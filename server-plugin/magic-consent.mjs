@@ -3,6 +3,8 @@ import {standing}from'./standing.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {intelligenceOf}from'./npc-intelligence.mjs';
 import {registerIncident}from'./law.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic-consent',{kinds:['permit']});
 
 export const spellConsentActions=['mental_magic','support_magic','healing'];
 export function hasSpellConsent(d,target,authorization,action,catalog,until=d.get('state','minute')){
@@ -31,7 +33,7 @@ export function spellConsentPermission(d,engine,args,eventId){
   if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==target||old.grantee!=='player')throw Error('只有原签发本人能撤销同意');
   if(d.get('state','npcs',target,'location')!==d.get('state','location'))throw Error('撤销同意须本人在场');
   if(old.revoked)return{authorization:args.authorization,consent:old,duplicate:true};
-  const row={...old,revoked:true,revokedAt:now,revokedBy:target};d.set(['state','records',args.authorization],row);return{authorization:args.authorization,consent:row};
+  const row={...old,revoked:true,revokedAt:now,revokedBy:target};holdingSet(d,null,['state','records',args.authorization],row,'magic-consent');return{authorization:args.authorization,consent:row};
  }
  if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('施法同意须明确用途');
  const minutes=args.minutes??60;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>1440)throw Error('同意期限须为1至1440分钟');
@@ -43,7 +45,7 @@ export function spellConsentPermission(d,engine,args,eventId){
  const authorization=`permission_${eventId}`,row={category:'authorization',action,subject:target,grantor:target,grantee:'player',createdAt:now,expires:now+minutes,revoked:false,
   scope:{location:d.get('state','location'),...(spell?{spell}:{})},content:args.content.trim(),sourceEvent:eventId};
  if(d.get('state','records',authorization))throw Error('同意登记编号已存在');
- d.set(['state','records',authorization],row);d.say(`${engine.byId.get(target).name}明确同意所述施法用途，可随时撤销`);
+ holdingSet(d,null,['state','records',authorization],row,'magic-consent');d.say(`${engine.byId.get(target).name}明确同意所述施法用途，可随时撤销`);
  return{target,action,...decision,registered:true,authorization,consent:row};
 }
 export function spellConsentAction(c){

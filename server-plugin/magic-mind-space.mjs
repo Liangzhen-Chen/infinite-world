@@ -13,6 +13,8 @@ import {prepareAnchorCargo}from'./magic-movement.mjs';
 import {monsterStats}from'./combat.mjs';
 import {assertSpellConsent,hasSpellConsent}from'./magic-consent.mjs';
 import {personMental}from'./entity-view.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic-mind-space',{kinds:[],locations:true});
 
 // Bounds describe consumers for unpublished authoring candidates.
 export const mindSpaceMechanisms=Object.freeze({
@@ -188,14 +190,14 @@ function putEffect(d,p,eventId,extra={}){
 function detach(d,engine,item,eventId,status,extra={}){
  const id=trackSingleItem(d,engine,'player',item,eventId);
  changeItems(d,engine,'player',item,-1,{preserve:true,selection:[id],books:{account:placedStock(engine,extra.location,item),writer:'magic-mind-space',eventId}});
- d.set(['state','itemInstances',id],{...d.get('state','itemInstances',id),status,...extra});return id;
+ holdingSet(d,null,['state','itemInstances',id],{...d.get('state','itemInstances',id),status,...extra},'magic-mind-space');return id;
 }
 function pickup(d,engine,u){
  changeItems(d,engine,'player',u.item,1,{books:{account:placedStock(engine,u.status==='袋内'?u.container:u.location,u.item),writer:'magic-mind-space',eventId:u.id}});
  const bag=engine.bagPath('player');
  d.set([...bag,u.item,'instances'],[...d.get(...bag,u.item,'instances')??[],u.id]);
  const next={...u,status:'持有'};for(const k of ['container','location','position','weight'])delete next[k];
- d.set(['state','itemInstances',u.id],next);
+ holdingSet(d,null,['state','itemInstances',u.id],next,'magic-mind-space');
 }
 export function applyMindSpace(d,initial,eventId){
  const p=prepareMindSpace.call(this,d,initial.catalog,initial.args,{completion:true});
@@ -293,7 +295,7 @@ export function advanceMindSpace(d,engine,before,after){
   const minutes=Math.max(0,end-start);
   if(e.operation==='store'&&e.expires<=after){
    const u=d.get('state','itemInstances',e.instance);
-   if(u?.status==='封存'){moveStock(d,{from:placedStock(engine,u.location,u.item),to:placedStock(engine,e.location,u.item),amount:1,writer:'magic-mind-space',eventId:e.sourceEvent});d.set(['state','itemInstances',e.instance],{...u,status:'落地',location:e.location,position:e.point,droppedAt:e.expires});}
+   if(u?.status==='封存'){moveStock(d,{from:placedStock(engine,u.location,u.item),to:placedStock(engine,e.location,u.item),amount:1,writer:'magic-mind-space',eventId:e.sourceEvent});holdingSet(d,null,['state','itemInstances',e.instance],{...u,status:'落地',location:e.location,position:e.point,droppedAt:e.expires},'magic-mind-space');}
   }
   if(mental.has(e.operation)){
    const a=d.get(...path(e.target));if(!a)continue;

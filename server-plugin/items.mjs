@@ -1,6 +1,8 @@
 import {createHash}from'node:crypto';
 import {bag,bookStock,moveStock,BOOKED} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('items',{kinds:[],locations:true});
 declareLedgerWriter('items');
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw new Error('物品数量无效');return value;};
 export function heldUnit(d,engine,owner,item){
@@ -12,7 +14,7 @@ export function heldUnit(d,engine,owner,item){
 export function wearItem(d,engine,owner,item,amount){
     const selected=heldUnit(d,engine,owner,item),definition=engine.byId.get(item);
     const durability=Math.max(0,(selected.durability??definition.durability)-amount);
-    if(selected.instance)d.set(['state','itemInstances',selected.instance,'durability'],durability);
+    if(selected.instance)holdingSet(d,null,['state','itemInstances',selected.instance,'durability'],durability,'items');
     if(!selected.instance||engine.quantity(d,owner,item)===1)d.set([...engine.bagPath(owner),item,'durability'],durability);
     return durability;
 }
@@ -28,7 +30,7 @@ export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=
     for(const unit of removed){
         const record=d.get('state','itemInstances',unit);
         if(!record||record.owner!==owner||record.item!==item||record.status!=='持有')throw new Error('单件归属与库存不符');
-        if(!preserve)d.set(['state','itemInstances',unit],{...record,owner:null,status:'已消耗',consumedAt:d.get('state','minute')});
+        if(!preserve)holdingSet(d,null,['state','itemInstances',unit],{...record,owner:null,status:'已消耗',consumedAt:d.get('state','minute')},'items');
     }
     if(!amount)d.remove(path);
     else{
@@ -54,7 +56,7 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null){
     if(moved.instances.length){
         const path=[...engine.bagPath(to),item,'instances'];
         d.set(path,[...d.get(...path)??[],...moved.instances]);
-        for(const unit of moved.instances)d.set(['state','itemInstances',unit,'owner'],to);
+        for(const unit of moved.instances)holdingSet(d,null,['state','itemInstances',unit,'owner'],to,'items');
     }
     return moved;
 }
@@ -68,8 +70,8 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         if(d.get('state','itemInstances',id))throw new Error('此次制造的单件编号已经存在，不能重复制造');
         ids.push(id);
         const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
-        d.set(['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship});
+        holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
+            recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
@@ -83,8 +85,8 @@ export function trackSingleItem(d,engine,owner,item,eventId){
     const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:existing:${owner}:${item}`).digest('hex').slice(0,24)}`;
     if(d.get('state','itemInstances',id))throw new Error('既有物品的编号重复');
     const definition=engine.byId.get(item);
-    d.set(['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
-        origin:'既有物品登记，制作者未知',quality:held.quality??definition.quality,durability:held.durability??definition.durability,maxDurability:held.maxDurability??definition.durability});
+    holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
+        origin:'既有物品登记，制作者未知',quality:held.quality??definition.quality,durability:held.durability??definition.durability,maxDurability:held.maxDurability??definition.durability},'items');
     d.set([...engine.bagPath(owner),item,'instances'],[id]);return id;
 }
 
@@ -103,7 +105,7 @@ export function trackTransferUnit(d,engine,owner,item,eventId,requested=null){
     const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:transfer:${owner}:${item}`).digest('hex').slice(0,24)}`;
     if(d.get('state','itemInstances',id))throw new Error('既有单件登记编号冲突');
     const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity,quality:definition.quality,durability:definition.durability,weight:definition.weight};
-    d.set(['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
-        origin:'既有库存单件登记，制作者未知',quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability});
+    holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
+        origin:'既有库存单件登记，制作者未知',quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability},'items');
     d.set([...engine.bagPath(owner),item],{...properties,quantity,instances:[...units,id]});return id;
 }

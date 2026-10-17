@@ -8,6 +8,8 @@ import {personAge,personConstraint}from'./entity-view.mjs';
 import {forestView,harvestForest,forestSites}from'./forest-water.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('sites',{kinds:['permit']});
 // S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
 // 定期再生来自 src:regrowth，采集转入采集者行囊；机关消耗材料、续约供品进 sink:consume。
 // 林木据点的木料以林木存量（forest-water）为唯一账户，据点 remaining 只是采集上限，不另记账。
@@ -33,7 +35,7 @@ function putSite(d,engine,place,row,{to=null,eventId=null}={}){
         if(taken)moveStock(d,{from:acct,to:to.account,amount:taken,writer:'sites',eventId});
         if(grown<0)throw Error('据点资源减少却没有去处');
     }
-    d.set(['state','records',siteKey(place.id)],row);
+    holdingSet(d,null,['state','records',siteKey(place.id)],row,'sites');
 }
 
 // A location's optional site contains occupants (actor IDs), manager, owner,
@@ -238,7 +240,7 @@ function infiltrate(d,engine,place,eventId){
     const check=engine.check(d,watcher?{...rest,opponent:{npc:watcher,attribute:'精神'}}:plan.check,eventId);
     if(check.success){
         putSite(d,engine,place,ledger(d,place),{eventId});
-        d.set(['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId});
+        holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         infiltrationSucceeded(d,engine,place,eventId);
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
     }
@@ -296,7 +298,7 @@ export function siteAction(d,args,eventId){
     if(operation==='enter'){
         unblocked(row,s.entryMechanisms??[]);
         putSite(d,this,place,row,{eventId});
-        d.set(['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId});
+        holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         return{...siteView(this,d.document),truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
     }
     const mechanism=(s.mechanisms??[]).find(m=>[m.id,m.name].includes(args.target));
@@ -305,7 +307,7 @@ export function siteAction(d,args,eventId){
         const key=observationKey(place.id,mechanism.id);
         if(d.get('state','records',key))return{target:mechanism.id,duplicate:true};
         advance(mechanism.minutes);
-        d.set(['state','records',key],{category:'site_observation',site:place.id,target:mechanism.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId});
+        holdingSet(d,null,['state','records',key],{category:'site_observation',site:place.id,target:mechanism.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         const element=mechanism.element?{feature:mechanism.element.feature,states:mechanism.element.tags}:undefined;
         return{target:mechanism.id,description:mechanism.description??'',tool:mechanism.tool??null,materials:mechanism.materials??[],...(element?{element}:{})};
     }
@@ -355,7 +357,7 @@ export function siteAction(d,args,eventId){
     advance(target.minutes);
     if(!check.success)return{target:target.id,check,discovered:false};
     const evidence={category:'site_discovery',site:place.id,clue:target.id,actor:'player',text:target.text,minute:d.get('state','minute'),sourceEvent:eventId};
-    d.set(['state','records',discoveryKey(place.id,target.id)],evidence);
+    holdingSet(d,null,['state','records',discoveryKey(place.id,target.id)],evidence,'sites');
     return{target:target.id,check,discovered:true,evidence,truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
 }
 
@@ -375,7 +377,7 @@ export function sitePermission(d,engine,args,eventId){
     if(place.access?.mode==='council'&&place.access.authority!==grantor)throw Error('议事区许可须由登记负责人签发');
     if(args.operation==='revoke_access'){
         if(old?.action!=='site_use'||old.subject!==place.id||old.grantor!==grantor)throw Error('只有原签发者能撤销据点许可');
-        const permission={...old,revoked:true,revokedAt:now};d.set(['state','records',args.authorization],permission);return{authorization:args.authorization,permission};
+        const permission={...old,revoked:true,revokedAt:now};holdingSet(d,null,['state','records',args.authorization],permission,'sites');return{authorization:args.authorization,permission};
     }
     const minutes=args.minutes??60;
     if(!Number.isSafeInteger(minutes)||minutes<1||minutes>10080||typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('据点许可须有用途及1至10080分钟期限');
@@ -386,7 +388,7 @@ export function sitePermission(d,engine,args,eventId){
     const guests=(args.guests??[]).map(name=>engine.resolve(name,'npc'));
     if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==actor.location||!d.get('state','player','companions')?.includes(id)))throw Error('获准同行者须为实际在场且不重复的同行人');
     const permission={category:'authorization',action:'site_use',subject:place.id,owner,owners:owned,grantor,grantee:'player',operations,guests,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
-    d.set(['state','records',authorization],permission);return{authorization,permission};
+    holdingSet(d,null,['state','records',authorization],permission,'sites');return{authorization,permission};
 }
 
 // RW-04 woodcutting lives with site harvest boundaries in the ecology pack.

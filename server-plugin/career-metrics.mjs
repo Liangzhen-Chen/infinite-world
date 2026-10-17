@@ -13,6 +13,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('career-metrics');
 import {spellTraits}from'./traits.mjs';
 import {certifiedForSkill}from'./professions.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('career-metrics',{kinds:['certified'],entities:['office']});
 
 const SCHOOL_ELEMENT={火:'fire',水:'water',土:'earth',风:'wind',光:'light',信仰:'light',暗影:'shadow',精神:'mind',冰:'cold',霜:'cold',雷:'lightning'};
 const CARE_OPERATIONS=new Set(['stabilize','hemostasis','clean_wound','pain','restore_tendon','ritual_heal']);
@@ -160,7 +162,7 @@ export function acquireHiddenProfession(d,engine,role,id){
         d.say(`经历「${catalog.initiation}」未能完成`);
         return{profession:role,acquired:false,initiation:catalog.initiation,...outcome};
     }
-    d.set(['state','professions','hidden'],[...d.get('state','professions','hidden'),role]);
+    holdingSet(d,null,['state','professions','hidden'],[...d.get('state','professions','hidden'),role],'career-metrics');
     d.set(['state','careers',role,'certification'],{experience:catalog.initiation,minute:now,source:id});
     const ultimate=grantUltimate(d,engine,career.ultimate?.skill,{type:'hidden_profession',id:role});
     d.say(`完成经历「${catalog.initiation}」，取得隐藏身份：${catalog.name}`);

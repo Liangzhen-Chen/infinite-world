@@ -51,6 +51,8 @@ import {medicineAction} from './medicine.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('activities',{kinds:['owns']});
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -260,6 +262,6 @@ export const activities={
         if(type==='bld')throw new Error('建筑需要工程完工证明，不能凭空创建');
         let founded=null;
         if(type==='org'){entity.founder='player';entity.notes=requiredText(entity.notes);founded=foundOrganization(d,this,entity,id);}
-        d.set(['state','created',entity.id],entity);return {entity:entity.id,...founded};
+        holdingSet(d,null,['state','created',entity.id],entity,'activities');return {entity:entity.id,...founded};
     },
 };

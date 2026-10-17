@@ -19,6 +19,8 @@ import {presentWitnesses}from'./world-events.mjs';
 import {produceItems}from'./items.mjs';
 import {effectiveProficiency}from'./professions.mjs';
 import {spellElements}from'./career-metrics.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('works',{kinds:['owns'],locations:true});
 
 export const WORK_RULES=Object.freeze({
     literacySkill:'skill_literacy',scribeSkill:'skill_life_22_core',surveySkill:'skill_life_11_core',artSkills:['skill_life_14_core','skill_life_16_core'],
@@ -95,8 +97,8 @@ function write(d,engine,args,id){
         teaches,knowledge:{grade:engine.rules.books.grades[Math.min(4,Math.floor(effectiveProficiency(d,engine,skill)/300))],teaches,
             ceilings:Object.fromEntries(teaches.map(entity=>[entity,effectiveProficiency(d,engine,entity.startsWith('skill_')?entity:engine.byId.get(entity).skill)])),author:'player',edition:1,chain:[]},
         minute:d.get('state','minute'),location,settlement,sourceEvent:id,item:WORK_RULES.manuscript,instance,editions:[]});
-    d.set(['state','itemInstances',instance,'work'],work.id);
-    d.set(['state','itemInstances',instance,'book'],work.knowledge);
+    holdingSet(d,null,['state','itemInstances',instance,'work'],work.id,'works');
+    holdingSet(d,null,['state','itemInstances',instance,'book'],work.knowledge,'works');
     d.say(`写成《${title}》，${quality}`);
     return{operation:'write',work:work.id,quality,masterpiece,instance,minutes,...outcome,workEvent:event('write',work,{masterpiece,skill})};
 }
@@ -117,7 +119,7 @@ function publish(d,engine,args,id){
     moveCoins(d,{from:source('import','book_sales'),to:purse(engine,'player'),amount:income,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')+income);
     const kept=printed-sold,instances=kept?produceItems(d,engine,WORK_RULES.book,kept,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
-    for(const unitId of instances){d.set(['state','itemInstances',unitId,'work'],work.id);if(work.knowledge)d.set(['state','itemInstances',unitId,'book'],{...work.knowledge,edition});}
+    for(const unitId of instances){holdingSet(d,null,['state','itemInstances',unitId,'work'],work.id,'works');if(work.knowledge)holdingSet(d,null,['state','itemInstances',unitId,'book'],{...work.knowledge,edition},'works');}
     const row={edition,eventId:id,settlement,location,printed,sold,kept,price,income,cost:coins,minute:d.get('state','minute'),points:WORK_RULES.points.publish+(work.masterpiece?WORK_RULES.points.masterpiece:0)};
     save(d,{...work,editions:[...work.editions,row]});
     const fame=addFame(d,engine,settlement,fameFor('publish',work.masterpiece),id,'publish');
@@ -153,11 +155,11 @@ function copy(d,engine,args,id){
     const edition=(origin?.edition??0)+1,[instance]=crafted(d,engine,item,1,{eventId:id,workmanship:workQuality(outcome,scribe)});
     const author=origin?.author??definition.book?.author,recordAuthor=Boolean(author)&&(!engine.replaying||engine.replayResult?.bookAuthor!==undefined);
     const book={...origin,...(recordAuthor?{author}:{}),teaches:origin?.teaches??definition.book?.teaches??[],grade:grades[index],edition,chain,source:source.unit?.id??null,scribe:'player',scribeName:d.get('state','player','name'),copiedAt:d.get('state','minute')};
-    d.set(['state','itemInstances',instance,'book'],book);
+    holdingSet(d,null,['state','itemInstances',instance,'book'],book,'works');
     const{location,settlement}=placeOf(d,engine);
     const work=save(d,{id:`work_${id}`,kind:'copy',title:definition.name,author:definition.book?.author??origin?.author,scribe:'player',skill:WORK_RULES.scribeSkill,quality:workQuality(outcome,scribe),
         masterpiece:false,minute:d.get('state','minute'),location,settlement,sourceEvent:id,item,instance,grade:book.grade,edition,chain});
-    d.set(['state','itemInstances',instance,'work'],work.id);
+    holdingSet(d,null,['state','itemInstances',instance,'work'],work.id,'works');
     d.say(`抄成《${definition.name}》第${edition}代抄本，品级${book.grade}`);
     return{operation:'copy',work:work.id,item,instance,grade:book.grade,edition,chain,minutes,...(recordAuthor?{bookAuthor:author}:{}),...outcome,workEvent:event('copy',work)};
 }
@@ -201,8 +203,8 @@ function survey(d,engine,args,id){
     const [instance]=crafted(d,engine,WORK_RULES.map,1,{eventId:id,workmanship:quality}),masterpiece=quality==='杰作';
     const work=save(d,{id:`work_${id}`,kind:'map',title,author:'player',authorName:d.get('state','player','name'),skill,quality,masterpiece,minute:d.get('state','minute'),
         location,settlement,sourceEvent:id,item:WORK_RULES.map,instance,locations,routes:routes.map(row=>row.id).sort(),points:settlement?WORK_RULES.points.survey:0});
-    d.set(['state','itemInstances',instance,'work'],work.id);
-    d.set(['state','itemInstances',instance,'map'],{title,locations,routes:work.routes,surveyor:'player'});
+    holdingSet(d,null,['state','itemInstances',instance,'work'],work.id,'works');
+    holdingSet(d,null,['state','itemInstances',instance,'map'],{title,locations,routes:work.routes,surveyor:'player'},'works');
     d.say(`绘成《${title}》，图上${locations.length}处地点`);
     return{operation:'survey',work:work.id,instance,locations,routes:work.routes,quality,masterpiece,minutes,...outcome,workEvent:event('survey',work,{masterpiece,skill})};
 }
@@ -240,8 +242,8 @@ function fuse(d,engine,args,id){
     d.set(['state','fusionAttempts',`fusion_${id}`],{skills:pair,name,mechanism,coins,minutes,minute:d.get('state','minute'),success:outcome.success});
     if(!outcome.success){d.say(`融合实验未成，耗去${coins}铜与${minutes}分钟`);return{operation:'fuse',skills:pair,coins,minutes,...outcome};}
     const skill=`skill_created_${id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,proficiency=Math.floor(Math.min(...values)/rule.fraction),base=engine.byId.get(skills[lower]);
-    d.set(['state','created',skill],{id:skill,name,aliases:[],scope:d.get('state','location'),attribute:base?.attribute??'智力',profession:null,stage:Math.floor(proficiency/300),
-        prerequisites:pair,notes:mechanism,fusion:pair,source:id});
+    holdingSet(d,null,['state','created',skill],{id:skill,name,aliases:[],scope:d.get('state','location'),attribute:base?.attribute??'智力',profession:null,stage:Math.floor(proficiency/300),
+        prerequisites:pair,notes:mechanism,fusion:pair,source:id},'works');
     const source={type:'fusion',id,skills:pair};
     d.set(['state','skills',skill],{proficiency,grade:grade(proficiency),breakthroughs:[],daily:{},source,learnedAt:d.get('state','minute')});
     d.say(`融合成功：${name}，熟练度${proficiency}`);
@@ -266,7 +268,7 @@ export function recordArtWork(d,engine,{recipe,instances,workmanship,eventId}){
     const{location,settlement}=placeOf(d,engine),masterpiece=workmanship==='杰作';
     const work=save(d,{id:`work_${eventId}`,kind:'art',title:engine.byId.get(recipe.output.item)?.name??recipe.output.item,author:'player',authorName:d.get('state','player','name'),
         skill:recipe.skill,quality:workmanship,masterpiece,minute:d.get('state','minute'),location,settlement,sourceEvent:eventId,item:recipe.output.item,instance:instances[0]});
-    for(const unit of instances)d.set(['state','itemInstances',unit,'work'],work.id);
+    for(const unit of instances)holdingSet(d,null,['state','itemInstances',unit,'work'],work.id,'works');
     const fame=masterpiece?addFame(d,engine,settlement,WORK_RULES.fame.masterpiece,eventId,'art'):null;
     return{work:work.id,quality:workmanship,...(fame?{fame}:{})};
 }

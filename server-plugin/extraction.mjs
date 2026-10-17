@@ -6,6 +6,8 @@ import {miningJurisdiction} from './law-codes.mjs';
 import {adjustStanding} from './standing.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve as reserveAccount,moveStock} from './stock.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('extraction',{kinds:['permit']});
 // S1b: 钓到的鱼是死亡转化的产物（src:harvest，种群账另记 withdrawn）；剖洗用水、煮食耗材进 sink:consume；
 // 矿脉是资源点账户 mineral:<地点>:<矿产>|<矿产>|reserve，首次开采按世界数据（spec.reserve）经 src:genesis 开户，
 // 恢复来自 src:regrowth，采得的转入开采者行囊。
@@ -50,7 +52,7 @@ export function fish(d,args,id){
         // withdrawn is the existing ecological sink, also used for actual individuals.
         d.set([...path(`ecology:${habitat.id}`),'populations',selected.id],{...p,count:p.count-1,withdrawn:p.withdrawn+1});
         this.itemDelta(d,'player','item_fish',1,{flow:'src:harvest',purpose:'fishing',writer:'extraction',eventId:id});
-        d.set(path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id});
+        holdingSet(d,null,path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id},'extraction');
     }
     const training=able(d)?practice(d,this,'skill_life_2_core',`钓鱼:${habitat.id}`):null;
     return {success,check,species:success?selected.id:null,obtained:success?[{item:'item_fish',quantity:1}]:[],training,season,
@@ -94,7 +96,7 @@ export function mine(d,args,id){
     if(!d.get(...path(key)))moveStock(d,{from:`src:genesis|${vein.split('|')[1]}|mineral`,to:vein,amount:old.reserve,writer:'extraction',eventId:id});
     moveStock(d,{from:`src:regrowth|${vein.split('|')[1]}|mineral`,to:vein,amount:recovered,writer:'extraction',eventId:id});
     if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1,{account:vein,writer:'extraction',eventId:id});}
-    d.set(path(key),row);
+    holdingSet(d,null,path(key),row,'extraction');
     const witnesses=[...new Set([...atStart,...present()])];
     const value=success?this.byId.get(item).basePrice:0;
     const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,code:jurisdiction.code}):null;
@@ -109,5 +111,5 @@ export function miningPermit(d,args,id){
     if(!owner||owner!==this.resolve(args.authority,'npc')||d.get('state','npcs',owner,'location')!==location||d.get('state','npcs',owner,'status')!=='正常'||args.consent!==true)throw Error('须由本矿区在场所有者明确同意');
     const permit=this.rules.extraction.mining.permit,minutes=args.minutes??permit.defaultMinutes;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>permit.maxMinutes)throw Error('开采许可期限无效');
     const key=`mining_permit:${id}`,permission={category:'authorization',action:'mining',location,grantee:'player',grantor:owner,expires:d.get('state','minute')+minutes,revoked:false,sourceEvent:id};
-    d.set(path(key),permission);return {permit:key,permission};
+    holdingSet(d,null,path(key),permission,'extraction');return {permit:key,permission};
 }

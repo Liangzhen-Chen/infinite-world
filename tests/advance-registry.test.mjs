@@ -17,7 +17,8 @@ async function trace({quiet=false,seed='advance-registry',steps}){
   const r=await engine.reduce(doc,{tool,args,eventId:`step_${i}`});doc=applyPatches(doc,r.patches);
   // S1a: the books (document.ledger, a sibling of state) are checked by tests/ledger-reconcile.test.mjs;
   // the golden hashes cover the game state and its patches, which the ledger must leave unchanged.
-  out.push(hash({state:doc.state,patches:r.patches.filter(p=>p.path[0]!=='ledger'),messages:r.messages}));
+  // S2a: likewise the holding store (document.holdings), checked by tests/holdings-reconcile.test.mjs.
+  out.push(hash({state:doc.state,patches:r.patches.filter(p=>p.path[0]!=='ledger'&&p.path[0]!=='holdings'),messages:r.messages}));
  }
  return out;
 }

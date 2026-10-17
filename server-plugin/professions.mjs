@@ -10,6 +10,8 @@ import {npcServices}from'./npc-state.mjs';
 import {personCertified}from'./entity-view.mjs';
 import {compensateHidden}from'./hidden-passives.mjs';
 import {acquireHiddenProfession,variantProgress,professionUltimate,completeProfessionUltimate,careerOf}from'./career-metrics.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('professions',{kinds:['certified'],entities:['office']});
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0;
@@ -45,7 +47,7 @@ export function profession(d,args,id){
         if(d.get('state','player','coins')<fee)throw new Error('退职费用不足');
         moveCoins(d,{from:purse(this,'player'),to:sink('export','guild'),amount:fee,writer:'professions',eventId:id});
         d.set(['state','player','coins'],d.get('state','player','coins')-fee);
-        d.set(['state','professions',catalog.kind],catalog.kind==='combat'?'':current.life.filter(value=>value!==role));
+        holdingSet(d,null,['state','professions',catalog.kind],catalog.kind==='combat'?'':current.life.filter(value=>value!==role),'professions');
         d.set(['state','careerFunds',`abandon_${id}`],{role,amount:fee,destination:'职业行会退职账'});
         d.set(['state','careerCooldowns',role],d.get('state','minute')+(catalog.abandonCooldownMinutes??1440));
         d.say(`放弃${catalog.name}，支付${fee}铜；技能熟练度保留，职业核心有效熟练度上限299`);
@@ -102,7 +104,7 @@ export function profession(d,args,id){
     const outcome=this.check(d,{attribute:catalog.attribute??'智力',skill:entry?.skill,difficulty:entry?.difficulty??15},id);this.advance(d,entry?.minutes??120,id);
     if(outcome.success){
         moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:catalog.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],player.coins-catalog.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);
-        d.set(['state','professions',catalog.kind],catalog.kind==='combat'?role:[...current.life,role]);
+        holdingSet(d,null,['state','professions',catalog.kind],catalog.kind==='combat'?role:[...current.life,role],'professions');
         d.set(['state','careers',role,'certification'],{teacher,minute:d.get('state','minute'),source:id,...(task?{task:task.name}:{})});
         d.say(`通过${catalog.name}职业认证`);
     }

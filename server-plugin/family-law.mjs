@@ -8,7 +8,7 @@ import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
-declareHoldingWriter('family-law',{kinds:['guardian_of'],entities:['case']});
+declareHoldingWriter('family-law',{kinds:['guardian_of','owns'],entities:['case']});
 
 const rec=id=>['state','records',id];
 export function fileFamilyDispute(d,e,{claimant,estate,guardianship,reason,eventId}){
@@ -39,7 +39,7 @@ export function adjudicateFamilyDispute(d,e,row,code,judge,eventId){
   const original=death.estate.propertyOwners?.[asset]??{},expected={...original};
   for(const allocation of death.estate.allocations.filter(r=>r.assets.includes(asset)))expected[allocation.heir]=(original[allocation.heir]??0)+(allocation.propertyShares?.[asset]??1/entitled.length);
   if(Object.keys(building.owners??{}).sort().join('|')===Object.keys(expected).sort().join('|')&&Object.entries(expected).every(([id,n])=>building.owners[id]===n))continue;
-  d.set(['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id});restored.push(asset);
+  holdingSet(d,null,['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id},'family-law');restored.push(asset);
  }
  const judgment={judge,minute:s.minute,compensation:owed,fine:0,evidenceScore:2,restored,decision:owed?'返还侵吞财产':restored.length?'按死亡分产登记恢复产权':'维持依法分产，监护继续按期记账'};
  holdingSet(d,null,rec(row.id),{...row,status:owed?'待赔偿':'已结案',judgment,value:owed,compensationPaid:owed===0},'family-law');

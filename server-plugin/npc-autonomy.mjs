@@ -18,13 +18,17 @@ import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+// 自治动作在工作草稿里演算后回放，回放可落到被演算动作写的任何持有种类。
+declareHoldingWriter('npc-autonomy',{kinds:['*'],entities:['*'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const full=(engine,id)=>personSimulation(engine,{},id).value;
 const auditGoal=g=>/核清现有(?:铁料|线料)/.test(g.content);
 function draft(document,at){const d={document,patches:[],get(...p){if(at!==undefined&&p.join('.')==='state.minute')return at;return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){const p={op:'set',path,value};this.document=applyPatches(this.document,[p]);this.patches.push(p);},remove(path){const p={op:'delete',path};this.document=applyPatches(this.document,[p]);this.patches.push(p);}};return d;}
-const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?target.set(p.path,p.value):target.remove(p.path);};
+// S2a: 工作草稿没有引擎，不双写；回放到正式草稿时经持有写入包装双写。
+const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?holdingSet(target,null,p.path,p.value,'npc-autonomy'):holdingRemove(target,null,p.path,'npc-autonomy');};
 const proficiency=npcProficiency;
 function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
 function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
@@ -108,7 +112,7 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
  const definition=engine.byId.get(item),instances=[];
  for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
   const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
-  d.set(['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship});
+  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'npc-autonomy');
  }
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }

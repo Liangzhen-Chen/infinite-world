@@ -6,6 +6,8 @@ import {assertNpcService} from './npc-schedule.mjs';
 import {digest} from './storage.mjs';
 import {convertFaith} from './faith.mjs';
 import {temples} from './faith-catalog.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('training',{kinds:['mentor_of','devotee_of','permit','certified'],entities:['office']});
 
 const record=id=>['state','records',id];
 const awake=a=>a&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
@@ -46,10 +48,10 @@ export function initiation(d,engine,args,id){
   // Re-entering one's own temple (after a breach) renews the observance from
   // today and keeps the breach on record; only a first entry or a change of
   // temple is a conversion with its membership and standing effects.
-  if(current?.temple===t?.id&&Number.isSafeInteger(current.observedSince))d.set(['state','player','faith'],{...current,observedSince:now,initiation:key});
-  else{convertFaith(d,engine,{...t,organization:{leader:teacher}},'player',id,{paid:true});d.set(['state','player','faith'],{...d.get('state','player','faith'),initiation:key});}
+  if(current?.temple===t?.id&&Number.isSafeInteger(current.observedSince))holdingSet(d,null,['state','player','faith'],{...current,observedSince:now,initiation:key},'training');
+  else{convertFaith(d,engine,{...t,organization:{leader:teacher}},'player',id,{paid:true});holdingSet(d,null,['state','player','faith'],{...d.get('state','player','faith'),initiation:key},'training');}
  }else if(entry.ritual){const deity=entry.deity&&engine.byId.get(entry.deity);
-  d.set(['state','player','faith'],{deity:deity?.id??null,institution,church:deity?.church.name??entry.church,taboo:deity?.taboo??entry.rule,observedSince:now,lastBreach:row.lastBreach,initiation:key});
+  holdingSet(d,null,['state','player','faith'],{deity:deity?.id??null,institution,church:deity?.church.name??entry.church,taboo:deity?.taboo??entry.rule,observedSince:now,lastBreach:row.lastBreach,initiation:key},'training');
  }
  return{initiated:true,profession:role,institution,teacher,initiation:key,rule:entry.rule,cost:entry.initiationFee,minutes:entry.initiationMinutes};
 }
@@ -89,7 +91,7 @@ export function recordDisciplineBreach(d,engine,kind,eventId){
   const init=d.get('state','careers',e.profession,'initiation');
   if(init?.institution!==e.institution||init.status!=='守戒中'||!e.breaches.includes(kind))continue;
   d.set(['state','careers',e.profession,'initiation'],{...init,lastBreach:now,status:'违戒',breachEvent:eventId});
-  const f=d.get('state','player','faith');if(f?.initiation===init.record)d.set(['state','player','faith'],{...f,lastBreach:now});
+  const f=d.get('state','player','faith');if(f?.initiation===init.record)holdingSet(d,null,['state','player','faith'],{...f,lastBreach:now},'training');
   for(const [key,r]of Object.entries(d.get('state','records')??{}))if(r.sourceType==='training'&&r.initiation===init.record&&!r.revoked)d.set(record(key),{...r,revoked:true,revokedAt:now,reason:'违戒',breachEvent:eventId});
   d.say('师门守戒已中断，相关主持资格停止；重新入门须当面承担费用和守戒时间');
  }

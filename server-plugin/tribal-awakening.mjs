@@ -25,9 +25,9 @@ import {forestHabitatCapacity} from './forest-water.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
-declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office'],entities:['office']});
+declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office','tamed_by'],entities:['office','wreck'],locations:true});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const TRIBAL_AWAKENING_VERSION=1;
@@ -299,7 +299,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants});
   d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
-  for(const id of inhabitants)d.set(['state','creatures',id,'location'],skeleton.id);
+  for(const id of inhabitants)holdingSet(d,null,['state','creatures',id,'location'],skeleton.id,'tribal-awakening');
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
   if(ecology){const moved=Math.min(ecology.count,joining);d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}

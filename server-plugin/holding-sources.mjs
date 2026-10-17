@@ -12,10 +12,12 @@
 // 与存储里该单元的存活持有比对，按差关闭（reason）与开立（经 L0 唯一写入点，受注册形状校验）。
 // 旧写入点漏调它，对账（tests/helpers/holdings-audit.mjs）即报出差异。
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,locationOf,declareHoldingWriter,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
+    setLocation,clearLocation,locationOf,declareHoldingWriter,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
+import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
+import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
 const sources=new Map();
@@ -43,7 +45,7 @@ function sets(engine){
         settlements:new Set([...(w.settlementProfiles??[]).map(p=>p.id),...(engine.rules?.agriculture?.settlements??[]).map(p=>p.settlement),...(w.regions??[]).map(r=>r.id)]),
         people:new Set([...(w.npcs??[]),...(w.residents??[]),...(w.factionPeople??[])].map(p=>p.id)),
         creatures:new Set([...(w.monsters??[]),...(w.bosses??[])].map(m=>m.id)),
-        polities:new Set((engine.rules?.military?.polities??[]).map(p=>p.id)),
+        polities:new Set((engine.rules?.military?.polities??[]).map(p=>p.id)),banks:new Set((engine.rules?.economy?.credit?.banks??[]).map(b=>b.id)),
         lairs:new Set((w.bosses??[]).map(b=>b.residence?.id).filter(Boolean)),
         societies:new Set((w.locations??[]).filter(l=>l.monsterSociety).map(l=>l.id))};
     worldSets.set(engine.world,s);return s;
@@ -56,10 +58,10 @@ export function entityTemplates(engine,state,id){
     const out=new Set();
     if(state?.npcs?.[id]||state?.created?.[id]&&state.created[id].kind!=='building'||state?.family?.people?.[id]||w.people.has(id)||state?.creatures?.[id]||w.creatures.has(id)||/^npc_/.test(id))out.add('agent');
     if(w.settlements.has(id)||state?.settlements?.[id]){out.add('collective');out.add('place');}
-    if(w.factions.has(id)||w.households.has(id)||w.polities.has(id)||w.societies.has(id)||records[`organization:${id}`]||state?.family?.households?.[id]||COLLECTIVE_PREFIX.test(id))out.add('collective');
+    if(w.factions.has(id)||w.households.has(id)||w.polities.has(id)||w.banks.has(id)||records[id]?.category==='bank'||w.societies.has(id)||records[`organization:${id}`]||state?.family?.households?.[id]||COLLECTIVE_PREFIX.test(id))out.add('collective');
     if(/^(loc_|site_|lair_)/.test(id)||w.lairs.has(id)||engine.byId?.get(id)?.type==='loc')out.add('place');
     if(/^bld_/.test(id)||state?.created?.[id]?.kind==='building'){out.add('thing');out.add('place');}
-    if(state?.itemInstances?.[id]||records[id]?.category==='transport_asset'||state?.buildings?.[id])out.add('thing');
+    if(state?.itemInstances?.[id]||records[id]?.category==='transport_asset'||/^transport_asset:/.test(id)||state?.buildings?.[id])out.add('thing');
     if(records[id]?.category==='business')out.add('thing');
     if(state?.obligations?.[id]||records[id]?.category==='debt'||records[id]?.category==='contract')out.add('instrument');
     return out.size?[...out]:null;
@@ -96,7 +98,7 @@ registerHoldingsOpening(legacyHoldings);
 declareHoldingWriter('holding-sources',{kinds:['*'],entities:['*'],locations:true});
 // 双写入口：writer 为旧写入点所在模块（须声明持有写入者），reason 为关闭旧边的原因。
 export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId=null}={}){
-    engine??=d.engine;
+    engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!writer)throw Error('双写须给出写入者');
     if(!ensureHoldings(d,engine))return false;
@@ -106,7 +108,7 @@ export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId
 // 旧记录（state.records 的一行）的双写：按记录类别找到受影响的来源与单元（写入前后两版记录都算，
 // 改了持有人、换了聚落或删掉记录都能找回原单元）。来源以 recordCategories / unitOfRecord 声明它读哪些记录。
 export function syncHoldingRecord(d,engine,key,opts){
-    engine??=d.engine;
+    engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!ensureHoldings(d,engine))return false;
     const state=read(d,'state'),units=new Set();
     for(const [state0,row] of [[state,state?.records?.[key]],[d.original?.state,d.original?.state?.records?.[key]]]){
@@ -118,7 +120,7 @@ export function syncHoldingRecord(d,engine,key,opts){
 }
 // 同一来源的全部单元（写入点一次改动多条旧记录、或不便算出单元时）。
 export function syncHoldingSource(d,engine,name,opts){
-    engine??=d.engine;
+    engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!ensureHoldings(d,engine))return false;
     const state=read(d,'state'),units=new Set([...sources.get(name).units(engine,state)].map(String));
@@ -307,12 +309,12 @@ function pathUnits(path){
         const p=rule.prefix,n=Math.min(p.length,path.length);let same=true;for(let i=0;i<n;i++)if(p[i]!=='*'&&p[i]!==path[i]){same=false;break;}
         if(!same)continue;
         if(rule.at!==undefined)out.push([name,path.length>rule.at?String(path[rule.at]):null]);
-        else out.push([name,path.length<p.length&&rule.whole!==false?null:'all']);
+        else out.push([name,path.length<p.length&&rule.unit===undefined?null:String(rule.unit??'all')]);
     }
     return out;
 }
 function afterWrite(d,engine,path,writer,eventId){
-    if(path[0]!=='state')return;
+    engine??=d.engine;if(!engine||path[0]!=='state')return;
     if(path[1]==='records'&&path.length>=3){
         const key=path[2],cats=holdingRecordCategories();
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
@@ -320,18 +322,17 @@ function afterWrite(d,engine,path,writer,eventId){
     }
     if(path.length<2){for(const name of holdingSources())syncHoldingSource(d,engine,name,{writer,eventId});return;}
     const units=pathUnits(path);if(!units.length)return;
-    if(!ensureHoldings(d,engine??=d.engine))return;
+    if(!ensureHoldings(d,engine))return;
     const all=new Set(units.filter(([,u])=>u===null).map(([n])=>n));
     for(const name of all)syncHoldingSource(d,engine,name,{writer,eventId});
     for(const [name,unit] of units)if(unit!==null&&!all.has(name))applyUnit(d,engine,name,unit,{writer,eventId});
 }
-export function holdingSet(d,engine,path,value,writer,eventId=null){
-    d.set(path,value);afterWrite(d,engine,path,writer,eventId);
-    return value;
-}
-export function holdingRemove(d,engine,path,writer,eventId=null){
-    d.remove(path);afterWrite(d,engine,path,writer,eventId);
-}
+// 调试与审计：HOLDINGS_DEBUG 打印、HOLDINGS_AUDIT_LOG 追加双写时抛出的错误（游戏代码可能吞掉异常，改变结算，审计要看得见）。
+const debugLog=process.env.HOLDINGS_AUDIT_LOG,debug=process.env.HOLDINGS_DEBUG||debugLog;
+registerHoldingObserver(debug?(d,engine,path,writer,eventId)=>{try{afterWrite(d,engine,path,writer,eventId);}catch(e){
+    const line=JSON.stringify({holdingError:e.message,code:e.code??null,writer,path,stack:String(e.stack).split(/\r?\n/).slice(1,6).join(' | ')});
+    if(debugLog)fsAppend(debugLog,`${line}\n`);else console.error('HOLDINGS',line);throw e;}}:afterWrite);
+export {holdingSet,holdingRemove};
 // 写入点是否落在某个来源上（静态扫描测试与审计用）。
 export const holdingPathWatched=path=>path[0]==='state'&&(path[1]==='records'||pathUnits(path).length>0);
 
@@ -435,5 +436,220 @@ defineHoldingSource('resides',{
         if(home)out.push({kind:'resides',holder:id,subject:home});
         if(settlement&&(entityTemplates(engine,state,settlement)??[]).includes('collective'))out.push({kind:'resident_of',holder:id,subject:settlement});
         return {holdings:out};
+    },
+});
+
+// ---- contract：合同里的结构性关系（契约本身的钱与日程是义务，S3 统一；这里只取它开立的持有） ----
+// workshop（雇工，有效 / 要求加薪 / 罢工）→ employed_by（雇员 → 雇主）；employment（玩家受雇，履行中）→ employed_by；
+// asset_lease（租房，有效）→ leases（承租人 → 房屋）；商号租约 version 1 kind lease（待履行 / 有效）→ leases；
+// 客房（room，有效）→ lodges（住客 → 房间）：同一住客同一房间的续住合并为一条（一个单元 = 住客 × 房间）。
+const WORKSHOP_ALIVE=['有效','要求加薪','罢工'];
+function contractUnit(state,key,row){
+    if(row?.category!=='contract'||row.kind==='equity')return null;
+    if(row.room)return `room|${row.parties?.[0]??'player'}|${row.room}`;
+    return `row|${key}`;
+}
+defineHoldingSource('contract',{
+    recordCategories:['contract'],unitOfRecord:contractUnit,
+    units(engine,state){const out=new Set();for(const [k,r] of Object.entries(state.records??{})){const u=contractUnit(state,k,r);if(u)out.add(u);}return out;},
+    extract(engine,state,unit){
+        const [type,a,b]=unit.split('|');
+        if(type==='room'){
+            const alive=Object.values(state.records??{}).some(r=>r?.category==='contract'&&r.room===b&&(r.parties?.[0]??'player')===a&&r.status==='有效');
+            return {holdings:alive?[{kind:'lodges',holder:actorId(engine.world,a),subject:b}]:[]};
+        }
+        const key=unit.slice(4),r=state.records?.[key];if(r?.category!=='contract')return null;
+        const out=[];
+        if(r.kind==='workshop'&&WORKSHOP_ALIVE.includes(r.status)&&r.worker&&r.owner)out.push({kind:'employed_by',holder:actorId(engine.world,r.worker),subject:actorId(engine.world,r.owner),terms:{contract:key}});
+        if(r.kind==='employment'&&r.status==='履行中'&&r.employer)out.push({kind:'employed_by',holder:'player',subject:actorId(engine.world,r.employer),terms:{contract:key}});
+        if(r.kind==='asset_lease'&&r.status==='有效'&&r.tenant&&r.subject)out.push({kind:'leases',holder:actorId(engine.world,r.tenant),subject:r.subject,terms:{contract:key,use:r.use??null}});
+        if(r.version===1&&r.kind==='lease'&&['待履行','有效'].includes(r.status)&&r.subject)out.push({kind:'leases',holder:r.parties?.[0]??'player',subject:r.subject,terms:{contract:key,use:'business'}});
+        return {holdings:out.filter(h=>h.holder&&h.subject&&h.holder!==h.subject&&(entityTemplates(engine,state,h.subject)??[]).length)};
+    },
+});
+
+// ---- equity：入股（contract kind equity，有效）→ 股份 share（份额 = 百分比 / 100）；未售出的份额记在发行组织自己名下，
+// 使同一标的份额之和恒为 1（I8）。发行人是个人（以其商号入股）时，设计上股份的标的须是组织或商号实体，旧数据无法表达，不进存储。
+defineHoldingSource('equity',{
+    recordCategories:['contract'],unitOfRecord:(state,key,row)=>row.kind==='equity'?row.issuer:null,
+    units:(engine,state)=>new Set(Object.values(state.records??{}).filter(r=>r?.category==='contract'&&r.kind==='equity'&&r.issuer).map(r=>r.issuer)),
+    extract(engine,state,issuer){
+        if(!(entityTemplates(engine,state,issuer)??[]).includes('collective'))return null;
+        const shares=new Map();
+        for(const r of Object.values(state.records??{}))if(r?.category==='contract'&&r.kind==='equity'&&r.issuer===issuer&&r.status==='有效'&&r.holder&&r.share>0){const h=actorId(engine.world,r.holder);shares.set(h,(shares.get(h)??0)+r.share/100);}
+        const sold=[...shares.values()].reduce((n,s)=>n+s,0);
+        if(!shares.size)return null;
+        if(sold<1-1e-9)shares.set(issuer,(shares.get(issuer)??0)+(1-sold));
+        return {holdings:[...shares].map(([holder,share])=>({kind:'share',holder,subject:issuer,terms:{share:Math.round(share*1e9)/1e9}}))};
+    },
+});
+
+// ---- business：本人的商号（business 记录，筹备 / 营业）→ 经营 operates（店主 → 商号）。 ----
+defineHoldingSource('business',{
+    recordCategories:['business'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='business').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='business'||!['筹备','营业'].includes(r.status)||!r.owner)return null;
+        return {holdings:[{kind:'operates',holder:actorId(engine.world,r.owner),subject:key}]};
+    },
+});
+
+// ---- property：建筑所有（作者数据的 owner、本局建成的 state.created 与 state.buildings 的 owner / owners 份额）→ owns{share} ----
+defineHoldingSource('property',{
+    paths:[{prefix:['state','buildings','*'],at:2},{prefix:['state','created','*'],at:2}],
+    units(engine,state){
+        const out=new Set();
+        for(const l of engine.world.locations??[])if(l.owner)out.add(l.id);
+        for(const [id,c] of Object.entries(state.created??{}))if(c?.type==='bld'&&c.owner)out.add(id);
+        for(const id of Object.keys(state.buildings??{}))out.add(id);
+        return out;
+    },
+    extract(engine,state,id){
+        // 只有物（建筑、设施）可被所有；作者数据里聚落“拥有”自己的街区、野外地点是公共地块，设计上由统治 / 管理表达，不进 owns。
+        if(!(entityTemplates(engine,state,id)??[]).includes('thing'))return null;
+        const row=state.buildings?.[id],base=state.created?.[id]??engine.byId?.get(id);
+        const owners=row?.owners&&Object.keys(row.owners).length?row.owners:null,owner=row?.owner??base?.owner??null;
+        const shares=owners?Object.entries(owners).filter(([,s])=>s>0):owner?[[owner,1]]:[];
+        return {holdings:shares.map(([h,s])=>({kind:'owns',holder:actorId(engine.world,h),subject:id,terms:{share:Math.round(s*1e9)/1e9}}))};
+    },
+});
+
+// ---- transport：车船与驮畜（作者数据的期初载具 + transport_asset 记录）→ owns（主人 → 载具）与位置事实（载具在地点）。 ----
+const openingAsset=(engine,key)=>openingTransportAssets.find(a=>a.id===key&&engine.byId?.has(a.owner)&&engine.byId?.has(a.location));
+defineHoldingSource('transport',{
+    recordCategories:['transport_asset'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>new Set([...openingTransportAssets.filter(a=>engine.byId?.has(a.owner)&&engine.byId?.has(a.location)).map(a=>a.id),
+        ...Object.entries(state.records??{}).filter(([,r])=>r?.category==='transport_asset').map(([k])=>k)]),
+    extract(engine,state,key){
+        const r=state.records?.[key]??openingAsset(engine,key);
+        if(!r||(r.durability??1)<=0)return null;
+        return {holdings:r.owner?[{kind:'owns',holder:actorId(engine.world,r.owner),subject:key,terms:{share:1}}]:[],
+            locations:r.location?[{entity:key,at:r.location,mode:'place'}]:[]};
+    },
+});
+
+// ---- tamed：生灵的主人（state.creatures.<id>.owner）→ tamed_by（主人 → 生灵）。法律归属 owns 待物种 ownable 数据，此处只记驯服。 ----
+defineHoldingSource('tamed',{
+    paths:[{prefix:['state','creatures','*','owner'],at:2}],
+    units:(engine,state)=>Object.entries(state.creatures??{}).filter(([,c])=>c?.owner).map(([k])=>k),
+    extract(engine,state,id){const c=state.creatures?.[id];return c?.owner?{holdings:[{kind:'tamed_by',holder:actorId(engine.world,c.owner),subject:id}]}:null;},
+});
+
+// ---- companion：同行（state.player.companions）→ companion（玩家 → 同行者）。 ----
+defineHoldingSource('companion',{
+    paths:[{prefix:['state','player','companions']}],
+    units:()=>['player'],
+    extract:(engine,state)=>({holdings:[...new Set(state.player?.companions??[])].map(id=>({kind:'companion',holder:'player',subject:actorId(engine.world,id)}))}),
+});
+
+// ---- faith：本人存下的信仰（actor.faith 或作者数据的 faith，带 temple）→ 信奉 devotee_of（人 → 教团）。
+// faith-state.faithOf 的其余推断（师承、同户、文化神）是读取派生，不在此列。 ----
+defineHoldingSource('faith',{
+    paths:[{prefix:['state','npcs','*','faith'],at:2},{prefix:['state','creatures','*','faith'],at:2},{prefix:['state','player','faith'],unit:'player'}],
+    units:(engine,state)=>new Set(['player',...[...engine.world.npcs??[],...engine.world.residents??[]].filter(p=>p.faith).map(p=>p.id),
+        ...Object.entries(state.npcs??{}).filter(([,n])=>n?.faith).map(([k])=>k),...Object.entries(state.creatures??{}).filter(([,n])=>n?.faith).map(([k])=>k)]),
+    extract(engine,state,id){
+        const a=id==='player'?state.player:state.npcs?.[id]??state.creatures?.[id],f=a?.faith??(id==='player'?null:engine.byId?.get(id)?.faith);
+        const temple=f?.temple;if(!temple||!(entityTemplates(engine,state,temple)??[]).includes('collective'))return null;
+        return {holdings:[{kind:'devotee_of',holder:id,subject:temple,terms:{aspect:f.deity??null}}]};
+    },
+});
+
+// ---- career：认证（玩家职业 state.professions、人物 state.npcs.<id>.certifications、作者数据 professions）→
+// certified（人 → 认证资格职位 office_cert:<职业>）；入门守戒（training_initiation，守戒中）与作者数据的“师父”→ 师承 mentor_of。 ----
+export const certificationOffice=profession=>`office_cert:${profession}`;
+const playerRoles=state=>[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean);
+const authoredRoles=p=>Array.isArray(p?.professions)?p.professions.map(x=>typeof x==='string'?x:x?.id).filter(Boolean):[];
+defineHoldingSource('career',{
+    paths:[{prefix:['state','professions'],unit:'player'},{prefix:['state','npcs','*','certifications'],at:2}],
+    recordCategories:['training_initiation'],unitOfRecord:()=>'player',
+    units:(engine,state)=>new Set(['player',...(engine.world.npcs??[]).filter(p=>authoredRoles(p).length||p.relationships?.some(r=>r.type==='师父')).map(p=>p.id),
+        ...Object.entries(state.npcs??{}).filter(([,n])=>n?.certifications&&Object.keys(n.certifications).length).map(([k])=>k)]),
+    extract(engine,state,id,ctx){
+        const roles=id==='player'?playerRoles(state):[...new Set([...Object.keys(state.npcs?.[id]?.certifications??{}),...authoredRoles(engine.byId?.get(id))])];
+        const valid=roles.filter(r=>/^profession_/.test(r)).sort();
+        const out=valid.map(r=>({kind:'certified',holder:id,subject:certificationOffice(r)}));
+        const teachers=new Set();
+        for(const r of engine.byId?.get(id)?.relationships??[])if(r.type==='师父'&&(!r.status||r.status==='有效'))teachers.add(r.with);
+        if(id==='player')for(const r of byCategory(state,'training_initiation',ctx))if(r.status==='守戒中'&&r.teacher)teachers.add(r.teacher);
+        for(const t of teachers)if(t!==id&&(entityTemplates(engine,state,t)??[]).includes('agent'))out.push({kind:'mentor_of',holder:actorId(engine.world,t),subject:id});
+        return {entities:valid.map(r=>({id:certificationOffice(r),kind:'office',facts:{profession:r}})),holdings:out};
+    },
+});
+
+// ---- permit：授权（authorization，未撤回；授予者 → 受权人与同行者）与宅基许可（housing_permit，未收回）→ 许可 permit{scope}。 ----
+defineHoldingSource('permit',{
+    recordCategories:['authorization','housing_permit'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='authorization'||r?.category==='housing_permit').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(!r)return null;
+        let grantor,grantees,scope;
+        if(r.category==='authorization'){if(r.revoked)return null;grantor=r.grantor;grantees=[r.grantee,...r.guests??[]];scope=r.action??null;}
+        else if(r.category==='housing_permit'){if(r.status==='已收回')return null;grantor=r.steward;grantees=[r.holder];scope='housing_plot';}
+        else return null;
+        grantor=grantor?actorId(engine.world,grantor):null;
+        if(!grantor||!(entityTemplates(engine,state,grantor)??[]).some(t=>['agent','collective','office'].includes(t)))return null;
+        return {holdings:[...new Set(grantees.filter(Boolean).map(g=>actorId(engine.world,g)))].filter(g=>g!==grantor&&(entityTemplates(engine,state,g)??[]).includes('agent'))
+            .map(g=>({kind:'permit',holder:grantor,subject:g,terms:{scope,record:key}}))};
+    },
+});
+
+// ---- lair：首领巢穴（lair 记录，驻守）→ 控制 controls（占据者 → 巢穴）。 ----
+defineHoldingSource('lair',{
+    recordCategories:['lair'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='lair').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='lair'||r.status!=='驻守'||!r.lair)return null;
+        const who=r.occupant?.actor??r.occupant?.definition??r.boss;if(!who)return null;
+        return {holdings:[{kind:'controls',holder:actorId(engine.world,who),subject:r.lair}]};
+    },
+});
+
+// ---- branch：钱庄网点（作者数据 rules.economy.credit.banks：钱庄 → 柜台所在建筑）。 ----
+defineHoldingSource('branch',{
+    units:engine=>(engine.rules?.economy?.credit?.banks??[]).map(b=>b.id),
+    extract(engine,state,id){const b=(engine.rules?.economy?.credit?.banks??[]).find(x=>x.id===id);return b?.location?{holdings:[{kind:'branch',holder:id,subject:b.location}]}:null;},
+});
+
+// ---- item：物品个体的位置事实（state.itemInstances）：持有中 → 随身（owner 为个体时），容器内 → container，封存在某处 → 地点。 ----
+// 旧字段的 owner 是“东西在谁手里”（占有），不是法律归属；所有权 owns 的个体化留待物品实体化。
+defineHoldingSource('item',{
+    paths:[{prefix:['state','itemInstances','*'],at:2}],
+    units:(engine,state)=>Object.keys(state.itemInstances??{}),
+    extract(engine,state,id){
+        const u=state.itemInstances?.[id];if(!u)return null;
+        if(u.container&&state.itemInstances?.[u.container])return {locations:[{entity:id,at:u.container,mode:'container'}]};
+        if(u.status==='持有'&&u.owner&&(entityTemplates(engine,state,actorId(engine.world,u.owner))??[]).includes('agent'))return {locations:[{entity:id,at:actorId(engine.world,u.owner),mode:'carried'}]};
+        if(u.status==='封存'&&u.location)return {locations:[{entity:id,at:u.location,mode:'place'}]};
+        return null;
+    },
+});
+
+// ---- 实体化：遗产（family.deaths 的遗产分配）、议案（组织 / 聚落 / 怪物社会的议案记录）、残骸（生灵尸体）。 ----
+// 遗产：旧实现当刻“先分后还”，所以遗产实体在死亡事件里开立即已关闭（phase closed）；S2b 改为按程序阶段清偿分配。
+defineHoldingSource('estate',{
+    paths:[{prefix:['state','family','deaths','*'],at:3}],goneBasis:'dissolution',
+    units:(engine,state)=>Object.entries(state.family?.deaths??{}).filter(([,r])=>r?.estate).map(([k])=>k),
+    extract(engine,state,id){
+        const r=state.family?.deaths?.[id];if(!r?.estate)return null;
+        return {entities:[{id:`estate_${id}`,kind:'estate',facts:{deceased:r.person,heirs:[...r.estate.heirs??[]],phase:'closed'}}]};
+    },
+});
+const MOTIONS=['organization_proposal','governance_proposal','society_motion'];
+defineHoldingSource('motion',{
+    recordCategories:MOTIONS,unitOfRecord:(state,key)=>key,goneBasis:'dissolution',
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>MOTIONS.includes(r?.category)).map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(!MOTIONS.includes(r?.category))return null;
+        return {entities:[{id:`motion_${key}`,kind:'motion',facts:{body:r.org??r.settlement??r.society??null,phase:r.status??null}}]};
+    },
+});
+defineHoldingSource('wreck',{
+    paths:[{prefix:['state','creatures','*','corpse'],at:2}],goneBasis:'destruction',
+    units:(engine,state)=>Object.entries(state.creatures??{}).filter(([,c])=>c?.corpse).map(([k])=>k),
+    extract(engine,state,id){
+        const c=state.creatures?.[id];if(!c?.corpse)return null;
+        const wreck=`wreck_${id}:${c.incarnation??0}`;
+        return {entities:[{id:wreck,kind:'wreck',facts:{of:id,species:c.species??null,phase:c.corpse.status??null}}],locations:c.location?[{entity:wreck,at:c.location,mode:'place'}]:[]};
     },
 });

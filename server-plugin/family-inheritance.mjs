@@ -7,7 +7,7 @@ import {rosterLifeState} from './population.mjs';
 import {transferItems} from './items.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings,syncHoldingRecord} from './holding-sources.mjs';
 declareHoldingWriter('family-inheritance',{kinds:['holds_office','fief','guardian_of','owns','share'],entities:['office','estate']});
 
@@ -38,7 +38,7 @@ function guardianship(d,e,ward,from,deathId,minute,coins){
  const guardian=pool[0]??null,id=`guardianship:${deathId}:${ward}`,age=npcAgeAt(e,s,ward,minute);
  const profile=s.family?.people?.[ward]??s.created?.[ward]??e.byId.get(ward),adult=e.rules.npcLife?.adultAge??18;
  const expires=profile?.birth?((profile.birth.year-1+adult)*360+(profile.birth.month-1)*30+profile.birth.day-1)*DAY:age===null?null:Math.max(minute,(adult-(profile?.age??age))*YEAR);
- d.set(rec(id),{category:'guardianship',id,ward,guardian,family,estate:deathId,since:minute,expires,status:guardian?'代管中':'待指定',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],receivedCoins:coins,ledger:[],sourceEvent:deathId});
+ holdingSet(d,null,rec(id),{category:'guardianship',id,ward,guardian,family,estate:deathId,since:minute,expires,status:guardian?'代管中':'待指定',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],receivedCoins:coins,ledger:[],sourceEvent:deathId},'family-inheritance');
  entityTransition(d,e,{id:`${id}:appoint`,verb:'appoint',actor:guardian??family,target:ward,minute,location:npcHousehold(e,s,ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],summary:guardian?'未成年继承人的财产由监护人记账代管':'未成年继承人的财产保留本人名下，等待指定监护人'});
  return id;
 }
@@ -50,7 +50,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
  const heirs=selection.heirs.filter(x=>d.get('state','npcs',x)),current=d.get(...actorPath(e.world,id));
  const estate={heir:heirs[0]??null,heirs,rule,coins:current.coins??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts:Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort(),guardianships:[]};
  if(!heirs.length){
-  for(const [key,row]of Object.entries(s.records??{}))if(row.holder===id&&(row.category==='title'&&row.status!=='已除爵'||row.category==='governance_office'&&row.status==='在任')){d.set(rec(key),{...row,status:row.category==='title'?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，无可继承人'});syncHoldingRecord(d,e,key,{writer:'family-inheritance',eventId:deathId});}
+  for(const [key,row]of Object.entries(s.records??{}))if(row.holder===id&&(row.category==='title'&&row.status!=='已除爵'||row.category==='governance_office'&&row.status==='在任')){holdingSet(d,null,rec(key),{...row,status:row.category==='title'?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，无可继承人'},'family-inheritance');syncHoldingRecord(d,e,key,{writer:'family-inheritance',eventId:deathId});}
   return estate;
  }
  const rowFor=who=>estate.allocations.find(r=>r.heir===who);
@@ -65,19 +65,19 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
   const owned=row.owners?.[id]??1,owners={...row.owners};delete owners[id];
   estate.propertyOwners={...estate.propertyOwners,[asset]:{...owners}};
   for(const heir of heirs){owners[heir]=(owners[heir]??0)+owned/heirs.length;rowFor(heir).assets.push(asset);rowFor(heir).propertyShares={...rowFor(heir).propertyShares,[asset]:owned/heirs.length};}
-  d.set(['state','buildings',asset],{...row,owner:Object.keys(owners).length===1?heirs[0]:natalFamily(e,s,id),owners,inheritedAt:minute,inheritance:deathId});
+  holdingSet(d,null,['state','buildings',asset],{...row,owner:Object.keys(owners).length===1?heirs[0]:natalFamily(e,s,id),owners,inheritedAt:minute,inheritance:deathId},'family-inheritance');
  }
  for(const [key,row]of Object.entries(s.records??{})){
   if(row.category==='title'&&row.holder===id&&row.status!=='已除爵'||row.category==='governance_office'&&row.holder===id&&row.status==='在任'){
    const title=row.category==='title',successor=title?selection.children[0]??heirs[0]:row.hereditary===true&&rule.office==='hereditary'?selection.children[0]??heirs[0]:null;
-   d.set(rec(key),{...row,...(successor?{holder:successor,previousHolder:id,inheritedAt:minute,inheritance:deathId,...(!familyAdult(e,s,successor,minute)?{heldInMinority:true}:{})}:{status:title?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，职位不世袭'})});
+   holdingSet(d,null,rec(key),{...row,...(successor?{holder:successor,previousHolder:id,inheritedAt:minute,inheritance:deathId,...(!familyAdult(e,s,successor,minute)?{heldInMinority:true}:{})}:{status:title?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，职位不世袭'})},'family-inheritance');
    syncHoldingRecord(d,e,key,{writer:'family-inheritance',eventId:deathId});
    if(successor){materialize(d,e,successor,minute);if(!heirs.includes(successor)&&!familyAdult(e,s,successor,minute))estate.guardianships.push(guardianship(d,e,successor,id,deathId,minute,0));}
    entityTransition(d,e,{id:`${deathId}:succession:${key}`,verb:successor?'appoint':'dismiss',actor:id,target:successor,minute,location,tags:['family','succession'],summary:successor?'持有人死亡，按当地规则承接称号或世袭职务':'持有人死亡，任职终止'});
   }
   if(row.category==='equity'&&row.holder===id&&row.status==='有效'){
-   d.set(rec(key),{...row,status:'已继承',inheritance:deathId});
-   for(const heir of heirs){const next=`${key}:inherit:${deathId}:${heir}`;d.set(rec(next),{...row,id:next,holder:heir,share:row.share/heirs.length,stake:(row.stake??0)/heirs.length,distributed:(row.distributed??0)/heirs.length,inheritance:deathId});rowFor(heir).assets.push(next);}
+   holdingSet(d,null,rec(key),{...row,status:'已继承',inheritance:deathId},'family-inheritance');
+   for(const heir of heirs){const next=`${key}:inherit:${deathId}:${heir}`;holdingSet(d,null,rec(next),{...row,id:next,holder:heir,share:row.share/heirs.length,stake:(row.stake??0)/heirs.length,distributed:(row.distributed??0)/heirs.length,inheritance:deathId},'family-inheritance');rowFor(heir).assets.push(next);}
   }
   // Keep the original debt and collateral together. Co-heirs acquire explicit
   // shares of the same claim/liability instead of duplicating its principal.
@@ -87,7 +87,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
    for(const {id:heir,amount}of portions(account,heirs)){
     accounts[heir]=(accounts[heir]??0)+amount;rowFor(heir).assets.push(`${key}:account`);
    }
-   d.set(rec(key),{...row,accounts});
+   holdingSet(d,null,rec(key),{...row,accounts},'family-inheritance');
   }
  }
  for(const allocation of estate.allocations){
@@ -104,8 +104,8 @@ export function advanceGuardianships(d,e,minute){
  for(const r of Object.values(d.get('state','records')??{}).filter(r=>r.category==='guardianship'&&['代管中','待指定'].includes(r.status))){
   const s=d.get('state');
   if(familyAdult(e,s,r.ward,minute)||!familyLiving(s,r.ward)){
-   d.set(rec(r.id),{...r,status:'已结束',endedAt:minute,reason:familyLiving(s,r.ward)?'继承人已成年':'继承人死亡'});
+   holdingSet(d,null,rec(r.id),{...r,status:'已结束',endedAt:minute,reason:familyLiving(s,r.ward)?'继承人已成年':'继承人死亡'},'family-inheritance');
    entityTransition(d,e,{id:`${r.id}:end`,verb:'transfer',actor:r.guardian,target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],summary:'监护任期结束，结束财产代管'});
-  }else if(r.guardian&&!familyAdult(e,s,r.guardian,minute))d.set(rec(r.id),{...r,guardian:null,status:'待指定',previousGuardian:r.guardian});
+  }else if(r.guardian&&!familyAdult(e,s,r.guardian,minute))holdingSet(d,null,rec(r.id),{...r,guardian:null,status:'待指定',previousGuardian:r.guardian},'family-inheritance');
  }
 }

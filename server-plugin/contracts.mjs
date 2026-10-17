@@ -4,6 +4,8 @@ declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
 const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
@@ -36,16 +38,16 @@ export function createBusinessContract(d,{kind,parties,subject,quantity,deadline
     const row={...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
         escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]};
     row.signedTerms=structuredClone(signedTerms(row));
-    d.set(contractPath(id),row);return row;
+    holdingSet(d,null,contractPath(id),row,'contracts');return row;
 }
 export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,paid=row.paid,reason,by,source}){
     const minute=d.get('state','minute'),next={...row,status,fulfilled,paid,resolvedAt:minute,
         performance:[...row.performance,{status,quantity:fulfilled,paid,minute,source}],
         breaches:reason?[...row.breaches,{reason,by,minute,source}]:row.breaches};
-    d.set(contractPath(row.id),next);return next;
+    holdingSet(d,null,contractPath(row.id),next,'contracts');return next;
 }
 export function refundContractEscrow(d,row){
-    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:purse(null,'player'),amount:row.escrow,writer:'contracts'});d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};d.set(contractPath(row.id),row);}
+    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:purse(null,'player'),amount:row.escrow,writer:'contracts'});d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');}
     return row;
 }
 export function releaseBusinessLease(d,engine,row,{status='已终止',reason,source}={}){
@@ -56,7 +58,7 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
         if(used){const paid=debt.paid+used;
             moveCoins(d,{from:escrowAccount(row.id),to:purse(engine,debt.creditor),amount:used,writer:'contracts'});
             d.set([...engine.actorPath(debt.creditor),'coins'],engine.actor(d,debt.creditor).coins+used);
-            d.set(contractPath(row.debt),{...debt,paid,status:paid===debt.amount?'已还清':debt.status,...(paid===debt.amount?{paidAt:d.get('state','minute')}:{})});
+            holdingSet(d,null,contractPath(row.debt),{...debt,paid,status:paid===debt.amount?'已还清':debt.status,...(paid===debt.amount?{paidAt:d.get('state','minute')}:{})},'contracts');
         }
     }
     row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
@@ -87,7 +89,7 @@ export function chargeTrade(d,engine,{buyer,seller,cost,payment='cash',creditMin
     const id=`debt_${eventId}`;if(d.get('state','records',id))throw new Error('欠款编号已存在');
     const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:cost,paid:0,createdAt:d.get('state','minute'),
         deadline:d.get('state','minute')+minutes,status:'待偿还',source:eventId};
-    d.set(['state','records',id],debt);
+    holdingSet(d,null,['state','records',id],debt,'contracts');
     return{debt:id,amount:cost,deadline:debt.deadline,payment:'credit'};
 }
 export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
@@ -98,8 +100,8 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     chargeTrade(d,engine,{buyer,seller,cost:amount},eventId);
     // Settling a credit sale taxes the same goods a cash sale would (finance-tax.mjs taxableSale).
     if(row.sale){const tax=taxableSale(engine,d.get('state'),seller,row.sale.item)?assessTradeTax(d,engine,{seller,cost:amount,location:row.sale.location,sourceEvent:eventId}):{amount:0};recordFinanceSale(d,engine,{...row.sale,settledBasis:row.sale.basis,tax:tax.amount,eventId});}
-    d.set(['state','records',id],{...row,paid:row.amount,status:'已还清',paidAt:d.get('state','minute')});
-    for(const[key,contract]of Object.entries(d.get('state','records')??{}))if(contract.category==='contract'&&contract.debt===id)d.set(['state','records',key],{...contract,paid:row.amount});
+    holdingSet(d,null,['state','records',id],{...row,paid:row.amount,status:'已还清',paidAt:d.get('state','minute')},'contracts');
+    for(const[key,contract]of Object.entries(d.get('state','records')??{}))if(contract.category==='contract'&&contract.debt===id)holdingSet(d,null,['state','records',key],{...contract,paid:row.amount},'contracts');
     engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}铜`);
     return{debt:id,cost:amount,status:'已还清'};
 }
@@ -115,7 +117,7 @@ export function advanceContracts(d,engine,minute){
                     :finishBusinessContract(d,refundContractEscrow(d,row),{status:'违约',reason,by:row.parties[1],source:id});
                 if(row.kind==='lease'){
                     const shop=d.get('state','records',row.business);
-                    if(shop&&['筹备','营业'].includes(shop.status))d.set(contractPath(shop.id),{...shop,status:'停业',reason:reason??'租赁到期',endedAt:minute});
+                    if(shop&&['筹备','营业'].includes(shop.status))holdingSet(d,null,contractPath(shop.id),{...shop,status:'停业',reason:reason??'租赁到期',endedAt:minute},'contracts');
                     for(const pending of Object.values(d.get('state','records')??{}))if(pending.category==='contract'&&pending.version===1&&pending.business===row.business&&pending.status==='待履行'){
                         finishBusinessContract(d,refundContractEscrow(d,pending),{status:'已取消',reason:'铺面租赁结束',by:'player',source:id});
                     }
@@ -124,10 +126,10 @@ export function advanceContracts(d,engine,minute){
             }
         }
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
-            d.set(['state','records',id],{...row,status:'已到期'});d.say(`${row.name}已到期，需要退房或另行续住`);
+            holdingSet(d,null,['state','records',id],{...row,status:'已到期'},'contracts');d.say(`${row.name}已到期，需要退房或另行续住`);
         }
         if(row.category==='debt'&&row.status==='待偿还'&&row.deadline<=minute){
-            d.set(['state','records',id],{...row,status:'逾期',overdueAt:row.deadline});
+            holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:row.deadline},'contracts');
             if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
             d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}铜已到期，尚未偿还`);
         }

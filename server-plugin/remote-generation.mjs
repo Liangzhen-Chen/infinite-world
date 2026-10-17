@@ -10,9 +10,9 @@ import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
-declareHoldingWriter('remote-generation',{kinds:['holds_office'],entities:['office']});
+declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by'],entities:['office','wreck'],locations:true});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -570,7 +570,7 @@ export function unfoldRemoteAt(d,engine,location){
         const missingLedger=!d.get('state','settlements',s.id);
         if(missingLedger)d.set(['state','settlements',s.id],{name:s.name,population:s.population,food:0,wood:0,stone:0,iron:0,treasury:0});
         const patches=planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters??[]);
-        for(const patch of patches)d.set(patch.path,patch.value);
+        for(const patch of patches)holdingSet(d,engine,patch.path,patch.value,'remote-generation');
         return missingLedger||patches.length?{version:REMOTE_VERSION,kind:'tribal',settlement:s.id,habitats:habitats.map(h=>h.id)}:null;
     }
     if(!county||d.get('state','remote',county))return null;

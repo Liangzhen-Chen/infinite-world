@@ -21,6 +21,8 @@ import {personView,personOffices,settlementGovernment,settlementPopulation} from
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {purse} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic-economy',{kinds:['permit']});
 declareLedgerWriter('magic-economy');
 
 const DAY=1440,MONTH=30*DAY,SEASON=90*DAY,KINDS=['preserve','irrigate','growth','purify'],MODES=['fee','license','restrict'];
@@ -86,7 +88,7 @@ export function recordMagicEconomy(d,catalog,effect,eventId){
  if(kind==='irrigate')out.field=irrigate(d,this,row,sid,cfg,minute);
  row.casts.push(cast);
  const regulation=regulate(d,this,row,sid,r,minute,eventId,location);if(regulation)out.regulation=regulation;
- d.set(['state','records',key(sid)],row);
+ holdingSet(d,null,['state','records',key(sid)],row,'magic-economy');
  return out;
 }
 function irrigate(d,engine,row,sid,cfg,minute){
@@ -103,7 +105,7 @@ function irrigate(d,engine,row,sid,cfg,minute){
    const used=ir.cohorts[c.id]??0,add=round(Math.max(0,Math.min(bonus,cfg.maximumYieldBonusPermille-used)));if(!add)continue;
    c.qualitySum*=1+add/1000;ir.cohorts[c.id]=round(used+add);given=Math.max(given,add);
   }
-  if(given)d.set(['state','records',farmKey],f);
+  if(given)holdingSet(d,null,['state','records',farmKey],f,'magic-economy');
   return {areaUnits:cfg.areaUnitsPerCast,managed:true,bonusPermille:given};
  }
  const bonus=cfg.yieldBonusPermille*Math.min(1,cfg.areaUnitsPerCast/cfg.unmanagedFieldAreaUnits);
@@ -132,7 +134,7 @@ function regulate(d,engine,row,sid,r,minute,eventId,location){
   if(coins<copper||!account)return false;
   d.set(['state','player','coins'],coins-copper);
   changeGroupCoins(d,engine,sid,copper,{kind:'生活魔法收费',levy:kind,collector:government.head.value,minute,sourceEvent:eventId},{account:purse(engine,'player'),writer:'magic-economy',eventId});
-  d.set(['state','records',`magic-levy:${eventId}`],{category:'magic_levy',settlement:sid,collector:government.head.value,kind,copper,month,minute,sourceEvent:eventId});
+  holdingSet(d,null,['state','records',`magic-levy:${eventId}`],{category:'magic_levy',settlement:sid,collector:government.head.value,kind,copper,month,minute,sourceEvent:eventId},'magic-economy');
   row.ledger.feesCopper+=copper;return true;
  };
  if(rule.maximumCastsPerMonth&&count>rule.maximumCastsPerMonth)return violation('magic_over_quota',0);
@@ -140,8 +142,8 @@ function regulate(d,engine,row,sid,r,minute,eventId,location){
   const licence=`magic-licence:${sid}:${month}`,held=state.records?.[licence];
   if(held?.category==='authorization'&&!held.revoked&&held.expires>minute)return {...out,licence};
   if(!pay(rule.licenseCopper,'licence'))return violation('magic_unlicensed',rule.licenseCopper);
-  d.set(['state','records',licence],{category:'authorization',action:'trade_magic',subject:'player',grantee:'player',grantor:sid,settlement:sid,
-   createdAt:minute,expires:(month+1)*MONTH,revoked:false,sourceType:'magic_economy_licence',fee:rule.licenseCopper,sourceEvent:eventId});
+  holdingSet(d,null,['state','records',licence],{category:'authorization',action:'trade_magic',subject:'player',grantee:'player',grantor:sid,settlement:sid,
+   createdAt:minute,expires:(month+1)*MONTH,revoked:false,sourceType:'magic_economy_licence',fee:rule.licenseCopper,sourceEvent:eventId},'magic-economy');
   return {...out,licence,paid:rule.licenseCopper};
  }
  if(rule.feeCopper){
@@ -171,7 +173,7 @@ export function preservedSpoilage(d,engine,sid,day,spoil,food){
  const saved=Math.min(spoil,Math.floor(spoil*Math.min(1,covered/(food*30))*cfg.lossCutPermille/1000));
  if(!saved)return 0;
  const next=structuredClone(row);next.ledger.preserveSaved+=saved;next.spoilage=[...(next.spoilage??[]),{day,spoil,saved}].slice(-12);
- d.set(['state','records',key(sid)],next);return saved;
+ holdingSet(d,null,['state','records',key(sid)],next,'magic-economy');return saved;
 }
 // Unmanaged fields: this season's irrigation raises the daily output.
 export function magicYieldFactor(state,sid,minute){
@@ -252,6 +254,6 @@ export function advanceMagicEconomy(d,engine,{before,after}){
  const keys=Object.keys(d.get('state','records')??{}).filter(k=>k.startsWith('magic-economy:'));if(!keys.length)return;
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++)for(const k of keys){
   const row=structuredClone(d.get('state','records',k));if(row?.category!=='magic_economy')continue;
-  settleDay(d,engine,row,day*DAY);d.set(['state','records',k],row);
+  settleDay(d,engine,row,day*DAY);holdingSet(d,null,['state','records',k],row,'magic-economy');
  }
 }

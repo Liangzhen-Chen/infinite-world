@@ -123,8 +123,8 @@ export const holdingRow=(d,id)=>rowOf(d,id);
 const EPS=1e-9;
 function checkTemplates(d,kind,holder,subject,engine){
     const h=templatesOf(d,holder,engine),s=templatesOf(d,subject,engine);
-    if(!h)throw new HoldingRejected('E-HOLDING-ENTITY','持有人不存在',`${kind}: ${holder}`);
-    if(!s)throw new HoldingRejected('E-HOLDING-ENTITY','标的不存在',`${kind}: ${subject}`);
+    if(!h)throw new HoldingRejected('E-HOLDING-ENTITY','持有人不存在',`${kind.id}: ${holder}`);
+    if(!s)throw new HoldingRejected('E-HOLDING-ENTITY','标的不存在',`${kind.id}: ${subject}`);
     if(!h.some(t=>kind.holderKinds.includes(t)))throw new HoldingRejected('E-HOLDING-TEMPLATE',`${kind.label}的持有人不能是这类实体`,`${kind.id}: ${holder} 为 ${h.join('/')}`);
     if(!s.some(t=>kind.subjectKinds.includes(t)))throw new HoldingRejected('E-HOLDING-TEMPLATE',`${kind.label}的标的不能是这类实体`,`${kind.id}: ${subject} 为 ${s.join('/')}`);
 }
@@ -274,6 +274,13 @@ export function located(d,entity,placeOf=()=>null){
     while(x&&!seen.has(x)){seen.add(x);const l=locationOf(d,x);if(!l)return placeOf(x)??null;if(l.mode==='place')return l.at;x=l.at;}
     return null;
 }
+
+// ---- 旧写入点的包装（L0 入口，内核与各层共用）：d.set / d.remove 之后通知 L1 适配器按写入路径双写 ----
+// L1（holding-sources.mjs）登记观察者；本模块只转发，不知道哪些路径对应哪些持有。
+let observer=null;
+export function registerHoldingObserver(fn){const prev=observer;observer=fn;return prev;}
+export function holdingSet(d,engine,path,value,writer,eventId=null){d.set(path,value);observer?.(d,engine,path,writer,eventId);return value;}
+export function holdingRemove(d,engine,path,writer,eventId=null){d.remove(path);observer?.(d,engine,path,writer,eventId);}
 
 // ---- 世界版本更新（包升级）的折算 ------------------------------------------------------
 const upgrades=new Map();

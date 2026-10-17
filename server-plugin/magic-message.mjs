@@ -3,6 +3,8 @@ import {localPlayerPoint}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {heldUnit}from'./items.mjs';
 import {enforceLegalRestriction}from'./law.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic-message',{kinds:['permit']});
 export const messageKinds=Object.freeze(['message','mind_message','consent_link','team_link']);
 const moods=Object.freeze(['平静','紧张','高兴','难过']),rhythms=Object.freeze(['前进','撤退','防守','合围','停步']);
 const permissionLabels={mental_message:'接收限距传讯',consent_link:'自愿精神连接',team_link:'多人战术节奏连接'};
@@ -122,13 +124,13 @@ function cancelMessages(d,id,reason,member){
 }
 function endLink(d,id,reason,minute){
  const e=d.get('state','effects',id);if(!e)return;
- d.set(['state','records',`ended_link:${id}`],{category:'ended_magic_link',sourceEvent:e.source,target:e.target,endedAt:minute,reason,spentMp:e.spentMp});d.remove(['state','effects',id]);cancelMessages(d,id,reason);
+ holdingSet(d,null,['state','records',`ended_link:${id}`],{category:'ended_magic_link',sourceEvent:e.source,target:e.target,endedAt:minute,reason,spentMp:e.spentMp},'magic-message');d.remove(['state','effects',id]);cancelMessages(d,id,reason);
 }
 function removeMember(d,id,member,reason,minute){
  const e=d.get('state','effects',id);if(!e)return;
  if(e.kind!=='team_link'){endLink(d,id,reason,minute);return;}
  const members={...e.members};delete members[member];cancelMessages(d,id,reason,member);
- d.set(['state','effects',id,'members'],members);d.set(['state','records',`link_departure:${id}:${member}`],{category:'magic_link_departure',sourceEvent:e.source,member,minute,reason});
+ d.set(['state','effects',id,'members'],members);holdingSet(d,null,['state','records',`link_departure:${id}:${member}`],{category:'magic_link_departure',sourceEvent:e.source,member,minute,reason},'magic-message');
  if(Object.keys(members).length<2)endLink(d,id,'多人连接人数不足',minute);
 }
 function validMember(d,engine,e,id,until){
@@ -190,7 +192,7 @@ export function magicMessagePermission(d,engine,args,eventId){
  if(args.operation==='revoke_access'){
   if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==target||old.grantee!=='player')throw Error('只有原签发本人能收回精神同意');
   if(old.revoked)return{authorization:args.authorization,consent:old,duplicate:true};
-  const permission={...old,revoked:true,revokedAt:now,revokedBy:target};d.set(['state','records',args.authorization],permission);
+  const permission={...old,revoked:true,revokedAt:now,revokedBy:target};holdingSet(d,null,['state','records',args.authorization],permission,'magic-message');
   for(const[id,e]of Object.entries(d.get('state','effects')??{}))if(isEffect(e)&&membersOf(e)[target]?.authorization===args.authorization)removeMember(d,id,target,'本人收回同意',now);
   rememberConsent(d,target,action,eventId,true);d.say(`${base.name}收回了${permissionLabels[action]}同意`);return{authorization:args.authorization,consent:permission};
  }
@@ -204,7 +206,7 @@ export function magicMessagePermission(d,engine,args,eventId){
  for(const id of guests){if(engine.byId.get(id)?.tier!=='full'||!awake(d.get('state','npcs',id))||d.get('state','npcs',id,'location')!==actor.location)throw Error('多人许可名单须是本人实际在场的清醒成员');messageDistance(d,engine,id);}
  const authorization=`permission_${eventId}`;if(d.get('state','records',authorization))throw Error('精神同意编号已经存在');
  const permission={category:'authorization',action,subject:target,grantor:target,grantee:'player',createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId,...(action==='team_link'?{recipients:['player',...guests]}:{})};
- d.set(['state','records',authorization],permission);rememberConsent(d,target,action,eventId,false);d.say(`${base.name}同意${permissionLabels[action]}，许可至${engine.formatCalendar(permission.expires)}`);
+ holdingSet(d,null,['state','records',authorization],permission,'magic-message');rememberConsent(d,target,action,eventId,false);d.say(`${base.name}同意${permissionLabels[action]}，许可至${engine.formatCalendar(permission.expires)}`);
  return{authorization,consent:permission};
 }
 

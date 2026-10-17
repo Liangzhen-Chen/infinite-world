@@ -85,6 +85,8 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('engine',{kinds:['companion','lodges']});
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
@@ -338,8 +340,8 @@ export class WorldEngine {
             const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
-            d.set(['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,
-                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`});
+            holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,
+                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`},'engine');
             this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
         }
         if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -534,7 +536,7 @@ export class WorldEngine {
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
             d.set(['state','obligations',key,'status'],'已完成');d.say(`${this.byId.get(obligation.promisor).name}的带路约定已完成`);
             const stillGuiding=Object.values(d.get('state','obligations')).some(row=>row.type==='带路'&&row.promisor===obligation.promisor&&row.status==='进行中');
-            if(!stillGuiding&&this.byId.get(obligation.promisor)?.schedule)d.set(['state','player','companions'],d.get('state','player','companions').filter(npc=>npc!==obligation.promisor));
+            if(!stillGuiding&&this.byId.get(obligation.promisor)?.schedule)holdingSet(d,null,['state','player','companions'],d.get('state','player','companions').filter(npc=>npc!==obligation.promisor),'engine');
         }
         // Daily ecology or migration can remove a predicted animal while travelling.
         // A vanished lead must not strand the player at an otherwise unrequested stop.
@@ -573,7 +575,7 @@ export class WorldEngine {
         const p=d.get('state','player'),loss=p.level<10?p.level*10:xpRequired(p.level);
         if(p.status==='死亡')return;
         d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.set(['state','player','status'],'死亡');d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
-        d.set(['state','player','companions'],[]);
+        holdingSet(d,null,['state','player','companions'],[],'engine');
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
     }
     revive(d,args,id) {
@@ -690,7 +692,7 @@ export class WorldEngine {
             const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.document.randomSeed);
             routePreview={from,destination:obligation.destination,minutes:route.minutes,movingMinutes:route.movingMinutes,cost:route.cost,calculatedAt,estimate:true};
             if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))throw new Error('带路者必须在场');
-            obligation.status='进行中';d.set(['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])]);
+            obligation.status='进行中';holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])],'engine');
         }
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
         if(type==='付款'){

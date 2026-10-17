@@ -3,6 +3,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
 import {assertTrainingRitual} from './training.mjs';
 import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
 // 年岁按需计算，不为每只野兽每日写账；灵地、随人经历、灵物、点化和时钟各自记来源。
@@ -35,13 +37,13 @@ function blankMind(day){return{version:1,firstDay:day,points:{experience:0,place
 function awaken(d,engine,id,kind,minute,sourceEvent){
     const actor=d.get('state','creatures',id),rules=engine.rules.wildlifeAwakening;
     const formerOwner=actor.owner??null,mind={...clone(actor.mind),awakened:{stage:'立意',kind,minute,sourceEvent,formerOwner}};
-    d.set(['state','creatures',id,'mind'],mind);
+    holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-awakening');
     if(formerOwner==='player'){
         const pet=d.get('state','pets',id);
         if(pet)d.set(['state','pets',id],{...pet,status:'已解除',following:false,ended:minute,endedReason:'立意自主'});
         if(d.get('state','player','mount')===id)d.remove(['state','player','mount']);
-        d.set(['state','creatures',id,'owner'],null);
-        d.set(['state','creatures',id,'companion'],{with:'player',consent:true,since:minute,sourceEvent,formerPet:true,terms:clone(rules.pactTerms)});
+        holdingSet(d,null,['state','creatures',id,'owner'],null,'wildlife-awakening');
+        holdingSet(d,null,['state','creatures',id,'companion'],{with:'player',consent:true,since:minute,sourceEvent,formerPet:true,terms:clone(rules.pactTerms)},'wildlife-awakening');
     }
     d.say(`${actor.name??id}已立意，能以声响和动作表达意愿，可以交流${formerOwner==='player'?'；原宠物归属已解除，改为双方同意的结缘':''}`);
     return mind.awakened;
@@ -62,7 +64,7 @@ export function advanceWildlifeAwakening(d,engine,day){
         const mind=clone(actor.mind??blankMind(day));let changed=false;
         if(land){mind.points.place+=land.pointsPerDay;mind.placeDays[land.location]=(mind.placeDays[land.location]??0)+1;changed=true;}
         if(companion&&mind.points.experience<rules.experience.maximumPoints){mind.points.experience=Math.min(rules.experience.maximumPoints,mind.points.experience+rules.experience.pointsPerDay);changed=true;}
-        if(changed)d.set(['state','creatures',id,'mind'],mind);
+        if(changed)holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-awakening');
         settle(d,engine,id,'natural',minute,`wildlife-awakening:${id}:${day}`);
     }
     advanceSpiritSocieties(d,engine,day);
@@ -71,7 +73,7 @@ function addSource(d,id,day,kind,points,row){
     const actor=d.get('state','creatures',id),mind=clone(actor.mind??blankMind(day));
     mind.points[kind]+=points;mind.sources.push({kind,points,...row});
     if(kind==='item')mind.lastItemDay=day;if(kind==='mentor')mind.lastMentorDay=day;
-    d.set(['state','creatures',id,'mind'],mind);
+    holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-awakening');
 }
 export function validateWildlifeAwakening(world){
     const r=world.rules.wildlifeAwakening,errors=[];if(!r)return errors;
@@ -123,7 +125,7 @@ export function awakeningAction(d,args,eventId,target){
         this.advance(d,rules.pactMinutes,eventId);
         if(!present())return{success:false,note:'结缘完成前一方离开或失去行动能力'};
         const companion={with:'player',consent:true,since:d.get('state','minute'),sourceEvent:eventId,formerPet:false,terms:clone(rules.pactTerms)};
-        d.set(['state','creatures',target,'companion'],companion);
+        holdingSet(d,null,['state','creatures',target,'companion'],companion,'wildlife-awakening');
         return{success:true,target,companion,note:'双方同意的有边界关系，不是宠物或财产'};
     }
     if(sapient(actor))throw Error('已经立意；修习改用world_learn的student传授，借形用borrow_form');

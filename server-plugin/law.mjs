@@ -11,7 +11,7 @@ import {recordDisciplineBreach}from'./training.mjs';
 import {advanceWanted,activeWanted,activeHold,wantedOfCase,wantedReachedAt,holdPlayer,issueWanted,enforcersOf,dismissed,bribePrice,bribeStake,closeWanted,WANTED_REASONS}from'./bounty.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
-declareHoldingWriter('law',{kinds:['guest_of','wanted'],entities:['case']});
+declareHoldingWriter('law',{kinds:['guest_of','wanted','companion'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const path=id=>['state','records',id];
@@ -150,7 +150,7 @@ export function crimeAction(d,args,eventId){
             const unit=trackTransferUnit(d,this,victim,item,eventId,args.instance??null);
             transferItems(d,this,victim,'player',item,1,[unit]);
             const record=d.get('state','itemInstances',unit);
-            d.set(['state','itemInstances',unit,'legalClaims'],[...record.legalClaims??[],{case:key,victim,minute:d.get('state','minute')}]);
+            holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...record.legalClaims??[],{case:key,victim,minute:d.get('state','minute')}],'law');
             stolen={item,quantity:1,unit};
         }else{
             books(d,purse(this,victim),purse(this,'player'),amount,eventId);d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
@@ -237,7 +237,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
         const units=[...escrow.units];
         if(returnUnit){
             changeItems(d,engine,'player',record.item,-1,{preserve:true,selection:[unit],books:{account:placedStock(engine,escrowKey,record.item),writer:'law',eventId:row.id}});
-            d.set(['state','itemInstances',unit],{...record,owner:escrowKey,status:'保管'});units.push(unit);
+            holdingSet(d,null,['state','itemInstances',unit],{...record,owner:escrowKey,status:'保管'},'law');units.push(unit);
         }
         holdingSet(d,null,path(escrowKey),{...escrow,coins:escrow.coins+compensation,units},'law');
     }
@@ -336,7 +336,7 @@ function captureFugitive(d,engine,row,eventId){
     const result=engine.check(d,{attribute:'力量',opponent:{npc:target,attribute:'敏捷'}},eventId);
     engine.advance(d,engine.rules.law.actionMinutes,eventId);
     const actor=d.get('state','npcs',target),cur=d.get(...path(w.id)),captured=result.success&&alive(actor)&&actor.location===d.get('state','location');
-    if(captured){d.set(['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])]);holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
+    if(captured){holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])],'law');holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
     else holdingSet(d,null,path(w.id),{...cur,evadedAt:d.get('state','minute')},'law');
     return{case:row.id,target,captured,check:result,note:captured?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'对方挣脱了，一小时后才有机会再试'};
 }
@@ -557,7 +557,7 @@ export function lawAction(d,args,eventId){
         for(const unit of escrow.units){
             const record=d.get('state','itemInstances',unit);if(record?.owner!==key||record.status!=='保管')throw new Error('返还物单件不在法院保管，拒绝复制');
             this.itemDelta(d,recipient,record.item,1,{account:placedStock(this,key,record.item),writer:'law',eventId});const bag=[...this.bagPath(recipient),record.item,'instances'];
-            d.set(bag,[...d.get(...bag)??[],unit]);d.set(['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)});
+            d.set(bag,[...d.get(...bag)??[],unit]);holdingSet(d,null,['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)},'law');
         }
         const bank=row.bank&&d.get(...path(row.bank));
         books(d,fundAccount(key),bank?.category==='bank'?vault(row.bank):purse(this,recipient),escrow.coins,eventId);

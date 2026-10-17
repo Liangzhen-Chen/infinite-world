@@ -16,7 +16,7 @@ import {entityTransition} from './entity-transitions.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {createNpcObligation} from './npc-obligations.mjs';
 import {npcLessonGain,settleNpcLesson,npcProficiency} from './npc-growth.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
 declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of'],entities:['office']});
 
@@ -70,7 +70,7 @@ function changeFaith(d,e,who,t,eventId,{kind='conversion',devotion=true}={}){
  if(!devotion&&previous?.temple===t.id&&Number.isSafeInteger(previous.observedSince))return {previous,next:previous};
  const god=e.byId.get(t.deity),next={deity:t.deity,temple:t.id,institution:t.seat,church:god?.church.name??t.church,taboo:god?.taboo??t.rule,
   observedSince:devotion?now:null,lastBreach:-1,sourceEvent:eventId,override:true};
- d.set([...actorPath(e.world,who),'faith'],next);
+ holdingSet(d,null,[...actorPath(e.world,who),'faith'],next,'faith');
  const key=`faith_change:${eventId}:${who}`;d.set(path(key),{category:'faith_change',subject:who,previous,next,kind,minute:now,sourceEvent:eventId});
  return {previous,next};
 }
@@ -220,7 +220,7 @@ export function faithExperience(d,e,events){
   if(t&&(taught||ev.verb==='help'&&ev.value>0))changeFaith(d,e,who,t,ev.id,{kind:taught?'teaching':'relief',devotion:false});
   else if(exposed||ev.tags?.includes('disaster')){
    const f=faithOf(e,state,who).value;if(!f)continue;
-   d.set([...actorPath(e.world,who),'faith'],{...f,observedSince:null,lastBreach:ev.minute,doubt:true,sourceEvent:ev.id,override:true});
+   holdingSet(d,null,[...actorPath(e.world,who),'faith'],{...f,observedSince:null,lastBreach:ev.minute,doubt:true,sourceEvent:ev.id,override:true},'faith');
   }else continue;
   d.set(path(`faith_experience:${ev.id}`),{category:'faith_experience',subject:who,sourceEvent:ev.id});
  }

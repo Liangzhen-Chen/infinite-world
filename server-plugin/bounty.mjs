@@ -21,7 +21,7 @@ import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
-declareHoldingWriter('bounty',{kinds:['guest_of','wanted'],entities:['case']});
+declareHoldingWriter('bounty',{kinds:['guest_of','wanted','companion'],entities:['case']});
 
 const DAY=1440,TICK=600,ACTIVE='生效';
 const rec=id=>['state','records',id];
@@ -121,7 +121,7 @@ export function closeWanted(d,engine,w,status,reason,minute){
             if(back&&d.get('state','npcs',next.pledge.from)){moveCoins(d,{from:fundAccount(key),to:purse(null,next.pledge.from),amount:back,writer:'bounty',eventId:w.id});holdingSet(d,null,rec(key),{...d.get(...rec(key)),coins:row.coins-back},'bounty');d.set(['state','npcs',next.pledge.from,'coins'],d.get('state','npcs',next.pledge.from,'coins')+back);}}
     }
     if(status!=='已到案')closeQuest(d,next,'撤销',reason,minute);
-    if(next.captive?.by==='player'){d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject));}
+    if(next.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');}
     if(w.subject!=='player'&&d.get('state','npcs',w.subject,'fugitive')===w.id)d.remove(['state','npcs',w.subject,'fugitive']);
     save(d,next);return next;
 }
@@ -159,7 +159,7 @@ export function deliverFugitive(d,engine,w,by,minute){
     const code=codeById(engine,w.law),row=d.get(...rec(w.case)),npc=w.subject;
     if(d.get(...rec(`legal_detention:${w.id}`)))return 0;
     const shops=businessSnapshot(engine,d.get('state'));
-    d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc));
+    holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc),'bounty');
     d.set(['state','npcs',npc,'location'],code.court);
     d.set(['state','npcs',npc,'activity'],'依法拘留');
     for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))d.remove(['state','npcs',npc,field]);
@@ -342,7 +342,7 @@ export function bountyQuestAction(d,engine,q,args,eventId){
     if(q.taker!=='player'||q.status!=='进行中')throw Error('你没有接下这份赏金');
     if(args.operation==='cancel'){
         d.set(['state','quests',q.id],{...q,status:'公开',taker:null});
-        if(w.captive?.by==='player'){d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject));save(d,{...w,captive:null});}
+        if(w.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');save(d,{...w,captive:null});}
         return {quest:q.id,status:'公开',note:'放弃赏金；押着的人已放走'};
     }
     const code=codeById(engine,w.law),here=d.get('state','location');

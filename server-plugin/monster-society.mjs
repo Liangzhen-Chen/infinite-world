@@ -9,6 +9,8 @@ import {standing,HOSTILE} from './standing.mjs';
 import {groupView,personView} from './entity-view.mjs';
 import {actorId} from './npc-state.mjs';
 import {resolveCreature} from './wildlife.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('monster-society',{kinds:[],entities:['motion']});
 
 // Social standing of a monster settlement. A location with `monsterSociety`
 // registers the settlement seat: {leader, neighbors:{loc:stance}, stances:{player},
@@ -120,13 +122,13 @@ export function stanceOf(state,engine,holder,target){
 function setStance(d,engine,holder,target,stance,{minute,sourceEvent,reason}){
     const key=`stance:${holder}:${target}`,old=d.get(...rec(key)),before=old?.stance??initial(engine,holder,target);
     if(before===stance)return before;
-    d.set(rec(key),{category:'settlement_stance',holder,target,stance,minute,sourceEvent,reason,
-        history:[...old?.history??[],{from:before,to:stance,minute,sourceEvent,reason}]});
+    holdingSet(d,null,rec(key),{category:'settlement_stance',holder,target,stance,minute,sourceEvent,reason,
+        history:[...old?.history??[],{from:before,to:stance,minute,sourceEvent,reason}]},'monster-society');
     return before;
 }
 function receipt(d,{society,kind,eventId,...rest}){
     const key=`society_receipt:${eventId}:${kind}${rest.agreement?`:${rest.agreement}`:''}`;
-    if(!d.get(...rec(key)))d.set(rec(key),{category:'society_receipt',society,kind,subject:'player',minute:d.get('state','minute'),sourceEvent:eventId,...rest});
+    if(!d.get(...rec(key)))holdingSet(d,null,rec(key),{category:'society_receipt',society,kind,subject:'player',minute:d.get('state','minute'),sourceEvent:eventId,...rest},'monster-society');
     return key;
 }
 // Later quest cards read these instead of narration.
@@ -138,7 +140,7 @@ function sendNews(d,engine,{from,to,actor,victim,act,sourceEvent,minute}){
     const key=`society_news:${sourceEvent}:${to}`;if(d.get(...rec(key))||from===to&&to!==victim)return;
     let travel=0;
     if(from!==to){try{travel=engine.route(from,to,'walk',minute,d.document.randomSeed).minutes;}catch{return;}}
-    d.set(rec(key),{category:'society_news',from,to,actor,victim,act,sourceEvent,sentAt:minute,arrivesAt:minute+travel,status:'在途'});
+    holdingSet(d,null,rec(key),{category:'society_news',from,to,actor,victim,act,sourceEvent,sentAt:minute,arrivesAt:minute+travel,status:'在途'},'monster-society');
 }
 function broadcast(d,engine,society,act,sourceEvent){
     const minute=d.get('state','minute');
@@ -155,15 +157,15 @@ export function advanceSocietyNews(d,engine,after){
         const delta=view==='戒备'?0:(n.act==='harm'?-1:1)*(view==='敌对'?-1:1);
         const before=stanceOf(d.get('state'),engine,n.to,n.actor),stance=shift(before,delta);
         setStance(d,engine,n.to,n.actor,stance,{minute:n.arrivesAt,sourceEvent:n.sourceEvent,reason:`${n.from}传来消息`});
-        d.set(rec(key),{...n,status:'已送达',before,after:stance});
+        holdingSet(d,null,rec(key),{...n,status:'已送达',before,after:stance},'monster-society');
     }
     for(const [key,a]of Object.entries(d.get('state','records')??{}))if(a.category==='society_agreement'&&a.status==='有效'){
         if(a.nextDue!==null&&a.nextDue<=after)breach(d,engine,key,a,'player',`第${a.installments.length+1}期未按时交付`,`${key}:due:${a.nextDue}`,a.nextDue);
-        else if(a.nextDue===null&&a.expires<=after)d.set(rec(key),{...a,status:'到期',endedAt:a.expires});
+        else if(a.nextDue===null&&a.expires<=after)holdingSet(d,null,rec(key),{...a,status:'到期',endedAt:a.expires},'monster-society');
     }
 }
 function breach(d,engine,key,a,by,reason,sourceEvent,minute=d.get('state','minute')){
-    d.set(rec(key),{...a,status:'背约',breachedBy:by,reason,endedAt:minute});
+    holdingSet(d,null,rec(key),{...a,status:'背约',breachedBy:by,reason,endedAt:minute},'monster-society');
     if(by!=='player'){receipt(d,{society:a.society,kind:'agreement_breached',eventId:sourceEvent,agreement:key,by,reason});return;}
     const before=setStance(d,engine,a.society,'player','敌对',{minute,sourceEvent,reason});
     breakBossAgreement(d,a.leader,sourceEvent,engine);
@@ -274,7 +276,7 @@ export function societyAgreement(d,engine,boss,args,eventId,negotiate){
     const row={category:'society_agreement',id:key,society,leader:boss.actor,kind:args.term,locations,parties:[boss.actor,...members(engine,d.get('state'),society)],
         offer:result.terms.offer,request:result.terms.request,signedAt:now,expires,nextDue:args.term!=='passage'&&firstDue<=expires?firstDue:null,
         installments:[{event:eventId,minute:now}],status:'有效',sourceEvent:eventId,positions:{support:stances.support,oppose:stances.oppose}};
-    d.set(rec(key),row);
+    holdingSet(d,null,rec(key),row,'monster-society');
     receipt(d,{society,kind:'agreement_signed',eventId,agreement:key,term:args.term,positions:row.positions});
     return{...result,agreement:key,terms:row,...(stances.oppose.length?{opposedBy:stances.oppose.map(id=>c(id))}:{})};
 }
@@ -293,7 +295,7 @@ function installment(d,engine,boss,society,id,eventId){
     for(const r of a.offer)transferItems(d,engine,'player',boss.actor,r.item,r.quantity);
     for(const r of a.request)transferItems(d,engine,boss.actor,'player',r.item,r.quantity);
     const now=d.get('state','minute'),next=a.nextDue+PERIOD;
-    d.set(rec(id),{...a,installments:[...a.installments,{event:eventId,minute:now}],nextDue:next<=a.expires?next:null});
+    holdingSet(d,null,rec(id),{...a,installments:[...a.installments,{event:eventId,minute:now}],nextDue:next<=a.expires?next:null},'monster-society');
     const before=stanceOf(d.get('state'),engine,society,'player'),after=shift(before,1);
     setStance(d,engine,society,'player',after,{minute:now,sourceEvent:eventId,reason:'按期履约'});
     receipt(d,{society,kind:'agreement_kept',eventId,agreement:id,stance:{before,after}});
@@ -341,7 +343,7 @@ export function societyGovernance(d,engine,args,eventId,society){
         if(old?.status==='议事中')throw Error('该议题正在议事');
         if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw Error('聚居地对你敌对，不接受你提议');
         const row={category:'society_motion',society,motion:m.id,name:m.name,proposer:'player',status:'议事中',opinions:[],minute:now,sourceEvent:eventId,rounds:[...old?.rounds??[],...old?[{status:old.status,closedAt:old.closedAt}]:[]]};
-        d.set(rec(key(m.id)),row);return{proposal:key(m.id),meeting:row};
+        holdingSet(d,null,rec(key(m.id)),row,'monster-society');return{proposal:key(m.id),meeting:row};
     }
     const id=args.proposal??key(args.issue),row=d.get(...rec(id));
     if(row?.category!=='society_motion'||row.society!==society)throw Error('没有该议题记录');
@@ -359,7 +361,7 @@ export function societyGovernance(d,engine,args,eventId,society){
             entry=check.success?{...entry,persuaded:{from:held,difficulty:position.persuasion??15}}:
                 {...entry,opinion:held,content:position.claim,heldPosition:{asked:args.opinion,difficulty:position.persuasion??15}};
         }
-        d.set(rec(id),{...row,opinions:[...row.opinions,entry]});return{proposal:id,opinion:entry};
+        holdingSet(d,null,rec(id),{...row,opinions:[...row.opinions,entry]},'monster-society');return{proposal:id,opinion:entry};
     }
     if(args.operation==='governance_close'){
         if(row.status!=='议事中')return{proposal:id,meeting:row,duplicate:true};
@@ -371,7 +373,7 @@ export function societyGovernance(d,engine,args,eventId,society){
             .map(({n,p})=>({speaker:n.id,opinion:p.stances[row.motion],content:p.claim,position:p.id,implicit:true,minute:now,sourceEvent:eventId}));
         const all=[...row.opinions,...implicit],yes=all.filter(o=>o.opinion==='approve').length,no=all.filter(o=>o.opinion==='reject').length;
         const closed={...row,opinions:all,status:yes>no?'通过':'否决',closedAt:now,closeEvent:eventId};
-        d.set(rec(id),closed);
+        holdingSet(d,null,rec(id),closed,'monster-society');
         return{proposal:id,meeting:closed,note:'实际后果由已发布的势力时钟按此记录推进'};
     }
     throw Error('聚居地议事只支持governance_inspect、propose、opinion、close');
@@ -425,7 +427,7 @@ export const societyIssueConsumer={
             for(const n of o.news??[])sendNews(d,engine,{from:effect.settlement,to:n.target,actor:effect.settlement,victim:n.target,act:n.act,sourceEvent:context.sourceEvent,minute:context.minute});
             row={...row,outcome:o.result,motion:effect.motion,decidedBy:`society_motion:${effect.settlement}:${effect.motion}`,motionStatus:status,shares:structuredClone(o.shares??[]),news:structuredClone(o.news??[])};
         }
-        d.set(rec(key),row);
+        holdingSet(d,null,rec(key),row,'monster-society');
         return{applied:true,kind:effect.kind,issue:effect.issue,status:effect.status,outcome:row.outcome};
     },
 };

@@ -8,16 +8,16 @@ import {postGeneratedQuest} from './quest-sources.mjs';
 import {armies,armyKey,raiseLevy} from './military.mjs';
 import {tradeTax} from './finance-tax.mjs';
 import {grantHousingSteward,processEmployedHousing} from './public-projects.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldingRecord} from './holding-sources.mjs';
-declareHoldingWriter('high-nobility',{kinds:['holds_office'],entities:['office']});
+declareHoldingWriter('high-nobility',{kinds:['holds_office','employed_by'],entities:['office']});
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].levy&&!s.npcs[id].cognitionTravel;
 const awake=(s,id)=>able(s,id)&&!s.npcs[id].scheduleTravel&&!/睡眠|睡觉|熟睡/.test(s.npcs[id].activity??'');
 export const royalServices=(s,who)=>rows(s).filter(r=>r.category==='world_event'&&r.actor===who&&r.tags?.includes('royal_service')&&r.minute<=s.minute);
 function service(d,who,kind,source,at,location,evidence){
  const id=`royal-service:${kind}:${source}`;if(d.get(...rec(`world_event:${id}`)))return;
- d.set(rec(`world_event:${id}`),{category:'world_event',id,verb:'help',actor:who,target:'loc_capital',minute:at,location,witnesses:[],tags:['royal_service',kind],sourceEvent:source,evidence,claim:`王室服务已核记：${kind}`});
+ holdingSet(d,null,rec(`world_event:${id}`),{category:'world_event',id,verb:'help',actor:who,target:'loc_capital',minute:at,location,witnesses:[],tags:['royal_service',kind],sourceEvent:source,evidence,claim:`王室服务已核记：${kind}`},'high-nobility');
 }
 export function advanceRoyalService(d,e,{before,after}){
  const r=nobleRules(e);if(!r||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
@@ -45,7 +45,7 @@ export function upperAppointment(d,e,args,id){
  const clerks=e.world.npcs.filter(n=>s.npcs[n.id]?.location===s.location&&able(s,n.id)&&personRegistrar(e,s,n.id,s.location,e.rules.governance.authority.superiors.auth_bs_office_charter.registrars.occupations));
  if(!clerks.length&&s.location!==source.seat)throw Error('前厅没有在岗递件人');
  if(rows(s).some(r=>r.category==='upper_application'&&r.settlement===args.settlement&&r.status==='待审定'))throw Error('同一辖区已有待审定申请');
- const row={category:'upper_application',id:`upper_application:${id}`,holder:'player',settlement:args.settlement,source,status:'待审定',filedAt:s.minute,due:s.minute+source.decisionDays*DAY,sourceEvent:id};d.set(rec(row.id),row);return {application:row.id,pending:row};
+ const row={category:'upper_application',id:`upper_application:${id}`,holder:'player',settlement:args.settlement,source,status:'待审定',filedAt:s.minute,due:s.minute+source.decisionDays*DAY,sourceEvent:id};holdingSet(d,null,rec(row.id),row,'high-nobility');return {application:row.id,pending:row};
 }
 function appointmentReasons(e,s,row){
  const r=nobleRules(e),governed=rows(s).filter(o=>o.category==='governance_office'&&o.holder===row.holder&&o.status==='在任'&&s.minute-o.since>=r.governDays*DAY);
@@ -57,20 +57,20 @@ function appointmentReasons(e,s,row){
 }
 function appoint(d,e,holder,settlement,at,id,source){
  const old=rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.office==='office_village_head'&&o.settlement===settlement&&o.status==='在任');
- for(const o of old){d.set(rec(o.id),{...o,status:'已免职',removedAt:at,reason:'上级改任'});syncHoldingRecord(d,e,o.id,{writer:'high-nobility',eventId:id});}
- const key=`governance_office:${settlement}:office_village_head:${holder}`,row={category:'governance_office',id:key,holder,settlement,office:'office_village_head',status:'在任',since:at,until:at+360*DAY,nextReview:at+30*DAY,appointedBy:source.institution??source,source:source.id??source,sourceEvent:id,upper:true};d.set(rec(key),row);syncHoldingRecord(d,e,key,{writer:'high-nobility',eventId:id});
+ for(const o of old){holdingSet(d,null,rec(o.id),{...o,status:'已免职',removedAt:at,reason:'上级改任'},'high-nobility');syncHoldingRecord(d,e,o.id,{writer:'high-nobility',eventId:id});}
+ const key=`governance_office:${settlement}:office_village_head:${holder}`,row={category:'governance_office',id:key,holder,settlement,office:'office_village_head',status:'在任',since:at,until:at+360*DAY,nextReview:at+30*DAY,appointedBy:source.institution??source,source:source.id??source,sourceEvent:id,upper:true};holdingSet(d,null,rec(key),row,'high-nobility');syncHoldingRecord(d,e,key,{writer:'high-nobility',eventId:id});
  entityTransition(d,e,{id:`${id}:appoint`,verb:'appoint',actor:source.id??source,target:holder,minute:at,location:settlement,office:row.office,summary:`上级任命已登记`});return row;
 }
 export function reviewUpperOffice(d,e,row,at){
  const s=d.get('state'),reason=at>=row.until?'任期届满':row.holder!=='player'&&s.npcs?.[row.holder]?.status==='死亡'?'失去履职能力':rows(s).some(c=>c.category==='legal_case'&&c.offender===row.holder&&c.judgment)?'犯罪裁定':null;
- if(reason){d.set(rec(row.id),{...row,status:'已免职',removedAt:at,reason});syncHoldingRecord(d,e,row.id,{writer:'high-nobility'});entityTransition(d,e,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`上级免职：${reason}`});}
- else d.set(rec(row.id),{...row,nextReview:at+30*DAY,reviews:[...row.reviews??[],at]});
+ if(reason){holdingSet(d,null,rec(row.id),{...row,status:'已免职',removedAt:at,reason},'high-nobility');syncHoldingRecord(d,e,row.id,{writer:'high-nobility'});entityTransition(d,e,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`上级免职：${reason}`});}
+ else holdingSet(d,null,rec(row.id),{...row,nextReview:at+30*DAY,reviews:[...row.reviews??[],at]},'high-nobility');
 }
 export function advanceUpperAppointments(d,e,{after}){
  if(!nobleRules(e)||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
  for(const row of rows(d.get('state')).filter(r=>r.category==='upper_application'&&r.status==='待审定'&&r.due<=after)){
   const reasons=appointmentReasons(e,d.get('state'),row);if(!reasons.length)appoint(d,e,row.holder,row.settlement,row.due,row.id,row.source);
-  d.set(rec(row.id),{...row,status:reasons.length?'未获任命':'已任命',reasons,decidedAt:row.due});
+  holdingSet(d,null,rec(row.id),{...row,status:reasons.length?'未获任命':'已任命',reasons,decidedAt:row.due},'high-nobility');
  }
 }
 function lord(e,s,who='player'){
@@ -95,17 +95,17 @@ export function upperGovernanceAction(d,args,id){
  if(args.operation==='domain_steward'){
   const worker=e.resolve(args.steward,'npc');if(!awake(s,worker)||(npcAgeAt(e,s,worker)??0)<18||s.npcs[worker].location!==s.location||args.consent!==true||currentEmployment(s,worker)||personOffices(e,s,worker).length||personConstraint(e,s,worker))throw Error('管事须成年清醒在场自愿，且无任职或雇佣冲突');
   const key=`workshop:${id}`,row={category:'contract',kind:'workshop',id:key,laborMarket:1,domainSteward:true,task:'领地管事',owner:'player',worker,location:s.location,settlement,wage:nobleRules(e).steward.wageDay,status:'有效',createdAt:s.minute,starts:(Math.floor(s.minute/DAY)+1)*DAY+480,nextWork:(Math.floor(s.minute/DAY)+1)*DAY+1020,deadline:s.minute+nobleRules(e).steward.days*DAY,paid:0,produced:0,workedMinutes:0,targetQuantity:0,shifts:[],source:id};
-  e.assertNpcObligationAction(d,[worker],{start:row.starts,minutes:480,kind:'employment'});d.set(rec(key),row);
+  e.assertNpcObligationAction(d,[worker],{start:row.starts,minutes:480,kind:'employment'});holdingSet(d,null,rec(key),row,'high-nobility');
   let housing=null;if(args.action==='housing'){
    const hall=e.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.meetingPlace;if(!hall)throw Error('该地没有已登记宅基审批处');
-   housing=grantHousingSteward(d,e,args,id,settlement,hall);d.set(rec(housing.authorization),{...housing.steward,employment:key});
+   housing=grantHousingSteward(d,e,args,id,settlement,hall);holdingSet(d,null,rec(housing.authorization),{...housing.steward,employment:key},'high-nobility');
   }
   return {contract:key,worker,...(housing?{authorization:housing.authorization}:{})};
  }
  if(args.operation==='domain_request'){
   if(!['tax','levy','account_report'].includes(args.choice))throw Error('批复支持tax、levy或account_report');
   const contract=args.authorization&&s.records?.[args.authorization];if(args.authorization&&(!contract?.domainSteward||contract.owner!=='player'||contract.status!=='有效'||contract.settlement!==settlement))throw Error('没有该辖区有效管事合同');
-  const key=`domain_request:${id}`,row={category:'domain_request',id:key,settlement,holder:'player',kind:args.choice,taxBps:args.taxBps??null,army:args.org??null,contract:args.authorization??null,status:contract?'待办理':'待批复',minute:s.minute,sourceEvent:id};d.set(rec(key),row);
+  const key=`domain_request:${id}`,row={category:'domain_request',id:key,settlement,holder:'player',kind:args.choice,taxBps:args.taxBps??null,army:args.org??null,contract:args.authorization??null,status:contract?'待办理':'待批复',minute:s.minute,sourceEvent:id};holdingSet(d,null,rec(key),row,'high-nobility');
   if(!contract)return {request:executeDomainRequest(d,e,row,id)};return {request:row};
  }
  throw Error('未知上位治理事务');
@@ -115,17 +115,17 @@ export function executeDomainRequest(d,e,row,id){
  let result;
  if(row.kind==='tax'){
   if(!Number.isSafeInteger(row.taxBps)||row.taxBps<0||row.taxBps>nobleRules(e).maxTaxBps)throw Error('税率超出辖区权限');
-  d.set(rec(`domain-tax:${row.settlement}`),{category:'domain_tax',holder:row.holder,settlement:row.settlement,bps:row.taxBps,sourceEvent:id});result={...tradeTax(e,d.get('state'),row.settlement),bps:row.taxBps};
+  holdingSet(d,null,rec(`domain-tax:${row.settlement}`),{category:'domain_tax',holder:row.holder,settlement:row.settlement,bps:row.taxBps,sourceEvent:id},'high-nobility');result={...tradeTax(e,d.get('state'),row.settlement),bps:row.taxBps};
  }else if(row.kind==='levy'){
   const a=s.records?.[armyKey(row.army)];if(!a||a.party!==(rulerNation(s,row.holder)?.id??row.holder)||!a.levySettlements.includes(row.settlement))throw Error('征兵须为本人军队及其登记征召地');
-  const next=structuredClone(a);raiseLevy(d,e,next,s.minute,id);d.set(rec(armyKey(next.id)),next);result={army:a.id,levy:next.levy.count};
+  const next=structuredClone(a);raiseLevy(d,e,next,s.minute,id);holdingSet(d,null,rec(armyKey(next.id)),next,'high-nobility');result={army:a.id,levy:next.levy.count};
  }else result={treasury:s.settlements?.[row.settlement]?.treasury??null,population:s.settlements?.[row.settlement]?.population??null};
- const next={...row,status:'已完成',resolvedAt:s.minute,result};d.set(rec(row.id),next);return next;
+ const next={...row,status:'已完成',resolvedAt:s.minute,result};holdingSet(d,null,rec(row.id),next,'high-nobility');return next;
 }
 export function settleStewardRequests(d,e,contract,id){
  if(!contract.domainSteward)return;
  processEmployedHousing(d,e,contract,d.get('state','minute'));
  for(const row of rows(d.get('state')).filter(r=>r.category==='domain_request'&&r.contract===contract.id&&r.status==='待办理')){
-  try{executeDomainRequest(d,e,row,id);}catch(error){d.set(rec(row.id),{...row,status:'退回',reason:error.message});}
+  try{executeDomainRequest(d,e,row,id);}catch(error){holdingSet(d,null,rec(row.id),{...row,status:'退回',reason:error.message},'high-nobility');}
  }
 }
