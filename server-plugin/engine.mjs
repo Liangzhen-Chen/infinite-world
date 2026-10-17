@@ -85,7 +85,7 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
-import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
 const withBooks=(engine,document)=>withLedger(engine,document);
@@ -271,6 +271,8 @@ export class WorldEngine {
         // Older ledger events replay without it, exactly as they were recorded.
         // T143: the first arrival in a far county generates its skeleton once.
         const remote=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.remote)?unfoldRemoteAt(d,session,d.get('state','location')):null;
+        // S2a: 新生成的远方郡只出现在叠加世界里：用叠加世界的引擎把持有存储重同步（居民的居住、家户、官职等）。
+        if(remote)resyncHoldings(d,remoteEngine(this,d.document,world=>new WorldEngine(world)));
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
         if(document.state.location!==d.get('state','location')&&Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)){
             const arrival=this.scoped(d.document),now=d.get('state','minute');

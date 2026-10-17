@@ -67,6 +67,7 @@ const LOG=process.env.HOLDINGS_AUDIT_LOG;
 if(LOG){
     const {WorldEngine}=await import('../../server-plugin/engine.mjs');
     const {applyPatches}=await import('../../server-plugin/storage.mjs');
+    const {remoteEngine}=await import('../../server-plugin/remote-generation.mjs');
     const original=WorldEngine.prototype.reduce;
     // 远方郡的存档由叠加世界的引擎归约（外层 reduce 委托给 overlay.reduce）：只审内层，那里的世界与写入时一致。
     const frames=[];
@@ -81,7 +82,9 @@ if(LOG){
             // 迁移事件（schema / release / rules_state）直接改旧字段且不开账：尚未开分区时，下一个双写按当时的旧字段开账，
             // 迁移本身没有漏写可言；已开分区时迁移按世界版本更新同一入口折算，照常审。
             if(!after.holdings&&/migration/.test(input.type??''))return out;
-            const bad=holdingsDiscrepancies(this,document,after,out.patches);
+            // 旧字段按事件后的世界视图读：本事件生成了远方郡时，事件后的叠加世界才含新居民。
+            const viewEngine=remoteEngine(this,after,world=>new WorldEngine(world));
+            const bad=holdingsDiscrepancies(viewEngine,document,after,out.patches);
             const view=doc=>({peek:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
             const prior=new Set(auditHoldings(view(document))),audit=auditHoldings(view(after)).filter(e=>!prior.has(e));
             // 适配器被注册形状拒绝而记下的漂移（旧字段仍是权威，存储缺这一条）。

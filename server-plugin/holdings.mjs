@@ -301,6 +301,9 @@ export function holdingRemove(d,engine,path,writer,eventId=null){d.remove(path);
 // ---- 世界版本更新（包升级）的折算 ------------------------------------------------------
 const upgrades=new Map();
 export function registerHoldingsUpgrade(name,fn){upgrades.set(name,fn);}
+// 世界视图在本事件里变大（远方郡生成后叠加世界含新居民、家户与官职）：用新世界的引擎把各来源重同步一遍。
+// 旧字段没有为这些人写任何路径，单靠写入点双写够不着。
+export function resyncHoldings(d,engine){for(const fn of upgrades.values())fn(d,engine);}
 export function bookHoldingsUpgrade(before,after,world){
     if(before?.holdings?.version!==HOLDINGS_VERSION)return [];
     const patches=[],doc={...after,holdings:structuredClone(before.holdings)};
