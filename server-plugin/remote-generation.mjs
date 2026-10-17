@@ -12,7 +12,7 @@ import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
-declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','devotee_of','certified'],entities:['office','wreck'],locations:true});
+declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
