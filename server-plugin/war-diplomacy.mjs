@@ -14,7 +14,7 @@ import {drawArmyRations} from './settlement-trade.mjs';
 import {armyRations} from './stock.mjs';
 import {regionOf} from './regions.mjs';
 import {presentWitnesses} from './world-events.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 declareHoldingWriter('war-diplomacy',{kinds:['governs','controls','allied_with']});
 const DAY=1440,copy=x=>structuredClone(x),path=id=>['state','records',id];
@@ -26,7 +26,7 @@ const fresh=e=>!e.replaying||e.replayResult?.warVersion===WAR_VERSION;
 const name=(e,s,id)=>partyName(e,s,id);
 const sideOf=(w,a)=>a.warSide??a.party;
 const pair=(a,b)=>[a,b].sort().join(':');
-function save(d,w){d.set(path(`war:${w.id}`),w);}
+function save(d,w){holdingSet(d,null,path(`war:${w.id}`),w,'war-diplomacy');}
 export function validateWarDiplomacy(world){
  const r=world.rules?.warDiplomacy;if(!r)return [];
  const errors=[],has=id=>world.locations.some(l=>l.id===id),party=id=>world.factions?.some(f=>f.id===id)||world.regions?.some(c=>c.id===id)||world.households?.some(h=>h.settlement===id);
@@ -46,7 +46,7 @@ function relations(d,e,a,b,value,src,minute){
 function announce(d,e,w,claim,at,src){
  const carriers=presentWitnesses(d.get('state'),w.front).filter((id,i,all)=>all.indexOf(id)===i&&d.get('state','npcs',id)&&e.world.npcs.some(n=>n.id===id));
  if(carriers.length)applyEffect(d,e,{kind:'rumor',id:'war_news',claim,carriers},{minute:at,sourceEvent:src,settlement:w.front,faction:w.aggressor},'world');
- const id=`${src}:public`;d.set(path(`world_event:${id}`),{category:'world_event',id,verb:'clash',actor:w.aggressor,target:w.defender,location:w.front,minute:at,witnesses:carriers,tags:['war','public'],claim,sourceEvent:src});
+ const id=`${src}:public`;holdingSet(d,null,path(`world_event:${id}`),{category:'world_event',id,verb:'clash',actor:w.aggressor,target:w.defender,location:w.front,minute:at,witnesses:carriers,tags:['war','public'],claim,sourceEvent:src},'war-diplomacy');
 }
 export function startWar(d,e,spec,at,src){
  const old=d.get(...path(`war:${spec.id}`));if(old)return old;
@@ -54,13 +54,13 @@ export function startWar(d,e,spec,at,src){
  ensureArmies(d,e,at);
  const w={category:'war',id:spec.id,name:spec.name,aggressor:spec.aggressor,defender:spec.defender,front:spec.front,armyIds:[...spec.armies],routes:spec.routes??[],villages:spec.villages??[],territory:spec.territory??null,
   status:'交战',since:at,nextAt:at+rules(e).intervalDays*DAY,rounds:0,score:0,history:[],supplyCut:{},sourceEvent:src,source:spec.source??'diplomacy',initial:{}};
- for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row||row.war)throw Error('参战队伍不存在或已在别处出征');const a=copy(row);if(![w.aggressor,w.defender].includes(a.party))throw Error('军队不属于交战双方');raiseLevy(d,e,a,at,src);a.war=w.id;a.status='出征';a.location=w.front;w.initial[a.party]=(w.initial[a.party]??0)+armyStrength(a);d.set(path(armyKey(id)),a);}
+ for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row||row.war)throw Error('参战队伍不存在或已在别处出征');const a=copy(row);if(![w.aggressor,w.defender].includes(a.party))throw Error('军队不属于交战双方');raiseLevy(d,e,a,at,src);a.war=w.id;a.status='出征';a.location=w.front;w.initial[a.party]=(w.initial[a.party]??0)+armyStrength(a);holdingSet(d,null,path(armyKey(id)),a,'war-diplomacy');}
  relations(d,e,w.aggressor,w.defender,rules(e).declareStanding,src,at);save(d,w);
  announce(d,e,w,`${w.name}已经开战，行旅须避开交战地。`,at,src);return w;
 }
 function setDisruption(d,e,w,at){
  const r=rules(e),until=at+r.intervalDays*DAY;
- d.set(path(`war-disruption:${w.id}`),{category:'war_disruption',war:w.id,since:at,until,routes:w.routes,locations:[w.front,...w.villages],factor:r.priceFactor});
+ holdingSet(d,null,path(`war-disruption:${w.id}`),{category:'war_disruption',war:w.id,since:at,until,routes:w.routes,locations:[w.front,...w.villages],factor:r.priceFactor},'war-diplomacy');
  // Reprice quotes made earlier the same day after a campaign changes the local market.
  for(const key of Object.keys(d.get('state','quotes')??{}))if(key.startsWith(`region:${Math.floor(at/DAY)}:`))d.remove(['state','quotes',key]);
 }
@@ -77,9 +77,9 @@ function raid(d,e,w,winner,at,src){
  // S1b: 掠得的粮记入胜方队伍的军粮；没有本方队伍接收则就地毁弃。
  const unit=w.armyIds.map(id=>d.get(...path(armyKey(id)))).find(a=>a&&sideOf(w,a)===winner);
  const food=drawArmyRations(d,e,village,rules(e).raidFood,{raid:true,to:unit?{account:armyRations(e,unit.id)}:{flow:'sink:destroy',purpose:'raid'},eventId:src});
- if(unit&&food)d.set(path(armyKey(unit.id)),{...unit,food:unit.food+food});
+ if(unit&&food)holdingSet(d,null,path(armyKey(unit.id)),{...unit,food:unit.food+food},'war-diplomacy');
  // Ordinary family migration chooses a host and route; the war supplies the danger.
- d.set(path(`war-danger:${village}`),{category:'war_danger',war:w.id,settlement:village,actor:winner,since:at,until:at+rules(e).intervalDays*DAY,sourceEvent:src});
+ holdingSet(d,null,path(`war-danger:${village}`),{category:'war_danger',war:w.id,settlement:village,actor:winner,since:at,until:at+rules(e).intervalDays*DAY,sourceEvent:src},'war-diplomacy');
  for(const id of Object.keys(d.get('state','npcs')))if(e.byId.get(id)?.settlement===village||e.world.households?.some(h=>h.settlement===village&&h.members.includes(id))){
   const stream=d.get('state','npcs',id,'memoryStream')??[];d.set(['state','npcs',id,'memoryStream'],[...stream,{id:`${src}:${id}`,sourceEvent:src,kind:'conflict',sourceType:'亲历',minute:at,location:village,participants:[winner,id],content:'交战队伍掠过村庄，家中准备避祸。',salience:3,emotion:'恐惧'}]);
  }
@@ -91,7 +91,7 @@ export function endWar(d,e,w,{winner=null,tribute=0,at,src,status='议和'}){
  w.status=status;w.endedAt=at;w.winner=winner;w.nextAt=null;
  for(const t of tribalWars(d.get('state')))if(t.war===w.id)holdingSet(d,e,path(`tribal_war:${t.dynamic}`),{...t,status,endedAt:at,winner},'war-diplomacy');
  for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row)continue;const a=copy(row);releaseLevy(d,e,a,a.levy.count,{at,reason:'战事结算'});a.war=null;delete a.warSide;a.location=a.home;a.status=armyStrength(a)?'驻守':'待征';holdingSet(d,e,path(armyKey(id)),a,'war-diplomacy');}
- d.remove(path(`war-disruption:${w.id}`));for(const v of w.villages)if(d.get(...path(`war-danger:${v}`))?.war===w.id)d.remove(path(`war-danger:${v}`));
+ holdingRemove(d,null,path(`war-disruption:${w.id}`),'war-diplomacy');for(const v of w.villages)if(d.get(...path(`war-danger:${v}`))?.war===w.id)holdingRemove(d,null,path(`war-danger:${v}`),'war-diplomacy');
  relations(d,e,w.aggressor,w.defender,rules(e).peaceStanding,src,at);
  if(winner===w.aggressor&&w.territory){const previous=e.world.regions.find(c=>c.id===w.territory)?.ruler;holdingSet(d,e,path(`territory:${w.territory}`),{category:'territory',county:w.territory,ruler:winner,previous,war:w.id,minute:at,sourceEvent:src},'war-diplomacy');}
  if(winner&&tribute){const loser=winner===w.aggressor?w.defender:w.aggressor;holdingSet(d,e,path(`tribute:${pair(winner,loser)}`),{category:'tribute',payer:loser,payee:winner,amount:tribute,nextAt:at+30*DAY,arrears:0,war:w.id,sourceEvent:src},'war-diplomacy');}
@@ -105,7 +105,7 @@ export function campaignRound(d,e,w,at){
  const left=sidePower(d,e,w,w.aggressor,at),right=sidePower(d,e,w,w.defender,at),roll=r.rollMinimum+clockRoll(d.document.randomSeed,w.id,at/DAY)*r.rollRange;
  const winner=left.power*roll>=right.power?w.aggressor:w.defender;
  const losses={};for(const side of [left,right])for(const row of side.units){const a=copy(row),n=Math.min(armyStrength(a),Math.ceil(armyStrength(a)*r.lossBps/10000*(sideOf(w,a)===winner?r.winnerLossFactor:r.loserLossFactor)));
-  losses[a.id]=loseSoldiers(d,e,a,n,{at,reason:'战事结算',killed:true});a.morale=Math.max(0,Math.min(100,a.morale+(sideOf(w,a)===winner?r.victoryMorale:-r.victoryMorale)));d.set(path(armyKey(a.id)),a);}
+  losses[a.id]=loseSoldiers(d,e,a,n,{at,reason:'战事结算',killed:true});a.morale=Math.max(0,Math.min(100,a.morale+(sideOf(w,a)===winner?r.victoryMorale:-r.victoryMorale)));holdingSet(d,null,path(armyKey(a.id)),a,'war-diplomacy');}
  w.rounds++;w.score+=winner===w.aggressor?1:-1;w.supplyCut={};
  for(const id of w.armyIds){const a=d.get(...path(armyKey(id)));if(a&&sideOf(w,a)!==winner)w.supplyCut[id]=true;}
  setDisruption(d,e,w,at);const raided=raid(d,e,w,winner,at,src);
@@ -125,7 +125,7 @@ export function advanceWarDiplomacy(d,e,{before,after}){
   const at=day*DAY;
   for(const s of r.sources??[])if(day>=s.startDay&&!d.get(...path(`war:${s.id}`))){
    const key=`war-source:${s.id}`;
-   if(!d.get(...path(key))){for(const [holder,target] of [[s.aggressor,s.defender],[s.defender,s.aggressor]])adjustStanding(d,e,holder,target,s.initialStanding,{sourceEvent:`war:source:${s.id}`,reason:'边境争端',minute:at});d.set(path(key),{category:'war_source',id:s.id,minute:at});}
+   if(!d.get(...path(key))){for(const [holder,target] of [[s.aggressor,s.defender],[s.defender,s.aggressor]])adjustStanding(d,e,holder,target,s.initialStanding,{sourceEvent:`war:source:${s.id}`,reason:'边境争端',minute:at});holdingSet(d,null,path(key),{category:'war_source',id:s.id,minute:at},'war-diplomacy');}
    if(standing(e,d.get('state'),s.aggressor,s.defender)<=r.declareStanding)startWar(d,e,s,at,`war:source:${s.id}`);
   }
   for(const t of tribalWars(d.get('state')).filter(t=>t.status==='对峙')){
@@ -135,12 +135,12 @@ export function advanceWarDiplomacy(d,e,{before,after}){
    createArmy(d,e,{id:aid,name:'砾泉苔背战队',party:t.aggressor,base:t.front,location:t.front,supply:'forage',regular:t.strength,training:r.tribalTraining,morale:r.tribalMorale,payCopperMonth:0},at,t.sourceEvent);
    const defenders=armies(d.get('state')).filter(a=>a.party===defender&&!a.war).map(a=>a.id);if(!defenders.length){ensureArmies(d,e,at);defenders.push(...armies(d.get('state')).filter(a=>a.party===defender&&!a.war).map(a=>a.id));}if(!defenders.length)continue;
    startWar(d,e,{id,name:'砾泉矿道争战',aggressor:t.aggressor,defender,front:t.front,armies:[aid,...defenders],villages:r.tribalVillages,routes:r.tribalRoutes,source:'tribal_war'},at,t.sourceEvent);
-   d.set(path(`tribal_war:${t.dynamic}`),{...t,status:'交战',war:id,handler:'U12',note:'军队与战役已接管'});
+   holdingSet(d,null,path(`tribal_war:${t.dynamic}`),{...t,status:'交战',war:id,handler:'U12',note:'军队与战役已接管'},'war-diplomacy');
   }
   for(const old of wars(d.get('state'))){const w=copy(old);if(w.status==='交战'&&w.nextAt<=at)campaignRound(d,e,w,at);else if(w.status==='停战'&&w.truceUntil<=at){w.status='交战';w.nextAt=at+r.intervalDays*DAY;save(d,w);}}
   postWarQuests(d,e,at);
   for(const old of Object.values(d.get('state','records')??{}).filter(t=>t.category==='tribute'&&t.nextAt<=at)){
-   const t=copy(old),owed=t.amount+t.arrears,paid=partyPay(d,e,t.payer,owed,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:{account:partyAccount(e,d.get('state'),t.payee),writer:'war-diplomacy',eventId:`tribute:${t.war}:${at}`}});partyCredit(d,e,t.payee,paid,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:BOOKED});t.arrears=owed-paid;t.nextAt+=30*DAY;t.lastPaid=paid;d.set(path(`tribute:${pair(t.payer,t.payee)}`),t);
+   const t=copy(old),owed=t.amount+t.arrears,paid=partyPay(d,e,t.payer,owed,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:{account:partyAccount(e,d.get('state'),t.payee),writer:'war-diplomacy',eventId:`tribute:${t.war}:${at}`}});partyCredit(d,e,t.payee,paid,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',books:BOOKED});t.arrears=owed-paid;t.nextAt+=30*DAY;t.lastPaid=paid;holdingSet(d,null,path(`tribute:${pair(t.payer,t.payee)}`),t,'war-diplomacy');
    if(t.arrears)adjustStanding(d,e,t.payee,t.payer,-r.tributeBreachStanding,{sourceEvent:`tribute:${t.war}:${at}`,reason:'战事结算',minute:at});
   }
  }
@@ -172,7 +172,7 @@ export function warAction(d,args,src){
  if(!w||!active(w)||pair(a,b)!==pair(w.aggressor,w.defender))throw Error('clock 须指定双方正在交涉的战事');
  if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false,books:{account:sink('export','mediation'),writer:'war-diplomacy',eventId:src}})!==r.mediationCopper)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  if(choice==='truce'&&own&&score<r.truceStanding&&Math.abs(w.score)<r.peaceScore)throw Error('对方尚不愿停战，须改善立场或打出战果');
- if(choice==='truce'){w.status='停战';w.truceUntil=Math.ceil((at+r.truceDays*DAY)/DAY)*DAY;save(d,w);d.remove(path(`war-disruption:${w.id}`));relations(d,e,a,b,r.truceStanding,src,at);return {war:w.id,status:w.status,until:w.truceUntil};}
+ if(choice==='truce'){w.status='停战';w.truceUntil=Math.ceil((at+r.truceDays*DAY)/DAY)*DAY;save(d,w);holdingRemove(d,null,path(`war-disruption:${w.id}`),'war-diplomacy');relations(d,e,a,b,r.truceStanding,src,at);return {war:w.id,status:w.status,until:w.truceUntil};}
  if(!['peace','tribute'].includes(choice))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  if(choice==='peace'&&own&&score<r.peaceStanding&&Math.abs(w.score)<r.peaceScore)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  return endWar(d,e,w,{winner:choice==='tribute'?b:null,tribute:choice==='tribute'?r.tributeCopperMonth:0,at,src});
@@ -184,8 +184,8 @@ export function warCombatResult(d,e,{target,damage,received,killed,retreated},sr
  if(!foe)return null;const key=`war-combat:${w.id}:${target}`;if(state.records[key]||!killed&&!retreated)return null;
  const unit=copy(foe);let losses=0;
  if(unit.levy.people.some(p=>p.id===target)){unit.levy.people=[...unit.levy.people.filter(p=>p.id!==target),unit.levy.people.find(p=>p.id===target)];releaseLevy(d,e,unit,1,{at:state.minute,reason:'前线交锋',killed,person:target});losses=1;}else if(unit.regular){unit.regular--;losses=1;}else if(unit.private){unit.private--;losses=1;}else if(unit.mercenary?.count){unit.mercenary.count--;losses=1;if(!unit.mercenary.count)unit.mercenary=null;}
- unit.morale=Math.max(0,unit.morale-rules(e).exchangeMorale);d.set(path(armyKey(unit.id)),unit);w.score+=sideOf(w,a)===w.aggressor?1:-1;save(d,w);
- d.set(path(key),{category:'war_combat',war:w.id,target,damage,received,killed,retreated,losses,sourceEvent:src,minute:state.minute});return {war:w.id,losses,score:w.score};
+ unit.morale=Math.max(0,unit.morale-rules(e).exchangeMorale);holdingSet(d,null,path(armyKey(unit.id)),unit,'war-diplomacy');w.score+=sideOf(w,a)===w.aggressor?1:-1;save(d,w);
+ holdingSet(d,null,path(key),{category:'war_combat',war:w.id,target,damage,received,killed,retreated,losses,sourceEvent:src,minute:state.minute},'war-diplomacy');return {war:w.id,losses,score:w.score};
 }
 function postWarQuests(d,e,at){
  const q=rules(e).quest;

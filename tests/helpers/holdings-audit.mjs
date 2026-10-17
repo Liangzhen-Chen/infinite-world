@@ -27,7 +27,13 @@ export function holdingsDiscrepancies(engine,before,after){
     const lb=legacySide(engine,before.state),la=legacySide(engine,after.state);
     const sb=storeSide(before)??lb,sa=storeSide(after)??sb,out=[];
     const dl=deltaCount(lb.holdings,la.holdings),ds=deltaCount(sb.holdings,sa.holdings);
-    for(const k of new Set([...dl.keys(),...ds.keys()]))if((dl.get(k)??0)!==(ds.get(k)??0))out.push({holding:k,legacy:dl.get(k)??0,store:ds.get(k)??0});
+    // 本事件里任一侧变过的键：存储已开时，事件后两侧应相等（双写把存储改成写入后的旧字段；测试夹具在两次归约之间
+    // 直接改过旧字段、而本事件又写到它的，也由这次双写对齐，不算漏写）；存储未开时比较两侧的变化量。
+    const opened=Boolean(storeSide(after));
+    for(const k of new Set([...dl.keys(),...ds.keys()])){
+        const miss=opened?(la.holdings.get(k)??0)!==(sa.holdings.get(k)??0):(dl.get(k)??0)!==(ds.get(k)??0);
+        if(miss)out.push({holding:k,legacy:dl.get(k)??0,store:ds.get(k)??0,...((lb.holdings.get(k)??0)!==(sb.holdings.get(k)??0)?{preexisting:true}:{})});
+    }
     // 实体与位置：存储在事件后应 = 事件前的存储 + 旧字段在本事件里的变化。
     for(const field of ['entities','locations']){
         const el=deltaFact(lb[field],la[field]),es=deltaFact(sb[field],sa[field]);
@@ -45,14 +51,24 @@ if(LOG){
     const {WorldEngine}=await import('../../server-plugin/engine.mjs');
     const {applyPatches}=await import('../../server-plugin/storage.mjs');
     const original=WorldEngine.prototype.reduce;
+    // 远方郡的存档由叠加世界的引擎归约（外层 reduce 委托给 overlay.reduce）：只审内层，那里的世界与写入时一致。
+    const frames=[];
     WorldEngine.prototype.reduce=async function(document,input,options){
-        const out=await original.call(this,document,input,options);
+        const frame={nested:false};frames.push(frame);let out;
+        try{out=await original.call(this,document,input,options);}finally{frames.pop();}
+        if(frames.length)frames.at(-1).nested=true;
+        if(frame.nested)return out;
         try{
             if(!document?.state||!out?.patches?.length)return out;
             const after=applyPatches(document,out.patches);
+            // 迁移事件（schema / release / rules_state）直接改旧字段且不开账：尚未开分区时，下一个双写按当时的旧字段开账，
+            // 迁移本身没有漏写可言；已开分区时迁移按世界版本更新同一入口折算，照常审。
+            if(!after.holdings&&/migration/.test(input.type??''))return out;
             const bad=holdingsDiscrepancies(this,document,after);
             const prior=new Set(auditHoldings({peek:(...p)=>p.reduce((v,k)=>v?.[k],document)})),audit=auditHoldings({peek:(...p)=>p.reduce((v,k)=>v?.[k],after)}).filter(e=>!prior.has(e));
-            if(bad.length||audit.length||process.env.HOLDINGS_AUDIT_ALL)fs.appendFileSync(LOG,JSON.stringify({test:process.argv.at(-1),tool:input.tool??input.type,op:input.args?.operation??input.args?.choice??input.args?.action??null,eventId:input.eventId,bad:bad.slice(0,12),audit:audit.slice(0,5)})+'\n');
+            // 适配器被注册形状拒绝而记下的漂移（旧字段仍是权威，存储缺这一条）。
+            const drift=(after.holdings?.drift??[]).slice((document.holdings?.drift??[]).length);
+            if(bad.length||audit.length||drift.length||process.env.HOLDINGS_AUDIT_ALL)fs.appendFileSync(LOG,JSON.stringify({test:process.argv.at(-1),tool:input.tool??input.type,op:input.args?.operation??input.args?.choice??input.args?.action??null,eventId:input.eventId,bad:bad.slice(0,12),audit:audit.slice(0,5),drift:drift.slice(0,5)})+'\n');
         }catch(e){fs.appendFileSync(LOG,JSON.stringify({tool:input.tool,eventId:input.eventId,error:String(e.stack??e).slice(0,1500)})+'\n');}
         return out;
     };

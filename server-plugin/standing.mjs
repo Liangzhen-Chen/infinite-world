@@ -7,6 +7,8 @@ import {readBossCognition} from './boss-cognition.mjs';
 import {readBossNegotiation} from './boss-negotiation.mjs';
 import {personView} from './entity-view.mjs';
 import {actorId} from './npc-state.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('standing',{kinds:[]});
 
 // One read model for "how does X regard Y", normalized to -100..100. It wraps
 // the seven existing stores without changing them:
@@ -92,7 +94,7 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
     const old=standingLedger(state,holder,target);
     if(old?.history.some(h=>h.sourceEvent===sourceEvent&&h.via===via))return null;
     const row={category:'standing',holder,target,value:clamp((old?.value??0)+delta),history:[...old?.history??[],{delta,sourceEvent,reason,via,minute}]};
-    d.set(['state','records',rec(holder,target)],row);return row;
+    holdingSet(d,null,['state','records',rec(holder,target)],row,'standing');return row;
 }
 
 // Transmission: what is done to a member reaches the collectives it belongs to,

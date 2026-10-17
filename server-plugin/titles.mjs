@@ -76,7 +76,7 @@ function petition(d,engine,args,eventId){
     if(d.get(...rec(id)))throw Error('事务编号已占用');
     const registry=authorityOf(engine).superiors.auth_capital_title_registry;
     const row={category:'title_petition',id,title:def.name,fief,...(fiefCandidates(engine,state,def.name).find(c=>c.id===fief)?{domains:fiefCandidates(engine,state,def.name).find(c=>c.id===fief).domains}:{}),bases,registrar:clerk,filedAt:state.minute,due:state.minute+registry.decisionDays*DAY,status:'待审定',sourceEvent:eventId};
-    d.set(rec(id),row);
+    holdingSet(d,null,rec(id),row,'titles');
     return {petition:id,pending:row,note:`已转呈王都封册署，${registry.decisionDays}日后按凭据审定；贡献度不作凭据。`};
 }
 function decide(d,engine,p){

@@ -85,8 +85,12 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('engine',{kinds:['companion','lodges']});
+import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove} from './holdings.mjs';
+// S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
+// 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
+const withBooks=(engine,document)=>withLedger(engine,document);
+// 引擎自己的写入（同行、客房）与旧存档分区补齐（巢穴、农事等迁移补丁的转运，可落到任何来源）。
+declareHoldingWriter('engine',{kinds:['*'],entities:['*'],locations:true});
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
@@ -215,17 +219,19 @@ export class WorldEngine {
         if(this.compat)return this.compat.reduce(document,input);
         // T143: a campaign with generated far counties runs over its overlay world.
         const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.reduce(document,input,options);
-        if (input.type==='schema_migration') return {patches:input.patches,result:{migration:true}};
-        if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:migration.patches,result:migration.report};}
-        if(input.type==='rules_state_migration')return{patches:planRuleStateMigration(document,this.rules),result:{migration:true,runtimeRuleVersion}};
+        // S2a: 迁移事件的补丁直接改旧字段；已开持有分区的存档随之折算持有（与世界版本更新同一入口）。
+        const booked=patches=>[...patches,...bookHoldingsUpgrade(document,applyPatches(document,patches),this.world)];
+        if (input.type==='schema_migration') return {patches:booked(input.patches),result:{migration:true}};
+        if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:booked(migration.patches),result:migration.report};}
+        if(input.type==='rules_state_migration')return{patches:booked(planRuleStateMigration(document,this.rules)),result:{migration:true,runtimeRuleVersion}};
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
-            const books=withLedger(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
+            const books=withBooks(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),notices:[]}};
         }
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
-            const books=withLedger(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
+            const books=withBooks(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
             session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
@@ -233,7 +239,7 @@ export class WorldEngine {
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
-        const books=withLedger(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
+        const books=withBooks(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
@@ -243,7 +249,7 @@ export class WorldEngine {
         }
         if(document.releaseVersion!==1){
             if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
-            for(const patch of planPreR1Partitions(document,this.world))d.set(patch.path,patch.value);
+            for(const patch of planPreR1Partitions(document,this.world))holdingSet(d,this,patch.path,patch.value,'engine');
         }
         settleAgricultureExpiry(d,this);
         enforceLegalRestriction(d,tool,args);
@@ -258,7 +264,7 @@ export class WorldEngine {
         }
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
-        if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))d.remove(['state','records','site_presence']);
+        if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
         if(document.state.location!==d.get('state','location'))recordReturnVisit(d,session,document.state,id);
         // Entering an unexpanded district or lair settles its seeded roster once.
@@ -360,7 +366,7 @@ export class WorldEngine {
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         const tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
-        if(payment.debt)d.set(['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}});
+        if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
         d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
     }
@@ -408,9 +414,9 @@ export class WorldEngine {
             if(duration<=0)throw new Error('目标钟点必须晚于现在，请核对 dayOffset');
         }
         const minutes=number(duration,1,43200,'耗时');
-        if(['睡眠','休息'].includes(args.activity))d.set(['state','records','mind_rest_activity'],true);
+        if(['睡眠','休息'].includes(args.activity))holdingSet(d,null,['state','records','mind_rest_activity'],true,'engine');
         this.advance(d,minutes,id);
-        if(d.get('state','records','mind_rest_activity'))d.remove(['state','records','mind_rest_activity']);
+        if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){
                 d.set(['state','player','hp'],Math.min(p.maxHp,p.hp+Math.floor(minutes/30)));
@@ -514,24 +520,24 @@ export class WorldEngine {
         transfer(d,{from:accountKey('player',LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId:id});
         d.set(['state','player','coins'],d.get('state','player','coins')-route.cost);
         d.set(['state','location'],destination);
-        if(d.get('state','records','local_player_position'))d.remove(['state','records','local_player_position']);
+        if(d.get('state','records','local_player_position'))holdingRemove(d,null,['state','records','local_player_position'],'engine');
         const discovered=Boolean(d.get('state','discoveries',destination));
         d.set(['state','discoveries',destination],{minute:d.get('state','minute')+route.minutes,source:'亲历'});
         for(const npc of d.get('state','player','companions')){
             d.set(['state','npcs',npc,'location'],destination);
-            if(d.get('state','records',`local_actor_position:${npc}`))d.remove(['state','records',`local_actor_position:${npc}`]);
+            if(d.get('state','records',`local_actor_position:${npc}`))holdingRemove(d,null,['state','records',`local_actor_position:${npc}`],'engine');
         }
         movePets(d,this,old,destination,route.movingMinutes);moveSpiritCompanions(d,old,destination);
         for(const[key,effect]of Object.entries(d.get('state','effects')))if(effect.kind==='summon'&&effect.owner==='player'&&effect.location===old)d.set(['state','effects',key,'location'],destination);
         this.npcObligationAction.arrivalMinute=d.get('state','minute')+route.minutes;
         const areaTravel=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='area');
-        if(areaTravel)d.set(['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id});
+        if(areaTravel)holdingSet(d,null,['state','records','magic_area_transit'],{category:'magic_area_transit',subjects:['player',...d.get('state','player','companions')],start:d.get('state','minute'),arrival:this.npcObligationAction.arrivalMinute,source:id},'engine');
         strainCare(d,this,'player',route.movingMinutes);
         this.advance(d,route.minutes,id);
         inspectSmuggling(d,this,route,id);
         let encounter=null;
         for(const attempt of attempts){const seen=settleWildlifeEncounter(d,this,attempt,id);if(seen)encounter=seen;}
-        if(areaTravel)d.remove(['state','records','magic_area_transit']);
+        if(areaTravel)holdingRemove(d,null,['state','records','magic_area_transit'],'engine');
         const experience=discovered?{experience:0}:milestone(d,this,'discovery',destination,id);
         for(const [key,obligation]of Object.entries(d.get('state','obligations')))if(obligation.type==='带路'&&obligation.destination===destination&&obligation.status==='进行中'){
             d.set(['state','obligations',key,'status'],'已完成');d.say(`${this.byId.get(obligation.promisor).name}的带路约定已完成`);
@@ -580,7 +586,7 @@ export class WorldEngine {
     }
     revive(d,args,id) {
         const result=revivePlayer.call(this,d,args,id);
-        if(d.get('state','records','local_player_position'))d.remove(['state','records','local_player_position']);
+        if(d.get('state','records','local_player_position'))holdingRemove(d,null,['state','records','local_player_position'],'engine');
         return result;
     }
     revival(d,args,id){

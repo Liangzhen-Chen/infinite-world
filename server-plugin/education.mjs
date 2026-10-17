@@ -13,7 +13,7 @@ import {npcEntryCheck} from './checks.mjs';
 import {npcServices} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
-declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified'],entities:['office']});
+declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
 const able=(s,id)=>capable(s,id)&&(id==='player'||!s.npcs[id].cognitionTravel&&!s.npcs[id].scheduleTravel);
@@ -29,7 +29,7 @@ export function prepareEducation(d,e,{before,after}){
   // zero-time action or in the middle of an already running class.
   if(!d.get('state','npcs',id)&&after>before&&before%DAY===c.start){
    const n=rosterLifeState(e,d.get('state'),id,d.get('state','minute'),'自动入学',{minor:true});
-   if(n)d.set(['state','npcs',id],n);
+   if(n)holdingSet(d,null,['state','npcs',id],n,'education');
   }
   e.educationAttendance.set(id,[]);
  }
@@ -81,7 +81,7 @@ function lesson(d,e,c,student,attended,factor,at,dismissed,day){
    try{gain=npcLessonGain(e,s,student,skill,ceiling,e.rules.npcGrowth.teach.gain);settleNpcLesson(d,e,student,skill,gain,`${key}:${at}`);completed+=required;sessions++;}catch{/* Daily allowance or proficiency ceiling: no free growth. */}
   }else if(!knowsKnowledge(e,s,student,c.entity)){
    const partition=c.entity.startsWith('recipe_')?'recipes':'spells';
-   d.set(['state','npcs',student,partition,c.entity],{source:{type:c.book?'book':'teacher',id:source},learnedAt:at,sourceEvent:key});completed+=required;sessions++;
+   holdingSet(d,null,['state','npcs',student,partition,c.entity],{source:{type:c.book?'book':'teacher',id:source},learnedAt:at,sourceEvent:key},'education');completed+=required;sessions++;
   }
  }
  // Keep at most one uncompleted lesson; unavailable daily allowance cannot be
@@ -162,7 +162,7 @@ export function educationAction(d,args,id){
   const students=[...new Set((args.students??[args.student]).filter(Boolean).map(n=>actor(e,n)))];if(!students.length||students.includes('player'))throw Error('须指定实际居民学生');
   for(const who of students)if(!d.get('state','npcs',who)&&args.consent===true){
    const student=rosterLifeState(e,d.get('state'),who,s.minute,'报名受教',{minor:(e.byId.get(who)?.age??18)<18});
-   if(student&&student.location===s.location)d.set(['state','npcs',who],student);
+   if(student&&student.location===s.location)holdingSet(d,null,['state','npcs',who],student,'education');
   }
   for(const who of [...students,...teacher?[teacher]:[]])present(d,e,who);
   if(teacher&&!teaching(e,s,teacher,entity))throw Error('先生没有实际掌握所授内容');

@@ -11,6 +11,8 @@ import {advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {personView} from './entity-view.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {resolveCreature} from './wildlife.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('elections',{kinds:['holds_office'],entities:['office']});
 
 const path=id=>['state','records',id];
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
@@ -43,7 +45,7 @@ export function electionAction(d,args,id){
         const key=`election:${id}`,row={category:'election',id:key,org:org?.id??null,settlement,office:office?.id??null,incumbent,candidate:'player',
             status:'竞选中',started:now,due:now+this.rules.elections.campaignDays*1440,campaigns:[],frauds:[],sourceEvent:id};
         row.electorate=voters(this,d.get('state'),row);if(row.electorate.filter(v=>v!=='player').length===0)throw Error('没有实际选民');
-        d.set(path(key),row);return {election:key,status:row.status,due:row.due,electorate:row.electorate};
+        holdingSet(d,null,path(key),row,'elections');return {election:key,status:row.status,due:row.due,electorate:row.electorate};
     }
     const row=d.get(...path(args.proposal));if(row?.category!=='election')throw Error('没有该竞选');
     if(args.operation==='election_expose'){
@@ -53,8 +55,8 @@ export function electionAction(d,args,id){
         const exposure=exposeLieCall(d,this,{subject:fraud.observer,key:fraud.key,source:speaker,content:'参选人曾送钱要求我投票，声称只是无关选票的赠礼。'},id);
         const incident=registerIncident(d,this,{victim:speaker,offense:'vote_buying',value:fraud.coins,witnesses:[speaker,fraud.observer],eventId:id,optional:true});
         for(const v of voters(this,d.get('state'),row).filter(v=>v!=='player'))adjustStanding(d,this,v,'player',-20,{sourceEvent:id,reason:'贿选被揭发'});
-        const next={...row,frauds:row.frauds.map(f=>f===fraud?{...f,exposed:true,case:incident}:f),disqualified:true};d.set(path(row.id),next);
-        if(row.appointment){const a=d.get(...path(row.appointment));if(a?.status==='待审定')d.set(path(a.id),{...a,status:'撤回',reason:'贿选揭发'});}
+        const next={...row,frauds:row.frauds.map(f=>f===fraud?{...f,exposed:true,case:incident}:f),disqualified:true};holdingSet(d,null,path(row.id),next,'elections');
+        if(row.appointment){const a=d.get(...path(row.appointment));if(a?.status==='待审定')holdingSet(d,null,path(a.id),{...a,status:'撤回',reason:'贿选揭发'},'elections');}
         return {election:row.id,disqualified:true,case:incident,...exposure};
     }
     if(row.status!=='竞选中')throw Error('本轮投票已经结束');
@@ -87,7 +89,7 @@ export function electionAction(d,args,id){
         for(const voter of targets)d.set([...actorPath(this.world,voter),'memoryStream'],[...d.get(...actorPath(this.world,voter),'memoryStream')??[],{
             id:`campaign:${id}:${voter}`,kind:'campaign',sourceEvent:id,minute:d.get('state','minute'),location:d.get('state','location'),participants:['player',voter],sourceType:'亲历',
             content:args.content??(gift?'参选人当面送了礼物。':'参选人私下送钱求票。'),campaignSuccess:gain>0,...(coins?{private:true}:{})}]);
-        d.set(path(row.id),{...row,frauds,disqualified,campaigns:[...row.campaigns,{action,targets,day:Math.floor(now/1440),content:args.content??null,gift,coins,check:check.success,sourceEvent:id}]});
+        holdingSet(d,null,path(row.id),{...row,frauds,disqualified,campaigns:[...row.campaigns,{action,targets,day:Math.floor(now/1440),content:args.content??null,gift,coins,check:check.success,sourceEvent:id}]},'elections');
         return {election:row.id,targets,gain,success:check.success,spent:{minutes:30,item:gift,coins},worldEvent:{verb:'gift',target:targets[0],value:Math.max(0,gain),witnesses:targets,tags:['election',action]}};
     }
     if(args.operation!=='election_finish')throw Error('未知竞选操作');
@@ -102,9 +104,9 @@ export function electionAction(d,args,id){
         if(won){
             // Election nominates; the sourced superior still checks the existing office requirements.
             const result=governanceAction.call(this,d,{operation:'governance_apply',settlement:row.settlement,name:row.office},`${id}_appointment`);appointment=result.application;
-            d.set([...path(appointment),'election'],row.id);
+            holdingSet(d,null,[...path(appointment),'election'],row.id,'elections');
         }
     }
-    d.set(path(row.id),{...row,status:won?'当选':'落选',votes,proposal,appointment,finished:now});
+    holdingSet(d,null,path(row.id),{...row,status:won?'当选':'落选',votes,proposal,appointment,finished:now},'elections');
     return {election:row.id,won,proposal,appointment,status:won?'当选':'落选',votes};
 }

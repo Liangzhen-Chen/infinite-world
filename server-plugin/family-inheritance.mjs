@@ -9,7 +9,7 @@ import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings,syncHoldingRecord} from './holding-sources.mjs';
-declareHoldingWriter('family-inheritance',{kinds:['holds_office','fief','guardian_of','owns','share'],entities:['office','estate']});
+declareHoldingWriter('family-inheritance',{kinds:['holds_office','fief','guardian_of','owns','share','resides','devotee_of','certified'],entities:['office','estate']});
 
 const DAY=1440,YEAR=360*DAY,rec=id=>['state','records',id];
 export function inheritanceRule(e,s,id,location){
@@ -30,7 +30,7 @@ const portions=(n,ids)=>ids.map((id,i)=>({id,amount:Math.floor(n/ids.length)+(i<
 function materialize(d,e,id,at){
  if(d.get('state','npcs',id))return;
  const row=rosterLifeState(e,d.get('state'),id,at,'继承',{minor:!familyAdult(e,d.get('state'),id,at)});
- if(row)d.set(['state','npcs',id],row);
+ if(row)holdingSet(d,null,['state','npcs',id],row,'family-inheritance');
 }
 function guardianship(d,e,ward,from,deathId,minute,coins){
  const s=d.get('state'),family=natalFamily(e,s,ward),parents=familyEdges(e,s).filter(r=>r.kind==='parent'&&r.to===ward).map(r=>r.from);
@@ -54,7 +54,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
   return estate;
  }
  const rowFor=who=>estate.allocations.find(r=>r.heir===who);
- for(const {id:to,amount}of portions(estate.coins,heirs))if(amount){moveCoins(d,{from:purse(e,id),to:purse(e,to),amount:amount,writer:'family-inheritance',eventId:deathId});d.set(['state','npcs',to,'coins'],(d.get('state','npcs',to,'coins')??0)+amount);rowFor(to).coins=amount;}
+ for(const {id:to,amount}of portions(estate.coins,heirs))if(amount){moveCoins(d,{from:purse(e,id),to:purse(e,to),amount:amount,writer:'family-inheritance',eventId:deathId});holdingSet(d,null,['state','npcs',to,'coins'],(d.get('state','npcs',to,'coins')??0)+amount,'family-inheritance');rowFor(to).coins=amount;}
  if(estate.coins)d.set([...actorPath(e.world,id),'coins'],0);
  for(const item of Object.keys(current.inventory??{}).sort()){
   const quantity=e.quantity(d,id,item);if(!quantity)continue;estate.items[item]=quantity;
@@ -92,7 +92,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
  }
  for(const allocation of estate.allocations){
   const heir=allocation.heir;
-  d.set(['state','npcs',heir,'developments'],[...d.get('state','npcs',heir,'developments')??[],{type:'继承',source:deathId,minute,from:id}]);
+  holdingSet(d,null,['state','npcs',heir,'developments'],[...d.get('state','npcs',heir,'developments')??[],{type:'继承',source:deathId,minute,from:id}],'family-inheritance');
   if(!familyAdult(e,d.get('state'),heir,minute))estate.guardianships.push(guardianship(d,e,heir,id,deathId,minute,allocation.coins));
  }
  return estate;

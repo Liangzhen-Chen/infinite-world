@@ -50,7 +50,7 @@ export function fish(d,args,id){
     if(success){
         const p=latest.populations[selected.id];
         // withdrawn is the existing ecological sink, also used for actual individuals.
-        d.set([...path(`ecology:${habitat.id}`),'populations',selected.id],{...p,count:p.count-1,withdrawn:p.withdrawn+1});
+        holdingSet(d,null,[...path(`ecology:${habitat.id}`),'populations',selected.id],{...p,count:p.count-1,withdrawn:p.withdrawn+1},'extraction');
         this.itemDelta(d,'player','item_fish',1,{flow:'src:harvest',purpose:'fishing',writer:'extraction',eventId:id});
         holdingSet(d,null,path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id},'extraction');
     }

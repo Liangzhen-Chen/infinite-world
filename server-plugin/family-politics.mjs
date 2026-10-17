@@ -72,8 +72,8 @@ export function familyAction(d,args,eventId){
   holdingSet(d,null,['state','family','adoptions',aid],row,'family-politics');moveHouse(d,e,child,house,eventId);
   // Transfer legal care without erasing the recorded biological parents.
   if(!familyAdult(e,s,child)){
-   const prior=activeGuardianship(e,s,child);if(prior)d.set(rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind});
-   d.set(rec(`guardianship:${aid}`),{category:'guardianship',id:`guardianship:${aid}`,ward:child,guardian:parent,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,child)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:[],sourceEvent:aid});
+   const prior=activeGuardianship(e,s,child);if(prior)holdingSet(d,null,rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind},'family-politics');
+   holdingSet(d,null,rec(`guardianship:${aid}`),{category:'guardianship',id:`guardianship:${aid}`,ward:child,guardian:parent,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,child)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:[],sourceEvent:aid},'family-politics');
   }
   holdingSet(d,null,['state','family','seenByPlayer',aid],s.minute,'family-politics');
   entityTransition(d,e,{id:aid,verb:'transfer',actor:parent,target:child,location:house.homeLocation,visibility:'members',tags:['family',row.kind],summary:`当事人同意${row.kind}并实际迁入养亲家户`});return {adoption:row,household:house.id};
@@ -96,7 +96,7 @@ export function familyAction(d,args,eventId){
    if(relationView(e,s,guardian,id).trust<0)throw Error('候选人不愿监护');
    const prior=Object.values(s.records??{}).find(r=>r.category==='guardianship'&&r.ward===id&&['待指定','已撤换'].includes(r.status)),key=prior?.id??`guardianship:${eventId}`;
    const row={...prior,category:'guardianship',id:key,ward:id,guardian,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,id)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:prior?.ledger??[],appointedBy:authority,sourceEvent:eventId};
-   d.set(rec(key),row);entityTransition(d,e,{id:`${eventId}:guardian`,verb:'appoint',actor:authority,target:guardian,location:s.location,visibility:'members',tags:['family','guardianship'],summary:'当地法庭指定未成年人的监护人'});return {guardianship:key,guardian};
+   holdingSet(d,null,rec(key),row,'family-politics');entityTransition(d,e,{id:`${eventId}:guardian`,verb:'appoint',actor:authority,target:guardian,location:s.location,visibility:'members',tags:['family','guardianship'],summary:'当地法庭指定未成年人的监护人'});return {guardianship:key,guardian};
   }
   return manageWard(d,e,{ward:id,guardian,coins:args.coins,kind:args.choice,purpose:args.content,recipient:args.authority,eventId});
  }

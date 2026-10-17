@@ -163,7 +163,7 @@ export function bookTransport(d,e,args,eventId){
  holdingSet(d,null,path(id),row,'transport');index(d,id);return clone(row);
 }
 function setPosition(d,row,location){
- d.set([...path(row.asset),'location'],location);
+ holdingSet(d,null,[...path(row.asset),'location'],location,'transport');
  const animal=d.get(...path(row.asset),'animal');if(animal)holdingSet(d,null,['state','creatures',animal,'location'],location,'transport');
  for(const actor of [row.driver,...row.passengers,...row.escort?[row.escort]:[]]){
   if(actor==='player')d.set(['state','location'],location);
@@ -181,7 +181,7 @@ export function advanceTransport(d,e,minute){
   }
   if(t.segment){const waypoint=stepTransport(e,t,t.segment);
    if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)},'transport');}
-   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));d.set([...path(row.asset),'durability'],Math.max(0,asset.durability-wear));}}
+   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));holdingSet(d,null,[...path(row.asset),'durability'],Math.max(0,asset.durability-wear),'transport');}}
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
    const handover=!row.cargo.length||actorLocation(d.get('state'),row.recipient)===t.location;
@@ -242,7 +242,7 @@ export function transportAction(d,e,args,eventId){
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
  if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});d.set([...path(a.id),'durability'],100);return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

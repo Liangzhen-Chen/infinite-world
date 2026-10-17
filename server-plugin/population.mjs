@@ -6,7 +6,7 @@ import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('population',{kinds:['owns']});
+declareHoldingWriter('population',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 
 // On-demand population for seeded settlements and lairs. The roster of a
 // residential district is a pure function of the template and quota captured
@@ -430,8 +430,8 @@ export function acceptPopulationProfile(d,engine,input){
     d.set(['state','population',entity.settlement,'profiles',person],{status:'full',failures:status?.failures??0,minute,profileHash:hashText(profile),
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});
     // A profile adds description; family life may already have admitted this actor.
-    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...full,coins:0,inventory:{}}),occupation:full.occupation,
-        routine:lifeRoutine(full.home.location??full.home.district,{minor:full.flags.minor,occupation:full.occupation})});
+    if(!d.get('state','npcs',person))holdingSet(d,null,['state','npcs',person],{...initialNpcState({...full,coins:0,inventory:{}}),occupation:full.occupation,
+        routine:lifeRoutine(full.home.location??full.home.district,{minor:full.flags.minor,occupation:full.occupation})},'population');
     return {person,status:'full',name:full.name};
 }
 

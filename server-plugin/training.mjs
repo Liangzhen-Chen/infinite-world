@@ -7,7 +7,7 @@ import {digest} from './storage.mjs';
 import {convertFaith} from './faith.mjs';
 import {temples} from './faith-catalog.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('training',{kinds:['mentor_of','devotee_of','permit','certified'],entities:['office']});
+declareHoldingWriter('training',{kinds:['mentor_of','devotee_of','permit','certified','member_of','holds_office'],entities:['office']});
 
 const record=id=>['state','records',id];
 const awake=a=>a&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
@@ -41,7 +41,7 @@ export function initiation(d,engine,args,id){
  if(previous?.institution===institution&&previous.status==='守戒中')throw Error('已经入门，不能重复收费或重置守戒起日');
  present(d,engine,entry,entry.initiationMinutes);pay(d,engine,entry,entry.initiationFee,entry.initiationMinutes,id);
  const now=d.get('state','minute'),key=`training_initiation:${id}`,row={category:'training_initiation',profession:role,teacher,institution,rule:entry.rule,observedSince:now,lastBreach:previous?.lastBreach??-1,status:'守戒中',sourceEvent:id,cost:entry.initiationFee};
- d.set(record(key),row);d.set(record(`training_source:${id}`),{initiation:structuredClone(row)});
+ holdingSet(d,null,record(key),row,'training');holdingSet(d,null,record(`training_source:${id}`),{initiation:structuredClone(row)},'training');
  d.set(['state','careers',role,'initiation'],{...row,record:key});
  if(entry.ritual&&engine.rules.faith){
   const t=temples(engine).find(t=>t.seat===institution&&t.teacher===teacher),current=d.get('state','player','faith');
@@ -74,7 +74,7 @@ export function ritualOfficiate(d,engine,args,id){
  present(d,engine,entry,entry.ritualMinutes);pay(d,engine,entry,entry.ritualFee,entry.ritualMinutes,id);
  const start=d.get('state','minute'),key=`ritual_permission:${id}`,god=deity&&engine.byId.get(deity);
  const permission={category:'authorization',action:'ritual_officiate',subject:'player',grantee:'player',grantor:teacher,institution,profession:engine.byId.get(profession).name,professionId:profession,deity,church:god?.church.name??entry.church,createdAt:start,expires:start+duration,revoked:false,sourceType:'training',sourceEvent:id,initiation:init.record};
- d.set(record(key),permission);d.set(record(`ritual_source:${id}`),{permission:structuredClone(permission)});
+ holdingSet(d,null,record(key),permission,'training');holdingSet(d,null,record(`ritual_source:${id}`),{permission:structuredClone(permission)},'training');
  return{permit:key,permission,cost:entry.ritualFee,minutes:entry.ritualMinutes};
 }
 export function assertTrainingRitual(d,engine,key,until){
@@ -92,7 +92,7 @@ export function recordDisciplineBreach(d,engine,kind,eventId){
   if(init?.institution!==e.institution||init.status!=='守戒中'||!e.breaches.includes(kind))continue;
   d.set(['state','careers',e.profession,'initiation'],{...init,lastBreach:now,status:'违戒',breachEvent:eventId});
   const f=d.get('state','player','faith');if(f?.initiation===init.record)holdingSet(d,null,['state','player','faith'],{...f,lastBreach:now},'training');
-  for(const [key,r]of Object.entries(d.get('state','records')??{}))if(r.sourceType==='training'&&r.initiation===init.record&&!r.revoked)d.set(record(key),{...r,revoked:true,revokedAt:now,reason:'违戒',breachEvent:eventId});
+  for(const [key,r]of Object.entries(d.get('state','records')??{}))if(r.sourceType==='training'&&r.initiation===init.record&&!r.revoked)holdingSet(d,null,record(key),{...r,revoked:true,revokedAt:now,reason:'违戒',breachEvent:eventId},'training');
   d.say('师门守戒已中断，相关主持资格停止；重新入门须当面承担费用和守戒时间');
  }
 }

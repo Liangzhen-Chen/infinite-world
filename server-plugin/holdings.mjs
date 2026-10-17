@@ -10,7 +10,8 @@
 export const HOLDINGS_VERSION=1;
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
 export const holdingsActive=d=>read(d,'holdings','version')===HOLDINGS_VERSION;
-const minuteOf=d=>read(d,'state','minute')??0;
+// 开账（genesis）写下的是“开局即有”的关系，不记开账时刻：开账发生在哪个事件不改变存储内容（分段推进与重载等价）。
+const minuteOf=d=>d.genesis?undefined:read(d,'state','minute')??0;
 
 // ---- 世界内原因：拒绝写入时抛出的错误带 code 与给玩家看的原因 -------------------------
 export class HoldingRejected extends Error{
@@ -55,10 +56,10 @@ export function holdingWriters(){
     return Object.fromEntries([...writers].sort(([a],[b])=>a<b?-1:1).map(([w,r])=>[w,{kinds:[...r.kinds].sort(),entities:[...r.entities].sort(),locations:r.locations}]));
 }
 function writerFor(writer,what,kind){
-    const w=writers.get(writer);if(!w)throw Error(`未登记的持有写入者：${writer}`);
-    if(what==='kinds'&&!w.kinds.has(kind)&&!w.kinds.has('*'))throw Error(`${writer} 没有持有种类 ${kind} 的写入权`);
-    if(what==='entities'&&!w.entities.has(kind)&&!w.entities.has('*'))throw Error(`${writer} 没有实体种类 ${kind} 的写入权`);
-    if(what==='locations'&&!w.locations)throw Error(`${writer} 没有位置事实的写入权`);
+    const w=writers.get(writer);if(!w)throw new HoldingRejected('E-HOLDING-WRITER',`未登记的持有写入者：${writer}`);
+    if(what==='kinds'&&!w.kinds.has(kind)&&!w.kinds.has('*'))throw new HoldingRejected('E-HOLDING-WRITER',`${writer} 没有持有种类 ${kind} 的写入权`);
+    if(what==='entities'&&!w.entities.has(kind)&&!w.entities.has('*'))throw new HoldingRejected('E-HOLDING-WRITER',`${writer} 没有实体种类 ${kind} 的写入权`);
+    if(what==='locations'&&!w.locations)throw new HoldingRejected('E-HOLDING-WRITER',`${writer} 没有位置事实的写入权`);
 }
 
 // ---- 开账（genesis）：分区在第一次写入时从旧字段开出 -------------------------------------
@@ -72,13 +73,15 @@ export function emptyHoldings(){return {version:HOLDINGS_VERSION,seq:0,rows:{},e
 export function openHoldings(engine,document){
     if(!opener)throw Error('持有开账函数未登记');
     const root={state:document.state,holdings:emptyHoldings()};
-    const d={peek:(...p)=>p.reduce((v,k)=>v?.[k],root),get(...p){return this.peek(...p);},
+    const d={genesis:true,peek:(...p)=>p.reduce((v,k)=>v?.[k],root),get(...p){return this.peek(...p);},
         set(path,value){if(path[0]!=='holdings')throw Error('开账只写持有分区');let t=root;for(const k of path.slice(0,-1))t=t[k]??={};t[path.at(-1)]=value;},
         remove(path){let t=root;for(const k of path.slice(0,-1))t=t?.[k];if(t)delete t[path.at(-1)];}};
     const {holdings=[],entities=[],locations=[]}=opener(engine,document.state);
-    for(const e of entities)createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source:e.source??null,writer:'genesis',origin:e.origin??'authored'});
-    for(const h of holdings)openHolding(d,{...h,writer:'genesis',engine});
-    for(const l of locations)setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,source:l.source??null,writer:'genesis',engine});
+    // 作者数据里违反注册形状的一条不阻断开账：记漂移（对账报出），其余照开。
+    const attempt=(info,fn)=>{try{fn();}catch(e){if(!(e instanceof HoldingRejected))throw e;root.holdings.drift=[...root.holdings.drift??[],{...info,code:e.code,reason:e.message}].slice(-50);}};
+    for(const e of entities)attempt({source:e.source,entity:e.id},()=>createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source:e.source??null,writer:'genesis',origin:e.origin??'authored'}));
+    for(const h of holdings)attempt({source:h.source,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,writer:'genesis',engine}));
+    for(const l of locations)attempt({source:l.source,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,source:l.source??null,writer:'genesis',engine}));
     return root.holdings;
 }
 declareHoldingWriter('genesis',{kinds:['*'],entities:['*'],locations:true});
@@ -140,7 +143,10 @@ export function openHolding(d,{kind:kindId,variant=null,holder,subject,terms=nul
     checkTemplates(d,kind,holder,subject,engine);
     const idx=index(d),v=variantOf(kind,variant),minute=minuteOf(d);
     const peers=[...idx.bySubject.get(`${kindId}|${subject}`)??[]].map(id=>rowOf(d,id));
-    if(peers.some(r=>r.holder===holder&&(r.variant??null)===variant))throw new HoldingRejected('E-HOLDING-DUPLICATE','这条持有已经存在',`${kindId}: ${holder} → ${subject}`);
+    // 同两端、同变体、同条款的第二条是重复；条款不同（两份授权、两份雇佣合同）是两条持有。
+    const termsKey=JSON.stringify(terms??null,terms?Object.keys(terms).sort():undefined);
+    // 份额种类每个持有人一条边（共有按份额）。
+    if(peers.some(r=>r.holder===holder&&(r.variant??null)===variant&&(kind.sum!==undefined||JSON.stringify(r.terms??null,r.terms?Object.keys(r.terms).sort():undefined)===termsKey)))throw new HoldingRejected('E-HOLDING-DUPLICATE','这条持有已经存在',`${kindId}: ${holder} → ${subject}`);
     if(kind.exclusive&&peers.length)throw new HoldingRejected('E-HOLDING-EXCLUSIVE',`${kind.label}同一时刻只能有一个持有人`,`${kindId}: ${subject} 已由 ${peers[0].holder} 持有`);
     if(kind.sum!==undefined){
         const share=terms?.share;
@@ -295,6 +301,14 @@ export function bookHoldingsUpgrade(before,after,world){
     for(const fn of upgrades.values())fn(d,engine);
     return patches;
 }
+
+// ---- 漂移：双写期旧字段仍是权威（S1a 账本同此）：适配器按旧字段写入时被注册形状拒绝的那一条，
+// 不拦旧结算，而是记一条漂移（种类、两端、拒绝码与原因），存储里缺这一条，对账即报出；验收要求漂移为 0。
+export function recordHoldingDrift(d,entry){
+    if(!holdingsActive(d))return;
+    d.set(['holdings','drift'],[...(read(d,'holdings','drift')??[]),{...entry,minute:minuteOf(d)}].slice(-50));
+}
+export const holdingsDrift=d=>read(d,'holdings','drift')??[];
 
 // ---- 审计 ----------------------------------------------------------------------------
 // I8：互斥种类同一标的至多一条存活持有；份额种类同一标的的存活份额之和不超过 sum（有份额者应恰为 sum，由对账报出）；

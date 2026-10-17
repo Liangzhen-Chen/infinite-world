@@ -16,7 +16,7 @@ import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from '.
 import {rankedOffice} from './promotion.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldingRecord} from './holding-sources.mjs';
-declareHoldingWriter('governance',{kinds:['holds_office','appointed'],entities:['office','motion']});
+declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion']});
 
 const DAY=1440;
 const path=id=>['state','records',id];

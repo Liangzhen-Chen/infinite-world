@@ -19,9 +19,9 @@ import {digest} from './storage.mjs';
 import {standing} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
-declareHoldingWriter('bounty',{kinds:['guest_of','wanted','companion'],entities:['case']});
+declareHoldingWriter('bounty',{kinds:['guest_of','wanted','companion','resides','devotee_of'],entities:['case']});
 
 const DAY=1440,TICK=600,ACTIVE='生效';
 const rec=id=>['state','records',id];
@@ -122,7 +122,7 @@ export function closeWanted(d,engine,w,status,reason,minute){
     }
     if(status!=='已到案')closeQuest(d,next,'撤销',reason,minute);
     if(next.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');}
-    if(w.subject!=='player'&&d.get('state','npcs',w.subject,'fugitive')===w.id)d.remove(['state','npcs',w.subject,'fugitive']);
+    if(w.subject!=='player'&&d.get('state','npcs',w.subject,'fugitive')===w.id)holdingRemove(d,null,['state','npcs',w.subject,'fugitive'],'bounty');
     save(d,next);return next;
 }
 
@@ -162,7 +162,7 @@ export function deliverFugitive(d,engine,w,by,minute){
     holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc),'bounty');
     d.set(['state','npcs',npc,'location'],code.court);
     d.set(['state','npcs',npc,'activity'],'依法拘留');
-    for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))d.remove(['state','npcs',npc,field]);
+    for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))holdingRemove(d,null,['state','npcs',npc,field],'bounty');
     holdingSet(d,null,rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes,
         ...(row?.private||['private','secret'].includes(row?.visibility)?{visibility:row.private?'private':row.visibility}:{})},'bounty');
     if(row)holdingSet(d,null,rec(row.id),{...row,status:'已到案',deliveredBy:by,deliveredAt:minute},'bounty');

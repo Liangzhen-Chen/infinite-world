@@ -46,7 +46,7 @@ function rowOf(d,engine,org){
     return structuredClone({category:'organization',id:org.id,source:org.source,members:{},removed:{},treasury:0,ledger:[],...d.get(...path(org.id))});
 }
 // S2a：会籍与首领职位双写进持有存储（holding-sources 的 org 来源）。
-const save=(d,row,engine)=>{d.set(path(row.id),row);syncHoldings(d,engine,'org',row.id,{writer:'organizations'});};
+const save=(d,row,engine)=>holdingSet(d,engine,path(row.id),row,'organizations');
 const coinPath=(engine,who)=>[...actorPath(engine.world,who),'coins'];
 const actor=(d,engine,who)=>d.get(...actorPath(engine.world,who));
 const resolveActor=(engine,state,name)=>{

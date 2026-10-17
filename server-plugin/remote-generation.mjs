@@ -12,7 +12,7 @@ import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
-declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by'],entities:['office','wreck'],locations:true});
+declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','devotee_of','certified'],entities:['office','wreck'],locations:true});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -581,7 +581,7 @@ export function unfoldRemoteAt(d,engine,location){
     // campaign as an edition update would, so remote wilds hold creatures on the first visit.
     const overlay=materializeWildlifeHabitats(remoteWorld(base,d.get('state'))),places=new Set(skeleton.locations.filter(l=>l.region===county).map(l=>l.id));
     const fresh=(overlay.rules.wildlife?.habitats??[]).filter(h=>h.derived&&places.has(h.location));
-    if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))d.set(patch.path,patch.value);
+    if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))holdingSet(d,engine,patch.path,patch.value,'remote-generation');
     // D1: every generated settlement opens its public ledger (notice board money, stores).
     // S1a: money the skeleton opens with enters the books from src:genesis.
     for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
@@ -591,7 +591,7 @@ export function unfoldRemoteAt(d,engine,location){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
         genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
-        d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
+        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation},'remote-generation');
     }
     syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
@@ -716,7 +716,7 @@ export function acceptRemoteProfile(d,engine,input,{check,maxFailures,fields}){
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});
     d.set(['state','remote',county,'revision'],(rec.revision??0)+1);
     // No purse or goods come with a profile; a shopkeeper keeps the shop it already had.
-    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation,
-        ...(!entity.schedule?{routine:{default:[{start:0,end:1440,location:entity.home?.location??entity.location,activity:'在家',services:[]}]}}:{})});
+    if(!d.get('state','npcs',person))holdingSet(d,null,['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation,
+        ...(!entity.schedule?{routine:{default:[{start:0,end:1440,location:entity.home?.location??entity.location,activity:'在家',services:[]}]}}:{})},'remote-generation');
     return {person,status:'full',name:entity.name,county};
 }

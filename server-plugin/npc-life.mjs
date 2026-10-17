@@ -29,7 +29,7 @@ import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
-declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates']});
+declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -219,7 +219,7 @@ function deliver(d,engine,pregnancy,minute){
  // health and moving like everyone else, never courtship or intimacy.
  const entity={id:child,name,aliases:[],tier:'roster',generated:'birth',age:0,sex,settlement:house.settlement,scope:house.settlement,householdId:house.id,
   home:{location:house.homeLocation},location:house.homeLocation,occupation:'幼童',flags:{minor:true,romanceable:false},sourceEvent:birthId};
- d.set(['state','created',child],entity);admit(engine,entity);
+ holdingSet(d,null,['state','created',child],entity,'npc-life');admit(engine,entity);
  holdingSet(d,null,['state','npcs',child],{...initialNpcState(entity),occupation:'幼童',activity:'由家人照看',routine:lifeRoutine(house.homeLocation,{minor:true}),life:{kind:'born',since:minute,source:birthId}},'npc-life');
  for(const parent of [pregnancy.mother,pregnancy.father])if(d.get('state','npcs',parent))for(const [from,to] of [[parent,child],[child,parent]])
   recordLifeRelation(d,engine,{key:`${birthId}:${from}:${to}`,sourceEvent:birthId,eventType:'出生',from,to,minute,delta:r.childRelation??{trust:50,affection:60}},()=>true);

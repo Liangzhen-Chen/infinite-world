@@ -12,14 +12,27 @@
 // 与存储里该单元的存活持有比对，按差关闭（reason）与开立（经 L0 唯一写入点，受注册形状校验）。
 // 旧写入点漏调它，对账（tests/helpers/holdings-audit.mjs）即报出差异。
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,locationOf,declareHoldingWriter,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
+    setLocation,clearLocation,locationOf,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
+import {legalCodeById} from './law-codes.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
+// 调试与审计：HOLDINGS_DEBUG 打印、HOLDINGS_AUDIT_LOG 追加双写时抛出的错误（游戏代码可能吞掉异常、改变结算，审计要看得见）。
+const debugLog=process.env.HOLDINGS_AUDIT_LOG,debug=process.env.HOLDINGS_DEBUG||debugLog;
+let depth=0;
+function guarded(writer,path,fn){
+    if(!debug)return fn();
+    depth++;try{return fn();}catch(e){if(depth===1)reportError(e,writer,path);throw e;}finally{depth--;}
+}
+function reportError(e,writer,path){
+    if(e.holdingsReported)return;e.holdingsReported=true;
+    const line=JSON.stringify({holdingError:e.message,code:e.code??null,writer,path,stack:String(e.stack).split(/\r?\n/).slice(1,6).join(' | ')});
+    if(debugLog)fsAppend(debugLog,line+'\n');else console.error('HOLDINGS',line);
+}
 const sources=new Map();
 export function defineHoldingSource(name,spec){
     if(!/^[a-z][a-z0-9_-]*$/.test(name))throw Error(`持有来源名无效：${name}`);
@@ -97,7 +110,8 @@ registerHoldingsOpening(legacyHoldings);
 
 declareHoldingWriter('holding-sources',{kinds:['*'],entities:['*'],locations:true});
 // 双写入口：writer 为旧写入点所在模块（须声明持有写入者），reason 为关闭旧边的原因。
-export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId=null}={}){
+export function syncHoldings(d,engine,name,unit,opts={}){return guarded(opts.writer,[name,unit],()=>syncHoldingsUnguarded(d,engine,name,unit,opts));}
+function syncHoldingsUnguarded(d,engine,name,unit,{writer,reason='vacated',eventId=null}={}){
     engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!writer)throw Error('双写须给出写入者');
@@ -107,7 +121,8 @@ export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId
 }
 // 旧记录（state.records 的一行）的双写：按记录类别找到受影响的来源与单元（写入前后两版记录都算，
 // 改了持有人、换了聚落或删掉记录都能找回原单元）。来源以 recordCategories / unitOfRecord 声明它读哪些记录。
-export function syncHoldingRecord(d,engine,key,opts){
+export function syncHoldingRecord(d,engine,key,opts={}){return guarded(opts.writer,['records',key],()=>syncHoldingRecordUnguarded(d,engine,key,opts));}
+function syncHoldingRecordUnguarded(d,engine,key,opts){
     engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!ensureHoldings(d,engine))return false;
     const state=read(d,'state'),units=new Set();
@@ -119,7 +134,8 @@ export function syncHoldingRecord(d,engine,key,opts){
     return units.size>0;
 }
 // 同一来源的全部单元（写入点一次改动多条旧记录、或不便算出单元时）。
-export function syncHoldingSource(d,engine,name,opts){
+export function syncHoldingSource(d,engine,name,opts={}){return guarded(opts.writer,[name],()=>syncHoldingSourceUnguarded(d,engine,name,opts));}
+function syncHoldingSourceUnguarded(d,engine,name,opts){
     engine??=d.engine;if(!engine)return false;// 演算用的工作草稿（无引擎）不双写：回放到正式草稿时再写
     if(!sources.has(name))throw Error(`未登记的持有来源：${name}`);
     if(!ensureHoldings(d,engine))return false;
@@ -130,23 +146,28 @@ export function syncHoldingSource(d,engine,name,opts){
     for(const unit of [...units].sort())applyUnit(d,engine,name,unit,opts);
     return true;
 }
+// 一条写入被注册形状拒绝（HoldingRejected）时记漂移、跳过这一条；其余错误（程序错误）照常抛出。
+function attempt(d,info,fn){
+    try{return fn();}catch(e){if(!(e instanceof HoldingRejected))throw e;recordHoldingDrift(d,{...info,code:e.code,reason:e.message});return null;}
+}
 function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
     const want=desired(engine,read(d,'state'),name,unit),source=sourceKey(name,unit);
     // 实体先于持有：新职位、案件等要先存在才能被持有。
     for(const e of want.entities){
         const have=entityRow(d,e.id);
-        if(!have)createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source,writer,eventId,origin:'runtime'});
-        else if(have.goneAt===undefined&&canon(have.facts)!==canon(e.facts??{}))updateEntity(d,{id:e.id,facts:e.facts??{},writer,eventId});
+        const info={source,writer,eventId,entity:e.id};
+        if(!have)attempt(d,info,()=>createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source,writer,eventId,origin:'runtime'}));
+        else if(have.goneAt===undefined&&canon(have.facts)!==canon(e.facts??{}))attempt(d,info,()=>updateEntity(d,{id:e.id,facts:e.facts??{},writer,eventId}));
     }
     const current=aliveHoldings(d,{source}),wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
     const keep=new Set();
-    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else closeHolding(d,{id:r.id,reason,writer,eventId});}
-    for(const [k,h] of wanted)if(!keep.has(k))openHolding(d,{...h,source,writer,eventId,engine});
-    for(const l of want.locations)setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,writer,source,engine});
-    for(const [entity,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.source===source&&!want.locations.some(x=>x.entity===entity))clearLocation(d,{entity,writer});
+    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>closeHolding(d,{id:r.id,reason,writer,eventId}));}
+    for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,source,writer,eventId,engine}));
+    for(const l of want.locations)attempt(d,{source,writer,eventId,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,writer,source,engine}));
+    for(const [entity,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.source===source&&!want.locations.some(x=>x.entity===entity))attempt(d,{source,writer,eventId,entity},()=>clearLocation(d,{entity,writer}));
     // 旧字段里已不存在的实体：记墓碑（basis 由来源声明，缺省 destruction）。
     for(const e of Object.values(read(d,'holdings','entities')??{}))if(e.source===source&&e.goneAt===undefined&&!want.entities.some(x=>x.id===e.id))
-        endEntity(d,{id:e.id,basis:sources.get(name).goneBasis??'destruction',writer,eventId});
+        attempt(d,{source,writer,eventId,entity:e.id},()=>endEntity(d,{id:e.id,basis:sources.get(name).goneBasis??'destruction',writer,eventId}));
 }
 
 // ---- 对账（测试与审计用）：旧字段应有 vs 存储存活，逐条 ---------------------------------
@@ -165,10 +186,10 @@ export function reconcileHoldings(engine,document){
     const locs=document.holdings.locations??{},wantLoc=new Map(want.locations.map(l=>[l.entity,l]));
     for(const [entity,l] of wantLoc){const x=locs[entity];if(!x||x.at!==l.at||x.mode!==l.mode)out.locations.push(`${entity}: ${x?`${x.mode}@${x.at}`:'无'} ≠ ${l.mode}@${l.at}`);}
     for(const entity of Object.keys(locs))if(!wantLoc.has(entity))out.locations.push(`extra ${entity}`);
-    out.missing.sort();out.extra.sort();
+    out.missing.sort();out.extra.sort();out.drift=document.holdings.drift??[];
     return out;
 }
-export const reconciled=r=>!r.missing.length&&!r.extra.length&&!r.entities.length&&!r.locations.length;
+export const reconciled=r=>!r.missing.length&&!r.extra.length&&!r.entities.length&&!r.locations.length&&!(r.drift?.length);
 
 // ---- 世界版本更新：作者数据改动带来的持有差异按 pack_converted / pack_removed 折算 ----------------
 registerHoldingsUpgrade('sources',(d,engine)=>{
@@ -327,11 +348,7 @@ function afterWrite(d,engine,path,writer,eventId){
     for(const name of all)syncHoldingSource(d,engine,name,{writer,eventId});
     for(const [name,unit] of units)if(unit!==null&&!all.has(name))applyUnit(d,engine,name,unit,{writer,eventId});
 }
-// 调试与审计：HOLDINGS_DEBUG 打印、HOLDINGS_AUDIT_LOG 追加双写时抛出的错误（游戏代码可能吞掉异常，改变结算，审计要看得见）。
-const debugLog=process.env.HOLDINGS_AUDIT_LOG,debug=process.env.HOLDINGS_DEBUG||debugLog;
-registerHoldingObserver(debug?(d,engine,path,writer,eventId)=>{try{afterWrite(d,engine,path,writer,eventId);}catch(e){
-    const line=JSON.stringify({holdingError:e.message,code:e.code??null,writer,path,stack:String(e.stack).split(/\r?\n/).slice(1,6).join(' | ')});
-    if(debugLog)fsAppend(debugLog,`${line}\n`);else console.error('HOLDINGS',line);throw e;}}:afterWrite);
+registerHoldingObserver(debug?(d,engine,path,writer,eventId)=>guarded(writer,path,()=>afterWrite(d,engine,path,writer,eventId)):afterWrite);
 export {holdingSet,holdingRemove};
 // 写入点是否落在某个来源上（静态扫描测试与审计用）。
 export const holdingPathWatched=path=>path[0]==='state'&&(path[1]==='records'||pathUnits(path).length>0);
@@ -343,7 +360,11 @@ export const caseEntity=key=>`case_${key}`;
 const collectiveOr=(engine,state,...ids)=>ids.find(id=>id&&(entityTemplates(engine,state,id)??[]).includes('collective'))??null;
 function caseHost(engine,state,caseKey){
     const c=state.records?.[caseKey];if(!c)return null;
-    return collectiveOr(engine,state,c.faction,c.settlement);
+    // 旧回放立的案件不带所属聚落 / 势力：按案件所依法典的所属取（law-codes 是 L1 本体）。
+    const code=c.faction||c.settlement?null:legalCodeById(engine,c.law,state);
+    // 法典也不写所属时，取法庭（或案发地）所在的聚落：沿地点树向上第一个群体。
+    const up=at=>{const out=[];const seen=new Set();while(at&&!seen.has(at)){seen.add(at);out.push(at);at=engine.byId?.get(at)?.parent;}return out;};
+    return collectiveOr(engine,state,c.faction,c.settlement,code?.faction,code?.settlement,...up(code?.court??c.location));
 }
 defineHoldingSource('case',{
     recordCategories:['legal_case'],unitOfRecord:(state,key)=>key,goneBasis:'dissolution',
@@ -537,7 +558,7 @@ defineHoldingSource('tamed',{
 
 // ---- companion：同行（state.player.companions）→ companion（玩家 → 同行者）。 ----
 defineHoldingSource('companion',{
-    paths:[{prefix:['state','player','companions']}],
+    paths:[{prefix:['state','player','companions'],unit:'player'}],
     units:()=>['player'],
     extract:(engine,state)=>({holdings:[...new Set(state.player?.companions??[])].map(id=>({kind:'companion',holder:'player',subject:actorId(engine.world,id)}))}),
 });
@@ -573,8 +594,14 @@ defineHoldingSource('career',{
         for(const r of engine.byId?.get(id)?.relationships??[])if(r.type==='师父'&&(!r.status||r.status==='有效'))teachers.add(r.with);
         if(id==='player')for(const r of byCategory(state,'training_initiation',ctx))if(r.status==='守戒中'&&r.teacher)teachers.add(r.teacher);
         for(const t of teachers)if(t!==id&&(entityTemplates(engine,state,t)??[]).includes('agent'))out.push({kind:'mentor_of',holder:actorId(engine.world,t),subject:id});
-        return {entities:valid.map(r=>({id:certificationOffice(r),kind:'office',facts:{profession:r}})),holdings:out};
+        return {holdings:out};
     },
+});
+
+// ---- certification：认证资格职位（世界职业目录里的每个职业一个 office_cert:<职业>）。职位不因无人持有而消失。 ----
+defineHoldingSource('certification',{
+    units:engine=>(engine.world.professions??[]).map(p=>p.id).filter(id=>/^profession_/.test(id)),
+    extract:(engine,state,id)=>({entities:[{id:certificationOffice(id),kind:'office',facts:{profession:id}}]}),
 });
 
 // ---- permit：授权（authorization，未撤回；授予者 → 受权人与同行者）与宅基许可（housing_permit，未收回）→ 许可 permit{scope}。 ----
@@ -651,5 +678,16 @@ defineHoldingSource('wreck',{
         const c=state.creatures?.[id];if(!c?.corpse)return null;
         const wreck=`wreck_${id}:${c.incarnation??0}`;
         return {entities:[{id:wreck,kind:'wreck',facts:{of:id,species:c.species??null,phase:c.corpse.status??null}}],locations:c.location?[{entity:wreck,at:c.location,mode:'place'}]:[]};
+    },
+});
+
+// ---- guardianship：监护（guardianship 记录，代管中）→ 监护 guardian_of（监护人 → 被监护人）。 ----
+// “待指定”（无监护人）不开持有；成年与死亡终止由旧推进写入状态时同步（成年 threshold 钩子是 S2b 的事）。
+defineHoldingSource('guardianship',{
+    recordCategories:['guardianship'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='guardianship').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(r?.category!=='guardianship'||r.status!=='代管中'||!r.guardian||!r.ward)return null;
+        return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:'person_and_property'}}]};
     },
 });

@@ -216,12 +216,12 @@ export function applyMindSpace(d,initial,eventId){
   const sleepy=p.mind.fatigue>=40&&p.mind.fatigue>p.mind.alertness;
   if(!sleepy)return{...result,sleeping:false,note:'疲劳不足或警觉过高，未入睡'};
   putEffect(d,p,eventId,{previousActivity:p.actor.activity??null,sleeping:true});
-  d.set([...path(p.id),'activity'],'睡眠');return{...result,sleeping:true};
+  holdingSet(d,null,[...path(p.id),'activity'],'睡眠','magic-mind-space');return{...result,sleeping:true};
  }
  if(['memory_guard','rest_bless','comfort'].includes(op)){
   const e=putEffect(d,p,eventId,{...(p.memory?{memory:p.memory.id}:{} )});
   if(op==='memory_guard'&&p.id==='player')d.set(['memories',p.memory.id,'guardUntil'],e.expires);
-  if(op==='comfort')d.set([...path(p.id),'mental'],{...p.mind,stress:Math.max(0,p.mind.stress-p.spec.power)});
+  if(op==='comfort')holdingSet(d,null,[...path(p.id),'mental'],{...p.mind,stress:Math.max(0,p.mind.stress-p.spec.power)},'magic-mind-space');
   return{...result,effect:eventId,expires:e.expires,...(p.memory?{memory:p.memory.id,truthVerified:false}:{})};
  }
  if(op==='contract_sense')return{...result,target:p.args.target,changes:p.contract.changes,legalJudgement:false};
@@ -230,7 +230,7 @@ export function applyMindSpace(d,initial,eventId){
   if(success){e.active=false;e.endedAt=now;e.counterSource=eventId;d.set(['state','records',p.args.target,'enforcement'],e);}
   else for(const id of [...new Set(p.contract.parties)]){
    if(!d.get(...path(id)))continue;
-   const m=mind(d,id,this);d.set([...path(id),'mental'],{...m,stress:Math.min(100,m.stress+Math.min(20,e.power-p.spec.power))});
+   const m=mind(d,id,this);holdingSet(d,null,[...path(id),'mental'],{...m,stress:Math.min(100,m.stress+Math.min(20,e.power-p.spec.power))},'magic-mind-space');
   }
   d.set(['state','records',`counter_contract:${eventId}`],{category:'contract_counter',contract:p.args.target,success,minute:now,sourceEvent:eventId});
   return{...result,target:p.args.target,countered:success,backlash:!success};
@@ -301,12 +301,12 @@ export function advanceMindSpace(d,engine,before,after){
    const a=d.get(...path(e.target));if(!a)continue;
    if(e.operation==='sleep'&&e.sleeping){
     if(minutes>0&&a.status!=='死亡'){
-     const m=mind(d,e.target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/2);d.set([...path(e.target),'mental'],m);
-     d.set([...path(e.target),'activity'],'睡眠');
+     const m=mind(d,e.target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/2);holdingSet(d,null,[...path(e.target),'mental'],m,'magic-mind-space');
+     holdingSet(d,null,[...path(e.target),'activity'],'睡眠','magic-mind-space');
     }
     if(!effective(d,e,after)||a.status==='死亡'){
      d.set(['state','effects',id,'sleeping'],false);
-     if(d.get(...path(e.target),'activity')==='睡眠')d.set([...path(e.target),'activity'],e.previousActivity);
+     if(d.get(...path(e.target),'activity')==='睡眠')holdingSet(d,null,[...path(e.target),'activity'],e.previousActivity,'magic-mind-space');
     }
    }
    if(e.operation==='rest_bless'&&minutes>0&&a.status!=='死亡'&&(e.target==='player'?d.get('state','records','mind_rest_activity')===true:/休息|睡眠|熟睡|睡觉/.test(a.activity??''))){
@@ -323,7 +323,7 @@ export function advanceMindSpace(d,engine,before,after){
   }
  }
  for(const [target,minutes]of byTarget){
-  const m=mind(d,target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/4);m.stress=Math.max(0,m.stress-minutes/10);d.set([...path(target),'mental'],m);
+  const m=mind(d,target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/4);m.stress=Math.max(0,m.stress-minutes/10);holdingSet(d,null,[...path(target),'mental'],m,'magic-mind-space');
  }
  // Physical water ingress continues without a spell; holes always leak.
  for(const row of environmentFeatures(engine)){

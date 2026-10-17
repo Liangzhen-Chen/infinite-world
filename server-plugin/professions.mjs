@@ -11,7 +11,7 @@ import {personCertified}from'./entity-view.mjs';
 import {compensateHidden}from'./hidden-passives.mjs';
 import {acquireHiddenProfession,variantProgress,professionUltimate,completeProfessionUltimate,careerOf}from'./career-metrics.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('professions',{kinds:['certified'],entities:['office']});
+declareHoldingWriter('professions',{kinds:['certified','mentor_of','permit'],entities:['office']});
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
     const value=d.get('state','skills',skill,'proficiency')??0;

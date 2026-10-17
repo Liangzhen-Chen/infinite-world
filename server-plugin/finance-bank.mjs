@@ -13,6 +13,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('finance-bank',{kinds:['member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
 const DAY=1440,MONTH=30*DAY;
@@ -33,7 +35,7 @@ export function financeChange(d,e,id,delta,sourceEvent,books){
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
     bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
     const org=d.get(...financePath(`organization:${id}`));
-    if(org?.category==='organization'){d.set(financePath(`organization:${id}`),{...org,treasury:balance,ledger:[...org.ledger??[],{coins:delta,sourceEvent}]});return balance;}
+    if(org?.category==='organization'){holdingSet(d,null,financePath(`organization:${id}`),{...org,treasury:balance,ledger:[...org.ledger??[],{coins:delta,sourceEvent}]},'finance-bank');return balance;}
     d.set([...e.actorPath(id),'coins'],balance);return balance;
 }
 export function financeTransfer(d,e,from,to,n,id,writer='finance-bank'){
@@ -111,12 +113,12 @@ export function borrowerCashFlow(e,state,id,minute=state.minute){
 function loanPayment(d,e,key,row,amount,minute,id){
     financeTransfer(d,e,row.debtor,'player',amount,id);
     const paid=row.paid+amount,status=paid===row.amount?'已还清':row.status;
-    d.set(financePath(key),{...row,paid,status,payments:[...row.payments??[],{minute,amount,sourceEvent:id}]});
+    holdingSet(d,null,financePath(key),{...row,paid,status,payments:[...row.payments??[],{minute,amount,sourceEvent:id}]},'finance-bank');
     if(status==='已还清'){
         if(row.pledgeRecord)releasePledge(d,e,row.pledgeRecord,row.debtor);
         if(row.defaulted?.case)settleCreditCase(d,e,row.defaulted.case,id);
     }else if(row.defaulted?.case){
-        const claim=d.get(...financePath(row.defaulted.case));if(claim)d.set(financePath(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})});
+        const claim=d.get(...financePath(row.defaulted.case));if(claim)holdingSet(d,null,financePath(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})},'finance-bank');
     }
     financeEvent(d,e,{id,actor:row.debtor,target:'player',value:amount,location:row.location,minute,tags:['repay']});
 }
@@ -127,8 +129,8 @@ export function bankTrade(d,e,args,id){
         counterpart(d,e,args.seller,{consent:args.consent});
         const interest=Math.min(row.interest,Math.ceil(row.principal*row.monthlyInterest*Math.max(0,now-row.createdAt)/MONTH));
         const amount=Math.max(row.paid,row.principal+interest);
-        d.set(financePath(args.debt),{...row,interest,amount,prepayment:{minute:now,waived:row.amount-amount,source:id}});
-        if(amount===row.paid){if(row.pledgeRecord)releasePledge(d,e,row.pledgeRecord,'player');d.set(financePath(args.debt),{...d.get(...financePath(args.debt)),status:'已还清'});return {debt:args.debt,repaid:0};}
+        holdingSet(d,null,financePath(args.debt),{...row,interest,amount,prepayment:{minute:now,waived:row.amount-amount,source:id}},'finance-bank');
+        if(amount===row.paid){if(row.pledgeRecord)releasePledge(d,e,row.pledgeRecord,'player');holdingSet(d,null,financePath(args.debt),{...d.get(...financePath(args.debt)),status:'已还清'},'finance-bank');return {debt:args.debt,repaid:0};}
         return repayCredit(d,e,{seller:e.resolve(args.seller),debt:args.debt},id);
     }
     if(op==='extend'){
@@ -140,7 +142,7 @@ export function bankTrade(d,e,args,id){
         const days=financeInt(args.days,1,cfg(e).loan.maximumDays,'展期天数'),principal=Math.max(0,row.principal-row.paid),interest=Math.ceil(principal*row.monthlyInterest*days/30);
         const next={...row,deadline:Math.max(now,row.deadline)+days*DAY,interest:row.interest+interest,amount:row.amount+interest,status:'待偿还',installments:1,installmentOverdueAt:null,
             amendments:[...row.amendments??[],{days,interest,minute:now,consentEvent:id}]};
-        d.set(financePath(key),next);return {debt:key,deadline:next.deadline,amount:next.amount,interest};
+        holdingSet(d,null,financePath(key),next,'finance-bank');return {debt:key,deadline:next.deadline,amount:next.amount,interest};
     }
     if(op==='lend'){
         const principal=financeInt(args.coins,1,1e7,'放贷本金'),days=args.days??30;
@@ -153,9 +155,9 @@ export function bankTrade(d,e,args,id){
         if(pledgeKey)pledge(d,e,pledgeKey,e.resolve(args.item,'item'),financeInt(args.quantity??1,1,100000,'抵押数量'),borrower);
         financeTransfer(d,e,'player',borrower,principal,id);
         const count=financeInt(args.item?1:args.quantity??1,1,days,'分期期数');
-        d.set(financePath(key),{category:'debt',kind:'player_loan',debtor:borrower,representative,creditor:'player',principal,interest:terms.interest,monthlyInterest:terms.rate,
+        holdingSet(d,null,financePath(key),{category:'debt',kind:'player_loan',debtor:borrower,representative,creditor:'player',principal,interest:terms.interest,monthlyInterest:terms.rate,
             amount:principal+terms.interest,paid:0,status:'待偿还',installments:count,nextInstallment:1,createdAt:now,deadline:now+days*DAY,nextPayment:now+Math.ceil(days*DAY/count),
-            pledgeRecord:pledgeKey,location,source:id,signedTerms:{principal,days,rate:terms.rate,installments:count}});
+            pledgeRecord:pledgeKey,location,source:id,signedTerms:{principal,days,rate:terms.rate,installments:count}},'finance-bank');
         return {debt:key,borrower,principal,interest:terms.interest,monthlyInterest:terms.rate};
     }
     if(op==='collect'){
@@ -172,7 +174,7 @@ export function bankTrade(d,e,args,id){
         const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=(e.byId.get(item).basePrice??0)*quantity;
         const maximum=Math.floor(value*cfg(e).pawn.advanceRatio),amount=financeInt(args.coins??maximum,1,maximum,'典当金额');
         const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal:amount,days:args.days??30,collateral:{item,quantity},eventId:id});
-        const debt=d.get(...financePath(loan.debt));d.set(financePath(loan.debt),{...debt,kind:'pawn',auctionAt:debt.deadline+cfg(e).pawn.graceDays*DAY});
+        const debt=d.get(...financePath(loan.debt));holdingSet(d,null,financePath(loan.debt),{...debt,kind:'pawn',auctionAt:debt.deadline+cfg(e).pawn.graceDays*DAY},'finance-bank');
         return {...loan,contract:loan.debt};
     }
     if(op==='redeem'){
@@ -186,18 +188,18 @@ export function bankTrade(d,e,args,id){
         const toBank=Math.min(price,debt.amount-debt.paid),surplus=Math.max(0,price-(debt.amount-debt.paid)),state=d.get('state');
         moveCoins(d,{from:partyAccount(e,state,buyer),to:vault(b.id),amount:toBank,writer:'finance-bank',eventId:id});
         moveCoins(d,{from:partyAccount(e,state,buyer),to:partyAccount(e,state,'player'),amount:surplus,writer:'finance-bank',eventId:id});
-        financeChange(d,e,buyer,-price,id,BOOKED);row.coins+=toBank;d.set(financePath(b.id),row);
+        financeChange(d,e,buyer,-price,id,BOOKED);row.coins+=toBank;holdingSet(d,null,financePath(b.id),row,'finance-bank');
         if(surplus)financeChange(d,e,'player',surplus,id,BOOKED);
         releasePledge(d,e,debt.pledgeRecord,buyer);
-        d.set(financePath(debt.pledgeRecord),{...d.get(...financePath(debt.pledgeRecord)),status:'已拍卖',holder:buyer});
-        const paid=Math.min(debt.amount,debt.paid+price);d.set(financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}});
+        holdingSet(d,null,financePath(debt.pledgeRecord),{...d.get(...financePath(debt.pledgeRecord)),status:'已拍卖',holder:buyer},'finance-bank');
+        const paid=Math.min(debt.amount,debt.paid+price);holdingSet(d,null,financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}},'finance-bank');
         return {contract:args.contract,buyer,price,surplus};
     }
     if(op==='remit'){
         const dest=derivedBankAt(e,d.get('state'),e.resolve(args.location));if(!dest||dest.id===b.id)throw Error('汇票须指定异地的真实钱庄柜面');
         const amount=financeInt(args.coins,1,1e7,'汇票金额'),fee=Math.max(1,Math.ceil(amount*cfg(e).remittance.feeRate));
-        financeChange(d,e,'player',-amount-fee,id,{account:vault(b.id),writer:'finance-bank',eventId:id});row.coins+=amount+fee;d.set(financePath(b.id),row);
-        const key=`bill:${id}`;d.set(financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id});
+        financeChange(d,e,'player',-amount-fee,id,{account:vault(b.id),writer:'finance-bank',eventId:id});row.coins+=amount+fee;holdingSet(d,null,financePath(b.id),row,'finance-bank');
+        const key=`bill:${id}`;holdingSet(d,null,financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id},'finance-bank');
         return {contract:key,bank:b.id,destination:dest.id,amount,fee};
     }
     if(op==='cash_bill'){
@@ -206,7 +208,7 @@ export function bankTrade(d,e,args,id){
         const origin=bankRow(d,source);if(row.coins<bill.amount||origin.coins<bill.amount)throw Error('两地准备金不足，暂不能兑付');
         // Destination pays cash, then receives the same reserve from the issuer.
         row.coins-=bill.amount;financeChange(d,e,'player',bill.amount,id,{account:vault(source.id),writer:'finance-bank',eventId:id});origin.coins-=bill.amount;row.coins+=bill.amount;
-        d.set(financePath(source.id),origin);d.set(financePath(b.id),row);d.set(financePath(args.contract),{...bill,status:'已兑付',paidAt:now,settledBy:id});
+        holdingSet(d,null,financePath(source.id),origin,'finance-bank');holdingSet(d,null,financePath(b.id),row,'finance-bank');holdingSet(d,null,financePath(args.contract),{...bill,status:'已兑付',paidAt:now,settledBy:id},'finance-bank');
         return {contract:args.contract,received:bill.amount};
     }
     throw Error('未知钱庄操作');
@@ -217,7 +219,7 @@ export function advanceBankFinance(d,e,minute){
         if(original.kind==='loan'&&original.debtor==='player'&&original.installments>1&&original.status!=='已还清'&&!original.defaulted){
             const span=(original.deadline-original.createdAt)/original.installments,paidCount=Math.min(original.installments,Math.floor(original.paid*original.installments/original.amount));
             const due=original.createdAt+Math.ceil(span*(paidCount+1));
-            d.set(financePath(id),{...original,status:minute>=due?'逾期':'待偿还',installmentOverdueAt:minute>=due?due:null});
+            holdingSet(d,null,financePath(id),{...original,status:minute>=due?'逾期':'待偿还',installmentOverdueAt:minute>=due?due:null},'finance-bank');
         }
         if(original.category==='bank'&&c.depositInterest){
             const b=bankById(e,id,d.get('state'));if(!b)continue;
@@ -231,9 +233,9 @@ export function advanceBankFinance(d,e,minute){
                 row.accounts.player=(row.accounts.player??0)+paid;row.interestAt=at;
                 row.interestLedger=[...row.interestLedger??[],{minute:at,due,paid,rate:depositRate(e,d.get('state'),b,at)}];
             }
-            d.set(financePath(id),row);
+            holdingSet(d,null,financePath(id),row,'finance-bank');
         }
-        if(original.kind==='pawn'&&original.status!=='已还清'&&original.auctionAt<=minute){d.set(financePath(id),{...original,status:'流当'});continue;}
+        if(original.kind==='pawn'&&original.status!=='已还清'&&original.auctionAt<=minute){holdingSet(d,null,financePath(id),{...original,status:'流当'},'finance-bank');continue;}
         if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
             let row=original;
             for(let at=row.nextPayment;at<=minute&&row.status!=='已还清';at+=DAY){
@@ -250,7 +252,7 @@ export function advanceBankFinance(d,e,minute){
                     const remaining=row.amount-row.paid,legalCase=remaining?registerCreditDefault(d,e,{debt:id,row,value:remaining,minute:at}):null;
                     row={...row,status:remaining?'逾期':'已还清',defaulted:{minute:at,remaining,case:legalCase}};
                 }
-                d.set(financePath(id),row);
+                holdingSet(d,null,financePath(id),row,'finance-bank');
             }
         }
     }
