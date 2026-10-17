@@ -21,10 +21,17 @@ export function wordTypes(text){
 }
 // Location side: K1 terrain traits plus authored biome tags. Generic terrain
 // (平地/丘陵 only give "earth") carries no ecology and yields no type.
+// R31: depends only on terrain and biome text, so equal text gives the cached list (a fresh array each time).
+const habitatTypesByText=new Map();
 export function locationHabitatTypes(location){
- const types=wordTypes([location?.terrain??'',...[].concat(location?.biome??[])]);
- for(const tag of locationTraits(location).tags)if(TRAIT_TYPES[tag])types.add(TRAIT_TYPES[tag]);
- return [...types].sort();
+ const terrain=location?.terrain??'',biome=[].concat(location?.biome??[]),text=JSON.stringify([terrain,...biome]);
+ let hit=habitatTypesByText.get(text);
+ if(!hit){
+  const types=wordTypes([terrain,...biome]);
+  for(const tag of locationTraits(location).tags)if(TRAIT_TYPES[tag])types.add(TRAIT_TYPES[tag]);
+  hit=[...types].sort();habitatTypesByText.set(text,hit);
+ }
+ return [...hit];
 }
 // Species side: its own habitat tags, its home range, and a water body for fish.
 export function speciesHabitatTypes(world,species,manual){

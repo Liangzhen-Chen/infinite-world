@@ -6,10 +6,28 @@ import {backup,root}from'./backup.mjs';
 import {createHash} from 'node:crypto';
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 
+// 静态 import 图：从已列入的运行时代码（tools/、server-plugin/）出发，把相对路径引用到的文件补进清单，避免漏带依赖；
+// 测试与草稿目录永不进包。
+const IMPORT_SPEC=/\b(?:import|export)\s*(?:[^'"();]*?\bfrom\s*)?['"](\.{1,2}\/[^'"]+)['"]|\bimport\s*\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g;
+export async function importClosure(sources,base=root){
+    const known=new Set(sources),queue=sources.filter(f=>/\.(?:mjs|js)$/.test(f)&&/^(?:tools|server-plugin)\//.test(f));
+    while(queue.length){
+        const file=queue.pop(),text=await fs.readFile(path.join(base,file),'utf8');
+        for(const m of text.matchAll(IMPORT_SPEC)){
+            const rel=path.posix.normalize(path.posix.join(path.posix.dirname(file),m[1]??m[2]));
+            if(rel.startsWith('..')||known.has(rel)||/^(?:tests|world\/drafts)\//.test(rel))continue;
+            try{if(!(await fs.stat(path.join(base,rel))).isFile())continue;}catch{continue;}
+            known.add(rel);sources.push(rel);if(/\.(?:mjs|js)$/.test(rel))queue.push(rel);
+        }
+    }
+    return sources;
+}
 const extensionPath='public/scripts/extensions/third-party/infinite-fields';
 export async function prepareDeployment(destination=path.join(root,'dist','engine-deployment')){
     destination=path.resolve(destination);
-    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','prompt/constitution.md','prompt/style.md'];
+    const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','prompt/constitution.md','prompt/style.md',
+        // balance-tables.mjs 用 fs 读（非 import），import 图补不到。
+        'schemas/balance-table.schema.json','schemas/balance-targets.schema.json'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             if(relative==='world'&&name==='drafts')continue;
@@ -22,6 +40,7 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
     await copyDirectory('extension');await copyDirectory('assets');
     // The plugin must resolve its runtime dependency without the development checkout.
     await copyDirectory('node_modules/opencc-js');
+    await importClosure(sources);
     const files=[];
     for(const source of sources){
         if(source.startsWith('assets/'))continue;

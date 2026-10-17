@@ -139,17 +139,19 @@ export function validateWildlife(world){
     }
     return [...errors,...validateHabitatDerivation(world),...validateWildlifeAwakening(world)];
 }
+// R31: a read-only look for views that copy out primitives at once; it does not make the draft recopy state and records on its next write.
+const lookState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
     // Ranges founded during this advance (tribal-awakening.mjs) join the day's settlement at once.
     for(const habitat of [...engine.rules.wildlife.habitats,...(engine.runtimeHabitats??[])]){
         const r=clone(d.get(...path(habitat.id)));if(!r)throw new Error('生态记录未迁移');
         if(r.lastDay!==day-1)throw new Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
-        const species=speciesAt(engine,habitat),forest=forestView(engine,d.get('state'),habitat.location);
+        const species=speciesAt(engine,habitat),forest=forestView(engine,lookState(d),habitat.location);
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
             for(const s of species){
-                const p=r.populations[s.id],spec={...rangeSpec(habitat,s),capacity:forestHabitatCapacity(engine,d.get('state'),habitat,s,forest)},present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+                const p=r.populations[s.id],spec={...rangeSpec(habitat,s),capacity:forestHabitatCapacity(engine,lookState(d),habitat,s,forest)},present=wildPresent(d,s.id,habitat.location),total=p.count+present;
                 // T154: undead/elementals arise by their registered condition, not by pairing or prey.
                 if(spec.manifest){const arisen=manifestArisals(spec===s.wildlife?s:{...s,wildlife:spec},total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
                 const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);

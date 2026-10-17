@@ -116,6 +116,13 @@ function initial(engine,holder,target){
     if(target==='player')return '中立';
     return seat(engine,target)?.monsterSociety.neighbors?.[holder]??'戒备';
 }
+// 只读：该立场是否只是缺省姿态（没有立场记录，世界也没有为这一对写明）。不改 stanceOf 的取值。
+export function stanceIsDefault(state,engine,holder,target){
+    if(state.records?.[`stance:${holder}:${target}`])return false;
+    const own=seat(engine,holder)?.monsterSociety;
+    if(own)return (target==='player'?own.stances?.player:own.neighbors?.[target])===undefined;
+    return target!=='player'&&seat(engine,target)?.monsterSociety.neighbors?.[holder]===undefined;
+}
 export function stanceOf(state,engine,holder,target){
     return state.records?.[`stance:${holder}:${target}`]?.stance??initial(engine,holder,target);
 }

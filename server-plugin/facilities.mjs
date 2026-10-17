@@ -44,9 +44,11 @@ export function applyFacilityInteraction(d,engine,target,outcome,{minute=d.get('
  if(outcome.agent==='flood')damageFacility(d,engine,target,view.material==='stone'?8:20,{cause:'洪水',minute,sourceEvent});
  return changed;
 }
+// R31: a read-only look at the current state for definitions and views whose primitives are read at once.
+const lookState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 function weather(engine,d,id,at){
- let place=id;const state=d.get('state'),seen=new Set();
- while(place&&!seen.has(place)){const w=weatherAt(engine,d.document.randomSeed,place,at);if(w)return w;seen.add(place);place=facilityDefinition(engine,state,place)?.parent;}
+ let place=id;const state=lookState(d),seen=new Set(),seed=d.get('randomSeed'); // R31: neither read makes the draft recopy the document and state on its next write
+ while(place&&!seen.has(place)){const w=weatherAt(engine,seed,place,at);if(w)return w;seen.add(place);place=facilityDefinition(engine,state,place)?.parent;}
  return null;
 }
 function distance(a,b){
@@ -93,7 +95,7 @@ export function advanceFacilities(d,engine,{before,after}){
    }
    // A building finished at this midnight has not yet experienced a day's wear.
    if((row.builtAt??-1)>=at||(row.lastWearDay??-1)>=day)continue;
-   const view=facilityView(engine,d.get('state'),base.id);if(view.condition<=0)continue;
+   const view=facilityView(engine,lookState(d),base.id);if(view.condition<=0)continue;
    const w=weather(engine,d,base.id,day*DAY+720),weatherWear=w?.kind==='storm'?4:w?.kind==='rain'?1:0;
    const usage=occupied.has(base.id)?1:0,wear=(row.wearUnits??0)+(view.material==='stone'?1:3)+weatherWear+usage;
    const loss=Math.floor(wear/10);
@@ -101,7 +103,7 @@ export function advanceFacilities(d,engine,{before,after}){
    // and one long advance agree. Ordinary wear emits only at a use threshold.
    const condition=Math.max(0,view.condition-loss);
    holdingSet(d,null,['state','buildings',base.id],{...row,condition,wearUnits:wear%10,lastWearDay:day},'facilities');
-   const next=facilityView(engine,d.get('state'),base.id);
+   const next=facilityView(engine,lookState(d),base.id);
    if(view.status!==next.status)event(d,engine,`wear:${base.id}:${day}`,'harm',base.id,`${base.name}年久失修，用途${next.status}`,{minute:at,cause:'损耗'});
   }
   for(const [county,representative] of distant){

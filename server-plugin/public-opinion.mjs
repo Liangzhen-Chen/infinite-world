@@ -1,6 +1,6 @@
 import {reputationFactions}from'./reputation-registry.mjs';
 import {societyOfActor} from './monster-society.mjs';
-import {standing,HOSTILE} from './standing.mjs';
+import {standing,standingIsDefault,HOSTILE} from './standing.mjs';
 import {settlementAt} from './reputation.mjs';
 import {organizationsOf} from './organizations.mjs';
 
@@ -94,6 +94,8 @@ export function opinionOf(engine,state,who,topic){
         if(value)return pick(value,`所属${engine.byId.get(faction.id)?.name??faction.id}对行事者的声望`);
     }
     for(const org of organizationsOf(state,who,engine)){
+        // 聚居地对玩家的缺省戒备只是姿态，不是对本事件的立场；有显式记录的立场（好感、敌意）照常计入。
+        if(standingIsDefault(engine,state,org,topic.actor))continue;
         const value=standing(engine,state,org,topic.actor);
         if(value)return pick(value,`所属${state.records[`organization:${org}`]?.name??engine.byId.get(org)?.name??org}对行事者的立场`);
     }

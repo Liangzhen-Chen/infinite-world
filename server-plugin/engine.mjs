@@ -2,7 +2,7 @@ import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {hiddenCheckBonus} from './hidden-passives.mjs';
-import { applyPatches, canonical, PatchCursor } from './storage.mjs';
+import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
@@ -148,7 +148,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
     for(const npc of changed){
         const value=d.get('state','npcs',npc);
         if(value===undefined){if(npcsBefore?.[npc]!==undefined)d.patches.push({op:'delete',path:['state','npcs',npc]});continue;}
-        if(canonical(npcsBefore?.[npc])!==canonical(value))d.patches.push({op:'set',path:['state','npcs',npc],value});
+        if(!canonicalEqual(npcsBefore?.[npc],value))d.patches.push({op:'set',path:['state','npcs',npc],value});
     }
 }
 export class WorldEngine {
@@ -446,7 +446,7 @@ export class WorldEngine {
             }
             graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),closedRoutes=warClosedRoutes(this.airDraft?.get('state'),minute),facilities=facilityRouteStates(this,this.airDraft?.get('state'));
+        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),airState=typeof this.airDraft?.peek==='function'?this.airDraft.peek('state'):this.airDraft?.get('state'),closedRoutes=warClosedRoutes(airState,minute),facilities=facilityRouteStates(this,airState); // R31: read-only look, so the draft is not made to recopy state and npcs on its next write
         // P2: each edge as seen from one end, built once per topology (read-only).
         const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
         // P2: a binary heap of discovered nodes ordered by (distance, world

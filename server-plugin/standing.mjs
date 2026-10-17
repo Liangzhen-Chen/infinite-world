@@ -2,7 +2,7 @@ import {isReputationSettlement,reputationFactions,reputationSettlements,factionR
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {digest} from './storage.mjs';
 import {relationView,recordStandingEvidence} from './npc-relations.mjs';
-import {stanceOf} from './monster-society.mjs';
+import {stanceOf,stanceIsDefault} from './monster-society.mjs';
 import {readBossCognition} from './boss-cognition.mjs';
 import {readBossNegotiation} from './boss-negotiation.mjs';
 import {personView} from './entity-view.mjs';
@@ -75,6 +75,12 @@ export function standing(engine,state,holder,target='player'){
     holder=actorId(engine.world,holder);target=actorId(engine.world,target);
     const kind=standingKind(engine,state,holder);
     return clamp(baseStanding(engine,state,holder,target,kind)+(standingLedger(state,holder,target)?.value??0));
+}
+// 只读：holder 对 target 的 standing 是否纯属缺省姿态（聚居地没有立场记录也没有世界写明的立场，且无立场账本条目）。
+// 有任何显式来源（立场记录、世界写明、standing 账本）即为 false；不改 standing() 的数值。
+export function standingIsDefault(engine,state,holder,target='player'){
+    holder=actorId(engine.world,holder);target=actorId(engine.world,target);
+    return standingKind(engine,state,holder)==='society'&&!standingLedger(state,holder,target)&&stanceIsDefault(state,engine,holder,target);
 }
 // World words for the scene card; numbers stay out of narration.
 export function standingWords(value){

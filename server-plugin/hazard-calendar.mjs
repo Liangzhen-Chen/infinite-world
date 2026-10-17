@@ -8,6 +8,7 @@
 // route closures are decided the same way for planning, replays and NPCs.
 import {createHash} from 'node:crypto';
 import {weatherAt} from './weather.mjs';
+import {recordsWhere} from './storage.mjs';
 
 const DAY=1440,YEAR=360*DAY;
 export const PURE_CONDITIONS=Object.freeze(['always','weather']);
@@ -103,5 +104,5 @@ export function famineAt(state,settlement,minute=state.minute){
 }
 
 // Campaign closures are stateful and shared by travel, NPC schedules and trade.
-export function warRouteClosed(state,route,minute){return Object.values(state?.records??{}).some(r=>r.category==='war_disruption'&&active(r,minute)&&r.routes.includes(route));}
-export function warClosedRoutes(state,minute){return new Set(Object.values(state?.records??{}).filter(r=>r.category==='war_disruption'&&active(r,minute)).flatMap(r=>r.routes));}
+export function warRouteClosed(state,route,minute){return recordsWhere(state?.records,'category','war_disruption').some(r=>active(r,minute)&&r.routes.includes(route));}
+export function warClosedRoutes(state,minute){return new Set(recordsWhere(state?.records,'category','war_disruption').filter(r=>active(r,minute)).flatMap(r=>r.routes));}
