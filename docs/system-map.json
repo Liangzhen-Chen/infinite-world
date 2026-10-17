@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s1c",
+  "commit": "refs/heads/r32",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -856,7 +856,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 635,
+   "lines": 641,
    "stateWrites": [
     "records"
    ],
@@ -1054,7 +1054,7 @@
     "server-plugin/money.mjs",
     "server-plugin/stock.mjs"
    ],
-   "lines": 606,
+   "lines": 610,
    "stateWrites": [],
    "stateReads": [
     "creatures",
@@ -2012,7 +2012,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4854,
+   "lines": 4863,
    "stateWrites": [
     "buildings",
     "created",
@@ -18040,7 +18040,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 247
+   "lines": 248
   },
   "server-plugin/legal-representation.mjs": {
    "system": "sim_law",
@@ -19047,7 +19047,7 @@
     "residents"
    ],
    "worldDirs": [],
-   "lines": 434
+   "lines": 441
   },
   "server-plugin/nation-founding.mjs": {
    "system": "sim_society",
@@ -19944,7 +19944,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 149
+   "lines": 151
   },
   "server-plugin/public-projects.mjs": {
    "system": "sim_society",
@@ -20778,7 +20778,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 150
+   "lines": 156
   },
   "server-plugin/state-notices.mjs": {
    "system": "ui_scene",
@@ -20833,7 +20833,7 @@
     "meta",
     "ontology"
    ],
-   "lines": 242
+   "lines": 245
   },
   "server-plugin/storage.mjs": {
    "system": "kernel_storage",
