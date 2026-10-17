@@ -134,7 +134,7 @@ const SYSTEMS=[
  {id:'data_actions',layer:'data',name:'动作注册表与事件模板（A1）',dir:'world/actions',modules:[]},
  {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:[]},
  // 内核层
- {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs']},
+ {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs','scheduler.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
    'agriculture-migration.mjs','boss-migration.mjs','farm-pests-migration.mjs','compat/v2-phase1-activities.mjs','compat/v2-phase1-engine.mjs','legacy/core.js']},
  // 底座层 K1–K7
