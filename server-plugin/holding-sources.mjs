@@ -351,6 +351,29 @@ function afterWrite(d,engine,path,writer,eventId){
 }
 registerHoldingObserver(debug?(d,engine,path,writer,eventId)=>guarded(writer,path,()=>afterWrite(d,engine,path,writer,eventId)):afterWrite);
 export {holdingSet,holdingRemove};
+// 一次归约的补丁触及的来源单元（审计只比对受影响的单元：旧字段的持有只住在登记过的路径与记录类别里，
+// 本事件没写到的单元不会变）。值为单元集合，null 表示整源（写入的是上级整块）。
+export function touchedUnits(patches,before,after){
+    const out=new Map(),add=(name,unit)=>{if(unit===null){out.set(name,null);return;}const set=out.get(name);if(set===null)return;if(set)set.add(unit);else out.set(name,new Set([unit]));};
+    for(const p of patches){
+        const path=p.path;if(path?.[0]!=='state')continue;
+        if(path.length<2){for(const name of sources.keys())add(name,null);continue;}
+        if(path[1]==='records'){
+            if(path.length<3){for(const [name,spec] of sources)if(spec.recordCategories)add(name,null);continue;}
+            for(const st of [before?.state,after?.state]){
+                const row=st?.records?.[path[2]];if(!row?.category)continue;
+                for(const [name,spec] of sources)if(spec.recordCategories?.includes(row.category))for(const u of [].concat(spec.unitOfRecord(st,path[2],row)??[]))add(name,String(u));
+            }
+            continue;
+        }
+        for(const [name,unit] of pathUnits(path))add(name,unit);
+    }
+    return out;
+}
+// 审计用：某来源某单元按旧字段应有的内容（带来源键），与该来源的全部单元。
+export function legacyOfUnit(engine,state,name,unit,ctx={}){const out=desired(engine,state,name,unit,ctx),source=sourceKey(name,unit);return {holdings:out.holdings.map(h=>({...h,source})),entities:out.entities,locations:out.locations};}
+export const unitsOfSource=(engine,state,name)=>[...new Set(sources.get(name).units(engine,state))].map(String);
+
 // 写入点是否落在某个来源上（静态扫描测试与审计用）。
 export const holdingPathWatched=path=>path[0]==='state'&&(path[1]==='records'||pathUnits(path).length>0);
 
