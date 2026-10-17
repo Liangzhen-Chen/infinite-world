@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r32",
+  "commit": "refs/heads/r31",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 514
+  "links": 515
  },
  "layers": [
   {
@@ -678,7 +678,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1606,
+   "lines": 1751,
    "stateWrites": [
     "checks",
     "crafted",
@@ -704,6 +704,7 @@
    ],
    "stateReads": [
     "creatures",
+    "family",
     "pets",
     "settlement"
    ],
@@ -856,7 +857,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 641,
+   "lines": 646,
    "stateWrites": [
     "records"
    ],
@@ -994,7 +995,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 270,
+   "lines": 275,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1125,7 +1126,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3612,
+   "lines": 3613,
    "stateWrites": [
     "created",
     "creatures",
@@ -1268,7 +1269,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1438,
+   "lines": 1439,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -1485,7 +1486,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1362,
+   "lines": 1371,
    "stateWrites": [
     "crafted",
     "created",
@@ -1828,7 +1829,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 2981,
+   "lines": 2982,
    "stateWrites": [
     "crafted",
     "itemInstances",
@@ -2012,7 +2013,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4863,
+   "lines": 4872,
    "stateWrites": [
     "buildings",
     "created",
@@ -2212,7 +2213,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1114,
+   "lines": 1115,
    "stateWrites": [
     "family",
     "npcs",
@@ -2947,6 +2948,14 @@
    "kind": "call",
    "labels": [
     "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "kernel_storage",
+   "kind": "call",
+   "labels": [
+    "storage.mjs"
    ]
   },
   {
@@ -12224,6 +12233,7 @@
    "readers": [
     "base_events",
     "base_standing",
+    "kernel_storage",
     "sim_faith",
     "ui_scene",
     "ui_server"
@@ -15819,6 +15829,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
+    "server-plugin/storage.mjs",
     "server-plugin/summons.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/transport.mjs",
@@ -15855,7 +15866,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 208
+   "lines": 213
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -16572,7 +16583,8 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/faith-catalog.mjs",
-    "server-plugin/npc-state.mjs"
+    "server-plugin/npc-state.mjs",
+    "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
    "stateReads": [],
@@ -16594,7 +16606,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 136
+   "lines": 137
   },
   "server-plugin/education.mjs": {
    "system": "sim_character",
@@ -16735,7 +16747,9 @@
   },
   "server-plugin/employment-state.mjs": {
    "system": "sim_economy",
-   "imports": [],
+   "imports": [
+    "server-plugin/storage.mjs"
+   ],
    "stateWrites": [
     "records"
    ],
@@ -16751,7 +16765,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 43
+   "lines": 44
   },
   "server-plugin/engine.mjs": {
    "system": "kernel_engine",
@@ -16933,7 +16947,8 @@
     "server-plugin/noble-state.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/organization-state.mjs",
-    "server-plugin/promotion-view.mjs"
+    "server-plugin/promotion-view.mjs",
+    "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -16979,7 +16994,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 485
+   "lines": 490
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -17088,7 +17103,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 129
+   "lines": 131
   },
   "server-plugin/facility-state.mjs": {
    "system": "sim_society",
@@ -17696,6 +17711,7 @@
   "server-plugin/hazard-calendar.mjs": {
    "system": "sim_clock",
    "imports": [
+    "server-plugin/storage.mjs",
     "server-plugin/weather.mjs"
    ],
    "stateWrites": [],
@@ -17714,7 +17730,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 108
+   "lines": 109
   },
   "server-plugin/hidden-passives.mjs": {
    "system": "sim_character",
@@ -19561,7 +19577,8 @@
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
    "imports": [
-    "server-plugin/entity-view.mjs"
+    "server-plugin/entity-view.mjs",
+    "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -19581,7 +19598,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 111
+   "lines": 112
   },
   "server-plugin/office-salary.mjs": {
    "system": "sim_society",
@@ -20040,6 +20057,7 @@
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/stock.mjs",
+    "server-plugin/storage.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -20052,6 +20070,7 @@
    "stateReads": [
     "buildings",
     "creatures",
+    "family",
     "minute"
    ],
    "recordWrites": [
@@ -20077,7 +20096,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 398
+   "lines": 405
   },
   "server-plugin/quest-wildlife.mjs": {
    "system": "sim_society",
@@ -20839,13 +20858,16 @@
    "system": "kernel_storage",
    "imports": [],
    "stateWrites": [],
-   "stateReads": [],
+   "stateReads": [
+    "family",
+    "records"
+   ],
    "recordWrites": [],
    "recordReads": [],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 475
+   "lines": 620
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
@@ -21395,7 +21417,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 91
+   "lines": 98
   },
   "server-plugin/wildlife-migration.mjs": {
    "system": "sim_wildlife",
@@ -21530,7 +21552,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 243
+   "lines": 245
   },
   "server-plugin/works.mjs": {
    "system": "sim_works",
