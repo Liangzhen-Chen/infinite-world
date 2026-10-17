@@ -19,7 +19,7 @@
 //   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
 // 批次（lots）只在仓储类用途（granary、seed、cargo）上启用：粮食需要保质期，其余物品暂按数量计。
-import {accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
+import {isResourceKey,accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -32,7 +32,10 @@ const coinItems=new WeakMap();
 export function itemResource(engine,item){
     const world=engine?.world;let map=world&&coinItems.get(world);
     if(world&&!map){map=new Map((world.rules?.economy?.credit?.coinages??[]).filter(c=>c.item).map(c=>[c.item,c.id.replace(/^coinage_/,'coin_')]));coinItems.set(world,map);}
-    return map?.get(item)??item;
+    const coin=map?.get(item);if(coin)return coin;
+    // 旧存档的物品按中文名记（干粮）：不合资源键格式时按名称解析成物品 id；解析不了就原样交给键校验报错。
+    if(!isResourceKey(item)&&typeof engine?.resolve==='function'){try{return engine.resolve(item,'item');}catch{}}
+    return item;
 }
 const res=(engine,item)=>itemResource(engine,item);
 export const bag=(engine,id,item)=>accountKey(engine?actorId(engine.world,id):id,res(engine,item),'inventory');
