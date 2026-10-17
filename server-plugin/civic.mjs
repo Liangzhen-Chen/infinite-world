@@ -5,6 +5,9 @@ import {settlementHead,personSimulation} from './entity-view.mjs';
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
 import {npcHousehold} from './npc-life.mjs';
 import {workContribution} from './works.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('civic',{kinds:['resides','resident_of']});
 
 const recordPath=id=>['state','records',id];
 const key=(kind,settlement)=>`civic_${kind}:${settlement}:player`;
@@ -73,7 +76,7 @@ function credit(d,{sourceEvent,settlement,subject='player',kind,points,minute}){
     }
     if(!Number.isSafeInteger(points)||points<1)throw Error('实际贡献未达到最小记分量');
     const row={category:'civic_contribution',sourceEvent,settlement,subject,kind,points,minute};
-    d.set(recordPath(id),row);return row;
+    holdingSet(d,null,recordPath(id),row,'civic');return row;
 }
 export function recordDonationContribution(d,engine,result,eventId){
     if(result.operation!=='donate')return null;
@@ -89,7 +92,7 @@ export function donationReceipt(d,engine,args,eventId){
     return {...old.result,duplicate:true};
 }
 export function saveDonationReceipt(d,result,eventId){
-    if(result.operation==='donate')d.set(recordPath(`civic_donation:${eventId}`),{category:'civic_donation',subject:'player',result});
+    if(result.operation==='donate')holdingSet(d,null,recordPath(`civic_donation:${eventId}`),{category:'civic_donation',subject:'player',result},'civic');
 }
 export function publicProjectApproval(d,engine,settlement,authorization,beneficiaries){
     // Four village charters currently provide tax-ledger and judicial duties,
@@ -143,7 +146,7 @@ export function civicAction(d,args,eventId){
         const proof=residenceProof(d,this,settlement),row={category:'civic_residence',subject:'player',settlement,...proof};
         const id=key('residence',settlement),old=d.get(...recordPath(id));
         if(old&&old.category!=='civic_residence')throw Error('居住登记编号冲突');
-        d.set(recordPath(id),row);return {residence:row};
+        holdingSet(d,null,recordPath(id),row,'civic');return {residence:row};
     }
     if(operation==='civic_sponsor'){
         const sponsor=present(d,this,args.sponsor),base=this.byId.get(sponsor);
@@ -152,7 +155,7 @@ export function civicAction(d,args,eventId){
         const id=key('sponsor',settlement),old=d.get(...recordPath(id));
         if(old&&old.category!=='civic_sponsor')throw Error('担保编号冲突');
         const row={category:'civic_sponsor',subject:'player',settlement,sponsor,minute:d.get('state','minute'),sourceEvent:eventId};
-        d.set(recordPath(id),row);return {sponsor:row};
+        holdingSet(d,null,recordPath(id),row,'civic');return {sponsor:row};
     }
     const kind=operation==='civic_apply_resident'?'resident':operation==='civic_apply_citizen'?'citizen':null;
     if(!kind)throw Error('未知户籍操作');
@@ -175,5 +178,5 @@ export function civicAction(d,args,eventId){
     moveCoins(d,{from:purse(null,'player'),to:treasuryAccount(settlement),amount:gate.fee,writer:'civic',eventId:eventId});
     d.set(['state','player','coins'],d.get('state','player','coins')-gate.fee);
     d.set(['state','settlements',settlement,'treasury'],treasury+gate.fee);
-    d.set(recordPath(id),row);return {application:row,note:'身份登记不授予土地、官职或公共物资权限。'};
+    holdingSet(d,null,recordPath(id),row,'civic');return {application:row,note:'身份登记不授予土地、官职或公共物资权限。'};
 }

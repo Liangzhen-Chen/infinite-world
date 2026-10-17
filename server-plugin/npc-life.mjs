@@ -27,6 +27,9 @@ import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from '
 import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
 import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet,holdingRemove} from './holding-sources.mjs';
+declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates']});
 
 const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
 const rules=engine=>engine.rules.npcLife;
@@ -50,7 +53,7 @@ const lifeActor=(engine,state,id)=>Boolean(state.npcs[id])&&(personSimulation(en
 // event needs them (see population.mjs); false when they cannot be.
 function bring(d,engine,id,minute,reason){
  const state=d.get('state'),row=rosterLifeState(engine,state,id,minute,reason,{minor:npcIsMinor(engine,state,id,minute)});
- if(!row)return false;d.set(['state','npcs',id],row);return true;
+ if(!row)return false;holdingSet(d,null,['state','npcs',id],row,'npc-life');return true;
 }
 function withRoster(engine,state,ids,minute){
  const extra={};for(const id of ids){const row=rosterLifeState(engine,state,id,minute,'预检',{minor:npcIsMinor(engine,state,id,minute)});if(row)extra[id]=row;}
@@ -69,7 +72,7 @@ function setMembership(d,engine,houseId,id,inside){
  const house=householdDefinition(engine,d.get('state'),houseId),row=d.get('state','family','households',houseId)??{};
  const members=(row.members??[]).filter(m=>m!==id),left=(row.left??[]).filter(m=>m!==id);
  if(house.members.includes(id)){if(!inside)left.push(id);}else if(inside)members.push(id);
- d.set(['state','family','households',houseId],{...row,members,...(left.length||row.left?{left}:{})});
+ holdingSet(d,null,['state','family','households',houseId],{...row,members,...(left.length||row.left?{left}:{})},'npc-life');
 }
 
 const staticTie=(engine,a,b)=>[...(engine.byId.get(a)?.relationships??[]).filter(r=>r.with===b),...(engine.byId.get(b)?.relationships??[]).filter(r=>r.with===a)];
@@ -137,7 +140,7 @@ function candidatePairs(engine,state){
 const nameOf=(engine,state,id)=>personName(engine,state,id).value??id;
 function addMemory(d,who,row){
  const stream=d.get('state','npcs',who,'memoryStream')??[];if(stream.some(m=>(m.rootMemoryId??m.id)===row.rootMemoryId))return;
- d.set(['state','npcs',who,'memoryStream'],[...stream,{...row,id:`${row.rootMemoryId}:${who}`}]);
+ holdingSet(d,null,['state','npcs',who,'memoryStream'],[...stream,{...row,id:`${row.rootMemoryId}:${who}`}],'npc-life');
 }
 // Those involved remember it first-hand; household members who are actually
 // with one of them at that moment witness it. Everyone else hears later, if
@@ -150,20 +153,20 @@ function witness(d,engine,eventId,principals,houses,{minute,kind,content,salienc
  for(const id of seen)addMemory(d,id,{...memory,location:state.npcs[id].location,sourceType:'目击',salience:Math.max(2,salience-1)});
  // The player standing right there sees it too; nobody else's knowledge is
  // handed to the player (see npcLifeLines and the people panel).
- if(state.location&&at.has(state.location)&&!unable.includes(state.player?.status))d.set(['state','family','seenByPlayer',eventId],minute);
+ if(state.location&&at.has(state.location)&&!unable.includes(state.player?.status))holdingSet(d,null,['state','family','seenByPlayer',eventId],minute,'npc-life');
  return seen;
 }
 
 export function marry(d,engine,[a,b],courtship,minute){
  const state=d.get('state'),id=`marriage_${key(a,b,minute)}`,ha=npcHousehold(engine,state,a),hb=npcHousehold(engine,state,b);
  const content=`${nameOf(engine,state,a)}与${nameOf(engine,state,b)}在${engine.calendar(minute).text.slice(0,-6)}结为夫妻。`;
- d.set(['state','family','marriages',id],{id,partners:[a,b],since:minute,courtshipSince:courtship.since,settlement:ha.settlement,households:[...new Set([ha.id,hb.id])],status:'在婚',sourceEvent:id});
- d.remove(['state','family','courtships',pairKey(a,b)]);
+ holdingSet(d,null,['state','family','marriages',id],{id,partners:[a,b],since:minute,courtshipSince:courtship.since,settlement:ha.settlement,households:[...new Set([ha.id,hb.id])],status:'在婚',sourceEvent:id},'npc-life');
+ holdingRemove(d,null,['state','family','courtships',pairKey(a,b)],'npc-life');
  const delta=rules(engine).marriageRelation;
  for(const [from,to] of [[a,b],[b,a]])recordLifeRelation(d,engine,{key:`${id}:${from}`,sourceEvent:id,eventType:'成婚',from,to,minute,delta},who=>npcIsMinor(engine,d.get('state'),who,minute));
- for(const p of [a,b])d.set(['state','npcs',p,'developments'],[...d.get('state','npcs',p,'developments')??[],{type:'成婚',source:id,minute,with:p===a?b:a}]);
+ for(const p of [a,b])holdingSet(d,null,['state','npcs',p,'developments'],[...d.get('state','npcs',p,'developments')??[],{type:'成婚',source:id,minute,with:p===a?b:a}],'npc-life');
  const witnesses=witness(d,engine,id,[a,b],[ha.id,hb.id],{minute,kind:'family',content});
- d.set(['state','family','marriages',id,'witnesses'],witnesses);
+ holdingSet(d,null,['state','family','marriages',id,'witnesses'],witnesses,'npc-life');
  const marriage=d.get('state','family','marriages',id);marriagePolitics(d,engine,marriage);
  entityTransition(d,engine,{id,verb:'marry',actor:a,target:b,minute,location:state.npcs[a]?.location??ha.settlement,witnesses,summary:content});
  return marriage;
@@ -192,24 +195,24 @@ export function birthBlocker(engine,state,marriage,minute=state.minute){
 function conceive(d,engine,marriage,minute){
  const state=d.get('state'),[a,b]=marriage.partners,mother=engine.byId.get(a).sex==='女'?a:b,father=mother===a?b:a;
  const id=`pregnancy_${key(marriage.id,minute)}`,house=npcHousehold(engine,state,mother);
- d.set(['state','family','pregnancies',id],{id,marriage:marriage.id,mother,father,conceivedAt:minute,dueAt:minute+rules(engine).birth.gestationDays*DAY,household:house.id,status:'怀孕'});
+ holdingSet(d,null,['state','family','pregnancies',id],{id,marriage:marriage.id,mother,father,conceivedAt:minute,dueAt:minute+rules(engine).birth.gestationDays*DAY,household:house.id,status:'怀孕'},'npc-life');
  witness(d,engine,id,[mother,father],[],{minute,kind:'family',content:`${nameOf(engine,state,mother)}有了身孕。`,salience:2});
 }
 
 function deliver(d,engine,pregnancy,minute){
  const state=d.get('state'),r=rules(engine).birth;
- if(!alive(state,pregnancy.mother)){d.set(['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'母亲已不在'});return;}
+ if(!alive(state,pregnancy.mother)){holdingSet(d,null,['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'母亲已不在'},'npc-life');return;}
  const house=npcHousehold(engine,state,pregnancy.mother)??{id:pregnancy.household,...engine.world.households.find(h=>h.id===pregnancy.household)};
  const ledger=state.settlements?.[house.settlement];
- if(!Number.isSafeInteger(ledger?.population)){d.set(['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'聚落人口账不存在'});return;}
+ if(!Number.isSafeInteger(ledger?.population)){holdingSet(d,null,['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'聚落人口账不存在'},'npc-life');return;}
  const seed=d.document.randomSeed,day=minute/DAY,sex=clockRoll(seed,`${pregnancy.id}:sex`,day)<0.5?'女':'男';
  const given=r.givenNames[Math.floor(clockRoll(seed,`${pregnancy.id}:name`,day)*r.givenNames.length)];
  const child=`npc_born_${key(pregnancy.id)}`,name=`${nameOf(engine,state,pregnancy.father).slice(0,1)}${given}`,birthId=`birth_${key(pregnancy.id)}`;
- d.set(['state','family','people',child],{id:child,name,sex,birth:calendarDate(minute),bornAt:minute,parents:{mother:pregnancy.mother,father:pregnancy.father},
-  marriage:pregnancy.marriage,household:house.id,settlement:house.settlement,location:house.homeLocation,status:'正常',flags:{minor:true,romanceable:false},sourceEvent:birthId});
- d.set(['state','family','households',house.id,'members'],[...state.family?.households?.[house.id]?.members??[],child]);
+ holdingSet(d,null,['state','family','people',child],{id:child,name,sex,birth:calendarDate(minute),bornAt:minute,parents:{mother:pregnancy.mother,father:pregnancy.father},
+  marriage:pregnancy.marriage,household:house.id,settlement:house.settlement,location:house.homeLocation,status:'正常',flags:{minor:true,romanceable:false},sourceEvent:birthId},'npc-life');
+ holdingSet(d,null,['state','family','households',house.id,'members'],[...state.family?.households?.[house.id]?.members??[],child],'npc-life');
  d.set(['state','settlements',house.settlement,'population'],ledger.population+1);
- d.set(['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'已生产',endedAt:minute,child});
+ holdingSet(d,null,['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'已生产',endedAt:minute,child},'npc-life');
  const content=`${nameOf(engine,state,pregnancy.mother)}在${engine.calendar(minute).text.slice(0,-6)}生下${sex==='女'?'女儿':'儿子'}${name}，入${engine.byId.get(house.homeLocation)?.name??'本'}户。`;
  const witnesses=witness(d,engine,birthId,[pregnancy.mother,pregnancy.father],[house.id],{minute,kind:'family',content});
  // The child is a campaign person: home routine with no work, population,
@@ -217,27 +220,27 @@ function deliver(d,engine,pregnancy,minute){
  const entity={id:child,name,aliases:[],tier:'roster',generated:'birth',age:0,sex,settlement:house.settlement,scope:house.settlement,householdId:house.id,
   home:{location:house.homeLocation},location:house.homeLocation,occupation:'幼童',flags:{minor:true,romanceable:false},sourceEvent:birthId};
  d.set(['state','created',child],entity);admit(engine,entity);
- d.set(['state','npcs',child],{...initialNpcState(entity),occupation:'幼童',activity:'由家人照看',routine:lifeRoutine(house.homeLocation,{minor:true}),life:{kind:'born',since:minute,source:birthId}});
+ holdingSet(d,null,['state','npcs',child],{...initialNpcState(entity),occupation:'幼童',activity:'由家人照看',routine:lifeRoutine(house.homeLocation,{minor:true}),life:{kind:'born',since:minute,source:birthId}},'npc-life');
  for(const parent of [pregnancy.mother,pregnancy.father])if(d.get('state','npcs',parent))for(const [from,to] of [[parent,child],[child,parent]])
   recordLifeRelation(d,engine,{key:`${birthId}:${from}:${to}`,sourceEvent:birthId,eventType:'出生',from,to,minute,delta:r.childRelation??{trust:50,affection:60}},()=>true);
- d.set(['state','family','births',birthId],{id:birthId,child,mother:pregnancy.mother,father:pregnancy.father,marriage:pregnancy.marriage,minute,household:house.id,settlement:house.settlement,
-  population:{before:ledger.population,after:ledger.population+1},witnesses});
+ holdingSet(d,null,['state','family','births',birthId],{id:birthId,child,mother:pregnancy.mother,father:pregnancy.father,marriage:pregnancy.marriage,minute,household:house.id,settlement:house.settlement,
+  population:{before:ledger.population,after:ledger.population+1},witnesses},'npc-life');
 }
 
 function familyDay(d,engine,minute){
  const r=rules(engine),seed=d.document.randomSeed,day=minute/DAY;
  for(const m of Object.values(d.get('state','family','marriages')??{}).sort((x,y)=>x.id.localeCompare(y.id))){
   const state=d.get('state');
-  if(m.status==='在婚'&&m.partners.some(p=>!alive(state,p)))d.set(['state','family','marriages',m.id],{...m,status:'丧偶',endedAt:minute});
+  if(m.status==='在婚'&&m.partners.some(p=>!alive(state,p)))holdingSet(d,null,['state','family','marriages',m.id],{...m,status:'丧偶',endedAt:minute},'npc-life');
  }
  for(const p of Object.values(d.get('state','family','pregnancies')??{}).sort((x,y)=>x.id.localeCompare(y.id)))if(p.status==='怀孕'&&p.dueAt<=minute)deliver(d,engine,p,minute);
  // Authored spouses who have died end their marriage in campaign state too.
  for(const [a,b] of candidatePairs(engine,d.get('state'))){
   const state=d.get('state'),k=pairKey(a,b),old=state.family?.courtships?.[k];
   if(staticTie(engine,a,b).some(t=>t.type==='配偶')&&!state.family?.marriages?.[staticMarriageId(a,b)]&&(!alive(state,a)||!alive(state,b)))
-   d.set(['state','family','marriages',staticMarriageId(a,b)],{id:staticMarriageId(a,b),partners:[a,b],status:'丧偶',static:true,endedAt:minute});
-  if(marriageBlocker(engine,state,a,b,minute)){if(old)d.remove(['state','family','courtships',k]);continue;}
-  if(!old){d.set(['state','family','courtships',k],{partners:[a,b],since:minute});continue;}
+   holdingSet(d,null,['state','family','marriages',staticMarriageId(a,b)],{id:staticMarriageId(a,b),partners:[a,b],status:'丧偶',static:true,endedAt:minute},'npc-life');
+  if(marriageBlocker(engine,state,a,b,minute)){if(old)holdingRemove(d,null,['state','family','courtships',k],'npc-life');continue;}
+  if(!old){holdingSet(d,null,['state','family','courtships',k],{partners:[a,b],since:minute},'npc-life');continue;}
   if(minute-old.since>=r.courtship.days*DAY&&clockRoll(seed,`marriage:${k}`,day)<r.courtship.marriageChancePerDay)marry(d,engine,[a,b],old,minute);
  }
  const seen=new Set();
@@ -281,13 +284,13 @@ function addFever(d,engine,id,illness){
  const h=healthRules(engine),old=d.get('state','npcs',id,'medical');
  const m=old?structuredClone(old):{bloodMl:h.bloodMl,pain:0,wounds:[],symptoms:[]};
  m.symptoms=[...(m.symptoms??[]),{kind:'fever',observable:true,temperatureC:illness.severity==='重'?h.feverC[1]:h.feverC[0],illness:illness.id}];
- d.set(['state','npcs',id,'medical'],m);return !old;
+ holdingSet(d,null,['state','npcs',id,'medical'],m,'npc-life');return !old;
 }
 function removeFever(d,id,illness){
  const m=d.get('state','npcs',id,'medical');if(!m)return;
  const symptoms=(m.symptoms??[]).filter(s=>s.illness!==illness.id);
  if(illness.medicalCreated&&!m.wounds?.length&&!symptoms.length&&!m.tendon&&!m.parasites?.length&&!m.lostBloodMl){d.remove(['state','npcs',id,'medical']);return;}
- d.set(['state','npcs',id,'medical'],{...m,symptoms});
+ holdingSet(d,null,['state','npcs',id,'medical'],{...m,symptoms},'npc-life');
 }
 function release(d,illness){
  for(const id of Object.keys(d.get('state','npcs')).sort())if(d.get('state','npcs',id,'caring')?.illness===illness.id)d.remove(['state','npcs',id,'caring']);
@@ -314,9 +317,9 @@ function assignCare(d,engine,illness,minute){
   for(const id of roster)if(bring(d,engine,id,minute,'照护家人')){state=d.get('state');who=caregiverFor(engine,state,illness,minute);break;}
  }
  for(const id of Object.keys(state.npcs).sort())if(state.npcs[id].caring?.illness===illness.id&&id!==who)d.remove(['state','npcs',id,'caring']);
- if(who&&!state.npcs[who].caring)d.set(['state','npcs',who,'caring'],{patient:illness.patient,illness:illness.id,location:house.homeLocation,since:minute});
+ if(who&&!state.npcs[who].caring)holdingSet(d,null,['state','npcs',who,'caring'],{patient:illness.patient,illness:illness.id,location:house.homeLocation,since:minute},'npc-life');
  const row=d.get('state','family','illnesses',illness.id);
- if(who&&!row.caregivers.includes(who))d.set(['state','family','illnesses',illness.id,'caregivers'],[...row.caregivers,who]);
+ if(who&&!row.caregivers.includes(who))holdingSet(d,null,['state','family','illnesses',illness.id,'caregivers'],[...row.caregivers,who],'npc-life');
  return who;
 }
 
@@ -332,9 +335,9 @@ function beginIllness(d,engine,id,minute,{severity,days,illId,disease=null}){
  const illness={id:illId,patient:id,severity,since:minute,endsAt:minute+days*DAY,status:'患病中',previousStatus:npc.status??null,household:npcHousehold(engine,state,id)?.id??null,caregivers:[],
   ...(disease?{disease:disease.id,diseaseName:disease.name,epidemic:disease.epidemic,...(disease.fatality?{fatality:disease.fatality}:{})}:{})};
  illness.medicalCreated=addFever(d,engine,id,illness);
- d.set(['state','family','illnesses',illId],illness);
- d.set(['state','npcs',id,'status'],'患病');d.set(['state','npcs',id,'activity'],'患病');
- d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'患病',source:illId,minute,severity,...(disease?{disease:disease.id}:{})}]);
+ holdingSet(d,null,['state','family','illnesses',illId],illness,'npc-life');
+ holdingSet(d,null,['state','npcs',id,'status'],'患病','npc-life');holdingSet(d,null,['state','npcs',id,'activity'],'患病','npc-life');
+ holdingSet(d,null,['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'患病',source:illId,minute,severity,...(disease?{disease:disease.id}:{})}],'npc-life');
  if(severity==='重')assignCare(d,engine,illness,minute);
  const date=engine.calendar(minute).text.slice(0,-6);
  const content=disease?`${nameOf(engine,state,id)}在${date}染上${disease.name}（${disease.symptoms}），${severity==='重'?'病重卧床':'在家歇着'}。`:`${nameOf(engine,state,id)}在${date}${severity==='重'?'病重卧床':'染病在家歇着'}。`;
@@ -352,13 +355,13 @@ export function contractIllness(d,engine,id,minute,{severity,days,disease}){
 export function recoverIllness(d,engine,illness,minute){
  const id=illness.patient;
  if(id==='player'){
-  const row=d.get('state','family','illnesses',illness.id);d.set(['state','family','illnesses',illness.id],{...row,status:'痊愈',endedAt:minute});
+  const row=d.get('state','family','illnesses',illness.id);holdingSet(d,null,['state','family','illnesses',illness.id],{...row,status:'痊愈',endedAt:minute},'npc-life');
   const m=d.get('state','player','medical');if(m)d.set(['state','player','medical'],{...m,symptoms:(m.symptoms??[]).filter(s=>s.illness!==illness.id)});return;
  }
- if(d.get('state','npcs',id,'status')==='患病'){if(illness.previousStatus===null)d.remove(['state','npcs',id,'status']);else d.set(['state','npcs',id,'status'],illness.previousStatus);}
+ if(d.get('state','npcs',id,'status')==='患病'){if(illness.previousStatus===null)d.remove(['state','npcs',id,'status']);else holdingSet(d,null,['state','npcs',id,'status'],illness.previousStatus,'npc-life');}
  removeFever(d,id,illness);release(d,illness);
  const row=d.get('state','family','illnesses',illness.id);
- d.set(['state','family','illnesses',illness.id],{...row,status:'痊愈',endedAt:minute});
+ holdingSet(d,null,['state','family','illnesses',illness.id],{...row,status:'痊愈',endedAt:minute},'npc-life');
  // Nursing is help that both remember; the patient's regard grows most.
  const k=rules(engine).kindness?.care;
  if(k)for(const carer of row.caregivers??[])if(alive(d.get('state'),carer)){
@@ -390,9 +393,9 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  d.set([...path,'status'],'死亡');d.set([...path,'activity'],'已故');d.set([...path,'diedAt'],minute);
  if(actor.hp!==undefined)d.set([...path,'hp'],0);
  for(const field of ['caring','scheduleTravel','cognitionTravel'])if(actor[field])d.remove([...path,field]);
- if(state.player.companions?.includes(id))d.set(['state','player','companions'],state.player.companions.filter(x=>x!==id));
+ if(state.player.companions?.includes(id))holdingSet(d,null,['state','player','companions'],state.player.companions.filter(x=>x!==id),'npc-life');
  for(const row of Object.values(state.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中')){
-  release(d,row);d.set(['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute});
+  release(d,row);holdingSet(d,null,['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute},'npc-life');
  }
  const obligations=[];
  for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
@@ -403,17 +406,17 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
   if(row.version===1&&row.business){
    if(row.kind==='lease')releaseBusinessLease(d,engine,row,{status:'已终止',source:deathId});
    else finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',source:deathId});
-   d.set(['state','records',cid,'endedByDeath'],deathId);
-  }else d.set(['state','records',cid],{...row,status:'已终止',resolvedAt:minute,endedByDeath:deathId});
-  if(row.enforcement?.active)d.set(['state','records',cid,'enforcement','active'],false);
+   holdingSet(d,null,['state','records',cid,'endedByDeath'],deathId,'npc-life');
+  }else holdingSet(d,null,['state','records',cid],{...row,status:'已终止',resolvedAt:minute,endedByDeath:deathId},'npc-life');
+  if(row.enforcement?.active)holdingSet(d,null,['state','records',cid,'enforcement','active'],false,'npc-life');
   contracts.push(cid);
  }
  const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
  const pets=[];
  for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
-  const owner=pet===id?null:heir;d.set(['state','creatures',pet,'owner'],owner);pets.push(pet);
+  const owner=pet===id?null:heir;holdingSet(d,null,['state','creatures',pet,'owner'],owner,'npc-life');pets.push(pet);
   const entry=d.get('state','pets',pet);
-  if(entry)d.set(['state','pets',pet],{...entry,status:pet===id?'死亡':'已解除',following:false,ended:minute,endedByDeath:deathId});
+  if(entry)holdingSet(d,null,['state','pets',pet],{...entry,status:pet===id?'死亡':'已解除',following:false,ended:minute,endedByDeath:deathId},'npc-life');
   if(state.player.mount===pet)d.remove(['state','player','mount']);
  }
  const ledger=house?state.settlements?.[house.settlement]:null,population=Number.isSafeInteger(ledger?.population)?{before:ledger.population,after:Math.max(0,ledger.population-1)}:null;
@@ -422,7 +425,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  const witnesses=witness(d,engine,deathId,[id],house?[house.id]:[],{minute,kind:'health',content,salience:4,...(!npc?{at:[actor.location].filter(Boolean)}:{})});
  const result={id:deathId,person:id,...(life?{incarnation:life}:{}),minute,cause,illness:illness?.id??null,household:house?.id??null,settlement:house?.settlement??null,population,estate,obligations,witnesses,
   ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
- d.set(['state','family','deaths',deathId],result);
+ holdingSet(d,null,['state','family','deaths',deathId],result,'npc-life');
  entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});
  businessTransitions(d,engine,shops,deathId,minute);return result;
 }
@@ -433,7 +436,7 @@ function healthDay(d,engine,minute){
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
   if(illness.patient==='player')continue;
   const npc=d.get('state','npcs',illness.patient);
-  if(!npc||npc.status==='死亡'){release(d,illness);d.set(['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute});continue;}
+  if(!npc||npc.status==='死亡'){release(d,illness);holdingSet(d,null,['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute},'npc-life');continue;}
   if(minute>=illness.endsAt){recoverIllness(d,engine,illness,minute);ended.add(illness.patient);continue;}
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
@@ -570,7 +573,7 @@ function followers(engine,d,id,from,minute){
   // earlier event) now lives in state because the family is moving; school
   // at the new home is re-derived from the new household after arrival.
   const life=now.npcs[x].life;
-  if(life?.kind==='roster'&&life.reason!=='随家人迁居')d.set(['state','npcs',x,'life'],{...life,since:minute,reason:'随家人迁居',earlier:[...life.earlier??[],{since:life.since,reason:life.reason}]});
+  if(life?.kind==='roster'&&life.reason!=='随家人迁居')holdingSet(d,null,['state','npcs',x,'life'],{...life,since:minute,reason:'随家人迁居',earlier:[...life.earlier??[],{since:life.since,reason:life.reason}]},'npc-life');
   out.push(x);
  }
  return out;
@@ -587,14 +590,14 @@ function migrationDay(d,engine,minute){
   const row={id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),...(why.stranger?{stranger:true}:{}),host:why.host,
    from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
    decidedAt:minute,departAt:minute+r.noticeDays*DAY+r.departMinute,postponed:0,status:'待出发'};
-  d.set(['state','family','migrations',mid],row);
+  holdingSet(d,null,['state','family','migrations',mid],row,'npc-life');
   // The plan is the person's own knowledge first; neighbours learn it the
   // ordinary way, from them or their household, before the day they leave.
   const content=`${nameOf(engine,state,id)}${reasonText(row)}，打算${engine.calendar(row.departAt).text.slice(0,-6)}动身，迁往${placeName(engine,why.house.settlement)}${nameOf(engine,state,why.host)}家。`;
   witness(d,engine,`${mid}:plan`,[id],[from.id],{minute,kind:'migration',content});
   if(['谋生','避祸'].includes(why.reason))for(const f of followers(engine,d,id,from,minute)){
    const now=d.get('state');
-   d.set(['state','family','migrations',`${mid}:${f}`],{...row,id:`${mid}:${f}`,person:f,with:id,withName:nameOf(engine,now,id)});
+   holdingSet(d,null,['state','family','migrations',`${mid}:${f}`],{...row,id:`${mid}:${f}`,person:f,with:id,withName:nameOf(engine,now,id)},'npc-life');
   }
  }
 }
@@ -624,36 +627,36 @@ function endObligations(d,engine,id,test,reason,mid,minute){
 }
 function postpone(d,engine,m,why){
  const next=m.postponed+1;
- d.set(['state','family','migrations',m.id],next>migrationRules(engine).maxPostponeDays?{...m,status:'中止',reason:why,endedAt:m.departAt}:{...m,departAt:m.departAt+DAY,postponed:next,lastDelay:why});
+ holdingSet(d,null,['state','family','migrations',m.id],next>migrationRules(engine).maxPostponeDays?{...m,status:'中止',reason:why,endedAt:m.departAt}:{...m,departAt:m.departAt+DAY,postponed:next,lastDelay:why},'npc-life');
 }
 function depart(d,engine,m,at){
  const state=d.get('state'),npc=state.npcs[m.person],name=nameOf(engine,state,m.person);
  // Family going along set out with the person they follow.
  const lead=m.with?state.family.migrations[m.id.slice(0,m.id.lastIndexOf(':'))]:null;
- if(lead?.status==='中止'){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'同行的家人没有动身',endedAt:at});return;}
- if(lead?.status==='待出发'){d.set(['state','family','migrations',m.id],{...m,departAt:lead.departAt,lastDelay:'等同行家人动身'});return;}
- if(!npc||unable.includes(npc.status)){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at});return;}
- if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at});return;}
+ if(lead?.status==='中止'){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'同行的家人没有动身',endedAt:at},'npc-life');return;}
+ if(lead?.status==='待出发'){holdingSet(d,null,['state','family','migrations',m.id],{...m,departAt:lead.departAt,lastDelay:'等同行家人动身'},'npc-life');return;}
+ if(!npc||unable.includes(npc.status)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at},'npc-life');return;}
+ if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at},'npc-life');return;}
  if(!settled(state,m.person)||incapable.includes(npc.status)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
  let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.document.randomSeed);}catch{postpone(d,engine,m,'路线暂不可通行');return;}
  if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
  const shops=businessSnapshot(engine,d.get('state'));
- d.set(['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed});
- moveCoins(d,{from:purse(null,m.person),to:sink('export','travel'),amount:route.cost,writer:'npc-life',eventId:m.id});d.set(['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost);
- d.set(['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id});
- d.set(['state','npcs',m.person,'location'],null);d.set(['state','npcs',m.person,'activity'],'迁居赶路');
+ holdingSet(d,null,['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed},'npc-life');
+ moveCoins(d,{from:purse(null,m.person),to:sink('export','travel'),amount:route.cost,writer:'npc-life',eventId:m.id});holdingSet(d,null,['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost,'npc-life');
+ holdingSet(d,null,['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id},'npc-life');
+ holdingSet(d,null,['state','npcs',m.person,'location'],null,'npc-life');holdingSet(d,null,['state','npcs',m.person,'activity'],'迁居赶路','npc-life');
  const content=`${name}${reasonText(m)}，${engine.calendar(at).text.slice(0,-6)}从${placeName(engine,npc.location)}动身，迁往${placeName(engine,m.to.settlement)}${nameOf(engine,state,m.host)}家。`;
  const witnesses=witness(d,engine,`${m.id}:depart`,[m.person],[m.from.household],{minute:at,kind:'migration',content,at:[npc.location]});
- d.set(['state','family','migrations',m.id],{...m,status:'在途',departedAt:at,arriveAt,routeMinutes:route.minutes,routeCost:route.cost,routeEdges:route.edges,origin:npc.location,obligations:early,witnesses:{depart:witnesses}});
+ holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'在途',departedAt:at,arriveAt,routeMinutes:route.minutes,routeCost:route.cost,routeEdges:route.edges,origin:npc.location,obligations:early,witnesses:{depart:witnesses}},'npc-life');
  entityTransition(d,engine,{id:`${m.id}:depart`,verb:'migrate',actor:m.person,minute:at,location:npc.location,witnesses,from:m.from,to:m.to,stage:'depart',summary:content});
  businessTransitions(d,engine,shops,`${m.id}:depart`,at);
 }
 function arrive(d,engine,m,at){
  const state=d.get('state'),npc=state.npcs[m.person];
- if(npc?.scheduleTravel?.migration===m.id){d.set(['state','npcs',m.person,'location'],m.to.home);d.remove(['state','npcs',m.person,'scheduleTravel']);}
- if(!npc||unable.includes(npc.status)){d.set(['state','family','migrations',m.id],{...m,status:'中止',reason:'途中出事，未能抵达',endedAt:at});return;}
+ if(npc?.scheduleTravel?.migration===m.id){holdingSet(d,null,['state','npcs',m.person,'location'],m.to.home,'npc-life');d.remove(['state','npcs',m.person,'scheduleTravel']);}
+ if(!npc||unable.includes(npc.status)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'途中出事，未能抵达',endedAt:at},'npc-life');return;}
  const name=nameOf(engine,state,m.person);
  setMembership(d,engine,m.from.household,m.person,false);setMembership(d,engine,m.to.household,m.person,true);
  let population=null;
@@ -664,12 +667,12 @@ function arrive(d,engine,m,at){
   if(Number.isSafeInteger(b)){population.to={before:b,after:b+1};d.set(['state','settlements',m.to.settlement,'population'],population.to.after);}
  }
  const late=endObligations(d,engine,m.person,o=>!within(engine,o.location,m.to.settlement),`${name}已迁居${placeName(engine,m.to.settlement)}，原约定作罢`,m.id,at);
- d.set(['state','npcs',m.person,'residence','arrivedAt'],at);
- if(npc.residence?.workChanged)d.set(['state','npcs',m.person,'occupation'],`迁居后帮衬${nameOf(engine,state,m.host)}家（原${npc.occupation??engine.byId.get(m.person).occupation??''}）`);
- d.set(['state','npcs',m.person,'developments'],[...d.get('state','npcs',m.person,'developments')??[],{type:'迁居',source:m.id,minute:at,reason:m.reason,from:m.from.household,to:m.to.household}]);
+ holdingSet(d,null,['state','npcs',m.person,'residence','arrivedAt'],at,'npc-life');
+ if(npc.residence?.workChanged)holdingSet(d,null,['state','npcs',m.person,'occupation'],`迁居后帮衬${nameOf(engine,state,m.host)}家（原${npc.occupation??engine.byId.get(m.person).occupation??''}）`,'npc-life');
+ holdingSet(d,null,['state','npcs',m.person,'developments'],[...d.get('state','npcs',m.person,'developments')??[],{type:'迁居',source:m.id,minute:at,reason:m.reason,from:m.from.household,to:m.to.household}],'npc-life');
  const content=`${name}${engine.calendar(at).text.slice(0,-6)}迁到${placeName(engine,m.to.home)}，与${nameOf(engine,state,m.host)}家同住。`;
  const witnesses=witness(d,engine,`${m.id}:arrive`,[m.person],[m.to.household],{minute:at,kind:'migration',content,at:[m.to.home]});
- d.set(['state','family','migrations',m.id],{...d.get('state','family','migrations',m.id),status:'已抵达',arrivedAt:at,population,obligations:[...m.obligations??[],...late],witnesses:{...m.witnesses,arrive:witnesses}});
+ holdingSet(d,null,['state','family','migrations',m.id],{...d.get('state','family','migrations',m.id),status:'已抵达',arrivedAt:at,population,obligations:[...m.obligations??[],...late],witnesses:{...m.witnesses,arrive:witnesses}},'npc-life');
  entityTransition(d,engine,{id:`${m.id}:arrive`,verb:'migrate',actor:m.person,minute:at,location:m.to.home,witnesses,from:m.from,to:m.to,stage:'arrive',summary:content});
 }
 function migrationsDue(d,engine,before,after){
@@ -727,8 +730,8 @@ function coworkDay(d,engine,minute){
    for(const [from,to] of [[a,b],[b,a]]){
     const view=relationView(engine,d.get('state'),from,to);
     if(view.affection>=k.cap||view.routine?.cowork>=period)continue;
-    d.set(['state','npcs',from,'relationships',to],{...view,trust:Math.min(100,view.trust+k.trust),affection:Math.min(k.cap,view.affection+k.affection),
-     routine:{...view.routine,cowork:period,coworkTimes:(view.routine?.coworkTimes??0)+1}});
+    holdingSet(d,null,['state','npcs',from,'relationships',to],{...view,trust:Math.min(100,view.trust+k.trust),affection:Math.min(k.cap,view.affection+k.affection),
+     routine:{...view.routine,cowork:period,coworkTimes:(view.routine?.coworkTimes??0)+1}},'npc-life');
    }
   }
  }
