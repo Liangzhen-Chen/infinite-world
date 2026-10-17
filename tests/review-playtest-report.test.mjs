@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {playtestEvidenceHash,persistentReviewClient,reassessPlaytestReport,reviewReportCLI} from '../tools/review-playtest-report.mjs';
@@ -20,8 +20,8 @@ const mock=()=>({spent:0,async generate(body){
     return {measurement:{costUpperYuan:.01},choices:[{finish_reason:'stop',message:{content:JSON.stringify(value)}}]};
 }});
 async function temporary(t){
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-review-'));
-    t.after(async()=>{assert.ok(directory.startsWith(path.join(os.tmpdir(),'dnd-review-')));await fs.rm(directory,{recursive:true,force:true});});
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'dnd-review-'));
+    t.after(async()=>{assert.ok(directory.startsWith(path.join(tmpRoot(),'dnd-review-')));await fs.rm(directory,{recursive:true,force:true});});
     return directory;
 }
 

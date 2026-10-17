@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -15,7 +15,7 @@ const qty=value=>typeof value==='number'?value:value?.quantity??0;
 const script=async id=>JSON.parse(await fs.readFile(new URL(`playtests/${id}.json`,import.meta.url),'utf8'));
 
 async function session(t,id){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m1-preconditions-'));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m1-preconditions-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     let providerCalls=0;

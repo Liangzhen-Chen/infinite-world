@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {siteItemReferences} from '../server-plugin/sites.mjs';
@@ -57,7 +57,7 @@ test('L1核对中文时辰、息和材料单位，不能把一份两公斤铁料
 });
 
 test('world_upgrade引入W3目录且既有财物保留，升级后新工序可制造署名单件',async t=>{
-  const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'w3-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   // Remove only this wave from the fixture world so the test remains a genuine
   // addition after the source catalogue itself has been published.
   const oldWorld=structuredClone(world),siteKept=siteItemReferences(world.locations),ids=new Set([...bones.items,...bones.recipes].map(row=>row.id).filter(id=>!siteKept.has(id)));

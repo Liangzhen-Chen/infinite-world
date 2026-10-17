@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -104,7 +104,7 @@ test('world_actions：此处可做、对人可做、快捷栏七项；槽位可�
 });
 
 test('/actions 只读目录与 /execute 的 world_act：事件存旧调用、回执带事件流文字、幂等与只读动作拒绝',async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'a1-actions-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const root=fs.mkdtempSync(path.join(tmpRoot(),'a1-actions-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  const app=express();app.use(express.json({limit:'50mb'}));const router=express.Router();await init(router,{baseRoot:root,world,npcPlanningEnabled:false});app.use(router);
  const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
  const request=async(endpoint,body)=>{const r=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};

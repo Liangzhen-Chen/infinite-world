@@ -16,6 +16,9 @@ import {entityTransition} from './entity-transitions.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {createNpcObligation} from './npc-obligations.mjs';
 import {npcLessonGain,settleNpcLesson,npcProficiency} from './npc-growth.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of','permit'],entities:['office']});
 
 const DAY=1440,path=id=>['state','records',id],actor=(d,e,id)=>d.get(...actorPath(e.world,id));
 const int=(n,min=0,max=1e9)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error('信仰钱粮或时长无效');return n;};
@@ -67,15 +70,15 @@ function changeFaith(d,e,who,t,eventId,{kind='conversion',devotion=true}={}){
  if(!devotion&&previous?.temple===t.id&&Number.isSafeInteger(previous.observedSince))return {previous,next:previous};
  const god=e.byId.get(t.deity),next={deity:t.deity,temple:t.id,institution:t.seat,church:god?.church.name??t.church,taboo:god?.taboo??t.rule,
   observedSince:devotion?now:null,lastBreach:-1,sourceEvent:eventId,override:true};
- d.set([...actorPath(e.world,who),'faith'],next);
- const key=`faith_change:${eventId}:${who}`;d.set(path(key),{category:'faith_change',subject:who,previous,next,kind,minute:now,sourceEvent:eventId});
+ holdingSet(d,null,[...actorPath(e.world,who),'faith'],next,'faith');
+ const key=`faith_change:${eventId}:${who}`;holdingSet(d,null,path(key),{category:'faith_change',subject:who,previous,next,kind,minute:now,sourceEvent:eventId},'faith');
  return {previous,next};
 }
 function member(d,e,t,who,remove,eventId){
  const key=`organization:${t.id}`,row=structuredClone(d.get(...path(key))??{category:'organization',id:t.id,source:t.source,members:{},removed:{},treasury:0,ledger:[]});
  if(remove){delete row.members[who];row.removed[who]={minute:d.get('state','minute'),sourceEvent:eventId};}
  else{delete row.removed[who];row.members[who]={position:'成员',joinedAt:d.get('state','minute'),arrears:0};}
- d.set(path(key),row);
+ holdingSet(d,null,path(key),row,'faith');syncHoldings(d,e,'org',t.id,{writer:'faith',eventId});
 }
 export function convertFaith(d,e,t,who,eventId,{paid=false}={}){
  const previous=faithOf(e,d.get('state'),who).value;
@@ -93,7 +96,7 @@ export function convertFaith(d,e,t,who,eventId,{paid=false}={}){
  if(old&&old.id!==t.id){
   adjustStanding(d,e,old.id,who,policy.formerDelta,{sourceEvent:eventId,reason:'改宗离开原寺观'});
   for(const g of groups)if(g.holder!==old.id)adjustStanding(d,e,g.holder,who,g.via.startsWith('household:')?policy.familyDelta:policy.organizationDelta,{sourceEvent:eventId,reason:'成员改宗',via:g.via});
-  for(const rule of faithConflictClocks(e))if([rule.faction,rule.rival].every(id=>[old.id,t.id].includes(id)))d.set(path(`faith_competition:${rule.id}`),{category:'faith_competition',active:true,reason:'信众改宗',sourceEvent:eventId});
+  for(const rule of faithConflictClocks(e))if([rule.faction,rule.rival].every(id=>[old.id,t.id].includes(id)))holdingSet(d,null,path(`faith_competition:${rule.id}`),{category:'faith_competition',active:true,reason:'信众改宗',sourceEvent:eventId},'faith');
  }
  adjustStanding(d,e,t.id,who,3,{sourceEvent:eventId,reason:'完成入教仪式'});
  entityTransition(d,e,{id:`${eventId}:faith:${who}`,verb:'organize',actor:who,target:t.id,location:t.seat,visibility:'public',witnesses:presentWitnesses(d.get('state'),d.get('state','location')),
@@ -102,8 +105,8 @@ export function convertFaith(d,e,t,who,eventId,{paid=false}={}){
 }
 
 registerEffect('faith_claim',{sources:['faction'],validate(e,v){if(!templeById(e,v.target))throw Error('教派诉讼对方未登记');},
- apply(d,e,v,c){const id=`faith_claim:${c.sourceEvent}`;d.set(path(id),{category:'legal_claim',id,claimant:c.faction,respondent:v.target,location:c.settlement,
-  kind:'temple_dispute',status:'待受理',sourceEvent:c.sourceEvent,minute:c.minute});return {applied:true,claim:id};}});
+ apply(d,e,v,c){const id=`faith_claim:${c.sourceEvent}`;holdingSet(d,null,path(id),{category:'legal_claim',id,claimant:c.faction,respondent:v.target,location:c.settlement,
+  kind:'temple_dispute',status:'待受理',sourceEvent:c.sourceEvent,minute:c.minute},'faith');return {applied:true,claim:id};}});
 
 // A visible sign carries only the authored form, never a person's secrets or
 // an asserted verdict. The effect has a bounded place and expiration.
@@ -130,8 +133,8 @@ function ritual(d,e,t,args,eventId){
  spend(d,e,t,0,spec.offerings,{kind:'祭仪耗用',sourceEvent:eventId,minute:at,party:who},undefined,{flow:'sink:consume',purpose:'ritual',writer:'faith',eventId});advanceWithNpcParticipants(d,e,spec.minutes,eventId,[host,...members].filter(id=>id!=='player'));
  let response={applied:false,reason:'普通祭仪'};
  if(eligible){response=applyEffects(d,e,[{kind:'faith_omen',deity:t.deity,rite:r.id,minutes:r.responseMinutes}],{minute:now,sourceEvent:eventId,settlement:t.seat},'world');
-  if(response.applied)d.set(path(`faith_cooldown:${t.id}:${t.deity}`),{category:'faith_cooldown',until:now+r.cooldownDays*DAY,sourceEvent:eventId});}
- const row={category:'faith_ritual',temple:t.id,subject:who,participants:members,minute:now,response,sourceEvent:eventId};d.set(path(`faith_ritual:${eventId}`),row);return row;
+  if(response.applied)holdingSet(d,null,path(`faith_cooldown:${t.id}:${t.deity}`),{category:'faith_cooldown',until:now+r.cooldownDays*DAY,sourceEvent:eventId},'faith');}
+ const row={category:'faith_ritual',temple:t.id,subject:who,participants:members,minute:now,response,sourceEvent:eventId};holdingSet(d,null,path(`faith_ritual:${eventId}`),row,'faith');return row;
 }
 function use(d,e,t,args,eventId){
  const s=e.rules.faith?.uses?.[args.choice];if(!s)throw Error('寺观用途未登记');
@@ -163,7 +166,7 @@ function use(d,e,t,args,eventId){
  if(['medicine','school','assembly'].includes(args.choice))d.set(coinPath(e,host),(actor(d,e,host).coins??0)+s.coins);
  advanceWithNpcParticipants(d,e,s.minutes,eventId,[host,who].filter(id=>id!=='player'));
  if(lesson)settleNpcLesson(d,e,who,lesson.skill,lesson.gain,eventId);
- const row={category:'faith_use',temple:t.id,subject:who,purpose:args.choice,cost:{coins:s.coins,items:s.items},minute,sourceEvent:eventId};d.set(path(`faith_use:${eventId}`),row);
+ const row={category:'faith_use',temple:t.id,subject:who,purpose:args.choice,cost:{coins:s.coins,items:s.items},minute,sourceEvent:eventId};holdingSet(d,null,path(`faith_use:${eventId}`),row,'faith');
  if(who!=='player'&&['relief','medicine','school'].includes(args.choice))changeFaith(d,e,who,t,eventId,{kind:args.choice,devotion:false});
  return row;
 }
@@ -196,7 +199,7 @@ export function faithAction(d,args,eventId){
    const from=d.get('state','location'),context=e.npcObligationAction;
    e.npcObligationAction={...context,tool:'move'};
    let result;try{result=e.move(d,{destination:t.seat,mode:'walk'},eventId);}finally{e.npcObligationAction=context;}
-   d.set(path(`faith_pilgrimage:${eventId}`),{category:'faith_pilgrimage',subject:who,temple:t.id,purpose:'pilgrimage',from,destination:t.seat,returnLocation:from,minute:d.get('state','minute'),arrived:d.get('state','location')===t.seat,sourceEvent:eventId});
+   holdingSet(d,null,path(`faith_pilgrimage:${eventId}`),{category:'faith_pilgrimage',subject:who,temple:t.id,purpose:'pilgrimage',from,destination:t.seat,returnLocation:from,minute:d.get('state','minute'),arrived:d.get('state','location')===t.seat,sourceEvent:eventId},'faith');
    return {...result,purpose:'朝圣',temple:t.id};
   }
   if(args.consent!==true)throw Error('朝圣约定须本人同意');
@@ -217,9 +220,9 @@ export function faithExperience(d,e,events){
   if(t&&(taught||ev.verb==='help'&&ev.value>0))changeFaith(d,e,who,t,ev.id,{kind:taught?'teaching':'relief',devotion:false});
   else if(exposed||ev.tags?.includes('disaster')){
    const f=faithOf(e,state,who).value;if(!f)continue;
-   d.set([...actorPath(e.world,who),'faith'],{...f,observedSince:null,lastBreach:ev.minute,doubt:true,sourceEvent:ev.id,override:true});
+   holdingSet(d,null,[...actorPath(e.world,who),'faith'],{...f,observedSince:null,lastBreach:ev.minute,doubt:true,sourceEvent:ev.id,override:true},'faith');
   }else continue;
-  d.set(path(`faith_experience:${ev.id}`),{category:'faith_experience',subject:who,sourceEvent:ev.id});
+  holdingSet(d,null,path(`faith_experience:${ev.id}`),{category:'faith_experience',subject:who,sourceEvent:ev.id},'faith');
  }
 }
 registerWorldEventSubscriber({id:'faith_experience',order:65,on:(d,engine,events)=>faithExperience(d,engine,events)});

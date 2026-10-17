@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {readReusePublication,mergeReusePublication,publishReuse} from '../tools/publish-w2-reuse.mjs';
@@ -18,8 +18,8 @@ before.items.find(row=>row.id==='item_clothes').tags=before.items.find(row=>row.
 const next=mergeReusePublication(before,publication),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 
 test('隔离预演不写入，只追加T19的14条法术且重复零写入；正文/来源/L4篡改在写入前拒绝',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-w2-reuse-'));
- t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(root,{recursive:true,force:true});});
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-w2-reuse-'));
+ t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(root,{recursive:true,force:true});});
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const [file,value]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});

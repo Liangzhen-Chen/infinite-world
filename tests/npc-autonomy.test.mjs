@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {planNpcAutonomy} from '../tools/npc-autonomy-planner.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -67,7 +67,7 @@ test('NPC 交易双方真实同场才成交，钱和物品守恒，买方无需�
  const result=applyNpcPlan(d,engine,plan,'trade');assert.equal(result.results[0].status,'进行中');advance(d,engine,605);
  assert.equal(count(d,seller,item),stock-1);assert.equal(count(d,actor,item)+count(d,seller,item),items);assert.equal(d.get('state','npcs',actor,'coins')+d.get('state','npcs',seller,'coins'),money);
 });
-async function plannerTemp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-npc-planner-'));t.after(async()=>{const resolved=path.resolve(dir);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});return path.join(dir,'ledger.json');}
+async function plannerTemp(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'dnd-npc-planner-'));t.after(async()=>{const resolved=path.resolve(dir);assert.ok(resolved.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(resolved,{recursive:true,force:true});});return path.join(dir,'ledger.json');}
 // The expanded rumor catalog leaves less of the unchanged 60000-token daily
 // reservation for output. These mock replies need fewer than 1000 tokens.
 const plannerOptions={maxTokens:1000};

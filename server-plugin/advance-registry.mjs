@@ -59,6 +59,7 @@ import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextH
 
 const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
+import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
@@ -76,7 +77,11 @@ export function nextAdvanceMinute(engine,d,now,end){
     return next;
 }
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
+// R31: a draft whose every write goes through its PatchCursor can share a records-by-kind index across one pass (storage.mjs recordsWhere).
 export function runAdvance(engine,d,ctx){
+    return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
+}
+function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
     try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}

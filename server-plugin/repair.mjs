@@ -5,6 +5,8 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
 import {workstation}from'./manufacturing.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('repair',{kinds:[],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 
@@ -62,8 +64,8 @@ export function repair(d,args,eventId){
     const completed=outcome.success&&Boolean(stillHeld),completionFailure=stillHeld?null:'维修完成前物品已经交付或离开行囊';
     const after=completed?{durability:Math.min(newMaximum,before.durability+restore),maxDurability:newMaximum}:before;
     if(completed){
-        d.set(['state','itemInstances',target,'durability'],after.durability);
-        d.set(['state','itemInstances',target,'maxDurability'],after.maxDurability);
+        holdingSet(d,null,['state','itemInstances',target,'durability'],after.durability,'repair');
+        holdingSet(d,null,['state','itemInstances',target,'maxDurability'],after.maxDurability,'repair');
         if(quantity===1){d.set([...this.bagPath('player'),item,'durability'],after.durability);d.set([...this.bagPath('player'),item,'maxDurability'],after.maxDurability);}
         this.practice(d,{skill:plan.skill,gain:2,target:`${plan.id}:${target}`},eventId);
     }

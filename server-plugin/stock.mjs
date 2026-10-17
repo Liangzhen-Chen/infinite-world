@@ -19,7 +19,7 @@
 //   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
 // 批次（lots）只在仓储类用途（granary、seed、cargo）上启用：粮食需要保质期，其余物品暂按数量计。
-import {accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
+import {isResourceKey,accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -32,7 +32,10 @@ const coinItems=new WeakMap();
 export function itemResource(engine,item){
     const world=engine?.world;let map=world&&coinItems.get(world);
     if(world&&!map){map=new Map((world.rules?.economy?.credit?.coinages??[]).filter(c=>c.item).map(c=>[c.item,c.id.replace(/^coinage_/,'coin_')]));coinItems.set(world,map);}
-    return map?.get(item)??item;
+    const coin=map?.get(item);if(coin)return coin;
+    // 旧存档的物品按中文名记（干粮）：不合资源键格式时按名称解析成物品 id；解析不了就原样交给键校验报错。
+    if(!isResourceKey(item)&&typeof engine?.resolve==='function'){try{return engine.resolve(item,'item');}catch{}}
+    return item;
 }
 const res=(engine,item)=>itemResource(engine,item);
 export const bag=(engine,id,item)=>accountKey(engine?actorId(engine.world,id):id,res(engine,item),'inventory');
@@ -184,3 +187,58 @@ export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},writer,even
     if(!recipe)throw Error('制造产出必须指明配方（src:craft 守恒对）');
     d.set(['ledger','crafts'],[...(d.get('ledger','crafts')??[]),{recipe,batches,inputs,outputs,writer,eventId,minute:d.get('state','minute')??null}].slice(-50));
 }
+
+// ---- S1c 价格输入读账户（15 §15.2：价格是账户的投影） --------------------------------
+// 价格公式一字不改，只把公式读取的存量、库存、货币量从旧字段换成账户余额（批次账户读 lots）。
+// 过渡期保留旧字段的读法作对照：priceRead 在装了探针（probePriceReads）时同时取两份并报给探针，
+// 测试断言两者逐点相等；setPriceReadMode('legacy') 让整条价格链只读旧字段，用来把同一事件算两遍。
+// 账本没开账（旧存档的预报、裸单元测试草稿）或对应范围未开账时只能读旧字段。
+// 每个读取点必须先登记在这里；tests/ledger-price.test.mjs 逐点核对被演练过，并扫描源码里的价格相关处。
+export const PRICE_POINTS=Object.freeze({
+    'region.grain':'settlement-trade.regionalTradePrice：托管聚落粮仓里未过期的 grain 批次（区域报价的需求系数）',
+    'forest.food':'forest-water.forestWaterPriceFactor：非托管聚落的公仓粮（粮价的存量系数）',
+    'forest.reserve':'forest-water.forestWaterPriceFactor：林木存量账户（木料价的稀缺系数）',
+    'medicine.herb':'medicine-state.medicinePriceFactor：诊所医者行囊里的草药（药价的供给量）',
+    'tax.payer':'finance-tax.assessTradeTax：纳税人现款（商税能否缴清）',
+    'tax.tariff':'finance-tax.collectRouteTariffs：玩家行囊里的应税货物（关税税基）',
+    'assets.cash':'finance-assets.netAssets：当事人现款（股份与净资产估值）',
+    'assets.goods':'finance-assets.netAssets：当事人库存货物（股份与净资产估值）',
+    'assets.basis':'finance-assets.recordFinanceSale：买方成交前的库存（成本基准的起点）',
+    'army.cash':'military.supplyWeek：所属方现钱（按报价能买多少军粮）',
+    'labor.stock':'labor-market：供货人的库存（补货工按价能收多少）',
+    'labor.cash':'labor-market：雇主现款（补货工按价能付多少）',
+    'shop.shelf':'shop.restockRow：店主货架上的存货（补货上限）',
+    'shop.cash':'shop.restockRow：店主现钱（按进货价能买多少）',
+    'shop.supply':'shop.restockRow：来源聚落的库存（可调拨量）',
+    'npc.stock':'npc-autonomy：卖方库存（自治交易的报价是否成交）',
+    'npc.cash':'npc-autonomy：买方现钱（自治交易的报价是否付得起）',
+    'smuggling.cash':'smuggling：买方现钱（按报价能否付清货款）',
+    'smuggling.stock':'smuggling：玩家行囊里的货（交付数量）',
+    'business.cash':'business：顾客现钱（店铺当日消费上限的口径）',
+    'salary.treasury':'office-salary：聚落公库（官职月俸按公库余额付多少）',
+    'public.treasury':'governance.spendPublic：聚落公库（公款支出的留底）',
+    'projects.stock':'public-projects：玩家自备工程材料（按工钱参照立项）',
+    'projects.supply':'public-projects：聚落公共工程材料',
+    'projects.cash':'public-projects：玩家现款（私人工程工钱账单）',
+});
+let readMode='ledger',probe=null;
+export function setPriceReadMode(mode){if(mode!=='ledger'&&mode!=='legacy')throw Error(`价格读取模式无效：${mode}`);readMode=mode;}
+export function probePriceReads(fn){probe=fn;}
+const getter=d=>typeof d.peek==='function'?(...p)=>d.peek(...p):(...p)=>d.get(...p);
+// 草稿（get / peek）或整份存档文档，二者都能读到 ledger 分区。
+const bookView=src=>src?(typeof src.get==='function'?src:{get:(...p)=>p.reduce((v,k)=>v?.[k],src)}):null;
+function ledgerValue(read,account,lots){
+    if(!lots)return read('ledger','accounts',account)??0;
+    return (read('ledger','lots',account)??[]).filter(l=>(lots.kind==null||l.kind===lots.kind)&&(lots.after==null||l.expiresDay>lots.after)).reduce((n,l)=>n+l.qty,0);
+}
+// legacy: 取旧字段的函数；account: 账户键；lots: {kind?, after?} 时读批次（kind 相等且 expiresDay > after）。
+export function priceRead(src,{point,scope='stock',account,legacy,lots=null}){
+    if(!Object.hasOwn(PRICE_POINTS,point))throw Error(`未登记的价格输入点：${point}`);
+    const d=bookView(src),read=d&&getter(d),open=Boolean(d)&&ledgerActive(d)&&(read('ledger','scopes')??['coin']).includes(scope);
+    if(!open||readMode==='legacy'){const old=legacy();if(probe&&readMode==='ledger')probe({point,legacy:old,ledger:null,open});return old;}
+    const now=ledgerValue(read,account,lots);
+    if(probe)probe({point,legacy:legacy(),ledger:now,open});
+    return now;
+}
+// 行囊里某物品的数量（缺省草稿不开账时回旧字段）。
+export const bagStock=(src,engine,{point,id,item,legacy})=>priceRead(src,{point,account:bag(engine,id,item),legacy});

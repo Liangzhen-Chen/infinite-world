@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import Ajv from 'ajv';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -160,9 +160,9 @@ test('repeated weekly casts share one crop lifetime budget and do not raise per-
  const matured=(await f.wait(doc,14*1440,'natural-finish')).document;assert.equal(farm(matured).field.cohorts[0].ready,true);conservation(matured);
 });
 test('CampaignStorage restart/export/import/replay preserves consumed resources and source quotas without reopening payouts',async t=>{
- const f=await setup(),sample=await successfulCast(f),directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-t37-growth-'));
+ const f=await setup(),sample=await successfulCast(f),directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-t37-growth-'));
  t.after(()=>{
-  const root=path.resolve(os.tmpdir()),target=path.resolve(directory),relative=path.relative(root,target);
+  const root=path.resolve(tmpRoot()),target=path.resolve(directory),relative=path.relative(root,target);
   if(relative.startsWith('..')||path.isAbsolute(relative)||!path.basename(target).startsWith('fields-t37-growth-'))throw Error('拒绝清理非本测试目录');
   return fs.rm(target,{recursive:true,force:true});
  });

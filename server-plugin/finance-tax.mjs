@@ -3,11 +3,14 @@ import {placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {rulerOf,regionOf} from './regions.mjs';
 import {changeGroupCoins,groupAccountView} from './group-account.mjs';
-import {moveCoins,purse,treasury,BOOKED} from './money.mjs';
+import {moveCoins,purse,treasury,BOOKED,coinRead} from './money.mjs';
+import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-tax');
 import {itemTraits} from './traits.mjs';
 import {shopOfKeeper} from './shop.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('finance-tax',{kinds:[]});
 
 // Commercial tax falls on trade, not on property changing hands: a spot sale owes
 // it when the seller is an organization account (faction, temple, settlement), or
@@ -37,7 +40,7 @@ export function tradeTax(e,state,location,kind='commercial'){
 export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='commercial'}){
     const tax=tradeTax(e,d.get('state'),location,kind),amount=Math.floor(cost*tax.bps/10000);
     if(!amount||seller===tax.settlement)return {...tax,amount:0};
-    const actor=e.actorPath(seller),group=groupAccountView(e,d.get('state'),seller),balance=group?.coins??d.get(...actor,'coins')??0;
+    const actor=e.actorPath(seller),group=groupAccountView(e,d.get('state'),seller),balance=coinRead(d,{point:'tax.payer',account:group?treasury(seller):purse(e,seller),legacy:()=>group?.coins??d.get(...actor,'coins')??0});
     if(balance<amount)throw Error('卖方现款不足以缴纳本笔商税');
     if(!groupAccountView(e,d.get('state'),tax.settlement)){
         if(!e.world.settlementProfiles?.some(p=>p.id===tax.settlement))throw Error('聚落未登记公账，不能收取商税');
@@ -47,7 +50,7 @@ export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='comme
     if(group)changeGroupCoins(d,e,seller,-amount,{kind:'商税',sourceEvent,minute:d.get('state','minute')},BOOKED);
     else d.set([...actor,'coins'],balance-amount);
     changeGroupCoins(d,e,tax.settlement,amount,{kind:'商税',taxKind:kind,payer:seller,bps:tax.bps,sourceEvent,minute:d.get('state','minute')},BOOKED);
-    const key=`trade_tax:${sourceEvent}:${kind}`;d.set(['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')});
+    const key=`trade_tax:${sourceEvent}:${kind}`;holdingSet(d,null,['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')},'finance-tax');
     return {...tax,amount};
 }
 export function collectRouteTariffs(d,e,route,eventId){
@@ -62,12 +65,12 @@ export function collectRouteTariffs(d,e,route,eventId){
         const shipments=Object.values(d.get('state','records')??{}).filter(r=>r.category==='smuggling'&&r.status==='运输中');
         let value=0;
         for(const [item,row]of Object.entries(d.get('state','inventory')??{})){
-            const def=e.byId.get(item),quantity=typeof row==='number'?row:row.quantity??0;
+            const def=e.byId.get(item),quantity=bagStock(d,e,{point:'tax.tariff',id:'player',item,legacy:()=>typeof row==='number'?row:row.quantity??0});
             if(!def||!itemTraits(def).tags.some(t=>rules.cargoTags.includes(t)))continue;
             const hidden=shipments.filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
             value+=Math.max(0,quantity-hidden-rules.personalAllowance)*(def.basePrice??0);
         }
         const tax=assessTradeTax(d,e,{seller:'player',cost:value,location:edge.to,sourceEvent:`${eventId}:${edgeId}`,kind:'tariff'});
-        d.set(['state','records',key],{category:'tariff_passage',edge:edgeId,...tax,value,minute:d.get('state','minute'),sourceEvent:eventId});
+        holdingSet(d,null,['state','records',key],{category:'tariff_passage',edge:edgeId,...tax,value,minute:d.get('state','minute'),sourceEvent:eventId},'finance-tax');
     }
 }

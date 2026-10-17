@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -131,7 +131,7 @@ test('显式升级和重启保留同一身体、售空库存及认知，不重�
  d.state.npcs[person].hp=7;d.state.npcs[person].cognition={blurred:{},reflections:[]};
  const next=applyPatches(d,planWorldUpgrade(d,f.world,f.world,{worldHash:'society',eventId:'two'}).patches);
  assert.equal(next.state.npcs[person].hp,7);assert.equal(next.state.npcs[person].inventory.item_ration,0);assert.deepEqual(next.state.npcs[person].cognition,d.state.npcs[person].cognition);
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'monster-society-'));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'monster-society-'));
  try{
   const storage=new CampaignStorage(root);await storage.create({id:'society',worldVersion:next.worldVersion,document:next});const restored=(await new CampaignStorage(root).load('society')).document;
   assert.equal(restored.state.npcs[person].hp,7);assert.equal(restored.state.creatures?.[bossId],undefined);

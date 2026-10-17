@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -127,7 +127,7 @@ test('已有在场个体沿用身份，不增种群扣除；满场景至多给�
 });
 
 test('存档重启、重复事件、重放、导入导出与回滚保留遭遇和种群；旧回执不补遭遇',async t=>{
-    const{engine,c}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'wildlife-encounters-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const{engine,c}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'wildlife-encounters-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(directory,{reducer,snapshotEvery:100});
     await store.create({id:'encounters',worldVersion:engine.world.version,document:c});
     const request={id:'move',anchor:'a1',input:{tool:'world_move',args:{destination:field},eventId:'move'}};

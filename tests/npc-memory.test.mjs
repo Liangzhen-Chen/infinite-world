@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -167,8 +167,8 @@ test('重提具体物品能找回较早交易，不只按最近时间或高显�
 
 test('存储幂等、重启、导出和撤销保持记忆与真实账本同步',async t=>{
     const {engine,document}=await setup();
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-npc-memory-'));
-    t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep+'dnd-npc-memory-'));await fs.rm(root,{recursive:true,force:true});});
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-npc-memory-'));
+    t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep+'dnd-npc-memory-'));await fs.rm(root,{recursive:true,force:true});});
     const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(root,{reducer});
     await store.create({id:'memory',worldVersion:document.worldVersion,document});
     const event={id:'bread',anchor:'bread',input:{tool:'world_trade',args:{seller:merchant,item:'item_bread',quantity:1},eventId:'bread'}};

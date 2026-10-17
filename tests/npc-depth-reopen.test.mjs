@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {hashContent,runContentPipeline} from '../tools/content-pipeline.mjs';
@@ -21,7 +21,7 @@ test('T09来源追加授权不重写原预算版本、额度、历史请求或�
  const forged=structuredClone(manifest);forged.sourceAuthorizations[0].parentManifestHash='wrong';assert.throws(()=>grantDepthBudget(ledger,'T09',allocation,forged),/追加来源授权/);
 });
 async function fixture(t,{card='T08',missing=false,shared=false}={}){
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'npc-reopen-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const worldRoot=path.join(dir,'world');
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'npc-reopen-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const worldRoot=path.join(dir,'world');
  for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  const world=await loadWorld(worldRoot),ids=shared?['npc_yp_qinli','npc_yp_gaoxin']:['npc_yp_qinli'];
  for(const id of ids){const n=world.npcs.find(n=>n.id===id);if(shared)n.memorySeeds=n.memorySeeds.filter(m=>m.knownBy.length===1);else n.notes='主持人不要透露旧账页。';}

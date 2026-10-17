@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -38,7 +38,7 @@ async function planCarry(engine,document){
     assert.equal(out.result.results[0].status,'进行中');
     return {document:applyPatches(document,out.patches),delivery:out.result.results[0].detail};
 }
-async function temp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'fields-rumor-route-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
+async function temp(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'fields-rumor-route-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
 
 test('正式传闻加载保持可选，只有登记讲述者进入计划，作者真相不进入人物认知',async t=>{
     const {world,engine,document}=await setup(),root=await temp(t);

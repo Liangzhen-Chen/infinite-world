@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -15,8 +15,8 @@ const draftRoot=new URL('../world/drafts/w1/yp-depth-rest/',import.meta.url),rea
 const realProof=await optional('incremental-proof.json'),priorPublication=await optional('reopen/prior-publication-state.json');
 const readHistory=async f=>{if(realProof&&/^npc_yp_.*\.json$/.test(f)){const old=realProof.oldRecords.find(r=>r.id===f.slice(0,-5));if(old)return old;}if(priorPublication?.files[f])return JSON.parse(priorPublication.files[f].raw);return readFile(f);};
 async function frozenWorldFixture(t){
- const temporary=await fs.mkdtemp(path.join(os.tmpdir(),'t06-before-world-')),worldRoot=path.join(temporary,'world'),source=fileURLToPath(new URL('../world/',import.meta.url));
- assert.equal(path.dirname(path.resolve(temporary)),path.resolve(os.tmpdir()));assert.ok(path.basename(temporary).startsWith('t06-before-world-'));
+ const temporary=await fs.mkdtemp(path.join(tmpRoot(),'t06-before-world-')),worldRoot=path.join(temporary,'world'),source=fileURLToPath(new URL('../world/',import.meta.url));
+ assert.equal(path.dirname(path.resolve(temporary)),path.resolve(tmpRoot()));assert.ok(path.basename(temporary).startsWith('t06-before-world-'));
  t.after(()=>fs.rm(temporary,{recursive:true,force:true}));
  const frozen=await readFile('reopen/publication-source-files.json');
  for(const [relative,file]of Object.entries(frozen.files)){

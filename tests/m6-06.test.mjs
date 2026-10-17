@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -14,7 +14,7 @@ import {prepareDeployment} from '../tools/deploy-engine.mjs';
 import {arrivalText,makeBackup,unpackBackup,remapSession,hostBridge,serializeActions} from '../extension/start/play-town.js';
 
 async function fixture(t){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-06-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m6-06-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json({limit:'100mb'}));const router=express.Router();
     await init(router,{baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false});app.use('/api/plugins/infinite-fields',router);
     app.use('/scripts/extensions/third-party/infinite-fields/assets',express.static(path.resolve('assets')));
@@ -66,7 +66,7 @@ test('M6-06 备份接受旧服务器格式，拒绝错配角色；前情顺序�
 });
 
 test('M6-06 隔离包带同名开始入口及全部相对依赖，不激活安装',async t=>{
-    const destination=await fs.mkdtemp(path.join(os.tmpdir(),'fields-start-package-'));t.after(()=>fs.rm(destination,{recursive:true,force:true}));
+    const destination=await fs.mkdtemp(path.join(tmpRoot(),'fields-start-package-'));t.after(()=>fs.rm(destination,{recursive:true,force:true}));
     const report=await prepareDeployment(destination);assert.equal(report.activation,false);
     for(const relative of ['public/play-town.html','extension/start/play-town.js','extension/start/play-town.css','extension/ui-settings.mjs','extension/runtime.js']){
         assert.ok(report.files.some(file=>file.path===relative),relative);await fs.access(path.join(destination,relative));

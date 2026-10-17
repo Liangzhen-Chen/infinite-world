@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import fc from 'fast-check';
 import {loadWorld}from'../tools/load-world.mjs';
@@ -223,8 +223,8 @@ test('真实推搡留下法律案件，掰腕检定不被当成伤害，原有�
 });
 
 test('法律案件与赃物在重启、导出导入和删除消息回滚中与原库存一致',async t=>{
-    const{engine,document,run}=await setup(),incident=await theft(run,document),directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-law-test-'));
-    t.after(async()=>{const target=path.resolve(directory);if(!target.startsWith(path.resolve(os.tmpdir())+path.sep+'fields-law-test-'))throw new Error('临时目录边界错误');await fs.rm(target,{recursive:true,force:true});});
+    const{engine,document,run}=await setup(),incident=await theft(run,document),directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-law-test-'));
+    t.after(async()=>{const target=path.resolve(directory);if(!target.startsWith(path.resolve(tmpRoot())+path.sep+'fields-law-test-'))throw new Error('临时目录边界错误');await fs.rm(target,{recursive:true,force:true});});
     const reducer=(c,input)=>engine.reduce(c,input),store=new CampaignStorage(directory,{reducer});await store.create({id:'law',worldVersion:engine.world.version,document});
     await store.transact('law',{id:incident.eventId,anchor:'stolen',input:{tool:'world_crime',args:{operation:'steal',target:victim,item:'item_bread'},eventId:incident.eventId}},reducer);
     const current=await store.read('law');assert.deepEqual(current.document,incident.document);

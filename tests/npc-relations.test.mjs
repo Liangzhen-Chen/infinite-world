@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {relationView,applyNpcRelation,recordNpcRelationEvidence} from '../server-plugin/npc-relations.mjs';
@@ -58,7 +58,7 @@ test('无full档旧世界不产生新关系账，保持历史职责',()=>{
  const d=new Draft(document);assert.equal(applyNpcRelation(d,engine,{npc:'a',eventType:'帮助',sourceEvent:'old'},'old'),null);assert.deepEqual(recordNpcRelationEvidence(d,engine,document.state,'trade',{}, {cost:5},'old'),[]);assert.deepEqual(d.document,document);
 });
 test('实际事件交易幂等，重启与导出保留关系证据，撤销恢复钱与原关系',async t=>{
- const {engine,document}=setup(),root=await fs.mkdtemp(path.join(os.tmpdir(),'npc-relations-'));t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep+'npc-relations-'));await fs.rm(root,{recursive:true,force:true});});
+ const {engine,document}=setup(),root=await fs.mkdtemp(path.join(tmpRoot(),'npc-relations-'));t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep+'npc-relations-'));await fs.rm(root,{recursive:true,force:true});});
  const reducer=async(doc,input)=>{const d=new Draft(doc);d.set(['state','player','coins'],doc.state.player.coins-5);d.set(['state','npcs','a','coins'],doc.state.npcs.a.coins+5);recordNpcRelationEvidence(d,engine,doc.state,'trade',{seller:'a'},{buyer:'player',seller:'a',cost:5},input.eventId);return {patches:d.patches,result:{ok:true}};};
  const storage=new CampaignStorage(root,{reducer});await storage.create({id:'relations',worldVersion:document.worldVersion,document});
  const event={id:'paid',anchor:'paid',input:{eventId:'paid'}};await storage.transact('relations',event,reducer);await storage.transact('relations',event,reducer);

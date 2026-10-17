@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import fc from'fast-check';
 import {loadWorld}from'../tools/load-world.mjs';
@@ -144,8 +144,8 @@ test('水和污染转移性质验证：任意有限源量、空余容量与堵�
 
 test('环境动态状态经重启、导出导入与删消息回滚一致，改变源初始水量不会补满已有对象',async t=>{
     const{world,engine,document,run,spell}=await setup(),sample=await cast(run,document,spell('irrigate'),'引水沟');
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-water-'));t.after(()=>{
-        const resolved=path.resolve(directory),relative=path.relative(path.resolve(os.tmpdir()),resolved);
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-water-'));t.after(()=>{
+        const resolved=path.resolve(directory),relative=path.relative(path.resolve(tmpRoot()),resolved);
         if(relative.startsWith('..')||path.isAbsolute(relative)||!path.basename(resolved).startsWith('infinite-fields-water-'))throw new Error('拒绝清理非本测试临时目录');
         return fs.rm(resolved,{recursive:true,force:true});
     });

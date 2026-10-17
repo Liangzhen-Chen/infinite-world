@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'./tmp-root.mjs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {performance} from 'node:perf_hooks';
@@ -78,7 +78,7 @@ export async function measureScale(fixture,{month=true}={}){
     }
     const context=await benchmarkContext({world,engine,document});metrics.promptMs=Math.max(...context.samples);metrics.sceneMs=Math.max(...context.sceneSamples);
     const json=await timed('serializeMs',()=>JSON.stringify(document));metrics.saveBytes=Buffer.byteLength(json);
-    const dir=await fs.mkdtemp(path.join(os.tmpdir(),'dnd-scale-'));
+    const dir=await fs.mkdtemp(path.join(tmpRoot(),'dnd-scale-'));
     try{
         await timed('writeMs',()=>atomicJSON(path.join(dir,'save.json'),document));
         const restored=await timed('readMs',async()=>JSON.parse(await fs.readFile(path.join(dir,'save.json'),'utf8')));

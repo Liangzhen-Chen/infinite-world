@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -243,7 +243,7 @@ test('四份粮约从默认出生点保留全部正式作息，实际提运交�
             assert.ok(document.state.minute - initial.state.minute < 7 * 1440);
 
             // Real storage export/import and a fresh cache reconstruct every actual action.
-            const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'dnd-t23-trade-'));
+            const directory = await fs.mkdtemp(path.join(tmpRoot(), 'dnd-t23-trade-'));
             try {
                 const reducer = (doc, input) => engine.reduce(doc, input);
                 const storage = new CampaignStorage(directory, {reducer});
@@ -268,7 +268,7 @@ test('四份粮约从默认出生点保留全部正式作息，实际提运交�
                 evidence.persistence = {exportedEvents: bundle.events.length, documentHash: bundle.documentHash, importedAndReloaded: true, duplicatePickup: true, duplicateDelivery: true, freshDeliveryAlreadySettled: true};
             } finally {
                 const resolved = path.resolve(directory);
-                assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
+                assert.ok(resolved.startsWith(path.resolve(tmpRoot()) + path.sep));
                 await fs.rm(resolved, {recursive: true, force: true});
             }
             assert.equal(digest(world.npcs), npcDefinitionsHash, 'all source schedules and tiers remain untouched');

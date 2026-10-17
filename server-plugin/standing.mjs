@@ -2,11 +2,13 @@ import {isReputationSettlement,reputationFactions,reputationSettlements,factionR
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {digest} from './storage.mjs';
 import {relationView,recordStandingEvidence} from './npc-relations.mjs';
-import {stanceOf} from './monster-society.mjs';
+import {stanceOf,stanceIsDefault} from './monster-society.mjs';
 import {readBossCognition} from './boss-cognition.mjs';
 import {readBossNegotiation} from './boss-negotiation.mjs';
 import {personView} from './entity-view.mjs';
 import {actorId} from './npc-state.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('standing',{kinds:[]});
 
 // One read model for "how does X regard Y", normalized to -100..100. It wraps
 // the seven existing stores without changing them:
@@ -74,6 +76,12 @@ export function standing(engine,state,holder,target='player'){
     const kind=standingKind(engine,state,holder);
     return clamp(baseStanding(engine,state,holder,target,kind)+(standingLedger(state,holder,target)?.value??0));
 }
+// 只读：holder 对 target 的 standing 是否纯属缺省姿态（聚居地没有立场记录也没有世界写明的立场，且无立场账本条目）。
+// 有任何显式来源（立场记录、世界写明、standing 账本）即为 false；不改 standing() 的数值。
+export function standingIsDefault(engine,state,holder,target='player'){
+    holder=actorId(engine.world,holder);target=actorId(engine.world,target);
+    return standingKind(engine,state,holder)==='society'&&!standingLedger(state,holder,target)&&stanceIsDefault(state,engine,holder,target);
+}
 // World words for the scene card; numbers stay out of narration.
 export function standingWords(value){
     return value<=-60?'视你为仇':value<=-30?'对你怀有敌意':value<=-10?'对你戒备':value<10?'对你平常':value<30?'对你友善':value<60?'颇信任你':'视你为可托之人';
@@ -92,7 +100,7 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
     const old=standingLedger(state,holder,target);
     if(old?.history.some(h=>h.sourceEvent===sourceEvent&&h.via===via))return null;
     const row={category:'standing',holder,target,value:clamp((old?.value??0)+delta),history:[...old?.history??[],{delta,sourceEvent,reason,via,minute}]};
-    d.set(['state','records',rec(holder,target)],row);return row;
+    holdingSet(d,null,['state','records',rec(holder,target)],row,'standing');return row;
 }
 
 // Transmission: what is done to a member reaches the collectives it belongs to,

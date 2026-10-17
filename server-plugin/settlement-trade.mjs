@@ -1,6 +1,6 @@
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {granary as granaryAccount,cargo as cargoAccount,moveStock} from './stock.mjs';
+import {granary as granaryAccount,cargo as cargoAccount,moveStock,priceRead} from './stock.mjs';
 // S1b: 周贸易在途粮记在 settlement-trade:<id>|item_oats|cargo（带原粮批次）；途中过期进 sink:decay，仓容不足拒收的进 sink:destroy。
 declareLedgerWriter('settlement-trade',{sinks:['sink:decay','sink:destroy']});
 import {granaryCapacity} from './facility-state.mjs';
@@ -79,13 +79,13 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     // U3 price swings (hazard clocks) scale the seasonal coefficient here, so
     // shop quotes, business and village lanes all read one figure.
     // U10: life-magic price cuts settled at midnight (magic-economy.mjs).
-    const swing=hazardPriceFactor(engine,d.get('state'),item,location,minute),magic=magicPriceFactor(engine,d.get('state'),item,location),resource=forestWaterPriceFactor(engine,d.get('state'),item,location),hazard=swing*magic*resource;
+    const swing=hazardPriceFactor(engine,d.get('state'),item,location,minute),magic=magicPriceFactor(engine,d.get('state'),item,location),resource=forestWaterPriceFactor(engine,d.get('state'),item,location,d),hazard=swing*magic*resource;
     if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);
     if(existing!==undefined){if(!integer(existing,1))throw Error('区域报价账无效');return existing;}
     const w=warehouse(d,sid),lane=r.lanes.find(l=>l.buyer===sid),target=w.s.population*r.targetDays;
-    const actual=grain(w,day),demand=clamp(target/Math.max(1,actual),...engine.rules.economy.priceFactorLimits.region);
+    const actual=priceRead(d,{point:'region.grain',account:granaryAccount(engine,sid),lots:{kind:'grain',after:day},legacy:()=>grain(w,day)}),demand=clamp(target/Math.max(1,actual),...engine.rules.economy.priceFactorLimits.region);
     const distanceKm=(lane?.routes??[]).reduce((n,id)=>n+engine.world.routes.find(e=>e.id===id).lengthKm,0);
     let route=null,closed=false;
     if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}

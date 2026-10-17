@@ -6,6 +6,9 @@ import {familyAdult} from './family-state.mjs';
 import {activeGuardianship} from './family-inheritance.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('family-law',{kinds:['guardian_of','owns'],entities:['case']});
 
 const rec=id=>['state','records',id];
 export function fileFamilyDispute(d,e,{claimant,estate,guardianship,reason,eventId}){
@@ -21,7 +24,7 @@ export function fileFamilyDispute(d,e,{claimant,estate,guardianship,reason,event
   offender:g?.guardian??death?.estate.heir,victim:claimant,offense:g?'guardianship_account':'inheritance_partition',value:0,stolen:null,
   minute:s.minute,location:s.location,status:'已报案',reported:true,witnesses:[],evidence:[],sourceEvent:eventId,
   familyCivil:{estate:death?.id??g.estate,guardianship:g?.id??null,reason,claimant,documents:[death?.id,g?.id].filter(Boolean)}};
- if(d.get(...rec(id)))return id;d.set(rec(id),row);return id;
+ if(d.get(...rec(id)))return id;holdingSet(d,null,rec(id),row,'family-law');return id;
 }
 // Same local court and appeal hierarchy as criminal/debt cases. Documentary
 // estate and management records determine restitution, never an invented fine.
@@ -36,11 +39,11 @@ export function adjudicateFamilyDispute(d,e,row,code,judge,eventId){
   const original=death.estate.propertyOwners?.[asset]??{},expected={...original};
   for(const allocation of death.estate.allocations.filter(r=>r.assets.includes(asset)))expected[allocation.heir]=(original[allocation.heir]??0)+(allocation.propertyShares?.[asset]??1/entitled.length);
   if(Object.keys(building.owners??{}).sort().join('|')===Object.keys(expected).sort().join('|')&&Object.entries(expected).every(([id,n])=>building.owners[id]===n))continue;
-  d.set(['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id});restored.push(asset);
+  holdingSet(d,null,['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id},'family-law');restored.push(asset);
  }
  const judgment={judge,minute:s.minute,compensation:owed,fine:0,evidenceScore:2,restored,decision:owed?'返还侵吞财产':restored.length?'按死亡分产登记恢复产权':'维持依法分产，监护继续按期记账'};
- d.set(rec(row.id),{...row,status:owed?'待赔偿':'已结案',judgment,value:owed,compensationPaid:owed===0});
- if(owed&&guard)d.set(rec(guard.id),{...guard,status:'已撤换',removedAt:s.minute,removalCase:row.id});
+ holdingSet(d,null,rec(row.id),{...row,status:owed?'待赔偿':'已结案',judgment,value:owed,compensationPaid:owed===0},'family-law');
+ if(owed&&guard)holdingSet(d,null,rec(guard.id),{...guard,status:'已撤换',removedAt:s.minute,removalCase:row.id},'family-law');
  entityTransition(d,e,{id:`${eventId}:family:judgment`,verb:'transfer',actor:judge,target:row.victim,location:code.court,tags:['family','law'],summary:judgment.decision});
  return {case:row.id,convicted:false,civil:true,judgment};
 }
@@ -50,8 +53,8 @@ export function recoverFamilyCompensation(d,e,row,eventId){
  const offenderPath=actorPath(e.world,row.offender),victimPath=actorPath(e.world,row.victim),available=d.get(...offenderPath,'coins')??0,amount=Math.min(remaining,available);
  if(amount){moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount:amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],available-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);}
  const recovered=(row.recovered??0)+amount,closed=recovered===row.judgment.compensation;
- d.set(rec(row.id),{...row,recovered,status:closed?'已结案':'待赔偿',compensationPaid:closed});
- if(closed){const guard=d.get(...rec(row.familyCivil.guardianship));if(guard)d.set(rec(guard.id),{...guard,ledger:guard.ledger.map(r=>r.kind==='侵吞'?{...r,recoveredBy:row.id}:r)});}
+ holdingSet(d,null,rec(row.id),{...row,recovered,status:closed?'已结案':'待赔偿',compensationPaid:closed},'family-law');
+ if(closed){const guard=d.get(...rec(row.familyCivil.guardianship));if(guard)holdingSet(d,null,rec(guard.id),{...guard,ledger:guard.ledger.map(r=>r.kind==='侵吞'?{...r,recoveredBy:row.id}:r)},'family-law');}
  return {case:row.id,recovered:amount,remaining:remaining-amount,closed};
 }
 export function manageWard(d,e,{ward,guardian,coins,kind,purpose,recipient,eventId}){
@@ -65,7 +68,7 @@ export function manageWard(d,e,{ward,guardian,coins,kind,purpose,recipient,event
  if(!['保管','支出','侵吞'].includes(kind))throw Error('choice 须为保管、支出或侵吞；保管不改变所有权');
  if(kind==='支出'&&(!recipient||recipient===guardian||recipient===ward||!d.get(...target)||d.get(...target,'location')!==s.location))throw Error('受监护人开支须支付给在场实际收款者，不能转作监护人私财');
  if(kind!=='保管'){moveCoins(d,{from:purse(e,ward),to:purse(e,kind==='支出'?recipient:guardian),amount:coins,writer:'family-law',eventId:eventId});d.set([...source,'coins'],have-coins);d.set([...target,'coins'],(d.get(...target,'coins')??0)+coins);}
- const entry={kind,coins,purpose,...(recipient?{recipient}:{}),minute:s.minute,sourceEvent:eventId};d.set(rec(guard.id),{...guard,ledger:[...guard.ledger,entry]});
+ const entry={kind,coins,purpose,...(recipient?{recipient}:{}),minute:s.minute,sourceEvent:eventId};holdingSet(d,null,rec(guard.id),{...guard,ledger:[...guard.ledger,entry]},'family-law');
  entityTransition(d,e,{id:`${eventId}:guard`,verb:kind==='侵吞'?'steal':'transfer',actor:guardian,target:ward,location:s.location,visibility:'members',tags:['family','guardianship'],summary:`监护代管记账：${purpose}`});
  return {guardianship:guard.id,entry};
 }

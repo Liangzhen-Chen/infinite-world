@@ -5,7 +5,7 @@ import {entityTransition} from './entity-transitions.mjs';
 import {advanceWaterCycle,waterResourceFactor} from './water-cycle.mjs';
 import {reservedMigrationCapacity} from './seasonal-migration.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve as reserveAccount,settlementStock,moveStock,bookStock} from './stock.mjs';
+import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead} from './stock.mjs';
 // S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
 // 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
 declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});
@@ -49,11 +49,12 @@ function stock(d,engine,site,minute){
  if(days){const grown=Math.min(Math.max(0,site.capacity-row.reserve),growth(site,row.updatedAt,days));row.reserve+=grown;row.grown+=grown;row.updatedAt+=days*DAY;}
  return row;
 }
-export function forestView(engine,state,location,site=forestSites(engine).find(s=>s.location===location)){
+// books（草稿或文档）给出时，林木存量读林木账户（S1c 价格输入）；没有时读旧记录。
+export function forestView(engine,state,location,site=forestSites(engine).find(s=>s.location===location),books=null){
  if(!site)return null;
  const row=state.records?.[`forest:${location}`];
  const days=row?Math.max(0,Math.floor(((state.minute??row.updatedAt)-row.updatedAt)/DAY)):0;
- const initial=row?.reserve??site.capacity,reserve=initial+Math.min(Math.max(0,site.capacity-initial),growth(site,row?.updatedAt??0,days));
+ const initial=row&&books?priceRead(books,{point:'forest.reserve',account:forestAccount(engine,location),legacy:()=>row.reserve}):row?.reserve??site.capacity,reserve=initial+Math.min(Math.max(0,site.capacity-initial),growth(site,row?.updatedAt??0,days));
  return {...site,reserve,cover:Math.min(1,reserve/site.capacity),updatedAt:row?.updatedAt??null};
 }
 export function forestHabitatCapacity(engine,state,habitat,species,forest=forestView(engine,state,habitat.location)){
@@ -152,18 +153,19 @@ export function advanceForestWater(d,engine,day){
  }
  advanceWaterCycle(d,engine,day);
 }
-export function forestWaterPriceFactor(engine,state,item,location){
+export function forestWaterPriceFactor(engine,state,item,location,books=null){
  if(!engine.rules.forestWater)return 1;
  const settlement=resourceSettlement(engine,location,state);
  if(item==='item_water')return waterResourceFactor(engine,state,location);
  if(settlement&&item===engine.rules.settlementTrade?.item&&!engine.rules.agriculture?.settlements.some(p=>p.settlement===settlement)){
   const s=state.settlements[settlement],limits=engine.rules.economy.priceFactorLimits.region;
   if(s.granary===false||!(s.foodPerDay>0))return 1;
-  return Math.max(limits[0],Math.min(limits[1],s.population*engine.rules.settlementTrade.targetDays/Math.max(1,s.food)));
+  const food=priceRead(books,{point:'forest.food',account:granaryAccount(engine,settlement),legacy:()=>s.food});
+  return Math.max(limits[0],Math.min(limits[1],s.population*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
  }
  if(item!=='item_wood'&&!itemTraits(engine.byId.get(item)).tags.includes('wood'))return 1;
  const forests=settlement?settlementForests(engine,state,settlement):forestSites(engine).filter(s=>s.location===location);
- const capacity=forests.reduce((n,s)=>n+s.capacity,0),reserve=forests.reduce((n,s)=>n+forestView(engine,state,s.location).reserve,0);
+ const capacity=forests.reduce((n,s)=>n+s.capacity,0),reserve=forests.reduce((n,s)=>n+forestView(engine,state,s.location,undefined,books).reserve,0);
  const shortage=state.records?.[`forest-supply:${settlement}`]?.shortage??0;
  return capacity?Math.min(engine.rules.forestWater.forest.maximumPriceFactor,Math.max(1,capacity/Math.max(1,reserve),shortage?2:1)):shortage?engine.rules.forestWater.forest.maximumPriceFactor:1;
 }

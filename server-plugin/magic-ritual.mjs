@@ -15,6 +15,8 @@ import {prepareRevivalMark}from'./revival.mjs';
 import {monsterStats}from'./combat.mjs';
 import {assertTrainingRitual}from'./training.mjs';
 import {speciesInHabitat}from'./wildlife-range.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic-ritual',{kinds:['permit'],locations:true});
 
 // These bounds enable authoring; they do not publish or teach spells.
 export const ritualMechanisms=Object.freeze({
@@ -45,7 +47,7 @@ function stateOf(d,row){
  if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('役灵仪式对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
-const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
+const store=(d,row,state)=>holdingSet(d,null,['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state},'magic-ritual');
 function authorization(d,args,action,subject,grantor,until){
  const id=[args.authorization,...args.authorizations??[]].find(id=>{
   const r=d.get('state','records',id);
@@ -147,7 +149,7 @@ export function applySummonWork(d,e,eventId,power=e.power){
  }
  s.contents=s.contents.filter(id=>id!==args.source);t.contents.push(args.source);store(d,source,s);store(d,dest,t);
  const unit=d.get('state','itemInstances',args.source);moveStock(d,{from:placedStock(this,unit.container,unit.item),to:placedStock(this,dest.id,unit.item),amount:1,writer:'magic-ritual',eventId});
- d.set(['state','itemInstances',args.source,'container'],dest.id);return{paper:args.source,destination:dest.id,sourceEvent:eventId};
+ holdingSet(d,null,['state','itemInstances',args.source,'container'],dest.id,'magic-ritual');return{paper:args.source,destination:dest.id,sourceEvent:eventId};
 }
 function nearbySpirits(d,engine,c){
  const location=d.get('state','location'),origin=localPlayerPoint(d);
@@ -279,7 +281,7 @@ export function applyRitual(d,initial,eventId){
  if(p.op==='invite'){
   const record=`invitation:${eventId}`;
   const now=d.get('state','minute');
-  d.set(['state','records',record],{category:'realm_invitation',subject:p.id,terms:p.args.text,status:p.accepted?'已接受':'已拒绝',minute:now,expires:now+p.actor.spirit.invitation.visitMinutes,...(p.permission?{authorization:p.permission}:{}),source:eventId});
+  holdingSet(d,null,['state','records',record],{category:'realm_invitation',subject:p.id,terms:p.args.text,status:p.accepted?'已接受':'已拒绝',minute:now,expires:now+p.actor.spirit.invitation.visitMinutes,...(p.permission?{authorization:p.permission}:{}),source:eventId},'magic-ritual');
   if(p.accepted){d.set([...actorPath(p.id),'location'],p.location);d.set([...actorPath(p.id),'spirit','realm'],'local');recordLocalContact(d,this,p.id,eventId);}
   return{...result,record,accepted:p.accepted};
  }
@@ -314,9 +316,9 @@ export function applyRitual(d,initial,eventId){
   const now=d.get('state','minute'),record=`spirit_ferry:${eventId}`,path=actorPath(p.id),ecology=`ecology:${p.actor.ecology}`,row=d.get('state','records',ecology)?.populations?.[p.actor.species];
   d.set(path,{...clone(p.actor),status:'已超度',hp:0,location:null,activity:'已超度',spirit:{...clone(p.actor.spirit),realm:'beyond',ferried:{record,minute:now,destination:p.tablet.id}}});
   d.remove(['state','records',`local_actor_position:${p.id}`]);
-  if(row)d.set(['state','records',ecology,'populations',p.actor.species,'ferried'],(row.ferried??0)+1);
+  if(row)holdingSet(d,null,['state','records',ecology,'populations',p.actor.species,'ferried'],(row.ferried??0)+1,'magic-ritual');
   const t=stateOf(d,p.tablet);t.names=[...(Array.isArray(t.names)?t.names:[]),{subject:p.id,name:p.actor.name,species:p.actor.species,minute:now,record}];store(d,p.tablet,t);
-  d.set(['state','records',record],{category:'spirit_ferry',subject:p.id,species:p.actor.species,habitat:p.actor.ecology,from:p.location,destination:p.tablet.id,minute:now,revivable:false,source:eventId});
+  holdingSet(d,null,['state','records',record],{category:'spirit_ferry',subject:p.id,species:p.actor.species,habitat:p.actor.ecology,from:p.location,destination:p.tablet.id,minute:now,revivable:false,source:eventId},'magic-ritual');
   recordCreatureResolution(d,this,{target:p.id,outcome:'ferried',eventId,location:p.location});
   return{...result,ferried:true,record,destination:p.tablet.id,revived:false};
  }
@@ -324,7 +326,7 @@ export function applyRitual(d,initial,eventId){
   const rows=p.op==='exorcise'?[[p.id,p.actor]]:p.spirits.slice(0,p.spec.power),expelled=[];
   for(const[id,a]of rows){
    if(a.spirit?.nature==='malevolent'){d.set([...actorPath(id),'location'],null);d.set([...actorPath(id),'activity'],'已驱离');d.remove(['state','records',`local_actor_position:${id}`]);expelled.push(id);recordCreatureResolution(d,this,{target:id,outcome:'expelled',eventId,location:p.location});}
-   else{d.set([...actorPath(id),'hp'],Math.max(1,a.hp-1));d.set(['state','records',`ritual_harm:${eventId}`],{category:'ritual_harm',subject:id,damage:Math.min(1,a.hp-1),minute:d.get('state','minute'),source:eventId});return{...result,misidentified:true,harmed:id};}
+   else{d.set([...actorPath(id),'hp'],Math.max(1,a.hp-1));holdingSet(d,null,['state','records',`ritual_harm:${eventId}`],{category:'ritual_harm',subject:id,damage:Math.min(1,a.hp-1),minute:d.get('state','minute'),source:eventId},'magic-ritual');return{...result,misidentified:true,harmed:id};}
   }return{...result,expelled};
  }
  if(['discipline','faith_shield'].includes(p.op)){
@@ -354,7 +356,7 @@ export function advanceRituals(d,engine,after){
   if(after<r.expires&&consent?.category==='authorization'&&consent.action==='realm_visit'&&consent.subject===r.subject&&consent.grantor===r.subject&&consent.grantee==='player'&&!consent.revoked&&Number.isSafeInteger(consent.expires)&&consent.expires>after)continue;
   const a=d.get('state','creatures',r.subject);
   if(a?.spirit?.realm==='local'){d.set([...actorPath(r.subject),'location'],null);d.set([...actorPath(r.subject),'spirit','realm'],'other');d.remove(['state','records',`local_actor_position:${r.subject}`]);}
-  d.set(['state','records',id],{...r,status:after>=r.expires?'已到期':'已撤销',ended:Math.min(after,r.expires)});
+  holdingSet(d,null,['state','records',id],{...r,status:after>=r.expires?'已到期':'已撤销',ended:Math.min(after,r.expires)},'magic-ritual');
  }
  for(const[id,e]of Object.entries(d.get('state','effects')??{})){
   if(e.ritualBinding){

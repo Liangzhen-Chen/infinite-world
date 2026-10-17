@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -122,7 +122,7 @@ test('动物实例、生态账与尸体状态在存储重启/导入导出/删除
     const{engine,c,run}=setup();c.state.location='loc_hw_northwood';
     const tracked=await track(run,c),start=tracked.document,id=tracked.result.found.id;
     start.state.creatures[id].hp=1;start.state.player.level=30;start.state.player.hp=500;start.state.player.maxHp=500;
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'wildlife-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'wildlife-store-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});await store.create({id:'wild',worldVersion:engine.world.version,document:start});
     for(let i=0;i<40;i++){
         if((await store.read('wild')).document.state.creatures[id].status==='死亡')break;
@@ -133,7 +133,7 @@ test('动物实例、生态账与尸体状态在存储重启/导入导出/删除
     assert.deepEqual((await store.import(await store.export('wild'),'copy')).document,saved);assert.deepEqual((await store.reconcile('wild',[],null)).document,start);
 });
 test('生态迁移CLI只写独立副本，保留旧动物/记忆，重复输出或密钥路径拒绝',async t=>{
-    const{engine}=setup(),base=path.resolve(os.tmpdir()),directory=await fs.mkdtemp(path.join(base,'wildlife-migration-'));
+    const{engine}=setup(),base=path.resolve(tmpRoot()),directory=await fs.mkdtemp(path.join(base,'wildlife-migration-'));
     assert.ok(path.resolve(directory).startsWith(base+path.sep));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const old=engine.initialFromLegacy(legacy,'wildlife-cli',{prepare:false});old.state.minute=100*1440;
     old.state.creatures={old_animal:{name:'旧动物',species:'monster_red_ear_fox',hp:8,maxHp:8,status:'正常',owner:'player',location:'loc_hw_northwood'}};

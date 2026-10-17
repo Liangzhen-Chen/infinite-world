@@ -1,6 +1,9 @@
-import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED,priceRead,bagStock,settlementStock} from './stock.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldingRecord} from './holding-sources.mjs';
+declareHoldingWriter('public-projects',{kinds:['appointed','permit','owns'],entities:['office']});
 declareLedgerWriter('public-projects',{sinks:['sink:consume']});
 // S1b: 工程备料的账本入口，供工具分派（activities）与推进注册表的旧工程路径使用。
 export const holdProjectWorks=(d,engine,project,amounts,from,eventId)=>holdWorks(d,engine,project,amounts,{from,writer:'public-projects',eventId});
@@ -53,13 +56,13 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     }
     if(args.consent!==true)throw Error('做工的人须当面同意工期与工钱');
     const row=state.settlements[settlement];
-    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&engine.quantity(d,'player',item)<n)throw Error('自备工程材料不足');}
-    else if((row.wood??0)<wood||(row.stone??0)<stone)throw Error('公共工程材料不足');
+    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&bagStock(d,engine,{point:'projects.stock',id:'player',item,legacy:()=>engine.quantity(d,'player',item)})<n)throw Error('自备工程材料不足');}
+    else if(priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'wood'),legacy:()=>row.wood??0})<wood||priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'stone'),legacy:()=>row.stone??0})<stone)throw Error('公共工程材料不足');
     const wage=authorityOf(engine).treasury.wagePerWorkerDayCopper,bill=wage*workers.length*days;
     const project=`project_${eventId}`;
     let spend;
     if(privateFunding){
-        if(state.player.coins<bill)throw Error('私人工程工钱不足');
+        if(coinRead(d,{point:'projects.cash',account:purse(engine,'player'),legacy:()=>state.player.coins})<bill)throw Error('私人工程工钱不足');
         for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n,{books:STOCK_BOOKED});
         holdWorks(d,engine,project,{wood,stone},{from:{party:'player'},writer:'public-projects',eventId:project});
         moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);
@@ -79,7 +82,7 @@ export function startPublicProject(d,engine,args,eventId,settlement){
 function settleLabor(d,p,minute){
     for(const [npc,days]of Object.entries(p.public.labor)){
         const key=`civic_source:${p.id}:${npc}`;
-        if(!d.get('state','records',key))d.set(['state','records',key],{category:'civic_contribution',sourceEvent:`${p.id}:${npc}`,settlement:p.settlement,subject:npc,kind:'project_labor',points:days,minute});
+        if(!d.get('state','records',key))holdingSet(d,null,['state','records',key],{category:'civic_contribution',sourceEvent:`${p.id}:${npc}`,settlement:p.settlement,subject:npc,kind:'project_labor',points:days,minute},'public-projects');
     }
 }
 function finish(d,engine,p,status,minute,eventId){
@@ -171,14 +174,14 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const id=`housing_steward:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     const row={category:'housing_steward',id,settlement,grantor:'player',steward,hall,rules:{plots:plots.map(p=>p.id),fees,eligibility:'resident'},
         createdAt:state.minute,expires:state.minute+minutes,revoked:false,source:office.source,sourceEvent:eventId};
-    d.set(rec(id),row);
+    holdingSet(d,null,rec(id),row,'public-projects');syncHoldingRecord(d,engine,id,{writer:'public-projects',eventId});
     entityTransition(d,engine,{id:`${id}:appoint`,verb:'appoint',actor:'player',target:steward,location:hall,office:'office_village_steward',summary:`${engine.byId.get(steward)?.name??steward}受任宅基管事`});
     return {authorization:id,steward:row};
 }
 export function revokeHousingSteward(d,a,engine){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
     if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
-    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);
+    const row={...a,revoked:true,revokedAt:d.get('state','minute')};holdingSet(d,null,rec(a.id),row,'public-projects');syncHoldingRecord(d,engine,a.id,{writer:'public-projects'});
     entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:'player',target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
     return {authorization:a.id,steward:row};
 }
@@ -191,7 +194,7 @@ export function fileHousingApplication(d,engine,args,eventId,settlement,a){
     const now=state.minute,day=Math.floor(now/DAY),due=now<day*DAY+PROCESS_MINUTE?day*DAY+PROCESS_MINUTE:(day+1)*DAY+PROCESS_MINUTE;
     const id=`housing_application:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     const row={category:'housing_application',id,settlement,applicant,plot:plot.id,authorization:a.id,steward:a.steward,status:'待管事办理',due,filedAt:now,sourceEvent:eventId};
-    d.set(rec(id),row);return {application:id,pending:row,note:'管事在约定办理时刻按村长写定的规矩处理；批准只给宅基，不代建。'};
+    holdingSet(d,null,rec(id),row,'public-projects');return {application:id,pending:row,note:'管事在约定办理时刻按村长写定的规矩处理；批准只给宅基，不代建。'};
 }
 const permits=(state,plot)=>Object.values(state.records??{}).filter(r=>r.category==='housing_permit'&&r.plot===plot&&r.status!=='已收回');
 const coinsOf=(state,who)=>who==='player'?state.player.coins:state.npcs[who]?.coins??0;
@@ -201,14 +204,14 @@ function pay(d,who,settlement,copper){
     d.set(p,d.get(...p)-copper);d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
 }
 function handle(d,engine,r,at){
-    const state=d.get('state'),a=state.records[r.authorization],plot=authorityOf(engine).plots[r.plot],returned=reason=>{d.set(rec(r.id),{...r,status:'已退回',decidedAt:at,reason});};
+    const state=d.get('state'),a=state.records[r.authorization],plot=authorityOf(engine).plots[r.plot],returned=reason=>{holdingSet(d,null,rec(r.id),{...r,status:'已退回',decidedAt:at,reason},'public-projects');};
     const s=state.npcs[r.steward];
     if(a?.employment){const job=state.records[a.employment];
         if(!job?.domainSteward||job.worker!==r.steward||job.owner!==a.grantor||!['有效','要求加薪'].includes(job.status)||job.deadline<=at)return returned('管事雇佣已停止');
-        if(!job.shifts?.some(shift=>shift.minute===at&&shift.paid===shift.earned&&shift.paid>0)){d.set(rec(r.id),{...r,due:at+DAY});return;}
+        if(!job.shifts?.some(shift=>shift.minute===at&&shift.paid===shift.earned&&shift.paid>0)){holdingSet(d,null,rec(r.id),{...r,due:at+DAY},'public-projects');return;}
     }
     // A steward who cannot work today leaves the file for tomorrow.
-    if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else d.set(rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1});return;}
+    if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else holdingSet(d,null,rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1},'public-projects');return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
     if(!playerOffices(state,{settlement:r.settlement,power:'housing'},engine).length)return returned('授权的村长已不在任，管事无权批准');
     if(!a.rules.plots.includes(r.plot))return returned('所申地块不在村长写定的范围内');
@@ -220,10 +223,10 @@ function handle(d,engine,r,at){
     if(coinsOf(state,r.applicant)<fee)return returned('申请人当场交不出宅基费');
     pay(d,r.applicant,r.settlement,fee);
     const permit=`housing_permit:${r.id.slice('housing_application:'.length)}`;
-    d.set(rec(permit),{category:'housing_permit',id:permit,settlement:r.settlement,plot:r.plot,location:plot.location,slot:slot+1,holder:r.applicant,steward:r.steward,
-        feePaid:fee,annualRentCopper:plot.annualRentCopper,rentDue:at+YEAR,arrears:0,materials:plot.materials,buildDays:plot.buildDays,status:'已批准',approvedAt:at,application:r.id});
-    d.set(rec(`housing_fee:${r.id}`),{category:'housing_fee',settlement:r.settlement,payer:r.applicant,copper:fee,kind:'宅基费',minute:at,permit,sourceEvent:r.id});
-    d.set(rec(r.id),{...r,status:'已批准',decidedAt:at,permit});
+    holdingSet(d,null,rec(permit),{category:'housing_permit',id:permit,settlement:r.settlement,plot:r.plot,location:plot.location,slot:slot+1,holder:r.applicant,steward:r.steward,
+        feePaid:fee,annualRentCopper:plot.annualRentCopper,rentDue:at+YEAR,arrears:0,materials:plot.materials,buildDays:plot.buildDays,status:'已批准',approvedAt:at,application:r.id},'public-projects');
+    holdingSet(d,null,rec(`housing_fee:${r.id}`),{category:'housing_fee',settlement:r.settlement,payer:r.applicant,copper:fee,kind:'宅基费',minute:at,permit,sourceEvent:r.id},'public-projects');
+    holdingSet(d,null,rec(r.id),{...r,status:'已批准',decidedAt:at,permit},'public-projects');
 }
 export function processEmployedHousing(d,engine,contract,at){
  for(const r of Object.values(d.get('state','records')??{}))if(r.category==='housing_application'&&r.status==='待管事办理'&&r.filedAt<=at&&d.get('state','records',r.authorization)?.employment===contract.id)handle(d,engine,r,at);
@@ -232,9 +235,9 @@ function collectRent(d,p,at){
     const state=d.get('state'),due=p.annualRentCopper+p.arrears;
     if(coinsOf(state,p.holder)>=due){
         pay(d,p.holder,p.settlement,due);
-        d.set(rec(`housing_fee:${p.id}:${p.rentDue}`),{category:'housing_fee',settlement:p.settlement,payer:p.holder,copper:due,kind:'地租',minute:at,permit:p.id,sourceEvent:p.id});
-        d.set(rec(p.id),{...p,arrears:0,rentDue:p.rentDue+YEAR});
-    }else d.set(rec(p.id),{...p,arrears:due,rentDue:p.rentDue+YEAR,lastUnpaid:at});
+        holdingSet(d,null,rec(`housing_fee:${p.id}:${p.rentDue}`),{category:'housing_fee',settlement:p.settlement,payer:p.holder,copper:due,kind:'地租',minute:at,permit:p.id,sourceEvent:p.id},'public-projects');
+        holdingSet(d,null,rec(p.id),{...p,arrears:0,rentDue:p.rentDue+YEAR},'public-projects');
+    }else holdingSet(d,null,rec(p.id),{...p,arrears:due,rentDue:p.rentDue+YEAR,lastUnpaid:at},'public-projects');
 }
 const housingDue=state=>Object.values(state.records??{}).flatMap(r=>r.category==='housing_application'&&r.status==='待管事办理'?[r.due]:r.category==='housing_permit'&&r.status!=='已收回'?[r.rentDue]:[]);
 export function nextHousingMinute(state,now){return Math.min(Infinity,...housingDue(state).filter(m=>m>now));}
@@ -260,7 +263,7 @@ export function startHouse(d,engine,args,eventId,permitId){
     const project=`project_${eventId}`;holdWorks(d,engine,project,p.materials,{from:{party:holder},writer:'public-projects',eventId});
     d.set(['state','projects',project],{id:project,type:'建房',creator:holder,name:text(args.name??'自家宅屋'),settlement:p.settlement,location:p.location,permit:p.id,facilityType:'house',material:p.materials.stone>p.materials.wood?'stone':'wood',
         remainingDays:p.buildDays,days:p.buildDays,wood:p.materials.wood,stone:p.materials.stone,status:'施工中',sourceEvent:eventId});
-    d.set(rec(p.id),{...p,status:'施工中',project});
+    holdingSet(d,null,rec(p.id),{...p,status:'施工中',project},'public-projects');
     return {project,note:'自备材料已投入；按宅基工期逐日施工。'};
 }
 export function advanceHouses(d,engine,{before,after}){
@@ -272,8 +275,8 @@ export function advanceHouses(d,engine,{before,after}){
         const remainingDays=hired?Math.ceil(p.remainingWork??p.remainingDays):Math.max(0,p.remainingDays-days);
         if(remainingDays){d.set(['state','projects',key],{...p,remainingDays});continue;}
         const id=completeFacilityProject(d,engine,p);
-        d.set(['state','buildings',id,'permit'],p.permit);
+        holdingSet(d,null,['state','buildings',id,'permit'],p.permit,'public-projects');
         d.set(['state','projects',key],{...p,remainingDays:0,status:'已完成',facility:id});settleWorks(d,engine,p,{writer:'public-projects',eventId:`${key}:works`});
-        d.set(rec(p.permit),{...d.get(...rec(p.permit)),status:'已建成',building:id});
+        holdingSet(d,null,rec(p.permit),{...d.get(...rec(p.permit)),status:'已建成',building:id},'public-projects');
     }
 }

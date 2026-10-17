@@ -15,6 +15,8 @@ import {postGeneratedQuest} from './quest-sources.mjs';
 import {groupAccountView,groupAccountPath,ensureGroupAccount} from './group-account.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),path=id=>['state','records',id];
 const SPECS=Object.freeze({cart:{mode:'cart',kg:600,m3:3,seats:4,wood:20,metal:2,rate:0.012},boat:{mode:'boat',kg:2400,m3:12,seats:12,wood:60,metal:4,rate:0.008},pack:{mode:'walk',kg:80,m3:0.5,seats:0,wood:0,metal:0,rate:0.02}});
@@ -22,7 +24,7 @@ const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw Error(`${labe
 const all=s=>Object.values(s.records??{});
 const unfinished=s=>(s.records?.['transport:active']?.ids??[]).map(id=>s.records[id]).filter(Boolean);
 const live=s=>unfinished(s).filter(r=>['booked','moving','delayed'].includes(r.status));
-function index(d,id,add=true){const ids=d.get(...path('transport:active'),'ids')??[];d.set(path('transport:active'),{category:'transport_index',ids:add?[...new Set([...ids,id])]:ids.filter(x=>x!==id)});}
+function index(d,id,add=true){const ids=d.get(...path('transport:active'),'ids')??[];holdingSet(d,null,path('transport:active'),{category:'transport_index',ids:add?[...new Set([...ids,id])]:ids.filter(x=>x!==id)},'transport');}
 const assetKey=id=>id.startsWith('transport_asset:')?id:`transport_asset:${id}`;
 const actorLocation=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const assets=(e,s)=>[...new Map([...openingTransportAssets.filter(a=>e.byId.has(a.owner)&&e.byId.has(a.location)),...all(s).filter(a=>a.category==='transport_asset')].map(a=>[a.id,a])).values()];
@@ -58,7 +60,7 @@ export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},
   moveGoods(d,e,owner,'item_wood',spec.wood,{take:true,books:build});moveGoods(d,e,owner,'item_iron',spec.metal,{take:true,books:build});
  }
  const asset={category:'transport_asset',id:key,kind,owner,location,durability:100,maxDurability:100,animal:animal??null,createdAt:s.minute,sourceEvent:eventId};
- d.set(path(key),asset);return transportAssetView(e,d.get('state'),key);
+ holdingSet(d,null,path(key),asset,'transport');return transportAssetView(e,d.get('state'),key);
 }
 export function transportServices(e,s,location){
  return assets(e,s).map(a=>transportAssetView(e,s,a.id)).filter(a=>a.factor&&!a.busy&&a.location===location).flatMap(a=>{
@@ -88,7 +90,7 @@ export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},ev
  const a=transportAssetView(e,d.get('state'),asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
  if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw Error('资产不能出租');
  financeBalance(d,e,a.owner);financeTransfer(d,e,tenant,a.owner,coins,eventId);assessTradeTax(d,e,{seller:a.owner,cost:coins,location:a.location,sourceEvent:eventId});
- const row={category:'transport_lease',asset:a.id,tenant,owner:a.owner,starts:now,ends:now+minutes,coins};d.set(path(`transport_lease:${eventId}`),row);return row;
+ const row={category:'transport_lease',asset:a.id,tenant,owner:a.owner,starts:now,ends:now+minutes,coins};holdingSet(d,null,path(`transport_lease:${eventId}`),row,'transport');return row;
 }
 // S1b: trip = 托运记录键（货物在途账户的所属实体）。
 // books = 不经托运时的对方（造车船消耗的木铁）。
@@ -101,7 +103,7 @@ function moveGoods(d,e,owner,item,quantity,{take=false,instances=[],trip,books=n
  const moved=changeItems(d,e,owner,item,take?-quantity:quantity,{preserve:take,selection:take?null:undefined,books});
  if(!take&&instances.length){
   const p=[...e.bagPath(owner),item,'instances'];d.set(p,[...d.get(...p)??[],...instances]);
-  for(const unit of instances)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner,status:'持有'});
+  for(const unit of instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner,status:'持有'},'transport');
  }
  return moved;
 }
@@ -139,8 +141,8 @@ export function bookTransport(d,e,args,eventId){
  const row={category:'transport',id,asset:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
   freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
   transport:{edges:q.route.edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null},history:[{minute:now,location:from,kind:'booked'}]};
- if(!d.get(...path(a.id)))d.set(path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','mode','factor','busy','tags'].includes(k))));
- if(!externalValid)for(const c of cargo){const moved=moveGoods(d,e,owner,c.item,c.quantity,{take:true,trip:id});const units=moved.instances??[];row.cargo.push({...c,instances:units});for(const unit of units)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:id,status:'托运'});}
+ if(!d.get(...path(a.id)))holdingSet(d,null,path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','mode','factor','busy','tags'].includes(k))),'transport');
+ if(!externalValid)for(const c of cargo){const moved=moveGoods(d,e,owner,c.item,c.quantity,{take:true,trip:id});const units=moved.instances??[];row.cargo.push({...c,instances:units});for(const unit of units)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:id,status:'托运'},'transport');}
  financeTransfer(d,e,owner,service.carrier,q.freight+q.toll,eventId);assessTradeTax(d,e,{seller:service.carrier,cost:q.freight,location:from,sourceEvent:eventId});
  // Route tolls and tariffs are actual payments to the current destination treasury.
  for(const p of q.passages){
@@ -156,13 +158,13 @@ export function bookTransport(d,e,args,eventId){
  }
  for(const actor of actors)if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:id,from,to,depart:departAt,arrive:q.estimatedArrivalAt});
  if(departAt===now){const t=row.transport;t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,now);t.segmentStartedAt=now;t.nextAt=now+t.segment.minutes;row.status=t.segment.kind==='wait'?'delayed':'moving';
-  if(a.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',a.animal,'care');if(care)d.set(['state','creatures',a.animal,'care'],{...care,busyUntil:t.nextAt});}
+  if(a.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',a.animal,'care');if(care)holdingSet(d,null,['state','creatures',a.animal,'care'],{...care,busyUntil:t.nextAt},'transport');}
  }
- d.set(path(id),row);index(d,id);return clone(row);
+ holdingSet(d,null,path(id),row,'transport');index(d,id);return clone(row);
 }
 function setPosition(d,row,location){
- d.set([...path(row.asset),'location'],location);
- const animal=d.get(...path(row.asset),'animal');if(animal)d.set(['state','creatures',animal,'location'],location);
+ holdingSet(d,null,[...path(row.asset),'location'],location,'transport');
+ const animal=d.get(...path(row.asset),'animal');if(animal)holdingSet(d,null,['state','creatures',animal,'location'],location,'transport');
  for(const actor of [row.driver,...row.passengers,...row.escort?[row.escort]:[]]){
   if(actor==='player')d.set(['state','location'],location);
   else {d.set(['state','npcs',actor,'location'],location);d.set(['state','npcs',actor,'activity'],row.status==='delivered'?'抵达':'承运途中');if(row.status==='delivered')d.remove(['state','npcs',actor,'cognitionTravel']);}
@@ -175,11 +177,11 @@ export function advanceTransport(d,e,minute){
   if(t.nextAt<minute)throw Error('承运时钟越过未处理节点');
   const asset=transportAssetView(e,d.get('state'),row.asset);
   if(!asset?.factor||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
-   row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';d.set(path(row.id),row);continue;
+   row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';holdingSet(d,null,path(row.id),row,'transport');continue;
   }
   if(t.segment){const waypoint=stepTransport(e,t,t.segment);
-   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)d.set(['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)});}
-   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));d.set([...path(row.asset),'durability'],Math.max(0,asset.durability-wear));}}
+   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)},'transport');}
+   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));holdingSet(d,null,[...path(row.asset),'durability'],Math.max(0,asset.durability-wear),'transport');}}
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
    const handover=!row.cargo.length||actorLocation(d.get('state'),row.recipient)===t.location;
@@ -188,18 +190,18 @@ export function advanceTransport(d,e,minute){
    if(!handover)row.status='arrived';
    if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q?.escrow&&q.status==='进行中'){
     financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});
-    d.set(path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:q.escrow,refund:0,source:'npc_needs'});
+    holdingSet(d,null,path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:q.escrow,refund:0,source:'npc_needs'},'transport');
    }}
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});
   }else{
    t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,minute);t.segmentStartedAt=minute;t.nextAt=minute+t.segment.minutes;
-   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)d.set(['state','creatures',asset.animal,'care'],{...care,busyUntil:t.nextAt});}
+   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,busyUntil:t.nextAt},'transport');}
    row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
    if(t.segment.kind==='wait')row.history.push({minute,location:t.location,kind:'blocked',edge:t.edges[t.edgeIndex]});
    // Between endpoints the route id and remaining distance, not a false town address, locate the shipment.
    setPosition(d,row,t.location);
   }
-  d.set(path(row.id),row);
+  holdingSet(d,null,path(row.id),row,'transport');
  }
 }
 export function transportIncident(d,e,{shipment,actor='player',recover=false,consent=false},eventId){
@@ -208,7 +210,7 @@ export function transportIncident(d,e,{shipment,actor='player',recover=false,con
  if(!row.passengers.includes(actor)&&actor!==row.driver&&(position.location===null||actorLocation(s,actor)!==position.location))throw Error('须到运单实际所在路段端点');
  if(recover){if(row.status!=='intercepted'||![row.owner,row.carrier].includes(actor)||row.custodian!==actor&&!(consent&&actorLocation(s,row.custodian)===actorLocation(s,actor)))throw Error('须先从实际扣货者取回货物');row.status='delayed';row.transport.nextAt=s.minute+1;row.custodian=null;row.transport.segment=null;}
  else{if(row.escort&&!['死亡','昏迷','濒死'].includes(s.npcs?.[row.escort]?.status)&&!personConstraint(e,s,row.escort))throw Error('护送者仍在守卫，须先处理护送者');row.status='intercepted';row.custodian=actor;row.transport.nextAt=null;}
- row.history.push({minute:s.minute,location:row.transport.location,kind:recover?'recovered':'intercepted',actor});d.set(path(row.id),row);
+ row.history.push({minute:s.minute,location:row.transport.location,kind:recover?'recovered':'intercepted',actor});holdingSet(d,null,path(row.id),row,'transport');
  publishTransitionEvent(d,e,{id:`${eventId}:transport`,verb:recover?'trade':'theft',actor,target:row.owner,location:row.transport.location,minute:s.minute,tags:['transport'],witnesses:[]});return row;
 }
 export function transportTrace(e,s,id,viewer='player'){
@@ -224,7 +226,7 @@ export function transportPosition(e,s,row){
 }
 export function collectTransport(d,e,id,actor='player'){
  const old=d.get(...path(id));if(old?.category!=='transport'||old.status!=='arrived'||old.recipient!==actor||actorLocation(d.get('state'),actor)!==old.to)throw Error('收货人须亲到到货地点提取实际货物');
- const row=clone(old);for(const c of row.cargo)moveGoods(d,e,actor,c.item,c.quantity,{instances:c.instances,trip:id});row.deliveredCargo=clone(row.cargo);row.cargo=[];row.status='delivered';row.collectedAt=d.get('state','minute');d.set(path(id),row);return row;
+ const row=clone(old);for(const c of row.cargo)moveGoods(d,e,actor,c.item,c.quantity,{instances:c.instances,trip:id});row.deliveredCargo=clone(row.cargo);row.cargo=[];row.status='delivered';row.collectedAt=d.get('state','minute');holdingSet(d,null,path(id),row,'transport');return row;
 }
 export function transportScene(e,document){
  const s=document.state,row=unfinished(s).find(r=>r.passengers.includes('player'));if(!row)return null;
@@ -240,7 +242,7 @@ export function transportAction(d,e,args,eventId){
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
  if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});d.set([...path(a.id),'durability'],100);return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

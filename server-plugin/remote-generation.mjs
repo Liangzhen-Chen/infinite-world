@@ -10,6 +10,9 @@ import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldingSource} from './holding-sources.mjs';
+declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -567,7 +570,7 @@ export function unfoldRemoteAt(d,engine,location){
         const missingLedger=!d.get('state','settlements',s.id);
         if(missingLedger)d.set(['state','settlements',s.id],{name:s.name,population:s.population,food:0,wood:0,stone:0,iron:0,treasury:0});
         const patches=planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters??[]);
-        for(const patch of patches)d.set(patch.path,patch.value);
+        for(const patch of patches)holdingSet(d,engine,patch.path,patch.value,'remote-generation');
         return missingLedger||patches.length?{version:REMOTE_VERSION,kind:'tribal',settlement:s.id,habitats:habitats.map(h=>h.id)}:null;
     }
     if(!county||d.get('state','remote',county))return null;
@@ -578,7 +581,7 @@ export function unfoldRemoteAt(d,engine,location){
     // campaign as an edition update would, so remote wilds hold creatures on the first visit.
     const overlay=materializeWildlifeHabitats(remoteWorld(base,d.get('state'))),places=new Set(skeleton.locations.filter(l=>l.region===county).map(l=>l.id));
     const fresh=(overlay.rules.wildlife?.habitats??[]).filter(h=>h.derived&&places.has(h.location));
-    if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))d.set(patch.path,patch.value);
+    if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))holdingSet(d,engine,patch.path,patch.value,'remote-generation');
     // D1: every generated settlement opens its public ledger (notice board money, stores).
     // S1a: money the skeleton opens with enters the books from src:genesis.
     for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
@@ -588,8 +591,9 @@ export function unfoldRemoteAt(d,engine,location){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
         genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
-        d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
+        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation},'remote-generation');
     }
+    syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
         rostered:skeleton.census.rostered};
 }
@@ -712,7 +716,7 @@ export function acceptRemoteProfile(d,engine,input,{check,maxFailures,fields}){
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});
     d.set(['state','remote',county,'revision'],(rec.revision??0)+1);
     // No purse or goods come with a profile; a shopkeeper keeps the shop it already had.
-    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation,
-        ...(!entity.schedule?{routine:{default:[{start:0,end:1440,location:entity.home?.location??entity.location,activity:'在家',services:[]}]}}:{})});
+    if(!d.get('state','npcs',person))holdingSet(d,null,['state','npcs',person],{...initialNpcState({...entity,...profile,coins:0,inventory:{}}),occupation:entity.occupation,
+        ...(!entity.schedule?{routine:{default:[{start:0,end:1440,location:entity.home?.location??entity.location,activity:'在家',services:[]}]}}:{})},'remote-generation');
     return {person,status:'full',name:entity.name,county};
 }

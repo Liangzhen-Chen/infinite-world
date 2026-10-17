@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -144,7 +144,7 @@ test('公开工具及共享schema能表示自创配方，重启、导入与回�
     assert.ok(new Ajv({strict:false}).compile(definition.parameters)({type:'recipe',name:'试制木楔法',project:'research_study',data:data()}));
     const schema=JSON.parse(await fs.readFile('schemas/world.schema.json','utf8'));
     assert.ok(new Ajv({strict:false}).compile(schema.$defs.recipe)(created.document.state.created[id]));
-    const dir=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-invention-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+    const dir=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-invention-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
     const reducer=(c,input)=>new WorldEngine(world).reduce(c,input),store=new CampaignStorage(dir,{reducer});
     await store.create({id:'invention',worldVersion:world.version,document:created.document});
     const args={entity:id,source:'research_study'},learned=await observed(created.document,'world_learn',args,true,'stored_learn');

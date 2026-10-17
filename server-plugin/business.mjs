@@ -1,4 +1,4 @@
-import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
@@ -9,6 +9,8 @@ import {regionalTradePrice} from './settlement-trade.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
 import {assessTradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -53,7 +55,7 @@ function endShop(d,engine,shop,status,eventId,reason){
     for(const row of Object.values(d.get('state','records')??{}))if(row.category==='contract'&&row.version===1&&row.business===shop.id&&row.status==='待履行'){
         finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',reason,by:'player',source:eventId});
     }
-    d.set(path(shop.id),{...shop,status,reason,endedAt:d.get('state','minute'),endSource:eventId});
+    holdingSet(d,null,path(shop.id),{...shop,status,reason,endedAt:d.get('state','minute'),endSource:eventId},'business');
 }
 
 export async function businessTrade(d,args,eventId){
@@ -77,9 +79,9 @@ export async function businessTrade(d,args,eventId){
         const payment=chargeTrade(d,this,{buyer:'player',seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'铺面租金'},eventId);
         const row=createBusinessContract(d,{kind:'lease',parties:['player',seller],subject:location,quantity:days,
             deadline:d.get('state','minute')+days*1440,business:shopId,cost,escrow:deposit,quote:key,...(payment.debt?{debt:payment.debt}:{})},eventId);
-        const lease={...row,status:'有效',paid:payment.debt?0:cost,fulfilled:days};d.set(path(row.id),lease);
-        d.set(path(shopId),{id:shopId,category:'business',owner:'player',location,lease:row.id,status:'筹备',createdAt:d.get('state','minute'),source:eventId,
-            opening,openingSource:{event:eventId,kind:'期初已有现金和行囊；制作者未知的旧物不补造来源'}});
+        const lease={...row,status:'有效',paid:payment.debt?0:cost,fulfilled:days};holdingSet(d,null,path(row.id),lease,'business');
+        holdingSet(d,null,path(shopId),{id:shopId,category:'business',owner:'player',location,lease:row.id,status:'筹备',createdAt:d.get('state','minute'),source:eventId,
+            opening,openingSource:{event:eventId,kind:'期初已有现金和行囊；制作者未知的旧物不补造来源'}},'business');
         d.set(['state','quotes',key],cost);this.advance(d,5,eventId);
         return {business:shopId,contract:row.id,cost,deposit,...payment};
     }
@@ -122,7 +124,7 @@ export async function businessTrade(d,args,eventId){
         const q=quote(d,this,'player',buyer,item,args.unitPrice),cost=q.price*quantity;
         const day=Math.floor(d.get('state','minute')/1440);
         const purchases=Object.values(d.get('state','records')??{}).filter(row=>row.kind==='sale'&&row.parties?.[1]===buyer&&Math.floor(row.createdAt/1440)===day);
-        const capacity=purchases[0]?.customerBudget??Math.floor(this.actor(d,buyer).coins/4);
+        const capacity=purchases[0]?.customerBudget??Math.floor(coinRead(d,{point:'business.cash',account:purse(this,buyer),legacy:()=>this.actor(d,buyer).coins})/4);
         const spent=purchases.reduce((sum,row)=>sum+row.cost,0);
         if(spent+cost>capacity)throw Error(`顾客当日店铺消费上限${capacity}铜，不无限消费`);
         const incomeBefore=this.actor(d,buyer).coins;
@@ -163,7 +165,7 @@ export async function businessTrade(d,args,eventId){
         workWindow(d,this,seller,row.minutes);
         if(this.quantity(d,'player',row.subject)<row.quantity)throw Error('约定库存尚未到货或已不足，不能完成盘点');
         audit={item:row.subject,quantity:this.quantity(d,'player',row.subject),worker:seller,start:d.get('state','minute')};
-        d.set(path(row.id),{...row,status:'履行中'});
+        holdingSet(d,null,path(row.id),{...row,status:'履行中'},'business');
         advanceWithNpcParticipants(d,this,row.minutes,eventId,[seller]);
         if(!awake(this.actor(d,seller))||this.actor(d,seller).location!==row.location){
             finishBusinessContract(d,refundContractEscrow(d,row),{status:'违约',reason:'工作期间雇工无法继续履行',by:seller,source:eventId});return {business:shop.id,contract:row.id,status:'违约'};
@@ -194,10 +196,10 @@ export function recordBusinessReceipt(d,before,{tool,args,eventId,detail}){
             for(const item of new Set([...Object.keys(a),...Object.keys(b)])){const n=(b[item]??0)-(a[item]??0);if(n)items[item]=n;}
             return cash||Object.keys(items).length?[{actor,coins:cash,goods:items}]:[];
         });
-        d.set(path(id),{id,category:'business_receipt',businesses:shops.map(s=>s.id),source:eventId,tool,operation:args.operation??args.payment??'trade',minute:d.get('state','minute'),coins,goods,contracts,counterparties,
-            trade:detail.item&&detail.quantity&&detail.cost!==undefined?{buyer:detail.buyer,seller:detail.seller,item:detail.item,quantity:detail.quantity,cost:detail.cost}:null});
+        holdingSet(d,null,path(id),{id,category:'business_receipt',businesses:shops.map(s=>s.id),source:eventId,tool,operation:args.operation??args.payment??'trade',minute:d.get('state','minute'),coins,goods,contracts,counterparties,
+            trade:detail.item&&detail.quantity&&detail.cost!==undefined?{buyer:detail.buyer,seller:detail.seller,item:detail.item,quantity:detail.quantity,cost:detail.cost}:null},'business');
     }
-    for(const shop of shops)if(!live(shop)&&!shop.closing)d.set(path(shop.id),{...shop,closing:end,closingSource:eventId});
+    for(const shop of shops)if(!live(shop)&&!shop.closing)holdingSet(d,null,path(shop.id),{...shop,closing:end,closingSource:eventId},'business');
 }
 
 export function businessReport(d,engine,shop){
@@ -244,7 +246,7 @@ export function businessAction(d,args,eventId){
     if(args.operation==='business_open'){
         leaseFor(d,shop);
         if(!Object.values(quantities(d.get('state','inventory'))).some(q=>q>0))throw Error('须有现有库存才能开店');
-        d.set(path(shop.id),{...shop,status:'营业',openedAt:d.get('state','minute')});return {business:shop.id,status:'营业'};
+        holdingSet(d,null,path(shop.id),{...shop,status:'营业',openedAt:d.get('state','minute')},'business');return {business:shop.id,status:'营业'};
     }
     if(!['business_close','business_bankrupt'].includes(args.operation))throw Error('未知店铺操作');
     const bankrupt=args.operation==='business_bankrupt';

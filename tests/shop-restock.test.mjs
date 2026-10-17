@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {validateShopRules,qualityAllowed,originSettlement} from '../server-plugin/shop.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -73,7 +74,7 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     const coins=f.doc.state.npcs[host].coins,treasury=f.doc.state.settlements[town].treasury;
     // Forge buys iron from the village stock down to its reserve.
     f.doc.state.settlements.loc_hw.iron=5;const smithCoins=f.doc.state.npcs[smith].coins;
-    f.doc.state.npcs[smith].inventory.item_iron=0;
+    f.doc.state.npcs[smith].inventory.item_iron=0;resyncBooks(f.engine,f.doc);
     await f.act('world_time',{minutes:DAY},'day1');
     const row=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration');
     assert.deepEqual([row.source,row.from,row.added,row.paidCopper],['route',town,2,6]);

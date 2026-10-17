@@ -26,6 +26,13 @@ import {registerEffect} from './effects.mjs';
 import {presentWitnesses} from './world-events.mjs';
 import {intelligenceOf,npcNeedGoals} from './npc-intelligence.mjs';
 import {npcHousehold,npcIllness} from './npc-life.mjs';
+import {recordsMemo,recordIndexActive} from './storage.mjs';
+// R31: npcIllness for a whole scan of people, from one patient index of the same illnesses object (storage.mjs recordsMemo).
+function illnessOf(state,id){
+ if(!recordIndexActive()||!state.family?.illnesses)return npcIllness(state,id);
+ const rows=state.family.illnesses,byPatient=recordsMemo(rows,'byPatient',()=>{const out=new Map();for(const r of Object.values(rows)){const list=out.get(r.patient);if(list)list.push(r);else out.set(r.patient,[r]);}return out;});
+ return (byPatient.get(id)??[]).find(r=>r.status==='患病中')??null;
+}
 import {famineAt} from './hazard-calendar.mjs';
 import {factionClockRules,spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
 import {adjustStanding} from './standing.mjs';
@@ -234,7 +241,7 @@ const NEED_DETECTORS={
  },
  medicine(engine,state,id){
   const house=npcHousehold(engine,state,id);
-  for(const m of [...house?.members??[id]].sort()){const ill=npcIllness(state,m);if(ill)return {urgency:ill.severity==='重'?3:2,cause:ill.id,vars:{patient:nameOf(engine,m)}};}
+  for(const m of [...house?.members??[id]].sort()){const ill=illnessOf(state,m);if(ill)return {urgency:ill.severity==='重'?3:2,cause:ill.id,vars:{patient:nameOf(engine,m)}};}
   return null;
  },
  repair(engine,state,id,home,at,row){

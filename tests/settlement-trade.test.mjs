@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {regionalTradePrice,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
@@ -173,7 +174,7 @@ test('玩家world_trade消费区域公共价并扣真实既有商人库存；两
     const day=Math.floor(doc.state.minute/DAY),price=c.state.quotes[`region:${day}:${sid}:item_oats`];
     assert.ok(price>engine.byId.get('item_oats').basePrice);assert.equal(first.out.result.cost,price);
     assert.equal(c.state.player.coins,wallet-price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-1);assert.equal(snapshotCash(c),cash);
-    setGrain(c,sid,500);const second=await run(c,'same-day-buy');c=second.doc;
+    setGrain(c,sid,500);resyncBooks(engine,c);const second=await run(c,'same-day-buy');c=second.doc;
     assert.equal(second.out.result.cost,price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-2);
     c=(await wait(engine,c,(day+1)*DAY+540)).doc;
     const third=await run(c,'next-day-buy');c=third.doc;

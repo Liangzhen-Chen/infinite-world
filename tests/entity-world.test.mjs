@@ -12,6 +12,7 @@ import {publicSettlement} from '../server-plugin/settlement-profile.mjs';
 import {advanceTribalAwakening,tribalKey,tribalOrgId} from '../server-plugin/tribal-awakening.mjs';
 import {remoteWorld} from '../server-plugin/remote-generation.mjs';
 import {applyEffects} from '../server-plugin/effects.mjs';
+import {forestHabitatCapacity} from '../server-plugin/forest-water.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440,Q=90*DAY;
 const host='npc_hw_linsui',inn='bld_hw_qingdeng';
@@ -114,7 +115,9 @@ test('U11自治地点可进入并展开同种居民，往返、重启与重放�
  const org=tribalOrgId(dyn.id,'accord');d.set(['state','records',`tribal_clock:${org}`,'filled'],engine.rules.tribalAwakening.clock.segments);
  advanceTribalAwakening(d,engine,{before:2*Q-1,after:2*Q});
  const record=d.get('state','records',`tribal_settlement:${dyn.id}`);assert.ok(record);const sk=record.skeleton;
- assert.equal(sk.population,eco.count+2);assert.equal(d.get('state','records',`ecology:${dyn.habitat}`,'populations',dyn.species,'count'),0);
+ // R24: the wild range keeps half its capacity (at least a breeding pair); only the surplus joins.
+ const keep=Math.max(2,Math.ceil(forestHabitatCapacity(engine,d.get('state'),engine.rules.wildlife.habitats.find(h=>h.id===dyn.habitat),engine.byId.get(dyn.species))/2));
+ assert.ok(eco.count+2>keep,'夹具野生存量超出可持续保留量');assert.equal(sk.population,eco.count+2-keep);assert.equal(d.get('state','records',`ecology:${dyn.habitat}`,'populations',dyn.species,'count'),keep);
  d.set(['state','location'],dyn.home);
  const arrival=d.document,out=await engine.reduce(arrival,{tool:'world_move',args:{destination:sk.id},eventId:'v5-enter'});d.document=applyPatches(arrival,out.patches);
  const replay=await engine.reduce(arrival,{tool:'world_move',args:{destination:sk.id},eventId:'v5-enter'},{replay:true,result:out.result});assert.deepEqual(replay.patches,out.patches);

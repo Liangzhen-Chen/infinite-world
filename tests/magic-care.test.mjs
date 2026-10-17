@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -290,7 +290,7 @@ test('garden候选复用T37田块水肥与种粮账，正常推进产生有限�
 });
 test('真实CampaignStorage重载与重复施法不重复扣材料、回血或产生保鲜批次',async()=>{
  const s=fixture();s.doc.state.player.medical.wounds[0].bleedingMlPerMinute=0;
- const directory=await fs.mkdtemp(path.join(os.tmpdir(),'magic-care-'));
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'magic-care-'));
  try{
   const store=new CampaignStorage(directory,{reducer:(doc,event)=>s.engine.reduce(doc,event),snapshotEvery:1});
   await store.create({id:'care-storage',worldVersion:s.world.version,document:s.doc});

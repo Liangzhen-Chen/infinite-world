@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import { runContentPipeline,hashContent,readApprovedContent } from '../tools/content-pipeline.mjs';
 import {extractDraft,buildDraftRequest} from '../tools/npc-depth-content.mjs';
 
 test('逐条审查、最多两次重写、失败不拒绝同批、通过条目断点续跑', async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-pipeline-'));
+  const root = await fs.mkdtemp(path.join(tmpRoot(), 'content-pipeline-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const calls = [], client = { spent: 0, budgetYuan: 20, estimateCostYuan:()=>.01, async generate(body, label) {
     calls.push(label); this.spent += 0.01;
@@ -38,7 +38,7 @@ test('逐条审查、最多两次重写、失败不拒绝同批、通过条目�
 });
 
 test('累计预算续跑且骨架改变使旧通过结果失效', async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'content-pipeline-'));
+  const root = await fs.mkdtemp(path.join(tmpRoot(), 'content-pipeline-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let calls = 0;
   const client = { spent: 0, budgetYuan: 20, estimateCostYuan:()=>1,async generate(body, label) {
@@ -52,7 +52,7 @@ test('累计预算续跑且骨架改变使旧通过结果失效', async t => {
 });
 
 async function recoveryFixture(t,{raw=false,hard=false,bad=false}={}){
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'protocol-recovery-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'protocol-recovery-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const entry={id:'npc_yp_zhaofeng',contract:'audit-patch-v1',patches:[{path:'opinions.neighbors[2].view',value:'雨后曾与乔端逐段核对低垄水痕；他要先对原簿，她要先止住沟口受损，对先做哪件事尚有分歧。'}]};
  const response=value=>({choices:[{message:{content:JSON.stringify(value)}}]});
  let error;try{assert.deepEqual({candidate:entry},entry);}catch(e){error=e.message;}
@@ -81,7 +81,7 @@ test('无关manual、非白名单、已有L2与passed均零调用',async t=>{
 });
 
 async function budgetFixture(t,{limit=.15,ids=['item_one'],unknown=false,hard=false}={}){
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'pipeline-round-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'pipeline-round-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const calls=[],client={spent:0,reserved:0,budgetYuan:limit,estimateCostYuan:()=>.1,async generate(body,label){
   // Match the transport's second guard, which adds its own reservation.
   assert.ok(this.spent+this.reserved+.1<=this.budgetYuan+1e-12);

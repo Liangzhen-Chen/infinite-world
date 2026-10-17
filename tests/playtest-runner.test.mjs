@@ -7,7 +7,7 @@ import {promptSections}from'../extension/prompt.mjs';
 import {toolSelectionMetrics,playtestAcceptance}from'../tools/playtest-metrics.mjs';
 import fs from'node:fs/promises';
 import path from'node:path';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {openPlaytestBudget,openPlaytestTape}from'../tools/playtest-budget.mjs';
 
 test('选工具实测逐行动列出类别、参数、目标及漏调用；空样本与全部漏调不能报零风险',()=>{
@@ -253,7 +253,7 @@ test('审查完成且允许提交的warning仍需复核，不能冒充整场验�
 });
 
 test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执行不重发',async t=>{
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-runner-resume-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-runner-resume-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const server=await createPlaytestServer({directory:path.join(directory,'server')});t.after(()=>server.close());
     let calls=0,executeCount=0;
     const provider={async generate(){

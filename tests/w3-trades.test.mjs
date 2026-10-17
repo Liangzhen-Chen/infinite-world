@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import{CampaignStorage}from'../server-plugin/storage.mjs';
 import{WorldRegistry}from'../server-plugin/world-registry.mjs';
@@ -48,7 +48,7 @@ test('候选矿镐从段岩真实有限库存购买，双方铜币与镐数量�
 
 
 test('候选 world_upgrade 保留已交易库存和人物变化，新的书及配方目录可检索',async t=>{
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'w3-trades-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'w3-trades-upgrade-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const registry=new WorldRegistry(path.join(root,'worlds')),store=new CampaignStorage(path.join(root,'saves'),{reducer:archivedReducer(registry)});
     // Reconstruct the edition before this batch. Once published, loadWorld()
     // already contains these supplies and cannot stand in for an old edition.

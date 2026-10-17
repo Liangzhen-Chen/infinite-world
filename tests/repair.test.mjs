@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -134,7 +134,7 @@ test('维修不会重置先前耐久上限，后续魔法也不能恢复永久�
 
 test('维修记录、费用与单件状态经存储重启、导出导入和删消息回滚一致，旧格式无需新增必填字段',async t=>{
     const{engine,document,run}=await setup(),sample=await outcome(run,document,{item:'旧木杖'},true);
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'infinite-fields-repair-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-repair-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(c,input)=>engine.reduce(c,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'repair',worldVersion:engine.world.version,document});
     await store.transact('repair',{id:'repair_event',anchor:'repaired',input:{tool:'world_craft',args:{operation:'repair',item:'旧木杖'},eventId:sample.id}},reducer);

@@ -20,6 +20,9 @@ import {environmentFeatures} from './environment.mjs';
 import {readObjectState,storeObjectState} from './magic-object.mjs';
 import {applyPatches} from './storage.mjs';
 import {traitsOf} from './traits.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+// 事务回放是别的模块写入的转运：可落到任何持有种类。
+declareHoldingWriter('effects',{kinds:['*'],entities:['*'],locations:true});
 
 const DAY=1440,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 export function assertEffect(engine,effect,source='world'){
@@ -38,7 +41,8 @@ export function clockTransaction(d,apply){
   set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
   remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(content){this.messages.push(content);}};
  const result=apply(tx);if(result?.applied===false)return result;
- for(const p of tx.patches)if(p.op==='set')d.set(p.path,p.value);else d.remove(p.path);
+ // S2a: 回放经持有写入包装，事务里改到的会籍、职位等在正式草稿上双写。
+ for(const p of tx.patches)if(p.op==='set')holdingSet(d,null,p.path,p.value,'effects');else holdingRemove(d,null,p.path,'effects');
  for(const message of tx.messages)d.say(message);
  return result;
 }

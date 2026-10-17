@@ -1,7 +1,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import os from'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
@@ -260,7 +260,7 @@ test('完成前授权撤销拒绝全部状态修改',()=>{
  s.doc.state.records.altar_use.revoked=true;const before=structuredClone(s.doc);assert.throws(()=>applyMagic.call(s.engine,d,p,'late-cast'),/授权/);assert.deepEqual(s.doc,before);
 });
 test('存档恢复与同一事件重放不重复清扫或扣魔力',async()=>{
- const s=fixture(),before=structuredClone(s.doc),dir=await fs.mkdtemp(path.join(os.tmpdir(),'t89-')),reducer=(doc,input)=>s.engine.reduce(doc,input),storage=new CampaignStorage(dir,{reducer});
+ const s=fixture(),before=structuredClone(s.doc),dir=await fs.mkdtemp(path.join(tmpRoot(),'t89-')),reducer=(doc,input)=>s.engine.reduce(doc,input),storage=new CampaignStorage(dir,{reducer});
  try{
   await storage.create({id:'ritual',worldVersion:s.world.version,document:before});
   let chosen;for(let i=0;i<100;i++){const input={...publicCall('world_cast',{spell:cat(s,'clean_servant').id,target:'feature_dust'}),eventId:`persist-${i}`},out=await reducer(before,input);if(out.result.success){chosen=input;break;}}

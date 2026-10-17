@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
@@ -130,7 +130,7 @@ test('伤害法术沿已有交锋接点留下认知，败亡保留最后经历�
 });
 
 test('存档重启、导出导入与回滚保留真实首领认知，同一请求不重复计数',async t=>{
-    const{document,engine}=setup(),directory=await fs.mkdtemp(path.join(os.tmpdir(),'boss-cognition-'));
+    const{document,engine}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'boss-cognition-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));const reducer=(doc,input)=>engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'boss',worldVersion:engine.world.version,document});
     const enter={id:'enter',anchor:'a1',input:{tool:'world_lair',args:{operation:'approach',lair},eventId:'enter'}};

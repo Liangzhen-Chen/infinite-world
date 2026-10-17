@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {validateNpcProfiles} from '../tools/npc-profile-validation.mjs';
@@ -34,10 +34,10 @@ test('正式来源人物事实或已审查作息改变时拒绝，额外人物�
  current=legacyCurrent();current.push({...current[0],id:'npc_extra_unreviewed',name:'额外旧人物'});assert.deepEqual(mergeNpcProfiles(current,candidate,baseline).at(-1),current.at(-1));
 });
 test('L4或候选正文被改不能绕过发布审核',async()=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-review-'));await fs.cp(root,temp,{recursive:true});
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'m2-review-'));await fs.cp(root,temp,{recursive:true});
  try{const changed=structuredClone(candidate);changed.npcs[0].description+='凭空赠送一座城';await fs.writeFile(path.join(temp,'candidate.json'),JSON.stringify(changed));await assert.rejects(prepareNpcPublication({world,root:temp}),/候选不等于/);
  await fs.writeFile(path.join(temp,'candidate.json'),JSON.stringify(candidate));const batch=JSON.parse(await fs.readFile(path.join(temp,'batch-0.json'),'utf8'));batch.l4.approved=false;await fs.writeFile(path.join(temp,'batch-0.json'),JSON.stringify(batch));await assert.rejects(prepareNpcPublication({world,root:temp}),/L4/);
- }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
+ }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
 test('完整档必填和嵌套类型生效，未标full的旧档兼容',()=>{
  const old={...world,npcs:world.npcs.map(n=>(()=>{const old=baseline.find(row=>row.id===n.id);return old?{...old,settlement:n.settlement,householdId:n.householdId,household:n.household,home:n.home}:n;})())};assert.equal(validateWorld(old).ok,true);
@@ -56,12 +56,12 @@ test('人物不能投影本人不知的记忆或秘密，出生日期与元年�
  const w=structuredClone(published.world),n=w.npcs[0];n.birth.month=1;n.birth.day=1;n.birth.year=1-n.age;assert.deepEqual(validateNpcProfiles(w),[]);
 });
 test('实际写入只在隔离世界执行一次，第二次无写入且不改变字节',async()=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'m2-publish-'));await fs.cp(path.resolve('world'),temp,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
  try{// T92/T93后白石镇另有升档人物、入门书和法规场所，旧世界剔除逻辑集中在夹具里。
  await writePreBaishiWorld(temp,world);
  await fs.writeFile(path.join(temp,'people/baseline.json'),JSON.stringify(world.npcs.filter(preBaishiNpc).map(n=>{const original=baseline.find(x=>x.id===n.id);return original?{...original,inventory:n.inventory,schedule:n.schedule}:n;}),null,2)+'\n');
  const first=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(first.written,true);const before=await fs.readFile(path.join(temp,'people/baseline.json'),'utf8');const second=await publishNpcProfiles({worldRoot:temp,root,write:true});assert.equal(second.written,false);assert.equal(await fs.readFile(path.join(temp,'people/baseline.json'),'utf8'),before);
- }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
+ }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
 
 test('真实32人深度来源保留新notes/opinions及后来的钱物和记忆，伪造凭证或漂移不能重发',async()=>{
@@ -82,8 +82,8 @@ test('真实32人深度来源保留新notes/opinions及后来的钱物和记忆�
 });
 
 test('深度来源缺失、manifest漂移或撤销L4不能用旧出版凭证放行',async t=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'depth-source-')),worldRoot=path.join(temp,'world');
- t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(os.tmpdir())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
+ const temp=await fs.mkdtemp(path.join(tmpRoot(),'depth-source-')),worldRoot=path.join(temp,'world');
+ t.after(async()=>{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});});
  await assert.rejects(readPublishedNpcDepth({world,worldRoot}),/ENOENT/);
  await fs.symlink(path.resolve('tools'),path.join(temp,'tools'),'junction');
  for(const folder of ['meta','people','geo','lore','design'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});

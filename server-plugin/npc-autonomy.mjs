@@ -1,6 +1,6 @@
-import {purse,workshopFund,moveCoins} from './money.mjs';
+import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {facilityView} from './facility-state.mjs';
@@ -18,13 +18,17 @@ import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+// 自治动作在工作草稿里演算后回放，回放可落到被演算动作写的任何持有种类。
+declareHoldingWriter('npc-autonomy',{kinds:['*'],entities:['*'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n?.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const full=(engine,id)=>personSimulation(engine,{},id).value;
 const auditGoal=g=>/核清现有(?:铁料|线料)/.test(g.content);
 function draft(document,at){const d={document,patches:[],get(...p){if(at!==undefined&&p.join('.')==='state.minute')return at;return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){const p={op:'set',path,value};this.document=applyPatches(this.document,[p]);this.patches.push(p);},remove(path){const p={op:'delete',path};this.document=applyPatches(this.document,[p]);this.patches.push(p);}};return d;}
-const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?target.set(p.path,p.value):target.remove(p.path);};
+// S2a: 工作草稿没有引擎，不双写；回放到正式草稿时经持有写入包装双写。
+const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?holdingSet(target,null,p.path,p.value,'npc-autonomy'):holdingRemove(target,null,p.path,'npc-autonomy');};
 const proficiency=npcProficiency;
 function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
 function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
@@ -71,7 +75,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
   if(action.seller===id||!awake(seller)||personConstraint(engine,state,action.seller,at)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw Error('交易品种或数量未登记');
-  if(engine.quantity(d,action.seller,action.item)<action.quantity||state.npcs[id].coins<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
+  if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||coinRead(d,{point:'npc.cash',account:purse(engine,id),legacy:()=>state.npcs[id].coins})<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
  }else throw Error('自主行动类型未实现');
  return {minutes,location:actor.location,furnace,work};
@@ -108,7 +112,7 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
  const definition=engine.byId.get(item),instances=[];
  for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
   const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
-  d.set(['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship});
+  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'npc-autonomy');
  }
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }

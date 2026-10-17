@@ -7,6 +7,8 @@ import {financeBalance,financeTransfer,financeChange,financeInt} from './finance
 import {fund as fundAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {store,moveStock} from './stock.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('medicine',{kinds:['employed_by']});
 // S1b: 诊疗与防疫用掉的药材进 sink:consume。
 declareLedgerWriter('medicine',{sinks:['sink:consume']});
 const HERB_USE=(purpose,eventId)=>({flow:'sink:consume',purpose,writer:'medicine',eventId});
@@ -66,7 +68,7 @@ function book(d,e,{patient='player',clinic,source=null,credit=false,charity=fals
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
  if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw Error('诊费不足，可求赊欠或义诊');
  const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
- d.set(rec(row.id),row);return row;
+ holdingSet(d,null,rec(row.id),row,'medicine');return row;
 }
 function stockSource(d,e,r){
  if(r.charity?.startsWith('medicine_fund:')){
@@ -77,16 +79,16 @@ function stockSource(d,e,r){
  return null;
 }
 function pay(d,e,r,stock){
- if(stock.fund){financeChange(d,e,r.owner,r.fee,r.id,{account:fundAccount(stock.fund.id),writer:'medicine',eventId:r.id});d.set(rec(stock.fund.id),{...stock.fund,coins:stock.fund.coins-r.fee,spent:stock.fund.spent+r.fee});return {paid:r.fee,sponsor:stock.fund.id};}
+ if(stock.fund){financeChange(d,e,r.owner,r.fee,r.id,{account:fundAccount(stock.fund.id),writer:'medicine',eventId:r.id});holdingSet(d,null,rec(stock.fund.id),{...stock.fund,coins:stock.fund.coins-r.fee,spent:stock.fund.spent+r.fee},'medicine');return {paid:r.fee,sponsor:stock.fund.id};}
  if(stock.temple){financeTransfer(d,e,stock.temple,r.owner,r.fee,r.id);return {paid:r.fee,sponsor:stock.temple};}
  const paid=Math.min(financeBalance(d,e,r.patient),r.fee);if(paid<r.fee&&!r.credit)return null;
  if(paid&&r.patient!==r.owner)financeTransfer(d,e,r.patient,r.owner,paid,r.id);
- if(paid<r.fee)d.set(rec(`debt:${r.id}`),{id:`debt:${r.id}`,category:'debt',kind:'medicine',debtor:r.patient,creditor:r.owner,amount:r.fee-paid,paid:0,status:'待偿还',createdAt:r.end,deadline:r.end+30*DAY,location:r.location,source:r.id});
+ if(paid<r.fee)holdingSet(d,null,rec(`debt:${r.id}`),{id:`debt:${r.id}`,category:'debt',kind:'medicine',debtor:r.patient,creditor:r.owner,amount:r.fee-paid,paid:0,status:'待偿还',createdAt:r.end,deadline:r.end+30*DAY,location:r.location,source:r.id},'medicine');
  return {paid,debt:r.fee-paid};
 }
 function finish(d,e,r){
  let s=d.get('state'),site=medicineSites(e,s).find(c=>c.id===r.clinic);
- const cancel=reason=>d.set(rec(r.id),{...r,status:'未诊',reason,endedAt:r.end});
+ const cancel=reason=>holdingSet(d,null,rec(r.id),{...r,status:'未诊',reason,endedAt:r.end},'medicine');
  if(!site?.capacity||!site.doctors.includes(r.doctor)||!capable(s,r.patient)||personConstraint(e,s,r.doctor)||personConstraint(e,s,r.patient)||present(s,r.patient)!==r.location||present(s,r.doctor)!==r.location)return cancel('场所、人员或到诊条件变化');
  const stock=stockSource(d,e,r);if(!stock)return cancel('药材短缺');
  const payment=pay(d,e,r,stock);if(!payment)return cancel('诊费不足');
@@ -114,7 +116,7 @@ function finish(d,e,r){
  const wages=[];
  for(const who of [r.doctor,...r.assistants]){const job=currentEmployment(d.get('state'),who,r.start);if(job?.medicine===1&&job.location===r.location)wages.push({worker:who,...settleEmploymentPay(d,e,job,r.end,r.end-r.start)});}
  const row={...r,status:'已诊',endedAt:r.end,payment,wages,prescription:{item:'item_herb',quantity:1,identified:correct,consumedFrom:stock.temple??stock.holder},diagnosis:{correct,skill:medicalSkill(e,s,r.doctor),roll},outcome,followUpAt:r.end+DAY};
- d.set(rec(r.id),row);
+ holdingSet(d,null,rec(r.id),row,'medicine');
 }
 export function nextMedicineMinute(e,d,now){
  if(!medicineFresh(e))return Infinity;
@@ -131,9 +133,9 @@ function autonomous(d,e,now){
   const sid=placeSettlement(e,s,present(s,patient)).value,site=sites.find(c=>c.capacity&&c.doctors.some(id=>id!==patient)&&placeSettlement(e,s,c.seat).value===sid);if(!site)continue;
   const poor=financeBalance(d,e,patient)<8,charity=poor,credit=poor&&condition.severity==='重';
   if(poor&&!credit&&!fundAt(s,site.seat)&&!templeSponsor(e,s,site.seat,8)){
-   d.set(rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:'诊费不足，暂缓求医',minute:now,condition:condition.id});continue;
+   holdingSet(d,null,rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:'诊费不足，暂缓求医',minute:now,condition:condition.id},'medicine');continue;
   }
-  try{book(d,e,{patient,clinic:site.id,source:previous?.id??condition.id,credit,charity,consent:true,only:c=>needsCare(c,now)},`auto:${patient}:${now}`);}catch(error){d.set(rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:error.message,minute:now,condition:condition.id});}
+  try{book(d,e,{patient,clinic:site.id,source:previous?.id??condition.id,credit,charity,consent:true,only:c=>needsCare(c,now)},`auto:${patient}:${now}`);}catch(error){holdingSet(d,null,rec(`medicine_delay:${patient}`),{category:'medicine_delay',patient,clinic:site.id,reason:error.message,minute:now,condition:condition.id},'medicine');}
  }
 }
 export function prepareMedicine(d,e,{before,after}){
@@ -169,7 +171,7 @@ export function advanceMedicine(d,e,{before,after}){
   }
  }
  if(Math.floor(before/DAY)<Math.floor(after/DAY)){
-  for(const debt of Object.values(d.get('state','records')??{}))if(debt.category==='debt'&&debt.kind==='medicine'&&debt.amount>debt.paid){const amount=Math.min(debt.amount-debt.paid,Math.max(0,financeBalance(d,e,debt.debtor)-8));if(amount){financeTransfer(d,e,debt.debtor,debt.creditor,amount,debt.id);d.set(rec(debt.id),{...debt,paid:debt.paid+amount,status:debt.paid+amount===debt.amount?'已还清':'待偿还'});}}
+  for(const debt of Object.values(d.get('state','records')??{}))if(debt.category==='debt'&&debt.kind==='medicine'&&debt.amount>debt.paid){const amount=Math.min(debt.amount-debt.paid,Math.max(0,financeBalance(d,e,debt.debtor)-8));if(amount){financeTransfer(d,e,debt.debtor,debt.creditor,amount,debt.id);holdingSet(d,null,rec(debt.id),{...debt,paid:debt.paid+amount,status:debt.paid+amount===debt.amount?'已还清':'待偿还'},'medicine');}}
   if(Object.values(d.get('state','records')??{}).some(r=>r.category==='water_exposure'))for(const n of Object.keys(d.get('state','npcs')??{}))for(const exposure of waterDiseaseExposure(d.get('state'),present(d.get('state'),n))){
    const disease=e.rules.hazardClock?.diseases?.find(x=>x.id===exposure.disease);if(disease&&clockRoll(d.document.randomSeed,`water-exposure:${n}:${exposure.id}`,Math.floor(after/DAY))<exposure.risk)contractIllness(d,e,n,after,{severity:'轻',days:disease.courseDays[0],disease});
   }
@@ -192,7 +194,7 @@ export function medicineAction(d,args,id){
   if(coins)financeChange(d,e,'player',-coins,id,{account:fundAccount(key),writer:'medicine',eventId:id});
   const holder=old?.holder??site.owner;if(!holder)throw Error('医馆没有接收药材的经营者');
   if(quantity)transferItems(d,e,'player',holder,'item_herb',quantity);
-  const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,minute:s.minute}]};d.set(rec(key),row);return row;
+  const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,minute:s.minute}]};holdingSet(d,null,rec(key),row,'medicine');return row;
  }
  if(op==='medicine_hire'){
   // The clinic owner signs; doctor or helper role follows the worker's current skill.
@@ -202,7 +204,7 @@ export function medicineAction(d,args,id){
   const wage=financeInt(args.proposedFee,1,1e6,'日薪'),days=financeInt(args.days??30,1,360,'雇佣天数'),key=`medicine_contract:${id}`;
   const task=medicalSkill(e,s,worker)>0?'医师诊疗':'药童';
   const row={category:'contract',kind:'workshop',medicine:1,id:key,owner:'player',worker,location:site.seat,wage,workMinutes:480,task,starts:s.minute,createdAt:s.minute,deadline:s.minute+days*DAY,status:'有效',paid:0,workedMinutes:0,source:id};
-  d.set(rec(key),row);return {contract:key,worker,task,wage};
+  holdingSet(d,null,rec(key),row,'medicine');return {contract:key,worker,task,wage};
  }
  if(op==='medicine_health'){
   // U3 public-health measures run through the registered epidemic effect; the clinic supplies staff and herbs.

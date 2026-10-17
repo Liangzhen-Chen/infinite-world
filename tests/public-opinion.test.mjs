@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {withM5LawRules}from'../world/design/m5-law-rules.mjs';
@@ -10,10 +10,12 @@ import {applyPatches,CampaignStorage}from'../server-plugin/storage.mjs';
 import {shareNpcMemory}from'../server-plugin/npc-cognition.mjs';
 import {localOpinion,npcOpinions,opinionAmong}from'../server-plugin/public-opinion.mjs';
 import {npcContext}from'../server-plugin/npc-memory.mjs';
+import {adjustStanding}from'../server-plugin/standing.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const baseWorld=await loadWorld();
 const victim='npc_hw_linsui',carrier='npc_hw_hezhou',guard='npc_hw_gucen',judge='npc_hw_chenbai',friend='faction_saltboat',enemy='faction_riverhomes';
+const draft=document=>({document,get(...k){return k.reduce((o,x)=>o?.[x],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);}});
 const topicAt=(c,engine,place,topic)=>localOpinion(engine,c,place).topics.find(t=>t.topic===topic);
 const stanceOf=(c,engine,id,topic)=>npcOpinions(engine,c,id).find(row=>row.topic===topic)?.stance;
 
@@ -71,7 +73,7 @@ test('同一裁判经真实携信传到两地，形成不同支持/反对比例�
 test('撤判消息实际抵达后看法才改变；重放与存档恢复得到同一舆论',async t=>{
     const f=lawSetup();let{c,id,topic}=await judged(f);
     const notice=c.state.npcs[victim].memoryStream.find(m=>m.legalCase===id);
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'public-opinion-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'public-opinion-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input)=>f.engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
     await store.create({id:'opinion',worldVersion:f.engine.world.version,document:c});
     let receipt=await store.transact('opinion',{id:'carry',input:{tool:'world_law',args:{operation:'notify',case:id,from:victim,to:carrier,memory:notice.id,channel:'carry'},eventId:'carry'}},reducer);
@@ -165,4 +167,25 @@ test('聚居地成员只在消息送达后获知，看法沿用聚居地对受�
     // A friendly settlement holds the opposite view of the same deed.
     const friendly=structuredClone(arrived);friendly.state.records[`stance:${seat}:loc_hw`]={category:'settlement_stance',holder:seat,target:'loc_hw',stance:'中立',history:[]};
     assert.equal(localOpinion(engine,friendly,seat).topics[0].neutral,2);
+});
+
+test('聚居地对行事者的显式立场（立场账本）照常计入成员舆论；缺省戒备不计',()=>{
+    const world=structuredClone(baseWorld),boss=structuredClone(world.bosses.find(b=>b.intelligence>0)),seat='loc_po_seat',hall='site_po_hall';
+    const leader='npc_hw_linsui',member='npc_hw_fanrong';
+    Object.assign(boss,{id:'boss_po_leader',name:'测试窟主',aliases:[],actor:leader,lair:hall,minions:[],residence:{id:'lair_po',name:'测试驻地',location:hall}});
+    world.bosses.push(boss);
+    world.locations.push({id:seat,name:'测试窟',aliases:[],parent:'loc_hw',scope:'loc_hw',coordinates:[3,0],terrain:'丘陵',monsterSociety:{leader:boss.id,neighbors:{loc_hw:'敌对'},meetingPlace:hall}},
+        {id:hall,name:'测试窟厅',aliases:[],parent:seat,scope:'loc_hw',coordinates:[3,0],terrain:'丘陵'});
+    for(const id of[leader,member])Object.assign(world.npcs.find(n=>n.id===id),{species:boss.monster,society:seat,settlement:seat});
+    const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'opinion-standing');
+    for(const id of[leader,member])doc.state.npcs[id].location=hall;
+    doc.state.minute=1100;
+    doc.state.records['society_news:raid_hw:'+seat]={category:'society_news',from:'loc_hw',to:seat,actor:'player',victim:'loc_hw',act:'harm',sourceEvent:'raid_hw',sentAt:900,arrivesAt:1100,status:'已送达'};
+    // 对受害方持中立：不触发“与受影响者敌对”，落到所属组织立场这一支。
+    doc.state.records[`stance:${seat}:loc_hw`]={category:'settlement_stance',holder:seat,target:'loc_hw',stance:'中立',history:[]};
+    const topic=document=>localOpinion(engine,document,seat).topics[0];
+    const neutral=topic(doc);assert.equal(neutral.neutral,2,'只有缺省戒备：与双方无利害');
+    const withStanding=delta=>{const d=draft(structuredClone(doc));adjustStanding(d,engine,seat,'player',delta,{sourceEvent:'relief',reason:'救灾'});return d.document;};
+    const liked=topic(withStanding(60));assert.equal(liked.support,2);assert.equal(liked.views[0].basis,'所属测试窟对行事者的立场');
+    const disliked=topic(withStanding(-10));assert.equal(disliked.oppose,2);assert.equal(disliked.views[0].basis,'所属测试窟对行事者的立场');
 });

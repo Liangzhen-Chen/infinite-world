@@ -17,6 +17,7 @@
 import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
+import {priceRead} from './stock.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
 export const COIN=LEDGER_COIN;
@@ -109,3 +110,7 @@ export function bookSide(d,account,delta,books){
     return delta>0?moveCoins(d,{from:books.account,to:account,amount:delta,writer:books.writer,eventId:books.eventId??null})
         :moveCoins(d,{from:account,to:books.account,amount:-delta,writer:books.writer,eventId:books.eventId??null});
 }
+
+// ---- S1c 价格输入读账户：货币量（现款、公库）经账户余额读取，旧字段只作过渡期对照 ----------
+// account: 账户键（partyAccount / purse / treasury …）；legacy: 取旧字段的函数。见 stock.priceRead。
+export const coinRead=(src,{point,account,legacy})=>priceRead(src,{point,scope:'coin',account,legacy});

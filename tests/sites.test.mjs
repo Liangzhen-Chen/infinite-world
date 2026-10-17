@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -198,7 +198,7 @@ test('加载据点参数检查真实引用、有限数量与发现门槛，不�
 
 test('真实HTTP：发现条件限制目录、检索与场景；重复采集、重启重放和独立战役保持账本',async t=>{
     const f=fixture(s=>{s.entryMechanisms=[];s.resources[0].mechanisms=[];s.clues[0].mechanisms=[];});
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-sites-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-sites-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const serve=async()=>{
         const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:root,world:f.world,npcPlanningEnabled:false,consistencyEnabled:false});app.use(router);
         const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>{server.closeAllConnections();server.close();});

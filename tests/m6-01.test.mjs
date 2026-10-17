@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import {pathToFileURL} from 'node:url';
@@ -18,7 +18,7 @@ import {moneyText} from '../extension/topbar.mjs';
 
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function fixture(t){
-    const root=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-01-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+    const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m6-01-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();
     await init(router,{baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false});
     app.use('/api/plugins/infinite-fields',router);
@@ -65,7 +65,7 @@ test('M6-01 设置范围、钱袋拆分与原铜账一致',()=>{
 });
 
 test('M6-01 新服务端模块直接注册 /ui/*；注册点没有写存档接口',async t=>{
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-ui-registry-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-ui-registry-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     await fs.copyFile('server-plugin/ui-routes.mjs',path.join(directory,'ui-routes.mjs'));
     await fs.writeFile(path.join(directory,'ui-next.mjs'),"export function registerUIRoutes({post,readCampaign}){post('/ui/next',async req=>{const {document,engine}=await readCampaign(req);return {name:engine.name,minute:document.state.minute};});}");
     const {registerUIRoutes}=await import(pathToFileURL(path.join(directory,'ui-routes.mjs'))),routes=new Map();let reads=0;
@@ -75,7 +75,7 @@ test('M6-01 新服务端模块直接注册 /ui/*；注册点没有写存档接�
 });
 
 test('M6-01 隔离打包包含界面模块、完整字体和许可，二进制哈希可核对', {timeout:120000},async t=>{
-    const directory=await fs.mkdtemp(path.join(os.tmpdir(),'fields-m6-bundle-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+    const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-m6-bundle-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const report=await prepareDeployment(directory);assert.equal(report.activation,false);
     assert.equal(report.files.some(row=>['extension/index.js','extension/core.js','extension/seed.json'].includes(row.path)),false);
     const packaged=await import(pathToFileURL(path.join(directory,'plugin/index.mjs'))),routes=new Map();
@@ -116,7 +116,8 @@ test('M6-01 浏览器：双主题、两行顶栏、全屏抽屉、字号持久�
     assert.equal(await page.locator('#chat .mes_text p').innerText(),narrative);
     assert.match(await page.locator('#fields-status').innerText(),/春历.*雨月/);assert.match(await page.locator('#fields-status').innerText(),/青灯酒馆/);
     assert.match(await page.locator('#fields-status').innerText(),/0金 1银 80铜/);
-    const report='docs/测试报告/最新/M6-01';await fs.mkdir(report,{recursive:true});
+    // 截图默认写到临时目录（进程退出时清理），不改写 docs 下已跟踪的存档图；设 M6_UPDATE_SCREENSHOTS=1 才更新它们。
+    const report=process.env.M6_UPDATE_SCREENSHOTS==='1'?'docs/测试报告/最新/M6-01':path.join(tmpRoot(),'m6-01-shots');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light']){
         assert.equal(await page.locator('#fields-dialog').count(),0);
         await page.evaluate(async theme=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({theme,fontSize:20,highContrast:false,reducedMotion:false});},theme);
