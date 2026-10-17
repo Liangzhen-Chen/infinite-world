@@ -161,7 +161,7 @@ AR-3 迁移：用户 2026-10-15 同意方向。按 docs/架构设计/10-现状�
 - R25 已完成（2026-10-16）：人物自治任务快照写入 activity:undefined，存档导出再导入与重启读盘报“事件校验失败”（A1 发现，见 docs/问题.md）——玩家存档可能无法读取，最高优先级；修实现并加导出/导入/重启读盘的往返测试。
 - R30 已完成（2026-10-17）：R29 无新回归；4 项主线回归（非基线 23 项）转 R32；生态审计主线 ok。
 - R31（进行中，Sonnet high）：测试与长模拟提速（结果逐字节等价，不减种子/月数/断言），含生态审计变慢。
-- R32（进行中，Sonnet medium）：修 balance-metrics 资源键、deploy 打包清单（deployment/m6-01，并防截图改写 docs）、public-opinion 立场读取。
+- R32 已完成（2026-10-17）：修 balance-metrics 资源键、deploy 打包清单（deployment/m6-01，并防截图改写 docs）、public-opinion 立场读取。
 - S2a（进行中 2026-10-17，Opus）。
 - R27（进行中）：agriculture 三年守恒（“76≠0”）从 S1b 拆出单独处理；接手材料见 logs/sessions/S1B-cc-001.final.txt 中的线索。
 - R24 已完成（2026-10-17）：生态审计（2 种子×36 月）回归——monster_burrow_badger 两种子均于第 21–28 月灭绝（初始 12、出生 11、withdrawn 23），10-14 前通过；疑 RW-04 林水栖地缩减或采猎取用；证据 logs/sessions/R24-ecology-evidence.json。修实现，不放宽审计。
