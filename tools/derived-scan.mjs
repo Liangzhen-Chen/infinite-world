@@ -39,8 +39,11 @@ export function scanWritePoints(files,fields){
  const hits=[],names=new Set(fields.map(f=>f.field));
  for(const abs of files){
   const text=fs.readFileSync(abs,'utf8'),file=rel(abs);
-  for(const m of text.matchAll(/\.set\(\s*\[/g)){
-   const args=callArgs(text,m.index+5),[pathArg,value]=splitFirstArg(args);
+  // S2a：旧写入点经 holdingSet(d, engine, path, value, writer) 包装后照样计入（路径是第三个参数）。
+  const calls=[...[...text.matchAll(/\.set\(\s*\[/g)].map(m=>({m,args:callArgs(text,m.index+5)})),
+   ...[...text.matchAll(/(?<![\w$.])holdingSet\(/g)].map(m=>{const [,rest]=splitFirstArg(callArgs(text,m.index+'holdingSet('.length));const [,tail]=splitFirstArg(rest);return {m,args:tail.trimStart()};}).filter(c=>c.args.startsWith('['))];
+  for(const {m,args} of calls){
+   const [pathArg,value]=splitFirstArg(args);
    if(!/['"]state['"]/.test(pathArg))continue;
    const line=text.slice(0,m.index).split('\n').length;
    const segs=[...pathArg.matchAll(/'([A-Za-z_]\w*)'/g)].map(x=>x[1]),last=segs.at(-1);
