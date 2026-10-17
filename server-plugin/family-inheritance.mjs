@@ -7,6 +7,9 @@ import {rosterLifeState} from './population.mjs';
 import {transferItems} from './items.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings,syncHoldingRecord} from './holding-sources.mjs';
+declareHoldingWriter('family-inheritance',{kinds:['holds_office','fief','guardian_of','owns','share'],entities:['office','estate']});
 
 const DAY=1440,YEAR=360*DAY,rec=id=>['state','records',id];
 export function inheritanceRule(e,s,id,location){
@@ -47,7 +50,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
  const heirs=selection.heirs.filter(x=>d.get('state','npcs',x)),current=d.get(...actorPath(e.world,id));
  const estate={heir:heirs[0]??null,heirs,rule,coins:current.coins??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts:Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort(),guardianships:[]};
  if(!heirs.length){
-  for(const [key,row]of Object.entries(s.records??{}))if(row.holder===id&&(row.category==='title'&&row.status!=='已除爵'||row.category==='governance_office'&&row.status==='在任'))d.set(rec(key),{...row,status:row.category==='title'?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，无可继承人'});
+  for(const [key,row]of Object.entries(s.records??{}))if(row.holder===id&&(row.category==='title'&&row.status!=='已除爵'||row.category==='governance_office'&&row.status==='在任')){d.set(rec(key),{...row,status:row.category==='title'?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，无可继承人'});syncHoldingRecord(d,e,key,{writer:'family-inheritance',eventId:deathId});}
   return estate;
  }
  const rowFor=who=>estate.allocations.find(r=>r.heir===who);
@@ -68,6 +71,7 @@ export function settleFamilyEstate(d,e,id,minute,deathId,location){
   if(row.category==='title'&&row.holder===id&&row.status!=='已除爵'||row.category==='governance_office'&&row.holder===id&&row.status==='在任'){
    const title=row.category==='title',successor=title?selection.children[0]??heirs[0]:row.hereditary===true&&rule.office==='hereditary'?selection.children[0]??heirs[0]:null;
    d.set(rec(key),{...row,...(successor?{holder:successor,previousHolder:id,inheritedAt:minute,inheritance:deathId,...(!familyAdult(e,s,successor,minute)?{heldInMinority:true}:{})}:{status:title?'已除爵':'已免职',removedAt:minute,reason:'持有人死亡，职位不世袭'})});
+   syncHoldingRecord(d,e,key,{writer:'family-inheritance',eventId:deathId});
    if(successor){materialize(d,e,successor,minute);if(!heirs.includes(successor)&&!familyAdult(e,s,successor,minute))estate.guardianships.push(guardianship(d,e,successor,id,deathId,minute,0));}
    entityTransition(d,e,{id:`${deathId}:succession:${key}`,verb:successor?'appoint':'dismiss',actor:id,target:successor,minute,location,tags:['family','succession'],summary:successor?'持有人死亡，按当地规则承接称号或世袭职务':'持有人死亡，任职终止'});
   }

@@ -10,6 +10,9 @@ import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldingSource} from './holding-sources.mjs';
+declareHoldingWriter('remote-generation',{kinds:['holds_office'],entities:['office']});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -590,6 +593,7 @@ export function unfoldRemoteAt(d,engine,location){
         genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
         d.set(['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation});
     }
+    syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
         rostered:skeleton.census.rostered};
 }

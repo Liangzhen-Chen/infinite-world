@@ -14,6 +14,8 @@
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
     setLocation,clearLocation,locationOf,declareHoldingWriter,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
+import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
+import {actorId} from './npc-state.mjs';
 
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
 const sources=new Map();
@@ -73,11 +75,12 @@ function* allUnits(engine,state){
 }
 // 开账（genesis）：全部来源的全部单元。来源名带进 source 字段，对账与双写按它找回单元。
 export function legacyHoldings(engine,state){
-    const holdings=[],entities=[],locations=[];
+    const holdings=[],entities=[],locations=[],seen=new Set();
     for(const [name,unit] of allUnits(engine,state)){
         const out=desired(engine,state,name,unit),source=sourceKey(name,unit);
         for(const h of out.holdings)holdings.push({...h,source});
-        for(const e of out.entities)entities.push({...e,source});
+        // 同一实体可被几个单元提到（职位既是任职的标的，又是任命的持有人）：首个提到它的单元是它的来源。
+        for(const e of out.entities)if(!seen.has(e.id)){seen.add(e.id);entities.push({...e,source});}
         for(const l of out.locations)locations.push({...l,source});
     }
     return {holdings,entities,locations};
@@ -92,6 +95,18 @@ export function syncHoldings(d,engine,name,unit,{writer,reason='vacated',eventId
     if(!ensureHoldings(d,engine))return false;
     applyUnit(d,engine,name,String(unit),{writer,reason,eventId});
     return true;
+}
+// 旧记录（state.records 的一行）的双写：按记录类别找到受影响的来源与单元（写入前后两版记录都算，
+// 改了持有人、换了聚落或删掉记录都能找回原单元）。来源以 recordCategories / unitOfRecord 声明它读哪些记录。
+export function syncHoldingRecord(d,engine,key,opts){
+    if(!ensureHoldings(d,engine))return false;
+    const state=read(d,'state'),units=new Set();
+    for(const [state0,row] of [[state,state?.records?.[key]],[d.original?.state,d.original?.state?.records?.[key]]]){
+        if(!row?.category)continue;
+        for(const [name,spec] of sources)if(spec.recordCategories?.includes(row.category)){const u=spec.unitOfRecord(state0,key,row);if(u!=null)units.add(`${name}#${u}`);}
+    }
+    for(const x of [...units].sort()){const i=x.indexOf('#');applyUnit(d,engine,x.slice(0,i),x.slice(i+1),opts);}
+    return units.size>0;
 }
 // 同一来源的全部单元（写入点一次改动多条旧记录、或不便算出单元时）。
 export function syncHoldingSource(d,engine,name,opts){
@@ -149,3 +164,72 @@ registerHoldingsUpgrade('sources',(d,engine)=>{
     for(const name of holdingSources())syncHoldingSource(d,engine,name,{writer:'holding-sources',reason:'pack_removed'});
 });
 export {ENTITY_KINDS,locationOf,holdingsActive};
+
+// =====================================================================================
+// 来源（每类旧字段一个）。单元键是旧状态里的稳定编号；职位等实体的编号由单元派生，永不复用。
+// =====================================================================================
+
+// ---- org：组织会籍与首领职位（作者数据 world.factions / 怪物社会 / 教会 + 本局 organization:* 记录） ----
+// 会籍 member_of{rank}；首领是职位实体 office_org:<组织>:leader，由 holds_office 持有（职权属于职位）。
+export const orgLeaderOffice=id=>`office_org:${id}:leader`;
+defineHoldingSource('org',{
+    recordCategories:['organization'],unitOfRecord:(state,key,row)=>row.id,
+    units:(engine,state)=>storedOrganizationIds(engine,state),
+    extract(engine,state,id){
+        const o=storedOrganization(engine,state,id);if(!o)return null;
+        const office=orgLeaderOffice(id);
+        return {entities:[{id:office,kind:'office',facts:{org:id,role:'leader'}}],
+            holdings:[...Object.entries(o.members).map(([m,rank])=>({kind:'member_of',holder:m,subject:id,terms:{rank}})),
+                ...(o.leader?[{kind:'holds_office',holder:o.leader,subject:office}]:[])]};
+    },
+});
+
+// ---- office：聚落的官职（作者数据的村长 / 农事管事、远方郡骨架的官职 + 本局 governance_office 记录） ----
+// 一个单元 = 一个职位实体（聚落 × 职位定义）：office_gov:<聚落>:<职位>；远方骨架的职位沿用它自己的编号 office_rg_*。
+// 持有人按旧读法取该职位最晚的一条任命（since 序，同 since 按记录次序）：在任即持有，否则空缺；
+// 没有任何任命记录时取作者数据的原任（与 entity-view.settlementGovernment 的“最晚任命优先、空缺不回退”一致）。
+// 议会制聚落的首脑是议会组织的首领，走 org 来源。
+const VILLAGE_HEAD='office_village_head';
+function remoteOffices(state){
+    const out=[];for(const r of Object.values(state.remote??{}))for(const o of r.skeleton?.offices??[])out.push(o);return out;
+}
+function remoteHead(state,settlement){return remoteOffices(state).find(o=>o.settlement===settlement&&o.source==='generated')??null;}
+export const officeEntity=(settlement,office)=>String(office).startsWith('office_rg_')?office:`office_gov:${settlement}:${office}`;
+const officeUnitOf=(state,row)=>`${row.settlement}|${row.office===VILLAGE_HEAD?remoteHead(state,row.settlement)?.id??VILLAGE_HEAD:row.office}`;
+function catalogHead(engine,state,settlement,office){
+    if(office===VILLAGE_HEAD){
+        const profile=engine.world.settlementProfiles?.find(p=>p.id===settlement);if(profile?.council)return null;
+        return profile?.details?.governance?.head??engine.rules.agriculture?.settlements?.find(p=>p.settlement===settlement)?.manager??null;
+    }
+    const o=remoteOffices(state).find(o=>o.id===office&&o.settlement===settlement);
+    return o&&!String(o.holder).startsWith('key:')?o.holder:null;
+}
+defineHoldingSource('office',{
+    recordCategories:['governance_office'],unitOfRecord:(state,key,row)=>row.settlement&&row.office?officeUnitOf(state,row):null,
+    units(engine,state){
+        const out=new Set();
+        for(const p of engine.world.settlementProfiles??[])if(!p.council&&catalogHead(engine,state,p.id,VILLAGE_HEAD))out.add(`${p.id}|${VILLAGE_HEAD}`);
+        for(const a of engine.rules.agriculture?.settlements??[])if(a.manager&&!engine.world.settlementProfiles?.find(p=>p.id===a.settlement)?.council)out.add(`${a.settlement}|${VILLAGE_HEAD}`);
+        for(const o of remoteOffices(state))out.add(`${o.settlement}|${o.id}`);
+        for(const r of Object.values(state.records??{}))if(r?.category==='governance_office'&&r.settlement&&r.office)out.add(officeUnitOf(state,r));
+        return out;
+    },
+    extract(engine,state,unit){
+        const i=unit.indexOf('|'),settlement=unit.slice(0,i),office=unit.slice(i+1),id=officeEntity(settlement,office);
+        const rows=Object.values(state.records??{}).filter(r=>r?.category==='governance_office'&&r.settlement===settlement&&r.office&&officeUnitOf(state,r)===unit);
+        let latest=null;for(const r of rows)if(!latest||(r.since??r.appointedAt??0)>=(latest.since??latest.appointedAt??0))latest=r;
+        const holder=latest?(latest.status==='在任'?latest.holder:null):catalogHead(engine,state,settlement,office);
+        return {entities:[{id,kind:'office',facts:{settlement,office}}],holdings:holder?[{kind:'holds_office',holder:actorId(engine.world,holder),subject:id}]:[]};
+    },
+});
+// ---- steward：村长委托的住房管事（housing_steward 记录）= 任命 appointed（授予者是村长职位，01 §1.3） ----
+defineHoldingSource('steward',{
+    recordCategories:['housing_steward'],unitOfRecord:(state,key)=>key,
+    units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='housing_steward').map(([k])=>k),
+    extract(engine,state,key){
+        const r=state.records?.[key];if(!r||r.revoked||!r.steward||!r.settlement)return null;
+        const head=officeEntity(r.settlement,remoteHead(state,r.settlement)?.id??VILLAGE_HEAD);
+        return {entities:[{id:head,kind:'office',facts:{settlement:r.settlement,office:remoteHead(state,r.settlement)?.id??VILLAGE_HEAD}}],
+            holdings:[{kind:'appointed',holder:head,subject:actorId(engine.world,r.steward),terms:{role:'housing_steward'}}]};
+    },
+});

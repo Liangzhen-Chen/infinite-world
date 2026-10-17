@@ -4,6 +4,9 @@ import {changeGroupCoins} from './group-account.mjs';
 import {purse,treasury as treasuryAccount,escrow as escrowAccount,moveCoins,bookSide} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('organizations');
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('organizations',{kinds:['member_of','holds_office'],entities:['office']});
 import {entityTransition} from './entity-transitions.mjs';
 import {personName} from './entity-view.mjs';
 import {presentWitnesses} from './world-events.mjs';
@@ -42,7 +45,8 @@ export function organizationsOf(state,member,engine=null){
 function rowOf(d,engine,org){
     return structuredClone({category:'organization',id:org.id,source:org.source,members:{},removed:{},treasury:0,ledger:[],...d.get(...path(org.id))});
 }
-const save=(d,row)=>d.set(path(row.id),row);
+// S2a：会籍与首领职位双写进持有存储（holding-sources 的 org 来源）。
+const save=(d,row,engine)=>{d.set(path(row.id),row);syncHoldings(d,engine,'org',row.id,{writer:'organizations'});};
 const coinPath=(engine,who)=>[...actorPath(engine.world,who),'coins'];
 const actor=(d,engine,who)=>d.get(...actorPath(engine.world,who));
 const resolveActor=(engine,state,name)=>{
@@ -112,7 +116,7 @@ function execute(d,engine,org,p,minute,sourceEvent){
         row.charter={...row.charter,...m.charter};
         if((m.charter.dues??0)>0&&!row.nextDues)row.nextDues=minute+DUES_PERIOD;
     }
-    save(d,row);return outcome;
+    save(d,row,engine);return outcome;
 }
 function settle(d,engine,proposalId,minute,sourceEvent){
     const prior=d.get('state','records',proposalId),org=organization(engine,d.get('state'),prior.org),decision=deciders(d.get('state'),org);
@@ -227,13 +231,13 @@ export function advanceOrganizations(d,engine,{before,after}){
                 else move(d,engine,row,{kind:'欠费',amount:0,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`});
                 if(arrears>=EXPEL_ARREARS&&m!==org.leader){
                     delete row.members[m];row.removed={...row.removed,[m]:{minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,reason:`欠费${EXPEL_ARREARS}期除名`}};
-                    save(d,row);
+                    save(d,row,engine);
                     worldEvent(d,engine,org,`organization_dues:${row.id}:${at}:${m}`,at,{target:m,tags:['organization','org:expel','arrears']});
                 }else row.members[m]={...entry,arrears};
             }
             row.nextDues=at+DUES_PERIOD;
         }
-        save(d,row);
+        save(d,row,engine);
     }
 }
 export function nextOrganizationMinute(state){
@@ -246,7 +250,7 @@ export function foundOrganization(d,engine,entity,eventId){
     const row={category:'organization',id:entity.id,source:'created',name:entity.name,kind,seat:entity.scope,founder:'player',foundedAt:minute,leader:'player',
         members:{player:{position:LEADER[kind],joinedAt:minute,arrears:0}},removed:{},
         charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[entity.notes]},treasury:0,ledger:[],sourceEvent:eventId};
-    save(d,row);entity.kind=kind;
+    save(d,row,engine);entity.kind=kind;
     return {organization:entity.id,kind,leaderTitle:LEADER[kind],charter:row.charter,organizationEvent:event(organization(engine,d.get('state'),entity.id),'found')};
 }
 
@@ -284,7 +288,7 @@ export function organizationAction(d,args,eventId){
         if(!org.charter.approval){
             const row=rowOf(d,engine,org);row.members[who]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[who];
             if(fee){move(d,engine,row,{kind:'入会费',amount:fee,party:who,minute,sourceEvent:eventId,balance:org.treasury+fee},{account:purse(engine,who),writer:'organizations',eventId});}
-            save(d,row);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
+            save(d,row,engine);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
             worldEvent(d,engine,org,`${eventId}:join`,minute,{target:who,value:fee,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:join'],summary:`${personName(engine,d.get('state'),who).value??who}加入${org.name}`});
             return {organization:org.id,member:who,joined:true};
         }
@@ -299,13 +303,13 @@ export function organizationAction(d,args,eventId){
         if(!org.members[who])throw Error('不是成员');
         if(who===org.leader&&Object.keys(org.members).length>1)throw Error('首脑须先改任他人再退会');
         const row=rowOf(d,engine,org);delete row.members[who];row.removed={...row.removed,[who]:{minute,sourceEvent:eventId,reason:'退会'}};
-        if(who===org.leader)row.leader=null;save(d,row);
+        if(who===org.leader)row.leader=null;save(d,row,engine);
         worldEvent(d,engine,org,`${eventId}:leave`,minute,{target:who,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:leave'],summary:`${personName(engine,d.get('state'),who).value??who}退出${org.name}`});
         return {organization:org.id,member:who,left:true};
     }
     case 'org_deposit':{
         const coins=int(args.coins,1,1e9);if(!pay(d,engine,'player',coins))throw Error('铜币不足');
-        const row=rowOf(d,engine,org);move(d,engine,row,{kind:'存入',amount:coins,party:'player',minute,sourceEvent:eventId,reason:args.content??null,balance:org.treasury+coins},{account:purse(engine,'player'),writer:'organizations',eventId});save(d,row);
+        const row=rowOf(d,engine,org);move(d,engine,row,{kind:'存入',amount:coins,party:'player',minute,sourceEvent:eventId,reason:args.content??null,balance:org.treasury+coins},{account:purse(engine,'player'),writer:'organizations',eventId});save(d,row,engine);
         adjustStanding(d,engine,org.id,'player',Math.min(10,2+Math.floor(coins/10)),{sourceEvent:eventId,reason:'捐入公库'});
         return {organization:org.id,deposited:coins,treasury:org.treasury+coins,organizationEvent:event(org,'deposit',{value:coins})};
     }

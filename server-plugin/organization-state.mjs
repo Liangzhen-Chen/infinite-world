@@ -73,6 +73,27 @@ export function organizationIds(engine,state){
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
         ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...medicineSites(engine,state).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
 }
+// S2a：组织里“存下的”会籍与首领（作者数据 + 本局记录），不按生死与家户年龄派生——
+// 持有适配器（holding-sources.mjs）的开账、双写与对账只读它。家户、学堂、医馆的成员是派生的，不在此列；
+// 它们若有本局记录，只取记录里的成员。
+export function storedOrganization(engine,state,id){
+    const row=state.records?.[key(id)];
+    const t=String(id).startsWith('temple:')||engine.world.factions?.some(f=>f.id===id&&f.kind==='教会')?templeById(engine,id):null;
+    const temple=t?.teacher?{leader:t.teacher,members:{[t.teacher]:{position:'主祭'}}}:null;
+    const base=row?.source==='created'?null:factionBase(engine,id)??societyBase(engine,id)??temple;
+    if(!base&&!row)return null;
+    const members={};
+    for(const [m,entry]of Object.entries(base?.members??{}))members[actorId(engine.world,m)]=entry.position??MEMBER;
+    for(const m of Object.keys(row?.removed??{}))delete members[actorId(engine.world,m)];
+    for(const [m,entry]of Object.entries(row?.members??{}))members[actorId(engine.world,m)]=entry?.position??MEMBER;
+    const leader=Object.hasOwn(row??{},'leader')?row.leader:base?.leader??null,current=leader&&members[actorId(engine.world,leader)]!==undefined?actorId(engine.world,leader):null;
+    return {id,members,leader:current};
+}
+export function storedOrganizationIds(engine,state){
+    return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),
+        ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
+        ...temples(engine).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])].sort();
+}
 export function memberOrganizations(engine,state,member){
     member=actorId(engine.world,member);
     const ids=organizationIds(engine,state),family=natalFamily(engine,state,member);if(family)ids.push(family);

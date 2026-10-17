@@ -68,19 +68,20 @@ function writerFor(writer,what,kind){
 let opener=null;
 export function registerHoldingsOpening(fn){opener=fn;}
 export function emptyHoldings(){return {version:HOLDINGS_VERSION,seq:0,rows:{},entities:{},locations:{}};}
+// 开账的每一条也经唯一写入点（写入者 genesis），受同样的注册形状校验；缔结快照记 form: authored。
 export function openHoldings(engine,document){
     if(!opener)throw Error('持有开账函数未登记');
-    const out=emptyHoldings(),minute=document.state?.minute??0;
+    const root={state:document.state,holdings:emptyHoldings()};
+    const d={peek:(...p)=>p.reduce((v,k)=>v?.[k],root),get(...p){return this.peek(...p);},
+        set(path,value){if(path[0]!=='holdings')throw Error('开账只写持有分区');let t=root;for(const k of path.slice(0,-1))t=t[k]??={};t[path.at(-1)]=value;},
+        remove(path){let t=root;for(const k of path.slice(0,-1))t=t?.[k];if(t)delete t[path.at(-1)];}};
     const {holdings=[],entities=[],locations=[]}=opener(engine,document.state);
-    for(const e of entities)out.entities[e.id]={...e,createdAt:e.createdAt??minute,origin:e.origin??'authored'};
-    for(const h of holdings){
-        const id=`h${++out.seq}`;
-        out.rows[id]=stripUndefined({id,kind:h.kind,variant:h.variant,holder:h.holder,subject:h.subject,terms:h.terms,grantedBy:h.grantedBy,since:h.since??minute,
-            source:h.source,writer:'genesis',...(concludedOf(h.kind,h.variant)?{concluded:{time:h.since??minute,place:h.place??null,lawVersion:null,form:'authored'}}:{})});
-    }
-    for(const l of locations)out.locations[l.entity]={at:l.at,mode:l.mode,since:l.since??minute,source:l.source};
-    return out;
+    for(const e of entities)createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source:e.source??null,writer:'genesis',origin:e.origin??'authored'});
+    for(const h of holdings)openHolding(d,{...h,writer:'genesis',engine});
+    for(const l of locations)setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,source:l.source??null,writer:'genesis',engine});
+    return root.holdings;
 }
+declareHoldingWriter('genesis',{kinds:['*'],entities:['*'],locations:true});
 export function ensureHoldings(d,engine){
     if(holdingsActive(d))return true;
     if(read(d,'holdings')!==undefined)return false;// 版本不同的分区：不覆盖

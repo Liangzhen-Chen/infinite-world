@@ -11,6 +11,9 @@ import {advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {rosterLifeState} from './population.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {npcServices} from './npc-state.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('education',{kinds:['member_of','holds_office'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
 const able=(s,id)=>capable(s,id)&&(id==='player'||!s.npcs[id].cognitionTravel&&!s.npcs[id].scheduleTravel);
@@ -146,7 +149,7 @@ export function educationAction(d,args,id){
  }
  if(operation==='school_fund'){
   const org=args.org,school=educationSites(e,s).find(o=>o.id===org);if(!school||school.seat!==s.location)throw Error('须在学馆资助');
-  if(!s.records?.[`organization:${org}`]&&!e.world.factions?.some(f=>f.id===org)&&!org.startsWith('temple:'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'education',name:school.name,kind:school.kind,seat:school.seat,treasury:0,members:{},ledger:[]});
+  if(!s.records?.[`organization:${org}`]&&!e.world.factions?.some(f=>f.id===org)&&!org.startsWith('temple:'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'education',name:school.name,kind:school.kind,seat:school.seat,treasury:0,members:{},ledger:[]}),syncHoldings(d,e,'org',org,{writer:'education'});
   const coins=int(args.coins,1,1e6,'资助');financeTransfer(d,e,'player',org,coins,id);return {org,coins,balance:financeBalance(d,e,org)};
  }
  if(operation==='school_close'){
@@ -177,7 +180,7 @@ export function educationAction(d,args,id){
   const course=`education:${id}`,org=args.org??`school:${location}`,existing=organizationState(e,s,org);
   const owner=s.buildings?.[location]?.owner??definition(e,s,location)?.owner;
   if(!book&&owner&&owner!=='player'&&!(existing?.members?.player)&&args.consent!==true)throw Error('借用场所须负责人同意');
-  if(!book&&(!existing||existing.source==='education'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'created',name:args.name??definition(e,s,location)?.name??'授业班',kind:args.schoolKind??'私塾',seat:location,founder:'player',leader:'player',members:{player:{position:'先生',joinedAt:since,arrears:0}},treasury:0,charter:{mode:'leader',fee:0,dues:0}});
+  if(!book&&(!existing||existing.source==='education'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'created',name:args.name??definition(e,s,location)?.name??'授业班',kind:args.schoolKind??'私塾',seat:location,founder:'player',leader:'player',members:{player:{position:'先生',joinedAt:since,arrears:0}},treasury:0,charter:{mode:'leader',fee:0,dues:0}}),syncHoldings(d,e,'org',org,{writer:'education'});
   if(!book&&(args.coins??0)>0)financeTransfer(d,e,'player',org,int(args.coins,1,1e6,'办学款'),id);
   let contract=null;
   if(teacher&&teacher!=='player'&&(args.wage??0)>0){

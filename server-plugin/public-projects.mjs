@@ -1,6 +1,9 @@
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED,priceRead,bagStock,settlementStock} from './stock.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldingRecord} from './holding-sources.mjs';
+declareHoldingWriter('public-projects',{kinds:['appointed','permit'],entities:['office']});
 declareLedgerWriter('public-projects',{sinks:['sink:consume']});
 // S1b: 工程备料的账本入口，供工具分派（activities）与推进注册表的旧工程路径使用。
 export const holdProjectWorks=(d,engine,project,amounts,from,eventId)=>holdWorks(d,engine,project,amounts,{from,writer:'public-projects',eventId});
@@ -171,14 +174,14 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const id=`housing_steward:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     const row={category:'housing_steward',id,settlement,grantor:'player',steward,hall,rules:{plots:plots.map(p=>p.id),fees,eligibility:'resident'},
         createdAt:state.minute,expires:state.minute+minutes,revoked:false,source:office.source,sourceEvent:eventId};
-    d.set(rec(id),row);
+    d.set(rec(id),row);syncHoldingRecord(d,engine,id,{writer:'public-projects',eventId});
     entityTransition(d,engine,{id:`${id}:appoint`,verb:'appoint',actor:'player',target:steward,location:hall,office:'office_village_steward',summary:`${engine.byId.get(steward)?.name??steward}受任宅基管事`});
     return {authorization:id,steward:row};
 }
 export function revokeHousingSteward(d,a,engine){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
     if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
-    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);
+    const row={...a,revoked:true,revokedAt:d.get('state','minute')};d.set(rec(a.id),row);syncHoldingRecord(d,engine,a.id,{writer:'public-projects'});
     entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:'player',target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
     return {authorization:a.id,steward:row};
 }

@@ -16,6 +16,9 @@ import {entityTransition} from './entity-transitions.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {createNpcObligation} from './npc-obligations.mjs';
 import {npcLessonGain,settleNpcLesson,npcProficiency} from './npc-growth.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of'],entities:['office']});
 
 const DAY=1440,path=id=>['state','records',id],actor=(d,e,id)=>d.get(...actorPath(e.world,id));
 const int=(n,min=0,max=1e9)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error('信仰钱粮或时长无效');return n;};
@@ -75,7 +78,7 @@ function member(d,e,t,who,remove,eventId){
  const key=`organization:${t.id}`,row=structuredClone(d.get(...path(key))??{category:'organization',id:t.id,source:t.source,members:{},removed:{},treasury:0,ledger:[]});
  if(remove){delete row.members[who];row.removed[who]={minute:d.get('state','minute'),sourceEvent:eventId};}
  else{delete row.removed[who];row.members[who]={position:'成员',joinedAt:d.get('state','minute'),arrears:0};}
- d.set(path(key),row);
+ d.set(path(key),row);syncHoldings(d,e,'org',t.id,{writer:'faith',eventId});
 }
 export function convertFaith(d,e,t,who,eventId,{paid=false}={}){
  const previous=faithOf(e,d.get('state'),who).value;

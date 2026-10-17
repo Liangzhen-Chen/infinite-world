@@ -10,6 +10,9 @@ import {legalCodeAt} from './law-codes.mjs';
 import {regionOf} from './regions.mjs';
 import {settlementHead} from './entity-view.mjs';
 import {entityTransition} from './entity-transitions.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings,syncHoldingRecord} from './holding-sources.mjs';
+declareHoldingWriter('nation-founding',{kinds:['member_of','holds_office','governs','allied_with'],entities:['office']});
 const DAY=1440,rec=id=>['state','records',id],pair=(a,b)=>[a,b].sort().join(':'),rows=s=>Object.values(s.records??{});
 const activeWar=(s,a,b)=>wars(s).some(w=>['交战','停战'].includes(w.status)&&pair(w.aggressor,w.defender)===pair(a,b));
 function external(e,s,id,who){
@@ -71,7 +74,7 @@ export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('
  const id=`nation_${src}`.replace(/[^a-zA-Z0-9_]/g,'_');if(s.records?.[`nation:${id}`])throw Error('国家编号已占用');
  const originalSuzerain=suzerain(e,s,ready.domains[0]);if(!originalSuzerain)throw Error('原宗主来源缺失');
  if(partyPay(d,e,who,amount,{sourceEvent:src,reason:'独立国库',partial:false,books:{account:treasury(id),writer:'nation-founding',eventId:src}})!==amount)throw Error('国库款项不足');
- d.set(rec(`organization:${id}`),{category:'organization',id,source:'created',kind:'王国',name:name.trim(),seat:capital,leader:who,founder:who,foundedAt:at,members:{[who]:{position:'国王',joinedAt:at,arrears:0}},removed:{},charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['独立国库与本国法典']},treasury:0,ledger:[]});
+ d.set(rec(`organization:${id}`),{category:'organization',id,source:'created',kind:'王国',name:name.trim(),seat:capital,leader:who,founder:who,foundedAt:at,members:{[who]:{position:'国王',joinedAt:at,arrears:0}},removed:{},charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['独立国库与本国法典']},treasury:0,ledger:[]});syncHoldings(d,e,'org',id,{writer:'nation-founding',eventId:src});
  let n={category:'nation',id,name:name.trim(),ruler:who,capital,domains:ready.domains,suzerain:originalSuzerain,status:'独立待定',foundedAt:at,lawSource:baseLaw.id,amendments:{},taxes:{},nextReview:at+nobleRules(e).founding.reviewDays*DAY,breaches:0,sourceEvent:src};
  d.set(rec(`nation:${id}`),n);changeGroupCoins(d,e,id,amount,{kind:'建国入库',sourceEvent:src,minute:at},BOOKED);
  for(const a of armies(d.get('state')).filter(a=>a.party===who))d.set(rec(armyKey(a.id)),{...a,party:id,partyName:n.name});
@@ -86,7 +89,7 @@ function collapse(d,e,n,status,winner,at,src){
  for(const domain of n.domains)d.set(rec(`territory:${domain}`),{category:'territory',county:domain,ruler:winner,previous:n.id,minute:at,sourceEvent:src});
  const coins=groupAccountView(e,d.get('state'),n.id)?.coins??0;if(coins){changeGroupCoins(d,e,n.id,-coins,{kind:'吞并转出',sourceEvent:src,minute:at},{account:partyAccount(e,d.get('state'),winner),writer:'nation-founding',eventId:src});partyCredit(d,e,winner,coins,{sourceEvent:src,reason:'吞并接收',books:BOOKED});}
  for(const a of armies(d.get('state')).filter(a=>a.party===n.id))d.set(rec(armyKey(a.id)),{...a,party:winner,partyName:winner});
- for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&n.domains.some(id=>containsDomain(e,d.get('state'),id,o.settlement))))d.set(rec(o.id),{...o,status:'已免职',removedAt:at,reason:status});
+ for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&n.domains.some(id=>containsDomain(e,d.get('state'),id,o.settlement)))){d.set(rec(o.id),{...o,status:'已免职',removedAt:at,reason:status});syncHoldingRecord(d,e,o.id,{writer:'nation-founding',eventId:src});}
  const t=d.get('state','records',`title:${n.ruler}`);if(t?.independentNation===n.id)d.set(rec(`title:${n.ruler}`),{...t,status:'已除爵',strippedAt:at,reason:status});
  publish(d,e,next,'transfer',src,at,`${n.name}${status}`);return next;
 }

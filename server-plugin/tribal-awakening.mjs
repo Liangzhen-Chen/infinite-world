@@ -25,6 +25,9 @@ import {forestHabitatCapacity} from './forest-water.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office'],entities:['office']});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const TRIBAL_AWAKENING_VERSION=1;
@@ -197,7 +200,7 @@ function placeMembers(d,engine,dyn,rec,members,at,sourceEvent){
   const org=tribalOrgId(dyn.id,stanceFor(seed,dyn,id)),row=clone(d.get('state','records',`organization:${org}`));
   if(!groupView(engine,d.get('state'),org)?.leader.value){row.leader=id;row.members[id]={position:'会长',joinedAt:at,arrears:0};}
   else row.members[id]={position:'成员',joinedAt:at,arrears:0};
-  d.set(['state','records',`organization:${org}`],row);
+  d.set(['state','records',`organization:${org}`],row);syncHoldings(d,engine,'org',org,{writer:'tribal-awakening',eventId:sourceEvent});
   publishTransitionEvent(d,engine,{id:`${sourceEvent}:join:${id}`,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:org,member:id,position:row.members[id].position,tags:['organization','org:join','tribal'],tribe:dyn.id,sourceEvent});
  }
 }
@@ -209,6 +212,7 @@ function split(d,engine,t,dyn,rec,members,at,sourceEvent){
   d.set(['state','records',`organization:${id}`],{category:'organization',id,source:'created',name:f.name,kind:'会社',seat:dyn.home,founder:null,foundedAt:at,leader:null,
    members:{},removed:{},charter:{mode:f.mode,approval:true,fee:0,dues:0,rules:[f.creed]},treasury:0,ledger:[],sourceEvent,
    tribal:{dynamic:dyn.id,stance:f.stance,population:Math.round(population*f.share/total),status:'活动'}});
+  syncHoldings(d,engine,'org',id,{writer:'tribal-awakening',eventId:sourceEvent});
   d.set(['state','records',clockKey(id)],{category:'tribal_clock',id:clockKey(id),org:id,dynamic:dyn.id,stance:f.stance,filled:0,segments:t.clock.segments,history:[]});
   const ev=`${sourceEvent}:found:${f.stance}`;
   publishTransitionEvent(d,engine,{id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:null,
