@@ -147,7 +147,8 @@ export function advanceAgriculture(d,engine,id,source,day){
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
     const hired=agriculturalEmployment(d.get('state'),id,day);
     const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0)-hired.unavailable);
-    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(Math.floor(p.processingWorkers*laborShare),availableWorkers);
+    // Meals are prepared first: levy or hired-out shifts take workers from fields, fresh gathering and wood, never rounding the granary's cooks down.
+    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,availableWorkers);
     const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
     const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
     if(day%30===29){
@@ -173,7 +174,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     const mouths=Math.max(0,s.population-(d.get('state','records',`levy:${id}`)?.count??0));
     const MEAL={flow:'sink:consume',purpose:'meal'};
     const freshEaten=takeFood(r,s,mouths,'fresh',MEAL);
-    const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,processing*p.processingPerWorker),'grain',MEAL);
+    const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,Math.floor(processing*p.processingPerWorker)),'grain',MEAL);
     const eaten=freshEaten+grainEaten;r.ledger.eaten+=eaten;
     const missingMeals=mouths-eaten;r.lastDay=day;
     const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
