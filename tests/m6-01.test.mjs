@@ -116,7 +116,8 @@ test('M6-01 浏览器：双主题、两行顶栏、全屏抽屉、字号持久�
     assert.equal(await page.locator('#chat .mes_text p').innerText(),narrative);
     assert.match(await page.locator('#fields-status').innerText(),/春历.*雨月/);assert.match(await page.locator('#fields-status').innerText(),/青灯酒馆/);
     assert.match(await page.locator('#fields-status').innerText(),/0金 1银 80铜/);
-    const report='docs/测试报告/最新/M6-01';await fs.mkdir(report,{recursive:true});
+    // 截图默认写到临时目录（进程退出时清理），不改写 docs 下已跟踪的存档图；设 M6_UPDATE_SCREENSHOTS=1 才更新它们。
+    const report=process.env.M6_UPDATE_SCREENSHOTS==='1'?'docs/测试报告/最新/M6-01':path.join(tmpRoot(),'m6-01-shots');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light']){
         assert.equal(await page.locator('#fields-dialog').count(),0);
         await page.evaluate(async theme=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({theme,fontSize:20,highContrast:false,reducedMotion:false});},theme);

@@ -10,6 +10,7 @@ export const LEDGER_COIN='coin_river';
 const DAY=1440;
 // 资源键：[命名空间:]名称；core: 可省略（规范形式不带 core:）。
 const RESOURCE=/^(?:([a-z][a-z0-9_-]{1,31}):)?([a-z][a-z0-9_]*)$/;
+export const isResourceKey=resource=>RESOURCE.test(String(resource??''));
 export function resourceKey(resource){
     const m=RESOURCE.exec(String(resource??''));if(!m)throw Error(`资源键无效：${resource}`);
     return m[1]&&m[1]!==CORE_NAMESPACE?`${m[1]}:${m[2]}`:m[2];
