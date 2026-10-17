@@ -12,7 +12,7 @@
 // 与存储里该单元的存活持有比对，按差关闭（reason）与开立（经 L0 唯一写入点，受注册形状校验）。
 // 旧写入点漏调它，对账（tests/helpers/holdings-audit.mjs）即报出差异。
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,locationOf,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
+    setLocation,clearLocation,locationOf,holdingsOfSource,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
@@ -152,6 +152,7 @@ function attempt(d,info,fn){
 }
 function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
     const want=desired(engine,read(d,'state'),name,unit),source=sourceKey(name,unit);
+    if(!want.holdings.length&&!want.entities.length&&!want.locations.length){const s0=holdingsOfSource(d,source);if(!s0.holdings.length&&!s0.entities.length&&!s0.locations.length)return;}
     // 实体先于持有：新职位、案件等要先存在才能被持有。
     for(const e of want.entities){
         const have=entityRow(d,e.id);
@@ -159,15 +160,15 @@ function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
         if(!have)attempt(d,info,()=>createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source,writer,eventId,origin:'runtime'}));
         else if(have.goneAt===undefined&&canon(have.facts)!==canon(e.facts??{}))attempt(d,info,()=>updateEntity(d,{id:e.id,facts:e.facts??{},writer,eventId}));
     }
-    const current=aliveHoldings(d,{source}),wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
+    const stored=holdingsOfSource(d,source),current=stored.holdings,wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
     const keep=new Set();
     for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>closeHolding(d,{id:r.id,reason,writer,eventId}));}
     for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,source,writer,eventId,engine}));
     for(const l of want.locations)attempt(d,{source,writer,eventId,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,writer,source,engine}));
-    for(const [entity,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.source===source&&!want.locations.some(x=>x.entity===entity))attempt(d,{source,writer,eventId,entity},()=>clearLocation(d,{entity,writer}));
+    for(const entity of stored.locations)if(!want.locations.some(x=>x.entity===entity))attempt(d,{source,writer,eventId,entity},()=>clearLocation(d,{entity,writer}));
     // 旧字段里已不存在的实体：记墓碑（basis 由来源声明，缺省 destruction）。
-    for(const e of Object.values(read(d,'holdings','entities')??{}))if(e.source===source&&e.goneAt===undefined&&!want.entities.some(x=>x.id===e.id))
-        attempt(d,{source,writer,eventId,entity:e.id},()=>endEntity(d,{id:e.id,basis:sources.get(name).goneBasis??'destruction',writer,eventId}));
+    for(const id of stored.entities)if(!want.entities.some(x=>x.id===id))
+        attempt(d,{source,writer,eventId,entity:id},()=>endEntity(d,{id,basis:sources.get(name).goneBasis??'destruction',writer,eventId}));
 }
 
 // ---- 对账（测试与审计用）：旧字段应有 vs 存储存活，逐条 ---------------------------------

@@ -102,8 +102,10 @@ const indexes=new WeakMap();
 function index(d){
     const seq=read(d,'holdings','seq')??0,cached=indexes.get(d);
     if(cached&&cached.seq===seq)return cached;
-    const idx={seq,bySubject:new Map(),byHolder:new Map(),bySource:new Map()};
+    const idx={seq,bySubject:new Map(),byHolder:new Map(),bySource:new Map(),entities:new Map(),locations:new Map()};
     for(const row of Object.values(read(d,'holdings','rows')??{}))if(row.until===undefined)addIndex(idx,row);
+    for(const e of Object.values(read(d,'holdings','entities')??{}))if(e.goneAt===undefined&&e.source)push(idx.entities,e.source,e.id);
+    for(const [entity,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.source)push(idx.locations,l.source,entity);
     indexes.set(d,idx);return idx;
 }
 const push=(m,k,id)=>{let s=m.get(k);if(!s)m.set(k,s=new Set());s.add(id);};
@@ -121,6 +123,12 @@ export function aliveHoldings(d,{kind,holder,subject,source}={}){
         .sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));
 }
 export const holdingRow=(d,id)=>rowOf(d,id);
+// 某个来源单元在存储里的存活持有、存活实体与位置事实（双写按单元比对时用，不扫全表）。
+export function holdingsOfSource(d,source){
+    if(!holdingsActive(d))return {holdings:[],entities:[],locations:[]};
+    const idx=index(d);
+    return {holdings:aliveHoldings(d,{source}),entities:[...idx.entities.get(source)??[]].sort(),locations:[...idx.locations.get(source)??[]].sort()};
+}
 
 // ---- 写入点 ------------------------------------------------------------------------
 const EPS=1e-9;
@@ -220,7 +228,7 @@ export function createEntity(d,{id,kind,facts={},source=null,writer,eventId=null
     writerFor(writer,'entities',kind);
     if(!holdingsActive(d))return null;
     if(entityRow(d,id))throw new HoldingRejected('E-ENTITY-DUPLICATE','编号已被占用（编号永不复用）',id);
-    const idx=index(d);bump(d,idx);
+    const idx=index(d);bump(d,idx);if(source)push(idx.entities,source,id);
     d.set(['holdings','entities',id],stripUndefined({id,kind,facts,source:source??undefined,origin,createdAt:minuteOf(d),writer,event:eventId??undefined}));
     return id;
 }
@@ -244,9 +252,9 @@ export function endEntity(d,{id,basis,writer,eventId=null}){
     writerFor(writer,'entities',e.kind);
     if(!GONE_BASES.includes(basis))throw Error(`未登记的消失起因：${basis}`);
     if(e.goneAt!==undefined)return id;
-    const idx=index(d);bump(d,idx);
+    const idx=index(d);bump(d,idx);if(e.source)pull(idx.entities,e.source,id);
     d.set(['holdings','entities',id],{...e,goneAt:minuteOf(d),basis,...(eventId?{goneBy:eventId}:{})});
-    if(read(d,'holdings','locations',id))d.remove(['holdings','locations',id]);
+    const loc=read(d,'holdings','locations',id);if(loc){if(loc.source)pull(idx.locations,loc.source,id);d.remove(['holdings','locations',id]);}
     return id;
 }
 
@@ -266,13 +274,15 @@ export function setLocation(d,{entity,at,mode,writer,source=null,engine=null}){
     const prev=locationOf(d,entity);
     if(prev&&prev.at===at&&prev.mode===mode)return entity;
     const idx=index(d);bump(d,idx);
-    d.set(['holdings','locations',entity],stripUndefined({at,mode,since:minuteOf(d),source:source??prev?.source??undefined}));
+    const next=stripUndefined({at,mode,since:minuteOf(d),source:source??prev?.source??undefined});
+    if(prev?.source)pull(idx.locations,prev.source,entity);if(next.source)push(idx.locations,next.source,entity);
+    d.set(['holdings','locations',entity],next);
     return entity;
 }
 export function clearLocation(d,{entity,writer}){
     writerFor(writer,'locations');
     if(!holdingsActive(d)||!locationOf(d,entity))return null;
-    const idx=index(d);bump(d,idx);d.remove(['holdings','locations',entity]);return entity;
+    const idx=index(d);bump(d,idx);const prev=locationOf(d,entity);if(prev?.source)pull(idx.locations,prev.source,entity);d.remove(['holdings','locations',entity]);return entity;
 }
 // 有效位置：沿随身者 / 容器链上溯到地点；载体自身的位置由 L1 的 placeOf（旧字段：人物 location 等）给出。
 export function located(d,entity,placeOf=()=>null){
