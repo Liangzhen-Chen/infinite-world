@@ -2,7 +2,7 @@ import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {hiddenCheckBonus} from './hidden-passives.mjs';
-import { applyPatches, canonical, PatchCursor } from './storage.mjs';
+import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
@@ -141,7 +141,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
     for(const npc of changed){
         const value=d.get('state','npcs',npc);
         if(value===undefined){if(npcsBefore?.[npc]!==undefined)d.patches.push({op:'delete',path:['state','npcs',npc]});continue;}
-        if(canonical(npcsBefore?.[npc])!==canonical(value))d.patches.push({op:'set',path:['state','npcs',npc],value});
+        if(!canonicalEqual(npcsBefore?.[npc],value))d.patches.push({op:'set',path:['state','npcs',npc],value});
     }
 }
 export class WorldEngine {

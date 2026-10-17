@@ -171,6 +171,24 @@ const INDEXED = new Set(['kind', 'category']);
 const recordIndexes = new WeakMap();
 const NO_ROWS = Object.freeze([]);
 let recordIndexDepth = 0;
+export const recordIndexActive = () => recordIndexDepth > 0;
+// Equality of canonical(a) and canonical(b) without building either string: shared subtrees
+// (a draft copies only what it writes) are equal at once and a difference ends the walk.
+export function canonicalEqual(a, b) {
+    if (a === b) return true;
+    const objA = a !== null && typeof a === 'object', objB = b !== null && typeof b === 'object';
+    if (!objA || !objB) return !objA && !objB && JSON.stringify(a) === JSON.stringify(b);
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    if (Array.isArray(a)) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) if (!canonicalEqual(a[i], b[i])) return false;
+        return true;
+    }
+    const keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) return false;
+    for (const key of keys) if (!Object.hasOwn(b, key) || !canonicalEqual(a[key], b[key])) return false;
+    return true;
+}
 export function withRecordIndex(task) {
     recordIndexDepth++;
     try { return task(); } finally { recordIndexDepth--; }
@@ -255,7 +273,10 @@ export class PatchCursor {
         if (!root || typeof root !== 'object') throw new Error('补丁路径无法解析');
         if ((patch.op !== 'set' && patch.op !== 'delete') || !Array.isArray(path) || !path.length || path.length > 12) throw new Error('补丁格式无效');
         if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
-        if (recordIndexDepth && path[0] === 'state' && path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
+        if (recordIndexDepth && path[0] === 'state') {
+            if (path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
+            else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
+        }
         // Resolve the whole path before writing, so a rejected patch leaves no trace.
         const last = path.length - 1;
         let probe = root;
