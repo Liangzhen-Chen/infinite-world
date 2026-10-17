@@ -4,6 +4,7 @@
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
+import {recordsWhere,recordEntriesWhere,recordsMemo} from './storage.mjs';
 import {organizationState,memberOrganizations} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
@@ -23,8 +24,8 @@ export function personMental(engine,state,id){
 }
 
 const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡';
-const dismissed=(state,id)=>Object.values(state.records??{}).some(r=>r.category==='legal_dismissal'&&(r.subject??r.npc)===id&&r.status!=='撤销');
-const officeRows=state=>Object.entries(state.records??{}).filter(([,r])=>r.category==='governance_office');
+const dismissed=(state,id)=>recordsWhere(state.records,'category','legal_dismissal').some(r=>(r.subject??r.npc)===id&&r.status!=='撤销');
+const officeRows=state=>recordEntriesWhere(state.records,'category','governance_office');
 function remoteHeadOffice(state,settlement){
     for(const [county,r] of Object.entries(state.remote??{})){
         const office=r.skeleton?.offices?.find(o=>o.settlement===settlement&&o.source==='generated');
@@ -266,6 +267,10 @@ export function personSimulation(engine,state,id){
 // A caller may build this index for a single read-only movement pass. It is
 // never retained on engine/state, so later legal writes are read immediately.
 export function personConstraints(engine,state){
+    // R31: inside an advance pass the same records object yields the same index (storage.mjs recordsMemo drops it on any records write).
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state));
+}
+function buildPersonConstraints(engine,state){
     const out=new Map();
     out.offices=[];out.organizations=[];out.dismissals=new Set();out.stewards=[];
     // Active employment and leases by person and the festival occurrence rows, in
