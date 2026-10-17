@@ -158,6 +158,67 @@ function deadPatchValues(patches) {
     return dead;
 }
 
+// R31: records-by-field index for one elapsed-time pass. Readers that scan
+// every record for a kind or category (leases, contracts, war closures, offices)
+// get the same rows in the same order from a bucket instead. Only active inside
+// withRecordIndex (the advance registry, for a draft whose writes all go through
+// a PatchCursor). The index belongs to one records object; a write that adds,
+// replaces or deletes a row, or writes inside one (the row may be copied), in the
+// object a cursor still mutates in place drops it. Objects a cursor has exposed
+// are never written again, so their index stays valid. The second query on the same
+// object builds it; a single query scans exactly as before.
+const INDEXED = new Set(['kind', 'category']);
+const recordIndexes = new WeakMap();
+const NO_ROWS = Object.freeze([]);
+let recordIndexDepth = 0;
+export function withRecordIndex(task) {
+    recordIndexDepth++;
+    try { return task(); } finally { recordIndexDepth--; }
+}
+function recordGroups(records, field, entries) {
+    if (!INDEXED.has(field)) throw new Error(`records index field ${field}`);
+    const name = entries ? `${field}:entries` : field;
+    let cache = recordIndexes.get(records);
+    if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
+    const hit = cache.get(name);
+    if (hit?.groups) return hit.groups;
+    if (!hit) { cache.set(name, { groups: null }); return null; }
+    const groups = new Map();
+    for (const entry of Object.entries(records)) {
+        const key = entry[1]?.[field];
+        let rows = groups.get(key);
+        if (!rows) groups.set(key, rows = []);
+        rows.push(entries ? entry : entry[1]);
+    }
+    hit.groups = groups;
+    return groups;
+}
+// A value derived from the rows of this records object alone (and a key object such as the
+// world), built once while the index is on. Read-only.
+export function recordsMemo(records, key, build) {
+    if (!recordIndexDepth || !records || typeof records !== 'object') return build();
+    let cache = recordIndexes.get(records);
+    if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
+    if (cache.has(key)) return cache.get(key);
+    const value = build();
+    cache.set(key, value);
+    return value;
+}
+// Same rows and order as Object.values(records).filter(r => r?.[field] === value). Read-only.
+export function recordsWhere(records, field, value) {
+    if (!records || typeof records !== 'object') return NO_ROWS;
+    const groups = recordIndexDepth ? recordGroups(records, field, false) : null;
+    if (groups) return groups.get(value) ?? NO_ROWS;
+    return Object.values(records).filter(r => r?.[field] === value);
+}
+// Same rows and order as Object.entries(records).filter(([, r]) => r?.[field] === value). Read-only.
+export function recordEntriesWhere(records, field, value) {
+    if (!records || typeof records !== 'object') return NO_ROWS;
+    const groups = recordIndexDepth ? recordGroups(records, field, true) : null;
+    if (groups) return groups.get(value) ?? NO_ROWS;
+    return Object.entries(records).filter(([, r]) => r?.[field] === value);
+}
+
 // P2: one patch at a time over a working document, with the same result as
 // applyPatches. Copies made here stay writable across later patches until a
 // reference to them escapes (expose), so a long simulation does not recopy
@@ -194,6 +255,7 @@ export class PatchCursor {
         if (!root || typeof root !== 'object') throw new Error('补丁路径无法解析');
         if ((patch.op !== 'set' && patch.op !== 'delete') || !Array.isArray(path) || !path.length || path.length > 12) throw new Error('补丁格式无效');
         if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
+        if (recordIndexDepth && path[0] === 'state' && path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
         // Resolve the whole path before writing, so a rejected patch leaves no trace.
         const last = path.length - 1;
         let probe = root;

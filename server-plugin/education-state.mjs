@@ -1,4 +1,5 @@
 import {temples} from './faith-catalog.mjs';
+import {recordsWhere} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -8,7 +9,7 @@ import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 const DAY=1440;
 export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
-export const educationRows=s=>Object.values(s.records??{}).filter(r=>r.category==='education_course'&&r.status==='开课');
+export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
 export const knowledgeProficiency=(e,s,id,skill)=>{
  const b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[skill]:s.npcs?.[id]?.skills?.[skill]??b?.proficiencies?.[skill]??b?.skills?.[skill];
  return typeof v==='number'?v:v?.proficiency??0;
@@ -54,7 +55,7 @@ function deriveEducationCourses(e,s){
  const constraints=personConstraints(e,s),calendar=e.calendar(s.minute);
  const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
  const routines=new Map(teachers.map(id=>[id,npcSchedule(e,s,id,undefined,constraints)]));
- const jobs=Object.values(s.records??{}).filter(r=>r.category==='contract'&&['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
+ const jobs=recordsWhere(s.records,'category','contract').filter(r=>['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
  const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
  const homeOf=memo(id=>settlement(e,s,id)),ageOf=memo(id=>npcAgeAt(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
  for(const site of educationSites(e,s)){
