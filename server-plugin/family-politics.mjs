@@ -9,6 +9,9 @@ import {relationView} from './npc-relations.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {lawAuthorities} from './entity-view.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('family-politics',{kinds:['kin','household_member','resides','resident_of','guardian_of']});
 
 const DAY=1440,rec=id=>['state','records',id];
 function person(e,s,value){const id=s.npcs?.[value]?value:e.resolve(value,'npc');if(!s.npcs?.[id])throw Error('须为有实际状态的人物');return id;}
@@ -18,7 +21,7 @@ function willingKin(e,s,ids){for(const a of ids)for(const b of ids)if(a!==b&&rel
 function membership(d,e,house,id,inside){
  const definition=householdDefinition(e,d.get('state'),house),row=d.get('state','family','households',house)??{},members=(row.members??[]).filter(x=>x!==id),left=(row.left??[]).filter(x=>x!==id);
  if(inside)members.push(id);else if(definition?.members.includes(id))left.push(id);
- d.set(['state','family','households',house],{...row,members,left});
+ holdingSet(d,null,['state','family','households',house],{...row,members,left},'family-politics');
 }
 function moveHouse(d,e,id,destination,eventId){
  const s=d.get('state'),from=npcHousehold(e,s,id);if(!from||!destination)throw Error('迁出和迁入须有实际家户');
@@ -26,8 +29,8 @@ function moveHouse(d,e,id,destination,eventId){
  membership(d,e,from.id,id,false);membership(d,e,destination.id,id,true);
  const old=d.get('state','npcs',id),routine=e.byId.get(id)?.schedule??old.routine;
  const remap=v=>Array.isArray(v)?v.map(remap):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,k==='location'&&v===from.homeLocation?destination.homeLocation:remap(v)])):v;
- d.set(['state','npcs',id,'residence'],{household:destination.id,settlement:destination.settlement,home:destination.homeLocation,since:s.minute,sourceEvent:eventId,schedule:remap(routine)});
- d.set(['state','npcs',id,'location'],destination.homeLocation);
+ holdingSet(d,null,['state','npcs',id,'residence'],{household:destination.id,settlement:destination.settlement,home:destination.homeLocation,since:s.minute,sourceEvent:eventId,schedule:remap(routine)},'family-politics');
+ holdingSet(d,null,['state','npcs',id,'location'],destination.homeLocation,'family-politics');
  if(from.settlement!==destination.settlement)for(const [sid,delta]of [[from.settlement,-1],[destination.settlement,1]]){
   const n=d.get('state','settlements',sid,'population');if(!Number.isSafeInteger(n)||n+delta<0)throw Error('迁居人口账不可用');d.set(['state','settlements',sid,'population'],n+delta);
  }
@@ -53,7 +56,7 @@ export function familyAction(d,args,eventId){
  if(args.operation==='family_marry'){
   const a=person(e,s,args.speaker);consent(e,s,[a,id],args);
   const blocker=marriageBlocker(e,s,a,id,s.minute,true);if(blocker)throw Error(blocker);
-  const marriage=marry(d,e,[a,id],{since:s.minute},s.minute);d.set(['state','family','marriages',marriage.id,'requestId'],eventId);return {marriage:marriage.id,partners:marriage.partners};
+  const marriage=marry(d,e,[a,id],{since:s.minute},s.minute);holdingSet(d,null,['state','family','marriages',marriage.id,'requestId'],eventId,'family-politics');return {marriage:marriage.id,partners:marriage.partners};
  }
  if(['family_adopt','family_foster'].includes(args.operation)){
   const parent=person(e,s,args.speaker),child=id,parents=familyEdges(e,s).filter(r=>r.kind==='parent'&&r.to===child).map(r=>r.from).filter(p=>familyAdult(e,s,p)&&legalChildren(e,s,p).includes(child));
@@ -66,13 +69,13 @@ export function familyAction(d,args,eventId){
   const participants=[...new Set([parent,child,...responsible])];consent(e,s,participants,args);willingKin(e,s,participants);
   const house=npcHousehold(e,s,parent);if(!house)throw Error('养亲须有真实家户');
   const aid=`adoption:${eventId}`,row={id:aid,parent,child,kind:args.operation==='family_foster'?'过继':'收养',household:house.id,minute:s.minute,participants,sourceEvent:eventId};
-  d.set(['state','family','adoptions',aid],row);moveHouse(d,e,child,house,eventId);
+  holdingSet(d,null,['state','family','adoptions',aid],row,'family-politics');moveHouse(d,e,child,house,eventId);
   // Transfer legal care without erasing the recorded biological parents.
   if(!familyAdult(e,s,child)){
-   const prior=activeGuardianship(e,s,child);if(prior)d.set(rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind});
-   d.set(rec(`guardianship:${aid}`),{category:'guardianship',id:`guardianship:${aid}`,ward:child,guardian:parent,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,child)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:[],sourceEvent:aid});
+   const prior=activeGuardianship(e,s,child);if(prior)holdingSet(d,null,rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind},'family-politics');
+   holdingSet(d,null,rec(`guardianship:${aid}`),{category:'guardianship',id:`guardianship:${aid}`,ward:child,guardian:parent,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,child)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:[],sourceEvent:aid},'family-politics');
   }
-  d.set(['state','family','seenByPlayer',aid],s.minute);
+  holdingSet(d,null,['state','family','seenByPlayer',aid],s.minute,'family-politics');
   entityTransition(d,e,{id:aid,verb:'transfer',actor:parent,target:child,location:house.homeLocation,visibility:'members',tags:['family',row.kind],summary:`当事人同意${row.kind}并实际迁入养亲家户`});return {adoption:row,household:house.id};
  }
  if(args.operation==='family_split'){
@@ -80,7 +83,7 @@ export function familyAction(d,args,eventId){
   const home=e.resolve(args.plot,'loc'),building=s.buildings?.[home],from=npcHousehold(e,s,id);
   if(!building||building.owner!==id||home!==s.location||!from||home===from.homeLocation)throw Error('须在本人另有合法产权的居所分家');
   const hid=`house_split:${eventId}`;
-  d.set(['state','family','households',hid],{id:hid,settlement:from.settlement,homeLocation:home,members:[],left:[],previousHousehold:from.id,sourceEvent:eventId});
+  holdingSet(d,null,['state','family','households',hid],{id:hid,settlement:from.settlement,homeLocation:home,members:[],left:[],previousHousehold:from.id,sourceEvent:eventId},'family-politics');
   moveHouse(d,e,id,householdDefinition(e,d.get('state'),hid),eventId);return {household:hid,from:from.id,member:id};
  }
  if(args.operation==='family_manage'){
@@ -93,7 +96,7 @@ export function familyAction(d,args,eventId){
    if(relationView(e,s,guardian,id).trust<0)throw Error('候选人不愿监护');
    const prior=Object.values(s.records??{}).find(r=>r.category==='guardianship'&&r.ward===id&&['待指定','已撤换'].includes(r.status)),key=prior?.id??`guardianship:${eventId}`;
    const row={...prior,category:'guardianship',id:key,ward:id,guardian,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,id)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:prior?.ledger??[],appointedBy:authority,sourceEvent:eventId};
-   d.set(rec(key),row);entityTransition(d,e,{id:`${eventId}:guardian`,verb:'appoint',actor:authority,target:guardian,location:s.location,visibility:'members',tags:['family','guardianship'],summary:'当地法庭指定未成年人的监护人'});return {guardianship:key,guardian};
+   holdingSet(d,null,rec(key),row,'family-politics');entityTransition(d,e,{id:`${eventId}:guardian`,verb:'appoint',actor:authority,target:guardian,location:s.location,visibility:'members',tags:['family','guardianship'],summary:'当地法庭指定未成年人的监护人'});return {guardianship:key,guardian};
   }
   return manageWard(d,e,{ward:id,guardian,coins:args.coins,kind:args.choice,purpose:args.content,recipient:args.authority,eventId});
  }

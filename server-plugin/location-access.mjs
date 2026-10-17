@@ -4,6 +4,8 @@ import {spellConsentPermission}from'./magic-consent.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {sitePermission}from'./sites.mjs';
 import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-view.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('location-access',{kinds:['permit']});
 // Existing authorization records govern entry; the route alone is not consent.
 export function assertLocationAccess(d,engine,destination,{authorization,companions=[],arrivalMinute=d.get('state','minute')}={}){
  if(facilityView(engine,d.get('state'),destination)?.factor===0)throw Error('建筑已停用，不能居住或进入服务区');
@@ -35,7 +37,7 @@ export function homePermission(d,engine,args,eventId){
   const old=d.get('state','records',args.authorization);
   if(old?.category!=='authorization'||!['enter_home','enter_council'].includes(old.action)||old.grantor!==grantor||old.grantee!=='player')throw Error('只有原签发住户能撤销这份私宅许可');
   if(old.revoked)return{authorization:args.authorization,permission:old,duplicate:true};
-  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};d.set(['state','records',args.authorization],permission);
+  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};holdingSet(d,null,['state','records',args.authorization],permission,'location-access');
   d.say(`${base.name}收回了进入${engine.byId.get(old.subject).name}的许可`);return{authorization:args.authorization,permission};
  }
  const location=engine.resolve(args.location??args.destination),place=engine.byId.get(location);
@@ -53,7 +55,7 @@ export function homePermission(d,engine,args,eventId){
  const authorization=`permission_${eventId}`;
  if(d.get('state','records',authorization))throw Error('私宅许可编号已经存在');
  const permission={category:'authorization',action:council?'enter_council':'enter_home',subject:location,grantor,grantee:'player',guests,createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
- d.set(['state','records',authorization],permission);d.say(`${base.name}同意你${guests.length?'和已登记同行者':''}进入${place.name}，许可至${engine.formatCalendar(permission.expires)}`);
+ holdingSet(d,null,['state','records',authorization],permission,'location-access');d.say(`${base.name}同意你${guests.length?'和已登记同行者':''}进入${place.name}，许可至${engine.formatCalendar(permission.expires)}`);
  return{authorization,permission};
 }
 
@@ -73,7 +75,7 @@ function environmentPermission(d,engine,args,eventId){
  if(args.operation==='revoke_access'){
   if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==grantor||old.grantee!=='player')throw Error('只有原签发者能撤销环境许可');
   if(old.revoked)return{authorization:args.authorization,permission:old,duplicate:true};
-  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};d.set(['state','records',args.authorization],permission);return{authorization:args.authorization,permission};
+  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};holdingSet(d,null,['state','records',args.authorization],permission,'location-access');return{authorization:args.authorization,permission};
  }
  const minutes=args.minutes??60;
  if(!Number.isSafeInteger(minutes)||minutes<1||minutes>10080||typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('环境许可须记录用途及1至10080分钟有效时长');
@@ -82,7 +84,7 @@ function environmentPermission(d,engine,args,eventId){
  if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==location||!d.get('state','player','companions')?.includes(id)))throw Error('获准同行者须是实际在场且不重复的同行人');
  const authorization=`permission_${eventId}`;if(d.get('state','records',authorization))throw Error('环境许可编号已存在');
  const permission={category:'authorization',action,subject:target,grantor,grantee:'player',guests,createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
- d.set(['state','records',authorization],permission);d.say(`${base.name}给出了限期环境使用许可`);return{authorization,permission};
+ holdingSet(d,null,['state','records',authorization],permission,'location-access');d.say(`${base.name}给出了限期环境使用许可`);return{authorization,permission};
 }
 
 // The existing grant/revoke action also records owner-issued anchor permits.
@@ -97,7 +99,7 @@ function anchorPermission(d,engine,args,eventId){
  if(args.operation==='revoke_access'){
   if(old?.category!=='authorization'||old.action!=='teleport_anchor'||old.subject!==feature.id||old.grantor!==grantor||old.grantee!=='player')throw Error('只有原签发所有者能撤销锚点许可');
   if(old.revoked)return{authorization:args.authorization,permission:old,duplicate:true};
-  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};d.set(['state','records',args.authorization],permission);d.say(`${base.name}撤销了${feature.name}的传送许可`);return{authorization:args.authorization,permission};
+  const permission={...old,revoked:true,revokedAt:now,revokedBy:grantor};holdingSet(d,null,['state','records',args.authorization],permission,'location-access');d.say(`${base.name}撤销了${feature.name}的传送许可`);return{authorization:args.authorization,permission};
  }
  const minutes=args.minutes??60;
  if(!Number.isSafeInteger(minutes)||minutes<1||minutes>1440||typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('锚点许可须记录用途及1至1440分钟有效时长');
@@ -107,8 +109,8 @@ function anchorPermission(d,engine,args,eventId){
  const authorization=`permission_${eventId}`;
  if(d.get('state','records',authorization))throw Error('锚点许可编号已存在');
  const permission={category:'authorization',action:'teleport_anchor',subject:feature.id,grantor,grantee:'player',guests,createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
- d.set(['state','records',authorization],permission);
+ holdingSet(d,null,['state','records',authorization],permission,'location-access');
  const key=`known_anchor:${feature.id}`,known=d.get('state','records',key);
- if(known?.category==='known_anchor'&&known.subject===feature.id&&known.owner===grantor)d.set(['state','records',key,'permission'],authorization);
+ if(known?.category==='known_anchor'&&known.subject===feature.id&&known.owner===grantor)holdingSet(d,null,['state','records',key,'permission'],authorization,'location-access');
  d.say(`${base.name}同意你和已登记同行者使用${feature.name}，许可至${engine.formatCalendar(permission.expires)}`);return{authorization,permission};
 }

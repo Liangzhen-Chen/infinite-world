@@ -1,6 +1,8 @@
 import {migrationPath} from './wildlife-range.mjs';
 import {forestHabitatCapacity} from './forest-water.mjs';
 import {sapient} from './wildlife-awakening.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('seasonal-migration',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
 const ecology=h=>['state','records',`ecology:${h}`];
 export function reservedMigrationCapacity(d,habitat,species){
@@ -32,8 +34,8 @@ export function advanceSeasonalMigration(d,engine,day){
         for(const id of t.actors){const actor=d.get('state','creatures',id);
             // A dead traveller stays dead; no revived replacement enters the pool.
             if(!alive(actor)){m.lost++;continue;}
-            d.set(['state','creatures',id,'location'],habitats.get(t.to).location);
-            d.set(['state','creatures',id,'ecology'],t.to);d.remove(['state','creatures',id,'migration']);m.arrived++;
+            holdingSet(d,null,['state','creatures',id,'location'],habitats.get(t.to).location,'seasonal-migration');
+            holdingSet(d,null,['state','creatures',id,'ecology'],t.to,'seasonal-migration');d.remove(['state','creatures',id,'migration']);m.arrived++;
         }
     }
     m.transit=remaining;d.set(migrationPath(),m);
@@ -49,7 +51,7 @@ export function advanceSeasonalMigration(d,engine,day){
         const amount=Math.min(room,Math.floor((p.count+actors.length)*route.fraction));if(!amount)continue;
         const unseen=Math.min(p.count,amount),travellers=actors.slice(0,amount-unseen).map(([id])=>id),id=`${route.id}:${now}`;
         p.count-=unseen;p.emigrated+=unseen;d.set(ecology(route.from),source);
-        for(const id of travellers){d.set(['state','creatures',id,'location'],null);d.set(['state','creatures',id,'migration'],`${route.id}:${now}`);}
+        for(const id of travellers){holdingSet(d,null,['state','creatures',id,'location'],null,'seasonal-migration');holdingSet(d,null,['state','creatures',id,'migration'],`${route.id}:${now}`,'seasonal-migration');}
         m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,actors:travellers});
         m.departed+=amount;d.set(migrationPath(),m);
     }

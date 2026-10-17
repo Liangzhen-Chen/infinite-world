@@ -5,6 +5,8 @@ import {composeName,acceptRemoteProfile} from './remote-generation.mjs';
 import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('population',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 
 // On-demand population for seeded settlements and lairs. The roster of a
 // residential district is a pure function of the template and quota captured
@@ -290,7 +292,7 @@ export function settlePopulationLayers(d,engine){
             update(sid,record,location,{...district,households:rows.length,compacted:true});
         }
     }
-    if(created)d.set(['state','created'],created);
+    if(created)holdingSet(d,null,['state','created'],created,'population');
     for(const [sid,record] of records)d.set(['state','population',sid],record);
 }
 
@@ -315,7 +317,7 @@ export function unfoldPopulationAt(d,engine,location){
         for(const member of household.members){
             record.remaining.population--;record.remaining.ages[bucketOf(member.age)]--;
             if(d.get('state','created',member.id)||d.get('state','npcs',member.id))throw Error(`按需人口编号已被占用：${member.id}`);
-            d.set(['state','created',member.id],rosterEntity(record.template,household,member));people.push(member.id);
+            holdingSet(d,null,['state','created',member.id],rosterEntity(record.template,household,member),'population');people.push(member.id);
         }
     }
     if(record.remaining.households<0||record.remaining.population<0||AGE_KEYS.some(k=>record.remaining.ages[k]<0))throw Error('按需人口超出剩余配额，拒绝生成');
@@ -424,12 +426,12 @@ export function acceptPopulationProfile(d,engine,input){
     if(errors.length)throw Error(`完整档未通过硬约束：${errors.join('；')}`);
     const profile=Object.fromEntries(Object.entries(input.profile).filter(([k])=>PROFILE_FIELDS[k]));
     const full={...entity,...profile,profileStatus:'full'};
-    d.set(['state','created',person],full);
+    holdingSet(d,null,['state','created',person],full,'population');
     d.set(['state','population',entity.settlement,'profiles',person],{status:'full',failures:status?.failures??0,minute,profileHash:hashText(profile),
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});
     // A profile adds description; family life may already have admitted this actor.
-    if(!d.get('state','npcs',person))d.set(['state','npcs',person],{...initialNpcState({...full,coins:0,inventory:{}}),occupation:full.occupation,
-        routine:lifeRoutine(full.home.location??full.home.district,{minor:full.flags.minor,occupation:full.occupation})});
+    if(!d.get('state','npcs',person))holdingSet(d,null,['state','npcs',person],{...initialNpcState({...full,coins:0,inventory:{}}),occupation:full.occupation,
+        routine:lifeRoutine(full.home.location??full.home.district,{minor:full.flags.minor,occupation:full.occupation})},'population');
     return {person,status:'full',name:full.name};
 }
 

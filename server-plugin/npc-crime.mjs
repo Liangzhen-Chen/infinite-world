@@ -14,6 +14,9 @@ import {entityTransition,businessSnapshot,businessTransitions} from './entity-tr
 import {issueWanted,wantedOfCase,WANTED_REASONS} from './bounty.mjs';
 import {monsterStats} from './combat.mjs';
 import {transferItems} from './items.mjs';
+import {declareHoldingWriter} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('npc-crime',{kinds:['guest_of','wanted'],entities:['case']});
 const DAY=1440,path=id=>['state','records',id];
 export const NPC_CRIME_VERSION=1;
 const fresh=e=>!e.replaying||e.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION;
@@ -62,7 +65,7 @@ export function commitNpcCrime(d,e,plan,minute){
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
  if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
- d.set(path(key),{...d.get(...path(key)),npcCrime:{version:1,motive:plan.need,intelligence:plan.intelligence,reportAt,reportRoute,sourceEvent:id},nextHearing:reportAt===null?null:reportAt+code.hearingMinutes});
+ holdingSet(d,null,path(key),{...d.get(...path(key)),npcCrime:{version:1,motive:plan.need,intelligence:plan.intelligence,reportAt,reportRoute,sourceEvent:id},nextHearing:reportAt===null?null:reportAt+code.hearingMinutes},'npc-crime');
  const verb=offense==='assault'?'harm':offense==='fraud'?'deceive':offense==='smuggling'?'breach':'steal';
  publishTransitionEvent(d,e,{id,verb,actor,target:victim,value,harm,case:key,location,minute,witnesses,
   tags:['crime','npc_crime','hostile',offense,...(witnesses.length?['discovered','exposed']:[])]});
@@ -75,14 +78,14 @@ function settleNpcSentence(d,e,row,code,minute){
  if((n.coins??0)>=fine+compensation){
   moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
   d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
-  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');d.set(path(treasury),{...fund,coins:fund.coins+fine});
-  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');d.set(path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]});}
-  d.set(path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute});
+  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
+  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
+  holdingSet(d,null,path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute},'npc-crime');
  }else if(!row.fineDischarged){
   const key=`legal_custody:${row.id}`;if(d.get(...path(key)))return;
   const shops=businessSnapshot(e,d.get('state'));
-  d.set(path(key),{category:'legal_custody',case:row.id,subject:row.offender,reason:'劳役',location:code.court,status:'生效',started:minute,expires:minute+row.judgment.communityMinutes});
-  d.set(path(row.id),{...row,status:'服役中',sentence:'labor',compensationPaid:row.value===0});
+  holdingSet(d,null,path(key),{category:'legal_custody',case:row.id,subject:row.offender,reason:'劳役',location:code.court,status:'生效',started:minute,expires:minute+row.judgment.communityMinutes},'npc-crime');
+  holdingSet(d,null,path(row.id),{...row,status:'服役中',sentence:'labor',compensationPaid:row.value===0},'npc-crime');
   entityTransition(d,e,{id:`${key}:detain`,verb:'detain',actor:row.judgment.judge,target:row.offender,minute,location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}依法开始劳役`});
   businessTransitions(d,e,shops,key,minute);
  }
@@ -94,24 +97,24 @@ export function advanceNpcJustice(d,e,after){
    const receiver=localOfficer(d,e,code,'officer');if(!receiver)continue;
    const witnesses=row.witnesses.filter(id=>d.get('state','npcs',id,'legalKnowledge')?.some(k=>k.case===row.id&&k.source==='亲见或在场受理'));
    row={...row,npcCrime:{...row.npcCrime,statementsReceived:true},reported:true,status:'已报案',reportedAt:after,receiver,evidence:row.evidence.map(r=>r.kind==='eyewitness'&&witnesses.includes(r.witness)?{...r,testified:true,statementAt:after}:r),nextHearing:after+code.hearingMinutes};
-   d.set(path(row.id),row);d.set(['state','npcs',receiver,'legalKnowledge'],[...d.get('state','npcs',receiver,'legalKnowledge')??[],{case:row.id,minute:after,source:'沿路递交的报案'}]);
+   holdingSet(d,null,path(row.id),row,'npc-crime');d.set(['state','npcs',receiver,'legalKnowledge'],[...d.get('state','npcs',receiver,'legalKnowledge')??[],{case:row.id,minute:after,source:'沿路递交的报案'}]);
   }
   if(!row.reported)continue;
   if(['已报案','已到案','证据不足'].includes(row.status)&&!row.judgment&&row.nextHearing<=after){
    const judge=localOfficer(d,e,code,'judge');if(!judge||[row.offender,row.victim].includes(judge))continue;
-   if(evidenceScore(d,row)<code.evidenceRequired){if(row.status!=='证据不足')d.set(path(row.id),{...row,status:'证据不足'});continue;}
+   if(evidenceScore(d,row)<code.evidenceRequired){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
    for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){
     const shops=businessSnapshot(e,d.get('state'));
-    d.set(path(key),{...hold,status:'已结束',ended:after});
+    holdingSet(d,null,path(key),{...hold,status:'已结束',ended:after},'npc-crime');
     entityTransition(d,e,{id:`${key}:release`,verb:'release',actor:judge,target:row.offender,minute:after,location:hold.location,visibility:row.private?'private':row.visibility??hold.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}审结后解除待审拘留`});
     businessTransitions(d,e,shops,`${key}:release`,after);
    }
   }
   if(row.judgment&&['已裁定','已到案','待赔偿'].includes(row.status))settleNpcSentence(d,e,row,code,after);
   row=d.get(...path(row.id));const escrow=d.get(...path(`legal_deposit:${row.id}`));
-  if(escrow?.coins>0&&awake(d.get('state','npcs',row.victim))&&d.get('state','npcs',row.victim,'location')===code.court){moveCoins(d,{from:fundAccount(`legal_deposit:${row.id}`),to:purse(null,row.victim),amount:escrow.coins,writer:'npc-crime',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],d.get('state','npcs',row.victim,'coins')+escrow.coins);d.set(path(`legal_deposit:${row.id}`),{...escrow,coins:0,claimed:true,claimedAt:after});}
+  if(escrow?.coins>0&&awake(d.get('state','npcs',row.victim))&&d.get('state','npcs',row.victim,'location')===code.court){moveCoins(d,{from:fundAccount(`legal_deposit:${row.id}`),to:purse(null,row.victim),amount:escrow.coins,writer:'npc-crime',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],d.get('state','npcs',row.victim,'coins')+escrow.coins);holdingSet(d,null,path(`legal_deposit:${row.id}`),{...escrow,coins:0,claimed:true,claimedAt:after},'npc-crime');}
  }
 }
 export function nextNpcCrimeMinute(e,d,now){

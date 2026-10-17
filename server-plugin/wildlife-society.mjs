@@ -10,6 +10,8 @@ import {effectiveProficiency} from './professions.mjs';
 import {heldUnit,wearItem,produceItems} from './items.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {initialIn} from './wildlife-habitats.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('wildlife-society',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 
 // T161 成精后的修习与结社。只作用于已立意的同一身体：修习、借形、结社都写在
 // creatures[id] 上，不改等级、体力、物种或生态来源，不生成新人口，也不凭空造物。
@@ -24,7 +26,7 @@ export const spiritOperations=['talk','follow','stay','settle','leave','borrow_f
 
 function logEvent(d,id,row){
     const events=[...d.get('state','creatures',id,'mind','events')??[],row].slice(-40);
-    d.set(['state','creatures',id,'mind','events'],events);
+    holdingSet(d,null,['state','creatures',id,'mind','events'],events,'wildlife-society');
 }
 function presentSpirit(d,engine,id,{label='它'}={}){
     const actor=d.get('state','creatures',id);
@@ -103,7 +105,7 @@ export function teachSpirit(d,engine,args,eventId,id){
     if(kind==='skill')c.skills[skill]=(c.skills[skill]??0)+gain;
     else c.recipes[entity]={source:{type:'player'},learnedAt:at,sourceEvent:eventId};
     c.sessions.push({kind:'teach',entity,gained:gain,by:'player',event:eventId,minute:at});c.today={day,teach:today.teach+1};
-    d.set(['state','creatures',id,'cultivation'],c);
+    holdingSet(d,null,['state','creatures',id,'cultivation'],c,'wildlife-society');
     logEvent(d,id,{kind:'修习',party:'player',event:eventId,minute:at,entity});
     const summary=kind==='skill'?`跟你修习${minutes}分钟${catalog.name}，熟练度提高${gain}`:`跟你学会配方${catalog.name}`;
     d.say(`${nameOf(engine,id,actor)}${summary}`);
@@ -145,7 +147,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     if(outcome.success){
         workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(proficiency>=1500?'优秀':'精良'):'普通';
         for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,books:craftOutput('wildlife-society',eventId)}));
-        for(const unit of ids)d.set(['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name});
+        for(const unit of ids)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name},'wildlife-society');
     }else for(const[item,amount]of materials){const back=thermal?.crackedQuantity?0:Math.floor(amount*(recipe.failure?.recoverFraction??0));if(back){this.itemDelta(d,'player',item,back,craftOutput('wildlife-society',eventId));salvage.push({item,amount:back});}}
     recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'wildlife-society',eventId});
     const at=d.get('state','minute'),receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,
@@ -171,16 +173,16 @@ export function spiritAction(d,args,eventId,target){
     if(op==='follow'||op==='stay'){
         if(!partner(actor))throw Error('它未与你结缘，不会跟随你');
         if(op==='follow'&&actor.status==='濒死')throw Error('它伤重，无法同行');
-        d.set(['state','creatures',target,'companion'],{...actor.companion,following:op==='follow'});
-        if(op==='follow'&&actor.mind.settle){const mind=clone(actor.mind);delete mind.settle;d.set(['state','creatures',target,'mind'],mind);}
+        holdingSet(d,null,['state','creatures',target,'companion'],{...actor.companion,following:op==='follow'},'wildlife-society');
+        if(op==='follow'&&actor.mind.settle){const mind=clone(actor.mind);delete mind.settle;holdingSet(d,null,['state','creatures',target,'mind'],mind,'wildlife-society');}
         return{target,following:op==='follow',note:'结缘同行出于它自己的同意，可随时留下'};
     }
     if(op==='settle'){
         if(!partner(actor))throw Error('只有与你结缘的精怪会和你商量去留；野居的精怪自行决定');
         if(actor.society)throw Error('它已属于一处精怪聚落，须先离群');
         const r=rules.society;
-        d.set(['state','creatures',target,'mind','settle'],{location:actor.location,minute,event:eventId,by:'player'});
-        d.set(['state','creatures',target,'companion'],{...actor.companion,following:false});
+        holdingSet(d,null,['state','creatures',target,'mind','settle'],{location:actor.location,minute,event:eventId,by:'player'},'wildlife-society');
+        holdingSet(d,null,['state','creatures',target,'companion'],{...actor.companion,following:false},'wildlife-society');
         logEvent(d,target,{kind:'愿定居',party:'player',event:eventId,minute,location:actor.location});
         const next=(Math.floor(minute/DAY/r.periodDays)+1)*r.periodDays*DAY;
         return{target,intent:{location:actor.location},nextCheck:next,note:'它愿在此定居；结社检查按季度看自愿成员、可居住地点和口粮，满足才成社或并入，不足则仍游居'};
@@ -207,7 +209,7 @@ export function spiritAction(d,args,eventId,target){
         const spent=spend(d,this,bf.acquireItems,eventId);this.advance(d,bf.acquireMinutes,eventId);
         if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.acquireMinutes},note:'仪式未完成，灵物已耗'};
         const at=d.get('state','minute');
-        d.set(['state','creatures',target,'cultivation'],{...clone(c),borrowForm:{acquired:at,event:eventId,permit:args.permit,institution:entry.institution,by:'player'}});
+        holdingSet(d,null,['state','creatures',target,'cultivation'],{...clone(c),borrowForm:{acquired:at,event:eventId,permit:args.permit,institution:entry.institution,by:'player'}},'wildlife-society');
         logEvent(d,target,{kind:'得借形',party:'player',event:eventId,minute:at,institution:entry.institution});
         d.say(`${name}取得借形之能；身体、伤势与战力不变`);
         return{success:true,target,acquired:true,spent:{items:spent,minutes:bf.acquireMinutes},note:'只得能力，并未变形；每次借形须明说借何形并付代价'};
@@ -225,7 +227,7 @@ export function spiritAction(d,args,eventId,target){
     const spent=spend(d,this,bf.useItems,eventId);this.advance(d,bf.useMinutes,eventId);
     if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.useMinutes},note:'施术未成，灵物已耗'};
     const at=d.get('state','minute'),row={as:form.id,name:form.name,since:at,until:at+bf.durationMinutes,event:eventId};
-    d.set(['state','creatures',target,'form'],row);
+    holdingSet(d,null,['state','creatures',target,'form'],row,'wildlife-society');
     logEvent(d,target,{kind:'借形',event:eventId,minute:at,as:form.id});
     return{success:true,target,form:row,spent:{items:spent,minutes:bf.useMinutes},
         note:'只改外貌，仍是同一身体：生命、等级、物种与战力不变，到期自然散形'};
@@ -245,7 +247,7 @@ export function recordSpiritGrudges(d,engine,events){
 
 export function moveSpiritCompanions(d,origin,destination){
     for(const[id,a]of Object.entries(d.get('state','creatures')??{}))
-        if(sapient(a)&&alive(a)&&partner(a)&&a.companion.following&&a.location===origin)d.set(['state','creatures',id,'location'],destination);
+        if(sapient(a)&&alive(a)&&partner(a)&&a.companion.following&&a.location===origin)holdingSet(d,null,['state','creatures',id,'location'],destination,'wildlife-society');
 }
 
 // 结社检查：自愿成员、可居住地点、口粮来源。重复检查只认已有成员，不重复登记人口或物资。
@@ -274,8 +276,8 @@ export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
         row.food=home?{kind:'home'}:{kind:'habitat',habitat:food.habitat,checkedTotal:food.total,minute};
         for(const id of ids){
             row.members[id]={joined:minute,sourceEvent};
-            const mind=clone(d.get('state','creatures',id,'mind'));delete mind.settle;d.set(['state','creatures',id,'mind'],mind);
-            d.set(['state','creatures',id,'society'],{id:key,location,joined:minute,sourceEvent});
+            const mind=clone(d.get('state','creatures',id,'mind'));delete mind.settle;holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-society');
+            holdingSet(d,null,['state','creatures',id,'society'],{id:key,location,joined:minute,sourceEvent},'wildlife-society');
             logEvent(d,id,{kind:'定居',event:sourceEvent,minute,society:key});
         }
         row.history=[...row.history,{minute,event:sourceEvent,joined:ids}];

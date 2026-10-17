@@ -28,6 +28,8 @@ import {prepareWindObject,applyWindObject,windArmorMultiplier,projectileAirPenal
 import {prepareStone,launchStone,waterEarthState}from'./magic-water-earth.mjs';
 import {itemTraits,hasTrait}from'./traits.mjs';
 import {lightDamageMultiplier}from'./magic-light.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('magic',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 export function validateMagicCatalog(catalog,{requireHandler=false}={}){
     const spec=catalog.effectSpec,errors=[];
     if(!spec){if(requireHandler||catalog.mechanism)errors.push('此法术机制尚未接入规则，不能叙述已实现');return errors;}
@@ -122,7 +124,7 @@ export function applyMagic(d,prepared,id){
         const current=heldUnit(d,this,'player',target),maximum=current.maxDurability??prepared.definition.durability;
         const repaired=Math.min(spec.power,Math.max(0,maximum-current.durability));
         d.set([...path,'durability'],current.durability+repaired);
-        if(current.instance)d.set(['state','itemInstances',current.instance,'durability'],current.durability+repaired);
+        if(current.instance)holdingSet(d,null,['state','itemInstances',current.instance,'durability'],current.durability+repaired,'magic');
         return{target,repaired};
     }
     if(spec.kind==='dry'){
@@ -152,7 +154,7 @@ export function applyMagic(d,prepared,id){
     if(spec.kind==='damage')rememberBossTactic(d,this,target,tactic,id);
     const killed=spec.kind==='damage'&&!next&&['monster_','boss_'].some(prefix=>target.startsWith(prefix));
     const corpse=killed?recordWildlifeDeath(d,this,target,id):null,lair=killed?defeatBoss(d,this,target,id):null;
-    if(corpse&&(prepared.context?.source??'player')!=='player')d.set(['state','creatures',target,'corpse','killedBy'],prepared.context.source);
+    if(corpse&&(prepared.context?.source??'player')!=='player')holdingSet(d,null,['state','creatures',target,'corpse','killedBy'],prepared.context.source,'magic');
     const experience=killed&&(prepared.context?.source??'player')==='player'?monsterReward(d,this,target,id):{};
     return{target,[spec.kind==='heal'?'healed':'damage']:Math.abs(next-old),targetHp:next,...experience,...projectile,...(spec.coldDecay?{ambientC:prepared.ambientC,heatMultiplier}:{}),...(spec.lightDecay||spec.shadowDecay?{lightMultiplier:heatMultiplier}:{}),...(shield.absorbed?{absorbed:shield.absorbed,protectionEffect:shield.effect}:{}),...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true}}:{})};
 }

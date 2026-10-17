@@ -15,6 +15,8 @@ import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
 import {recordLocalContact} from './environment.mjs';
 import {recordCreatureResolution} from './quest-wildlife.mjs';
 import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awakeningView,validateWildlifeAwakening} from './wildlife-awakening.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('wildlife',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
 const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
 // T160 owns identity changes. Clocks pass an existing individual and a stable
@@ -81,8 +83,8 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     if(d.get('state','created',id)||d.get('state','creatures',id))throw new Error('个体编号已存在，拒绝重复接触');
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
     p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
-    d.set(['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location});
-    d.set(['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})});
+    holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location},'wildlife');
+    holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
     return{id,name,species:s.name,level,hp:stats.maxHp};
 }
 export function settleWildlifeEncounter(d,engine,attempt,eventId){
@@ -185,7 +187,7 @@ export function recordWildlifeDeath(d,engine,target,eventId){
     const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw new Error('生态个体缺物种定义');
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
     const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
-        items:clone(bone.drops)};d.set(['state','creatures',target,'corpse'],corpse);
+        items:clone(bone.drops)};holdingSet(d,null,['state','creatures',target,'corpse'],corpse,'wildlife');
     return{target,expires:corpse.expires,hasMaterials:corpse.items.length>0,note:'仍在尸体中，尚未进入行囊'};
 }
 export function wildlifePriceFactor(engine,document,item,location){
@@ -238,7 +240,7 @@ export function wildlifeAction(d,args,eventId){
     const known=d.get('state','skills','skill_life_1_core'),check=this.check(d,{attribute:'敏捷',...(known?{skill:'skill_life_1_core'}:{}),difficulty:10},eventId);
     if(recipe.tool)wearItem(d,this,'player',recipe.tool,1);this.advance(d,recipe.minutes,eventId);
     const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===habitat.location;
-    d.set(['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId});
+    holdingSet(d,null,['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'wildlife');
     if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }

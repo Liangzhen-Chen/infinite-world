@@ -306,6 +306,11 @@
    "family": "primitive"
   },
   {
+   "id": "holding_rescaled",
+   "label": "份额改写",
+   "family": "primitive"
+  },
+  {
    "id": "obligation_created",
    "label": "义务成立",
    "family": "primitive"

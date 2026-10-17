@@ -9,6 +9,8 @@ import {templeById,faithConflictClocks} from './faith-catalog.mjs';
 import {factionRelations} from './reputation-registry.mjs';
 import {clockRoll,clockTransaction} from './world-clock.mjs';
 import {registerEffect,assertEffect as assertTableEffect,applyEffect as applyTableEffect,hookedEffects} from './effects.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('faction-clock',{kinds:['member_of','holds_office'],entities:['office']});
 
 const DAY=1440,accountPath=id=>['state','records',`faction-assets:${id}`],clockPath=id=>['state','records',`faction-clock:${id}`];
 const uint=n=>Number.isSafeInteger(n)&&n>=0;
@@ -114,7 +116,7 @@ function changeAssets(d,engine,id,cost,sign,event,books,itemBooks){
  for(const [item,n]of Object.entries(cost.items??{}))bookStock(d,engine,store(engine,id,item),sign*n,itemBooks);
  for(const [item,n]of Object.entries(cost.items??{}))items[item]=(items[item]??0)+sign*n;
  const coins=row.coins+sign*(cost.coins??0);if(!uint(coins)||Object.values(items).some(n=>!uint(n)))throw Error('势力资源不足或溢出');
- d.set(accountPath(id),{...row,coins,items,ledger:[...row.ledger,{...event,coins:sign*(cost.coins??0),items:Object.fromEntries(Object.entries(cost.items??{}).map(([id,n])=>[id,sign*n]))}]});
+ holdingSet(d,null,accountPath(id),{...row,coins,items,ledger:[...row.ledger,{...event,coins:sign*(cost.coins??0),items:Object.fromEntries(Object.entries(cost.items??{}).map(([id,n])=>[id,sign*n]))}]},'faction-clock');
 }
 // Used by effect consumers that carry their own outcome price.
 export function spendFactionAssets(d,engine,id,cost,event,books,itemBooks){
@@ -129,7 +131,7 @@ export function initializeFactionClocks(d,engine,minute,end=minute){
   if(rule.triggerRecord&&!d.get('state','records',rule.triggerRecord,'active'))continue;
   const nextAt=(Math.floor(minute/DAY/rule.intervalDays)+1)*rule.intervalDays*DAY;if(nextAt>end)continue;
   ensureAccount(d,engine,rule.faction);
-  d.set(clockPath(rule.id),{category:'faction_clock',id:rule.id,faction:rule.faction,phase:0,year:Math.floor(minute/DAY/360)+1,initializedAt:nextAt,nextAt,paused:false,history:[],interventions:[]});
+  holdingSet(d,null,clockPath(rule.id),{category:'faction_clock',id:rule.id,faction:rule.faction,phase:0,year:Math.floor(minute/DAY/360)+1,initializedAt:nextAt,nextAt,paused:false,history:[],interventions:[]},'faction-clock');
  }
 }
 export function nextFactionClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='faction_clock'&&r.nextAt>now).map(r=>r.nextAt));}
@@ -169,14 +171,14 @@ registerEffect('relation',{sources:['faction'],
  validate(engine,effect){owned(engine,effect);if(!Number.isSafeInteger(effect.delta)||Math.abs(effect.delta)>100)throw Error('势力关系变化无效');},
  apply(d,engine,effect,{faction:owner}){
   const account=ensureAccount(d,engine,owner),score=Math.max(-100,Math.min(100,(account.relations[effect.target]??0)+effect.delta));
-  d.set(accountPath(owner),{...account,relations:{...account.relations,[effect.target]:score}});
+  holdingSet(d,null,accountPath(owner),{...account,relations:{...account.relations,[effect.target]:score}},'faction-clock');
   return {applied:true,...effect,score};
  }});
 registerEffect('dispute',{sources:['faction'],
  validate(engine,effect){owned(engine,effect);if(!effect.id||!['open','settled','escalated'].includes(effect.status))throw Error('势力争端阶段无效');},
  apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
   const account=ensureAccount(d,engine,owner),key=`${effect.target}:${effect.id}`;
-  d.set(accountPath(owner),{...account,disputes:{...account.disputes,[key]:{status:effect.status,sourceEvent,minute}}});
+  holdingSet(d,null,accountPath(owner),{...account,disputes:{...account.disputes,[key]:{status:effect.status,sourceEvent,minute}}},'faction-clock');
   return {applied:true,...effect};
  }});
 export function advanceFactionClocks(d,engine,at){
@@ -200,12 +202,12 @@ export function advanceFactionClocks(d,engine,at){
     row.blocked=receipt.applied?null:receipt.reason??'效果条件未满足';
     if(receipt.applied){
      const event={category:'faction_event',...context,name:stage.name??stage.id,cost:stage.cost??{},effects:receipt.effects};
-     d.set(['state','records',sourceEvent],event);
+     holdingSet(d,null,['state','records',sourceEvent],event,'faction-clock');
      row={...row,phase:row.phase+1,history:[...row.history,event]};
     }
    }
   }
-  d.set(clockPath(rule.id),row);
+  holdingSet(d,null,clockPath(rule.id),row,'faction-clock');
  }
 }
 function requireContact(d,engine,contact,faction){
@@ -254,7 +256,7 @@ export function factionClockAction(d,args,eventId){
   if(action.effect==='redirect')updated.phase=rule.stages.findIndex(s=>s.id===action.nextStage);
   else updated.paused=action.effect==='pause';
  }
- d.set(clockPath(rule.id),updated);this.advance(d,action.minutes,eventId);
+ holdingSet(d,null,clockPath(rule.id),updated,'faction-clock');this.advance(d,action.minutes,eventId);
  return {faction:rule.faction,clock:rule.id,...entry,phase:d.get(...clockPath(rule.id),'phase'),...check};
 }
 function payPlayer(d,engine,cost,books,itemBooks){

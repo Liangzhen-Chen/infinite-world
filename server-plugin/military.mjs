@@ -23,6 +23,9 @@ import {spendFactionAssets,creditFactionAssets} from './faction-clock.mjs';
 import {purse,treasury,vault,polityTreasury,transit,source,sink,bookSide,moveCoins,BOOKED,coinRead} from './money.mjs';
 import {declareLedgerWriter,balance} from './ledger.mjs';
 import {armyRations,moveStock} from './stock.mjs';
+import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
+import {syncHoldings,holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('military',{kinds:['member_of','holds_office','fief','employed_by','resides','devotee_of'],entities:['office']});
 // S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
 // 就地觅食来自 src:regrowth，吃掉的进 sink:consume。
 declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000,item_oats:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
@@ -132,19 +135,19 @@ export function partyPay(d,engine,id,coins,{sourceEvent,reason,partial=true,book
  if(amount<=0||!partial&&amount<coins)return 0;
  const minute=state.minute;
  switch(partyKind(engine,state,id)){
- case 'npc':bookSide(d,purse(engine,id),-amount,books);d.set(['state','npcs',id,'coins'],have-amount);break;
+ case 'npc':bookSide(d,purse(engine,id),-amount,books);holdingSet(d,null,['state','npcs',id,'coins'],have-amount,'military');break;
  case 'player':{
   let left=amount;const cash=Math.min(left,state.player.coins);bookSide(d,purse(engine,'player'),-cash,books);d.set(['state','player','coins'],state.player.coins-cash);left-=cash;
   // U2：本人现钱不够时由钱庄存款代付。
-  for(const b of playerBanks(engine,state)){if(!left)break;const row=clone(b),take=Math.min(left,row.accounts.player,row.coins);bookSide(d,vault(b.id),-take,books);row.accounts.player-=take;row.coins-=take;left-=take;d.set(rec(b.id),row);}
+  for(const b of playerBanks(engine,state)){if(!left)break;const row=clone(b),take=Math.min(left,row.accounts.player,row.coins);bookSide(d,vault(b.id),-take,books);row.accounts.player-=take;row.coins-=take;left-=take;holdingSet(d,null,rec(b.id),row,'military');}
   break;}
  case 'faction':if(!spendFactionAssets(d,engine,id,{coins:amount},{sourceEvent,minute,kind:'military'},books))return 0;break;
- case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),-amount,books);row.coins-=amount;row.ledger=[...row.ledger,{amount:-amount,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
+ case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),-amount,books);row.coins-=amount;row.ledger=[...row.ledger,{amount:-amount,reason,sourceEvent,minute}].slice(-40);holdingSet(d,null,rec(`polity:${id}`),row,'military');break;}
  case 'settlement':bookSide(d,treasury(id),-amount,books);d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury-amount);break;
  case 'organization':{
   if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,-amount,{sourceEvent,reason,minute},books);break;}
   const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);bookSide(d,treasury(id),-amount,books);row.treasury-=amount;
-  row.ledger=[...row.ledger??[],{kind:'军需',amount:-amount,party:null,minute,sourceEvent,reason,balance:org.treasury-amount}];d.set(rec(`organization:${id}`),row);break;}
+  row.ledger=[...row.ledger??[],{kind:'军需',amount:-amount,party:null,minute,sourceEvent,reason,balance:org.treasury-amount}];holdingSet(d,null,rec(`organization:${id}`),row,'military');break;}
  default:return 0;
  }
  return amount;
@@ -153,15 +156,15 @@ export function partyCredit(d,engine,id,coins,{sourceEvent,reason,books}){
  if(coins<=0)return;
  const state=d.get('state'),minute=state.minute;
  switch(partyKind(engine,state,id)){
- case 'npc':bookSide(d,purse(engine,id),coins,books);d.set(['state','npcs',id,'coins'],(state.npcs[id].coins??0)+coins);break;
+ case 'npc':bookSide(d,purse(engine,id),coins,books);holdingSet(d,null,['state','npcs',id,'coins'],(state.npcs[id].coins??0)+coins,'military');break;
  case 'player':bookSide(d,purse(engine,'player'),coins,books);d.set(['state','player','coins'],state.player.coins+coins);break;
  case 'faction':creditFactionAssets(d,engine,id,{coins},{sourceEvent,minute,kind:'military'},books);break;
- case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),coins,books);row.coins+=coins;row.ledger=[...row.ledger,{amount:coins,reason,sourceEvent,minute}].slice(-40);d.set(rec(`polity:${id}`),row);break;}
+ case 'polity':{const row=polityRow(d,engine,id);bookSide(d,polityTreasury(id),coins,books);row.coins+=coins;row.ledger=[...row.ledger,{amount:coins,reason,sourceEvent,minute}].slice(-40);holdingSet(d,null,rec(`polity:${id}`),row,'military');break;}
  case 'settlement':bookSide(d,treasury(id),coins,books);d.set(['state','settlements',id,'treasury'],state.settlements[id].treasury+coins);break;
  case 'organization':{
   if(groupAccountView(engine,state,id)){changeGroupCoins(d,engine,id,coins,{sourceEvent,reason,minute},books);break;}
   const row=clone(d.get(...rec(`organization:${id}`))),org=organization(engine,state,id);bookSide(d,treasury(id),coins,books);row.treasury+=coins;
-  row.ledger=[...row.ledger??[],{kind:'进项',amount:coins,party:null,minute,sourceEvent,reason,balance:org.treasury+coins}];d.set(rec(`organization:${id}`),row);break;}
+  row.ledger=[...row.ledger??[],{kind:'进项',amount:coins,party:null,minute,sourceEvent,reason,balance:org.treasury+coins}];holdingSet(d,null,rec(`organization:${id}`),row,'military');break;}
  }
 }
 
@@ -169,13 +172,14 @@ export function partyCredit(d,engine,id,coins,{sourceEvent,reason,books}){
 export const armyStrength=a=>a?a.regular+a.levy.count+(a.mercenary?.count??0)+a.private:0;
 export function armies(state){return Object.values(state.records??{}).filter(r=>r.category==='army').sort((a,b)=>a.id.localeCompare(b.id));}
 export function leviedWorkers(state,sid){return state.records?.[`levy:${sid}`]?.count??0;}
-function saveArmy(d,a){d.set(rec(armyKey(a.id)),a);}
+function saveArmy(d,a){holdingSet(d,null,rec(armyKey(a.id)),a,'military');}
 function log(a,row){a.ledger=[...a.ledger,row].slice(-30);}
 // 每支队伍同时是一个 U1 组织：名册、首领与饷箱。
-function armyOrg(d,a,{leader=null,minute}){
+function armyOrg(d,engine,a,{leader=null,minute}){
  const key=`organization:${a.id}`;if(d.get(...rec(key)))return;
- d.set(rec(key),{category:'organization',id:a.id,source:'created',name:a.name,kind:'军团',seat:a.base,founder:null,foundedAt:minute,leader,
-  members:leader?{[leader]:{position:'统领',joinedAt:minute,arrears:0}}:{},removed:{},charter:{mode:'leader',approval:false,fee:0,dues:0,rules:[`隶属${a.partyName}`]},treasury:0,ledger:[],army:a.id});
+ holdingSet(d,null,rec(key),{category:'organization',id:a.id,source:'created',name:a.name,kind:'军团',seat:a.base,founder:null,foundedAt:minute,leader,
+  members:leader?{[leader]:{position:'统领',joinedAt:minute,arrears:0}}:{},removed:{},charter:{mode:'leader',approval:false,fee:0,dues:0,rules:[`隶属${a.partyName}`]},treasury:0,ledger:[],army:a.id},'military');
+ syncHoldings(d,engine,'org',a.id,{writer:'military'});
 }
 export function createArmy(d,engine,spec,minute,sourceEvent){
  const key=armyKey(spec.id);if(d.get(...rec(key)))return d.get(...rec(key));
@@ -185,7 +189,7 @@ export function createArmy(d,engine,spec,minute,sourceEvent){
   training:spec.training,morale:spec.morale,food:0,arrears:0,payCopperMonth:spec.payCopperMonth,post:Boolean(spec.post),levySettlements:[...spec.levy??[]],
   hungry:false,war:null,createdAt:minute,sourceEvent,history:[],ledger:[]};
  if(spec.mercenary){const c=m.mercenaries.find(c=>c.org===spec.mercenary.org);a.mercenary={org:c.org,count:spec.mercenary.count,payCopperMonth:c.payCopperMonth};}
- armyOrg(d,a,{leader:spec.leader??null,minute});saveArmy(d,a);return a;
+ armyOrg(d,engine,a,{leader:spec.leader??null,minute});saveArmy(d,a);return a;
 }
 export function ensureArmies(d,engine,minute){
  const m=rules(engine);if(!m)return;const usable=assertMilitary(engine);
@@ -216,20 +220,20 @@ export function raiseLevy(d,engine,a,at,sourceEvent){
    const youngest=adults.length>=2?adults.filter(x=>eligible(engine,state,x,m,at)).sort((x,y)=>(npcAgeAt(engine,state,x,at)-npcAgeAt(engine,state,y,at))||x.localeCompare(y))[0]:null;
    if(!youngest)continue;
    const pick=youngest;
-   if(!state.npcs?.[pick]){const row=rosterLifeState(engine,d.get('state'),pick,at,'征召服役');if(!row)continue;d.set(['state','npcs',pick],row);}
+   if(!state.npcs?.[pick]){const row=rosterLifeState(engine,d.get('state'),pick,at,'征召服役');if(!row)continue;holdingSet(d,null,['state','npcs',pick],row,'military');}
    prior.households[h.id]=pick;count++;
    if(pick){
-    people.push(pick);d.set(['state','npcs',pick,'levy'],{army:a.id,location:a.location,since:at,settlement:sid,household:h.id});
+    people.push(pick);holdingSet(d,null,['state','npcs',pick,'levy'],{army:a.id,location:a.location,since:at,settlement:sid,household:h.id},'military');
     for(const kin of members)if(kin!==pick&&state.npcs?.[kin]?.status!=='死亡')adjustStanding(d,engine,kin,a.party,m.levy.familyStanding,{sourceEvent:`${sourceEvent}:levy:${pick}`,reason:`家里的${nameOf(engine,pick)}被征去${a.name}`,minute:at});
    }
   }
   if(!count)continue;
   prior.count+=count;prior.people=[...prior.people,...people];prior.armies[a.id]={count,people,since:at};prior.history=[...prior.history,{army:a.id,count,minute:at,sourceEvent}].slice(-20);
-  d.set(rec(key),prior);
+  holdingSet(d,null,rec(key),prior,'military');
   a.levy.count+=count;a.levy.from[sid]=(a.levy.from[sid]??0)+count;a.levy.people=[...a.levy.people,...people.map(id=>({id,settlement:sid}))];
-  const org=clone(d.get(...rec(`organization:${a.id}`)));for(const id of people)org.members[id]={position:'征丁',joinedAt:at,arrears:0};d.set(rec(`organization:${a.id}`),org);
+  const org=clone(d.get(...rec(`organization:${a.id}`)));for(const id of people)org.members[id]={position:'征丁',joinedAt:at,arrears:0};holdingSet(d,null,rec(`organization:${a.id}`),org,'military');syncHoldings(d,engine,'org',a.id,{writer:'military',eventId:sourceEvent});
   const ev=`${sourceEvent}:levy:${sid}`;
-  d.set(rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:sid,witnesses:people,tool:'advance',verb:'organize',actor:a.party,target:sid,tags:['army','levy'],count,army:a.id,sourceEvent});
+  holdingSet(d,null,rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:sid,witnesses:people,tool:'advance',verb:'organize',actor:a.party,target:sid,tags:['army','levy'],count,army:a.id,sourceEvent},'military');
   total+=count;
  }
  return total;
@@ -250,10 +254,10 @@ export function releaseLevy(d,engine,a,n,{at,reason,killed=false,person=null}){
   const mine=row.armies[a.id];if(mine){mine.count-=take;mine.people=mine.people.filter(id=>!freed.includes(id));}
   if(!a.levy.from[sid]){delete a.levy.from[sid];delete row.armies[a.id];for(const [h,v]of Object.entries(row.households))if(!Object.keys(row.armies).length||freed.includes(v))delete row.households[h];}
   row.history=[...row.history,{army:a.id,released:take,killed,minute:at,reason}].slice(-20);
-  if(row.count>0||Object.keys(row.armies).length)d.set(rec(key),row);else d.remove(rec(key));
+  if(row.count>0||Object.keys(row.armies).length)holdingSet(d,null,rec(key),row,'military');else holdingRemove(d,null,rec(key),'military');
   if(killed&&fromUnnamed){const s=d.get('state','settlements',sid);if(s)d.set(['state','settlements',sid,'population'],Math.max(0,s.population-fromUnnamed));}
  }
- const org=d.get(...rec(`organization:${a.id}`));if(org&&released.length){const row=clone(org);for(const id of released){delete row.members[id];row.removed={...row.removed,[id]:{minute:at,reason}};}d.set(rec(`organization:${a.id}`),row);}
+ const org=d.get(...rec(`organization:${a.id}`));if(org&&released.length){const row=clone(org);for(const id of released){delete row.members[id];row.removed={...row.removed,[id]:{minute:at,reason}};}holdingSet(d,null,rec(`organization:${a.id}`),row,'military');syncHoldings(d,engine,'org',a.id,{writer:'military'});}
  return released;
 }
 // 伤亡与逃散：常备、私兵、征丁、佣兵按人数比例分担。
@@ -305,7 +309,7 @@ export function armyWeek(d,engine,a,at,src,{blocked=false}={}){
  let deserted=0;
  if(a.morale<m.desertion.below){
   deserted=loseSoldiers(d,engine,a,Math.ceil(before*m.desertion.bps/10000),{at,reason:'士气低落逃散'});
-  const ev=`${src}:desert`;d.set(rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:a.location,witnesses:[],tool:'advance',verb:'breach',actor:a.id,target:a.party,tags:['army','desertion'],count:deserted,sourceEvent:src});
+  const ev=`${src}:desert`;holdingSet(d,null,rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:a.location,witnesses:[],tool:'advance',verb:'breach',actor:a.id,target:a.party,tags:['army','desertion'],count:deserted,sourceEvent:src},'military');
  }
  if(!armyStrength(a))a.status='溃散';
  const row={minute:at,strength:armyStrength(a),food:a.food,...sup,training:a.training,morale:a.morale,moraleDelta:delta,deserted,sourceEvent:src};
@@ -320,11 +324,11 @@ export function armyPayday(d,engine,a,at,src){
   a.morale=Math.max(0,Math.min(100,a.morale+(a.arrears?m.morale.unpaid:m.morale.paid)));
   // 被征的人物按人头领到自己那份；其余发给未登记的兵丁。
   const share=paidSoldiers?Math.floor(paid/paidSoldiers):0;
-  for(const p of a.levy.people){const n=d.get('state','npcs',p.id);if(n&&share){moveCoins(d,{from:chest,to:purse(engine,p.id),amount:share,writer:'military',eventId:src});d.set(['state','npcs',p.id,'coins'],(n.coins??0)+share);}}
+  for(const p of a.levy.people){const n=d.get('state','npcs',p.id);if(n&&share){moveCoins(d,{from:chest,to:purse(engine,p.id),amount:share,writer:'military',eventId:src});holdingSet(d,null,['state','npcs',p.id,'coins'],(n.coins??0)+share,'military');}}
   // 其余饷钱发给未登记的兵丁，离开模拟范围。
   moveCoins(d,{from:chest,to:sink('export','army_pay'),amount:balance(d,chest),writer:'military',eventId:src});
   log(a,{kind:'月饷',owed,paid,arrears:a.arrears,minute:at,sourceEvent:src});
-  const org=clone(d.get(...rec(`organization:${a.id}`)));if(org){org.ledger=[...org.ledger??[],{kind:'拨饷',amount:paid,party:a.party,minute:at,sourceEvent:src},{kind:'发饷',amount:-paid,party:null,minute:at,sourceEvent:src}].slice(-40);d.set(rec(`organization:${a.id}`),org);}
+  const org=clone(d.get(...rec(`organization:${a.id}`)));if(org){org.ledger=[...org.ledger??[],{kind:'拨饷',amount:paid,party:a.party,minute:at,sourceEvent:src},{kind:'发饷',amount:-paid,party:null,minute:at,sourceEvent:src}].slice(-40);holdingSet(d,null,rec(`organization:${a.id}`),org,'military');}
  }
  if(a.mercenary){
   const merc=a.mercenary,cost=merc.count*merc.payCopperMonth,got=partyPay(d,engine,a.party,cost,{sourceEvent:`${src}:merc`,reason:`${a.name}佣兵合同`,partial:false,books:{account:partyAccount(engine,d.get('state'),merc.org),writer:'military',eventId:src}});
@@ -332,7 +336,7 @@ export function armyPayday(d,engine,a,at,src){
   else{
    log(a,{kind:'佣兵散伙',org:merc.org,count:merc.count,minute:at,sourceEvent:src});
    if(partyKind(engine,d.get('state'),a.party))adjustStanding(d,engine,merc.org,a.party==='player'?'player':a.party,-10,{sourceEvent:`${src}:merc`,reason:'欠付佣金',minute:at});
-   const ev=`${src}:merc_breach`;d.set(rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:a.location,witnesses:[],tool:'advance',verb:'breach',actor:a.party,target:merc.org,tags:['army','mercenary'],value:cost,sourceEvent:src});
+   const ev=`${src}:merc_breach`;holdingSet(d,null,rec(`world_event:${ev}`),{category:'world_event',id:ev,minute:at,location:a.location,witnesses:[],tool:'advance',verb:'breach',actor:a.party,target:merc.org,tags:['army','mercenary'],value:cost,sourceEvent:src},'military');
    a.mercenary=null;
   }
  }
@@ -356,7 +360,7 @@ export function advanceMilitary(d,engine,{before,after}){
    if(a.party==='player'||d.get('state','records',`organization:${a.party}`)?.leader==='player'&&a.private)a.location=d.get('state','location');
    if(week)armyWeek(d,engine,a,at,src,{blocked:Boolean(a.war&&d.get('state','records',`war:${a.war}`)?.supplyCut?.[a.id])});
    if(month)armyPayday(d,engine,a,at,src);
-   for(const p of a.levy.people)if(d.get('state','npcs',p.id,'levy')&&d.get('state','npcs',p.id,'levy','location')!==a.location)d.set(['state','npcs',p.id,'levy','location'],a.location);
+   for(const p of a.levy.people)if(d.get('state','npcs',p.id,'levy')&&d.get('state','npcs',p.id,'levy','location')!==a.location)holdingSet(d,null,['state','npcs',p.id,'levy','location'],a.location,'military');
    saveArmy(d,a);
   }
  }
@@ -391,8 +395,8 @@ function enlist(engine,d,args,eventId){
  if(a.status==='溃散')throw Error('这支队伍已经溃散');
  if(partyKind(engine,state,a.party)!=='polity'&&standing(engine,state,a.party,'player')<=HOSTILE)throw Error('所属方视你为敌，不收你入营');
  const prior=service(state);if(prior?.status==='在营'&&prior.army!==a.id&&state.records?.[`organization:${prior.army}`]?.members?.player)throw Error('你已在别的队伍服役，先退营（org_leave）');
- const minute=state.minute,org=clone(d.get(...rec(`organization:${a.id}`)));org.members.player={position:'兵',joinedAt:minute,arrears:0};delete org.removed?.player;d.set(rec(`organization:${a.id}`),org);
- d.set(rec('military_service:player'),{category:'military_service',holder:'player',army:a.id,party:a.party,status:'在营',since:minute,days:0,campaignDays:0,paid:0,history:[...prior?.history??[],...(prior?[{army:prior.army,until:minute}]:[])],sourceEvent:eventId});
+ const minute=state.minute,org=clone(d.get(...rec(`organization:${a.id}`)));org.members.player={position:'兵',joinedAt:minute,arrears:0};delete org.removed?.player;holdingSet(d,null,rec(`organization:${a.id}`),org,'military');syncHoldings(d,engine,'org',a.id,{writer:'military',eventId});
+ holdingSet(d,null,rec('military_service:player'),{category:'military_service',holder:'player',army:a.id,party:a.party,status:'在营',since:minute,days:0,campaignDays:0,paid:0,history:[...prior?.history??[],...(prior?[{army:prior.army,until:minute}]:[])],sourceEvent:eventId},'military');
  engine.advance(d,30,eventId);
  const t=playerTitle(d.get('state'));
  return {army:a.id,name:a.name,enlisted:true,note:`已在${a.name}报到入营${t?.levy?.men?'；在营执勤的日数计入爵位兵役':''}`,organizationEvent:{verb:'organize',target:a.id,tags:['organization','org:join','kind:军团','army']}};
@@ -408,7 +412,7 @@ function duty(engine,d,args,eventId){
   if(a.status==='出征')campaignDays++;
   const t=playerTitle(d.get('state'));
   // Credit each actual day before its annual inspection, including a duty crossing the due date.
-  if(t?.levy?.men&&a.post){men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));d.set(rec('title:player'),{...t,levy:{...t.levy,served:t.levy.served+men,attended:true}});}
+  if(t?.levy?.men&&a.post){men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));holdingSet(d,engine,rec('title:player'),{...t,levy:{...t.levy,served:t.levy.served+men,attended:true}},'military');}
   engine.advance(d,DAY,eventId);
  }
  const campaign=campaignDays>0;
@@ -417,7 +421,7 @@ function duty(engine,d,args,eventId){
  if(wage)d.set(['state','player','coins'],d.get('state','player','coins')+wage);
  a.training=Math.min(m.soldier.trainingCap,a.training+m.service.trainingPerDutyDay*days);saveArmy(d,a);
  const now=clone(service(d.get('state')));now.days+=days;now.campaignDays+=campaignDays;now.paid+=wage;now.lastDuty={minute:d.get('state','minute'),days,location:a.location,war:a.war,sourceEvent:eventId};
- d.set(rec('military_service:player'),now);
+ holdingSet(d,null,rec('military_service:player'),now,'military');
  // T127：在营执勤即应役；随员按人头计入（自身应役的爵位只计本人）。
  const t=playerTitle(d.get('state'));let levy=null;
  if(t?.levy?.men&&a.post){
@@ -497,7 +501,7 @@ export function titleMilitaryService(d,engine,days,eventId){
  if(service(state)?.army!==post.id||!state.records[`organization:${post.id}`]?.members?.player)enlist(engine,d,{org:post.id},`${eventId}:enlist`);
  for(let left=days;left>0;left-=30)duty(engine,d,{days:Math.min(30,left)},`${eventId}:duty:${left}`);
  const t=playerTitle(d.get('state'));if(!t)throw Error('爵位已除');
- if(!days)d.set(rec('title:player'),{...t,levy:{...t.levy,attended:true}});
+ if(!days)holdingSet(d,engine,rec('title:player'),{...t,levy:{...t.levy,attended:true}},'military');
  return {title:t.title,army:post.id,served:t.levy.served,required:t.levy.men*t.levy.days,men:t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0))};
 }
 

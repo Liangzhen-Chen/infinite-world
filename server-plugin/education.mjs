@@ -11,6 +11,9 @@ import {advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {rosterLifeState} from './population.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {npcServices} from './npc-state.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
 const able=(s,id)=>capable(s,id)&&(id==='player'||!s.npcs[id].cognitionTravel&&!s.npcs[id].scheduleTravel);
@@ -26,7 +29,7 @@ export function prepareEducation(d,e,{before,after}){
   // zero-time action or in the middle of an already running class.
   if(!d.get('state','npcs',id)&&after>before&&before%DAY===c.start){
    const n=rosterLifeState(e,d.get('state'),id,d.get('state','minute'),'自动入学',{minor:true});
-   if(n)d.set(['state','npcs',id],n);
+   if(n)holdingSet(d,null,['state','npcs',id],n,'education');
   }
   e.educationAttendance.set(id,[]);
  }
@@ -78,7 +81,7 @@ function lesson(d,e,c,student,attended,factor,at,dismissed,day){
    try{gain=npcLessonGain(e,s,student,skill,ceiling,e.rules.npcGrowth.teach.gain);settleNpcLesson(d,e,student,skill,gain,`${key}:${at}`);completed+=required;sessions++;}catch{/* Daily allowance or proficiency ceiling: no free growth. */}
   }else if(!knowsKnowledge(e,s,student,c.entity)){
    const partition=c.entity.startsWith('recipe_')?'recipes':'spells';
-   d.set(['state','npcs',student,partition,c.entity],{source:{type:c.book?'book':'teacher',id:source},learnedAt:at,sourceEvent:key});completed+=required;sessions++;
+   holdingSet(d,null,['state','npcs',student,partition,c.entity],{source:{type:c.book?'book':'teacher',id:source},learnedAt:at,sourceEvent:key},'education');completed+=required;sessions++;
   }
  }
  // Keep at most one uncompleted lesson; unavailable daily allowance cannot be
@@ -90,7 +93,7 @@ function lesson(d,e,c,student,attended,factor,at,dismissed,day){
  if(!minutes&&!gain&&sessions===old.sessions&&(carry===(old.carry??0)||!s.records?.[key]))return gain;
  const row={...old,minutes:dismissed?Math.min(total,completed+required):total,completedMinutes:completed,sessions,...(minutes?{lastAt:at}:{}),...(attendedDay===undefined?{}:{attendedDay}),source,gained:(old.gained??0)+gain};
  if(carry)row.carry=carry;else delete row.carry;
- d.set(path(key),row);
+ holdingSet(d,null,path(key),row,'education');
  return gain;
 }
 export function nextEducationMinute(e,d,now){
@@ -116,7 +119,7 @@ export function advanceEducation(d,e,{before,after,beforeState}){
     // A degraded facility (factor 0.5) credits half minutes; the remainder is
     // carried so split time advances credit exactly what one advance would.
     const scaled=minutes*(view?.factor??1)+(old?.carry??0),credited=Math.floor(scaled),carry=scaled-credited;
-    d.set(path(key),{category:'education_cohort',course:c.id,...c.cohort,skill:c.entity,teacher,start:old?.start??start,end,minutes:(old?.minutes??0)+credited,ceiling:knowledgeProficiency(e,state,teacher,c.entity),...(carry?{carry}:{})});taughtMinutes=minutes;
+    holdingSet(d,null,path(key),{category:'education_cohort',course:c.id,...c.cohort,skill:c.entity,teacher,start:old?.start??start,end,minutes:(old?.minutes??0)+credited,ceiling:knowledgeProficiency(e,state,teacher,c.entity),...(carry?{carry}:{})},'education');taughtMinutes=minutes;
    }
   }
   for(const student of c.students.slice(0,cap)){
@@ -131,8 +134,8 @@ export function advanceEducation(d,e,{before,after,beforeState}){
    const key=`education_pay:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key))??{category:'education_pay',minutes:0,paid:0};
    const total=old.minutes+taughtMinutes,earned=Math.ceil(job.wage*total/480)-Math.ceil(job.wage*old.minutes/480);
    const payment=earned?settleEmploymentPay(d,e,{...job,wage:earned},end,480):{paid:0};
-   d.set(path(key),{...old,minutes:total,paid:old.paid+payment.paid});
-   const current=d.get(...path(job.id));d.set(path(job.id),{...current,paid:(current.paid??0)+payment.paid,workedMinutes:(current.workedMinutes??0)+taughtMinutes});
+   holdingSet(d,null,path(key),{...old,minutes:total,paid:old.paid+payment.paid},'education');
+   const current=d.get(...path(job.id));holdingSet(d,null,path(job.id),{...current,paid:(current.paid??0)+payment.paid,workedMinutes:(current.workedMinutes??0)+taughtMinutes},'education');
   }
  }
 }
@@ -146,12 +149,12 @@ export function educationAction(d,args,id){
  }
  if(operation==='school_fund'){
   const org=args.org,school=educationSites(e,s).find(o=>o.id===org);if(!school||school.seat!==s.location)throw Error('须在学馆资助');
-  if(!s.records?.[`organization:${org}`]&&!e.world.factions?.some(f=>f.id===org)&&!org.startsWith('temple:'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'education',name:school.name,kind:school.kind,seat:school.seat,treasury:0,members:{},ledger:[]});
+  if(!s.records?.[`organization:${org}`]&&!e.world.factions?.some(f=>f.id===org)&&!org.startsWith('temple:'))holdingSet(d,null,path(`organization:${org}`),{category:'organization',id:org,source:'education',name:school.name,kind:school.kind,seat:school.seat,treasury:0,members:{},ledger:[]},'education'),syncHoldings(d,e,'org',org,{writer:'education'});
   const coins=int(args.coins,1,1e6,'资助');financeTransfer(d,e,'player',org,coins,id);return {org,coins,balance:financeBalance(d,e,org)};
  }
  if(operation==='school_close'){
   const c=s.records?.[args.course];if(!c||c.category!=='education_course'||c.founder!=='player')throw Error('只能停办自己的课程');
-  d.set(path(c.id),{...c,status:'停课',until:s.minute});if(c.contract)d.set(path(c.contract),{...s.records[c.contract],status:'已到期',endedAt:s.minute});return {course:c.id};
+  holdingSet(d,null,path(c.id),{...c,status:'停课',until:s.minute},'education');if(c.contract)holdingSet(d,null,path(c.contract),{...s.records[c.contract],status:'已到期',endedAt:s.minute},'education');return {course:c.id};
  }
  if(operation==='school_open'||operation==='book_study'){
   const book=operation==='book_study',teacher=book?null:actor(e,args.source),entity=e.resolve(args.entity,args.kind),b=definition(e,s,entity);
@@ -159,7 +162,7 @@ export function educationAction(d,args,id){
   const students=[...new Set((args.students??[args.student]).filter(Boolean).map(n=>actor(e,n)))];if(!students.length||students.includes('player'))throw Error('须指定实际居民学生');
   for(const who of students)if(!d.get('state','npcs',who)&&args.consent===true){
    const student=rosterLifeState(e,d.get('state'),who,s.minute,'报名受教',{minor:(e.byId.get(who)?.age??18)<18});
-   if(student&&student.location===s.location)d.set(['state','npcs',who],student);
+   if(student&&student.location===s.location)holdingSet(d,null,['state','npcs',who],student,'education');
   }
   for(const who of [...students,...teacher?[teacher]:[]])present(d,e,who);
   if(teacher&&!teaching(e,s,teacher,entity))throw Error('先生没有实际掌握所授内容');
@@ -177,17 +180,17 @@ export function educationAction(d,args,id){
   const course=`education:${id}`,org=args.org??`school:${location}`,existing=organizationState(e,s,org);
   const owner=s.buildings?.[location]?.owner??definition(e,s,location)?.owner;
   if(!book&&owner&&owner!=='player'&&!(existing?.members?.player)&&args.consent!==true)throw Error('借用场所须负责人同意');
-  if(!book&&(!existing||existing.source==='education'))d.set(path(`organization:${org}`),{category:'organization',id:org,source:'created',name:args.name??definition(e,s,location)?.name??'授业班',kind:args.schoolKind??'私塾',seat:location,founder:'player',leader:'player',members:{player:{position:'先生',joinedAt:since,arrears:0}},treasury:0,charter:{mode:'leader',fee:0,dues:0}});
+  if(!book&&(!existing||existing.source==='education'))holdingSet(d,null,path(`organization:${org}`),{category:'organization',id:org,source:'created',name:args.name??definition(e,s,location)?.name??'授业班',kind:args.schoolKind??'私塾',seat:location,founder:'player',leader:'player',members:{player:{position:'先生',joinedAt:since,arrears:0}},treasury:0,charter:{mode:'leader',fee:0,dues:0}},'education'),syncHoldings(d,e,'org',org,{writer:'education'});
   if(!book&&(args.coins??0)>0)financeTransfer(d,e,'player',org,int(args.coins,1,1e6,'办学款'),id);
   let contract=null;
   if(teacher&&teacher!=='player'&&(args.wage??0)>0){
    if(args.consent!==true||(personAge(e,s,teacher)?.value??0)<18||currentEmployment(s,teacher))throw Error('先生须成年同意且没有其他雇佣');
    const wage=int(args.wage,1,1e6,'先生日薪');contract=`education_contract:${id}`;
    if(financeBalance(d,e,org)<Math.ceil(wage*minutes/480))throw Error('学馆不足以支付首课工钱，请先资助');
-   d.set(path(contract),{category:'contract',kind:'workshop',education:1,id:contract,owner:org,worker:teacher,location,wage,workMinutes:minutes,task:'授业',starts:since,createdAt:since,deadline:until,status:'有效',paid:0,workedMinutes:0,source:id});
+   holdingSet(d,null,path(contract),{category:'contract',kind:'workshop',education:1,id:contract,owner:org,worker:teacher,location,wage,workMinutes:minutes,task:'授业',starts:since,createdAt:since,deadline:until,status:'有效',paid:0,workedMinutes:0,source:id},'education');
   }
   const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students,start,end,since,until,status:'开课',founder:'player',contract};
-  d.set(path(course),row);return {course,...row};
+  holdingSet(d,null,path(course),row,'education');return {course,...row};
  }
  throw Error('未知授业操作');
 }
@@ -211,7 +214,7 @@ export function examineNpc(d,e,args,id){
  // evidence. No rumour or donation can manufacture this certification.
  const attribute=current.npcs[student]?.attributes?.[b.attribute]??e.byId.get(student)?.attributes?.[b.attribute]??10;
  const outcome=npcEntryCheck(d,e,student,{attribute:b.attribute??'智力',skill:entry?.skill,difficulty:entry?.difficulty??15},id),success=attribute>=(entry?.minimumAttribute??0)&&outcome.success;
- const row={category:'education_exam',student,teacher,profession:role,skill:entry?.skill,...outcome,success,minute:current.minute,source:id};d.set(path(`education_exam:${id}`),row);
- if(success){financeTransfer(d,e,student,teacher,b.fee,id);d.set(['state','npcs',student,'certifications',role],{teacher,minute:current.minute,source:id,task:entry?.name??b.name});}
+ const row={category:'education_exam',student,teacher,profession:role,skill:entry?.skill,...outcome,success,minute:current.minute,source:id};holdingSet(d,null,path(`education_exam:${id}`),row,'education');
+ if(success){financeTransfer(d,e,student,teacher,b.fee,id);holdingSet(d,null,['state','npcs',student,'certifications',role],{teacher,minute:current.minute,source:id,task:entry?.name??b.name},'education');}
  return row;
 }

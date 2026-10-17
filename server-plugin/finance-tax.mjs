@@ -9,6 +9,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-tax');
 import {itemTraits} from './traits.mjs';
 import {shopOfKeeper} from './shop.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('finance-tax',{kinds:[]});
 
 // Commercial tax falls on trade, not on property changing hands: a spot sale owes
 // it when the seller is an organization account (faction, temple, settlement), or
@@ -48,7 +50,7 @@ export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='comme
     if(group)changeGroupCoins(d,e,seller,-amount,{kind:'商税',sourceEvent,minute:d.get('state','minute')},BOOKED);
     else d.set([...actor,'coins'],balance-amount);
     changeGroupCoins(d,e,tax.settlement,amount,{kind:'商税',taxKind:kind,payer:seller,bps:tax.bps,sourceEvent,minute:d.get('state','minute')},BOOKED);
-    const key=`trade_tax:${sourceEvent}:${kind}`;d.set(['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')});
+    const key=`trade_tax:${sourceEvent}:${kind}`;holdingSet(d,null,['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')},'finance-tax');
     return {...tax,amount};
 }
 export function collectRouteTariffs(d,e,route,eventId){
@@ -69,6 +71,6 @@ export function collectRouteTariffs(d,e,route,eventId){
             value+=Math.max(0,quantity-hidden-rules.personalAllowance)*(def.basePrice??0);
         }
         const tax=assessTradeTax(d,e,{seller:'player',cost:value,location:edge.to,sourceEvent:`${eventId}:${edgeId}`,kind:'tariff'});
-        d.set(['state','records',key],{category:'tariff_passage',edge:edgeId,...tax,value,minute:d.get('state','minute'),sourceEvent:eventId});
+        holdingSet(d,null,['state','records',key],{category:'tariff_passage',edge:edgeId,...tax,value,minute:d.get('state','minute'),sourceEvent:eventId},'finance-tax');
     }
 }

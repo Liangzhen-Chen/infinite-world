@@ -7,6 +7,8 @@ import {publishTransitionEvent,presentWitnesses} from './world-events.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 
 import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within} from './facility-state.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('facilities',{kinds:['owns']});
 const DAY=1440,HOUR=60;
 function event(d,engine,id,verb,building,summary,{minute=d.get('state','minute'),actor,sourceEvent=id,...facts}={}){
  const state=d.get('state'),base=facilityDefinition(engine,state,building),location=base?.parent??building;
@@ -18,7 +20,7 @@ export function damageFacility(d,engine,building,amount,{cause='损毁',minute=d
  const marker=`facility_damage:${sourceEvent}:${building}`;if(state.records?.[marker])return view;
  const row=state.buildings?.[building]??{},condition=Math.max(0,view.condition-amount);
  if(condition===view.condition)return view;
- d.set(['state','buildings',building],{...row,condition,...(condition===0?{burning:false}:{})});
+ holdingSet(d,null,['state','buildings',building],{...row,condition,...(condition===0?{burning:false}:{})},'facilities');
  d.set(['state','records',marker],{category:'facility_damage',building,amount:view.condition-condition,cause,minute,sourceEvent});
  const after=facilityView(engine,d.get('state'),building),base=facilityDefinition(engine,state,building);
  event(d,engine,`${sourceEvent}:facility:${building}`,'harm',building,`${base.name}因${cause}受损${after.status==='可用'?'':`，用途${after.status}`}`,{minute,actor,sourceEvent,cause,damage:view.condition-condition});
@@ -37,7 +39,7 @@ export function applyFacilityInteraction(d,engine,target,outcome,{minute=d.get('
  if(outcome.add.includes('burning')&&!view.burning&&view.condition>0){
   row.burning=true;row.fireDepth=depth;row.fireSince=minute;row.fireTick=minute;row.fireSpread=false;changed.added.push('burning');
  }
- if(changed.added.length||changed.removed.length)d.set(['state','buildings',target],row);
+ if(changed.added.length||changed.removed.length)holdingSet(d,null,['state','buildings',target],row,'facilities');
  if(changed.added.includes('burning'))event(d,engine,`${sourceEvent}:ignite:${target}`,'harm',target,`${facilityDefinition(engine,d.get('state'),target).name}起火，已经停用`,{minute,sourceEvent,cause:'火灾'});
  if(outcome.agent==='flood')damageFacility(d,engine,target,view.material==='stone'?8:20,{cause:'洪水',minute,sourceEvent});
  return changed;
@@ -72,7 +74,7 @@ export function advanceFacilityFire(d,engine,{after}){
    }
    const view=facilityView(engine,d.get('state'),id);
    damageFacility(d,engine,id,view.material==='stone'?4:25,{cause:'火灾',minute:at,sourceEvent:`fire:${id}:${at}`});
-   row={...d.get('state','buildings',id),fireTick:at,fireSpread:true};d.set(['state','buildings',id],row);
+   row={...d.get('state','buildings',id),fireTick:at,fireSpread:true};holdingSet(d,null,['state','buildings',id],row,'facilities');
   }
  }
 }
@@ -100,7 +102,7 @@ export function advanceFacilities(d,engine,{before,after}){
    // Store the fractional wear; integer arithmetic makes partitioned advances
    // and one long advance agree. Ordinary wear emits only at a use threshold.
    const condition=Math.max(0,view.condition-loss);
-   d.set(['state','buildings',base.id],{...row,condition,wearUnits:wear%10,lastWearDay:day});
+   holdingSet(d,null,['state','buildings',base.id],{...row,condition,wearUnits:wear%10,lastWearDay:day},'facilities');
    const next=facilityView(engine,lookState(d),base.id);
    if(view.status!==next.status)event(d,engine,`wear:${base.id}:${day}`,'harm',base.id,`${base.name}年久失修，用途${next.status}`,{minute:at,cause:'损耗'});
   }
@@ -117,14 +119,14 @@ export function completeFacilityProject(d,engine,p,minute=d.get('state','minute'
  if(target){
   const row=d.get('state','buildings',target)??{},view=facilityView(engine,d.get('state'),target);
   if(!view)throw Error('施工建筑不存在');
-  d.set(['state','buildings',target],p.projectWork==='repair'?{...row,condition:100,burning:false,wearUnits:0,lastRepair:minute}:
-   {...row,condition:view.condition,expansions:(row.expansions??0)+1});
+  holdingSet(d,null,['state','buildings',target],p.projectWork==='repair'?{...row,condition:100,burning:false,wearUnits:0,lastRepair:minute}:
+   {...row,condition:view.condition,expansions:(row.expansions??0)+1},'facilities');
   event(d,engine,`${p.id}:complete`,'help',target,`${facilityDefinition(engine,d.get('state'),target).name}${p.projectWork==='repair'?'修缮完成，用途恢复':'扩建完成，服务容量增加'}`,{minute,actor:p.creator,sourceEvent:p.id});return target;
  }
  const id=`bld_${p.type==='建房'?'house':'built'}_${p.id.replace(/[^a-zA-Z0-9_-]/g,'_')}`;if(d.get('state','created',id))return id;
  const owner=p.public&&!p.public.payer||p.civicApproval?p.settlement:p.creator??'player';
- d.set(['state','created',id],{id,name:p.name,aliases:[],type:'bld',scope:p.settlement,parent:p.location??p.settlement,owner,
-  access:{mode:owner===p.settlement?'public':'private'},purpose:FACILITY_TYPES[kind].purpose,facilityType:kind,material:p.material??'wood',builtProject:p.id,openHours:[0,1440]});
- d.set(['state','buildings',id],{owner,condition:100,project:p.id,builtAt:minute,...(p.route?{route:p.route}:{})});
+ holdingSet(d,null,['state','created',id],{id,name:p.name,aliases:[],type:'bld',scope:p.settlement,parent:p.location??p.settlement,owner,
+  access:{mode:owner===p.settlement?'public':'private'},purpose:FACILITY_TYPES[kind].purpose,facilityType:kind,material:p.material??'wood',builtProject:p.id,openHours:[0,1440]},'facilities');
+ holdingSet(d,null,['state','buildings',id],{owner,condition:100,project:p.id,builtAt:minute,...(p.route?{route:p.route}:{})},'facilities');
  event(d,engine,`${p.id}:complete`,'help',id,`${p.name}建成，${FACILITY_TYPES[kind].purpose}投入使用`,{minute,actor:p.creator,sourceEvent:p.id});return id;
 }

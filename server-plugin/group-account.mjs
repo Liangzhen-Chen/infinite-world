@@ -2,6 +2,8 @@
 // original ledger as historical evidence, never as a second spendable balance.
 import {templeById} from './faith-catalog.mjs';
 import {treasury,bookSide} from './money.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('group-account',{kinds:['member_of','holds_office'],entities:['office']});
 export const groupAccountPath=id=>['state','records',`faction-assets:${id}`];
 const amount=l=>l.amount??l.coins??0;
 const signature=l=>l.sourceEvent?JSON.stringify([l.sourceEvent,amount(l)]):null;
@@ -36,7 +38,7 @@ export function ensureGroupAccount(d,engine,id){
     const row=groupAccountView(engine,d.get('state'),id);if(!row)throw Error(`未登记势力：${id}`);
     if(d.get(...groupAccountPath(id))?.organizationReconciliation)return row;
     row.organizationReconciliation??={delta:0,applied:0,overlap:0,unverified:0,ledger:[]};
-    d.set(groupAccountPath(id),row);return row;
+    holdingSet(d,null,groupAccountPath(id),row,'group-account');return row;
 }
 // S1a: books = 账本对方账户（money.bookSide）。
 export function changeGroupCoins(d,engine,id,delta,event,books){
@@ -51,6 +53,6 @@ export function changeGroupCoins(d,engine,id,delta,event,books){
     const row=ensureGroupAccount(d,engine,id),coins=row.coins+delta;
     if(!Number.isSafeInteger(coins)||coins<0)throw Error('组织公库不足或溢出');
     bookSide(d,treasury(id),delta,books);
-    d.set(groupAccountPath(id),{...row,coins,ledger:[...row.ledger,{...event,coins:delta}]});
+    holdingSet(d,null,groupAccountPath(id),{...row,coins,ledger:[...row.ledger,{...event,coins:delta}]},'group-account');
     return coins;
 }

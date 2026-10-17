@@ -7,6 +7,8 @@ import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
 import {employmentReservation} from './employment-state.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+declareHoldingWriter('npc-obligations',{kinds:['resides','devotee_of','certified']});
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
 const full=(engine,id)=>personSimulation(engine,{},id).value;
@@ -154,7 +156,7 @@ function simulateNpc(d,engine,id,before,after,bookings){
   }else{npc.activity=slot.activity;if(end<=t)break;add(end,!/(睡眠|熟睡|睡觉)/.test(npc.activity));}
  }
  for(const key of ['location','activity','coins','scheduleTravel'])if(JSON.stringify(old[key])!==JSON.stringify(npc[key])){
-  if(npc[key]===undefined)d.remove(['state','npcs',id,key]);else d.set(['state','npcs',id,key],npc[key]);
+  if(npc[key]===undefined)holdingRemove(d,null,['state','npcs',id,key],'npc-obligations');else holdingSet(d,null,['state','npcs',id,key],npc[key],'npc-obligations');
  }
  return segments;
 }

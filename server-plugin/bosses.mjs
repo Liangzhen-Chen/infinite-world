@@ -6,6 +6,8 @@ import {initialBossNegotiation,negotiateBoss}from'./boss-negotiation.mjs';
 import {spiritStateFor}from'./creature-nature.mjs';
 import {creatureCounter}from'./interactions.mjs';
 import {traitsOf}from'./traits.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('bosses',{kinds:['controls','tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
 export function validateBossEcology(world){
@@ -65,16 +67,16 @@ export function defeatBoss(d,engine,target,eventId){
     const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
     const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
-    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;d.set(key(boss),r);
+    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;holdingSet(d,null,key(boss),r,'bosses');
     if(boss.actor)return{lair:boss.residence.name,vacant:true,note:'社会首领已死，居民与聚居地保留；不会从野生种群补刷'};
     return{lair:boss.residence.name,vacant:true,note:'原首领已死，巢穴空置；不会复活原个体，未来迁入者须来自实际种群'};
 }
 function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
     const definition=engine.byId.get(boss??species),s=engine.byId.get(species),level=boss?definition.level:s.levelRange[0];
     const stats=monsterStats({level,template:s.template,bossTier:boss?definition.tier:0},engine.rules),name=boss?definition.name:`${s.name}·${id.slice(-4)}`;
-    if(!boss)d.set(['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location});
-    d.set(['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),
-        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition(),negotiation:initialBossNegotiation(definition,engine)}:{})}:{}),source:eventId});
+    if(!boss)holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:species,template:s.template,scope:location},'bosses');
+    holdingSet(d,null,['state','creatures',id],{name,species,ecology:s.wildlife.habitat,lair,location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),
+        ...(boss?{boss,battleMemory:{tactics:{},lastEvent:null},...(definition.intelligence>0?{cognition:emptyBossCognition(),negotiation:initialBossNegotiation(definition,engine)}:{})}:{}),source:eventId},'bosses');
     return{id,name,level,hp:stats.maxHp};
 }
 function drawSpecies(d,engine,species,lair,eventId){
@@ -93,7 +95,7 @@ export function advanceBosses(d,engine,day){
             const actor=engine.actor(d,boss.actor),present=living(actor)&&actor.location===boss.residence.location;
             r.occupant=present?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
             r.status=present?'驻守':'空置';r.reoccupyAfter=null;
-            r.lastDay=day;d.set(key(boss),r);continue;
+            r.lastDay=day;holdingSet(d,null,key(boss),r,'bosses');continue;
         }
         if(r.occupant?.actor){
             const actor=engine.actor(d,r.occupant.actor);
@@ -111,7 +113,7 @@ export function advanceBosses(d,engine,day){
         if(r.occupant?.kind==='monster'&&!living(engine.actor(d,r.occupant.actor))){
             r.history.push({type:'迁入者离去或死亡',day,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;
         }
-        r.lastDay=day;d.set(key(boss),r);
+        r.lastDay=day;holdingSet(d,null,key(boss),r,'bosses');
     }
 }
 export function lairAction(d,args,eventId){
@@ -134,7 +136,7 @@ export function lairAction(d,args,eventId){
     if(boss.actor){
         const actor=this.actor(d,boss.actor);
         latest.occupant=living(actor)&&actor.location===boss.residence.location?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
-        latest.status=latest.occupant?'驻守':'空置';d.set(key(boss),latest);
+        latest.status=latest.occupant?'驻守':'空置';holdingSet(d,null,key(boss),latest,'bosses');
     }
     if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
     if(latest.occupant.actor){const actor=this.actor(d,latest.occupant.actor);
@@ -143,7 +145,7 @@ export function lairAction(d,args,eventId){
         return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,...publicContact(d,this,latest.occupant.actor)},alreadyPresent:true};}
     if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw new Error('巢穴占据者记录无效');
     const contact=instantiate(d,this,{id:boss.id,species:boss.monster,boss:boss.id,location:boss.residence.location,lair:boss.residence.id,eventId});
-    latest.occupant.actor=boss.id;d.set(key(boss),latest);
+    latest.occupant.actor=boss.id;holdingSet(d,null,key(boss),latest,'bosses');
     rememberBossEncounter(d,this,boss.id,{kind:'approach',eventId});
     Object.assign(contact,publicContact(d,this,boss.id));
     const minions=[];for(let i=0;i<boss.residence.minionCount;i++){

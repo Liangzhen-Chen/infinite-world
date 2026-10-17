@@ -14,6 +14,9 @@ import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldingRecord} from './holding-sources.mjs';
+declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion']});
 
 const DAY=1440;
 const path=id=>['state','records',id];
@@ -98,7 +101,7 @@ function proposal(d,engine,args,eventId,settlement){
         budget:number(args.budget??0,0,1000000),fee:number(args.proposedFee??0,0,1000000),
         taxBps:number(args.taxBps??p.details.economy.tax.rateBps,0,10000),
         eligible:all,affected,opinions:[],status:'议事中',minute:d.get('state','minute'),sourceEvent:eventId};
-    d.set(path(id),row);return {proposal:id,meeting:row,note:'须逐人当面登记意见；意见通过不授予官职、地权或支出权限。'};
+    holdingSet(d,null,path(id),row,'governance');return {proposal:id,meeting:row,note:'须逐人当面登记意见；意见通过不授予官职、地权或支出权限。'};
 }
 
 function permission(d,engine,id,settlement,at){
@@ -128,7 +131,7 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
     if(request.kind!=='account_report'){
         const result={category:'governance_execution',request:requestId,settlement:request.settlement,authorization,steward:a.grantee,
             status:'待权限决定',reason:unavailable,minute:at,sourceEvent:`governance_execution:${requestId}`,charged:0};
-        d.set(path(result.sourceEvent),result);d.set(path(requestId),{...request,status:result.status});return result;
+        holdingSet(d,null,path(result.sourceEvent),result,'governance');holdingSet(d,null,path(requestId),{...request,status:result.status},'governance');return result;
     }
     const account=d.get('state','settlements',request.settlement);
     if(!account||!safe(account.treasury)||!safe(account.wood))throw Error('公账余额或库存未知，不能报结算成功');
@@ -136,7 +139,7 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
         status:'已完成',minute:at,sourceEvent:`governance_execution:${requestId}`,charged:0,
         report:{treasury:account.treasury,wood:account.wood,stone:account.stone??null,
             fiscal:structuredClone(d.get(...path(`village-fiscal:${request.settlement}`))??null)}};
-    d.set(path(result.sourceEvent),result);d.set(path(requestId),{...request,status:'已完成'});
+    holdingSet(d,null,path(result.sourceEvent),result,'governance');holdingSet(d,null,path(requestId),{...request,status:'已完成'},'governance');
     d.set(['state','npcs',a.grantee,'memoryStream'],[...d.get('state','npcs',a.grantee,'memoryStream')??[],{
         id:result.sourceEvent,sourceEvent:result.sourceEvent,kind:'governance',minute:at,location:a.scope.counter,
         participants:[a.grantee],sourceType:'亲历',content:`按限期授权核对${engine.byId.get(request.settlement).name}现存公账：公款${account.treasury}铜，木料${account.wood}。`,salience:3}]);
@@ -178,7 +181,7 @@ function action(d,args,eventId){
         const entry={speaker,opinion:args.opinion,content:text(args.content),minute:now,sourceEvent:eventId};
         const old=row.opinions.find(o=>o.speaker===speaker);
         if(old){if(old.opinion!==entry.opinion||old.content!==entry.content)throw Error('该参与者已有意见，不能替换原话');return {proposal:row.id,opinion:old,duplicate:true};}
-        d.set(path(row.id),{...row,opinions:[...row.opinions,entry]});return {proposal:row.id,opinion:entry};
+        holdingSet(d,null,path(row.id),{...row,opinions:[...row.opinions,entry]},'governance');return {proposal:row.id,opinion:entry};
     }
     case 'governance_close':{
         const authority=chair(d,this,settlement,args.authority),row=record(d,args.proposal,'governance_proposal',settlement);
@@ -186,14 +189,14 @@ function action(d,args,eventId){
         const rejected=row.opinions.filter(o=>o.opinion==='reject'),missing=row.affected.filter(id=>!row.opinions.some(o=>o.speaker===id&&o.opinion==='approve'));
         if(!rejected.length&&missing.length)return {proposal:row.id,status:'议事中',missing,note:'受影响住户未逐人同意；不代投、不按先到者人数推算多数。'};
         const closed={...row,status:rejected.length?'已否决':'意见已确认',closedAt:now,authority,appointmentSource:source(this,settlement,now,d.get('state')),closeEvent:eventId,publicOpinion:hallOpinion(d,this,settlement)};
-        d.set(path(row.id),closed);return {proposal:row.id,meeting:closed,note:rejected.length?'否决后不得开工、收费或扣公共材料。':unavailable};
+        holdingSet(d,null,path(row.id),closed,'governance');return {proposal:row.id,meeting:closed,note:rejected.length?'否决后不得开工、收费或扣公共材料。':unavailable};
     }
     case 'governance_appointment':{
         chair(d,this,settlement,args.authority);
         const id=`governance_referral:${eventId}`;unique(d,id);
         const row={category:'governance_referral',settlement,applicant:'player',requestedOffice:text(args.name),
             status:'待上级决定',authority:settlementHead(this,d.get('state'),settlement).value,appointmentSource:source(this,settlement,now,d.get('state')),referral:structuredClone(g.referral),minute:now,sourceEvent:eventId,reason:'村长由上级依据贡献与村民意见任命；上级执行主体未登记，不能签发玩家官职'};
-        d.set(path(id),row);return {referral:id,request:row,granted:false};
+        holdingSet(d,null,path(id),row,'governance');return {referral:id,request:row,granted:false};
     }
     case 'governance_grant':{
         // T126: a sitting village head (the player) delegates housing review by written rules.
@@ -210,7 +213,7 @@ function action(d,args,eventId){
         const a={category:'authorization',action:'account_report',settlement,grantor:authority,grantee:steward,appointmentSource:source(this,settlement,now,d.get('state')),
             scope:{actions:['account_report'],counter:g.meetingPlace,budget:0,fee:0,taxBps:p.details.economy.tax.rateBps},
             createdAt:now,expires:now+minutes,revoked:false,consentEvent:eventId,sourceEvent:eventId};
-        d.set(path(id),a);return {authorization:id,permission:a};
+        holdingSet(d,null,path(id),a,'governance');return {authorization:id,permission:a};
     }
     case 'governance_revoke':{
         const housing=d.get(...path(args.authorization));
@@ -218,7 +221,7 @@ function action(d,args,eventId){
         const authority=chair(d,this,settlement,args.authority),a=record(d,args.authorization,'authorization',settlement);
         if(a.grantor!==authority||a.action!=='account_report')throw Error('只有原签发者可撤销该范围的授权');
         if(a.revoked)return {authorization:args.authorization,permission:a,duplicate:true};
-        const revoked={...a,revoked:true,revokedAt:now,revokedBy:authority};d.set(path(args.authorization),revoked);return {authorization:args.authorization,permission:revoked};
+        const revoked={...a,revoked:true,revokedAt:now,revokedBy:authority};holdingSet(d,null,path(args.authorization),revoked,'governance');return {authorization:args.authorization,permission:revoked};
     }
     case 'governance_queue':{
         const housing=d.get(...path(args.authorization));
@@ -236,7 +239,7 @@ function action(d,args,eventId){
         if(due>=a.expires)throw Error('约定办理时间超出授权期限');
         const id=`governance_request:${eventId}`;unique(d,id);
         const row={category:'governance_request',id,settlement,authorization:args.authorization,steward:a.grantee,kind:args.action,proposal,
-            status:'待办理',due,minute:now,sourceEvent:eventId};d.set(path(id),row);return {request:id,pending:row};
+            status:'待办理',due,minute:now,sourceEvent:eventId};holdingSet(d,null,path(id),row,'governance');return {request:id,pending:row};
     }
     case 'governance_process':{
         const a=permission(d,this,args.authorization,settlement,now);
@@ -251,7 +254,7 @@ export function governanceAction(d,args,eventId){
     const key=`governance_source:${eventId}`,old=d.get(...path(key)),fingerprint=digest(args);
     if(old){if(old.category!=='governance_receipt'||old.fingerprint!==fingerprint)throw Error('治理sourceEvent已占用，不能改写事务');return {...structuredClone(old.result),duplicate:true};}
     const result=action.call(this,d,args,eventId);
-    if(args.operation!=='governance_inspect')d.set(path(key),{category:'governance_receipt',settlement:this.resolve(args.settlement,'loc'),fingerprint,result:structuredClone(result)});
+    if(args.operation!=='governance_inspect')holdingSet(d,null,path(key),{category:'governance_receipt',settlement:this.resolve(args.settlement,'loc'),fingerprint,result:structuredClone(result)},'governance');
     return result;
 }
 
@@ -268,7 +271,7 @@ export function advanceGovernance(d,engine,before,after,{beforeState}={}){
             try{results.push(runRequest(d,engine,id,r.authorization,at,presence));}
             catch(error){
                 const key=`governance_attempt:${day}:${id}`;
-                if(!d.get(...path(key)))d.set(path(key),{category:'governance_attempt',settlement:r.settlement,request:id,steward:r.steward,minute:at,sourceEvent:key,status:'未执行',reason:error.message,charged:0});
+                if(!d.get(...path(key)))holdingSet(d,null,path(key),{category:'governance_attempt',settlement:r.settlement,request:id,steward:r.steward,minute:at,sourceEvent:key,status:'未执行',reason:error.message,charged:0},'governance');
             }
         }
     }
@@ -347,19 +350,20 @@ function apply(d,engine,args,eventId,settlement){
     const id=`governance_application:${eventId}`;unique(d,id);
     const row={category:'governance_application',id,applicant:'player',settlement,office:office.id,officeName:office.name,registrar:clerk,institution:charter.institution,
         filedAt:now,due:now+charter.decisionAfterDays*DAY,status:'待审定',source:office.source,sourceEvent:eventId,...(qualification?{qualification}:{})};
-    d.set(path(id),row);
+    holdingSet(d,null,path(id),row,'governance');
     return {application:id,pending:row,note:`公署按章程于登记满${charter.decisionAfterDays}日后审定；递件人只登记，不当场许诺。`};
 }
 function decide(d,engine,row,at){
     const state=d.get('state'),office=rankedOffice(engine,state,row.settlement,authorityOf(engine).offices[row.office]),{reasons,points,head,views}=appraise(engine,state,row.settlement,office);
     if(row.election&&(state.records[row.election]?.status!=='当选'||state.records[row.election]?.disqualified))reasons.push('推选资格已撤销');
     const basis={contribution:points,headStanding:head,residents:views};
-    if(reasons.length){d.set(path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis});return;}
+    if(reasons.length){holdingSet(d,null,path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis},'governance');return;}
     const key=officeKey(row.settlement,office.id);
-    d.set(path(key),{category:'governance_office',id:key,holder:'player',settlement:row.settlement,office:office.id,name:office.name,status:'在任',
+    holdingSet(d,null,path(key),{category:'governance_office',id:key,holder:'player',settlement:row.settlement,office:office.id,name:office.name,status:'在任',
         since:at,until:at+office.termDays*DAY,nextReview:at+authorityOf(engine).superiors.auth_bs_office_charter.reviewEveryDays*DAY,
-        appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id});
-    d.set(path(row.id),{...row,status:'已任命',decidedAt:at,basis});
+        appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id},'governance');
+    syncHoldingRecord(d,engine,key,{writer:'governance',eventId:row.id});
+    holdingSet(d,null,path(row.id),{...row,status:'已任命',decidedAt:at,basis},'governance');
     entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:'player',minute:at,location:row.settlement,office:office.id,summary:`${state.player.name}获任${office.name}`});
 }
 function review(d,engine,row,at){
@@ -371,10 +375,10 @@ function review(d,engine,row,at){
     else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
     if(reason){
         const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
-        d.set(path(row.id),{...row,status:'已免职',removedAt:at,reason});
+        holdingSet(d,null,path(row.id),{...row,status:'已免职',removedAt:at,reason},'governance');syncHoldingRecord(d,engine,row.id,{writer:'governance'});
         entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${state.player.name}卸任${name}：${reason}`});
     }
-    else d.set(path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]});
+    else holdingSet(d,null,path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]},'governance');
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
@@ -409,7 +413,7 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     bookSide(d,treasuryAccount(settlement),-copper,books);
     d.set(['state','settlements',settlement,'treasury'],treasury-copper);
     const row={category:'governance_spend',id,settlement,holder:'player',office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
-    d.set(path(id),row);return row;
+    holdingSet(d,null,path(id),row,'governance');return row;
 }
 // Money returned to the treasury (refund, unused wages) nets against the month it was drawn in.
 export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books}){
@@ -418,5 +422,5 @@ export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,book
     bookSide(d,treasuryAccount(settlement),copper,books);
     d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
     const row={category:'governance_spend',id,settlement,holder:'player',month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
-    d.set(path(id),row);return row;
+    holdingSet(d,null,path(id),row,'governance');return row;
 }

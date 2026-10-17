@@ -6,6 +6,8 @@ import { xpRequired } from './progression.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {sapient,awakeningView}from'./wildlife-awakening.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('pets',{kinds:['tamed_by']});
 
 const clamp = value => Math.max(0, Math.min(100, value));
 const activeStatuses = new Set(['活跃', '留守']);
@@ -47,11 +49,11 @@ function careOf(actor, now) {
         feedDay: -1, groomDay: -1, trainDay: -1, skills: {}, experience: 0 };
 }
 
-function writeCare(d, id, care) { d.set(['state', 'creatures', id, 'care'], care); }
+function writeCare(d, id, care) { holdingSet(d,null,['state', 'creatures', id, 'care'], care,'pets'); }
 function detach(d, id, status, minute) {
     const pet = d.get('state', 'pets', id);
     if (pet?.petFormat === 1) d.set(['state', 'pets', id], { ...pet, status, following: false, ended: minute });
-    d.set(['state', 'creatures', id, 'owner'], null);
+    holdingSet(d,null,['state', 'creatures', id, 'owner'], null,'pets');
     if (d.get('state', 'player', 'mount') === id) d.remove(['state', 'player', 'mount']);
 }
 
@@ -88,7 +90,7 @@ export function advancePets(d, engine, after) {
                 detach(d, id, '出走', minute); d.say(`${actor.name ?? id}离开了你的照料，当前归属已解除`);
             }
         }
-        d.set(['state', 'creatures', id, 'hp'], hp); writeCare(d, id, care);
+        holdingSet(d,null,['state', 'creatures', id, 'hp'], hp,'pets'); writeCare(d, id, care);
     }
 }
 
@@ -154,7 +156,7 @@ export function petAction(d, args, eventId) {
         if (result.success && !failed && !expired) {
             if (operation === 'contact') latest.bond = clamp(latest.bond + petTrustGain(this,d.get('state'),id,rules.contactTrust));
             else {
-                d.set(['state', 'creatures', id, 'owner'], 'player');
+                holdingSet(d,null,['state', 'creatures', id, 'owner'], 'player','pets');
                 d.set(['state', 'pets', id], { petFormat: 1, creature: id, category: rule.category, status: '活跃', following: true, acquired: d.get('state', 'minute'), source: eventId });
             }
         } else latest.bond = clamp(latest.bond - (result.degree === '大失败' ? 5 : 1));
@@ -222,8 +224,8 @@ export function petAction(d, args, eventId) {
         if (!failed && result.success) {
             if (operation === 'treat') {
                 latest.sickness = false; latest.sickHours = 0;
-                d.set(['state', 'creatures', id, 'hp'], Math.min(actor.maxHp, d.get('state', 'creatures', id, 'hp') + rules.treatmentHeal));
-                if(d.get('state','creatures',id,'hp')>0&&d.get('state','creatures',id,'status')==='濒死')d.set(['state','creatures',id,'status'],'正常');
+                holdingSet(d,null,['state', 'creatures', id, 'hp'], Math.min(actor.maxHp, d.get('state', 'creatures', id, 'hp') + rules.treatmentHeal),'pets');
+                if(d.get('state','creatures',id,'hp')>0&&d.get('state','creatures',id,'status')==='濒死')holdingSet(d,null,['state','creatures',id,'status'],'正常','pets');
             } else {
                 latest.skills[args.skill] = Math.min(2699, (latest.skills[args.skill] ?? 0) + 3);
                 latest.experience += rules.trainExperience; latest.fatigue = clamp(latest.fatigue + 10);
@@ -231,8 +233,8 @@ export function petAction(d, args, eventId) {
                 while (level < 200 && latest.experience >= xpRequired(level + 1)) { latest.experience -= xpRequired(level + 1); level++; }
                 if (level === 200) latest.experience = 0;
                 const gained = level - d.get('state', 'creatures', id, 'level');
-                d.set(['state', 'creatures', id, 'level'], level);
-                if (gained) d.set(['state', 'creatures', id, 'maxHp'], actor.maxHp + gained * 2);
+                holdingSet(d,null,['state', 'creatures', id, 'level'], level,'pets');
+                if (gained) holdingSet(d,null,['state', 'creatures', id, 'maxHp'], actor.maxHp + gained * 2,'pets');
             }
         }
         writeCare(d, id, latest);
@@ -272,7 +274,7 @@ export function movePets(d, engine, origin, destination, movingMinutes) {
     for (const [id, pet] of Object.entries(d.get('state', 'pets') ?? {})) {
         const actor = d.get('state', 'creatures', id);
         if (pet.petFormat !== 1 || !active(pet) || !pet.following || actor?.owner !== 'player' || actor.location !== origin || actor.status === '死亡') continue;
-        d.set(['state', 'creatures', id, 'location'], destination);
+        holdingSet(d,null,['state', 'creatures', id, 'location'], destination,'pets');
         const care = careOf(actor, d.get('state', 'minute'));
         care.busyUntil=d.get('state','minute')+movingMinutes;
         care.fatigue = clamp(care.fatigue + Math.ceil(movingMinutes / 30) * engine.rules.petCare.travelFatiguePer30Minutes);

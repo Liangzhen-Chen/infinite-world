@@ -19,6 +19,9 @@ import {digest} from './storage.mjs';
 import {standing} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
+import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
+import {holdingSet} from './holding-sources.mjs';
+declareHoldingWriter('bounty',{kinds:['guest_of','wanted','companion','resides','devotee_of'],entities:['case']});
 
 const DAY=1440,TICK=600,ACTIVE='生效';
 const rec=id=>['state','records',id];
@@ -52,7 +55,7 @@ function knows(engine,state,w,npc,minute){
     if(w.scope.some(law=>w.reach[law]<=minute&&enforcersOf(engine,law,state).includes(npc)))return true;
     return (state.npcs[npc]?.memoryStream??[]).some(m=>m.legalCase===w.case&&m.legalStage==='wanted'&&m.minute<=minute);
 }
-function save(d,w){d.set(rec(w.id),w);}
+function save(d,w){holdingSet(d,null,rec(w.id),w,'bounty');}
 function remember(d,engine,npc,w,minute,content,{visibility='public',kind='law'}={}){
     const stream=d.get('state','npcs',npc,'memoryStream');if(!stream&&!d.get('state','npcs',npc))return;
     const id=`wanted_${digest([w.id,npc,content,minute]).slice(0,20)}`;if((stream??[]).some(m=>m.id===id))return;
@@ -62,12 +65,12 @@ function remember(d,engine,npc,w,minute,content,{visibility='public',kind='law'}
 function treasury(d,law){const key=`legal_treasury:${law}`,row=d.get(...rec(key));if(row&&row.category!=='legal_treasury')throw Error('法律资金登记键冲突');return {key,row:row??{category:'legal_treasury',law,coins:0}};}
 function releaseReward(d,w){
     if(!w.bounty)return;const {key,row}=treasury(d,w.law);
-    d.set(rec(key),{...row,reserved:Math.max(0,(row.reserved??0)-w.bounty)});
+    holdingSet(d,null,rec(key),{...row,reserved:Math.max(0,(row.reserved??0)-w.bounty)},'bounty');
 }
 function payReward(d,w,to,minute){
     if(!w.bounty||!to)return 0;const {key,row}=treasury(d,w.law),amount=Math.min(w.bounty,row.coins);
     moveCoins(d,{from:fundAccount(key),to:purse(null,to),amount:amount,writer:'bounty',eventId:w.id});
-    d.set(rec(key),{...row,coins:row.coins-amount,reserved:Math.max(0,(row.reserved??0)-w.bounty)});
+    holdingSet(d,null,rec(key),{...row,coins:row.coins-amount,reserved:Math.max(0,(row.reserved??0)-w.bounty)},'bounty');
     const path=to==='player'?['state','player','coins']:['state','npcs',to,'coins'];d.set(path,(d.get(...path)??0)+amount);
     w.rewardPaid=amount;w.history=[...w.history,{kind:'领赏',by:to,coins:amount,minute}];return amount;
 }
@@ -92,7 +95,7 @@ export function issueWanted(d,engine,row,reason,minute){
     if(free<declared&&victim&&!dead(victim))pledge=Math.max(0,Math.min(declared-free,Math.floor((victim.coins??0)*(b.victimPledgeShare??0.5))));
     if(pledge){moveCoins(d,{from:purse(null,row.victim),to:fundAccount(fund.key),amount:pledge,writer:'bounty',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);}
     const bounty=Math.min(declared,free+pledge);
-    if(bounty||pledge)d.set(rec(fund.key),{...fund.row,coins:fund.row.coins+pledge,reserved:(fund.row.reserved??0)+bounty});
+    if(bounty||pledge)holdingSet(d,null,rec(fund.key),{...fund.row,coins:fund.row.coins+pledge,reserved:(fund.row.reserved??0)+bounty},'bounty');
     const state=d.get('state'),who=nameOf(engine,state,row.offender);
     const w={category:'legal_wanted',id,case:row.id,subject:row.offender,law:code.id,reason,scope,reach,notified:[],declared,bounty,
         pledge:pledge?{from:row.victim,coins:pledge}:null,status:ACTIVE,issuedAt:minute,quest:null,hunt:null,gaveUp:[],silenced:[],sightings:[],history:[{kind:'发出通缉',minute}]};
@@ -103,7 +106,7 @@ export function issueWanted(d,engine,row,reason,minute){
             location:code.court,createdAt:minute,status:'公开',taker:null});
         w.quest=quest;
     }
-    save(d,w);d.set(rec(row.id),{...d.get(...rec(row.id)),wanted:id});
+    save(d,w);holdingSet(d,null,rec(row.id),{...d.get(...rec(row.id)),wanted:id},'bounty');
     d.say(`${code.name}对${who}发出通缉（${reason}）${bounty?`，悬赏${bounty}铜`:''}；文书沿路传往协查各地`);
     return w;
 }
@@ -115,11 +118,11 @@ export function closeWanted(d,engine,w,status,reason,minute){
     if(next.rewardPaid===undefined){
         releaseReward(d,next);
         if(next.pledge){const {key,row}=treasury(d,w.law),back=Math.min(next.pledge.coins,row.coins);
-            if(back&&d.get('state','npcs',next.pledge.from)){moveCoins(d,{from:fundAccount(key),to:purse(null,next.pledge.from),amount:back,writer:'bounty',eventId:w.id});d.set(rec(key),{...d.get(...rec(key)),coins:row.coins-back});d.set(['state','npcs',next.pledge.from,'coins'],d.get('state','npcs',next.pledge.from,'coins')+back);}}
+            if(back&&d.get('state','npcs',next.pledge.from)){moveCoins(d,{from:fundAccount(key),to:purse(null,next.pledge.from),amount:back,writer:'bounty',eventId:w.id});holdingSet(d,null,rec(key),{...d.get(...rec(key)),coins:row.coins-back},'bounty');d.set(['state','npcs',next.pledge.from,'coins'],d.get('state','npcs',next.pledge.from,'coins')+back);}}
     }
     if(status!=='已到案')closeQuest(d,next,'撤销',reason,minute);
-    if(next.captive?.by==='player'){d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject));}
-    if(w.subject!=='player'&&d.get('state','npcs',w.subject,'fugitive')===w.id)d.remove(['state','npcs',w.subject,'fugitive']);
+    if(next.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');}
+    if(w.subject!=='player'&&d.get('state','npcs',w.subject,'fugitive')===w.id)holdingRemove(d,null,['state','npcs',w.subject,'fugitive'],'bounty');
     save(d,next);return next;
 }
 
@@ -128,7 +131,7 @@ export function holdPlayer(d,engine,w,{captor,location,minute,surrendered=false}
     const code=codeById(engine,w.law);let escort=60;
     try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.document.randomSeed).minutes);}catch{}
     const key=`legal_custody:${w.id}:${minute}`;
-    d.set(rec(key),{category:'legal_custody',case:w.case,wanted:w.id,reason:'到案',captor,location,status:'生效',started:minute,expires:minute+escort,surrendered});
+    holdingSet(d,null,rec(key),{category:'legal_custody',case:w.case,wanted:w.id,reason:'到案',captor,location,status:'生效',started:minute,expires:minute+escort,surrendered},'bounty');
     const caseRow=d.get(...rec(w.case));
     entityTransition(d,engine,{id:`${key}:detain`,verb:'detain',actor:captor,target:'player',minute,location,visibility:caseRow?.private?'private':caseRow?.visibility??'public',summary:`${d.get('state','player','name')}已被拘押`});
     save(d,{...w,history:[...w.history,{kind:surrendered?'自首':'拦截',by:captor,location,minute}]});
@@ -137,14 +140,14 @@ export function holdPlayer(d,engine,w,{captor,location,minute,surrendered=false}
 }
 function arrivePlayer(d,engine,lockKey,lock,minute){
     const w=d.get(...rec(lock.wanted)),code=codeById(engine,w.law),row=d.get(...rec(w.case));
-    d.set(rec(lockKey),{...lock,status:'已结束',ended:minute});
+    holdingSet(d,null,rec(lockKey),{...lock,status:'已结束',ended:minute},'bounty');
     d.set(['state','location'],code.court);if(d.get('state','player','mount'))d.remove(['state','player','mount']);
     if(d.get('state','npcs',lock.captor))d.set(['state','npcs',lock.captor,'location'],code.court);
     if(row&&['已报案','证据不足','未报案'].includes(row.status)){
         let key=`legal_custody:${row.id}`;if(d.get(...rec(key)))key=`legal_custody:${row.id}:${minute}`;
-        d.set(rec(key),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:minute,expires:minute+code.maximumDetentionMinutes});
+        holdingSet(d,null,rec(key),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:minute,expires:minute+code.maximumDetentionMinutes},'bounty');
     }
-    if(row)d.set(rec(row.id),{...row,appearedAt:minute});
+    if(row)holdingSet(d,null,rec(row.id),{...row,appearedAt:minute},'bounty');
     const enforcer=w.scope.some(law=>enforcersOf(engine,law,d.get('state')).includes(lock.captor));
     const next={...d.get(...rec(w.id))};const paid=!enforcer&&!lock.surrendered?payReward(d,next,lock.captor,minute):0;
     if(next.quest)closeQuest(d,next,'已完成','逃犯已押到',minute,{taker:lock.captor,rewardPaid:paid});
@@ -156,13 +159,13 @@ export function deliverFugitive(d,engine,w,by,minute){
     const code=codeById(engine,w.law),row=d.get(...rec(w.case)),npc=w.subject;
     if(d.get(...rec(`legal_detention:${w.id}`)))return 0;
     const shops=businessSnapshot(engine,d.get('state'));
-    d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc));
+    holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==npc),'bounty');
     d.set(['state','npcs',npc,'location'],code.court);
     d.set(['state','npcs',npc,'activity'],'依法拘留');
-    for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))d.remove(['state','npcs',npc,field]);
-    d.set(rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes,
-        ...(row?.private||['private','secret'].includes(row?.visibility)?{visibility:row.private?'private':row.visibility}:{})});
-    if(row)d.set(rec(row.id),{...row,status:'已到案',deliveredBy:by,deliveredAt:minute});
+    for(const field of ['scheduleTravel','cognitionTravel'])if(d.get('state','npcs',npc,field))holdingRemove(d,null,['state','npcs',npc,field],'bounty');
+    holdingSet(d,null,rec(`legal_detention:${w.id}`),{category:'legal_detention',subject:npc,case:w.case,wanted:w.id,location:code.court,deliveredBy:by,minute,status:'生效',expires:minute+code.maximumDetentionMinutes,
+        ...(row?.private||['private','secret'].includes(row?.visibility)?{visibility:row.private?'private':row.visibility}:{})},'bounty');
+    if(row)holdingSet(d,null,rec(row.id),{...row,status:'已到案',deliveredBy:by,deliveredAt:minute},'bounty');
     const next={...w};const paid=payReward(d,next,by,minute);
     closeQuest(d,next,'已完成','逃犯已交付法院',minute,{taker:by,rewardPaid:paid});
     save(d,next);closeWanted(d,engine,next,'已到案','缉拿交付',minute);
@@ -178,7 +181,7 @@ export function advanceWanted(d,engine,after){
     const rules=lawRules(engine).wanted;if(!rules)return;
     for(const [key,lock] of Object.entries(d.get('state','records')??{})){
         if(lock?.category!=='legal_custody'||lock.reason!=='到案'||lock.status!=='生效')continue;
-        if(d.get('state','player','status')==='死亡'){d.set(rec(key),{...lock,status:'已中止',ended:after});continue;}
+        if(d.get('state','player','status')==='死亡'){holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after},'bounty');continue;}
         if(lock.expires<=after)arrivePlayer(d,engine,key,lock,lock.expires);
     }
     issue(d,engine,rules,after);
@@ -199,7 +202,7 @@ function issue(d,engine,rules,after){
         if(row?.category!=='legal_case'||row.offender!=='player'||wantedOfCase(state,row.id))continue;
         if(custody.some(l=>l.case===row.id&&l.status==='生效'))continue;
         const since=row.appearedAt??-Infinity,escaped=custody.find(l=>l.case===row.id&&l.status==='已中止'&&l.reason!=='到案'&&l.ended>since&&!l.wanted);
-        if(escaped){const w=issueWanted(d,engine,row,WANTED_REASONS.escape,after);if(w){const {key,...lock}=escaped;d.set(rec(key),{...lock,wanted:w.id});}continue;}
+        if(escaped){const w=issueWanted(d,engine,row,WANTED_REASONS.escape,after);if(w){const {key,...lock}=escaped;holdingSet(d,null,rec(key),{...lock,wanted:w.id},'bounty');}continue;}
         if(row.status==='已裁定'&&row.judgment&&Math.max(row.judgment.minute,since)+rules.appearanceMinutes<=after)issueWanted(d,engine,row,WANTED_REASONS.unappeared,after);
         else if(row.offense==='debt_default'&&['已报案','证据不足'].includes(row.status)&&Math.max(row.minute,since)+rules.appearanceMinutes<=after)issueWanted(d,engine,row,WANTED_REASONS.debt,after);
     }
@@ -339,7 +342,7 @@ export function bountyQuestAction(d,engine,q,args,eventId){
     if(q.taker!=='player'||q.status!=='进行中')throw Error('你没有接下这份赏金');
     if(args.operation==='cancel'){
         d.set(['state','quests',q.id],{...q,status:'公开',taker:null});
-        if(w.captive?.by==='player'){d.set(['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject));save(d,{...w,captive:null});}
+        if(w.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');save(d,{...w,captive:null});}
         return {quest:q.id,status:'公开',note:'放弃赏金；押着的人已放走'};
     }
     const code=codeById(engine,w.law),here=d.get('state','location');

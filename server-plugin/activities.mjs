@@ -51,6 +51,8 @@ import {medicineAction} from './medicine.mjs';
 import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('activities',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
@@ -141,7 +143,7 @@ export const activities={
         if(received)this.health(d,{delta:-received},id);
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        if(isNpc&&!duel&&base.tier!=='full')d.set(['state','npcs',target,'trust'],Math.max(-100,npc.trust-5));
+        if(isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
         if(weapon)wearItem(d,this,'player',weapon,1);
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
@@ -254,12 +256,12 @@ export const activities={
         if(type==='npc'){
             integer(entity.age,0,150);requiredText(entity.occupation);requiredText(entity.notes);
             entity.location=d.get('state','location');entity.flags={minor:entity.age<18,romanceable:entity.age>=18};entity.coins=0;entity.inventory={};entity.services=[];
-            d.set(['state','npcs',entity.id],{id:entity.id,name,location:entity.location,coins:0,inventory:{},trust:0,affection:0,developments:[]});
+            holdingSet(d,null,['state','npcs',entity.id],{id:entity.id,name,location:entity.location,coins:0,inventory:{},trust:0,affection:0,developments:[]},'activities');
         }
         if(type==='item')throw new Error('物品只允许由受限配方制造，不能凭空创建');
         if(type==='bld')throw new Error('建筑需要工程完工证明，不能凭空创建');
         let founded=null;
         if(type==='org'){entity.founder='player';entity.notes=requiredText(entity.notes);founded=foundOrganization(d,this,entity,id);}
-        d.set(['state','created',entity.id],entity);return {entity:entity.id,...founded};
+        holdingSet(d,null,['state','created',entity.id],entity,'activities');return {entity:entity.id,...founded};
     },
 };

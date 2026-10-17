@@ -25,6 +25,9 @@ import {forestHabitatCapacity} from './forest-water.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {syncHoldings} from './holding-sources.mjs';
+declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office','tamed_by','allied_with','controls'],entities:['office','wreck'],locations:true});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const TRIBAL_AWAKENING_VERSION=1;
@@ -197,7 +200,7 @@ function placeMembers(d,engine,dyn,rec,members,at,sourceEvent){
   const org=tribalOrgId(dyn.id,stanceFor(seed,dyn,id)),row=clone(d.get('state','records',`organization:${org}`));
   if(!groupView(engine,d.get('state'),org)?.leader.value){row.leader=id;row.members[id]={position:'会长',joinedAt:at,arrears:0};}
   else row.members[id]={position:'成员',joinedAt:at,arrears:0};
-  d.set(['state','records',`organization:${org}`],row);
+  holdingSet(d,null,['state','records',`organization:${org}`],row,'tribal-awakening');syncHoldings(d,engine,'org',org,{writer:'tribal-awakening',eventId:sourceEvent});
   publishTransitionEvent(d,engine,{id:`${sourceEvent}:join:${id}`,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:org,member:id,position:row.members[id].position,tags:['organization','org:join','tribal'],tribe:dyn.id,sourceEvent});
  }
 }
@@ -206,10 +209,11 @@ function split(d,engine,t,dyn,rec,members,at,sourceEvent){
  rec.factions=[];
  for(const f of dyn.factions){
   const id=tribalOrgId(dyn.id,f.stance);
-  d.set(['state','records',`organization:${id}`],{category:'organization',id,source:'created',name:f.name,kind:'会社',seat:dyn.home,founder:null,foundedAt:at,leader:null,
+  holdingSet(d,null,['state','records',`organization:${id}`],{category:'organization',id,source:'created',name:f.name,kind:'会社',seat:dyn.home,founder:null,foundedAt:at,leader:null,
    members:{},removed:{},charter:{mode:f.mode,approval:true,fee:0,dues:0,rules:[f.creed]},treasury:0,ledger:[],sourceEvent,
-   tribal:{dynamic:dyn.id,stance:f.stance,population:Math.round(population*f.share/total),status:'活动'}});
-  d.set(['state','records',clockKey(id)],{category:'tribal_clock',id:clockKey(id),org:id,dynamic:dyn.id,stance:f.stance,filled:0,segments:t.clock.segments,history:[]});
+   tribal:{dynamic:dyn.id,stance:f.stance,population:Math.round(population*f.share/total),status:'活动'}},'tribal-awakening');
+  syncHoldings(d,engine,'org',id,{writer:'tribal-awakening',eventId:sourceEvent});
+  holdingSet(d,null,['state','records',clockKey(id)],{category:'tribal_clock',id:clockKey(id),org:id,dynamic:dyn.id,stance:f.stance,filled:0,segments:t.clock.segments,history:[]},'tribal-awakening');
   const ev=`${sourceEvent}:found:${f.stance}`;
   publishTransitionEvent(d,engine,{id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb:'organize',actor:id,target:null,
    tags:['organization','org:found','tribal',`stance:${f.stance}`],tribe:dyn.id,sourceEvent});
@@ -237,7 +241,7 @@ function advanceClocks(d,engine,t,dyn,rec,g,members,at,sourceEvent){
   const roll=clockRoll(seed,clockKey(org),at/DAY),bonus=dyn.drift[stance]>0&&roll<c.probability?1:0,delta=pressure[stance]+bonus;
   row.filled=Math.max(0,Math.min(row.segments,row.filled+delta));
   row.history=[...row.history,{minute:at,delta,roll,filled:row.filled,choices:clone(ch),injustice:g.injustice,sourceEvent}];
-  d.set(['state','records',clockKey(org)],row);clocks[stance]=row;
+  holdingSet(d,null,['state','records',clockKey(org)],row,'tribal-awakening');clocks[stance]=row;
   // K4：族群各派对玩家的看法随所作所为改变；激进派对镇压记恨加倍，隐退派不计较贸易。
   const s=t.standing,value=ch.teach*s.teach+(stance==='recluse'?0:ch.trade*s.trade)+ch.mediate*s.mediate+ch.suppress*s.suppress*(stance==='radical'?2:1);
   if(value)adjustStanding(d,engine,org,'player',value,{sourceEvent:`${sourceEvent}:standing`,reason:`${dyn.name}对你本季所为的看法`,minute:at});
@@ -278,7 +282,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
  const receipt=applyEffects(d,engine,outcomeEffects(engine,dyn,kind,at),{settlement:dyn.board,faction:dyn.anchor.faction,minute:at,sourceEvent:ev},'world');
  let transition;
  const event=(verb,actor,target,tags)=>{transition={id:ev,minute:at,location:dyn.home,witnesses:[],tool:'advance',verb,actor,target,tags:['tribal',...tags],tribe:dyn.id,sourceEvent:ev};};
- const setOrg=(id,patch)=>{const row=d.get('state','records',`organization:${id}`);if(row)d.set(['state','records',`organization:${id}`],{...row,tribal:{...row.tribal,...patch}});};
+ const setOrg=(id,patch)=>{const row=d.get('state','records',`organization:${id}`);if(row)holdingSet(d,null,['state','records',`organization:${id}`],{...row,tribal:{...row.tribal,...patch}},'tribal-awakening');};
  const outcome={kind,status:TRIBAL_OUTCOMES[kind],stance,org,minute:at,sourceEvent:ev,effects:receipt.applied?receipt.effects.map(e=>e.kind):[]};
  if(kind==='ally'){
   adjustStanding(d,engine,dyn.board,accord,20,{sourceEvent:ev,reason:`${dyn.name}结盟入村`,minute:at});
@@ -293,19 +297,19 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   // breeding pair, so weekly births can refill it instead of the species dying out.
   const joining=sustainableJoiners(d,engine,dyn);
   const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
-  d.set(['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants});
+  holdingSet(d,null,['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants},'tribal-awakening');
   d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
-  for(const id of inhabitants)d.set(['state','creatures',id,'location'],skeleton.id);
+  for(const id of inhabitants)holdingSet(d,null,['state','creatures',id,'location'],skeleton.id,'tribal-awakening');
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
-  if(ecology){const moved=Math.min(ecology.count,joining);d.set(['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved});}
+  if(ecology){const moved=Math.min(ecology.count,joining);holdingSet(d,null,['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved},'tribal-awakening');}
   // Always derive from the authored base, including a second autonomy in this
   // same advance; using the previous overlay would append its households twice.
   if(resourceAware)engine.tribalBaseWorld??=engine.remoteBase?.world??engine.world;
   const overlay=materializeWildlifeHabitats(remoteWorld(engine.tribalBaseWorld??engine.remoteBase?.world??engine.world,d.get('state')));
   const habitats=overlay.rules.wildlife?.habitats.filter(h=>h.location===`${skeleton.id}_wild`)??[];
   const ecologyDocument=resourceAware?{...d.document,state:{...d.get('state'),minute:at}}:d.document;
-  for(const patch of planWildlifeMigration(ecologyDocument,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))d.set(patch.path,patch.value);
+  for(const patch of planWildlifeMigration(ecologyDocument,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats}},overlay.monsters))holdingSet(d,engine,patch.path,patch.value,'tribal-awakening');
   // RW04: forest/water stocks and settlement lookups read the geographic view
   // (engine.world locations, byId), so a resource-aware world moves this same
   // advance onto the new view; archived worlds keep their original catalog.
@@ -325,8 +329,8 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
  }else if(kind==='war'){
   // U12 接口：交战双方、前线、兵力与状态；军队与战争结算由 U12 接管。
   const strength=Object.keys(groupView(engine,d.get('state'),radical)?.members.value??{}).length+(d.get('state','records',`organization:${radical}`)?.tribal?.population??0);
-  d.set(['state','records',`tribal_war:${dyn.id}`],{category:'tribal_war',dynamic:dyn.id,aggressor:radical,defenders:[dyn.board,dyn.anchor.faction],front:dyn.home,habitat:dyn.habitat,
-   strength,status:'对峙',since:at,sourceEvent:ev,handler:'U12',note:'军队、兵役与战事结算待U12接管；此前只有野物躁动与立场敌对'});
+  holdingSet(d,null,['state','records',`tribal_war:${dyn.id}`],{category:'tribal_war',dynamic:dyn.id,aggressor:radical,defenders:[dyn.board,dyn.anchor.faction],front:dyn.home,habitat:dyn.habitat,
+   strength,status:'对峙',since:at,sourceEvent:ev,handler:'U12',note:'军队、兵役与战事结算待U12接管；此前只有野物躁动与立场敌对'},'tribal-awakening');
   adjustStanding(d,engine,dyn.board,radical,-40,{sourceEvent:ev,reason:`${dyn.name}起事`,minute:at});
   setOrg(radical,{status:'起事'});outcome.war=`tribal_war:${dyn.id}`;
   event('clash',radical,dyn.board,['war']);
@@ -336,7 +340,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   event('organize',tribalOrgId(dyn.id,'recluse'),null,['organization','latent']);
  }
  rec.status=TRIBAL_OUTCOMES[kind];rec.outcome=outcome;
- d.set(['state','records',`tribal_awakening:${dyn.id}`],rec);
+ holdingSet(d,null,['state','records',`tribal_awakening:${dyn.id}`],rec,'tribal-awakening');
  publishTransitionEvent(d,engine,transition);
  d.say(`${dyn.name}的觉醒有了结局：${TRIBAL_OUTCOMES[kind]}`);
 }
@@ -379,7 +383,7 @@ function tick(d,engine,t,dyn,at){
  }
  rec.level=levelOf(t,rec);rec.intelligence=levelProfile(rec.level).name;
  rec.quarters=[...rec.quarters,row].slice(-12);rec.lastTick=at;
- d.set(['state','records',k],rec);
+ holdingSet(d,null,['state','records',k],rec,'tribal-awakening');
 }
 export function advanceTribalAwakening(d,engine,{before,after}){
  const t=rules(engine);if(!t||!tribalFresh(engine))return;
