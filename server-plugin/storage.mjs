@@ -167,11 +167,51 @@ function deadPatchValues(patches) {
 // object a cursor still mutates in place drops it. Objects a cursor has exposed
 // are never written again, so their index stays valid. The second query on the same
 // object builds it; a single query scans exactly as before.
+//
+// RULE: while an advance pass runs, no code may bypass the PatchCursor and edit
+// state.records in place (adding/removing a row, changing a row's kind/category or any
+// field a recordsMemo build reads). Write through the draft (d.set / d.adopt / d.remove)
+// so the index is dropped. A bypass leaves the index silently stale.
+// Self-check: FIELDS_INDEX_CHECK=1 (or setRecordIndexCheck(true)) makes every index or
+// memo hit also recompute the answer from the records and compare; a mismatch throws and
+// is also kept in recordIndexCheck.violations (a caller's try/catch cannot hide it).
 const INDEXED = new Set(['kind', 'category']);
 const recordIndexes = new WeakMap();
 const NO_ROWS = Object.freeze([]);
 let recordIndexDepth = 0;
 export const recordIndexActive = () => recordIndexDepth > 0;
+let indexCheck = process.env.FIELDS_INDEX_CHECK === '1';
+export const recordIndexCheck = { hits: 0, memoHits: 0, violations: [] };
+export const setRecordIndexCheck = on => { indexCheck = Boolean(on); };
+function stale(message) {
+    recordIndexCheck.violations.push(message);
+    throw new Error(`records 索引过期（推进期内有代码绕过 PatchCursor 直接改了 state.records）：${message}`);
+}
+// canonicalEqual that also looks inside Map and Set (memo values such as personConstraints).
+function memoEqual(a, b) {
+    if (a === b) return true;
+    if (a instanceof Map && b instanceof Map) {
+        if (a.size !== b.size) return false;
+        const rows = [...b];
+        let i = 0;
+        for (const [k, v] of a) { const [k2, v2] = rows[i++]; if (!memoEqual(k, k2) || !memoEqual(v, v2)) return false; }
+    } else if (a instanceof Set && b instanceof Set) {
+        if (a.size !== b.size) return false;
+        const rows = [...b];
+        let i = 0;
+        for (const v of a) if (!memoEqual(v, rows[i++])) return false;
+        return true;
+    } else if ((a instanceof Map || a instanceof Set) !== (b instanceof Map || b instanceof Set)) return false;
+    if (a !== null && b !== null && typeof a === 'object' && typeof b === 'object') {
+        if (Array.isArray(a) !== Array.isArray(b)) return false;
+        const keys = Object.keys(a);
+        if (keys.length !== Object.keys(b).length) return false;
+        for (const key of keys) if (!Object.hasOwn(b, key) || !memoEqual(a[key], b[key])) return false;
+        return true;
+    }
+    return canonicalEqual(a, b);
+}
+const sameRows = (a, b) => a.length === b.length && a.every((row, i) => row === b[i]);
 // Equality of canonical(a) and canonical(b) without building either string: shared subtrees
 // (a draft copies only what it writes) are equal at once and a difference ends the walk.
 export function canonicalEqual(a, b) {
@@ -217,7 +257,14 @@ export function recordsMemo(records, key, build) {
     if (!recordIndexDepth || !records || typeof records !== 'object') return build();
     let cache = recordIndexes.get(records);
     if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
-    if (cache.has(key)) return cache.get(key);
+    if (cache.has(key)) {
+        const hit = cache.get(key);
+        if (indexCheck) {
+            recordIndexCheck.memoHits++;
+            if (!memoEqual(hit, build())) stale(`memo ${typeof key === 'object' ? 'object-key' : String(key)}`);
+        }
+        return hit;
+    }
     const value = build();
     cache.set(key, value);
     return value;
@@ -226,14 +273,29 @@ export function recordsMemo(records, key, build) {
 export function recordsWhere(records, field, value) {
     if (!records || typeof records !== 'object') return NO_ROWS;
     const groups = recordIndexDepth ? recordGroups(records, field, false) : null;
-    if (groups) return groups.get(value) ?? NO_ROWS;
+    if (groups) {
+        const rows = groups.get(value) ?? NO_ROWS;
+        if (indexCheck) {
+            recordIndexCheck.hits++;
+            if (!sameRows(rows, Object.values(records).filter(r => r?.[field] === value))) stale(`${field}=${String(value)}`);
+        }
+        return rows;
+    }
     return Object.values(records).filter(r => r?.[field] === value);
 }
 // Same rows and order as Object.entries(records).filter(([, r]) => r?.[field] === value). Read-only.
 export function recordEntriesWhere(records, field, value) {
     if (!records || typeof records !== 'object') return NO_ROWS;
     const groups = recordIndexDepth ? recordGroups(records, field, true) : null;
-    if (groups) return groups.get(value) ?? NO_ROWS;
+    if (groups) {
+        const rows = groups.get(value) ?? NO_ROWS;
+        if (indexCheck) {
+            recordIndexCheck.hits++;
+            const scan = Object.entries(records).filter(([, r]) => r?.[field] === value);
+            if (rows.length !== scan.length || rows.some((e, i) => e[0] !== scan[i][0] || e[1] !== scan[i][1])) stale(`${field}=${String(value)} (entries)`);
+        }
+        return rows;
+    }
     return Object.entries(records).filter(([, r]) => r?.[field] === value);
 }
 
