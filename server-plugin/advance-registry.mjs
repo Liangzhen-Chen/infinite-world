@@ -61,6 +61,7 @@ const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
+import {advanceSystemSortKey}from'./scheduler.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -81,10 +82,19 @@ export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>syst
 export function runAdvance(engine,d,ctx){
     return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
 }
+// S2b：同刻调度器按 §14.2 阶段与排序键重排推进系统。默认关闭（保持现有 order，金快照不变）；
+// 用 SCHEDULER_PHASE_ORDER=1 或存档 state.scheduler.phaseOrder=true 开启。系统声明 phase 后按阶段归序，
+// 未声明的系统归阶段 2 并按原 order，因此开启后若无 phase 声明，顺序仍与默认一致。
+const schedulerPhaseOrderEnabled=d=>process.env.SCHEDULER_PHASE_ORDER==='1'||d.get('state','scheduler','phaseOrder')===true;
+function orderedSystems(d){
+    if(!schedulerPhaseOrderEnabled(d))return advanceRegistry;
+    const key=advanceSystemSortKey;
+    return [...advanceRegistry].sort((a,b)=>{const x=key(a),y=key(b);for(let i=0;i<x.length;i++){if(x[i]<y[i])return-1;if(x[i]>y[i])return 1;}return 0;});
+}
 function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
-    try{for(const system of advanceRegistry)system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
+    try{for(const system of orderedSystems(d))system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.

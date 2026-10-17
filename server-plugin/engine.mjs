@@ -86,6 +86,7 @@ import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
 import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
+import {applyConfigSet} from './scheduler.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
 const withBooks=(engine,document)=>withLedger(engine,document);
@@ -224,6 +225,8 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:booked(input.patches),result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:booked(migration.patches),result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:booked(planRuleStateMigration(document,this.rules)),result:{migration:true,runtimeRuleVersion}};
+        // 14 §14.2：调度配置（反应深度上限、每刻提案上限）是输入事件 config_set{key,value}，写入存档的 state.scheduler。
+        if(input.type==='config_set'){const d=new Draft(document,this);const scheduler=applyConfigSet(d.get('state'),input.key,input.value);d.set(['state','scheduler'],scheduler);return{patches:d.patches,result:{ok:true,scheduler}};}
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
             const books=withBooks(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
