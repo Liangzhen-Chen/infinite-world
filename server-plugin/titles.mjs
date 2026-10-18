@@ -1,16 +1,17 @@
-import {changeLegacyHoldings} from './transition.mjs';
 import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('titles',{sinks:['sink:export']});
-import {fiefCandidates,nobleRules,currentDomains,domainPopulation,domainSettlements,highTitle} from './noble-state.mjs';
+import {fiefCandidates,nobleRules,currentDomains,domainPopulation,domainSettlements,highTitle,nobleLords,rulerNation,containsDomain,localLevel} from './noble-state.mjs';
 import {royalServices} from './high-nobility.mjs';
 import {partyPay} from './military.mjs';
 import {personRegistrar,personOffices} from './entity-view.mjs';
-import {actorPath} from './npc-state.mjs';
+import {actorPath,npcAgeAt} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
 import {titleMilitaryService,militaryFresh} from './military.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
+import {declareHoldingWriter,aliveHoldings,createEntity,entityRow,ensureHoldings} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
+import {changeHolding,changeLegacyHoldings} from './transition.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 declareHoldingWriter('titles',{kinds:['holds_office','fief'],entities:['office']});
 
 // T127 titles. A petition is filed at the Baishi office with a registrar and
@@ -156,15 +157,64 @@ function service(d,engine,args,eventId){
     return {title:now.title,served:now.levy.served+men*days,required:now.levy.men*now.levy.days,men};
 }
 export function titleAction(d,args,eventId){
+    if(args.operation==='title_grant')return grantTitle(d,this,args,eventId);
+    if(args.operation==='title_strip')return stripTitle(d,this,args,eventId);
     if(args.operation==='title_petition')return petition(d,this,args,eventId);
     if(args.operation==='title_service')return service(d,this,args,eventId);
     if(args.operation==='title_inspect'){const state=d.get('state');return {title:playerTitle(state),quotaD:titleQuotaD(this,state),candidates:Object.fromEntries(['男爵','子爵','伯爵','侯爵','公爵'].map(name=>[name,fiefCandidates(this,state,name)])),royalServices:royalServices(state,'player'),petitions:Object.values(state.records??{}).filter(r=>r.category==='title_petition'),actionScope:{kind:'instant'}};}
     throw Error('未知爵位事务');
 }
+// Authored remote lords receive the same canonical title/fief edges as a
+// campaign grant, before any title decision operates on them.
+export function ensureNobleTitles(d,engine){
+    ensureHoldings(d,engine);
+    for(const t of nobleLords(engine,d.get('state')).filter(t=>!t.id)){
+        const def=titleDef(engine,t.title);if(!def)continue;
+        const row={...t,id:`title:${t.holder}`,rank:def.ranks[0],grantedAt:d.get('state','minute'),nextIncome:d.get('state','minute')+MONTH,incomeMark:domainReceipts(engine,d.get('state'),t.domains),
+            levy:{...def.levy,due:d.get('state','minute')+YEAR,served:0,attended:false},breaches:0};
+        writeGrantedTitle(d,engine,row,`authored-title:${t.holder}`);
+    }
+}
+function writeGrantedTitle(d,e,row,eventId){
+    const subject=`office_title:${row.id}`,source=`title:${row.id}`;
+    if(!entityRow(d,subject))createEntity(d,{id:subject,kind:'office',facts:{title:row.title,rank:row.rank},source,writer:'titles'});
+    changeHolding(d,e,{op:'open',kind:'holds_office',holder:row.holder,subject,source,eventId:`${eventId}:office`});
+    for(const domain of row.domains??[row.fief].filter(Boolean))changeHolding(d,e,{op:'open',kind:'fief',holder:row.holder,subject:domain,grantedBy:subject,source,eventId:`${eventId}:fief:${domain}`});
+    holdingSet(d,e,rec(row.id),row,'titles');return row;
+}
+export function grantTitle(d,e,args,eventId){
+    ensureNobleTitles(d,e);
+    const s=d.get('state'),nation=rulerNation(s,'player'),holder=e.resolve(args.member,'npc'),def=titleDef(e,args.name),domain=args.settlement;
+    if(!nation||!isEffective(e,d,'player'))throw Error('只有现任君主可以授爵');
+    if(!def||!highTitle({title:def.name,status:'受封'})||!nation.domains.some(id=>containsDomain(e,s,id,domain))||!currentDomains(e,s,'player').some(id=>containsDomain(e,s,id,domain)))throw Error('爵位或封地不在君主可授范围');
+    if(!isEffective(e,d,holder)||(npcAgeAt(e,s,holder)??0)<18)throw Error('受封者须为现存成年人物');
+    const level=localLevel(e,s,domain);
+    if(def.name==='男爵'&&!['镇','城'].includes(level)||def.name==='子爵'&&level!=='城'||def.name==='伯爵'&&level!=='郡'||['侯爵','公爵'].includes(def.name)&&level!=='省')throw Error('爵位与封地级别不符');
+    if(def.name==='侯爵'&&(e.world.regions?.find(r=>r.id===domain)?.counties?.length??0)<2)throw Error('侯爵须至少两郡');
+    if(args.consent!==true||d.get('state','npcs',holder,'location')!==s.location||!awake(s.npcs?.[holder]))throw Error('受封者须清醒在场并同意');
+    const prior=s.records?.[`title:${holder}`];
+    if(prior&&prior.sourceEvent===eventId)return {title:prior,duplicate:true};
+    if(prior&&prior.status!=='已除爵')throw Error('已有爵位，须先依法处理原爵');
+    if(nobleLords(e,s).some(t=>t.holder!==nation.ruler&&t.holder!==holder&&(t.domains??[t.fief]).some(id=>containsDomain(e,s,id,domain)||containsDomain(e,s,domain,id))))throw Error('封地已有受封者');
+    const row={category:'title',id:`title:${holder}`,holder,title:def.name,rank:def.ranks[0],fief:domain,domains:[domain],status:'受封',grantor:nation.id,grantedAt:s.minute,source:`nation:${nation.id}`,sourceEvent:eventId,
+        nextIncome:s.minute+MONTH,incomeMark:domainReceipts(e,s,[domain]),levy:{...def.levy,due:s.minute+YEAR,served:0,attended:false},breaches:0};
+    return {title:writeGrantedTitle(d,e,row,eventId)};
+}
+export function stripTitle(d,e,args,eventId){
+    ensureNobleTitles(d,e);
+    const s=d.get('state'),holder=args.member==='player'?'player':e.resolve(args.member,'npc'),row=s.records?.[`title:${holder}`],nation=rulerNation(s,'player');
+    if(!row||!nation||row.grantor!==nation.id||!isEffective(e,d,'player'))throw Error('没有剥夺该爵位的任免权限');
+    if(row.status==='已除爵')return {title:row,duplicate:true};
+    if(typeof args.reason!=='string'||!args.reason.trim())throw Error('除爵须登记裁决理由');
+    const next={...row,status:'已除爵',strippedAt:s.minute,strippedBy:nation.id,reason:args.reason,decisionEvent:eventId};
+    changeLegacyHoldings(d,e,{holder,source:`title:${row.id}`,reason:'vacated',eventId},()=>holdingSet(d,e,rec(row.id),next,'titles'));
+    return {title:next};
+}
 function dueOf(r){return r.category==='title_petition'?r.due:Math.min(r.nextIncome,r.levy.due);}
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status));
 export function nextTitleMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueOf).filter(m=>m>now));}
 export function advanceTitles(d,engine,{after}){
+    ensureNobleTitles(d,engine);
     for(let guard=0;guard<1000;guard++){
         const r=scheduled(d.get('state')).filter(r=>dueOf(r)<=after).sort((a,b)=>dueOf(a)-dueOf(b))[0];
         if(!r)return;

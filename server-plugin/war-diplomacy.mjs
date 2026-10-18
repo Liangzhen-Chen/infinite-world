@@ -1,7 +1,7 @@
 import {sink,BOOKED} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('war-diplomacy',{sinks:['sink:export']});
-import {recognizeIndependence,settleNationWar} from './nation-founding.mjs';
+import {recognizeIndependence,settleNationWar,changeTerritoryControl} from './nation-founding.mjs';
 import {damageFacilities} from './facilities.mjs';
 // U12b: campaigns share military ledgers, K4 standing, K6 effects and U17 commissions.
 import {armies,armyKey,armyStrength,createArmy,ensureArmies,raiseLevy,loseSoldiers,releaseLevy,partyPay,partyCredit,partyName,partyAccount} from './military.mjs';
@@ -88,12 +88,13 @@ function raid(d,e,w,winner,at,src){
  return {village,food};
 }
 export function endWar(d,e,w,{winner=null,tribute=0,at,src,status='议和'}){
+ const settled=d.get(...path(`war:${w.id}`));if(settled?.endedAt!==undefined)return settled;
  w.status=status;w.endedAt=at;w.winner=winner;w.nextAt=null;
  for(const t of tribalWars(d.get('state')))if(t.war===w.id)holdingSet(d,e,path(`tribal_war:${t.dynamic}`),{...t,status,endedAt:at,winner},'war-diplomacy');
  for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row)continue;const a=copy(row);releaseLevy(d,e,a,a.levy.count,{at,reason:'战事结算'});a.war=null;delete a.warSide;a.location=a.home;a.status=armyStrength(a)?'驻守':'待征';holdingSet(d,e,path(armyKey(id)),a,'war-diplomacy');}
  holdingRemove(d,null,path(`war-disruption:${w.id}`),'war-diplomacy');for(const v of w.villages)if(d.get(...path(`war-danger:${v}`))?.war===w.id)holdingRemove(d,null,path(`war-danger:${v}`),'war-diplomacy');
  relations(d,e,w.aggressor,w.defender,rules(e).peaceStanding,src,at);
- if(winner===w.aggressor&&w.territory){const previous=e.world.regions.find(c=>c.id===w.territory)?.ruler;holdingSet(d,e,path(`territory:${w.territory}`),{category:'territory',county:w.territory,ruler:winner,previous,war:w.id,minute:at,sourceEvent:src},'war-diplomacy');}
+ if(winner===w.aggressor&&w.territory)changeTerritoryControl(d,e,w.territory,winner,{at,src,war:w.id});
  if(winner&&tribute){const loser=winner===w.aggressor?w.defender:w.aggressor;holdingSet(d,e,path(`tribute:${pair(winner,loser)}`),{category:'tribute',payer:loser,payee:winner,amount:tribute,nextAt:at+30*DAY,arrears:0,war:w.id,sourceEvent:src},'war-diplomacy');}
  settleNationWar(d,e,w,{winner,at,src});
  save(d,w);announce(d,e,w,`${w.name}已经${status}，战后条件已经议定。`,at,src);return w;

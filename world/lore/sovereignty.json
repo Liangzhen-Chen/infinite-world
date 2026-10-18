@@ -35,6 +35,10 @@
     "ambition": 60,
     "hostility": -30
   },
+  "defection": {
+    "followMargin": 20,
+    "source": "S2c-K2：叛离须有退出原组织的实际行为；部下对叛离者的立场须比对原组织高至少20才自愿跟随。原公库不随人转移。爵位裁决与实控、主权分别登记。"
+  },
   "source": "U16任免、封地与独立章",
   "practices": [
     {

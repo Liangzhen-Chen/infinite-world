@@ -4,6 +4,10 @@ import {authorityOf,playerOffices,residentAdults} from './governance.mjs';
 import {standing} from './standing.mjs';
 import {knownTopics,opinionOf} from './public-opinion.mjs';
 import {promotionRules,adminLevel,marketFactor} from './promotion-view.mjs';
+import fs from 'node:fs';
+import {allFacilities,facilityView,within as facilityWithin} from './facility-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+const facilityRequirements=JSON.parse(fs.readFileSync(new URL('../world/lore/promotion-facilities.json',import.meta.url),'utf8'));
 export {promotionRules,adminLevel,rankedOffice,marketFactor} from './promotion-view.mjs';
 
 // U13 settlement promotion. Administrative level (village, town, city,
@@ -48,14 +52,19 @@ export function promotionConditions(engine,state,settlement,{survey=false}={}){
     const housing=engine.world.locations.filter(l=>l.access?.mode==='private'&&l.id!==settlement&&within(engine,l.id,settlement)).length+created.filter(c=>c.purpose==='私宅').length;
     const businesses=Object.values(state.records??{}).filter(r=>r.category==='business'&&r.status==='营业'&&within(engine,r.location,settlement)).length;
     const industries=(profile?.details?.economy?.industries?.length??0)+businesses;
-    const facilities=created.filter(c=>c.purpose==='公共设施').length;
+    const required=facilityRequirements.steps[`${step.from}:${step.to}`]??[];
+    const usable=allFacilities(engine,state).filter(b=>facilityWithin(engine,state,b.id,settlement)&&
+        facilityView(engine,state,b.id)?.factor>0&&!Object.values(state.projects??{}).some(p=>p.status==='施工中'&&(p.building===b.id||b.builtProject===p.id)));
+    const matched=required.map(r=>({...r,buildings:usable.filter(b=>r.services.some(s=>facilityView(engine,state,b.id).services.includes(s))||r.names.some(n=>(b.name??'').includes(n))).map(b=>b.id)}));
+    const facilities=required.length?matched.filter(r=>r.buildings.length).length:usable.filter(b=>b.purpose==='公共设施').length;
     const cases=Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&(r.settlement===settlement||within(engine,r.location,settlement))&&r.minute>state.minute-q.caseWindowDays*DAY).length;
     const who=governor(engine,state,settlement),ineligible=(s.population??0)<q.population||housing<q.housing||industries<q.industries||facilities<q.facilities||cases>q.maxCases;
     const views=who&&!(survey&&ineligible)?opinion(engine,state,settlement,who):{support:0,oppose:0};
     const checks={population:{have:s.population??0,need:q.population},housing:{have:housing,need:q.housing},industries:{have:industries,need:q.industries},
-        facilities:{have:facilities,need:q.facilities},order:{have:cases,max:q.maxCases},opinion:{...views,governor:who}};
+        facilities:{have:facilities,need:q.facilities,required:matched},order:{have:cases,max:q.maxCases},opinion:{...views,governor:who}};
     const LABEL={population:'人口',housing:'住房',industries:'产业',facilities:'公共设施'},reasons=[];
     for(const k of Object.keys(LABEL))if(checks[k].have<checks[k].need)reasons.push(`${LABEL[k]}${checks[k].have}，未满${checks[k].need}`);
+    for(const r of matched)if(!r.buildings.length)reasons.push(`缺少建成可用的${r.name}`);
     if(cases>q.maxCases)reasons.push(`近${q.caseWindowDays}日立案${cases}起，多于${q.maxCases}`);
     if(views.oppose>views.support)reasons.push(`成年住户反对主事者${views.oppose}多于支持${views.support}`);
     return {settlement,level:level.level,to:step.to,step,checks,ok:!reasons.length,reasons};
@@ -116,7 +125,7 @@ function survey(d,engine,at){
             const key=`promotion_notice:${settlement}:${period}`;if(d.get(...rec(key)))continue;
             d.set(rec(key),{category:'promotion_notice',id:key,settlement,minute:at,to:c.to,checks:c.checks,note:'条件已齐，可到白石镇公署前厅递件申请升格',sourceEvent:key});
             d.say(`${engine.byId.get(settlement)?.name??settlement}已具备升为${c.to}的条件，可到公署递件`);
-        }else if(who&&state.npcs?.[who]?.status!=='死亡')file(d,engine,settlement,who,null,`survey_${period}`,at);
+        }else if(who&&isEffective(engine,d,who))file(d,engine,settlement,who,null,`survey_${period}`,at);
     }
 }
 export function promotionAction(d,args,eventId){
