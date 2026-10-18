@@ -41,7 +41,7 @@ export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=
     bookStock(d,engine,bag(engine,owner,item),delta,books);
     return{instances:removed};
 }
-export function transferItems(d,engine,from,to,item,quantity,selection=null){
+export function validateItemTransfer(d,engine,from,to,item,quantity,selection=null){
     count(quantity);if(!quantity)throw new Error('转移数量必须为正');
     if(from===to)throw new Error('物品转移双方不能相同');
     if(selection!==null&&!Array.isArray(selection))throw new Error('单件选择必须为编号列表');
@@ -49,6 +49,10 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null){
     if(selection&&selection.some(unit=>!units.includes(unit)))throw new Error('没有选中的单件');
     if(selection&&new Set(selection).size!==selection.length)throw new Error('单件编号重复');
     if(selection&&selection.length>quantity)throw new Error('单件数超过转移数量');
+    return units;
+}
+export function transferItems(d,engine,from,to,item,quantity,selection=null){
+    const units=validateItemTransfer(d,engine,from,to,item,quantity,selection);
     const chosen=selection?[...selection,...units.filter(unit=>!selection.includes(unit)).slice(0,Math.max(0,quantity-selection.length))]:units.slice(0,quantity);
     const moved=changeItems(d,engine,from,item,-quantity,{preserve:true,selection:chosen,books:BOOKED});
     changeItems(d,engine,to,item,quantity,{books:BOOKED});

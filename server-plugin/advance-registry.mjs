@@ -14,8 +14,8 @@ import {advanceAirEffects}from'./magic-air.mjs';
 import {advanceWaterEarth}from'./magic-water-earth.mjs';
 import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
-import {advanceShadowContracts,advanceContracts,advanceRituals}from'./contracts.mjs';
-import {advanceCredit}from'./credit.mjs';
+import {advanceShadowContracts,advanceContracts,advanceRituals,advanceRitualEffects}from'./contracts.mjs';
+import {advanceCredit,nextCreditMinute}from'./credit.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
@@ -35,13 +35,14 @@ import {advanceFestivals,nextFestivalMinute,festivalCalendar}from'./festival.mjs
 import {advanceWildlife,nextWildlifeEncounterMinute,wildlifeEncounterAt,settleWildlifeEncounter,displaceForestWildlife}from'./wildlife.mjs';
 import {advanceBosses}from'./bosses.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
-import {advanceNpcAutonomy,nextNpcAutonomyMinute}from'./npc-autonomy.mjs';
+import {advanceNpcAutonomy,nextNpcAutonomyMinute,catchUpFurnaces}from'./npc-autonomy.mjs';
+import {magicEffect}from'./magic-effects.mjs';
 import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
 import {advanceOrganizations,nextOrganizationMinute}from'./organizations.mjs';
-import {isEffective} from './lifecycle-state.mjs';
+import {isEffective} from './holdings.mjs';
 import {advanceFaith}from'./faith.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
@@ -103,6 +104,15 @@ export function catchUpLocal(engine,d,after){
         advanceCare(d,engine,before,after);
         advanceWaterEarth(d,engine,before,after);
     }
+    // Settle the elapsed part while expiring effects are still available.
+    // Heat owns the shared room/air minute loop; mind-space uses this same
+    // local cursor so a later scheduled tick cannot charge the tail twice.
+    catchUpFurnaces(d,engine,after);
+    advanceMagicObjects(d,engine,after);
+    advanceAirEffects(d,engine,before,after);
+    advanceMindSpace(d,engine,before,after);
+    advanceShadowContracts(d,before,after);
+    advanceRitualEffects(d,engine,after);
     // These consumers have already restored temperature/returned reserved
     // water. Locally shortened lifetimes must not leave stale active effects.
     for(const [id,effect]of Object.entries(d.get('state','effects')??{}))if(['care','water_earth'].includes(effect.kind)&&effect.expires<=after)d.remove(['state','effects',id]);
@@ -140,6 +150,8 @@ export function nextFromScheduleHeap(engine,d,now,end){
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
+        if(row.category==='society_news'&&row.status==='在途')due(row.arrivesAt);
+        if(row.category==='society_agreement'&&row.status==='有效')due(row.nextDue);
         if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }
     const constraints=personConstraints(engine,state);
@@ -227,7 +239,7 @@ const systems=[
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>advanceNpcObligations(d,e,before,after,id,{beforeState})},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
- {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
+ {id:'credit',order:250,nextMinute:nextCreditMinute,advance:(e,d,{after})=>advanceCredit(d,e,after)},
  {id:'labor_market',order:240,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextLaborMinute(e,d,now),advance:(e,d,ctx)=>advanceLaborMarket(d,e,ctx)},
  {id:'summons',order:300,advance:(e,d,{after})=>advanceSummons(d,after)},
  {id:'law',order:400,advance:(e,d,{after})=>advanceLaw(d,after,e)},
@@ -313,10 +325,10 @@ const systems=[
     }
  }},
  {id:'magic_care',order:1800,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='preserve'&&x.expires>now&&x.upkeepMp>0).map(x=>now+Math.max(1,Math.floor(d.get('state','player','mp')/x.upkeepMp)+1))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceCare(d,e,before,after);}},
- {id:'magic_mind_space',order:1900,advance:(e,d,{before,after})=>advanceMindSpace(d,e,before,after)},
- {id:'shadow_contracts',order:2000,advance:(e,d,{before,after})=>advanceShadowContracts(d,before,after)},
- {id:'magic_objects',order:2100,advance:(e,d,{after})=>advanceMagicObjects(d,e,after)},
- {id:'magic_air',order:2200,advance:(e,d,{before,after})=>advanceAirEffects(d,e,before,after)},
+ {id:'magic_mind_space',order:1900,advance:(e,d,{before,after})=>{if(!d.scheduler)advanceMindSpace(d,e,before,after);}},
+ {id:'shadow_contracts',order:2000,advance:(e,d,{before,after})=>{if(!d.scheduler)advanceShadowContracts(d,before,after);}},
+ {id:'magic_objects',order:2100,advance:(e,d,{after})=>{if(!d.scheduler)advanceMagicObjects(d,e,after);}},
+ {id:'magic_air',order:2200,advance:(e,d,{before,after})=>{if(!d.scheduler)advanceAirEffects(d,e,before,after);}},
  {id:'magic_water_earth',order:2300,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='water_earth'&&x.operation==='mud_seal'&&x.expires>now).map(x=>Math.max(now+1,x.lastChecked+4))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceWaterEarth(d,e,before,after);}},
  {id:'magic_area',order:2400,active:(e,d)=>Object.values(d.get('state','effects')??{}).some(x=>x.kind==='area'),nextMinute:(e,d,now)=>nextMagicAreaMinute(d.get('state'),now),
   advance:(e,d)=>settleMagicAreas(d,e)},
@@ -375,7 +387,10 @@ const dueCollectors={
     summons:(e,d,c)=>Object.entries(d.get('state','effects')??{}).filter(([,r])=>r.kind==='summon')
         .map(([id,r])=>({id,anchorId:r.target??r.owner??'player',registeredSeq:r.registeredSeq??0,execute:()=>advanceSummons(d,c.after,[id])})),
     effect_expiry:(e,d,c)=>Object.entries(d.get('state','effects')??{}).filter(([,r])=>r.expires<=c.after)
-        .map(([id,r])=>({id,anchorId:r.target??r.owner??id,registeredSeq:r.registeredSeq??0,execute:()=>{if(d.get('state','effects',id)?.expires<=c.after)d.remove(['state','effects',id]);}})),
+        .map(([id,r])=>({id,anchorId:r.target??r.owner??id,registeredSeq:r.registeredSeq??0,execute:()=>{
+            const effect=d.get('state','effects',id);
+            if(effect?.expires<=c.after&&!magicEffect(effect.kind)?.expire?.(d,id,c.after))d.remove(['state','effects',id]);
+        }})),
     agriculture_expiry:(e,d)=> (e.rules.agriculture?.settlements??[]).map(p=>({id:p.settlement,anchorId:p.settlement,execute:()=>settleAgricultureExpiry(d,e,p.settlement)})),
     dying:(e,d,c)=>[{id:'dying',anchorId:'player',execute:()=>systems.find(s=>s.id==='dying').advance(e,d,c)}],
     deliveries:(e,d,c)=>Object.entries(d.get('state','obligations')??{}).map(([id,r])=>({id,anchorId:r.promisor??'player',registeredSeq:r.registeredSeq??r.seq??0,execute:()=>systems.find(s=>s.id==='deliveries').advance(e,d,{...c,obligationIds:[id]})})),

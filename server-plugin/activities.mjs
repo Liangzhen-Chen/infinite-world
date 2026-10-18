@@ -1,4 +1,4 @@
-import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
+import {isEffective,isPhysicallyDead} from './holdings.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
@@ -42,7 +42,7 @@ import {festivalAction}from'./festival.mjs';
 import {factionClockAction}from'./faction-clock.mjs';
 import {isHazardClock,hazardClockAction}from'./seasonal-hazards.mjs';
 import {siteAction,woodcut}from'./sites.mjs';
-import {organizationAction,foundOrganization}from'./organizations.mjs';
+import {organizationAction,foundOrganization,organizationDuelContext,settleOrganizationDuel}from'./organizations.mjs';
 import {familyAction} from './family-politics.mjs';
 import {faithAction}from'./faith.mjs';
 import {workAction,isWorkOperation}from'./works.mjs';
@@ -58,6 +58,8 @@ declareHoldingWriter('activities',{kinds:['owns','resides','resident_of','devote
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw new Error('记录文字无效');return value.trim();};
 export const activities={
+    organizationDuelContext(d,id,challenger,target){return organizationDuelContext(d,this,id,challenger,target);},
+    settleOrganizationDuel(d,duel,winner,eventId){return settleOrganizationDuel(d,this,duel,winner,eventId);},
     site(d,args,id){return args.operation==='woodcut'?woodcut.call(this,d,args,id):args.operation==='mine'?mine.call(this,d,args,id):siteAction.call(this,d,args,id);},
     lair(d,args,id){return lairAction.call(this,d,args,id);},
     wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},

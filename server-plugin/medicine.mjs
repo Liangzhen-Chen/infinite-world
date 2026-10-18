@@ -121,7 +121,11 @@ function finish(d,e,r){
 }
 export function nextMedicineMinute(e,d,now){
  if(!medicineFresh(e))return Infinity;
- return medicineRows(d.get('state')).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]).filter(at=>at>now).reduce((a,b)=>Math.min(a,b),Infinity);
+ const s=d.get('state');
+ return [...medicineRows(s).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]),
+  ...[s.player,...Object.values(s.npcs??{})].flatMap(a=>(a.medical?.wounds??[]).filter(w=>!w.healed).map(w=>w.careDue)),
+  ...Object.values(s.family?.illnesses??{}).filter(r=>r.patient==='player'&&r.status==='患病中').map(r=>r.endsAt)]
+  .filter(at=>Number.isSafeInteger(at)&&at>now).reduce((a,b)=>Math.min(a,b),Infinity);
 }
 function autonomous(d,e,now){
  const s=d.get('state'),sites=medicineSites(e,s);if(!sites.some(c=>c.doctors.length&&c.capacity))return;

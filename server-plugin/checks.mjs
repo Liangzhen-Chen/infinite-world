@@ -3,7 +3,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {heldUnit}from'./items.mjs';
 import {trickKey,adaptationBonus,noteTrick,intelligenceFresh}from'./npc-intelligence.mjs';
 import {hiddenCheckBonus,passiveDomain,observationTime}from'./hidden-passives.mjs';
-import {isPhysicallyDead}from'./lifecycle-state.mjs';
+import {isPhysicallyDead}from'./holdings.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const die=(document,eventId,label)=>createHash('sha256').update(`${document.randomSeed}:${eventId}:${label}`).digest().readUInt32LE(0)%20+1;
 const attributeOf=(engine,value)=>{if(!engine.rules.attributes.includes(value))throw new Error('属性不在规则表');return value;};

@@ -3,7 +3,7 @@ import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} f
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
-export {advanceRituals};
+export {advanceRituals,advanceRitualEffects}from'./magic-ritual.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -30,7 +30,7 @@ export function advanceShadowContracts(d,before,after){
   if(e.target!=='player'&&(permission?.category!=='authorization'||permission.action!=='mental_magic'||permission.subject!==e.target||permission.grantor!==e.target||permission.grantee!=='player'||permission.revoked||permission.expires<=before)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const until=Math.min(after,e.expires,e.target==='player'?Infinity:permission.expires),minutes=Math.max(0,until-Math.max(before,e.started));
   const path=e.target==='player'?['state','player']:['state','npcs',e.target],actor=d.get(...path);
-  if(!actor?.mental||isPhysicallyDead(engine,d,e.target)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
+  if(!actor?.mental||isPhysicallyDead(d.engine,d,e.target)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const amount=Math.min(e.remaining,minutes*e.stressPerMinute);
   d.set([...path,'mental','stress'],Math.min(100,actor.mental.stress+amount));
   holdingSet(d,null,[...contractPath(id),'enforcement'],{...e,remaining:e.remaining-amount,active:e.remaining>amount&&until===after&&after<e.expires},'contracts');
