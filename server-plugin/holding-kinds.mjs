@@ -88,6 +88,7 @@ export const confined=(d,x)=>aliveHoldings(d,{kind:'guest_of',holder:x}).some(r=
 // alive / impaired 由调用方给出（旧字段：人物 status）；regime 读 guest_of 条款 terms.regime.keepsEffective。
 export function effective(d,id,{alive=()=>true,impaired=()=>false}={}){
     const h=holdingRow(d,id);if(!h||h.until!==undefined)return false;
+    if((d.peek?d.peek('holdings','protocol','entities',h.holder):d.get('holdings','protocol','entities',h.holder))?.gone)return false;
     if(!holdingKind(h.kind)?.functional)return alive(h.holder);
     if(!alive(h.holder)||h.terms?.suspended||impaired(h.holder))return false;
     const custody=aliveHoldings(d,{kind:'guest_of',holder:h.holder}).filter(r=>r.variant==='detained');

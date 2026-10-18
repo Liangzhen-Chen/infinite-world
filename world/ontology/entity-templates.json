@@ -16,7 +16,8 @@
    "holder": true,
    "subject": true,
    "obligationParty": true,
-   "located": true
+   "located": true,
+   "inheritance": true
   },
   {
    "id": "collective",
@@ -29,7 +30,8 @@
    "holder": true,
    "subject": true,
    "obligationParty": true,
-   "located": true
+   "located": true,
+   "inheritance": false
   },
   {
    "id": "thing",
@@ -45,7 +47,8 @@
    "holder": false,
    "subject": true,
    "obligationParty": false,
-   "located": true
+   "located": true,
+   "inheritance": false
   },
   {
    "id": "population",
@@ -57,7 +60,8 @@
    "holder": false,
    "subject": true,
    "obligationParty": false,
-   "located": true
+   "located": true,
+   "inheritance": false
   },
   {
    "id": "place",
@@ -69,7 +73,8 @@
    "holder": false,
    "subject": true,
    "obligationParty": false,
-   "located": true
+   "located": true,
+   "inheritance": false
   },
   {
    "id": "office",
@@ -81,7 +86,8 @@
    "holder": true,
    "subject": true,
    "obligationParty": true,
-   "located": false
+   "located": false,
+   "inheritance": false
   },
   {
    "id": "instrument",
@@ -96,7 +102,8 @@
    "holder": false,
    "subject": true,
    "obligationParty": false,
-   "located": false
+   "located": false,
+   "inheritance": false
   },
   {
    "id": "interim",
@@ -112,7 +119,8 @@
    "holder": true,
    "subject": false,
    "obligationParty": true,
-   "located": false
+   "located": false,
+   "inheritance": false
   }
  ],
  "idPrefixes": [

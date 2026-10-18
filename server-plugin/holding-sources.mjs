@@ -14,6 +14,7 @@
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
     setLocation,clearLocation,locationOf,holdingsOfSource,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
+import {holdingKind} from './holdings.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
@@ -40,6 +41,21 @@ export function defineHoldingSource(name,spec){
     sources.set(name,spec);
 }
 export const holdingSources=()=>[...sources.keys()].sort();
+
+defineHoldingSource('transition',{
+    recordCategories:['transition','transition_procedure'],unitOfRecord:(state,key)=>state.records?.[key]?.entity,
+    units:(engine,state)=>Object.values(state.records??{}).filter(r=>r.category==='transition').map(r=>r.entity),
+    extract(engine,state,id){
+        const r=state.records?.[`transition:${id}`];if(!r)return null;
+        const entities=[],locations=[];
+        const procedures=Object.values(state.records??{}).filter(p=>p.category==='transition_procedure'&&p.entity===id);
+        if(r.successor&&!procedures.some(p=>p.id===r.successor))procedures.push({id:r.successor,phase:'notice'});
+        for(const p of procedures)entities.push({id:p.id,kind:p.id.startsWith('liq_')?'liquidation':'estate',facts:{of:id,phase:p.phase}});
+        if(r.wreck&&r.gone){entities.push({id:r.wreck,kind:'wreck',facts:{of:id,body:r.body,yields:r.yields}});
+            if(r.location)locations.push({entity:r.wreck,at:r.location,mode:'place'});}
+        return {entities,locations};
+    },
+});
 const sourceKey=(name,unit)=>`${name}:${unit}`;
 const parseSource=key=>{const i=String(key).indexOf(':');return i<0?null:{name:key.slice(0,i),unit:key.slice(i+1)};};
 
@@ -89,7 +105,24 @@ const holdingKey=h=>`${h.kind}|${h.variant??''}|${h.holder}|${h.subject}|${canon
 // 一个单元按旧字段应有的内容；缺省三项为空。
 function desired(engine,state,name,unit,ctx={}){
     const out=sources.get(name).extract(engine,state,unit,ctx)??{};
-    return {holdings:out.holdings??[],entities:out.entities??[],locations:out.locations??[]};
+    // Old fields retain history. A legal disappearance closes their current
+    // edges; the compatibility projection independently reads the declaration.
+    const gone=id=>state.records?.[`transition:${id}`]?.gone?state.records[`transition:${id}`]:null;
+    const holdings=(out.holdings??[]).flatMap(h=>{
+        let row={...h};const a=gone(h.holder),b=gone(h.subject);
+        if(a){const hook=holdingKind(h.kind)?.handover.gone;
+            const target=hook==='estate'?a.successor:hook==='succeed'?a.successors?.[0]:hook==='revert'?h.grantedBy:null;
+            if(!target)return [];row.holder=target;
+        }
+        if(b){const hook=holdingKind(h.kind)?.onSubjectGone;if(hook==='close')return [];
+            if(hook==='estate')row.subject=b.successor??b.wreck;
+            if(hook==='reparent')row.subject=b.location;
+        }
+        return row.subject?[row]:[];
+    });
+    return {holdings,entities:(out.entities??[]).filter(e=>!gone(e.id)),locations:(out.locations??[]).filter(l=>!gone(l.entity)).map(l=>{
+        const t=gone(l.at);return t?{...l,at:t.wreck??t.location,mode:t.wreck?'container':'place'}:l;
+    })};
 }
 function* allUnits(engine,state){
     for(const name of holdingSources())for(const unit of new Set(sources.get(name).units(engine,state)))yield [name,String(unit)];
@@ -251,7 +284,9 @@ defineHoldingSource('office',{
         const i=unit.indexOf('|'),settlement=unit.slice(0,i),office=unit.slice(i+1),id=officeEntity(settlement,office);
         const rows=Object.values(state.records??{}).filter(r=>r?.category==='governance_office'&&r.settlement===settlement&&r.office&&officeUnitOf(state,r)===unit);
         let latest=null;for(const r of rows)if(!latest||(r.since??r.appointedAt??0)>=(latest.since??latest.appointedAt??0))latest=r;
-        const holder=latest?(latest.status==='在任'?latest.holder:null):catalogHead(engine,state,settlement,office);
+        let holder=latest?(latest.status==='在任'?latest.holder:null):catalogHead(engine,state,settlement,office);
+        const t=state.records?.[`transition:${holder}`];
+        if(t?.restoredAt!==undefined&&(!latest||t.officeFacts?.some(o=>o.id===latest.id&&o.since===latest.since&&o.sourceEvent===latest.sourceEvent)))holder=null;
         return {entities:[{id,kind:'office',facts:{settlement,office}}],holdings:holder?[{kind:'holds_office',holder:actorId(engine.world,holder),subject:id}]:[]};
     },
 });
@@ -567,7 +602,7 @@ defineHoldingSource('transport',{
         ...Object.entries(state.records??{}).filter(([,r])=>r?.category==='transport_asset').map(([k])=>k)]),
     extract(engine,state,key){
         const r=state.records?.[key]??openingAsset(engine,key);
-        if(!r||(r.durability??1)<=0)return null;
+        if(!r||((r.durability??1)<=0&&r.destroyedAt===undefined))return null;
         return {holdings:r.owner?[{kind:'owns',holder:actorId(engine.world,r.owner),subject:key,terms:{share:1}}]:[],
             locations:r.location?[{entity:key,at:r.location,mode:'place'}]:[]};
     },
@@ -669,7 +704,7 @@ defineHoldingSource('item',{
     units:(engine,state)=>Object.keys(state.itemInstances??{}),
     extract(engine,state,id){
         const u=state.itemInstances?.[id];if(!u)return null;
-        if(u.container&&state.itemInstances?.[u.container])return {locations:[{entity:id,at:u.container,mode:'container'}]};
+        if(u.container&&(state.itemInstances?.[u.container]||Object.values(state.records??{}).some(r=>r.category==='transition'&&r.wreck===u.container&&r.gone)))return {locations:[{entity:id,at:u.container,mode:'container'}]};
         if(u.status==='持有'&&u.owner&&(entityTemplates(engine,state,actorId(engine.world,u.owner))??[]).includes('agent'))return {locations:[{entity:id,at:actorId(engine.world,u.owner),mode:'carried'}]};
         if(u.status==='封存'&&u.location)return {locations:[{entity:id,at:u.location,mode:'place'}]};
         return null;

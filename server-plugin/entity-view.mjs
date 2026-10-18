@@ -23,7 +23,8 @@ export function personMental(engine,state,id){
     return fact(a?.mental??{fatigue:0,alertness:50,stress:0,interference:[]},a?.mental?'actor.mental':'unstrained baseline',Boolean(a?.mental));
 }
 
-const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡';
+const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'&&!state.records?.[`transition:${id}`]?.gone;
+const priorOffice=(state,id,key,row)=>{const t=state.records?.[`transition:${id}`];return t?.restoredAt!==undefined&&(!key||t.officeFacts?.some(o=>o.id===key&&o.since===row?.since&&o.sourceEvent===row?.sourceEvent));};
 const dismissed=(state,id)=>recordsWhere(state.records,'category','legal_dismissal').some(r=>(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>recordEntriesWhere(state.records,'category','governance_office');
 function remoteHeadOffice(state,settlement){
@@ -56,8 +57,10 @@ function officeFact(engine,state,key,row,override=true){
 // the office definition at the settlement's current administrative level.
 export function personOffices(engine,state,requested,{settlement=null,power=null}={}){
     const id=actorId(engine.world,requested),rows=officeRows(state),out=[];
+    const transition=state.records?.[`transition:${id}`];
     if(!living(engine,state,id)||dismissed(state,id))return out;
     for(const [key,row] of rows){
+        if(transition?.restoredAt!==undefined&&transition.officeFacts?.some(o=>o.id===key&&o.since===row.since&&o.sourceEvent===row.sourceEvent))continue;
         if(actorId(engine.world,row.holder)!==id||row.status!=='在任'||(row.since??row.appointedAt??0)>(state.minute??0)||(row.until??Infinity)<=(state.minute??0))continue;
         if(row.office==='office_village_head'||row.office===remoteHeadOffice(state,row.settlement)?.office.id){
             const gov=settlementGovernment(engine,state,row.settlement);
@@ -73,6 +76,7 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
     for(const sid of settlements){
+        if(transition?.restoredAt!==undefined)continue;
         const g=settlementGovernment(engine,state,sid);
         if(g.head.value!==id||g.head.override||engine.world.settlementProfiles?.find(p=>p.id===sid)?.council)continue;
         const entry=officeFact(engine,state,`catalog:${sid}`,{id:`catalog:${sid}`,category:'governance_office',office:'office_village_head',holder:id,settlement:sid,status:'在任',since:0,source:g.source.value},false);
@@ -293,6 +297,7 @@ function buildPersonConstraints(engine,state){
 }
 export function personConstraint(engine,state,id,minute=state.minute??0,index=null){
     id=actorId(engine.world,id);
+    const gone=state.records?.[`transition:${id}`];if(gone?.gone&&gone.minute<=minute)return fact(gone,`state.records.transition:${id}`,true);
     for(const {key,r} of (index??personConstraints(engine,state)).get(id)??[]){
         if((r.minute??r.started??0)>minute||(r.expires??Infinity)<=minute)continue;
         return fact(r,`state.records.${key}`,true);
@@ -442,9 +447,9 @@ export function settlementGovernment(engine,state,id){
     const eligible=holder=>Boolean(holder)&&living(engine,state,holder)&&!dismissed(state,actorId(engine.world,holder));
     // Select the last effective appointment before checking its validity. An
     // expired or removed successor leaves a vacancy rather than restoring a predecessor.
-    const active=row?.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&eligible(row.holder);
+    const active=row?.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&eligible(row.holder)&&!priorOffice(state,row.holder,current?.[0],row);
     const office=engine.rules.governance?.authority?.offices?.[row?.office];
-    let head=fact(row?active?actorId(engine.world,row.holder):null:eligible(originalHead)?actorId(engine.world,originalHead):null,
+    let head=fact(row?active?actorId(engine.world,row.holder):null:eligible(originalHead)&&!priorOffice(state,originalHead,null,null)?actorId(engine.world,originalHead):null,
         current?`state.records.${current[0]}`:g?.head?`catalog.${id}.details.governance.head`:ag?.manager?`rules.agriculture.${id}.manager`:generated?.source??`catalog.${id}.details.governance.head`,Boolean(current));
     if(!current&&!originalHead){
         const group=engine.rules.questSources?.funds?.[id];

@@ -18,8 +18,8 @@ export function inheritanceRule(e,s,id,location){
  const local=(culture&&law?.rules?.find(r=>r.culture===culture))||(code&&law?.rules?.find(r=>r.code===(code.template??code.id)))||law?.rules?.find(r=>r.polity===(code?.polity??'王国'));
  return {property:'spouse-first',title:'eldest-child',office:'vacant',...local,law:code?.id??null};
 }
-function candidates(e,s,id,rule,minute){
- const living=ids=>[...new Set(ids)].filter(x=>x!==id&&familyLiving(s,x)&&(s.npcs?.[x]||e.byId.has(x)||s.created?.[x]));
+export function inheritanceCandidates(e,s,id,rule,minute,eligible=()=>true){
+ const living=ids=>[...new Set(ids)].filter(x=>x!==id&&familyLiving(s,x)&&eligible(x)&&(s.npcs?.[x]||e.byId.has(x)||s.created?.[x]));
  const children=living(legalChildren(e,s,id)).sort((a,b)=>(npcAgeAt(e,s,b,minute)??-1)-(npcAgeAt(e,s,a,minute)??-1)||a.localeCompare(b));
  const spouses=living(familyEdges(e,s).filter(r=>r.kind==='spouse'&&!r.ended&&(r.from===id||r.to===id)).map(r=>r.from===id?r.to:r.from)).filter(x=>familyAdult(e,s,x,minute)).sort();
  const house=living(npcHousehold(e,s,id)?.members??[]).sort();
@@ -45,7 +45,7 @@ function guardianship(d,e,ward,from,deathId,minute,coins){
 // Called only by V2's death commit. Ownership changes once; the death row
 // records the allocation, never a second balance of the inherited estate.
 export function settleFamilyEstate(d,e,id,minute,deathId,location){
- const s=d.get('state'),rule=inheritanceRule(e,s,id,location),selection=candidates(e,s,id,rule,minute);
+ const s=d.get('state'),rule=inheritanceRule(e,s,id,location),selection=inheritanceCandidates(e,s,id,rule,minute);
  for(const heir of [...selection.heirs,...selection.children])materialize(d,e,heir,minute);
  const heirs=selection.heirs.filter(x=>d.get('state','npcs',x)),current=d.get(...actorPath(e.world,id));
  const estate={heir:heirs[0]??null,heirs,rule,coins:current.coins??0,items:{},allocations:heirs.map(heir=>({heir,coins:0,items:{},assets:[]})),debts:Object.entries(s.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes(id)&&r.amount>(r.paid??0)).map(([key])=>key).sort(),guardianships:[]};
