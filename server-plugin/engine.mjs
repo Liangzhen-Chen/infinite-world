@@ -80,13 +80,13 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
 import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
-import {applyConfigSet} from './scheduler.mjs';
+import {applyConfigSet,Scheduler,schedulerConfig,schedulerWired} from './scheduler.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
 const withBooks=(engine,document)=>withLedger(engine,document);
@@ -103,7 +103,7 @@ export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
     // S2a: the engine rides along so legacy write points without an engine argument can dual-write holdings (holding-sources.holdingSet).
-    constructor(document, engine = null) { this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; }
+    constructor(document, engine = null) { this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; this.scheduler = null; this.contestPool = null; }
     // P2: the cursor keeps its own copies writable until a read lets them escape.
     get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
     set document(document) { this.cursor.reset(document); this.adopted.clear(); }
@@ -297,6 +297,8 @@ export class WorldEngine {
         if(tool==='time')compactNpcPatches(d,0,document.state.npcs);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
+        // S2b：调度器序号与结算钟随推进续写回存档，保证分段推进与一次推进的 seq 连续一致。
+        if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
         return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
@@ -397,15 +399,25 @@ export class WorldEngine {
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute');
-            const next=nextAdvanceMinute(this,d,now,end);
-            this.advanceInterval(d,next-now,id);
+            if(d.scheduler){
+                const next=nextFromScheduleHeap(this,d,now,end);
+                if(next===null){d.set(['state','minute'],end);break;}
+                // S2b：结算钟与玩家钟分离——before 取上一结算刻（跨 reduce 持久），
+                // 使逐日推进与一次推进在非整日起点下也产生相同 before/after/days。
+                const settledBefore=d.scheduler.lastSettled??now;
+                this.advanceInterval(d,next-now,id,settledBefore);
+                d.scheduler.lastSettled=next;
+            }else{
+                const next=nextAdvanceMinute(this,d,now,end);
+                this.advanceInterval(d,next-now,id);
+            }
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
         // Keep one final NPC patch per changed person in this elapsed-time event.
         compactNpcPatches(d,patchStart,npcsBefore);
     }
-    advanceInterval(d,minutes,id){
-        const beforeState=d.get('state'),before=beforeState.minute,after=before+minutes;d.set(['state','minute'],after);
+    advanceInterval(d,minutes,id,settledBefore){
+        const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
@@ -420,6 +432,12 @@ export class WorldEngine {
         }
         const minutes=number(duration,1,43200,'耗时');
         if(['睡眠','休息'].includes(args.activity))holdingSet(d,null,['state','records','mind_rest_activity'],true,'engine');
+        if(schedulerWired(d.get('state'))){
+            d.scheduler=new Scheduler({seed:d.document.randomSeed,config:schedulerConfig(d.get('state'))});
+            d.scheduler.seq=d.get('state','scheduler','seq')??0;
+            d.scheduler.lastSettled=d.get('state','scheduler','lastSettled')??null;
+            d.contestPool=[];
+        }
         this.advance(d,minutes,id);
         if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {
