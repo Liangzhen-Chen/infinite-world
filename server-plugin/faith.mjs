@@ -18,20 +18,34 @@ import {createNpcObligation} from './npc-obligations.mjs';
 import {npcLessonGain,settleNpcLesson,npcProficiency} from './npc-growth.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+import {facilityView,facilityRepairMaterials,facilityRuntime} from './facility-state.mjs';
+import {recordsWhere} from './storage.mjs';
 declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of','permit'],entities:['office']});
 
 const DAY=1440,path=id=>['state','records',id],actor=(d,e,id)=>d.get(...actorPath(e.world,id));
 const int=(n,min=0,max=1e9)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error('信仰钱粮或时长无效');return n;};
-const capable=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡/.test(n.activity??'');
+const capable=n=>n&&!['濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡/.test(n.activity??'');
 function subject(d,e,name='player',{recipient=false}={}){
  const id=name==='player'?'player':e.resolve(name),n=actor(d,e,id);
  const available=recipient&&n?.status==='患病'?capable({...n,status:'正常'}):capable(n);
- if(!available||id!=='player'&&n.location!==d.get('state','location')||personConstraint(e,d.get('state'),id))throw Error('须由清醒且可行动的当事人实际在场');return id;
+ if(!isEffective(e,d,id)||!available||id!=='player'&&n.location!==d.get('state','location')||personConstraint(e,d.get('state'),id))throw Error('须由清醒且可行动的当事人实际在场');return id;
 }
 function temple(d,e,name,{local=true}={}){
  const t=templeById(e,name);if(!t)throw Error('未登记寺观或教会');
  if(local&&!placeAncestors(e,d.get('state','location')).includes(t.seat))throw Error('须到寺观所在地办理');
  return {...t,organization:organizationState(e,d.get('state'),t.id)};
+}
+export function templeCapacity(e,state,t){
+ const v=facilityView(e,state,t.seat),factor=v?.factor??1;
+ const members=Object.keys(organizationState(e,state,t.id)?.members??{}).filter(id=>isEffective(e,state,id));
+ return {factor,capacity:v?.capacity??members.length,members,participants:members.slice(0,v?.capacity??members.length)};
+}
+function requireOpen(d,e,t,count=1){
+ const state=d.get('state'),v=facilityView(e,state,t.seat),base=state.created?.[t.seat]??e.byId.get(t.seat);
+ const limited=v&&(v.kind!=='public'||base?.capacity!==undefined);
+ if(v&&(v.factor===0||limited&&v.capacity<count))throw Error('寺观设施停用或开放容量不足');
 }
 function steward(d,e,t,minutes){
  const id=t.organization.leader;if(!id)throw Error('寺观主持职位空缺');
@@ -70,7 +84,8 @@ function changeFaith(d,e,who,t,eventId,{kind='conversion',devotion=true}={}){
  if(!devotion&&previous?.temple===t.id&&Number.isSafeInteger(previous.observedSince))return {previous,next:previous};
  const god=e.byId.get(t.deity),next={deity:t.deity,temple:t.id,institution:t.seat,church:god?.church.name??t.church,taboo:god?.taboo??t.rule,
   observedSince:devotion?now:null,lastBreach:-1,sourceEvent:eventId,override:true};
- holdingSet(d,null,[...actorPath(e.world,who),'faith'],next,'faith');
+ const write=()=>holdingSet(d,null,[...actorPath(e.world,who),'faith'],next,'faith');
+ if(previous?.temple&&previous.temple!==t.id)changeLegacyHoldings(d,e,{holder:who,kinds:['devotee_of'],reason:'vacated',eventId:`${eventId}:faith`},write);else write();
  const key=`faith_change:${eventId}:${who}`;holdingSet(d,null,path(key),{category:'faith_change',subject:who,previous,next,kind,minute:now,sourceEvent:eventId},'faith');
  return {previous,next};
 }
@@ -78,7 +93,8 @@ function member(d,e,t,who,remove,eventId){
  const key=`organization:${t.id}`,row=structuredClone(d.get(...path(key))??{category:'organization',id:t.id,source:t.source,members:{},removed:{},treasury:0,ledger:[]});
  if(remove){delete row.members[who];row.removed[who]={minute:d.get('state','minute'),sourceEvent:eventId};}
  else{delete row.removed[who];row.members[who]={position:'成员',joinedAt:d.get('state','minute'),arrears:0};}
- holdingSet(d,null,path(key),row,'faith');syncHoldings(d,e,'org',t.id,{writer:'faith',eventId});
+ const write=()=>{holdingSet(d,null,path(key),row,'faith');syncHoldings(d,e,'org',t.id,{writer:'faith',eventId});};
+ if(remove)changeLegacyHoldings(d,e,{holder:who,subject:t.id,kinds:['member_of'],reason:'vacated',eventId:`${eventId}:leave`},write);else write();
 }
 export function convertFaith(d,e,t,who,eventId,{paid=false}={}){
  const previous=faithOf(e,d.get('state'),who).value;
@@ -117,6 +133,7 @@ registerEffect('faith_omen',{validate(e,v){if(!e.rules.faith?.rites?.some(r=>r.i
   return {applied:true,omen:key,form,location:c.settlement,expires:c.minute+v.minutes};}});
 
 function ritual(d,e,t,args,eventId){
+ requireOpen(d,e,t,1+(args.workers?.length??0));
  const who=subject(d,e,args.member??'player');if(who!=='player'&&args.consent!==true)throw Error('NPC 祭仪须本人当面同意');
  const r=e.rules.faith?.rites?.find(r=>r.id===args.choice&&r.deity===t.deity);
  const ordinary=e.rules.faith?.ordinaryRite;if(!ordinary)throw Error('未登记祭仪规则');
@@ -138,12 +155,23 @@ function ritual(d,e,t,args,eventId){
 }
 function use(d,e,t,args,eventId){
  const s=e.rules.faith?.uses?.[args.choice];if(!s)throw Error('寺观用途未登记');
- const host=steward(d,e,t,s.minutes);if(args.consent!==true)throw Error('公库用途须主持当面同意');
+ const host=args.choice==='repair'?subject(d,e,t.organization.leader):steward(d,e,t,s.minutes);if(args.consent!==true)throw Error('公库用途须主持当面同意');
  const who=args.member??'player',minute=d.get('state','minute'),event={kind:args.choice,party:who,minute,sourceEvent:eventId};let lesson=null;
  if(args.choice==='repair'){
-  if(typeof e.repairFaithFacility!=='function')throw Error('修缮等待设施接口，不扣钱粮');
-  return clockTransaction(d,tx=>{spend(tx,e,t,s.coins,s.items,event,{account:sink('export','facility_repair'),writer:'faith',eventId},{flow:'sink:consume',purpose:'facility_repair',writer:'faith',eventId});return e.repairFaithFacility(tx,{temple:t.id,location:t.seat,eventId});});
+  const view=facilityView(e,d.get('state'),t.seat);
+  if(!view)throw Error('寺观修缮缺少实际设施接口');
+  if(!isEffective(e,d,t.seat))throw Error('寺观已毁灭，须先重建新实体');
+  if(view.burning)throw Error('修缮前须先灭火');
+  if(view.condition===100)throw Error('寺观设施接口确认无需修缮');
+  const project=`faith_repair:${t.id}`,old=d.get(...path(project));if(old?.status==='施工中')return old;
+  const materials=facilityRepairMaterials(view),units=materials.work,items={item_wood:materials.wood,item_stone:materials.stone};
+  return clockTransaction(d,tx=>{
+   spend(tx,e,t,s.coins*units,items,event,{account:sink('export','facility_repair'),writer:'faith',eventId},{flow:'sink:consume',purpose:'facility_repair',writer:'faith',eventId});
+   const p={id:`${project}:${eventId}`,category:'faith_repair',temple:t.id,building:t.seat,creator:host,projectWork:'repair',status:'施工中',remainingWork:units,started:minute,lastDay:Math.floor(minute/DAY)-1,cost:{coins:s.coins*units,items},sourceEvent:eventId};
+   tx.set(path(project),p);return p;
+  });
  }
+ requireOpen(d,e,t);
  subject(d,e,who,{recipient:['relief','medicine'].includes(args.choice)});if(who!=='player'&&args.consent!==true)throw Error('受助者须当面同意');
  e.assertNpcObligationAction?.(d,[host,who],{minutes:s.minutes,location:d.get('state','location')});
  e.assertNpcAutonomyAction?.(d.get('state'),[host,who],{minutes:s.minutes});
@@ -176,7 +204,7 @@ export function faithAction(d,args,eventId){
  const t=temple(d,e,args.org,{local:args.operation!=='faith_pilgrim'});
  if(args.operation==='faith_inspect'){
   const state=d.get('state');return {temple:t,faith:faithOf(e,state,args.member??'player'),account:groupAccountView(e,state,t.id),policy:conversionPolicy(e,state,'player',t.seat),
-   uses:e.rules.faith?.uses,rites:e.rules.faith?.rites?.filter(r=>r.deity===t.deity),
+   availability:templeCapacity(e,state,t),uses:e.rules.faith?.uses,rites:e.rules.faith?.rites?.filter(r=>r.deity===t.deity),
    history:Object.values(state.records??{}).filter(r=>r.temple===t.id&&['faith_use','faith_ritual'].includes(r.category)),
    omens:Object.values(state.effects??{}).filter(r=>r.kind==='faith_omen'&&r.location===state.location&&r.expires>state.minute),
    conflicts:(e.rules.factionClock?.clocks??[]).filter(r=>r.id.startsWith('faith:')&&[r.faction,r.rival].includes(t.id)).map(r=>({clock:r.id,rival:r.faction===t.id?r.rival:r.faction,
@@ -188,6 +216,7 @@ export function faithAction(d,args,eventId){
   const who=subject(d,e,args.member??'player');if(who!=='player'&&args.consent!==true)throw Error('改宗须本人当面同意');return convertFaith(d,e,t,who,eventId);
  }
  if(args.operation==='faith_give'){
+  if(args.choice!=='repair')requireOpen(d,e,t);
   const item=args.item?e.resolve(args.item,'item'):null,coins=int(args.coins??0),quantity=int(args.quantity??0);
   if(!coins&&!quantity||quantity&&!item)throw Error('香火须有实际钱粮');
   pay(d,e,t,'player',coins,item?{[item]:quantity}:{},{kind:'香火捐献',sourceEvent:eventId,minute:d.get('state','minute'),party:'player'});return {temple:t.id,account:groupAccountView(e,d.get('state'),t.id)};
@@ -230,8 +259,21 @@ registerWorldEventSubscriber({id:'faith_experience',order:65,on:(d,engine,events
 // A new illness is a personal calamity already settled by npc-life or the
 // epidemic consumer. Observe that real transition, without polling residents
 // or turning a private diagnosis into public knowledge.
-export function advanceFaith(d,e,{beforeState,id}){
+export function advanceFaith(d,e,{beforeState,id,before=beforeState?.minute??d.get('state','minute'),after=d.get('state','minute')}){
  if(!e.rules.faith)return;
+ const records=typeof d.peek==='function'?d.peek('state','records'):d.get('state','records');
+ for(const p of recordsWhere(records,'category','faith_repair'))if(p.status==='施工中'){
+  const key=`faith_repair:${p.temple}`;
+  let next={...p};
+  for(let day=Math.max(p.lastDay+1,Math.floor(p.started/DAY));day<Math.floor(after/DAY)&&next.remainingWork>0;day++){
+   const n=actor(d,e,p.creator),view=facilityView(e,d.get('state'),p.building);
+   next.lastDay=day;
+   if(!isEffective(e,d,p.creator)||!capable(n)||n.location!==p.building||personConstraint(e,d.get('state'),p.creator)||view?.burning||!isEffective(e,d,p.building))continue;
+   next.remainingWork--;
+   if(!next.remainingWork){facilityRuntime().completeFacilityProject(d,e,p,(day+1)*DAY);next.status='已完成';next.completed=(day+1)*DAY;}
+  }
+  d.set(path(key),next);
+ }
  for(const [key,ill]of Object.entries(d.get('state','family','illnesses')??{})){
   if(beforeState?.family?.illnesses?.[key]||ill.status!=='患病中'||!d.get('state','npcs',ill.patient))continue;
   const eventId=`faith_calamity:${key}`;

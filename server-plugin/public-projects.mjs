@@ -1,3 +1,4 @@
+import {isEffective} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {holdWorks,settleWorks,BOOKED as STOCK_BOOKED,priceRead,bagStock,settlementStock} from './stock.mjs';
@@ -27,7 +28,7 @@ import {currentEmployment,employmentReservation} from './employment-state.mjs';
 const DAY=1440;
 const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>80)throw Error('需要工程名称');return n.trim();};
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}须在${min}到${max}之间`);return n;};
-const able=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status);
+const able=n=>n&&!['濒死','昏迷','患病'].includes(n.status);
 const awake=n=>able(n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
 
@@ -51,7 +52,7 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     for(const id of workers){
         const n=state.npcs[id];
         if(currentEmployment(state,id))throw Error('做工的人已有未结束的雇佣排班');
-        if(!awake(n)||n.location!==state.location)throw Error('做工的人须当面在场且清醒');
+        if(!isEffective(engine,state,id)||!awake(n)||n.location!==state.location)throw Error('做工的人须当面在场且清醒');
         if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw Error('做工的人须是本村成年住户');
     }
     if(args.consent!==true)throw Error('做工的人须当面同意工期与工钱');
@@ -120,7 +121,7 @@ export function advancePublicProjects(d,engine,{before,after,id}){
         const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
+            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&isEffective(engine,state,w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
             const pub=structuredClone(p.public);
             if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
             for(const w of present){
@@ -155,13 +156,13 @@ function plotByArg(engine,settlement,arg){
     const plot=plots.find(p=>p.id===id);if(!plot)throw Error('不是本村登记的宅基地块');
     return plot;
 }
-function adultResident(engine,state,id,settlement){return npcHousehold(engine,state,id)?.settlement===settlement&&(npcAgeAt(engine,state,id)??0)>=18&&state.npcs[id]?.status!=='死亡';}
+function adultResident(engine,state,id,settlement){return npcHousehold(engine,state,id)?.settlement===settlement&&(npcAgeAt(engine,state,id)??0)>=18&&isEffective(engine,state,id);}
 export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const state=d.get('state');
     if(!playerOffices(state,{settlement,power:'steward'},engine).length)throw Error('没有在任村长官职，未登记建房审批与派管事的权限');
     if(state.location!==hall)throw Error('须在本村登记议事屋当面交代');
     const steward=engine.resolve(args.steward,'npc'),n=state.npcs[steward];
-    if(!awake(n)||n.location!==hall||!adultResident(engine,state,steward,settlement)||args.consent!==true)throw Error('管事须为在场清醒的本村成年住户并明确同意');
+    if(!isEffective(engine,state,steward)||!awake(n)||n.location!==hall||!adultResident(engine,state,steward,settlement)||args.consent!==true)throw Error('管事须为在场清醒的本村成年住户并明确同意');
     const office=authorityOf(engine).offices.office_village_steward;
     const plots=args.plot?[plotByArg(engine,settlement,args.plot)]:plotsOf(engine,settlement);
     const fees=Object.fromEntries(plots.map(p=>{
@@ -189,7 +190,7 @@ export function fileHousingApplication(d,engine,args,eventId,settlement,a){
     const state=d.get('state');
     if(state.location!==a.hall)throw Error('须在本村登记议事屋递交建房申请');
     const applicant=!args.speaker||args.speaker==='player'?'player':engine.resolve(args.speaker,'npc');
-    if(applicant!=='player'&&(!awake(state.npcs[applicant])||state.npcs[applicant].location!==a.hall||args.consent!==true))throw Error('申请人须本人在场并同意');
+    if(applicant!=='player'&&((!isEffective(engine,state,applicant)||!awake(state.npcs[applicant]))||state.npcs[applicant].location!==a.hall||args.consent!==true))throw Error('申请人须本人在场并同意');
     const plot=plotByArg(engine,settlement,args.plot);
     const now=state.minute,day=Math.floor(now/DAY),due=now<day*DAY+PROCESS_MINUTE?day*DAY+PROCESS_MINUTE:(day+1)*DAY+PROCESS_MINUTE;
     const id=`housing_application:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
@@ -211,7 +212,7 @@ function handle(d,engine,r,at){
         if(!job.shifts?.some(shift=>shift.minute===at&&shift.paid===shift.earned&&shift.paid>0)){holdingSet(d,null,rec(r.id),{...r,due:at+DAY},'public-projects');return;}
     }
     // A steward who cannot work today leaves the file for tomorrow.
-    if(!s||['死亡','濒死','昏迷','患病'].includes(s.status)){if(s?.status==='死亡')returned('管事已故，申请退回');else holdingSet(d,null,rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1},'public-projects');return;}
+    if(!isEffective(engine,d,r.steward)||!s||['濒死','昏迷','患病'].includes(s.status)){if(!isEffective(engine,d,r.steward))returned('管事已故或失效，申请退回');else holdingSet(d,null,rec(r.id),{...r,due:r.due+DAY,delays:(r.delays??0)+1},'public-projects');return;}
     if(!a||a.revoked||a.expires<=at)return returned('管事授权已撤回或到期');
     if(!playerOffices(state,{settlement:r.settlement,power:'housing'},engine).length)return returned('授权的村长已不在任，管事无权批准');
     if(!a.rules.plots.includes(r.plot))return returned('所申地块不在村长写定的范围内');
@@ -255,7 +256,7 @@ export function startHouse(d,engine,args,eventId,permitId){
     const p=d.get(...rec(permitId)),state=d.get('state');
     const holder=args.speaker&&args.speaker!=='player'?engine.resolve(args.speaker,'npc'):'player';
     if(p?.category!=='housing_permit'||p.holder!==holder)throw Error('没有本人名下的宅基批文');
-    if(holder!=='player'&&(!awake(state.npcs[holder])||state.npcs[holder].location!==state.location||args.consent!==true))throw Error('建房人须本人在场同意');
+    if(holder!=='player'&&((!isEffective(engine,state,holder)||!awake(state.npcs[holder]))||state.npcs[holder].location!==state.location||args.consent!==true))throw Error('建房人须本人在场同意');
     if(p.status!=='已批准')throw Error('这块宅基已开工或已收回');
     if(state.location!==p.location)throw Error('须到宅基所在地开工');
     for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,holder,item)<n)throw Error('自备建房材料不足');
@@ -270,7 +271,7 @@ export function advanceHouses(d,engine,{before,after}){
     const days=Math.floor(after/DAY)-Math.floor(before/DAY);if(!days)return;
     for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
         if(p.type!=='建房'||p.status!=='施工中')continue;
-        if(p.creator!=='player'&&(!able(d.get('state','npcs',p.creator))||d.get('state','npcs',p.creator,'levy')||d.get('state','npcs',p.creator,'caring')))continue;
+        if(p.creator!=='player'&&((!isEffective(engine,d,p.creator)||!able(d.get('state','npcs',p.creator)))||d.get('state','npcs',p.creator,'levy')||d.get('state','npcs',p.creator,'caring')))continue;
         const hired=Object.values(d.get('state','records')??{}).some(r=>r.laborMarket===1&&r.project===key);
         const remainingDays=hired?Math.ceil(p.remainingWork??p.remainingDays):Math.max(0,p.remainingDays-days);
         if(remainingDays){d.set(['state','projects',key],{...p,remainingDays});continue;}

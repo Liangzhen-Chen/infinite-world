@@ -69,7 +69,7 @@ function fiscal(d,id){
 }
 function region(engine,location){
     const seen=new Set();while(location&&!seen.has(location)){
-        if(profile(engine,location)?.opening)return location;
+        if(profile(engine,location))return location;
         seen.add(location);location=engine.byId.get(location)?.parent;
     }
     return null;

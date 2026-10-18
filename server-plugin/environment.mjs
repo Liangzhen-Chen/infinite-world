@@ -1,3 +1,4 @@
+import {isEffective} from './lifecycle-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('environment',{sinks:['sink:consume']});
 import {facilityView,isFacility} from './facility-state.mjs';
@@ -67,7 +68,7 @@ function permission(d,engine,row,args){
     const authorization=[args.authorization,...keys].filter(Boolean).map(id=>d.get('state','records',id)).find(record=>record?.subject===row.id);
     if(!authorization||authorization.category!=='authorization'||authorization.subject!==row.id||authorization.action!=='environment_use'||
         authorization.grantor!==row.owner||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))throw new Error('私人环境对象需要有效所有者授权');
-    if(row.owner.startsWith('npc_')&&['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')))throw new Error('对象所有者无法继续履约');
+    if(row.owner.startsWith('npc_')&&(!isEffective(engine,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw new Error('对象所有者无法继续履约');
 }
 function visible(row,state){
     const out={id:row.id,name:row.name,kind:row.kind,owner:row.owner,access:row.access,position:[...row.position],links:{...row.links??{}}};
