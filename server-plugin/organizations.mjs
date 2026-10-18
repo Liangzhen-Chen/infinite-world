@@ -1,4 +1,5 @@
-import {changeLegacyHoldings} from './transition.mjs';
+import {changeLegacyHoldings,changeHolding,transition} from './transition.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 import {personView,groupView} from './entity-view.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {changeGroupCoins} from './group-account.mjs';
@@ -6,11 +7,12 @@ import {purse,treasury as treasuryAccount,escrow as escrowAccount,moveCoins,book
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('organizations');
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {syncHoldings} from './holding-sources.mjs';
+import {storedOrganization} from './organization-state.mjs';
+import {orgLeaderOffice} from './holding-sources.mjs';
 declareHoldingWriter('organizations',{kinds:['member_of','holds_office'],entities:['office','motion']});
 import {entityTransition} from './entity-transitions.mjs';
 import {personName} from './entity-view.mjs';
-import {presentWitnesses} from './world-events.mjs';
+import {presentWitnesses,registerWorldEventSubscriber} from './world-events.mjs';
 import {resolveCreature} from './wildlife.mjs';
 import {standing,adjustStanding} from './standing.mjs';
 import {opinionAmong} from './public-opinion.mjs';
@@ -35,7 +37,7 @@ const key=id=>`organization:${id}`;
 const path=id=>['state','records',key(id)];
 const int=(n,min,max)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`数值需在${min}到${max}之间`);return n;};
 const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('需要实际文字');return n.trim();};
-const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(n,engine,source,id)=>n&&isEffective(engine,source,id)&&!n.scheduleTravel&&!n.cognitionTravel&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const within=(engine,location,place)=>{const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;};
 // Shared selector keeps current removals, vacancies and actor aliases consistent.
 export const organization=(engine,state,id)=>groupView(engine,state,id)?.organization.value??null;
@@ -48,6 +50,27 @@ function rowOf(d,engine,org){
 }
 // S2a：会籍与首领职位双写进持有存储（holding-sources 的 org 来源）。
 const save=(d,row,engine)=>holdingSet(d,engine,path(row.id),row,'organizations');
+// Close precisely the changed membership/office, then open its replacement.
+// The old-source observer only projects these already chosen protocol edges.
+function saveMembership(d,row,engine,eventId){
+    const before=storedOrganization(engine,d.get('state'),row.id)??{members:{},leader:null};
+    const members={...before.members};
+    for(const m of Object.keys(row.removed??{}))delete members[m];
+    for(const [m,entry]of Object.entries(row.members??{}))members[m]=entry.position;
+    const leader=Object.hasOwn(row,'leader')?row.leader:before.leader;
+    const changed=Object.keys(before.members).filter(m=>before.members[m]!==members[m]);
+    const closures=changed.map(holder=>({holder,kinds:['member_of']}));
+    if(before.leader&&before.leader!==leader)closures.push({holder:before.leader,kinds:['holds_office']});
+    const apply=()=>{
+        for(const [holder,rank]of Object.entries(members))if(before.members[holder]!==rank)
+            changeHolding(d,engine,{op:'open',kind:'member_of',holder,subject:row.id,terms:{rank},source:`org:${row.id}`,eventId:`${eventId}:member:${holder}`});
+        if(leader&&leader!==before.leader)
+            changeHolding(d,engine,{op:'open',kind:'holds_office',holder:leader,subject:orgLeaderOffice(row.id),source:`org:${row.id}`,eventId:`${eventId}:leader`});
+        return save(d,row,engine);
+    };
+    const close=i=>i===closures.length?apply():changeLegacyHoldings(d,engine,{...closures[i],source:`org:${row.id}`,reason:'vacated',eventId:`${eventId}:close:${i}`},()=>close(i+1));
+    return close(0);
+}
 const coinPath=(engine,who)=>[...actorPath(engine.world,who),'coins'];
 const actor=(d,engine,who)=>d.get(...actorPath(engine.world,who));
 const resolveActor=(engine,state,name)=>{
@@ -83,7 +106,7 @@ function findOrg(engine,d,name){
 }
 function present(d,engine,name){
     const id=resolveActor(engine,d.get('state'),name),n=actor(d,engine,id);
-    if(!awake(n)||n.location!==d.get('state','location'))throw Error('需要此人实际在场且清醒');
+    if(!awake(n,engine,d,id)||n.location!==d.get('state','location'))throw Error('需要此人实际在场且清醒');
     return id;
 }
 const event=(org,op,extra={})=>({verb:'organize',target:org.id,tags:['organization',`org:${op}`,`kind:${org.kind}`],...extra});
@@ -108,7 +131,7 @@ function execute(d,engine,org,p,minute,sourceEvent){
         }
     }else if(m.action==='withdraw'){
         if(org.treasury<m.coins)outcome='执行失败：公库不足';
-        else if(m.member!=='player'&&(!actor(d,engine,m.member)||actor(d,engine,m.member).status==='死亡'))outcome='执行失败：收款人不在世';
+        else if(!isEffective(engine,d,m.member))outcome='执行失败：收款人不在世';
         else{
             d.set(coinPath(engine,m.member),(d.get(...coinPath(engine,m.member))??0)+m.coins);
             move(d,engine,row,{kind:'支取',amount:-m.coins,party:m.member,minute,sourceEvent,reason:p.content,balance:treasury()-m.coins},{account:purse(engine,m.member),writer:'organizations',eventId:sourceEvent});
@@ -117,11 +140,19 @@ function execute(d,engine,org,p,minute,sourceEvent){
         row.charter={...row.charter,...m.charter};
         if((m.charter.dues??0)>0&&!row.nextDues)row.nextDues=minute+DUES_PERIOD;
     }
-    save(d,row,engine);return outcome;
+    if(['admit','expel','appoint'].includes(m.action))saveMembership(d,row,engine,sourceEvent);
+    else save(d,row,engine);
+    return outcome;
+}
+function recordSupport(d,engine,p){
+    if(p.motion.action!=='appoint')return;
+    for(const v of p.votes)if(p.deciders.includes(v.voter)&&['approve','reject'].includes(v.opinion))
+        adjustStanding(d,engine,p.motion.member,v.voter,v.opinion==='approve'?5:-5,{sourceEvent:`org_support:${p.id}:${v.voter}`,reason:v.opinion==='approve'?'支持任命':'反对任命',minute:v.minute});
 }
 function settle(d,engine,proposalId,minute,sourceEvent){
     const prior=d.get('state','records',proposalId),org=organization(engine,d.get('state'),prior.org),decision=deciders(d.get('state'),org);
     const p={...prior,mode:decision.mode,deciders:decision.people},status=tally(p);
+    recordSupport(d,engine,p);
     if(!status)return p;
     let outcome=null;
     if(status==='通过')outcome=execute(d,engine,org,p,minute,sourceEvent);
@@ -151,7 +182,7 @@ function motionOf(engine,d,org,args){
     if(action==='expel'){if(!org.members[member])throw Error('此人不是成员');if(member===org.leader)throw Error('不能除名现任首脑，先改任');}
     if(action==='appoint'){if(!org.members[member])throw Error('只能任命现有成员');return {action,member,name:text(args.name)};}
     if(action==='withdraw'){
-        if(member!=='player'&&(!actor(d,engine,member)||actor(d,engine,member).status==='死亡'))throw Error('收款人须是现存人物');
+        if(!isEffective(engine,d,member))throw Error('收款人须是现存人物');
         return {action,member,coins:int(args.coins,1,1e9)};
     }
     return {action,member};
@@ -197,10 +228,59 @@ function worldEvent(d,engine,org,id,minute,extra){
         summary:`${org.name}成员资格发生变化`,...extra});
 }
 
+// Only an explicit charter can make a witnessed duel decide a vacancy.
+export function organizationDuelContext(d,engine,id,challenger,target){
+    const org=organization(engine,d.get('state'),id);
+    if(!org||org.leader||!org.charter.rules?.some(r=>/约斗|比试/.test(r)&&/继任|承继|继位/.test(r)))throw Error('章程未授权以约斗决定空缺首脑');
+    if([challenger,target].some(m=>org.members[m]?.position!==ELDER))throw Error('争位双方须为本组织合法长老');
+    return {org:org.id};
+}
+export const SPLIT_MARGIN=20;
+export function settleOrganizationDuel(d,engine,duel,winner,eventId){
+    if(!duel.org)return null;
+    const org=organization(engine,d.get('state'),duel.org);
+    // The vacancy may have been filled legally while the duel was in progress.
+    if(!org||org.leader)return null;
+    const loser=duel.challenger===winner?duel.target:duel.challenger;
+    if(!org.members[winner]||org.members[winner].position!==ELDER)return null;
+    const leaves=isEffective(engine,d,loser)&&standing(engine,d.get('state'),loser,winner)<=-SPLIT_MARGIN&&standing(engine,d.get('state'),loser,org.id)<10;
+    const departed=leaves?Object.keys(org.members).filter(m=>m!==winner&&m!=='player'&&
+        (m===loser||standing(engine,d.get('state'),m,loser)-standing(engine,d.get('state'),m,winner)>=SPLIT_MARGIN)).sort():[];
+    execute(d,engine,org,{motion:{action:'appoint',member:winner,name:org.leaderTitle}},d.get('state','minute'),`${eventId}:succession`);
+    const row=rowOf(d,engine,organization(engine,d.get('state'),org.id));
+    for(const m of departed){delete row.members[m];row.removed={...row.removed,[m]:{minute:d.get('state','minute'),sourceEvent:eventId,reason:'争位后自愿离群',following:loser}};}
+    row.succession={duel:duel.id,winner,loser,departed,sourceEvent:eventId};
+    saveMembership(d,row,engine,`${eventId}:split`);
+    worldEvent(d,engine,org,`${eventId}:succession`,d.get('state','minute'),{target:winner,participants:Object.keys(org.members),tags:['organization','org:succession'],summary:`${org.name}依章程由${personName(engine,d.get('state'),winner).value??winner}继任；${departed.length}名成员离群`});
+    return row.succession;
+}
+registerWorldEventSubscriber({id:'organization-succession',order:55,on(d,engine,events){
+    for(const e of events){
+        if(e.verb!=='succession'||!String(e.subject??e.entity).startsWith('office_org:'))continue;
+        const office=e.subject??e.entity,id=office.slice('office_org:'.length,-':leader'.length);
+        if(office!==orgLeaderOffice(id))continue;
+        const org=organization(engine,d.get('state'),id),key=`organization_vacancy:${e.id}`;
+        if(!org||org.leader||d.get('state','records',key))continue;
+        const candidates=Object.keys(org.members).filter(m=>org.members[m].position===ELDER).sort();
+        d.set(['state','records',key],{category:'organization_vacancy',org:id,office,previousHolder:e.previousHolder,candidates,cause:e.id,minute:e.minute??d.get('state','minute')});
+    }
+}});
+
 export function advanceOrganizations(d,engine,{before,after}){
     const records=()=>Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b));
     for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
         const at=day*DAY;
+        for(const [id,v]of records()){
+            if(v.category!=='organization_vacancy'||v.proposal)continue;
+            const org=organization(engine,d.get('state'),v.org);
+            if(!org||org.leader||org.charter.rules?.some(r=>/约斗|比试/.test(r)&&/继任|承继|继位/.test(r)))continue;
+            const candidates=v.candidates.filter(m=>org.members[m]);
+            if(!candidates.length)continue;
+            const people=deciders(d.get('state'),org).people;
+            candidates.sort((a,b)=>people.reduce((n,m)=>n+standing(engine,d.get('state'),m,b)-standing(engine,d.get('state'),m,a),0)||a.localeCompare(b));
+            const nominee=candidates[0],p=propose(d,engine,org,{action:'appoint',member:nominee,name:org.leaderTitle},nominee,`vacancy:${v.cause}`);
+            d.set(['state','records',id],{...v,proposal:p.id});
+        }
         for(const [id,p]of records()){
             if(p.category!=='organization_proposal'||p.status!=='议事中'||p.minute>=at)continue;
             const state=d.get('state'),org=organization(engine,state,p.org);
@@ -225,14 +305,14 @@ export function advanceOrganizations(d,engine,{before,after}){
             let balance=org.treasury;
             if(!dues){delete row.nextDues;break;}
             for(const m of Object.keys(org.members).sort()){
-                if(m!=='player'&&(!actor(d,engine,m)||actor(d,engine,m).status==='死亡'))continue;
+                if(!isEffective(engine,d,m))continue;
                 const entry=org.members[m],owed=dues*(1+(entry.arrears??0)),have=d.get(...coinPath(engine,m))??0;
                 const paid=have>=owed?owed:have>=dues?dues:0,settled=paid?paid/dues:0,arrears=(entry.arrears??0)+1-settled;
                 if(paid){d.set(coinPath(engine,m),have-paid);move(d,engine,row,{kind:'会费',amount:paid,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,balance:balance+=paid},{account:purse(engine,m),writer:'organizations'});}
                 else move(d,engine,row,{kind:'欠费',amount:0,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`});
                 if(arrears>=EXPEL_ARREARS&&m!==org.leader){
                     delete row.members[m];row.removed={...row.removed,[m]:{minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,reason:`欠费${EXPEL_ARREARS}期除名`}};
-                    save(d,row,engine);
+                    saveMembership(d,row,engine,`organization_dues:${row.id}:${at}:${m}`);
                     worldEvent(d,engine,org,`organization_dues:${row.id}:${at}:${m}`,at,{target:m,tags:['organization','org:expel','arrears']});
                 }else row.members[m]={...entry,arrears};
             }
@@ -260,7 +340,7 @@ export function inspectOrganization(engine,document,org){
         const view=familyOrganizationProjection(engine,document.state,org,Object.keys(org.members)[0]);
         return {...view,organization:org.id,kind:org.kind,source:org.source,seat:org.seat,leaderTitle:org.leaderTitle,treasury:org.treasury,actionScope:{kind:'instant'}};
     }
-    const state=document.state,people=Object.keys(org.members).filter(m=>{const view=personView(engine,state,m);return m!=='player'&&view&&awake(view.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state))&&view.location.value===state.location;});
+    const state=document.state,people=Object.keys(org.members).filter(m=>{const view=personView(engine,state,m);return m!=='player'&&view&&awake(view.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state),engine,state,m)&&view.location.value===state.location;});
     return {organization:org.id,name:org.name,kind:org.kind,source:org.source,seat:org.seat,leader:org.leader,leaderTitle:org.leaderTitle,
         mode:MODES[org.charter.mode],charter:org.charter,treasury:org.treasury,nextDues:org.nextDues,
         members:Object.entries(org.members).map(([id,m])=>({id,name:id==='player'?state.player.name:engine.byId.get(id)?.name??id,...m})),
@@ -289,7 +369,7 @@ export function organizationAction(d,args,eventId){
         if(!org.charter.approval){
             const row=rowOf(d,engine,org);row.members[who]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[who];
             if(fee){move(d,engine,row,{kind:'入会费',amount:fee,party:who,minute,sourceEvent:eventId,balance:org.treasury+fee},{account:purse(engine,who),writer:'organizations',eventId});}
-            save(d,row,engine);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
+            saveMembership(d,row,engine,eventId);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
             worldEvent(d,engine,org,`${eventId}:join`,minute,{target:who,value:fee,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:join'],summary:`${personName(engine,d.get('state'),who).value??who}加入${org.name}`});
             return {organization:org.id,member:who,joined:true};
         }
@@ -304,7 +384,8 @@ export function organizationAction(d,args,eventId){
         if(!org.members[who])throw Error('不是成员');
         if(who===org.leader&&Object.keys(org.members).length>1)throw Error('首脑须先改任他人再退会');
         const row=rowOf(d,engine,org);delete row.members[who];row.removed={...row.removed,[who]:{minute,sourceEvent:eventId,reason:'退会'}};
-        if(who===org.leader)row.leader=null;changeLegacyHoldings(d,engine,{holder:who,source:`org:${org.id}`,reason:'vacated',eventId},()=>save(d,row,engine));
+        if(who===org.leader)row.leader=null;saveMembership(d,row,engine,eventId);
+        if(!Object.keys(organization(engine,d.get('state'),org.id)?.members??{}).length&&org.source==='created')transition(d,engine,{entity:org.id,basis:'dissolution',origin:'dissolution',eventId:`${eventId}:dissolution`});
         worldEvent(d,engine,org,`${eventId}:leave`,minute,{target:who,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:leave'],summary:`${personName(engine,d.get('state'),who).value??who}退出${org.name}`});
         return {organization:org.id,member:who,left:true};
     }
@@ -315,8 +396,9 @@ export function organizationAction(d,args,eventId){
         return {organization:org.id,deposited:coins,treasury:org.treasury+coins,organizationEvent:event(org,'deposit',{value:coins})};
     }
     case 'org_propose':{
-        if(!player)throw Error('只有成员能提出议案');
-        const motion=motionOf(engine,d,org,args),p=propose(d,engine,org,motion,'player',eventId,{content:args.content??null});
+        const proposer=args.speaker&&args.speaker!=='player'?present(d,engine,args.speaker):'player';
+        if(!org.members[proposer])throw Error('只有成员能提出议案');
+        const motion=motionOf(engine,d,org,args),p=propose(d,engine,org,motion,proposer,eventId,{content:args.content??null});
         return {organization:org.id,proposal:p.id,mode:MODES[p.mode],deciders:p.deciders,status:p.status,outcome:p.outcome??null,
             note:p.status==='议事中'?'在场决策人可当面表态；未表态的人物在次日按各自立场表态，七日未决搁置。':undefined,
             organizationEvent:event(org,'propose',{motion:motion.action,...(motion.member?{member:motion.member}:{}),...(p.status!=='议事中'?{decided:p.status}:{})})};
