@@ -300,12 +300,13 @@ export async function creditTrade(d,args,eventId){
 }
 
 // ---- time --------------------------------------------------------------------
-export function advanceCredit(d,engine,minute){
+export function advanceCredit(d,engine,minute,recordIds){
     const c=creditRules(engine);if(!c)return;
-    advanceBankFinance(d,engine,minute);
-    advanceFinanceAssets(d,engine,minute);
-    for(const [id,row]of Object.entries(d.get('state','records')??{}))
+    advanceBankFinance(d,engine,minute,recordIds);
+    advanceFinanceAssets(d,engine,minute,recordIds);
+    const rows=()=>recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{});
+    for(const [id,row]of rows())
         if(row.category==='contract'&&row.kind==='partnership'&&row.status==='有效'&&row.deadline<=minute)settlePartnership(d,engine,id,row,{minute:row.deadline,eventId:`deadline_${id}`});
-    for(const [id,row]of Object.entries(d.get('state','records')??{}))
+    for(const [id,row]of rows())
         if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+(c.loan.defaultGraceMinutes??0)<=minute)defaultDebt(d,engine,id,row);
 }

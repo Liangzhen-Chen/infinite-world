@@ -105,9 +105,9 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}铜`);
     return{debt:id,cost:amount,status:'已还清'};
 }
-export function advanceContracts(d,engine,minute){
-    advanceRituals(d,engine,minute);
-    for(const[id,row]of Object.entries(d.get('state','records')??{})){
+export function advanceContracts(d,engine,minute,recordIds){
+    if(!recordIds)advanceRituals(d,engine,minute);
+    for(const[id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
         if(row.category==='contract'&&row.version===1&&row.business&&['有效','待履行'].includes(row.status)){
             if(d.get('state','records',id)?.status!==row.status)continue;
             const overdue=row.debt&&d.get('state','records',row.debt)?.deadline<=minute&&d.get('state','records',row.debt)?.status!=='已还清';

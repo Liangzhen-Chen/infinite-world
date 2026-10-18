@@ -204,9 +204,10 @@ export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}
     r.ledger.sold+=taken;r.ledger[raid?'raided':'armyDrawn']=(r.ledger[raid?'raided':'armyDrawn']??0)+taken;
     balanced(r,s);commit(d,engine,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
 }
-export function settleAgricultureExpiry(d,engine){
+export function settleAgricultureExpiry(d,engine,settlementId){
     const day=Math.floor(d.get('state','minute')/1440);
     for(const p of engine.rules.agriculture?.settlements??[]){
+        if(settlementId&&p.settlement!==settlementId)continue;
         const original=d.get(...path(p.settlement));if(original?.mode!=='managed')continue;
         const batches=[...original.batches,...original.field.seedBatches];
         if(!batches.some(b=>b.expiresDay<=day||(original.granary.condition<50&&b.kind!=='fresh'&&b.expiresDay>b.harvestDay+p.normalStorageDays)))continue;

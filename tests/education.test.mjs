@@ -43,7 +43,11 @@ test('场地容量、课时重叠、现有义务与停办约束持续课程',asy
 test('既有学堂日程自动接入学生，跨日持续识字，不保存识字总分',async()=>{
  const e=new WorldEngine(world),f={e,doc:e.createCharacter(seed,{},'school')};
  const course=educationCourses(e,f.doc.state).find(c=>c.automatic&&c.entity==='skill_literacy');assert.ok(course?.students.length);
- const student=course.students[0];f.doc.state.location='loc_bs';await run(f,'world_time',{minutes:4*1440},'schooldays');
+ const student=course.students[0],start=f.doc.state.minute;
+ const opening=Math.min(...educationCourses(e,f.doc.state).filter(c=>c.students.includes(student)).map(c=>Math.floor(start/1440)*1440+c.start+(start%1440>c.start?1440:0)));
+ assert.equal(f.doc.state.npcs[student],undefined);
+ f.doc.state.location='loc_bs';await run(f,'world_time',{minutes:4*1440},'schooldays');
+ assert.equal(f.doc.state.npcs[student].life.since,opening);
  assert.ok(f.doc.state.npcs[student].skills?.skill_literacy>0);assert.ok(educationStatistics(e,f.doc.state,'loc_hw').literate>0);
 });
 

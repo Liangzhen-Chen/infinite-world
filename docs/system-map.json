@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/a2",
+  "commit": "refs/heads/s2b",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 47,
-  "modules": 236,
+  "modules": 237,
   "advance": 59,
   "tools": 27,
-  "verbs": 28,
+  "verbs": 32,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 544
+  "links": 548
  },
  "layers": [
   {
@@ -566,9 +566,10 @@
     "server-plugin/engine.mjs",
     "server-plugin/activities.mjs",
     "server-plugin/campaign-reducer.mjs",
-    "server-plugin/archived-reducer.mjs"
+    "server-plugin/archived-reducer.mjs",
+    "server-plugin/scheduler.mjs"
    ],
-   "lines": 1082,
+   "lines": 1407,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -583,6 +584,7 @@
     "projects",
     "quotes",
     "records",
+    "scheduler",
     "settlements",
     "skills",
     "subMinuteSeconds",
@@ -833,7 +835,7 @@
     "server-plugin/world-events.mjs",
     "server-plugin/entity-transitions.mjs"
    ],
-   "lines": 183,
+   "lines": 236,
    "stateWrites": [
     "records"
    ],
@@ -843,11 +845,12 @@
     "minute",
     "npcs"
    ],
-   "recordWrites": [],
+   "recordWrites": [
+    "world_event"
+   ],
    "recordReads": [
     "rumor_event",
-    "rumor_lie",
-    "world_event"
+    "rumor_lie"
    ],
    "rules": [],
    "world": [],
@@ -1033,12 +1036,13 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 275,
+   "lines": 444,
    "stateWrites": [
     "effects",
     "obligations",
     "projects",
     "records",
+    "scheduler",
     "settlements"
    ],
    "stateReads": [
@@ -1052,6 +1056,7 @@
     "local_actor_position"
    ],
    "rules": [
+    "agriculture",
     "death",
     "hazardClock",
     "military",
@@ -1066,8 +1071,7 @@
    "advance": [
     "local_actor_positions",
     "effect_expiry",
-    "dying",
-    "deliveries"
+    "dying"
    ],
    "subscribes": [],
    "effects": [],
@@ -1227,7 +1231,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3775,
+   "lines": 3787,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1248,6 +1252,7 @@
    "stateReads": [
     "created",
     "creatures",
+    "effects",
     "itemInstances",
     "location",
     "minute",
@@ -1301,7 +1306,8 @@
     "npc_cognition",
     "npc_autonomy",
     "medicine",
-    "npc_life"
+    "npc_life",
+    "deliveries"
    ],
    "subscribes": [
     {
@@ -1376,7 +1382,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1448,
+   "lines": 1458,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -1406,6 +1412,7 @@
     "professions",
     "projects",
     "records",
+    "scheduler",
     "spells"
    ],
    "recordWrites": [],
@@ -1936,7 +1943,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 3004,
+   "lines": 3005,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -2039,7 +2046,7 @@
    "modules": [
     "server-plugin/agriculture.mjs"
    ],
-   "lines": 398,
+   "lines": 399,
    "stateWrites": [
     "player",
     "records",
@@ -2418,7 +2425,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1250,
+   "lines": 1251,
    "stateWrites": [
     "location",
     "npcs",
@@ -2991,6 +2998,7 @@
    "to": "sim_npc",
    "kind": "advance",
    "labels": [
+    "deliveries",
     "medicine",
     "medicine_booking",
     "npc_autonomy",
@@ -3050,10 +3058,34 @@
   },
   {
    "from": "base_advance",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "base_ledger",
+   "kind": "call",
+   "labels": [
+    "ledger.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
    "to": "base_standing",
    "kind": "call",
    "labels": [
     "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "kernel_engine",
+   "kind": "call",
+   "labels": [
+    "scheduler.mjs"
    ]
   },
   {
@@ -3085,6 +3117,7 @@
    "to": "sim_character",
    "kind": "call",
    "labels": [
+    "education-state.mjs",
     "education.mjs",
     "progression.mjs"
    ]
@@ -3159,6 +3192,7 @@
     "magic-care.mjs",
     "magic-mind-space.mjs",
     "magic-object.mjs",
+    "magic-ritual.mjs",
     "magic-water-earth.mjs"
    ]
   },
@@ -3180,7 +3214,8 @@
     "npc-autonomy.mjs",
     "npc-cognition.mjs",
     "npc-life.mjs",
-    "npc-obligations.mjs"
+    "npc-obligations.mjs",
+    "npc-schedule.mjs"
    ]
   },
   {
@@ -3310,6 +3345,14 @@
    "labels": [
     "entity-view.mjs",
     "standing.mjs"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "kernel_engine",
+   "kind": "call",
+   "labels": [
+    "scheduler.mjs"
    ]
   },
   {
@@ -5227,6 +5270,14 @@
    "labels": [
     "entity-view.mjs",
     "standing.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
+   "to": "kernel_engine",
+   "kind": "call",
+   "labels": [
+    "scheduler.mjs"
    ]
   },
   {
@@ -7157,14 +7208,14 @@
   },
   {
    "from": "base_effects",
-   "to": "base_events",
+   "to": "ui_scene",
    "kind": "record",
    "labels": [
     "world_event"
    ]
   },
   {
-   "from": "base_effects",
+   "from": "base_events",
    "to": "ui_scene",
    "kind": "record",
    "labels": [
@@ -7363,14 +7414,6 @@
    "kind": "record",
    "labels": [
     "physical_feature"
-   ]
-  },
-  {
-   "from": "sim_society",
-   "to": "base_events",
-   "kind": "record",
-   "labels": [
-    "world_event"
    ]
   },
   {
@@ -8319,12 +8362,15 @@
    "id": "magic_care",
    "order": 1800,
    "stepped": false,
-   "nextMinute": false,
+   "nextMinute": true,
    "modules": [
     "server-plugin/magic-care.mjs"
    ],
    "inline": false,
-   "partitions": []
+   "partitions": [
+    "effects",
+    "player"
+   ]
   },
   {
    "id": "magic_mind_space",
@@ -8374,12 +8420,14 @@
    "id": "magic_water_earth",
    "order": 2300,
    "stepped": false,
-   "nextMinute": false,
+   "nextMinute": true,
    "modules": [
     "server-plugin/magic-water-earth.mjs"
    ],
    "inline": false,
-   "partitions": []
+   "partitions": [
+    "effects"
+   ]
   },
   {
    "id": "magic_area",
@@ -8426,9 +8474,9 @@
    "stepped": false,
    "nextMinute": false,
    "modules": [
-    "server-plugin/advance-registry.mjs"
+    "server-plugin/npc-obligations.mjs"
    ],
-   "inline": true,
+   "inline": false,
    "partitions": [
     "obligations"
    ]
@@ -8474,7 +8522,10 @@
    "transfer",
    "promote",
    "marry",
-   "vocation"
+   "vocation",
+   "contest_win",
+   "contest_lose",
+   "proposal_rejected"
   ],
   "verbs": [
    "appoint",
@@ -8483,6 +8534,8 @@
    "cast",
    "clash",
    "close",
+   "contest_lose",
+   "contest_win",
    "deceive",
    "detain",
    "die",
@@ -8498,6 +8551,8 @@
    "organize",
    "pact",
    "promote",
+   "proposal_rejected",
+   "reaction_cut",
    "release",
    "rumor",
    "salary",
@@ -8668,6 +8723,14 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
+   "contest_lose": [
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/scheduler.mjs"
+   ],
+   "contest_win": [
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/scheduler.mjs"
+   ],
    "deceive": [
     "server-plugin/lies.mjs"
    ],
@@ -8728,6 +8791,12 @@
    "promote": [
     "server-plugin/promotion.mjs"
    ],
+   "proposal_rejected": [
+    "server-plugin/world-events.mjs"
+   ],
+   "reaction_cut": [
+    "server-plugin/scheduler.mjs"
+   ],
    "release": [
     "server-plugin/law.mjs",
     "server-plugin/npc-crime.mjs"
@@ -8758,6 +8827,9 @@
    ]
   },
   "toolVerbs": {
+   "craft": [
+    "proposal_rejected"
+   ],
    "combat": [
     "clash",
     "duel",
@@ -11565,6 +11637,7 @@
     "server-plugin/action-affordances.mjs",
     "server-plugin/action-text.mjs",
     "server-plugin/advance-layers.mjs",
+    "server-plugin/advance-registry.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
@@ -12307,6 +12380,7 @@
    "server-plugin/weather.mjs"
   ],
   "agriculture": [
+   "server-plugin/advance-registry.mjs",
    "server-plugin/agriculture-migration.mjs",
    "server-plugin/agriculture.mjs",
    "server-plugin/civic.mjs",
@@ -12616,6 +12690,7 @@
     "sim_boss",
     "sim_character",
     "sim_environment",
+    "sim_npc",
     "sim_wildlife"
    ]
   },
@@ -12997,6 +13072,15 @@
     "sim_character"
    ],
    "readers": []
+  },
+  "scheduler": {
+   "writers": [
+    "base_advance",
+    "kernel_engine"
+   ],
+   "readers": [
+    "sim_character"
+   ]
   },
   "settlements": {
    "writers": [
@@ -13580,6 +13664,7 @@
      "means": "场所物件：交互规则可点燃、浇湿、冻结",
      "pattern": "\\.features\\b|thermalModel",
      "modules": [
+      "server-plugin/advance-registry.mjs",
       "server-plugin/effects.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
@@ -13596,6 +13681,7 @@
       "server-plugin/water-cycle.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_effects",
       "base_interactions",
       "base_standing",
@@ -14228,6 +14314,7 @@
      "pattern": "\\.schedule\\b",
      "modules": [
       "server-plugin/advance-layers.mjs",
+      "server-plugin/advance-registry.mjs",
       "server-plugin/consistency-evidence.mjs",
       "server-plugin/engine.mjs",
       "server-plugin/entity-view.mjs",
@@ -15207,11 +15294,13 @@
      "modules": [
       "server-plugin/action-text.mjs",
       "server-plugin/activities.mjs",
+      "server-plugin/advance-registry.mjs",
       "server-plugin/consistency-review.mjs",
       "server-plugin/consistency-service.mjs",
       "server-plugin/faction-clock.mjs",
       "server-plugin/monster-society.mjs",
       "server-plugin/quest-sources.mjs",
+      "server-plugin/scheduler.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/tribal-awakening.mjs",
@@ -15219,6 +15308,7 @@
       "extension/turn.mjs"
      ],
      "systems": [
+      "base_advance",
       "kernel_engine",
       "nar_consistency",
       "sim_clock",
@@ -15258,6 +15348,7 @@
     }
    ],
    "autoSystems": [
+    "base_advance",
     "base_npc_decision",
     "base_standing",
     "kernel_engine",
@@ -16248,6 +16339,7 @@
     "server-plugin/bounty.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/education-state.mjs",
     "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
@@ -16260,12 +16352,14 @@
     "server-plugin/high-nobility.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-area.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-object.mjs",
+    "server-plugin/magic-ritual.mjs",
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/medicine.mjs",
     "server-plugin/military.mjs",
@@ -16277,6 +16371,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-schedule.mjs",
     "server-plugin/office-salary.mjs",
     "server-plugin/organizations.mjs",
     "server-plugin/pets.mjs",
@@ -16285,6 +16380,7 @@
     "server-plugin/promotion.mjs",
     "server-plugin/public-projects.mjs",
     "server-plugin/quest-sources.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
@@ -16296,17 +16392,20 @@
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs",
-    "server-plugin/world-clock.mjs"
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
     "effects",
     "obligations",
     "projects",
     "records",
+    "scheduler",
     "settlements"
    ],
    "stateReads": [
     "location",
+    "npcs",
     "player",
     "remote"
    ],
@@ -16315,6 +16414,7 @@
     "local_actor_position"
    ],
    "rules": [
+    "agriculture",
     "death",
     "hazardClock",
     "military",
@@ -16322,10 +16422,11 @@
     "worldClock"
    ],
    "world": [
+    "locations",
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 213
+   "lines": 382
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -16392,7 +16493,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 398
+   "lines": 399
   },
   "server-plugin/applied-effects.mjs": {
    "system": "ui_actions",
@@ -16682,7 +16783,8 @@
    "stateReads": [
     "creatures",
     "minute",
-    "professions"
+    "professions",
+    "scheduler"
    ],
    "recordWrites": [],
    "recordReads": [],
@@ -16692,7 +16794,7 @@
     "professions"
    ],
    "worldDirs": [],
-   "lines": 214
+   "lines": 215
   },
   "server-plugin/catalog.mjs": {
    "system": "nar_memory",
@@ -17025,7 +17127,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 312
+   "lines": 313
   },
   "server-plugin/dialogue.mjs": {
    "system": "sim_npc",
@@ -17127,7 +17229,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 137
+   "lines": 145
   },
   "server-plugin/education.mjs": {
    "system": "sim_character",
@@ -17150,7 +17252,6 @@
    ],
    "stateWrites": [],
    "stateReads": [
-    "minute",
     "npcs",
     "records"
    ],
@@ -17167,7 +17268,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 221
+   "lines": 222
   },
   "server-plugin/effect-registry.mjs": {
    "system": "base_effects",
@@ -17359,6 +17460,7 @@
     "server-plugin/revival.mjs",
     "server-plugin/rule-state-migration.mjs",
     "server-plugin/scene-card.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/settlement-trade.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
@@ -17388,6 +17490,7 @@
     "obligations",
     "player",
     "quotes",
+    "scheduler",
     "skills",
     "turns"
    ],
@@ -17442,7 +17545,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 776
+   "lines": 838
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -18616,7 +18719,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 585
+   "lines": 586
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -19814,6 +19917,7 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/quest-board.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
     "server-plugin/subjective-view.mjs",
@@ -19847,7 +19951,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 259
+   "lines": 268
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -20105,6 +20209,7 @@
     "obligations"
    ],
    "stateReads": [
+    "effects",
     "location",
     "minute",
     "npcs",
@@ -20226,7 +20331,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 212
+   "lines": 215
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -21125,6 +21230,20 @@
    ],
    "worldDirs": [],
    "lines": 154
+  },
+  "server-plugin/scheduler.mjs": {
+   "system": "kernel_engine",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "scheduler"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 263
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
@@ -22322,6 +22441,7 @@
    "imports": [
     "server-plugin/career-metrics.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/standing.mjs"
    ],
    "stateWrites": [
@@ -22332,16 +22452,17 @@
     "family",
     "npcs"
    ],
-   "recordWrites": [],
+   "recordWrites": [
+    "world_event"
+   ],
    "recordReads": [
     "rumor_event",
-    "rumor_lie",
-    "world_event"
+    "rumor_lie"
    ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 157
+   "lines": 210
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",

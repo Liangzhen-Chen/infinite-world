@@ -106,9 +106,9 @@ function end(d, id, effect, status, minute) {
 }
 
 // Process shared mana in chronological order. Expiry wins ties with upkeep.
-export function advanceSummons(d, after) {
+export function advanceSummons(d, after, effectIds) {
     while (true) {
-        const events = Object.entries(d.get('state', 'effects')).filter(([, effect]) => effect.kind === 'summon')
+        const events = (effectIds?effectIds.map(id=>[id,d.get('state','effects',id)]).filter(([,effect])=>effect):Object.entries(d.get('state', 'effects'))).filter(([, effect]) => effect.kind === 'summon')
             .map(([id, effect]) => ({ id, effect, due: Math.min(effect.nextUpkeep, effect.expires) }))
             .filter(row => row.due <= after || d.get('state', 'player', 'status') !== '正常')
             .sort((a, b) => a.due - b.due || a.id.localeCompare(b.id));

@@ -61,7 +61,7 @@ import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialo
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
-import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
+import {createNpcObligation,assertNpcObligationAction,npcObligationAt,advanceNpcObligations}from'./npc-obligations.mjs';
 import {applyNpcRelation}from'./npc-relations.mjs';
 import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
@@ -80,12 +80,13 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,runAdvance}from'./advance-registry.mjs';
+import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
 import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
+import {applyConfigSet,Scheduler,schedulerConfig,schedulerWired} from './scheduler.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
 const withBooks=(engine,document)=>withLedger(engine,document);
@@ -102,20 +103,41 @@ export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
     // S2a: the engine rides along so legacy write points without an engine argument can dual-write holdings (holding-sources.holdingSet).
-    constructor(document, engine = null) { this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; }
+    constructor(document, engine = null) {
+        this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = [];
+        this.scheduler = schedulerWired(document.state) ? new Scheduler({seed:document.randomSeed,config:schedulerConfig(document.state)}) : null;
+        if(this.scheduler){
+            this.scheduler.seq=document.state.scheduler?.seq??0;
+            for(const row of Object.values(document.state.records??{}))if(row.category==='world_event'&&Number.isSafeInteger(row.seq))this.scheduler.seq=Math.max(this.scheduler.seq,row.seq);
+            this.scheduler.lastSettled=document.state.scheduler?.lastSettled??document.state.minute;
+        }
+        this.contestPool = this.scheduler ? [] : null;
+    }
     // P2: the cursor keeps its own copies writable until a read lets them escape.
     get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
     set document(document) { this.cursor.reset(document); this.adopted.clear(); }
     get(...path) { if (this.adopted.size) this.release(path); let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return this.cursor.expose(object); }
     // Only for a caller that reads, copies what it keeps and drops the reference before its next write.
     peek(...path) { let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
-    set(path, value) { this.write({ op: 'set', path, value }); }
+    numberEvent(path,value){
+        if(this.scheduler&&path.length===3&&path[0]==='state'&&value&&typeof value==='object'&&
+            (['effects','obligations'].includes(path[1])||path[1]==='records'&&['contract','debt','bank','authorization','legal_detention','legal_custody'].includes(value.category))){
+            value={...value,registeredSeq:this.get(...path)?.registeredSeq??value.registeredSeq??this.scheduler.nextSeq()};
+        }
+        if(this.scheduler&&path.length===3&&path[0]==='state'&&path[1]==='records'&&value?.category==='world_event'){
+            const old=this.get(...path);
+            return {...value,seq:old?.seq??value.seq??this.scheduler.nextSeq()};
+        }
+        return value;
+    }
+    set(path, value) { this.write({ op: 'set', path, value:this.numberEvent(path,value) }); }
     remove(path) { this.write({ op: 'delete', path }); }
     // P2: a fresh records row the caller hands over and never touches again.
     // The draft holds the patch's own object instead of a copy until a read
     // could reach it (release); then it holds a copy, exactly as set would.
     adopt(path, value) {
         if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
+        value=this.numberEvent(path,value);
         const patch = { op: 'set', path, value };
         this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
     }
@@ -224,6 +246,8 @@ export class WorldEngine {
         if (input.type==='schema_migration') return {patches:booked(input.patches),result:{migration:true}};
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:booked(migration.patches),result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:booked(planRuleStateMigration(document,this.rules)),result:{migration:true,runtimeRuleVersion}};
+        // 14 §14.2：调度配置（反应深度上限、每刻提案上限）是输入事件 config_set{key,value}，写入存档的 state.scheduler。
+        if(input.type==='config_set'){const d=new Draft(document,this);const scheduler=applyConfigSet(d.get('state'),input.key,input.value);d.set(['state','scheduler'],scheduler);return{patches:d.patches,result:{ok:true,scheduler}};}
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
             const books=withBooks(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
@@ -294,6 +318,8 @@ export class WorldEngine {
         if(tool==='time')compactNpcPatches(d,0,document.state.npcs);
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
+        // S2b：调度器序号与结算钟随推进续写回存档，保证分段推进与一次推进的 seq 连续一致。
+        if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
         return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
@@ -363,13 +389,25 @@ export class WorldEngine {
         const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
-        const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
+        let payment,moved,tax,rejected;
+        const execute=()=>{
+        payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
+        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
-        const tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
+        tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
+        };
+        if(d.scheduler){
+            submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
+            // An external proposal is a real tick. Due NPC proposals at this
+            // minute join the same pool before either side moves money or goods.
+            this.advance(d,0,id);
+            if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
+        }else execute();
+        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
@@ -389,20 +427,44 @@ export class WorldEngine {
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(!advanceNeedsSteps(this,d,d.get('state','minute')))return this.advanceInterval(d,minutes,id);
-        if(!minutes)return this.advanceInterval(d,0,id);
+        if(!d.scheduler&&!advanceNeedsSteps(this,d,d.get('state','minute')))return this.advanceInterval(d,minutes,id);
+        if(!minutes){
+            if(!d.scheduler)return this.advanceInterval(d,0,id);
+            if(d.contestPool.length){this.advanceInterval(d,0,id,d.scheduler.lastSettled);d.scheduler.lastSettled=d.get('state','minute');}
+            return;
+        }
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute');
-            const next=nextAdvanceMinute(this,d,now,end);
-            this.advanceInterval(d,next-now,id);
+            if(d.scheduler){
+                const next=nextFromScheduleHeap(this,d,now,end);
+                if(next===null){
+                    const beforeState=d.get('state');
+                    d.set(['state','minute'],end);catchUpLocal(this,d,end);
+                    // A courier's continuous trip (including the return to its
+                    // routine) must be current at a read even without a tick.
+                    // Its own cursor leaves lastSettled and event seq alone.
+                    if(Object.values(d.get('state','obligations')??{}).some(o=>o.deliveryVersion===1))
+                        advanceNpcObligations(d,this,d.scheduler.lastSettled??now,end,id,{beforeState});
+                    break;
+                }
+                // S2b：结算钟与玩家钟分离——before 取上一结算刻（跨 reduce 持久），
+                // 使逐日推进与一次推进在非整日起点下也产生相同 before/after/days。
+                const settledBefore=d.scheduler.lastSettled??now;
+                this.advanceInterval(d,next-now,id,settledBefore);
+                d.scheduler.lastSettled=next;
+            }else{
+                const next=nextAdvanceMinute(this,d,now,end);
+                this.advanceInterval(d,next-now,id);
+            }
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
         // Keep one final NPC patch per changed person in this elapsed-time event.
         compactNpcPatches(d,patchStart,npcsBefore);
     }
-    advanceInterval(d,minutes,id){
-        const beforeState=d.get('state'),before=beforeState.minute,after=before+minutes;d.set(['state','minute'],after);
+    advanceInterval(d,minutes,id,settledBefore){
+        const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
+        if(d.scheduler)catchUpLocal(this,d,after);
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
