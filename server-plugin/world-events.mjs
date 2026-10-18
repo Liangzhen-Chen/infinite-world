@@ -8,7 +8,7 @@ import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 import {personAge} from './entity-view.mjs';
 export const WORLD_EVENT_VERSION=1;
-export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation']);
+export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
@@ -124,6 +124,8 @@ export function worldEvents(state,filter=()=>true){
 // Stable domain ids guard both persistence and subscriber delivery on replay.
 export function publishTransitionEvent(d,engine,event){
     if(d.get('state','records',`world_event:${event.id}`))return false;
+    // S2b：推进接线后，离屏产生的事件从当前调度器取全局单调序号（14 §14.2）。
+    if(d.scheduler&&event.seq===undefined)event.seq=d.scheduler.nextSeq();
     publishWorldEvents(d,engine,[event],{before:d.get('state'),args:{},detail:{},eventId:event.id,tool:event.tool??'advance'});
     return true;
 }
