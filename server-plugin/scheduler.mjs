@@ -37,7 +37,9 @@ export function layerRank(layer) {
 // ---- 阶段内排序键（14 §14.2）----
 // 阶段 2 到期项：(到期项类, 锚实体 id 字典序, 登记序号)。
 export function dueSortKey(item) {
-    return [item.dueClass ?? '', item.anchorId ?? '', Number.isInteger(item.registeredSeq) ? item.registeredSeq : 0];
+    const classes=['协议续步与承接实体阶段','义务','案件阶段','组织计划阶段','效果与状态到期','许可 / 托养 / 封印维护到期'];
+    const rank=classes.indexOf(item.dueClass);
+    return [rank<0?item.dueClass??'':rank, item.anchorId ?? '', Number.isInteger(item.registeredSeq) ? item.registeredSeq : 0];
 }
 // 阶段 3 时钟规则：(层级, 包 id, 规则 id, 对象的骰值键序)。
 export function clockSortKey(seed, minute, rule) {
@@ -89,6 +91,14 @@ const normalizeContest = rule => {
     if (rule === 'firstToSatisfy') return 'lottery';
     return rule ?? 'lottery';
 };
+export function contestRuleFor(kind) {
+    return ({goods:'price',daily_volume:'price',office:'rank',detained:'rank',bounty:'lottery',lodges:'lottery',service:'lottery',residence:'lottery',repayment:'rank'})[kind]??'lottery';
+}
+export function submitContest(d,proposal){
+    if(!Array.isArray(d.contestPool))throw new Error('调度器未接线，不能提交争夺提案');
+    d.contestPool.push({...proposal});
+    return {status:'pending',id:proposal.id};
+}
 // 同组抽签：按骰值键（含 seq）取最大者，平局按提案键稳定排序。
 function lotteryWinner(group, seed, minute) {
     const keyed = group.map(proposal => ({
@@ -109,25 +119,34 @@ export function resolveContest(proposals, { seed, minute }) {
     }
     const results = [];
     for (const [target, group] of [...byTarget.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
-        const contest = normalizeContest(group[0].contest);
+        const declarations=new Set(group.map(p=>normalizeContest(p.contest??contestRuleFor(p.targetKind))));
+        if(declarations.size!==1)throw new Error(`争夺标的规则不一致：${target}`);
+        const contest = [...declarations][0];
+        let remaining=group[0].capacity??1;
+        const winners=[];
+        let available=group.filter(p=>(p.quantity??1)<=remaining);
+        while(available.length){
         let winner;
         if (contest === 'price') {
-            const best = Math.max(...group.map(p => Number.isFinite(p.bid) ? p.bid : -Infinity));
-            const tied = group.filter(p => (Number.isFinite(p.bid) ? p.bid : -Infinity) === best);
+            const best = Math.max(...available.map(p => Number.isFinite(p.bid) ? p.bid : -Infinity));
+            const tied = available.filter(p => (Number.isFinite(p.bid) ? p.bid : -Infinity) === best);
             winner = tied.length === 1 ? tied[0] : lotteryWinner(tied, seed, minute);
         } else if (contest === 'arrival') {
-            const best = Math.min(...group.map(p => Number.isFinite(p.arrival) ? p.arrival : Infinity));
-            const tied = group.filter(p => (Number.isFinite(p.arrival) ? p.arrival : Infinity) === best);
+            const best = Math.min(...available.map(p => Number.isFinite(p.arrival) ? p.arrival : Infinity));
+            const tied = available.filter(p => (Number.isFinite(p.arrival) ? p.arrival : Infinity) === best);
             winner = tied.length === 1 ? tied[0] : lotteryWinner(tied, seed, minute);
         } else if (contest === 'rank') {
-            const best = Math.min(...group.map(p => Number.isFinite(p.rank) ? p.rank : Infinity));
-            const tied = group.filter(p => (Number.isFinite(p.rank) ? p.rank : Infinity) === best);
+            const best = Math.min(...available.map(p => Number.isFinite(p.rank) ? p.rank : Infinity));
+            const tied = available.filter(p => (Number.isFinite(p.rank) ? p.rank : Infinity) === best);
             winner = tied.length === 1 ? tied[0] : lotteryWinner(tied, seed, minute);
         } else {
-            winner = lotteryWinner(group, seed, minute);
+            winner = lotteryWinner(available, seed, minute);
         }
-        const losers = group.filter(p => p !== winner);
-        results.push({ target, contest, winners: [winner], losers, reason: '刚被人抢先了' });
+        winners.push(winner);remaining-=winner.quantity??1;
+        available=available.filter(p=>p!==winner&&(p.quantity??1)<=remaining);
+        }
+        const losers = group.filter(p => !winners.includes(p));
+        results.push({ target, contest, winners, losers, reason: '刚被人抢先了' });
     }
     return results;
 }

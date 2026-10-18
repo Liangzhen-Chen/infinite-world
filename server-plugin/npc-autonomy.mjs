@@ -19,6 +19,7 @@ import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './
 import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+import {submitContest,clockDiceKey} from './scheduler.mjs';
 // 自治动作在工作草稿里演算后回放，回放可落到被演算动作写的任何持有种类。
 declareHoldingWriter('npc-autonomy',{kinds:['*'],entities:['*'],locations:true});
 
@@ -163,14 +164,22 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
   if(task.status!=='进行中')continue;
   try{if(task.furnace)advanceFurnace(d,engine,task,Math.min(after,task.finish));if(task.finish>after)continue;
-   const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true,furnace:d.get('state','npcAutonomy','tasks',task.id,'furnace')});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);}
+   const execute=()=>{const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true,furnace:d.get('state','npcAutonomy','tasks',task.id,'furnace')});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);};
+   if(d.scheduler&&task.action.kind==='trade'){
+    if(!d.contestPool.some(p=>p.id===task.id)){
+     validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true});
+     const {price}=tradeQuote(d,engine,task.npc,task.action,d.get('state','npcs',task.npc,'location'));
+     submitContest(d,{id:task.id,target:`goods:${task.action.seller}:${task.action.item}`,targetKind:'goods',ruleId:'npc_autonomy:trade',objectId:task.npc,bid:price,quantity:task.action.quantity,capacity:engine.quantity(d,task.action.seller,task.action.item),execute,reject:reason=>{d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],reason);}});
+    }
+   }else execute();}
   catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);}
  }};settle();
  if(!beforeState)return results;
  for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
   const start=day*DAY+600;if(start<before||start>after)continue;
   const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.document.randomSeed);
-  for(const id of Object.keys(presence.npcs).sort()){
+  const objectKey=id=>clockDiceKey(d.document.randomSeed,'npc_autonomy:daily',id,start);
+  for(const id of Object.keys(presence.npcs).sort((a,b)=>d.scheduler?objectKey(a).localeCompare(objectKey(b)):a.localeCompare(b))){
    const actor=presence.npcs[id],base=engine.byId.get(id),actionId=`npc_daily_${day}_${id}`;
    if(!full(engine,id)||!awake(actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;
    if(d.get('state','npcAutonomy','tasks',actionId))continue;

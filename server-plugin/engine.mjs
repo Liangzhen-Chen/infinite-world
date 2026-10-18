@@ -80,7 +80,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance}from'./advance-registry.mjs';
+import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
@@ -103,20 +103,37 @@ export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
     // S2a: the engine rides along so legacy write points without an engine argument can dual-write holdings (holding-sources.holdingSet).
-    constructor(document, engine = null) { this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = []; this.scheduler = null; this.contestPool = null; }
+    constructor(document, engine = null) {
+        this.original = document; this.engine = engine; this.cursor = new PatchCursor(document); this.adopted = new Map(); this.patches = []; this.messages = [];
+        this.scheduler = schedulerWired(document.state) ? new Scheduler({seed:document.randomSeed,config:schedulerConfig(document.state)}) : null;
+        if(this.scheduler){
+            this.scheduler.seq=document.state.scheduler?.seq??0;
+            for(const row of Object.values(document.state.records??{}))if(row.category==='world_event'&&Number.isSafeInteger(row.seq))this.scheduler.seq=Math.max(this.scheduler.seq,row.seq);
+            this.scheduler.lastSettled=document.state.scheduler?.lastSettled??document.state.minute;
+        }
+        this.contestPool = this.scheduler ? [] : null;
+    }
     // P2: the cursor keeps its own copies writable until a read lets them escape.
     get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
     set document(document) { this.cursor.reset(document); this.adopted.clear(); }
     get(...path) { if (this.adopted.size) this.release(path); let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return this.cursor.expose(object); }
     // Only for a caller that reads, copies what it keeps and drops the reference before its next write.
     peek(...path) { let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
-    set(path, value) { this.write({ op: 'set', path, value }); }
+    numberEvent(path,value){
+        if(this.scheduler&&path.length===3&&path[0]==='state'&&path[1]==='records'&&value?.category==='world_event'){
+            const old=this.get(...path);
+            return {...value,seq:old?.seq??value.seq??this.scheduler.nextSeq()};
+        }
+        return value;
+    }
+    set(path, value) { this.write({ op: 'set', path, value:this.numberEvent(path,value) }); }
     remove(path) { this.write({ op: 'delete', path }); }
     // P2: a fresh records row the caller hands over and never touches again.
     // The draft holds the patch's own object instead of a copy until a read
     // could reach it (release); then it holds a copy, exactly as set would.
     adopt(path, value) {
         if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
+        value=this.numberEvent(path,value);
         const patch = { op: 'set', path, value };
         this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
     }
@@ -368,13 +385,25 @@ export class WorldEngine {
         const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
-        const moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
+        let payment,moved,tax,rejected;
+        const execute=()=>{
+        payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
+        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
-        const tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
+        tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
+        };
+        if(d.scheduler){
+            submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
+            // An external proposal is a real tick. Due NPC proposals at this
+            // minute join the same pool before either side moves money or goods.
+            this.advance(d,0,id);
+            if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
+        }else execute();
+        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
@@ -394,8 +423,12 @@ export class WorldEngine {
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
-        if(!advanceNeedsSteps(this,d,d.get('state','minute')))return this.advanceInterval(d,minutes,id);
-        if(!minutes)return this.advanceInterval(d,0,id);
+        if(!d.scheduler&&!advanceNeedsSteps(this,d,d.get('state','minute')))return this.advanceInterval(d,minutes,id);
+        if(!minutes){
+            if(!d.scheduler)return this.advanceInterval(d,0,id);
+            if(d.contestPool.length){this.advanceInterval(d,0,id,d.scheduler.lastSettled);d.scheduler.lastSettled=d.get('state','minute');}
+            return;
+        }
         const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute');
@@ -432,12 +465,6 @@ export class WorldEngine {
         }
         const minutes=number(duration,1,43200,'耗时');
         if(['睡眠','休息'].includes(args.activity))holdingSet(d,null,['state','records','mind_rest_activity'],true,'engine');
-        if(schedulerWired(d.get('state'))){
-            d.scheduler=new Scheduler({seed:d.document.randomSeed,config:schedulerConfig(d.get('state'))});
-            d.scheduler.seq=d.get('state','scheduler','seq')??0;
-            d.scheduler.lastSettled=d.get('state','scheduler','lastSettled')??null;
-            d.contestPool=[];
-        }
         this.advance(d,minutes,id);
         if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {

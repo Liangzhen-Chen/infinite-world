@@ -13,7 +13,8 @@ import {
 import { applyPatches, canonical } from '../../server-plugin/storage.mjs';
 import { loadWorld } from '../../tools/load-world.mjs';
 import { WorldEngine } from '../../server-plugin/engine.mjs';
-import { registerAdvance, submitContest } from '../../server-plugin/advance-registry.mjs';
+import { advanceRegistry, registerAdvance, submitContest } from '../../server-plugin/advance-registry.mjs';
+import {resyncBooks} from '../helpers/ledger-sync.mjs';
 import { publishTransitionEvent, worldEvents } from '../../server-plugin/world-events.mjs';
 
 const hash = value => crypto.createHash('sha256').update(canonical(value)).digest('hex');
@@ -244,12 +245,18 @@ const runSpan = async (engine, doc, minutesList) => {
     for (const minutes of minutesList) d = await step({ engine, doc: d }, minutes);
     return d;
 };
-const seqEvents = doc => worldEvents(doc.state).filter(e => Number.isInteger(e.seq)).sort((a, b) => a.seq - b.seq);
+const seqEvents = doc => {
+    const rows=worldEvents(doc.state);
+    assert.ok(rows.every(e=>Number.isSafeInteger(e.seq)&&e.seq>0),'所有世界事件都有 seq，不能过滤漏编号事件');
+    assert.equal(new Set(rows.map(e=>e.seq)).size,rows.length,'事件序号全局唯一');
+    return rows.sort((a,b)=>a.seq-b.seq);
+};
 
 test('真实引擎 I31：一次推进 10 天与逐日推进产生相同事件序列（含 seq）', async () => {
     const unregister = registerAdvance({
         id: 'i31_probe_daily', order: 1e9,
         advance(engine, d, { after }) {
+            if(after%DAY!==0)return;
             publishTransitionEvent(d, engine, {
                 id: `i31a:${after}`, verb: 'organize', actor: 'player', target: null,
                 minute: after, location: d.get('state', 'location'), witnesses: [], tags: ['i31a'],
@@ -261,9 +268,15 @@ test('真实引擎 I31：一次推进 10 天与逐日推进产生相同事件序
         const ten = freshDoc('i31-a');
         const oneDoc = await runSpan(one.engine, one.doc, [10 * DAY]);
         const tenDoc = await runSpan(ten.engine, ten.doc, Array(10).fill(DAY));
+        const split=freshDoc('i31-a');
+        const short=await step({...split},1);
+        assert.equal(short.state.scheduler.lastSettled,split.doc.state.minute,'无刻短步保留最初结算起点');
+        const restored=JSON.parse(JSON.stringify(short));
+        const splitDoc=await runSpan(new WorldEngine(structuredClone(world)),restored,[10*DAY-1]);
         const a = seqEvents(oneDoc), b = seqEvents(tenDoc);
         assert.ok(a.length >= 10, '至少 10 个午夜事件被记录');
         assert.deepEqual(b, a, '逐日 vs 一次推进的事件序列逐字节相同（含 seq）');
+        assert.deepEqual(seqEvents(splitDoc),a,'首个无刻短步与 JSON 存档往返后序列相同');
     } finally { unregister(); }
 });
 
@@ -279,11 +292,14 @@ test('真实引擎 I31：打乱推进系统注册顺序后事件序列哈希不�
         },
     });
     const runWith = async order => {
+        const original=[...advanceRegistry];
+        advanceRegistry.splice(0,advanceRegistry.length,...seededShuffle(original,order[0]===ids[0]?3:17));
         const unregs = order.map(id => registerAdvance(mkSystem(id)));
+        advanceRegistry.splice(0,advanceRegistry.length,...seededShuffle(advanceRegistry,order[0]===ids[0]?5:19));
         try {
             const { engine, doc } = freshDoc('i31-b');
             return hash(seqEvents(await runSpan(engine, doc, [DAY])));
-        } finally { unregs.forEach(u => u()); }
+        } finally { unregs.forEach(u => u());advanceRegistry.splice(0,advanceRegistry.length,...original); }
     };
     const h1 = await runWith(ids);
     const h2 = await runWith([ids[2], ids[0], ids[1]]);
@@ -314,4 +330,48 @@ test('真实引擎 I31：两 NPC 同刻争夺同一稀缺标的，结果可重�
     assert.equal(wins.length, 1, '唯一胜者');
     assert.ok(['npc_a', 'npc_b'].includes(wins[0].actor), '胜者是两位争夺者之一');
     assert.deepEqual(second, first, '同种子重放结果逐字节相同');
+});
+
+test('真实引擎 I31：同刻争购最后一份面包按骰值键裁决，整笔钱货守恒，任务 id 与枚举顺序不偏置',async()=>{
+    const buyers=['npc_hw_ayan','npc_hw_duanyan'],seller='npc_hw_linsui',item='item_bread',place='bld_hw_qingdeng';
+    const run=async(seed,reverse=false,insolvent=null)=>{
+        const w=structuredClone(world);
+        for(const id of [...buyers,seller])w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:place,activity:'日常活动',services:id===seller?['trade']:[]}]};
+        const engine=new WorldEngine(w),doc=engine.createCharacter(LEGACY,{},seed);
+        doc.state.scheduler={wireAdvance:true};doc.state.minute=600;doc.state.location='loc_capital';
+        for(const id of [...buyers,seller])Object.assign(doc.state.npcs[id],{location:place,activity:'日常活动',coins:1000});
+        if(insolvent)doc.state.npcs[insolvent].coins=0;
+        delete doc.state.npcs[seller].scheduleTravel;
+        doc.state.npcs[seller].inventory[item]=1;
+        const quantity=(d,id)=>{const n=d.state.npcs[id].inventory[item];return typeof n==='number'?n:n?.quantity??0;};
+        const tasks=buyers.map((id,i)=>({id:reverse?`z_${1-i}`:`a_${i}`,npc:id,action:{kind:'trade',seller,item,quantity:1},start:600,finish:605,status:'进行中',presence:{npcs:Object.fromEntries([id,seller].map(who=>[who,{location:place,activity:'日常活动',status:doc.state.npcs[who].status}]))}}));
+        doc.state.npcAutonomy={...(doc.state.npcAutonomy??{}),tasks:Object.fromEntries((reverse?[...tasks].reverse():tasks).map(t=>[t.id,t]))};
+        resyncBooks(engine,doc);
+        const coins=d=>[...buyers,seller].reduce((n,id)=>n+d.state.npcs[id].coins,0),goods=d=>[...buyers,seller].reduce((n,id)=>n+quantity(d,id),0);
+        const after=await step({engine,doc},5);
+        const finished=Object.values(after.state.npcAutonomy.tasks).filter(t=>t.status==='已完成');
+        assert.equal(finished.length,1,'真实交易恰好一笔成功');
+        assert.equal(Object.values(after.state.npcAutonomy.tasks).filter(t=>t.status==='失败').length,1);
+        assert.equal(quantity(after,seller),0);assert.equal(coins(after),coins(doc));assert.equal(goods(after),goods(doc));
+        const winner=finished[0].npc,loser=buyers.find(id=>id!==winner);
+        assert.equal(quantity(after,winner),quantity(doc,winner)+1);assert.equal(quantity(after,loser),quantity(doc,loser));
+        assert.equal(after.state.npcs[loser].coins,doc.state.npcs[loser].coins,'败者整个提案未扣款');
+        seqEvents(after);
+        return winner;
+    };
+    const seen=new Set();
+    for(let i=0;i<8;i++){
+        const seed=`i31-real-contest-${i}`,winner=await run(seed);
+        assert.equal(await run(seed,true),winner,'只改变任务 id 与登记顺序不改变胜者');seen.add(winner);
+    }
+    assert.equal(seen.size,2,'改变骰值键后两人都有胜出，不固定偏向实体 id');
+    for(const poor of buyers)assert.equal(await run('i31-invalid-bid',false,poor),buyers.find(id=>id!==poor),'不具履约能力的提案不能挤掉有效买家');
+});
+
+test('真实引擎 I31：无其他系统到期时效果仍在精确分钟到期',async()=>{
+    const {engine,doc}=freshDoc('i31-expiry');
+    doc.state.effects.i31={expires:doc.state.minute+1};
+    const after=await step({engine,doc},1);
+    assert.equal(after.state.effects.i31,undefined);
+    assert.equal(after.state.scheduler.lastSettled,doc.state.minute+1);
 });

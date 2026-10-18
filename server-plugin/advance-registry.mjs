@@ -58,11 +58,13 @@ import {advancePromotion,nextPromotionMinute}from'./promotion.mjs';
 import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute,settleProjectWorks}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
-import {personSimulation}from'./entity-view.mjs';
+import {personSimulation,personConstraints}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
-import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
-import {advanceSystemSortKey,ScheduleHeap,resolveContest,schedulerWired}from'./scheduler.mjs';
+import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
+import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE}from'./scheduler.mjs';
 import {publishTransitionEvent}from'./world-events.mjs';
+import {scheduleAt}from'./npc-schedule.mjs';
+import {educationCourses}from'./education-state.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -84,15 +86,14 @@ export function runAdvance(engine,d,ctx){
     return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
 }
 // S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
-// 阶段归序键 advanceSystemSortKey 缺省为阶段 2 并按原 order，且以系统 id 决出平局，因此
-// 打乱注册顺序不改变执行顺序；关闭时保持现有 order（金快照不变）。
-function orderedSystems(d){
+// 生产规则显式声明 phase/packId/ruleId；关闭时保持现有 order。
+function orderedSystems(d,ctx){
     if(!schedulerWired(d.get('state')))return advanceRegistry;
-    const key=advanceSystemSortKey;
     return [...advanceRegistry].sort((a,b)=>{
-        const x=key(a),y=key(b);
-        for(let i=0;i<x.length;i++){if(x[i]<y[i])return-1;if(x[i]>y[i])return 1;}
-        return a.id<b.id?-1:a.id>b.id?1:0;
+        const phase=(a.phase??PHASE.clock)-(b.phase??PHASE.clock);
+        if(phase)return phase;
+        if(a.phase===PHASE.due)return compareDue(a,b)||a.id.localeCompare(b.id);
+        return compareClock(d.document.randomSeed,ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
     });
 }
 // 接线后的刻集由日程堆唯一确定（14 §14.2）：只有到期项与时钟规则的刻才存在，
@@ -106,35 +107,62 @@ export function nextFromScheduleHeap(engine,d,now,end){
         const minute=system.nextMinute(engine,d,now);
         if(minute>now&&minute<=end)heap.add({kind:'due',minute});
     }
+    // These legacy handlers have no nextMinute hook. Register their actual
+    // deadlines, including travel created by the preceding tick.
+    const due=minute=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute});};
+    const state=d.get('state');
+    for(const effect of Object.values(state.effects??{}))due(effect.expires);
+    if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
+    for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
+        due(row.deadline);due(row.expires);due(row.nextAt);
+    }
+    const previous=engine.educationCourseContext;
+    engine.educationCourseContext=educationCourses(engine,state);
+    const constraints=personConstraints(engine,state);
+    const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
+    try{for(const [id,npc]of Object.entries(state.npcs??{})){
+        due(npc.scheduleTravel?.arrive);due(npc.cognitionTravel?.arrive);
+        // The existing layer adapter settles eligible fixed-location skeletons
+        // daily or on promotion. They do not own individual slot clocks.
+        const group=regional?.persons.get(id);
+        if(group&&group.layer!=='intelligent')continue;
+        if(engine.byId.get(id)?.schedule||npc.routine){const slot=scheduleAt(engine,id,now,state,constraints);due(slot?.until);}
+    }}finally{engine.educationCourseContext=previous;}
     const ticks=heap.ticksBetween(now,end);
     return ticks.length?ticks[0]:null;
 }
 // 争夺池：推进系统在本刻提交的互斥标的提案（提交即按当前调度器分配 seq），本刻系统结算完后
 // 由缺省表裁决，产生 contest_win / contest_lose 事件（seq 晚于阶段 1–3，见 runTick）。
-export function submitContest(d,proposal){
-    if(!Array.isArray(d.contestPool))throw new Error('调度器未接线，不能提交争夺提案');
-    const seq=d.scheduler?d.scheduler.nextSeq():0;
-    d.contestPool.push({...proposal,seq});
-}
+export {submitContest}from'./scheduler.mjs';
 function recordContestEvent(d,event){
     const key=`world_event:contest:${event.target}:${event.id}:${event.minute}`;
     if(d.get('state','records',key))return;
-    publishTransitionEvent(d,d.engine,{id:`contest:${event.target}:${event.id}:${event.minute}`,verb:event.verb,actor:event.id,target:event.target,minute:event.minute,location:d.get('state','location'),witnesses:[],tags:['contest',event.rule??'lottery'],...(event.reason?{reason:event.reason}:{})});
+    publishTransitionEvent(d,d.engine,{id:`contest:${event.target}:${event.id}:${event.minute}`,verb:event.verb,actor:event.actor??event.id,target:event.target,minute:event.minute,location:d.get('state','location'),witnesses:[],tags:['contest',event.rule??'lottery'],...(event.reason?{reason:event.reason}:{})});
 }
 function resolveContestPool(d,ctx){
     if(!d.contestPool?.length)return;
-    const outcomes=resolveContest(d.contestPool,{seed:d.document.randomSeed,minute:ctx.after});
+    const proposals=d.contestPool.splice(0).sort((a,b)=>{
+        const key=p=>clockDiceKey(d.document.randomSeed,p.ruleId??'',p.objectId??'',ctx.after);
+        return key(a).localeCompare(key(b));
+    });
+    for(const proposal of proposals)proposal.seq=d.scheduler.nextSeq();
+    const outcomes=resolveContest(proposals,{seed:d.document.randomSeed,minute:ctx.after});
     for(const outcome of outcomes){
-        for(const winner of outcome.winners)recordContestEvent(d,{verb:'contest_win',id:winner.id,target:outcome.target,rule:outcome.contest,minute:ctx.after});
-        for(const loser of outcome.losers)recordContestEvent(d,{verb:'contest_lose',id:loser.id,target:outcome.target,rule:outcome.contest,reason:outcome.reason,minute:ctx.after});
+        for(const winner of outcome.winners){
+            // The callback owns the entire proposal, including money and goods.
+            // A rejected callback restores all of its writes and event numbers.
+            const checkpoint=d.document,patches=d.patches.length,messages=d.messages.length,seq=d.scheduler.seq;
+            try{winner.execute?.();recordContestEvent(d,{verb:'contest_win',id:winner.id,actor:winner.actor??winner.objectId,target:outcome.target,rule:outcome.contest,minute:ctx.after});}
+            catch(error){d.document=checkpoint;d.patches.length=patches;d.messages.length=messages;d.scheduler.seq=seq;winner.reject?.(error.message);recordContestEvent(d,{verb:'contest_lose',id:winner.id,actor:winner.actor??winner.objectId,target:outcome.target,rule:outcome.contest,reason:error.message,minute:ctx.after});}
+        }
+        for(const loser of outcome.losers){loser.reject?.(outcome.reason);recordContestEvent(d,{verb:'contest_lose',id:loser.id,actor:loser.actor??loser.objectId,target:outcome.target,rule:outcome.contest,reason:outcome.reason,minute:ctx.after});}
     }
-    d.contestPool.length=0;
 }
 function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
     try{
-        for(const system of orderedSystems(d))system.advance(engine,d,ctx);
+        for(const system of orderedSystems(d,ctx))system.advance(engine,d,ctx);
         if(schedulerWired(d.get('state')))resolveContestPool(d,ctx);
     }finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
@@ -261,4 +289,16 @@ const systems=[
  {id:'wildlife_encounter',order:2800,active:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now)!==Infinity,nextMinute:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now),
   advance:(e,d,{before,after,id})=>{if(after===nextWildlifeEncounterMinute(d,e,before))settleWildlifeEncounter(d,e,wildlifeEncounterAt(d,e,d.get('state','location'),after),id);}},
 ];
-for(const system of systems)registerAdvance(system);
+// Preparatory rules remain before the rules that consume their attendance and
+// booking contexts. Stable rule ids preserve those existing dependencies.
+const dueSystems={contracts:'义务',credit:'义务',summons:'效果与状态到期',law:'案件阶段',effect_expiry:'效果与状态到期',dying:'效果与状态到期',deliveries:'义务',agriculture_expiry:'效果与状态到期'};
+for(const system of systems){
+    const dueClass=dueSystems[system.id];
+    system.phase=dueClass?PHASE.due:PHASE.clock;
+    system.dueClass=dueClass;
+    system.packId='core';
+    // Stable rule identities retain the existing dependency order inside core
+    // (prepare attendance -> schedules -> settle attendance, for example).
+    system.ruleId=`${String(system.order).padStart(4,'0')}:${system.id}`;
+    registerAdvance(system);
+}

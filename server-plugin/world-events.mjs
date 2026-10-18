@@ -10,6 +10,7 @@ import {personAge} from './entity-view.mjs';
 export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
+SOCIAL_VERBS.add('proposal_rejected');
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
 export function presentWitnesses(state,location,exclude=[]){
@@ -50,7 +51,9 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     if(tool==='craft'&&args.operation==='repair')tool='repair';
     const location=before.location,minute=after.minute;
     let e={verb:tool,actor:'player',target:null,tags:[tool]};
-    if(tool==='combat'&&detail.target){
+    if(detail.status==='rejected'){
+        e={verb:'proposal_rejected',actor:'player',target:detail.seller??null,reason:detail.reason,tags:['proposal_rejected']};
+    }else if(tool==='combat'&&detail.target){
         const intent=args.intent??'attack',hostile=['attack','shove'].includes(intent);
         e={verb:hostile?'harm':'clash',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat',`tactic:${intent}`,...(hostile?['hostile','violence']:[])]};
         if(detail.duel)e={verb:'duel',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat','duel',detail.duelRule],duel:detail.duel};
@@ -107,6 +110,7 @@ export function registerWorldEventSubscriber(subscriber){
 }
 export function worldEventSubscribers(){return subscriberStore().map(({id,order})=>({id,order}));}
 export function publishWorldEvents(d,engine,events,context,subscribers=subscriberStore().map(s=>s.on)){
+    if(d.scheduler)events=events.map(e=>SOCIAL_VERBS.has(e.verb)?{...e,seq:d.get('state','records',`world_event:${e.id}`)?.seq??e.seq??d.scheduler.nextSeq()}:e);
     if(!context.legacy)for(const e of events)if(SOCIAL_VERBS.has(e.verb)&&e.actor){
         const key=`world_event:${e.id}`;if(d.get('state','records',key))continue;
         const {legacy:_,...row}=e;d.set(['state','records',key],{category:'world_event',...row});
@@ -125,7 +129,7 @@ export function worldEvents(state,filter=()=>true){
 export function publishTransitionEvent(d,engine,event){
     if(d.get('state','records',`world_event:${event.id}`))return false;
     // S2b：推进接线后，离屏产生的事件从当前调度器取全局单调序号（14 §14.2）。
-    if(d.scheduler&&event.seq===undefined)event.seq=d.scheduler.nextSeq();
+    if(d.scheduler&&event.seq===undefined)event={...event,seq:d.scheduler.nextSeq()};
     publishWorldEvents(d,engine,[event],{before:d.get('state'),args:{},detail:{},eventId:event.id,tool:event.tool??'advance'});
     return true;
 }
