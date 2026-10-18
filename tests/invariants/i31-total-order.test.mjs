@@ -4,12 +4,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
 import {
     runTick, resolveContest, ScheduleHeap, diceKey, rollDice, clockDiceKey,
     compareDue, compareClock, applyConfigSet, schedulerConfig, advanceSystemSortKey,
     PHASE, runReactions,
 } from '../../server-plugin/scheduler.mjs';
-import { canonical } from '../../server-plugin/storage.mjs';
+import { applyPatches, canonical } from '../../server-plugin/storage.mjs';
+import { loadWorld } from '../../tools/load-world.mjs';
+import { WorldEngine } from '../../server-plugin/engine.mjs';
+import { registerAdvance, submitContest } from '../../server-plugin/advance-registry.mjs';
+import { publishTransitionEvent, worldEvents } from '../../server-plugin/world-events.mjs';
 
 const hash = value => crypto.createHash('sha256').update(canonical(value)).digest('hex');
 const SEED = 'i31-seed';
@@ -215,4 +220,98 @@ test('推进系统阶段归序键：未声明 phase 的系统保持原 order（�
         return 0;
     });
     assert.deepEqual(sorted.map(s => s.id), ['y', 'z', 'x'], '全部未声明 phase 时按 order 排序');
+});
+
+// ---- 真实引擎夹具（I31：world_time 经调度器驱动真实存档）----
+// 与 tests/advance-registry.test.mjs 一样从 world 与 legacy 种子构建真实存档，
+// 并把 state.scheduler.wireAdvance 打开，使推进走 §14.2 调度器。事件序列 = 带 seq 的
+// world_event 记录按 seq 排序（离屏过渡事件在接线后取得全局单调序号）。
+const world = await loadWorld();
+const LEGACY = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
+const DAY = 1440;
+const freshDoc = seed => {
+    const engine = new WorldEngine(structuredClone(world));
+    const doc = engine.createCharacter(LEGACY, {}, seed);
+    doc.state.scheduler = { wireAdvance: true };
+    return { engine, doc };
+};
+const step = async ({ engine, doc }, minutes) => {
+    const r = await engine.reduce(doc, { tool: 'world_time', args: { minutes }, eventId: 'i31' });
+    return applyPatches(doc, r.patches);
+};
+const runSpan = async (engine, doc, minutesList) => {
+    let d = doc;
+    for (const minutes of minutesList) d = await step({ engine, doc: d }, minutes);
+    return d;
+};
+const seqEvents = doc => worldEvents(doc.state).filter(e => Number.isInteger(e.seq)).sort((a, b) => a.seq - b.seq);
+
+test('真实引擎 I31：一次推进 10 天与逐日推进产生相同事件序列（含 seq）', async () => {
+    const unregister = registerAdvance({
+        id: 'i31_probe_daily', order: 1e9,
+        advance(engine, d, { after }) {
+            publishTransitionEvent(d, engine, {
+                id: `i31a:${after}`, verb: 'organize', actor: 'player', target: null,
+                minute: after, location: d.get('state', 'location'), witnesses: [], tags: ['i31a'],
+            });
+        },
+    });
+    try {
+        const one = freshDoc('i31-a');
+        const ten = freshDoc('i31-a');
+        const oneDoc = await runSpan(one.engine, one.doc, [10 * DAY]);
+        const tenDoc = await runSpan(ten.engine, ten.doc, Array(10).fill(DAY));
+        const a = seqEvents(oneDoc), b = seqEvents(tenDoc);
+        assert.ok(a.length >= 10, '至少 10 个午夜事件被记录');
+        assert.deepEqual(b, a, '逐日 vs 一次推进的事件序列逐字节相同（含 seq）');
+    } finally { unregister(); }
+});
+
+test('真实引擎 I31：打乱推进系统注册顺序后事件序列哈希不变', async () => {
+    const ids = ['i31_probe_b0', 'i31_probe_b1', 'i31_probe_b2'];
+    const mkSystem = id => ({
+        id, order: 2e9,
+        advance(engine, d, { after }) {
+            publishTransitionEvent(d, engine, {
+                id: `${id}:${after}`, verb: 'organize', actor: 'player', target: null,
+                minute: after, location: d.get('state', 'location'), witnesses: [], tags: ['i31b'],
+            });
+        },
+    });
+    const runWith = async order => {
+        const unregs = order.map(id => registerAdvance(mkSystem(id)));
+        try {
+            const { engine, doc } = freshDoc('i31-b');
+            return hash(seqEvents(await runSpan(engine, doc, [DAY])));
+        } finally { unregs.forEach(u => u()); }
+    };
+    const h1 = await runWith(ids);
+    const h2 = await runWith([ids[2], ids[0], ids[1]]);
+    assert.equal(h2, h1, '注册顺序无关：事件序列哈希相同');
+});
+
+test('真实引擎 I31：两 NPC 同刻争夺同一稀缺标的，结果可重放且胜者唯一', async () => {
+    const run = async () => {
+        let submitted = false;
+        const unregister = registerAdvance({
+            id: 'i31_probe_contest', order: 3e9,
+            advance(engine, d) {
+                if (submitted) return;
+                submitted = true;
+                submitContest(d, { id: 'npc_a', target: 'scarce_item', contest: 'lottery', ruleId: 'r', objectId: 'npc_a' });
+                submitContest(d, { id: 'npc_b', target: 'scarce_item', contest: 'lottery', ruleId: 'r', objectId: 'npc_b' });
+            },
+        });
+        try {
+            const { engine, doc } = freshDoc('i31-c');
+            return seqEvents(await runSpan(engine, doc, [DAY])).filter(e => ['contest_win', 'contest_lose'].includes(e.verb));
+        } finally { unregister(); }
+    };
+    const first = await run();
+    const second = await run();
+    assert.equal(first.length, 2, '同刻两笔争夺产生一胜一败');
+    const wins = first.filter(e => e.verb === 'contest_win');
+    assert.equal(wins.length, 1, '唯一胜者');
+    assert.ok(['npc_a', 'npc_b'].includes(wins[0].actor), '胜者是两位争夺者之一');
+    assert.deepEqual(second, first, '同种子重放结果逐字节相同');
 });
