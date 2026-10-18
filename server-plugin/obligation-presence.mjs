@@ -4,6 +4,10 @@ export function settlementLocation(engine,state,id,seen=new Set()){
     if(!id||seen.has(id))return null;
     seen.add(id);
     if(id==='player')return state.location??null;
+    if(state.settlements?.[id]){
+        const government=engine.world.settlementProfiles?.find(p=>p.id===id)?.details?.governance;
+        return government?.meetingPlace??id;
+    }
     const row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.records?.[id]??state.records?.[`organization:${id}`]??engine.byId.get(id);
     if(row?.scheduleTravel||row?.cognitionTravel)return null;
     if(['死亡','昏迷','濒死'].includes(row?.status))return null;

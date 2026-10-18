@@ -34,7 +34,7 @@ export function localExamination(d,args,id){
   assertNpcService(d,e,teacher,'register',rule.minutes);
   const check=student==='player'?e.check(d,{attribute:'智力',skill:rule.skill,difficulty:rule.difficulty},id):npcEntryCheck(d,e,student,{attribute:'智力',skill:rule.skill,difficulty:rule.difficulty},id);
   advanceWithNpcParticipants(d,e,rule.minutes,id,[teacher,...student==='player'?[]:[student]]);
-  if(!awake(engine,d.get('state'),teacher,d.get('state','npcs',teacher)))throw Error('考官中途失去行动能力');
+  if(!awake(e,d.get('state'),teacher,d.get('state','npcs',teacher)))throw Error('考官中途失去行动能力');
   result={...check,task:rule.task};
  }
  const success=result.success===true||result.certified===true,row={category:'education_qualification',id:`education_qualification:${id}`,student,teacher,settlement,rule:rule.id,culture:rule.culture,form:mode==='civil'?rule.form:mode==='guild'?'行会考核':'门派考核',mode,profession:mode==='civil'?null:e.resolve(args.profession,'profession'),success,minute:d.get('state','minute'),sourceEvent:id,task:result.task??result.entryTask};

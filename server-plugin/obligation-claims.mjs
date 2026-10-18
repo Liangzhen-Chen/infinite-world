@@ -2,7 +2,7 @@
 // through the existing legacy bridge. There is only one payable claim.
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {adoptLegacyObligation,dueObligation,settleObligation} from './obligation-runtime.mjs';
-import {obligationRow,obligationRows,currentGrace} from './obligation-state.mjs';
+import {obligationRow,obligationRows,currentGrace,claimLimitation,claimEnforceable} from './obligation-state.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {canonical} from './storage.mjs';
 import {ledgerActive} from './ledger.mjs';
@@ -23,22 +23,6 @@ function registerClaim(d,e,row){
 }
 // Limitation never erases the underlying debt. Only recorded legal events
 // suspend or restart the procedural clock; a caller's arbitrary flag cannot.
-export function claimLimitation(state,id,minute=state.minute){
-    const row=typeof id==='object'?id:obligationRow(state,id),terms=row?.terms?.limitation;
-    if(!terms)return {enforceable:true,elapsed:0,remaining:Infinity};
-    const period=typeof terms==='number'?terms:terms.minutes;
-    if(!Number.isSafeInteger(period)||period<0)throw Error('Invalid limitation period');
-    let start=row.deadline??row.createdAt??0,paused=null,elapsed=0;
-    const events=Object.values(state.records??{}).filter(r=>r.category==='claim_procedure'&&r.claim===row.id&&r.minute<=minute).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
-    for(const fact of events){
-        if(fact.minute<start)continue;
-        if(fact.action==='restart'){elapsed=0;start=fact.minute;paused=null;}
-        if(fact.action==='suspend'&&paused===null){elapsed+=fact.minute-start;paused=fact.minute;}
-        if(fact.action==='resume'&&paused!==null){start=fact.minute;paused=null;}
-    }
-    elapsed+=paused===null?Math.max(0,minute-start):0;
-    return {enforceable:elapsed<=period,elapsed,remaining:Math.max(0,period-elapsed),suspended:paused!==null};
-}
 export function recordClaimProcedure(d,e,{claim,action,minute=d.get('state','minute'),evidence},eventId){
     const row=obligationRow(d.get('state'),claim),fact=d.get(...path(evidence));
     if(!row||!['suspend','resume','restart'].includes(action)||!Number.isSafeInteger(minute)||minute>d.get('state','minute'))throw Error('Invalid claim procedure');
@@ -48,7 +32,7 @@ export function recordClaimProcedure(d,e,{claim,action,minute=d.get('state','min
     if(old){if(canonical(old)!==canonical(next))throw Error('Procedure event reused');return old;}
     holdingSet(d,e,path(id),next,'obligation-claims');return next;
 }
-export function claimEnforceable(d,row,minute){return claimLimitation(d.get('state'),row,minute).enforceable;}
+export {claimLimitation,claimEnforceable} from './obligation-state.mjs';
 export function settleClaim(d,e,args,eventId){
     // The runtime returns the actual ledger transfer. A legacy, unopened
     // draft would otherwise debit its mirror while reporting transferred=0.

@@ -139,3 +139,22 @@ export function addObligationSchedule(heap,engine,row,now,end,state={}){
     if(row.category==='contract'){add(row.nextRent);add(row.nextDividend);}
 }
 
+
+export function claimLimitation(state,id,minute=state.minute){
+    const row=typeof id==='object'?id:obligationRow(state,id),terms=row?.terms?.limitation;
+    if(!terms)return {enforceable:true,elapsed:0,remaining:Infinity};
+    const period=typeof terms==='number'?terms:terms.minutes;
+    if(!Number.isSafeInteger(period)||period<0)throw Error('Invalid limitation period');
+    let start=row.deadline??row.createdAt??0,paused=null,elapsed=0;
+    const events=Object.values(state.records??{}).filter(r=>r.category==='claim_procedure'&&r.claim===row.id&&r.minute<=minute).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
+    for(const fact of events){
+        if(fact.minute<start)continue;
+        if(fact.action==='restart'){elapsed=0;start=fact.minute;paused=null;}
+        if(fact.action==='suspend'&&paused===null){elapsed+=fact.minute-start;paused=fact.minute;}
+        if(fact.action==='resume'&&paused!==null){start=fact.minute;paused=null;}
+    }
+    elapsed+=paused===null?Math.max(0,minute-start):0;
+    return {enforceable:elapsed<=period,elapsed,remaining:Math.max(0,period-elapsed),suspended:paused!==null};
+}
+
+export function claimEnforceable(d,row,minute){return claimLimitation(d.get('state'),row,minute).enforceable;}

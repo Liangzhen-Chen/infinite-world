@@ -2,23 +2,35 @@
 // the existing protocol obligation; all money uses the existing ledger.
 import {canonical,digest} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {declareLedgerWriter,resourceKey} from './ledger.mjs';
-import {partyAccount,moveCoins,mirrorPartyCoins,escrow as escrowAccount} from './money.mjs';
+import {declareLedgerWriter,resourceKey,ledgerActive} from './ledger.mjs';
+import {partyAccount,moveCoins,mirrorPartyCoins,escrow as escrowAccount,fund as fundAccount} from './money.mjs';
 import {obligationTransaction,syncObligationClaims} from './transition.mjs';
 import {snapshotObligationTerms,obligationKind} from './obligation-kinds.mjs';
 import {obligationRow,obligationRows,obligationView} from './obligation-state.mjs';
 import {settlementPresent,settlementLocation} from './obligation-presence.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
-import {isEffective} from './lifecycle-state.mjs';
-import {legalCodeAt} from './law-codes.mjs';
+import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
+import {legalCodeAt,legalCodeById} from './law-codes.mjs';
+import {groupView,lawAuthorities,personConstraint} from './entity-view.mjs';
 import {identities} from './identity.mjs';
 import {npcAgeAt} from './npc-state.mjs';
+import {transferItems} from './items.mjs';
 
 const W='obligation-runtime';
 declareHoldingWriter(W,{kinds:[]});declareLedgerWriter(W);
 const read=(d,...p)=>d.peek?d.peek(...p):d.get(...p);
 const integer=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)throw Error(`Invalid ${label}`);return n;};
 const clean=o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v!==undefined));
+// Resolve an office from today's facts, never from the signature's old name.
+export function obligationRepresentative(e,s,party){
+    const base=e.rules.economy?.credit?.banks?.find(b=>b.id===party),stored=s.records?.[party];
+    const bank=stored?.category==='bank'?{...base,...stored}:base;
+    const candidates=bank?.keepers??[groupView(e,s,party)?.leader.value].filter(Boolean);
+    return candidates.find(id=>{
+        const n=id==='player'?s.player:s.npcs?.[id];return n&&isEffective(e,s,id)&&!['死亡','昏迷','濒死'].includes(n.status)&&
+            !/睡眠|睡觉|熟睡/.test(n.activity??'')&&!personConstraint(e,s,id)&&settlementPresent(e,s,id,party);
+    })??null;
+}
 function receipt(d,e,id,eventId,verb,args,fn){
     if(typeof eventId!=='string'||!eventId)throw Error('Obligation mutation requires eventId');
     const key=`obligation:${id}:${eventId}`,old=read(d,'state','records',`world_event:${key}`),signature=canonical({verb,args});
@@ -27,8 +39,8 @@ function receipt(d,e,id,eventId,verb,args,fn){
         const result=fn();SOCIAL_VERBS.add(verb);
         const row=obligationRow(read(d,'state'),id);
         publishTransitionEvent(d,e,{id:key,verb,actor:args.actor??args.payer??row.debtor,minute:read(d,'state','minute'),
-            location:args.signingPlace??settlementLocation(e,read(d,'state'),row.debtor),visibility:'private',witnesses:[],
-            participants:[row.debtor,row.creditor].filter(Boolean),tags:['obligation'],obligation:id,signature,result,
+            location:args.signingPlace??settlementLocation(e,read(d,'state'),row.debtor??row.promisor),visibility:'private',witnesses:[],
+            participants:[row.debtor??row.promisor,row.creditor??row.promisee].filter(Boolean),tags:['obligation'],obligation:id,signature,result,
             summary:`${id}: ${verb}`});
         return result;
     });
@@ -38,6 +50,7 @@ function write(d,e,row){
     d.set(['state','obligations',row.id],row);
     if(row.legacyRecord){
         const old=read(d,'state','records',row.legacyRecord)??{};
+        if(old.category&&old.category!=='debt')return read(d,'state','obligations',row.id);
         const status=row.status==='settled'?'已还清':['void','cancelled'].includes(row.status)?'已取消':old.status??'履行中';
         holdingSet(d,e,['state','records',row.legacyRecord],clean({...old,id:row.legacyRecord,category:'debt',obligation:row.id,
             debtor:row.debtor,creditor:row.creditor,amount:row.remaining!==undefined?(row.paid??0)+row.remaining:row.amount,
@@ -73,18 +86,19 @@ export function assertObligationAuthority(e,s,{actor,debtor,actedAs,inName},acti
     const code=legalCodeAt(e,settlementLocation(e,s,actor),s),capacity=code?.civil?.capacity;
     const age=actor==='player'?who.age:npcAgeAt(e,s,actor),majority=code?.civil?.majority?.[action]??capacity?.majority?.[action];
     if(Number.isFinite(majority)&&Number.isFinite(age)&&age<majority)throw Error('Signer lacks legal capacity for this action');
+    if(actor!==debtor&&inName&&!identities(e,s,actor).some(i=>i.key===inName))throw Error('Signing identity is not held');
     if(actor===debtor){if(inName&&!identities(e,s,actor).some(i=>i.key===inName))throw Error('Signing identity is not held');return;}
     const grant=actedAs?.source&&s.records?.[actedAs.source];
     const valid=grant&&!grant.revoked&&grant.endedAt===undefined&&(grant.since??grant.createdAt??0)<=(s.minute??0)&&(grant.expires??Infinity)>(s.minute??0)&&
         (grant.grantee===actor||grant.guardian===actor)&&
         (grant.grantor===debtor||grant.ward===debtor)&&
         (grant.category==='guardianship'&&grant.status==='代管中'||grant.category==='authorization'&&(grant.action===action||grant.actions?.includes(action)));
-    if(!valid)throw Error('Signer lacks current authority for this party');
+    if(!valid&&obligationRepresentative(e,s,debtor)!==actor)throw Error('Signer lacks current authority for this party');
 }
 function requireRow(d,id){const row=obligationRow(read(d,'state'),id);if(!row)throw Error('Unknown obligation');return {...row,id:row.id??id};}
 // A representative item is a fact in the inventory, not a flag supplied by
 // the caller. Delivery adapters keep owner/container up to date as it moves.
-function instrumentFor(e,s,row,payer){
+export function obligationInstrument(e,s,row,payer){
     const required=row.terms?.requiresInstrument;
     if(!required)return null;
     const items=Object.entries(s.itemInstances??{}).filter(([id,item])=>
@@ -97,10 +111,11 @@ function instrumentFor(e,s,row,payer){
         const inventory=owner==='player'?s.inventory:s.npcs?.[owner]?.inventory??s.creatures?.[owner]?.inventory;
         if(!Object.values(inventory??{}).some(v=>v?.quantity>0&&v.instances?.includes(id)))continue;
         if(item.container&&item.container!==settlementLocation(e,s,payer))continue;
-        if(settlementPresent(e,s,payer,owner))return {id,item,owner};
+        if(settlementPresent(e,s,payer,owner))return {id,item,owner,holder:owner,custodian:owner,arrival:settlementLocation(e,s,owner),status:item.status??'valid',claim:row.id};
     }
     return null;
 }
+const instrumentFor=obligationInstrument;
 function collectionAt(e,s,row,payer){
     const clause=row.terms?.collection;if(!clause)return null;
     const grant=s.records?.[clause.source],collector=clause.collector,seat=settlementLocation(e,s,collector);
@@ -109,6 +124,31 @@ function collectionAt(e,s,row,payer){
         !(grant.action==='collect'||grant.actions?.includes('collect'))||grant.obligation&&grant.obligation!==row.id)return null;
     if(!seat||!e.byId.get(seat)||!settlementPresent(e,s,payer,collector))return null;
     return {collector,seat,key:`obligation_collection:${row.id}:${seat}`,account:`${seat}|coin_river|collected:${row.id}`,creditor:row.creditor};
+}
+function settlementFunding(e,s,row,args,amount){
+    if(args.judicial){
+        const {case:caseId,authority,source}=args.judicial,c=s.records?.[caseId],code=c&&legalCodeById(e,c.law,s);
+        if(!c||c.category!=='legal_case'||c.status!=='已裁定'||!c.judgment||
+            ![row.id,row.legacyRecord].includes(c.debt)||c.offender!==row.debtor||!Number.isSafeInteger(c.judgment.compensation)||amount>c.judgment.compensation||isPhysicallyDead(e,s,row.debtor)||
+            !code||s.location!==code.court||!lawAuthorities(e,s,code,'officer').includes(authority)||
+            settlementLocation(e,s,authority)!==code.court||personConstraint(e,s,authority))throw Error('Judicial settlement requires a current court, judgment and present officer');
+        const n=s.npcs?.[authority];if(!n||['死亡','濒死','昏迷'].includes(n.status)||/睡眠|熟睡|睡觉/.test(n.activity??''))throw Error('Officer cannot execute judgment');
+        if(source){
+            const deposit=s.records?.[source];
+            if(source!==`legal_deposit:${caseId}`||deposit?.category!=='legal_deposit'||deposit.case!==caseId||deposit.beneficiary!==row.creditor||deposit.coins<amount||deposit.claimed)throw Error('Judgment deposit is not available for this claim');
+            return {from:fundAccount(source),record:source,field:'coins',seat:code.court,caseId};
+        }
+        const location=row.debtor==='player'?s.location:s.npcs?.[row.debtor]?.location;
+        if(location!==code.court)throw Error('Judicial seizure requires assets physically at the court');
+        return {from:partyAccount(e,s,row.debtor),payer:row.debtor,seat:code.court,caseId};
+    }
+    if(args.fundingContract){
+        const c=s.records?.[args.fundingContract];
+        if(c?.category!=='contract'||c.owner!==row.debtor||c.worker!==row.creditor||row.contract!==args.fundingContract||amount>(c.escrow??0)||
+            settlementLocation(e,s,row.creditor)!==c.location)throw Error('Employment guarantee is not pledged to this earned claim');
+        return {from:escrowAccount(args.fundingContract),record:args.fundingContract,field:'escrow',seat:c.location};
+    }
+    return null;
 }
 export function openObligation(d,e,args,eventId){
     const id=args.id??`obligation_${eventId}`;
@@ -164,39 +204,75 @@ export function amendObligation(d,e,{id,actor,changes,...facts},eventId){
 export function closeObligation(d,e,{id,actor,reason,...facts},eventId){
     const args={id,actor,reason,...facts};
     return receipt(d,e,id,eventId,'obligation_closed',args,()=>{
-        const row=requireRow(d,id),s=read(d,'state');assertObligationAuthority(e,s,{...facts,actor,debtor:row.debtor});
+        const row=requireRow(d,id),s=read(d,'state');
+        // Either signatory may end future service. Earned claims survive.
+        const party=facts.party??row.debtor;
+        if(![row.debtor,row.creditor].includes(party))throw Error('Only a party may close an obligation');
+        assertObligationAuthority(e,s,{...facts,actor,debtor:party});
         const next={...row,endedAt:row.endedAt??s.minute,endReason:reason??'terminated'};
         write(d,e,next);return {id,transferred:0,remaining:obligationView(s,next).owed,evidence:eventId};
     });
 }
+// The delivery adapter owns the real stock movement and completion receipt.
+// Transport calls this only after its route/arrival checks have succeeded.
+export function performObligation(d,e,{id,actor},eventId){
+    if(!ledgerActive(d))throw Error('Performance requires an opened ledger transaction');
+    return receipt(d,e,id,eventId,'obligation_performed',{id,actor},()=>{
+        const row=requireRow(d,id),s=read(d,'state'),debtor=row.debtor??row.promisor,creditor=row.creditor??row.promisee;
+        assertObligationAuthority(e,s,{actor,debtor});
+        if(row.type!=='送货'&&row.kind!=='delivery')throw Error('This obligation requires its actual service adapter');
+        if(obligationView(s,row).closed||row.status==='已完成')throw Error('Performance already closed');
+        if(!settlementPresent(e,s,actor,creditor)||row.location&&settlementLocation(e,s,actor)!==row.location)throw Error('Delivery requires the agreed physical recipient and place');
+        integer(row.quantity,'delivery quantity');if(!row.item||!row.quantity)throw Error('Delivery requires real goods');
+        transferItems(d,e,debtor,creditor,row.item,row.quantity);
+        write(d,e,{...row,status:'已完成',resolvedAt:s.minute,completion:{eventId,actor,minute:s.minute,item:row.item,quantity:row.quantity}});
+        return {id,transferred:0,delivered:row.quantity,item:row.item,remaining:0,evidence:eventId};
+    });
+}
 export function settleObligation(d,e,args,eventId){
+    if(!ledgerActive(d))throw Error('Settlement requires an opened ledger transaction');
     const resolved=requireRow(d,args.id),id=resolved.id;
     args={...args,id};
     return receipt(d,e,id,eventId,'obligation_settled',args,()=>{
         const row=requireRow(d,id),s=read(d,'state'),payer=args.payer??row.debtor,actor=args.actor??payer;
         if(row.resource&&resourceKey(row.resource)!=='coin_river')throw Error('Non-monetary claim requires its performance adapter');
         const view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount');
-        const escrow=args.escrowContract&&s.records?.[args.escrowContract];
-        if(args.escrowContract){
+        if([args.judicial,args.fundingContract,args.escrowContract,args.automatic].filter(Boolean).length>1)throw Error('Conflicting payment authority');
+        const funding=settlementFunding(e,s,row,args,amount),escrow=args.escrowContract&&s.records?.[args.escrowContract];
+        if(funding){
+            if(payer!==row.debtor)throw Error('A pledged source can only settle its own debtor');
+        }else if(args.escrowContract){
             if(escrow?.category!=='contract'||![id,row.legacyRecord].includes(escrow.debt)||
                 (escrow.parties?.[0]??escrow.owner)!==payer||payer!==row.debtor||amount>(escrow.escrow??0))throw Error('Escrow is not pledged to this debt');
         }else if(args.automatic){
             if(!row.terms?.autoSettle||payer!==row.debtor||amount>view.amountDue)throw Error('Automatic settlement exceeds the signed due authority');
-        }else assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment');
+        }else {
+            assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment');
+            if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
+        }
         if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');
         if(s.records?.[`transition_procedure:${row.debtor}`]?.phase&&s.records[`transition_procedure:${row.debtor}`].phase!=='closed')throw Error('Claim is controlled by the active lifecycle procedure');
         if(row.inheritanceFrom&&s.records?.[`transition_procedure:${row.inheritanceFrom}`]?.phase!=='closed'&&s.records?.[`transition_procedure:${row.inheritanceFrom}`]?.reopenedClaims?.includes(id))throw Error('Claim is controlled by the reopened lifecycle procedure');
         const instrument=instrumentFor(e,s,row,payer),creditor=instrument?.owner??row.creditor,collection=!instrument&&collectionAt(e,s,row,payer);
         if(row.terms?.requiresInstrument&&!instrument)throw Error('Settlement requires the valid representative instrument physically delivered');
-        if(!escrow&&!collection&&!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
+        const deposit=funding?.caseId&&settlementLocation(e,s,creditor)!==funding.seat?`legal_deposit:${funding.caseId}`:null;
+        if(!funding&&!escrow&&!collection&&!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
+        if(funding&&!deposit&&settlementLocation(e,s,creditor)!==funding.seat)throw Error('Pledged funds require local receipt');
         if(row.terms?.limitation&&typeof e.obligationClaimEnforceable!=='function')throw Error('Limitation adapter is required');
         if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,row,s.minute))throw Error('Claim is not enforceable under current procedure');
-        const from=escrow?escrowAccount(args.escrowContract):partyAccount(e,s,payer),to=collection?.account??partyAccount(e,s,creditor);
+        const from=funding?.from??(escrow?escrowAccount(args.escrowContract):partyAccount(e,s,payer)),to=deposit?fundAccount(deposit):collection?.account??partyAccount(e,s,creditor);
         if(from===to)throw Error('Settlement accounts must differ');
+        if((read(d,'ledger','accounts',from)??0)<amount)throw Error('Settlement source has insufficient booked cash');
         const transferred=moveCoins(d,{from,to,amount,writer:W,eventId});
-        if(escrow)holdingSet(d,e,['state','records',args.escrowContract],{...escrow,escrow:escrow.escrow-amount},W);
+        if(transferred!==amount)throw Error('Settlement must book the exact receipt amount');
+        if(funding?.record){const old=s.records[funding.record];holdingSet(d,e,['state','records',funding.record],{...old,[funding.field]:old[funding.field]-amount},W);}
+        else if(escrow)holdingSet(d,e,['state','records',args.escrowContract],{...escrow,escrow:escrow.escrow-amount},W);
         else mirrorPartyCoins(d,e,payer,-amount,eventId,W);
-        if(collection){
+        if(deposit){
+            const old=read(d,'state','records',deposit);
+            if(old&&(old.category!=='legal_deposit'||old.beneficiary!==creditor))throw Error('Court deposit beneficiary mismatch');
+            holdingSet(d,e,['state','records',deposit],{...old,category:'legal_deposit',case:funding.caseId,beneficiary:creditor,location:funding.seat,coins:(old?.coins??0)+amount,units:old?.units??[],payments:[...old?.payments??[],{obligation:id,amount,eventId}]},W);
+        }else if(collection){
             const old=read(d,'state','records',collection.key);
             holdingSet(d,e,['state','records',collection.key],{...collection,category:'obligation_collection',obligation:id,coins:(old?.coins??0)+amount},W);
         }else mirrorPartyCoins(d,e,creditor,amount,eventId,W);
@@ -242,9 +318,10 @@ export function receiveObligationCollection(d,e,{id,actor,...facts},eventId){
         assertObligationAuthority(e,read(d,'state'),{...facts,actor,debtor:row.creditor},'payment');
         if(settlementLocation(e,read(d,'state'),actor)!==row.seat)throw Error('Collected funds must be received at their actual seat');
         const amount=row.coins,to=partyAccount(e,read(d,'state'),row.creditor);
+        if(!ledgerActive(d)||(read(d,'ledger','accounts',row.account)??0)<amount)throw Error('Collection requires its actual booked funds');
         // An agent takes custody locally; crediting a remote owner's purse is
         // not a delivery. The owner can receive directly here.
-        if(actor!==row.creditor)throw Error('Agent collection requires a transport custody adapter');
+        if(actor!==row.creditor&&!(obligationRepresentative(e,read(d,'state'),row.creditor)===actor&&settlementLocation(e,read(d,'state'),row.creditor)===row.seat))throw Error('Agent collection requires a transport custody adapter');
         moveCoins(d,{from:row.account,to,amount,writer:W,eventId});mirrorPartyCoins(d,e,row.creditor,amount,eventId,W);
         holdingSet(d,e,['state','records',id],{...row,coins:0,receivedAt:read(d,'state','minute'),receivedBy:eventId},W);
         return {id,transferred:amount,evidence:eventId};

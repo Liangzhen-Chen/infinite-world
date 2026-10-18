@@ -6,6 +6,7 @@ import {facilityView} from './facility-state.mjs';
 import {transferItems} from './items.mjs';
 import {financeTransfer,financeBalance} from './finance-bank.mjs';
 import {settleEmploymentPay,settleArrears} from './labor-market.mjs';
+import {serviceClaimsFresh} from './service-queue.mjs';
 import {currentEmployment,employmentReservation} from './employment-state.mjs';
 import {organizationState} from './organization-state.mjs';
 import {advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -136,7 +137,8 @@ export function advanceEducation(d,e,{before,after,beforeState}){
   if(taughtMinutes&&job){
    const key=`education_pay:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key))??{category:'education_pay',minutes:0,paid:0};
    const total=old.minutes+taughtMinutes;
-   const payment=settleEmploymentPay(d,e,job,end,taughtMinutes);
+   const earned=Math.ceil(job.wage*total/480)-Math.ceil(job.wage*old.minutes/480);
+   const payment=serviceClaimsFresh(e)?settleEmploymentPay(d,e,job,end,taughtMinutes):earned?settleEmploymentPay(d,e,{...job,wage:earned},end,480):{paid:0};
    holdingSet(d,null,path(key),{...old,minutes:total,paid:old.paid+payment.paid},'education');
    const current=d.get(...path(job.id));holdingSet(d,null,path(job.id),{...current,paid:(current.paid??0)+payment.paid,workedMinutes:(current.workedMinutes??0)+taughtMinutes},'education');
   }

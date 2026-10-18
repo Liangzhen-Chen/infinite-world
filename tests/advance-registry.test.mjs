@@ -10,11 +10,12 @@ import {advanceRegistry,registerAdvance} from '../server-plugin/advance-registry
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const hash=value=>crypto.createHash('sha256').update(canonical(value)).digest('hex');
 // Each step: [tool,args]. The full trace (state + patches + messages per step) is hashed.
-async function trace({quiet=false,seed='advance-registry',steps}){
+async function trace({quiet=false,seed='advance-registry',steps,historical=false}){
  const w=structuredClone(world);if(quiet)for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const engine=new WorldEngine(w);let doc=engine.createCharacter(legacy,{},seed);const out=[];
  for(const [i,[tool,args]]of steps.entries()){
-  const r=await engine.reduce(doc,{tool,args,eventId:`step_${i}`});doc=applyPatches(doc,r.patches);
+  const versions={laborMarketVersion:1,medicineVersion:1,educationVersion:1,npcCrimeVersion:1,legalProcedureVersion:1,worldEventVersion:1,npcIntelligenceVersion:1,factionClockVersion:1,questSourcesVersion:1,tribalAwakeningVersion:1,militaryVersion:1,warVersion:1,villageWildlifeVersion:1,sovereigntyVersion:1,wildlifeEncounterVersion:1};
+  const r=await engine.reduce(doc,{tool,args,eventId:`step_${i}`},historical?{replay:true,result:versions}:{});doc=applyPatches(doc,r.patches);
   // S1a: the books (document.ledger, a sibling of state) are checked by tests/ledger-reconcile.test.mjs;
   // the golden hashes cover the game state and its patches, which the ledger must leave unchanged.
   // S2a: likewise the holding store (document.holdings), checked by tests/holdings-reconcile.test.mjs.
@@ -26,6 +27,7 @@ const days=n=>Array.from({length:n},()=>['world_time',{minutes:DAY}]);
 // Golden hashes: first recorded from the hand-written advance() before the registry refactor (K7, equivalence verified at merge).
 // They are now a regression snapshot; after an intended behaviour change regenerate with UPDATE_ADVANCE_GOLDEN=1.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
+const HISTORICAL=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-pre-s3-services.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},
  quiet:{quiet:true,seed:'advance-quiet',steps:[...days(2),['world_time',{minutes:14*DAY}],['world_time',{minutes:37}]]},
@@ -34,6 +36,9 @@ for(const [name,scenario]of Object.entries(SCENARIOS))test(`对照：${name}存�
  const got=await trace(scenario);assert.deepEqual(await trace(scenario),got);
  if(process.env.UPDATE_ADVANCE_GOLDEN){GOLDEN[name]=got;await fs.writeFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),JSON.stringify(GOLDEN,null,1)+'\n');return;}
  assert.deepEqual(got,GOLDEN[name]);
+});
+for(const [name,scenario]of Object.entries(SCENARIOS))test(`历史服务回执：${name}仍逐字节回放S3之前的推进`,async()=>{
+ assert.deepEqual(await trace({...scenario,historical:true}),HISTORICAL[name]);
 });
 test('注册表按order排序、编号唯一，并覆盖原有推进系统',()=>{
  const orders=advanceRegistry.map(s=>s.order),ids=advanceRegistry.map(s=>s.id);

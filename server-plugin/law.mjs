@@ -475,10 +475,10 @@ export function lawAction(d,args,eventId){
         }
     }
     const creditorClaim=row.debt&&(d.get(...path(row.debt),'creditor')==='player'||d.get(...path(row.debt),'kind')==='wage');
-    if(row.offender!=='player'&&creditorClaim){
+    if(row.offender!=='player'&&creditorClaim&&operation!=='claim'){
         if(!['hear','pay'].includes(operation))throw Error('债权追讨须由法院审理后执行');
         if(operation==='pay'){
-            authority(d,this,code,args.authority,'officer');
+            const officer=authority(d,this,code,args.authority,'officer');
             if(d.get('state','location')!==code.court||row.status!=='已裁定')throw Error('须在法院持有效裁判执行，不能重复追讨');
             const debt=d.get(...path(row.debt));
             if(!claimLimitation(d.get('state'),row.debt,now).enforceable)throw Error('债权已过诉讼时效，余额保留');
@@ -486,6 +486,12 @@ export function lawAction(d,args,eventId){
             // a fine. Unreachable senior creditors retain the reserved assets.
             const initialOwed=obligationView(d.get('state'),row.debt).owed;let executed=0;
             for(const senior of wagePriorityClaims(d.get('state'),debt.debtor)){
+                if([senior.id,senior.legacyRecord].includes(row.debt)){
+                    const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
+                    if(payment){settleClaim(d,this,{id:senior.id,amount:payment,judicial:{case:row.id,authority:officer}},`${eventId}:wage:${senior.id}`);executed+=payment;}
+                    if(obligationView(d.get('state'),senior.id).owed)break;
+                    continue;
+                }
                 if(!settlementPresent(this,d.get('state'),debt.debtor,senior.creditor))throw Error('优先工资债权人须到场领取或安排法庭托存');
                 const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
                 if(payment){settleClaim(d,this,{id:senior.id,amount:payment},`${eventId}:wage:${senior.id}`);executed+=payment;}
@@ -494,7 +500,7 @@ export function lawAction(d,args,eventId){
             const balance=financeBalance(d,this,debt.debtor),amount=Math.min(obligationView(d.get('state'),row.debt).owed,balance);
             const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
             if(amount+fine+executed<=0&&obligationView(d.get('state'),row.debt).owed)throw Error('债务人没有可执行资金，欠款保留');
-            if(amount)settleClaim(d,this,{id:row.debt,amount},`${eventId}:claim`);
+            if(amount)settleClaim(d,this,{id:row.debt,amount,judicial:{case:row.id,authority:officer}},`${eventId}:claim`);
             if(fine){financeChange(d,this,debt.debtor,-fine,eventId,{account:fundAccount(`legal_treasury:${row.law}`),writer:'law',eventId});const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});holdingSet(d,null,path(key),{...fund,coins:fund.coins+fine},'law');}
             const remaining=obligationView(d.get('state'),row.debt).owed;
             const recovered=initialOwed-remaining;
@@ -626,9 +632,9 @@ export function lawAction(d,args,eventId){
     }
     if(operation==='claim'){
         authority(d,this,code,args.authority,'officer');if(d.get('state','location')!==code.court)throw new Error('领取须亲自在法院');
-        const recipient=present(d,this,args.claimant);if(recipient!==row.victim)throw new Error('只有本案受害人可领取，不能擅改受益人');
+        const recipient=args.claimant==='player'?'player':present(d,this,args.claimant);if(recipient!==row.victim)throw new Error('只有本案受害人可领取，不能擅改受益人');
         const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));
-        if(escrow?.category!=='legal_deposit'||escrow.claimed)throw new Error('赔偿没有交存或已经领取');
+        if(escrow?.category!=='legal_deposit'||escrow.claimed||escrow.beneficiary!==recipient)throw new Error('赔偿没有交存或已经领取');
         for(const unit of escrow.units){
             const record=d.get('state','itemInstances',unit);if(record?.owner!==key||record.status!=='保管')throw new Error('返还物单件不在法院保管，拒绝复制');
             this.itemDelta(d,recipient,record.item,1,{account:placedStock(this,key,record.item),writer:'law',eventId});const bag=[...this.bagPath(recipient),record.item,'instances'];
@@ -637,7 +643,7 @@ export function lawAction(d,args,eventId){
         const bank=row.bank&&d.get(...path(row.bank));
         books(d,fundAccount(key),bank?.category==='bank'?vault(row.bank):purse(this,recipient),escrow.coins,eventId);
         if(bank?.category==='bank')holdingSet(d,null,path(row.bank),{...bank,coins:bank.coins+escrow.coins},'law');
-        else d.set(['state','npcs',recipient,'coins'],d.get('state','npcs',recipient,'coins')+escrow.coins);
+        else {const target=recipient==='player'?['state','player','coins']:['state','npcs',recipient,'coins'];d.set(target,(d.get(...target)??0)+escrow.coins);}
         holdingSet(d,null,path(key),{...escrow,coins:0,units:[],claimed:true,claimedAt:now},'law');knowledge(d,recipient,row.id,now);
         this.advance(d,10,eventId);return{case:row.id,recipient,coins:escrow.coins,units:escrow.units,claimed:true};
     }

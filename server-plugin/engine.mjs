@@ -73,7 +73,8 @@ import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
-import {openObligation,settleObligation,receiveObligationCollection,dueObligation} from './obligation-runtime.mjs';
+import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-runtime.mjs';
+import {claimEnforceable} from './obligation-state.mjs';
 import {fileClosedObligation,advanceProcedure} from './transition.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
@@ -181,6 +182,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 }
 export class WorldEngine {
     constructor(world) {
+        this.obligationClaimEnforceable=claimEnforceable;
         this.protocolScheduleAt=scheduleAt;
         this.protocolLiquidatePledge=(d,row)=>{
             if(!row.pledgeRecord)return 0;
@@ -340,6 +342,7 @@ export class WorldEngine {
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.medicineVersion===1?{medicineVersion:1}:{}),
+            ...(!session.replaying||session.replayResult?.serviceClaimsVersion===1?{serviceClaimsVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
@@ -765,9 +768,14 @@ export class WorldEngine {
         return {npc,trustDelta:trust};
     }
     promise(d,args,id) {
-        if(['settle','file_claim','receive_collection','resume_estate'].includes(args.operation)){
+        if(['settle','close','file_claim','receive_collection','resume_estate'].includes(args.operation)){
             if(args.actor&&args.actor!=='player')throw Error('Public settlement must be performed by the player');
             if(args.operation==='settle')return settleObligation(d,this,{id:args.obligation,payer:'player',actor:'player',...(args.coins!==undefined?{amount:args.coins}:{})},id);
+            if(args.operation==='close'){
+                const row=dueObligation(d.get('state'),args.obligation)?.row;
+                if(!row)throw Error('Unknown obligation');
+                return closeObligation(d,this,{id:args.obligation,actor:'player',party:row.creditor==='player'?'player':row.debtor},id);
+            }
             if(args.operation==='receive_collection')return receiveObligationCollection(d,this,{id:args.obligation,actor:'player'},id);
             if(args.operation==='file_claim'){
                 const claim=dueObligation(d.get('state'),args.obligation);
@@ -833,7 +841,11 @@ export class WorldEngine {
             if(!from||!to||from!==to)throw new Error('双方尚未在同一地点交付，不能隔空转移钱物');
             if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');
         }
-        if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
+        if(o.type==='送货'){
+            if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');
+            if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},`${id}:deliver:${key}`);
+            else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
+        }
         if(o.type==='付款'){
             if(o.runtimeVersion===1)settleObligation(d,this,{id:key,payer:o.promisor,amount:dueObligation(d.get('state'),key).owed},`${id}:deliver:${key}`);
             else{if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
