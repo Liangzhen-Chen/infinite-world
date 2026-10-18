@@ -11,6 +11,7 @@ import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
 import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -142,10 +143,12 @@ export function personRegistrar(engine,state,id,seat,occupations){
     return (career.vocation?.location??base?.workplace?.location)===seat&&occupations.includes(career.occupation);
 }
 export function personRemuneration(engine,state,id){
-    const offices=personOffices(engine,state,id),debts=records(state).filter(([,r])=>r.category==='office_salary'&&r.holder===id);
+    const salaries=obligationRows(state).filter(o=>o.kind==='salary'&&o.creditor===id);
+    const projected=new Set(salaries.map(o=>o.legacyRecord).filter(Boolean));
+    const offices=personOffices(engine,state,id),debts=records(state).filter(([key,r])=>r.category==='office_salary'&&r.holder===id&&!projected.has(key)&&!salaries.some(o=>o.id===r.obligation));
     const actor=at(state,actorPath(engine.world,id).slice(1));
-    if(!offices.length&&!debts.length&&actor?.morale===undefined)return null;
-    return fact({monthlyCopper:offices.reduce((sum,o)=>sum+o.value.monthlySalaryCopper,0),arrearsCopper:debts.reduce((sum,[,r])=>sum+r.arrears,0),
+    if(!offices.length&&!debts.length&&!salaries.length&&actor?.morale===undefined)return null;
+    return fact({monthlyCopper:offices.reduce((sum,o)=>sum+o.value.monthlySalaryCopper,0),arrearsCopper:debts.reduce((sum,[,r])=>sum+(r.arrears??0),0)+salaries.reduce((sum,o)=>sum+obligationView(state,o).owed,0),
         morale:actor?.morale??engine.rules.governance?.salaries?.moraleBase??60},'personOffices + state.records.office_salary + actor.morale',Boolean(debts.length||actor?.morale!==undefined));
 }
 export function personLawRoles(engine,state,id,code){

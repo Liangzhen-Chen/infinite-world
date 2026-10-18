@@ -45,14 +45,15 @@ test('义务分期、宽限和存款结息使用 S2b 日程堆',()=>{
 });
 test('forward、开放 bounty、approval 和生灵义务可注册；签署代理与条款不随输入修改',()=>{
     for(const kind of ['forward','bounty','approval','pact','gratitude','grievance','vow'])assert.equal(obligationKind({kind}).id,kind);
-    const row={kind:'pact',actedAs:{source:'office',authority:['contract'],version:1},terms:{deferredPrice:{years:3}},createdAt:0};
+    const row={kind:'pact',actedAs:{source:'office',authority:['contract'],version:1},signingPlace:'signed-place',signingLawVersion:'signed-law',terms:{deferredPrice:{years:3}},createdAt:0};
     const signed=snapshotObligationTerms(row),contract=snapshotContractTerms(row);
     row.actedAs.authority.push('destroy');row.terms.deferredPrice.years=100;
     assert.deepEqual(signed.terms.actedAs.authority,['contract']);assert.equal(signed.terms.deferredPrice.years,3);
     assert.deepEqual(contractTerms(contract,10).actedAs.authority,['contract']);
-    const amended={...contract,amendments:[{minute:5,actedAs:{source:'new-office',authority:['destroy'],version:2},inName:'someone-else',wage:30}]};
+    const amended={...contract,amendments:[{minute:5,actedAs:{source:'new-office',authority:['destroy'],version:2},inName:'someone-else',signingPlace:'remote',signingLawVersion:'future-law',wage:30}]};
     assert.deepEqual(contractTerms(amended,10).actedAs.authority,['contract']);
     assert.equal(contractTerms(amended,10).wage,30);
+    assert.equal(contractTerms(amended,10).signingPlace,'signed-place');assert.equal(contractTerms(amended,10).signingLawVersion,'signed-law');
     assert.equal(signed.terms.onDebtorGone,'pursue');
     assert.equal(obligationKind({kind:'gratitude'}).onCreditorGone,'heirs');
     const delivery=snapshotObligationTerms({reservationVersion:1,deliveryVersion:1,promisor:'courier',promisee:'player'});

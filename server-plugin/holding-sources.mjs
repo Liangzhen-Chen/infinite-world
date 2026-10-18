@@ -399,7 +399,9 @@ function afterWrite(d,engine,path,writer,eventId){
         }
         if(row?.category==='debt'&&row.obligation&&read(d,'state','obligations',row.obligation)){
             const o=read(d,'state','obligations',row.obligation);
-            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,remaining:['坏账','已取消'].includes(row.status)?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
+            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,
+                ...(o.inheritanceFrom?{inheritedPaid:(o.inheritedPaid??0)+Math.max(0,(row.paid??0)-(o.paid??0))}:{}),
+                remaining:['坏账','已取消'].includes(row.status)?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
         }
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
         return;

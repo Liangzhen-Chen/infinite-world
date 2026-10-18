@@ -1,10 +1,73 @@
 // Shared L1 obligation arithmetic. Queries do not mutate a document or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
-import {legalCodeAt} from './law-codes.mjs';
+import {accrualFraction,addAccrual,fraction} from './obligation-calendar.mjs';
+// Installed by the engine composition root. Pure consumer queries must not
+// import the legal/action graph back through entity-view.
+let civilGrace=null;
+export const registerObligationCivilGrace=resolve=>{civilGrace=resolve;};
 
 export const DAY=1440;
-const ended=new Set(['settled','void','cancelled','bad_debt','已还清','已取消','坏账']);
+const ended=new Set(['settled','void','cancelled','bad_debt','closed','completed','terminated','expired','已还清','已取消','坏账','已完成','已终止','已到期','取消']);
 export const obligationClosed=row=>ended.has(row.status);
+
+// One canonical claim can have an old records projection. Never add their
+// balances together. Reads of pre-migration saves do not perform migration.
+export function obligationRow(state,id){
+    const direct=state.obligations?.[id];if(direct)return direct;
+    const legacy=state.records?.[id];
+    if(legacy?.obligation&&state.obligations?.[legacy.obligation])return state.obligations[legacy.obligation];
+    return Object.values(state.obligations??{}).find(o=>o.legacyRecord===id)??legacy??null;
+}
+export function obligationRows(state){
+    const rows=new Map(Object.entries(state.obligations??{}));
+    const projections=new Set([...rows.values()].map(o=>o.legacyRecord).filter(Boolean));
+    for(const [id,row]of Object.entries(state.records??{}))if(row.category==='debt'&&!rows.has(row.obligation??id)&&!projections.has(id))rows.set(id,{...row,id});
+    return [...rows.values()];
+}
+// Shared labor valuation input. Consumers supply the current proficiency and
+// relationship derivations; an already signed wage is never repriced here.
+export function wageQuote({baseHalfDay,proficiency=0,regard=0,minutes=480,signedWage=null}){
+    if(!Number.isFinite(baseHalfDay)||baseHalfDay<0||!Number.isFinite(proficiency)||proficiency<0||!Number.isSafeInteger(minutes)||minutes<0)throw Error('Invalid wage quote inputs');
+    const daily=signedWage??Math.ceil(baseHalfDay*2*(1+proficiency/3000)*(regard<0?1.2:1));
+    if(!Number.isSafeInteger(daily)||daily<0)throw Error('Invalid signed wage');
+    return {daily,amount:Math.ceil(daily*minutes/480),minutes};
+}
+export function obligationAccrued(row,minute){
+    const terms=row.terms??row.clauses??row,accrual=terms.accrual;
+    if(!accrual)return 0;
+    let expires=terms.expires??row.expires??row.deadline??Infinity;
+    for(const a of row.amendments??[])if(a.minute<=minute&&a.expires!==undefined)expires=a.expires;
+    const start=row.createdAt??terms.starts??0,until=Math.min(minute,row.endedAt??row.closedAt??Infinity,expires);
+    if(until<=start)return 0;
+    let total=fraction(0n),at=start,current={...terms,...accrual};
+    const cumulative=(end,t)=>accrualFraction({...t,from:start,to:end,calendar:terms.calendar,value:t.value,principal:t.principal??terms.principal});
+    for(const a of row.amendments??[]){
+        if(a.minute>until)break;
+        if(a.minute<start)continue;
+        total=addAccrual(total,addAccrual(cumulative(a.minute,current),cumulative(at,current),-1n));at=a.minute;
+        current={...current,...a,...a.accrual};
+    }
+    total=addAccrual(total,addAccrual(cumulative(until,current),cumulative(at,current),-1n));
+    return Number(total.numerator/total.denominator)-(row.accrualSettled??0);
+}
+export function obligationView(state,id,minute=state.minute??0,options={}){
+    const row=typeof id==='object'?id:obligationRow(state,id);if(!row)return null;
+    const paid=row.paid??0,accrued=obligationAccrued(row,minute);
+    const gross=(row.amount??row.coins??0)+accrued;
+    const remaining=Math.max(0,Math.min(row.remaining!==undefined?row.remaining+accrued:gross-paid,Math.max(0,(row.terms?.liabilityCap??Infinity)-(row.remaining!==undefined?0:paid))));
+    const extinguished=['void','cancelled','bad_debt','已取消','坏账'].includes(row.status);
+    const owed=extinguished?0:remaining;
+    const closed=row.endedAt!==undefined||obligationClosed(row)||['已完成','取消'].includes(row.status);
+    const start=row.createdAt??row.terms?.starts??0,deadline=row.called?.effectiveAt??row.deadline??row.terms?.deadline??Infinity;
+    const plan=Number.isSafeInteger(deadline)?installmentState({...row,createdAt:start,deadline,amount:gross},minute):{target:0,outstanding:0,nextDue:Infinity,overdueCount:0};
+    const effective={...row,terms:{...row.terms}};
+    for(const a of row.amendments??[])if(a.minute<=minute&&a.grace!==undefined)effective.terms.grace=a.grace;
+    const allowance=options.allowance??grace(effective,minute,options);
+    return {id:row.id??(typeof id==='string'?id:null),row,closed,owed,paid,accrued,
+        amountDue:owed&&minute>=deadline?owed:Math.min(owed,plan.outstanding),
+        overdueCount:owed&&minute>=plan.nextDue+allowance.minutes?plan.overdueCount:0,
+        nextDue:owed?plan.nextDue:Infinity,grace:allowance};
+}
 
 // Contractual grace is a signed fact. Procedural grace is queried now, so a
 // caller supplies the currently selected civil clause, never a signing snapshot.
@@ -15,8 +78,8 @@ export function grace(row,minute,{civil=null,fallbackMinutes=0}={}){
     return {minutes,basis:row.clauses?.grace!==undefined||row.terms?.grace!==undefined?'contract':civil!==null?'civil':'kind',at:minute};
 }
 export function currentGrace(engine,state,row,minute,{fallbackMinutes=0}={}){
-    const location=row.location??state.location;
-    const civil=engine.world?legalCodeAt(engine,location,{...state,minute})?.civil?.grace??null:null;
+    if(engine.world&&!civilGrace)throw Error('Current civil grace resolver is not installed');
+    const civil=engine.world?civilGrace(engine,state,row,minute):null;
     return grace(row,minute,{civil,fallbackMinutes});
 }
 

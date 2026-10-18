@@ -102,6 +102,9 @@ const number = (value, min = 0, max = 1e9, label = '数值') => {
 const text = (value, max = 1200) => { if (typeof value !== 'string' || !value.trim() || value.length > max) throw new Error('文字为空或过长'); return value.trim(); };
 export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
+import {legalCodeAt} from './law-codes.mjs';
+import {registerObligationCivilGrace} from './obligation-state.mjs';
+registerObligationCivilGrace((engine,state,row,minute)=>legalCodeAt(engine,row.location??state.location,{...state,minute})?.civil?.grace??null);
 class Draft {
     // S2a: the engine rides along so legacy write points without an engine argument can dual-write holdings (holding-sources.holdingSet).
     constructor(document, engine = null) {

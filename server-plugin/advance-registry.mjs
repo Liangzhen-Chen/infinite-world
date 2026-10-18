@@ -124,6 +124,9 @@ function orderedSystems(d,ctx){
 // 跨度的终点 end 本身不是刻——它只是把时钟拨到 end。午夜入堆为时钟规则，
 // 各系统 nextMinute 入堆为到期项；取 (now, end] 内最小刻，无则返回 null。
 export function nextFromScheduleHeap(engine,d,now,end){
+    return d?.cursor instanceof PatchCursor?withRecordIndex(()=>collectScheduleMinute(engine,d,now,end)):collectScheduleMinute(engine,d,now,end);
+}
+function collectScheduleMinute(engine,d,now,end){
     const heap=new ScheduleHeap();
     const state=d.get('state'),previous=engine.educationCourseContext;
     engine.educationCourseContext=educationCourses(engine,state);
@@ -257,7 +260,11 @@ const systems=[
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
  {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
- {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
+ {id:'shop_restock',order:850,advance:(e,d,{before,after})=>{
+    // Restocking has no effects outside midnight boundaries. Deriving every
+    // shop during unrelated school/travel ticks repeatedly scans the world.
+    if(Math.floor(after/1440)>Math.floor(before/1440))advanceShops(d,e,before,after);
+ }},
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){

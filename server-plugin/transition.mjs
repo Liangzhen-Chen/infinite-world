@@ -13,6 +13,7 @@ import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
 import {recordsWhere,PatchCursor} from './storage.mjs';
 import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
+import {obligationView,obligationRow} from './obligation-state.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {registerHoldingProtocol} from './holdings.mjs';
 
@@ -46,6 +47,59 @@ function atomic(d,fn){
         if(reaction)d.reactionTick={...reaction,queue};else delete d.reactionTick;
         invalidateHoldings(d);throw error;
     }finally{delete d.protocolTransaction;}
+}
+export {atomic as obligationTransaction};
+// Public compatibility adapter. It preserves explicit links rather than
+// guessing claim identity from matching amounts or parties.
+export function syncObligationClaims(d,engine,entity=null){
+    if(entity!==null)importRecordedClaims(d,engine,entity);
+    syncRecordedClaims(d,engine);
+}
+// Filing after distribution creates capped claims against the actual recipients;
+// it never repays through the empty estate and never grants a fresh estate value
+// to each additional creditor. The same claim id remains the settlement key.
+export function fileClosedObligation(d,e,{estate,obligation,eventId}){
+    if(!eventId)throw Error('Late claim requires eventId');
+    return atomic(d,()=>{
+        const p=read(d,...root,'procedures',estate);
+        if(!p||p.phase!=='closed'||!p.distribution)throw Error('Estate distribution is not closed');
+        const previous=p.lateClaims?.[obligation];
+        if(previous)return structuredClone(previous);
+        const state=read(d,'state'),source=obligationRow(state,obligation);
+        if(!source||![estate,p.entity].includes(source.debtor)||source.inheritanceFrom)throw Error('Claim does not belong to this estate');
+        if(source.terms?.limitation&&typeof e.obligationClaimEnforceable!=='function')throw Error('Limitation adapter is required');
+        if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,source,now(d)))throw Error('Claim is not enforceable');
+        const view=obligationView(state,source),amount=view.owed,heirs=p.distribution.heirs;
+        if(!amount||!heirs?.length)throw Error('No outstanding claim or distribution recipients');
+        const parts=allocation(amount,heirs),paid=allocation(source.paid??0,heirs),ids=[];
+        for(const [index,part]of parts.entries()){
+            if(!part.amount)continue;
+            const r=heirs.find(h=>h.heir===part.heir),used=Object.values(read(d,'state','obligations')??{}).filter(o=>o.inheritanceFrom===estate&&o.debtor===part.heir)
+                .reduce((n,o)=>n+(o.inheritedPaid??0)+(o.remaining??0),0);
+            const remaining=Math.min(part.amount,Math.max(0,r.value-used)),id=index?`${obligation}:heir:${part.heir}`:obligation;
+            const row=snapshotObligationTerms({...source,id,debtor:part.heir,amount:part.amount+(paid.find(x=>x.heir===part.heir)?.amount??0),
+                paid:paid.find(x=>x.heir===part.heir)?.amount??0,remaining,status:remaining?'pending':'bad_debt',badDebt:part.amount-remaining,
+                inheritanceFrom:estate,originalObligation:obligation,originalAmount:amount,originalTerms:source.originalTerms??source.terms??{},
+                inheritedPaid:0,goneRoute:'assume_by_heirs',filedAt:now(d),filedBy:eventId,
+                ...(source.legacyRecord?{legacyRecord:index?`${source.legacyRecord}:heir:${part.heir}`:source.legacyRecord,originalLegacyRecord:source.legacyRecord}:{}),
+                terms:{...source.terms,liabilityCap:r.value,guardian:r.guardian??null}});
+            row.kind??='compensation';
+            if(state.records?.[obligation]===source&&!row.legacyRecord)row.legacyRecord=index?`${obligation}:heir:${part.heir}`:obligation;
+            if(source.terms?.accrual){
+                // Only accrued, closed monetary claims can be filed by this
+                // adapter. Continuing performance stays with its kind adapter.
+                if(source.endedAt===undefined&&(source.deadline??Infinity)>now(d))throw Error('Continuing accrual requires its inheritance adapter');
+                row.accrualSettled=(source.accrualSettled??0)+view.accrued;
+            }
+            d.set(['state','obligations',id],row);ids.push(id);
+        }
+        const result={estate,obligation,claims:ids,amount,evidence:eventId};
+        const next={...p,lateClaims:{...p.lateClaims,[obligation]:result}};
+        d.set([...root,'procedures',estate],next);writeRecord(d,e,`transition_procedure:${estate}`,{category:'transition_procedure',...next});
+        syncRecordedClaims(d,e);
+        emit(d,e,{id:eventId,verb:'protocol_stage',entity:estate,phase:'filing',obligation,cause:p.eventId,claims:ids});
+        return result;
+    });
 }
 function emit(d,engine,event){
     SOCIAL_VERBS.add(event.verb);
@@ -926,7 +980,7 @@ function distribute(d,e,id,p){
         const parts=allocation(amount,heirs).filter(h=>h.amount);
         const principal=allocation(o.amount??o.coins??amount,heirs),paid=allocation(o.paid??0,heirs);
         for(const [i,part]of parts.entries()){
-            const n={...o,id:i?`${oid}:heir:${part.heir}`:oid,amount:principal.find(h=>h.heir===part.heir).amount,remaining:part.amount,paid:paid.find(h=>h.heir===part.heir).amount,inheritanceFrom:id,originalTerms:o.originalTerms??o.terms??{},originalObligation:oid,originalAmount:amount};
+            const n={...o,id:i?`${oid}:heir:${part.heir}`:oid,amount:principal.find(h=>h.heir===part.heir).amount,remaining:part.amount,paid:paid.find(h=>h.heir===part.heir).amount,inheritedPaid:0,inheritanceFrom:id,originalTerms:o.originalTerms??o.terms??{},originalObligation:oid,originalAmount:amount};
             if(o.coins!==undefined)n.coins=n.amount;
             if(o.legacyRecord){n.originalLegacyRecord=o.legacyRecord;n.legacyRecord=i?`${o.legacyRecord}:heir:${part.heir}`:o.legacyRecord;}
             n.inheritedEndpoints=['debtor','promisor','creditor','promisee'].filter(k=>n[k]===id);

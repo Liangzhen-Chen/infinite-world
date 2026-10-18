@@ -14,7 +14,7 @@ export const TRAIT_TAGS=new Set([...ELEMENTS,...CREATURE_TAGS,...FLAMMABLE]);
 const ROOT=path.resolve(import.meta.dirname,'..');
 const rel=p=>path.relative(ROOT,p).split(path.sep).join('/');
 export const CORE='core';
-export const KINDS=['verbs','tags','offenses','holdings','obligations','resources','entity-templates','primitives','derived-fields'];
+export const KINDS=['verbs','tags','offenses','holdings','obligations','resources','entity-templates','primitives','derived-fields','calendars'];
 let validator;
 function validate(){
  if(!validator)validator=new Ajv({allErrors:true,strict:false}).compile(JSON.parse(fs.readFileSync(path.join(ROOT,'schemas/ontology.schema.json'),'utf8')));

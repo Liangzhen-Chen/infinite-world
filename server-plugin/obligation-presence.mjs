@@ -4,12 +4,13 @@ export function settlementLocation(engine,state,id,seen=new Set()){
     if(!id||seen.has(id))return null;
     seen.add(id);
     if(id==='player')return state.location??null;
-    const bank=engine.rules.economy?.credit?.banks?.find(b=>b.id===id);
-    if(bank)return bank.location;
     const row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.records?.[id]??state.records?.[`organization:${id}`]??engine.byId.get(id);
     if(row?.scheduleTravel||row?.cognitionTravel)return null;
+    if(['死亡','昏迷','濒死'].includes(row?.status))return null;
     const location=row?.seat??row?.location??row?.home?.location;
     if(location)return location;
+    const bank=engine.rules.economy?.credit?.banks?.find(b=>b.id===id);
+    if(bank)return bank.location;
     // Projects and procedural estates keep money at their site/executor.
     const entity=state.projects?.[id]??state.records?.[`protocol_assets:${id}`];
     if(entity?.location||entity?.seat)return entity.location??entity.seat;

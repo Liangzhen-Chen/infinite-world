@@ -12,6 +12,33 @@ import {unfoldPopulationAt,populationTemplate,settlePopulationLayers} from '../s
 import {startWar} from '../server-plugin/war-diplomacy.mjs';
 import {advanceTribalAwakening} from '../server-plugin/tribal-awakening.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
+import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
+
+// Tool-only instrumentation: never persisted and never used for budget claims.
+// Collectors and their executions are separate so an empty candidate scan is
+// visible instead of being mistaken for settlement cost.
+export function scaleDiagnostics(){
+    const rows={},restore=[],ticks=new Set();
+    const wrap=(owner,key,label,transform=null,temporary=false)=>{
+        const original=owner[key];if(typeof original!=='function')return;
+        owner[key]=function(...args){
+            const start=performance.now(),row=rows[label]??={calls:0,ms:0,candidates:0};row.calls++;
+            try{const result=original.apply(this,args);return transform?transform(result,row,args):result;}
+            finally{row.ms+=performance.now()-start;}
+        };
+        if(!temporary)restore.push(()=>{owner[key]=original;});
+    };
+    for(const system of advanceRegistry){
+        wrap(system,'nextMinute',`${system.id}.next`);
+        wrap(system,'advance',`${system.id}.advance`,(result,row,args)=>{ticks.add(args[2].after);return result;});
+        wrap(system,'dueItems',`${system.id}.collect`,(items,row,args)=>{
+            ticks.add(args[2].after);row.candidates+=items.length;
+            for(const item of items)wrap(item,'execute',`${system.id}.execute`,null,true);
+            return items;
+        });
+    }
+    return {report:()=>({instrumented:true,ticks:ticks.size,systems:rows}),close:()=>{for(const reset of restore.reverse())reset();}};
+}
 
 // 5 seconds keeps a one-day rest bounded; the 30-day offline operation gets
 // 120 seconds (4 seconds per day, amortizing fixed work). Scene generation
@@ -64,12 +91,20 @@ export async function scaleFixture({counties=Infinity,world=null,activate=counti
     session=engine.scoped(document);
     return {world,engine,document,session,scale};
 }
-export async function measureScale(fixture,{month=true}={}){
+export async function measureScale(fixture,{month=true,diagnostics=false,onlyMonth=false}={}){
     const {engine,document,world}=fixture,metrics={},hashes={};
     const timed=async(name,fn)=>{const start=performance.now(),v=await fn();metrics[name]=performance.now()-start;if(process.env.SCALE_TRACE==='1')console.log(name,metrics[name]);return v;};
     const heapBefore=process.memoryUsage().heapUsed;
-    for(const [name,minutes] of [['turnMs',1],['dayMs',1440],...(month?[['monthMs',30*1440]]:[])]){
-        const out=await timed(name,()=>engine.reduce(document,{tool:'world_time',args:{minutes},eventId:`scale-${name}`}));
+    const diagnostic={};
+    for(const [name,minutes] of (onlyMonth?[['monthMs',30*1440]]:[['turnMs',1],['dayMs',1440],...(month?[['monthMs',30*1440]]:[])])){
+        const probe=diagnostics?scaleDiagnostics():null;
+        let out;
+        try{out=await timed(name,()=>engine.reduce(document,{tool:'world_time',args:{minutes},eventId:`scale-${name}`}));}
+        finally{if(probe){diagnostic[name]=probe.report();probe.close();}}
+        if(probe){
+            const writes={};for(const p of out.patches){const key=p.path.slice(0,2).join('.');writes[key]=(writes[key]??0)+1;}
+            diagnostic[name].patchWrites=writes;
+        }
         hashes[name]=digest({patches:out.patches,result:out.result});
         if(name==='monthMs'||name==='dayMs'&&!month){
             const advanced=applyPatches(document,out.patches);metrics.advancedSaveBytes=Buffer.byteLength(JSON.stringify(advanced));
@@ -85,19 +120,19 @@ export async function measureScale(fixture,{month=true}={}){
         if(digest(restored)!==digest(document))throw Error('存档读写不等价');
     }finally{await fs.rm(dir,{recursive:true,force:true});}
     metrics.heapGrowthBytes=process.memoryUsage().heapUsed-heapBefore;metrics.peakRssBytes=process.resourceUsage().maxRSS*1024;
-    return {scale:fixture.scale,metrics,hashes};
+    return {scale:fixture.scale,metrics,hashes,...(diagnostics?{diagnostic}:{})};
 }
-export async function scaleBench({counties=Infinity,month=true}={}){
+export async function scaleBench({counties=Infinity,month=true,diagnostics=false,onlyMonth=false}={}){
     const world=await loadWorld();
-    const core=await measureScale(await scaleFixture({counties:0,world}),{month});
+    const core=await measureScale(await scaleFixture({counties:0,world}),{month,diagnostics,onlyMonth});
     console.log('scale-bench: core complete');
     const full=await scaleFixture({counties,world});console.log('scale-bench: fixture',JSON.stringify(full.scale));
-    const large=await measureScale(full,{month});
+    const large=await measureScale(full,{month,diagnostics,onlyMonth});
     const report={node:process.version,budgets:SCALE_BUDGETS,scope:'正式生成与人口配额，无模型；真实工具/5000消息提示/原子存档读写；RSS为进程累计峰值',core,large};
     report.violations=scaleViolations(report);report.pass=!report.violations.length;return report;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
-    const i=process.argv.indexOf('--counties'),report=await scaleBench({counties:i<0?Infinity:Number(process.argv[i+1]),month:!process.argv.includes('--no-month')});
+    const i=process.argv.indexOf('--counties'),report=await scaleBench({counties:i<0?Infinity:Number(process.argv[i+1]),month:!process.argv.includes('--no-month'),diagnostics:process.argv.includes('--diagnostics'),onlyMonth:process.argv.includes('--only-month')});
     const json=JSON.stringify(report,null,2)+'\n',o=process.argv.indexOf('--output');if(o>=0)await fs.writeFile(process.argv[o+1],json);console.log(json);
     if(!report.pass)process.exitCode=1;
 }

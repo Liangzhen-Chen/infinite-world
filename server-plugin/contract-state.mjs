@@ -1,7 +1,8 @@
 // Signed clauses are facts; current usability is derived, never a stored flag.
 import {facilityView} from './facility-state.mjs';
 
-const fields=['parties','owner','worker','employer','tenant','holder','issuer','partner','subject','room','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','baselineNet','baselineProfit','unitPrice','targetQuantity','demandSource','supplier','item','project','farm','monthlyRent','starts','createdAt','deadline','expires','onHolderGone','onEmployerGone','onWorkerGone','actedAs','inName','calendar','days','grace','exclusive','autoSettle','limitation','accrual'];
+const fields=['parties','owner','worker','employer','tenant','holder','issuer','partner','subject','room','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','baselineNet','baselineProfit','unitPrice','targetQuantity','demandSource','supplier','item','project','farm','monthlyRent','starts','createdAt','deadline','expires','onHolderGone','onEmployerGone','onWorkerGone','actedAs','inName','signingPlace','signingLaw','signingLawVersion','calendar','days','grace','exclusive','autoSettle','limitation','accrual'];
+const signingFacts=new Set(['actedAs','inName','signingPlace','signingLaw','signingLawVersion']);
 export function snapshotContractTerms(row){
  if(row.clauses)return row;
  const terms=Object.fromEntries(fields.filter(k=>row[k]!==undefined).map(k=>[k,structuredClone(row[k])]));
@@ -14,7 +15,7 @@ export function contractTerms(row,minute=Infinity){
  const terms={...row,...row.clauses};
  // Party substitution is a protocol fact; economic terms are signed facts.
  for(const field of ['owner','employer','worker','tenant','holder','issuer','partner','parties'])if(row.substitutedAt!==undefined){if(Object.hasOwn(row,field))terms[field]=row[field];else delete terms[field];}
- for(const a of row.amendments??[])if(a.minute<=minute){for(const k of fields)if(k!=='actedAs'&&k!=='inName'&&a[k]!==undefined)terms[k]=a[k];if(a.deadline!==undefined)terms.expires=a.deadline;}
+ for(const a of row.amendments??[])if(a.minute<=minute){for(const k of fields)if(!signingFacts.has(k)&&a[k]!==undefined)terms[k]=a[k];if(a.deadline!==undefined)terms.expires=a.deadline;}
  if(terms.expires!==undefined)terms.deadline=terms.expires;
  else{delete terms.deadline;delete terms.expires;}
  if(row.endedAt===undefined&&row.resolvedAt===undefined&&row.settledAt===undefined&&['已终止','已到期','已取消','已解除','已辞退','已辞职','已辞工','已完成','已结算','已转让','中止','违约'].includes(row.status))terms.status=row.clauses.initialStatus??'有效';
