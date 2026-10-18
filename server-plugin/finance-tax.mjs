@@ -38,6 +38,11 @@ export function tradeTax(e,state,location,kind='commercial'){
     return {settlement:sid,bps:explicit??basis+(r.levelBps[rank]??0),kind,regime,level:rank};
 }
 export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='commercial'}){
+    const key=`trade_tax:${sourceEvent}:${kind}`,previous=d.get('state','records',key);
+    if(previous){
+        if(previous.payer!==seller||previous.gross!==cost||previous.location!==location)throw Error('同一商税事件不能更换交易');
+        const {settlement,bps,amount,regime,level}=previous;return {settlement,bps,amount,regime,level,kind};
+    }
     const tax=tradeTax(e,d.get('state'),location,kind),amount=Math.floor(cost*tax.bps/10000);
     if(!amount||seller===tax.settlement)return {...tax,amount:0};
     const actor=e.actorPath(seller),group=groupAccountView(e,d.get('state'),seller),balance=coinRead(d,{point:'tax.payer',account:group?treasury(seller):purse(e,seller),legacy:()=>group?.coins??d.get(...actor,'coins')??0});
@@ -50,7 +55,7 @@ export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='comme
     if(group)changeGroupCoins(d,e,seller,-amount,{kind:'商税',sourceEvent,minute:d.get('state','minute')},BOOKED);
     else d.set([...actor,'coins'],balance-amount);
     changeGroupCoins(d,e,tax.settlement,amount,{kind:'商税',taxKind:kind,payer:seller,bps:tax.bps,sourceEvent,minute:d.get('state','minute')},BOOKED);
-    const key=`trade_tax:${sourceEvent}:${kind}`;holdingSet(d,null,['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,...tax,amount,sourceEvent,minute:d.get('state','minute')},'finance-tax');
+    holdingSet(d,null,['state','records',key],{category:'trade_tax',id:key,payer:seller,gross:cost,location,...tax,amount,sourceEvent,minute:d.get('state','minute')},'finance-tax');
     return {...tax,amount};
 }
 export function collectRouteTariffs(d,e,route,eventId){
