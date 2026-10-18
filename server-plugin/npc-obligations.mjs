@@ -124,7 +124,7 @@ export function nextNpcObligationMinute(state,after){
 
 // A reserved actor follows the same route/coin rules as the routine scheduler.
 // Record occupied intervals so an endpoint or a trip never counts as attendance.
-function simulateNpc(d,engine,id,before,after,bookings){
+function simulateNpc(d,engine,id,before,after,bookings,beforeState){
  const old=d.get('state','npcs',id),npc=structuredClone(old),segments=[];let t=before;
  const constraints=personConstraints(engine,d.get('state'));
  const add=(end,available=true)=>{if(end>t)segments.push({start:t,end,location:npc.location,available});t=end;};
@@ -132,7 +132,7 @@ function simulateNpc(d,engine,id,before,after,bookings){
  while(t<=after){
   const constraint=personConstraint(engine,d.get('state'),id,t,constraints)?.value;
   if(constraint){npc.location=constraint.location;npc.activity='依法拘留';delete npc.scheduleTravel;add(Math.min(after,constraint.expires??after),false);if(t>=after)break;continue;}
-  const heldUntil=waterEarthHeldUntil(d.get('state'),id,t);
+  const heldUntil=waterEarthHeldUntil({effects:{...beforeState?.effects,...d.get('state','effects')}},id,t,Math.max(t,beforeState?.minute??t));
   if(heldUntil>t){add(Math.min(after,heldUntil),capable(npc));if(t>=after)break;continue;}
   if(!capable(npc)){npc.activity=npc.status;add(after,false);break;}
   if(d.get('state','player','companions')?.includes(id)){npc.activity='同行';add(after,false);break;}
@@ -160,21 +160,21 @@ function simulateNpc(d,engine,id,before,after,bookings){
  }
  return segments;
 }
-export function advanceNpcObligations(d,engine,before,after,eventId){
+export function advanceNpcObligations(d,engine,before,after,eventId,{beforeState=null}={}){
  before=Math.max(before,d.get('state','npcObligationClock')??before);
  if(after<=before)return;
  const state=d.get('state'),bookings=Object.values(state.obligations??{}).filter(live).sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));
- if(!bookings.length){if(state.npcObligationClock!==undefined)d.set(['state','npcObligationClock'],after);advanceNpcSchedules(d,engine,before,after);return;}
+ if(!bookings.length){if(state.npcObligationClock!==undefined)d.set(['state','npcObligationClock'],after);advanceNpcSchedules(d,engine,before,after,{beforeState});return;}
  d.set(['state','npcObligationClock'],after);
  const ids=new Set(bookings.flatMap(reservedActors).filter(id=>id!=='player'));
  const previous=engine.npcScheduleReservations;engine.npcScheduleReservations=new Set([...previous??[],...ids]);
- try{advanceNpcSchedules(d,engine,before,after);}finally{engine.npcScheduleReservations=previous;}
+ try{advanceNpcSchedules(d,engine,before,after,{beforeState});}finally{engine.npcScheduleReservations=previous;}
  const occupied=new Map(),action=engine.npcObligationAction;
  const playerAvailable=capable(state.player)&&action?.tool!=='move'&&!['睡眠','休息'].includes(action?.args?.activity)&&(!action||['time','turn'].includes(action.tool));
  occupied.set('player',[{start:before,end:after,location:state.location,available:playerAvailable}]);
  for(const id of ids){
   if(previous?.has(id))occupied.set(id,[{start:before,end:after,location:state.npcs[id]?.location,available:false}]);
-  else occupied.set(id,simulateNpc(d,engine,id,before,after,bookings.filter(o=>reservedActors(o).includes(id))));
+  else occupied.set(id,simulateNpc(d,engine,id,before,after,bookings.filter(o=>reservedActors(o).includes(id)),beforeState));
  }
  const span=(segment,o)=>segment.available&&segment.location===o.location?Math.max(0,Math.min(segment.end,o.deadline)-Math.max(segment.start,o.start)):0;
  for(const old of bookings){

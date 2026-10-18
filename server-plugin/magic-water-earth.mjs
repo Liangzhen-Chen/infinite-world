@@ -181,8 +181,8 @@ export function waterEarthSightClear(d,location,from,to){
 export function waterEarthSoundLoss(d,location,from,to){
  return active(d,'veil_water').some(([,e])=>e.location===location&&crossing(e.point,.5,from,to))?60:0;
 }
-export function waterEarthHeldUntil(state,target,minute){
- return Object.values(state.effects??{}).filter(e=>e.kind==='water_earth'&&e.operation==='bind_water'&&e.target===target&&e.started<=minute&&e.expires>minute).reduce((n,e)=>Math.max(n,e.expires),minute);
+export function waterEarthHeldUntil(state,target,minute,knownAt=minute){
+ return Object.values(state.effects??{}).filter(e=>e.kind==='water_earth'&&e.operation==='bind_water'&&e.target===target&&e.started<=knownAt&&e.expires>minute).reduce((n,e)=>Math.max(n,e.expires),minute);
 }
 export function assertWaterEarthMovement(d,target='player'){
  if(waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute'))throw Error('水绳束住一肢或轻物，须先切断水体媒介或等其失效');

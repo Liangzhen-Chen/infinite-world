@@ -71,6 +71,22 @@ async function refuse(s,op,target,pattern,extra={}){
 const wait=(s,minutes)=>run(s,'world_time',{minutes});
 const reload=s=>{const world=structuredClone(s.world);return{...s,world,engine:new WorldEngine(world),rows:world.locations.find(r=>r.id===s.location).features,doc:JSON.parse(JSON.stringify(s.doc))};};
 const inspect=async(s,target,extra={})=>(await run(s,'world_environment',{operation:'inspect',target,...extra})).care;
+test('shared root water and leakage keep minute order across split advances',async()=>{
+ const s=fixture();s.doc.state.scheduler={wireAdvance:true};
+ await cast(s,'roots','feature_seedling',{source:'feature_water'});
+ const water=s.rows.find(r=>r.id==='feature_water');
+ Object.assign(water,{waterEarthProcess:'leak',links:{drain:'feature_drain'}});
+ set(s,'feature_water',{waterMl:10,capacityMl:1000,pressureKpa:1,leakMlPerMinute:9});
+ set(s,'feature_seedling',{plant:{...state(s,'feature_seedling').plant,rootLengthMeters:1}});
+ s.rows.push({id:'feature_drain',name:'drain',kind:'basin',position:[.2,0],owner:'player',state:{waterMl:0,capacityMl:1000}});
+ s.engine=new WorldEngine(s.world);
+ const split=reload(s);
+ await wait(s,5);for(let i=0;i<5;i++)await wait(split,1);
+ assert.deepEqual(split.doc.state,s.doc.state);
+ assert.equal(state(s,'feature_seedling').rootDrawnWaterMl,1);
+ assert.equal(state(s,'feature_drain').waterMl,9);
+ assert.equal(state(s,'feature_water').waterMl,0);
+});
 function contact(s,point=[0,0]){
  Object.assign(s.doc.state.npcs[npc],{location:s.location,scheduleTravel:null,cognitionTravel:null,hp:100,maxHp:100,status:'正常',medical:medical()});
  s.doc.state.records.local_player_position={location:s.location,point};

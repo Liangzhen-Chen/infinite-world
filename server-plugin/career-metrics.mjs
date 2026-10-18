@@ -45,7 +45,8 @@ function addEvidence(m,key,kind,skills,state,minute){
 export function recordCareerMetrics(d,engine,events,context){
     if(context.legacy||!events.length)return;
     const before=context.before,after=d.get('state'),minute=after.minute,detail=context.detail??{},args=context.args??{},tool=events[0].tool??context.tool;
-    const old=after.careerMetrics,m=structuredClone(old??empty(before.minute)),c=m.counters,id=context.eventId;
+    const origin=d.scheduler?(d.original.state.scheduler?.lastSettled??d.original.state.minute):before.minute;
+    const old=after.careerMetrics,m=structuredClone(old??empty(origin)),c=m.counters,id=context.eventId;
     // Places: every arrival is a visit; boat arrivals are voyages.
     m.visited[before.location]=true;
     if(after.location!==before.location){m.visited[after.location]=true;if(tool==='move'&&args.mode==='boat')inc(c,'voyages');}

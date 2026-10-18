@@ -80,7 +80,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest}from'./advance-registry.mjs';
+import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
@@ -438,7 +438,7 @@ export class WorldEngine {
             const now=d.get('state','minute');
             if(d.scheduler){
                 const next=nextFromScheduleHeap(this,d,now,end);
-                if(next===null){d.set(['state','minute'],end);break;}
+                if(next===null){d.set(['state','minute'],end);catchUpLocal(this,d,end);break;}
                 // S2b：结算钟与玩家钟分离——before 取上一结算刻（跨 reduce 持久），
                 // 使逐日推进与一次推进在非整日起点下也产生相同 before/after/days。
                 const settledBefore=d.scheduler.lastSettled??now;
@@ -455,6 +455,7 @@ export class WorldEngine {
     }
     advanceInterval(d,minutes,id,settledBefore){
         const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
+        if(d.scheduler)catchUpLocal(this,d,after);
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {

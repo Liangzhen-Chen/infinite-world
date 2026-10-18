@@ -27,8 +27,9 @@ export function prepareEducation(d,e,{before,after}){
  for(const c of e.educationCourseContext)for(const id of [c.teacher,...c.students].filter(Boolean)){
   // Admission happens at an actual opening bell, never during an unrelated
   // zero-time action or in the middle of an already running class.
-  if(!d.get('state','npcs',id)&&after>before&&before%DAY===c.start){
-   const n=rosterLifeState(e,d.get('state'),id,d.get('state','minute'),'自动入学',{minor:true});
+  const opening=Math.floor(after/DAY)*DAY+c.start;
+  if(!d.get('state','npcs',id)&&after>before&&before<=opening&&opening<=after){
+   const n=rosterLifeState(e,d.get('state'),id,opening,'自动入学',{minor:true});
    if(n)holdingSet(d,null,['state','npcs',id],n,'education');
   }
   e.educationAttendance.set(id,[]);

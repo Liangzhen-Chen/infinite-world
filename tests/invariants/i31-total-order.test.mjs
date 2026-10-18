@@ -252,6 +252,20 @@ const seqEvents = doc => {
     return rows.sort((a,b)=>a.seq-b.seq);
 };
 
+test('local continuous objects catch up without adding a scheduled tick',async()=>{
+    const initial=freshDoc('i31-local');
+    const before=initial.doc.state.minute;
+    const short=await step(initial,1);
+    assert.equal(short.state.scheduler.lastSettled,before);
+    assert.equal(short.state.scheduler.localUntil,before+1);
+    const food=short.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
+    assert.ok(food.spoiledGrams>0,'food decays even when the span has no scheduled tick');
+    const split=await step({engine:new WorldEngine(structuredClone(world)),doc:JSON.parse(JSON.stringify(short))},36);
+    const whole=await step(freshDoc('i31-local'),37);
+    assert.deepEqual(split.state,whole.state);
+    assert.deepEqual(seqEvents(split),seqEvents(whole));
+});
+
 test('真实引擎级联：阶段归序、广度优先、config_set 深度上限与重放', async () => {
     const run=async(reverse=false,depthLimit=2)=>{
         const {engine,doc:initial}=freshDoc('i31-cascade');
@@ -317,6 +331,8 @@ test('真实引擎 I31：一次推进 10 天与逐日推进产生相同事件序
         assert.equal(short.state.scheduler.lastSettled,split.doc.state.minute,'无刻短步保留最初结算起点');
         const restored=JSON.parse(JSON.stringify(short));
         const splitDoc=await runSpan(new WorldEngine(structuredClone(world)),restored,[10*DAY-1]);
+        assert.deepEqual(tenDoc.state,oneDoc.state,'daily and single advance states');
+        assert.deepEqual(splitDoc.state,oneDoc.state,'unscheduled split and JSON roundtrip states');
         const a = seqEvents(oneDoc), b = seqEvents(tenDoc);
         assert.ok(a.length >= 10, '至少 10 个午夜事件被记录');
         assert.deepEqual(b, a, '逐日 vs 一次推进的事件序列逐字节相同（含 seq）');

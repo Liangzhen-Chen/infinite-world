@@ -209,7 +209,8 @@ export function applyConfigSet(state, key, value) {
 // 默认关闭：开启会使 advance-registry 金快照破裂（刻集改由日程堆唯一确定 + state.scheduler
 // 写回 seq/lastSettled），差异已记录于 S2B-ds-003.golden-diff.txt（S2b-1 步 3）。
 export function schedulerWired(state) {
-    return process.env.SCHEDULER_WIRE_ADVANCE === '1' || state?.scheduler?.wireAdvance === true;
+    if(process.env.SCHEDULER_WIRE_ADVANCE === '0')return false;
+    return process.env.SCHEDULER_WIRE_ADVANCE === '1' || state?.scheduler?.wireAdvance !== false;
 }
 
 // ---- 完整一刻驱动 ----

@@ -95,11 +95,11 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 // P2: a read-only look at the current state for the lookups below, which use
 // it only before this NPC's writes; it does not make the draft recopy state.
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
-export function advanceNpcSchedules(d,engine,before,after,{promote=false}={}){
+export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
     const previous=engine.educationScheduleCourses;engine.educationScheduleCourses??=new Map();
-    try{return settleSchedules(d,engine,before,after,{promote});}finally{engine.educationScheduleCourses=previous;}
+    try{return settleSchedules(d,engine,before,after,{promote,beforeState});}finally{engine.educationScheduleCourses=previous;}
 }
-function settleSchedules(d,engine,before,after,{promote=false}={}){
+function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
@@ -124,7 +124,10 @@ function settleSchedules(d,engine,before,after,{promote=false}={}){
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
         const since=regional?.before??before;
-        let cursor=Math.max(waterEarthHeldUntil(peekState(d),npcId,since),mindSleepUntil(d,npcId,since));
+        // The snapshot records the actor's actual presence when a binding was
+        // cast, even if that action occurred after the last global clock tick.
+        const heldState={effects:{...beforeState?.effects,...peekState(d).effects}};
+        let cursor=Math.max(waterEarthHeldUntil(heldState,npcId,since,Math.max(since,beforeState?.minute??since)),mindSleepUntil(d,npcId,since));
         // Eligible skeleton routines never travel or charge money. Their last
         // slot is exactly the result of walking every intervening slot.
         if(regional)cursor=after;

@@ -88,6 +88,28 @@ export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>syst
 export function runAdvance(engine,d,ctx){
     return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
 }
+// Continuous local processes catch up to reads/actions without introducing a
+// clock tick or advancing lastSettled. Their own cursor prevents the next
+// scheduled settlement from charging the same elapsed minutes twice.
+export function catchUpLocal(engine,d,after){
+    const before=d.get('state','scheduler','localUntil')??d.scheduler.lastSettled;
+    if(after<=before)return;
+    // Roots can draw from a leaking source. Preserve minute order for that
+    // shared resource; independent processes retain their existing batch loop.
+    const roots=Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='roots'&&x.expires>before);
+    const coupled=roots.some(x=>engine.world.locations.some(p=>p.features?.some(r=>r.id===x.medium&&r.waterEarthProcess)));
+    if(coupled)for(let minute=before;minute<after;minute++){
+        advanceCare(d,engine,minute,minute+1);
+        advanceWaterEarth(d,engine,minute,minute+1);
+    }else{
+        advanceCare(d,engine,before,after);
+        advanceWaterEarth(d,engine,before,after);
+    }
+    // These consumers have already restored temperature/returned reserved
+    // water. Locally shortened lifetimes must not leave stale active effects.
+    for(const [id,effect]of Object.entries(d.get('state','effects')??{}))if(['care','water_earth'].includes(effect.kind)&&effect.expires<=after)d.remove(['state','effects',id]);
+    d.set(['state','scheduler','localUntil'],after);
+}
 // S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
 // 生产规则显式声明 phase/packId/ruleId；关闭时保持现有 order。
 function orderedSystems(d,ctx){
@@ -199,7 +221,7 @@ const systems=[
  {id:'medicine',order:1190,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextMedicineMinute(e,d,now),advance:(e,d,ctx)=>advanceMedicine(d,e,ctx)},
  {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
-  advance:(e,d,{before,after,id})=>advanceNpcObligations(d,e,before,after,id)},
+  advance:(e,d,{before,after,id,beforeState})=>advanceNpcObligations(d,e,before,after,id,{beforeState})},
  {id:'contracts',order:200,advance:(e,d,{after})=>advanceContracts(d,e,after)},
  {id:'credit',order:250,advance:(e,d,{after})=>advanceCredit(d,e,after)},
  {id:'labor_market',order:240,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextLaborMinute(e,d,now),advance:(e,d,ctx)=>advanceLaborMarket(d,e,ctx)},
@@ -286,12 +308,12 @@ const systems=[
         if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
     }
  }},
- {id:'magic_care',order:1800,advance:(e,d,{before,after})=>advanceCare(d,e,before,after)},
+ {id:'magic_care',order:1800,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='preserve'&&x.expires>now&&x.upkeepMp>0).map(x=>now+Math.max(1,Math.floor(d.get('state','player','mp')/x.upkeepMp)+1))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceCare(d,e,before,after);}},
  {id:'magic_mind_space',order:1900,advance:(e,d,{before,after})=>advanceMindSpace(d,e,before,after)},
  {id:'shadow_contracts',order:2000,advance:(e,d,{before,after})=>advanceShadowContracts(d,before,after)},
  {id:'magic_objects',order:2100,advance:(e,d,{after})=>advanceMagicObjects(d,e,after)},
  {id:'magic_air',order:2200,advance:(e,d,{before,after})=>advanceAirEffects(d,e,before,after)},
- {id:'magic_water_earth',order:2300,advance:(e,d,{before,after})=>advanceWaterEarth(d,e,before,after)},
+ {id:'magic_water_earth',order:2300,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='water_earth'&&x.operation==='mud_seal'&&x.expires>now).map(x=>Math.max(now+1,x.lastChecked+4))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceWaterEarth(d,e,before,after);}},
  {id:'magic_area',order:2400,active:(e,d)=>Object.values(d.get('state','effects')??{}).some(x=>x.kind==='area'),nextMinute:(e,d,now)=>nextMagicAreaMinute(d.get('state'),now),
   advance:(e,d)=>settleMagicAreas(d,e)},
  {id:'effect_expiry',order:2500,advance(e,d,{after}){
