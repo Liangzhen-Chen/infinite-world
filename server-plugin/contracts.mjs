@@ -5,6 +5,8 @@ import {advanceRituals}from'./magic-ritual.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
+import {contractTerms} from './contract-state.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
@@ -44,7 +46,9 @@ export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,pai
     const minute=d.get('state','minute'),next={...row,status,fulfilled,paid,resolvedAt:minute,
         performance:[...row.performance,{status,quantity:fulfilled,paid,minute,source}],
         breaches:reason?[...row.breaches,{reason,by,minute,source}]:row.breaches};
-    holdingSet(d,null,contractPath(row.id),next,'contracts');return next;
+    return changeLegacyHoldings(d,d.engine,{source:`contract:${row.id}`,kinds:['leases','employed_by','lodges'],eventId:source},()=>{
+        holdingSet(d,null,contractPath(row.id),next,'contracts');return next;
+    });
 }
 export function refundContractEscrow(d,row){
     if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:purse(null,'player'),amount:row.escrow,writer:'contracts'});d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');}
@@ -107,7 +111,8 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
 }
 export function advanceContracts(d,engine,minute,recordIds){
     if(!recordIds)advanceRituals(d,engine,minute);
-    for(const[id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
+    for(const[id,stored]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
+        const row=stored.category==='contract'?contractTerms(stored,minute):stored;
         if(row.category==='contract'&&row.version===1&&row.business&&['有效','待履行'].includes(row.status)){
             if(d.get('state','records',id)?.status!==row.status)continue;
             const overdue=row.debt&&d.get('state','records',row.debt)?.deadline<=minute&&d.get('state','records',row.debt)?.status!=='已还清';
@@ -126,7 +131,7 @@ export function advanceContracts(d,engine,minute,recordIds){
             }
         }
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
-            holdingSet(d,null,['state','records',id],{...row,status:'已到期'},'contracts');d.say(`${row.name}已到期，需要退房或另行续住`);
+            changeLegacyHoldings(d,engine,{holder:row.parties?.[0]??'player',subject:row.room,kinds:['lodges'],reason:'expired',eventId:`${id}:expired`},()=>holdingSet(d,null,['state','records',id],{...row,status:'已到期',endedAt:row.expires},'contracts'));d.say(`${row.name}已到期，需要退房或另行续住`);
         }
         if(row.category==='debt'&&row.status==='待偿还'&&row.deadline<=minute){
             holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:row.deadline},'contracts');

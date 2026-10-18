@@ -10,6 +10,7 @@ import {wildlifePriceFactor} from './wildlife.mjs';
 import {assessTradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -50,12 +51,14 @@ function workWindow(d,engine,worker,minutes){
     }
 }
 function endShop(d,engine,shop,status,eventId,reason){
+    return changeLegacyHoldings(d,engine,{holder:shop.owner,subject:shop.id,kinds:['operates'],eventId},()=>{
     const lease=d.get(...path(shop.lease));
     if(lease?.status==='有效')releaseBusinessLease(d,engine,lease,{source:eventId});
     for(const row of Object.values(d.get('state','records')??{}))if(row.category==='contract'&&row.version===1&&row.business===shop.id&&row.status==='待履行'){
         finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',reason,by:'player',source:eventId});
     }
     holdingSet(d,null,path(shop.id),{...shop,status,reason,endedAt:d.get('state','minute'),endSource:eventId},'business');
+    });
 }
 
 export async function businessTrade(d,args,eventId){

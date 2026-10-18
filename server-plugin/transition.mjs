@@ -1,17 +1,16 @@
 // L1 transfer protocol. The caller's scheduler determines the order of calls.
 import fs from 'node:fs';
 import {GONE_BASES,ensureHoldings,aliveHoldings,holdingRow,holdingKind,templatesOf,createEntity,entityRow,endEntity,updateEntity,
-    openHolding,closeHolding,transferHolding,rescaleHolding,setLocation,clearLocation,locationOf,auditHoldings,declareHoldingWriter,invalidateHoldings,holdingKindIds,holdingSet} from './holdings.mjs';
+    openHolding,closeHolding,transferHolding,rescaleHolding,setLocation,clearLocation,locationOf,auditHoldings,declareHoldingWriter,invalidateHoldings,holdingKindIds,holdingSet,registerLifecycleProtocol} from './holdings.mjs';
 import './holding-kinds.mjs';
 import {accountKey,parseAccount,transfer,declareLedgerWriter} from './ledger.mjs';
 import {registerProtocolRunner} from './scheduler.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,presentWitnesses} from './world-events.mjs';
 import {identities} from './identity.mjs';
-import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-inheritance.mjs';
+import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
-import {scheduleAt} from './npc-schedule.mjs';
 import {recordsWhere} from './storage.mjs';
 import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
@@ -36,7 +35,11 @@ function atomic(d,fn){
     const reaction=d.reactionTick?structuredClone({...d.reactionTick,queue:[]}):null,queue=d.reactionTick?.queue?.slice();
     d.protocolTransaction=true;
     try{return fn();}catch(error){
-        d.document=document;if(d.patches)d.patches.length=patches;if(d.messages)d.messages.length=messages;
+        if(!Reflect.set(d,'document',document)){
+            for(const key of Object.keys(d.document))if(!Object.hasOwn(document,key))d.remove([key]);
+            for(const [key,value]of Object.entries(document))d.set([key],value);
+        }
+        if(d.patches)d.patches.length=patches;if(d.messages)d.messages.length=messages;
         if(d.scheduler)d.scheduler.seq=seq;
         if(reaction)d.reactionTick={...reaction,queue};else delete d.reactionTick;
         invalidateHoldings(d);throw error;
@@ -65,6 +68,7 @@ function accountOwnerLive(d,e,id){
     if(stationPlace)return live(d,e,stationPlace.id);
     const row=read(d,'state','records',id);
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
+    if(row?.category==='settlement_trade')return live(d,e,row.seller)&&live(d,e,row.buyer);
     if(row?.category==='army')return !byEntity(d,row.id)?.gone&&live(d,e,row.location);
     return !!read(d,'state','quests',id)||!!read(d,'state','projects',id);
 }
@@ -77,7 +81,8 @@ export function assertTransitionInvariants(d,e,entity=null){
         const a=body(d,entity);
         if(byEntity(d,entity)?.gone&&templatesOf(d,entity,e)?.includes('agent')){
             if(personOffices(e,read(d,'state'),entity).length)errors.push(`I6 powers: ${entity}`);
-            if(scheduleAt(e,entity,now(d),read(d,'state'))!==null)errors.push(`I6 schedule effective: ${entity}`);
+            if(typeof e.protocolScheduleAt!=='function')throw Error('Protocol schedule query is not installed');
+            if(e.protocolScheduleAt(e,entity,now(d),read(d,'state'))!==null)errors.push(`I6 schedule effective: ${entity}`);
         }
         if(['scheduleTravel','cognitionTravel','caring'].some(k=>a?.[k]))errors.push(`I6 schedule: ${entity}`);
         if(byEntity(d,entity)?.gone&&recordsWhere(read(d,'state','records')??{},'category','protocol_schedule').some(r=>r.status==='pending'&&r.context?.entity===entity))errors.push(`I6 protocol schedule: ${entity}`);
@@ -135,7 +140,7 @@ function action(d,e,r,template,ctx,side='holder'){
         }
     }else if(template==='vacate'){
         close();const office=entityRow(d,r.subject);
-        emit(d,e,{id:`${ctx.eventId}:vacancy:${r.id}`,verb:'succession',entity:r.subject,cause:ctx.eventId,rule:r.terms?.succession??office?.facts?.succession??'vacant_until_claimed'});
+        emit(d,e,{id:`${ctx.eventId}:vacancy:${r.id}`,verb:'succession',entity:r.subject,subject:r.subject,previousHolder:r.holder,holding:r.id,kind:r.kind,reason:ctx.reason??'vacated',cause:ctx.eventId,rule:r.terms?.succession??office?.facts?.succession??'vacant_until_claimed'});
     }else if(template==='retain_disputed'){
         writeRecord(d,e,`${ctx.eventId}:claim:${r.id}`,{category:'transition_claim',holder:r.holder,subject:r.subject,status:'open',cause:ctx.eventId,minute:now(d)});
         emit(d,e,{id:`${ctx.eventId}:claim:${r.id}`,verb:'claim',holder:r.holder,subject:r.subject,cause:ctx.eventId});
@@ -263,6 +268,14 @@ function conquest(d,e,r,previous,ctx){
 }
 export function changeHolding(d,engine,{op='close',id,...input}){
     return atomic(d,()=>{
+        if(op==='rescale'){
+            ensureHoldings(d,engine);
+            const eventId=input.eventId??`holding:rescale:${input.subject}:${now(d)}`;
+            const result=rescaleHolding(d,{...input,writer:W,engine,eventId});
+            invariant(d,null,engine);
+            emit(d,engine,{id:eventId,verb:'holding_rescaled',subject:input.subject,kind:input.kind,shares:input.shares,reason:'rescaled'});
+            return result;
+        }
         ensureHoldings(d,engine);const before=id?holdingRow(d,id):null;
         const eventId=input.eventId??`holding:${op}:${id??read(d,'holdings','seq')+1}:${now(d)}`,reason=input.reason??(op==='close'?'vacated':op==='open'?'opened':'transferred');
         const ctx={...input,entity:before?.holder,eventId,reason};
@@ -275,7 +288,7 @@ export function changeHolding(d,engine,{op='close',id,...input}){
             if(holdingRow(d,id).until===undefined)closeHolding(d,{id,reason,writer:W,eventId});
             // The closed edge still invokes its own vacancy notification.
             if(reason==='vacated'&&holdingKind(before.kind)?.handover.vacated==='vacate'){
-                emit(d,engine,{id:`${eventId}:vacancy`,verb:'succession',entity:before.subject,cause:eventId});
+                emit(d,engine,{id:`${eventId}:vacancy`,verb:'succession',entity:before.subject,subject:before.subject,previousHolder:before.holder,holding:before.id,kind:before.kind,reason,cause:eventId,rule:before.terms?.succession??entityRow(d,before.subject)?.facts?.succession??'vacant_until_claimed'});
             }
             hooks(d,engine,before,`self.closed(${reason})`,ctx);
             if(before.kind==='member_of'&&reason==='defected')for(const r of sorted(aliveHoldings(d,{holder:before.holder}))){
@@ -289,17 +302,17 @@ export function changeHolding(d,engine,{op='close',id,...input}){
             if(before.kind!=='governs')for(const h of aliveHoldings(d,{subject:before.subject}))hooks(d,engine,h,`subject.transferred(${before.kind})`,ctx,'subject');
         }else throw Error(`Unknown holding operation ${op}`);
         const row=op==='close'?before:holdingRow(d,result);
-        invariant(d);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
+        invariant(d,null,engine);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
         return result;
     });
 }
 
 // Compatibility boundary: close the selected edges through the protocol, then
 // write the old fields in the same transaction. It never closes an agent.
-export function changeLegacyHoldings(d,engine,{holder,source,kinds,reason='vacated',eventId},legacy){
+export function changeLegacyHoldings(d,engine,{holder,subject,source,kinds,reason='vacated',eventId},legacy){
     return atomic(d,()=>{
         ensureHoldings(d,engine);
-        const rows=sorted(aliveHoldings(d,{holder}).filter(h=>(!source||h.source===source)&&(!kinds||kinds.includes(h.kind))));
+        const rows=sorted(aliveHoldings(d,{holder,subject}).filter(h=>(!source||h.source===source||source.startsWith('contract:')&&h.source===`contract:row|${source.slice(9)}`)&&(!kinds||kinds.includes(h.kind))));
         for(const h of rows)changeHolding(d,engine,{op:'close',id:h.id,reason,eventId:eventId?`${eventId}:${h.id}`:undefined});
         const result=legacy();
         invariant(d,null,engine);
@@ -538,6 +551,8 @@ export function transition(d,engine,input){
     });
 }
 
+registerLifecycleProtocol(transition);
+
 const phases=['notice','filing','settlement','distribution','closed'];
 const price=(e,resource)=>resource==='coin_river'?1:e.byId?.get(resource)?.basePrice??0;
 function publicRecipient(d,e,entity,location,rule){
@@ -555,7 +570,7 @@ function allocation(amount,heirs){
 }
 function inheritancePlan(d,e,p){
     if(p.bankrupt)return {rule:{},heirs:[{heir:p.bankrupt,share:1}],bequests:[]};
-    const s=read(d,'state'),code=legalCodeAt(e,p.location,s),rule={...inheritanceRule(e,s,p.entity,p.location),...code?.civil?.inheritance,...p.law};
+    const s=read(d,'state'),code=legalCodeAt(e,p.location,s),familyCode=legalCodeAt(e,npcHousehold(e,s,p.entity)?.settlement??p.location,s)??code,rule={...inheritanceRule(e,s,p.entity,p.location,familyCode),...code?.civil?.inheritance,...p.law};
     const eligible=id=>{
         const kin=(p.kin??[]).filter(h=>[h.holder,h.subject].includes(id));
         return id!==p.entity&&live(d,e,id)&&(!kin.length||kin.some(h=>h.terms?.recognized!==false))&&(body(d,id)?.inheritance??e.byId?.get(body(d,id)?.species)?.inheritance??templates.find(t=>templatesOf(d,id,e)?.includes(t.id))?.inheritance)===true;

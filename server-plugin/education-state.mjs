@@ -1,4 +1,5 @@
 import {temples} from './faith-catalog.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordsWhere} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
@@ -63,7 +64,7 @@ function deriveEducationCourses(e,s){
  const pupilsByTown=new Map();
  for(const p of people){
   const age=ageOf(p.id);
-  if((age??0)<(e.rules.education?.minimumAge??6)||(age??99)>(e.rules.education?.maximumAge??17)||s.npcs?.[p.id]?.status==='死亡')continue;
+  if((age??0)<(e.rules.education?.minimumAge??6)||(age??99)>(e.rules.education?.maximumAge??17)||isPhysicallyDead(e,s,p.id))continue;
   const town=homeOf(p.id);if(!pupilsByTown.has(town))pupilsByTown.set(town,[]);
   pupilsByTown.get(town).push(p);
  }
@@ -127,7 +128,7 @@ export function educationReservation(e,s,id,start,minutes,{automatic=false}={}){
 }
 export function educationStatistics(e,s,location){
  const ids=[...new Set([...e.world.npcs.map(n=>n.id),...(e.world.residents??[]).map(n=>n.id),...Object.values(s.created??{}).filter(n=>n.id?.startsWith('npc_')).map(n=>n.id),...Object.keys(s.npcs??{})])];
- const residents=ids.filter(id=>s.npcs?.[id]?.status!=='死亡'&&settlement(e,s,id)===location),distribution={},record=s.population?.[location],progress=record?expandedEducation(e,s,location):new Map();let literate=0;
+ const residents=ids.filter(id=>!isPhysicallyDead(e,s,id)&&settlement(e,s,id)===location),distribution={},record=s.population?.[location],progress=record?expandedEducation(e,s,location):new Map();let literate=0;
  const proficiency=(id,skill)=>Math.max(knowledgeProficiency(e,s,id,skill),s.npcs?.[id]?0:progress.get(id)?.skills[skill]??0);
  for(const id of residents){if(proficiency(id,'skill_literacy')>=(e.rules.books?.minimumLiteracy??100))literate++;
   for(const skill of e.world.skills){const p=proficiency(id,skill.id);if(p>0){const bin=Math.floor(p/300),counts=distribution[skill.id]??{};counts[bin]=(counts[bin]??0)+1;distribution[skill.id]=counts;}}

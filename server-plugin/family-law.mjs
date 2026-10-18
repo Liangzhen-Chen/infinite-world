@@ -8,6 +8,7 @@ import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
+import {changeHolding,changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('family-law',{kinds:['guardian_of','owns'],entities:['case']});
 
 const rec=id=>['state','records',id];
@@ -39,11 +40,12 @@ export function adjudicateFamilyDispute(d,e,row,code,judge,eventId){
   const original=death.estate.propertyOwners?.[asset]??{},expected={...original};
   for(const allocation of death.estate.allocations.filter(r=>r.assets.includes(asset)))expected[allocation.heir]=(original[allocation.heir]??0)+(allocation.propertyShares?.[asset]??1/entitled.length);
   if(Object.keys(building.owners??{}).sort().join('|')===Object.keys(expected).sort().join('|')&&Object.entries(expected).every(([id,n])=>building.owners[id]===n))continue;
+  changeHolding(d,e,{op:'rescale',kind:'owns',subject:asset,shares:expected,eventId:`${eventId}:partition:${asset}`});
   holdingSet(d,null,['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id},'family-law');restored.push(asset);
  }
  const judgment={judge,minute:s.minute,compensation:owed,fine:0,evidenceScore:2,restored,decision:owed?'返还侵吞财产':restored.length?'按死亡分产登记恢复产权':'维持依法分产，监护继续按期记账'};
  holdingSet(d,null,rec(row.id),{...row,status:owed?'待赔偿':'已结案',judgment,value:owed,compensationPaid:owed===0},'family-law');
- if(owed&&guard)holdingSet(d,null,rec(guard.id),{...guard,status:'已撤换',removedAt:s.minute,removalCase:row.id},'family-law');
+ if(owed&&guard)changeLegacyHoldings(d,e,{holder:guard.guardian,subject:guard.ward,kinds:['guardian_of'],eventId},()=>holdingSet(d,null,rec(guard.id),{...guard,status:'已撤换',removedAt:s.minute,removalCase:row.id},'family-law'));
  entityTransition(d,e,{id:`${eventId}:family:judgment`,verb:'transfer',actor:judge,target:row.victim,location:code.court,tags:['family','law'],summary:judgment.decision});
  return {case:row.id,convicted:false,civil:true,judgment};
 }

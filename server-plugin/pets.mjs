@@ -7,6 +7,7 @@ import {resolveCreature}from'./wildlife.mjs';
 import {sapient,awakeningView}from'./wildlife-awakening.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('pets',{kinds:['tamed_by']});
 
 const clamp = value => Math.max(0, Math.min(100, value));
@@ -50,11 +51,13 @@ function careOf(actor, now) {
 }
 
 function writeCare(d, id, care) { holdingSet(d,null,['state', 'creatures', id, 'care'], care,'pets'); }
-function detach(d, id, status, minute) {
+function detach(d, engine, id, status, minute) {
+    return changeLegacyHoldings(d,engine,{subject:id,kinds:['tamed_by','companion'],reason:'vacated',eventId:`pet:${id}:${minute}:${status}`},()=>{
     const pet = d.get('state', 'pets', id);
     if (pet?.petFormat === 1) d.set(['state', 'pets', id], { ...pet, status, following: false, ended: minute });
     holdingSet(d,null,['state', 'creatures', id, 'owner'], null,'pets');
     if (d.get('state', 'player', 'mount') === id) d.remove(['state', 'player', 'mount']);
+    });
 }
 
 // Absolute hourly ticks make one long wait and many short waits equivalent.
@@ -65,7 +68,7 @@ export function advancePets(d, engine, after) {
     for (const [id, actor] of Object.entries(d.get('state', 'creatures') ?? {})) {
         if (actor.care?.version !== 1 || sapient(actor)) continue;
         if (actor.status === '死亡' || actor.hp <= 0) {
-            if(d.get('state','pets',id)?.petFormat===1&&active(d.get('state','pets',id)))detach(d,id,'死亡',after);
+            if(d.get('state','pets',id)?.petFormat===1&&active(d.get('state','pets',id)))detach(d,engine,id,'死亡',after);
             continue;
         }
         const care = structuredClone(actor.care);
@@ -83,11 +86,11 @@ export function advancePets(d, engine, after) {
             if (care.hunger >= 100 || care.sickness) hp = Math.max(0, hp - rules.starvationDamage);
             care.nextTick += 60;
             if (!hp) {
-                recordEntityDeath(d,engine,id,minute,'饥病死亡'); detach(d, id, '死亡', minute);
+                recordEntityDeath(d,engine,id,minute,'饥病死亡'); detach(d, engine, id, '死亡', minute);
                 d.say(`${actor.name ?? id}因饥病死亡`); break;
             }
             if (d.get('state', 'creatures', id, 'owner') === 'player' && care.loyalty <= rules.escapeLoyalty && care.neglectHours >= rules.neglectHours) {
-                detach(d, id, '出走', minute); d.say(`${actor.name ?? id}离开了你的照料，当前归属已解除`);
+                detach(d, engine, id, '出走', minute); d.say(`${actor.name ?? id}离开了你的照料，当前归属已解除`);
             }
         }
         holdingSet(d,null,['state', 'creatures', id, 'hp'], hp,'pets'); writeCare(d, id, care);
@@ -164,7 +167,7 @@ export function petAction(d, args, eventId) {
         return { target: id, ...result, checkSuccess: result.success, success: result.success && !failed && !expired, operation, ...(failed || expired ? { effectFailed: failed ?? '首领特殊条件在驯服完成前失效' } : {}), care: latest };
     }
     if (operation === 'release') {
-        detach(d, id, '释放', now);
+        detach(d, this, id, '释放', now);
         return { target: id, released: true, location:actor.location,
             factSummary:`${actor.name??id}已解除归属，目前仍在${this.byId.get(actor.location)?.name??actor.location}。本次完成后地点与生命保持原值。`,
             actionScope:{kind:'ownership_release',instantaneous:true,locationChanged:false,

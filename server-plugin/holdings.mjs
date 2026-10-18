@@ -28,6 +28,13 @@ export function registerHoldingKind(entry){
 export function registerHoldingReasons(list){reasons=new Set([...reasons,...list]);}
 export const holdingKind=id=>kinds.get(id)??null;
 export const holdingKindIds=()=>[...kinds.keys()].sort();
+// L0 dispatch only; the installed L1 protocol owns lifecycle decisions.
+let lifecycleProtocol=null;
+export function registerLifecycleProtocol(fn){lifecycleProtocol=fn;}
+export function runLifecycleProtocol(d,engine,input){
+    if(!lifecycleProtocol)throw Error('Lifecycle protocol is not installed');
+    return lifecycleProtocol(d,engine,input);
+}
 const variantOf=(kind,variant)=>variant?kind.variants?.[variant]??null:null;
 
 // ---- 模板解析与容量（L1 登记：实体 id → 可能的模板集合） --------------------------------

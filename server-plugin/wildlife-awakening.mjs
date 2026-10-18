@@ -4,6 +4,7 @@ declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
 import {assertTrainingRitual} from './training.mjs';
 import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
@@ -39,11 +40,13 @@ function awaken(d,engine,id,kind,minute,sourceEvent){
     const formerOwner=actor.owner??null,mind={...clone(actor.mind),awakened:{stage:'立意',kind,minute,sourceEvent,formerOwner}};
     holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-awakening');
     if(formerOwner==='player'){
+        changeLegacyHoldings(d,engine,{holder:formerOwner,subject:id,kinds:['tamed_by'],reason:'vacated',eventId:sourceEvent},()=>{
         const pet=d.get('state','pets',id);
         if(pet)d.set(['state','pets',id],{...pet,status:'已解除',following:false,ended:minute,endedReason:'立意自主'});
         if(d.get('state','player','mount')===id)d.remove(['state','player','mount']);
         holdingSet(d,null,['state','creatures',id,'owner'],null,'wildlife-awakening');
         holdingSet(d,null,['state','creatures',id,'companion'],{with:'player',consent:true,since:minute,sourceEvent,formerPet:true,terms:clone(rules.pactTerms)},'wildlife-awakening');
+        });
     }
     d.say(`${actor.name??id}已立意，能以声响和动作表达意愿，可以交流${formerOwner==='player'?'；原宠物归属已解除，改为双方同意的结缘':''}`);
     return mind.awakened;

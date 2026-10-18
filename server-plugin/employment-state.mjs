@@ -1,8 +1,10 @@
 import {recordsWhere} from './storage.mjs';
+import {contractTerms} from './contract-state.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Contracts are facts. Current employment and occupied time are read-only views.
-export const employmentActive=r=>r?.kind==='workshop'&&['有效','要求加薪','罢工'].includes(r.status);
+export const employmentActive=r=>r?.kind==='workshop'&&r.endedAt===undefined&&r.resolvedAt===undefined&&(!!r.clauses||['有效','要求加薪','罢工'].includes(r.status));
 export function currentEmployment(state,id,minute=state?.minute??0){
-    return recordsWhere(state?.records,'kind','workshop').find(r=>employmentActive(r)&&r.worker===id&&r.createdAt<=minute&&minute<r.deadline)??null;
+    return recordsWhere(state?.records,'kind','workshop').map(r=>contractTerms(r,minute)).find(r=>employmentActive(r)&&r.worker===id&&r.createdAt<=minute&&minute<r.deadline)??null;
 }
 export function employmentReservation(state,id,start,minutes=0,restDays=[]){
     const end=start+Math.max(1,minutes);
@@ -27,7 +29,7 @@ export function agriculturalEmployment(state,settlement,day){
 }
 export function recordEmploymentAttendance(d,id,start,end,location){
     const job=currentEmployment(d.get('state'),id,start);if(!job?.laborMarket||job.status==='罢工'||location!==job.location)return;
-    const worker=d.get('state','npcs',id);if(worker?.caring||worker?.levy||worker?.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(worker?.status)||d.get('state','player','companions')?.includes(id))return;
+    const worker=d.get('state','npcs',id);if(worker?.caring||worker?.levy||worker?.cognitionTravel||isPhysicallyDead(null,d,id)||['濒死','昏迷','患病'].includes(worker?.status)||d.get('state','player','companions')?.includes(id))return;
     start=Math.max(start,job.starts,job.attendanceThrough??0);end=Math.min(end,job.deadline);
     if(end<=start)return;
     const attendance={...job.attendance};let added=0;

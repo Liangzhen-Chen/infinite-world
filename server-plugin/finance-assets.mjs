@@ -1,5 +1,5 @@
 import {changeLegacyHoldings} from './transition.mjs';
-import {leaseClauses,leaseState} from './contract-state.mjs';
+import {leaseClauses,leaseState,contractTerms} from './contract-state.mjs';
 import {counterpart} from './credit.mjs';
 import {workshopFund,coinRead,partyAccount} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
@@ -231,7 +231,9 @@ function rentDue(d,e,row,at){
 }
 function workshopShift(d,e,row,at){
     const s=d.get('state'),recipe=base(e,s,row.recipe),worker=s.npcs[row.worker],regard=standing(e,s,row.worker,'player'),wage=fairWage(e,s,row.worker,recipe);
-    const end=(status,reason)=>{holdingSet(d,null,rec(row.id),{...row,status,reason,nextWork:at+DAY,...(['已辞工','已到期'].includes(status)?{endedAt:at}:{})},'finance-assets');};
+    const end=(status,reason)=>{const next={...row,status,reason,nextWork:at+DAY,...(['已辞工','已到期'].includes(status)?{endedAt:at}:{})};
+        if(next.endedAt!==undefined)return changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,eventId:`${row.id}:end:${at}`},()=>holdingSet(d,null,rec(row.id),next,'finance-assets'));
+        holdingSet(d,null,rec(row.id),next,'finance-assets');};
     if(!alive(s,row.worker)||regard< -40||row.raiseRequestedAt&&at-row.raiseRequestedAt>=3*DAY)return end('已辞工','工人无法继续或不再接受现有工钱');
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(at).day)){holdingSet(d,null,rec(row.id),{...row,nextWork:at+DAY},'finance-assets');return;}
     if(personConstraint(e,s,row.worker,at)||worker.levy||worker.caring||worker.scheduleTravel||worker.cognitionTravel||worker.location!==row.location)return end('罢工','工人未到工坊或受拘押、服役、照护、在途限制');
@@ -256,11 +258,11 @@ export function advanceFinanceAssets(d,e,minute,recordIds){
         if(initial.kind==='asset_lease'&&leaseState(e,d.get('state'),initial,leaseClauses(initial).starts).active){
             const expires=leaseClauses(initial).expires;
             for(let at=initial.nextRent;at<=minute&&at<expires;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
-            if(minute>=expires)holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets');
+            if(minute>=expires)changeLegacyHoldings(d,e,{holder:initial.tenant,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets'));
         }
         if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
             for(let at=initial.nextWork;at<=minute&&at<initial.deadline;at+=DAY){const row=d.get(...rec(initial.id));if(!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}
-            if(minute>=initial.deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'},'finance-assets');
+            if(minute>=contractTerms(initial,minute).deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))changeLegacyHoldings(d,e,{holder:initial.worker,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:contractTerms(initial,minute).deadline},'finance-assets'));
         }
     }
     for(const [id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){

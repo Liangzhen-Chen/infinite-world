@@ -13,6 +13,7 @@ import {npcEntryCheck} from './checks.mjs';
 import {npcServices} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
@@ -155,7 +156,7 @@ export function educationAction(d,args,id){
  }
  if(operation==='school_close'){
   const c=s.records?.[args.course];if(!c||c.category!=='education_course'||c.founder!=='player')throw Error('只能停办自己的课程');
-  holdingSet(d,null,path(c.id),{...c,status:'停课',until:s.minute},'education');if(c.contract)holdingSet(d,null,path(c.contract),{...s.records[c.contract],status:'已到期',endedAt:s.minute},'education');return {course:c.id};
+  holdingSet(d,null,path(c.id),{...c,status:'停课',until:s.minute},'education');if(c.contract)changeLegacyHoldings(d,e,{holder:c.teacher,source:`contract:${c.contract}`,eventId:id},()=>holdingSet(d,null,path(c.contract),{...s.records[c.contract],status:'已到期',endedAt:s.minute},'education'));return {course:c.id};
  }
  if(operation==='school_open'||operation==='book_study'){
   const book=operation==='book_study',teacher=book?null:actor(e,args.source),entity=e.resolve(args.entity,args.kind),b=definition(e,s,entity);

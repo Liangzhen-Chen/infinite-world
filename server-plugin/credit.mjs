@@ -27,7 +27,8 @@ declareHoldingWriter('credit',{kinds:['employed_by','leases','share'],locations:
 export const CREDIT_KINDS=new Set(['loan','partnership','pawn']);
 const rec=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
-const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
+import {projectionLiving} from './lifecycle-state.mjs';
+const awake=n=>projectionLiving(n)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
 export const creditRules=engine=>engine.rules.economy?.credit??null;
 function rules(engine){const c=creditRules(engine);if(!c)throw Error('此世界尚未登记借贷与钱庄规则');return c;}
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;

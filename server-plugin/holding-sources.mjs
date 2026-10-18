@@ -18,6 +18,9 @@ import {holdingKind} from './holdings.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
+import {snapshotContractTerms} from './contract-state.mjs';
+import {snapshotObligationTerms} from './obligation-kinds.mjs';
+import {isGone} from './lifecycle-state.mjs';
 import {legalCodeById} from './law-codes.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
@@ -107,7 +110,7 @@ function desired(engine,state,name,unit,ctx={}){
     const out=sources.get(name).extract(engine,state,unit,ctx)??{};
     // Old fields retain history. A legal disappearance closes their current
     // edges; the compatibility projection independently reads the declaration.
-    const gone=id=>state.records?.[`transition:${id}`]?.gone?state.records[`transition:${id}`]:null;
+    const gone=id=>isGone(engine,state,id)&&state.records?.[`transition:${id}`]?.gone?state.records[`transition:${id}`]:null;
     const holdings=(out.holdings??[]).flatMap(h=>{
         let row={...h};const a=gone(h.holder),b=gone(h.subject);
         if(a){const hook=holdingKind(h.kind)?.handover.gone;
@@ -374,6 +377,16 @@ function afterWrite(d,engine,path,writer,eventId){
     engine??=d.engine;if(!engine||path[0]!=='state')return;
     if(path[1]==='records'&&path.length>=3){
         const key=path[2],cats=holdingRecordCategories();
+        const row=read(d,'state','records',key);
+        // Only a new signed record is snapshotted. Loading and amending legacy
+        // records without clauses keeps their explicit compatibility behavior.
+        if(path.length===3&&!d.original?.state?.records?.[key]&&row&&!row.clauses){
+            if(row.category==='contract')d.set(path,snapshotContractTerms(row));
+            if(row.category==='debt'){
+                const terms=snapshotObligationTerms(row).terms;
+                d.set(path,{...row,clauses:{onDebtorGone:terms.onDebtorGone,onCreditorGone:terms.onCreditorGone}});
+            }
+        }
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
         return;
     }
@@ -685,7 +698,7 @@ defineHoldingSource('lair',{
     recordCategories:['lair'],unitOfRecord:(state,key)=>key,
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='lair').map(([k])=>k),
     extract(engine,state,key){
-        const r=state.records?.[key];if(r?.category!=='lair'||r.status!=='驻守'||!r.lair)return null;
+        const r=state.records?.[key];if(r?.category!=='lair'||!['驻守','易主'].includes(r.status)||!r.lair)return null;
         const who=r.occupant?.actor??r.occupant?.definition??r.boss;if(!who)return null;
         return {holdings:[{kind:'controls',holder:actorId(engine.world,who),subject:r.lair}]};
     },

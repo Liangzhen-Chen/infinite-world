@@ -7,9 +7,17 @@ import {spiritStateFor}from'./creature-nature.mjs';
 import {creatureCounter}from'./interactions.mjs';
 import {traitsOf}from'./traits.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('bosses',{kinds:['controls','tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
 const living=a=>a&&a.status!=='死亡'&&a.hp>0;
+function writeLair(d,engine,boss,row){
+    const previous=d.get(...key(boss)),holder=previous?.occupant?.actor??previous?.occupant?.definition;
+    const write=()=>holdingSet(d,engine,key(boss),row,'bosses');
+    if(holder&&(holder!==(row.occupant?.actor??row.occupant?.definition)||!['驻守','易主'].includes(row.status)))
+        return changeLegacyHoldings(d,engine,{holder,subject:boss.residence.id,kinds:['controls'],eventId:`lair:${boss.residence.id}:${row.lastDay}:${holder}`},write);
+    return write();
+}
 export function validateBossEcology(world){
     const errors=[],rules=world.rules.bossEcology;if(!rules)return errors;
     if(!world.rules.wildlife)errors.push('首领生态需要实际野外种群');
@@ -67,7 +75,7 @@ export function defeatBoss(d,engine,target,eventId){
     const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
     const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
-    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;holdingSet(d,null,key(boss),r,'bosses');
+    r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;writeLair(d,engine,boss,r);
     if(boss.actor)return{lair:boss.residence.name,vacant:true,note:'社会首领已死，居民与聚居地保留；不会从野生种群补刷'};
     return{lair:boss.residence.name,vacant:true,note:'原首领已死，巢穴空置；不会复活原个体，未来迁入者须来自实际种群'};
 }
@@ -95,7 +103,7 @@ export function advanceBosses(d,engine,day){
             const actor=engine.actor(d,boss.actor),present=living(actor)&&actor.location===boss.residence.location;
             r.occupant=present?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
             r.status=present?'驻守':'空置';r.reoccupyAfter=null;
-            r.lastDay=day;holdingSet(d,null,key(boss),r,'bosses');continue;
+            r.lastDay=day;writeLair(d,engine,boss,r);continue;
         }
         if(r.occupant?.actor){
             const actor=engine.actor(d,r.occupant.actor);
@@ -113,7 +121,7 @@ export function advanceBosses(d,engine,day){
         if(r.occupant?.kind==='monster'&&!living(engine.actor(d,r.occupant.actor))){
             r.history.push({type:'迁入者离去或死亡',day,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;
         }
-        r.lastDay=day;holdingSet(d,null,key(boss),r,'bosses');
+        r.lastDay=day;writeLair(d,engine,boss,r);
     }
 }
 export function lairAction(d,args,eventId){

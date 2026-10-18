@@ -13,6 +13,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('finance-bank',{kinds:['member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
@@ -240,7 +241,7 @@ export function advanceBankFinance(d,e,minute,recordIds){
         if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
             let row=original;
             for(let at=row.nextPayment;at<=minute&&row.status!=='已还清';at+=DAY){
-                const actor=d.get('state','npcs',row.debtor),unable=actor&&(['死亡','濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
+                const actor=d.get('state','npcs',row.debtor),unable=actor&&(isPhysicallyDead(e,d,row.debtor)||['濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
                 const cash=financeBalance(d,e,row.debtor),expense=borrowerCashFlow(e,d.get('state'),row.debtor,at).expense;
                 const elapsed=Math.floor((at-row.createdAt)/((row.deadline-row.createdAt)/row.installments));
                 const completed=Math.min(row.installments,Math.max(1,elapsed)),target=Math.ceil(row.amount*completed/row.installments);

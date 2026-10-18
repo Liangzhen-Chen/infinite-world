@@ -56,7 +56,7 @@ import {sceneCard}from'./scene-card.mjs';
 import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
-import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
+import {assertNpcService,advanceNpcSchedules,scheduleAt}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
@@ -85,7 +85,7 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
-import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings,runLifecycleProtocol} from './holdings.mjs';
 import {applyConfigSet,Scheduler,schedulerConfig,schedulerWired} from './scheduler.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
@@ -175,6 +175,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 }
 export class WorldEngine {
     constructor(world) {
+        this.protocolScheduleAt=scheduleAt;
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
@@ -644,7 +645,8 @@ export class WorldEngine {
     death(d) {
         const p=d.get('state','player'),loss=p.level<10?p.level*10:xpRequired(p.level);
         if(p.status==='死亡')return;
-        d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.set(['state','player','status'],'死亡');d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
+        runLifecycleProtocol(d,this,{entity:'player',basis:'death',origin:'death_rule',location:d.get('state','location')});
+        d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
         holdingSet(d,null,['state','player','companions'],[],'engine');
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
     }

@@ -2,6 +2,7 @@ import {purse,shrineFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('revival');
 import {revivalPoint}from'./rule-state-migration.mjs';
+import {restoreTransition} from './transition.mjs';
 const validInteger=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function prepareRevivalMark(d,location){
     const point=this.rules.death.points?.find(p=>p.location===location);
@@ -48,6 +49,8 @@ export function revivePlayer(d,args,id){
         location=selected.location;
         d.set(['state','player','revivalAnchor'],location);
     }
+    restoreTransition(d,this,{entity:'player',origin:'registered_action',action:{produces:'restored'},eventId:id,location,
+        vital:{hp:Math.max(1,Math.ceil(player.maxHp*this.rules.death.reviveFraction))}});
     d.set(['state','location'],location);
     d.set(['state','player','hp'],Math.max(1,Math.ceil(player.maxHp*this.rules.death.reviveFraction)));
     d.set(['state','player','mp'],Math.ceil(player.maxMp*this.rules.death.reviveFraction));

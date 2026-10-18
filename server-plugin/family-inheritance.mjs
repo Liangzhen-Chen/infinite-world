@@ -9,29 +9,17 @@ import {legalCodeAt} from './law-codes.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings,syncHoldingRecord} from './holding-sources.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('family-inheritance',{kinds:['holds_office','fief','guardian_of','owns','share','resides','devotee_of','certified'],entities:['office','estate']});
 
 const DAY=1440,YEAR=360*DAY,rec=id=>['state','records',id];
+import {inheritanceRule as ruleFor,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
+export {inheritanceCandidates,guardianCandidates} from './family-state.mjs';
 export function inheritanceRule(e,s,id,location){
  const house=npcHousehold(e,s,id),code=legalCodeAt(e,house?.settlement??location,s)??legalCodeAt(e,location,s);
- const culture=(s.created?.[id]??e.byId.get(id))?.culture,law=e.rules.law?.family;
- const local=(culture&&law?.rules?.find(r=>r.culture===culture))||(code&&law?.rules?.find(r=>r.code===(code.template??code.id)))||law?.rules?.find(r=>r.polity===(code?.polity??'王国'));
- return {property:'spouse-first',title:'eldest-child',office:'vacant',...local,law:code?.id??null};
-}
-export function inheritanceCandidates(e,s,id,rule,minute,eligible=()=>true){
- const living=ids=>[...new Set(ids)].filter(x=>x!==id&&familyLiving(s,x)&&eligible(x)&&(s.npcs?.[x]||e.byId.has(x)||s.created?.[x]));
- const children=living(legalChildren(e,s,id)).sort((a,b)=>(npcAgeAt(e,s,b,minute)??-1)-(npcAgeAt(e,s,a,minute)??-1)||a.localeCompare(b));
- const spouses=living(familyEdges(e,s).filter(r=>r.kind==='spouse'&&!r.ended&&(r.from===id||r.to===id)).map(r=>r.from===id?r.to:r.from)).filter(x=>familyAdult(e,s,x,minute)).sort();
- const house=living(npcHousehold(e,s,id)?.members??[]).sort();
- const first=spouses.length?spouses:children.length?children:house;
- return {children,spouses,house,heirs:rule.property==='equal'?(children.length||spouses.length?living([...children,...spouses]).sort():house.slice(0,1)):rule.property==='eldest'?(children.length?children.slice(0,1):first.slice(0,1)):rule.property==='household'?house:rule.property==='children'?(children.length?children:first):first.slice(0,1)};
+ return ruleFor(e,s,id,location,code);
 }
 const portions=(n,ids)=>ids.map((id,i)=>({id,amount:Math.floor(n/ids.length)+(i<n%ids.length?1:0)}));
-export function guardianCandidates(e,s,ward,from,minute){
- const edges=familyEdges(e,s),parents=edges.filter(r=>r.kind==='parent'&&r.to===ward).map(r=>r.from);
- const kin=edges.filter(r=>['sibling','kin'].includes(r.kind)&&[r.from,r.to].includes(ward)).map(r=>r.from===ward?r.to:r.from);
- return [...new Set([...parents,...kin,...npcHousehold(e,s,ward)?.members??[]])].filter(id=>id!==from&&familyAdult(e,s,id,minute)&&!s.records?.[`transition:${id}`]?.gone).sort((a,b)=>Number(parents.includes(b))-Number(parents.includes(a))||Number(kin.includes(b))-Number(kin.includes(a))||a.localeCompare(b));
-}
 function materialize(d,e,id,at){
  if(d.get('state','npcs',id))return;
  const row=rosterLifeState(e,d.get('state'),id,at,'继承',{minor:!familyAdult(e,d.get('state'),id,at)});
@@ -109,7 +97,7 @@ export function advanceGuardianships(d,e,minute){
  for(const r of Object.values(d.get('state','records')??{}).filter(r=>r.category==='guardianship'&&['代管中','待指定'].includes(r.status))){
   const s=d.get('state');
   if(familyAdult(e,s,r.ward,minute)||!familyLiving(s,r.ward)){
-   holdingSet(d,null,rec(r.id),{...r,status:'已结束',endedAt:minute,reason:familyLiving(s,r.ward)?'继承人已成年':'继承人死亡'},'family-inheritance');
+   changeLegacyHoldings(d,e,{holder:r.guardian,subject:r.ward,kinds:['guardian_of'],reason:'expired',eventId:`${r.id}:end`},()=>holdingSet(d,null,rec(r.id),{...r,status:'已结束',endedAt:minute,reason:familyLiving(s,r.ward)?'继承人已成年':'继承人死亡'},'family-inheritance'));
    entityTransition(d,e,{id:`${r.id}:end`,verb:'transfer',actor:r.guardian,target:r.ward,minute,location:npcHousehold(e,s,r.ward)?.homeLocation,visibility:'members',tags:['family','guardianship'],summary:'监护任期结束，结束财产代管'});
   }else if(r.guardian&&!familyAdult(e,s,r.guardian,minute))holdingSet(d,null,rec(r.id),{...r,guardian:null,status:'待指定',previousGuardian:r.guardian},'family-inheritance');
  }

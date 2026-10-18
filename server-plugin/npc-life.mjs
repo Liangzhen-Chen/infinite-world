@@ -379,7 +379,10 @@ export function recoverIllness(d,engine,illness,minute){
 export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
- if(!actor||id==='player')return null;
+ if(!actor)return null;
+ if(id==='player'){
+  engine.death(d);return d.get('holdings','protocol','entities','player');
+ }
  const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===(actor.incarnation??0));
  if(previous||actor.diedAt!==undefined)return previous??null;
  let result;

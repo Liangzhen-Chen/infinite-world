@@ -2,7 +2,8 @@
 import {npcAgeAt,npcHousehold,householdDefinition} from './npc-state.mjs';
 
 export const familyPerson=(e,s,id)=>s.family?.people?.[id]??s.created?.[id]??e.byId.get(id);
-export const familyLiving=(s,id)=>s.npcs?.[id]?.status!=='死亡'&&!Object.values(s.family?.deaths??{}).some(r=>r.person===id);
+import {isGone} from './lifecycle-state.mjs';
+export const familyLiving=(s,id)=>!isGone(null,s,id)&&(s.records?.[`transition:${id}`]?.gone===false||!Object.values(s.family?.deaths??{}).some(r=>r.person===id&&(r.incarnation??0)===(s.npcs?.[id]?.incarnation??0)));
 export const familyAdult=(e,s,id,at=s.minute)=>familyLiving(s,id)&&(npcAgeAt(e,s,id,at)??-1)>=(e.rules.npcLife?.adultAge??18);
 const childTypes=new Set(['子女','儿子','女儿']),parentTypes=new Set(['父亲','母亲','父母']),siblingTypes=new Set(['兄弟','姐妹','兄妹','姐弟','兄长','姐姐','弟弟','妹妹']);
 const extendedKin=new Set(['父女','孙女','孙子','孙辈','外孙','外孙女','外甥','外甥女','外祖父','儿媳','女婿','岳父','同户小辈','同户长者','同户晚辈']),affinal=new Set(['儿媳','女婿','岳父']);
@@ -81,4 +82,23 @@ export function natalFamily(e,s,id){
  const adoption=Object.values(s.family?.adoptions??{}).filter(r=>r.child===id).sort((a,b)=>b.minute-a.minute)[0];
  const house=adoption?.household??e.world.households?.find(h=>h.members.includes(id))?.id??npcHousehold(e,s,id)?.id;
  return house?`family:${house}`:null;
+}
+
+export function inheritanceRule(e,s,id,location,code){
+ const culture=(s.created?.[id]??e.byId.get(id))?.culture,law=e.rules.law?.family;
+ const local=(culture&&law?.rules?.find(r=>r.culture===culture))||(code&&law?.rules?.find(r=>r.code===(code.template??code.id)))||law?.rules?.find(r=>r.polity===(code?.polity??'王国'));
+ return {property:'spouse-first',title:'eldest-child',office:'vacant',...local,law:code?.id??null};
+}
+export function inheritanceCandidates(e,s,id,rule,minute,eligible=()=>true){
+ const living=ids=>[...new Set(ids)].filter(x=>x!==id&&familyLiving(s,x)&&eligible(x)&&(s.npcs?.[x]||e.byId.has(x)||s.created?.[x]));
+ const children=living(legalChildren(e,s,id)).sort((a,b)=>(npcAgeAt(e,s,b,minute)??-1)-(npcAgeAt(e,s,a,minute)??-1)||a.localeCompare(b));
+ const spouses=living(familyEdges(e,s).filter(r=>r.kind==='spouse'&&!r.ended&&(r.from===id||r.to===id)).map(r=>r.from===id?r.to:r.from)).filter(x=>familyAdult(e,s,x,minute)).sort();
+ const house=living(npcHousehold(e,s,id)?.members??[]).sort();
+ const first=spouses.length?spouses:children.length?children:house;
+ return {children,spouses,house,heirs:rule.property==='equal'?(children.length||spouses.length?living([...children,...spouses]).sort():house.slice(0,1)):rule.property==='eldest'?(children.length?children.slice(0,1):first.slice(0,1)):rule.property==='household'?house:rule.property==='children'?(children.length?children:first):first.slice(0,1)};
+}
+export function guardianCandidates(e,s,ward,from,minute){
+ const edges=familyEdges(e,s),parents=edges.filter(r=>r.kind==='parent'&&r.to===ward).map(r=>r.from);
+ const kin=edges.filter(r=>['sibling','kin'].includes(r.kind)&&[r.from,r.to].includes(ward)).map(r=>r.from===ward?r.to:r.from);
+ return [...new Set([...parents,...kin,...npcHousehold(e,s,ward)?.members??[]])].filter(id=>id!==from&&familyAdult(e,s,id,minute)&&!s.records?.[`transition:${id}`]?.gone).sort((a,b)=>Number(parents.includes(b))-Number(parents.includes(a))||Number(kin.includes(b))-Number(kin.includes(a))||a.localeCompare(b));
 }

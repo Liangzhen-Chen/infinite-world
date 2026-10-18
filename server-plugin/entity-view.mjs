@@ -10,6 +10,7 @@ import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
 import {hiddenPassives} from './hidden-passives.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -23,7 +24,7 @@ export function personMental(engine,state,id){
     return fact(a?.mental??{fatigue:0,alertness:50,stress:0,interference:[]},a?.mental?'actor.mental':'unstrained baseline',Boolean(a?.mental));
 }
 
-const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'&&!state.records?.[`transition:${id}`]?.gone;
+const living=(engine,state,id)=>isEffective(engine,state,id);
 const priorOffice=(state,id,key,row)=>{const t=state.records?.[`transition:${id}`];return t?.restoredAt!==undefined&&(!key||t.officeFacts?.some(o=>o.id===key&&o.since===row?.since&&o.sourceEvent===row?.sourceEvent));};
 const dismissed=(state,id)=>recordsWhere(state.records,'category','legal_dismissal').some(r=>(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>recordEntriesWhere(state.records,'category','governance_office');
