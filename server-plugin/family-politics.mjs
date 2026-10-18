@@ -40,11 +40,11 @@ function moveHouse(d,e,id,destination,eventId){
 export function familyAction(d,args,eventId){
  const e=this,s=d.get('state');
  const split=s.family?.households?.[`house_split:${eventId}`];
- if(args.operation==='family_split'&&split)return {household:split.id,from:split.previousHousehold,member:split.members[0]};
+ if(args.operation==='family_split'&&split)return {duplicate:true,household:split.id,from:split.previousHousehold,member:split.members[0]};
  const adopted=s.family?.adoptions?.[`adoption:${eventId}`];
- if(['family_adopt','family_foster'].includes(args.operation)&&adopted)return {adoption:adopted,household:adopted.household};
+ if(['family_adopt','family_foster'].includes(args.operation)&&adopted)return {duplicate:true,adoption:adopted,household:adopted.household};
  const married=Object.values(s.family?.marriages??{}).find(r=>r.requestId===eventId);
- if(args.operation==='family_marry'&&married)return {marriage:married.id,partners:married.partners};
+ if(args.operation==='family_marry'&&married)return {duplicate:true,marriage:married.id,partners:married.partners};
  if(args.operation==='family_alliance')return familyAlliance(d,e,args,eventId);
  const value=args.member??args.name,id=args.operation==='family_inspect'?(familyPerson(e,s,value)?value:e.resolve(value,'npc')):person(e,s,value),orgId=natalFamily(e,s,id);
  if(args.operation==='family_inspect'){

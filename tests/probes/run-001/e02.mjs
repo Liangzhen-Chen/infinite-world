@@ -8,21 +8,44 @@ const scenario=once(async()=>{
  const {settlementGovernment}=await imp('server-plugin/entity-view.mjs');
  const {syncHoldingRecord}=await imp('server-plugin/holding-sources.mjs');
  const {scheduleAt}=await imp('server-plugin/npc-schedule.mjs');
+ const {personOffices}=await imp('server-plugin/entity-view.mjs');
+ const {currentEmployment}=await imp('server-plugin/employment-state.mjs');
+ const {snapshotContractTerms}=await imp('server-plugin/contract-state.mjs');
+ const {openLedger}=await imp('server-plugin/ledger.mjs');
+ const {openHoldings}=await imp('server-plugin/holdings.mjs');
+ const {transition,advanceProcedure}=await imp('server-plugin/transition.mjs');
  const S=setup({schedules:true});
  let doc=await S.wait(S.doc,Math.max(0.1,(29*DAY+600-S.doc.state.minute)/DAY),'e02a');
  doc.state.records.debt_lend_probe={category:'debt',kind:'player_loan',debtor:head,representative:head,creditor:'player',principal:3000,interest:300,monthlyInterest:0.02,amount:3300,paid:0,status:'待偿还',
   installments:10,nextInstallment:1,createdAt:doc.state.minute,deadline:doc.state.minute+20*DAY,nextPayment:doc.state.minute+2*DAY,location:sid,source:'probe',signedTerms:{}};
  doc.state.npcs[head].coins=5000;
+ const shopLocation=S.w.locations.find(p=>p.id.startsWith('bld_')&&p.parent===sid)?.id??doc.state.npcs[head].location;
+ const workers=Object.keys(doc.state.npcs).filter(id=>id!==head&&!S.engine.byId.get(id)?.flags?.minor&&(S.engine.byId.get(id)?.age??0)>=18&&!personOffices(S.engine,doc.state,id).length&&!currentEmployment(doc.state,id)).slice(0,4);
+ if(workers.length!==4)throw Error('E02 requires four real adult employees');
+ doc.state.buildings[shopLocation]={...doc.state.buildings[shopLocation],owner:head,condition:100};
+ doc.state.records.business_e02_distillery={id:'business_e02_distillery',category:'business',owner:head,location:shopLocation,status:'营业',createdAt:doc.state.minute};
+ for(const [i,worker]of workers.entries()){
+  Object.assign(doc.state.npcs[worker],{location:shopLocation,activity:'酒坊清扫与搬运',status:'正常'});
+  const id=`workshop:e02:${i}`,nextWork=Math.floor(doc.state.minute/DAY)*DAY+1020;
+  doc.state.records[id]=snapshotContractTerms({id,category:'contract',kind:'workshop',laborMarket:1,owner:head,worker,parties:[worker,head],location:shopLocation,task:'酒坊清扫与搬运',wage:20,starts:doc.state.minute,createdAt:doc.state.minute,deadline:doc.state.minute+40*DAY,nextWork,status:'有效',paid:0,produced:0,targetQuantity:100000,workedMinutes:0,attendance:{},shifts:[],source:'e02-distillery'});
+ }
  // 监护：赵枫代管河湾 16 岁的段禾（替代“10 岁侄子”）
  doc.state.records['guardianship:probe']={category:'guardianship',id:'guardianship:probe',ward:ward,guardian:head,status:'代管中',since:doc.state.minute-DAY,expires:null,source:'probe'};
- const deathMinute=doc.state.minute,d=draft(doc);
+ // Open fixture records and balances together, as for a loaded legacy save.
+ doc.ledger=openLedger(S.engine,doc);doc.holdings=openHoldings(S.engine,doc);
+ const unclaimed=draft(JSON.parse(JSON.stringify(doc)));unclaimed.engine=S.engine;
+ const unclaimedTransition=transition(unclaimed,S.engine,{entity:head,basis:'death',origin:'death_rule',successors:[],law:{noHeir:{mode:'seal',recipient:sid,notice:1}}});
+ advanceProcedure(unclaimed,S.engine,unclaimedTransition.successor);
+ unclaimed.set(['state','minute'],unclaimed.get('state','minute')+1);advanceProcedure(unclaimed,S.engine,unclaimedTransition.successor);
+ const sealed=unclaimed.get('state','records','business_e02_distillery');
+ const deathMinute=doc.state.minute,d=draft(doc);d.engine=S.engine;
  syncHoldingRecord(d,S.engine,'guardianship:probe',{writer:'family-inheritance',eventId:'e02:guardianship'});
  const death=recordEntityDeath(d,S.engine,head,deathMinute,'猝死');
  let c=d.document;
  const heirCoins=Object.fromEntries((death.estate?.heirs??[]).map(h=>[h,c.state.npcs[h]?.coins]));
  const govAfterDeath=settlementGovernment(S.engine,c.state,sid).head.value;
  c=await S.wait(c,35,'e02b');
- return {S,death,deathMinute,heirCoins,govAfterDeath,c,gov35:settlementGovernment(S.engine,c.state,sid).head.value,
+ return {S,death,deathMinute,heirCoins,govAfterDeath,c,sealed,workers,shopLocation,gov35:settlementGovernment(S.engine,c.state,sid).head.value,
   salaries:recs(c,'office_salary').filter(([,r])=>r.holder===head),loan:c.state.records.debt_lend_probe,
   guardianship:c.state.records['guardianship:probe'],cases:recs(c,'legal_case').map(([k,r])=>({k,...r})),npc:c.state.npcs[head],schedule:scheduleAt(S.engine,head,c.state.minute,c.state)};
 });
@@ -35,14 +58,15 @@ export default [
   return stopped?partial('死后俸禄停发，但主官空缺 35 天无人代理或补选'):wrong('主官空缺且死后仍发俸禄');}},
  {id:'E02-2',event:'E02',no:2,text:'酒坊归继承人；无继承人时官府封存，雇工工资照常累计、到期不发就停工',async check(){
   const s=await scenario();
-  const ended=recs(s.c,'contract').filter(([,r])=>(r.parties??[]).includes(head)||r.employer===head||r.owner===head);
-  const accruing=ended.some(([,r])=>r.status==='有效'&&(r.estate||r.sealedBy));
+  const ended=s.workers.map((_,i)=>[`workshop:e02:${i}`,s.c.state.records[`workshop:e02:${i}`]]);
+  const accruing=ended.every(([,r])=>r.substitutedAt!==undefined&&r.owner!==head);
   // A contract's label or a source-code keyword is not wage evidence. The
   // scenario must contain the actual workshop and four attended wage records.
   const workers=ended.filter(([,r])=>r.kind==='workshop'&&r.workedMinutes>0&&r.shifts?.length);
-  const property=(s.death.estate?.allocations??[]).some(r=>r.assets?.length>0);
-  if(accruing&&property&&workers.length>=4&&workers.every(([,r])=>r.paid>0||recs(s.c,'debt').some(([,debt])=>debt.contract===r.id&&debt.kind==='wage')))return ok('实有酒坊和四名到岗雇工，承接后的已付或欠薪有实际账据');
-  return missing('尚缺实有酒坊、四名到岗雇工和无继承人封存的完整行为对照');}},
+  const receipt=Object.values(s.c.state.family?.deaths??{}).find(r=>r.id===s.death.id);
+  const property=(receipt?.estate?.allocations??[]).some(r=>r.assets?.includes(s.shopLocation));
+  if(accruing&&property&&s.sealed.status==='封存'&&workers.length>=4&&workers.every(([,r])=>r.paid>0||recs(s.c,'debt').some(([,debt])=>debt.contract===r.id&&debt.kind==='wage')))return ok('实有酒坊和四名到岗雇工，承接后的已付或欠薪有实际账据；无继承人对照已封存');
+  return missing(`酒坊继承=${property}，无继承人封存=${s.sealed.status}，合同承接=${accruing}，到岗=${workers.length}/4；${JSON.stringify(ended.map(([,r])=>({id:r.id,owner:r.owner,status:r.status,minutes:r.workedMinutes,paid:r.paid,shifts:r.shifts.length,reason:r.reason})))}`);}},
  {id:'E02-3',event:'E02',no:3,text:'贷款先从遗产清偿，不转嫁侄子',async check(){
   const s=await scenario();
   const paid=s.loan?.paid??0,defaultCase=s.cases.some(c=>[c.offender,c.defendant].includes(head)&&/default|违约/.test(`${c.offense}${c.k}`));

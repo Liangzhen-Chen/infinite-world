@@ -1,4 +1,4 @@
-import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
@@ -6,7 +6,7 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
-import {contractTerms} from './contract-state.mjs';
+import {contractTerms,partyInProcedure,snapshotContractTerms} from './contract-state.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
@@ -37,8 +37,8 @@ export function advanceShadowContracts(d,before,after){
 export function createBusinessContract(d,{kind,parties,subject,quantity,deadline,business,cost,escrow=0,...terms},eventId){
     const id=`contract_${kind}_${eventId}`;
     if(d.get(...contractPath(id)))throw new Error('合同编号已存在');
-    const row={...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
-        escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]};
+    const row=snapshotContractTerms({...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
+        escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]});
     row.signedTerms=structuredClone(signedTerms(row));
     holdingSet(d,null,contractPath(id),row,'contracts');return row;
 }
@@ -50,8 +50,9 @@ export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,pai
         holdingSet(d,null,contractPath(row.id),next,'contracts');return next;
     });
 }
-export function refundContractEscrow(d,row){
-    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:purse(null,'player'),amount:row.escrow,writer:'contracts'});d.set(['state','player','coins'],d.get('state','player','coins')+row.escrow);row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');}
+export function refundContractEscrow(d,row,engine=d.engine){
+    const recipient=row.parties?.[0]??row.owner??'player';
+    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:partyAccount(engine,d.get('state'),recipient),amount:row.escrow,writer:'contracts'});mirrorPartyCoins(d,engine,recipient,row.escrow,row.source,'contracts');row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');}
     return row;
 }
 export function releaseBusinessLease(d,engine,row,{status='已终止',reason,source}={}){
@@ -68,15 +69,12 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
     return finishBusinessContract(d,row,{status,reason,by:reason?'player':undefined,source});
 }
-export function chargeTrade(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description},eventId){
+export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description},eventId){
     if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw new Error('交易当事人或金额无效');
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
         if(source.coins<cost)throw new Error('买方余额不足');
-        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'contracts',eventId});
-        d.set([...engine.actorPath(buyer),'coins'],source.coins-cost);
-        d.set([...engine.actorPath(seller),'coins'],target.coins+cost);
-        return{};
+        return {payment:'cash'};
     }
     if(payment!=='credit'||buyer!=='player')throw new Error('只支持玩家按商家的赊账规则购买');
     const policy=engine.byId.get(seller)?.creditPolicy;
@@ -90,6 +88,17 @@ export function chargeTrade(d,engine,{buyer,seller,cost,payment='cash',creditMin
     if(outstanding+cost>policy.limitCopper)throw new Error(`未还欠款与本次合计不得超过${policy.limitCopper}铜，当前已欠${outstanding}铜`);
     const minutes=creditMinutes??policy.maximumMinutes;
     if(!Number.isSafeInteger(minutes)||minutes<1||minutes>policy.maximumMinutes)throw new Error(`赊账期限必须为1至${policy.maximumMinutes}分钟`);
+    return {payment:'credit',minutes};
+}
+export function chargeTrade(d,engine,args,eventId){
+    const {buyer,seller,cost,payment='cash',description}=args,plan=validateTradeCharge(d,engine,args,eventId),minutes=plan.minutes;
+    if(payment==='cash'){
+        const source=engine.actor(d,buyer),target=engine.actor(d,seller);
+        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'contracts',eventId});
+        d.set([...engine.actorPath(buyer),'coins'],source.coins-cost);
+        d.set([...engine.actorPath(seller),'coins'],target.coins+cost);
+        return{};
+    }
     const id=`debt_${eventId}`;if(d.get('state','records',id))throw new Error('欠款编号已存在');
     const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:cost,paid:0,createdAt:d.get('state','minute'),
         deadline:d.get('state','minute')+minutes,status:'待偿还',source:eventId};
@@ -114,7 +123,7 @@ export function advanceContracts(d,engine,minute,recordIds){
     for(const[id,stored]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
         const row=stored.category==='contract'?contractTerms(stored,minute):stored;
         if(row.category==='contract'&&row.version===1&&row.business&&['有效','待履行'].includes(row.status)){
-            if(d.get('state','records',id)?.status!==row.status)continue;
+            if(row.endedAt!==undefined||row.resolvedAt!==undefined)continue;
             const overdue=row.debt&&d.get('state','records',row.debt)?.deadline<=minute&&d.get('state','records',row.debt)?.status!=='已还清';
             if(row.deadline<=minute||overdue){
                 const reason=overdue?'租金未按期偿还':row.kind==='lease'?undefined:'到期未履行';
@@ -133,7 +142,7 @@ export function advanceContracts(d,engine,minute,recordIds){
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
             changeLegacyHoldings(d,engine,{holder:row.parties?.[0]??'player',subject:row.room,kinds:['lodges'],reason:'expired',eventId:`${id}:expired`},()=>holdingSet(d,null,['state','records',id],{...row,status:'已到期',endedAt:row.expires},'contracts'));d.say(`${row.name}已到期，需要退房或另行续住`);
         }
-        if(row.category==='debt'&&row.status==='待偿还'&&row.deadline<=minute){
+        if(row.category==='debt'&&!partyInProcedure(d.get('state'),row.debtor)&&row.status==='待偿还'&&row.deadline<=minute){
             holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:row.deadline},'contracts');
             if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
             d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}铜已到期，尚未偿还`);

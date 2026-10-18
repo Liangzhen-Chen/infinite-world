@@ -23,3 +23,12 @@ test('new supported contract kinds snapshot parties and terms; legacy rows retai
  }
  assert.equal(contractState({kind:'workshop',status:'已到期',createdAt:0,deadline:100},10).active,false);
 });
+
+test('a protocol substitution keeps only actual party fields and persists without undefined values',()=>{
+ const row=snapshotContractTerms({id:'job',kind:'workshop',owner:'a',worker:'b',wage:10,starts:0,deadline:100,status:'有效'});
+ row.owner='estate_a';row.substitutedAt=10;
+ const terms=contractTerms(row,20);
+ assert.equal(terms.owner,'estate_a');assert.equal(terms.worker,'b');
+ for(const key of ['employer','tenant','holder','issuer','partner','parties'])assert.equal(Object.hasOwn(terms,key),false,key);
+ assert.deepEqual(JSON.parse(JSON.stringify(terms)),terms);
+});

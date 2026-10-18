@@ -1,3 +1,4 @@
+import {advanceProcedure,transitionState} from '../server-plugin/transition.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -32,7 +33,9 @@ function setup(property='equal'){
 }
 const action=(f,args,id='family-test')=>familyAction.call(f.e,f.d,args,id);
 const tie=(f,a,b)=>{f.d.set(['state','npcs',a,'relationships',b],{trust:90,affection:90});f.d.set(['state','npcs',b,'relationships',a],{trust:90,affection:90});};
-const die=f=>recordEntityDeath(f.d,f.e,A,600,'寿终');
+const die=f=>{const old=transitionState(f.d,A);const death=recordEntityDeath(f.d,f.e,A,600,'natural');if(old?.gone)return death;
+ f.d.set(['state','minute'],f.d.get('state','minute')+2*DAY);advanceProcedure(f.d,f.e,transitionState(f.d,A).successor);
+ return f.d.get('state','family','deaths',death.id);};
 
 test('族谱由亲属关系派生，已故亲属在知情范围内保留，私密关系不泄漏',()=>{
  const f=setup();f.setKin(A,C);f.setKin(A,D,{private:true,knownBy:[A]});

@@ -303,7 +303,12 @@ export function located(d,entity,placeOf=()=>null){
 // L1（holding-sources.mjs）登记观察者；本模块只转发，不知道哪些路径对应哪些持有。
 let observer=null;
 export function registerHoldingObserver(fn){const prev=observer;observer=fn;return prev;}
-export function holdingSet(d,engine,path,value,writer,eventId=null){d.set(path,value);observer?.(d,engine,path,writer,eventId);return value;}
+export function holdingSet(d,engine,path,value,writer,eventId=null,{projection=false}={}){
+    // The lifecycle transaction has already changed the authoritative edges.
+    // Its compatibility projection must not run the old-source adapter again.
+    if(projection&&(!d.protocolTransaction||writer!=='transition'))throw Error('Holding projection requires the lifecycle transaction');
+    d.set(path,value);if(!projection)observer?.(d,engine,path,writer,eventId);return value;
+}
 export function holdingRemove(d,engine,path,writer,eventId=null){d.remove(path);observer?.(d,engine,path,writer,eventId);}
 
 // ---- 世界版本更新（包升级）的折算 ------------------------------------------------------

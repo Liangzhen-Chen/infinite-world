@@ -427,7 +427,8 @@
    "subjectKinds": [
     "collective",
     "agent",
-    "thing"
+    "thing",
+    "interim"
    ],
    "exclusive": false,
    "handover": {

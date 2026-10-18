@@ -224,7 +224,7 @@ test('real engine advances persisted estate due stages after JSON reload and con
     const doc=engine.createCharacter(seed,{},'procedure-reload');doc.holdings=openHoldings(engine,doc);const d=draft(doc);
     recordEntityDeath(d,engine,person,doc.state.minute,'寿终');const estate=transitionState(d,person).successor;
     const saved=JSON.parse(JSON.stringify(d.document)),previousSeq=Math.max(...Object.values(saved.state.records).filter(e=>e.category==='world_event').map(e=>e.seq??0));
-    const r=await engine.reduce(saved,{tool:'world_time',args:{minutes:1},eventId:'resume-estate'}),after=applyPatches(saved,r.patches);
+    const r=await engine.reduce(saved,{tool:'world_time',args:{minutes:2*1440},eventId:'resume-estate'}),after=applyPatches(saved,r.patches);
     assert.equal(after.holdings.protocol.procedures[estate].phase,'closed');
     assert.ok(Object.values(after.state.records).some(e=>e.verb==='protocol_stage'&&e.seq>previousSeq));
     const result=reconcileHoldings(engine,after);assert.ok(reconciled(result),JSON.stringify(result));

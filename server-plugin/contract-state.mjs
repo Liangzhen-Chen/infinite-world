@@ -1,34 +1,39 @@
 // Signed clauses are facts; current usability is derived, never a stored flag.
 import {facilityView} from './facility-state.mjs';
 
-const fields=['parties','owner','worker','employer','tenant','holder','issuer','subject','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','monthlyRent','starts','createdAt','deadline','expires'];
+const fields=['parties','owner','worker','employer','tenant','holder','issuer','partner','subject','room','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','baselineNet','baselineProfit','unitPrice','targetQuantity','demandSource','supplier','item','project','farm','monthlyRent','starts','createdAt','deadline','expires','onHolderGone','onEmployerGone','onWorkerGone'];
 export function snapshotContractTerms(row){
  if(row.clauses)return row;
  const terms=Object.fromEntries(fields.filter(k=>row[k]!==undefined).map(k=>[k,structuredClone(row[k])]));
- return {...row,clauses:{...terms,starts:row.starts??row.createdAt??0,expires:row.expires??row.deadline,
-  ...(row.kind==='asset_lease'?leaseClauses(row):{})}};
+ const clauses={...terms,initialStatus:row.status,starts:row.starts??row.createdAt??0,expires:row.expires??row.deadline,
+  ...(row.kind==='asset_lease'?leaseClauses(row):{})};
+ return {...row,clauses:Object.fromEntries(Object.entries(clauses).filter(([,v])=>v!==undefined))};
 }
 export function contractTerms(row,minute=Infinity){
  if(!row.clauses)return row;
  const terms={...row,...row.clauses};
  // Party substitution is a protocol fact; economic terms are signed facts.
- for(const field of ['owner','employer','worker','tenant','parties'])if(row.substitutedAt!==undefined)terms[field]=row[field];
- for(const a of row.amendments??[])if(a.minute<=minute)for(const k of fields)if(a[k]!==undefined)terms[k]=a[k];
- terms.deadline=terms.expires;return terms;
+ for(const field of ['owner','employer','worker','tenant','holder','issuer','partner','parties'])if(row.substitutedAt!==undefined){if(Object.hasOwn(row,field))terms[field]=row[field];else delete terms[field];}
+ for(const a of row.amendments??[])if(a.minute<=minute){for(const k of fields)if(a[k]!==undefined)terms[k]=a[k];if(a.deadline!==undefined)terms.expires=a.deadline;}
+ if(terms.expires!==undefined)terms.deadline=terms.expires;
+ else{delete terms.deadline;delete terms.expires;}
+ if(row.endedAt===undefined&&row.resolvedAt===undefined&&row.settledAt===undefined&&['已终止','已到期','已取消','已解除','已辞退','已辞职','已辞工','已完成','已结算','已转让','中止','违约'].includes(row.status))terms.status=row.clauses.initialStatus??'有效';
+ return terms;
 }
+export const partyInProcedure=(state,id)=>{const p=state.records?.[`transition_procedure:${id}`];return Boolean(p&&p.phase!=='closed');};
 export function contractState(row,minute){
- const terms=contractTerms(row,minute),ended=row.endedAt??row.resolvedAt;
- const legacyEnded=!row.clauses&&['已终止','已到期','已取消','已解除','已辞退','已辞职','已完成','违约'].includes(row.status);
+ const terms=contractTerms(row,minute),ended=row.endedAt??row.resolvedAt??row.settledAt;
+ const legacyEnded=!row.clauses&&['已终止','已到期','已取消','已解除','已辞退','已辞职','已辞工','已完成','已结算','已转让','中止','违约'].includes(row.status);
  const active=ended===undefined&&!legacyEnded&&minute>=(terms.starts??0)&&minute<(terms.deadline??Infinity);
  return {active,status:active?(row.suspendedAt!==undefined?'suspended':'effective'):'ended',terms};
 }
 
 export function leaseClauses(row){
- return {starts:row.createdAt,expires:row.deadline,monthlyRent:row.monthlyRent,
+ return {starts:row.starts??row.createdAt,expires:row.expires??row.deadline,monthlyRent:row.monthlyRent,
   usability:{minimumCondition:25,reducedBelow:60,reducedFactor:0.5},...row.clauses};
 }
 export function leaseState(engine,state,row,minute=state.minute){
- const terms=leaseClauses(row),facility=facilityView(engine,state,row.subject);
+ const terms={...leaseClauses(row),...contractTerms(row,minute)},facility=facilityView(engine,state,terms.subject);
  // Signed records use termination facts and the agreed interval. The status
  // column remains a compatibility projection for older records only.
  const legacyEnded=!row.clauses&&['已终止','已到期','已取消'].includes(row.status);

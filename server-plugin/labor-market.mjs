@@ -18,7 +18,7 @@ import {transferItems} from './items.mjs';
 import {medicineSites,medicalSkill} from './medicine-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
-import {contractTerms} from './contract-state.mjs';
+import {contractTerms,partyInProcedure} from './contract-state.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -37,6 +37,8 @@ const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind
 
 function ownerCanHire(e,s,owner){
     if(owner==='player')return false;
+    const estate=s.records?.[`protocol_assets:${owner}`];if(estate)return estate.sealedAt===undefined&&estate.executor&&able(s,estate.executor)&&!personConstraint(e,s,estate.executor);
+
     if(s.npcs?.[owner])return able(s,owner)&&!personConstraint(e,s,owner);
     const representative=groupRepresentative(e,s,owner);
     return Boolean((groupAccountView(e,s,owner)||s.records?.[`organization:${owner}`]?.category==='organization')&&representative&&able(s,representative)&&!personConstraint(e,s,representative));
@@ -267,11 +269,11 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
             const lo=Math.max(before,start+(row.commuteMinutes??0)),hi=Math.min(after,day*DAY+1020);
             recordEmploymentAttendance(d,row.worker,lo,hi,row.location);
         }
-        row=d.get(...rec(row.id));
+        row=contractTerms(d.get(...rec(row.id)),after);
         if(statistical&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY))&&after<row.deadline)continue;
         const shifts=[];
         for(let at=row.nextWork;at<=after&&at<row.deadline;at+=DAY){
-            row=d.get(...rec(row.id));if(!employmentActive(row))break;
+            row=contractTerms(d.get(...rec(row.id)),after);if(!employmentActive(row))break;
             if(settleArrears(d,e,row,at))continue;
             const shift=settleShift(d,e,row,at);if(shift)shifts.push(shift);
         }

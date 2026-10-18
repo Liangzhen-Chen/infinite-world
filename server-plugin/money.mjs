@@ -17,10 +17,11 @@
 import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
-import {holdingSet} from './holdings.mjs';
+import {holdingSet,declareHoldingWriter} from './holdings.mjs';
 import {priceRead} from './stock.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
+declareHoldingWriter('money',{kinds:[]});
 export const COIN=LEDGER_COIN;
 export const purse=(engine,id)=>accountKey(engine?actorId(engine.world,id):id,COIN,'purse');
 export const treasury=id=>accountKey(id,COIN,'treasury');
@@ -58,6 +59,11 @@ export function mirrorPartyCoins(d,engine,id,delta,eventId,writer){
         if(!Number.isSafeInteger(value)||value<0)throw Error('Invalid organization balance');
         holdingSet(d,engine,['state','records',`organization:${id}`],{...org,treasury:value,ledger:[...org.ledger??[],{coins:delta,sourceEvent:eventId}]},writer,eventId);return value;
     }
+    if(state.records?.[`protocol_assets:${id}`]){
+        const path=['state','records',`protocol_assets:${id}`,'coins'],value=(d.get(...path)??0)+delta;
+        if(!Number.isSafeInteger(value)||value<0)throw Error('Invalid estate balance');
+        d.set(path,value);return value;
+    }
     const path=engine.actorPath(id),value=(path.reduce((v,k)=>v?.[k],d.document)?.coins??0)+delta;
     if(!Number.isSafeInteger(value)||value<0)throw Error('Invalid party balance');
     d.set([...path,'coins'],value);return value;
@@ -87,7 +93,8 @@ export function legacyMoney(engine,state){
     for(const [key,row] of Object.entries(records)){
         if(!row||typeof row!=='object')continue;
         const c=row.category;
-        if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])add(treasury(id),row.treasury);}
+        if(c==='protocol_assets'){add(purse(null,row.owner),row.coins);for(const [purpose,n]of Object.entries(row.funds??{}))add(accountKey(row.owner,COIN,purpose),n);}
+        else if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])add(treasury(id),row.treasury);}
         else if(c==='polity_treasury'){polities.delete(key.slice('polity:'.length));add(accountKey(key,COIN,'treasury'),row.coins);}
         else if(c==='bank'){banks.delete(key);add(vault(key),row.coins);}
         else if(RECORD_FUNDS.has(c))add(fund(key),row.coins);

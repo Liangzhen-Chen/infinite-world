@@ -25,7 +25,7 @@ import {famineAt} from './hazard-calendar.mjs';
 import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
-import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
+import {advanceGuardianships} from './family-inheritance.mjs';
 import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
@@ -387,7 +387,7 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  if(previous||actor.diedAt!==undefined)return previous??null;
  let result;
  const life=actor.incarnation??0,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`;
- transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],
+ transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],durations:engine.rules.law?.estate?.durations??{notice:DAY,filing:DAY},
   legacy:()=>{result=recordLegacyEntityDeath(d,engine,id,minute,cause,illness);}});
  return result;
 }
@@ -413,24 +413,8 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
   release(d,row);holdingSet(d,null,['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute},'npc-life');
  }
  const obligations=Object.values(d.get('state','obligations')??{}).filter(o=>o.endedByDeath===deathId).map(o=>o.id).sort();
- const contracts=[];
- for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
-  if(row.version===1&&row.business){
-   if(row.kind==='lease')releaseBusinessLease(d,engine,row,{status:'已终止',source:deathId});
-   else finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',source:deathId});
-   holdingSet(d,null,['state','records',cid,'endedByDeath'],deathId,'npc-life');
-  }else holdingSet(d,null,['state','records',cid],{...row,status:'已终止',resolvedAt:minute,endedByDeath:deathId},'npc-life');
-  if(row.enforcement?.active)holdingSet(d,null,['state','records',cid,'enforcement','active'],false,'npc-life');
-  contracts.push(cid);
- }
- const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
- const pets=[];
- for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
-  const owner=pet===id?null:heir;holdingSet(d,null,['state','creatures',pet,'owner'],owner,'npc-life');pets.push(pet);
-  const entry=d.get('state','pets',pet);
-  if(entry)holdingSet(d,null,['state','pets',pet],{...entry,status:pet===id?'死亡':'已解除',following:false,ended:minute,endedByDeath:deathId},'npc-life');
-  if(state.player.mount===pet)d.remove(['state','player','mount']);
- }
+ const protocol=d.get('holdings','protocol','entities',id),estate={id:protocol?.successor,heir:null,heirs:[],coins:actor.coins??0,items:structuredClone(actor.inventory??{}),allocations:[],debts:[],guardianships:[]};
+ const contracts=[],pets=[];
  const ledger=house?state.settlements?.[house.settlement]:null,population=Number.isSafeInteger(ledger?.population)?{before:ledger.population,after:Math.max(0,ledger.population-1)}:null;
  if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;

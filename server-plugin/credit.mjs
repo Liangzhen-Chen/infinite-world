@@ -1,3 +1,4 @@
+import {contractTerms,partyInProcedure} from './contract-state.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
 // by its fineness; any registered guest room or spare house can be rented; the
@@ -23,7 +24,7 @@ import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-accoun
 
 export {CREDIT_OPERATIONS} from './finance-operations.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('credit',{kinds:['employed_by','leases','share'],locations:true});
+declareHoldingWriter('credit',{kinds:['pledged','employed_by','leases','share'],locations:true});
 export const CREDIT_KINDS=new Set(['loan','partnership','pawn']);
 const rec=id=>['state','records',id];
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -90,7 +91,8 @@ export function releasePledge(d,engine,key,to,bank=null){
         changeItems(d,engine,to,p.item,p.quantity,{books:{account:pledged(engine,key,p.item),writer:'credit',eventId:key}});
         if(p.instances.length){
             const bag=[...engine.bagPath(to),p.item,'instances'];d.set(bag,[...d.get(...bag)??[],...p.instances]);
-            for(const unit of p.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有'},'credit');
+            const deceased=d.get('holdings','entities',to,'facts','of'),container=deceased&&d.get('holdings','protocol','entities',deceased,'wreck');
+            for(const unit of p.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有',...(container?{container}:{})},'credit');
         }
     }
     const next={...p,status:to===(p.owner??'player')?'已退还':'已没收',releasedAt:d.get('state','minute'),holder:bank?.id??to};holdingSet(d,null,rec(key),next,'credit');return next;
@@ -175,6 +177,7 @@ function defaultDebt(d,engine,id,row){
 
 // ---- partnership -------------------------------------------------------------
 function settlePartnership(d,engine,id,row,{minute,eventId}){
+    row=contractTerms(row,minute);
     const shop=d.get(...rec(row.business)),net=businessReport(d,engine,shop).profit.net,profit=net-row.baselineNet;
     const payout=Math.max(0,row.stake+Math.floor(profit*row.share/100));
     let debt=null;
@@ -305,7 +308,7 @@ export function advanceCredit(d,engine,minute,recordIds){
     const c=creditRules(engine);if(!c)return;
     advanceBankFinance(d,engine,minute,recordIds);
     advanceFinanceAssets(d,engine,minute,recordIds);
-    const rows=()=>recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{});
+    const rows=()=>(recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})).map(([id,row])=>[id,row.category==='contract'?contractTerms(row,minute):row]);
     for(const [id,row]of rows())
         if(row.category==='contract'&&row.kind==='partnership'&&row.status==='有效'&&row.deadline<=minute)settlePartnership(d,engine,id,row,{minute:row.deadline,eventId:`deadline_${id}`});
     for(const [id,row]of rows())

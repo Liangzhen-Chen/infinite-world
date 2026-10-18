@@ -8,7 +8,7 @@ export function currentEmployment(state,id,minute=state?.minute??0){
 }
 export function employmentReservation(state,id,start,minutes=0,restDays=[]){
     const end=start+Math.max(1,minutes);
-    return recordsWhere(state.records,'kind','workshop').find(r=>employmentActive(r)&&!r.education&&r.worker===id&&r.status!=='罢工'&&end>r.starts&&start<r.deadline&&
+    return recordsWhere(state.records,'kind','workshop').map(r=>contractTerms(r,start)).find(r=>employmentActive(r)&&!r.education&&r.worker===id&&r.status!=='罢工'&&end>r.starts&&start<r.deadline&&
         Array.from({length:Math.ceil((end-start)/1440)+1},(_,i)=>Math.floor(start/1440)+i).some(day=>{
             if(restDays.includes((day%30+30)%30+1))return false;
             return [[480,720],[780,1020]].some(([lo,hi])=>{

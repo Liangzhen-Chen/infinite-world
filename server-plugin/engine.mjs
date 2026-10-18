@@ -32,7 +32,7 @@ import {changeItems,transferItems}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -71,9 +71,9 @@ import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
-import {chargeTrade,repayDebt}from'./contracts.mjs';
+import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
-import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
+import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -176,6 +176,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 export class WorldEngine {
     constructor(world) {
         this.protocolScheduleAt=scheduleAt;
+        this.protocolDebtSettled=(d,row,eventId)=>{if(row.pledgeRecord)releasePledge(d,this,row.pledgeRecord,row.debtor);if(row.defaulted?.case)settleCreditCase(d,this,row.defaulted.case,eventId);};
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
@@ -289,6 +290,7 @@ export class WorldEngine {
         }
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
+        if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
         if(document.state.location!==d.get('state','location'))recordReturnVisit(d,session,document.state,id);
@@ -342,7 +344,7 @@ export class WorldEngine {
     npcAutonomyBusy(state,id,minute){return npcAutonomyBusy(state,id,minute);}
     assertNpcAutonomyAction(state,actors,action){return assertNpcAutonomyAction(state,actors,action);}
     actorPath(id) { return actorPath(this.world,id); }
-    bagPath(id) { return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
+    bagPath(id) { if(/^(estate_|liq_)/.test(id))return ['state','records',`protocol_assets:${id}`,'inventory']; return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
     itemDelta(d,id,item,delta,books) {
         return changeItems(d,this,id,item,delta,{books});
@@ -391,6 +393,7 @@ export class WorldEngine {
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
+        validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         let payment,moved,tax,rejected;
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);

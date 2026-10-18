@@ -88,6 +88,7 @@ export function entityTemplates(engine,state,id){
     const w=sets(engine),records=state?.records??{};
     if(id==='player')return ['agent'];
     const out=new Set();
+    if(records[`protocol_assets:${id}`])out.add('interim');
     if(state?.npcs?.[id]||state?.created?.[id]&&state.created[id].kind!=='building'||state?.family?.people?.[id]||w.people.has(id)||state?.creatures?.[id]||w.creatures.has(id)||/^npc_/.test(id))out.add('agent');
     if(w.settlements.has(id)||state?.settlements?.[id]){out.add('collective');out.add('place');}
     if(w.factions.has(id)||w.households.has(id)||w.polities.has(id)||w.banks.has(id)||records[id]?.category==='bank'||w.societies.has(id)||records[`organization:${id}`]||state?.family?.households?.[id]||COLLECTIVE_PREFIX.test(id))out.add('collective');
@@ -95,7 +96,7 @@ export function entityTemplates(engine,state,id){
     if(/^bld_/.test(id)||state?.created?.[id]?.kind==='building'){out.add('thing');out.add('place');}
     if(state?.itemInstances?.[id]||records[id]?.category==='transport_asset'||/^transport_asset:/.test(id)||state?.buildings?.[id])out.add('thing');
     if(records[id]?.category==='business')out.add('thing');
-    if(state?.obligations?.[id]||records[id]?.category==='debt'||records[id]?.category==='contract')out.add('instrument');
+    if(state?.obligations?.[id]||['debt','contract','pledge'].includes(records[id]?.category))out.add('instrument');
     return out.size?[...out]:null;
 }
 registerEntityResolver((d,id,engine)=>engine?entityTemplates(engine,read(d,'state'),id):null);
@@ -387,6 +388,10 @@ function afterWrite(d,engine,path,writer,eventId){
                 d.set(path,{...row,clauses:{onDebtorGone:terms.onDebtorGone,onCreditorGone:terms.onCreditorGone}});
             }
         }
+        if(row?.category==='debt'&&row.obligation&&read(d,'state','obligations',row.obligation)){
+            const o=read(d,'state','obligations',row.obligation);
+            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,remaining:row.status==='坏账'?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
+        }
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
         return;
     }
@@ -578,6 +583,15 @@ defineHoldingSource('equity',{
 });
 
 // ---- business：本人的商号（business 记录，筹备 / 营业）→ 经营 operates（店主 → 商号）。 ----
+defineHoldingSource('pledge',{
+    recordCategories:['debt','pledge'],
+    unitOfRecord:(state,key,row)=>row.category==='debt'?key:Object.entries(state?.records??{}).filter(([,r])=>r.category==='debt'&&r.pledgeRecord===key).map(([id])=>id),
+    units:(engine,state)=>Object.keys(state.records??{}).filter(id=>state.records[id]?.category==='debt'&&state.records[id].pledgeRecord),
+    extract(engine,state,id){
+        const debt=state.records?.[id],pledge=debt?.pledgeRecord&&state.records?.[debt.pledgeRecord];
+        return {holdings:debt?.amount>(debt.paid??0)&&pledge?.status==='质押中'?[{kind:'pledged',holder:id,subject:debt.pledgeRecord}]:[]};
+    },
+});
 defineHoldingSource('business',{
     recordCategories:['business'],unitOfRecord:(state,key)=>key,
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='business').map(([k])=>k),
@@ -731,6 +745,7 @@ defineHoldingSource('estate',{
     units:(engine,state)=>Object.entries(state.family?.deaths??{}).filter(([,r])=>r?.estate).map(([k])=>k),
     extract(engine,state,id){
         const r=state.family?.deaths?.[id];if(!r?.estate)return null;
+        if(r.estate.id)return null; // The protocol source owns this estate.
         return {entities:[{id:`estate_${id}`,kind:'estate',facts:{deceased:r.person,heirs:[...r.estate.heirs??[]],phase:'closed'}}]};
     },
 });
@@ -760,6 +775,6 @@ defineHoldingSource('guardianship',{
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='guardianship').map(([k])=>k),
     extract(engine,state,key){
         const r=state.records?.[key];if(r?.category!=='guardianship'||r.status!=='代管中'||!r.guardian||!r.ward)return null;
-        return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:'person_and_property'}}]};
+        return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:r.scope??'person_and_property'}}]};
     },
 });
