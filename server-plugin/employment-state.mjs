@@ -1,14 +1,15 @@
 import {recordsWhere} from './storage.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {obligationView} from './obligation-state.mjs';
 // Contracts are facts. Current employment and occupied time are read-only views.
-export const employmentActive=r=>r?.kind==='workshop'&&r.endedAt===undefined&&r.resolvedAt===undefined&&(!!r.clauses||['有效','要求加薪','罢工'].includes(r.status));
+export const employmentActive=(r,state=null)=>r?.kind==='workshop'&&r.endedAt===undefined&&r.resolvedAt===undefined&&(!r.serviceObligation||!state||obligationView(state,r.serviceObligation)?.closed===false)&&(!!r.clauses||['有效','要求加薪','罢工'].includes(r.status));
 export function currentEmployment(state,id,minute=state?.minute??0){
-    return recordsWhere(state?.records,'kind','workshop').map(r=>contractTerms(r,minute)).find(r=>employmentActive(r)&&r.worker===id&&r.createdAt<=minute&&minute<r.deadline)??null;
+    return recordsWhere(state?.records,'kind','workshop').map(r=>contractTerms(r,minute)).find(r=>employmentActive(r,state)&&r.worker===id&&r.createdAt<=minute&&minute<r.deadline)??null;
 }
 export function employmentReservation(state,id,start,minutes=0,restDays=[]){
     const end=start+Math.max(1,minutes);
-    return recordsWhere(state.records,'kind','workshop').map(r=>contractTerms(r,start)).find(r=>employmentActive(r)&&!r.education&&r.worker===id&&r.status!=='罢工'&&end>r.starts&&start<r.deadline&&
+    return recordsWhere(state.records,'kind','workshop').map(r=>contractTerms(r,start)).find(r=>employmentActive(r,state)&&!r.education&&r.worker===id&&r.status!=='罢工'&&end>r.starts&&start<r.deadline&&
         Array.from({length:Math.ceil((end-start)/1440)+1},(_,i)=>Math.floor(start/1440)+i).some(day=>{
             if(restDays.includes((day%30+30)%30+1))return false;
             return [[480,720],[780,1020]].some(([lo,hi])=>{

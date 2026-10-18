@@ -8,17 +8,25 @@ import {npcSchedule,npcAgeAt} from './npc-state.mjs';
 import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
+import {employmentActive} from './employment-state.mjs';
+import {contractTerms} from './contract-state.mjs';
 const DAY=1440;
 // Catalog identity follows immutable world/created partitions, never the clock,
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});
 const householdCatalog=Symbol('education households');
+const catalogs=new WeakMap();
 function educationCatalog(e,s){
- return recordsMemo(s.created??emptyCreated,e.world,()=>{
+ let worldCache=catalogs.get(e.world);
+ if(!worldCache||worldCache.locations!==e.world.locations||worldCache.npcs!==e.world.npcs||worldCache.residents!==e.world.residents){
+  worldCache={locations:e.world.locations,npcs:e.world.npcs,residents:e.world.residents,created:new WeakMap()};catalogs.set(e.world,worldCache);
+ }
+ const created=s.created??emptyCreated,hit=worldCache.created.get(created);if(hit)return hit;
+ const catalog=(()=>{
   const entities=Object.values(s.created??{});
   return {people:[...new Map([...e.world.residents??[],...e.world.npcs,...entities].filter(p=>p.id?.startsWith('npc_')).map(p=>[p.id,p])).values()],
    sites:[...e.world.locations,...entities.filter(x=>x.id?.startsWith('bld_'))].filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school')};
- });
+ })();worldCache.created.set(created,catalog);return catalog;
 }
 export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
 export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
@@ -67,7 +75,7 @@ function deriveEducationCourses(e,s){
  const constraints=personConstraints(e,s),calendar=e.calendar(s.minute);
  const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
  const routines=new Map(teachers.map(id=>[id,npcSchedule(e,s,id,undefined,constraints)]));
- const jobs=recordsWhere(s.records,'category','contract').filter(r=>['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
+ const jobs=recordsWhere(s.records,'category','contract').map(r=>contractTerms(r,s.minute)).filter(r=>employmentActive(r,s)&&r.status!=='罢工'&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
  const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
  const homeOf=memo(id=>settlement(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
  // Each school used to rescan the entire expanded population for every
