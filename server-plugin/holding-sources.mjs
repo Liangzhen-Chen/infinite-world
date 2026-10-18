@@ -12,7 +12,7 @@
 // 与存储里该单元的存活持有比对，按差关闭（reason）与开立（经 L0 唯一写入点，受注册形状校验）。
 // 旧写入点漏调它，对账（tests/helpers/holdings-audit.mjs）即报出差异。
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,locationOf,holdingsOfSource,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
+    setLocation,clearLocation,locationOf,holdingsOfSource,rescaleHolding,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
 import {holdingKind} from './holdings.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
@@ -199,6 +199,11 @@ function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
         else if(have.goneAt===undefined&&canon(have.facts)!==canon(e.facts??{}))attempt(d,info,()=>updateEntity(d,{id:e.id,facts:e.facts??{},writer,eventId}));
     }
     const stored=holdingsOfSource(d,source),current=stored.holdings,wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
+    if(name==='equity'){
+        if(current.length===wanted.size&&current.every(h=>wanted.has(holdingKey(h))))return;
+        const input={op:'rescale',kind:'share',subject:unit,shares:Object.fromEntries(want.holdings.map(h=>[h.holder,h.terms.share])),source,eventId};
+        runHoldingProtocol(d,engine,input)??rescaleHolding(d,{...input,writer,engine});return;
+    }
     const keep=new Set();
     for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>runHoldingProtocol(d,engine,{op:'close',id:r.id,reason,eventId})??closeHolding(d,{id:r.id,reason,writer,eventId}));}
     for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>runHoldingProtocol(d,engine,{...h,op:'open',source,eventId})??openHolding(d,{...h,source,writer,eventId,engine}));
@@ -393,7 +398,7 @@ function afterWrite(d,engine,path,writer,eventId){
         }
         if(row?.category==='debt'&&row.obligation&&read(d,'state','obligations',row.obligation)){
             const o=read(d,'state','obligations',row.obligation);
-            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,remaining:row.status==='坏账'?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
+            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,remaining:['坏账','已取消'].includes(row.status)?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
         }
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
         return;

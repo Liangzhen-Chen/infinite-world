@@ -32,7 +32,7 @@ export const holdingKindIds=()=>[...kinds.keys()].sort();
 let lifecycleProtocol=null;
 let holdingProtocol=null;
 export function registerHoldingProtocol(fn){holdingProtocol=fn;}
-export function runHoldingProtocol(d,engine,input){return holdingProtocol?holdingProtocol(d,engine,input):null;}
+export function runHoldingProtocol(d,engine,input){return holdingProtocol&&d.document?holdingProtocol(d,engine,input):null;}
 export function registerLifecycleProtocol(fn){lifecycleProtocol=fn;}
 export function runLifecycleProtocol(d,engine,input){
     if(!lifecycleProtocol)throw Error('Lifecycle protocol is not installed');

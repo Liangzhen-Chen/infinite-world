@@ -1,4 +1,5 @@
 import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation} from './education-state.mjs';
+export {educationCourses};
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
 import {personConstraint,personHousehold,personAge,personCertified} from './entity-view.mjs';
 import {facilityView} from './facility-state.mjs';

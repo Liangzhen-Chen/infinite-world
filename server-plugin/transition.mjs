@@ -9,9 +9,9 @@ import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,present
 import {identities} from './identity.mjs';
 import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
-import {legalCodeAt} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,PatchCursor} from './storage.mjs';
 import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {registerHoldingProtocol} from './holdings.mjs';
@@ -33,7 +33,7 @@ const writeRecord=(d,engine,id,value)=>holdingSet(d,engine,['state','records',id
 // Draft exposes immutable checkpoints. Restore sequence and caches along with data.
 function atomic(d,fn){
     if(d.protocolTransaction)return fn();
-    const document=structuredClone(d.document),patches=d.patches?.length??0,messages=d.messages?.length??0,seq=d.scheduler?.seq;
+    const document=d.cursor instanceof PatchCursor?d.cursor.expose(d.document):structuredClone(d.document),patches=d.patches?.length??0,messages=d.messages?.length??0,seq=d.scheduler?.seq;
     const reaction=d.reactionTick?structuredClone({...d.reactionTick,queue:[]}):null,queue=d.reactionTick?.queue?.slice();
     d.protocolTransaction=true;
     try{return fn();}catch(error){
@@ -71,7 +71,7 @@ function accountOwnerLive(d,e,id){
     const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
     if(stationPlace)return live(d,e,stationPlace.id);
     const row=read(d,'state','records',id);
-    if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!e.rules.law?.codes?.some(c=>c.id===row.law);
+    if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
     if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
     if(row?.category==='settlement_trade')return live(d,e,row.seller)&&live(d,e,row.buyer);
@@ -108,8 +108,8 @@ export function assertTransitionInvariants(d,e,entity=null){
     if(errors.length)throw Error(errors.join('; '));
 }
 const invariant=(d,entity=null,e=d.engine)=>assertTransitionInvariants(d,e,entity);
-const bands=[['holds_office','appointed','governs','administers','fief','permit'],['guardian_of','custody_of'],['registered'],['operates','employed_by'],['owns','share','leases','tamed_by','commands','pledged'],[]];
-const rank=r=>{const i=bands.findIndex(b=>b.includes(r.kind));return i<0?5:i;};
+const bands=[['holds_office','appointed'],['governs','administers','fief','permit'],['guardian_of','custody_of'],['registered'],['operates','employed_by'],['owns','share','leases','tamed_by','commands','pledged'],[]];
+const rank=r=>{const i=bands.findIndex(b=>b.includes(r.kind));return i<0?bands.length-1:i;};
 const sorted=rows=>rows.sort((a,b)=>rank(a)-rank(b)||a.kind.localeCompare(b.kind)||a.id.localeCompare(b.id));
 const successors=(d,ctx,r)=>[...r.terms?.successors??[],...ctx.successors??[]].map(x=>typeof x==='string'?x:x.heir??x.id).filter(x=>x!==ctx.entity&&!byEntity(d,x)?.gone);
 function action(d,e,r,template,ctx,side='holder'){
@@ -469,6 +469,17 @@ export function transition(d,engine,input){
         const source=`transition:${entity}`;
         const parent=emit(d,engine,{id:eventId,verb:'transition',entity,kind,basis,causes:input.causes??[],location,visibility:input.visibility??'public'});
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        // Private commissions depend on the publishing person's performance.
+        // Close them while their escrow can still join the estate, before a
+        // later expiry would refund the now departed publisher's purse.
+        if(estate)for(const [id,q]of Object.entries(read(d,'state','quests')??{})){
+            if(q.publisher!==entity||q.fundedBy||!['公开','进行中'].includes(q.status))continue;
+            const amount=q.escrow??0;
+            if(amount){ensureEstateAssets(d,successor,engine);transfer(d,{from:accountKey(id,'coin_river','escrow'),to:purse(engine,successor),amount,writer:W,eventId});mirrorPartyCoins(d,engine,successor,amount,eventId,W);}
+            d.set(['state','quests',id],{...q,status:'取消',reason:'私人发布者已消失，未付报酬退入遗产',escrow:0,refund:amount,resolvedAt:now(d),transition:eventId});
+            if(q.reservation){const o=read(d,'state','obligations',q.reservation);if(o&&!terminal(o))d.set(['state','obligations',q.reservation],{...o,status:'取消',resolvedAt:now(d),cause:eventId});}
+            writeRecord(d,engine,`${id}:取消`,{category:'quest_receipt',quest:id,parties:[entity,q.taker].filter(Boolean),minute:now(d),location:q.location,status:'取消',escrow:0,refund:amount,rewardPaid:0,sourceEvent:eventId});
+        }
         if(wreck&&!entityRow(d,wreck)){
             createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
             if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
@@ -943,7 +954,12 @@ function settleClaims(d,e,estate,claims,p){
     for(const g of [...groups.values()].sort((a,b)=>a.priority-b.priority||a.resource.localeCompare(b.resource))){
         const depositMode=g.resource==='coin_river'&&!!read(d,'state','records',`protocol_assets:${estate}`);
         const accounts=depositMode?legacyClaimAccounts(d,e,estate,g.resource):Object.entries(read(d,'ledger','accounts')??{}).filter(([k,n])=>{const a=parseAccount(k);return a.owner===estate&&a.resource===g.resource&&n>0;}).sort(([a],[b])=>a.localeCompare(b));
-        const total=g.rows.reduce((n,r)=>n+r.amount,0),available=Math.min(total,accounts.reduce((n,[,amount])=>n+amount,0));
+        const cash=accounts.reduce((n,[,amount])=>n+amount,0);
+        if(g.rows.reduce((n,r)=>n+r.amount,0)>cash)for(const r of g.rows){
+            const covered=r.o.legacyRecord?e.protocolLiquidatePledge?.(d,{...r.o,remaining:r.amount})??0:0;
+            if(covered){r.amount-=covered;r.o={...r.o,paid:(r.o.paid??0)+covered,remaining:r.amount};}
+        }
+        const total=g.rows.reduce((n,r)=>n+r.amount,0),available=Math.min(total,cash);
         let allocated=0;
         const payments=g.rows.map(r=>{const numerator=BigInt(available)*BigInt(r.amount),denominator=BigInt(total||1),paid=Number(numerator/denominator);allocated+=paid;return {...r,paid,remainder:numerator%denominator};});
         payments.sort((a,b)=>a.remainder===b.remainder?a.o.id.localeCompare(b.o.id):a.remainder>b.remainder?-1:1);
@@ -958,7 +974,7 @@ function settleClaims(d,e,estate,claims,p){
             const result={...r.o,status:!unpaid?'settled':p.bankrupt?p.discharge?'cancelled':'pending':'bad_debt',paid:(r.o.paid??0)+r.paid,badDebt:p.bankrupt?0:unpaid,remaining:p.bankrupt&&!p.discharge?unpaid:0,resolvedAt:now(d)};
             if(p.bankrupt&&unpaid&&!p.discharge){for(const k of ['debtor','promisor'])if(result[k]===estate)result[k]=p.bankrupt;delete result.resolvedAt;result.goneRoute='returned';}
             d.set(['state','obligations',r.o.id],result);
-            if(!unpaid&&r.o.legacyRecord)e.protocolDebtSettled?.(d,{...r.o,debtor:estate},p.eventId);
+            if(r.o.legacyRecord&&terminal(result))e.protocolDebtSettled?.(d,{...result,debtor:estate,unpaid},p.eventId);
             emit(d,e,{id:`${p.eventId}:settle:${r.o.id}`,verb:'protocol_stage',entity:estate,phase:'settlement',cause:p.eventId,obligation:r.o.id,paid:r.paid,badDebt:r.amount-r.paid});
         }
     }

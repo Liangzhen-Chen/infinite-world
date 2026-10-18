@@ -157,7 +157,8 @@ function sign(d,e,offer,app,at,source){
 }
 function conflict(d,e,row,start){
     const s=d.get('state'),n=s.npcs[row.worker];
-    if(!able(s,row.worker)||personConstraint(e,s,row.worker,start)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||personOffices(e,s,row.worker).length||s.player.companions?.includes(row.worker))return '工人受现有义务或健康限制';
+    const otherOffice=personOffices(e,s,row.worker).some(o=>!(row.domainSteward&&o.value.category==='housing_steward'&&o.value.employment===row.id));
+    if(!able(s,row.worker)||personConstraint(e,s,row.worker,start)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||otherOffice||s.player.companions?.includes(row.worker))return '工人受现有义务或健康限制';
     if(standing(e,s,row.worker,row.owner)<=-40)return '工人拒绝敌对雇主';
     if(row.domainSteward&&!currentDomains(e,s,row.owner).some(id=>containsDomain(e,s,id,row.settlement)))return '领地授权已失效';
     if(!row.domainSteward&&!ownerCanHire(e,s,row.owner))return '雇主不能履约';
@@ -183,7 +184,7 @@ function settleShift(d,e,row,at){
     const start=at-540,s=d.get('state');
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(start).day)){writeJob(d,e,{...row,nextWork:at+DAY});return null;}
     let production=null,minutes=row.attendance?.[String(Math.floor(start/DAY))]??0,quantity=0;
-    if(!minutes){writeJob(d,e,{...row,nextWork:at+DAY,status:'罢工',reason:'没有实际到岗工时'});return null;}
+    if(!minutes){writeJob(d,e,{...row,nextWork:at+DAY,reason:'没有实际到岗工时'});return null;}
     let needed=row.targetQuantity-row.produced;
     if(row.demandSource?.startsWith('shop:')){
         const shelf=currentShops(e,s).find(shop=>shop.keeper===row.owner)?.restock.find(stock=>stock.item===row.item);

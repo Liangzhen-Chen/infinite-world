@@ -176,7 +176,13 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 export class WorldEngine {
     constructor(world) {
         this.protocolScheduleAt=scheduleAt;
-        this.protocolDebtSettled=(d,row,eventId)=>{if(row.pledgeRecord)releasePledge(d,this,row.pledgeRecord,row.debtor);if(row.defaulted?.case)settleCreditCase(d,this,row.defaulted.case,eventId);};
+        this.protocolLiquidatePledge=(d,row)=>{
+            if(!row.pledgeRecord)return 0;
+            const bank=this.rules.economy?.credit?.banks?.find(b=>b.id===row.creditor);
+            const asset=releasePledge(d,this,row.pledgeRecord,row.creditor,bank);
+            return Math.min(row.remaining??row.amount,asset?.value??0);
+        };
+        this.protocolDebtSettled=(d,row,eventId)=>{const unpaid=row.unpaid??row.badDebt??0;if(!unpaid&&row.pledgeRecord)releasePledge(d,this,row.pledgeRecord,row.debtor);if(row.defaulted?.case)settleCreditCase(d,this,row.defaulted.case,eventId,{badDebt:unpaid});};
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);

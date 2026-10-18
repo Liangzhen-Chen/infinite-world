@@ -83,7 +83,7 @@ export function advanceFacilityFire(d,engine,{after}){
    const view=facilityView(engine,d.get('state'),id);
    damageFacility(d,engine,id,view.material==='stone'?4:25,{cause:'火灾',minute:at,sourceEvent:`fire:${id}:${at}`,fireOrigin:row.fireOrigin});
    row={...d.get('state','buildings',id),fireTick:at,fireSpread:true};
-   if(row.condition===0)d.set(['state','buildings',id],row);else holdingSet(d,null,['state','buildings',id],row,'facilities');
+   holdingSet(d,null,['state','buildings',id],row,'facilities');
  }
 }
 function downwindReach(a,b,vector,reach){
@@ -121,7 +121,7 @@ export function advanceFacilities(d,engine,{before,after}){
    const condition=Math.max(0,view.condition-loss);
    if(condition===0)damageFacility(d,engine,base.id,loss,{cause:'损耗',minute:at,sourceEvent:`wear:${base.id}:${day}`});
    const worn={...d.get('state','buildings',base.id),...row,condition,wearUnits:wear%10,lastWearDay:day};
-   if(condition===0)d.set(['state','buildings',base.id],worn);else holdingSet(d,null,['state','buildings',base.id],worn,'facilities');
+   holdingSet(d,null,['state','buildings',base.id],worn,'facilities');
    const next=facilityView(engine,lookState(d),base.id);
    if(view.status!==next.status)event(d,engine,`wear:${base.id}:${day}`,'harm',base.id,`${base.name}年久失修，用途${next.status}`,{minute:at,cause:'损耗'});
   }
@@ -138,7 +138,14 @@ export function completeFacilityProject(d,engine,p,minute=d.get('state','minute'
  if(target){
   const row=d.get('state','buildings',target)??{},view=facilityView(engine,d.get('state'),target);
   if(!view)throw Error('施工建筑不存在');
-  if(isGone(engine,d,target))throw Error('建筑已毁灭，须重建为新实体，不能修缮复用失效持有');
+  if(isGone(engine,d,target)){
+   if(p.projectWork!=='repair'||!p.public||p.remainingDays>0||p.remainingWork>0)throw Error('建筑已毁灭，须以实际完工工程重建');
+   const id=`bld_rebuilt_${p.id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,base=facilityDefinition(engine,d.get('state'),target);
+   const owner=p.public&&!p.public.payer||p.civicApproval?p.settlement:p.creator??'player';
+   holdingSet(d,null,['state','created',id],{...base,id,owner,rebuiltFrom:target,builtProject:p.id},'facilities');
+   holdingSet(d,null,['state','buildings',id],{owner,condition:100,burning:false,wearUnits:0,builtAt:minute,project:p.id,...(p.route?{route:p.route}:{})},'facilities');
+   event(d,engine,`${p.id}:complete`,'help',id,`${base.name}重建完成，用途恢复`,{minute,actor:p.creator,sourceEvent:p.id});return id;
+  }
   holdingSet(d,null,['state','buildings',target],p.projectWork==='repair'?{...row,condition:100,burning:false,wearUnits:0,lastRepair:minute}:
    {...row,condition:view.condition,expansions:(row.expansions??0)+1},'facilities');
   event(d,engine,`${p.id}:complete`,'help',target,`${facilityDefinition(engine,d.get('state'),target).name}${p.projectWork==='repair'?'修缮完成，用途恢复':'扩建完成，服务容量增加'}`,{minute,actor:p.creator,sourceEvent:p.id});return target;

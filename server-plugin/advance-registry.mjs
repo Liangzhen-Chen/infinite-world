@@ -1,6 +1,6 @@
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
-import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
+import {advanceEducation,nextEducationMinute,prepareEducation,educationCourses} from './education.mjs';
 import {prepareMedicine,advanceMedicine,nextMedicineMinute} from './medicine.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
@@ -14,7 +14,7 @@ import {advanceAirEffects}from'./magic-air.mjs';
 import {advanceWaterEarth}from'./magic-water-earth.mjs';
 import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
-import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
+import {advanceShadowContracts,advanceContracts,advanceRituals}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
@@ -63,9 +63,6 @@ import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
-import {scheduleAt}from'./npc-schedule.mjs';
-import {educationCourses}from'./education-state.mjs';
-import {advanceRituals}from'./magic-ritual.mjs';
 import {advanceWanted}from'./bounty.mjs';
 import {auditLedger}from'./ledger.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
@@ -152,7 +149,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
         if(group&&group.layer!=='intelligent')continue;
-        if(engine.byId.get(id)?.schedule||npc.routine){const slot=scheduleAt(engine,id,now,state,constraints);due(slot?.until);}
+        if(engine.byId.get(id)?.schedule||npc.routine){const slot=engine.protocolScheduleAt(engine,id,now,state,constraints);due(slot?.until);}
     }
     const ticks=heap.ticksBetween(now,end);
     return ticks.length?ticks[0]:null;
@@ -219,7 +216,11 @@ function runAdvanceSystems(engine,d,ctx){
 const systems=[
  {id:'transition_protocol',order:0,nextMinute:nextProtocolMinute,advance:(e,d,c)=>{for(const item of protocolDueItems(e,d,c))item.execute();}},
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
- {id:'medicine_booking',order:60,advance:(e,d,ctx)=>prepareMedicine(d,e,ctx)},
+ {id:'medicine_booking',order:60,nextMinute:(e,d,now)=>{
+    const state=d.get('state');
+    if(!Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'))return Infinity;
+    const decision=Math.floor(now/1440)*1440+481;return decision>now?decision:decision+1440;
+ },advance:(e,d,ctx)=>prepareMedicine(d,e,ctx.after%1440===481?{...ctx,before:ctx.after-1}:ctx)},
  {id:'medicine',order:1190,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextMedicineMinute(e,d,now),advance:(e,d,ctx)=>advanceMedicine(d,e,ctx)},
  {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
@@ -360,7 +361,10 @@ const dueCollectors={
         ...recordItems(d,r=>['contract','debt'].includes(r.category),id=>advanceContracts(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id)],
     credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>{
         const row=d.get('state','records',id);
-        if(row?.kind==='workshop'&&row.nextWork<=c.after)advanceNpcObligations(d,e,c.before,c.after,c.id,{beforeState:c.beforeState});
+        if(row?.kind==='workshop'&&row.nextWork<=c.after&&!c.workshopPresenceDone){
+            c.workshopPresenceDone=true;
+            advanceNpcObligations(d,e,c.before,c.after,c.id,{beforeState:c.beforeState});
+        }
         advanceCredit(d,e,c.after,[id]);
     },(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
     law:(e,d,c)=>[

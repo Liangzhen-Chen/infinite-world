@@ -42,7 +42,9 @@ export function within(engine,state,id,location){
 // binds its physical condition/capacity to that edge, including all planners.
 export function facilityRouteStates(engine,state){
  const out=new Map();if(!state)return out;
+ const replaced=new Set(Object.values(state.created??{}).filter(b=>b.rebuiltFrom&&state.buildings?.[b.id]).map(b=>b.rebuiltFrom));
  for(const [id,row] of Object.entries(state.buildings??{})){
+  if(replaced.has(id))continue;
   const route=row.route??facilityDefinition(engine,state,id)?.route;if(!route)continue;
   const v=facilityView(engine,state,id);if(!v)continue;
   const previous=out.get(route);

@@ -45,6 +45,7 @@ const SURVEY={
     'settlement-trade.mjs':'read','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
     'credit.mjs':'公式 = 基价 × 抵押数量，数量来自借据与参数，不读库存',
+    'transition.mjs':'遗产估值 = 基价 × 已转移账户或持有数量；清偿与分配数量来自账本，不使用估值决定可支付库存',
     'finance-bank.mjs':'当铺估价 = 基价 × 参数数量；存款利率读区域报价缓存与灾害系数，都不读库存或现款',
     'bounty.mjs':'贿赂价码 = 涉案金额 × 廉洁度 × 立场，不读存量',
     'law.mjs':'偷窃涉案值取物品基价或参数金额，不读存量',

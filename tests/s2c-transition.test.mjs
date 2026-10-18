@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyPatches,PatchCursor} from '../server-plugin/storage.mjs';
 import {emptyHoldings,openHolding,declareHoldingWriter,aliveHoldings} from '../server-plugin/holdings.mjs';
 import {emptyLedger} from '../server-plugin/ledger.mjs';
 import {registerObligationKind,snapshotObligationTerms,obligationGoneRoute} from '../server-plugin/obligation-kinds.mjs';
@@ -17,6 +17,19 @@ function fresh(){const document=engine.createCharacter(seed,{},'s2c');document.h
  get(...p){return structuredClone(p.reduce((v,k)=>v?.[k],this.document));},peek(...p){return p.reduce((v,k)=>v?.[k],this.document);},
  set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);this.patches.push({op:'set',path,value});},
  remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);this.patches.push({op:'delete',path});},say(){}};}
+
+test('cursor-backed protocol failure restores the immutable checkpoint, patches and messages',()=>{
+ const cursor=new PatchCursor(fresh().document),d={cursor,engine,patches:[],messages:[],
+  get document(){return cursor.expose(cursor.root);},set document(value){cursor.reset(value);},
+  get(...path){return cursor.expose(path.reduce((v,k)=>v?.[k],cursor.root));},peek(...path){return path.reduce((v,k)=>v?.[k],cursor.root);},
+  set(path,value){const patch={op:'set',path,value};cursor.apply(patch);this.patches.push(patch);},
+  remove(path){const patch={op:'delete',path};cursor.apply(patch);this.patches.push(patch);},say(message){this.messages.push(message);}};
+ d.set(['state','npcs',person,'coins'],17);
+ const before=structuredClone(d.document),checkpoint=d.document,patchCount=d.patches.length;
+ assert.throws(()=>transition(d,engine,{entity:person,basis:'death',origin:'death_rule',legacy(){d.set(['state','npcs',person,'coins'],999);d.say('not committed');throw Error('reject after handover');}}),/reject after handover/);
+ assert.deepEqual(d.document,before);assert.deepEqual(checkpoint,before);assert.equal(d.patches.length,patchCount);assert.deepEqual(d.messages,[]);
+ d.set(['state','npcs',person,'coins'],19);assert.equal(checkpoint.state.npcs[person].coins,17);assert.equal(d.get('state','npcs',person,'coins'),19);
+});
 
 test('a declared package kind uses the protocol without installing handover code',()=>{
  registerObligationKind({id:'s2c-service',onDebtorGone:'void',onCreditorGone:'estate'});

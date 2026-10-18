@@ -22,7 +22,7 @@ function holdingSet(d,engine,p,value,writer){
  const old=d.get(...p);
  if((engine||d.engine)&&p[0]==='state'&&p[1]==='records'&&['legal_custody','legal_detention'].includes(old?.category)&&old.status==='生效'&&value.status!=='生效'){
   const reason=value.endReason??(value.expires<=value.ended?'expired':'released');
-  return changeLegacyHoldings(d,engine??d.engine,{source:`custody:${p[2]}`,kinds:['guest_of'],reason:reason==='death'?'vacated':reason,eventId:`${p[2]}:${value.ended}:${reason}`},()=>writeHoldingProjection(d,engine,p,value,writer));
+  return changeLegacyHoldings(d,engine??d.engine,{source:`custody:${p[2]}`,kinds:['guest_of'],reason,eventId:`${p[2]}:${value.ended}:${reason}`},()=>writeHoldingProjection(d,engine,p,value,writer));
  }
  return writeHoldingProjection(d,engine,p,value,writer);
 }
@@ -110,7 +110,7 @@ export function registerFireDamage(d,engine,{building,damage,grain,origin,eventI
 }
 
 function endCustody(d,engine,id,next,reason,eventId){
- return changeLegacyHoldings(d,engine,{source:`custody:${id}`,kinds:['guest_of'],reason:reason==='death'?'vacated':reason,eventId},()=>writeHoldingProjection(d,null,path(id),{...next,endReason:reason},'law'));
+ return changeLegacyHoldings(d,engine,{source:`custody:${id}`,kinds:['guest_of'],reason,eventId},()=>writeHoldingProjection(d,null,path(id),{...next,endReason:reason},'law'));
 }
 
 // A credit default (credit.mjs) is filed by the creditor under the code where the
@@ -144,11 +144,12 @@ export function registerMagicViolation(d,engine,{location,settlement,offense,val
     return id;
 }
 // Paying the debt itself settles the creditor's claim; a fine already judged stays.
-export function settleCreditCase(d,engine,id,eventId){
+export function settleCreditCase(d,engine,id,eventId,{badDebt=0}={}){
     const row=d.get(...path(id));if(row?.category!=='legal_case'||!row.debt)return null;
     const now=d.get('state','minute');
     const next=['已报案','证据不足','待赔偿'].includes(row.status)?{...row,status:'已结案',compensationPaid:true,fineDischarged:row.status==='待赔偿'?row.fineDischarged:true,finePaid:row.finePaid??0,closed:now,settledBy:eventId}
         :{...row,compensationPaid:true,compensationSettledBy:eventId};
+    if(badDebt){next.compensationPaid=false;next.compensationDischarged=true;next.badDebt=badDebt;next.value=0;next.fineDischarged=row.fineDischarged??false;if(row.judgment)next.judgment={...row.judgment,compensation:0,dischargedCompensation:badDebt};}
     holdingSet(d,null,path(id),next,'law');return next;
 }
 
@@ -244,8 +245,8 @@ export function advanceLaw(d,after,engine,recordIds){
         if(engine)entityTransition(d,engine,{id:`${id}:release`,verb:'release',actor:lock.location,target:subject,minute:lock.expires,location:lock.location,visibility:row?.private?'private':row?.visibility??lock.visibility??'public',summary:`${personName(engine,d.get('state'),subject).value??subject}羁押或服役期满释放`});
         if(shops)businessTransitions(d,engine,shops,`${id}:release`,lock.expires);
         if(row?.category==='legal_case'&&lock.reason!=='待审'){
-            holdingSet(d,null,path(lock.case),{...row,status:row.compensationPaid?'已结案':'待赔偿',sentenceCompleted:lock.expires,finePaid:0,fineDischarged:true},'law');
-            if(engine&&row.compensationPaid)recordLegalNotification(d,engine,d.get(...path(lock.case)),'fulfilled',`${row.id}:sentence:${lock.expires}`,localObservers(d));
+            holdingSet(d,null,path(lock.case),{...row,status:row.compensationPaid||row.compensationDischarged?'已结案':'待赔偿',sentenceCompleted:lock.expires,finePaid:0,fineDischarged:true},'law');
+            if(engine&&(row.compensationPaid||row.compensationDischarged))recordLegalNotification(d,engine,d.get(...path(lock.case)),'fulfilled',`${row.id}:sentence:${lock.expires}`,localObservers(d));
         }
         d.say(lock.reason==='待审'?'羁押期限届满，未审先释放':'刑期或劳役已完成');
     }
@@ -581,7 +582,7 @@ export function lawAction(d,args,eventId){
     if(operation==='pay'||operation==='compensate'){
         authority(d,this,code,args.authority,'officer');if(d.get('state','location')!==code.court)throw new Error('判罚资金与返还物须在登记法院交存');
         if(operation==='pay'&&row.status!=='已裁定'||operation==='compensate'&&row.status!=='待赔偿')throw new Error('当前案件状态不能重复缴纳或改变判罚');
-        const payment=deposit(d,this,row,{fine:operation==='pay'?row.judgment.fine:0,compensate:!(row.debt&&row.compensationPaid)});
+        const payment=deposit(d,this,row,{fine:operation==='pay'?row.judgment.fine:0,compensate:!(row.debt&&(row.compensationPaid||row.compensationDischarged))});
         const owed=row.debt&&payment.compensation?d.get(...path(row.debt)):null;
         if(owed?.category==='debt'&&owed.status!=='已还清')holdingSet(d,null,path(row.debt),{...owed,paid:owed.amount,status:'已还清',paidAt:d.get('state','minute'),settledBy:row.id},'law');
         this.advance(d,10,eventId);holdingSet(d,null,path(row.id),{...row,status:'已结案',finePaid:operation==='pay'?row.judgment.fine:row.finePaid??0,fineDischarged:true,compensationPaid:true,closed:d.get('state','minute')},'law');
@@ -596,7 +597,7 @@ export function lawAction(d,args,eventId){
         const minutes=row.remainingSentence?.type===operation?row.remainingSentence.minutes:operation==='labor'?row.judgment.communityMinutes:row.judgment.prisonMinutes;
         holdingSet(d,null,path(key),{category:'legal_custody',case:row.id,reason:operation==='labor'?'劳役':'监禁',location:code.court,status:'生效',started:now,expires:now+minutes},'law');
         entityTransition(d,this,{id:`${eventId}:detain`,verb:'detain',actor:code.id,target:'player',location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(this,d.get('state'),'player').value}开始${operation==='labor'?'劳役':'监禁'}`});
-        holdingSet(d,null,path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0||Boolean(row.debt&&row.compensationPaid)},'law');
+        holdingSet(d,null,path(row.id),{...row,status:'服役中',sentence:{type:operation,minutes},compensationPaid:row.value===0||Boolean(row.debt&&(row.compensationPaid||row.compensationDischarged))},'law');
         return{case:row.id,sentenceMinutes:minutes,compensationDebt:row.value,note:'刑期由真实世界时间推进，罚款折役；赔偿债务仍保留，不自动造钱或已经完成服役'};
     }
     if(operation==='claim'){

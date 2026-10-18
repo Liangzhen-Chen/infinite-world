@@ -15,6 +15,7 @@ import {recordEmploymentAttendance} from '../server-plugin/employment-state.mjs'
 import {snapshotContractTerms} from '../server-plugin/contract-state.mjs';
 import {reconcile as reconcileBooks,conservation} from './helpers/ledger-audit.mjs';
 import {leaseClauses,leaseState} from '../server-plugin/contract-state.mjs';
+import {advanceQuestBoard} from '../server-plugin/quest-board.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'));
 const person='npc_hw_linsui',creditor='npc_hw_chenbai';
@@ -46,6 +47,15 @@ test('recorded loan is paid before heirs receive the residue; dual write reconci
  assert.equal(d.get('state','player','coins'),before+3300);
  assert.equal(d.get('holdings','protocol','procedures',transitionState(d,person).successor,'distribution','accounts').filter(a=>a.resource==='coin_river').reduce((n,a)=>n+a.amount,0),1700);
  assert.equal(transitionState(d,person).gone,true);reconcile(d);
+});
+
+test('private quest escrow joins the publisher estate before expiry and cannot refund the departed purse',()=>{
+ const d=fresh(s=>{s.npcs[person].coins=0;s.quests.personal={id:'personal',boardVersion:1,publisher:person,personal:true,status:'公开',escrow:30,reward:30,deadline:s.minute+100,location:s.location,content:'求药',objective:{type:'deliver',item:'item_herb',quantity:3}};});
+ recordEntityDeath(d,engine,person,d.get('state','minute'),'规则致命');
+ const estate=transitionState(d,person).successor;
+ assert.equal(d.get('state','quests','personal','status'),'取消');assert.equal(d.get('state','records',`protocol_assets:${estate}`,'coins'),30);
+ settle(d);advanceQuestBoard(d,engine,0,d.get('state','minute'));
+ assert.equal(d.get('state','npcs',person,'coins'),0);assert.equal(d.get('ledger','accounts',`${person}|coin_river|purse`)??0,0);assert.equal(d.get('state','quests','personal','escrow'),0);reconcile(d);
 });
 test('insolvent estate pays peers pro rata, closes the shortfall and never prosecutes the departed borrower',()=>{
  const d=fresh(s=>{s.npcs[person].coins=5;s.records.a=debt(4);s.records.b=debt(4,{creditor});});
@@ -221,4 +231,15 @@ test('a recorded loan settlement releases the original pledge and closes its exi
  const d=fresh(s=>{s.npcs[person].coins=100;s.records.loan=debt(80,{pledgeRecord:'pledge:probe',defaulted:{case:'case:probe'}});s.records['pledge:probe']={category:'pledge',owner:person,item:'item_bread',quantity:2,instances:[],value:20,status:'质押中'};s.records['case:probe']={id:'case:probe',category:'legal_case',debt:'loan',status:'已报案',location:s.location};});
  recordEntityDeath(d,engine,person,d.get('state','minute'),'规则致命');settle(d);
  assert.equal(d.get('state','records','loan','paid'),80);assert.equal(d.get('state','records','pledge:probe','status'),'已退还');assert.equal(d.get('state','records','case:probe','compensationPaid'),true);assert.equal(d.get('state','records','case:probe','status'),'已结案');reconcile(d);
+});
+
+test('an insolvent estate applies pledged stock once and discharges the unpaid claim without erasing fines',()=>{
+ const d=fresh(s=>{s.npcs[person].coins=5;s.records.loan=debt(80,{pledgeRecord:'pledge:short',defaulted:{case:'case:short'}});s.records['pledge:short']={category:'pledge',owner:person,item:'item_bread',quantity:2,instances:[],value:20,status:'质押中'};s.records['case:short']={id:'case:short',category:'legal_case',debt:'loan',status:'已判决',location:s.location,judgment:{fine:7,compensation:80},finePaid:0};});
+ const coins=d.get('state','player','coins'),bread=engine.quantity(d,'player','item_bread');
+ recordEntityDeath(d,engine,person,d.get('state','minute'),'规则致命');settle(d);
+ assert.equal(d.get('state','records','loan','paid'),25);assert.equal(d.get('state','records','loan','status'),'坏账');
+ assert.equal(d.get('state','records','pledge:short','status'),'已没收');assert.equal(engine.quantity(d,'player','item_bread'),bread+2);
+ assert.equal(d.get('state','player','coins'),coins+5);
+ const claim=d.get('state','records','case:short');assert.equal(claim.compensationDischarged,true);assert.equal(claim.badDebt,55);assert.equal(claim.judgment.fine,7);assert.equal(claim.finePaid,0);assert.equal(claim.fineDischarged,false);
+ const snapshot=structuredClone(d.document);settle(d);assert.deepEqual(d.get('ledger'),snapshot.ledger);reconcile(d);
 });

@@ -272,7 +272,7 @@ export function advanceFaith(d,e,{beforeState,id,before=beforeState?.minute??d.g
    next.remainingWork--;
    if(!next.remainingWork){facilityRuntime().completeFacilityProject(d,e,p,(day+1)*DAY);next.status='已完成';next.completed=(day+1)*DAY;}
   }
-  d.set(path(key),next);
+  holdingSet(d,e,path(key),next,'faith');
  }
  for(const [key,ill]of Object.entries(d.get('state','family','illnesses')??{})){
   if(beforeState?.family?.illnesses?.[key]||ill.status!=='患病中'||!d.get('state','npcs',ill.patient))continue;

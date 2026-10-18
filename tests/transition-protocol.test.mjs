@@ -403,13 +403,16 @@ test('real adjudication emits an authenticated judgment hook; rumor and forged j
 test('personal insolvency judgment preserves civil capacity, exemption and returns or discharges unpaid debt',()=>{
     for(const discharge of [false,true]){
         const d=fresh();d.set(['ledger','accounts',accountKey(person,'coin_river','purse')],15);
-        d.set(['state','obligations','bankrupt-loan'],{id:'bankrupt-loan',kind:'loan',debtor:person,creditor:heir,amount:20,status:'pending'});
+        d.set(['state','obligations','bankrupt-loan'],{id:'bankrupt-loan',kind:'loan',debtor:person,creditor:heir,amount:20,status:'pending',legacyRecord:'bankrupt-loan'});
+        d.set(['state','records','bankrupt-loan'],{category:'debt',kind:'loan',debtor:person,creditor:heir,amount:20,paid:0,status:'待偿还',defaulted:{case:'legal_case:old-default'}});
+        d.set(['state','records','legal_case:old-default'],{category:'legal_case',id:'legal_case:old-default',debt:'bankrupt-loan',status:'已裁定',judgment:{fine:7,compensation:20},finePaid:0});
         const row={id:'legal_case:bankrupt',category:'legal_case',subject:person,offender:person,evidence:[],civilMatter:'insolvency',procedure:{exemptAmount:5,discharge}};
         d.set(['state','records',row.id],row);adjudicateLegalCase(d,engine,row,{evidenceRequired:0,court:place},heir,'bankrupt');
         const id=Object.keys(d.get('holdings','protocol','procedures'))[0];advanceProcedure(d,engine,id);
         assert.equal(d.get('ledger','accounts',accountKey(person,'coin_river','purse')),5);assert.equal(transitionState(d,person),null);
         const o=d.get('state','obligations','bankrupt-loan');assert.equal(o.status,discharge?'cancelled':'pending');assert.equal(o.remaining,discharge?0:10);
         if(!discharge)assert.equal(o.debtor,person);
+        else{const claim=d.get('state','records','legal_case:old-default');assert.equal(claim.compensationDischarged,true);assert.equal(claim.compensationPaid,false);assert.equal(claim.judgment.compensation,0);assert.equal(claim.judgment.fine,7);assert.equal(claim.fineDischarged,false);}
     }
 });
 

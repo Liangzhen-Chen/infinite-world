@@ -15,12 +15,22 @@ import {endWar,startWar} from '../server-plugin/war-diplomacy.mjs';
 import {nationAt,territoryController} from '../server-plugin/noble-state.mjs';
 import {adjustStanding} from '../server-plugin/standing.mjs';
 import {legalCodeAt} from '../server-plugin/law-codes.mjs';
-import {digest} from '../server-plugin/storage.mjs';
+import {digest,applyPatches} from '../server-plugin/storage.mjs';
 import {groupAccountView} from '../server-plugin/group-account.mjs';
 import {advanceOfficeSalaries} from '../server-plugin/office-salary.mjs';
 import {holdingsDiscrepancies} from './helpers/holdings-audit.mjs';
 
 import {nationalScenario} from './probes/run-001/e14.mjs';
+test('公开授爵和除爵入口实际执行，并保留权限、成年、到场及同意限制',async()=>{
+ const {e,d,rebel}=nationalScenario();
+ const strip=await e.reduce(d.document,{tool:'world_settlement',args:{operation:'title_strip',member:rebel,reason:'依法重新册封'},eventId:'public-strip'});
+ d.document=applyPatches(d.document,strip.patches);assert.equal(d.get('state','records',`title:${rebel}`,'status'),'已除爵');
+ const args={operation:'title_grant',name:'伯爵',member:rebel,settlement:county,consent:true};
+ await assert.rejects(e.reduce(d.document,{tool:'world_settlement',args:{...args,consent:false},eventId:'public-denied'}),/同意/);
+ const grant=await e.reduce(d.document,{tool:'world_settlement',args,eventId:'public-grant'});
+ d.document=applyPatches(d.document,grant.patches);assert.equal(d.get('state','records',`title:${rebel}`,'status'),'受封');
+ assert.equal(aliveHoldings(d,{kind:'holds_office',holder:rebel,subject:`office_title:title:${rebel}`}).length,1);
+});
 test('E02-1 死亡发布空缺后按原任免来源补选，离任者停薪；无人过半不假造代理',()=>{
  const {e,d}=setup(),g=e.world.settlementProfiles.find(p=>p.id===village).details.governance,old=g.head,candidate=g.coordinators.find(id=>id!==old);
  const all=eligible(e,village,d.get('state'));

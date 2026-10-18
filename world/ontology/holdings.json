@@ -63,6 +63,7 @@
   "subjectGone"
  ],
  "reasons": [
+  {"id": "death"},
   {
    "id": "opened"
   },

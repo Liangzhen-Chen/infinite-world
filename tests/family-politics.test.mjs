@@ -1,5 +1,6 @@
 import {advanceProcedure,transitionState} from '../server-plugin/transition.mjs';
 import test from 'node:test';
+import {aliveHoldings} from '../server-plugin/holdings.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -99,6 +100,7 @@ test('NPC 继承的封地爵位向本人支付实际税收分成，玩家账不�
  f.d.set(['state','records','title:income'],{category:'title',id:'title:income',holder:A,title:'勋爵',rank:'三等',fief:'loc_hw',status:'受封',nextIncome:30*DAY,incomeMark:0,levy:{due:YEAR,men:1,days:10,served:0}});
  f.d.set(['state','records','village-fiscal:loc_hw'],{taxReceiptsCopper:100});f.d.set(['state','settlements','loc_hw','treasury'],1000);
  const player=f.d.get('state','player','coins');die(f);advanceTitles(f.d,f.e,{after:30*DAY});
+ assert.equal(aliveHoldings(f.d,{kind:'fief',holder:A}).length,0);assert.equal(aliveHoldings(f.d,{kind:'fief',holder:D,subject:'loc_hw'}).length,1);
  const income=f.d.get('state','records','title_income:title:income:1');assert.ok(income.income>0);assert.equal(income.holder,D);assert.equal(f.d.get('state','npcs',D,'coins'),income.income-income.tribute);assert.equal(f.d.get('state','player','coins'),player);
 });
 test('当地法院能指定待定监护人，合法开支付真实在场收款者并记账，重复请求不重复付款',()=>{

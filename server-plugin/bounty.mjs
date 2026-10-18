@@ -36,7 +36,7 @@ function holdingSet(d,engine,p,value,writer){
  if((engine||d.engine)&&p[0]==='state'&&p[1]==='records'&&old?.category==='legal_wanted'&&old.status==='生效'&&value.status!=='生效')return changeLegacyHoldings(d,engine??d.engine,{source:`wanted:${p[2]}`,kinds:['wanted'],reason:'released',eventId:`${p[2]}:closed`},()=>writeHoldingProjection(d,engine,p,value,writer));
  if((engine||d.engine)&&p[0]==='state'&&p[1]==='records'&&['legal_custody','legal_detention'].includes(old?.category)&&old.status==='生效'&&value.status!=='生效'){
   const reason=value.endReason??(value.expires<=value.ended?'expired':'released');
-  return changeLegacyHoldings(d,engine??d.engine,{source:`custody:${p[2]}`,kinds:['guest_of'],reason:reason==='death'?'vacated':reason,eventId:`${p[2]}:${value.ended}:${reason}`},()=>writeHoldingProjection(d,engine,p,value,writer));
+  return changeLegacyHoldings(d,engine??d.engine,{source:`custody:${p[2]}`,kinds:['guest_of'],reason,eventId:`${p[2]}:${value.ended}:${reason}`},()=>writeHoldingProjection(d,engine,p,value,writer));
  }
  return writeHoldingProjection(d,engine,p,value,writer);
 }
@@ -196,7 +196,7 @@ export function advanceWanted(d,engine,after){
     const rules=lawRules(engine).wanted;if(!rules)return;
     for(const [key,lock] of Object.entries(d.get('state','records')??{})){
         if(lock?.category!=='legal_custody'||lock.reason!=='到案'||lock.status!=='生效')continue;
-        if(!isEffective(engine,d,'player')){changeLegacyHoldings(d,engine,{source:`custody:${key}`,kinds:['guest_of'],reason:'vacated',eventId:`${key}:gone`},()=>holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after,endReason:'death'},'bounty'));continue;}
+        if(!isEffective(engine,d,'player')){changeLegacyHoldings(d,engine,{source:`custody:${key}`,kinds:['guest_of'],reason:'death',eventId:`${key}:gone`},()=>holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after,endReason:'death'},'bounty'));continue;}
         if(lock.expires<=after)arrivePlayer(d,engine,key,lock,lock.expires);
     }
     issue(d,engine,rules,after);

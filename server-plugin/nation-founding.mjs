@@ -91,7 +91,7 @@ export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('
 export function changeTerritoryControl(d,e,domain,ruler,{at=d.get('state','minute'),src,war=null}={}){
  ensureHoldings(d,e);
  const old=d.get(...rec(`territory:${domain}`));if(old?.ruler===ruler&&old.sourceEvent===src)return old;
- if(!holdingsActive(d)){const row={category:'territory',county:domain,ruler,previous:old?.ruler??null,minute:at,sourceEvent:src,...(war?{war}:{})};d.set(rec(`territory:${domain}`),row);return row;}
+ if(!holdingsActive(d)){const row={category:'territory',county:domain,ruler,previous:old?.ruler??null,minute:at,sourceEvent:src,...(war?{war}:{})};holdingSet(d,e,rec(`territory:${domain}`),row,'nation-founding');return row;}
  const collective=templatesOf(d,ruler,e).includes('collective'),current=aliveHoldings(d,{subject:domain}).filter(h=>h.kind==='controls');
  for(const h of current)if(h.holder!==ruler)changeHolding(d,e,{op:'close',id:h.id,eventId:`${src}:${h.id}`,reason:'transferred'});
  if(!collective&&!aliveHoldings(d,{subject:domain,holder:ruler,kind:'controls'}).length)changeHolding(d,e,{op:'open',kind:'controls',holder:ruler,subject:domain,source:`sovereignty:${domain}`,eventId:`${src}:control:${domain}`});
@@ -103,7 +103,7 @@ export function changeTerritoryControl(d,e,domain,ruler,{at=d.get('state','minut
  const row={category:'territory',county:domain,ruler,sovereign,previous:old?.ruler??null,minute:at,sourceEvent:src,...(war?{war}:{})};
  // Both canonical edges have already gone through the protocol. K1's shared
  // sovereignty adapter must project sovereign separately from actual ruler.
- d.set(rec(`territory:${domain}`),row);return row;
+ holdingSet(d,e,rec(`territory:${domain}`),row,'nation-founding');return row;
 }
 // An explicit act, not a hostile attitude, ends allegiance. A garrison must
 // actually obey the defector before the territory compatibility view changes.
@@ -128,7 +128,7 @@ export function defectFromNation(d,e,{nation,member},src){
  }
  const remaining=structuredClone(org);for(const id of [member,...followers]){delete remaining.members[id];remaining.removed={...remaining.removed,[id]:{minute:s.minute,reason:'叛离',sourceEvent:src}};}
  holdingSet(d,e,rec(`organization:${nation}`),remaining,'nation-founding');
- const retinueId=`retinue_${member}`,retinue={category:'organization',id:retinueId,source:'created',kind:'随从',name:'叛离随从',seat:s.npcs?.[member]?.location??n.capital,leader:null,founder:member,foundedAt:s.minute,members:{},removed:{},treasury:0,ledger:[],charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['成员按本人立场决定归属']}};
+ const retinueId=`retinue_${member}`,retinue={category:'organization',id:retinueId,source:'created',kind:'随从',name:'叛离随从',seat:s.npcs?.[member]?.location??n.capital,founder:member,foundedAt:s.minute,members:{},removed:{},treasury:0,ledger:[],charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['成员按本人立场决定归属']}};
  holdingSet(d,e,rec(`organization:${retinueId}`),retinue,'nation-founding');
  for(const id of [member,...followers]){
   if(holdingsActive(d))changeHolding(d,e,{op:'open',kind:'member_of',holder:id,subject:retinueId,terms:{rank:{position:id===member?'首领':'成员',joinedAt:s.minute,arrears:0}},source:`org:${retinueId}`,eventId:`${src}:follow:${id}`});
@@ -151,7 +151,7 @@ export function defectFromNation(d,e,{nation,member},src){
  for(const contract of rows(s).filter(r=>r.category==='contract'&&r.status==='有效'&&followers.includes(r.worker)&&[nation,n.ruler].includes(r.owner)))
   changeLegacyHoldings(d,e,{holder:contract.worker,source:`contract:${contract.id}`,kinds:['employed_by'],reason:'defected',eventId:`${src}:${contract.id}`},()=>holdingSet(d,e,rec(contract.id),{...contract,status:'已终止',endedAt:s.minute,reason:'自愿跟随叛离者'},'nation-founding'));
  const row={category:'nation_defection',id:key,nation,member,followers,retinue:retinueId,decisions,domains,minute:s.minute,sourceEvent:src};holdingSet(d,e,rec(key),row,'nation-founding');
- d.set(rec(`nation:${n.id}`),{...n,status:'内乱',splits:[...n.splits??[],{ruler:member,domains,minute:s.minute,sourceEvent:src}]});
+ holdingSet(d,e,rec(`nation:${n.id}`),{...n,status:'内乱',splits:[...n.splits??[],{ruler:member,domains,minute:s.minute,sourceEvent:src}]},'nation-founding');
  return row;
 }
 function collapse(d,e,n,status,winner,at,src){

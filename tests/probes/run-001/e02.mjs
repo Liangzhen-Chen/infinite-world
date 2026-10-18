@@ -14,13 +14,20 @@ const scenario=once(async()=>{
  const {openLedger}=await imp('server-plugin/ledger.mjs');
  const {openHoldings}=await imp('server-plugin/holdings.mjs');
  const {transition,advanceProcedure}=await imp('server-plugin/transition.mjs');
+ const {eligible}=await imp('server-plugin/governance.mjs');
+ const {npcHousehold}=await imp('server-plugin/npc-state.mjs');
  const S=setup({schedules:true});
  let doc=await S.wait(S.doc,Math.max(0.1,(29*DAY+600-S.doc.state.minute)/DAY),'e02a');
  doc.state.records.debt_lend_probe={category:'debt',kind:'player_loan',debtor:head,representative:head,creditor:'player',principal:3000,interest:300,monthlyInterest:0.02,amount:3300,paid:0,status:'待偿还',
   installments:10,nextInstallment:1,createdAt:doc.state.minute,deadline:doc.state.minute+20*DAY,nextPayment:doc.state.minute+2*DAY,location:sid,source:'probe',signedTerms:{}};
  doc.state.npcs[head].coins=5000;
+ const government=S.w.settlementProfiles.find(p=>p.id===sid).details.governance;
+ const candidate=government.coordinators.find(id=>id!==head);
+ doc.state.records[`civic_citizen:${sid}:${candidate}`]={category:'civic_citizen',subject:candidate,settlement:sid,status:'已登记'};
+ doc.state.records['civic_source:e02-candidate']={category:'civic_contribution',subject:candidate,settlement:sid,points:120,sourceEvent:'e02-candidate'};
+ for(const voter of eligible(S.engine,sid,doc.state))if(voter!==head)doc.state.records[`standing:${voter}:${candidate}`]={category:'standing',holder:voter,target:candidate,value:100,history:[]};
  const shopLocation=S.w.locations.find(p=>p.id.startsWith('bld_')&&p.parent===sid)?.id??doc.state.npcs[head].location;
- const workers=Object.keys(doc.state.npcs).filter(id=>id!==head&&!S.engine.byId.get(id)?.flags?.minor&&(S.engine.byId.get(id)?.age??0)>=18&&!personOffices(S.engine,doc.state,id).length&&!currentEmployment(doc.state,id)).slice(0,4);
+ const workers=Object.keys(doc.state.npcs).filter(id=>id!==head&&id!==candidate&&npcHousehold(S.engine,doc.state,id)?.settlement===sid&&!S.engine.byId.get(id)?.flags?.minor&&(S.engine.byId.get(id)?.age??0)>=18&&!personOffices(S.engine,doc.state,id).length&&!currentEmployment(doc.state,id)).slice(0,4);
  if(workers.length!==4)throw Error('E02 requires four real adult employees');
  doc.state.buildings[shopLocation]={...doc.state.buildings[shopLocation],owner:head,condition:100};
  doc.state.records.business_e02_distillery={id:'business_e02_distillery',category:'business',owner:head,location:shopLocation,status:'营业',createdAt:doc.state.minute};
@@ -45,7 +52,7 @@ const scenario=once(async()=>{
  const heirCoins=Object.fromEntries((death.estate?.heirs??[]).map(h=>[h,c.state.npcs[h]?.coins]));
  const govAfterDeath=settlementGovernment(S.engine,c.state,sid).head.value;
  c=await S.wait(c,35,'e02b');
- return {S,death,deathMinute,heirCoins,govAfterDeath,c,sealed,workers,shopLocation,gov35:settlementGovernment(S.engine,c.state,sid).head.value,
+ return {S,death,deathMinute,heirCoins,govAfterDeath,c,sealed,workers,shopLocation,oldPowers:personOffices(S.engine,c.state,head).length,gov35:settlementGovernment(S.engine,c.state,sid).head.value,
   salaries:recs(c,'office_salary').filter(([,r])=>r.holder===head),loan:c.state.records.debt_lend_probe,
   guardianship:c.state.records['guardianship:probe'],cases:recs(c,'legal_case').map(([k,r])=>({k,...r})),npc:c.state.npcs[head],schedule:scheduleAt(S.engine,head,c.state.minute,c.state)};
 });
@@ -54,7 +61,7 @@ export default [
  {id:'E02-1',event:'E02',no:1,text:'镇长职位空缺，由副职代理或大会补选，俸禄从死亡当日停发',async check(){
   const s=await scenario();
   const stopped=s.salaries.every(([,r])=>(r.minute??r.createdAt??0)<=s.deathMinute);
-  if(s.gov35&&s.gov35!==head&&stopped)return ok(`35 天后主官=${JSON.stringify(s.gov35)}，死后无俸禄=${stopped}`);
+  if(s.gov35&&s.gov35!==head&&stopped&&!s.oldPowers)return ok(`35 天后主官=${JSON.stringify(s.gov35)}，死后无俸禄=${stopped}，旧主官无公库权限`);
   return stopped?partial('死后俸禄停发，但主官空缺 35 天无人代理或补选'):wrong('主官空缺且死后仍发俸禄');}},
  {id:'E02-2',event:'E02',no:2,text:'酒坊归继承人；无继承人时官府封存，雇工工资照常累计、到期不发就停工',async check(){
   const s=await scenario();
