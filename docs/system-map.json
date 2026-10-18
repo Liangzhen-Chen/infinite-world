@@ -569,7 +569,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1398,
+   "lines": 1407,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -1036,7 +1036,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 437,
+   "lines": 444,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1071,8 +1071,7 @@
    "advance": [
     "local_actor_positions",
     "effect_expiry",
-    "dying",
-    "deliveries"
+    "dying"
    ],
    "subscribes": [],
    "effects": [],
@@ -1307,7 +1306,8 @@
     "npc_cognition",
     "npc_autonomy",
     "medicine",
-    "npc_life"
+    "npc_life",
+    "deliveries"
    ],
    "subscribes": [
     {
@@ -2998,6 +2998,7 @@
    "to": "sim_npc",
    "kind": "advance",
    "labels": [
+    "deliveries",
     "medicine",
     "medicine_booking",
     "npc_autonomy",
@@ -8473,9 +8474,9 @@
    "stepped": false,
    "nextMinute": false,
    "modules": [
-    "server-plugin/advance-registry.mjs"
+    "server-plugin/npc-obligations.mjs"
    ],
-   "inline": true,
+   "inline": false,
    "partitions": [
     "obligations"
    ]
@@ -16425,7 +16426,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 375
+   "lines": 382
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -17544,7 +17545,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 829
+   "lines": 838
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
