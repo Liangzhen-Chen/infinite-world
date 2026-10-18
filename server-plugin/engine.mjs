@@ -111,6 +111,7 @@ class Draft {
             this.scheduler.seq=document.state.scheduler?.seq??0;
             for(const row of Object.values(document.state.records??{}))if(row.category==='world_event'&&Number.isSafeInteger(row.seq))this.scheduler.seq=Math.max(this.scheduler.seq,row.seq);
             this.scheduler.lastSettled=document.state.scheduler?.lastSettled??document.state.minute;
+            this.schedulerBaseline={seq:this.scheduler.seq,lastSettled:this.scheduler.lastSettled};
         }
         this.contestPool = this.scheduler ? [] : null;
     }
@@ -329,7 +330,9 @@ export class WorldEngine {
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
         // S2b：调度器序号与结算钟随推进续写回存档，保证分段推进与一次推进的 seq 连续一致。
-        if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
+        if(d.scheduler&&(document.state.scheduler||d.scheduler.seq!==d.schedulerBaseline.seq||d.scheduler.lastSettled!==d.schedulerBaseline.lastSettled)){
+            d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);
+        }
         return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
