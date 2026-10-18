@@ -10,13 +10,28 @@ import {effectiveProficiency} from './professions.mjs';
 import {heldUnit,wearItem,produceItems} from './items.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {initialIn} from './wildlife-habitats.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('wildlife-society',{kinds:['tamed_by'],entities:['wreck'],locations:true});
+import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
+import {changeHolding,changeLegacyHoldings,transition} from './transition.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+import {defineHoldingSource} from './holding-sources.mjs';
+declareHoldingWriter('wildlife-society',{kinds:['tamed_by','member_of'],entities:['wreck'],locations:true});
+const societyEntity=(key,row)=>row?.entity??`society_${key.replaceAll(':','_')}`;
+// The domain owns both the producer and its old-document projection. Register
+// through the existing source API so genesis, reload and reconciliation agree.
+defineHoldingSource('spirit-society',{
+    recordCategories:['spirit_society'],unitOfRecord:(_state,key)=>key,
+    units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='spirit_society').map(([key])=>key),
+    extract(engine,state,key){
+        const row=state.records?.[key];if(!row||row.status==='已散')return null;
+        return {holdings:Object.keys(row.members??{}).filter(id=>state.creatures?.[id]?.society?.id===key&&isEffective(engine,state,id))
+            .map(holder=>({kind:'member_of',holder,subject:societyEntity(key,row)}))};
+    },
+});
 
 // T161 成精后的修习与结社。只作用于已立意的同一身体：修习、借形、结社都写在
 // creatures[id] 上，不改等级、体力、物种或生态来源，不生成新人口，也不凭空造物。
 const DAY=1440,clone=v=>structuredClone(v);
-const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
+const alive=(a,source,id)=>a&&isEffective(null,source,id)&&a.hp>0;
 const sapient=a=>Boolean(a?.mind?.awakened);
 const rulesOf=engine=>{const r=engine.rules.wildlifeAwakening;if(!r)throw Error('当前世界未启用开灵规则');return r;};
 const partner=a=>a?.companion?.with==='player';
@@ -31,12 +46,12 @@ function logEvent(d,id,row){
 function presentSpirit(d,engine,id,{label='它'}={}){
     const actor=d.get('state','creatures',id);
     if(!actor||!sapient(actor))throw Error(`${label}尚未立意，不能以精怪身份修习、交谈或结社`);
-    if(!alive(actor))throw Error(`${label}已经死亡`);
+    if(!alive(actor,d,id))throw Error(`${label}已经死亡或失去行动资格`);
     if(actor.location!==d.get('state','location'))throw Error(`${label}不在场`);
     if(d.get('state','player','status')!=='正常')throw Error('你此时无法行动');
     return actor;
 }
-const stillHere=(d,id)=>{const a=d.get('state','creatures',id);return alive(a)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
+const stillHere=(d,id)=>{const a=d.get('state','creatures',id);return alive(a,d,id)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
 function spend(d,engine,rows,eventId){
     for(const row of rows)if(engine.quantity(d,'player',row.item)<row.amount)throw Error(`缺少${engine.byId.get(row.item)?.name??row.item}${row.amount}份`);
     for(const row of rows)engine.itemDelta(d,'player',row.item,-row.amount,{flow:'sink:consume',purpose:'form',writer:'wildlife-society',eventId});
@@ -64,7 +79,7 @@ export function spiritProfile(engine,document,id){
         recent:events.slice(-5).map(e=>({kind:e.kind,party:e.party??null,minute:e.minute,event:e.event}))};
 }
 export function spiritScene(engine,document){
-    const s=document.state,rows=Object.entries(s.creatures??{}).filter(([,a])=>sapient(a)&&alive(a)&&a.location===s.location);
+    const s=document.state,rows=Object.entries(s.creatures??{}).filter(([id,a])=>sapient(a)&&alive(a,document,id)&&a.location===s.location);
     if(!rows.length)return null;
     return `【在场精怪】${rows.slice(0,3).map(([id,a])=>{const f=activeForm(a,s.minute);
         return `${nameOf(engine,id,a)}（${id}）立意${partner(a)?`，与你结缘${a.companion.following?'且同行':''}`:''}${f?`，借形为${f.name}`:''}${a.society?`，属${engine.byId.get(a.society.location)?.name??a.society.location}`:''}`;}).join('；')}。可用wildlife_talk交谈，其恩怨只认具体当事人。`;
@@ -192,8 +207,13 @@ export function spiritAction(d,args,eventId,target){
         if(!partner(actor))throw Error('它未与你结缘，去留不由你商量');
         const key=actor.society.id,row=clone(d.get('state','records',key));
         delete row.members[target];row.history=[...row.history,{minute,event:eventId,left:[target]}];
-        if(!Object.keys(row.members).length&&row.kind==='formed')row.status='已散';
-        d.set(['state','records',key],row);d.remove(['state','creatures',target,'society']);
+        const dissolved=!Object.keys(row.members).length&&row.kind==='formed';
+        if(dissolved)row.status='已散';
+        const entity=societyEntity(key,row);
+        changeLegacyHoldings(d,this,{holder:target,subject:entity,kinds:['member_of'],reason:'vacated',eventId},()=>{
+            d.set(['state','records',key],row);d.remove(['state','creatures',target,'society']);
+        });
+        if(dissolved)transition(d,this,{entity,basis:'dissolution',origin:'dissolution',eventId:`${eventId}:dissolution`});
         logEvent(d,target,{kind:'离群',party:'player',event:eventId,minute,society:key});
         return{target,left:key,remaining:Object.keys(row.members).length};
     }
@@ -235,7 +255,7 @@ export function spiritAction(d,args,eventId,target){
 
 // 攻击已立意者会留下具体的寻仇记忆；伤及结缘者则断缘。
 export function recordSpiritGrudge(d,target,party,eventId,damage){
-    const a=d.get('state','creatures',target);if(!sapient(a)||!alive(a)||!(damage>0))return;
+    const a=d.get('state','creatures',target);if(!sapient(a)||!alive(a,d,target)||!(damage>0))return;
     logEvent(d,target,{kind:'寻仇',party,event:eventId,minute:d.get('state','minute'),damage});
     if(a.companion?.with===party){d.remove(['state','creatures',target,'companion']);logEvent(d,target,{kind:'断缘',party,event:eventId,minute:d.get('state','minute')});}
 }
@@ -247,7 +267,7 @@ export function recordSpiritGrudges(d,engine,events){
 
 export function moveSpiritCompanions(d,origin,destination){
     for(const[id,a]of Object.entries(d.get('state','creatures')??{}))
-        if(sapient(a)&&alive(a)&&partner(a)&&a.companion.following&&a.location===origin)holdingSet(d,null,['state','creatures',id,'location'],destination,'wildlife-society');
+        if(sapient(a)&&alive(a,d,id)&&partner(a)&&a.companion.following&&a.location===origin)holdingSet(d,null,['state','creatures',id,'location'],destination,'wildlife-society');
 }
 
 // 结社检查：自愿成员、可居住地点、口粮来源。重复检查只认已有成员，不重复登记人口或物资。
@@ -258,14 +278,14 @@ function forage(d,engine,location){
         :speciesInHabitat(engine.rules,engine.world.monsters,habitat.id).reduce((n,s)=>n+initialIn(habitat,s),0);
     return{habitat:habitat.id,total};
 }
-const voluntary=a=>sapient(a)&&alive(a)&&!a.owner&&!a.society&&a.location&&!a.companion?.following&&(!partner(a)||a.mind.settle?.location===a.location);
+const voluntary=(a,d,id)=>sapient(a)&&alive(a,d,id)&&!a.owner&&!a.society&&a.location&&!a.companion?.following&&(!partner(a)||a.mind.settle?.location===a.location);
 export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
     const r=rulesOf(engine).society,result={formed:[],joined:[],wandering:[]},groups=new Map();
     for(const[id,a]of Object.entries(d.get('state','creatures')??{}).sort(([x],[y])=>x.localeCompare(y)))
-        if(voluntary(a)&&(!only||a.location===only))groups.set(a.location,[...groups.get(a.location)??[],id]);
+        if(voluntary(a,d,id)&&(!only||a.location===only))groups.set(a.location,[...groups.get(a.location)??[],id]);
     for(const[location,ids]of[...groups].sort(([x],[y])=>x.localeCompare(y))){
         const key=`spirit_society:${location}`,prior=d.get('state','records',key),home=r.homes.includes(location);
-        const members=Object.keys(prior?.members??{}).filter(id=>alive(d.get('state','creatures',id))),food=home?{kind:'home'}:forage(d,engine,location);
+        const members=Object.keys(prior?.members??{}).filter(id=>alive(d.get('state','creatures',id),d,id)),food=home?{kind:'home'}:forage(d,engine,location);
         let reason=null;
         if(!home&&!food)reason='此地不可居住：不是登记的栖地或精怪之乡';
         else if(!prior&&!home&&ids.length<r.minimumMembers)reason=`自愿成员不足${r.minimumMembers}`;
@@ -274,7 +294,13 @@ export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
         const row=prior&&prior.status!=='已散'?clone(prior):{category:'spirit_society',id:key,location,kind:home?'home':'formed',founded:minute,sourceEvent,members:{},history:[]};
         if(prior?.status==='已散')Object.assign(row,{history:prior.history,refounded:minute});
         row.food=home?{kind:'home'}:{kind:'habitat',habitat:food.habitat,checkedTotal:food.total,minute};
+        // Refounding uses a new collective; the old dissolved entity remains gone.
+        const baseEntity=`society_${key.replaceAll(':','_')}`;
+        row.entity=prior?.status==='已散'?`${baseEntity}_${minute}`:prior?.entity??baseEntity;
         for(const id of ids){
+            if(!isEffective(engine,d,id))continue;
+            if(!aliveHoldings(d,{kind:'member_of',holder:id,subject:row.entity}).length)
+                changeHolding(d,engine,{op:'open',kind:'member_of',holder:id,subject:row.entity,source:`spirit-society:${key}`,eventId:`${sourceEvent}:member:${id}`});
             row.members[id]={joined:minute,sourceEvent};
             const mind=clone(d.get('state','creatures',id,'mind'));delete mind.settle;holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-society');
             holdingSet(d,null,['state','creatures',id,'society'],{id:key,location,joined:minute,sourceEvent},'wildlife-society');
