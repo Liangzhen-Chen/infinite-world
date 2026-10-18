@@ -1,4 +1,5 @@
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
+import {currentGrace} from './obligation-state.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
 // by its fineness; any registered guest room or spare house can be rented; the
@@ -164,13 +165,14 @@ export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
     return {debt:id,repaid:amount,status,...(returned?{pledgeReturned:returned.item}:{})};
 }
 function defaultDebt(d,engine,id,row){
-    const minute=(row.installmentOverdueAt??row.deadline)+(rules(engine).loan.defaultGraceMinutes??0),bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
+    const allowance=currentGrace(engine,d.get('state'),row,d.get('state','minute'),{fallbackMinutes:rules(engine).loan.defaultGraceMinutes??0});
+    const minute=(row.installmentOverdueAt??row.deadline)+allowance.minutes,bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
     let next={...row};
     const forfeited=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,row.creditor,bank):null;
     if(forfeited){const covered=Math.min(forfeited.value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
     const remaining=next.amount-next.paid;
     const legalCase=remaining>0?registerCreditDefault(d,engine,{debt:id,row:next,value:remaining,minute}):null;
-    next.defaulted={minute,remaining,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
+    next.defaulted={minute,remaining,grace:allowance,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
     holdingSet(d,null,rec(id),next,'credit');
     d.say(`欠${bank?.name??nameOf(engine,row.creditor)}的${row.kind==='loan'?'借款':'合伙款'}过宽限仍未还，按契约违约${forfeited?`，抵押${nameOf(engine,forfeited.item)}已归债主`:''}${legalCase?`，已在当地立案（${legalCase}）`:''}`);
 }
@@ -312,5 +314,5 @@ export function advanceCredit(d,engine,minute,recordIds){
     for(const [id,row]of rows())
         if(row.category==='contract'&&row.kind==='partnership'&&row.status==='有效'&&row.deadline<=minute)settlePartnership(d,engine,id,row,{minute:row.deadline,eventId:`deadline_${id}`});
     for(const [id,row]of rows())
-        if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+(c.loan.defaultGraceMinutes??0)<=minute)defaultDebt(d,engine,id,row);
+        if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+currentGrace(engine,d.get('state'),row,minute,{fallbackMinutes:c.loan.defaultGraceMinutes??0}).minutes<=minute)defaultDebt(d,engine,id,row);
 }

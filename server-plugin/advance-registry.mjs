@@ -16,6 +16,7 @@ import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts,advanceRituals}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
+import {addObligationSchedule} from './obligation-state.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
@@ -139,6 +140,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
     for(const effect of Object.values(state.effects??{}))due(effect.expires);
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
+        addObligationSchedule(heap,engine,row,now,end,state);
         due(row.deadline);due(row.expires);due(row.nextAt);
         if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }

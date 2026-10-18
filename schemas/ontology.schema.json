@@ -865,7 +865,8 @@
         "id",
         "label",
         "schedule",
-        "handover"
+        "onDebtorGone",
+        "onCreditorGone"
       ],
       "properties": {
         "id": {

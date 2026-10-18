@@ -9,6 +9,8 @@ import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {contractTerms,partyInProcedure,snapshotContractTerms} from './contract-state.mjs';
+import {debtDue,currentGrace} from './obligation-state.mjs';
+import {assertSettlementPresent} from './obligation-presence.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical}from'./storage.mjs';
@@ -111,6 +113,7 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     const row=d.get('state','records',id);
     if(row?.category!=='debt'||row.debtor!==buyer||row.creditor!==seller||buyer!=='player')throw new Error('需要 debt 指定本人对该商家的真实欠款');
     if(row.status==='已还清')throw new Error('这笔欠款已经还清，不重复付款');
+    assertSettlementPresent(engine,d.get('state'),buyer,seller);
     const amount=row.amount-row.paid;
     chargeTrade(d,engine,{buyer,seller,cost:amount},eventId);
     // Settling a credit sale taxes the same goods a cash sale would (finance-tax.mjs taxableSale).
@@ -144,8 +147,10 @@ export function advanceContracts(d,engine,minute,recordIds){
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
             changeLegacyHoldings(d,engine,{holder:row.parties?.[0]??'player',subject:row.room,kinds:['lodges'],reason:'expired',eventId:`${id}:expired`},()=>holdingSet(d,null,['state','records',id],{...row,status:'已到期',endedAt:row.expires},'contracts'));d.say(`${row.name}已到期，需要退房或另行续住`);
         }
-        if(row.category==='debt'&&!partyInProcedure(d.get('state'),row.debtor)&&row.status==='待偿还'&&row.deadline<=minute){
-            holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:row.deadline},'contracts');
+        const allowance=row.category==='debt'&&row.status==='待偿还'?currentGrace(engine,d.get('state'),row,minute):null;
+        if(row.category==='debt'&&!partyInProcedure(d.get('state'),row.debtor)&&row.status==='待偿还'&&debtDue(row,minute,{allowance}).overdue){
+            const due=debtDue(row,minute,{allowance});
+            holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:due.deadline,graceBasis:due.grace},'contracts');
             if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
             d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}铜已到期，尚未偿还`);
         }
