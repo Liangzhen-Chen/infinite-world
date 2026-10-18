@@ -6062,5 +6062,18 @@
     ],
     "toll": 0,
     "risk": 1
-  }
+  },
+  {
+  "id": "route_hw_grain_annex",
+  "from": "bld_hw_forge",
+  "to": "bld_hw_grain_annex",
+  "lengthKm": 0.01,
+  "terrainMultiplier": 1,
+  "modes": [
+    "walk"
+  ],
+  "closedSeasons": [],
+  "toll": 0,
+  "risk": 0
+}
 ]

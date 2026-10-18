@@ -1,4 +1,5 @@
 import {nationAt,nationRows,liveNation} from './noble-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 // Executable jurisdictions are views of current places, rulers and offices.
 import {regionOf} from './regions.mjs';
 import {standing} from './standing.mjs';
@@ -19,7 +20,7 @@ function authorities(world,state,settlement,kind){
  const generated=pool.filter(n=>n.generated==='remote'&&n.settlement===settlement&&n.remoteRole==='official'&&
   (!n.judicialRole||kind==='judge'&&n.judicialRole!=='officer'||kind==='officer'&&n.judicialRole==='officer')&&
   personCareer(engine,state,n.id).value.occupation===n.occupation&&(!n.office||head===n.id)).map(n=>n.id);
- return [...new Set([...current,...generated])].filter(id=>!state?.records?.[`legal_dismissal:${id}`]&&!['死亡','濒死'].includes(state?.npcs?.[id]?.status));
+ return [...new Set([...current,...generated])].filter(id=>!state?.records?.[`legal_dismissal:${id}`]&&isEffective(engine,state,id)&&state?.npcs?.[id]?.status!=='濒死');
 }
 const geometry=new WeakMap();
 export function legalCodes(world,state={}){

@@ -6,7 +6,7 @@ import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,ar
 // 吃掉的进 sink:consume，过期与月损进 sink:decay，仓满挤出与掠夺无主的进 sink:destroy；
 // 播种的种粮进 sink:consume（作物此后在田里再生，收获时再从 src:regrowth 流入）。
 declareLedgerWriter('agriculture',{sources:{'src:regrowth':{'*':1000000}},sinks:['sink:consume','sink:decay','sink:destroy']});
-import {granaryCapacity}from'./facility-state.mjs';
+import {granaryCapacity,installFacilityRuntime}from'./facility-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
 import {weatherAt}from'./weather.mjs';
@@ -18,11 +18,12 @@ export {farmWaterFactor}from'./water-cycle.mjs';
 import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
 const int=(value,min=1,max=100000)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`数量须在${min}到${max}之间`);return value;};
-const awake=n=>n&&!['死亡','濒死','睡眠','昏迷'].includes(n.status)&&!['睡觉','睡眠'].includes(n.activity);
+const awake=n=>n&&!['濒死','睡眠','昏迷'].includes(n.status)&&!['睡觉','睡眠'].includes(n.activity);
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
 function balanced(r,s){
     if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw new Error('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
@@ -55,7 +56,7 @@ function commit(d,engine,sid,r,eventId=null){
 }
 function addBatch(r,s,p,amount,{id,day,source,kind='grain',expiresDay,growthSources,capacity=r.granary.capacity,from}={}){
     const space=Math.max(0,capacity-s.food-r.field.seedBank),stored=Math.min(amount,space),expires=expiresDay??day+(kind==='fresh'?1:storageDays(r,p));
-    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expires,source,kind,...(growthSources?.length?{growthSources}: {})});s.food+=stored;}
+    if(stored){r.batches.push({id,amount:stored,harvestDay:day,expiresDay:expires,source,kind,warehouse:p.warehouse??p.counter,...(growthSources?.length?{growthSources}: {})});s.food+=stored;}
     if(!from)throw Error('入仓须指明来处（账本对方）');
     if(stored||amount-stored)note(r,{in:'granary',qty:stored,overflow:amount-stored,from,lot:{id:String(id),day,expiresDay:expires,kind}});
     r.ledger.overflow+=amount-stored;return stored;
@@ -204,6 +205,34 @@ export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}
     r.ledger.sold+=taken;r.ledger[raid?'raided':'armyDrawn']=(r.ledger[raid?'raided':'armyDrawn']??0)+taken;
     balanced(r,s);commit(d,engine,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
 }
+
+// Physical containers are independent of account ownership: a batch in another
+// warehouse, seed reserve, or travelling cargo is never lost with this building.
+export function damageStoredGrain(d,engine,building,damage,condition,{eventId,minute}={}){
+ const marker=`warehouse_loss:${eventId}`;if(d.get('state','records',marker))return 0;
+ let lost=0;
+ for(const p of engine.rules.agriculture?.settlements??[]){
+  const sid=p.settlement,original=d.get(...path(sid));if(original?.mode!=='managed')continue;
+  const r=clone(original),s=clone(d.get('state','settlements',sid));balanced(r,s);
+  const parts=[];
+  for(const b of r.batches){
+   // Old saves have one real counter/warehouse. New batches carry that address.
+   if((b.warehouse??p.warehouse??p.counter)!==building)continue;
+   b.warehouse=building;
+   const amount=Math.min(b.amount,Math.floor(b.amount*damage/condition));
+   if(amount){b.amount-=amount;parts.push({id:b.id,amount});lost+=amount;s.food-=amount;}
+  }
+  if(!parts.length)continue;
+  r.batches=r.batches.filter(b=>b.amount>0);
+  // sold is the existing external-outflow conservation column; keep the actual
+  // cause separately, just as armyDrawn/raided already do.
+  const amount=parts.reduce((n,b)=>n+b.amount,0);r.ledger.sold+=amount;r.ledger.fireDestroyed=(r.ledger.fireDestroyed??0)+amount;
+  note(r,{out:'granary',parts,to:{flow:'sink:destroy',purpose:'fire'}});commit(d,engine,sid,r,eventId);
+  balanced(r,s);d.set(path(sid),r);d.set(['state','settlements',sid],s);
+ }
+ d.set(['state','records',marker],{category:'warehouse_loss',building,amount:lost,minute,sourceEvent:eventId});
+ return lost;
+}
 export function settleAgricultureExpiry(d,engine,settlementId){
     const day=Math.floor(d.get('state','minute')/1440);
     for(const p of engine.rules.agriculture?.settlements??[]){
@@ -253,7 +282,7 @@ export function validateAgricultureRules(world){
     return errors;
 }
 function counter(d,engine,p){
-    if(d.get('state','location')!==p.counter||!awake(d.get('state','npcs',p.manager))||d.get('state','npcs',p.manager,'location')!==p.counter)throw new Error('需要本人到粮仓柜台，与在场清醒管理员办理');
+    if(d.get('state','location')!==p.counter||(!isEffective(engine,d,p.manager)||!awake(d.get('state','npcs',p.manager)))||d.get('state','npcs',p.manager,'location')!==p.counter)throw new Error('需要本人到粮仓柜台，与在场清醒管理员办理');
     const hours=engine.byId.get(p.counter)?.openHours,clock=d.get('state','minute')%1440;
     if(hours&&(clock<hours[0]||clock>=hours[1]))throw new Error('柜台当前不在登记开放时段');
 }
@@ -396,3 +425,4 @@ export function agricultureAction(d,args,eventId){
     if(known&&(result.units??0)>0)this.practice(d,{skill,gain:3,target:p.fieldId},eventId);
     return{success:(result.units??0)>0,...result,field:p.fieldId,note:'这是公共田的志愿工作；产物进入公共粮仓，不自动送入玩家行囊'};
 }
+installFacilityRuntime({damageStoredGrain});
