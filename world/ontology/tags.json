@@ -770,6 +770,12 @@
    "source": "design",
    "label": "燃料",
    "broader": "goods:*"
+  },
+  {
+   "id": "protocol",
+   "label": "转移协议",
+   "family": "event",
+   "source": "code"
   }
  ]
 }

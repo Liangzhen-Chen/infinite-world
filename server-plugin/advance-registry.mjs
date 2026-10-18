@@ -61,7 +61,7 @@ const clone=value=>structuredClone(value);
 import {personSimulation,personConstraints}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
-import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE}from'./scheduler.mjs';
+import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {scheduleAt}from'./npc-schedule.mjs';
 import {educationCourses}from'./education-state.mjs';
@@ -216,6 +216,7 @@ function runAdvanceSystems(engine,d,ctx){
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
+ {id:'transition_protocol',order:0,nextMinute:nextProtocolMinute,advance:(e,d,c)=>{for(const item of protocolDueItems(e,d,c))item.execute();}},
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
  {id:'medicine_booking',order:60,advance:(e,d,ctx)=>prepareMedicine(d,e,ctx)},
  {id:'medicine',order:1190,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextMedicineMinute(e,d,now),advance:(e,d,ctx)=>advanceMedicine(d,e,ctx)},
@@ -345,13 +346,14 @@ const systems=[
 ];
 // Preparatory rules remain before the rules that consume their attendance and
 // booking contexts. Stable rule ids preserve those existing dependencies.
-const dueSystems={contracts:'义务',credit:'义务',summons:'效果与状态到期',law:'案件阶段',effect_expiry:'效果与状态到期',dying:'效果与状态到期',deliveries:'义务',agriculture_expiry:'效果与状态到期'};
+const dueSystems={transition_protocol:'协议续步与承接实体阶段',contracts:'义务',credit:'义务',summons:'效果与状态到期',law:'案件阶段',effect_expiry:'效果与状态到期',dying:'效果与状态到期',deliveries:'义务',agriculture_expiry:'效果与状态到期'};
 // Native handlers accept a selected record/effect. The scheduler owns the
 // ordering across handlers; each handler retains its domain checks and writes.
 const recordItems=(d,predicate,execute,anchor)=>Object.entries(d.get('state','records')??{})
     .map(([id,row],index)=>({id,row,index})).filter(({row})=>predicate(row))
     .map(({id,row,index})=>({id,anchorId:anchor(row,id),registeredSeq:row.registeredSeq??row.seq??index+1,execute:()=>execute(id)}));
 const dueCollectors={
+    transition_protocol:protocolDueItems,
     contracts:(e,d,c)=>[
         {id:'rituals',dueClass:'许可 / 托养 / 封印维护到期',anchorId:'player',execute:()=>advanceRituals(d,e,c.after)},
         ...recordItems(d,r=>['contract','debt'].includes(r.category),id=>advanceContracts(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id)],

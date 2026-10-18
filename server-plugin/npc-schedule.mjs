@@ -25,6 +25,7 @@ export function scheduleAt(engine,npcId,minute,state,constraints=null){
 function scheduledSlot(engine,npcId,minute,state,constraints=null){
     constraints??=state?personConstraints(engine,state):null;
     const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
+    if(hold?.category==='transition')return null;
     if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
     const lesson=state&&educationSlot(engine,state,npcId,minute);
     if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
@@ -110,6 +111,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         if(promote&&!regional)continue;
         if(regional&&!regional.due)continue;
         const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;
+        if(hold?.category==='transition')continue;
         if(hold){
             if(d.get('state','npcs',npcId,'status')!=='死亡'){
                 d.set(['state','npcs',npcId,'location'],hold.location);d.set(['state','npcs',npcId,'activity'],'依法拘留');

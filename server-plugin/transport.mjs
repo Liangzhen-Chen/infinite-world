@@ -1,4 +1,5 @@
 import {transportSegment,stepTransport} from './transport-route.mjs';
+import {transition} from './transition.mjs';
 import {financeBalance,financeTransfer,financeChange} from './finance-bank.mjs';
 import {escrow as escrowAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -32,7 +33,7 @@ function available(e,s,id){const n=s.npcs?.[id];return n&&!['死亡','濒死','�
 function operator(e,s,owner){return s.npcs?.[owner]?owner:groupRepresentative(e,s,owner);}
 export function transportAssetView(e,s,id){
  const a=s.records?.[assetKey(id)]??openingTransportAssets.find(a=>a.id===assetKey(id)&&e.byId.has(a.owner)&&e.byId.has(a.location));if(a?.category!=='transport_asset')return null;
- const spec=SPECS[a.kind];let factor=a.durability<25?0:a.durability<60?0.5:1,location=a.location;
+ const spec=SPECS[a.kind];let factor=a.destroyedAt!==undefined||a.durability<25?0:a.durability<60?0.5:1,location=a.location;
  if(a.kind==='pack'){
   const c=s.creatures?.[a.animal],rule=e.byId.get(c?.species)?.tamingRule;
   if(!c||c.owner!==a.owner||c.hp<c.maxHp/2||['死亡','昏迷'].includes(c.status)||c.mind?.awakened||c.care?.fatigue>=e.rules.petCare.maximumRideFatigue||c.care?.sickness||c.care?.hunger>=e.rules.petCare.hungryThreshold||s.player.mount===a.animal)factor=0;
@@ -233,8 +234,30 @@ export function transportScene(e,document){
  const position=transportPosition(e,s,row),asset=transportAssetView(e,s,row.asset),name=id=>e.byId.get(id)?.name??id;
  return `【时间】${e.calendar(s.minute).text}\n【乘车船】${asset.kind}｜${row.status}｜${name(row.from)}至${name(row.to)}\n【实际位置】${position.location?name(position.location):`${position.route}路段上，距下一节点${position.remainingKm.toFixed(2)}公里`}\n【承运人】${name(row.driver)}｜预计抵达${e.calendar(row.estimatedArrivalAt).text}${row.reason?`｜${row.reason}`:''}\n【你】生命${s.player.hp}/${s.player.maxHp}｜铜${s.player.coins}｜运单${row.id}`;
 }
+export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}},eventId){
+ const a=transportAssetView(e,d.get('state'),asset);if(!a)throw Error('Transport asset not found');
+ return transition(d,e,{entity:a.id,basis:'destruction',origin:'destruction',eventId,causes:[cause],location:a.location,salvage,
+  legacy:()=>{
+   holdingSet(d,e,path(a.id),{...d.get(...path(a.id)),category:'transport_asset',id:a.id,kind:a.kind,owner:a.owner,location:a.location,durability:0,destroyedAt:d.get('state','minute')},'transport');
+   const wreck=d.get('holdings','protocol','entities',a.id,'wreck');
+   for(const old of unfinished(d.get('state')).filter(r=>r.asset===a.id)){
+    const row=clone(old);row.status='wrecked';row.reason=cause;row.transport.nextAt=null;row.cargoLocation=wreck;row.shortfallAt=d.get('state','minute');
+    for(const cargo of row.cargo)for(const unit of cargo.instances??[]){
+     const item=d.get('state','itemInstances',unit);if(item)holdingSet(d,e,['state','itemInstances',unit],{...item,container:wreck,status:'袋内'},'transport');
+    }
+    publishTransitionEvent(d,e,{id:`${eventId}:shortfall:${row.id}`,verb:'shortfall',actor:a.id,subject:row.id,minute:d.get('state','minute'),visibility:'private',witnesses:[],tags:['protocol','transport'],cause:eventId});
+    row.history.push({minute:d.get('state','minute'),location:row.transport.location,kind:'wrecked'});
+    holdingSet(d,e,path(row.id),row,'transport');index(d,row.id,false);
+    for(const actor of [row.driver,...row.passengers,...row.escort?[row.escort]:[]])if(actor!=='player'&&d.get('state','npcs',actor,'cognitionTravel')?.transport===row.id)d.remove(['state','npcs',actor,'cognitionTravel']);
+   }
+  }});
+}
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='destroy'){
+  const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.location!==d.get('state','location'))throw Error('Only the present owner can destroy this asset');
+  return destroyTransportAsset(d,e,{asset:a.id},eventId);
+ }
  if(task==='register')return createTransportAsset(d,e,{kind:args.mode??'cart',animal:args.item},eventId);
  if(task==='trace')return transportTrace(e,d.get('state'),args.business??asset);
  if(task==='collect')return collectTransport(d,e,args.business??asset);
@@ -242,7 +265,7 @@ export function transportAction(d,e,args,eventId){
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
  if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.destroyedAt!==undefined||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

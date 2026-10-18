@@ -23,7 +23,7 @@ const kinds=new Map();
 let reasons=new Set();
 export function registerHoldingKind(entry){
     if(!entry?.id||!Array.isArray(entry.holderKinds)||!Array.isArray(entry.subjectKinds)||!entry.handover||!('onSubjectGone' in entry))throw Error(`持有种类注册形状不完整：${entry?.id}`);
-    kinds.set(entry.id,entry);
+    kinds.set(entry.id,{...entry,hooks:(entry.hooks??[]).map((h,i)=>({...h,id:h.id??`${entry.id}:${i}`,packId:h.packId??entry.namespace??'core'}))});
 }
 export function registerHoldingReasons(list){reasons=new Set([...reasons,...list]);}
 export const holdingKind=id=>kinds.get(id)??null;
@@ -99,6 +99,7 @@ const concludedOf=(kind,variant)=>{const k=kinds.get(kind);return Boolean(varian
 
 // ---- 存活持有的索引（每个草稿一份，按 seq 失效；本模块是唯一写者） ------------------------
 const indexes=new WeakMap();
+export const invalidateHoldings=d=>indexes.delete(d);
 function index(d){
     const seq=read(d,'holdings','seq')??0,cached=indexes.get(d);
     if(cached&&cached.seq===seq)return cached;
@@ -140,7 +141,7 @@ function checkTemplates(d,kind,holder,subject,engine){
     if(!s.some(t=>kind.subjectKinds.includes(t)))throw new HoldingRejected('E-HOLDING-TEMPLATE',`${kind.label}的标的不能是这类实体`,`${kind.id}: ${subject} 为 ${s.join('/')}`);
 }
 // 返回值：新持有的 id。同一事务里由 incompatibleWith auto_vacate 关闭的持有记在 row.vacated。
-export function openHolding(d,{kind:kindId,variant=null,holder,subject,terms=null,grantedBy=null,source=null,writer,eventId=null,reason='opened',place=null,lawVersion=null,form=null,engine=null}){
+export function openHolding(d,{kind:kindId,variant=null,holder,subject,terms=null,grantedBy=null,source=null,writer,eventId=null,reason='opened',place=null,lawVersion=null,form=null,inName=null,engine=null}){
     const kind=kinds.get(kindId);if(!kind)throw new HoldingRejected('E-HOLDING-KIND','未登记的持有种类',kindId);
     writerFor(writer,'kinds',kindId);
     if(kind.variants&&!kind.variants[variant])throw new HoldingRejected('E-HOLDING-VARIANT',`${kind.label}须指明变体`,`${kindId}: ${variant}`);
@@ -182,7 +183,7 @@ export function openHolding(d,{kind:kindId,variant=null,holder,subject,terms=nul
     const seq=bump(d,idx),id=`h${seq}`;
     const row=stripUndefined({id,kind:kindId,variant:variant??undefined,holder,subject,terms:terms??undefined,grantedBy:grantedBy??undefined,since:minute,source:source??undefined,writer,
         event:eventId??undefined,...(flags.length?{flags}:{}),...(vacated.length?{vacated}:{}),
-        ...(concludedOf(kindId,variant)?{concluded:stripUndefined({time:minute,place,lawVersion,form:form??(writer==='genesis'?'authored':'act')})}:{})});
+        ...(concludedOf(kindId,variant)?{concluded:stripUndefined({time:minute,place,lawVersion,form:form??(writer==='genesis'?'authored':'act'),...(inName?{inName}:{})})}:{})});
     d.set(['holdings','rows',id],row);addIndex(idx,row);
     return id;
 }

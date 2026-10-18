@@ -14,8 +14,9 @@ import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {syncHoldingRecord} from './holding-sources.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
+import {changeHolding} from './transition.mjs';
+import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion']});
 
 const DAY=1440;
@@ -374,6 +375,7 @@ function review(d,engine,row,at){
     else if(crimeJudged(state))reason='犯罪裁定';
     else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
     if(reason){
+        for(const h of aliveHoldings(d,{kind:'holds_office',holder:row.holder,subject:officeEntity(row.settlement,row.office)}))changeHolding(d,engine,{id:h.id,op:'close',reason:'vacated',eventId:`${row.id}:vacate:${at}`});
         const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
         holdingSet(d,null,path(row.id),{...row,status:'已免职',removedAt:at,reason},'governance');syncHoldingRecord(d,engine,row.id,{writer:'governance'});
         entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${state.player.name}卸任${name}：${reason}`});

@@ -13,6 +13,7 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
 import {digest} from './storage.mjs';
+import {transition} from './transition.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
 import {npcSchedule} from './npc-state.mjs';
@@ -377,6 +378,17 @@ export function recoverIllness(d,engine,illness,minute){
 // for minors without moving their property into the guardian's ownership.
 export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
+ id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
+ if(!actor||id==='player'||path[1]!=='npcs')return recordLegacyEntityDeath(d,engine,id,minute,cause,illness);
+ const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===(actor.incarnation??0));
+ if(previous||actor.diedAt!==undefined)return previous??null;
+ let result;
+ const life=actor.incarnation??0,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`;
+ transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],
+  legacy:()=>{result=recordLegacyEntityDeath(d,engine,id,minute,cause,illness);}});
+ return result;
+}
+function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
  if(!actor||id==='player')return null;
  // A death row belongs to one life: a wild body's id comes back as a new

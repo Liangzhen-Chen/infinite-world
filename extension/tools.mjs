@@ -71,7 +71,7 @@ transport.operation.enum.push('smuggle','deliver_smuggled','bank_inspect','exten
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
 transport.operation.description='trade/business/bank/asset/transport/post';
 transport.operation.enum.push('transport','post');
-transport.task.enum.push('register','book','trace','lease','repair','intercept','recover','open','lose','collect');
+transport.task.enum.push('destroy','register','book','trace','lease','repair','intercept','recover','open','lose','collect');
 transport.service.enum.push('passage');
 transport.escort=str;
 transport.authorization=str;

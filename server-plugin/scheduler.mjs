@@ -5,6 +5,12 @@
 // 争夺池（缺省表）、广度优先反应队列与深度/提案上限、config_set 调度配置。
 import {createHash} from 'node:crypto';
 
+// L1 installs the protocol continuation handler; L0 owns its scheduling.
+let protocolRunner=null;
+export const registerProtocolRunner=runner=>{protocolRunner=runner;};
+export const protocolDueItems=(engine,d,ctx)=>protocolRunner?.items(engine,d,ctx)??[];
+export const nextProtocolMinute=(engine,d,now)=>protocolRunner?.next(engine,d,now)??Infinity;
+
 const sha256 = text => createHash('sha256').update(text).digest('hex');
 
 // ---- 骰值键（14 §14.5）----

@@ -454,6 +454,26 @@
    "id": "impaired",
    "label": "失能",
    "family": "design"
+  },
+  {
+   "id": "succession",
+   "label": "职位继任",
+   "family": "primitive"
+  },
+  {
+   "id": "protocol_stage",
+   "label": "承接程序阶段",
+   "family": "primitive"
+  },
+  {
+   "id": "restored",
+   "label": "法律人格恢复",
+   "family": "primitive"
+  },
+  {
+   "id": "shortfall",
+   "label": "载货缺损",
+   "family": "primitive"
   }
  ]
 }

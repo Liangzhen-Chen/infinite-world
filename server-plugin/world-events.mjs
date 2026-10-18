@@ -12,6 +12,7 @@ export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 SOCIAL_VERBS.add('proposal_rejected');
+for(const verb of ['transition','holding_opened','holding_closed','holding_transferred','succession','claim','protocol_stage','restored','shortfall'])SOCIAL_VERBS.add(verb);
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
 export function presentWitnesses(state,location,exclude=[]){

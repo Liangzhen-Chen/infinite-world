@@ -1079,6 +1079,9 @@
         "obligationParty": {
           "type": "boolean"
         },
+        "inheritance": {
+          "type": "boolean"
+        },
         "located": {
           "type": "boolean"
         },
