@@ -7,13 +7,14 @@ import {accountKey,parseAccount,transfer,declareLedgerWriter} from './ledger.mjs
 import {registerProtocolRunner} from './scheduler.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,presentWitnesses} from './world-events.mjs';
 import {identities} from './identity.mjs';
-import {inheritanceRule,inheritanceCandidates} from './family-inheritance.mjs';
+import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-inheritance.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {recordsWhere} from './storage.mjs';
 import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
+import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
 
 const W='transition';
 declareHoldingWriter('transition',{kinds:['*'],entities:['*'],locations:true});
@@ -121,12 +122,17 @@ function action(d,e,r,template,ctx,side='holder'){
         move({holder:target});
     }else if(template==='succeed'||template==='revert'){
         let target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
+        if(template==='succeed'&&r.kind==='guardian_of')target=[...r.terms?.successors??[],...guardianCandidates(e,read(d,'state'),r.subject,r.holder,now(d)),r.grantedBy].map(x=>typeof x==='string'?x:x?.id).find(id=>live(d,e,id)&&id!==ctx.entity);
         // Old title rows used their own office as the grantor. An office that
         // cannot hold this kind is not a lawful recipient of the reverted fief.
         if(template==='revert'&&templatesOf(d,target,e)?.includes('office')&&!holdingKind(r.kind).holderKinds.includes('office'))target=null;
         if(target)move({holder:target});
         else if(r.kind==='governs')throw Error('governs requires a living polity successor');
         else close();
+        if(r.kind==='guardian_of'&&r.source?.startsWith('guardianship:')){
+            const id=r.source.slice('guardianship:'.length),row=read(d,'state','records',id);
+            if(row)writeRecord(d,e,id,{...row,guardian:target??null,status:target?'代管中':'待指定',previousGuardian:r.holder,reassignedAt:now(d),sourceEvent:ctx.eventId});
+        }
     }else if(template==='vacate'){
         close();const office=entityRow(d,r.subject);
         emit(d,e,{id:`${ctx.eventId}:vacancy:${r.id}`,verb:'succession',entity:r.subject,cause:ctx.eventId,rule:r.terms?.succession??office?.facts?.succession??'vacant_until_claimed'});
@@ -444,6 +450,14 @@ export function transition(d,engine,input){
             const receipt=input.legacyReceipt?.replace(/^estate_/,''),cause=input.causes?.[0]??basis;
             d.set(['state','obligations',id],{...snapshotObligationTerms(o),status:'取消',reason:`${a.name??engine.byId?.get(entity)?.name??entity}已${cause}，约定终止`,resolvedAt:now(d),...(receipt?{endedByDeath:receipt}:{}),resolution:{kind:'void',cause:eventId,minute:now(d)}});
         }
+        // During dual write the legacy estate still distributes the property.
+        // Route its recorded liabilities first, using the same settlement
+        // allocator as procedural estates, before that distribution can run.
+        if(input.legacy&&estate){
+            const claims=Object.entries(read(d,'state','records')??{}).filter(([,o])=>o.category==='debt'&&o.debtor===entity&&o.amount>(o.paid??0)&&!['已还清','坏账'].includes(o.status)).map(([id,o])=>({...o,id,remaining:o.amount-(o.paid??0)}));
+            const accelerated=claims.filter(o=>obligationGoneRoute(o,'debtor',civil)==='accelerate');
+            if(!settleClaims(d,engine,entity,accelerated,{...ctx,legacyDebt:true}))throw Error('Cannot settle recorded estate liabilities');
+        }
         input.legacy?.(d);
         // Keep the old closed settlement receipt addressable during dual write.
         // Protocol references use the live procedural estate, never that receipt.
@@ -682,11 +696,12 @@ function settleClaims(d,e,estate,claims,p){
     for(const o of claims){
         const amount=o.remaining??o.amount??o.coins;
         if(!Number.isSafeInteger(amount)||amount<0)return false;
-        const resource=o.resource??'coin_river',priority=o.priority??({funeral:0,wage:1,tax:2}[o.kind]??3),key=`${priority}:${resource}`;
+        const order=e.rules.law?.estate?.debtOrder,rank=order?.indexOf(o.kind);
+        const resource=o.resource??'coin_river',priority=o.priority??(p.legacyDebt&&order?(rank>=0?rank:order.length):({funeral:0,wage:1,tax:2}[o.kind]??3)),key=`${priority}:${resource}`;
         if(!groups.has(key))groups.set(key,{priority,resource,rows:[]});groups.get(key).rows.push({o,amount});
     }
     for(const g of [...groups.values()].sort((a,b)=>a.priority-b.priority||a.resource.localeCompare(b.resource))){
-        const accounts=Object.entries(read(d,'ledger','accounts')??{}).filter(([k,n])=>{const a=parseAccount(k);return a.owner===estate&&a.resource===g.resource&&n>0;}).sort(([a],[b])=>a.localeCompare(b));
+        const accounts=p.legacyDebt?legacyClaimAccounts(d,e,estate,g.resource):Object.entries(read(d,'ledger','accounts')??{}).filter(([k,n])=>{const a=parseAccount(k);return a.owner===estate&&a.resource===g.resource&&n>0;}).sort(([a],[b])=>a.localeCompare(b));
         const total=g.rows.reduce((n,r)=>n+r.amount,0),available=Math.min(total,accounts.reduce((n,[,amount])=>n+amount,0));
         let allocated=0;
         const payments=g.rows.map(r=>{const numerator=BigInt(available)*BigInt(r.amount),denominator=BigInt(total||1),paid=Number(numerator/denominator);allocated+=paid;return {...r,paid,remainder:numerator%denominator};});
@@ -695,16 +710,41 @@ function settleClaims(d,e,estate,claims,p){
         for(const r of payments.sort((a,b)=>a.o.id.localeCompare(b.o.id))){
             const creditor=r.o.creditor??r.o.promisee;if(!creditor)return false;
             let left=r.paid;
-            for(const [key] of accounts){const amount=Math.min(left,read(d,'ledger','accounts',key)??0);if(!amount)continue;
-                transfer(d,{from:key,to:accountKey(creditor,g.resource,g.resource==='coin_river'?'purse':'inventory'),amount,writer:W,eventId:p.eventId});left-=amount;if(!left)break;}
+            for(const [key,n] of accounts){const amount=Math.min(left,p.legacyDebt?n:read(d,'ledger','accounts',key)??0);if(!amount)continue;
+                if(p.legacyDebt){payLegacyClaim(d,e,estate,key,creditor,amount,p.eventId);accounts.find(a=>a[0]===key)[1]-=amount;}
+                else transfer(d,{from:key,to:accountKey(creditor,g.resource,g.resource==='coin_river'?'purse':'inventory'),amount,writer:W,eventId:p.eventId});left-=amount;if(!left)break;}
             const unpaid=r.amount-r.paid;
             const result={...r.o,status:!unpaid?'settled':p.bankrupt?p.discharge?'cancelled':'pending':'bad_debt',paid:(r.o.paid??0)+r.paid,badDebt:p.bankrupt?0:unpaid,remaining:p.bankrupt&&!p.discharge?unpaid:0,resolvedAt:now(d)};
             if(p.bankrupt&&unpaid&&!p.discharge){for(const k of ['debtor','promisor'])if(result[k]===estate)result[k]=p.bankrupt;delete result.resolvedAt;result.goneRoute='returned';}
-            d.set(['state','obligations',r.o.id],result);
+            if(p.legacyDebt){
+                const original=read(d,'state','records',r.o.id);
+                writeRecord(d,e,r.o.id,{...original,clauses:{...original.clauses,onDebtorGone:obligationGoneRoute(r.o,'debtor'),onCreditorGone:obligationGoneRoute(r.o,'creditor')},paid:result.paid,status:unpaid?'坏账':'已还清',settledBy:p.eventId,paidAt:now(d),...(unpaid?{badDebt:{minute:now(d),remaining:unpaid,estate:p.successor}}:{})});
+            }else d.set(['state','obligations',r.o.id],result);
             emit(d,e,{id:`${p.eventId}:settle:${r.o.id}`,verb:'protocol_stage',entity:estate,phase:'settlement',cause:p.eventId,obligation:r.o.id,paid:r.paid,badDebt:r.amount-r.paid});
         }
     }
     return true;
+}
+function legacyClaimAccounts(d,e,entity,resource){
+    if(resource!=='coin_river')throw Error('Recorded debt requires a declared monetary settlement adapter');
+    const accounts=[[purse(e,entity),body(d,entity)?.coins??0]];
+    for(const [id,b]of Object.entries(read(d,'state','records')??{}).sort(([a],[b])=>a.localeCompare(b)))if(b.category==='bank'&&b.accounts?.[entity]>0)accounts.push([vault(id),Math.min(b.accounts[entity],b.coins??0)]);
+    return accounts;
+}
+function payLegacyClaim(d,e,entity,from,creditor,amount,eventId){
+    const bank=read(d,'state','records',creditor),base=(e.rules.economy?.credit?.banks??[]).find(b=>b.id===creditor);
+    const to=bank?.category==='bank'||base?vault(creditor):partyAccount(e,read(d,'state'),creditor);
+    // A deposit at the creditor bank is set off against its claim. Its reserve
+    // does not move; only the depositor's liability account is reduced.
+    if(from===to){writeRecord(d,e,creditor,{...bank,accounts:{...bank.accounts,[entity]:bank.accounts[entity]-amount}});return;}
+    transfer(d,{from,to,amount,writer:W,eventId});
+    const account=parseAccount(from);
+    if(account.purpose==='vault'){
+        const b=read(d,'state','records',account.owner);
+        writeRecord(d,e,account.owner,{...b,coins:b.coins-amount,accounts:{...b.accounts,[entity]:b.accounts[entity]-amount}});
+    }else d.set([...(entity==='player'?['state','player']:['state','npcs',entity]),'coins'],(body(d,entity)?.coins??0)-amount);
+    if(bank?.category==='bank'||base)writeRecord(d,e,creditor,{...(bank??{category:'bank',id:creditor,accounts:{},goods:{}}),coins:(bank?.coins??base.reserveCopper)+amount});
+    else mirrorPartyCoins(d,e,creditor,amount,eventId,W);
 }
 function escrowClaims(d,e,estate,claims,p){
     for(const o of claims){

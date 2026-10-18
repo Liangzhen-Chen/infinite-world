@@ -7,6 +7,7 @@
  "entries": [
   {
    "id": "loan",
+   "aliases": ["player_loan", "pawn"],
    "label": "借贷",
    "schedule": "installments",
    "handover": {
@@ -67,6 +68,7 @@
   },
   {
    "id": "dividend",
+   "aliases": ["partnership"],
    "label": "分红",
    "schedule": "periodic",
    "handover": {
@@ -163,6 +165,7 @@
   },
   {
    "id": "compensation",
+   "aliases": ["medicine"],
    "label": "赔偿抚恤",
    "schedule": "installments",
    "handover": {

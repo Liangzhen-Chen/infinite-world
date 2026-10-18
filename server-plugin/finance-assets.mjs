@@ -188,7 +188,7 @@ export function assetTrade(d,e,args,id){
     if(op==='rent_out'){
         const {id:subject}=ownedPlace(d,e,args),tenant=counterpart(d,e,args.seller,{consent:args.consent}),need=rentalNeed(e,state,tenant,subject);
         if(!need)throw Error('对方当前没有对应住房或经营租赁需求');
-        if(all(d).some(r=>r.kind==='asset_lease'&&r.subject===subject&&r.status==='有效'&&r.deadline>now))throw Error('资产已出租');
+        if(all(d).some(r=>r.kind==='asset_lease'&&r.subject===subject&&r.status==='有效'&&leaseState(e,state,r,now).active))throw Error('资产已出租');
         const days=int(args.days??30,1,360,'租赁天数'),anchor=e.rules.economy.rentalCopperPerWeek*4*(need.kind==='commercial'?2:1),rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金');
         const initial=Math.ceil(rent*Math.min(days,30)/30);financeTransfer(d,e,tenant,'player',initial,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant,owner:'player',use:need.kind,settlement:need.settlement,oldHome:need.oldHome,
@@ -253,9 +253,10 @@ function workshopShift(d,e,row,at){
 export function advanceFinanceAssets(d,e,minute,recordIds){
     for(const initial of (recordIds?recordIds.map(id=>d.get('state','records',id)).filter(Boolean):all(d))){
         if(initial.kind==='equity'&&initial.status==='有效')for(let at=initial.nextDividend;at<=minute;at+=MONTH)payDividend(d,e,d.get(...rec(initial.id)),at);
-        if(initial.kind==='asset_lease'&&initial.status==='有效'){
-            for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
-            if(minute>=initial.deadline)holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'},'finance-assets');
+        if(initial.kind==='asset_lease'&&leaseState(e,d.get('state'),initial,leaseClauses(initial).starts).active){
+            const expires=leaseClauses(initial).expires;
+            for(let at=initial.nextRent;at<=minute&&at<expires;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
+            if(minute>=expires)holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets');
         }
         if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
             for(let at=initial.nextWork;at<=minute&&at<initial.deadline;at+=DAY){const row=d.get(...rec(initial.id));if(!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}

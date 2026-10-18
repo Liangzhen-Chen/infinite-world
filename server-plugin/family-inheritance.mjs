@@ -27,6 +27,11 @@ export function inheritanceCandidates(e,s,id,rule,minute,eligible=()=>true){
  return {children,spouses,house,heirs:rule.property==='equal'?(children.length||spouses.length?living([...children,...spouses]).sort():house.slice(0,1)):rule.property==='eldest'?(children.length?children.slice(0,1):first.slice(0,1)):rule.property==='household'?house:rule.property==='children'?(children.length?children:first):first.slice(0,1)};
 }
 const portions=(n,ids)=>ids.map((id,i)=>({id,amount:Math.floor(n/ids.length)+(i<n%ids.length?1:0)}));
+export function guardianCandidates(e,s,ward,from,minute){
+ const edges=familyEdges(e,s),parents=edges.filter(r=>r.kind==='parent'&&r.to===ward).map(r=>r.from);
+ const kin=edges.filter(r=>['sibling','kin'].includes(r.kind)&&[r.from,r.to].includes(ward)).map(r=>r.from===ward?r.to:r.from);
+ return [...new Set([...parents,...kin,...npcHousehold(e,s,ward)?.members??[]])].filter(id=>id!==from&&familyAdult(e,s,id,minute)&&!s.records?.[`transition:${id}`]?.gone).sort((a,b)=>Number(parents.includes(b))-Number(parents.includes(a))||Number(kin.includes(b))-Number(kin.includes(a))||a.localeCompare(b));
+}
 function materialize(d,e,id,at){
  if(d.get('state','npcs',id))return;
  const row=rosterLifeState(e,d.get('state'),id,at,'继承',{minor:!familyAdult(e,d.get('state'),id,at)});

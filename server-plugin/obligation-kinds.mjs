@@ -12,8 +12,8 @@ export function registerObligationKind(spec){
 for(const spec of JSON.parse(fs.readFileSync(new URL('../world/ontology/obligations.json',import.meta.url),'utf8')).entries)registerObligationKind(spec);
 export const obligationKinds=()=>[...kinds.values()];
 export function obligationKind(row){
- const id=row.kind??(row.reservationVersion===1?'promise':row.deliveryVersion===1?'delivery':null);
- const spec=kinds.get(id);
+ const id=row.obligationKind??row.kind??(row.category==='debt'?'compensation':row.reservationVersion===1?'promise':row.deliveryVersion===1?'delivery':null);
+ const spec=kinds.get(id)??(row.category==='debt'?[...kinds.values()].find(k=>k.aliases?.includes(id)):null);
  if(!spec)throw Error(`Undeclared obligation kind: ${id}`);
  return spec;
 }
@@ -24,7 +24,7 @@ export function snapshotObligationTerms(row){
 }
 export function obligationGoneRoute(row,side,civil={}){
  const field=side==='debtor'?'onDebtorGone':'onCreditorGone';
- const spec=obligationKind(row),route=civil[field]?.[spec.id]??row.terms?.[field]??row[field]??spec[field];
+ const spec=obligationKind(row),route=civil[field]?.[spec.id]??row.clauses?.[field]??row.terms?.[field]??row[field]??spec[field];
  if(!(side==='debtor'?DEBTOR_GONE:CREDITOR_GONE).includes(route))throw Error(`Unknown ${side} gone route: ${route}`);
  return route;
 }

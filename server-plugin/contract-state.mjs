@@ -7,7 +7,10 @@ export function leaseClauses(row){
 }
 export function leaseState(engine,state,row,minute=state.minute){
  const terms=leaseClauses(row),facility=facilityView(engine,state,row.subject);
- const active=row.endedAt===undefined&&row.resolvedAt===undefined&&!['已终止','已到期','已取消'].includes(row.status)&&minute>=terms.starts&&minute<terms.expires;
+ // Signed records use termination facts and the agreed interval. The status
+ // column remains a compatibility projection for older records only.
+ const legacyEnded=!row.clauses&&['已终止','已到期','已取消'].includes(row.status);
+ const active=row.endedAt===undefined&&row.resolvedAt===undefined&&!legacyEnded&&minute>=terms.starts&&minute<terms.expires;
  const rule=terms.usability;
  const factor=!active||!facility||facility.burning||facility.condition<rule.minimumCondition?0:facility.condition<rule.reducedBelow?rule.reducedFactor:1;
  return {active,factor,status:!active?'ended':factor===0?'suspended':factor===1?'effective':'reduced',monthlyRent:terms.monthlyRent*factor,clauses:terms};

@@ -24,7 +24,7 @@ const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
 const wage=e=>Math.max(1,2*(e.rules.economy.wageCopperPerHalfDay?.[0]??10));
-const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid);
+const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid&&r.status!=='坏账');
 export const laborMarketFresh=e=>!e.replaying||e.replayResult?.laborMarketVersion===1;
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
 
