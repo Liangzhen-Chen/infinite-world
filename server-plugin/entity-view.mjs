@@ -10,6 +10,7 @@ import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
 import {hiddenPassives} from './hidden-passives.mjs';
+import {isEffective,isLiving} from './lifecycle-state.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -23,7 +24,7 @@ export function personMental(engine,state,id){
     return fact(a?.mental??{fatigue:0,alertness:50,stress:0,interference:[]},a?.mental?'actor.mental':'unstrained baseline',Boolean(a?.mental));
 }
 
-const living=(engine,state,id)=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'&&!state.records?.[`transition:${id}`]?.gone;
+const living=(engine,state,id)=>isEffective(engine,state,id);
 const priorOffice=(state,id,key,row)=>{const t=state.records?.[`transition:${id}`];return t?.restoredAt!==undefined&&(!key||t.officeFacts?.some(o=>o.id===key&&o.since===row?.since&&o.sourceEvent===row?.sourceEvent));};
 const dismissed=(state,id)=>recordsWhere(state.records,'category','legal_dismissal').some(r=>(r.subject??r.npc)===id&&r.status!=='撤销');
 const officeRows=state=>recordEntriesWhere(state.records,'category','governance_office');
@@ -70,8 +71,6 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
     }
     for(const [key,row] of records(state)){
         if(row.category!=='housing_steward'||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
-        const grantor=rows.find(([,r])=>r.holder===row.grantor&&r.settlement===row.settlement&&r.office==='office_village_head'&&r.status==='在任'&&(r.until??Infinity)>(state.minute??0));
-        if(!grantor||settlementHead(engine,state,row.settlement).value!==row.grantor)continue;
         out.push(officeFact(engine,state,key,{...row,office:'office_village_steward',holder:id,status:'在任',since:row.createdAt,until:row.expires,workplace:row.hall}));
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
@@ -313,7 +312,7 @@ export function homeResidents(engine,state,location){
     const owner=placeView(engine,state,location)?.owner.value;
     for(const r of Object.values(state.records??{}))if(r.kind==='asset_lease'&&r.use==='home'&&r.subject===location&&r.status==='有效'&&r.deadline>state.minute)members.push(r.tenant);
     if(typeof owner==='string'&&(state.npcs?.[owner]||engine.byId.get(owner)?.tier))members.push(owner);
-    return fact([...new Set(members)].filter(id=>at(state,actorPath(engine.world,id).slice(1))?.status!=='死亡'),houses.length?'world.households + state.family.households + place.owner':'place.access.residents + place.owner',Boolean(houses.some(h=>state.family?.households?.[h.id])));
+    return fact([...new Set(members)].filter(id=>isEffective(engine,state,id)),houses.length?'world.households + state.family.households + place.owner':'place.access.residents + place.owner',Boolean(houses.some(h=>state.family?.households?.[h.id])));
 }
 
 export function personView(engine,state,requested){
@@ -426,7 +425,7 @@ export function settlementPopulation(engine,state,id){
     const baseline=new Set([...profile?.residentIds??[],...houses.flatMap(h=>h.members),...generated.map(p=>p.id)]);
     const candidates=new Set([...baseline,...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])]);
     const homes=new Map([...candidates].map(p=>[p,personHousehold(reader,state,p).value]));
-    const current=[...candidates].filter(p=>{const h=homes.get(p);return state.npcs?.[p]?.status!=='死亡'&&(h?h.settlement===id:baseline.has(p));});
+    const current=[...candidates].filter(p=>{const h=homes.get(p);return isLiving(engine,state,p)&&(h?h.settlement===id:baseline.has(p));});
     const count=ledger?.population??Math.max(0,(profile?.population??baseline.size)+current.length-baseline.size);
     const occupied=new Set(current.map(p=>homes.get(p)?.id).filter(Boolean));
     const initial=new Set([...houses.map(h=>h.id),...generated.map(p=>p.householdId)]);

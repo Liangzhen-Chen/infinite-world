@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins,coinRead} from './money.mjs';
 import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -12,7 +13,7 @@ import {tradeTax,collectRouteTariffs} from './finance-tax.mjs';
 
 const path=id=>['state','records',id];
 const cargo=state=>Object.values(state.records??{}).filter(r=>r.category==='smuggling'&&r.status==='运输中');
-const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
+const awake=(state,id,n)=>n&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
 function checkpoints(engine,route,state){
     return route.edges.flatMap(id=>{
         const edge=engine.world.routes.find(r=>r.id===id),registered=engine.rules.smuggling.checkpoints.filter(c=>c.route===id);
@@ -26,7 +27,7 @@ export function smuggleTrade(d,args,id){
         if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw Error('走私数量无效');
         const reserved=cargo(d.get('state')).filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
         if(this.quantity(d,'player',item)<quantity+reserved)throw Error('没有足量未托运的货物');
-        if(!awake(d.get('state','npcs',buyer)))throw Error('没有可履约的买方');
+        if(!awake(d.get('state'),buyer,d.get('state','npcs',buyer)))throw Error('没有可履约的买方');
         const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.document.randomSeed);
         const checks=checkpoints(this,route,d.get('state')),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
         if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw Error('路线没有违禁或逃税货物检查点');
@@ -40,7 +41,7 @@ export function smuggleTrade(d,args,id){
     const row=d.get(...path(args.contract));if(row?.category!=='smuggling'||row.status!=='运输中')throw Error('没有待交付的走私货物');
     if(row.destination!==d.get('state','location'))throw Error('未到约定目的地');
     const buyer=d.get('state','npcs',row.buyer);
-    if(!awake(buyer)||buyer.location!==row.destination)throw Error('买方不在场或不能履约');
+    if(!awake(d.get('state'),row.buyer,buyer)||buyer.location!==row.destination)throw Error('买方不在场或不能履约');
     if(bagStock(d,this,{point:'smuggling.stock',id:'player',item:row.item,legacy:()=>this.quantity(d,'player',row.item)})<row.quantity)throw Error('实际货物不足');
     if(!row.checks.length)throw Error('未实际经过本批货物检查点');
     const price=Math.ceil(regionalTradePrice(d,this,row.item,row.destination)*(row.contraband?this.rules.smuggling.contrabandPremium:1)),cost=price*row.quantity;
@@ -58,7 +59,7 @@ export function inspectSmuggling(d,engine,route,eventId){
         for(const cp of checkpoints(engine,route,d.get('state'))){
             const row=d.get(...path(original.id));if(row.status!=='运输中')break;
             if(engine.quantity(d,'player',row.item)<row.quantity){d.set(path(row.id),{...row,status:'货物遗失'});break;}
-            const guards=cp.guards.filter(id=>awake(d.get('state','npcs',id))&&d.get('state','npcs',id,'location')===cp.location&&!dismissed(d.get('state'),id));
+            const guards=cp.guards.filter(id=>awake(d.get('state'),id,d.get('state','npcs',id))&&d.get('state','npcs',id,'location')===cp.location&&!dismissed(d.get('state'),id));
             const guard=guards[0],integrity=guard?integrityOf(engine,guard):0;
             const check=guard?engine.check(d,{attribute:'敏捷',difficulty:integrity>=75?20:integrity>=45?15:10},`${eventId}_${row.id}_${cp.edge}_conceal`):null;
             let passed=!guard||check.success,bribed=false,exposed=false,incident=null,corruption=null;
@@ -68,7 +69,7 @@ export function inspectSmuggling(d,engine,route,eventId){
                 bribed=row.bribe>=price&&d.get('state','player','coins')>=row.bribe;
                 if(bribed){
                     moveCoins(d,{from:purse(engine,'player'),to:purse(engine,guard),amount:row.bribe,writer:'smuggling',eventId:tag});d.set(['state','player','coins'],d.get('state','player','coins')-row.bribe);d.set(['state','npcs',guard,'coins'],d.get('state','npcs',guard,'coins')+row.bribe);
-                    const observers=Object.entries(d.get('state','npcs')).filter(([id,n])=>id!==guard&&awake(n)&&n.location===cp.location).map(([id])=>id);
+                    const observers=Object.entries(d.get('state','npcs')).filter(([id,n])=>id!==guard&&awake(d.get('state'),id,n)&&n.location===cp.location).map(([id])=>id);
                     exposed=observers.length>0&&!engine.check(d,{attribute:'魅力',difficulty:15},`${tag}_bribe`).success;
                     d.set(path(`legal_bribe:${tag}`),{category:'legal_bribe',briber:'player',recipient:guard,coins:row.bribe,shipment:row.id,minute:d.get('state','minute'),location:cp.location,effects:exposed?[]:['放行'],discovered:exposed});
                     if(exposed){

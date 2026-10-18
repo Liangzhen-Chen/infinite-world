@@ -1,6 +1,6 @@
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
-import {advanceEducation,nextEducationMinute,prepareEducation} from './education.mjs';
+import {advanceEducation,nextEducationMinute,prepareEducation,educationCourses} from './education.mjs';
 import {prepareMedicine,advanceMedicine,nextMedicineMinute} from './medicine.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
@@ -14,7 +14,7 @@ import {advanceAirEffects}from'./magic-air.mjs';
 import {advanceWaterEarth}from'./magic-water-earth.mjs';
 import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
-import {advanceShadowContracts,advanceContracts}from'./contracts.mjs';
+import {advanceShadowContracts,advanceContracts,advanceRituals}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
@@ -40,7 +40,8 @@ import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
-import {advanceOrganizations}from'./organizations.mjs';
+import {advanceOrganizations,nextOrganizationMinute}from'./organizations.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 import {advanceFaith}from'./faith.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
@@ -63,9 +64,6 @@ import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
-import {scheduleAt}from'./npc-schedule.mjs';
-import {educationCourses}from'./education-state.mjs';
-import {advanceRituals}from'./magic-ritual.mjs';
 import {advanceWanted}from'./bounty.mjs';
 import {auditLedger}from'./ledger.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
@@ -142,6 +140,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
+        if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }
     const constraints=personConstraints(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
@@ -151,7 +150,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
         if(group&&group.layer!=='intelligent')continue;
-        if(engine.byId.get(id)?.schedule||npc.routine){const slot=scheduleAt(engine,id,now,state,constraints);due(slot?.until);}
+        if(engine.byId.get(id)?.schedule||npc.routine){const slot=engine.protocolScheduleAt(engine,id,now,state,constraints);due(slot?.until);}
     }
     const ticks=heap.ticksBetween(now,end);
     return ticks.length?ticks[0]:null;
@@ -218,7 +217,11 @@ function runAdvanceSystems(engine,d,ctx){
 const systems=[
  {id:'transition_protocol',order:0,nextMinute:nextProtocolMinute,advance:(e,d,c)=>{for(const item of protocolDueItems(e,d,c))item.execute();}},
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
- {id:'medicine_booking',order:60,advance:(e,d,ctx)=>prepareMedicine(d,e,ctx)},
+ {id:'medicine_booking',order:60,nextMinute:(e,d,now)=>{
+    const state=d.get('state');
+    if(!Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'))return Infinity;
+    const decision=Math.floor(now/1440)*1440+481;return decision>now?decision:decision+1440;
+ },advance:(e,d,ctx)=>prepareMedicine(d,e,ctx.after%1440===481?{...ctx,before:ctx.after-1}:ctx)},
  {id:'medicine',order:1190,layers:ADVANCE_LAYERS,nextMinute:(e,d,now)=>nextMedicineMinute(e,d,now),advance:(e,d,ctx)=>advanceMedicine(d,e,ctx)},
  {id:'education',order:1090,nextMinute:(e,d,now)=>nextEducationMinute(e,d,now),advance:(e,d,ctx)=>advanceEducation(d,e,ctx)},
  {id:'npc_obligations',order:100,layers:ADVANCE_LAYERS,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcObligationMinute(d.get('state'),now),
@@ -289,7 +292,7 @@ const systems=[
  {id:'magic_economy',order:1370,advance:(e,d,ctx)=>advanceMagicEconomy(d,e,ctx)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
- {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ {id:'organizations',order:1450,nextMinute:(e,d,now)=>Math.max(now+1,nextOrganizationMinute(d.get('state'))),advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
  {id:'faith_experience',order:1451,advance:(e,d,ctx)=>advanceFaith(d,e,ctx)},
  // U12a armies: weekly supply, drill, morale and desertion; monthly pay (rules.military).
  {id:'military',order:1452,advance:(e,d,ctx)=>advanceMilitary(d,e,ctx)},
@@ -306,7 +309,7 @@ const systems=[
  {id:'local_actor_positions',order:1700,advance(e,d,{after}){
     for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
         const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
-        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
+        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)d.remove(['state','records',key]);
     }
  }},
  {id:'magic_care',order:1800,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='preserve'&&x.expires>now&&x.upkeepMp>0).map(x=>now+Math.max(1,Math.floor(d.get('state','player','mp')/x.upkeepMp)+1))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceCare(d,e,before,after);}},
@@ -357,7 +360,14 @@ const dueCollectors={
     contracts:(e,d,c)=>[
         {id:'rituals',dueClass:'许可 / 托养 / 封印维护到期',anchorId:'player',execute:()=>advanceRituals(d,e,c.after)},
         ...recordItems(d,r=>['contract','debt'].includes(r.category),id=>advanceContracts(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id)],
-    credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>advanceCredit(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
+    credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>{
+        const row=d.get('state','records',id);
+        if(row?.kind==='workshop'&&row.nextWork<=c.after&&!c.workshopPresenceDone){
+            c.workshopPresenceDone=true;
+            advanceNpcObligations(d,e,c.before,c.after,c.id,{beforeState:c.beforeState});
+        }
+        advanceCredit(d,e,c.after,[id]);
+    },(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
     law:(e,d,c)=>[
         {id:'wanted',anchorId:'',execute:()=>advanceWanted(d,e,c.after)},
         ...recordItems(d,r=>['legal_detention','legal_custody'].includes(r.category),id=>advanceLaw(d,c.after,e,[id]),(r,id)=>r.case??id),

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('learning');
@@ -69,7 +70,7 @@ export function learn(d,args,id){
         if(kind==='spell'&&stage>=4)throw new Error('专家级以上法术只能通过研究或稀有典籍获得');
         const npc=d.get('state','npcs',source);
         if(!npc||npc.location!==d.get('state','location'))throw new Error('导师不在场');
-        if(npc.status==='死亡')throw new Error('导师已经死亡');
+        if(isPhysicallyDead(this,d,source))throw new Error('导师已经死亡');
         if(!personTeaching(this,d.get('state'),source,entity,{stage}))throw new Error('导师没有教授这项内容的资格');
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
         assertNpcService(d,this,source,'teach',minutes);

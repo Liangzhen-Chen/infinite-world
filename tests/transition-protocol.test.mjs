@@ -224,7 +224,7 @@ test('real engine advances persisted estate due stages after JSON reload and con
     const doc=engine.createCharacter(seed,{},'procedure-reload');doc.holdings=openHoldings(engine,doc);const d=draft(doc);
     recordEntityDeath(d,engine,person,doc.state.minute,'寿终');const estate=transitionState(d,person).successor;
     const saved=JSON.parse(JSON.stringify(d.document)),previousSeq=Math.max(...Object.values(saved.state.records).filter(e=>e.category==='world_event').map(e=>e.seq??0));
-    const r=await engine.reduce(saved,{tool:'world_time',args:{minutes:1},eventId:'resume-estate'}),after=applyPatches(saved,r.patches);
+    const r=await engine.reduce(saved,{tool:'world_time',args:{minutes:2*1440},eventId:'resume-estate'}),after=applyPatches(saved,r.patches);
     assert.equal(after.holdings.protocol.procedures[estate].phase,'closed');
     assert.ok(Object.values(after.state.records).some(e=>e.verb==='protocol_stage'&&e.seq>previousSeq));
     const result=reconcileHoldings(engine,after);assert.ok(reconciled(result),JSON.stringify(result));
@@ -403,13 +403,16 @@ test('real adjudication emits an authenticated judgment hook; rumor and forged j
 test('personal insolvency judgment preserves civil capacity, exemption and returns or discharges unpaid debt',()=>{
     for(const discharge of [false,true]){
         const d=fresh();d.set(['ledger','accounts',accountKey(person,'coin_river','purse')],15);
-        d.set(['state','obligations','bankrupt-loan'],{id:'bankrupt-loan',kind:'loan',debtor:person,creditor:heir,amount:20,status:'pending'});
+        d.set(['state','obligations','bankrupt-loan'],{id:'bankrupt-loan',kind:'loan',debtor:person,creditor:heir,amount:20,status:'pending',legacyRecord:'bankrupt-loan'});
+        d.set(['state','records','bankrupt-loan'],{category:'debt',kind:'loan',debtor:person,creditor:heir,amount:20,paid:0,status:'待偿还',defaulted:{case:'legal_case:old-default'}});
+        d.set(['state','records','legal_case:old-default'],{category:'legal_case',id:'legal_case:old-default',debt:'bankrupt-loan',status:'已裁定',judgment:{fine:7,compensation:20},finePaid:0});
         const row={id:'legal_case:bankrupt',category:'legal_case',subject:person,offender:person,evidence:[],civilMatter:'insolvency',procedure:{exemptAmount:5,discharge}};
         d.set(['state','records',row.id],row);adjudicateLegalCase(d,engine,row,{evidenceRequired:0,court:place},heir,'bankrupt');
         const id=Object.keys(d.get('holdings','protocol','procedures'))[0];advanceProcedure(d,engine,id);
         assert.equal(d.get('ledger','accounts',accountKey(person,'coin_river','purse')),5);assert.equal(transitionState(d,person),null);
         const o=d.get('state','obligations','bankrupt-loan');assert.equal(o.status,discharge?'cancelled':'pending');assert.equal(o.remaining,discharge?0:10);
         if(!discharge)assert.equal(o.debtor,person);
+        else{const claim=d.get('state','records','legal_case:old-default');assert.equal(claim.compensationDischarged,true);assert.equal(claim.compensationPaid,false);assert.equal(claim.judgment.compensation,0);assert.equal(claim.judgment.fine,7);assert.equal(claim.fineDischarged,false);}
     }
 });
 

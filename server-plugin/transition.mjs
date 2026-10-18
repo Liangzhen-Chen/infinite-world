@@ -1,18 +1,20 @@
 // L1 transfer protocol. The caller's scheduler determines the order of calls.
 import fs from 'node:fs';
 import {GONE_BASES,ensureHoldings,aliveHoldings,holdingRow,holdingKind,templatesOf,createEntity,entityRow,endEntity,updateEntity,
-    openHolding,closeHolding,transferHolding,rescaleHolding,setLocation,clearLocation,locationOf,auditHoldings,declareHoldingWriter,invalidateHoldings,holdingKindIds,holdingSet} from './holdings.mjs';
+    openHoldings,openHolding,closeHolding,transferHolding,rescaleHolding,setLocation,clearLocation,locationOf,auditHoldings,declareHoldingWriter,invalidateHoldings,holdingKindIds,holdingSet,registerLifecycleProtocol} from './holdings.mjs';
 import './holding-kinds.mjs';
-import {accountKey,parseAccount,transfer,declareLedgerWriter} from './ledger.mjs';
+import {accountKey,parseAccount,transfer,declareLedgerWriter,openLedger} from './ledger.mjs';
 import {registerProtocolRunner} from './scheduler.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,presentWitnesses} from './world-events.mjs';
 import {identities} from './identity.mjs';
-import {inheritanceRule,inheritanceCandidates} from './family-inheritance.mjs';
+import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
-import {legalCodeAt} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
-import {scheduleAt} from './npc-schedule.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,PatchCursor} from './storage.mjs';
+import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
+import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
+import {registerHoldingProtocol} from './holdings.mjs';
 
 const W='transition';
 declareHoldingWriter('transition',{kinds:['*'],entities:['*'],locations:true});
@@ -25,16 +27,21 @@ const byEntity=(d,x)=>read(d,...root,'entities',x)??null;
 export const transitionState=byEntity;
 const body=(d,x)=>x==='player'?read(d,'state','player'):read(d,'state','npcs',x)??read(d,'state','creatures',x)??read(d,'state','created',x);
 const clean=x=>Object.fromEntries(Object.entries(x).filter(([,v])=>v!==undefined));
+const projectFields=(d,engine,path,value,eventId)=>holdingSet(d,engine,path,value,W,eventId,{projection:true});
 const writeRecord=(d,engine,id,value)=>holdingSet(d,engine,['state','records',id],value,'transition');
 
 // Draft exposes immutable checkpoints. Restore sequence and caches along with data.
 function atomic(d,fn){
     if(d.protocolTransaction)return fn();
-    const document=structuredClone(d.document),patches=d.patches?.length??0,messages=d.messages?.length??0,seq=d.scheduler?.seq;
+    const document=d.cursor instanceof PatchCursor?d.cursor.expose(d.document):structuredClone(d.document),patches=d.patches?.length??0,messages=d.messages?.length??0,seq=d.scheduler?.seq;
     const reaction=d.reactionTick?structuredClone({...d.reactionTick,queue:[]}):null,queue=d.reactionTick?.queue?.slice();
     d.protocolTransaction=true;
     try{return fn();}catch(error){
-        d.document=document;if(d.patches)d.patches.length=patches;if(d.messages)d.messages.length=messages;
+        if(!Reflect.set(d,'document',document)){
+            for(const key of Object.keys(d.document))if(!Object.hasOwn(document,key))d.remove([key]);
+            for(const [key,value]of Object.entries(document))d.set([key],value);
+        }
+        if(d.patches)d.patches.length=patches;if(d.messages)d.messages.length=messages;
         if(d.scheduler)d.scheduler.seq=seq;
         if(reaction)d.reactionTick={...reaction,queue};else delete d.reactionTick;
         invalidateHoldings(d);throw error;
@@ -43,9 +50,11 @@ function atomic(d,fn){
 function emit(d,engine,event){
     SOCIAL_VERBS.add(event.verb);
     const row={minute:now(d),actor:event.entity??event.holder??'core:protocol',visibility:'private',witnesses:[],participants:[],tags:['entity-transition','protocol'],...event};
+    const phaseNames={notice:'公告遗产程序',filing:'受理债权申报',settlement:'清偿遗产债务',distribution:'分配遗产',closed:'完成遗产程序'};
+    row.summary??=`${engine.byId?.get(row.entity??row.holder)?.name??row.entity??row.holder??'当事人'}：${phaseNames[row.phase]??({transition:'依法办理交接',succession:'职位出现空缺',holding_transferred:'持有关系已交接',holding_closed:'持有关系已结束',restored:'恢复法律身份'}[row.verb]??'登记权利义务变更')}`;
     row.actorAs??=identities(engine,read(d,'state'),row.actor).at(-1)?.key;
     if(event.witnesses===undefined&&event.location)row.witnesses=presentWitnesses(read(d,'state'),event.location,[row.actor]);
-    publishTransitionEvent(d,engine,row);return read(d,'state','records',`world_event:${event.id}`)??row;
+    publishTransitionEvent(d,engine,clean(row));return read(d,'state','records',`world_event:${event.id}`)??row;
 }
 const terminal=o=>['void','settled','bad_debt','cancelled','取消','已完成'].includes(o.status);
 const live=(d,e,id)=>{
@@ -58,21 +67,35 @@ const live=(d,e,id)=>{
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
     if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    // Site reserves are anchored to an authored resource of the live site,
+    // rather than an independent agent named by the composite account owner.
+    if(id.startsWith('site:')){
+        const site=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>
+            p.site?.resources?.some(r=>id===`site:${p.id}:${r.id}`));
+        if(site)return live(d,e,site.id);
+    }
+    // Workstation inventory is a real S1 account, anchored at its building.
+    const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
+    if(stationPlace)return live(d,e,stationPlace.id);
     const row=read(d,'state','records',id);
+    if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
+    if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
+    if(row?.category==='settlement_trade')return live(d,e,row.seller)&&live(d,e,row.buyer);
     if(row?.category==='army')return !byEntity(d,row.id)?.gone&&live(d,e,row.location);
     return !!read(d,'state','quests',id)||!!read(d,'state','projects',id);
 }
 export function assertTransitionInvariants(d,e,entity=null){
     const errors=auditHoldings(d);
     if(entity){
-        if(aliveHoldings(d,{holder:entity}).length)errors.push(`I6 holdings: ${entity}`);
+        if(aliveHoldings(d,{holder:entity}).length)errors.push(`I6 holdings: ${entity} ${aliveHoldings(d,{holder:entity}).map(h=>`${h.kind}:${h.subject}`).join(',')}`);
         if(Object.values(read(d,'holdings','locations')??{}).some(l=>l.at===entity))errors.push(`I6 contents: ${entity}`);
         if(Object.entries(read(d,'ledger','accounts')??{}).some(([k,n])=>parseAccount(k).owner===entity&&n))errors.push(`I6 accounts: ${entity}`);
         const a=body(d,entity);
         if(byEntity(d,entity)?.gone&&templatesOf(d,entity,e)?.includes('agent')){
             if(personOffices(e,read(d,'state'),entity).length)errors.push(`I6 powers: ${entity}`);
-            if(scheduleAt(e,entity,now(d),read(d,'state'))!==null)errors.push(`I6 schedule effective: ${entity}`);
+            if(typeof e.protocolScheduleAt!=='function')throw Error('Protocol schedule query is not installed');
+            if(e.protocolScheduleAt(e,entity,now(d),read(d,'state'))!==null)errors.push(`I6 schedule effective: ${entity}`);
         }
         if(['scheduleTravel','cognitionTravel','caring'].some(k=>a?.[k]))errors.push(`I6 schedule: ${entity}`);
         if(byEntity(d,entity)?.gone&&recordsWhere(read(d,'state','records')??{},'category','protocol_schedule').some(r=>r.status==='pending'&&r.context?.entity===entity))errors.push(`I6 protocol schedule: ${entity}`);
@@ -92,18 +115,22 @@ export function assertTransitionInvariants(d,e,entity=null){
     if(errors.length)throw Error(errors.join('; '));
 }
 const invariant=(d,entity=null,e=d.engine)=>assertTransitionInvariants(d,e,entity);
-const bands=[['holds_office','appointed','governs','administers','fief','permit'],['guardian_of','custody_of'],['registered'],['operates','employed_by'],['owns','share','leases','tamed_by','commands','pledged'],[]];
-const rank=r=>{const i=bands.findIndex(b=>b.includes(r.kind));return i<0?5:i;};
+const bands=[['holds_office','appointed'],['governs','administers','fief','permit'],['guardian_of','custody_of'],['registered'],['operates','employed_by'],['owns','share','leases','tamed_by','commands','pledged'],[]];
+const rank=r=>{const i=bands.findIndex(b=>b.includes(r.kind));return i<0?bands.length-1:i;};
 const sorted=rows=>rows.sort((a,b)=>rank(a)-rank(b)||a.kind.localeCompare(b.kind)||a.id.localeCompare(b.id));
 const successors=(d,ctx,r)=>[...r.terms?.successors??[],...ctx.successors??[]].map(x=>typeof x==='string'?x:x.heir??x.id).filter(x=>x!==ctx.entity&&!byEntity(d,x)?.gone);
 function action(d,e,r,template,ctx,side='holder'){
     if(!r||holdingRow(d,r.id)?.until!==undefined)return;
     const options={id:r.id,writer:W,eventId:ctx.eventId,engine:e};
-    const close=()=>{closeHolding(d,{...options,reason:ctx.reason??'vacated'});emit(d,e,{id:`${ctx.eventId}:close:${r.id}`,verb:'holding_closed',holder:r.holder,subject:r.subject,cause:ctx.eventId,kind:r.kind,reason:ctx.reason??'vacated'});};
-    const move=patch=>{const id=transferHolding(d,{...options,...patch,reason:ctx.reason??'transferred'});emit(d,e,{id:`${ctx.eventId}:transfer:${r.id}`,verb:'holding_transferred',holder:patch.holder??r.holder,subject:patch.subject??r.subject,cause:ctx.eventId,kind:r.kind});return id;};
+    const close=()=>{closeHolding(d,{...options,reason:ctx.reason??'vacated'});projectHolding(d,e,r,null,ctx);emit(d,e,{id:`${ctx.eventId}:close:${r.id}`,verb:'holding_closed',holder:r.holder,subject:r.subject,cause:ctx.eventId,kind:r.kind,reason:ctx.reason??'vacated'});};
+    const move=patch=>{const id=transferHolding(d,{...options,...patch,reason:ctx.reason??'transferred'});projectHolding(d,e,r,holdingRow(d,id),ctx);emit(d,e,{id:`${ctx.eventId}:transfer:${r.id}`,verb:'holding_transferred',holder:patch.holder??r.holder,subject:patch.subject??r.subject,cause:ctx.eventId,kind:r.kind});return id;};
     if(template==null||template==='stay')return;
     if(template==='suspend'){throw Error('suspend is derived, not a protocol action');}
     if(side==='subject'){
+        if(template==='estate'&&r.kind==='employed_by'){
+            const contract=read(d,'state','records',r.terms?.contract),route=contract?.clauses?.onEmployerGone??contract?.clauses?.onHolderGone;
+            if(['terminate','void'].includes(route)){close();return;}
+        }
         if(template==='close')close();
         else if(template==='estate'){if(!ctx.successor)throw Error('subject estate requires successor');move({subject:ctx.successor});}
         else if(template==='reparent'){if(ctx.location)move({subject:ctx.location});else close();}
@@ -116,13 +143,31 @@ function action(d,e,r,template,ctx,side='holder'){
         if(!target)throw Error(`No estate or owner for ${r.kind}`);
         move({holder:target});
     }else if(template==='succeed'||template==='revert'){
-        const target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
+        let target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
+        if(r.kind==='fief'&&r.source?.startsWith('title:'))target=aliveHoldings(d,{kind:'holds_office',subject:r.grantedBy})[0]?.holder??target;
+        if(target===ctx.entity||target&&!live(d,e,target))target=null;
+        if(template==='succeed'&&r.kind==='guardian_of')target=[...r.terms?.successors??[],...guardianCandidates(e,read(d,'state'),r.subject,r.holder,now(d)),r.grantedBy].map(x=>typeof x==='string'?x:x?.id).find(id=>live(d,e,id)&&id!==ctx.entity);
+        // Old title rows used their own office as the grantor. An office that
+        // cannot hold this kind is not a lawful recipient of the reverted fief.
+        if(templatesOf(d,target,e)?.includes('office')&&!holdingKind(r.kind).holderKinds.includes('office'))target=null;
         if(target)move({holder:target});
         else if(r.kind==='governs')throw Error('governs requires a living polity successor');
         else close();
+        if(r.kind==='guardian_of'&&r.source?.startsWith('guardianship:')){
+            const id=r.source.slice('guardianship:'.length),row=read(d,'state','records',id);
+            if(row)writeRecord(d,e,id,{...row,guardian:target??null,status:target?'代管中':'待指定',previousGuardian:r.holder,reassignedAt:now(d),sourceEvent:ctx.eventId});
+        }
     }else if(template==='vacate'){
-        close();const office=entityRow(d,r.subject);
-        emit(d,e,{id:`${ctx.eventId}:vacancy:${r.id}`,verb:'succession',entity:r.subject,cause:ctx.eventId,rule:r.terms?.succession??office?.facts?.succession??'vacant_until_claimed'});
+        const title=r.source?.startsWith('title:')?read(d,'state','records',r.source.slice(6)):null;
+        if(ctx.reason==='defected'&&title){action(d,e,r,'retain_disputed',ctx);return;}
+        const office=entityRow(d,r.subject),officeRow=Object.values(read(d,'state','records')??{}).find(o=>o.category==='governance_office'&&o.holder===r.holder&&o.office===office?.facts?.office&&o.settlement===office?.facts?.settlement);
+        if(title||officeRow?.hereditary){
+            const state=read(d,'state'),rule=inheritanceRule(e,state,ctx.entity,ctx.location,legalCodeAt(e,ctx.location,state)),selection=inheritanceCandidates(e,state,ctx.entity,rule,now(d));
+            const target=selection.children.find(id=>live(d,e,id))??selection.heirs.find(id=>live(d,e,id));
+            if(target&&(title||rule.office==='hereditary')){move({holder:target});return;}
+        }
+        close();
+        emit(d,e,{id:`${ctx.eventId}:vacancy:${r.id}`,verb:'succession',entity:r.subject,subject:r.subject,previousHolder:r.holder,holding:r.id,kind:r.kind,reason:ctx.reason??'vacated',cause:ctx.eventId,rule:r.terms?.succession??office?.facts?.succession??'vacant_until_claimed'});
     }else if(template==='retain_disputed'){
         writeRecord(d,e,`${ctx.eventId}:claim:${r.id}`,{category:'transition_claim',holder:r.holder,subject:r.subject,status:'open',cause:ctx.eventId,minute:now(d)});
         emit(d,e,{id:`${ctx.eventId}:claim:${r.id}`,verb:'claim',holder:r.holder,subject:r.subject,cause:ctx.eventId});
@@ -184,7 +229,7 @@ export function executeProtocolPrimitive(d,e,p,ctx={}){
     if(p.op==='obligation.create'){
         const o=a.obligation??a.value;if(!o?.id)throw Error('Obligation id required');
         if(read(d,'state','obligations',o.id))throw Error('Obligation already exists');
-        d.set(['state','obligations',o.id],o);return o.id;
+        d.set(['state','obligations',o.id],snapshotObligationTerms(o));return o.id;
     }
     if(p.op==='obligation.cancel'||p.op==='obligation.settle'){
         const o=read(d,'state','obligations',a.id);if(!o)throw Error('Obligation missing');
@@ -250,6 +295,14 @@ function conquest(d,e,r,previous,ctx){
 }
 export function changeHolding(d,engine,{op='close',id,...input}){
     return atomic(d,()=>{
+        if(op==='rescale'){
+            ensureHoldings(d,engine);
+            const eventId=input.eventId??`holding:rescale:${input.subject}:${now(d)}`;
+            const result=rescaleHolding(d,{...input,writer:W,engine,eventId});
+            invariant(d,null,engine);
+            emit(d,engine,{id:eventId,verb:'holding_rescaled',subject:input.subject,kind:input.kind,shares:input.shares,reason:'rescaled'});
+            return result;
+        }
         ensureHoldings(d,engine);const before=id?holdingRow(d,id):null;
         const eventId=input.eventId??`holding:${op}:${id??read(d,'holdings','seq')+1}:${now(d)}`,reason=input.reason??(op==='close'?'vacated':op==='open'?'opened':'transferred');
         const ctx={...input,entity:before?.holder,eventId,reason};
@@ -262,7 +315,7 @@ export function changeHolding(d,engine,{op='close',id,...input}){
             if(holdingRow(d,id).until===undefined)closeHolding(d,{id,reason,writer:W,eventId});
             // The closed edge still invokes its own vacancy notification.
             if(reason==='vacated'&&holdingKind(before.kind)?.handover.vacated==='vacate'){
-                emit(d,engine,{id:`${eventId}:vacancy`,verb:'succession',entity:before.subject,cause:eventId});
+                emit(d,engine,{id:`${eventId}:vacancy`,verb:'succession',entity:before.subject,subject:before.subject,previousHolder:before.holder,holding:before.id,kind:before.kind,reason,cause:eventId,rule:before.terms?.succession??entityRow(d,before.subject)?.facts?.succession??'vacant_until_claimed'});
             }
             hooks(d,engine,before,`self.closed(${reason})`,ctx);
             if(before.kind==='member_of'&&reason==='defected')for(const r of sorted(aliveHoldings(d,{holder:before.holder}))){
@@ -276,10 +329,24 @@ export function changeHolding(d,engine,{op='close',id,...input}){
             if(before.kind!=='governs')for(const h of aliveHoldings(d,{subject:before.subject}))hooks(d,engine,h,`subject.transferred(${before.kind})`,ctx,'subject');
         }else throw Error(`Unknown holding operation ${op}`);
         const row=op==='close'?before:holdingRow(d,result);
-        invariant(d);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
+        invariant(d,null,engine);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
         return result;
     });
 }
+
+// Compatibility boundary: close the selected edges through the protocol, then
+// write the old fields in the same transaction. It never closes an agent.
+export function changeLegacyHoldings(d,engine,{holder,subject,source,kinds,reason='vacated',eventId},legacy){
+    return atomic(d,()=>{
+        ensureHoldings(d,engine);
+        const rows=sorted(aliveHoldings(d,{holder,subject}).filter(h=>(!source||h.source===source||source.startsWith('contract:')&&h.source===`contract:row|${source.slice(9)}`)&&(!kinds||kinds.includes(h.kind))));
+        for(const h of rows)changeHolding(d,engine,{op:'close',id:h.id,reason,eventId:eventId?`${eventId}:${h.id}`:undefined});
+        const result=legacy();
+        invariant(d,null,engine);
+        return result;
+    });
+}
+registerHoldingProtocol(changeHolding);
 
 // The same hooks field handles event subscriptions; unsupported RX never
 // silently evaluates true. Only candidate kinds are queried, avoiding a scan
@@ -375,7 +442,9 @@ export function transition(d,engine,input){
     const {entity,basis,origin,kind='gone'}=input;
     if(kind!=='gone'||!GONE_BASES.includes(basis)||!origins[basis]?.includes(origin))throw Error('I26: unsupported transition source');
     return atomic(d,()=>{
-        ensureHoldings(d,engine);
+        if(!ensureHoldings(d,engine)&&read(d,'holdings')===undefined)d.set(['holdings'],openHoldings(engine,d.document));
+        if(!read(d,'ledger'))d.set(['ledger'],openLedger(engine,d.document));
+        importRecordedClaims(d,engine,entity);
         const generation=input.generation??body(d,entity)?.incarnation??byEntity(d,entity)?.generation??0;
         const previous=byEntity(d,entity);
         if(previous&&generation<previous.generation)throw Error('An earlier instance generation cannot be reused');
@@ -407,6 +476,17 @@ export function transition(d,engine,input){
         const source=`transition:${entity}`;
         const parent=emit(d,engine,{id:eventId,verb:'transition',entity,kind,basis,causes:input.causes??[],location,visibility:input.visibility??'public'});
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        // Private commissions depend on the publishing person's performance.
+        // Close them while their escrow can still join the estate, before a
+        // later expiry would refund the now departed publisher's purse.
+        if(estate)for(const [id,q]of Object.entries(read(d,'state','quests')??{})){
+            if(q.publisher!==entity||q.fundedBy||!['公开','进行中'].includes(q.status))continue;
+            const amount=q.escrow??0;
+            if(amount){ensureEstateAssets(d,successor,engine);transfer(d,{from:accountKey(id,'coin_river','escrow'),to:purse(engine,successor),amount,writer:W,eventId});mirrorPartyCoins(d,engine,successor,amount,eventId,W);}
+            d.set(['state','quests',id],{...q,status:'取消',reason:'私人发布者已消失，未付报酬退入遗产',escrow:0,refund:amount,resolvedAt:now(d),transition:eventId});
+            if(q.reservation){const o=read(d,'state','obligations',q.reservation);if(o&&!terminal(o))d.set(['state','obligations',q.reservation],{...o,status:'取消',resolvedAt:now(d),cause:eventId});}
+            writeRecord(d,engine,`${id}:取消`,{category:'quest_receipt',quest:id,parties:[entity,q.taker].filter(Boolean),minute:now(d),location:q.location,status:'取消',escrow:0,refund:amount,rewardPaid:0,sourceEvent:eventId});
+        }
         if(wreck&&!entityRow(d,wreck)){
             createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
             if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
@@ -415,6 +495,15 @@ export function transition(d,engine,input){
         const civil=input.law??legalCodeAt(engine,location,read(d,'state'))?.civil?.inheritance??{};
         const entityHooks=[...templates.filter(t=>types.includes(t.id)).flatMap(t=>t.hooks??[]),...engine.byId?.get(entity)?.hooks??[],...a.hooks??[]];
         hooks(d,engine,{holder:entity,subject:entity},`holder.gone(${basis})`,ctx,'holder',entityHooks);
+        // Personal appointments terminate by their declaration, before the
+        // compatibility receipt is made. The domain no longer performs handover.
+        for(const [id,o]of Object.entries(read(d,'state','obligations')??{})){
+            if(o.reservationVersion!==1||terminal(o)||!['待履行','进行中'].includes(o.status))continue;
+            const debtor=[o.debtor,o.promisor].includes(entity),creditor=[o.creditor,o.promisee].includes(entity);
+            if(!(debtor&&obligationGoneRoute(o,'debtor',civil)==='void'||creditor&&obligationGoneRoute(o,'creditor',civil)==='void'))continue;
+            const receipt=input.legacyReceipt?.replace(/^estate_/,''),cause=input.causes?.[0]??basis;
+            d.set(['state','obligations',id],{...snapshotObligationTerms(o),status:'取消',reason:`${a.name??engine.byId?.get(entity)?.name??entity}已${cause}，约定终止`,resolvedAt:now(d),...(receipt?{endedByDeath:receipt}:{}),resolution:{kind:'void',cause:eventId,minute:now(d)}});
+        }
         input.legacy?.(d);
         // Keep the old closed settlement receipt addressable during dual write.
         // Protocol references use the live procedural estate, never that receipt.
@@ -432,55 +521,59 @@ export function transition(d,engine,input){
         }
         for(const r of held){hooks(d,engine,r,`holder.gone(${basis})`,ctx);action(d,engine,holdingRow(d,r.id),holdingKind(r.kind).handover.gone,ctx);}
         for(const r of subject){hooks(d,engine,r,`subject.gone(${basis})`,ctx,'subject');action(d,engine,holdingRow(d,r.id),holdingKind(r.kind).onSubjectGone,{...ctx,successor:successor??wreck},'subject');}
+        routeContracts(d,engine,entity,successor,ctx);
         for(const [id,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.at===entity){
             if(!wreck&&!location)throw Error('No destination for contained objects');
             setLocation(d,{entity:id,at:wreck??location,mode:wreck?'container':'place',writer:W,engine});
         }
         clearLocation(d,{entity,writer:W});
+        moveDeposits(d,engine,entity,successor??owner,eventId);
         for(const [key,amount] of Object.entries(read(d,'ledger','accounts')??{})){
             const ac=parseAccount(key);if(ac.owner!==entity||!amount)continue;
             const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
             const saved=debris?Math.floor(amount*salvage):amount;
             const to=input.treasury??successor??input.successor??(debris?wreck:owner);
             if(saved&&!to&&basis!=='pack_removed')throw Error('No account successor');
-            if(saved)transfer(d,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
-            if(amount>saved)transfer(d,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
+            if(saved)bookTransfer(d,engine,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
+            if(amount>saved)bookTransfer(d,engine,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
         }
         for(const [id,o] of Object.entries(read(d,'state','obligations')??{})){
             if(['void','cancelled','settled','取消','已完成'].includes(o.status))continue;
             const debtor=o.debtor===entity||o.promisor===entity,creditor=o.creditor===entity||o.promisee===entity,carrier=o.carrier===entity;
             if(!debtor&&!creditor&&!carrier)continue;
             hooks(d,engine,{holder:o.debtor??o.promisor,subject:o.creditor??o.promisee,id},debtor?`holder.gone(${basis})`:`subject.gone(${basis})`,{...ctx,obligation:o},'holder',o.hooks??[]);
-            const next={...o};
+            const next={...snapshotObligationTerms(o)};
             if(carrier){next.carrier=wreck??successor;next.shortfallAt=now(d);emit(d,engine,{id:`${eventId}:shortfall:${id}`,verb:'shortfall',entity,cause:eventId,obligation:id});}
             if(debtor){
-                const route=civil.onDebtorGone?.[o.kind]??o.onDebtorGone??'accelerate';
-                if(!['accelerate','assume_by_heirs','substitute_performance','void','pursue'].includes(route))throw Error(`Unknown debtor gone route: ${route}`);
+                const route=obligationGoneRoute(o,'debtor',civil);
                 const target=route==='pursue'?input.soul??a.soul??Object.entries(read(d,'state','npcs')??{}).find(([id,n])=>n.soulOf===entity&&live(d,engine,id))?.[0]:successor;
                 if(route==='void'||route==='pursue'&&!target){next.status='void';next.resolvedAt=now(d);next.goneRoute=route;next.resolutionReason=route==='pursue'?'no_soul_or_reincarnation':'onDebtorGone:void';emit(d,engine,{id:`${eventId}:void:${id}`,verb:'protocol_stage',entity,obligation:id,phase:'obligation_routed',route,reason:next.resolutionReason,cause:eventId});}
                 else if(!target||!live(d,engine,target))throw Error(`No living ${route} obligation successor: ${id}`);
                 else{if(o.debtor===entity)next.debtor=target;if(o.promisor===entity)next.promisor=target;next.goneRoute=route;if(route==='accelerate')next.acceleratedAt=now(d);}
             }
             if(creditor){
-                const route=civil.onCreditorGone?.[o.kind]??o.onCreditorGone??'estate',target=successor;
-                if(!['estate','heirs','void'].includes(route))throw Error(`Unknown creditor gone route: ${route}`);
+                const route=obligationGoneRoute(o,'creditor',civil),target=successor;
                 if(route==='void'){next.status='void';next.resolvedAt=now(d);}
                 else if(!target)throw Error(`No creditor successor: ${id}`);
                 else{if(o.creditor===entity)next.creditor=target;if(o.promisee===entity)next.promisee=target;next.creditorGoneRoute=route;}
             }
             d.set(['state','obligations',id],next);
+            if(debtor&&o.pledgeRecord){const pledge=read(d,'state','records',o.pledgeRecord);if(pledge?.owner===entity)writeRecord(d,engine,o.pledgeRecord,{...pledge,owner:next.debtor??next.promisor});}
             if(creditor&&next.creditorGoneRoute==='heirs'&&!terminal(next)){
                 const plan=inheritancePlan(d,engine,{...input,entity,location});
                 if(!plan.disputed&&!plan.heirs.some(h=>h.noHeir)){
                     const parts=allocation(next.remaining??next.amount??next.coins,plan.heirs).filter(p=>p.amount);
+                    const principal=allocation(next.amount??next.coins,plan.heirs),paid=allocation(next.paid??0,plan.heirs);
                     for(const [i,part]of parts.entries()){
-                        const n={...next,id:i?`${id}:heir:${part.heir}`:id,amount:part.amount,remaining:part.amount};
+                        const n={...next,id:i?`${id}:heir:${part.heir}`:id,amount:principal.find(p=>p.heir===part.heir).amount,paid:paid.find(p=>p.heir===part.heir).amount,remaining:part.amount};
+                        if(next.legacyRecord){n.originalLegacyRecord=next.legacyRecord;n.legacyRecord=i?`${next.legacyRecord}:heir:${part.heir}`:next.legacyRecord;}
                         for(const k of ['creditor','promisee'])if(n[k]===successor)n[k]=part.heir;
                         d.set(['state','obligations',n.id],n);
                     }
                 }
             }
         }
+        syncRecordedClaims(d,engine);
         const tombstone={...record,phase:'gone'};d.set([...root,'entities',entity],tombstone);
         writeRecord(d,engine,`transition:${entity}`,tombstone);
         d.set([...root,'tombstones',`${entity}:${generation}`],tombstone);
@@ -489,15 +582,202 @@ export function transition(d,engine,input){
         invariant(d,entity,engine);
         if(successor&&(!actualDeath||read(d,...root,'procedures',successor)?.phase==='closed'&&(aliveHoldings(d,{holder:successor}).length||Object.entries(read(d,'ledger','accounts')??{}).some(([k,n])=>parseAccount(k).owner===successor&&n)))){
             const preceding=actualDeath?read(d,...root,'procedures',successor):null;
-            const phase=clean({id:successor,entity,phase:'notice',nextAt:now(d)+(input.durations?.notice??0),durations:input.durations??{},successors:input.successors??preceding?.successors,eventId,registeredSeq:parent.seq??0,law:input.law??preceding?.law,location,escrowCustodian:input.escrowCustodian,kin:[...held,...subject].filter(h=>h.kind==='kin'),...(preceding?{previousDistributions:[...preceding.previousDistributions??[],...preceding.distribution?[preceding.distribution]:[]]}:{})});
+            const propertyOwners={};for(const h of held.filter(h=>h.kind==='owns'))propertyOwners[h.subject]=Object.fromEntries(aliveHoldings(d,{kind:'owns',subject:h.subject}).filter(x=>x.holder!==successor).map(x=>[x.holder,x.terms.share]));
+            const phase=clean({propertyOwners,id:successor,entity,phase:'notice',nextAt:now(d)+(input.durations?.notice??0),durations:input.durations??{},successors:input.successors??preceding?.successors,eventId,registeredSeq:parent.seq??0,law:input.law??preceding?.law,location,escrowCustodian:input.escrowCustodian,kin:[...held,...subject].filter(h=>h.kind==='kin'),...(preceding?{previousDistributions:[...preceding.previousDistributions??[],...preceding.distribution?[preceding.distribution]:[]]}:{})});
             d.set([...root,'procedures',successor],phase);
             writeRecord(d,engine,`transition_procedure:${successor}`,{category:'transition_procedure',...phase});
         }
+        configureEstate(d,engine,tombstone,input);
         return tombstone;
     });
 }
 
+registerLifecycleProtocol(transition);
+
 const phases=['notice','filing','settlement','distribution','closed'];
+// Recorded debts are projections of one claim, identified by record id or an
+// explicit link. Equal amounts alone never identify the same debt.
+function importRecordedClaims(d,e,entity){
+    for(const [id,row]of Object.entries(read(d,'state','records')??{})){
+        if(row.category!=='debt'||![row.debtor,row.creditor].includes(entity)||['已还清','坏账','已取消'].includes(row.status))continue;
+        const entries=Object.entries(read(d,'state','obligations')??{});
+        const found=entries.find(([key,o])=>key===id||key===row.obligation||o.legacyRecord===id||o.record===id);
+        const key=found?.[0]??id,old=found?.[1];
+        const claim=snapshotObligationTerms({...row,...old,id:key,kind:old?.kind??row.kind??'compensation',legacyRecord:id,
+            amount:old?.amount??row.amount,paid:old?.paid??row.paid??0,remaining:old?.remaining??row.amount-(row.paid??0),
+            status:old?.status??'pending'});
+        // The record's signed route is retained when importing old documents.
+        claim.clauses??=row.clauses;
+        d.set(['state','obligations',key],claim);
+    }
+}
+function syncRecordedClaims(d,e){
+    for(const o of Object.values(read(d,'state','obligations')??{})){
+        if(!o.legacyRecord)continue;
+        const old=read(d,'state','records',o.legacyRecord)??read(d,'state','records',o.originalLegacyRecord);if(!old)continue;
+        const status=o.status==='settled'?'已还清':o.status==='bad_debt'?'坏账':['void','cancelled'].includes(o.status)?'已取消':old.status;
+        writeRecord(d,e,o.legacyRecord,{...old,debtor:o.debtor,creditor:o.creditor,amount:o.inheritanceFrom&&o.terms?.liabilityCap!==undefined?(o.paid??0)+(o.remaining??0):o.amount,contractualAmount:o.amount,paid:o.paid??0,status,
+            ...(o.badDebt?{badDebt:{remaining:o.badDebt,minute:now(d)}}:{}),obligation:o.id,substitutedAt:now(d),
+            ...(terminal(o)?{settledBy:o.cause??o.resolvedAt,paidAt:o.resolvedAt}:{}),
+            clauses:{...old.clauses,onDebtorGone:obligationGoneRoute(o,'debtor'),onCreditorGone:obligationGoneRoute(o,'creditor')}});
+    }
+}
+function ensureEstateAssets(d,id,e=d.engine){
+    const key=`protocol_assets:${id}`;
+    if(!read(d,'state','records',key))projectFields(d,e,['state','records',key],{category:'protocol_assets',owner:id,coins:0,inventory:{}});
+    return key;
+}
+function accountProjection(d,e,key){
+    const a=parseAccount(key),s=read(d,'state');
+    if(a.owner.startsWith('src:')||a.owner.startsWith('sink:'))return null;
+    const estate=read(d,'state','records',`protocol_assets:${a.owner}`);
+    if(a.resource==='coin_river'){
+        if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
+        if(estate)return ['state','records',`protocol_assets:${a.owner}`,a.purpose==='purse'?'coins':'funds',...(a.purpose==='purse'?[]:[a.purpose])];
+        if(a.purpose==='purse')return a.owner==='player'?['state','player','coins']:s.npcs?.[a.owner]?['state','npcs',a.owner,'coins']:s.creatures?.[a.owner]?['state','creatures',a.owner,'coins']:null;
+        if(a.purpose==='vault'&&s.records?.[a.owner]?.category==='bank')return ['state','records',a.owner,'coins'];
+        if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
+    }else if(a.purpose==='inventory'){
+        if(estate)return ['state','records',`protocol_assets:${a.owner}`,'inventory',a.resource];
+        if(a.owner==='player')return ['state','inventory',a.resource];
+        for(const part of ['npcs','creatures'])if(s[part]?.[a.owner])return ['state',part,a.owner,'inventory',a.resource];
+    }
+    return null;
+}
+function bookTransfer(d,e,args){
+    const from=parseAccount(args.from),to=parseAccount(args.to);
+    const original=accountProjection(d,e,args.from),v=original&&read(d,...original),n=typeof v==='number'?v:v?.quantity??0;
+    const mirrored=n>=args.amount;
+    if(mirrored&&!accountProjection(d,e,args.to)&&live(d,e,to.owner))ensureEstateAssets(d,to.owner,e);
+    transfer(d,args);
+    if(!mirrored)return;
+    const change=(path,delta)=>{if(!path)return;const old=read(d,...path),value=(typeof old==='number'?old:old?.quantity??0)+delta;
+        d.set(path,old&&typeof old==='object'?{...old,quantity:value}:value);};
+    change(original,-args.amount);
+    const dest=accountProjection(d,e,args.to);
+    if(dest)change(dest,args.amount);
+    else if(to.resource==='coin_river'&&to.purpose==='treasury')mirrorPartyCoins(d,e,to.owner,args.amount,args.eventId,W);
+    // Transfer the corresponding instances, not every copy of this resource.
+    if(from.purpose==='inventory'&&to.purpose==='inventory'&&v?.instances?.length){
+        const moved=v.instances.slice(0,args.amount),source=read(d,...original),target=read(d,...dest);
+        d.set(original,{...source,instances:v.instances.filter(id=>!moved.includes(id))});
+        d.set(dest,{...(typeof target==='number'?{quantity:target}:target),instances:[...target?.instances??[],...moved]});
+        for(const id of moved){
+            const unit=read(d,'state','itemInstances',id);if(!unit)throw Error(`Missing inventory instance: ${id}`);
+            const next={...unit,owner:to.owner};
+            if(templatesOf(d,to.owner,e)?.includes('agent'))delete next.container;
+            else next.container=locationOf(d,id)?.at;
+            holdingSet(d,e,['state','itemInstances',id],next,W,args.eventId);
+        }
+    }
+}
+function moveDeposits(d,e,from,to,eventId){
+    if(!to)return;
+    for(const [id,row]of Object.entries(read(d,'state','records')??{}))if(row.category==='bank'&&row.accounts?.[from]){
+        const accounts={...row.accounts,[to]:(row.accounts[to]??0)+row.accounts[from]};delete accounts[from];
+        writeRecord(d,e,id,{...row,accounts});
+    }
+}
+function splitDeposits(d,e,from,heirs,eventId){
+    for(const [id,row]of Object.entries(read(d,'state','records')??{}))if(row.category==='bank'&&row.accounts?.[from]){
+        const accounts={...row.accounts};delete accounts[from];
+        for(const part of allocation(row.accounts[from],heirs))accounts[part.heir]=(accounts[part.heir]??0)+part.amount;
+        writeRecord(d,e,id,{...row,accounts});
+    }
+}
+function projectProperty(d,subject,owners,e=d.engine){
+    const old=read(d,'state','buildings',subject);if(!old)return;
+    projectFields(d,e,['state','buildings',subject],{...old,owners,owner:Object.keys(owners).length===1?Object.keys(owners)[0]:null});
+}
+function projectHolding(d,e,before,after,ctx){
+    if(before.kind==='holds_office'){
+        const office=entityRow(d,before.subject);
+        for(const [id,row]of Object.entries(read(d,'state','records')??{})){
+            if(row.holder!==before.holder)continue;
+            if(!(row.category==='title'&&before.source===`title:${id}`||row.category==='governance_office'&&row.office===office?.facts?.office&&row.settlement===office?.facts?.settlement))continue;
+            projectFields(d,e,['state','records',id],{...row,...(after?{holder:after.holder,previousHolder:before.holder,inheritedAt:now(d)}:{status:row.category==='title'?'已除爵':'已免职',removedAt:now(d)})});
+        }
+    }
+    if(before.kind==='owns'){
+        const owners={};for(const h of aliveHoldings(d,{kind:'owns',subject:before.subject}))owners[h.holder]=(owners[h.holder]??0)+(h.terms?.share??1);
+        projectProperty(d,before.subject,owners);
+    }
+    if(before.kind==='operates'){
+        const shop=read(d,'state','records',before.subject);
+        if(shop?.category==='business')projectFields(d,e,['state','records',before.subject],{...shop,owner:after?.holder??shop.owner,...(!after?{status:'封存',sealedAt:now(d),sealedBy:ctx.eventId}:{})});
+    }
+    if(before.kind==='tamed_by'){
+        if(read(d,'state','creatures',before.subject))projectFields(d,e,['state','creatures',before.subject,'owner'],after?.holder??null);
+        const pet=read(d,'state','pets',before.subject);if(pet)d.set(['state','pets',before.subject],{...pet,owner:after?.holder??null,following:false,...(!after?{status:'已解除',ended:now(d)}:{})});
+    }
+    if(before.kind==='employed_by'){
+        const id=before.terms?.contract,row=id&&read(d,'state','records',id);if(!row)return;
+        const next={...row,substitutedAt:now(d)};
+        if(after){for(const field of ['owner','employer'])if(next[field]===before.subject)next[field]=after.subject;
+            if(next.worker===before.holder)next.worker=after.holder;
+            if(next.parties)next.parties=next.parties.map(x=>x===before.subject?after.subject:x===before.holder?after.holder:x);
+        }else Object.assign(next,{status:'已终止',endedAt:now(d)});
+        projectFields(d,e,['state','records',id],next);
+    }
+}
+function distributeEmployments(d,e,id,heirs,p){
+    const target=heirs.slice().sort((a,b)=>b.share-a.share||a.heir.localeCompare(b.heir))[0];
+    for(const h of aliveHoldings(d,{kind:'employed_by',subject:id})){
+        if(target.noHeir){closeHolding(d,{id:h.id,reason:'vacated',writer:W,eventId:p.eventId});projectHolding(d,e,h,null,p);}
+        else{const hid=transferHolding(d,{id:h.id,subject:target.heir,writer:W,engine:e,eventId:p.eventId});projectHolding(d,e,h,holdingRow(d,hid),p);}
+    }
+    routeContracts(d,e,id,target.noHeir?null:target.heir,p);
+}
+function routeContracts(d,e,from,to,ctx){
+    for(const [id,row]of Object.entries(read(d,'state','records')??{})){
+        if(row.category!=='contract'||!(['owner','employer','worker','tenant','holder','issuer','partner'].some(k=>row[k]===from)||row.parties?.includes(from)))continue;
+        const worker=row.worker===from||row.kind==='hire'&&row.parties?.[1]===from;
+        const route=row.clauses?.[worker?'onWorkerGone':row.owner===from||row.employer===from?'onEmployerGone':'onHolderGone']??row.clauses?.onHolderGone??(worker?'terminate':'inherit');
+        if(!['inherit','continue','terminate','void'].includes(route))throw Error(`Unknown contract gone route: ${route}`);
+        if(!to||['terminate','void'].includes(route)||row.endedAt!==undefined||row.resolvedAt!==undefined){
+            if(row.endedAt===undefined&&row.resolvedAt===undefined||row.escrow>0){
+                if(row.escrow>0){
+                    const recipient=row.kind==='employment'?row.employer:row.parties?.[0]??row.owner??'player';
+                    const target=recipient===from?to??ctx.owner:recipient;
+                    if(!target)throw Error(`Contract escrow has no recipient: ${id}`);
+                    const key=accountKey(id,'coin_river','escrow');
+                    transfer(d,{from:key,to:partyAccount(e,read(d,'state'),target),amount:row.escrow,writer:W,eventId:ctx.eventId});
+                    mirrorPartyCoins(d,e,target,row.escrow,ctx.eventId,W);
+                }
+                projectFields(d,e,['state','records',id],{...row,status:'已终止',escrow:0,endedAt:row.endedAt??now(d),resolvedAt:row.resolvedAt??now(d),endCause:ctx.eventId});
+            }
+        }else{
+            const next={...row,substitutedAt:now(d)};
+            for(const field of ['owner','employer','worker','tenant','holder','issuer','partner'])if(next[field]===from)next[field]=to;
+            if(next.parties)next.parties=next.parties.map(id=>id===from?to:id);
+            projectFields(d,e,['state','records',id],next);
+        }
+    }
+}
+function projectEstateReceipt(d,e,id,p,receipts,rule){
+    const allocations=receipts.map(r=>({heir:r.heir,coins:r.accounts.filter(a=>a.resource==='coin_river').reduce((n,a)=>n+a.amount,0),items:Object.fromEntries(r.accounts.filter(a=>a.resource!=='coin_river').map(a=>[a.resource,a.amount])),assets:[],propertyShares:{}}));
+    for(const h of aliveHoldings(d,{kind:'owns'})){
+        const a=allocations.find(a=>a.heir===h.holder);
+        if(a&&receipts.find(r=>r.heir===h.holder)?.holdings.includes(h.id)){a.assets.push(h.subject);a.propertyShares[h.subject]=h.terms.share-(p.propertyOwners?.[h.subject]?.[h.holder]??0);}
+    }
+    // Pre-holdings equity documents have no issuer endpoint to adapt. Their
+    // explicitly supported compatibility records still distribute here once.
+    for(const [key,row]of Object.entries(read(d,'state','records')??{}))if(row.category==='equity'&&row.holder===p.entity&&row.status==='有效'){
+        projectFields(d,e,['state','records',key],{...row,status:'已继承',inheritance:id});
+        for(const r of receipts){const next=`${key}:inherit:${id}:${r.heir}`;projectFields(d,e,['state','records',next],{...row,id:next,holder:r.heir,share:row.share*r.share,stake:(row.stake??0)*r.share,distributed:(row.distributed??0)*r.share,inheritance:id});allocations.find(a=>a.heir===r.heir).assets.push(next);}
+    }
+    for(const [key,death]of Object.entries(read(d,'state','family','deaths')??{}))if(death.estate?.id===id){
+        const guardianships=Object.values(read(d,'state','records')??{}).filter(r=>r.category==='guardianship'&&r.estate===id).map(r=>r.id);
+        projectFields(d,e,['state','family','deaths',key],{...death,estate:{...death.estate,heir:receipts[0]?.heir??null,heirs:receipts.filter(r=>!r.noHeir).map(r=>r.heir),rule,allocations,propertyOwners:p.propertyOwners??{},guardianships,phase:'closed'}});
+    }
+}
+function configureEstate(d,e,r,input){
+    if(!r.successor||!['death','declared','rested','reborn'].includes(r.basis)||!(aliveHoldings(d,{holder:r.successor,kind:'operates'}).length||aliveHoldings(d,{subject:r.successor,kind:'employed_by'}).length)||!templatesOf(d,r.successor,e)?.includes('interim'))return;
+    const key=ensureEstateAssets(d,r.successor,e),p=read(d,...root,'procedures',r.successor),plan=inheritancePlan(d,e,p??{entity:r.entity,location:r.location});
+    const executor=plan.heirs.find(h=>!h.noHeir&&npcAgeAt(e,read(d,'state'),h.heir,now(d))>=18)?.heir??plan.heirs.filter(h=>!h.noHeir).flatMap(h=>guardianCandidates(e,read(d,'state'),h.heir,r.entity,now(d)))[0];
+    projectFields(d,e,['state','records',key],{...read(d,'state','records',key),executor:executor??null,...(!executor?{sealedAt:now(d)}:{})});
+    if(!executor)for(const h of aliveHoldings(d,{holder:r.successor,kind:'operates'})){closeHolding(d,{id:h.id,reason:'vacated',writer:W,eventId:r.eventId});projectHolding(d,e,h,null,r);}
+}
 const price=(e,resource)=>resource==='coin_river'?1:e.byId?.get(resource)?.basePrice??0;
 function publicRecipient(d,e,entity,location,rule){
     const code=legalCodeAt(e,location,read(d,'state'));
@@ -514,7 +794,7 @@ function allocation(amount,heirs){
 }
 function inheritancePlan(d,e,p){
     if(p.bankrupt)return {rule:{},heirs:[{heir:p.bankrupt,share:1}],bequests:[]};
-    const s=read(d,'state'),code=legalCodeAt(e,p.location,s),rule={...inheritanceRule(e,s,p.entity,p.location),...code?.civil?.inheritance,...p.law};
+    const s=read(d,'state'),code=legalCodeAt(e,p.location,s),familyCode=legalCodeAt(e,npcHousehold(e,s,p.entity)?.settlement??p.location,s)??code,rule={...inheritanceRule(e,s,p.entity,p.location,familyCode),...code?.civil?.inheritance,...p.law};
     const eligible=id=>{
         const kin=(p.kin??[]).filter(h=>[h.holder,h.subject].includes(id));
         return id!==p.entity&&live(d,e,id)&&(!kin.length||kin.some(h=>h.terms?.recognized!==false))&&(body(d,id)?.inheritance??e.byId?.get(body(d,id)?.species)?.inheritance??templates.find(t=>templatesOf(d,id,e)?.includes(t.id))?.inheritance)===true;
@@ -593,18 +873,19 @@ function distribute(d,e,id,p){
     const receipt=id=>receipts.find(h=>h.heir===id)??(()=>{const r={heir:id,share:0,value:0,holdings:[],holdingValues:{},accounts:[]};receipts.push(r);return r;})();
     const assets=aliveHoldings(d,{holder:id});
     for(const h of assets){
-        if(heirs.some(h=>h.noHeir)&&h.kind==='operates'){closeHolding(d,{id:h.id,reason:'vacated',writer:W,eventId:p.eventId});continue;}
+        if(heirs.some(h=>h.noHeir)&&h.kind==='operates'){closeHolding(d,{id:h.id,reason:'vacated',writer:W,eventId:p.eventId});projectHolding(d,e,h,null,p);continue;}
         const bequest=plan.bequests?.find(b=>b.subject===h.subject),dest=bequest?[{heir:bequest.heir,share:bequest.share},...heirs.map(x=>({...x,share:x.share*(1-bequest.share)}))].filter(x=>x.share>0):heirs;
         const assign=dest=>{
         if(holdingKind(h.kind).sum!==undefined){
             const shares={};for(const row of aliveHoldings(d,{kind:h.kind,subject:h.subject}))if(row.holder!==id)shares[row.holder]=(shares[row.holder]??0)+row.terms.share;
             for(const x of dest)shares[x.heir]=(shares[x.heir]??0)+h.terms.share*x.share;
             const ids=rescaleHolding(d,{kind:h.kind,subject:h.subject,shares,writer:W,engine:e,eventId:p.eventId});
+            if(h.kind==='owns')projectProperty(d,h.subject,shares);
             for(const hid of ids){const row=holdingRow(d,hid),part=dest.filter(x=>x.heir===row.holder).reduce((n,x)=>n+x.share,0);if(!part)continue;
                 const r=receipt(row.holder);r.holdings.push(hid);const value=(h.terms?.value??e.byId?.get(h.subject)?.basePrice??0)*part;r.holdingValues[hid]=value;r.value+=value;}
         }else{
             const target=dest.slice().sort((a,b)=>b.share-a.share||a.heir.localeCompare(b.heir))[0].heir;
-            const hid=transferHolding(d,{id:h.id,holder:target,writer:W,engine:e,eventId:p.eventId});receipt(target).holdings.push(hid);const value=h.terms?.value??e.byId?.get(h.subject)?.basePrice??0;receipt(target).holdingValues[hid]=value;receipt(target).value+=value;
+            const hid=transferHolding(d,{id:h.id,holder:target,writer:W,engine:e,eventId:p.eventId});projectHolding(d,e,h,holdingRow(d,hid),p);receipt(target).holdings.push(hid);const value=h.terms?.value??e.byId?.get(h.subject)?.basePrice??0;receipt(target).holdingValues[hid]=value;receipt(target).value+=value;
         }
         };
         if(!bequest)assign(dest);
@@ -619,19 +900,24 @@ function distribute(d,e,id,p){
     }
     for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
         const ac=parseAccount(key);if(ac.owner!==id||!amount)continue;
-        for(const part of allocation(amount,heirs))if(part.amount){transfer(d,{from:key,to:accountKey(part.heir,ac.resource,ac.purpose),amount:part.amount,writer:W,eventId:p.eventId});
+        for(const part of allocation(amount,heirs))if(part.amount){bookTransfer(d,e,{from:key,to:accountKey(part.heir,ac.resource,ac.purpose),amount:part.amount,writer:W,eventId:p.eventId});
             const r=receipt(part.heir);r.accounts.push({...ac,amount:part.amount});r.value+=part.amount*price(e,ac.resource);}
     }
+    distributeEmployments(d,e,id,heirs,p);
+    splitDeposits(d,e,id,heirs,p.eventId);
     for(const r of receipts){
         const age=npcAgeAt(e,read(d,'state'),r.heir,now(d));
         if(age!==null&&age<(e.rules.npcLife?.adultAge??18)){
             const current=aliveHoldings(d,{kind:'guardian_of',subject:r.heir})[0];
             const publicGuardian=publicRecipient(d,e,p.entity,p.location,rule);
-            const guardian=current?.holder??rule.guardian??(templatesOf(d,publicGuardian,e)?.some(t=>holdingKind('guardian_of').holderKinds.includes(t))?publicGuardian:null);
-            if(!guardian||!live(d,e,guardian))throw Error(`Minor heir requires a guardian: ${r.heir}`);
-            if(!current)openHolding(d,{kind:'guardian_of',holder:guardian,subject:r.heir,terms:{scope:'property_only'},writer:W,engine:e,eventId:p.eventId});
+            const guardian=current?.holder??rule.guardian??guardianCandidates(e,read(d,'state'),r.heir,p.entity,now(d))[0]??(templatesOf(d,publicGuardian,e)?.some(t=>holdingKind('guardian_of').holderKinds.includes(t))?publicGuardian:null);
+            if(guardian&&!live(d,e,guardian))throw Error(`Minor heir requires a live guardian: ${r.heir}`);
+            if(!current&&guardian)openHolding(d,{kind:'guardian_of',holder:guardian,subject:r.heir,terms:{scope:'property_only'},source:`guardianship:guardianship:${id}:${r.heir}`,writer:W,engine:e,eventId:p.eventId});
             r.guardian=guardian;
             writeRecord(d,e,`custody:${id}:${r.heir}`,{category:'inheritance_custody',ward:r.heir,guardian,estate:id,transferAllowed:false,incomeTo:r.heir});
+            const gid=`guardianship:${id}:${r.heir}`,age=npcAgeAt(e,read(d,'state'),r.heir,now(d));
+            // The ward owns the assets even when no lawful caretaker is available.
+            if(!current)writeRecord(d,e,gid,{scope:'property_only',category:'guardianship',id:gid,ward:r.heir,guardian:guardian??null,estate:id,since:now(d),expires:now(d)+Math.ceil(((e.rules.npcLife?.adultAge??18)-age)*360*1440),status:guardian?'代管中':'待指定',receivedCoins:r.accounts.filter(a=>a.resource==='coin_river').reduce((n,a)=>n+a.amount,0),ledger:[],sourceEvent:p.eventId});
         }
     }
     for(const [oid,o]of Object.entries(read(d,'state','obligations')??{}))if([o.debtor,o.promisor,o.creditor,o.promisee].includes(id)&&!terminal(o)){
@@ -642,12 +928,25 @@ function distribute(d,e,id,p){
         for(const [i,part]of parts.entries()){
             const n={...o,id:i?`${oid}:heir:${part.heir}`:oid,amount:principal.find(h=>h.heir===part.heir).amount,remaining:part.amount,paid:paid.find(h=>h.heir===part.heir).amount,inheritanceFrom:id,originalTerms:o.originalTerms??o.terms??{},originalObligation:oid,originalAmount:amount};
             if(o.coins!==undefined)n.coins=n.amount;
-            for(const k of ['debtor','promisor','creditor','promisee'])if(n[k]===id)n[k]=part.heir;
+            if(o.legacyRecord){n.originalLegacyRecord=o.legacyRecord;n.legacyRecord=i?`${o.legacyRecord}:heir:${part.heir}`:o.legacyRecord;}
+            n.inheritedEndpoints=['debtor','promisor','creditor','promisee'].filter(k=>n[k]===id);
+            for(const k of n.inheritedEndpoints)n[k]=part.heir;
             if(['assume_by_heirs','substitute_performance'].includes(o.goneRoute))n.terms={...o.terms,liabilityCap:receipt(part.heir).value,guardian:receipt(part.heir).guardian??null};
             d.set(['state','obligations',n.id],n);
         }
         if(!parts.length)d.set(['state','obligations',oid],{...o,status:'settled',remaining:0});
     }
+    // One inheritance budget covers all of an heir's inherited debts, rather
+    // than granting each creditor a fresh copy of the same liability cap.
+    for(const r of receipts){
+        const claims=Object.values(read(d,'state','obligations')??{}).filter(o=>o.inheritanceFrom===id&&[o.debtor,o.promisor].includes(r.heir)&&['assume_by_heirs','substitute_performance'].includes(o.goneRoute)&&!terminal(o));
+        const total=claims.reduce((n,o)=>n+(o.remaining??0),0);
+        if(total>r.value)for(const part of allocation(r.value,claims.map(o=>({heir:o.id,share:o.remaining})))){
+            const o=read(d,'state','obligations',part.heir);
+            d.set(['state','obligations',o.id],{...o,remaining:part.amount,badDebt:(o.badDebt??0)+o.remaining-part.amount});
+        }
+    }
+    projectEstateReceipt(d,e,id,p,receipts,rule);
     return {...p,distribution:{heir:receipts[0]?.heir??null,heirs:receipts,value:receipts.reduce((n,r)=>n+r.value,0),holdings:receipts.flatMap(r=>r.holdings),accounts:receipts.flatMap(r=>r.accounts),rule,will:plan.will??null}};
 }
 function settleClaims(d,e,estate,claims,p){
@@ -655,12 +954,19 @@ function settleClaims(d,e,estate,claims,p){
     for(const o of claims){
         const amount=o.remaining??o.amount??o.coins;
         if(!Number.isSafeInteger(amount)||amount<0)return false;
-        const resource=o.resource??'coin_river',priority=o.priority??({funeral:0,wage:1,tax:2}[o.kind]??3),key=`${priority}:${resource}`;
+        const order=e.rules.law?.estate?.debtOrder,rank=order?.indexOf(o.kind);
+        const resource=o.resource??'coin_river',priority=o.priority??(order?(rank>=0?rank:order.length):({funeral:0,wage:1,tax:2}[o.kind]??3)),key=`${priority}:${resource}`;
         if(!groups.has(key))groups.set(key,{priority,resource,rows:[]});groups.get(key).rows.push({o,amount});
     }
     for(const g of [...groups.values()].sort((a,b)=>a.priority-b.priority||a.resource.localeCompare(b.resource))){
-        const accounts=Object.entries(read(d,'ledger','accounts')??{}).filter(([k,n])=>{const a=parseAccount(k);return a.owner===estate&&a.resource===g.resource&&n>0;}).sort(([a],[b])=>a.localeCompare(b));
-        const total=g.rows.reduce((n,r)=>n+r.amount,0),available=Math.min(total,accounts.reduce((n,[,amount])=>n+amount,0));
+        const depositMode=g.resource==='coin_river'&&!!read(d,'state','records',`protocol_assets:${estate}`);
+        const accounts=depositMode?legacyClaimAccounts(d,e,estate,g.resource):Object.entries(read(d,'ledger','accounts')??{}).filter(([k,n])=>{const a=parseAccount(k);return a.owner===estate&&a.resource===g.resource&&n>0;}).sort(([a],[b])=>a.localeCompare(b));
+        const cash=accounts.reduce((n,[,amount])=>n+amount,0);
+        if(g.rows.reduce((n,r)=>n+r.amount,0)>cash)for(const r of g.rows){
+            const covered=r.o.legacyRecord?e.protocolLiquidatePledge?.(d,{...r.o,remaining:r.amount})??0:0;
+            if(covered){r.amount-=covered;r.o={...r.o,paid:(r.o.paid??0)+covered,remaining:r.amount};}
+        }
+        const total=g.rows.reduce((n,r)=>n+r.amount,0),available=Math.min(total,cash);
         let allocated=0;
         const payments=g.rows.map(r=>{const numerator=BigInt(available)*BigInt(r.amount),denominator=BigInt(total||1),paid=Number(numerator/denominator);allocated+=paid;return {...r,paid,remainder:numerator%denominator};});
         payments.sort((a,b)=>a.remainder===b.remainder?a.o.id.localeCompare(b.o.id):a.remainder>b.remainder?-1:1);
@@ -668,16 +974,40 @@ function settleClaims(d,e,estate,claims,p){
         for(const r of payments.sort((a,b)=>a.o.id.localeCompare(b.o.id))){
             const creditor=r.o.creditor??r.o.promisee;if(!creditor)return false;
             let left=r.paid;
-            for(const [key] of accounts){const amount=Math.min(left,read(d,'ledger','accounts',key)??0);if(!amount)continue;
-                transfer(d,{from:key,to:accountKey(creditor,g.resource,g.resource==='coin_river'?'purse':'inventory'),amount,writer:W,eventId:p.eventId});left-=amount;if(!left)break;}
+            for(const [key,n] of accounts){const amount=Math.min(left,depositMode?n:read(d,'ledger','accounts',key)??0);if(!amount)continue;
+                if(depositMode){payLegacyClaim(d,e,estate,key,creditor,amount,p.eventId);accounts.find(a=>a[0]===key)[1]-=amount;}
+                else bookTransfer(d,e,{from:key,to:g.resource==='coin_river'?partyAccount(e,read(d,'state'),creditor):accountKey(creditor,g.resource,'inventory'),amount,writer:W,eventId:p.eventId});left-=amount;if(!left)break;}
             const unpaid=r.amount-r.paid;
             const result={...r.o,status:!unpaid?'settled':p.bankrupt?p.discharge?'cancelled':'pending':'bad_debt',paid:(r.o.paid??0)+r.paid,badDebt:p.bankrupt?0:unpaid,remaining:p.bankrupt&&!p.discharge?unpaid:0,resolvedAt:now(d)};
             if(p.bankrupt&&unpaid&&!p.discharge){for(const k of ['debtor','promisor'])if(result[k]===estate)result[k]=p.bankrupt;delete result.resolvedAt;result.goneRoute='returned';}
             d.set(['state','obligations',r.o.id],result);
+            if(r.o.legacyRecord&&terminal(result))e.protocolDebtSettled?.(d,{...result,debtor:estate,unpaid},p.eventId);
             emit(d,e,{id:`${p.eventId}:settle:${r.o.id}`,verb:'protocol_stage',entity:estate,phase:'settlement',cause:p.eventId,obligation:r.o.id,paid:r.paid,badDebt:r.amount-r.paid});
         }
     }
     return true;
+}
+function legacyClaimAccounts(d,e,entity,resource){
+    if(resource!=='coin_river')throw Error('Recorded debt requires a declared monetary settlement adapter');
+    const accounts=[[purse(e,entity),read(d,'ledger','accounts',purse(e,entity))??0]];
+    for(const [id,b]of Object.entries(read(d,'state','records')??{}).sort(([a],[b])=>a.localeCompare(b)))if(b.category==='bank'&&b.accounts?.[entity]>0)accounts.push([vault(id),Math.min(b.accounts[entity],b.coins??0)]);
+    return accounts;
+}
+function payLegacyClaim(d,e,entity,from,creditor,amount,eventId){
+    const bank=read(d,'state','records',creditor),base=(e.rules.economy?.credit?.banks??[]).find(b=>b.id===creditor);
+    const to=bank?.category==='bank'||base?vault(creditor):partyAccount(e,read(d,'state'),creditor);
+    // A deposit at the creditor bank is set off against its claim. Its reserve
+    // does not move; only the depositor's liability account is reduced.
+    if(from===to){writeRecord(d,e,creditor,{...bank,accounts:{...bank.accounts,[entity]:bank.accounts[entity]-amount}});return;}
+    if(parseAccount(from).purpose!=='vault'){bookTransfer(d,e,{from,to,amount,writer:W,eventId});return;}
+    transfer(d,{from,to,amount,writer:W,eventId});
+    const account=parseAccount(from);
+    if(account.purpose==='vault'){
+        const b=read(d,'state','records',account.owner);
+        writeRecord(d,e,account.owner,{...b,coins:b.coins-amount,accounts:{...b.accounts,[entity]:b.accounts[entity]-amount}});
+    }else mirrorPartyCoins(d,e,entity,-amount,eventId,W);
+    if(bank?.category==='bank'||base)writeRecord(d,e,creditor,{...(bank??{category:'bank',id:creditor,accounts:{},goods:{}}),coins:(bank?.coins??base.reserveCopper)+amount});
+    else mirrorPartyCoins(d,e,creditor,amount,eventId,W);
 }
 function escrowClaims(d,e,estate,claims,p){
     for(const o of claims){
@@ -689,7 +1019,7 @@ function escrowClaims(d,e,estate,claims,p){
         let left=amount;
         for(const [key,n]of Object.entries(read(d,'ledger','accounts')??{}).sort(([a],[b])=>a.localeCompare(b))){
             const ac=parseAccount(key);if(ac.owner!==estate||ac.resource!==resource||!n)continue;
-            const part=Math.min(n,left);if(part)transfer(d,{from:key,to:accountKey(custodian,resource,`escrow:${o.id}`),amount:part,writer:W,eventId:p.eventId});left-=part;if(!left)break;
+            const part=Math.min(n,left);if(part)bookTransfer(d,e,{from:key,to:accountKey(custodian,resource,`escrow:${o.id}`),amount:part,writer:W,eventId:p.eventId});left-=part;if(!left)break;
         }
         const n={...o,escrowCustodian:custodian,escrowAmount:amount-left,badDebt:(o.badDebt??0)+left,remaining:amount-left,status:amount===left?'bad_debt':'pending'};
         for(const k of ['debtor','promisor'])if(n[k]===estate)n[k]=custodian;
@@ -702,6 +1032,7 @@ export function advanceProcedure(d,e,id,minute=now(d)){
         for(let i=0;i<phases.length&&p.nextAt<=minute&&p.phase!=='closed';i++){
             const phase=p.phase;
             if(phase==='settlement'){
+                importRecordedClaims(d,e,id);
                 // Package obligations require their own registered settlement handler.
                 const claims=Object.values(read(d,'state','obligations')??{}).filter(o=>[o.debtor,o.promisor].includes(id)&&(o.goneRoute==='accelerate'||(o.deadline??Infinity)<=minute)&&!terminal(o));
                 const owed=claims.filter(o=>o.filed!==false&&o.creditorPresent!==false);
@@ -713,10 +1044,11 @@ export function advanceProcedure(d,e,id,minute=now(d)){
                 p=distribute(d,e,id,p);
                 if(p.frozen||p.nextAt>minute){d.set([...root,'procedures',id],p);writeRecord(d,e,`transition_procedure:${id}`,{category:'transition_procedure',...p});return;}
             }
+            syncRecordedClaims(d,e);
             const next=phases[phases.indexOf(phase)+1];
             emit(d,e,{id:`${p.eventId}:phase:${phase}`,verb:'protocol_stage',entity:id,phase,cause:p.eventId,minute:p.nextAt,visibility:phase==='notice'?'public':'private'});
             p={...p,phase:next,nextAt:p.nextAt+(p.durations[next]??0)};
-            if(next==='closed'){invariant(d,id);emit(d,e,{id:`${p.eventId}:phase:closed`,verb:'protocol_stage',entity:id,phase:'closed',cause:p.eventId});}
+            if(next==='closed'){invariant(d,id,e);emit(d,e,{id:`${p.eventId}:phase:closed`,verb:'protocol_stage',entity:id,phase:'closed',cause:p.eventId});}
             updateEntity(d,{id,facts:{phase:next},writer:W,eventId:p.eventId});d.set([...root,'procedures',id],p);
             writeRecord(d,e,`transition_procedure:${id}`,{category:'transition_procedure',...p});
         }
@@ -738,8 +1070,8 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
         law={...legalCodeAt(engine,location??r.location,read(d,'state'))?.civil,...law};
         if(origin!=='declaration_revoked'&&law.recognition?.resurrection===false){
             const id=`${entity}:resurrected:${eventId}`,a=body(d,entity)??{};
-            d.set(['state','created',id],{...engine.byId?.get(entity),id,kind:'person',resurrectedFrom:entity,location:location??r.location});
-            d.set(['state','npcs',id],{...a,status:'正常',hp:Math.max(1,vital?.hp??1),location:location??r.location,incarnation:0});
+            holdingSet(d,engine,['state','created',id],{...engine.byId?.get(entity),id,kind:'person',resurrectedFrom:entity,location:location??r.location},W,eventId);
+            holdingSet(d,engine,['state','npcs',id],{...a,status:'正常',hp:Math.max(1,vital?.hp??1),location:location??r.location,incarnation:0},W,eventId);
             emit(d,engine,{id:eventId,verb:'restored',entity:id,cause:r.eventId,recognizedAs:entity,recognition:false,visibility:'public'});
             return {entity:id,recognized:false,previous:entity};
         }
@@ -747,8 +1079,9 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
         writeRecord(d,engine,`transition:${entity}`,next);
         const p=r.successor&&read(d,...root,'procedures',r.successor);
         if(p&&p.phase!=='closed'){
-            for(const h of aliveHoldings(d,{holder:r.successor}))transferHolding(d,{id:h.id,holder:entity,writer:W,engine,eventId});
-            for(const [key,amount] of Object.entries(read(d,'ledger','accounts')??{})){const ac=parseAccount(key);if(ac.owner===r.successor&&amount)transfer(d,{from:key,to:accountKey(entity,ac.resource,ac.purpose),amount,writer:W,eventId});}
+            for(const h of aliveHoldings(d,{holder:r.successor})){const hid=transferHolding(d,{id:h.id,holder:entity,writer:W,engine,eventId});projectHolding(d,engine,h,holdingRow(d,hid),{eventId});}
+            distributeEmployments(d,engine,r.successor,[{heir:entity,share:1}],{eventId});moveDeposits(d,engine,r.successor,entity,eventId);
+            for(const [key,amount] of Object.entries(read(d,'ledger','accounts')??{})){const ac=parseAccount(key);if(ac.owner===r.successor&&amount)bookTransfer(d,engine,{from:key,to:accountKey(entity,ac.resource,ac.purpose),amount,writer:W,eventId});}
             for(const [id,o] of Object.entries(read(d,'state','obligations')??{})){
                 const n={...o};let changed=false;for(const k of ['debtor','creditor','promisor','promisee'])if(n[k]===r.successor){n[k]=entity;changed=true;}
                 if(changed)d.set(['state','obligations',id],n);
@@ -773,16 +1106,16 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
                 if(amount>0){const id=`${eventId}:compensation:${heir}`;d.set(['state','obligations',id],{id,kind:'compensation',debtor:heir,creditor:entity,resource:'coin_river',amount,remaining:amount,status:'pending',cause:eventId});}
             }
             const restored=new Map();
-            for(const [id,o]of Object.entries(read(d,'state','obligations')??{}))if(o.inheritanceFrom===r.successor&&!terminal(o)){
+            for(const [id,o]of Object.entries(read(d,'state','obligations')??{}))if(o.inheritanceFrom===r.successor&&(!terminal(o)||o.terms?.liabilityCap!==undefined&&o.amount>(o.paid??0))){
                 const n={...o,terms:o.originalTerms??{}};
-                for(const k of ['debtor','promisor','creditor','promisee'])if(receipts.some(h=>h.heir===n[k]))n[k]=entity;
+                for(const k of o.inheritedEndpoints??['debtor','promisor','creditor','promisee'])if(receipts.some(h=>h.heir===n[k]))n[k]=entity;
                 const key=o.originalObligation??id,prior=restored.get(key);
-                n.id=key;n.amount=n.remaining??n.amount;
+                n.id=key;n.remaining=Math.max(0,n.amount-(n.paid??0));n.status=n.remaining?'pending':'settled';delete n.resolvedAt;
                 if(prior){prior.amount+=n.amount;prior.remaining+=n.remaining??n.amount;prior.paid=(prior.paid??0)+(n.paid??0);}
                 else restored.set(key,n);
                 if(id!==key)d.set(['state','obligations',id],{...o,status:'cancelled',remaining:0,restoredBy:eventId});
             }
-            for(const [id,n]of restored){delete n.inheritanceFrom;delete n.originalTerms;delete n.originalObligation;delete n.originalAmount;d.set(['state','obligations',id],n);}
+            for(const [id,n]of restored){delete n.inheritanceFrom;delete n.originalTerms;delete n.originalObligation;delete n.originalAmount;delete n.inheritedEndpoints;d.set(['state','obligations',id],n);}
         }
         // Restore personal civil facts, never appointments or spent assets.
         for(const id of new Set([...r.holdings,...r.subjectHoldings])){const h=holdingRow(d,id);if(!h||h.until===undefined||!['citizen_of','resident_of','resides','household_member','certified','kin'].includes(h.kind))continue;
@@ -810,6 +1143,7 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
             }
         }
         if(location)d.set(['state',entity==='player'?'location':'npcs',...(entity==='player'?[]:[entity,'location'])],location);
-        emit(d,engine,{id:eventId,verb:'restored',entity,cause:r.eventId,visibility:'public'});invariant(d);return next;
+        syncRecordedClaims(d,engine);
+        emit(d,engine,{id:eventId,verb:'restored',entity,cause:r.eventId,visibility:'public'});invariant(d,null,engine);return next;
     });
 }

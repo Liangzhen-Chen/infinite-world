@@ -1,3 +1,4 @@
+import {contractTerms} from './contract-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
@@ -10,6 +11,7 @@ import {wildlifePriceFactor} from './wildlife.mjs';
 import {assessTradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -20,7 +22,7 @@ const quantities=bag=>Object.fromEntries(Object.entries(bag??{}).map(([item,row]
 const assets=state=>({coins:state.player.coins,goods:quantities(state.inventory)});
 function business(d,id){const shop=d.get(...path(id));if(shop?.category!=='business'||shop.owner!=='player')throw Error('需要本人的真实店铺编号');return shop;}
 function localBusiness(d,id){const shop=business(d,id);if(!live(shop))throw Error(`店铺已${shop.status}`);if(shop.location!==d.get('state','location'))throw Error('店主尚未到达铺面');return shop;}
-function leaseFor(d,shop){const lease=d.get(...path(shop.lease));if(lease?.kind!=='lease'||lease.status!=='有效'||lease.deadline<=d.get('state','minute'))throw Error('店铺没有有效合法租赁');return lease;}
+function leaseFor(d,shop){const lease=contractTerms(d.get(...path(shop.lease))??{},d.get('state','minute'));if(lease?.kind!=='lease'||lease.status!=='有效'||lease.deadline<=d.get('state','minute'))throw Error('店铺没有有效合法租赁');return lease;}
 function party(d,engine,name,{consent=false,minutes=0,service=false}={}){
     const id=engine.resolve(name),row=engine.actor(d,id);
     if(id==='player'||!awake(row)||row.location!==d.get('state','location'))throw Error('合同对方须实际在场且清醒');
@@ -50,12 +52,14 @@ function workWindow(d,engine,worker,minutes){
     }
 }
 function endShop(d,engine,shop,status,eventId,reason){
-    const lease=d.get(...path(shop.lease));
+    return changeLegacyHoldings(d,engine,{holder:shop.owner,subject:shop.id,kinds:['operates'],eventId},()=>{
+    const lease=contractTerms(d.get(...path(shop.lease))??{},d.get('state','minute'));
     if(lease?.status==='有效')releaseBusinessLease(d,engine,lease,{source:eventId});
     for(const row of Object.values(d.get('state','records')??{}))if(row.category==='contract'&&row.version===1&&row.business===shop.id&&row.status==='待履行'){
         finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',reason,by:'player',source:eventId});
     }
     holdingSet(d,null,path(shop.id),{...shop,status,reason,endedAt:d.get('state','minute'),endSource:eventId},'business');
+    });
 }
 
 export async function businessTrade(d,args,eventId){
@@ -136,7 +140,7 @@ export async function businessTrade(d,args,eventId){
         finishBusinessContract(d,row,{status:'已完成',fulfilled:quantity,paid:cost,source:eventId});this.advance(d,5,eventId);
         return {business:shop.id,contract:row.id,buyer,seller:'player',item,quantity,cost,instances:moved.instances};
     }
-    const row=d.get(...path(args.contract));
+    const row=contractTerms(d.get(...path(args.contract))??{},d.get('state','minute'));
     if(row?.category!=='contract'||row.version!==1||row.business!==shop.id)throw Error('需要属于该店铺的合同编号');
     if(operation==='pay'){
         if(!row.debt)throw Error('该合同没有待偿还欠款，托管款在履约时支付');

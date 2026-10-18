@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition} from './transport.mjs';
 import {memoryFor,permitted,appendHeard} from './npc-cognition.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
@@ -45,7 +46,7 @@ export function advancePost(d,e,minute){
    d.set(path(row.id),row);continue;
   }
   const recipient=row.to==='player'?d.get('state','player'):d.get('state','npcs',row.to);
-  if(locationOf(d.get('state'),row.to)!==row.destination||['死亡','昏迷','濒死'].includes(recipient?.status)||recipient?.cognitionTravel||recipient?.scheduleTravel||/睡眠|熟睡|睡觉/.test(recipient?.activity??'')){row.status='awaiting-recipient';d.set(path(row.id),row);continue;}
+  if(locationOf(d.get('state'),row.to)!==row.destination||isPhysicallyDead(e,d,row.to)||['昏迷','濒死'].includes(recipient?.status)||recipient?.cognitionTravel||recipient?.scheduleTravel||/睡眠|熟睡|睡觉/.test(recipient?.activity??'')){row.status='awaiting-recipient';d.set(path(row.id),row);continue;}
   const current=d.get('state','npcs',row.from,'memoryStream')?.find(m=>m.id===row.memoryId)??row.payload;
   if(!permitted(current,row.to)){row.status='awaiting-recipient';row.reason='披露许可已撤销';d.set(path(row.id),row);continue;}
   if(!row.deliveredAt){

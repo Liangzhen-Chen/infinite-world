@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {derivedStats}from'./combat.mjs';
 export const xpRequired=newLevel=>newLevel<10?newLevel*100:Math.ceil(newLevel**4/10);
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
@@ -45,7 +46,7 @@ export function milestone(d,engine,kind,subject,eventId){
 
 export function monsterReward(d,engine,target,eventId){
     const actor=d.get('state','creatures',target),definition=engine.byId.get(target);
-    if(!actor||actor.status!=='死亡')throw new Error('没有可验证的怪物战果');
+    if(!actor||!isPhysicallyDead(engine,d,target))throw new Error('没有可验证的怪物战果');
     if(actor.owner)return{experience:0,reason:'驯养动物不计野外战果'};
     const species=definition.monster??target,template=definition.template??engine.byId.get(species)?.template??2;
     const level=actor.level??definition.level??definition.levelRange?.[0]??1,player=d.get('state','player');

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {cloneData} from './storage.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 // U7 灵智等级（指南5.3）：人物与已开灵的精怪共用一张等级表。等级不决定说话
@@ -169,7 +170,7 @@ export function advanceNpcNeeds(d,engine,minute){
  const debts=records.filter(r=>r.category==='debt'&&r.status!=='已还清'&&Number.isFinite(r.deadline));
  for(const id of Object.keys(state.npcs??{}).sort()){
   const npc=state.npcs[id],base=engine.byId.get(id);
-  if(!personSimulation(engine,state,id).value||['死亡','濒死'].includes(npc.status))continue;
+  if(!personSimulation(engine,state,id).value||isPhysicallyDead(engine,state,id)||npc.status==='濒死')continue;
   const {level,maxActions,horizonDays}=intelligenceOf(engine,state,id);if(level<1)continue;
   const needs=detectNeeds(engine,state,id,level,minute,events,debts),goals=clone(npc.goals??base.goals??{});let changed=false;
   for(const g of Object.values(goals).flat())if(g?.source==='need'&&g.status==='进行中'&&!needs.some(n=>n.kind===g.need&&(n.ambition??false)===(g.ambition??false))){

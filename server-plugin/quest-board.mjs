@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('quest-board');
@@ -16,7 +17,7 @@ import {laborNotices} from './labor-market.mjs';
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
 const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('任务内容为空或过长');return n.trim();};
-const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/(睡眠|睡觉|熟睡)/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/(睡眠|睡觉|熟睡)/.test(n.activity??'');
 const place=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
 
@@ -71,7 +72,7 @@ function construction(engine,d,q,id){
 function acceptNpc(d,engine,q,id,now,state=d.get('state')){
  if(!['deliver','visit','build'].includes(q.objective.type))throw Error('NPC尚无执行这种目标的能力，不能接单');
  const actor=state.npcs[id];
- if(engine.byId.get(id)?.tier!=='full'||!awake(actor)||actor.scheduleTravel||actor.cognitionTravel||state.player.companions?.includes(id))throw Error('承接者须是可独立行动的现有full人物');
+ if(engine.byId.get(id)?.tier!=='full'||!awake(engine,state,id,actor)||actor.scheduleTravel||actor.cognitionTravel||state.player.companions?.includes(id))throw Error('承接者须是可独立行动的现有full人物');
  if(id===q.publisher||actor.location!==q.location)throw Error('承接者没有实际看到该地点告示');
  const target=q.objective.type==='build'?(construction(engine,d,q,id).location??d.get('state','projects',q.objective.project,'settlement')):q.objective.location;
  if(!engine.world.locations.some(l=>l.id===target))throw Error('委托目的地必须已登记');
@@ -100,7 +101,7 @@ export function questBoardAction(d,engine,args,eventId){
  if(!['publish','accept','complete','cancel','inspect'].includes(args.operation))throw Error('未知任务操作；发布用publish，接受用accept，完成用complete');
  if(args.operation==='publish'){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
-  if(!awake(actor))throw Error('任务发布者无法清醒履约');
+  if(!awake(engine,d.get('state'),publisher,actor))throw Error('任务发布者无法清醒履约');
   if(!(grade in engine.rules.quests.quotaUnits))throw Error('任务等级无效');
   const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
   if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw Error('身份或本月任务发布额度不足');
@@ -154,7 +155,7 @@ export function questBoardAction(d,engine,args,eventId){
  // U17 generated quests: a world record reaching the stated state (a lair cleared, a motion decided).
  if(o.type==='record')done=o.equals.includes(d.get('state','records',o.record,o.field));
  if(o.type==='deliver'){
-  const target=engine.actor(d,q.publisher);if(['死亡','濒死'].includes(target?.status))throw Error('委托人无法接收交付，需先处理委托变更');
+  const target=engine.actor(d,q.publisher);if(isPhysicallyDead(engine,d,q.publisher)||target?.status==='濒死')throw Error('委托人无法接收交付，需先处理委托变更');
   if(place(d.get('state'),q.publisher)!==d.get('state','location'))throw Error('委托人不在场，不能交付');
   if(engine.quantity(d,'player',o.item)<o.quantity)throw Error('任务交付物品不足');transferItems(d,engine,'player',q.publisher,o.item,o.quantity);done=true;
  }
@@ -175,10 +176,10 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
     if(!booking||['取消','违约'].includes(booking.status))throw Error(booking?.reason??'委托占时记录失效');
     if(q.workEvidence){const p=d.get('state','projects',q.objective.project);if(!p||!['施工中','已完成'].includes(p.status))throw Error('委托工程已停止或不存在');if(p.status==='已完成'){results.push(close(d,engine,q,'已完成','实际施工记录与工程完成状态已核对',after));continue;}}
     else if(booking.deadline<=after){
-     const actor=d.get('state','npcs',q.taker);if(!awake(actor)||actor.scheduleTravel||actor.cognitionTravel||actor.location!==booking.location||booking.workMinutes<q.workRequired)throw Error('未能清醒到场完成约定工作');
+     const actor=d.get('state','npcs',q.taker);if(!awake(engine,d.get('state'),q.taker,actor)||actor.scheduleTravel||actor.cognitionTravel||actor.location!==booking.location||booking.workMinutes<q.workRequired)throw Error('未能清醒到场完成约定工作');
      if(q.objective.type==='deliver'){
       const recipient=engine.actor(d,q.publisher),action=engine.npcObligationAction;
-      if(place(d.get('state'),q.publisher)!==booking.location||!awake(recipient)||recipient.scheduleTravel||recipient.cognitionTravel||q.publisher==='player'&&action?.args?.activity==='睡眠')throw Error('收件人未在约定地点清醒接收，货物仍由承接者持有');
+      if(place(d.get('state'),q.publisher)!==booking.location||!awake(engine,d.get('state'),q.publisher,recipient)||recipient.scheduleTravel||recipient.cognitionTravel||q.publisher==='player'&&action?.args?.activity==='睡眠')throw Error('收件人未在约定地点清醒接收，货物仍由承接者持有');
       if((q.publisher==='player'||d.get('state','player','companions')?.includes(q.publisher))&&action?.tool==='move'&&after<action.arrivalMinute)throw Error('收件人仍在途中，货物仍由承接者持有');
       if(engine.quantity(d,q.taker,q.objective.item)<q.objective.quantity)throw Error('承接者实际交付材料不足');
       transferItems(d,engine,q.taker,q.publisher,q.objective.item,q.objective.quantity);

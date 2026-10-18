@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U4: long-term career metrics. A world-event subscriber reads each settled
 // tool call (events plus before/after state) and keeps observable counters in
 // state.careerMetrics. They feed three things:
@@ -54,7 +55,7 @@ export function recordCareerMetrics(d,engine,events,context){
         if(e.actor!=='player')continue;
         if(['harm','clash'].includes(e.verb)&&e.target){
             inc(m.battles,e.location??before.location);
-            if(status(after,e.target)==='死亡'&&status(before,e.target)!=='死亡'){
+            if(isPhysicallyDead(engine,after,e.target)&&!isPhysicallyDead(engine,before,e.target)){
                 m.kills++;m.lastKill=minute;
                 const previous=before.npcs?.[e.target]??before.creatures?.[e.target];
                 if(previous?.surrendered||/投降/.test(previous?.activity??''))m.surrenderKills=[...m.surrenderKills??[],{actor:'player',target:e.target,minute,sourceEvent:id}];
@@ -134,7 +135,7 @@ export function variantProgress(engine,state,variant){
 }
 
 export function hiddenHolders(engine,state,role){
-    const npcs=Object.entries(state.npcs??{}).filter(([id,row])=>row.status!=='死亡'&&[...row.hiddenProfessions??[],...engine.byId.get(id)?.hiddenProfessions??[]].includes(role)).length;
+    const npcs=Object.entries(state.npcs??{}).filter(([id,row])=>!isPhysicallyDead(engine,state,id)&&[...row.hiddenProfessions??[],...engine.byId.get(id)?.hiddenProfessions??[]].includes(role)).length;
     return npcs+(state.professions?.hidden?.includes(role)?1:0);
 }
 

@@ -7,13 +7,16 @@
  "entries": [
   {
    "id": "loan",
+   "aliases": ["player_loan", "pawn"],
    "label": "借贷",
    "schedule": "installments",
    "handover": {
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "deposit",
@@ -23,7 +26,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "bill",
@@ -33,7 +38,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "rent",
@@ -43,7 +50,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "substitute_performance",
+   "onCreditorGone": "estate"
   },
   {
    "id": "wage",
@@ -53,17 +62,22 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "dividend",
+   "aliases": ["partnership"],
    "label": "分红",
    "schedule": "periodic",
    "handover": {
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "salary",
@@ -73,7 +87,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "tax",
@@ -83,7 +99,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "delivery",
@@ -93,7 +111,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "substitute_performance",
+   "onCreditorGone": "estate"
   },
   {
    "id": "escort",
@@ -103,7 +123,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "promise",
@@ -113,7 +135,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "service",
@@ -123,7 +147,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "judgment",
@@ -133,17 +159,22 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "compensation",
+   "aliases": ["medicine"],
    "label": "赔偿抚恤",
    "schedule": "installments",
    "handover": {
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "accelerate",
+   "onCreditorGone": "estate"
   },
   {
    "id": "upkeep",
@@ -153,7 +184,9 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "project",
@@ -163,7 +196,33 @@
     "debtorGone": "estate",
     "creditorGone": "estate",
     "impaired": "suspend"
-   }
+   },
+   "onDebtorGone": "substitute_performance",
+   "onCreditorGone": "estate"
+  },
+  {
+   "id": "grievance",
+   "label": "怨债",
+   "schedule": "single",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   },
+   "onDebtorGone": "pursue",
+   "onCreditorGone": "void"
+  },
+  {
+   "id": "betrothal",
+   "label": "婚约",
+   "schedule": "single",
+   "handover": {
+    "debtorGone": "estate",
+    "creditorGone": "estate",
+    "impaired": "suspend"
+   },
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   }
  ]
 }

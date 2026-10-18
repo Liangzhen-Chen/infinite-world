@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-life',{sinks:['sink:export']});
@@ -25,14 +26,14 @@ import {famineAt} from './hazard-calendar.mjs';
 import {personSimulation,personConstraint,personHousehold,personConstraints,personName,personAge,personRelationships} from './entity-view.mjs';
 import {actorId,actorPath,householdDefinition} from './npc-state.mjs';
 import {finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
-import {settleFamilyEstate,advanceGuardianships} from './family-inheritance.mjs';
+import {advanceGuardianships} from './family-inheritance.mjs';
 import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
-const DAY=1440,YEAR=360*DAY,unable=['死亡','濒死'];
+const DAY=1440,YEAR=360*DAY,unable=['濒死'];
 const rules=engine=>engine.rules.npcLife;
 const key=(...parts)=>digest(parts).slice(0,16);
 const pairKey=(a,b)=>[a,b].sort().join('|');
@@ -46,7 +47,7 @@ export function npcIsMinor(engine,state,id,minute=state.minute){
  if(age===null)return (state.family?.people?.[id]??engine.byId.get(id))?.flags?.minor!==false;
  return age<(rules(engine)?.adultAge??18);
 }
-const alive=(state,id)=>Boolean(state.npcs[id])&&!unable.includes(state.npcs[id].status);
+const alive=(state,id)=>Boolean(state.npcs[id])&&!isPhysicallyDead(null,state,id)&&!unable.includes(state.npcs[id].status);
 // Full catalog people, plus roster people and campaign-born children whom
 // family life has brought into the simulation (they carry state.npcs.*.life).
 const lifeActor=(engine,state,id)=>Boolean(state.npcs[id])&&(personSimulation(engine,state,id).value||Boolean(state.npcs[id].life));
@@ -154,7 +155,7 @@ function witness(d,engine,eventId,principals,houses,{minute,kind,content,salienc
  for(const id of seen)addMemory(d,id,{...memory,location:state.npcs[id].location,sourceType:'目击',salience:Math.max(2,salience-1)});
  // The player standing right there sees it too; nobody else's knowledge is
  // handed to the player (see npcLifeLines and the people panel).
- if(state.location&&at.has(state.location)&&!unable.includes(state.player?.status))holdingSet(d,null,['state','family','seenByPlayer',eventId],minute,'npc-life');
+ if(state.location&&at.has(state.location)&&!isPhysicallyDead(engine,state,'player')&&!unable.includes(state.player?.status))holdingSet(d,null,['state','family','seenByPlayer',eventId],minute,'npc-life');
  return seen;
 }
 
@@ -263,7 +264,8 @@ function familyDay(d,engine,minute){
 // later night, less often when a household member is caring for them. The
 // illness only adds its own fever to the medical record and restores only its
 // own status, so older wounds and conditions are kept as they were.
-const incapable=['死亡','濒死','昏迷','患病'];
+const incapable=['濒死','昏迷','患病'];
+const incapacitated=(state,id)=>isPhysicallyDead(null,state,id)||incapable.includes(state.npcs[id]?.status);
 const healthRules=engine=>rules(engine)?.health;
 const perDay=perYear=>1-(1-Math.min(1,perYear))**(1/360);
 function ageBand(h,age){let band=null;for(const row of h.bands)if(age>=row.fromAge)band=row;return band;}
@@ -301,7 +303,7 @@ function release(d,illness){
 function caregiverFor(engine,state,illness,minute){
  const house=npcHousehold(engine,state,illness.patient);if(!house)return null;
  const spouse=marriagesOf(engine,state,illness.patient).flatMap(m=>m.partners);
- const able=id=>id!==illness.patient&&lifeActor(engine,state,id)&&!incapable.includes(state.npcs[id].status)&&!npcIsMinor(engine,state,id,minute)
+ const able=id=>id!==illness.patient&&lifeActor(engine,state,id)&&!incapacitated(state,id)&&!npcIsMinor(engine,state,id,minute)
   &&!state.npcs[id].cognitionTravel&&!state.player?.companions?.includes(id)&&(!state.npcs[id].caring||state.npcs[id].caring.illness===illness.id);
  const current=Object.keys(state.npcs).find(id=>state.npcs[id].caring?.illness===illness.id);
  if(current&&able(current)&&house.members.includes(current))return current;
@@ -350,7 +352,7 @@ function beginIllness(d,engine,id,minute,{severity,days,illId,disease=null}){
 // ill or incapable; nursing, recovery and death then follow the rules above.
 export function contractIllness(d,engine,id,minute,{severity,days,disease}){
  const state=d.get('state'),npc=state.npcs?.[id];
- if(!healthRules(engine)||!npc||!lifeActor(engine,state,id)||incapable.includes(npc.status)||npcIllness(state,id))return null;
+ if(!healthRules(engine)||!npc||!lifeActor(engine,state,id)||incapacitated(state,id)||npcIllness(state,id))return null;
  return beginIllness(d,engine,id,minute,{severity,days,disease,illId:`illness_${key(id,minute,disease.id)}`});
 }
 export function recoverIllness(d,engine,illness,minute){
@@ -379,12 +381,15 @@ export function recoverIllness(d,engine,illness,minute){
 export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
- if(!actor||id==='player'||path[1]!=='npcs')return recordLegacyEntityDeath(d,engine,id,minute,cause,illness);
+ if(!actor)return null;
+ if(id==='player'){
+  engine.death(d);return d.get('holdings','protocol','entities','player');
+ }
  const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===(actor.incarnation??0));
  if(previous||actor.diedAt!==undefined)return previous??null;
  let result;
  const life=actor.incarnation??0,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`;
- transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],
+ transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],durations:engine.rules.law?.estate?.durations??{notice:DAY,filing:DAY},
   legacy:()=>{result=recordLegacyEntityDeath(d,engine,id,minute,cause,illness);}});
  return result;
 }
@@ -409,28 +414,9 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
  for(const row of Object.values(state.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中')){
   release(d,row);holdingSet(d,null,['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute},'npc-life');
  }
- const obligations=[];
- for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
-  d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
- }
- const contracts=[];
- for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
-  if(row.version===1&&row.business){
-   if(row.kind==='lease')releaseBusinessLease(d,engine,row,{status:'已终止',source:deathId});
-   else finishBusinessContract(d,refundContractEscrow(d,row),{status:'已取消',source:deathId});
-   holdingSet(d,null,['state','records',cid,'endedByDeath'],deathId,'npc-life');
-  }else holdingSet(d,null,['state','records',cid],{...row,status:'已终止',resolvedAt:minute,endedByDeath:deathId},'npc-life');
-  if(row.enforcement?.active)holdingSet(d,null,['state','records',cid,'enforcement','active'],false,'npc-life');
-  contracts.push(cid);
- }
- const current=d.get(...path),estate=npc?settleFamilyEstate(d,engine,id,minute,deathId,actor.location):{heir:null,coins:current.coins??0,items:{},debts:[]},heir=estate.heir;
- const pets=[];
- for(const [pet,body] of Object.entries(state.creatures??{}))if(body.owner===id||pet===id){
-  const owner=pet===id?null:heir;holdingSet(d,null,['state','creatures',pet,'owner'],owner,'npc-life');pets.push(pet);
-  const entry=d.get('state','pets',pet);
-  if(entry)holdingSet(d,null,['state','pets',pet],{...entry,status:pet===id?'死亡':'已解除',following:false,ended:minute,endedByDeath:deathId},'npc-life');
-  if(state.player.mount===pet)d.remove(['state','player','mount']);
- }
+ const obligations=Object.values(d.get('state','obligations')??{}).filter(o=>o.endedByDeath===deathId).map(o=>o.id).sort();
+ const protocol=d.get('holdings','protocol','entities',id),estate={id:protocol?.successor,heir:null,heirs:[],coins:actor.coins??0,items:structuredClone(actor.inventory??{}),allocations:[],debts:[],guardianships:[]};
+ const contracts=[],pets=[];
  const ledger=house?state.settlements?.[house.settlement]:null,population=Number.isSafeInteger(ledger?.population)?{before:ledger.population,after:Math.max(0,ledger.population-1)}:null;
  if(population)d.set(['state','settlements',house.settlement,'population'],population.after);
  const content=`${name}在${engine.calendar(minute).text.slice(0,-6)}${cause}。`;
@@ -448,7 +434,7 @@ function healthDay(d,engine,minute){
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
   if(illness.patient==='player')continue;
   const npc=d.get('state','npcs',illness.patient);
-  if(!npc||npc.status==='死亡'){release(d,illness);holdingSet(d,null,['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute},'npc-life');continue;}
+  if(!npc||isPhysicallyDead(engine,d,illness.patient)){release(d,illness);holdingSet(d,null,['state','family','illnesses',illness.id],{...d.get('state','family','illnesses',illness.id),status:'中止',endedAt:minute},'npc-life');continue;}
   if(minute>=illness.endsAt){recoverIllness(d,engine,illness,minute);ended.add(illness.patient);continue;}
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
@@ -459,7 +445,7 @@ function healthDay(d,engine,minute){
  for(const id of Object.keys(d.get('state','npcs')).sort()){
   const state=d.get('state'),npc=state.npcs[id];
   const along=withPlayer(state,id);
-  if(!lifeActor(engine,state,id)||incapable.includes(npc.status)||!(settled(state,id)||along)||ended.has(id))continue;
+  if(!lifeActor(engine,state,id)||incapacitated(state,id)||!(settled(state,id)||along)||ended.has(id))continue;
   const age=npcAgeAt(engine,state,id,minute),band=age===null?null:ageBand(h,age);if(!band)continue;
   if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
   if(clockRoll(seed,`illness:${id}`,day)<Math.min(1,band.illnessPerYear/360))fallIll(d,engine,id,minute,band);
@@ -495,7 +481,7 @@ function mobile(engine,state,id,constraints=null){
  if(personConstraint(engine,state,id,undefined,constraints))return false;
  if(state.npcs[id]?.levy)return false;
  const n=state.npcs[id];
- return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id,undefined,constraints))&&settled(state,id)&&!incapable.includes(n.status)&&!n.caring&&!npcMigration(state,id);
+ return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id,undefined,constraints))&&settled(state,id)&&!incapacitated(state,id)&&!n.caring&&!npcMigration(state,id);
 }
 // With no relative or friend to take them, a household elsewhere may still
 // take in someone fleeing hunger or harm: the settlement is not short of food
@@ -511,7 +497,7 @@ function strangerHost(engine,state,id,from,minute){
   const members=householdMembers(engine,state,house.id).filter(x=>present(engine,state,x));
   const coming=Object.values(state.family?.migrations??{}).filter(m=>m.to.household===house.id&&m.status!=='中止');
   if(members.length+coming.filter(m=>['待出发','在途'].includes(m.status)).length>=s.maxHousehold||coming.filter(m=>m.stranger&&!m.with).length>=s.perHousehold)continue;
-  const host=members.filter(x=>lifeActor(engine,state,x)&&alive(state,x)&&!incapable.includes(state.npcs[x].status)&&!npcIsMinor(engine,state,x,minute)&&!npcMigration(state,x)
+  const host=members.filter(x=>lifeActor(engine,state,x)&&alive(state,x)&&!incapacitated(state,x)&&!npcIsMinor(engine,state,x,minute)&&!npcMigration(state,x)
    &&npcHousehold(engine,state,x)?.id===house.id&&relationView(engine,state,x,id).trust>=s.minimumTrust&&relationView(engine,state,x,id).affection>=s.minimumAffection).sort()[0];
   if(host)rows.push({host,house:npcHousehold(engine,state,host),related:false,stranger:true});
  }
@@ -557,7 +543,7 @@ function migrationReason(engine,state,id,minute,seed){
  }
  const harm=(state.npcs[id].memoryStream??[]).filter(m=>['conflict','crime'].includes(m.kind)&&m.sourceType==='亲历'&&m.participants?.[1]===id&&m.participants[0]!==id&&m.minute<=minute&&minute-m.minute<=r.refuge.withinDays*DAY).sort((a,b)=>b.minute-a.minute);
  for(const m of harm){
-  const actor=m.participants[0],place=actor==='player'?(state.player?.status!=='死亡'?state.location:null):alive(state,actor)?state.npcs[actor].location??npcHousehold(engine,state,actor)?.homeLocation:null;
+  const actor=m.participants[0],place=actor==='player'?(!isPhysicallyDead(engine,state,'player')?state.location:null):alive(state,actor)?state.npcs[actor].location??npcHousehold(engine,state,actor)?.homeLocation:null;
   const danger=state.records?.[`war-danger:${house.settlement}`],warThreat=danger&&danger.since<=minute&&minute<danger.until&&danger.actor===actor;
   if(!warThreat&&(!place||!within(engine,place,house.settlement)))continue;
   if(clockRoll(seed,`migration:refuge:${id}`,day)>=r.refuge.chancePerDay)break;
@@ -580,7 +566,7 @@ function followers(engine,d,id,from,minute){
   if(x===id||engine.byId.get(x)?.tier==='full'&&!minor)continue;
   if(!(spouses.has(x)&&!minor||minor&&childOf(x)))continue;
   if(!d.get('state','npcs',x)&&!bring(d,engine,x,minute,'随家人迁居'))continue;
-  const now=d.get('state');if(!alive(now,x)||incapable.includes(now.npcs[x].status)||now.npcs[x].caring||npcMigration(now,x)||!settled(now,x))continue;
+  const now=d.get('state');if(!alive(now,x)||incapacitated(now,x)||now.npcs[x].caring||npcMigration(now,x)||!settled(now,x))continue;
   // A roster child already in state only for a school bell (or another
   // earlier event) now lives in state because the family is moving; school
   // at the new home is re-derived from the new household after arrival.
@@ -647,9 +633,9 @@ function depart(d,engine,m,at){
  const lead=m.with?state.family.migrations[m.id.slice(0,m.id.lastIndexOf(':'))]:null;
  if(lead?.status==='中止'){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'同行的家人没有动身',endedAt:at},'npc-life');return;}
  if(lead?.status==='待出发'){holdingSet(d,null,['state','family','migrations',m.id],{...m,departAt:lead.departAt,lastDelay:'等同行家人动身'},'npc-life');return;}
- if(!npc||unable.includes(npc.status)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at},'npc-life');return;}
+ if(!alive(state,m.person)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at},'npc-life');return;}
  if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at},'npc-life');return;}
- if(!settled(state,m.person)||incapable.includes(npc.status)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
+ if(!settled(state,m.person)||incapacitated(state,m.person)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
  let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.document.randomSeed);}catch{postpone(d,engine,m,'路线暂不可通行');return;}
  if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
@@ -668,7 +654,7 @@ function depart(d,engine,m,at){
 function arrive(d,engine,m,at){
  const state=d.get('state'),npc=state.npcs[m.person];
  if(npc?.scheduleTravel?.migration===m.id){holdingSet(d,null,['state','npcs',m.person,'location'],m.to.home,'npc-life');d.remove(['state','npcs',m.person,'scheduleTravel']);}
- if(!npc||unable.includes(npc.status)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'途中出事，未能抵达',endedAt:at},'npc-life');return;}
+ if(!alive(state,m.person)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'途中出事，未能抵达',endedAt:at},'npc-life');return;}
  const name=nameOf(engine,state,m.person);
  setMembership(d,engine,m.from.household,m.person,false);setMembership(d,engine,m.to.household,m.person,true);
  let population=null;
@@ -701,7 +687,7 @@ export function nextNpcLifeMinute(state,after){
 // family, health and moving news actually in their own memory.
 export function npcLifeNews(engine,document,id){
  const state=document.state,npc=state.npcs[id],days=migrationRules(engine)?.newsDays??90;
- if(!npc||npc.status==='死亡')return [];
+ if(!npc||isPhysicallyDead(engine,state,id))return [];
  return (npc.memoryStream??[]).filter(m=>['family','health','migration'].includes(m.kind)&&m.minute<=state.minute&&state.minute-m.minute<=days*DAY&&!m.private&&!['private','secret'].includes(m.visibility)&&!npc.cognition?.blurred?.[m.id])
   .sort((a,b)=>b.minute-a.minute||a.id.localeCompare(b.id)).slice(0,3)
   .map(m=>({id:m.id,rootMemoryId:m.rootMemoryId??m.id,minute:m.occurredAt??m.minute,content:m.content,sourceType:m.sourceType,heardFrom:m.heardFrom??null}));
@@ -720,7 +706,7 @@ function coworkDay(d,engine,minute){
  const state=d.get('state'),period=Math.floor(minute/DAY/k.everyDays),start=minute-DAY,at=new Map(),constraints=personConstraints(engine,state);
  for(const id of Object.keys(state.npcs).sort()){
   const n=state.npcs[id];
-  if(!lifeActor(engine,state,id)||incapable.includes(n.status)||!settled(state,id)||n.caring||npcIsMinor(engine,state,id,minute))continue;
+  if(!lifeActor(engine,state,id)||incapacitated(state,id)||!settled(state,id)||n.caring||npcIsMinor(engine,state,id,minute))continue;
   try{
    for(let cursor=start;cursor<minute;){
     const slot=scheduleAt(engine,id,cursor,state,constraints);if(!slot)break;

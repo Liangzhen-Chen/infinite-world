@@ -269,6 +269,47 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "features": [
+      {
+        "id": "feature_hw_forge_hearth",
+        "name": "铁铺炉膛",
+        "kind": "object",
+        "position": [
+          0,
+          0
+        ],
+        "state": {},
+        "owner": "npc_hw_duanyan",
+        "access": "consent",
+        "thermalModel": {
+          "heatCapacityJPerC": 1000,
+          "maximumC": 1000,
+          "ambientC": 20,
+          "passiveExchangeJPerMinute": 50,
+          "burnMgPerMinute": 100,
+          "fuelJPerMg": 20,
+          "efficiencyPermille": 900,
+          "ashPermille": 50,
+          "ignitionMaximumMg": 5000,
+          "ignitable": true,
+          "dryable": false,
+          "fuels": [
+            {
+              "item": "item_charcoal",
+              "milligramsPerUnit": 250000
+            }
+          ]
+        },
+        "thermalInitial": {
+          "temperatureC": 20,
+          "fuelMg": 0,
+          "moistureMg": 0
+        },
+        "unattendedFire": {
+          "responsible": "npc_hw_duanyan"
+        }
+      }
     ]
   },
   {
@@ -30872,5 +30913,28 @@
         }
       ]
     }
+  },
+  {
+    "id": "bld_hw_grain_annex",
+    "name": "铁铺巷公仓",
+    "parent": "loc_hw",
+    "scope": "loc_hw",
+    "terrain": "平地",
+    "coordinates": [
+      0.31,
+      0
+    ],
+    "owner": "loc_hw",
+    "purpose": "粮仓",
+    "facilityType": "granary",
+    "material": "wood",
+    "capacity": 20000,
+    "access": {
+      "mode": "public"
+    },
+    "openHours": [
+      420,
+      1350
+    ]
   }
 ]

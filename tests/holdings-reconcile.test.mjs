@@ -3,6 +3,7 @@
 // 场景：组织（创立、入会议案、表决）、商号（租铺、经营、雇工）、受雇、借贷、多日与离屏推进；
 // 犯罪立案 → 认罪 → 逮捕羁押（受限 guest_of{detained}）→ 羁押期满；成婚与死亡（遗产、监护、合同终止、宠物与同行）。
 import test from 'node:test';
+import {advanceProcedure,transitionState} from '../server-plugin/transition.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -116,6 +117,12 @@ test('成婚与死亡：婚姻双向两条、遗产实体、合同终止、继�
     const married=d.document;d=engineDraft(engine,married);
     const death=recordEntityDeath(d,engine,host,married.state.minute,'寿终');
     assert.ok(death);check(engine,married,d.document,'death');
-    assert.ok(d.document.holdings.entities[`estate_${death.id}`],'遗产是实体');
-    assert.equal(d.document.holdings.entities[`estate_${death.id}`].facts.phase,'closed','旧实现先分后还，遗产当刻关闭（S2b 改为程序阶段）');
+    const estate=transitionState(d,host).successor;
+    assert.equal(death.estate.id,estate,'兼容凭据指向同一个协议遗产');
+    assert.ok(d.document.holdings.entities[estate],'遗产是实体');
+    assert.equal(d.document.holdings.entities[estate].facts.phase,'notice','先公告，不提前处分遗产');
+    const pending=d.document;d=engineDraft(engine,pending);
+    d.set(['state','minute'],pending.state.minute+2*1440);advanceProcedure(d,engine,estate);
+    assert.equal(d.document.holdings.entities[estate].facts.phase,'closed','公告、申报后完成清偿与分配');
+    check(engine,pending,d.document,'estate distribution');
 });

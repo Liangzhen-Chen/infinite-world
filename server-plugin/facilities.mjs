@@ -5,8 +5,10 @@ import {resolveInteraction} from './interactions.mjs';
 import {weatherAt} from './weather.mjs';
 import {publishTransitionEvent,presentWitnesses} from './world-events.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
+import {transition} from './transition.mjs';
+import {isGone} from './lifecycle-state.mjs';
 
-import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within} from './facility-state.mjs';
+import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('facilities',{kinds:['owns']});
 const DAY=1440,HOUR=60;
@@ -15,13 +17,16 @@ function event(d,engine,id,verb,building,summary,{minute=d.get('state','minute')
  publishTransitionEvent(d,engine,{id,verb,actor:actor??building,target:building,subject:building,
   minute,location,witnesses:presentWitnesses(state,location),visibility:'public',tags:['entity-transition','facility'],summary,sourceEvent,...facts});
 }
-export function damageFacility(d,engine,building,amount,{cause='损毁',minute=d.get('state','minute'),sourceEvent=`${cause}:${minute}`,actor}={}){
+export function damageFacility(d,engine,building,amount,{cause='损毁',minute=d.get('state','minute'),sourceEvent=`${cause}:${minute}`,actor,fireOrigin}={}){
  const state=d.get('state'),view=facilityView(engine,state,building);if(!view||!(amount>0))return null;
  const marker=`facility_damage:${sourceEvent}:${building}`;if(state.records?.[marker])return view;
  const row=state.buildings?.[building]??{},condition=Math.max(0,view.condition-amount);
  if(condition===view.condition)return view;
+ const grain=cause==='火灾'?facilityRuntime().damageStoredGrain(d,engine,building,view.condition-condition,view.condition,{eventId:marker,minute}):0;
  holdingSet(d,null,['state','buildings',building],{...row,condition,...(condition===0?{burning:false}:{})},'facilities');
  d.set(['state','records',marker],{category:'facility_damage',building,amount:view.condition-condition,cause,minute,sourceEvent});
+ if(condition===0)transition(d,engine,{entity:building,basis:'destruction',origin:'destruction',eventId:`${marker}:gone`,causes:[sourceEvent]});
+ if(cause==='火灾'&&fireOrigin)facilityRuntime().registerFireDamage(d,engine,{building,damage:view.condition-condition,grain,origin:fireOrigin,eventId:marker,minute});
  const after=facilityView(engine,d.get('state'),building),base=facilityDefinition(engine,state,building);
  event(d,engine,`${sourceEvent}:facility:${building}`,'harm',building,`${base.name}因${cause}受损${after.status==='可用'?'':`，用途${after.status}`}`,{minute,actor,sourceEvent,cause,damage:view.condition-condition});
  return after;
@@ -31,13 +36,14 @@ export function damageFacilities(d,engine,locations,amount,context={}){
 }
 // Called only after K2 resolved the material rule. Water and rain use the same
 // extinguishing result as features. Flood additionally damages the structure.
-export function applyFacilityInteraction(d,engine,target,outcome,{minute=d.get('state','minute'),sourceEvent=`${outcome.agent}:${minute}`,depth=0}={}){
+export function applyFacilityInteraction(d,engine,target,outcome,{minute=d.get('state','minute'),sourceEvent=`${outcome.agent}:${minute}`,depth=0,fireOrigin}={}){
  const view=facilityView(engine,d.get('state'),target),changed={added:[],removed:[]};if(!view)return changed;
  const row={...(d.get('state','buildings',target)??{}),condition:view.condition};
  if(outcome.remove.includes('burning')&&row.burning){row.burning=false;changed.removed.push('burning');}
  if(outcome.add.includes('wet')){row.wetUntil=minute+DAY;changed.added.push('wet');}
  if(outcome.add.includes('burning')&&!view.burning&&view.condition>0){
   row.burning=true;row.fireDepth=depth;row.fireSince=minute;row.fireTick=minute;row.fireSpread=false;changed.added.push('burning');
+  if(fireOrigin)row.fireOrigin=fireOrigin;
  }
  if(changed.added.length||changed.removed.length)holdingSet(d,null,['state','buildings',target],row,'facilities');
  if(changed.added.includes('burning'))event(d,engine,`${sourceEvent}:ignite:${target}`,'harm',target,`${facilityDefinition(engine,d.get('state'),target).name}起火，已经停用`,{minute,sourceEvent,cause:'火灾'});
@@ -60,23 +66,34 @@ function distance(a,b){
  return p&&q?Math.hypot((p.x??p[0])-(q.x??q[0]),(p.y??p[1])-(q.y??q[1]))*(a.position&&b.position?1:1000):Infinity;
 }
 export function advanceFacilityFire(d,engine,{after}){
- const ids=Object.entries(d.get('state','buildings')??{}).filter(([,r])=>r.burning).map(([id])=>id).sort();
- for(const id of ids){
-  let row=d.get('state','buildings',id);const tick=row.fireTick??row.fireSince??after;
-  for(let at=tick+HOUR;at<=after&&row.burning;at+=HOUR){
+ // Settle all fires in time order, including newly ignited neighbours. A long
+ // advance and hourly advances must consume the same fuel and stored grain.
+ for(;;){
+  const due=Object.entries(d.get('state','buildings')??{}).filter(([,r])=>r.burning).map(([id,r])=>({id,at:(r.fireTick??r.fireSince??after)+HOUR})).filter(r=>r.at<=after).sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id))[0];
+  if(!due)break;
+  const {id,at}=due;let row=d.get('state','buildings',id);
    const w=weather(engine,d,id,at),rain=['rain','storm'].includes(w?.kind),base=facilityDefinition(engine,d.get('state'),id);
-   if(rain){applyFacilityInteraction(d,engine,id,resolveInteraction('rain',traitsOf(engine,d.get('state'),id)),{minute:at});break;}
+   if(rain){applyFacilityInteraction(d,engine,id,resolveInteraction('rain',traitsOf(engine,d.get('state'),id)),{minute:at});continue;}
    if(!row.fireSpread&&(row.fireDepth??0)<2){
-    const air=facilityDefinition(engine,d.get('state'),base.parent)?.features?.find(f=>f.airModel?.windVector),vector=air?.airModel?.windVector;
+    const air=facilityDefinition(engine,d.get('state'),base.parent)?.features?.find(f=>f.airModel?.windVector),vector=base.windVector??air?.airModel?.windVector;
     const wind=base.windKmh??w?.windKmh??(vector?Math.hypot(...vector)*3.6:0),reach=8+Math.min(12,wind/2);
-    const neighbours=allFacilities(engine,d.get('state')).filter(b=>b.id!==id&&distance(base,b)<=reach).sort((a,b)=>distance(base,a)-distance(base,b)||a.id.localeCompare(b.id)).slice(0,2);
-    for(const b of neighbours){const outcome=resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id));applyFacilityInteraction(d,engine,b.id,outcome,{minute:at,sourceEvent:`fire:${id}:${at}`,depth:(row.fireDepth??0)+1});}
+    const neighbours=allFacilities(engine,d.get('state')).filter(b=>b.id!==id&&!facilityView(engine,d.get('state'),b.id).burning&&downwindReach(base,b,vector,reach)&&resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id)).add.includes('burning')).sort((a,b)=>distance(base,a)-distance(base,b)||a.id.localeCompare(b.id)).slice(0,2);
+    for(const b of neighbours){const outcome=resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id));applyFacilityInteraction(d,engine,b.id,outcome,{minute:at,sourceEvent:`fire:${id}:${at}`,depth:(row.fireDepth??0)+1,fireOrigin:row.fireOrigin});}
    }
    const view=facilityView(engine,d.get('state'),id);
-   damageFacility(d,engine,id,view.material==='stone'?4:25,{cause:'火灾',minute:at,sourceEvent:`fire:${id}:${at}`});
-   row={...d.get('state','buildings',id),fireTick:at,fireSpread:true};holdingSet(d,null,['state','buildings',id],row,'facilities');
-  }
+   damageFacility(d,engine,id,view.material==='stone'?4:25,{cause:'火灾',minute:at,sourceEvent:`fire:${id}:${at}`,fireOrigin:row.fireOrigin});
+   row={...d.get('state','buildings',id),fireTick:at,fireSpread:true};
+   holdingSet(d,null,['state','buildings',id],row,'facilities');
  }
+}
+function downwindReach(a,b,vector,reach){
+ const metres=distance(a,b);if(metres>reach)return false;
+ const p=a.position??a.coordinates,q=b.position??b.coordinates;
+ // No direction is invented for authored adjacency without coordinates.
+ if(!vector||!p||!q||!Math.hypot(...vector))return metres<=reach;
+ const dx=(q.x??q[0])-(p.x??p[0]),dy=(q.y??q[1])-(p.y??p[1]);
+ const along=(dx*vector[0]+dy*vector[1])/(Math.hypot(dx,dy)*Math.hypot(...vector)||1);
+ return metres<=Math.max(2,8+(reach-8)*along);
 }
 export function nextFacilityMinute(state,now){
  return Math.min(Infinity,...Object.values(state.buildings??{}).filter(b=>b.burning).map(b=>Math.max(now+1,(b.fireTick??b.fireSince??now)+HOUR)));
@@ -102,7 +119,9 @@ export function advanceFacilities(d,engine,{before,after}){
    // Store the fractional wear; integer arithmetic makes partitioned advances
    // and one long advance agree. Ordinary wear emits only at a use threshold.
    const condition=Math.max(0,view.condition-loss);
-   holdingSet(d,null,['state','buildings',base.id],{...row,condition,wearUnits:wear%10,lastWearDay:day},'facilities');
+   if(condition===0)damageFacility(d,engine,base.id,loss,{cause:'损耗',minute:at,sourceEvent:`wear:${base.id}:${day}`});
+   const worn={...d.get('state','buildings',base.id),...row,condition,wearUnits:wear%10,lastWearDay:day};
+   holdingSet(d,null,['state','buildings',base.id],worn,'facilities');
    const next=facilityView(engine,lookState(d),base.id);
    if(view.status!==next.status)event(d,engine,`wear:${base.id}:${day}`,'harm',base.id,`${base.name}年久失修，用途${next.status}`,{minute:at,cause:'损耗'});
   }
@@ -119,6 +138,14 @@ export function completeFacilityProject(d,engine,p,minute=d.get('state','minute'
  if(target){
   const row=d.get('state','buildings',target)??{},view=facilityView(engine,d.get('state'),target);
   if(!view)throw Error('施工建筑不存在');
+  if(isGone(engine,d,target)){
+   if(p.projectWork!=='repair'||!p.public||p.remainingDays>0||p.remainingWork>0)throw Error('建筑已毁灭，须以实际完工工程重建');
+   const id=`bld_rebuilt_${p.id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,base=facilityDefinition(engine,d.get('state'),target);
+   const owner=p.public&&!p.public.payer||p.civicApproval?p.settlement:p.creator??'player';
+   holdingSet(d,null,['state','created',id],{...base,id,owner,rebuiltFrom:target,builtProject:p.id},'facilities');
+   holdingSet(d,null,['state','buildings',id],{owner,condition:100,burning:false,wearUnits:0,builtAt:minute,project:p.id,...(p.route?{route:p.route}:{})},'facilities');
+   event(d,engine,`${p.id}:complete`,'help',id,`${base.name}重建完成，用途恢复`,{minute,actor:p.creator,sourceEvent:p.id});return id;
+  }
   holdingSet(d,null,['state','buildings',target],p.projectWork==='repair'?{...row,condition:100,burning:false,wearUnits:0,lastRepair:minute}:
    {...row,condition:view.condition,expansions:(row.expansions??0)+1},'facilities');
   event(d,engine,`${p.id}:complete`,'help',target,`${facilityDefinition(engine,d.get('state'),target).name}${p.projectWork==='repair'?'修缮完成，用途恢复':'扩建完成，服务容量增加'}`,{minute,actor:p.creator,sourceEvent:p.id});return target;
@@ -130,3 +157,4 @@ export function completeFacilityProject(d,engine,p,minute=d.get('state','minute'
  holdingSet(d,null,['state','buildings',id],{owner,condition:100,project:p.id,builtAt:minute,...(p.route?{route:p.route}:{})},'facilities');
  event(d,engine,`${p.id}:complete`,'help',id,`${p.name}建成，${FACILITY_TYPES[kind].purpose}投入使用`,{minute,actor:p.creator,sourceEvent:p.id});return id;
 }
+installFacilityRuntime({completeFacilityProject,applyFacilityInteraction});

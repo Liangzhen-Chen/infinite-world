@@ -2,7 +2,7 @@ import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
 import {educationSlot,educationCourses,courseWindow} from './education-state.mjs';
-import {facilityView} from './facility-state.mjs';
+import {facilityView,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
@@ -12,6 +12,7 @@ import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     const previous=engine.educationCourseContext;
@@ -23,6 +24,7 @@ export function scheduleAt(engine,npcId,minute,state,constraints=null){
     try{return scheduledSlot(engine,npcId,minute,state,constraints);}finally{engine.educationCourseContext=previous;}
 }
 function scheduledSlot(engine,npcId,minute,state,constraints=null){
+    if(state&&!isEffective(engine,state,npcId))return null;
     constraints??=state?personConstraints(engine,state):null;
     const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
     if(hold?.category==='transition')return null;
@@ -45,7 +47,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
 }
 
-const incapacitated=npc=>['死亡','濒死','昏迷','患病'].includes(npc.status);
+const incapacitated=npc=>['濒死','昏迷','患病'].includes(npc.status);
 export function nextNpcService(engine,npcId,minute,service,state){
     const constraints=state?personConstraints(engine,state):null;
     for(let cursor=minute;cursor<minute+31*1440;){
@@ -58,7 +60,7 @@ export function nextNpcService(engine,npcId,minute,service,state){
 export function npcAvailability(engine,state,npcId){
     const npc=state.npcs[npcId],slot=scheduleAt(engine,npcId,state.minute,state);
     if(!npc)return {activity:'不在战役中',services:[]};
-    if(incapacitated(npc))return {activity:npc.status,services:[]};
+    if(!isEffective(engine,state,npcId)||incapacitated(npc))return {activity:npc.status,services:[]};
     if(personConstraint(engine,state,npcId))return {activity:'依法拘留',services:[]};
     if(npc.scheduleTravel||npc.cognitionTravel)return {activity:npc.cognitionTravel?'携信赶路':'赶路',services:[]};
     const work=engine.npcAutonomyBusy?.(state,npcId);
@@ -107,13 +109,13 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     for(const npcId of Object.keys(d.get('state','npcs'))){
-        const regional=batch?.persons.get(npcId);
+        const regional=jobs.has(npcId)?null:batch?.persons.get(npcId);
         if(promote&&!regional)continue;
         if(regional&&!regional.due)continue;
         const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;
         if(hold?.category==='transition')continue;
         if(hold){
-            if(d.get('state','npcs',npcId,'status')!=='死亡'){
+            if(isEffective(engine,d,npcId)){
                 d.set(['state','npcs',npcId,'location'],hold.location);d.set(['state','npcs',npcId,'activity'],'依法拘留');
                 if(d.get('state','npcs',npcId,'scheduleTravel'))d.remove(['state','npcs',npcId,'scheduleTravel']);
             }
@@ -134,7 +136,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         // slot is exactly the result of walking every intervening slot.
         if(regional)cursor=after;
         while(cursor<=after){
-            if(incapacitated(npc)){activity(npc.status);break;}
+            if(!isEffective(engine,d,npcId)||incapacitated(npc)){activity(npc.status);break;}
             if(d.get('state','player','companions')?.includes(npcId)){activity('同行');break;}
             const trip=npc.scheduleTravel;
             if(trip){
@@ -156,6 +158,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                 catch{activity('行程受阻');}
                 if(route&&npc.coins<route.cost){route=null;activity('路费不足，暂留原处');}
                 if(route){
+                    facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
                     moveCoins(d,{from:purse(null,npcId),to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null});
                     npc.coins-=route.cost;
                     npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges};
@@ -168,6 +171,8 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                 if(!regional&&job?.laborMarket&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
             }
             if(slot.until>after)break;
+            const next=facilityRuntime().hasUnattendedFurnace(engine,npcId)?scheduleAt(engine,npcId,slot.until,peekState(d),constraints):null;
+            if(npc.location===slot.location&&next&&next.activity!==slot.activity&&!next.services?.length&&!/锻|打铁|做工|值守|生产/.test(next.activity??''))facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,slot.until);
             cursor=slot.until;
         }
         // Preserve deterministic travel calculations while writing only the
@@ -214,3 +219,4 @@ export function validateNpcSchedules(world){
     }
     return errors;
 }
+installFacilityRuntime({scheduleAt});

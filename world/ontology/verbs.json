@@ -5,6 +5,10 @@
  "version": 1,
  "note": "事件动词词汇表（I18）。social 来自 world-events.SOCIAL_VERBS；code 为代码 verb 字面量；tool 为 deriveWorldEvents 的默认动词（工具名）；primitive 为 06 §6.3 原语事件；design 为 03/04/06 的设计动词，S0 只登记不接线。",
  "entries": [
+  {"id":"contest_win","label":"争夺胜出","family":"code"},
+  {"id":"contest_lose","label":"争夺落选","family":"code"},
+  {"id":"proposal_rejected","label":"提案被拒","family":"code"},
+  {"id":"reaction_cut","label":"反应链截断","family":"code"},
   {
    "id": "harm",
    "label": "伤害",

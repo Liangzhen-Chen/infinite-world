@@ -25,6 +25,9 @@ import {declareLedgerWriter,balance} from './ledger.mjs';
 import {armyRations,moveStock} from './stock.mjs';
 import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
 import {syncHoldings,holdingSet} from './holding-sources.mjs';
+import {changeHolding} from './transition.mjs';
+import {aliveHoldings} from './holdings.mjs';
+import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 declareHoldingWriter('military',{kinds:['member_of','holds_office','fief','employed_by','resides','devotee_of'],entities:['office']});
 // S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
 // 就地觅食来自 src:regrowth，吃掉的进 sink:consume。
@@ -200,7 +203,7 @@ const armyOf=(d,id)=>{const a=d.get(...rec(armyKey(id)));return a?clone(a):null;
 // ---- 征召：每户抽丁，人物去营地服役，村里可用劳力扣减 ------------------------------------
 // 户里的成年人：已在战役中的人物看其状态；尚未展开的户籍名册成员只看年龄。
 function eligible(engine,state,id,m,minute){
- const n=state.npcs?.[id];if(n&&(['死亡','濒死','昏迷','患病'].includes(n.status)||n.levy||npcMigration(state,id)))return false;
+ const n=state.npcs?.[id];if(n&&(!isEffective(engine,state,id)||['濒死','昏迷','患病'].includes(n.status)||n.levy||npcMigration(state,id)))return false;
  if(state.player?.companions?.includes(id)||npcIsMinor(engine,state,id,minute))return false;
  const age=npcAgeAt(engine,state,id,minute);return Number.isFinite(age)&&age>=m.levy.minAge&&age<=m.levy.maxAge;
 }
@@ -215,7 +218,7 @@ export function raiseLevy(d,engine,a,at,sourceEvent){
   let count=0;const people=[];
   for(const h of houses){
    if(count>=quota)break;if(prior.households[h.id])continue;
-   const members=householdMembers(engine,state,h.id),adults=members.filter(x=>state.npcs?.[x]?.status!=='死亡'&&!npcIsMinor(engine,state,x,at));
+   const members=householdMembers(engine,state,h.id),adults=members.filter(x=>!isPhysicallyDead(engine,state,x)&&!npcIsMinor(engine,state,x,at));
    // 抽真实户籍中最年轻的适龄者，并为名册居民展开服役状态；独身户留一名成年人。
    const youngest=adults.length>=2?adults.filter(x=>eligible(engine,state,x,m,at)).sort((x,y)=>(npcAgeAt(engine,state,x,at)-npcAgeAt(engine,state,y,at))||x.localeCompare(y))[0]:null;
    if(!youngest)continue;
@@ -224,7 +227,7 @@ export function raiseLevy(d,engine,a,at,sourceEvent){
    prior.households[h.id]=pick;count++;
    if(pick){
     people.push(pick);holdingSet(d,null,['state','npcs',pick,'levy'],{army:a.id,location:a.location,since:at,settlement:sid,household:h.id},'military');
-    for(const kin of members)if(kin!==pick&&state.npcs?.[kin]?.status!=='死亡')adjustStanding(d,engine,kin,a.party,m.levy.familyStanding,{sourceEvent:`${sourceEvent}:levy:${pick}`,reason:`家里的${nameOf(engine,pick)}被征去${a.name}`,minute:at});
+    for(const kin of members)if(kin!==pick&&isEffective(engine,state,kin))adjustStanding(d,engine,kin,a.party,m.levy.familyStanding,{sourceEvent:`${sourceEvent}:levy:${pick}`,reason:`家里的${nameOf(engine,pick)}被征去${a.name}`,minute:at});
    }
   }
   if(!count)continue;
@@ -248,7 +251,10 @@ export function releaseLevy(d,engine,a,n,{at,reason,killed=false,person=null}){
   let take=Math.min(left,a.levy.from[sid]),fromUnnamed=Math.min(take,unnamed),fromNamed=take-fromUnnamed;
   if(person&&named.some(p=>p.id===person)){fromUnnamed=0;fromNamed=take;}
   const freed=person&&named.some(p=>p.id===person)?[person]:named.slice(named.length-fromNamed).map(p=>p.id);
-  for(const id of freed){d.remove(['state','npcs',id,'levy']);if(killed)recordMilitaryDeath(d,engine,id,at);released.push(id);}
+  for(const id of freed){
+   if(!killed)for(const h of aliveHoldings(d,{kind:'member_of',holder:id,subject:a.id}))changeHolding(d,engine,{op:'close',id:h.id,reason:'vacated',eventId:`army-release:${a.id}:${id}:${at}`});
+   d.remove(['state','npcs',id,'levy']);if(killed)recordMilitaryDeath(d,engine,id,at);released.push(id);
+  }
   a.levy.people=a.levy.people.filter(p=>!freed.includes(p.id));a.levy.from[sid]-=take;a.levy.count-=take;left-=take;
   row.count-=take;row.people=row.people.filter(id=>!freed.includes(id));
   const mine=row.armies[a.id];if(mine){mine.count-=take;mine.people=mine.people.filter(id=>!freed.includes(id));}

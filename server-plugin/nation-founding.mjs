@@ -10,8 +10,11 @@ import {legalCodeAt} from './law-codes.mjs';
 import {regionOf} from './regions.mjs';
 import {settlementHead} from './entity-view.mjs';
 import {entityTransition} from './entity-transitions.mjs';
-import {declareHoldingWriter} from './holdings.mjs';
-import {syncHoldings,syncHoldingRecord,holdingSet} from './holding-sources.mjs';
+import {declareHoldingWriter,aliveHoldings,ensureHoldings,templatesOf,holdingsActive} from './holdings.mjs';
+import {syncHoldings,syncHoldingRecord,holdingSet,orgLeaderOffice} from './holding-sources.mjs';
+import {changeHolding,changeLegacyHoldings} from './transition.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+import {householdMembers,npcHousehold} from './npc-state.mjs';
 declareHoldingWriter('nation-founding',{kinds:['member_of','holds_office','fief','governs','controls','allied_with'],entities:['office']});
 const DAY=1440,rec=id=>['state','records',id],pair=(a,b)=>[a,b].sort().join(':'),rows=s=>Object.values(s.records??{});
 const activeWar=(s,a,b)=>wars(s).some(w=>['交战','停战'].includes(w.status)&&pair(w.aggressor,w.defender)===pair(a,b));
@@ -79,18 +82,85 @@ export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('
  holdingSet(d,e,rec(`nation:${id}`),n,'nation-founding');changeGroupCoins(d,e,id,amount,{kind:'建国入库',sourceEvent:src,minute:at},BOOKED);
  for(const a of armies(d.get('state')).filter(a=>a.party===who))holdingSet(d,e,rec(armyKey(a.id)),{...a,party:id,partyName:n.name},'nation-founding');
  for(const domain of n.domains)holdingSet(d,e,rec(`territory:${domain}`),{category:'territory',county:domain,ruler:id,previous:n.suzerain,minute:at,sourceEvent:src},'nation-founding');
+ for(const t of rows(s).filter(t=>t.category==='territory'&&t.ruler===who&&n.domains.some(domain=>containsDomain(e,s,domain,t.county))))changeTerritoryControl(d,e,t.county,id,{at,src:`${src}:incorporate:${t.county}`});
  for(const recognizer of ready.recognized){const value=standing(e,s,recognizer,who);adjustStanding(d,e,recognizer,id,value,{sourceEvent:src,reason:'独立承认',minute:at});}
  n=react(d,e,n,at,src);holdingSet(d,e,rec(`nation:${id}`),n,'nation-founding');
  const title=s.records?.[`title:${who}`];if(title)holdingSet(d,e,rec(`title:${who}`),{...title,status:'独立',title:'国王',rank:'唯一',formerTitle:title.title,independentNation:id},'nation-founding');
  publish(d,e,n,'organize',`${src}:founded`,at,`${n.name}宣布独立，原宗主${n.reaction}`);return n;
 }
+export function changeTerritoryControl(d,e,domain,ruler,{at=d.get('state','minute'),src,war=null}={}){
+ ensureHoldings(d,e);
+ const old=d.get(...rec(`territory:${domain}`));if(old?.ruler===ruler&&old.sourceEvent===src)return old;
+ if(!holdingsActive(d)){const row={category:'territory',county:domain,ruler,previous:old?.ruler??null,minute:at,sourceEvent:src,...(war?{war}:{})};holdingSet(d,e,rec(`territory:${domain}`),row,'nation-founding');return row;}
+ const collective=templatesOf(d,ruler,e).includes('collective'),current=aliveHoldings(d,{subject:domain}).filter(h=>h.kind==='controls');
+ for(const h of current)if(h.holder!==ruler)changeHolding(d,e,{op:'close',id:h.id,eventId:`${src}:${h.id}`,reason:'transferred'});
+ if(!collective&&!aliveHoldings(d,{subject:domain,holder:ruler,kind:'controls'}).length)changeHolding(d,e,{op:'open',kind:'controls',holder:ruler,subject:domain,source:`sovereignty:${domain}`,eventId:`${src}:control:${domain}`});
+ if(collective){
+  for(const h of aliveHoldings(d,{kind:'governs',subject:domain}))if(h.holder!==ruler)changeHolding(d,e,{op:'transfer',id:h.id,holder:ruler,eventId:`${src}:${h.id}`});
+  if(!aliveHoldings(d,{kind:'governs',subject:domain,holder:ruler}).length)changeHolding(d,e,{op:'open',kind:'governs',holder:ruler,subject:domain,source:`sovereignty:${domain}`,eventId:`${src}:sovereign:${domain}`});
+ }
+ const sovereign=collective?ruler:old?.sovereign??old?.ruler??null;
+ const row={category:'territory',county:domain,ruler,sovereign,previous:old?.ruler??null,minute:at,sourceEvent:src,...(war?{war}:{})};
+ // Both canonical edges have already gone through the protocol. K1's shared
+ // sovereignty adapter must project sovereign separately from actual ruler.
+ holdingSet(d,e,rec(`territory:${domain}`),row,'nation-founding');return row;
+}
+// An explicit act, not a hostile attitude, ends allegiance. A garrison must
+// actually obey the defector before the territory compatibility view changes.
+export function defectFromNation(d,e,{nation,member},src){
+ const s=d.get('state'),n=liveNation(s,nation),key=`nation_defection:${nation}:${member}`;
+ if(s.records?.[key])return {...s.records[key],duplicate:true};
+ if(!n||member===n.ruler||!isEffective(e,d,member))throw Error('叛离者或原国家不成立');
+ const org=s.records?.[`organization:${nation}`];if(!org?.members?.[member])throw Error('叛离者不在原国家名册');
+ ensureHoldings(d,e);
+ const units=armies(s).filter(a=>a.party===nation&&s.records?.[`organization:${a.id}`]?.leader===member&&armyStrength(a)>0);
+ const titles=titlesOf(s,member).filter(highTitle),domains=[...new Set([...titles.flatMap(t=>t.domains??[t.fief]),...rows(s).filter(o=>o.category==='governance_office'&&o.status==='在任'&&o.holder===member).map(o=>o.settlement)])].filter(domain=>n.domains.some(id=>containsDomain(e,s,id,domain))&&units.some(a=>containsDomain(e,s,domain,a.location)));
+ const kin=npcHousehold(e,s,member),related=new Set([...Object.keys(org.members),...units.flatMap(a=>Object.keys(s.records?.[`organization:${a.id}`]?.members??{})),...(kin?householdMembers(e,s,kin.id):[]),
+  ...rows(s).filter(r=>r.category==='contract'&&r.status==='有效'&&[member,nation,n.ruler].includes(r.owner)).map(r=>r.worker)].filter(Boolean));
+ const margin=nobleRules(e).defection?.followMargin;if(!Number.isFinite(margin))throw Error('未登记部下分流规则');
+ const decisions=[...related].filter(id=>id!==member&&id!==n.ruler&&isEffective(e,d,id)).sort().map(id=>({id,rebel:standing(e,s,id,member),original:standing(e,s,id,nation)}));
+ const followers=decisions.filter(v=>v.rebel-v.original>=margin).map(v=>v.id);
+ for(const id of [member,...followers]){
+  for(const h of aliveHoldings(d,{kind:'member_of',holder:id,subject:nation}))changeHolding(d,e,{op:'close',id:h.id,reason:'defected',eventId:`${src}:defect:${id}`});
+  for(const office of rows(d.get('state')).filter(r=>r.category==='governance_office'&&r.holder===id&&r.status==='在任')){
+   holdingSet(d,e,rec(office.id),{...office,status:'已免职',removedAt:s.minute,reason:'叛离原组织'},'nation-founding');
+  }
+ }
+ const remaining=structuredClone(org);for(const id of [member,...followers]){delete remaining.members[id];remaining.removed={...remaining.removed,[id]:{minute:s.minute,reason:'叛离',sourceEvent:src}};}
+ holdingSet(d,e,rec(`organization:${nation}`),remaining,'nation-founding');
+ const retinueId=`retinue_${member}`,retinue={category:'organization',id:retinueId,source:'created',kind:'随从',name:'叛离随从',seat:s.npcs?.[member]?.location??n.capital,founder:member,foundedAt:s.minute,members:{},removed:{},treasury:0,ledger:[],charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['成员按本人立场决定归属']}};
+ holdingSet(d,e,rec(`organization:${retinueId}`),retinue,'nation-founding');
+ for(const id of [member,...followers]){
+  if(holdingsActive(d))changeHolding(d,e,{op:'open',kind:'member_of',holder:id,subject:retinueId,terms:{rank:{position:id===member?'首领':'成员',joinedAt:s.minute,arrears:0}},source:`org:${retinueId}`,eventId:`${src}:follow:${id}`});
+  retinue.members[id]={position:id===member?'首领':'成员',joinedAt:s.minute,arrears:0};
+ }
+ if(holdingsActive(d))changeHolding(d,e,{op:'open',kind:'holds_office',holder:member,subject:orgLeaderOffice(retinueId),source:`org:${retinueId}`,eventId:`${src}:retinue-leader`});
+ retinue.leader=member;holdingSet(d,e,rec(`organization:${retinueId}`),retinue,'nation-founding');
+ for(const a of units){
+  const armyOrg=structuredClone(d.get(...rec(`organization:${a.id}`)));
+  for(const id of Object.keys(armyOrg.members).filter(id=>id!==member&&!followers.includes(id))){
+   for(const h of aliveHoldings(d,{kind:'member_of',holder:id,subject:a.id}))changeHolding(d,e,{op:'close',id:h.id,reason:'vacated',eventId:`${src}:remain:${id}`});
+   delete armyOrg.members[id];armyOrg.removed={...armyOrg.removed,[id]:{minute:s.minute,reason:'选择留在原国'}};
+  }
+  if(holdingsActive(d)&&!aliveHoldings(d,{kind:'holds_office',holder:member,subject:orgLeaderOffice(a.id)}).length)changeHolding(d,e,{op:'open',kind:'holds_office',holder:member,subject:orgLeaderOffice(a.id),source:`org:${a.id}`,eventId:`${src}:army-command:${a.id}`});
+  holdingSet(d,e,rec(`organization:${a.id}`),armyOrg,'nation-founding');
+  holdingSet(d,e,rec(armyKey(a.id)),{...a,party:member,partyName:member,defection:src},'nation-founding');
+ }
+ for(const domain of domains)changeTerritoryControl(d,e,domain,member,{src:`${src}:${domain}`});
+ // A follower leaves national employment only after making their own choice.
+ for(const contract of rows(s).filter(r=>r.category==='contract'&&r.status==='有效'&&followers.includes(r.worker)&&[nation,n.ruler].includes(r.owner)))
+  changeLegacyHoldings(d,e,{holder:contract.worker,source:`contract:${contract.id}`,kinds:['employed_by'],reason:'defected',eventId:`${src}:${contract.id}`},()=>holdingSet(d,e,rec(contract.id),{...contract,status:'已终止',endedAt:s.minute,reason:'自愿跟随叛离者'},'nation-founding'));
+ const row={category:'nation_defection',id:key,nation,member,followers,retinue:retinueId,decisions,domains,minute:s.minute,sourceEvent:src};holdingSet(d,e,rec(key),row,'nation-founding');
+ holdingSet(d,e,rec(`nation:${n.id}`),{...n,status:'内乱',splits:[...n.splits??[],{ruler:member,domains,minute:s.minute,sourceEvent:src}]},'nation-founding');
+ return row;
+}
 function collapse(d,e,n,status,winner,at,src){
  const next={...n,status,endedAt:at,annexedBy:winner};holdingSet(d,e,rec(`nation:${n.id}`),next,'nation-founding');
- for(const domain of n.domains)holdingSet(d,e,rec(`territory:${domain}`),{category:'territory',county:domain,ruler:winner,previous:n.id,minute:at,sourceEvent:src},'nation-founding');
+ for(const domain of n.domains)changeTerritoryControl(d,e,domain,winner,{at,src});
  const coins=groupAccountView(e,d.get('state'),n.id)?.coins??0;if(coins){changeGroupCoins(d,e,n.id,-coins,{kind:'吞并转出',sourceEvent:src,minute:at},{account:partyAccount(e,d.get('state'),winner),writer:'nation-founding',eventId:src});partyCredit(d,e,winner,coins,{sourceEvent:src,reason:'吞并接收',books:BOOKED});}
  for(const a of armies(d.get('state')).filter(a=>a.party===n.id))holdingSet(d,e,rec(armyKey(a.id)),{...a,party:winner,partyName:winner},'nation-founding');
- for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&n.domains.some(id=>containsDomain(e,d.get('state'),id,o.settlement)))){holdingSet(d,e,rec(o.id),{...o,status:'已免职',removedAt:at,reason:status},'nation-founding');syncHoldingRecord(d,e,o.id,{writer:'nation-founding',eventId:src});}
- const t=d.get('state','records',`title:${n.ruler}`);if(t?.independentNation===n.id)holdingSet(d,e,rec(`title:${n.ruler}`),{...t,status:'已除爵',strippedAt:at,reason:status},'nation-founding');
+ for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&n.domains.some(id=>containsDomain(e,d.get('state'),id,o.settlement))))changeLegacyHoldings(d,e,{holder:o.holder,source:`office:${o.settlement}|${o.office}`,reason:'vacated',eventId:`${src}:${o.id}`},()=>holdingSet(d,e,rec(o.id),{...o,status:'已免职',removedAt:at,reason:status},'nation-founding'));
+ const t=d.get('state','records',`title:${n.ruler}`);if(t?.independentNation===n.id)changeLegacyHoldings(d,e,{holder:n.ruler,source:`title:${t.id}`,reason:'vacated',eventId:`${src}:title`},()=>holdingSet(d,e,rec(t.id),{...t,status:'已除爵',strippedAt:at,reason:status},'nation-founding'));
  publish(d,e,next,'transfer',src,at,`${n.name}${status}`);return next;
 }
 export function settleNationWar(d,e,w,{winner,at,src}){
@@ -106,6 +176,11 @@ export function nationAction(d,args,src){
  const e=this,s=d.get('state'),n=rulerNation(s,'player');
  if(args.operation==='nation_inspect')return {nation:n,readiness:nationReadiness(e,s),requirements:nobleRules(e)?.founding,recognition:{operation:'diplomacy',choice:'recognize',org:n?.id??'player',member:'外部势力ID'},choices:['found','negotiate','law','tax'],actionScope:{kind:'instant'}};
  if(args.choice==='found')return {nation:foundNation(d,e,{name:args.name,capital:args.settlement??s.location,coins:args.coins},src)};
+ if(args.choice==='defect'){
+  const member=args.member==='player'?'player':e.resolve(args.member,'npc');
+  if(args.consent!==true||member!=='player'&&(!s.player.companions?.includes(member)||s.npcs?.[member]?.location!==s.location||standing(e,s,member,'player')<nobleRules(e).founding.standing))throw Error('须叛离者本人或清醒在场且自愿的同伴作出实际叛离');
+  return {defection:defectFromNation(d,e,{nation:args.org,member},src)};
+ }
  if(!n)throw Error('尚未建立国家');
  if(args.choice==='negotiate'){
   if(n.status!=='谈判中')throw Error('没有未决宗主谈判');
@@ -138,18 +213,13 @@ export function advanceNations(d,e,{before,after}){
    current={...current,nextReview:at+r.founding.reviewDays*DAY,taxThrough:at,breaches:bad?current.breaches+1:0,lastReview:{minute:at,reasons:ready.reasons}};
    holdingSet(d,e,rec(`nation:${n.id}`),current,'nation-founding');
    if(current.breaches>=r.founding.graceReviews){collapse(d,e,current,'建国失败',current.suzerain,at,`${n.id}:failure:${at}`);break;}
-   const rebel=rows(s).find(o=>o.category==='governance_office'&&o.status==='在任'&&o.holder!==n.ruler&&nationAt(e,s,o.settlement)?.id===n.id&&standing(e,s,o.holder,n.ruler)<=r.npc.hostility);
-   if(rebel){
-    const remaining=current.domains.filter(id=>id!==rebel.settlement);holdingSet(d,e,rec(`territory:${rebel.settlement}`),{category:'territory',county:rebel.settlement,ruler:rebel.holder,previous:n.id,minute:at,sourceEvent:`${n.id}:split:${at}`},'nation-founding');
-    holdingSet(d,e,rec(`nation:${n.id}`),{...current,domains:remaining,status:'内乱',splits:[...current.splits??[],{settlement:rebel.settlement,ruler:rebel.holder,minute:at}]},'nation-founding');publish(d,e,current,'transfer',`${n.id}:split:${at}`,at,'下辖主官带领辖区分裂');
-   }
   }
  }
  if(Math.floor(before/(30*DAY))===Math.floor(after/(30*DAY)))return;
  for(const t of nobleLords(e,d.get('state'))){
   if(t.holder==='player'||rulerNation(d.get('state'),t.holder))continue;
   const s=d.get('state'),npc=s.npcs?.[t.holder],base=e.byId.get(t.holder),ambition=npc?.ambition??base?.ambition??(/野心|独立|自立/.test(JSON.stringify(base?.goals??base?.personality??''))?r.npc.ambition:0),sup=suzerain(e,s,t.domains?.[0]??t.fief);
-  if(!npc||npc.status==='死亡'||ambition<r.npc.ambition||standing(e,s,t.holder,sup)>r.npc.hostility)continue;
+  if(!npc||!isEffective(e,d,t.holder)||ambition<r.npc.ambition||standing(e,s,t.holder,sup)>r.npc.hostility)continue;
   // NPC diplomacy is also recorded, and only willing external allies recognize it.
   for(const f of e.world.factions??[])if(external(e,s,f.id,t.holder)&&standing(e,s,f.id,t.holder)>=r.founding.standing&&s.records?.[`diplomacy:${pair(f.id,t.holder)}`]?.status==='结盟'&&!activeWar(s,f.id,t.holder))holdingSet(d,e,rec(`recognition:${t.holder}:${f.id}`),{category:'diplomacy',status:'承认独立',subject:t.holder,recognizer:f.id,parties:[f.id,t.holder],minute:after,sourceEvent:`npc-independence:${after}:${t.holder}`},'nation-founding');
   const ready=nationReadiness(e,d.get('state'),t.holder);if(!ready.ready)continue;

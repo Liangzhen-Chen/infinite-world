@@ -1,3 +1,5 @@
+import {changeLegacyHoldings} from './transition.mjs';
+import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './contract-state.mjs';
 import {counterpart} from './credit.mjs';
 import {workshopFund,coinRead,partyAccount} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
@@ -21,7 +23,7 @@ import {ASSET_OPERATIONS} from './finance-operations.mjs';
 export {ASSET_OPERATIONS};
 const all=d=>Object.values(d.get('state','records')??{}),base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const alive=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
-function ownsWorkshop(state,id){return state.buildings?.[id]?.owner==='player'||allState(state).some(r=>r.kind==='lease'&&r.subject===id&&r.parties?.[0]==='player'&&r.status==='有效'&&r.deadline>state.minute);}
+function ownsWorkshop(state,id,owner='player'){return state.buildings?.[id]?.owner===owner||state.buildings?.[id]?.owners?.[owner]>0||allState(state).some(r=>r.kind==='lease'&&r.subject===id&&r.parties?.[0]===owner&&r.status==='有效'&&r.deadline>state.minute);}
 function ownedPlace(d,e,args,allowLease=false){
     const id=e.resolve(args.location??d.get('state','location')),place=base(e,d.get('state'),id),asset=d.get('state','buildings',id);
     if(id!==d.get('state','location')||!place||!(allowLease?ownsWorkshop(d.get('state'),id):asset?.owner==='player')||asset?.condition<=0)throw Error('须在本人合法持有且完好的房屋、田地或铺面签约');
@@ -94,6 +96,7 @@ export function recordFinanceSale(d,e,{buyer,seller,item,quantity,cost,tax=0,eve
     return basis;
 }
 function payDividend(d,e,row,at){
+    row=contractTerms(row,at);
     const profit=operatingProfit(d,e,row.issuer),eligible=Math.max(0,Math.floor((profit-row.baselineProfit)*row.share/100)-row.distributed);
     const paid=Math.min(eligible,financeBalance(d,e,row.issuer));
     if(paid)financeTransfer(d,e,row.issuer,row.holder,paid,`${row.id}:${at}`);
@@ -103,8 +106,12 @@ function payDividend(d,e,row,at){
 }
 export function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
 function employmentAccount(d,e,owner){const g=groupAccountView(e,d.get('state'),owner);if(g)return g;const r=d.get(...rec(`organization:${owner}`));return r?.category==='organization'?r:null;}
-export function employmentStock(d,e,owner,item){const g=employmentAccount(d,e,owner);return g?g.items?.[item]??0:e.quantity(d,owner,item);}
+export function employmentStock(d,e,owner,item){const estate=d.get('state','records',`protocol_assets:${owner}`);if(estate){const v=estate.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;}const g=employmentAccount(d,e,owner);return g?g.items?.[item]??0:e.quantity(d,owner,item);}
 export function changeEmploymentStock(d,e,owner,item,delta,eventId,books){
+    const estate=d.get('state','records',`protocol_assets:${owner}`);
+    if(estate){const quantity=employmentStock(d,e,owner,item)+delta;if(quantity<0)throw Error('Estate inventory insufficient');
+        bookStock(d,e,bag(e,owner,item),delta,books);holdingSet(d,e,['state','records',`protocol_assets:${owner}`,'inventory',item],quantity,'finance-assets');return;}
+
     const g=groupAccountView(e,d.get('state'),owner);
     if(!g){const org=d.get(...rec(`organization:${owner}`));if(org?.category==='organization'){
         const quantity=(org.items?.[item]??0)+delta;if(quantity<0)throw Error('组织实际库存不足');
@@ -122,7 +129,7 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location);
     if(skill<(recipe.minimumProficiency??0))return {reason:'当前技能不足'};
     if(facility?.factor===0||s.buildings?.[row.location]?.condition<=0)return {reason:'工坊已停用'};
-    const toolsOwner=employmentAccount(d,e,owner)?row.worker:owner;
+    const toolsOwner=employmentAccount(d,e,owner)||s.records?.[`protocol_assets:${owner}`]?row.worker:owner;
     let batches=Math.min(50,Math.floor(minutes/recipe.minutes*(1+skill/3000)),Math.floor(200/recipe.output.quantity),maximum);
     for(const p of recipe.byproducts??[])batches=Math.min(batches,Math.floor(200/p.amount));
     for(const m of recipe.materials)batches=Math.min(batches,Math.floor(employmentStock(d,e,owner,m.item)/m.amount));
@@ -142,7 +149,7 @@ export function settleEmploymentProduction(d,e,row,at,plan){
     for(const tool of recipe.tools??[])wearItem(d,e,toolsOwner,tool,(recipe.toolWear??1)*batches);
     const instances=[],products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))];
     for(const p of products){
-        if(employmentAccount(d,e,owner))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
+        if(employmentAccount(d,e,owner)||d.get('state','records',`protocol_assets:${owner}`))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
         else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker,books:craftOutput('finance-assets',eventId)}));
     }
     recordCraft(d,{recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
@@ -170,7 +177,7 @@ export function assetTrade(d,e,args,id){
         return {contract:key,issuer,share,cost};
     }
     if(op==='dividend'||op==='share_transfer'){
-        const row=d.get(...rec(args.contract));if(row?.kind!=='equity'||row.holder!=='player'||row.status!=='有效')throw Error('需要本人持有的有效股份契约');
+        const row=contractTerms(d.get(...rec(args.contract))??{},now);if(row?.kind!=='equity'||row.holder!=='player'||row.status!=='有效')throw Error('需要本人持有的有效股份契约');
         if(op==='dividend'){
             if(now<row.nextDividend)throw Error('尚未到分红期');return payDividend(d,e,row,now);
         }
@@ -179,18 +186,18 @@ export function assetTrade(d,e,args,id){
         const value=Math.max(1,Math.ceil(netAssets(d,e,row.issuer)*share/100)),cost=int(args.coins??value,Math.max(1,Math.ceil(value*.8)),Math.ceil(value*1.5),'转让价款');
         financeTransfer(d,e,buyer,'player',cost,id);
         // Accrued undistributed entitlements transfer with the shares.
-        const part=share/row.share,transferred={...row,id:`equity:${id}`,holder:buyer,share,stake:Math.floor(row.stake*part),distributed:Math.floor(row.distributed*part),source:id};
-        holdingSet(d,null,rec(row.id),{...row,share:row.share-share,stake:row.stake-transferred.stake,distributed:row.distributed-transferred.distributed,status:share===row.share?'已转让':'有效'},'finance-assets');holdingSet(d,null,rec(transferred.id),transferred,'finance-assets');
+        const part=share/row.share,transferred=snapshotContractTerms({...row,clauses:undefined,amendments:[],id:`equity:${id}`,holder:buyer,share,stake:Math.floor(row.stake*part),distributed:Math.floor(row.distributed*part),source:id});
+        holdingSet(d,null,rec(row.id),{...row,share:row.share-share,stake:row.stake-transferred.stake,distributed:row.distributed-transferred.distributed,...(share===row.share?{endedAt:now}:{}),amendments:[...row.amendments??[],{minute:now,share:row.share-share,stake:row.stake-transferred.stake}],status:share===row.share?'已转让':'有效'},'finance-assets');holdingSet(d,null,rec(transferred.id),transferred,'finance-assets');
         return {contract:transferred.id,buyer,share,cost};
     }
     if(op==='rent_out'){
         const {id:subject}=ownedPlace(d,e,args),tenant=counterpart(d,e,args.seller,{consent:args.consent}),need=rentalNeed(e,state,tenant,subject);
         if(!need)throw Error('对方当前没有对应住房或经营租赁需求');
-        if(all(d).some(r=>r.kind==='asset_lease'&&r.subject===subject&&r.status==='有效'&&r.deadline>now))throw Error('资产已出租');
+        if(all(d).some(r=>r.kind==='asset_lease'&&r.subject===subject&&r.status==='有效'&&leaseState(e,state,r,now).active))throw Error('资产已出租');
         const days=int(args.days??30,1,360,'租赁天数'),anchor=e.rules.economy.rentalCopperPerWeek*4*(need.kind==='commercial'?2:1),rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金');
         const initial=Math.ceil(rent*Math.min(days,30)/30);financeTransfer(d,e,tenant,'player',initial,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant,owner:'player',use:need.kind,settlement:need.settlement,oldHome:need.oldHome,
-            monthlyRent:rent,paid:initial,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id};holdingSet(d,null,rec(key),row,'finance-assets');
+            monthlyRent:rent,paid:initial,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id};row.clauses=leaseClauses(row);holdingSet(d,null,rec(key),row,'finance-assets');
         return {contract:key,tenant,rent,paid:initial,need};
     }
     if(op==='workshop'){
@@ -208,9 +215,9 @@ export function assetTrade(d,e,args,id){
         const row={category:'contract',kind:'workshop',id:key,worker,owner:'player',recipe:recipe.id,location:subject,wage,status:'有效',createdAt:now,deadline:now+days*DAY,
             starts:(Math.floor(now/DAY)+1)*DAY+480,nextWork:(Math.floor(now/DAY)+1)*DAY+1020,paid:0,produced:0,shifts:[],source:id};holdingSet(d,null,rec(key),row,'finance-assets');return {contract:key,worker,wage,recipe:recipe.id};
     }
-    const row=d.get(...rec(args.contract));if(row?.kind!=='workshop'||row.owner!=='player'||!['有效','要求加薪','罢工'].includes(row.status))throw Error('需要尚未结束的本人工坊雇佣合同');
+    const row=contractTerms(d.get(...rec(args.contract))??{},now);if(row?.kind!=='workshop'||row.owner!=='player'||!['有效','要求加薪','罢工'].includes(row.status))throw Error('需要尚未结束的本人工坊雇佣合同');
     if(row.location!==location)throw Error('须到工坊修改或解除雇佣');
-    if(op==='dismiss'){holdingSet(d,null,rec(row.id),{...row,status:'已解雇',endedAt:now},'finance-assets');return {contract:row.id,status:'已解雇'};}
+    if(op==='dismiss'){changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,reason:'vacated',eventId:id},()=>holdingSet(d,e,rec(row.id),{...row,status:'已解雇',endedAt:now},'finance-assets'));return {contract:row.id,status:'已解雇'};}
     if(op==='workshop_terms'){
         if(e.resolve(args.seller)!==row.worker)throw Error('须由原雇工同意新工钱');counterpart(d,e,row.worker,{consent:args.consent});
         const wage=int(args.coins,1,1e6,'新日薪');holdingSet(d,null,rec(row.id),{...row,wage,status:'有效',raiseRequestedAt:null,amendments:[...row.amendments??[],{wage,minute:now,source:id}]},'finance-assets');return {contract:row.id,wage};
@@ -218,45 +225,51 @@ export function assetTrade(d,e,args,id){
     throw Error('未知资产操作');
 }
 function rentDue(d,e,row,at){
-    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(row.monthlyRent*Math.min(MONTH,row.deadline-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
-    if(paid)financeTransfer(d,e,row.tenant,'player',paid,key);
+    const terms=leaseState(e,d.get('state'),row,at);
+    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(terms.monthlyRent*Math.min(MONTH,terms.clauses.expires-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
+    if(paid)financeTransfer(d,e,row.tenant,contractTerms(row,at).owner??'player',paid,key);
     if(paid<amount){
-        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:'player',amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location};holdingSet(d,null,rec(key),debt,'finance-assets');
+        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:contractTerms(row,at).owner??'player',amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location};holdingSet(d,null,rec(key),debt,'finance-assets');
     }
     holdingSet(d,null,rec(row.id),{...row,paid:row.paid+paid,nextRent:at+MONTH},'finance-assets');
     financeEvent(d,e,{id:key,actor:row.tenant,target:'player',value:paid,minute:at,location:row.location,tags:['rent']});
 }
 function workshopShift(d,e,row,at){
+    row=contractTerms(row,at);const owner=row.owner??'player';
     const s=d.get('state'),recipe=base(e,s,row.recipe),worker=s.npcs[row.worker],regard=standing(e,s,row.worker,'player'),wage=fairWage(e,s,row.worker,recipe);
-    const end=(status,reason)=>{holdingSet(d,null,rec(row.id),{...row,status,reason,nextWork:at+DAY,...(['已辞工','已到期'].includes(status)?{endedAt:at}:{})},'finance-assets');};
+    const end=(status,reason)=>{const next={...row,status,reason,nextWork:at+DAY,...(['已辞工','已到期'].includes(status)?{endedAt:at}:{})};
+        if(next.endedAt!==undefined)return changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,eventId:`${row.id}:end:${at}`},()=>holdingSet(d,null,rec(row.id),next,'finance-assets'));
+        holdingSet(d,null,rec(row.id),next,'finance-assets');};
     if(!alive(s,row.worker)||regard< -40||row.raiseRequestedAt&&at-row.raiseRequestedAt>=3*DAY)return end('已辞工','工人无法继续或不再接受现有工钱');
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(at).day)){holdingSet(d,null,rec(row.id),{...row,nextWork:at+DAY},'finance-assets');return;}
     if(personConstraint(e,s,row.worker,at)||worker.levy||worker.caring||worker.scheduleTravel||worker.cognitionTravel||worker.location!==row.location)return end('罢工','工人未到工坊或受拘押、服役、照护、在途限制');
     const start=Math.floor(at/DAY)*DAY+480;
     try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
     catch(error){if(!/冲突|自主工作/.test(error.message))throw error;return end('罢工','本班与已有义务冲突');}
-    if(!ownsWorkshop(s,row.location)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
+    if(!ownsWorkshop(s,row.location,owner)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
     if(row.wage<wage&&row.raiseRequestedAt)return end('罢工','加薪要求尚未解决');
-    if(financeBalance(d,e,'player')<row.wage)return end('罢工','雇主付不起本班工钱');
-    const plan=employmentProductionPlan(d,e,{...row,owner:'player'});
+    if(financeBalance(d,e,owner)<row.wage)return end('罢工','雇主付不起本班工钱');
+    const plan=employmentProductionPlan(d,e,{...row,owner});
     if(plan.reason)return end('罢工',plan.reason);
-    if(financeBalance(d,e,'player')<row.wage+plan.fee)return end('罢工','工钱与工作台费用不足');
-    financeTransfer(d,e,'player',row.worker,row.wage,`${row.id}:${at}`);
-    const {quantity,...shift}=settleEmploymentProduction(d,e,{...row,owner:'player'},at,plan),eventId=`${row.id}:${at}`;
+    if(financeBalance(d,e,owner)<row.wage+plan.fee)return end('罢工','工钱与工作台费用不足');
+    financeTransfer(d,e,owner,row.worker,row.wage,`${row.id}:${at}`);
+    const {quantity,...shift}=settleEmploymentProduction(d,e,{...row,owner},at,plan),eventId=`${row.id}:${at}`;
     const next={...row,nextWork:at+DAY,paid:row.paid+row.wage,produced:row.produced+quantity,status:row.wage<wage?'要求加薪':'有效',
         ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage}]};holdingSet(d,null,rec(row.id),next,'finance-assets');
-    financeEvent(d,e,{id:eventId,actor:row.worker,target:'player',minute:at,location:row.location,value:row.wage,tags:['workshop']});
+    financeEvent(d,e,{id:eventId,actor:row.worker,target:owner,minute:at,location:row.location,value:row.wage,tags:['workshop']});
 }
 export function advanceFinanceAssets(d,e,minute,recordIds){
-    for(const initial of (recordIds?recordIds.map(id=>d.get('state','records',id)).filter(Boolean):all(d))){
+    for(const stored of (recordIds?recordIds.map(id=>d.get('state','records',id)).filter(Boolean):all(d))){
+        const initial=stored.category==='contract'?contractTerms(stored,minute):stored;
         if(initial.kind==='equity'&&initial.status==='有效')for(let at=initial.nextDividend;at<=minute;at+=MONTH)payDividend(d,e,d.get(...rec(initial.id)),at);
-        if(initial.kind==='asset_lease'&&initial.status==='有效'){
-            for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
-            if(minute>=initial.deadline)holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'},'finance-assets');
+        if(initial.kind==='asset_lease'&&leaseState(e,d.get('state'),initial,leaseClauses(initial).starts).active){
+            const expires=leaseClauses(initial).expires;
+            for(let at=initial.nextRent;at<=minute&&at<expires;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
+            if(minute>=expires)changeLegacyHoldings(d,e,{holder:initial.tenant,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets'));
         }
         if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
-            for(let at=initial.nextWork;at<=minute&&at<initial.deadline;at+=DAY){const row=d.get(...rec(initial.id));if(!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}
-            if(minute>=initial.deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'},'finance-assets');
+            for(let at=initial.nextWork;at<=minute&&at<contractTerms(initial,at).deadline;at+=DAY){const row=contractTerms(d.get(...rec(initial.id)),at);if(row.endedAt!==undefined||row.resolvedAt!==undefined||!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}
+            if(minute>=contractTerms(initial,minute).deadline&&['有效','要求加薪','罢工'].includes(contractTerms(d.get(...rec(initial.id)),minute).status))changeLegacyHoldings(d,e,{holder:initial.worker,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:contractTerms(initial,minute).deadline},'finance-assets'));
         }
     }
     for(const [id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){

@@ -1,3 +1,4 @@
+import {partyInProcedure} from './contract-state.mjs';
 // F1: contract facts are persisted; prices, services and creditworthiness are views.
 import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit} from './credit.mjs';
 import {placeSettlement,settlementGovernment,groupRepresentative,personConstraint,personBusiness,personOccupation} from './entity-view.mjs';
@@ -13,8 +14,9 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('finance-bank',{kinds:['member_of','holds_office'],entities:['office']});
+declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
 const DAY=1440,MONTH=30*DAY;
@@ -26,6 +28,7 @@ export function financeBalance(d,e,id){
     if(group)return group.coins;
     const org=d.get(...financePath(`organization:${id}`));
     if(org?.category==='organization')return org.treasury??0;
+    const estate=d.get('state','records',`protocol_assets:${id}`);if(estate)return estate.coins??0;
     const actor=d.get(...e.actorPath(id));if(!actor)throw Error('资金当事人不存在');return actor.coins??0;
 }
 // S1a: books = 账本对方账户（money.bookSide），成对的另一边已记账时传 BOOKED。
@@ -34,6 +37,7 @@ export function financeChange(d,e,id,delta,sourceEvent,books){
     const balance=financeBalance(d,e,id)+delta;if(!Number.isSafeInteger(balance)||balance<0)throw Error('当事人资金不足');
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
     bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
+    const estate=d.get('state','records',`protocol_assets:${id}`);if(estate){holdingSet(d,e,['state','records',`protocol_assets:${id}`,'coins'],balance,'finance-bank');return balance;}
     const org=d.get(...financePath(`organization:${id}`));
     if(org?.category==='organization'){holdingSet(d,null,financePath(`organization:${id}`),{...org,treasury:balance,ledger:[...org.ledger??[],{coins:delta,sourceEvent}]},'finance-bank');return balance;}
     d.set([...e.actorPath(id),'coins'],balance);return balance;
@@ -111,7 +115,7 @@ export function borrowerCashFlow(e,state,id,minute=state.minute){
     return {income:Math.ceil(income/30),expense:Math.max(account?0:e.rules.economy.rentalCopperPerNight,Math.ceil(expense/30))};
 }
 function loanPayment(d,e,key,row,amount,minute,id){
-    financeTransfer(d,e,row.debtor,'player',amount,id);
+    financeTransfer(d,e,row.debtor,row.creditor??'player',amount,id);
     const paid=row.paid+amount,status=paid===row.amount?'已还清':row.status;
     holdingSet(d,null,financePath(key),{...row,paid,status,payments:[...row.payments??[],{minute,amount,sourceEvent:id}]},'finance-bank');
     if(status==='已还清'){
@@ -216,6 +220,8 @@ export function bankTrade(d,e,args,id){
 export function advanceBankFinance(d,e,minute,recordIds){
     const c=cfg(e);if(!c)return;
     for(const [id,original]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
+        if(original.category==='debt'&&partyInProcedure(d.get('state'),original.debtor))continue;
+        if(original.category==='debt'&&original.status==='坏账')continue;
         if(original.kind==='loan'&&original.debtor==='player'&&original.installments>1&&original.status!=='已还清'&&!original.defaulted){
             const span=(original.deadline-original.createdAt)/original.installments,paidCount=Math.min(original.installments,Math.floor(original.paid*original.installments/original.amount));
             const due=original.createdAt+Math.ceil(span*(paidCount+1));
@@ -239,7 +245,7 @@ export function advanceBankFinance(d,e,minute,recordIds){
         if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
             let row=original;
             for(let at=row.nextPayment;at<=minute&&row.status!=='已还清';at+=DAY){
-                const actor=d.get('state','npcs',row.debtor),unable=actor&&(['死亡','濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
+                const actor=d.get('state','npcs',row.debtor),unable=actor&&(isPhysicallyDead(e,d,row.debtor)||['濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
                 const cash=financeBalance(d,e,row.debtor),expense=borrowerCashFlow(e,d.get('state'),row.debtor,at).expense;
                 const elapsed=Math.floor((at-row.createdAt)/((row.deadline-row.createdAt)/row.installments));
                 const completed=Math.min(row.installments,Math.max(1,elapsed)),target=Math.ceil(row.amount*completed/row.installments);

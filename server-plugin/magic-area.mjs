@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 // Areas use trusted world/state coordinates. Presence alone never implies range.
 import {environmentFeatures,localSightClear}from'./environment.mjs';
@@ -9,7 +10,7 @@ const living=(d,target)=>target==='player'?d.get('state','player'):d.get('state'
 const locationOf=(d,target)=>target==='player'?d.get('state','location'):living(d,target)?.location;
 const childId=(area,target)=>`${area}:member:${target}`;
 export function areaTargetFacts(d,engine,target,location,center){
- const actor=living(d,target);if(!actor||actor.status==='死亡'||locationOf(d,target)!==location||actor.scheduleTravel||actor.cognitionTravel)return null;
+ const actor=living(d,target);if(!actor||isPhysicallyDead(engine,d,target)||locationOf(d,target)!==location||actor.scheduleTravel||actor.cognitionTravel)return null;
  const transit=d.get('state','records','magic_area_transit');
  if(transit?.subjects?.includes(target)&&d.get('state','minute')<transit.arrival)return null;
  if(target==='player'){
@@ -25,7 +26,7 @@ export function areaTargetFacts(d,engine,target,location,center){
 }
 function facts(d,engine,target,location,center){
  const actor=living(d,target),transit=d.get('state','records','magic_area_transit');
- if(!actor||actor.status==='死亡'||locationOf(d,target)!==location||actor.scheduleTravel||actor.cognitionTravel||transit?.subjects?.includes(target)&&d.get('state','minute')<transit.arrival)return null;
+ if(!actor||isPhysicallyDead(engine,d,target)||locationOf(d,target)!==location||actor.scheduleTravel||actor.cognitionTravel||transit?.subjects?.includes(target)&&d.get('state','minute')<transit.arrival)return null;
  const value=engine.magicAreaTargetFacts?.(d,target,location,center)??areaTargetFacts(d,engine,target,location,center);
  return value&&pointValid(value.point)?value:null;
 }

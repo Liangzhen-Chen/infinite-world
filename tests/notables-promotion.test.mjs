@@ -119,7 +119,7 @@ const grow=c=>{
  const q=P.steps[0].requires;c.state.settlements[village].population=q.population+20;
  c.state.created??={};
  for(let i=0;i<q.housing-30;i++)c.state.created[`bld_house_h${i}`]={id:`bld_house_h${i}`,type:'bld',scope:village,parent:'loc_yp_path',owner:'player',purpose:'私宅'};
- for(let i=0;i<q.facilities;i++)c.state.created[`bld_built_f${i}`]={id:`bld_built_f${i}`,type:'bld',scope:village,parent:'loc_yp_path',owner:village,purpose:'公共设施'};
+ for(let i=0;i<q.facilities;i++)c.state.created[`bld_built_f${i}`]={id:`bld_built_f${i}`,type:'bld',name:['集市','驿站'][i],scope:village,parent:'loc_yp_path',owner:village,purpose:'公共设施'};
  c.state.records['business:x']={id:'business:x',category:'business',owner:'player',location:'loc_yp_path',status:'营业'};
 };
 

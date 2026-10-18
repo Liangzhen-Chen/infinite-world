@@ -55,7 +55,7 @@
   "craft.manufacture": "你照着配方动手制作。",
   "craft.repair": "你动手修理{item}。",
   "practice": "你练了一阵{skill}。",
-  "combat": "你对{target}出手。",
+  "combat": "{actor}对{target}出手。",
   "crime.steal": "你趁{target}不备伸了手。",
   "wildlife.fish": "你找了处水边下钩。",
   "site.woodcut": "你抡起斧子砍柴。",

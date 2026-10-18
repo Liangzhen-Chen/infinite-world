@@ -9,7 +9,7 @@ export const lawFoundation = {
         reportMinutes: 15, searchMinutes: 10, hearingMinutes: 60, maximumDetentionMinutes: 1440,
         evidenceRequired: 2, communityMinutesPerCopper: 30, prisonMinutesPerCopper: 60,
         maximumSentenceMinutes: 10080,
-        penalties: { theft: { baseFine: 10, valueMultiplier: 1 }, theft_attempt: { baseFine: 5, valueMultiplier: 0 },
+        penalties: { negligent_fire:{baseFine:10,valueMultiplier:0}, theft: { baseFine: 10, valueMultiplier: 1 }, theft_attempt: { baseFine: 5, valueMultiplier: 0 },
             assault: { baseFine: 20, valueMultiplier: 0 }, assault_attempt: { baseFine: 5, valueMultiplier: 0 },
             homicide: { baseFine: 100, valueMultiplier: 0 } } }],
 };

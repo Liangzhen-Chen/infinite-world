@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personCareer} from './entity-view.mjs';
 
 const active=o=>['待履行','进行中','有效','施工中'].includes(o.status);
@@ -30,7 +31,7 @@ export function hiddenPassives(e,s,id='player'){
   if(rule.condition==='maps'&&!intact(e,s,id,(b,u)=>Boolean(u.map||u.work&&s.works?.[u.work]?.kind==='map'||b?.map)))reason='未保管可核对的地图测稿';
   if(rule.domain==='survey'&&(id==='player'?s.location:actor(s,id)?.location)?.startsWith('bld_'))reason='野外测绘加成不用于室内';
   if(rule.condition==='restitution'&&breachUnpaid(s,id,since))reason='违约尚未完成补偿';
-  if(rule.condition==='healthy_pets'&&Object.keys(s.pets??{}).some(key=>{const a=s.creatures?.[key];return a?.owner===id&&a.status!=='死亡'&&(a.care?.sickness||(a.care?.hunger??0)>=(e.rules.petCare?.hungryThreshold??70));}))reason='自有宠物正在饥病';
+  if(rule.condition==='healthy_pets'&&Object.keys(s.pets??{}).some(key=>{const a=s.creatures?.[key];return a?.owner===id&&!isPhysicallyDead(e,s,key)&&(a.care?.sickness||(a.care?.hunger??0)>=(e.rules.petCare?.hungryThreshold??70));}))reason='自有宠物正在饥病';
   if(rule.condition==='wind'&&!records(s).some(r=>r.category==='air_weather'&&r.location===(id==='player'?s.location:actor(s,id)?.location)&&r.expires>s.minute))reason='缺少当前实际风向记录';
   if(rule.condition==='observations'&&!intact(e,s,id,(b,u)=>Boolean(u.map?.routes?.length||u.work&&s.works?.[u.work]?.routes?.length)))reason='缺少随身观测资料';
   if(rule.domain==='irrigation'&&Object.values(s.projects??{}).some(p=>/引水|水道/.test(p.name??'')&&p.funding==='public'&&p.owner===id&&!(p.beneficiaries?.length)))reason='公共引水被个人独占';
@@ -88,12 +89,12 @@ export function hiddenCheckBonus(e,s,id,domain){
  if(!domain)return {bonus:0,professions:[]};
  let rows=hiddenPassives(e,s,id).filter(r=>r.active&&r.domain===domain&&r.checkBonus);
  if(['book_repair','rune_copy'].includes(domain)&&!intact(e,s,id,(b,u)=>{const book=u.book??b?.book;return book?.author&&book.edition!==undefined&&book.copyAllowed!==false;}))rows=[];
- if(domain==='contract'&&!records(s).some(r=>r.category==='contract'&&r.parties?.includes(id)&&r.consent!==false&&((r.witnesses?.length??0)>=2||r.signedTerms&&r.parties.length>=2&&r.parties.every(who=>who===id||actor(s,who)?.location===(id==='player'?s.location:actor(s,id)?.location)&&!['死亡','昏迷','濒死'].includes(actor(s,who)?.status)))))rows=[];
+ if(domain==='contract'&&!records(s).some(r=>r.category==='contract'&&r.parties?.includes(id)&&r.consent!==false&&((r.witnesses?.length??0)>=2||r.signedTerms&&r.parties.length>=2&&r.parties.every(who=>who===id||actor(s,who)?.location===(id==='player'?s.location:actor(s,id)?.location)&&!isPhysicallyDead(e,s,who)&&actor(s,who)?.status!=='昏迷'&&actor(s,who)?.status!=='濒死'))))rows=[];
  if(domain==='public_pact'&&!records(s).some(r=>r.category==='organization_proposal'&&r.status==='通过'&&r.deciders?.length&&r.deciders.every(who=>r.votes?.some(v=>v.voter===who&&v.opinion==='approve'))))rows=[];
  if(domain==='delivery'&&!Object.values(s.obligations??{}).some(o=>o.type==='送货'&&o.promisor===id&&active(o)&&o.location&&o.promisee&&o.item))rows=[];
  if(domain==='anchor'&&(!records(s).some(r=>r.category==='known_anchor')||e.npcObligationAction?.tool!=='cast'&&!records(s).some(r=>r.category==='authorization'&&r.grantee===id&&r.action==='anchor_calibrate'&&!r.revoked&&r.expires>s.minute)))rows=[];
  if(domain==='summon'&&!Object.values(s.effects??{}).some(x=>x.kind==='summon'&&x.owner===id&&x.expires>s.minute))rows=[];
- if(domain==='bees'&&!Object.values(s.creatures??{}).some(a=>a.status!=='死亡'&&a.location===(id==='player'?s.location:actor(s,id)?.location)&&/蜂/.test(e.byId.get(a.species)?.name??a.name??'')))rows=[];
+ if(domain==='bees'&&!Object.entries(s.creatures??{}).some(([creatureId,a])=>!isPhysicallyDead(e,s,creatureId)&&a.location===(id==='player'?s.location:actor(s,id)?.location)&&/蜂/.test(e.byId.get(a.species)?.name??a.name??'')))rows=[];
  if(domain==='dyke'&&!Object.values(s.projects??{}).some(p=>p.type==='工程'&&p.creator===id&&p.sourceEvent&&(p.wood||p.stone)&&/堤|水道/.test(p.name??'')))rows=[];
  if(domain==='disarm'){
   const requested=e.npcObligationAction?.args?.opponent?.npc;

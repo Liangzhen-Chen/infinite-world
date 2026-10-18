@@ -100,7 +100,9 @@ test('工程类型产生真实桥路、学堂、医馆、仓廪；桥断路绝�
  const routes=engine.world.routes;engine.world.routes=[edge];
  assert.ok(engine.route(edge.from,edge.to,'walk',600).edges.includes(edge.id));
  damageFacility(d,engine,bridge,100,{sourceEvent:'bridge_down'});assert.throws(()=>engine.route(edge.from,edge.to,'walk',600),/路线/);
- start({building:bridge,action:'repair'},'bridge_repair');finish();assert.ok(engine.route(edge.from,edge.to,'walk',600).edges.includes(edge.id));engine.world.routes=routes;
+ start({building:bridge,action:'repair'},'bridge_repair');finish();assert.ok(engine.route(edge.from,edge.to,'walk',600).edges.includes(edge.id));
+ const rebuilt=d.get('state','projects','project_bridge_repair','facility');assert.notEqual(rebuilt,bridge);assert.equal(d.get('holdings','protocol','entities',bridge,'gone'),true);assert.equal(d.get('state','buildings',bridge,'condition'),0);assert.equal(d.get('state','created',rebuilt,'rebuiltFrom'),bridge);
+ assert.equal(completeFacilityProject(d,engine,d.get('state','projects','project_bridge_repair')),rebuilt);engine.world.routes=routes;
 });
 
 test('新增仓容实际接收入仓粮，扩建和灾损改变可用仓容，未复制进公仓账',()=>{

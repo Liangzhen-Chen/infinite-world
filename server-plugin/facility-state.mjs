@@ -1,4 +1,6 @@
-// Pure facility projection: no runtime imports or writes.
+import {recordsMemo} from './storage.mjs';
+// Facility projections import no runtime modules; domain callbacks are installed below.
+const rebuildCatalog=Symbol('facility rebuilds');
 export const FACILITY_TYPES=Object.freeze({
  house:{purpose:'住宅',services:['housing'],capacity:4,wood:8,stone:2,work:2},
  workshop:{purpose:'工坊',services:['craft'],capacity:2,wood:8,stone:4,work:3},
@@ -10,6 +12,10 @@ export const FACILITY_TYPES=Object.freeze({
  public:{purpose:'公共设施',services:[],capacity:0,wood:0,stone:0,work:0},
 });
 export const facilityDefinition=(engine,state,id)=>state?.created?.[id]??engine.byId.get(id);
+export function facilityRepairMaterials(view){
+ const units=Math.max(1,Math.ceil((100-view.condition)/25));
+ return {wood:view.material==='stone'?units:2*units,stone:view.material==='stone'?2*units:units,work:units};
+}
 export const isFacility=p=>p?.type==='bld'||p?.id?.startsWith('bld_');
 export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
@@ -38,7 +44,10 @@ export function within(engine,state,id,location){
 // binds its physical condition/capacity to that edge, including all planners.
 export function facilityRouteStates(engine,state){
  const out=new Map();if(!state)return out;
+ const rebuilt=recordsMemo(state.created,rebuildCatalog,()=>Object.values(state.created??{}).filter(b=>b.rebuiltFrom));
+ const replaced=new Set(rebuilt.filter(b=>state.buildings?.[b.id]).map(b=>b.rebuiltFrom));
  for(const [id,row] of Object.entries(state.buildings??{})){
+  if(replaced.has(id))continue;
   const route=row.route??facilityDefinition(engine,state,id)?.route;if(!route)continue;
   const v=facilityView(engine,state,id);if(!v)continue;
   const previous=out.get(route);
@@ -74,7 +83,7 @@ export function prepareFacilityProject(engine,state,args,settlement){
  if(target&&Object.values(state.projects??{}).some(p=>p.building===target&&p.status==='施工中'))throw Error('该建筑已有施工工程');
  if(projectWork==='repair'&&view.condition===100&&!view.burning)throw Error('建筑无需修缮');
  const spec=FACILITY_TYPES[kind],units=projectWork==='repair'?Math.max(1,Math.ceil((100-view.condition)/25)):1;
- const required=projectWork==='repair'?{wood:view.material==='stone'?units:2*units,stone:view.material==='stone'?2*units:units,work:units}:spec;
+ const required=projectWork==='repair'?facilityRepairMaterials(view):spec;
  const route=args.route??view?.route;
  if(['road','bridge'].includes(kind)){
   const edge=engine.world.routes.find(r=>r.id===route);
@@ -87,3 +96,7 @@ export function prepareFacilityProject(engine,state,args,settlement){
  if(days*(args.workers?.length??1)<required.work)throw Error('工程工时不足');
  return {facilityType:kind,projectWork,location,material,...(target?{building:target}:{}),...(route?{route}:{}),requiredWork:required.work};
 }
+
+// Installed consumers keep fire, storage and repair calls out of pack imports.
+export function facilityRuntime(){return facilityRuntime.handlers??={};}
+export function installFacilityRuntime(handlers){Object.assign(facilityRuntime(),handlers);}

@@ -5,6 +5,7 @@ import {purse,treasury,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('office-salary');
 import {actorPath} from './npc-state.mjs';
+import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 
 const MONTH=30*1440,rec=id=>['state','records',id];
 export function nextSalaryMinute(engine,now){return engine.rules.governance?.salaries?(Math.floor(now/MONTH)+1)*MONTH:Infinity;}
@@ -20,7 +21,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
         const offices=[...ids].flatMap(id=>personOffices(engine,prior,id)).map(e=>e.value).sort((a,b)=>a.id.localeCompare(b.id));
         for(const office of offices){
             const key=`office_salary:${office.settlement}:${office.office}:${office.holder}:${at}`;
-            if(!office.monthlySalaryCopper||d.get(...rec(key)))continue;
+            if(!isEffective(engine,d,office.holder)||!office.monthlySalaryCopper||d.get(...rec(key)))continue;
             d.set(rec(key),{category:'office_salary',id:key,holder:office.holder,office:office.office,officeName:office.name,settlement:office.settlement,
                 assessedAt:at,monthlyCopper:office.monthlySalaryCopper,paid:0,arrears:office.monthlySalaryCopper,status:'待付',payments:[],source:office.source??'rules.governance.salaries'});
         }
@@ -30,7 +31,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
             const balance=coinRead(d,{point:'salary.treasury',account:treasury(debt.settlement),legacy:()=>groupAccountView(engine,d.get('state'),debt.settlement)?.coins??0});
             const paid=Math.min(debt.arrears,Math.max(0,balance-(engine.rules.governance?.authority?.treasury?.reserveCopper??0)));
             const actor=actorPath(engine.world,debt.holder),person=d.get(...actor);
-            if(!person||person.status==='死亡')continue;
+            if(!person||isPhysicallyDead(engine,d,debt.holder))continue;
             if(paid){
                 changeGroupCoins(d,engine,debt.settlement,-paid,{kind:'官职月俸',holder:debt.holder,office:debt.office,minute:at,sourceEvent:`${debt.id}:${at}`},{account:purse(engine,debt.holder),writer:'office-salary',eventId:`${debt.id}:${at}`});
                 d.set([...actor,'coins'],(person.coins??0)+paid);

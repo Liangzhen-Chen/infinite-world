@@ -17,19 +17,28 @@ import {advanceLayerPlan} from './advance-layers.mjs';
 import {transferItems} from './items.mjs';
 import {medicineSites,medicalSkill} from './medicine-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
+import {contractTerms,partyInProcedure} from './contract-state.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
+function writeJob(d,e,row){
+    const write=()=>holdingSet(d,e,rec(row.id),row,'labor-market');
+    if(row.endedAt!==undefined)return changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,reason:row.status==='已到期'?'expired':'vacated',eventId:`${row.id}:end:${row.endedAt}`},write);
+    return write();
+}
 const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
 const wage=e=>Math.max(1,2*(e.rules.economy.wageCopperPerHalfDay?.[0]??10));
-const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid);
+const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid&&r.status!=='坏账');
 export const laborMarketFresh=e=>!e.replaying||e.replayResult?.laborMarketVersion===1;
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
 
 function ownerCanHire(e,s,owner){
     if(owner==='player')return false;
+    const estate=s.records?.[`protocol_assets:${owner}`];if(estate)return estate.sealedAt===undefined&&estate.executor&&able(s,estate.executor)&&!personConstraint(e,s,estate.executor);
+
     if(s.npcs?.[owner])return able(s,owner)&&!personConstraint(e,s,owner);
     const representative=groupRepresentative(e,s,owner);
     return Boolean((groupAccountView(e,s,owner)||s.records?.[`organization:${owner}`]?.category==='organization')&&representative&&able(s,representative)&&!personConstraint(e,s,representative));
@@ -135,7 +144,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
 }
 function sign(d,e,offer,app,at,source){
     const old=currentEmployment(d.get('state'),app.worker,at);
-    if(old){holdingSet(d,null,rec(old.id),{...old,status:'已辞工',endedAt:at,reason:'转赴新雇主',successor:`workshop:${source}`},'labor-market');refundGuarantee(d,e,d.get(...rec(old.id)));}
+    if(old){changeLegacyHoldings(d,e,{holder:old.worker,source:`contract:${old.id}`,eventId:source},()=>holdingSet(d,null,rec(old.id),{...old,status:'已辞工',endedAt:at,reason:'转赴新雇主',successor:`workshop:${source}`},'labor-market'));refundGuarantee(d,e,d.get(...rec(old.id)));}
     const starts=Math.floor(at/DAY)*DAY+480,first=starts>at?starts:starts+DAY,key=`workshop:${source}`;
     const terms={owner:offer.owner,worker:app.worker,recipe:offer.recipe??null,task:offer.task??'受雇工坊生产',location:offer.location,wage:offer.wage,workMinutes:480,deadline:offer.deadline};
     const row={category:'contract',kind:'workshop',laborMarket:1,id:key,...terms,parties:[app.worker,offer.owner],signedTerms:structuredClone(terms),
@@ -148,7 +157,8 @@ function sign(d,e,offer,app,at,source){
 }
 function conflict(d,e,row,start){
     const s=d.get('state'),n=s.npcs[row.worker];
-    if(!able(s,row.worker)||personConstraint(e,s,row.worker,start)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||personOffices(e,s,row.worker).length||s.player.companions?.includes(row.worker))return '工人受现有义务或健康限制';
+    const otherOffice=personOffices(e,s,row.worker).some(o=>!(row.domainSteward&&o.value.category==='housing_steward'&&o.value.employment===row.id));
+    if(!able(s,row.worker)||personConstraint(e,s,row.worker,start)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||otherOffice||s.player.companions?.includes(row.worker))return '工人受现有义务或健康限制';
     if(standing(e,s,row.worker,row.owner)<=-40)return '工人拒绝敌对雇主';
     if(row.domainSteward&&!currentDomains(e,s,row.owner).some(id=>containsDomain(e,s,id,row.settlement)))return '领地授权已失效';
     if(!row.domainSteward&&!ownerCanHire(e,s,row.owner))return '雇主不能履约';
@@ -160,10 +170,11 @@ function conflict(d,e,row,start){
 }
 // The wage is earned only for completed work; a shortfall becomes an L1 debt.
 export function settleEmploymentPay(d,e,row,at,minutes){
+    row=contractTerms(row,at);
     const earned=Math.ceil(row.wage*minutes/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
-    if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});holdingSet(d,null,rec(row.id),{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed},'labor-market');}
+    if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});writeJob(d,e,{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
     const paid=cash+guaranteed;
     if(paid<earned){const id=`debt_wage:${row.id}:${at}`;holdingSet(d,null,rec(id),{id,category:'debt',kind:'wage',debtor:row.owner,creditor:row.worker,amount:earned,paid,status:'待偿还',
         createdAt:at,deadline:at+DAY,location:row.location,source:row.source,contract:row.id},'labor-market');}
@@ -171,9 +182,9 @@ export function settleEmploymentPay(d,e,row,at,minutes){
 }
 function settleShift(d,e,row,at){
     const start=at-540,s=d.get('state');
-    if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(start).day)){holdingSet(d,null,rec(row.id),{...row,nextWork:at+DAY},'labor-market');return null;}
+    if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(start).day)){writeJob(d,e,{...row,nextWork:at+DAY});return null;}
     let production=null,minutes=row.attendance?.[String(Math.floor(start/DAY))]??0,quantity=0;
-    if(!minutes){holdingSet(d,null,rec(row.id),{...row,nextWork:at+DAY,status:'罢工',reason:'没有实际到岗工时'},'labor-market');return null;}
+    if(!minutes){writeJob(d,e,{...row,nextWork:at+DAY,reason:'没有实际到岗工时'});return null;}
     let needed=row.targetQuantity-row.produced;
     if(row.demandSource?.startsWith('shop:')){
         const shelf=currentShops(e,s).find(shop=>shop.keeper===row.owner)?.restock.find(stock=>stock.item===row.item);
@@ -182,12 +193,12 @@ function settleShift(d,e,row,at){
         const order=s.records[row.demandSource];
         needed=['待履行','履行中','有效'].includes(order.status)?Math.min(needed,Math.max(0,order.quantity-(order.fulfilled??0)-employmentStock(d,e,row.owner,row.item))):0;
     }
-    if((row.recipe||row.supplier)&&needed<=0){holdingSet(d,null,rec(row.id),{...row,status:'已完成',endedAt:at,reason:'经营缺口已消失'},'labor-market');return null;}
+    if((row.recipe||row.supplier)&&needed<=0){writeJob(d,e,{...row,status:'已完成',endedAt:at,reason:'经营缺口已消失'});return null;}
     if(row.recipe){
         const recipe=e.byId.get(row.recipe),maximum=Math.ceil(needed/recipe.output.quantity);
-        if(maximum<=0){holdingSet(d,null,rec(row.id),{...row,status:'已完成',endedAt:at},'labor-market');return null;}
+        if(maximum<=0){writeJob(d,e,{...row,status:'已完成',endedAt:at});return null;}
         const plan=employmentProductionPlan(d,e,row,{maximum,minutes});
-        if(plan.reason){holdingSet(d,null,rec(row.id),{...row,nextWork:at+DAY,status:'罢工',reason:plan.reason},'labor-market');return null;}
+        if(plan.reason){writeJob(d,e,{...row,nextWork:at+DAY,status:'罢工',reason:plan.reason});return null;}
         minutes=Math.min(minutes,Math.ceil(plan.batches*recipe.minutes/(1+plan.skill/3000)));
         production=settleEmploymentProduction(d,e,row,at,plan);quantity=production.quantity;
     }else if(row.supplier){
@@ -198,27 +209,27 @@ function settleShift(d,e,row,at){
         // S1c: 供货人的库存与雇主现款读账户。
         const stock=supplier?bagStock(d,e,{point:'labor.stock',id:row.supplier,item:row.item,legacy:()=>{const held=supplier.inventory?.[row.item];return typeof held==='number'?held:held?.quantity??0;}}):0;
         quantity=Math.min(needed,stock,Math.floor((minutes-trip)/5),price?Math.floor(coinRead(d,{point:'labor.cash',account:partyAccount(e,d.get('state'),row.owner),legacy:()=>financeBalance(d,e,row.owner)})/price):0);
-        if(!business?.open.value||quantity<=0||!Number.isFinite(trip)||trip>120){holdingSet(d,null,rec(row.id),{...row,status:'罢工',nextWork:at+DAY,reason:'补货来源或实际路程不可用'},'labor-market');return null;}
+        if(!business?.open.value||quantity<=0||!Number.isFinite(trip)||trip>120){writeJob(d,e,{...row,status:'罢工',nextWork:at+DAY,reason:'补货来源或实际路程不可用'});return null;}
         minutes=trip+quantity*5;const cost=price*quantity;
         financeTransfer(d,e,row.owner,row.supplier,cost,`${row.id}:${at}:stock`);transferItems(d,e,row.supplier,row.owner,row.item,quantity);
         production={supplier:row.supplier,item:row.item,quantity,cost,travelMinutes:trip};
     }else if(row.project){
         const p=d.get('state','projects',row.project);
-        if(p?.status!=='施工中'){holdingSet(d,null,rec(row.id),{...row,status:'已完成',endedAt:at},'labor-market');return null;}
+        if(p?.status!=='施工中'){writeJob(d,e,{...row,status:'已完成',endedAt:at});return null;}
         quantity=Math.min(minutes/480,p.remainingWork??p.remainingDays);minutes=Math.ceil(quantity*480);
         const remainingWork=Math.max(0,(p.remainingWork??p.remainingDays)-quantity);
         d.set(['state','projects',p.id],{...p,laborMarket:1,remainingWork,remainingDays:Math.ceil(remainingWork),laborMinutes:(p.laborMinutes??0)+minutes});
     }else if(row.farm){
         const p=e.rules.agriculture.settlements.find(p=>p.settlement===row.farm),farm=d.get('state','records',`agriculture:${row.farm}`),day=Math.floor(start/DAY)%360,c=e.rules.agriculture.crop;
         if(!p||!farm||!farm.field.cohorts.some(c=>c.ready)&&!(day>=c.sowDays[0]&&day<=c.sowDays[1]&&farm.field.seedBank>0)){
-            holdingSet(d,null,rec(row.id),{...row,status:'已完成',endedAt:at},'labor-market');return null;
+            writeJob(d,e,{...row,status:'已完成',endedAt:at});return null;
         }
     }
     const pay=settleEmploymentPay(d,e,row,at,minutes);
     const current=d.get(...rec(row.id)),done=(row.recipe||row.supplier)&&row.produced+quantity>=row.targetQuantity;
     const shift={minute:at,start,minutes,...pay,...(production?{production}:{})};
-    holdingSet(d,null,rec(row.id),{...current,nextWork:at+DAY,paid:row.paid+pay.paid,produced:row.produced+quantity,workedMinutes:row.workedMinutes+minutes,
-        status:pay.arrears?'罢工':done?'已完成':'有效',...(pay.arrears?{stoppedAt:at,reason:'欠薪停工'}:{}),...(done&&!pay.arrears?{endedAt:at}:{}),shifts:[...row.shifts,shift]},'labor-market');
+    writeJob(d,e,{...current,nextWork:at+DAY,paid:row.paid+pay.paid,produced:row.produced+quantity,workedMinutes:row.workedMinutes+minutes,
+        status:pay.arrears?'罢工':done?'已完成':'有效',...(pay.arrears?{stoppedAt:at,reason:'欠薪停工'}:{}),...(done&&!pay.arrears?{endedAt:at}:{}),shifts:[...row.shifts,shift]});
     if(row.domainSteward&&!pay.arrears)settleStewardRequests(d,e,d.get(...rec(row.id)),`${row.id}:${at}`);
     financeEvent(d,e,{id:`${row.id}:${at}`,actor:row.worker,target:row.owner,location:row.location,minute:at,value:pay.paid,tags:['employment',pay.arrears?'wage_arrears':'wage']});
     return shift;
@@ -231,23 +242,23 @@ export function settleArrears(d,e,row,minute){
         holdingSet(d,null,rec(debt.id),{...debt,status:'逾期',defaulted:{case:legalCase,minute:debt.deadline,remaining:debt.amount-debt.paid}},'labor-market');
     }
     if(minute>=earliest+2*DAY&&employmentActive(row)){
-        holdingSet(d,null,rec(row.id),{...row,status:'已辞工',endedAt:earliest+2*DAY,reason:'欠薪投诉后离职'},'labor-market');
+        writeJob(d,e,{...row,status:'已辞工',endedAt:earliest+2*DAY,reason:'欠薪投诉后离职'});
         financeEvent(d,e,{id:`${row.id}:quit`,actor:row.worker,target:row.owner,minute:earliest+2*DAY,location:row.location,tags:['employment','wage_complaint']});
     }
     return true;
 }
-function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`,{account:escrowAccount(row.id),writer:'labor-market'});holdingSet(d,null,rec(row.id),{...row,escrow:0},'labor-market');}}
+function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`,{account:escrowAccount(row.id),writer:'labor-market'});writeJob(d,e,{...row,escrow:0});}}
 export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
     if(!laborMarketFresh(e))return;
     const contracts=rows(d.get('state')).filter(r=>r.laborMarket===1&&r.kind==='workshop');
     if(!contracts.length&&Math.floor(before/DAY)===Math.floor(after/DAY))return;
     const plan=e.advanceLayerContext??advanceLayerPlan(e,d.get('state'));
     for(const initial of contracts){
-        let row=d.get(...rec(initial.id));
+        let row=contractTerms(d.get(...rec(initial.id)),after);
         if(!employmentActive(row)){settleArrears(d,e,row,after);refundGuarantee(d,e,d.get(...rec(row.id)));continue;}
-        if(row.domainSteward){const reason=conflict(d,e,row,Math.max(before,row.starts));if(reason){holdingSet(d,null,rec(row.id),{...row,status:'罢工',reason,nextWork:Math.max(row.nextWork,Math.floor(after/DAY)*DAY+1020)},'labor-market');continue;}}
+        if(row.domainSteward){const reason=conflict(d,e,row,Math.max(before,row.starts));if(reason){writeJob(d,e,{...row,status:'罢工',reason,nextWork:Math.max(row.nextWork,Math.floor(after/DAY)*DAY+1020)});continue;}}
         if(row.status==='罢工'&&!outstanding(d.get('state'),row.id).length&&!conflict(d,e,row,Math.max(before,row.starts))&&(!row.recipe||!employmentProductionPlan(d,e,row).reason)){
-            row={...row,status:'有效',reason:null};holdingSet(d,null,rec(row.id),row,'labor-market');
+            row={...row,status:'有效',reason:null};writeJob(d,e,row);
         }
         const statistical=layer(e,d.get('state'),row.location,plan)==='statistics';
         // Attendance is measured on each actual interval. Remote people use the
@@ -259,20 +270,20 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
             const lo=Math.max(before,start+(row.commuteMinutes??0)),hi=Math.min(after,day*DAY+1020);
             recordEmploymentAttendance(d,row.worker,lo,hi,row.location);
         }
-        row=d.get(...rec(row.id));
+        row=contractTerms(d.get(...rec(row.id)),after);
         if(statistical&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY))&&after<row.deadline)continue;
         const shifts=[];
         for(let at=row.nextWork;at<=after&&at<row.deadline;at+=DAY){
-            row=d.get(...rec(row.id));if(!employmentActive(row))break;
+            row=contractTerms(d.get(...rec(row.id)),after);if(!employmentActive(row))break;
             if(settleArrears(d,e,row,at))continue;
             const shift=settleShift(d,e,row,at);if(shift)shifts.push(shift);
         }
         row=d.get(...rec(initial.id));settleArrears(d,e,row,after);row=d.get(...rec(initial.id));
         if(statistical&&shifts.length){
             const minutes=shifts.reduce((n,s)=>n+s.minutes,0),paid=shifts.reduce((n,s)=>n+s.paid,0),earned=shifts.reduce((n,s)=>n+s.earned,0);
-            holdingSet(d,null,rec(row.id),{...row,shifts:[...row.shifts.slice(0,-shifts.length),{start:shifts[0].start,minute:shifts.at(-1).minute,minutes,paid,earned,arrears:earned-paid,days:shifts.length,aggregate:true}],aggregateMinutes:(row.aggregateMinutes??0)+minutes},'labor-market');
+            writeJob(d,e,{...row,shifts:[...row.shifts.slice(0,-shifts.length),{start:shifts[0].start,minute:shifts.at(-1).minute,minutes,paid,earned,arrears:earned-paid,days:shifts.length,aggregate:true}],aggregateMinutes:(row.aggregateMinutes??0)+minutes});
         }
-        row=d.get(...rec(initial.id));if(after>=row.deadline&&employmentActive(row))holdingSet(d,null,rec(row.id),{...row,status:'已到期',endedAt:row.deadline},'labor-market');
+        row=d.get(...rec(initial.id));if(after>=contractTerms(row,after).deadline&&employmentActive(row))writeJob(d,e,{...row,status:'已到期',endedAt:contractTerms(row,after).deadline});
         row=d.get(...rec(initial.id));if(!employmentActive(row))refundGuarantee(d,e,row);
     }
     if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
@@ -312,7 +323,7 @@ export function laborTrade(d,e,args,id){
     if(args.operation==='labor_guarantee'){
         if(!employmentActive(row))throw Error('雇佣已结束');
         const coins=financeInt(args.coins,1,1e6,'担保款');financeChange(d,e,'player',-coins,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});
-        holdingSet(d,null,rec(row.id),{...row,guarantor:'player',escrow:(row.escrow??0)+coins},'labor-market');return {contract:row.id,escrow:(row.escrow??0)+coins};
+        writeJob(d,e,{...row,guarantor:'player',escrow:(row.escrow??0)+coins});return {contract:row.id,escrow:(row.escrow??0)+coins};
     }
     if(args.consent!==true||s.npcs[row.worker]?.location!==s.location||!able(s,row.worker)||/睡眠|睡觉|熟睡/.test(s.npcs[row.worker]?.activity??'')||personConstraint(e,s,row.worker))throw Error('须由清醒在场的雇工同意');
     if(args.operation==='labor_mediate'){
@@ -326,7 +337,7 @@ export function laborTrade(d,e,args,id){
         const nextWage=financeInt(args.coins??row.wage,wage(e),1e6,'调解日薪');
         const other=currentEmployment(s,row.worker,now);
         const active=now<row.deadline&&(!other||other.id===row.id);
-        holdingSet(d,null,rec(row.id),{...row,escrow,paid:row.paid+due,wage:nextWage,...(active?{status:'有效',nextWork:(Math.floor(now/DAY)+1)*DAY+1020}:{}),amendments:[...row.amendments??[],{minute:now,wage:nextWage,source:id}]},'labor-market');
+        writeJob(d,e,{...row,escrow,paid:row.paid+due,wage:nextWage,...(active?{status:'有效',nextWork:(Math.floor(now/DAY)+1)*DAY+1020}:{}),amendments:[...row.amendments??[],{minute:now,wage:nextWage,source:id}]});
         return {contract:row.id,paid:due,wage:nextWage};
     }
     if(args.operation==='labor_poach'){

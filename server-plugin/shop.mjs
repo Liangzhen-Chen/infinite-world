@@ -1,3 +1,4 @@
+import {isEffective} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
@@ -179,7 +180,7 @@ function restockRow(d,engine,shop,row,minute){
 }
 function restockShop(d,engine,shop,minute){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
-    if(!keeper||['死亡','濒死'].includes(keeper.status))return;
+    if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
     const entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute)).filter(Boolean);
     if(!entries.length)return;
     const key=`shop:${shop.id}`,old=d.get('state','records',key);

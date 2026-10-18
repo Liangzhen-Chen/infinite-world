@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -32,7 +33,7 @@ import {changeItems,transferItems}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -56,7 +57,7 @@ import {sceneCard}from'./scene-card.mjs';
 import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
-import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
+import {assertNpcService,advanceNpcSchedules,scheduleAt}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
@@ -71,9 +72,9 @@ import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
-import {chargeTrade,repayDebt}from'./contracts.mjs';
+import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
-import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess}from'./credit.mjs';
+import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -85,7 +86,7 @@ import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
-import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings,runLifecycleProtocol} from './holdings.mjs';
 import {applyConfigSet,Scheduler,schedulerConfig,schedulerWired} from './scheduler.mjs';
 // S1a 账本在每次归约开头开账；S2a 持有存储在第一次双写时从事件前的文档懒开账（holdings.ensureHoldings）——
 // 开账写下的是不带时刻的“开局即有”，所以开在哪个事件不改变存储内容（分段推进与重载等价），也不让即时查看改存档。
@@ -175,6 +176,14 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 }
 export class WorldEngine {
     constructor(world) {
+        this.protocolScheduleAt=scheduleAt;
+        this.protocolLiquidatePledge=(d,row)=>{
+            if(!row.pledgeRecord)return 0;
+            const bank=this.rules.economy?.credit?.banks?.find(b=>b.id===row.creditor);
+            const asset=releasePledge(d,this,row.pledgeRecord,row.creditor,bank);
+            return Math.min(row.remaining??row.amount,asset?.value??0);
+        };
+        this.protocolDebtSettled=(d,row,eventId)=>{const unpaid=row.unpaid??row.badDebt??0;if(!unpaid&&row.pledgeRecord)releasePledge(d,this,row.pledgeRecord,row.debtor);if(row.defaulted?.case)settleCreditCase(d,this,row.defaulted.case,eventId,{badDebt:unpaid});};
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
@@ -278,7 +287,7 @@ export class WorldEngine {
         settleAgricultureExpiry(d,this);
         enforceLegalRestriction(d,tool,args);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
-        if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
+        if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
@@ -288,6 +297,7 @@ export class WorldEngine {
         }
         settleMagicAreas(d,session);
         const detail = await session[tool](d,args,id);
+        if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
         if(document.state.location!==d.get('state','location'))recordReturnVisit(d,session,document.state,id);
@@ -341,7 +351,7 @@ export class WorldEngine {
     npcAutonomyBusy(state,id,minute){return npcAutonomyBusy(state,id,minute);}
     assertNpcAutonomyAction(state,actors,action){return assertNpcAutonomyAction(state,actors,action);}
     actorPath(id) { return actorPath(this.world,id); }
-    bagPath(id) { return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
+    bagPath(id) { if(/^(estate_|liq_)/.test(id))return ['state','records',`protocol_assets:${id}`,'inventory']; return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
     itemDelta(d,id,item,delta,books) {
         return changeItems(d,this,id,item,delta,{books});
@@ -356,7 +366,7 @@ export class WorldEngine {
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
         if(buyer===seller) throw new Error('交易双方不能相同');
         if(!this.actor(d,buyer)||!this.actor(d,seller)) throw new Error('交易对象不在战役中');
-        for(const actor of[buyer,seller])if(['死亡','濒死'].includes(this.actor(d,actor).status))throw new Error('交易一方无法清醒履约');
+        for(const actor of[buyer,seller])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor).status==='濒死'))throw new Error('交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
@@ -390,6 +400,7 @@ export class WorldEngine {
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
+        validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         let payment,moved,tax,rejected;
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
@@ -468,7 +479,7 @@ export class WorldEngine {
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
-        if(d.get('state','player','status')==='死亡')this.revive(d,{},id);
+        if(isPhysicallyDead(this,d,'player'))this.revive(d,{},id);
         if(args.minutes!==undefined&&args.until!==undefined)throw new Error('minutes 与 until 只能选一个');
         let duration=args.minutes;
         if(args.until!==undefined){
@@ -633,7 +644,7 @@ export class WorldEngine {
     }
     health(d,args,id) {
         const amount=number(args.delta,-1e9,1e9,'生命变化'),p=d.get('state','player');
-        if(p.status==='死亡')throw new Error('死亡后需要复活，不能直接治疗');
+        if(isPhysicallyDead(this,d,'player'))throw new Error('死亡后需要复活，不能直接治疗');
         d.set(['state','player','hp'],Math.max(0,Math.min(p.maxHp,p.hp+amount)));
         if(p.hp+amount<=0){d.set(['state','player','status'],'濒死');if(p.status!=='濒死')d.set(['state','player','dyingSince'],d.get('state','minute'));
             if(d.get('state','player','mount'))d.remove(['state','player','mount']);
@@ -643,8 +654,9 @@ export class WorldEngine {
     }
     death(d) {
         const p=d.get('state','player'),loss=p.level<10?p.level*10:xpRequired(p.level);
-        if(p.status==='死亡')return;
-        d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.set(['state','player','status'],'死亡');d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
+        if(isPhysicallyDead(this,d,'player'))return;
+        runLifecycleProtocol(d,this,{entity:'player',basis:'death',origin:'death_rule',location:d.get('state','location')});
+        d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
         holdingSet(d,null,['state','player','companions'],[],'engine');
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
     }
@@ -754,7 +766,7 @@ export class WorldEngine {
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
         if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
-        for(const actor of[promisor,promisee])if(['死亡','濒死'].includes(this.actor(d,actor)?.status))throw new Error('义务当事人无法清醒履约');
+        for(const actor of[promisor,promisee])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor)?.status==='濒死'))throw new Error('义务当事人无法清醒履约');
         for(const actor of[promisor,promisee])if(actor!=='player'&&personConstraint(this,d.get('state'),actor))throw new Error('义务当事人正在依法拘留，不能自由行动');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};
         let routePreview;

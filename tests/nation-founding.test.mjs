@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {setup,prepareNation,noble,office,DAY,county,village} from './helpers/u16.mjs';
-import {nationReadiness,recognizeIndependence,foundNation,nationAction,advanceNations} from '../server-plugin/nation-founding.mjs';
+import {nationReadiness,recognizeIndependence,foundNation,nationAction,advanceNations,defectFromNation} from '../server-plugin/nation-founding.mjs';
 import {nationAt,rulerNation} from '../server-plugin/noble-state.mjs';
-import {armyKey,armyStrength,partyCoins,partyPay} from '../server-plugin/military.mjs';
+import {armyKey,armyStrength,partyCoins,partyPay,createArmy} from '../server-plugin/military.mjs';
 import {groupAccountView} from '../server-plugin/group-account.mjs';
 import {organizationState} from '../server-plugin/organization-state.mjs';
 import {warAction,endWar,campaignRound} from '../server-plugin/war-diplomacy.mjs';
@@ -12,6 +12,7 @@ import {legalCodeAt,courtHierarchy,legalCooperation} from '../server-plugin/law-
 import {tradeTax,assessTradeTax} from '../server-plugin/finance-tax.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {applyPatches,digest} from '../server-plugin/storage.mjs';
+import {holdingSet} from '../server-plugin/holding-sources.mjs';
 const recognize=(e,d,factions,who='player')=>{for(const f of factions){if(who==='player')warAction.call(e,d,{operation:'diplomacy',choice:'recognize',org:who,member:f},`recognize_${f}`);else d.set(['state','records',`recognition:${who}:${f}`],{category:'diplomacy',status:'承认独立',subject:who,recognizer:f,parties:[who,f],minute:d.get('state','minute')});}};
 function ready(){const {e,d}=setup(),factions=prepareNation(e,d);recognize(e,d,factions);return {e,d,factions};}
 const found=(e,d,id='found')=>nationAction.call(e,d,{operation:'nation',choice:'found',name:'垄渠新国',settlement:village,coins:25000},id).nation;
@@ -65,6 +66,11 @@ test('敌对下级分裂后地方税与法典不再归新国，税款只能由�
  const {e,d}=ready(),n=found(e,d),rebel='npc_yp_gaoxin';office(d,rebel,village,{upper:true});adjustStanding(d,e,rebel,'player',-80,{sourceEvent:'split',minute:d.get('state','minute')});
  const before=d.get('state','settlements',village,'treasury');d.set(['state','npcs','npc_yp_shile','coins'],2000);const tax=assessTradeTax(d,e,{seller:'npc_yp_shile',cost:1000,location:village,sourceEvent:'taxable'});
  const at=n.nextReview;d.set(['state','minute'],at);advanceNations(d,e,{before:at-DAY,after:at});assert.equal(d.get('state','settlements',village,'treasury'),before);assert.equal(groupAccountView(e,d.get('state'),n.id).coins,25000+tax.amount);
+ // Hostility alone cannot split territory. The sourced official now takes the
+ // explicit act of leaving, with an actual local garrison obeying him.
+ const org=structuredClone(d.get('state','records',`organization:${n.id}`));org.members[rebel]={position:'主官',joinedAt:at,arrears:0};holdingSet(d,e,['state','records',`organization:${n.id}`],org,'nation-founding');
+ createArmy(d,e,{id:'army_local_rebel',name:'地方卫队',party:n.id,leader:rebel,base:village,location:village,supply:'purchase',regular:30,training:50,morale:70,payCopperMonth:0},at,'local-garrison');
+ defectFromNation(d,e,{nation:n.id,member:rebel},'local-defection');
  assert.equal(d.get('state','records',`nation:${n.id}`,'status'),'内乱');assert.equal(nationAt(e,d.get('state'),village),null);assert.ok(!legalCodeAt(e,village,d.get('state')).nation);
  const population=nationReadiness(e,d.get('state')).population;assert.equal(population,600+(d.get('state','settlements','loc_bs_liquan','population')??0)+(d.get('state','settlements','loc_bs_sangban','population')??0)+(d.get('state','settlements','loc_hw','population')??0));
  const balance=groupAccountView(e,d.get('state'),n.id).coins;d.set(['state','minute'],at+30*DAY);assessTradeTax(d,e,{seller:'npc_yp_shile',cost:1000,location:village,sourceEvent:'rebel_tax'});advanceNations(d,e,{before:at,after:at+30*DAY});assert.equal(groupAccountView(e,d.get('state'),n.id).coins,balance);assert.equal(d.get('state','records',`nation:${n.id}`,'splits').length,1);

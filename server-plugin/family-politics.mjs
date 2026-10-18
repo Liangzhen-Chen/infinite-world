@@ -10,6 +10,7 @@ import {entityTransition} from './entity-transitions.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {lawAuthorities} from './entity-view.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 import {holdingSet} from './holding-sources.mjs';
 declareHoldingWriter('family-politics',{kinds:['kin','household_member','resides','resident_of','guardian_of']});
 
@@ -39,11 +40,11 @@ function moveHouse(d,e,id,destination,eventId){
 export function familyAction(d,args,eventId){
  const e=this,s=d.get('state');
  const split=s.family?.households?.[`house_split:${eventId}`];
- if(args.operation==='family_split'&&split)return {household:split.id,from:split.previousHousehold,member:split.members[0]};
+ if(args.operation==='family_split'&&split)return {duplicate:true,household:split.id,from:split.previousHousehold,member:split.members[0]};
  const adopted=s.family?.adoptions?.[`adoption:${eventId}`];
- if(['family_adopt','family_foster'].includes(args.operation)&&adopted)return {adoption:adopted,household:adopted.household};
+ if(['family_adopt','family_foster'].includes(args.operation)&&adopted)return {duplicate:true,adoption:adopted,household:adopted.household};
  const married=Object.values(s.family?.marriages??{}).find(r=>r.requestId===eventId);
- if(args.operation==='family_marry'&&married)return {marriage:married.id,partners:married.partners};
+ if(args.operation==='family_marry'&&married)return {duplicate:true,marriage:married.id,partners:married.partners};
  if(args.operation==='family_alliance')return familyAlliance(d,e,args,eventId);
  const value=args.member??args.name,id=args.operation==='family_inspect'?(familyPerson(e,s,value)?value:e.resolve(value,'npc')):person(e,s,value),orgId=natalFamily(e,s,id);
  if(args.operation==='family_inspect'){
@@ -72,7 +73,7 @@ export function familyAction(d,args,eventId){
   holdingSet(d,null,['state','family','adoptions',aid],row,'family-politics');moveHouse(d,e,child,house,eventId);
   // Transfer legal care without erasing the recorded biological parents.
   if(!familyAdult(e,s,child)){
-   const prior=activeGuardianship(e,s,child);if(prior)holdingSet(d,null,rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind},'family-politics');
+   const prior=activeGuardianship(e,s,child);if(prior)changeLegacyHoldings(d,e,{holder:prior.guardian,subject:child,kinds:['guardian_of'],eventId},()=>holdingSet(d,null,rec(prior.id),{...prior,status:'已结束',endedAt:s.minute,reason:row.kind},'family-politics'));
    holdingSet(d,null,rec(`guardianship:${aid}`),{category:'guardianship',id:`guardianship:${aid}`,ward:child,guardian:parent,since:s.minute,expires:s.minute+Math.max(0,18-(npcAgeAt(e,s,child)??0))*360*DAY,status:'代管中',responsibilities:['保全本人财产','逐笔记账','成年交还管理权'],ledger:[],sourceEvent:aid},'family-politics');
   }
   holdingSet(d,null,['state','family','seenByPlayer',aid],s.minute,'family-politics');

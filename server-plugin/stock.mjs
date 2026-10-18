@@ -113,7 +113,8 @@ export function legacyStock(engine,state){
     for(const [key,row] of Object.entries(records)){
         if(!row||typeof row!=='object')continue;
         const c=row.category;
-        if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])for(const [item,n] of Object.entries(row.items??{}))add(store(engine,id,item),n);}
+        if(c==='protocol_assets')bagOf(row.owner,row.inventory);
+        else if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])for(const [item,n] of Object.entries(row.items??{}))add(store(engine,id,item),n);}
         else if(c==='army')add(armyRations(engine,key),row.food);
         else if(c==='settlement_trade'&&row.status==='in-transit')add(cargo(engine,key,row.item),(row.batches??[]).reduce((n,b)=>n+b.amount,0),batchLots(row.batches??[]));
         else if(c==='transport')for(const g of row.cargo??[])add(freight(engine,key,g.item),g.quantity);

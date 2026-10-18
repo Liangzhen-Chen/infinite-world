@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U8 谎言账（指南5.7）：撒谎时说法与真相成对记账，谁对谁说、动机、知情者
 // 都在 records 的 `lie:<id>` 里。被骗者把说法当事实记住，并作为 K5 传闻
 // `rumor_lie:<id>` 沿原有转述路线传播（失真照常）。矛盾证据、知情者开口、
@@ -16,7 +17,7 @@ export const LIE_ROUTES=Object.freeze({contradiction:'矛盾证据',knower:'知�
 const FIRSTHAND=new Set(['亲历','目击','约定核对']);
 const clone=v=>structuredClone(v);
 const text=(value,max)=>{if(typeof value!=='string'||!value.trim()||value.length>max)throw Error('文字为空或过长');return value.trim();};
-const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(state,id,n)=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const minor=(engine,state,id)=>{const base=engine.byId.get(id),now=state.npcs?.[id];return Boolean(base?.flags?.minor||base?.minor||base?.age<18||now?.flags?.minor||now?.age<18);};
 const nameOf=(engine,state,id)=>id==='player'?state.player?.name??'你':engine.byId.get(id)?.name??state.npcs?.[id]?.name??id;
 export const lieRecordKey=(liar,key)=>`lie:${digest([liar,key]).slice(0,16)}`;
@@ -29,7 +30,7 @@ function person(engine,state,value,role){
     if(id!=='player'&&!state.npcs?.[id])throw Error(`${role}须为已登记人物或玩家`);
     return id;
 }
-function here(state,id){return id==='player'?state.player?.hp>0&&awake(state.player):state.npcs[id]?.location===state.location&&awake(state.npcs[id]);}
+function here(state,id){return id==='player'?state.player?.hp>0&&awake(state,'player',state.player):state.npcs[id]?.location===state.location&&awake(state,id,state.npcs[id]);}
 function assertPresent(state,ids,why){for(const id of ids)if(!here(state,id))throw Error(`${why}须在场且清醒`);}
 
 // 被骗者把说法当事实记住；完整人物的记忆流里它是一条可转述的传闻。
@@ -153,7 +154,7 @@ export function exposeLies(d,engine,rows,to,{route,by,evidence},eventId){
     }
     if(!exposed.length)return{};
     const liar=exposed[0].liar,hidden=exposed.some(l=>l.private);
-    const witnesses=Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&awake(n)&&![liar,to].includes(id)).map(([id])=>id).sort();
+    const witnesses=Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&awake(state,id,n)&&![liar,to].includes(id)).map(([id])=>id).sort();
     return{exposed:exposed.map(l=>l.id),route,truth:exposed.map(l=>l.truth),
         lieEvent:{verb:'deceive',actor:liar,target:to,value:exposed.length,witnesses,tags:['lie','exposed',`route:${route}`,...(hidden?['private']:[])],lies:exposed.map(l=>l.id),route,by}};
 }

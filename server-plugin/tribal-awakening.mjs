@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U11 族群觉醒动态（指南3.8.5）。个体成精（wildlife-awakening：听息、立意）之上的一层：
 // 以“物种+栖地”为单位的族群按季度累积觉醒进度，来源只认账本里实际发生的事：
 //   吸收魔力  栖地内的灵地（wildlifeAwakening.spiritLands）、同栖的灵性物种（K8栖地种群）、首领领地；
@@ -42,8 +43,8 @@ const clockKey=org=>`tribal_clock:${org}`;
 const rules=engine=>engine.rules?.tribalAwakening??null;
 // 旧事件重放不补出族群推进：只有新结算或重放结果已带本版本号时才推进。
 export function tribalFresh(engine){return !engine.replaying||engine.replayResult?.tribalAwakeningVersion===TRIBAL_AWAKENING_VERSION;}
-const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
-const npcAlive=n=>n&&!['死亡'].includes(n.status);
+const alive=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&a.hp>0;
+const npcAlive=(state,id,n)=>n&&!isPhysicallyDead(null,state,id);
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
 const habitatOf=(engine,dyn)=>engine.rules.wildlife?.habitats.find(h=>h.id===dyn.habitat);
 const sum=(o)=>Object.values(o).reduce((n,v)=>n+v,0);
@@ -114,8 +115,8 @@ export function assertTribalAwakening(engine){
 function membersOf(d,engine,dyn,rec){
  const h=habitatOf(engine,dyn),out=new Set();
  for(const [id,a]of Object.entries(d.get('state','creatures')??{}))
-  if(alive(a)&&a.species===dyn.species&&(a.ecology===dyn.habitat||h&&within(engine,a.location,h.location)))out.add(id);
- for(const org of rec?.factions??[])for(const id of Object.keys(groupView(engine,d.get('state'),org)?.members.value??{}))if(alive(d.get('state','creatures',id)))out.add(id);
+  if(alive(d,id,a)&&a.species===dyn.species&&(a.ecology===dyn.habitat||h&&within(engine,a.location,h.location)))out.add(id);
+ for(const org of rec?.factions??[])for(const id of Object.keys(groupView(engine,d.get('state'),org)?.members.value??{}))if(alive(d,id,d.get('state','creatures',id)))out.add(id);
  return [...out].sort();
 }
 const ecologyCount=(d,dyn)=>d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species]?.count??0;
@@ -140,13 +141,13 @@ function gather(d,engine,t,dyn,rec,members,from,at,sourceEvent){
  const lands=(engine.rules.wildlifeAwakening?.spiritLands??[]).filter(l=>h&&within(engine,l.location,h.location)).length;
  const eco=state.records?.[`ecology:${dyn.habitat}`]?.populations??{};
  const spirits=h?speciesInHabitat(engine.rules,engine.world.monsters,h.id).filter(s=>s.id!==dyn.species&&(s.nature?.spirit||s.tags?.includes('spirit'))&&(eco[s.id]?.count??1)>0).length:0;
- const dead=new Set(Object.values(state.creatures??{}).filter(a=>a.boss&&!alive(a)).map(a=>a.boss));
+ const dead=new Set(Object.entries(state.creatures??{}).filter(([id,a])=>a.boss&&!alive(state,id,a)).map(([,a])=>a.boss));
  const lairs=h?(engine.world.bosses??[]).filter(b=>b.residence?.location&&within(engine,b.residence.location,h.location)&&!dead.has(b.id)).length:0;
  const magic=Math.min(w.magic.cap,lands*w.magic.spiritLand+spirits*w.magic.spiritSpecies+lairs*w.magic.lair);
  // 受到教导：玩家传授记录、导师NPC本季的教导（写成世界事件）、完成的教导委托
  let taught=0;
  for(const id of members)taught+=(state.creatures?.[id]?.cultivation?.sessions??[]).filter(s=>s.by==='player'&&s.kind==='teach'&&s.minute>from&&s.minute<=at).length;
- const tutors=dyn.tutors.filter(n=>npcAlive(state.npcs?.[n]));
+ const tutors=dyn.tutors.filter(n=>npcAlive(state,n,state.npcs?.[n]));
  for(const tutor of tutors){
   const id=`${sourceEvent}:teach:${tutor}`;
   publishTransitionEvent(d,engine,{id,minute:at,location:dyn.home,witnesses:[],tool:'advance',
@@ -157,7 +158,7 @@ function gather(d,engine,t,dyn,rec,members,from,at,sourceEvent){
  const harmed=events.filter(e=>e.verb==='harm'&&member.has(e.target)).length;
  const displacedNow=eco[dyn.species]?.displaced??0,displaced=Math.max(0,displacedNow-(rec.seen?.displaced??displacedNow));// 首季只记基线
  const hazards=Object.values(state.records??{}).filter(r=>r.category==='hazard_clock'&&r.settlement===dyn.board).reduce((n,r)=>n+(r.history??[]).filter(x=>x.applied&&x.minute>from&&x.minute<=at).length,0);
- const owned=Object.values(state.creatures??{}).filter(a=>alive(a)&&a.species===dyn.species&&a.owner).length;
+ const owned=Object.entries(state.creatures??{}).filter(([id,a])=>alive(state,id,a)&&a.species===dyn.species&&a.owner).length;
  const servitude=['结盟','自治'].includes(rec.status)?0:dyn.servitude;
  const injustice=Math.min(w.injustice.cap,harmed*w.injustice.harm+displaced*w.injustice.displaced+hazards*w.injustice.hazard+owned*w.injustice.enslaved+servitude);
  // 玩家的选择（无视＝四项皆零）
@@ -291,7 +292,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   event('pact',accord,dyn.board,['pact','alliance']);
  }else if(kind==='autonomy'){
   const resourceAware=Boolean(engine.rules.forestWater);
-  const inhabitants=rec.awakened.filter(id=>alive(d.get('state','creatures',id)));
+  const inhabitants=rec.awakened.filter(id=>alive(d,id,d.get('state','creatures',id)));
   // R24: only the sustainable surplus of unseen wild stock joins the census.
   // The range keeps half its current (forest-derived) capacity, never below a
   // breeding pair, so weekly births can refill it instead of the species dying out.

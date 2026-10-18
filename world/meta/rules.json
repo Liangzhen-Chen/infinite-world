@@ -2060,6 +2060,7 @@
         "prisonMinutesPerCopper": 60,
         "maximumSentenceMinutes": 10080,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2230,6 +2231,7 @@
         "prisonMinutesPerCopper": 60,
         "maximumSentenceMinutes": 10080,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2312,6 +2314,7 @@
         "prisonMinutesPerCopper": 60,
         "maximumSentenceMinutes": 10080,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2394,6 +2397,7 @@
         "prisonMinutesPerCopper": 60,
         "maximumSentenceMinutes": 10080,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2476,6 +2480,7 @@
         "prisonMinutesPerCopper": 60,
         "maximumSentenceMinutes": 10080,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2674,6 +2679,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2771,6 +2777,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2868,6 +2875,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -2965,6 +2973,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3062,6 +3071,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3159,6 +3169,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3256,6 +3267,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3353,6 +3365,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3449,6 +3462,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3545,6 +3559,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3641,6 +3656,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3737,6 +3753,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3833,6 +3850,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -3929,6 +3947,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -4025,6 +4044,7 @@
         },
         "evidenceRequired": 2,
         "penalties": {
+          "negligent_fire": {"baseFine": 10, "valueMultiplier": 0},
           "theft": {
             "baseFine": 10,
             "valueMultiplier": 1
@@ -5021,6 +5041,7 @@
       {
         "settlement": "loc_hw",
         "counter": "bld_hw_council",
+        "warehouse": "bld_hw_grain_annex",
         "manager": "npc_hw_chenbai",
         "fieldLocation": "loc_hw_fields",
         "fieldId": "farm_hw_oats",

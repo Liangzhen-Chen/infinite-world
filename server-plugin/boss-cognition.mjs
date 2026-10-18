@@ -2,10 +2,11 @@ import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {bossCognitionField}from'./npc-state.mjs';
 import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
 import {societyView}from'./monster-society.mjs';
+import {isPhysicallyDead}from'./lifecycle-state.mjs';
 const goals=new Set(['defend_territory','avoid_conflict']);
 const intelligent=boss=>Number.isInteger(boss?.intelligence)&&boss.intelligence>0;
 const plain=value=>value&&typeof value==='object'&&!Array.isArray(value);
-const living=actor=>actor&&actor.status!=='死亡'&&actor.hp>0;
+const living=(engine,d,id,actor)=>actor&&!isPhysicallyDead(engine,d,id)&&actor.hp>0;
 
 // Existing intelligent residents defend their registered lair by default.
 // Templates may select another implemented goal without adding authored history.
@@ -40,7 +41,7 @@ export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
     if(!intelligent(boss))return;
     template(boss);
     if(!actor||actor.location!==d.get('state','location')||
-        kind==='approach'&&(!living(actor)||actor.owner))throw new Error('首领接触需要实际在场的自由个体');
+        kind==='approach'&&(!living(engine,d,target,actor)||actor.owner))throw new Error('首领接触需要实际在场的自由个体');
     if(!['approach','clash'].includes(kind)||typeof eventId!=='string'||!eventId||
         kind==='clash'&&(typeof tactic!=='string'||!tactic))throw new Error('首领接触事件无效');
     const c=structuredClone(readBossCognition(actor)),prior=c.encounters.find(e=>e.event===eventId);
@@ -57,7 +58,7 @@ export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
 // the resident's goal. Peaceful visits never erase a previous attack.
 export function bossPublicAttitude(d,engine,target){
     const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);
-    if(!intelligent(boss)||!living(actor)||actor.location!==d.get('state','location'))return undefined;
+    if(!intelligent(boss)||!living(engine,d,target,actor)||actor.location!==d.get('state','location'))return undefined;
     const c=readBossCognition(actor),t=template(boss),inTerritory=t.territory.includes(actor.location);
     const clashes=c.encounters.filter(e=>e.kind==='clash'),threats=clashes.filter(e=>!['flee','defend'].includes(e.tactic));
     const territorialThreat=threats.some(e=>t.territory.includes(e.location));
@@ -87,7 +88,7 @@ export function recordBossEvents(d,engine,events){
     for(const e of events){
         if(e.legacy||e.actor!=='player'||!e.target||!['steal','gift'].includes(e.verb))continue;
         const actor=engine.actor(d,e.target);
-        if(!actor?.boss||!intelligent(engine.byId.get(actor.boss))||!living(actor)||actor.location!==d.get('state','location')||actor.owner)continue;
+        if(!actor?.boss||!intelligent(engine.byId.get(actor.boss))||!living(engine,d,e.target,actor)||actor.location!==d.get('state','location')||actor.owner)continue;
         if(readBossCognition(actor).encounters.some(x=>x.event===e.id))continue;
         rememberBossEncounter(d,engine,e.target,e.verb==='steal'?{kind:'clash',tactic:'theft',eventId:e.id}:{kind:'approach',eventId:e.id});
     }

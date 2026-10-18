@@ -14,9 +14,13 @@ import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
-import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity} from './holdings.mjs';
 import {changeHolding} from './transition.mjs';
 import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+import fs from 'node:fs';
+import {registerWorldEventSubscriber} from './world-events.mjs';
+const successionRules=JSON.parse(fs.readFileSync(new URL('../world/lore/office-succession.json',import.meta.url),'utf8'));
 declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion']});
 
 const DAY=1440;
@@ -60,12 +64,12 @@ export function residentAdults(engine,settlement,state,p=engine.world.settlement
     const houses=(engine.world.households??[]).filter(h=>h.settlement===settlement);
     const people=new Set([...p?.residentIds??[],...houses.flatMap(h=>householdMembers(engine,state,h.id)),
         ...Object.values(state.created??{}).filter(p=>p.generated==='population'&&p.settlement===settlement).map(p=>p.id)]);
-    return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&state.npcs?.[id]?.status!=='死亡'
+    return [...people].filter(id=>npcHousehold(engine,state,id)?.settlement===settlement&&isEffective(engine,state,id)
         &&(npcAgeAt(engine,state,id)??0)>=18).sort();
 }
 function person(d,engine,name){
     const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);
-    if(!(engine.world.npcs.some(n=>n.id===id)||personSimulation(engine,d.get('state'),id).value)||!awake(actor)||actor.location!==d.get('state','location'))throw Error('需要既有人物实际在场且清醒；名册不代替参与');
+    if(!(engine.world.npcs.some(n=>n.id===id)||personSimulation(engine,d.get('state'),id).value)||!isEffective(engine,d,id)||!awake(actor)||actor.location!==d.get('state','location'))throw Error('需要既有人物实际在场且清醒；名册不代替参与');
     return id;
 }
 function chair(d,engine,settlement,name){
@@ -320,24 +324,24 @@ function registrar(d,engine){
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return {charter,registrar:staff[0]};
 }
-const crimeJudged=state=>Object.values(state.records??{}).some(r=>r.category==='legal_case'&&r.offender==='player'&&r.judgment);
-function residentViews(engine,state,settlement){
+const crimeJudged=(state,holder='player')=>Object.values(state.records??{}).some(r=>r.category==='legal_case'&&r.offender===holder&&r.judgment);
+function residentViews(engine,state,settlement,holder='player'){
     let support=0,oppose=0;
-    for(const id of eligible(engine,settlement,state)){const v=standing(engine,state,id,'player');if(v>0)support++;else if(v<0)oppose++;}
+    for(const id of eligible(engine,settlement,state)){const v=standing(engine,state,id,holder);if(v>0)support++;else if(v<0)oppose++;}
     return {support,oppose};
 }
 // The same test is used at the decision and at every review.
-function appraise(engine,state,settlement,office){
+function appraise(engine,state,settlement,office,{holder='player',vacancy=false}={}){
     const {g}=profile(engine,settlement),reasons=[],req=office.requires;
-    const citizen=state.records?.[`civic_citizen:${settlement}:player`];
+    const citizen=state.records?.[`civic_citizen:${settlement}:${holder}`];
     if(req.citizen&&citizen?.status!=='已登记')reasons.push('不是本村登记公民');
-    const points=contributionTotal(state,settlement);
+    const points=contributionTotal(state,settlement,holder);
     if(points<req.contribution)reasons.push(`本村贡献${points}，未达${req.contribution}`);
-    const head=standing(engine,state,g.head,'player');
-    if(state.npcs[g.head]?.status==='死亡'||head<req.headRecommendation.minStanding)reasons.push(`原头人不举荐（看法${head}，需${req.headRecommendation.minStanding}）`);
-    const views=residentViews(engine,state,settlement);
+    const head=standing(engine,state,g.head,holder),headAvailable=isEffective(engine,state,g.head);
+    if(!(vacancy&&!headAvailable)&&(!headAvailable||head<req.headRecommendation.minStanding))reasons.push(`原头人不举荐（看法${head}，需${req.headRecommendation.minStanding}）`);
+    const views=residentViews(engine,state,settlement,holder);
     if(views.oppose>views.support)reasons.push(`成年住户反对${views.oppose}多于支持${views.support}`);
-    if(crimeJudged(state))reasons.push('有犯罪裁定');
+    if(crimeJudged(state,holder))reasons.push('有犯罪裁定');
     return {reasons,points,head,views};
 }
 function apply(d,engine,args,eventId,settlement){
@@ -360,39 +364,101 @@ function decide(d,engine,row,at){
     const basis={contribution:points,headStanding:head,residents:views};
     if(reasons.length){holdingSet(d,null,path(row.id),{...row,status:'未获任命',decidedAt:at,reasons,basis},'governance');return;}
     const key=officeKey(row.settlement,office.id);
-    holdingSet(d,null,path(key),{category:'governance_office',id:key,holder:'player',settlement:row.settlement,office:office.id,name:office.name,status:'在任',
+    closeOfficeIncumbents(d,engine,row.settlement,office.id,at,row.id);
+    appointOfficeRecord(d,engine,{category:'governance_office',id:key,holder:'player',settlement:row.settlement,office:office.id,name:office.name,status:'在任',
         since:at,until:at+office.termDays*DAY,nextReview:at+authorityOf(engine).superiors.auth_bs_office_charter.reviewEveryDays*DAY,
-        appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id},'governance');
+        appointedBy:office.appointingInstitution,application:row.id,basis,source:office.source,sourceEvent:row.id},row.id);
     syncHoldingRecord(d,engine,key,{writer:'governance',eventId:row.id});
     holdingSet(d,null,path(row.id),{...row,status:'已任命',decidedAt:at,basis},'governance');
     entityTransition(d,engine,{id:`${row.id}:appoint`,verb:'appoint',actor:office.appointingInstitution,target:'player',minute:at,location:row.settlement,office:office.id,summary:`${state.player.name}获任${office.name}`});
+}
+// Domain decisions close an incumbent through the protocol before writing the
+// compatibility appointment. The office, rather than its former holder, owns
+// subordinate appointments.
+export function closeOfficeIncumbents(d,engine,settlement,office,at,eventId){
+    ensureHoldings(d,engine);
+    const subject=currentOfficeSubject(d,settlement,office);
+    for(const h of aliveHoldings(d,{kind:'holds_office',subject}))changeHolding(d,engine,{op:'close',id:h.id,reason:'vacated',eventId:`${eventId}:${h.id}`});
+    for(const row of Object.values(d.get('state','records')??{}).filter(r=>r.category==='governance_office'&&r.settlement===settlement&&r.office===office&&r.status==='在任'))
+        holdingSet(d,engine,path(row.id),{...row,status:'已免职',removedAt:at,reason:'上级改任'},'governance');
+}
+function currentOfficeSubject(d,settlement,office){
+    const remote=office==='office_village_head'?Object.values(d.get('state','remote')??{}).flatMap(r=>r.skeleton?.offices??[]).find(o=>o.settlement===settlement&&o.source==='generated'):null;
+    return officeEntity(settlement,remote?.id??office);
+}
+export function appointOfficeRecord(d,engine,row,eventId){
+    ensureHoldings(d,engine);const subject=currentOfficeSubject(d,row.settlement,row.office);
+    if(holdingsActive(d)){
+        const office=subject.startsWith('office_rg_')?subject:row.office,source=`office:${row.settlement}|${office}`;
+        if(!entityRow(d,subject))createEntity(d,{id:subject,kind:'office',facts:{settlement:row.settlement,office},source,writer:'governance'});
+        changeHolding(d,engine,{op:'open',kind:'holds_office',holder:row.holder,subject,source,eventId:`${eventId}:office`});
+    }
+    holdingSet(d,engine,path(row.id),row,'governance');return row;
+}
+export function consumeOfficeVacancies(d,engine,after=d.get('state','minute')){
+    ensureHoldings(d,engine);
+    const events=Object.values(d.get('state','records')??{}).filter(r=>r.category==='world_event'&&r.verb==='succession'&&r.kind==='holds_office'&&r.minute<=after).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
+    for(const event of events){
+        const key=`governance_vacancy:${event.id}`;if(d.get(...path(key)))continue;
+        const facts=entityRow(d,event.subject)?.facts;if(!facts?.settlement||!facts.office)continue;
+        const state=d.get('state'),settlement=facts.settlement,office=facts.office;
+        const source=authorityOf(engine)?.offices?.[office],election=engine.rules.governance?.elections?.[office];
+        const filled=aliveHoldings(d,{kind:'holds_office',subject:event.subject}).length>0;
+        const due=event.minute+(engine.rules.elections?.campaignDays??0)*DAY;
+        holdingSet(d,engine,path(key),{category:'governance_vacancy',id:key,subject:event.subject,settlement,office,previousHolder:event.previousHolder,cause:event.id,
+            status:filled?'已有继任':election?.settlements.includes(settlement)&&source?'补选中':'待原任免机构决定',due,source:successionRules.source,sourceEvent:event.id},'governance');
+    }
+    for(const vacancy of Object.values(d.get('state','records')??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due<=after)){
+        if(aliveHoldings(d,{kind:'holds_office',subject:vacancy.subject}).length){holdingSet(d,engine,path(vacancy.id),{...vacancy,status:'已有继任'},'governance');continue;}
+        const state=d.get('state'),{g}=profile(engine,vacancy.settlement),electorate=eligible(engine,vacancy.settlement,state);
+        const candidates=(g.coordinators??[]).filter(id=>id!==vacancy.previousHolder&&electorate.includes(id)&&isEffective(engine,d,id)&&!['濒死','昏迷','患病'].includes(state.npcs?.[id]?.status)&&
+            !appraise(engine,state,vacancy.settlement,authorityOf(engine).offices[vacancy.office],{holder:id,vacancy:true}).reasons.length);
+        const votes=electorate.map(voter=>{const choices=candidates.map(id=>({id,value:standing(engine,state,voter,id)})).filter(c=>c.value>0).sort((a,b)=>b.value-a.value||a.id.localeCompare(b.id));return {voter,candidate:choices[0]?.id??null};});
+        const winner=candidates.find(id=>votes.filter(v=>v.candidate===id).length*2>electorate.length);
+        let appointment=null;
+        if(winner){
+            const office=authorityOf(engine).offices[vacancy.office],charter=authorityOf(engine).superiors[office.appointedBy];
+            const id=`governance_office:${vacancy.settlement}:${vacancy.office}:${winner}`;
+            appointment={category:'governance_office',id,holder:winner,settlement:vacancy.settlement,office:vacancy.office,status:'在任',since:vacancy.due,until:vacancy.due+office.termDays*DAY,
+                nextReview:vacancy.due+charter.reviewEveryDays*DAY,appointedBy:office.appointingInstitution,source:office.source,sourceEvent:vacancy.id,election:vacancy.id};
+            changeHolding(d,engine,{op:'open',kind:'holds_office',holder:winner,subject:vacancy.subject,source:`office:${vacancy.settlement}|${vacancy.office}`,eventId:`${vacancy.id}:appoint`});
+            holdingSet(d,engine,path(id),appointment,'governance');
+        }
+        holdingSet(d,engine,path(vacancy.id),{...vacancy,status:winner?'已继任':'无人过半待补选',votes,appointment:appointment?.id??null,decidedAt:vacancy.due},'governance');
+    }
 }
 function review(d,engine,row,at){
     if(row.upper)return reviewUpperOffice(d,engine,row,at);
     const charter=authorityOf(engine).superiors.auth_bs_office_charter,state=d.get('state');
     let reason=null;
     if(at>=row.until)reason='任期届满';
-    else if(crimeJudged(state))reason='犯罪裁定';
-    else{const v=residentViews(engine,state,row.settlement);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
+    else if(!isEffective(engine,d,row.holder))reason='失去履职资格';
+    else if(crimeJudged(state,row.holder))reason='犯罪裁定';
+    else{const v=residentViews(engine,state,row.settlement,row.holder);if(v.oppose>v.support)reason=`成年住户反对${v.oppose}多于支持${v.support}`;}
     if(reason){
         for(const h of aliveHoldings(d,{kind:'holds_office',holder:row.holder,subject:officeEntity(row.settlement,row.office)}))changeHolding(d,engine,{id:h.id,op:'close',reason:'vacated',eventId:`${row.id}:vacate:${at}`});
         const name=personOffices(engine,{...state,minute:Math.min(at,row.until-1)},row.holder,{settlement:row.settlement}).find(o=>o.value.id===row.id)?.value.name??row.name;
         holdingSet(d,null,path(row.id),{...row,status:'已免职',removedAt:at,reason},'governance');syncHoldingRecord(d,engine,row.id,{writer:'governance'});
-        entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${state.player.name}卸任${name}：${reason}`});
+        entityTransition(d,engine,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`${row.holder==='player'?state.player.name:engine.byId.get(row.holder)?.name??row.holder}卸任${name}：${reason}`});
     }
     else holdingSet(d,null,path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]},'governance');
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
-export function nextOfficeMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueAt).filter(m=>m>now));}
+export function nextOfficeMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueAt).filter(m=>m>now),...Object.values(state.records??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
 export function advanceOffices(d,engine,{after}){
+    consumeOfficeVacancies(d,engine,after);
     for(;;){
         const rows=scheduled(d.get('state')).filter(r=>dueAt(r)<=after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
-        if(!rows.length)return;
+        if(!rows.length){consumeOfficeVacancies(d,engine,after);return;}
         const r=rows[0];
         if(r.category==='governance_application')decide(d,engine,r,r.due);else review(d,engine,r,dueAt(r));
     }
 }
+function governanceVacancyEvents(d,engine,events){
+    if(events.some(e=>e.verb==='succession'&&e.kind==='holds_office'))consumeOfficeVacancies(d,engine,d.get('state','minute'));
+}
+registerWorldEventSubscriber({id:'governance_vacancy',order:85,on:(d,engine,events)=>governanceVacancyEvents(d,engine,events)});
 
 // Public money: each draw is a ledger record under an office's power and
 // monthly cap, and never takes the treasury below the charter reserve.

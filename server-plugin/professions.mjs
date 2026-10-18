@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('professions',{sinks:['sink:export']});
@@ -28,7 +29,7 @@ export function careerEquipment(state){
 }
 function validMentor(d,engine,teacher,profession){
     const actor=d.get('state','npcs',teacher),definition=engine.byId.get(teacher);
-    if(!actor||actor.status==='死亡'||actor.location!==d.get('state','location')||!npcServices(engine,d.get('state'),teacher).includes(profession))throw new Error('认证导师不在场或无资格');
+    if(!actor||isPhysicallyDead(engine,d,teacher)||actor.location!==d.get('state','location')||!npcServices(engine,d.get('state'),teacher).includes(profession))throw new Error('认证导师不在场或无资格');
     return definition;
 }
 export function profession(d,args,id){

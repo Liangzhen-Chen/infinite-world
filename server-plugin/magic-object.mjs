@@ -8,10 +8,13 @@ import {areaTargetFacts} from './magic-area.mjs';
 import {normalize} from './retrieval.mjs';
 import {advanceAirMinute}from'./magic-air.mjs';
 import {precipitationAt} from './weather.mjs';
-import {featureTraits} from './traits.mjs';
+import {featureTraits,traitsOf} from './traits.mjs';
+import {presentWitnesses} from './world-events.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
 import {resolveInteraction,applyInteraction,assertLiquidWater} from './interactions.mjs';
 
+import {isEffective,isLiving} from './lifecycle-state.mjs';
+import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}无效`);return n;};
 const clone=x=>structuredClone(x),recordKey=id=>`physical_feature:${id}`;
@@ -140,6 +143,32 @@ function store(d,row,state){d.set(['state','records',recordKey(row.id)],{id:row.
 // Thermal read/write for the interaction executor (interactions.mjs).
 export const readObjectState=read;
 export function storeObjectState(d,row,state){validateThermalState(state.thermal,row.thermalModel);store(d,row,state);}
+// Called at an actual routine departure, before its location becomes transit.
+// A furnace is a risk only when the authored fixture explicitly registers it.
+const furnaceCatalog=new WeakMap();
+function furnacesOf(engine,who){
+ const key=engine.advanceFeatures??engine.world;let rows=furnaceCatalog.get(key);
+ if(!rows){rows=new Map();for(const f of environmentFeatures(engine))if(f.thermalModel&&f.unattendedFire?.responsible){const owner=f.unattendedFire.responsible;if(!rows.has(owner))rows.set(owner,[]);rows.get(owner).push(f);}furnaceCatalog.set(key,rows);}
+ return rows.get(who)??[];
+}
+export const hasUnattendedFurnace=(engine,who)=>furnacesOf(engine,who).length>0;
+export function recordFurnaceDeparture(d,engine,who,location,minute){
+ for(const row of furnacesOf(engine,who).filter(f=>f.location===location)){
+  const id=`unattended_furnace:${row.id}:${minute}`;if(d.get('state','records',id))continue;
+  const initial=d.get('state','records',recordKey(row.id),'state','thermal')??row.state?.thermal??initialThermalState(row.thermalInitial??{},row.thermalModel,minute);
+  if(initial.lastMinute>minute)continue;
+  const t=advanceThermalState(initial,row.thermalModel,minute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});
+  if(!t.burning||!t.fuelMg)continue;
+  const state=d.get('state'),attendants=Object.entries(state.npcs??{}).filter(([id,n])=>{
+   if(id===who||!isEffective(engine,state,id)||n.location!==location||n.scheduleTravel||n.cognitionTravel||['昏迷','濒死'].includes(n.status)||/睡/.test(n.activity??''))return false;
+   const slot=facilityRuntime().scheduleAt(engine,id,minute,state);
+   return /值守|看炉|锻|打铁/.test(n.activity??'')||slot?.location===location&&(/值守|看炉|锻|打铁/.test(slot.activity??'')||slot.services?.some(s=>['craft','smithing'].includes(s)));
+  }).map(([id])=>id);
+  const fact={category:'unattended_furnace',id,feature:row.id,building:location,responsible:who,minute,burning:true,fuelMg:t.fuelMg,attendants,witnesses:presentWitnesses(state,location).filter(id=>id!==who)};
+  d.set(['state','records',id],fact);
+  if(!attendants.length)facilityRuntime().applyFacilityInteraction(d,engine,location,resolveInteraction('fire',traitsOf(engine,state,location)),{minute,sourceEvent:id,fireOrigin:id});
+ }
+}
 const ignites=(d,row,state)=>resolveInteraction('fire',featureTraits(row,state,d.get('state','minute'))).add.includes('burning');
 function access(d,row,args,range){
  if(row.location!==d.get('state','location'))throw new Error('物件不在所在地');
@@ -149,7 +178,7 @@ function access(d,row,args,range){
  if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw new Error('环境授权编号列表无效');
  const p=[args.authorization,...args.authorizations??[]].map(id=>d.get('state','records',id)).find(p=>p?.subject===row.id);
  if(!p||p.category!=='authorization'||p.subject!==row.id||p.action!=='environment_use'||p.grantor!==row.owner||p.revoked||p.expires!==undefined&&p.expires<=d.get('state','minute'))throw new Error('物件需要有效所有者授权');
- if(row.owner?.startsWith('npc_')&&['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')))throw new Error('物件所有者无法继续履约');
+ if(row.owner?.startsWith('npc_')&&(!isEffective(null,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw new Error('物件所有者无法继续履约');
 }
 export function inspectObjectProcess(d,engine,target,args={}){const row=locate(engine,target,d.get('state','location'));access(d,row,args,3);const state=read(d,row),s=state.thermal;return{target:row.id,temperatureC:s.energyJ/row.thermalModel.heatCapacityJPerC,burning:s.burning,fuelMg:s.fuelMg,burnedFuelMg:s.burnedFuelMg,moistureMg:s.moistureMg,energyJ:s.energyJ};}
 export function prepareObjectMagic(d,catalog,args){
@@ -318,7 +347,7 @@ function livingHand(d,engine,args,catalog){
  const target=args.target??'player',partition=target==='player'?'player':target.startsWith('npc_')?'npcs':null;
  if(!partition)throw new Error('暖掌需要真实活体目标');
  const path=target==='player'?['state','player']:['state',partition,target],actor=d.get(...path);
- if(!actor||actor.status==='死亡'||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw new Error('暖掌目标不在场或已经死亡');
+ if(!isLiving(engine,d,target)||!actor||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw new Error('暖掌目标不在场或已经死亡');
  if(target!=='player'){
   const facts=areaTargetFacts(d,engine,target,d.get('state','location'),localPlayerPoint(d));
   if(!facts?.lineOfSight||Math.hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw new Error('暖掌须真实接触活体');
@@ -415,7 +444,7 @@ function advanceHeatScenes(d,engine,after){
   advanceAirMinute(d,engine,rooms,minute);
   for(const x of hands){
    const h=x.hand;if(h.lastMinute>minute)continue;
-   const active=effects.map(([,e])=>e).filter(e=>e.kind==='heat'&&e.operation==='warm'&&e.target===x.target&&e.started<=minute&&e.expires>minute&&x.actor.status!=='死亡').sort((a,b)=>b.power-a.power)[0];
+   const active=effects.map(([,e])=>e).filter(e=>e.kind==='heat'&&e.operation==='warm'&&e.target===x.target&&e.started<=minute&&e.expires>minute&&isLiving(engine,d,x.target)).sort((a,b)=>b.power-a.power)[0];
    if(active){integer(active.power,1,1000,'暖掌功率');const input=Math.min(active.power,38000-h.energyJ);h.energyJ+=input;h.spellInputJ+=input;}
    const exchange=Math.min(200,Math.abs(h.energyJ-32000));
    if(h.energyJ>32000){h.energyJ-=exchange;h.dissipatedJ+=exchange;}else{h.energyJ+=exchange;h.ambientInputJ+=exchange;}
@@ -477,3 +506,4 @@ export function coldHeatMultiplier(temperature){return Math.max(0,1-Math.max(0,t
 // Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
 registerMagicEffect({kinds:['object'],validate:validateObjectCatalog,prepare(d,c,args){return prepareObjectMagic.call(this,d,c,args);},apply(d,p,id){return applyObjectMagic.call(this,d,p,id);}});
 registerMagicEffect({kinds:['heat'],validate:validateHeatCatalog,prepare(d,c,args){return prepareHeatMagic.call(this,d,c,args);},apply(d,p,id){return applyHeatMagic.call(this,d,p,id);}});
+installFacilityRuntime({recordFurnaceDeparture,hasUnattendedFurnace});

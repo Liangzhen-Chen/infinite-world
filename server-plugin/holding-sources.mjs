@@ -12,12 +12,16 @@
 // 与存储里该单元的存活持有比对，按差关闭（reason）与开立（经 L0 唯一写入点，受注册形状校验）。
 // 旧写入点漏调它，对账（tests/helpers/holdings-audit.mjs）即报出差异。
 import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,locationOf,holdingsOfSource,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
+    setLocation,clearLocation,locationOf,holdingsOfSource,rescaleHolding,declareHoldingWriter,recordHoldingDrift,HoldingRejected,registerHoldingsOpening,registerEntityResolver,registerCapacityResolver,registerHoldingObserver,holdingSet,holdingRemove,registerHoldingsUpgrade,ENTITY_KINDS} from './holdings.mjs';
 import './holding-kinds.mjs';
 import {holdingKind} from './holdings.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
 import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
+import {snapshotContractTerms} from './contract-state.mjs';
+import {snapshotObligationTerms} from './obligation-kinds.mjs';
+import {isGone,isEffective} from './lifecycle-state.mjs';
+import {runHoldingProtocol} from './holdings.mjs';
 import {legalCodeById} from './law-codes.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
@@ -41,6 +45,7 @@ export function defineHoldingSource(name,spec){
     sources.set(name,spec);
 }
 export const holdingSources=()=>[...sources.keys()].sort();
+
 
 defineHoldingSource('transition',{
     recordCategories:['transition','transition_procedure'],unitOfRecord:(state,key)=>state.records?.[key]?.entity,
@@ -85,6 +90,7 @@ export function entityTemplates(engine,state,id){
     const w=sets(engine),records=state?.records??{};
     if(id==='player')return ['agent'];
     const out=new Set();
+    if(records[`protocol_assets:${id}`])out.add('interim');
     if(state?.npcs?.[id]||state?.created?.[id]&&state.created[id].kind!=='building'||state?.family?.people?.[id]||w.people.has(id)||state?.creatures?.[id]||w.creatures.has(id)||/^npc_/.test(id))out.add('agent');
     if(w.settlements.has(id)||state?.settlements?.[id]){out.add('collective');out.add('place');}
     if(w.factions.has(id)||w.households.has(id)||w.polities.has(id)||w.banks.has(id)||records[id]?.category==='bank'||w.societies.has(id)||records[`organization:${id}`]||state?.family?.households?.[id]||COLLECTIVE_PREFIX.test(id))out.add('collective');
@@ -92,7 +98,7 @@ export function entityTemplates(engine,state,id){
     if(/^bld_/.test(id)||state?.created?.[id]?.kind==='building'){out.add('thing');out.add('place');}
     if(state?.itemInstances?.[id]||records[id]?.category==='transport_asset'||/^transport_asset:/.test(id)||state?.buildings?.[id])out.add('thing');
     if(records[id]?.category==='business')out.add('thing');
-    if(state?.obligations?.[id]||records[id]?.category==='debt'||records[id]?.category==='contract')out.add('instrument');
+    if(state?.obligations?.[id]||['debt','contract','pledge'].includes(records[id]?.category))out.add('instrument');
     return out.size?[...out]:null;
 }
 registerEntityResolver((d,id,engine)=>engine?entityTemplates(engine,read(d,'state'),id):null);
@@ -107,7 +113,7 @@ function desired(engine,state,name,unit,ctx={}){
     const out=sources.get(name).extract(engine,state,unit,ctx)??{};
     // Old fields retain history. A legal disappearance closes their current
     // edges; the compatibility projection independently reads the declaration.
-    const gone=id=>state.records?.[`transition:${id}`]?.gone?state.records[`transition:${id}`]:null;
+    const gone=id=>isGone(engine,state,id)&&state.records?.[`transition:${id}`]?.gone?state.records[`transition:${id}`]:null;
     const holdings=(out.holdings??[]).flatMap(h=>{
         let row={...h};const a=gone(h.holder),b=gone(h.subject);
         if(a){const hook=holdingKind(h.kind)?.handover.gone;
@@ -194,9 +200,14 @@ function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
         else if(have.goneAt===undefined&&canon(have.facts)!==canon(e.facts??{}))attempt(d,info,()=>updateEntity(d,{id:e.id,facts:e.facts??{},writer,eventId}));
     }
     const stored=holdingsOfSource(d,source),current=stored.holdings,wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
+    if(name==='equity'){
+        if(current.length===wanted.size&&current.every(h=>wanted.has(holdingKey(h))))return;
+        const input={op:'rescale',kind:'share',subject:unit,shares:Object.fromEntries(want.holdings.map(h=>[h.holder,h.terms.share])),source,eventId};
+        runHoldingProtocol(d,engine,input)??rescaleHolding(d,{...input,writer,engine});return;
+    }
     const keep=new Set();
-    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>closeHolding(d,{id:r.id,reason,writer,eventId}));}
-    for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,source,writer,eventId,engine}));
+    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>runHoldingProtocol(d,engine,{op:'close',id:r.id,reason,eventId})??closeHolding(d,{id:r.id,reason,writer,eventId}));}
+    for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>runHoldingProtocol(d,engine,{...h,op:'open',source,eventId})??openHolding(d,{...h,source,writer,eventId,engine}));
     for(const l of want.locations)attempt(d,{source,writer,eventId,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,writer,source,engine}));
     for(const entity of stored.locations)if(!want.locations.some(x=>x.entity===entity))attempt(d,{source,writer,eventId,entity},()=>clearLocation(d,{entity,writer}));
     // 旧字段里已不存在的实体：记墓碑（basis 由来源声明，缺省 destruction）。
@@ -336,7 +347,9 @@ defineHoldingSource('sovereignty',{
         let nation=null;for(const r of rows)if(r?.category==='nation'&&LIVE_NATION.includes(r.status)&&(r.domains??[]).includes(domain)&&(!nation||(r.foundedAt??0)>=(nation.foundedAt??0)))nation=r;
         const ruler=territory?territory.ruler:nation?.id;if(!ruler)return null;
         const id=actorId(engine.world,ruler),t=entityTemplates(engine,state,id)??[];
-        return {holdings:[{kind:t.includes('collective')?'governs':'controls',holder:id,subject:domain}]};
+        const sovereign=territory?.sovereign;
+        return {holdings:[{kind:t.includes('collective')?'governs':'controls',holder:id,subject:domain},
+            ...(!t.includes('collective')&&sovereign&&(entityTemplates(engine,state,sovereign)??[]).includes('collective')?[{kind:'governs',holder:sovereign,subject:domain}]:[])]};
     },
 });
 
@@ -374,6 +387,20 @@ function afterWrite(d,engine,path,writer,eventId){
     engine??=d.engine;if(!engine||path[0]!=='state')return;
     if(path[1]==='records'&&path.length>=3){
         const key=path[2],cats=holdingRecordCategories();
+        const row=read(d,'state','records',key);
+        // Only a new signed record is snapshotted. Loading and amending legacy
+        // records without clauses keeps their explicit compatibility behavior.
+        if(path.length===3&&!d.original?.state?.records?.[key]&&row&&!row.clauses){
+            if(row.category==='contract')d.set(path,snapshotContractTerms(row));
+            if(row.category==='debt'){
+                const terms=snapshotObligationTerms(row).terms;
+                d.set(path,{...row,clauses:{onDebtorGone:terms.onDebtorGone,onCreditorGone:terms.onCreditorGone}});
+            }
+        }
+        if(row?.category==='debt'&&row.obligation&&read(d,'state','obligations',row.obligation)){
+            const o=read(d,'state','obligations',row.obligation);
+            d.set(['state','obligations',row.obligation],{...o,debtor:row.debtor,creditor:row.creditor,amount:row.contractualAmount??row.amount,paid:row.paid??0,remaining:['坏账','已取消'].includes(row.status)?0:Math.max(0,row.amount-(row.paid??0)),status:row.status==='已还清'?'settled':row.status==='坏账'?'bad_debt':row.status==='已取消'?'cancelled':o.status});
+        }
         if(cats.has(read(d,'state','records',key)?.category)||cats.has(d.original?.state?.records?.[key]?.category))syncHoldingRecord(d,engine,key,{writer,eventId});
         return;
     }
@@ -565,6 +592,15 @@ defineHoldingSource('equity',{
 });
 
 // ---- business：本人的商号（business 记录，筹备 / 营业）→ 经营 operates（店主 → 商号）。 ----
+defineHoldingSource('pledge',{
+    recordCategories:['debt','pledge'],
+    unitOfRecord:(state,key,row)=>row.category==='debt'?key:Object.entries(state?.records??{}).filter(([,r])=>r.category==='debt'&&r.pledgeRecord===key).map(([id])=>id),
+    units:(engine,state)=>Object.keys(state.records??{}).filter(id=>state.records[id]?.category==='debt'&&state.records[id].pledgeRecord),
+    extract(engine,state,id){
+        const debt=state.records?.[id],pledge=debt?.pledgeRecord&&state.records?.[debt.pledgeRecord];
+        return {holdings:debt?.amount>(debt.paid??0)&&pledge?.status==='质押中'?[{kind:'pledged',holder:id,subject:debt.pledgeRecord}]:[]};
+    },
+});
 defineHoldingSource('business',{
     recordCategories:['business'],unitOfRecord:(state,key)=>key,
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='business').map(([k])=>k),
@@ -685,7 +721,7 @@ defineHoldingSource('lair',{
     recordCategories:['lair'],unitOfRecord:(state,key)=>key,
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='lair').map(([k])=>k),
     extract(engine,state,key){
-        const r=state.records?.[key];if(r?.category!=='lair'||r.status!=='驻守'||!r.lair)return null;
+        const r=state.records?.[key];if(r?.category!=='lair'||!['驻守','易主'].includes(r.status)||!r.lair)return null;
         const who=r.occupant?.actor??r.occupant?.definition??r.boss;if(!who)return null;
         return {holdings:[{kind:'controls',holder:actorId(engine.world,who),subject:r.lair}]};
     },
@@ -718,6 +754,7 @@ defineHoldingSource('estate',{
     units:(engine,state)=>Object.entries(state.family?.deaths??{}).filter(([,r])=>r?.estate).map(([k])=>k),
     extract(engine,state,id){
         const r=state.family?.deaths?.[id];if(!r?.estate)return null;
+        if(r.estate.id)return null; // The protocol source owns this estate.
         return {entities:[{id:`estate_${id}`,kind:'estate',facts:{deceased:r.person,heirs:[...r.estate.heirs??[]],phase:'closed'}}]};
     },
 });
@@ -747,6 +784,18 @@ defineHoldingSource('guardianship',{
     units:(engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='guardianship').map(([k])=>k),
     extract(engine,state,key){
         const r=state.records?.[key];if(r?.category!=='guardianship'||r.status!=='代管中'||!r.guardian||!r.ward)return null;
-        return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:'person_and_property'}}]};
+        return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:r.scope??'person_and_property'}}]};
+    },
+});
+
+// Keep registration with the source registry. A domain importing this registry
+// through npc-state/entity-view must not call it during its initialization cycle.
+defineHoldingSource('spirit-society',{
+    recordCategories:['spirit_society'],unitOfRecord:(_state,key)=>key,
+    units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='spirit_society').map(([key])=>key),
+    extract(engine,state,key){
+        const row=state.records?.[key];if(!row||row.status==='已散')return null;
+        return {holdings:Object.keys(row.members??{}).filter(id=>state.creatures?.[id]?.society?.id===key&&isEffective(engine,state,id))
+            .map(holder=>({kind:'member_of',holder,subject:row.entity??`society_${key.replaceAll(':','_')}`}))};
     },
 });

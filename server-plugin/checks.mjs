@@ -3,6 +3,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {heldUnit}from'./items.mjs';
 import {trickKey,adaptationBonus,noteTrick,intelligenceFresh}from'./npc-intelligence.mjs';
 import {hiddenCheckBonus,passiveDomain,observationTime}from'./hidden-passives.mjs';
+import {isPhysicallyDead}from'./lifecycle-state.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 const die=(document,eventId,label)=>createHash('sha256').update(`${document.randomSeed}:${eventId}:${label}`).digest().readUInt32LE(0)%20+1;
 const attributeOf=(engine,value)=>{if(!engine.rules.attributes.includes(value))throw new Error('属性不在规则表');return value;};
@@ -14,7 +15,7 @@ export function npcProficiency(d,engine,npc,skill){
 function presentNpc(d,engine,name){
     const npc=engine.resolve(name,'npc'),actor=d.get('state','npcs',npc);
     if(!actor||actor.location!==d.get('state','location'))throw new Error('检定当事人不在场');
-    if(['死亡','濒死'].includes(actor.status))throw new Error('检定当事人无法清醒行动');
+    if(isPhysicallyDead(engine,d,npc)||actor.status==='濒死')throw new Error('检定当事人无法清醒行动');
     return npc;
 }
 function modifierForNpc(d,engine,npc,attribute,skill,domain=null){

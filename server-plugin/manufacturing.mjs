@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
@@ -71,7 +72,7 @@ export function workstation(d,engine,recipe,args){
     const fee=integer(station.fee??0,0,100000,'工坊使用费');
     if(d.get('state','player','coins')<fee)throw new Error('工坊使用费不足');
     if(station.owner?.startsWith('npc_')){
-        const owner=d.get('state','npcs',station.owner);if(!owner||['死亡','濒死'].includes(owner.status))throw new Error('工坊主人无法履约');
+        const owner=d.get('state','npcs',station.owner);if(!owner||isPhysicallyDead(engine,d,station.owner)||owner.status==='濒死')throw new Error('工坊主人无法履约');
     }
     const workMinutes=Math.ceil(recipe.minutes/(facilityView(engine,d.get('state'),location)?.factor??1));
     const thermalPlan=prepareThermalWorkstation(d,engine,station,workMinutes);

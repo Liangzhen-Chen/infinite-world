@@ -1,5 +1,7 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
+import {recordsWhere,recordsMemo} from './storage.mjs';
+const ownedAccounts=Symbol('subjective own accounts');
 
 const copy=x=>structuredClone(x);
 const active=o=>['待履行','进行中','在任','有效'].includes(o.status);
@@ -14,7 +16,8 @@ export function subjectiveView(engine,document,observer){
  const seeds=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])].filter(r=>r.source===observer||r.carriers?.includes(observer)).map(r=>({id:`rumor_seed:${r.id}:${observer}`,sourceEvent:`rumor_registration:${r.id}`,kind:'rumor',minute:0,content:r.claim,sourceType:'传闻',participants:[]}));
  // Memories already delivered to this observer are versions, never pointers
  // dereferenced against the current truth. Written clauses retain their text.
- const witnessed=Object.values(s.records??{}).filter(r=>r.category==='world_event'&&(r.actor===observer||r.witnesses?.includes(observer))).map(e=>({id:e.id,sourceEvent:e.id,kind:e.verb,minute:e.minute,content:e.summary??e.verb,sourceType:'目击',participants:[e.actor,e.target].filter(Boolean)}));
+ const events=recordsWhere(s.records,'category','world_event');
+ const witnessed=events.filter(r=>r.actor===observer||r.witnesses?.includes(observer)).map(e=>({id:e.id,sourceEvent:e.id,kind:e.verb,minute:e.minute,content:e.summary??e.verb,sourceType:'目击',participants:[e.actor,e.target].filter(Boolean)}));
  const memories=[...seeds,...witnessed,...Object.values(document.memories??{}).filter(m=>m.subject===observer),...(n.memoryStream??[]),...(b.knowledgeSeeds??[]),...Object.values(s.records??{}).filter(r=>r.category==='knowledge'&&r.observer===observer)]
   .filter(m=>(m.minute??0)<=now&&m.recall!==0&&(!m.private||m.subject===observer||m.participants?.includes(observer)||(m.knownBy??m.permittedRecipients??[]).includes(observer)))
   .map(m=>n.cognition?.blurred?.[m.id]?{...copy(m),content:n.cognition.blurred[m.id].content,blurred:true}:copy(m));
@@ -43,8 +46,14 @@ export function subjectiveView(engine,document,observer){
   const p=actor(s,id),def=base(engine,s,id);
   return {id,name:p.name??def.name??id,status:p.status,activity:p.activity??'',services:personCareer(engine,s,id).value.services};
  });
- const ownEvents=Object.values(s.records??{}).filter(e=>e.category==='world_event'&&e.actor===observer).map(copy);
- const accounts=Object.fromEntries(Object.entries(document.ledger?.accounts??{}).filter(([key])=>key.startsWith(`${observer}|`)&&['purse','inventory'].includes(key.split('|')[2])).map(([key,balance])=>[key,{balance,lots:(document.ledger?.lots?.[key]??[]).map(l=>l.purports?{...copy(l.purports),amount:l.amount}:copy(l))}]));
+ const ownEvents=events.filter(e=>e.actor===observer).map(copy);
+ const byOwner=recordsMemo(document.ledger?.accounts,ownedAccounts,()=>{
+  const groups=new Map();for(const entry of Object.entries(document.ledger?.accounts??{})){
+   const [owner,,purpose]=entry[0].split('|');if(!['purse','inventory'].includes(purpose))continue;
+   if(!groups.has(owner))groups.set(owner,[]);groups.get(owner).push(entry);
+  }return groups;
+ });
+ const accounts=Object.fromEntries((byOwner.get(observer)??[]).map(([key,balance])=>[key,{balance,lots:(document.ledger?.lots?.[key]??[]).map(l=>l.purports?{...copy(l.purports),amount:l.amount}:copy(l))}]));
  const busyUntil=Math.max(now,...Object.values(s.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.npc===observer&&t.start<=now).map(t=>t.finish));
  const self={id:observer,name:n.name??b.name??observer,status:n.status,location:here,coins:n.coins??0,inventory:copy(observer==='player'?s.inventory??{}:n.inventory??{}),
   mental:copy(n.mental??{}),activity:n.activity??'',traits:copy(b.personality??{}),redLines:copy(b.redLines??[]),minor:Boolean(b.flags?.minor||(n.age??b.age??100)<18),culture:b.culture??'common',

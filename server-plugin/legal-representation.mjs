@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('legal-representation');
@@ -7,7 +8,7 @@ import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 const path=id=>['state','records',id];
 export function advocateService(engine,state,id){
  const career=personCareer(engine,state,id).value,r=engine.rules.law?.advocates?.occupations?.[career.occupation];
- if(!r||npcAgeAt(engine,state,id)<18||personConstraint(engine,state,id)||['死亡','濒死','昏迷'].includes(state.npcs?.[id]?.status))return null;
+ if(!r||npcAgeAt(engine,state,id)<18||personConstraint(engine,state,id)||isPhysicallyDead(engine,state,id)||['濒死','昏迷'].includes(state.npcs?.[id]?.status))return null;
  const base=engine.byId.get(id),skill=state.npcs?.[id]?.skills?.[r.skill]??base?.skills?.[r.skill];
  const proficiency=typeof skill==='number'?skill:skill?.proficiency??0;
  return{npc:id,occupation:career.occupation,fee:r.baseFee+Math.floor(proficiency/100)*r.feePerHundred,proficiency,

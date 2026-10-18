@@ -3,6 +3,7 @@ export {EFFECT_SOURCES,registerEffect,effectKinds,effectConsumer} from './effect
 import {damageFacilities} from './facilities.mjs';
 import {allFacilities,within} from './facility-state.mjs';
 import {isReputationSettlement}from'./reputation-registry.mjs';
+import {isPhysicallyDead}from'./lifecycle-state.mjs';
 // K6 unified effect table. World clocks, faction clocks, festivals and the
 // seasonal table all validate and apply stage effects here. A system adds an
 // effect kind with registerEffect(kind,{sources,validate,apply}); rules data in
@@ -72,7 +73,7 @@ registerEffect('wildlife_stir',{
  validate(engine,effect){habitat(engine,effect.habitat);if(!int(effect.minutes,1,360*DAY)||effect.factor!==undefined&&!(effect.factor>1&&effect.factor<=3))throw Error('野物躁动时长或倍率无效');},
  apply(d,engine,effect,context){
   const key=`wildlife:stir:${effect.habitat}`,factor=effect.factor??2,until=context.minute+effect.minutes;
-  d.set(['state','records',key],{category:'wildlife_stir',habitat:effect.habitat,factor,since:context.minute,until,sourceEvent:context.sourceEvent});
+  holdingSet(d,null,['state','records',key],{category:'wildlife_stir',habitat:effect.habitat,factor,since:context.minute,until,sourceEvent:context.sourceEvent},'effects');
   return {applied:true,...effect,factor,until};
  },
 });
@@ -88,7 +89,7 @@ registerEffect('wildlife_migrate',{
   if(!a||!b)return {applied:false,reason:'栖地种群记录缺失'};
   const moved=Math.min(effect.count,a.count);if(!moved)return {applied:false,reason:'迁出栖地已无该物种'};
   a.count-=moved;a.displaced=(a.displaced??0)+moved;b.count+=moved;b.displacedIn=(b.displacedIn??0)+moved;
-  d.set(path(effect.from),from);d.set(path(effect.to),to);
+  holdingSet(d,null,path(effect.from),from,'effects');holdingSet(d,null,path(effect.to),to,'effects');
   return {applied:true,...effect,moved};
  },
 });
@@ -102,9 +103,9 @@ registerEffect('rumor',{
  },
  apply(d,engine,effect,context){
   const id=`${context.sourceEvent}:rumor:${effect.id}`,rumor=`rumor_event:${id}`,state=d.get('state');
-  const carriers=effect.carriers.filter(n=>state.npcs?.[n]&&state.npcs[n].status!=='死亡');
-  d.set(['state','records',`world_event:${id}`],{category:'world_event',id,verb:'rumor',actor:context.faction??null,target:null,minute:context.minute,
-   location:context.settlement??null,witnesses:carriers,tags:['rumor','effect'],claim:effect.claim,sourceEvent:context.sourceEvent});
+  const carriers=effect.carriers.filter(n=>state.npcs?.[n]&&!isPhysicallyDead(null,state,n));
+  holdingSet(d,null,['state','records',`world_event:${id}`],{category:'world_event',id,verb:'rumor',actor:context.faction??null,target:null,minute:context.minute,
+   location:context.settlement??null,witnesses:carriers,tags:['rumor','effect'],claim:effect.claim,sourceEvent:context.sourceEvent},'effects');
   for(const npc of carriers){
    const stream=d.get('state','npcs',npc,'memoryStream')??[];if(stream.some(m=>m.id===id))continue;
    d.set(['state','npcs',npc,'memoryStream'],[...stream,{id,sourceEvent:context.sourceEvent,kind:'rumor',minute:context.minute,location:context.settlement??null,participants:[],
@@ -190,7 +191,7 @@ export function advanceSeasonEffects(d,engine,before,after){
   const at=seasonStart(year,s.season),key=`season-effect:${s.id}:${year}`;
   if(at<=before||at>after||d.get('state','records',key))continue;
   const sourceEvent=`season:${s.id}:${year}`,receipt=applyEffects(d,engine,s.effects,{settlement:s.settlement,faction:null,minute:at,sourceEvent},'season');
-  d.set(['state','records',key],{category:'season_effect',id:s.id,season:s.season,year,minute:at,settlement:s.settlement,sourceEvent,
-   applied:receipt.applied,...(receipt.applied?{effects:receipt.effects}:{reason:receipt.reason??'效果条件未满足'})});
+  holdingSet(d,null,['state','records',key],{category:'season_effect',id:s.id,season:s.season,year,minute:at,settlement:s.settlement,sourceEvent,
+   applied:receipt.applied,...(receipt.applied?{effects:receipt.effects}:{reason:receipt.reason??'效果条件未满足'})},'effects');
  }
 }

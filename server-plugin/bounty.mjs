@@ -1,3 +1,5 @@
+import {isEffective} from './lifecycle-state.mjs';
+import {changeLegacyHoldings} from './transition.mjs';
 import {purse,fund as fundAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('bounty');
@@ -20,15 +22,28 @@ import {standing} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
 import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
-import {holdingSet} from './holding-sources.mjs';
+import {holdingSet as writeHoldingProjection} from './holding-sources.mjs';
 declareHoldingWriter('bounty',{kinds:['guest_of','wanted','companion','resides','devotee_of'],entities:['case']});
 
 const DAY=1440,TICK=600,ACTIVE='生效';
 const rec=id=>['state','records',id];
+function holdingSet(d,engine,p,value,writer){
+ const old=d.get(...p);
+ if((engine||d.engine)&&p[0]==='state'&&p[1]==='player'&&p[2]==='companions'){
+  const removed=(old??[]).find(id=>!value.includes(id));
+  if(removed)return changeLegacyHoldings(d,engine??d.engine,{source:'companion:player',subject:removed,kinds:['companion'],reason:'released',eventId:`bounty:release:${removed}:${d.get('state','minute')}`},()=>writeHoldingProjection(d,engine,p,value,writer));
+ }
+ if((engine||d.engine)&&p[0]==='state'&&p[1]==='records'&&old?.category==='legal_wanted'&&old.status==='生效'&&value.status!=='生效')return changeLegacyHoldings(d,engine??d.engine,{source:`wanted:${p[2]}`,kinds:['wanted'],reason:'released',eventId:`${p[2]}:closed`},()=>writeHoldingProjection(d,engine,p,value,writer));
+ if((engine||d.engine)&&p[0]==='state'&&p[1]==='records'&&['legal_custody','legal_detention'].includes(old?.category)&&old.status==='生效'&&value.status!=='生效'){
+  const reason=value.endReason??(value.expires<=value.ended?'expired':'released');
+  return changeLegacyHoldings(d,engine??d.engine,{source:`custody:${p[2]}`,kinds:['guest_of'],reason,eventId:`${p[2]}:${value.ended}:${reason}`},()=>writeHoldingProjection(d,engine,p,value,writer));
+ }
+ return writeHoldingProjection(d,engine,p,value,writer);
+}
 export const WANTED_REASONS=Object.freeze({unappeared:'判决后逾期未到案',escape:'脱逃羁押',debt:'违约逃债',flight:'受贿事发潜逃'});
-const dead=n=>!n||['死亡','濒死'].includes(n.status);
-const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
-const able=n=>n&&!dead(n)&&n.status!=='昏迷';
+const dead=(n,state,id)=>!n||!isEffective(null,state,id)||n.status==='濒死';
+const awake=(n,state,id)=>n&&isEffective(null,state,id)&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const able=(n,state,id)=>n&&!dead(n,state,id)&&n.status!=='昏迷';
 const d20=(document,...parts)=>createHash('sha256').update([document.randomSeed,'bounty',...parts].join(':')).digest().readUInt32LE(0)%20+1;
 const mod=score=>Math.floor(((Number.isFinite(score)?score:10)-10)/2);
 const nameOf=(engine,state,id)=>id==='player'?state.player?.name??'玩家':engine.byId.get(id)?.name??id;
@@ -40,7 +55,7 @@ export const codeById=legalCodeById;
 export const codeAt=legalCodeAt;
 const polity=(engine,law)=>lawRules(engine).polities?.find(p=>p.law===law)??null;
 export function wantedScope(engine,law,state={}){const code=codeById(engine,law,state);if(!code)return[];return legalCodes(engine.world,state).filter(c=>legalCooperation(engine,state,code,c).notices).map(c=>c.id);}
-export function enforcersOf(engine,law,state={}){const c=codeById(engine,law,state);return c?[...new Set([...lawAuthorities(engine,state,c),...(polity(engine,law)?.guards??[]).filter(id=>!dismissed(state,id)&&state.npcs?.[id]?.status!=='死亡')])]:[];}
+export function enforcersOf(engine,law,state={}){const c=codeById(engine,law,state);return c?[...new Set([...lawAuthorities(engine,state,c),...(polity(engine,law)?.guards??[]).filter(id=>!dismissed(state,id)&&isEffective(engine,state,id))])]:[];}
 export const dismissed=(state,npc)=>state.records?.[`legal_dismissal:${npc}`]?.category==='legal_dismissal';
 export function integrityOf(engine,npc){
     for(const p of lawRules(engine).polities??[])if(p.integrity?.[npc]!==undefined)return p.integrity[npc];
@@ -92,7 +107,7 @@ export function issueWanted(d,engine,row,reason,minute){
     const b=rules.bounty??{},declared=Math.min(b.maximum??2000,(b.base??0)+Math.ceil((row.judgment?.fine??row.value??0)*(b.perFine??1)));
     const fund=treasury(d,code.id),free=Math.max(0,fund.row.coins-(fund.row.reserved??0));
     const victim=row.victim&&row.victim!=='player'?d.get('state','npcs',row.victim):null;let pledge=0;
-    if(free<declared&&victim&&!dead(victim))pledge=Math.max(0,Math.min(declared-free,Math.floor((victim.coins??0)*(b.victimPledgeShare??0.5))));
+    if(free<declared&&victim&&!dead(victim,d.get('state'),row.victim))pledge=Math.max(0,Math.min(declared-free,Math.floor((victim.coins??0)*(b.victimPledgeShare??0.5))));
     if(pledge){moveCoins(d,{from:purse(null,row.victim),to:fundAccount(fund.key),amount:pledge,writer:'bounty',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);}
     const bounty=Math.min(declared,free+pledge);
     if(bounty||pledge)holdingSet(d,null,rec(fund.key),{...fund.row,coins:fund.row.coins+pledge,reserved:(fund.row.reserved??0)+bounty},'bounty');
@@ -181,7 +196,7 @@ export function advanceWanted(d,engine,after){
     const rules=lawRules(engine).wanted;if(!rules)return;
     for(const [key,lock] of Object.entries(d.get('state','records')??{})){
         if(lock?.category!=='legal_custody'||lock.reason!=='到案'||lock.status!=='生效')continue;
-        if(d.get('state','player','status')==='死亡'){holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after},'bounty');continue;}
+        if(!isEffective(engine,d,'player')){changeLegacyHoldings(d,engine,{source:`custody:${key}`,kinds:['guest_of'],reason:'death',eventId:`${key}:gone`},()=>holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after,endReason:'death'},'bounty'));continue;}
         if(lock.expires<=after)arrivePlayer(d,engine,key,lock,lock.expires);
     }
     issue(d,engine,rules,after);
@@ -196,7 +211,7 @@ export function advanceWanted(d,engine,after){
     }
 }
 function issue(d,engine,rules,after){
-    const state=d.get('state');if(state.player.status==='死亡')return;
+    const state=d.get('state');if(!isEffective(engine,state,'player'))return;
     const custody=Object.entries(state.records??{}).filter(([,r])=>r?.category==='legal_custody').map(([key,r])=>({...r,key}));
     for(const row of Object.values(state.records??{})){
         if(row?.category!=='legal_case'||row.offender!=='player'||wantedOfCase(state,row.id))continue;
@@ -225,7 +240,7 @@ function recognise(d,engine,rules,w,after){
     const state=d.get('state'),location=state.location,code=codeAt(engine,location);
     if(w.pending&&w.pending.at<=after){
         const officer=w.pending.officer,actor=state.npcs[officer],pending=w.pending;w={...w,pending:null};save(d,w);
-        if(wantedReachedAt(engine,w,location,after,state)&&!activeHold(state)&&location===pending.location&&actor&&!dead(actor)&&!dismissed(state,officer)&&!w.silenced.includes(officer)){
+        if(wantedReachedAt(engine,w,location,after,state)&&!activeHold(state)&&location===pending.location&&actor&&!dead(actor,state,officer)&&!dismissed(state,officer)&&!w.silenced.includes(officer)){
             d.set(['state','npcs',officer,'location'],location);holdPlayer(d,engine,d.get(...rec(w.id)),{captor:officer,location,minute:after});return;
         }
     }
@@ -234,10 +249,10 @@ function recognise(d,engine,rules,w,after){
     const dc=(rules.recognitionDifficulty??12)+mod(state.player.attributes?.['魅力']);
     for(const npc of Object.keys(state.npcs).sort()){
         const n=state.npcs[npc];
-        if(n.location!==location||!awake(n)||state.player.companions?.includes(npc)||w.silenced.includes(npc)||dismissed(state,npc)||!knows(engine,state,w,npc,after))continue;
+        if(n.location!==location||!awake(n,state,npc)||state.player.companions?.includes(npc)||w.silenced.includes(npc)||dismissed(state,npc)||!knows(engine,state,w,npc,after))continue;
         if(d20(d.document,w.id,npc,after,'recognise')+mod(attribute(engine,state,npc,'精神'))<dc)continue;
         const enforcer=w.scope.some(law=>enforcersOf(engine,law,state).includes(npc));
-        const officer=enforcer?npc:lawAuthorities(engine,state,code).find(o=>state.npcs[o]&&!dead(state.npcs[o])&&!dismissed(state,o));
+        const officer=enforcer?npc:lawAuthorities(engine,state,code).find(o=>state.npcs[o]&&!dead(state.npcs[o],state,o)&&!dismissed(state,o));
         const sighting={location,minute:after,by:npc,reaction:enforcer?'拦截':officer?'报官':'记下'};
         save(d,{...w,sightings:[...w.sightings,sighting],...(!enforcer&&officer?{pending:{location,at:after+code.reportMinutes,officer,reporter:npc}}:{})});
         remember(d,engine,npc,w,after,`在${engine.byId.get(location)?.name??location}认出了被通缉的${nameOf(engine,state,'player')}，${enforcer?'当场拦下':'赶去报官'}。`,{visibility:'private'});
@@ -251,7 +266,7 @@ function recognise(d,engine,rules,w,after){
 function hunters(engine,state,w){
     const h=lawRules(engine).wanted?.hunters??{},ids=new Set(h.roster??[]);
     for(const g of h.guilds??[])for(const m of Object.keys(organization(engine,state,g)?.members??{}))ids.add(m);
-    return [...ids].filter(id=>engine.byId.get(id)?.tier==='full'&&able(state.npcs[id])&&id!==w.subject&&!state.player.companions?.includes(id)&&!w.gaveUp.includes(id)
+    return [...ids].filter(id=>engine.byId.get(id)?.tier==='full'&&able(state.npcs[id],state,id)&&id!==w.subject&&!state.player.companions?.includes(id)&&!w.gaveUp.includes(id)
         &&!dismissed(state,id)&&!(w.subject==='player'&&standing(engine,state,id,'player')>=(h.refuseStanding??60))).sort();
 }
 const huntable=w=>w.status===ACTIVE&&w.bounty>0&&w.quest;
@@ -289,11 +304,11 @@ function pursue(d,engine,w,at){
         save(d,{...w,hunt:null,gaveUp:[...w.gaveUp,hunter],history:[...w.history,{kind:'追捕落空',by:hunter,reason,minute:at}]});
         remember(d,engine,hunter,w,at,`追捕${nameOf(engine,state,w.subject)}落空：${reason}。`,{visibility:'private',kind:'quest'});
     };
-    if(!able(actor))return giveUp('猎手失能');
+    if(!able(actor,state,hunter))return giveUp('猎手失能');
     if(at>=w.hunt.until)return giveUp('追期已满仍未拿到人');
     const where=w.subject==='player'?state.location:state.npcs[w.subject]?.location;
-    if(w.subject==='player'&&(activeHold(state)||state.player.status==='死亡'))return;
-    if(w.subject!=='player'&&(dead(state.npcs[w.subject])||w.captive))return;
+    if(w.subject==='player'&&(activeHold(state)||!isEffective(engine,state,'player')))return;
+    if(w.subject!=='player'&&(dead(state.npcs[w.subject],state,w.subject)||w.captive))return;
     if(!wantedReachedAt(engine,w,where,at,d.get('state'))){save(d,{...w,history:[...w.history,{kind:'追踪无果',by:hunter,reason:'目标不在通缉范围',minute:at}]});return;}
     const lead=w.sightings.some(s=>s.location===where&&at-s.minute<=DAY)?rules.leadBonus??0:0;
     const track=d20(d.document,w.id,hunter,at,'track')+mod(attribute(engine,state,hunter,'智力'))+Math.floor(level(engine,state,hunter)/3)+lead;
@@ -348,7 +363,7 @@ export function bountyQuestAction(d,engine,q,args,eventId){
     const code=codeById(engine,w.law),here=d.get('state','location');
     if(here!==code.court)throw Error(`须把逃犯押到${engine.byId.get(code.court)?.name??code.court}交付`);
     if(w.captive?.by!=='player'||!d.get('state','player','companions')?.includes(w.subject))throw Error('逃犯不在你押解之下，没有可交付的人');
-    const receiver=enforcersOf(engine,code.id,d.get('state')).find(id=>{const n=d.get('state','npcs',id);return awake(n)&&n.location===here&&!dismissed(d.get('state'),id);});
+    const receiver=enforcersOf(engine,code.id,d.get('state')).find(id=>{const n=d.get('state','npcs',id);return awake(n,d.get('state'),id)&&n.location===here&&!dismissed(d.get('state'),id);});
     if(!receiver)throw Error('法院没有清醒在场的执法或审判人员接收');
     const paid=deliverFugitive(d,engine,w,'player',now);
     d.say(`把${nameOf(engine,d.get('state'),w.subject)}交给${engine.byId.get(receiver)?.name}，领赏${paid}铜`);
