@@ -174,12 +174,21 @@ export function runReactions(rootEvents, expand, { seed, minute, depthLimit = 8,
 export const DEFAULT_SCHEDULER_CONFIG = Object.freeze({ depthLimit: 8, proposalLimit: 12 });
 export const SCHEDULER_CONFIG_KEYS = ['depthLimit', 'proposalLimit'];
 export function schedulerConfig(state) {
-    return { ...DEFAULT_SCHEDULER_CONFIG, ...(state?.scheduler ?? {}) };
+    const scheduler = state?.scheduler ?? {};
+    return {
+        depthLimit: scheduler.depthLimit ?? DEFAULT_SCHEDULER_CONFIG.depthLimit,
+        proposalLimit: scheduler.proposalLimit ?? DEFAULT_SCHEDULER_CONFIG.proposalLimit,
+    };
 }
 export function applyConfigSet(state, key, value) {
     if (!SCHEDULER_CONFIG_KEYS.includes(key)) throw new Error(`未知调度配置键：${key}；可选 ${SCHEDULER_CONFIG_KEYS.join('、')}`);
     if (!Number.isInteger(value) || value < 0 || value > 100000) throw new Error('调度配置值必须是 0 到 100000 的整数');
-    return { ...schedulerConfig(state), [key]: value };
+    return { ...(state?.scheduler ?? {}), ...schedulerConfig(state), [key]: value };
+}
+// 推进路径接线开关：SCHEDULER_WIRE_ADVANCE=1 或存档 state.scheduler.wireAdvance=true 时，
+// world_time 推进改经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。默认关闭以保金快照不变。
+export function schedulerWired(state) {
+    return process.env.SCHEDULER_WIRE_ADVANCE === '1' || state?.scheduler?.wireAdvance === true;
 }
 
 // ---- 完整一刻驱动 ----
