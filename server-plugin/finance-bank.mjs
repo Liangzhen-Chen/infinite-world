@@ -213,9 +213,9 @@ export function bankTrade(d,e,args,id){
     }
     throw Error('未知钱庄操作');
 }
-export function advanceBankFinance(d,e,minute){
+export function advanceBankFinance(d,e,minute,recordIds){
     const c=cfg(e);if(!c)return;
-    for(const [id,original]of Object.entries(d.get('state','records')??{})){
+    for(const [id,original]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{}))){
         if(original.kind==='loan'&&original.debtor==='player'&&original.installments>1&&original.status!=='已还清'&&!original.defaulted){
             const span=(original.deadline-original.createdAt)/original.installments,paidCount=Math.min(original.installments,Math.floor(original.paid*original.installments/original.amount));
             const due=original.createdAt+Math.ceil(span*(paidCount+1));

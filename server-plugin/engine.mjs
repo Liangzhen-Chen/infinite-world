@@ -120,6 +120,10 @@ class Draft {
     // Only for a caller that reads, copies what it keeps and drops the reference before its next write.
     peek(...path) { let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
     numberEvent(path,value){
+        if(this.scheduler&&path.length===3&&path[0]==='state'&&value&&typeof value==='object'&&
+            (['effects','obligations'].includes(path[1])||path[1]==='records'&&['contract','debt','bank','authorization','legal_detention','legal_custody'].includes(value.category))){
+            value={...value,registeredSeq:this.get(...path)?.registeredSeq??value.registeredSeq??this.scheduler.nextSeq()};
+        }
         if(this.scheduler&&path.length===3&&path[0]==='state'&&path[1]==='records'&&value?.category==='world_event'){
             const old=this.get(...path);
             return {...value,seq:old?.seq??value.seq??this.scheduler.nextSeq()};

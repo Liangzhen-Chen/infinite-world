@@ -58,6 +58,15 @@ function deriveEducationCourses(e,s){
  const jobs=recordsWhere(s.records,'category','contract').filter(r=>['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
  const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
  const homeOf=memo(id=>settlement(e,s,id)),ageOf=memo(id=>npcAgeAt(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
+ // Each school used to rescan the entire expanded population for every
+ // teacher and slot. Group the same ordered candidates once per derivation.
+ const pupilsByTown=new Map();
+ for(const p of people){
+  const age=ageOf(p.id);
+  if((age??0)<(e.rules.education?.minimumAge??6)||(age??99)>(e.rules.education?.maximumAge??17)||s.npcs?.[p.id]?.status==='死亡')continue;
+  const town=homeOf(p.id);if(!pupilsByTown.has(town))pupilsByTown.set(town,[]);
+  pupilsByTown.get(town).push(p);
+ }
  for(const site of educationSites(e,s)){
   if(!site.capacity)continue;
   for(const teacher of teachers){
@@ -73,9 +82,8 @@ function deriveEducationCourses(e,s){
     let town=site.seat;const seen=new Set();while(town&&!settlements.has(town)&&!seen.has(town)){seen.add(town);const place=s.created?.[town]??e.byId.get(town);town=place?.parent??place?.scope;}
     town??=homeOf(teacher);
     const statistical=layers?.layers.get(layers.countyOf(town))==='statistics',ceiling=literacyOf(teacher)-e.rules.npcGrowth.teach.teacherMargin;
-    const students=people.filter(p=>p.id!==teacher&&available(p.id)&&homeOf(p.id)===town&&
-     !(statistical&&p.generated==='population'&&!s.npcs?.[p.id])&&(ageOf(p.id)??0)>=(e.rules.education?.minimumAge??6)&&(ageOf(p.id)??99)<=(e.rules.education?.maximumAge??17)&&s.npcs?.[p.id]?.status!=='死亡'&&
-     literacyOf(p.id)<ceiling)
+    const students=(pupilsByTown.get(town)??[]).filter(p=>p.id!==teacher&&
+     !(statistical&&p.generated==='population'&&!s.npcs?.[p.id])&&literacyOf(p.id)<ceiling&&available(p.id))
      .map(p=>p.id).sort().slice(0,seats);
     const previous=s.records?.[`education_cohort:education:auto:${site.id}:${teacher}:${slot.start}:${Math.floor(s.minute/DAY)}`];
     const roster=statistical?(previous?.roster??cohortSeats(e,s,town,'skill_literacy',knowledgeProficiency(e,s,teacher,'skill_literacy'),seats-students.length,s.minute)):[];

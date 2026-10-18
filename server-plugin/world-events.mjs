@@ -7,6 +7,7 @@
 import {eventWeight} from './standing.mjs';
 import {recordCareerMetrics} from './career-metrics.mjs';
 import {personAge} from './entity-view.mjs';
+import {reactionSortKey,PHASE} from './scheduler.mjs';
 export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
@@ -101,21 +102,67 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
 // register while it is still evaluating.
 function subscriberStore(){return subscriberStore.rows??=[];}
 export function registerWorldEventSubscriber(subscriber){
-    const {id,order,on}=subscriber??{};
+    const {id,order,on,priorityClass='social',packId='core',ruleId=id}=subscriber??{};
     if(typeof id!=='string'||!id||!Number.isFinite(order)||typeof on!=='function')throw Error('世界事件订阅者须有 id、order 与 on');
     const rows=subscriberStore();
     if(rows.some(s=>s.id===id))throw Error(`世界事件订阅者重复登记：${id}`);
-    rows.push({id,order,on});rows.sort((a,b)=>a.order-b.order);
+    rows.push({id,order,on,priorityClass,packId,ruleId});rows.sort((a,b)=>a.order-b.order);
     return()=>{const i=rows.findIndex(s=>s.id===id);if(i>=0)rows.splice(i,1);};
 }
 export function worldEventSubscribers(){return subscriberStore().map(({id,order})=>({id,order}));}
-export function publishWorldEvents(d,engine,events,context,subscribers=subscriberStore().map(s=>s.on)){
+export function beginReactionTick(d){
+    if(!d.scheduler)return;
+    d.reactionTick={queue:[],cursor:0,count:0,seen:new Set(),active:null};
+}
+export function drainWorldReactions(d){
+    const tick=d.reactionTick;if(!tick||tick.draining)return;
+    tick.draining=true;
+    try{
+        while(tick.cursor<tick.queue.length){
+            const {engine,events,context,subscribers,depth,metrics}=tick.queue[tick.cursor++];
+            if(depth>16)throw new Error('反应总深度超过 16，回滚本次推进');
+            for(const s of subscribers){
+                const key=`${s.id}:${events.map(e=>e.seq??e.id).join(',')}`;
+                if(tick.seen.has(key))continue;
+                tick.seen.add(key);
+                const limited=['social','autonomy'].includes(s.priorityClass);
+                if(limited&&(depth>d.scheduler.config.depthLimit||tick.count>=d.scheduler.config.proposalLimit)){
+                    const cause=events[0];
+                    const id=`reaction_cut:${cause.seq??cause.id}:${s.id}`;
+                    d.set(['state','records',`world_event:${id}`],{category:'world_event',id,verb:'reaction_cut',cause:cause.seq,depth,rule:s.id,limit:depth>d.scheduler.config.depthLimit?'depth':'proposal',minute:cause.minute,phase:PHASE.reaction});
+                    continue;
+                }
+                tick.active={depth,priorityClass:s.priorityClass,cause:events[0].seq};
+                s.on(d,engine,events,context);
+                tick.active=null;
+            }
+            if(metrics)recordCareerMetrics(d,engine,metrics,context);
+        }
+    }finally{tick.active=null;tick.draining=false;}
+}
+export function publishWorldEvents(d,engine,events,context,subscribers){
+    if(d.reactionTick?.active){
+        const {depth,cause}=d.reactionTick.active;
+        events=events.map(e=>({...e,depth,cause,phase:PHASE.reaction}));
+    }
     if(d.scheduler)events=events.map(e=>SOCIAL_VERBS.has(e.verb)?{...e,seq:d.get('state','records',`world_event:${e.id}`)?.seq??e.seq??d.scheduler.nextSeq()}:e);
     if(!context.legacy)for(const e of events)if(SOCIAL_VERBS.has(e.verb)&&e.actor){
         const key=`world_event:${e.id}`;if(d.get('state','records',key))continue;
         const {legacy:_,...row}=e;d.set(['state','records',key],{category:'world_event',...row});
     }
-    for(const s of subscribers)s(d,engine,events,context);
+    if(d.scheduler){
+        const own=!d.reactionTick;
+        if(own)beginReactionTick(d);
+        const tick=d.reactionTick;
+        if(tick.active)tick.count+=events.length;
+        const rows=subscribers?subscribers.map((on,i)=>({id:`explicit:${i}`,on,priorityClass:'social',packId:'core',ruleId:String(i).padStart(6,'0')})):subscriberStore();
+        const ordered=[...rows].sort((a,b)=>{const x=reactionSortKey(a),y=reactionSortKey(b);for(let i=0;i<x.length;i++){if(x[i]<y[i])return -1;if(x[i]>y[i])return 1;}return 0;});
+        const causes=[...events].sort((a,b)=>(a.seq??0)-(b.seq??0));
+        for(const [i,event]of causes.entries())tick.queue.push({engine,events:[event],context,subscribers:ordered,depth:(tick.active?.depth??0)+1,metrics:i===causes.length-1?events:null});
+        if(own){try{drainWorldReactions(d);}finally{delete d.reactionTick;}}
+        return;
+    }
+    for(const s of subscribers??subscriberStore().map(s=>s.on))s(d,engine,events,context);
     // Career metrics observe every settled call, after the social subscribers.
     recordCareerMetrics(d,engine,events,context);
 }

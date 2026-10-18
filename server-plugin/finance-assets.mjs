@@ -247,8 +247,8 @@ function workshopShift(d,e,row,at){
         ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage}]};holdingSet(d,null,rec(row.id),next,'finance-assets');
     financeEvent(d,e,{id:eventId,actor:row.worker,target:'player',minute:at,location:row.location,value:row.wage,tags:['workshop']});
 }
-export function advanceFinanceAssets(d,e,minute){
-    for(const initial of all(d)){
+export function advanceFinanceAssets(d,e,minute,recordIds){
+    for(const initial of (recordIds?recordIds.map(id=>d.get('state','records',id)).filter(Boolean):all(d))){
         if(initial.kind==='equity'&&initial.status==='有效')for(let at=initial.nextDividend;at<=minute;at+=MONTH)payDividend(d,e,d.get(...rec(initial.id)),at);
         if(initial.kind==='asset_lease'&&initial.status==='有效'){
             for(let at=initial.nextRent;at<=minute&&at<initial.deadline;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
@@ -259,7 +259,7 @@ export function advanceFinanceAssets(d,e,minute){
             if(minute>=initial.deadline&&['有效','要求加薪','罢工'].includes(d.get(...rec(initial.id),'status')))holdingSet(d,null,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期'},'finance-assets');
         }
     }
-    for(const [id,row]of Object.entries(d.get('state','records')??{}))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){
+    for(const [id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){
         const legalCase=registerCreditDefault(d,e,{debt:id,row,value:row.amount-row.paid,minute:row.deadline});holdingSet(d,null,rec(id),{...row,status:'逾期',defaulted:{case:legalCase,remaining:row.amount-row.paid,minute:row.deadline}},'finance-assets');
     }
 }

@@ -154,8 +154,8 @@ export function resolveContest(proposals, { seed, minute }) {
 // ---- 反应队列（14 §14.2 阶段 4，广度优先 + 深度/提案上限）----
 // 按起因事件 seq 广度优先；同一事件触发的多条规则按 (优先级类, 包 id, 规则 id)。
 // 深度上限只作用于 social 与 autonomy 优先级类（core/legal 豁免在此最小版简化为按 priorityClass 判断）。
-const PRIORITY = { core: 0, legal: 1, autonomy: 2, social: 3 };
-const depthLimited = priorityClass => !['core', 'legal'].includes(priorityClass);
+const PRIORITY = { core: 0, settlement: 1, legal: 2, autonomy: 3, social: 4 };
+const depthLimited = priorityClass => ['social','autonomy'].includes(priorityClass??'social');
 export function reactionSortKey(rule) {
     return [PRIORITY[rule.priorityClass ?? 'social'] ?? 3, rule.packId ?? '', rule.ruleId ?? ''];
 }
@@ -169,12 +169,12 @@ export function runReactions(rootEvents, expand, { seed, minute, depthLimit = 8,
     while (cursor < queue.length) {
         const cause = queue[cursor++];
         const depth = (cause.depth ?? 0) + 1;
-        if (depthLimited(cause.priorityClass) && depth > depthLimit) {
-            cut.push({ cause: cause.seq, depth });
-            continue;
-        }
         const reactions = (expand ? expand(cause) : []).slice().sort((a, b) => lex(reactionSortKey(a), reactionSortKey(b)));
+        if(!reactions.length&&depthLimited(cause.priorityClass)&&depth>depthLimit)cut.push({cause:cause.seq,depth});
         for (const rule of reactions) {
+            if(depthLimited(rule.priorityClass??cause.priorityClass)&&depth>depthLimit){
+                cut.push({cause:cause.seq,depth});continue;
+            }
             if (depthLimited(rule.priorityClass ?? cause.priorityClass) && count >= proposalLimit) {
                 cut.push({ cause: cause.seq, depth, limit: 'proposal' });
                 continue;

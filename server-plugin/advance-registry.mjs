@@ -62,9 +62,12 @@ import {personSimulation,personConstraints}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE}from'./scheduler.mjs';
-import {publishTransitionEvent}from'./world-events.mjs';
+import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {scheduleAt}from'./npc-schedule.mjs';
 import {educationCourses}from'./education-state.mjs';
+import {advanceRituals}from'./magic-ritual.mjs';
+import {advanceWanted}from'./bounty.mjs';
+import {auditLedger}from'./ledger.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -101,6 +104,9 @@ function orderedSystems(d,ctx){
 // 各系统 nextMinute 入堆为到期项；取 (now, end] 内最小刻，无则返回 null。
 export function nextFromScheduleHeap(engine,d,now,end){
     const heap=new ScheduleHeap();
+    const state=d.get('state'),previous=engine.educationCourseContext;
+    engine.educationCourseContext=educationCourses(engine,state);
+    try{
     const midnight=Math.floor(now/1440)*1440+1440;
     if(midnight<=end)heap.add({kind:'clock',minute:midnight});
     for(const system of advanceRegistry)if(system.nextMinute){
@@ -110,26 +116,24 @@ export function nextFromScheduleHeap(engine,d,now,end){
     // These legacy handlers have no nextMinute hook. Register their actual
     // deadlines, including travel created by the preceding tick.
     const due=minute=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute});};
-    const state=d.get('state');
     for(const effect of Object.values(state.effects??{}))due(effect.expires);
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
     }
-    const previous=engine.educationCourseContext;
-    engine.educationCourseContext=educationCourses(engine,state);
     const constraints=personConstraints(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
-    try{for(const [id,npc]of Object.entries(state.npcs??{})){
+    for(const [id,npc]of Object.entries(state.npcs??{})){
         due(npc.scheduleTravel?.arrive);due(npc.cognitionTravel?.arrive);
         // The existing layer adapter settles eligible fixed-location skeletons
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
         if(group&&group.layer!=='intelligent')continue;
         if(engine.byId.get(id)?.schedule||npc.routine){const slot=scheduleAt(engine,id,now,state,constraints);due(slot?.until);}
-    }}finally{engine.educationCourseContext=previous;}
+    }
     const ticks=heap.ticksBetween(now,end);
     return ticks.length?ticks[0]:null;
+    }finally{engine.educationCourseContext=previous;}
 }
 // 争夺池：推进系统在本刻提交的互斥标的提案（提交即按当前调度器分配 seq），本刻系统结算完后
 // 由缺省表裁决，产生 contest_win / contest_lose 事件（seq 晚于阶段 1–3，见 runTick）。
@@ -161,10 +165,31 @@ function resolveContestPool(d,ctx){
 function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
+    if(d.scheduler)beginReactionTick(d);
     try{
-        for(const system of orderedSystems(d,ctx))system.advance(engine,d,ctx);
-        if(schedulerWired(d.get('state')))resolveContestPool(d,ctx);
-    }finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
+        const systems=orderedSystems(d,ctx);
+        if(d.scheduler){
+            const due=[];
+            for(const system of systems.filter(s=>s.phase===PHASE.due)){
+                if(system.dueItems)due.push(...system.dueItems(engine,d,ctx).map(item=>({...system,...item})));
+                else due.push({...system,execute:()=>system.advance(engine,d,ctx)});
+            }
+            due.sort((a,b)=>compareDue(a,b)||a.ruleId.localeCompare(b.ruleId)||a.id.localeCompare(b.id));
+            for(const item of due)item.execute();
+            for(const system of systems.filter(s=>s.phase!==PHASE.due&&s.phase!==PHASE.assertion))system.advance(engine,d,ctx);
+        }else for(const system of systems)system.advance(engine,d,ctx);
+        if(d.scheduler){
+            resolveContestPool(d,ctx);
+            drainWorldReactions(d);
+            // Reactions get one final contest round. New claims from its
+            // reactions remain pending until the next scheduled tick.
+            resolveContestPool(d,ctx);
+            drainWorldReactions(d);
+            for(const system of systems.filter(s=>s.phase===PHASE.assertion))system.advance(engine,d,ctx);
+            const errors=auditLedger(d.get('ledger'));
+            if(errors.length)throw new Error(`刻末账本断言失败：${errors.join('; ')}`);
+        }
+    }finally{delete d.reactionTick;engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
@@ -276,8 +301,8 @@ const systems=[
     const p=d.get('state','player');
     if(p.status==='濒死' && after-p.dyingSince>=e.rules.death.dyingMinutes) e.death(d);
  }},
- {id:'deliveries',order:2700,advance(e,d,{after,id}){
-    for(const [key,obligation] of Object.entries(d.get('state','obligations'))) {
+ {id:'deliveries',order:2700,advance(e,d,{after,id,obligationIds}){
+    for(const [key,obligation] of (obligationIds?obligationIds.map(key=>[key,d.get('state','obligations',key)]):Object.entries(d.get('state','obligations')))) {
         if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
             try { e.deliver(d,key,obligation,id); } catch(error) {
                 const courier=obligation.deliveryVersion===1;
@@ -292,10 +317,33 @@ const systems=[
 // Preparatory rules remain before the rules that consume their attendance and
 // booking contexts. Stable rule ids preserve those existing dependencies.
 const dueSystems={contracts:'义务',credit:'义务',summons:'效果与状态到期',law:'案件阶段',effect_expiry:'效果与状态到期',dying:'效果与状态到期',deliveries:'义务',agriculture_expiry:'效果与状态到期'};
+// Native handlers accept a selected record/effect. The scheduler owns the
+// ordering across handlers; each handler retains its domain checks and writes.
+const recordItems=(d,predicate,execute,anchor)=>Object.entries(d.get('state','records')??{})
+    .map(([id,row],index)=>({id,row,index})).filter(({row})=>predicate(row))
+    .map(({id,row,index})=>({id,anchorId:anchor(row,id),registeredSeq:row.registeredSeq??row.seq??index+1,execute:()=>execute(id)}));
+const dueCollectors={
+    contracts:(e,d,c)=>[
+        {id:'rituals',dueClass:'许可 / 托养 / 封印维护到期',anchorId:'player',execute:()=>advanceRituals(d,e,c.after)},
+        ...recordItems(d,r=>['contract','debt'].includes(r.category),id=>advanceContracts(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id)],
+    credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>advanceCredit(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
+    law:(e,d,c)=>[
+        {id:'wanted',anchorId:'',execute:()=>advanceWanted(d,e,c.after)},
+        ...recordItems(d,r=>['legal_detention','legal_custody'].includes(r.category),id=>advanceLaw(d,c.after,e,[id]),(r,id)=>r.case??id),
+        ...recordItems(d,r=>r.category==='authorization',id=>advanceLaw(d,c.after,e,[id]),(r,id)=>r.grantor??id).map(item=>({...item,dueClass:'许可 / 托养 / 封印维护到期'}))],
+    summons:(e,d,c)=>Object.entries(d.get('state','effects')??{}).filter(([,r])=>r.kind==='summon')
+        .map(([id,r])=>({id,anchorId:r.target??r.owner??'player',registeredSeq:r.registeredSeq??0,execute:()=>advanceSummons(d,c.after,[id])})),
+    effect_expiry:(e,d,c)=>Object.entries(d.get('state','effects')??{}).filter(([,r])=>r.expires<=c.after)
+        .map(([id,r])=>({id,anchorId:r.target??r.owner??id,registeredSeq:r.registeredSeq??0,execute:()=>{if(d.get('state','effects',id)?.expires<=c.after)d.remove(['state','effects',id]);}})),
+    agriculture_expiry:(e,d)=> (e.rules.agriculture?.settlements??[]).map(p=>({id:p.settlement,anchorId:p.settlement,execute:()=>settleAgricultureExpiry(d,e,p.settlement)})),
+    dying:(e,d,c)=>[{id:'dying',anchorId:'player',execute:()=>systems.find(s=>s.id==='dying').advance(e,d,c)}],
+    deliveries:(e,d,c)=>Object.entries(d.get('state','obligations')??{}).map(([id,r])=>({id,anchorId:r.promisor??'player',registeredSeq:r.registeredSeq??r.seq??0,execute:()=>systems.find(s=>s.id==='deliveries').advance(e,d,{...c,obligationIds:[id]})})),
+};
 for(const system of systems){
     const dueClass=dueSystems[system.id];
     system.phase=dueClass?PHASE.due:PHASE.clock;
     system.dueClass=dueClass;
+    system.dueItems=dueCollectors[system.id];
     system.packId='core';
     // Stable rule identities retain the existing dependency order inside core
     // (prepare attendance -> schedules -> settle attendance, for example).

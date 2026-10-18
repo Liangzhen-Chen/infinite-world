@@ -186,8 +186,9 @@ function custodyInterrupted(d,lock){
     return subject==='player'?d.get('state','player','status')==='死亡'||d.get('state','location')!==lock.location:
         d.get('state','npcs',subject,'status')==='死亡'||d.get('state','npcs',subject,'location')!==lock.location;
 }
-export function advanceLaw(d,after,engine){
-    for(const [id,hold] of Object.entries(d.get('state','records')??{}))if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
+export function advanceLaw(d,after,engine,recordIds){
+    const rows=()=>recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{});
+    for(const [id,hold] of rows())if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
         const dead=d.get('state','npcs',hold.subject,'status')==='死亡';
         if(dead||(hold.expires??Infinity)<=after){
             const shops=engine&&!dead?businessSnapshot(engine,{...d.get('state'),minute:hold.expires-1}):null;
@@ -196,8 +197,8 @@ export function advanceLaw(d,after,engine){
             if(shops)businessTransitions(d,engine,shops,`${id}:release`,hold.expires);
         }
     }
-    for(const[id,r]of Object.entries(d.get('state','records')??{}))if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)holdingSet(d,null,path(id),{...r,revoked:true,status:'已到期',ended:r.expires},'law');
-    for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&
+    for(const[id,r]of rows())if(r.category==='authorization'&&r.sourceType==='magic_permit'&&!r.revoked&&r.expires<=after)holdingSet(d,null,path(id),{...r,revoked:true,status:'已到期',ended:r.expires},'law');
+    for(const[id,lock]of rows())if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&
         custodyInterrupted(d,lock)){
         holdingSet(d,null,path(id),{...lock,status:'已中止',ended:after,remaining:Math.max(0,lock.expires-after)},'law');
         const row=d.get(...path(lock.case));
@@ -205,7 +206,7 @@ export function advanceLaw(d,after,engine){
             remainingSentence:{type:lock.reason==='劳役'?'labor':'prison',minutes:Math.max(0,lock.expires-after)}},'law');
         d.say('羁押或服役因死亡/离开登记地点中止；未完成判罚仍保留');
     }
-    for(const[id,lock]of Object.entries(d.get('state','records')??{}))if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&lock.expires<=after){
+    for(const[id,lock]of rows())if(lock?.category==='legal_custody'&&lock.status==='生效'&&lock.reason!=='到案'&&lock.expires<=after){
         const subject=lock.subject??d.get(...path(lock.case),'offender')??'player';
         const shops=engine&&subject!=='player'?businessSnapshot(engine,{...d.get('state'),minute:lock.expires-1}):null;
         holdingSet(d,null,path(id),{...lock,status:'已结束',ended:lock.expires},'law');
@@ -218,7 +219,7 @@ export function advanceLaw(d,after,engine){
         }
         d.say(lock.reason==='待审'?'羁押期限届满，未审先释放':'刑期或劳役已完成');
     }
-    if(engine)advanceWanted(d,engine,after);
+    if(engine&&!recordIds)advanceWanted(d,engine,after);
 }
 
 function localObservers(d){return Object.entries(d.get('state','npcs')??{}).filter(([,npc])=>awake(npc)&&npc.location===d.get('state','location')).map(([id])=>id);}

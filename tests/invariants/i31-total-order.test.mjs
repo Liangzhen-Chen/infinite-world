@@ -15,7 +15,7 @@ import { loadWorld } from '../../tools/load-world.mjs';
 import { WorldEngine } from '../../server-plugin/engine.mjs';
 import { advanceRegistry, registerAdvance, submitContest } from '../../server-plugin/advance-registry.mjs';
 import {resyncBooks} from '../helpers/ledger-sync.mjs';
-import { publishTransitionEvent, worldEvents } from '../../server-plugin/world-events.mjs';
+import { publishTransitionEvent, worldEvents, registerWorldEventSubscriber } from '../../server-plugin/world-events.mjs';
 
 const hash = value => crypto.createHash('sha256').update(canonical(value)).digest('hex');
 const SEED = 'i31-seed';
@@ -251,6 +251,50 @@ const seqEvents = doc => {
     assert.equal(new Set(rows.map(e=>e.seq)).size,rows.length,'事件序号全局唯一');
     return rows.sort((a,b)=>a.seq-b.seq);
 };
+
+test('真实引擎级联：阶段归序、广度优先、config_set 深度上限与重放', async () => {
+    const run=async(reverse=false,depthLimit=2)=>{
+        const {engine,doc:initial}=freshDoc('i31-cascade');
+        const configured=await engine.reduce(initial,{type:'config_set',key:'depthLimit',value:depthLimit});
+        let doc=applyPatches(initial,configured.patches);
+        const calls=[];
+        const emit=(d,e,id)=>publishTransitionEvent(d,e,{id,verb:'organize',actor:'player',minute:d.get('state','minute'),witnesses:[],tags:['cascade']});
+        const systems=[{id:'cascade-clock',order:99999,phase:PHASE.clock,packId:'test',ruleId:'clock',advance(e,d,{after}){if(after%DAY===0)emit(d,e,`cascade:root:${after}`);}},
+            {id:'cascade-due',order:99998,phase:PHASE.due,dueClass:'义务',anchorId:'a',advance(e,d,{after}){if(after%DAY===0)calls.push('due');}}];
+        const subscribers=['a','b'].map(id=>({id:`cascade-${id}`,order:9999,packId:'test',ruleId:id,on(d,e,events){for(const event of events){if(!event.id.startsWith('cascade:'))continue;calls.push(`${event.id}:${id}`);if(event.id.split('/').length<4)emit(d,e,`${event.id}/${id}`);}}}));
+        const removers=[...(reverse?[...systems].reverse():systems).map(registerAdvance),...(reverse?[...subscribers].reverse():subscribers).map(registerWorldEventSubscriber)];
+        try{doc=await step({engine,doc},DAY);return {events:seqEvents(doc).filter(e=>e.id.startsWith('cascade:')||e.verb==='reaction_cut'),calls,doc};}
+        finally{removers.forEach(remove=>remove());}
+    };
+    const a=await run(),b=await run(true);
+    assert.deepEqual(b.events,a.events);
+    assert.equal(a.calls[0],'due');
+    const root=a.events.find(e=>e.id.startsWith('cascade:root:')).id;
+    assert.deepEqual(a.calls.slice(1,7),[`${root}:a`,`${root}:b`,`${root}/a:a`,`${root}/a:b`,`${root}/b:a`,`${root}/b:b`]);
+    assert.ok(a.events.some(e=>e.verb==='reaction_cut'&&e.limit==='depth'));
+    assert.equal(a.events.filter(e=>e.id.startsWith('cascade:')).length,7);
+    const shallow=await run(false,1);
+    assert.equal(shallow.events.filter(e=>e.id.startsWith('cascade:')).length,3);
+    assert.equal(shallow.doc.state.scheduler.depthLimit,1);
+});
+
+test('真实引擎反应：提案上限可配置，settlement/legal 不受社交深度截断',async()=>{
+    const {engine,doc:initial}=freshDoc('i31-reaction-priority');
+    const update=await engine.reduce(initial,{type:'config_set',key:'depthLimit',value:0});
+    const doc=applyPatches(initial,update.patches),calls=[];
+    const removers=['social','settlement','legal'].map(priorityClass=>registerWorldEventSubscriber({id:`priority-${priorityClass}`,order:9999,priorityClass,on(d,e,events){if(events.some(e=>e.id==='priority-root'))calls.push(priorityClass);}}));
+    removers.push(registerAdvance({id:'priority-producer',order:99999,advance(e,d,{after}){if(after%DAY===0)publishTransitionEvent(d,e,{id:'priority-root',verb:'organize',actor:'player',minute:after,witnesses:[],tags:[]});}}));
+    try{
+        const result=await step({engine,doc},DAY);
+        assert.deepEqual(calls,['settlement','legal']);
+        assert.ok(seqEvents(result).some(e=>e.verb==='reaction_cut'&&e.rule==='priority-social'));
+        const limit=await engine.reduce(initial,{type:'config_set',key:'proposalLimit',value:0});
+        calls.length=0;
+        const bounded=await step({engine,doc:applyPatches(initial,limit.patches)},DAY);
+        assert.deepEqual(calls,['settlement','legal']);
+        assert.ok(seqEvents(bounded).some(e=>e.verb==='reaction_cut'&&e.limit==='proposal'));
+    }finally{removers.forEach(remove=>remove());}
+});
 
 test('真实引擎 I31：一次推进 10 天与逐日推进产生相同事件序列（含 seq）', async () => {
     const unregister = registerAdvance({
