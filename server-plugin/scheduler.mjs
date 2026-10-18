@@ -186,7 +186,9 @@ export function applyConfigSet(state, key, value) {
     return { ...(state?.scheduler ?? {}), ...schedulerConfig(state), [key]: value };
 }
 // 推进路径接线开关：SCHEDULER_WIRE_ADVANCE=1 或存档 state.scheduler.wireAdvance=true 时，
-// world_time 推进改经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。默认关闭以保金快照不变。
+// world_time 推进改经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。
+// 默认关闭：开启会使 advance-registry 金快照破裂（刻集改由日程堆唯一确定 + state.scheduler
+// 写回 seq/lastSettled），差异已记录于 S2B-ds-003.golden-diff.txt（S2b-1 步 3）。
 export function schedulerWired(state) {
     return process.env.SCHEDULER_WIRE_ADVANCE === '1' || state?.scheduler?.wireAdvance === true;
 }
