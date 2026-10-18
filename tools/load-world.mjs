@@ -12,6 +12,8 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const [rules,npcs,locations,routes,items,professions,skills,spells] = await Promise.all([
         read('meta/rules.json'),read('people/baseline.json'),read('geo/locations.json'),read('geo/routes.json'),read('meta/items.json'),read('meta/professions.json'),read('meta/skills.json'),read('meta/spells.json')]);
     const [recipes,monsters,bosses]=await Promise.all(['recipes','monsters','bosses'].map(name=>optional(`meta/${name}.json`)));
+    const [autonomyCandidates,bargaining]=await Promise.all([optional('autonomy/candidates.json'),optional('rules/tables/bargaining.json')]);
+    if(bargaining.length)rules.bargaining=bargaining;
     const [cultures,deities,factions,history,factionPeople,eras,festivals,rumors]=await Promise.all(['cultures','deities','factions','history','factionPeople','eras','festivals','rumors'].map(name=>optional(`lore/${name}.json`)));
     // W5: reviewed faction rows stay untouched on disk. Explicit reverse
     // bindings reuse the source relation's score and reason at load time.
@@ -51,6 +53,15 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
+    if(autonomyCandidates.length)world.autonomy={candidates:autonomyCandidates};
+    // Dialogue templates are pinned with the campaign world, including wording
+    // persisted in a conversation. A later content update cannot alter replay.
+    const templates={};
+    async function dialogueFiles(dir,prefix=''){
+        let entries;try{entries=await fs.readdir(dir,{withFileTypes:true});}catch(error){if(error.code==='ENOENT')return;throw error;}
+        for(const entry of entries){const key=prefix+entry.name;if(entry.isDirectory())await dialogueFiles(path.join(dir,entry.name),key+'/');else if(entry.name.endsWith('.json'))templates[key]=JSON.parse(await fs.readFile(path.join(dir,entry.name),'utf8'));}
+    }
+    await dialogueFiles(path.join(root,'templates/dialogue'));if(Object.keys(templates).length)world.dialogueTemplates=templates;
     // RW-07 faith competition clocks likewise: derived from the church seats, replacing any saved faith:* rows.
     materializeFaithClocks({world,rules,byId:new Map([...locations,...deities].map(e=>[e.id,e]))});
     // S1 numeric parameter tables (rules/tables/balance): validated on every load (bounds, required fields,

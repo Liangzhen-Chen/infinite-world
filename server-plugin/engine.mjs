@@ -57,7 +57,7 @@ import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService,advanceNpcSchedules}from'./npc-schedule.mjs';
-import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan}from'./npc-autonomy.mjs';
+import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
@@ -686,6 +686,7 @@ export class WorldEngine {
         return {npc,trustDelta:trust};
     }
     promise(d,args,id) {
+        const conversation=dialogueRequest(d,this,args,id);if(conversation)return conversation;
         const permission=homePermission(d,this,args,id);if(permission)return permission;
         const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
@@ -739,6 +740,7 @@ export class WorldEngine {
         d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {
+        const conversation=applyDialogue(d,this,args,id);if(conversation)return conversation;
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);
         if(args.truth!==undefined)return recordLie(d,this,args,id);
         if(args.motive!==undefined||args.knowers!==undefined)throw new Error('motive/knowers只用于带truth的谎言登记');

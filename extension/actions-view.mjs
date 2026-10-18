@@ -62,7 +62,13 @@ export async function renderActionsPanel(container,data){
         box.append(button('返回此处',()=>{state.target=null;state.form=null;rerender();},{className:'fields-actions-back'}));
         for(const s of here.target.soldOut??[])box.append(node('p',`${s.name}已经卖完，下次进货在${s.next}。`,'fields-note'));
         if(!rows.length)box.append(node('p','此刻对这个对象做不了什么。','fields-note'));
-        for(const a of rows)box.append(actionButton(a));
+        for(const a of rows.filter(a=>a.group!=='交谈'))box.append(actionButton(a));
+        const talk=rows.filter(a=>a.group==='交谈');
+        if(talk.length){
+            const panel=section(`与${here.target.name}交谈`,fragment);panel.setAttribute('aria-label','对话面板');
+            const last=data.view.document.state.dialogues?.[here.target.id];if(last?.text)panel.append(node('p',last.text));
+            for(const a of talk)panel.append(actionButton(a));
+        }
         if(state.pendingAction){const a=rows.find(r=>r.id===state.pendingAction);state.pendingAction=null;if(a)state.form=a;}
     }else if(!state.quick){
         const box=section('此处可做',fragment);
