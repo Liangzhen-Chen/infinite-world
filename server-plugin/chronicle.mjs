@@ -4,12 +4,15 @@ import {applyPatches,digest} from './storage.mjs';
 import {MemoryIndex,normalize} from './retrieval.mjs';
 import {stateNotices} from './state-notices.mjs';
 import {expandRetrievalText,prepareRetrievalRecord,RETRIEVAL_DICTIONARY} from './retrieval-lexicon.mjs';
+import {resourceKey,parseAccount} from './ledger.mjs';
+import {settlementLocation} from './obligation-presence.mjs';
 
 const DAY=1440,clone=value=>structuredClone(value),cache=new WeakMap();
 const unique=values=>[...new Set(values.filter(value=>value!==null&&value!==undefined))];
 const unresolved=new Set(['待履行','进行中','待偿还','逾期','待交付','在途','待处理']);
 const visible=(row,viewer)=>viewer==='omniscient'||row.visibleTo?.includes(viewer);
 const count=value=>typeof value==='number'?value:value?.quantity??0;
+const protocolVerbs=new Set(['obligation_opened','obligation_amended','obligation_closed','obligation_settled']);
 function bounded(parts,limit){
  let text='';for(const raw of parts){const part=String(raw).replace(/\s+/g,' ').trim();if(!part)continue;
   const next=text?`${text}；${part}`:part;if([...next].length>limit){if(!text)text=[...part].slice(0,Math.max(0,limit-1)).join('')+'…';break;}text=next;
@@ -19,7 +22,7 @@ function span(facts){return {events:unique(facts.map(f=>f.sourceEvent)),sequence
 
 // Only reducer output and its before/after state are accepted. Raw chat,
 // remember.content, model summaries and free-form result.messages are not facts.
-export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,{sequence=0,anchor=null}={}){
+export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,{sequence=0,anchor=null,result=null}={}){
  const before=beforeDocument.state,after=afterDocument.state,eventId=input.eventId;
  if(!eventId||!before||!after||after.minute<before.minute)throw Error('编年史缺少有效事件或时间倒退');
  if(input.type&&input.type!=='npc_plan')return [];
@@ -32,12 +35,30 @@ export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,
   const keywords=unique([...(kind==='trade'?['购买 买过 支付 交易']:[]),...items.flatMap(row=>[row.name,...row.aliases??[],row.use??''])]);
   rows.push({id:`chronicle_fact_${digest([eventId,key]).slice(0,24)}`,sourceEvent:eventId,sequence,anchor,minute,location,participants:unique(participants),entities:unique([...participants,...entities,location]),keywords,visibleTo:unique(visibleTo),salience,kind,text:clean,reference,status,authority:'event-derived'});
  };
+ const protocols=new Map(Object.entries(after.records??{}).filter(([id,e])=>!before.records?.[id]&&e.category==='world_event'&&protocolVerbs.has(e.verb)&&typeof e.result?.evidence==='string').map(([,e])=>[e.id,e]));
+ const protocolClaims=new Set([...protocols.values()].map(e=>e.obligation)),knownProtocol=new Map();
+ const refs=[result?.debt,result?.contract,result?.id,typeof result?.obligation==='string'?result.obligation:result?.obligation?.id].filter(id=>typeof id==='string');
+ const primaryClaims=new Set(refs.flatMap(id=>[id,obligationRow(after,id)?.id]).filter(Boolean));
  const observed=new Map();
  for(const [npcId,npc] of Object.entries(after.npcs??{}))for(const memory of npc.memoryStream??[]){
-  if(memory.sourceEvent!==eventId||!['亲历','目击','约定核对'].includes(memory.sourceType)||before.npcs?.[npcId]?.memoryStream?.some(old=>old.id===memory.id))continue;
+  if(memory.sourceEvent!==eventId&&!protocols.has(memory.sourceEvent)||!['亲历','目击','约定核对'].includes(memory.sourceType)||before.npcs?.[npcId]?.memoryStream?.some(old=>old.id===memory.id))continue;
+  if(protocols.has(memory.sourceEvent)){const known=knownProtocol.get(memory.sourceEvent)??{holders:new Set(),location:memory.location};known.holders.add(npcId);knownProtocol.set(memory.sourceEvent,known);continue;}
   const row=observed.get(memory.id)??{memory,holders:[]};row.holders.push(npcId);observed.set(memory.id,row);
  }
  for(const {memory,holders} of observed.values())add(`memory:${memory.id}`,memory.content,{minute:memory.minute,location:memory.location,participants:memory.participants??[],entities:memory.entities??[],visibleTo:unique([...holders,...(memory.participants?.includes('player')?['player']:[])]),salience:memory.salience,kind:memory.kind,reference:memory.rumor?`rumor:${memory.rumor}`:null,status:memory.rumor?'未核实':null});
+ // Use the actual receipt and its informed recipients, not the end-of-wait
+ // projection. Several payments in one wait can have different witnesses.
+ for(const e of protocols.values()){
+  const row=obligationRow(after,e.obligation),[debtor,creditor]=e.participants??[],known=knownProtocol.get(e.id);
+  const acknowledged=primaryClaims.has(e.obligation)&&(e.verb==='obligation_opened'||e.result.evidence===eventId||e.result.evidence.startsWith(`${eventId}:`));
+  const owner=e.result.accounts?.from?parseAccount(e.result.accounts.from).owner:e.actor;
+  const from=settlementLocation(engine,before,owner),to=settlementLocation(engine,after,owner);
+  const location=known?known.location:e.verb==='obligation_opened'?row?.terms?.signingPlace??null:from===to||e.minute===before.minute?from:e.minute===after.minute?to:null;
+  const unit=!row?.resource||resourceKey(row.resource)==='coin_river'?'铜':'份';
+  const action={obligation_opened:'已签订',obligation_amended:'已变更',obligation_closed:'履行期已结束',obligation_settled:`实际清偿${e.result.transferred}${unit}`}[e.verb];
+  add(`protocol:${e.id}`,`${name(debtor)}与${name(creditor)}的${row?.kind??'债务'}约定：${action}，尚欠${e.result.remaining}${unit}`,
+   {minute:e.minute,location,participants:e.participants,entities:[e.obligation,...(row?.legacyRecord?[row.legacyRecord]:[])],visibleTo:[...known?.holders??[],...(acknowledged?['player']:[])],salience:4,kind:'obligations',reference:`obligations:${e.obligation}`,status:e.verb});
+ }
  // Family, health and moving events the player stood right there for
  // (npc-life marks them); the text is the first-hand memory of those involved.
  for(const [root,minute] of Object.entries(after.family?.seenByPlayer??{}))if(before.family?.seenByPlayer?.[root]===undefined){
@@ -50,12 +71,14 @@ export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,
  const notices=stateNotices(before,after,name).filter(n=>['coins','hp','mp','status','level','inventory','durability','effect','protection','learning','skill','learned','profession','repair'].includes(n.type));
  if(notices.length)add('player-changes',`${name('player')}：${notices.map(n=>n.text).join('；')}`,{kind:'player-change',salience:notices.some(n=>n.type==='status')?5:3,entities:unique([...Object.keys(before.inventory??{}),...Object.keys(after.inventory??{})].filter(id=>count(before.inventory?.[id])!==count(after.inventory?.[id])))});
  for(const collection of ['obligations','quests','records'])for(const [id,row] of Object.entries(after[collection]??{})){
+  if(collection==='obligations'&&row.debtor)continue;
+  if(collection==='records'&&row.category==='debt'&&protocolClaims.has(row.obligation??obligationRow(after,id)?.id))continue;
   const old=before[collection]?.[id];if(old&&old.status===row.status&&old.paid===row.paid)continue;
   const participants=collection==='obligations'?[row.promisor,row.promisee]:collection==='quests'?['player',row.giver,row.issuer]:row.category==='debt'?[row.debtor,row.creditor]:row.parties??[];
   if(!participants.includes('player')&&!participants.some(p=>after.npcs?.[p]))continue;
   let text;if(collection==='obligations')text=`${name(row.promisor)}与${name(row.promisee)}的${row.type}约定：${row.status}`;
   else if(collection==='quests')text=`${name('player')}的委托“${row.name??row.title??id}”：${row.status}`;
-  else if(row.category==='debt')text=`${name(row.debtor)}欠${name(row.creditor)}${row.amount-(row.paid??0)}铜：${row.status}`;
+  else if(row.category==='debt')text=`${name(row.debtor)}欠${name(row.creditor)}${obligationView(after,row.obligation??id)?.owed??row.amount-(row.paid??0)}铜：${row.status}`;
   else if(row.category==='contract')text=`${participants.map(name).join('、')}的契约“${row.name??'契约'}”：${row.status}`;
   else continue;
   add(`${collection}:${id}`,text,{kind:collection,participants,visibleTo:participants,location:row.location??null,salience:4,reference:`${collection}:${id}`,status:row.status});
@@ -113,7 +136,7 @@ export async function getChronicle(store,id,{engineFor,engine,viewer='player',ch
    const selected=engineFor?await engineFor(projection.document):engine??await store.worldRegistry?.get(projection.document.worldHash);
    if(!selected)throw Error('编年史需要战役对应的世界实体目录');
    const scoped=selected.scoped?.(projection.document)??selected;
-   projection.facts.push(...collectChronicleFacts(scoped,before,projection.document,{...event.input,eventId:event.input.eventId??event.id},{sequence:event.sequence,anchor:event.anchor}));
+   projection.facts.push(...collectChronicleFacts(scoped,before,projection.document,{...event.input,eventId:event.input.eventId??event.id},{sequence:event.sequence,anchor:event.anchor,result:output.result}));
   }
   projection.sequence=state.sequence;campaigns.set(id,projection);
   return {...buildChronicle(projection.facts,{now:state.document.state.minute,viewer,chapterDays,sceneBreakAfter}),reference:store.reference(state)};
@@ -137,3 +160,4 @@ export function chronicleContext(chronicle,{query='',entities=[],location=null,p
  const selected=[];let size=0;for(const row of [...recent,...(today?[today]:[]),...relevant]){if(size+row.text.length>budgetChars)continue;selected.push(clone(row));size+=row.text.length;}
  return {authority:'历史摘要低于当前状态与原始事件；未了事项描述的是当时状态',entries:selected,characters:size};
 }
+import {obligationRow,obligationView} from './obligation-state.mjs';

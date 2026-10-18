@@ -1,4 +1,6 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {settlementLocation} from './obligation-presence.mjs';
+import {parseAccount} from './ledger.mjs';
 import {personPublicRole,personRelationships,personRemuneration,personName} from './entity-view.mjs';
 import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber,privateWorldEvent}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
@@ -38,6 +40,25 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     const {args={},detail={},eventId}=rest[0];
     const event=events[0],verb=event.verb;
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
+    if(['obligation_opened','obligation_amended','obligation_closed','obligation_settled'].includes(verb)){
+        const row=after.obligations?.[event.obligation];if(!row)return;
+        const participants=[...new Set([...(event.participants??[]),event.actor].filter(Boolean))];
+        const payment=verb==='obligation_settled'?row.events?.findLast(e=>e.eventId===event.result.evidence):null;
+        const payer=payment?.payer??event.actor??row.debtor,operator=payment?.actor??event.actor??payer;
+        const source=event.result?.accounts?.from?parseAccount(event.result.accounts.from).owner:payment?payer:operator;
+        const location=verb==='obligation_opened'?row.terms?.signingPlace:settlementLocation(engine,after,source);
+        const content=verb==='obligation_settled'?`${operator!==payer?`${name(operator)}代${name(payer)}`:name(payer)}${payer!==row.debtor?`替${name(row.debtor)}`:''}向${name(row.creditor)}实际偿还${event.result.transferred}，剩余${event.result.remaining}${event.result.remaining===0?'，已还清':''}`:
+            `${name(row.debtor)}与${name(row.creditor)}的${row.kind}约定${{obligation_opened:'已签订',obligation_amended:'已变更',obligation_closed:'履行期已结束'}[verb]}`;
+        for(const id of participants){
+            const npc=after.npcs?.[id];if(!npc||isPhysicallyDead(null,after,id))continue;
+            if(['昏迷','濒死'].includes(npc.status)||/睡眠|睡觉|熟睡/.test(npc.activity??'')||mindSleepUntil(d,id,event.minute)>event.minute)continue;
+            if(id!==event.actor&&(!location||settlementLocation(engine,after,id)!==location))continue;
+            const key=`${event.id}:obligation`,stream=npc.memoryStream??[];if(stream.some(m=>m.id===key))continue;
+            d.set(['state','npcs',id,'memoryStream'],[...stream,{id:key,sourceEvent:event.id,obligation:row.id,kind:verb==='obligation_settled'?(after.records?.[row.legacyRecord]?.category==='debt'?'debt':'trade'):'obligation',minute:event.minute,location,
+                participants,content,sourceType:'亲历',salience:3,private:true,...(payment?{payer,paymentActor:operator,forDebtor:row.debtor,amount:event.result.transferred}:{})}]);
+        }
+        return;
+    }
     if(event.tags?.includes('entity-transition')){
         const participants=event.participants??[event.actor,event.target].filter(Boolean),hidden=privateWorldEvent(event),rumor=eventRumorId(engine,after,event);
         const recipients=new Set([...participants,...(!hidden?event.witnesses??[]:[])]);
@@ -61,8 +82,16 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         add(`rumor_${detail.rumor}`,detail.content,['player',detail.source],{observers:[],private:true,reliability:'未核实',rumor:detail.rumor});
     }else if(verb==='trade'){
         const buyer=detail.buyer??resolve(args.buyer??'player'),seller=detail.seller??resolve(args.seller);
+        const debtId=detail.debt??args.debt,claim=debtId?obligationRow(after,debtId):null;
+        const paid=claim?.events?.findLast(e=>e.eventId===eventId&&e.transferred>0);
+        const opened=claim?.runtimeVersion===1&&claim.source===eventId&&['borrow','lend'].includes(args.operation);
         const what=detail.item?`${name(detail.item)}${detail.quantity}份`:detail.debt&&args.payment==='repay'?'欠款':args.service==='住宿'?`${detail.days}天住宿`:'交易';
-        add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
+        if(paid||opened){
+            // The receipt has already told its personal parties. A bank's
+            // actual clerk also knows what they handled, but bystanders do not.
+            if(seller&&![claim.debtor,claim.creditor].includes(seller))add(paid?'trade':`obligation_${claim.id}`,
+                paid?`${name(buyer)}经${name(seller)}实际偿还${paid.transferred}铜`:`${name(seller)}经手${name(claim.debtor)}的借约登记`,[buyer,seller],{observers:[],private:true,salience:3});
+        }else add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
     }else if(verb==='learn'){
         const teacher=detail.teacher??(detail.source?.type==='teacher'?detail.source.id:null);
         add('learn',`${name('player')}${teacher?`向${name(teacher)}学习`:'研读'}${name(detail.entity)}，花费${detail.minutes}分钟、${detail.cost}铜，${detail.success?'学会了':'尚未学会'}`,['player',teacher],{salience:3});
@@ -97,6 +126,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         if(quest?.taker==='player'&&args.operation!=='inspect'&&!recorded)add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[],private:true});
     }
     for(const [id,obligation]of Object.entries(after.obligations??{})){
+        if(obligation.debtor)continue; // Protocol receipts and debt compatibility rows notify their actual parties.
         const old=before.obligations?.[id];if(old?.status===obligation.status)continue;
         const terms=obligation.type==='付款'?`${obligation.coins}铜付款`:obligation.type==='送货'?`${name(obligation.item)}${obligation.quantity}份送货`:obligation.type;
         add(`obligation_${id}`,`${name(obligation.promisor)}对${name(obligation.promisee)}的${terms}约定：${obligation.status}`,[obligation.promisor,obligation.promisee],{observers:[],partyNotice:Boolean(old),...(obligation.deliveryVersion===1&&Number.isSafeInteger(obligation.resolvedAt)?{minute:obligation.resolvedAt}:{}),...(old?{location:null,noticeKey:`:obligation_${id}`}:{ }),salience:4,emotion:obligation.status==='违约'?'失望':'认真'});
@@ -106,6 +136,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     // A debt opened and already overdue inside one elapsed span still went
     // overdue; the memory is keyed by the record so event splits agree.
     for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&(before.records?.[id]?.status??(debt.status==='逾期'?'待偿还':debt.status))!==debt.status){
+        if(debt.obligation&&debt.status==='已还清'&&after.obligations?.[debt.obligation]?.events?.some(e=>e.transferred>0))continue;
         add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
     }
     // The primary social fact of a witnessed, weighty event carries its rumor id.
@@ -191,3 +222,4 @@ export function npcBackground(engine,document,id,query=''){
 }
 // World-event subscriber; settlement order is the `order` field.
 registerWorldEventSubscriber({id:'npc_memory',order:30,on:(d,engine,events,c)=>recordNpcMemories(d,engine,c.before,events,c)});
+import {obligationRow} from './obligation-state.mjs';

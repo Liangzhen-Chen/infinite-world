@@ -7,6 +7,8 @@ import {exitsFrom,presentPeople,sceneLines,distanceText,loadTemplates} from './a
 import {derivedBankAt} from './finance-bank.mjs';
 import {weatherTravel} from './weather.mjs';
 import {currentShops} from './shop.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 export const QUICK=['交易','移动','等待','制作','账目','休息','观察'];
@@ -17,9 +19,10 @@ function context(engine,document){
  const people=presentPeople(engine,s),present=new Set(people.map(p=>p.id));
  const stations=new Set((place?.workstations??[]).map(w=>w.kind));
  const recipes=(engine.world.recipes??[]).filter(r=>(!r.learningRequired||s.recipes?.[r.id])&&(!r.workstation||stations.has(r.workstation)));
- const debts=Object.entries(s.records??{}).filter(([,r])=>r?.category==='debt'&&r.debtor==='player'&&!['已还清','已结清'].includes(r.status))
-  .map(([id,r])=>({id,creditor:r.creditor,remaining:(r.amount??0)-(r.paid??0)}));
  let bank=null;try{bank=derivedBankAt(engine,s,s.location);}catch{bank=null;}
+ const debts=obligationRows(s).filter(r=>r.debtor==='player'&&(!r.resource||['coin_river','core:coin_river'].includes(r.resource))&&obligationView(s,r).owed>0)
+  .map(r=>{const seller=r.bank&&r.bank===bank?.id?bank.keepers.find(id=>present.has(id)):r.creditor;
+   return{id:r.legacyRecord??r.id,creditor:r.creditor,seller,reachable:Boolean(seller&&present.has(seller)&&settlementPresent(engine,s,'player',r.creditor)),remaining:obligationView(s,r).owed};});
  const lodging=place?.lodging?.host&&(place.lodging.rooms??0)>0?place.lodging:null;
  // 路况：本季封路、天气封路或当下天气（与地图同一算法），步行计。
  const season=engine.calendar(s.minute).season;
@@ -40,7 +43,7 @@ function holds(ctx,condition,target){
   case 'lodging(here)':return Boolean(ctx.lodging);
   case 'bank(here)':return Boolean(ctx.bank);
   case 'knowsRecipe':return ctx.recipes.length>0;
-  case 'hasDebt':return ctx.debts.length>0;
+  case 'hasDebt':return ctx.debts.some(r=>r.reachable);
   case 'hasSkill':return ctx.skills.length>0;
   case 'outdoors(here)':return !String(ctx.s.location).startsWith('bld_');
   case 'exit(destination)':return ctx.exits.length>0;
@@ -54,7 +57,7 @@ function options(ctx,source,target){
   case 'inventory':return ctx.inventory.map(r=>({value:r.id,label:`${r.name}×${r.quantity}`}));
   case 'recipes':return ctx.recipes.map(r=>({value:r.id,label:r.name}));
   case 'skills':return ctx.skills.map(r=>({value:r.id,label:r.name}));
-  case 'debts':return ctx.debts.map(r=>({value:r.id,label:`欠${ctx.name(r.creditor)} ${r.remaining}文`,fill:{seller:r.creditor}}));
+  case 'debts':return ctx.debts.filter(r=>r.reachable).map(r=>({value:r.id,label:`欠${ctx.name(r.creditor)} ${r.remaining}文`,fill:{seller:r.seller}}));
   default:return null;
  }
 }

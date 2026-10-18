@@ -9,6 +9,9 @@ import {sapient,awakeningView}from'./wildlife-awakening.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
+import {openObligation,closeObligation} from './obligation-runtime.mjs';
+import {obligationView} from './obligation-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 declareHoldingWriter('pets',{kinds:['tamed_by']});
 
 const clamp = value => Math.max(0, Math.min(100, value));
@@ -52,6 +55,28 @@ function careOf(actor, now) {
 }
 
 function writeCare(d, id, care) { holdingSet(d,null,['state', 'creatures', id, 'care'], care,'pets'); }
+
+// Custody changes the keeper, never the animal's owner. Food remains real
+// inventory belonging to that keeper and is consumed on the same hourly clock.
+function custodyFeed(d, engine, id, actor, care, minute) {
+    const pet=d.get('state','pets',id),service=pet?.custody;
+    if(!service||service.status!=='active')return;
+    const keeper=d.get('state','npcs',service.keeper)??d.get('state','creatures',service.keeper);
+    const claim=obligationView(d.get('state'),service.obligation,minute);
+    const moved=keeper?.scheduleTravel?.migration||(keeper?.residence?.migration??null)!==(service.migration??null);
+    const reason=!keeper||!isEffective(engine,d,service.keeper)?'受托人已不能履行':moved?'受托人已迁居':claim?.closed||minute>service.until?'托养期限结束':null;
+    if(reason){
+        if(keeper&&isEffective(engine,d,service.keeper)&&!['死亡','昏迷','濒死'].includes(keeper.status)&&claim&&!claim.closed)
+            closeObligation(d,engine,{id:service.obligation,actor:service.keeper,reason:minute>service.until?'custody_expired':'custodian_relocated'},`custody-end:${service.obligation}:${minute}`);
+        d.set(['state','pets',id],{...pet,custody:{...service,status:minute>service.until?'expired':'interrupted',endedAt:minute,reason}});return;
+    }
+    if(keeper.location!==actor.location||keeper.scheduleTravel||keeper.cognitionTravel||['昏迷','濒死'].includes(keeper.status)||/睡眠|睡觉|熟睡/.test(keeper.activity??'')||care.hunger<engine.rules.petCare.hungryThreshold)return;
+    const definition=engine.byId.get(id),rule=definition?.tamingRule??engine.byId.get(definition?.monster)?.tamingRule;
+    const food=rule?.food.find(f=>engine.quantity(d,service.keeper,f.item)>0);
+    if(!food)return;
+    engine.itemDelta(d,service.keeper,food.item,-1,{flow:'sink:consume',purpose:'custody_feed',writer:'pets',eventId:`custody:${service.obligation}:${minute}`});
+    care.hunger=clamp(care.hunger-food.hungerRelief);
+}
 function detach(d, engine, id, status, minute) {
     return changeLegacyHoldings(d,engine,{subject:id,kinds:['tamed_by','companion'],reason:'vacated',eventId:`pet:${id}:${minute}:${status}`},()=>{
     const pet = d.get('state', 'pets', id);
@@ -77,6 +102,7 @@ export function advancePets(d, engine, after) {
         while (care.nextTick <= after) {
             const minute = care.nextTick;
             care.hunger = clamp(care.hunger + rules.hungerPerHour);
+            custodyFeed(d,engine,id,actor,care,minute);
             if (!(care.busyUntil >= minute)) care.fatigue = clamp(care.fatigue - rules.restPerHour);
             if (care.hunger >= rules.hungryThreshold) {
                 care.loyalty = clamp(care.loyalty - rules.loyaltyLoss); care.mood = clamp(care.mood - 1);
@@ -118,6 +144,28 @@ export function petAction(d, args, eventId) {
     const row = animal(d, this, args.target, { owned: !['feed', 'contact', 'tame'].includes(operation) });
     const { id, actor, rule } = row, rules = this.rules.petCare, now = d.get('state', 'minute'), day = Math.floor(now / 1440);
     const care = careOf(actor, now);
+    if(operation==='custody'){
+        const keeper=this.resolve(args.keeper??args.member,'npc'),person=d.get('state','npcs',keeper);
+        if(args.consent!==true||!person||!isEffective(this,d,keeper)||person.location!==actor.location||person.scheduleTravel||['昏迷','濒死'].includes(person.status))throw Error('托养须受托人实际在场、清醒并同意');
+        if(!Number.isSafeInteger(args.days)||args.days<1||args.days>360)throw Error('托养期限须为1到360天');
+        if(row.pet.custody?.status==='active')throw Error('已有生效托养，不能重复委托');
+        if(d.get('state','player','mount')===id)throw Error('须先下坐骑再托养');
+        const until=now+args.days*1440,obligation=`pet-custody:${eventId}`;
+        openObligation(d,this,{id:obligation,kind:'service',debtor:keeper,creditor:'player',actor:keeper,subject:id,deadline:until,
+            terms:{exclusive:{scope:'subject',family:'pet-custody',policy:'forbid'},expires:until,service:'custody',foodOwner:keeper}},eventId);
+        writeCare(d,id,care);
+        d.set(['state','pets',id],{...row.pet,following:false,status:'留守',custody:{obligation,keeper,migration:person.residence?.migration??null,location:actor.location,since:now,until,status:'active'}});
+        return{target:id,obligation,keeper,until,owner:'player',foodOwner:keeper};
+    }
+    if(operation==='collect'){
+        const service=row.pet.custody;if(!service)throw Error('没有托养记录');
+        const keeper=d.get('state','npcs',service.keeper);
+        if(service.status==='active'&&(!keeper||keeper.location!==actor.location||!isEffective(this,d,service.keeper)))throw Error('须由实际在场的受托人交还');
+        if(service.status==='active')closeObligation(d,this,{id:service.obligation,actor:service.keeper,reason:'animal_returned'},eventId);
+        d.set(['state','pets',id],{...row.pet,status:'活跃',following:true,custody:{...service,status:'returned',returnedAt:now}});
+        return{target:id,obligation:service.obligation,returned:true,owner:'player'};
+    }
+    if(row.pet?.custody?.status==='active'&&!['inspect','feed','treat'].includes(operation))throw Error('托养期间须先实际领回宠物');
     if (actor.status === '濒死' && !['feed', 'treat'].includes(operation)) throw new Error('动物伤重，不能驯服、训练或骑乘');
     if (operation === 'feed') {
         const item = this.resolve(args.item, 'item'), food = rule.food.find(entry => entry.item === item);
