@@ -296,14 +296,14 @@ function conquest(d,e,r,previous,ctx){
 export function changeHolding(d,engine,{op='close',id,...input}){
     return atomic(d,()=>{
         if(op==='rescale'){
-            ensureHoldings(d,engine);
+            if(!ensureHoldings(d,engine))return null;
             const eventId=input.eventId??`holding:rescale:${input.subject}:${now(d)}`;
             const result=rescaleHolding(d,{...input,writer:W,engine,eventId});
             invariant(d,null,engine);
             emit(d,engine,{id:eventId,verb:'holding_rescaled',subject:input.subject,kind:input.kind,shares:input.shares,reason:'rescaled'});
             return result;
         }
-        ensureHoldings(d,engine);const before=id?holdingRow(d,id):null;
+        if(!ensureHoldings(d,engine))return null;const before=id?holdingRow(d,id):null;
         const eventId=input.eventId??`holding:${op}:${id??read(d,'holdings','seq')+1}:${now(d)}`,reason=input.reason??(op==='close'?'vacated':op==='open'?'opened':'transferred');
         const ctx={...input,entity:before?.holder,eventId,reason};
         let result;
@@ -708,7 +708,8 @@ function projectHolding(d,e,before,after,ctx){
     }
     if(before.kind==='tamed_by'){
         if(read(d,'state','creatures',before.subject))projectFields(d,e,['state','creatures',before.subject,'owner'],after?.holder??null);
-        const pet=read(d,'state','pets',before.subject);if(pet)d.set(['state','pets',before.subject],{...pet,owner:after?.holder??null,following:false,...(!after?{status:'已解除',ended:now(d)}:{})});
+        const pet=read(d,'state','pets',before.subject);if(pet)d.set(['state','pets',before.subject],{...pet,owner:after?.holder??null,following:false,...(!after?{status:ctx.basis==='death'?'死亡':'已解散',ended:now(d)}:{})});
+        if(read(d,'state','player','mount')===before.subject&&after?.holder!=='player')d.remove(['state','player','mount']);
     }
     if(before.kind==='employed_by'){
         const id=before.terms?.contract,row=id&&read(d,'state','records',id);if(!row)return;

@@ -129,6 +129,7 @@
   },
   {
    "id": "promise",
+   "aliases": ["付款", "会面"],
    "label": "承诺",
    "schedule": "single",
    "handover": {

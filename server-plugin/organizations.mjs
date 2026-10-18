@@ -1,4 +1,4 @@
-import {changeLegacyHoldings,changeHolding,transition} from './transition.mjs';
+import {changeLegacyHoldings,changeHolding} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {personView,groupView} from './entity-view.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
@@ -386,7 +386,6 @@ export function organizationAction(d,args,eventId){
         if(who===org.leader&&Object.keys(org.members).length>1)throw Error('首脑须先改任他人再退会');
         const row=rowOf(d,engine,org);delete row.members[who];row.removed={...row.removed,[who]:{minute,sourceEvent:eventId,reason:'退会'}};
         if(who===org.leader)row.leader=null;saveMembership(d,row,engine,eventId);
-        if(!Object.keys(organization(engine,d.get('state'),org.id)?.members??{}).length&&org.source==='created')transition(d,engine,{entity:org.id,basis:'dissolution',origin:'dissolution',eventId:`${eventId}:dissolution`});
         worldEvent(d,engine,org,`${eventId}:leave`,minute,{target:who,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:leave'],summary:`${personName(engine,d.get('state'),who).value??who}退出${org.name}`});
         return {organization:org.id,member:who,left:true};
     }
