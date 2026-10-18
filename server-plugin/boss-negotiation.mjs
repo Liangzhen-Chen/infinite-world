@@ -2,6 +2,7 @@ import {standing} from './standing.mjs';
 import {transferItems}from'./items.mjs';
 import {readBossCognition}from'./boss-cognition.mjs';
 import {societyAgreement}from'./monster-society.mjs';
+import {openObligation} from './obligation-runtime.mjs';
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const amount=v=>Number.isSafeInteger(v)&&v>0&&v<=100000;
 const pacts=new Set(['respect_territory','nonaggression']);
@@ -59,6 +60,10 @@ export function readBossNegotiation(actor){
 export function breakBossAgreement(d,target,eventId,engine){
     const actor=engine.actor(d,target);if(actor.negotiation===undefined)return;
     const n=structuredClone(readBossNegotiation(actor));if(!n.relation)return;
+    if(n.obligation){
+        const row=d.get('state','obligations',n.obligation);
+        if(row)d.set(['state','obligations',row.id],{...row,status:'breached',endedAt:d.get('state','minute'),breachEvent:eventId});
+    }
     n.relation=null;n.brokenBy=eventId;if(actor.id?.startsWith('npc_'))n.inventory={};d.set([...engine.actorPath(target),'negotiation'],n);
 }
 function termsFor(engine,args){
@@ -120,7 +125,14 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     const h={event:eventId,minute:d.get('state','minute'),terms:t,accepted:!reason,
         reason:reason??(goal==='defend_territory'?'接受守界条件，交换按实际库存履行':'接受避免冲突的条件，交换按实际库存履行')};
     n.history.push(h);
-    if(h.accepted){n.relation={pact:t.pact,alliance:t.alliance,event:eventId};delete n.brokenBy;}
+    if(h.accepted){
+        n.relation={pact:t.pact,alliance:t.alliance,event:eventId};delete n.brokenBy;
+        if(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1){
+            const id=`boss-pact:${eventId}`;
+            openObligation(d,engine,{id,kind:'pact',debtor:'player',creditor:target,actor:'player',amount:0,subject:target,exclusive:{family:'boss-pact',scope:'debtor_subject',policy:'supersede'},terms:{pact:t.pact,alliance:t.alliance,territory:[...territory]}},eventId);
+            n.obligation=id;
+        }
+    }
     d.set([...engine.actorPath(target),'negotiation'],boss.actor?{...n,inventory:{}}:n);
     if(h.accepted){
         for(const r of t.offer)transferItems(d,bag,'player',target,r.item,r.quantity);

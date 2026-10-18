@@ -1,6 +1,9 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {ledgerActive} from './ledger.mjs';
+import {registerEarnedClaim,settleClaim} from './obligation-claims.mjs';
+import {obligationTransaction} from './transition.mjs';
 declareLedgerWriter('quest-board');
 import {standing,HOSTILE} from './standing.mjs';
 import {transferItems,heldUnit,wearItem,changeItems} from './items.mjs';
@@ -38,13 +41,27 @@ function notice(d,engine,q,minute,stage,location=q.location){
   escrow:q.escrow,refund:q.refund??0,rewardPaid:q.rewardPaid??0,...(q.source?{source:q.source.generator}:{}),sourceEvent:id});
 }
 function close(d,engine,q,status,reason,minute){
+ return obligationTransaction(d,()=>closeQuest(d,engine,q,status,reason,minute));
+}
+function closeQuest(d,engine,q,status,reason,minute){
+ const current=d.get('state','quests',q.id);
+ if(current&&!active(current))return current;
  const paid=status==='已完成',amount=q.escrow,who=paid?q.taker:q.publisher;
  // A publicly funded reward goes back to the village treasury, not to the official.
  // U17: commissions escrowed from a faction treasury or a settlement account go back there.
- if(!paid&&refundQuestFunding(d,engine,q,amount,minute));
+ let rewardClaim;
+ if(paid&&amount&&ledgerActive(d)&&(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1)){
+  rewardClaim=`${q.id}:reward`;
+  const debtor=q.fundedBy?.faction??q.fundedBy?.treasury??q.fundedBy?.settlement??q.publisher;
+  registerEarnedClaim(d,engine,{id:rewardClaim,kind:'bounty',debtor,creditor:q.taker,amount,createdAt:minute,deadline:minute,source:q.id,terms:{onDebtorGone:'accelerate',onCreditorGone:'estate'}});
+  d.set(['state','quests',q.id],{...q,escrow:0});
+  d.set(['state','records',q.id],{category:'contract',id:q.id,kind:'service',parties:[debtor,q.taker],debt:rewardClaim,escrow:amount,createdAt:q.createdAt,endedAt:minute,status:'已终止'});
+  settleClaim(d,engine,{id:rewardClaim,payer:debtor,amount,escrowContract:q.id},`${q.id}:${status}`);
+ }
+ else if(!paid&&refundQuestFunding(d,engine,q,amount,minute));
  else if(!paid&&q.fundedBy)refundPublic(d,{settlement:q.fundedBy.settlement,copper:amount,month:q.fundedBy.month,purpose:`委托退款 ${q.id}`,sourceEvent:`${q.id}:refund`,books:{account:escrowAccount(q.id),writer:'quest-board',eventId:`${q.id}:refund`}});
  else{moveCoins(d,{from:escrowAccount(q.id),to:purse(engine,who),amount,writer:'quest-board',eventId:`${q.id}:${status}`});d.set([...actorPath(who),'coins'],engine.actor(d,who).coins+amount);}
- const row={...q,status,reason,escrow:0,resolvedAt:minute,...(paid?{rewardPaid:amount}:{refund:amount})};
+ const row={...q,status,reason,escrow:0,resolvedAt:minute,...(paid?{rewardPaid:amount}:{refund:amount}),...(rewardClaim?{rewardClaim}:{})};
  d.set(['state','quests',q.id],row);
  const booking=d.get('state','obligations',q.reservation);
  if(booking&&['待履行','进行中'].includes(booking.status))d.set(['state','obligations',booking.id],{...booking,status:paid?'已完成':status==='取消'?'取消':'违约',reason,resolvedAt:minute});
@@ -169,7 +186,10 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  const results=[];
  for(const q of Object.values(d.get('state','quests')??{})){
   if(q.boardVersion!==1||!active(q))continue;
-  if(q.transport){if(q.deadline<=after)results.push(close(d,engine,q,'已过期','护送运单逾期，退回未支付报酬',after));continue;}
+  if(q.transport){
+   if(d.get('state','records',q.transport,'transportObligationVersion')===1)continue;
+   if(q.deadline<=after)results.push(close(d,engine,q,'已过期','护送运单逾期，退回未支付报酬',after));continue;
+  }
   if(q.status==='进行中'&&q.taker!=='player'){
    const booking=d.get('state','obligations',q.reservation);
    try{
@@ -215,4 +235,8 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  }
  return results;
 }
-export function nextQuestBoardMinute(state,after){return Math.min(Infinity,...Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q)&&q.deadline>after).map(q=>q.deadline));}
+export function nextQuestBoardMinute(state,after){
+ const quests=Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q));
+ const changedProject=quests.some(q=>q.workEvidence&&q.objective.type==='build'&&state.projects?.[q.objective.project]?.status!=='施工中');
+ return Math.min(changedProject?after+1:Infinity,...quests.filter(q=>q.deadline>after).map(q=>q.deadline));
+}

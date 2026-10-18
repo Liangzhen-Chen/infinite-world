@@ -245,7 +245,11 @@ export function spiritAction(d,args,eventId,target){
 export function recordSpiritGrudge(d,target,party,eventId,damage){
     const a=d.get('state','creatures',target);if(!sapient(a)||!alive(a,d,target)||!(damage>0))return;
     logEvent(d,target,{kind:'寻仇',party,event:eventId,minute:d.get('state','minute'),damage});
-    if(a.companion?.with===party){d.remove(['state','creatures',target,'companion']);logEvent(d,target,{kind:'断缘',party,event:eventId,minute:d.get('state','minute')});}
+    if(a.companion?.with===party){
+        const obligation=a.companion.obligation&&d.get('state','obligations',a.companion.obligation);
+        if(obligation)d.set(['state','obligations',obligation.id],{...obligation,status:'breached',endedAt:d.get('state','minute'),breachEvent:eventId});
+        d.remove(['state','creatures',target,'companion']);logEvent(d,target,{kind:'断缘',party,event:eventId,minute:d.get('state','minute')});
+    }
 }
 
 // World-event subscriber: any wound the player dealt to a creature, by blade or spell.
