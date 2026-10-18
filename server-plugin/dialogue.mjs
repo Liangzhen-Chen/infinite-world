@@ -1,0 +1,116 @@
+// Deterministic conversation adapter. Existing promises/items/coins remain the
+// authoritative executors; speech alone cannot grant a permission or a reward.
+import fs from 'node:fs';
+import {subjectiveView,subjectiveFact} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {moveCoins,purse} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {recordLie} from './lies.mjs';
+declareLedgerWriter('dialogue',{});
+const prefix='对话请求：';
+const templateRoot=new URL('../world/templates/dialogue/common/plain/',import.meta.url);
+const bargaining=JSON.parse(fs.readFileSync(new URL('../world/rules/tables/bargaining.json',import.meta.url),'utf8'));
+const row=(d,npc)=>d.get('state','npcs',npc);
+function present(d,engine,raw){
+ const npc=engine.resolve(raw,'npc'),n=row(d,npc);
+ if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||['死亡','濒死','昏迷'].includes(n.status))throw Error('对方不在这里或无法交谈');
+ return npc;
+}
+function language(view,engine,d){
+ const b=engine.byId.get(view.observer),player=d.get('state','player');
+ const a=player.languages??engine.rules.languages?.default??['lang:common'],n=b.languages??['lang:common'];
+ const ids=x=>Array.isArray(x)?x:Object.keys(x).filter(k=>x[k]>0);
+ if(ids(a).some(x=>ids(n).includes(x)))return {degree:2,interpreter:null};
+ const interpreter=view.observable.people.find(p=>{const langs=ids(engine.byId.get(p.id)?.languages??[]);return p.id!==view.observer&&langs.some(l=>ids(a).includes(l))&&langs.some(l=>ids(n).includes(l));});
+ return interpreter?{degree:1,interpreter:interpreter.id}:null;
+}
+function line(engine,view,action,decision,detail=''){
+ const name=action==='request'?'request':action;
+ const templates=engine.world.dialogueTemplates;
+ let rows=templates?.[`${view.self.culture}/plain/${name}_${decision.outcome}.json`]??templates?.[`common/plain/${name}_${decision.outcome}.json`]??templates?.['common/plain/default_agree.json'];
+ if(!rows)try{rows=JSON.parse(fs.readFileSync(new URL(`${name}_${decision.outcome}.json`,templateRoot),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;rows=JSON.parse(fs.readFileSync(new URL('default_agree.json',templateRoot),'utf8'));}
+ const vars={name:view.self.name,reason:decision.reason,detail,topic:view.knowledge.memories.at(-1)?.content??view.self.activity??'',price:decision.conditions?.prepay??'',alternative:decision.alternatives.map(a=>a.name).filter((x,i,a)=>a.indexOf(x)===i).join('、')};
+ const selected=rows.find(r=>r.when&&r.when===`season() == '${view.observable.season}'`)??rows.find(r=>!r.when)??rows[0];
+ return selected.text.replace(/\{(\w+)\}/g,(_,k)=>vars[k]??'');
+}
+function save(d,npc,eventId,action,decision,text,extra={}){
+ const dialogue={npc,action,decision,text,...extra};
+ d.set(['state','dialogues',npc],{...dialogue,minute:d.get('state','minute'),sourceEvent:eventId});
+ return {dialogue};
+}
+export function dialogueRequest(d,engine,args,eventId){
+ if(!args.content?.startsWith(prefix))return null;
+ const npc=present(d,engine,args.promisor),view=subjectiveView(engine,d.document,npc);
+ if(!language(view,engine,d))return save(d,npc,eventId,'request',npcDecision(view,{kind:'greet'}),'言语不通，请先找通译。');
+ const kind=args.type,decision=npcDecision(view,{kind,from:'player',cost:{minutes:args.minutes??0},service:kind});
+ const content=args.content.slice(prefix.length),pending={...args,content,consent:true};
+ if(decision.outcome==='defer')d.set(['state','records',`dialogue_due:${eventId}`],{category:'dialogue_pending',npc,due:decision.due,request:pending});
+ if(decision.outcome!=='agree')return save(d,npc,eventId,'request',decision,line(engine,view,'request',decision),{pending});
+ const detail=engine.promise(d,pending,eventId);
+ return {...detail,...save(d,npc,eventId,'request',decision,line(engine,view,'request',decision))};
+}
+export function applyDialogue(d,engine,args,eventId){
+ if(!args.key?.startsWith('dialogue:'))return null;
+ const npc=present(d,engine,args.subject),view=subjectiveView(engine,d.document,npc),action=args.key.slice(9);
+ const previous=d.get('state','dialogues',npc),communicates=language(view,engine,d);
+ if(!communicates&&!['greet','leave','interpreter'].includes(action))return save(d,npc,eventId,action,npcDecision(view,{kind:'greet'}),'言语不通，只能寒暄、手势交易，或找通译。');
+ let decision=npcDecision(view,{kind:action,from:'player'}),detail='';
+ if(action==='ask'){
+  const known=subjectiveFact(view,args.content);
+  detail=known?`${known.kind==='belief'?'我猜':known.kind==='prior'?'按常理说':'我知道'}：${typeof known.value==='string'?known.value:JSON.stringify(known.value)}`:'这件事我不知道。';
+ }else if(action==='greet'){
+  const memory=[...view.knowledge.memories].reverse().find(m=>m.participants?.includes('player')&&m.kind!=='dialogue');
+  const clause=memory&&view.self.clauses.find(c=>memory.id?.endsWith(`:obligation_${c.id}`));
+  detail=memory?`我还记得${clause?.content?`${clause.content}，`:''}${memory.content}`:Object.values(view.self.goals).flat().find(g=>(g.progress??0)<100)?.content??view.self.activity;
+ }else if(action==='public_key')decision=npcDecision(view,{kind:'public_key',service:'granary'});
+ else if(action==='accept'){
+  if(previous?.action==='haggle'&&previous.pendingTrade&&previous.decision.outcome==='agree'){
+   const q=previous.pendingTrade;d.remove(['state','quotes',`${Math.floor(view.minute/1440)}_${npc}_player_${q.item}`]);
+   return engine.trade(d,previous.pendingTrade,eventId).then(trade=>({...trade,...save(d,npc,eventId,action,decision,`${view.self.name}：依谈好的价格成交。`),socialEvent:{verb:'trade',actor:'player',target:npc,value:trade.cost,tags:['trade','dialogue','cash']}}));
+  }
+  if(!previous?.pending||previous.decision.outcome!=='conditional')throw Error('没有待接受的条件');
+  const price=previous.decision.conditions.prepay;
+  const confirmed=npcDecision(view,{kind:previous.pending.type,from:'player',prepaid:true,reward:price,cost:{minutes:previous.pending.minutes??0}});
+  if(confirmed.outcome!=='agree')return save(d,npc,eventId,'request',confirmed,line(engine,view,'request',confirmed),{pending:previous.pending});
+  decision=confirmed;
+  moveCoins(d,{from:purse(engine,'player'),to:purse(engine,npc),amount:price,writer:'dialogue',eventId});
+  d.set(['state','player','coins'],d.get('state','player','coins')-price);
+  d.set(['state','npcs',npc,'coins'],row(d,npc).coins+price);
+  const result=engine.promise(d,{...previous.pending,consent:true},eventId);
+  return {...result,...save(d,npc,eventId,action,decision,`${view.self.name}：收到${price}文，就照约定办。`)};
+ }else if(['persuade','threaten','bribe','deceive'].includes(action)){
+  // Use the established contested check; a successful roll never overrides a
+  // red line or invents consent. Subsequent requests are still adjudicated.
+  const judgement=engine.check(d,{attribute:'魅力',opponent:{npc,attribute:'精神'}},eventId);
+  detail=judgement.success?'我听到了你的说法，具体的事还得另议。':'这番话没能说服我。';
+  let lie=null;
+  if(action==='deceive'&&judgement.success){
+   const known=subjectiveView(engine,d.document,'player').knowledge.memories.find(m=>m.id===args.source||m.sourceEvent===args.source);
+   if(!known)throw Error('欺骗需要本人已知的实情来源编号');
+   lie=recordLie(d,engine,{subject:npc,source:'player',key:`dialogue_${eventId}`,content:args.content,truth:known.content,motive:'对话欺骗'},eventId);
+  }
+  return {...lie,...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),{judgement,tags:[action],...(communicates?.interpreter?{actedAs:communicates.interpreter}:{})}),
+   socialEvent:{verb:action==='threaten'?'clash':action==='deceive'?'deceive':'pact',target:npc,tags:['dialogue',action,judgement.success?'success':'attempt']}};
+ }else if(action==='tell'){
+  const known=subjectiveView(engine,d.document,'player').knowledge.memories.find(m=>m.id===args.source||m.sourceEvent===args.source);
+  if(!known)throw Error('告知需要本人已知的来源编号');
+  if(args.content!==known.content)throw Error('告知须保留已知版本；改编说法请用欺骗动作');
+  const memory={...structuredClone(known),id:`tell_${eventId}`,sourceEvent:known.sourceEvent??known.id,sourceType:'转述',minute:view.minute,participants:['player',npc],content:args.content};
+  if(known.private&&!(known.permittedRecipients??known.knownBy??[]).includes(npc))throw Error('这份私密信息不能转述给对方');
+  d.set(['state','npcs',npc,'memoryStream'],[...row(d,npc).memoryStream??[],memory]);detail=args.content;
+ }else if(action==='haggle'){
+  const offered=Number(args.content);if(!Number.isSafeInteger(offered)||offered<1)throw Error('还价须是正整数文钱');
+  const rules=engine.rules.bargaining??bargaining,rule=Array.isArray(rules)?rules.find(r=>!r.selector.culture||r.selector.culture===view.self.culture):rules;
+  const rounds=(previous?.action==='haggle'?previous.rounds??0:0)+1,max=rule.maxRounds;
+  decision=npcDecision(view,{kind:'haggle',reward:offered});
+  if(rounds>max){decision={...decision,outcome:'refuse',reason:'已经谈过几轮，不再还价。'};}
+  const item=args.source?engine.resolve(args.source,'item'):null;
+  const observed=Object.values(d.get('state','records')??{}).find(r=>r.category==='trade_quote'&&r.day===Math.floor(view.minute/1440)&&r.seller===npc&&r.item===item)?.listPrice;
+  if(observed&&offered<Math.ceil(observed*(1-(rule.concession[Math.min(rounds-1,rule.concession.length-1)]??0))))decision={...decision,outcome:'refuse',reason:'这个出价太低，还要再商量。'};
+  return save(d,npc,eventId,action,decision,line(engine,view,action,decision,`你的出价是${offered}文；成交仍须确认具体交易。`),{rounds,offer:offered,...(item?{pendingTrade:{seller:npc,item,quantity:1,unitPrice:offered}}:{})});
+ }else if(action==='interpreter')detail=view.observable.people.filter(p=>p.id!==npc).map(p=>p.name).join('、')||'这里没有可找的通译。';
+ else if(action==='leave')detail='回头见。';
+ else if(action!=='greet')throw Error('未知对话动作');
+ return save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{});
+}
+export {npcDecision,subjectiveView};

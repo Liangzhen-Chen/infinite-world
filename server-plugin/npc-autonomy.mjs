@@ -6,7 +6,7 @@ declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['s
 import {facilityView} from './facility-state.mjs';
 import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
-import {npcPresenceAt,shareNpcMemory,npcCognitionView} from './npc-cognition.mjs';
+import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
 import {derivedStats} from './combat.mjs';
@@ -18,6 +18,12 @@ import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {autonomyCandidates,candidateAction,planFromCandidate} from './autonomy-candidates.mjs';
+export {applyDialogue,dialogueRequest} from './dialogue.mjs';
+export {npcDecision} from './npc-decision.mjs';
+export {scheduleNpcAutonomy} from './autonomy-candidates.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 import {submitContest,clockDiceKey} from './scheduler.mjs';
 // 自治动作在工作草稿里演算后回放，回放可落到被演算动作写的任何持有种类。
@@ -164,7 +170,14 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
   if(task.status!=='进行中')continue;
   try{if(task.furnace)advanceFurnace(d,engine,task,Math.min(after,task.finish));if(task.finish>after)continue;
-   const execute=()=>{const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true,furnace:d.get('state','npcAutonomy','tasks',task.id,'furnace')});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');results.push(row);};
+   const execute=()=>{const row=executeAction(d,engine,task.npc,task.action,{at:task.finish,start:task.start,presence:task.presence,actionId:task.id,ignoreTask:true,furnace:d.get('state','npcAutonomy','tasks',task.id,'furnace')});d.set(['state','npcAutonomy','tasks',task.id,'status'],row.outcome.success?'已完成':'失败');
+    const plan=d.get('state','npcs',task.npc,'plan');
+    if(task.candidate&&plan?.candidate===task.candidate&&row.outcome.success){
+     const steps=clone(plan.steps),index=steps.findIndex(s=>!s.done);if(index>=0)steps[index].done=true;
+     const complete=steps.every(s=>s.done);d.set(['state','npcs',task.npc,'plan'],{...plan,steps,...(complete?{status:'completed'}:{})});
+     if(complete&&d.get('state','autonomyCandidates',task.candidate))d.remove(['state','autonomyCandidates',task.candidate]);
+    }
+    results.push(row);};
    if(d.scheduler&&task.action.kind==='trade'){
     if(!d.contestPool.some(p=>p.id===task.id)){
      validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true});
@@ -187,10 +200,27 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const reach=Math.max(30,intelligenceOf(engine,d.get('state'),id).recipeMinutes);
    const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=reach).sort((a,b)=>a.id.localeCompare(b.id));
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
-   for(const action of choices){try{
+   const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
+   const view=subjectiveView(engine,projected,id);
+   const queued=Object.values(d.get('state','autonomyCandidates')??{}).filter(c=>c.npc===id);
+   const candidates=autonomyCandidates(engine,view,{scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
+   const currentPlan=d.get('state','npcs',id,'plan');
+   if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
+    d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
+   }
+   for(const candidate of candidates){try{
+    let selected=candidate;
+    if((candidate.horizon??1)>1){
+     let plan=d.get('state','npcs',id,'plan');
+     if(!plan){plan=planFromCandidate(view,candidate);d.set(['state','npcs',id,'plan'],plan);}
+     if(plan.deadline<start){d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'期限已过',basis:candidate.decision.trace});continue;}
+     const step=plan.steps.find(s=>!s.done);if(!step)continue;selected={...candidate,...step};
+    }
+    const action=candidateAction(engine,selected);
     const checked=validateAction(d,engine,id,action,{at:start,presence});
     const actorPresence={npcs:{[id]:presenceOf(actor)}};
-    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true},checked);break;
+    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:{} )},checked);
+    if((candidate.horizon??1)<=1&&queued.some(c=>c.id===candidate.id))d.remove(['state','autonomyCandidates',candidate.id]);break;
    }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
   }
   settle();
@@ -206,8 +236,8 @@ export function npcPlanningContext(engine,document,{limit=12}={}){
   const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
  const day=Math.floor(document.state.minute/DAY);
- return {minute:document.state.minute,day,stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>{const mind=intelligenceOf(engine,document.state,n.id);return {id:n.id,name:n.name,location:document.state.npcs[n.id].location,coins:document.state.npcs[n.id].coins,inventory:clone(document.state.npcs[n.id].inventory),values:n.personality.values,redLines:n.redLines,
-  intelligence:{maxActions:mind.maxActions,horizonDays:mind.horizonDays,breaksRoutine:mind.offSchedule},goals:clone(goalsWithinHorizon(document.state.npcs[n.id].goals??n.goals,mind.horizonDays,day)),memories:npcCognitionView(engine,document,n.id).memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:n.relationships.map(r=>({with:r.with,type:r.type,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)};})};
+ return {minute:document.state.minute,day,stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>{const mind=intelligenceOf(engine,document.state,n.id),view=subjectiveView(engine,document,n.id);return {id:n.id,name:view.self.name,location:view.self.location,coins:view.self.coins,inventory:view.self.inventory,values:view.self.traits.values,redLines:view.self.redLines,
+  intelligence:{maxActions:mind.maxActions,horizonDays:mind.horizonDays,breaksRoutine:mind.offSchedule},goals:clone(goalsWithinHorizon(view.self.goals,mind.horizonDays,day)),memories:view.knowledge.memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:Object.entries(view.self.relations).map(([withId,r])=>({with:withId,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)};})};
 }
 export function applyNpcPlan(d,engine,input,eventId){
  if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document)&&input.stateFingerprint!==legacyPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
@@ -222,6 +252,8 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(index>=reach)throw Error('计划步数超出本人灵智所及');
    const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
    if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
+   const decision=npcDecision(subjectiveView(engine,d.document,proposal.npc),{kind:action.kind,from:proposal.npc,needSatisfaction:100});
+   if(decision.outcome!=='agree')throw Error(decision.reason);
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');

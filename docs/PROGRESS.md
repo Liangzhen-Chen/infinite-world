@@ -436,3 +436,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-17 R27 已合入（Sonnet xhigh）：agriculture 三年守恒失败实为缺餐断言（粮账本身平）——seed 0 第 45–51 天一人外出受雇，加工人数 floor(2×0.97)=1，每天只能加工 30 份，仓存 5730 吃不上，累计缺餐 76。修：agriculture.mjs 加工人数取 min(processingWorkers, 可用劳力) 并先于农田/农副/木料分配人手，labor-market.mjs 空缺估算同步；未动账本适配层。验收：三年用例 20 种子分批全过（S2a 后复验 seed 0、7），合入时含 agriculture 整文件原样单进程共 91/91（约 4h20m）。金快照未变。0 模型。
 
 - 2026-10-18 W1 已合入（DeepSeek V4 Pro 试用，经 F:/dnd-tools/run-ds.sh，7 分钟 ¥1.16）：weather.test「季节与天气改变真实粮食入库」19569≠19571 根因是 advance-registry daily 对 cropProduction 再乘 hazard/magic/RW-04 farmWaterFactor，测试期望未乘；判定引擎正确，期望改为经同一系数链推导（非硬编码），长等待与逐日守恒断言保留。合入时 63/63。遗留：雾日 farmWaterFactor 0.99999969（流域短缺千万分之三）经 floor 丢 1 份，取整口径待 S5 统一。
+
+- 2026-10-18 A2 已合入（Codex gpt-6.1-sol 主体 32 万 token + gpt-6-luna 审查 10 万、补完 10 万；主会话代提交）：NPC 决策规则骨架（5.7 五步 + explain）、四域主观视图（知情集合 + belief，自知域收窄）、自治候选扩展点与计划最小版、17 个对话动作与模板库、对话面板；luna 独立审查退回 3 项（公钥拒绝未入 explain、I25 缺秘密会籍双世界、缺 N2 脚本）后补齐。合入时含浏览器面板测试 79/79；import 513→513，静态提示 10571，金快照未改。未完成（转 A3）：部分旧同意路径改走新决策、belief 尚不改变 standing 数值。0 Claude 子代理。

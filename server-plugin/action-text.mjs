@@ -89,6 +89,7 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
 }
 // Event-stream text for one settled action: one verb line, then one line per applied effect.
 export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
+ if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
  const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
  const head=chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
