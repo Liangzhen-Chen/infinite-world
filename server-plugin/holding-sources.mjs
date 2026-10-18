@@ -21,6 +21,7 @@ import {actorId} from './npc-state.mjs';
 import {snapshotContractTerms} from './contract-state.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
 import {isGone} from './lifecycle-state.mjs';
+import {runHoldingProtocol} from './holdings.mjs';
 import {legalCodeById} from './law-codes.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 
@@ -199,8 +200,8 @@ function applyUnit(d,engine,name,unit,{writer,reason='vacated',eventId=null}){
     }
     const stored=holdingsOfSource(d,source),current=stored.holdings,wanted=new Map(want.holdings.map(h=>[holdingKey(h),h]));
     const keep=new Set();
-    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>closeHolding(d,{id:r.id,reason,writer,eventId}));}
-    for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,source,writer,eventId,engine}));
+    for(const r of current){const k=holdingKey(r);if(wanted.has(k)&&!keep.has(k))keep.add(k);else attempt(d,{source,writer,eventId,kind:r.kind,holder:r.holder,subject:r.subject},()=>runHoldingProtocol(d,engine,{op:'close',id:r.id,reason,eventId})??closeHolding(d,{id:r.id,reason,writer,eventId}));}
+    for(const [k,h] of wanted)if(!keep.has(k))attempt(d,{source,writer,eventId,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>runHoldingProtocol(d,engine,{...h,op:'open',source,eventId})??openHolding(d,{...h,source,writer,eventId,engine}));
     for(const l of want.locations)attempt(d,{source,writer,eventId,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,writer,source,engine}));
     for(const entity of stored.locations)if(!want.locations.some(x=>x.entity===entity))attempt(d,{source,writer,eventId,entity},()=>clearLocation(d,{entity,writer}));
     // 旧字段里已不存在的实体：记墓碑（basis 由来源声明，缺省 destruction）。
@@ -340,7 +341,9 @@ defineHoldingSource('sovereignty',{
         let nation=null;for(const r of rows)if(r?.category==='nation'&&LIVE_NATION.includes(r.status)&&(r.domains??[]).includes(domain)&&(!nation||(r.foundedAt??0)>=(nation.foundedAt??0)))nation=r;
         const ruler=territory?territory.ruler:nation?.id;if(!ruler)return null;
         const id=actorId(engine.world,ruler),t=entityTemplates(engine,state,id)??[];
-        return {holdings:[{kind:t.includes('collective')?'governs':'controls',holder:id,subject:domain}]};
+        const sovereign=territory?.sovereign;
+        return {holdings:[{kind:t.includes('collective')?'governs':'controls',holder:id,subject:domain},
+            ...(!t.includes('collective')&&sovereign&&(entityTemplates(engine,state,sovereign)??[]).includes('collective')?[{kind:'governs',holder:sovereign,subject:domain}]:[])]};
     },
 });
 

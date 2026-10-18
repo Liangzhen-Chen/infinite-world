@@ -142,6 +142,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
+        if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }
     const constraints=personConstraints(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
@@ -357,7 +358,11 @@ const dueCollectors={
     contracts:(e,d,c)=>[
         {id:'rituals',dueClass:'许可 / 托养 / 封印维护到期',anchorId:'player',execute:()=>advanceRituals(d,e,c.after)},
         ...recordItems(d,r=>['contract','debt'].includes(r.category),id=>advanceContracts(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id)],
-    credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>advanceCredit(d,e,c.after,[id]),(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
+    credit:(e,d,c)=>recordItems(d,r=>['bank','debt','contract'].includes(r.category),id=>{
+        const row=d.get('state','records',id);
+        if(row?.kind==='workshop'&&row.nextWork<=c.after)advanceNpcObligations(d,e,c.before,c.after,c.id,{beforeState:c.beforeState});
+        advanceCredit(d,e,c.after,[id]);
+    },(r,id)=>r.debtor??r.parties?.[0]??r.owner??id),
     law:(e,d,c)=>[
         {id:'wanted',anchorId:'',execute:()=>advanceWanted(d,e,c.after)},
         ...recordItems(d,r=>['legal_detention','legal_custody'].includes(r.category),id=>advanceLaw(d,c.after,e,[id]),(r,id)=>r.case??id),

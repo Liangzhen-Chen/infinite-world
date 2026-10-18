@@ -30,6 +30,9 @@ export const holdingKind=id=>kinds.get(id)??null;
 export const holdingKindIds=()=>[...kinds.keys()].sort();
 // L0 dispatch only; the installed L1 protocol owns lifecycle decisions.
 let lifecycleProtocol=null;
+let holdingProtocol=null;
+export function registerHoldingProtocol(fn){holdingProtocol=fn;}
+export function runHoldingProtocol(d,engine,input){return holdingProtocol?holdingProtocol(d,engine,input):null;}
 export function registerLifecycleProtocol(fn){lifecycleProtocol=fn;}
 export function runLifecycleProtocol(d,engine,input){
     if(!lifecycleProtocol)throw Error('Lifecycle protocol is not installed');

@@ -109,7 +109,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     for(const npcId of Object.keys(d.get('state','npcs'))){
-        const regional=batch?.persons.get(npcId);
+        const regional=jobs.has(npcId)?null:batch?.persons.get(npcId);
         if(promote&&!regional)continue;
         if(regional&&!regional.due)continue;
         const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;

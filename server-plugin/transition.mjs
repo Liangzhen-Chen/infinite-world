@@ -14,6 +14,7 @@ import {personOffices} from './entity-view.mjs';
 import {recordsWhere} from './storage.mjs';
 import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins} from './money.mjs';
+import {registerHoldingProtocol} from './holdings.mjs';
 
 const W='transition';
 declareHoldingWriter('transition',{kinds:['*'],entities:['*'],locations:true});
@@ -70,6 +71,8 @@ function accountOwnerLive(d,e,id){
     const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
     if(stationPlace)return live(d,e,stationPlace.id);
     const row=read(d,'state','records',id);
+    if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!e.rules.law?.codes?.some(c=>c.id===row.law);
+    if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
     if(row?.category==='settlement_trade')return live(d,e,row.seller)&&live(d,e,row.buyer);
     if(row?.category==='army')return !byEntity(d,row.id)?.gone&&live(d,e,row.location);
@@ -135,6 +138,7 @@ function action(d,e,r,template,ctx,side='holder'){
     }else if(template==='succeed'||template==='revert'){
         let target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
         if(r.kind==='fief'&&r.source?.startsWith('title:'))target=aliveHoldings(d,{kind:'holds_office',subject:r.grantedBy})[0]?.holder??target;
+        if(target===ctx.entity||target&&!live(d,e,target))target=null;
         if(template==='succeed'&&r.kind==='guardian_of')target=[...r.terms?.successors??[],...guardianCandidates(e,read(d,'state'),r.subject,r.holder,now(d)),r.grantedBy].map(x=>typeof x==='string'?x:x?.id).find(id=>live(d,e,id)&&id!==ctx.entity);
         // Old title rows used their own office as the grantor. An office that
         // cannot hold this kind is not a lawful recipient of the reverted fief.
@@ -148,6 +152,7 @@ function action(d,e,r,template,ctx,side='holder'){
         }
     }else if(template==='vacate'){
         const title=r.source?.startsWith('title:')?read(d,'state','records',r.source.slice(6)):null;
+        if(ctx.reason==='defected'&&title){action(d,e,r,'retain_disputed',ctx);return;}
         const office=entityRow(d,r.subject),officeRow=Object.values(read(d,'state','records')??{}).find(o=>o.category==='governance_office'&&o.holder===r.holder&&o.office===office?.facts?.office&&o.settlement===office?.facts?.settlement);
         if(title||officeRow?.hereditary){
             const state=read(d,'state'),rule=inheritanceRule(e,state,ctx.entity,ctx.location,legalCodeAt(e,ctx.location,state)),selection=inheritanceCandidates(e,state,ctx.entity,rule,now(d));
@@ -334,6 +339,7 @@ export function changeLegacyHoldings(d,engine,{holder,subject,source,kinds,reaso
         return result;
     });
 }
+registerHoldingProtocol(changeHolding);
 
 // The same hooks field handles event subscriptions; unsupported RX never
 // silently evaluates true. Only candidate kinds are queried, avoiding a scan
