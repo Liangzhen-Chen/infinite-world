@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personRegistrar} from './entity-view.mjs';
 import {authorityOf} from './governance.mjs';
 import {standing,adjustStanding} from './standing.mjs';
@@ -17,7 +18,7 @@ import {resolveCreature} from './wildlife.mjs';
 // after recognition, a judged crime) strikes the name off.
 const DAY=1440,KEY='notable:player',rec=id=>['state','records',id];
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
-const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 export const notableRules=engine=>engine.rules.governance?.notables??null;
 export const playerNotable=state=>{const r=state.records?.[KEY];return r?.category==='notable'&&r.status==='在册'?r:null;};
 export function notableCulturalQuotaD(engine,state){return playerNotable(state)?notableRules(engine).rights.culturalQuotaD:0;}
@@ -66,7 +67,7 @@ export function recommendation(engine,state,sponsor){
     sponsor=actorId(engine.world,sponsor);
     if(!persons(engine,state,[...r.organizationKinds,...rights.nobleKinds]).has(sponsor))return {ok:false,reason:'举荐者须是学院、行会或贵族家族的首领长老，或四村原头人'};
     const path=personView(engine,state,sponsor)?.actorPath.value;
-    if(path?.slice(1).reduce((o,k)=>o?.[k],state)?.status==='死亡')return {ok:false,reason:'举荐者已不在世'};
+    if(isPhysicallyDead(engine,state,sponsor))return {ok:false,reason:'举荐者已不在世'};
     const v=standing(engine,state,sponsor,'player');
     return v>=r.personStanding?{ok:true,by:sponsor,kind:'person',standing:v}:{ok:false,reason:`举荐者对你的看法${v}，不到${r.personStanding}`};
 }
@@ -83,7 +84,7 @@ function appraise(engine,state,petition){
 function registrar(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
     if(!charter||state.location!==charter.seat)throw Error('须在白石镇公署前厅递件转呈');
-    const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
+    const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(engine,state,n.id,state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
     if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0];
 }
@@ -127,7 +128,7 @@ function audience(d,engine,args,eventId){
     if(!target)throw Error('家族首领职位空缺');
     if(!within(engine,state.location,house.contactAnchor))throw Error(`须到${house.name}所在地求见`);
     const view=personView(engine,state,target),npc=view?.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state);
-    if(npc&&(!awake(npc)||!within(engine,npc.location,house.contactAnchor)))throw Error('主人不在府中或不便见客');
+    if(npc&&(!awake(engine,state,target,npc)||!within(engine,npc.location,house.contactAnchor)))throw Error('主人不在府中或不便见客');
     const id=`notable_audience:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
     engine.advance(d,rules.rights.audienceMinutes,eventId);
     const at=d.get('state','minute');

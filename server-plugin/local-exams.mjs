@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {settlementHead,personRegistrar,personAge,personConstraint} from './entity-view.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -5,7 +6,7 @@ import {npcEntryCheck} from './checks.mjs';
 import {profession} from './professions.mjs';
 import {digest} from './storage.mjs';
 const path=id=>['state','records',id];
-const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 function policy(e,s,settlement){
  const p=e.world.settlementProfiles?.find(p=>p.id===settlement),head=settlementHead(e,s,settlement).value;
  const culture=p?.culture??e.byId.get(head)?.culture??p?.details?.culture;
@@ -23,17 +24,17 @@ export function localExamination(d,args,id){
   // The original entry task owns fees, skill thresholds, career slots and time.
   result=profession.call(e,d,{profession:role,teacher,...(student!=='player'?{student}:{})},id);
  }else{
-  if(student===teacher||!awake(s.npcs[teacher])||s.npcs[teacher].location!==s.location||personConstraint(e,s,teacher))throw Error('考官须实际清醒在场');
+  if(student===teacher||!awake(e,s,teacher,s.npcs[teacher])||s.npcs[teacher].location!==s.location||personConstraint(e,s,teacher))throw Error('考官须实际清醒在场');
   const place=e.byId.get(s.location),local=place?.scope===settlement||place?.parent===settlement||s.location===settlement||e.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.meetingPlace===s.location;
   const registrars=e.rules.governance?.authority?.superiors?.auth_bs_office_charter?.registrars?.occupations??[];
   if(!local||teacher!==settlementHead(e,s,settlement).value&&!personRegistrar(e,s,teacher,s.location,registrars))throw Error('须由本地现任头人或在岗登记人主持');
   if((personAge(e,s,student)?.value??0)<18||knowledgeProficiency(e,s,student,rule.skill)<rule.minimumProficiency)throw Error('报考须成年并满足识字能力要求');
-  if(student!=='player'&&(!awake(s.npcs[student])||s.npcs[student].location!==s.location||personConstraint(e,s,student)))throw Error('考生须实际清醒在场');
+  if(student!=='player'&&(!awake(e,s,student,s.npcs[student])||s.npcs[student].location!==s.location||personConstraint(e,s,student)))throw Error('考生须实际清醒在场');
   e.assertNpcObligationAction?.(d,[student,teacher],{minutes:rule.minutes,kind:'exam'});e.assertNpcAutonomyAction?.(s,[student,teacher],{minutes:rule.minutes});
   assertNpcService(d,e,teacher,'register',rule.minutes);
   const check=student==='player'?e.check(d,{attribute:'智力',skill:rule.skill,difficulty:rule.difficulty},id):npcEntryCheck(d,e,student,{attribute:'智力',skill:rule.skill,difficulty:rule.difficulty},id);
   advanceWithNpcParticipants(d,e,rule.minutes,id,[teacher,...student==='player'?[]:[student]]);
-  if(!awake(d.get('state','npcs',teacher)))throw Error('考官中途失去行动能力');
+  if(!awake(engine,d.get('state'),teacher,d.get('state','npcs',teacher)))throw Error('考官中途失去行动能力');
   result={...check,task:rule.task};
  }
  const success=result.success===true||result.certified===true,row={category:'education_qualification',id:`education_qualification:${id}`,student,teacher,settlement,rule:rule.id,culture:rule.culture,form:mode==='civil'?rule.form:mode==='guild'?'行会考核':'门派考核',mode,profession:mode==='civil'?null:e.resolve(args.profession,'profession'),success,minute:d.get('state','minute'),sourceEvent:id,task:result.task??result.entryTask};

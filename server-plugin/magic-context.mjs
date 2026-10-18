@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import{localWeather}from'./weather.mjs';
 import{environmentFeatures,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -19,7 +20,7 @@ export function statusContext(d,engine,target){
  const actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
  if(!actor||target!=='player'&&actor.location!==d.get('state','location'))return{};
  const weather=localWeather(engine,d.document);
- const eyesClosed=actor.hasVision===false||actor.eyesClosed===true||['死亡','濒死','昏迷'].includes(actor.status)||['睡眠','熟睡'].includes(actor.activity);
+ const eyesClosed=actor.hasVision===false||actor.eyesClosed===true||isPhysicallyDead(engine,d,target)||['濒死','昏迷'].includes(actor.status)||['睡眠','熟睡'].includes(actor.activity);
  // Coarse game visibility: dark terrain stays dark; clear outdoor nights are dim.
  // An unlit interior has no known illumination level.
  const facts=areaTargetFacts(d,engine,target,d.get('state','location'));

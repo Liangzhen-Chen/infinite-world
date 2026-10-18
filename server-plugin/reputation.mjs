@@ -1,10 +1,11 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {reputationFactions,reputationSettlements}from'./reputation-registry.mjs';
 import {digest} from './storage.mjs';
 import {standing} from './standing.mjs';
 
 const path=id=>['state','records',id];
 const key=(...parts)=>digest(parts).slice(0,24);
-const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(state,id,n)=>n&&n.location&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 
 export function settlementAt(engine,location) {
     const allowed=new Set(reputationSettlements(engine)),seen=new Set();
@@ -57,7 +58,7 @@ export function recordLegalNotification(d,engine,row,stage,eventId,observers,{fr
         ...(stage==='overturned'?{reverses:old.reputationEvents?.conviction?.sourceEvent}:{} )};
     if(fresh||!old.reputationEvents?.[stage])d.set(path(row.id),{...old,procedureVersion:1,reputationEvents:{...old.reputationEvents,[stage]:event},reputationHistory:[...old.reputationHistory??[],event]});
     for(const npc of new Set(observers)) {
-        if(!awake(d.get('state','npcs',npc))||d.get('state','npcs',npc,'location')!==event.location)continue;
+        if(!awake(d.get('state'),npc,d.get('state','npcs',npc))||d.get('state','npcs',npc,'location')!==event.location)continue;
         const memoryId=`legal_${key(event.sourceEvent,npc)}`;
         if(d.get('state','npcs',npc,'memoryStream')?.some(memory=>memory.id===memoryId))continue;
         const memory={id:memoryId,sourceEvent:event.sourceEvent,kind:'law',minute,location:event.location,

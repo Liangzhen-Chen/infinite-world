@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
 // authoritative executors; speech alone cannot grant a permission or a reward.
 import fs from 'node:fs';
@@ -13,7 +14,7 @@ const bargaining=JSON.parse(fs.readFileSync(new URL('../world/rules/tables/barga
 const row=(d,npc)=>d.get('state','npcs',npc);
 function present(d,engine,raw){
  const npc=engine.resolve(raw,'npc'),n=row(d,npc);
- if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||['死亡','濒死','昏迷'].includes(n.status))throw Error('对方不在这里或无法交谈');
+ if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,npc)||['濒死','昏迷'].includes(n.status))throw Error('对方不在这里或无法交谈');
  return npc;
 }
 function language(view,engine,d){

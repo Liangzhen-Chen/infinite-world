@@ -1,13 +1,14 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {migrationPath} from './wildlife-range.mjs';
 import {forestHabitatCapacity} from './forest-water.mjs';
 import {sapient} from './wildlife-awakening.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('seasonal-migration',{kinds:['tamed_by'],entities:['wreck'],locations:true});
-const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
+const alive=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&a.hp>0;
 const ecology=h=>['state','records',`ecology:${h}`];
 export function reservedMigrationCapacity(d,habitat,species){
     return (d.get(...migrationPath())?.transit??[]).filter(t=>t.to===habitat&&t.species===species)
-        .reduce((n,t)=>n+t.count+t.actors.filter(id=>alive(d.get('state','creatures',id))).length,0);
+        .reduce((n,t)=>n+t.count+t.actors.filter(id=>alive(d,id,d.get('state','creatures',id))).length,0);
 }
 export function advanceSeasonalMigration(d,engine,day){
     const rules=engine.rules.wildlife?.migration;if(!rules)return;
@@ -33,7 +34,7 @@ export function advanceSeasonalMigration(d,engine,day){
         p.count+=t.count;p.immigrated+=t.count;d.set(ecology(t.to),r);m.arrived+=t.count;
         for(const id of t.actors){const actor=d.get('state','creatures',id);
             // A dead traveller stays dead; no revived replacement enters the pool.
-            if(!alive(actor)){m.lost++;continue;}
+            if(!alive(d,id,actor)){m.lost++;continue;}
             holdingSet(d,null,['state','creatures',id,'location'],habitats.get(t.to).location,'seasonal-migration');
             holdingSet(d,null,['state','creatures',id,'ecology'],t.to,'seasonal-migration');d.remove(['state','creatures',id,'migration']);m.arrived++;
         }
@@ -44,9 +45,9 @@ export function advanceSeasonalMigration(d,engine,day){
         if(now%360!==route.departDay)continue;
         if(route.path.some(id=>engine.world.routes.find(r=>r.id===id).closedSeasons.includes(season)))continue;
         const home=habitats.get(route.from),destination=habitats.get(route.to),source=structuredClone(d.get(...ecology(route.from))),p=source.populations[route.species];
-        const actors=Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.species===route.species&&a.ecology===route.from&&a.location===home.location&&!a.owner&&!sapient(a)&&!a.boss&&!a.lair&&alive(a)).sort(([a],[b])=>a.localeCompare(b,'en'));
+        const actors=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===route.species&&a.ecology===route.from&&a.location===home.location&&!a.owner&&!sapient(a)&&!a.boss&&!a.lair&&alive(d,id,a)).sort(([a],[b])=>a.localeCompare(b,'en'));
         const target=d.get(...ecology(route.to),'populations',route.species),definition=engine.byId.get(route.species);
-        const present=Object.values(d.get('state','creatures')??{}).filter(a=>a.species===route.species&&a.location===destination.location&&!a.owner&&!sapient(a)&&alive(a)).length;
+        const present=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===route.species&&a.location===destination.location&&!a.owner&&!sapient(a)&&alive(d,id,a)).length;
         const room=Math.max(0,forestHabitatCapacity(engine,d.get('state'),destination,definition)-target.count-present-reservedMigrationCapacity(d,route.to,route.species));
         const amount=Math.min(room,Math.floor((p.count+actors.length)*route.fraction));if(!amount)continue;
         const unseen=Math.min(p.count,amount),travellers=actors.slice(0,amount-unseen).map(([id])=>id),id=`${route.id}:${now}`;

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personPublicRole,personRelationships,personRemuneration,personName} from './entity-view.mjs';
 import {deriveWorldEvents,eventRumorId,registerWorldEventSubscriber,privateWorldEvent}from'./world-events.mjs';
 import {npcCognitionView}from'./npc-cognition.mjs';
@@ -15,14 +16,14 @@ export function memoryBlurMinute(d,npcId,memory,ttl,now){
 }
 
 const full=(engine,id)=>personSimulation(engine,{},id).value;
-const awake=npc=>npc&&!['死亡','濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
-const present=(state,location=state.location)=>Object.entries(state.npcs).filter(([,npc])=>npc.location===location&&awake(npc)).map(([id])=>id);
+const awake=(state,id,npc)=>npc&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
+const present=(state,location=state.location)=>Object.entries(state.npcs).filter(([id,npc])=>npc.location===location&&awake(state,id,npc)).map(([id])=>id);
 function witnessedThroughout(engine,before,after,id){
-    if(after.npcs[id]?.location!==before.location||!awake(after.npcs[id]))return false;
+    if(after.npcs[id]?.location!==before.location||!awake(after,id,after.npcs[id]))return false;
     if(before.player.companions?.includes(id)&&after.location===before.location)return true;
     for(let cursor=before.minute;cursor<after.minute;){
         const slot=scheduleAt(engine,id,cursor,after);if(!slot)return true;
-        if(slot.location!==before.location||!awake({activity:slot.activity}))return false;
+        if(slot.location!==before.location||/(睡眠|熟睡|睡觉)/.test(slot.activity??''))return false;
         cursor=slot.until;
     }
     return true;
@@ -41,7 +42,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         const participants=event.participants??[event.actor,event.target].filter(Boolean),hidden=privateWorldEvent(event),rumor=eventRumorId(engine,after,event);
         const recipients=new Set([...participants,...(!hidden?event.witnesses??[]:[])]);
         for(const id of recipients){
-            const npc=after.npcs?.[id];if(!npc||npc.status==='死亡')continue;
+            const npc=after.npcs?.[id];if(!npc||isPhysicallyDead(null,after,id))continue;
             const key=`${event.id}:transition`,stream=npc.memoryStream??[];if(stream.some(m=>m.id===key))continue;
             d.set(['state','npcs',id,'memoryStream'],[...stream,{id:key,sourceEvent:event.id,kind:'transition',minute:event.minute,location:event.location,participants,
                 content:event.summary,sourceType:participants.includes(id)?'亲历':'目击',salience:3,...(hidden?{private:true}:{}),
@@ -115,7 +116,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         const observers=fact.observers??present(before).filter(id=>witnessedThroughout(engine,before,after,id));
         const parties=fact.onlyObservers?[]:fact.participants.filter(id=>fact.partyNotice
             ?!fact.noticeKey||before.npcs[id]?.memoryStream?.some(row=>row.id.endsWith(fact.noticeKey))
-            :before.npcs[id]?.location===before.location&&awake(before.npcs[id]));
+            :before.npcs[id]?.location===before.location&&awake(before,id,before.npcs[id]));
         const recipients=new Set([...observers,...parties]);
         for(const npcId of recipients){
             if(!full(engine,npcId)||!after.npcs[npcId])continue;

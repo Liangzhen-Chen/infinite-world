@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {bagStock} from './stock.mjs';
 import {allFacilities,facilityView,facilityKind} from './facility-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
@@ -27,7 +28,7 @@ export function medicineSites(e,s){
   for(const id of Object.keys(s.npcs??{})){
    const n=s.npcs[id],b=s.created?.[id]??e.byId.get(id),job=jobs.get(id)??null,role=medicalRole(e,s,id,job);
    const workplace=job?.location??n.workplace?.location??n.residence?.workplace??b?.workplace?.location;
-   if(workplace!==p.id||['死亡','濒死','昏迷','患病'].includes(n.status)||job?.status==='罢工')continue;
+   if(workplace!==p.id||isPhysicallyDead(e,s,id)||['濒死','昏迷','患病'].includes(n.status)||job?.status==='罢工')continue;
    if(/医师|药师/.test(role)&&medicalSkill(e,s,id)>0)members[id]={position:'医师',joinedAt:job?.createdAt??null,arrears:0};
    else if(/药童|药工/.test(role))members[id]={position:'药童',joinedAt:job?.createdAt??null,arrears:0};
   }

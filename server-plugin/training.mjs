@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('training');
@@ -10,7 +11,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('training',{kinds:['mentor_of','devotee_of','permit','certified','member_of','holds_office'],entities:['office']});
 
 const record=id=>['state','records',id];
-const awake=a=>a&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
+const awake=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&!['濒死','昏迷','患病'].includes(a.status)&&!['睡眠','熟睡'].includes(a.activity)&&!a.scheduleTravel&&!a.cognitionTravel;
 const roles=d=>{const p=d.get('state','professions');return[p.combat,...p.life,...p.hidden];};
 export function trainingInstitution(engine,institution,profession,teacher,state={}){
  const entry=engine.rules.training?.institutions?.find(e=>e.institution===institution&&e.profession===profession&&e.teacher===teacher);
@@ -20,7 +21,7 @@ export function trainingInstitution(engine,institution,profession,teacher,state=
 }
 function present(d,engine,entry,minutes){
  const mentor=d.get('state','npcs',entry.teacher);
- if(d.get('state','location')!==entry.institution||!awake(mentor)||mentor.location!==entry.institution)throw Error('须在登记机构与清醒导师当面办理');
+ if(d.get('state','location')!==entry.institution||!awake(d,entry.teacher,mentor)||mentor.location!==entry.institution)throw Error('须在登记机构与清醒导师当面办理');
  assertNpcService(d,engine,entry.teacher,'teach',minutes);
 }
 function pay(d,engine,entry,fee,minutes,id){

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
@@ -57,7 +58,7 @@ const discoveryKey=(site,clue)=>`site_discovery:${site}:${clue}`;
 const observationKey=(site,mechanism)=>`site_observation:${site}:${mechanism}`;
 const ownerOf=(place,row=place.site)=>Object.hasOwn(row,'owner')?row.owner:place.site.owner??place.owner??null;
 const authorityOf=(place,owner)=>owner===ownerOf(place)?place.site.manager??owner:owner;
-const living=actor=>actor&&actor.status!=='死亡'&&(actor.hp===undefined||actor.hp>0);
+const living=(engine,source,id,actor)=>actor&&!isPhysicallyDead(engine,source,id)&&(actor.hp===undefined||actor.hp>0);
 const allowed=(document,place,owner,authorization,operation='enter')=>{
     if(!owner||owner==='player'||passageAllows(document,place,owner,operation))return true;
     return (Array.isArray(authorization)?authorization:[authorization]).some(id=>{
@@ -179,7 +180,7 @@ function assertOccupants(d,engine,place,authorization){
     for(const id of ids){
         const actor=engine.actor(d,id),isNpc=engine.actorPath(id)[1]==='npcs';
         if(!actor)throw Error('登记占据者状态尚未落实，不能视为空置');
-        if(actor.location!==place.id||!living(actor))continue;
+        if(actor.location!==place.id||!living(engine,d,id,actor))continue;
         if(isNpc&&place.access?.mode==='public')continue;
         const managed=s.manager&&ownerOf(place)&&allowed(d.document,place,ownerOf(place),authorization);
         if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw Error('占据者仍在场，需取得许可或实际解决占据关系');
@@ -225,7 +226,7 @@ export function assertSiteHarvest(d,engine,place,args){
 function watchers(d,engine,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
     return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
-        const a=d.get('state','npcs',id);return a?.location===place.id&&!['死亡','濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
+        const a=d.get('state','npcs',id);return a?.location===place.id&&!isPhysicallyDead(engine,d,id)&&!['濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
     });
 }
 function infiltrate(d,engine,place,eventId){
@@ -263,7 +264,7 @@ export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
     const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute):stored,entered=document.state.records?.site_presence?.site===place.id;
     const view={site:place.id,name:place.name,owner:ownerOf(place),entered,occupants:(place.site.occupants??[]).filter(id=>{
-        const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(actor);
+        const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(engine,document,id,actor);
     }),mechanisms:(place.site.mechanisms??[]).filter(m=>entered||(place.site.entryMechanisms??[]).includes(m.id)).map(m=>({id:m.id,name:m.name,description:m.description??'',status:row?.mechanisms[m.id]?.status??'未解除'}))};
     if(entered){
         if(place.site.history)view.history=place.site.history.map(h=>`${h.era}：${h.text}`);
@@ -371,7 +372,7 @@ export function sitePermission(d,engine,args,eventId){
     const owned=[...new Set(owners.filter(owner=>authorityOf(place,owner)===grantor))],owner=owned[0];
     const propertyOwners=[ownerOf(place),...(place.site.resources??[]).map(row=>ownerOf(place,row))];
     const onlyOccupant=owner&&!propertyOwners.includes(owner)&&!place.site.manager;
-    if(!owner||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
+    if(!owner||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
     if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('据点许可只登记给玩家');
     if(place.access?.mode==='private'&&place.access.requiresConsent&&!place.access.residents?.includes(grantor))throw Error('私宅据点许可仍须由登记住户签发');
     if(place.access?.mode==='council'&&place.access.authority!==grantor)throw Error('议事区许可须由登记负责人签发');

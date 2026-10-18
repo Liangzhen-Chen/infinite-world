@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
@@ -35,7 +36,7 @@ function access(d,engine,row,args,range,read=false){
  if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw Error('水土对象超过实际距离或视线被遮挡');
  if(read||row.owner==='player'||row.access==='public')return;
  const allowed=[args.authorization,...args.authorizations??[]].some(id=>{
-  const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));
+  const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
  });
  if(!allowed)throw Error('水土对象需要有效所有者授权');
 }
@@ -76,7 +77,7 @@ export function prepareWaterEarthMagic(d,c,args){
  if(op==='bind_water'&&!args.target?.startsWith('feature_')){
   const target=args.target??'player';actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
   facts=areaTargetFacts(d,this,target,location,localPlayerPoint(d));
-  if(!actor||actor.status==='死亡'||!facts)throw Error('水绳缺少真实在场肢体');
+  if(!actor||isPhysicallyDead(engine,d,subject)||!facts)throw Error('水绳缺少真实在场肢体');
   const limbMass=actor.limbMassGrams??this.byId.get(target)?.limbMassGrams??(target==='player'||target.startsWith('npc_')?1500:undefined);
   assertMagicTargeting(d,this,c,args,target);integer(limbMass,1,c.effectSpec.power,'肢体载荷');
  }else{
@@ -205,7 +206,7 @@ export function waterEarthWalkMinutes(d,engine,from,to){
 }
 function waterCurtainNoise(d,engine,e,id,minute){
  for(const [subject,actor]of [['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{}),...Object.entries(d.get('state','creatures')??{})]){
-  if(actor.status==='死亡')continue;const f=areaTargetFacts(d,engine,subject,e.location);
+  if(isPhysicallyDead(engine,d,subject))continue;const f=areaTargetFacts(d,engine,subject,e.location);
   if(f&&dist(f.point,e.point)<=5)d.set(['state','records',`water_heard:${id}:${subject}`],{category:'heard_sound',subject,text:'通道的水帘声',volume:60,location:e.location,point:clone(e.point),minute,source:id});
  }
 }

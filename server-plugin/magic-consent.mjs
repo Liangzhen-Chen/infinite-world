@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personView,personMental}from'./entity-view.mjs';
 import {standing}from'./standing.mjs';
 import {relationView}from'./npc-relations.mjs';
@@ -64,7 +65,7 @@ export function recordSpellViolation(d,engine,c,args,target,eventId){
  const grave=s.status==='compulsion'?'compulsion':rules.memoryOperations.includes(s.operation)?'memory_tampering':null;
  const action=spellConsentAction(c),consented=action&&hasSpellConsent(d,target,args.authorization,action,c);
  if(!grave&&(args.force!==true||!action||consented||action==='healing'&&emergencyHealing(d,engine,target,c)))return null;
- const location=c.location??d.get('state','location'),offense=grave??'unconsented_magic',witnesses=Object.entries(d.get('state','npcs')??{}).filter(([,a])=>a.location===location&&!['死亡','濒死','昏迷'].includes(a.status)&&!/睡眠|熟睡/.test(a.activity??'')).map(([id])=>id);
+ const location=c.location??d.get('state','location'),offense=grave??'unconsented_magic',witnesses=Object.entries(d.get('state','npcs')??{}).filter(([id,a])=>a.location===location&&!isPhysicallyDead(engine,d,id)&&!['濒死','昏迷'].includes(a.status)&&!/睡眠|熟睡/.test(a.activity??'')).map(([id])=>id);
  return registerIncident(d,engine,{victim:target,offense,witnesses,eventId,location,optional:true});
 }
 
@@ -73,7 +74,7 @@ export function personSpellConsent(engine,state,id,action){
     const stance=standing(engine,state,id),relation=relationView(engine,state,id,'player'),level=intelligenceOf(engine,state,id)?.level??0;
     const refuse=reason=>({decision:'refuse',reason});
     if(!view||!a||view.location.value!==state.location||a.scheduleTravel||a.cognitionTravel)return refuse('本人不在场');
-    if(!view.simulation.value||(view.age.value??0)<18||level<1||['死亡','濒死','昏迷'].includes(a.status)||/睡眠|熟睡|睡觉/.test(a.activity??''))return refuse('本人当前无法明确表达同意');
+    if(!view.simulation.value||(view.age.value??0)<18||level<1||isPhysicallyDead(engine,state,id)||['濒死','昏迷'].includes(a.status)||/睡眠|熟睡|睡觉/.test(a.activity??''))return refuse('本人当前无法明确表达同意');
     const mental=personMental(engine,state,id).value;
     if(view.constraint||relation.fear>=30||mental.stress>=80||Object.values(state.effects??{}).some(e=>e.target===id&&e.kind==='status'&&e.expires>state.minute&&e.remainingUses!==0&&['fear','illusion','compulsion'].includes(e.status)))return refuse('拘束或恐惧下不能登记自愿同意');
     if(stance<=-30||relation.trust<=-40)return refuse('本人不信任施法者');

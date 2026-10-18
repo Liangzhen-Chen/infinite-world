@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {transferItems} from './items.mjs';
 import {transit as transitStock,stockSink,moveStock} from './stock.mjs';
@@ -22,7 +23,7 @@ export const STANCES=['敌对','戒备','中立'];
 const DAY=1440,PERIOD=10*DAY,KINDS=new Set(['trade','tribute','passage']);
 const rec=id=>['state','records',id];
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
-const awake=n=>n&&n.status!=='死亡'&&(n.hp===undefined||n.hp>0)&&!n.scheduleTravel&&!n.cognitionTravel&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&(n.hp===undefined||n.hp>0)&&!n.scheduleTravel&&!n.cognitionTravel&&!['濒死','昏迷'].includes(n.status)&&!/(?:睡眠|睡觉|熟睡)/.test(n.activity??'');
 const shift=(stance,delta)=>STANCES[Math.max(0,Math.min(2,STANCES.indexOf(stance)+delta))];
 
 // edition=true (engine construction, via validateSites) lets a society name places
@@ -293,7 +294,7 @@ function installment(d,engine,boss,society,id,eventId){
     if(a.installments.some(i=>i.event===eventId))return{agreement:id,terms:a,duplicate:true};
     if(a.status!=='有效'||a.nextDue===null)throw Error('约定已结束或本期无须交付');
     const actor=engine.actor(d,boss.actor);
-    if(!awake(actor)||actor.location!==d.get('state','location'))throw Error('履约需要首领清醒在场');
+    if(!awake(engine,d.get('state'),boss.actor,actor)||actor.location!==d.get('state','location'))throw Error('履约需要首领清醒在场');
     if(a.offer.some(r=>engine.quantity(d,'player',r.item)<r.quantity))throw Error('你没有足够的实际物资履约');
     if(a.request.some(r=>engine.quantity(d,boss.actor,r.item)<r.quantity)){
         breach(d,engine,id,a,boss.actor,'首领库存不足，未能交付约定物资',eventId);
@@ -344,7 +345,7 @@ export function societyGovernance(d,engine,args,eventId,society){
     }
     if(d.get('state','location')!==meeting)throw Error('须在聚居地议事处办理');
     const present=name=>{const id=actorId(engine.world,resolveCreature(engine,d,name)),view=personView(engine,d.get('state'),id),n=view&&d.get(...view.actorPath.value);
-        if(!societyMember(engine,d.get('state'),society,id)||!(view?.age.value>=18)||!awake(n)||n.location!==meeting)throw Error('需要本聚居地清醒在场的成年成员');return id;};
+        if(!societyMember(engine,d.get('state'),society,id)||!(view?.age.value>=18)||!awake(engine,d.get('state'),id,n)||n.location!==meeting)throw Error('需要本聚居地清醒在场的成年成员');return id;};
     if(args.operation==='governance_propose'){
         const m=motion(args.issue),old=d.get(...rec(key(m.id)));
         if(old?.status==='议事中')throw Error('该议题正在议事');
@@ -375,7 +376,7 @@ export function societyGovernance(d,engine,args,eventId,society){
         if(present(args.authority)!==leaderOf(engine,d.get('state'),society))throw Error('须由聚居地首领在场闭合议题');
         // Present adult members who did not speak are counted by their position's stance.
         const state=d.get('state'),spoken=new Set(row.opinions.map(o=>o.speaker));
-        const implicit=members(engine,state,society).map(id=>personView(engine,state,id)).filter(v=>v?.age.value>=18&&!spoken.has(v.id.value)&&awake(d.get(...v.actorPath.value))&&v.location.value===meeting).map(v=>({id:v.id.value}))
+        const implicit=members(engine,state,society).map(id=>personView(engine,state,id)).filter(v=>v?.age.value>=18&&!spoken.has(v.id.value)&&awake(engine,d.get('state'),v.id.value,d.get(...v.actorPath.value))&&v.location.value===meeting).map(v=>({id:v.id.value}))
             .map(n=>({n,p:positionOf(engine,society,n.id,state)})).filter(({p})=>p?.stances?.[row.motion])
             .map(({n,p})=>({speaker:n.id,opinion:p.stances[row.motion],content:p.claim,position:p.id,implicit:true,minute:now,sourceEvent:eventId}));
         const all=[...row.opinions,...implicit],yes=all.filter(o=>o.opinion==='approve').length,no=all.filter(o=>o.opinion==='reject').length;

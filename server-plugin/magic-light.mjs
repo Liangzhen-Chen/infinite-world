@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -29,7 +30,7 @@ function permission(d,engine,row,args){
  if(row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  if(!ids.some(id=>{
-  const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));
+  const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
  }))throw Error('光学对象需要有效所有者授权');
 }
 function access(d,engine,row,args,range,read=false){
@@ -287,7 +288,7 @@ export function lightDamageMultiplier(d,engine,target,spec){
  const from=localPlayerPoint(d),metres=distance(from,f.point);
  if(spec.lightDecay){
   const actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
-  const sighted=actor.hasVision!==false&&!actor.eyesClosed&&!['昏迷','濒死','死亡'].includes(actor.status)&&!['睡眠','熟睡'].includes(actor.activity);
+  const sighted=actor.hasVision!==false&&!actor.eyesClosed&&!['昏迷','濒死'].includes(actor.status)&&!isPhysicallyDead(engine,d,target)&&!['睡眠','熟睡'].includes(actor.activity);
   return(sighted?1:.25)/(1+metres*metres/25);
  }
  let brightest=0;

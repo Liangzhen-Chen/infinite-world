@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Completion evidence for a named individual; callers write after state changes.
 export const villageWildlifeFresh=engine=>!engine.replaying||engine.replayResult?.villageWildlifeVersion===1;
 export function recordCreatureResolution(d,engine,{target,outcome,eventId,location}){
@@ -16,7 +17,7 @@ export function wildlifeQuestEvidence(d,q){
  if(!a)return null;
  if(o.type==='creature'){
   if(a.species!==o.species||a.owner)return null;
-  const valid={death:()=>a.status==='死亡'&&a.hp===0,expelled:()=>a.location===null&&a.activity==='已驱离',ferried:()=>a.status==='已超度'&&a.spirit?.realm==='beyond'};
+  const valid={death:()=>isPhysicallyDead(null,d,o.target)&&a.hp===0,expelled:()=>a.location===null&&a.activity==='已驱离',ferried:()=>a.status==='已超度'&&a.spirit?.realm==='beyond'};
   for(const [key,r] of Object.entries(d.get('state','records')??{})){
    if(r.category!=='creature_resolution'||r.subject!==o.target||r.actor!=='player'||r.location!==o.location||r.minute<(q.acceptedAt??Infinity)||!o.outcomes.includes(r.outcome)||!valid[r.outcome]?.())continue;
    if(!q.evidenceBefore?.includes(key)&&!d.get('state','records',`quest_wildlife_claim:${key}`))return {key,outcome:r.outcome,target:o.target};

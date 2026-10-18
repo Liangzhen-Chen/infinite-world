@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {bag,settlementStock,armyRations,moveStock,BOOKED as BOOKED_STOCK} from './stock.mjs';
@@ -232,7 +233,7 @@ export function settleQuestOutcome(d,engine,q,minute){
 }
 
 // ---- 生成器一：人物需求 ------------------------------------------------------------
-const alive=n=>n&&!['死亡','濒死'].includes(n.status);
+const alive=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&n.status!=='濒死';
 // 每个需求探测返回 {urgency 1–3, cause, vars, place?}；数据行只写报酬、物件与措辞。
 const NEED_DETECTORS={
  food(engine,state,id,home,at){
@@ -269,7 +270,7 @@ function scanNpcNeeds(d,engine,at){
  const state=d.get('state'),l=t.limits,posted=[],open=generated(state).filter(active);
  const offers=[];
  for(const id of Object.keys(state.npcs??{}).sort()){
-  const npc=state.npcs[id];if(!personSimulation(engine,state,id).value||!alive(npc))continue;
+  const npc=state.npcs[id];if(!personSimulation(engine,state,id).value||!alive(engine,state,id,npc))continue;
   const {level}=intelligenceOf(engine,state,id),limit=l.perNpcByLevel[level]??0;
   if(open.filter(q=>q.publisher===id&&q.source.generator==='npc_needs').length>=limit)continue;
   const home=npcHousehold(engine,state,id)?.settlement;if(!home||!locationKnown(engine,home))continue;

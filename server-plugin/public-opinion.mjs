@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {reputationFactions}from'./reputation-registry.mjs';
 import {societyOfActor} from './monster-society.mjs';
 import {standing,standingIsDefault,HOSTILE} from './standing.mjs';
@@ -13,7 +14,7 @@ import {organizationsOf} from './organizations.mjs';
 export const STANCE_LABEL={support:'支持',oppose:'反对',neutral:'中立'};
 const STAGE_ACT={conviction:'harm',fulfilled:'aid',overturned:'cleared'};
 const hidden=m=>m.private===true||['private','secret'].includes(m.visibility)||['secret','debt','obligation','quest'].includes(m.kind)||m.sourceType==='约定核对';
-const living=n=>n&&n.status!=='死亡';
+const living=(state,id,n)=>n&&!isPhysicallyDead(null,state,id);
 const seatOf=(engine,id)=>engine.world.locations.find(l=>l.id===id&&l.monsterSociety);
 
 function within(engine,location,place){
@@ -46,7 +47,7 @@ function shape(state,memory){
 // longer identify who did what, so they no longer carry an opinion.
 export function knownTopics(engine,document,id){
     const state=document.state,npc=state.npcs[id],topics=new Map();
-    if(!living(npc))return topics;
+    if(!living(state,id,npc))return topics;
     const keep=row=>{const old=topics.get(row.topic);if(!old||row.order>old.order||row.order===old.order&&row.minute>old.minute)topics.set(row.topic,row);};
     for(const memory of npc.memoryStream??[]){
         if(memory.minute>state.minute||hidden(memory)||npc.cognition?.blurred?.[memory.id])continue;
@@ -125,7 +126,7 @@ export function npcOpinions(engine,document,id){
 // Ratios count only people who actually know the topic; the rest are reported
 // as unaware and never assumed to share the majority view.
 export function opinionAmong(engine,document,people,{topic=null}={}){
-    const topics=new Map(),ids=[...new Set(people)].filter(id=>living(document.state.npcs[id])).sort();
+    const topics=new Map(),ids=[...new Set(people)].filter(id=>living(document.state,id,document.state.npcs[id])).sort();
     for(const id of ids)for(const row of npcOpinions(engine,document,id)){
         if(topic&&row.topic!==topic)continue;
         const entry=topics.get(row.topic)??{topic:row.topic,label:row.label,support:0,oppose:0,neutral:0,known:0,views:[]};
@@ -140,7 +141,7 @@ export function opinionAmong(engine,document,people,{topic=null}={}){
 // A place is a reputation settlement or a monster settlement seat; its people
 // are those currently there, as with where reputation is heard.
 export function localOpinion(engine,document,place,options={}){
-    const people=Object.entries(document.state.npcs).filter(([,n])=>living(n)&&within(engine,n.location,place)).map(([id])=>id);
+    const people=Object.entries(document.state.npcs).filter(([id,n])=>living(document.state,id,n)&&within(engine,n.location,place)).map(([id])=>id);
     return {place,population:people.length,topics:opinionAmong(engine,document,people,options)};
 }
 export function opinionPlace(engine,location){

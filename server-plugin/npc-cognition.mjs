@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-cognition',{sinks:['sink:export']});
@@ -15,7 +16,7 @@ import {transportServices,quoteTransport} from './transport.mjs';
 import {sendPost} from './post.mjs';
 
 const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
-const awake=n=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const key=(...parts)=>digest(parts).slice(0,24);
 const relation=(engine,state,from,to)=>state.npcs[from]?.relationships?.[to]||engine.byId.get(from)?.relationships?.some(r=>r.with===to)?relationView(engine,state,from,to):null;
 const originalId=row=>row.rootMemoryId??row.id;
@@ -63,14 +64,14 @@ function occupied(state,id,start,end){return state.player.companions?.includes(i
 export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation',eventId}){
  const state=d.get('state'),at=state.minute,a=state.npcs[from],b=state.npcs[to];
  if(working(state,from,at,at+1)||channel==='conversation'&&working(state,to,at,at+1))throw Error('人物正在完成已经开始的自主工作');
- if(from===to||!a||!b||!personSimulation(engine,state,to).value||!awake(a)||personConstraint(engine,state,from))throw Error('传话双方须是可行动的已登记人物');
+ if(from===to||!a||!b||!personSimulation(engine,state,to).value||!awake(engine,state,from,a)||personConstraint(engine,state,from))throw Error('传话双方须是可行动的已登记人物');
  if(!relation(engine,state,from,to)||(relation(engine,state,from,to).trust??0)<0)throw Error('没有可传话的人物关系渠道');
  const memory=memoryFor(engine,state,from,memoryId,at);if(!permitted(memory,to))throw Error('这条私密记忆没有向收件人披露的渠道');
  if(known(engine,state,to,memory))return {duplicate:true};
  const messageId=`message_${key(originalId(memory),from,to,channel)}`;
  if(channel==='conversation'){
   assertNpcObligationAction(d,engine,[from,to],{start:at,minutes:0,location:a.location,kind:'conversation'});
-  if(!awake(b)||a.location!==b.location)throw Error('当面转述需要同一地点且双方清醒');
+  if(!awake(engine,state,to,b)||a.location!==b.location)throw Error('当面转述需要同一地点且双方清醒');
   appendHeard(d,engine,from,to,memory,at,'conversation',messageId);return {messageId,delivered:true,minute:at};
  }
  if(channel!=='carry')throw Error('未登记的消息渠道');
@@ -127,7 +128,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
   // fixed quarter-hours, independent of how a player splits wait commands.
   if(message.status==='待交付'&&after%15!==0)continue;
   const carrier=d.get('state','npcs',message.from),trip=carrier?.cognitionTravel;
-  if(trip?.messageId===message.id&&(['死亡','濒死','昏迷','患病'].includes(carrier.status)||personConstraint(engine,d.get('state'),message.from))){
+  if(trip?.messageId===message.id&&(isPhysicallyDead(engine,d.get('state'),message.from)||['濒死','昏迷','患病'].includes(carrier.status)||personConstraint(engine,d.get('state'),message.from))){
    d.set(['state','npcCognition','messages',message.id,'status'],'中止');d.set(['state','npcCognition','messages',message.id,'reason'],`携信者${carrier.status}，未抵达`);
    d.set(['state','npcs',message.from,'interruptedTravel'],{...trip,interruptedAt:after});d.remove(['state','npcs',message.from,'cognitionTravel']);continue;
   }
@@ -136,7 +137,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
   const current=a?.memoryStream?.find(row=>row.id===message.memoryId)??npcRumorSeeds(engine,message.from).find(row=>row.id===message.memoryId);
   if(!current||!permitted(current,message.to))continue;
   const memory=message.memory??current;
-  if(awake(a)&&awake(b)&&a.location===b.location){
+  if(awake(engine,d.get('state'),message.from,a)&&awake(engine,d.get('state'),message.to,b)&&a.location===b.location){
    appendHeard(d,engine,message.from,message.to,memory,after,'carry',message.id,b.location,message.version);d.set(['state','npcCognition','messages',message.id,'status'],'已交付');d.set(['state','npcCognition','messages',message.id,'deliveredAt'],after);delivered++;
   }
  }
@@ -145,10 +146,10 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
   const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
   const sourceStreams=d.get('state','npcs');
   for(const from of Object.keys(presence.npcs).sort()){
-   if(!awake(presence.npcs[from])||occupied(beforeState,from,at,at+1))continue;
+   if(!awake(engine,presence,from,presence.npcs[from])||occupied(beforeState,from,at,at+1))continue;
    const relations=(engine.byId.get(from)?.relationships??[]).filter(r=>(relation(engine,d.get('state'),from,r.with)?.trust??0)>=20).slice(0,3);
    const memories=(sourceStreams[from]?.memoryStream??[]).filter(m=>m.minute<=at&&m.salience>=2&&at-m.minute<=30*DAY).slice(-3);
-   for(const rel of relations){const to=rel.with;if(!awake(presence.npcs[to])||presence.npcs[from].location!==presence.npcs[to].location||occupied(beforeState,to,at,at+1))continue;
+   for(const rel of relations){const to=rel.with;if(!awake(engine,presence,to,presence.npcs[to])||presence.npcs[from].location!==presence.npcs[to].location||occupied(beforeState,to,at,at+1))continue;
     for(const memory of memories){if(!permitted(memory,to)||known(engine,d.get('state'),to,memory))continue;if(appendHeard(d,engine,from,to,memory,at,'conversation',`message_${key(originalId(memory),from,to,'conversation')}`,presence.npcs[to].location))shared++;}
    }
   }

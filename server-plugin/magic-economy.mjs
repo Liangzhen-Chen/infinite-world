@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U10 life-magic economy (guide 3.6; rules.magicEconomy, data in
 // world/design/magic-economy.mjs). A completed player cast of a preserve,
 // irrigate, growth or purify spell inside a village is entered in that
@@ -200,13 +201,13 @@ export function purifiedWaterFactor(engine,state,sid,at,field,disease){
 const homeOf=(engine,state,view)=>view.settlement.value??economySettlement(engine,state,view.location.value);
 function people(engine,state,sid,patterns,limit){
  if(!patterns.length)return [];
- return Object.keys(state.npcs??{}).filter(id=>state.npcs[id].status!=='死亡').map(id=>personView(engine,state,id))
+ return Object.keys(state.npcs??{}).filter(id=>!isPhysicallyDead(engine,state,id)).map(id=>personView(engine,state,id))
   .filter(v=>v&&patterns.some(p=>(v.occupation.value??'').includes(p))&&homeOf(engine,state,v)===sid)
   .map(v=>v.id.value).sort().slice(0,limit);
 }
 function complain(d,engine,row,sid,npc,kind,at,day){
  const r=table(engine),state=d.get('state'),sourceEvent=`magic-complaint:${sid}:${npc}:${day}`,name=id=>engine.byId.get(id)?.name??id;
- const neighbours=Object.keys(state.npcs??{}).filter(id=>id!==npc&&state.npcs[id].status!=='死亡'&&homeOf(engine,state,personView(engine,state,id))===sid).sort();
+ const neighbours=Object.keys(state.npcs??{}).filter(id=>id!==npc&&!isPhysicallyDead(engine,state,id)&&homeOf(engine,state,personView(engine,state,id))===sid).sort();
  const carriers=[npc,...neighbours.slice(0,Math.max(0,r.reactions.complaintCarriers-1))];
  const claim=`${name(npc)}抱怨：有人在${name(sid)}接连施${r.kinds[kind].name}之术，断了自家生计，要找村里说理。`;
  const effects=[{kind:'rumor',id:'magic_complaint',claim,carriers,salience:2}];
