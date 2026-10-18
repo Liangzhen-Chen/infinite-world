@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {subjectiveView,subjectiveFact} from '../server-plugin/subjective-view.mjs';
 import {npcDecision,DECISION_ORDER,npcDecisionLibrary} from '../server-plugin/npc-decision.mjs';
+import {standing} from '../server-plugin/standing.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world),npc='npc_hw_linsui';
 const seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'));
 function fresh(){const d=engine.initialFromLegacy(seed,'a2');d.state.npcs[npc].goals={};return d;}
@@ -12,6 +13,9 @@ test('五步骨架与四种答复，explain 是确定性的库函数，不依赖
  const v=subjectiveView(engine,fresh(),npc);assert.equal(npcDecisionLibrary.npcDecision,npcDecision);
  assert.equal(npcDecision(v,{kind:'greet'}).outcome,'agree');
  assert.equal(npcDecision(v,{kind:'public_key'}).outcome,'refuse');
+ const key=npcDecision(v,{kind:'public_key'}),basis=key.explain().at(-1).basis;
+ assert.equal(basis.publicKey,true);assert.match(basis.publicKeyRule,/有职权的管事/);
+ assert.equal(key.outcome,'refuse');assert.match(key.reason,/公共仓库.*管事/);
  assert.equal(npcDecision(v,{kind:'help',cost:{minutes:9999}}).outcome,'conditional');
  const busy=structuredClone(v);busy.self.activity='睡眠';assert.equal(npcDecision(busy,{kind:'help'}).outcome,'defer');
  const a=npcDecision(v,{kind:'greet'}),b=npcDecision(v,{kind:'greet'});
@@ -27,15 +31,26 @@ test('禁区优先；关系、欠情、收益、急事、已知义务冲突均�
  v.self.obligations=[{id:'booked',status:'进行中',start:v.minute,deadline:v.minute+30}];assert.equal(npcDecision(v,{kind:'help'}).outcome,'refuse');
  v.self.goals={short:[{content:'救助家人',urgency:10}]};assert.equal(npcDecision(v,{kind:'help'}).outcome,'defer');
 });
-test('I25 双世界：远方船沉、报价、秘密成员及义务清偿不渗入四域或决策',()=>{
+test('I25 双世界：秘密会籍不泄漏视图、立场与决策；belief 可改变主观决策',()=>{
  const a=fresh(),b=structuredClone(a),other='npc_hw_ayan';
  a.state.npcs[other].location=b.state.npcs[other].location='bld_hw_mill';
+ const secret='org_secret_a2';
+ a.state.records[`organization:${secret}`]={category:'organization',id:secret,source:'created',name:'秘密会籍',kind:'结社',seat:'bld_hw_mill',members:{[other]:{position:'成员'}},treasury:0};
+ b.state.records[`organization:${secret}`]={category:'organization',id:secret,source:'created',name:'秘密会籍',kind:'结社',seat:'bld_hw_mill',members:{},treasury:0};
  const contract={id:'remote',type:'付款',promisor:other,promisee:npc,content:'远方货款',deadline:9000,status:'待履行'};
  a.state.obligations.remote=contract;b.state.obligations.remote={...contract,status:'已完成'};
  b.state.records.secret={category:'organization',members:[other],secret:true};
  b.state.records.ship={category:'wreck',status:'沉没'};b.state.marketReports={far:{grain:999}};
  const av=subjectiveView(engine,a,npc),bv=subjectiveView(engine,b,npc);
- assert.deepEqual(av,bv);assert.deepEqual(npcDecision(av,{kind:'help'}),npcDecision(bv,{kind:'help'}));
+ assert.deepEqual(av.self.relations[other],bv.self.relations[other]);
+ assert.deepEqual(av.self.holdings,bv.self.holdings);assert.deepEqual(av.observable.people,bv.observable.people);
+ assert.deepEqual(av.knowledge.facts,bv.knowledge.facts);
+ assert.deepEqual(npcDecision(av,{kind:'help'}),npcDecision(bv,{kind:'help'}));
+ assert.equal(standing(engine,a.state,npc,other),standing(engine,b.state,npc,other));
+ const believed=structuredClone(bv);believed.knowledge.facts.secret_membership={value:true,kind:'belief',credence:0.8};
+ const disbelieved=structuredClone(bv);disbelieved.knowledge.facts.secret_membership={value:false,kind:'belief',credence:0.8};
+ const request={kind:'help',proposition:'secret_membership'};
+ assert.notEqual(npcDecision(believed,request).outcome,npcDecision(disbelieved,request).outcome);
  assert.ok(!JSON.stringify(bv).includes('沉没'));assert.equal(bv.self.clauses[0].status,undefined);
 });
 test('知情和 belief 读版本；揭穿覆盖信念，分支读取不会污染另一分支',()=>{

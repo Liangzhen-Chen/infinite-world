@@ -21,11 +21,12 @@ export function npcDecision(view,request={}){
  add('circumstances',{busy,mental:view.self.mental,urgent:urgent?.content??null,plan:view.self.plan?.goal??null});
  const conflicts=knownActiveObligations(view).filter(o=>Math.max(view.minute,o.start??view.minute)<Math.min(view.minute+Math.max(1,time),o.deadline??Infinity));
  const identity=subjectiveFact(view,'identity_conflict')?.value,norm=subjectiveFact(view,`norm:${request.kind}`)?.value;
- add('conflicts',{obligations:conflicts.map(o=>o.id),identity:identity??null,norm:norm??null});
+ const publicKey=request.kind==='public_key';
+ add('conflicts',{obligations:conflicts.map(o=>o.id),identity:identity??null,norm:norm??null,publicKey,publicKeyRule:publicKey?'公共仓库钥匙仅由有职权的管事保管':null});
  const alternatives=view.observable.services.filter(s=>s.provider!==view.observer&&(!request.service||s.service===request.service));
  let outcome='agree',reason='可以，就这么办。',conditions=null;
  if(red||view.self.minor&&tags.includes('romance')){outcome='refuse';reason=red?`这触犯我的底线：${typeof red==='string'?red:red.reason??red.action}`:'未成年人物只进行正常互动。';}
- else if(request.kind==='public_key'){outcome='refuse';reason='公共仓库的钥匙不能私借，请找有职权的管事。';}
+ else if(publicKey){outcome='refuse';reason='公共仓库的钥匙不能私借，请找有职权的管事。';}
  else if(money>view.self.coins||belief?.value===false){outcome='refuse';reason=belief?.value===false?'我相信这件事不可靠。':'我没有足够的随身钱款。';}
  else if(busy||urgent||view.self.plan&&view.self.plan.status!=='completed'&&(view.self.plan.urgency??0)>(request.urgency??0)){outcome='defer';reason=urgent?`我得先${urgent.content}。`:'我现在脱不开身，稍后再说。';}
  else if(conflicts.length||identity===true||norm==='forbid'){outcome='refuse';reason=conflicts.length?'这与我已经答应的事冲突。':identity?'这与我的身份职责冲突。':'我知道的成员规矩不允许这样做。';}

@@ -16,6 +16,17 @@ test('对话入口、N2 完成后仍可聊天；N3 拒借公钥有理由；询�
  const ask=await talk(ui,'ask',{content:'不存在的秘密'});assert.ok(ask.ok,ask.error);assert.match(ask.lines.join(''),/不知道/);
  assert.ok((await talk(ui,'greet')).ok);
 });
+test('N2 脚本：询问 NPC 未知的具体消息，明确答不知情且不生成传闻或承诺',async t=>{
+ const ui=await setup(t);await primed(ui);
+ const before=await ui.read(),beforeRumors=Object.values(before.state.records).filter(r=>r.category==='rumor').length;
+ const result=await talk(ui,'ask',{content:'秘密会籍的成员名单'});
+ assert.ok(result.ok,result.error);assert.match(result.lines.join(''),/不知/);
+ assert.equal(result.result.dialogue.decision.outcome,'agree');
+ const after=await ui.read();
+ assert.equal(Object.values(after.state.records).filter(r=>r.category==='rumor').length,beforeRumors);
+ assert.equal(Object.values(after.state.obligations??{}).length,Object.values(before.state.obligations??{}).length);
+ assert.ok(!JSON.stringify(after.state.npcs[NPC].memoryStream??[]).includes('成员名单'));
+});
 test('N4 请求带路经同一决策，按真实路线同行、到达完成；回执和导出可重放',async t=>{
  const ui=await setup(t);await primed(ui);const before=await ui.read();
  const request=await talk(ui,'guide',{destination:'loc_hw'});assert.ok(request.ok,request.error);
