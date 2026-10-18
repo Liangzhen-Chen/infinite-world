@@ -13,20 +13,8 @@ import {initialIn} from './wildlife-habitats.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 import {changeHolding,changeLegacyHoldings,transition} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {defineHoldingSource} from './holding-sources.mjs';
 declareHoldingWriter('wildlife-society',{kinds:['tamed_by','member_of'],entities:['wreck'],locations:true});
 const societyEntity=(key,row)=>row?.entity??`society_${key.replaceAll(':','_')}`;
-// The domain owns both the producer and its old-document projection. Register
-// through the existing source API so genesis, reload and reconciliation agree.
-defineHoldingSource('spirit-society',{
-    recordCategories:['spirit_society'],unitOfRecord:(_state,key)=>key,
-    units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='spirit_society').map(([key])=>key),
-    extract(engine,state,key){
-        const row=state.records?.[key];if(!row||row.status==='已散')return null;
-        return {holdings:Object.keys(row.members??{}).filter(id=>state.creatures?.[id]?.society?.id===key&&isEffective(engine,state,id))
-            .map(holder=>({kind:'member_of',holder,subject:societyEntity(key,row)}))};
-    },
-});
 
 // T161 成精后的修习与结社。只作用于已立意的同一身体：修习、借形、结社都写在
 // creatures[id] 上，不改等级、体力、物种或生态来源，不生成新人口，也不凭空造物。
@@ -211,7 +199,7 @@ export function spiritAction(d,args,eventId,target){
         if(dissolved)row.status='已散';
         const entity=societyEntity(key,row);
         changeLegacyHoldings(d,this,{holder:target,subject:entity,kinds:['member_of'],reason:'vacated',eventId},()=>{
-            d.set(['state','records',key],row);d.remove(['state','creatures',target,'society']);
+            holdingSet(d,null,['state','records',key],row,'wildlife-society');d.remove(['state','creatures',target,'society']);
         });
         if(dissolved)transition(d,this,{entity,basis:'dissolution',origin:'dissolution',eventId:`${eventId}:dissolution`});
         logEvent(d,target,{kind:'离群',party:'player',event:eventId,minute,society:key});
@@ -307,10 +295,10 @@ export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
             logEvent(d,id,{kind:'定居',event:sourceEvent,minute,society:key});
         }
         row.history=[...row.history,{minute,event:sourceEvent,joined:ids}];
-        d.set(['state','records',key],row);
+        holdingSet(d,null,['state','records',key],row,'wildlife-society');
         (prior&&prior.status!=='已散'||home?result.joined:result.formed).push({society:key,location,members:ids});
     }
-    if(groups.size)d.set(['state','records','spirit_society_check'],{category:'spirit_society_check',minute,sourceEvent,...clone(result)});
+    if(groups.size)holdingSet(d,null,['state','records','spirit_society_check'],{category:'spirit_society_check',minute,sourceEvent,...clone(result)},'wildlife-society');
     return result;
 }
 export function advanceSpiritSocieties(d,engine,day){

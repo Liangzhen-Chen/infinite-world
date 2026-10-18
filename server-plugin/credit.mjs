@@ -91,7 +91,7 @@ export function releasePledge(d,engine,key,to,bank=null){
         changeItems(d,engine,to,p.item,p.quantity,{books:{account:pledged(engine,key,p.item),writer:'credit',eventId:key}});
         if(p.instances.length){
             const bag=[...engine.bagPath(to),p.item,'instances'];d.set(bag,[...d.get(...bag)??[],...p.instances]);
-            const deceased=d.get('holdings','entities',to,'facts','of'),container=deceased&&d.get('holdings','protocol','entities',deceased,'wreck');
+            const estateOwner=d.get('holdings','entities',to,'facts','of'),container=estateOwner&&d.get('holdings','protocol','entities',estateOwner,'wreck');
             for(const unit of p.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有',...(container?{container}:{})},'credit');
         }
     }

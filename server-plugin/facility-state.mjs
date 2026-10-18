@@ -1,4 +1,6 @@
+import {recordsMemo} from './storage.mjs';
 // Facility projections import no runtime modules; domain callbacks are installed below.
+const rebuildCatalog=Symbol('facility rebuilds');
 export const FACILITY_TYPES=Object.freeze({
  house:{purpose:'住宅',services:['housing'],capacity:4,wood:8,stone:2,work:2},
  workshop:{purpose:'工坊',services:['craft'],capacity:2,wood:8,stone:4,work:3},
@@ -42,7 +44,8 @@ export function within(engine,state,id,location){
 // binds its physical condition/capacity to that edge, including all planners.
 export function facilityRouteStates(engine,state){
  const out=new Map();if(!state)return out;
- const replaced=new Set(Object.values(state.created??{}).filter(b=>b.rebuiltFrom&&state.buildings?.[b.id]).map(b=>b.rebuiltFrom));
+ const rebuilt=recordsMemo(state.created,rebuildCatalog,()=>Object.values(state.created??{}).filter(b=>b.rebuiltFrom));
+ const replaced=new Set(rebuilt.filter(b=>state.buildings?.[b.id]).map(b=>b.rebuiltFrom));
  for(const [id,row] of Object.entries(state.buildings??{})){
   if(replaced.has(id))continue;
   const route=row.route??facilityDefinition(engine,state,id)?.route;if(!route)continue;

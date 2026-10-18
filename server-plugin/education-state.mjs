@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,recordsMemo,recordIndexActive} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -9,6 +9,17 @@ import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 const DAY=1440;
+// Catalog identity follows immutable world/created partitions, never the clock,
+// skills or legal state. Those remain live inputs to every course derivation.
+const emptyCreated=Object.freeze({});
+const householdCatalog=Symbol('education households');
+function educationCatalog(e,s){
+ return recordsMemo(s.created??emptyCreated,e.world,()=>{
+  const entities=Object.values(s.created??{});
+  return {people:[...new Map([...e.world.residents??[],...e.world.npcs,...entities].filter(p=>p.id?.startsWith('npc_')).map(p=>[p.id,p])).values()],
+   sites:[...e.world.locations,...entities.filter(x=>x.id?.startsWith('bld_'))].filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school')};
+ });
+}
 export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
 export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
 export const knowledgeProficiency=(e,s,id,skill)=>{
@@ -22,8 +33,7 @@ export function knowsKnowledge(e,s,id,entity){
  return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id));
 }
 export function educationSites(e,s){
- const places=[...e.world.locations,...Object.values(s.created??{}).filter(x=>x.id?.startsWith('bld_'))];
- const out=places.filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school').map(p=>({id:`school:${p.id}`,name:p.name,kind:/书院/.test(p.name)?'书院':/私塾/.test(p.name)?'私塾':'学馆',seat:p.id,leader:null}));
+ const out=educationCatalog(e,s).sites.map(p=>({id:`school:${p.id}`,name:p.name,kind:/书院/.test(p.name)?'书院':/私塾/.test(p.name)?'私塾':'学馆',seat:p.id,leader:null}));
  for(const t of temples(e))if(t.seat&&!out.some(o=>o.seat===t.seat))out.push({id:t.id,name:t.name,kind:'寺观义学',seat:t.seat,leader:t.teacher});
  for(const r of educationRows(s))if(!out.some(o=>o.id===r.org))out.push({id:r.org,name:r.name,kind:r.schoolKind,seat:r.location,leader:r.teacher});
  return out.map(o=>({...o,capacity:facilityView(e,s,o.seat)?.capacity??0}));
@@ -32,7 +42,8 @@ function settlement(e,s,id){
  const n=s.npcs?.[id],b=s.created?.[id]??e.byId.get(id);
  if(n?.residence?.settlement)return n.residence.settlement;
  const hid=n?.residence?.household??n?.householdId??b?.householdId;
- const h=e.world.households?.find(h=>h.id===hid);return h?.settlement??b?.settlement??b?.scope;
+ const h=recordIndexActive()?recordsMemo(e.world.households,householdCatalog,()=>new Map((e.world.households??[]).map(h=>[h.id,h]))).get(hid):e.world.households?.find(h=>h.id===hid);
+ return h?.settlement??b?.settlement??b?.scope;
 }
 // A read-only pass over one fixed state (engine.scene) may set e.educationCourseMemo
 // (WeakMap state→courses): the same state object derives the same courses.
@@ -47,7 +58,7 @@ function deriveEducationCourses(e,s){
  const rows=educationRows(s),out=[...rows];
  // Derive classes from the teacher's current work, not just the authored
  // schedule. Hired teachers and changed livelihoods use the same entrance.
- const people=[...new Map([...e.world.residents??[],...e.world.npcs,...Object.values(s.created??{})].filter(p=>p.id?.startsWith('npc_')).map(p=>[p.id,p])).values()];
+ const people=educationCatalog(e,s).people;
  const layers=Object.keys(s.population??{}).length?(e.advanceLayerContext??advanceLayerPlan(e,s)):null;
  const settlements=new Set((e.world.settlementProfiles??[]).map(p=>p.id));
  // Teachers, their routines and teaching contracts do not depend on the site:
@@ -58,12 +69,12 @@ function deriveEducationCourses(e,s){
  const routines=new Map(teachers.map(id=>[id,npcSchedule(e,s,id,undefined,constraints)]));
  const jobs=recordsWhere(s.records,'category','contract').filter(r=>['有效','要求加薪'].includes(r.status)&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
  const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
- const homeOf=memo(id=>settlement(e,s,id)),ageOf=memo(id=>npcAgeAt(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
+ const homeOf=memo(id=>settlement(e,s,id)),literacyOf=memo(id=>knowledgeProficiency(e,s,id,'skill_literacy'));
  // Each school used to rescan the entire expanded population for every
  // teacher and slot. Group the same ordered candidates once per derivation.
  const pupilsByTown=new Map();
  for(const p of people){
-  const age=ageOf(p.id);
+  const age=npcAgeAt(e,s,p.id);
   if((age??0)<(e.rules.education?.minimumAge??6)||(age??99)>(e.rules.education?.maximumAge??17)||isPhysicallyDead(e,s,p.id))continue;
   const town=homeOf(p.id);if(!pupilsByTown.has(town))pupilsByTown.set(town,[]);
   pupilsByTown.get(town).push(p);

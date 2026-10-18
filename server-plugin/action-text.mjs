@@ -65,6 +65,7 @@ function variables(engine,action,before,after,args,result,templates){
  for(const k of ['seller','buyer','target','item','destination','skill','recipe'])resolved(k);
  const elapsed=(s.minute??0)-(before.state.minute??0);
  vars.duration=durationText(Math.max(0,elapsed),templates);vars.clock=clockText(s.minute??0);vars.place=nameOf(engine,s,s.location);
+ vars.actor=nameOf(engine,s,result?.actor??'player');
  return vars;
 }
 // Other people's purses appear only for the counterparties named in this action (the player cannot see anyone else's money move).

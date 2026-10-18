@@ -48,8 +48,8 @@ export function genealogy(e,s,root,viewer='player',recipient=viewer){
  const knownEdges=edges.filter(r=>ids.has(r.from)&&ids.has(r.to));
  return {root,people:[...ids].sort().filter(id=>familyPerson(e,s,id)).map(id=>{
   const p=familyPerson(e,s,id),death=Object.values(s.family?.deaths??{}).find(r=>r.person===id);
-  const dead=death&&familyFactKnown(s,{source:death.id,participants:[id]},viewer);
-  return {id,name:p.name,age:npcAgeAt(e,s,id,dead?death.minute:s.minute),...(dead?{status:'已故',diedAt:death.minute}:{} )};
+  const knownDeath=death&&familyFactKnown(s,{source:death.id,participants:[id]},viewer);
+  return {id,name:p.name,age:npcAgeAt(e,s,id,knownDeath?death.minute:s.minute),...(knownDeath?{status:'已故',diedAt:death.minute}:{} )};
  }),relations:knownEdges.map(r=>({from:r.from,to:r.to,type:r.type,source:r.source,ended:r.ended??false}))};
 }
 export function familyOrganizationProjection(e,s,org,root,viewer='player'){

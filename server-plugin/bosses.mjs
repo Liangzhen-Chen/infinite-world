@@ -1,3 +1,4 @@
+import {isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {monsterStats,tacticDefense} from './combat.mjs';
 import {validateBossMechanics,templateBossCounter}from'./boss-abilities.mjs';
@@ -10,7 +11,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 declareHoldingWriter('bosses',{kinds:['controls','tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
-const living=a=>a&&a.status!=='死亡'&&a.hp>0;
+const living=(d,id)=>isLiving(null,d,id)&&d.get('state',id?.startsWith('npc_')?'npcs':'creatures',id)?.hp>0;
 function writeLair(d,engine,boss,row){
     const previous=d.get(...key(boss)),holder=previous?.occupant?.actor??previous?.occupant?.definition;
     const write=()=>holdingSet(d,engine,key(boss),row,'bosses');
@@ -52,9 +53,9 @@ export function validateBossEcology(world){
 export function bossCounter(d,engine,target,tactic){
     const actor=engine.actor(d,target),r=engine.rules.bossEcology;
     // Species nature and body tags go through the interaction table (K2).
-    const n=living(actor)?creatureCounter(traitsOf(engine,d.get('state'),target),tactic):null;
+    const n=living(d,target)?creatureCounter(traitsOf(engine,d.get('state'),target),tactic):null;
     const element=n?{damageMultiplier:n.damageMultiplier,interaction:n.interaction,...(n.nature?{nature:n.nature}:{})}:null;
-    if(!r||!actor?.boss||!living(actor))return{tactic,seen:0,damageMultiplier:actor?.boss?1:element?.damageMultiplier??1,adapted:false,...(element&&!actor.boss?{...element}:{})};
+    if(!r||!actor?.boss||!living(d,target))return{tactic,seen:0,damageMultiplier:actor?.boss?1:element?.damageMultiplier??1,adapted:false,...(element&&!actor.boss?{...element}:{})};
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
     if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
     const counter=templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
@@ -72,7 +73,7 @@ export function rememberBossTactic(d,engine,target,tactic,eventId){
     if(publicAttitude)d.say(`${actor.name}：${publicAttitude.attitude}。${publicAttitude.reason}`);
 }
 export function defeatBoss(d,engine,target,eventId){
-    const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(actor))return null;
+    const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(d,target))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
     const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
     r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;writeLair(d,engine,boss,r);
@@ -100,7 +101,7 @@ export function advanceBosses(d,engine,day){
     for(const boss of engine.world.bosses.filter(b=>b.residence)){
         const r=clone(d.get(...key(boss)));if(r.lastDay!==day-1)throw new Error('巢穴日结不连续');
         if(boss.actor){
-            const actor=engine.actor(d,boss.actor),present=living(actor)&&actor.location===boss.residence.location;
+            const actor=engine.actor(d,boss.actor),present=living(d,boss.actor)&&actor.location===boss.residence.location;
             r.occupant=present?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
             r.status=present?'驻守':'空置';r.reoccupyAfter=null;
             r.lastDay=day;writeLair(d,engine,boss,r);continue;
@@ -118,7 +119,7 @@ export function advanceBosses(d,engine,day){
                 r.history.push({type:'迁入',day:day+1,occupant:actor.id,definition:species});break;
             }
         }
-        if(r.occupant?.kind==='monster'&&!living(engine.actor(d,r.occupant.actor))){
+        if(r.occupant?.kind==='monster'&&!living(d,r.occupant.actor)){
             r.history.push({type:'迁入者离去或死亡',day,occupant:r.occupant.actor});r.occupant=null;r.status='空置';r.vacantSince=day;r.reoccupyAfter=day+boss.residence.vacancyDays;
         }
         r.lastDay=day;writeLair(d,engine,boss,r);
@@ -143,12 +144,12 @@ export function lairAction(d,args,eventId){
     const latest=clone(d.get(...key(boss)));
     if(boss.actor){
         const actor=this.actor(d,boss.actor);
-        latest.occupant=living(actor)&&actor.location===boss.residence.location?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
+        latest.occupant=living(d,boss.actor)&&actor.location===boss.residence.location?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
         latest.status=latest.occupant?'驻守':'空置';holdingSet(d,null,key(boss),latest,'bosses');
     }
     if(!latest.occupant)return{contact:null,note:'巢穴实际空置，进入不会触发原首领重生'};
     if(latest.occupant.actor){const actor=this.actor(d,latest.occupant.actor);
-        if(!living(actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
+        if(!living(d,latest.occupant.actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
         rememberBossEncounter(d,this,latest.occupant.actor,{kind:'approach',eventId});
         return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,...publicContact(d,this,latest.occupant.actor)},alreadyPresent:true};}
     if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw new Error('巢穴占据者记录无效');

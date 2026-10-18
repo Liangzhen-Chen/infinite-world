@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
 import {recordRitualCare}from'./magic-ritual.mjs';
@@ -63,7 +64,7 @@ function wound(m,args){
 }
 function living(d,engine,c,args){
  const target=resolveCreature(engine,d,args.target??'player'),path=actorPath(target),a=d.get(...path),location=d.get('state','location');
- if(!a||target!=='player'&&a.location!==location||a.status==='死亡')throw Error('治疗目标不在场或已经死亡');
+ if(!a||target!=='player'&&a.location!==location||isPhysicallyDead(engine,d,target))throw Error('治疗目标不在场或已经死亡');
  assertMagicTargeting(d,engine,c,args,target);
  assertSpellConsent(d,engine,c,args,target,'healing');
  if(target!=='player'){
@@ -230,7 +231,7 @@ export function strainCare(d,engine,target,minutes){
  }
 }
 function advanceMedical(d,engine,target,minute){
- const path=actorPath(target),a=d.get(...path);if(!a?.medical||a.status==='死亡')return;
+ const path=actorPath(target),a=d.get(...path);if(!a?.medical||isPhysicallyDead(engine,d,target))return;
  const m=medical(d,target),loss=m.wounds.reduce((n,w)=>n+number(w.bleedingMlPerMinute,0,1000,'出血速度'),0);
  if(loss){m.bloodMl=Math.max(0,m.bloodMl-loss);m.lostBloodMl=(m.lostBloodMl??0)+Math.min(loss,a.medical.bloodMl);}
  for(const w of m.wounds)if(w.closed&&w.contamination>0&&w.infectionRisk>=50){
@@ -312,8 +313,8 @@ function advanceFood(d,engine,row,minute){
 export function advanceCare(d,engine,before,after){
  // A record with nothing that bleeds, festers, heals or is dying stays as it
  // is minute by minute (e.g. only an illness fever), so it is not stepped.
- const changing=a=>a?.medical&&a.status!=='死亡'&&(a.status==='濒死'||!(a.medical.bloodMl>0)||a.medical.tendon?.ruptured||a.medical.wounds?.some(w=>w.bleedingMlPerMinute>0||w.closed&&w.contamination>0&&w.infectionRisk>=50)||!Array.isArray(a.medical.wounds));
- const actors=['player',...Object.keys(d.get('state','npcs')??{}),...Object.keys(d.get('state','creatures')??{})].filter(id=>changing(d.get(...actorPath(id))));
+ const changing=a=>a?.medical&&(a.status==='濒死'||!(a.medical.bloodMl>0)||a.medical.tendon?.ruptured||a.medical.wounds?.some(w=>w.bleedingMlPerMinute>0||w.closed&&w.contamination>0&&w.infectionRisk>=50)||!Array.isArray(a.medical.wounds));
+ const actors=['player',...Object.keys(d.get('state','npcs')??{}),...Object.keys(d.get('state','creatures')??{})].filter(id=>!isPhysicallyDead(engine,d,id)&&changing(d.get(...actorPath(id))));
  const rows=environmentFeatures(engine).filter(r=>r.careProcess==='plant'||r.careProcess==='food'||Object.values(d.get('state','effects')??{}).some(e=>e.kind==='care'&&e.target===r.id));
  if(!actors.length&&!rows.length)return;
  for(let minute=before;minute<after;minute++){

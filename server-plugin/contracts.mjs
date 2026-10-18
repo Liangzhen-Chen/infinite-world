@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('contracts');
@@ -29,7 +30,7 @@ export function advanceShadowContracts(d,before,after){
   if(e.target!=='player'&&(permission?.category!=='authorization'||permission.action!=='mental_magic'||permission.subject!==e.target||permission.grantor!==e.target||permission.grantee!=='player'||permission.revoked||permission.expires<=before)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const until=Math.min(after,e.expires,e.target==='player'?Infinity:permission.expires),minutes=Math.max(0,until-Math.max(before,e.started));
   const path=e.target==='player'?['state','player']:['state','npcs',e.target],actor=d.get(...path);
-  if(!actor?.mental||actor.status==='死亡'){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
+  if(!actor?.mental||isPhysicallyDead(engine,d,e.target)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const amount=Math.min(e.remaining,minutes*e.stressPerMinute);
   d.set([...path,'mental','stress'],Math.min(100,actor.mental.stress+amount));
   holdingSet(d,null,[...contractPath(id),'enforcement'],{...e,remaining:e.remaining-amount,active:e.remaining>amount&&until===after&&after<e.expires},'contracts');

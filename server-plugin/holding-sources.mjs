@@ -20,7 +20,7 @@ import {storedOrganization,storedOrganizationIds} from './organization-state.mjs
 import {actorId} from './npc-state.mjs';
 import {snapshotContractTerms} from './contract-state.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
-import {isGone} from './lifecycle-state.mjs';
+import {isGone,isEffective} from './lifecycle-state.mjs';
 import {runHoldingProtocol} from './holdings.mjs';
 import {legalCodeById} from './law-codes.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
@@ -45,6 +45,7 @@ export function defineHoldingSource(name,spec){
     sources.set(name,spec);
 }
 export const holdingSources=()=>[...sources.keys()].sort();
+
 
 defineHoldingSource('transition',{
     recordCategories:['transition','transition_procedure'],unitOfRecord:(state,key)=>state.records?.[key]?.entity,
@@ -784,5 +785,17 @@ defineHoldingSource('guardianship',{
     extract(engine,state,key){
         const r=state.records?.[key];if(r?.category!=='guardianship'||r.status!=='代管中'||!r.guardian||!r.ward)return null;
         return {holdings:[{kind:'guardian_of',holder:actorId(engine.world,r.guardian),subject:actorId(engine.world,r.ward),terms:{scope:r.scope??'person_and_property'}}]};
+    },
+});
+
+// Keep registration with the source registry. A domain importing this registry
+// through npc-state/entity-view must not call it during its initialization cycle.
+defineHoldingSource('spirit-society',{
+    recordCategories:['spirit_society'],unitOfRecord:(_state,key)=>key,
+    units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r?.category==='spirit_society').map(([key])=>key),
+    extract(engine,state,key){
+        const row=state.records?.[key];if(!row||row.status==='已散')return null;
+        return {holdings:Object.keys(row.members??{}).filter(id=>state.creatures?.[id]?.society?.id===key&&isEffective(engine,state,id))
+            .map(holder=>({kind:'member_of',holder,subject:row.entity??`society_${key.replaceAll(':','_')}`}))};
     },
 });

@@ -23,6 +23,7 @@ function willing(engine,state,npc,opponent,rule){
 export function activeDuel(d,engine,target,challenger='player'){
     const now=d.get('state','minute'),location=d.get('state','location');
     return Object.values(d.get('state','records')??{}).find(r=>r.category==='duel'&&r.status==='已接受'&&[r.challenger,r.target].includes(challenger)&&[r.challenger,r.target].includes(target)&&challenger!==target&&r.location===location&&r.expires>now
+        &&[r.challenger,r.target].every(id=>awake(id==='player'?d.get('state','player'):d.get('state','npcs',id),engine,d,id)&&(id==='player'||d.get('state','npcs',id,'location')===location))
         &&awake(d.get('state','npcs',r.witness),engine,d,r.witness)&&d.get('state','npcs',r.witness,'location')===location);
 }
 export function duelAction(d,args,id){

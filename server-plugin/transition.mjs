@@ -67,6 +67,13 @@ const live=(d,e,id)=>{
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
     if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    // Site reserves are anchored to an authored resource of the live site,
+    // rather than an independent agent named by the composite account owner.
+    if(id.startsWith('site:')){
+        const site=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>
+            p.site?.resources?.some(r=>id===`site:${p.id}:${r.id}`));
+        if(site)return live(d,e,site.id);
+    }
     // Workstation inventory is a real S1 account, anchored at its building.
     const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
     if(stationPlace)return live(d,e,stationPlace.id);

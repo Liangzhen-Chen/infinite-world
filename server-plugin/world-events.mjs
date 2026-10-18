@@ -1,3 +1,5 @@
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('world-events',{kinds:[]});
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Normalized world events. Every settled tool call yields one event
 // {verb,actor,target,harm|gift|value,witnesses,location,tags,minute}; side
@@ -58,8 +60,8 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
         e={verb:'proposal_rejected',actor:'player',target:detail.seller??null,reason:detail.reason,tags:['proposal_rejected']};
     }else if(tool==='combat'&&detail.target){
         const intent=args.intent??'attack',hostile=['attack','shove'].includes(intent);
-        e={verb:hostile?'harm':'clash',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat',`tactic:${intent}`,...(hostile?['hostile','violence']:[])]};
-        if(detail.duel)e={verb:'duel',actor:'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat','duel',detail.duelRule],duel:detail.duel};
+        e={verb:hostile?'harm':'clash',actor:detail.actor??'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat',`tactic:${intent}`,...(hostile?['hostile','violence']:[])]};
+        if(detail.duel)e={verb:'duel',actor:detail.actor??'player',target:detail.target,harm:Math.max(0,detail.damage??0),tags:['combat','duel',detail.duelRule],duel:detail.duel};
     }else if(tool==='cast'){
         const spell=engine.byId.get(detail.spell??resolve(engine,args.spell)),kind=spell?.effectSpec?.kind;
         const target=typeof detail.target==='string'&&detail.target!=='player'?detail.target:null;
@@ -131,7 +133,7 @@ export function drainWorldReactions(d){
                 if(limited&&(depth>d.scheduler.config.depthLimit||tick.count>=d.scheduler.config.proposalLimit)){
                     const cause=events[0];
                     const id=`reaction_cut:${cause.seq??cause.id}:${s.id}`;
-                    d.set(['state','records',`world_event:${id}`],{category:'world_event',id,verb:'reaction_cut',cause:cause.seq,depth,rule:s.id,limit:depth>d.scheduler.config.depthLimit?'depth':'proposal',minute:cause.minute,phase:PHASE.reaction});
+                    holdingSet(d,engine,['state','records',`world_event:${id}`],{category:'world_event',id,verb:'reaction_cut',cause:cause.seq,depth,rule:s.id,limit:depth>d.scheduler.config.depthLimit?'depth':'proposal',minute:cause.minute,phase:PHASE.reaction},'world-events');
                     continue;
                 }
                 tick.active={depth,priorityClass:s.priorityClass,cause:events[0].seq};
@@ -150,7 +152,7 @@ export function publishWorldEvents(d,engine,events,context,subscribers){
     if(d.scheduler)events=events.map(e=>SOCIAL_VERBS.has(e.verb)?{...e,seq:d.get('state','records',`world_event:${e.id}`)?.seq??e.seq??d.scheduler.nextSeq()}:e);
     if(!context.legacy)for(const e of events)if(SOCIAL_VERBS.has(e.verb)&&e.actor){
         const key=`world_event:${e.id}`;if(d.get('state','records',key))continue;
-        const {legacy:_,...row}=e;d.set(['state','records',key],{category:'world_event',...row});
+        const {legacy:_,...row}=e;holdingSet(d,engine,['state','records',key],{category:'world_event',...row},'world-events');
     }
     if(d.scheduler){
         const own=!d.reactionTick;

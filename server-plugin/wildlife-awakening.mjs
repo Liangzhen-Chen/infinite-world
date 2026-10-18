@@ -1,3 +1,4 @@
+import {bodyLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
@@ -10,7 +11,7 @@ declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck']
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
 // 年岁按需计算，不为每只野兽每日写账；灵地、随人经历、灵物、点化和时钟各自记来源。
 const DAY=1440,clone=v=>structuredClone(v);
-const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
+const alive=a=>bodyLiving(a)&&a.hp>0;
 export const sapient=a=>Boolean(a?.mind?.awakened);
 const sources=['experience','place','item','mentor','clock'];
 export function awakeningEligible(engine,actor){

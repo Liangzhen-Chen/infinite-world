@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const pattern=/死亡|\b(?:dead|died|deceased|killed)\b/i;
-const semanticPattern=/(?:status\s*(?:===?|!==?)\s*['"](?:死亡|dead|died|deceased|killed)['"]|['"](?:死亡|dead|died|deceased|killed)['"]\s*[,\]]?\s*\.includes\(\s*\w+\.status|\b(?:dead|died|deceased|killed)\b\s*(?:\?|&&|\|\|)|(?:status|diedAt)\s*=\s*['"](?:死亡|dead|died|deceased|killed)['"])/i;
+const semanticPattern=/(?:status\s*(?:===?|!==?)\s*['"](?:死亡|dead|died|deceased|killed)['"]|['"](?:死亡|dead|died|deceased|killed)['"]\s*[,\]]?\s*\.includes\(\s*\w+\.status|\b(?:dead|died|deceased|killed)\b\s*(?:\?|&&|\|\|)|(?:status|diedAt)\s*=\s*['"](?:死亡|dead|died|deceased|killed)['"]|\bset\([^\n;]*['"]status['"][^\n;]*['"]死亡['"])/i;
 function files(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(dir,e.name)):e.name.endsWith('.mjs')?[path.relative(root,path.join(dir,e.name)).replaceAll('\\','/')]:[]);}
 function scan(){
  const all=files(path.join(root,'server-plugin')).sort(),raw=all.filter(f=>pattern.test(fs.readFileSync(path.join(root,f),'utf8')));

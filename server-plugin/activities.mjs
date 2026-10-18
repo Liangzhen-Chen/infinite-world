@@ -1,9 +1,11 @@
+import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
 import {nationAction} from './nation-founding.mjs';
 import {appointmentSource} from './noble-state.mjs';
 import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
+import {npcEntryCheck} from './checks.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
 import{visibilityPenalty}from'./magic-context.mjs';
@@ -76,75 +78,83 @@ export const activities={
     pet(d,args,id){return petAction.call(this,d,args,id);},
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
+        const attacker=args.actor&&args.actor!=='player'?this.resolve(args.actor,'npc'):'player',attackerPath=attacker==='player'?['state','player']:['state','npcs',attacker];
         const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??target),isBoss=Boolean(npc?.boss);
-        const duel=isNpc?activeDuel(d,this,target):null,nonlethal=duel?.rule==='touch';
+        const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
+        if(attacker!=='player'&&(!duel||!isEffective(this,d,attacker)||d.get(...attackerPath,'location')!==d.get('state','location')))throw Error('NPC 交锋须为本人已接受且见证人在场的约斗');
         if(!isNpc&&!['monster_','boss_'].some(prefix=>target.startsWith(prefix)))throw new Error('这个实体不是交锋对象');
         if(!npc||npc.location!==d.get('state','location'))throw new Error('对手不在场');
-        if(npc.status==='死亡')throw new Error('对手已经死亡');
+        if(isPhysicallyDead(this,d,target))throw new Error('对手已经死亡');
         const weapon=args.weapon?this.resolve(args.weapon,'item'):null;
-        if(weapon&&this.quantity(d,'player',weapon)<1)throw new Error('没有这件武器');
-        if(weapon){const held=heldUnit(d,this,'player',weapon),definition=this.byId.get(weapon);
+        if(weapon&&this.quantity(d,attacker,weapon)<1)throw new Error('没有这件武器');
+        if(weapon){const held=heldUnit(d,this,attacker,weapon),definition=this.byId.get(weapon);
             if(held.durability<=0)throw new Error('武器已损坏，需要修理');
             const gate=this.rules.equipment.requiredLevels[this.rules.equipment.qualities.indexOf(held.quality??definition.quality)];
-            if(d.get('state','player','level')<gate)throw new Error(`这件装备需要${gate}级`);
+            if((d.get(...attackerPath,'level')??this.byId.get(attacker)?.level??1)<gate)throw new Error(`这件装备需要${gate}级`);
         }
-        const p=d.get('state','player'),level=npc.level??base.level??base.levelRange?.[0]??1;
-        const opponentBase=isNpc&&!isBoss?derivedStats({level,attributes:base.attributes,profession:Boolean(base.combatProfession)},this.rules)
+        const p=d.get(...attackerPath),level=npc.level??base.level??base.levelRange?.[0]??1;
+        const opponentBase=isNpc&&!isBoss?derivedStats({level,attributes:npc.attributes??base.attributes,profession:Boolean(base.combatProfession)},this.rules)
             :monsterStats({level,template:base.template??this.byId.get(base.monster)?.template??2,bossTier:base.tier??0},this.rules);
         const opponentContext=this.magicStatusContext(d,target),opponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext));
         opponent.evasion=Math.max(0,opponent.evasion-waterEarthMudPenalty(d,this,target)*.05);
         if(opponent.divine&&!d.get('state','divinePermissions',target))throw new Error('神性屏障阻止普通攻击，需要交涉、逃离或取得特殊条件');
-        const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,'player',weapon):null;
+        const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,attacker,weapon):null;
         const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
-        const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=careerEquipment(d.get('state'));
-        const hidden=hiddenCombat(this,d.get('state'),'player',args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
+        const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=attacker==='player'?careerEquipment(d.get('state')):{};
+        const hidden=hiddenCombat(this,d.get('state'),attacker,args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
         opponent.defense+=otherHidden.defense;
         const equipment=Object.fromEntries([...new Set([...Object.keys(weaponStats),...Object.keys(careerStats)])].map(key=>[key,(weaponStats[key]??0)+(careerStats[key]??0)]));
         equipment.defense=(equipment.defense??0)+hidden.defense;
-        const playerBase=derivedStats({level:p.level,attributes:p.attributes,profession:Boolean(d.get('state','professions','combat')),equipment},this.rules),playerContext=this.magicStatusContext(d,'player');
+        const playerBase=derivedStats({level:p.level??this.byId.get(attacker)?.level??1,attributes:p.attributes??this.byId.get(attacker)?.attributes,profession:attacker==='player'?Boolean(d.get('state','professions','combat')):Boolean(this.byId.get(attacker)?.combatProfession),equipment},this.rules),playerContext=this.magicStatusContext(d,attacker);
         playerContext.moving=['flee','shove'].includes(args.intent);
-        const stats=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
-        stats.evasion=Math.max(0,stats.evasion-waterEarthMudPenalty(d,this)*.05);
-        const maxHp=npc.maxHp??opponent.maxHp,hp=npc.hp??maxHp,rng=combatRandom(d.document,id),intent=args.intent??'attack';
+        const stats=withMagicStats(playerBase,magicStatusStats(d,attacker,playerContext));
+        stats.evasion=Math.max(0,stats.evasion-waterEarthMudPenalty(d,this,attacker)*.05);
+        const attackerHp=p.hp??stats.maxHp,maxHp=npc.maxHp??opponent.maxHp,hp=npc.hp??maxHp,rng=combatRandom(d.document,id),intent=args.intent??'attack';
         if(!['attack','defend','flee','shove'].includes(intent))throw new Error('交锋意图需为attack、defend、flee或shove');
-        if(intent==='flee')assertWaterEarthMovement(d);
-        if(intent==='flee')assertLightMovement(d,this);
+        if(intent==='flee')assertWaterEarthMovement(d,attacker);
+        if(intent==='flee')assertLightMovement(d,this,attacker);
         const tactic=intent==='attack'?(weapon?'armed':'unarmed'):intent,counter=bossCounter(d,this,target,tactic);
         const location=this.byId.get(d.get('state','location')),terrain=location.combatTags??[];
         const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&playerContext.illumination!=='lit'?this.rules.combat.terrain.dark.hit:0;
         const hitModifier=terrain.reduce((sum,tag)=>sum+(tag==='dark'&&playerContext.illumination==='lit'?0:this.rules.combat.terrain[tag]?.hit??0),0)+(weather?.hitModifier??0)+night;
-        const playerHit=visibilityPenalty(hitModifier,magicStatusStats(d,'player',playerContext),playerContext);
+        const playerHit=visibilityPenalty(hitModifier,magicStatusStats(d,attacker,playerContext),playerContext);
         const arrowPenalty=projectileAirPenalty(d,target,intent==='attack'?this.byId.get(weapon)?.projectileMg:undefined);
         const attack=intent==='flee'?{damage:0,hit:false}:strike(stats,opponent,rng,this.rules,{hitModifier:(intent==='shove'?playerHit-(1-counter.damageMultiplier):playerHit)+arrowPenalty,damageMultiplier:(intent==='defend'?0.65:intent==='shove'?0:1)*counter.damageMultiplier});
-        if(attack.hit)recordLocalContact(d,this,target,id);
-        if(intent!=='flee')consumeTransientMagic(d,'player',playerContext);
+        if(attack.hit&&attacker==='player')recordLocalContact(d,this,target,id);
+        if(intent!=='flee')consumeTransientMagic(d,attacker,playerContext);
         const protection=consumeMagicProtection(d,target,intent==='shove'?(attack.hit?1:0):attack.damage,'physical');
         const damage=nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
-        let escaped=false;if(intent==='flee')escaped=this.check(d,{attribute:'敏捷',difficulty:counter.escapeDifficulty??15},`${id}_escape`).success;
-        let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<p.hp&&!(nonlethal&&attack.hit)){
-            const currentOpponent=withMagicStats({...opponentBase,defense:opponentBase.defense+otherHidden.defense},magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,'player',playerContext));
-            currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this)*.05);
+        let escaped=false;if(intent==='flee'){
+            const check={attribute:'敏捷',difficulty:counter.escapeDifficulty??15};
+            escaped=(attacker==='player'?this.check(d,check,`${id}_escape`):npcEntryCheck(d,this,attacker,check,`${id}_escape`)).success;
+        }
+        let received=0,absorbed=0;const bossAbilities=[];for(let i=0;i<(opponent.attacks??1);i++)if(remaining>0&&!escaped&&received<attackerHp&&!(nonlethal&&attack.hit)){
+            const currentOpponent=withMagicStats({...opponentBase,defense:opponentBase.defense+otherHidden.defense},magicStatusStats(d,target,opponentContext)),currentPlayer=withMagicStats(playerBase,magicStatusStats(d,attacker,playerContext));
+            currentPlayer.evasion=Math.max(0,currentPlayer.evasion-waterEarthMudPenalty(d,this,attacker)*.05);
             const opponentDark=opponentContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0;
             const opponentHit=visibilityPenalty(hitModifier-(playerContext.illumination==='lit'?0:terrain.includes('dark')||night?this.rules.combat.terrain.dark.hit:0)+opponentDark,magicStatusStats(d,target,opponentContext),opponentContext);
-            const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit+projectileAirPenalty(d,'player',base.projectileMg),damageMultiplier:intent==='defend'?0.5:1});
-            if(hit.hit)recordLocalContact(d,this,target,id);
+            const hit=strike(currentOpponent,currentPlayer,rng,this.rules,{hitModifier:opponentHit+projectileAirPenalty(d,attacker,base.projectileMg),damageMultiplier:intent==='defend'?0.5:1});
+            if(hit.hit&&attacker==='player')recordLocalContact(d,this,target,id);
             consumeTransientMagic(d,target,opponentContext);
             const ability=isNpc&&!isBoss?null:applyBossCounterAbility(d,this,target,{eventId:id,attackIndex:i,hit:hit.hit,defense:currentPlayer.defense,remainingHp:remaining});
             if(ability)bossAbilities.push(ability);
             const abilityDamage=ability?.damage!==undefined?Math.max(0,Math.round(ability.damage*(intent==='defend'?.5:1))):hit.damage;
-            const protectedHit=consumeMagicProtection(d,'player',abilityDamage,ability?.damageType??'physical');received+=protectedHit.damage;absorbed+=protectedHit.absorbed;
+            const protectedHit=consumeMagicProtection(d,attacker,abilityDamage,ability?.damageType??'physical');received+=protectedHit.damage;absorbed+=protectedHit.absorbed;
         }
         const opponentTouched=nonlethal&&received>0;
-        if(nonlethal)received=Math.min(received,Math.max(0,p.hp-1));
+        if(nonlethal)received=Math.min(received,Math.max(0,attackerHp-1));
         d.set(['state',partition,target,'hp'],remaining);d.set(['state',partition,target,'maxHp'],maxHp);
         if(!remaining)recordEntityDeath(d,this,target,d.get('state','minute'),'战斗身亡');
         else if(remaining<maxHp*0.25)d.set(['state',partition,target,'activity'],'退让并呼救');
         if(!isNpc||isBoss)rememberBossTactic(d,this,target,tactic,id);
-        if(received)this.health(d,{delta:-received},id);
+        if(received){if(attacker==='player')this.health(d,{delta:-received},id);else{
+            d.set([...attackerPath,'hp'],Math.max(0,attackerHp-received));d.set([...attackerPath,'maxHp'],p.maxHp??stats.maxHp);
+            if(attackerHp<=received)recordEntityDeath(d,this,attacker,d.get('state','minute'),'战斗身亡');
+        }}
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        if(isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
-        if(weapon)wearItem(d,this,'player',weapon,1);
+        if(attacker==='player'&&isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
+        if(weapon)wearItem(d,this,attacker,weapon,1);
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
             d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
@@ -152,16 +162,16 @@ export const activities={
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         const lair=!remaining?defeatBoss(d,this,target,id):null;
-        const experience=!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
-        const duelResult=duel&&(nonlethal&&(attack.hit||opponentTouched)||!remaining||d.get('state','player','hp')<=0||escaped)?finishDuel(d,this,duel,!remaining||nonlethal&&attack.hit?'player':target,id,escaped?'脱离':nonlethal?'点到为止':'生死已分'):null;
-        const incident=isNpc?recordViolence(d,this,{victim:target,damage,killed:!remaining,intent,eventId:id,duel}):null;
+        const experience=attacker==='player'&&!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
+        const duelResult=duel&&(nonlethal&&(attack.hit||opponentTouched)||!remaining||attackerHp<=received||escaped)?finishDuel(d,this,duel,!remaining||nonlethal&&attack.hit?attacker:target,id,escaped?'脱离':nonlethal?'点到为止':'生死已分'):null;
+        const incident=isNpc?recordViolence(d,this,{attacker,victim:target,damage,killed:!remaining,intent,eventId:id,duel}):null;
         if(duelResult)d.say(`决斗结束：${duelResult.reason}`);
         for(let i=0;i<bossAbilities.length;i++)if(bossAbilities[i].pendingArea){
             const {catalog,id:areaId,source}=bossAbilities[i].pendingArea;
             bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
         }
         const war=warCombatResult(d,this,{target,damage,received,killed:!remaining,retreated:remaining>0&&remaining<maxHp*0.25},id);
-        d.say(`交锋结束，对方受伤${damage}，你受伤${received}`);return {target,damage,received,...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);

@@ -116,7 +116,7 @@ export function applyPatches(document, patches) {
         }
         return copies.get(value);
     };
-    const next = writable(document), dead = deadPatchValues(patches);
+    const next = writable(document), superseded = deadPatchValues(patches);
     let index = -1;
     for (const patch of patches) {
         index++;
@@ -129,17 +129,17 @@ export function applyPatches(document, patches) {
         }
         const key = patch.path.at(-1);
         if (patch.op === 'delete') delete target[key];
-        else target[key] = dead?.[index] ? patch.value : cloneData(patch.value);
+        else target[key] = superseded?.[index] ? patch.value : cloneData(patch.value);
     }
     return next;
 }
-// P2: a value is dead when a later patch sets or deletes exactly the same path
+// P2: a value is superseded when a later patch sets or deletes exactly the same path
 // and nothing in between writes inside it. Such a value is never read, written
 // through or returned, so applyPatches places it without copying; the result
 // is unchanged. Long elapsed-time events rewrite the same records each minute.
 function deadPatchValues(patches) {
     if (!Array.isArray(patches) || patches.length < 2) return null;
-    const root = { children: null }, dead = new Array(patches.length).fill(false);
+    const root = { children: null }, superseded = new Array(patches.length).fill(false);
     const child = (node, key) => {
         if (!node.children) node.children = new Map();
         let next = node.children.get(key);
@@ -152,10 +152,10 @@ function deadPatchValues(patches) {
         let node = root;
         for (let d = 0; d < path.length - 1; d++) { node = child(node, path[d]); node.inside = true; }
         node = child(node, path[path.length - 1]);
-        dead[i] = node.later && !node.inside;
+        superseded[i] = node.later && !node.inside;
         node.later = true; node.inside = false;
     }
-    return dead;
+    return superseded;
 }
 
 // R31: records-by-field index for one elapsed-time pass. Readers that scan
@@ -337,8 +337,10 @@ export class PatchCursor {
         if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
         if (recordIndexDepth && path[0] === 'state') {
             if (path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
+            else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
         }
+        if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
         // Resolve the whole path before writing, so a rejected patch leaves no trace.
         const last = path.length - 1;
         let probe = root;

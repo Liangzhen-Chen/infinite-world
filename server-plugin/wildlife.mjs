@@ -1,3 +1,4 @@
+import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView} from './forest-water.mjs';
 export {displaceForestWildlife} from './forest-water.mjs';
@@ -18,7 +19,7 @@ import {sapient,advanceWildlifeAwakening,awakeningAction,awakeningOperations,awa
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('wildlife',{kinds:['tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),path=h=>['state','records',`ecology:${h}`];
-const alive=a=>a&&a.status!=='死亡'&&a.hp>0;
+const alive=(a,d,id)=>a&&isLiving(null,d,id)&&a.hp>0;
 // T160 owns identity changes. Clocks pass an existing individual and a stable
 // source event; an absent consumer must never masquerade as an awakening.
 export function assertWildlifeAwakeningEffect(engine,effect){
@@ -30,7 +31,7 @@ export function assertWildlifeAwakeningEffect(engine,effect){
 export function applyWildlifeAwakeningEffect(d,engine,effect,context){
     assertWildlifeAwakeningEffect(engine,effect);
     const actor=d.get('state','creatures',effect.target);
-    if(!alive(actor)||!actor.species||!actor.ecology)throw Error('野兽觉醒目标不是存活的生态个体');
+    if(!alive(actor,d,effect.target)||!actor.species||!actor.ecology)throw Error('野兽觉醒目标不是存活的生态个体');
     const result=engine.wildlifeAwakening.apply(d,engine,effect,context);
     if(!result||typeof result.applied!=='boolean')throw Error('野兽觉醒消费者缺少 applied 回执');
     return result;
@@ -43,7 +44,7 @@ const speciesAt=(engine,habitat)=>speciesInHabitat(engine.rules,engine.world.mon
 const ritualEffects=(d,op)=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='ritual'&&e.operation===op);
 const warded=(d,location,minute)=>ritualEffects(d,'ward').some(e=>e.target==='player'&&e.location===location&&e.started<=minute&&e.expires>minute);
 const consecrated=(d,habitat,s,day)=>ritualEffects(d,'consecrate').some(e=>e.habitat===habitat&&e.group===s.nature?.group&&e.started<(day+1)*1440&&e.expires>day*1440);
-const wildPresent=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.species===species&&a.location===location&&!a.owner&&!sapient(a)&&alive(a)).length;
+const wildPresent=(d,species,location)=>Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===species&&a.location===location&&!a.owner&&!sapient(a)&&alive(a,d,id)).length;
 // K6 wildlife_stir effect: a stirred habitat yields encounters more often until it calms.
 export function wildlifeStirFactor(state,habitatId,minute){const r=state.records?.[`wildlife:stir:${habitatId}`];return r?.category==='wildlife_stir'&&r.since<=minute&&r.until>minute?r.factor:1;}
 const encounterPath=h=>['state','records',`wildlife:encounter:${h}`];
@@ -65,7 +66,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     const window=Math.floor(minute/WINDOW),old=d.get(...encounterPath(habitat.id));
     if(old?.checkedWindow>=window)return null;
     const rng=random(engine,d.document.randomSeed,`encounter:${habitat.id}:${window}`),chance=rng();
-    const here=Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a));
+    const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a,d,id));
     const populations=d.get(...path(habitat.id),'populations');
     const ward=warded(d,location,minute),eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440)&&!(ward&&s.nature?.spirit));
     const base={habitat,window,minute};
@@ -95,10 +96,10 @@ export function settleWildlifeEncounter(d,engine,attempt,eventId){
     if(attempt.kind&&d.get('state','location')===habitat.location&&d.get('state','player','status')==='正常'){
         const s=attempt.species,minute=d.get('state','minute');
         let target=attempt.target;
-        if(target&&(!alive(d.get('state','creatures',target))||d.get('state','creatures',target,'location')!==habitat.location))target=null;
+        if(target&&(!alive(d.get('state','creatures',target),d,target)||d.get('state','creatures',target,'location')!==habitat.location))target=null;
         const available=d.get(...path(habitat.id),'populations',s.id,'count')>0&&activeAt(s.wildlife.activeHours,minute%1440);
         if(attempt.kind==='present'&&!target&&available&&engine.npcObligationAction?.tool!=='time'){
-            const here=Object.values(d.get('state','creatures')??{}).filter(a=>a.location===habitat.location&&alive(a));
+            const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===habitat.location&&alive(a,d,id)).map(([,a])=>a);
             if(here.length<engine.rules.wildlife.maximumPresent)target=createWildlifeInstance(d,engine,habitat,s,`encounter:${habitat.id}:${window}`,random(engine,d.document.randomSeed,`encounter-instance:${habitat.id}:${window}`))?.id;
         }
         if(target||available)sighting={kind:target?'present':'trace',habitat:habitat.id,location:habitat.location,species:s.id,name:s.name,
@@ -195,10 +196,10 @@ export function wildlifePriceFactor(engine,document,item,location){
     const habitats=engine.rules.wildlife.habitats.filter(h=>h.location===location||engine.byId.get(h.location)?.parent===location);
     const ranges=habitats.flatMap(h=>speciesAt(engine,h).filter(s=>s.drops.some(drop=>drop.item===item)).map(s=>({s,h})));
     if(!ranges.length)return 1;
-    const actors=Object.values(document.state.creatures??{});
+    const actors=Object.entries(document.state.creatures??{});
     const initial=ranges.reduce((n,{s,h})=>n+initialIn(h,s),0),current=ranges.reduce((n,{s,h})=>{
         const unseen=document.state.records[`ecology:${h.id}`]?.populations[s.id]?.count??initialIn(h,s);
-        const present=actors.filter(a=>a.species===s.id&&a.ecology===h.id&&a.location===h.location&&!a.owner&&!sapient(a)&&alive(a)).length;
+        const present=actors.filter(([id,a])=>a.species===s.id&&a.ecology===h.id&&a.location===h.location&&!a.owner&&!sapient(a)&&alive(a,document,id)).length;
         return n+unseen+present;
     },0);
     return Math.min(engine.rules.wildlife.scarcityMaximum,Math.max(1,initial/Math.max(1,current)));
@@ -213,7 +214,7 @@ export function wildlifeAction(d,args,eventId){
     if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
         ...(a.corpse?{corpse:{status:a.corpse.status,expires:a.corpse.expires,hasMaterials:a.corpse.items.length>0}}:{})})),traces:wildlifeEncounterView(d.document).filter(r=>r.kind==='trace'),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='track'){
-        const r=clone(d.get(...path(habitat.id))),here=Object.values(d.get('state','creatures')??{}).filter(a=>a.location===habitat.location&&alive(a));
+        const r=clone(d.get(...path(habitat.id))),here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===habitat.location&&alive(a,d,id)).map(([,a])=>a);
         if(here.length>=this.rules.wildlife.maximumPresent)throw new Error('这里已有可接触动物，先处理当前局面');
         const hour=d.get('state','minute')%1440,requested=args.species?this.resolve(args.species,'monster'):null;
         const eligible=speciesAt(this,habitat).filter(s=>(!requested||s.id===requested)&&r.populations[s.id].count>0&&activeAt(s.wildlife.activeHours,hour));
@@ -230,7 +231,7 @@ export function wildlifeAction(d,args,eventId){
     }
     if(operation!=='gather')throw new Error('未知野外操作');
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
-    if(!actor||actor.location!==habitat.location||actor.status!=='死亡'||!corpse)throw new Error('没有这里已死亡且可验证的尸体');
+    if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw new Error('没有这里已死亡且可验证的尸体');
     if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw new Error('尸体已处理或已经腐坏');
     if(actor.owner&&actor.owner!=='player')throw new Error('动物归其他所有者，不能擅自取材');
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw new Error('这个物种没有登记可加工材料');

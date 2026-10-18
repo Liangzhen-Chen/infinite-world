@@ -40,7 +40,8 @@ import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects}from'./effects.mjs';
-import {advanceOrganizations}from'./organizations.mjs';
+import {advanceOrganizations,nextOrganizationMinute}from'./organizations.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 import {advanceFaith}from'./faith.mjs';
 import {advanceQuestSources}from'./quest-sources.mjs';
 import {advanceTribalAwakening}from'./tribal-awakening.mjs';
@@ -291,7 +292,7 @@ const systems=[
  {id:'magic_economy',order:1370,advance:(e,d,ctx)=>advanceMagicEconomy(d,e,ctx)},
  {id:'faction_clock',order:1400,active:e=>factionClockRules(e).length>0,nextMinute:(e,d,now)=>nextFactionClockMinute(d.get('state'),now),
   advance:(e,d,{after})=>advanceFactionClocks(d,e,after)},
- {id:'organizations',order:1450,advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
+ {id:'organizations',order:1450,nextMinute:(e,d,now)=>Math.max(now+1,nextOrganizationMinute(d.get('state'))),advance:(e,d,ctx)=>advanceOrganizations(d,e,ctx)},
  {id:'faith_experience',order:1451,advance:(e,d,ctx)=>advanceFaith(d,e,ctx)},
  // U12a armies: weekly supply, drill, morale and desertion; monthly pay (rules.military).
  {id:'military',order:1452,advance:(e,d,ctx)=>advanceMilitary(d,e,ctx)},
@@ -308,7 +309,7 @@ const systems=[
  {id:'local_actor_positions',order:1700,advance(e,d,{after}){
     for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
         const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
-        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||actor.status==='死亡'||row.expires<=after)d.remove(['state','records',key]);
+        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)d.remove(['state','records',key]);
     }
  }},
  {id:'magic_care',order:1800,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='preserve'&&x.expires>now&&x.upkeepMp>0).map(x=>now+Math.max(1,Math.floor(d.get('state','player','mp')/x.upkeepMp)+1))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceCare(d,e,before,after);}},

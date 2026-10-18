@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Effect families register their effectSpec.kind values in magic-effects.mjs;
 // importing them here loads them before the first cast.
 import './magic-ritual.mjs';
@@ -71,7 +72,7 @@ export function prepareMagic(d,catalog,args,context={}){
     if(target!=='player'&&!partition)throw new Error('法术需要实际生命目标');
     const actor=target==='player'?d.get('state','player'):d.get('state',partition,target),definition=this.byId.get(target);
     if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw new Error('法术目标不在场');
-    if(actor.status==='死亡')throw new Error('目标已经死亡，此法术不能使死者复生');
+    if(isPhysicallyDead(this,d,target))throw new Error('目标已经死亡，此法术不能使死者复生');
     const targetingEngine=Object.create(this);
     if(context.targetFacts)targetingEngine.magicTargetFacts=()=>context.targetFacts;
     assertMagicTargeting(d,targetingEngine,catalog,args,target);
@@ -105,7 +106,7 @@ export function applyMagic(d,prepared,id){
         catch(error){return{target,effectFailed:`施法完成前条件失效：${error.message}`};}
     }
     const latest=d.get(...path);
-    if(!latest||latest.status==='死亡')return{target,effectFailed:'施法完成前目标已离开行囊或死亡，效果未生效'};
+    if(!latest||isPhysicallyDead(this,d,target))return{target,effectFailed:'施法完成前目标已离开行囊或死亡，效果未生效'};
     if(spec.kind==='protection')return applyProtectionPrimitive(d,{spec,target,spell:catalog.id,duration:catalog.duration},id);
     if(spec.kind==='relief')return relieveMagicStatuses(d,target,spec.statuses,spec.power);
     if(spec.kind==='status'||spec.kind==='light'){

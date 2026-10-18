@@ -262,7 +262,7 @@ registerWorldEventSubscriber({id:'organization-succession',order:55,on(d,engine,
         const org=organization(engine,d.get('state'),id),key=`organization_vacancy:${e.id}`;
         if(!org||org.leader||d.get('state','records',key))continue;
         const candidates=Object.keys(org.members).filter(m=>org.members[m].position===ELDER).sort();
-        d.set(['state','records',key],{category:'organization_vacancy',org:id,office,previousHolder:e.previousHolder,candidates,cause:e.id,minute:e.minute??d.get('state','minute')});
+        holdingSet(d,engine,['state','records',key],{category:'organization_vacancy',org:id,office,previousHolder:e.previousHolder,candidates,cause:e.id,minute:e.minute??d.get('state','minute')},'organizations');
     }
 }});
 
@@ -279,7 +279,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             const people=deciders(d.get('state'),org).people;
             candidates.sort((a,b)=>people.reduce((n,m)=>n+standing(engine,d.get('state'),m,b)-standing(engine,d.get('state'),m,a),0)||a.localeCompare(b));
             const nominee=candidates[0],p=propose(d,engine,org,{action:'appoint',member:nominee,name:org.leaderTitle},nominee,`vacancy:${v.cause}`);
-            d.set(['state','records',id],{...v,proposal:p.id});
+            holdingSet(d,engine,['state','records',id],{...v,proposal:p.id},'organizations');
         }
         for(const [id,p]of records()){
             if(p.category!=='organization_proposal'||p.status!=='议事中'||p.minute>=at)continue;
@@ -308,7 +308,7 @@ export function advanceOrganizations(d,engine,{before,after}){
                 if(!isEffective(engine,d,m))continue;
                 const entry=org.members[m],owed=dues*(1+(entry.arrears??0)),have=d.get(...coinPath(engine,m))??0;
                 const paid=have>=owed?owed:have>=dues?dues:0,settled=paid?paid/dues:0,arrears=(entry.arrears??0)+1-settled;
-                if(paid){d.set(coinPath(engine,m),have-paid);move(d,engine,row,{kind:'会费',amount:paid,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,balance:balance+=paid},{account:purse(engine,m),writer:'organizations'});}
+                if(paid){d.set(coinPath(engine,m),have-paid);move(d,engine,row,{kind:org.kind==='教会'?'香火供献':'会费',amount:paid,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,balance:balance+=paid},{account:purse(engine,m),writer:'organizations'});}
                 else move(d,engine,row,{kind:'欠费',amount:0,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`});
                 if(arrears>=EXPEL_ARREARS&&m!==org.leader){
                     delete row.members[m];row.removed={...row.removed,[m]:{minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,reason:`欠费${EXPEL_ARREARS}期除名`}};

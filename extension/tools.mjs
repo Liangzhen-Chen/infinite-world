@@ -27,7 +27,7 @@ const sitePermitType=definitions.find(row=>row.function.name==='world_promise').
 sitePermitType.enum.push('site_visit','site_disarm','site_gather');
 sitePermitType.description='承诺必填；据点参观/机关/采集，私宅免填';
 definitions.find(row=>row.function.name==='world_promise').function.parameters.properties.location.description='约定/许可地点，勿追人';
-define('world_combat','攻/防/脱离/推搡',{target:str,weapon:str,intent:{type:'string',enum:['attack','defend','flee','shove']}},['target']);
+define('world_combat','攻/防/脱离/推搡',{target:str,actor:str,weapon:str,intent:{type:'string',enum:['attack','defend','flee','shove']}},['target']);
 define('world_lair','巢穴接近/谈判；offer交物、request索物；term立约，contract按期履约',{operation:{enum:['observe','approach','negotiate']},lair:str,term:{enum:['trade','tribute','passage'],description:'贸易/朝贡/通行'},days:int,pact:{enum:['respect_territory','nonaggression'],description:'守界/互不攻击'},alliance:bool,offer:{type:'array',maxItems:20,items:object({item:str,quantity:int},['item','quantity'])},request:{type:'array',maxItems:20,items:object({item:str,quantity:int},['item','quantity'])}},[]);
 define('world_site','本地据点进入/调查/解机关/有限采集。',{operation:{enum:['inspect','enter','investigate','disarm','gather','infiltrate']},target:str,quantity:int,authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
 define('world_craft','配方制造/工序维修',{operation:{enum:['manufacture','repair']},recipe:str,item:{...str,description:'维修名/类型ID'},instance:{...str,description:'instances单件ID'},repairPlan:str,authorization:str,helpers:{type:'array',items:str},maker:{...str,description:'结缘精怪代工'}},[]);

@@ -48,7 +48,7 @@ function permission(d,p,f,args,minute){
  const a=d.get('state','records',args.authorization);
  if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute)throw Error('田块生长需要田主有效同意；公用访问不授权施法');
  const owner=d.get('state','npcs',a.grantor);
- if(!owner||isPhysicallyDead(engine,d,a.grantor)||owner.status==='濒死')throw Error('田主无法继续履约');
+ if(!owner||isPhysicallyDead(null,d,a.grantor)||owner.status==='濒死')throw Error('田主无法继续履约');
  return a;
 }
 function readResource(d,f){

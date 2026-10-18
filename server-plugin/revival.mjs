@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,shrineFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('revival');
@@ -38,7 +39,7 @@ export function registerRevival(d,args,id){
 }
 
 export function revivePlayer(d,args,id){
-    if(d.get('state','player','status')!=='死亡')throw new Error('当前没有死亡');
+    if(!isPhysicallyDead(this,d,'player'))throw new Error('当前没有死亡');
     const player=d.get('state','player');
     let location=player.revivalAnchor;
     if(this.rules.death.points){

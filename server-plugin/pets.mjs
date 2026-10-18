@@ -1,3 +1,4 @@
+import {isPhysicallyDead,isLiving,bodyLiving} from './lifecycle-state.mjs';
 import {petTrustGain} from './hidden-passives.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('pets',{sinks:['sink:consume']});
@@ -14,7 +15,7 @@ const clamp = value => Math.max(0, Math.min(100, value));
 const activeStatuses = new Set(['活跃', '留守']);
 const categoryNames = { support: '辅助', combat: '战斗', mount: '坐骑' };
 const categoryOf = row => Object.keys(categoryNames).find(key => key === row.category || categoryNames[key] === row.category);
-const active = row => row?.petFormat === 1 ? activeStatuses.has(row.status) : !['死亡', '出走', '释放', '已解除'].includes(row?.status);
+const active = row => row?.petFormat === 1 ? activeStatuses.has(row.status) : bodyLiving(row)&&!['出走', '释放', '已解除'].includes(row?.status);
 
 export function petCapacity(engine, combat, category) {
     return category === 'combat' && combat === 'profession_summoner' ? engine.rules.pets.summonerCombat
@@ -35,7 +36,7 @@ function animal(d, engine, name, { owned = false } = {}) {
     if (!actor || !rule || !engine.rules.petCare) throw new Error('没有已登记的动物实例或驯养规则');
     if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw new Error('动物健康或等级记录无效');
     if (actor.location !== d.get('state', 'location')) throw new Error('动物不在场');
-    if (actor.status === '死亡' || actor.hp <= 0) throw new Error('动物已经死亡，照料不能复活');
+    if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw new Error('动物已经死亡，照料不能复活');
     if (actor.owner && actor.owner !== 'player') throw new Error('动物已有其他所有者，不能擅自操作');
     if (sapient(actor)) throw new Error('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
     const pet = d.get('state', 'pets', id);
@@ -67,7 +68,7 @@ export function advancePets(d, engine, after) {
     if (!rules) return;
     for (const [id, actor] of Object.entries(d.get('state', 'creatures') ?? {})) {
         if (actor.care?.version !== 1 || sapient(actor)) continue;
-        if (actor.status === '死亡' || actor.hp <= 0) {
+        if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) {
             if(d.get('state','pets',id)?.petFormat===1&&active(d.get('state','pets',id)))detach(d,engine,id,'死亡',after);
             continue;
         }
@@ -97,9 +98,9 @@ export function advancePets(d, engine, after) {
     }
 }
 
-function stillPresent(d, row) {
+function stillPresent(d, engine, row) {
     const actor = d.get('state', 'creatures', row.id);
-    if (actor.status === '死亡' || actor.hp <= 0) return '照料结束前动物死亡，未生效';
+    if (isPhysicallyDead(engine,d,row.id) || actor.hp <= 0) return '照料结束前动物死亡，未生效';
     if (actor.location !== d.get('state', 'location')) return '动物已不在场，未生效';
     if (row.ownedRequired && (actor.owner !== 'player' || !active(d.get('state', 'pets', row.id)))) return '结束前宠物归属已解除，未生效';
     if (actor.owner && actor.owner !== 'player') return '结束前归属已改变，未生效';
@@ -111,7 +112,7 @@ export function petAction(d, args, eventId) {
     if (operation === 'inspect') {
         const view=petView(this,d.document);if(!args.target)return view;
         const id=resolveCreature(this,d,args.target),actor=d.get('state','creatures',id);
-        if(!actor||actor.location!==d.get('state','location')||actor.status==='死亡')throw new Error('这不是当前在场的活体动物');
+        if(!actor||actor.location!==d.get('state','location')||isPhysicallyDead(this,d,id))throw new Error('这不是当前在场的活体动物');
         return{target:id,animal:view.presentAnimals.find(row=>row.id===id),pet:view.pets.find(row=>row.id===id)??null};
     }
     const row = animal(d, this, args.target, { owned: !['feed', 'contact', 'tame'].includes(operation) });
@@ -152,7 +153,7 @@ export function petAction(d, args, eventId) {
         this.advance(d, operation === 'contact' ? rules.contactMinutes : rule.minutes, eventId);
         this.practice(d, { skill: rules.tamingSkill, target: id, gain: 3 }, eventId);
         const completedCare=d.get('state','creatures',id,'care');
-        const failed = stillPresent(d, row)??(completedCare.hunger>=rules.hungryThreshold||completedCare.sickness?'接触结束前动物陷入饥病，未建立归属或新增信任':null);
+        const failed = stillPresent(d, this, row)??(completedCare.hunger>=rules.hungryThreshold||completedCare.sickness?'接触结束前动物陷入饥病，未建立归属或新增信任':null);
         const permission=d.get('state','records',args.authorization);
         const expired=operation==='tame'&&row.definition.tier&&(!permission||permission.expires<=d.get('state','minute'));
         const latest = structuredClone(d.get('state', 'creatures', id, 'care'));
@@ -202,7 +203,7 @@ export function petAction(d, args, eventId) {
     if (operation === 'groom') {
         if (care.groomDay === day) throw new Error('今天已经照料，忠诚不能反复刷取');
         care.groomDay = day; writeCare(d, id, care); this.advance(d, rules.groomMinutes, eventId);
-        const failed = stillPresent(d, row), latest = structuredClone(d.get('state', 'creatures', id, 'care'));
+        const failed = stillPresent(d, this, row), latest = structuredClone(d.get('state', 'creatures', id, 'care'));
         if (!failed) { latest.loyalty = clamp(latest.loyalty + rules.groomLoyalty); latest.mood = clamp(latest.mood + 5); writeCare(d, id, latest); }
         return { target: id, groomed: !failed, ...(failed ? { effectFailed: failed } : {}), care: latest };
     }
@@ -223,7 +224,7 @@ export function petAction(d, args, eventId) {
         const result = this.check(d, { attribute: operation === 'treat' ? '智力' : '魅力', skill, difficulty: 15 }, eventId);
         writeCare(d, id, care); this.advance(d, operation === 'treat' ? rules.treatmentMinutes : rules.trainMinutes, eventId);
         this.practice(d, { skill, target: id, gain: 3 }, eventId);
-        const failed = stillPresent(d, row), latest = structuredClone(d.get('state', 'creatures', id, 'care'));
+        const failed = stillPresent(d, this, row), latest = structuredClone(d.get('state', 'creatures', id, 'care'));
         if (!failed && result.success) {
             if (operation === 'treat') {
                 latest.sickness = false; latest.sickHours = 0;
@@ -253,7 +254,7 @@ export function petView(engine, document) {
         if (pet.petFormat !== 1) return { id, ...structuredClone(pet), note: '旧宠物记录保留；尚无可验证的动物实例，不自动补造' };
         const actor = state.creatures?.[id];
         return { id, name: actor?.name ?? engine.byId.get(id)?.name, ...structuredClone(pet), location: actor?.location, hp: actor?.hp, maxHp: actor?.maxHp, level: actor?.level, care: structuredClone(actor?.care), ...mindOf(engine, document, id, actor) };
-    }), presentAnimals: Object.entries(state.creatures ?? {}).filter(([, actor]) => actor.location === state.location && actor.status !== '死亡').map(([id, actor]) => {
+    }), presentAnimals: Object.entries(state.creatures ?? {}).filter(([id, actor]) => actor.location === state.location && isLiving(engine,document,id)).map(([id, actor]) => {
         const definition=engine.byId.get(id),species=definition?.monster?engine.byId.get(definition.monster):definition;
         const rule=definition?.tamingRule??species?.tamingRule;
         return { id, name: actor.name ?? definition?.name, owner: actor.owner ?? null, hp: actor.hp, level: actor.level, care: structuredClone(actor.care),tamingRule:rule?structuredClone(rule):null, ...mindOf(engine, document, id, actor) };
@@ -276,7 +277,7 @@ export function movePets(d, engine, origin, destination, movingMinutes) {
     if (!engine.rules.petCare) return;
     for (const [id, pet] of Object.entries(d.get('state', 'pets') ?? {})) {
         const actor = d.get('state', 'creatures', id);
-        if (pet.petFormat !== 1 || !active(pet) || !pet.following || actor?.owner !== 'player' || actor.location !== origin || actor.status === '死亡') continue;
+        if (pet.petFormat !== 1 || !active(pet) || !pet.following || actor?.owner !== 'player' || actor.location !== origin || isPhysicallyDead(engine,d,id)) continue;
         holdingSet(d,null,['state', 'creatures', id, 'location'], destination,'pets');
         const care = careOf(actor, d.get('state', 'minute'));
         care.busyUntil=d.get('state','minute')+movingMinutes;

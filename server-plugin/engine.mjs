@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -286,7 +287,7 @@ export class WorldEngine {
         settleAgricultureExpiry(d,this);
         enforceLegalRestriction(d,tool,args);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
-        if(d.get('state','player','status')==='死亡'&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
+        if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
@@ -365,7 +366,7 @@ export class WorldEngine {
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
         if(buyer===seller) throw new Error('交易双方不能相同');
         if(!this.actor(d,buyer)||!this.actor(d,seller)) throw new Error('交易对象不在战役中');
-        for(const actor of[buyer,seller])if(['死亡','濒死'].includes(this.actor(d,actor).status))throw new Error('交易一方无法清醒履约');
+        for(const actor of[buyer,seller])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor).status==='濒死'))throw new Error('交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
@@ -478,7 +479,7 @@ export class WorldEngine {
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
-        if(d.get('state','player','status')==='死亡')this.revive(d,{},id);
+        if(isPhysicallyDead(this,d,'player'))this.revive(d,{},id);
         if(args.minutes!==undefined&&args.until!==undefined)throw new Error('minutes 与 until 只能选一个');
         let duration=args.minutes;
         if(args.until!==undefined){
@@ -643,7 +644,7 @@ export class WorldEngine {
     }
     health(d,args,id) {
         const amount=number(args.delta,-1e9,1e9,'生命变化'),p=d.get('state','player');
-        if(p.status==='死亡')throw new Error('死亡后需要复活，不能直接治疗');
+        if(isPhysicallyDead(this,d,'player'))throw new Error('死亡后需要复活，不能直接治疗');
         d.set(['state','player','hp'],Math.max(0,Math.min(p.maxHp,p.hp+amount)));
         if(p.hp+amount<=0){d.set(['state','player','status'],'濒死');if(p.status!=='濒死')d.set(['state','player','dyingSince'],d.get('state','minute'));
             if(d.get('state','player','mount'))d.remove(['state','player','mount']);
@@ -653,7 +654,7 @@ export class WorldEngine {
     }
     death(d) {
         const p=d.get('state','player'),loss=p.level<10?p.level*10:xpRequired(p.level);
-        if(p.status==='死亡')return;
+        if(isPhysicallyDead(this,d,'player'))return;
         runLifecycleProtocol(d,this,{entity:'player',basis:'death',origin:'death_rule',location:d.get('state','location')});
         d.set(['state','player','xp'],Math.max(0,p.xp-loss));d.say(`死亡损失经验${Math.min(p.xp,loss)}`);
         holdingSet(d,null,['state','player','companions'],[],'engine');
@@ -765,7 +766,7 @@ export class WorldEngine {
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
         if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
         if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
-        for(const actor of[promisor,promisee])if(['死亡','濒死'].includes(this.actor(d,actor)?.status))throw new Error('义务当事人无法清醒履约');
+        for(const actor of[promisor,promisee])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor)?.status==='濒死'))throw new Error('义务当事人无法清醒履约');
         for(const actor of[promisor,promisee])if(actor!=='player'&&personConstraint(this,d.get('state'),actor))throw new Error('义务当事人正在依法拘留，不能自由行动');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};
         let routePreview;

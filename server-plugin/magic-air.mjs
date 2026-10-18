@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
@@ -64,7 +65,7 @@ function linkedPath(d,engine,args,origin,range,readOnly=false,acoustic=false){
 function living(d,engine,c,args){
  const target=args.target??'player',path=target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
  const actor=d.get(...path);
- if(!actor||actor.status==='死亡'||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw Error('风族活体目标不在场或已死亡');
+ if(!actor||isPhysicallyDead(engine,d,target)||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw Error('风族活体目标不在场或已死亡');
  assertMagicTargeting(d,engine,c,args,target);return{target,path,actor};
 }
 export function prepareAirMagic(d,c,args){
@@ -129,7 +130,7 @@ function sendSound(d,engine,rows,text,volume,id){
   volume=Math.max(0,volume-silence);if(!volume)break;
   const actors=[['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{}),...Object.entries(d.get('state','creatures')??{})];
   for(const [target,actor] of actors){
-   if(heard.includes(target)||actor.status==='死亡')continue;
+   if(heard.includes(target)||isPhysicallyDead(engine,d,target))continue;
    const f=areaTargetFacts(d,engine,target,row.location);
    if(!f||dist(f.point,row.position)>(row.airModel.hearingRadiusMeters??2))continue;
    const audible=Math.max(0,volume-waterEarthSoundLoss(d,row.location,row.position,f.point));if(!audible)continue;
@@ -209,7 +210,7 @@ export function advanceAirMinute(d,engine,rooms,minute){
   }
   if(e.operation==='air_bubble'){
    const actor=d.get(...e.actorPath),location=e.target==='player'?d.get('state','location'):actor?.location;
-   if(!actor||actor.status==='死亡'||location!==e.location){e.expires=minute;}
+   if(!actor||isPhysicallyDead(engine,d,e.target)||location!==e.location){e.expires=minute;}
    else{const demand=actor.breathingExertion?1200:600,used=Math.min(demand,e.oxygenMg);e.oxygenMg-=used;e.consumedOxygenMg+=used;if(!e.oxygenMg)e.expires=minute+1;}
   }
   e.lastMinute=minute+1;d.set(['state','effects',id],e);

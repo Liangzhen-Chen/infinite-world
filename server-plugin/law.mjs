@@ -195,13 +195,13 @@ export function crimeAction(d,args,eventId){
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
 
-export function recordViolence(d,engine,{victim,damage,killed,intent,eventId,duel=null}){
+export function recordViolence(d,engine,{attacker='player',victim,damage,killed,intent,eventId,duel=null}){
     const code=codeFor(engine,d.get('state','location'));
     if(duel&&(code?.duels??engine.rules.law?.duels?.[code?.id])?.[duel.rule]===true)return null;
-    if(damage>0&&['attack','shove'].includes(intent))recordDisciplineBreach(d,engine,'violence',eventId);
+    if(attacker==='player'&&damage>0&&['attack','shove'].includes(intent))recordDisciplineBreach(d,engine,'violence',eventId);
     if(!codeFor(engine,d.get('state','location'))||!['attack','shove'].includes(intent))return null;
     const witnesses=Object.entries(d.get('state','npcs')).filter(([id,actor])=>awake(actor,d,id)&&actor.location===d.get('state','location')).map(([id])=>id);
-    return registerIncident(d,engine,{victim,offense:killed?'homicide':damage?'assault':'assault_attempt',witnesses,eventId,relationshipApplied:true});
+    return registerIncident(d,engine,{offender:attacker,victim,offense:killed?'homicide':damage?'assault':'assault_attempt',witnesses,eventId,relationshipApplied:true});
 }
 
 export function enforceLegalRestriction(d,tool,args){

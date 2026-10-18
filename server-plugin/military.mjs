@@ -227,7 +227,7 @@ export function raiseLevy(d,engine,a,at,sourceEvent){
    prior.households[h.id]=pick;count++;
    if(pick){
     people.push(pick);holdingSet(d,null,['state','npcs',pick,'levy'],{army:a.id,location:a.location,since:at,settlement:sid,household:h.id},'military');
-    for(const kin of members)if(kin!==pick&&state.npcs?.[kin]?.status!=='死亡')adjustStanding(d,engine,kin,a.party,m.levy.familyStanding,{sourceEvent:`${sourceEvent}:levy:${pick}`,reason:`家里的${nameOf(engine,pick)}被征去${a.name}`,minute:at});
+    for(const kin of members)if(kin!==pick&&isEffective(engine,state,kin))adjustStanding(d,engine,kin,a.party,m.levy.familyStanding,{sourceEvent:`${sourceEvent}:levy:${pick}`,reason:`家里的${nameOf(engine,pick)}被征去${a.name}`,minute:at});
    }
   }
   if(!count)continue;
