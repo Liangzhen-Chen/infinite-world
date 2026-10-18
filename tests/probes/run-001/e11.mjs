@@ -1,53 +1,86 @@
-// E11 掌门坐化，门派争位：玩家 world_create 创立 kind=教会 的“清虚观”，河湾林岁任主祭、阿岩/陈白任长老，玩家为成员；
-// 主祭以 status=死亡 模拟坐化，推进 3 天，再由玩家提议阿岩继任并投赞成（核对者 e11.mjs 同情境）。
-import fs from 'node:fs';
-import {setup,imp,once,ok,partial,wrong,missing,src} from '../harness.mjs';
+// Five original E11 questions, scored from behavior rather than source text.
+import {setup,draft,once,ok,partial,wrong,missing} from '../harness.mjs';
+import {organization} from '../../../server-plugin/organizations.mjs';
+import {recordEntityDeath} from '../../../server-plugin/npc-life.mjs';
+import {standing,adjustStanding} from '../../../server-plugin/standing.mjs';
+import {isGone} from '../../../server-plugin/lifecycle-state.mjs';
+import {templeCapacity} from '../../../server-plugin/faith.mjs';
+import {resyncBooks} from '../../helpers/ledger-sync.mjs';
 
-const A='npc_hw_linsui',B='npc_hw_ayan',C='npc_hw_chenbai';
-const scenario=once(async()=>{
- const {organization}=await imp('server-plugin/organizations.mjs');
+const A='npc_hw_linsui',B='npc_hw_ayan',C='npc_hw_chenbai',W='npc_hw_gucen';
+export const scenario=once(async()=>{
  const S=setup({coins:500});let doc=S.doc;doc.state.minute=540;
- for(const id of[A,B,C])Object.assign(doc.state.npcs[id],{location:doc.state.location,activity:'闲谈',coins:100,status:'正常'});
- const run=async(tool,args,id)=>{const r=await S.attempt(doc,tool,args,id);doc=r.document;return r.error?{error:r.error}:r.result;};
- const org=(args,id)=>run('world_settlement',args,id);
- const f=await run('world_create',{type:'org',name:'清虚观',data:{notes:'道门',occupation:'教会'}},'e11found');const id=f.organization;
- for(const m of[A,B,C]){const j=await org({operation:'org_join',org:id,member:m,consent:true},`e11join${m}`);if(j.proposal)await org({operation:'org_vote',org:id,proposal:j.proposal,opinion:'approve'},`e11v${m}`);}
- await org({operation:'org_join',org:id,member:'player'},'e11pj');
- for(const m of[B,C])await org({operation:'org_propose',org:id,action:'appoint',member:m,name:'长老'},`e11el${m}`);
- await org({operation:'org_propose',org:id,action:'appoint',member:A,name:'主祭'},'e11lead');
+ for(const id of [A,B,C,W])Object.assign(doc.state.npcs[id],{location:doc.state.location,activity:'闲谈',coins:100,status:'正常'});
+ for(const id of [B,C])S.engine.byId.get(id).personality={traits:['尚武','争强']};
+ const failures=[];
+ const run=async(tool,args,id,required=true)=>{
+  const r=await S.attempt(doc,tool,args,id);doc=r.document;
+  if(r.error){failures.push({id,error:r.error});if(required)throw Error(`${id}: ${r.error}`);return {error:r.error};}
+  return r.result;
+ };
+ const org=(args,id,required)=>run('world_settlement',args,id,required);
+ const f=await run('world_create',{type:'org',name:'清虚观',data:{notes:'双方同意并有独立见证的约斗决定继任',occupation:'教会'}},'e11found'),id=f.organization;
+ await org({operation:'org_propose',org:id,action:'charter',consent:false},'e11open');
+ for(const m of [A,B,C])await org({operation:'org_join',org:id,member:m,consent:true},`e11join${m}`);
+ for(const m of [B,C])await org({operation:'org_propose',org:id,action:'appoint',member:m,name:'长老'},`e11elder${m}`);
  await org({operation:'org_deposit',org:id,coins:200,content:'香火'},'e11dep');
- const before=organization(S.engine,doc.state,id),profBefore=JSON.stringify(doc.state.professions);
- doc.state.npcs[A].status='死亡';
- const afterDeath=organization(S.engine,doc.state,id);
- await run('world_time',{minutes:3*1440},'e11wait3');
- const after3=organization(S.engine,doc.state,id);
- const proposals3=Object.values(doc.state.records).filter(r=>r.category==='organization_proposal'&&r.org===id&&r.status==='议事中').length;
- const relBefore=JSON.stringify(doc.state.npcs[B].relationships?.player??null);
- const p=await org({operation:'org_propose',org:id,action:'appoint',member:B,name:'主祭'},'e11succ');
- await run('world_time',{minutes:1440},'e11wait1');
- const elected=organization(S.engine,doc.state,id);
- const relAfter=JSON.stringify(doc.state.npcs[B].relationships?.player??null);
- for(const m of[B,C])Object.assign(doc.state.npcs[m],{location:doc.state.location,activity:'闲谈',status:'正常'});
- const duel=await run('world_settlement',{operation:'duel_challenge',speaker:B,member:C,authority:'npc_hw_gucen',choice:'death'},'e11duel');
- return {id,before,afterDeath,after3,proposals3,elected,proposal:p,relBefore,relAfter,duel,aCoins:doc.state.npcs[A].coins,profUnchanged:JSON.stringify(doc.state.professions)===profBefore};
+ await org({operation:'org_propose',org:id,action:'appoint',member:A,name:'主祭'},'e11lead');
+ await org({operation:'org_propose',org:id,speaker:A,action:'charter',choice:'vote'},'e11voteMode');
+ const before=organization(S.engine,doc.state,id);
+ const priorLocation=doc.state.location,host='npc_bs_077_1',seat='bld_bs_reed_dao';
+ doc.state.location=seat;Object.assign(doc.state.npcs[host],{location:seat,activity:'闲谈',status:'正常'});
+ doc.state.player.level=10;doc.state.skills.skill_taoist_combat_01={proficiency:100,grade:'初级1阶',breakthroughs:[],daily:{}};
+ let cert;
+ for(let i=0;i<20;i++){
+  cert=await run('world_profession',{profession:'profession_taoist',teacher:host},`e11certify:${i}`,false);
+  if(cert.certified||cert.error)break;
+ }
+ doc.state.location=priorLocation;
+ const certified=cert.certified===true&&doc.state.professions.combat==='profession_taoist'&&!!doc.state.careers?.profession_taoist?.certification?.source;
+ const profBefore=JSON.stringify(doc.state.professions);resyncBooks(S.engine,doc);
+ const d=draft(doc);d.engine=S.engine;d.original=doc;recordEntityDeath(d,S.engine,A,d.get('state','minute'),'自然死亡');doc=d.document;
+ const afterDeath=organization(S.engine,doc.state,id),deathRecorded=isGone(S.engine,doc,A);
+ const oldPay=await org({operation:'org_propose',org:id,speaker:A,action:'withdraw',member:A,coins:10},'e11oldPay',false);
+ const wait=await run('world_time',{minutes:3*1440},'e11wait3',false);
+ for(const m of [B,C,W])Object.assign(doc.state.npcs[m],{location:doc.state.location,activity:'闲谈',status:'正常'});
+ const relBefore=standing(S.engine,doc.state,B,'player'),oppBefore=standing(S.engine,doc.state,B,C);
+ const p=await org({operation:'org_propose',org:id,action:'appoint',member:B,name:'主祭'},'e11support');
+ await org({operation:'org_vote',org:id,proposal:p.proposal,speaker:C,opinion:'reject'},'e11oppose');
+ const oppAfter=standing(S.engine,doc.state,B,C);
+ const attitudes=draft(doc);attitudes.engine=S.engine;attitudes.original=doc;
+ adjustStanding(attitudes,S.engine,C,B,-100,{sourceEvent:'e11rivalry',reason:'反对争位者'});
+ adjustStanding(attitudes,S.engine,C,id,-100,{sourceEvent:'e11loyalty',reason:'不愿留任'});doc=attitudes.document;
+ const available=()=>templeCapacity(S.engine,doc.state,{id,seat:priorLocation});
+ const capacityBefore=available(),coinsBefore=doc.state.npcs[C].coins;
+ const duel=await org({operation:'duel_challenge',org:id,speaker:B,member:C,authority:W,choice:'touch'},'e11duel');
+ // Surrender exercises succession independently; it never proves a fight.
+ const ended=await org({operation:'duel_yield',proposal:duel.duel,speaker:C,consent:true},'e11yield');
+ const elected=organization(S.engine,doc.state,id),capacityAfter=available();
+ await org({operation:'org_vote',org:id,proposal:p.proposal,speaker:B,opinion:'approve'},'e11closeSupport');
+ const pay=await org({operation:'org_propose',org:id,speaker:B,action:'withdraw',member:B,coins:10},'e11newPay');
+ const paid=await org({operation:'org_vote',org:id,proposal:pay.proposal,opinion:'approve'},'e11approvePay');
+ const final=organization(S.engine,doc.state,id);
+ const donation=await org({operation:'faith_give',org:id,coins:1},'e11donation',false);
+ return {before,afterDeath,deathRecorded,oldPay,wait,duel,ended,elected,final,paid,certified,cert,
+  privateCoins:coinsBefore,departedCoins:doc.state.npcs[C].coins,capacityBefore,capacityAfter,donation,
+  relBefore,relAfter:standing(S.engine,doc.state,B,'player'),oppBefore,oppAfter,
+  profUnchanged:JSON.stringify(doc.state.professions)===profBefore,failures};
 });
 
 export default [
  {id:'E11-1',event:'E11',no:1,text:'决斗按双方真实实力结算，生死按约定规则（NPC 之间争位）',async check(){
-  const s=await scenario();
-  if(!s.duel.error)return ok(`两位长老可约斗：${JSON.stringify(s.duel).slice(0,100)}`);
-  return missing(`NPC 之间不能约斗（${s.duel.error}）；掌门死后 3 天首脑=${s.after3.leader}，自发继任议案 ${s.proposals3} 件`);}},
+  const s=await scenario();return ['生死已分','点到为止'].includes(s.ended.reason)?ok(JSON.stringify(s.ended)):
+   missing(`两位长老已接受，但目前仅完成${s.ended.reason}；没有双方实际伤害、实力与生死战证据`);}},
  {id:'E11-2',event:'E11',no:2,text:'新掌门接管公库，原掌门私产不并入公库',async check(){
-  const s=await scenario();
-  return s.afterDeath.treasury===s.before.treasury&&s.aCoins===100?ok(`公库 ${s.before.treasury} 不变，死者私钱 ${s.aCoins} 仍在本人名下；首脑=${s.afterDeath.leader}`):wrong(`公库 ${s.before.treasury}→${s.afterDeath.treasury}，死者私钱 ${s.aCoins}`);}},
+  const s=await scenario();return s.deathRecorded&&s.oldPay.error&&s.elected.leader===B&&s.afterDeath.treasury===s.before.treasury&&s.paid.status==='通过'&&s.final.treasury===s.before.treasury-10?
+   ok(`真实死亡后旧主祭不能支库；新主祭议决支付10，公库${s.before.treasury}→${s.final.treasury}，遗产未入公库`):wrong(JSON.stringify({old:s.oldPay,pay:s.paid,treasury:s.final.treasury}));}},
  {id:'E11-3',event:'E11',no:3,text:'玩家的弟子身份与道士认证照常有效',async check(){
-  const s=await scenario();
-  return s.elected.members?.player&&s.profUnchanged?ok('换首脑后玩家仍是成员，职业认证不变'):wrong('换首脑后成员资格或认证变化');}},
+  const s=await scenario();return s.elected.members.player&&s.certified&&s.profUnchanged?ok('真实授证后换掌门，弟子会籍与道士认证均保留'):
+   missing(`弟子=${!!s.elected.members.player}；实际道士授证=${s.certified}；${JSON.stringify(s.cert)}`);}},
  {id:'E11-4',event:'E11',no:4,text:'败方长老可能带人出走，成员数和香火同步减少',async check(){
-  const f=src('server-plugin/organizations.mjs');
-  return /secede|split|出走|分裂/.test(f)?partial('有派系出走入口，未接争位'):missing('没有派系分裂或集体退会，退会只能逐人进行');}},
+  const s=await scenario(),split=!s.elected.members[C]&&s.capacityAfter.members.length<s.capacityBefore.members.length&&s.departedCoins===s.privateCoins;
+  return split?partial(`离群与参与容量已变化；尚缺实际供献减少证据：${s.donation.error??'单次捐献不证明减少'}`):missing('没有真实胜负后的成员分流证据');}},
  {id:'E11-5',event:'E11',no:5,text:'玩家支持哪一方影响新掌门对他的好感',async check(){
-  const s=await scenario();
-  if(s.relBefore!==s.relAfter)return ok(`玩家提议并支持后，阿岩对玩家关系 ${s.relBefore} → ${s.relAfter}`);
-  return missing(`玩家提议/支持继任者后，新首脑对玩家关系不变（${s.relAfter}）；新首脑=${s.elected.leader}`);}},
+  const s=await scenario();return s.elected.leader===B&&s.relAfter===s.relBefore+5&&s.oppAfter===s.oppBefore-5?
+   ok(`合法继任后，当前standing：支持者${s.relBefore}→${s.relAfter}，反对者${s.oppBefore}→${s.oppAfter}`):missing('支持/反对未改变合法继任者的权威关系');}},
 ];

@@ -27,7 +27,7 @@ export function activeDuel(d,engine,target,challenger='player'){
 }
 export function duelAction(d,args,id){
     if(args.operation==='duel_challenge'){
-        const challenger=args.speaker?present(d,this,args.speaker):'player',target=present(d,this,args.member);
+        const challenger=present(d,this,args.speaker??'player'),target=present(d,this,args.member);
         if(challenger===target)throw Error('约斗须由两位不同的当事人参加');
         const witness=present(d,this,args.authority),rule=args.choice??'touch';
         if(witness==='player'||[challenger,target].includes(witness))throw Error('须有独立的在场见证人');

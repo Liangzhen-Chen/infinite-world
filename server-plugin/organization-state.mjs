@@ -7,12 +7,11 @@ import {actorId,actorPath} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 import {temples,templeById} from './faith-catalog.mjs';
 import {familyGroup,natalFamily} from './family-state.mjs';
-import {isEffective} from './lifecycle-state.mjs';
+import {isEffective,isGone} from './lifecycle-state.mjs';
 const LEADER={王国:'国王',行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
-    const actor=actorPath(engine.world,id).slice(1).reduce((o,k)=>o?.[k],state);
-    return !!actor&&isEffective(engine,state,actorId(engine.world,id));
+    return isEffective(engine,state,actorId(engine.world,id));
 };
 
 function factionBase(engine,id){
@@ -44,7 +43,7 @@ function societyBase(engine,id){
 }
 // Derived view: catalog or household base, then this campaign's record on top.
 export function organizationState(engine,state,id){
-    if(!isEffective(engine,state,id)&&state.records?.[`transition:${id}`]?.gone)return null;
+    if(isGone(engine,state,id))return null;
     const row=state.records?.[key(id)];
     const t=String(id).startsWith('temple:')?templeById(engine,id):null;
     const temple=t?.source==='temple'?{...t,kind:'教会',leader:t.teacher,leaderTitle:'主祭',members:{[t.teacher]:{position:'主祭',joinedAt:null,arrears:0}},treasury:0,charter:{mode:'leader',approval:true,fee:0,dues:0,rules:[t.rule]}}:null;
