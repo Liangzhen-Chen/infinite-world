@@ -254,7 +254,7 @@ export function settleOrganizationDuel(d,engine,duel,winner,eventId){
     worldEvent(d,engine,org,`${eventId}:succession`,d.get('state','minute'),{target:winner,participants:Object.keys(org.members),tags:['organization','org:succession'],summary:`${org.name}依章程由${personName(engine,d.get('state'),winner).value??winner}继任；${departed.length}名成员离群`});
     return row.succession;
 }
-registerWorldEventSubscriber({id:'organization-succession',order:55,on(d,engine,events){
+function organizationSuccessionEvents(d,engine,events){
     for(const e of events){
         if(e.verb!=='succession'||!String(e.subject??e.entity).startsWith('office_org:'))continue;
         const office=e.subject??e.entity,id=office.slice('office_org:'.length,-':leader'.length);
@@ -264,7 +264,8 @@ registerWorldEventSubscriber({id:'organization-succession',order:55,on(d,engine,
         const candidates=Object.keys(org.members).filter(m=>org.members[m].position===ELDER).sort();
         holdingSet(d,engine,['state','records',key],{category:'organization_vacancy',org:id,office,previousHolder:e.previousHolder,candidates,cause:e.id,minute:e.minute??d.get('state','minute')},'organizations');
     }
-}});
+}
+registerWorldEventSubscriber({id:'organization_succession',order:55,on:(d,engine,events)=>organizationSuccessionEvents(d,engine,events)});
 
 export function advanceOrganizations(d,engine,{before,after}){
     const records=()=>Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b));

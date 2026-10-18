@@ -455,9 +455,10 @@ export function advanceOffices(d,engine,{after}){
         if(r.category==='governance_application')decide(d,engine,r,r.due);else review(d,engine,r,dueAt(r));
     }
 }
-registerWorldEventSubscriber({id:'governance_vacancy',order:85,on:(d,engine,events)=>{
+function governanceVacancyEvents(d,engine,events){
     if(events.some(e=>e.verb==='succession'&&e.kind==='holds_office'))consumeOfficeVacancies(d,engine,d.get('state','minute'));
-}});
+}
+registerWorldEventSubscriber({id:'governance_vacancy',order:85,on:(d,engine,events)=>governanceVacancyEvents(d,engine,events)});
 
 // Public money: each draw is a ledger record under an office's power and
 // monthly cap, and never takes the treasury below the charter reserve.
