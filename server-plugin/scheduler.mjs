@@ -204,10 +204,9 @@ export function applyConfigSet(state, key, value) {
     if (!Number.isInteger(value) || value < 0 || value > 100000) throw new Error('调度配置值必须是 0 到 100000 的整数');
     return { ...(state?.scheduler ?? {}), ...schedulerConfig(state), [key]: value };
 }
-// 推进路径接线开关：SCHEDULER_WIRE_ADVANCE=1 或存档 state.scheduler.wireAdvance=true 时，
-// world_time 推进改经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。
-// 默认关闭：开启会使 advance-registry 金快照破裂（刻集改由日程堆唯一确定 + state.scheduler
-// 写回 seq/lastSettled），差异已记录于 S2B-ds-003.golden-diff.txt（S2b-1 步 3）。
+// 推进路径接线开关：默认开启，world_time 推进经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。
+// SCHEDULER_WIRE_ADVANCE=0 或存档 state.scheduler.wireAdvance=false 时走旧路径；
+// 开启后金快照的逐哈希依据见 logs/sessions/S2B-sol-007.golden-rationale.txt。
 export function schedulerWired(state) {
     if(process.env.SCHEDULER_WIRE_ADVANCE === '0')return false;
     return process.env.SCHEDULER_WIRE_ADVANCE === '1' || state?.scheduler?.wireAdvance !== false;
