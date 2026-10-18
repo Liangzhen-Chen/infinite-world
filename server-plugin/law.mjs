@@ -348,6 +348,12 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
     if(row.familyCivil)return adjudicateFamilyDispute(d,engine,row,code,judge,eventId);
     const score=evidenceScore(d,row);
         if(score<code.evidenceRequired){holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'law');return{case:row.id,convicted:false,evidenceScore:score};}
+        if(['declared','declaration_revoked','insolvency','inheritance_distribution'].includes(row.civilMatter)){
+            const judgment={judge,minute:d.get('state','minute'),evidenceScore:score,effect:row.civilMatter,eventId:`${eventId}:judgment`,procedure:row.procedure??{},law:code.civil??{}};
+            holdingSet(d,engine,path(row.id),{...row,status:'已裁定',judgment},'law');
+            entityTransition(d,engine,{id:judgment.eventId,verb:'judgment',actor:judge,target:row.subject??row.offender,case:row.id,location:code.court,visibility:row.private?'private':'public',tags:['law']});
+            return {case:row.id,convicted:true,judgment};
+        }
         const penalty=codePenalty(engine,code,row.offense)??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
         const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
         const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.victim?row.value:0,evidenceScore:score,

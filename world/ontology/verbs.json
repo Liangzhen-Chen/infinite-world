@@ -474,6 +474,11 @@
    "id": "shortfall",
    "label": "载货缺损",
    "family": "primitive"
+  },
+  {
+   "id": "judgment",
+   "label": "判决",
+   "family": "design"
   }
  ]
 }

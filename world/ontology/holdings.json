@@ -383,7 +383,8 @@
    "id": "operates",
    "label": "经营",
    "holderKinds": [
-    "agent"
+    "agent",
+    "interim"
    ],
    "subjectKinds": [
     "thing",
