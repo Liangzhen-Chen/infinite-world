@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s2b",
+  "commit": "refs/heads/s2b2",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 47,
-  "modules": 237,
-  "advance": 59,
+  "modules": 239,
+  "advance": 60,
   "tools": 27,
-  "verbs": 32,
-  "subscribers": 9,
+  "verbs": 42,
+  "subscribers": 10,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 548
+  "links": 558
  },
  "layers": [
   {
@@ -130,7 +130,7 @@
     "server-plugin/transport-route.mjs",
     "server-plugin/post.mjs"
    ],
-   "lines": 372,
+   "lines": 395,
    "stateWrites": [
     "location",
     "npcs",
@@ -569,7 +569,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1407,
+   "lines": 1413,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -643,7 +643,9 @@
     "skills",
     "spells"
    ],
-   "advance": [],
+   "advance": [
+    "transition_protocol"
+   ],
    "subscribes": [],
    "effects": [],
    "tools": [
@@ -835,7 +837,7 @@
     "server-plugin/world-events.mjs",
     "server-plugin/entity-transitions.mjs"
    ],
-   "lines": 236,
+   "lines": 237,
    "stateWrites": [
     "records"
    ],
@@ -870,7 +872,7 @@
     "server-plugin/standing.mjs",
     "server-plugin/entity-view.mjs"
    ],
-   "lines": 648,
+   "lines": 653,
    "stateWrites": [],
    "stateReads": [
     "careers",
@@ -896,7 +898,8 @@
     "physical_feature",
     "reputation",
     "settlement_rank",
-    "spirit_society"
+    "spirit_society",
+    "transition"
    ],
    "rules": [
     "agriculture",
@@ -1036,7 +1039,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 444,
+   "lines": 446,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1150,16 +1153,21 @@
    "modules": [
     "server-plugin/holdings.mjs",
     "server-plugin/holding-kinds.mjs",
-    "server-plugin/holding-sources.mjs"
+    "server-plugin/holding-sources.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/identity.mjs"
    ],
-   "lines": 1165,
-   "stateWrites": [],
-   "stateReads": [
+   "lines": 2040,
+   "stateWrites": [
     "created",
+    "npcAutonomy",
+    "npcs",
+    "obligations"
+   ],
+   "stateReads": [
     "creatures",
     "family",
-    "npcs",
-    "obligations",
+    "minute",
     "player",
     "professions",
     "records",
@@ -1170,12 +1178,17 @@
    "recordReads": [
     "holding",
     "key",
-    "organization"
+    "organization",
+    "sink",
+    "src",
+    "transition",
+    "world_event"
    ],
    "rules": [
     "agriculture",
     "economy",
-    "military"
+    "military",
+    "npcLife"
    ],
    "world": [
     "factions",
@@ -1188,7 +1201,23 @@
     "settlementProfiles"
    ],
    "advance": [],
-   "subscribes": [],
+   "subscribes": [
+    {
+     "fn": "dispatchProtocolEvents",
+     "verbs": [
+      "claim",
+      "close",
+      "holding_closed",
+      "holding_transferred",
+      "judgment",
+      "protocol_stage",
+      "restored",
+      "shortfall",
+      "succession",
+      "transition"
+     ]
+    }
+   ],
    "effects": [
     "dispute",
     "faith_claim",
@@ -1231,7 +1260,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3787,
+   "lines": 3801,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -2127,7 +2156,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 4941,
+   "lines": 4943,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2425,7 +2454,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1251,
+   "lines": 1257,
    "stateWrites": [
     "location",
     "npcs",
@@ -2879,6 +2908,14 @@
    "kind": "advance",
    "labels": [
     "season_effects"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "kernel_engine",
+   "kind": "advance",
+   "labels": [
+    "transition_protocol"
    ]
   },
   {
@@ -3373,6 +3410,46 @@
   },
   {
    "from": "base_holdings",
+   "to": "base_events",
+   "kind": "call",
+   "labels": [
+    "world-events.mjs"
+   ]
+  },
+  {
+   "from": "base_holdings",
+   "to": "base_ledger",
+   "kind": "call",
+   "labels": [
+    "ledger.mjs"
+   ]
+  },
+  {
+   "from": "base_holdings",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "base_holdings",
+   "to": "kernel_engine",
+   "kind": "call",
+   "labels": [
+    "scheduler.mjs"
+   ]
+  },
+  {
+   "from": "base_holdings",
+   "to": "kernel_storage",
+   "kind": "call",
+   "labels": [
+    "storage.mjs"
+   ]
+  },
+  {
+   "from": "base_holdings",
    "to": "sim_law",
    "kind": "call",
    "labels": [
@@ -3384,6 +3461,7 @@
    "to": "sim_npc",
    "kind": "call",
    "labels": [
+    "npc-schedule.mjs",
     "npc-state.mjs"
    ]
   },
@@ -3392,6 +3470,7 @@
    "to": "sim_society",
    "kind": "call",
    "labels": [
+    "family-inheritance.mjs",
     "organization-state.mjs"
    ]
   },
@@ -5240,7 +5319,8 @@
    "kind": "call",
    "labels": [
     "holding-sources.mjs",
-    "holdings.mjs"
+    "holdings.mjs",
+    "transition.mjs"
    ]
   },
   {
@@ -5432,7 +5512,8 @@
    "kind": "call",
    "labels": [
     "holding-sources.mjs",
-    "holdings.mjs"
+    "holdings.mjs",
+    "transition.mjs"
    ]
   },
   {
@@ -5605,7 +5686,8 @@
    "to": "base_holdings",
    "kind": "call",
    "labels": [
-    "holdings.mjs"
+    "holdings.mjs",
+    "transition.mjs"
    ]
   },
   {
@@ -7150,6 +7232,14 @@
   },
   {
    "from": "base_events",
+   "to": "base_holdings",
+   "kind": "event",
+   "labels": [
+    "dispatchProtocolEvents"
+   ]
+  },
+  {
+   "from": "base_events",
    "to": "base_standing",
    "kind": "event",
    "labels": [
@@ -7208,7 +7298,23 @@
   },
   {
    "from": "base_effects",
+   "to": "base_holdings",
+   "kind": "record",
+   "labels": [
+    "world_event"
+   ]
+  },
+  {
+   "from": "base_effects",
    "to": "ui_scene",
+   "kind": "record",
+   "labels": [
+    "world_event"
+   ]
+  },
+  {
+   "from": "base_events",
+   "to": "base_holdings",
    "kind": "record",
    "labels": [
     "world_event"
@@ -7414,6 +7520,14 @@
    "kind": "record",
    "labels": [
     "physical_feature"
+   ]
+  },
+  {
+   "from": "sim_society",
+   "to": "base_holdings",
+   "kind": "record",
+   "labels": [
+    "world_event"
    ]
   },
   {
@@ -7814,6 +7928,17 @@
   }
  ],
  "advance": [
+  {
+   "id": "transition_protocol",
+   "order": 0,
+   "stepped": false,
+   "nextMinute": true,
+   "modules": [
+    "server-plugin/scheduler.mjs"
+   ],
+   "inline": false,
+   "partitions": []
+  },
   {
    "id": "education_enrollment",
    "order": 50,
@@ -8525,13 +8650,24 @@
    "vocation",
    "contest_win",
    "contest_lose",
-   "proposal_rejected"
+   "proposal_rejected",
+   "transition",
+   "holding_opened",
+   "holding_closed",
+   "holding_transferred",
+   "succession",
+   "claim",
+   "protocol_stage",
+   "restored",
+   "shortfall",
+   "judgment"
   ],
   "verbs": [
    "appoint",
    "author",
    "breach",
    "cast",
+   "claim",
    "clash",
    "close",
    "contest_lose",
@@ -8545,6 +8681,10 @@
    "harm",
    "hazard",
    "help",
+   "holding_closed",
+   "holding_opened",
+   "holding_transferred",
+   "judgment",
    "learn",
    "marry",
    "migrate",
@@ -8552,13 +8692,18 @@
    "pact",
    "promote",
    "proposal_rejected",
+   "protocol_stage",
    "reaction_cut",
    "release",
+   "restored",
    "rumor",
    "salary",
+   "shortfall",
    "steal",
+   "succession",
    "trade",
    "transfer",
+   "transition",
    "vocation"
   ],
   "verbNotes": {
@@ -8581,6 +8726,24 @@
   "subscribers": [
    {
     "order": 1,
+    "id": "transition_hooks",
+    "fn": "dispatchProtocolEvents",
+    "module": "server-plugin/transition.mjs",
+    "verbs": [
+     "claim",
+     "close",
+     "holding_closed",
+     "holding_transferred",
+     "judgment",
+     "protocol_stage",
+     "restored",
+     "shortfall",
+     "succession",
+     "transition"
+    ]
+   },
+   {
+    "order": 2,
     "id": "monster_society",
     "fn": "recordSocietyActs",
     "module": "server-plugin/monster-society.mjs",
@@ -8591,7 +8754,7 @@
     ]
    },
    {
-    "order": 2,
+    "order": 3,
     "id": "npc_relations",
     "fn": "recordNpcRelationEvidence",
     "module": "server-plugin/npc-relations.mjs",
@@ -8605,7 +8768,7 @@
     ]
    },
    {
-    "order": 3,
+    "order": 4,
     "id": "npc_memory",
     "fn": "recordNpcMemories",
     "module": "server-plugin/npc-memory.mjs",
@@ -8622,7 +8785,7 @@
     ]
    },
    {
-    "order": 4,
+    "order": 5,
     "id": "spirit_grudges",
     "fn": "recordSpiritGrudges",
     "module": "server-plugin/wildlife-society.mjs",
@@ -8632,7 +8795,7 @@
     ]
    },
    {
-    "order": 5,
+    "order": 6,
     "id": "boss_cognition",
     "fn": "recordBossEvents",
     "module": "server-plugin/boss-cognition.mjs",
@@ -8643,7 +8806,7 @@
     ]
    },
    {
-    "order": 6,
+    "order": 7,
     "id": "standing",
     "fn": "transmitStanding",
     "module": "server-plugin/standing.mjs",
@@ -8658,7 +8821,7 @@
     ]
    },
    {
-    "order": 7,
+    "order": 8,
     "id": "faith_experience",
     "fn": "faithExperience",
     "module": "server-plugin/faith.mjs",
@@ -8671,7 +8834,7 @@
     ]
    },
    {
-    "order": 8,
+    "order": 9,
     "id": "npc_intelligence",
     "fn": "recordIntelligenceEvents",
     "module": "server-plugin/npc-intelligence.mjs",
@@ -8685,7 +8848,7 @@
     ]
    },
    {
-    "order": 9,
+    "order": 10,
     "fn": "recordCareerMetrics",
     "module": "server-plugin/career-metrics.mjs",
     "verbs": [
@@ -8714,6 +8877,9 @@
    ],
    "cast": [
     "server-plugin/world-events.mjs"
+   ],
+   "claim": [
+    "server-plugin/transition.mjs"
    ],
    "clash": [
     "server-plugin/war-diplomacy.mjs",
@@ -8767,6 +8933,16 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/world-events.mjs"
    ],
+   "holding_closed": [
+    "server-plugin/transition.mjs"
+   ],
+   "holding_opened": [],
+   "holding_transferred": [
+    "server-plugin/transition.mjs"
+   ],
+   "judgment": [
+    "server-plugin/law.mjs"
+   ],
    "learn": [
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/world-events.mjs"
@@ -8794,12 +8970,18 @@
    "proposal_rejected": [
     "server-plugin/world-events.mjs"
    ],
+   "protocol_stage": [
+    "server-plugin/transition.mjs"
+   ],
    "reaction_cut": [
     "server-plugin/scheduler.mjs"
    ],
    "release": [
     "server-plugin/law.mjs",
     "server-plugin/npc-crime.mjs"
+   ],
+   "restored": [
+    "server-plugin/transition.mjs"
    ],
    "rumor": [
     "server-plugin/effects.mjs",
@@ -8809,8 +8991,15 @@
    "salary": [
     "server-plugin/office-salary.mjs"
    ],
+   "shortfall": [
+    "server-plugin/transition.mjs",
+    "server-plugin/transport.mjs"
+   ],
    "steal": [
     "server-plugin/world-events.mjs"
+   ],
+   "succession": [
+    "server-plugin/transition.mjs"
    ],
    "trade": [
     "server-plugin/dialogue.mjs",
@@ -8821,6 +9010,9 @@
     "server-plugin/family-inheritance.mjs",
     "server-plugin/family-law.mjs",
     "server-plugin/family-politics.mjs"
+   ],
+   "transition": [
+    "server-plugin/transition.mjs"
    ],
    "vocation": [
     "server-plugin/npc-growth.mjs"
@@ -11945,6 +12137,7 @@
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
     "server-plugin/traits.mjs",
+    "server-plugin/transition.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
@@ -12058,7 +12251,8 @@
     "server-plugin/holding-kinds.mjs",
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
-    "server-plugin/stock.mjs"
+    "server-plugin/stock.mjs",
+    "server-plugin/transition.mjs"
    ],
    "tools": [
     "tools/derived-scan.mjs",
@@ -12494,6 +12688,7 @@
    "server-plugin/npc-relations.mjs",
    "server-plugin/scene-card.mjs",
    "server-plugin/seasonal-hazards.mjs",
+   "server-plugin/transition.mjs",
    "server-plugin/ui-history.mjs"
   ],
   "effectTable": [
@@ -12617,11 +12812,11 @@
   },
   "created": {
    "writers": [
+    "base_holdings",
     "kernel_storage"
    ],
    "readers": [
     "base_events",
-    "base_holdings",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -12794,6 +12989,7 @@
    "readers": [
     "base_effects",
     "base_events",
+    "base_holdings",
     "base_interactions",
     "base_ledger",
     "base_standing",
@@ -12823,6 +13019,7 @@
   },
   "npcAutonomy": {
    "writers": [
+    "base_holdings",
     "kernel_engine",
     "sim_npc"
    ],
@@ -12858,6 +13055,7 @@
   "npcs": {
    "writers": [
     "base_effects",
+    "base_holdings",
     "kernel_engine",
     "kernel_storage",
     "sim_character",
@@ -12875,7 +13073,6 @@
    "readers": [
     "base_advance",
     "base_events",
-    "base_holdings",
     "base_ledger",
     "base_npc_decision",
     "base_standing",
@@ -12892,6 +13089,7 @@
   "obligations": {
    "writers": [
     "base_advance",
+    "base_holdings",
     "kernel_engine",
     "kernel_storage",
     "sim_character",
@@ -12900,7 +13098,6 @@
     "sim_society"
    ],
    "readers": [
-    "base_holdings",
     "nar_consistency",
     "sim_economy",
     "ui_server"
@@ -13628,6 +13825,7 @@
       "server-plugin/shop.mjs",
       "server-plugin/sites.mjs",
       "server-plugin/standing.mjs",
+      "server-plugin/transition.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
       "server-plugin/ui-map.mjs",
@@ -14181,7 +14379,8 @@
       "server-plugin/npc-crime.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/regions.mjs",
-      "server-plugin/reputation.mjs"
+      "server-plugin/reputation.mjs",
+      "server-plugin/transition.mjs"
      ],
      "systems": [
       "base_holdings",
@@ -14444,6 +14643,7 @@
       "server-plugin/state-notices.mjs",
       "server-plugin/stock.mjs",
       "server-plugin/titles.mjs",
+      "server-plugin/transition.mjs",
       "server-plugin/transport.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/ui-affairs.mjs",
@@ -14819,11 +15019,13 @@
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/smuggling.mjs",
+      "server-plugin/transition.mjs",
       "server-plugin/transport.mjs",
       "server-plugin/world-events.mjs"
      ],
      "systems": [
       "base_events",
+      "base_holdings",
       "sim_agriculture",
       "sim_boss",
       "sim_economy",
@@ -16426,7 +16628,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 382
+   "lines": 384
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -17600,7 +17802,8 @@
     "faction-assets",
     "organization",
     "physical_feature",
-    "settlement_rank"
+    "settlement_rank",
+    "transition"
    ],
    "rules": [
     "agriculture",
@@ -17620,7 +17823,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 490
+   "lines": 495
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -18288,7 +18491,8 @@
     "server-plugin/public-opinion.mjs",
     "server-plugin/public-projects.mjs",
     "server-plugin/standing.mjs",
-    "server-plugin/storage.mjs"
+    "server-plugin/storage.mjs",
+    "server-plugin/transition.mjs"
    ],
    "stateWrites": [
     "npcs",
@@ -18319,7 +18523,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 427
+   "lines": 429
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -18444,7 +18648,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 106
+   "lines": 107
   },
   "server-plugin/holding-sources.mjs": {
    "system": "base_holdings",
@@ -18471,7 +18675,8 @@
    "recordWrites": [],
    "recordReads": [
     "key",
-    "organization"
+    "organization",
+    "transition"
    ],
    "rules": [
     "agriculture",
@@ -18490,7 +18695,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 718
+   "lines": 753
   },
   "server-plugin/holdings.mjs": {
    "system": "base_holdings",
@@ -18506,7 +18711,21 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 341
+   "lines": 342
+  },
+  "server-plugin/identity.mjs": {
+   "system": "base_holdings",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [
+    "minute"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 22
   },
   "server-plugin/index.mjs": {
    "system": "ui_server",
@@ -18719,7 +18938,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 586
+   "lines": 592
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -20129,6 +20348,7 @@
     "server-plugin/npc-state.mjs",
     "server-plugin/population.mjs",
     "server-plugin/storage.mjs",
+    "server-plugin/transition.mjs",
     "server-plugin/world-clock.mjs"
    ],
    "stateWrites": [
@@ -20158,7 +20378,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 830
+   "lines": 842
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -20331,7 +20551,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 215
+   "lines": 217
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -21243,7 +21463,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 263
+   "lines": 269
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
@@ -21797,6 +22017,43 @@
    ],
    "lines": 159
   },
+  "server-plugin/transition.mjs": {
+   "system": "base_holdings",
+   "imports": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/holdings.mjs",
+    "server-plugin/identity.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/ledger.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/scheduler.mjs",
+    "server-plugin/storage.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "stateWrites": [
+    "created",
+    "npcAutonomy",
+    "npcs",
+    "obligations"
+   ],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [
+    "sink",
+    "src",
+    "world_event"
+   ],
+   "rules": [
+    "npcLife"
+   ],
+   "world": [],
+   "worldDirs": [
+    "ontology"
+   ],
+   "lines": 816
+  },
   "server-plugin/transport-route.mjs": {
    "system": "sim_transport",
    "imports": [
@@ -21833,6 +22090,7 @@
     "server-plugin/npc-obligations.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/stock.mjs",
+    "server-plugin/transition.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/world-events.mjs",
     "world/design/transport-rules.mjs"
@@ -21864,7 +22122,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 250
+   "lines": 273
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -22462,7 +22720,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 210
+   "lines": 211
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",
