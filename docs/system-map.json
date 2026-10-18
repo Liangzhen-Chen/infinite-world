@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/w1",
+  "commit": "refs/heads/a2",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -17,15 +17,15 @@
  },
  "counts": {
   "layers": 6,
-  "systems": 46,
-  "modules": 232,
+  "systems": 47,
+  "modules": 236,
   "advance": 59,
   "tools": 27,
   "verbs": 28,
   "subscribers": 9,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 538
+  "links": 544
  },
  "layers": [
   {
@@ -63,6 +63,7 @@
     "base_interactions",
     "base_events",
     "base_standing",
+    "base_npc_decision",
     "base_effects",
     "base_advance",
     "base_ledger",
@@ -311,6 +312,7 @@
     "base_advance",
     "base_effects",
     "base_holdings",
+    "base_npc_decision",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -398,6 +400,7 @@
     "base_effects",
     "base_holdings",
     "base_ledger",
+    "base_npc_decision",
     "base_standing",
     "kernel_engine",
     "sim_character",
@@ -548,7 +551,9 @@
    "subscribes": [],
    "effects": [],
    "tools": [],
-   "readBy": [],
+   "readBy": [
+    "sim_npc"
+   ],
    "files": 1
   },
   {
@@ -563,7 +568,7 @@
     "server-plugin/campaign-reducer.mjs",
     "server-plugin/archived-reducer.mjs"
    ],
-   "lines": 1080,
+   "lines": 1082,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -934,6 +939,37 @@
    "readBy": []
   },
   {
+   "id": "base_npc_decision",
+   "name": "主观视图与 NPC 决策",
+   "layer": "base",
+   "card": "A2",
+   "dir": null,
+   "modules": [
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/autonomy-candidates.mjs"
+   ],
+   "lines": 138,
+   "stateWrites": [
+    "autonomyCandidates"
+   ],
+   "stateReads": [
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "rumors",
+    "settlementProfiles"
+   ],
+   "advance": [],
+   "subscribes": [],
+   "effects": [],
+   "tools": [],
+   "readBy": []
+  },
+  {
    "id": "base_effects",
    "name": "效果表",
    "layer": "base",
@@ -1171,6 +1207,7 @@
    "card": null,
    "dir": null,
    "modules": [
+    "server-plugin/dialogue.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/npc-cognition.mjs",
@@ -1190,8 +1227,10 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3626,
+   "lines": 3775,
    "stateWrites": [
+    "autonomyCandidates",
+    "dialogues",
     "family",
     "npcAutonomy",
     "npcCognition",
@@ -1216,9 +1255,13 @@
     "pets",
     "remote"
    ],
-   "recordWrites": [],
+   "recordWrites": [
+    "dialogue_due",
+    "plan_abandoned"
+   ],
    "recordReads": [
     "agriculture",
+    "dialogue",
     "medicine_fund",
     "post",
     "rumor_lie",
@@ -2656,7 +2699,7 @@
     "extension/ui-actions.mjs",
     "extension/actions-view.mjs"
    ],
-   "lines": 593,
+   "lines": 600,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -3356,6 +3399,22 @@
    "kind": "call",
    "labels": [
     "group-account.mjs"
+   ]
+  },
+  {
+   "from": "base_npc_decision",
+   "to": "base_standing",
+   "kind": "call",
+   "labels": [
+    "entity-view.mjs"
+   ]
+  },
+  {
+   "from": "base_npc_decision",
+   "to": "ui_actions",
+   "kind": "call",
+   "labels": [
+    "action-registry.mjs"
    ]
   },
   {
@@ -5153,6 +5212,16 @@
   },
   {
    "from": "sim_npc",
+   "to": "base_npc_decision",
+   "kind": "call",
+   "labels": [
+    "autonomy-candidates.mjs",
+    "npc-decision.mjs",
+    "subjective-view.mjs"
+   ]
+  },
+  {
+   "from": "sim_npc",
    "to": "base_standing",
    "kind": "call",
    "labels": [
@@ -6134,6 +6203,14 @@
   },
   {
    "from": "data_geo",
+   "to": "base_npc_decision",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "base_standing",
    "kind": "data",
    "labels": [
@@ -6335,6 +6412,14 @@
   {
    "from": "data_lore",
    "to": "base_ledger",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "base_npc_decision",
    "kind": "data",
    "labels": [
     "world/lore"
@@ -6826,6 +6911,14 @@
    "kind": "data",
    "labels": [
     "world/people"
+   ]
+  },
+  {
+   "from": "data_rules",
+   "to": "sim_npc",
+   "kind": "data",
+   "labels": [
+    "world/rules"
    ]
   },
   {
@@ -8651,6 +8744,7 @@
     "server-plugin/world-events.mjs"
    ],
    "trade": [
+    "server-plugin/dialogue.mjs",
     "server-plugin/transport.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -10219,6 +10313,7 @@
       "server-plugin/entity-view.mjs",
       "server-plugin/holdings.mjs",
       "server-plugin/location-access.mjs",
+      "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-obligations.mjs"
      ],
      "systems": [
@@ -10253,6 +10348,7 @@
      "modules": [
       "server-plugin/engine.mjs",
       "server-plugin/lies.mjs",
+      "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-rumors.mjs",
       "server-plugin/retrieval.mjs"
      ],
@@ -11534,6 +11630,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/smuggling.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/subjective-view.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs",
@@ -11623,6 +11720,7 @@
     "server-plugin/return-summary.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/stock.mjs",
+    "server-plugin/subjective-view.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-clock.mjs"
@@ -11981,10 +12079,24 @@
    "dir": "world/rules",
    "files": 1,
    "keys": [],
-   "readers": [],
+   "readers": [
+    "server-plugin/dialogue.mjs"
+   ],
    "tools": [
     "tools/balance-tables.mjs",
+    "tools/load-world.mjs",
     "tools/system-map.mjs"
+   ]
+  },
+  {
+   "dir": "world/templates",
+   "files": 1,
+   "keys": [],
+   "readers": [
+    "server-plugin/dialogue.mjs"
+   ],
+   "tools": [
+    "tools/load-world.mjs"
    ]
   }
  ],
@@ -12369,6 +12481,13 @@
   ]
  },
  "stateShare": {
+  "autonomyCandidates": {
+   "writers": [
+    "base_npc_decision",
+    "sim_npc"
+   ],
+   "readers": []
+  },
   "careerCooldowns": {
    "writers": [
     "sim_character"
@@ -12464,6 +12583,12 @@
     "sim_society",
     "sim_transport"
    ]
+  },
+  "dialogues": {
+   "writers": [
+    "sim_npc"
+   ],
+   "readers": []
   },
   "discoveries": {
    "writers": [
@@ -12677,6 +12802,7 @@
     "base_events",
     "base_holdings",
     "base_ledger",
+    "base_npc_decision",
     "base_standing",
     "nar_consistency",
     "sim_agriculture",
@@ -13254,9 +13380,11 @@
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-rumors.mjs",
       "server-plugin/public-opinion.mjs",
-      "server-plugin/return-summary.mjs"
+      "server-plugin/return-summary.mjs",
+      "server-plugin/subjective-view.mjs"
      ],
      "systems": [
+      "base_npc_decision",
       "kernel_storage",
       "nar_consistency",
       "sim_boss",
@@ -13287,6 +13415,7 @@
    "autoSystems": [
     "base_holdings",
     "base_ledger",
+    "base_npc_decision",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -14285,12 +14414,15 @@
       "server-plugin/facility-state.mjs",
       "server-plugin/festival.mjs",
       "server-plugin/npc-autonomy.mjs",
+      "server-plugin/npc-decision.mjs",
       "server-plugin/npc-schedule.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/scene-card.mjs",
-      "server-plugin/shop.mjs"
+      "server-plugin/shop.mjs",
+      "server-plugin/subjective-view.mjs"
      ],
      "systems": [
+      "base_npc_decision",
       "base_standing",
       "kernel_engine",
       "sim_character",
@@ -14332,13 +14464,18 @@
      "means": "自主行动计划",
      "pattern": "\\.goals\\b|redLines",
      "modules": [
+      "server-plugin/autonomy-candidates.mjs",
+      "server-plugin/dialogue.mjs",
       "server-plugin/nation-founding.mjs",
       "server-plugin/npc-autonomy.mjs",
+      "server-plugin/npc-decision.mjs",
       "server-plugin/npc-intelligence.mjs",
       "server-plugin/npc-memory.mjs",
-      "server-plugin/scene-card.mjs"
+      "server-plugin/scene-card.mjs",
+      "server-plugin/subjective-view.mjs"
      ],
      "systems": [
+      "base_npc_decision",
       "sim_npc",
       "sim_society",
       "ui_scene"
@@ -14380,7 +14517,6 @@
       "server-plugin/faith-state.mjs",
       "server-plugin/family-state.mjs",
       "server-plugin/holding-sources.mjs",
-      "server-plugin/npc-autonomy.mjs",
       "server-plugin/npc-cognition.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-relations.mjs",
@@ -14390,12 +14526,14 @@
       "server-plugin/remote-generation.mjs",
       "server-plugin/rule-state-migration.mjs",
       "server-plugin/state-notices.mjs",
+      "server-plugin/subjective-view.mjs",
       "extension/core.js",
       "extension/index.js",
       "extension/state-read.mjs"
      ],
      "systems": [
       "base_holdings",
+      "base_npc_decision",
       "base_standing",
       "kernel_engine",
       "kernel_storage",
@@ -14416,6 +14554,7 @@
     "base_events",
     "base_holdings",
     "base_ledger",
+    "base_npc_decision",
     "base_standing",
     "kernel_engine",
     "kernel_storage",
@@ -15099,6 +15238,8 @@
       "server-plugin/family-politics.mjs",
       "server-plugin/family-state.mjs",
       "server-plugin/group-account.mjs",
+      "server-plugin/npc-autonomy.mjs",
+      "server-plugin/npc-decision.mjs",
       "server-plugin/reputation-catalog.mjs",
       "server-plugin/reputation-registry.mjs",
       "server-plugin/scene-card.mjs",
@@ -15106,8 +15247,10 @@
       "extension/personal-panels.mjs"
      ],
      "systems": [
+      "base_npc_decision",
       "base_standing",
       "sim_clock",
+      "sim_npc",
       "sim_society",
       "ui_client",
       "ui_scene"
@@ -15115,6 +15258,7 @@
     }
    ],
    "autoSystems": [
+    "base_npc_decision",
     "base_standing",
     "kernel_engine",
     "nar_consistency",
@@ -15125,6 +15269,7 @@
     "sim_faith",
     "sim_law",
     "sim_military",
+    "sim_npc",
     "sim_society",
     "ui_actions",
     "ui_client",
@@ -15648,6 +15793,11 @@
     "usedByTools": true
    },
    {
+    "module": "server-plugin/dialogue.mjs",
+    "usedByTests": false,
+    "usedByTools": false
+   },
+   {
     "module": "server-plugin/holding-kinds.mjs",
     "usedByTests": true,
     "usedByTools": true
@@ -15980,7 +16130,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 126
+   "lines": 127
   },
   "server-plugin/activities.mjs": {
    "system": "kernel_engine",
@@ -16270,6 +16420,26 @@
    "world": [],
    "worldDirs": [],
    "lines": 23
+  },
+  "server-plugin/autonomy-candidates.mjs": {
+   "system": "base_npc_decision",
+   "imports": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/subjective-view.mjs"
+   ],
+   "stateWrites": [
+    "autonomyCandidates"
+   ],
+   "stateReads": [
+    "npcs"
+   ],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 38
   },
   "server-plugin/boss-abilities.mjs": {
    "system": "sim_boss",
@@ -16857,6 +17027,40 @@
    "worldDirs": [],
    "lines": 312
   },
+  "server-plugin/dialogue.mjs": {
+   "system": "sim_npc",
+   "imports": [
+    "server-plugin/ledger.mjs",
+    "server-plugin/lies.mjs",
+    "server-plugin/money.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/subjective-view.mjs"
+   ],
+   "stateWrites": [
+    "dialogues",
+    "npcs",
+    "player",
+    "quotes",
+    "records"
+   ],
+   "stateReads": [
+    "location",
+    "minute"
+   ],
+   "recordWrites": [
+    "dialogue_due"
+   ],
+   "recordReads": [
+    "dialogue"
+   ],
+   "rules": [],
+   "world": [],
+   "worldDirs": [
+    "rules",
+    "templates"
+   ],
+   "lines": 117
+  },
   "server-plugin/duels.mjs": {
    "system": "sim_combat",
    "imports": [
@@ -17238,7 +17442,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 774
+   "lines": 776
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -19592,6 +19796,7 @@
   "server-plugin/npc-autonomy.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/autonomy-candidates.mjs",
     "server-plugin/combat.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/facility-state.mjs",
@@ -19603,6 +19808,7 @@
     "server-plugin/manufacturing.mjs",
     "server-plugin/money.mjs",
     "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-decision.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-obligations.mjs",
@@ -19610,12 +19816,15 @@
     "server-plugin/quest-board.mjs",
     "server-plugin/stock.mjs",
     "server-plugin/storage.mjs",
+    "server-plugin/subjective-view.mjs",
     "server-plugin/wildlife.mjs"
    ],
    "stateWrites": [
+    "autonomyCandidates",
     "npcAutonomy",
     "npcs",
     "quotes",
+    "records",
     "workshopFunds"
    ],
    "stateReads": [
@@ -19626,7 +19835,9 @@
     "obligations",
     "player"
    ],
-   "recordWrites": [],
+   "recordWrites": [
+    "plan_abandoned"
+   ],
    "recordReads": [],
    "rules": [
     "check",
@@ -19636,7 +19847,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 227
+   "lines": 259
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -19714,6 +19925,20 @@
    "world": [],
    "worldDirs": [],
    "lines": 140
+  },
+  "server-plugin/npc-decision.mjs": {
+   "system": "base_npc_decision",
+   "imports": [
+    "server-plugin/subjective-view.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 41
   },
   "server-plugin/npc-growth.mjs": {
    "system": "sim_npc",
@@ -21305,6 +21530,23 @@
    "worldDirs": [],
    "lines": 620
   },
+  "server-plugin/subjective-view.mjs": {
+   "system": "base_npc_decision",
+   "imports": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [
+    "rumors",
+    "settlementProfiles"
+   ],
+   "worldDirs": [],
+   "lines": 59
+  },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
    "imports": [
@@ -22291,7 +22533,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 126
+   "lines": 132
   },
   "extension/affairs-panels.mjs": {
    "system": "ui_client",

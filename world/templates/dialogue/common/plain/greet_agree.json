@@ -1,0 +1,9 @@
+[
+ {
+  "when": "season() == 'autumn'",
+  "text": "{name}：秋收时节事多。{detail}。你近来可好？"
+ },
+ {
+  "text": "{name}：{detail}。你近来可好？"
+ }
+]

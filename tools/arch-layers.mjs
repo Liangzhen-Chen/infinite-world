@@ -8,7 +8,7 @@ const L0=['storage','archived-reducer','campaign-reducer','migrations','migratio
  'agriculture-migration','boss-migration','farm-pests-migration',/* 迁移归存档 */
  'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'holdings'/* S2a 持有存储：持有、实体化对象与位置事实 */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];
-const L1=['entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state'/* *-state 选择器 */,
+const L1=['subjective-view','npc-decision','autonomy-candidates','entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state'/* *-state 选择器 */,
  'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'stock'/* S1b 物品、粮与库存适配器：旧字段 → 账户 */,'holding-kinds'/* S2a 持有种类注册表 */,'holding-sources'/* S2a 持有适配器：旧字段 → 持有 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression','action-registry'/* A1 动作注册表（数据） */];
 const PACKS={
  economy:['business','shop','settlement-trade','finance-bank','finance-assets','finance-tax','credit','contracts','labor-market','transport','transport-route','post','smuggling','extraction','manufacturing','repair','works','magic-economy'],
@@ -20,7 +20,7 @@ const PACKS={
   'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
- npc:['npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
+ npc:['dialogue','npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
  military:['military','war-diplomacy'],
  companion:['pets'],
  remote:['remote-generation','population','population-service'],
