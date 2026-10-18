@@ -106,7 +106,7 @@ export function upperGovernanceAction(d,args,id){
  }
  if(args.operation==='domain_request'){
   if(!['tax','levy','account_report'].includes(args.choice))throw Error('批复支持tax、levy或account_report');
-  const contract=args.authorization&&s.records?.[args.authorization];if(args.authorization&&(!contract?.domainSteward||contract.owner!=='player'||contract.status!=='有效'||contract.settlement!==settlement))throw Error('没有该辖区有效管事合同');
+  const contract=args.authorization&&s.records?.[args.authorization];if(args.authorization&&(!contract?.domainSteward||contract.owner!=='player'||currentEmployment(s,contract.worker)?.id!==contract.id||contract.status!=='有效'||contract.settlement!==settlement))throw Error('没有该辖区有效管事合同');
   const key=`domain_request:${id}`,row={category:'domain_request',id:key,settlement,holder:'player',kind:args.choice,taxBps:args.taxBps??null,army:args.org??null,contract:args.authorization??null,status:contract?'待办理':'待批复',minute:s.minute,sourceEvent:id};holdingSet(d,null,rec(key),row,'high-nobility');
   if(!contract)return {request:executeDomainRequest(d,e,row,id)};return {request:row};
  }

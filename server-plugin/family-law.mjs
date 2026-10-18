@@ -9,9 +9,15 @@ import {entityTransition} from './entity-transitions.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 import {changeHolding,changeLegacyHoldings} from './transition.mjs';
+import {registerLoss,lossView,recoverLoss} from './obligation-claims.mjs';
 declareHoldingWriter('family-law',{kinds:['guardian_of','owns'],entities:['case']});
 
 const rec=id=>['state','records',id];
+function familyLoss(d,e,row){
+ const guard=d.get(...rec(row.familyCivil.guardianship));
+ const source=row.lossSource??`${guard?.id??row.id}:${(guard?.ledger??[]).filter(r=>r.kind==='侵吞'&&!r.recoveredBy).map(r=>r.sourceEvent).sort().join('|')}`;
+ return registerLoss(d,e,{id:row.loss??`loss:family:${source}`,victim:row.victim,amount:row.lossAmount??row.judgment.compensation,source});
+}
 export function fileFamilyDispute(d,e,{claimant,estate,guardianship,reason,eventId}){
  const s=d.get('state'),death=Object.values(s.family?.deaths??{}).find(r=>r.id===estate),guard=s.records?.[guardianship];
  if(!death&&guard?.category!=='guardianship')throw Error('须指定实际死亡分产或监护登记');
@@ -44,17 +50,19 @@ export function adjudicateFamilyDispute(d,e,row,code,judge,eventId){
   holdingSet(d,null,['state','buildings',asset],{...building,owner:entitled.length===1?entitled[0]:building.owner,owners:expected,partitionJudgment:row.id},'family-law');restored.push(asset);
  }
  const judgment={judge,minute:s.minute,compensation:owed,fine:0,evidenceScore:2,restored,decision:owed?'返还侵吞财产':restored.length?'按死亡分产登记恢复产权':'维持依法分产，监护继续按期记账'};
- holdingSet(d,null,rec(row.id),{...row,status:owed?'待赔偿':'已结案',judgment,value:owed,compensationPaid:owed===0},'family-law');
+ const source=`${guard?.id??row.id}:${diversions.map(r=>r.sourceEvent).sort().join('|')}`,loss=registerLoss(d,e,{id:`loss:family:${source}`,victim:row.victim,amount:owed,source});
+ holdingSet(d,null,rec(row.id),{...row,status:loss.remaining?'待赔偿':'已结案',judgment,value:owed,loss:loss.id,lossSource:source,lossAmount:owed,compensationPaid:loss.remaining===0},'family-law');
  if(owed&&guard)changeLegacyHoldings(d,e,{holder:guard.guardian,subject:guard.ward,kinds:['guardian_of'],eventId},()=>holdingSet(d,null,rec(guard.id),{...guard,status:'已撤换',removedAt:s.minute,removalCase:row.id},'family-law'));
  entityTransition(d,e,{id:`${eventId}:family:judgment`,verb:'transfer',actor:judge,target:row.victim,location:code.court,tags:['family','law'],summary:judgment.decision});
  return {case:row.id,convicted:false,civil:true,judgment};
 }
 export function recoverFamilyCompensation(d,e,row,eventId){
+ row=d.get(...rec(row.id))??row;
  if(!row.judgment)throw Error('须先由有权法庭审理');
- const s=d.get('state'),remaining=Math.max(0,row.judgment.compensation-(row.recovered??0));
+ const s=d.get('state'),loss=familyLoss(d,e,row),remaining=Math.min(loss.remaining,Math.max(0,row.judgment.compensation-(row.recovered??0)));
  const offenderPath=actorPath(e.world,row.offender),victimPath=actorPath(e.world,row.victim),available=d.get(...offenderPath,'coins')??0,amount=Math.min(remaining,available);
- if(amount){moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount:amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],available-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);}
- const recovered=(row.recovered??0)+amount,closed=recovered===row.judgment.compensation;
+ if(amount)recoverLoss(d,e,{id:loss.id,amount,payer:row.offender},eventId,()=>{moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],available-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);});
+ const recovered=(row.recovered??0)+amount,closed=lossView(d.get('state'),loss.id).remaining===0;
  holdingSet(d,null,rec(row.id),{...row,recovered,status:closed?'已结案':'待赔偿',compensationPaid:closed},'family-law');
  if(closed){const guard=d.get(...rec(row.familyCivil.guardianship));if(guard)holdingSet(d,null,rec(guard.id),{...guard,ledger:guard.ledger.map(r=>r.kind==='侵吞'?{...r,recoveredBy:row.id}:r)},'family-law');}
  return {case:row.id,recovered:amount,remaining:remaining-amount,closed};

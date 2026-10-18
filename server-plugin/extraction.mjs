@@ -1,5 +1,6 @@
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
-import {populationView} from './entity-view.mjs';
+import {populationView,personConstraint} from './entity-view.mjs';
+import {npcEntryCheck} from './checks.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
@@ -21,10 +22,10 @@ function practice(d,engine,skill,target){
     if(!d.get('state','skills',skill))d.set(['state','skills',skill],{proficiency:0,grade:'初级1等',daily:{}});
     return engine.practice(d,{skill,target,gain:3});
 }
-function usable(d,engine,tool){
-    const held=heldUnit(d,engine,'player',tool),definition=engine.byId.get(tool);
-    if(!engine.quantity(d,'player',tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
-    if(typeof held==='number')d.set([...engine.bagPath('player'),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
+function usable(d,engine,tool,actor='player'){
+    const held=heldUnit(d,engine,actor,tool),definition=engine.byId.get(tool);
+    if(!engine.quantity(d,actor,tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
+    if(typeof held==='number')d.set([...engine.bagPath(actor),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
 }
 export function fish(d,args,id){
     const location=d.get('state','location'),habitat=this.rules.wildlife?.habitats.find(h=>h.location===location);
@@ -68,13 +69,36 @@ export function eatFish(d,args,id){
 }
 
 export function mine(d,args,id){
-    const location=d.get('state','location'),place=this.byId.get(location),rules=this.rules.extraction.mining;
+    return mineActor.call(this,d,args,id,'player',true);
+}
+// Autonomous labor calls this only after measured attendance. No second clock
+// advance is introduced inside a scheduler settlement.
+export function mineEmployment(d,e,row,at,minutes){
+    const current=d.get('state','records',row.id),n=d.get('state','npcs',row.worker);
+    const receipt=`mining_work:${row.id}:${at}`,old=d.get(...path(receipt));
+    if(old){if(old.minutes!==minutes)throw Error('同次采矿工时事实不一致');return old.result;}
+    const attendance=current?.attendance?.[String(Math.floor((at-540)/1440))]??0;
+    if(current?.worker!==row.worker||current.owner!==row.owner||current.task!=='矿脉开采'||current.endedAt!==undefined||current.status==='罢工'||minutes>attendance||n?.location!==row.location||n.status!=='正常'||personConstraint(e,d.get('state'),row.worker)||n.scheduleTravel||n.cognitionTravel)return null;
+    if(minutes<e.rules.extraction.mining.minutes)return null;
+    const unit=e.rules.extraction.mining.minutes,attempts=[];
+    for(let i=0;i<Math.floor(minutes/unit);i++){
+        const vein=d.get(...path(`mineral:${row.location}:${row.item}`));
+        const tool=heldUnit(d,e,row.worker,e.rules.extraction.mining.tool);
+        if(i&&(vein?.reserve===0||(tool?.durability??0)<=0))break;
+        attempts.push(mineActor.call(e,d,{item:row.item,employment:current},`${row.id}:mine:${at}:${i}`,row.worker,false));
+    }
+    const last=attempts.at(-1),quantity=attempts.reduce((n,r)=>n+r.obtained.reduce((v,x)=>v+x.quantity,0),0);
+    const result={...last,success:quantity>0,obtained:quantity?[{item:row.item,quantity}]:[],cases:attempts.map(r=>r.case).filter(Boolean),minutesSpent:attempts.length*unit,attempts};
+    holdingSet(d,e,path(receipt),{category:'mining_work',contract:row.id,minute:at,minutes,result},'extraction');return result;
+}
+function mineActor(d,args,id,actor,advance){
+    const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location'),place=d.get('state','created',location)??this.byId.get(location),rules=this.rules.extraction.mining;
     const tags=locationTraits(place).tags;
     const deposits=place.minerals??rules.locations?.[location]??rules.terrain.find(r=>tags.includes(r.tag))?.minerals;
     if(!deposits?.length)throw Error('这里没有可开采矿脉');
     const item=args.item?this.resolve(args.item,'item'):deposits[0].item,spec=deposits.find(s=>s.item===item);
     if(!spec)throw Error('这里没有该矿产');
-    usable(d,this,rules.tool);
+    usable(d,this,rules.tool,actor);
     const key=`mineral:${location}:${item}`,now=d.get('state','minute');
     const old=d.get(...path(key))??{category:'mineral',location,item,initial:spec.reserve,reserve:spec.reserve,extracted:0,recovered:0,updatedAt:now};
     // Recovery is lazy: only elapsed full periods restore exposed fragments, up to capacity.
@@ -83,27 +107,28 @@ export function mine(d,args,id){
     const row={...old,reserve:old.reserve+recovered,recovered:old.recovered+recovered,updatedAt:periods?old.updatedAt+periods*spec.recoveryDays*1440:old.updatedAt};
     if(!row.reserve)throw Error('矿脉已枯竭或尚未恢复');
     const owner=spec.owner??place.owner,permit=args.authorization&&d.get(...path(args.authorization));
-    const licensed=owner==='player'||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee==='player'&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
+    const job=args.employment;
+    const licensed=owner===actor||job?.owner===owner&&job.worker===actor&&job.location===location&&job.endedAt===undefined&&job.deadline>now||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee===actor&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
     // Read before acting: a place whose ruling code or council custom is missing refuses the dig outright.
     const jurisdiction=owner&&!licensed?miningJurisdiction(this,d.get('state'),location):null;
     // An hour's digging is seen by whoever was there when it began as well as whoever is there at the end.
     const present=()=>Object.entries(d.get('state','npcs')).filter(([,n])=>n.location===location&&n.status==='正常'&&!/睡/.test(n.activity??'')).map(([id])=>id);
     const atStart=present();
-    const check=this.check(d,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty,tools:[rules.tool]},id);
-    wearItem(d,this,'player',rules.tool,rules.wear);this.advance(d,rules.minutes,id);
-    const success=check.success&&able(d)&&d.get('state','location')===location;
+    const check=actor==='player'?this.check(d,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty,tools:[rules.tool]},id):npcEntryCheck(d,this,actor,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty},id);
+    wearItem(d,this,actor,rules.tool,rules.wear);if(advance)this.advance(d,rules.minutes,id);
+    const success=check.success&&(actor==='player'?able(d)&&d.get('state','location')===location:d.get('state','npcs',actor,'status')==='正常'&&d.get('state','npcs',actor,'location')===location);
     const vein=reserveAccount(this,key,item);
     if(!d.get(...path(key)))moveStock(d,{from:`src:genesis|${vein.split('|')[1]}|mineral`,to:vein,amount:old.reserve,writer:'extraction',eventId:id});
     moveStock(d,{from:`src:regrowth|${vein.split('|')[1]}|mineral`,to:vein,amount:recovered,writer:'extraction',eventId:id});
-    if(success){row.reserve--;row.extracted++;this.itemDelta(d,'player',item,1,{account:vein,writer:'extraction',eventId:id});}
+    if(success){row.reserve--;row.extracted++;this.itemDelta(d,job?.owner??actor,item,1,{account:vein,writer:'extraction',eventId:id});}
     holdingSet(d,null,path(key),row,'extraction');
-    const witnesses=[...new Set([...atStart,...present()])];
+    const witnesses=[...new Set([...atStart,...present()])].filter(w=>w!==actor);
     const value=success?this.byId.get(item).basePrice:0;
-    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,code:jurisdiction.code}):null;
-    const custom=jurisdiction?.kind==='faction'&&witnesses.length?adjustStanding(d,this,jurisdiction.faction,'player',jurisdiction.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
+    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,location,code:jurisdiction.code}):null;
+    const custom=jurisdiction?.kind==='faction'&&witnesses.length?adjustStanding(d,this,jurisdiction.faction,actor,jurisdiction.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
     const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty})};
     return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),jurisdiction:judged,
-        training:able(d)?practice(d,this,rules.check.skill,`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
+        training:actor==='player'&&able(d)?practice(d,this,rules.check.skill,`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
 }
 
 export function miningPermit(d,args,id){

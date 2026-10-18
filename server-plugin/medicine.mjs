@@ -22,10 +22,15 @@ import {settleEmploymentPay} from './labor-market.mjs';
 import {counterpart} from './credit.mjs';
 import {applyEffects} from './effects.mjs';
 import {personOffices} from './entity-view.mjs';
+import {registerEarnedClaim,settleClaim,claimLimitation} from './obligation-claims.mjs';
+import {obligationView as dueObligation} from './obligation-state.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
+import {obligationTransaction} from './transition.mjs';
+import {serviceUrgency,orderServices} from './service-queue.mjs';
 const DAY=1440,rec=id=>['state','records',id],actor=(s,id)=>id==='player'?s.player:s.npcs?.[id];
 const present=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const capable=(e,s,id)=>actor(s,id)&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(actor(s,id).status);
-const pending=(s,id)=>medicineRows(s).some(r=>r.patient===id&&r.status==='预约');
+const pending=(s,id)=>medicineRows(s).some(r=>r.patient===id&&['预约','排队'].includes(r.status));
 function windows(e,s,id,minute){
  const routine=npcSchedule(e,s,id,minute);if(!routine)return [];
  const cal=e.calendar(minute),variant=cal.market?'market':routine.restDays?.includes(cal.day)?'rest':'default',season=routine.seasonal?.[String(cal.season)];
@@ -43,7 +48,9 @@ function templeSponsor(e,s,location,fee){
  const sid=placeSettlement(e,s,location).value;
  return temples(e).find(t=>placeSettlement(e,s,t.seat).value===sid&&(groupAccountView(e,s,t.id)?.coins??0)>=fee&&(groupAccountView(e,s,t.id)?.items?.item_herb??0)>0);
 }
-function book(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
+function book(d,e,args,id){return obligationTransaction(d,()=>bookVisit(d,e,args,id));}
+export {book as bookMedicine};
+function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
  let s=d.get('state');const now=s.minute;
  if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
  const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
@@ -55,6 +62,13 @@ function book(d,e,{patient='player',clinic,source=null,credit=false,charity=fals
  let travel=0;
  if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw Error('病人没有可行赴诊路线');}}
  if(!Number.isFinite(travel)||travel>DAY)throw Error('病人路程过远，需先安排运输');
+ const urgency=serviceUrgency(conditions),displaced=[];
+ // A new acute patient may take an unstarted lower-priority appointment.
+ // The displaced patient remains in the queue with their original arrival.
+ for(const visit of orderServices(medicineRows(s)).reverse())if(visit.clinic===site.id&&visit.status==='预约'&&visit.depart>now&&(visit.urgency??serviceUrgency(medicalConditions(s,visit.patient)))<urgency){
+  holdingSet(d,null,rec(visit.id),{...visit,status:'排队',urgency:visit.urgency??serviceUrgency(medicalConditions(s,visit.patient)),queuedAt:now},'medicine');displaced.push(visit);
+ }
+ s=d.get('state');
  let chosen=null;
  for(let day=Math.floor(now/DAY);day<=Math.floor(now/DAY)+7&&!chosen;day++)for(let at=Math.max(day*DAY+480,Math.ceil((now+travel)/30)*30);at+30<=day*DAY+1080;at+=30){
   const end=at+30;
@@ -68,7 +82,7 @@ function book(d,e,{patient='player',clinic,source=null,credit=false,charity=fals
  if(!chosen)throw Error('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
  if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw Error('诊费不足，可求赊欠或义诊');
- const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
+ const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,urgency,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
  holdingSet(d,null,rec(row.id),row,'medicine');return row;
 }
 function stockSource(d,e,r){
@@ -84,7 +98,7 @@ function pay(d,e,r,stock){
  if(stock.temple){financeTransfer(d,e,stock.temple,r.owner,r.fee,r.id);return {paid:r.fee,sponsor:stock.temple};}
  const paid=Math.min(financeBalance(d,e,r.patient),r.fee);if(paid<r.fee&&!r.credit)return null;
  if(paid&&r.patient!==r.owner)financeTransfer(d,e,r.patient,r.owner,paid,r.id);
- if(paid<r.fee)holdingSet(d,null,rec(`debt:${r.id}`),{id:`debt:${r.id}`,category:'debt',kind:'medicine',debtor:r.patient,creditor:r.owner,amount:r.fee-paid,paid:0,status:'待偿还',createdAt:r.end,deadline:r.end+30*DAY,location:r.location,source:r.id},'medicine');
+ if(paid<r.fee)registerEarnedClaim(d,e,{id:`debt:${r.id}`,kind:'compensation',service:'medicine',debtor:r.patient,creditor:r.owner,amount:r.fee-paid,paid:0,createdAt:r.end,deadline:r.end+30*DAY,location:r.location,source:r.id});
  return {paid,debt:r.fee-paid};
 }
 function finish(d,e,r){
@@ -121,12 +135,13 @@ function finish(d,e,r){
 }
 export function nextMedicineMinute(e,d,now){
  if(!medicineFresh(e))return Infinity;
- return medicineRows(d.get('state')).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]).filter(at=>at>now).reduce((a,b)=>Math.min(a,b),Infinity);
+ const s=d.get('state'),care=[s.player,...Object.values(s.npcs??{})].flatMap(n=>(n.medical?.wounds??[]).map(w=>w.careDue));
+ return [...medicineRows(s).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]),...care].filter(at=>at>now).reduce((a,b)=>Math.min(a,b),Infinity);
 }
 function autonomous(d,e,now){
  const s=d.get('state'),sites=medicineSites(e,s);if(!sites.some(c=>c.doctors.length&&c.capacity))return;
  const patients=new Set([...Object.values(s.family?.illnesses??{}).filter(r=>r.status==='患病中').map(r=>r.patient),...Object.keys(s.npcs??{}).filter(id=>s.npcs[id].medical?.wounds?.some(w=>!w.healed&&(!w.closed||w.infected)))]);
- for(const patient of [...patients].sort()){
+ for(const {id:patient} of orderServices([...patients].map(id=>({id,urgency:serviceUrgency(medicalConditions(s,id))})))){
   if(patient==='player'||pending(d.get('state'),patient)||!capable(e,s,patient)||s.player.companions?.includes(patient)||s.npcs[patient]?.cognitionTravel||s.npcs[patient]?.scheduleTravel)continue;
   const previous=medicineRows(s).filter(r=>r.patient===patient).sort((a,b)=>b.createdAt-a.createdAt)[0];if(previous&&(previous.followUpAt??previous.createdAt+DAY)>now)continue;
   // People first rest at home; a sickness that lingers or an acute wound sends them to a doctor.
@@ -149,6 +164,15 @@ export function prepareMedicine(d,e,{before,after}){
 }
 export function advanceMedicine(d,e,{before,after}){
  if(!medicineFresh(e)||after<=before)return;
+ for(const queued of orderServices(medicineRows(d.get('state')).filter(r=>r.status==='排队'))){
+  // Retry only on real advance boundaries. Failed scheduling leaves the same
+  // queue fact, rather than rewriting a daily delay cursor.
+  try{obligationTransaction(d,()=>{
+   holdingSet(d,null,rec(queued.id),{...queued,status:'重排'},'medicine');
+   const visit=book(d,e,{patient:queued.patient,clinic:queued.clinic,source:queued.source,credit:queued.credit,charity:Boolean(queued.charity),consent:true},queued.id.slice('medicine:'.length));
+   holdingSet(d,null,rec(queued.id),{...visit,createdAt:queued.createdAt},'medicine');
+  });}catch(error){if(!/排期|预约|路线|赴诊|诊费|医馆|疾病|创伤/.test(error.message))throw error;}
+ }
  for(const r of medicineRows(d.get('state')))if(r.status==='预约'){
   if(r.houseCall&&after>=r.start&&before<r.end&&capable(e,d.get('state'),r.doctor)&&!personConstraint(e,d.get('state'),r.doctor)){d.set(['state','npcs',r.doctor,'location'],r.location);d.set(['state','npcs',r.doctor,'activity'],'出诊');}
   else if(r.patient!=='player'&&after>=r.start&&before<r.end&&capable(e,d.get('state'),r.patient)&&!personConstraint(e,d.get('state'),r.patient)){
@@ -172,7 +196,10 @@ export function advanceMedicine(d,e,{before,after}){
   }
  }
  if(Math.floor(before/DAY)<Math.floor(after/DAY)){
-  for(const debt of Object.values(d.get('state','records')??{}))if(debt.category==='debt'&&debt.kind==='medicine'&&debt.amount>debt.paid){const amount=Math.min(debt.amount-debt.paid,Math.max(0,financeBalance(d,e,debt.debtor)-8));if(amount){financeTransfer(d,e,debt.debtor,debt.creditor,amount,debt.id);holdingSet(d,null,rec(debt.id),{...debt,paid:debt.paid+amount,status:debt.paid+amount===debt.amount?'已还清':'待偿还'},'medicine');}}
+  for(const debt of Object.values(d.get('state','records')??{}))if(debt.category==='debt'&&(debt.kind==='medicine'||debt.service==='medicine')&&settlementPresent(e,d.get('state'),debt.debtor,debt.creditor)&&claimLimitation(d.get('state'),debt.id,after).enforceable){
+   const amount=Math.min(dueObligation(d.get('state'),debt.id).owed,Math.max(0,financeBalance(d,e,debt.debtor)-8));
+   if(amount)settleClaim(d,e,{id:debt.id,payer:debt.debtor,amount},`${debt.id}:collect:${after}`);
+  }
   if(Object.values(d.get('state','records')??{}).some(r=>r.category==='water_exposure'))for(const n of Object.keys(d.get('state','npcs')??{}))for(const exposure of waterDiseaseExposure(d.get('state'),present(d.get('state'),n))){
    const disease=e.rules.hazardClock?.diseases?.find(x=>x.id===exposure.disease);if(disease&&clockRoll(d.document.randomSeed,`water-exposure:${n}:${exposure.id}`,Math.floor(after/DAY))<exposure.risk)contractIllness(d,e,n,after,{severity:'轻',days:disease.courseDays[0],disease});
   }
@@ -181,6 +208,10 @@ export function advanceMedicine(d,e,{before,after}){
 }
 export function medicineAction(d,args,id){
  const e=this,s=d.get('state'),op=args.operation,site=medicineSites(e,s).find(c=>c.id===args.business||c.seat===args.business||c.name===args.business||!args.business&&c.seat===s.location);
+ if(op==='medicine_cancel'){
+  const visit=s.records?.[args.contract];if(!visit||visit.patient!=='player'||!['预约','排队'].includes(visit.status)||visit.status==='预约'&&visit.start<=s.minute)throw Error('只能取消本人尚未开始的诊疗');
+  const row={...visit,status:'已取消',endedAt:s.minute};holdingSet(d,null,rec(visit.id),row,'medicine');return row;
+ }
  if(op==='medicine_inspect')return {clinics:medicineSites(e,s),visits:medicineRows(s).filter(r=>r.patient==='player'||r.location===s.location),conditions:medicalConditions(s,'player'),funds:Object.values(s.records??{}).filter(r=>r.category==='medicine_fund'&&r.location===s.location)};
  if(!site||site.seat!==s.location)throw Error('须到医馆办理');
  if(op==='medicine_seek'){

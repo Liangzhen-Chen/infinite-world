@@ -14,6 +14,9 @@ import {holdingSet as writeHoldingProjection} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {isGone,isEffective} from './lifecycle-state.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
+import {claimLimitation,recordClaimProcedure,registerLoss,lossView,recoverLoss,settleClaim,wagePriorityClaims} from './obligation-claims.mjs';
+import {obligationView,obligationRow} from './obligation-state.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
@@ -122,13 +125,15 @@ import {placed as placedStock} from './stock.mjs';
 declareLedgerWriter('law');
 const books=(d,from,to,amount,eventId)=>moveCoins(d,{from,to,amount,writer:'law',eventId});
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
-    const code=codeFor(engine,row.location);if(!code)return null;
+    if(!claimLimitation(d.get('state'),debt,minute).enforceable)return null;
+    const code=codeFor(engine,row.location,d.get('state'));if(!code)return null;
     const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
     const receiver=code.officers[0];
     holdingSet(d,null,path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
         offender:row.debtor??'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
         status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]},'law');
     if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
+    if(obligationRow(d.get('state'),debt)?.terms?.limitation)recordClaimProcedure(d,engine,{claim:debt,action:'suspend',minute,evidence:id},`${id}:filed`);
     return id;
 }
 // U10: a cast past the village's fee, licence or limit (magic-economy.mjs) is
@@ -255,10 +260,16 @@ export function advanceLaw(d,after,engine,recordIds){
 
 function localObservers(d){return Object.entries(d.get('state','npcs')??{}).filter(([id,npc])=>awake(npc,d,id)&&npc.location===d.get('state','location')).map(([id])=>id);}
 
+export function caseLoss(d,engine,row){
+    if(!row.victim)return null;
+    const source=row.lossSource??row.sourceEvent??row.id,id=row.loss??`loss:${source}`;
+    return registerLoss(d,engine,{id,victim:row.victim,amount:row.lossAmount??row.value,source});
+}
 function deposit(d,engine,row,{fine=0,compensate=true}={}){
     const unit=row.stolen?.unit,record=unit?d.get('state','itemInstances',unit):null;
     const returnUnit=Boolean(compensate&&record?.owner==='player'&&record.status==='持有'&&d.get('state','inventory',record.item,'instances')?.includes(unit));
-    const compensation=compensate?returnUnit?0:row.value:0,total=fine+compensation;
+    const loss=compensate?caseLoss(d,engine,row):null;
+    const compensation=compensate?returnUnit?0:loss?.remaining??row.value:0,total=fine+compensation;
     if(d.get('state','player','coins')<total)throw new Error('余额不足支付罚款和赔偿；可以选择劳役或服刑处理罚款，赔偿债务仍保留');
     const treasuryKey=`legal_treasury:${row.law}`,escrowKey=`legal_deposit:${row.id}`;
     const treasury=safeFund(d,treasuryKey,'legal_treasury',{law:row.law}),escrow=safeFund(d,escrowKey,'legal_deposit',{case:row.id,beneficiary:row.victim,units:[]});
@@ -273,6 +284,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
         }
         holdingSet(d,null,path(escrowKey),{...escrow,coins:escrow.coins+compensation,units},'law');
     }
+    if(loss)recoverLoss(d,engine,{id:loss.id,amount:returnUnit?loss.remaining:compensation,payer:row.offender,kind:returnUnit?'restitution':'deposit'},`${row.id}:deposit`);
     return{cost:total,fine,compensation,returnedUnit:returnUnit?unit:null,deposit:compensate?escrowKey:null};
 }
 
@@ -387,7 +399,8 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
         }
         const penalty=codePenalty(engine,code,row.offense)??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
         const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
-        const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.victim?row.value:0,evidenceScore:score,
+        const loss=row.victim&&!row.debt?caseLoss(d,engine,row):null;
+        const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.debt?obligationView(d.get('state'),row.debt)?.owed??row.value:loss?.remaining??0,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,penalty.detentionMinutes??fine*code.prisonMinutesPerCopper)};
         holdingSet(d,null,path(row.id),{...row,status:'已裁定',judgment},'law');
         recordLegalNotification(d,engine,d.get(...path(row.id)),'conviction',eventId,observers,{fresh:true,location:code.court});
@@ -461,22 +474,33 @@ export function lawAction(d,args,eventId){
             return {case:row.id,recovered:amount,remaining:due-amount};
         }
     }
-    const creditorClaim=row.debt&&d.get(...path(row.debt),'creditor')==='player';
+    const creditorClaim=row.debt&&(d.get(...path(row.debt),'creditor')==='player'||d.get(...path(row.debt),'kind')==='wage');
     if(row.offender!=='player'&&creditorClaim){
         if(!['hear','pay'].includes(operation))throw Error('债权追讨须由法院审理后执行');
         if(operation==='pay'){
             authority(d,this,code,args.authority,'officer');
             if(d.get('state','location')!==code.court||row.status!=='已裁定')throw Error('须在法院持有效裁判执行，不能重复追讨');
-            const debt=d.get(...path(row.debt)),balance=financeBalance(d,this,debt.debtor),amount=Math.min(debt.amount-debt.paid,balance);
+            const debt=d.get(...path(row.debt));
+            if(!claimLimitation(d.get('state'),row.debt,now).enforceable)throw Error('债权已过诉讼时效，余额保留');
+            // Earned wage claims are executed before an ordinary creditor or
+            // a fine. Unreachable senior creditors retain the reserved assets.
+            const initialOwed=obligationView(d.get('state'),row.debt).owed;let executed=0;
+            for(const senior of wagePriorityClaims(d.get('state'),debt.debtor)){
+                if(!settlementPresent(this,d.get('state'),debt.debtor,senior.creditor))throw Error('优先工资债权人须到场领取或安排法庭托存');
+                const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
+                if(payment){settleClaim(d,this,{id:senior.id,amount:payment},`${eventId}:wage:${senior.id}`);executed+=payment;}
+                if(obligationView(d.get('state'),senior.id).owed)break;
+            }
+            const balance=financeBalance(d,this,debt.debtor),amount=Math.min(obligationView(d.get('state'),row.debt).owed,balance);
             const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
-            if(amount+fine<=0)throw Error('债务人没有可执行资金，欠款保留');
-            if(amount)financeTransfer(d,this,debt.debtor,'player',amount,eventId);
+            if(amount+fine+executed<=0&&obligationView(d.get('state'),row.debt).owed)throw Error('债务人没有可执行资金，欠款保留');
+            if(amount)settleClaim(d,this,{id:row.debt,amount},`${eventId}:claim`);
             if(fine){financeChange(d,this,debt.debtor,-fine,eventId,{account:fundAccount(`legal_treasury:${row.law}`),writer:'law',eventId});const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});holdingSet(d,null,path(key),{...fund,coins:fund.coins+fine},'law');}
-            const paid=debt.paid+amount,remaining=debt.amount-paid;
-            holdingSet(d,null,path(row.debt),{...debt,paid,status:remaining?'逾期':'已还清',settledBy:row.id},'law');
+            const remaining=obligationView(d.get('state'),row.debt).owed;
+            const recovered=initialOwed-remaining;
             const finePaid=(row.finePaid??0)+fine,closed=!remaining&&finePaid===row.judgment.fine;
-            holdingSet(d,null,path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+amount},'law');
-            return {case:row.id,recovered:amount,fine,remaining,closed};
+            holdingSet(d,null,path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+recovered},'law');
+            return {case:row.id,recovered,fine,remaining,closed};
         }
     }
     if(row.offender!=='player'&&!creditorClaim){

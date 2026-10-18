@@ -19,6 +19,9 @@ import {medicineSites,medicalSkill} from './medicine-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
+import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obligation-claims.mjs';
+import {obligationView as dueObligation,wageQuote} from './obligation-state.mjs';
+import {mineEmployment} from './extraction.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -30,8 +33,8 @@ function writeJob(d,e,row){
 const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
-const wage=e=>Math.max(1,2*(e.rules.economy.wageCopperPerHalfDay?.[0]??10));
-const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&r.amount>r.paid&&r.status!=='坏账');
+const wage=e=>Math.max(1,wageQuote({baseHalfDay:e.rules.economy.wageCopperPerHalfDay?.[0]??10}).daily);
+const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&dueObligation(s,r.id)?.owed>0);
 export const laborMarketFresh=e=>!e.replaying||e.replayResult?.laborMarketVersion===1;
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
 
@@ -90,6 +93,11 @@ export function laborOffers(e,s,minute=s.minute){
             if(recipeFor(e,s,owner,r.output.item).some(p=>p.id===r.id)&&employmentStock({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},e,owner,r.output.item)===0)add({owner,location,recipe:r.id,item:r.output.item,quantity:r.output.quantity,source:`workshop:${location}:${r.id}`,reason:'工坊成品缺货'});
         }
     }
+    for(const place of e.world.locations)for(const mineral of place.minerals??e.rules.extraction?.mining?.locations?.[place.id]??[]){
+        const owner=mineral.owner??s.buildings?.[place.id]?.owner??place.owner;
+        const remaining=s.records?.[`mineral:${place.id}:${mineral.item}`]?.reserve??mineral.reserve;
+        if(remaining>0)add({owner,location:place.id,task:'矿脉开采',item:mineral.item,quantity:remaining,source:`mining:${place.id}:${mineral.item}`,reason:'矿脉用工'});
+    }
     for(const p of Object.values(s.projects??{}))if(['工程','建房'].includes(p.type)&&p.status==='施工中'&&!p.public&&p.creator!=='player'){
         add({owner:p.creator??p.owner,location:p.location??p.settlement,task:'工程施工',project:p.id,quantity:p.remainingWork??p.remainingDays,source:p.id,reason:'工程缺工',deadline:minute+Math.max(2,p.remainingDays??7)*DAY});
     }
@@ -128,6 +136,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(old&&old.owner===offer.owner)return null;
     if(old&&offer.wage<=old.wage*1.2&&old.status!=='罢工')return null;
     if(offer.medicalSkill&&medicalSkill(e,s,id)<offer.medicalSkill)return null;
+    if(offer.task==='矿脉开采'&&!e.quantity({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},id,e.rules.extraction.mining.tool))return null;
     const skill=offer.recipe?workerSkill(e,s,id,e.byId.get(offer.recipe)):0,r=offer.recipe&&e.byId.get(offer.recipe);
     const knows=r&&(r.teachers?.includes(id)||n.recipes?.[r.id]||!r.learningRequired);
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;
@@ -171,14 +180,22 @@ function conflict(d,e,row,start){
 // The wage is earned only for completed work; a shortfall becomes an L1 debt.
 export function settleEmploymentPay(d,e,row,at,minutes){
     row=contractTerms(row,at);
-    const earned=Math.ceil(row.wage*minutes/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
+    if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw Error('工资与实际工时须为非负整数');
+    const key=`employment_pay:${row.id}:${at}`,previous=d.get(...rec(key));
+    if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw Error('同次工时结算事实不一致');return previous.result;}
+    const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
+    if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
+    const earned=Math.ceil(total/480)-Math.ceil(units/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
     if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});writeJob(d,e,{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
     const paid=cash+guaranteed;
-    if(paid<earned){const id=`debt_wage:${row.id}:${at}`;holdingSet(d,null,rec(id),{id,category:'debt',kind:'wage',debtor:row.owner,creditor:row.worker,amount:earned,paid,status:'待偿还',
-        createdAt:at,deadline:at+DAY,location:row.location,source:row.source,contract:row.id},'labor-market');}
-    return {earned,paid,arrears:earned-paid};
+    if(paid<earned){const id=`debt_wage:${row.id}:${at}`;registerEarnedClaim(d,e,{id,kind:'wage',debtor:row.owner,creditor:row.worker,amount:earned,paid,
+        createdAt:at,deadline:at+DAY,location:row.location,source:row.source,contract:row.id});}
+    writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});
+    const result={earned,paid,arrears:earned-paid};
+    holdingSet(d,e,rec(key),{id:key,category:'employment_pay',contract:row.id,minutes,wage:row.wage,result},'labor-market');
+    return result;
 }
 function settleShift(d,e,row,at){
     const start=at-540,s=d.get('state');
@@ -194,7 +211,11 @@ function settleShift(d,e,row,at){
         needed=['待履行','履行中','有效'].includes(order.status)?Math.min(needed,Math.max(0,order.quantity-(order.fulfilled??0)-employmentStock(d,e,row.owner,row.item))):0;
     }
     if((row.recipe||row.supplier)&&needed<=0){writeJob(d,e,{...row,status:'已完成',endedAt:at,reason:'经营缺口已消失'});return null;}
-    if(row.recipe){
+    if(row.task==='矿脉开采'){
+        const mined=mineEmployment(d,e,row,at,minutes);
+        if(!mined){writeJob(d,e,{...row,nextWork:at+DAY,reason:'没有实际采矿工时或矿工不能作业'});return null;}
+        production=mined;quantity=mined.obtained.reduce((n,r)=>n+r.quantity,0);minutes=mined.minutesSpent;
+    }else if(row.recipe){
         const recipe=e.byId.get(row.recipe),maximum=Math.ceil(needed/recipe.output.quantity);
         if(maximum<=0){writeJob(d,e,{...row,status:'已完成',endedAt:at});return null;}
         const plan=employmentProductionPlan(d,e,row,{maximum,minutes});
@@ -237,9 +258,10 @@ function settleShift(d,e,row,at){
 export function settleArrears(d,e,row,minute){
     const debts=outstanding(d.get('state'),row.id);if(!debts.length)return false;
     const earliest=Math.min(...debts.map(r=>r.createdAt));
-    for(const debt of debts)if(debt.deadline<=minute&&!debt.defaulted){
-        const legalCase=registerCreditDefault(d,e,{debt:debt.id,row:debt,value:debt.amount-debt.paid,minute:debt.deadline});
-        holdingSet(d,null,rec(debt.id),{...debt,status:'逾期',defaulted:{case:legalCase,minute:debt.deadline,remaining:debt.amount-debt.paid}},'labor-market');
+    for(const debt of debts)if(claimDue(e,d.get('state'),debt.id,minute)?.overdueCount&&!debt.defaulted&&claimLimitation(d.get('state'),debt.id,minute).enforceable){
+        const due=dueObligation(d.get('state'),debt.id,minute).owed;
+        const legalCase=registerCreditDefault(d,e,{debt:debt.id,row:debt,value:due,minute});
+        holdingSet(d,null,rec(debt.id),{...debt,status:'逾期',defaulted:{case:legalCase,minute,remaining:due}},'labor-market');
     }
     if(minute>=earliest+2*DAY&&employmentActive(row)){
         writeJob(d,e,{...row,status:'已辞工',endedAt:earliest+2*DAY,reason:'欠薪投诉后离职'});
@@ -332,8 +354,11 @@ export function laborTrade(d,e,args,id){
         const debts=outstanding(s,row.id),due=debts.reduce((n,r)=>n+r.amount-r.paid,0);
         if(financeBalance(d,e,row.owner)+(row.escrow??0)<due)throw Error('现有款项不足以清偿欠薪');
         let escrow=row.escrow??0;
-        for(const debt of debts){const amount=debt.amount-debt.paid,cash=Math.min(amount,financeBalance(d,e,row.owner));if(cash)financeTransfer(d,e,row.owner,row.worker,cash,id);if(amount>cash){financeChange(d,e,row.worker,amount-cash,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});escrow-=amount-cash;}
-            const paid={...debt,paid:debt.amount,status:'已还清',settledAt:now};holdingSet(d,null,rec(debt.id),paid,'labor-market');settleCreditCase(d,e,debt.id,paid,{minute:now});}
+        for(const debt of debts){const amount=dueObligation(d.get('state'),debt.id).owed,cash=Math.min(amount,financeBalance(d,e,row.owner));
+            if(cash)settleClaim(d,e,{id:debt.id,payer:row.owner,amount:cash},`${id}:${debt.id}:cash`);
+            if(amount>cash){const guaranteed=amount-cash;financeChange(d,e,'player',guaranteed,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});escrow-=guaranteed;
+                settleClaim(d,e,{id:debt.id,payer:'player',amount:guaranteed},`${id}:${debt.id}:guarantee`);}
+            if(debt.defaulted?.case)settleCreditCase(d,e,debt.defaulted.case,id);}
         const nextWage=financeInt(args.coins??row.wage,wage(e),1e6,'调解日薪');
         const other=currentEmployment(s,row.worker,now);
         const active=now<row.deadline&&(!other||other.id===row.id);
