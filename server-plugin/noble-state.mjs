@@ -1,6 +1,7 @@
 // Read-only jurisdiction views. Grants and occupation changes are facts; scope is derived.
 import {regionOf} from './regions.mjs';
 import {adminLevel} from './promotion-view.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 
 export const nobleRules=e=>e.rules.governance?.sovereignty;
 export const highTitle=t=>['男爵','子爵','伯爵','侯爵','公爵'].includes(t?.title)&&['受封','停俸'].includes(t.status);
@@ -11,7 +12,7 @@ export function nobleLords(e,s){
  for(const [county,record]of Object.entries(s.remote??{})){
   const region=e.world.regions?.find(c=>c.id===county),title=['男爵','子爵','伯爵','侯爵','公爵'].find(t=>region?.ruler?.title?.includes(t));if(!title)continue;
   const row=record.skeleton?.offices?.find(o=>o.level==='郡'&&o.source==='outline'),person=record.skeleton?.people?.find(p=>p.id===row?.holder);
-  if(!person||seen.has(person.id)||!s.npcs?.[person.id]||s.npcs[person.id].status==='死亡')continue;
+  if(!person||seen.has(person.id)||!s.npcs?.[person.id]||!isEffective(e,s,person.id))continue;
   if(Object.values(s.records??{}).some(t=>t.category==='title'&&t.holder===person.id&&t.status==='已除爵'))continue;
   if(s.records?.[`territory:${county}`]&&s.records[`territory:${county}`].ruler!==person.id)continue;
   out.push({category:'title',holder:person.id,title,status:'受封',fief:county,domains:[county],source:`T142:${county}.ruler + current county office`});seen.add(person.id);
@@ -37,7 +38,7 @@ export function domainSettlements(e,s,domains){
  return settlementIds(e,s).filter(id=>domains.some(d=>containsDomain(e,s,d,id))&&!e.byId.get(id)?.monsterSociety&&!e.world.settlementProfiles?.find(p=>p.id===id)?.council);
 }
 export function currentDomains(e,s,who){
- if(s.npcs?.[who]?.status==='死亡')return [];
+ if(!isEffective(e,s,who))return [];
  const nation=rulerNation(s,who);if(nation)return nation.domains.filter(id=>!s.records?.[`territory:${id}`]||s.records[`territory:${id}`].ruler===nation.id);
  const out=[];
  for(const t of titlesOf(s,who))if(highTitle(t))out.push(...t.domains??[t.fief].filter(Boolean));
@@ -46,7 +47,7 @@ export function currentDomains(e,s,who){
   if(r.category==='governance_office'&&r.holder===who&&r.office==='office_village_head'&&r.status==='在任'&&(r.until??Infinity)>s.minute)out.push(r.settlement);
   if(r.category==='territory'&&r.ruler===who)out.push(r.county);
  }
- return [...new Set(out)].filter(id=>!s.records?.[`territory:${id}`]||s.records[`territory:${id}`].ruler===who);
+ return [...new Set(out)].filter(id=>{const ruler=s.records?.[`territory:${id}`]?.ruler;return !ruler||ruler===who||titlesOf(s,who).some(t=>highTitle(t)&&t.grantor===ruler&&(t.domains??[t.fief]).includes(id));});
 }
 export function fiefCandidates(e,s,title,who='player'){
  if(!nobleRules(e))return [];
@@ -79,9 +80,9 @@ export function territoryController(e,s,place){
 export function nationAt(e,s,place){return nationRows(s).find(n=>liveNation(s,n.id)&&n.domains.some(id=>containsDomain(e,s,id,place))&&
  (!territoryController(e,s,place)||territoryController(e,s,place)===n.id))??null;}
 export function domainAuthority(e,s,who,settlement,power){
- if(!settlement||!['housing','steward','public_project','tax'].includes(power)||s.npcs?.[who]?.status==='死亡'||who==='player'&&s.player?.status==='死亡')return null;
+ if(!settlement||!['housing','steward','public_project','tax'].includes(power)||!isEffective(e,s,who))return null;
  const n=rulerNation(s,who),t=nobleLords(e,s).find(t=>t.holder===who);if(!n&&!t)return null;
- const controller=territoryController(e,s,settlement);if(controller&&controller!==(n?.id??who))return null;
+ const controller=territoryController(e,s,settlement);if(controller&&controller!==(n?.id??who)&&controller!==t?.grantor)return null;
  if(!currentDomains(e,s,who).some(id=>containsDomain(e,s,id,settlement))||e.byId.get(settlement)?.monsterSociety||e.world.settlementProfiles?.find(p=>p.id===settlement)?.council)return null;
  const def=e.rules.governance.authority.offices.office_village_head,rank=upperOffice(e,s,{office:def.id,settlement},def);
  return {id:`domain-authority:${who}:${settlement}`,holder:who,settlement,office:'upper_lord',powers:['housing','steward','public_project','tax'],monthlyBudgetCopper:rank.monthlyBudgetCopper,monthlyQuotaD:0,source:n?`nation:${n.id}`:t.source??t.id};

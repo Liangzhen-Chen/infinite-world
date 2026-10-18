@@ -11,6 +11,7 @@ import {advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {personView} from './entity-view.mjs';
 import {actorId,actorPath} from './npc-state.mjs';
 import {resolveCreature} from './wildlife.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('elections',{kinds:['holds_office'],entities:['office']});
 
@@ -18,10 +19,10 @@ const path=id=>['state','records',id];
 const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!/睡/.test(n.activity??'');
 function here(d,engine,name){
     const id=actorId(engine.world,resolveCreature(engine,d,name)),view=personView(engine,d.get('state'),id),n=view&&d.get(...view.actorPath.value);
-    if(!awake(n)||n.location!==d.get('state','location'))throw Error('拉票或揭发当事人须实际在场');return id;
+    if(!isEffective(engine,d,id)||!awake(n)||n.location!==d.get('state','location'))throw Error('拉票或揭发当事人须实际在场');return id;
 }
 function voters(engine,state,row){
-    if(row.org){const org=organization(engine,state,row.org);if(!org||org.charter.mode!=='vote')throw Error('组织已不实行成员选任');return Object.keys(org.members).sort();}
+    if(row.org){const org=organization(engine,state,row.org);if(!org||org.charter.mode!=='vote')throw Error('组织已不实行成员选任');return Object.keys(org.members).filter(id=>isEffective(engine,state,id)).sort();}
     return eligible(engine,row.settlement,state);
 }
 export function electionAction(d,args,id){
