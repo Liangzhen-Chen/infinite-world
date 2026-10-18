@@ -323,7 +323,14 @@ const systems=[
     const p=d.get('state','player');
     if(p.status==='濒死' && after-p.dyingSince>=e.rules.death.dyingMinutes) e.death(d);
  }},
- {id:'deliveries',order:2700,advance(e,d,{after,id,obligationIds}){
+ {id:'deliveries',order:2700,advance(e,d,{before,after,id,beforeState,obligationIds}){
+    // Phase 2 reads the courier and recipient before the phase 3 schedule
+    // clock runs. Catch their schedules up to this read (§14.3), retaining
+    // npcObligationClock so phase 3 cannot repeat attendance or travel costs.
+    if(d.scheduler&&(obligationIds??Object.keys(d.get('state','obligations')??{})).some(key=>{
+        const o=d.get('state','obligations',key);
+        return o?.deliveryVersion===1&&['待履行','进行中'].includes(o.status)&&o.deadline<=after;
+    }))advanceNpcObligations(d,e,before,after,id,{beforeState});
     for(const [key,obligation] of (obligationIds?obligationIds.map(key=>[key,d.get('state','obligations',key)]):Object.entries(d.get('state','obligations')))) {
         if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
             try { e.deliver(d,key,obligation,id); } catch(error) {

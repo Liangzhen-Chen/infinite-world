@@ -61,7 +61,7 @@ import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialo
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
-import {createNpcObligation,assertNpcObligationAction,npcObligationAt}from'./npc-obligations.mjs';
+import {createNpcObligation,assertNpcObligationAction,npcObligationAt,advanceNpcObligations}from'./npc-obligations.mjs';
 import {applyNpcRelation}from'./npc-relations.mjs';
 import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
@@ -438,7 +438,16 @@ export class WorldEngine {
             const now=d.get('state','minute');
             if(d.scheduler){
                 const next=nextFromScheduleHeap(this,d,now,end);
-                if(next===null){d.set(['state','minute'],end);catchUpLocal(this,d,end);break;}
+                if(next===null){
+                    const beforeState=d.get('state');
+                    d.set(['state','minute'],end);catchUpLocal(this,d,end);
+                    // A courier's continuous trip (including the return to its
+                    // routine) must be current at a read even without a tick.
+                    // Its own cursor leaves lastSettled and event seq alone.
+                    if(Object.values(d.get('state','obligations')??{}).some(o=>o.deliveryVersion===1))
+                        advanceNpcObligations(d,this,d.scheduler.lastSettled??now,end,id,{beforeState});
+                    break;
+                }
                 // S2b：结算钟与玩家钟分离——before 取上一结算刻（跨 reduce 持久），
                 // 使逐日推进与一次推进在非整日起点下也产生相同 before/after/days。
                 const settledBefore=d.scheduler.lastSettled??now;
