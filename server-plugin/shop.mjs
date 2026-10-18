@@ -20,7 +20,18 @@ const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 const clamp=(v,[a,b])=>Math.max(a,Math.min(b,v));
 export const shopRules=engine=>engine.rules.economy?.shops??null;
 
-function settlementIds(world,rules){return new Set([...(world.settlementProfiles??[]).map(p=>p.id),...(rules?.quality?.capitals??[])]);}
+const catalogs=new WeakMap();
+function catalog(world,rules){
+    let byRules=catalogs.get(world.locations);if(!byRules)catalogs.set(world.locations,byRules=new WeakMap());
+    let value=rules&&byRules.get(rules);
+    if(!value||value.items!==world.items||value.profiles!==world.settlementProfiles){
+        value={items:world.items,profiles:world.settlementProfiles,places:new Set([...(world.settlementProfiles??[]).map(p=>p.id),...(rules?.quality?.capitals??[])]),
+            locations:new Map(world.locations.map(l=>[l.id,l])),itemById:new Map(world.items.map(i=>[i.id,i])),origins:new Map()};
+        if(rules)byRules.set(rules,value);
+    }
+    return value;
+}
+function settlementIds(world,rules){return catalog(world,rules).places;}
 const held=(npc,item)=>{const v=npc?.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;};
 const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[]).some(s=>s?.kind==='trade');
 // Derived shops: a person who offers trade (services or serviceCatalog) and whose
@@ -33,7 +44,7 @@ const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[])
 export function derivedShops(world,rules=world.rules.economy?.shops){
     const types=rules?.types??{},keepers=new Set((rules?.stores??[]).map(s=>s.keeper));
     if(!rules||!Object.keys(types).length)return[];
-    const places=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),rows=[];
+    const places=settlementIds(world,rules),byId=catalog(world,rules).locations,rows=[];
     const settle=npc=>{for(let at of [npc.settlement,npc.workplace?.location,npc.home?.location??npc.home,npc.location]){const seen=new Set();
         while(typeof at==='string'&&!seen.has(at)){if(places.has(at))return at;seen.add(at);at=byId.get(at)?.parent;}}return null;};
     for(const npc of world.npcs){
@@ -83,10 +94,11 @@ export function currentShops(engine,state){
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
 // The settlement an item is produced in: walk its origin up the location tree.
 export function originSettlement(world,item,rules=world.rules.economy?.shops){
-    const ids=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),seen=new Set();
-    let at=world.items.find(i=>i.id===item)?.origin??null;
-    while(at&&!seen.has(at)){if(ids.has(at))return at;seen.add(at);at=byId.get(at)?.parent??null;}
-    return null;
+    const c=catalog(world,rules);if(c.origins.has(item))return c.origins.get(item);
+    const ids=c.places,byId=c.locations,seen=new Set();
+    let at=c.itemById.get(item)?.origin??null,result=null;
+    while(at&&!seen.has(at)){if(ids.has(at)){result=at;break;}seen.add(at);at=byId.get(at)?.parent??null;}
+    c.origins.set(item,result);return result;
 }
 export function settlementScale(world,settlement,rules=world.rules.economy?.shops,population=null){
     if(rules.quality.capitals.includes(settlement))return 'capital';
@@ -96,7 +108,7 @@ export function settlementScale(world,settlement,rules=world.rules.economy?.shop
 // Up to `open` any shop may stock it; above that a tier must admit the shop by
 // settlement scale or by one of its channel tags.
 export function qualityAllowed(world,shop,item,rules=world.rules.economy?.shops,population=null){
-    const order=world.rules.equipment.qualities,quality=world.items.find(i=>i.id===item)?.quality,grade=order.indexOf(quality);
+    const order=world.rules.equipment.qualities,quality=catalog(world,rules).itemById.get(item)?.quality,grade=order.indexOf(quality);
     if(grade<0)return false;if(grade<=order.indexOf(rules.quality.open))return true;
     const tier=rules.quality.tiers.find(t=>t.quality===quality);if(!tier)return false;
     return tier.scales.includes(settlementScale(world,shop.settlement,rules,population))||shop.channels.some(c=>tier.channels.includes(c));

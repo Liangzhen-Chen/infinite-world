@@ -33,7 +33,7 @@ function recallEvidence(state,id,events){
 }
 export function reviewPlayerFacts(state){
  return {
-  debts:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='debt'&&[r.debtor,r.creditor].includes('player')).map(([id,r])=>[id,pick(r,['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt'])])),
+  debts:Object.fromEntries(obligationRows(state).filter(r=>[r.debtor,r.creditor].includes('player')).map(r=>[r.legacyRecord??r.id,{...pick(r,['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt']),resource:r.resource??'coin_river',outstanding:obligationView(state,r).owed,amountDue:obligationView(state,r).amountDue,closed:obligationView(state,r).closed}])),
   quests:Object.fromEntries(Object.entries(state.quests??{}).filter(([,q])=>q.taker==='player'||q.publisher==='player'||!q.taker).map(([id,q])=>[id,pick(q,['publisher','taker','name','content','status','grade','reward','objective','deadline','escrow'])])),
   authorizations:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='authorization'&&(r.grantee==='player'||r.grantor==='player')).map(([id,r])=>[id,pick(r,['action','subject','grantor','grantee','guests','scope','content','createdAt','expires','revoked','revokedAt','sourceEvent'])]))
  };
@@ -93,3 +93,4 @@ export function reviewNpcKnowledge(engine,document,{before,receipts=[],events=[]
   return [[id,{scope:'reviewer-only',present:state.npcs[id].location===state.location&&!state.npcs[id].scheduleTravel&&!state.npcs[id].cognitionTravel,known:context.known,unknown:context.unknown,background:context.background,memories:memories.map(memory=>pick(memory,['id','sourceEvent','sourceType','heardFrom','minute','content','blurred','reliability','participants'])),contracts:contractKnowledge,recall:recallEvidence(state,id,events),...(lieKnowledge(state,id).length?{lies:lieKnowledge(state,id)}:{})}]];
  }));
 }
+import {obligationRows,obligationView} from './obligation-state.mjs';

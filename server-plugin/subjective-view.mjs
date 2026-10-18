@@ -35,12 +35,16 @@ export function subjectiveView(engine,document,observer){
   const r=n.relationships?.[id]??b.relationships?.find(r=>r.with===id)??(id==='player'?n:{});
   relations[id]=Object.fromEntries(dimensions.map(k=>[k,r[k]??0]));relations[id].favors=copy(r.favors??[]);
  }
- const clauses=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee].includes(observer)&&o.recall!==0).map(o=>{
+ const signedParty=(o,side)=>o.inheritedEndpoints?.includes(side)?o.inheritanceFrom:o[side];
+ const clauses=Object.values(s.obligations??{}).filter(o=>o.recall!==0&&(o.debtor?
+  [signedParty(o,'debtor'),signedParty(o,'creditor')].includes(observer)||memories.some(m=>m.obligation===o.id&&m.participants?.includes(observer)):
+  [o.promisor,o.promisee].includes(observer))).map(o=>{
+  if(o.debtor)return {id:o.id,type:o.kind,promisor:signedParty(o,'debtor'),promisee:signedParty(o,'creditor'),content:o.content??o.terms?.service,signingPlace:o.terms?.signingPlace,signingMinute:o.terms?.signingMinute};
   const {id,type,promisor,promisee,content,start,deadline,coins,item,quantity,destination,location}=o;
   // A remote counterparty's settlement, disappearance or breach isn't sensed.
   return Object.fromEntries(Object.entries({id,type,promisor,promisee,content,start,deadline,coins,item,quantity,destination,location}).filter(([,v])=>v!==undefined));
  });
- const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee].includes(observer)&&present(o.promisor)&&present(o.promisee)).map(copy);
+ const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee,o.debtor,o.creditor].includes(observer)&&present(o.promisor??o.debtor)&&present(o.promisee??o.creditor)).map(copy);
  const holdings=Object.values(document.holdings?.rows??{}).filter(h=>h.holder===observer&&present(h.subject)).map(copy);
  const people=Object.keys(s.npcs??{}).filter(present).map(id=>{
   const p=actor(s,id),def=base(engine,s,id);

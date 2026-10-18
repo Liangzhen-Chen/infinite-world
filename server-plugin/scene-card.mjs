@@ -102,13 +102,14 @@ export function sceneCard(engine,document,query='',index=null){
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
     if(weather&&/天气|雨|雪|雾|日出|日落|天亮|天黑|湿度|启程|赶路/.test(query))parts.push(`【天气与昼长】${weather.name}，${weather.indoors?'室内':'户外'}；日出${weather.sunrise}，日落${weather.sunset}；湿度${weather.humidityPercent}%${weather.boatClosed?'；船路暂停通行':''}`);
     parts.push(`【已学法术】共${learned.length}：${learned.slice(0,8).map(row=>`${row.name}（${row.id}，魔力${row.mp}）`).join('；')||'无'}`);
-    const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee].includes('player')&&!['已完成','取消'].includes(o.status));
+    const obligations=Object.values(s.obligations??{}).filter(o=>o.debtor?[o.debtor,o.creditor].includes('player')&&!obligationView(s,o).closed&&(!obligationView(s,o).owed||o.resource&&!['coin_river','core:coin_river'].includes(o.resource)):[o.promisor,o.promisee].includes('player')&&!['已完成','取消'].includes(o.status)).map(o=>o.debtor?{...o,content:o.content??o.terms?.service??o.kind}:o);
     const quests=Object.values(s.quests??{}).filter(q=>[q.publisher,q.taker].includes('player')&&!['已完成','取消','失败','超期'].includes(q.status)||q.status==='公开'&&q.location===s.location);
     const hiring=/招工|打工|雇|工钱|欠薪|谋生/.test(query)?laborNotices(engine,s).slice(0,3):[];
     if(hiring.length)parts.push('【招工告示】',...hiring.map(o=>`${o.id}｜${o.content}`));
     if(obligations.length||quests.length)parts.push('【进行中】',...[...obligations,...quests].slice(0,8).map(o=>`${o.sourceLabel?`〔${o.sourceLabel}〕`:''}${text(o.content??o.name,180)}｜${o.status??''}${o.deadline?`｜期限${engine.calendar(o.deadline).text}`:''}`));
-    const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='debt'&&row.debtor==='player'&&row.status!=='已还清'||row.category==='contract'&&row.room&&row.parties?.includes('player'));
-    if(contracts.length)parts.push('【住宿与欠款】',...contracts.slice(-6).map(([id,row])=>row.category==='debt'?`${id}｜欠${name(row.creditor)} ${row.amount-row.paid}铜｜${row.status}｜到期${engine.calendar(row.deadline).text}`:`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
+    const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='contract'&&row.room&&row.parties?.includes('player'));
+    const debts=obligationRows(s).filter(row=>row.debtor==='player'&&(!row.resource||['coin_river','core:coin_river'].includes(row.resource))&&obligationView(s,row).owed>0);
+    if(contracts.length||debts.length)parts.push('【住宿与欠款】',...debts.slice(-6).map(row=>`${row.id}｜欠${name(row.creditor)} ${obligationView(s,row).owed}铜｜${row.status}｜${Number.isFinite(row.deadline)?`到期${engine.calendar(row.deadline).text}`:'未定期限'}`),...contracts.slice(-6).map(([,row])=>`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
     const animals=petView(engine,document).presentAnimals;
@@ -152,3 +153,4 @@ export function sceneStandings(engine,s,people){
     return holders.map(([holder,collective])=>{const value=standing(engine,s,holder,'player');return{holder,collective,words:standingWords(value),value};})
         .filter(v=>v.words!==standingWords(0)).slice(0,6).map(({holder,collective,words})=>({holder,collective,words}));
 }
+import {obligationRows,obligationView} from './obligation-state.mjs';

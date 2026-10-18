@@ -1,4 +1,5 @@
 import {cloneData} from './storage.mjs';
+import {debtDue,currentGrace} from './obligation-state.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
 const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
@@ -63,6 +64,7 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
   for(const who of breached){const observer=people.find(x=>x!==who);add(`obligation:${id}:breached:${who}`,id,'违约',observer,who,minute,{trust:-5,affection:-1,respect:-1},{reason:o.reason??'未履行约定'});}
  }
  for(const [id,debt]of Object.entries(after.records??{})){
+  if(debt.obligation&&debt.status==='已还清'&&after.obligations?.[debt.obligation]?.events?.some(e=>e.transferred>0))continue;
   // A debt both opened and overdue within one elapsed span is still a breach.
   const old=before.records?.[id]??(debt.category==='debt'&&debt.status==='逾期'?{status:'待偿还'}:null);if(debt.category!=='debt'||!old||debt.status===old.status)continue;
   if(debt.status==='逾期'&&old.status==='待偿还'&&debt.amount>debt.paid&&debt.deadline<=after.minute)add(`debt:${id}:overdue`,id,'违约',debt.creditor,debt.debtor,debt.overdueAt??debt.deadline,{trust:-5,affection:-1});
@@ -76,6 +78,16 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
  }
  const kind=engine.rules?.npcLife?.kindness;
  for(const e of events){
+  if(e.verb==='obligation_settled'&&e.result?.transferred>0&&e.result.remaining===0){
+   const row=after.obligations?.[e.obligation],index=row?.events?.findLastIndex(x=>x.eventId===e.result.evidence)??-1,payer=row?.events?.[index]?.payer;
+   if(row&&payer===row.debtor){
+    const deadline=row.called?.effectiveAt??row.deadline??row.terms?.deadline;
+    const prior={...row,status:'pending',deadline,paid:(row.paid??0)-row.events.slice(index).reduce((n,x)=>n+(x.transferred??0),0)};
+    const legacy=after.records?.[row.legacyRecord],wasOverdue=row.defaulted||legacy?.defaulted||legacy?.overdueAt!==undefined||legacy?.installmentOverdueAt!==undefined;
+    const onTime=!wasOverdue&&(!Number.isSafeInteger(deadline)||e.minute<=debtDue(prior,e.minute,{allowance:currentGrace(engine,after,prior,e.minute)}).deadline);
+    add(`obligation-payment:${e.id}`,e.id,'实际清偿',row.creditor,row.debtor,e.minute,{trust:onTime?3:0,respect:1});
+   }
+  }
   if(e.verb==='gift'&&e.source?.obligation&&kind?.gift)add(e.key,e.source.obligation,'送礼',e.target,e.actor,e.minute,{...kind.gift});
   if(e.verb==='trade'&&args.payment!=='repay'&&detail.cost>0&&!detail.debt){
    const buyer=e.actor,seller=e.target;
