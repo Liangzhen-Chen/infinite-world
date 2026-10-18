@@ -61,7 +61,8 @@ const clone=value=>structuredClone(value);
 import {personSimulation}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,ADVANCE_LAYERS}from'./advance-layers.mjs';
-import {advanceSystemSortKey}from'./scheduler.mjs';
+import {advanceSystemSortKey,ScheduleHeap,resolveContest,schedulerWired}from'./scheduler.mjs';
+import {publishTransitionEvent}from'./world-events.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -82,19 +83,60 @@ export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>syst
 export function runAdvance(engine,d,ctx){
     return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
 }
-// S2b：同刻调度器按 §14.2 阶段与排序键重排推进系统。默认关闭（保持现有 order，金快照不变）；
-// 用 SCHEDULER_PHASE_ORDER=1 或存档 state.scheduler.phaseOrder=true 开启。系统声明 phase 后按阶段归序，
-// 未声明的系统归阶段 2 并按原 order，因此开启后若无 phase 声明，顺序仍与默认一致。
-const schedulerPhaseOrderEnabled=d=>process.env.SCHEDULER_PHASE_ORDER==='1'||d.get('state','scheduler','phaseOrder')===true;
+// S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
+// 阶段归序键 advanceSystemSortKey 缺省为阶段 2 并按原 order，且以系统 id 决出平局，因此
+// 打乱注册顺序不改变执行顺序；关闭时保持现有 order（金快照不变）。
 function orderedSystems(d){
-    if(!schedulerPhaseOrderEnabled(d))return advanceRegistry;
+    if(!schedulerWired(d.get('state')))return advanceRegistry;
     const key=advanceSystemSortKey;
-    return [...advanceRegistry].sort((a,b)=>{const x=key(a),y=key(b);for(let i=0;i<x.length;i++){if(x[i]<y[i])return-1;if(x[i]>y[i])return 1;}return 0;});
+    return [...advanceRegistry].sort((a,b)=>{
+        const x=key(a),y=key(b);
+        for(let i=0;i<x.length;i++){if(x[i]<y[i])return-1;if(x[i]>y[i])return 1;}
+        return a.id<b.id?-1:a.id>b.id?1:0;
+    });
+}
+// 接线后的刻集由日程堆唯一确定（14 §14.2）：只有到期项与时钟规则的刻才存在，
+// 跨度的终点 end 本身不是刻——它只是把时钟拨到 end。午夜入堆为时钟规则，
+// 各系统 nextMinute 入堆为到期项；取 (now, end] 内最小刻，无则返回 null。
+export function nextFromScheduleHeap(engine,d,now,end){
+    const heap=new ScheduleHeap();
+    const midnight=Math.floor(now/1440)*1440+1440;
+    if(midnight<=end)heap.add({kind:'clock',minute:midnight});
+    for(const system of advanceRegistry)if(system.nextMinute){
+        const minute=system.nextMinute(engine,d,now);
+        if(minute>now&&minute<=end)heap.add({kind:'due',minute});
+    }
+    const ticks=heap.ticksBetween(now,end);
+    return ticks.length?ticks[0]:null;
+}
+// 争夺池：推进系统在本刻提交的互斥标的提案（提交即按当前调度器分配 seq），本刻系统结算完后
+// 由缺省表裁决，产生 contest_win / contest_lose 事件（seq 晚于阶段 1–3，见 runTick）。
+export function submitContest(d,proposal){
+    if(!Array.isArray(d.contestPool))throw new Error('调度器未接线，不能提交争夺提案');
+    const seq=d.scheduler?d.scheduler.nextSeq():0;
+    d.contestPool.push({...proposal,seq});
+}
+function recordContestEvent(d,event){
+    const key=`world_event:contest:${event.target}:${event.id}:${event.minute}`;
+    if(d.get('state','records',key))return;
+    publishTransitionEvent(d,d.engine,{id:`contest:${event.target}:${event.id}:${event.minute}`,verb:event.verb,actor:event.id,target:event.target,minute:event.minute,location:d.get('state','location'),witnesses:[],tags:['contest',event.rule??'lottery'],...(event.reason?{reason:event.reason}:{})});
+}
+function resolveContestPool(d,ctx){
+    if(!d.contestPool?.length)return;
+    const outcomes=resolveContest(d.contestPool,{seed:d.document.randomSeed,minute:ctx.after});
+    for(const outcome of outcomes){
+        for(const winner of outcome.winners)recordContestEvent(d,{verb:'contest_win',id:winner.id,target:outcome.target,rule:outcome.contest,minute:ctx.after});
+        for(const loser of outcome.losers)recordContestEvent(d,{verb:'contest_lose',id:loser.id,target:outcome.target,rule:outcome.contest,reason:outcome.reason,minute:ctx.after});
+    }
+    d.contestPool.length=0;
 }
 function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
-    try{for(const system of orderedSystems(d))system.advance(engine,d,ctx);}finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
+    try{
+        for(const system of orderedSystems(d))system.advance(engine,d,ctx);
+        if(schedulerWired(d.get('state')))resolveContestPool(d,ctx);
+    }finally{engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
