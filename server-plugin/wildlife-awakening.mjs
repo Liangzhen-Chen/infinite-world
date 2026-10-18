@@ -1,4 +1,5 @@
 import {bodyLiving} from './lifecycle-state.mjs';
+import {openObligation} from './obligation-runtime.mjs';
 import {createHash} from 'node:crypto';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
@@ -129,6 +130,11 @@ export function awakeningAction(d,args,eventId,target){
         this.advance(d,rules.pactMinutes,eventId);
         if(!present())return{success:false,note:'结缘完成前一方离开或失去行动能力'};
         const companion={with:'player',consent:true,since:d.get('state','minute'),sourceEvent:eventId,formerPet:false,terms:clone(rules.pactTerms)};
+        if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1){
+            const id=`spirit-pact:${eventId}`;
+            openObligation(d,this,{id,kind:'pact',debtor:'player',creditor:target,actor:'player',amount:0,subject:target,terms:{boundaries:clone(rules.pactTerms)}},eventId);
+            companion.obligation=id;
+        }
         holdingSet(d,null,['state','creatures',target,'companion'],companion,'wildlife-awakening');
         return{success:true,target,companion,note:'双方同意的有边界关系，不是宠物或财产'};
     }
