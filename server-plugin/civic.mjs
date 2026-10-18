@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('civic');
@@ -11,7 +12,7 @@ declareHoldingWriter('civic',{kinds:['resides','resident_of']});
 
 const recordPath=id=>['state','records',id];
 const key=(kind,settlement)=>`civic_${kind}:${settlement}:player`;
-const alive=actor=>actor&&!['死亡','濒死','昏迷','患病'].includes(actor.status)&&!['睡眠','熟睡'].includes(actor.activity);
+const alive=(engine,state,id,actor)=>actor&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(actor.status)&&!['睡眠','熟睡'].includes(actor.activity);
 const integer=n=>Number.isSafeInteger(n)&&n>=0;
 function profile(engine,settlement){
     const p=engine.rules.agriculture?.settlements.find(row=>row.settlement===settlement);
@@ -28,7 +29,7 @@ function belongs(engine,location,settlement){
 }
 function present(d,engine,name){
     const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);
-    if(!(engine.world.npcs.some(row=>row.id===id)||personSimulation(engine,d.get('state'),id).value)||!alive(actor)||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel)throw Error('需要实际在场且清醒的既有人物');
+    if(!(engine.world.npcs.some(row=>row.id===id)||personSimulation(engine,d.get('state'),id).value)||!alive(engine,d.get('state'),id,actor)||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel)throw Error('需要实际在场且清醒的既有人物');
     return id;
 }
 function manager(d,engine,p,name){
@@ -101,7 +102,7 @@ export function publicProjectApproval(d,engine,settlement,authorization,benefici
     const p=profile(engine,settlement),a=d.get(...recordPath(authorization)),now=d.get('state','minute');
     if(a?.category!=='authorization'||a.action!=='public_project'||a.settlement!==settlement||a.grantor!==p.manager||a.grantee!=='player'||a.revoked||!integer(a.expires)||a.expires<=now||!beneficiaries?.includes(settlement)||beneficiaries.includes('player'))return null;
     const actor=d.get('state','npcs',p.manager);
-    if(!alive(actor)||actor.location!==d.get('state','location')||d.get('state','location')!==p.counter)return null;
+    if(!alive(engine,d.get('state'),p.manager,actor)||actor.location!==d.get('state','location')||d.get('state','location')!==p.counter)return null;
     return {authorization,grantor:p.manager,settlement,minute:now,expires:a.expires};
 }
 function contribution(d,engine,args,settlement){

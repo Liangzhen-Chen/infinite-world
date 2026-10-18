@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {placed as placedStock,moveStock} from './stock.mjs';
@@ -32,7 +33,7 @@ const actorPath=id=>id==='player'?['state','player']:['state',id.startsWith('npc
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}未登记或超出范围`);return v;};
-const awake=a=>a&&!['死亡','濒死','昏迷'].includes(a.status)&&!a.scheduleTravel&&!a.cognitionTravel;
+const awake=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&!['濒死','昏迷'].includes(a.status)&&!a.scheduleTravel&&!a.cognitionTravel;
 function divine(engine,a){
  if(a.spirit)return a.spirit.divine!==false;
  const def=engine.byId.get(a.species??a.boss),template=def?.template;
@@ -62,7 +63,7 @@ function access(d,engine,row,c,args,until){
 }
 function life(d,engine,c,args,id,until,action='support_magic'){
  id=resolveCreature(engine,d,id);const a=d.get(...actorPath(id));
- if(!awake(a)||id!=='player'&&a.location!==d.get('state','location'))throw Error('仪式参与者须在场清醒且存活');
+ if(!awake(d,id,a)||id!=='player'&&a.location!==d.get('state','location'))throw Error('仪式参与者须在场清醒且存活');
  assertMagicTargeting(d,engine,{...c,targeting:{lineOfSight:true}},args,id);
  let permission=null;
  if(spellConsentActions.includes(action)){
@@ -154,7 +155,7 @@ export function applySummonWork(d,e,eventId,power=e.power){
 function nearbySpirits(d,engine,c){
  const location=d.get('state','location'),origin=localPlayerPoint(d);
  return Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>{
-  if(!awake(a)||a.location!==location||!a.spirit)return false;
+  if(!awake(d,id,a)||a.location!==location||!a.spirit)return false;
   const f=areaTargetFacts(d,engine,id,location,origin);return f?.lineOfSight&&distance(f.point,origin)<=c.rangeMeters;
  });
 }
@@ -164,7 +165,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  if(op==='lure'){
   p.id=resolveCreature(this,d,args.target);const a=d.get('state','creatures',p.id),base=this.byId.get(a?.species);
   const f=areaTargetFacts(d,this,p.id,location,p.origin);
- if(!awake(a)||a.owner||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw Error('只能引导实际近处、无主且趋光的温顺动物');
+ if(!awake(d,p.id,a)||a.owner||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw Error('只能引导实际近处、无主且趋光的温顺动物');
   p.actor=a;return p;
  }
  if(['reassign','coordinate'].includes(op)){
@@ -181,7 +182,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  }
  if(op==='invite'){
   p.id=args.target;p.actor=d.get('state','creatures',p.id);const spirit=p.actor?.spirit;
-  if(!awake(p.actor)||!spirit||spirit.divine!==false||spirit.rank!==0||spirit.realm!=='other'||!spirit.invitation||typeof spirit.invitation.terms!=='string'||typeof spirit.invitation.willing!=='boolean')throw Error('没有已知、可回应的跨界来访者');
+  if(!awake(d,p.id,p.actor)||!spirit||spirit.divine!==false||spirit.rank!==0||spirit.realm!=='other'||!spirit.invitation||typeof spirit.invitation.terms!=='string'||typeof spirit.invitation.willing!=='boolean')throw Error('没有已知、可回应的跨界来访者');
   if(typeof args.text!=='string'||args.text.length>80||!args.text.trim())throw Error('邀约需要明确有限条款');
   p.accepted=spirit.invitation.willing&&args.text===spirit.invitation.terms;
   number(spirit.invitation.visitMinutes,1,60,'邀约停留时限');
@@ -200,7 +201,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  if(op==='ferry'){
   p.id=resolveCreature(this,d,args.target);p.actor=d.get('state','creatures',p.id);
   const base=this.byId.get(p.actor?.species),s=p.actor?.spirit;
-  if(!p.actor||!awake(p.actor)||p.actor.location!==location||p.actor.owner||!p.actor.ecology||base?.nature?.kind!=='游魂'||!s||s.divine!==false||s.rank!==0||s.realm!=='local')throw Error('度亡只适用于在场、无主的低阶游魂个体；不能用于活人、亡者遗体或复活');
+  if(!p.actor||!awake(d,p.id,p.actor)||p.actor.location!==location||p.actor.owner||!p.actor.ecology||base?.nature?.kind!=='游魂'||!s||s.divine!==false||s.rank!==0||s.realm!=='local')throw Error('度亡只适用于在场、无主的低阶游魂个体；不能用于活人、亡者遗体或复活');
   assertMagicTargeting(d,this,{...c,targeting:{lineOfSight:true}},args,p.id);
   p.tablet=environmentFeatures(this).find(r=>r.id===p.spec.destination);
   if(!p.tablet)throw Error('度亡去向未登记');return p;
@@ -219,7 +220,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  if(op==='purify_area'){p.spirits=nearbySpirits(d,this,c).filter(([,a])=>a.spirit.divine===false&&a.spirit.rank===0&&a.spirit.nature==='malevolent');if(!p.spirits.length)throw Error('有限区域没有可确认的低阶邪秽');return p;}
  if(op==='exorcise'){
   p.id=resolveCreature(this,d,args.target);p.actor=d.get(...actorPath(p.id));
-  if(!awake(p.actor)||p.id==='player'||divine(this,p.actor))throw Error('驱离需要实际在场且非神性目标');
+  if(!awake(d,p.id,p.actor)||p.id==='player'||divine(this,p.actor))throw Error('驱离需要实际在场且非神性目标');
   assertMagicTargeting(d,this,{...c,targeting:{lineOfSight:true}},args,p.id);
   const spirit=p.actor.spirit;
   if(spirit&&(spirit.divine!==false||spirit.rank!==0))throw Error('不能驱离神性、未知或高阶灵体');return p;
@@ -308,7 +309,7 @@ export function applyRitual(d,initial,eventId){
  if(p.op==='consecrate')return{...result,habitat:p.habitat.id,group:p.spec.group,species:p.species.map(s=>s.id),...put(d,p,eventId,{habitat:p.habitat.id,group:p.spec.group,species:p.species.map(s=>s.id)})};
  if(p.op==='spirit_census'){
   const rows=d.get('state','records',`ecology:${p.habitat.id}`)?.populations??{};
-  return{...result,habitat:p.habitat.id,spirits:p.species.map(s=>{const r=rows[s.id]??{},present=Object.values(d.get('state','creatures')??{}).filter(a=>a.species===s.id&&a.location===p.habitat.location&&a.status!=='死亡'&&a.hp>0&&!a.owner).length;
+  return{...result,habitat:p.habitat.id,spirits:p.species.map(s=>{const r=rows[s.id]??{},present=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===s.id&&a.location===p.habitat.location&&!isPhysicallyDead(null,d,id)&&a.hp>0&&!a.owner).length;
    return{species:s.id,name:s.name,kind:s.nature.kind,nature:s.nature.spirit.nature,rank:s.nature.spirit.rank,unseen:r.count??s.wildlife.population,present,arisen:r.arisen??0,ferried:r.ferried??0,seasons:[...s.wildlife.manifest.seasons],cause:s.wildlife.manifest.cause};})};
  }
  if(p.op==='ferry'){
@@ -343,7 +344,7 @@ export function ritualProtectionValid(d,e,now=d.get('state','minute')){
  const b=e.ritualBinding;if(!b)return true;
  return b.members.every(m=>{
   const a=d.get(...actorPath(m.id)),f=a?.faith,r=m.authorization&&d.get('state','records',m.authorization);
-  if(!awake(a)||!f||(b.institution?f.institution!==b.institution:f.deity!==b.deity)||f.church!==b.church||f.taboo!==b.taboo||f.lastBreach!==m.lastBreach||m.id!=='player'&&a.location!==b.location||m.id==='player'&&d.get('state','location')!==b.location)return false;
+  if(!awake(d,m.id,a)||!f||(b.institution?f.institution!==b.institution:f.deity!==b.deity)||f.church!==b.church||f.taboo!==b.taboo||f.lastBreach!==m.lastBreach||m.id!=='player'&&a.location!==b.location||m.id==='player'&&d.get('state','location')!==b.location)return false;
   if(m.id!=='player'&&(r?.category!=='authorization'||r.action!=='support_magic'||r.subject!==m.id||r.grantor!==m.id||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now))return false;
   return b.operation==='discipline'?f.observedSince===m.observedSince&&f.lastBreach<f.observedSince:f&&Number.isFinite(a.mental?.fatigue)&&a.mental.fatigue<90;
  });
@@ -374,12 +375,12 @@ export function advanceRituals(d,engine,after){
   }
  }
  for(const[id,a]of Object.entries(d.get('state','creatures')??{})){
-  const s=a.spirit;if(!s?.interference||s.divine!==false||s.rank!==0||s.nature!=='malevolent'||!awake(a))continue;
+  const s=a.spirit;if(!s?.interference||s.divine!==false||s.rank!==0||s.nature!=='malevolent'||!awake(d,id,a))continue;
   const i=s.interference,actor=d.get(...actorPath(i.target)),location=i.target==='player'?d.get('state','location'):actor?.location;
   if(!Number.isSafeInteger(i.settled)||i.settled>after)throw Error('邪秽干扰时间状态损坏');
   number(i.remaining,0,100,'邪秽剩余干扰');number(i.stressPerMinute,.01,1,'邪秽干扰速度');
   const minutes=after-i.settled;d.set([...actorPath(id),'spirit','interference','settled'],after);
-  if(!awake(actor)||a.location!==location)continue;
+  if(!awake(d,i.target,actor)||a.location!==location)continue;
   const mental=personMental(engine,d.get('state'),i.target).value;
   let amount=Math.min(i.remaining,minutes*i.stressPerMinute),remaining=amount;
   const wards=Object.entries(d.get('state','effects')??{}).filter(([,w])=>w.kind==='ritual'&&w.operation==='ward'&&w.target===i.target&&w.started<=i.settled&&w.expires>i.settled&&w.remaining>0&&w.location===location).filter(([,w])=>{

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {speciesInHabitat,migrationPath} from './wildlife-range.mjs';
 import {initialIn} from './wildlife-habitats.mjs';
 export function planWildlifeMigration(document,rules,catalog){
@@ -15,7 +16,7 @@ export function planWildlifeMigration(document,rules,catalog){
                 }
                 continue;
             }
-            const existing=Object.values(document.state.creatures??{}).filter(a=>a.species===species.id&&a.location===habitat.location&&!a.owner&&a.status!=='死亡').length;
+            const existing=Object.entries(document.state.creatures??{}).filter(([id,a])=>a.species===species.id&&a.location===habitat.location&&!a.owner&&!isPhysicallyDead(null,document,id)).length;
             // Home and K8 derived ranges start stocked; migration-only ranges start empty.
             const count=Math.max(0,initialIn(habitat,species)-existing);
             populations[species.id]={count,initial:count,born:0,predated:0,starved:0,withdrawn:0,...(rules.wildlife.migration?{immigrated:0,emigrated:0}:{})};changed=true;

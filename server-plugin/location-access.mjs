@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {magicMessagePermission}from'./magic-message.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {spellConsentPermission}from'./magic-consent.mjs';
@@ -31,7 +32,7 @@ export function homePermission(d,engine,args,eventId){
  const environmentResult=environmentPermission(d,engine,args,eventId);if(environmentResult)return environmentResult;
  const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),now=d.get('state','minute');
  if(!actor||!personSimulation(engine,d.get('state'),grantor).value||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel
-    ||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('私宅许可须由实际在场且清醒的成年住户作出');
+    ||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('私宅许可须由实际在场且清醒的成年住户作出');
  if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('当前私宅许可只登记给玩家及指定同行者');
  if(args.operation==='revoke_access'){
   const old=d.get('state','records',args.authorization);
@@ -70,7 +71,7 @@ function environmentPermission(d,engine,args,eventId){
  if(!profile&&!feature)throw Error('许可所属环境对象已不存在');
  const action=profile?'growth_magic':'environment_use',owner=profile?(profile.fieldOwner&&profile.fieldOwner!==profile.settlement?profile.fieldOwner:profile.manager):feature.owner;
  const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),location=profile?.fieldLocation??feature.location,now=d.get('state','minute');
- if(grantor!==owner||!personSimulation(engine,d.get('state'),grantor).value||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||actor.location!==location||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('环境许可须由实际在场且清醒的成年所有者或登记田主签发');
+ if(grantor!==owner||!personSimulation(engine,d.get('state'),grantor).value||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||actor.location!==location||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('环境许可须由实际在场且清醒的成年所有者或登记田主签发');
  if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('环境许可只登记给玩家及指定同行者');
  if(args.operation==='revoke_access'){
   if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==grantor||old.grantee!=='player')throw Error('只有原签发者能撤销环境许可');
@@ -94,7 +95,7 @@ function anchorPermission(d,engine,args,eventId){
  if(!feature&&old?.action!=='teleport_anchor')return null;
  if(!feature)throw Error('许可所属锚点已不存在');
  const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),now=d.get('state','minute');
- if(feature.owner!==grantor||!personSimulation(engine,d.get('state'),grantor).value||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||actor.location!==feature.location||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('锚点许可须由实际在场且清醒的成年所有者签发或撤销');
+ if(feature.owner!==grantor||!personSimulation(engine,d.get('state'),grantor).value||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||actor.location!==feature.location||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('锚点许可须由实际在场且清醒的成年所有者签发或撤销');
  if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('锚点许可只登记给玩家及指定同行者');
  if(args.operation==='revoke_access'){
   if(old?.category!=='authorization'||old.action!=='teleport_anchor'||old.subject!==feature.id||old.grantor!==grantor||old.grantee!=='player')throw Error('只有原签发所有者能撤销锚点许可');

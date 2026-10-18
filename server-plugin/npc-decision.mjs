@@ -1,3 +1,4 @@
+import {projectionLiving} from './lifecycle-state.mjs';
 // L1 decision library: this module accepts only an I25 projection, never truth.
 import {subjectiveFact,knownActiveObligations} from './subjective-view.mjs';
 export const DECISION_ORDER=['red_lines','relations','cost_benefit','circumstances','conflicts'];
@@ -17,7 +18,7 @@ export function npcDecision(view,request={}){
  const benefit=Math.max(0,request.reward??0)+(relation.trust??0)/10+(relation.favors?.filter(f=>f.status!=='已还').length??0)*3+(request.needSatisfaction??0);
  add('cost_benefit',{cost,benefit,belief,coins:view.self.coins,riskAversion});
  const urgent=goals(view).find(g=>(g.urgency??0)>(request.urgency??0));
- const busy=/睡|赶路|拘留|昏迷/.test(view.self.activity)||['死亡','濒死','昏迷'].includes(view.self.status)||(view.self.busyUntil??0)>view.minute||(view.self.mental.stress??0)>=90;
+ const busy=/睡|赶路|拘留|昏迷/.test(view.self.activity)||!projectionLiving(view.self)||['濒死','昏迷'].includes(view.self.status)||(view.self.busyUntil??0)>view.minute||(view.self.mental.stress??0)>=90;
  add('circumstances',{busy,mental:view.self.mental,urgent:urgent?.content??null,plan:view.self.plan?.goal??null});
  const conflicts=knownActiveObligations(view).filter(o=>Math.max(view.minute,o.start??view.minute)<Math.min(view.minute+Math.max(1,time),o.deadline??Infinity));
  const identity=subjectiveFact(view,'identity_conflict')?.value,norm=subjectiveFact(view,`norm:${request.kind}`)?.value;

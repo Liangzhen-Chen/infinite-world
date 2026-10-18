@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
 import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
@@ -20,7 +21,7 @@ const DAY=1440,clone=v=>structuredClone(v),path=id=>['state','records',`forest:$
 // Absolute growth quanta telescope across intervals, including non-integral
 // area/rate combinations; daily and P3 weekly rounding therefore agree.
 const growth=(site,start,days)=>Math.floor(site.capacity*site.growthPerDay*(start+days*DAY)/DAY)-Math.floor(site.capacity*site.growthPerDay*start/DAY);
-const present=(d,species,location)=>Object.values(d.get('state','creatures')??{}).filter(a=>a.location===location&&a.species===species&&!a.owner&&!a.mind?.awakened&&a.hp>0&&a.status!=='死亡').length;
+const present=(d,species,location)=>Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===location&&a.species===species&&!a.owner&&!a.mind?.awakened&&a.hp>0&&!isPhysicallyDead(null,d,id)).length;
 export function resourceSettlement(engine,location,state={}){
  const seen=new Set(),settlements=new Set([...Object.keys(state.settlements??{}),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement)]);
  while(location&&!seen.has(location)){if(settlements.has(location))return location;seen.add(location);location=engine.byId.get(location)?.parent;}

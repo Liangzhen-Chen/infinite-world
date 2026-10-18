@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personOccupation,personName} from './entity-view.mjs';
 import {laborNotices} from './labor-market.mjs';
 import {personAge}from'./entity-view.mjs';
@@ -115,7 +116,7 @@ export function sceneCard(engine,document,query='',index=null){
     const tribes=tribalScene(engine,document);if(tribes)parts.push(tribes);
     const army=militaryScene(engine,document);if(army)parts.push(army);
     const war=warScene(engine,document);if(war)parts.push(war);
-    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&a.status!=='死亡'&&intelligenceSign(s,id)).slice(0,3);
+    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&!isPhysicallyDead(null,s,id)&&intelligenceSign(s,id)).slice(0,3);
     if(spiritSigns.length)parts.push(`【精怪近况】${spiritSigns.map(([id,a])=>`${a.name??name(a.species)}（${id}）${intelligenceSign(s,id)}`).join('；')}`);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);
@@ -147,7 +148,7 @@ export function sceneStandings(engine,s,people){
     const holders=[...people.map(id=>[id,false])];
     const seat=societyAt(engine,s.location)?.id,local=settlementAt(engine,s.location);
     for(const id of [seat,local])if(id)holders.push([id,true]);
-    for(const [id,a]of Object.entries(s.creatures??{}))if(a.location===s.location&&a.status!=='死亡'&&(a.care||a.mind?.awakened||a.boss))holders.push([id,false]);
+    for(const [id,a]of Object.entries(s.creatures??{}))if(a.location===s.location&&!isPhysicallyDead(null,s,id)&&(a.care||a.mind?.awakened||a.boss))holders.push([id,false]);
     return holders.map(([holder,collective])=>{const value=standing(engine,s,holder,'player');return{holder,collective,words:standingWords(value),value};})
         .filter(v=>v.words!==standingWords(0)).slice(0,6).map(({holder,collective,words})=>({holder,collective,words}));
 }

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {emptyBossCognition,readBossCognition}from'./boss-cognition.mjs';
 import {monsterStats}from'./combat.mjs';
 export function planBossMigration(document,rules,catalog,world){
@@ -29,7 +30,7 @@ export function planBossMigration(document,rules,catalog,world){
             readBossCognition(actor);actor.bossCognition??=emptyBossCognition();
             actor.negotiation??={format:1,inventory:{},relation:null,history:[]};
             if(JSON.stringify(actor)!==JSON.stringify(current))patches.push({op:'set',path,value:actor});
-            const present=actor.status!=='死亡'&&actor.hp>0&&actor.location===boss.residence.location;
+            const present=!isPhysicallyDead(null,document,boss.actor)&&actor.hp>0&&actor.location===boss.residence.location;
             const record={...(old??{category:'lair',format:1,lair:boss.residence.id,boss:boss.id,initializedDay:day,history:[],lastDay:day-1}),
                 status:present?'驻守':'空置',occupant:present?{kind:'boss',definition:boss.id,actor:boss.actor}:null,vacantSince:present?null:old?.vacantSince??day,reoccupyAfter:null};
             if(JSON.stringify(record)!==JSON.stringify(old))patches.push({op:'set',path:['state','records',key],value:record});
@@ -41,7 +42,7 @@ export function planBossMigration(document,rules,catalog,world){
             if(actor.cognition===undefined)patches.push({op:'set',path:['state','creatures',boss.id,'cognition'],value:emptyBossCognition()});
         }
         if(old){if(old.category!=='lair'||old.format!==1||old.boss!==boss.id)throw new Error('巢穴记录冲突或不支持版本');continue;}
-        const dead=actor&&(actor.status==='死亡'||actor.hp===0);
+        const dead=actor&&(isPhysicallyDead(null,document,boss.actor)||actor.hp===0);
         if(actor){
             const metadata={boss:boss.id,species:boss.monster,ecology:boss.residence.habitat,lair:boss.residence.id};
             for(const [field,value]of Object.entries(metadata)){

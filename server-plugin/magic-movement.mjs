@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -86,7 +87,7 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
  if(d.get('state','player','mount')||Object.values(d.get('state','pets')??{}).some(p=>p.following)||Object.values(d.get('state','effects')??{}).some(e=>e.kind==='summon'&&e.owner==='player'))throw Error('位移尚不支持坐骑、宠物或召唤物载荷，须先解除同行');
  for(const id of companions){
   const actor=d.get('state','npcs',id),f=areaTargetFacts(d,this,id,location,point);
-  if(!actor||['死亡','濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??'')||!f||f.lineOfSight!==true||distance(point,f.point)>catalog.rangeMeters)throw Error('同行者缺少实际近端位置或无法清醒同行');
+  if(!actor||isPhysicallyDead(this,d,id)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??'')||!f||f.lineOfSight!==true||distance(point,f.point)>catalog.rangeMeters)throw Error('同行者缺少实际近端位置或无法清醒同行');
  }
  const loadKg=loadOf(d,this,companions);if(loadKg>s.maxLoadKg)throw Error('位移载荷超额');
  let metres,sourceAnchor,permitIds=[];

@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Normalized world events. Every settled tool call yields one event
 // {verb,actor,target,harm|gift|value,witnesses,location,tags,minute}; side
 // outcomes settled in the same call (an unpaid delivery is a gift) add their
@@ -10,13 +11,13 @@ import {personAge} from './entity-view.mjs';
 import {reactionSortKey,PHASE} from './scheduler.mjs';
 export const WORLD_EVENT_VERSION=1;
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
-const awake=n=>n&&!['死亡','濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
+const awake=(state,id,n)=>n&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 SOCIAL_VERBS.add('proposal_rejected');
 for(const verb of ['transition','holding_opened','holding_closed','holding_transferred','succession','claim','protocol_stage','restored','shortfall','judgment'])SOCIAL_VERBS.add(verb);
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
 export function presentWitnesses(state,location,exclude=[]){
-    return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===location&&awake(n)&&!exclude.includes(id)).map(([id])=>id).sort();
+    return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===location&&awake(state,id,n)&&!exclude.includes(id)).map(([id])=>id).sort();
 }
 const valueOf=(engine,item,quantity=1)=>(engine.byId.get(item)?.basePrice??0)*quantity;
 

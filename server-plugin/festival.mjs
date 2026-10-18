@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('festival',{sinks:['sink:consume']});
@@ -9,7 +10,7 @@ import {changeItems} from './items.mjs';
 import {applyEffects,hookedEffects} from './effects.mjs';
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
-const awake=n=>n&&!['死亡','濒死','昏迷','患病','睡眠'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 // Only already published village customs are adapted here. The 24 W5 draft
 // candidates are never imported and this adapter does not promote customs.
 export function localFestivalCalendar(engine){
@@ -92,8 +93,8 @@ function venueAvailable(engine,state,f){
   (!hours||hours[0]===hours[1]||(offset>=hours[0]&&end<=hours[1]));
 }
 function available(engine,state,id,location,at){
- if(id==='player')return state.location===location&&awake(state.player);
- return engine.world.npcs.some(n=>n.id===id)&&state.npcs[id]?.location===location&&awake(state.npcs[id])&&
+ if(id==='player')return state.location===location&&awake(engine,state,'player',state.player);
+ return engine.world.npcs.some(n=>n.id===id)&&state.npcs[id]?.location===location&&awake(engine,state,id,state.npcs[id])&&
   !npcObligationAt(state,id,at)&&!npcAutonomyBusy(state,id)&&!state.player.companions?.includes(id);
 }
 function local(d,f){if(d.get('state','location')!==f.location)throw Error('须在登记节俗场所办理，远方消息不能代替现场同意');}
@@ -130,7 +131,7 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=nu
    (row.host===npcId||row.supplier===npcId||enrollment(d,row,npcId))&&agreement(d,row,row.host);
   if(!attending)continue;
   if(minute<row.due){if(slot)slot={...slot,until:Math.min(slot.until,row.due)};continue;}
-  if(row.status==='planned'&&(!awake(state.npcs[npcId])||state.npcs[npcId]?.location!==row.location))continue;
+  if(row.status==='planned'&&(!awake(engine,state,npcId,state.npcs[npcId])||state.npcs[npcId]?.location!==row.location))continue;
   return {start:row.due%DAY,end:row.endsAt%DAY,location:row.location,activity:row.status==='planned'?state.npcs[npcId].activity:`参加${row.name}${row.kind==='market'?'集市':'仪式'}`,
    services:row.kind==='market'&&engine.byId.get(npcId)?.serviceCatalog?.some(s=>s.kind==='trade')?['trade']:[],
    production:false,festival:row.id,until:row.endsAt,variant:'festival'};

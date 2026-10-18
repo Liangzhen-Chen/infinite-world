@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {cloneData} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
@@ -64,7 +65,7 @@ function mind(d,id,engine){
 }
 function targetMind(d,engine,c,args,until){
  const id=resolveCreature(engine,d,args.target??'player'),a=d.get(...path(id));
- if(!a||['死亡','濒死','昏迷'].includes(a.status)||id!=='player'&&a.location!==d.get('state','location'))throw Error('精神观察目标不在场或无法同意');
+ if(!a||isPhysicallyDead(engine,d,id)||['濒死','昏迷'].includes(a.status)||id!=='player'&&a.location!==d.get('state','location'))throw Error('精神观察目标不在场或无法同意');
  assertMagicTargeting(d,engine,c,args,id);
  assertSpellConsent(d,engine,c,args,id,'mental_magic',until);
  if(!id.startsWith('npc_')&&id!=='player'){
@@ -300,16 +301,16 @@ export function advanceMindSpace(d,engine,before,after){
   if(mental.has(e.operation)){
    const a=d.get(...path(e.target));if(!a)continue;
    if(e.operation==='sleep'&&e.sleeping){
-    if(minutes>0&&a.status!=='死亡'){
+    if(minutes>0&&!isPhysicallyDead(engine,d,e.target)){
      const m=mind(d,e.target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/2);holdingSet(d,null,[...path(e.target),'mental'],m,'magic-mind-space');
      holdingSet(d,null,[...path(e.target),'activity'],'睡眠','magic-mind-space');
     }
-    if(!effective(d,e,after)||a.status==='死亡'){
+    if(!effective(d,e,after)||isPhysicallyDead(engine,d,e.target)){
      d.set(['state','effects',id,'sleeping'],false);
      if(d.get(...path(e.target),'activity')==='睡眠')holdingSet(d,null,[...path(e.target),'activity'],e.previousActivity,'magic-mind-space');
     }
    }
-   if(e.operation==='rest_bless'&&minutes>0&&a.status!=='死亡'&&(e.target==='player'?d.get('state','records','mind_rest_activity')===true:/休息|睡眠|熟睡|睡觉/.test(a.activity??''))){
+   if(e.operation==='rest_bless'&&minutes>0&&!isPhysicallyDead(engine,d,e.target)&&(e.target==='player'?d.get('state','records','mind_rest_activity')===true:/休息|睡眠|熟睡|睡觉/.test(a.activity??''))){
     byTarget.set(e.target,Math.max(byTarget.get(e.target)??0,minutes));
    }
    continue;

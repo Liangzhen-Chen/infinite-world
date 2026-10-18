@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {MEDICAL_SKILL,medicineFresh,medicineRows,medicineSites,medicineReservation,medicalConditions,medicalSkill,waterDiseaseExposure} from './medicine-state.mjs';
 import {npcSchedule} from './npc-state.mjs';
 import {personConstraint,placeSettlement} from './entity-view.mjs';
@@ -23,7 +24,7 @@ import {applyEffects} from './effects.mjs';
 import {personOffices} from './entity-view.mjs';
 const DAY=1440,rec=id=>['state','records',id],actor=(s,id)=>id==='player'?s.player:s.npcs?.[id];
 const present=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
-const capable=(s,id)=>actor(s,id)&&!['死亡','濒死','昏迷'].includes(actor(s,id).status);
+const capable=(e,s,id)=>actor(s,id)&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(actor(s,id).status);
 const pending=(s,id)=>medicineRows(s).some(r=>r.patient===id&&r.status==='预约');
 function windows(e,s,id,minute){
  const routine=npcSchedule(e,s,id,minute);if(!routine)return [];
@@ -31,7 +32,7 @@ function windows(e,s,id,minute){
  return season?.[variant]??routine[variant]??season?.default??routine.default??[];
 }
 function available(e,s,id,start,end,location){
- const a=actor(s,id);if(!a||['死亡','濒死','昏迷','患病'].includes(a.status)||a.caring||a.levy||a.scheduleTravel||a.cognitionTravel||s.player.companions?.includes(id)||personConstraint(e,s,id,start)||medicineReservation(s,id,start,end-start)||educationReservation(e,s,id,start,end-start))return false;
+ const a=actor(s,id);if(!a||isPhysicallyDead(e,s,id)||['濒死','昏迷','患病'].includes(a.status)||a.caring||a.levy||a.scheduleTravel||a.cognitionTravel||s.player.companions?.includes(id)||personConstraint(e,s,id,start)||medicineReservation(s,id,start,end-start)||educationReservation(e,s,id,start,end-start))return false;
  const job=currentEmployment(s,id,start);if(employmentReservation(s,id,start,end-start)&&(!job||job.location!==location||!/诊疗|药童/.test(job.task??'')))return false;
  return windows(e,s,id,start).some(w=>w.location===location&&w.start<=start%DAY&&w.end>=start%DAY+end-start&&!/睡|午饭|休息|家务/.test(w.activity??''));
 }
@@ -44,7 +45,7 @@ function templeSponsor(e,s,location,fee){
 }
 function book(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
  let s=d.get('state');const now=s.minute;
- if(!capable(s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
+ if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
  const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
  const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw Error('医馆不存在或已停用');
  if(patient==='player'&&s.location!==site.seat)throw Error('须到医馆求医');
@@ -89,7 +90,7 @@ function pay(d,e,r,stock){
 function finish(d,e,r){
  let s=d.get('state'),site=medicineSites(e,s).find(c=>c.id===r.clinic);
  const cancel=reason=>holdingSet(d,null,rec(r.id),{...r,status:'未诊',reason,endedAt:r.end},'medicine');
- if(!site?.capacity||!site.doctors.includes(r.doctor)||!capable(s,r.patient)||personConstraint(e,s,r.doctor)||personConstraint(e,s,r.patient)||present(s,r.patient)!==r.location||present(s,r.doctor)!==r.location)return cancel('场所、人员或到诊条件变化');
+ if(!site?.capacity||!site.doctors.includes(r.doctor)||!capable(e,s,r.patient)||personConstraint(e,s,r.doctor)||personConstraint(e,s,r.patient)||present(s,r.patient)!==r.location||present(s,r.doctor)!==r.location)return cancel('场所、人员或到诊条件变化');
  const stock=stockSource(d,e,r);if(!stock)return cancel('药材短缺');
  const payment=pay(d,e,r,stock);if(!payment)return cancel('诊费不足');
  if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);moveStock(d,{from:store(e,stock.temple,'item_herb'),to:'sink:consume|item_herb|treatment',amount:1,writer:'medicine',eventId:r.id});d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,item_herb:a.items.item_herb-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{item_herb:-1},sourceEvent:r.id}]});}
@@ -126,7 +127,7 @@ function autonomous(d,e,now){
  const s=d.get('state'),sites=medicineSites(e,s);if(!sites.some(c=>c.doctors.length&&c.capacity))return;
  const patients=new Set([...Object.values(s.family?.illnesses??{}).filter(r=>r.status==='患病中').map(r=>r.patient),...Object.keys(s.npcs??{}).filter(id=>s.npcs[id].medical?.wounds?.some(w=>!w.healed&&(!w.closed||w.infected)))]);
  for(const patient of [...patients].sort()){
-  if(patient==='player'||pending(d.get('state'),patient)||!capable(s,patient)||s.player.companions?.includes(patient)||s.npcs[patient]?.cognitionTravel||s.npcs[patient]?.scheduleTravel)continue;
+  if(patient==='player'||pending(d.get('state'),patient)||!capable(e,s,patient)||s.player.companions?.includes(patient)||s.npcs[patient]?.cognitionTravel||s.npcs[patient]?.scheduleTravel)continue;
   const previous=medicineRows(s).filter(r=>r.patient===patient).sort((a,b)=>b.createdAt-a.createdAt)[0];if(previous&&(previous.followUpAt??previous.createdAt+DAY)>now)continue;
   // People first rest at home; a sickness that lingers or an acute wound sends them to a doctor.
   const condition=medicalConditions(d.get('state'),patient).find(c=>needsCare(c,now));if(!condition)continue;
@@ -149,8 +150,8 @@ export function prepareMedicine(d,e,{before,after}){
 export function advanceMedicine(d,e,{before,after}){
  if(!medicineFresh(e)||after<=before)return;
  for(const r of medicineRows(d.get('state')))if(r.status==='预约'){
-  if(r.houseCall&&after>=r.start&&before<r.end&&capable(d.get('state'),r.doctor)&&!personConstraint(e,d.get('state'),r.doctor)){d.set(['state','npcs',r.doctor,'location'],r.location);d.set(['state','npcs',r.doctor,'activity'],'出诊');}
-  else if(r.patient!=='player'&&after>=r.start&&before<r.end&&capable(d.get('state'),r.patient)&&!personConstraint(e,d.get('state'),r.patient)){
+  if(r.houseCall&&after>=r.start&&before<r.end&&capable(e,d.get('state'),r.doctor)&&!personConstraint(e,d.get('state'),r.doctor)){d.set(['state','npcs',r.doctor,'location'],r.location);d.set(['state','npcs',r.doctor,'activity'],'出诊');}
+  else if(r.patient!=='player'&&after>=r.start&&before<r.end&&capable(e,d.get('state'),r.patient)&&!personConstraint(e,d.get('state'),r.patient)){
    // The stored route duration is elapsed before arrival; no stock or coins move in transit.
    d.set(['state','npcs',r.patient,'location'],r.location);d.set(['state','npcs',r.patient,'activity'],'求医');
   }

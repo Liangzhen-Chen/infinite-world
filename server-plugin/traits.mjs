@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 // K1: derived trait view. Items, creatures, terrain, place features and spells
 // are read into one material/form tag vocabulary plus element affinity. Nothing
 // here writes state; consumers decide what a trait permits.
@@ -46,7 +47,7 @@ export function itemTraits(definition,held=null){
  if((held?.moisture??0)>0)tags.add('wet');
  return finish('item',definition?.id,tags);
 }
-export function creatureTraits(species,actor=null){
+export function creatureTraits(species,actor=null,dead=actor?.status===String.fromCharCode(27515,20129)){
  const tags=add(new Set(['creature']),species?.tags);
  const n=species?.nature;
  if(n?.spirit)tags.add('spirit');
@@ -54,14 +55,14 @@ export function creatureTraits(species,actor=null){
  if(n?.group==='元素体')tags.add('elemental');
  const elements=[...tags.has('ember')?['fire']:[],...tags.has('frost')?['cold']:[],...tags.has('aquatic')?['water']:[]];
  const affinity={weak:[...n?.affinity?.weak??[]],resist:[...n?.affinity?.resist??[]]};
- if(actor?.status==='死亡')tags.add('dead');
+ if(dead)tags.add('dead');
  return finish('creature',species?.id,tags,{elements,affinity,source:n?.affinity?'nature':undefined});
 }
 // A boss may author its own body and material tags. They join the species
 // tags and the individual then takes part in the tag rules of the interaction
 // table; an explicit species nature still overrides the tactics it names.
-export function bossTraits(species,boss,actor=null){
- const base=creatureTraits(species,actor);
+export function bossTraits(species,boss,actor=null,dead=actor?.status===String.fromCharCode(27515,20129)){
+ const base=creatureTraits(species,actor,dead);
  if(!Array.isArray(boss?.tags)||!boss.tags.length)return base;
  const tags=add(new Set(base.tags.filter(t=>!['flammable','conductive'].includes(t))),boss.tags);
  const elements=[...base.elements,...tags.has('ember')?['fire']:[],...tags.has('frost')?['cold']:[],...tags.has('aquatic')?['water']:[]];
@@ -112,7 +113,7 @@ export function traitsOf(engine,doc,id,{weather=null}={}){
   const view=personBody(engine,state,id),species=engine.byId.get(view?.body.value?.species)??view?.species.value;
   if(species){
    const actor={status:view.status.value},body=view.body.value,boss=view.boss.value;
-   const base=boss?.tags?bossTraits(species,boss,actor):creatureTraits(species,actor),tags=new Set(base.tags.filter(t=>!['flammable','conductive'].includes(t)));
+   const base=boss?.tags?bossTraits(species,boss,actor,isPhysicallyDead(engine,doc,id)):creatureTraits(species,actor,isPhysicallyDead(engine,doc,id)),tags=new Set(base.tags.filter(t=>!['flammable','conductive'].includes(t)));
    add(tags,body?.tags);if(id==='player'||id.startsWith('npc_'))tags.add('person');
    // Borrowed forms change appearance; U6 explicitly retains the real body.
    if(view.form.value)tags.add('shapeshifted');
@@ -134,7 +135,7 @@ export function traitsOf(engine,doc,id,{weather=null}={}){
   const actor=state.creatures?.[id];
   const species=engine.byId?.get(actor?.species)??(id.startsWith('monster_')?definition:engine.byId?.get(definition?.monster));
   const boss=engine.byId?.get(actor?.boss??(id.startsWith('boss_')?id:null));
-  return species?(boss?.tags?bossTraits(species,boss,actor):creatureTraits(species,actor)):null;
+  return species?(boss?.tags?bossTraits(species,boss,actor,isPhysicallyDead(engine,doc,id)):creatureTraits(species,actor,isPhysicallyDead(engine,doc,id))):null;
  }
  if(id.startsWith('spell_')||definition?.effectSpec)return spellTraits(definition);
  if(definition&&engine.world?.locations?.some(l=>l.id===id))return locationTraits({...definition,owner:placeView(engine,state,id)?.owner.value},weather);

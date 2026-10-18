@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {isReputationSettlement,reputationSettlements}from'./reputation-registry.mjs';
 // 返场变化汇总：玩家回到离开过的聚落、聚居地或据点时，从已有账目里汇总离开
 // 期间当地发生、按认知边界玩家回来后可能得知的变化。只读世界事件、人物生活、
@@ -134,7 +135,7 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
     // 传闻：此地人离开期间新听来的、可转述的传闻（未核实）。
     const registered=new Set([...engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[],...engine.world.rumors??[]].map(r=>r.id)),told=new Set();
     for(const [id,npc]of Object.entries(state.npcs??{}).sort(([a],[b])=>a.localeCompare(b))){
-        if(!within(engine,npc.location,place)||npc.status==='死亡')continue;
+        if(!within(engine,npc.location,place)||isPhysicallyDead(engine,state,id))continue;
         for(const m of npc.memoryStream??[]){
             if(!m.rumor||told.has(m.rumor)||!inWindow(m.minute)||hidden(m)||m.kind!=='rumor'&&!m.eventRumor)continue;
             if(!registered.has(m.rumor)&&!(m.eventRumor&&eventRumorRecorded(state,m.rumor)))continue;

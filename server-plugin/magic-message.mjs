@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {localPlayerPoint}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -13,7 +14,7 @@ const isEffect=e=>isLink(e?.kind);
 const membersOf=e=>e.kind==='team_link'?e.members:{[e.target]:{authorization:e.authorization}};
 const participantsOf=e=>['player',...Object.keys(membersOf(e))];
 const integer=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
-const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|熟睡|睡觉/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
+const awake=(d,id,n)=>n&&!isPhysicallyDead(null,d,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|熟睡|睡觉/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
 export function validateMessageCatalog(catalog){
  const s=catalog.effectSpec,errors=[],link=isLink(s.kind);
  const fields=['kind','power','maxChars','maxDistanceMeters','delayMinutes','markRequired','markText',...(link?['upkeepMp','upkeepMinutes']:[]),...(s.kind==='team_link'?['maxMembers']:[])];
@@ -32,7 +33,7 @@ export function messageDistance(d,engine,target){
  const actor=d.get('state','npcs',target),location=d.get('state','location'),action=engine.npcObligationAction;
  if(action?.tool==='move'&&d.get('state','minute')<action.arrivalMinute)throw Error('玩家正在途中，没有可确认的传讯位置');
  if(action?.tool==='time'&&action.args?.activity==='睡眠')throw Error('玩家正在睡眠，不能维持自愿精神连接或传讯');
- if(!awake(actor)||!actor.location||!awake(d.get('state','player')))throw Error('传讯双方须清醒且有实际位置，途中不能传讯');
+ if(!awake(d,target,actor)||!actor.location||!awake(d,'player',d.get('state','player')))throw Error('传讯双方须清醒且有实际位置，途中不能传讯');
  if(actor.location===location){
   const point=localPlayerPoint(d),facts=areaTargetFacts(d,engine,target,location,point);
   if(!facts)throw Error('缺少收者实际距离事实，须先实际接触');
@@ -59,7 +60,7 @@ function participantDistance(d,engine,from,to){
  if(from==='player')return messageDistance(d,engine,to);
  if(to==='player')return messageDistance(d,engine,from);
  const a=d.get('state','npcs',from),b=d.get('state','npcs',to);
- if(!awake(a)||!awake(b)||!a.location||!b.location)throw Error('连接成员缺少清醒状态或实际位置');
+ if(!awake(d,from,a)||!awake(d,to,b)||!a.location||!b.location)throw Error('连接成员缺少清醒状态或实际位置');
  if(a.location!==b.location)return routeDistance(d,engine,a.location,b.location);
  const x=areaTargetFacts(d,engine,from,a.location),y=areaTargetFacts(d,engine,to,b.location);
  if(!x||!y)throw Error('缺少连接成员实际距离事实');return{meters:Math.hypot(x.point[0]-y.point[0],x.point[1]-y.point[1]),basis:'local_contact',edges:[]};
@@ -184,8 +185,8 @@ export function magicMessagePermission(d,engine,args,eventId){
  const old=d.get('state','records',args.authorization),action=args.location??args.destination??old?.action;
  if(!['mental_message','consent_link','team_link'].includes(action))return null;
  const target=engine.resolve(args.promisor,'npc'),base=engine.byId.get(target),actor=d.get('state','npcs',target),now=d.get('state','minute');
- if(args.operation==='grant_access'&&args.authorization){if(base?.tier!=='full'||base.age<18||!awake(actor))throw Error('主动声明须由清醒的成年本人作出');return publishDeclaration(d,engine,args,eventId,target,action);}
- if(base?.tier!=='full'||base.age<18||!awake(actor)||args.operation!=='revoke_access'&&actor.location!==d.get('state','location'))throw Error('精神同意须由实际在场且清醒的成年本人给出或收回');
+ if(args.operation==='grant_access'&&args.authorization){if(base?.tier!=='full'||base.age<18||!awake(d,target,actor))throw Error('主动声明须由清醒的成年本人作出');return publishDeclaration(d,engine,args,eventId,target,action);}
+ if(base?.tier!=='full'||base.age<18||!awake(d,target,actor)||args.operation!=='revoke_access'&&actor.location!==d.get('state','location'))throw Error('精神同意须由实际在场且清醒的成年本人给出或收回');
 
  if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('精神同意只登记给玩家');
  if(action!=='team_link'&&args.guests?.length)throw Error('精神同意不能代替其他人的自愿许可');
@@ -203,7 +204,7 @@ export function magicMessagePermission(d,engine,args,eventId){
  if(args.guests!==undefined&&!Array.isArray(args.guests))throw Error('多人许可名单须为数组');
  const guests=action==='team_link'?(args.guests??[]).map(name=>engine.resolve(name,'npc')):[];
  if(guests.length>7||new Set(guests).size!==guests.length||guests.includes(target))throw Error('多人许可的其他成员名单重复或超限');
- for(const id of guests){if(engine.byId.get(id)?.tier!=='full'||!awake(d.get('state','npcs',id))||d.get('state','npcs',id,'location')!==actor.location)throw Error('多人许可名单须是本人实际在场的清醒成员');messageDistance(d,engine,id);}
+ for(const id of guests){if(engine.byId.get(id)?.tier!=='full'||!awake(d,id,d.get('state','npcs',id))||d.get('state','npcs',id,'location')!==actor.location)throw Error('多人许可名单须是本人实际在场的清醒成员');messageDistance(d,engine,id);}
  const authorization=`permission_${eventId}`;if(d.get('state','records',authorization))throw Error('精神同意编号已经存在');
  const permission={category:'authorization',action,subject:target,grantor:target,grantee:'player',createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId,...(action==='team_link'?{recipients:['player',...guests]}:{})};
  holdingSet(d,null,['state','records',authorization],permission,'magic-message');rememberConsent(d,target,action,eventId,false);d.say(`${base.name}同意${permissionLabels[action]}，许可至${engine.formatCalendar(permission.expires)}`);

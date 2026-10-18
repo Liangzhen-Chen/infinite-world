@@ -3,6 +3,7 @@ export {EFFECT_SOURCES,registerEffect,effectKinds,effectConsumer} from './effect
 import {damageFacilities} from './facilities.mjs';
 import {allFacilities,within} from './facility-state.mjs';
 import {isReputationSettlement}from'./reputation-registry.mjs';
+import {isPhysicallyDead}from'./lifecycle-state.mjs';
 // K6 unified effect table. World clocks, faction clocks, festivals and the
 // seasonal table all validate and apply stage effects here. A system adds an
 // effect kind with registerEffect(kind,{sources,validate,apply}); rules data in
@@ -102,7 +103,7 @@ registerEffect('rumor',{
  },
  apply(d,engine,effect,context){
   const id=`${context.sourceEvent}:rumor:${effect.id}`,rumor=`rumor_event:${id}`,state=d.get('state');
-  const carriers=effect.carriers.filter(n=>state.npcs?.[n]&&state.npcs[n].status!=='死亡');
+  const carriers=effect.carriers.filter(n=>state.npcs?.[n]&&!isPhysicallyDead(null,state,n));
   d.set(['state','records',`world_event:${id}`],{category:'world_event',id,verb:'rumor',actor:context.faction??null,target:null,minute:context.minute,
    location:context.settlement??null,witnesses:carriers,tags:['rumor','effect'],claim:effect.claim,sourceEvent:context.sourceEvent});
   for(const npc of carriers){

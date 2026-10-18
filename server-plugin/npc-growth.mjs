@@ -1,3 +1,4 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {knowsKnowledge} from './education-state.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 // NPC skill growth comes only from a real lesson by the player or from a
@@ -10,7 +11,7 @@ import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
 import {personSimulation,personConstraint,personCertified}from'./entity-view.mjs';
 import {hiddenCheckBonus}from'./hidden-passives.mjs';
 
-const DAY=1440,unable=['死亡','濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
+const DAY=1440,unable=['濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};
 const full=(engine,id)=>personSimulation(engine,{},id).value;
 
@@ -32,7 +33,7 @@ export function npcLessonGain(engine,state,id,skill,teacher,amount){
  if(gain<=0)throw Error('学生已接近主持水平或达到成长上限');return gain;
 }
 export function settleNpcLesson(d,engine,id,skill,amount,eventId){
- if(unable.includes(d.get('state','npcs',id,'status')))throw Error('教学中途学生失去行动能力');
+ if(isPhysicallyDead(engine,d,id)||unable.includes(d.get('state','npcs',id,'status')))throw Error('教学中途学生失去行动能力');
  const gain=grow(d,engine,id,skill,amount,'teach'),mark=today(d.get('state'),id,d.get('state','minute'));
  d.set(['state','npcs',id,'growth','today'],{...mark,teach:mark.teach+1});
  remember(d,engine,id,eventId,`在寺观义学修习${engine.byId.get(skill)?.name??skill}。`,[id]);return gain;
@@ -56,12 +57,12 @@ export function teachNpc(d,engine,args,eventId){
  const r=rules(engine).teach,state=d.get('state'),student=engine.resolve(args.student,'npc'),npc=state.npcs[student];
  const teacherId=args.source===undefined||['player','玩家'].includes(args.source)?'player':engine.resolve(args.source,'npc');
  if(teacherId===student)throw Error('不能向自己授业');
- if(teacherId!=='player'&&(!state.npcs[teacherId]||state.npcs[teacherId].location!==state.location||unable.includes(state.npcs[teacherId].status)||personConstraint(engine,state,teacherId)))throw Error('先生须清醒在场');
+ if(teacherId!=='player'&&(!state.npcs[teacherId]||state.npcs[teacherId].location!==state.location||isPhysicallyDead(engine,state,teacherId)||unable.includes(state.npcs[teacherId].status)||personConstraint(engine,state,teacherId)))throw Error('先生须清醒在场');
  const entity=engine.resolve(args.entity,args.kind),kind=entity.split('_')[0],catalog=engine.byId.get(entity);
  if(!['skill','recipe'].includes(kind))throw Error('只能向人物传授技能或配方');
  if(!engine.byId.get(student)||!npc)throw Error('这位人物没有独立成长记录');
  if(npc.location!==state.location)throw Error('学生不在场');
- if(unable.includes(npc.status))throw Error(`学生此刻${npc.status}，不能受教`);
+ if(isPhysicallyDead(engine,state,student)||unable.includes(npc.status))throw Error(`学生此刻${npc.status}，不能受教`);
  if(personConstraint(engine,state,student))throw Error('学生正在依法拘留，不能受教');
  const minutes=kind==='recipe'?catalog.learnMinutes??r.minutes:r.minutes,companion=state.player.companions?.includes(student);
  engine.assertNpcObligationAction?.(d,[teacherId,student],{minutes,location:state.location,kind:'teach'});
@@ -85,7 +86,7 @@ export function teachNpc(d,engine,args,eventId){
   if(npcProficiency(engine,state,student,catalog.skill)<(catalog.minimumProficiency??0))throw Error('学生的相关技能不足以学这个配方');
  }
  advanceWithNpcParticipants(d,engine,minutes,eventId,[student,...teacherId!=='player'?[teacherId]:[]]);
- if(unable.includes(d.get('state','npcs',student,'status')))throw Error('教学中途学生失去行动能力');
+ if(isPhysicallyDead(engine,d,student)||unable.includes(d.get('state','npcs',student,'status')))throw Error('教学中途学生失去行动能力');
  const at=d.get('state','minute'),mark=today(d.get('state'),student,state.minute);
  const teacherSpecies=teacherId==='player'?state.player.species??'human':state.npcs[teacherId]?.species??engine.byId.get(teacherId)?.species??'human';
  const studentSpecies=npc.species??engine.byId.get(student)?.species??'human';
@@ -118,7 +119,7 @@ export function npcWorkGrowth(d,engine,id,skill,success,minute){
 function vocationBlocker(engine,state,id,vocation){
  const r=rules(engine),npc=state.npcs[id],row=npc?.growth?.skills?.[vocation.skill],minute=state.minute;
  if(!full(engine,id)||!npc)return '人物没有独立成长记录';
- if(unable.includes(npc.status))return `人物此刻${npc.status}`;
+ if(isPhysicallyDead(engine,state,id)||unable.includes(npc.status))return `人物此刻${npc.status}`;
  if(personConstraint(engine,state,id))return '人物正在依法拘留';
  if(npc.vocation?.id===vocation.id)return '已经以这门营生为业';
  if((r.institutionTeachersStay??true)&&engine.rules.training?.institutions?.some(e=>e.teacher===id))return '登记机构导师不能自行离职';

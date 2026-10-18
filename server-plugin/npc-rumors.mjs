@@ -1,8 +1,9 @@
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {MemoryIndex,engineIndexOptions} from './retrieval.mjs';
 import {scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {eventRumorRecorded,lieRumorRecorded} from './world-events.mjs';
 
-const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(state,id,n)=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const registered=engine=>[...engine.world.settlementProfiles?.flatMap(p=>p.details?.rumors??[])??[],...engine.world.rumors??[]];
 
 // Authored seeds belong only to their registered speaker/carriers. No static
@@ -50,9 +51,9 @@ export function selectNpcRumors(engine,id,query='',document=null){
 
 export function assertRumorConversation(d,engine,speaker,minutes=10){
     const state=d.get('state'),npc=state.npcs[speaker];
-    if(!awake(state.player)||state.player.hp<=0)throw Error('玩家须清醒且可行动才能交谈');
+    if(!awake(state,'player',state.player)||state.player.hp<=0)throw Error('玩家须清醒且可行动才能交谈');
     if(!npc||npc.location!==state.location)throw Error('讲述者不在场');
-    if(!awake(npc))throw Error('讲述者须清醒且可行动');
+    if(!awake(state,speaker,npc))throw Error('讲述者须清醒且可行动');
     engine.assertNpcObligationAction(d,['player',speaker],{minutes,location:state.location,kind:'conversation'});
     engine.assertNpcAutonomyAction(state,['player',speaker],{minutes});
     if(!state.player.companions?.includes(speaker))for(let cursor=state.minute;cursor<state.minute+minutes;){
