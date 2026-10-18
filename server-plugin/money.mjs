@@ -100,6 +100,7 @@ export function legacyMoney(engine,state){
     for(const [key,row] of Object.entries(records)){
         if(!row||typeof row!=='object')continue;
         const c=row.category;
+        if(c==='obligation_collection'){add(row.account,row.coins);continue;}
         if(c==='protocol_assets'){add(purse(null,row.owner),row.coins);for(const [purpose,n]of Object.entries(row.funds??{}))add(accountKey(row.owner,COIN,purpose),n);}
         else if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])add(treasury(id),row.treasury);}
         else if(c==='polity_treasury'){polities.delete(key.slice('polity:'.length));add(accountKey(key,COIN,'treasury'),row.coins);}

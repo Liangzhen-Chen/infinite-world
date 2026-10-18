@@ -17,6 +17,7 @@ import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts,advanceRituals}from'./contracts.mjs';
 import {advanceCredit}from'./credit.mjs';
 import {addObligationSchedule} from './obligation-state.mjs';
+import {automaticObligationItems} from './obligation-runtime.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
@@ -220,6 +221,7 @@ function runAdvanceSystems(engine,d,ctx){
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
+ {id:'obligation_runtime',order:199,advance:(e,d,c)=>{for(const item of automaticObligationItems(e,d,c))item.execute();}},
  {id:'transition_protocol',order:0,nextMinute:nextProtocolMinute,advance:(e,d,c)=>{for(const item of protocolDueItems(e,d,c))item.execute();}},
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
  {id:'medicine_booking',order:60,nextMinute:(e,d,now)=>{
@@ -345,7 +347,7 @@ const systems=[
         return o?.deliveryVersion===1&&['待履行','进行中'].includes(o.status)&&o.deadline<=after;
     }))advanceNpcObligations(d,e,before,after,id,{beforeState});
     for(const [key,obligation] of (obligationIds?obligationIds.map(key=>[key,d.get('state','obligations',key)]):Object.entries(d.get('state','obligations')))) {
-        if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
+        if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中'||obligation.runtimeVersion===1&&obligation.type==='付款'&&obligation.status==='pending') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
             try { e.deliver(d,key,obligation,id); } catch(error) {
                 const courier=obligation.deliveryVersion===1;
                 d.set(['state','obligations',key],{...obligation,status:'违约',reason:error.message,...(courier?{resolvedAt:after,breachedBy:[error.deliveryResponsibility??obligation.promisor]}:{})});
@@ -390,6 +392,7 @@ const dueCollectors={
     deliveries:(e,d,c)=>Object.entries(d.get('state','obligations')??{}).map(([id,r])=>({id,anchorId:r.promisor??'player',registeredSeq:r.registeredSeq??r.seq??0,execute:()=>systems.find(s=>s.id==='deliveries').advance(e,d,{...c,obligationIds:[id]})})),
 };
 for(const system of systems){
+    if(system.id==='obligation_runtime'){dueSystems[system.id]='义务';dueCollectors[system.id]=automaticObligationItems;}
     const dueClass=dueSystems[system.id];
     system.phase=dueClass?PHASE.due:PHASE.clock;
     system.dueClass=dueClass;

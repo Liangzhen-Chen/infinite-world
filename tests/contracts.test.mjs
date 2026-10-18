@@ -14,7 +14,10 @@ test('同一欠款不能再建自动付款义务，还清后跨过期限不重�
     let c=(await execute(fresh(),'world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'rent')).document;
     const before=structuredClone(c);
     await assert.rejects(execute(c,'world_promise',{type:'付款',promisor:'player',promisee:'林穗',coins:6,content:'还这笔房钱',deadline:c.state.minute+60},'duplicate-debt'),/已有欠款记录 debt_rent/);
-    assert.deepEqual(c,before);assert.deepEqual(c.state.obligations,{});
+    assert.deepEqual(c,before);
+    assert.deepEqual(Object.keys(c.state.obligations),['debt_rent']);
+    assert.equal(c.state.obligations.debt_rent.legacyRecord,'debt_rent');
+    assert.equal(c.state.obligations.debt_rent.amount,6);
     c=(await execute(c,'world_trade',{seller:'林穗',payment:'repay',debt:'debt_rent'},'paid')).document;
     const settledCoins=c.state.player.coins;
     c=(await execute(c,'world_time',{minutes:1440},'next-day')).document;

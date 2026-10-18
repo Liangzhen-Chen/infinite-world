@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import {GONE_BASES,ensureHoldings,aliveHoldings,holdingRow,holdingKind,templatesOf,createEntity,entityRow,endEntity,updateEntity,
     openHoldings,openHolding,closeHolding,transferHolding,rescaleHolding,setLocation,clearLocation,locationOf,auditHoldings,declareHoldingWriter,invalidateHoldings,holdingKindIds,holdingSet,registerLifecycleProtocol} from './holdings.mjs';
 import './holding-kinds.mjs';
-import {accountKey,parseAccount,transfer,declareLedgerWriter,openLedger} from './ledger.mjs';
+import {accountKey,parseAccount,resourceKey,transfer,declareLedgerWriter,openLedger} from './ledger.mjs';
 import {registerProtocolRunner} from './scheduler.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,presentWitnesses} from './world-events.mjs';
 import {identities} from './identity.mjs';
 import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
@@ -62,11 +63,13 @@ export function fileClosedObligation(d,e,{estate,obligation,eventId}){
     if(!eventId)throw Error('Late claim requires eventId');
     return atomic(d,()=>{
         const p=read(d,...root,'procedures',estate);
-        if(!p||p.phase!=='closed'||!p.distribution)throw Error('Estate distribution is not closed');
+        if(!p||!p.distribution)throw Error('Estate distribution is not closed');
         const previous=p.lateClaims?.[obligation];
         if(previous)return structuredClone(previous);
+        if(p.phase!=='closed')throw Error('Estate distribution is not closed');
         const state=read(d,'state'),source=obligationRow(state,obligation);
         if(!source||![estate,p.entity].includes(source.debtor)||source.inheritanceFrom)throw Error('Claim does not belong to this estate');
+        if(source.resource&&resourceKey(source.resource)!=='coin_river')throw Error('Non-monetary late claim requires its performance adapter');
         if(source.terms?.limitation&&typeof e.obligationClaimEnforceable!=='function')throw Error('Limitation adapter is required');
         if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,source,now(d)))throw Error('Claim is not enforceable');
         const view=obligationView(state,source),amount=view.owed,heirs=p.distribution.heirs;
@@ -94,7 +97,11 @@ export function fileClosedObligation(d,e,{estate,obligation,eventId}){
             d.set(['state','obligations',id],row);ids.push(id);
         }
         const result={estate,obligation,claims:ids,amount,evidence:eventId};
-        const next={...p,lateClaims:{...p.lateClaims,[obligation]:result}};
+        const reopen=legalCodeAt(e,p.location??state.location,state)?.civil?.inheritance?.lateClaims==='reopen';
+        const next={...p,lateClaims:{...p.lateClaims,[obligation]:result},...(reopen?{
+            phase:'settlement',nextAt:now(d),reopenedAt:now(d),reopenedBy:eventId,
+            reopenedClaims:[...p.reopenedClaims??[],...ids]}:{})};
+        if(reopen&&entityRow(d,estate))updateEntity(d,{id:estate,facts:{phase:'settlement'},writer:W,eventId});
         d.set([...root,'procedures',estate],next);writeRecord(d,e,`transition_procedure:${estate}`,{category:'transition_procedure',...next});
         syncRecordedClaims(d,e);
         emit(d,e,{id:eventId,verb:'protocol_stage',entity:estate,phase:'filing',obligation,cause:p.eventId,claims:ids});
@@ -520,7 +527,8 @@ export function transition(d,engine,input){
         const nativeOwner=input.owner??[a.owner,...subject.filter(h=>['owns','tamed_by'].includes(h.kind)).map(h=>h.holder)].find(id=>live(d,engine,id));
         const owner=nativeOwner??(types.includes('agent')&&!inherit?publicRecipient(d,engine,entity,location,input.law??{}):null);
         const suffix=`${generation}${cycle?`:${cycle}`:''}`;
-        const affectedObligations=Object.values(read(d,'state','obligations')??{}).some(o=>!terminal(o)&&[o.debtor,o.promisor,o.creditor,o.promisee].includes(entity));
+        const collections=recordsWhere(read(d,'state','records')??{},'category','obligation_collection').filter(r=>r.creditor===entity&&r.coins>0);
+        const affectedObligations=collections.length>0||Object.values(read(d,'state','obligations')??{}).some(o=>!terminal(o)&&[o.debtor,o.promisor,o.creditor,o.promisee].includes(entity));
         const successor=actualDeath?previous.successor:estate?(input.successor??`estate_${entity}:${suffix}`):liquidation||affectedObligations?(input.successor??`liq_${entity}:${suffix}`):null;
         const wreck=corpse||debris?`wreck_${entity}:${suffix}`:null;
         const record=clean({category:'transition',entity,generation,cycle,basis,eventId,gone:true,minute:now(d),successor,wreck,location,previousVital:a.status,holdings:[...new Set([...actualDeath?previous.holdings:[],...held.map(r=>r.id)])],subjectHoldings:[...new Set([...actualDeath?previous.subjectHoldings:[],...subject.map(r=>r.id)])],identities:identities(engine,read(d,'state'),entity),successors:input.successors??previous?.successors??[],phase:'transitioning',body:corpse,yields:a.yields??engine.byId?.get(a.species)?.yields??[],...(actualDeath?{actualDeath:now(d),declarationEvent:previous.eventId}: {})});
@@ -530,6 +538,7 @@ export function transition(d,engine,input){
         const source=`transition:${entity}`;
         const parent=emit(d,engine,{id:eventId,verb:'transition',entity,kind,basis,causes:input.causes??[],location,visibility:input.visibility??'public'});
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        for(const row of collections)writeRecord(d,engine,row.key,{...row,creditor:successor,previousCreditor:entity,substitutedAt:now(d)});
         // Private commissions depend on the publishing person's performance.
         // Close them while their escrow can still join the estate, before a
         // later expiry would refund the now departed publisher's purse.
@@ -1001,6 +1010,17 @@ function distribute(d,e,id,p){
         }
     }
     projectEstateReceipt(d,e,id,p,receipts,rule);
+    // A collection is an entitlement to cash still held at its collecting
+    // building. Split that entitlement, without teleporting the cash to heirs.
+    for(const row of recordsWhere(read(d,'state','records')??{},'category','obligation_collection').filter(r=>r.creditor===id&&r.coins>0)){
+        for(const part of allocation(row.coins,heirs)){
+            if(!part.amount)continue;
+            const key=`${row.key}:heir:${part.heir}`;
+            writeRecord(d,e,key,{...row,key,creditor:part.heir,coins:part.amount,inheritanceFrom:id});
+            const r=receipt(part.heir);r.value+=part.amount;r.collections=[...r.collections??[],key];
+        }
+        writeRecord(d,e,row.key,{...row,coins:0,distributedAt:now(d)});
+    }
     return {...p,distribution:{heir:receipts[0]?.heir??null,heirs:receipts,value:receipts.reduce((n,r)=>n+r.value,0),holdings:receipts.flatMap(r=>r.holdings),accounts:receipts.flatMap(r=>r.accounts),rule,will:plan.will??null}};
 }
 function settleClaims(d,e,estate,claims,p){
@@ -1083,6 +1103,30 @@ function escrowClaims(d,e,estate,claims,p){
 export function advanceProcedure(d,e,id,minute=now(d)){
     return atomic(d,()=>{
         let p=read(d,...root,'procedures',id);if(!p||p.phase==='closed'||p.nextAt>minute||p.frozen)return;
+        if(p.reopenedClaims){
+            // Reopen enforces the original recipients' capped debts. It never
+            // repeats distribution or treats their whole wealth as an estate.
+            let pending=false;
+            for(const oid of p.reopenedClaims){
+                const o=read(d,'state','obligations',oid);if(!o||terminal(o))continue;
+                const view=obligationView(read(d,'state'),o,minute),from=partyAccount(e,read(d,'state'),o.debtor);
+                const present=settlementPresent(e,read(d,'state'),o.debtor,o.creditor);
+                const amount=present?Math.min(view.owed,read(d,'ledger','accounts',from)??0):0;
+                if(amount){
+                    const payment=`${p.reopenedBy}:settle:${oid}:${o.paid??0}`;
+                    bookTransfer(d,e,{from,to:partyAccount(e,read(d,'state'),o.creditor),amount,writer:W,eventId:payment});
+                    d.set(['state','obligations',oid],{...o,paid:(o.paid??0)+amount,inheritedPaid:(o.inheritedPaid??0)+amount,
+                        remaining:view.owed-amount,status:view.owed===amount?'settled':'pending'});
+                    emit(d,e,{id:payment,verb:'protocol_stage',entity:id,phase:'settlement',obligation:oid,paid:amount,cause:p.reopenedBy});
+                }
+                if(view.owed>amount)pending=true;
+            }
+            p={...p,phase:pending?'settlement':'closed',nextAt:minute+1};
+            if(pending)p.awaiting='settlement';else delete p.awaiting;
+            d.set([...root,'procedures',id],p);writeRecord(d,e,`transition_procedure:${id}`,{category:'transition_procedure',...p});
+            if(entityRow(d,id))updateEntity(d,{id,facts:{phase:p.phase},writer:W,eventId:p.reopenedBy});
+            syncRecordedClaims(d,e);return;
+        }
         for(let i=0;i<phases.length&&p.nextAt<=minute&&p.phase!=='closed';i++){
             const phase=p.phase;
             if(phase==='settlement'){
@@ -1090,6 +1134,15 @@ export function advanceProcedure(d,e,id,minute=now(d)){
                 // Package obligations require their own registered settlement handler.
                 const claims=Object.values(read(d,'state','obligations')??{}).filter(o=>[o.debtor,o.promisor].includes(id)&&(o.goneRoute==='accelerate'||(o.deadline??Infinity)<=minute)&&!terminal(o));
                 const owed=claims.filter(o=>o.filed!==false&&o.creditorPresent!==false);
+                const held=recordsWhere(read(d,'state','records')??{},'category','obligation_collection').some(r=>r.creditor===id&&r.coins>0);
+                if(held&&!e.settleProtocolObligations&&owed.filter(o=>(o.resource??'coin_river')==='coin_river').reduce((n,o)=>n+(o.remaining??o.amount??o.coins),0)>
+                    legacyClaimAccounts(d,e,id,'coin_river').reduce((n,[,amount])=>n+amount,0)){
+                    // Held proceeds are estate property, but have not arrived.
+                    // Do not discharge creditors and distribute that property
+                    // to heirs merely because the estate purse is empty.
+                    p={...p,awaiting:'collection'};d.set([...root,'procedures',id],p);
+                    writeRecord(d,e,`transition_procedure:${id}`,{category:'transition_procedure',...p});return;
+                }
                 if(e.settleProtocolObligations)e.settleProtocolObligations(d,id,owed,p);
                 else if(!settleClaims(d,e,id,owed,p)){d.set([...root,'procedures',id],{...p,awaiting:'settlement'});return;}
                 escrowClaims(d,e,id,claims.filter(o=>o.filed===false||o.creditorPresent===false),p);
