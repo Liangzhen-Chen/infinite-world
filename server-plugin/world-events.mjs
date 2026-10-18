@@ -1,6 +1,6 @@
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('world-events',{kinds:[]});
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 // Normalized world events. Every settled tool call yields one event
 // {verb,actor,target,harm|gift|value,witnesses,location,tags,minute}; side
 // outcomes settled in the same call (an unpaid delivery is a gift) add their

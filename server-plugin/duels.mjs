@@ -1,7 +1,6 @@
 import {standing,adjustStanding} from './standing.mjs';
 import {intelligenceOf} from './npc-intelligence.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {organizationDuelContext,settleOrganizationDuel} from './organizations.mjs';
 
 const path=id=>['state','records',id];
 const awake=(n,engine,source,id)=>n&&isEffective(engine,source,id)&&!['濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡/.test(n.activity??'');
@@ -37,7 +36,7 @@ export function duelAction(d,args,id){
         const decisions=Object.fromEntries([challenger,target].filter(p=>p!=='player').map(p=>[p,willing(this,d.get('state'),p,p===challenger?target:challenger,rule)]));
         const accepted=Object.values(decisions).every(p=>p.accept);
         if(Object.values(d.get('state','records')??{}).some(r=>r.category==='duel'&&['已接受','待答复'].includes(r.status)&&r.expires>d.get('state','minute')))throw Error('已有未结束的战书');
-        const context=args.org?organizationDuelContext(d,this,args.org,challenger,target):{};
+        const context=args.org?this.organizationDuelContext(d,args.org,challenger,target):{};
         const key=`duel:${id}`,status=!accepted?'已拒绝':target==='player'?'待答复':'已接受';
         const row={category:'duel',id:key,challenger,target,opponent,witness,rule,...context,location:d.get('state','location'),minute:d.get('state','minute'),expires:d.get('state','minute')+1440,status,decision,decisions,sourceEvent:id};
         d.set(path(key),row);return {duel:key,status,decision,rule,witness};
@@ -72,6 +71,6 @@ export function finishDuel(d,engine,row,winner,eventId,reason){
         const key='duel_renown',old=d.get(...path(key))??{category:'duel_renown',wins:0,losses:0,fame:0};
         d.set(path(key),{...old,wins:old.wins+(won?1:0),losses:old.losses+(won?0:1),fame:old.fame+(won?3:-1)});
     }else adjustStanding(d,engine,row.witness,winner,5,{sourceEvent:eventId,reason:'见证正式决斗'});
-    const succession=settleOrganizationDuel(d,engine,row,winner,eventId);
+    const succession=engine.settleOrganizationDuel(d,row,winner,eventId);
     return {duel:row.id,winner,status:'已结束',reason,...(succession?{succession}:{})};
 }

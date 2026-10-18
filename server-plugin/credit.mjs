@@ -304,6 +304,12 @@ export async function creditTrade(d,args,eventId){
 }
 
 // ---- time --------------------------------------------------------------------
+export function nextCreditMinute(engine,d,now){
+    const period=creditRules(engine)?.depositInterest?.periodDays*1440;
+    if(!Number.isSafeInteger(period)||period<=0)return Infinity;
+    return Object.values(d.get('state','records')??{}).filter(r=>r.category==='bank'&&Number.isSafeInteger(r.interestAt))
+        .reduce((next,r)=>Math.min(next,r.interestAt+(Math.floor(Math.max(0,now-r.interestAt)/period)+1)*period),Infinity);
+}
 export function advanceCredit(d,engine,minute,recordIds){
     const c=creditRules(engine);if(!c)return;
     advanceBankFinance(d,engine,minute,recordIds);

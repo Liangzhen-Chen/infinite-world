@@ -127,6 +127,11 @@ function endLink(d,id,reason,minute){
  const e=d.get('state','effects',id);if(!e)return;
  holdingSet(d,null,['state','records',`ended_link:${id}`],{category:'ended_magic_link',sourceEvent:e.source,target:e.target,endedAt:minute,reason,spentMp:e.spentMp},'magic-message');d.remove(['state','effects',id]);cancelMessages(d,id,reason);
 }
+function expireMagicLink(d,id,minute){
+ const e=d.get('state','effects',id);
+ if(!isEffect(e)||e.expires>minute)return false;
+ endLink(d,id,'连接到期',minute);return true;
+}
 function removeMember(d,id,member,reason,minute){
  const e=d.get('state','effects',id);if(!e)return;
  if(e.kind!=='team_link'){endLink(d,id,reason,minute);return;}
@@ -239,4 +244,4 @@ function publishDeclaration(d,engine,args,eventId,from,kind){
  return{from,recipients,link:id,messageIds,arrive:now+e.delayMinutes,declared:args.content,upkeepPayer:'player'};
 }
 // Spell effect family (dispatched by magic.mjs through magic-effects.mjs).
-registerMagicEffect({kinds:messageKinds,validateSpec:validateMessageCatalog,prepare(d,c,args){return prepareMessage.call(this,d,c,args);},apply(d,p,id){return applyMessage.call(this,d,p,id);}});
+registerMagicEffect({kinds:messageKinds,validateSpec:validateMessageCatalog,prepare(d,c,args){return prepareMessage.call(this,d,c,args);},apply(d,p,id){return applyMessage.call(this,d,p,id);},expire:expireMagicLink});

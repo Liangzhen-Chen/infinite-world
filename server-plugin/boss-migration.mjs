@@ -1,4 +1,4 @@
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 import {emptyBossCognition,readBossCognition}from'./boss-cognition.mjs';
 import {monsterStats}from'./combat.mjs';
 export function planBossMigration(document,rules,catalog,world){

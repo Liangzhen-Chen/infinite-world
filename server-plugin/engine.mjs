@@ -1,4 +1,4 @@
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -29,7 +29,7 @@ import {createCharacter}from'./character.mjs';
 import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mjs';
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
-import {changeItems,transferItems}from'./items.mjs';
+import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
@@ -404,6 +404,7 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
+        validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected;
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);

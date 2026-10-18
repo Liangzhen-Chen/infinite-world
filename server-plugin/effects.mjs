@@ -3,7 +3,7 @@ export {EFFECT_SOURCES,registerEffect,effectKinds,effectConsumer} from './effect
 import {damageFacilities} from './facilities.mjs';
 import {allFacilities,within} from './facility-state.mjs';
 import {isReputationSettlement}from'./reputation-registry.mjs';
-import {isPhysicallyDead}from'./lifecycle-state.mjs';
+import {isPhysicallyDead}from'./holdings.mjs';
 // K6 unified effect table. World clocks, faction clocks, festivals and the
 // seasonal table all validate and apply stage effects here. A system adds an
 // effect kind with registerEffect(kind,{sources,validate,apply}); rules data in
