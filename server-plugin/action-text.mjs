@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {appliedEffects} from './applied-effects.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 
 const LOCALES=fileURLToPath(new URL('../world/actions/locale/',import.meta.url));
 export const BASE_LOCALE='zh-CN';
@@ -111,7 +112,7 @@ export function exitsFrom(engine,state,templates=loadTemplates()){
  return rows.sort((x,y)=>(x.km??0)-(y.km??0)||x.id.localeCompare(y.id));
 }
 export function presentPeople(engine,state){
- return Object.entries(state.npcs??{}).filter(([,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&n.status!=='死亡')
+ return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id))
   .map(([id,n])=>{let activity=null;try{activity=npcAvailability(engine,state,id).activity||null;}catch{activity=null;}return {id,name:nameOf(engine,state,id),activity:activity??(typeof n.activity==='string'&&n.activity?n.activity:null)};}).sort((a,b)=>a.id.localeCompare(b.id));
 }
 // 方位组织的场景文字（无 LLM 时由模板直接生成）：此处、在场的人、各方向的出路。
