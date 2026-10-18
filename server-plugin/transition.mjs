@@ -13,6 +13,7 @@ import {legalCodeAt} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {recordsWhere} from './storage.mjs';
+import {obligationGoneRoute,snapshotObligationTerms} from './obligation-kinds.mjs';
 
 const W='transition';
 declareHoldingWriter('transition',{kinds:['*'],entities:['*'],locations:true});
@@ -58,6 +59,9 @@ const live=(d,e,id)=>{
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
     if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    // Workstation inventory is a real S1 account, anchored at its building.
+    const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
+    if(stationPlace)return live(d,e,stationPlace.id);
     const row=read(d,'state','records',id);
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
     if(row?.category==='army')return !byEntity(d,row.id)?.gone&&live(d,e,row.location);
@@ -116,7 +120,10 @@ function action(d,e,r,template,ctx,side='holder'){
         if(!target)throw Error(`No estate or owner for ${r.kind}`);
         move({holder:target});
     }else if(template==='succeed'||template==='revert'){
-        const target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
+        let target=template==='revert'?r.grantedBy:successors(d,ctx,r)[0]??r.grantedBy;
+        // Old title rows used their own office as the grantor. An office that
+        // cannot hold this kind is not a lawful recipient of the reverted fief.
+        if(template==='revert'&&templatesOf(d,target,e)?.includes('office')&&!holdingKind(r.kind).holderKinds.includes('office'))target=null;
         if(target)move({holder:target});
         else if(r.kind==='governs')throw Error('governs requires a living polity successor');
         else close();
@@ -184,7 +191,7 @@ export function executeProtocolPrimitive(d,e,p,ctx={}){
     if(p.op==='obligation.create'){
         const o=a.obligation??a.value;if(!o?.id)throw Error('Obligation id required');
         if(read(d,'state','obligations',o.id))throw Error('Obligation already exists');
-        d.set(['state','obligations',o.id],o);return o.id;
+        d.set(['state','obligations',o.id],snapshotObligationTerms(o));return o.id;
     }
     if(p.op==='obligation.cancel'||p.op==='obligation.settle'){
         const o=read(d,'state','obligations',a.id);if(!o)throw Error('Obligation missing');
@@ -277,6 +284,19 @@ export function changeHolding(d,engine,{op='close',id,...input}){
         }else throw Error(`Unknown holding operation ${op}`);
         const row=op==='close'?before:holdingRow(d,result);
         invariant(d);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
+        return result;
+    });
+}
+
+// Compatibility boundary: close the selected edges through the protocol, then
+// write the old fields in the same transaction. It never closes an agent.
+export function changeLegacyHoldings(d,engine,{holder,source,kinds,reason='vacated',eventId},legacy){
+    return atomic(d,()=>{
+        ensureHoldings(d,engine);
+        const rows=sorted(aliveHoldings(d,{holder}).filter(h=>(!source||h.source===source)&&(!kinds||kinds.includes(h.kind))));
+        for(const h of rows)changeHolding(d,engine,{op:'close',id:h.id,reason,eventId:eventId?`${eventId}:${h.id}`:undefined});
+        const result=legacy();
+        invariant(d,null,engine);
         return result;
     });
 }
@@ -415,6 +435,15 @@ export function transition(d,engine,input){
         const civil=input.law??legalCodeAt(engine,location,read(d,'state'))?.civil?.inheritance??{};
         const entityHooks=[...templates.filter(t=>types.includes(t.id)).flatMap(t=>t.hooks??[]),...engine.byId?.get(entity)?.hooks??[],...a.hooks??[]];
         hooks(d,engine,{holder:entity,subject:entity},`holder.gone(${basis})`,ctx,'holder',entityHooks);
+        // Personal appointments terminate by their declaration, before the
+        // compatibility receipt is made. The domain no longer performs handover.
+        for(const [id,o]of Object.entries(read(d,'state','obligations')??{})){
+            if(o.reservationVersion!==1||terminal(o)||!['待履行','进行中'].includes(o.status))continue;
+            const debtor=[o.debtor,o.promisor].includes(entity),creditor=[o.creditor,o.promisee].includes(entity);
+            if(!(debtor&&obligationGoneRoute(o,'debtor',civil)==='void'||creditor&&obligationGoneRoute(o,'creditor',civil)==='void'))continue;
+            const receipt=input.legacyReceipt?.replace(/^estate_/,''),cause=input.causes?.[0]??basis;
+            d.set(['state','obligations',id],{...snapshotObligationTerms(o),status:'取消',reason:`${a.name??engine.byId?.get(entity)?.name??entity}已${cause}，约定终止`,resolvedAt:now(d),...(receipt?{endedByDeath:receipt}:{}),resolution:{kind:'void',cause:eventId,minute:now(d)}});
+        }
         input.legacy?.(d);
         // Keep the old closed settlement receipt addressable during dual write.
         // Protocol references use the live procedural estate, never that receipt.
@@ -454,16 +483,14 @@ export function transition(d,engine,input){
             const next={...o};
             if(carrier){next.carrier=wreck??successor;next.shortfallAt=now(d);emit(d,engine,{id:`${eventId}:shortfall:${id}`,verb:'shortfall',entity,cause:eventId,obligation:id});}
             if(debtor){
-                const route=civil.onDebtorGone?.[o.kind]??o.onDebtorGone??'accelerate';
-                if(!['accelerate','assume_by_heirs','substitute_performance','void','pursue'].includes(route))throw Error(`Unknown debtor gone route: ${route}`);
+                const route=obligationGoneRoute(o,'debtor',civil);
                 const target=route==='pursue'?input.soul??a.soul??Object.entries(read(d,'state','npcs')??{}).find(([id,n])=>n.soulOf===entity&&live(d,engine,id))?.[0]:successor;
                 if(route==='void'||route==='pursue'&&!target){next.status='void';next.resolvedAt=now(d);next.goneRoute=route;next.resolutionReason=route==='pursue'?'no_soul_or_reincarnation':'onDebtorGone:void';emit(d,engine,{id:`${eventId}:void:${id}`,verb:'protocol_stage',entity,obligation:id,phase:'obligation_routed',route,reason:next.resolutionReason,cause:eventId});}
                 else if(!target||!live(d,engine,target))throw Error(`No living ${route} obligation successor: ${id}`);
                 else{if(o.debtor===entity)next.debtor=target;if(o.promisor===entity)next.promisor=target;next.goneRoute=route;if(route==='accelerate')next.acceleratedAt=now(d);}
             }
             if(creditor){
-                const route=civil.onCreditorGone?.[o.kind]??o.onCreditorGone??'estate',target=successor;
-                if(!['estate','heirs','void'].includes(route))throw Error(`Unknown creditor gone route: ${route}`);
+                const route=obligationGoneRoute(o,'creditor',civil),target=successor;
                 if(route==='void'){next.status='void';next.resolvedAt=now(d);}
                 else if(!target)throw Error(`No creditor successor: ${id}`);
                 else{if(o.creditor===entity)next.creditor=target;if(o.promisee===entity)next.promisee=target;next.creditorGoneRoute=route;}

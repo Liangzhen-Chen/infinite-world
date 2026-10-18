@@ -379,7 +379,7 @@ export function recoverIllness(d,engine,illness,minute){
 export function recordMilitaryDeath(d,engine,id,minute){return recordEntityDeath(d,engine,id,minute,'战死');}
 export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  id=actorId(engine.world,id);const path=actorPath(engine.world,id),actor=d.get(...path);
- if(!actor||id==='player'||path[1]!=='npcs')return recordLegacyEntityDeath(d,engine,id,minute,cause,illness);
+ if(!actor||id==='player')return null;
  const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===(actor.incarnation??0));
  if(previous||actor.diedAt!==undefined)return previous??null;
  let result;
@@ -409,10 +409,7 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
  for(const row of Object.values(state.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中')){
   release(d,row);holdingSet(d,null,['state','family','illnesses',row.id],{...d.get('state','family','illnesses',row.id),status:cause==='病故'?'病故':'中止',endedAt:minute},'npc-life');
  }
- const obligations=[];
- for(const o of Object.values(state.obligations??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)){
-  d.set(['state','obligations',o.id],{...o,status:'取消',reason:`${name}已${cause}，约定终止`,resolvedAt:minute,endedByDeath:deathId});obligations.push(o.id);
- }
+ const obligations=Object.values(d.get('state','obligations')??{}).filter(o=>o.endedByDeath===deathId).map(o=>o.id).sort();
  const contracts=[];
  for(const [cid,row] of Object.entries(state.records??{}))if(row.category==='contract'&&row.parties?.includes(id)&&['有效','待履行'].includes(row.status)){
   if(row.version===1&&row.business){

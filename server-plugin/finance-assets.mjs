@@ -1,3 +1,5 @@
+import {changeLegacyHoldings} from './transition.mjs';
+import {leaseClauses,leaseState} from './contract-state.mjs';
 import {counterpart} from './credit.mjs';
 import {workshopFund,coinRead,partyAccount} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
@@ -190,7 +192,7 @@ export function assetTrade(d,e,args,id){
         const days=int(args.days??30,1,360,'租赁天数'),anchor=e.rules.economy.rentalCopperPerWeek*4*(need.kind==='commercial'?2:1),rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金');
         const initial=Math.ceil(rent*Math.min(days,30)/30);financeTransfer(d,e,tenant,'player',initial,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant,owner:'player',use:need.kind,settlement:need.settlement,oldHome:need.oldHome,
-            monthlyRent:rent,paid:initial,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id};holdingSet(d,null,rec(key),row,'finance-assets');
+            monthlyRent:rent,paid:initial,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id};row.clauses=leaseClauses(row);holdingSet(d,null,rec(key),row,'finance-assets');
         return {contract:key,tenant,rent,paid:initial,need};
     }
     if(op==='workshop'){
@@ -210,7 +212,7 @@ export function assetTrade(d,e,args,id){
     }
     const row=d.get(...rec(args.contract));if(row?.kind!=='workshop'||row.owner!=='player'||!['有效','要求加薪','罢工'].includes(row.status))throw Error('需要尚未结束的本人工坊雇佣合同');
     if(row.location!==location)throw Error('须到工坊修改或解除雇佣');
-    if(op==='dismiss'){holdingSet(d,null,rec(row.id),{...row,status:'已解雇',endedAt:now},'finance-assets');return {contract:row.id,status:'已解雇'};}
+    if(op==='dismiss'){changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,reason:'vacated',eventId:id},()=>holdingSet(d,e,rec(row.id),{...row,status:'已解雇',endedAt:now},'finance-assets'));return {contract:row.id,status:'已解雇'};}
     if(op==='workshop_terms'){
         if(e.resolve(args.seller)!==row.worker)throw Error('须由原雇工同意新工钱');counterpart(d,e,row.worker,{consent:args.consent});
         const wage=int(args.coins,1,1e6,'新日薪');holdingSet(d,null,rec(row.id),{...row,wage,status:'有效',raiseRequestedAt:null,amendments:[...row.amendments??[],{wage,minute:now,source:id}]},'finance-assets');return {contract:row.id,wage};
@@ -218,7 +220,8 @@ export function assetTrade(d,e,args,id){
     throw Error('未知资产操作');
 }
 function rentDue(d,e,row,at){
-    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(row.monthlyRent*Math.min(MONTH,row.deadline-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
+    const terms=leaseState(e,d.get('state'),row,at);
+    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(terms.monthlyRent*Math.min(MONTH,terms.clauses.expires-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
     if(paid)financeTransfer(d,e,row.tenant,'player',paid,key);
     if(paid<amount){
         const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:'player',amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location};holdingSet(d,null,rec(key),debt,'finance-assets');

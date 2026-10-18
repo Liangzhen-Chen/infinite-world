@@ -1,3 +1,4 @@
+import {changeLegacyHoldings} from './transition.mjs';
 import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('titles',{sinks:['sink:export']});
@@ -138,7 +139,8 @@ function yearEnd(d,engine,t,at){
         const i=def.ranks.indexOf(t.rank);
         next={...next,breaches:1,status:'停俸',rank:def.ranks[Math.max(0,i-1)],reason:'未应兵役或报到：停俸一年并降等'};
     }
-    holdingSet(d,engine,rec(t.id??KEY),next,'titles');
+    if(next.status==='已除爵')changeLegacyHoldings(d,engine,{holder:t.holder,source:`title:${t.id??KEY}`,reason:'vacated',eventId:`${t.id??KEY}:strip:${at}`},()=>holdingSet(d,engine,rec(t.id??KEY),next,'titles'));
+    else holdingSet(d,engine,rec(t.id??KEY),next,'titles');
 }
 // Service is done in person at the Baishi office (with companions counting as
 // men); a zero-day visit is the yearly report.

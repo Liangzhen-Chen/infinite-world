@@ -918,6 +918,22 @@
           "items": {
             "type": "string"
           }
+        },
+        "onDebtorGone": {
+          "enum": [
+            "accelerate",
+            "assume_by_heirs",
+            "substitute_performance",
+            "void",
+            "pursue"
+          ]
+        },
+        "onCreditorGone": {
+          "enum": [
+            "estate",
+            "heirs",
+            "void"
+          ]
         }
       },
       "additionalProperties": false

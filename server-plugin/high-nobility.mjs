@@ -1,3 +1,4 @@
+import {changeLegacyHoldings} from './transition.mjs';
 import {nobleRules,highTitle,titlesOf,currentDomains,containsDomain,domainSettlements,appointmentSource,territoryController,rulerNation} from './noble-state.mjs';
 import {personOffices,personRegistrar,questPublisher,personConstraint} from './entity-view.mjs';
 import {npcAgeAt} from './npc-life.mjs';
@@ -57,13 +58,13 @@ function appointmentReasons(e,s,row){
 }
 function appoint(d,e,holder,settlement,at,id,source){
  const old=rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.office==='office_village_head'&&o.settlement===settlement&&o.status==='在任');
- for(const o of old){holdingSet(d,null,rec(o.id),{...o,status:'已免职',removedAt:at,reason:'上级改任'},'high-nobility');syncHoldingRecord(d,e,o.id,{writer:'high-nobility',eventId:id});}
+ for(const o of old)changeLegacyHoldings(d,e,{holder:o.holder,source:`office:${o.settlement}|${o.office}`,reason:'vacated',eventId:id},()=>{holdingSet(d,e,rec(o.id),{...o,status:'已免职',removedAt:at,reason:'上级改任'},'high-nobility');syncHoldingRecord(d,e,o.id,{writer:'high-nobility',eventId:id});});
  const key=`governance_office:${settlement}:office_village_head:${holder}`,row={category:'governance_office',id:key,holder,settlement,office:'office_village_head',status:'在任',since:at,until:at+360*DAY,nextReview:at+30*DAY,appointedBy:source.institution??source,source:source.id??source,sourceEvent:id,upper:true};holdingSet(d,null,rec(key),row,'high-nobility');syncHoldingRecord(d,e,key,{writer:'high-nobility',eventId:id});
  entityTransition(d,e,{id:`${id}:appoint`,verb:'appoint',actor:source.id??source,target:holder,minute:at,location:settlement,office:row.office,summary:`上级任命已登记`});return row;
 }
 export function reviewUpperOffice(d,e,row,at){
  const s=d.get('state'),reason=at>=row.until?'任期届满':row.holder!=='player'&&s.npcs?.[row.holder]?.status==='死亡'?'失去履职能力':rows(s).some(c=>c.category==='legal_case'&&c.offender===row.holder&&c.judgment)?'犯罪裁定':null;
- if(reason){holdingSet(d,null,rec(row.id),{...row,status:'已免职',removedAt:at,reason},'high-nobility');syncHoldingRecord(d,e,row.id,{writer:'high-nobility'});entityTransition(d,e,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`上级免职：${reason}`});}
+ if(reason){changeLegacyHoldings(d,e,{holder:row.holder,source:`office:${row.settlement}|${row.office}`,reason:at>=row.until?'expired':'vacated',eventId:`${row.id}:dismiss:${at}`},()=>{holdingSet(d,e,rec(row.id),{...row,status:'已免职',removedAt:at,reason},'high-nobility');syncHoldingRecord(d,e,row.id,{writer:'high-nobility'});});entityTransition(d,e,{id:`${row.id}:dismiss:${at}`,verb:'dismiss',actor:row.appointedBy,target:row.holder,minute:at,location:row.settlement,office:row.office,reason,summary:`上级免职：${reason}`});}
  else holdingSet(d,null,rec(row.id),{...row,nextReview:at+30*DAY,reviews:[...row.reviews??[],at]},'high-nobility');
 }
 export function advanceUpperAppointments(d,e,{after}){

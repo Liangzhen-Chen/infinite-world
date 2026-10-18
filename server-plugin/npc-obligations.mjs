@@ -1,4 +1,5 @@
 import {purse,sink,moveCoins} from './money.mjs';
+import {snapshotObligationTerms} from './obligation-kinds.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-obligations',{sinks:['sink:export']});
 import {educationReservation} from './education-state.mjs';
@@ -78,8 +79,8 @@ export function createNpcObligation(d,engine,args,eventId){
  }
  if(locationOf(state,promisor)!==locationOf(state,promisee))throw new Error('登记约定时双方必须实际在同一地点');
  const id=`obl_${eventId}`;if(state.obligations?.[id])throw new Error('义务编号已存在');
- const obligation={id,reservationVersion:1,type:args.type,promisor,promisee,content:args.content.trim(),location,start,deadline,departures,createdAt:now,
-  status:start===now?'进行中':'待履行',attendance:{[promisor]:0,[promisee]:0},togetherMinutes:0};
+ const obligation=snapshotObligationTerms({id,reservationVersion:1,type:args.type,promisor,promisee,content:args.content.trim(),location,start,deadline,departures,createdAt:now,
+  status:start===now?'进行中':'待履行',attendance:{[promisor]:0,[promisee]:0},togetherMinutes:0});
  d.set(['state','obligations',id],obligation);return {obligation};
 }
 
@@ -107,7 +108,7 @@ function createNpcDelivery(d,engine,args,eventId){
  engine.assertNpcAutonomyAction?.(state,[promisor],{start,minutes:deadline-start});
  if(Object.values(state.obligations??{}).some(o=>['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(promisor)))throw Error('已有带路承诺，不能同时送货');
  const id=`obl_${eventId}`;if(state.obligations?.[id])throw Error('义务编号已存在');
- const obligation={id,reservationVersion:1,deliveryVersion:1,type:'送货',promisor,promisee,content:args.content.trim(),item,quantity,location,start,deadline,departures:{[promisor]:start},createdAt:now,status:start===now?'进行中':'待履行'};
+ const obligation=snapshotObligationTerms({id,reservationVersion:1,deliveryVersion:1,type:'送货',promisor,promisee,content:args.content.trim(),item,quantity,location,start,deadline,departures:{[promisor]:start},createdAt:now,status:start===now?'进行中':'待履行'});
  d.set(['state','obligations',id],obligation);return {obligation};
 }
 function assertCourierAccess(engine,id,location){

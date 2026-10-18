@@ -70,8 +70,6 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
     }
     for(const [key,row] of records(state)){
         if(row.category!=='housing_steward'||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
-        const grantor=rows.find(([,r])=>r.holder===row.grantor&&r.settlement===row.settlement&&r.office==='office_village_head'&&r.status==='在任'&&(r.until??Infinity)>(state.minute??0));
-        if(!grantor||settlementHead(engine,state,row.settlement).value!==row.grantor)continue;
         out.push(officeFact(engine,state,key,{...row,office:'office_village_steward',holder:id,status:'在任',since:row.createdAt,until:row.expires,workplace:row.hall}));
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
