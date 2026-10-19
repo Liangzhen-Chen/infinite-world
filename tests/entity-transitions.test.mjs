@@ -137,7 +137,8 @@ test('升格通知只在批准后产生，读取新官称而保留原任命与�
     const q=rules.steps[0].requires;s.settlements[SID].population=q.population;
     for(let i=0;i<q.housing;i++)s.created[`bld_v6_home_${i}`]={id:`bld_v6_home_${i}`,scope:SID,purpose:'私宅'};
     for(let i=0;i<q.industries;i++)s.records[`business:v6_${i}`]={category:'business',status:'营业',location:SID};
-    for(let i=0;i<q.facilities;i++)s.created[`bld_v6_public_${i}`]={id:`bld_v6_public_${i}`,scope:SID,purpose:'公共设施'};
+    s.created.bld_v6_market={id:'bld_v6_market',name:'集市',scope:SID,parent:SID,type:'bld'};
+    s.created.bld_v6_post={id:'bld_v6_post',name:'驿站',scope:SID,parent:SID,type:'bld'};
     s.records.petition={category:'promotion_petition',id:'petition',settlement:SID,from:'村',status:'待审定',due:600};
     const e=once(f,'promote',()=>advancePromotion(d,engine,{before:599,after:600}));
     assert.equal(personOccupation(engine,s,'player').value,'镇长');assert.match(e.summary,/升为镇/);assert.deepEqual(s.records[appointed.id],old);

@@ -1,7 +1,7 @@
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
-import {educationSlot,educationCourses,courseWindow} from './education-state.mjs';
+import {educationSlot,educationCourses,personCourses,courseWindow,sameScheduleInputs} from './education-state.mjs';
 import {facilityView,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
@@ -32,7 +32,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const lesson=state&&educationSlot(engine,state,npcId,minute);
     if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
     const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule){
-        if(state){const next=educationCourses(engine,state).filter(c=>[c.teacher,...c.students].includes(npcId)).map(c=>courseWindow(c,minute)?.start).filter(at=>at>minute);
+        if(state){const next=personCourses(engine,state,npcId).map(c=>courseWindow(c,minute)?.start).filter(at=>at>minute);
         if(next.length)return {location:state.npcs[npcId]?.location,activity:'日常起居',services:[],until:Math.min(...next)};}
         if(state&&educationCourses(engine,state).some(c=>c.students.includes(npcId))){const home=engine.byId.get(npcId)?.home?.location??state.npcs[npcId]?.location;return {location:home,activity:'日常起居',services:[],until:(Math.floor(minute/1440)+1)*1440};}
         return festivalScheduleAt(engine,state,npcId,minute,null,constraints);
@@ -43,7 +43,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
     let until=minute-offset+slot.end;
-    if(state)for(const c of educationCourses(engine,state))if([c.teacher,...c.students].includes(npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
+    if(state)for(const c of personCourses(engine,state,npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
     return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
 }
 
@@ -107,6 +107,8 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
     const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
+    const prepared=d.scheduleEducation,state=peekState(d),courses=engine.educationCourseContext;
+    const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     for(const npcId of Object.keys(d.get('state','npcs'))){
         const regional=jobs.has(npcId)?null:batch?.persons.get(npcId);
@@ -125,6 +127,11 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
+        const current=peekState(d).npcs[npcId],slot=reuse&&prepared.state.npcs[npcId]===current?prepared.slots?.get(npcId):null;
+        // The heap already read this exact actor and all schedule inputs. A
+        // stationary, unchanged slot has no work until its boundary. Teaching,
+        // employment attendance, companions and furnaces retain the full path.
+        if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId))continue;
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
         const since=regional?.before??before;
@@ -178,7 +185,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         // Preserve deterministic travel calculations while writing only the
         // resulting state, rather than thousands of intermediate daily patches.
         for(const field of ['location','activity','coins','scheduleTravel']){
-            if(JSON.stringify(original[field])===JSON.stringify(npc[field]))continue;
+            if(original[field]===npc[field]||JSON.stringify(original[field])===JSON.stringify(npc[field]))continue;
             if(npc[field]===undefined)d.remove([...path,field]);else d.set([...path,field],npc[field]);
         }
     }

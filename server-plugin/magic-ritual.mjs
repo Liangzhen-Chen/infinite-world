@@ -359,6 +359,10 @@ export function advanceRituals(d,engine,after){
   if(a?.spirit?.realm==='local'){d.set([...actorPath(r.subject),'location'],null);d.set([...actorPath(r.subject),'spirit','realm'],'other');d.remove(['state','records',`local_actor_position:${r.subject}`]);}
   holdingSet(d,null,['state','records',id],{...r,status:after>=r.expires?'已到期':'已撤销',ended:Math.min(after,r.expires)},'magic-ritual');
  }
+ advanceRitualEffects(d,engine,after);
+}
+// Continuous bindings settle before their phase-2 expiry removes the effect.
+export function advanceRitualEffects(d,engine,after){
  for(const[id,e]of Object.entries(d.get('state','effects')??{})){
   if(e.ritualBinding){
    const b=e.ritualBinding;

@@ -782,7 +782,8 @@
    "id": "tamed_by",
    "label": "驯服",
    "holderKinds": [
-    "agent"
+    "agent",
+    "interim"
    ],
    "subjectKinds": [
     "agent"

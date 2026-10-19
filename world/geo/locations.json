@@ -30935,6 +30935,7 @@
     "openHours": [
       420,
       1350
-    ]
+    ],
+    "mapHierarchy": [{"id":"known-continent","name":"已知大陆片区"},{"id":"known-region","name":"已知地区片区"},{"id":"known-county","name":"已知郡级片区"},{"id":"loc_hw","name":"河湾村"}]
   }
 ]

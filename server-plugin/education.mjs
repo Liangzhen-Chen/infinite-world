@@ -1,4 +1,4 @@
-import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation} from './education-state.mjs';
+import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation,sameScheduleInputs} from './education-state.mjs';
 export {educationCourses};
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
 import {personConstraint,personHousehold,personAge,personCertified} from './entity-view.mjs';
@@ -26,7 +26,11 @@ const location=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const definition=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 export function prepareEducation(d,e,{before,after}){
  e.educationAttendance=new Map();
- e.educationCourseContext=educationCourses(e,{...d.get('state'),minute:before}).filter(c=>!c.school||!e.npcScheduleReservations?.has(c.teacher));
+ const state=d.get('state'),prepared=d.scheduleEducation;
+ // The heap read an immutable draft snapshot. Reuse only when no simulation
+ // input changed in phase 2; the clock/cursor writes alone do not change courses.
+ const same=prepared?.minute===before&&sameScheduleInputs(prepared.state,state);
+ e.educationCourseContext=(same?prepared.courses:educationCourses(e,{...state,minute:before})).filter(c=>!c.school||!e.npcScheduleReservations?.has(c.teacher));
  for(const c of e.educationCourseContext)for(const id of [c.teacher,...c.students].filter(Boolean)){
   // Admission happens at an actual opening bell, never during an unrelated
   // zero-time action or in the middle of an already running class.
@@ -138,7 +142,7 @@ export function advanceEducation(d,e,{before,after,beforeState}){
    const key=`education_pay:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key))??{category:'education_pay',minutes:0,paid:0};
    const total=old.minutes+taughtMinutes;
    const earned=Math.ceil(job.wage*total/480)-Math.ceil(job.wage*old.minutes/480);
-   const payment=serviceClaimsFresh(e)?settleEmploymentPay(d,e,job,end,taughtMinutes):earned?settleEmploymentPay(d,e,{...job,wage:earned},end,480):{paid:0};
+   const payment=serviceClaimsFresh(e)?settleEmploymentPay(d,e,job,end,taughtMinutes):earned?settleEmploymentPay(d,e,job,end,480,{earnedOverride:earned}):{paid:0};
    holdingSet(d,null,path(key),{...old,minutes:total,paid:old.paid+payment.paid},'education');
    const current=d.get(...path(job.id));holdingSet(d,null,path(job.id),{...current,paid:(current.paid??0)+payment.paid,workedMinutes:(current.workedMinutes??0)+taughtMinutes},'education');
   }

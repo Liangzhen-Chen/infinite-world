@@ -236,7 +236,7 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  return results;
 }
 export function nextQuestBoardMinute(state,after){
- const quests=Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q));
- const changedProject=quests.some(q=>q.workEvidence&&q.objective.type==='build'&&state.projects?.[q.objective.project]?.status!=='施工中');
- return Math.min(changedProject?after+1:Infinity,...quests.filter(q=>q.deadline>after).map(q=>q.deadline));
+ const rows=Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q));
+ const failedBuild=rows.some(q=>q.workEvidence&&q.objective?.type==='build'&&(!state.projects?.[q.objective.project]||!['施工中','已完成'].includes(state.projects[q.objective.project].status)));
+ return Math.min(failedBuild?after+1:Infinity,...rows.filter(q=>q.deadline>after).map(q=>q.deadline));
 }

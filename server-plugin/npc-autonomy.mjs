@@ -95,6 +95,12 @@ function startTask(d,task,checked){
  if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
  d.set(['state','npcAutonomy','tasks',task.id],task);
 }
+export function catchUpFurnaces(d,engine,after){
+ for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&task.furnace){
+  try{advanceFurnace(d,engine,task,Math.min(after,task.finish));}
+  catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);}
+ }
+}
 function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
  if(!awake(engine,d.get('state'),task.npc,actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
@@ -201,11 +207,14 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const reach=Math.max(30,intelligenceOf(engine,d.get('state'),id).recipeMinutes);
    const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=reach).sort((a,b)=>a.id.localeCompare(b.id));
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
+   const queued=Object.values(d.get('state','autonomyCandidates')??{}).filter(c=>c.npc===id);
+   const currentPlan=d.get('state','npcs',id,'plan');
+   // An empty candidate set cannot decide or abandon a plan. Avoid building
+   // the full subjective projection for every resident with nothing to do.
+   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length))continue;
    const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
    const view=subjectiveView(engine,projected,id);
-   const queued=Object.values(d.get('state','autonomyCandidates')??{}).filter(c=>c.npc===id);
    const candidates=autonomyCandidates(engine,view,{scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
-   const currentPlan=d.get('state','npcs',id,'plan');
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
     d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
    }
@@ -253,6 +262,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(index>=reach)throw Error('计划步数超出本人灵智所及');
    const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
    if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
+   if(action.kind==='switch_vocation'&&!d.get('state','npcs',proposal.npc))throw Error('人物没有独立成长记录');
    const decision=npcDecision(subjectiveView(engine,d.document,proposal.npc),{kind:action.kind,from:proposal.npc,needSatisfaction:100});
    if(decision.outcome!=='agree')throw Error(decision.reason);
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}

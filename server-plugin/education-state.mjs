@@ -11,6 +11,16 @@ import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 const DAY=1440;
+const scheduleRecords=Symbol('schedule records');
+// Physical feature state belongs to continuous plant/food/water processes.
+// Neither course derivation nor routine projection reads those rows.
+export function sameScheduleInputs(a,b){
+ if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records'].includes(k)&&a[k]!==b[k]))return false;
+ if(a.records===b.records)return true;
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>r.category!=='physical_feature'));
+ const x=rows(a),y=rows(b);
+ return x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
+}
 // Catalog identity follows immutable world/created partitions, never the clock,
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});
@@ -136,8 +146,18 @@ export function courseWindow(c,minute){
  const day=Math.floor(minute/DAY),start=day*DAY+c.start,end=day*DAY+c.end;
  return start>=c.since&&start<c.until&&!c.restDays?.includes(day%30+1)?{start,end}:null;
 }
+const coursesByPerson=new WeakMap();
+export function personCourses(e,s,id){
+ const courses=educationCourses(e,s);let people=coursesByPerson.get(courses);
+ if(!people){
+  people=new Map();for(const c of courses)for(const who of new Set([c.teacher,...c.students].filter(Boolean))){
+   if(!people.has(who))people.set(who,[]);people.get(who).push(c);
+  }coursesByPerson.set(courses,people);
+ }
+ return people.get(id)??[];
+}
 export function educationSlot(e,s,id,minute){
- for(const c of educationCourses(e,s))if((!c.automatic||c.apprentice)&&c.teacher===id||c.students.includes(id)){
+ for(const c of personCourses(e,s,id))if((!c.automatic||c.apprentice)&&c.teacher===id||c.students.includes(id)){
   const w=courseWindow(c,minute);if(w&&minute>=w.start&&minute<w.end)return {location:c.location,activity:c.teacher===id?'授课':'受教',services:[],until:w.end,education:c.id};
  }
  return null;

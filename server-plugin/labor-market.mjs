@@ -179,8 +179,8 @@ function conflict(d,e,row,start){
     return null;
 }
 // The wage is earned only for completed work; a shortfall becomes an L1 debt.
-export function settleEmploymentPay(d,e,row,at,minutes){
- if(!serviceClaimsFresh(e))return settleEmploymentPayV1(d,e,row,at,minutes);
+export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
+ if(!serviceClaimsFresh(e))return settleEmploymentPayV1(d,e,row,at,minutes,{earnedOverride});
     row=contractTerms(row,at);
     if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw Error('工资与实际工时须为非负整数');
     const key=`employment_pay:${row.id}:${at}`,previous=d.get(...rec(key));
@@ -383,9 +383,9 @@ export function laborTrade(d,e,args,id){
 }
 
 // Historical service receipts retain their recorded cash and scheduling semantics.
-function settleEmploymentPayV1(d,e,row,at,minutes){
+function settleEmploymentPayV1(d,e,row,at,minutes,{earnedOverride}={}){
     row=contractTerms(row,at);
-    const earned=Math.ceil(row.wage*minutes/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
+    const earned=earnedOverride??Math.ceil(row.wage*minutes/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
     if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});writeJob(d,e,{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}

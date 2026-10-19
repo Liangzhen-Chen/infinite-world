@@ -1,4 +1,4 @@
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -29,7 +29,7 @@ import {createCharacter}from'./character.mjs';
 import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mjs';
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
-import {changeItems,transferItems}from'./items.mjs';
+import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
@@ -84,7 +84,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
+import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
@@ -117,6 +117,7 @@ class Draft {
             this.scheduler.seq=document.state.scheduler?.seq??0;
             for(const row of Object.values(document.state.records??{}))if(row.category==='world_event'&&Number.isSafeInteger(row.seq))this.scheduler.seq=Math.max(this.scheduler.seq,row.seq);
             this.scheduler.lastSettled=document.state.scheduler?.lastSettled??document.state.minute;
+            this.schedulerBaseline={seq:this.scheduler.seq,lastSettled:this.scheduler.lastSettled};
         }
         this.contestPool = this.scheduler ? [] : null;
     }
@@ -336,7 +337,9 @@ export class WorldEngine {
         if(tool==='check')detail.actionScope={kind:'judgement',healthChanged:false,inventoryChanged:false,feePaid:0,
             note:'仅结算判断或对抗，并履行已引用的协助；未伤人、毁物或制造。不得从骰点虚构这些变化。'};
         // S2b：调度器序号与结算钟随推进续写回存档，保证分段推进与一次推进的 seq 连续一致。
-        if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
+        if(d.scheduler&&(document.state.scheduler||d.scheduler.seq!==d.schedulerBaseline.seq||d.scheduler.lastSettled!==d.schedulerBaseline.lastSettled)){
+            d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);
+        }
         return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(d.obligationRuntimeVersion?{obligationRuntimeVersion:1}:{}),...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
@@ -409,6 +412,7 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
+        validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected;
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
@@ -442,7 +446,16 @@ export class WorldEngine {
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife','site'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
-        const end=d.get('state','minute')+minutes;
+        const now=d.get('state','minute');
+        // The persisted world clock is authoritative after a save has been
+        // restored or a fixture has repositioned it. Never let a scheduler
+        // cursor already ahead of that clock suppress local work or charge a
+        // future interval against the current minute.
+        if(d.scheduler&&d.scheduler.lastSettled>now)d.scheduler.lastSettled=now;
+        const localUntil=d.get('state','scheduler','localUntil');
+        if(Number.isFinite(localUntil)&&localUntil>now)d.set(['state','scheduler','localUntil'],now);
+        const end=now+minutes;
+        if(d.scheduler)for(const system of advanceRegistry)system.currentMinute?.(this,d,now,id);
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));

@@ -125,9 +125,16 @@ const live=(d,e,id)=>{
     // Freight remains in a shipment's custody account after its vehicle is lost.
     return row?.category==='transport'&&!!row.cargoLocation&&live(d,e,row.cargoLocation);
 };
+function workstationAnchorOwner(d,e,id){
+    return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id))?.id??null;
+}
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
-    if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    if((byEntity(d,id)??read(d,'state','records',`transition:${id}`))?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    // A legacy vital-status flag alone has not transferred ownership. Existing
+    // balances remain attached to that registered owner until the gone protocol
+    // settles them; live() still rejects it as a new inheritance destination.
+    if(templatesOf(d,id,e)?.length)return true;
     // Site reserves are anchored to an authored resource of the live site,
     // rather than an independent agent named by the composite account owner.
     if(id.startsWith('site:')){
@@ -136,8 +143,9 @@ function accountOwnerLive(d,e,id){
         if(site)return live(d,e,site.id);
     }
     // Workstation inventory is a real S1 account, anchored at its building.
-    const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
-    if(stationPlace)return live(d,e,stationPlace.id);
+    const stationOwner=workstationAnchorOwner(d,e,id);
+    if(stationOwner)return !byEntity(d,stationOwner)?.gone&&entityRow(d,stationOwner)?.goneAt===undefined;
+    if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
     const row=read(d,'state','records',id);
     if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
     if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
@@ -357,14 +365,14 @@ function conquest(d,e,r,previous,ctx){
 export function changeHolding(d,engine,{op='close',id,...input}){
     return atomic(d,()=>{
         if(op==='rescale'){
-            ensureHoldings(d,engine);
+            if(!ensureHoldings(d,engine))return null;
             const eventId=input.eventId??`holding:rescale:${input.subject}:${now(d)}`;
             const result=rescaleHolding(d,{...input,writer:W,engine,eventId});
             invariant(d,null,engine);
             emit(d,engine,{id:eventId,verb:'holding_rescaled',subject:input.subject,kind:input.kind,shares:input.shares,reason:'rescaled'});
             return result;
         }
-        ensureHoldings(d,engine);const before=id?holdingRow(d,id):null;
+        if(!ensureHoldings(d,engine))return null;const before=id?holdingRow(d,id):null;
         const eventId=input.eventId??`holding:${op}:${id??read(d,'holdings','seq')+1}:${now(d)}`,reason=input.reason??(op==='close'?'vacated':op==='open'?'opened':'transferred');
         const ctx={...input,entity:before?.holder,eventId,reason};
         let result;
@@ -533,9 +541,29 @@ export function transition(d,engine,input){
         const wreck=corpse||debris?`wreck_${entity}:${suffix}`:null;
         const record=clean({category:'transition',entity,generation,cycle,basis,eventId,gone:true,minute:now(d),successor,wreck,location,previousVital:a.status,holdings:[...new Set([...actualDeath?previous.holdings:[],...held.map(r=>r.id)])],subjectHoldings:[...new Set([...actualDeath?previous.subjectHoldings:[],...subject.map(r=>r.id)])],identities:identities(engine,read(d,'state'),entity),successors:input.successors??previous?.successors??[],phase:'transitioning',body:corpse,yields:a.yields??engine.byId?.get(a.species)?.yields??[],...(actualDeath?{actualDeath:now(d),declarationEvent:previous.eventId}: {})});
         record.officeFacts=Object.entries(read(d,'state','records')??{}).filter(([,o])=>o.category==='governance_office'&&o.holder===entity).map(([id,o])=>clean({id,since:o.since,sourceEvent:o.sourceEvent}));
+        const source=`transition:${entity}`;
+        // Move live account balances before publishing the gone state. Holding
+        // source observers validate account destinations after each projection,
+        // so leaving a positive account on the departing entity during the
+        // transition would expose an invalid intermediate state.
+        if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        // Debris account salvage can target this wreck. Materialize it before
+        // moving those balances so ledger observers never see a missing owner.
+        if(wreck&&!entityRow(d,wreck)){
+            createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
+            if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
+        }
+        for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
+            const ac=parseAccount(key);if((ac.owner!==entity&&workstationAnchorOwner(d,engine,ac.owner)!==entity)||!amount)continue;
+            const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
+            const saved=debris?Math.floor(amount*salvage):amount;
+            const to=input.treasury??successor??input.successor??(debris?wreck:owner);
+            if(saved&&!to&&basis!=='pack_removed')throw Error('No account successor');
+            if(saved)bookTransfer(d,engine,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
+            if(amount>saved)bookTransfer(d,engine,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
+        }
         d.set([...root,'entities',entity],record);
         writeRecord(d,engine,`transition:${entity}`,record);
-        const source=`transition:${entity}`;
         const parent=emit(d,engine,{id:eventId,verb:'transition',entity,kind,basis,causes:input.causes??[],location,visibility:input.visibility??'public'});
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
         for(const row of collections)writeRecord(d,engine,row.key,{...row,creditor:successor,previousCreditor:entity,substitutedAt:now(d)});
@@ -549,10 +577,6 @@ export function transition(d,engine,input){
             d.set(['state','quests',id],{...q,status:'取消',reason:'私人发布者已消失，未付报酬退入遗产',escrow:0,refund:amount,resolvedAt:now(d),transition:eventId});
             if(q.reservation){const o=read(d,'state','obligations',q.reservation);if(o&&!terminal(o))d.set(['state','obligations',q.reservation],{...o,status:'取消',resolvedAt:now(d),cause:eventId});}
             writeRecord(d,engine,`${id}:取消`,{category:'quest_receipt',quest:id,parties:[entity,q.taker].filter(Boolean),minute:now(d),location:q.location,status:'取消',escrow:0,refund:amount,rewardPaid:0,sourceEvent:eventId});
-        }
-        if(wreck&&!entityRow(d,wreck)){
-            createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
-            if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
         }
         const ctx={...input,entity,eventId,successor:successor??input.successor,location,owner,reason:'transferred'};
         const civil=input.law??legalCodeAt(engine,location,read(d,'state'))?.civil?.inheritance??{};
@@ -591,15 +615,6 @@ export function transition(d,engine,input){
         }
         clearLocation(d,{entity,writer:W});
         moveDeposits(d,engine,entity,successor??owner,eventId);
-        for(const [key,amount] of Object.entries(read(d,'ledger','accounts')??{})){
-            const ac=parseAccount(key);if(ac.owner!==entity||!amount)continue;
-            const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
-            const saved=debris?Math.floor(amount*salvage):amount;
-            const to=input.treasury??successor??input.successor??(debris?wreck:owner);
-            if(saved&&!to&&basis!=='pack_removed')throw Error('No account successor');
-            if(saved)bookTransfer(d,engine,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
-            if(amount>saved)bookTransfer(d,engine,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
-        }
         for(const [id,o] of Object.entries(read(d,'state','obligations')??{})){
             if(['void','cancelled','settled','取消','已完成'].includes(o.status))continue;
             const debtor=o.debtor===entity||o.promisor===entity,creditor=o.creditor===entity||o.promisee===entity,carrier=o.carrier===entity;
@@ -610,16 +625,17 @@ export function transition(d,engine,input){
             if(debtor){
                 const route=obligationGoneRoute(o,'debtor',civil);
                 const target=route==='pursue'?input.soul??a.soul??Object.entries(read(d,'state','npcs')??{}).find(([id,n])=>n.soulOf===entity&&live(d,engine,id))?.[0]:successor;
-                if(route==='void'||route==='pursue'&&!target){next.status='void';next.resolvedAt=now(d);next.goneRoute=route;next.resolutionReason=route==='pursue'?'no_soul_or_reincarnation':'onDebtorGone:void';emit(d,engine,{id:`${eventId}:void:${id}`,verb:'protocol_stage',entity,obligation:id,phase:'obligation_routed',route,reason:next.resolutionReason,cause:eventId});}
+                if(route==='void'||route==='pursue'&&!target){next.status=['待履行','进行中'].includes(o.status)?'取消':'void';next.resolvedAt=now(d);next.goneRoute=route;next.resolutionReason=route==='pursue'?'no_soul_or_reincarnation':'onDebtorGone:void';emit(d,engine,{id:`${eventId}:void:${id}`,verb:'protocol_stage',entity,obligation:id,phase:'obligation_routed',route,reason:next.resolutionReason,cause:eventId});}
                 else if(!target||!live(d,engine,target))throw Error(`No living ${route} obligation successor: ${id}`);
                 else{if(o.debtor===entity)next.debtor=target;if(o.promisor===entity)next.promisor=target;next.goneRoute=route;if(route==='accelerate')next.acceleratedAt=now(d);}
             }
             if(creditor){
                 const route=obligationGoneRoute(o,'creditor',civil),target=successor;
-                if(route==='void'){next.status='void';next.resolvedAt=now(d);}
+                if(route==='void'){next.status=['待履行','进行中'].includes(o.status)?'取消':'void';next.resolvedAt=now(d);}
                 else if(!target)throw Error(`No creditor successor: ${id}`);
                 else{if(o.creditor===entity)next.creditor=target;if(o.promisee===entity)next.promisee=target;next.creditorGoneRoute=route;}
             }
+            if(next.status==='取消')next.resolution={kind:'void',cause:eventId,minute:now(d)};
             d.set(['state','obligations',id],next);
             if(debtor&&o.pledgeRecord){const pledge=read(d,'state','records',o.pledgeRecord);if(pledge?.owner===entity)writeRecord(d,engine,o.pledgeRecord,{...pledge,owner:next.debtor??next.promisor});}
             if(creditor&&next.creditorGoneRoute==='heirs'&&!terminal(next)){
@@ -665,6 +681,9 @@ function importRecordedClaims(d,e,entity){
         if(row.category!=='debt'||![row.debtor,row.creditor].includes(entity)||['已还清','坏账','已取消'].includes(row.status))continue;
         const entries=Object.entries(read(d,'state','obligations')??{});
         const found=entries.find(([key,o])=>key===id||key===row.obligation||o.legacyRecord===id||o.record===id);
+        // Bare historical debt notes are not signed, scheduled claims. Do not
+        // invent compensation terms and settle them merely because someone dies.
+        if(!found&&!row.kind&&row.createdAt===undefined&&row.deadline===undefined)continue;
         const key=found?.[0]??id,old=found?.[1];
         const claim=snapshotObligationTerms({...row,...old,id:key,kind:old?.kind??row.kind??'compensation',legacyRecord:id,
             amount:old?.amount??row.amount,paid:old?.paid??row.paid??0,remaining:old?.remaining??row.amount-(row.paid??0),
@@ -771,7 +790,8 @@ function projectHolding(d,e,before,after,ctx){
     }
     if(before.kind==='tamed_by'){
         if(read(d,'state','creatures',before.subject))projectFields(d,e,['state','creatures',before.subject,'owner'],after?.holder??null);
-        const pet=read(d,'state','pets',before.subject);if(pet)d.set(['state','pets',before.subject],{...pet,owner:after?.holder??null,following:false,...(!after?{status:'已解除',ended:now(d)}:{})});
+        const pet=read(d,'state','pets',before.subject);if(pet)d.set(['state','pets',before.subject],{...pet,owner:after?.holder??null,following:false,...(!after?{status:ctx.basis==='death'?'死亡':'已解散',ended:now(d)}:{})});
+        if(read(d,'state','player','mount')===before.subject&&after?.holder!=='player')d.remove(['state','player','mount']);
     }
     if(before.kind==='employed_by'){
         const id=before.terms?.contract,row=id&&read(d,'state','records',id);if(!row)return;
@@ -807,7 +827,7 @@ function routeContracts(d,e,from,to,ctx){
                     transfer(d,{from:key,to:partyAccount(e,read(d,'state'),target),amount:row.escrow,writer:W,eventId:ctx.eventId});
                     mirrorPartyCoins(d,e,target,row.escrow,ctx.eventId,W);
                 }
-                projectFields(d,e,['state','records',id],{...row,status:'已终止',escrow:0,endedAt:row.endedAt??now(d),resolvedAt:row.resolvedAt??now(d),endCause:ctx.eventId});
+                projectFields(d,e,['state','records',id],{...row,status:row.version===1&&['hire','procurement','sale'].includes(row.kind)?'已取消':'已终止',escrow:0,endedAt:row.endedAt??now(d),resolvedAt:row.resolvedAt??now(d),endCause:ctx.eventId});
             }
         }else{
             const next={...row,substitutedAt:now(d)};
@@ -831,7 +851,8 @@ function projectEstateReceipt(d,e,id,p,receipts,rule){
     }
     for(const [key,death]of Object.entries(read(d,'state','family','deaths')??{}))if(death.estate?.id===id){
         const guardianships=Object.values(read(d,'state','records')??{}).filter(r=>r.category==='guardianship'&&r.estate===id).map(r=>r.id);
-        projectFields(d,e,['state','family','deaths',key],{...death,estate:{...death.estate,heir:receipts[0]?.heir??null,heirs:receipts.filter(r=>!r.noHeir).map(r=>r.heir),rule,allocations,propertyOwners:p.propertyOwners??{},guardianships,phase:'closed'}});
+        const items={};for(const a of allocations)for(const [item,amount]of Object.entries(a.items))items[item]=(items[item]??0)+amount;
+        projectFields(d,e,['state','family','deaths',key],{...death,estate:{...death.estate,coins:allocations.reduce((n,a)=>n+a.coins,0),items,heir:receipts[0]?.heir??null,heirs:receipts.filter(r=>!r.noHeir).map(r=>r.heir),rule,allocations,propertyOwners:p.propertyOwners??{},guardianships,phase:'closed'}});
     }
 }
 function configureEstate(d,e,r,input){

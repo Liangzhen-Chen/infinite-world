@@ -137,8 +137,11 @@ function finish(d,e,r){
 export function nextMedicineMinute(e,d,now){
  if(!serviceClaimsFresh(e))return nextMedicineMinuteV1(e,d,now);
  if(!medicineFresh(e))return Infinity;
- const s=d.get('state'),care=[s.player,...Object.values(s.npcs??{})].flatMap(n=>(n.medical?.wounds??[]).map(w=>w.careDue));
- return [...medicineRows(s).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]),...care].filter(at=>at>now).reduce((a,b)=>Math.min(a,b),Infinity);
+ const s=d.get('state');
+ return [...medicineRows(s).filter(r=>r.status==='预约').flatMap(r=>[r.depart,r.start,r.end]),
+  ...[s.player,...Object.values(s.npcs??{})].flatMap(a=>(a.medical?.wounds??[]).filter(w=>!w.healed).map(w=>w.careDue)),
+  ...Object.values(s.family?.illnesses??{}).filter(r=>r.patient==='player'&&r.status==='患病中').map(r=>r.endsAt)]
+  .filter(at=>Number.isSafeInteger(at)&&at>now).reduce((a,b)=>Math.min(a,b),Infinity);
 }
 function autonomous(d,e,now){
  if(!serviceClaimsFresh(e))return autonomousV1(d,e,now);

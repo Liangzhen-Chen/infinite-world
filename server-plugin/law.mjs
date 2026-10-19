@@ -433,7 +433,8 @@ export function lawAction(d,args,eventId){
         d.set(['state','player','coins'],d.get('state','player','coins')-fee);
         d.set(['state','npcs',issuer,'coins'],d.get('state','npcs',issuer,'coins')+fee);
         const key=`magic_permission:${eventId}`,now=d.get('state','minute'),permission={category:'authorization',action:args.action,subject:'player',grantee:'player',grantor:issuer,location,law:code.id,createdAt:now,expires:now+duration,revoked:false,sourceType:'magic_permit',sourceEvent:eventId};
-        holdingSet(d,null,path(key),permission,'law');holdingSet(d,null,path(`magic_permission_source:${eventId}`),{permission:structuredClone(permission)},'law');
+        holdingSet(d,null,path(key),permission,'law');
+        holdingSet(d,null,path(`magic_permission_source:${eventId}`),{permission:structuredClone(d.get('state','records',key))},'law');
         return{permit:key,permission,cost:fee,minutes:5};
     }
     const {row,code}=caseRow(d,this,args.case),now=d.get('state','minute');
@@ -652,7 +653,7 @@ export function lawAction(d,args,eventId){
 
 export function lawView(engine,document){
     const code=codeFor(engine,document.state.location,document.state);
-    const d={get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
+    const d={document,get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
     const notifications=localObservers(d).flatMap(from=>(d.get('state','npcs',from,'memoryStream')??[]).filter(memory=>memory.kind==='law'&&memory.visibility==='public'&&!memory.private&&memory.minute<=document.state.minute&&memory.legalCase).map(memory=>({from,memory:memory.id,case:memory.legalCase,stage:memory.legalStage,sourceType:memory.sourceType,sourceEvent:memory.sourceEvent})));
     const wanted=activeWanted(document.state).filter(w=>w.subject==='player').map(w=>({id:w.id,case:w.case,law:w.law,reason:w.reason,scope:[...w.scope],bounty:w.bounty,reachedHere:wantedReachedAt(engine,w,document.state.location,document.state.minute,document.state)}));
     const bounties=Object.values(document.state.quests??{}).filter(q=>q.bounty&&['公开','进行中'].includes(q.status)&&(q.taker==='player'||q.location===document.state.location))

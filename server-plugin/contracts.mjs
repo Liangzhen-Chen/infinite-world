@@ -3,7 +3,7 @@ import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} f
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
-export {advanceRituals};
+export {advanceRituals,advanceRitualEffects}from'./magic-ritual.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';

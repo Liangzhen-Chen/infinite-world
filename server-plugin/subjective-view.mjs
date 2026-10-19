@@ -2,6 +2,7 @@
 import {personCareer} from './entity-view.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 const ownedAccounts=Symbol('subjective own accounts');
+const ownedHoldings=Symbol('subjective own holdings');
 
 const copy=x=>structuredClone(x);
 const active=o=>['待履行','进行中','在任','有效'].includes(o.status);
@@ -13,12 +14,13 @@ export function subjectiveView(engine,document,observer){
  const s=document.state,n=actor(s,observer);if(!n)throw Error('观察者不存在');
  const b=base(engine,s,observer),here=location(s,observer),now=s.minute??0;
  const present=id=>Boolean(here&&location(s,id)===here&&!actor(s,id)?.scheduleTravel&&!actor(s,id)?.cognitionTravel);
- const seeds=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])].filter(r=>r.source===observer||r.carriers?.includes(observer)).map(r=>({id:`rumor_seed:${r.id}:${observer}`,sourceEvent:`rumor_registration:${r.id}`,kind:'rumor',minute:0,content:r.claim,sourceType:'传闻',participants:[]}));
+ const registeredRumors=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])];
+ const seeds=registeredRumors.filter(r=>r.source===observer||r.carriers?.includes(observer)).map(r=>({id:`rumor_seed:${r.id}:${observer}`,rootMemoryId:`rumor_seed:${r.id}:${r.source}`,rumor:r.id,rumorSource:r.source,sourceEvent:`rumor_registration:${r.id}`,kind:'rumor',minute:0,occurredAt:0,content:r.claim,sourceType:'传闻',salience:2,participants:[],reliability:'未证实',transmissionChain:observer===r.source?[]:[{from:r.source,to:observer,minute:0,channel:'registered',content:r.claim,distortion:'仅由已登记的携带者版本'}]}));
  // Memories already delivered to this observer are versions, never pointers
  // dereferenced against the current truth. Written clauses retain their text.
  const events=recordsWhere(s.records,'category','world_event');
  const witnessed=events.filter(r=>r.actor===observer||r.witnesses?.includes(observer)).map(e=>({id:e.id,sourceEvent:e.id,kind:e.verb,minute:e.minute,content:e.summary??e.verb,sourceType:'目击',participants:[e.actor,e.target].filter(Boolean)}));
- const memories=[...seeds,...witnessed,...Object.values(document.memories??{}).filter(m=>m.subject===observer),...(n.memoryStream??[]),...(b.knowledgeSeeds??[]),...Object.values(s.records??{}).filter(r=>r.category==='knowledge'&&r.observer===observer)]
+ const memories=[...seeds,...witnessed,...Object.values(document.memories??{}).filter(m=>m.subject===observer),...(n.memoryStream??[]),...(b.knowledgeSeeds??[]),...recordsWhere(s.records,'category','knowledge').filter(r=>r.observer===observer)]
   .filter(m=>(m.minute??0)<=now&&m.recall!==0&&(!m.private||m.subject===observer||m.participants?.includes(observer)||(m.knownBy??m.permittedRecipients??[]).includes(observer)))
   .map(m=>n.cognition?.blurred?.[m.id]?{...copy(m),content:n.cognition.blurred[m.id].content,blurred:true}:copy(m));
  const beliefs=memories.filter(m=>m.kind==='belief'&&!m.retracted);
@@ -45,7 +47,12 @@ export function subjectiveView(engine,document,observer){
   return Object.fromEntries(Object.entries({id,type,promisor,promisee,content,start,deadline,coins,item,quantity,destination,location}).filter(([,v])=>v!==undefined));
  });
  const obligations=Object.values(s.obligations??{}).filter(o=>[o.promisor,o.promisee,o.debtor,o.creditor].includes(observer)&&present(o.promisor??o.debtor)&&present(o.promisee??o.creditor)).map(copy);
- const holdings=Object.values(document.holdings?.rows??{}).filter(h=>h.holder===observer&&present(h.subject)).map(copy);
+ const byHolder=recordsMemo(document.holdings?.rows,ownedHoldings,()=>{
+  const groups=new Map();for(const h of Object.values(document.holdings?.rows??{})){
+   if(!groups.has(h.holder))groups.set(h.holder,[]);groups.get(h.holder).push(h);
+  }return groups;
+ });
+ const holdings=(byHolder.get(observer)??[]).filter(h=>present(h.subject)).map(copy);
  const people=Object.keys(s.npcs??{}).filter(present).map(id=>{
   const p=actor(s,id),def=base(engine,s,id);
   return {id,name:p.name??def.name??id,status:p.status,activity:p.activity??'',services:personCareer(engine,s,id).value.services};

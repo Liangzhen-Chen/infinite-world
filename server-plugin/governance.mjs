@@ -221,7 +221,7 @@ function action(d,args,eventId){
         const a={category:'authorization',action:'account_report',settlement,grantor:authority,grantee:steward,appointmentSource:source(this,settlement,now,d.get('state')),
             scope:{actions:['account_report'],counter:g.meetingPlace,budget:0,fee:0,taxBps:p.details.economy.tax.rateBps},
             createdAt:now,expires:now+minutes,revoked:false,consentEvent:eventId,sourceEvent:eventId};
-        holdingSet(d,null,path(id),a,'governance');return {authorization:id,permission:a};
+        holdingSet(d,null,path(id),a,'governance');return {authorization:id,permission:d.get(...path(id))};
     }
     case 'governance_revoke':{
         const housing=d.get(...path(args.authorization));
@@ -274,8 +274,8 @@ export function advanceGovernance(d,engine,before,after,{beforeState}={}){
     if(!beforeState)return [];
     const results=[];
     for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
-        const at=day*DAY+600;if(at<=before||at>after)continue;
-        const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+        const at=day*DAY+600;if(at<=before||at>after||at<beforeState.minute)continue;
+        const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
         for(const [id,r]of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(r.category!=='governance_request'||r.status!=='待办理'||r.due>at||presence.npcs[r.steward]?.location===presence.location)continue;
             const grant=d.get(...path(r.authorization));

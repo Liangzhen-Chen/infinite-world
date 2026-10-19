@@ -61,7 +61,8 @@ const lex = (a, b) => {
 };
 export const compareDue = (a, b) => lex(dueSortKey(a), dueSortKey(b));
 export function compareClock(seed, minute) {
-    return (a, b) => lex(clockSortKey(seed, minute, a), clockSortKey(seed, minute, b));
+    return (a, b) => lex([layerRank(a.layer??'rule'),a.packId??'',a.ruleId??''],[layerRank(b.layer??'rule'),b.packId??'',b.ruleId??''])
+        || clockDiceKey(seed,a.ruleId??'',a.objectId??'',minute).localeCompare(clockDiceKey(seed,b.ruleId??'',b.objectId??'',minute));
 }
 
 // ---- 日程堆 ----

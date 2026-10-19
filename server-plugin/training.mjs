@@ -75,8 +75,10 @@ export function ritualOfficiate(d,engine,args,id){
  present(d,engine,entry,entry.ritualMinutes);pay(d,engine,entry,entry.ritualFee,entry.ritualMinutes,id);
  const start=d.get('state','minute'),key=`ritual_permission:${id}`,god=deity&&engine.byId.get(deity);
  const permission={category:'authorization',action:'ritual_officiate',subject:'player',grantee:'player',grantor:teacher,institution,profession:engine.byId.get(profession).name,professionId:profession,deity,church:god?.church.name??entry.church,createdAt:start,expires:start+duration,revoked:false,sourceType:'training',sourceEvent:id,initiation:init.record};
- holdingSet(d,null,record(key),permission,'training');holdingSet(d,null,record(`ritual_source:${id}`),{permission:structuredClone(permission)},'training');
- return{permit:key,permission,cost:entry.ritualFee,minutes:entry.ritualMinutes};
+ holdingSet(d,null,record(key),permission,'training');
+ const stored=d.get(...record(key));
+ holdingSet(d,null,record(`ritual_source:${id}`),{permission:structuredClone(stored)},'training');
+ return{permit:key,permission:stored,cost:entry.ritualFee,minutes:entry.ritualMinutes};
 }
 export function assertTrainingRitual(d,engine,key,until){
  const r=d.get(...record(key)),receipt=r&&d.get(...record(`ritual_source:${r.sourceEvent}`));

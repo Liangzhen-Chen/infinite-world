@@ -20,7 +20,10 @@ export function compatibleWorld(oldWorld,newWorld){
             if(category==='residents'&&world.npcs.some(row=>row.id===old.id))continue;
             const next=incoming.get(old.id);
             if(!next){incoming.set(old.id,structuredClone(old));retained.push({category,id:old.id,reason:'历史实体未删除'});}
-            else if(!['eras','households','settlementProfiles'].includes(category))next.aliases=[...new Set([...(next.aliases??[]),old.name,...(old.aliases??[])])].filter(name=>name!==next.name);
+            else if(!['eras','households','settlementProfiles'].includes(category)){
+                const aliases=[...new Set([...(next.aliases??[]),old.name,...(old.aliases??[])])].filter(name=>name!==next.name);
+                if(aliases.length||next.aliases!==undefined)next.aliases=aliases;
+            }
         }
         world[category]=[...incoming.values()];
     }
