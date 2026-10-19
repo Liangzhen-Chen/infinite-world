@@ -8,7 +8,7 @@ import {adjustStanding} from './standing.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve as reserveAccount,moveStock} from './stock.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('extraction',{kinds:['permit']});
+declareHoldingWriter('extraction',{kinds:['permit','owns']});
 // S1b: 钓到的鱼是死亡转化的产物（src:harvest，种群账另记 withdrawn）；剖洗用水、煮食耗材进 sink:consume；
 // 矿脉是资源点账户 mineral:<地点>:<矿产>|<矿产>|reserve，首次开采按世界数据（spec.reserve）经 src:genesis 开户，
 // 恢复来自 src:regrowth，采得的转入开采者行囊。
@@ -132,8 +132,8 @@ function mineActor(d,args,id,actor,advance){
     const stolen=units.length?{item,quantity:1,unit:units[0]}:null;
     const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,stolen,witnesses,eventId:id,location,code:jurisdiction.code}):null;
     for(const unit of units){
-        d.set(['state','itemInstances',unit,'stolenOrigin'],{event:id,case:incident,victim:owner,offender:actor,location,minute:now});
-        if(incident)d.set(['state','itemInstances',unit,'legalClaims'],[{case:incident,victim:owner,minute:now}]);
+        holdingSet(d,null,['state','itemInstances',unit,'stolenOrigin'],{event:id,case:incident,victim:owner,offender:actor,location,minute:now},'extraction');
+        if(incident)holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[{case:incident,victim:owner,minute:now}],'extraction');
     }
     const local=jurisdiction?.kind==='faction'?jurisdiction:jurisdiction?.custom;
     const custom=local&&witnesses.length?adjustStanding(d,this,local.faction,actor,local.rule.standing,{sourceEvent:id,reason:'盗采'}):null;

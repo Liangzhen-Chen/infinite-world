@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {npcPlanFingerprint,npcPlanningContext} from '../server-plugin/npc-autonomy.mjs';
 import {scheduleAt,npcAvailability} from '../server-plugin/npc-schedule.mjs';
+import {npcSchedule} from '../server-plugin/npc-state.mjs';
 import {validateNpcGrowthRules} from '../server-plugin/npc-growth.mjs';
 
 const source=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -96,10 +97,18 @@ test('达到条件后换营生：作息、服务与职务改变，存档恢复�
  const vocation=s.doc.state.npcs[npc].vocation;assert.equal(vocation.id,'vocation_hw_qingdeng_cook');assert.equal(s.doc.state.npcs[npc].occupation,'青灯酒馆帮厨');assert.equal(vocation.previous.occupation,'修理学徒');
  const day=Math.floor(s.doc.state.minute/DAY)*DAY;
  assert.deepEqual([scheduleAt(s.engine,npc,day+60,s.doc.state).location,scheduleAt(s.engine,npc,day+600,s.doc.state).location],['bld_hw_qingdeng','bld_hw_qingdeng'],'改业基准夜间居所取当前家户，不复制旧工作日程');
- assert.deepEqual(scheduleAt(s.engine,npc,day+600,s.doc.state).services,['trade']);
+ // S3-SV: the vocation still replaces the old authored services exactly;
+ // the live slot additionally derives recipes from the cook's current station.
+ assert.deepEqual(npcSchedule(s.engine,s.doc.state,npc,day+600).default.find(r=>r.start<=600&&600<r.end).services,['trade']);
+ assert.ok(scheduleAt(s.engine,npc,day+600,s.doc.state).services.includes('recipe_bake_flatbread'));
+ assert.ok(scheduleAt(s.engine,npc,day+600,s.doc.state).services.includes('teach'));
  const saved=reload(s);await nextMorning(saved);
  assert.equal(saved.doc.state.npcs[npc].location,'bld_hw_qingdeng');assert.equal(saved.doc.state.npcs[npc].activity,'在青灯酒馆后厨帮厨');
- saved.doc.state.location='bld_hw_qingdeng';assert.deepEqual(npcAvailability(saved.engine,saved.doc.state,npc).services,['trade']);
+ // Restoring a save must retain both the exact vocation and its live services.
+ saved.doc.state.location='bld_hw_qingdeng';
+ assert.deepEqual(npcSchedule(saved.engine,saved.doc.state,npc).default.find(r=>r.start<=600&&600<r.end).services,['trade']);
+ assert.deepEqual(npcAvailability(saved.engine,saved.doc.state,npc).services,scheduleAt(saved.engine,npc,saved.doc.state.minute,saved.doc.state).services);
+ assert.ok(npcAvailability(saved.engine,saved.doc.state,npc).services.includes('recipe_bake_flatbread'));
  // The old catalog teaching service is replaced by the new livelihood's.
  const learner=reload(saved);learner.doc.state.skills={};learner.doc.state.recipes={};learner.doc.state.player.coins=500;
  await rejects(run(learner,{tool:'world_learn',args:{entity:'skill_life_6_core',source:npc},eventId:'learn-old'}),/资格/);

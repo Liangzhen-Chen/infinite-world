@@ -23,6 +23,7 @@ import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obligation-claims.mjs';
 import {obligationView as dueObligation,wageQuote} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -90,7 +91,7 @@ export function laborOffers(e,s,minute=s.minute){
         const place=base(e,s,location);if(!place?.workstations?.length)continue;
         for(const r of e.world.recipes){
             if(r.location&&r.location!==location||!r.workstation||!place.workstations.some(st=>st.kind===r.workstation&&(st.access==='public'||st.owner===owner)))continue;
-            if(!r.teachers?.includes(owner)&&!s.npcs[owner]?.recipes?.[r.id])continue;
+            if(!r.teachers?.includes(owner)&&!s.npcs[owner]?.recipes?.[r.id]&&!currentWorkstationRecipes(e,s,owner).some(p=>p.id===r.id))continue;
             if(recipeFor(e,s,owner,r.output.item).some(p=>p.id===r.id)&&employmentStock({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},e,owner,r.output.item)===0)add({owner,location,recipe:r.id,item:r.output.item,quantity:r.output.quantity,source:`workshop:${location}:${r.id}`,reason:'工坊成品缺货'});
         }
     }
@@ -139,7 +140,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(offer.medicalSkill&&medicalSkill(e,s,id)<offer.medicalSkill)return null;
     if(offer.task==='矿脉开采'&&!e.quantity({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},id,e.rules.extraction.mining.tool))return null;
     const skill=offer.recipe?workerSkill(e,s,id,e.byId.get(offer.recipe)):0,r=offer.recipe&&e.byId.get(offer.recipe);
-    const knows=r&&(r.teachers?.includes(id)||n.recipes?.[r.id]||!r.learningRequired);
+    const knows=r&&(r.teachers?.includes(id)||n.recipes?.[r.id]||!r.learningRequired||currentWorkstationRecipes(e,s,id).some(p=>p.id===r.id));
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;
     const regard=standing(e,s,id,offer.owner);if(regard<=-40)return null;
     const needs=npcNeedGoals(s,id).filter(g=>g.progress!==100&&/money|food|钱|款|粮|口粮|活计/.test(`${g.need??g.kind??''} ${g.content??''}`));

@@ -1,5 +1,6 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {knowsKnowledge} from './education-state.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 // NPC skill growth comes only from a real lesson by the player or from a
 // finished autonomous work action. Both are bounded per day and per skill, and
@@ -81,7 +82,7 @@ export function teachNpc(d,engine,args,eventId){
   gain=Math.min(r.gain,teacher-r.teacherMargin-current,room(engine,state,student,skill));
   if(gain<=0)throw Error('学生已接近你的水平或达到成长上限，再教也不会进步');
  }else{
-  if(!knowsKnowledge(engine,state,teacherId,entity))throw Error('你没有学会这个配方');
+  if(!knowsKnowledge(engine,state,teacherId,entity)&&!(teacherId!=='player'&&currentWorkstationRecipes(engine,state,teacherId).some(r=>r.id===entity)))throw Error('你没有学会这个配方');
   if(knowsRecipe(state,student,catalog))throw Error('学生已经会这个配方');
   if(npcProficiency(engine,state,student,catalog.skill)<(catalog.minimumProficiency??0))throw Error('学生的相关技能不足以学这个配方');
  }

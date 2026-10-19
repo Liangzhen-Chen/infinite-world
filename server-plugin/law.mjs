@@ -103,7 +103,7 @@ export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eve
  const units=instances.filter(unit=>{
   const origin=d.get('state','itemInstances',unit,'stolenOrigin');
   if(!origin||origin.recoveredAt!==undefined)return false;
-  if(origin.victim===seller){d.set(['state','itemInstances',unit,'stolenOrigin'],{...origin,recoveredAt:d.get('state','minute'),recoveryEvent:eventId});return false;}
+  if(origin.victim===seller){holdingSet(d,null,['state','itemInstances',unit,'stolenOrigin'],{...origin,recoveredAt:d.get('state','minute'),recoveryEvent:eventId},'law');return false;}
   return true;
  });
  if(!units.length)return [];
@@ -114,7 +114,7 @@ export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eve
   const origin=d.get('state','itemInstances',unit,'stolenOrigin');
   const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:engine.byId.get(item).basePrice,
    stolen:{item,quantity:1,unit},witnesses,eventId:`${eventId}:receiving:${index}`,location,code});
-  d.set(['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}]);
+  holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}],'law');
   return incident;
  });
 }

@@ -12,6 +12,7 @@ import {faithOf} from './faith-state.mjs';
 import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -110,6 +111,7 @@ export function personCertified(engine,state,id,skill){
 }
 export function personTeaching(engine,state,id,entity,{stage=null}={}){
     if(!living(engine,state,id)||personConstraint(engine,state,id))return false;
+    if(entity.startsWith('recipe_')&&currentWorkstationRecipes(engine,state,id).some(r=>r.id===entity))return true;
     const c=personCareer(engine,state,id).value,base=baseOf(engine,state,id),catalog=engine.byId.get(entity);
     if(c.services.includes(entity))return true;
     const skill=catalog?.skill?engine.byId.get(catalog.skill):catalog,role=skill?.profession;

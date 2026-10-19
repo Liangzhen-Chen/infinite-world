@@ -2,6 +2,7 @@ import {educationCourses,educationSites,educationStatistics,knowledgeProficiency
 export {educationCourses};
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
 import {personConstraint,personHousehold,personAge,personCertified} from './entity-view.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {facilityView} from './facility-state.mjs';
 import {transferItems} from './items.mjs';
 import {financeTransfer,financeBalance} from './finance-bank.mjs';
@@ -44,6 +45,7 @@ export function prepareEducation(d,e,{before,after}){
 }
 function present(d,e,id){const s=d.get('state');if(!able(s,id)||location(s,id)!==s.location||personConstraint(e,s,id))throw Error('参与者须清醒在场且不受拘留');}
 function teaching(e,s,teacher,entity){
+ if(entity.startsWith('recipe_')&&currentWorkstationRecipes(e,s,teacher).some(r=>r.id===entity))return true;
  if(!knowsKnowledge(e,s,teacher,entity))return false;
  const b=definition(e,s,entity);if(entity.startsWith('spell_')&&b.stage>=4)return false;
  return entity.startsWith('skill_')||knowledgeProficiency(e,s,teacher,b.skill)>=(b.minimumProficiency??0);

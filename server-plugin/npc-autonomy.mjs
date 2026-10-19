@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
@@ -61,7 +62,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw Error('这项目标不能通过盘点本人库存直接完成');
  }else if(action.kind==='craft'){
   const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw Error('配方未登记');
-  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id])throw Error('人物没有学会该配方');
+  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw Error('人物没有学会该配方');
   if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw Error('人物技能不足');
   if(recipe.location&&recipe.location!==actor.location)throw Error('不在配方地点');
   const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
