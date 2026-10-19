@@ -60,7 +60,7 @@ import {advancePromotion,nextPromotionMinute}from'./promotion.mjs';
 import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextHousingMinute,settleProjectWorks}from'./public-projects.mjs';
 
 const clone=value=>structuredClone(value);
-import {personSimulation,personConstraints}from'./entity-view.mjs';
+import {personSimulation,personConstraint,personConstraints}from'./entity-view.mjs';
 import {PatchCursor,withRecordIndex}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
@@ -146,7 +146,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
     // These legacy handlers have no nextMinute hook. Register their actual
     // deadlines, including travel created by the preceding tick.
     const due=minute=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute});};
-    for(const effect of Object.values(state.effects??{}))due(effect.expires);
+    for(const effect of Object.values(state.effects??{})){due(effect.expires);due(effect.nextUpkeep);}
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
@@ -155,6 +155,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
         if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }
     const constraints=personConstraints(engine,state);
+    const schedulePlan=advanceLayerPlan(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
     for(const [id,npc]of Object.entries(state.npcs??{})){
         due(npc.scheduleTravel?.arrive);due(npc.cognitionTravel?.arrive);
@@ -162,7 +163,19 @@ export function nextFromScheduleHeap(engine,d,now,end){
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
         if(group&&group.layer!=='intelligent')continue;
-        if(engine.byId.get(id)?.schedule||npc.routine){const slot=engine.protocolScheduleAt(engine,id,now,state,constraints);due(slot?.until);}
+        if(engine.byId.get(id)?.schedule||npc.routine){
+            const slot=engine.protocolScheduleAt(engine,id,now,state,constraints);
+            due(slot?.until);
+            // A clock tick at the end of a slot is too late to start a trip
+            // for the slot already in progress. Wake once at the first
+            // actionable minute so advanceNpcSchedules can create its travel
+            // deadline, which is then registered above on the next pass.
+            const constrained=personConstraint(engine,state,id,now,constraints)?.value;
+            const occupied=state.player?.companions?.includes(id)||engine.npcScheduleReservations?.has(id)||engine.medicineParticipants?.has(id)||engine.npcAutonomyBusy?.(state,id,now);
+            if(schedulePlan.countyOf(npc.location)===schedulePlan.player&&personSimulation(engine,state,id).value&&slot?.services?.length&&slot.location===state.location&&!npc.scheduleTravel&&npc.location&&npc.location!==slot.location&&!constrained&&!occupied&&!['濒死','昏迷','患病'].includes(npc.status)){
+                try{if(engine.route(npc.location,slot.location,'walk',now,state.randomSeed,engine.weatherSequences,engine.advanceGraphs).cost<=npc.coins)due(now+1);}catch{}
+            }
+        }
     }
     const ticks=heap.ticksBetween(now,end);
     return ticks.length?ticks[0]:null;
@@ -281,7 +294,7 @@ const systems=[
  {id:'public_projects',order:910,advance:(e,d,ctx)=>{advancePublicProjects(d,e,ctx);advanceHouses(d,e,ctx);}},
  {id:'npc_cognition',order:1000,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcCognitionMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcCognition(d,e,before,after,id,{beforeState});}},
- {id:'npc_autonomy',order:1100,active:e=>fullNpcs(e),nextMinute:(e,d,now)=>nextNpcAutonomyMinute(d.get('state'),now),
+ {id:'npc_autonomy',order:1100,active:e=>fullNpcs(e),currentMinute:(e,d,now,id)=>{if(now%1440===600)advanceNpcAutonomy(d,e,now,now,id,{beforeState:d.get('state')});},nextMinute:(e,d,now)=>nextNpcAutonomyMinute(d.get('state'),now),
   advance:(e,d,{before,after,id,beforeState})=>{if(fullNpcs(e))advanceNpcAutonomy(d,e,before,after,id,{beforeState});}},
  {id:'office_salaries',order:1129,nextMinute:(e,d,now)=>nextSalaryMinute(e,now),advance:(e,d,ctx)=>advanceOfficeSalaries(d,e,ctx)},
  {id:'governance_offices',order:1130,nextMinute:(e,d,now)=>nextOfficeMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceOffices(d,e,ctx)},

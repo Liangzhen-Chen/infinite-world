@@ -215,4 +215,8 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  }
  return results;
 }
-export function nextQuestBoardMinute(state,after){return Math.min(Infinity,...Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q)&&q.deadline>after).map(q=>q.deadline));}
+export function nextQuestBoardMinute(state,after){
+ const rows=Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&active(q));
+ const failedBuild=rows.some(q=>q.workEvidence&&q.objective?.type==='build'&&(!state.projects?.[q.objective.project]||!['施工中','已完成'].includes(state.projects[q.objective.project].status)));
+ return Math.min(failedBuild?after+1:Infinity,...rows.filter(q=>q.deadline>after).map(q=>q.deadline));
+}

@@ -20,7 +20,7 @@ const next=mergeReusePublication(before,publication),seed=JSON.parse(await fs.re
 test('隔离预演不写入，只追加T19的14条法术且重复零写入；正文/来源/L4篡改在写入前拒绝',async t=>{
  const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-w2-reuse-'));
  t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(root,{recursive:true,force:true});});
- for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ for(const folder of ['meta','people','geo','lore','rules','templates'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const [file,value]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w2-reuse'),path.join(root,'drafts/w2-reuse'),{recursive:true});

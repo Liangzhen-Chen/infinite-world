@@ -259,6 +259,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(index>=reach)throw Error('计划步数超出本人灵智所及');
    const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
    if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
+   if(action.kind==='switch_vocation'&&!d.get('state','npcs',proposal.npc))throw Error('人物没有独立成长记录');
    const decision=npcDecision(subjectiveView(engine,d.document,proposal.npc),{kind:action.kind,from:proposal.npc,needSatisfaction:100});
    if(decision.outcome!=='agree')throw Error(decision.reason);
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}
