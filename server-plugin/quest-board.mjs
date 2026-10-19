@@ -16,6 +16,8 @@ import {personQuestRights} from './entity-view.mjs';
 import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
 import {laborNotices} from './labor-market.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('quest-board',{kinds:[]});
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -37,7 +39,7 @@ function notice(d,engine,q,minute,stage,location=q.location){
   d.set(['state','npcs',who,'memoryStream'],[...stream,{id,sourceEvent:id,kind:'quest',private:true,minute,location,participants,
    content:`委托“${q.content}”：${q.status}${q.reason?`，${q.reason}`:''}`,sourceType:'亲历',salience:3}]);
  }
- d.set(['state','records',id],{category:'quest_receipt',quest:q.id,parties:participants,minute,location,status:q.status,reason:q.reason??null,
+ holdingSet(d,null,['state','records',id],{category:'quest_receipt',quest:q.id,parties:participants,minute,location,status:q.status,reason:q.reason??null,
   escrow:q.escrow,refund:q.refund??0,rewardPaid:q.rewardPaid??0,...(q.source?{source:q.source.generator}:{}),sourceEvent:id});
 }
 function close(d,engine,q,status,reason,minute){
@@ -55,7 +57,7 @@ function closeQuest(d,engine,q,status,reason,minute){
   const debtor=q.fundedBy?.faction??q.fundedBy?.treasury??q.fundedBy?.settlement??q.publisher;
   registerEarnedClaim(d,engine,{id:rewardClaim,kind:'bounty',debtor,creditor:q.taker,amount,createdAt:minute,deadline:minute,source:q.id,terms:{onDebtorGone:'accelerate',onCreditorGone:'estate'}});
   d.set(['state','quests',q.id],{...q,escrow:0});
-  d.set(['state','records',q.id],{category:'contract',id:q.id,kind:'service',parties:[debtor,q.taker],debt:rewardClaim,escrow:amount,createdAt:q.createdAt,endedAt:minute,status:'已终止'});
+  holdingSet(d,null,['state','records',q.id],{category:'contract',id:q.id,kind:'service',parties:[debtor,q.taker],debt:rewardClaim,escrow:amount,createdAt:q.createdAt,endedAt:minute,status:'已终止'},'quest-board');
   settleClaim(d,engine,{id:rewardClaim,payer:debtor,amount,escrowContract:q.id},`${q.id}:${status}`);
  }
  else if(!paid&&refundQuestFunding(d,engine,q,amount,minute));

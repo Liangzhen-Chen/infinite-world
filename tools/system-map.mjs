@@ -146,7 +146,7 @@ const SYSTEMS=[
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs']},
  {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs']},
- {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-claims.mjs','service-queue.mjs']},
+ {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-conditional.mjs','obligation-claims.mjs','service-queue.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
