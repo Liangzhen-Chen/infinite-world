@@ -33,7 +33,7 @@ function recallEvidence(state,id,events){
 }
 export function reviewPlayerFacts(state){
  return {
-  debts:Object.fromEntries(obligationRows(state).filter(r=>[r.debtor,r.creditor].includes('player')).map(r=>[r.legacyRecord??r.id,{...pick(r,['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt']),resource:r.resource??'coin_river',outstanding:obligationView(state,r).owed,amountDue:obligationView(state,r).amountDue,closed:obligationView(state,r).closed}])),
+  debts:Object.fromEntries(obligationRows(state).filter(r=>[r.debtor,r.creditor].includes('player')).map(r=>[r.legacyRecord??r.id,{...pick({...r,...state.records?.[r.legacyRecord]},['name','debtor','creditor','amount','paid','status','createdAt','deadline','overdueAt','paidAt']),resource:r.resource??'coin_river',outstanding:obligationView(state,r).owed,amountDue:obligationView(state,r).amountDue,closed:obligationView(state,r).closed}])),
   quests:Object.fromEntries(Object.entries(state.quests??{}).filter(([,q])=>q.taker==='player'||q.publisher==='player'||!q.taker).map(([id,q])=>[id,pick(q,['publisher','taker','name','content','status','grade','reward','objective','deadline','escrow'])])),
   authorizations:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r.category==='authorization'&&(r.grantee==='player'||r.grantor==='player')).map(([id,r])=>[id,pick(r,['action','subject','grantor','grantee','guests','scope','content','createdAt','expires','revoked','revokedAt','sourceEvent'])]))
  };

@@ -50,7 +50,7 @@ export function stateNotices(before,after,resolveName=id=>id){
             else if(old&&!row.revoked&&before.minute<row.expires&&row.expires<=after.minute)push('permission',`进入${name(row.subject)}的许可已到期`);
         }
         if(row.category==='repair'&&row.mechanic==='player'&&!before.records?.[id])push('repair',`${name(row.item)}修整${row.success?'完成':'未成功'}${row.completionFailure?`：${row.completionFailure}`:''}`);
-        if(row.category==='debt'&&row.debtor==='player'&&!row.obligation){
+        if(row.category==='debt'&&row.debtor==='player'){
             const old=before.records?.[id];
             if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${row.amount-row.paid}铜 · ${row.status}`);
         }
@@ -58,7 +58,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         const old=before.records?.[id];
         if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`,playerDocuments(after,resolveName).find(card=>card.id===`record:${id}`));
     }
-    for(const row of obligationRows(after).filter(r=>after.obligations?.[r.id]&&r.debtor==='player')){
+    for(const row of obligationRows(after).filter(r=>after.obligations?.[r.id]&&r.debtor==='player'&&!r.legacyRecord&&!r.reservationVersion)){
         const old=obligationRow(before,row.id),current=obligationView(after,row);
         if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${current.owed}铜 · ${row.status}`);
     }

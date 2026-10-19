@@ -856,7 +856,7 @@ export class WorldEngine {
         }
         if(o.type==='送货'){
             if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');
-            if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},`${id}:deliver:${key}`);
+            if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},o.deliveryVersion===1?`delivery:${key}:${o.deadline}`:`${id}:deliver:${key}`);
             else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
         }
         if(o.type==='付款'){

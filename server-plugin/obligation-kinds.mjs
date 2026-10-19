@@ -13,7 +13,7 @@ function freeze(value){if(value&&typeof value==='object'){for(const v of Object.
 for(const spec of JSON.parse(fs.readFileSync(new URL('../world/ontology/obligations.json',import.meta.url),'utf8')).entries)registerObligationKind(spec);
 export const obligationKinds=()=>[...kinds.values()];
 export function obligationKind(row){
- const id=row.obligationKind??row.kind??(row.category==='debt'?'compensation':row.deliveryVersion===1?'delivery':row.reservationVersion===1?'promise':row.type??null);
+ const id=row.obligationKind??row.kind??(row.deliveryVersion===1?'delivery':row.reservationVersion===1?'promise':row.category==='debt'?'compensation':row.type??null);
  const spec=kinds.get(id)??[...kinds.values()].find(k=>k.aliases?.includes(id));
  if(!spec)throw Error(`Undeclared obligation kind: ${id}`);
  return spec;

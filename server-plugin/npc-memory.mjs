@@ -42,6 +42,8 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     const after=d.get('state'),name=id=>id==='player'?after.player.name:engine.byId.get(id)?.name??id;
     if(['obligation_opened','obligation_amended','obligation_closed','obligation_settled'].includes(verb)){
         const row=after.obligations?.[event.obligation];if(!row)return;
+        // Quest-board owns the reward receipt and the parties' quest memory.
+        if(row.kind==='bounty'&&after.quests?.[row.source])return;
         const participants=[...new Set([...(event.participants??[]),event.actor].filter(Boolean))];
         const payment=verb==='obligation_settled'?row.events?.findLast(e=>e.eventId===event.result.evidence):null;
         const payer=payment?.payer??event.actor??row.debtor,operator=payment?.actor??event.actor??payer;
@@ -126,7 +128,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         if(quest?.taker==='player'&&args.operation!=='inspect'&&!recorded)add('quest',`${name('player')}参与的委托“${quest.content??quest.name}”现为${quest.status}`,['player',quest.publisher],{salience:3,observers:[],private:true});
     }
     for(const [id,obligation]of Object.entries(after.obligations??{})){
-        if(obligation.debtor)continue; // Protocol receipts and debt compatibility rows notify their actual parties.
+        if(obligation.debtor&&!obligation.promisor)continue; // Promises retain their concrete performance memories.
         const old=before.obligations?.[id];if(old?.status===obligation.status)continue;
         const terms=obligation.type==='付款'?`${obligation.coins}铜付款`:obligation.type==='送货'?`${name(obligation.item)}${obligation.quantity}份送货`:obligation.type;
         add(`obligation_${id}`,`${name(obligation.promisor)}对${name(obligation.promisee)}的${terms}约定：${obligation.status}`,[obligation.promisor,obligation.promisee],{observers:[],partyNotice:Boolean(old),...(obligation.deliveryVersion===1&&Number.isSafeInteger(obligation.resolvedAt)?{minute:obligation.resolvedAt}:{}),...(old?{location:null,noticeKey:`:obligation_${id}`}:{ }),salience:4,emotion:obligation.status==='违约'?'失望':'认真'});
