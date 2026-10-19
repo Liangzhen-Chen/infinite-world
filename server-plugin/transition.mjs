@@ -64,9 +64,11 @@ const live=(d,e,id)=>{
     // Freight remains in a shipment's custody account after its vehicle is lost.
     return row?.category==='transport'&&!!row.cargoLocation&&live(d,e,row.cargoLocation);
 };
+function workstationAnchorOwner(d,e,id){
+    return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id))?.id??null;
+}
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
-    if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
     // Site reserves are anchored to an authored resource of the live site,
     // rather than an independent agent named by the composite account owner.
     if(id.startsWith('site:')){
@@ -75,8 +77,9 @@ function accountOwnerLive(d,e,id){
         if(site)return live(d,e,site.id);
     }
     // Workstation inventory is a real S1 account, anchored at its building.
-    const stationPlace=[...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id));
-    if(stationPlace)return live(d,e,stationPlace.id);
+    const stationOwner=workstationAnchorOwner(d,e,id);
+    if(stationOwner)return !byEntity(d,stationOwner)?.gone&&entityRow(d,stationOwner)?.goneAt===undefined;
+    if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
     const row=read(d,'state','records',id);
     if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
     if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
@@ -478,7 +481,7 @@ export function transition(d,engine,input){
         // transition would expose an invalid intermediate state.
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
         for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
-            const ac=parseAccount(key);if(ac.owner!==entity||!amount)continue;
+            const ac=parseAccount(key);if((ac.owner!==entity&&workstationAnchorOwner(d,engine,ac.owner)!==entity)||!amount)continue;
             const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
             const saved=debris?Math.floor(amount*salvage):amount;
             const to=input.treasury??successor??input.successor??(debris?wreck:owner);

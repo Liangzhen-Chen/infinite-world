@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r35a",
+  "commit": "refs/heads/r35c",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -1034,7 +1034,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 471,
+   "lines": 484,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1157,7 +1157,7 @@
     "server-plugin/contract-state.mjs",
     "server-plugin/lifecycle-state.mjs"
    ],
-   "lines": 2554,
+   "lines": 2557,
    "stateWrites": [
     "npcAutonomy",
     "obligations",
@@ -2172,7 +2172,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 5231,
+   "lines": 5235,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2487,7 +2487,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 1320,
+   "lines": 1321,
    "stateWrites": [
     "location",
     "npcs",
@@ -14894,6 +14894,7 @@
      "pattern": "\\.services\\b|serviceCatalog",
      "modules": [
       "server-plugin/activities.mjs",
+      "server-plugin/advance-registry.mjs",
       "server-plugin/business.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/entity-view.mjs",
@@ -14910,6 +14911,7 @@
       "server-plugin/subjective-view.mjs"
      ],
      "systems": [
+      "base_advance",
       "base_npc_decision",
       "base_standing",
       "kernel_engine",
@@ -16832,7 +16834,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 409
+   "lines": 422
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -19238,7 +19240,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 637
+   "lines": 638
   },
   "server-plugin/learning.mjs": {
    "system": "sim_character",
@@ -21416,7 +21418,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 219
+   "lines": 223
   },
   "server-plugin/quest-sources.mjs": {
    "system": "sim_society",
@@ -22472,7 +22474,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 1154
+   "lines": 1157
   },
   "server-plugin/transport-route.mjs": {
    "system": "sim_transport",
