@@ -63,7 +63,9 @@
   "subjectGone"
  ],
  "reasons": [
-  {"id": "death"},
+  {
+   "id": "death"
+  },
   {
    "id": "opened"
   },
@@ -552,6 +554,39 @@
     "rank"
    ],
    "note": "长期离境是否解任由章程 removalTriggers 决定；defected 另发 defect 事件"
+  },
+  {
+   "id": "business_member_of",
+   "label": "商号会籍",
+   "holderKinds": [
+    "business"
+   ],
+   "subjectKinds": [
+    "collective"
+   ],
+   "exclusive": false,
+   "handover": {
+    "gone": "close",
+    "vacated": "close",
+    "defected": "close"
+   },
+   "onSubjectGone": "close",
+   "hooks": [],
+   "concluded": false,
+   "functional": false,
+   "derives": {
+    "conduction": true
+   },
+   "visibility": "public",
+   "pins": "none",
+   "contest": null,
+   "incompatibleWith": [],
+   "terms": [
+    "rank",
+    "representative",
+    "feeAccount"
+   ],
+   "note": "仅供真实 business 商号；由现任代表同意，使用商号经营所用店主账户缴费，不授予人物职位。"
   },
   {
    "id": "devotee_of",

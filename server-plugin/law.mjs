@@ -486,8 +486,26 @@ export function lawAction(d,args,eventId){
             // Earned wage claims are executed before an ordinary creditor or
             // a fine. Unreachable senior creditors retain the reserved assets.
             const initialOwed=obligationView(d.get('state'),row.debt).owed;let executed=0;
+            const shareholderExecutions=[];
+            const fundLiability=needed=>{
+                let shortfall=Math.max(0,needed-financeBalance(d,this,debt.debtor));
+                for(const equity of Object.values(d.get('state','records')??{})){
+                    const terms=equity.clauses?.liability;
+                    if(!shortfall)break;
+                    if(equity.kind!=='equity'||equity.status!=='有效'||equity.share<=0||equity.issuer!==debt.debtor||
+                        terms?.form!=='unlimited'||terms.issuer!==debt.debtor||terms.holder!==equity.holder||!terms.consentEvent)continue;
+                    const holder=equity.holder,at=holder==='player'?d.get('state','location'):d.get('state','npcs',holder,'location');
+                    if(at!==code.court||holder===debt.debtor||isGone(this,d.get('state'),holder))continue;
+                    const seized=Math.min(shortfall,financeBalance(d,this,holder));
+                    if(!seized)continue;
+                    financeTransfer(d,this,holder,debt.debtor,seized,`${eventId}:shareholder:${equity.id}`);
+                    shareholderExecutions.push({contract:equity.id,holder,form:terms.form,amount:seized,consentEvent:terms.consentEvent});
+                    shortfall-=seized;
+                }
+            };
             for(const senior of wagePriorityClaims(d.get('state'),debt.debtor)){
                 if([senior.id,senior.legacyRecord].includes(row.debt)){
+                    fundLiability(obligationView(d.get('state'),senior).owed);
                     const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
                     if(payment){settleClaim(d,this,{id:senior.id,amount:payment,judicial:{case:row.id,authority:officer}},`${eventId}:wage:${senior.id}`);executed+=payment;}
                     if(obligationView(d.get('state'),senior.id).owed)break;
@@ -498,8 +516,10 @@ export function lawAction(d,args,eventId){
                 if(payment){settleClaim(d,this,{id:senior.id,amount:payment},`${eventId}:wage:${senior.id}`);executed+=payment;}
                 if(obligationView(d.get('state'),senior.id).owed)break;
             }
-            const balance=financeBalance(d,this,debt.debtor),amount=Math.min(obligationView(d.get('state'),row.debt).owed,balance);
-            const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
+            const reserved=wagePriorityClaims(d.get('state'),debt.debtor).filter(r=>![r.id,r.legacyRecord].includes(row.debt)).reduce((n,r)=>n+obligationView(d.get('state'),r).owed,0);
+            if(!reserved)fundLiability(obligationView(d.get('state'),row.debt).owed);
+            const balance=financeBalance(d,this,debt.debtor),amount=Math.min(obligationView(d.get('state'),row.debt).owed,Math.max(0,balance-reserved));
+            const fine=Math.min(Math.max(0,balance-amount-reserved),Math.max(0,row.judgment.fine-(row.finePaid??0)));
             if(amount+fine+executed<=0&&obligationView(d.get('state'),row.debt).owed)throw Error('债务人没有可执行资金，欠款保留');
             if(amount)settleClaim(d,this,{id:row.debt,amount,judicial:{case:row.id,authority:officer}},`${eventId}:claim`);
             if(fine){financeChange(d,this,debt.debtor,-fine,eventId,{account:fundAccount(`legal_treasury:${row.law}`),writer:'law',eventId});const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});holdingSet(d,null,path(key),{...fund,coins:fund.coins+fine},'law');}
@@ -507,7 +527,8 @@ export function lawAction(d,args,eventId){
             const recovered=initialOwed-remaining;
             const finePaid=(row.finePaid??0)+fine,closed=!remaining&&finePaid===row.judgment.fine;
             holdingSet(d,null,path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+recovered},'law');
-            return {case:row.id,recovered,fine,remaining,closed};
+            if(shareholderExecutions.length)holdingSet(d,null,path(row.id),{...d.get(...path(row.id)),shareholderExecutions:[...row.shareholderExecutions??[],...shareholderExecutions]},'law');
+            return {case:row.id,recovered,fine,remaining,closed,shareholderExecutions};
         }
     }
     if(row.offender!=='player'&&!creditorClaim){

@@ -97,7 +97,7 @@ export function entityTemplates(engine,state,id){
     if(/^(loc_|site_|lair_)/.test(id)||w.lairs.has(id)||engine.byId?.get(id)?.type==='loc')out.add('place');
     if(/^bld_/.test(id)||state?.created?.[id]?.kind==='building'){out.add('thing');out.add('place');}
     if(state?.itemInstances?.[id]||records[id]?.category==='transport_asset'||/^transport_asset:/.test(id)||state?.buildings?.[id])out.add('thing');
-    if(records[id]?.category==='business')out.add('thing');
+    if(records[id]?.category==='business'){out.add('thing');out.add('business');}
     if(state?.obligations?.[id]||['debt','contract','pledge'].includes(records[id]?.category))out.add('instrument');
     return out.size?[...out]:null;
 }
@@ -256,7 +256,7 @@ defineHoldingSource('org',{
         const o=storedOrganization(engine,state,id);if(!o)return null;
         const office=orgLeaderOffice(id);
         return {entities:[{id:office,kind:'office',facts:{org:id,role:'leader'}}],
-            holdings:[...Object.entries(o.members).map(([m,rank])=>({kind:'member_of',holder:m,subject:id,terms:{rank}})),
+            holdings:[...Object.entries(o.members).map(([m,rank])=>({kind:state.records?.[m]?.category==='business'?'business_member_of':'member_of',holder:m,subject:id,terms:{rank,...(state.records?.[m]?.category==='business'?{representative:state.records[`organization:${id}`]?.members?.[m]?.representative,feeAccount:state.records[`organization:${id}`]?.members?.[m]?.feeAccount}:{})}})),
                 ...(o.leader?[{kind:'holds_office',holder:o.leader,subject:office}]:[])]};
     },
 });

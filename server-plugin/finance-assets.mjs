@@ -173,6 +173,8 @@ export function assetTrade(d,e,args,id){
             note:'invest:business组织或seller商人,quantity股份%；share_transfer:contract,buyer；rent_out:location,coins月租；workshop:item配方,coins日薪；workshop_terms调整工资。'};
     }
     if(op==='invest'){
+        const liability=args.liability??'limited';
+        if(!['limited','unlimited'].includes(liability))throw Error('责任形式须为 limited 或 unlimited');
         const issuer=args.business?e.resolve(args.business):e.resolve(args.seller),representative=args.business?groupRepresentative(e,state,issuer,args.seller):issuer;
         if(!representative)throw Error('组织没有现任签约代表');counterpart(d,e,representative,{consent:args.consent});
         if(!args.business&&!personBusiness(e,state,issuer)?.open.value)throw Error('对方没有当前可经营的商号');
@@ -180,8 +182,9 @@ export function assetTrade(d,e,args,id){
         if(sold+share>90)throw Error('发行股份超过可转让比例');
         const value=Math.ceil(netAssets(d,e,issuer)*share/(100-share)),cost=int(args.coins??value,Math.max(1,Math.ceil(value*.8)),Math.max(1,Math.ceil(value*1.5)),'入股对价');
         financeTransfer(d,e,'player',issuer,cost,id);const key=`equity:${id}`;
-        const row={category:'contract',kind:'equity',id:key,issuer,holder:'player',share,stake:cost,baselineProfit:operatingProfit(d,e,issuer),distributed:0,nextDividend:now+MONTH,payments:[],status:'有效',location,createdAt:now,source:id};holdingSet(d,e,rec(key),row,'finance-assets');
-        return {contract:key,issuer,share,cost};
+        const row={category:'contract',kind:'equity',id:key,issuer,holder:'player',share,stake:cost,baselineProfit:operatingProfit(d,e,issuer),distributed:0,nextDividend:now+MONTH,payments:[],status:'有效',location,createdAt:now,source:id};
+        holdingSet(d,e,rec(key),snapshotContractTerms({...row,liability:{form:liability,scope:liability==='limited'?'以出资为限':'可追及个人财产',contribution:cost,holder:'player',issuer,representative,consentEvent:id,signedAt:now}}),'finance-assets');
+        return {contract:key,issuer,share,cost,liability};
     }
     if(op==='dividend'||op==='share_transfer'){
         const row=contractTerms(d.get(...rec(args.contract))??{},now);if(row?.kind!=='equity'||row.holder!=='player'||row.status!=='有效')throw Error('需要本人持有的有效股份契约');
@@ -193,7 +196,7 @@ export function assetTrade(d,e,args,id){
         const value=Math.max(1,Math.ceil(netAssets(d,e,row.issuer)*share/100)),cost=int(args.coins??value,Math.max(1,Math.ceil(value*.8)),Math.ceil(value*1.5),'转让价款');
         financeTransfer(d,e,buyer,'player',cost,id);
         // Accrued undistributed entitlements transfer with the shares.
-        const part=share/row.share,transferred=snapshotContractTerms({...row,clauses:undefined,amendments:[],id:`equity:${id}`,holder:buyer,share,stake:Math.floor(row.stake*part),distributed:Math.floor(row.distributed*part),source:id});
+        const part=share/row.share,transferred=snapshotContractTerms({...row,clauses:undefined,amendments:[],id:`equity:${id}`,holder:buyer,share,stake:Math.floor(row.stake*part),distributed:Math.floor(row.distributed*part),source:id,liability:row.liability?{...row.liability,holder:buyer,contribution:Math.floor(row.stake*part),consentEvent:id,signedAt:now}:undefined});
         holdingSet(d,e,rec(row.id),{...row,share:row.share-share,stake:row.stake-transferred.stake,distributed:row.distributed-transferred.distributed,...(share===row.share?{endedAt:now}:{}),amendments:[...row.amendments??[],{minute:now,share:row.share-share,stake:row.stake-transferred.stake}],status:share===row.share?'已转让':'有效'},'finance-assets');holdingSet(d,e,rec(transferred.id),transferred,'finance-assets');
         return {contract:transferred.id,buyer,share,cost};
     }

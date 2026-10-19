@@ -2,7 +2,8 @@
 import {facilityView} from './facility-state.mjs';
 
 const fields=['parties','owner','worker','employer','tenant','holder','issuer','partner','subject','room','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','baselineNet','baselineProfit','unitPrice','targetQuantity','demandSource','supplier','item','project','farm','monthlyRent','starts','createdAt','deadline','expires','onHolderGone','onEmployerGone','onWorkerGone','actedAs','inName','signingPlace','signingLaw','signingLawVersion','calendar','days','grace','exclusive','autoSettle','limitation','accrual'];
-const signingFacts=new Set(['actedAs','inName','signingPlace','signingLaw','signingLawVersion']);
+fields.push('liability');
+const signingFacts=new Set(['actedAs','inName','signingPlace','signingLaw','signingLawVersion','liability']);
 export function snapshotContractTerms(row){
  if(row.clauses)return row;
  const terms=Object.fromEntries(fields.filter(k=>row[k]!==undefined).map(k=>[k,structuredClone(row[k])]));

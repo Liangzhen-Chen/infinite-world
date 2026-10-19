@@ -13,6 +13,8 @@ import {assessTradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
+import {entityTransition} from './entity-transitions.mjs';
+import {presentWitnesses} from './world-events.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -264,5 +266,6 @@ export function businessAction(d,args,eventId){
         if(debt<=d.get('state','player','coins')+refundable)throw Error('现有现金和托管款足以偿债，不符合现金破产条件');
     }
     endShop(d,this,shop,bankrupt?'破产':'停业',eventId,bankrupt?'无力用现金偿还现有欠款，欠款保留':'店主主动停业');
+    if(bankrupt)entityTransition(d,this,{id:`${eventId}:business-breach`,verb:'breach',actor:shop.id,location:shop.location,visibility:'public',witnesses:presentWitnesses(d.get('state'),shop.location),participants:[shop.owner],tags:['business'],summary:`${shop.id}无力偿还经营欠款，宣告破产；债务保留`});
     return {business:shop.id,status:bankrupt?'破产':'停业',inventoryRetained:true,note:'剩余实物保留，未偿欠款仍在原债务记录中。'};
 }

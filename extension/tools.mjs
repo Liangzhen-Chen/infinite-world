@@ -44,6 +44,7 @@ define('world_actions','查此处/对目标可做之事',{target:str,query:str},
 define('world_act','按id执行；槽位查world_actions',{action:str,slots:{type:'object'}},['action']);
 definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.operation.description='依次交易/租铺/采购/雇盘点/当面履约/同意收购/还债/取消未履约/借款(coins,days,item押)/钱庄存取兑币(buyer=player买)/受雇/合伙(quantity分成%)';
 definitions.find(row=>row.function.name==='world_remember').function.parameters.properties.rumor={...str,description:'玩家传闻ID/在场来源/未核实原文；10分'};
+definitions.find(row=>row.function.name==='world_trade').function.parameters.properties.liability={type:'string',enum:['limited','unlimited'],description:'入股签署责任：limited 以出资为限；unlimited 可追及个人财产'};
 const festivalParameters=definitions.find(row=>row.function.name==='world_settlement').function.parameters.properties;
 festivalParameters.operation.enum.push('medicine_inspect','medicine_seek','medicine_fund','medicine_hire','medicine_health','medicine_cancel');
 festivalParameters.contract=str;
