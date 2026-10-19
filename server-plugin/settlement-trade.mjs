@@ -1,6 +1,6 @@
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {granary as granaryAccount,cargo as cargoAccount,moveStock,priceRead} from './stock.mjs';
+import {granary as granaryAccount,cargo as cargoAccount,moveStock,priceRead,bagStock,settlementStock} from './stock.mjs';
 // S1b: 周贸易在途粮记在 settlement-trade:<id>|item_oats|cargo（带原粮批次）；途中过期进 sink:decay，仓容不足拒收的进 sink:destroy。
 declareLedgerWriter('settlement-trade',{sinks:['sink:decay','sink:destroy']});
 import {granaryCapacity} from './facility-state.mjs';
@@ -74,12 +74,49 @@ function region(engine,location){
     }
     return null;
 }
-export function regionalTradePrice(d,engine,item,location,minute=d.get('state','minute')){
+// Minimal material market: shop stock ceilings/reserves express local demand;
+// only mined output and public/supplier stock are supply, never unmined reserves.
+// S5 can extend these terms with commitments, retention and incoming deliveries.
+export function regionalMaterialSupply(d,engine,item,location){
+ const sid=region(engine,location),rules=engine.rules.economy?.shops;
+ if(!sid||!rules)return null;
+ const demand=goods=>(rules.stores??[]).filter(s=>s.settlement===sid).flatMap(s=>s.restock.filter(r=>r.item===goods&&r.source==='settlement'&&r.stock!=='food'));
+ const rows=demand(item),stock=rows[0]?.stock,s=d.get('state','settlements',sid);
+ let target=rows.reduce((n,r)=>n+r.maximum+r.reserve,0);
+ // Upstream materials inherit demand from actual conversion recipes, not a
+ // named ore/iron multiplier. Unprocessed ore remains its own resource account.
+ if(!target)for(const recipe of engine.world.recipes??[]){
+  const amount=recipe.materials.filter(m=>m.item===item).reduce((n,m)=>n+m.amount,0);
+  if(amount)target+=demand(recipe.output.item).reduce((n,r)=>n+r.maximum+r.reserve,0)*amount/recipe.output.quantity;
+ }
+ if(!target)return null;
+ let supply=stock?priceRead(d,{point:'region.material',account:settlementStock(engine,sid,stock),legacy:()=>s?.[stock]??0}):0;
+ const suppliers=[];
+ for(const [id,n]of Object.entries(d.get('state','npcs')??{})){
+  if(region(engine,n.location??engine.byId.get(id)?.location)!==sid)continue;
+  const quantity=bagStock(d,engine,{point:'region.material',id,item,legacy:()=>{const v=n.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;}});
+  supply+=quantity;if(quantity)suppliers.push({id,quantity});
+ }
+ return {settlement:sid,item,stock,supply,target,suppliers,factor:clamp(target/Math.max(1,supply),...engine.rules.economy.priceFactorLimits.region)};
+}
+export function regionalTradePrice(d,engine,item,location,minute=d.get('state','minute'),pricing=new Set()){
     const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
     // U3 price swings (hazard clocks) scale the seasonal coefficient here, so
     // shop quotes, business and village lanes all read one figure.
     // U10: life-magic price cuts settled at midnight (magic-economy.mjs).
     const swing=hazardPriceFactor(engine,d.get('state'),item,location,minute),magic=magicPriceFactor(engine,d.get('state'),item,location),resource=forestWaterPriceFactor(engine,d.get('state'),item,location,d),hazard=swing*magic*resource;
+    const material=regionalMaterialSupply(d,engine,item,location);
+    if(material){
+        if(pricing.has(item))return base*material.factor*hazard;
+        const next=new Set(pricing).add(item),recipes=(engine.world.recipes??[]).filter(r=>r.output.item===item);
+        const costs=recipes.map(r=>{
+            const reference=r.materials.reduce((n,m)=>n+engine.byId.get(m.item).basePrice*m.amount,0);
+            const current=r.materials.reduce((n,m)=>n+regionalTradePrice(d,engine,m.item,location,minute,next)*m.amount,0);
+            return reference?current/reference:1;
+        });
+        const inputFactor=costs.length?Math.min(...costs):1;
+        return base*material.factor*inputFactor*hazard;
+    }
     if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);

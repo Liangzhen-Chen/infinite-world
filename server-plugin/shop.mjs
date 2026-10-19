@@ -9,6 +9,7 @@ import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
+import {regionalTradePrice,regionalMaterialSupply} from './settlement-trade.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -170,7 +171,8 @@ function restockRow(d,engine,shop,row,minute){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
-    const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
+    const material=regionalMaterialSupply(d,engine,row.item,shop.settlement);
+    const base=material?Math.ceil(regionalTradePrice(d,engine,row.item,shop.settlement,minute)):engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
     const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins})/base));
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
     if(row.source==='local'){entry.added=want;}
@@ -208,11 +210,11 @@ export function advanceShops(d,engine,before,after){
         for(const shop of stores)if(day>=shop.firstDay&&(day-shop.firstDay)%shop.cycleDays===0)restockShop(d,engine,shop,day*DAY);
 }
 
-// The day's list price between a player and an NPC. Written once per day and
-// counterpart into the ledger; later calls that day read it back unchanged.
+// Material quotes read current supply even within a day; the existing daily
+// quotes remain for other markets until S5 replaces their pricing projections.
 export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
-    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');return old;}
+    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
     const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
     let relation=1,keeperRegard=null,settlementRegard=null;
@@ -225,6 +227,8 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     }
     const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location,d)));
     const row={category:'trade_quote',day,buyer,seller,item,shop:shop?.id??null,settlement:place,basePrice:engine.byId.get(item).basePrice,regionalPrice:price,
+        ...(regionalMaterialSupply(d,engine,item,location)?{dynamic:true}:{}),
+        ...(old?.deals?{deals:old.deals}:{}),
         shopFactor:markup,relationFactor:relation,keeperRegard,settlementRegard,listPrice,quotedAt:minute};
     d.set(['state','records',key],row);
     return row;

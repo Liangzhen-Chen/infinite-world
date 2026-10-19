@@ -9765,5 +9765,48 @@
       "injury": 0
     },
     "process": "把制黄精片、茯苓块和甘草片研成细粉，与滤蜜调成药泥搓成十粒蜜丸，放在东街学馆丹炉上隔火烘40分钟；整段时间炉火须在燃烧，炉温保持在70至140摄氏度之间，炉壁温区不匀时一部分丹丸会焦裂。"
+  },
+  {
+    "id": "recipe_smelt_iron",
+    "name": "选矿冶炼铁料",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_5_core",
+    "minimumProficiency": 0,
+    "minutes": 120,
+    "difficulty": 10,
+    "workstation": "smithing",
+    "process": "分选含铁矿石，以木炭还原并锻打成可回炉铁料；消耗真实矿石和燃料，失败不凭空返料。",
+    "materials": [
+      {
+        "item": "item_iron_ore",
+        "amount": 2
+      },
+      {
+        "item": "item_charcoal",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_smith_hammer",
+      "item_smith_tongs"
+    ],
+    "output": {
+      "item": "item_iron",
+      "quantity": 1
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 4,
+    "learnMinutes": 120,
+    "teachers": [
+      "npc_hw_duanyan"
+    ],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 2
+    },
+    "prerequisites": []
   }
 ]

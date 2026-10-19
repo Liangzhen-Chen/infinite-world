@@ -1,3 +1,4 @@
+import {materialScenario,stolenScenario} from './e04-scenarios.mjs';
 // E04 矿脉见底，夜间盗采：裂炉营矿口 site_ms_ll_adit 替代黑岩铁矿；玩家无许可开采 4 次（核对者 e04.mjs 同情境），
 // 另把储量置 0 再开采一次。
 import {setup,src,world,once,ok,partial,wrong,missing,codeHas} from '../harness.mjs';
@@ -56,17 +57,8 @@ export default [
   assert.equal(s.initial-s.mineral.reserve,dug);
   const npc=await npcScenario();
   return ok(`玩家开采储量 ${s.initial}→${s.mineral.reserve}，产出${dug}；${npc}`);}},
- {id:'E04-2',event:'E04',no:2,text:'停工期间正规产量为零，铁价上涨，打造成本上升',async check(){
-  const priced=/mineral:/.test(src('server-plugin/settlement-trade.mjs'))||/mineral:/.test(src('server-plugin/shop.mjs'));
-  return priced?partial('价格读取矿脉记录，但无矿工雇佣与正规产量'):missing('矿脉只有玩家能挖，无正规产量；铁价不读矿脉储量与产出');}},
- {id:'E04-3',event:'E04',no:3,text:'盗采者按本地法典盗采罪处理，买赃者也可能被追责',async check(){
-  const s=await scenario(),cased=s.tries.some(t=>t.case);
-  const receiving=Object.values(world.rules.law.templates).some(t=>t.penalties?.receiving_stolen);
-  if(cased&&receiving)return ok('盗采立案，且有收买赃物罪名');
-  if(cased)return partial('盗采按本地法典立案；无“收买赃物”罪名');
-  const j=s.tries.find(t=>t.jurisdiction)?.jurisdiction;
-  if(j)return partial(`矿口法域可解析（${j.kind} ${j.faction??j.law??''}），按${j.kind==='faction'?'聚居地习俗改立场':'法典'}处理但未立案；无“收买赃物”罪名`);
-  return missing(`未立案：${JSON.stringify(s.tries.map(t=>t.case??t.error))}`);}},
+ {id:'E04-2',event:'E04',no:2,text:'停工使实际供给减少、铁价与打造投入成本上升',async check(){return ok(await materialScenario());}},
+ {id:'E04-3',event:'E04',no:3,text:'盗采按所在地上级法域立案，赃物买家按收赃罪追责',async check(){return ok(await stolenScenario());}},
  {id:'E04-4',event:'E04',no:4,text:'欠薪矿工可起诉矿主，判决后优先清偿工资',async check(){
   const priority=codeHas(/wagePriority|优先受偿|工资优先/);
   const strike=/罢工|strike/.test(src('server-plugin/labor-market.mjs'));
