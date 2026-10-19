@@ -420,7 +420,8 @@ export function lawAction(d,args,eventId){
         d.set(['state','player','coins'],d.get('state','player','coins')-fee);
         d.set(['state','npcs',issuer,'coins'],d.get('state','npcs',issuer,'coins')+fee);
         const key=`magic_permission:${eventId}`,now=d.get('state','minute'),permission={category:'authorization',action:args.action,subject:'player',grantee:'player',grantor:issuer,location,law:code.id,createdAt:now,expires:now+duration,revoked:false,sourceType:'magic_permit',sourceEvent:eventId};
-        holdingSet(d,null,path(key),permission,'law');holdingSet(d,null,path(`magic_permission_source:${eventId}`),{permission:structuredClone(permission)},'law');
+        holdingSet(d,null,path(key),permission,'law');
+        holdingSet(d,null,path(`magic_permission_source:${eventId}`),{permission:structuredClone(d.get('state','records',key))},'law');
         return{permit:key,permission,cost:fee,minutes:5};
     }
     const {row,code}=caseRow(d,this,args.case),now=d.get('state','minute');
