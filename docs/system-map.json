@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r35b",
+  "commit": "refs/heads/r36",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 12,
   "interactionRules": 25,
   "effectKinds": 22,
-  "links": 568
+  "links": 569
  },
  "layers": [
   {
@@ -313,6 +313,7 @@
     "base_advance",
     "base_effects",
     "base_holdings",
+    "base_npc_decision",
     "base_standing",
     "base_traits",
     "kernel_engine",
@@ -400,6 +401,7 @@
     "base_effects",
     "base_holdings",
     "base_ledger",
+    "base_npc_decision",
     "base_standing",
     "kernel_engine",
     "sim_character",
@@ -964,7 +966,10 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [],
-   "world": [],
+   "world": [
+    "rumors",
+    "settlementProfiles"
+   ],
    "advance": [],
    "subscribes": [],
    "effects": [],
@@ -3613,14 +3618,6 @@
    "kind": "call",
    "labels": [
     "storage.mjs"
-   ]
-  },
-  {
-   "from": "base_npc_decision",
-   "to": "sim_npc",
-   "kind": "call",
-   "labels": [
-    "npc-rumors.mjs"
    ]
   },
   {
@@ -6511,6 +6508,14 @@
   },
   {
    "from": "data_geo",
+   "to": "base_npc_decision",
+   "kind": "data",
+   "labels": [
+    "world/geo"
+   ]
+  },
+  {
+   "from": "data_geo",
    "to": "base_standing",
    "kind": "data",
    "labels": [
@@ -6712,6 +6717,14 @@
   {
    "from": "data_lore",
    "to": "base_ledger",
+   "kind": "data",
+   "labels": [
+    "world/lore"
+   ]
+  },
+  {
+   "from": "data_lore",
+   "to": "base_npc_decision",
    "kind": "data",
    "labels": [
     "world/lore"
@@ -12078,6 +12091,7 @@
     "server-plugin/sites.mjs",
     "server-plugin/smuggling.mjs",
     "server-plugin/standing.mjs",
+    "server-plugin/subjective-view.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/transition.mjs",
@@ -12171,6 +12185,7 @@
     "server-plugin/return-summary.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/stock.mjs",
+    "server-plugin/subjective-view.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/war-diplomacy.mjs",
     "server-plugin/world-clock.mjs"
@@ -22284,7 +22299,6 @@
    "system": "base_npc_decision",
    "imports": [
     "server-plugin/entity-view.mjs",
-    "server-plugin/npc-rumors.mjs",
     "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
@@ -22292,7 +22306,10 @@
    "recordWrites": [],
    "recordReads": [],
    "rules": [],
-   "world": [],
+   "world": [
+    "rumors",
+    "settlementProfiles"
+   ],
    "worldDirs": [],
    "lines": 69
   },
