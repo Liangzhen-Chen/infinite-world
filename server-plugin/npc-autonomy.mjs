@@ -207,11 +207,14 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const reach=Math.max(30,intelligenceOf(engine,d.get('state'),id).recipeMinutes);
    const recipes=engine.world.recipes.filter(r=>(r.teachers?.includes(id)||d.get('state','npcs',id,'recipes',r.id))&&r.minutes<=reach).sort((a,b)=>a.id.localeCompare(b.id));
    const choices=goal?[{kind:'audit_inventory',goal:goal.id}]:recipes.map(r=>({kind:'craft',recipe:r.id}));
+   const queued=Object.values(d.get('state','autonomyCandidates')??{}).filter(c=>c.npc===id);
+   const currentPlan=d.get('state','npcs',id,'plan');
+   // An empty candidate set cannot decide or abandon a plan. Avoid building
+   // the full subjective projection for every resident with nothing to do.
+   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length))continue;
    const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
    const view=subjectiveView(engine,projected,id);
-   const queued=Object.values(d.get('state','autonomyCandidates')??{}).filter(c=>c.npc===id);
    const candidates=autonomyCandidates(engine,view,{scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
-   const currentPlan=d.get('state','npcs',id,'plan');
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
     d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
    }

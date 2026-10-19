@@ -23,6 +23,17 @@ async function trace({quiet=false,seed='advance-registry',steps}){
  return out;
 }
 const days=n=>Array.from({length:n},()=>['world_time',{minutes:DAY}]);
+test('unrelated ticks skip midnight clocks and retain undeclared legacy work',async()=>{
+ const counts={daily:0,shop_restock:0,legacy:0};
+ const originals=new Map(['daily','shop_restock'].map(id=>{const s=advanceRegistry.find(s=>s.id===id);return[s,s.advance];}));
+ for(const [s,advance]of originals)s.advance=(...args)=>{counts[s.id]++;return advance(...args);};
+ const unregister=registerAdvance({id:'r38_legacy_probe',order:1e9,nextMinute:(e,d,now)=>now+1,advance:()=>counts.legacy++});
+ try{
+  const engine=new WorldEngine(world),doc=engine.createCharacter(legacy,{},'r38-clocks');
+  await engine.reduce(doc,{tool:'world_time',args:{minutes:3},eventId:'r38-clock'});
+  assert.deepEqual(counts,{daily:0,shop_restock:0,legacy:3});
+ }finally{unregister();for(const [s,advance]of originals)s.advance=advance;}
+});
 // Golden hashes: first recorded from the hand-written advance() before the registry refactor (K7, equivalence verified at merge).
 // They are now a regression snapshot; after an intended behaviour change regenerate with UPDATE_ADVANCE_GOLDEN=1.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));

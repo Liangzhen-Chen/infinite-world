@@ -61,7 +61,7 @@ import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextH
 
 const clone=value=>structuredClone(value);
 import {personSimulation,personConstraint,personConstraints}from'./entity-view.mjs';
-import {PatchCursor,withRecordIndex}from'./storage.mjs';
+import {PatchCursor,withRecordIndex,recordsMemo}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
@@ -133,21 +133,25 @@ function orderedSystems(d,ctx){
 // 跨度的终点 end 本身不是刻——它只是把时钟拨到 end。午夜入堆为时钟规则，
 // 各系统 nextMinute 入堆为到期项；取 (now, end] 内最小刻，无则返回 null。
 export function nextFromScheduleHeap(engine,d,now,end){
+    return withRecordIndex(()=>buildScheduleHeap(engine,d,now,end));
+}
+function buildScheduleHeap(engine,d,now,end){
     const heap=new ScheduleHeap();
     const state=d.get('state'),previous=engine.educationCourseContext;
     engine.educationCourseContext=educationCourses(engine,state);
+    d.scheduleEducation={state,minute:now,courses:engine.educationCourseContext};
     try{
     const midnight=Math.floor(now/1440)*1440+1440;
-    if(midnight<=end)heap.add({kind:'clock',minute:midnight});
+    if(midnight<=end)heap.add({kind:'clock',minute:midnight,systemIds:[...midnightSystems,'npc_life','office_salaries']});
     for(const system of advanceRegistry)if(system.nextMinute){
         const minute=system.nextMinute(engine,d,now);
-        if(minute>now&&minute<=end)heap.add({kind:'due',minute});
+        if(minute>now&&minute<=end)heap.add({kind:'due',minute,systemId:system.id});
     }
     // These legacy handlers have no nextMinute hook. Register their actual
     // deadlines, including travel created by the preceding tick.
-    const due=minute=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute});};
-    for(const effect of Object.values(state.effects??{})){due(effect.expires);due(effect.nextUpkeep);}
-    if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes);
+    const due=(minute,systemIds=['contracts','law','credit','deliveries','society_news'])=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute,systemIds});};
+    for(const effect of Object.values(state.effects??{})){due(effect.expires,['effect_expiry','summons']);due(effect.nextUpkeep,['summons','contracts']);}
+    if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes,['dying']);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
         due(row.deadline);due(row.expires);due(row.nextAt);
         if(row.category==='society_news'&&row.status==='在途')due(row.arrivesAt);
@@ -155,17 +159,19 @@ export function nextFromScheduleHeap(engine,d,now,end){
         if(row.category==='contract'&&row.kind==='workshop')due(row.nextWork);
     }
     const constraints=personConstraints(engine,state);
+    const slots=new Map();d.scheduleEducation.slots=slots;
     const schedulePlan=advanceLayerPlan(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
     for(const [id,npc]of Object.entries(state.npcs??{})){
-        due(npc.scheduleTravel?.arrive);due(npc.cognitionTravel?.arrive);
+        due(npc.scheduleTravel?.arrive,['npc_obligations']);due(npc.cognitionTravel?.arrive,['npc_cognition']);
         // The existing layer adapter settles eligible fixed-location skeletons
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
         if(group&&group.layer!=='intelligent')continue;
         if(engine.byId.get(id)?.schedule||npc.routine){
             const slot=engine.protocolScheduleAt(engine,id,now,state,constraints);
-            due(slot?.until);
+            slots.set(id,slot);
+            due(slot?.until,['npc_obligations','education']);
             // A clock tick at the end of a slot is too late to start a trip
             // for the slot already in progress. Wake once at the first
             // actionable minute so advanceNpcSchedules can create its travel
@@ -178,6 +184,7 @@ export function nextFromScheduleHeap(engine,d,now,end){
         }
     }
     const ticks=heap.ticksBetween(now,end);
+    d.advanceSchedule={minute:ticks[0],systems:new Set(heap.entries.filter(entry=>entry.minute===ticks[0]).flatMap(entry=>entry.systemIds??[entry.systemId]))};
     return ticks.length?ticks[0]:null;
     }finally{engine.educationCourseContext=previous;}
 }
@@ -208,6 +215,23 @@ function resolveContestPool(d,ctx){
         for(const loser of outcome.losers){loser.reject?.(outcome.reason);recordContestEvent(d,{verb:'contest_lose',id:loser.id,actor:loser.actor??loser.objectId,target:outcome.target,rule:outcome.contest,reason:outcome.reason,minute:ctx.after});}
     }
 }
+// These handlers only loop over crossed midnight/day boundaries. Keep legacy
+// state-driven handlers running until their non-clock work has an explicit owner.
+const midnightSystems=new Set(['daily','shop_restock','projects','hazard_clock','magic_economy','military','war_diplomacy','tribal_awakening','quest_sources']);
+const deadlineSystems=new Set(['world_clock','faction_clock','transport','notables']);
+const ledgerAudit=Symbol('tick ledger audit');
+function systemRunsAt(system,engine,d,ctx){
+    if(midnightSystems.has(system.id))return ctx.days>0;
+    if(system.id==='office_salaries')return Math.floor(ctx.before/(30*1440))<Math.floor(ctx.after/(30*1440));
+    if(system.id==='npc_life')return ctx.days>0||nextNpcLifeMinute(d.get('state'),-1)<=ctx.after;
+    if(system.id==='facilities')return ctx.days>0||nextFacilityMinute(d.get('state'),ctx.before)<=ctx.after;
+    if(system.id==='promotion')return ctx.days>0||nextPromotionMinute(d.get('state'),-1)<=ctx.after;
+    if(system.id==='bounty')return nextBountyMinute(d.get('state'),ctx.before)<=ctx.after;
+    if(deadlineSystems.has(system.id))return d.advanceSchedule?.minute===ctx.after&&d.advanceSchedule.systems.has(system.id)||system.nextMinute(engine,d,-1)<=ctx.after;
+    // Continuous magic is already settled by catchUpLocal before phase 2.
+    if(['magic_care','magic_mind_space','shadow_contracts','magic_objects','magic_air','magic_water_earth'].includes(system.id))return false;
+    return true;
+}
 function runAdvanceSystems(engine,d,ctx){
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
@@ -222,7 +246,7 @@ function runAdvanceSystems(engine,d,ctx){
             }
             due.sort((a,b)=>compareDue(a,b)||a.ruleId.localeCompare(b.ruleId)||a.id.localeCompare(b.id));
             for(const item of due)item.execute();
-            for(const system of systems.filter(s=>s.phase!==PHASE.due&&s.phase!==PHASE.assertion))system.advance(engine,d,ctx);
+            for(const system of systems.filter(s=>s.phase!==PHASE.due&&s.phase!==PHASE.assertion))if(systemRunsAt(system,engine,d,ctx))system.advance(engine,d,ctx);
         }else for(const system of systems)system.advance(engine,d,ctx);
         if(d.scheduler){
             resolveContestPool(d,ctx);
@@ -232,7 +256,7 @@ function runAdvanceSystems(engine,d,ctx){
             resolveContestPool(d,ctx);
             drainWorldReactions(d);
             for(const system of systems.filter(s=>s.phase===PHASE.assertion))system.advance(engine,d,ctx);
-            const errors=auditLedger(d.get('ledger'));
+            const ledger=d.get('ledger'),errors=recordsMemo(ledger,ledgerAudit,()=>auditLedger(ledger));
             if(errors.length)throw new Error(`刻末账本断言失败：${errors.join('; ')}`);
         }
     }finally{delete d.reactionTick;engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}

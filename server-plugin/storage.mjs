@@ -335,12 +335,6 @@ export class PatchCursor {
         if (!root || typeof root !== 'object') throw new Error('补丁路径无法解析');
         if ((patch.op !== 'set' && patch.op !== 'delete') || !Array.isArray(path) || !path.length || path.length > 12) throw new Error('补丁格式无效');
         if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
-        if (recordIndexDepth && path[0] === 'state') {
-            if (path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
-            else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
-            else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
-        }
-        if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
         // Resolve the whole path before writing, so a rejected patch leaves no trace.
         const last = path.length - 1;
         let probe = root;
@@ -350,6 +344,14 @@ export class PatchCursor {
             if (typeof child !== 'object') throw new Error('补丁路径无法解析');
             probe = child;
         }
+        if (recordIndexDepth && path[0] === 'state') {
+            if (path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
+            else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
+            else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
+        }
+        if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
+        if (recordIndexDepth && path[0] === 'ledger') recordIndexes.delete(root.ledger);
+        if (recordIndexDepth && path[0] === 'holdings' && path[1] === 'rows') recordIndexes.delete(root.holdings?.rows);
         const value = patch.op === 'delete' ? undefined : clone ? cloneData(patch.value) : patch.value;
         const chain = this.chain;
         let target, reused = 0;

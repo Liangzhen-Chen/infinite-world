@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r37",
+  "commit": "refs/heads/r38",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -570,7 +570,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1450,
+   "lines": 1451,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -697,7 +697,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1760,
+   "lines": 1762,
    "stateWrites": [
     "checks",
     "crafted",
@@ -956,7 +956,7 @@
     "server-plugin/npc-decision.mjs",
     "server-plugin/autonomy-candidates.mjs"
    ],
-   "lines": 149,
+   "lines": 155,
    "stateWrites": [
     "autonomyCandidates"
    ],
@@ -1039,7 +1039,7 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/advance-layers.mjs"
    ],
-   "lines": 484,
+   "lines": 508,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1280,7 +1280,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 3815,
+   "lines": 3825,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1430,7 +1430,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1486,
+   "lines": 1510,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -16851,7 +16851,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 422
+   "lines": 446
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -17692,7 +17692,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 157
+   "lines": 177
   },
   "server-plugin/education.mjs": {
    "system": "sim_character",
@@ -17732,7 +17732,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 224
+   "lines": 228
   },
   "server-plugin/effect-registry.mjs": {
    "system": "base_effects",
@@ -20539,7 +20539,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 276
+   "lines": 279
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -20930,7 +20930,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 223
+   "lines": 230
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -21884,7 +21884,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 269
+   "lines": 270
   },
   "server-plugin/seasonal-hazards.mjs": {
    "system": "sim_clock",
@@ -22293,7 +22293,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 622
+   "lines": 624
   },
   "server-plugin/subjective-view.mjs": {
    "system": "base_npc_decision",
@@ -22311,7 +22311,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 69
+   "lines": 75
   },
   "server-plugin/summons.mjs": {
    "system": "sim_companion",
