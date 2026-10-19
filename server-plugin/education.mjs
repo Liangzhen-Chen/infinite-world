@@ -136,7 +136,7 @@ export function advanceEducation(d,e,{before,after,beforeState}){
   if(taughtMinutes&&job){
    const key=`education_pay:${c.id}:${Math.floor(start/DAY)}`,old=d.get(...path(key))??{category:'education_pay',minutes:0,paid:0};
    const total=old.minutes+taughtMinutes,earned=Math.ceil(job.wage*total/480)-Math.ceil(job.wage*old.minutes/480);
-   const payment=earned?settleEmploymentPay(d,e,{...job,wage:earned},end,480):{paid:0};
+   const payment=earned?settleEmploymentPay(d,e,job,end,480,{earnedOverride:earned}):{paid:0};
    holdingSet(d,null,path(key),{...old,minutes:total,paid:old.paid+payment.paid},'education');
    const current=d.get(...path(job.id));holdingSet(d,null,path(job.id),{...current,paid:(current.paid??0)+payment.paid,workedMinutes:(current.workedMinutes??0)+taughtMinutes},'education');
   }

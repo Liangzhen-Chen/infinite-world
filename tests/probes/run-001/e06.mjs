@@ -18,6 +18,9 @@ import {SEAT,T,HOST} from '../../helpers/faith.mjs';
 
 export function fireScene(){
  const s=setup(),{engine,w}=s;delete w.rules.weather;
+ // negligent_fire belongs to this fire scenario's settlement law, not the shared village charter.
+ const localLaw=engine.world.rules.law?.codes?.find(code=>code.locations?.includes('loc_hw'));
+ if(localLaw)localLaw.penalties.negligent_fire={baseFine:10,valueMultiplier:0};
  const d=draft(s.doc),forge='bld_hw_forge',warehouse='bld_hw_council';d.engine=engine;d.original=s.doc;
  d.set(['state','minute'],600);d.set(['state','location'],'loc_hw');
  const place=(id,x,y,extra={})=>{const existing=engine.byId.get(id),b={...existing,id,name:id,type:'bld',parent:'loc_hw',scope:'loc_hw',material:'wood',facilityType:'house',owner:'player',position:[x,y],access:{mode:'public'},...extra};if(existing)Object.assign(existing,b);else d.set(['state','created',id],b);return id;};

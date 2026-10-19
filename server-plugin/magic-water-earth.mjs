@@ -77,7 +77,7 @@ export function prepareWaterEarthMagic(d,c,args){
  if(op==='bind_water'&&!args.target?.startsWith('feature_')){
   const target=args.target??'player';actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
   facts=areaTargetFacts(d,this,target,location,localPlayerPoint(d));
-  if(!actor||isPhysicallyDead(engine,d,subject)||!facts)throw Error('水绳缺少真实在场肢体');
+  if(!actor||isPhysicallyDead(this,d,target)||!facts)throw Error('水绳缺少真实在场肢体');
   const limbMass=actor.limbMassGrams??this.byId.get(target)?.limbMassGrams??(target==='player'||target.startsWith('npc_')?1500:undefined);
   assertMagicTargeting(d,this,c,args,target);integer(limbMass,1,c.effectSpec.power,'肢体载荷');
  }else{

@@ -388,9 +388,10 @@ export function recordEntityDeath(d,engine,id,minute,cause,illness=null){
  const previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===(actor.incarnation??0));
  if(previous||actor.diedAt!==undefined)return previous??null;
  let result;
+ const shops=businessSnapshot(engine,d.get('state'));
  const life=actor.incarnation??0,deathId=`death_${key(id,minute)}${life?`_${life}`:''}`;
  transition(d,engine,{entity:id,basis:'death',origin:'death_rule',generation:life,legacyReceipt:`estate_${deathId}`,location:actor.location,causes:[cause],durations:engine.rules.law?.estate?.durations??{notice:DAY,filing:DAY},
-  legacy:()=>{result=recordLegacyEntityDeath(d,engine,id,minute,cause,illness);}});
+  legacy:()=>{result=recordLegacyEntityDeath(d,engine,id,minute,cause,illness);businessTransitions(d,engine,shops,deathId,minute);}});
  return result;
 }
 function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
@@ -401,7 +402,6 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
  // that body dies once more; the registry keeps each life's row.
  const life=actor.incarnation??0,previous=Object.values(d.get('state','family','deaths')??{}).find(r=>r.person===id&&(r.incarnation??0)===life);
  if(previous||actor.diedAt!==undefined)return previous??null;
- const shops=businessSnapshot(engine,d.get('state'));
  const npc=path[1]==='npcs',household=personHousehold(engine,d.get('state'),id).value;
  // Roster housemates are the ones who inherit, mourn and may later have to
  // move to kin; they enter campaign state now.
@@ -425,7 +425,7 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
   ...(contracts.length?{contracts}:{}),...(pets.length?{pets}:{})};
  holdingSet(d,null,['state','family','deaths',deathId],result,'npc-life');
  entityTransition(d,engine,{id:deathId,verb:'die',actor:id,minute,location:actor.location??house?.settlement,witnesses,cause,summary:content});
- businessTransitions(d,engine,shops,deathId,minute);return result;
+ return result;
 }
 
 function healthDay(d,engine,minute){

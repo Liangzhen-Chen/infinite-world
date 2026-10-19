@@ -8,7 +8,7 @@ const royal=[
  ['jingzhao','镜沼灰盐','堤阵与盐田争议查分水簿及现场痕迹；未验明污染来源不得连坐整户。'],
  ['wushan','雾杉高地','冠雪台原巡山差受理后保存现场记录；夏营休闭时递件转王国郡府，不延长拘押期限。'],
 ];
-const common={negligent_fire:{baseFine:10,valueMultiplier:0},theft:{baseFine:10,valueMultiplier:1},theft_attempt:{baseFine:5,valueMultiplier:0},assault:{baseFine:20,valueMultiplier:0},assault_attempt:{baseFine:5,valueMultiplier:0},homicide:{baseFine:100,valueMultiplier:0},fraud:{baseFine:20,valueMultiplier:1},smuggling:{baseFine:20,valueMultiplier:2},illegal_mining:{baseFine:15,valueMultiplier:2},enslavement:{baseFine:100,valueMultiplier:2},trafficking:{baseFine:100,valueMultiplier:2},mental_magic:{baseFine:40,valueMultiplier:0}};
+const common={theft:{baseFine:10,valueMultiplier:1},theft_attempt:{baseFine:5,valueMultiplier:0},assault:{baseFine:20,valueMultiplier:0},assault_attempt:{baseFine:5,valueMultiplier:0},homicide:{baseFine:100,valueMultiplier:0},fraud:{baseFine:20,valueMultiplier:1},smuggling:{baseFine:20,valueMultiplier:2},illegal_mining:{baseFine:15,valueMultiplier:2},enslavement:{baseFine:100,valueMultiplier:2},trafficking:{baseFine:100,valueMultiplier:2},mental_magic:{baseFine:40,valueMultiplier:0}};
 const royalStances={duel:'只准成年自愿、有见证且点到为止的决斗；生死约不免伤人杀人责任。',magic:'伤人、胁迫与未经同意的心智施法按相应侵害审理；机构许可只在登记用途和期限内有效。',smuggling:'隐匿应验货物属走私，罚款按货值加计；须先验明货物与携带者。',mining:'无权采掘他人矿脉或公用资源属盗采，返还所得并按货值加罚。',enslavement:'强迫终身服役属奴役，解除拘束并追究实施者；依法限期劳役不得转卖。',trafficking:'买卖人口或抵债转卖人身属犯罪，受害者不因被买卖承担债务。'};
 const make=(id,polity,name,courts,enforcement,procedure,evidence,stances,extra={})=>({id,polity,name,courts,enforcement,procedure,evidence,stances,
  evidenceRequired:2,penalties:structuredClone(common),reportMinutes:15,searchMinutes:10,hearingMinutes:60,maximumDetentionMinutes:1440,
