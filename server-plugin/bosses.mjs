@@ -8,10 +8,13 @@ import {spiritStateFor}from'./creature-nature.mjs';
 import {creatureCounter}from'./interactions.mjs';
 import {traitsOf}from'./traits.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {changeLegacyHoldings} from './transition.mjs';
+import {changeLegacyHoldings,transition} from './transition.mjs';
 declareHoldingWriter('bosses',{kinds:['controls','tamed_by'],entities:['wreck'],locations:true});
 const clone=v=>structuredClone(v),key=b=>['state','records',`lair:${b.residence.id}`];
-const living=(d,id)=>isLiving(null,d,id)&&d.get('state',id?.startsWith('npc_')?'npcs':'creatures',id)?.hp>0;
+const living=(d,id)=>{
+    const source=typeof d?.get==='function'&&!d.document?{state:d.get('state'),holdings:d.get('holdings')}:d;
+    return isLiving(null,source,id)&&d.get('state',id?.startsWith('npc_')?'npcs':'creatures',id)?.hp>0;
+};
 function writeLair(d,engine,boss,row){
     const previous=d.get(...key(boss)),holder=previous?.occupant?.actor??previous?.occupant?.definition;
     const write=()=>holdingSet(d,engine,key(boss),row,'bosses');
@@ -75,6 +78,8 @@ export function rememberBossTactic(d,engine,target,tactic,eventId){
 export function defeatBoss(d,engine,target,eventId){
     const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(d,target))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;
+    if(!d.get('holdings','protocol','entities',target)?.gone)
+        transition(d,engine,{entity:target,basis:'death',origin:'vital',eventId});
     const day=Math.floor(d.get('state','minute')/1440);r.history.push({event:eventId,day,occupant:target,definition:boss.id,type:'败亡'});
     r.status='空置';r.occupant=null;r.vacantSince=day;r.reoccupyAfter=boss.actor?null:day+boss.residence.vacancyDays;writeLair(d,engine,boss,r);
     if(boss.actor)return{lair:boss.residence.name,vacant:true,note:'社会首领已死，居民与聚居地保留；不会从野生种群补刷'};

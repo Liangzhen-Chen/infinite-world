@@ -81,7 +81,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
-import {advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
+import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
 import {advanceLayersFresh}from'./advance-layers.mjs';
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
@@ -438,7 +438,16 @@ export class WorldEngine {
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
         if(['trade','learn','practice','profession','craft','repair','research','cast','pet','summon','environment','farm','wildlife','site'].includes(this.npcObligationAction?.tool))assertNpcObligationAction(d,this,['player'],{minutes});
-        const end=d.get('state','minute')+minutes;
+        const now=d.get('state','minute');
+        // The persisted world clock is authoritative after a save has been
+        // restored or a fixture has repositioned it. Never let a scheduler
+        // cursor already ahead of that clock suppress local work or charge a
+        // future interval against the current minute.
+        if(d.scheduler&&d.scheduler.lastSettled>now)d.scheduler.lastSettled=now;
+        const localUntil=d.get('state','scheduler','localUntil');
+        if(Number.isFinite(localUntil)&&localUntil>now)d.set(['state','scheduler','localUntil'],now);
+        const end=now+minutes;
+        if(d.scheduler)for(const system of advanceRegistry)system.currentMinute?.(this,d,now,id);
         initializeWorldClocks(d,this,d.get('state','minute'),end);
         initializeFactionClocks(d,this,d.get('state','minute'),end);
         advanceSettlementTrade(d,this,d.get('state','minute'));
