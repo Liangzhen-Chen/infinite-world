@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/r35c",
+  "commit": "refs/heads/r35b",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -695,7 +695,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1757,
+   "lines": 1760,
    "stateWrites": [
     "checks",
     "crafted",
@@ -1157,11 +1157,12 @@
     "server-plugin/contract-state.mjs",
     "server-plugin/lifecycle-state.mjs"
    ],
-   "lines": 2557,
+   "lines": 2568,
    "stateWrites": [
     "npcAutonomy",
     "obligations",
     "pets",
+    "player",
     "quests"
    ],
    "stateReads": [
@@ -1170,7 +1171,6 @@
     "family",
     "minute",
     "npcs",
-    "player",
     "professions",
     "records",
     "remote",
@@ -2172,7 +2172,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 5235,
+   "lines": 5236,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2389,7 +2389,7 @@
     "server-plugin/seasonal-hazards.mjs",
     "server-plugin/hazard-calendar.mjs"
    ],
-   "lines": 1118,
+   "lines": 1131,
    "stateWrites": [
     "family",
     "npcs",
@@ -2400,6 +2400,7 @@
     "inventory",
     "location",
     "minute",
+    "obligations",
     "settlements",
     "spells"
    ],
@@ -13290,6 +13291,7 @@
    ],
    "readers": [
     "nar_consistency",
+    "sim_clock",
     "sim_economy",
     "ui_server"
    ]
@@ -13307,6 +13309,7 @@
   },
   "player": {
    "writers": [
+    "base_holdings",
     "kernel_engine",
     "kernel_storage",
     "sim_agriculture",
@@ -13324,7 +13327,6 @@
    ],
    "readers": [
     "base_advance",
-    "base_holdings",
     "base_ledger",
     "base_standing",
     "sim_boss",
@@ -18540,6 +18542,7 @@
    "stateReads": [
     "location",
     "minute",
+    "obligations",
     "player",
     "records"
    ],
@@ -18558,7 +18561,7 @@
     "geo",
     "lore"
    ],
-   "lines": 263
+   "lines": 276
   },
   "server-plugin/finance-assets.mjs": {
    "system": "sim_economy",
@@ -21041,6 +21044,7 @@
    ],
    "stateWrites": [],
    "stateReads": [
+    "created",
     "creatures",
     "location",
     "minute",
@@ -21058,7 +21062,7 @@
     "households"
    ],
    "worldDirs": [],
-   "lines": 422
+   "lines": 423
   },
   "server-plugin/pets.mjs": {
    "system": "sim_companion",
@@ -22449,6 +22453,7 @@
     "npcAutonomy",
     "obligations",
     "pets",
+    "player",
     "quests"
    ],
    "stateReads": [],
@@ -22461,6 +22466,7 @@
     "site",
     "src",
     "title",
+    "transition",
     "world_event"
    ],
    "rules": [
@@ -22474,7 +22480,7 @@
    "worldDirs": [
     "ontology"
    ],
-   "lines": 1157
+   "lines": 1168
   },
   "server-plugin/transport-route.mjs": {
    "system": "sim_transport",
@@ -23191,7 +23197,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 79
+   "lines": 82
   },
   "server-plugin/migrations/r1.mjs": {
    "system": "kernel_storage",
