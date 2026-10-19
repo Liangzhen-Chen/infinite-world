@@ -4,7 +4,7 @@
 export const LAYERS=['L0','L1','L2','L3','L4'];
 export const LAYER_NAMES={L0:'内核',L1:'本体',L2:'玩法包',L3:'投影',L4:'接口'};
 
-const L0=['storage','archived-reducer','campaign-reducer','migrations','migrations/r1','rule-state-migration','world-upgrade','world-registry',
+const L0=['obligation-protocol','storage','archived-reducer','campaign-reducer','migrations','migrations/r1','rule-state-migration','world-upgrade','world-registry',
  'agriculture-migration','boss-migration','farm-pests-migration',/* 迁移归存档 */
  'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'holdings'/* S2a 持有存储：持有、实体化对象与位置事实 */,'scheduler'/* S2b 同刻调度器：阶段、排序键、序号、争夺池 */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];

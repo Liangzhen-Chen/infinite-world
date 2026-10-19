@@ -1,7 +1,7 @@
 // Distance is derived from the player's current county and the authored
 // county links. Only progress is persisted; a tier is never copied into people.
 const DAY=1440;
-import {obligationClosed} from './obligation-state.mjs';
+import {obligationClosed} from './obligation-protocol.mjs';
 export const ADVANCE_LAYERS=Object.freeze({intelligent:1,rule:DAY,statistics:7*DAY});
 export const advanceLayersFresh=engine=>!engine.replaying||engine.replayResult?.advanceLayerVersion===1;
 export const regionProgressKey=county=>`advance_region:${county}`;

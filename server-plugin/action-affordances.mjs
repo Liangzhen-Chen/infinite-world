@@ -44,6 +44,9 @@ function holds(ctx,condition,target){
   case 'bank(here)':return Boolean(ctx.bank);
   case 'knowsRecipe':return ctx.recipes.length>0;
   case 'hasDebt':return ctx.debts.some(r=>r.reachable);
+  case 'playerObligation':return obligationRows(ctx.s).some(r=>[r.debtor,r.creditor,r.promisor,r.promisee].includes('player'));
+  case 'pendingMedicalVisit':return Object.values(ctx.s.records??{}).some(r=>r.patient==='player'&&(r.status==='排队'||r.status==='预约'&&r.start>ctx.s.minute));
+  case 'investmentCounterparty':return ctx.people.length>0;
   case 'hasSkill':return ctx.skills.length>0;
   case 'outdoors(here)':return !String(ctx.s.location).startsWith('bld_');
   case 'exit(destination)':return ctx.exits.length>0;

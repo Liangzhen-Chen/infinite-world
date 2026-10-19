@@ -1,3 +1,5 @@
+import {registerObligationProtocol} from './obligation-protocol.mjs';
+import {registerObligationCivilGrace} from './obligation-state.mjs';
 // Shared mutation entry points. Records remain compatibility projections of
 // the existing protocol obligation; all money uses the existing ledger.
 import {canonical,digest} from './storage.mjs';
@@ -335,3 +337,6 @@ export function receiveObligationCollection(d,e,{id,actor,...facts},eventId){
     });
 }
 export {obligationView as dueObligation,obligationRows,syncObligationClaims};
+
+registerObligationProtocol({openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation:obligationView,automaticObligationItems});
+registerObligationCivilGrace((engine,state,row,minute)=>legalCodeAt(engine,row.location??state.location,{...state,minute})?.civil?.grace??null);

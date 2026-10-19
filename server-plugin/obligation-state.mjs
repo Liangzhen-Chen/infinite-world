@@ -1,3 +1,4 @@
+import {registerObligationProtocol} from './obligation-protocol.mjs';
 // Shared L1 obligation arithmetic. Queries do not mutate a document or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
 import {accrualFraction,addAccrual,fraction} from './obligation-calendar.mjs';
@@ -158,3 +159,5 @@ export function claimLimitation(state,id,minute=state.minute){
 }
 
 export function claimEnforceable(d,row,minute){return claimLimitation(d.get('state'),row,minute).enforceable;}
+
+registerObligationProtocol({claimEnforceable,addObligationSchedule,obligationClosed});

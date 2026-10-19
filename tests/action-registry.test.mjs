@@ -34,11 +34,18 @@ test('注册表：数据声明、带命名空间、与 S0 动作清单一一对�
  }
 });
 
-test('每个注册动作都别名到一个公开旧工具与子操作，经 resolveToolCall 落到 S0 登记的处理器',()=>{
+test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由到原工具',()=>{
  const tools=new Map(toolDefinitions().map(d=>[d.function.name,d.function.parameters]));const byId=new Map(catalog.map(a=>[a.id,a]));
  for(const a of registry.actions){
   if(a.projection){assert.equal(a.call,null);continue;}
   const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
+  if(a.source==='catalog'){
+   assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);
+   assert.ok(a.preconditions.length&&a.consent?.from,`${a.id} 声明前置和同意来源`);
+   const r=resolveToolCall(a.call.tool,{operation:a.call.operation});
+   assert.equal(r.tool,a.call.tool,a.id);assert.equal(r.args.operation,a.call.operation,a.id);
+   continue;
+  }
   if(a.call.operation)assert.ok(schema.properties.operation.enum.includes(a.call.operation),a.id);
   for(const s of a.slots)assert.ok(s.name in schema.properties,`${a.id} 槽位 ${s.name} 不是旧参数`);
   const r=resolveToolCall(a.call.tool,{...Object.fromEntries(a.slots.map(s=>[s.name,'x'])),...a.call.fixed,...(a.call.operation?{operation:a.call.operation}:{})});

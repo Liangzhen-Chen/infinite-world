@@ -1,3 +1,4 @@
+import {registerObligationProtocol} from './obligation-protocol.mjs';
 // L1 transfer protocol. The caller's scheduler determines the order of calls.
 import fs from 'node:fs';
 import {GONE_BASES,ensureHoldings,aliveHoldings,holdingRow,holdingKind,templatesOf,createEntity,entityRow,endEntity,updateEntity,
@@ -1275,3 +1276,5 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
         emit(d,engine,{id:eventId,verb:'restored',entity,cause:r.eventId,visibility:'public'});invariant(d,null,engine);return next;
     });
 }
+
+registerObligationProtocol({fileClosedObligation,advanceProcedure});
