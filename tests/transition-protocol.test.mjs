@@ -26,6 +26,21 @@ function draft(document){return {document,original:structuredClone(document),eng
     remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);this.patches.push({op:'delete',path});},say(s){this.messages.push(s);}};}
 function fresh(){const doc=engine.createCharacter(seed,{},'transition');doc.holdings=emptyHoldings();doc.ledger=emptyLedger();return draft(doc);}
 const W={writer:'transition-test',engine};
+test('legacy vital flags do not orphan existing accounts; gone accounts and heirs remain checked',()=>{
+    const d=fresh(),key=accountKey(heir,'coin_river','purse');
+    d.set(['state','npcs',heir,'status'],'死亡');
+    d.set(['ledger','accounts',key],7);
+    d.set(['ledger','accounts',accountKey(person,'coin_river','purse')],5);
+    assert.doesNotThrow(()=>assertTransitionInvariants(d,engine));
+    const r=transition(d,engine,{entity:person,basis:'death',origin:'death_rule',successors:[heir]});
+    advanceProcedure(d,engine,r.successor);
+    assert.equal(d.get('ledger','accounts',key),7,'a dead legacy actor cannot receive inheritance');
+    d.set(['holdings','protocol','entities',heir],{gone:true,generation:0,basis:'death'});
+    assert.throws(()=>assertTransitionInvariants(d,engine),/I6 account destination/);
+    d.remove(['holdings','protocol','entities',heir]);
+    d.set(['state','records',`transition:${heir}`],{gone:true,generation:0,basis:'death'});
+    assert.throws(()=>assertTransitionInvariants(d,engine),/I6 account destination/);
+});
 test('gone transaction: estate, corpse, holdings, accounts and causal sequence',()=>{
     const d=fresh();d.set(['state','npcs',person,'location'],place);
     createEntity(d,{id:'office_test',kind:'office',...W});

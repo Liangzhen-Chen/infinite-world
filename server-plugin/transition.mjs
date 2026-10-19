@@ -66,7 +66,11 @@ const live=(d,e,id)=>{
 };
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
-    if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    if((byEntity(d,id)??read(d,'state','records',`transition:${id}`))?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
+    // A legacy vital-status flag alone has not transferred ownership. Existing
+    // balances remain attached to that registered owner until the gone protocol
+    // settles them; live() still rejects it as a new inheritance destination.
+    if(templatesOf(d,id,e)?.length)return true;
     // Site reserves are anchored to an authored resource of the live site,
     // rather than an independent agent named by the composite account owner.
     if(id.startsWith('site:')){
