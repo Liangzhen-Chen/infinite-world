@@ -8,6 +8,9 @@ import {transferItems} from './items.mjs';
 import {canonical} from './storage.mjs';
 import {ledgerActive} from './ledger.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+
+declareHoldingWriter('obligation-conditional',{kinds:[]});
 
 const supported=new Set(['forward','delivery','pact','gratitude','vow']);
 const positive=n=>Number.isSafeInteger(n)&&n>0;
@@ -51,7 +54,7 @@ export function performGoodsObligation(d,e,{id,actor,quantity,...authority},even
   const remaining=view.owed-quantity,next={...row,paid:(row.paid??0)+quantity,...(row.remaining!==undefined?{remaining}:{}),...(row.inheritanceFrom?{inheritedPaid:(row.inheritedPaid??0)+quantity}:{}),status:remaining?'pending':'completed',...(remaining?{}:{resolvedAt:s.minute}),events:[...row.events??[],{eventId,minute:s.minute,actor,quantity}]};
   d.set(['state','obligations',id],next);
   const result={id,transferred:quantity,remaining,evidence:key};
-  d.set(['state','records',key],{category:'conditional_receipt',id:key,signature,result,obligation:id,minute:s.minute,item:terms.item,parties:[row.debtor,row.creditor]});
+  holdingSet(d,null,['state','records',key],{category:'conditional_receipt',id:key,signature,result,obligation:id,minute:s.minute,item:terms.item,parties:[row.debtor,row.creditor]},'obligation-conditional');
   publishTransitionEvent(d,e,{id:key,verb:'trade',actor,target:row.creditor,minute:s.minute,location:terms.location,visibility:'private',witnesses:[],participants:[row.debtor,row.creditor],tags:['obligation'],obligation:id,value:quantity});
   return result;
  });

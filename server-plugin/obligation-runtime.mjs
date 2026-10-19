@@ -17,7 +17,7 @@ import {npcAgeAt} from './npc-state.mjs';
 import {transferItems} from './items.mjs';
 
 const W='obligation-runtime';
-declareHoldingWriter(W,{kinds:[]});declareLedgerWriter(W);
+declareHoldingWriter('obligation-runtime',{kinds:[]});declareLedgerWriter(W);
 const read=(d,...p)=>d.peek?d.peek(...p):d.get(...p);
 const integer=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)throw Error(`Invalid ${label}`);return n;};
 const clean=o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v!==undefined));
