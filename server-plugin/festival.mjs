@@ -10,7 +10,7 @@ import {changeItems} from './items.mjs';
 import {applyEffects,hookedEffects} from './effects.mjs';
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
-const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
+const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病','睡眠'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 // Only already published village customs are adapted here. The 24 W5 draft
 // candidates are never imported and this adapter does not promote customs.
 export function localFestivalCalendar(engine){
@@ -96,6 +96,18 @@ function available(engine,state,id,location,at){
  if(id==='player')return state.location===location&&awake(engine,state,'player',state.player);
  return engine.world.npcs.some(n=>n.id===id)&&state.npcs[id]?.location===location&&awake(engine,state,id,state.npcs[id])&&
   !npcObligationAt(state,id,at)&&!npcAutonomyBusy(state,id)&&!state.player.companions?.includes(id);
+}
+function obligationOverlaps(state,id,start,end){
+ return Object.values(state.obligations??{}).some(o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&
+  (o.deliveryVersion===1?[o.promisor]:[o.promisor,o.promisee]).includes(id)&&
+  ! (o.type==='等待'&&o.promisee===id&&(o.attendance?.[id]??0)>0)&&
+  Math.max(start,o.departures?.[id]??o.start)<Math.min(end,o.deadline));
+}
+function scheduledAt(engine,id,minute){
+ const npc=engine.byId.get(id),schedule=npc?.schedule;if(!schedule)return null;
+ const c=engine.calendar(minute),variant=c.market?'market':schedule.restDays?.includes(c.day)?'rest':'default';
+ const seasonal=schedule.seasonal?.[String(c.season)],slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
+ return slots?.find(row=>row.start<=minute%DAY&&minute%DAY<row.end)??null;
 }
 function local(d,f){if(d.get('state','location')!==f.location)throw Error('须在登记节俗场所办理，远方消息不能代替现场同意');}
 function agreement(d,row,who){
@@ -211,7 +223,8 @@ export function advanceFestivals(d,engine,at){
   else if(!(row.formal?required(engine,f,row):[row.host,...(row.cost?[row.supplier]:[])]).every(who=>agreement(d,row,who))){status='unauthorized';reason='组织、材料、场地或收费授权缺失、到期或来源不成立';}
   else if(!available(engine,state,row.host,row.location,at)||row.cost&&!available(engine,state,row.supplier,row.location,at)){status='unavailable';reason='组织者或收费服务者未实际到场或正忙';}
   else{
-   participants=row.enrolled.filter(id=>id!==row.host&&id!==row.supplier&&enrollment(d,row,id)&&available(engine,state,id,row.location,at));
+   participants=row.enrolled.filter(id=>id!==row.host&&id!==row.supplier&&enrollment(d,row,id)&&available(engine,state,id,row.location,at)&&
+    !obligationOverlaps(state,id,at,at+f.runtime.durationMinutes)&&(!scheduledAt(engine,id,at)||scheduledAt(engine,id,at).location===row.location));
    if(participants.length<(f.runtime?.minimumParticipants??1)){status='no-attendance';reason='没有足够已同意且实际到场的参加者';}
    else if(!safe(state.npcs[row.host]?.coins)||state.npcs[row.host].coins<row.cost){status='insufficient-funds';reason='组织者自有现金不足，不动公共粮钱或补造库存';}
    else if(row.cost&&!safe(state.npcs[row.supplier]?.coins)){status='unavailable';reason='收费者现金账未知';}

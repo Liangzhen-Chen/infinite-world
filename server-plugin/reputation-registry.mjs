@@ -5,7 +5,7 @@ export {deriveReputationRegistry,reputationSettlements,isReputationSettlement} f
 export function reputationFactions(engine,state){
     const rows=catalogFactions(engine);
     if(!state)return rows;
-    return rows.map(f=>({...f,members:Object.keys(groupView(engine,state,f.id)?.members.value??{})}));
+    return rows.map(f=>({...f,members:[...new Set([...(f.members??[]),...Object.keys(groupView(engine,state,f.id)?.members.value??{})])]}));
 }
 
 // Separate relation supplements leave reviewed society council rows intact.

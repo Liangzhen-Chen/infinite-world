@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {recordEntityDeath,recordMilitaryDeath} from '../server-plugin/npc-life.mjs';
+import {advanceProcedure} from '../server-plugin/transition.mjs';
 import {personView,personSimulation,personConstraint,homeResidents,groupView,personHousehold} from '../server-plugin/entity-view.mjs';
 import {npcAvailability,assertNpcService,advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {npcServices,npcHousehold} from '../server-plugin/npc-state.mjs';
@@ -19,6 +20,10 @@ import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mj
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_zhongxiu',B='npc_hw_baihui',HOME=world.households.find(h=>h.members.includes(A)).homeLocation;
 const ITEM=world.items[0].id,DAY=1440,YEAR=360*DAY;
+function distributeEstate(d,e,death,minute){
+ // 依 04 §4.4 遗产分配在阶段期限后
+ advanceProcedure(d,e,death.estate.id,minute+4*DAY);
+}
 function draft(document){return {document,patches:[],get(...p){return p.reduce((o,k)=>o?.[k],this.document);},
  set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
  remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(){}};}
@@ -65,7 +70,8 @@ for(const cause of ['战斗身亡','法术致死','寿终','处决','战死'])te
  const debt=structuredClone(d.get('state','records','v2_debt'));
  d.set(['state','records','organization:v2_org'],{category:'organization',id:'v2_org',source:'created',name:'会',kind:'行会',members:{[A]:{position:'会长'}},leader:A});
  d.set(['state','creatures','monster_v2_pet'],{hp:12,status:'正常',owner:A,location:HOME});
- const death=cause==='战死'?recordMilitaryDeath(d,e,A,600):recordEntityDeath(d,e,A,600,cause);
+ const initialDeath=cause==='战死'?recordMilitaryDeath(d,e,A,600):recordEntityDeath(d,e,A,600,cause);
+ distributeEstate(d,e,initialDeath,600);const death=d.get('state','family','deaths',initialDeath.id);
  assert.equal(death.estate.heir,B);assert.equal(d.get('state','npcs',B,'coins'),coins+37);assert.equal(d.get('state','npcs',A,'coins'),0);
  assert.equal(e.quantity(d,B,ITEM),3);assert.equal(e.quantity(d,A,ITEM),0);assert.equal(d.get('state','settlements','loc_hw','population'),population-1);
  assert.equal(d.get('state','obligations','v2_obl','status'),'取消');assert.equal(groupView(e,d.get('state'),'v2_org').leader.value,null);
@@ -120,7 +126,8 @@ test('名册先继承后补档保留完整 actor；full 状态立即获得成长
  if(prior)d.set(['state','family','households',prior.id],{left:[donor.id]});
  d.set(['state','family','households',person.householdId],{members:[donor.id]});
  d.set(['state','npcs',donor.id,'coins'],19);d.set(['state','npcs',donor.id,'inventory'],{[ITEM]:2});
- const death=recordEntityDeath(d,session,donor.id,600,'战死');assert.equal(death.estate.heir,person.id);
+ const initialDeath=recordEntityDeath(d,session,donor.id,600,'战死');distributeEstate(d,session,initialDeath,600);
+ const death=d.get('state','family','deaths',initialDeath.id);assert.equal(death.estate.heir,person.id);
  assert.equal(personHousehold(session,d.get('state'),person.id).value.id,person.householdId);
  const actor=structuredClone(d.get('state','npcs',person.id));assert.equal(actor.coins,24);assert.equal(personSimulation(session,d.get('state'),person.id).value,false);
  const out=await e.reduce(d.document,{type:'population_profile',person:person.id,profile:profile(profileBrief(d.document,person.id))});

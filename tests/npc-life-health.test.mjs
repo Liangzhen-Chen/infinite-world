@@ -95,10 +95,13 @@ test('病故后约定终止不追责，遗产整体交给同户成年继承人�
  const carerCoins=npc(s,carer).coins,population=s.doc.state.settlements.loc_hw.population;
  await until(s,firstNight+DAY+60,'a');
  const death=Object.values(life(s).deaths).find(r=>r.person===elder);assert.equal(death.cause,'病故');assert.equal(death.minute,firstNight+DAY);
+ // 依 04 §4.4 遗产分配在阶段期限后
+ await until(s,death.minute+4*DAY,'estate-phases');
+ const settledDeath=life(s).deaths[death.id];
  assert.equal(npc(s,elder).status,'死亡');assert.equal(life(s).illnesses[death.illness].status,'病故');
  assert.equal(npc(s,carer).caring,undefined);
- assert.equal(death.estate.heir,carer);assert.equal(npc(s,carer).coins,carerCoins+37);assert.equal(npc(s,elder).coins,0);
- assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);assert.deepEqual(death.estate.items,{[item]:3});
+ assert.equal(settledDeath.estate.heir,carer);assert.equal(npc(s,carer).coins,carerCoins+37);assert.equal(npc(s,elder).coins,0);
+ assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);assert.deepEqual(settledDeath.estate.items,{[item]:3});
  assert.deepEqual(death.population,{before:population,after:population-1});assert.equal(s.doc.state.settlements.loc_hw.population,population-1);
  const o=s.doc.state.obligations.obl_after;
  assert.equal(o.status,'取消');assert.equal(o.endedByDeath,death.id);assert.equal(o.breachedBy,undefined);

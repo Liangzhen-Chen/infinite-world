@@ -448,3 +448,5 @@ M2修复批审定写入PLAN（T61–T64）：Astra草案F4工具机会标注并�
 - 2026-10-18 R33 已合入（Codex gpt-6-luna）：tests/governance.test.mjs 主线 6 项失败根因在 S2b-1（2100ed92）——调度器给授权记录追加序号后，治理回执仍存旧副本致摘要校验拒绝授权；调度游标还造成读取路径改档、错过时刻的待办被追办。修 governance.mjs 与 engine.mjs，授权与账目保护不变。合入时 97/97（governance 8/8）。教训：合入测试应纳入受影响模块的全部测试文件，已在后续卡提示中要求按 grep 选取。
 
 - 2026-10-18 R34 已合入（Codex gpt-6.1-sol，57 万 token）：10-18 master 全量扫描（logs/sessions/sweep-master-*.tsv）对比 R31 基线发现 59 个文件新失败；脚本二分（logs/sessions/bisect-reg.sh，0 AI）定位到 S2b-1 调度器的 13 个（arch-metrics、daily-b2-exact2、m4-integration、magic-forge/mind-space/air/message/ritual、medicine、monster-society(-content)、manufacturing、npc-furnace）。修：连续结算、到期登记、终止回执、授权副本、交易校验与跨层接线；不改断言、不关调度器、金快照不变。合入时 279/279。余：S2c 等合入引入的回归 → R35。
+
+- 2026-10-19 R35Y ִ���жϣ�ʵ�ָĶ����ڹ�������δ�ύ�������� Node ������������������������������ռ� logs/sessions/R35Y-luna.final.txt��
