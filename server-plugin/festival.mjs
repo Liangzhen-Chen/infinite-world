@@ -224,7 +224,7 @@ export function advanceFestivals(d,engine,at){
   else if(!available(engine,state,row.host,row.location,at)||row.cost&&!available(engine,state,row.supplier,row.location,at)){status='unavailable';reason='组织者或收费服务者未实际到场或正忙';}
   else{
    participants=row.enrolled.filter(id=>id!==row.host&&id!==row.supplier&&enrollment(d,row,id)&&available(engine,state,id,row.location,at)&&
-    !obligationOverlaps(state,id,at,at+f.runtime.durationMinutes)&&(!scheduledAt(engine,id,at)||scheduledAt(engine,id,at).location===row.location));
+    (!row.formal||!obligationOverlaps(state,id,at,at+f.runtime.durationMinutes)&&(!scheduledAt(engine,id,at)||scheduledAt(engine,id,at).location===row.location)));
    if(participants.length<(f.runtime?.minimumParticipants??1)){status='no-attendance';reason='没有足够已同意且实际到场的参加者';}
    else if(!safe(state.npcs[row.host]?.coins)||state.npcs[row.host].coins<row.cost){status='insufficient-funds';reason='组织者自有现金不足，不动公共粮钱或补造库存';}
    else if(row.cost&&!safe(state.npcs[row.supplier]?.coins)){status='unavailable';reason='收费者现金账未知';}

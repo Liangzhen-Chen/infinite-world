@@ -107,7 +107,7 @@ test('病故后约定终止不追责，遗产整体交给同户成年继承人�
  assert.equal(o.status,'取消');assert.equal(o.endedByDeath,death.id);assert.equal(o.breachedBy,undefined);
  assert.deepEqual(death.obligations,['obl_after']);
  assert.deepEqual(npcAvailability(s.engine,s.doc.state,elder),{activity:'死亡',services:[]},'既有服务检查按死亡处理');
- await until(s,firstNight+4*DAY,'b');
+ await until(s,death.minute+5*DAY,'b');
  assert.equal(s.doc.state.obligations.obl_after.status,'取消','到期也不改判违约');
  assert.equal(npc(s,elder).status,'死亡');
  assert.ok(!Object.values(npc(s,friend).relationships[elder]?.ledger??{}).some(r=>r.eventType==='违约'));

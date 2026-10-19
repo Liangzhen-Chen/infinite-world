@@ -195,6 +195,9 @@ test('名册家人在照护、离世、迁居需要时进入状态：配偶照�
   world:(w,find)=>{find(elder).schedule=day(home);},prep:s=>{Object.assign(npc(s,elder),{location:home,coins:40});}});
  await wait(d,DAY,'death');
  const death=Object.values(family(d).deaths).find(r=>r.person===elder);assert.ok(death);
+ // The forced fatality creates this death; keep the surviving spouse alive
+ // while the newly required estate phases run.
+ d.engine.rules.npcLife.health.bands=structuredClone(quiet.bands);
  // 依 04 §4.4 遗产分配在阶段期限后
  await wait(d,4*DAY,'estate-phases');
  assert.equal(family(d).deaths[death.id].estate.heir,husband);assert.equal(npc(d,husband).coins,40);
