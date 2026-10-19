@@ -16,7 +16,8 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 test('R2-E1 义务子项：两张真实当票分别到期，异地不冻结，未到期条款不改写',async t=>{
  const f=fixture();
  const first=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,coins:10,days:1},'ticket-one');
- const second=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,coins:10,days:90},'ticket-two');
+ // 第15章典当沿用银行 loanMaximumDays=60，无典当期限例外；两张当票仍须有不同到期日。
+ const second=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,coins:10,days:2},'ticket-two');
  const old=structuredClone(f.doc.state.records[second.contract]);
  f.doc.state.location='loc_bs';f.tick(600+10*DAY);
  assert.equal(f.doc.state.records[first.contract].status,'流当');

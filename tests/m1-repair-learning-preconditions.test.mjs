@@ -148,7 +148,12 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     // 这里核对其余记录不变、记录键集合不变，果实的总量守恒在下面单独核对。
     // RW-05 起学堂按课表自动开课，等待期间在校学生的出勤记录（education_study/education_cohort）是世界自主活动，由 education 测试核对。
     const schooling=id=>id.startsWith('education_study:')||id.startsWith('education_cohort:');
-    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')&&!schooling(id)));
+    // 05 §5.1：等待期内进行中的矿业日结雇佣合同累计出勤、续期（expires 后移）并更新条款与初始状态投影；仅屏蔽该合同记录的这五个进度字段，其余记录保持不变。
+    const miningContractId=Object.entries(waited.before.state.records).find(([,row])=>row?.category==='contract'&&row?.kind==='workshop'&&row?.laborMarket)?.[0];
+    assert.ok(miningContractId,'等待前存在本次实际矿业雇佣合同');
+    const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')&&!schooling(id)).map(([id,row])=>[
+        id,id===miningContractId?Object.fromEntries(Object.entries(row).filter(([key])=>!['attendance','attendanceThrough','clauses','expires','initialStatus'].includes(key))):row
+    ]));
     assert.deepEqual(Object.keys(waited.after.state.records).filter(id=>!schooling(id)).sort(),Object.keys(waited.before.state.records).filter(id=>!schooling(id)).sort());
     assert.deepEqual(nonPerishable(waited.after.state.records),nonPerishable(waited.before.state.records));
     const oldFruit=waited.before.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0],newFruit=waited.after.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];

@@ -8,6 +8,8 @@ import {applyPatches}from'../server-plugin/storage.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
 import {evaluateAssertions}from'../tools/playtest-assertions.mjs';
 import {toolSelectionMetrics}from'../tools/playtest-metrics.mjs';
+import {obligationRows}from'../server-plugin/obligation-state.mjs';
+import {subjectiveView}from'../server-plugin/subjective-view.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const original=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
@@ -79,7 +81,14 @@ test('原home_visit顺序入宅→完整60分钟等待至许可过期→离宅�
 test('原private顺序赊账→保密不建会面→去北林→逾期，屋外人物没有欠款认知',async()=>{
     const r=await replay('npc_private');await r.step(0,[['world_move',{destination:'bld_hw_qingdeng'}]]);
     await r.step(1,[['world_trade',{seller:'npc_hw_linsui',service:'住宿',days:1,payment:'credit',creditMinutes:60}]]);
-    await r.step(2);assert.deepEqual(r.doc.state.obligations,{});
+    await r.step(2);
+    // 15 §15.1.1 与主观视图设计：统一义务账本保存债务，屋外旁观者仍不因此获知。
+    const debt=obligationRows(r.doc.state).find(row=>row.debtor==='player'&&row.creditor==='npc_hw_linsui');
+    assert.ok(debt,'赊账债务进入统一义务表');assert.equal(debt.creditor,'npc_hw_linsui');
+    for(const npc of ['npc_hw_wushuo','npc_hw_chenbai','npc_hw_gucen']){
+        const view=subjectiveView(r.engine,r.doc,npc);
+        assert.ok(!view.self.obligations.some(row=>row.id===debt.id),`${npc} 对该债务无认知`);
+    }
     await r.step(3,[['world_move',{destination:'loc_hw_northwood'}]]);
     await r.step(4,[['world_time',{minutes:120}]]);await r.step(5);await r.step(6);await r.step(7);
     assert.ok(!(r.doc.state.npcs.npc_hw_wushuo.memoryStream??[]).some(row=>row.kind==='debt'));
