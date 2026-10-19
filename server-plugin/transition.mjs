@@ -485,6 +485,12 @@ export function transition(d,engine,input){
         // so leaving a positive account on the departing entity during the
         // transition would expose an invalid intermediate state.
         if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        // Debris account salvage can target this wreck. Materialize it before
+        // moving those balances so ledger observers never see a missing owner.
+        if(wreck&&!entityRow(d,wreck)){
+            createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
+            if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
+        }
         for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
             const ac=parseAccount(key);if((ac.owner!==entity&&workstationAnchorOwner(d,engine,ac.owner)!==entity)||!amount)continue;
             const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
@@ -507,10 +513,6 @@ export function transition(d,engine,input){
             d.set(['state','quests',id],{...q,status:'取消',reason:'私人发布者已消失，未付报酬退入遗产',escrow:0,refund:amount,resolvedAt:now(d),transition:eventId});
             if(q.reservation){const o=read(d,'state','obligations',q.reservation);if(o&&!terminal(o))d.set(['state','obligations',q.reservation],{...o,status:'取消',resolvedAt:now(d),cause:eventId});}
             writeRecord(d,engine,`${id}:取消`,{category:'quest_receipt',quest:id,parties:[entity,q.taker].filter(Boolean),minute:now(d),location:q.location,status:'取消',escrow:0,refund:amount,rewardPaid:0,sourceEvent:eventId});
-        }
-        if(wreck&&!entityRow(d,wreck)){
-            createEntity(d,{id:wreck,kind:'wreck',facts:{of:entity,body:corpse,yields:record.yields},source,writer:W,origin:'protocol'});
-            if(location)setLocation(d,{entity:wreck,at:location,mode:'place',source,writer:W,engine});
         }
         const ctx={...input,entity,eventId,successor:successor??input.successor,location,owner,reason:'transferred'};
         const civil=input.law??legalCodeAt(engine,location,read(d,'state'))?.civil?.inheritance??{};
