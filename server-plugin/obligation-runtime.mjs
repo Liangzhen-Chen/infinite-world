@@ -38,9 +38,11 @@ function receipt(d,e,id,eventId,verb,args,fn){
     return obligationTransaction(d,()=>{
         const result=fn();SOCIAL_VERBS.add(verb);
         const row=obligationRow(read(d,'state'),id);
-        publishTransitionEvent(d,e,{id:key,verb,actor:args.actor??args.payer??row.debtor,minute:read(d,'state','minute'),
-            location:args.signingPlace??settlementLocation(e,read(d,'state'),row.debtor??row.promisor),visibility:'private',witnesses:[],
-            participants:[row.debtor??row.promisor,row.creditor??row.promisee].filter(Boolean),tags:['obligation'],obligation:id,signature,result,
+        const payment=result.payment;
+        publishTransitionEvent(d,e,{id:key,verb,actor:payment?.actor??args.actor??args.payer??row.debtor,minute:read(d,'state','minute'),
+            location:payment?.location??args.signingPlace??settlementLocation(e,read(d,'state'),row.debtor??row.promisor),visibility:'private',witnesses:[],
+            participants:[...new Set([row.debtor??row.promisor,row.creditor??row.promisee,payment?.payer,payment?.actor,payment?.collector].filter(Boolean))],tags:['obligation'],obligation:id,signature,result,
+            ...(payment?{payment}:{}),
             summary:`${id}: ${verb}`});
         return result;
     });
@@ -284,7 +286,12 @@ export function settleObligation(d,e,args,eventId){
         write(d,e,next);
         if(instrument&&!remaining)holdingSet(d,e,['state','itemInstances',instrument.id],{...instrument.item,status:'redeemed',redeemedAt:s.minute,settledBy:eventId},W);
         if(!remaining&&row.legacyRecord&&(row.pledgeRecord||row.defaulted?.case))e.protocolDebtSettled?.(d,{...next,unpaid:0},eventId);
-        return {id,transferred,remaining,evidence:eventId,accounts:{from,to}};
+        if(e.replaying&&e.replayResult?.obligationSettlementVersion!==1)return {id,transferred,remaining,evidence:eventId,accounts:{from,to}};
+        d.obligationSettlementVersion=1;
+        const payment={payer,actor:args.judicial?.authority??actor,debtor:row.debtor,creditor,
+            location:funding?.seat??(escrow?(escrow.location??settlementLocation(e,s,creditor)):settlementLocation(e,s,actor)),accounts:{from,to},
+            ...(args.actedAs?{actedAs:structuredClone(args.actedAs)}:{}),...(collection?{collector:collection.collector}:{})};
+        return {id,transferred,remaining,evidence:eventId,accounts:{from,to},payment};
     });
 }
 export function adoptLegacyObligation(d,e,id){

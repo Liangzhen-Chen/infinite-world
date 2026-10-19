@@ -4,7 +4,7 @@ import {settleObligation,openObligation,amendObligation,adoptLegacyObligation,du
 import {obligationTransaction} from './transition.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 // F1: contract facts are persisted; prices, services and creditworthiness are views.
-import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit} from './credit.mjs';
+import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms} from './credit.mjs';
 import {placeSettlement,settlementGovernment,groupRepresentative,personConstraint,personBusiness,personOccupation,personAge} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
@@ -199,9 +199,11 @@ export function bankTrade(d,e,args,id){
         if(pledgeKey)pledge(d,e,pledgeKey,e.resolve(args.item,'item'),financeInt(args.quantity??1,1,100000,'抵押数量'),borrower);
         financeTransfer(d,e,'player',borrower,principal,id);
         const count=financeInt(args.item?1:args.quantity??1,1,days,'分期期数');
+        const succession=loanSuccessionTerms(d,e);
         holdingSet(d,e,financePath(key),{category:'debt',kind:'player_loan',debtor:borrower,representative,creditor:'player',principal,interest:terms.interest,monthlyInterest:terms.rate,
             amount:principal+terms.interest,paid:0,status:'待偿还',installments:count,nextInstallment:1,createdAt:now,deadline:now+days*DAY,nextPayment:now+Math.ceil(days*DAY/count),
-            pledgeRecord:pledgeKey,location,source:id,signedTerms:{principal,days,rate:terms.rate,installments:count}},'finance-bank');
+            pledgeRecord:pledgeKey,location,source:id,...(succession?{terms:succession}:{}),
+            signedTerms:{principal,days,rate:terms.rate,installments:count,...succession}},'finance-bank');
         if(borrower===representative){
             openObligation(d,e,{...d.get(...financePath(key)),id:`finance:${key}`,legacyRecord:key,actor:borrower},`${id}:claim`);
             holdingSet(d,e,financePath(key),{...d.get(...financePath(key)),kind:'player_loan'},'finance-bank');

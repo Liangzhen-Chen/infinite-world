@@ -123,6 +123,11 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue})
 }
 // Creates the debt; the principal goes to the player or into a contract's escrow.
 // S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
+export function loanSuccessionTerms(d,engine){
+    if(engine.replaying&&engine.replayResult?.loanSuccessionVersion!==1)return null;
+    d.loanSuccessionVersion=1;
+    return {onDebtorGone:'assume_by_heirs'};
+}
 export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(engine,collateral.item,collateral.quantity):0;
@@ -135,7 +140,11 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');}
     else d.set([...engine.actorPath(lender),'coins'],engine.actor(d,lender).coins-principal);
     if(toPlayer)mirrorPartyCoins(d,engine,debtor,principal,eventId,'credit');
-    const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null};
+    // New loans explicitly continue their signed schedule through the estate.
+    // Old records without this clause retain the package's accelerate route.
+    const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
+    const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
+        ...(succession?{terms:succession}:{})};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
         amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms)};
     holdingSet(d,engine,rec(id),row,'credit');
