@@ -13,6 +13,13 @@ import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
+import {regionalTradePrice} from './settlement-trade.mjs';
+// Replacement value of actual recipe inputs, shared with market quotations.
+// S5 adds labor valuation here; this never charges for already-owned materials.
+export function recipeInputCost(d,engine,recipe,location=d.get('state','location')){
+ const materials=recipe.materials.map(({item,amount})=>({item,quantity:amount,unitPrice:regionalTradePrice(d,engine,item,location)}));
+ return {materials,copper:materials.reduce((n,r)=>n+r.quantity*r.unitPrice,0)};
+}
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
     if(!data||typeof data!=='object')throw new Error('配方数据无效');
@@ -100,6 +107,7 @@ export function manufacture(d,args,eventId){
     if(typeof recover!=='number'||recover<0||recover>1)throw new Error('失败回收率无效');
     const injury=integer(failure.injury??0,0,50,'失败伤害');
     const hpBefore=d.get('state','player','hp');
+    const inputCost=recipeInputCost(d,this,recipe);
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('manufacturing',eventId));
     if(station?.fee){
@@ -129,7 +137,7 @@ export function manufacture(d,args,eventId){
         d.say(`制造${outcome.degree}，耗时${workMinutes}分钟，按配方回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
     }
     const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,...(thermal?{thermal}:{}),
-        maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,
+        maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,inputCost,
         degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
     recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'manufacturing',eventId});

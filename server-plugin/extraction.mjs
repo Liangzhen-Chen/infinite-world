@@ -1,7 +1,7 @@
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView,personConstraint} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
-import {heldUnit,wearItem} from './items.mjs';
+import {heldUnit,wearItem,produceItems} from './items.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
 import {adjustStanding} from './standing.mjs';
@@ -120,13 +120,25 @@ function mineActor(d,args,id,actor,advance){
     const vein=reserveAccount(this,key,item);
     if(!d.get(...path(key)))moveStock(d,{from:`src:genesis|${vein.split('|')[1]}|mineral`,to:vein,amount:old.reserve,writer:'extraction',eventId:id});
     moveStock(d,{from:`src:regrowth|${vein.split('|')[1]}|mineral`,to:vein,amount:recovered,writer:'extraction',eventId:id});
-    if(success){row.reserve--;row.extracted++;this.itemDelta(d,job?.owner??actor,item,1,{account:vein,writer:'extraction',eventId:id});}
+    let units=[];
+    if(success){row.reserve--;row.extracted++;
+        const books={account:vein,writer:'extraction',eventId:id},recipient=job?.owner??actor;
+        if(jurisdiction)units=produceItems(d,this,item,1,{eventId:id,recipe:null,workmanship:null,owner:recipient,maker:actor,books});
+        else this.itemDelta(d,recipient,item,1,books);
+    }
     holdingSet(d,null,path(key),row,'extraction');
     const witnesses=[...new Set([...atStart,...present()])].filter(w=>w!==actor);
     const value=success?this.byId.get(item).basePrice:0;
-    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,witnesses,eventId:id,location,code:jurisdiction.code}):null;
-    const custom=jurisdiction?.kind==='faction'&&witnesses.length?adjustStanding(d,this,jurisdiction.faction,actor,jurisdiction.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
-    const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty})};
+    const stolen=units.length?{item,quantity:1,unit:units[0]}:null;
+    const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,stolen,witnesses,eventId:id,location,code:jurisdiction.code}):null;
+    for(const unit of units){
+        d.set(['state','itemInstances',unit,'stolenOrigin'],{event:id,case:incident,victim:owner,offender:actor,location,minute:now});
+        if(incident)d.set(['state','itemInstances',unit,'legalClaims'],[{case:incident,victim:owner,minute:now}]);
+    }
+    const local=jurisdiction?.kind==='faction'?jurisdiction:jurisdiction?.custom;
+    const custom=local&&witnesses.length?adjustStanding(d,this,local.faction,actor,local.rule.standing,{sourceEvent:id,reason:'盗采'}):null;
+    const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty,
+        ...(local?{custom:{faction:local.faction,standing:custom?local.rule.standing:0,witnessed:witnesses.length>0}}:{})})};
     return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),jurisdiction:judged,
         training:actor==='player'&&able(d)?practice(d,this,rules.check.skill,`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
 }

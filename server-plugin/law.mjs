@@ -97,6 +97,28 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
     return id;
 }
 
+// A transfer is a fact, not a conviction. Provenance survives resale; witnesses
+// must still report and the court must still examine evidence in the usual way.
+export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eventId,location=d.get('state','location')}){
+ const units=instances.filter(unit=>{
+  const origin=d.get('state','itemInstances',unit,'stolenOrigin');
+  if(!origin||origin.recoveredAt!==undefined)return false;
+  if(origin.victim===seller){d.set(['state','itemInstances',unit,'stolenOrigin'],{...origin,recoveredAt:d.get('state','minute'),recoveryEvent:eventId});return false;}
+  return true;
+ });
+ if(!units.length)return [];
+ const code=legalCodeAt(engine,location,d.get('state'));
+ if(!code||!codePenalty(engine,code,'receiving_stolen'))return [];
+ const witnesses=Object.entries(d.get('state','npcs')??{}).filter(([id,n])=>id!==buyer&&id!==seller&&n.location===location&&awake(n,d,id)).map(([id])=>id);
+ return units.map((unit,index)=>{
+  const origin=d.get('state','itemInstances',unit,'stolenOrigin');
+  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:engine.byId.get(item).basePrice,
+   stolen:{item,quantity:1,unit},witnesses,eventId:`${eventId}:receiving:${index}`,location,code});
+  d.set(['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}]);
+  return incident;
+ });
+}
+
 export function registerFireDamage(d,engine,{building,damage,grain,origin,eventId,minute}){
  const fact=d.get('state','records',origin);
  if(fact?.category!=='unattended_furnace'||!fact.responsible||!fact.burning||fact.attendants?.length)return null;
@@ -660,7 +682,8 @@ export function lawAction(d,args,eventId){
         for(const unit of escrow.units){
             const record=d.get('state','itemInstances',unit);if(record?.owner!==key||record.status!=='保管')throw new Error('返还物单件不在法院保管，拒绝复制');
             this.itemDelta(d,recipient,record.item,1,{account:placedStock(this,key,record.item),writer:'law',eventId});const bag=[...this.bagPath(recipient),record.item,'instances'];
-            d.set(bag,[...d.get(...bag)??[],unit]);holdingSet(d,null,['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)},'law');
+            d.set(bag,[...d.get(...bag)??[],unit]);holdingSet(d,null,['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id),
+                ...(record.stolenOrigin?.victim===recipient?{stolenOrigin:{...record.stolenOrigin,recoveredAt:now,recoveryEvent:eventId}}:{})},'law');
         }
         const bank=row.bank&&d.get(...path(row.bank));
         books(d,fundAccount(key),bank?.category==='bank'?vault(row.bank):purse(this,recipient),escrow.coins,eventId);

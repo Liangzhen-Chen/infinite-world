@@ -2660,7 +2660,9 @@
       "item_practice_sword": 2
     },
     "skills": [],
-    "services": [],
+    "services": [
+      "recipe_smelt_iron"
+    ],
     "traits": [
       "直率",
       "护女"
@@ -2707,7 +2709,8 @@
           "location": "bld_hw_forge",
           "activity": "打铁与检查工具",
           "services": [
-            "trade"
+            "trade",
+            "teach"
           ]
         },
         {
@@ -2762,7 +2765,8 @@
           "location": "loc_hw",
           "activity": "核对集市货单",
           "services": [
-            "trade"
+            "trade",
+            "teach"
           ]
         },
         {

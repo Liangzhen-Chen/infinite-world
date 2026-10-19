@@ -42,6 +42,7 @@ const SRC=new URL('../server-plugin/',import.meta.url);
 const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).map(f=>[f,readFileSync(new URL(f,SRC),'utf8')]));
 // 含价格、报价、估值字样的模块的归类。read = 价格输入已读账户；其余是“不读存量或货币量”的原因。
 const SURVEY={
+    'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
     'settlement-trade.mjs':'read','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
     'credit.mjs':'公式 = 基价 × 抵押数量，数量来自借据与参数，不读库存',
@@ -89,6 +90,16 @@ test('读取规则：账本未开账或范围未开时读旧字段；开账后�
 });
 
 // ---- 推演夹具 ---------------------------------------------------------------------
+test('区域材料报价覆盖新旧读取对照，已开户时不信过期库存字段',()=>{
+    const {engine,doc}=campaignStock();doc.ledger=openLedger(engine,doc);
+    const d=draft(doc),location='bld_hw_forge',item='item_iron';
+    const price=regionalTradePrice(d,engine,item,location);
+    assert.equal(inMode('legacy',()=>regionalTradePrice(d,engine,item,location)),price);
+    const next=structuredClone(d.document);next.state.settlements.loc_hw.iron+=100000;
+    probePriceReads(null);
+    try{assert.equal(regionalTradePrice(draft(next),engine,item,location),price,'旧字段失真不能改变已开账的报价');}
+    finally{probePriceReads(r=>probe.record(r));}
+});
 function campaignStock(){
     const w=structuredClone(world),h=host;
     for(const npc of w.npcs.filter(n=>n.id===h))npc.schedule={default:[{start:0,end:1440,location:inn,activity:'营业',services:['trade']}]};

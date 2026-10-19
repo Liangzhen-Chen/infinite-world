@@ -33,7 +33,7 @@ import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -405,16 +405,17 @@ export class WorldEngine {
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
         const quote=tradeQuote(d,this,{buyer,seller,item,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
-        const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
+        const price=(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
-        let payment,moved,tax,rejected;
+        let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
@@ -429,7 +430,7 @@ export class WorldEngine {
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
         this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         // P2: one elapsed-time event shares each region's yearly weather

@@ -53,7 +53,19 @@ function nationLegalCodes(world,state,codes){
   }
  }return out;
 }
-export function legalCodeAt(engine,location,state={}){return legalCodes(engine.world,state).find(c=>c.locations.includes(location))??null;}
+// Local norms keep precedence. Where they have no court, only an actual
+// administrative ancestor/seat may supply jurisdiction (never a nearby village).
+export function legalCodeAt(engine,location,state={}){
+ const codes=legalCodes(engine.world,state),local=codes.find(c=>c.locations.includes(location));
+ if(local)return local;
+ const nation=nationAt(engine,state,location);
+ if(nation)return codes.find(c=>c.nation===nation.id&&c.locations.includes(nation.capital)&&c.court&&c.judges.length&&c.officers.length)??null;
+ const region=regionOf(engine.world,location);if(!region)return null;
+ const template=legalTemplate(engine.world,region.county);
+ const seats=[region.county.seat?.location,state.remote?.[region.county.id]?.skeleton?.seat,region.province?.seat?.location];
+ return seats.filter(Boolean).map(seat=>codes.find(c=>c.locations.includes(seat)))
+  .find(c=>c&&codeTemplate(engine,c)?.id===template?.id&&c.court&&c.judges.length&&c.officers.length)??null;
+}
 export function legalCodeById(engine,id,state={}){return legalCodes(engine.world,state).find(c=>c.id===id)??engine.rules.law?.codes?.find(c=>c.id===id)??null;}
 export function courtHierarchy(engine,state,code){
  if(code.nation)return [{level:0,name:'本国初审',court:code.court,judges:code.judges,code:code.id},{level:1,name:'本国复审',court:liveNation(state,code.nation)?.capital,judges:[liveNation(state,code.nation)?.ruler].filter(Boolean),code:code.id}];
@@ -106,24 +118,29 @@ export function codePenalty(engine,code,offense){return code?.penalties?.[offens
 // Missing data is an error, never a borrowed village code.
 export function miningJurisdiction(engine,state,location,offense='illegal_mining'){
  const world=engine.world,byId=new Map(world.locations.map(l=>[l.id,l])),profiles=new Map((world.settlementProfiles??[]).map(p=>[p.id,p]));
- const codes=legalCodes(world,state);let code=codes.find(c=>c.locations.includes(location))??null;
+ const codes=legalCodes(world,state);let code=legalCodeAt(engine,location,state);
  const chain=[];for(let at=location,seen=new Set();at&&!seen.has(at);at=byId.get(at)?.parent){seen.add(at);chain.push(at);}
  if(!code)for(const at of chain){code=codes.find(c=>c.settlement===at)??null;if(code)break;if(profiles.has(at))break;}
+ function localCustom(){
+  const autonomy=engine.rules.law?.autonomy;
+  for(const at of chain){
+   const place=byId.get(at),profile=profiles.get(at);
+   const tribal=profile?.generated==='tribal'?profile.council:null;
+   const society=place?.monsterSociety?(world.factions??[]).find(f=>f.kind==='聚居地议事'&&f.contactAnchor===at)?.id:null;
+   if(!tribal&&!society)continue;
+   const holder=society??tribal,rule=(society?autonomy?.factions?.[society]:autonomy?.tribal)?.offenses?.[offense];
+   if(!rule)throw Error(`自治地 ${at} 的所属势力 ${holder} 缺少${offense}规矩`);
+   return{kind:'faction',settlement:at,faction:holder,rule,executable:false};
+  }
+  return null;
+ }
  if(code){
   const penalty=codePenalty(engine,code,offense),template=codeTemplate(engine,code);
   if(!penalty)throw Error(`法典 ${code.id} 缺少${offense}罪名`);
-  return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:template?.stances?.mining??null,executable:true};
+  const custom=localCustom();
+  return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:template?.stances?.mining??null,executable:true,...(custom?{custom}:{})};
  }
- const autonomy=engine.rules.law?.autonomy;
- for(const at of chain){
-  const place=byId.get(at),profile=profiles.get(at);
-  const tribal=profile?.generated==='tribal'?profile.council:null;
-  const society=place?.monsterSociety?(world.factions??[]).find(f=>f.kind==='聚居地议事'&&f.contactAnchor===at)?.id:null;
-  if(!tribal&&!society)continue;
-  const holder=society??tribal,rule=(society?autonomy?.factions?.[society]:autonomy?.tribal)?.offenses?.[offense];
-  if(!rule)throw Error(`自治地 ${at} 的所属势力 ${holder} 缺少${offense}规矩`);
-  return{kind:'faction',settlement:at,faction:holder,rule,executable:false};
- }
+ const custom=localCustom();if(custom)return custom;
  const county=regionOf(world,location)?.county,template=county&&legalTemplate(world,county);
  if(!template)throw Error(`${location} 无法派生所属政体法典`);
  const penalty=template.penalties?.[offense];if(!penalty)throw Error(`法典 ${template.id} 缺少${offense}罪名`);

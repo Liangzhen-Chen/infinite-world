@@ -196,6 +196,7 @@ export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},writer,even
 // 账本没开账（旧存档的预报、裸单元测试草稿）或对应范围未开账时只能读旧字段。
 // 每个读取点必须先登记在这里；tests/ledger-price.test.mjs 逐点核对被演练过，并扫描源码里的价格相关处。
 export const PRICE_POINTS=Object.freeze({
+    'region.material':'区域材料市场：聚落库存与已开采的本地供货人账户，不读地下储量',
     'region.grain':'settlement-trade.regionalTradePrice：托管聚落粮仓里未过期的 grain 批次（区域报价的需求系数）',
     'forest.food':'forest-water.forestWaterPriceFactor：非托管聚落的公仓粮（粮价的存量系数）',
     'forest.reserve':'forest-water.forestWaterPriceFactor：林木存量账户（木料价的稀缺系数）',
