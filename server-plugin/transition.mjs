@@ -474,11 +474,24 @@ export function transition(d,engine,input){
         const wreck=corpse||debris?`wreck_${entity}:${suffix}`:null;
         const record=clean({category:'transition',entity,generation,cycle,basis,eventId,gone:true,minute:now(d),successor,wreck,location,previousVital:a.status,holdings:[...new Set([...actualDeath?previous.holdings:[],...held.map(r=>r.id)])],subjectHoldings:[...new Set([...actualDeath?previous.subjectHoldings:[],...subject.map(r=>r.id)])],identities:identities(engine,read(d,'state'),entity),successors:input.successors??previous?.successors??[],phase:'transitioning',body:corpse,yields:a.yields??engine.byId?.get(a.species)?.yields??[],...(actualDeath?{actualDeath:now(d),declarationEvent:previous.eventId}: {})});
         record.officeFacts=Object.entries(read(d,'state','records')??{}).filter(([,o])=>o.category==='governance_office'&&o.holder===entity).map(([id,o])=>clean({id,since:o.since,sourceEvent:o.sourceEvent}));
+        const source=`transition:${entity}`;
+        // Move live account balances before publishing the gone state. Holding
+        // source observers validate account destinations after each projection,
+        // so leaving a positive account on the departing entity during the
+        // transition would expose an invalid intermediate state.
+        if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
+        for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
+            const ac=parseAccount(key);if((ac.owner!==entity&&workstationAnchorOwner(d,engine,ac.owner)!==entity)||!amount)continue;
+            const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
+            const saved=debris?Math.floor(amount*salvage):amount;
+            const to=input.treasury??successor??input.successor??(debris?wreck:owner);
+            if(saved&&!to&&basis!=='pack_removed')throw Error('No account successor');
+            if(saved)bookTransfer(d,engine,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
+            if(amount>saved)bookTransfer(d,engine,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
+        }
         d.set([...root,'entities',entity],record);
         writeRecord(d,engine,`transition:${entity}`,record);
-        const source=`transition:${entity}`;
         const parent=emit(d,engine,{id:eventId,verb:'transition',entity,kind,basis,causes:input.causes??[],location,visibility:input.visibility??'public'});
-        if(successor&&!entityRow(d,successor))createEntity(d,{id:successor,kind:estate?'estate':'liquidation',facts:{of:entity,phase:'notice'},source,writer:W,origin:'protocol'});
         // Private commissions depend on the publishing person's performance.
         // Close them while their escrow can still join the estate, before a
         // later expiry would refund the now departed publisher's purse.
@@ -531,15 +544,6 @@ export function transition(d,engine,input){
         }
         clearLocation(d,{entity,writer:W});
         moveDeposits(d,engine,entity,successor??owner,eventId);
-        for(const [key,amount] of Object.entries(read(d,'ledger','accounts')??{})){
-            const ac=parseAccount(key);if((ac.owner!==entity&&workstationAnchorOwner(d,engine,ac.owner)!==entity)||!amount)continue;
-            const salvage=Math.max(0,Math.min(1,input.salvage?.[ac.resource]??a.salvage?.[ac.resource]??0));
-            const saved=debris?Math.floor(amount*salvage):amount;
-            const to=input.treasury??successor??input.successor??(debris?wreck:owner);
-            if(saved&&!to&&basis!=='pack_removed')throw Error('No account successor');
-            if(saved)bookTransfer(d,engine,{from:key,to:accountKey(basis==='pack_removed'?'sink:pack_removed':to,ac.resource,ac.purpose),amount:saved,writer:W,eventId});
-            if(amount>saved)bookTransfer(d,engine,{from:key,to:accountKey('sink:destroy',ac.resource,'destruction'),amount:amount-saved,writer:W,eventId});
-        }
         for(const [id,o] of Object.entries(read(d,'state','obligations')??{})){
             if(['void','cancelled','settled','取消','已完成'].includes(o.status))continue;
             const debtor=o.debtor===entity||o.promisor===entity,creditor=o.creditor===entity||o.promisee===entity,carrier=o.carrier===entity;

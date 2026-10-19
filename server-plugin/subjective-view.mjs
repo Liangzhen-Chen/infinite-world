@@ -1,5 +1,6 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
+import {npcRumorSeeds} from './npc-rumors.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 const ownedAccounts=Symbol('subjective own accounts');
 
@@ -13,7 +14,7 @@ export function subjectiveView(engine,document,observer){
  const s=document.state,n=actor(s,observer);if(!n)throw Error('观察者不存在');
  const b=base(engine,s,observer),here=location(s,observer),now=s.minute??0;
  const present=id=>Boolean(here&&location(s,id)===here&&!actor(s,id)?.scheduleTravel&&!actor(s,id)?.cognitionTravel);
- const seeds=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])].filter(r=>r.source===observer||r.carriers?.includes(observer)).map(r=>({id:`rumor_seed:${r.id}:${observer}`,sourceEvent:`rumor_registration:${r.id}`,kind:'rumor',minute:0,content:r.claim,sourceType:'传闻',participants:[]}));
+ const seeds=npcRumorSeeds(engine,observer);
  // Memories already delivered to this observer are versions, never pointers
  // dereferenced against the current truth. Written clauses retain their text.
  const events=recordsWhere(s.records,'category','world_event');
