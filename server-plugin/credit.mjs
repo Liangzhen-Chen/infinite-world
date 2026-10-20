@@ -1,5 +1,6 @@
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
+import {recordsWhere} from './storage.mjs';
 import {openObligation,adoptLegacyObligation} from './obligation-runtime.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
@@ -320,7 +321,7 @@ export async function creditTrade(d,args,eventId){
 export function nextCreditMinute(engine,d,now){
     const period=creditRules(engine)?.depositInterest?.periodDays*1440;
     if(!Number.isSafeInteger(period)||period<=0)return Infinity;
-    return Object.values(d.get('state','records')??{}).filter(r=>r.category==='bank'&&Number.isSafeInteger(r.interestAt))
+    return recordsWhere(d.get('state','records'),'category','bank').filter(r=>Number.isSafeInteger(r.interestAt))
         .reduce((next,r)=>Math.min(next,r.interestAt+(Math.floor(Math.max(0,now-r.interestAt)/period)+1)*period),Infinity);
 }
 export function advanceCredit(d,engine,minute,recordIds){

@@ -86,6 +86,17 @@ function detach(d, engine, id, status, minute) {
     });
 }
 
+export function nextPetMinute(engine,d,now){
+    if(!engine.rules.petCare)return Infinity;
+    const state=d.get('state');let next=Infinity;
+    for(const [id,actor]of Object.entries(state.creatures??{})){
+        if(actor.care?.version!==1||sapient(actor))continue;
+        if(isPhysicallyDead(engine,d,id)||actor.hp<=0){
+            if(state.pets?.[id]?.petFormat===1&&active(state.pets[id]))next=Math.min(next,now+1);
+        }else if(Number.isSafeInteger(actor.care.nextTick))next=Math.min(next,Math.max(now+1,actor.care.nextTick));
+    }
+    return next;
+}
 // Absolute hourly ticks make one long wait and many short waits equivalent.
 // Old unnamed pet rows are preserved; no speculative physiology is applied to them.
 export function advancePets(d, engine, after) {
