@@ -110,6 +110,12 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    }
   }
   if(old.status!==now.status)add(stateEffect('status',{target:id,status:now.status},[...path,'status'],before,after));
+  // Native pet feeding uses care.hunger (inverse satiety), rather than the
+  // humanoid body partition. Adopt only the actual committed reduction.
+  if(tool==='pet'&&args.operation==='feed'&&id===result.target&&result.fed&&Number.isFinite(old.care?.hunger)&&Number.isFinite(now.care?.hunger)){
+   const delta=old.care.hunger-now.care.hunger;
+   if(delta>0)add({op:'vital',target:id,type:'body:satiety',need:'satiety',delta,result:{before:{value:100-old.care.hunger},after:{value:100-now.care.hunger}}});
+  }
   for(const field of ['xp','level','attributes'])if(!same(old[field],now[field]))
    add(stateEffect('fact.set',{entity:id,field,value:now[field]},[...path,field],before,after));
   for(const need of ['stamina','satiety','hydration','fatigue']){

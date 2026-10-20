@@ -1,7 +1,9 @@
 // A3-B native service. The engine/HTTP composition root owns public dispatch.
 import {routeAction,createRoutingContext,resolveProposalEntities} from './action-router.mjs';
 import {limitOpenEffects,deriveOpenLimits} from './action-limits.mjs';
-import {primitiveRuntime} from './primitives-runtime.mjs';
+import {primitiveRuntime,primitiveContext} from './primitives-runtime.mjs';
+import {canAct} from './action-capacity.mjs';
+import {authority} from './action-authority.mjs';
 import {reject,writableFactField} from './primitive-policy.mjs';
 import {executeLeaveMark} from './mark-actions.mjs';
 import {executeRite} from './action-rite.mjs';
@@ -98,9 +100,19 @@ export function prepareOpenAction(engine,document,proposal,native){
  }
  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
  native??=createOpenActionContext(engine,document,proposal);
+ // Walking cannot release an existing custody holding. Report that native
+ // restriction even when the proposed outside destination needs clarification.
+ for(const effect of proposal.effects??[])if(effect.op==='move'&&effect.mode==='walk'&&native.routing.resolve?.(effect.entity).value===native.routing.actor){
+  const permission=canAct(primitiveContext(engine,document),native.routing.actor,'move',{to:effect.to});
+  if(!permission.allowed)reject('E-CAPACITY',permission.reason);
+ }
  if(typeof native.routing.resolve==='function'){
   const entities=resolveProposalEntities(proposal,native.routing,{deferCombatDestination:true});
-  if(entities.ambiguities.length)return {status:'needs_entities',...entities,effects:[],cost:null,candidates:[],routed:null};
+  if(entities.ambiguities.length){
+   const mark=proposal.effects?.some(effect=>effect.op==='create'&&effect.kind==='mark');
+   const onlyMaterials=entities.ambiguities.every(row=>/^effects\.\d+\.(?:resource|materials\.\d+\.(?:resource|item))$/.test(row.path));
+   return {status:'needs_entities',...entities,effects:[],cost:null,candidates:[],routed:null,...(mark&&onlyMaterials?{fallback:{action:'open:leave_mark',intent:proposal.intent,available:Boolean(engine.world.openActionRules&&engine.world.openReactions&&engine.world.openTagging),label:'换种形式，留下心意',reason:'材料尚未确认，原物件不会被消耗；可以改用不需要这些材料的形式留下心意'}}:{})};
+  }
   proposal=entities.proposal;
  }
  proposal=scheduledQuestion(engine,document,proposal,native.routing);
@@ -109,6 +121,10 @@ export function prepareOpenAction(engine,document,proposal,native){
  const routing=routeAction(proposal,registry,native.routing);
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
+ for(const effect of proposal.effects??[])if(effect.op==='holding.rescale'){
+  const permission=authority(primitiveContext(engine,document),native.routing.actor,effect.op,effect.subject,{shares:effect.shares,effect});
+  if(!permission.allowed)reject('E-AUTHORITY',permission.reason);
+ }
  if(proposal.effects.some(e=>e.op==='emit'&&e.payload?.kind==='ritual_participation'))reject('E-RITE-SOURCE','请指定真实登记的仪式或寺观；须核对当前主持、参与时窗与实际供品，不能用仪式留痕代替参与');
  // Deferred directions belong only to the registered combat program. The
  // unmatched path must still resolve every actual primitive destination.
@@ -128,7 +144,11 @@ export function prepareOpenAction(engine,document,proposal,native){
   const bounds=native.limits(document,routing.nearest);
   if(!proposal.effects.filter(e=>e.op==='create').every(e=>bounds.improvised?.(e)))reject('E-OPEN-CRAFT','即兴制作须有已掌握的相应手艺、完好工具和同事务投入的自有材料');
  }
- const limits=limitOpenEffects(proposal,native.limits(document,routing.nearest));
+ const bounds=native.limits(document,routing.nearest),limits=limitOpenEffects(proposal,bounds);
+ if(limits.blocked.some(row=>{
+  const effect=proposal.effects[row.index];
+  return effect?.op==='fact.set'&&effect.field==='condition'&&(effect.delta>0||effect.value>bounds.currentValue?.(effect));
+ }))reject('E-OPEN-REPAIR','修复需要与材质和规模匹配的技能、工具、材料及工时；请使用修理动作或分阶段工程');
  const alternative=limits.blocked.length>0||limits.effects.length===0;
  return {...routing,...limits,status:alternative?'needs_alternative':'open',fallback:alternative?{action:'open:leave_mark',intent:proposal.intent,available:Boolean(engine.world.openActionRules&&engine.world.openReactions&&engine.world.openTagging),...(!limits.effects.length&&!limits.blocked.length?{reason:'当前收益或工作量已达上限，可以换一种手段，或留下痕迹'}:{})}:null};
 }
