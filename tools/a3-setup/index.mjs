@@ -13,6 +13,7 @@ export function registerSetupLoader(module){modules.push(module);modules.sort((a
 export const setupLoaderFields=()=>modules.flatMap(m=>m.fields);
 export function runSetupLoaders(ctx,setup){
  const activityFields=new Set(modules.flatMap(m=>m.actorStateFields??[]));
+ const objectFields=new Set(modules.flatMap(m=>m.objectStateFields??[]));
  for(const module of modules){
   const fields=module.fields.filter(field=>Object.hasOwn(setup,field)&&(!module.rows?.[field]||Array.isArray(setup[field])&&setup[field].some(module.rows[field])));
   if(!fields.length)continue;
@@ -27,6 +28,7 @@ export function runSetupLoaders(ctx,setup){
    const actors=Object.entries(input.actorStates).map(([id,row])=>[id,row&&typeof row==='object'?Object.fromEntries(Object.entries(row).filter(([k])=>module.actorStateFields?module.actorStateFields.includes(k):!activityFields.has(k))):row]).filter(([,row])=>!row||typeof row!=='object'||Object.keys(row).length);
    input.actorStates=Object.fromEntries(actors);
   }
+  if(fields.includes('objects')&&Array.isArray(input.objects)&&!module.objectStateFields)input.objects=input.objects.map(row=>row&&typeof row==='object'?Object.fromEntries(Object.entries(row).filter(([key])=>!objectFields.has(key))):row);
   module.load(ctx,input,fields);
  }
 }
