@@ -2,7 +2,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
 // authoritative executors; speech alone cannot grant a permission or a reward.
 import fs from 'node:fs';
-import {subjectiveView,subjectiveFact} from './subjective-view.mjs';
+import {subjectiveView,subjectiveFact,conversationLanguage as language} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {moveCoins,purse} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -21,14 +21,6 @@ function present(d,engine,raw){
  const npc=engine.resolve(raw,'npc'),n=row(d,npc);
  if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,npc)||['濒死','昏迷'].includes(n.status))throw Error('对方不在这里或无法交谈');
  return npc;
-}
-function language(view,engine,d){
- const b=engine.byId.get(view.observer),player=d.get('state','player');
- const a=player.languages??engine.rules.languages?.default??['lang:common'],n=b.languages??['lang:common'];
- const ids=x=>Array.isArray(x)?x:Object.keys(x).filter(k=>x[k]>0);
- if(ids(a).some(x=>ids(n).includes(x)))return {degree:2,interpreter:null};
- const interpreter=view.observable.people.find(p=>{const langs=ids(engine.byId.get(p.id)?.languages??[]);return p.id!==view.observer&&langs.some(l=>ids(a).includes(l))&&langs.some(l=>ids(n).includes(l));});
- return interpreter?{degree:1,interpreter:interpreter.id}:null;
 }
 function line(engine,view,action,decision,detail=''){
  const name=action==='request'?'request':action;

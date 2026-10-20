@@ -9,6 +9,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {trackSingleItem} from '../server-plugin/items.mjs';
 import {dieOf} from './helpers/daily-b2.mjs';
+import {reconcile} from './helpers/ledger-audit.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 
 const original=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -155,4 +156,67 @@ test('A3 dialogue cost: asking uses 15 real minutes, while an archived pre-A3 as
  const legacy=applyPatches(before,replayed.patches);
  assert.equal(legacy.state.minute,before.state.minute);assert.deepEqual(legacy.state.player.body,before.state.player.body);
  assert.equal(Object.hasOwn(replayed.result,'cost'),false);
+});
+
+function joinFixture({trust=30,absent=false,foreign=false,redLine=false}={}){
+ const f=fixture(),state=f.document.state;
+ state.records['organization:org_a3_join']={category:'organization',id:'org_a3_join',source:'created',name:'入会测试行会',kind:'行会',seat:INN,
+  founder:SELLER,foundedAt:0,leader:SELLER,members:{[SELLER]:{position:'会长',joinedAt:0,arrears:0}},removed:{},
+  charter:{mode:'leader',approval:true,fee:20,dues:0,rules:[]},treasury:0,ledger:[],sourceEvent:'fixture'};
+ Object.assign(state.npcs[SELLER],{trust,affection:trust,goals:{},...(absent?{location:'loc_hw'}:{})});
+ const npc=f.world.npcs.find(n=>n.id===SELLER);
+ if(foreign){npc.languages=['lang:a3-isolated'];state.player.languages=['lang:common'];}
+ if(redLine)npc.redLines=['org.join'];
+ return book(f);
+}
+const joinSlots={org:'org_a3_join'};
+
+test('A3 D36: in-person A2 admission executes once in 15 minutes, transfers the charter fee to the treasury and reloads idempotently',async()=>{
+ const f=joinFixture(),before=structuredClone(f.document),{out,after}=await act(f,'core:settlement.org_join',joinSlots,'a3-join');
+ assert.equal(out.result.joined,true);assert.equal(out.result.decision.outcome,'agree');
+ assert.equal(after.state.minute-before.state.minute,15);assert.equal(out.result.cost.time,15);
+ assert.equal(after.state.player.coins,before.state.player.coins-20);
+ assert.equal(after.state.npcs[SELLER].coins,before.state.npcs[SELLER].coins);
+ assert.equal(after.state.records['organization:org_a3_join'].treasury,20);
+ assert.equal(after.state.records['organization:org_a3_join'].members.player.position,'成员');
+ const proposal=after.state.records[out.result.proposal];assert.equal(proposal.status,'通过');
+ assert.equal(proposal.votes[0].voter,SELLER);assert.equal(proposal.votes[0].decision.trace.length,5);
+ assert.ok(readBodyNeed(f.engine,after,'player','stamina')<readBodyNeed(f.engine,before,'player','stamina'));
+ assert.deepEqual(reconcile(f.engine,after).mismatches,[]);assert.deepEqual(auditLedger(after.ledger),[]);
+ f.document=JSON.parse(JSON.stringify(after));const duplicate=await act(f,'core:settlement.org_join',joinSlots,'a3-join');
+ assert.deepEqual(duplicate.out.patches,[]);assert.equal(duplicate.out.result.duplicate,true);
+ await assert.rejects(act(f,'core:settlement.org_join',joinSlots,'a3-join-twice'),/已是成员/);
+});
+
+test('A3 D36: conditional, red-line and language decisions never admit the player or charge the charter fee',async()=>{
+ for(const [options,expected] of [[{trust:0},'conditional'],[{redLine:true},'refuse'],[{foreign:true},'defer']]){
+  const f=joinFixture(options),before=structuredClone(f.document),{out,after}=await act(f,'core:settlement.org_join',joinSlots,`a3-join-${expected}`);
+  assert.equal(out.result.decision.outcome,expected);assert.equal(out.result.joined,false);
+  assert.equal(after.state.minute-before.state.minute,15);assert.equal(out.result.cost.time,15);
+  assert.equal(after.state.records['organization:org_a3_join'].members.player,undefined);
+  assert.equal(after.state.records['organization:org_a3_join'].treasury,0);assert.equal(after.state.player.coins,before.state.player.coins);
+  assert.deepEqual(after.ledger,before.ledger);assert.deepEqual(reconcile(f.engine,after).mismatches,[]);
+  assert.equal(Object.values(after.state.records).filter(r=>r.category==='organization_proposal').length,0,'条件未被接受，不能留下会在次日自行批准的议案');
+ }
+});
+
+test('A3 D36: absent leaders retain actual pending proposals; archived zero-time admission replays without new A2 or body costs',async()=>{
+ const f=joinFixture({absent:true}),before=structuredClone(f.document),pending=await act(f,'core:settlement.org_join',joinSlots,'a3-remote-join');
+ assert.equal(pending.out.result.joined,false);assert.equal(pending.out.result.status,'议事中');
+ assert.equal(pending.after.state.minute,before.state.minute);assert.equal(pending.after.state.player.coins,before.state.player.coins-20);
+ assert.deepEqual(reconcile(f.engine,pending.after).mismatches,[]);
+ const old=joinFixture(),oldBefore=structuredClone(old.document);
+ const replay=await old.engine.reduce(old.document,{tool:'world_settlement',args:{operation:'org_join',...joinSlots},eventId:'a3-old-join'},{replay:true,result:{joined:false,status:'议事中'}});
+ const after=applyPatches(old.document,replay.patches);
+ assert.equal(replay.result.joined,false);assert.equal(after.state.minute,oldBefore.state.minute);
+ assert.deepEqual(after.state.player.body,oldBefore.state.player.body);assert.equal(Object.hasOwn(replay.result,'cost'),false);
+ assert.equal(after.state.player.coins,oldBefore.state.player.coins-20);assert.deepEqual(reconcile(old.engine,after).mismatches,[]);
+});
+
+test('A3 D36: insufficient charter fees roll back the entire conversation, time, body and membership',async()=>{
+ const f=joinFixture();f.document.state.player.coins=1;
+ // Opening fixture changed its purse: re-open the fixture books before executing.
+ delete f.document.ledger;book(f);const before=structuredClone(f.document);
+ await assert.rejects(act(f,'core:settlement.org_join',joinSlots,'a3-poor-join'),/入会费不足/);
+ assert.deepEqual(f.document,before);assert.deepEqual(reconcile(f.engine,f.document).mismatches,[]);
 });

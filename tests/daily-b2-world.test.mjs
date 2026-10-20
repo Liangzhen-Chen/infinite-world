@@ -7,7 +7,7 @@ import {weatherAt} from '../server-plugin/weather.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {monsterStats} from '../server-plugin/combat.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {resyncBooks} from './helpers/ledger-sync.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';
 import {variant,item,setPrice,scene,stack,tool,monthDayMinute,conserved,primed,held,baseEngine,DAY} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',HEZHOU='npc_hw_hezhou',CHENBAI='npc_hw_chenbai',GUCEN='npc_hw_gucen',VILLAGE='loc_hw',TOWN='loc_bs';
@@ -140,10 +140,13 @@ test('D23 接任务 + D24 交任务：接下不收钱不先给钱，截止四月
 test('D23 ④实际接任手续7分钟、无钱物变化，资金仍在原托管',async t=>{
  const start=monthDayMinute(4,6,9,30),world=variant(),engine=new WorldEngine(world),ui=await uiSession(t,{world,mutate:scene(BOARD,start,(s,doc)=>{
   s.player.coins=30;s.npcs[CHENBAI].coins=460;s.quests={quest_d23:questRow(start)};
-  // This is opening fixture escrow, not a running-world free source.
-  resyncBooks(engine,doc);
+  // 接任务不转账，withLedger/finishLedger 按设计不会持久化懒开账；
+  // resyncBooks 对未开账的新局是空操作。夹具须在导入前显式开账，
+  // 才能核验原托管与全部账户，而不是把不存在的账本当成零余额账本。
+  doc.ledger=openLedger(engine,doc);
  })});
- const before=await primed(ui),accepted=await ui.choose('quest.accept',{quest:'quest_d23'},{search:true});assert.ok(accepted.ok,accepted.error);
+ const before=await primed(ui);assert.ok(before.ledger,'夹具在导入前已开账');conserved(before,before,'D23 initial',engine);
+ const accepted=await ui.choose('quest.accept',{quest:'quest_d23'},{search:true});assert.ok(accepted.ok,accepted.error);
  const after=await ui.read();assert.equal(after.state.minute-before.state.minute,7);assert.equal(accepted.result.cost.time,7);
  assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory);
  assert.equal(after.state.quests.quest_d23.escrow,40);conserved(before,after,'D23',engine);

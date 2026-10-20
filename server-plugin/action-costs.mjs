@@ -11,6 +11,12 @@ export function assertActionTime(d,engine,minutes,actors=['player']){
  engine.assertNpcObligationAction(d,actors,{minutes,location:d.get('state','location')});
  engine.assertNpcAutonomyAction(d.get('state'),actors,{minutes});
 }
+export function advanceActionParticipants(d,engine,minutes,eventId,participants){
+ const previous=engine.npcScheduleReservations;
+ engine.npcScheduleReservations=new Set([...previous??[],...participants]);
+ try{engine.advance(d,minutes,eventId);}
+ finally{engine.npcScheduleReservations=previous;}
+}
 export function beginActionActivity(d,engine,activity,actor='player'){
  const start=d.get('state','minute');
  // Archived pre-A3 worlds have no body table. Their original replay remains
