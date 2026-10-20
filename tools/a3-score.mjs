@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine,skillGrade} from '../server-plugin/engine.mjs';
 import '../server-plugin/primitives-runtime.mjs';
@@ -16,14 +17,15 @@ import {monsterStats} from '../server-plugin/combat.mjs';
 import {spiritStateFor} from '../server-plugin/creature-nature.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
 import {createRoutingContext} from '../server-plugin/action-router.mjs';
-import {canonicalActionId} from '../server-plugin/action-registry.mjs';
-import {primitiveRuntime} from '../server-plugin/primitives-runtime.mjs';
+import {canonicalActionId,findAction} from '../server-plugin/action-registry.mjs';
+import {primitiveRuntime,actionEffects} from '../server-plugin/primitives-runtime.mjs';
+import {resolvePrimitiveTransfer} from '../server-plugin/primitive-accounts.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const setupWriter='a3-score-setup';
 declareHoldingWriter(setupWriter,{kinds:['*'],entities:['office'],locations:true});
 export const oldCorpusPath=path.join(root,'tests/fixtures/a3-intents.json');
-export const v2CorpusPath='F:/dnd/logs/sessions/a3-intents-v2.json';
+export const v2CorpusPath=path.join(root,'tests/fixtures/a3-intents-v2.json');
 export async function loadCorpus({corpusPath}={}){
  let selected=corpusPath??v2CorpusPath,raw;
  try{raw=await fs.readFile(selected,'utf8');}
@@ -32,7 +34,6 @@ export async function loadCorpus({corpusPath}={}){
 }
 const receiptOf=value=>value?.result?.receipt??value?.receipt??null;
 const unique=values=>[...new Set(values)].sort();
-const sameSet=(a,b)=>JSON.stringify(unique(a))===JSON.stringify(unique(b));
 const clarifyStates=new Set(['needs_entities','needs_slots']);
 const routeName=(route,registry)=>canonicalActionId(registry,({拒绝:'reject',rejected:'reject',refuse:'reject',澄清:'clarify',clarification:'clarify'}[route]??route));
 
@@ -311,7 +312,7 @@ export function signatureEffects(effects,receipt={},requested=receipt.routing?.p
  const costs=[...receipt.cost?.resources??[]],excluded=[];
  const selected=effects.filter(effect=>{
   const index=costs.findIndex(cost=>Object.keys(cost).length>0&&Object.entries(cost).every(([key,value])=>JSON.stringify(effect[key])===JSON.stringify(value)));
-  if(index<0)return true;
+  if(index<0||effect.role!=='additional_cost')return true;
   // Explicitly requested consumption remains part of the adopted signature,
   // even if the registered action implements it as a resource cost.
   const owner=value=>selfId(value?.split('|')[0]);
@@ -349,11 +350,23 @@ function referenceCatalog(world){
  const pattern=new RegExp(`(?<![A-Za-z0-9])(?:${[...ids].sort((a,b)=>b.length-a.length).map(escape).join('|')}|self|player|coin)(?![A-Za-z0-9])`,'g');
  referenceCatalogs.set(world,pattern);return pattern;
 }
+const endpointToken=value=>value.trim().replace(/^(person|creature|thing|collective|org|holding|obligation|resource):/,'').replace(/:(?:\d.*|requested_.*|bounded_output)$/,'');
+function recipeEndpoint(value,world){
+ const token=endpointToken(value);
+ return (world.recipes??[]).find(recipe=>token===recipe.id||token===`${recipe.id}的产出来源`||token===`${recipe.name}的产出来源`)?.id;
+}
+// 01 §1.6 / §1.12: one table, exact owners/purposes and native recipe metadata.
+const endpointRules=[
+ {accepts:token=>token.startsWith('sink:'),matches:(token,account)=>account[0]?.startsWith('sink:')&&(account[2]===token.slice(5)||token==='sink:consume'&&account[0]===token)},
+ {accepts:(token,world)=>Boolean(recipeEndpoint(token,world)),matches:(token,account,effect,receipt,world)=>account[0]==='src:craft'&&account[2]==='craft'&&recipeEndpoint(token,world)===(effect.recipe??receipt.legacy?.recipe)},
+ {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
+];
 function qualifierMatches(qualifier,effect,receipt,world){
  const actor=receipt.actor??'player';
  const normalize=value=>['self','player'].includes(value)?actor:value==='coin'?'coin_river':value;
  const actualId=value=>value==='self'?actor:value==='coin'?'coin_river':value;
- const references=[...qualifier.matchAll(referenceCatalog(world))].map(m=>normalize(m[0]));
+ const recipeSource=qualifier.includes('->')?recipeEndpoint(qualifier.split('->')[0],world):null;
+ const references=[...qualifier.matchAll(referenceCatalog(world))].map(m=>normalize(m[0])).filter(id=>id!==recipeSource);
  const atoms=[];
  function collect(value){
   if(typeof value==='string')atoms.push(...value.split('|').map(actualId));
@@ -365,33 +378,77 @@ function qualifierMatches(qualifier,effect,receipt,world){
  collect(effect);
  if(!references.every(id=>atoms.includes(id)))return false;
  if(qualifier.includes('->')){
-  const endpoint=value=>normalize(value.trim().replace(/^(person|creature|thing|collective|org|holding|obligation|resource):/,'').replace(/:(?:\d.*|requested_.*|bounded_output)$/,''));
   const parts=qualifier.split('->');
   if(parts.length!==2)return false;
-  const owner=value=>actualId(value?.split('|')[0]);
-  if(owner(effect.from)!==endpoint(parts[0])||owner(effect.to)!==endpoint(parts[1]))return false;
+  const matches=(value,account)=>{
+   const token=endpointToken(value),rule=endpointRules.find(rule=>rule.accepts(token,world));
+   return rule.matches(token,typeof account==='string'?account.split('|').map(actualId):[],effect,receipt,world,normalize);
+  };
+  if(!matches(parts[0],effect.from)||!matches(parts[1],effect.to))return false;
  }
  return true;
 }
 export function signatureMatches(expected,effects,receipt={},requested,world){
- const adopted=signatureEffects(effects,receipt,requested).effects;
- if(!sameSet(expected.map(signatureOp).filter(Boolean),adopted.map(e=>e.op)))return false;
- return expected.every(value=>{
+ const adopted=effects,excluded=signatureEffects(effects,receipt,requested).excluded;
+ const matches=(value,effect)=>{
   const op=signatureOp(value);
-  // Unqualified legacy field/tag tokens retain their exact-value contract.
-  if(!op)return adopted.some(effect=>legacyQualifierMatches(value,effect));
+  if(!op)return legacyQualifierMatches(value,effect);
+  if(effect.op!==op)return false;
   if(value===op)return true;
   if(!value.endsWith(')'))return false;
   const qualifiers=value.slice(op.length+1,-1).split(',').map(q=>q.trim());
   if(!world)throw new TypeError('Qualified signature matching requires the scored world');
-  return adopted.some(effect=>effect.op===op&&qualifiers.every(q=>qualifierMatches(q,effect,receipt,world)));
- });
+  return qualifiers.every(q=>qualifierMatches(q,effect,receipt,world));
+ };
+ if(!expected.filter(value=>!signatureOp(value)).every(value=>adopted.some(effect=>matches(value,effect))))return false;
+ const required=expected.filter(signatureOp),candidates=required.map(value=>adopted.flatMap((effect,i)=>matches(value,effect)?[i]:[]));
+ const mandatory=adopted.flatMap((effect,i)=>excluded.includes(effect)||companionEffect(effect,receipt)?[]:[i]);
+ if(mandatory.length>required.length||candidates.some(list=>!list.length))return false;
+ // First cover every non-companion, then fill the remaining requirements.
+ // Augmenting paths preserve that coverage and handle overlapping qualifiers
+ // without factorial enumeration of repeated primitive names (up to 64).
+ const assigned=required.map(()=>-1);
+ const cover=(effect,seen)=>{
+  for(let r=0;r<required.length;r++)if(!seen.has(r)&&candidates[r].includes(effect)){
+   seen.add(r);
+   if(assigned[r]<0||cover(assigned[r],seen)){assigned[r]=effect;return true;}
+  }
+  return false;
+ };
+ if(!mandatory.every(effect=>cover(effect,new Set())))return false;
+ const owners=new Map(assigned.flatMap((effect,r)=>effect<0?[]:[[effect,r]]));
+ const fill=(r,seen)=>{
+  for(const effect of candidates[r])if(!seen.has(effect)){
+   seen.add(effect);const owner=owners.get(effect);
+   if(owner===undefined||fill(owner,seen)){owners.set(effect,r);assigned[r]=effect;return true;}
+  }
+  return false;
+ };
+ return assigned.every((effect,r)=>effect>=0||fill(r,new Set()));
+}
+
+function companionEffect(effect,receipt){
+ const actor=receipt.actor??'player',target=effect.target??effect.entity??effect.actor;
+ if(effect.op==='learn'&&target===actor){
+  const source=effect.learningSource??(typeof effect.source==='string'?effect.source:effect.source?.type)??effect.mode;
+  return ['doing','practice'].includes(source)&&effect.result?.path?.[1]==='skills';
+ }
+ if(effect.op==='fact.set'&&effect.field==='durability'){
+  return (receipt.legacy?.spent?.toolWear??[]).some(row=>row.item===effect.entity&&row.before===effect.result?.before&&row.after===effect.value&&row.after<row.before);
+ }
+ if(effect.op==='time')return effect.minutes>0&&effect.minutes===receipt.cost?.time;
+ if(effect.op==='vital'&&target===actor&&effect.type===`body:${effect.need}`){
+  const drain=['stamina','satiety','hydration'].includes(effect.need)&&effect.delta<0||effect.need==='fatigue'&&effect.delta>0;
+  return Boolean(drain&&receipt.cost?.time>0&&effect.result?.after);
+ }
+ return false;
 }
 
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
  let {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
+ const before=document;
  const signatureContext=engine.byId?createRoutingContext(engine,document):null;
  const previews=[];
  const calls=[],eventId=`a3-score-${row.id}`;
@@ -435,11 +492,10 @@ export async function executeIntent(engine,initial,row){
   let quote=builder.action?await builder.preview():null;
   // Model the UI's explicit “leave a trace” choice, then select a form actually
   // offered by the current scene. Requested fictional forms are not enum IDs.
-  // A primitive-policy refusal throws and has no routing receipt. The UI still
-  // offers the catalog's explicit trace action alongside creative proposals.
-  // Select that separate action from the real menu, never forward the failed
-  // primitive's facts (e.g. an object's name) as mark facts.
-  const fallback=builder.feedback?.fallback??(actionId==='open:proposal'&&slots.effects?.some(e=>e.op==='create'&&e.kind==='mark')?{action:'open:leave_mark',available:true}:null);
+  // A rejected fictional mark is still eligible for the UI's explicit trace
+  // choice. The original call keeps its rejection; this is a separate action.
+  const rejectedMark=actionId==='open:proposal'&&previews.at(-1)?.code==='E-MARK-FACT'&&slots.effects?.some(e=>e.op==='create'&&e.kind==='mark');
+  const fallback=builder.feedback?.fallback??(rejectedMark?{available:true,action:'open:leave_mark'}:null);
   if(!quote&&fallback?.available){
    const mark=worldActions(engine.scoped(document),document,{query:fallback.action,target,limit:100}).actions.find(a=>a.id===fallback.action);
    if(mark&&!mark.blocked&&mark.permission?.allowed!==false){
@@ -498,7 +554,125 @@ export async function executeIntent(engine,initial,row){
  const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(measured.effects.map(e=>e.op)),signatureEffects:measured.effects,excludedCosts:measured.excluded,unmatchedCosts:measured.unmatchedCosts,refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
  // Read the refusal contract; a routed refusal never earns execution credit.
  Object.assign(actual,{routed:receipt?.routed??null,reasonCode:receipt?.code??null,reason:receipt?.reason??null,missing:receipt?.missing??[],repair:receipt?.repair??[],setupUnmet,preview:previews[0]??null,previews});
- return {actual,receipt,document,preview,prepared,effects,submitted,setupUnmet,requested};
+ return {actual,receipt,document,before,preview,prepared,effects,submitted,setupUnmet,requested};
+}
+
+const dieFor=(seed,id,label)=>createHash('sha256').update(`${seed}:${id}:${label}`).digest().readUInt32LE(0)%20+1;
+function intentChecks(run,row){
+ const prefix=`a3-score-${row.id}`;
+ return Object.entries(run.document.state.checks??{}).filter(([id,value])=>([prefix,`${prefix}:action-check`,`${prefix}:rite-check`,`${prefix}_escape`].includes(id)||id.startsWith(`${prefix}:batch:`)&&/^\d+$/.test(id.slice(`${prefix}:batch:`.length)))&&Number.isInteger(value.die));
+}
+// Select the existing document seed input, never override check()/its result.
+// Both extremes include advantage/disadvantage and the opposing die. Keep the
+// same event IDs in preview, confirmation and constructor replay.
+function branchSeed(initial,checks,outcome){
+ const wanted=outcome==='success'?20:1,opposed=21-wanted;
+ for(let nonce=0;nonce<1000000;nonce++){
+  const seed=`${initial.randomSeed}:a3:${outcome}:${nonce}`;
+  if(checks.every(([id,check])=>dieFor(seed,id,'d20')===wanted&&(!(check.rolls?.length>1)||dieFor(seed,id,'second')===wanted)&&(!check.opponent||dieFor(seed,id,'opponent:d20')===opposed)))return seed;
+ }
+ return null;
+}
+const sameValue=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+// The other branch has no corpus signature. Check its native outcome contract,
+// raw effects and books rather than treating any committed receipt as success.
+export function validateCheckBranch(engine,run,row,outcome){
+ const issues=[],{receipt,actual,document}=run,success=outcome==='success';
+ const checks=intentChecks(run,row);
+ if(!actual.committed||actual.error)issues.push('branch did not commit');
+ if(!checks.length||checks.some(([,check])=>check.success!==success))issues.push('requested check outcome is impossible at the selected dice extreme');
+ if(auditLedger(document.ledger).length)issues.push('ledger audit failed');
+ const preview=receiptOf(run.preview);
+ if(preview&&preview.status==='preview'&&!sameValue(preview.applied,receipt?.applied))issues.push('preview and committed effects differ');
+ if(!receipt)return {ok:false,issues};
+ const selected=signatureEffects(run.effects,receipt,[]).effects;
+ const legacy=receipt.legacy,action=findAction(primitiveRuntime.registry(engine),actual.route);
+ if(legacy?.recipe){
+  const recipe=engine.world.recipes.find(r=>r.id===legacy.recipe),batches=legacy.results??[legacy];
+  if(!recipe)issues.push('missing native recipe');
+  else for(const batch of batches){
+   const record=document.state.crafted?.[batch.receipt];
+   if(!record||record.recipe!==recipe.id||record.quantity!==(success?(batch.produced??[]).find(p=>p.item===recipe.output.item)?.amount??0:0))issues.push('craft receipt/output mismatch');
+   if(!success&&((batch.produced??[]).length||(batch.instances??[]).length||(record?.byproducts??[]).length))issues.push('failed craft granted products');
+   const products=[{item:recipe.output.item,amount:recipe.output.quantity},...recipe.byproducts??[]];
+   if((batch.produced??[]).some(product=>!products.some(p=>p.item===product.item&&product.amount<=p.amount)))issues.push('craft output exceeds recipe');
+   for(const salvage of batch.salvage??[]){
+    const input=(batch.spent?.materials??[]).find(m=>m.item===salvage.item);
+    if(!input||salvage.amount>Math.floor(input.quantity*(recipe.failure?.recoverFraction??0)))issues.push('craft salvage exceeds recipe');
+   }
+  }
+  const records=(document.ledger.crafts??[]).filter(c=>c.eventId===receipt.eventId||c.eventId?.startsWith(`${receipt.eventId}:batch:`));
+  const output=new Map();
+  for(const record of records)for(const [item,qty] of Object.entries(record.outputs))output.set(item,(output.get(item)??0)+qty);
+  for(const effect of selected.filter(e=>e.op==='transfer'&&e.from?.split('|')[0]==='src:craft')){
+   const item=effect.resource??effect.from.split('|')[1];output.set(item,(output.get(item)??0)-effect.qty);
+  }
+  if([...output.values()].some(n=>n!==0))issues.push('craft source transfers exceed recorded outputs');
+  if(!success)for(const effect of selected){
+   if(companionEffect(effect,receipt))continue;
+   if(effect.op==='transfer'&&(effect.to?.split('|')[0].startsWith('sink:')||effect.from?.split('|')[0]==='src:craft'))continue;
+   if(effect.op==='vital'&&effect.target==='player'&&effect.need==='hp'&&effect.delta<0&&-effect.delta<=batches.length*(recipe?.failure?.injury??0))continue;
+   issues.push(`failed craft granted ${effect.op}`);
+  }
+ }else if(!legacy&&receipt.outcome){
+  if(!success&&(!action?.outcomes||Array.isArray(action.outcomes))){
+   const originals=(receipt.trimmed??[]).filter(t=>t.reason==='check_failed').map(t=>t.effect);
+   const harm=originals.find(e=>e.op==='vital'&&e.delta<0);
+   for(const effect of selected){
+    if(companionEffect(effect,receipt))continue;
+    if(effect.op==='emit'&&effect.payload?.kind==='action_exposed'&&effect.payload.action===receipt.source.id)continue;
+    if(receipt.outcome==='fumble'&&harm&&effect.op==='vital'&&effect.target===receipt.actor&&effect.delta===-Math.max(1,Math.floor(Math.abs(harm.delta)/4)))continue;
+    issues.push(`failed action granted ${effect.op}`);
+   }
+  }else{
+   let declared=action?.outcomes;
+   if(declared&&!Array.isArray(declared))declared=declared[receipt.outcome]??(success?declared.success??declared.accepted??[]:[]);
+   declared??=run.prepared?.proposal?.effects??run.requested;
+   if(!declared)issues.push('no native branch program available');
+   else{
+    const specs=actionEffects({outcomes:declared},run.submitted?.args?.slots??{},receipt.actor).map(spec=>resolvePrimitiveTransfer(engine,run.before,spec,{actor:receipt.actor}));
+    for(const effect of selected){
+     const index=specs.findIndex(spec=>spec.op===effect.op&&Object.entries(spec).every(([key,value])=>{
+      if(key==='delta'&&receipt.outcome==='critical'&&effect.op==='vital'&&value<0)return effect.delta===Math.floor(value*engine.rules.combat.criticalMultiplier);
+      return sameValue(value==='self'?receipt.actor:value,effect[key]);
+     }));
+     if(index>=0)specs.splice(index,1);
+     else if(!companionEffect(effect,receipt))issues.push(`undeclared branch effect: ${effect.op}`);
+    }
+   }
+  }
+ }else if(!success&&legacy){
+  const route=actual.route;
+  if(route==='core:learn'){
+   const subject=legacy.entity;
+   if(document.state.learning?.[receipt.eventId]?.success!==false)issues.push('failed learning has no failed attempt');
+   if(selected.some(e=>!companionEffect(e,receipt)&&(e.op!=='learn'||e.subject!==subject||e.result?.path?.[1]!=='learning'||e.result?.after?.success!==false)))issues.push('failed learning granted unrelated effect');
+   for(const partition of ['skills','recipes','spells'])if(!sameValue(run.before.state[partition]?.[subject],document.state[partition]?.[subject]))issues.push('failed learning granted knowledge');
+  }else if(route==='core:cast'){
+   for(const effect of selected){
+    if(companionEffect(effect,receipt))continue;
+    if(effect.op==='vital'&&effect.target==='player'&&['hp','mp'].includes(effect.need)&&effect.delta<0)continue;
+    issues.push(`failed cast granted ${effect.op}`);
+   }
+  }else if(!['core:dialogue.persuade','core:combat'].includes(route))issues.push('no native failure contract available');
+ }
+ return {ok:issues.length===0,issues:unique(issues)};
+}
+
+async function executeCheckedIntent(engine,initial,row){
+ const first=await executeIntent(engine,initial,row),checks=intentChecks(first,row);
+ if(!checks.length||first.setupUnmet.length)return {...first,branches:null,branchesOK:true};
+ const runs={},branches={};
+ for(const outcome of ['success','failure']){
+  const randomSeed=branchSeed(initial,checks,outcome);
+  if(!randomSeed){branches[outcome]={ok:false,issues:['unable to select deterministic dice'],impossible:false};continue;}
+  const document={...initial,randomSeed},run=await executeIntent(engine,document,row);
+  const validation=validateCheckBranch(engine,run,row,outcome),actualChecks=intentChecks(run,row);
+  runs[outcome]=run;
+  branches[outcome]={...validation,randomSeed,checks:actualChecks.map(([id,check])=>({id,...check})),impossible:actualChecks.some(([,check])=>check.success!==(outcome==='success')),actual:run.actual};
+ }
+ const selected=row.expected.checkOutcome==='failure'?'failure':'success',run=runs[selected]??first;
+ return {...run,branches,branchesOK:Object.values(branches).every(branch=>branch.ok)};
 }
 
 export async function scoreRows(rows,{world,seed,document:initial}={}){
@@ -507,7 +681,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
  const registry=primitiveRuntime.registry(engine),normalizeRoute=route=>routeName(route,registry);
  const results=[];
  for(const row of rows){
-  const run=await executeIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
+  const run=await executeCheckedIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(actual.route));
   // Rejection signatures describe the REQUEST, not an adopted effect set.
@@ -519,7 +693,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const routeRejects=Array.isArray(expectedRoute)?expectedRoute.every(r=>normalizeRoute(r)==='reject'):normalizeRoute(expectedRoute)==='reject';
   const bounded=row.expected.outOfBounds===true&&!routeRejects;
   const expectsRejection=!bounded&&(row.expected.outOfBounds===true||routeRejects);
-  const signature=ready&&(expectsRejection
+  const signature=ready&&run.branchesOK&&(expectsRejection
    ?actual.refused&&!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0
    :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world));
   let constructor=false,builder=actual.builder;
@@ -533,15 +707,15 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
     const action=input?.tool==='world_propose'?'open:proposal':input?.tool==='world_act'?input.args.action:null;
     const slots=input?.tool==='world_propose'?input.args:input?.args?.slots;
     if(action&&slots){
-     const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
-     builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews};
+     const built=await executeCheckedIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
+     builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews,checkBranches:built.branches};
      const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(built.actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(built.actual.route);
-     constructor=Boolean(builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world)&&(!row.expected.fallback||built.actual.fallback));
+     constructor=Boolean(built.branchesOK&&builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
   const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:normalizeRoute(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
-  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,actual:{...actual,builder},scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&supported,constructor},repair:row.expected.repair});
+  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,actual:{...actual,builder},checkBranches:run.branches,scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&run.branchesOK&&supported,constructor},repair:row.expected.repair});
  }
  const total=rows.length,tricky=rows.filter(r=>r.tricky).length,rate=(key,denominator=total)=>denominator?results.filter(r=>r.scores[key]).length/denominator:1;
  const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=rows.filter(r=>r.expected.constructor).length;
