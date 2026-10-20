@@ -46,6 +46,29 @@
       "minute": 600,
       "facts": [
         "饱腹30/100；干粮新鲜、未受污染，由本人所有并实际放在行囊中。"
+      ],
+      "body": {
+        "player": {
+          "satiety": 30
+        }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_001_owned_item",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_ration",
+          "inventoryBinding": {
+            "item": "item_ration",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "carriedBy": "player",
+          "contaminated": false
+        }
       ]
     }
   },
@@ -103,6 +126,82 @@
       "minute": 600,
       "facts": [
         "林穗在柜台可受理交易，持有至少2份新鲜item_bread；本场报价每份2铜，尚未成交。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_002_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-002"
+          },
+          "actor": "npc_hw_linsui",
+          "subject": "player",
+          "service": "trade"
+        },
+        {
+          "id": "a3v2_002_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-002"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "item_bread",
+          "quantity": 2,
+          "totalCoins": 4
+        },
+        {
+          "id": "a3v2_002_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-002"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "item_bread",
+          "balance": 2
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_002_appointment_0",
+          "actor": "npc_hw_linsui",
+          "location": "bld_hw_qingdeng",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "trade"
+          ],
+          "sourceEvent": "a3v2_002_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_002_quote",
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "item_bread",
+          "quantity": 2,
+          "totalCoins": 4,
+          "direction": "sell_to_player",
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_002_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_linsui",
+          "resource": "item_bread",
+          "purpose": "inventory",
+          "balance": 2,
+          "sourceEvent": "a3v2_002_account_0"
+        }
       ]
     }
   },
@@ -163,6 +262,80 @@
       "minute": 1200,
       "facts": [
         "林穗有权出租，尚有1个空床位，本场一夜报价6铜；玩家尚无该夜住宿持有。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_003_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-003"
+          },
+          "actor": "npc_hw_linsui",
+          "subject": "player",
+          "service": "lodging"
+        },
+        {
+          "id": "a3v2_003_quoted",
+          "verb": "quoted",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-003"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "lodging_one_night",
+          "quantity": 1,
+          "totalCoins": 6
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_003_appointment_0",
+          "actor": "npc_hw_linsui",
+          "location": "bld_hw_qingdeng",
+          "start": 1200,
+          "end": 1380,
+          "services": [
+            "lodging"
+          ],
+          "sourceEvent": "a3v2_003_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_003_quote",
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "lodging_one_night",
+          "quantity": 1,
+          "totalCoins": 6,
+          "direction": "sell_to_player",
+          "at": 1199,
+          "expires": 1320,
+          "sourceEvent": "a3v2_003_quoted"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_003_available_bed",
+          "template": "thing",
+          "kind": "item",
+          "name": "今晚可出租的空床位",
+          "location": "bld_hw_qingdeng",
+          "available": true
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_003_rental_authority",
+          "holder": "npc_hw_linsui",
+          "subject": "bld_hw_qingdeng",
+          "scope": "rent_beds",
+          "source": "setup.facts"
+        }
       ]
     }
   },
@@ -216,6 +389,79 @@
       "facts": [
         "本人已付费并取得覆盖今夜至明早的有效lodges持有，人在所租床上；床位可用且无敌对干扰。",
         "体力30/100、疲劳70/100；次日日出按本地历法，睡眠实际推进至天亮。"
+      ],
+      "body": {
+        "player": {
+          "stamina": 30,
+          "fatigue": 70
+        }
+      },
+      "zones": [
+        {
+          "id": "a3v2_004_zone_0",
+          "name": "所租床上",
+          "location": "bld_hw_qingdeng"
+        },
+        {
+          "id": "a3v2_004_zone_1",
+          "name": "已租床位",
+          "location": "bld_hw_qingdeng"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_004_path_0_1",
+          "fromZone": "a3v2_004_zone_0",
+          "toZone": "a3v2_004_zone_1",
+          "distanceMeters": 2,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_004_zone_1"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_004_bed",
+          "template": "thing",
+          "kind": "item",
+          "name": "已租床位",
+          "location": "bld_hw_qingdeng",
+          "zone": "a3v2_004_zone_1",
+          "available": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_004_lodging_paid",
+          "verb": "paid",
+          "at": 1319,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-004"
+          },
+          "actor": "player",
+          "to": "npc_hw_linsui",
+          "purpose": "lodging",
+          "subject": "a3v2_004_bed"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_004_lodges",
+          "kind": "lodges",
+          "holder": "player",
+          "subject": "bld_hw_qingdeng",
+          "terms": {
+            "bed": "a3v2_004_bed",
+            "from": 1200,
+            "until": 1800,
+            "paymentEvent": "a3v2_004_lodging_paid"
+          }
+        }
       ]
     }
   },
@@ -268,7 +514,13 @@
       "minute": 600,
       "facts": [
         "体力60/100、疲劳40/100，清醒，无战斗；村口有可坐下休息的安全位置。"
-      ]
+      ],
+      "body": {
+        "player": {
+          "stamina": 60,
+          "fatigue": 40
+        }
+      }
     }
   },
   {
@@ -310,6 +562,19 @@
       "minute": 600,
       "facts": [
         "已知从村口到loc_bs的地图路线，各段当前可通行；人可步行，无拘禁或超载；路程与耗时照常结算。"
+      ],
+      "mapKnowledge": [
+        {
+          "holder": "player",
+          "destination": "loc_bs",
+          "source": "known_map",
+          "route": {
+            "from": "loc_hw_gate",
+            "to": "loc_bs",
+            "useExistingWorldRoute": true,
+            "passable": true
+          }
+        }
       ]
     }
   },
@@ -357,6 +622,29 @@
       "minute": 600,
       "facts": [
         "水合度50/100；本人持有一份可饮用清水，已在手边，不含毒物或病原污染。"
+      ],
+      "body": {
+        "player": {
+          "hydration": 50
+        }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_007_owned_item",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_water",
+          "inventoryBinding": {
+            "item": "item_water",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "carriedBy": "player",
+          "contaminated": false
+        }
       ]
     }
   },
@@ -407,6 +695,78 @@
       "facts": [
         "已获陆青允许进入院内；自有小陶罐初始已从行囊取出放在脚边，inventory在本题表示本人可及物，不再另生成第二只。",
         "旁边墙根是同院相邻、可到达的空位，搬运距离2米；陶罐完好，玩家能提动。"
+      ],
+      "zones": [
+        {
+          "id": "a3v2_008_zone_0",
+          "name": "院内脚边",
+          "location": "bld_hw_school"
+        },
+        {
+          "id": "a3v2_008_zone_1",
+          "name": "旁边墙根",
+          "location": "bld_hw_school"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_008_path_0_1",
+          "fromZone": "a3v2_008_zone_0",
+          "toZone": "a3v2_008_zone_1",
+          "distanceMeters": 2,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_008_zone_0"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_008_pot",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_school",
+          "item": "item_clay_pot",
+          "inventoryBinding": {
+            "item": "item_clay_pot",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "zone": "a3v2_008_zone_0",
+          "carriedBy": null
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_008_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-008"
+          },
+          "actor": "npc_hw_luqing",
+          "subject": "bld_hw_school",
+          "to": "player",
+          "scope": "enter_courtyard"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_008_permit_0",
+          "holder": "player",
+          "subject": "bld_hw_school",
+          "scope": "enter_courtyard",
+          "issuer": "npc_hw_luqing",
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_008_permit_0"
+        }
       ]
     }
   },
@@ -527,7 +887,12 @@
       "minute": 600,
       "facts": [
         "郑水生在整理船绳；当地道路和可感知活动保留真实状态，仅所见所闻可进入观察结果。"
-      ]
+      ],
+      "actorStates": {
+        "npc_hw_zhengshuisheng": {
+          "activity": "整理船绳"
+        }
+      }
     }
   },
   {
@@ -579,7 +944,22 @@
       "minute": 600,
       "facts": [
         "许苓清醒、未忙于其他授课，在可对话距离；玩家尚不会spell_light，只请求报价，不预先写入授课同意。"
-      ]
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_xuling",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
+      ],
+      "actorStates": {
+        "npc_hw_xuling": {
+          "activity": "可交谈",
+          "teachingBusy": false
+        }
+      }
     }
   },
   {
@@ -644,6 +1024,88 @@
       "facts": [
         "阿砚有recipe_wooden_pegs授艺资格，已本人明确同意今天以4铜授课，来源事件有效且未撤销；玩家尚未学会该配方。",
         "削木小刀完好，旧磨坊木作台可供本次授课使用，使用许可和费用已包含在约定中；保留实际授课30分钟。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_012_teach_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-012"
+          },
+          "actor": "npc_hw_ayan",
+          "to": "player",
+          "scope": "teach",
+          "subject": "recipe_wooden_pegs",
+          "terms": {
+            "fee": 4,
+            "minutes": 30
+          },
+          "expires": 2040,
+          "revoked": false
+        },
+        {
+          "id": "a3v2_012_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-012"
+          },
+          "actor": "npc_hw_ayan",
+          "subject": "player",
+          "service": "teach"
+        },
+        {
+          "id": "a3v2_012_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-012"
+          },
+          "actor": "npc_hw_ayan",
+          "subject": "station_hw_mill_bench",
+          "to": "player",
+          "scope": "lesson_use"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_012_appointment_0",
+          "actor": "npc_hw_ayan",
+          "location": "bld_hw_mill",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "teach"
+          ],
+          "sourceEvent": "a3v2_012_appointment_0",
+          "subject": "recipe_wooden_pegs",
+          "fee": 4,
+          "minutes": 30
+        }
+      ],
+      "abilitiesByActor": {
+        "npc_hw_ayan": {
+          "teaches": [
+            "recipe_wooden_pegs"
+          ]
+        }
+      },
+      "permits": [
+        {
+          "id": "a3v2_012_permit_0",
+          "holder": "player",
+          "subject": "station_hw_mill_bench",
+          "scope": "lesson_use",
+          "issuer": "npc_hw_ayan",
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_012_permit_0",
+          "includedInLessonFee": true
+        }
       ]
     }
   },
@@ -700,7 +1162,47 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "history": [
+        {
+          "id": "a3v2_013_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-013"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_hw_riverhome"
+          },
+          "subject": "bld_hw_riverhome",
+          "to": "player",
+          "scope": "practice"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_013_permit_0",
+          "holder": "player",
+          "subject": "bld_hw_riverhome",
+          "scope": "practice",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_hw_riverhome"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_013_permit_0"
+        }
+      ],
+      "practiceState": [
+        {
+          "actor": "player",
+          "subject": "skill_light",
+          "practicedToday": false
+        }
+      ]
     }
   },
   {
@@ -754,7 +1256,65 @@
         "recipes": [],
         "licenses": [],
         "literacy": 100
-      }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_014_owned_item",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_school",
+          "item": "item_book_spin_wool",
+          "inventoryBinding": {
+            "item": "item_book_spin_wool",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "carriedBy": "player"
+        }
+      ],
+      "reading": [
+        {
+          "reader": "player",
+          "item": "a3v2_014_owned_item",
+          "canRead": true,
+          "source": "setup.facts"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_014_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-014"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "subject": "bld_hw_school",
+          "to": "player",
+          "scope": "read"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_014_permit_0",
+          "holder": "player",
+          "subject": "bld_hw_school",
+          "scope": "read",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_014_permit_0"
+        }
+      ]
     }
   },
   {
@@ -813,6 +1373,65 @@
         "recipes": [],
         "licenses": [],
         "literacy": 0
+      },
+      "history": [
+        {
+          "id": "a3v2_015_teach_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-015"
+          },
+          "actor": "npc_hw_luqing",
+          "to": "player",
+          "scope": "teach",
+          "subject": "skill_literacy",
+          "terms": {
+            "fee": 2,
+            "minutes": 60
+          },
+          "expires": 2040,
+          "revoked": false
+        },
+        {
+          "id": "a3v2_015_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-015"
+          },
+          "actor": "npc_hw_luqing",
+          "subject": "player",
+          "service": "teach"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_015_appointment_0",
+          "actor": "npc_hw_luqing",
+          "location": "bld_hw_school",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "teach"
+          ],
+          "sourceEvent": "a3v2_015_appointment_0",
+          "subject": "skill_literacy",
+          "fee": 2,
+          "minutes": 60
+        }
+      ],
+      "abilitiesByActor": {
+        "npc_hw_luqing": {
+          "teaches": [
+            "skill_literacy"
+          ],
+          "skills": {
+            "skill_literacy": 450
+          }
+        }
       }
     }
   },
@@ -868,7 +1487,47 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "history": [
+        {
+          "id": "a3v2_016_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-016"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_bs_still_temple"
+          },
+          "subject": "bld_bs_still_temple",
+          "to": "player",
+          "scope": "practice"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_016_permit_0",
+          "holder": "player",
+          "subject": "bld_bs_still_temple",
+          "scope": "practice",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_bs_still_temple"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_016_permit_0"
+        }
+      ],
+      "practiceState": [
+        {
+          "actor": "player",
+          "subject": "skill_monk_combat_01",
+          "practicedToday": false
+        }
+      ]
     }
   },
   {
@@ -924,6 +1583,50 @@
         "spells": [],
         "recipes": [],
         "licenses": []
+      },
+      "history": [
+        {
+          "id": "a3v2_017_observe_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-017"
+          },
+          "actor": "npc_hw_sulan",
+          "to": "player",
+          "scope": "observe",
+          "subject": "weaving",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "demonstrations": [
+        {
+          "id": "a3v2_017_weaving",
+          "actor": "npc_hw_sulan",
+          "subject": "skill_life_4_core",
+          "workstation": "bld_hw_weaving",
+          "fromMinute": 590,
+          "toMinute": 660,
+          "teaching": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_sulan",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
+      ],
+      "actorStates": {
+        "npc_hw_sulan": {
+          "activity": "织布",
+          "teachingBusy": true
+        }
       }
     }
   },
@@ -978,7 +1681,72 @@
         "recipes": [],
         "licenses": [],
         "literacy": 100
-      }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_018_owned_item",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_school",
+          "item": "item_literacy_primer",
+          "inventoryBinding": {
+            "item": "item_literacy_primer",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "carriedBy": "player"
+        }
+      ],
+      "reading": [
+        {
+          "reader": "player",
+          "item": "a3v2_018_owned_item",
+          "canRead": true,
+          "source": "setup.facts"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_018_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-018"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "subject": "bld_hw_school",
+          "to": "player",
+          "scope": "read"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_018_permit_0",
+          "holder": "player",
+          "subject": "bld_hw_school",
+          "scope": "read",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_018_permit_0"
+        }
+      ],
+      "practiceState": [
+        {
+          "actor": "player",
+          "subject": "skill_literacy",
+          "dailyLimitReached": false
+        }
+      ]
     }
   },
   {
@@ -989,13 +1757,12 @@
     "expected": {
       "route": "core:research",
       "signature": [
-        "create(collective:project,research_tool_handle)",
-        "learn(person:self,tool_handle_research:research)"
+        "create(collective:project,research_tool_handle)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.9.3允许研究表单，§6.3的learn以真实研究为来源而不在立项时保证成果。"
+      "why": "06 §6.3/§6.6/§6.9.3：本次只立项，尚无实际研究进展，不要求learn；后续真实研究有检定、来源与日上限。"
     },
     "proposal": {
       "intent": "我想研究怎么让现有的木柄更耐用，拿自己的样品和木工知识立个研究项目。",
@@ -1044,7 +1811,40 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "history": [
+        {
+          "id": "a3v2_019_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-019"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "station_hw_mill_bench"
+          },
+          "subject": "station_hw_mill_bench",
+          "to": "player",
+          "scope": "observe_sample"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_019_permit_0",
+          "holder": "player",
+          "subject": "station_hw_mill_bench",
+          "scope": "observe_sample",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "station_hw_mill_bench"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_019_permit_0"
+        }
+      ]
     }
   },
   {
@@ -1109,6 +1909,88 @@
         "spells": [],
         "recipes": [],
         "licenses": []
+      },
+      "instances": [
+        {
+          "id": "a3v2_020_office_npc_hw_yanzhe",
+          "template": "office",
+          "kind": "office",
+          "name": "木工执业申请登记与转交",
+          "organization": "loc_bs",
+          "seat": "bld_bs_guild",
+          "authority": {
+            "scope": "木工执业申请登记与转交",
+            "profession": "profession_life_6",
+            "operations": [
+              "receive_application",
+              "refer_examiner"
+            ]
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_020_office_holding_npc_hw_yanzhe",
+          "kind": "holds_office",
+          "holder": "npc_hw_yanzhe",
+          "subject": "a3v2_020_office_npc_hw_yanzhe",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_hw_yanzhe": {
+          "onDuty": true
+        }
+      },
+      "examinations": [
+        {
+          "id": "a3v2_020_exam",
+          "profession": "profession_life_6",
+          "registrar": "npc_hw_yanzhe",
+          "examiner": {
+            "role": "qualified_examiner",
+            "profession": "profession_life_6",
+            "at": "bld_bs_guild"
+          },
+          "minutes": 120,
+          "fee": 20,
+          "available": true,
+          "passed": false
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_020_sample",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_guild",
+          "item": "item_tool_handle",
+          "inventoryBinding": {
+            "item": "item_tool_handle",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_020_sample_made",
+          "verb": "crafted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-020"
+          },
+          "actor": "player",
+          "subject": "a3v2_020_sample"
+        }
+      ],
+      "body": {
+        "player": {
+          "level": 1
+        }
       }
     }
   },
@@ -1120,14 +2002,14 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:item_wood,self->sink:craft)",
-        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self)",
-        "transfer(resource:item_wood_shavings,recipe_wooden_pegs->self)"
+        "transfer(resource:item_wood,self->sink:consume)",
+        "transfer(resource:item_wooden_peg,src:craft->self)",
+        "transfer(resource:item_wood_shavings,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7要求计量制造经注册配方结算，recipe_wooden_pegs规定投入、四块木楔与刨屑副产物。"
+      "why": "06 §6.7要求计量制造经注册配方结算，recipe_wooden_pegs规定投入、四块木楔与刨屑副产物。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "我已经学会削木楔了，木料和削木小刀都在工作台上，按配方做一批。",
@@ -1175,7 +2057,19 @@
           "recipe_wooden_pegs"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_021_station_access",
+          "station": "station_hw_mill_bench",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1186,13 +2080,16 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:recipe_bake_flatbread_inputs,self->sink:craft)",
-        "transfer(resource:item_oat_flatbread,recipe_bake_flatbread->self)"
+        "transfer(resource:item_oat_flour,self->sink:consume)",
+        "transfer(resource:item_water,self->sink:consume)",
+        "transfer(resource:item_salt,self->sink:consume)",
+        "transfer(resource:item_wood_shavings,self->sink:consume)",
+        "transfer(resource:item_oat_flatbread,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7的配方制造由材料、设施与工时限制，世界配方recipe_bake_flatbread给定四份产出。"
+      "why": "06 §6.7的配方制造由材料、设施与工时限制，世界配方recipe_bake_flatbread给定四份产出。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "锅和炉子能用，燕麦粉、清水、盐、刨屑都备齐了，我按学过的方子烙一锅薄饼。",
@@ -1265,7 +2162,19 @@
           "recipe_bake_flatbread"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_022_station_access",
+          "station": "station_hw_kitchen",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 3,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1276,13 +2185,14 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:item_fish+item_salt,self->sink:craft)",
-        "transfer(resource:item_salt_fish,recipe_salt_fish->self)"
+        "transfer(resource:item_fish,self->sink:consume)",
+        "transfer(resource:item_salt,self->sink:consume)",
+        "transfer(resource:item_salt_fish,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3、§6.7要求真实投入并优先配方动作，recipe_salt_fish只产出一份咸鱼。"
+      "why": "06 §6.3、§6.7要求真实投入并优先配方动作，recipe_salt_fish只产出一份咸鱼。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "这条剖净鲜鱼是我的，盐和切刀也有，我按短腌小咸鱼的配方腌好。",
@@ -1340,7 +2250,19 @@
           "recipe_salt_fish"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_023_station_access",
+          "station": "station_hw_kitchen",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 3,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1351,13 +2273,13 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:item_wool,self->sink:craft)",
-        "transfer(resource:item_wool_yarn,recipe_spin_wool->self)"
+        "transfer(resource:item_wool,self->sink:consume)",
+        "transfer(resource:item_wool_yarn,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7限制制造收益到配方，recipe_spin_wool将一束羊毛加工为三团毛线。"
+      "why": "06 §6.7限制制造收益到配方，recipe_spin_wool将一束羊毛加工为三团毛线。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "我拿一束自己的洗净羊毛，用木纺锤照学过的方子纺粗毛线。",
@@ -1404,7 +2326,19 @@
           "recipe_spin_wool"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_024_station_access",
+          "station": "station_hw_loom_table",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1415,13 +2349,14 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:item_clay+item_charcoal,self->sink:craft)",
-        "transfer(resource:item_clay_cup,recipe_fire_cup->self)"
+        "transfer(resource:item_clay,self->sink:consume)",
+        "transfer(resource:item_charcoal,self->sink:consume)",
+        "transfer(resource:item_clay_cup,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7规定设施、材料与工时都约束配方制造，recipe_fire_cup的产出是三只小陶杯。"
+      "why": "06 §6.7规定设施、材料与工时都约束配方制造，recipe_fire_cup的产出是三只小陶杯。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "陶轮和窑炉都借好了，我用备齐的黏土和木炭按配方烧一批小陶杯。",
@@ -1476,7 +2411,39 @@
           "recipe_fire_cup"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_025_station_access",
+          "station": "station_bs_small_kiln",
+          "holder": "player",
+          "fromMinute": 479,
+          "toMinute": 1080,
+          "fee": 5,
+          "paid": true,
+          "usable": true,
+          "paymentEvent": "a3v2_025_kiln_paid"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_025_kiln_paid",
+          "verb": "paid",
+          "at": 479,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-025"
+          },
+          "actor": "player",
+          "to": {
+            "role": "fee_recipient",
+            "of": "station_bs_small_kiln"
+          },
+          "amount": 5,
+          "resource": "coin_river",
+          "purpose": "workstation_use"
+        }
+      ]
     }
   },
   {
@@ -1487,13 +2454,15 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:recipe_dip_candles_inputs,self->sink:craft)",
-        "transfer(resource:item_wax_candle,recipe_dip_candles->self)"
+        "transfer(resource:item_beeswax,self->sink:consume)",
+        "transfer(resource:item_flax,self->sink:consume)",
+        "transfer(resource:item_charcoal,self->sink:consume)",
+        "transfer(resource:item_wax_candle,src:craft->self)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7要求计量制品沿配方守恒，recipe_dip_candles限定一批四根蜡烛。"
+      "why": "06 §6.7要求计量制品沿配方守恒，recipe_dip_candles限定一批四根蜡烛。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。"
     },
     "proposal": {
       "intent": "我把蜂蜡、麻纤维和木炭备好了，用那口可用的煮锅按学过的方子浸一批蜡烛。",
@@ -1558,7 +2527,19 @@
           "recipe_dip_candles"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_026_station_access",
+          "station": "station_hw_kitchen",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 3,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1620,7 +2601,38 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_027_station_access",
+          "station": "station_hw_mill_bench",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_027_staff",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_mill",
+          "item": "item_staff",
+          "inventoryBinding": {
+            "item": "item_staff",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 60,
+          "damage": {
+            "kind": "surface_hairline_crack"
+          }
+        }
+      ]
     }
   },
   {
@@ -1688,7 +2700,39 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_028_station_access",
+          "station": "station_hw_loom_table",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_028_clothes",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_weaving",
+          "item": "item_clothes",
+          "inventoryBinding": {
+            "item": "item_clothes",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 60,
+          "damage": {
+            "kind": "seam_open",
+            "part": "cuff"
+          }
+        }
+      ]
     }
   },
   {
@@ -1705,7 +2749,7 @@
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7允许以匹配性状的真实材料即兴制作低耐久粗劣物，不得凭空获得配方级产出。"
+      "why": "06 §6.7允许以匹配性状的真实材料即兴制作低耐久粗劣物，不得凭空获得配方级产出。 06 §6.6明确即兴制作可失败：普通失败材料半失、大失败全失，无支架；signature保留成功分支，不能以固定骰失败改成无条件产物或仅emit即合格。材料整数折算须依规则，不能自行四舍五入掉全部损失。"
     },
     "proposal": {
       "intent": "没有合适的成品支架，我想用自己的木料和绳子临时扎个能撑住小陶罐的粗架子。",
@@ -1779,7 +2823,19 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_029_station_access",
+          "station": "station_hw_mill_bench",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -1835,7 +2891,30 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 3
+        }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_030_clothes",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_clothes",
+          "inventoryBinding": {
+            "item": "item_clothes",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "moisture": 60,
+          "wornBy": "player"
+        }
+      ]
     }
   },
   {
@@ -1903,6 +2982,33 @@
       "minute": 600,
       "facts": [
         "bank_hw_post汇兑柜营业，沈渡有权办理，银行准备金按world保留；100铜本金与1铜手续费分别实付，当前尚无本笔存款。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_031_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-031"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "deposit"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_031_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "deposit"
+          ],
+          "sourceEvent": "a3v2_031_appointment_0"
+        }
       ]
     }
   },
@@ -1956,6 +3062,105 @@
       "facts": [
         "本人在小驿站汇兑柜的唯一未结清存款：deposit义务，债务人bank_hw_post、债权人self、余额100铜、可随时提取。",
         "本人持有效具名存款凭据，银行可付准备金至少50铜，沈渡在柜台核验；本次只取50铜。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_032_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-032"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "withdraw"
+        },
+        {
+          "id": "a3v2_032_deposit_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-032"
+          },
+          "subject": "a3v2_032_deposit",
+          "debtor": "bank_hw_post",
+          "creditor": "player",
+          "amount": 100
+        },
+        {
+          "id": "a3v2_032_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-032"
+          },
+          "owner": "bank_hw_post",
+          "resource": "coin_river",
+          "balance": 50
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_032_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "withdraw"
+          ],
+          "sourceEvent": "a3v2_032_appointment_0"
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_032_deposit",
+          "kind": "deposit",
+          "debtor": "bank_hw_post",
+          "creditor": "player",
+          "amount": 100,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_032_deposit_opened",
+          "terms": {
+            "withdrawable": true
+          },
+          "name": "本人在小驿站汇兑柜的唯一未结清存款"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_032_deposit_receipt",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_post",
+          "item": "item_parchment",
+          "condition": 100
+        }
+      ],
+      "documents": [
+        {
+          "id": "a3v2_032_deposit_receipt",
+          "owner": "player",
+          "sourceEvent": "a3v2_032_deposit_opened",
+          "obligation": "a3v2_032_deposit",
+          "valid": true,
+          "namedHolder": "player"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "bank_hw_post",
+          "resource": "coin_river",
+          "purpose": "vault",
+          "balance": 50,
+          "sourceEvent": "a3v2_032_account_0"
+        }
       ]
     }
   },
@@ -2009,6 +3214,33 @@
       "minute": 600,
       "facts": [
         "汇兑柜正常受理借款询价，玩家尚未签署本笔贷款、无该笔资金到账；本金100铜在该网点业务范围内，期限利息和担保仍待报价。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_033_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-033"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "loan_quote"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_033_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "loan_quote"
+          ],
+          "sourceEvent": "a3v2_033_appointment_0"
+        }
       ]
     }
   },
@@ -2071,6 +3303,28 @@
       "minute": 600,
       "facts": [
         "吴朔清醒、亲自提出并同意向玩家借50铜、10天后无息归还；有可追溯的本人请求事件，尚未出借或记账，无重名借款。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_034_loan_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-034"
+          },
+          "actor": "npc_hw_wushuo",
+          "to": "player",
+          "scope": "loan",
+          "subject": "player",
+          "terms": {
+            "principal": 50,
+            "days": 10,
+            "interest": 0
+          },
+          "expires": 2040,
+          "revoked": false
+        }
       ]
     }
   },
@@ -2122,6 +3376,39 @@
       "minute": 600,
       "facts": [
         "本人欠林穗的唯一三十铜借款：self为债务人、npc_hw_linsui为债权人，余额30铜，本息合计30铜，已可清偿；林穗在场有权收款。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_035_loan_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-035"
+          },
+          "subject": "a3v2_035_loan",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 30
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_035_loan",
+          "kind": "loan",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 30,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_035_loan_opened",
+          "terms": {
+            "interest": 0,
+            "earlySettlement": true
+          },
+          "name": "本人欠林穗的唯一三十铜借款"
+        }
       ]
     }
   },
@@ -2178,6 +3465,33 @@
       "facts": [
         "自有旧木杖完整可估价，无质押或处分限制；小驿站汇兑柜在本独立场景办理world/meta/rules.json economy.credit.pawn规定的质押借款，沈渡有授权。",
         "这里只询价，尚未同意报价、交杖或放款；不额外虚构当铺ID。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_036_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-036"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "pawn_quote"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_036_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "pawn_quote"
+          ],
+          "sourceEvent": "a3v2_036_appointment_0"
+        }
       ]
     }
   },
@@ -2238,6 +3552,99 @@
         "本人以旧木杖质押的唯一未结清借款：bank_hw_post为债权人、本息合计2铜，赎期未过。",
         "该旧木杖在小驿站汇兑柜的有效质押持有：标的是本人唯一item_staff实例，所有权仍归self，实物在柜内并由银行保管，不在玩家行囊。",
         "沈渡有权收款解押并返还原物；两条运行记录均事先存在且互相链接。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_037_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-037"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "redeem"
+        },
+        {
+          "id": "a3v2_037_pawn_loan_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-037"
+          },
+          "subject": "a3v2_037_pawn_loan",
+          "debtor": "player",
+          "creditor": "bank_hw_post",
+          "amount": 2
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_037_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "redeem"
+          ],
+          "sourceEvent": "a3v2_037_appointment_0"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_037_staff",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_post",
+          "item": "item_staff",
+          "carriedBy": "bank_hw_post",
+          "condition": 100
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_037_pawn_loan",
+          "kind": "loan",
+          "debtor": "player",
+          "creditor": "bank_hw_post",
+          "amount": 2,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_037_pawn_loan_opened",
+          "terms": {
+            "totalDue": 2,
+            "redeemDeadline": 2040,
+            "collateral": "a3v2_037_staff"
+          },
+          "name": "本人以旧木杖质押的唯一未结清借款"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_037_owns",
+          "kind": "owns",
+          "holder": "player",
+          "subject": "a3v2_037_staff",
+          "terms": {
+            "share": 1
+          }
+        },
+        {
+          "id": "a3v2_037_pledge",
+          "kind": "pledged",
+          "holder": "a3v2_037_pawn_loan",
+          "subject": "a3v2_037_staff",
+          "terms": {
+            "obligation": "a3v2_037_pawn_loan",
+            "redeemDeadline": 2040
+          },
+          "name": "该旧木杖在小驿站汇兑柜的有效质押持有"
+        }
       ]
     }
   },
@@ -2308,6 +3715,71 @@
       "facts": [
         "汇兑柜营业，本场50铜汇款手续费2铜；收款人npc_hw_yanzhe此时实际在loc_bs，有已核验身份和可兑付的目的网点，不在玩家面前。",
         "尚未创建本笔bill；汇票与异地兑付按真实流程处理，不把汇款当即时隔空交付。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_038_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-038"
+          },
+          "actor": "npc_hw_shendu",
+          "subject": "player",
+          "service": "remittance"
+        },
+        {
+          "id": "a3v2_038_remit_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "actor": "npc_hw_shendu",
+          "subject": "remittance",
+          "principal": 50,
+          "fee": 2,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-038"
+          }
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_038_appointment_0",
+          "actor": "npc_hw_shendu",
+          "location": "bld_hw_post",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "remittance"
+          ],
+          "sourceEvent": "a3v2_038_appointment_0"
+        }
+      ],
+      "actorStates": {
+        "npc_hw_yanzhe": {
+          "location": "loc_bs"
+        }
+      },
+      "quotes": [
+        {
+          "id": "a3v2_038_remit_quote",
+          "actor": "npc_hw_shendu",
+          "to": "player",
+          "service": "remittance",
+          "principal": 50,
+          "fee": 2,
+          "recipient": "npc_hw_yanzhe",
+          "destination": "loc_bs",
+          "recipientIdentityVerified": true,
+          "destinationBranch": {
+            "role": "redeeming_branch",
+            "at": "loc_bs"
+          },
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_038_remit_quoted"
+        }
       ]
     }
   },
@@ -2368,6 +3840,100 @@
       "minute": 600,
       "facts": [
         "两只陶杯由玩家此前实际制作、完好且无处分限制；严辙有至少12铜并已本人同意以总价12铜购买，双方同意记录可追溯，尚未交割。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_039_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-039"
+          },
+          "actor": "npc_hw_yanzhe",
+          "subject": "player",
+          "service": "trade"
+        },
+        {
+          "id": "a3v2_039_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-039"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_clay_cup",
+          "quantity": 2,
+          "totalCoins": 12
+        },
+        {
+          "id": "a3v2_039_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-039"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 12
+        },
+        {
+          "id": "a3v2_039_trade_3",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-039"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "scope": "trade",
+          "subject": "a3v2_039_quote",
+          "terms": {
+            "totalCoins": 12
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_039_appointment_0",
+          "actor": "npc_hw_yanzhe",
+          "location": "bld_hw_qingdeng",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "trade"
+          ],
+          "sourceEvent": "a3v2_039_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_039_quote",
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_clay_cup",
+          "quantity": 2,
+          "totalCoins": 12,
+          "direction": "buy_from_player",
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_039_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 12,
+          "sourceEvent": "a3v2_039_account_0"
+        }
       ]
     }
   },
@@ -2410,6 +3976,40 @@
       "minute": 600,
       "facts": [
         "阿砚欠本人的唯一十铜借款：debtor=npc_hw_ayan、creditor=self、未偿本金10铜，未转让、未质押；玩家对债权有完整免除权。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_040_loan_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-040"
+          },
+          "subject": "a3v2_040_loan",
+          "debtor": "npc_hw_ayan",
+          "creditor": "player",
+          "amount": 10
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_040_loan",
+          "kind": "loan",
+          "debtor": "npc_hw_ayan",
+          "creditor": "player",
+          "amount": 10,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_040_loan_opened",
+          "terms": {
+            "interest": 0,
+            "assigned": false,
+            "pledged": false
+          },
+          "name": "阿砚欠本人的唯一十铜借款"
+        }
       ]
     }
   },
@@ -2460,6 +4060,15 @@
       "minute": 600,
       "facts": [
         "林穗正在柜台做普通店务，听得见招呼，双方有共同语言；不提前写好她的答复。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_linsui",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -2509,6 +4118,15 @@
       "minute": 600,
       "facts": [
         "郑水生清醒，能听见提问，有今日河上的实际经历；回答只限他知道的情况，setup不保证给出完整地图。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_zhengshuisheng",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -2560,6 +4178,32 @@
       "facts": [
         "玩家刚在北林边亲眼见到一只monster_bent_horn_goat，有时间地点明确的观察事件进入其知情集合；该动物已离开当前可见范围。",
         "吴朔在可对话距离且能听懂；他说法、信任变化与后续反应不预设。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_043_observed_goat",
+          "verb": "observed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-043"
+          },
+          "observer": "player",
+          "subject": {
+            "species": "monster_bent_horn_goat",
+            "count": 1
+          },
+          "location": "loc_hw_northwood",
+          "currentlyVisible": false,
+          "name": "刚才我亲眼看见北林边有野兽"
+        }
+      ],
+      "knowledge": [
+        {
+          "holder": "player",
+          "event": "a3v2_043_observed_goat",
+          "source": "direct_observation"
+        }
       ]
     }
   },
@@ -2611,6 +4255,82 @@
       "minute": 600,
       "facts": [
         "严辙本场在南市有权出售一根自有item_staff，已向玩家报价6铜，玩家请求降到4铜；尚无议价答复或成交。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_044_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-044"
+          },
+          "actor": "npc_hw_yanzhe",
+          "subject": "player",
+          "service": "trade"
+        },
+        {
+          "id": "a3v2_044_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-044"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_staff",
+          "quantity": 1,
+          "totalCoins": 6
+        },
+        {
+          "id": "a3v2_044_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-044"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "item_staff",
+          "balance": 1
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_044_appointment_0",
+          "actor": "npc_hw_yanzhe",
+          "location": "loc_bs_nanshi",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "trade"
+          ],
+          "sourceEvent": "a3v2_044_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_044_quote",
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_staff",
+          "quantity": 1,
+          "totalCoins": 6,
+          "direction": "sell_to_player",
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_044_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "item_staff",
+          "purpose": "inventory",
+          "balance": 1,
+          "sourceEvent": "a3v2_044_account_0"
+        }
       ]
     }
   },
@@ -2665,6 +4385,44 @@
       "facts": [
         "严辙是眼前外乡商人；本独立场景中玩家只会河谷话、严辙只会海岸话，两人的语言能力无交集；双方清醒、可听见对方。",
         "沈渡是愿意帮忙的在场通译，已掌握双方语言且能传达谈话；此项是场景先置的语言能力，不靠玩家请求临时获得。"
+      ],
+      "abilitiesByActor": {
+        "player": {
+          "spokenLanguages": [
+            "river"
+          ],
+          "writtenLanguages": []
+        },
+        "npc_hw_yanzhe": {
+          "spokenLanguages": [
+            "coast"
+          ],
+          "writtenLanguages": []
+        },
+        "npc_hw_shendu": {
+          "spokenLanguages": [
+            "river",
+            "coast"
+          ]
+        }
+      },
+      "history": [
+        {
+          "id": "a3v2_045_interpret_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-045"
+          },
+          "actor": "npc_hw_shendu",
+          "to": "player",
+          "scope": "interpret",
+          "subject": "river-coast",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
       ]
     }
   },
@@ -2719,6 +4477,38 @@
       "minute": 600,
       "facts": [
         "郑水生正在狭窄候渡通道整理绳索，身体和绳圈挡住玩家前路，有可让开的相邻空位；能听懂客气请求，是否让路仍由本人决定。"
+      ],
+      "zones": [
+        {
+          "id": "a3v2_046_zone_0",
+          "name": "候渡通道",
+          "location": "loc_hw_dock"
+        },
+        {
+          "id": "a3v2_046_zone_1",
+          "name": "旁边可让开的空位",
+          "location": "loc_hw_dock"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_046_path_0_1",
+          "fromZone": "a3v2_046_zone_0",
+          "toZone": "a3v2_046_zone_1",
+          "distanceMeters": 1,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_046_zone_0"
+        },
+        {
+          "entity": "npc_hw_zhengshuisheng",
+          "zone": "a3v2_046_zone_0",
+          "blocksPassage": true
+        }
       ]
     }
   },
@@ -2770,6 +4560,15 @@
       "minute": 600,
       "facts": [
         "郑水生在场、清醒，知道至少一处当前可行的渡河点；玩家尚未取得带路同意或签订带路义务，仅请求他答复。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_zhengshuisheng",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -2823,7 +4622,43 @@
       "facts": [
         "自有两份木料（共4公斤）装在脚边的自有木箱中；本场玩家暂时单人安全搬运上限为3公斤，阿砚有协助搬运能力，物品不重复放入行囊。",
         "阿砚在可交谈范围，双手可用；仅问是否协助，不预先把木料搬走或写入同意。"
-      ]
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_048_crate",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_mill",
+          "item": "item_bottle_divider_crate",
+          "inventoryBinding": {
+            "item": "item_bottle_divider_crate",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "carriedBy": null
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_048_crate",
+          "contents": [
+            {
+              "inventoryBinding": {
+                "item": "item_wood",
+                "quantity": 2,
+                "mode": "same_stock"
+              },
+              "weightKg": 4
+            }
+          ]
+        }
+      ],
+      "body": {
+        "player": {
+          "safeCarryKg": 3
+        }
+      }
     }
   },
   {
@@ -2875,6 +4710,38 @@
       "facts": [
         "本人欠林穗的唯一十铜借款：未偿本金10铜、债务人self、债权人npc_hw_linsui；此刻尚无本题的新承诺。",
         "玩家当面表达本人履约承诺，期限是明天本地日落前、交付地点bld_hw_qingdeng；起始可无钱，承诺不产生钱或清偿旧债。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_049_loan_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-049"
+          },
+          "subject": "a3v2_049_loan",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 10
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_049_loan",
+          "kind": "loan",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 10,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_049_loan_opened",
+          "terms": {
+            "interest": 0
+          },
+          "name": "本人欠林穗的唯一十铜借款"
+        }
       ]
     }
   },
@@ -2925,6 +4792,17 @@
       "minute": 600,
       "facts": [
         "与陈柏的面对面对话会话已开始且主要内容说完，双方清醒能听懂；当前没有强制阻止告别的冲突。"
+      ],
+      "conversations": [
+        {
+          "id": "a3v2_050_conversation",
+          "participants": [
+            "player",
+            "npc_hw_chenbai"
+          ],
+          "active": true,
+          "mainTopicFinished": true
+        }
       ]
     }
   },
@@ -2985,7 +4863,109 @@
       "facts": [
         "npc_bs_032_1为本场当班受理差役；玩家刚亲眼见npc_hw_wushuo拿走自己那只item_grain_sack，有相应观察事件，粮袋此刻在吴朔处，吴朔不在受理前厅。",
         "手中唯一item_parchment是已写有购袋及袋上特征的真实凭据，可作为证据递交；不把空白纸当证据，也不预设定罪。"
-      ]
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_051_grain_sack",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "loc_hw_northwood",
+          "item": "item_grain_sack",
+          "carriedBy": "npc_hw_wushuo"
+        },
+        {
+          "id": "a3v2_051_evidence",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_watch",
+          "item": "item_parchment",
+          "inventoryBinding": {
+            "item": "item_parchment",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_051_theft",
+          "verb": "theft",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-051"
+          },
+          "actor": "npc_hw_wushuo",
+          "owner": "player",
+          "subject": "a3v2_051_grain_sack",
+          "witnesses": [
+            "player"
+          ]
+        },
+        {
+          "id": "a3v2_051_purchase_receipt",
+          "verb": "purchase_receipt",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-051"
+          },
+          "owner": "player",
+          "subject": "a3v2_051_grain_sack"
+        }
+      ],
+      "knowledge": [
+        {
+          "holder": "player",
+          "event": "a3v2_051_theft",
+          "source": "direct_observation"
+        }
+      ],
+      "documents": [
+        {
+          "id": "a3v2_051_evidence",
+          "owner": "player",
+          "sourceEvent": "a3v2_051_purchase_receipt",
+          "describes": "a3v2_051_grain_sack",
+          "content": {
+            "type": "purchase_and_identifying_features",
+            "identifies": "a3v2_051_grain_sack"
+          }
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_051_office_npc_bs_032_1",
+          "template": "office",
+          "kind": "office",
+          "name": "受理报案",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "scope": "受理报案",
+            "operations": [
+              "receive_report"
+            ]
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_051_office_holding_npc_bs_032_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_032_1",
+          "subject": "a3v2_051_office_npc_bs_032_1",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_bs_032_1": {
+          "onDuty": true
+        }
+      }
     }
   },
   {
@@ -3044,7 +5024,116 @@
       "facts": [
         "本人在白石镇公署已判决的唯一财物案：已有可追溯判决，玩家是可上诉当事人，当前仍在上诉期限内，此处有权受理。",
         "自有item_parchment为新找到的原始收据，内容与该案财物对应，先前未被审查；公署受理人当班，不预设撤销原判。"
-      ]
+      ],
+      "history": [
+        {
+          "id": "a3v2_052_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-052"
+          },
+          "subject": "a3v2_052_case",
+          "court": "bld_bs_office"
+        },
+        {
+          "id": "a3v2_052_judgment",
+          "verb": "judged",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-052"
+          },
+          "subject": "a3v2_052_case",
+          "court": "bld_bs_office"
+        },
+        {
+          "id": "a3v2_052_receipt_found",
+          "verb": "evidence_found",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-052"
+          },
+          "actor": "player",
+          "case": "a3v2_052_case"
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_052_case",
+          "court": "bld_bs_office",
+          "stage": "judged",
+          "parties": [
+            "player"
+          ],
+          "sourceEvent": "a3v2_052_case_registered",
+          "appealDeadline": 2040,
+          "judgmentEvent": "a3v2_052_judgment",
+          "name": "本人在白石镇公署已判决的唯一财物案"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_052_new_receipt",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_office",
+          "item": "item_parchment",
+          "inventoryBinding": {
+            "item": "item_parchment",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100
+        }
+      ],
+      "documents": [
+        {
+          "id": "a3v2_052_new_receipt",
+          "owner": "player",
+          "sourceEvent": "a3v2_052_receipt_found",
+          "case": "a3v2_052_case",
+          "reviewed": false,
+          "content": {
+            "type": "property_receipt",
+            "case": "a3v2_052_case"
+          }
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_052_office_npc_bs_031_1",
+          "template": "office",
+          "kind": "office",
+          "name": "受理上诉",
+          "organization": "loc_bs",
+          "seat": "bld_bs_office",
+          "authority": {
+            "scope": "受理上诉",
+            "operations": [
+              "receive_appeal"
+            ],
+            "case": "a3v2_052_case"
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_052_office_holding_npc_bs_031_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_031_1",
+          "subject": "a3v2_052_office_npc_bs_031_1",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_bs_031_1": {
+          "onDuty": true
+        }
+      }
     }
   },
   {
@@ -3092,11 +5181,65 @@
       ],
       "inventory": {},
       "coins": 0,
-      "minute": 600,
+      "minute": 2040,
       "facts": [
         "本人昨日在青灯酒馆偷走一份干粮的事件真实存在，物主npc_hw_linsui，未经其同意；事件记录保留取得和物主，当前未自首。",
         "顾岑清醒、当班并有权受理；玩家能叙述自己的行为，但不得由一句自首抹除损失或判决。"
-      ]
+      ],
+      "history": [
+        {
+          "id": "a3v2_053_theft",
+          "verb": "theft",
+          "at": 600,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-053"
+          },
+          "actor": "player",
+          "owner": "npc_hw_linsui",
+          "item": "item_ration",
+          "quantity": 1,
+          "location": "bld_hw_qingdeng",
+          "name": "本人昨日在青灯酒馆偷走一份干粮的事件"
+        }
+      ],
+      "knowledge": [
+        {
+          "holder": "player",
+          "event": "a3v2_053_theft",
+          "source": "own_action"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_053_office_npc_hw_gucen",
+          "template": "office",
+          "kind": "office",
+          "name": "受理自首",
+          "organization": "loc_hw",
+          "seat": "loc_hw_gate",
+          "authority": {
+            "scope": "受理自首",
+            "operations": [
+              "receive_surrender"
+            ]
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_053_office_holding_npc_hw_gucen",
+          "kind": "holds_office",
+          "holder": "npc_hw_gucen",
+          "subject": "a3v2_053_office_npc_hw_gucen",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_hw_gucen": {
+          "onDuty": true
+        }
+      }
     }
   },
   {
@@ -3149,7 +5292,134 @@
       "facts": [
         "镇巡值房对本人唯一已生效的十铜罚款：self为付款义务人、bld_bs_watch为有权代收账户，尚欠10铜，无其他同额罚款。",
         "npc_bs_032_1有该笔罚款的有效代收职权且当班在场；款项归公账，不进差役私人账户。"
-      ]
+      ],
+      "history": [
+        {
+          "id": "a3v2_054_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-054"
+          },
+          "subject": "a3v2_054_case",
+          "court": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_054_fine_judgment",
+          "verb": "judged",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-054"
+          },
+          "subject": "a3v2_054_case",
+          "fine": 10,
+          "effective": true
+        },
+        {
+          "id": "a3v2_054_fine_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-054"
+          },
+          "subject": "a3v2_054_fine",
+          "debtor": "player",
+          "creditor": "loc_bs",
+          "amount": 10
+        },
+        {
+          "id": "a3v2_054_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-054"
+          },
+          "owner": "loc_bs",
+          "resource": "coin_river",
+          "balance": 0
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_054_case",
+          "court": "bld_bs_watch",
+          "stage": "judged",
+          "parties": [
+            "player"
+          ],
+          "sourceEvent": "a3v2_054_case_registered"
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_054_fine",
+          "kind": "fine",
+          "debtor": "player",
+          "creditor": "loc_bs",
+          "amount": 10,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_054_fine_opened",
+          "terms": {
+            "case": "a3v2_054_case",
+            "judgmentEvent": "a3v2_054_fine_judgment",
+            "collectionSite": "bld_bs_watch"
+          },
+          "name": "镇巡值房对本人唯一已生效的十铜罚款"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "loc_bs",
+          "resource": "coin_river",
+          "purpose": "legal_treasury",
+          "balance": 0,
+          "sourceEvent": "a3v2_054_account_0",
+          "seat": "bld_bs_watch",
+          "balanceMode": "ensure_existing"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_054_office_npc_bs_032_1",
+          "template": "office",
+          "kind": "office",
+          "name": "本笔罚款代收",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "scope": "本笔罚款代收",
+            "operations": [
+              "collect_fine"
+            ],
+            "obligation": "a3v2_054_fine",
+            "collectionAccount": {
+              "owner": "loc_bs",
+              "resource": "coin_river",
+              "purpose": "legal_treasury"
+            }
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_054_office_holding_npc_bs_032_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_032_1",
+          "subject": "a3v2_054_office_npc_bs_032_1",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_bs_032_1": {
+          "onDuty": true
+        }
+      }
     }
   },
   {
@@ -3204,6 +5474,74 @@
       "facts": [
         "白石镇公署受理的本人唯一在办案件已登记，玩家是被告；此时未签辩护委托。",
         "本独立场景的陆青已依vocation_advocate取得讼师身份，识字450，具备承接此案的资格且没有利害冲突；本人表示愿接案，双方尚待确认具体费用与范围。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_055_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-055"
+          },
+          "subject": "a3v2_055_case",
+          "court": "bld_bs_office"
+        },
+        {
+          "id": "a3v2_055_advocate_qualified",
+          "verb": "qualified",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-055"
+          },
+          "actor": "npc_hw_luqing",
+          "vocation": "vocation_advocate"
+        },
+        {
+          "id": "a3v2_055_negotiate_defence_2",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-055"
+          },
+          "actor": "npc_hw_luqing",
+          "to": "player",
+          "scope": "negotiate_defence",
+          "subject": "a3v2_055_case",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_055_case",
+          "court": "bld_bs_office",
+          "stage": "pending",
+          "parties": [
+            "player"
+          ],
+          "sourceEvent": "a3v2_055_case_registered",
+          "defendant": "player",
+          "name": "白石镇公署受理的本人唯一在办案件"
+        }
+      ],
+      "abilitiesByActor": {
+        "npc_hw_luqing": {
+          "skills": {
+            "skill_literacy": 450
+          }
+        }
+      },
+      "vocations": [
+        {
+          "actor": "npc_hw_luqing",
+          "id": "vocation_advocate",
+          "sourceEvent": "a3v2_055_advocate_qualified",
+          "conflictOfInterest": false
+        }
       ]
     }
   },
@@ -3263,7 +5601,138 @@
       "facts": [
         "npc_bs_016_1为既有托运义务的承运人；此前接走玩家一只完好item_clay_cup，交付时杯体破裂，实际损失尚待认定。",
         "玩家手中item_parchment为真实交接收据，记载双方、货物、交付时况及日期；公署有权受理，承运人不必在场，不预置赔偿判决。"
-      ]
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_056_cargo",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_office",
+          "item": "item_clay_cup",
+          "condition": 40,
+          "damage": {
+            "kind": "cracked_body"
+          }
+        },
+        {
+          "id": "a3v2_056_handover_receipt",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_office",
+          "item": "item_parchment",
+          "inventoryBinding": {
+            "item": "item_parchment",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_056_delivery_opened",
+          "verb": "obligation_opened",
+          "at": 400,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-056"
+          },
+          "subject": "a3v2_056_delivery",
+          "debtor": "npc_bs_016_1",
+          "creditor": "player",
+          "amount": 1
+        },
+        {
+          "id": "a3v2_056_accepted",
+          "verb": "accepted_cargo",
+          "at": 500,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-056"
+          },
+          "actor": "npc_bs_016_1",
+          "owner": "player",
+          "subject": "a3v2_056_cargo",
+          "condition": 100
+        },
+        {
+          "id": "a3v2_056_delivered",
+          "verb": "delivered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-056"
+          },
+          "actor": "npc_bs_016_1",
+          "to": "player",
+          "subject": "a3v2_056_cargo",
+          "damage": {
+            "kind": "cracked_body"
+          }
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_056_delivery",
+          "kind": "delivery",
+          "debtor": "npc_bs_016_1",
+          "creditor": "player",
+          "amount": 1,
+          "paid": 0,
+          "openedAt": 400,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_056_delivery_opened",
+          "terms": {
+            "subject": "a3v2_056_cargo",
+            "delivered": true,
+            "lossAssessed": false
+          }
+        }
+      ],
+      "documents": [
+        {
+          "id": "a3v2_056_handover_receipt",
+          "owner": "player",
+          "sourceEvent": "a3v2_056_delivered",
+          "links": [
+            "a3v2_056_accepted",
+            "a3v2_056_delivered"
+          ],
+          "obligation": "a3v2_056_delivery"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_056_office_npc_bs_031_1",
+          "template": "office",
+          "kind": "office",
+          "name": "受理托运索赔",
+          "organization": "loc_bs",
+          "seat": "bld_bs_office",
+          "authority": {
+            "scope": "受理托运索赔",
+            "operations": [
+              "receive_claim"
+            ]
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_056_office_holding_npc_bs_031_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_031_1",
+          "subject": "a3v2_056_office_npc_bs_031_1",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_bs_031_1": {
+          "onDuty": true
+        }
+      }
     }
   },
   {
@@ -3346,7 +5815,7 @@
           "seat": "bld_bs_watch",
           "authority": {
             "target": "npc_hw_wushuo",
-            "basis": "本案已生效且指向吴朔的拘捕决定",
+            "basis": "a3v2_057_arrest_order",
             "operations": [
               "holding.open",
               "move"
@@ -3372,7 +5841,79 @@
         "licenses": [
           "a3v2_057_holds_office"
         ]
-      }
+      },
+      "history": [
+        {
+          "id": "a3v2_057_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-057"
+          },
+          "subject": "a3v2_057_case",
+          "court": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_057_arrest_order",
+          "verb": "arrest_order",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-057"
+          },
+          "subject": "a3v2_057_case",
+          "target": "npc_hw_wushuo",
+          "expires": 2040,
+          "name": "本案已生效且指向吴朔的拘捕决定"
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_057_case",
+          "court": "bld_bs_watch",
+          "stage": "execution",
+          "parties": [
+            "npc_hw_wushuo"
+          ],
+          "sourceEvent": "a3v2_057_case_registered"
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_057_zone_0",
+          "name": "值房受理前厅",
+          "location": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_057_zone_1",
+          "name": "镇巡值房内本案使用的拘禁室",
+          "location": "bld_bs_watch"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_057_path_0_1",
+          "fromZone": "a3v2_057_zone_0",
+          "toZone": "a3v2_057_zone_1",
+          "distanceMeters": 5,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_057_zone_0"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ]
     }
   },
   {
@@ -3428,6 +5969,75 @@
       "facts": [
         "npc_bs_032_1确实是玩家现有案件的当班经办人；双方在能私下交谈、无第三人在听的近处。",
         "玩家仅提出10铜行贿请求，起始没有相关收款、同意或枉法决定；差役可拒绝或形成后果。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_058_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-058"
+          },
+          "subject": "a3v2_058_case",
+          "court": "bld_bs_watch"
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_058_case",
+          "court": "bld_bs_watch",
+          "stage": "pending",
+          "parties": [
+            "player"
+          ],
+          "sourceEvent": "a3v2_058_case_registered",
+          "handlerOffice": "a3v2_058_office_npc_bs_032_1"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_058_office_npc_bs_032_1",
+          "template": "office",
+          "kind": "office",
+          "name": "本案经办",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "scope": "本案经办",
+            "case": "a3v2_058_case",
+            "operations": [
+              "handle_case"
+            ]
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_058_office_holding_npc_bs_032_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_032_1",
+          "subject": "a3v2_058_office_npc_bs_032_1",
+          "terms": {}
+        }
+      ],
+      "status": {
+        "npc_bs_032_1": {
+          "onDuty": true
+        }
+      },
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_bs_032_1",
+          "distanceMeters": 1,
+          "lineOfSight": true,
+          "audibleTo": [
+            "player",
+            "npc_bs_032_1"
+          ],
+          "thirdPartyListeners": []
+        }
       ]
     }
   },
@@ -3481,6 +6091,38 @@
       "facts": [
         "吴朔为30岁清醒成年人，本独立场景正在近身攻击玩家，距离1米内、无遮挡；已有敌对事件。",
         "自有木杖已握在手中且完好，玩家能行动，当前不是玩家被绑缚或失去行动轮。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_059_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-059"
+          },
+          "actor": "npc_hw_wushuo",
+          "target": "player"
+        }
+      ],
+      "combats": [
+        {
+          "id": "a3v2_059_combat",
+          "participants": [
+            "player",
+            "npc_hw_wushuo"
+          ],
+          "active": true,
+          "playerActedThisRound": false
+        }
       ]
     }
   },
@@ -3533,6 +6175,50 @@
       "facts": [
         "双方处在未结束的战斗中，吴朔持一把真实item_kitchen_knife举刀威胁，距离1米；木杖自有完好且在手中。",
         "玩家清醒可防御，本轮尚未采取行动，没有既存的本次防守加成。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_060_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-060"
+          },
+          "actor": "npc_hw_wushuo",
+          "target": "player"
+        }
+      ],
+      "combats": [
+        {
+          "id": "a3v2_060_combat",
+          "participants": [
+            "player",
+            "npc_hw_wushuo"
+          ],
+          "active": true,
+          "playerActedThisRound": false
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_060_enemy_knife",
+          "template": "thing",
+          "kind": "item",
+          "owner": "npc_hw_wushuo",
+          "location": "loc_hw_northwood",
+          "item": "item_kitchen_knife",
+          "carriedBy": "npc_hw_wushuo",
+          "condition": 100
+        }
       ]
     }
   },
@@ -3579,6 +6265,51 @@
       "facts": [
         "吴朔与玩家仍处战斗，玩家清醒可移动，身后有通向loc_hw_gate的已知小路，起步区与退路可通行。",
         "对手仍可追击或拦截；不预先解除战斗，不把脱离判作普通无风险移动。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_061_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-061"
+          },
+          "actor": "npc_hw_wushuo",
+          "target": "player"
+        }
+      ],
+      "combats": [
+        {
+          "id": "a3v2_061_combat",
+          "participants": [
+            "player",
+            "npc_hw_wushuo"
+          ],
+          "active": true,
+          "playerActedThisRound": false
+        }
+      ],
+      "mapKnowledge": [
+        {
+          "holder": "player",
+          "destination": "loc_hw_gate",
+          "source": "known_path",
+          "route": {
+            "from": "loc_hw_northwood",
+            "to": "loc_hw_gate",
+            "useExistingWorldRoute": true,
+            "passable": true
+          }
+        }
       ]
     }
   },
@@ -3628,6 +6359,70 @@
       "facts": [
         "吴朔是清醒成年人，持有一把item_kitchen_knife并贴近玩家，处在门口1米内；门侧有容纳一人的相邻空位。",
         "玩家可自由使用双手，具有尝试推搡的体力；对手仍会抵抗，不预先改位置。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_062_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-062"
+          },
+          "actor": "npc_hw_wushuo",
+          "target": "player"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_062_enemy_knife",
+          "template": "thing",
+          "kind": "item",
+          "owner": "npc_hw_wushuo",
+          "location": "bld_hw_qingdeng",
+          "item": "item_kitchen_knife",
+          "carriedBy": "npc_hw_wushuo",
+          "condition": 100
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_062_zone_0",
+          "name": "门口",
+          "location": "bld_hw_qingdeng"
+        },
+        {
+          "id": "a3v2_062_zone_1",
+          "name": "门侧相邻空位",
+          "location": "bld_hw_qingdeng"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_062_path_0_1",
+          "fromZone": "a3v2_062_zone_0",
+          "toZone": "a3v2_062_zone_1",
+          "distanceMeters": 1,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_062_zone_0"
+        },
+        {
+          "entity": "npc_hw_wushuo",
+          "zone": "a3v2_062_zone_0"
+        }
       ]
     }
   },
@@ -3690,7 +6485,59 @@
         "licenses": [
           "profession_mage"
         ]
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 15
+        }
+      },
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 8,
+          "lineOfSight": true,
+          "rayMeters": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ]
+          ]
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_063_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-063"
+          },
+          "actor": "npc_hw_wushuo",
+          "target": "player"
+        }
+      ],
+      "obstacles": [
+        {
+          "id": "a3v2_063_wall",
+          "kind": "stone_wall",
+          "segmentMeters": [
+            [
+              2,
+              1
+            ],
+            [
+              6,
+              1
+            ]
+          ]
+        }
+      ]
     }
   },
   {
@@ -3752,6 +6599,89 @@
         "自有空分格小瓶木箱在脚边，只有边角刚燃的小火、fire_intensity=1，没有危险化学物；箱体按原物移动出行囊，不复制。",
         "林穗已许可玩家拿起feature_hw_kitchen_bucket用于灭火；桶中有本场玩家自有一桶水（本题item_water这一份），水账与inventory指同一份、不重复计数。",
         "桶和木箱均在伸手可及范围，水量足以扑灭这一小火；未预先灭火。"
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_064_crate",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_bottle_divider_crate",
+          "inventoryBinding": {
+            "item": "item_bottle_divider_crate",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "carriedBy": null
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_064_ignited",
+          "verb": "ignited",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-064"
+          },
+          "subject": "a3v2_064_crate",
+          "fireIntensity": 1
+        },
+        {
+          "id": "a3v2_064_use_bucket_1",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-064"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "use_bucket",
+          "subject": "feature_hw_kitchen_bucket",
+          "terms": {
+            "purpose": "extinguish"
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_064_crate",
+          "fireIntensity": 1,
+          "sourceEvent": "a3v2_064_ignited"
+        },
+        {
+          "id": "feature_hw_kitchen_bucket",
+          "location": "bld_hw_qingdeng",
+          "carriedBy": "player",
+          "contents": [
+            {
+              "inventoryBinding": {
+                "item": "item_water",
+                "quantity": 1,
+                "mode": "same_stock"
+              },
+              "owner": "player"
+            }
+          ]
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "a3v2_064_crate",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "feature_hw_kitchen_bucket",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        }
       ]
     }
   },
@@ -3820,7 +6750,47 @@
         "licenses": [
           "profession_mage"
         ]
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 28
+        }
+      },
+      "zones": [
+        {
+          "id": "a3v2_065_zone_0",
+          "name": "采坑塌石阶前安全落脚处",
+          "location": "site_w5_white_quarry"
+        },
+        {
+          "id": "a3v2_065_zone_1",
+          "name": "眼前相邻落石窄路",
+          "location": "site_w5_white_quarry"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_065_path_0_1",
+          "fromZone": "a3v2_065_zone_0",
+          "toZone": "a3v2_065_zone_1",
+          "distanceMeters": 1,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_065_zone_0"
+        }
+      ],
+      "hazards": [
+        {
+          "id": "a3v2_065_rockfall",
+          "zone": "a3v2_065_zone_1",
+          "kind": "falling_rocks",
+          "active": true
+        }
+      ]
     }
   },
   {
@@ -3872,7 +6842,67 @@
         "北林废观测塔入口已发现的绊索落木机关：本独立场景在入口现存的唯一机械机关，armed=true，绊索、木楔与落木可触及且已识别。",
         "有权管理者先前已许可玩家解除此机关；玩家有拆解此类简单绊索的知识，铁钳可夹稳楔片、小刀可割绳，工具完好；拆解仍耗时并可失败。",
         "该机关用thing/node通用模板在setup时登记，不借用world里已经锈断、没有危险的旧捕夹充当活动陷阱。"
-      ]
+      ],
+      "objects": [
+        {
+          "id": "a3v2_066_trap",
+          "template": "thing",
+          "kind": "node",
+          "name": "北林废观测塔入口已发现的绊索落木机关",
+          "location": "site_beilin_tower",
+          "armed": true,
+          "mechanism": "tripwire_falling_log",
+          "identified": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_066_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-066"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "a3v2_066_trap"
+          },
+          "subject": "a3v2_066_trap",
+          "to": "player",
+          "scope": "disarm"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_066_permit_0",
+          "holder": "player",
+          "subject": "a3v2_066_trap",
+          "scope": "disarm",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "a3v2_066_trap"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_066_permit_0"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "a3v2_066_trap",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        }
+      ],
+      "abilitiesByActor": {
+        "player": {
+          "practicalKnowledge": [
+            "simple_tripwire_disassembly"
+          ]
+        }
+      }
     }
   },
   {
@@ -3929,6 +6959,11 @@
         ],
         "recipes": [],
         "licenses": []
+      },
+      "body": {
+        "player": {
+          "mp": 1
+        }
       }
     }
   },
@@ -3987,7 +7022,50 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 2
+        }
+      },
+      "objects": [
+        {
+          "id": "feature_hw_kitchen_bucket",
+          "location": "bld_hw_qingdeng",
+          "owner": "npc_hw_linsui",
+          "waterLiters": 8,
+          "turbidity": 55
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_068_cast_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-068"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "cast",
+          "subject": "feature_hw_kitchen_bucket",
+          "terms": {
+            "spell": "spell_water_02",
+            "waterBatch": "current"
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "feature_hw_kitchen_bucket",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        }
+      ]
     }
   },
   {
@@ -4044,7 +7122,86 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 4
+        }
+      },
+      "objects": [
+        {
+          "id": "feature_hw_pool",
+          "location": "loc_hw_dock",
+          "waterLiters": 30
+        },
+        {
+          "id": "feature_hw_channel",
+          "location": "loc_hw_dock",
+          "fromObject": "feature_hw_pool",
+          "toObject": "feature_hw_plot",
+          "blockagePercent": 0
+        },
+        {
+          "id": "feature_hw_plot",
+          "location": "loc_hw_dock",
+          "waterLiters": 0,
+          "availableCapacityLiters": 20
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_069_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-069"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "feature_hw_pool"
+          },
+          "subject": "feature_hw_pool",
+          "to": "player",
+          "scope": "draw_water"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_069_permit_0",
+          "holder": "player",
+          "subject": "feature_hw_pool",
+          "scope": "draw_water",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "feature_hw_pool"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_069_permit_0",
+          "quantityLiters": 20
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "feature_hw_pool",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "feature_hw_channel",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "feature_hw_plot",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        }
+      ]
     }
   },
   {
@@ -4108,6 +7265,11 @@
         ],
         "recipes": [],
         "licenses": []
+      },
+      "body": {
+        "player": {
+          "mp": 1
+        }
       }
     }
   },
@@ -4177,7 +7339,40 @@
         "licenses": [
           "profession_mage"
         ]
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 28
+        }
+      },
+      "history": [
+        {
+          "id": "a3v2_071_cast_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-071"
+          },
+          "actor": "npc_hw_taozhi",
+          "to": "player",
+          "scope": "cast",
+          "subject": "npc_hw_taozhi",
+          "terms": {
+            "spell": "spell_fire_11"
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_taozhi",
+          "distanceMeters": 2,
+          "lineOfSight": true
+        }
+      ]
     }
   },
   {
@@ -4243,7 +7438,45 @@
         "licenses": [
           "profession_mage"
         ]
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 7
+        }
+      },
+      "history": [
+        {
+          "id": "a3v2_072_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-072"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "subject": "bld_hw_school",
+          "to": "player",
+          "scope": "cast"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_072_permit_0",
+          "holder": "player",
+          "subject": "bld_hw_school",
+          "scope": "cast",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_hw_school"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_072_permit_0"
+        }
+      ]
     }
   },
   {
@@ -4293,6 +7526,73 @@
         "本人在场的唯一水盏役灵：此前由spell_summon_04实际召出、summonType=water_cup、归本人契约管理的活动生灵，距玩家1米，未消失。",
         "本人在场水盏役灵的唯一维持义务：与上述生灵绑定的有效upkeep记录，条款明确允许本人和平解离，无逾欠或第三人权利；本次请求之前契约仍有效。",
         "动态生灵由既有召唤记录绑定，不把法术ID或生灵模板ID当其运行实例ID；present中的静态人物列表为空，生灵按本条facts加载。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_073_summoned",
+          "verb": "summoned",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-073"
+          },
+          "actor": "player",
+          "subject": "a3v2_073_water_cup",
+          "spell": "spell_summon_04"
+        },
+        {
+          "id": "a3v2_073_upkeep_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-073"
+          },
+          "subject": "a3v2_073_upkeep",
+          "debtor": "player",
+          "creditor": "a3v2_073_water_cup",
+          "amount": 0
+        }
+      ],
+      "summons": [
+        {
+          "id": "a3v2_073_water_cup",
+          "name": "本人在场的唯一水盏役灵",
+          "spell": "spell_summon_04",
+          "summonType": "water_cup",
+          "owner": "player",
+          "location": "bld_hw_school",
+          "active": true,
+          "sourceEvent": "a3v2_073_summoned"
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_073_upkeep",
+          "kind": "upkeep",
+          "debtor": "player",
+          "creditor": "a3v2_073_water_cup",
+          "amount": 0,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_073_upkeep_opened",
+          "terms": {
+            "active": true,
+            "peacefulDismissal": true,
+            "overdue": false,
+            "thirdPartyRights": false
+          },
+          "name": "本人在场水盏役灵的唯一维持义务"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "a3v2_073_water_cup",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
       ]
     }
   },
@@ -4358,6 +7658,55 @@
       "facts": [
         "今日河湾石坛确有已排定仪式，当前在其参与时窗内；本独立场景陈柏持有该场主持资格，已本人准许玩家作为participant参与。",
         "供品要求为一份新鲜自有干粮，玩家已带齐；只以参与者身份履行步骤，不获得主持权或保证神赐。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_074_rite_scheduled",
+          "verb": "rite_scheduled",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-074"
+          },
+          "actor": "npc_hw_chenbai",
+          "location": "bld_hw_altar"
+        },
+        {
+          "id": "a3v2_074_participate_1",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-074"
+          },
+          "actor": "npc_hw_chenbai",
+          "to": "player",
+          "scope": "participate",
+          "subject": "a3v2_074_rite",
+          "terms": {
+            "role": "participant"
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "rites": [
+        {
+          "id": "a3v2_074_rite",
+          "name": "河湾石坛今日仪式",
+          "location": "bld_hw_altar",
+          "host": "npc_hw_chenbai",
+          "start": 540,
+          "end": 720,
+          "hostAuthorized": true,
+          "offerings": [
+            {
+              "item": "item_ration",
+              "quantity": 1
+            }
+          ],
+          "sourceEvent": "a3v2_074_rite_scheduled"
+        }
       ]
     }
   },
@@ -4432,6 +7781,87 @@
       "facts": [
         "饱腹30/100；林穗库存有至少2份新鲜item_bread，本场报价每份2铜，买卖尚未成交，玩家行囊起初无面包。",
         "先成交取得两份，再真实消耗一份；留存的另一份在正常保存下可至明早，不提前扣款或预置进食结果。"
+      ],
+      "body": {
+        "player": {
+          "satiety": 30
+        }
+      },
+      "history": [
+        {
+          "id": "a3v2_075_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-075"
+          },
+          "actor": "npc_hw_linsui",
+          "subject": "player",
+          "service": "trade"
+        },
+        {
+          "id": "a3v2_075_quoted",
+          "verb": "quoted",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-075"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "item_bread",
+          "quantity": 2,
+          "totalCoins": 4
+        },
+        {
+          "id": "a3v2_075_account_0",
+          "verb": "opening_balance",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-075"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "item_bread",
+          "balance": 2
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_075_appointment_0",
+          "actor": "npc_hw_linsui",
+          "location": "bld_hw_qingdeng",
+          "start": 1200,
+          "end": 1380,
+          "services": [
+            "trade"
+          ],
+          "sourceEvent": "a3v2_075_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_075_quote",
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "item_bread",
+          "quantity": 2,
+          "totalCoins": 4,
+          "direction": "sell_to_player",
+          "at": 1199,
+          "expires": 1320,
+          "sourceEvent": "a3v2_075_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_linsui",
+          "resource": "item_bread",
+          "purpose": "inventory",
+          "balance": 2,
+          "sourceEvent": "a3v2_075_account_0"
+        }
       ]
     }
   },
@@ -4498,7 +7928,31 @@
           "recipe_wooden_pegs"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_076_station_access",
+          "station": "station_hw_mill_bench",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_076_ayan_knife",
+          "template": "thing",
+          "kind": "item",
+          "owner": "npc_hw_ayan",
+          "location": "bld_hw_mill",
+          "item": "item_whittling_knife",
+          "carriedBy": "npc_hw_ayan",
+          "condition": 100
+        }
+      ]
     }
   },
   {
@@ -4578,7 +8032,99 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 3,
+          "stamina": 30,
+          "fatigue": 70
+        }
+      },
+      "zones": [
+        {
+          "id": "a3v2_077_zone_0",
+          "name": "酒馆内烘衣处",
+          "location": "bld_hw_qingdeng"
+        },
+        {
+          "id": "a3v2_077_zone_1",
+          "name": "已租床位",
+          "location": "bld_hw_qingdeng"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_077_path_0_1",
+          "fromZone": "a3v2_077_zone_0",
+          "toZone": "a3v2_077_zone_1",
+          "distanceMeters": 2,
+          "passable": true
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_077_zone_0"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_077_bed",
+          "template": "thing",
+          "kind": "item",
+          "name": "已租床位",
+          "location": "bld_hw_qingdeng",
+          "zone": "a3v2_077_zone_1",
+          "available": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_077_lodging_paid",
+          "verb": "paid",
+          "at": 1319,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-077"
+          },
+          "actor": "player",
+          "to": "npc_hw_linsui",
+          "purpose": "lodging",
+          "subject": "a3v2_077_bed"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_077_lodges",
+          "kind": "lodges",
+          "holder": "player",
+          "subject": "bld_hw_qingdeng",
+          "terms": {
+            "bed": "a3v2_077_bed",
+            "from": 1200,
+            "until": 1800,
+            "paymentEvent": "a3v2_077_lodging_paid"
+          }
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_077_clothes",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_clothes",
+          "inventoryBinding": {
+            "item": "item_clothes",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "moisture": 60,
+          "wornBy": "player"
+        }
+      ]
     }
   },
   {
@@ -4648,6 +8194,105 @@
         "吴朔欠本人的唯一到期五十铜借款：吴朔为债务人、self为债权人，余额50铜，无利息；吴朔身上有50铜，已经本人同意此时归还。",
         "本人欠林穗的唯一三十铜借款：self为债务人、林穗为债权人，余额30铜、可结清；两笔义务各有独立既存记录。",
         "玩家起始0铜，必须先真实收到第一笔才可支付第二笔；不预先清偿任何一笔。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_078_receivable_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-078"
+          },
+          "subject": "a3v2_078_receivable",
+          "debtor": "npc_hw_wushuo",
+          "creditor": "player",
+          "amount": 50
+        },
+        {
+          "id": "a3v2_078_payable_opened",
+          "verb": "obligation_opened",
+          "at": 540,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-078"
+          },
+          "subject": "a3v2_078_payable",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 30
+        },
+        {
+          "id": "a3v2_078_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-078"
+          },
+          "owner": "npc_hw_wushuo",
+          "resource": "coin_river",
+          "balance": 50
+        },
+        {
+          "id": "a3v2_078_repay_3",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-078"
+          },
+          "actor": "npc_hw_wushuo",
+          "to": "player",
+          "scope": "repay",
+          "subject": "a3v2_078_receivable",
+          "terms": {
+            "amount": 50
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "obligations": [
+        {
+          "id": "a3v2_078_receivable",
+          "kind": "loan",
+          "debtor": "npc_hw_wushuo",
+          "creditor": "player",
+          "amount": 50,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_078_receivable_opened",
+          "terms": {
+            "interest": 0
+          },
+          "name": "吴朔欠本人的唯一到期五十铜借款"
+        },
+        {
+          "id": "a3v2_078_payable",
+          "kind": "loan",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
+          "amount": 30,
+          "paid": 0,
+          "openedAt": 540,
+          "dueAt": 600,
+          "sourceEvent": "a3v2_078_payable_opened",
+          "terms": {
+            "interest": 0
+          },
+          "name": "本人欠林穗的唯一三十铜借款"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_wushuo",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 50,
+          "sourceEvent": "a3v2_078_account_0"
+        }
       ]
     }
   },
@@ -4720,7 +8365,113 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 6
+        }
+      },
+      "objects": [
+        {
+          "id": "feature_hw_pool",
+          "location": "loc_hw_dock",
+          "waterLiters": 30,
+          "waterState": "turbid"
+        },
+        {
+          "id": "feature_hw_channel",
+          "location": "loc_hw_dock",
+          "fromObject": "feature_hw_pool",
+          "toObject": "feature_hw_plot",
+          "blockagePercent": 0
+        },
+        {
+          "id": "feature_hw_kitchen_bucket",
+          "location": "loc_hw_dock",
+          "owner": "player",
+          "waterLiters": 0,
+          "capacityLiters": 10,
+          "sourceEvent": "a3v2_079_bucket_delivered"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_079_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-079"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "feature_hw_pool"
+          },
+          "subject": "feature_hw_pool",
+          "to": "player",
+          "scope": "draw_water"
+        },
+        {
+          "id": "a3v2_079_bucket_delivered",
+          "verb": "ownership_transferred_and_delivered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-079"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "feature_hw_kitchen_bucket",
+          "location": "loc_hw_dock"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_079_permit_0",
+          "holder": "player",
+          "subject": "feature_hw_pool",
+          "scope": "draw_water",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "feature_hw_pool"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_079_permit_0",
+          "quantityLiters": 10
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "feature_hw_pool",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "feature_hw_channel",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "feature_hw_kitchen_bucket",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_079_owns",
+          "kind": "owns",
+          "holder": "player",
+          "subject": "feature_hw_kitchen_bucket",
+          "terms": {
+            "share": 1
+          }
+        }
+      ]
     }
   },
   {
@@ -4780,7 +8531,94 @@
         "玩家自有2只完好陶杯；严辙是已有报价的买家，有12铜并提出总价12铜购买；此时双方尚未成交，玩家尚未确认接受。",
         "玩家只会河谷话、严辙只会海岸话，沈渡事先已会双方语言且愿当通译，三者清醒在场。",
         "先翻译条款，必须等待玩家另行确认；不得把买家愿意或通译完成当作玩家同意交货。"
-      ]
+      ],
+      "history": [
+        {
+          "id": "a3v2_080_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-080"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_clay_cup",
+          "quantity": 2,
+          "totalCoins": 12
+        },
+        {
+          "id": "a3v2_080_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-080"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 12
+        },
+        {
+          "id": "a3v2_080_interpret_2",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-080"
+          },
+          "actor": "npc_hw_shendu",
+          "to": "player",
+          "scope": "interpret",
+          "subject": "river-coast",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_080_quote",
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_clay_cup",
+          "quantity": 2,
+          "totalCoins": 12,
+          "direction": "buy_from_player",
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_080_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 12,
+          "sourceEvent": "a3v2_080_account_0"
+        }
+      ],
+      "abilitiesByActor": {
+        "player": {
+          "spokenLanguages": [
+            "river"
+          ],
+          "writtenLanguages": []
+        },
+        "npc_hw_yanzhe": {
+          "spokenLanguages": [
+            "coast"
+          ],
+          "writtenLanguages": []
+        },
+        "npc_hw_shendu": {
+          "spokenLanguages": [
+            "river",
+            "coast"
+          ]
+        }
+      }
     }
   },
   {
@@ -4833,6 +8671,41 @@
       "facts": [
         "林穗对青灯酒馆的有效所有权持有已存在，标的bld_hw_qingdeng，所有者npc_hw_linsui；玩家既非所有者，也无实际控制、出售授权或代理身份。",
         "严辙为眼前买家，持有100铜可用于出价；不为玩家补授权，不预先转移林穗的所有权。"
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_081_inn_owns",
+          "kind": "owns",
+          "holder": "npc_hw_linsui",
+          "subject": "bld_hw_qingdeng",
+          "terms": {
+            "share": 1
+          },
+          "name": "林穗对青灯酒馆的有效所有权持有"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_081_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-081"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 100
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 100,
+          "sourceEvent": "a3v2_081_account_0"
+        }
       ]
     }
   },
@@ -4896,6 +8769,29 @@
       "facts": [
         "林穗柜台有她自有的100铜，林穗清醒、能表达意愿，但尚未同意向玩家借款；没有有效loan同意事件、没有代理授权。",
         "proposal.consent.granted=true只是本题故意伪造的声称，不得写入setup当真；玩家余额0。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_082_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-082"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "coin_river",
+          "balance": 100
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_linsui",
+          "resource": "coin_river",
+          "purpose": "counter",
+          "balance": 100,
+          "sourceEvent": "a3v2_082_account_0"
+        }
       ]
     }
   },
@@ -4941,6 +8837,28 @@
       "facts": [
         "玩家唯一自有item_staff实例真实留在bld_bs_inn客舍内，具有有效所有权，离玩家很远；行囊没有木杖。",
         "无运输委托、递送人员、空间容器、传送法术或远距取物权限；setup不可把木杖放入inventory或移至河湾村。"
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_083_remote_staff",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_bs_inn",
+          "item": "item_staff",
+          "condition": 100
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_083_owns",
+          "kind": "owns",
+          "holder": "player",
+          "subject": "a3v2_083_remote_staff",
+          "terms": {
+            "share": 1
+          }
+        }
       ]
     }
   },
@@ -5003,7 +8921,19 @@
       "constructor": false,
       "why": "06 §6.5第1步与§6.10.4要求歧义返回候选，须先明确是哪瓶及可识别内容而不能随机代选。"
     },
-    "proposal": null,
+    "proposal": {
+      "intent": "桌上这两瓶长得一样，你替我选一瓶，把那个喝了。",
+      "target": "桌上那瓶",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "桌上那瓶中的液体",
+          "from": "桌上那瓶",
+          "to": "sink:consume",
+          "qty": 1
+        }
+      ]
+    },
     "clarifyNeed": "请明确选择左边还是右边那一瓶，并先确认可识别的内容物；未选定前不取用、不饮用。",
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -5014,8 +8944,125 @@
       "facts": [
         "桌上有两只真实、外观相同、各盛一份可饮液体的小瓶，均在手边且允许玩家使用；玩家不知道内容区别。",
         "两只瓶是按thing/item通用模板事先登记的不同实例，各有独立位置与内容；没有选中标记，原话不能唯一确定哪瓶，不替玩家默认选择。"
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_085_bottle_left",
+          "template": "thing",
+          "kind": "item",
+          "owner": null,
+          "location": "bld_hw_qingdeng",
+          "name": "桌上相同的小瓶",
+          "appearance": "identical_small_bottle",
+          "tableSide": "left",
+          "contents": [
+            {
+              "resourceAlias": "a3v2_085_drink_left",
+              "quantity": 1,
+              "drinkable": true,
+              "identityKnownToPlayer": false
+            }
+          ]
+        },
+        {
+          "id": "a3v2_085_bottle_right",
+          "template": "thing",
+          "kind": "item",
+          "owner": null,
+          "location": "bld_hw_qingdeng",
+          "name": "桌上相同的小瓶",
+          "appearance": "identical_small_bottle",
+          "tableSide": "right",
+          "contents": [
+            {
+              "resourceAlias": "a3v2_085_drink_right",
+              "quantity": 1,
+              "drinkable": true,
+              "identityKnownToPlayer": false
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_085_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-085"
+          },
+          "actor": {
+            "role": "authorized_owner",
+            "of": "a3v2_085_bottle_left"
+          },
+          "subject": "a3v2_085_bottle_left",
+          "to": "player",
+          "scope": "drink"
+        },
+        {
+          "id": "a3v2_085_permit_1",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-085"
+          },
+          "actor": {
+            "role": "authorized_owner",
+            "of": "a3v2_085_bottle_right"
+          },
+          "subject": "a3v2_085_bottle_right",
+          "to": "player",
+          "scope": "drink"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_085_permit_0",
+          "holder": "player",
+          "subject": "a3v2_085_bottle_left",
+          "scope": "drink",
+          "issuer": {
+            "role": "authorized_owner",
+            "of": "a3v2_085_bottle_left"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_085_permit_0"
+        },
+        {
+          "id": "a3v2_085_permit_1",
+          "holder": "player",
+          "subject": "a3v2_085_bottle_right",
+          "scope": "drink",
+          "issuer": {
+            "role": "authorized_owner",
+            "of": "a3v2_085_bottle_right"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_085_permit_1"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "a3v2_085_bottle_left",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "a3v2_085_bottle_right",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        }
       ]
-    }
+    },
+    "proposalNotes": [
+      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。"
+    ]
   },
   {
     "id": "A3V2-086",
@@ -5032,7 +9079,11 @@
       "constructor": false,
       "why": "06 §6.5的意图解析不得猜测玩家要谈话、治疗还是攻击，须先问清处理的具体目标。"
     },
-    "proposal": null,
+    "proposal": {
+      "intent": "吴朔就在面前，帮我把他处理一下，意思你自己看着办。",
+      "target": "npc_hw_wushuo",
+      "effects": []
+    },
     "clarifyNeed": "你想对吴朔具体做什么：交谈、治疗、攻击，还是别的事？“处理一下”不足以决定动作与效果。",
     "setup": {
       "location": "loc_hw_northwood",
@@ -5044,8 +9095,20 @@
       "minute": 600,
       "facts": [
         "吴朔清醒站在玩家面前，当前没有战斗、治疗请求、搬运委托等能唯一解释“处理”的上下文；不推断玩家想伤害他。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
-    }
+    },
+    "proposalNotes": [
+      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。"
+    ]
   },
   {
     "id": "A3V2-087",
@@ -5062,7 +9125,31 @@
       "constructor": false,
       "why": "06 §6.5与§6.10.4要求先澄清相互冲突的目标，不能擅自选择毁纸或保纸并声称两者都完成。"
     },
-    "proposal": null,
+    "proposal": {
+      "intent": "把我这张纸彻底烧成灰，不过同时要让它原封不动，一点也别损坏。",
+      "target": "a3v2_087_paper",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "a3v2_087_paper",
+          "field": "condition",
+          "value": 0
+        },
+        {
+          "op": "fact.set",
+          "entity": "a3v2_087_paper",
+          "field": "condition",
+          "value": 100
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_s2_tinder",
+          "a3v2_087_small_fire"
+        ],
+        "manner": "同一张纸同时彻底成灰且原封不动；不是先毁后修"
+      }
+    },
     "clarifyNeed": "你要把纸烧成灰，还是保持纸张完整？两项要求冲突；若只是想看火焰幻象，请明确改为幻象。",
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -5076,8 +9163,71 @@
       "facts": [
         "玩家自有唯一一张完整干燥羊皮纸，手边有获准使用的现成小火源与引火料，具备烧毁纸的物理条件。",
         "该世界没有让同一张纸同时彻底成灰且原封不动的机制；不给复制品、保护法术或回档替代两项互斥要求。"
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_087_paper",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_qingdeng",
+          "item": "item_parchment",
+          "inventoryBinding": {
+            "item": "item_parchment",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "moisture": 0
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_087_small_fire",
+          "template": "thing",
+          "kind": "node",
+          "name": "手边现成的小火源",
+          "location": "bld_hw_qingdeng",
+          "fireIntensity": 1
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_087_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-087"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "a3v2_087_small_fire"
+          },
+          "subject": "a3v2_087_small_fire",
+          "to": "player",
+          "scope": "burn_paper"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_087_permit_0",
+          "holder": "player",
+          "subject": "a3v2_087_small_fire",
+          "scope": "burn_paper",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "a3v2_087_small_fire"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_087_permit_0"
+        }
       ]
-    }
+    },
+    "proposalNotes": [
+      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。"
+    ]
   },
   {
     "id": "A3V2-088",
@@ -5136,7 +9286,60 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "objects": [
+        {
+          "id": "a3v2_088_stone_gate",
+          "template": "thing",
+          "kind": "building",
+          "name": "环城现役城门的开裂石砌门体",
+          "location": "loc_far_huancheng",
+          "condition": 40,
+          "material": "stone",
+          "scale": "whole_city_gate"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_088_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-088"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "a3v2_088_stone_gate"
+          },
+          "subject": "a3v2_088_stone_gate",
+          "to": "player",
+          "scope": "inspect_and_attempt_repair"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_088_permit_0",
+          "holder": "player",
+          "subject": "a3v2_088_stone_gate",
+          "scope": "inspect_and_attempt_repair",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "a3v2_088_stone_gate"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_088_permit_0"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "a3v2_088_stone_gate",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ]
     }
   },
   {
@@ -5202,8 +9405,77 @@
           "subject": "loc_bs",
           "terms": {
             "mode": "detained",
-            "regime": "custody.default"
+            "regime": "custody.default",
+            "zone": "a3v2_089_zone_0"
           }
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_089_zone_0",
+          "name": "上锁的拘禁室",
+          "location": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_089_zone_1",
+          "name": "牢门外相邻通道",
+          "location": "bld_bs_watch"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_089_path_0_1",
+          "fromZone": "a3v2_089_zone_0",
+          "toZone": "a3v2_089_zone_1",
+          "distanceMeters": 1,
+          "passable": false,
+          "blockedBy": "a3v2_089_cell_lock"
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_089_zone_0"
+        },
+        {
+          "entity": "npc_hw_wushuo",
+          "zone": "a3v2_089_zone_0"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_089_cell_lock",
+          "template": "thing",
+          "kind": "item",
+          "name": "镇巡值房本间拘禁室的门锁",
+          "location": "bld_bs_watch",
+          "zone": "a3v2_089_zone_0",
+          "locked": true,
+          "mechanism": "mechanical_lock"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_089_weather_seen",
+          "verb": "observed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-089"
+          },
+          "observer": "player",
+          "subject": "weather",
+          "location": "loc_bs",
+          "atBeforeDetention": true,
+          "name": "我入牢前看到的外头天气"
+        }
+      ],
+      "knowledge": [
+        {
+          "holder": "player",
+          "event": "a3v2_089_weather_seen",
+          "source": "direct_observation",
+          "currentOutsideWeather": false
         }
       ]
     }
@@ -5268,7 +9540,10 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "player": {}
+        "player": {},
+        "npc_bs_032_1": {
+          "onDuty": true
+        }
       },
       "facts": [
         "本人受镇巡值房拘禁的有效持有仍在，host=loc_bs（白石镇地方共同体，拘禁机构驻bld_bs_watch）、mode=detained；所在拘禁室牢门关闭，未获释。",
@@ -5285,10 +9560,81 @@
           "subject": "loc_bs",
           "terms": {
             "mode": "detained",
-            "regime": "custody.default"
+            "regime": "custody.default",
+            "zone": "a3v2_090_zone_0"
+          }
+        },
+        {
+          "id": "a3v2_090_office_holding_npc_bs_032_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_032_1",
+          "subject": "a3v2_090_office_npc_bs_032_1",
+          "terms": {}
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_090_zone_0",
+          "name": "上锁的拘禁室",
+          "location": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_090_zone_1",
+          "name": "牢门外相邻通道",
+          "location": "bld_bs_watch"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_090_path_0_1",
+          "fromZone": "a3v2_090_zone_0",
+          "toZone": "a3v2_090_zone_1",
+          "distanceMeters": 1,
+          "passable": false,
+          "blockedBy": "a3v2_090_cell_lock"
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_090_zone_0"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_090_cell_lock",
+          "template": "thing",
+          "kind": "item",
+          "name": "镇巡值房本间拘禁室的门锁",
+          "location": "bld_bs_watch",
+          "zone": "a3v2_090_zone_0",
+          "locked": true,
+          "mechanism": "mechanical_lock"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_090_office_npc_bs_032_1",
+          "template": "office",
+          "kind": "office",
+          "name": "拘禁室当班看守",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "scope": "拘禁室当班看守",
+            "operations": [
+              "guard"
+            ]
           }
         }
-      ]
+      ],
+      "actorStates": {
+        "npc_bs_032_1": {
+          "facingAway": true,
+          "hearingActive": true,
+          "alertness": "normal"
+        }
+      }
     }
   },
   {
@@ -5330,7 +9676,10 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "player": {}
+        "player": {},
+        "npc_bs_032_1": {
+          "onDuty": true
+        }
       },
       "facts": [
         "本人受镇巡值房拘禁的有效持有仍在，host=loc_bs（白石镇地方共同体，拘禁机构驻bld_bs_watch）、mode=detained，拘禁室门锁locked=true，看守当班。",
@@ -5346,8 +9695,86 @@
           "subject": "loc_bs",
           "terms": {
             "mode": "detained",
-            "regime": "custody.default"
+            "regime": "custody.default",
+            "zone": "a3v2_091_zone_0"
           }
+        },
+        {
+          "id": "a3v2_091_office_holding_npc_bs_032_1",
+          "kind": "holds_office",
+          "holder": "npc_bs_032_1",
+          "subject": "a3v2_091_office_npc_bs_032_1",
+          "terms": {}
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_091_zone_0",
+          "name": "上锁的拘禁室",
+          "location": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_091_zone_1",
+          "name": "牢门外相邻通道",
+          "location": "bld_bs_watch"
+        }
+      ],
+      "paths": [
+        {
+          "id": "a3v2_091_path_0_1",
+          "fromZone": "a3v2_091_zone_0",
+          "toZone": "a3v2_091_zone_1",
+          "distanceMeters": 1,
+          "passable": false,
+          "blockedBy": "a3v2_091_cell_lock"
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_091_zone_0"
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_091_cell_lock",
+          "template": "thing",
+          "kind": "item",
+          "name": "镇巡值房本间拘禁室的门锁",
+          "location": "bld_bs_watch",
+          "zone": "a3v2_091_zone_0",
+          "locked": true,
+          "mechanism": "mechanical_lock"
+        }
+      ],
+      "instances": [
+        {
+          "id": "a3v2_091_office_npc_bs_032_1",
+          "template": "office",
+          "kind": "office",
+          "name": "拘禁室当班看守",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "scope": "拘禁室当班看守",
+            "operations": [
+              "guard"
+            ]
+          }
+        }
+      ],
+      "actorStates": {
+        "npc_bs_032_1": {
+          "facingAway": false,
+          "hearingActive": true,
+          "alertness": "normal"
+        }
+      },
+      "mapKnowledge": [
+        {
+          "holder": "player",
+          "destination": "loc_bs_nanshi",
+          "source": "known_map"
         }
       ]
     }
@@ -5484,10 +9911,31 @@
         "item_bread": 1
       },
       "coins": 5,
-      "minute": 900,
+      "minute": 2340,
       "facts": [
         "世界已运行超过一天；玩家今日通过真实交易赚得5铜并取得1份面包，对应交易事件和当前账目都存在。",
         "世界时间单调推进；没有回档请求或撤销交易，不能为倒退一天而删除今日事件，同时保留其收益。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_094_today_earnings",
+          "verb": "trade_completed",
+          "at": 2339,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-094"
+          },
+          "actor": "player",
+          "atDay": 1,
+          "netCoins": 5,
+          "acquired": [
+            {
+              "item": "item_bread",
+              "quantity": 1
+            }
+          ],
+          "openingStockOnly": true
+        }
       ]
     }
   },
@@ -5554,6 +10002,151 @@
         "阿砚对本人借用的削木小刀的有效所有权持有：owner=npc_hw_ayan，标的是玩家身上唯一削木小刀。",
         "原借用许可仅许使用和归还，不许出售；实物确已交付给玩家且可接触，阿砚此时不在场。",
         "严辙清醒、有3铜并愿以3铜购买；保留实际占有与无权处分的区别，不预先补出售许可或预判买家取得有效所有权。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_095_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-095"
+          },
+          "actor": "npc_hw_yanzhe",
+          "subject": "player",
+          "service": "trade"
+        },
+        {
+          "id": "a3v2_095_quoted",
+          "verb": "quoted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-095"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_whittling_knife",
+          "quantity": 1,
+          "totalCoins": 3
+        },
+        {
+          "id": "a3v2_095_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-095"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 3
+        },
+        {
+          "id": "a3v2_095_trade_3",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-095"
+          },
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "scope": "trade",
+          "subject": "a3v2_095_quote",
+          "terms": {
+            "totalCoins": 3
+          },
+          "expires": 2040,
+          "revoked": false
+        },
+        {
+          "id": "a3v2_095_borrow_4",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-095"
+          },
+          "actor": "npc_hw_ayan",
+          "to": "player",
+          "scope": "borrow",
+          "subject": "a3v2_095_borrowed_knife",
+          "terms": {
+            "allowed": [
+              "use",
+              "return"
+            ],
+            "saleAllowed": false
+          },
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_095_appointment_0",
+          "actor": "npc_hw_yanzhe",
+          "location": "loc_bs_nanshi",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "trade"
+          ],
+          "sourceEvent": "a3v2_095_appointment_0"
+        }
+      ],
+      "quotes": [
+        {
+          "id": "a3v2_095_quote",
+          "actor": "npc_hw_yanzhe",
+          "to": "player",
+          "resource": "item_whittling_knife",
+          "quantity": 1,
+          "totalCoins": 3,
+          "direction": "buy_from_player",
+          "at": 599,
+          "expires": 720,
+          "sourceEvent": "a3v2_095_quoted"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 3,
+          "sourceEvent": "a3v2_095_account_0"
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_095_borrowed_knife",
+          "template": "thing",
+          "kind": "item",
+          "owner": "npc_hw_ayan",
+          "location": "loc_bs_nanshi",
+          "item": "item_whittling_knife",
+          "carriedBy": "player",
+          "condition": 100,
+          "inventoryBinding": {
+            "item": "item_whittling_knife",
+            "quantity": 1,
+            "mode": "same_stock"
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_095_knife_owns",
+          "kind": "owns",
+          "holder": "npc_hw_ayan",
+          "subject": "a3v2_095_borrowed_knife",
+          "terms": {
+            "share": 1
+          },
+          "name": "阿砚对本人借用的削木小刀的有效所有权持有"
+        }
       ]
     }
   },
@@ -5604,7 +10197,57 @@
       "facts": [
         "严辙在1米内，随身钱袋至少有10铜且袋口松开，正看向摊位；钱实际归他所有，尚未同意任何转移。",
         "玩家可动手尝试，未被拘束；对方警觉、附近见证与失败后果仍按正常规则，不保证偷到。"
-      ]
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_096_purse",
+          "template": "thing",
+          "kind": "item",
+          "owner": "npc_hw_yanzhe",
+          "location": "loc_bs_nanshi",
+          "name": "严辙随身钱袋",
+          "carriedBy": "npc_hw_yanzhe",
+          "access": "loose_open"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_096_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-096"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 10
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 10,
+          "sourceEvent": "a3v2_096_account_0",
+          "container": "a3v2_096_purse"
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_yanzhe",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "actorStates": {
+        "npc_hw_yanzhe": {
+          "attention": "market_stall",
+          "alertness": "normal"
+        }
+      }
     }
   },
   {
@@ -5670,7 +10313,41 @@
         ],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "body": {
+        "player": {
+          "mp": 3
+        },
+        "npc_hw_wushuo": {
+          "hpDeficit": 4,
+          "age": 30,
+          "conscious": true
+        }
+      },
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_wushuo",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_097_refused_heal",
+          "verb": "refused",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-097"
+          },
+          "actor": "npc_hw_wushuo",
+          "scope": "heal",
+          "spell": "spell_s3_mend_palm",
+          "expires": 2040,
+          "revoked": false
+        }
+      ]
     }
   },
   {
@@ -5720,7 +10397,28 @@
       "facts": [
         "许苓有spell_light授艺能力、清醒在场，但已本人明确拒绝教玩家，当前既未示范也未提供书籍；玩家尚未学会。",
         "没有有效授课同意事件；proposal内玩家冒填的granted=true不改变许苓真实意愿，不用旁观替代被拒的完整授艺。"
-      ]
+      ],
+      "history": [
+        {
+          "id": "a3v2_098_refused_teach",
+          "verb": "refused",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-098"
+          },
+          "actor": "npc_hw_xuling",
+          "scope": "teach",
+          "subject": "spell_light",
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "actorStates": {
+        "npc_hw_xuling": {
+          "demonstrating": false
+        }
+      }
     }
   },
   {
@@ -5778,6 +10476,43 @@
       "facts": [
         "严辙为眼前清醒成年商人，有100铜可贷；玩家只会河谷话、商人只会海岸话，双方没有任何共同口语或可读文字。",
         "现场无通译、翻译工具或可生效的语言法术，只有手势；双方没有理解并同意两年期浮动利息条款，不预填贷款同意或放款。"
+      ],
+      "abilitiesByActor": {
+        "player": {
+          "spokenLanguages": [
+            "river"
+          ],
+          "writtenLanguages": []
+        },
+        "npc_hw_yanzhe": {
+          "spokenLanguages": [
+            "coast"
+          ],
+          "writtenLanguages": []
+        }
+      },
+      "history": [
+        {
+          "id": "a3v2_099_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-099"
+          },
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "balance": 100
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_yanzhe",
+          "resource": "coin_river",
+          "purpose": "purse",
+          "balance": 100,
+          "sourceEvent": "a3v2_099_account_0"
+        }
       ]
     }
   },
@@ -5836,7 +10571,32 @@
         "recipes": [],
         "licenses": [],
         "literacy": 0
-      }
+      },
+      "itemInstances": [
+        {
+          "id": "a3v2_100_owned_item",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "bld_hw_school",
+          "item": "item_bs_mage_primer",
+          "inventoryBinding": {
+            "item": "item_bs_mage_primer",
+            "quantity": 1,
+            "mode": "same_stock"
+          },
+          "condition": 100,
+          "carriedBy": "player"
+        }
+      ],
+      "reading": [
+        {
+          "reader": "player",
+          "item": "a3v2_100_owned_item",
+          "canRead": false,
+          "source": "setup.facts"
+        }
+      ]
     }
   },
   {
@@ -5882,7 +10642,17 @@
         "师父为world已有僧门导师npc_bs_076_3，确会skill_monk_combat_01；本题新功法具体指玩家尚未学会的三息定桩。",
         "师父已经昏迷、无意识，不能讲话或演示；现场没有功法书、录制示范或其他教师。",
         "玩家清醒，已具备学习的其他条件和费用；不把教师昏迷变成教师缺失，也不预先治疗或唤醒他。"
-      ]
+      ],
+      "status": {
+        "npc_bs_076_3": "昏迷"
+      },
+      "abilitiesByActor": {
+        "npc_bs_076_3": {
+          "teaches": [
+            "skill_monk_combat_01"
+          ]
+        }
+      }
     }
   },
   {
@@ -5936,7 +10706,47 @@
         "spells": [],
         "recipes": [],
         "licenses": []
-      }
+      },
+      "history": [
+        {
+          "id": "a3v2_102_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-102"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_bs_still_temple"
+          },
+          "subject": "bld_bs_still_temple",
+          "to": "player",
+          "scope": "practice"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_102_permit_0",
+          "holder": "player",
+          "subject": "bld_bs_still_temple",
+          "scope": "practice",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_bs_still_temple"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_102_permit_0"
+        }
+      ],
+      "practiceState": [
+        {
+          "actor": "player",
+          "subject": "skill_monk_combat_01",
+          "practicedToday": false
+        }
+      ]
     }
   },
   {
@@ -5947,13 +10757,14 @@
     "expected": {
       "route": "core:craft.manufacture",
       "signature": [
-        "transfer(resource:item_wood,self->sink:craft:requested_10)",
-        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self:bounded_output)"
+        "transfer(resource:item_wood,self->sink:consume)",
+        "transfer(resource:item_wooden_peg,src:craft->self)",
+        "transfer(resource:item_wood_shavings,src:craft->self)"
       ],
       "outOfBounds": true,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.7将计量产出裁剪到真实投入和工时允许的配方批数，可补齐材料再继续而不能凭空补库存。"
+      "why": "06 §6.7将计量产出裁剪到真实投入和工时允许的配方批数，可补齐材料再继续而不能凭空补库存。 01 §1.6/§1.12：投入到sink:consume、产出来自src:craft，配方不是账户。signature表示成功分支；失败按配方failure扣料、工位费用及实际磨损，不产主副产品，06 §6.7的练习和实际附带成本须如实保留。 本题测10批请求按仅1份木料和2铜裁为至多1批；成功最多4木楔及1刨屑，失败无产出。不得把requested_10写成已消费10份。"
     },
     "proposal": {
       "intent": "我包里只有一份木料，却要按削木楔配方同时做十批，缺的木料就当我已经有了。",
@@ -6001,7 +10812,19 @@
           "recipe_wooden_pegs"
         ],
         "licenses": []
-      }
+      },
+      "workstationAccess": [
+        {
+          "id": "a3v2_103_station_access",
+          "station": "station_hw_mill_bench",
+          "holder": "player",
+          "fromMinute": 599,
+          "toMinute": 840,
+          "fee": 2,
+          "paid": false,
+          "usable": true
+        }
+      ]
     }
   },
   {
@@ -6062,6 +10885,113 @@
       "facts": [
         "林穗本场带着自有item_oat_flatbread在渡口售卖，明确同意一份售1铜；郑水生也明确同意本次船费1铜，两种服务都可履行但尚未付款。",
         "玩家全部可用资金只有1铜，无存款、赊账、授信、代垫、退款或出售物品收入；不会因买饼或等待平白增加余额。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_104_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-104"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "item_oat_flatbread",
+          "balance": 1
+        },
+        {
+          "id": "a3v2_104_buy_flatbread_1",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-104"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "buy_flatbread",
+          "subject": "player",
+          "terms": {
+            "price": 1
+          },
+          "expires": 2040,
+          "revoked": false
+        },
+        {
+          "id": "a3v2_104_appointment_0",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-104"
+          },
+          "actor": "npc_hw_linsui",
+          "subject": "player",
+          "service": "buy_flatbread"
+        },
+        {
+          "id": "a3v2_104_boat_passage_3",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-104"
+          },
+          "actor": "npc_hw_zhengshuisheng",
+          "to": "player",
+          "scope": "boat_passage",
+          "subject": "player",
+          "terms": {
+            "price": 1
+          },
+          "expires": 2040,
+          "revoked": false
+        },
+        {
+          "id": "a3v2_104_appointment_1",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-104"
+          },
+          "actor": "npc_hw_zhengshuisheng",
+          "subject": "player",
+          "service": "boat_passage"
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "npc_hw_linsui",
+          "resource": "item_oat_flatbread",
+          "purpose": "inventory",
+          "balance": 1,
+          "sourceEvent": "a3v2_104_account_0"
+        }
+      ],
+      "appointments": [
+        {
+          "id": "a3v2_104_appointment_0",
+          "actor": "npc_hw_linsui",
+          "location": "loc_hw_dock",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "buy_flatbread"
+          ],
+          "sourceEvent": "a3v2_104_appointment_0"
+        },
+        {
+          "id": "a3v2_104_appointment_1",
+          "actor": "npc_hw_zhengshuisheng",
+          "location": "loc_hw_dock",
+          "start": 600,
+          "end": 780,
+          "services": [
+            "boat_passage"
+          ],
+          "sourceEvent": "a3v2_104_appointment_1"
+        }
       ]
     }
   },
@@ -6117,6 +11047,56 @@
         "白石镇现任镇长的职位是按office模板事先登记、seat=bld_bs_office、管辖loc_bs的真实职位，已有合法任职者；玩家知道该职位而无任免权。",
         "玩家是无官职外乡人，无holds_office、任命决议、调库委托或公库签字权；公库在本场确有至少100铜。",
         "world没有专名office_bs_town_head；使用该真实运行职位的唯一名称，不能用只适用辖下四村的office_village_head冒充。"
+      ],
+      "instances": [
+        {
+          "id": "a3v2_105_town_head_office",
+          "template": "office",
+          "kind": "office",
+          "name": "白石镇现任镇长的职位",
+          "organization": "loc_bs",
+          "seat": "bld_bs_office",
+          "authority": {
+            "jurisdiction": "loc_bs",
+            "role": "town_head"
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_105_incumbent_holding",
+          "kind": "holds_office",
+          "holder": {
+            "role": "existing_legal_town_head",
+            "of": "loc_bs"
+          },
+          "subject": "a3v2_105_town_head_office",
+          "terms": {}
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_105_account_0",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-105"
+          },
+          "owner": "loc_bs",
+          "resource": "coin_river",
+          "balance": 100
+        }
+      ],
+      "accounts": [
+        {
+          "owner": "loc_bs",
+          "resource": "coin_river",
+          "purpose": "treasury",
+          "balance": 100,
+          "sourceEvent": "a3v2_105_account_0",
+          "seat": "bld_bs_office"
+        }
       ]
     }
   },
@@ -6249,6 +11229,59 @@
         "白石镇公署受理的本人唯一在办案件已经进入追诉阶段，原案历史、证据和受理记录仍存在，玩家是被追诉对象。",
         "镇巡值房针对本人当前案件的有效通缉持有已开立，尚未过期或撤销，关联上述同一个案件；玩家无官职、无释放或撤销通缉权限。",
         "玩家站在值房外可接近的位置，尚未被捕；不得因在场而把案件历史清空或补发撤销授权。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_107_case_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-107"
+          },
+          "subject": "a3v2_107_case",
+          "court": "bld_bs_watch"
+        },
+        {
+          "id": "a3v2_107_wanted_issued",
+          "verb": "wanted_issued",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-107"
+          },
+          "actor": "loc_bs",
+          "target": "player",
+          "case": "a3v2_107_case",
+          "expires": 2040
+        }
+      ],
+      "cases": [
+        {
+          "id": "a3v2_107_case",
+          "court": "bld_bs_watch",
+          "stage": "prosecution",
+          "parties": [
+            "player"
+          ],
+          "sourceEvent": "a3v2_107_case_registered",
+          "defendant": "player",
+          "name": "白石镇公署受理的本人唯一在办案件"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_107_wanted",
+          "kind": "wanted",
+          "holder": "loc_bs",
+          "subject": "player",
+          "terms": {
+            "case": "a3v2_107_case",
+            "sourceEvent": "a3v2_107_wanted_issued",
+            "expires": 2040
+          },
+          "name": "镇巡值房针对本人当前案件的有效通缉持有"
+        }
       ]
     }
   },
@@ -6393,6 +11426,26 @@
       "facts": [
         "吴朔已本人同意明早在loc_hw_northwood当面听玩家再询问一次带路，双方有真实会面约定，但尚无带路同意、目的地或带路义务。",
         "排期的“明天早晨”在本场明确为次日08:00；当前没有同一排期，届时仍检查双方是否到场，并让吴朔自主答复。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_110_meet_to_discuss_guide_0",
+          "verb": "consented",
+          "at": 899,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-110"
+          },
+          "actor": "npc_hw_wushuo",
+          "to": "player",
+          "scope": "meet_to_discuss_guide",
+          "subject": "loc_hw_northwood",
+          "terms": {
+            "atMinute": 1920
+          },
+          "expires": 2340,
+          "revoked": false
+        }
       ]
     }
   },
@@ -6441,6 +11494,33 @@
       "minute": 1200,
       "facts": [
         "玩家能说唱与自嘲，店内允许普通吟唱，林穗在可听见的位置；歌谣尚未创作，不预写听众喜好或传播结果。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_111_sing_0",
+          "verb": "consented",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-111"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "sing",
+          "subject": "bld_hw_qingdeng",
+          "terms": {},
+          "expires": 2640,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_linsui",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6510,6 +11590,33 @@
       "facts": [
         "木板和木炭均为玩家实有，板已刨到可画画，渡口管理者已准许在指定不挡道位置摆放；木板不额外复制成第二件。",
         "边沿确有湿滑危险，郑水生能看见画面；只给提示留痕，是否提醒到路人由其感知与规则决定。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_112_display_board_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-112"
+          },
+          "actor": "npc_hw_zhengshuisheng",
+          "to": "player",
+          "scope": "display_board",
+          "subject": "loc_hw_dock",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_zhengshuisheng",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6579,6 +11686,33 @@
       "facts": [
         "石料自有且为易刻的软石小块；阔口修石凿、手锤完好，玩家只具备刻几道浅线的手工能力，没有高阶剑术。",
         "磨坊有权管理者已许可在指定台边展示，阿砚可看见；不赋予刻线任何剑术、门派或力量效果。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_113_display_carving_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-113"
+          },
+          "actor": "npc_hw_ayan",
+          "to": "player",
+          "scope": "display_carving",
+          "subject": "bld_hw_mill",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_ayan",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6660,6 +11794,33 @@
       "facts": [
         "纸墨笔均自有且可用，已获陆青允许在桌上画草图并留供讨论；玩家没有自动灌田机器配方或制造能力。",
         "当前没有机器，草图与讨论不自动补齐配方、能源或机械产物。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_114_draw_and_discuss_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-114"
+          },
+          "actor": "npc_hw_luqing",
+          "to": "player",
+          "scope": "draw_and_discuss",
+          "subject": "bld_hw_school",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_luqing",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6774,6 +11935,33 @@
       "facts": [
         "店内准许普通酒令展示，玩家能演示手势并说明规则，林穗可看见和听见；其他人尚未承诺参与。",
         "此题留下规则痕迹，不扣未声明的酒、不强令任何人游戏。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_116_show_game_0",
+          "verb": "consented",
+          "at": 1199,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-116"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "show_game",
+          "subject": "bld_hw_qingdeng",
+          "terms": {},
+          "expires": 2640,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_linsui",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6838,6 +12026,67 @@
         "本人携带的唯一一只破底旧鞋：此前已存在的自有thing/item实物，数量1、condition=0、不可穿，按该唯一名称绑定；不是靴撑、鞋垫或护靴片。",
         "果园有权管理者梅绫已许可在一根伸手可及的树枝悬挂纪念物；旧鞋上原有鞋带可用于悬挂，鞋与树枝可及，不伤树。",
         "world无整鞋商品ID，故旧鞋不伪装成目录库存；由setup按通用物模板登记实物并绑定材料引用，悬挂后不能仍在可消费物中重复使用。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_117_hang_memorial_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-117"
+          },
+          "actor": "npc_hw_meiling",
+          "to": "player",
+          "scope": "hang_memorial",
+          "subject": "loc_hw_orchard",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_meiling",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        },
+        {
+          "observer": "player",
+          "target": "a3v2_117_branch",
+          "distanceMeters": 1,
+          "lineOfSight": true
+        }
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_117_old_shoe",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "loc_hw_orchard",
+          "name": "本人携带的唯一一只破底旧鞋",
+          "condition": 0,
+          "wearable": false,
+          "quantity": 1,
+          "carriedBy": "player",
+          "materialTraits": [
+            "old_shoe"
+          ],
+          "attachedLaces": true
+        }
+      ],
+      "objects": [
+        {
+          "id": "a3v2_117_branch",
+          "template": "thing",
+          "kind": "node",
+          "name": "获准纪念的树枝",
+          "location": "loc_hw_orchard",
+          "reachable": true
+        }
       ]
     }
   },
@@ -6917,6 +12166,33 @@
       "facts": [
         "玩家自有一份细麻线和一份已削成小木片的木料；林穗已准许在不妨碍通行的角落布置，可让后来人看见。",
         "玩家只会摆出机关外观，没有真实伤害结构、警报法术或自动恐惧效果；尚未布置完成。"
+      ],
+      "history": [
+        {
+          "id": "a3v2_118_place_decoy_0",
+          "verb": "consented",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-118"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "scope": "place_decoy",
+          "subject": "bld_hw_qingdeng",
+          "terms": {},
+          "expires": 2040,
+          "revoked": false
+        }
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "npc_hw_linsui",
+          "distanceMeters": 2,
+          "lineOfSight": true,
+          "audible": true
+        }
       ]
     }
   },
@@ -6984,6 +12260,20 @@
       "facts": [
         "玩家位于公署外墙旁公开可到达的街面，炭笔是自有可作画的一段item_charcoal，墙面在伸手范围内。",
         "没有涂画许可，差役npc_bs_032_1在可见范围；保留物主反应、见证和法律后果，不因违法把纸笔或墙面设为不存在。"
+      ],
+      "positions": [
+        {
+          "observer": "player",
+          "target": "bld_bs_office",
+          "distanceMeters": 0.5,
+          "lineOfSight": true
+        },
+        {
+          "observer": "player",
+          "target": "npc_bs_032_1",
+          "distanceMeters": 3,
+          "lineOfSight": true
+        }
       ]
     }
   },
@@ -7061,6 +12351,69 @@
         "已得到当地有权管理人的摆放许可，井旁有不承重、不妨碍取水的安全位置，井场松动井口另行避开；石子自有且实在。",
         "玩家没有求雨神通或主持正式求雨仪轨的资格，当前天气按原状态保持；供台只留表达心意的mark，不保证降雨。",
         "world无花束商品ID，故由setup按通用物模板登记已有野花材料，和旧鞋一样须绑定实际实例后才可消费。"
+      ],
+      "itemInstances": [
+        {
+          "id": "a3v2_120_flowers",
+          "template": "thing",
+          "kind": "item",
+          "owner": "player",
+          "location": "site_w5_well_camp",
+          "name": "本人携带的一束无毒野花",
+          "quantity": 1,
+          "carriedBy": "player",
+          "materialTraits": [
+            "flower"
+          ],
+          "toxic": false,
+          "medicinalEffect": false
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_120_permit_0",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-120"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "site_w5_well_camp"
+          },
+          "subject": "site_w5_well_camp",
+          "to": "player",
+          "scope": "place_small_offering"
+        }
+      ],
+      "permits": [
+        {
+          "id": "a3v2_120_permit_0",
+          "holder": "player",
+          "subject": "site_w5_well_camp",
+          "scope": "place_small_offering",
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "site_w5_well_camp"
+          },
+          "fromMinute": 599,
+          "toMinute": 2040,
+          "sourceEvent": "a3v2_120_permit_0"
+        }
+      ],
+      "zones": [
+        {
+          "id": "a3v2_120_zone_0",
+          "name": "井旁不妨碍取水的安全位置",
+          "location": "site_w5_well_camp"
+        }
+      ],
+      "placements": [
+        {
+          "entity": "player",
+          "zone": "a3v2_120_zone_0"
+        }
       ]
     }
   }
