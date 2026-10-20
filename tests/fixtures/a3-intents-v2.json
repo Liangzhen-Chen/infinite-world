@@ -1,0 +1,4978 @@
+[
+  {
+    "id": "A3V2-001",
+    "intent": "肚子饿了，我把行囊里那份没坏的干粮吃掉。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:wildlife.eat",
+      "signature": [
+        "transfer(resource:item_ration,self->sink:consume)",
+        "vital(person:self,body:satiety)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3 与附录A §A.15.7规定进食须真实消耗食物，再按营养恢复饱腹。"
+    },
+    "proposal": {
+      "intent": "肚子饿了，我把行囊里那份没坏的干粮吃掉。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_ration",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:satiety",
+          "delta": 30
+        }
+      ]
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。"
+    ]
+  },
+  {
+    "id": "A3V2-002",
+    "intent": "我已经到青灯酒馆了，跟柜台前的林穗买两块面包，现钱付。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:trade.buy",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_linsui)",
+        "transfer(resource:item_bread,npc_hw_linsui->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.4、§6.8规定常规买卖优先走注册动作，双方库存与付款同事务校验。"
+    },
+    "proposal": {
+      "intent": "我已经到青灯酒馆了，跟柜台前的林穗买两块面包，现钱付。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_linsui",
+          "qty": 4
+        },
+        {
+          "op": "transfer",
+          "resource": "item_bread",
+          "from": "npc_hw_linsui",
+          "to": "self",
+          "qty": 2
+        }
+      ],
+      "target": "npc_hw_linsui",
+      "consent": {
+        "from": "npc_hw_linsui",
+        "scope": "trade",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "金额为按 world 静态价格形成的提议价，不是伪造已成交报价；引擎须核验当前报价和双方真实同意，不符则返回条件。"
+    ]
+  },
+  {
+    "id": "A3V2-003",
+    "intent": "今晚不赶路了，就在青灯酒馆跟林穗租一晚床位。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:trade.lodge",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_linsui)",
+        "holding.open(person:self,lodges:bld_hw_qingdeng)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.8要求住宿先核验经营者权限、付款与床位容量，世界持有词汇lodges表示有期限的住宿占用。"
+    },
+    "proposal": {
+      "intent": "今晚不赶路了，就在青灯酒馆跟林穗租一晚床位。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_linsui",
+          "qty": 6
+        },
+        {
+          "op": "holding.open",
+          "holdingKind": "lodges",
+          "holder": "self",
+          "subject": "bld_hw_qingdeng",
+          "terms": {
+            "nights": 1
+          },
+          "grantedBy": "npc_hw_linsui"
+        }
+      ],
+      "target": "npc_hw_linsui",
+      "consent": {
+        "from": "npc_hw_linsui",
+        "scope": "lodge",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "租金 6 铜取自 world/meta/rules.json 的 rentalCopperPerNight；期限、床位及经营者许可仍由住宿动作校验。"
+    ]
+  },
+  {
+    "id": "A3V2-004",
+    "intent": "床位已经租好了，我在床上睡到天亮。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:time.sleep",
+      "signature": [
+        "time(world,until:dawn)",
+        "vital(person:self,body:stamina)",
+        "vital(person:self,body:fatigue)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "附录A §A.15.7规定睡眠按时长和住宿设施恢复身体需求，06 §6.8优先路由睡眠动作。"
+    },
+    "proposal": {
+      "intent": "床位已经租好了，我在床上睡到天亮。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:stamina",
+          "delta": 100
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:fatigue",
+          "delta": -100
+        }
+      ],
+      "means": {
+        "manner": "sleep",
+        "until": "dawn"
+      }
+    },
+    "proposalNotes": [
+      "请求恢复至充分休息；100 是身体量上限而非保证恢复量。06 §6.7 不允许提案自定耗时，睡眠动作按当前时刻、天亮与床位派生 time 和实际恢复值。"
+    ]
+  },
+  {
+    "id": "A3V2-005",
+    "intent": "走累了，我在村口歇一会儿，先不睡觉。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:time.rest",
+      "signature": [
+        "time(world,rest)",
+        "vital(person:self,body:stamina)",
+        "vital(person:self,body:fatigue)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.1有休息入口，附录A §A.15.7区分休息与睡眠的恢复条件。"
+    },
+    "proposal": {
+      "intent": "走累了，我在村口歇一会儿，先不睡觉。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:stamina",
+          "delta": 12
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:fatigue",
+          "delta": -12
+        }
+      ],
+      "target": "loc_hw_gate",
+      "means": {
+        "manner": "rest"
+      }
+    },
+    "proposalNotes": [
+      "恢复值是待裁决幅度，不把休息当睡眠；休息动作读取默认时长（目录为 60 分钟）及恢复规则，提案不直接提交 time。"
+    ]
+  },
+  {
+    "id": "A3V2-006",
+    "intent": "我在河湾村口，沿地图上那条能走的路去白石镇。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:move",
+      "signature": [
+        "move(person:self,loc_hw_gate->loc_bs)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的move读取可通行路线并派生旅行耗时，不把地图选择当瞬移。"
+    },
+    "proposal": {
+      "intent": "我在河湾村口，沿地图上那条能走的路去白石镇。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "loc_bs",
+          "mode": "walk"
+        }
+      ],
+      "target": "loc_bs",
+      "context": {
+        "modifier": 0,
+        "reason": "从 loc_hw_gate 沿当前可通行路线出发，逐段旅行"
+      }
+    }
+  },
+  {
+    "id": "A3V2-007",
+    "intent": "这杯清水是我自己的，我现在把它喝掉。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:item_water,self->sink:consume)",
+        "vital(person:self,body:hydration)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "附录A §A.15.7明确饮水为资源消耗加身体需求恢复，现有目录未明确列出饮水专门动作。"
+    },
+    "proposal": {
+      "intent": "这杯清水是我自己的，我现在把它喝掉。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_water",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:hydration",
+          "delta": 25
+        }
+      ]
+    }
+  },
+  {
+    "id": "A3V2-008",
+    "intent": "我已经在院里了，把自己的小陶罐从脚边搬到旁边墙根，别打碎。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "move(thing:own_clay_pot,adjacent_wall_zone)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3允许对可及实体作分区移动，§6.9.1构造器可选择搬动、目标、手段与谨慎方式。"
+    },
+    "proposal": {
+      "intent": "我已经在院里了，把自己的小陶罐从脚边搬到旁边墙根，别打碎。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "item_clay_pot",
+          "to": "旁边墙根",
+          "mode": "carry"
+        }
+      ],
+      "means": {
+        "tools": [],
+        "manner": "careful"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
+      "06 §6.3 允许 to 为局部方位；未编造院墙分区 ID，须按当前院内可及空间解析。"
+    ]
+  },
+  {
+    "id": "A3V2-009",
+    "intent": "我家那只跟着来的家畜饿了，拿我包里它能吃的一份口粮喂它。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:pet.feed",
+      "signature": [
+        "transfer(resource:species_food,self->sink:consume)",
+        "vital(creature:own_pet,body:satiety)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "附录A §A.15.7规定喂食与进食同形并读取物种食性，06 §6.8优先匹配喂食动作。"
+    },
+    "proposal": {
+      "intent": "我家那只跟着来的家畜饿了，拿我包里它能吃的一份口粮喂它。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_oats",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "vital",
+          "target": "missing:own_pet",
+          "type": "body:satiety",
+          "delta": 30
+        }
+      ],
+      "target": "missing:own_pet"
+    },
+    "proposalNotes": [
+      "静态数据不能确定本题玩家所拥有的家畜实例；item_oats 是现有植物性饲料候选，须核验该家畜食性。不能把任意野物或怪物模板当作已拥有宠物。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_pet。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-010",
+    "intent": "我站在旧渡口，先看看四周哪些人在忙、哪条路能走。",
+    "tricky": false,
+    "category": "日常生活",
+    "expected": {
+      "route": "core:look",
+      "signature": [],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.4规定观察只投影当前可感知场景与方位，不额外修改世界事实。"
+    },
+    "proposal": {
+      "intent": "我站在旧渡口，先看看四周哪些人在忙、哪条路能走。",
+      "effects": [],
+      "target": "loc_hw_dock",
+      "expect": "只返回当前可感知的人、活动和道路，不写状态"
+    }
+  },
+  {
+    "id": "A3V2-011",
+    "intent": "许苓就在我面前，我想请她教我照明术，先问清学费再决定。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "emit(person:npc_hw_xuling,request:teach_spell_light)",
+        "learn(person:self,spell_light:teacher)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的learn要求来源存在且教师愿意授艺，未接受费用条件前不得扣款或直接学会。"
+    },
+    "proposal": {
+      "intent": "许苓就在我面前，我想请她教我照明术，先问清学费再决定。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "npc_hw_xuling",
+          "tags": [],
+          "payload": {
+            "kind": "teach",
+            "terms": {
+              "subject": "spell_light",
+              "quoteOnly": true
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_xuling"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。"
+    ]
+  },
+  {
+    "id": "A3V2-012",
+    "intent": "阿砚答应了今天教我削木楔，我带齐学费和工具来上这堂课。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_ayan)",
+        "learn(person:self,recipe_wooden_pegs:teacher)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与§6.9.3将配方授课落为有来源的learn，阿砚是世界配方数据声明的教师。"
+    },
+    "proposal": {
+      "intent": "阿砚答应了今天教我削木楔，我带齐学费和工具来上这堂课。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_ayan",
+          "qty": 4
+        },
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "recipe_wooden_pegs",
+          "source": "npc_hw_ayan",
+          "amount": 1
+        }
+      ],
+      "target": "npc_hw_ayan",
+      "consent": {
+        "from": "npc_hw_ayan",
+        "scope": "teach",
+        "onRefusal": "abort"
+      },
+      "means": {
+        "tools": [
+          "item_whittling_knife"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "4 铜为该配方公开学费；题目的已有同意必须在引擎事件中真实存在。learn.amount 为提议增量，不直接写已学会。"
+    ]
+  },
+  {
+    "id": "A3V2-013",
+    "intent": "我已经会照明术了，找个安静角落按平时的方法练一轮。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:practice",
+      "signature": [
+        "learn(person:self,skill_light:practice)",
+        "time(world,practice)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7规定技能练习按规则确定增量并受每日上限与重复衰减约束。"
+    },
+    "proposal": {
+      "intent": "我已经会照明术了，找个安静角落按平时的方法练一轮。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "skill_light",
+          "source": "practice",
+          "amount": 1.2
+        }
+      ],
+      "means": {
+        "skill": "skill_light",
+        "manner": "practice"
+      }
+    },
+    "proposalNotes": [
+      "练习幅度与 time 均由练习规则按正常一轮、阶段及当日衰减裁决。"
+    ]
+  },
+  {
+    "id": "A3V2-014",
+    "intent": "我看得懂这本《手纺粗毛线工序册》，照着它学手纺粗毛线的配方。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "learn(person:self,recipe_spin_wool:book_item_book_spin_wool)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的learn与附录A §A.15.21要求书籍来源和canRead，读书收益仍按自学档位裁决。"
+    },
+    "proposal": {
+      "intent": "我看得懂这本《手纺粗毛线工序册》，照着它学手纺粗毛线的配方。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "recipe_spin_wool",
+          "source": "item_book_spin_wool",
+          "amount": 1
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_book_spin_wool"
+        ]
+      }
+    }
+  },
+  {
+    "id": "A3V2-015",
+    "intent": "陆青愿意教我识字，我到小学堂跟他学一课田契里常用的字。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "learn(person:self,literacy:teacher_npc_hw_luqing)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3允许在场且同意授课的教师作为技能来源，收益由学习规则派生。"
+    },
+    "proposal": {
+      "intent": "陆青愿意教我识字，我到小学堂跟他学一课田契里常用的字。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "skill_literacy",
+          "source": "npc_hw_luqing",
+          "amount": 3.4
+        }
+      ],
+      "target": "npc_hw_luqing",
+      "consent": {
+        "from": "npc_hw_luqing",
+        "scope": "teach",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "只请求一课的识字增长，不把教师愿意授课视为已获得所有读写能力。"
+    ]
+  },
+  {
+    "id": "A3V2-016",
+    "intent": "我会的那套基础吐纳今天还没练，先按原来的功法练一遍。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:practice",
+      "signature": [
+        "learn(person:self,known_cultivation_skill:practice)",
+        "time(world,practice)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7把功法练习的幅度交技能阶、每日上限与耗时表，不能靠叙述直接升阶。"
+    },
+    "proposal": {
+      "intent": "我会的那套基础吐纳今天还没练，先按原来的功法练一遍。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "missing:known_basic_breathing_skill",
+          "source": "practice",
+          "amount": 1.2
+        }
+      ],
+      "means": {
+        "skill": "missing:known_basic_breathing_skill",
+        "manner": "practice"
+      }
+    },
+    "proposalNotes": [
+      "world/meta/skills.json 未有可唯一对应题中“原来的基础吐纳功法”的 ID；不能擅自改成定息术或三息定桩。须从玩家已有技能绑定；缺失引用交引擎返回原因。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:known_basic_breathing_skill。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-017",
+    "intent": "苏岚这会儿没空授课，我就在获准旁观的位置看她织布，能看懂多少算多少。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "learn(person:self,weaving:observation_npc_hw_sulan)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的learn允许无授课同意时观察偷学，幅度为正常授艺的四分之一且可能被察觉。"
+    },
+    "proposal": {
+      "intent": "苏岚这会儿没空授课，我就在获准旁观的位置看她织布，能看懂多少算多少。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "skill_life_4_core",
+          "source": "npc_hw_sulan",
+          "amount": 0.85
+        }
+      ],
+      "means": {
+        "skill": "skill_life_4_core",
+        "manner": "observe"
+      }
+    },
+    "proposalNotes": [
+      "苏岚正在演示织布但未同意授课；0.85 是正常每小时授艺 3.4 的四分之一提议值，实际时长、衰减与可见性仍由引擎决定，不提交教师同意。"
+    ]
+  },
+  {
+    "id": "A3V2-018",
+    "intent": "我用自己能读懂的《田契识字课本》温习刚学过的字。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:learn",
+      "signature": [
+        "learn(person:self,literacy:book_item_literacy_primer)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3要求可读的学习来源，§6.7对重复学习保留每日上限与衰减。"
+    },
+    "proposal": {
+      "intent": "我用自己能读懂的《田契识字课本》温习刚学过的字。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "skill_literacy",
+          "source": "item_literacy_primer",
+          "amount": 1
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_literacy_primer"
+        ]
+      }
+    }
+  },
+  {
+    "id": "A3V2-019",
+    "intent": "我想研究怎么让现有的木柄更耐用，拿自己的样品和木工知识立个研究项目。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:research",
+      "signature": [
+        "create(collective:project,research_tool_handle)",
+        "learn(person:self,tool_handle_research:research)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.3允许研究表单，§6.3的learn以真实研究为来源而不在立项时保证成果。"
+    },
+    "proposal": {
+      "intent": "我想研究怎么让现有的木柄更耐用，拿自己的样品和木工知识立个研究项目。",
+      "effects": [
+        {
+          "op": "create",
+          "kind": "project",
+          "template": "missing:research_project_template",
+          "facts": {
+            "name": "木柄耐用性研究",
+            "author": "self",
+            "subject": "item_tool_handle",
+            "skill": "skill_life_6_core",
+            "goal": "改善现有木柄耐用性"
+          },
+          "materials": []
+        }
+      ],
+      "means": {
+        "skill": "skill_life_6_core",
+        "tools": [
+          "item_tool_handle"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "设计允许研究项目，但 world 未提供可直接引用的研究实体模板 ID，明确保留缺失模板；没有提前提交研究成果或凭空学习奖励。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:research_project_template。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-020",
+    "intent": "我已经满足本地木工执业的申请条件，想去行会办个正式认证。",
+    "tricky": false,
+    "category": "修行与学习",
+    "expected": {
+      "route": "core:profession.certify",
+      "signature": [
+        "emit(org:local_guild,request:certification)",
+        "holding.open(person:self,certified:woodworking)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.4与§6.9.3把认证交注册动作和授予权校验，申请本身不等于取得资格。"
+    },
+    "proposal": {
+      "intent": "我已经满足本地木工执业的申请条件，想去行会办个正式认证。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "bld_bs_guild",
+          "tags": [],
+          "payload": {
+            "kind": "certification",
+            "terms": {
+              "skill": "skill_life_6_core",
+              "profession": "profession_life_6"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bld_bs_guild"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "商旅行会联络处是真实地点，但不能假定它有木工认证授予权；须由目录或受理者指出有权机构，不直接开 certified。"
+    ]
+  },
+  {
+    "id": "A3V2-021",
+    "intent": "我已经学会削木楔了，木料和削木小刀都在工作台上，按配方做一批。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:item_wood,self->sink:craft)",
+        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self)",
+        "transfer(resource:item_wood_shavings,recipe_wooden_pegs->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7要求计量制造经注册配方结算，recipe_wooden_pegs规定投入、四块木楔与刨屑副产物。"
+    },
+    "proposal": {
+      "intent": "我已经学会削木楔了，木料和削木小刀都在工作台上，按配方做一批。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_wood",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        }
+      ],
+      "expect": "按 recipe_wooden_pegs 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_6_core",
+        "recipe": "recipe_wooden_pegs",
+        "batches": 1,
+        "tools": [
+          "item_whittling_knife"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-022",
+    "intent": "锅和炉子能用，燕麦粉、清水、盐、刨屑都备齐了，我按学过的方子烙一锅薄饼。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:recipe_bake_flatbread_inputs,self->sink:craft)",
+        "transfer(resource:item_oat_flatbread,recipe_bake_flatbread->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7的配方制造由材料、设施与工时限制，世界配方recipe_bake_flatbread给定四份产出。"
+    },
+    "proposal": {
+      "intent": "锅和炉子能用，燕麦粉、清水、盐、刨屑都备齐了，我按学过的方子烙一锅薄饼。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_oat_flour",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_water",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_salt",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_wood_shavings",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        }
+      ],
+      "expect": "按 recipe_bake_flatbread 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_3_core",
+        "recipe": "recipe_bake_flatbread",
+        "batches": 1,
+        "tools": [
+          "item_cooking_pot"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-023",
+    "intent": "这条剖净鲜鱼是我的，盐和切刀也有，我按短腌小咸鱼的配方腌好。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:item_fish+item_salt,self->sink:craft)",
+        "transfer(resource:item_salt_fish,recipe_salt_fish->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.7要求真实投入并优先配方动作，recipe_salt_fish只产出一份咸鱼。"
+    },
+    "proposal": {
+      "intent": "这条剖净鲜鱼是我的，盐和切刀也有，我按短腌小咸鱼的配方腌好。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_fish",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_salt",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        }
+      ],
+      "expect": "按 recipe_salt_fish 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_3_core",
+        "recipe": "recipe_salt_fish",
+        "batches": 1,
+        "tools": [
+          "item_kitchen_knife"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-024",
+    "intent": "我拿一束自己的洗净羊毛，用木纺锤照学过的方子纺粗毛线。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:item_wool,self->sink:craft)",
+        "transfer(resource:item_wool_yarn,recipe_spin_wool->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7限制制造收益到配方，recipe_spin_wool将一束羊毛加工为三团毛线。"
+    },
+    "proposal": {
+      "intent": "我拿一束自己的洗净羊毛，用木纺锤照学过的方子纺粗毛线。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_wool",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        }
+      ],
+      "expect": "按 recipe_spin_wool 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_4_core",
+        "recipe": "recipe_spin_wool",
+        "batches": 1,
+        "tools": [
+          "item_spindle"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-025",
+    "intent": "陶轮和窑炉都借好了，我用备齐的黏土和木炭按配方烧一批小陶杯。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:item_clay+item_charcoal,self->sink:craft)",
+        "transfer(resource:item_clay_cup,recipe_fire_cup->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7规定设施、材料与工时都约束配方制造，recipe_fire_cup的产出是三只小陶杯。"
+    },
+    "proposal": {
+      "intent": "陶轮和窑炉都借好了，我用备齐的黏土和木炭按配方烧一批小陶杯。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_clay",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_charcoal",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 2
+        }
+      ],
+      "expect": "按 recipe_fire_cup 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_14_core",
+        "recipe": "recipe_fire_cup",
+        "batches": 1,
+        "tools": [
+          "item_pottery_wheel"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-026",
+    "intent": "我把蜂蜡、麻纤维和木炭备好了，用那口可用的煮锅按学过的方子浸一批蜡烛。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:recipe_dip_candles_inputs,self->sink:craft)",
+        "transfer(resource:item_wax_candle,recipe_dip_candles->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7要求计量制品沿配方守恒，recipe_dip_candles限定一批四根蜡烛。"
+    },
+    "proposal": {
+      "intent": "我把蜂蜡、麻纤维和木炭备好了，用那口可用的煮锅按学过的方子浸一批蜡烛。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_beeswax",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_flax",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_charcoal",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 1
+        }
+      ],
+      "expect": "按 recipe_dip_candles 制作 1 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_3_core",
+        "recipe": "recipe_dip_candles",
+        "batches": 1,
+        "tools": [
+          "item_cooking_pot"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-027",
+    "intent": "自己的旧木杖裂了一道，我有合适工具和修补料，照现有修理方案补牢。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.repair",
+      "signature": [
+        "transfer(resource:repair_materials,self->sink:consume)",
+        "fact.set(thing:own_item_staff,condition)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的fact.set按技能、工具和时间限幅，§6.8优先匹配修理动作而不直接满耐久。"
+    },
+    "proposal": {
+      "intent": "自己的旧木杖裂了一道，我有合适工具和修补料，照现有修理方案补牢。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "item_staff",
+          "field": "condition",
+          "delta": 20
+        }
+      ],
+      "means": {
+        "skill": "skill_life_6_core",
+        "tools": [
+          "item_whittling_knife"
+        ],
+        "repair": "repair_staff_trim"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
+      "world/meta/rules.json 的 repair_staff_trim.restore=20 且 materials=[]；不因原签名概括“修补料”而凭空扣料，实际工时与磨损交注册修理动作。"
+    ]
+  },
+  {
+    "id": "A3V2-028",
+    "intent": "我那件普通衣服袖口破了，针线都齐，就按已有修补方案缝好。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:craft.repair",
+      "signature": [
+        "transfer(resource:cloth_repair_materials,self->sink:consume)",
+        "fact.set(thing:own_item_clothes,condition)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7规定修复幅度来自工作量，注册修理动作保留材料消耗与工具条件。"
+    },
+    "proposal": {
+      "intent": "我那件普通衣服袖口破了，针线都齐，就按已有修补方案缝好。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_hemp_thread",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "fact.set",
+          "entity": "item_clothes",
+          "field": "condition",
+          "delta": 20
+        }
+      ],
+      "means": {
+        "skill": "skill_life_4_core",
+        "tools": [
+          "item_sewing_needle"
+        ],
+        "manner": "careful"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
+      "针、麻线及裁缝技能均有真实 ID；world 的 repairs 未列衣物修补方案，20 只是请求修复幅度，不能据此声称已有可用注册方案。"
+    ]
+  },
+  {
+    "id": "A3V2-029",
+    "intent": "没有合适的成品支架，我想用自己的木料和绳子临时扎个能撑住小陶罐的粗架子。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:wood+rope,self->sink:consume)",
+        "create(thing:crude_pot_stand,improvised)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7允许以匹配性状的真实材料即兴制作低耐久粗劣物，不得凭空获得配方级产出。"
+    },
+    "proposal": {
+      "intent": "没有合适的成品支架，我想用自己的木料和绳子临时扎个能撑住小陶罐的粗架子。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_wood",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_flax_cord",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "item",
+          "template": "missing:crude_pot_stand_template",
+          "facts": {
+            "name": "临时陶罐支架",
+            "quality": "crude",
+            "author": "self",
+            "location": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_wood",
+              "qty": 1
+            },
+            {
+              "resource": "item_flax_cord",
+              "qty": 1
+            }
+          ]
+        }
+      ],
+      "means": {
+        "skill": "skill_life_6_core",
+        "tools": [
+          "item_whittling_knife"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "真实材料已指明；world 未找到陶罐支架或可引用的通用即兴物品模板 ID，保留缺失模板由引擎返回即兴制作或降级做法。materials 是同事务投入清单，不是第二次扣料。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:crude_pot_stand_template。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-030",
+    "intent": "我会烘衣术，想把身上这一件湿衣服烘干，别烧坏。",
+    "tricky": false,
+    "category": "制作与修理",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "fact.set(thing:own_item_clothes,moisture)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3将法术dry映射到fact.set，世界spell_fire_03只排出单件衣物潮气并保留纤维。"
+    },
+    "proposal": {
+      "intent": "我会烘衣术，想把身上这一件湿衣服烘干，别烧坏。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "item_clothes",
+          "field": "moisture",
+          "value": 0
+        }
+      ],
+      "means": {
+        "skill": "skill_fire_03",
+        "spell": "spell_fire_03"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。"
+    ]
+  },
+  {
+    "id": "A3V2-031",
+    "intent": "我就在钱庄柜台，把随身的一百铜存进去，存单给我留好。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.deposit",
+      "signature": [
+        "transfer(resource:coin,self->bank)",
+        "obligation.create(person:bank->self,deposit)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与05 §5.1要求存款有真实资金转移和可追索义务，不能只改余额。"
+    },
+    "proposal": {
+      "intent": "我就在钱庄柜台，把随身的一百铜存进去，存单给我留好。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "bank_hw_post",
+          "qty": 100
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "bank_hw_post",
+          "qty": 1
+        },
+        {
+          "op": "obligation.create",
+          "obligationKind": "deposit",
+          "debtor": "bank_hw_post",
+          "creditor": "self",
+          "terms": {
+            "resource": "coin",
+            "principal": 100
+          }
+        }
+      ],
+      "target": "bank_hw_post",
+      "consent": {
+        "from": "bank_hw_post",
+        "scope": "deposit",
+        "onRefusal": "abort"
+      },
+      "expect": "存入本金100铜并由银行提供有效凭据，另付公开手续费1铜"
+    },
+    "proposalNotes": [
+      "银行与手续费取自 world/meta/rules.json 的 economy.credit.banks；两笔转移分别为本金与费用，不把手续费计入存款债权。凭据由存款注册动作生成。"
+    ]
+  },
+  {
+    "id": "A3V2-032",
+    "intent": "我带着有效存款凭据到了开户钱庄，想取回其中五十铜。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.withdraw",
+      "signature": [
+        "transfer(resource:coin,bank->self)",
+        "obligation.settle(obligation:own_deposit,partial:50)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3规定提款须在场、银行有可支配余额并相应结算存款义务。"
+    },
+    "proposal": {
+      "intent": "我带着有效存款凭据到了开户钱庄，想取回其中五十铜。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "bank_hw_post",
+          "to": "self",
+          "qty": 50
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:own_deposit",
+          "amount": 50,
+          "partial": true
+        }
+      ],
+      "target": "bank_hw_post"
+    },
+    "proposalNotes": [
+      "有效存款凭据对应的运行时 obligation ID 未提供，不能把 bank_hw_post 当成存款合同 ID。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_deposit。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-033",
+    "intent": "我在钱庄想借一百铜，先把期限和利息列给我看，合适我再签。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.borrow",
+      "signature": [
+        "emit(org:bank,request:loan)",
+        "obligation.create(person:self->bank,loan)",
+        "transfer(resource:coin,bank->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.4的借贷须双方决策与条款同意，预览请求不能提前生成债务或到账。"
+    },
+    "proposal": {
+      "intent": "我在钱庄想借一百铜，先把期限和利息列给我看，合适我再签。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "bank_hw_post",
+          "tags": [],
+          "payload": {
+            "kind": "loan",
+            "terms": {
+              "principal": 100,
+              "resource": "coin",
+              "quoteOnly": true
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bank_hw_post"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。"
+    ]
+  },
+  {
+    "id": "A3V2-034",
+    "intent": "吴朔和我都在这儿，他当面提出向我借五十铜、十天后无息还，我把钱借给他。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.lend",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_wushuo)",
+        "obligation.create(person:npc_hw_wushuo->self,loan)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.4的lend示例要求真实转款和债务人同意，条款按义务种类限制校验。"
+    },
+    "proposal": {
+      "intent": "吴朔和我都在这儿，他当面提出向我借五十铜、十天后无息还，我把钱借给他。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_wushuo",
+          "qty": 50
+        },
+        {
+          "op": "obligation.create",
+          "obligationKind": "loan",
+          "debtor": "npc_hw_wushuo",
+          "creditor": "self",
+          "terms": {
+            "resource": "coin",
+            "principal": 50,
+            "days": 10,
+            "interest": 0
+          }
+        }
+      ],
+      "target": "npc_hw_wushuo",
+      "consent": {
+        "from": "npc_hw_wushuo",
+        "scope": "loan",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "吴朔当面提出的借款条件须有真实请求或同意来源；from 不等于调用方代他签字。"
+    ]
+  },
+  {
+    "id": "A3V2-035",
+    "intent": "林穗在柜台，我把账上那笔欠她的三十铜还清。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.repay",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_linsui)",
+        "obligation.settle(obligation:own_debt_to_linsui,amount:30)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的obligation.settle须与资金转移同事务，并满足债权人或代收者在场。"
+    },
+    "proposal": {
+      "intent": "林穗在柜台，我把账上那笔欠她的三十铜还清。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_linsui",
+          "qty": 30
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:own_debt_to_linsui",
+          "amount": 30,
+          "partial": false
+        }
+      ],
+      "target": "npc_hw_linsui"
+    },
+    "proposalNotes": [
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_debt_to_linsui。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-036",
+    "intent": "这根旧木杖是我自己的，带到当铺先看看能押多少，再按同意的条款典当。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.pawn",
+      "signature": [
+        "holding.open(thing:own_item_staff,pledged)",
+        "obligation.create(person:self->pawnshop,loan)",
+        "transfer(resource:coin,pawnshop->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3规定质押须有处分权或占有且借款条款获同意，估价不等于已经成交。"
+    },
+    "proposal": {
+      "intent": "这根旧木杖是我自己的，带到当铺先看看能押多少，再按同意的条款典当。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_pawnshop",
+          "tags": [],
+          "payload": {
+            "kind": "pawn",
+            "terms": {
+              "item": "item_staff",
+              "quoteOnly": true
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_pawnshop"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "未找到与题目所指当铺唯一对应的 world ID；不把有放贷服务的汇兑柜自动视为这家当铺。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_pawnshop。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-037",
+    "intent": "我的木杖还在这家当铺，赎期也没过，我把本息付清取回来。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.redeem",
+      "signature": [
+        "transfer(resource:coin,self->pawnshop)",
+        "obligation.settle(obligation:own_pawn_loan,full)",
+        "holding.close(holding:own_staff_pledge,redeemed)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3要求清偿、资金与质押解除一致结算，解除后才能取回标的。"
+    },
+    "proposal": {
+      "intent": "我的木杖还在这家当铺，赎期也没过，我把本息付清取回来。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "missing:present_pawnshop",
+          "qty": 2
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:own_pawn_loan",
+          "amount": 2,
+          "partial": false
+        },
+        {
+          "op": "holding.close",
+          "holding": "missing:own_staff_pledge",
+          "reason": "redeemed"
+        }
+      ],
+      "target": "missing:present_pawnshop"
+    },
+    "proposalNotes": [
+      "当铺、质押与借款均是题设运行时引用，静态 world 未给出；2 铜仅为旧杖 basePrice=4 × collateralRatio=0.5 的本金示例，真实本息须查询借据后替换，不宣称已足额赎回。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_pawn_loan、missing:own_staff_pledge、missing:present_pawnshop。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-038",
+    "intent": "我在钱庄柜台，想寄五十铜给白石镇的收款人，按汇票走，手续费也照付。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.remit",
+      "signature": [
+        "transfer(resource:coin,self->local_bank)",
+        "obligation.create(person:bank->recipient,bill)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的transfer以汇兑载体实现异地支付，出票不等于远方收款人当场拿到现金。"
+    },
+    "proposal": {
+      "intent": "我在钱庄柜台，想寄五十铜给白石镇的收款人，按汇票走，手续费也照付。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "bank_hw_post",
+          "qty": 50
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "bank_hw_post",
+          "qty": 2
+        },
+        {
+          "op": "obligation.create",
+          "obligationKind": "bill",
+          "debtor": "bank_hw_post",
+          "creditor": "missing:baishi_recipient",
+          "terms": {
+            "resource": "coin",
+            "principal": 50,
+            "destination": "loc_bs"
+          }
+        }
+      ],
+      "target": "bank_hw_post",
+      "consent": {
+        "from": "bank_hw_post",
+        "scope": "remit",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "收款人未具名，保留缺失引用，不能换成任意白石镇居民；手续费2铜是50×3%向上取整的提议，须由实际报价替换。出票和到账分开，未给远方收款人加余额。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:baishi_recipient。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-039",
+    "intent": "买家就在面前，我把自己刚做好的两只小陶杯按谈好的价钱卖给他。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:trade.sell_to",
+      "signature": [
+        "transfer(resource:item_clay_cup,self->buyer)",
+        "transfer(resource:coin,buyer->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.8优先匹配卖给对方的注册动作，§6.3仍核验货物、对价与双方权限。"
+    },
+    "proposal": {
+      "intent": "买家就在面前，我把自己刚做好的两只小陶杯按谈好的价钱卖给他。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_clay_cup",
+          "from": "self",
+          "to": "missing:present_buyer",
+          "qty": 2
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:present_buyer",
+          "to": "self",
+          "qty": 12
+        }
+      ],
+      "target": "missing:present_buyer",
+      "consent": {
+        "from": "missing:present_buyer",
+        "scope": "trade",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "买家须由场景唯一绑定；12铜为两杯静态基价示例，题中已谈妥的真实价格优先，不把基价当双方同意。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_buyer。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-040",
+    "intent": "阿砚欠我的那笔十铜是我自己的债权，我现在免掉，不让他再还。",
+    "tricky": false,
+    "category": "交易与借贷",
+    "expected": {
+      "route": "core:promise.cancel",
+      "signature": [
+        "obligation.cancel(obligation:ayan_debt_to_self,creditor_waiver)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3允许债权人取消自己的债权，免债不产生钱款也不改其他人的债务。"
+    },
+    "proposal": {
+      "intent": "阿砚欠我的那笔十铜是我自己的债权，我现在免掉，不让他再还。",
+      "effects": [
+        {
+          "op": "obligation.cancel",
+          "id": "missing:ayan_debt_to_self",
+          "reason": "creditor_waiver"
+        }
+      ],
+      "target": "npc_hw_ayan"
+    },
+    "proposalNotes": [
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:ayan_debt_to_self。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-041",
+    "intent": "林穗就在柜台忙着，我先跟她打个招呼。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.greet",
+      "signature": [
+        "emit(person:npc_hw_linsui,greet)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2规定寒暄按NPC立场回应，不由玩家指定对方情绪。"
+    },
+    "proposal": {
+      "intent": "林穗就在柜台忙着，我先跟她打个招呼。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "tell",
+          "actor": "self",
+          "target": "npc_hw_linsui",
+          "tags": [],
+          "payload": {
+            "kind": "greet",
+            "content": "林穗，你好。",
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_linsui"
+    },
+    "proposalNotes": [
+      "world 动词表无 greet；用现有 tell 记录寒暄，由意图路由寒暄动作。"
+    ]
+  },
+  {
+    "id": "A3V2-042",
+    "intent": "我在旧渡口遇见郑水生，问问他今天河上有没有不好走的地方。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.ask",
+      "signature": [
+        "emit(person:npc_hw_zhengshuisheng,request:known_route_conditions)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2与05 §5.4规定打听只从对方主观视图作答，未知路况不能凭空补全。"
+    },
+    "proposal": {
+      "intent": "我在旧渡口遇见郑水生，问问他今天河上有没有不好走的地方。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "npc_hw_zhengshuisheng",
+          "tags": [],
+          "payload": {
+            "kind": "ask",
+            "terms": {
+              "topic": "今天河上哪些地方不好走",
+              "location": "loc_hw_dock"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_zhengshuisheng"
+    }
+  },
+  {
+    "id": "A3V2-043",
+    "intent": "吴朔就在旁边，我把刚亲眼看见北林边有野兽的事告诉他，说明是在哪儿看到的。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.tell",
+      "signature": [
+        "emit(person:npc_hw_wushuo,tell:witnessed_beast)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的emit(tell)携带说法与来源，05 §5.4由听者决定采信而不直写belief。"
+    },
+    "proposal": {
+      "intent": "吴朔就在旁边，我把刚亲眼看见北林边有野兽的事告诉他，说明是在哪儿看到的。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "tell",
+          "actor": "self",
+          "target": "npc_hw_wushuo",
+          "tags": [],
+          "payload": {
+            "version": "刚才我亲眼看见北林边有野兽",
+            "source": "self",
+            "location": "loc_hw_northwood"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_wushuo"
+    },
+    "proposalNotes": [
+      "这里只转述玩家所声称的目击；不创建野兽、不直接写吴朔的 belief。"
+    ]
+  },
+  {
+    "id": "A3V2-044",
+    "intent": "这位南市摊主报的价有点高，我试着问能不能便宜两铜。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.haggle",
+      "signature": [
+        "emit(person:present_merchant,request:haggle)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2的议价按规则表与NPC决策给答复，仅成交时的转移价格受影响。"
+    },
+    "proposal": {
+      "intent": "这位南市摊主报的价有点高，我试着问能不能便宜两铜。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_nanshi_merchant",
+          "tags": [],
+          "payload": {
+            "kind": "haggle",
+            "terms": {
+              "discountCopper": 2
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_nanshi_merchant"
+    },
+    "proposalNotes": [
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_nanshi_merchant。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-045",
+    "intent": "我和眼前的外乡商人说不到一块儿，请旁边愿意帮忙、会我们两种话的人当通译。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.interpreter",
+      "signature": [
+        "emit(person:present_interpreter,request:interpret)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2与附录A §A.15.21允许在场通译参与，转述保留来源和actedAs。"
+    },
+    "proposal": {
+      "intent": "我和眼前的外乡商人说不到一块儿，请旁边愿意帮忙、会我们两种话的人当通译。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_interpreter",
+          "tags": [],
+          "payload": {
+            "kind": "interpret",
+            "terms": {
+              "otherParty": "missing:present_foreign_merchant"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_interpreter"
+    },
+    "proposalNotes": [
+      "仅凭静态目录不能识别眼前通译、商人与双方语言；不凭空赋予任何现有 NPC 双语能力。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_foreign_merchant、missing:present_interpreter。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-046",
+    "intent": "旧渡口前这个人挡着道，我客气地劝他让出一点路让我过去。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.persuade",
+      "signature": [
+        "emit(person:present_blocker,request:make_way)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7规定说服只向NPC决策提供修正，不能把请求直接写成对方移动。"
+    },
+    "proposal": {
+      "intent": "旧渡口前这个人挡着道，我客气地劝他让出一点路让我过去。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_blocker",
+          "tags": [],
+          "payload": {
+            "kind": "make_way",
+            "terms": {
+              "location": "loc_hw_dock"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_blocker",
+      "means": {
+        "manner": "polite"
+      }
+    },
+    "proposalNotes": [
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_blocker。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-047",
+    "intent": "郑水生在这里，我请他带我去他熟悉的渡河处，先听听他愿不愿意。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.guide",
+      "signature": [
+        "emit(person:npc_hw_zhengshuisheng,request:guide)",
+        "obligation.create(person:npc_hw_zhengshuisheng->self,service:conditional_on_acceptance)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2的带路请求由NPC决定答复，只有接受条款才创建服务义务。"
+    },
+    "proposal": {
+      "intent": "郑水生在这里，我请他带我去他熟悉的渡河处，先听听他愿不愿意。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "npc_hw_zhengshuisheng",
+          "tags": [],
+          "payload": {
+            "kind": "guide",
+            "terms": {
+              "destination": "熟悉的可渡河处"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_zhengshuisheng"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。"
+    ]
+  },
+  {
+    "id": "A3V2-048",
+    "intent": "这箱自己的木料太沉，阿砚就在边上，我问他肯不肯搭把手。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.assist",
+      "signature": [
+        "emit(person:npc_hw_ayan,request:assist)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2规定帮忙属于请求，承诺与实际搬动不能由发起者代替阿砚决定。"
+    },
+    "proposal": {
+      "intent": "这箱自己的木料太沉，阿砚就在边上，我问他肯不肯搭把手。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "npc_hw_ayan",
+          "tags": [],
+          "payload": {
+            "kind": "assist",
+            "terms": {
+              "task": "搬运我的木料箱",
+              "resource": "item_wood"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_ayan"
+    }
+  },
+  {
+    "id": "A3V2-049",
+    "intent": "我当面向林穗保证，明天日落前把欠她的十铜送到柜台。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.promise",
+      "signature": [
+        "obligation.create(person:self->npc_hw_linsui,payment:10_before_tomorrow_sunset)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2允许玩家为自己的履行作承诺，§6.3要求条款可表达且不替别人负债。"
+    },
+    "proposal": {
+      "intent": "我当面向林穗保证，明天日落前把欠她的十铜送到柜台。",
+      "effects": [
+        {
+          "op": "obligation.create",
+          "obligationKind": "promise",
+          "debtor": "self",
+          "creditor": "npc_hw_linsui",
+          "terms": {
+            "resource": "coin",
+            "amount": 10,
+            "due": "明天日落前",
+            "place": "bld_hw_qingdeng",
+            "fulfills": "missing:own_ten_coin_debt"
+          }
+        }
+      ],
+      "target": "npc_hw_linsui"
+    },
+    "proposalNotes": [
+      "这是一项对已有债务的履行承诺；fulfills 指向原债，不能重复增加10铜贷款本金。相对期限由历法解析。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_ten_coin_debt。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-050",
+    "intent": "我已经和陈柏聊完了，跟他道个别就结束这场谈话。",
+    "tricky": false,
+    "category": "社交与对话",
+    "expected": {
+      "route": "core:dialogue.leave",
+      "signature": [
+        "emit(person:npc_hw_chenbai,leave)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2把道别作为对话动作，结束谈话不等于角色已经离开地点。"
+    },
+    "proposal": {
+      "intent": "我已经和陈柏聊完了，跟他道个别就结束这场谈话。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "tell",
+          "actor": "self",
+          "target": "npc_hw_chenbai",
+          "tags": [],
+          "payload": {
+            "kind": "leave",
+            "content": "我先告辞了。",
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_chenbai"
+    },
+    "proposalNotes": [
+      "记录道别但不移动人物；world 动词表无 leave，使用 tell 的道别内容。"
+    ]
+  },
+  {
+    "id": "A3V2-051",
+    "intent": "我到镇巡值房报案，说清刚才亲眼看见谁偷走了我的粮袋，并交出手里的证据。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.report",
+      "signature": [
+        "emit(org:local_authority,claim:theft_with_evidence)",
+        "create(collective:case,if_authority_accepts)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7区分指控与立案，玩家报案不能直接判定对方有罪或强制受理。"
+    },
+    "proposal": {
+      "intent": "我到镇巡值房报案，说清刚才亲眼看见谁偷走了我的粮袋，并交出手里的证据。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "claim",
+          "actor": "self",
+          "target": "bld_bs_watch",
+          "tags": [],
+          "payload": {
+            "kind": "theft",
+            "accused": "missing:witnessed_thief",
+            "stolen": "missing:own_grain_sack",
+            "evidence": [
+              "missing:held_theft_evidence"
+            ],
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bld_bs_watch"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "被告、粮袋与证据需绑定真实场景引用；不以玩家报案直接创建案件或判罪。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:held_theft_evidence、missing:own_grain_sack、missing:witnessed_thief。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-052",
+    "intent": "这案子已经判过了，我带着新找到的收据向有权机关上诉。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.appeal",
+      "signature": [
+        "emit(collective:own_case,request:appeal_with_document)",
+        "fact.set(collective:own_case,stage:appeal_if_accepted)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7将上诉作为案件阶段，新书证进入评分且执行是否暂停须读法典。"
+    },
+    "proposal": {
+      "intent": "这案子已经判过了，我带着新找到的收据向有权机关上诉。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "bld_bs_office",
+          "tags": [],
+          "payload": {
+            "kind": "appeal",
+            "terms": {
+              "case": "missing:own_judged_case",
+              "evidence": [
+                "missing:new_receipt"
+              ]
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bld_bs_office"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:new_receipt、missing:own_judged_case。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-053",
+    "intent": "之前那次偷拿东西确实是我干的，我到顾岑面前把经过讲清楚，主动自首。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.confess",
+      "signature": [
+        "emit(person:npc_hw_gucen,claim:confession)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7把自首与供述写入案件起因和证据，减等由法典派生而非玩家自免刑罚。"
+    },
+    "proposal": {
+      "intent": "之前那次偷拿东西确实是我干的，我到顾岑面前把经过讲清楚，主动自首。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "claim",
+          "actor": "self",
+          "target": "npc_hw_gucen",
+          "tags": [],
+          "payload": {
+            "kind": "confession",
+            "source": "self",
+            "content": "之前那次偷拿东西是我所为",
+            "incident": "missing:past_theft_incident"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_gucen"
+    },
+    "proposalNotes": [
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:past_theft_incident。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-054",
+    "intent": "这笔罚款已经生效，收款差役就在面前，我用自己的现钱缴清。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.pay",
+      "signature": [
+        "transfer(resource:coin,self->authorized_collector)",
+        "obligation.settle(obligation:own_fine,full)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与05 §5.2.7要求罚款经有权代收、真实付款并结算对应义务。"
+    },
+    "proposal": {
+      "intent": "这笔罚款已经生效，收款差役就在面前，我用自己的现钱缴清。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "bld_bs_watch",
+          "qty": 10
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:own_fine",
+          "amount": 10,
+          "partial": false
+        }
+      ],
+      "target": "missing:authorized_collector"
+    },
+    "proposalNotes": [
+      "10铜仅占定额提案位置，不是统一罚金；题面未给裁判金额与收款差役ID，须绑定生效罚款和真实代收账。不能因写了缴清就抹去未付余额。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_collector、missing:own_fine。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-055",
+    "intent": "我想请眼前愿意接案的讼师替我辩护，费用和服务范围谈妥后签下来。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.hire_advocate",
+      "signature": [
+        "obligation.create(person:advocate->self,service:defense)",
+        "transfer(resource:coin,self->advocate)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7把讼师建模为service义务并影响证据评分，聘请不能保证胜诉。"
+    },
+    "proposal": {
+      "intent": "我想请眼前愿意接案的讼师替我辩护，费用和服务范围谈妥后签下来。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_advocate",
+          "tags": [],
+          "payload": {
+            "kind": "defense",
+            "terms": {
+              "case": "missing:own_case",
+              "quoteOnly": true
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_advocate"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_case、missing:present_advocate。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-056",
+    "intent": "货物托运坏了，我拿着交接凭据向受理机关索赔，要求按实际损失处理。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.claim",
+      "signature": [
+        "emit(org:local_authority,claim:cargo_damage)",
+        "create(collective:case,civil_claim_if_accepted)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7规定货损索赔进入民事案件，赔偿须经事实认定或和解而非直接取走承运人的钱。"
+    },
+    "proposal": {
+      "intent": "货物托运坏了，我拿着交接凭据向受理机关索赔，要求按实际损失处理。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "claim",
+          "actor": "self",
+          "target": "bld_bs_office",
+          "tags": [],
+          "payload": {
+            "kind": "cargo_damage",
+            "carrier": "missing:cargo_carrier",
+            "evidence": [
+              "missing:cargo_handover_receipt"
+            ],
+            "remedy": "按认定的实际损失赔偿",
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bld_bs_office"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:cargo_carrier、missing:cargo_handover_receipt。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-057",
+    "intent": "我是当班且有逮捕权的差役，手里有这人的有效拘捕依据，他就在面前，我依法把他押去牢房。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.arrest",
+      "signature": [
+        "move(person:present_suspect,local_cell)",
+        "holding.open(person:present_suspect,guest_of:detained)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "05 §5.2.7与06 §6.3要求实际可及、职位actedAs和案件依据，拘禁仍保留行为能力。"
+    },
+    "proposal": {
+      "intent": "我是当班且有逮捕权的差役，手里有这人的有效拘捕依据，他就在面前，我依法把他押去牢房。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "missing:present_suspect",
+          "to": "missing:local_cell",
+          "mode": "escort"
+        },
+        {
+          "op": "holding.open",
+          "holdingKind": "guest_of",
+          "holder": "missing:present_suspect",
+          "subject": "missing:local_custody_authority",
+          "terms": {
+            "mode": "detained",
+            "host": "missing:local_custody_authority",
+            "basis": "missing:valid_arrest_basis",
+            "regime": "custody.default"
+          },
+          "grantedBy": "missing:acting_arrest_office"
+        }
+      ],
+      "target": "missing:present_suspect",
+      "means": {
+        "manner": "arrest",
+        "actedAs": "missing:acting_arrest_office"
+      }
+    },
+    "proposalNotes": [
+      "题设明确玩家有逮捕权；仍须绑定真实职位、依据、嫌疑人、拘禁机关及牢房。镇巡值房bld_bs_watch只是已知地点，不能拿建筑ID冒充机关法人或职位；拘禁按受限处理。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:acting_arrest_office、missing:local_cell、missing:local_custody_authority、missing:present_suspect、missing:valid_arrest_basis。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-058",
+    "intent": "我想私下给眼前管这案子的差役十铜，求他照顾一下，看看他敢不敢收。",
+    "tricky": false,
+    "category": "法律与官府",
+    "expected": {
+      "route": "core:law.bribe",
+      "signature": [
+        "emit(person:present_officer,request:bribe)",
+        "transfer(resource:coin,self->officer_if_accepted)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7规定违法不自动拦截且贿赂不决定答复，事件和见证交规范栈处理。"
+    },
+    "proposal": {
+      "intent": "我想私下给眼前管这案子的差役十铜，求他照顾一下，看看他敢不敢收。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_case_officer",
+          "tags": [],
+          "payload": {
+            "kind": "bribe",
+            "terms": {
+              "amount": 10,
+              "resource": "coin",
+              "purpose": "照顾我的案子"
+            }
+          },
+          "visibility": "private"
+        }
+      ],
+      "target": "missing:present_case_officer"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_case_officer。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-059",
+    "intent": "拿我手里的旧木杖，朝贴在面前、正攻击我的那个成年人打过去。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:combat",
+      "signature": [
+        "vital(person:present_enemy,harm:staff)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的vital核验可及性与防护，§6.9.3把攻击交交锋动作和成败档位。"
+    },
+    "proposal": {
+      "intent": "拿我手里的旧木杖，朝贴在面前、正攻击我的那个成年人打过去。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "missing:present_attacking_adult",
+          "type": "blunt",
+          "delta": -4
+        }
+      ],
+      "target": "missing:present_attacking_adult",
+      "means": {
+        "tools": [
+          "item_staff"
+        ],
+        "manner": "attack"
+      }
+    },
+    "proposalNotes": [
+      "4 是请求伤害；武器、技能、防护与交锋结果决定实际幅度。敌人不能从无辜 NPC 中擅自挑选。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_attacking_adult。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-060",
+    "intent": "眼前的对手举刀了，我这一轮用木杖防守，先护住自己。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:combat",
+      "signature": [
+        "status(person:self,combat_defense)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.3提供防守战术，最终防护效果由交锋规则派生而不保证挡住所有攻击。"
+    },
+    "proposal": {
+      "intent": "眼前的对手举刀了，我这一轮用木杖防守，先护住自己。",
+      "effects": [
+        {
+          "op": "status",
+          "target": "self",
+          "status": "combat_defense",
+          "duration": 1,
+          "magnitude": 1
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_staff"
+        ],
+        "manner": "guard"
+      }
+    },
+    "proposalNotes": [
+      "请求本轮防守；combat_defense 为题意状态名，静态 world 未确认同名状态定义。应由交锋动作转成实际防守状态，不能保证格挡。"
+    ]
+  },
+  {
+    "id": "A3V2-061",
+    "intent": "我不想跟面前的敌人继续打了，沿身后那条通着的小路脱离战斗。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:combat",
+      "signature": [
+        "move(person:self,reachable_escape_route)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.3规定脱离为交锋意图，移动须读邻接且可被打断。"
+    },
+    "proposal": {
+      "intent": "我不想跟面前的敌人继续打了，沿身后那条通着的小路脱离战斗。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "身后可通行的小路",
+          "mode": "disengage"
+        }
+      ],
+      "means": {
+        "manner": "retreat"
+      }
+    },
+    "proposalNotes": [
+      "to 使用06 §6.3允许的相对方位；必须解析邻接和脱离检定，不能当作瞬移。"
+    ]
+  },
+  {
+    "id": "A3V2-062",
+    "intent": "这个持刀的人已经贴过来了，我试着把他推离门口，给自己腾出位置。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:combat",
+      "signature": [
+        "move(person:adjacent_enemy,adjacent_clear_zone)",
+        "status(person:adjacent_enemy,shove_outcome)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.3的推搡进入战术裁决，位移幅度和是否失衡取决于对抗结果。"
+    },
+    "proposal": {
+      "intent": "这个持刀的人已经贴过来了，我试着把他推离门口，给自己腾出位置。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "missing:adjacent_armed_enemy",
+          "to": "门口旁相邻空位",
+          "mode": "shove"
+        }
+      ],
+      "target": "missing:adjacent_armed_enemy",
+      "means": {
+        "manner": "shove"
+      }
+    },
+    "proposalNotes": [
+      "只请求推离；是否附带失衡由交锋结果派生，不预先附加必中的失能状态。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:adjacent_armed_enemy。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-063",
+    "intent": "敌人就在看得见的近处，我用自己会的焰矢术打他，避开挡路的石墙。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "vital(person:visible_enemy,harm:fire)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3将damage映射为vital，spell_fire_08和物理校验要求视野、射程与遮挡成立。"
+    },
+    "proposal": {
+      "intent": "敌人就在看得见的近处，我用自己会的焰矢术打他，避开挡路的石墙。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "missing:visible_enemy",
+          "type": "fire",
+          "delta": -16
+        }
+      ],
+      "target": "missing:visible_enemy",
+      "means": {
+        "skill": "skill_fire_08",
+        "spell": "spell_fire_08"
+      }
+    },
+    "proposalNotes": [
+      "沿可见射线施术；不能以“避开石墙”删除遮挡或赋予法术绕墙能力。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:visible_enemy。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-064",
+    "intent": "脚边自己的木箱刚冒小火，我把手里这桶现成的水泼上去灭火。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:water,self->sink:consume)",
+        "fact.set(thing:own_burning_box,fire_intensity)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的transfer与fact.set按真实水量和材质交互裁决，不能把少量泼水等同任意规模灭火。"
+    },
+    "proposal": {
+      "intent": "脚边自己的木箱刚冒小火，我把手里这桶现成的水泼上去灭火。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_water",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "fact.set",
+          "entity": "missing:own_burning_box",
+          "field": "fire_intensity",
+          "value": 0
+        }
+      ],
+      "means": {
+        "tools": [
+          "missing:held_water_bucket"
+        ],
+        "manner": "douse"
+      }
+    },
+    "proposalNotes": [
+      "item_water 为真实物品资源；题设桶内实际水量与箱体须绑定，申请灭掉小火，实际降幅受水量和材质限制。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:held_water_bucket、missing:own_burning_box。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-065",
+    "intent": "我会石肤术，先给自己加一层再穿过眼前落石不断的窄路。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "status(person:self,stone_skin)",
+        "move(person:self,adjacent_rockfall_route)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.9.3允许防护与移动组合，spell_earth_11减撞击但降低灵活性且不消除落石风险。"
+    },
+    "proposal": {
+      "intent": "我会石肤术，先给自己加一层再穿过眼前落石不断的窄路。",
+      "effects": [
+        {
+          "op": "status",
+          "target": "self",
+          "status": "stone_skin",
+          "duration": 90,
+          "magnitude": 4
+        },
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "眼前相邻落石窄路",
+          "mode": "walk"
+        }
+      ],
+      "means": {
+        "skill": "skill_earth_11",
+        "spell": "spell_earth_11"
+      }
+    },
+    "proposalNotes": [
+      "持续90分钟与强度4来自法术；施法先结算，旅行另耗时，仍承受落石与灵活性代价。"
+    ]
+  },
+  {
+    "id": "A3V2-066",
+    "intent": "这片遗址里我已获准处理机关，陷阱就在手边，我用带来的工具小心拆掉它。",
+    "tricky": false,
+    "category": "战斗与危险",
+    "expected": {
+      "route": "core:site.disarm",
+      "signature": [
+        "fact.set(thing:reachable_trap,armed:false)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与§6.9.1要求目标可及、工具和能力匹配，拆除结果仍由注册动作检定。"
+    },
+    "proposal": {
+      "intent": "这片遗址里我已获准处理机关，陷阱就在手边，我用带来的工具小心拆掉它。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "missing:reachable_trap",
+          "field": "armed",
+          "value": false
+        }
+      ],
+      "means": {
+        "tools": [
+          "missing:carried_disarm_tools"
+        ],
+        "manner": "careful"
+      }
+    },
+    "proposalNotes": [
+      "未给遗址机关与工具实例；不拿普通刀具冒充已经匹配的拆陷阱工具。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:carried_disarm_tools、missing:reachable_trap。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-067",
+    "intent": "天黑了，我会照明术，就让手里这根旧木杖发点柔光照路。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "status(thing:own_item_staff,light)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3把light映射到状态，spell_light只令近处物体发光且不造成伤害。"
+    },
+    "proposal": {
+      "intent": "天黑了，我会照明术，就让手里这根旧木杖发点柔光照路。",
+      "effects": [
+        {
+          "op": "status",
+          "target": "item_staff",
+          "status": "light",
+          "duration": 60,
+          "magnitude": 2
+        }
+      ],
+      "means": {
+        "skill": "skill_light",
+        "spell": "spell_light"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。"
+    ]
+  },
+  {
+    "id": "A3V2-068",
+    "intent": "这桶浑水就在我脚边，我用会的净水术去掉悬浮脏东西。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "fact.set(thing:present_water_bucket,turbidity)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3将环境改物映射到fact.set，spell_water_02仅降低浑浊度而非清除所有毒素。"
+    },
+    "proposal": {
+      "intent": "这桶浑水就在我脚边，我用会的净水术去掉悬浮脏东西。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "missing:present_water_bucket",
+          "field": "turbidity",
+          "delta": -40
+        }
+      ],
+      "means": {
+        "skill": "skill_water_02",
+        "spell": "spell_water_02"
+      }
+    },
+    "proposalNotes": [
+      "题中的水桶没有实例ID，不能替换成属于林穗的后厨水桶；净水术幅度40只作用于浑浊度。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_water_bucket。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-069",
+    "intent": "田边现有水沟是通的，我获准用水，施展引水术把沟里的水引进旁边干田。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "transfer(resource:water,existing_channel->adjacent_field)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3要求transfer真实来源和可达，spell_water_04只能沿现有沟渠移水。"
+    },
+    "proposal": {
+      "intent": "田边现有水沟是通的，我获准用水，施展引水术把沟里的水引进旁边干田。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "water",
+          "from": "feature_hw_pool",
+          "to": "feature_hw_plot",
+          "qty": 20
+        }
+      ],
+      "means": {
+        "skill": "skill_water_04",
+        "spell": "spell_water_04"
+      }
+    },
+    "proposalNotes": [
+      "取真实水源feature_hw_pool，经真实feature_hw_channel到feature_hw_plot；20的单位为法术数据的升。沟是通路而非虚构水源账户，须核验当前水量、通行与许可。"
+    ]
+  },
+  {
+    "id": "A3V2-070",
+    "intent": "我自己中了轻度恐惧，想用已经学会的定息术缓一缓。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "status(person:self,fear:reduce)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的status受来源阶限幅，spell_mind_01减轻已有恐惧但不改变现实危险。"
+    },
+    "proposal": {
+      "intent": "我自己中了轻度恐惧，想用已经学会的定息术缓一缓。",
+      "effects": [
+        {
+          "op": "status",
+          "target": "self",
+          "status": "fear",
+          "duration": 0,
+          "magnitude": -1
+        }
+      ],
+      "means": {
+        "skill": "skill_mind_01",
+        "spell": "spell_mind_01"
+      }
+    },
+    "proposalNotes": [
+      "负幅度表达减轻已有fear，不新增恐惧；定息术power=1，具体解除程度交来源阶与状态叠加规则。"
+    ]
+  },
+  {
+    "id": "A3V2-071",
+    "intent": "陶芷就在旁边，已经当面对这次护身施法说了同意，我给她施展自己会的隔焰罩。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "status(person:npc_hw_taozhi,fire_shield)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.5与附录A §A.15.20读取被作用者本人的有效同意，spell_fire_11只防火焰而不防刀剑。"
+    },
+    "proposal": {
+      "intent": "陶芷就在旁边，已经当面对这次护身施法说了同意，我给她施展自己会的隔焰罩。",
+      "effects": [
+        {
+          "op": "status",
+          "target": "npc_hw_taozhi",
+          "status": "fire_shield",
+          "duration": 90,
+          "magnitude": 40
+        }
+      ],
+      "target": "npc_hw_taozhi",
+      "consent": {
+        "from": "npc_hw_taozhi",
+        "scope": "cast",
+        "onRefusal": "contest"
+      },
+      "means": {
+        "skill": "skill_fire_11",
+        "spell": "spell_fire_11"
+      }
+    },
+    "proposalNotes": [
+      "这里仅声明读取陶芷同意；题设当面同意须来自本人事件，提案未写granted:true。"
+    ]
+  },
+  {
+    "id": "A3V2-072",
+    "intent": "我会火蜥投影，想在这里召一只照明，并按约定继续付维持它的魔力。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "create(creature:fire_projection,illusionary)",
+        "obligation.create(person:self->summon,upkeep)",
+        "vital(person:self,magic_cost)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3把summon映射为实体和维持义务，spell_summon_05的光投影不是燃料且不能点火。"
+    },
+    "proposal": {
+      "intent": "我会火蜥投影，想在这里召一只照明，并按约定继续付维持它的魔力。",
+      "effects": [
+        {
+          "op": "create",
+          "kind": "creature",
+          "template": "fire_projection",
+          "facts": {
+            "name": "火蜥投影",
+            "location": "self",
+            "illusion": true
+          },
+          "materials": []
+        }
+      ],
+      "expect": "召出照明投影，并由注册召唤动作绑定新实体与每5分钟1魔力的upkeep义务",
+      "means": {
+        "skill": "skill_summon_05",
+        "spell": "spell_summon_05"
+      }
+    },
+    "proposalNotes": [
+      "fire_projection 是该法术effectSpec.summonType；没有静态实例ID。新实体ID尚未生成，提案不捏造债权人，upkeep及6魔力施法成本由同一注册动作创建，投影不能充燃料。"
+    ]
+  },
+  {
+    "id": "A3V2-073",
+    "intent": "这只是我自己的在场役灵，契约允许和平解离，我现在解除契约让它离开。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:summon.dismiss",
+      "signature": [
+        "obligation.cancel(obligation:own_summon_upkeep,peaceful_dismissal)",
+        "transition(creature:own_present_summon,gone:contract_ended)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与§6.9.3要求解除真实召唤关系，结束后不能继续保有未消耗的投影防护。"
+    },
+    "proposal": {
+      "intent": "这只是我自己的在场役灵，契约允许和平解离，我现在解除契约让它离开。",
+      "effects": [
+        {
+          "op": "obligation.cancel",
+          "id": "missing:own_summon_upkeep",
+          "reason": "peaceful_dismissal"
+        },
+        {
+          "op": "transition",
+          "entity": "missing:own_present_summon",
+          "kind": "gone",
+          "cause": "contract_ended"
+        }
+      ],
+      "target": "missing:own_present_summon"
+    },
+    "proposalNotes": [
+      "契约允许解离须有真实依据；役灵和upkeep皆为运行时引用，不能把法术或物种定义当成已召出的实体。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_present_summon、missing:own_summon_upkeep。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-074",
+    "intent": "主持人已经准许我参加河湾石坛今天的仪式，我带自己的供品过去照要求参与。",
+    "tricky": false,
+    "category": "超自然与仪式",
+    "expected": {
+      "route": "core:settlement.faith_rite",
+      "signature": [
+        "transfer(resource:own_offering,self->sink:consume)",
+        "emit(person:self,ritual_participation)",
+        "time(world,rite_stage)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "13 §13.5与06 §6.6要求仪式按角色、材料、时窗及档位裁决，参与不等于获得神赐。"
+    },
+    "proposal": {
+      "intent": "主持人已经准许我参加河湾石坛今天的仪式，我带自己的供品过去照要求参与。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_ration",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "emit",
+          "verb": "settlement",
+          "actor": "self",
+          "target": "bld_hw_altar",
+          "tags": [],
+          "payload": {
+            "kind": "ritual_participation",
+            "role": "participant",
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "bld_hw_altar",
+      "means": {
+        "manner": "participate"
+      }
+    },
+    "proposalNotes": [
+      "干粮作为真实供品候选；是否合该仪式要求须由主持者与仪式条款校验，不保证获赐。仪式阶段time由注册动作生成。"
+    ]
+  },
+  {
+    "id": "A3V2-075",
+    "intent": "我在青灯酒馆，先找林穗买两块面包，再吃一块，另一块留着明早赶路。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:coin,self->npc_hw_linsui)",
+        "transfer(resource:item_bread,npc_hw_linsui->self:2)",
+        "transfer(resource:item_bread,self->sink:consume:1)",
+        "vital(person:self,body:satiety)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.8要求分步买入再消费并各自匹配买卖和进食，购买失败不能继续吃未取得的面包。"
+    },
+    "proposal": {
+      "intent": "我在青灯酒馆，先找林穗买两块面包，再吃一块，另一块留着明早赶路。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_linsui",
+          "qty": 4
+        },
+        {
+          "op": "transfer",
+          "resource": "item_bread",
+          "from": "npc_hw_linsui",
+          "to": "self",
+          "qty": 2
+        },
+        {
+          "op": "transfer",
+          "resource": "item_bread",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:satiety",
+          "delta": 30
+        }
+      ],
+      "target": "npc_hw_linsui",
+      "consent": {
+        "from": "npc_hw_linsui",
+        "scope": "trade",
+        "onRefusal": "abort"
+      }
+    },
+    "proposalNotes": [
+      "金额为按 world 静态价格形成的提议价，不是伪造已成交报价；引擎须核验当前报价和双方真实同意，不符则返回条件。",
+      "必须按买入再进食的顺序结算；前笔未成交，不能食用尚未取得的面包。"
+    ]
+  },
+  {
+    "id": "A3V2-076",
+    "intent": "阿砚就在跟前，我先问能不能借他的削木小刀，答应了再用自己的木料按已学配方做木楔，做完还刀。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "emit(person:npc_hw_ayan,request:borrow_tool)",
+        "holding.open(person:npc_hw_ayan,permit:self_use_knife_if_accepted)",
+        "move(thing:ayan_knife,to:self_if_accepted)",
+        "transfer(resource:item_wood,self->sink:craft)",
+        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self)",
+        "move(thing:ayan_knife,return_to:npc_hw_ayan)",
+        "holding.close(holding:knife_use_permit,returned)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.7要求借工具先获许可且配方投入真实，拒借时后续制造不应偷用工具。"
+    },
+    "proposal": {
+      "intent": "阿砚就在跟前，我先问能不能借他的削木小刀，答应了再用自己的木料按已学配方做木楔，做完还刀。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "npc_hw_ayan",
+          "tags": [],
+          "payload": {
+            "kind": "borrow_tool",
+            "terms": {
+              "tool": "item_whittling_knife",
+              "purpose": "按recipe_wooden_pegs削木楔",
+              "returnAfter": "本次制作完成"
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "npc_hw_ayan"
+    },
+    "proposalNotes": [
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。"
+    ]
+  },
+  {
+    "id": "A3V2-077",
+    "intent": "先把我这件湿衣服用烘衣术弄干，再到已经租好的床位睡到天亮。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "fact.set(thing:own_item_clothes,moisture)",
+        "move(person:self,rented_bed_zone)",
+        "time(world,until:dawn)",
+        "vital(person:self,body:fatigue)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.8规定施法、移动、睡眠分别受各自前置与耗时约束，组合不能免除代价。"
+    },
+    "proposal": {
+      "intent": "先把我这件湿衣服用烘衣术弄干，再到已经租好的床位睡到天亮。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "item_clothes",
+          "field": "moisture",
+          "value": 0
+        },
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "已租床位",
+          "mode": "walk"
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:stamina",
+          "delta": 100
+        },
+        {
+          "op": "vital",
+          "target": "self",
+          "type": "body:fatigue",
+          "delta": -100
+        }
+      ],
+      "means": {
+        "skill": "skill_fire_03",
+        "spell": "spell_fire_03",
+        "until": "dawn"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
+      "床位须沿真实lodges持有解析；先施法再移动再睡眠，各自成本照收。time与恢复幅度由睡眠动作派生，100只是请求恢复上限。"
+    ]
+  },
+  {
+    "id": "A3V2-078",
+    "intent": "先向当面欠我钱的吴朔收回已到期的五十铜，收到后再用其中三十铜还给旁边的林穗。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:coin,npc_hw_wushuo->self:50)",
+        "obligation.settle(obligation:wushuo_debt,amount:50)",
+        "transfer(resource:coin,self->npc_hw_linsui:30)",
+        "obligation.settle(obligation:self_debt,amount:30)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3要求两笔债务分别有真实结算依据，前笔未到账不能预支其余额执行后笔。"
+    },
+    "proposal": {
+      "intent": "先向当面欠我钱的吴朔收回已到期的五十铜，收到后再用其中三十铜还给旁边的林穗。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "npc_hw_wushuo",
+          "to": "self",
+          "qty": 50
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:wushuo_due_debt_to_self",
+          "amount": 50,
+          "partial": false
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_linsui",
+          "qty": 30
+        },
+        {
+          "op": "obligation.settle",
+          "id": "missing:self_debt_to_linsui",
+          "amount": 30,
+          "partial": false
+        }
+      ],
+      "target": "npc_hw_wushuo"
+    },
+    "proposalNotes": [
+      "两笔真实债务须分别绑定并核验付款授权；吴朔欠钱不自动允许玩家动用他的钱袋。首笔未收到不得预支执行后笔，不能抹去第一笔失败。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:self_debt_to_linsui、missing:wushuo_due_debt_to_self。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-079",
+    "intent": "我已经会引水术和净水术，先从获准取水的现有沟渠引一桶水到自己的桶里，再净掉悬浮泥沙。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:water,authorized_channel->own_bucket)",
+        "fact.set(thing:own_water_bucket,turbidity)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的守恒与物理校验逐步成立，两个已知法术组合仍不能造水或获得除毒保证。"
+    },
+    "proposal": {
+      "intent": "我已经会引水术和净水术，先从获准取水的现有沟渠引一桶水到自己的桶里，再净掉悬浮泥沙。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "water",
+          "from": "feature_hw_pool",
+          "to": "missing:own_water_bucket",
+          "qty": 10
+        },
+        {
+          "op": "fact.set",
+          "entity": "missing:own_water_bucket",
+          "field": "turbidity",
+          "delta": -40
+        }
+      ],
+      "means": {
+        "spells": [
+          "spell_water_04",
+          "spell_water_02"
+        ],
+        "tools": [
+          "missing:own_water_bucket"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "沿feature_hw_channel引取真实源水；桶实例与接沟条件待绑定，10升为桶量提议，受容量和源水上限限制。两个法术各收成本且不除毒。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_water_bucket。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-080",
+    "intent": "先请现场的通译把买家提出的条款译给我听，等我确认接受，再把自己的两只陶杯交给买家收钱。",
+    "tricky": false,
+    "category": "组合/多步",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "emit(person:present_interpreter,request:translate_terms)",
+        "emit(person:self,tell:translated_terms)",
+        "transfer(resource:item_clay_cup,self->buyer:2)",
+        "transfer(resource:coin,buyer->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.2与附录A §A.15.21要求通译来源和双方同意，翻译完成前不能替玩家接受交易。"
+    },
+    "proposal": {
+      "intent": "先请现场的通译把买家提出的条款译给我听，等我确认接受，再把自己的两只陶杯交给买家收钱。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "request",
+          "actor": "self",
+          "target": "missing:present_interpreter",
+          "tags": [],
+          "payload": {
+            "kind": "translate_terms",
+            "terms": {
+              "speaker": "missing:present_buyer",
+              "listener": "self",
+              "goods": "item_clay_cup",
+              "quantity": 2
+            }
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_interpreter"
+    },
+    "proposalNotes": [
+      "玩家明确保留确认权。本轮只有翻译请求，不伪造通译发言、玩家接受或交易转移；译完仍须等待玩家确认。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_buyer、missing:present_interpreter。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-081",
+    "intent": "我只是路过，青灯酒馆也不在我手里，但我想直接把它卖给眼前这个买家，钱归我。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "holding.transfer(holding:other_owner_inn,new_holder:buyer)",
+        "transfer(resource:coin,buyer->self)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与附录A §A.15.12要求处分权或实际占有，两者皆无须拒绝，可先向店主提出收购请求。"
+    },
+    "proposal": {
+      "intent": "我只是路过，青灯酒馆也不在我手里，但我想直接把它卖给眼前这个买家，钱归我。",
+      "effects": [
+        {
+          "op": "holding.transfer",
+          "holding": "missing:other_owner_qingdeng_owns",
+          "newHolder": "missing:present_buyer"
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:present_buyer",
+          "to": "self",
+          "qty": 100
+        }
+      ],
+      "target": "bld_hw_qingdeng"
+    },
+    "proposalNotes": [
+      "100铜为非法售房的提议价；玩家既无权也不占有，不应因买家有钱或出价而放行。真实owns与买家引用未给。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:other_owner_qingdeng_owns、missing:present_buyer。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-082",
+    "intent": "林穗还没答应借钱，我替她说一声同意，把她柜台里的一百铜借给我并写好借据。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "transfer(resource:coin,npc_hw_linsui->self)",
+        "obligation.create(person:self->npc_hw_linsui,loan)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.4与附录A §A.15.20不接受发起者伪造NPC同意，可先询问林穗是否愿意出借。"
+    },
+    "proposal": {
+      "intent": "林穗还没答应借钱，我替她说一声同意，把她柜台里的一百铜借给我并写好借据。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "npc_hw_linsui",
+          "to": "self",
+          "qty": 100
+        },
+        {
+          "op": "obligation.create",
+          "obligationKind": "loan",
+          "debtor": "self",
+          "creditor": "npc_hw_linsui",
+          "terms": {
+            "resource": "coin",
+            "principal": 100,
+            "days": 10,
+            "interest": 0
+          }
+        }
+      ],
+      "target": "npc_hw_linsui",
+      "consent": {
+        "from": "npc_hw_linsui",
+        "scope": "loan",
+        "granted": true
+      }
+    },
+    "proposalNotes": [
+      "granted:true 故意表达玩家冒填的NPC同意，应由引擎忽略或拒绝；十日无息是越权借据中的提议条款，不是林穗真实答复。"
+    ]
+  },
+  {
+    "id": "A3V2-083",
+    "intent": "我人在河湾村，把我留在白石镇客舍里的那根木杖直接塞进现在的行囊，不找人送。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "move(thing:remote_own_staff,loc_bs->self_at_loc_hw)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3的物理可达校验禁止自有物品隔空移动，可亲自取回或委托托运。"
+    },
+    "proposal": {
+      "intent": "我人在河湾村，把我留在白石镇客舍里的那根木杖直接塞进现在的行囊，不找人送。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "item_staff",
+          "to": "self",
+          "mode": "teleport"
+        }
+      ],
+      "context": {
+        "modifier": 0,
+        "reason": "玩家在loc_hw，所指自有木杖实际在bld_bs_inn，无托运或传送来源"
+      }
+    },
+    "proposalNotes": [
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。"
+    ]
+  },
+  {
+    "id": "A3V2-084",
+    "intent": "我一文钱都没有，也没有收入来源，就在钱袋里变出一百铜真钱给我花。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "transfer(resource:coin,nonexistent_source->self:100)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与§6.10.5要求资金来源真实且提案不得引用src账户，可通过做工或经同意借款取得钱。"
+    },
+    "proposal": {
+      "intent": "我一文钱都没有，也没有收入来源，就在钱袋里变出一百铜真钱给我花。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:money_source",
+          "to": "self",
+          "qty": 100
+        }
+      ]
+    },
+    "proposalNotes": [
+      "明确不存在的真钱来源；不改写为画币、赠款或收入。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:money_source。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-085",
+    "intent": "桌上这两瓶长得一样，你替我选一瓶，把那个喝了。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "clarify",
+      "signature": [
+        "transfer(resource:unresolved_bottle,self->sink:consume)",
+        "vital(person:self,unresolved_contents)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.5第1步与§6.10.4要求歧义返回候选，须先明确是哪瓶及可识别内容而不能随机代选。"
+    },
+    "proposal": null,
+    "clarifyNeed": "请明确选择左边还是右边那一瓶，并先确认可识别的内容物；未选定前不取用、不饮用。"
+  },
+  {
+    "id": "A3V2-086",
+    "intent": "吴朔就在面前，帮我把他处理一下，意思你自己看着办。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "clarify",
+      "signature": [
+        "emit(person:npc_hw_wushuo,request:unresolved_goal)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.5的意图解析不得猜测玩家要谈话、治疗还是攻击，须先问清处理的具体目标。"
+    },
+    "proposal": null,
+    "clarifyNeed": "你想对吴朔具体做什么：交谈、治疗、攻击，还是别的事？“处理一下”不足以决定动作与效果。"
+  },
+  {
+    "id": "A3V2-087",
+    "intent": "把我这张纸彻底烧成灰，不过同时要让它原封不动，一点也别损坏。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "clarify",
+      "signature": [
+        "fact.set(thing:own_paper,condition:contradictory)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.5与§6.10.4要求先澄清相互冲突的目标，不能擅自选择毁纸或保纸并声称两者都完成。"
+    },
+    "proposal": null,
+    "clarifyNeed": "你要把纸烧成灰，还是保持纸张完整？两项要求冲突；若只是想看火焰幻象，请明确改为幻象。"
+  },
+  {
+    "id": "A3V2-088",
+    "intent": "我只有初学木工的本事和一把小刀，想把眼前裂开的整座石城门一口气修到全新。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "fact.set(thing:present_stone_gate,condition:requested_full)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3、§6.7要求改物有匹配工具、技能与工时，初学木工的小刀无法修复整座石门，可先找石工工具并拆成工程。"
+    },
+    "proposal": {
+      "intent": "我只有初学木工的本事和一把小刀，想把眼前裂开的整座石城门一口气修到全新。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "missing:present_stone_city_gate",
+          "field": "condition",
+          "value": 100
+        }
+      ],
+      "means": {
+        "skill": "skill_life_6_core",
+        "tools": [
+          "item_whittling_knife"
+        ],
+        "manner": "instant_repair"
+      }
+    },
+    "proposalNotes": [
+      "未找到可唯一对应眼前整座石城门的world实体；不得换成木门。即使目标绑定，木工小刀也不支持请求的整门修复。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_stone_city_gate。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-089",
+    "intent": "我被关在牢里，但人清醒，制度准许聊天；想跟同牢的成年人说说外头的天气。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:dialogue.tell",
+      "signature": [
+        "emit(person:present_cellmate,tell:known_weather)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.9.1与附录A §A.3区分受限和失能，制度允许的在场交谈不能因为在押而整体拒绝。"
+    },
+    "proposal": {
+      "intent": "我被关在牢里，但人清醒，制度准许聊天；想跟同牢的成年人说说外头的天气。",
+      "effects": [
+        {
+          "op": "emit",
+          "verb": "tell",
+          "actor": "self",
+          "target": "missing:present_adult_cellmate",
+          "tags": [],
+          "payload": {
+            "version": "我入牢前看到的外头天气",
+            "source": "self"
+          },
+          "visibility": "present"
+        }
+      ],
+      "target": "missing:present_adult_cellmate"
+    },
+    "proposalNotes": [
+      "没有新的天气消息时只谈自己已知的天气，不读取全局天气真相；同牢成年人由场景绑定。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_adult_cellmate。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-090",
+    "intent": "我还在押，想趁看守转身用随身细铁丝试开门锁，再溜出去，成不成照检定算。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "fact.set(thing:cell_lock,locked:false_if_success)",
+        "holding.close(holding:self_detained,reason:escaped_if_success)",
+        "move(person:self,outside_cell_if_success)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与附录A §A.15.24允许脱逃对抗但不得直接自解拘禁，成功才关闭持有并产生escaped连锁。"
+    },
+    "proposal": {
+      "intent": "我还在押，想趁看守转身用随身细铁丝试开门锁，再溜出去，成不成照检定算。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "missing:cell_lock",
+          "field": "locked",
+          "value": false
+        },
+        {
+          "op": "holding.close",
+          "holding": "missing:self_detained",
+          "reason": "escaped"
+        },
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "牢门外相邻通道",
+          "mode": "escape"
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_iron_wire"
+        ],
+        "manner": "stealthy_escape"
+      }
+    },
+    "proposalNotes": [
+      "这些是申请成功档效果，非保证执行。必须按脱逃动作对看守与设施作对抗，失败不得关掉拘禁持有；不借普通holding.close绕过检定。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:cell_lock、missing:self_detained。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-091",
+    "intent": "我在上锁的牢房里，没有获释也不打算逃狱，就按普通走路直接去南市街。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "move(person:self,cell->loc_bs_nanshi)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.9.1与附录A §A.15.24禁止受限者普通移动离开东道分区，可申请释放或尝试脱逃。"
+    },
+    "proposal": {
+      "intent": "我在上锁的牢房里，没有获释也不打算逃狱，就按普通走路直接去南市街。",
+      "effects": [
+        {
+          "op": "move",
+          "entity": "self",
+          "to": "loc_bs_nanshi",
+          "mode": "walk"
+        }
+      ],
+      "context": {
+        "modifier": 0,
+        "reason": "当前仍受有效拘禁且牢门上锁，没有释放或脱逃动作"
+      }
+    }
+  },
+  {
+    "id": "A3V2-092",
+    "intent": "已经查清这世界根本没有我说的紫晶龙王，我还是要隔空杀掉它，按杀龙给我结奖励。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "vital(creature:nonexistent_purple_dragon,harm)",
+        "transfer(resource:coin,unfunded_reward->self)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.5第1步与§6.10.5要求目标和奖励来源存在，可先寻找真实可及的危险或有出资人的委托。"
+    },
+    "proposal": {
+      "intent": "已经查清这世界根本没有我说的紫晶龙王，我还是要隔空杀掉它，按杀龙给我结奖励。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "missing:purple_crystal_dragon_king",
+          "type": "harm",
+          "delta": -99999
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:dragon_reward_funder",
+          "to": "self",
+          "qty": 1000
+        }
+      ],
+      "target": "missing:purple_crystal_dragon_king"
+    },
+    "proposalNotes": [
+      "目标明确不存在，奖励也无真实出资者；1000铜仅表达非法索奖，不能创建龙或资金以满足提案。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:dragon_reward_funder、missing:purple_crystal_dragon_king。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-093",
+    "intent": "这回别走游戏规则了，直接按管理员命令把我升到最高境界，骰子也固定成二十。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "fact.set(person:self,derived_progression:forbidden_override)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.2第5条与§6.7规定裁决和幅度来自引擎，元游戏指令不能改派生境界或骰值，可正常练习。"
+    },
+    "proposal": {
+      "intent": "这回别走游戏规则了，直接按管理员命令把我升到最高境界，骰子也固定成二十。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "self",
+          "field": "derived_progression",
+          "value": "maximum"
+        },
+        {
+          "op": "fact.set",
+          "entity": "world",
+          "field": "dice.next",
+          "value": 20
+        }
+      ]
+    },
+    "proposalNotes": [
+      "故意提交派生境界与引擎骰值的白名单外写入；world为全局状态指称，不是可供玩家改写的普通实体。"
+    ]
+  },
+  {
+    "id": "A3V2-094",
+    "intent": "不要删消息也不要回档，让世界时间倒退一天，但我今天赚的钱和拿到的东西全留着。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "time(world,minutes:negative)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3要求时间单调且§6.7不接受提案自报时序，可正常等待而不能保留收益倒流世界时间。"
+    },
+    "proposal": {
+      "intent": "不要删消息也不要回档，让世界时间倒退一天，但我今天赚的钱和拿到的东西全留着。",
+      "effects": [
+        {
+          "op": "time",
+          "minutes": -1440
+        }
+      ]
+    },
+    "proposalNotes": [
+      "故意请求时间倒退一天且不回滚资产，用来检验时间单调与不接受调用方篡改时序。"
+    ]
+  },
+  {
+    "id": "A3V2-095",
+    "intent": "这把借来的刀归别人，但现在确实在我身上；眼前买家愿意出钱，我偷偷把它卖了。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:trade.sell_to",
+      "signature": [
+        "holding.transfer(holding:borrowed_knife_owns,new_holder:buyer)",
+        "transfer(resource:coin,buyer->self)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3与附录A §A.15.12允许无权但实际占有者处分并标unauthorized_disposition，效力和追偿交法典判断。"
+    },
+    "proposal": {
+      "intent": "这把借来的刀归别人，但现在确实在我身上；眼前买家愿意出钱，我偷偷把它卖了。",
+      "effects": [
+        {
+          "op": "holding.transfer",
+          "holding": "missing:borrowed_knife_owns",
+          "newHolder": "missing:present_buyer"
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:present_buyer",
+          "to": "self",
+          "qty": 3
+        }
+      ],
+      "target": "missing:present_buyer",
+      "consent": {
+        "from": "missing:present_buyer",
+        "scope": "trade",
+        "onRefusal": "abort"
+      },
+      "means": {
+        "tools": [
+          "item_whittling_knife"
+        ],
+        "manner": "secret_sale"
+      }
+    },
+    "proposalNotes": [
+      "3铜是待绑定的买家出价示例。题设实际占有必须保留；禁止仅因非所有者就一概拒绝，效力与追偿交无权处分规则。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:borrowed_knife_owns、missing:present_buyer。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-096",
+    "intent": "旁边那人钱袋没收好，我想趁他不注意偷十铜，失败就认栽。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:crime.steal",
+      "signature": [
+        "transfer(resource:coin,present_victim->self:10_if_theft_success)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.7允许有检定与价值上限的盗窃，违法只生成描述和规范后果而不预先封禁。"
+    },
+    "proposal": {
+      "intent": "旁边那人钱袋没收好，我想趁他不注意偷十铜，失败就认栽。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "missing:present_victim",
+          "to": "self",
+          "qty": 10
+        }
+      ],
+      "target": "missing:present_victim",
+      "means": {
+        "manner": "steal",
+        "theft": true
+      }
+    },
+    "proposalNotes": [
+      "theft 表明偷窃意图，不是取款授权；必须路由盗窃动作，并由检定成功和价值上限授予此次转移依据。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_victim。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-097",
+    "intent": "眼前这个清醒的成年人拒绝治疗，我仍想用已经会的治疗法术试着给他治伤，按他的抵抗来。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:cast",
+      "signature": [
+        "vital(person:present_unconsenting_adult,heal)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3、§6.5与附录A §A.15.20要求无同意治疗转对抗并记unconsented，不能伪造同意也不能一概拒绝。"
+    },
+    "proposal": {
+      "intent": "眼前这个清醒的成年人拒绝治疗，我仍想用已经会的治疗法术试着给他治伤，按他的抵抗来。",
+      "effects": [
+        {
+          "op": "vital",
+          "target": "missing:present_unconsenting_adult",
+          "type": "heal",
+          "delta": 4
+        }
+      ],
+      "target": "missing:present_unconsenting_adult",
+      "consent": {
+        "from": "missing:present_unconsenting_adult",
+        "scope": "heal",
+        "onRefusal": "contest"
+      },
+      "means": {
+        "skill": "skill_s3_mend_palm",
+        "spell": "spell_s3_mend_palm"
+      }
+    },
+    "proposalNotes": [
+      "用world现有抚伤掌作为题中已知治疗法术的具体候选，场景须确有该技能；目标明确拒绝，不能伪造同意或直接拒绝整类治疗，应进入对抗。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_unconsenting_adult。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-098",
+    "intent": "许苓明确不肯教我，也没有在演示，我替她填个同意，直接算她已经把照明术完整教给我，别算旁观。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "learn(person:self,spell_light:forged_teacher_source)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3的learn要求真实授艺来源与来源方意愿，可再请求授课或在实际演示时按观察收益学习。"
+    },
+    "proposal": {
+      "intent": "许苓明确不肯教我，也没有在演示，我替她填个同意，直接算她已经把照明术完整教给我，别算旁观。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "spell_light",
+          "source": "npc_hw_xuling",
+          "amount": 2699
+        }
+      ],
+      "target": "npc_hw_xuling",
+      "consent": {
+        "from": "npc_hw_xuling",
+        "scope": "teach",
+        "granted": true
+      }
+    },
+    "proposalNotes": [
+      "故意伪造教师同意并索取完整授艺；教师未授课也未演示，不能偷换成有效旁观来源。"
+    ]
+  },
+  {
+    "id": "A3V2-099",
+    "intent": "我和这个商人一句共同语言也没有，现场也没通译，就打几个手势替双方签两年期的浮动利息借款。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "obligation.create(person:self->present_merchant,loan:complex_terms_without_language)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与附录A §A.15.21规定零沟通度的手势交易不能缔结复杂条款义务，可先找通译。"
+    },
+    "proposal": {
+      "intent": "我和这个商人一句共同语言也没有，现场也没通译，就打几个手势替双方签两年期的浮动利息借款。",
+      "effects": [
+        {
+          "op": "obligation.create",
+          "obligationKind": "loan",
+          "debtor": "self",
+          "creditor": "missing:present_foreign_merchant",
+          "terms": {
+            "resource": "coin",
+            "principal": 100,
+            "days": 730,
+            "interest": {
+              "kind": "floating",
+              "index": "local_loan_rate",
+              "resetDays": 30
+            }
+          }
+        }
+      ],
+      "target": "missing:present_foreign_merchant",
+      "means": {
+        "manner": "gestures"
+      }
+    },
+    "proposalNotes": [
+      "100铜与浮息重定周期是越界合同的具体示例；零共同语言、无通译是明确场景条件，手势不能为双方签复杂条款。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_foreign_merchant。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-100",
+    "intent": "这本法术书的字我一个也不认识，仍然要自己直接读懂并学会里面的法术，不找人翻译。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "learn(person:self,unknown_spell:unreadable_book)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与附录A §A.15.21要求canRead成立，可先学语言或请在场懂文字者代读。"
+    },
+    "proposal": {
+      "intent": "这本法术书的字我一个也不认识，仍然要自己直接读懂并学会里面的法术，不找人翻译。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "spell_light",
+          "source": "item_bs_mage_primer",
+          "amount": 1
+        }
+      ],
+      "means": {
+        "tools": [
+          "item_bs_mage_primer"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "采用真实《东学光术初课》及其所教spell_light，保持玩家完全不识该书文字的条件；有书不等于canRead成立。"
+    ]
+  },
+  {
+    "id": "A3V2-101",
+    "intent": "眼前的师父已经昏迷，没留下书也没在演示，我现在就让他给我上一堂新功法课。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "learn(person:self,new_cultivation_skill:impaired_teacher)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与附录A §A.3规定失能者不能授艺，可等其恢复或另找有效来源。"
+    },
+    "proposal": {
+      "intent": "眼前的师父已经昏迷，没留下书也没在演示，我现在就让他给我上一堂新功法课。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "missing:new_cultivation_skill",
+          "source": "missing:unconscious_master",
+          "amount": 1
+        }
+      ],
+      "target": "missing:unconscious_master"
+    },
+    "proposalNotes": [
+      "师父与新功法未给真实ID，保留缺失引用；场景绑定后也必须保持师父昏迷、无书、无演示的条件。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:new_cultivation_skill、missing:unconscious_master。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-102",
+    "intent": "今天只练这一遍最基础的吐纳，就把这一项功法直接练到全世界最高阶。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:practice",
+      "signature": [
+        "learn(person:self,known_cultivation_skill:requested_max_stage)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7以技能阶段、每日上限与衰减裁剪收益，结合用户2026-10-16成长决定只能结算正常一轮练习。"
+    },
+    "proposal": {
+      "intent": "今天只练这一遍最基础的吐纳，就把这一项功法直接练到全世界最高阶。",
+      "effects": [
+        {
+          "op": "learn",
+          "entity": "self",
+          "subject": "missing:known_basic_breathing_skill",
+          "source": "practice",
+          "amount": 2699
+        }
+      ],
+      "means": {
+        "skill": "missing:known_basic_breathing_skill",
+        "manner": "practice"
+      }
+    },
+    "proposalNotes": [
+      "2699来自world的最高熟练度上限，故意请求一轮达顶。原功法ID待玩家技能绑定；绑定后应保留正常练习并裁掉越量，不能改成直接升阶。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:known_basic_breathing_skill。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-103",
+    "intent": "我包里只有一份木料，却要按削木楔配方同时做十批，缺的木料就当我已经有了。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "core:craft.manufacture",
+      "signature": [
+        "transfer(resource:item_wood,self->sink:craft:requested_10)",
+        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self:bounded_output)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.7将计量产出裁剪到真实投入和工时允许的配方批数，可补齐材料再继续而不能凭空补库存。"
+    },
+    "proposal": {
+      "intent": "我包里只有一份木料，却要按削木楔配方同时做十批，缺的木料就当我已经有了。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_wood",
+          "from": "self",
+          "to": "sink:craft",
+          "qty": 10
+        }
+      ],
+      "expect": "按 recipe_wooden_pegs 制作 10 批，实际产量由配方与可用材料裁决",
+      "means": {
+        "skill": "skill_life_6_core",
+        "recipe": "recipe_wooden_pegs",
+        "batches": 10,
+        "tools": [
+          "item_whittling_knife"
+        ]
+      }
+    },
+    "proposalNotes": [
+      "06 §6.7：这是一项请求按所指配方制造的提案。只提交真实投入的转移请求；注册动作须补齐配方产出、副产物、工时和工具损耗。recipe ID 不是账户，提案不直接引用 src:craft。批数是申请量，须按实际投入裁剪。"
+    ]
+  },
+  {
+    "id": "A3V2-104",
+    "intent": "我身上只剩一铜，先用它买一铜的饼，再用同一枚钱交一铜船费，不许赊账也别找别人垫。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "transfer(resource:coin,self->baker:1)",
+        "transfer(resource:coin,self->boatman:1)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3的transfer要求每次支出余额充足，不能预览为两笔都能完成，可只选一笔或先增加收入。"
+    },
+    "proposal": {
+      "intent": "我身上只剩一铜，先用它买一铜的饼，再用同一枚钱交一铜船费，不许赊账也别找别人垫。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "missing:present_baker",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_oat_flatbread",
+          "from": "missing:present_baker",
+          "to": "self",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "self",
+          "to": "npc_hw_zhengshuisheng",
+          "qty": 1
+        }
+      ]
+    },
+    "proposalNotes": [
+      "保持起始余额仅1铜且两次支出各1铜；一铜饼/船费是题设成交价，非当前市场保证。不得补钱或赊账；若逐步提交，第二笔仍须余额不足。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:present_baker。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-105",
+    "intent": "我是个没有任何官职的外乡人，就由我直接任命自己为白石镇长，公库也归我调。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "holding.open(person:self,holds_office:town_head)",
+        "transfer(resource:coin,town_treasury->self)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与附录A §A.15.9要求任命和公款动用有实际权能来源，可循合法任职申请程序提出请求。"
+    },
+    "proposal": {
+      "intent": "我是个没有任何官职的外乡人，就由我直接任命自己为白石镇长，公库也归我调。",
+      "effects": [
+        {
+          "op": "holding.open",
+          "holdingKind": "holds_office",
+          "holder": "self",
+          "subject": "missing:office_bs_town_head",
+          "terms": {},
+          "grantedBy": "self"
+        },
+        {
+          "op": "transfer",
+          "resource": "coin",
+          "from": "loc_bs",
+          "to": "self",
+          "qty": 100
+        }
+      ],
+      "target": "loc_bs"
+    },
+    "proposalNotes": [
+      "world只有具体村级职位，未找到白石镇长职位ID，不能以office_village_head冒充。100铜表示无权调库的请求，不能因自封职位获得权限。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:office_bs_town_head。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-106",
+    "intent": "我是普通小股东，没有增发权也没人同意，直接把其他股东的份额削掉，给我加到九成。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "holding.rescale(org:shared_business,shares:self_0.9)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3及附录A §A.6规定份额重排须有组织权能或判决且经持有人同意或章程表决，可先提出增资议案。"
+    },
+    "proposal": {
+      "intent": "我是普通小股东，没有增发权也没人同意，直接把其他股东的份额削掉，给我加到九成。",
+      "effects": [
+        {
+          "op": "holding.rescale",
+          "subject": "missing:shared_business",
+          "shares": {
+            "self": 0.9,
+            "missing:other_shareholder": 0.1
+          }
+        }
+      ]
+    },
+    "proposalNotes": [
+      "份额和故意保持1，避免让总和错误遮住核心的无增发权、无同意问题；商号和原股东必须绑定真实状态。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:other_shareholder、missing:shared_business。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-107",
+    "intent": "我的通缉还有效，我也没有官职，就自己把那条通缉撤掉，过去的案子当没发生。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "holding.close(holding:self_wanted,unauthorized)",
+        "fact.set(collective:own_case,erase_history:forbidden)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3与05 §5.2.7不许无权者关闭法律持有或抹去案件，可自首、申诉或依法申请撤销。"
+    },
+    "proposal": {
+      "intent": "我的通缉还有效，我也没有官职，就自己把那条通缉撤掉，过去的案子当没发生。",
+      "effects": [
+        {
+          "op": "holding.close",
+          "holding": "missing:self_wanted",
+          "reason": "self_revocation"
+        },
+        {
+          "op": "fact.set",
+          "entity": "missing:own_case",
+          "field": "history",
+          "value": []
+        }
+      ]
+    },
+    "proposalNotes": [
+      "保留无权关闭法律持有及抹历史两种非法请求；不能用普通自有持有关闭权限放行。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:own_case、missing:self_wanted。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-108",
+    "intent": "我没去过白石镇，也没收到消息，直接把那里每个人现在的秘密和藏钱位置全部显示给我。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "05 §5.4与06 §6.9.4限定主观视图和知情来源，可旅行、打听或查阅可获得的文书而不能读取全局真相。"
+    },
+    "proposal": {
+      "intent": "我没去过白石镇，也没收到消息，直接把那里每个人现在的秘密和藏钱位置全部显示给我。",
+      "effects": [],
+      "target": "loc_bs",
+      "expect": "显示白石镇每个人当前的秘密及藏钱位置"
+    },
+    "proposalNotes": [
+      "越权读取没有写状态原语，effects为空仍要按完整intent及知情边界拒绝，不能退化成正常观察或伪造tell来源。"
+    ]
+  },
+  {
+    "id": "A3V2-109",
+    "intent": "我什么话也不说，直接让吴朔的脑子认定欠我一百铜，并把这事写成真债。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "reject",
+      "signature": [
+        "fact.set(person:npc_hw_wushuo,belief:forbidden_write)",
+        "obligation.create(person:npc_hw_wushuo->self,fabricated_loan)"
+      ],
+      "outOfBounds": true,
+      "fallback": false,
+      "constructor": false,
+      "why": "06 §6.3禁止提案直接产出belief且债务须有同意或规则来源，可表达请求或说法但不得把信念写成真实欠款。"
+    },
+    "proposal": {
+      "intent": "我什么话也不说，直接让吴朔的脑子认定欠我一百铜，并把这事写成真债。",
+      "effects": [
+        {
+          "op": "fact.set",
+          "entity": "npc_hw_wushuo",
+          "field": "belief",
+          "value": {
+            "owes": {
+              "self": 100
+            }
+          }
+        },
+        {
+          "op": "obligation.create",
+          "obligationKind": "loan",
+          "debtor": "npc_hw_wushuo",
+          "creditor": "self",
+          "terms": {
+            "resource": "coin",
+            "principal": 100
+          }
+        }
+      ],
+      "target": "npc_hw_wushuo"
+    },
+    "proposalNotes": [
+      "故意直写禁止由提案产出的belief，并创建无出资、无债务人同意的假债。"
+    ]
+  },
+  {
+    "id": "A3V2-110",
+    "intent": "吴朔愿意明天听我再问一次带路的事，帮我安排明早当面询问，到时候仍让他自己决定。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "schedule(person:npc_hw_wushuo,request:guide_via_npc_autonomy)",
+        "emit(person:npc_hw_wushuo,request:guide_when_due)"
+      ],
+      "outOfBounds": false,
+      "fallback": false,
+      "constructor": true,
+      "why": "06 §6.3的schedule须引用已有规则或动作，附录A §A.6要求交NPC决策而不把预约当成未来强制同意。"
+    },
+    "proposal": {
+      "intent": "吴朔愿意明天听我再问一次带路的事，帮我安排明早当面询问，到时候仍让他自己决定。",
+      "effects": [
+        {
+          "op": "schedule",
+          "at": "明天早晨",
+          "action": "core:dialogue.ask",
+          "args": {
+            "actor": "self",
+            "target": "npc_hw_wushuo",
+            "subject": "npc_hw_wushuo",
+            "topic": "是否愿意带路，以及愿意带到哪里"
+          },
+          "via": "npc-autonomy"
+        }
+      ],
+      "target": "npc_hw_wushuo"
+    },
+    "proposalNotes": [
+      "action是world目录真实的打听动作；只排期明早当面询问意愿和目的地，不提前调用缺少目的地的带路签约动作。时刻按历法解析，via:npc-autonomy按附录A §A.6交未来决策，届时仍须核验在场并由吴朔决定，不直接生成带路义务。"
+    ]
+  },
+  {
+    "id": "A3V2-111",
+    "intent": "我想在青灯酒馆编一首笑话自己赌运差的打油歌，留成大家能传唱的段子。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:satire+mark:art)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许以歌谣留存零价值mark并由见闻触发传唱或印象，不能直接指定听众立场数值。"
+    },
+    "proposal": {
+      "intent": "我想在青灯酒馆编一首笑话自己赌运差的打油歌，留成大家能传唱的段子。",
+      "effects": [
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:satire",
+            "mark:art"
+          ],
+          "facts": {
+            "intent": "我想在青灯酒馆编一首笑话自己赌运差的打油歌，留成大家能传唱的段子。",
+            "form": "自嘲赌运的打油歌",
+            "location": "bld_hw_qingdeng",
+            "author": "self"
+          },
+          "materials": []
+        }
+      ]
+    }
+  },
+  {
+    "id": "A3V2-112",
+    "intent": "我用自己的炭在获准画画的木板上画个大浪和箭头，放在旧渡口提醒后来人别靠近湿滑边沿。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:item_charcoal,self->sink:consume)",
+        "create(thing:mark,mark:warning)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许真实材料形成警示mark并引起看到者的反应，图画不能替代道路事实或强迫行人停步。"
+    },
+    "proposal": {
+      "intent": "我用自己的炭在获准画画的木板上画个大浪和箭头，放在旧渡口提醒后来人别靠近湿滑边沿。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_charcoal",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:warning"
+          ],
+          "facts": {
+            "intent": "我用自己的炭在获准画画的木板上画个大浪和箭头，放在旧渡口提醒后来人别靠近湿滑边沿。",
+            "form": "画有大浪与箭头的警示木板",
+            "location": "loc_hw_dock",
+            "author": "self",
+            "carrier": "missing:authorized_drawing_board"
+          },
+          "materials": [
+            {
+              "resource": "item_charcoal",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "只消耗自有炭，木板是原有且获准使用的载体，不凭画图复制木板或强令路人停步。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_drawing_board。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-113",
+    "intent": "我不是高手，只想在自己这块石料上刻几道像剑招的线，摆在获准展示的地方留个练剑念想。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:sword_carving+mark:art)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5的剑痕标签可承接创作并触发相应印象或tell，不能凭刻痕直接获得剑术经验或门派资格。"
+    },
+    "proposal": {
+      "intent": "我不是高手，只想在自己这块石料上刻几道像剑招的线，摆在获准展示的地方留个练剑念想。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_stone",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:sword_carving",
+            "mark:art"
+          ],
+          "facts": {
+            "intent": "我不是高手，只想在自己这块石料上刻几道像剑招的线，摆在获准展示的地方留个练剑念想。",
+            "form": "自有石料上的仿剑招刻线",
+            "location": "missing:authorized_display_place",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_stone",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "石料进入零价值刻痕载体，不能同时仍留在行囊可再消费；没有剑术经验或门派资格效果。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_display_place。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-114",
+    "intent": "我还不会造自动灌田的机器，先用自己的纸笔画个设想图，留着让人讨论，不把机器变出来。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:own_paper_and_ink,self->sink:consume)",
+        "create(thing:mark,mark:invention+mark:public_display)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5可用发明草图mark保存意图并引发讨论，§6.7禁止把零价值草图等同可用设备或已学配方。"
+    },
+    "proposal": {
+      "intent": "我还不会造自动灌田的机器，先用自己的纸笔画个设想图，留着让人讨论，不把机器变出来。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_parchment",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_soot_ink",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:invention",
+            "mark:public_display"
+          ],
+          "facts": {
+            "intent": "我还不会造自动灌田的机器，先用自己的纸笔画个设想图，留着让人讨论，不把机器变出来。",
+            "form": "自动灌田机器设想图",
+            "location": "missing:current_drawing_place",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_parchment",
+              "qty": 1
+            },
+            {
+              "resource": "item_soot_ink",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "用world现有羊皮纸和烟墨落实纸墨，画笔可用item_ink_brush且不消耗；不创建机器或已学配方。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:current_drawing_place。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-115",
+    "intent": "这块空地我没有地契，只想用自己带的几块石头摆条边界线，表明我打算在这儿扎营。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:boundary)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许界标留痕并引发旁人反应，06 §6.3的holding.open仍须授权且摆石头不会授予土地权利。"
+    },
+    "proposal": {
+      "intent": "这块空地我没有地契，只想用自己带的几块石头摆条边界线，表明我打算在这儿扎营。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_stone",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 3
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:boundary"
+          ],
+          "facts": {
+            "intent": "这块空地我没有地契，只想用自己带的几块石头摆条边界线，表明我打算在这儿扎营。",
+            "form": "石头摆出的扎营意向边界",
+            "location": "missing:current_unowned_camp_plot",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_stone",
+              "qty": 3
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "3块是“几块”的具体提议，须有真实自有石料；摆出后作为痕迹材料，不另开owns土地。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:current_unowned_camp_plot。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-116",
+    "intent": "我在酒馆想出个只比手势不说话的新酒令，把规则留给大家试，愿不愿玩随他们。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:custom)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5以新习俗标签承接无现成玩法的创意，旁人的参与仍经NPC决策并至少产生规则订阅反应。"
+    },
+    "proposal": {
+      "intent": "我在酒馆想出个只比手势不说话的新酒令，把规则留给大家试，愿不愿玩随他们。",
+      "effects": [
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:custom"
+          ],
+          "facts": {
+            "intent": "我在酒馆想出个只比手势不说话的新酒令，把规则留给大家试，愿不愿玩随他们。",
+            "form": "只比手势的新酒令规则",
+            "location": "bld_hw_qingdeng",
+            "author": "self"
+          },
+          "materials": []
+        }
+      ]
+    }
+  },
+  {
+    "id": "A3V2-117",
+    "intent": "我把自己那只不能穿的旧鞋挂在获准纪念的树枝上，纪念走过这条路的人，留下缘由。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:memorial)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许真实物件摆放成为纪念mark，记录作者与意图且由感知触发反应而不增加资源。"
+    },
+    "proposal": {
+      "intent": "我把自己那只不能穿的旧鞋挂在获准纪念的树枝上，纪念走过这条路的人，留下缘由。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "missing:own_unwearable_shoe",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:memorial"
+          ],
+          "facts": {
+            "intent": "我把自己那只不能穿的旧鞋挂在获准纪念的树枝上，纪念走过这条路的人，留下缘由。",
+            "form": "树枝上悬挂的旧鞋及纪念缘由",
+            "location": "missing:authorized_memorial_tree",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "missing:own_unwearable_shoe",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "world物品表没有可对应的旧鞋ID；明确保留缺失材料，不凭空生成鞋或替换为衣服。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_memorial_tree、missing:own_unwearable_shoe。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-118",
+    "intent": "我用自己的细绳和小木片在获准布置的角落摆个像机关的样子，想吓退偷窥的人，不要求它真能伤人。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:trap+mark:decoy)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许陷阱样布置作为零数值mark引起印象或tell，不能暗加伤害或保证吓退目标。"
+    },
+    "proposal": {
+      "intent": "我用自己的细绳和小木片在获准布置的角落摆个像机关的样子，想吓退偷窥的人，不要求它真能伤人。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_hemp_thread",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_wood",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:trap",
+            "mark:decoy"
+          ],
+          "facts": {
+            "intent": "我用自己的细绳和小木片在获准布置的角落摆个像机关的样子，想吓退偷窥的人，不要求它真能伤人。",
+            "form": "细绳木片组成的假机关",
+            "location": "missing:authorized_corner",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_hemp_thread",
+              "qty": 1
+            },
+            {
+              "resource": "item_wood",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "用真实麻线和木料作零伤害布置；不直接添加恐惧状态或保证吓退。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_corner。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  },
+  {
+    "id": "A3V2-119",
+    "intent": "我有炭笔，就在眼前公署的外墙上画一幅嘲讽差役的漫画，没有许可也照画，后果我认。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "transfer(resource:own_charcoal,self->sink:consume)",
+        "create(thing:mark,mark:satire+mark:defacement)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5使讽刺与毁损公物标签触发反应，§6.7规定违法照常裁决而由规范栈和见证决定后果。"
+    },
+    "proposal": {
+      "intent": "我有炭笔，就在眼前公署的外墙上画一幅嘲讽差役的漫画，没有许可也照画，后果我认。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "item_charcoal",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:satire",
+            "mark:defacement"
+          ],
+          "facts": {
+            "intent": "我有炭笔，就在眼前公署的外墙上画一幅嘲讽差役的漫画，没有许可也照画，后果我认。",
+            "form": "嘲讽差役的炭笔漫画",
+            "location": "bld_bs_office",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "item_charcoal",
+              "qty": 1
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "位置为公署外墙，未取得许可；提案保留毁损标签，法律与见证后果由引擎产生，不因违法预先取消绘画。"
+    ]
+  },
+  {
+    "id": "A3V2-120",
+    "intent": "我没有求雨的神通，想拿自己的花和石子在获准摆放的井边摆个求雨小供台，灵不灵随它，把这份心意留下。",
+    "tricky": true,
+    "category": "刁钻意图",
+    "expected": {
+      "route": "open:proposal",
+      "signature": [
+        "create(thing:mark,mark:offering+mark:sacred_symbol)"
+      ],
+      "outOfBounds": false,
+      "fallback": true,
+      "constructor": true,
+      "why": "06 §6.9.5允许供奉痕迹引起宗教、精怪或见闻反应，13 §13.5的资格与效力规则不会让自创供台保证降雨。"
+    },
+    "proposal": {
+      "intent": "我没有求雨的神通，想拿自己的花和石子在获准摆放的井边摆个求雨小供台，灵不灵随它，把这份心意留下。",
+      "effects": [
+        {
+          "op": "transfer",
+          "resource": "missing:own_flowers",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 1
+        },
+        {
+          "op": "transfer",
+          "resource": "item_stone",
+          "from": "self",
+          "to": "sink:consume",
+          "qty": 3
+        },
+        {
+          "op": "create",
+          "kind": "mark",
+          "tags": [
+            "mark:offering",
+            "mark:sacred_symbol"
+          ],
+          "facts": {
+            "intent": "我没有求雨的神通，想拿自己的花和石子在获准摆放的井边摆个求雨小供台，灵不灵随它，把这份心意留下。",
+            "form": "花与石子摆成的求雨小供台",
+            "location": "missing:authorized_wellside",
+            "author": "self"
+          },
+          "materials": [
+            {
+              "resource": "missing:own_flowers",
+              "qty": 1
+            },
+            {
+              "resource": "item_stone",
+              "qty": 3
+            }
+          ]
+        }
+      ]
+    },
+    "proposalNotes": [
+      "未找到可唯一对应自有花束与获准井边的world ID，明确保留缺失材料和地点；没有降雨、神赐或法术效果。",
+      "缺失引用（未在允许读取的静态world中确定，不代表这些实体已存在）：missing:authorized_wellside、missing:own_flowers。保留给引擎的对象解析、缺参或拒绝处理；若搭建正向场景，应先绑定真实实例，不能把此处命名直接注册成事实。"
+    ]
+  }
+]

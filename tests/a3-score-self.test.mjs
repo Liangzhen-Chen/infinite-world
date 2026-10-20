@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {executeIntent,scoreRows,signatureMatches} from '../tools/a3-score.mjs';
+import {executeIntent,scoreRows,signatureMatches,applyIntentSetup} from '../tools/a3-score.mjs';
+import {reconcile} from './helpers/ledger-audit.mjs';
+import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'a3-score-self');
@@ -23,6 +25,82 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+test('A3 setup: two independent scenes execute the two-phase protocol with balanced opening books',async()=>{
+ const baseline=structuredClone(initial),asleep=structuredClone(initial);
+ asleep.state.npcs.npc_hw_linsui.activity='睡眠';
+ asleep.state.npcs.npc_hw_linsui.status='昏迷';
+ asleep.state.npcs.npc_hw_linsui.scheduleTravel={to:'loc_hw'};
+ const locations=world.locations.filter(l=>l.id!==initial.state.location).slice(0,2).map(l=>l.id);
+ assert.equal(locations.length,2);
+ const setups=locations.map((location,i)=>({location,present:['npc_hw_linsui'],inventory:{item_ration:i+2},coins:41+i,minute:initial.state.minute+10+i,status:'正常',facts:[{path:['state','player','hp'],value:initial.state.player.maxHp-1}]}));
+ const cases=[{...rows[0],id:'setup-say',setup:setups[0]},{...rows[5],id:'setup-mark',setup:setups[1]}];
+ const scored=await scoreRows(cases,{...options,document:asleep});
+ assert.equal(scored.setupUnmetCount,0);assert.deepEqual(scored.setupUnmet,[]);
+ for(const [i,row] of cases.entries()){
+  const result=scored.results[i],run=await executeIntent(engine,asleep,row);
+  assert.equal(result.scores.route,true,JSON.stringify(result));
+  assert.equal(result.scores.signature,true,JSON.stringify(result));
+  assert.equal(result.scores.supported,true,JSON.stringify(result));
+  assert.equal(result.actual.preview.status,'preview');
+  assert.equal(result.actual.calls[0].phase,'preview');assert.equal(result.actual.calls.at(-1).phase,'confirm');
+  assert.equal(run.document.state.location,setups[i].location);
+  assert.equal(run.document.state.npcs.npc_hw_linsui.location,setups[i].location);
+  assert.equal(run.document.state.npcs.npc_hw_linsui.status,'正常');
+  assert.equal(run.document.state.npcs.npc_hw_linsui.scheduleTravel,null);
+  assert.equal(run.document.state.inventory.item_ration.quantity,i+2);
+  assert.equal(run.document.state.player.coins,41+i);
+  assert.equal(run.document.state.player.hp,initial.state.player.maxHp-1);
+  assert.equal(run.document.ledger.accounts['player|coin_river|purse'],41+i);
+  assert.equal(run.document.ledger.accounts['player|item_ration|inventory'],i+2);
+  assert.deepEqual(reconcile(engine,run.document),{mismatches:[],lots:[],drift:[],audit:[]});
+  const fixture=applyIntentSetup(engine,asleep,setups[i]);
+  assert.equal(fixture.document.state.minute,setups[i].minute);
+ }
+ assert.deepEqual(initial,baseline);assert.equal(asleep.state.npcs.npc_hw_linsui.status,'昏迷');
+ // The builder replay must receive the same setup as the initial execution.
+ const built=await scoreRows([{...rows[4],setup:setups[0]}],{...options,document:asleep});
+ assert.equal(built.results[0].scores.constructor,true,JSON.stringify(built.results[0]));
+});
+
+test('A3 setup: unmet items are reported separately and earn no credit, even empty signatures',async()=>{
+ const row={...rows[0],id:'setup-missing',setup:{location:'missing:place',present:['missing:person'],inventory:{missing_item:1},coins:-1,minute:-1,status:{missing_actor:'正常'},facts:[{path:['state','player','invented'],value:true}]}},before=structuredClone(initial);
+ const failed=await scoreRows([row],options),result=failed.results[0];
+ assert.equal(failed.setupUnmetCount,1);assert.equal(failed.setupUnmet[0].id,row.id);
+ for(const key of ['location','present[0]','inventory.missing_item','coins','minute','status.missing_actor','facts[0]'])assert.ok(result.setupUnmet.some(x=>x.item===key),key);
+ assert.ok(Object.values(result.scores).every(x=>x===false));
+ assert.deepEqual(result.actual.calls,[]);assert.equal(result.actual.preview,null);
+ assert.equal(result.actual.error.code,'A3-SCORE-SETUP');assert.deepEqual(initial,before);
+ const empty=await scoreRows([{...rows[2],setup:{location:'missing:place'}}],options);
+ assert.equal(empty.signature,0);assert.equal(empty.route,0);
+});
+
+test('A3 setup: existing creature instances and native special statuses are real state',()=>{
+ const baseline=structuredClone(initial);
+ baseline.state.creatures={test_creature:{name:'fixture creature',species:world.monsters[0].id,location:initial.state.location,hp:20,maxHp:20,status:'正常',activity:'睡眠'}};
+ const setup={location:world.locations.find(l=>l.id!==initial.state.location).id,present:['test_creature'],minute:initial.state.minute+30,status:[{target:'player',status:'fear',power:2,duration:60}]};
+ const built=applyIntentSetup(engine,baseline,setup);
+ assert.deepEqual(built.setupUnmet,[]);
+ assert.equal(built.document.state.creatures.test_creature.location,setup.location);
+ assert.equal(built.document.state.creatures.test_creature.activity,'闲逛');
+ assert.equal(magicStatusStats(engine.primitiveDraft(built.document),'player').hit,-0.04);
+ assert.equal(built.document.state.effects['a3-score:setup-status:0'].expires,setup.minute+60);
+ assert.equal(baseline.state.creatures.test_creature.activity,'睡眠');
+ const bad=applyIntentSetup(engine,baseline,{status:[{target:'player',status:'invented',power:2,duration:60}]});
+ assert.equal(bad.setupUnmet[0].item,'status[0]');
+});
+
+test('A3 preview: clarification, rejection and fallback retain original diagnostics',async()=>{
+ const clarification=await executeIntent(engine,initial,rows[2]);
+ assert.equal(clarification.actual.preview.status,'not_submitted');
+ assert.equal(clarification.actual.preview.routingStatus,'needs_entities');
+ assert.ok(clarification.actual.preview.ambiguities.length);
+ const refusal=await executeIntent(engine,initial,rows[1]);
+ assert.equal(refusal.actual.preview.status,'rejected');assert.ok(refusal.actual.preview.reason);
+ const fallback=await executeIntent(engine,initial,rows[3]);
+ assert.equal(fallback.actual.preview.status,'not_submitted');
+ assert.equal(fallback.actual.previews.length,2);assert.equal(fallback.actual.previews[1].status,'preview');
+});
+
 const report=await scoreRows(rows,options);
 for(const row of rows)test(`A3 scorer self: ${row.id} — ${row.intent}`,async()=>{
  const result=report.results.find(r=>r.id===row.id);
