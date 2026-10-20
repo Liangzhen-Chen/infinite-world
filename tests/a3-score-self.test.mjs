@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {executeIntent,scoreRows,signatureMatches,applyIntentSetup} from '../tools/a3-score.mjs';
+import {executeIntent,scoreRows,signatureMatches,signatureEffects,applyIntentSetup} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 
@@ -25,6 +25,53 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+test('A3 signature: adopted effects exclude only receipt-proven derived resource costs',async()=>{
+ const requested={op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}};
+ const cost={op:'transfer',from:'player|item_charcoal|inventory',to:'sink:consume|item_charcoal|action',qty:1};
+ const receipt={status:'committed',source:{id:'open:proposal'},actor:'player',applied:[{index:0,...cost,result:{transferred:1}},{index:1,...requested}],cost:{time:5,body:{stamina:{value:98}},resources:[cost]}};
+ assert.equal(signatureMatches(['emit(person:self,tell)'],receipt.applied,receipt),true);
+ assert.deepEqual(signatureEffects(receipt.applied,receipt).excluded,[receipt.applied[0]]);
+ // No provenance means no exclusion, even for a plausible material sink.
+ assert.equal(signatureMatches(['emit'],receipt.applied),false);
+ const explicitConsumption=[requested,{op:'transfer',resource:'item_charcoal',from:'self',to:'sink:consume',qty:1}];
+ assert.equal(signatureMatches(['emit','transfer(resource:item_charcoal,self->sink:consume)'],receipt.applied,receipt,explicitConsumption),true);
+ assert.equal(signatureMatches(['emit'],receipt.applied,receipt,explicitConsumption),false);
+ assert.equal(signatureMatches(['emit'],[...receipt.applied,{...cost}],receipt),false);
+ // Authority evidence is unrelated to cost provenance.
+ assert.equal(signatureMatches(['emit'],[requested,{op:'vital',target:'player',delta:-1,actedAs:{kind:'office',id:'test'}}]),false);
+ // A wrong requested primitive must survive filtering and fail exact equality.
+ assert.equal(signatureMatches(['emit'],[...receipt.applied,{op:'status',target:'player',status:'fear'}],receipt),false);
+ const mock={previewAction:async()=>({receipt:{status:'preview'}}),reduce:async()=>({patches:[],result:{receipt}})};
+ const run=await executeIntent(mock,initial,{id:'cost-provenance',proposal:{intent:'hello',effects:[requested]}});
+ assert.deepEqual(run.actual.signature,['emit']);assert.equal(run.actual.excludedCosts.length,1);
+ assert.equal(signatureMatches(['emit'],run.effects,run.receipt),true);
+});
+test('A3 signature: qualifiers belong to the same adopted primitive, never prose or authority',()=>{
+ const effects=[{op:'emit',target:'npc_hw_linsui',signatureKind:'person',verb:'tell',payload:{text:'npc_hw_wushuo greet'}},{op:'status',target:'player',status:'fear'}];
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,tell)','status(person:self,fear)'],effects),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_wushuo,tell)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(person:self,tell)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(thing:npc_hw_linsui,tell)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,fear)','status'],effects),false);
+ assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning','mark:art']}]),true);
+ assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning']}]),false);
+});
+test('A3 signature: real registered action pays derived costs without adding them to the requested signature',async()=>{
+ const action={id:'test:score_cost',label:'说一句话',narration:'test.score_cost',slots:[],cost:{owner:'primitives',time:1,resources:[{resource:'coin_river',qty:1}]},outcomes:[{op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}}]};
+ const costWorld=structuredClone(world);costWorld.actionDefinitions={format:1,actions:[action]};
+ const costEngine=new WorldEngine(costWorld);
+ const row={id:'real-cost',action:action.id,setup:{coins:5},expected:expected(action.id,['emit(person:self,tell)'])};
+ const run=await executeIntent(costEngine,initial,row);
+ assert.equal(run.receipt.status,'committed');
+ assert.deepEqual(run.receipt.applied.map(e=>e.op),['transfer','emit']);
+ assert.equal(run.receipt.cost.resources.length,1);assert.equal(run.receipt.cost.time,1);
+ assert.equal(run.document.state.player.coins,4);
+ assert.equal(signatureMatches(row.expected.signature,run.effects,run.receipt),true);
+ assert.deepEqual(run.actual.signature,['emit']);
+ const scored=await scoreRows([row],{...options,world:costWorld});
+ assert.equal(scored.results[0].scores.signature,true);
+});
 test('A3 setup: two independent scenes execute the two-phase protocol with balanced opening books',async()=>{
  const baseline=structuredClone(initial),asleep=structuredClone(initial);
  asleep.state.npcs.npc_hw_linsui.activity='睡眠';
@@ -118,7 +165,8 @@ for(const row of rows)test(`A3 scorer self: ${row.id} — ${row.intent}`,async()
   assert.equal(wrong.results[0].scores.route,false);assert.equal(wrong.results[0].scores.signature,false);
   assert.equal(signatureMatches(['emit'],[{op:'emit'},{op:'vital'}]),false);
   assert.equal(signatureMatches(['emit','tell'],[{op:'emit',verb:'retell'}]),false);
-  assert.equal(signatureMatches(['emit(person:self,tell)'],[{op:'emit'}]),true);
+  // 06 §6.8: a qualified signature requires evidence for subject and field.
+  assert.equal(signatureMatches(['emit(person:self,tell)'],[{op:'emit'}]),false);
   const broken=await executeIntent({previewAction:async()=>{throw Error('implementation failure');}},initial,row);
   assert.equal(broken.actual.refused,false);assert.equal(broken.actual.committed,false);
   const noInput=await scoreRows([{id:'text-only',intent:row.intent,expected:expected('open:proposal',[])}],options);
