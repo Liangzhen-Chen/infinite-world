@@ -5,6 +5,7 @@ import {primitiveRuntime} from './primitives-runtime.mjs';
 import {reject} from './primitive-policy.mjs';
 import {executeLeaveMark} from './mark-actions.mjs';
 import {executeRite} from './action-rite.mjs';
+import {resolvePrimitiveTransfer} from './primitive-accounts.mjs';
 
 export function prepareOpenAction(engine,document,proposal,native){
  if(!proposal||typeof proposal.intent!=='string'||!proposal.intent.trim())reject('E-OPEN-INTENT','请说明你想做什么');
@@ -14,6 +15,7 @@ export function prepareOpenAction(engine,document,proposal,native){
   if(entities.ambiguities.length)return {status:'needs_entities',...entities,effects:[],cost:null,candidates:[],routed:null};
   proposal=entities.proposal;
  }
+ proposal={...proposal,effects:proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor}))};
  const registry=primitiveRuntime.registry(engine),routing=routeAction(proposal,registry,native.routing);
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
@@ -27,7 +29,8 @@ export function createOpenActionContext(engine,document,proposal,{actor='player'
  return {routing,limits:(current,nearest)=>{
   const fresh=createRoutingContext(engine,current,{actor}),resolved=resolveProposalEntities(proposal,fresh);
   if(resolved.ambiguities.length)reject('E-OPEN-ENTITY','对象已经离开或不再可见');
-  return deriveOpenLimits(engine,current,resolved.proposal,nearest,{actor,routing:fresh});
+  const normalized={...resolved.proposal,effects:resolved.proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,current,effect,{actor}))};
+  return deriveOpenLimits(engine,current,normalized,nearest,{actor,routing:fresh});
  }};
 }
 

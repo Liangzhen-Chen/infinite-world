@@ -15,11 +15,11 @@ const clone=value=>structuredClone(value);
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 // Native composition root only. JSON proposals cannot manufacture this token.
 // Every policy sees the transaction's CURRENT document, including prior effects.
-export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
+export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,transferLot=null,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
  if(typeof actor!=='string'||!actor||typeof eventId!=='string'||!eventId||eventId.length>120||!['catalog','open','rule'].includes(source?.kind)||typeof source.id!=='string'||!source.id)reject('E-PRIMITIVE-FRAME','缺少服务端行动者、事件编号或来源');
  for(const [name,fn] of Object.entries({canAct,authority,location,mirrorTransfer}))if(typeof fn!=='function')reject('E-PRIMITIVE-FRAME',`缺少服务端 ${name} 接点`);
  const frame=Object.freeze({actor,eventId,source:Object.freeze({...source})});
- frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,validateFact,prepare,finish,identity:clone(identity)});return frame;
+ frames.set(frame,{canAct,authority,location,mirrorTransfer,transferLot,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,validateFact,prepare,finish,identity:clone(identity)});return frame;
 }
 function draft(document){
  return {document:clone(document),patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},peek(...p){return this.get(...p);},
@@ -76,7 +76,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     }
     // New primitives cannot use the migration ledger's drift repair branch.
     if(balance(d,effect.from)<qty)reject('E-TRANSFER-BALANCE','账户余额不足');
-    result=transfer(d,{from:effect.from,to:effect.to,amount:qty,writer:'primitives',eventId:frame.eventId,pick:effect.lot??null});
+    result=transfer(d,{from:effect.from,to:effect.to,amount:qty,writer:'primitives',eventId:frame.eventId,pick:effect.lot??null,lot:policy.transferLot?.(d.document,effect)??null});
     policy.mirrorTransfer(d,{...effect,actor:frame.actor,eventId:frame.eventId});
    }else if(effect.op.startsWith('holding.')){
     if(d.get('holdings','version')!==1)reject('E-HOLDING-BOOKS','Holdings are not initialized');

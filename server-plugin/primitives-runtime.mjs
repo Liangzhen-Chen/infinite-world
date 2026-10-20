@@ -35,6 +35,9 @@ import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './ac
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {beginSleep,finishSleep} from './body-needs.mjs';
 import {openUsageEntry} from './action-limits.mjs';
+import {resolvePrimitiveTransfer,primitiveStockProjection} from './primitive-accounts.mjs';
+import {ensureGroupAccount} from './group-account.mjs';
+import {holdingSet} from './holdings.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -47,7 +50,8 @@ const proposalRouting=(proposal,prepared)=>({intent:proposal.intent,proposal:str
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
- for(const effect of effects){
+ for(const raw of effects){
+  const effect=resolvePrimitiveTransfer(engine,document,raw);
   if(effect.op==='transfer'){
    const target=`account:${effect.from}`,old=claims.get(target),needed=(draw.get(effect.from)??0)+effect.qty;
    draw.set(effect.from,needed);draw.set(effect.to,(draw.get(effect.to)??0)-effect.qty);
@@ -113,12 +117,23 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
   if(!sink)mirrorPartyCoins(d,engine,to.owner,effect.qty,effect.eventId,'primitives');
   return;
  }
- if(from.purpose!=='inventory'||!sink&&to.purpose!=='inventory'||!engine.byId.has(from.resource))reject('E-TRANSFER-PROJECTION','This stock purpose requires its resource adapter');
- const moved=changeItems(d,engine,from.owner,from.resource,-effect.qty,{preserve:!sink,books:BOOKED});
+ const source=primitiveStockProjection(engine,d.get('state'),effect.from),destination=sink?null:primitiveStockProjection(engine,d.get('state'),effect.to);
+ const instances=d.get(...source.path)?.instances??[];
+ if(instances.length&&destination&&!destination.inventory)reject('E-TRANSFER-PROJECTION','带单件身份的物品须通过保留单件归属的仓储协议转移');
+ const change=(projection,owner,delta)=>{
+  if(projection.inventory)return changeItems(d,engine,owner,projection.item,delta,{preserve:!sink,books:BOOKED});
+  if(projection.group)ensureGroupAccount(d,engine,projection.group);
+  const value=(d.get(...projection.path)??0)+delta;
+  if(!Number.isSafeInteger(value)||value<0)reject('E-TRANSFER-BALANCE','库存不足或溢出');
+  if(projection.path[1]==='records')holdingSet(d,engine,projection.path,value,'primitives',effect.eventId);
+  else d.set(projection.path,value);
+  return {instances:[]};
+ };
+ const moved=change(source,from.owner,-effect.qty);
  if(!sink){
-  changeItems(d,engine,to.owner,to.resource,effect.qty,{books:BOOKED});
+  change(destination,to.owner,effect.qty);
   if(moved.instances.length){
-   const path=[...engine.bagPath(to.owner),to.resource,'instances'];
+   const path=[...engine.bagPath(to.owner),destination.item,'instances'];
    d.set(path,[...d.get(...path)??[],...moved.instances]);
    for(const id of moved.instances)d.set(['state','itemInstances',id,'owner'],to.owner);
   }
@@ -170,14 +185,23 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
   },
   prepare:(d,meta)=>{
    factUsage.clear();
-   const selected=prepare?.(d,meta)??meta.effects;
+   const normalize=effects=>effects.map(effect=>resolvePrimitiveTransfer(engine,d.document,effect,{actor}));
+   const normalized={...meta,effects:normalize(meta.effects)},selected=normalize(prepare?.(d,normalized)??normalized.effects);
    return declared?.theft===true?trimTheft(d,engine,declared,selected,actor,meta.receipt):selected;
   },
   accountExists:(document,key)=>{
-   const account=parseAccount(key),s=document.state,agent=account.owner==='player'||s.npcs?.[account.owner]||s.creatures?.[account.owner];
-   return agent&&(account.resource===LEDGER_COIN?key===partyAccount(engine,s,account.owner):account.purpose==='inventory'&&engine.byId.has(account.resource));
+   const account=parseAccount(key),s=document.state;
+   if(account.resource===LEDGER_COIN){
+    const known=account.owner==='player'||s.npcs?.[account.owner]||s.creatures?.[account.owner]||s.settlements?.[account.owner]||s.records?.[`organization:${account.owner}`]||s.records?.[`faction-assets:${account.owner}`]||engine.world.factions?.some(f=>f.id===account.owner)||engine.rules.economy?.credit?.banks?.some(b=>b.id===account.owner)||s.records?.[account.owner]?.category==='bank';
+    return known&&key===partyAccount(engine,s,account.owner);
+   }
+   try{return Boolean(primitiveStockProjection(engine,s,key));}catch{return false;}
   },
   mirrorTransfer:(d,effect)=>mirrorPrimitiveTransfer(d,engine,effect),
+  transferLot:(document,effect)=>{
+   const to=parseAccount(effect.to);
+   return to.resource===LEDGER_COIN||isSink(to.owner)?null:primitiveStockProjection(engine,document.state,effect.to).lot??null;
+  },
   executePrimitive:(d,effect,{frame,index,requireAuthority,tags})=>{
    if(consequence?.(d.document,effect)===true&&['vital','status'].includes(effect.op)&&(isPhysicallyDead(engine,d,effect.target)||isGone(engine,d,effect.target)))return {applied:false,reason:'target_not_living',target:effect.target};
    const child=`${frame.eventId}:${index}`,s=d.get('state');
@@ -319,6 +343,7 @@ function actionDuration(engine,document,action,slots,actor){
 }
 
 function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{duration=0,purpose=action.id,limits={},quote={}}={}){
+ effects=effects.map(effect=>resolvePrimitiveTransfer(engine,d.document,effect,{actor}));
  let permission=null,check=action.check,failed=false;
  const scopeRules=action.consent?.scope;
  if(action.consent){
