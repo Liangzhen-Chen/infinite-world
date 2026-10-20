@@ -1,7 +1,7 @@
 // Server-derived bounds, separate from authority/consent and primitive validation.
 import {parseAccount} from './ledger.mjs';
 import {reject} from './primitive-policy.mjs';
-import {effectSignature} from './action-router.mjs';
+import {effectSignature,actorKnowledge} from './action-router.mjs';
 import {actionReader} from './action-capacity.mjs';
 import {authority} from './action-authority.mjs';
 import {heldUnit} from './items.mjs';
@@ -20,7 +20,7 @@ export function limitOpenEffects(proposal,native){
  if(proposal.time!==undefined||proposal.cost!==undefined||proposal.effects.some(e=>e.op==='time'))reject('E-OPEN-TIME','耗时由动作派生，不能由提案指定');
  const context=proposal.context??{};
  if(!Number.isSafeInteger(context.modifier??0)||Math.abs(context.modifier??0)>5||context.modifier&&!String(context.reason??'').trim())reject('E-OPEN-CONTEXT','情境修正须在 ±5 内并说明理由');
- const effects=[],sources=[],trimmed=[],blocked=[],used=new Map(),dailyUsed=new Map(),usage=native.usage??{repeats:0,produced:0};
+ const effects=[],sources=[],trimmed=[],blocked=[],used=new Map(),dailyUsed=new Map(),nearestUsed=new Map(),usage=native.usage??{repeats:0,produced:0};
  finite(usage.repeats,'repeat count');finite(usage.produced,'daily usage');
  let minutes=0,difficulty=0;
  for(const [index,original] of proposal.effects.entries()){
@@ -59,10 +59,12 @@ export function limitOpenEffects(proposal,native){
     const nearest=native.nearestBounds?.[effect.op]?.[field];if(nearest!==undefined)maximum=Math.min(maximum,finite(nearest,'nearest reward'));
    }
    let available=Math.max(0,maximum-(used.get(key)??0));
+   const nearestKey=JSON.stringify([effect.op,field]),nearestBound=reward?native.nearestBounds?.[effect.op]?.[field]:undefined;
+   if(nearestBound!==undefined)available=Math.min(available,Math.max(0,finite(nearestBound,'nearest reward')-(nearestUsed.get(nearestKey)??0)));
    if(reward&&source.dailyCap!==undefined)available=Math.min(available,Math.max(0,finite(source.dailyCap,'daily cap')-(usage.producedByKey?.[dailyKey]??usage.produced)-(dailyUsed.get(dailyKey)??0)));
    const amount=Math.min(Math.abs(effect[field]),available);
    used.set(key,(used.get(key)??0)+amount);effect[field]=Math.sign(effect[field])*amount;
-   if(reward)dailyUsed.set(dailyKey,(dailyUsed.get(dailyKey)??0)+amount);
+   if(reward){dailyUsed.set(dailyKey,(dailyUsed.get(dailyKey)??0)+amount);nearestUsed.set(nearestKey,(nearestUsed.get(nearestKey)??0)+amount);}
    if(effect[field]!==before[field])trimmed.push({index,field,requested:before[field]??before.value,applied:effect[field],reason:'source_or_daily_bound'});
   }
   if(Object.entries(source.bounds??{}).some(([field])=>effect[field]===0))continue;
@@ -96,13 +98,18 @@ export function openUsageEntry(prepared,receipt,minute){
  const produced={},consumed=new Set();
  // Count the actual applied gain, including post-check and post-K2 clipping.
  // Scalar work is grouped by its native daily key, not by chosen source id.
- for(const [i,source] of (prepared.sources??[]).entries())for(const field of source?.rewardFields??[]){
-  const effect=prepared.effects[i],index=receipt.applied?.findIndex((e,j)=>!consumed.has(j)&&e.op===effect?.op&&(e.target??e.entity??e.subject)===(effect.target??effect.entity??effect.subject));
+ for(const [i,source] of (prepared.sources??[]).entries()){
+  if(!source?.rewardFields?.length)continue;
+  const effect=prepared.effects[i],index=receipt.applied?.findIndex((e,j)=>!consumed.has(j)&&e.op===effect?.op&&(e.target??e.entity??e.subject)===(effect.target??effect.entity??effect.subject)&&
+   ['field','type','status','subject','learningSource'].every(key=>e[key]===effect[key])&&
+   (effect.delta===undefined||Math.sign(e.delta)===Math.sign(effect.delta)));
   const applied=index>=0?receipt.applied[index]:null;
   if(!applied||applied.result?.applied===false||applied.result?.resisted)continue;
   consumed.add(index);
+  for(const field of source.rewardFields){
   const actual=field==='amount'&&applied.result?.gain!==undefined?applied.result.gain:field==='delta'&&applied.result?.healed!==undefined?applied.result.healed:Math.abs(applied[field]??0);
   const key=source.dailyKey??JSON.stringify([effect.op,field]);produced[key]=(produced[key]??0)+finite(actual,'applied production');
+  }
  }
  return {minute,signature:[...prepared.signature],produced};
 }
@@ -112,7 +119,7 @@ export function openUsageEntry(prepared,receipt,minute){
 export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player',routing}={}){
  const table=engine.world.openActionRules,caps=table?.sourceCaps,generic=table?.generic;
  if(!caps||!generic)reject('E-OPEN-DATA','缺少存档中的开放动作幅度表');
- const d=actionReader(document),s=document.state,body=actor==='player'?s.player:s.npcs?.[actor],knowledge=actor==='player'?s:s.npcs?.[actor]??{};
+ const d=actionReader(document),s=document.state,body=actor==='player'?s.player:s.npcs?.[actor],knowledge=actorKnowledge(engine,document,actor);
  const bag=actor==='player'?s.inventory:s.npcs?.[actor]?.inventory;
  const skillRaw=id=>knowledge.skills?.[id],tier=id=>{
   const raw=skillRaw(id),value=typeof raw==='number'?raw:raw?.proficiency;
@@ -157,7 +164,9 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   return null;
  };
  const nearestAction=nearest&&engine.world.actionDefinitions?.actions?.find(a=>a.id===nearest.id),sameFamily=nearest?.signatureScore>0;
- const nearestCost=sameFamily&&Number.isSafeInteger(nearestAction?.cost?.time)?nearestAction.cost.time:undefined;
+ // A duration slot is part of the registered program. Its default/picked
+ // duration must remain a cost floor even when the proposal misses routing.
+ const nearestCost=sameFamily&&(nearestAction?.durationSlot||Number.isSafeInteger(nearestAction?.cost?.time))?openDuration(nearestAction,nearest.slots):undefined;
  const nearestBounds={};
  if(sameFamily){
   const effects=Array.isArray(nearestAction?.outcomes)?nearestAction.outcomes:nearestAction?.outcomes?.success??[];

@@ -9,7 +9,7 @@ const die=(document,eventId,label)=>createHash('sha256').update(`${document.rand
 const attributeOf=(engine,value)=>{if(!engine.rules.attributes.includes(value))throw new Error('属性不在规则表');return value;};
 export function npcProficiency(d,engine,npc,skill){
     const actor=d.get('state','npcs',npc),definition=engine.byId.get(npc);
-    const raw=actor?.skills?.[skill]??definition?.skills?.[skill];
+    const raw=actor?.skills?.[skill]??definition?.skills?.[skill]??definition?.proficiencies?.[skill];
     return integer(raw&&typeof raw==='object'?raw.proficiency:raw??0,0,2699,'人物技能熟练度');
 }
 function presentNpc(d,engine,name){

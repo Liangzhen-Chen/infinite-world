@@ -11,8 +11,8 @@ export function signatureJaccard(left,right){
  for(const key of new Set([...a.keys(),...b.keys()])){common+=Math.min(a.get(key)??0,b.get(key)??0);total+=Math.max(a.get(key)??0,b.get(key)??0);}
  return total?common/total:0;
 }
-export function effectSignature(effects,{kindOf=()=>null,bindings={}}={}){
- const bind=value=>value&&typeof value==='object'&&value.slot?bindings[value.slot]:value;
+export function effectSignature(effects,{kindOf=()=>null,bindings={},actor='player'}={}){
+ const bind=value=>value==='$actor'?actor:value&&typeof value==='object'&&value.slot?bindings[value.slot]:value;
  return effects.map(effect=>{
   const target=bind(effect.target??effect.entity??effect.subject??effect.to);
   const slot=(effect.target??effect.entity??effect.subject??effect.to)?.slot;
@@ -62,6 +62,12 @@ export function routeAction(proposal,registry,context){
 
 // Only currently accessible objects enter name resolution. Global engine.resolve
 // is intentionally not used here: knowing a private id is not perception.
+export function actorKnowledge(engine,document,actor='player'){
+ const current=actor==='player'?document.state:document.state.npcs?.[actor]??{},base=actor==='player'?{}:engine.byId.get(actor)??{};
+ const skillMap=(value,proficiencies={})=>Array.isArray(value)?Object.fromEntries(value.map(id=>[id,proficiencies[id]??0])):value??{};
+ const knownMap=value=>Array.isArray(value)?Object.fromEntries(value.map(id=>[id,true])):value??{};
+ return {skills:{...base.proficiencies,...skillMap(base.skills,base.proficiencies),...skillMap(current.skills,base.proficiencies)},spells:{...knownMap(base.spells),...knownMap(current.spells)},recipes:{...knownMap(base.recipes),...knownMap(current.recipes)}};
+}
 export function createRoutingContext(engine,document,{actor='player'}={}){
  const state=document.state,d=actionReader(document),location=actor==='player'?state.location:state.npcs?.[actor]?.location;
  const pool=new Map(),add=(id,kind,row={})=>{
@@ -83,8 +89,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const ends=route.ends??route.nodes??[route.from,route.to];
   if(ends.includes(location))for(const id of ends)if(id&&id!==location)add(id,'place');
  }
- const knowledge=actor==='player'?state:state.npcs?.[actor]??{};
- for(const [field,kind] of [['skills','skill'],['spells','spell'],['recipes','recipe']])for(const [id,value] of Object.entries(knowledge[field]??{}))if(value)add(id,kind);
+ const knowledge=actorKnowledge(engine,document,actor);
+ for(const [field,kind] of [['skills','skill'],['spells','spell'],['recipes','recipe']])for(const [id,value] of Object.entries(knowledge[field]??{}))if(value||field==='skills'&&value===0)add(id,kind);
  const owner=id=>typeof id==='string'&&id.includes('|')?parseAccount(id).owner:id;
  const kindOf=id=>pool.get(owner(id))?.kind??null;
  const resolve=(value,kind=null)=>{
@@ -100,6 +106,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(value===undefined)for(const e of proposal.effects??[]){
     if(e[slot.name]!==undefined){value=e[slot.name];break;}
     if(e.op==='create'&&e.facts?.[slot.name]!==undefined){value=e.facts[slot.name];break;}
+    if(slot.name==='destination'&&e.op==='move'){value=e.to;break;}
+    if(slot.name==='source'&&e.op==='learn'){value=e.learningSource;break;}
+    if(['skill','spell','recipe'].includes(slot.entity)&&e.op==='learn'&&e.subject!==undefined){
+     const subject=resolve(e.subject,slot.entity);if(subject.value!==null){value=subject.value;break;}
+    }
     if(slot.name==='quantity'&&e.qty!==undefined){value=e.qty;break;}
     if(slot.entity&&target!==undefined&&kindOf(target)===(slot.entity==='npc'?'person':slot.entity)){value=target;break;}
    }
