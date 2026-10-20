@@ -4,7 +4,7 @@ declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
 import {nationAction} from './nation-founding.mjs';
 import {appointmentSource} from './noble-state.mjs';
-import {derivedStats,monsterStats,strike,combatRandom,encounterForExchange,settleEncounterExchange}from'./combat.mjs';
+import {derivedStats,monsterStats,strike,combatRandom,encounterForExchange,settleEncounterExchange,combatEscapeDestination}from'./combat.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
@@ -116,6 +116,9 @@ export const activities={
         if(!['attack','defend','flee','shove'].includes(intent))throw new Error('交锋意图需为attack、defend、flee或shove');
         if(intent==='flee')assertWaterEarthMovement(d,attacker);
         if(intent==='flee')assertLightMovement(d,this,attacker);
+        const escapeDestination=intent==='flee'&&args.destination!==undefined?combatEscapeDestination(d,this,args.destination):null;
+        if(escapeDestination&&attacker!=='player')throw Error('Only player retreat supports a path destination');
+        if(escapeDestination){const restriction=this.primitiveLegacyRestriction(d.document,'move',{destination:escapeDestination});if(restriction)throw Error(restriction);}
         const tactic=intent==='attack'?(weapon?'armed':'unarmed'):intent,counter=bossCounter(d,this,target,tactic);
         const location=this.byId.get(d.get('state','location')),terrain=location.combatTags??[];
         const weather=localWeather(this,d.document),night=weather&&!weather.indoors&&!weather.daylight&&!terrain.includes('dark')&&playerContext.illumination!=='lit'?this.rules.combat.terrain.dark.hit:0;
@@ -159,7 +162,8 @@ export const activities={
         const seconds=(d.get('state','subMinuteSeconds')??0)+this.rules.combat.exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
         if(attacker==='player'&&isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
-        if(weapon)wearItem(d,this,attacker,weapon,1);
+        const toolWear=[];
+        if(weapon){const before=heldUnit(d,this,attacker,weapon).durability;wearItem(d,this,attacker,weapon,1);toolWear.push({item:weapon,before,after:heldUnit(d,this,attacker,weapon).durability});}
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
             d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
@@ -176,8 +180,15 @@ export const activities={
             bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
         }
         const war=warCombatResult(d,this,{target,damage,received,killed:!remaining,retreated:remaining>0&&remaining<maxHp*0.25},id);
-        settleEncounterExchange(d,this,encounter,{actor:attacker,target,intent,escaped,eventId:id,ended:!!duelResult||!remaining||attackerHp<=received});
-        d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,vitals:{[attacker]:{before:attackerHp,after:d.get(...attackerPath,'hp')??attackerHp},[target]:{before:hp,after:d.get('state',partition,target,'hp')}},...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        let movement=null;
+        if(escaped&&escapeDestination){
+            const previous=this.npcObligationAction;
+            this.npcObligationAction={tool:'move',args:{destination:escapeDestination,mode:'walk'}};
+            try{movement=this.move(d,this.npcObligationAction.args,`${id}:retreat`);}finally{this.npcObligationAction=previous;}
+        }
+        const exchange={actor:attacker,target,intent,weapon,origin:location.id,damage,received,actorStatus:d.get(...attackerPath,'status'),vitals:{[attacker]:{before:attackerHp,after:Math.max(0,attackerHp-received)},[target]:{before:hp,after:remaining}},escaped,...(intent==='defend'?{defense:{status:'combat_defense',incomingMultiplier:0.5,outgoingMultiplier:0.65,consumed:true}}:{}),...(movement?{movement}: {})};
+        const encounterResult=settleEncounterExchange(d,this,encounter,{actor:attacker,target,intent,escaped,eventId:id,ended:!!duelResult||!remaining||attackerHp<=received,exchange});
+        d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,encounter:encounterResult,exchange,spent:{toolWear},...(movement?{movement}:{}),vitals:{[attacker]:{before:attackerHp,after:d.get(...attackerPath,'hp')??attackerHp},[target]:{before:hp,after:d.get('state',partition,target,'hp')}},...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);

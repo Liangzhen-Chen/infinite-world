@@ -132,7 +132,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    if(!Number.isFinite(was)||!Number.isFinite(value))continue;
    const delta=value-was;
    if(delta){
-    const effect=stateEffect('vital',{target:id,need,type:delta<0?'harm':'heal',delta},[...path,need],before,after);
+    const effect=stateEffect('vital',{target:id,need,type:delta<0?'harm':'heal',delta,...(tool==='combat'&&id===result.target&&result.exchange?.weapon?{weapon:result.exchange.weapon}: {})},[...path,need],before,after);
     effect.result.before=was;add(effect);
    }
   }
@@ -145,7 +145,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   }
   for(const field of ['xp','level','attributes'])if(!same(old[field],now[field])){
    const change=stateEffect('fact.set',{entity:id,field,value:now[field]},[...path,field],before,after);
-   const awards=id==='player'?Object.values(a.experienceLedger??{}).filter(row=>row.eventId===eventId&&!same(b.experienceLedger?.[row.source],row)):[];
+   const awards=id==='player'?Object.values(a.experienceLedger??{}).filter(row=>(row.eventId===eventId||tool==='combat'&&result.movement&&row.eventId===`${eventId}:retreat`)&&!same(b.experienceLedger?.[row.source],row)):[];
    // 06 §6.3 / §6.10.3: experience is derived by progression, never an
    // executable fact.set(xp) proposal. Retain its real evidence as a consequence.
    if(awards.length)receipt.consequences.push({type:'progression',entity:id,field,value:now[field],result:change.result,awards:structuredClone(awards),reason:`${field}: ${JSON.stringify(old[field])} → ${JSON.stringify(now[field])}`});
@@ -165,7 +165,12 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    if((delta||recovery!==undefined||written&&tool==='time')&&(tool==='time'||result.nutrition))add({op:'vital',target:id,type:`body:${need}`,need,delta,result:{before:was,after:value,...(!same(initial,was)?{initial}:{}),...(!delta?{clamped:true}: {})}});
   }
  }
- if(b.location!==a.location)add(stateEffect('move',{entity:'player',from:b.location,to:a.location,mode:args.mode??'walk'},['state','location'],before,after));
+ if(tool==='combat'&&result.exchange?.defense){
+  const key=`combat_encounter:${result.encounter?.id}`,row=a.records?.[key];
+  if(row?.lastRound?.sourceEvent===eventId&&row.lastRound.intent==='defend'&&same(row.lastRound.defense,result.exchange.defense))
+   add(stateEffect('status',{target:result.actor??'player',status:'combat_defense',duration:1,consumed:true,round:row.lastRound.round},['state','records',key,'lastRound'],before,after));
+ }
+ if(b.location!==a.location)add(stateEffect('move',{entity:'player',from:b.location,to:a.location,mode:tool==='combat'&&result.movement?'disengage':args.mode??'walk',...(tool==='combat'&&result.movement?{route:result.movement.edges,minutes:result.movement.minutes}: {})},['state','location'],before,after));
  // A removed native summon is gone even though it never lived in creatures.
  // Its real contract closure supplies the cause, not a requested transition.
  if(tool==='summon'&&args.operation==='dismiss'&&result.dismissed){

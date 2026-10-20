@@ -20,15 +20,32 @@ export function encounterForExchange(d,e,actor,target){
  if(actor==='player'&&row?.playerActedThisRound)throw Error('Player already acted this round');
  return row??null;
 }
-export function settleEncounterExchange(d,e,encounter,{actor,target,intent,escaped,eventId,ended=false}){
+export function settleEncounterExchange(d,e,encounter,{actor,target,intent,escaped,eventId,ended=false,exchange={}}){
  const s=d.get('state'),id=encounter?.id??`exchange:${eventId}`,participants=encounter?.participants??[actor,target];
  const active=!ended&&!escaped&&participants.every(id=>!isPhysicallyDead(e,s,id)&&combatLocation(s,id)===s.location);
  // A legacy exchange includes the opponent's response. Preserve the spent
  // round and open the next one, rather than locking out every later exchange.
  const round=encounter?.round??1;
- const row={...encounter,id,category:'combat_encounter',participants,location:s.location,active,round:active?round+1:round,playerActedThisRound:!active&&actor==='player',lastRound:{round,actor,intent,playerActed:actor==='player',sourceEvent:eventId},sourceEvent:encounter?.sourceEvent??eventId};
+ const row={...encounter,id,category:'combat_encounter',participants,location:encounter?.location??exchange.origin??s.location,active,round:active?round+1:round,playerActedThisRound:!active&&actor==='player',lastRound:{round,actor,intent,playerActed:actor==='player',sourceEvent:eventId,...exchange},sourceEvent:encounter?.sourceEvent??eventId};
  holdingSet(d,e,['state','records',`combat_encounter:${id}`],row,'combat-state');
  return {id,active,round:row.round,playerActedThisRound:row.playerActedThisRound};
+}
+// A descriptive retreat names a known path, never an arbitrary map node.
+// Every edge (including a multi-edge known path) is traversed by normal travel.
+export function combatEscapeDestination(d,e,requested){
+ const s=d.get('state'),visible=row=>row&&(row.minute??row.updated??0)<=s.minute&&(!row.private||(row.permittedRecipients??row.knownBy??[]).includes('player'))&&(!row.permittedRecipients||row.permittedRecipients.includes('player'));
+ const known=new Set(Object.keys(s.discoveries??{}).filter(id=>visible(s.discoveries[id])));
+ const paths=new Set();
+ for(const memory of Object.values(d.document.memories??{}))if(memory.source==='known_path'&&visible(memory))paths.add(memory.subject);
+ const adjacent=[...new Set(e.world.routes.filter(r=>r.from===s.location||r.to===s.location).map(r=>r.from===s.location?r.to:r.from))];
+ let exact;try{exact=e.resolve(requested);}catch{}
+ const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
+ const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
+  try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
+ });
+ if(!exact&&!/(?:旁|附近|身边|小路|path|nearby|adjacent)/i.test(requested))throw Error('Unknown escape destination');
+ if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
+ return candidates[0];
 }
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export const combatRandom=(document,eventId)=>seededRandom(createHash('sha256').update(`${document.randomSeed}:${eventId}:combat`).digest().readUInt32LE(0));

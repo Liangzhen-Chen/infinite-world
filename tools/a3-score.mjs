@@ -573,6 +573,18 @@ export function signatureMatches(expected,effects,receipt={},requested,world,doc
 
 function companionEffect(effect,receipt){
  const actor=receipt.actor??'player',target=effect.target??effect.entity??effect.actor;
+ const exchange=receipt.routed==='core:combat'?receipt.legacy?.exchange:null;
+ if(exchange){
+  const vital=exchange.vitals?.[target],path=target==='player'?['state','player']:['state',effect.signatureKind==='creature'?'creatures':'npcs',target];
+  // Native retaliation and defensive counterstrikes accompany the requested
+  // intent. Require the exact committed HP pair, never all combat harm.
+  if(effect.op==='vital'&&effect.need==='hp'&&effect.type==='harm'&&vital&&
+   (target===exchange.actor||exchange.intent==='defend'&&target===exchange.target)&&
+   effect.delta===vital.after-vital.before&&effect.delta<0&&
+   sameValue(effect.result?.path,[...path,'hp'])&&effect.result?.before===vital.before&&effect.result?.after===vital.after)return true;
+  if(effect.op==='status'&&target===exchange.actor&&exchange.received>0&&vital?.after===0&&
+   effect.status===exchange.actorStatus&&sameValue(effect.result?.path,[...path,'status'])&&effect.result?.after===effect.status)return true;
+ }
  if(effect.op==='learn'&&target===actor){
   const source=effect.learningSource??(typeof effect.source==='string'?effect.source:effect.source?.type)??effect.mode;
   return ['doing','practice'].includes(source)&&effect.result?.path?.[1]==='skills';
@@ -853,6 +865,13 @@ export function validateCheckBranch(engine,run,row,outcome,target){
     issues.push(`failed cast granted ${effect.op}`);
    }
   }else if(!['core:dialogue.persuade','core:combat'].includes(route))issues.push('no native failure contract available');
+ }
+ if(actual.route==='core:combat'&&legacy?.exchange?.intent==='flee'){
+  const exchange=legacy.exchange,record=document.state.records?.[`combat_encounter:${legacy.encounter?.id}`];
+  if(exchange.escaped!==success||!record||!sameValue(record.lastRound?.movement??null,exchange.movement??null)||record.lastRound?.sourceEvent!==receipt.eventId)issues.push('escape check and native encounter differ');
+  const moves=selected.filter(e=>e.op==='move');
+  if(!success&&(moves.length||exchange.movement||document.state.location!==run.before.state.location))issues.push('failed escape moved the actor');
+  if(exchange.movement&&(moves.length!==1||moves[0].to!==exchange.movement.destination||document.state.location!==exchange.movement.destination||record.active))issues.push('successful escape has no actual arrival');
  }
  return {ok:issues.length===0,issues:unique(issues)};
 }
