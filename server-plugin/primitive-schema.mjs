@@ -39,7 +39,7 @@ export const actionSchema={
    type:'object',required:['id','label','narration','slots','synonyms','visibility'],
    properties:{
     id:{type:'string',pattern:'^[a-z][a-z0-9_-]*:[a-z][a-z0-9_.-]*$'},label:string,narration:string,verb:string,group:string,pack:{type:['string','null']},source:string,namespace:string,
-    readOnly:{type:'boolean'},hint:string,call:{type:['object','null'],required:['tool'],properties:{tool:string,operation:string,fixed:object},additionalProperties:false},projection:string,
+    canonical:string,readOnly:{type:'boolean'},hint:string,call:{type:['object','null'],required:['tool'],properties:{tool:string,operation:string,fixed:object},additionalProperties:false},projection:string,
     slots:{type:'array',items:{type:'object',required:['name','kind'],properties:{name:string,kind:string,schema:{},entity:string,required:{type:'boolean'},consent:{type:'boolean'},min:rxNumber,max:rxNumber,options:{},filter:string},additionalProperties:true}},
     synonyms:{type:'array',items:string},visibility:{type:'object',required:['catalog'],properties:{catalog:{enum:['quick','here','target:npc','target:place','target:item','search','llm']},witness:{enum:['public','private','witnessed','present']}}},
     preconditions:{type:'array',items:{anyOf:[string,{type:'object',required:['value'],properties:{value:string,source:string,reason:string},additionalProperties:false}]}},

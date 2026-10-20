@@ -2138,6 +2138,10 @@
           "type": "string",
           "minLength": 1
         },
+        "canonical": {
+          "type": "string",
+          "minLength": 1
+        },
         "readOnly": {
           "type": "boolean"
         },
@@ -2970,6 +2974,10 @@
           "minLength": 1
         },
         "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonical": {
           "type": "string",
           "minLength": 1
         },

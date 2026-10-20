@@ -118,6 +118,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  for(const row of banks.values())if(row.location===location)add(row.id,'organization',row);
  const place=engine.byId.get(location);
  for(const feature of place?.features??[])if(!feature.hidden&&!feature.private)add(feature.id,feature.kind??'thing',feature);
+ // Use existing public local areas; a relative description never creates a
+ // new space, position or passage. Traversal still checks the physical path.
+ for(const zone of place?.zones??place?.areas??[])if(zone&&typeof zone==='object'&&zone.visible!==false&&zone.accessible!==false)add(zone.id,'zone',{...zone,name:zone.name??zone.label});
+ const summons=new Map(Object.entries(state.effects??{}).filter(([,row])=>row.kind==='summon'&&row.owner===actor&&row.expires>state.minute));
+ for(const [id,row] of summons)if(row.location===location){
+  const spell=engine.byId.get(row.spell);
+  add(id,'creature',{...row,name:row.name??spell?.name??id,aliases:[...row.aliases??[],...spell?.aliases??[]]});
+ }
  for(const route of engine.world.routes??[]){
   const ends=route.ends??route.nodes??[route.from,route.to];
   if(ends.includes(location))for(const id of ends)if(id&&id!==location)add(id,'place');
@@ -134,7 +142,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  const kindOf=id=>pool.get(owner(id))?.kind??null;
  const features=environmentFeatures(engine);
  const inaccessible=id=>{
-  const feature=features.find(row=>row.id===id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??banks.get(id)??feature??engine.byId.get(id);
+  const feature=features.find(row=>row.id===id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.effects?.[id]??banks.get(id)??feature??engine.byId.get(id);
   if(!row&&!entity&&id!=='player')return 'unknown_entity';
   const at=id==='player'?state.location:located(d,id,x=>state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??(x===id?row?.location:null)??null);
   if(entity?.goneAt!==undefined||at&&at!==location||row?.scheduleTravel||row?.cognitionTravel||!at&&/^npc_/.test(id))return 'not_present';
@@ -144,12 +152,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   let raw;try{raw=owner(value);}catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','账户引用格式无效');}
   const normalize=x=>String(x).trim().normalize('NFKC').toLowerCase(),q=normalize(raw);
   const id=['self','me','myself','i','我','自己','本人','自身','$actor'].includes(q)?actor:raw;
-  const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||banks.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||document.holdings?.entities?.[id]||features.some(row=>row.id===id);
+  const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||banks.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||state.effects?.[id]||document.holdings?.entities?.[id]||features.some(row=>row.id===id);
   const matchesKind=r=>!kind||kind==='entity'||r.kind===kind||['npc','agent'].includes(kind)&&r.kind==='person';
   // Exact ids (including inaccessible ones) never fall through to name matching.
-  const ownedDescription=q.match(/^(?:本人|我|自己)(?:在场)?的(?:唯一)?(.+)$/)?.[1];
-  const owned=id=>(typeof bag?.[id]==='number'?bag[id]:bag?.[id]?.quantity??0)>0||state.creatures?.[id]?.owner===actor||aliveHoldings(d,{kind:'owns',holder:actor,subject:id}).length>0;
-  const choices=(known?(exact&&matchesKind(exact)?[exact]:[]):[...pool.values()].filter(r=>matchesKind(r)&&[r.name,...r.aliases].some(n=>normalize(n)===q||ownedDescription&&owned(r.id)&&normalize(n)===ownedDescription))).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
+  const ownedDescription=q.match(/^(?:本人|我|自己)(?:在场|携带)?的(?:唯一)?(.+)$/)?.[1];
+  const localDescription=q.match(/^(?:眼前相邻|眼前|面前|旁边|在场的|现场的)(?:唯一的?|的)?(.+)$/)?.[1];
+  const owned=id=>(typeof bag?.[id]==='number'?bag[id]:bag?.[id]?.quantity??0)>0||state.creatures?.[id]?.owner===actor||summons.has(id)||aliveHoldings(d,{kind:'owns',holder:actor,subject:id}).length>0;
+  const choices=(known?(exact&&matchesKind(exact)?[exact]:[]):[...pool.values()].filter(r=>matchesKind(r)&&[r.name,...r.aliases].some(n=>normalize(n)===q||ownedDescription&&owned(r.id)&&normalize(n)===ownedDescription||localDescription&&r.id!==actor&&normalize(n)===localDescription))).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
   if(choices.length===1)return {value:typeof value==='string'&&value.includes('|')?value.replace(raw,choices[0].id):choices[0].id,candidates:choices};
   const exactId=known||/^[a-z][a-z0-9]*[_:][a-z0-9_:.-]+$/i.test(String(id));
   return {value:null,candidates:choices,...(!choices.length?{reason:known?inaccessible(id):exactId?'unknown_entity':'unresolved_reference'}:{})};
@@ -160,11 +169,17 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   return knownDestinations;
  };
  const resolveDestination=value=>{
-  const local=resolve(value),feature=local.value&&features.find(row=>row.id===local.value);
-  if(local.value&&(feature||document.holdings?.entities?.[local.value]?.kind==='node'))return local;
-  const result=resolve(value,'place');if(result.value!==null)return result;
-  const row=destinations().get(value);
-  return row?{value:row.id,candidates:[{id:row.id,kind:'place',name:row.name}]}:result;
+  const local=resolve(value),eligible=row=>['place','zone','person','creature'].includes(row.kind)||features.some(feature=>feature.id===row.id)||document.holdings?.entities?.[row.id]?.kind==='node';
+  const candidates=local.candidates.filter(eligible);
+  if(local.value===value&&candidates.length===1)return local;
+  const known=destinations(),exact=known.get(value);
+  if(exact)return {value:exact.id,candidates:[{id:exact.id,kind:'place',name:exact.name}]};
+  // Public map names are travel references, not physical perception. Search
+  // only the player's known map and preserve ambiguity between equal names.
+  if(engine.byId.has(value))return resolve(value,'place');
+  const q=String(value).trim().normalize('NFKC').toLowerCase(),matches=[...known.values()].filter(row=>[row.name,...engine.byId.get(row.id)?.aliases??[]].some(name=>String(name).normalize('NFKC').toLowerCase()===q));
+  const choices=[...new Map([...candidates,...matches.map(row=>({id:row.id,kind:'place',name:row.name}))].map(row=>[row.id,row])).values()].sort((a,b)=>a.id.localeCompare(b.id));
+  return choices.length?{value:choices.length===1?choices[0].id:null,candidates:choices}:resolve(value,'place');
  };
  const slotsFor=(action,proposal)=>{
   const slots={},target=proposal.participants?.target??proposal.target??proposal.effects?.find(e=>e.target!==undefined||e.entity!==undefined)?.target??proposal.effects?.find(e=>e.entity!==undefined)?.entity;
@@ -204,6 +219,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     const teachers=[...pool.values()].filter(row=>row.kind==='person'&&row.id!==actor&&npcServices(engine,state,row.id).includes(profession));
     if(teachers.length===1)value??=teachers[0].id;
    }
+   if(action.call?.tool==='world_companion'&&action.call.operation==='summon_dismiss'&&slot.name==='summon'&&summons.has(target))value??=target;
    if(action.call?.tool==='world_remember'&&action.call.fixed?.key==='dialogue:eat_meal'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
@@ -224,6 +240,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined){
      const opponents=[...pool.values()].filter(row=>row.id!==actor&&activeDuel({...d,document},engine,row.id,actor));
      value=opponents.length===1?opponents[0].id:undefined;
+     // A demonstrative enemy reference can bind the single other local agent.
+     // Generic guarding cannot turn a bystander into an opponent; multiple
+     // agents (or conflicting duels) must still be disambiguated by the player.
+     if(!opponents.length&&['guard','retreat'].includes(proposal.means?.manner)&&/(?:眼前|面前|跟前)(?:的)?(?:敌人|对手)/.test(proposal.intent??'')){
+      const present=[...pool.values()].filter(row=>row.id!==actor&&['person','creature'].includes(row.kind)&&state.creatures?.[row.id]?.owner!==actor&&!summons.has(row.id));
+      if(present.length===1)value=present[0].id;
+     }
      if(value===undefined)continue;
     }
    }
@@ -382,6 +405,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:target,field:'fire_intensity'}])];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
+  if(call?.tool==='world_companion'&&call.operation==='summon_dismiss'&&summons.has(slots.summon))return [sign([{op:'obligation.cancel'},{op:'transition',entity:slots.summon}])];
   if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];
   return [];
  };
@@ -393,6 +417,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_trade'&&call.operation==='remit')return ['coins','location'];
   if(call?.tool==='world_promise'&&call.operation==='cancel')return ['obligation'];
   if(call?.tool==='world_settlement'&&call.operation==='faith_rite')return ['org'];
+  if(call?.tool==='world_companion'&&call.operation==='summon_dismiss')return ['summon'];
   return [];
  };
  return {actor,kindOf,resolve,resolveDestination,resolveParty,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
@@ -449,7 +474,20 @@ export function resolveProposalEntities(proposal,context,{accounts=false,deferCo
   if(typeof value==='string'&&/^(sink|src):/.test(value))continue;
   effect[field]=resolve(value,`effects.${i}.${field}`,['debtor','creditor'].includes(field)?'party':effect.op==='move'&&field==='to'?'destination':null);
  }
- for(const effect of resolved.effects??[])if(accounts&&effect.op==='transfer'&&context.transferAccount){
+ // A natural-language material reference names an actual accessible item,
+ // never a new ledger resource. Canonical ids retain the account validator's
+ // existing strict checks (including unknown resources and empty stock).
+ const material=(value,path)=>{
+  if(typeof value!=='string'||/^[a-z][a-z0-9_:.-]*$/i.test(value))return value;
+  const result=context.resolve(value,'item');
+  if(result.value!==null)return result.value;
+  ambiguities.push({path,value,candidates:result.candidates});return value;
+ };
+ for(const [i,effect] of (resolved.effects??[]).entries()){
+  if(effect.op==='transfer'&&effect.resource!==undefined)effect.resource=material(effect.resource,`effects.${i}.resource`);
+  if(effect.op==='create')for(const [j,row] of (Array.isArray(effect.materials)?effect.materials:[]).entries())if(row&&typeof row==='object')for(const field of ['resource','item'])if(row[field]!==undefined)row[field]=material(row[field],`effects.${i}.materials.${j}.${field}`);
+ }
+ for(const effect of resolved.effects??[])if(accounts&&!ambiguities.length&&!rejections.length&&effect.op==='transfer'&&context.transferAccount){
   effect.from=context.transferAccount(effect.from,effect.resource);
   effect.to=context.transferAccount(effect.to,effect.resource);
   if(effect.resource==='coin')effect.resource=LEDGER_COIN;

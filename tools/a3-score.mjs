@@ -13,6 +13,8 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {isGone,isPhysicallyDead,bookHoldingsUpgrade,openHoldings,aliveHoldings} from '../server-plugin/holdings.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
 import {createRoutingContext} from '../server-plugin/action-router.mjs';
+import {canonicalActionId} from '../server-plugin/action-registry.mjs';
+import {primitiveRuntime} from '../server-plugin/primitives-runtime.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const oldCorpusPath=path.join(root,'tests/fixtures/a3-intents.json');
@@ -27,7 +29,7 @@ const receiptOf=value=>value?.result?.receipt??value?.receipt??null;
 const unique=values=>[...new Set(values)].sort();
 const sameSet=(a,b)=>JSON.stringify(unique(a))===JSON.stringify(unique(b));
 const clarifyStates=new Set(['needs_entities','needs_slots']);
-const routeName=route=>({拒绝:'reject',rejected:'reject',refuse:'reject',澄清:'clarify',clarification:'clarify'}[route]??route);
+const routeName=(route,registry)=>canonicalActionId(registry,({拒绝:'reject',rejected:'reject',refuse:'reject',澄清:'clarify',clarification:'clarify'}[route]??route));
 
 // Fixture construction before the measured action, using the same balance
 // construction + openLedger approach as tests/helpers/ledger-sync.mjs.
@@ -381,18 +383,19 @@ export async function executeIntent(engine,initial,row){
 export async function scoreRows(rows,{world,seed,document:initial}={}){
  world??=await loadWorld();seed??=JSON.parse(await fs.readFile(path.join(root,'tests/fixtures/legacy/seed.json'),'utf8'));
  const engine=new WorldEngine(world);initial??=engine.createCharacter(seed,{},'a3-score-independent');
+ const registry=primitiveRuntime.registry(engine),normalizeRoute=route=>routeName(route,registry);
  const results=[];
  for(const row of rows){
   const run=await executeIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   const ready=run.setupUnmet.length===0;
-  const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===actual.route):routeName(expectedRoute)===actual.route);
+  const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(actual.route));
   // Rejection signatures describe the REQUEST, not an adopted effect set.
   // Credit requires an actual refusal and zero raw applied effects, including
   // costs (do not let cost filtering or a rejected receipt hide mutations).
   // Out-of-bounds requests come in two forms (06 §6.7): a reject route must be
   // refused outright; a concrete route is a bounded outcome that must commit
   // only the clipped effects its signature names.
-  const routeRejects=Array.isArray(expectedRoute)?expectedRoute.every(r=>routeName(r)==='reject'):routeName(expectedRoute)==='reject';
+  const routeRejects=Array.isArray(expectedRoute)?expectedRoute.every(r=>normalizeRoute(r)==='reject'):normalizeRoute(expectedRoute)==='reject';
   const bounded=row.expected.outOfBounds===true&&!routeRejects;
   const expectsRejection=!bounded&&(row.expected.outOfBounds===true||routeRejects);
   const signature=ready&&(expectsRejection
@@ -411,12 +414,12 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
     if(action&&slots){
      const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
      builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews};
-     const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===built.actual.route):routeName(expectedRoute)===built.actual.route;
+     const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(built.actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(built.actual.route);
      constructor=Boolean(builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
-  const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:routeName(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
+  const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:normalizeRoute(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
   results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,actual:{...actual,builder},scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&supported,constructor},repair:row.expected.repair});
  }
  const total=rows.length,tricky=rows.filter(r=>r.tricky).length,rate=(key,denominator=total)=>denominator?results.filter(r=>r.scores[key]).length/denominator:1;
@@ -429,7 +432,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
 export async function scoreCorpus(options={}){const {rows,corpusPath}=await loadCorpus(options);return {...await scoreRows(rows,options),corpusPath};}
 // Importing the scorer performs no run and emits no output.
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- const index=process.argv.indexOf('--corpus'),report=await scoreCorpus(index>=0?{corpusPath:process.argv[index+1]}:{});
+ const index=process.argv.indexOf('--corpus'),corpusPath=index>=0?process.argv[index+1]:process.argv.slice(2).find(arg=>!arg.startsWith('--')),report=await scoreCorpus(corpusPath?{corpusPath}:{});
  console.log(JSON.stringify(process.argv.includes('--summary')?{...report,results:undefined}:report,null,2));
 }
 export default scoreCorpus;
