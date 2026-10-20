@@ -38,7 +38,12 @@ function assertRefusal(value){
 // continuous study of known skills through core:learn (15/18); those cases
 // retain negative controls with an unavailable teacher or missing real book.
 for(const n of ids)test(`A3 refusal ${n}: routed preview and direct commit preserve conditions and zero effects`,async()=>{
- const row=rowFor(n),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
+ const row=structuredClone(rowFor(n));
+ // 06 §6.3: 069 now binds its existing native channel correctly. Keep this
+ // refusal case on a genuinely blocked channel: prose saying "通的" cannot
+ // override the actual blockage. The real positive flow is covered in a3-r10.
+ if(n===69)row.setup.objects=[{id:'feature_hw_channel',blockagePercent:100}];
+ const {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setupUnmet,[]);
  const before=structuredClone(document),input={tool:'world_propose',eventId:`refusal-${n}`,args:row.proposal};
  if([15,18].includes(n)){

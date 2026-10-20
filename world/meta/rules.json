@@ -1974,6 +1974,29 @@
       "toolWear": 1,
       "restore": 20,
       "maxLoss": 1
+    },
+    {
+      "id": "repair_clothes_seam",
+      "name": "衣物补缝",
+      "item": "item_clothes",
+      "skill": "skill_life_4_core",
+      "attribute": "敏捷",
+      "minimumProficiency": 100,
+      "tools": [
+        "item_sewing_needle"
+      ],
+      "materials": [
+        {
+          "item": "item_hemp_thread",
+          "amount": 1
+        }
+      ],
+      "workstation": "weaving",
+      "minutes": 20,
+      "difficulty": 10,
+      "toolWear": 1,
+      "restore": 20,
+      "maxLoss": 0
     }
   ],
   "environment": {

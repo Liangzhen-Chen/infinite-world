@@ -26,7 +26,9 @@ export function assertMagicTargeting(d,engine,catalog,args,target){
  if(t.consent&&target!=='player'){
   assertSpellConsent(d,engine,catalog,args,target,t.consent);
  }
- if(t.permit){
+ // Self relief acts on an existing status with the caster's own consent;
+ // it cannot coerce another mind (06 §6.3, §6.7).
+ if(t.permit&&!(target==='player'&&catalog.effectSpec?.kind==='relief')){
   const r=d.get('state','records',args.permit),location=d.get('state','location');
   const code=legalCodeAt(engine,location,d.get('state'));
   const delegated=code?.magicAuthorities?.some(a=>a.npc===r?.grantor&&a.locations.includes(location)&&a.actions.includes(t.permit));

@@ -9,6 +9,9 @@ import {consent} from '../server-plugin/action-consent.mjs';
 import {obligationRows,obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {purseAccount} from '../server-plugin/items.mjs';
+import {serviceAppointments} from '../server-plugin/npc-state.mjs';
+import {currentAgreedQuotes} from '../server-plugin/shop.mjs';
+import {workstationDefinition} from '../server-plugin/workstation-services.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3e-institutions');
@@ -176,24 +179,34 @@ test('examinations: valid pending seat never certifies the registrar; passed inp
  const setup=fixture('020');setup.examinations[0].passed=true;assert.match(errors(run(setup),'examinations')[0].reason,/invalid pending examination/);
 });
 
-test('appointments: agreed service windows report missing native service booking without inventing vocations',()=>{
- const result=run(fixture('002'));assert.match(errors(result,'appointments')[0].reason,/createNpcObligation.*06/);
+test('appointments: agreed service windows reach native booking without inventing vocations',()=>{
+ // 06 §6.3: the implemented E connector restores a window, not a vocation.
+ const result=run(fixture('002'));assert.deepEqual(errors(result,'appointments'),[]);
+ assert.ok(serviceAppointments(result.document.state,'npc_hw_linsui').length);
  assert.equal(result.document.state.npcs.npc_hw_linsui.vocation,initial.state.npcs.npc_hw_linsui.vocation);
  const setup=fixture('002');setup.appointments[0].end=setup.appointments[0].start;assert.match(errors(run(setup),'appointments')[0].reason,/invalid service appointment/);
 });
 
-test('quotes: real quantity/price/direction/expiry and remittance fees stay unmet until native quote import exists',()=>{
+test('quotes: real quantity/price/direction/expiry and remittance fees reach native quote consumers',()=>{
  for(const id of ['002','038','039']){
-  const result=run(fixture(id));assert.match(errors(result,'quotes')[0].reason,/原生报价.*01/,id);
-  assert.deepEqual(result.document.state.quotes,initial.state.quotes,id);
+  // 01 §1.6 / 06 §6.8: F imports source-backed terms without replaying trade.
+  const result=run(fixture(id));assert.deepEqual(errors(result,'quotes'),[],id);
+  assert.ok(currentAgreedQuotes(result.document.state).length,id);
+  assert.equal(result.document.state.player.coins,fixture(id).coins,id);
  }
  const setup=fixture('002');setup.quotes[0].quantity=0;assert.match(errors(run(setup),'quotes')[0].reason,/invalid quote terms/);
- setup.quotes[0].quantity=2;setup.quotes[0].totalCoins=999;assert.match(errors(run(setup),'quotes')[0].reason,/mismatch/);
+ setup.quotes[0].quantity=2;setup.quotes[0].totalCoins=999;
+ const forged=run(setup);
+ // The native quote writer now owns the source comparison and rejects before storing.
+ assert.match(errors(forged,'quotes')[0].reason,/Invalid agreed quote actor, source or validity/);
+ assert.equal(currentAgreedQuotes(forged.document.state).length,0);
 });
 
 test('workstationAccess: public unpaid native station stays chargeable; old prepay is never refunded or charged again',()=>{
  const setup=fixture('021'),result=run(setup);assert.deepEqual(errors(result,'workstationAccess'),[]);assert.equal(result.document.state.player.coins,setup.coins);
- const paid=run(fixture('025'));assert.ok(errors(paid,'workstationAccess').length);assert.equal(paid.document.state.player.coins,0);
+ // 06 §6.6: G now restores prepaid access; restoration neither charges nor refunds.
+ const paid=run(fixture('025'));assert.deepEqual(errors(paid,'workstationAccess'),[]);assert.equal(paid.document.state.player.coins,0);
+ assert.ok(workstationDefinition(engine,paid.document.state,'station_bs_small_kiln'));
  const invalid=fixture('021');invalid.workstationAccess[0].fee=-1;assert.match(errors(run(invalid),'workstationAccess')[0].reason,/invalid workstation access/);
 });
 

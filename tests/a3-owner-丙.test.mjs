@@ -109,7 +109,12 @@ test('L: worn slots are separate from custody, exclusive, validated and roundtri
 });
 
 test('K: a native mechanism action uses the registered physical check and persists its actual outcome',async t=>{
- const out=setup({inventory:{item_smith_tongs:1},objects:[{...generic('checked_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),kind:'node'}]});
+ // 05 §5.4: knowing a trap's identity is distinct from knowing its procedure.
+ const premises={inventory:{item_smith_tongs:1},objects:[{...generic('checked_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),kind:'node'}]};
+ const unknown=setup(premises);
+ await assert.rejects(()=>engine.reduce(unknown.document,{tool:'world_act',eventId:'unknown-disarm',args:{action:'core:site.disarm',slots:{target:unknown.bindings.checked_trap}}}),/Unknown tripwire disassembly procedure/);
+ assert.equal(physicalItem(engine.primitiveDraft(unknown.document),engine,unknown.bindings.checked_trap).armed,true);
+ const out=setup({...premises,abilitiesByActor:{player:{practicalKnowledge:['simple_tripwire_disassembly']}}});
  assert.deepEqual(out.setupUnmet,[]);
  const id=out.bindings.checked_trap,saved=await roundtrip(t,out.document,{tool:'world_act',eventId:'native-disarm',args:{action:'core:site.disarm',slots:{target:id}}},result=>{
   assert.equal(result.receipt.routed,'core:site.disarm');

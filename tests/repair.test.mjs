@@ -46,7 +46,7 @@ test('维修误把物品名当单件编号时给出纠正方法，拒绝无副�
 });
 
 test('维修先检查实际损坏、持有、技能、工具、费用与工作台，伪造工序和折断对象不花钱耗时',async()=>{
-    const{world,engine,document,run}=await setup();
+    const{world,engine,document,run}=await setup(),plans=structuredClone(engine.rules.repairs);
     for(const alter of[
         c=>delete c.state.inventory.item_staff,c=>c.state.inventory.item_staff.durability=0,
         c=>c.state.inventory.item_staff.durability=100,c=>c.state.inventory.item_staff.durability=99,
@@ -63,7 +63,9 @@ test('维修先检查实际损坏、持有、技能、工具、费用与工作�
     await assert.rejects(run(document,'world_craft',{operation:'repair',item:'削木小刀'},'knife'),/没有可用维修/);
     world.locations.find(row=>row.id==='bld_hw_mill').workstations[0].access='consent';
     const privateEngine=new WorldEngine(world);await assert.rejects(privateEngine.reduce(document,{tool:'world_craft',args:{operation:'repair',item:'旧木杖'},eventId:'private'}),/使用许可/);
-    assert.equal(engine.rules.repairs.length,2);
+    // 06 §6.7: registered clothing repair extends the catalog. Invalid requests
+    // must still leave every real plan unchanged, including the new seam plan.
+    assert.deepEqual(engine.rules.repairs,plans);
 });
 
 test('修整既有单件实际收费计时磨损工具，有限恢复且未知制作者不被改成玩家',async()=>{
