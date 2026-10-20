@@ -1,17 +1,29 @@
 // Local, model-free composition. Only action ids and declared slots cross the
 // execution boundary; a preview receipt is never executable input.
+import {memberDefinitions,toolDefinitions} from './tools.mjs';
+const inputSchemas=new Map([...memberDefinitions(),...toolDefinitions()].map(row=>[row.function.name,row.function.parameters]));
+export const builderSlotSchema=(action,slot)=>inputSchemas.get(action.inputTool)?.properties?.[slot.name]??null;
 export const BUILDER_STEPS=['做什么','对谁或何物','用什么','怎么做'];
 const implementsSlot=new Set(['item','weapon','skill','spell','recipe','instance','tool','material']);
 const effectNames={transfer:'交付物品或款项',move:'移动',learn:'学习',vital:'身体变化',time:'时间推进',status:'状态变化',emit:'表达或请求',create:'留下实体','fact.set':'对象变化','holding.open':'建立关系','holding.close':'结束关系','obligation.create':'订立约定','obligation.fulfill':'履行约定','obligation.close':'结束约定',schedule:'预约行动',transition:'身份变化',invoke:'施展能力'};
+export async function findBuilderActions(api,{query,target}){
+ const result=await api('actions',{query,target,limit:24});
+ if(result.actions?.some(action=>!action.readOnly))return result.actions;
+ // Offer the fallback only when it is registered in this campaign.
+ const fallback=await api('actions',{query:'open:leave_mark',target,limit:1});
+ return fallback.actions.filter(action=>action.id==='open:leave_mark'&&!action.readOnly);
+}
 export function builderStep(slot){
- if(implementsSlot.has(slot.name))return 2;
+ if(implementsSlot.has(slot.name)||['instances','tools','skills'].includes(slot.name))return 2;
+ if(slot.multiple&&['helpers','workers','guests','beneficiaries'].includes(slot.name))return 1;
  if(slot.kind==='entity')return 1;
  return 3;
 }
 export function slotLabel(slot){
  const names={seller:'向谁',buyer:'交给谁',target:'对象',destination:'去处',item:'物品',weapon:'武器',skill:'技能',spell:'法术',recipe:'配方',instance:'哪一件',
  quantity:'数量',coins:'钱数（文）',minutes:'时长（分钟）',days:'天数',mode:'走法',intent:'出手方式',activity:'做什么',payment:'付款方式',creditMinutes:'赊账期限（分钟）',until:'等到',debt:'哪笔账'};
- return names[slot.name]??slot.name;
+ const compound={helpers:'帮手',workers:'参与者',guests:'同行者',beneficiaries:'受益者',instances:'具体物件',tools:'工具',skills:'技能',attributes:'分配属性点',data:'详细设置',objective:'约定目标',materials:'材料',output:'产出'};
+ return names[slot.name]??compound[slot.name]??slot.name;
 }
 export function previewLines(result,{label='这样做',startMinute}={}){
  const receipt=result?.receipt??result?.result?.receipt;
@@ -19,16 +31,53 @@ export function previewLines(result,{label='这样做',startMinute}={}){
  const legacy=receipt.legacy,lines=[`这相当于：${label}`,`路由：${receipt.routed??'尚未确定'}`];
  const elapsed=receipt.cost?.time??legacy?.elapsed??legacy?.minutes??(Number.isSafeInteger(startMinute)&&Number.isSafeInteger(legacy?.minute)?legacy.minute-startMinute:null);
  lines.push(`耗时：${Number.isFinite(elapsed)?`${elapsed}分钟`:'尚未提供'}`);
- if(Number.isFinite(legacy?.cost))lines.push(`费用：${legacy.cost}文`);
- else if(receipt.cost?.resources?.length)lines.push(`资源代价：${receipt.cost.resources.map(r=>`${r.qty??r.quantity??''}份物品或款项`).join('；')}`);
+ if(Number.isFinite(receipt.cost?.coins??legacy?.cost))lines.push(`费用：${receipt.cost?.coins??legacy.cost}文`);
+ else if(receipt.cost?.resources?.length)lines.push(`资源代价：${receipt.cost.resources.map(r=>`${r.qty??r.quantity??''} ${r.resource??r.item??'物品或款项'}`).join('；')}`);
  else lines.push('费用：以确认时的实际裁决为准');
  const check=receipt.check;
+ if(receipt.permission)lines.push(`行为限制：${receipt.permission.allowed===false?receipt.permission.reason:receipt.permission.allowed===true?'当前制度允许发起；确认时仍需校验':'尚未取得预判'}`);
+ if(receipt.consent){const permission=receipt.consent;lines.push(`同意：${permission.allowed?({given:'本人同意',proxy:'有效代理',emergency:'紧急依据'}[permission.kind]??'已有依据'):'未取得'}${permission.reason?`（${permission.reason}）`:''}`);}
+ if(Array.isArray(receipt.witnesses))lines.push(`已知见证：${receipt.witnesses.length}人`);
  lines.push(`难度：${check?.difficulty??check?.dc??(check?'按当前对抗裁决':'本次回执未提供检定难度')}`);
  for(const notice of legacy?.notices??[])if(notice.text)lines.push(`预计：${notice.text}`);
  if(receipt.applied?.length)lines.push(`预计效果：${receipt.applied.map(e=>effectNames[e.op]??'其他世界变化').join('、')}`);
  for(const c of receipt.consequences??[])lines.push(`后果：${typeof c==='string'?c:c.reason??c.tags?.join('、')??c.type??'确认时重新裁决'}`);
+ for(const row of receipt.trimmed??[])if(row.reason)lines.push(`受限效果：${row.reason}`);
  lines.push('预览尚未发生；见证、同意与法律后果以引擎实际提供的裁决为准。');
  return lines;
+}
+
+// Render the existing tool's declared fields; validation remains in the engine.
+// Nested objects and lists use controls instead of asking for JSON.
+function structuredInput(doc,{schema,value,id,label,disabled,onChange}){
+ const make=(tag,text)=>{const n=doc.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
+ const names={type:'种类',name:'名称',quantity:'数量',item:'物品',location:'地点',project:'工程',template:'模板',power:'规模',age:'年龄',occupation:'身份',notes:'说明',skill:'技能',minimumProficiency:'熟练度要求',materials:'材料',amount:'份量',minutes:'分钟',difficulty:'难度',output:'产出',tools:'工具',workstation:'设施',byproducts:'副产物',toolWear:'工具磨损',failure:'失败处理',recoverFraction:'可回收比例',injury:'受伤',spec:'规则说明'};
+ if(schema.type==='object'&&schema.properties){
+  const group=make('fieldset');group.id=id;group.disabled=disabled;group.append(make('legend',label));
+  for(const [key,child]of Object.entries(schema.properties))group.append(structuredInput(doc,{schema:child,value:value?.[key],id:`${id}-${key}`,label:`${names[key]??key}${schema.required?.includes(key)?'':'（可不填）'}`,disabled,onChange:next=>{const changed={...value};if(next===undefined)delete changed[key];else changed[key]=next;onChange(Object.keys(changed).length?changed:undefined);}}));
+  return group;
+ }
+ if(schema.type==='array'&&schema.items){
+  const group=make('fieldset');group.id=id;group.disabled=disabled;group.append(make('legend',label));
+  const values=Array.isArray(value)?value:[];
+  const button=(text,run)=>{const b=make('button',text);b.type='button';b.className='fields-actions-button';b.disabled=disabled;b.onclick=run;return b;};
+  values.forEach((entry,index)=>{const row=make('div');row.append(structuredInput(doc,{schema:schema.items,value:entry,id:`${id}-${index}`,label:`第${index+1}项`,disabled,onChange:next=>onChange(values.map((old,i)=>i===index?next:old))}),button('移除这一项',()=>{const next=values.filter((_,i)=>i!==index);onChange(next.length?next:undefined);}));group.append(row);});
+  if(values.length<(schema.maxItems??Infinity))group.append(button('添加一项',()=>onChange([...values,schema.items.type==='object'?{}:schema.items.enum?.[0]??''])));
+  return group;
+ }
+ const row=make('div'),caption=make('label',label);caption.htmlFor=id;let input;
+ if(schema.enum){
+  input=make('select');const empty=make('option','（不填）');empty.value='';input.append(empty);
+  schema.enum.forEach((entry,index)=>{const option=make('option',String(entry));option.value=String(index);input.append(option);});
+  const index=schema.enum.indexOf(value);input.value=index<0?'':String(index);input.onchange=()=>onChange(input.value===''?undefined:schema.enum[Number(input.value)]);
+ }else{
+  input=make('input');input.type=schema.type==='boolean'?'checkbox':['integer','number'].includes(schema.type)?'number':'text';
+  if(input.type==='checkbox')input.checked=value===true;else input.value=value??'';
+  if(input.type==='number'){input.step=schema.type==='integer'?'1':'any';if(schema.minimum!==undefined)input.min=schema.minimum;if(schema.maximum!==undefined)input.max=schema.maximum;}
+  if(schema.maxLength!==undefined)input.maxLength=schema.maxLength;
+  input.onchange=()=>onChange(input.type==='checkbox'?input.checked:input.value===''?undefined:input.type==='number'?Number(input.value):input.value);
+ }
+ input.id=id;input.disabled=disabled;row.append(caption,input);return row;
 }
 
 export class ActionBuilder{
@@ -36,7 +85,12 @@ export class ActionBuilder{
   this.services={preview,act,newEventId};this.step=0;this.action=null;this.slots={};this.revision=0;this.busy=false;this.cancelled=false;this.quote=null;this.error=null;this.result=null;
  }
  choose(action){
+  if(action.blocked){this.error=action.blocked;return;}
   this.action=structuredClone(action);this.slots={...action.fill};
+  if(action.id==='open:leave_mark'){
+   const intentSlot=action.slots.find(slot=>['intent','text'].includes(slot.name)&&slot.kind==='text');
+   if(intentSlot&&this.intent)this.slots[intentSlot.name]=this.intent;
+  }
   for(const slot of action.slots??[])if(this.slots[slot.name]===undefined&&slot.default!==undefined&&typeof slot.default!=='object'&&slot.default!=='dawn')this.slots[slot.name]=slot.default;
   this.invalidate();this.step=1;
  }
@@ -44,13 +98,18 @@ export class ActionBuilder{
  setSlot(name,value){
   if(!this.action?.slots.some(s=>s.name===name&&s.name!=='consent'))throw Error('这个动作没有此项选择');
   if(value===undefined||value==='')delete this.slots[name];else this.slots[name]=structuredClone(value);
+  const option=this.action.slots.find(s=>s.name===name)?.options?.find(o=>o.value===value);
+  if(option?.fill)Object.assign(this.slots,structuredClone(option.fill));
   this.invalidate();
  }
  // New target stock/options come from a fresh /actions projection. Retain only
  // choices still offered, including when the same item exists in two shops.
  refresh(action){
   this.action=structuredClone(action);
-  for(const slot of action.slots??[])if(slot.options&&this.slots[slot.name]!==undefined&&!slot.options.some(o=>o.value===this.slots[slot.name]))delete this.slots[slot.name];
+  for(const slot of action.slots??[])if(slot.options&&this.slots[slot.name]!==undefined){
+   if(slot.multiple){const kept=this.slots[slot.name].filter(v=>slot.options.some(o=>o.value===v));if(kept.length)this.slots[slot.name]=kept;else delete this.slots[slot.name];}
+   else if(!slot.options.some(o=>o.value===this.slots[slot.name]))delete this.slots[slot.name];
+  }
   this.invalidate();
  }
  async preview(){
@@ -101,7 +160,7 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   const search=node('button','找相近的动作');search.type='submit';search.className='fields-actions-button';search.disabled=builder.busy;form.append(search);container.append(form);
   form.onsubmit=e=>{e.preventDefault();const query=input.value.trim();builder.intent=query;perform(async()=>{
    builder.busy=true;
-   try{const result=await api('actions',{query,target:builder.target??here.target?.id,limit:24});if(!builder.cancelled)builder.matches=result.actions;}
+   try{const actions=await findBuilderActions(api,{query,target:builder.target??here.target?.id});if(!builder.cancelled)builder.matches=actions;}
    finally{builder.busy=false;}
   });};
   const choices=(builder.matches??here.actions).filter(a=>!a.readOnly);
@@ -114,24 +173,36 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   for(const slot of slots){
    const label=node('label',`${slotLabel(slot)}${slot.required?'':'（可不填）'}`),id=`fields-builder-${slot.name}`;label.htmlFor=id;
    container.append(label);
-   if(slot.kind==='object'){
+   if(slot.kind==='object'&&!slot.multiple){
     if(slot.default==='dawn')container.append(button('等到明早',()=>{const hour=Math.floor((builder.minute??0)%1440/60);builder.setSlot(slot.name,{dayOffset:hour>=6?1:0,hour:6});onChange();}));
-    else container.append(node('p','可改用本动作的时长或其他选项。'));
+    if(slot.name==='until'){
+     const current=builder.slots[slot.name]??{};
+     for(const [key,title,min,max]of [['dayOffset','从今天起第几天',0,null],['hour','钟点（时）',0,23],['minute','钟点（分）',0,59]]){
+      const field=node('input'),caption=node('label',title);field.type='number';field.id=`${id}-${key}`;caption.htmlFor=field.id;field.min=min;if(max!==null)field.max=max;field.step=1;field.value=current[key]??(key==='minute'?0:'');field.disabled=builder.busy;
+      field.onchange=()=>{const value={...builder.slots[slot.name]};if(field.value==='')delete value[key];else value[key]=Number(field.value);builder.setSlot(slot.name,Object.keys(value).length?value:undefined);onChange();};container.append(caption,field);
+     }
+    }else{
+     const schema=builderSlotSchema(builder.action,slot);
+     if(schema)container.append(structuredInput(doc,{schema,value:builder.slots[slot.name],id,label:slotLabel(slot),disabled:builder.busy,onChange:value=>{builder.setSlot(slot.name,value);onChange();}}));
+     else container.append(node('p','这个复合选项暂未提供本地编辑；请换用已有动作选项。'));
+    }
     continue;
    }
    let input;
    if(slot.options||slot.kind==='entity'){
-    input=node('select');const empty=node('option',slot.required?'请选择':'（不填）');empty.value='';input.append(empty);
-    for(const option of slot.options??[]){const o=node('option',option.label);o.value=option.value;input.append(o);}
+    input=node('select');input.multiple=Boolean(slot.multiple);if(!slot.multiple){const empty=node('option',slot.required?'请选择':'（不填）');empty.value='';input.append(empty);}
+    for(const option of slot.options??[]){const o=node('option',option.permission?.allowed===false?`${option.label}（${option.permission.reason}）`:option.label);o.value=option.value;o.disabled=option.permission?.allowed===false;input.append(o);}
    }else{
     input=node('input');input.type=['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'checkbox':'text';
     if(input.type==='number'){input.min='1';input.step='1';input.inputMode='numeric';}
    }
    input.id=id;input.required=Boolean(slot.required);input.disabled=builder.busy;
-   if(input.type==='checkbox')input.checked=Boolean(builder.slots[slot.name]);else input.value=builder.slots[slot.name]??'';
+   if(slot.multiple)for(const option of input.options)option.selected=(builder.slots[slot.name]??[]).includes(option.value);
+   else if(input.type==='checkbox')input.checked=Boolean(builder.slots[slot.name]);else input.value=builder.slots[slot.name]??'';
    input.onchange=()=>{
-    builder.setSlot(slot.name,input.type==='checkbox'?(input.checked||undefined):input.type==='number'?(input.value===''?undefined:Number(input.value)):input.value);
-    if(builder.step===1&&input.value)perform(async()=>{
+    const selected=slot.multiple?[...input.selectedOptions].map(o=>o.value):null;
+    builder.setSlot(slot.name,slot.multiple?(selected.length?selected:undefined):input.type==='checkbox'?(input.checked||undefined):input.type==='number'?(input.value===''?undefined:Number(input.value)):input.value);
+    if(builder.step===1&&!slot.multiple&&input.value)perform(async()=>{
      const revision=builder.revision,target=input.value;builder.busy=true;
      try{
       const result=await api('actions',{query:builder.action.id,target,limit:24});

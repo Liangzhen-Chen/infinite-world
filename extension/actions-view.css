@@ -13,6 +13,9 @@
 #fields-dialog .fields-actions-form input[type="checkbox"]{width:24px;height:24px}
 .fields-actions-presets{display:flex;flex-wrap:wrap}
 .fields-action-builder h4{margin:12px 0}
+.fields-action-builder fieldset{min-width:0;max-width:100%;margin:10px 0;padding:8px;border:1px solid var(--fields-border);border-radius:6px}
+.fields-action-builder legend{overflow-wrap:anywhere}
+#fields-dialog .fields-action-builder input[type="checkbox"]{min-width:44px;min-height:44px}
 .fields-builder-preview{padding:8px;border-left:2px solid var(--fields-accent);overflow-wrap:anywhere}
 .fields-builder-preview p{margin:6px 0;line-height:1.6}
 .fields-actions-entry{border-left:2px solid var(--fields-accent);padding:2px 10px;margin:10px 0}

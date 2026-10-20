@@ -72,7 +72,9 @@ test('world_act 翻译成旧调用：id 可省 core:，模板固定参数生效�
  assert.throws(()=>translateCall('world_act',{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:1,price:1}}),/没有这些槽位：price/);
  assert.throws(()=>translateCall('world_act',{action:'trade.buy',slots:{seller:'林穗'}}),/还缺：item、quantity/);
  assert.throws(()=>translateCall('world_act',{action:'core:look'}),/不写进账本/);
- assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/需要对方答应（对话功能完成后开放）/,'任何动作都不接受调用方替对方答应');
+ // A3-A7 replaces the obsolete dialogue promise with actual consent sources.
+ // Accept the two migration versions; caller-supplied consent must still throw.
+ assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/^Error: 需要对方答应（(?:对话功能完成后开放|须有同意事件、有效服务约定或对方当前决策，不能代填同意)）$/,'任何动作都不接受调用方替对方答应');
  assert.throws(()=>translateCall('world_act',{action:'core:read',slots:{section:'行囊'}}),/只读查询/);
  assert.equal(actionOfCall(registry,'world_trade',{operation:'trade',service:'住宿'}).id,'core:trade.lodge');
  assert.equal(actionOfCall(registry,'world_trade',{seller:'林穗',item:'x'}).id,'core:trade.trade','模型常用的无 operation 交易调用归到同名子操作');
@@ -105,7 +107,8 @@ test('world_actions：此处可做、对人可做、快捷栏七项；槽位可�
  assert.ok(atPost.actions.some(a=>a.id==='core:trade.deposit'&&a.fill.seller),'驿站钱庄柜面可存钱，柜员预填');
  const lodge2=worldActions(s,doc).actions.find(a=>a.id==='core:trade.lodge');assert.equal(lodge2.blocked,undefined,'当班店主出租客房由旧判定决定');
  const home={...doc,state:{...doc.state,location:'bld_hw_riverhome',npcs:{...doc.state.npcs,npc_hw_xuling:{...doc.state.npcs.npc_hw_xuling,location:'bld_hw_riverhome'}}}};
- assert.equal(worldActions(engine.scoped(home),home).actions.find(a=>a.id==='core:trade.lodge').blocked,'需要对方答应（对话功能完成后开放）','私宅借住要房东答应，暂不开放');
+ // A3-A7 changes the explanation, while private lodging still needs its host.
+ assert.match(worldActions(engine.scoped(home),home).actions.find(a=>a.id==='core:trade.lodge').blocked,/^需要对方答应（(?:对话功能完成后开放|须有同意事件、有效服务约定或对方当前决策，不能代填同意)）$/,'私宅借住要房东答应，暂不开放');
  const search=worldActions(s,doc,{query:'钓鱼'});assert.equal(search.actions[0].id,'core:wildlife.fish');
  assert.deepEqual(doc,fresh(),'只读投影');
 });

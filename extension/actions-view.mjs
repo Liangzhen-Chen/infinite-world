@@ -33,7 +33,11 @@ export async function renderActionsPanel(container,data){
         state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;rerender();
     },{disabled:state.builder?.busy});
     fragment.append(other);
-    const openForm=action=>{if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}state.form=action;rerender();};
+    const openForm=action=>{
+        if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}
+        state.form=action;
+        rerender();
+    };
     // 需要对方答应的动作照样列出，但按钮不可用并注明原因（A2 接入人物决策后开放）。
     const actionButton=a=>{const b=button(a.blocked?`${a.label}（${a.blocked}）`:a.label,()=>openForm(a),{disabled:Boolean(a.blocked)});return b;};
     async function run(action,slots){
@@ -52,7 +56,7 @@ export async function renderActionsPanel(container,data){
         }else if(state.quick==='移动'){
             if(!here.objects.exits.length)box.append(node('p','看不出有别的路。','fields-note'));
             const move=byQuick('移动');
-            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}})));
+            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}${e.permission?.allowed===false?`（${e.permission.reason}）`:''}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}}),{disabled:e.permission?.allowed===false}));
         }else if(state.quick==='账目'){
             const s=data.view.document.state;
             box.append(node('p',`钱袋：${s.player.coins}文`));
@@ -86,7 +90,7 @@ export async function renderActionsPanel(container,data){
         if(!here.objects.people.length)people.append(node('p','此处没有旁人。','fields-note'));
         for(const p of here.objects.people)people.append(button(p.activity?`${p.name}（${p.activity}）`:p.name,()=>{state.target=p.id;state.form=null;rerender();}));
         const exits=section('出路',fragment);
-        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}})));
+        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}${e.permission?.allowed===false?`（${e.permission.reason}）`:''}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}}),{disabled:e.permission?.allowed===false}));
         const items=section('行囊',fragment);
         if(!here.objects.items.length)items.append(node('p','行囊是空的。','fields-note'));
         for(const i of here.objects.items)items.append(button(`${i.name}×${i.quantity}`,()=>{state.target=i.id;state.form=null;rerender();}));
@@ -107,18 +111,23 @@ export async function renderActionsPanel(container,data){
         for(const slot of action.slots){
             if(slot.name==='consent')continue;// 同意由对方决定，不是玩家能填的槽位
             const filled=action.fill?.[slot.name];
-            if(slot.kind==='object'&&slot.default!=='dawn')continue;
-            if(slot.kind==='object'){inputs.push({slot,read:()=>sleepUntil(data.view.document.state.minute)});continue;}
+            if(slot.kind==='object'&&!slot.multiple&&slot.default!=='dawn')continue;
+            if(slot.kind==='object'&&!slot.multiple){inputs.push({slot,read:()=>sleepUntil(data.view.document.state.minute)});continue;}
             const label=node('label',slotLabel(slot)),id=`fields-slot-${slot.name}`;label.htmlFor=id;
             let input;
-            if(slot.options){input=node('select');input.id=id;if(!slot.required)input.append(new Option('（不填）',''));for(const o of slot.options)input.append(new Option(o.label,o.value));input.value=filled??slot.default??(slot.required?slot.options[0]?.value:'')??'';}
+            if(slot.options){
+                input=node('select');input.id=id;input.multiple=Boolean(slot.multiple);
+                if(!slot.required&&!slot.multiple)input.append(new Option('（不填）',''));
+                for(const o of slot.options){const option=new Option(o.permission?.allowed===false?`${o.label}（${o.permission.reason}）`:o.label,o.value);option.disabled=o.permission?.allowed===false;input.append(option);}
+                if(!slot.multiple)input.value=filled??slot.default??(slot.required?slot.options.find(o=>o.permission?.allowed!==false)?.value:'')??'';
+            }
             else if(slot.kind==='flag'){input=node('input');input.type='checkbox';input.id=id;input.checked=Boolean(filled);}
             else if(['quantity','coins','minutes'].includes(slot.kind)){input=node('input');input.type='number';input.min='1';input.inputMode='numeric';input.id=id;input.value=filled??slot.default??'';}
             else{input=node('input');input.type='text';input.id=id;input.value=filled??'';}
             if(filled!==undefined&&!slot.options&&slot.kind==='entity'){inputs.push({slot,read:()=>filled});continue;}
             form.append(label,input);
             if(slot.presets){const presets=node('div',undefined,'fields-actions-presets');for(const p of slot.presets)presets.append(button(String(p),()=>{input.value=p;},{className:'fields-actions-preset'}));form.append(presets);}
-            inputs.push({slot,read:()=>slot.kind==='flag'?(input.checked||undefined):['quantity','coins','minutes'].includes(slot.kind)?(input.value===''?undefined:Number(input.value)):(input.value===''?undefined:input.value)});
+            inputs.push({slot,read:()=>slot.multiple?([...input.selectedOptions].length?[...input.selectedOptions].map(o=>o.value):undefined):slot.kind==='flag'?(input.checked||undefined):['quantity','coins','minutes'].includes(slot.kind)?(input.value===''?undefined:Number(input.value)):(input.value===''?undefined:input.value)});
         }
         const submit=node('button','确定','fields-actions-submit');submit.type='submit';
         const cancel=button('算了',()=>{state.form=null;rerender();},{className:'fields-actions-back'});
