@@ -1,7 +1,7 @@
 import { getContext } from '../../../extensions.js';
 import { parseTurn, toolResultWithClock, lookupToolResult, actionCompletion } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
-import { toolDefinitions } from './tools.mjs';
+import { toolDefinitions, modelActionCatalog } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
 import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
@@ -222,9 +222,7 @@ async function act(action,slots={},confirmation={}){
 }
 async function modelActions(args){
     const result=await api('actions',{campaignId:view.reference.campaignId,target:args.target,query:args.query,limit:12});
-    // Compact for the model: ids, slots and filled choices; no internals, at most 8 choices per slot.
-    return JSON.stringify({here:result.scene,actions:result.actions.map(a=>({id:a.id,label:a.label,...(a.hint?{hint:a.hint}:{}),...(a.blocked?{blocked:a.blocked}:{}),...(a.permission?{permission:a.permission}:{}),...(Object.keys(a.fill??{}).length?{fill:a.fill}:{}),
-        slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.multiple?{multiple:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value),restrictedOptions:s.options.slice(0,8).filter(o=>o.permission?.allowed===false).map(o=>({value:o.value,reason:o.permission.reason}))}:{})}))}))});
+    return JSON.stringify(modelActionCatalog(result));
 }
 async function modelAct(args){
     const resolved=await api('actions',{campaignId:view.reference.campaignId,resolve:{action:args.action,slots:args.slots??{}}});

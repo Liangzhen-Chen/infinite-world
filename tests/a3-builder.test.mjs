@@ -10,12 +10,14 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {sceneLines,actionLines,loadTemplates} from '../server-plugin/action-text.mjs';
 import {localWeather} from '../server-plugin/weather.mjs';
 import {ActionBuilder,builderStep,previewLines,findBuilderActions,builderSlotSchema} from '../extension/action-builder.mjs';
-import {canAct} from '../server-plugin/action-capacity.mjs';
 import {openHoldings} from '../server-plugin/holdings.mjs';
-import {primitiveActionRuntime} from '../server-plugin/primitives.mjs';
 import {actionCompletion,actionNarrationContract,toolResultWithClock} from '../extension/turn.mjs';
 import {consistencyReviewRequest} from '../server-plugin/consistency-review.mjs';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
+import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
+import {withLedger,accountKey,auditLedger} from '../server-plugin/ledger.mjs';
+import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
+import {modelActionCatalog} from '../extension/tools.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 function fixture(){
@@ -182,16 +184,12 @@ test('动作包语言片段与核心模板共同读取，缺少翻译沿用基�
  assert.equal(translated.events.leave_mark,'你留下了记号。');assert.equal(translated.events.wait,'你等了一会儿。');assert.deepEqual(translated.units,base.units);assert.equal(base.events.leave_mark,undefined);
 });
 
-test('A7 权限消费接点：受限出路携带原生拒绝原因，等待保留，实际执行仍拒绝离开',async t=>{
+test('A7 实际权限消费：受限出路携带原生拒绝原因，等待保留，实际执行仍拒绝离开',async()=>{
  const f=fixture(),engine=f.engine.scoped(f.document),location=f.document.state.location;
  f.document.holdings=openHoldings(engine,f.document);
  f.document.holdings.rows.test_detained={id:'test_detained',kind:'guest_of',variant:'detained',holder:'player',subject:location};
  const before=structuredClone(f.document);
- // A7 is not merged into this worktree. This adapter tests D's contract using
- // real canAct, not the unmerged A7 normalization or its HTTP route.
- const runtime=primitiveActionRuntime(),original=runtime.actionPermission;
- t.after(()=>{if(original)runtime.actionPermission=original;else delete runtime.actionPermission;});
- runtime.actionPermission=(engine,document,{action,slots})=>({action,actor:'player',...canAct({engine,document},'player',action==='core:move'?'move':'wait',{to:slots.destination})});
+ // A7 is now merged: exercise the production normalization and capacity path.
  const menu=worldActions(engine,f.document,{query:'core:move'}),move=menu.actions.find(a=>a.id==='core:move');
  assert.ok(menu.objects.exits.length);assert.ok(menu.objects.exits.every(e=>e.permission.allowed===false&&/羁押/.test(e.permission.reason)));
  assert.ok(move.slots.find(s=>s.name==='destination').options.every(o=>o.permission.allowed===false));
@@ -228,4 +226,87 @@ test('未启用独立模型审查不替换正常正文，场外问题不回落�
   const review=await server.api('review/reply',{campaignId,token:begun.token,draft,query:playerText,expectedSequence:view.reference.sequence});
   assert.equal(review.fallback,undefined);assert.equal(review.text,draft);assert.deepEqual((await server.api('read',{campaignId})).document,view.document);
  }
+});
+
+test('留痕构造消费 B 的真实目录与规则：分区、标签和材料，预览不写且确认真实消耗并产生反应',async()=>{
+ const engine=new WorldEngine(structuredClone(world));
+ // A owns archive-loader installation. Bind B's actual data and adapter here;
+ // this verifies D -> B, not the still-unmerged public HTTP dispatch.
+ const json=async path=>JSON.parse(await fs.readFile(path,'utf8'));
+ Object.assign(engine.world,{openActionRules:await json('world/rules/tables/open-actions.json'),openTagging:await json('world/rules/open-tagging.json'),openReactions:await json('world/rules/open-reactions.json')});
+ let document=withLedger(engine,engine.createCharacter(seed,{},'builder-mark')).document,sequence=0;
+ const observer=Object.values(document.state.npcs).find(n=>n.location&&n.status!=='死亡'&&n.status!=='濒死'&&!n.scheduleTravel&&!n.cognitionTravel);
+ assert.ok(observer);document.state.location=observer.location;observer.activity='闲坐';observer.zone='wall';
+ const place=engine.byId.get(document.state.location);
+ place.zones=[{id:'wall',name:'东侧墙根'},{id:'hidden',name:'暗室',hidden:true},{id:'private',name:'私室',private:true},{id:'far',name:'封闭处',accessible:false},{id:'unseen',name:'不可见处',visible:false}];
+ const menu=()=>worldActions(engine.scoped(document),document,{query:'open:leave_mark'}),action=menu().actions.find(a=>a.id==='open:leave_mark');assert.ok(action);
+ assert.equal(builderStep(action.slots.find(s=>s.name==='zone')),1);assert.equal(builderStep(action.slots.find(s=>s.name==='materials')),2);
+ assert.deepEqual(action.slots.find(s=>s.name==='zone').options,[{value:'wall',label:'东侧墙根'}]);
+ const tags=action.slots.find(s=>s.name==='tags');assert.equal(tags.multiple,true);assert.deepEqual(tags.options.map(o=>o.value),[...engine.world.openTagging.tags,...engine.world.openTagging.traits]);assert.equal(tags.options.find(o=>o.value==='mark:warning').label,'警告');
+ const model=modelActionCatalog({scene:menu().scene,actions:[action]}).actions[0];
+ assert.deepEqual(model.slots.find(slot=>slot.name==='tags').options,tags.options.map(option=>option.value));assert.ok(model.slots.find(slot=>slot.name==='tags').options.includes('mark:art'));assert.equal('outcomes' in model,false);assert.equal('call' in model,false);
+ const schema=builderSlotSchema(action,action.slots.find(s=>s.name==='materials'));
+ assert.equal(schema.maxItems,engine.world.openActionRules.mark.maximumMaterials);assert.deepEqual(schema.items.required,['item','qty']);assert.equal(schema.items.properties.qty.minimum,1);
+ assert.deepEqual(model.slots.find(slot=>slot.name==='materials').inputSchema,schema);
+ const item=schema.items.properties.item.enum.find(id=>(document.ledger.accounts[accountKey('player',id,'inventory')]??0)>0);assert.ok(item);
+ assert.ok(schema.items.properties.item.enum.every(id=>Object.hasOwn(document.state.inventory,id)));assert.equal(schema.items.properties.item.enum.length,schema.items.properties.item.enumLabels.length);
+ const builder=new ActionBuilder({newEventId:()=> 'builder-real-mark',
+  preview:async(action,slots,eventId)=>({...executeLeaveMark(engine,document,{eventId,args:{slots}},{preview:true}),reference:{sequence}}),
+  act:async(action,slots,{eventId,expectedSequence})=>{assert.equal(expectedSequence,sequence);const out=executeLeaveMark(engine,document,{eventId,args:{slots}});document=applyPatches(document,out.patches);sequence++;return {ok:true,result:{receipt:out.receipt}};}
+ });
+ builder.intent='画出一扇能瞬移到王城的门';builder.choose(action);builder.setSlot('zone','wall');builder.setSlot('form','涂画');builder.setSlot('tags',['mark:warning']);builder.setSlot('materials',[{item,qty:1}]);
+ const before=structuredClone(document);await builder.preview();assert.ok(builder.quote);assert.deepEqual(document,before);assert.ok(previewLines(builder.quote.result).some(line=>line.includes('原本设想的效果不会')));
+ const names=Object.fromEntries([...menu().objects.people,...menu().objects.items].map(row=>[row.id,row.name])),forecast=previewLines(builder.quote.result,{label:action.label,names});
+ assert.ok(forecast.includes(`资源代价：1 ${names[item]}`));
+ const respondingId=builder.quote.result.receipt.mark.reactions[0].observer;assert.ok(names[respondingId]);assert.ok(forecast.some(line=>line.startsWith('可能回应：')&&line.includes(names[respondingId])));
+ const out=await builder.confirm(),receipt=out.result.receipt;assert.equal(receipt.status,'committed');assert.equal(receipt.fallback.originalIntentFulfilled,false);
+ assert.equal(document.ledger.accounts[accountKey('player',item,'inventory')],before.ledger.accounts[accountKey('player',item,'inventory')]-1);assert.deepEqual(auditLedger(document.ledger),[]);
+ assert.equal(document.state.location,before.state.location);assert.equal(document.state.minute,before.state.minute+engine.world.openActionRules.mark.minutes);assert.equal(document.state.created[receipt.mark.entity].zone,'wall');assert.ok(receipt.mark.reactions.length);
+ // The gateway narrates from the registered definition, not its UI projection.
+ const lines=actionLines({engine,action:loadActionRegistry().byId.get(action.id),before,after:document,args:builder.slots,result:{receipt}}).lines;
+ assert.ok(lines.some(line=>line.includes('涂画')));assert.ok(lines.some(line=>line.includes('原本设想的效果并未')));
+ for(const reaction of receipt.mark.reactions)assert.ok(lines.some(line=>line.includes(reaction.text)&&line.includes(document.state.npcs[reaction.observer].name??engine.byId.get(reaction.observer).name)));
+ assert.equal(await builder.confirm(),null);
+ // A refresh drops a formerly public area; the old choice cannot be confirmed.
+ place.zones=[];builder.refresh(menu().actions.find(a=>a.id==='open:leave_mark'));assert.equal(builder.slots.zone,undefined);assert.equal(builder.quote,null);
+});
+
+test('构造目录默认使用存档动作定义，不从安装目录漏入该存档未注册的新动作',()=>{
+ const engine=new WorldEngine(structuredClone(world)),document=engine.initialFromLegacy(seed,'archived-builder-menu');
+ const wait=structuredClone(loadActionRegistry().byId.get('core:time'));wait.label='本存档的等待';
+ engine.world.actionDefinitions={format:1,actions:[wait]};
+ const here=worldActions(engine.scoped(document),document);
+ assert.deepEqual(here.actions.map(action=>action.id),['core:time']);assert.equal(here.actions[0].label,'本存档的等待');
+ assert.ok(!worldActions(engine.scoped(document),document,{query:'open:leave_mark'}).actions.some(action=>action.id==='open:leave_mark'));
+});
+
+test('练习时长控件边界取自同一注册动作，不把30–480分钟显示成任意正数',()=>{
+ const f=fixture(),definition=loadActionRegistry().byId.get('core:practice.session');
+ const offer=worldActions(f.engine.scoped(f.document),f.document,{query:definition.id}).actions.find(action=>action.id===definition.id),duration=offer.slots.find(slot=>slot.name==='minutes');
+ assert.equal(duration.min,30);assert.equal(duration.max,480);assert.equal(duration.default,120);assert.deepEqual(duration.presets,[30,60,120,240]);
+ assert.equal(duration.min,definition.durationSlot.min);assert.equal(duration.max,definition.durationSlot.max);
+ const projected=modelActionCatalog({scene:[],actions:[offer]}).actions[0].slots.find(slot=>slot.name==='minutes');assert.equal(projected.min,30);assert.equal(projected.max,480);assert.equal(projected.default,120);
+});
+
+test('环境走近选择实际可见对象，确认走到对象位置；隐藏或异地对象不进入选择器',async()=>{
+ const f=fixture(),features=(f.engine.advanceFeatures??f.engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})))),local=features.find(row=>row.location===f.document.state.location&&row.position.some(value=>value!==0));assert.ok(local);
+ // The visibility projection reads the native feature set, not inferred NPC ids.
+ f.engine.advanceFeatures=[...features,{...local,id:'feature_builder_hidden',hidden:true},{...local,id:'feature_builder_private',private:true}];
+ const menu=worldActions(f.engine.scoped(f.document),f.document,{query:'core:environment.approach'}),offer=menu.actions.find(action=>action.id==='core:environment.approach'),targets=offer.slots.find(slot=>slot.name==='target').options;
+ assert.ok(targets.some(option=>option.value===local.id));assert.ok(targets.every(option=>!['feature_builder_hidden','feature_builder_private'].includes(option.value)&&(features.some(feature=>feature.id===option.value&&feature.location===f.document.state.location)||menu.objects.people.some(person=>person.id===option.value))));
+ const remote=features.find(row=>row.location!==f.document.state.location);assert.ok(remote);assert.ok(!targets.some(option=>option.value===remote.id));
+ const before=structuredClone(f.document);f.builder.choose(offer);f.builder.setSlot('target',local.id);await f.builder.preview();assert.ok(f.builder.quote);assert.deepEqual(f.document,before);
+ assert.equal((await f.builder.confirm()).ok,true);assert.deepEqual(f.document.state.records.local_player_position.point,local.position);assert.equal(f.document.state.location,before.state.location);assert.equal(f.document.state.player.coins,before.state.player.coins);assert.deepEqual(f.document.state.inventory,before.state.inventory);
+});
+
+test('法术选择只列本人已掌握的法术；可选自己和当前可见环境，不泄漏离屏目标',()=>{
+ const f=fixture(),spell=f.engine.world.spells[0];f.document.state.spells={[spell.id]:{level:1}};
+ f.document.state.creatures={...f.document.state.creatures,builder_beast:{name:'院里的山羊',location:f.document.state.location,hp:10,status:'正常'},builder_remote_beast:{name:'远处的山羊',location:'remote',hp:10,status:'正常'},builder_dead_beast:{name:'死去的山羊',location:f.document.state.location,hp:0,status:'死亡'}};
+ const cast=worldActions(f.engine.scoped(f.document),f.document,{query:'core:cast'}).actions.find(action=>action.id==='core:cast');
+ assert.deepEqual(cast.slots.find(slot=>slot.name==='spell').options,[{value:spell.id,label:spell.name}]);
+ const targets=cast.slots.find(slot=>slot.name==='target').options;assert.ok(targets.some(option=>option.value==='player'&&option.label==='自己'));assert.ok(targets.some(option=>option.value.startsWith('feature_')));
+ for(const offers of [targets,worldActions(f.engine.scoped(f.document),f.document,{query:'core:combat'}).actions.find(action=>action.id==='core:combat').slots.find(slot=>slot.name==='target').options]){
+  assert.ok(offers.some(option=>option.value==='builder_beast'));assert.ok(!offers.some(option=>['builder_remote_beast','builder_dead_beast'].includes(option.value)));
+ }
+ const remote=Object.keys(f.document.state.npcs).find(id=>f.document.state.npcs[id].location!==f.document.state.location);assert.ok(remote);assert.ok(!targets.some(option=>option.value===remote));
 });

@@ -10,10 +10,24 @@ import {currentShops} from './shop.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
+import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 export const QUICK=['交易','移动','等待','制作','账目','休息','观察'];
 const CHOICES={walk:'步行',horse:'骑马',cart:'乘车',boat:'乘船',cash:'现付',credit:'赊账',repay:'还账',attack:'攻击',defend:'防守',flee:'脱离',shove:'推搡'};
+const MARK_LABELS={'mark:insult':'侮辱','mark:satire':'讽刺','mark:defacement':'毁损标记','mark:graffiti':'涂鸦','mark:warning':'警告','mark:sacred_symbol':'神圣符号','mark:offering':'供奉','mark:memorial':'纪念','mark:petition':'请愿','mark:public_display':'公开展示','mark:art':'艺术','mark:custom':'自定含义','mark:invention':'发明设想','mark:boundary':'边界','mark:trap':'陷阱般的布置','mark:decoy':'诱饵般的布置','mark:shelter':'庇护记号','mark:omen':'征兆','mark:sword_carving':'剑刻',flammable:'易燃',wood:'木',paper:'纸',cloth:'布',fiber:'纤维',stone:'石',metal:'金属',wet:'湿润',frozen:'结冰'};
+
+// These are declared public areas, not invented coordinates or a second layout.
+function zoneOptions(ctx){
+ return (ctx.place?.zones??ctx.place?.areas??[]).filter(zone=>typeof zone==='string'||zone&&zone.hidden!==true&&zone.private!==true&&zone.visible!==false&&zone.accessible!==false)
+  .map(zone=>typeof zone==='string'?{value:zone,label:zone}:{value:zone.id,label:zone.name??zone.label??zone.id}).filter(zone=>typeof zone.value==='string');
+}
+function featureOptions(ctx){
+ const d={get:(...path)=>path.reduce((value,key)=>value?.[key],ctx.document)},origin=localPlayerPoint(d);
+ return environmentFeatures(ctx.engine).filter(row=>row.location===ctx.s.location&&!row.hidden&&!row.private&&row.visible!==false&&localSightClear(d,ctx.engine,ctx.s.location,origin,row.position))
+  .map(row=>({value:row.id,label:row.name}));
+}
 
 function context(engine,document){
  const s=document.state,place=engine.byId.get(s.location),templates=loadTemplates();
@@ -33,7 +47,8 @@ function context(engine,document){
   return {...e,condition:edge.closedSeasons?.includes(season)?'本季封路':w.closed?'天气封路':w.weather??null};});
  return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,
   inventory:Object.entries(s.inventory??{}).filter(([,v])=>qty(v)>0).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
-  skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)}))};
+  skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)})),
+  creatures:Object.entries(s.creatures??{}).filter(([id,row])=>row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
 }
 function stockOf(ctx,npc){return Object.entries(ctx.s.npcs?.[npc]?.inventory??{}).filter(([,v])=>qty(v)>0).map(([id,v])=>({id,name:ctx.name(id),quantity:qty(v)}));}
 // Named projection checks used by registry preconditions.
@@ -91,11 +106,26 @@ function actionPermission(ctx,action,slots){
 function offer(ctx,action,target){
  const fill={};
  const slots=action.slots.map(slot=>{
-  const row={name:slot.name,kind:slot.kind,...(slot.entity?{entity:slot.entity}:{}),...(slot.required?{required:true}:{}),...(slot.consent?{consent:true}:{}),...(slot.default!==undefined?{default:slot.default}:{}),...(slot.presets?{presets:slot.presets}:{})};
+  const row={name:slot.name,kind:slot.kind,...(slot.entity?{entity:slot.entity}:{}),...(slot.required?{required:true}:{}),...(slot.consent?{consent:true}:{}),...(slot.default!==undefined?{default:slot.default}:{}),...(slot.presets?{presets:slot.presets}:{}),...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{})};
   if(slot.fill==='target'&&target)fill[slot.name]=target;
   if(slot.fill==='host'&&ctx.lodging)fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.[0])fill[slot.name]=ctx.bank.keepers[0];
   let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
+  if(choices===null&&(slot.kind==='zone'||slot.name==='zone'))choices=zoneOptions(ctx);
+  if(action.id==='open:leave_mark'){
+   if(slot.name==='tags'){
+    const tagging=ctx.engine.world.openTagging;
+    choices=[...new Set([...(tagging?.tags??[]),...(tagging?.traits??[])])].map(value=>({value,label:MARK_LABELS[value]??value}));row.multiple=true;
+   }
+   if(slot.name==='materials'){
+    // Exact input contract of B's executeLeaveMark, using this archived world's
+    // material limit and the player's current inventory. No JSON text entry.
+    const maximum=ctx.engine.world.openActionRules?.mark?.maximumMaterials;
+    if(Number.isSafeInteger(maximum)&&maximum>=0)row.inputSchema={type:'array',maxItems:maximum,items:{type:'object',required:['item','qty'],properties:{
+     item:{type:'string',enum:ctx.inventory.map(item=>item.id),enumLabels:ctx.inventory.map(item=>item.name)},qty:{type:'integer',minimum:1}
+    }}};
+   }
+  }
   // Entity selectors are a projection of what the player can reach, never an
   // invitation to type a hidden catalogue id. Explicit stock/recipe lists win.
   if(choices===null&&slot.kind==='entity'){
@@ -103,7 +133,18 @@ function offer(ctx,action,target){
    else if(slot.entity==='item')choices=ctx.inventory.map(i=>({value:i.id,label:`${i.name}×${i.quantity}`}));
    else if(['place','location'].includes(slot.entity))choices=ctx.exits.map(e=>({value:e.id,label:`${e.direction} ${e.name}`}));
    else if(slot.entity==='skill')choices=ctx.skills.map(s=>({value:s.id,label:s.name}));
+   else if(slot.entity==='spell')choices=Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}));
+   else if(slot.entity==='recipe')choices=ctx.recipes.map(recipe=>({value:recipe.id,label:recipe.name}));
   }
+  // S0's shared world_field schema calls these targets "person"/"place";
+  // the actual environment handlers take local feature ids for these fields.
+  if(action.id.startsWith('core:environment.')&&['target','destination'].includes(slot.name)){
+   const local=featureOptions(ctx);
+   if(slot.name==='target'&&['core:environment.inspect','core:environment.inspect_marks','core:environment.inspect_heat','core:environment.warm_touch','core:environment.douse_fire'].includes(action.id))local.push(...ctx.inventory.map(item=>({value:item.id,label:item.name})));
+   choices=[...new Map([...(choices??[]),...local].map(option=>[option.value,option])).values()];
+  }
+  if(action.id==='core:cast'&&slot.name==='target')choices=[{value:'player',label:'自己'},...ctx.people.map(person=>({value:person.id,label:person.name})),...ctx.creatures,...featureOptions(ctx),...ctx.inventory.map(item=>({value:item.id,label:item.name}))];
+  if(action.id==='core:combat'&&slot.name==='target')choices=[...(choices??[]),...ctx.creatures];
   // Existing array inputs use only currently reachable people and owned units.
   if(slot.kind==='object'){
    if(['helpers','workers','guests','beneficiaries'].includes(slot.name))choices=ctx.people.map(p=>({value:p.id,label:p.name}));
@@ -135,7 +176,8 @@ function restockNotes(engine,ctx,keeper){
 }
 const kindOf=(ctx,engine,id)=>ctx.present.has(id)?'npc':ctx.inventory.some(r=>r.id===id)?'item':id===ctx.s.location||ctx.exits.some(e=>e.id===id)?'place':null;
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
-export function worldActions(engine,document,{target=null,query=null,limit=24,registry=loadActionRegistry()}={}){
+export function worldActions(engine,document,{target=null,query=null,limit=24,registry=null}={}){
+ registry??=primitiveActionRuntime()?.registry?.(engine)??loadActionRegistry();
  const ctx={...context(engine,document),document};
  let id=null;
  if(target){try{id=engine.resolve(String(target));}catch{id=ctx.people.find(p=>p.name===target)?.id??ctx.inventory.find(r=>r.name===target)?.id??null;}}

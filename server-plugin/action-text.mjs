@@ -104,13 +104,24 @@ export function actionLines({engine,action,before,after,args,result,effects=appl
  if(result?.receipt&&result.receipt.status!=='committed')return {lines:[refusalLine(action,result.receipt.reason??'行动尚未完成',locale)],effects:[]};
  if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
- const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
+ const entry=templates.events[action?.narration];
+ const chain=[typeof entry==='object'?entry?.success:entry,templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
  const receipt=result?.receipt;
  const head=receipt?.check?.success===false?`你尝试${action?.label??'这样做'}，未能达到预期。`:
   receipt?.narrate?.mustNot?.length?`你尝试${action?.label??'这样做'}，部分效果未能发生。`:chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
  const counterparties=new Set();
  for(const k of ['seller','buyer','target','npc','teacher','authority']){const raw=args?.[k];if(typeof raw!=='string')continue;try{counterparties.add(engine.resolve(raw));}catch{}}
  const rest=effectLines(engine,before,after,effects,templates,counterparties);
+ if(receipt?.fallback?.originalIntentFulfilled===false){
+  // The mark exists; the player's original desired effect is not its result.
+  rest.push('只留下了痕迹，原本设想的效果并未因此实现。');
+  for(const reaction of receipt.mark?.reactions??[]){
+   const event=after.state.records?.[`world_event:${reaction.event}`];
+   if(event?.verb!=='tell'||event.actor!==reaction.observer||event.payload?.kind!=='mark_reaction'||event.payload.mark!==receipt.mark.entity)continue;
+   if(event.target!=='player'&&event.actor!=='player'&&!event.witnesses?.includes('player'))continue;
+   rest.push(fill(entry?.reaction,{observer:nameOf(engine,after.state,event.actor),text:event.payload.text})??`${nameOf(engine,after.state,event.actor)}：${event.payload.text}`);
+  }
+ }
  return {lines:[head,...(rest.length?rest:[templates.effects.nothing])],effects};
 }
 export function refusalLine(action,reason,locale=BASE_LOCALE){

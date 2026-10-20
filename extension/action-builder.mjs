@@ -2,9 +2,9 @@
 // execution boundary; a preview receipt is never executable input.
 import {memberDefinitions,toolDefinitions} from './tools.mjs';
 const inputSchemas=new Map([...memberDefinitions(),...toolDefinitions()].map(row=>[row.function.name,row.function.parameters]));
-export const builderSlotSchema=(action,slot)=>inputSchemas.get(action.inputTool)?.properties?.[slot.name]??null;
+export const builderSlotSchema=(action,slot)=>slot.inputSchema??inputSchemas.get(action.inputTool)?.properties?.[slot.name]??null;
 export const BUILDER_STEPS=['做什么','对谁或何物','用什么','怎么做'];
-const implementsSlot=new Set(['item','weapon','skill','spell','recipe','instance','tool','material']);
+const implementsSlot=new Set(['item','weapon','skill','spell','recipe','instance','tool','material','materials']);
 const effectNames={transfer:'交付物品或款项',move:'移动',learn:'学习',vital:'身体变化',time:'时间推进',status:'状态变化',emit:'表达或请求',create:'留下实体','fact.set':'对象变化','holding.open':'建立关系','holding.close':'结束关系','obligation.create':'订立约定','obligation.fulfill':'履行约定','obligation.close':'结束约定',schedule:'预约行动',transition:'身份变化',invoke:'施展能力'};
 export async function findBuilderActions(api,{query,target}){
  const result=await api('actions',{query,target,limit:24});
@@ -16,31 +16,36 @@ export async function findBuilderActions(api,{query,target}){
 export function builderStep(slot){
  if(implementsSlot.has(slot.name)||['instances','tools','skills'].includes(slot.name))return 2;
  if(slot.multiple&&['helpers','workers','guests','beneficiaries'].includes(slot.name))return 1;
- if(slot.kind==='entity')return 1;
+ if(slot.kind==='entity'||['zone','direction'].includes(slot.kind)||['zone','direction'].includes(slot.name))return 1;
  return 3;
 }
 export function slotLabel(slot){
  const names={seller:'向谁',buyer:'交给谁',target:'对象',destination:'去处',item:'物品',weapon:'武器',skill:'技能',spell:'法术',recipe:'配方',instance:'哪一件',
- quantity:'数量',coins:'钱数（文）',minutes:'时长（分钟）',days:'天数',mode:'走法',intent:'出手方式',activity:'做什么',payment:'付款方式',creditMinutes:'赊账期限（分钟）',until:'等到',debt:'哪笔账'};
+ quantity:'数量',coins:'钱数（文）',minutes:'时长（分钟）',days:'天数',mode:'走法',intent:'出手方式',activity:'做什么',payment:'付款方式',creditMinutes:'赊账期限（分钟）',until:'等到',debt:'哪笔账',zone:'位置',direction:'朝哪个方向',tags:'痕迹的含义与材质',materials:'使用的材料',form:'留下什么形态'};
  const compound={helpers:'帮手',workers:'参与者',guests:'同行者',beneficiaries:'受益者',instances:'具体物件',tools:'工具',skills:'技能',attributes:'分配属性点',data:'详细设置',objective:'约定目标',materials:'材料',output:'产出'};
  return names[slot.name]??compound[slot.name]??slot.name;
 }
-export function previewLines(result,{label='这样做',startMinute}={}){
+export function previewLines(result,{label='这样做',startMinute,names={}}={}){
  const receipt=result?.receipt??result?.result?.receipt;
  if(!receipt)return ['尚未取得预览，不能确认。'];
- const legacy=receipt.legacy,lines=[`这相当于：${label}`,`路由：${receipt.routed??'尚未确定'}`];
+ const legacy=receipt.legacy,lines=[`这相当于：${label}`,`路由：${receipt.routed?`已登记动作（${label}）`:'尚未确定'}`];
  const elapsed=receipt.cost?.time??legacy?.elapsed??legacy?.minutes??(Number.isSafeInteger(startMinute)&&Number.isSafeInteger(legacy?.minute)?legacy.minute-startMinute:null);
  lines.push(`耗时：${Number.isFinite(elapsed)?`${elapsed}分钟`:'尚未提供'}`);
  if(Number.isFinite(receipt.cost?.coins??legacy?.cost))lines.push(`费用：${receipt.cost?.coins??legacy.cost}文`);
- else if(receipt.cost?.resources?.length)lines.push(`资源代价：${receipt.cost.resources.map(r=>`${r.qty??r.quantity??''} ${r.resource??r.item??'物品或款项'}`).join('；')}`);
+ else if(receipt.cost?.resources?.length)lines.push(`资源代价：${receipt.cost.resources.map(r=>{const resource=r.resource??r.item??(typeof r.from==='string'?r.from.split('|')[1]:null);return `${r.qty??r.quantity??''} ${names[resource]??'物品或款项'}`;}).join('；')}`);
  else lines.push('费用：以确认时的实际裁决为准');
  const check=receipt.check;
  if(receipt.permission)lines.push(`行为限制：${receipt.permission.allowed===false?receipt.permission.reason:receipt.permission.allowed===true?'当前制度允许发起；确认时仍需校验':'尚未取得预判'}`);
  if(receipt.consent){const permission=receipt.consent;lines.push(`同意：${permission.allowed?({given:'本人同意',proxy:'有效代理',emergency:'紧急依据'}[permission.kind]??'已有依据'):'未取得'}${permission.reason?`（${permission.reason}）`:''}`);}
  if(Array.isArray(receipt.witnesses))lines.push(`已知见证：${receipt.witnesses.length}人`);
+ const witnesses=(receipt.witnesses??[]).map(id=>names[id]).filter(Boolean);
+ if(witnesses.length)lines.push(`可见见证者：${witnesses.join('、')}`);
+ const responders=[...new Set((receipt.mark?.reactions??[]).map(row=>names[row.observer]).filter(Boolean))];
+ if(responders.length)lines.push(`可能回应：${responders.join('、')}（确认时重新裁决）`);
  lines.push(`难度：${check?.difficulty??check?.dc??(check?'按当前对抗裁决':'本次回执未提供检定难度')}`);
  for(const notice of legacy?.notices??[])if(notice.text)lines.push(`预计：${notice.text}`);
  if(receipt.applied?.length)lines.push(`预计效果：${receipt.applied.map(e=>effectNames[e.op]??'其他世界变化').join('、')}`);
+ if(receipt.fallback?.originalIntentFulfilled===false)lines.push('预计只留下痕迹；原本设想的效果不会因此实现。');
  for(const c of receipt.consequences??[])lines.push(`后果：${typeof c==='string'?c:c.reason??c.tags?.join('、')??c.type??'确认时重新裁决'}`);
  for(const row of receipt.trimmed??[])if(row.reason)lines.push(`受限效果：${row.reason}`);
  lines.push('预览尚未发生；见证、同意与法律后果以引擎实际提供的裁决为准。');
@@ -51,7 +56,7 @@ export function previewLines(result,{label='这样做',startMinute}={}){
 // Nested objects and lists use controls instead of asking for JSON.
 function structuredInput(doc,{schema,value,id,label,disabled,onChange}){
  const make=(tag,text)=>{const n=doc.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
- const names={type:'种类',name:'名称',quantity:'数量',item:'物品',location:'地点',project:'工程',template:'模板',power:'规模',age:'年龄',occupation:'身份',notes:'说明',skill:'技能',minimumProficiency:'熟练度要求',materials:'材料',amount:'份量',minutes:'分钟',difficulty:'难度',output:'产出',tools:'工具',workstation:'设施',byproducts:'副产物',toolWear:'工具磨损',failure:'失败处理',recoverFraction:'可回收比例',injury:'受伤',spec:'规则说明'};
+ const names={type:'种类',name:'名称',quantity:'数量',qty:'数量',item:'物品',location:'地点',project:'工程',template:'模板',power:'规模',age:'年龄',occupation:'身份',notes:'说明',skill:'技能',minimumProficiency:'熟练度要求',materials:'材料',amount:'份量',minutes:'分钟',difficulty:'难度',output:'产出',tools:'工具',workstation:'设施',byproducts:'副产物',toolWear:'工具磨损',failure:'失败处理',recoverFraction:'可回收比例',injury:'受伤',spec:'规则说明'};
  if(schema.type==='object'&&schema.properties){
   const group=make('fieldset');group.id=id;group.disabled=disabled;group.append(make('legend',label));
   for(const [key,child]of Object.entries(schema.properties))group.append(structuredInput(doc,{schema:child,value:value?.[key],id:`${id}-${key}`,label:`${names[key]??key}${schema.required?.includes(key)?'':'（可不填）'}`,disabled,onChange:next=>{const changed={...value};if(next===undefined)delete changed[key];else changed[key]=next;onChange(Object.keys(changed).length?changed:undefined);}}));
@@ -68,7 +73,7 @@ function structuredInput(doc,{schema,value,id,label,disabled,onChange}){
  const row=make('div'),caption=make('label',label);caption.htmlFor=id;let input;
  if(schema.enum){
   input=make('select');const empty=make('option','（不填）');empty.value='';input.append(empty);
-  schema.enum.forEach((entry,index)=>{const option=make('option',String(entry));option.value=String(index);input.append(option);});
+  schema.enum.forEach((entry,index)=>{const option=make('option',schema.enumLabels?.[index]??String(entry));option.value=String(index);input.append(option);});
   const index=schema.enum.indexOf(value);input.value=index<0?'':String(index);input.onchange=()=>onChange(input.value===''?undefined:schema.enum[Number(input.value)]);
  }else{
   input=make('input');input.type=schema.type==='boolean'?'checkbox':['integer','number'].includes(schema.type)?'number':'text';
@@ -173,7 +178,7 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   for(const slot of slots){
    const label=node('label',`${slotLabel(slot)}${slot.required?'':'（可不填）'}`),id=`fields-builder-${slot.name}`;label.htmlFor=id;
    container.append(label);
-   if(slot.kind==='object'&&!slot.multiple){
+   if((['object','materials'].includes(slot.kind)||builderSlotSchema(builder.action,slot))&&!slot.multiple){
     if(slot.default==='dawn')container.append(button('等到明早',()=>{const hour=Math.floor((builder.minute??0)%1440/60);builder.setSlot(slot.name,{dayOffset:hour>=6?1:0,hour:6});onChange();}));
     if(slot.name==='until'){
      const current=builder.slots[slot.name]??{};
@@ -189,12 +194,12 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
     continue;
    }
    let input;
-   if(slot.options||slot.kind==='entity'){
+   if(slot.options||['entity','zone','direction'].includes(slot.kind)||['zone','direction'].includes(slot.name)){
     input=node('select');input.multiple=Boolean(slot.multiple);if(!slot.multiple){const empty=node('option',slot.required?'请选择':'（不填）');empty.value='';input.append(empty);}
     for(const option of slot.options??[]){const o=node('option',option.permission?.allowed===false?`${option.label}（${option.permission.reason}）`:option.label);o.value=option.value;o.disabled=option.permission?.allowed===false;input.append(o);}
    }else{
     input=node('input');input.type=['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'checkbox':'text';
-    if(input.type==='number'){input.min='1';input.step='1';input.inputMode='numeric';}
+    if(input.type==='number'){input.min=String(slot.min??1);if(slot.max!==undefined)input.max=String(slot.max);input.step='1';input.inputMode='numeric';}
    }
    input.id=id;input.required=Boolean(slot.required);input.disabled=builder.busy;
    if(slot.multiple)for(const option of input.options)option.selected=(builder.slots[slot.name]??[]).includes(option.value);
@@ -216,7 +221,8 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   }
   if(builder.quote){
    const box=node('div');box.className='fields-builder-preview';box.setAttribute('role','status');
-   for(const line of previewLines(builder.quote.result,{label:builder.action.label,startMinute:builder.quote.result.startMinute}))box.append(node('p',line));
+   const names=Object.fromEntries([here.location,here.target,...here.objects?.people??[],...here.objects?.items??[]].filter(Boolean).map(row=>[row.id,row.name]));names.player='你';
+   for(const line of previewLines(builder.quote.result,{label:builder.action.label,startMinute:builder.quote.result.startMinute,names}))box.append(node('p',line));
    container.append(box,button('确认执行',()=>perform(async()=>{const result=await builder.confirm();if(result)onResult(result,builder.action);}))); 
   }else if(builder.step===3)container.append(button('预览代价与结果',()=>perform(()=>builder.preview())));
   if(builder.step<3)container.append(button('下一步',()=>{builder.step++;onChange();}));

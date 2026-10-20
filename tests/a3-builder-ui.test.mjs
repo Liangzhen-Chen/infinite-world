@@ -3,9 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from 'playwright-core';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
+import {loadWorld} from '../tools/load-world.mjs';
 
 test('真实后端无模型构造器：手机/桌面四步、预览取消、确认、stale及拒绝',{timeout:120000},async t=>{
- const server=await createPlaytestServer({consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
+ const world=await loadWorld(),json=async path=>JSON.parse(await fs.readFile(path,'utf8'));
+ // A still owns archive-loader/mark dispatch. These are B's actual data files;
+ // this UI block only edits and cancels. Native settlement is tested separately.
+ Object.assign(world,{openActionRules:await json('world/rules/tables/open-actions.json'),openTagging:await json('world/rules/open-tagging.json'),openReactions:await json('world/rules/open-reactions.json')});
+ const server=await createPlaytestServer({world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  for(const viewport of [{width:390,height:844},{width:1280,height:900}]){
   const created=await server.api('create',{}),campaignId=created.reference.campaignId;
@@ -76,6 +81,19 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await builder.locator('#fields-builder-attributes-体质').fill('1');await builder.locator('#fields-builder-attributes-体质').press('Tab');
   await builder.getByRole('button',{name:'预览代价与结果',exact:true}).click();await builder.getByRole('alert').waitFor();assert.equal(await builder.getByRole('button',{name:'确认执行',exact:true}).count(),0);assert.deepEqual((await read()).document,timed.document);
   await builder.getByRole('button',{name:'取消',exact:true}).click();
+  const mark=(await server.api('actions',{campaignId,query:'open:leave_mark'})).actions.find(a=>a.id==='open:leave_mark');
+  assert.ok(mark.slots.find(s=>s.name==='materials').inputSchema);
+  await dialog.getByRole('button',{name:'其他…',exact:true}).click();await builder.locator('#fields-builder-intent').fill('open:leave_mark');await builder.getByRole('button',{name:'找相近的动作',exact:true}).click();
+  await builder.getByRole('button',{name:mark.label,exact:true}).click();
+  assert.equal(await builder.locator('#fields-builder-zone').evaluate(node=>node.tagName),'SELECT');
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.getByRole('button',{name:'增加一项',exact:true}).click();
+  await builder.locator('#fields-builder-materials-0-item').selectOption({label:'面包'});
+  await builder.locator('#fields-builder-materials-0-qty').fill('1');await builder.locator('#fields-builder-materials-0-qty').press('Tab');
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.locator('#fields-builder-form').selectOption({label:'涂画'});
+  await builder.locator('#fields-builder-tags').selectOption(['mark:warning','paper']);
+  assert.equal(await builder.locator('#fields-builder-tags').evaluate(node=>node.multiple),true);
+  assert.equal(await builder.locator('#fields-builder-tags').evaluate(node=>[...node.selectedOptions].map(option=>option.text).join('、')),'警告、纸');
+  await builder.getByRole('button',{name:'取消',exact:true}).click();assert.deepEqual((await read()).document,timed.document);
   // Real reply review uses an offline client. Runtime must display replayed
   // templates and finish the UI turn without committing the narrator's tail.
   await page.evaluate(async()=>{
