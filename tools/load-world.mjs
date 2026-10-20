@@ -69,6 +69,11 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // basis); a bad table stops the load and names file and field. Attached as a non-enumerable property so the
     // world's serialized form, hash and clones are unchanged; consumers read world.balance (tables by name).
     Object.defineProperty(world,'balance',{value:requireBalanceTables(root),enumerable:false,writable:true,configurable:true});
+    // These tables/templates become serialized only for editions with primitive
+    // programs. Legacy hashes and archived reducers retain their original shape.
+    let narrativeTemplates=[];
+    try{narrativeTemplates=JSON.parse(await fs.readFile(path.join(root,'ontology/entity-templates.json'),'utf8')).entries.flatMap(e=>e.narrative??[]);}catch(error){if(error.code!=='ENOENT')throw error;}
+    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveTables:Object.fromEntries(['body','learning','action-costs'].map(name=>[name,world.balance[name]]))};
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));
@@ -78,6 +83,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         // archived world, just like recipes and dialogue templates.
         if(registry.actions.some(a=>a.outcomes||a.preconditions?.some(p=>p?.source)||a.consent?.scope?.some?.(p=>p?.source)))world.actionDefinitions={format:1,actions:registry.actions};
     }catch(error){if(error.code!=='ENOENT')throw error;}
+    for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions),writable:true,configurable:true});
     return world;
 }
 

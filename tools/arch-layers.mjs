@@ -4,7 +4,7 @@
 export const LAYERS=['L0','L1','L2','L3','L4'];
 export const LAYER_NAMES={L0:'内核',L1:'本体',L2:'玩法包',L3:'投影',L4:'接口'};
 
-const L0=['rx','primitives','primitive-policy','obligation-protocol','storage','archived-reducer','campaign-reducer','migrations','migrations/r1','rule-state-migration','world-upgrade','world-registry',
+const L0=['rx','primitives','primitive-policy','primitive-schema','obligation-protocol','storage','archived-reducer','campaign-reducer','migrations','migrations/r1','rule-state-migration','world-upgrade','world-registry',
  'agriculture-migration','boss-migration','farm-pests-migration',/* 迁移归存档 */
  'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'holdings'/* S2a 持有存储：持有、实体化对象与位置事实 */,'scheduler'/* S2b 同刻调度器：阶段、排序键、序号、争夺池 */,'advance-registry','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];
@@ -37,7 +37,7 @@ const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
 put(L0,'L0');put(L1,'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['primitives-runtime','rx-library'],'L1');
+put(['primitives-runtime','primitives-effects','primitives-body','rx-library'],'L1');
 
 // {layer, pack} for a repository-relative file, or null when unassigned.
 export function layerOf(file){

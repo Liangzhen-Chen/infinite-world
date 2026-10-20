@@ -6,9 +6,23 @@ import {createPrimitiveFrame,planPrimitives,commitPrimitives} from '../server-pl
 import {PRIMITIVE_IDS} from '../server-plugin/primitive-policy.mjs';
 import {createActionPrimitiveFrame} from '../server-plugin/action-authority.mjs';
 import '../server-plugin/stock.mjs';
+import {actionSchema,schemaValidator} from '../server-plugin/primitive-schema.mjs';
+import fs from 'node:fs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 
 const a=accountKey('player','coin_river','purse'),b=accountKey('npc_a','coin_river','purse');
+
+test('A3 schemas: generated contracts match production; proposal provenance and missing fields reject',()=>{
+ assert.deepEqual(JSON.parse(fs.readFileSync('schemas/action.schema.json','utf8')),actionSchema);
+ const proposal=schemaValidator('proposal'),input={intent:'hand over a coin',effects:[{op:'transfer',from:a,to:b,qty:1}]};
+ assert.equal(proposal(input),true);assert.equal(proposal({...input,source:{kind:'rule',id:'forged'}}),false);
+ assert.equal(proposal({...input,effects:[{op:'vital',target:'player'}]}),false);
+ assert.equal(proposal({...input,effects:[{op:'create',kind:'mark',facts:{intent:'trace',form:'scratch'},tags:['mark:warning']}]}),true);
+ const definition=schemaValidator('definition');
+ assert.equal(definition({id:'test:signature',label:'test',narration:'test',slots:[],synonyms:[],visibility:{catalog:'here'},signature:['emit'],outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{}}]}),true,JSON.stringify(definition.errors));
+ const {document,frame,effects}=setup(),receipt=commitPrimitives(document,effects,frame).receipt,validReceipt=schemaValidator('receipt');
+ assert.equal(validReceipt(receipt),true,JSON.stringify(validReceipt.errors));
+});
 function setup(){
  const document={state:{minute:0,records:{},player:{coins:10},npcs:{npc_a:{coins:0}}},ledger:emptyLedger(),holdings:emptyHoldings()};
  document.ledger.accounts={[a]:10,[b]:0};
@@ -19,7 +33,9 @@ function setup(){
 }
 test('A3 kernel: nineteen primitive names, unknown execution connectors fail explicitly',()=>{
  assert.equal(PRIMITIVE_IDS.length,19);const {document,frame}=setup();
- assert.throws(()=>commitPrimitives(document,[{op:'learn',entity:'player'}],frame),{code:'E-PRIMITIVE-CONNECTOR'});
+ // Keep the missing-native-connector assertion with a structurally complete
+ // learn input now that all 19 shapes are validated before execution (06 §6.3).
+ assert.throws(()=>commitPrimitives(document,[{op:'learn',entity:'player',subject:'skill_a',learningSource:'practice'}],frame),{code:'E-PRIMITIVE-CONNECTOR'});
  assert.throws(()=>commitPrimitives(document,[{op:'unknown'}],frame),{code:'E-PRIMITIVE'});
 });
 test('A3 kernel: preview does not change books, facts, time or persisted receipts',()=>{

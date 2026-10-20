@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyLedger,accountKey,withLedger} from '../server-plugin/ledger.mjs';
+import {emptyLedger,accountKey,withLedger,openLedger} from '../server-plugin/ledger.mjs';
 import {emptyHoldings,openHoldings} from '../server-plugin/holdings.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {createPrimitiveFrame,planPrimitives,commitPrimitives,queuePrimitiveProposal} from '../server-plugin/primitives.mjs';
@@ -11,6 +11,10 @@ import {consent} from '../server-plugin/action-consent.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import fs from 'node:fs/promises';
+import {recordLocalContact} from '../server-plugin/environment.mjs';
+import {auditLedger} from '../server-plugin/ledger.mjs';
+import {isGone} from '../server-plugin/holdings.mjs';
+import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 const a=accountKey('player','coin_river','purse'),b=accountKey('npc_a','coin_river','purse');
 function fixture(){
  const document={state:{minute:2,records:{}},ledger:emptyLedger(),holdings:emptyHoldings()};document.ledger.accounts={[a]:10,[b]:0};
@@ -56,6 +60,282 @@ function runtimeFixture(){
  assert.ok(npc,'requires an actually present recipient');
  return {engine,document,npc};
 }
+
+function effectFixture(){
+ const f=runtimeFixture();
+ f.engine.world.primitiveTables=structuredClone(runtimeWorld.primitiveTables);
+ f.engine.world.primitiveTemplates=structuredClone(runtimeWorld.primitiveTemplates);
+ const d=f.engine.primitiveDraft(f.document);recordLocalContact(d,f.engine,f.npc,'a3-contact');
+ f.document=applyPatches(f.document,d.patches);
+ f.frame=(id,limits={})=>createRuntimePrimitiveFrame(f.engine,f.document,{eventId:id,source:{kind:'catalog',id:'test:native'},limits});
+ return f;
+}
+function program(f,action){
+ action={slots:[],cost:{owner:'primitives'},...action};
+ f.engine.actionRegistry={actions:[action],byId:new Map([[action.id,action]]),errors:[]};
+ return {tool:'world_act',eventId:`event-${action.id}`,args:{action:action.id,slots:{}}};
+}
+
+test('A3 effects: native time bound, preview isolation, JSON idempotency and rollback',()=>{
+ const f=effectFixture(),before=structuredClone(f.document),effects=[{op:'time',minutes:2}],frame=f.frame('two-minutes',{time:2});
+ assert.equal(planPrimitives(f.document,effects,frame).receipt.applied[0].result.elapsed,2);assert.deepEqual(f.document,before);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.minute,before.state.minute+2);assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),effects,frame).patches,[]);
+ assert.throws(()=>commitPrimitives(f.document,[{op:'time',minutes:3}],frame),{code:'E-TIME-BOUND'});
+ assert.throws(()=>commitPrimitives(f.document,[...effects,{op:'transfer',from:a,to:b,qty:100000}],frame));assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: movement consumes its actual route once and rejects teleportation',()=>{
+ const f=effectFixture(),origin=f.document.state.location,edge=f.engine.world.routes.find(r=>r.from===origin||r.to===origin);assert.ok(edge);
+ const to=edge.from===origin?edge.to:edge.from,route=f.engine.route(origin,to,'walk',f.document.state.minute,f.document.randomSeed);
+ const result=commitPrimitives(f.document,[{op:'move',entity:'player',to,mode:'walk'}],f.frame('walk-route')),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.location,to);assert.equal(next.state.minute,f.document.state.minute+route.minutes);
+ for(const npc of f.document.state.player.companions)assert.equal(next.state.npcs[npc].location,to);
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:'loc_not_registered'}],f.frame('bad-route')));
+ assert.equal(f.document.state.location,origin);assert.deepEqual(auditLedger(next.ledger),[]);
+});
+
+test('A3 effects: core narrative templates reject resources; destruction uses actual lifecycle and wreck',()=>{
+ const f=effectFixture(),effect={op:'create',kind:'item',template:'core:item',facts:{name:'A3无价纸折',description:'只是叙述登记，没有库存'}};
+ const result=commitPrimitives(f.document,[effect],f.frame('describe-item')),created=applyPatches(f.document,result.patches),id=result.receipt.applied[0].result.entity;
+ assert.equal(created.holdings.entities[id].kind,'item');assert.equal(created.holdings.locations[id].at,f.document.state.location);
+ assert.equal(created.state.inventory[id],undefined);assert.ok(!Object.keys(created.ledger.accounts).some(key=>key.startsWith(`${id}|`)));
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,facts:{...effect.facts,coins:'100'}}],f.frame('mint-description')),{code:'E-CREATE-FACT'});
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,template:'not-core'}],f.frame('bad-template')),{code:'E-CREATE-TEMPLATE'});
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,facts:{name:f.document.state.player.name}}],f.frame('duplicate-player-name')),{code:'E-CREATE-NAME'});
+ const destroyed=commitPrimitives(created,[{op:'destroy',entity:id}],createRuntimePrimitiveFrame(f.engine,created,{eventId:'destroy-paper',source:{kind:'catalog',id:'test:destroy'}})),gone=applyPatches(created,destroyed.patches);
+ assert.equal(isGone(f.engine,gone,id),true);assert.ok(gone.holdings.protocol.entities[id].wreck);assert.deepEqual(auditLedger(gone.ledger),[]);
+ assert.throws(()=>commitPrimitives(created,[{op:'destroy',entity:'player'}],f.frame('destroy-person')),{code:'E-DESTROY-KIND'});
+ assert.throws(()=>commitPrimitives(created,[{op:'transition',entity:'player',kind:'gone',cause:'declared'}],f.frame('fake-judgment')),{code:'E-TRANSITION-PROOF'});
+ const dying=structuredClone(f.document);dying.state.player.hp=0;dying.state.player.status='濒死';dying.state.player.dyingSince=dying.state.minute;
+ assert.throws(()=>commitPrimitives(dying,[{op:'transition',entity:'player',kind:'gone',cause:'death'}],createRuntimePrimitiveFrame(f.engine,dying,{eventId:'premature-death',source:{kind:'catalog',id:'test:death'}})),{code:'E-TRANSITION-PROOF'});
+ assert.equal(dying.state.player.status,'濒死');assert.equal(dying.state.player.xp,f.document.state.player.xp);
+});
+
+test('A3 effects: vital uses native amount, healing, protection and actual target distance',()=>{
+ const f=effectFixture();f.document.state.player.hp=Math.max(1,f.document.state.player.maxHp-5);
+ const healed=commitPrimitives(f.document,[{op:'vital',target:'player',delta:3,type:'physical'}],f.frame('heal-self',{vital:{heal:3}})),next=applyPatches(f.document,healed.patches);
+ assert.equal(next.state.player.hp,f.document.state.player.hp+3);assert.equal(healed.receipt.applied[0].result.permission.kind,'self');
+ assert.ok(next.state.records['world_event:heal-self:0']);assert.equal(next.state.records['world_event:heal-self:0'].verb,'heal');
+ assert.throws(()=>commitPrimitives(f.document,[{op:'vital',target:'player',delta:4}],f.frame('excess-heal',{vital:{heal:3}})),{code:'E-PRIMITIVE-AMOUNT'});
+ const remote=structuredClone(f.document);delete remote.state.records[`local_actor_position:${f.npc}`];
+ assert.throws(()=>commitPrimitives(remote,[{op:'vital',target:f.npc,delta:-1,type:'physical'}],createRuntimePrimitiveFrame(f.engine,remote,{eventId:'no-distance',source:{kind:'catalog',id:'test:vital'},limits:{vital:{harm:1,rangeMeters:3}}})),{code:'E-PRIMITIVE-REACH'});
+ const protectedDoc=structuredClone(f.document);protectedDoc.state.effects.shield={kind:'protection',target:'player',power:5,remaining:5,damageTypes:['physical'],stacking:'strongest',expires:protectedDoc.state.minute+10};
+ const protectedNext=applyPatches(protectedDoc,commitPrimitives(protectedDoc,[{op:'vital',target:'player',delta:-3,type:'physical'}],createRuntimePrimitiveFrame(f.engine,protectedDoc,{eventId:'protected',source:{kind:'catalog',id:'test:vital'},limits:{vital:{harm:3}}})).patches);
+ assert.equal(protectedNext.state.player.hp,protectedDoc.state.player.hp);assert.equal(protectedNext.state.effects.shield.remaining,2);
+});
+
+test('A3 effects: status uses registered limits and native strongest stacking/expiry consumers',()=>{
+ const f=effectFixture(),effect={op:'status',target:'player',status:'stone_skin',duration:2,magnitude:3};
+ const result=commitPrimitives(f.document,[effect],f.frame('self-stone',{status:{statuses:['stone_skin'],duration:2,magnitude:3}})),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.effects['self-stone:0'].kind,'status');assert.equal(next.state.effects['self-stone:0'].power,3);assert.equal(next.state.effects['self-stone:0'].expires,next.state.minute+2);
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,magnitude:4}],f.frame('too-strong',{status:{statuses:['stone_skin'],duration:2,magnitude:3}})),{code:'E-PRIMITIVE-AMOUNT'});
+ const expired=applyPatches(next,commitPrimitives(next,[{op:'time',minutes:3}],createRuntimePrimitiveFrame(f.engine,next,{eventId:'status-expiry',source:{kind:'catalog',id:'test:time'},limits:{time:3}})).patches);
+ assert.ok(!expired.state.effects['self-stone:0']||expired.state.effects['self-stone:0'].expires<=expired.state.minute);
+});
+
+test('A3 effects: K2 weakness cannot amplify vital beyond the native final cap',()=>{
+ const f=effectFixture(),target='monster_resin_lump';
+ f.document.state.creatures??={};
+ f.document.state.creatures[target]={id:target,species:target,level:1,hp:100,maxHp:100,status:'正常',location:f.document.state.location};
+ const d=f.engine.primitiveDraft(f.document);recordLocalContact(d,f.engine,target,'a3-weak-body');f.document=applyPatches(f.document,d.patches);
+ const result=commitPrimitives(f.document,[{op:'vital',target,delta:-10,type:'fire'}],f.frame('weakness-cap',{vital:{harm:10,rangeMeters:3}})),next=applyPatches(f.document,result.patches),effect=result.receipt.applied[0];
+ assert.equal(effect.result.interaction.multiplier,1.5);assert.ok(effect.result.damage>0&&effect.result.damage<=10);assert.equal(next.state.creatures[target].hp,100-effect.result.damage);assert.equal(result.receipt.trimmed[0].reason,'final_vital_limit');
+ assert.equal(next.state.creatures[target].status,'正常');
+});
+
+test('A3 effects: an NPC uses the same physical facts and actual player consent to heal the player',()=>{
+ const f=effectFixture(),source={kind:'catalog',id:'test:npc-care'};f.document.state.player.hp=f.document.state.player.maxHp-4;
+ f.document.state.consentEvents=[{id:'player-agrees-care',type:'consent_given',from:'player',to:f.npc,scope:'healing',purpose:[source.id],at:f.document.state.minute,until:f.document.state.minute+120}];
+ const frame=createRuntimePrimitiveFrame(f.engine,f.document,{actor:f.npc,eventId:'npc-care-player',source,limits:{vital:{heal:3,rangeMeters:3}}});
+ const result=commitPrimitives(f.document,[{op:'vital',target:'player',delta:3}],frame),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.player.hp,f.document.state.player.hp+3);assert.equal(result.receipt.applied[0].result.permission.source,'player-agrees-care');assert.equal(next.state.records['world_event:npc-care-player:0'].actor,f.npc);
+});
+
+test('A3 pending: commit-time incapacity rejects only the proposal and persists an idempotent final receipt',()=>{
+ const f=effectFixture(),d=f.engine.primitiveDraft(f.document),effects=[{op:'transfer',from:a,to:accountKey(f.npc,'coin_river','purse'),qty:1}],frame=f.frame('revoked-before-contest');
+ const pending=queuePrimitiveProposal(d,effects,frame,{claims:[{target:'test:one-coin',quantity:1,capacity:1}]}),coins=d.get('state','player','coins');
+ d.set(['state','player','capacity'],'none');
+ assert.doesNotThrow(()=>d.contestPool[0].execute());assert.equal(pending.receipt.status,'rejected');assert.equal(pending.receipt.code,'E-CAPACITY');assert.deepEqual(pending.receipt.applied,[]);assert.equal(d.get('state','player','coins'),coins);assert.equal(d.get('state','player','capacity'),'none');
+ const again=commitPrimitives(JSON.parse(JSON.stringify(d.document)),effects,frame);assert.equal(again.receipt.status,'rejected');assert.equal(again.receipt.duplicate,true);assert.deepEqual(again.patches,[]);
+});
+
+test('A3 pending: a contest loser keeps its final receipt across JSON reload',()=>{
+ const f=effectFixture(),d=f.engine.primitiveDraft(f.document),effects=[{op:'transfer',from:a,to:accountKey(f.npc,'coin_river','purse'),qty:1}],frame=f.frame('lost-resource');
+ const pending=queuePrimitiveProposal(d,effects,frame,{claims:[{target:'test:one-coin',quantity:1,capacity:1}]});d.contestPool[0].reject('another buyer arrived first');
+ assert.equal(pending.receipt.status,'rejected');assert.equal(d.get('state','player','coins'),f.document.state.player.coins);
+ const again=commitPrimitives(JSON.parse(JSON.stringify(d.document)),effects,frame);assert.equal(again.receipt.duplicate,true);assert.equal(again.receipt.reason,'another buyer arrived first');
+});
+
+test('A3 effects: practice reads the actual learning table, spends time and retains daily decay',()=>{
+ const f=effectFixture(),skill=f.engine.world.skills.find(s=>(s.stage??0)===0).id;
+ f.document.state.skills[skill]={proficiency:0,grade:'初级1等',breakthroughs:[],daily:{}};
+ const before=f.document.state.skills[skill].proficiency,effect={op:'learn',entity:'player',subject:skill,learningSource:'practice',amount:10000};
+ const result=commitPrimitives(f.document,[effect],f.frame('bounded-practice',{learn:{minutes:120}})),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.minute,f.document.state.minute+120);assert.ok(result.receipt.applied[0].result.gain<=2);assert.equal(next.state.skills[skill].proficiency,before+result.receipt.applied[0].result.gain);
+ const again=commitPrimitives(next,[effect],createRuntimePrimitiveFrame(f.engine,next,{eventId:'repeat-practice',source:{kind:'catalog',id:'test:practice'},limits:{learn:{minutes:120}}}));
+ assert.ok(again.receipt.applied[0].result.gain<=result.receipt.applied[0].result.gain);
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,learningSource:'missing-book'}],f.frame('bad-learning-source',{learn:{minutes:120}})),{code:'E-LEARN-SOURCE'});
+});
+
+test('A3 effects: sub-point practice accumulates across save/load instead of rounding every session to zero',()=>{
+ const f=effectFixture(),skill=f.engine.world.skills.find(s=>(s.stage??0)===0).id;
+ f.document.state.skills[skill]={proficiency:0,grade:'初级1等',breakthroughs:[],daily:{}};
+ let current=f.document;const gains=[];
+ for(let i=0;i<3;i++){
+  const result=commitPrimitives(current,[{op:'learn',entity:'player',subject:skill,learningSource:'practice'}],createRuntimePrimitiveFrame(f.engine,current,{eventId:`fractional-${i}`,source:{kind:'catalog',id:'test:practice'},limits:{learn:{minutes:30}}}));
+  gains.push(result.receipt.applied[0].result.gain);current=JSON.parse(JSON.stringify(applyPatches(current,result.patches)));
+ }
+ assert.deepEqual(gains,[0,0,1]);assert.equal(current.state.skills[skill].proficiency,1);assert.equal(current.state.skills[skill].practiceCarry,.05);
+ const d=f.engine.primitiveDraft(current),legacy=f.engine.practice(d,{skill,gain:0,target:'legacy',nativeGain:10000},'json-cannot-supply-native-gain');
+ assert.equal(legacy.gain,0);assert.equal(d.get('state','skills',skill,'practiceCarry'),.05);
+});
+
+test('A3 effects: willing teacher gives full instruction; visible unwilling demonstration gives one quarter and may be noticed',()=>{
+ const make=()=>{
+  const f=effectFixture(),skill=f.engine.world.skills.find(s=>(s.stage??0)===0).id;
+  f.document.state.skills[skill]={proficiency:0,grade:'初级1等',breakthroughs:[],daily:{}};
+  f.document.state.npcs[f.npc].skills={[skill]:100};f.document.state.npcs[f.npc].activity='授艺演示';f.document.state.npcs[f.npc].practicing=skill;
+  f.engine.byId.get(f.npc).schedule={default:[{start:0,end:1440,location:f.document.state.location,activity:'授艺演示',services:['teach']}]};
+  return {...f,skill,effect:{op:'learn',entity:'player',subject:skill,learningSource:f.npc}};
+ };
+ const f=make();f.document.state.consentEvents=[{id:'teacher-agrees',type:'consent_given',from:f.npc,to:'player',scope:'teach',purpose:[f.skill],at:f.document.state.minute,until:f.document.state.minute+120}];
+ const full=commitPrimitives(f.document,[f.effect],f.frame('full-instruction',{learn:{minutes:60}})),taught=applyPatches(f.document,full.patches);
+ assert.equal(full.receipt.applied[0].result.gain,3);assert.equal(taught.state.skills[f.skill].practiceCarry,.4);assert.equal(full.receipt.applied[0].result.observed,false);
+ const g=make(),observed=commitPrimitives(g.document,[g.effect],g.frame('observe-instruction',{learn:{minutes:60}})),watched=applyPatches(g.document,observed.patches),result=observed.receipt.applied[0].result;
+ assert.equal(result.observed,true);assert.equal(result.gain,0);assert.equal(watched.state.skills[g.skill].practiceCarry,.85);assert.ok(observed.receipt.applied[0].tags.includes('unconsented'));
+ assert.deepEqual(watched.state.records['world_event:observe-instruction:0'].witnesses,result.detection.success?[]:[g.npc]);
+ const before=structuredClone(g.document);g.document.state.npcs[g.npc].status='昏迷';
+ assert.throws(()=>commitPrimitives(g.document,[g.effect],g.frame('incapable-teacher',{learn:{minutes:60}})),{code:'E-LEARN-SOURCE'});assert.equal(g.document.state.skills[g.skill].proficiency,before.state.skills[g.skill].proficiency);
+});
+
+test('A3 adjudication: registered duration/body cost, preview and duplicate calls use one transaction',async()=>{
+ const f=effectFixture(),input=program(f,{id:'test:rest',outcomes:[{op:'emit',verb:'tell',target:'player',visibility:'private',payload:{text:'rest'}}],cost:{owner:'primitives',time:30},activity:'light'}),before=structuredClone(f.document);
+ const preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.cost.time,30);assert.deepEqual(f.document,before);
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches);
+ assert.equal(result.result.minute,before.state.minute+30);assert.equal(next.state.minute,before.state.minute+30);
+ assert.equal(next.state.player.body.stamina.value,98.5);assert.equal(next.state.player.body.satiety.value,98.75);assert.equal(next.state.player.body.fatigue.value,1);assert.equal(next.state.player.body.stamina.asOf,next.state.minute);
+ assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(next)),input)).patches,[]);
+});
+
+test('A3 adjudication: bounded outcome slots reject amplification and checks select real failure outcomes',async()=>{
+ const f=effectFixture(),input=program(f,{id:'test:check',slots:[{name:'gain',kind:'quantity',required:true,max:2}],check:{attribute:'精神',difficulty:30},outcomes:{success:[{op:'vital',target:'player',delta:{slot:'gain'}}],failure:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'failed'}}],fumble:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'fumbled'}}]},cost:{owner:'primitives',time:1}});
+ input.args.slots={gain:3};await assert.rejects(f.engine.reduce(f.document,input),{code:'E-ACTION-SLOT'});
+ input.args.slots={gain:2};
+ // Search an event id for a natural failed check, with every preview isolated.
+ let preview;for(let i=0;i<40;i++){input.eventId=`failed-check-${i}`;preview=await f.engine.previewAction(f.document,input);if(!preview.receipt.check.success)break;}
+ assert.equal(preview.receipt.check.success,false);assert.ok(['failure','fumble'].includes(preview.receipt.outcome));assert.ok(preview.receipt.applied.every(e=>e.op!=='vital'));
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.player.hp,f.document.state.player.hp);assert.equal(next.state.minute,f.document.state.minute+1);assert.deepEqual(result.result.receipt.check,preview.receipt.check);
+});
+
+test('A3 effects: scheduling runs the registered action at due time and rechecks revoked authority',()=>{
+ const f=effectFixture(),action={id:'test:scheduled',slots:[],outcomes:[{op:'transfer',from:a,to:accountKey(f.npc,'coin_river','purse'),qty:1}],preconditions:['slots.enabled == true']};
+ // A real current-fact precondition changes between registration and execution.
+ action.slots=[{name:'enabled',kind:'flag',schema:'boolean'}];action.preconditions=['canAct(actor, "talk")'];program(f,action);
+ const effect={op:'schedule',at:f.document.state.minute+1,action:action.id,args:{enabled:true}},scheduled=commitPrimitives(f.document,[effect],f.frame('defer-gift')),next=applyPatches(f.document,scheduled.patches),id=scheduled.receipt.applied[0].result;
+ assert.equal(next.state.records[id].status,'pending');assert.equal(next.state.player.coins,f.document.state.player.coins);
+ next.state.player.status='昏迷';
+ const d=f.engine.primitiveDraft(next);f.engine.advance(d,2,'due-step');const final=applyPatches(next,d.patches);
+ assert.equal(final.state.records[id].status,'completed');assert.equal(final.state.records[`primitive_schedule_result:${id}`].status,'rejected');assert.equal(final.state.player.coins,next.state.player.coins);
+ assert.ok(!Object.values(final.state.records).some(r=>r.category==='primitive_receipt'&&r.receipt.source.id===action.id));
+});
+
+test('A3 adjudication: resource costs and elapsed body costs commit atomically after contest',async()=>{
+ const f=effectFixture(),input=program(f,{id:'test:paid',slots:[{name:'fee',kind:'coins',max:3}],outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'paid'}}],cost:{owner:'primitives',time:2,resources:[{resource:'coin_river',qty:'slots.fee'}]}});
+ input.args.slots={fee:2};const start=f.document.state.minute,coins=f.document.state.player.coins;
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.player.coins,coins-2);assert.equal(next.state.minute,start+2);assert.equal(result.result.minute,start+2);assert.equal(result.result.receipt.cost.time,2);
+ assert.equal(next.ledger.flows[accountKey('sink:consume','coin_river','action')],2);assert.deepEqual(auditLedger(next.ledger),[]);
+ assert.deepEqual((await f.engine.reduce(next,input)).patches,[]);
+ await assert.rejects(f.engine.reduce(next,{...input,args:{...input.args,slots:{fee:3}}}),{code:'E-PRIMITIVE-DUPLICATE'});
+ const before=structuredClone(f.document);f.document.state.player.coins=0;f.document.ledger.accounts[a]=0;
+ await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'no-cost-funds'}));assert.equal(f.document.state.minute,before.state.minute);assert.ok(!f.document.state.records['primitive:no-cost-funds']);
+});
+
+test('A3 adjudication: a committed receipt survives changed preconditions after preview',async()=>{
+ const f=effectFixture(),input=program(f,{id:'test:one-time',outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'once'}}],preconditions:['canAct(actor, "talk").allowed']});
+ const next=applyPatches(f.document,(await f.engine.reduce(f.document,input)).patches);next.state.player.status='昏迷';
+ assert.deepEqual((await f.engine.reduce(next,input)).patches,[]);
+ await assert.rejects(f.engine.reduce(next,{...input,eventId:'different-id'}),{code:'E-PRECONDITION'});
+});
+
+test('A3 adjudication: theft needs an actual successful catalog check and clips the entire proposal',async()=>{
+ const f=effectFixture();f.document.state.npcs[f.npc].coins=100;const from=accountKey(f.npc,'coin_river','purse');f.document.ledger=openLedger(f.engine,f.document);
+ const input=program(f,{id:'test:theft',theft:true,check:{attribute:'敏捷',difficulty:10},outcomes:[{op:'transfer',from,to:a,qty:15},{op:'transfer',from,to:a,qty:15}]});
+ let preview;for(let i=0;i<40;i++){input.eventId=`theft-check-${i}`;preview=await f.engine.previewAction(f.document,input);if(preview.receipt.check.success)break;}
+ assert.equal(preview.receipt.check.success,true);assert.equal(preview.receipt.applied.reduce((n,e)=>n+(e.op==='transfer'?e.qty:0),0),f.engine.rules.law.maximumTheftCoins);assert.equal(preview.receipt.trimmed[0].reason,'theft_limit');
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.player.coins,f.document.state.player.coins+20);assert.equal(next.state.npcs[f.npc].coins,80);assert.deepEqual(auditLedger(next.ledger),[]);assert.ok(result.result.receipt.applied.every(e=>e.actedAs.kind==='theft'&&e.tags.includes('unconsented')));
+ for(const i of [0,1]){assert.equal(next.state.records[`world_event:${input.eventId}:${i}`].verb,'steal');assert.equal(next.state.records[`world_event:${input.eventId}:${i}`].target,f.npc);}
+ const checkDraft=f.engine.primitiveDraft(f.document);f.engine.check(checkDraft,{attribute:'敏捷',difficulty:10},`${input.eventId}:action-check`);
+ const proofDocument=applyPatches(f.document,checkDraft.patches),nativeFrame=createRuntimePrimitiveFrame(f.engine,proofDocument,{eventId:input.eventId,source:{kind:'catalog',id:input.args.action}});
+ const direct=commitPrimitives(proofDocument,[{op:'transfer',from,to:a,qty:15},{op:'transfer',from,to:a,qty:15}],nativeFrame);
+ assert.equal(direct.receipt.applied.reduce((n,e)=>n+e.qty,0),20,'native frame also owns the cumulative cap');
+ assert.throws(()=>commitPrimitives(proofDocument,[{op:'transfer',from:accountKey(f.npc,f.engine.world.items[0].id,'inventory'),to:accountKey('player',f.engine.world.items[0].id,'inventory'),qty:1}],nativeFrame),{code:'E-PRIMITIVE-CONNECTOR'});
+ const raw=createRuntimePrimitiveFrame(f.engine,f.document,{eventId:'false-theft',source:{kind:'open',id:'player-proposal'}});
+ assert.throws(()=>commitPrimitives(f.document,[{op:'transfer',from,to:a,qty:1}],raw),{code:'E-AUTHORITY'});
+});
+
+test('A3 adjudication: NPC agreement is a purpose-scoped native event, never a caller boolean',async()=>{
+ const f=effectFixture();
+ const base=f.engine.byId.get(f.npc);base.redLines=[];f.document.state.npcs[f.npc].relationships={player:{trust:100}};
+ f.document.state.npcs[f.npc].activity='';f.document.state.npcs[f.npc].plan=null;f.document.state.npcs[f.npc].goals={};
+ const input=program(f,{id:'test:agreed-support',slots:[{name:'target',kind:'entity',required:true}],consent:{from:'target',scope:'support_magic',onRefusal:'abort'},outcomes:[{op:'status',target:{slot:'target'},status:'stone_skin',duration:2,magnitude:2}]});input.args.slots={target:f.npc};
+ const preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.decisions[0].outcome,'agree');assert.equal(f.document.state.consentEvents,undefined);
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches),grant=next.state.consentEvents.find(e=>e.from===f.npc);
+ assert.ok(grant);assert.equal(grant.to,'player');assert.notDeepEqual(grant.purpose,[input.args.action]);assert.equal(next.state.effects[`${input.eventId}:0`].target,f.npc);
+ assert.equal(next.state.records[`world_event:${grant.id}`].actor,f.npc);assert.equal(next.state.records[`world_event:${grant.id}`].parent,input.eventId);
+ assert.equal(consent(primitiveContext(f.engine,next),f.npc,'player','support_magic',{purpose:'test:agreed-support'}).allowed,false,'one request does not authorize every later invocation');
+ await assert.rejects(f.engine.reduce(f.document,{...input,args:{...input.args,slots:{target:f.npc,consent:true}}}),{code:'E-ACTION-SLOT'});
+});
+
+test('A3 adjudication: refused healing reuses its one native opposed check inside the vital effect',async()=>{
+ const f=effectFixture();f.engine.byId.get(f.npc).redLines=['healing'];f.document.state.npcs[f.npc].hp=1;f.document.state.npcs[f.npc].maxHp=10;
+ const input=program(f,{id:'test:opposed-care',slots:[{name:'target',kind:'entity',required:true}],consent:{from:'target',scope:'healing',onRefusal:'contest'},outcomes:[{op:'vital',target:{slot:'target'},delta:3}]});input.args.slots={target:f.npc};
+ const d=f.engine.primitiveDraft(f.document);let success=false;
+ for(let i=0;i<100;i++){input.eventId=`one-contest-${i}`;if(f.engine.check(d,{attribute:'精神',opponent:{npc:f.npc,attribute:'精神'}},`${input.eventId}:action-check`).success){success=true;break;}}
+ assert.equal(success,true);
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches),receipt=result.result.receipt;
+ assert.equal(receipt.check.success,true);assert.equal(receipt.applied[0].op,'vital');assert.deepEqual(receipt.applied[0].result.check,receipt.check);assert.ok(next.state.npcs[f.npc].hp>1);
+ assert.equal(next.state.checks[`${input.eventId}:0:consent`],undefined);assert.equal(Object.keys(next.state.checks).filter(id=>id.startsWith(input.eventId)).length,1);
+});
+
+test('A3 effects: scheduled successful action executes exactly once after JSON reload',()=>{
+ const f=effectFixture(),action={id:'test:due-gift',slots:[],outcomes:[{op:'transfer',from:a,to:accountKey(f.npc,'coin_river','purse'),qty:1}]};program(f,action);
+ const scheduled=commitPrimitives(f.document,[{op:'schedule',at:f.document.state.minute+1,action:action.id}],f.frame('once-schedule')),next=JSON.parse(JSON.stringify(applyPatches(f.document,scheduled.patches))),id=scheduled.receipt.applied[0].result;
+ const d=f.engine.primitiveDraft(next);f.engine.advance(d,2,'deliver-schedule');const final=applyPatches(next,d.patches);
+ assert.equal(final.state.records[`primitive_schedule_result:${id}`].status,'committed');assert.equal(final.state.player.coins,next.state.player.coins-1);
+ const later=f.engine.primitiveDraft(JSON.parse(JSON.stringify(final)));f.engine.advance(later,1,'deliver-again');const again=applyPatches(final,later.patches);
+ assert.equal(again.state.player.coins,final.state.player.coins);assert.equal(again.state.records[id].status,'completed');assert.deepEqual(auditLedger(again.ledger),[]);
+});
+
+test('A3 body: timestamped closed-form needs are equivalent across split durations',async()=>{
+ const f=effectFixture(),action={id:'test:body-travel',slots:[{name:'minutes',kind:'minutes',min:1,max:60}],durationSlot:{slot:'minutes',min:1,max:60},activity:'travel',cost:{owner:'primitives'},outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'working'}}]},input=program(f,action);
+ const whole=applyPatches(f.document,(await f.engine.reduce(f.document,{...input,eventId:'whole-body',args:{action:action.id,slots:{minutes:3}}})).patches);
+ let split=structuredClone(f.document);for(let i=0;i<3;i++)split=applyPatches(split,(await f.engine.reduce(split,{...input,eventId:`part-body-${i}`,args:{action:action.id,slots:{minutes:1}}})).patches);
+ for(const need of ['stamina','satiety','hydration','fatigue'])assert.deepEqual(split.state.player.body[need],whole.state.player.body[need]);
+ assert.equal(readBodyNeed(f.engine,whole,'player','satiety'),99.825);
+ const later=structuredClone(whole);later.state.minute+=60;
+ assert.equal(readBodyNeed(f.engine,later,'player','satiety'),98.825);assert.deepEqual(whole.state.player.body.satiety,{value:99.825,asOf:whole.state.minute,activity:'rest'});
+});
+
+test('A3 adjudication: default five degrees apply half damage, critical, fumble time and actual exposure',async()=>{
+ const f=effectFixture(),input=program(f,{id:'test:degrees',check:{attribute:'精神',difficulty:10},cost:{owner:'primitives',time:2},outcomes:[{op:'vital',target:'player',delta:-4,type:'physical'}]}),ids=new Map(),d=f.engine.primitiveDraft(f.document);
+ for(let i=0;i<500&&ids.size<5;i++){
+  const id=`degree-case-${i}`,check=f.engine.check(d,{attribute:'精神',difficulty:10},`${id}:action-check`);if(!ids.has(check.degree))ids.set(check.degree,id);
+ }
+ assert.equal(ids.size,5);
+ for(const [degree,eventId]of ids){
+  const result=await f.engine.reduce(f.document,{...input,eventId}),next=applyPatches(f.document,result.patches),receipt=result.result.receipt;
+  const damage={'大失败':1,'失败':0,'勉强成功':2,'成功':4,'大成功':6}[degree];
+  assert.equal(next.state.player.hp,f.document.state.player.hp-damage,degree);assert.equal(next.state.minute,f.document.state.minute+(degree==='大失败'?4:2),degree);
+  if(['大失败','失败'].includes(degree)){
+   assert.ok(receipt.narrate.mustNot.some(e=>e.op==='vital'));assert.ok(receipt.consequences.some(e=>e.kind==='exposure'));
+   const exposed=Object.values(next.state.records).find(e=>e.category==='world_event'&&e.payload?.kind==='action_exposed');assert.ok(exposed);assert.equal(exposed.visibility,'witnessed');assert.ok(exposed.witnesses.includes(f.npc));
+  }
+ }
+});
 test('A3 runtime: possessed property transfer retains lifecycle, original edge and legality tags',()=>{
  const {engine,document,npc}=runtimeFixture(),id=`h${++document.holdings.seq}`;
  document.holdings.entities.wreck_a={id:'wreck_a',kind:'wreck',facts:{}};
@@ -189,7 +469,7 @@ test('A3 runtime: loaded RX preconditions run at preview and again against curre
  assert.equal(document.state.player.coins,180);
 });
 
-test('A3 pending: a multi-resource proposal settles once; the loser leaves no transfer or receipt',()=>{
+test('A3 pending: a multi-resource proposal settles once; the loser leaves no transfer or successful receipt',()=>{
  const {document,options,effect}=fixture();
  const c=accountKey('player','item_oats','inventory'),to=accountKey('npc_a','item_oats','inventory');document.ledger.accounts[c]=3;document.ledger.accounts[to]=0;
  const d={document:structuredClone(document),patches:[],contestPool:[],scheduler:new Scheduler({seed:'pending'}),get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);this.patches.push({op:'set',path,value});},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);this.patches.push({op:'delete',path});}};
@@ -202,7 +482,12 @@ test('A3 pending: a multi-resource proposal settles once; the loser leaves no tr
  for(const o of outcomes){for(const winner of o.winners)winner.execute();for(const loser of o.losers)loser.reject(o.reason);}
  assert.equal(first.receipt.status,'committed');assert.equal(second.receipt.status,'rejected');assert.deepEqual(second.receipt.applied,[]);
  assert.equal(d.get('ledger','accounts',a),4);assert.equal(d.get('ledger','accounts',c),0);
- assert.equal(d.get('state','records','primitive:loser'),undefined);assert.equal(d.get('state','records','primitive:winner').receipt.applied.length,2);
+ // A3-A checkpoint 6 / 06 §6.5 requires the final pending result to survive
+ // reload. Keep a rejected receipt, while retaining every no-payment/no-goods
+ // assertion above and prohibiting successful effects or charged costs here.
+ const rejected=d.get('state','records','primitive:loser').receipt;
+ assert.equal(rejected.status,'rejected');assert.deepEqual(rejected.applied,[]);assert.equal(rejected.cost,undefined);
+ assert.equal(d.get('state','records','primitive:winner').receipt.applied.length,2);
  assert.deepEqual(resolveContest([...d.contestPool].reverse(),{seed:'pending',minute:2}).map(o=>o.winners.map(w=>w.id)),outcomes.map(o=>o.winners.map(w=>w.id)));
 });
 
@@ -230,8 +515,10 @@ test('A3 pending: real loan and transfer settle in phase 3, reactions see the fi
 test('A3 public: HTTP preview, archived program execution, JSON import replay and anchor rollback',async t=>{
  const {default:express}=await import('express'),{once}=await import('node:events'),{init}=await import('../server-plugin/index.mjs'),{tmpRoot}=await import('../tools/tmp-root.mjs'),path=await import('node:path');
  const root=await fs.mkdtemp(path.join(tmpRoot(),'a3-public-'));
- const action={id:'test:spend',label:'spend',verb:'transfer',group:'test',narration:'test',slots:[{name:'qty',kind:'quantity',required:true}],synonyms:[],visibility:{catalog:'here'},participants:{actor:'player'},preconditions:['slots.qty <= 2'],outcomes:[{op:'transfer',from:accountKey('player','coin_river','purse'),to:accountKey('sink:consume','coin_river','use'),qty:{slot:'qty'}}],cost:{owner:'primitives'}};
- const world={...structuredClone(runtimeWorld),actionDefinitions:{format:1,actions:[action]}};
+ // Extend the same replay/rollback case to the new time/body cost contract;
+ // the original coin, privacy, duplicate and anchor assertions remain intact.
+ const action={id:'test:spend',label:'spend',verb:'transfer',group:'test',narration:'test',slots:[{name:'qty',kind:'quantity',required:true}],synonyms:[],visibility:{catalog:'here'},participants:{actor:'player'},preconditions:['slots.qty <= 2'],outcomes:[{op:'transfer',from:accountKey('player','coin_river','purse'),to:accountKey('sink:consume','coin_river','use'),qty:{slot:'qty'}}],cost:{owner:'primitives',time:1}};
+ const world={...structuredClone(runtimeWorld),primitiveTables:structuredClone(runtimeWorld.primitiveTables),primitiveTemplates:structuredClone(runtimeWorld.primitiveTemplates),actionDefinitions:{format:1,actions:[action]}};
  const app=express();app.use(express.json({limit:'100mb'}));const router=express.Router();await init(router,{world,baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false,populationProfilesEnabled:false});app.use(router);
  const server=app.listen(0,'127.0.0.1');
  t.after(async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(root,{recursive:true,force:true});});
@@ -246,9 +533,11 @@ test('A3 public: HTTP preview, archived program execution, JSON import replay an
  const rejected=await request('/execute',{...input,tool:'world_act',args:{action:action.id,slots:{qty:3}}});assert.equal(rejected.status,400);assert.deepEqual((await request('/read',{campaignId})).body,before);
  const committed=await request('/execute',{...input,tool:'world_act'});assert.equal(committed.status,200,committed.body.error);assert.equal(committed.body.result.receipt.status,'committed');
  const after=(await request('/read',{campaignId})).body;assert.equal(after.document.state.player.coins,before.document.state.player.coins-2);
+ assert.equal(after.document.state.minute,before.document.state.minute+1);assert.equal(after.document.state.player.body.stamina.asOf,after.document.state.minute);
  const duplicate=await request('/execute',{...input,tool:'world_act'});assert.equal(duplicate.body.duplicate,true);assert.deepEqual((await request('/read',{campaignId})).body,after);
  const bundle=(await request('/export',{campaignId})).body,imported=await request('/import',{bundle});assert.equal(imported.status,200,imported.body.error);
  assert.deepEqual(imported.body.document,after.document);
  const rolled=await request('/reconcile',{campaignId,validAnchors:[]});assert.equal(rolled.status,200,rolled.body.error);assert.equal(rolled.body.document.state.player.coins,before.document.state.player.coins);
  assert.equal(rolled.body.document.state.records['primitive:http-spend'],undefined);
+ assert.deepEqual(rolled.body.document.state.player.body,before.document.state.player.body);
 });

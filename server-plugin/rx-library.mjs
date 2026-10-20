@@ -8,12 +8,13 @@ import {capacity,canAct,actionReader} from './action-capacity.mjs';
 import {authority} from './action-authority.mjs';
 import {consent} from './action-consent.mjs';
 import {aliveHoldings} from './holdings.mjs';
+import {readBodyNeed} from './primitives-body.mjs';
 
 const invalid=message=>{throw new RXError('E-RX-TYPE',message);};
 export function createRXLibrary(engine,document,{observer='player',context={engine,document}}={}){
  const now=document.state.minute;
  const signatures={
-  days:{args:['number'],returns:'number'},season:{args:[],returns:'number'},month:{args:[],returns:'number'},
+  days:{args:['number'],returns:'number'},season:{args:[],returns:'number'},month:{args:[],returns:'number'},body:{returns:'number'},
   holds:{args:['string','string','string'],returns:'boolean'},
   capacity:{args:['string','string'],returns:{level:'string',reason:'string'}},
   canAct:{args:['string','string'],returns:{allowed:'boolean',reason:'string'}},
@@ -24,6 +25,7 @@ export function createRXLibrary(engine,document,{observer='player',context={engi
  const functions={
   days(since){if(!Number.isSafeInteger(since))invalid('days requires an integer minute');return Number((BigInt(now)-BigInt(since))*10000n/1440n)/10000;},
   season:()=>engine.calendar(now).season,month:()=>engine.calendar(now).month,
+  body(actor,need,minute=now){return readBodyNeed(engine,document,actor,need,minute);},
   holds:(actor,kind,subject)=>aliveHoldings(actionReader(document),{holder:actor,kind,subject}).length>0,
   capacity(actor,family){const r=capacity(context,actor,family);return {level:r.level,reason:r.reason??''};},
   canAct(actor,family){const r=canAct(context,actor,family);return {allowed:r.allowed,reason:r.reason??''};},

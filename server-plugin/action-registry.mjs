@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {appendActionPatches} from './primitive-policy.mjs';
+import {schemaValidator} from './primitive-schema.mjs';
 
 const DIR=fileURLToPath(new URL('../world/actions/',import.meta.url));
 const ID=/^[a-z][a-z0-9_-]*:[a-z][a-z0-9_.-]*$/;
@@ -28,6 +29,8 @@ export function loadActionRegistry(dir=DIR){
    else patches.push(patch);
   }
   for(const a of doc.actions){
+   const valid=schemaValidator('definition');
+   if(!valid(a))errors.push(`${a.id??file}: action schema ${valid.errors[0].instancePath} ${valid.errors[0].message}`);
    if(!ID.test(a.id??'')||!a.id.startsWith(`${doc.namespace}:`))errors.push(`${file}：动作 id 须带本文件命名空间：${a.id}`);
    if(!VISIBILITY.includes(a.visibility?.catalog))errors.push(`${a.id}：可见性无效`);
    if(!a.call&&!a.projection&&!a.outcomes)errors.push(`${a.id}：既无 call、outcomes 也无 projection`);

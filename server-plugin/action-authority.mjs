@@ -14,7 +14,7 @@ export function possessor(context,target){
   if(operator)return operator.holder;id=loc.at;
  }return null;
 }
-export function authority(context,actor,op,target,{disposition=false,consentScope=null,holding=null,kind=null,variant=null,holder=null,reason=null,shares=null}={}){
+export function authority(context,actor,op,target,{disposition=false,consentScope=null,holding=null,kind=null,variant=null,holder=null,reason=null,shares=null,effect=null}={}){
  const d=actionReader(context.document),sources=[],tags=[];let account=null;
  if(typeof target==='string'&&target.includes('|'))account=parseAccount(target);
  // Protected purpose is never an ordinary possession/office exception.
@@ -31,7 +31,7 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
   const definition=holdingKind(h.kind),powers=h.terms?.authority??definition?.derives?.authority;
   const guardian=h.kind==='guardian_of'&&(op!=='consent'||h.terms?.scope!=='property_only'||['property','transfer'].includes(consentScope));
   const propertyOpening=op!=='holding.open'||['owns','pledged','leases','operates'].includes(kind);
-  if(h.subject===subject&&(!legal&&propertyOpening&&(['owns','operates'].includes(h.kind)||guardian)&&['transfer','holding.transfer','holding.open','fact.set','consent','obligation.create','obligation.settle','obligation.cancel'].includes(op)||scoped(powers,op,subject)))sources.push({kind:h.kind,id:h.id,subject:h.subject});
+  if(h.subject===subject&&(!legal&&propertyOpening&&(['owns','operates'].includes(h.kind)||guardian)&&['transfer','holding.transfer','holding.open','fact.set','consent','obligation.create','obligation.settle','obligation.cancel','move',...(h.kind==='owns'?['destroy']:[])].includes(op)||scoped(powers,op,subject)))sources.push({kind:h.kind,id:h.id,subject:h.subject});
   else if(scoped(powers,op,subject))sources.push({kind:h.kind,id:h.id,subject:h.subject});
  }
  const now=context.document.state?.minute??0;
@@ -39,7 +39,7 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
  for(const m of mandates)if(scoped(m.terms?.scope,op,subject)||op==='consent'&&consentScope&&scoped(m.terms?.scope,consentScope,subject))sources.push({kind:'mandate',id:m.id,principal:m.creditor});
  // Trusted composition-root provider covers law/charter/motions/recognition.
  // It returns current derived facts; proposal fields never become this input.
- for(const source of context.authoritySources?.({actor,op,target:subject,kind,variant,holding,holder,reason,document:context.document})??[])if(source?.id&&source.allowed===true){sources.push({...source});tags.push(...source.tags??[]);}
+ for(const source of context.authoritySources?.({actor,op,target:subject,kind,variant,holding,holder,reason,effect,document:context.document})??[])if(source?.id&&source.allowed===true&&!(source.kind==='theft'&&sources.length)){sources.push({...source});tags.push(...source.tags??[]);}
  if(legal&&op==='holding.close'&&actor===holding?.holder){
   const proof=context.movementAuthority?.({actor,to:null,custody:holding});
   if(reason==='escaped'&&proof?.allowed===true&&proof.kind==='escape'&&proof.source)return {allowed:true,sources:[{kind:'escape',id:proof.source}],tags:['escaped'],actedAs:null,reason:null};
@@ -62,10 +62,10 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
 // L1 composition adapter. Context and options come from native engine code;
 // proposal JSON supplies only effects. mirrorTransfer is mandatory while the
 // migration still has legacy resource projections.
-export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,accountExists=null,validate=null}){
+export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,accountExists=null,validate=null,prepare=null,finish=null,identity=null}){
  const withDocument=document=>({...context,document});
- return createPrimitiveFrame({actor,eventId,source,mirrorTransfer,factPolicy,verbs,createDraft,executePrimitive,engine:context.engine,accountExists,validate,
-  canAct:(document,id,family,effect)=>canAct(withDocument(document),id,family==='emit'&&['tell','request','claim','consent_given','consent_revoked'].includes(effect.verb)?'talk':family,{to:effect.to}),
+ return createPrimitiveFrame({actor,eventId,source,mirrorTransfer,factPolicy,verbs,createDraft,executePrimitive,engine:context.engine,accountExists,validate,prepare,finish,identity,
+  canAct:(document,id,family,effect)=>canAct(withDocument(document),id,family==='time'?'wait':family==='emit'&&['tell','request','claim','consent_given','consent_revoked'].includes(effect.verb)?'talk':family,{to:effect.to}),
   authority:(document,id,op,target,options)=>authority(withDocument(document),id,op,target,options),
   location:(document,id)=>located(actionReader(document),id,x=>x==='player'?document.state?.location:actionEntity(withDocument(document),x)?.location??context.engine?.byId?.get(x)?.location??null)});
 }

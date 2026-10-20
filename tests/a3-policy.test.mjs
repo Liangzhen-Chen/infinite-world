@@ -28,6 +28,12 @@ test('A3 policy: self, current holdings, mandate scope and protected purposes',(
  delete c.document.state.obligations.m.endedAt;c.document.state.obligations.m.terms.expires=10;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
 });
 
+test('A3 policy: an explicitly closed patchable field cannot be appended',()=>{
+ const definition={id:'test:closed',patchable:{preconditions:false}};
+ assert.throws(()=>appendActionPatches(definition,[{id:'extra:rule',field:'preconditions',op:'append',value:'true',reason:'rule'}]),{code:'E-PATCH'});
+ assert.equal(appendActionPatches({id:'test:open',reserved:false},[{id:'extra:rule',field:'preconditions',op:'append',value:'true',reason:'rule'}]).preconditions.length,1);
+});
+
 test('A3 policy: minor NPC cannot consent to intimacy, including proxy and explicit given events',()=>{
  const c=context();c.document.state.npcs.npc_a.age=17;
  c.document.state.consentEvents=[{id:'romantic',type:'consent_given',from:'npc_a',to:'player',scope:'romance',at:5,until:20}];

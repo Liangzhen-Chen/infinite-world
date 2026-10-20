@@ -7,6 +7,10 @@
  "entries": [
   {
    "id": "agent",
+   "narrative": [
+    {"id":"core:person","kind":"person","fields":["name","description","appearance"]},
+    {"id":"core:creature","kind":"creature","fields":["name","description","appearance"]}
+   ],
    "label": "个体",
    "kinds": [
     "person",
@@ -35,6 +39,10 @@
   },
   {
    "id": "thing",
+   "narrative": [
+    {"id":"core:item","kind":"item","fields":["name","description","appearance"]},
+    {"id":"core:building","kind":"building","fields":["name","description","appearance"]}
+   ],
    "label": "物",
    "kinds": [
     "item",

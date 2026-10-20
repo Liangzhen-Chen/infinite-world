@@ -1,7 +1,7 @@
 import {transfer,balance,parseAccount,isSource,isSink,declareLedgerWriter} from './ledger.mjs';
 import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,holdingKindIds,runHoldingProtocol} from './holdings.mjs';
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
-import {beginReactionTick,drainWorldReactions,publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
+import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitnesses,SOCIAL_VERBS} from './world-events.mjs';
 import {submitContest} from './scheduler.mjs';
 
 declareLedgerWriter('primitives',{sinks:['sink:consume']});
@@ -15,11 +15,11 @@ const clone=value=>structuredClone(value);
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 // Native composition root only. JSON proposals cannot manufacture this token.
 // Every policy sees the transaction's CURRENT document, including prior effects.
-export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null}){
+export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,prepare=null,finish=null,identity=null}){
  if(typeof actor!=='string'||!actor||typeof eventId!=='string'||!eventId||eventId.length>120||!['catalog','open','rule'].includes(source?.kind)||typeof source.id!=='string'||!source.id)reject('E-PRIMITIVE-FRAME','缺少服务端行动者、事件编号或来源');
  for(const [name,fn] of Object.entries({canAct,authority,location,mirrorTransfer}))if(typeof fn!=='function')reject('E-PRIMITIVE-FRAME',`缺少服务端 ${name} 接点`);
  const frame=Object.freeze({actor,eventId,source:Object.freeze({...source})});
- frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate});return frame;
+ frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,prepare,finish,identity:clone(identity)});return frame;
 }
 function draft(document){
  return {document:clone(document),patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},peek(...p){return this.get(...p);},
@@ -31,16 +31,19 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
  const policy=frames.get(frame);if(!policy)reject('E-PRIMITIVE-FRAME','原语只能由服务端行动框架调用');
  if(!Array.isArray(effects)||!effects.length||effects.length>64)reject('E-PRIMITIVE-LIST','原语列表须有 1 至 64 项');
  const original=clone(effects);original.forEach((effect,index)=>{try{validatePrimitive(effect);}catch(error){error.index=index;throw error;}});
- const fingerprint=canonical({actor:frame.actor,source:frame.source,effects:original}),key=`primitive:${frame.eventId}`;
+ const baseIdentity={actor:frame.actor,source:frame.source,effects:original},legacyFingerprint=canonical(baseIdentity),fingerprint=policy.identity===null?legacyFingerprint:canonical({...baseIdentity,identity:policy.identity}),key=`primitive:${frame.eventId}`;
  const old=document.state?.records?.[key];
- if(old){if(old.category!=='primitive_receipt'||old.fingerprint!==fingerprint)reject('E-PRIMITIVE-DUPLICATE','事件编号已用于不同提案');return {patches:[],events:[],receipt:{...clone(old.receipt),duplicate:true}};}
+ if(old){if(old.category!=='primitive_receipt'||old.fingerprint!==fingerprint&&old.fingerprint!==legacyFingerprint)reject('E-PRIMITIVE-DUPLICATE','事件编号已用于不同提案');return {patches:[],events:[],receipt:{...clone(old.receipt),duplicate:true}};}
  const d=policy.createDraft?policy.createDraft(clone(document)):draft(document),receipt=receiptBase(original,frame),children=[];
  if(frame.source.kind==='catalog')receipt.routed=frame.source.id;
  if(pending)receipt.pending=pending;
  if(policy.engine&&d.scheduler)beginReactionTick(d);
  policy.validate?.(d.document);
- for(let index=0;index<original.length;index++){
-  const effect=original[index],patchStart=d.patches.length;try{
+ const selected=policy.prepare?.(d,{frame,receipt,effects:original})??original;
+ if(!Array.isArray(selected)||selected.length>64)reject('E-PRIMITIVE-LIST','Invalid native outcome list');
+ selected.forEach(validatePrimitive);
+ for(let index=0;index<selected.length;index++){
+  const effect=selected[index],patchStart=d.patches.length;try{
    if(effect.actor!==undefined&&effect.actor!==frame.actor)reject('E-PRIMITIVE-ACTOR','Effect actor must be the native frame actor');
    const capability=policy.canAct(d.document,frame.actor,effect.op,effect);
    if(!capability?.allowed)reject('E-CAPACITY',capability?.reason??'当前不能进行这类行动');
@@ -55,7 +58,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(!d.get('ledger','accounts')||!Object.hasOwn(d.get('ledger','accounts'),effect.from)||!isSink(b.owner)&&!Object.hasOwn(d.get('ledger','accounts'),effect.to))reject('E-TRANSFER-ACCOUNT','两端账户必须已经存在');
     if(d.get('ledger','version')!==1)reject('E-TRANSFER-BOOKS','账本尚未开立');
     if(/^(escrow|collected)(:|$)/.test(a.purpose))reject('E-TRANSFER-PURPOSE','托管资金不能由普通转移提案动用');
-    requireAuthority('transfer',effect.from);
+    requireAuthority('transfer',effect.from,{effect});
     if(isSink(b.owner)&&(a.owner!==frame.actor||b.owner!=='sink:consume'))reject('E-TRANSFER-SINK','本接点只允许消耗自己账户中的资源');
     if(!isSink(b.owner)){
      const from=policy.location(d.document,a.owner),to=policy.location(d.document,b.owner);
@@ -117,7 +120,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    }else if(policy.executePrimitive){
     result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});
    }else reject('E-PRIMITIVE-CONNECTOR',`原语 ${effect.op} 尚缺执行接点`);
-   const applied={index,...effect,result,tags:[...new Set(tags)],...(actedAs?{actedAs}:{})};receipt.applied.push(applied);
+   const applied={index,...effect,result,tags:[...new Set(tags)],...(actedAs?{actedAs}:{})};
+   if(result?.check)receipt.check??=result.check;
+   if(result?.applied===false||result?.resisted){receipt.trimmed.push({index,effect,reason:result.reason??(result.resisted?'resisted':'opposed_check_failed')});receipt.narrate.mustNot.push({op:effect.op,index});}
+   else receipt.applied.push(applied);
+   if(result?.trimmed)receipt.trimmed.push({index,effect,...result.trimmed});
    const protocolId=`${frame.eventId}:${index}`,eventKeys=new Set(d.patches.slice(patchStart).filter(p=>p.op==='set'&&p.path.length===3&&p.path[0]==='state'&&p.path[1]==='records'&&p.value?.category==='world_event').map(p=>p.path[2]));
    for(const key of eventKeys){
     const event=d.get('state','records',key),canonical=event.id===protocolId||event.id.startsWith('obligation:')&&event.id.endsWith(`:${protocolId}`);
@@ -128,15 +135,20 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    children.push({...applied,id:`${frame.eventId}:${index}`,parent:frame.eventId,actor:frame.actor,source:frame.source});
   }catch(error){if(error instanceof PrimitiveRejected){error.index=index;throw error;}throw new PrimitiveRejected(error.code??'E-PRIMITIVE-EXECUTION',error.message,index);}
  }
+ policy.finish?.(d,{frame,receipt});
  receipt.status=commit?'committed':'preview';receipt.narrate.must=receipt.applied.map(e=>({op:e.op,index:e.index}));
  if(!commit)return {receipt};
  if(policy.engine){
   for(const child of children){
+   if(child.op==='time'||child.result?.applied===false||child.result?.resisted)continue;
    // Holding/obligation protocols already publish their own canonical events.
    if(child.op.startsWith('holding.')||child.op.startsWith('obligation.'))continue;
-   const verb=child.op==='emit'?child.verb:child.op;
+   const verb=child.op==='emit'?child.verb:child.op==='transfer'&&child.actedAs?.kind==='theft'?'steal':({vital:child.delta>0?'heal':'harm',status:'status_applied',move:'moved',create:'created',destroy:'destroyed',schedule:'scheduled',learn:'learned','fact.set':'fact_changed'})[child.op]??child.op;
    SOCIAL_VERBS.add(verb);
-   publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target:child.target??null,minute:d.get('state','minute'),location:policy.location(d.document,frame.actor),visibility:child.visibility??'private',witnesses:[],tags:child.tags,primitive:child.op,...(child.op==='emit'?{payload:child.payload??{}}:{})});
+   const location=policy.location(d.document,frame.actor),visibility=child.visibility??'private',witnesses=[...new Set([...(['public','witnessed'].includes(visibility)?presentWitnesses(d.get('state'),location,[frame.actor]):[]),...child.result?.noticedBy??[]])];
+   const party=child.op==='transfer'?parseAccount(verb==='steal'?child.from:child.to).owner:null;
+   const target=child.target??(party&&!isSink(party)?party:null)??(child.op==='learn'?child.result?.teacher:null)??child.entity??null;
+   publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target,minute:d.get('state','minute'),location,visibility,witnesses,tags:child.tags,primitive:child.op,result:child.result,...(child.op==='emit'?{payload:child.payload??{}}:{})});
   }
   if(!deferReactions)drainWorldReactions(d);
   if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
@@ -149,15 +161,24 @@ export function commitPrimitives(document,effects,frame){return execute(document
 
 // Native queue API: JSON cannot supply a frame or a contest callback. No effect
 // is applied until phase 3' invokes execute, which rechecks current facts.
-export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,onCommitted}={}){
+export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,onCommitted,preview=null}={}){
  if(!frames.has(frame))reject('E-PRIMITIVE-FRAME','Native frame required');
- const preview=planPrimitives(d.document,effects,frame).receipt;
- if(preview.duplicate)return {...commitPrimitives(d.document,effects,frame),receipt:preview};
+ const proposal=clone(effects);
+ preview??=planPrimitives(d.document,proposal,frame).receipt;
+ if(preview.duplicate)return {...commitPrimitives(d.document,proposal,frame),receipt:preview};
  if(!Array.isArray(claims)||!claims.length)reject('E-PRIMITIVE-CONTEST','Native resource claims required');
  const receipt={...preview,status:'pending',applied:[],narrate:{must:[],mustNot:[]},pending:frame.eventId};
+ const fail=(reason,code)=>{
+  Object.assign(receipt,{status:'rejected',reason,...(code?{code}:{}),applied:[],check:null,trimmed:proposal.map((effect,index)=>({effect,index,reason})),narrate:{must:[],mustNot:proposal.map((effect,index)=>({op:effect.op,index}))}});
+  for(const key of ['cost','consent','decisions','outcome'])delete receipt[key];
+  const policy=frames.get(frame),identity={actor:frame.actor,source:frame.source,effects:proposal,...(policy.identity===null?{}:{identity:policy.identity})};
+  d.set(['state','records',`primitive:${frame.eventId}`],{category:'primitive_receipt',fingerprint:canonical(identity),receipt:clone(receipt)});
+ };
  submitContest(d,{id:frame.eventId,actor:frame.actor,objectId:frame.actor,ruleId:frame.source.id,target:claims[0].target,targetKind:claims[0].targetKind,claims,bid,rank,arrival,
   execute(){
-   const committed=execute(d.document,effects,frame,true,{deferReactions:true,pending:frame.eventId});
+   let committed;
+   try{committed=execute(d.document,proposal,frame,true,{deferReactions:true,pending:frame.eventId});}
+   catch(error){if(!(error instanceof PrimitiveRejected))throw error;fail(error.message,error.code);return;}
    for(const patch of committed.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
    if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
    onCommitted?.(committed);
@@ -167,7 +188,7 @@ export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,
    }
    Object.assign(receipt,committed.receipt,{pending:frame.eventId});
   },
-  reject(reason){Object.assign(receipt,{status:'rejected',reason,applied:[],narrate:{must:[],mustNot:[]}});}
+  reject(reason){fail(reason);}
  });
  return {receipt};
 }

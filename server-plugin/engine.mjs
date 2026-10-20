@@ -1,5 +1,6 @@
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
+import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -284,7 +285,8 @@ export class WorldEngine {
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
             const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session)});
-            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:books.document.state.minute,messages:[],notices:[]}};
+            const next=applyPatches(books.document,applied.patches);
+            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         primitiveActionRuntime()?.validateLegacy(this,document,resolved.tool,resolved.args,options);
@@ -362,6 +364,30 @@ export class WorldEngine {
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveTargetFacts(d,actor,target){
+        if(actor==='player')return this.magicTargetFacts(d,target);
+        const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
+        const origin=areaTargetFacts(d,this,actor,location);if(!origin)return null;
+        const other=areaTargetFacts(d,this,target,location,origin.point);if(!other)return null;
+        return {distanceMeters:Math.hypot(origin.point[0]-other.point[0],origin.point[1]-other.point[1]),lineOfSight:origin.lineOfSight&&other.lineOfSight};
+    }
+    primitiveMagicEffect(d,{target,spec,duration=0,source,actor},eventId){
+        // Target preparation supplies existing body, divine barrier and derived
+        // defense facts. Consent has already been adjudicated by the primitive
+        // transaction, including the opposed path absent in the legacy adapter.
+        const catalog={id:source,effectSpec:{kind:'damage',power:1,damageType:'physical'},duration:0};
+        const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
+        const prepared=prepareMagic.call(this,d,catalog,{target},{source:actor,location});
+        delete prepared.completionArgs;
+        prepared.spec={...spec};
+        prepared.catalog={id:source,duration};
+        return applyMagic.call(this,d,prepared,eventId);
+    }
+    primitiveValidateScheduledAction(d,{action,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,slots},actor);}
+    executeProtocolPrimitive(d,effect,context){
+        if(effect.op!=='primitive.action')throw Error(`Protocol primitive is not installed: ${effect.op}`);
+        return primitiveActionRuntime().runScheduled(this,d,effect,context);
+    }
     primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
     async previewAction(document,input){
         const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
@@ -713,7 +739,7 @@ export class WorldEngine {
     check(d,args,id) {
         return check.call(this,d,args,id);
     }
-    practice(d,args,id) {
+    practice(d,args,id,nativeGain=null) {
         const skill=this.resolve(args.skill,'skill'),old=d.get('state','skills',skill);
         if(!old)throw new Error('尚未学会这项技能');
         const stage=Math.floor(old.proficiency/300),day=String(Math.floor(d.get('state','minute')/1440));
@@ -731,8 +757,15 @@ export class WorldEngine {
             return {skill,breakthrough:outcome.success,...outcome};
         }
         const daily=clone(old.daily??{}),row=daily[day]??{gain:0,targets:{}},target=text(args.target??'普通练习',100),repeats=row.targets[target]??0;
-        const requested=number(args.gain??3,0,100,'练习收益');
-        const gain=Math.max(0,Math.min(Math.floor(requested*0.5**repeats),this.rules.practice.dailyCaps[stage]-row.gain));
+        const requested=nativeGain===null?number(args.gain??3,0,100,'练习收益'):nativeGain;
+        if(!Number.isFinite(requested)||requested<0||requested>100000)throw Error('原生练习收益不在允许范围');
+        if(nativeGain!==null&&(!Number.isFinite(old.practiceCarry??0)||(old.practiceCarry??0)<0||(old.practiceCarry??0)>=1))throw Error('原生练习小数余量损坏');
+        // The fourth argument is native-only. JSON tool arguments cannot opt
+        // into fractional gains; legacy practice and its snapshots stay exact.
+        const accruedUnits=nativeGain===null?null:(repeats>64?0n:fixedUnits(requested)/(2n**BigInt(repeats)))+fixedUnits(old.practiceCarry??0);
+        const accrued=nativeGain===null?requested*0.5**repeats:fixedNumber(accruedUnits);
+        const room=this.rules.practice.dailyCaps[stage]-row.gain;
+        const gain=Math.max(0,Math.min(nativeGain===null?Math.floor(accrued):fixedInteger(accruedUnits),room));
         const role=this.byId.get(skill).profession;
         const certified=certifiedForSkill(d,this,skill);
         if(!certified&&old.proficiency>299)return {skill,gain:0,proficiency:old.proficiency,effectiveProficiency:299,retained:true};
@@ -740,7 +773,8 @@ export class WorldEngine {
         const proficiency=Math.min(limit,old.proficiency+gain),actual=proficiency-old.proficiency;
         row.gain+=actual;row.targets[target]=repeats+1;daily[day]=row;
         for(const key of Object.keys(daily))if(Number(key)<Number(day)-1)delete daily[key];
-        d.set(['state','skills',skill],{...old,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
+        const carry=nativeGain===null?{}:{practiceCarry:room<=accrued||proficiency>=limit?0:fixedNumber(accruedUnits%FIXED_SCALE)};
+        d.set(['state','skills',skill],{...old,...carry,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
         const paths=proficiency%300===299?breakthroughPaths(d.get('state'),skill,proficiency):[];
         return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299,...(paths.length?{breakthroughPaths:paths}:{})};
     }

@@ -15,9 +15,14 @@ import {legalCodeAt} from './law-codes.mjs';
 import {personOffices,personLawRoles} from './entity-view.mjs';
 import {aliveHoldings,holdingKind,ensureHoldings} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
-import {compileRX,evaluateRX} from './rx.mjs';
+import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
 import {consent,applyConsentEvent} from './action-consent.mjs';
+import {executeRuntimeEffect} from './primitives-effects.mjs';
+import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
+import {accountKey} from './ledger.mjs';
+import {digest} from './storage.mjs';
+import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
@@ -94,18 +99,43 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
  }
 }
 
-export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy={},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null}={}){
+export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy={},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null,limits={},prepare=null,finish=null,identity=null,purpose=source?.id}={}){
  const context=primitiveContext(engine,document);
+ context.consentPurpose=purpose;
+ if(typeof limits!=='function')limits=structuredClone(limits);
+ const declared=source?.kind==='catalog'?findAction(primitiveRuntime.registry(engine),source.id):null;
+ {
+  const base=context.authoritySources;
+  context.authoritySources=options=>{
+   const sources=base(options),current=options.document,checkId=`${eventId}:action-check`,check=current.state.checks?.[checkId],effect=options.effect;
+   if(options.op==='transfer'&&effect&&options.target!==actor){
+    for(const scope of ['property','transfer']){
+     let permission=consent({...context,document:current},options.target,actor,scope,{purpose,onRefusal:'abort'});
+     if(!permission.allowed&&purpose!==source.id)permission=consent({...context,document:current},options.target,actor,scope,{purpose:source.id,onRefusal:'abort'});
+     if(permission.allowed){sources.push({kind:'consent',id:permission.source,allowed:true});break;}
+    }
+   }
+   if(declared?.theft===true&&options.op==='transfer'&&effect&&check?.success===true&&parseAccount(effect.to).owner===actor&&options.target!==actor){
+    const facts=engine.primitiveTargetFacts({...actionReader(current),document:current},actor,options.target);
+    if(facts?.lineOfSight===true&&facts.distanceMeters>=0&&facts.distanceMeters<=1.5)sources.push({kind:'theft',id:checkId,allowed:true,tags:['unconsented','theft']});
+   }
+   return sources;
+  };
+ }
  createDraft??=doc=>engine.primitiveDraft(doc);
  const makeDraft=createDraft;
  createDraft=doc=>{const d=makeDraft(doc);ensureHoldings(d,engine);return d;};
- return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,
+ return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,
+  prepare:(d,meta)=>{
+   const selected=prepare?.(d,meta)??meta.effects;
+   return declared?.theft===true?trimTheft(d,engine,declared,selected,actor,meta.receipt):selected;
+  },
   accountExists:(document,key)=>{
    const account=parseAccount(key),s=document.state,agent=account.owner==='player'||s.npcs?.[account.owner]||s.creatures?.[account.owner];
    return agent&&(account.resource===LEDGER_COIN?key===partyAccount(engine,s,account.owner):account.purpose==='inventory'&&engine.byId.has(account.resource));
   },
   mirrorTransfer:(d,effect)=>mirrorPrimitiveTransfer(d,engine,effect),
-  executePrimitive:(d,effect,{frame,index,requireAuthority})=>{
+  executePrimitive:(d,effect,{frame,index,requireAuthority,tags})=>{
    const child=`${frame.eventId}:${index}`,s=d.get('state');
    if(effect.op==='emit'&&['consent_given','consent_revoked'].includes(effect.verb))return applyConsentEvent(d,primitiveContext(engine,d.document),{actor:frame.actor,eventId:child,verb:effect.verb,to:effect.target,payload:effect.payload});
    if(effect.op==='obligation.create'){
@@ -125,7 +155,7 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
     // closeObligation retains earned claims; cancellation cannot erase money.
     return closeObligation(d,engine,{id:effect.id,party:row.creditor,actor:frame.actor,reason:effect.reason,actedAs:a.actedAs?.source?{source:a.actedAs.source}:null},child);
    }
-   reject('E-PRIMITIVE-CONNECTOR',`Missing primitive connector: ${effect.op}`);
+   return executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthority,tags},context,typeof limits==='function'?limits(d.document):limits);
   }});
 }
 
@@ -145,14 +175,210 @@ export function actionEffects(action,slots,actor){
  return bind(action.outcomes);
 }
 
-function validatePreconditions(engine,current,action,slots,conditions=action.preconditions??[]){
- const library=createRXLibrary(engine,current,{context:primitiveContext(engine,current)}),slotSchema=Object.fromEntries(action.slots.map(slot=>[slot.name,slot.schema??(['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'boolean':'string')]));
+function validatePreconditions(engine,current,action,slots,conditions=action.preconditions??[],actor='player'){
+ const library=createRXLibrary(engine,current,{observer:actor,context:primitiveContext(engine,current)}),slotSchema=Object.fromEntries(action.slots.map(slot=>[slot.name,slot.schema??(['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'boolean':'string')]));
  for(const condition of conditions){
   const source=typeof condition==='string'?condition:condition.value;
   if(typeof source!=='string')reject('E-PRIMITIVE-CONNECTOR','Precondition requires an RX expression');
   const compiled=compileRX(source,{schema:{actor:'string',target:'string',slots:slotSchema},functions:library.signatures});
-  if(evaluateRX(compiled,{actor:'player',target:slots.target??'player',slots},{functions:library.functions})!==true)reject('E-PRECONDITION',condition.reason??'Action precondition is not satisfied');
+  if(evaluateRX(compiled,{actor,target:slots.target??actor,slots},{functions:library.functions})!==true)reject('E-PRECONDITION',condition.reason??'Action precondition is not satisfied');
  }
+}
+
+function rxValue(engine,document,action,slots,value,actor){
+ if(typeof value!=='string')return value;
+ const library=createRXLibrary(engine,document,{observer:actor,context:primitiveContext(engine,document)}),schema={actor:'string',target:'string',slots:Object.fromEntries(action.slots.map(s=>[s.name,s.schema??(['quantity','coins','minutes'].includes(s.kind)?'number':s.kind==='flag'?'boolean':'string')]))};
+ return evaluateRX(compileRX(value,{schema,functions:library.signatures}),{actor,target:slots.target??actor,slots},{functions:library.functions});
+}
+function validateSlots(engine,document,action,slots,actor){
+ for(const slot of action.slots){
+  const value=slots[slot.name];if(value===undefined)continue;
+  const type=slot.schema??(['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'boolean':null);
+  if(type==='number'&&(!Number.isSafeInteger(value)||value<0&&slot.min===undefined)||type==='boolean'&&typeof value!=='boolean'||type==='string'&&typeof value!=='string')reject('E-ACTION-SLOT',`Invalid slot type: ${slot.name}`);
+  if(slot.options&&Array.isArray(slot.options)&&!slot.options.includes(value))reject('E-ACTION-SLOT',`Invalid slot choice: ${slot.name}`);
+  if(slot.min!==undefined&&value<rxValue(engine,document,action,slots,slot.min,actor)||slot.max!==undefined&&value>rxValue(engine,document,action,slots,slot.max,actor))reject('E-ACTION-SLOT',`Slot outside native bounds: ${slot.name}`);
+ }
+}
+// Numeric effects authored as constants are their own bound. Client-bound
+// magnitude slots must have a finite catalog maximum, evaluated on current facts.
+function actionLimits(engine,document,action,slots,actor){
+ const outcomes=Array.isArray(action.outcomes)?[action.outcomes]:Object.values(action.outcomes),limits={time:0};
+ const numeric=(value)=>{
+  if(value&&typeof value==='object'&&typeof value.slot==='string'){
+   const slot=action.slots.find(s=>s.name===value.slot),max=slot?.max===undefined?undefined:rxValue(engine,document,action,slots,slot.max,actor),min=slot?.min===undefined?0:rxValue(engine,document,action,slots,slot.min,actor);
+   if(!Number.isSafeInteger(max)||!Number.isSafeInteger(min)||min>max)reject('E-ACTION-BOUND',`Effect slot requires native bounds: ${value.slot}`);
+   return Math.max(Math.abs(min),Math.abs(max));
+  }
+  if(!Number.isSafeInteger(value))reject('E-ACTION-BOUND','Effect requires a constant or bounded numeric slot');
+  return Math.abs(value);
+ };
+ for(const effects of outcomes){
+  if(!Array.isArray(effects))reject('E-ACTION-OUTCOME','An outcome must be a primitive list');
+  for(const effect of effects){
+   if(effect.op==='time')limits.time+=numeric(effect.minutes);
+   if(effect.op==='vital'){
+    const n=numeric(effect.delta);limits.vital??={harm:0,heal:0,rangeMeters:action.rangeMeters??1.5};
+    if(effect.type?.startsWith('body:')){limits.vital.body??={};limits.vital.body[effect.type.slice(5)]=n;}
+    // A bounded delta slot can select either direction. Both remain bounded.
+    if(typeof effect.delta==='number')limits.vital[effect.delta<0?'harm':'heal']=Math.max(limits.vital[effect.delta<0?'harm':'heal'],effect.delta<0&&action.check&&Array.isArray(action.outcomes)?fixedInteger(fixedMultiply(fixedUnits(n),fixedUnits(engine.rules.combat.criticalMultiplier))):n);
+    else {limits.vital.harm=Math.max(limits.vital.harm,fixedInteger(fixedMultiply(fixedUnits(n),fixedUnits(action.check&&Array.isArray(action.outcomes)?engine.rules.combat.criticalMultiplier:1))));limits.vital.heal=Math.max(limits.vital.heal,n);}
+   }
+   if(effect.op==='status'){
+    if(typeof effect.status!=='string')reject('E-ACTION-BOUND','Status identifiers must be authored');
+    limits.status??={statuses:[],magnitude:0,duration:0,rangeMeters:action.rangeMeters??1.5};
+    limits.status.statuses.push(effect.status);limits.status.magnitude=Math.max(limits.status.magnitude,numeric(effect.magnitude));limits.status.duration=Math.max(limits.status.duration,numeric(effect.duration));
+   }
+  }
+ }
+ return limits;
+}
+function actionDuration(engine,document,action,slots,actor){
+ const table=engine.world.primitiveTables?.['action-costs']?.rows??[],key=action.id.replace(/^core:/,''),row=table.find(r=>r.selector===key);
+ let duration=rxValue(engine,document,action,slots,action.cost?.time??row?.timeMin??row?.minutesPerBout??0,actor);
+ if(action.durationSlot){
+  const rule=action.durationSlot,name=typeof rule==='string'?rule:rule.slot??rule.name;
+  duration=slots[name];
+  if(!Number.isSafeInteger(duration)||duration<(rule.min??row?.durationMin??1)||duration>(rule.max??row?.durationMax??43200))reject('E-ACTION-DURATION','Duration is outside the activity bounds');
+ }
+ if(!Number.isSafeInteger(duration)||duration<0||duration>43200)reject('E-ACTION-COST','Invalid native action duration');
+ const effects=Array.isArray(action.outcomes)?action.outcomes:Object.values(action.outcomes??{}).flat();
+ return {duration,activity:action.activity??row?.activity??(effects.some(e=>e.op==='move')||key.startsWith('move')?'travel':effects.some(e=>e.op==='time')||key.startsWith('time')||key==='sleep'?'rest':'light')};
+}
+
+function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{duration=0,purpose=action.id,limits={},quote={}}={}){
+ let permission=null,check=action.check,failed=false;
+ const scopeRules=action.consent?.scope;
+ if(action.consent){
+  const rule=action.consent,from=rule.from==='self'?actor:rule.from==='party'?slots[rule.slot]:slots[rule.from]??slots.target;
+  const scopes=Array.isArray(scopeRules)?scopeRules:[scopeRules??'property'];
+  for(const entry of scopes){
+   const scope=typeof entry==='string'?entry:entry?.value;
+   if(typeof from!=='string'||typeof scope!=='string')reject('E-CONSENT','Consent requires a target and scope');
+   const onRefusal=rule.onRefusal??(['mind','memory','healing','support_magic'].includes(scope)?'contest':'abort'),until=d.get('state','minute')+duration;
+   permission=from===actor?{allowed:true,kind:'self',source:eventId,tags:[],check:null}:consent(primitiveContext(engine,d.document),from,actor,scope,{purpose,until,onRefusal});
+   if(!permission.allowed&&purpose!==action.id)permission=consent(primitiveContext(engine,d.document),from,actor,scope,{purpose:action.id,until,onRefusal});
+   if(!permission.allowed&&from!=='player'&&d.get('state','npcs',from)){
+    // A declaration asks the other party; it cannot supply their answer. A2
+    // receives only that NPC's subjective projection and a native request.
+    const transferred=effects.filter(e=>e.op==='transfer'),money=transferred.filter(e=>parseAccount(e.from).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.from).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.from).resource)?.basePrice??0),0),reward=transferred.filter(e=>parseAccount(e.to).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.to).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.to).resource)?.basePrice??0),0);
+    const library=createRXLibrary(engine,d.document,{observer:actor,context:primitiveContext(engine,d.document)}),decision=library.functions.npcDecision(from,{kind:scope,purpose:action.id,cost:{minutes:duration,coins:money},reward});
+    receipt.decisions??=[];receipt.decisions.push({from,scope,...decision});
+    if(decision.outcome==='agree'){
+     const id=`${eventId}:consent:${receipt.decisions.length}`,payload={scope,purpose:[purpose],until:until+1};
+     applyConsentEvent(d,primitiveContext(engine,d.document),{actor:from,eventId:id,verb:'consent_given',to:actor,payload});
+     SOCIAL_VERBS.add('consent_given');
+     publishTransitionEvent(d,engine,{id,parent:eventId,verb:'consent_given',actor:from,target:actor,minute:d.get('state','minute'),location:d.get('state','location'),visibility:'private',witnesses:[],tags:[],payload,source:{kind:'catalog',id:action.id}});
+     permission=consent(primitiveContext(engine,d.document),from,actor,scope,{purpose,until,onRefusal});
+    }
+   }
+   if(!permission.allowed){
+    if(permission.check==='abort')reject('E-CONSENT',entry?.reason??permission.reason);
+    if(actor!=='player'||!d.get('state','npcs',from))reject('E-PRIMITIVE-CONNECTOR','The opposed pair requires its native check adapter');
+    check={...(check??{}),opponent:{npc:from,attribute:'精神'}};
+    receipt.consequences.push({tags:permission.tags,scope,from,source:entry?.source??action.id});
+   }
+  }
+ }
+ if(check){
+  if(actor!=='player')reject('E-PRIMITIVE-CONNECTOR','NPC action checks require their native check adapter');
+  const args=actionEffects({outcomes:check},slots,actor);
+  if(args.opponent)delete args.difficulty;
+  if(args.difficulty!==undefined)args.difficulty=rxValue(engine,d.document,action,slots,args.difficulty,actor);
+  receipt.check=engine.check(d,args,`${eventId}:action-check`);failed=!receipt.check.success;
+ }
+ if(permission)receipt.consent=permission;
+ if(action.theft===true&&!check)reject('E-THEFT-CHECK','Theft requires an authored native check');
+ const grade=receipt.check?({'大失败':'fumble','失败':'failure','勉强成功':'partial','成功':'success','大成功':'critical'})[receipt.check.degree]:'success';
+ if(Array.isArray(action.outcomes)){
+  receipt.outcome=grade;
+  return defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote});
+ }
+ const selected=action.outcomes[grade]??(failed?[]:action.outcomes.success??action.outcomes.accepted??[]);
+ receipt.outcome=grade;return actionEffects({outcomes:selected},slots,actor);
+}
+
+function defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote}){
+ if(grade==='failure'||grade==='fumble'){
+  receipt.narrate.mustNot.push(...effects.map((e,index)=>({op:e.op,index})));
+  receipt.trimmed.push(...effects.map((effect,index)=>({effect,index,reason:'check_failed'})));
+  receipt.consequences.push({kind:'exposure',actor,action:action.id});
+  if(grade==='fumble')quote.duration*=2;
+  const backfire=effects.find(e=>e.op==='vital'&&e.delta<0);
+  const target=slotsTarget(effects,actor);
+  return [...(grade==='fumble'&&backfire?[{op:'vital',target:actor,delta:-Math.max(1,fixedInteger(fixedDivide(fixedUnits(Math.abs(backfire.delta)),fixedUnits(4)))),type:'physical'}]:[]),
+   {op:'emit',verb:'tell',...(target?{target}:{}),visibility:'witnessed',payload:{kind:'action_exposed',action:action.id,outcome:grade}}];
+ }
+ if(grade!=='partial'&&grade!=='critical')return effects;
+ if(grade==='critical'&&effects.some(e=>e.op==='fact.set'))quote.duration=fixedInteger(fixedDivide(fixedUnits(quote.duration),fixedUnits(2)));
+ return effects.flatMap((effect,index)=>{
+  let next=effect;
+  if(effect.op==='vital'){
+   const multiplier=grade==='partial'?.5:effect.delta<0?engine.rules.combat.criticalMultiplier:1;
+   next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(multiplier)))};
+  }else if(effect.op==='fact.set'&&grade==='partial'){
+   if(typeof effect.delta==='number')next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(.5)))};
+   else if(typeof effect.value==='number'){
+    const old=d.get('holdings','entities',effect.entity,'facts',effect.field)??0;next={...effect,value:old+fixedInteger(fixedMultiply(checkedFixed(fixedUnits(effect.value)-fixedUnits(old)),fixedUnits(.5)))};
+   }
+  }else if(effect.op==='learn'&&effect.learningSource!=='practice'){
+   const multiplier=grade==='partial'?.5:2;
+   if(limits.learn)limits.learn.multiplier=multiplier;
+   if(effect.amount!==undefined)next={...effect,amount:fixedInteger(fixedMultiply(fixedUnits(effect.amount),fixedUnits(multiplier)))};
+  }
+  if(next!==effect)receipt.trimmed.push({index,effect,applied:next,reason:`degree:${grade}`});
+  if(next.op==='vital'&&next.delta===0){receipt.narrate.mustNot.push({op:next.op,index});return [];}
+  return [next];
+ });
+}
+function slotsTarget(effects,actor){
+ for(const e of effects){if(e.target&&e.target!==actor)return e.target;if(e.op==='transfer'){const from=parseAccount(e.from).owner;if(from!==actor)return from;}}
+ return null;
+}
+
+function trimTheft(d,engine,action,effects,actor,receipt){
+ if(action.theft!==true)return effects;
+ let coins=engine.rules.law.maximumTheftCoins;const used=new Map();
+ return effects.flatMap((effect,index)=>{
+  if(effect.op!=='transfer'||parseAccount(effect.from).owner===actor)return [effect];
+  const from=parseAccount(effect.from),to=parseAccount(effect.to);
+  if(to.owner!==actor||!['purse','inventory'].includes(from.purpose))reject('E-THEFT-ACCOUNT','Theft only takes reachable personal property into the actor inventory');
+  if(from.resource!==LEDGER_COIN)reject('E-PRIMITIVE-CONNECTOR','Item theft requires its original-owner claim adapter; use the registered theft action');
+  const qty=Math.min(effect.qty,coins,Math.max(0,(d.get('ledger','accounts',effect.from)??0)-(used.get(effect.from)??0)));
+  if(qty!==effect.qty)receipt.trimmed.push({index,effect,applied:qty,reason:'theft_limit'});
+  if(!qty)return [];
+  used.set(effect.from,(used.get(effect.from)??0)+qty);
+  coins-=qty;
+  return [{...effect,qty}];
+ });
+}
+
+function settleActionCost(d,engine,action,slots,actor,start,quote,receipt,eventId){
+ const remaining=Math.max(0,quote.duration-(d.get('state','minute')-start));
+ if(remaining)engine.advance(d,remaining,`${eventId}:cost`);
+ const elapsed=d.get('state','minute')-start,body={},rows=engine.world.primitiveTables?.body?.rows;
+ if(elapsed||action.cost?.body){
+  if(!rows)reject('E-BODY-TABLE','The archived body table is required');
+  for(const row of rows.filter(r=>r.selector==='person')){
+   const explicit=action.cost?.body?.[row.need],fact=bodyFact(engine,d.document,actor,row.need);
+   if(explicit===undefined){
+    const state=readBodyState(engine,d.document,actor,row.need);writeBodyNeed(d,engine,actor,row.need,state.value,{remainder:state.remainder});body[row.need]={value:state.value,asOf:d.get('state','minute')};
+   }else{
+    const amount=rxValue(engine,d.document,action,slots,explicit,actor);
+    if(!Number.isFinite(amount)||amount<0)reject('E-ACTION-COST','Invalid body cost');
+    const value=writeBodyNeed(d,engine,actor,row.need,fixedNumber(checkedFixed(fixedUnits(fact.value)+(row.need==='fatigue'?1n:-1n)*fixedUnits(amount))),{remainder:fact.remainder??0});body[row.need]={value,asOf:d.get('state','minute')};
+   }
+  }
+ }
+ receipt.cost={time:elapsed,body};
+}
+
+function actionResourceCosts(engine,document,action,slots,actor){
+ return (action.cost?.resources??[]).map(row=>{
+  if(!row||typeof row.resource!=='string')reject('E-ACTION-COST','A resource cost requires a registered resource');
+  const resource=row.resource,qty=rxValue(engine,document,action,slots,row.qty??row.amount,actor);
+  if(!Number.isSafeInteger(qty)||qty<1||resource!==LEDGER_COIN&&!engine.byId.has(resource))reject('E-ACTION-COST','Invalid resource cost');
+  return {op:'transfer',from:resource===LEDGER_COIN?partyAccount(engine,document.state,actor):accountKey(actor,resource,'inventory'),to:accountKey('sink:consume',resource,'action'),qty};
+ });
 }
 
 export const primitiveRuntime={
@@ -177,7 +403,7 @@ export const primitiveRuntime={
   validatePreconditions(engine,document,action,args,(action.preconditions??[]).filter(condition=>condition?.source));
   if(action.consent?.scope?.some?.(scope=>scope?.source))reject('E-PRIMITIVE-CONNECTOR','Additional consent scope requires its adjudication connector');
  },
- resolve(engine,input){
+ resolve(engine,input,{actor='player'}={}){
   const registry=this.registry(engine),action=findAction(registry,input.args?.action);
   if(registry.errors?.length)reject('E-ACTION-REGISTRY',registry.errors.join('; '));
   if(!action)reject('E-ACTION','Unknown registered action');
@@ -188,28 +414,65 @@ export const primitiveRuntime={
   for(const slot of action.slots)if(slot.required&&!Object.hasOwn(slots,slot.name))reject('E-ACTION-SLOT',`Missing slot: ${slot.name}`);
   // Programs needing adjudication must use its connector; never run them as
   // unconditional effects merely because an outcomes array exists.
-  if(action.check||action.theft||action.rite||action.consent)reject('E-PRIMITIVE-CONNECTOR','This action requires its adjudication connector');
-  return {action,effects:actionEffects(action,slots,'player')};
+  if(action.rite)reject('E-PRIMITIVE-CONNECTOR','This action requires its rite connector');
+  const program=Array.isArray(action.outcomes)?action.outcomes:action.outcomes.success??action.outcomes.accepted;
+  if(!Array.isArray(program)||!program.length)reject('E-ACTION-OUTCOME','A primary success outcome is required');
+  return {action,effects:actionEffects({outcomes:program},slots,actor)};
  },
- execute(engine,document,input,{createDraft,preview=false}={}){
-  const resolved=this.resolve(engine,input);
+ execute(engine,document,input,{createDraft,preview=false,actor='player'}={}){
+  const resolved=this.resolve(engine,input,{actor});
   if(!resolved.effects)return {legacy:resolved};
   const {action}=resolved;
   if(action.cost?.owner!=='primitives'&&action.cost!==undefined)reject('E-ACTION-COST','Primitive actions must declare their cost owner');
-  if(action.cost?.time||action.cost?.body)reject('E-PRIMITIVE-CONNECTOR','Action cost requires its time/body connector');
-  const slots=input.args?.slots??{},validate=current=>validatePreconditions(engine,current,action,slots);
-  const frame=createRuntimePrimitiveFrame(engine,document,{eventId:input.eventId,source:{kind:'catalog',id:action.id},createDraft,validate});
-  const claims=primitiveClaims(engine,document,resolved.effects);
+  const slots=input.args?.slots??{},validate=current=>{validateSlots(engine,current,action,slots,actor);validatePreconditions(engine,current,action,slots,action.preconditions??[],actor);};
+  let limits,quote,start,resourceCosts;
+  const effects=resolved.effects;
+  const purpose=`action:${digest({action:action.id,eventId:input.eventId})}`;
+  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:'catalog',id:action.id},createDraft,validate,identity:{action:action.id,slots},limits:()=>limits,purpose,
+   prepare:(d,{receipt})=>{
+    limits=actionLimits(engine,d.document,action,slots,actor);limits.costManaged=true;quote=actionDuration(engine,d.document,action,slots,actor);start=d.get('state','minute');
+    if(quote.duration||action.cost?.body||effects.some(e=>['move','learn','time'].includes(e.op)))beginBodyActivity(d,engine,actor,quote.activity);
+    resourceCosts=actionResourceCosts(engine,d.document,action,slots,actor);
+    if(effects.some(e=>e.op==='learn'))limits.learn={minutes:quote.duration};
+    const selected=adjudicateAction(d,engine,action,slots,actor,input.eventId,effects,receipt,{duration:Math.max(quote.duration,limits.status?.duration??0),purpose,limits,quote});
+    limits.consentChecks=receipt.consequences.filter(row=>row.tags?.includes('unconsented')&&row.from&&row.scope).map(row=>({target:row.from,scope:row.scope,id:`${input.eventId}:action-check`}));
+    return [...resourceCosts,...selected];
+   },
+   finish:(d,{receipt})=>{settleActionCost(d,engine,action,slots,actor,start,quote,receipt,input.eventId);receipt.cost.resources=resourceCosts;}});
+  const planned=planPrimitives(document,effects,frame),claims=primitiveClaims(engine,document,planned.receipt.applied);
+  if(preview)return planned;
   if(claims.length&&!preview){
-   const d=createDraft(structuredClone(document));let events=[];
-   const pending=queuePrimitiveProposal(d,resolved.effects,frame,{claims,onCommitted:result=>{events=result.events;}});
+   const d=(createDraft??(doc=>engine.primitiveDraft(doc)))(structuredClone(document));let events=[];
+   const pending=queuePrimitiveProposal(d,effects,frame,{claims,preview:planned.receipt,onCommitted:result=>{events=result.events;}});
    if(pending.receipt.duplicate)return {patches:[],events:[],receipt:pending.receipt};
    if(pending.receipt.status==='pending')engine.advance(d,0,input.eventId);
    if(pending.receipt.status==='pending')reject('E-PRIMITIVE-CONTEST','Scheduler did not finalize the proposal');
    if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
    return {patches:d.patches,receipt:pending.receipt,events};
   }
-  return preview?planPrimitives(document,resolved.effects,frame):commitPrimitives(document,resolved.effects,frame);
+  return commitPrimitives(document,effects,frame);
+ },
+ validateScheduled(engine,document,{action,slots},actor){
+  const resolved=this.resolve(engine,{args:{action,slots}},{actor});
+  if(!resolved.effects)reject('E-SCHEDULE-ACTION','Only primitive programs can be scheduled');
+  validateSlots(engine,document,resolved.action,slots,actor);
+  return resolved.action.id;
+ },
+ runScheduled(engine,d,effect,context){
+  const key=`primitive_schedule_result:${context.eventId}`;
+  try{
+   const result=this.execute(engine,d.document,{eventId:`scheduled:${digest({schedule:context.eventId})}`,args:{action:effect.action,slots:effect.slots}},{actor:effect.actor});
+   for(const patch of result.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
+   if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
+   d.set(['state','records',key],{category:'primitive_schedule_result',status:'committed',receipt:result.receipt});
+   return result.receipt;
+  }catch(error){
+   // Domain rejection is a terminal result, not an immortal due item that
+   // prevents the whole world advancing. Unexpected engine errors still abort.
+   if(!error.code?.startsWith('E-'))throw error;
+   const result={category:'primitive_schedule_result',status:'rejected',code:error.code,reason:error.message};
+   d.set(['state','records',key],result);return result;
+  }
  },
  canAct(engine,document,actor,family,effect){return canAct(primitiveContext(engine,document),actor,family,effect);}
 };

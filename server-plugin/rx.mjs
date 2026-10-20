@@ -10,6 +10,15 @@ function fixed(s){
 }
 const LIMIT=BigInt(Number.MAX_SAFE_INTEGER);
 function bounded(v){if(v>LIMIT||v< -LIMIT)fail('E-RX-NUMBER','Fixed number overflow');return v;}
+// Native derived formulas share RX's four-decimal conversion, overflow and
+// toward-zero arithmetic. Values crossing the JSON boundary remain numbers.
+export const FIXED_SCALE=SCALE;
+export const fixedUnits=fixed;
+export const checkedFixed=bounded;
+export const fixedNumber=value=>Number(bounded(value))/10000;
+export const fixedInteger=value=>Number(bounded(value)/SCALE);
+export const fixedMultiply=(a,b)=>bounded(a*b/SCALE);
+export const fixedDivide=(a,b)=>{if(b===0n)fail('E-RX-NUMBER','Division by zero');return bounded(a*SCALE/b);};
 function input(v){
  if(typeof v==='number'){if(!Number.isFinite(v))fail('E-RX-NUMBER','Nonfinite view number');return fixed(v);}
  if(v===null||typeof v==='string'||typeof v==='boolean'||v===undefined)return v;
