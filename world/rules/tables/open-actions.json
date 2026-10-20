@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "note": "开放效果的保守初值；命中注册动作使用原动作。来源固有效力与这些上限取小值，不能据此创造新法术或资源。",
+  "sourceCaps": {
+    "vital": [5, 16, 32, 64, 128, 256, 512, 1024, 2048],
+    "factWork": [1, 2, 4, 8, 16, 32, 64, 100, 100],
+    "statusMagnitude": [2, 4, 8, 16, 32, 64, 128, 256, 512],
+    "statusDuration": [60, 120, 240, 480, 960, 1920, 3840, 7680, 15360]
+  },
+  "generic": {
+    "physicalMinutes": 1,
+    "physicalDifficulty": 10,
+    "speechMinutes": 1,
+    "transferMinutes": 1
+  },
+  "degrees": {
+    "大失败": {"key":"fumble","multiplier":0,"timeMultiplier":2,"exposed":true},
+    "失败": {"key":"failure","multiplier":0,"timeMultiplier":1,"exposed":true},
+    "勉强成功": {"key":"partial","multiplier":0.5,"timeMultiplier":1,"exposed":false},
+    "成功": {"key":"success","multiplier":1,"timeMultiplier":1,"exposed":false},
+    "大成功": {"key":"critical","multiplier":1,"timeMultiplier":1,"exposed":false}
+  },
+  "mark": {
+    "minutes": 5,
+    "maximumPerAuthorPlace": 8,
+    "reactionWindow": 10080,
+    "forms": ["刻痕", "摆放物", "涂画", "歌谣", "口号", "仪式残迹", "布置"],
+    "maximumMaterials": 8
+  }
+}

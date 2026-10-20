@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {routeAction,effectSignature,signatureJaccard} from '../server-plugin/action-router.mjs';
+import {routeAction,effectSignature,signatureJaccard,createRoutingContext,resolveProposalEntities} from '../server-plugin/action-router.mjs';
+import {loadWorld} from '../tools/load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import fs from 'node:fs/promises';
 const kindOf=id=>id==='player'||id?.startsWith('npc_')?'person':id?.startsWith('item_')?'item':null;
 const effect={op:'emit',target:'npc_one',verb:'request',visibility:'private',payload:{text:'help'}};
 const action=(id,label='请求帮助')=>({id,label,synonyms:[],participants:{actor:['person'],target:['person']},visibility:{catalog:'target:npc'},slots:[{name:'target',kind:'entity',entity:'person',required:true}],outcomes:[{...effect,target:{slot:'target'}}]});
@@ -38,4 +41,24 @@ test('A3 routing: source resource is part of a transfer signature; native actor 
  assert.equal(signatureJaccard(coins,items),0);
  const onlyPlayer={...action('test:player'),participants:{actor:'player',target:['person']}};
  assert.equal(routeAction({...proposal,participants:{...proposal.participants,actor:'player'}},{actions:[onlyPlayer]},{...context,actor:'npc_one'}).candidates.length,0);
+});
+
+test('A3 routing: native names, aliases and slots use currently accessible entities, preserve ambiguity',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+ const document=engine.createCharacter(seed,{},'a3-routing-native');
+ const people=Object.keys(document.state.npcs).slice(0,3);assert.equal(people.length,3);
+ for(const id of people.slice(0,2)){document.state.npcs[id].location=document.state.location;document.state.npcs[id].name='同名来客';}
+ const remote=people[2];document.state.npcs[remote].location='loc_inaccessible';
+ const context=createRoutingContext(engine,document);
+ const ambiguous=resolveProposalEntities({...proposal,participants:{target:'同名来客'},effects:[{...effect,target:'同名来客'}]},context);
+ assert.equal(ambiguous.ambiguities.length,2);assert.deepEqual(ambiguous.ambiguities[0].candidates.map(c=>c.id),people.slice(0,2).sort());
+ assert.equal(context.resolve(remote).value,null);assert.deepEqual(context.resolve(remote).candidates,[]);
+ assert.equal(context.kindOf(`${people[0]}|coin_river|purse`),'person');
+ const concrete={...proposal,participants:{target:people[0]},effects:[{...effect,target:people[0]}]};
+ const a=action('test:actual');
+ const result=routeAction(concrete,{actions:[a]},context);
+ assert.equal(result.routed,a.id);assert.equal(result.candidates[0].slots.target,people[0]);
+ document.state.npcs[people[0]].location='loc_inaccessible';
+ const fresh=createRoutingContext(engine,document);
+ assert.equal(routeAction(concrete,{actions:[a]},fresh).routed,null);
 });

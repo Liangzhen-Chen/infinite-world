@@ -54,3 +54,24 @@ test('A3 open: missing slots and unmatched plans never pretend effects were subm
  const plan=prepareOpenAction(f.engine,f.document,proposal,{...f.native,limits:()=>({actor:'player',sourceFor:()=>null})});
  assert.equal(plan.status,'needs_alternative');assert.deepEqual(plan.effects,[]);assert.equal(plan.fallback.available,false);
 });
+
+test('A3 open: native routing executes an actual registered transfer without injected resolvers',async()=>{
+ const f=fixture(),input={args:f.args,eventId:'a3-native-route'},out=await executeRoutedOpenAction(f.engine,f.document,input);
+ const after=applyPatches(f.document,out.patches);
+ assert.equal(out.routing.routed,'test:gift');assert.equal(after.ledger.accounts[f.to],f.document.ledger.accounts[f.to]+5);
+ assert.equal(after.state.minute,f.document.state.minute+2);assert.deepEqual(auditLedger(after.ledger),[]);
+});
+
+test('A3 open: routed leave_mark uses the real mark adapter and native costs',async()=>{
+ const engine=new WorldEngine(structuredClone(world));
+ Object.assign(engine.world,{openActionRules:JSON.parse(await fs.readFile('world/rules/tables/open-actions.json','utf8')),openTagging:JSON.parse(await fs.readFile('world/rules/open-tagging.json','utf8')),openReactions:JSON.parse(await fs.readFile('world/rules/open-reactions.json','utf8'))});
+ const document=withLedger(engine,engine.createCharacter(seed,{},'a3-routed-mark')).document;
+ const args={intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:'留下一个提醒路人的记号',form:'刻痕'},tags:['mark:warning']}]},before=structuredClone(document);
+ const preview=await executeRoutedOpenAction(engine,document,{eventId:'a3-routed-mark',args},undefined,{preview:true});
+ assert.equal(preview.receipt.status,'preview');assert.deepEqual(document,before);
+ const out=await executeRoutedOpenAction(engine,document,{eventId:'a3-routed-mark',args}),after=applyPatches(document,out.patches);
+ assert.equal(out.routing.routed,'open:leave_mark');assert.equal(after.state.created[out.receipt.mark.entity].intent,args.effects[0].facts.intent);
+ assert.equal(after.state.minute,before.state.minute+engine.world.openActionRules.mark.minutes);
+ assert.equal(out.receipt.fallback.originalIntentFulfilled,false);assert.deepEqual(after.ledger.accounts,before.ledger.accounts);
+ const duplicate=await executeRoutedOpenAction(engine,after,{eventId:'a3-routed-mark',args});assert.equal(duplicate.receipt.duplicate,true);assert.deepEqual(duplicate.patches,[]);
+});
