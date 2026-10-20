@@ -76,3 +76,13 @@ export function subjectiveView(engine,document,observer){
 }
 export function subjectiveFact(view,key){return view.knowledge.facts[key]??(Object.hasOwn(view.prior,key)?{value:view.prior[key],kind:'prior',credence:0.5}:null);}
 export const knownActiveObligations=view=>view.self.obligations.filter(active);
+
+// Shared spoken-language/interpreter check for conversations and admission.
+export function conversationLanguage(view,engine,d){
+ const b=engine.byId.get(view.observer),player=d.get('state','player');
+ const a=player.languages??engine.rules.languages?.default??['lang:common'],n=b.languages??['lang:common'];
+ const ids=x=>Array.isArray(x)?x:Object.keys(x).filter(k=>x[k]>0);
+ if(ids(a).some(x=>ids(n).includes(x)))return {degree:2,interpreter:null};
+ const interpreter=view.observable.people.find(p=>{const langs=ids(engine.byId.get(p.id)?.languages??[]);return p.id!==view.observer&&langs.some(l=>ids(a).includes(l))&&langs.some(l=>ids(n).includes(l));});
+ return interpreter?{degree:1,interpreter:interpreter.id}:null;
+}

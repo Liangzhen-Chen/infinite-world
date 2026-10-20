@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {monsterStats} from '../server-plugin/combat.mjs';
 import {MEDICAL_SKILL} from '../server-plugin/medicine-state.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
 import {variant,item,setPrice,scene,stack,monthDayMinute,conserved,primed,held,baseEngine,baseWorld} from './helpers/daily-b2.mjs';
 
@@ -72,32 +73,44 @@ test.todo('D32 ⑤生命“几天逐步回升”的速率——引擎睡眠/休�
 // ---- D36 加入组织 ----
 const ORG='org_d36',LEADER='npc_hw_luowei',orgRow=()=>({category:'organization',id:ORG,source:'created',name:'柳溪猎户会',kind:'行会',seat:'loc_hw',founder:LEADER,foundedAt:0,leader:LEADER,
  members:{[LEADER]:{position:'会长',joinedAt:0,arrears:0}},removed:{},charter:{mode:'leader',approval:true,fee:50,dues:0,rules:['入会需会长同意，入会费入会库']},treasury:0,ledger:[],sourceEvent:'fixture'});
-const joinSession=(t,trust)=>uiSession(t,{mutate:scene('loc_hw',monthDayMinute(6,1,8,0),s=>{
+const joinSession=(t,trust)=>uiSession(t,{mutate:scene('loc_hw',monthDayMinute(6,1,8,0),(s,doc)=>{
  s.player.coins=120;Object.assign(s.npcs[LEADER],{location:'loc_hw',activity:'闲谈',status:'正常',trust,affection:trust,coins:200});s.records[`organization:${ORG}`]=orgRow();
+ // 当面拒绝不必先扣再退；与 D23 一样显式开账，保留无转账路径的完整对账。
+ doc.ledger=openLedger(baseEngine,doc);
 })});
-test('D36 加入组织 ①②③：入会费 50（120→70）暂存，会长按好感 +30 同意后入会库而不是会长口袋，玩家进成员名单',async t=>{
+test('D36 加入组织 ①②③：入会费 50（120→70），在场会长按 A2 同意后入会库而不是会长口袋，玩家进成员名单',async t=>{
  // 老韩→罗苇（会长）；入会费 50、需会长同意；夏季六月初一辰时；玩家 120 文。
  const ui=await joinSession(t,30),before=await primed(ui);
  assert.equal(standing(baseEngine,before.state,LEADER,'player'),30,'夹具：会长对玩家好感 +30');
  const apply=await ui.choose('settlement.org_join',{org:ORG},{search:true});assert.ok(apply.ok,apply.error);
- const mid=await ui.read();assert.equal(mid.state.player.coins,70,'①120→70（入会费交出暂存）');assert.equal(apply.result.joined,false,'会长还没表态，尚未入会');
- assert.equal(mid.state.records[`organization:${ORG}`].members.player,undefined);
- await ui.choose('time',{until:{dayOffset:1,hour:8}});
+ // A3-C D36.5 要求当面表态；保留费用、公库、会长个人钱袋和成员资格断言。
+ assert.equal(apply.result.joined,true,'在场会长已经表态');assert.equal(apply.result.decision.outcome,'agree');
+ assert.ok(apply.lines.some(line=>line.includes('已加入')),'动作回执明确说明已入会');
  const after=await ui.read(),org=after.state.records[`organization:${ORG}`];
  assert.equal(org.treasury,50,'②入会费进了会库');assert.equal(after.state.npcs[LEADER].coins,200,'②不是会长个人口袋');
  assert.equal(org.members.player.position,'成员','③成员资格生效，成员名单包含玩家');assert.equal(after.state.player.coins,70);
+ assert.equal(after.state.minute-before.state.minute,15);assert.equal(apply.result.cost.time,15);
  conserved(before,after,'D36');
 });
 test('D36 易错：会长不同意（好感 −40）则不能入会，入会费原样退还',async t=>{
  const ui=await joinSession(t,-40),before=await primed(ui);
  const apply=await ui.choose('settlement.org_join',{org:ORG},{search:true});assert.ok(apply.ok,apply.error);
- await ui.choose('time',{until:{dayOffset:1,hour:8}});
+ assert.equal(apply.result.joined,false);assert.equal(apply.result.decision.outcome,'refuse');
  const after=await ui.read(),org=after.state.records[`organization:${ORG}`];
  assert.equal(org.members.player,undefined,'会长不同意不能入会');assert.equal(org.treasury,0);assert.equal(after.state.player.coins,120,'入会费退还');
  conserved(before,after,'D36 否决');
 });
 test.todo('D36 ④会员权益（参加会内狩猎分成）——引擎成员资格只记在组织名册，没有“会员权益”派生（狩猎分成/额度/投票权）：缺 member_of 持有的 derives（S2 持有与协议）');
-test.todo('D36 ⑤时间过去约一刻钟——引擎申请入会不耗时，会长按立场在次日日界表态；缺申请动作耗时读表与当面表态（A3 action-costs 增 org.join 行 15 分钟；当面表态 A2 NPC 决策）');
+test('D36 ⑤当面拒绝也占一刻钟，客户端 consent 不能替会长同意',async t=>{
+ const ui=await joinSession(t,-40),before=await primed(ui);
+ const forged=await ui.choose('settlement.org_join',{org:ORG,consent:true,opinion:'approve'},{search:true});
+ assert.equal(forged.ok,false,'A3-A 的旧入口同意保护拒绝客户端伪造同意');assert.equal((await ui.read()).state.minute,before.state.minute);
+ const apply=await ui.choose('settlement.org_join',{org:ORG},{search:true});assert.ok(apply.ok,apply.error);
+ const after=await ui.read();assert.equal(after.state.minute-before.state.minute,15);assert.equal(apply.result.cost.time,15);
+ assert.equal(apply.result.decision.outcome,'refuse');assert.equal(after.state.records[`organization:${ORG}`].members.player,undefined);
+ assert.ok(apply.lines.some(line=>line.includes('入会未完成')),'拒绝回执不能说成已加入');
+ assert.equal(after.state.player.coins,120);assert.equal(after.state.records[`organization:${ORG}`].treasury,0);conserved(before,after,'D36 当面拒绝');
+});
 
 // ---- D37 交税过关卡 ----
 test('D37 交税过关卡 ①②④⑤：10 匹粗布（货值 500）按 5% 抽税 25 文（100→75），税入关卡所在聚落公库，布全部保留过关，随身铜钱与衣物不计税',async t=>{

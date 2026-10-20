@@ -18,6 +18,9 @@ import {standing,adjustStanding} from './standing.mjs';
 import {opinionAmong,knownTopics} from './public-opinion.mjs';
 import {assertAcademyAdmission} from './notables.mjs';
 import {familyOrganizationProjection,familyAdult} from './family-state.mjs';
+import {subjectiveView,conversationLanguage} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {actionCostRule,assertActionTime,advanceActionParticipants,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 
 // Organizations as running entities: members and positions, a treasury whose
 // every movement is a ledger line, a charter (entry, fee, dues, rules) and a
@@ -373,6 +376,11 @@ export function organizationAction(d,args,eventId){
     switch(args.operation){
     case 'org_inspect':return inspectOrganization(engine,d.document,org);
     case 'org_join':{
+        const receiptKey=`org_join:${eventId}`,previous=d.get('state','records',receiptKey);
+        if(previous){
+            if(previous.org!==org.id||(args.member??'player')!=='player')throw Error('同一事件编号不能改换入会申请');
+            return {...previous.result,duplicate:true};
+        }
         if(['household','family'].includes(org.source))throw Error('家户家族成员随亲属迁居变化，不能申请加入');
         const membership=businessMembership(d,engine,org,args.member,args.consent);
         const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
@@ -384,6 +392,38 @@ export function organizationAction(d,args,eventId){
             assertAcademyAdmission(engine,state,org,who);
         }
         if(who==='player'&&org.source==='created'&&!within(engine,state.location,org.seat))throw Error('须到组织所在地申请');
+        // A3 D36: an available NPC leader can decide in person. Pre-A3 events
+        // retain their original zero-time proposal and next-day vote on replay.
+        const leader=org.leader,npc=state.npcs[leader];
+        if(who==='player'&&org.charter.approval&&org.charter.mode==='leader'&&leader!=='player'&&
+            npc?.location===state.location&&awake(npc,engine,d,leader)&&(!engine.replaying||engine.replayResult?.cost)){
+            const rule=actionCostRule(engine,'org.join');assertActionTime(d,engine,rule.timeMin,['player',leader]);
+            const view=subjectiveView(engine,d.document,leader),communicates=conversationLanguage(view,engine,d);
+            let decision=npcDecision(view,{kind:'org.join',from:who,cost:{minutes:rule.timeMin},tags:['admit',org.id]});
+            // The charter's existing admission stance remains a policy gate;
+            // a generic willingness to talk cannot overrule a hostile vote.
+            const [opinion,basis]=npcVote(engine,state,org,leader,{motion:{action:'admit',member:who}});
+            if(opinion==='reject')decision={...decision,outcome:'refuse',reason:basis,conditions:null};
+            if(!communicates)decision={...decision,outcome:'defer',reason:'言语不通，请先找通译。',conditions:null};
+            const span=beginActionActivity(d,engine,rule.activity);
+            advanceActionParticipants(d,engine,rule.timeMin,eventId,[leader]);
+            const current=organization(engine,d.get('state'),org.id),person=d.get('state','npcs',leader);
+            if(!current||current.leader!==leader||current.charter.mode!=='leader'||!awake(person,engine,d,leader)||person.location!==d.get('state','location'))throw Error('入会交谈中断，须按当前组织与会长重新申请');
+            let result={organization:org.id,member:who,joined:false,status:decision.outcome==='refuse'?'否决':'待答复',decision};
+            if(decision.outcome==='agree'){
+                const fee=current.charter.fee??0;if(fee&&!pay(d,engine,who,fee))throw Error('入会费不足');
+                const p=propose(d,engine,current,{action:'admit',member:who,membership},who,eventId,{escrow:fee});
+                holdingSet(d,null,['state','records',p.id],{...p,votes:[...p.votes,{voter:leader,opinion:'approve',basis:decision.reason,decision,minute:d.get('state','minute'),sourceEvent:eventId}]},'organizations');
+                const closed=settle(d,engine,p.id,d.get('state','minute'),eventId);
+                if(closed.status==='通过')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
+                result={...result,proposal:p.id,status:closed.status,joined:closed.status==='通过',organizationEvent:event(org,'apply',{member:who,value:fee})};
+            }
+            const name=engine.byId.get(leader)?.name??leader;
+            result.admissionText=result.joined?`${name}同意，你已加入${org.name}。`:`${name}：${decision.reason} 入会未完成。`;
+            result.cost=finishActionActivity(d,engine,span);
+            holdingSet(d,null,['state','records',receiptKey],{category:'organization_join',org:org.id,result,sourceEvent:eventId},'organizations');
+            return result;
+        }
         const fee=org.charter.fee??0;
         if(fee&&!pay(d,engine,who,fee))throw Error('入会费不足');
         if(!org.charter.approval){

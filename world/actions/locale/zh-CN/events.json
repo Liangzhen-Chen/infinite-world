@@ -38,6 +38,7 @@
   "noExit": "看不出有别的路。"
  },
  "events": {
+  "settlement.org_join": "{admissionText}",
   "trade.buy": "你向{seller}买下{quantity}份{item}，付了{cost}文。",
   "trade.sell": "你把{quantity}份{item}卖给{buyer}，得了{cost}文。",
   "trade.lodge": "你在{seller}这里订下{days}天的住处，房钱{cost}文。",
