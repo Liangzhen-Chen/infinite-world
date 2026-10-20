@@ -503,15 +503,14 @@
     "tricky": false,
     "category": "修行与学习",
     "expected": {
-      "route": "core:learn",
+      "route": "open:proposal",
       "signature": [
-        "emit(person:npc_hw_xuling,request:teach_spell_light)",
-        "learn(person:self,spell_light:teacher)"
+        "emit(person:npc_hw_xuling,request:teach_spell_light)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3的learn要求来源存在且教师愿意授艺，未接受费用条件前不得扣款或直接学会。"
+      "why": "06 §6.3的emit(request)不决定答复，§6.9.2允许先询价再接受；本次只请求许苓报价，签名不含learn，走开放请求而非立即授课。教师真实同意且玩家接受条款后才可另走core:learn，并校验来源、费用和学习前置；请求成功不等于学会。"
     },
     "proposal": {
       "intent": "许苓就在我面前，我想请她教我照明术，先问清学费再决定。",
@@ -1770,16 +1769,14 @@
     "tricky": false,
     "category": "交易与借贷",
     "expected": {
-      "route": "core:trade.borrow",
+      "route": "open:proposal",
       "signature": [
-        "emit(org:bank,request:loan)",
-        "obligation.create(person:self->bank,loan)",
-        "transfer(resource:coin,bank->self)"
+        "emit(org:bank,request:loan)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.4的借贷须双方决策与条款同意，预览请求不能提前生成债务或到账。"
+      "why": "06 §6.3、§6.4与§6.9.2区分请求、答复和成交。本次只询问100铜借款的期限利息，走开放请求，不创建债务或放款；玩家明确保留签约决定。取得真实报价与双方同意后才另走core:trade.borrow，不能把本次请求成功算作借贷完成。"
     },
     "proposal": {
       "intent": "我在钱庄想借一百铜，先把期限和利息列给我看，合适我再签。",
@@ -1938,16 +1935,14 @@
     "tricky": false,
     "category": "交易与借贷",
     "expected": {
-      "route": "core:trade.pawn",
+      "route": "open:proposal",
       "signature": [
-        "holding.open(thing:own_item_staff,pledged)",
-        "obligation.create(person:self->pawnshop,loan)",
-        "transfer(resource:coin,pawnshop->self)"
+        "emit(org:bank_hw_post,request:pawn_quote)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3规定质押须有处分权或占有且借款条款获同意，估价不等于已经成交。"
+      "why": "06 §6.3的emit(request)、holding.open与obligation.create分属询价和成交阶段，§6.9.2保留接受条款的选择。本次只向本场有质押业务授权的bank_hw_post请求估价，不交杖、不设质押、不生债务或放款；接受条款后再经core:trade.pawn校验处分权和真实结算。"
     },
     "proposal": {
       "intent": "这根旧木杖是我自己的，带到当铺先看看能押多少，再按同意的条款典当。",
@@ -2539,13 +2534,12 @@
     "expected": {
       "route": "core:dialogue.guide",
       "signature": [
-        "emit(person:npc_hw_zhengshuisheng,request:guide)",
-        "obligation.create(person:npc_hw_zhengshuisheng->self,service:conditional_on_acceptance)"
+        "emit(person:npc_hw_zhengshuisheng,request:guide)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.9.2的带路请求由NPC决定答复，只有接受条款才创建服务义务。"
+      "why": "06 §6.9.2和world/actions/core.json的core:dialogue.guide明确承接请人带路，故保留注册路由。本次只发出带路请求，NPC按05 §5.7独立答复；原条件性service义务仍须真实接受后才能创建，不是本次必有的签名。若需确定具体渡河点，应由知情答复补齐，不能代填同意或直接移动。"
     },
     "proposal": {
       "intent": "郑水生在这里，我请他带我去他熟悉的渡河处，先听听他愿不愿意。",
@@ -4115,18 +4109,12 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "emit(person:npc_hw_ayan,request:borrow_tool)",
-        "holding.open(person:npc_hw_ayan,permit:self_use_knife_if_accepted)",
-        "move(thing:ayan_knife,to:self_if_accepted)",
-        "transfer(resource:item_wood,self->sink:craft)",
-        "transfer(resource:item_wooden_peg,recipe_wooden_pegs->self)",
-        "move(thing:ayan_knife,return_to:npc_hw_ayan)",
-        "holding.close(holding:knife_use_permit,returned)"
+        "emit(person:npc_hw_ayan,request:borrow_tool)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3、§6.7要求借工具先获许可且配方投入真实，拒借时后续制造不应偷用工具。"
+      "why": "06 §6.3、§6.7与§6.9.2要求借用先获真实许可，request不能代替阿砚答复。本次提案仅请求借刀；若接受，后续仍须开许可、交接原刀、按配方消耗真实木料与费用、产出木楔、归还原刀并关闭许可，逐步按§6.8路由。请求签名通过不表示组合意图完成，拒借时不得偷用工具。"
     },
     "proposal": {
       "intent": "阿砚就在跟前，我先问能不能借他的削木小刀，答应了再用自己的木料按已学配方做木楔，做完还刀。",
@@ -4377,15 +4365,12 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "emit(person:present_interpreter,request:translate_terms)",
-        "emit(person:self,tell:translated_terms)",
-        "transfer(resource:item_clay_cup,self->buyer:2)",
-        "transfer(resource:coin,buyer->self)"
+        "emit(person:present_interpreter,request:translate_terms)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.9.2与附录A §A.15.21要求通译来源和双方同意，翻译完成前不能替玩家接受交易。"
+      "why": "06 §6.3、§6.9.2与附录A §A.15.21区分翻译请求、通译tell和双方交易。本次只请求在场通译翻译已报条款，保留open:proposal；目录core:dialogue.interpreter的找通译不能代表整段翻译后交易。译文须由真实通译来源产生，随后仍须等待玩家另行确认，才可交付两杯并收款；请求成功不等于翻译或交易完成。"
     },
     "proposal": {
       "intent": "先请现场的通译把买家提出的条款译给我听，等我确认接受，再把自己的两只陶杯交给买家收钱。",
