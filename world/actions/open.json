@@ -3,6 +3,21 @@
   "namespace": "open",
   "actions": [
     {
+      "id":"open:question","label":"当面发出询问","verb":"询问","group":"交谈","source":"catalog","narration":"open.question",
+      "synonyms":["届时询问"],"visibility":{"catalog":"search","witness":"present"},"participants":{"actor":"player"},"preconditions":["present(target) && canAct(target, 'talk').allowed"],
+      "slots":[{"name":"target","kind":"entity","entity":"person","required":true},{"name":"content","kind":"text","required":true}],
+      "cost":{"owner":"primitives","time":0},"check":null,
+      "outcomes":[{"op":"emit","actor":"$actor","target":{"slot":"target"},"verb":"request","visibility":"witnessed","payload":{"kind":"ask","text":{"slot":"content"}}}],"signature":{"requestKinds":["ask"]},
+      "hint":"只发出真实请求，对方仍自主决定；届时不在场或失能则不能发出。"
+    },
+    {
+      "id":"open:waive_debt","label":"免除本人的债权","verb":"免债","group":"账目","source":"catalog","narration":"open.waive_debt",
+      "synonyms":["免掉","免除","不让他再还"],"visibility":{"catalog":"here","witness":"present"},"participants":{"actor":"player"},"preconditions":[],
+      "slots":[{"name":"obligation","kind":"text","required":true}],"cost":{"owner":"primitives","time":1},"check":null,
+      "outcomes":[{"op":"obligation.cancel","id":{"slot":"obligation"},"reason":"creditor_waiver"}],
+      "hint":"须为本人拥有且可免除的真实债权；债务人与余额由义务记录核对。"
+    },
+    {
       "id": "open:proposal",
       "label": "提出创意行动",
       "verb": "提案",

@@ -220,7 +220,11 @@ export function closeObligation(d,e,{id,actor,reason,...facts},eventId,{authoriz
         const party=facts.party??row.debtor;
         if(![row.debtor,row.creditor].includes(party))throw Error('Only a party may close an obligation');
         assertObligationAuthority(e,s,{...facts,actor,debtor:party},'contract',authorize);
-        const next={...row,endedAt:row.endedAt??s.minute,endReason:reason??'terminated'};
+        const waived=reason==='creditor_waiver';
+        if(waived&&party!==row.creditor)throw Error('Only the current creditor may waive an earned claim');
+        if(waived&&row.pledgeRecord)throw Error('A secured claim requires its collateral release protocol before waiver');
+        const next={...row,endedAt:row.endedAt??s.minute,endReason:reason??'terminated',
+            ...(waived?{status:'cancelled',remaining:0,waiver:{actor,creditor:row.creditor,amount:obligationView(s,row).owed,minute:s.minute,eventId}}:{})};
         write(d,e,next);return {id,transferred:0,remaining:obligationView(s,next).owed,evidence:eventId};
     });
 }

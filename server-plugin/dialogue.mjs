@@ -58,7 +58,14 @@ export function applyDialogue(d,engine,args,eventId){
  const previous=d.get('state','dialogues',npc),communicates=language(view,engine,d);
  if(!communicates&&!['greet','leave','interpreter'].includes(action))return save(d,npc,eventId,action,npcDecision(view,{kind:'greet'}),'言语不通，只能寒暄、手势交易，或找通译。');
  let decision=npcDecision(view,{kind:action,from:'player'}),detail='',cost,gift;
- if(action==='ask'){
+ if(action==='guide_request'){
+  decision=npcDecision(view,{kind:'带路',from:'player'});
+  const rule=actionCostRule(engine,'talk.ask');assertRumorConversation(d,engine,npc,rule.timeMin);
+  const span=beginActionActivity(d,engine,rule.activity);
+  advanceWithNpcParticipants(d,engine,rule.timeMin,eventId,[npc]);cost=finishActionActivity(d,engine,span);
+  return {...save(d,npc,eventId,'request',decision,line(engine,view,'request',decision,'具体目的地和条款须另行约定；本次答复不成立带路义务。')),
+   cost,socialEvent:{verb:'request',target:npc,tags:['dialogue','guide']}};
+ }else if(action==='ask'){
   const known=subjectiveFact(view,args.content);
   detail=known?`${known.kind==='belief'?'我猜':known.kind==='prior'?'按常理说':'我知道'}：${typeof known.value==='string'?known.value:JSON.stringify(known.value)}`:'这件事我不知道。';
   const rule=engine.replaying&&!engine.replayResult?.cost?null:actionCostRule(engine,'talk.ask');

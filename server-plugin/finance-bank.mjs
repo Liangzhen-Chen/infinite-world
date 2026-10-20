@@ -20,6 +20,7 @@ declareLedgerWriter('finance-bank');
 import {BANK_OPERATIONS} from './finance-operations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {canAct} from './action-capacity.mjs';
 declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
@@ -247,10 +248,19 @@ export function bankTrade(d,e,args,id){
     }
     if(op==='remit'){
         const dest=derivedBankAt(e,d.get('state'),e.resolve(args.location));if(!dest||dest.id===b.id)throw Error('汇票须指定异地的真实钱庄柜面');
+        const beneficiary=args.buyer===undefined?null:e.resolve(args.buyer,'npc');
+        if(beneficiary&&(!d.get('state','npcs',beneficiary)||isPhysicallyDead(e,d,beneficiary)))throw Error('记名汇票须指定真实且有效的收款人');
         const amount=financeInt(args.coins,1,1e7,'汇票金额'),fee=Math.max(1,Math.ceil(amount*cfg(e).remittance.feeRate));
         financeChange(d,e,'player',-amount-fee,id,{account:vault(b.id),writer:'finance-bank',eventId:id});row.coins+=amount+fee;holdingSet(d,e,financePath(b.id),row,'finance-bank');
-        const key=`bill:${id}`;holdingSet(d,e,financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id},'finance-bank');
-        return {contract:key,bank:b.id,destination:dest.id,amount,fee};
+        const key=`bill:${id}`,payable=beneficiary?`${key}:payable`:null;
+        holdingSet(d,e,financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id,...(beneficiary?{beneficiary,payable}: {})},'finance-bank');
+        if(payable){
+            // A named instrument is the issuer's payment promise, not a remote
+            // cash delivery. Native issuance supplies its claim evidence.
+            holdingSet(d,e,financePath(payable),{id:payable,category:'debt',kind:'bill',debtor:b.id,creditor:beneficiary,amount,paid:0,status:'待偿还',createdAt:now,deadline:now,location:b.location,source:id,bill:key,billPayable:true},'finance-bank');
+            adoptLegacyObligation(d,e,payable);
+        }
+        return {contract:key,bank:b.id,destination:dest.id,amount,fee,...(beneficiary?{beneficiary,payable}: {})};
     }
     if(op==='cash_bill'){
         const bill=d.get(...financePath(args.contract));if(bill?.category!=='bank_bill'||bill.owner!=='player'||bill.status!=='未兑付'||bill.destination!==b.id)throw Error('汇票无效、已兑付或兑付地不符');
@@ -258,7 +268,15 @@ export function bankTrade(d,e,args,id){
         if(row.coins<bill.amount)throw Error('兑付柜准备金不足，暂不能兑付');
         // The paying branch delivers its own cash. Interbank clearing remains
         // a claim on the issuer until an actual transfer reaches this branch.
-        row.coins-=bill.amount;financeChange(d,e,'player',bill.amount,id,{account:vault(b.id),writer:'finance-bank',eventId:id});
+        if(bill.payable){
+            const claim=obligationRow(d.get('state'),bill.payable),payee=claim?.creditor;
+            if(!claim||obligationView(d.get('state'),claim).owed!==bill.amount||!settlementPresent(e,d.get('state'),b.id,payee))throw Error('记名汇票须由当前债权人在兑付柜面实际收款');
+            settleObligation(d,e,{id:bill.payable,payer:b.id,actor:keeper,amount:bill.amount},`${id}:payee`,{authorize:({engine,state,actor,party,action})=>({
+                allowed:action==='payment'&&party===b.id&&actor===keeper&&derivedBankById(engine,state,party)?.keepers.includes(actor)&&
+                    settlementPresent(engine,state,actor,party)&&canAct({engine,document:d.document},actor,'transfer').allowed
+            })});
+            Object.assign(row,d.get(...financePath(b.id)));
+        }else {row.coins-=bill.amount;financeChange(d,e,'player',bill.amount,id,{account:vault(b.id),writer:'finance-bank',eventId:id});}
         const clearing=`bill_clearing:${args.contract}`;
         holdingSet(d,e,financePath(clearing),{category:'debt',kind:'bill',debtor:source.id,creditor:b.id,amount:bill.amount,paid:0,status:'待偿还',createdAt:now,deadline:now,location:b.location,source:id,bill:args.contract},'finance-bank');
         adoptLegacyObligation(d,e,clearing);
@@ -283,7 +301,7 @@ export function advanceBankFinance(d,e,minute,recordIds){
             if(original.interestAt===undefined||original.interestAt+c.depositInterest.periodDays*DAY>minute)continue;
             const row=structuredClone(original),period=c.depositInterest.periodDays*DAY;
             for(let at=(row.interestAt??minute)+period;at<=minute;at+=period){
-                const state=d.get('state'),clearing=obligationRows(state).filter(r=>r.debtor===id&&r.kind==='bill').reduce((n,r)=>n+obligationView(state,r,at).owed,0);
+                const state=d.get('state'),clearing=obligationRows(state).filter(r=>r.debtor===id&&r.kind==='bill'&&!r.billPayable).reduce((n,r)=>n+obligationView(state,r,at).owed,0);
                 const liabilities=Object.values(row.accounts).reduce((n,v)=>n+v,0)+Object.values(state.records).filter(r=>r.category==='bank_bill'&&r.bank===id&&r.status==='未兑付').reduce((n,r)=>n+r.amount,0)+clearing;
                 // Interest is settled only at the agreed interest event. Its
                 // cursor moves here, never during a daily accumulation pass.

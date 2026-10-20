@@ -632,6 +632,7 @@ export const primitiveRuntime={
     Object.assign(receipt,{routing:proposalRouting(proposal,prepared),signature:prepared.signature,candidates:prepared.candidates});
     receipt.trimmed.push(...prepared.trimmed);
     limits=actionLimits(engine,d.document,action,{},actor);limits.costManaged=true;
+    limits.improvised=prepared.sources.some(source=>source.improvised===true);
     for(const op of ['vital','status'])if(limits[op])limits[op].rangeMeters=Math.min(...prepared.sources.filter((s,i)=>effects[i].op===op).map(s=>s.rangeMeters??1.5));
     if(limits.vital)for(const kind of ['harm','heal'])limits.vital[kind]=Math.max(0,...prepared.sources.filter((s,i)=>effects[i].op==='vital'&&(effects[i].delta<0?'harm':'heal')===kind).map(s=>s.bounds.delta));
     quote={duration:prepared.cost.time,activity:'light'};start=d.get('state','minute');

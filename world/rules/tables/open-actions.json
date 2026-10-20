@@ -11,6 +11,8 @@
     "physicalMinutes": 1,
     "physicalDifficulty": 10,
     "speechMinutes": 1,
+    "improvisedMinutes": 15,
+    "morningMinute": 480,
     "transferMinutes": 1
   },
   "degrees": {

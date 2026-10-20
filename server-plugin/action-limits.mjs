@@ -6,6 +6,7 @@ import {actionReader} from './action-capacity.mjs';
 import {authority} from './action-authority.mjs';
 import {heldUnit} from './items.mjs';
 import {recordsWhere} from './storage.mjs';
+import {itemTraits} from './traits.mjs';
 const finite=(value,label)=>{if(!Number.isSafeInteger(value)||value<0)reject('E-OPEN-BOUND',`Missing native ${label}`);return value;};
 export function openDuration(definition,slots={}){
  const rule=definition.durationSlot;
@@ -24,7 +25,7 @@ export function limitOpenEffects(proposal,native){
  finite(usage.repeats,'repeat count');finite(usage.produced,'daily usage');
  let minutes=0,difficulty=0;
  for(const [index,original] of proposal.effects.entries()){
-  if(original.op==='create'&&original.kind!=='mark'){
+  if(original.op==='create'&&original.kind!=='mark'&&!native.improvised?.(original)){
    blocked.push({index,reason:'计量制造须使用已有配方；没有配方可留下无价值的痕迹',alternative:'recipe_or_mark'});continue;
   }
   const source=sourceFor(original,index);
@@ -135,13 +136,40 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   if((unit.durability??item.durability??0)>0&&grade>=0&&level>=engine.rules.equipment.requiredLevels[grade])usableItem=item;
  }
  const cap=(family,stage)=>finite(caps[family]?.[stage],`${family} stage ${stage}`);
+ const consumed=(proposal.effects??[]).filter(e=>e.op==='transfer'&&parseAccount(e.from).owner===actor&&parseAccount(e.to).owner==='sink:consume');
+ const improvised=effect=>{
+  if(effect.op!=='create'||effect.kind!=='item'||!['thing','core:item'].includes(effect.template)||effect.facts?.quality!=='crude'||!skill||!usableItem?.checkBonus?.skills?.includes(skill.id))return false;
+  if((proposal.effects??[]).filter(e=>e.op==='create').length!==1||!Array.isArray(effect.materials)||!effect.materials.length||effect.materials.length>2)return false;
+  const profession=engine.byId.get(skill.profession),primary=new Set(profession?.materials??[]);
+  if(profession?.kind!=='life')return false;
+  const primaryMaterial=item=>[item?.name,...item?.aliases??[]].some(name=>primary.has(name));
+  const materials=effect.materials.map(row=>engine.byId.get(row.resource));
+  // Work a material belonging to this craft; a second flexible material may
+  // bind it. Food, money and arbitrary catalog objects are not raw stock.
+  if(!materials.some(primaryMaterial)||materials.some(item=>!item||!primaryMaterial(item)&&!itemTraits(item).tags.some(tag=>['fiber','cloth','leather'].includes(tag))))return false;
+  const totals=new Map();
+  for(const material of effect.materials){
+   if(!engine.world.items.some(row=>row.id===material.resource)||!Number.isSafeInteger(material.qty)||material.qty<1||material.qty>1||totals.has(material.resource))return false;
+   totals.set(material.resource,material.qty);
+  }
+  return consumed.length===totals.size&&consumed.every(e=>totals.get(parseAccount(e.from).resource)===e.qty);
+ };
  const sourceFor=effect=>{
+  if(effect.op==='schedule'&&effect.action==='open:question'&&Number.isSafeInteger(effect.at)&&effect.at>s.minute){
+   engine.primitiveValidateScheduledAction(d,{action:effect.action,slots:effect.args??{}},actor);
+   return {id:`schedule:${actor}`,stage:0,time:generic.speechMinutes,bounds:{}};
+  }
+  if(improvised(effect))return {id:`improvised:${skill.id}`,stage:tier(skill.id),skill:skill.id,time:generic.improvisedMinutes,difficulty:generic.physicalDifficulty,bounds:{},improvised:true};
   if(effect.op==='create'&&effect.kind==='mark')return {id:`mark:${actor}`,stage:0,time:finite(engine.world.openActionRules?.mark?.minutes,'mark time'),bounds:{}};
   if(effect.op==='transfer'){
    const from=parseAccount(effect.from),allowed=from.owner===actor||authority({engine,document},actor,'transfer',effect.from,{effect}).allowed;
    return {id:`account:${effect.from}`,stage:0,time:generic.transferMinutes,bounds:{},transferAuthorized:allowed};
   }
   if(effect.op==='emit'&&['tell','request','claim'].includes(effect.verb))return {id:`speech:${actor}`,stage:0,time:generic.speechMinutes,bounds:{}};
+  if(effect.op==='vital'&&effect.target===actor&&effect.type==='body:hydration'&&effect.delta>0&&consumed.length===1&&consumed[0].qty===1){
+   const food=engine.byId.get(parseAccount(consumed[0].from).resource),gain=food?.nutrition?.hydration;
+   if(Number.isSafeInteger(gain)&&gain>0)return {id:`drink:${food.id}`,stage:0,time:generic.transferMinutes,bounds:{delta:gain}};
+  }
   const spec=spell?.effectSpec,stage=spell?tier(spell.skill):null;
   if(spell&&stage!==null&&stage>=spell.stage){
    const common={id:spell.id,stage,time:spell.minutes,difficulty:spell.difficulty??10,rangeMeters:spell.rangeMeters,requirements:{mp:spell.mp??0,materials:spell.materials??[]},skill:spell.skill};
@@ -176,5 +204,5 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   }
  }
  const signature=effectSignature(proposal.effects??[],routing??{});
- return {actor,sourceFor,currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
+ return {actor,sourceFor,improvised,currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
 }

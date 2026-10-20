@@ -180,7 +180,7 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
   if(!limits.costManaged||learner!==actor)endBodyActivity(d,engine,learner);
   return result;
  }
- if(effect.op==='create')return createNarrative(d,engine,effect,{frame,child,context});
+ if(effect.op==='create')return createNarrative(d,engine,effect,{frame,child,context,limits});
  reject('E-PRIMITIVE-CONNECTOR',`Missing primitive connector: ${effect.op}`);
 }
 
@@ -254,23 +254,25 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
 // This is registration of a named narrative fact, never a stock/resource mint.
 // Recipe manufacture, population individuation and mark reactions belong to
 // their domain adapters and cannot be smuggled through these generic templates.
-function createNarrative(d,engine,effect,{frame,child}){
+function createNarrative(d,engine,effect,{frame,child,limits={}}){
  if(effect.kind==='mark')return engine.primitiveApplyMark(d,effect,{frame,child});
- const templates=engine.world.primitiveTemplates??[],template=templates.find(t=>t.id===effect.template&&t.kind===effect.kind);
+ const crude=limits.improvised===true&&frame.source.kind==='open'&&effect.kind==='item'&&effect.facts?.quality==='crude';
+ const templates=engine.world.primitiveTemplates??[],template=templates.find(t=>t.id===(crude&&effect.template==='thing'?'core:item':effect.template)&&t.kind===effect.kind);
  if(!template)reject('E-CREATE-TEMPLATE','A core narrative template is required');
  const facts=effect.facts;
- if(!facts||typeof facts!=='object'||Array.isArray(facts)||Object.keys(facts).some(k=>!template.fields.includes(k))||typeof facts.name!=='string'||!facts.name.trim()||facts.name.length>100||Object.values(facts).some(v=>typeof v!=='string'||v.length>1200))reject('E-CREATE-FACT','Only the narrative template facts may be registered');
- if(effect.materials?.length||effect.population!==undefined)reject('E-CREATE-MATERIALS','Valued manufacture and individuation require their resource adapter');
+ if(!facts||typeof facts!=='object'||Array.isArray(facts)||Object.keys(facts).some(k=>!template.fields.includes(k)&&!(crude&&['quality','author','location'].includes(k)))||typeof facts.name!=='string'||!facts.name.trim()||facts.name.length>100||Object.values(facts).some(v=>typeof v!=='string'||v.length>1200))reject('E-CREATE-FACT','Only the narrative template facts may be registered');
+ if(effect.materials?.length&&!crude||effect.population!==undefined)reject('E-CREATE-MATERIALS','Valued manufacture and individuation require their resource adapter');
  const location=currentLocation(d,frame.actor),limit=placeLimit(engine,d,location,'create');
  if(limit==='mark_only'||limit?.mode==='mark_only')reject('E-CREATE-PLACE','Only a trace can be left at this place');
  const name=facts.name.trim(),key=normalize(name),names=[...engine.byId.values(),d.get('state','player'),...Object.values(d.get('state','npcs')??{}),...Object.values(d.get('state','creatures')??{}),...Object.values(d.get('state','created')??{}),...Object.values(d.get('holdings','entities')??{}).map(e=>e.facts)];
  if(names.some(e=>normalize(e?.name??'')===key||e?.aliases?.some(alias=>normalize(alias)===key)))reject('E-CREATE-NAME','This name is already registered');
  const id=`${effect.kind}_${digest({eventId:frame.eventId,child}).slice(0,32)}`;
- createEntity(d,{id,kind:effect.kind,facts:{...facts,name,author:frame.actor},source:frame.source.id,writer:'primitives',eventId:child});
+ const nativeFacts={...facts,name,author:frame.actor,...(crude?{quality:'crude',durability:10,location}: {})};
+ createEntity(d,{id,kind:effect.kind,facts:nativeFacts,source:frame.source.id,writer:'primitives',eventId:child});
  setLocation(d,{entity:id,at:location,mode:'place',writer:'primitives',eventId:child,engine});
  // The authoritative object remains in holdings. The legacy resolver only
  // receives descriptive fields; there is no bag, balance, HP or numeric value.
- d.set(['state','created',id],{id,kind:effect.kind,...facts,name,location,scope:location,author:frame.actor,template:template.id});
+ d.set(['state','created',id],{id,kind:effect.kind,...nativeFacts,name,location,scope:location,author:frame.actor,template:template.id});
  if(['item','building'].includes(effect.kind))openHolding(d,{kind:'owns',holder:frame.actor,subject:id,terms:{share:1},writer:'primitives',eventId:child,engine});
  return {entity:id,template:template.id,location};
 }

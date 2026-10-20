@@ -1,6 +1,6 @@
 // Native routing policy (06 §6.8). Never executes a proposal's declared result.
 import {MemoryIndex,bm25TermScore,normalize} from './retrieval.mjs';
-import {isPhysicallyDead,located} from './holdings.mjs';
+import {isPhysicallyDead,located,aliveHoldings} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
 import {parseAccount,accountKey,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
@@ -8,6 +8,10 @@ import {PrimitiveRejected} from './primitive-policy.mjs';
 import {environmentFeatures} from './environment.mjs';
 import {localWeather} from './weather.mjs';
 import {mapView} from './ui-map.mjs';
+import {obligationRows,obligationClosed} from './obligation-state.mjs';
+import {npcServices} from './npc-state.mjs';
+import {activeDuel} from './duels.mjs';
+import {templeById} from './faith-catalog.mjs';
 
 const tokenizer=new MemoryIndex();
 const multiset=values=>{const out=new Map();for(const value of values)out.set(value,(out.get(value)??0)+1);return out;};
@@ -143,7 +147,9 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||banks.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||document.holdings?.entities?.[id]||features.some(row=>row.id===id);
   const matchesKind=r=>!kind||kind==='entity'||r.kind===kind||['npc','agent'].includes(kind)&&r.kind==='person';
   // Exact ids (including inaccessible ones) never fall through to name matching.
-  const choices=(known?(exact&&matchesKind(exact)?[exact]:[]):[...pool.values()].filter(r=>matchesKind(r)&&[r.name,...r.aliases].some(n=>normalize(n)===q))).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
+  const ownedDescription=q.match(/^(?:本人|我|自己)(?:在场)?的(?:唯一)?(.+)$/)?.[1];
+  const owned=id=>(typeof bag?.[id]==='number'?bag[id]:bag?.[id]?.quantity??0)>0||state.creatures?.[id]?.owner===actor||aliveHoldings(d,{kind:'owns',holder:actor,subject:id}).length>0;
+  const choices=(known?(exact&&matchesKind(exact)?[exact]:[]):[...pool.values()].filter(r=>matchesKind(r)&&[r.name,...r.aliases].some(n=>normalize(n)===q||ownedDescription&&owned(r.id)&&normalize(n)===ownedDescription))).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
   if(choices.length===1)return {value:typeof value==='string'&&value.includes('|')?value.replace(raw,choices[0].id):choices[0].id,candidates:choices};
   const exactId=known||/^[a-z][a-z0-9]*[_:][a-z0-9_:.-]+$/i.test(String(id));
   return {value:null,candidates:choices,...(!choices.length?{reason:known?inaccessible(id):exactId?'unknown_entity':'unresolved_reference'}:{})};
@@ -154,6 +160,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   return knownDestinations;
  };
  const resolveDestination=value=>{
+  const local=resolve(value),feature=local.value&&features.find(row=>row.id===local.value);
+  if(local.value&&(feature||document.holdings?.entities?.[local.value]?.kind==='node'))return local;
   const result=resolve(value,'place');if(result.value!==null)return result;
   const row=destinations().get(value);
   return row?{value:row.id,candidates:[{id:row.id,kind:'place',name:row.name}]}:result;
@@ -161,12 +169,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  const slotsFor=(action,proposal)=>{
   const slots={},target=proposal.participants?.target??proposal.target??proposal.effects?.find(e=>e.target!==undefined||e.entity!==undefined)?.target??proposal.effects?.find(e=>e.entity!==undefined)?.entity;
   for(const slot of action.slots??[]){
-   const guarding=action.call?.tool==='world_combat'&&proposal.means?.manner==='guard';
-   if(guarding&&slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined)continue;
    let value=proposal.participants?.[slot.name]??proposal.means?.[slot.name];
    const effects=proposal.effects??[],transfers=effects.filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
    const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
+   const obligation=effects.find(e=>e.op==='obligation.create'),settlement=effects.find(e=>e.op==='obligation.settle');
+   const holding=effects.find(e=>e.op==='holding.open');
    if(action.call?.tool==='world_trade'||action.call?.tool==='world_law'&&action.call.operation==='steal'){
     if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(proposal.means?.manner==='secret_sale'?proposal.means.tools?.[0]:undefined);
     if(slot.name==='quantity'&&goods)value??=goods.qty;
@@ -175,6 +183,34 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='days'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.terms?.days;
     if(slot.fill==='banker'){
      const bank=banks.get(proposal.target);value??=bank?.keepers?.find(id=>kindOf(id)==='person');
+    }
+    if(slot.name==='seller')value??=banks.get(target)?.keepers?.find(id=>kindOf(id)==='person')??(kindOf(target)==='person'?target:undefined);
+    if(slot.name==='coins'&&['deposit','remit'].includes(action.call.operation))value=proposal.means?.coins??obligation?.terms?.principal??money?.qty;
+    // The deposit API takes total cash tendered; the debt term names net
+    // principal. Fees never become part of the customer's deposit claim.
+    if(slot.name==='coins'&&action.call.operation==='deposit'&&obligation?.terms?.principal!==undefined)value=obligation.terms.principal+(banks.get(target)?.depositFeeCopper??0);
+    if(slot.name==='days'&&action.call.fixed?.service==='住宿')value??=holding?.terms?.nights;
+    if(slot.name==='location'&&action.call.operation==='remit')value??=obligation?.terms?.destination;
+    if(slot.name==='buyer'&&action.call.operation==='remit')value??=obligation?.creditor;
+    if(['debt','contract'].includes(slot.name)&&settlement){
+     const matches=obligationRows(state).filter(row=>!obligationClosed(row)&&row.debtor===actor&&(row.creditor===target||row.bank===target)&&(!settlement.amount||(row.amount??row.principal??row.terms?.principal??0)-(row.paid??0)>=settlement.amount));
+     const exact=matches.find(row=>row.id===settlement.id||row.legacyRecord===settlement.id);
+     const chosen=exact??(!/^[a-z][a-z0-9_:.-]*$/i.test(settlement.id??'')&&matches.length===1?matches[0]:null);
+     value??=chosen?.legacyRecord??chosen?.id;
+    }
+   }
+   if(action.call?.tool==='world_profession'&&action.call.operation==='certify'&&slot.name==='teacher'){
+    const profession=proposal.means?.profession??effects.find(e=>e.payload?.kind==='certification')?.payload?.terms?.profession;
+    const teachers=[...pool.values()].filter(row=>row.kind==='person'&&row.id!==actor&&npcServices(engine,state,row.id).includes(profession));
+    if(teachers.length===1)value??=teachers[0].id;
+   }
+   if(action.call?.tool==='world_remember'&&action.call.fixed?.key==='dialogue:eat_meal'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
+   if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
+   if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
+    if(slot.name==='source')value??=proposal.means?.tools?.[0];
+    if(slot.name==='millilitres'){
+     const water=transfers.find(e=>resource(e)==='item_water'&&owner(e.from)===actor&&owner(e.to)==='sink:consume');
+     if(water)value??=water.qty*engine.byId.get('item_water')?.weight*1000;
     }
    }
    if(action.call?.tool==='world_cast'){
@@ -185,7 +221,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_combat'){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
     if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
+    if(slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined){
+     const opponents=[...pool.values()].filter(row=>row.id!==actor&&activeDuel({...d,document},engine,row.id,actor));
+     value=opponents.length===1?opponents[0].id:undefined;
+     if(value===undefined)continue;
+    }
    }
+   if(action.id==='core:dialogue.guide_request'&&slot.name==='content')value??=proposal.intent;
+   if(action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'&&slot.name==='org')value??=templeById(engine,target??location)?.id;
    if(value===undefined&&slot.fill==='target')value=target;
    if(value===undefined)for(const e of proposal.effects??[]){
     if(slot.name==='destination'&&e.op==='move'){value=e.to;break;}
@@ -195,7 +238,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='item'&&e.op==='fact.set'){value=e.entity;break;}
     if(slot.name==='repairPlan'&&proposal.means?.repair){value=proposal.means.repair;break;}
     if(slot.name==='concept'&&e.op==='create'&&e.kind==='project'){value=e.facts?.goal;break;}
-    if(slot.name==='obligation'&&e.op==='obligation.cancel'){value=e.id;break;}
+    if(slot.name==='obligation'&&e.op==='obligation.cancel'){
+     const rows=obligationRows(state).filter(row=>!obligationClosed(row)&&row.creditor===actor&&(!target||row.debtor===target));
+     value=rows.find(row=>row.id===e.id||row.legacyRecord===e.id)?.id??(!/^[a-z][a-z0-9_:.-]*$/i.test(e.id??'')&&rows.length===1?rows[0].id:action.id==='open:waive_debt'?undefined:e.id);break;
+    }
     if(e.op==='obligation.create'&&e.obligationKind==='promise'){
      if(slot.name==='type'&&['coin',LEDGER_COIN].includes(e.terms?.resource)){value='付款';break;}
      if(slot.name==='coins'){value=e.terms?.amount;if(value!==undefined)break;}
@@ -239,10 +285,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     value={dayOffset,hour:Math.floor(sunrise/60),minute:sunrise%60};
    }
    if(slot.entity){
+    if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='buyer'){
+     const recipient=resolveParty(value);if(recipient.value!==null)slots[slot.name]=recipient.value;continue;
+    }
+    if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='location'&&engine.world.locations.some(row=>row.id===value&&!row.hidden&&!row.private)){slots[slot.name]=value;continue;}
     const publicKind=['skill','spell','recipe'].includes(slot.entity)||slot.entity==='item'&&slot.name==='item'&&['world_trade','world_law'].includes(action.call?.tool);
     const publicId=publicKind&&catalog(value,slot.entity);
     if(publicId)value=publicId;
-    else {const resolved=action.call?.tool==='world_move'&&slot.name==='destination'?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
+    else {const resolved=(action.call?.tool==='world_move'&&slot.name==='destination'||action.call?.tool==='world_trade'&&slot.name==='location')?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
    }
    if(typeof slot.options==='object'&&Array.isArray(slot.options)&&!slot.options.includes(value))continue;
    slots[slot.name]=value;
@@ -258,6 +308,18 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','转移须指定有效的资源与账户');}
  };
  const labelsFor=(action,proposal)=>{
+  const labels={
+   'core:eat.meal':['吃','吃掉','进食'],
+   'core:trade.lodge':['租','床位','住宿'],
+   'core:trade.deposit':['存','存进去','存入'],
+   'core:trade.repay':['还清','还给'],
+   'core:trade.redeem':['赎','取回来','本息付清'],
+   'core:trade.remit':['寄','汇票','汇款'],
+   'core:promise.cancel':['免掉','免除','不让他再还'],
+   'core:environment.douse_fire':['灭火','泼水'],
+   'core:settlement.faith_rite':['仪式','参与','供品']
+  };
+  if(labels[action.id])return labels[action.id];
   if(action.call?.tool==='world_move'){
    const target=proposal.effects?.find(e=>e.op==='move')?.to,row=destinations().get(target);return row?[row.name]:[];
   }
@@ -295,15 +357,47 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    }
    if(call.operation==='withdraw')return [sign([transfer(LEDGER_COIN,proposal.target,actor),{op:'obligation.settle'}])];
    if(call.operation==='lend')return [sign([transfer(LEDGER_COIN,actor,slots.seller),{op:'obligation.create',obligationKind:'loan'}])];
+   if(call.fixed?.service==='住宿')return [sign([transfer(LEDGER_COIN,actor,slots.seller),{op:'holding.open',subject:location}])];
+   if(call.fixed?.payment==='repay')return [sign([transfer(LEDGER_COIN,actor,slots.seller??proposal.target),{op:'obligation.settle'}])];
+   if(call.operation==='redeem')return [sign([transfer(LEDGER_COIN,actor,proposal.target),{op:'obligation.settle'},{op:'holding.close'}])];
+   if(['deposit','remit'].includes(call.operation)){
+    const bank=banks.get(proposal.target);if(!bank)return [];
+    const payments=[transfer(LEDGER_COIN,actor,bank.id)];
+    if(call.operation==='remit'||bank.depositFeeCopper>0)payments.push(transfer(LEDGER_COIN,actor,bank.id));
+    return [sign([...payments,{op:'obligation.create',obligationKind:call.operation==='deposit'?'deposit':'bill'}])];
+   }
+  }
+  if(call?.tool==='world_remember'&&call.fixed?.key==='dialogue:eat_meal'){
+   const consumed=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'),item=engine.byId.get(slots.item??(consumed&&resource(consumed)));
+   if(item?.nutrition?.satiety)return [sign([transfer(item.id,actor,'sink:consume'),{op:'vital',target:actor,type:'body:satiety'}])];
+  }
+  if(call?.tool==='world_promise'&&call.operation==='cancel'&&!proposal.effects?.some(e=>e.reason==='creditor_waiver'))return [sign([{op:'obligation.cancel'}])];
+  if(call?.tool==='world_settlement'&&call.operation==='faith_rite'){
+   const spec=engine.rules.faith?.ordinaryRite;
+   if(!spec)return [];
+   return [sign([...Object.entries(spec.offerings??{}).map(([item])=>transfer(item,actor,'sink:consume')),{op:'emit',target:proposal.target,verb:'settlement'}])];
+  }
+  if(call?.tool==='world_field'&&call.operation==='environment_douse_fire'){
+   const target=slots.target??proposal.effects?.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
+   return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:target,field:'fire_intensity'}])];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
   if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];
   return [];
  };
  const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0;
- const requiredSlots=(action,slots)=>action.call?.tool==='world_profession'&&action.call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden'?['teacher']:[];
+ const requiredSlots=(action,slots)=>{
+  const call=action.call;
+  if(call?.tool==='world_profession'&&call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden')return ['teacher'];
+  if(call?.tool==='world_trade'&&call.operation==='redeem')return ['contract'];
+  if(call?.tool==='world_trade'&&call.operation==='remit')return ['coins','location'];
+  if(call?.tool==='world_promise'&&call.operation==='cancel')return ['obligation'];
+  if(call?.tool==='world_settlement'&&call.operation==='faith_rite')return ['org'];
+  return [];
+ };
  return {actor,kindOf,resolve,resolveDestination,resolveParty,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
+  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>e.op==='emit'&&e.verb==='request'&&e.payload?.kind==='guide'))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
   if(learning&&action.call?.tool==='world_learn'&&learning.learningSource==='practice')return false;
   if(learning&&action.call?.tool==='world_practice'&&learning.learningSource!=='practice')return false;
@@ -311,6 +405,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(Object.entries(participants).some(([role,id])=>role!=='actor'&&typeof id==='string'&&!kindOf(id)&&!(role==='target'&&traveling)))return false;
   const target=participants.target,catalog=action.visibility?.catalog;
   if(!target&&action.call?.tool==='world_combat'&&proposal?.means?.manner==='guard')return true; // Missing opponent is a slot question, not an invented fight.
+  if(!target&&action.call?.tool==='world_combat'&&['retreat','shove'].includes(proposal?.means?.manner))return true;
   if(catalog?.startsWith('target:')&&!target)return false;
   if(catalog==='target:npc'&&kindOf(target)!=='person'||catalog==='target:item'&&kindOf(target)!=='item'||catalog==='target:place'&&!traveling&&kindOf(target)!=='place')return false;
   return (action.preconditions??[]).every(condition=>{
@@ -323,7 +418,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  }};
 }
 
-export function resolveProposalEntities(proposal,context,{accounts=false}={}){
+export function resolveProposalEntities(proposal,context,{accounts=false,deferCombatDestination=false}={}){
  const resolved=structuredClone(proposal),ambiguities=[],rejections=[];
  const entityFields=new Set(['actor','target','entity','subject','to','from','holder','newHolder','debtor','creditor']);
  const resolve=(value,path,role=null)=>{
@@ -346,6 +441,9 @@ export function resolveProposalEntities(proposal,context,{accounts=false}={}){
   // A learning subject names catalog knowledge, not a physical target. It need
   // not be known already; the learning program checks its source and teacher.
   if(effect.op==='learn'&&field==='subject')continue;
+  // Combat owns disengagement and contested displacement. A descriptive escape
+  // direction is not a free-standing world destination or a teleport endpoint.
+  if(deferCombatDestination&&effect.op==='move'&&field==='to'&&['shove','disengage'].includes(effect.mode))continue;
   // Account owners are entity references; destinations such as coordinates or
   // canonical sink accounts remain the primitive validator's responsibility.
   if(typeof value==='string'&&/^(sink|src):/.test(value))continue;

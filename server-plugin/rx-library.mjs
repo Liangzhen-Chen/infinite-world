@@ -16,6 +16,7 @@ export function createRXLibrary(engine,document,{observer='player',context={engi
  const signatures={
   days:{args:['number'],returns:'number'},season:{args:[],returns:'number'},month:{args:[],returns:'number'},body:{returns:'number'},
   holds:{args:['string','string','string'],returns:'boolean'},
+  present:{args:['string'],returns:'boolean'},
   capacity:{args:['string','string'],returns:{level:'string',reason:'string'}},
   canAct:{args:['string','string'],returns:{allowed:'boolean',reason:'string'}},
   authority:{args:['string','string','string'],returns:{allowed:'boolean',reason:'string'}},
@@ -27,6 +28,7 @@ export function createRXLibrary(engine,document,{observer='player',context={engi
   season:()=>engine.calendar(now).season,month:()=>engine.calendar(now).month,
   body(actor,need,minute=now){return readBodyNeed(engine,document,actor,need,minute);},
   holds:(actor,kind,subject)=>aliveHoldings(actionReader(document),{holder:actor,kind,subject}).length>0,
+  present:target=>target===observer||subjectiveView(engine,document,observer).observable.people.some(person=>person.id===target),
   capacity(actor,family){const r=capacity(context,actor,family);return {level:r.level,reason:r.reason??''};},
   canAct(actor,family){const r=canAct(context,actor,family);return {allowed:r.allowed,reason:r.reason??''};},
   authority(actor,op,target){const r=authority(context,actor,op,target);return {allowed:r.allowed,reason:r.reason??''};},

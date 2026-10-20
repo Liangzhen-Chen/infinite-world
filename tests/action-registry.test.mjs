@@ -40,6 +40,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
  // 06 §6.4/6.9.5: native definitions use outcomes, not a fabricated old tool.
  const nativeOutcomes={
   'core:practice.session':[{op:'learn',entity:'$actor',subject:{slot:'skill'},learningSource:'practice'}],
+  'open:question':[{op:'emit',actor:'$actor',target:{slot:'target'},verb:'request',visibility:'witnessed',payload:{kind:'ask',text:{slot:'content'}}}],
+  'open:waive_debt':[{op:'obligation.cancel',id:{slot:'obligation'},reason:'creditor_waiver'}],
   'open:leave_mark':[{op:'create',kind:'mark',facts:{intent:{slot:'intent'},form:{slot:'form'}}}]
  };
  assert.deepEqual(registry.actions.filter(a=>a.outcomes).map(a=>a.id),Object.keys(nativeOutcomes));
@@ -58,9 +60,11 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   if(a.outcomes){
    assert.equal(a.source,'catalog',a.id);assert.equal(a.cost.owner,'primitives',a.id);
    assert.ok(a.slots.every(s=>s.name&&s.kind),a.id);assert.deepEqual(a.outcomes,nativeOutcomes[a.id]);
-   const slots=a.id==='open:leave_mark'?{intent:'留下一幅画',form:'涂画'}:{skill:'skill_survival',minutes:120};
+   // A3-B round 7 adds two exact native programs; retain exhaustive outcome
+   // equality and exercise each program's own required slots.
+   const slots={'open:leave_mark':{intent:'留下一幅画',form:'涂画'},'open:question':{target:'npc_hw_linsui',content:'是否愿意带路'},'open:waive_debt':{obligation:'signed_debt'},'core:practice.session':{skill:'skill_survival',minutes:120}}[a.id];
    assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_act',args:{action:a.id,slots},action:a});
-   if(a.id==='open:leave_mark'){assert.equal(a.call,undefined);continue;}
+   if(['open:leave_mark','open:question','open:waive_debt'].includes(a.id)){assert.equal(a.call,undefined);continue;}
    assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
   }
   const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
@@ -68,6 +72,11 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);
    assert.ok(a.preconditions.length&&a.consent?.from,`${a.id} 声明前置和同意来源`);
    const r=resolveToolCall(a.call.tool,{operation:a.call.operation});
+   // The registered extinguisher reuses the existing environment handler via
+   // a catalog-only alias; do not expand the static schema to expose it.
+   if(a.id==='core:environment.douse_fire'){
+    assert.deepEqual(r,{tool:'world_environment',args:{operation:'douse_fire'}});continue;
+   }
    assert.equal(r.tool,a.call.tool,a.id);assert.equal(r.args.operation,a.call.operation,a.id);
    continue;
   }

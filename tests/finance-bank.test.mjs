@@ -6,6 +6,7 @@ import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {groupAccountView} from '../server-plugin/group-account.mjs';
 import {generateCounty,remoteWorld} from '../server-plugin/remote-generation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 
 test('存款按期结息，当前季节灾害改变报价；准备金不足或倒闭不凭空支付，重放不重复',async()=>{
     const f=fixture(),b=f.e.rules.economy.credit.banks[0];
@@ -38,12 +39,18 @@ test('玩家向NPC放贷实际转本金，信用立场灵智收支派生利率�
     assert.equal(f.doc.state.records[loan.debt].status,'已还清');assert.equal(cash(f.doc),total);
     const bad=await f.act({operation:'lend',seller:worker,coins:100,days:1,consent:true,item:'item_bread',quantity:1},'bad');
     const current=f.doc.state.npcs[worker].coins;f.doc.state.npcs[worker].coins=0;f.doc.state.player.coins+=current;
+    // S1b/S1c: this fixture transfer changes both purses outside the engine;
+    // synchronize books before testing real default/collection postings.
+    resyncBooks(f.e,f.doc);
     f.tick(f.doc.state.records[bad.debt].deadline+DAY);const row=f.doc.state.records[bad.debt];assert.ok(row.defaulted.case);assert.ok(row.paid>0);assert.equal(f.doc.state.records[row.defaulted.case].offender,worker);assert.equal(f.doc.state.records[row.defaulted.case].victim,'player');assert.equal(cash(f.doc),total);
     // 15 §15.1.1：价值有位置；追偿前债务人与法官、执法者须同在法院，才能从其随身资金执行。
     f.doc.state.location='bld_hw_council';for(const n of ['npc_hw_chenbai','npc_hw_gucen',worker]){f.doc.state.npcs[n].location='bld_hw_council';delete f.w.npcs.find(x=>x.id===n).schedule;}
     await f.act({operation:'hear',case:row.defaulted.case,authority:'npc_hw_chenbai'},'hear','world_law');
     await assert.rejects(f.act({operation:'pay',case:row.defaulted.case,authority:'npc_hw_gucen'},'empty','world_law'),/没有可执行资金/);
     f.doc.state.npcs[worker].coins=200;f.doc.state.player.coins-=200;
+    // The recovery must debit these actual 200 coins, not the stale pre-fixture
+    // account. Keep the closed-case and total-cash assertions unchanged.
+    resyncBooks(f.e,f.doc);
     const recovered=await f.act({operation:'pay',case:row.defaulted.case,authority:'npc_hw_gucen'},'recover','world_law');assert.ok(recovered.closed);assert.equal(cash(f.doc),total);
 });
 test('组织放贷读V4公库与现任代表，不能以代表私款偿还组织债',async()=>{

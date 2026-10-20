@@ -10,6 +10,21 @@ import {applyPatches,digest} from './storage.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {parseAccount,LEDGER_COIN} from './ledger.mjs';
 
+// Scheduling a question records the player's own future request. The authored
+// question program rechecks presence when due and grants no NPC commitment.
+function scheduledQuestion(engine,document,proposal,context){
+ if(proposal.effects?.length!==1)return proposal;
+ const effect=proposal.effects[0];if(effect.op!=='schedule'||effect.action!=='core:dialogue.ask')return proposal;
+ const args=effect.args??{},target=context.resolve(args.subject??args.target??proposal.target).value;
+ if(!target||context.kindOf(target)!=='person')reject('E-OPEN-SCHEDULE','预约询问须指定真实的在场交谈对象');
+ if(args.actor!==undefined&&context.resolve(args.actor).value!==context.actor)reject('E-OPEN-SCHEDULE','不能替他人预约行动');
+ if(args.source!==undefined)reject('E-OPEN-SCHEDULE','带赠礼的询问请在届时通过真实交谈动作办理');
+ const content=args.content??args.topic;if(typeof content!=='string'||!content.trim())reject('E-OPEN-SCHEDULE','请说明届时要问的内容');
+ const at=effect.at==='明天早晨'?(Math.floor(document.state.minute/1440)+1)*1440+engine.world.openActionRules.generic.morningMinute:effect.at;
+ if(!Number.isSafeInteger(at)||at<=document.state.minute)reject('E-SCHEDULE-TIME','请指定一个未来的明确时刻');
+ return {...proposal,effects:[{op:'schedule',at,action:'open:question',args:{target,content}},{op:'emit',verb:'tell',actor:context.actor,target,visibility:'witnessed',payload:{kind:'question_scheduled',at,content}}]};
+}
+
 // These are compositions of existing domain programs. No proposed transfer,
 // nutrition or settlement is executed directly by the composition itself.
 function prepareOpenSequence(proposal,registry,context){
@@ -78,15 +93,23 @@ export function prepareOpenAction(engine,document,proposal,native){
  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
  native??=createOpenActionContext(engine,document,proposal);
  if(typeof native.routing.resolve==='function'){
-  const entities=resolveProposalEntities(proposal,native.routing);
+  const entities=resolveProposalEntities(proposal,native.routing,{deferCombatDestination:true});
   if(entities.ambiguities.length)return {status:'needs_entities',...entities,effects:[],cost:null,candidates:[],routed:null};
   proposal=entities.proposal;
  }
+ proposal=scheduledQuestion(engine,document,proposal,native.routing);
  const registry=primitiveRuntime.registry(engine),sequence=prepareOpenSequence(proposal,registry,native.routing);
  if(sequence)return sequence;
  const routing=routeAction(proposal,registry,native.routing);
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
+ if(proposal.effects.some(e=>e.op==='emit'&&e.payload?.kind==='ritual_participation'))reject('E-RITE-SOURCE','请指定真实登记的仪式或寺观；须核对当前主持、参与时窗与实际供品，不能用仪式留痕代替参与');
+ // Deferred directions belong only to the registered combat program. The
+ // unmatched path must still resolve every actual primitive destination.
+ if(typeof native.routing.resolve==='function'){
+  const strict=resolveProposalEntities(proposal,native.routing);
+  if(strict.ambiguities.length)return {status:'needs_entities',...strict,effects:[],cost:null,candidates:routing.candidates,routed:null};
+ }
  // Only the unmatched primitive path consumes the proposal's accounts. A
  // registered program owns its own endpoints, consent, stock and cost checks.
  proposal={...proposal,effects:proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor}))};
@@ -94,6 +117,10 @@ export function prepareOpenAction(engine,document,proposal,native){
   if(effect.op==='move'&&effect.mode==='teleport')reject('E-OPEN-MOVE','普通搬动不能隔空取物，请先靠近或使用真实的传送来源');
   if(effect.op==='obligation.create'&&effect.obligationKind==='loan')reject('E-OPEN-OBLIGATION','借款须先取得真实同意并通过贷款或债务登记动作');
   if(effect.op==='learn')reject('E-OPEN-LEARN','学习须通过真实的授课、读书或练习动作校验来源与能力');
+ }
+ if(proposal.effects.some(e=>e.op==='create'&&e.kind==='item'&&e.facts?.quality==='crude')){
+  const bounds=native.limits(document,routing.nearest);
+  if(!proposal.effects.filter(e=>e.op==='create').every(e=>bounds.improvised?.(e)))reject('E-OPEN-CRAFT','即兴制作须有已掌握的相应手艺、完好工具和同事务投入的自有材料');
  }
  const limits=limitOpenEffects(proposal,native.limits(document,routing.nearest));
  const alternative=limits.blocked.length>0||limits.effects.length===0;
@@ -105,7 +132,8 @@ export function createOpenActionContext(engine,document,proposal,{actor='player'
  return {routing,limits:(current,nearest)=>{
   const fresh=createRoutingContext(engine,current,{actor}),resolved=resolveProposalEntities(proposal,fresh,{accounts:true});
   if(resolved.ambiguities.length)reject('E-OPEN-ENTITY','对象已经离开或不再可见');
-  const normalized={...resolved.proposal,effects:resolved.proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,current,effect,{actor}))};
+  const scheduled=scheduledQuestion(engine,current,resolved.proposal,fresh);
+  const normalized={...scheduled,effects:scheduled.effects.map(effect=>resolvePrimitiveTransfer(engine,current,effect,{actor}))};
   return deriveOpenLimits(engine,current,normalized,nearest,{actor,routing:fresh});
  }};
 }

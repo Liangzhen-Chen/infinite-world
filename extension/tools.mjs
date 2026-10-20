@@ -108,6 +108,8 @@ export function toolDefinitions(){return structuredClone(publicDefinitions);}
 // Pure routing is shared by the engine and report assertions. Stored old calls
 // remain valid; grouped calls execute exactly the same domain operations.
 export function resolveToolCall(tool,args={}){
+    // Catalog-only alias: retain the static tool schema and its prompt budget.
+    if(tool==='world_field'&&args.operation==='environment_douse_fire')return {tool:'world_environment',args:{...args,operation:'douse_fire'}};
     if(tool==='world_law'&&args.operation==='steal')return{tool:'world_crime',args};
     const mapping=routes.get(tool);if(!mapping)return{tool,args};
     const route=mapping.get(args.operation);
