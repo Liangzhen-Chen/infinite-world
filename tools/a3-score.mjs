@@ -20,6 +20,8 @@ import {createRoutingContext} from '../server-plugin/action-router.mjs';
 import {canonicalActionId,findAction} from '../server-plugin/action-registry.mjs';
 import {primitiveRuntime,actionEffects} from '../server-plugin/primitives-runtime.mjs';
 import {resolvePrimitiveTransfer} from '../server-plugin/primitive-accounts.mjs';
+import {runSetupLoaders,setupLoaderFields} from './a3-setup/index.mjs';
+import './a3-setup/loaders.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const setupWriter='a3-score-setup';
@@ -58,7 +60,7 @@ export function applyIntentSetup(engine,initial,setup){
   catch(error){unmet(item,error.message);return false;}
  };
  const ref=id=>bindings[id]??(id==='self'?'player':id);
- for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities','instances','holdings'].includes(key))unmet(key,'unsupported setup field');
+ for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities','instances','holdings',...setupLoaderFields()].includes(key))unmet(key,'unsupported setup field');
  if(Object.hasOwn(setup,'minute')){
   if(Number.isSafeInteger(setup.minute)&&setup.minute>=0)s.minute=setup.minute;
   else unmet('minute','expected a nonnegative safe integer');
@@ -287,6 +289,10 @@ export function applyIntentSetup(engine,initial,setup){
    parent[key]=structuredClone(fact.value);
   }
  }
+ // Domain premises (tools/a3-setup/) run after built-in scene fields and before
+ // presence and ledger audits.
+ const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),native,get document(){return document;},set document(value){document=value;s=value.state;}};
+ runSetupLoaders(ctx,setup);
  for(const id of Array.isArray(setup.present)?setup.present:[]){
   const body=actor(id);
   if(body&&(body.location!==s.location||['死亡','昏迷','失能'].includes(body.status)||/睡|昏迷/.test(body.activity??'')||body.capacity==='none'||isGone(engine,document,id)))unmet(`present.${id}`,'actor is not awake and present after setup');
