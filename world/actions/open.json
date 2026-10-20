@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "namespace": "open",
+  "actions": [
+    {
+      "id": "open:leave_mark",
+      "label": "留下痕迹",
+      "verb": "留痕",
+      "group": "创意",
+      "source": "catalog",
+      "narration": "open.leave_mark",
+      "synonyms": ["留字", "摆放记号", "留下歌谣"],
+      "visibility": {"catalog": "here", "witness": "present"},
+      "participants": {"actor": "player"},
+      "preconditions": [],
+      "slots": [
+        {"name":"intent","kind":"text","schema":"string","required":true},
+        {"name":"form","kind":"enum","options":["刻痕","摆放物","涂画","歌谣","口号","仪式残迹","布置"],"required":true},
+        {"name":"zone","kind":"text","schema":"string"},
+        {"name":"tags","kind":"tags","schema":"array"},
+        {"name":"materials","kind":"materials","schema":"array"}
+      ],
+      "cost": {"owner":"primitives","time":5},
+      "check": null,
+      "outcomes": [{"op":"create","kind":"mark","facts":{"intent":{"slot":"intent"},"form":{"slot":"form"}}}],
+      "hint": "只留下无价值的痕迹，不代表原本设想的效果已经实现。材料从行囊真实消耗。"
+    }
+  ]
+}

@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {limitOpenEffects,openDuration} from '../server-plugin/action-limits.mjs';
+import {limitOpenEffects,openDuration,deriveOpenLimits,openUsage,openUsageEntry} from '../server-plugin/action-limits.mjs';
+import {createRoutingContext} from '../server-plugin/action-router.mjs';
+import {loadWorld} from '../tools/load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import fs from 'node:fs/promises';
 const effect={op:'vital',target:'npc_one',delta:100,type:'physical'};
 const proposal=effects=>({intent:'推开眼前的目标',effects});
 const source={id:'native:item',stage:4,time:10,difficulty:10,bounds:{delta:12}};
@@ -41,4 +45,43 @@ test('A3 limits: manufactured resources need recipes, unauthorized transfers can
  const own={op:'transfer',from:to,to:from,qty:100};
  assert.throws(()=>limitOpenEffects(proposal([own]),native({accountBalance:()=>2})),{code:'E-TRANSFER-BALANCE'});
  const r=limitOpenEffects(proposal([{op:'create',kind:'item',facts:{quantity:100}}]),native());assert.deepEqual(r.effects,[]);assert.equal(r.blocked[0].alternative,'recipe_or_mark');
+});
+
+test('A3 limits: real held source stage is independent of the actor skill tier',async()=>{
+ const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+ engine.world.openActionRules=JSON.parse(await fs.readFile('world/rules/tables/open-actions.json','utf8'));
+ const document=engine.createCharacter(seed,{},'a3-source-stage'),item=engine.byId.get('item_staff');
+ // Authored high-stage weapon fixture: source stage belongs to this item.
+ item.stage=4;item.tags=['weapon'];document.state.inventory.item_staff={quantity:1,durability:100,quality:'木'};
+ const p={intent:'用持有的器物攻击',means:{item:item.id},effects:[{...effect,delta:-9999,type:'physical'}]},routing=createRoutingContext(engine,document);
+ const r=limitOpenEffects(p,deriveOpenLimits(engine,document,p,null,{routing}));
+ assert.equal(r.sources[0].stage,4);assert.equal(r.effects[0].delta,-engine.world.openActionRules.sourceCaps.vital[4]);
+ document.state.inventory.item_staff.quantity=0;
+ const unheld=limitOpenEffects(p,deriveOpenLimits(engine,document,p,null,{routing:createRoutingContext(engine,document)}));
+ assert.equal(unheld.sources[0].stage,0);assert.ok(Math.abs(unheld.effects[0].delta)<Math.abs(r.effects[0].delta));
+ item.stage=0;document.state.inventory.item_staff.quantity=1;document.state.skills.skill_light={proficiency:2699};
+ assert.equal(limitOpenEffects(p,deriveOpenLimits(engine,document,p,null,{routing})).sources[0].stage,0);
+});
+
+test('A3 limits: known spell sources preserve fixed power, materials and mana requirements',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+ engine.world.openActionRules=JSON.parse(await fs.readFile('world/rules/tables/open-actions.json','utf8'));
+ const document=engine.createCharacter(seed,{},'a3-spell-source'),spell=engine.byId.get('spell_s3_mend_palm');
+ document.state.skills[spell.skill]={proficiency:0};document.state.spells[spell.id]={known:true};
+ const p={intent:'施展已学的治疗手段',means:{spell:spell.id},effects:[{op:'vital',target:'player',delta:999,type:'healing'}]},routing=createRoutingContext(engine,document);
+ const r=limitOpenEffects(p,deriveOpenLimits(engine,document,p,null,{routing}));
+ assert.equal(r.effects[0].delta,spell.effectSpec.power);assert.equal(r.sources[0].requirements.mp,spell.mp);assert.deepEqual(r.sources[0].requirements.materials,spell.materials);
+ delete document.state.spells[spell.id];
+ assert.equal(limitOpenEffects(p,deriveOpenLimits(engine,document,p,null,{routing})).blocked.length,1);
+});
+
+test('A3 limits: usage is derived from committed receipts within rolling 24 hours and actual daily gains',()=>{
+ const signature=['vital:person:healing'],document={state:{minute:3000,records:{}}};
+ const record=(id,minute,produced,extra={})=>document.state.records[id]={category:'primitive_receipt',receipt:{actor:'player',status:'committed',openUsage:{minute,signature,produced},...extra}};
+ record('old',1560,{'vital:heal':100});record('recent',1561,{'vital:heal':4});record('today',2900,{'vital:heal':3});record('future',3001,{'vital:heal':99});record('preview',2950,{'vital:heal':88},{status:'preview'});record('other',2950,{'vital:heal':77},{actor:'npc_one'});
+ assert.deepEqual(openUsage(document,signature),{repeats:2,produced:0,producedByKey:{'vital:heal':3}});
+ const prepared={signature,effects:[{op:'vital',target:'player',delta:9}],sources:[{rewardFields:['delta'],dailyKey:'vital:heal'}]};
+ const entry=openUsageEntry(prepared,{applied:[{op:'vital',target:'player',delta:9,result:{healed:2}}]},3000);
+ assert.deepEqual(entry.produced,{'vital:heal':2});
+ assert.deepEqual(openUsageEntry(prepared,{applied:[{op:'vital',target:'player',delta:9,result:{applied:false}}]},3000).produced,{});
 });

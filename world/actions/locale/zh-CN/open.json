@@ -1,0 +1,10 @@
+{
+  "locale": "zh-CN",
+  "events": {
+    "open.leave_mark": {
+      "success": "{actor}留下了{form}。这只是痕迹，原本设想的效果并未因此实现。",
+      "refused": "未能留下痕迹：{reason}",
+      "reaction": "{observer}：{text}"
+    }
+  }
+}
