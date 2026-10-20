@@ -59,6 +59,14 @@ test('A3 kernel: JSON cannot forge server frame, writer, authority or rule sourc
  assert.throws(()=>commitPrimitives(document,[{op:'holding.open',holdingKind:'leases',holder:'__proto__',subject:'item_a'}],frame),{code:'E-PRIMITIVE-FIELD'});
  for(const from of ['src:craft|coin_river|output','src:mint|coin_river|mint'])assert.throws(()=>commitPrimitives(document,[{...effects[0],from}],frame),{code:'E-TRANSFER-ENDPOINT'});
 });
+test('A3 kernel: empty proposed tags are absent in effect, nonempty tags cannot replace derived tags',()=>{
+ const {document,frame,effects}=setup(),before=structuredClone(document);
+ const plain=planPrimitives(document,effects,frame),empty=planPrimitives(document,[{...effects[0],tags:[]}],frame);
+ assert.deepEqual(empty.receipt.applied,plain.receipt.applied);
+ assert.deepEqual(empty.receipt.applied[0].tags,[]);
+ for(const tags of [['authorized'],['unconsented'],['capacity:limited']])assert.throws(()=>commitPrimitives(document,[{...effects[0],tags}],frame),{code:'E-PRIMITIVE-SOURCE'});
+ assert.deepEqual(document,before);
+});
 test('A3 kernel: shared action adapter rereads location/capacity and preserves resource lots',()=>{
  const {document}=setup();document.state.location='loc_a';document.state.player.age=20;document.state.npcs.npc_a={age:20,location:'loc_a'};
  // Existing stock policy tracks lots for storage purposes, not loose inventory.

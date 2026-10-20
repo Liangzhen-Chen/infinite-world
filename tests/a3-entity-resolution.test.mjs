@@ -41,7 +41,7 @@ test('A3 entities: exact ids take precedence over colliding names and aliases',(
  assert.throws(()=>resolveProposalEntities(vital(target),fresh),{code:'E-OPEN-ENTITY',reason:'not_present'});
 });
 
-test('A3 entities: only multiple accessible matches require clarification, with concrete candidates',()=>{
+test('A3 entities: ambiguous names and unresolved descriptions require clarification, exact missing ids reject',()=>{
  const {engine,document,people}=fixture(),[a,b]=people;
  document.state.npcs[a].name='同名来客';document.state.npcs[b].name='同名来客';
  const context=createRoutingContext(engine,document),result=resolveProposalEntities(vital('同名来客'),context);
@@ -49,7 +49,12 @@ test('A3 entities: only multiple accessible matches require clarification, with 
  assert.deepEqual(result.ambiguities[0].candidates.map(row=>row.id),[a,b].sort());
  const prepared=prepareOpenAction(engine,document,vital('同名来客'));
  assert.equal(prepared.status,'needs_entities');assert.equal(prepared.ambiguities[0].candidates.length,2);
- assert.throws(()=>resolveProposalEntities(vital('没有这个名字'),context),{code:'E-OPEN-ENTITY',reason:'unknown_entity'});
+ // 06 §6.5 / A3-B round 5: an unresolved description asks who was meant;
+ // an exact nonexistent id remains a refusal. Both paths stay read-only.
+ const unresolved=resolveProposalEntities(vital('没有这个名字'),context);
+ assert.equal(unresolved.ambiguities.length,1);assert.deepEqual(unresolved.ambiguities[0].candidates,[]);
+ assert.equal(prepareOpenAction(engine,document,vital('没有这个名字')).status,'needs_entities');
+ assert.throws(()=>resolveProposalEntities(vital('npc_a3_missing'),context),{code:'E-OPEN-ENTITY',reason:'unknown_entity'});
  document.state.npcs[b].location='loc_not_here';
  assert.equal(createRoutingContext(engine,document).resolve('同名来客').value,a);
 });
@@ -106,4 +111,82 @@ test('A3 entities: public self-account proposals preview and commit the resolved
  assert.equal(out.result.receipt.status,'committed');
  assert.equal(out.result.receipt.applied.find(effect=>effect.op==='transfer').from,'player|coin_river|purse');
  assert.deepEqual(out.result.receipt.routing.proposal,input.args);assert.deepEqual(document,before);
+});
+
+test('A3 entities: resource and owner shorthand uses native accounts, malformed accounts reject read-only',async()=>{
+ const {engine,document,people}=fixture(),target=people[0];
+ engine.world.actionDefinitions={format:1,actions:[]};
+ const before=structuredClone(document),args={intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:'self',to:target,qty:1}]};
+ const input={tool:'world_propose',eventId:'a3-short-account',args};
+ const preview=await engine.previewAction(document,input);
+ assert.equal(preview.receipt.status,'preview');
+ assert.equal(preview.receipt.routing.effects[0].from,'player|coin_river|purse');
+ assert.equal(preview.receipt.routing.effects[0].to,`${target}|coin_river|purse`);
+ assert.deepEqual(preview.receipt.routing.proposal,args);assert.deepEqual(document,before);
+ const committed=await engine.reduce(document,input);
+ assert.equal(committed.result.receipt.status,'committed');
+ await assert.rejects(engine.previewAction(document,{...input,eventId:'a3-bad-account',args:{...args,effects:[{...args.effects[0],from:'self||purse'}]}}),{code:'E-OPEN-ACCOUNT'});
+ assert.deepEqual(document,before);
+});
+
+test('A3 entities: learning catalog subjects do not require prior knowledge, source aliases preserve the raw proposal',()=>{
+ const {engine,document}=fixture(),before=structuredClone(document),context=createRoutingContext(engine,document);
+ const subject=world.spells.find(row=>!document.state.spells[row.id])?.id;
+ assert.ok(subject);
+ const proposal={intent:'xyzzy',effects:[{op:'learn',entity:'self',subject,source:'practice',amount:1}]};
+ const result=resolveProposalEntities(proposal,context);
+ assert.deepEqual(result.ambiguities,[]);assert.equal(result.proposal.effects[0].subject,subject);
+ assert.equal(result.proposal.effects[0].entity,'player');assert.equal(result.proposal.effects[0].learningSource,'practice');
+ assert.equal(Object.hasOwn(result.proposal.effects[0],'source'),false);
+ assert.equal(proposal.effects[0].source,'practice');assert.deepEqual(document,before);
+});
+
+test('A3 entities: a compound shorthand transfer cannot spend the same coin twice or leave partial writes',async()=>{
+ const {engine,document,people}=fixture(),[a,b]=people;
+ engine.world.actionDefinitions={format:1,actions:[]};
+ document.state.player.coins=1;
+ const before=structuredClone(document),input={tool:'world_propose',eventId:'a3-double-spend',args:{intent:'xyzzy',effects:[a,b].map(to=>({op:'transfer',resource:'coin',from:'self',to,qty:1}))}};
+ await assert.rejects(engine.previewAction(document,input),{code:'E-TRANSFER-BALANCE'});
+ await assert.rejects(engine.reduce(document,input),{code:'E-TRANSFER-BALANCE'});
+ assert.deepEqual(document,before);
+});
+
+test('A3 entities: a native bank counter is perceivable locally, not from another location',()=>{
+ const {engine,document}=fixture(),bank=engine.rules.economy.credit.banks[0];
+ assert.ok(bank);document.state.location=bank.location;
+ const before=structuredClone(document),context=createRoutingContext(engine,document);
+ assert.equal(context.resolve(bank.id).value,bank.id);assert.equal(context.resolve(bank.name).value,bank.id);
+ assert.equal(context.kindOf(bank.id),'organization');
+ const proposal={intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:'self',to:bank.id,qty:1}]};
+ const resolved=resolveProposalEntities(proposal,context,{accounts:true});
+ assert.equal(resolved.proposal.effects[0].to,`${bank.id}|coin_river|vault`);
+ assert.deepEqual(document,before);
+ document.state.location='loc_hw_gate';
+ assert.throws(()=>resolveProposalEntities(proposal,createRoutingContext(engine,document)),{code:'E-OPEN-ENTITY',reason:'not_present'});
+});
+
+test('A3 entities: an existing remote contractual party grants neither physical access nor proxy consent',()=>{
+ const {engine,document,people}=fixture(),target=people[0];
+ document.state.npcs[target].location='loc_not_here';const before=structuredClone(document),context=createRoutingContext(engine,document);
+ const proposal={intent:'xyzzy',effects:[{op:'obligation.create',id:'test-remote-party',obligationKind:'loan',debtor:'self',creditor:target,terms:{principal:1}}]};
+ const result=resolveProposalEntities(proposal,context);
+ assert.deepEqual(result.ambiguities,[]);assert.equal(result.proposal.effects[0].creditor,target);
+ assert.equal(context.resolve(target).reason,'not_present');
+ assert.throws(()=>resolveProposalEntities(vital(target),context),{code:'E-OPEN-ENTITY',reason:'not_present'});
+ assert.throws(()=>prepareOpenAction(engine,document,proposal),{code:'E-OPEN-OBLIGATION'});
+ assert.deepEqual(document,before);
+});
+
+test('A3 entities: a learned map destination can route travel without becoming a perceivable physical target',()=>{
+ const {engine,document}=fixture();document.state.location='loc_hw_gate';
+ const proposal={intent:'沿路前往白石镇',target:'loc_bs',effects:[{op:'move',entity:'self',to:'loc_bs',mode:'walk'}]};
+ assert.throws(()=>resolveProposalEntities(proposal,createRoutingContext(engine,document)),{code:'E-OPEN-ENTITY',reason:'not_perceivable'});
+ document.state.discoveries??={};document.state.discoveries.loc_bs={minute:document.state.minute,source:'亲历'};
+ const before=structuredClone(document),context=createRoutingContext(engine,document);
+ assert.equal(context.resolveDestination('loc_bs').value,'loc_bs');
+ assert.equal(context.resolve('loc_bs').reason,'not_perceivable');
+ const prepared=prepareOpenAction(engine,document,proposal);
+ assert.equal(prepared.status,'routed');assert.equal(prepared.routed,'core:move');assert.equal(prepared.slots.destination,'loc_bs');
+ assert.throws(()=>resolveProposalEntities(vital('loc_bs'),context),{code:'E-OPEN-ENTITY',reason:'not_perceivable'});
+ assert.deepEqual(document,before);
 });

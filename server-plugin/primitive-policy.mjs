@@ -5,7 +5,7 @@ export class PrimitiveRejected extends Error {constructor(code,message,index=nul
 export const reject=(code,message)=>{throw new PrimitiveRejected(code,message);};
 export function validatePrimitive(effect){
  if(!effect||typeof effect!=='object'||!PRIMITIVE_IDS.includes(effect.op))reject('E-PRIMITIVE','未知效果原语');
- for(const key of ['writer','actedAs','source','checkResult','authorization','rule','index','parent','eventId','tags','result'])if(Object.hasOwn(effect,key)&&!(key==='tags'&&effect.op==='create'&&effect.kind==='mark')&&!(key==='rule'&&effect.op==='schedule'))reject('E-PRIMITIVE-SOURCE',`原语不能自报 ${key}`);
+ for(const key of ['writer','actedAs','source','checkResult','authorization','rule','index','parent','eventId','tags','result'])if(Object.hasOwn(effect,key)&&!(key==='tags'&&Array.isArray(effect.tags)&&(effect.tags.length===0||effect.op==='create'&&effect.kind==='mark'))&&!(key==='rule'&&effect.op==='schedule'))reject('E-PRIMITIVE-SOURCE',`原语不能自报 ${key}`);
  const forbidden=['__proto__','constructor','prototype'];
  for(const field of ['entity','target','holder','newHolder','subject','debtor','creditor','holding'])if(forbidden.includes(effect[field]))reject('E-PRIMITIVE-FIELD','Reserved property is not an entity identifier');
  if(effect.shares&&Object.keys(effect.shares).some(id=>forbidden.includes(id)))reject('E-PRIMITIVE-FIELD','Reserved property is not a shareholder');
@@ -13,9 +13,12 @@ export function validatePrimitive(effect){
  if(!valid(effect))reject('E-PRIMITIVE-SCHEMA',`Invalid primitive shape: ${valid.errors[0].instancePath} ${valid.errors[0].message}`);
  return effect;
 }
-const blocked=new Set(['__proto__','constructor','prototype','coin','coins','money','treasury','inventory','stock','accounts','balance','holdings','obligations','identity','id','inName','birth','age','skills','xp','minute','belief','capacity','status','hp','location']);
-export function writableFact(policy,kind,field,value){
+const blocked=new Set(['__proto__','constructor','prototype','coin','coins','money','treasury','inventory','stock','accounts','balance','holdings','obligations','identity','id','inName','birth','age','skills','xp','minute','belief','capacity','status','hp','location','history','derived_progression']);
+export function writableFactField(field){
  if(typeof field!=='string'||blocked.has(field)||field.includes('.')||field.includes('|'))reject('E-FACT-FIELD','该字段不允许由事实原语改写');
+}
+export function writableFact(policy,kind,field,value){
+ writableFactField(field);
  const rule=policy?.[kind]?.[field];if(!rule)reject('E-FACT-FIELD','该事实不在实体可写白名单');
  if(!['number','string','boolean'].includes(rule.type)||typeof value!==rule.type||typeof value==='number'&&(!Number.isSafeInteger(rule.min)||!Number.isSafeInteger(rule.max)||rule.min>rule.max||!Number.isSafeInteger(value)||value<rule.min||value>rule.max)||typeof value==='string'&&value.length>(rule.maxLength??1200))reject('E-FACT-RANGE','事实值不符合类型或范围');
  return value;
