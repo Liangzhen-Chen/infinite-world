@@ -408,7 +408,7 @@ export class WorldEngine {
     }
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
-    primitiveTeachingConsent(d,args){return teachingConsent(d,this,args);}
+    primitiveTeachingConsent(d,args){const session=Object.create(this);session.nativeConsentRequest={from:args.teacher,to:args.student??'player',scope:'teach',purpose:args.subject,terms:{fee:args.fee??0,minutes:args.minutes}};return teachingConsent(d,session,args);}
     primitiveOpenAction(document,input,prepared,{preview=false}={}){
         const books=withBooks(this,document),session=this.scoped(document);
         const applied=primitiveActionRuntime().executeOpen(session,books.document,input,prepared,{preview});

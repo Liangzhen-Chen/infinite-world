@@ -12,6 +12,7 @@ import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {npcServices} from './npc-state.mjs';
 import {activeDuel} from './duels.mjs';
 import {templeById} from './faith-catalog.mjs';
+import {knownWorldEventReference} from './world-events.mjs';
 
 const tokenizer=new MemoryIndex();
 const multiset=values=>{const out=new Map();for(const value of values)out.set(value,(out.get(value)??0)+1);return out;};
@@ -284,7 +285,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      }
     }
     if(slot.name==='content'&&e.op==='emit'){value=e.payload?.content??e.payload?.version??e.payload?.text??e.payload?.terms?.topic; if(value!==undefined)break;}
-    if(slot.name==='source'&&e.op==='emit'){value=e.payload?.source==='self'?actor:e.payload?.source;if(value!==undefined)break;}
+    if(slot.name==='source'&&e.op==='emit'){value=action.id==='core:dialogue.tell'?knownWorldEventReference(state,actor,{reference:e.payload?.source,content:e.payload?.version??e.payload?.content}):undefined;value??=e.payload?.source==='self'?actor:e.payload?.source;if(value!==undefined)break;}
     if(slot.name==='topic'&&e.op==='emit'){value=e.payload?.terms?.topic;if(value!==undefined)break;}
     if(e.op==='emit'&&e.payload?.terms?.[slot.name]!==undefined){value=e.payload.terms[slot.name];break;}
     if(e.op==='emit'&&e.payload?.kind==='haggle'&&['source','content'].includes(slot.name)){

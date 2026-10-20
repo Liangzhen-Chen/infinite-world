@@ -1,3 +1,4 @@
+import {worldEvent} from '../../server-plugin/world-events.mjs';
 import {registerSetupLoader} from './index.mjs';
 import {executeProtocolPrimitive} from '../../server-plugin/transition.mjs';
 import {skillGrade} from '../../server-plugin/engine.mjs';
@@ -14,8 +15,8 @@ const requireActor=(ctx,id)=>{id=ctx.ref(id);if(typeof id!=='string'||!ctx.actor
 const state=ctx=>ctx.document.state;
 const sourceEvent=(ctx,alias)=>{
  if(typeof alias!=='string'||!Object.hasOwn(ctx.bindings,alias))fail('unresolved source event binding (05 §5.6; history loader required)');
- const id=ctx.ref(alias),s=state(ctx),event=s.records?.[`world_event:${id}`]??s.records?.[id];
- if(!event||event.id!==id||!integer(event.minute??event.at)||((event.minute??event.at)>s.minute))fail('missing or future native source event');
+ const id=ctx.ref(alias),s=state(ctx),event=worldEvent(s,id);
+ if(!event||!integer(event.minute??event.at)||((event.minute??event.at)>s.minute))fail('missing or future native source event');
  return event;
 };
 const protocol=(ctx,d,p,id)=>executeProtocolPrimitive(d,ctx.engine,p,{eventId:`a3-agency:${id}`,entity:'player'});

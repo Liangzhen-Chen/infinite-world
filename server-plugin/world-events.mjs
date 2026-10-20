@@ -12,6 +12,33 @@ import {recordCareerMetrics} from './career-metrics.mjs';
 import {personAge} from './entity-view.mjs';
 import {reactionSortKey,PHASE} from './scheduler.mjs';
 export const WORLD_EVENT_VERSION=1;
+// References use record keys; event ids remain domain ids. Consumers may read
+// payload facts, but canonical identity/time/actor cannot be overwritten by it.
+export function worldEvent(state,reference){
+    if(typeof reference!=='string')return null;
+    const key=reference.startsWith('world_event:')?reference:`world_event:${reference}`,row=state.records?.[key];
+    return row?.category==='world_event'&&key===`world_event:${row.id}`?{...row.payload,...row}:null;
+}
+export function recordHistoricalEvent(d,engine,event){
+    const now=d.get('state','minute'),key=`world_event:${event.id}`;
+    if(typeof event.id!=='string'||!event.id||typeof event.verb!=='string'||!event.verb||!Number.isSafeInteger(event.minute)||event.minute<0||event.minute>now||event.source?.kind!=='corpus_premise'||typeof event.source.row!=='string'||!event.source.row)throw Error('Invalid historical event');
+    if(d.get('state','records',key))throw Error('Historical event already exists');
+    if(event.actor!==null&&event.actor!==undefined&&(typeof event.actor!=='string'||event.actor!=='player'&&!d.get('state','npcs',event.actor)&&!d.get('state','creatures',event.actor)&&!engine.byId?.has(event.actor)&&!d.get('holdings','entities',event.actor)))throw Error('Historical actor does not exist');
+    // Importing history never repeats its money, ownership or social effects.
+    const observer=event.payload?.observer;
+    if(observer!==undefined&&observer!=='player'&&!d.get('state','npcs',observer)&&!d.get('state','creatures',observer))throw Error('Historical observer does not exist');
+    const row={...structuredClone(event),category:'world_event',visibility:'private',witnesses:[...new Set([...event.witnesses??[],...observer?[observer]:[]])],...(observer?{observer}:{}),...(typeof event.payload?.name==='string'?{summary:event.payload.name}:{})};
+    holdingSet(d,engine,['state','records',key],row,'world-events');
+    return key;
+}
+// "I saw this" resolves only an exact version already known to the speaker.
+// This adapter grants neither knowledge nor access to private event records.
+export function knownWorldEventReference(state,observer,{reference,content}={}){
+    const known=new Set(Object.values(state.records??{}).filter(r=>r.category==='knowledge'&&r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
+    const rows=Object.entries(state.records??{}).filter(([key,r])=>r.category==='world_event'&&key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
+    const matches=rows.filter(r=>reference===r.id||reference===`world_event:${r.id}`||reference==='self'&&typeof content==='string'&&content===(r.summary??r.payload?.name));
+    return matches.length===1?matches[0].id:null;
+}
 export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade','learn','organize','breach','author','deceive','pact','duel','appoint','dismiss','salary','die','detain','release','migrate','close','transfer','promote','marry','vocation','contest_win','contest_lose']);
 const awake=(state,id,n)=>n&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 SOCIAL_VERBS.add('proposal_rejected');
