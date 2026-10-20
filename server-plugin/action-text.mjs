@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {appliedEffects} from './applied-effects.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {localWeather} from './weather.mjs';
 
 const LOCALES=fileURLToPath(new URL('../world/actions/locale/',import.meta.url));
 export const BASE_LOCALE='zh-CN';
@@ -91,10 +92,13 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
 }
 // Event-stream text for one settled action: one verb line, then one line per applied effect.
 export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
+ if(result?.receipt?.status==='pending')return {lines:['行动仍在等待裁决，尚未完成。'],effects:[]};
  if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
  const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
- const head=chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
+ const receipt=result?.receipt;
+ const head=receipt?.check?.success===false?`你尝试${action?.label??'这样做'}，未能达到预期。`:
+  receipt?.narrate?.mustNot?.length?`你尝试${action?.label??'这样做'}，部分效果未能发生。`:chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
  const counterparties=new Set();
  for(const k of ['seller','buyer','target','npc','teacher','authority']){const raw=args?.[k];if(typeof raw!=='string')continue;try{counterparties.add(engine.resolve(raw));}catch{}}
  const rest=effectLines(engine,before,after,effects,templates,counterparties);
@@ -120,6 +124,8 @@ export function presentPeople(engine,state){
 export function sceneLines(engine,document,locale=BASE_LOCALE){
  const t=loadTemplates(locale),sc=t.scene,s=document.state,place=placeOf(engine,s.location),parent=placeOf(engine,place?.parent);
  const lines=[fill(sc.header,{place:nameOf(engine,s,s.location),within:parent?fill(sc.within,{parent:parent.name}):''})??`【此处】${nameOf(engine,s,s.location)}`];
+ const weather=engine.rules?.weather?localWeather(engine,document):null;
+ if(weather)lines[0]+=`｜${weather.daylight?'白昼':'夜色已暗'}｜${weather.name}`;
  const people=presentPeople(engine,s);
  lines.push(people.length?sc.presentHeader+people.map(p=>p.activity?fill(sc.present,p):fill(sc.presentIdle,p)).join('；'):sc.nobody);
  const exits=exitsFrom(engine,s,t);

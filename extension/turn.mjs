@@ -30,6 +30,12 @@ export function toolResultWithClock(result,{startMinute,minute}={}){
     return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
 }
 
+export function actionCompletion(saved){
+ const receipt=saved?.result?.receipt;
+ if(receipt?.status==='pending')return {ok:false,pending:true,error:'行动仍在等待裁决，尚未完成'};
+ return {ok:saved?.result?.ok!==false};
+}
+
 // Speech generated after a wait does not itself authorize more elapsed time.
 export function fullyTimedWait({playerText='',receipts=[],clock}={}){
     if(!clock||!Number.isSafeInteger(clock.minute)||!Number.isSafeInteger(clock.startMinute))return false;

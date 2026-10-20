@@ -1,5 +1,5 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, lookupToolResult } from './turn.mjs';
+import { parseTurn, toolResultWithClock, lookupToolResult, actionCompletion } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
@@ -52,7 +52,7 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
+    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,preview:previewUIAction,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
@@ -169,7 +169,9 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
             const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
             view=await api('read',{campaignId:view.reference.campaignId});
             ambientAudio.noteAction(result.result,view.document.state.player,tool);
-            await persist();await refresh();return toolResultWithClock(result.result,{startMinute,minute:view.document.state.minute});
+            await persist();await refresh();
+            const completion=result.result?.receipt?actionCompletion(result):{};
+            return toolResultWithClock({...result.result,...completion},{startMinute,minute:view.document.state.minute});
         }catch(error){
             const uncertain=committed||(sent&&!error.rejected);
             const text=committed?`行动已保存，显示更新失败：${error.message}`:uncertain?`执行结果尚未确认，请重新对账：${error.message}`:`操作未完成：${error.message}`;
@@ -185,19 +187,36 @@ function recordFeed(lines,kind='action'){
     const metadata=ctx().chatMetadata,rows=Array.isArray(metadata[FEED])?metadata[FEED]:[];
     metadata[FEED]=[...rows,{minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)}].slice(-FEED_LIMIT);
 }
-async function act(action,slots={}){
+async function previewUIAction(action,slots={},eventId=`ui_${crypto.randomUUID()}`){
+    if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手'};
+    return queue(async()=>{
+        await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
+        const campaignId=view.reference.campaignId,current=await api('read',{campaignId});
+        const result=await api('propose',{campaignId,args:{action,slots},eventId});
+        return {...result,startMinute:current.document.state.minute};
+    });
+}
+async function act(action,slots={},confirmation={}){
     if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手',lines:[]};
     return queue(async()=>{
         try{
             await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
-            const campaignId=view.reference.campaignId,resolved=await api('actions',{resolve:{action,slots}});
+            const campaignId=view.reference.campaignId;
+            if(confirmation.expectedSequence!==undefined){
+                const current=await api('read',{campaignId});
+                if(current.reference.sequence!==confirmation.expectedSequence)return {ok:false,stale:true,error:'此刻情形已变化，请重新预览后再确认',lines:[]};
+                view=current;
+            }
+            const resolved=await api('actions',{campaignId,resolve:{action,slots}});
             if(resolved.projection){const here=await api('actions',{campaignId});recordFeed(here.scene,'look');await ctx().saveChat();return {ok:true,lines:here.scene};}
             if(resolved.clientRead)return {ok:true,read:readStateSection(view.document.state,resolved.args.section,resolved.args.npc),lines:[]};
-            const result=await api('execute',{campaignId,tool:'world_act',args:{action,slots},eventId:`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
+            const result=await api('execute',{campaignId,tool:'world_act',args:{action,slots},eventId:confirmation.eventId??`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
             view=await api('read',{campaignId});
-            const lines=result.narration?.lines??[];recordFeed(lines);
+            const completion=actionCompletion(result);
+            const lines=completion.pending?['行动仍在等待裁决，尚未完成。']:result.narration?.lines??[];
+            if(!completion.pending)recordFeed(lines);
             ambientAudio.noteAction(result.result,view.document.state.player,resolved.tool);
-            await persist();await refresh();return {ok:true,lines,result:result.result};
+            await persist();await refresh();return {...completion,lines,result:result.result};
         }catch(error){return {ok:false,error:error.message,lines:[]};}
     });
 }
@@ -208,7 +227,7 @@ async function modelActions(args){
         slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value)}:{})}))}))});
 }
 async function modelAct(args){
-    const resolved=await api('actions',{resolve:{action:args.action,slots:args.slots??{}}});
+    const resolved=await api('actions',{campaignId:view.reference.campaignId,resolve:{action:args.action,slots:args.slots??{}}});
     if(resolved.projection)return JSON.stringify({ok:true,here:(await api('actions',{campaignId:view.reference.campaignId})).scene});
     if(resolved.clientRead){
         if(resolved.tool==='world_read')return JSON.stringify(readStateSection(view.document.state,resolved.args.section,resolved.args.npc));
@@ -412,5 +431,5 @@ window.addEventListener('message',event=>{
     // Do not put that transition inside the queue those callbacks normally use.
     if(action==='enter')handleStart();else queue(handleStart);
 });
-window.infiniteFieldsV2={load,refresh,execute,act,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
+window.infiniteFieldsV2={load,refresh,execute,act,preview:previewUIAction,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
 if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);
