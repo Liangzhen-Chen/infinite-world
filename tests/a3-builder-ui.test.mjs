@@ -102,7 +102,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await builder.getByRole('button',{name:'下一步',exact:true}).click();
   await builder.locator('#fields-builder-intent').fill('对自己说今天的行程');await builder.locator('#fields-builder-intent').press('Tab');
   await builder.locator('#fields-builder-effects').getByRole('button',{name:'添加一项',exact:true}).click();
-  await builder.locator('#fields-builder-effects-0-kind').selectOption({label:'发布或交谈'});
+  await builder.locator('#fields-builder-effects-0-kind').selectOption({label:'表达或请求'});
   await builder.locator('#fields-builder-effects-0-target').selectOption({label:'自己'});
   await builder.locator('#fields-builder-effects-0-verb').selectOption({label:'tell'});
   await builder.locator('#fields-builder-effects-0-visibility').selectOption({label:'private'});
