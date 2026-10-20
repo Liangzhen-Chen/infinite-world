@@ -226,9 +226,9 @@ export function grantLodgingAccess(d,engine,place,host,{starts,expires,eventId})
 }
 
 // ---- operations (world_trade) -----------------------------------------------
-export async function creditTrade(d,args,eventId){
+export async function creditTrade(d,args,eventId,terms){
     const engine=this,op=args.operation;
-    if(BANK_OPERATIONS.has(op))return bankTrade(d,engine,args,eventId);
+    if(BANK_OPERATIONS.has(op))return bankTrade(d,engine,args,eventId,terms);
     if(ASSET_OPERATIONS.has(op))return assetTrade(d,engine,args,eventId);
     if(op==='borrow'){
         const bankHere=bankAt(engine,d.get('state','location'),d.get('state')),lender=engine.resolve(args.seller);

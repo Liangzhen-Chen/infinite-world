@@ -187,7 +187,7 @@ export function pawnForActor(d,e,{actor,owner=actor,representative=actor,actedAs
         return {...loan,contract:loan.debt,owner,actor,bank:b.id};
     });
 }
-export function bankTrade(d,e,args,id){
+export function bankTrade(d,e,args,id,{remittanceFee}={}){
     const op=args.operation,now=d.get('state','minute'),location=d.get('state','location');
     if(op==='prepay'){
         const row=d.get(...financePath(args.debt));if(row?.kind!=='loan'||row.debtor!=='player'||row.defaulted||row.status==='已还清'||now>=row.deadline)throw Error('借据不符合提前还款条件');
@@ -293,7 +293,7 @@ export function bankTrade(d,e,args,id){
         const dest=derivedBankAt(e,d.get('state'),e.resolve(args.location));if(!dest||dest.id===b.id)throw Error('汇票须指定异地的真实钱庄柜面');
         const beneficiary=args.buyer===undefined?null:e.resolve(args.buyer,'npc');
         if(beneficiary&&(!d.get('state','npcs',beneficiary)||isPhysicallyDead(e,d,beneficiary)))throw Error('记名汇票须指定真实且有效的收款人');
-        const amount=financeInt(args.coins,1,1e7,'汇票金额'),fee=Math.max(1,Math.ceil(amount*cfg(e).remittance.feeRate));
+        const amount=financeInt(args.coins,1,1e7,'汇票金额'),fee=remittanceFee??Math.max(1,Math.ceil(amount*cfg(e).remittance.feeRate));
         financeChange(d,e,'player',-amount-fee,id,{account:vault(b.id),writer:'finance-bank',eventId:id});row.coins+=amount+fee;holdingSet(d,e,financePath(b.id),row,'finance-bank');
         const key=`bill:${id}`,payable=beneficiary?`${key}:payable`:null;
         holdingSet(d,e,financePath(key),{category:'bank_bill',owner:'player',bank:b.id,destination:dest.id,amount,fee,status:'未兑付',createdAt:now,source:id,...(beneficiary?{beneficiary,payable}: {})},'finance-bank');
