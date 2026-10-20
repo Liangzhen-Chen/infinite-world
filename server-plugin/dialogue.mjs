@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
 // authoritative executors; speech alone cannot grant a permission or a reward.
@@ -115,7 +116,7 @@ export function applyDialogue(d,engine,args,eventId){
    socialEvent:{verb:action==='threaten'?'clash':action==='deceive'?'deceive':'pact',target:npc,tags:['dialogue',action,judgement.success?'success':'attempt']}};
  }else if(action==='tell'){
   const known=subjectiveView(engine,d.document,'player').knowledge.memories.find(m=>m.id===args.source||m.sourceEvent===args.source);
-  if(!known)throw Error('告知需要本人已知的来源编号');
+  if(!known)reject('E-ACTION-KNOWLEDGE','告知需要本人已知的来源编号',{missing:['需要本人已知的消息来源编号'],repair:['先取得消息，再用本人已知的真实来源编号告知']});
   if(args.content!==known.content)throw Error('告知须保留已知版本；改编说法请用欺骗动作');
   const memory={...structuredClone(known),id:`tell_${eventId}`,sourceEvent:known.sourceEvent??known.id,sourceType:'转述',minute:view.minute,participants:['player',npc],content:args.content};
   if(known.private&&!(known.permittedRecipients??known.knownBy??[]).includes(npc))throw Error('这份私密信息不能转述给对方');

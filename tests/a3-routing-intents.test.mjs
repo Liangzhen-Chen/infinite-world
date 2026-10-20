@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -68,7 +69,7 @@ test('A3 ordinary intent: lodging and bank deposits use their registered prices,
  const deposit=await act(bank,args,'deposit-route');assert.equal(deposit.preview.receipt.routing.routed,'core:trade.deposit');
  assert.equal(deposit.after.state.player.coins,99);assert.equal(deposit.after.state.records.bank_hw_post.accounts.player,100);
  const short=structuredClone(bank.document);short.state.player.coins=100;short.ledger=openLedger(bank.engine,short);
- const before=structuredClone(short);await assert.rejects(bank.engine.reduce(short,{...deposit.input,eventId:'deposit-too-poor'}));assert.deepEqual(short,before);
+ const before=structuredClone(short);await assertActionRejected(bank.engine.reduce(short,{...deposit.input,eventId:'deposit-too-poor'}));assert.deepEqual(short,before);
 });
 
 test('A3 ordinary intent: real debt references bind uniquely; absent and conflicting debt references stay questions',()=>{
@@ -94,11 +95,11 @@ test('A3 ordinary intent: named remittance creates the recipient claim and pays 
  f.document.state.location=dest.location;Object.assign(f.document.state.npcs[keeper],{location:dest.location,status:'正常',activity:'闲逛',scheduleTravel:null,cognitionTravel:null});
  const funded=await f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:trade.deposit',slots:{seller:keeper,coins:101}},eventId:'fund-destination'});f.document=applyPatches(f.document,funded.patches);
  const call={tool:'world_act',args:{action:'core:trade.cash_bill',slots:{seller:keeper,contract:bill.payable.replace(/:payable$/,'')}} ,eventId:'named-cash'};
- const absent=structuredClone(f.document);await assert.rejects(f.engine.reduce(f.document,call),/实际收款/);assert.deepEqual(f.document,absent);
+ const absent=structuredClone(f.document);await assertActionRejected(f.engine.reduce(f.document,call),/实际收款/);assert.deepEqual(f.document,absent);
  f.document.state.npcs[host].location=dest.location;const cash=await f.engine.reduce(f.document,call),after=applyPatches(f.document,cash.patches);
  assert.equal(after.state.npcs[host].coins,recipientCash+50);assert.equal(after.state.player.coins,48);assert.equal(obligationView(after.state,bill.payable).owed,0);
  assert.deepEqual(auditLedger(after.ledger),[]);assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),call)).patches,[]);
- await assert.rejects(f.engine.reduce(after,{...call,eventId:'named-cash-again'}),/汇票/);
+ await assertActionRejected(f.engine.reduce(after,{...call,eventId:'named-cash-again'}),/汇票/);
 });
 
 test('A3 ordinary intent: extinguishing routes to actual heat and water state, consumes water once and rolls back insufficient water',async()=>{
@@ -114,7 +115,7 @@ test('A3 ordinary intent: extinguishing routes to actual heat and water state, c
  assert.equal(result.after.state.records[`physical_feature:${target.id}`].state.thermal.burning,false);
  assert.equal(result.after.state.inventory.item_water,undefined,'physical source is used, not a second bag portion');
  const dry=structuredClone(f.document);dry.state.records[`physical_feature:${bucket.id}`]={id:bucket.id,category:'physical_feature',location:inn,state:{...bucket.state,waterMl:0}};
- const before=structuredClone(dry);await assert.rejects(f.engine.reduce(dry,{...result.input,eventId:'douse-dry'}),/水量不足/);assert.deepEqual(dry,before);
+ const before=structuredClone(dry);await assertActionRejected(f.engine.reduce(dry,{...result.input,eventId:'douse-dry'}),/水量不足/);assert.deepEqual(dry,before);
 });
 
 test('A3 ordinary intent: only the creditor can actually waive an earned debt; ordinary cancellation retains it and no cash is fabricated',async()=>{

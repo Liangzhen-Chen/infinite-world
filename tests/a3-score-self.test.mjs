@@ -62,6 +62,11 @@ test('A3 constructor scorer: explicit trace alternative selects a catalogued for
  assert.equal(direct.actual.fallback,true);
  assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool]),[['preview','world_propose'],['preview','world_act'],['confirm','world_act']]);
  assert.ok(world.openActionRules.mark.forms.includes(direct.document.state.created[direct.actual.entity].form));
+ // The selected alternative carries only mark facts; the fictional object's
+ // name remains prose in the original intent, never a primitive fact field.
+ const mark=direct.effects.find(e=>e.op==='create'&&e.kind==='mark');
+ assert.deepEqual(Object.keys(mark.facts).sort(),['form','intent']);
+ assert.equal(mark.facts.intent,proposal.intent);
 });
 
 test('A3 signature: adopted effects exclude only receipt-proven derived resource costs',async()=>{

@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
 import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation,codePenalty} from './law-codes.mjs';
@@ -34,7 +35,7 @@ const cases=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row
 const alive=(actor,d,id)=>actor&&isEffective(null,d,id)&&actor.status!=='濒死';
 const awake=(actor,d,id)=>alive(actor,d,id)&&!['睡眠','熟睡'].includes(actor.activity);
 const codeFor=legalCodeAt;
-function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'),d.get('state'));if(!code)throw new Error('当地尚未登记可执行法典，无执行权限');return code;}
+function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'),d.get('state'));if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});return code;}
 function unique(d,id){if(d.get(...path(id)))throw new Error('法律登记编号已占用，拒绝覆盖');}
 function present(d,engine,name,allowSleeping=false){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor,d,id):awake(actor,d,id))||actor.location!==d.get('state','location'))throw new Error('当事人不在场或不能清醒行动');return id;}
 function authority(d,engine,code,name,kind){
@@ -47,7 +48,7 @@ function authority(d,engine,code,name,kind){
     if(dismissed(d.get('state'),id))throw new Error('此人已因受贿事发被撤职，不再有执法或审判资格');
     if(!eligible.includes(id))throw new Error('此人没有该法典的执法或审判资格');return id;
 }
-function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')throw new Error('案件未登记');const code=legalCodeById(engine,row.law,d.get('state'));if(!code)throw new Error('案件对应法典不可用，无执行权限');return{row,code};}
+function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')reject('E-ACTION-CASE','案件未登记',{missing:['需要已登记的案件编号'],repair:['先依法报案登记案件，再以返回的案件编号办理']});const code=legalCodeById(engine,row.law,d.get('state'));if(!code)throw new Error('案件对应法典不可用，无执行权限');return{row,code};}
 function safeFund(d,id,category,extra={}){
     const existing=d.get(...path(id));if(existing&&existing.category!==category)throw new Error('法律资金登记键冲突');
     return existing??{category,coins:0,...extra};
@@ -77,7 +78,7 @@ function knowledge(d,npc,id,minute){
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
 export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null}){
-    const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)throw Error('当地尚未登记可执行法典，无执行权限');
+    const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});
     const id=`legal_case:${eventId}`;unique(d,id);
     const now=minute,evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
     const officer=witnesses.find(witness=>code.officers.includes(witness));

@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -27,7 +28,7 @@ test('A3 route order: trade and manufacture select programs before account/sink 
  assert.equal(trade.routed,'core:trade.buy');assert.equal(trade.slots.item,'item_bread');assert.equal(trade.slots.quantity,2);
  const craft={intent:'按配方削木楔',means:{recipe:'recipe_wooden_pegs'},effects:[{op:'transfer',resource:'item_wood',from:'self',to:'sink:craft',qty:999}]};
  const plan=prepareOpenAction(engine,document,craft);assert.equal(plan.routed,'core:craft.manufacture');assert.equal(plan.slots.recipe,'recipe_wooden_pegs');
- await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/尚未学会这个配方/);
+ await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/尚未学会这个配方/);
  assert.deepEqual(document,before);
 });
 
@@ -43,7 +44,12 @@ test('A3 route order: loan consent and unauthored transfers retain real authorit
  const {engine,document}=fixture(),before=structuredClone(document),args={intent:'借给对方五铜',target:shop,effects:[{op:'transfer',resource:'coin',from:'self',to:shop,qty:5},{op:'obligation.create',obligationKind:'loan',debtor:shop,creditor:'self',terms:{resource:'coin',principal:5,days:10,interest:0}}]};
  const plan=prepareOpenAction(engine,document,args);assert.equal(plan.routed,'core:trade.lend');assert.equal(plan.slots.coins,5);assert.equal(plan.slots.days,10);assert.equal(plan.slots.seller,shop);
  assert.equal(plan.slots.quantity,undefined); // Copper is not an installment count.
- await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:'route-no-loan-consent',args}),/明确同意/);
+ // 06 §6.10.4: a selected action with missing consent now returns a refusal
+ // receipt. Preserve the consent guard, world reason and zero-effect checks.
+ const refused=await engine.previewAction(document,{tool:'world_propose',eventId:'route-no-loan-consent',args});
+ assert.equal(refused.receipt.status,'rejected');assert.equal(refused.receipt.code,'E-ACTION-CONSENT');
+ assert.equal(refused.receipt.routed,'core:trade.lend');assert.match(refused.receipt.reason,/明确同意/);
+ assert.deepEqual(refused.receipt.applied,[]);assert.equal(refused.receipt.cost.time,0);
  assert.throws(()=>prepareOpenAction(engine,document,{intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:shop,to:'self',qty:5}]}),{code:'E-OPEN-TRANSFER'});
  assert.deepEqual(document,before);
 });
@@ -89,7 +95,7 @@ test('A3 route order: failed later sequence step returns no partial purchase',as
  // Remove the food registration so the purchase can succeed before the native
  // meal fails. The caller's satiety effect cannot make an item edible.
  engine.world.items.find(i=>i.id==='item_bread').nutrition=null;
- await assert.rejects(engine.reduce(document,{tool:'world_propose',eventId:'route-late-failure',args}),/可食用/);
+ await assertActionRejected(engine.reduce(document,{tool:'world_propose',eventId:'route-late-failure',args}),/可食用/);
  assert.deepEqual(document,before);
 });
 

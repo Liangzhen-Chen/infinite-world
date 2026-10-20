@@ -583,6 +583,7 @@ export const primitiveRuntime={
    if(prepared.status==='sequence'){
     const applied=await executeOpenSequence(engine,document,input,prepared,{preview});
     if(preview)return applied;
+    if(applied.result.receipt.status==='rejected')return applied;
     const d=engine.primitiveDraft(applyPatches(document,applied.patches));
     d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
     return {...applied,patches:[...applied.patches,...d.patches]};
@@ -606,10 +607,20 @@ export const primitiveRuntime={
   }
   if(preview){
    const result=await engine.previewAction(document,actionInput);
+   if(result.receipt.status==='rejected'&&result.receipt.routing?.fallback){
+    result.receipt.routing={...routing,...result.receipt.routing,intent:proposal.intent,proposal:structuredClone(proposal)};
+    result.receipt.routing.fallback.intent=proposal.intent;
+    return {...result,routing:result.receipt.routing};
+   }
    Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
    return {...result,routing};
   }
   const applied=await engine.reduce(document,actionInput,{...options,openProposal:{proposal,prepared}});
+  if(applied.result.ok===false&&applied.result.receipt?.status==='rejected'){
+   applied.result.receipt.routing={...routing,...applied.result.receipt.routing,intent:proposal.intent,proposal:structuredClone(proposal)};
+   applied.result.receipt.routing.fallback.intent=proposal.intent;
+   return applied;
+  }
   if(!applied.result.receipt){
    const resolved=this.resolve(engine,actionInput);
    applied.result.receipt={...this.legacyPreview(engine,document,actionInput,resolved,applied),status:'committed',routing,signature:prepared.signature,candidates:prepared.candidates};

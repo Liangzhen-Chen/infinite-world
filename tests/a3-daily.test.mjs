@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -66,7 +67,7 @@ test('A3 D05: a second unavailable dish or insufficient cash rolls back the enti
   const f=fixture();if(fault==='stock')delete f.document.state.npcs[SELLER].inventory[STEW];
   if(fault==='coins')f.document.state.player.coins=20;
   book(f);const before=structuredClone(f.document);
-  await assert.rejects(act(f,'core:eat.order',{subject:SELLER,item:BREAD,side:fault==='raw'?'item_mutton':STEW},`order-${fault}`));
+  await assertActionRejected(act(f,'core:eat.order',{subject:SELLER,item:BREAD,side:fault==='raw'?'item_mutton':STEW},`order-${fault}`));
   assert.deepEqual(f.document,before);
  }
 });
@@ -77,7 +78,7 @@ test('A3 daily entry cannot hide real elapsed work inside remember to bypass a p
  f.document.state.obligations.busy={id:'busy',reservationVersion:1,type:'会面',promisor:'player',promisee:SELLER,start:now,deadline:now+60,departures:{player:now,[SELLER]:now},status:'进行中',location:INN};
  book(f);const before=structuredClone(f.document);
  for(const [action,slots]of [['core:eat.meal',{item:'item_bread'}],['core:eat.order',{subject:SELLER,item:BREAD,side:STEW}]])
-  await assert.rejects(act(f,action,slots,`busy-${action}`),/时段冲突/);
+  await assertActionRejected(act(f,action,slots,`busy-${action}`),/时段冲突/);
  assert.deepEqual(f.document,before);
 });
 
@@ -125,7 +126,7 @@ test('A3 D22: buying a drink really gives it to the speaker; 15 minutes includes
  assert.ok(memory.content.includes(rumor.claim));assert.ok(!JSON.stringify(memory).includes(rumor.fact));
  assert.deepEqual(auditLedger(after.ledger),[]);
  f.document=after;assert.deepEqual((await act(f,'core:dialogue.treat_rumor',slots,'a3-treat')).out.patches,[]);
- await assert.rejects(act(f,'core:dialogue.treat_rumor',{...slots,rumor:'unknown-secret'},'a3-false-rumor'),/没有这条登记传闻/);
+ await assertActionRejected(act(f,'core:dialogue.treat_rumor',{...slots,rumor:'unknown-secret'},'a3-false-rumor'),/没有这条登记传闻/);
 });
 
 test('A3 D23: accepting a real posted task takes seven minutes, preserves escrow and cannot be accepted twice',async()=>{
@@ -142,7 +143,7 @@ test('A3 D23: accepting a real posted task takes seven minutes, preserves escrow
  const legacy=applyPatches(before,replayed.patches);
  assert.equal(legacy.state.minute,before.state.minute,'pre-A3 accepted events retain their old zero-minute replay');
  assert.deepEqual(legacy.state.player.body,before.state.player.body);assert.equal(Object.hasOwn(replayed.result,'cost'),false);
- f.document=after;await assert.rejects(act(f,'core:quest.accept',{quest},'a3-retake'),/不能接受/);
+ f.document=after;await assertActionRejected(act(f,'core:quest.accept',{quest},'a3-retake'),/不能接受/);
  assert.equal(f.document.state.minute,after.state.minute);
 });
 
@@ -185,7 +186,7 @@ test('A3 D36: in-person A2 admission executes once in 15 minutes, transfers the 
  assert.deepEqual(reconcile(f.engine,after).mismatches,[]);assert.deepEqual(auditLedger(after.ledger),[]);
  f.document=JSON.parse(JSON.stringify(after));const duplicate=await act(f,'core:settlement.org_join',joinSlots,'a3-join');
  assert.deepEqual(duplicate.out.patches,[]);assert.equal(duplicate.out.result.duplicate,true);
- await assert.rejects(act(f,'core:settlement.org_join',joinSlots,'a3-join-twice'),/已是成员/);
+ await assertActionRejected(act(f,'core:settlement.org_join',joinSlots,'a3-join-twice'),/已是成员/);
 });
 
 test('A3 D36: conditional, red-line and language decisions never admit the player or charge the charter fee',async()=>{
@@ -217,7 +218,7 @@ test('A3 D36: insufficient charter fees roll back the entire conversation, time,
  const f=joinFixture();f.document.state.player.coins=1;
  // Opening fixture changed its purse: re-open the fixture books before executing.
  delete f.document.ledger;book(f);const before=structuredClone(f.document);
- await assert.rejects(act(f,'core:settlement.org_join',joinSlots,'a3-poor-join'),/入会费不足/);
+ await assertActionRejected(act(f,'core:settlement.org_join',joinSlots,'a3-poor-join'),/入会费不足/);
  assert.deepEqual(f.document,before);assert.deepEqual(reconcile(f.engine,f.document).mismatches,[]);
 });
 
@@ -267,7 +268,7 @@ test('A3 D14: duration, local presence, season, permission, stock and prior comm
   if(fault==='permission')f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
   if(fault==='elsewhere')state.location=INN;
   if(fault==='busy')state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:state.minute,deadline:state.minute+180,departures:{player:state.minute,[SELLER]:state.minute},status:'待履行',location:state.location};
-  const before=structuredClone(f.document);await assert.rejects(act(f,fault==='legacy_quantity'?'core:site.gather':'core:site.gather_session',slots,`a3-herbs-${fault}`));
+  const before=structuredClone(f.document);await assertActionRejected(act(f,fault==='legacy_quantity'?'core:site.gather':'core:site.gather_session',slots,`a3-herbs-${fault}`));
   assert.deepEqual(f.document,before);
  }
 });
@@ -279,7 +280,7 @@ test('A3 D14: both duration endpoints execute, and depleted herbs stay empty thr
   assert.deepEqual(reconcile(f.engine,gathered.after).mismatches,[]);
   if(minutes===480){
    f.document=gathered.after;const empty=structuredClone(f.document);
-   await assert.rejects(act(f,'core:site.gather',{target:'nw_herb'},'a3-empty-legacy'),/存量|不足/);assert.deepEqual(f.document,empty);
+   await assertActionRejected(act(f,'core:site.gather',{target:'nw_herb'},'a3-empty-legacy'),/存量|不足/);assert.deepEqual(f.document,empty);
   }
  }
 });
@@ -320,7 +321,7 @@ test('A3 D38: remote, missing, expired, future, private and absent-speaker sourc
   if(fault==='private'||fault==='absent'){action='core:talk.overhear';slots={conversation:fault==='private'?'unpublished':'speech_d38'};}
   if(fault==='absent')f.document.state.npcs[SELLER].location='loc_hw';
   if(fault==='busy')f.document.state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:now,deadline:now+60,departures:{player:now,[SELLER]:now},status:'待履行',location:INN};
-  const before=structuredClone(f.document);await assert.rejects(act(f,action,slots,`a3-read-${fault}`));assert.deepEqual(f.document,before);
+  const before=structuredClone(f.document);await assertActionRejected(act(f,action,slots,`a3-read-${fault}`));assert.deepEqual(f.document,before);
  }
 });
 
@@ -353,7 +354,7 @@ test('A3 D35: watching a real held festival advances to its actual endsAt and ca
  assert.deepEqual(watched.after.state.inventory,before.state.inventory);assert.equal(watched.after.state.player.coins,before.state.player.coins);
  assert.equal(watched.after.state.records[f.id].paidCopper,event.paidCopper);assert.deepEqual(auditLedger(watched.after.ledger),[]);
  f.document=JSON.parse(JSON.stringify(watched.after));assert.deepEqual((await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch')).out.patches,[]);
- await assert.rejects(act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch-ended'),/没有正在举行/);
+ await assertActionRejected(act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch-ended'),/没有正在举行/);
  const remote=await festivalFixture();remote.document.state.location='loc_hw';const original=structuredClone(remote.document);
- await assert.rejects(act(remote,'core:settlement.festival_watch',{festival:remote.id},'a3-watch-remote'),/没有正在举行/);assert.deepEqual(remote.document,original);
+ await assertActionRejected(act(remote,'core:settlement.festival_watch',{festival:remote.id},'a3-watch-remote'),/没有正在举行/);assert.deepEqual(remote.document,original);
 });

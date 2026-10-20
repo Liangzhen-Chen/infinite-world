@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -73,14 +74,14 @@ test('A3 eating: real food goes to sink:consume, nutrition changes lazy satiety 
  assert.deepEqual(auditLedger(after.ledger),[]);
  f.document=JSON.parse(JSON.stringify(after));
  const again=await act(f,'core:eat.meal',{item},'eat-soup');assert.deepEqual(again.out.patches,[]);assert.equal(again.out.result.duplicate,true);
- await assert.rejects(act(f,'core:eat.meal',{item},'eat-another'),/没有持有/);
+ await assertActionRejected(act(f,'core:eat.meal',{item},'eat-another'),/没有持有/);
 });
 
 test('A3 eating: cannot consume tools, fabricate nutrition or exceed satiety cap',async()=>{
  const f=fixture();f.document.state.inventory.item_bread={quantity:2,quality:'木',durability:100,weight:.15};book(f);
  const before=structuredClone(f.document);
- await assert.rejects(act(f,'core:eat.meal',{item:'item_kitchen_knife'},'eat-tool'),/可食用/);
- await assert.rejects(act(f,'core:eat.meal',{item:'item_bread',satiety:100},'fake-nutrition'),/槽位/);
+ await assertActionRejected(act(f,'core:eat.meal',{item:'item_kitchen_knife'},'eat-tool'),/可食用/);
+ await assertActionRejected(act(f,'core:eat.meal',{item:'item_bread',satiety:100},'fake-nutrition'),/槽位/);
  assert.deepEqual(f.document,before);
  f.document.state.player.body.satiety.value=95;
  const {after}=await act(f,'core:eat.meal',{item:'item_bread'},'eat-full');

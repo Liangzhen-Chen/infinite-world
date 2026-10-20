@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {routeAction,effectSignature,signatureJaccard,createRoutingContext,resolveProposalEntities} from '../server-plugin/action-router.mjs';
@@ -101,7 +102,7 @@ test('A3 routing: catalog spell slots reach execution, which still refuses missi
  // by requiring that program to reject and leave the document unchanged.
  assert.equal(missing.routed,'core:cast');assert.equal(missing.nearest.slots.spell,'spell_light');
  const withoutSpell=structuredClone(document);
- await assert.rejects(engine.previewAction(document,{tool:'world_act',eventId:'a3-unknown-spell',args:{action:missing.routed,slots:missing.nearest.slots}}),/尚未学会这个法术/);
+ await assertActionRejected(engine.previewAction(document,{tool:'world_act',eventId:'a3-unknown-spell',args:{action:missing.routed,slots:missing.nearest.slots}}),/尚未学会这个法术/);
  assert.deepEqual(document,withoutSpell);
 });
 

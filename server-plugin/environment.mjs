@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('environment',{sinks:['sink:consume']});
@@ -67,7 +68,7 @@ function permission(d,engine,row,args){
     if(!Array.isArray(keys)||keys.length>8)throw new Error('环境授权编号列表无效');
     const authorization=[args.authorization,...keys].filter(Boolean).map(id=>d.get('state','records',id)).find(record=>record?.subject===row.id);
     if(!authorization||authorization.category!=='authorization'||authorization.subject!==row.id||authorization.action!=='environment_use'||
-        authorization.grantor!==row.owner||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))throw new Error('私人环境对象需要有效所有者授权');
+        authorization.grantor!==row.owner||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))reject('E-ACTION-OWNER-AUTHORITY','私人环境对象需要有效所有者授权',{missing:['需要所有者的有效授权'],repair:['先取得所有者对该环境对象的有效授权']});
     if(row.owner.startsWith('npc_')&&(!isEffective(engine,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw new Error('对象所有者无法继续履约');
 }
 function visible(row,state){
@@ -115,7 +116,7 @@ export function validateEnvironmentCatalog(catalog){
 }
 function watering(d,engine,row,operation,args,range,power){
     const channel=operation==='irrigate'?row:feature(engine,row.links?.channel,d.get('state','location'));
-    if(channel.kind!=='channel')throw new Error('缺少真实引水沟');
+    if(channel.kind!=='channel')reject('E-ACTION-CHANNEL','缺少真实引水沟',{missing:['需要真实存在的引水沟'],repair:['先修建引水沟，再选择其真实编号引水']});
     const source=feature(engine,channel.links?.source,d.get('state','location')),
         destination=feature(engine,channel.links?.destination,d.get('state','location'));
     if(source.kind!=='water'||destination.kind!=='soil'||operation==='soil_water'&&destination.id!==row.id)throw new Error('沟渠源头或目标田垄不匹配');
