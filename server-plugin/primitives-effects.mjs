@@ -1,6 +1,7 @@
 // L1 runtime adapters. Limits are native derivations, never proposal fields.
 import {reject} from './primitive-policy.mjs';
 import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone} from './holdings.mjs';
+import {physicalLocation} from './items.mjs';
 import {transition,executeProtocolPrimitive,applyProtocolJudgment} from './transition.mjs';
 import {consent} from './action-consent.mjs';
 import {capacity,canAct,actionEntity} from './action-capacity.mjs';
@@ -16,7 +17,7 @@ export {applyBodyVital} from './primitives-body.mjs';
 declareHoldingWriter('primitives',{entities:['person','creature','item','building','mark'],locations:true,kinds:['owns']});
 const integer=(n,min,max,code='E-PRIMITIVE-AMOUNT')=>{if(!Number.isSafeInteger(n)||n<min||n>max)reject(code,'Amount is outside the native bound');return n;};
 const pathOf=(d,id)=>id==='player'?['state','player']:d.get('state','npcs',id)?['state','npcs',id]:d.get('state','creatures',id)?['state','creatures',id]:null;
-const currentLocation=(d,id)=>id==='player'?d.get('state','location'):d.get('state','npcs',id,'location')??d.get('state','creatures',id,'location')??d.get('holdings','locations',id,'at');
+const currentLocation=(d,id)=>physicalLocation(d,null,id);
 const here=(d,actor,target)=>{const place=currentLocation(d,actor);if(!place||currentLocation(d,target)!==place)reject('E-PRIMITIVE-REACH','The target is not present');return place;};
 function reach(d,engine,actor,target,range){
  const location=here(d,actor,target);

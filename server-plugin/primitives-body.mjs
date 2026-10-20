@@ -2,6 +2,7 @@
 // make reads closed-form; no per-minute events or copied derived statuses.
 import {reject} from './primitive-policy.mjs';
 import {fixedUnits,fixedNumber,checkedFixed} from './rx.mjs';
+import {physicalItem} from './items.mjs';
 const pathOf=(document,actor)=>actor==='player'?['state','player']:document.state.npcs?.[actor]?['state','npcs',actor]:document.state.creatures?.[actor]?['state','creatures',actor]:null;
 const atPath=(document,path)=>path?.reduce((v,k)=>v?.[k],document);
 export function bodyRule(engine,need){
@@ -39,6 +40,15 @@ export function beginBodyActivity(d,engine,actor,activity){
 }
 export function endBodyActivity(d,engine,actor){beginBodyActivity(d,engine,actor,'rest');}
 export function applyBodyVital(d,engine,actor,need,delta,bound){
+ if(delta>0&&['satiety','hydration'].includes(need)){
+  for(const patch of d.patches??[]){
+   const unit=patch.path?.[1]==='itemInstances'&&patch.path.length===3?patch.value:null;
+   if(unit?.status==='已消耗'){
+    const facts=physicalItem(d,engine,unit.id);
+    if(facts.contaminated===true||facts.toxic===true||facts.condition===0)reject('E-BODY-FOOD','Unsafe consumed food cannot supply this nourishment');
+   }
+  }
+ }
  if(!['stamina','satiety','hydration','fatigue'].includes(need)||!Number.isFinite(delta)||Math.abs(delta)>(bound.body?.[need]??0))reject('E-BODY-BOUND','Body change exceeds its native bound');
  const state=readBodyState(engine,d.document,actor,need),old=state.value,value=writeBodyNeed(d,engine,actor,need,fixedNumber(checkedFixed(fixedUnits(old)+fixedUnits(delta))),{remainder:state.remainder});
  return {target:actor,need,delta:fixedNumber(fixedUnits(value)-fixedUnits(old)),value,asOf:d.get('state','minute')};

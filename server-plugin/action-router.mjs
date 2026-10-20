@@ -99,7 +99,7 @@ export function actorKnowledge(engine,document,actor='player'){
 }
 export function createRoutingContext(engine,document,{actor='player'}={}){
  const state=document.state,d=actionReader(document);
- const features=environmentFeatures(engine),featureById=new Map(features.map(row=>[row.id,row]));
+ const features=environmentFeatures(engine,document),featureById=new Map(features.map(row=>[row.id,row]));
  const currentLocation=id=>located(d,id,x=>x==='player'?state.location:state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??featureById.get(x)?.location??engine.byId.get(x)?.location??null);
  const location=currentLocation(actor);
  const pool=new Map(),add=(id,kind,row={})=>{
@@ -118,6 +118,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  for(const [id,row] of Object.entries(bag??{}))if((typeof row==='number'?row:row.quantity??0)>0)add(id,'item');
  for(const [id,row] of Object.entries(state.created??{}))if(currentLocation(id)===location&&document.holdings?.entities?.[id]?.goneAt===undefined)add(id,row.kind,row);
  for(const [id,row] of Object.entries(document.holdings?.entities??{}))if(row.goneAt===undefined&&currentLocation(id)===location)add(id,row.kind,row.facts);
+ for(const [id,row] of Object.entries(state.itemInstances??{}))if(!row.physicalFeature&&['持有','封存','落地','袋内','保管'].includes(row.status)&&currentLocation(id)===location){
+  const physical=state.records?.[`physical_item:${id}`],base=engine.byId.get(row.item);
+  add(id,'item',{...physical?.facts,name:physical?.name??(pool.has(row.item)?id:base?.name??id),aliases:physical?.aliases??[]});
+ }
  for(const row of Object.values(state.records??{}))if(row.category==='rite_project'&&row.actor===actor&&row.status==='active'&&row.location===location)add(row.id,'project',{name:engine.byId.get(row.action)?.name??row.id});
  add(location,'place');
  for(const row of banks.values())if(row.location===location)add(row.id,'organization',row);

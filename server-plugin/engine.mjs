@@ -32,8 +32,8 @@ import {createCharacter}from'./character.mjs';
 import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mjs';
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
-import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
-import {environmentCatalog,environmentFeatures,localPlayerPoint}from'./environment.mjs';
+import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,physicalCatalog}from'./items.mjs';
+import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
@@ -350,7 +350,8 @@ export class WorldEngine {
         // A.15.7 gives both sleeping and awake rest body recovery. The time
         // executor still distinguishes sleep for schedules and interruptions.
         const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
-        const detail = await session[tool](d,args,id);
+        validatePhysicalAction(d,session,tool,args);
+        const detail = physicalSiteAction(d,session,tool,args,id)??await session[tool](d,args,id);
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
@@ -510,7 +511,9 @@ export class WorldEngine {
         const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.scoped(document);
         const created=Object.values(document.state.created??{});
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
-        const session=Object.create(this);session.entities=[...this.entities,...created,player];session.resolver=this.resolver.extend([...created,player]);session.byId=session.resolver.entities;return session;
+        const physical=physicalCatalog(this,document),session=Object.create(this);session.physicalDocument=document;
+        if(physical.length)session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(this.world),items:{value:[...this.world.items,...physical],enumerable:true,writable:true,configurable:true}});
+        session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
@@ -899,7 +902,7 @@ export class WorldEngine {
     applyMagicArea(d,catalog,args,id,source='player'){
         return applyAreaMagic.call(this,d,prepareAreaMagic.call(this,d,catalog,args,{source}),id);
     }
-    magicTargetFacts(d,target){return targetFacts(d,this,target);}
+    magicTargetFacts(d,target){const reader=Object.create(this);reader.airDraft=d;return targetFacts(d,reader,target);}
     magicAreaTargetFacts(d,target,location,center){return areaTargetFacts(d,this,target,location,center);}
     magicStatusContext(d,target){return statusContext(d,this,target);}
     cast(d,args,id) {
