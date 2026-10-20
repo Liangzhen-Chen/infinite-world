@@ -115,10 +115,10 @@ test('N/O: full corpus fine proposal routes to the real public collection and em
  assert.equal(payment.to,'loc_bs|coin_river|legal_treasury');assert.equal(payment.qty,10);
  assert.ok(row.actual.signatureEffects.some(e=>e.op==='obligation.settle'&&e.id==='a3v2_054_fine'&&e.amount===10));
  assert.equal(row.actual.builder.ok,true);assert.equal(row.actual.builder.route,'core:law.pay');
- // The unchanged scorer compares endpoint tokens literally (endpointRules):
- // authorized_collector is not the real public owner loc_bs. Preserve and
- // expose that failure; never redirect public funds to a synthetic owner.
- assert.equal(row.scores.signature,false);assert.equal(row.scores.constructor,false);
+ // A3-E r9 / 01 §1.6, 06 §6.3: authorized_collector resolves through the
+ // native payment account to loc_bs's legal treasury, never the officer's
+ // private purse. The real payment/settlement assertions above stay intact.
+ assert.equal(row.scores.signature,true);assert.equal(row.scores.constructor,true);
 });
 
 test('N/O: paying a restored fine retains the ordinary ten-minute action cost',()=>{
