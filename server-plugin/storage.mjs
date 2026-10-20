@@ -162,21 +162,63 @@ function deadPatchValues(patches) {
 // every record for a kind or category (leases, contracts, war closures, offices)
 // get the same rows in the same order from a bucket instead. Only active inside
 // withRecordIndex (the advance registry, for a draft whose writes all go through
-// a PatchCursor). The index belongs to one records object; a write that adds,
-// replaces or deletes a row, or writes inside one (the row may be copied), in the
-// object a cursor still mutates in place drops it. Objects a cursor has exposed
-// are never written again, so their index stays valid. The second query on the same
-// object builds it; a single query scans exactly as before.
+// a PatchCursor). Cursor writes carry classification buckets to the new records
+// object and update only the affected row. Unrelated buckets remain shared.
+// Derived memos are invalidated unless their caller explicitly excludes the
+// changed category from its inputs. The second query builds a bucket index;
+// a single query scans exactly as before.
 //
 // RULE: while an advance pass runs, no code may bypass the PatchCursor and edit
 // state.records in place (adding/removing a row, changing a row's kind/category or any
 // field a recordsMemo build reads). Write through the draft (d.set / d.adopt / d.remove)
-// so the index is dropped. A bypass leaves the index silently stale.
+// so the index is updated. A bypass leaves the index silently stale.
 // Self-check: FIELDS_INDEX_CHECK=1 (or setRecordIndexCheck(true)) makes every index or
 // memo hit also recompute the answer from the records and compare; a mismatch throws and
 // is also kept in recordIndexCheck.violations (a caller's try/catch cannot hide it).
 const INDEXED = new Set(['kind', 'category']);
 const recordIndexes = new WeakMap();
+const memoIgnores = Symbol('memo ignored categories');
+// Carry only classification buckets across a cursor write. Derived memos may
+// depend on any field and must be rebuilt; unrelated buckets retain identity.
+function updateRecordGroups(cache, records, id, previous, fields) {
+    if (!cache) return;
+    const next = new Map(), row = records[id], exists = Object.hasOwn(records, id);
+    for (const field of INDEXED) for (const entries of [false, true]) {
+        const name = entries ? `${field}:entries` : field, hit = cache.get(name);
+        if (!hit) continue;
+        if (!hit.groups) { next.set(name, {groups:null}); continue; }
+        const oldKey = fields[field], newKey = row?.[field];
+        if (exists && row === previous && oldKey === newKey) {next.set(name,hit);continue;}
+        const groups = new Map(hit.groups);
+        if (previous !== undefined) {
+            const rows = groups.get(oldKey) ?? NO_ROWS;
+            groups.set(oldKey, rows.flatMap(item => {
+                const matches = entries ? item[0] === id : item === previous;
+                return !matches ? [item] : exists && oldKey === newKey ? [entries ? [id, row] : row] : [];
+            }));
+        }
+        if (exists && (previous === undefined || oldKey !== newKey)) {
+            const rows=groups.get(newKey)??NO_ROWS;
+            if (!rows.length || previous === undefined && !(String(Number(id) >>> 0) === id && Number(id) < 4294967295)) {
+                // A newly inserted non-integer key is last in enumeration
+                // order. Most simulation records use these stable string ids.
+                groups.set(newKey,[...rows,entries?[id,row]:row]);
+            } else {
+                // Reclassification and integer insertion retain object order.
+                groups.set(newKey,Object.entries(records).filter(([,r])=>r?.[field]===newKey).map(entry=>entries?entry:entry[1]));
+            }
+        }
+        next.set(name, {groups});
+    }
+    const ignores = cache.get(memoIgnores), retained = new Map();
+    if (ignores) for (const [key, categories] of ignores) {
+        if ((previous === undefined || categories.includes(fields.category)) && (!exists || categories.includes(row?.category))) {
+            next.set(key, cache.get(key));retained.set(key, categories);
+        }
+    }
+    if (retained.size) next.set(memoIgnores, retained);
+    if (next.size) recordIndexes.set(records, next);
+}
 const NO_ROWS = Object.freeze([]);
 let recordIndexDepth = 0;
 export const recordIndexActive = () => recordIndexDepth > 0;
@@ -252,8 +294,9 @@ function recordGroups(records, field, entries) {
     return groups;
 }
 // A value derived from the rows of this records object alone (and a key object such as the
-// world), built once while the index is on. Read-only.
-export function recordsMemo(records, key, build) {
+// world), built once while the index is on. Read-only. ignoreCategories is an
+// explicit dependency declaration: build must not read any of those rows.
+export function recordsMemo(records, key, build, ignoreCategories = null) {
     if (!recordIndexDepth || !records || typeof records !== 'object') return build();
     let cache = recordIndexes.get(records);
     if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
@@ -267,6 +310,11 @@ export function recordsMemo(records, key, build) {
     }
     const value = build();
     cache.set(key, value);
+    if (ignoreCategories) {
+        let ignores=cache.get(memoIgnores);
+        if (!ignores) cache.set(memoIgnores, ignores=new Map());
+        ignores.set(key, ignoreCategories);
+    }
     return value;
 }
 // Same rows and order as Object.values(records).filter(r => r?.[field] === value). Read-only.
@@ -344,8 +392,12 @@ export class PatchCursor {
             if (typeof child !== 'object') throw new Error('补丁路径无法解析');
             probe = child;
         }
-        if (recordIndexDepth && path[0] === 'state') {
-            if (path[1] === 'records' && path.length >= 3) recordIndexes.delete(root.state?.records);
+        const indexedRecords = path[0] === 'state' && path[1] === 'records' && path.length >= 3 ? root.state?.records : null;
+        const recordCache = indexedRecords && recordIndexes.get(indexedRecords);
+        const previousRow = indexedRecords?.[path[2]];
+        const previousFields = recordCache ? {kind:previousRow?.kind, category:previousRow?.category} : null;
+        if (path[0] === 'state') {
+            if (indexedRecords) recordIndexes.delete(indexedRecords);
             else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
         }
@@ -372,6 +424,7 @@ export class PatchCursor {
         if (patch.op === 'delete') delete target[key];
         else target[key] = value;
         this.chain = { nodes, keys: path.slice(0, last) };
+        if (recordCache) updateRecordGroups(recordCache, this.root.state.records, path[2], previousRow, previousFields);
         return this.root;
     }
 }

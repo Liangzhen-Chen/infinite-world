@@ -14,6 +14,7 @@ import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
+import {recordsWhere,canonicalEqual} from './storage.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     const previous=engine.educationCourseContext;
@@ -43,7 +44,15 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
-    let until=minute-offset+slot.end;
+    let end=slot.end;
+    // Adjacent identical slots have no transition to observe. Course openings
+    // and festival overrides below still impose their own real boundaries.
+    for(let i=slots.indexOf(slot)+1;i<slots.length;i++){
+        const next=slots[i];
+        if(next.start!==end||next.location!==slot.location||next.activity!==slot.activity||[...new Set([...Object.keys(slot),...Object.keys(next)])].some(key=>key!=='start'&&key!=='end'&&!canonicalEqual(slot[key],next[key])))break;
+        end=next.end;
+    }
+    let until=minute-offset+end;
     if(state)for(const c of personCourses(engine,state,npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
     const current=festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
     // education.teaching uses the recipe's minimumProficiency as its threshold.
@@ -110,7 +119,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
-    const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
+    const jobs=new Map(recordsWhere(peekState(d).records,'kind','workshop').filter(employmentActive).map(r=>[r.worker,r]));
     const prepared=d.scheduleEducation,state=peekState(d),courses=engine.educationCourseContext;
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
@@ -132,6 +141,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
         const current=peekState(d).npcs[npcId],slot=reuse&&prepared.state.npcs[npcId]===current?prepared.slots?.get(npcId):null;
+        if(current.scheduleTravel?.arrive>after&&!incapacitated(current)&&!state.player.companions?.includes(npcId))continue;
         // The heap already read this exact actor and all schedule inputs. A
         // stationary, unchanged slot has no work until its boundary. Teaching,
         // employment attendance, companions and furnaces retain the full path.

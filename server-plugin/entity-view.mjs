@@ -275,8 +275,8 @@ export function personSimulation(engine,state,id){
 // A caller may build this index for a single read-only movement pass. It is
 // never retained on engine/state, so later legal writes are read immediately.
 export function personConstraints(engine,state){
-    // R31: inside an advance pass the same records object yields the same index (storage.mjs recordsMemo drops it on any records write).
-    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state));
+    // Only categories this projection reads invalidate its derived constraints.
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay']);
 }
 function buildPersonConstraints(engine,state){
     const out=new Map();

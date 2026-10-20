@@ -12,18 +12,45 @@ import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
-// Physical feature state belongs to continuous plant/food/water processes.
-// Neither course derivation nor routine projection reads those rows.
+const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event'];
+// Physical state, study/pay progress and event receipts are not inputs to
+// course/routine derivation. Completed learning changes the actor's skills or
+// recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
  if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records'].includes(k)&&a[k]!==b[k]))return false;
  if(a.records===b.records)return true;
- const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>r.category!=='physical_feature'));
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnoredCategories.includes(r.category)),scheduleIgnoredCategories);
  const x=rows(a),y=rows(b);
- return x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
+ return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
 }
 // Catalog identity follows immutable world/created partitions, never the clock,
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});
+const advanceCourses=new WeakMap();
+const courseUnchangedNpcFields=new Set(['activity','coins','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
+function sameCourseInputs(e,a,b){
+ if(!sameScheduleInputs({...a,npcs:b.npcs},b))return false;
+ const ids=Object.keys(a.npcs??{});if(ids.length!==Object.keys(b.npcs??{}).length)return false;
+ for(const id of ids){
+  const x=a.npcs[id],y=b.npcs[id];if(x===y)continue;if(!y)return false;
+  const keys=Object.keys(x);if(keys.length!==Object.keys(y).length){
+   // Optional movement/cognition fields may appear or disappear as a trip ends.
+   if(keys.filter(k=>!courseUnchangedNpcFields.has(k)).length!==Object.keys(y).filter(k=>!courseUnchangedNpcFields.has(k)).length)return false;
+  }
+  const home=x.residence?.home??e.byId.get(id)?.home?.location;
+  for(const k of new Set([...keys,...Object.keys(y)]))if(!courseUnchangedNpcFields.has(k)&&!(k==='location'&&home)&&x[k]!==y[k])return false;
+ }
+ return true;
+}
+function courseCacheUntil(s){
+ let until=(Math.floor(s.minute/DAY)+1)*DAY;
+ for(const r of Object.values(s.records??{})){
+  if(scheduleIgnoredCategories.includes(r.category))continue;
+  for(const k of ['minute','createdAt','since','starts','until','expires','deadline'])if(Number.isSafeInteger(r[k])&&r[k]>s.minute)until=Math.min(until,r[k]);
+  for(const a of r.amendments??[])if(a.minute>s.minute)until=Math.min(until,a.minute);
+ }
+ return until;
+}
 const householdCatalog=Symbol('education households');
 const catalogs=new WeakMap();
 function educationCatalog(e,s){
@@ -67,6 +94,11 @@ function settlement(e,s,id){
 // (WeakMap state→courses): the same state object derives the same courses.
 export function educationCourses(e,s){
  if(e.educationCourseContext)return e.educationCourseContext;
+ if(recordIndexActive()){
+  const previous=advanceCourses.get(e);
+  if(previous&&s.minute>=previous.state.minute&&s.minute<previous.until&&sameCourseInputs(e,previous.state,s)){previous.state=s;return previous.courses;}
+  const courses=deriveEducationCourses(e,s);advanceCourses.set(e,{state:s,courses,until:courseCacheUntil(s)});return courses;
+ }
  const memo=e.educationCourseMemo;if(!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s);
  let hit=memo.get(s);if(!hit){hit=deriveEducationCourses(e,s);memo.set(s,hit);}
  return hit;
