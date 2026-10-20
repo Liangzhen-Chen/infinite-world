@@ -16,6 +16,8 @@ import fs from 'node:fs/promises';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {isGone} from '../server-plugin/holdings.mjs';
+import {petCareRules} from '../world/design/pet-foundation.mjs';
+import {primitiveRuntime} from '../server-plugin/primitives-runtime.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {adjudicateLegalCase} from '../server-plugin/law.mjs';
 const a=accountKey('player','coin_river','purse'),b=accountKey('npc_a','coin_river','purse');
@@ -79,6 +81,214 @@ function program(f,action){
  f.engine.actionRegistry={actions:[action],byId:new Map([[action.id,action]]),errors:[]};
  return {tool:'world_act',eventId:`event-${action.id}`,args:{action:action.id,slots:{}}};
 }
+
+function mountedNpcFixture(){
+ const f=effectFixture(),{engine,document,npc}=f,id='monster_a3_mount';
+ engine.rules.petCare=structuredClone(petCareRules);
+ const base={id,name:'夹具驮马',aliases:[],tamingRule:{category:'mount',rideable:true,riderWeightKg:60,carryKg:150,food:[{item:'item_ration',hungerRelief:50,trustGain:5}],skills:[]}};
+ engine.world.monsters.push(base);engine.byId.set(id,base);
+ document.state.creatures??={};document.state.pets??={};
+ document.state.creatures[id]={name:base.name,location:document.state.npcs[npc].location,hp:30,maxHp:30,level:1,status:'正常',owner:npc,care:{version:1,hunger:20,fatigue:0,mood:60,loyalty:50,sickness:false,sickHours:0,neglectHours:0,nextTick:document.state.minute+60,bond:30,skills:{},experience:0}};
+ document.state.pets[id]={petFormat:1,creature:id,category:'mount',status:'活跃',following:true};
+ document.state.npcs[npc].mount=id;
+ // Fixture ownership is mirrored before execution, as in the existing pet tests.
+ document.holdings=openHoldings(engine,document);
+ const origin=document.state.npcs[npc].location,edge=engine.world.routes.find(r=>(r.from===origin||r.to===origin)&&r.modes.includes('horse')),to=edge.from===origin?edge.to:edge.from;
+ return {...f,id,origin,to};
+}
+
+test('A3 NPC riding: actual mount travels with rider, accrues care fatigue, preserves player and ledger through reload',()=>{
+ const f=mountedNpcFixture(),{engine,npc,id,document,origin,to}=f,route=engine.route(origin,to,'horse',document.state.minute,document.randomSeed),effects=[{op:'move',to,mode:'horse'}];
+ const frame=createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:'npc-actual-horse',source:{kind:'catalog',id:'test:ride'}}),before=structuredClone(document);
+ const preview=planPrimitives(document,effects,frame);assert.deepEqual(document,before);
+ const result=commitPrimitives(document,effects,frame),next=JSON.parse(JSON.stringify(applyPatches(document,result.patches)));
+ assert.deepEqual(preview.receipt.applied,result.receipt.applied);
+ assert.equal(next.state.npcs[npc].location,to);assert.equal(next.state.creatures[id].location,to);assert.equal(next.state.creatures[id].owner,npc);
+ assert.equal(next.state.location,origin);assert.equal(next.state.player.mount,undefined);assert.equal(next.state.minute,document.state.minute+route.minutes);
+ assert.ok(next.state.creatures[id].care.fatigue>=Math.ceil(route.movingMinutes/30)*engine.rules.petCare.travelFatiguePer30Minutes);
+ assert.equal(next.state.npcs[npc].coins,document.state.npcs[npc].coins-route.cost);assert.deepEqual(auditLedger(next.ledger),[]);
+ assert.deepEqual(commitPrimitives(next,effects,frame).patches,[]);assert.equal(engine.npcScheduleReservations,undefined);
+});
+
+test('A3 NPC riding: move can board an actual owned mount and rolls boarding back when the route fails',()=>{
+ const f=mountedNpcFixture(),{engine,document,npc,id,to}=f;delete document.state.npcs[npc].mount;document.state.pets[id].following=false;
+ const effects=[{op:'move',to,mode:'horse',mount:id}],frame=createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:'npc-board-and-ride',source:{kind:'catalog',id:'test:ride'}}),before=structuredClone(document);
+ const preview=planPrimitives(document,effects,frame);assert.deepEqual(document,before);
+ const result=commitPrimitives(document,effects,frame),next=applyPatches(document,result.patches);assert.deepEqual(result.receipt.applied,preview.receipt.applied);assert.equal(next.state.npcs[npc].mount,id);assert.equal(next.state.creatures[id].location,to);assert.equal(next.state.pets[id].following,true);
+ assert.throws(()=>commitPrimitives(document,[{...effects[0],to:'loc_missing_route'}],frame));assert.deepEqual(document,before);
+ document.state.creatures[id].owner='player';assert.throws(()=>commitPrimitives(document,effects,frame),{code:'E-MOVE-MOUNT'});
+});
+
+test('A3 NPC riding: missing, remote, alien, overloaded, sick, tired and occupied mounts reject atomically',()=>{
+ for(const alter of [f=>delete f.document.state.npcs[f.npc].mount,f=>f.document.state.creatures[f.id].location=f.to,f=>f.document.state.creatures[f.id].owner='player',f=>f.engine.byId.get(f.id).tamingRule.carryKg=1,f=>f.document.state.creatures[f.id].care.sickness=true,f=>f.document.state.creatures[f.id].care.fatigue=100,f=>f.document.state.creatures[f.id].care.hunger=80,f=>f.document.state.creatures[f.id].hp=1,f=>f.document.state.creatures[f.id].status='昏迷',f=>f.document.state.player.mount=f.id]){
+  const f=mountedNpcFixture();alter(f);const before=structuredClone(f.document),frame=createRuntimePrimitiveFrame(f.engine,f.document,{actor:f.npc,eventId:'invalid-mount',source:{kind:'catalog',id:'test:ride'}});
+  assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:f.to,mode:'horse'}],frame),{code:'E-MOVE-MOUNT'});assert.deepEqual(f.document,before);
+ }
+});
+
+test('A3 NPC riding: local horseback approach uses actual distance and gives rider and mount the same contact evidence',()=>{
+ const f=mountedNpcFixture(),{engine,document,npc,id}=f,place=engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0))),feature=place.features.find(row=>row.position?.some(n=>n!==0));
+ document.state.location=place.id;document.state.npcs[npc].location=place.id;document.state.creatures[id].location=place.id;
+ const d=engine.primitiveDraft(document);assert.equal(recordLocalContact(d,engine,npc,'rider-local-start'),true);const start=applyPatches(document,d.patches),effects=[{op:'move',to:feature.id,mode:'horse'}];
+ const frame=createRuntimePrimitiveFrame(engine,start,{actor:npc,eventId:'local-horse',source:{kind:'catalog',id:'test:ride'}}),preview=planPrimitives(start,effects,frame),result=commitPrimitives(start,effects,frame),next=applyPatches(start,result.patches);
+ assert.deepEqual(preview.receipt.applied,result.receipt.applied);assert.deepEqual(next.state.records[`local_actor_position:${npc}`].point,feature.position);assert.deepEqual(next.state.records[`local_actor_position:${id}`].point,feature.position);
+ assert.equal(next.state.minute,start.state.minute+Math.ceil(Math.hypot(...feature.position)/(engine.rules.environment.walkingMetresPerMinute*engine.rules.travel.horseMultiplier)));assert.ok(next.state.creatures[id].care.fatigue>0);
+ assert.deepEqual(engine.magicAreaTargetFacts(engine.primitiveDraft(next),id,place.id).point,feature.position);assert.deepEqual(auditLedger(next.ledger),[]);
+});
+
+test('A3 creature movement: self walking follows actual routes, local contact and capacity without moving the player',()=>{
+ const f=mountedNpcFixture(),{engine,document,id,origin,to}=f;delete document.state.npcs[f.npc].mount;document.state.pets[id].following=false;
+ const frame=createRuntimePrimitiveFrame(engine,document,{actor:id,eventId:'creature-walk',source:{kind:'catalog',id:'test:walk'}}),route=engine.route(origin,to,'walk',document.state.minute,document.randomSeed);
+ const preview=planPrimitives(document,[{op:'move',to}],frame),result=commitPrimitives(document,[{op:'move',to}],frame),next=applyPatches(document,result.patches);
+ assert.equal(preview.receipt.applied[0].result.destination,to);assert.equal(next.state.creatures[id].location,to);assert.equal(next.state.location,origin);assert.equal(next.state.minute,document.state.minute+route.minutes);assert.deepEqual(auditLedger(next.ledger),[]);
+ const place=engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0))),feature=place.features.find(row=>row.position?.some(n=>n!==0));
+ document.state.location=place.id;document.state.creatures[id].location=place.id;
+ const d=engine.primitiveDraft(document);assert.equal(recordLocalContact(d,engine,id,'creature-contact'),true);const local=applyPatches(document,d.patches);
+ const approached=commitPrimitives(local,[{op:'move',to:feature.id}],createRuntimePrimitiveFrame(engine,local,{actor:id,eventId:'creature-local',source:{kind:'catalog',id:'test:walk'}}));
+ assert.deepEqual(applyPatches(local,approached.patches).state.records[`local_actor_position:${id}`].point,feature.position);
+ local.state.creatures[id].status='昏迷';assert.throws(()=>commitPrimitives(local,[{op:'move',to:feature.id}],createRuntimePrimitiveFrame(engine,local,{actor:id,eventId:'creature-unable',source:{kind:'catalog',id:'test:walk'}})),{code:'E-CAPACITY'});
+});
+
+test('A3 NPC checks: action outcomes use current NPC attributes, deterministic opposed dice, helpers and real tools',()=>{
+ const f=effectFixture(),{engine,document,npc}=f,attribute=engine.rules.attributes[0],skill=engine.world.skills.find(s=>(s.stage??0)===0).id;
+ document.state.npcs[npc].attributes={...document.state.npcs[npc].attributes,[attribute]:30};document.state.npcs[npc].skills={[skill]:300};
+ const other=Object.keys(document.state.npcs).find(id=>id!==npc);document.state.npcs[other].location=document.state.npcs[npc].location;document.state.npcs[other].status='正常';document.state.npcs[other].skills={[skill]:300};
+ document.state.obligations.a3_help={type:'协助',promisee:npc,promisor:other,status:'待履行',deadline:document.state.minute+100,skill,attribute};
+ const args={attribute,skill,opponent:{npc:'player',attribute},helpers:['a3_help'],advantage:true},before=structuredClone(document),d=engine.primitiveDraft(document),result=engine.primitiveCheck(d,args,'npc-opposed',npc);
+ assert.equal(result.actor,npc);assert.equal(result.opponent.npc,'player');assert.equal(result.modifier,12+result.helpers[0].bonus);assert.equal(result.die,Math.max(...result.rolls));assert.equal(d.get('state','obligations','a3_help','status'),'已完成');
+ assert.deepEqual(engine.primitiveCheck(engine.primitiveDraft(JSON.parse(JSON.stringify(document))),args,'npc-opposed',npc),result);assert.deepEqual(document,before);
+ assert.throws(()=>engine.primitiveCheck(engine.primitiveDraft(document),{...args,modifier:100},'forged-modifier',npc),{code:'E-CHECK-BOUND'});
+ const unheld=structuredClone(document);delete unheld.state.npcs[npc].inventory.item_ration;
+ assert.throws(()=>engine.primitiveCheck(engine.primitiveDraft(unheld),{attribute,difficulty:10,tools:['item_ration']},'absent-npc-tool',npc),{code:'E-CHECK-TOOLS'});
+ const input=program(f,{id:'test:npc_checked',check:{attribute,difficulty:10},outcomes:{success:[{op:'emit',verb:'tell',visibility:'private'}],partial:[{op:'emit',verb:'tell',visibility:'private'}],critical:[{op:'emit',verb:'tell',visibility:'private'}],failure:[],fumble:[]}});
+ let won,lost;for(let i=0;i<100&&(!won||!lost);i++){const attempt={...input,eventId:`npc-outcome-${i}`},p=primitiveRuntime.execute(engine,document,attempt,{actor:npc,preview:true});if(p.receipt.check.success)won=attempt;else lost=attempt;}
+ assert.ok(won);assert.ok(lost);const success=primitiveRuntime.execute(engine,document,won,{actor:npc}),failure=primitiveRuntime.execute(engine,document,lost,{actor:npc});
+ assert.equal(success.receipt.applied.length,1);assert.equal(success.receipt.source.kind,'catalog');assert.equal(failure.receipt.applied.length,0);assert.deepEqual(document,before);
+});
+
+test('A3 NPC checks: refused support adjudicates NPC versus player with one check and no failed effect',()=>{
+ const f=effectFixture(),{engine,document,npc}=f,effect={op:'status',target:'player',status:'stone_skin',duration:2,magnitude:2};
+ const make=id=>createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:id,source:{kind:'catalog',id:'test:npc-support'},limits:{status:{statuses:['stone_skin'],duration:2,magnitude:2}}});
+ let win,loss;for(let i=0;i<100&&(!win||!loss);i++){const frame=make(`npc-refused-${i}`),p=planPrimitives(document,[effect],frame);if(p.receipt.check.success)win=frame;else loss=frame;}
+ assert.ok(win);assert.ok(loss);const yes=commitPrimitives(document,[effect],win),no=commitPrimitives(document,[effect],loss);
+ assert.equal(yes.receipt.applied.length,1);assert.ok(yes.receipt.applied[0].tags.includes('unconsented'));assert.equal(no.receipt.applied.length,0);
+ const next=applyPatches(document,no.patches);assert.deepEqual(next.state.effects,document.state.effects);assert.equal(Object.keys(next.state.checks).filter(k=>k.startsWith(loss.eventId)).length,1);
+});
+
+function npcStudyFixture(){
+ const f=effectFixture(),{engine,document,npc}=f,skill=engine.world.skills.find(s=>(s.stage??0)===0&&!s.prerequisites?.length).id;
+ document.state.npcs[npc].skills={[skill]:1};document.state.npcs[npc].activity='研习';document.state.npcs[npc].plan=null;
+ engine.byId.get(npc).schedule={default:[{start:0,end:1440,location:document.state.location,activity:'研习',services:['teach']}]};
+ return {...f,skill,effect:{op:'learn',subject:skill,learningSource:'practice'},studyFrame:(id,doc=document,minutes=60)=>createRuntimePrimitiveFrame(engine,doc,{actor:npc,eventId:id,source:{kind:'catalog',id:'test:npc-study'},limits:{learn:{minutes}}})};
+}
+
+test('A3 NPC learning: practice shares fixed-point rate, daily/repeat/growth caps and survives JSON reload',()=>{
+ const f=npcStudyFixture(),{engine,npc,skill,effect}=f,before=structuredClone(f.document),preview=planPrimitives(f.document,[effect],f.studyFrame('npc-practice',f.document,60));assert.deepEqual(f.document,before);
+ const first=commitPrimitives(f.document,[effect],f.studyFrame('npc-practice')),next=JSON.parse(JSON.stringify(applyPatches(f.document,first.patches))),gain=first.receipt.applied[0].result.gain;
+ assert.equal(gain,1);assert.equal(next.state.npcs[npc].skills[skill].proficiency,2);assert.equal(next.state.npcs[npc].skills[skill].practiceCarry,.2);assert.equal(next.state.minute,before.state.minute+60);assert.deepEqual(next.state.skills,before.state.skills);
+ assert.deepEqual(first.receipt.applied,preview.receipt.applied);assert.deepEqual(commitPrimitives(next,[effect],f.studyFrame('npc-practice',next)).patches,[]);
+ const repeat=commitPrimitives(next,[effect],f.studyFrame('npc-practice-repeat',next));assert.equal(repeat.receipt.applied[0].result.gain,0);
+ next.state.npcs[npc].growth.skills[skill].work=engine.rules.npcGrowth.maximumGain;next.state.npcs[npc].skills[skill].practiceCarry=0;
+ const capped=commitPrimitives(next,[effect],f.studyFrame('npc-growth-capped',next));assert.equal(capped.receipt.applied[0].result.gain,0);
+ assert.throws(()=>commitPrimitives(f.document,[{...effect,learningSource:'missing-book'}],f.studyFrame('npc-phantom-source')));assert.deepEqual(f.document,before);
+});
+
+test('A3 NPC learning: teacher consent, visible observation and withdrawn/remote/unconscious sources use actual NPC checks',()=>{
+ const make=()=>{const f=npcStudyFixture(),teacher=Object.keys(f.document.state.npcs).find(id=>id!==f.npc);f.document.state.npcs[teacher].location=f.document.state.location;f.document.state.npcs[teacher].status='正常';f.document.state.npcs[teacher].skills={[f.skill]:300};f.document.state.npcs[teacher].activity='授艺演示';f.document.state.npcs[teacher].practicing=f.skill;f.engine.byId.get(teacher).schedule={default:[{start:0,end:1440,location:f.document.state.location,activity:'授艺演示',services:['teach']}]};const d=f.engine.primitiveDraft(f.document);assert.equal(recordLocalContact(d,f.engine,teacher,'npc-teacher-contact'),true);f.document=applyPatches(f.document,d.patches);return {...f,teacher,effect:{op:'learn',subject:f.skill,learningSource:teacher}};};
+ const f=make();f.document.state.consentEvents=[{id:'npc-teach-agrees',type:'consent_given',from:f.teacher,to:f.npc,scope:'teach',purpose:[f.skill],at:f.document.state.minute,until:f.document.state.minute+120}];
+ const before=structuredClone(f.document),full=commitPrimitives(f.document,[f.effect],f.studyFrame('npc-taught',f.document)),taught=applyPatches(f.document,full.patches),result=full.receipt.applied[0].result;
+ assert.equal(result.gain,3);assert.equal(result.observed,false);assert.equal(taught.state.npcs[f.teacher].skills[f.skill],300);assert.deepEqual(f.document,before);
+ const g=make(),watch=commitPrimitives(g.document,[g.effect],g.studyFrame('npc-watched',g.document)),watched=applyPatches(g.document,watch.patches),observed=watch.receipt.applied[0].result;
+ assert.equal(observed.gain,0);assert.equal(observed.observed,true);assert.equal(watched.state.npcs[g.npc].skills[g.skill].practiceCarry,.85);assert.equal(observed.detection.actor,g.npc);assert.ok(watch.receipt.applied[0].tags.includes('unconsented'));
+ f.document.state.consentEvents.push({id:'npc-teach-withdrawn',type:'consent_revoked',consent:'npc-teach-agrees',from:f.teacher,to:f.npc,scope:'teach',at:f.document.state.minute});f.document.state.npcs[f.teacher].practicing=null;
+ assert.throws(()=>commitPrimitives(f.document,[f.effect],f.studyFrame('npc-teach-revoked',f.document)),{code:'E-LEARN-OBSERVE'});
+ g.document.state.npcs[g.teacher].status='昏迷';assert.throws(()=>commitPrimitives(g.document,[g.effect],g.studyFrame('npc-teach-unable',g.document)),{code:'E-LEARN-SOURCE'});
+});
+
+test('A3 NPC learning: real books accumulate acquisition time and enforce physical copies, literacy and prerequisites',()=>{
+ const f=npcStudyFixture(),{engine,document,npc,skill}=f,recipe={...engine.world.recipes.find(r=>(r.minimumProficiency??0)===0),id:'recipe_a3_book_lesson',name:'夹具粥方',skill,stage:0,minimumProficiency:1,prerequisites:[],learnMinutes:120};
+ engine.world.recipes.push(recipe);engine.byId.set(recipe.id,recipe);
+ const item={id:'item_a3_lesson_book',name:'夹具粥方册',weight:1,book:{grade:engine.rules.books.grades[0],teaches:[recipe.id],readingMinutes:60,prerequisites:[]}};engine.world.items.push(item);engine.byId.set(item.id,item);
+ document.state.npcs[npc].inventory[item.id]={quantity:1};document.state.npcs[npc].skills.skill_literacy=engine.rules.books.minimumLiteracy;
+ document.ledger=openLedger(engine,document);document.holdings=openHoldings(engine,document);
+ const effect={op:'learn',subject:recipe.id,learningSource:item.id},before=structuredClone(document),first=commitPrimitives(document,[effect],f.studyFrame('npc-book-first',document)),half=JSON.parse(JSON.stringify(applyPatches(document,first.patches)));
+ assert.equal(first.receipt.applied[0].result.learned,false);assert.equal(half.state.npcs[npc].recipes?.[recipe.id],undefined);assert.deepEqual(document,before);
+ const second=commitPrimitives(half,[effect],f.studyFrame('npc-book-second',half)),learned=applyPatches(half,second.patches);assert.equal(second.receipt.applied[0].result.learned,true);assert.equal(learned.state.npcs[npc].recipes[recipe.id].source.id,item.id);assert.equal(learned.state.minute,document.state.minute+120);
+ assert.deepEqual(learned.state.npcs[npc].inventory,document.state.npcs[npc].inventory);assert.deepEqual(auditLedger(learned.ledger),[]);
+ const missing=structuredClone(document);delete missing.state.npcs[npc].inventory[item.id];assert.throws(()=>commitPrimitives(missing,[effect],f.studyFrame('npc-book-missing',missing)),{code:'E-LEARN-SOURCE'});
+ const illiterate=structuredClone(document);illiterate.state.npcs[npc].skills.skill_literacy=0;assert.throws(()=>commitPrimitives(illiterate,[effect],f.studyFrame('npc-book-illiterate',illiterate)),{code:'E-LEARN-LITERACY'});
+ const copy=structuredClone(document);copy.state.itemInstances??={};copy.state.itemInstances.a3_book_copy={item:item.id,owner:'player',status:'持有',durability:10,book:item.book};assert.throws(()=>commitPrimitives(copy,[{...effect,learningSource:'a3_book_copy'}],f.studyFrame('npc-book-stolen-copy',copy)),{code:'E-LEARN-SOURCE'});
+ const recall={id:'test:recall_study_book',slots:[],cost:{owner:'primitives',time:0},outcomes:[{op:'transfer',from:accountKey(npc,item.id,'inventory'),to:accountKey('player',item.id,'inventory'),qty:1}]};engine.world.primitiveRules.rules.push(recall);
+ const recalled=commitPrimitives(document,[{op:'schedule',at:document.state.minute+30,rule:recall.id}],createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:'recall-book-later',source:{kind:'catalog',id:'test:recall'}})),pending=applyPatches(document,recalled.patches),pendingBefore=structuredClone(pending);
+ assert.throws(()=>commitPrimitives(pending,[effect],f.studyFrame('npc-book-recalled-during-study',pending)),{code:'E-LEARN-SOURCE'});assert.deepEqual(pending,pendingBefore);
+ recipe.prerequisites=[{skill,minimum:200}];assert.throws(()=>commitPrimitives(document,[effect],f.studyFrame('npc-book-prerequisite',document)),{code:'E-LEARN-PREREQUISITE'});
+});
+
+test('A3 NPC learning: teaching another learner requires their current consent and keeps teacher knowledge',()=>{
+ const f=npcStudyFixture(),{engine,document,npc,skill}=f;document.state.skills[skill]={proficiency:300,daily:{},breakthroughs:[]};
+ const effect={op:'learn',entity:npc,subject:skill,learningSource:'player'},frame=id=>createRuntimePrimitiveFrame(engine,document,{eventId:id,source:{kind:'catalog',id:'test:teach-npc'},limits:{learn:{minutes:60}}});
+ assert.throws(()=>commitPrimitives(document,[effect],frame('no-learner-consent')),{code:'E-AUTHORITY'});
+ document.state.consentEvents=[{id:'learner-too-short',type:'consent_given',from:npc,to:'player',scope:'learn',purpose:[skill],at:document.state.minute,until:document.state.minute+1}];
+ assert.throws(()=>commitPrimitives(document,[effect],frame('short-learner-consent')),{code:'E-AUTHORITY'});
+ document.state.consentEvents=[{id:'learner-agrees',type:'consent_given',from:npc,to:'player',scope:'learn',purpose:[skill],at:document.state.minute,until:document.state.minute+120}];
+ const result=commitPrimitives(document,[effect],frame('learner-consents')),next=applyPatches(document,result.patches);assert.equal(result.receipt.applied[0].result.gain,3);assert.equal(next.state.skills[skill].proficiency,300);assert.equal(next.state.npcs[npc].skills[skill].proficiency,4);
+ document.state.consentEvents.push({type:'consent_revoked',id:'learner-withdraws',consent:'learner-agrees',from:npc,to:'player',scope:'learn',at:document.state.minute});
+ assert.throws(()=>commitPrimitives(document,[effect],frame('learner-revokes')),{code:'E-AUTHORITY'});
+});
+
+test('A3 NPC learning: a due rule revoking instruction during study prevents the unearned learning write',()=>{
+ const f=npcStudyFixture(),{engine,document,npc,skill}=f,teacher=Object.keys(document.state.npcs).find(id=>id!==npc);
+ document.state.npcs[teacher].location=document.state.location;document.state.npcs[teacher].status='正常';document.state.npcs[teacher].skills={[skill]:300};
+ engine.byId.get(teacher).schedule={default:[{start:0,end:1440,location:document.state.location,activity:'授艺',services:['teach']}]};
+ document.state.consentEvents=[{id:'brief-instruction',type:'consent_given',from:teacher,to:npc,scope:'teach',purpose:[skill],at:document.state.minute,until:document.state.minute+120}];
+ const rule={id:'test:withdraw_instruction',slots:[],cost:{owner:'primitives',time:0},outcomes:[{op:'emit',verb:'consent_revoked',target:npc,visibility:'private',payload:{consent:'brief-instruction'}}]};engine.world.primitiveRules.rules.push(rule);
+ const scheduled=commitPrimitives(document,[{op:'schedule',at:document.state.minute+30,rule:rule.id}],createRuntimePrimitiveFrame(engine,document,{actor:teacher,eventId:'schedule-withdraw-instruction',source:{kind:'catalog',id:'test:withdraw'}})),next=applyPatches(document,scheduled.patches),before=structuredClone(next);
+ assert.throws(()=>commitPrimitives(next,[{op:'learn',subject:skill,learningSource:teacher}],f.studyFrame('withdraw-during-study',next)),{code:'E-LEARN-SOURCE'});assert.deepEqual(next,before);
+ const due=engine.primitiveDraft(next);engine.advance(due,30,'instruction-withdraws');assert.equal(consent(primitiveContext(engine,due.document),teacher,npc,'teach',{purpose:skill}).allowed,false);assert.equal(due.get('state','npcs',npc,'skills',skill),1);
+});
+
+test('A3 scheduled rules: shipped program is archived, private, exactly once after reload and cannot be supplied as a body',()=>{
+ const f=effectFixture(),{engine,document}=f;assert.ok(engine.world.primitiveRules.rules.some(r=>r.id==='core:reminder'));
+ const effect={op:'schedule',at:document.state.minute+1,rule:'core:reminder',args:{text:'去赴约'}},before=structuredClone(document),preview=planPrimitives(document,[effect],f.frame('rule-reminder'));assert.deepEqual(document,before);
+ const scheduled=commitPrimitives(document,[effect],f.frame('rule-reminder')),next=JSON.parse(JSON.stringify(applyPatches(document,scheduled.patches))),id=scheduled.receipt.applied[0].result;
+ assert.equal(preview.receipt.applied[0].result,id);assert.equal(next.state.records[id].do[0].op,'primitive.rule');
+ const restored=new WorldEngine(JSON.parse(JSON.stringify(engine.world))),d=restored.primitiveDraft(next);restored.advance(d,2,'rule-due');const final=applyPatches(next,d.patches),receipt=final.state.records[`primitive_schedule_result:${id}`].receipt;
+ assert.equal(final.state.records[id].status,'completed');assert.equal(receipt.source.kind,'rule');assert.equal(receipt.source.id,'core:reminder');assert.equal(receipt.applied[0].result.payload.text,'去赴约');
+ const event=Object.values(final.state.records).find(r=>r.category==='world_event'&&r.parent===receipt.eventId&&r.verb==='tell');assert.ok(event);assert.equal(event.visibility,'private');assert.deepEqual(event.witnesses,[]);
+ const again=restored.primitiveDraft(JSON.parse(JSON.stringify(final)));restored.advance(again,1,'rule-after');assert.deepEqual(again.get('state','records',`primitive_schedule_result:${id}`),final.state.records[`primitive_schedule_result:${id}`]);
+ assert.throws(()=>commitPrimitives(document,[{...effect,rule:'missing:program'}],f.frame('unknown-rule')),{code:'E-ACTION'});
+ assert.throws(()=>commitPrimitives(document,[{...effect,action:'core:reminder'}],f.frame('ambiguous-schedule')),{code:'E-PRIMITIVE-SCHEMA'});
+ assert.throws(()=>commitPrimitives(document,[{...effect,rule:{outcomes:[{op:'time',minutes:1}]}}],f.frame('forged-rule-body')),{code:'E-PRIMITIVE-SCHEMA'});
+ assert.deepEqual(document,before);
+});
+
+test('A3 scheduled rules: current preconditions/authority reject terminally and multi-effect programs remain atomic',()=>{
+ const f=effectFixture(),{engine,document,npc}=f;
+ const rule={id:'test:rule_payment',slots:[],cost:{owner:'primitives',time:2},preconditions:['true'],outcomes:[{op:'transfer',from:a,to:accountKey(npc,'coin_river','purse'),qty:1},{op:'transfer',from:a,to:accountKey(npc,'coin_river','purse'),qty:100000}]};engine.world.primitiveRules.rules.push(rule);
+ const effect={op:'schedule',at:document.state.minute+1,rule:rule.id},scheduled=commitPrimitives(document,[effect],f.frame('schedule-atomic-rule')),next=applyPatches(document,scheduled.patches),id=scheduled.receipt.applied[0].result;
+ const d=engine.primitiveDraft(next);engine.advance(d,2,'fail-rule-due');const final=applyPatches(next,d.patches);
+ assert.equal(final.state.records[`primitive_schedule_result:${id}`].status,'rejected');assert.equal(final.state.player.coins,next.state.player.coins);assert.equal(final.state.npcs[npc].coins,next.state.npcs[npc].coins);assert.equal(final.state.records[id].status,'completed');assert.deepEqual(auditLedger(final.ledger),[]);
+ rule.outcomes.pop();rule.preconditions=['false'];const d2=engine.primitiveDraft(next);engine.advance(d2,2,'precondition-rule-due');assert.equal(d2.get('state','records',`primitive_schedule_result:${id}`).code,'E-PRECONDITION');
+ rule.preconditions=['true'];rule.outcomes[0].from=accountKey(npc,'coin_river','purse');rule.outcomes[0].to=a;const d3=engine.primitiveDraft(next);engine.advance(d3,2,'authority-rule-due');assert.equal(d3.get('state','records',`primitive_schedule_result:${id}`).code,'E-AUTHORITY');
+ assert.equal(d3.get('state','player','coins'),next.state.player.coins);assert.equal(d3.get('state','npcs',npc,'coins'),next.state.npcs[npc].coins);
+});
+
+test('A3 scheduled rules: an elapsed parent can schedule a child without reentry duplication or clock loss',()=>{
+ const f=effectFixture(),{engine,document,npc}=f,at=document.state.minute+1;
+ const child={id:'test:nested_child',slots:[],cost:{owner:'primitives',time:1},outcomes:[{op:'transfer',from:a,to:accountKey(npc,'coin_river','purse'),qty:1}]};
+ const parent={id:'test:nested_parent',slots:[],cost:{owner:'primitives',time:3},outcomes:[{op:'schedule',at:at+1,rule:child.id}]};engine.world.primitiveRules.rules.push(parent,child);
+ const scheduled=commitPrimitives(document,[{op:'schedule',at,rule:parent.id}],f.frame('nested-rule')),next=JSON.parse(JSON.stringify(applyPatches(document,scheduled.patches))),id=scheduled.receipt.applied[0].result;
+ const d=engine.primitiveDraft(next);engine.advance(d,2,'nested-rule-due');const final=applyPatches(next,d.patches),receipt=final.state.records[`primitive_schedule_result:${id}`].receipt,childId=receipt.applied[0].result;
+ assert.equal(final.state.records[`primitive_schedule_result:${childId}`].status,'committed');assert.equal(final.state.player.coins,document.state.player.coins-1);assert.equal(final.state.npcs[npc].coins,document.state.npcs[npc].coins+1);assert.ok(final.state.minute>=at+3);assert.deepEqual(auditLedger(final.ledger),[]);
+ const again=engine.primitiveDraft(JSON.parse(JSON.stringify(final)));engine.advance(again,1,'nested-rule-after');assert.equal(again.get('state','player','coins'),final.state.player.coins);assert.equal(again.get('state','records',id,'status'),'completed');assert.equal(again.get('state','records',childId,'status'),'completed');
+});
+
+test('A3 NPC scheduling: a registered learning action retains its native actor and charges elapsed cost once',()=>{
+ const f=npcStudyFixture(),{engine,document,npc,skill}=f,input=program(f,{id:'test:scheduled_npc_study',cost:{owner:'primitives',time:120},outcomes:[f.effect]});
+ const frame=createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:'schedule-npc-study',source:{kind:'catalog',id:'test:npc-schedule'}}),scheduled=commitPrimitives(document,[{op:'schedule',at:document.state.minute+1,action:input.args.action}],frame),next=JSON.parse(JSON.stringify(applyPatches(document,scheduled.patches))),id=scheduled.receipt.applied[0].result;
+ const d=engine.primitiveDraft(next);engine.advance(d,2,'npc-study-due');const final=applyPatches(next,d.patches),receipt=final.state.records[`primitive_schedule_result:${id}`].receipt;
+ assert.equal(receipt.actor,npc);assert.equal(receipt.cost.time,120);assert.equal(final.state.npcs[npc].skills[skill].proficiency,3);assert.equal(final.state.npcs[npc].skills[skill].practiceCarry,.4);assert.equal(final.state.minute,document.state.minute+121);assert.deepEqual(final.state.skills,document.state.skills);assert.deepEqual(auditLedger(final.ledger),[]);
+});
 
 test('A3 facts: archived kind whitelist and authored work bounds apply through the registered action',async()=>{
  const f=effectFixture(),made=commitPrimitives(f.document,[{op:'create',kind:'item',template:'core:item',facts:{name:'A3事实纸折'}}],f.frame('fact-item'));
@@ -201,7 +411,9 @@ test('A3 effects: moving another NPC requires real authority and rechecks detent
  const effects=[{op:'move',entity:npc,to}],frame=f.frame('npc-no-authority');
  assert.throws(()=>commitPrimitives(f.document,effects,frame),{code:'E-AUTHORITY'});
  const own=createRuntimePrimitiveFrame(f.engine,f.document,{actor:npc,eventId:'npc-detained',source:{kind:'catalog',id:'test:native'}});
- assert.throws(()=>commitPrimitives(f.document,[{op:'move',to,mode:'horse'}],own),{code:'E-PRIMITIVE-CONNECTOR'});
+ // A3-A round 6 installs riding: absent mounts must still fail, now at the
+ // actual mount/load/care gate rather than the former missing-connector gate.
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to,mode:'horse'}],own),{code:'E-MOVE-MOUNT'});
  f.document.holdings.rows.a3_custody={id:'a3_custody',kind:'guest_of',variant:'detained',holder:npc,subject:origin};
  assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],own),{code:'E-CAPACITY'});
  delete f.document.holdings.rows.a3_custody;f.document.state.npcs[npc].scheduleTravel={from:origin,to,depart:0,arrive:f.document.state.minute+1,edges:[]};

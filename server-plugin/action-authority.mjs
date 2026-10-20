@@ -38,7 +38,7 @@ export function possessor(context,target){
   if(operator)return operator.holder;id=loc.at;
  }return null;
 }
-export function authority(context,actor,op,target,{disposition=false,consentScope=null,holding=null,kind=null,variant=null,holder=null,reason=null,shares=null,effect=null}={}){
+export function authority(context,actor,op,target,{disposition=false,consentScope=null,holding=null,kind=null,variant=null,holder=null,reason=null,shares=null,effect=null,until=null}={}){
  const d=actionReader(context.document),sources=[],excess=[],tags=[];let account=null;
  if(typeof target==='string'&&target.includes('|'))account=parseAccount(target);
  // Protected purpose is never an ordinary possession/office exception.
@@ -71,7 +71,7 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
  }
  // Trusted composition-root provider covers law/charter/motions/recognition.
  // It returns current derived facts; proposal fields never become this input.
- for(const source of context.authoritySources?.({actor,op,target:subject,kind,variant,holding,holder,reason,effect,document:context.document})??[])if(source?.id&&source.allowed===true&&!(source.kind==='theft'&&sources.length)){sources.push({...source});tags.push(...source.tags??[]);}
+ for(const source of context.authoritySources?.({actor,op,target:subject,kind,variant,holding,holder,reason,effect,until,document:context.document})??[])if(source?.id&&source.allowed===true&&!(source.kind==='theft'&&sources.length)){sources.push({...source});tags.push(...source.tags??[]);}
  if(legal&&op==='holding.close'&&actor===holding?.holder){
   const proof=context.movementAuthority?.({actor,to:null,custody:holding,document:context.document});
   if(reason==='escaped'&&proof?.allowed===true&&proof.kind==='escape'&&proof.source){const source={kind:'escape',id:proof.source};return {allowed:true,sources:[source],tags:['escaped'],actedAs:source,reason:null};}

@@ -32,18 +32,18 @@ export function checkPetCareer(d, engine, combat) {
     }
 }
 
-function animal(d, engine, name, { owned = false } = {}) {
+function animal(d, engine, name, { owned = false, owner = 'player', location = d.get('state','location') } = {}) {
     const id = resolveCreature(engine,d,name), actor = d.get('state', 'creatures', id), definition = engine.byId.get(id);
     const species = definition?.monster ? engine.byId.get(definition.monster) : definition;
     const rule = definition?.tamingRule ?? species?.tamingRule;
     if (!actor || !rule || !engine.rules.petCare) throw new Error('没有已登记的动物实例或驯养规则');
     if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw new Error('动物健康或等级记录无效');
-    if (actor.location !== d.get('state', 'location')) throw new Error('动物不在场');
+    if (actor.location !== location) throw new Error('动物不在场');
     if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw new Error('动物已经死亡，照料不能复活');
-    if (actor.owner && actor.owner !== 'player') throw new Error('动物已有其他所有者，不能擅自操作');
+    if (actor.owner && actor.owner !== owner) throw new Error('动物已有其他所有者，不能擅自操作');
     if (sapient(actor)) throw new Error('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
     const pet = d.get('state', 'pets', id);
-    if (owned && (actor.owner !== 'player' || pet?.petFormat !== 1 || !active(pet))) throw new Error('这不是仍归你所有的宠物');
+    if (owned && (actor.owner !== owner || pet?.petFormat !== 1 || !active(pet))) throw new Error('这不是仍归你所有的宠物');
     return { id, actor, definition, rule, pet, ownedRequired:owned };
 }
 
@@ -320,23 +320,39 @@ export function petView(engine, document) {
     }) };
 }
 
-export function preparePetTravel(d, engine, mode, movingMinutes) {
-    const mounted = d.get('state', 'player', 'mount');
+export function preparePetTravel(d, engine, mode, movingMinutes, rider = 'player', selectedMount = null) {
+    const path=rider==='player'?['state','player']:['state','npcs',rider];
+    const existing=d.get(...path,'mount'),mounted = selectedMount??existing,location=rider==='player'?d.get('state','location'):d.get(...path,'location');
+    if(selectedMount&&existing&&existing!==selectedMount)throw Error('先从现有坐骑下来');
     if (mode === 'horse') {
         if (!mounted) throw new Error('骑行需要实际骑乘已归属的坐骑');
-        const { actor, rule } = animal(d, engine, mounted, { owned: true }), care = careOf(actor, d.get('state', 'minute'));
+        const { actor, rule } = animal(d, engine, mounted, { owned: true, owner:rider, location }), care = careOf(actor, d.get('state', 'minute'));
+        if([['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{})].some(([id,body])=>id!==rider&&body.mount===mounted))throw Error('坐骑已被其他骑手占用');
         const fatigue = Math.ceil(movingMinutes / 30) * engine.rules.petCare.travelFatiguePer30Minutes;
-        const load=Object.entries(d.get('state','inventory')).reduce((sum,[item])=>sum+engine.quantity(d,'player',item)*(engine.byId.get(item)?.weight??0),rule.riderWeightKg);
+        const load=Object.entries(d.get(...engine.bagPath(rider))??{}).reduce((sum,[item])=>sum+engine.quantity(d,rider,item)*(engine.byId.get(item)?.weight??0),rule.riderWeightKg);
         if(load>rule.carryKg)throw new Error('当前物品增加后坐骑负重不足，无法骑行');
-        if (!rule.rideable || care.sickness || care.hunger >= engine.rules.petCare.hungryThreshold || care.fatigue + fatigue > engine.rules.petCare.maximumRideFatigue || actor.hp < actor.maxHp / 2) throw new Error('坐骑无法完成这段路，须休息、照料或分段走');
+        if (!rule.rideable || ['昏迷','濒死','失能'].includes(actor.status) || care.sickness || care.hunger >= engine.rules.petCare.hungryThreshold || care.fatigue + fatigue > engine.rules.petCare.maximumRideFatigue || actor.hp < actor.maxHp / 2) throw new Error('坐骑无法完成这段路，须休息、照料或分段走');
     } else if (mounted) throw new Error('先下坐骑，再选择其他出行方式');
 }
 
-export function movePets(d, engine, origin, destination, movingMinutes) {
+// Native move.mount boards an actual NPC-owned animal. It uses the same
+// ownership, active-pet, load and care gates as travel and the legacy mount UI.
+export function mountNpcPet(d,engine,rider,id){
+    const body=d.get('state','npcs',rider);
+    if(!body)throw Error('NPC rider is missing');
+    const {actor,rule,pet}=animal(d,engine,id,{owned:true,owner:rider,location:body.location}),care=careOf(actor,d.get('state','minute'));
+    if(rule.category!=='mount'||!rule.rideable||care.loyalty<20||care.fatigue>=engine.rules.petCare.maximumRideFatigue)throw Error('坐骑状态不足以骑乘');
+    preparePetTravel(d,engine,'horse',0,rider,id);
+    writeCare(d,id,care);d.set(['state','npcs',rider,'mount'],id);
+    d.set(['state','pets',id],{...pet,following:true,status:'活跃'});
+}
+
+export function movePets(d, engine, origin, destination, movingMinutes, rider = 'player') {
     if (!engine.rules.petCare) return;
     for (const [id, pet] of Object.entries(d.get('state', 'pets') ?? {})) {
         const actor = d.get('state', 'creatures', id);
-        if (pet.petFormat !== 1 || !active(pet) || !pet.following || actor?.owner !== 'player' || actor.location !== origin || isPhysicallyDead(engine,d,id)) continue;
+        const mounted=rider==='player'?d.get('state','player','mount'):d.get('state','npcs',rider,'mount');
+        if (pet.petFormat !== 1 || !active(pet) || (!pet.following&&id!==mounted) || actor?.owner !== rider || actor.location !== origin || isPhysicallyDead(engine,d,id)) continue;
         holdingSet(d,null,['state', 'creatures', id, 'location'], destination,'pets');
         const care = careOf(actor, d.get('state', 'minute'));
         care.busyUntil=d.get('state','minute')+movingMinutes;

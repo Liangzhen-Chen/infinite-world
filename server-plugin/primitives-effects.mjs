@@ -40,8 +40,8 @@ function contested(d,engine,context,frame,target,scope,child,tags,{purpose=frame
  tags.push(...permission.tags);
  const previous=checkId===`${frame.eventId}:action-check`?d.get('state','checks',checkId):null;
  if(previous?.opponent?.npc===target)return {permission,check:previous,failed:!previous.success};
- if(frame.actor!=='player'||!d.get('state','npcs',target))reject('E-PRIMITIVE-CONNECTOR','This opposed pair requires its native check adapter');
- const check=engine.check(d,{attribute:'精神',opponent:{npc:target,attribute:'精神'}},`${child}:consent`);
+ if(target!=='player'&&!d.get('state','npcs',target))reject('E-PRIMITIVE-CONNECTOR','This opposed pair requires a person');
+ const check=engine.primitiveCheck(d,{attribute:'精神',opponent:{npc:target,attribute:'精神'}},`${child}:consent`,frame.actor);
  return {permission,check,failed:!check.success};
 }
 
@@ -56,15 +56,15 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
  }
  if(effect.op==='move'){
   const entity=effect.entity??actor;
+  if(effect.mount!==undefined&&entity==='player')reject('E-MOVE-MOUNT','Player boarding uses the existing pet mount action');
   if(entity!==actor){requireAuthority('move',entity);here(d,actor,entity);}
   if(typeof effect.to!=='string')reject('E-MOVE-DESTINATION','A registered destination is required');
   if(entity!=='player'){
-   if(effect.mode==='horse')reject('E-PRIMITIVE-CONNECTOR','NPC riding requires its actual mount, load and care adapter');
    const permission=canAct({...context,document:d.document},entity,'move',{to:effect.to});
    if(!permission.allowed)reject('E-CAPACITY',permission.reason);
    tags.push(...permission.tags??[]);
    if(!limits.costManaged||entity!==actor)beginBodyActivity(d,engine,entity,'travel');
-   const result=engine.primitiveMoveNpc(d,{entity,destination:effect.to,mode:effect.mode??'walk'},child);
+   const result=engine.primitiveMoveNpc(d,{entity,destination:effect.to,mode:effect.mode??'walk',mount:effect.mount},child);
    if(!limits.costManaged||entity!==actor)endBodyActivity(d,engine,entity);
    return result;
   }
@@ -75,7 +75,13 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
    return result;
   }
   const feature=engine.world.locations.some(l=>l.features?.some(f=>f.id===effect.to));
-  if(feature&&effect.mode!==undefined&&effect.mode!=='walk')reject('E-MOVE-MODE','Local approach uses walking');
+  if(feature&&effect.mode==='horse'){
+   if(!limits.costManaged)beginBodyActivity(d,engine,actor,'travel');
+   const result=engine.primitiveMoveLocal(d,{entity,destination:effect.to,mode:'horse'},child);
+   if(!limits.costManaged)endBodyActivity(d,engine,actor);
+   return result;
+  }
+  if(feature&&effect.mode!==undefined&&effect.mode!=='walk')reject('E-MOVE-MODE','Local approach uses walking or riding');
   const old=engine.npcObligationAction;engine.npcObligationAction=feature?{tool:'environment',args:{operation:'approach',target:effect.to}}:{tool:'move',args:{destination:effect.to,mode:effect.mode??'walk'}};
   try{
    if(!limits.costManaged)beginBodyActivity(d,engine,actor,'travel');
@@ -164,14 +170,15 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
  }
  if(effect.op==='schedule'){
   const at=integer(effect.at,now+1,Number.MAX_SAFE_INTEGER,'E-SCHEDULE-TIME');
-  if(typeof effect.action!=='string'||effect.rule!==undefined)reject('E-SCHEDULE-ACTION','Schedule requires a registered action');
-  engine.primitiveValidateScheduledAction(d,{action:effect.action,slots:effect.args??{}},actor);
-  return executeProtocolPrimitive(d,engine,{op:'schedule',at,do:[{op:'primitive.action',action:effect.action,slots:structuredClone(effect.args??{}),actor}]},{entity:actor,eventId:child});
+  const program=effect.rule===undefined?{op:'primitive.action',action:effect.action}:{op:'primitive.rule',rule:effect.rule};
+  engine.primitiveValidateScheduledAction(d,{action:effect.action,rule:effect.rule,slots:effect.args??{}},actor);
+  return executeProtocolPrimitive(d,engine,{op:'schedule',at,do:[{...program,slots:structuredClone(effect.args??{}),actor}]},{entity:actor,eventId:child});
  }
  if(effect.op==='learn'){
-  if(!limits.costManaged)beginBodyActivity(d,engine,actor,'light');
+  const learner=effect.entity??actor;
+  if(!limits.costManaged||learner!==actor)beginBodyActivity(d,engine,learner,'light');
   const result=learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,limits});
-  if(!limits.costManaged)endBodyActivity(d,engine,actor);
+  if(!limits.costManaged||learner!==actor)endBodyActivity(d,engine,learner);
   return result;
  }
  if(effect.op==='create')return createNarrative(d,engine,effect,{frame,child,context});
@@ -180,8 +187,8 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
 
 function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,limits}){
  const learner=effect.entity??frame.actor;
- if(learner!==frame.actor)requireAuthority('learn',learner);
- if(learner!=='player')reject('E-PRIMITIVE-CONNECTOR','NPC learning requires its education adapter');
+ if(learner!=='player')return engine.primitiveLearnNpc(d,effect,{frame,child,tags,requireAuthority,context,limits});
+ if(learner!==frame.actor)requireAuthority('learn',learner,{effect});
  const subject=engine.byId.get(effect.subject),old=d.get('state','skills',effect.subject);
  if(!subject)reject('E-LEARN-SUBJECT','Learning subject is not registered');
  // Initial acquisition keeps the existing prerequisite, book, fee, time and

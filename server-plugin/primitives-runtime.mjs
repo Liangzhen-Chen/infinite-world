@@ -25,6 +25,9 @@ import {digest} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
 import {moveLocally} from './primitives-movement.mjs';
+import {checkActor} from './primitives-checks.mjs';
+import {learnNpc} from './primitives-learning.mjs';
+import {primitiveRuleRegistry} from './primitive-rules.mjs';
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
@@ -123,6 +126,12 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
      if(!permission.allowed&&purpose!==source.id)permission=consent({...context,document:current},options.target,actor,scope,{purpose:source.id,onRefusal:'abort'});
      if(permission.allowed){sources.push({kind:'consent',id:permission.source,allowed:true});break;}
     }
+   }
+   if(options.op==='learn'&&effect&&options.target!==actor){
+    const bound=typeof limits==='function'?limits(current):limits,until=options.until??current.state.minute+(bound.learn?.minutes??0);
+    let permission=consent({...context,document:current},options.target,actor,'learn',{purpose:effect.subject,until,onRefusal:'abort'});
+    if(!permission.allowed)permission=consent({...context,document:current},options.target,actor,'learn',{purpose,until,onRefusal:'abort'});
+    if(permission.allowed)sources.push({kind:'consent',id:permission.source,allowed:true});
    }
    if(declared?.theft===true&&options.op==='transfer'&&effect&&check?.success===true&&parseAccount(effect.to).owner===actor&&options.target!==actor){
     const facts=engine.primitiveTargetFacts({...actionReader(current),document:current},actor,options.target);
@@ -320,18 +329,17 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
    }
    if(!permission.allowed){
     if(permission.check==='abort')reject('E-CONSENT',entry?.reason??permission.reason);
-    if(actor!=='player'||!d.get('state','npcs',from))reject('E-PRIMITIVE-CONNECTOR','The opposed pair requires its native check adapter');
+    if(from!=='player'&&!d.get('state','npcs',from))reject('E-PRIMITIVE-CONNECTOR','The opposed pair requires a person');
     check={...(check??{}),opponent:{npc:from,attribute:'精神'}};
     receipt.consequences.push({tags:permission.tags,scope,from,source:entry?.source??action.id});
    }
   }
  }
  if(check){
-  if(actor!=='player')reject('E-PRIMITIVE-CONNECTOR','NPC action checks require their native check adapter');
   const args=actionEffects({outcomes:check},slots,actor);
   if(args.opponent)delete args.difficulty;
   if(args.difficulty!==undefined)args.difficulty=rxValue(engine,d.document,action,slots,args.difficulty,actor);
-  receipt.check=engine.check(d,args,`${eventId}:action-check`);failed=!receipt.check.success;
+  receipt.check=engine.primitiveCheck(d,args,`${eventId}:action-check`,actor);failed=!receipt.check.success;
  }
  if(permission)receipt.consent=permission;
  if(action.theft===true&&!check)reject('E-THEFT-CHECK','Theft requires an authored native check');
@@ -430,6 +438,8 @@ function actionResourceCosts(engine,document,action,slots,actor){
 
 export const primitiveRuntime={
  moveLocally,
+ checkActor,
+ learnNpc,
  registry(engine){
   if(engine.actionRegistry)return engine.actionRegistry;
   const snapshot=engine.world.actionDefinitions;
@@ -449,12 +459,12 @@ export const primitiveRuntime={
   validatePreconditions(engine,document,action,legacyAction?.slots??args,(action.preconditions??[]).filter(condition=>condition?.source));
   if(action.consent?.scope?.some?.(scope=>scope?.source))reject('E-PRIMITIVE-CONNECTOR','Additional consent scope requires its adjudication connector');
  },
- resolve(engine,input,{actor='player'}={}){
-  const registry=this.registry(engine),action=findAction(registry,input.args?.action);
+ resolve(engine,input,{actor='player',sourceKind='catalog'}={}){
+  const registry=sourceKind==='rule'?primitiveRuleRegistry(engine.world):this.registry(engine),action=findAction(registry,input.args?.action);
   if(registry.errors?.length)reject('E-ACTION-REGISTRY',registry.errors.join('; '));
   if(!action)reject('E-ACTION','Unknown registered action');
   if(!action.outcomes)return actionCall(registry,action.id,input.args?.slots??{});
-  if(!engine.actionRegistry&&!engine.world.actionDefinitions)reject('E-ACTION-ARCHIVE','Primitive definitions must be part of the archived world');
+  if(sourceKind!=='rule'&&!engine.actionRegistry&&!engine.world.actionDefinitions)reject('E-ACTION-ARCHIVE','Primitive definitions must be part of the archived world');
   const slots=input.args?.slots??{};
   if(!slots||typeof slots!=='object'||Array.isArray(slots)||Object.keys(slots).some(k=>!action.slots.some(s=>s.name===k)))reject('E-ACTION-SLOT','Invalid action slots');
   for(const slot of action.slots)if(slot.required&&!Object.hasOwn(slots,slot.name))reject('E-ACTION-SLOT',`Missing slot: ${slot.name}`);
@@ -465,8 +475,8 @@ export const primitiveRuntime={
   if(!Array.isArray(program)||!program.length)reject('E-ACTION-OUTCOME','A primary success outcome is required');
   return {action,effects:actionEffects({outcomes:program},slots,actor)};
  },
- execute(engine,document,input,{createDraft,preview=false,actor='player'}={}){
-  const resolved=this.resolve(engine,input,{actor});
+ execute(engine,document,input,{createDraft,preview=false,actor='player',sourceKind='catalog'}={}){
+  const resolved=this.resolve(engine,input,{actor,sourceKind});
   if(!resolved.effects)return {legacy:resolved};
   const {action}=resolved;
   if(action.cost?.owner!=='primitives'&&action.cost!==undefined)reject('E-ACTION-COST','Primitive actions must declare their cost owner');
@@ -474,7 +484,7 @@ export const primitiveRuntime={
   let limits,quote,start,resourceCosts,escapeCheck=null,escapeClosures=new Set();
   const effects=resolved.effects;
   const purpose=`action:${digest({action:action.id,eventId:input.eventId})}`;
-  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:'catalog',id:action.id},createDraft,validate,identity:{action:action.id,slots},limits:()=>limits,purpose,
+  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:sourceKind,id:action.id},createDraft,validate,identity:{action:action.id,slots},limits:()=>limits,purpose,
    movementAuthority:({actor:who,to,custody,document:current})=>{
     if(who!==actor||to!==null||!escapeCheck?.success||!escapeClosures.has(custody.id)||custody.holder!==actor)return null;
     const guard=escapeCheck.opponent?.npc,state=current.state,place=actor==='player'?state.location:state.npcs?.[actor]?.location;
@@ -508,8 +518,8 @@ export const primitiveRuntime={
   }
   return commitPrimitives(document,effects,frame);
  },
- validateScheduled(engine,document,{action,slots},actor){
-  const resolved=this.resolve(engine,{args:{action,slots}},{actor});
+ validateScheduled(engine,document,{action,rule,slots},actor){
+  const resolved=this.resolve(engine,{args:{action:rule??action,slots}},{actor,sourceKind:rule===undefined?'catalog':'rule'});
   if(!resolved.effects)reject('E-SCHEDULE-ACTION','Only primitive programs can be scheduled');
   validateSlots(engine,document,resolved.action,slots,actor);
   return resolved.action.id;
@@ -517,7 +527,7 @@ export const primitiveRuntime={
  runScheduled(engine,d,effect,context){
   const key=`primitive_schedule_result:${context.eventId}`;
   try{
-   const result=this.execute(engine,d.document,{eventId:`scheduled:${digest({schedule:context.eventId})}`,args:{action:effect.action,slots:effect.slots}},{actor:effect.actor});
+   const result=this.execute(engine,d.document,{eventId:`scheduled:${digest({schedule:context.eventId})}`,args:{action:effect.rule??effect.action,slots:effect.slots}},{actor:effect.actor,sourceKind:effect.op==='primitive.rule'?'rule':'catalog'});
    for(const patch of result.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
    if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
    d.set(['state','records',key],{category:'primitive_schedule_result',status:'committed',receipt:result.receipt});

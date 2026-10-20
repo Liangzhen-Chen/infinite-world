@@ -8,15 +8,15 @@ const primitiveProperties={
  op:{enum:ops},actor:string,resource:string,from:string,to:string,qty:integer,lot:{},
  holdingKind:string,holder:string,newHolder:string,subject:string,terms:{type:['object','null']},variant:{type:['string','null']},holding:string,id:string,reason:string,shares:{type:'object',additionalProperties:{type:'number'}},
  obligationKind:string,debtor:string,creditor:string,amount:integer,deadline:integer,payer:string,with:{},
- entity:string,field:string,value:{},delta:{type:'number'},target:string,type:string,status:string,duration:integer,magnitude:integer,mode:string,
+ entity:string,field:string,value:{},delta:{type:'number'},target:string,type:string,status:string,duration:integer,magnitude:integer,mode:string,mount:string,
  kind:string,template:string,facts:object,tags:{type:'array',items:string},materials:array,population:string,verb:string,payload:object,visibility:{enum:['public','private','witnessed']},
- at:integer,action:string,args:object,cause:string,learningSource:string,minutes:integer
+ at:integer,action:string,rule:string,args:object,cause:string,learningSource:string,minutes:integer
 };
 const required={
  transfer:['from','to','qty'],'holding.open':['holdingKind','holder','subject'],'holding.close':[],'holding.transfer':[],'holding.rescale':['holdingKind','subject','shares'],
  'obligation.create':['id','obligationKind','debtor','creditor'],'obligation.settle':['id'],'obligation.cancel':['id'],
  'fact.set':['entity','field'],vital:['target','delta'],status:['target','status','duration','magnitude'],move:['to'],create:['kind','facts'],destroy:['entity'],
- emit:['verb','visibility'],schedule:['at','action'],transition:['entity','kind','cause'],learn:['subject','learningSource'],time:['minutes']
+ emit:['verb','visibility'],schedule:['at'],transition:['entity','kind','cause'],learn:['subject','learningSource'],time:['minutes']
 };
 function primitive(template=false){
  const properties=Object.fromEntries(Object.entries(primitiveProperties).map(([key,schema])=>[key,template&&key!=='op'?{anyOf:[schema,slot]}:schema]));
@@ -25,6 +25,7 @@ function primitive(template=false){
   {if:{properties:{op:{enum:['holding.close','holding.transfer']}}},then:{anyOf:[{required:['holding']},{required:['id']}]}},
   {if:{properties:{op:{const:'holding.transfer'}}},then:{anyOf:[{required:['newHolder']},{required:['holder']}]}},
   {if:{properties:{op:{const:'fact.set'}}},then:{oneOf:[{required:['value']},{required:['delta']}]}}
+  ,{if:{properties:{op:{const:'schedule'}}},then:{oneOf:[{required:['action']},{required:['rule']}]}}
   ,{if:{properties:{op:{const:'create'},kind:{not:{const:'mark'}}}},then:{required:['template']}}
  ]};
 }
@@ -62,6 +63,9 @@ export const actionSchema={
  }
 };
 const compiled=new Map();
+// Rule programs use the same interpreter and bounds, with no public UI/call
+// obligation. They are archived world data, never client-supplied programs.
+actionSchema.$defs.rule={...actionSchema.$defs.definition,required:['id','slots','cost','outcomes'],anyOf:[{required:['outcomes']}],properties:Object.fromEntries(Object.entries(actionSchema.$defs.definition.properties).filter(([key])=>!['call','projection','theft','rite'].includes(key)))};
 export function schemaValidator(kind){
  if(!compiled.has(kind)){
   if(!Object.hasOwn(actionSchema.$defs,kind))throw Error(`Unknown action schema: ${kind}`);

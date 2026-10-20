@@ -3,8 +3,8 @@ import {primitiveActionRuntime} from './primitives.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
-import {personTeaching} from './entity-view.mjs';
-import {hiddenCheckBonus} from './hidden-passives.mjs';
+import {personTeaching,personCertified} from './entity-view.mjs';
+import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
 import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
@@ -33,7 +33,7 @@ import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
 import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog,environmentFeatures,localPlayerPoint}from'./environment.mjs';
-import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
+import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
@@ -59,7 +59,7 @@ import {sceneCard}from'./scene-card.mjs';
 import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
-import {assertNpcService,advanceNpcSchedules,scheduleAt,withScheduleCache}from'./npc-schedule.mjs';
+import {assertNpcService,advanceNpcSchedules,scheduleAt,withScheduleCache,advanceWithNpcParticipants}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
@@ -73,7 +73,7 @@ import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
-import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
+import {INTELLIGENCE_VERSION,intelligenceFresh,trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
@@ -364,16 +364,25 @@ export class WorldEngine {
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     primitiveDraft(document){return new Draft(document,this);}
-    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath});}
-    primitiveMoveNpc(d,{entity,destination,mode},eventId){
-        const path=['state','npcs',entity],npc=d.get(...path),start=d.get('state','minute');
+    primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
+    primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
+    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
+    primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
+        const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity],npc=d.get(...path),start=d.get('state','minute');
         if(!npc||!npc.location||npc.scheduleTravel||npc.cognitionTravel)throw Error('NPC is missing or already travelling');
         if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes(entity)))throw Error('NPC is aboard an active transport');
+        if(mount!==undefined){
+            if(path[1]!=='npcs'||mode!=='horse')throw Object.assign(Error('Selecting a mount requires an NPC riding move'),{code:'E-MOVE-MOUNT'});
+            try{mountNpcPet(d,this,entity,mount);}catch(error){throw Object.assign(error,{code:'E-MOVE-MOUNT'});}
+        }
         const local=primitiveActionRuntime()?this.primitiveMoveLocal(d,{entity,destination,mode},eventId):null;if(local)return local;
         assertMindAwake(d,entity);assertWaterEarthMovement(d,entity);assertLightMovement(d,this,entity);
         destination=this.resolve(destination);
         if(destination===npc.location)return {destination,minutes:0,cost:0,edges:[]};
-        const route=this.route(npc.location,destination,mode,start,d.get('randomSeed'));
+        const route=this.route(npc.location,destination,mode,start,d.document.randomSeed);
+        if(path[1]==='creatures'&&mode!=='walk')throw Error('Creature self-movement requires walking');
+        if(path[1]==='npcs')try{preparePetTravel(d,this,mode,route.movingMinutes,entity);}catch(error){throw Object.assign(error,{code:'E-MOVE-MOUNT'});}
+        if(mode==='horse'){const mounted=d.get(...path,'mount');assertMindAwake(d,mounted);assertWaterEarthMovement(d,mounted);assertLightMovement(d,this,mounted);}
         let from=npc.location;
         assertFireTravel({...d,get:(...p)=>p.length===2&&p[0]==='state'&&p[1]==='location'?npc.location:d.get(...p)},this,route);
         for(const edgeId of route.edges){
@@ -385,10 +394,13 @@ export class WorldEngine {
         }
         assertNpcObligationAction(d,this,[entity],{minutes:route.minutes,location:destination,kind:'move'});
         assertNpcAutonomyAction(d.get('state'),[entity],{minutes:route.minutes});
-        if(npc.coins<route.cost)throw Error('NPC cannot afford this route');
+        if((npc.coins??0)<route.cost)throw Error('Actor cannot afford this route');
         facilityRuntime().recordFurnaceDeparture?.(d,this,entity,npc.location,start);
-        transfer(d,{from:accountKey(entity,LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId});
-        d.set([...path,'coins'],npc.coins-route.cost);
+        if(route.cost){
+            transfer(d,{from:accountKey(entity,LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId});
+            d.set([...path,'coins'],npc.coins-route.cost);
+        }
+        if(path[1]==='npcs')movePets(d,this,npc.location,destination,route.movingMinutes,entity);
         d.set([...path,'scheduleTravel'],{from:npc.location,to:destination,depart:start,arrive:start+route.minutes,edges:route.edges});
         d.set([...path,'location'],null);
         const previous=this.npcScheduleReservations;
@@ -419,9 +431,9 @@ export class WorldEngine {
         prepared.catalog={id:source,duration};
         return applyMagic.call(this,d,prepared,eventId);
     }
-    primitiveValidateScheduledAction(d,{action,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,slots},actor);}
+    primitiveValidateScheduledAction(d,{action,rule,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,rule,slots},actor);}
     executeProtocolPrimitive(d,effect,context){
-        if(effect.op!=='primitive.action')throw Error(`Protocol primitive is not installed: ${effect.op}`);
+        if(!['primitive.action','primitive.rule'].includes(effect.op))throw Error(`Protocol primitive is not installed: ${effect.op}`);
         return primitiveActionRuntime().runScheduled(this,d,effect,context);
     }
     primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
@@ -775,11 +787,15 @@ export class WorldEngine {
     check(d,args,id) {
         return check.call(this,d,args,id);
     }
-    practice(d,args,id,nativeGain=null) {
-        const skill=this.resolve(args.skill,'skill'),old=d.get('state','skills',skill);
+    practice(d,args,id,nativeGain=null,nativeActor='player',nativeCeiling=2699) {
+        const skill=this.resolve(args.skill,'skill'),path=nativeActor==='player'?['state','skills',skill]:['state','npcs',nativeActor,'skills',skill];
+        const raw=d.get(...path)??(nativeActor==='player'?null:this.byId.get(nativeActor)?.skills?.[skill]??this.byId.get(nativeActor)?.proficiencies?.[skill]);
+        const old=typeof raw==='number'?{proficiency:raw,breakthroughs:[],daily:{}}:raw;
+        if(nativeActor!=='player'&&(nativeGain===null||!d.get('state','npcs',nativeActor)))throw Error('NPC practice requires its native actor and gain');
         if(!old)throw new Error('尚未学会这项技能');
         const stage=Math.floor(old.proficiency/300),day=String(Math.floor(d.get('state','minute')/1440));
         if(args.breakthroughSource){
+            if(nativeActor!=='player')throw Error('NPC breakthrough requires its native evidence adapter');
             // Masterpiece, completed research or a key battle recorded by career metrics.
             const evidence=evidenceBreakthrough(d,this,skill,args.breakthroughSource,old);if(evidence)return evidence;
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
@@ -803,15 +819,15 @@ export class WorldEngine {
         const room=this.rules.practice.dailyCaps[stage]-row.gain;
         const gain=Math.max(0,Math.min(nativeGain===null?Math.floor(accrued):fixedInteger(accruedUnits),room));
         const role=this.byId.get(skill).profession;
-        const certified=certifiedForSkill(d,this,skill);
+        const certified=nativeActor==='player'?certifiedForSkill(d,this,skill):personCertified(this,d.get('state'),nativeActor,skill);
         if(!certified&&old.proficiency>299)return {skill,gain:0,proficiency:old.proficiency,effectiveProficiency:299,retained:true};
-        const limit=Math.min(certified?2699:299,(old.breakthroughs??[]).includes(stage+1)?(stage+2)*300-1:(stage+1)*300-1);
+        const limit=Math.max(old.proficiency,Math.min(nativeCeiling,certified?2699:299,(old.breakthroughs??[]).includes(stage+1)?(stage+2)*300-1:(stage+1)*300-1));
         const proficiency=Math.min(limit,old.proficiency+gain),actual=proficiency-old.proficiency;
         row.gain+=actual;row.targets[target]=repeats+1;daily[day]=row;
         for(const key of Object.keys(daily))if(Number(key)<Number(day)-1)delete daily[key];
         const carry=nativeGain===null?{}:{practiceCarry:room<=accrued||proficiency>=limit?0:fixedNumber(accruedUnits%FIXED_SCALE)};
-        d.set(['state','skills',skill],{...old,...carry,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
-        const paths=proficiency%300===299?breakthroughPaths(d.get('state'),skill,proficiency):[];
+        d.set(path,{...old,...carry,proficiency,grade:skillGrade(proficiency),daily});d.say(`${this.byId.get(skill).name}熟练度 +${actual}`);
+        const paths=nativeActor==='player'&&proficiency%300===299?breakthroughPaths(d.get('state'),skill,proficiency):[];
         return {skill,gain:actual,proficiency,needsBreakthrough:proficiency%300===299,...(paths.length?{breakthroughPaths:paths}:{})};
     }
     applyMagicArea(d,catalog,args,id,source='player'){

@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {primitiveRuleRegistry} from '../server-plugin/primitive-rules.mjs';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
@@ -85,7 +86,11 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         // archived world, just like recipes and dialogue templates.
         if(registry.actions.some(a=>a.outcomes||a.preconditions?.some(p=>p?.source)||a.consent?.scope?.some?.(p=>p?.source)))world.actionDefinitions={format:1,actions:registry.actions};
     }catch(error){if(error.code!=='ENOENT')throw error;}
-    for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions),writable:true,configurable:true});
+    try{
+        world.primitiveRules=JSON.parse(await fs.readFile(path.join(root,'rules/programs.json'),'utf8'));
+        primitiveRuleRegistry(world);
+    }catch(error){if(error.code!=='ENOENT')throw error;}
+    for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions)||Boolean(world.primitiveRules),writable:true,configurable:true});
     return world;
 }
 
