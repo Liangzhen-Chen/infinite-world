@@ -4,6 +4,7 @@ import {routeAction,effectSignature,signatureJaccard,createRoutingContext,resolv
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import fs from 'node:fs/promises';
+import {localWeather} from '../server-plugin/weather.mjs';
 const kindOf=id=>id==='player'||id?.startsWith('npc_')?'person':id?.startsWith('item_')?'item':null;
 const effect={op:'emit',target:'npc_one',verb:'request',visibility:'private',payload:{text:'help'}};
 const action=(id,label='请求帮助')=>({id,label,synonyms:[],participants:{actor:['person'],target:['person']},visibility:{catalog:'target:npc'},slots:[{name:'target',kind:'entity',entity:'person',required:true}],outcomes:[{...effect,target:{slot:'target'}}]});
@@ -34,6 +35,14 @@ test('A3 routing: text alone or identical op with unrelated text cannot force a 
  const r=routeAction({...proposal,effects:[{op:'move',to:'loc_a'}]},{actions:[action('test:ask')]},context);
  assert.equal(r.routed,null);assert.ok(r.nearest.score<.7);
  const noText=routeAction({...proposal,intent:'xyzzy'},{actions:[action('test:ask')]},context);assert.equal(noText.routed,null);assert.equal(noText.nearest.textScore,0);
+});
+test('A3 routing: a complete action phrase in a long intent keeps the authored threshold',()=>{
+ const candidate=action('test:help');
+ const result=routeAction({...proposal,intent:'我背着木料走了一整天，现在想请求帮助，把箱子搬到门边'},{actions:[candidate]},context);
+ assert.equal(result.routed,candidate.id);assert.equal(result.nearest.signatureScore,1);
+ assert.ok(result.nearest.score>=.7);
+ const wrong=routeAction({...proposal,intent:'我背着木料走了一整天，现在打算坐在门边喝水'},{actions:[candidate]},context);
+ assert.equal(wrong.routed,null);assert.ok(wrong.nearest.score<.7);
 });
 test('A3 routing: source resource is part of a transfer signature; native actor cannot be spoofed',()=>{
  const coins=effectSignature([{op:'transfer',from:'player|coin_river|purse',to:'npc_one'}],{kindOf});
@@ -73,4 +82,40 @@ test('A3 routing: primitive movement destination and learning source fill declar
  const learn={slots:[{name:'skill',entity:'skill',required:true},{name:'source',required:true}]};
  assert.deepEqual(context.slotsFor(learn,{effects:[{op:'learn',subject:skill,learningSource:'practice'}]}),{skill,source:'practice'});
  assert.equal(context.slotsFor(learn,{effects:[{op:'learn',subject:'skill_nonexistent',learningSource:'practice'}]}).skill,undefined);
+});
+
+test('A3 routing: spell routing accepts a reachable item, but does not invent missing spell knowledge',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.createCharacter(seed,{},'a3-cast-slots');
+ document.state.inventory.item_staff={quantity:1};
+ document.state.skills.skill_light={proficiency:100};document.state.spells.spell_light={};
+ const before=structuredClone(document),proposal={intent:'让手里的木杖施展照明术',means:{spell:'spell_light'},effects:[{op:'status',target:'item_staff',status:'light',duration:60,magnitude:2}]};
+ const registry={actions:engine.world.actionDefinitions.actions},context=createRoutingContext(engine,document),resolved=resolveProposalEntities(proposal,context).proposal;
+ const result=routeAction(resolved,registry,context);
+ assert.equal(result.routed,'core:cast');assert.equal(result.nearest.slots.spell,'spell_light');assert.equal(result.nearest.slots.target,'item_staff');
+ assert.deepEqual(document,before);
+ delete document.state.spells.spell_light;
+ const missing=routeAction(resolved,registry,createRoutingContext(engine,document));
+ assert.equal(missing.routed,null);assert.equal(missing.needsSlots.action,'core:cast');assert.ok(missing.needsSlots.missing.includes('spell'));
+});
+
+test('A3 routing: payment promise slots use the requested terms and the actual next-day sunset',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.createCharacter(seed,{},'a3-promise-slots');
+ const target='npc_hw_linsui';document.state.location='bld_hw_qingdeng';document.state.npcs[target].location=document.state.location;
+ const proposal={intent:'我当面保证明天日落前把十铜交给你',target,effects:[{op:'obligation.create',obligationKind:'promise',debtor:'self',creditor:target,terms:{resource:'coin',amount:10,due:'明天日落前'}}]};
+ const context=createRoutingContext(engine,document),resolved=resolveProposalEntities(proposal,context).proposal,registry={actions:engine.world.actionDefinitions.actions};
+ const result=routeAction(resolved,registry,context),tomorrow=(Math.floor(document.state.minute/1440)+1)*1440;
+ assert.equal(result.routed,'core:dialogue.promise');
+ assert.equal(result.nearest.slots.coins,10);assert.equal(result.nearest.slots.type,'付款');
+ assert.equal(result.nearest.slots.deadline,tomorrow+localWeather(engine,document,document.state.location,tomorrow).sunsetMinute);
+ assert.equal(result.nearest.slots.promisee,target);assert.equal(result.nearest.slots.content,proposal.intent);
+});
+
+test('A3 routing: guarding without an identified opponent asks for that target, never fights the actor',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.createCharacter(seed,{},'a3-guard-target');
+ document.state.inventory.item_staff={quantity:1};
+ const proposal={intent:'用手里的木杖防守',means:{manner:'guard',tools:['item_staff']},effects:[{op:'status',target:'self',status:'combat_defense',duration:1,magnitude:1}]};
+ const context=createRoutingContext(engine,document),resolved=resolveProposalEntities(proposal,context).proposal;
+ const result=routeAction(resolved,{actions:engine.world.actionDefinitions.actions},context);
+ assert.equal(result.routed,null);assert.deepEqual(result.needsSlots,{action:'core:combat',missing:['target']});
+ assert.equal(result.nearest.slots.intent,'defend');assert.equal(result.nearest.slots.weapon,'item_staff');
 });
