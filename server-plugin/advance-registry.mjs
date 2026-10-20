@@ -71,6 +71,8 @@ import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,com
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {advanceWanted}from'./bounty.mjs';
 import {auditLedger}from'./ledger.mjs';
+import {facilityRuntime}from'./facility-state.mjs';
+import {withScheduleCache,sameNpcScheduleInputs}from'./npc-schedule.mjs';
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
 export const advanceRegistry=[];
 export function registerAdvance(system){
@@ -89,7 +91,7 @@ export function nextAdvanceMinute(engine,d,now,end){
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
 // R31: a draft whose every write goes through its PatchCursor can share a records-by-kind index across one pass (storage.mjs recordsWhere).
 export function runAdvance(engine,d,ctx){
-    return d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx);
+    return withScheduleCache(engine,d,()=>d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx));
 }
 // Continuous local processes catch up to reads/actions without introducing a
 // clock tick or advancing lastSettled. Their own cursor prevents the next
@@ -157,7 +159,7 @@ function buildScheduleHeap(engine,d,now,end){
     // All other state partitions and every non-physical record must match.
     const reuse=prepared&&Math.floor(prepared.minute/1440)===Math.floor(now/1440)&&sameScheduleInputs({...prepared.state,npcs:state.npcs},state)&&canonicalEqual(prepared.courses,engine.educationCourseContext);
     const staticEnvironment=reuse||prepared&&Math.floor(prepared.minute/1440)===Math.floor(now/1440)&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records},state)&&canonicalEqual(prepared.courses,engine.educationCourseContext);
-    d.scheduleEducation={state,minute:now,courses:engine.educationCourseContext};
+    d.scheduleEducation={state,minute:now,courses:engine.educationCourseContext,patchStart:d.patches.length};
     try{
     const midnight=Math.floor(now/1440)*1440+1440;
     if(midnight<=end)heap.add({kind:'clock',minute:midnight,systemIds:[...midnightSystems,'npc_life','office_salaries']});
@@ -167,7 +169,7 @@ function buildScheduleHeap(engine,d,now,end){
     }
     // These legacy handlers have no nextMinute hook. Register their actual
     // deadlines, including travel created by the preceding tick.
-    const due=(minute,systemIds=['contracts','law','credit','deliveries','society_news'])=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute,systemIds});};
+    const due=(minute,systemIds=['contracts','law','credit','deliveries','society_news'],npcId=null)=>{if(Number.isSafeInteger(minute)&&minute>now&&minute<=end)heap.add({kind:'due',minute,systemIds,npcId});};
     for(const effect of Object.values(state.effects??{})){due(effect.expires,['effect_expiry','summons']);due(effect.nextUpkeep,['summons','contracts']);}
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes,['dying']);
     const scheduledRecords=recordsMemo(state.records,deadlineRows,()=>Object.values(state.records??{}).filter(row=>['debt','bank','contract'].includes(row.category)||['deadline','expires','nextAt','arrivesAt','nextDue','nextWork'].some(key=>Number.isSafeInteger(row[key]))),['physical_feature','education_study','education_pay']);
@@ -181,11 +183,14 @@ function buildScheduleHeap(engine,d,now,end){
     const constraints=personConstraints(engine,state);
     const overrides=scheduleOverrides(engine,constraints);
     d.scheduleEducation.overrides=overrides;d.scheduleEducation.festivals=constraints.festivals.length>0;
-    const slots=new Map();d.scheduleEducation.slots=slots;
+    const slots=new Map(),pending=new Set(),npcOrder=new Map();
+    Object.assign(d.scheduleEducation,{slots,pending,npcOrder});
     const schedulePlan=advanceLayerPlan(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
     for(const [id,npc]of Object.entries(state.npcs??{})){
-        due(npc.scheduleTravel?.arrive,['npc_obligations']);due(npc.cognitionTravel?.arrive,['npc_cognition']);
+        npcOrder.set(id,npcOrder.size);
+        if(constraints.has(id)||facilityRuntime().hasUnattendedFurnace(engine,id))pending.add(id);
+        due(npc.scheduleTravel?.arrive,['npc_obligations'],id);due(npc.cognitionTravel?.arrive,['npc_cognition']);
         // The existing layer adapter settles eligible fixed-location skeletons
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
@@ -195,24 +200,35 @@ function buildScheduleHeap(engine,d,now,end){
             // people's employment/progress records. Keep its slot across those
             // writes, while invalidating individual transitions and courses.
             const authored=staticEnvironment&&!overrides.has(id)&&!prepared.overrides?.has(id)&&!constraints.festivals.length&&!prepared.festivals&&!npc.vocation&&!npc.residence&&!npc.caring&&!npc.levy&&engine.byId.get(id)?.schedule&&prepared.state.records?.[`transition:${id}`]===state.records?.[`transition:${id}`];
-            const prior=(reuse||authored)&&prepared.state.npcs[id]===npc&&!constraints.has(id)&&!constraints.employment.get(id)?.length&&!constraints.leases.get(id)?.length?prepared.slots?.get(id):null;
-            const slot=prior?.until>now?prior:engine.protocolScheduleAt(engine,id,now,state,constraints);
+            const prior=(reuse||authored)&&sameNpcScheduleInputs(prepared.state.npcs[id],npc)&&!constraints.has(id)&&!constraints.employment.get(id)?.length&&!constraints.leases.get(id)?.length?prepared.slots?.get(id):null;
+            // Identical adjacent slots share a settlement boundary, but their
+            // authored start/end metadata still changes at the original edge.
+            const priorValid=prior?.until>now&&(prior.end===undefined||Math.floor(now/1440)*1440+prior.end>now);
+            const slot=priorValid?prior:engine.protocolScheduleAt(engine,id,now,state,constraints);
+            if(priorValid&&process.env.FIELDS_INDEX_CHECK==='1'){
+                const fresh=engine.protocolScheduleAt(engine,id,now,state,constraints);
+                if(!canonicalEqual(slot,fresh))throw Error(`schedule heap cache mismatch: ${id} at ${now}: ${JSON.stringify({cached:slot,fresh})}`);
+            }
             slots.set(id,slot);
-            due(slot?.until,['npc_obligations','education']);
+            due(slot?.until,['npc_obligations','education'],id);
+            if(slot&&(npc.location!==slot.location||npc.activity!==slot.activity))pending.add(id);
             // A clock tick at the end of a slot is too late to start a trip
             // for the slot already in progress. Wake once at the first
             // actionable minute so advanceNpcSchedules can create its travel
             // deadline, which is then registered above on the next pass.
-            const constrained=personConstraint(engine,state,id,now,constraints)?.value;
-            const occupied=state.player?.companions?.includes(id)||engine.npcScheduleReservations?.has(id)||engine.medicineParticipants?.has(id)||engine.npcAutonomyBusy?.(state,id,now);
-            if(schedulePlan.countyOf(npc.location)===schedulePlan.player&&personSimulation(engine,state,id).value&&slot?.services?.length&&slot.location===state.location&&!npc.scheduleTravel&&npc.location&&npc.location!==slot.location&&!constrained&&!occupied&&!['濒死','昏迷','患病'].includes(npc.status)){
-                try{if(engine.route(npc.location,slot.location,'walk',now,state.randomSeed,engine.weatherSequences,engine.advanceGraphs).cost<=npc.coins)due(now+1);}catch{}
+            if(slot?.services?.length&&slot.location===state.location&&!npc.scheduleTravel&&npc.location&&npc.location!==slot.location){
+                const constrained=personConstraint(engine,state,id,now,constraints)?.value;
+                const occupied=state.player?.companions?.includes(id)||engine.npcScheduleReservations?.has(id)||engine.medicineParticipants?.has(id)||engine.npcAutonomyBusy?.(state,id,now);
+                if(!constrained&&!occupied&&!['濒死','昏迷','患病'].includes(npc.status)&&schedulePlan.countyOf(npc.location)===schedulePlan.player&&personSimulation(engine,state,id).value){
+                    try{if(engine.route(npc.location,slot.location,'walk',now,state.randomSeed,engine.weatherSequences,engine.advanceGraphs).cost<=npc.coins)due(now+1);}catch{}
+                }
             }
         }
     }
     let minute=Infinity;
     for(const entry of heap.entries)if(entry.minute>now&&entry.minute<=end)minute=Math.min(minute,entry.minute);
-    d.advanceSchedule={minute:minute===Infinity?undefined:minute,systems:new Set(heap.entries.filter(entry=>entry.minute===minute).flatMap(entry=>entry.systemIds??[entry.systemId]))};
+    const dueEntries=heap.entries.filter(entry=>entry.minute===minute);
+    d.advanceSchedule={minute:minute===Infinity?undefined:minute,systems:new Set(dueEntries.flatMap(entry=>entry.systemIds??[entry.systemId])),npcs:new Set(dueEntries.map(entry=>entry.npcId).filter(Boolean))};
     return minute===Infinity?null:minute;
     }finally{engine.educationCourseContext=previous;}
 }

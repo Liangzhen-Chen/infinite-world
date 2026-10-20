@@ -12,12 +12,21 @@ import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
-const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event'];
+const scheduleReservations=Symbol('schedule reservations');
+const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary'];
+const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['promise','delivery',undefined].flatMap(kind=>recordsWhere(s.obligations,'kind',kind)).filter(r=>r.reservationVersion===1));
 // Physical state, study/pay progress and event receipts are not inputs to
 // course/routine derivation. Completed learning changes the actor's skills or
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
- if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records'].includes(k)&&a[k]!==b[k]))return false;
+ if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition'].includes(k)&&a[k]!==b[k]))return false;
+ if(a.obligations!==b.obligations){
+  const x=reservationInputs(a),y=reservationInputs(b);
+  if(x.length!==y.length||x.some((r,i)=>r!==y[i]))return false;
+  // A teaching employment may end through its unified service obligation.
+  // Financial accrual elsewhere does not change anybody's routine or class.
+  for(const job of recordsWhere(b.records,'kind','workshop'))if(job.serviceObligation&&a.obligations?.[job.serviceObligation]!==b.obligations?.[job.serviceObligation])return false;
+ }
  if(a.records===b.records)return true;
  const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnoredCategories.includes(r.category)),scheduleIgnoredCategories);
  const x=rows(a),y=rows(b);

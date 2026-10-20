@@ -53,7 +53,7 @@ export function appendHeard(d,engine,from,to,memory,minute,channel,messageId,loc
 // callers; actors carrying messages or following the player are not simulated.
 export function npcPresenceAt(engine,state,before,minute,randomSeed){
  const cursor=new PatchCursor({state,randomSeed});
- const d={get document(){return cursor.expose(cursor.root);},get:(...p)=>cursor.expose(p.reduce((x,k)=>x?.[k],cursor.root)),peek:(...p)=>p.reduce((x,k)=>x?.[k],cursor.root),set:(p,v)=>cursor.apply({op:'set',path:p,value:v}),remove:p=>cursor.apply({op:'delete',path:p})};
+ const d={cursor,get document(){return cursor.expose(cursor.root);},get:(...p)=>cursor.expose(p.reduce((x,k)=>x?.[k],cursor.root)),peek:(...p)=>p.reduce((x,k)=>x?.[k],cursor.root),set:(p,v)=>cursor.apply({op:'set',path:p,value:v}),remove:p=>cursor.apply({op:'delete',path:p})};
  if(minute>before)advanceNpcSchedules(d,Object.assign(Object.create(engine),{educationAttendance:null}),before,minute);
  return cursor.root.state;
 }
