@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {executeIntent,scoreRows,signatureMatches,signatureEffects,applyIntentSetup} from '../tools/a3-score.mjs';
+import {executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
+const signatureMatches=(expected,effects,receipt,requested)=>matchSignature(expected,effects,receipt,requested,world);
 const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'a3-score-self');
 // A known awake witness at the starting shop, as in the mark integration tests.
 initial.state.npcs.npc_hw_linsui.location=initial.state.location;
@@ -86,12 +87,40 @@ test('A3 signature: qualifiers belong to the same adopted primitive, never prose
  const effects=[{op:'emit',target:'npc_hw_linsui',signatureKind:'person',verb:'tell',payload:{text:'npc_hw_wushuo greet'}},{op:'status',target:'player',status:'fear'}];
  assert.equal(signatureMatches(['emit(person:npc_hw_linsui,tell)','status(person:self,fear)'],effects),true);
  assert.equal(signatureMatches(['emit(person:npc_hw_wushuo,tell)','status'],effects),false);
- assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],effects),false);
+ // Round 5 rule 4: greet/tell are descriptions; the same real NPC is the evidence.
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],effects),true);
  assert.equal(signatureMatches(['emit(person:self,tell)','status'],effects),false);
- assert.equal(signatureMatches(['emit(thing:npc_hw_linsui,tell)','status'],effects),false);
- assert.equal(signatureMatches(['emit(person:npc_hw_linsui,fear)','status'],effects),false);
+ // Round 5 rules 2/4: type labels and fear are descriptions, not registered IDs.
+ assert.equal(signatureMatches(['emit(thing:npc_hw_linsui,tell)','status'],effects),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,fear)','status'],effects),true);
  assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning','mark:art']}]),true);
- assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning']}]),false);
+ // Round 5 rule 4: mark tags in parentheses are descriptive, not world IDs.
+ assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning']}]),true);
+});
+test('A3 signature v2: real references, initiator and direction are machine checked',()=>{
+ const effect={op:'transfer',resource:'coin_river',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse'};
+ const signature=['transfer(resource:coin,self->npc_hw_linsui)'];
+ assert.equal(signatureMatches(signature,[effect]),true);
+ assert.equal(signatureMatches(signature,[{...effect,to:'npc_hw_wushuo|coin_river|purse'}]),false);
+ assert.equal(signatureMatches(signature,[{...effect,from:effect.to,to:effect.from}]),false);
+ assert.equal(signatureMatches(['transfer(resource:item_bread,self->npc_hw_linsui)'],[effect]),false);
+ assert.equal(signatureMatches(['transfer(resource:coin,self->npc_hw_linsui:30)'],[effect]),true);
+ const emit={op:'emit',target:'npc_hw_xuling',verb:'tell',payload:{kind:'different_description'}};
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[emit]),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[{...emit,payload:{spell:'spell_light'}}]),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,other_description)'],[emit]),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[emit]),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[{...emit,payload:{spell:'spell_light'}}]),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[emit,{op:'emit',payload:{spell:'spell_light'}}]),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling)'],[{op:'emit',payload:{text:'npc_hw_xuling'},actedAs:{id:'npc_hw_xuling'},result:{target:'npc_hw_xuling'}}]),false);
+ assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',actor:'npc_hw_xuling'}],{actor:'npc_hw_xuling'}),true);
+ assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',target:'npc_hw_linsui'}],{actor:'npc_hw_xuling'}),false);
+ assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',actor:'player'}],{actor:'npc_hw_xuling'}),false);
+ // Embedded book_/teacher_ prefixes still carry real IDs; similar longer IDs
+ // must not accidentally require their shorter registered prefix as well.
+ assert.equal(signatureMatches(['learn(person:self,teacher_npc_hw_luqing)'],[{op:'learn',target:'player',source:'npc_hw_luqing'}]),true);
+ assert.equal(signatureMatches(['transfer(resource:item_wood_shavings)'],[{op:'transfer',resource:'item_wood_shavings'}]),true);
+ assert.equal(signatureMatches(['transfer(resource:item_wood_shavings)'],[{op:'transfer',resource:'item_wood'}]),false);
 });
 test('A3 signature: real registered action pays derived costs without adding them to the requested signature',async()=>{
  const action={id:'test:score_cost',label:'说一句话',narration:'test.score_cost',slots:[],cost:{owner:'primitives',time:1,resources:[{resource:'coin_river',qty:1}]},outcomes:[{op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}}]};

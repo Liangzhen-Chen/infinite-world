@@ -142,42 +142,67 @@ export function signatureEffects(effects,receipt={},requested=receipt.routing?.p
 }
 const signatureOp=value=>PRIMITIVE_IDS.find(op=>value===op||value.startsWith(`${op}(`));
 const selfId=value=>value==='self'?'player':value;
-function qualifierMatches(qualifier,effect){
- const subject=effect.target??effect.entity??effect.subject??effect.actor;
- const typed=/^(person|creature|thing|collective|org|holding|obligation|resource):(.+)$/.exec(qualifier);
- if(typed){
-  const [,kind,id]=typed;
-  if(kind==='resource')return [effect.resource,effect.from?.split('|')[1],effect.to?.split('|')[1]].some(resource=>resource===id||(id==='coin'&&resource==='coin_river'));
-  if(effect.op==='create')return effect.kind===id&&({thing:['thing','item','mark'],collective:['collective','project','case'],creature:['creature'],person:['person'],org:['organization']}[kind]??[]).includes(effect.kind);
-  const value=kind==='holding'?(effect.holding??effect.id):kind==='obligation'?(effect.id??effect.obligation):subject;
-  const actualKind=effect.signatureKind??(selfId(subject)==='player'?'person':null);
-  const kindMatches=kind==='holding'||kind==='obligation'||(kind==='org'?actualKind==='organization':kind==='thing'?['thing','item','mark'].includes(actualKind):kind===actualKind);
-  return kindMatches&&selfId(value)===selfId(id);
- }
- if(qualifier==='world')return effect.op==='time';
- if(qualifier.includes('+'))return qualifier.split('+').every(q=>qualifierMatches(q,effect));
- if(qualifier.includes('->')){
-  const [from,to]=qualifier.split('->');
-  const owner=value=>selfId(value?.split('|')[0]);
-  return owner(effect.from)===selfId(from)&&owner(effect.to)===selfId(to);
- }
- // Compare semantic fields only: prose, results and authority cannot satisfy
- // a qualifier. Unbound scenario aliases stay unverified rather than guessed.
+function legacyQualifierMatches(qualifier,effect){
+ if(qualifier.includes('+'))return qualifier.split('+').every(q=>legacyQualifierMatches(q,effect));
  if((effect.tags??[]).includes(qualifier))return true;
  if([effect.type,effect.field,effect.verb,effect.status,effect.kind,effect.reason,effect.mode,effect.to,effect.subject].includes(qualifier))return true;
  const [head,...tail]=qualifier.split(':');
  return tail.length>0&&head===effect.verb&&tail.join(':')===effect.payload?.kind;
 }
-export function signatureMatches(expected,effects,receipt={},requested){
+// V2 qualifiers are descriptions, not literal effect values. Extract registered
+// world IDs (longest first, including IDs in teacher_/book_ descriptions) and
+// self/player references; require ALL of them in ONE adopted effect of this op.
+// Direction is an additional from/to check, never an unordered reference check.
+// Prose, authority and results are not evidence. Other descriptive words are
+// ignored for scoring; expected.signature remains verbatim in every report.
+const referenceCatalogs=new WeakMap();
+const resourceIds=JSON.parse(await fs.readFile(path.join(root,'world/ontology/resources.json'),'utf8')).entries.map(row=>row.id);
+function referenceCatalog(world){
+ if(referenceCatalogs.has(world))return referenceCatalogs.get(world);
+ const ids=new Set(resourceIds);
+ for(const key of ['npcs','residents','items','skills','spells','recipes','locations','monsters','bosses','factions','households']){
+  for(const row of world[key]??[])if(row.id)ids.add(row.id);
+ }
+ const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const pattern=new RegExp(`(?<![A-Za-z0-9])(?:${[...ids].sort((a,b)=>b.length-a.length).map(escape).join('|')}|self|player|coin)(?![A-Za-z0-9])`,'g');
+ referenceCatalogs.set(world,pattern);return pattern;
+}
+function qualifierMatches(qualifier,effect,receipt,world){
+ const actor=receipt.actor??'player';
+ const normalize=value=>['self','player'].includes(value)?actor:value==='coin'?'coin_river':value;
+ const actualId=value=>value==='self'?actor:value==='coin'?'coin_river':value;
+ const references=[...qualifier.matchAll(referenceCatalog(world))].map(m=>normalize(m[0]));
+ const atoms=[];
+ function collect(value){
+  if(typeof value==='string')atoms.push(...value.split('|').map(actualId));
+  else if(Array.isArray(value))value.forEach(collect);
+  else if(value&&typeof value==='object')for(const [key,child] of Object.entries(value)){
+   if(!['text','intent','description','narration','reason','actedAs','result','signatureKind'].includes(key))collect(child);
+  }
+ }
+ collect(effect);
+ if(!references.every(id=>atoms.includes(id)))return false;
+ if(qualifier.includes('->')){
+  const endpoint=value=>normalize(value.trim().replace(/^(person|creature|thing|collective|org|holding|obligation|resource):/,'').replace(/:(?:\d.*|requested_.*|bounded_output)$/,''));
+  const parts=qualifier.split('->');
+  if(parts.length!==2)return false;
+  const owner=value=>actualId(value?.split('|')[0]);
+  if(owner(effect.from)!==endpoint(parts[0])||owner(effect.to)!==endpoint(parts[1]))return false;
+ }
+ return true;
+}
+export function signatureMatches(expected,effects,receipt={},requested,world){
  const adopted=signatureEffects(effects,receipt,requested).effects;
  if(!sameSet(expected.map(signatureOp).filter(Boolean),adopted.map(e=>e.op)))return false;
  return expected.every(value=>{
   const op=signatureOp(value);
-  if(!op)return adopted.some(effect=>qualifierMatches(value,effect));
+  // Unqualified legacy field/tag tokens retain their exact-value contract.
+  if(!op)return adopted.some(effect=>legacyQualifierMatches(value,effect));
   if(value===op)return true;
   if(!value.endsWith(')'))return false;
   const qualifiers=value.slice(op.length+1,-1).split(',').map(q=>q.trim());
-  return adopted.some(effect=>effect.op===op&&qualifiers.every(q=>qualifierMatches(q,effect)));
+  if(!world)throw new TypeError('Qualified signature matching requires the scored world');
+  return adopted.some(effect=>effect.op===op&&qualifiers.every(q=>qualifierMatches(q,effect,receipt,world)));
  });
 }
 
@@ -297,7 +322,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const run=await executeIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===actual.route):routeName(expectedRoute)===actual.route);
-  const signature=ready&&(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested);
+  const signature=ready&&(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world);
   let constructor=false,builder=actual.builder;
   if(ready&&row.expected.constructor){
    if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
@@ -312,7 +337,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
      const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
      builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews};
      const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===built.actual.route):routeName(expectedRoute)===built.actual.route;
-     constructor=Boolean(builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested)&&(!row.expected.fallback||built.actual.fallback));
+     constructor=Boolean(builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
