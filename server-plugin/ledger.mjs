@@ -28,6 +28,10 @@ export function parseAccount(key){
 export const isSource=owner=>String(owner).startsWith('src:');
 export const isSink=owner=>String(owner).startsWith('sink:');
 const isFlow=owner=>isSource(owner)||isSink(owner);
+// L1 may mirror dedicated account storage after an actual posting. Ordinary
+// purses and stocks retain their existing writers; this grants no authority.
+let transferProjection=null;
+export function registerTransferProjection(fn){transferProjection=fn;}
 
 // ---- 源汇登记（写入权与每日预算） -------------------------------------------
 // 源汇词条（id 与含义）登记在 world/ontology/resources.json 的 sourcesAndSinks；
@@ -203,6 +207,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
         }
     }
     d.set(['ledger','transfers'],(read(d,'ledger','transfers')??0)+1);
+    transferProjection?.(d,{from,to,fromAccount:a,toAccount:b,amount,eventId,writer});
     globalThis.__LEDGER_TRACE__?.push({from,to,amount,writer,eventId});// 调试：对账定位用
     return amount;
 }

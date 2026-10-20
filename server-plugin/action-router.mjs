@@ -9,6 +9,7 @@ import {environmentFeatures} from './environment.mjs';
 import {localWeather} from './weather.mjs';
 import {mapView} from './ui-map.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
+import {finePaymentContext} from './obligation-runtime.mjs';
 import {npcServices} from './npc-state.mjs';
 import {facilityRuntime} from './facility-state.mjs';
 import {activeDuel} from './duels.mjs';
@@ -203,6 +204,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
    const obligation=effects.find(e=>e.op==='obligation.create'),settlement=effects.find(e=>e.op==='obligation.settle');
+   if(action.call?.tool==='world_law'&&action.call.operation==='pay'&&settlement){
+    const fine=finePaymentContext(engine,document,{reference:settlement.id,payer:actor,amount:settlement.amount});
+    if(fine)value??=({case:fine.case,authority:fine.collector,coins:fine.amount})[slot.name];
+   }
    const holding=effects.find(e=>e.op==='holding.open');
    if(action.call?.tool==='world_trade'||action.call?.tool==='world_law'&&action.call.operation==='steal'){
     if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(proposal.means?.manner==='secret_sale'?proposal.means.tools?.[0]:undefined);
@@ -349,6 +354,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','转移须指定有效的资源与账户');}
  };
  const labelsFor=(action,proposal)=>{
+  if(action.call?.tool==='world_law'&&action.call.operation==='pay')return ['缴款','缴清','罚款','罚金'];
   const labels={
    'core:eat.meal':['吃','吃掉','进食'],
    'core:pet.feed':['喂','喂它','喂养','口粮'],
@@ -446,6 +452,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:target,field:'fire_intensity'}])];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
+  if(call?.tool==='world_law'&&call.operation==='pay'){
+   const fine=finePaymentContext(engine,document,{caseId:slots.case,payer:actor,amount:slots.coins});
+   const settlement=proposal.effects?.find(e=>e.op==='obligation.settle');
+   if(fine&&money?.qty===fine.amount&&settlement?.amount===fine.amount&&owner(money.from)===actor&&[fine.site,fine.account].includes(money.to))return [sign([transfer(LEDGER_COIN,actor,money.to===fine.account?fine.account:fine.site),{op:'obligation.settle'}])];
+  }
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss'&&summons.has(slots.summon))return [sign([{op:'obligation.cancel'},{op:'transition',entity:slots.summon}])];
   if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];
   return [];

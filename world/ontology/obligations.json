@@ -159,6 +159,7 @@
   },
   {
    "id": "judgment",
+   "aliases": ["fine"],
    "label": "判决执行",
    "schedule": "single",
    "handover": {
