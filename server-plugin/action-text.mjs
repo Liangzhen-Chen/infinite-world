@@ -15,7 +15,14 @@ const merge=(base,over)=>{const out={...base};for(const [k,v]of Object.entries(o
 // A locale directory overrides only the keys it writes; everything else comes from the base locale.
 export function loadTemplates(locale=BASE_LOCALE){
  if(cache.has(locale))return cache.get(locale);
- const read=name=>{try{return JSON.parse(fs.readFileSync(`${LOCALES}${name}/events.json`,'utf8'));}catch(error){if(error.code==='ENOENT')return null;throw error;}};
+ const read=name=>{
+  const directory=`${LOCALES}${name}/`;let files;
+  try{files=fs.readdirSync(directory).filter(file=>file.endsWith('.json')).sort();}catch(error){if(error.code==='ENOENT')return null;throw error;}
+  if(name===BASE_LOCALE&&!files.includes('events.json'))return null;
+  // Core events first, then the action packs' locale fragments (e.g. open.json).
+  files.sort((a,b)=>(a==='events.json'?-1:b==='events.json'?1:a.localeCompare(b)));
+  return files.reduce((templates,file)=>merge(templates,JSON.parse(fs.readFileSync(directory+file,'utf8'))),{});
+ };
  const base=read(BASE_LOCALE);if(!base)throw Error('缺少基础事件模板');
  const templates=locale===BASE_LOCALE?base:merge(base,read(locale)??{});
  cache.set(locale,templates);return templates;
@@ -93,6 +100,8 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
 // Event-stream text for one settled action: one verb line, then one line per applied effect.
 export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
  if(result?.receipt?.status==='pending')return {lines:['行动仍在等待裁决，尚未完成。'],effects:[]};
+ if(result?.receipt?.status==='preview')return {lines:['这只是预览，行动尚未执行。'],effects:[]};
+ if(result?.receipt&&result.receipt.status!=='committed')return {lines:[refusalLine(action,result.receipt.reason??'行动尚未完成',locale)],effects:[]};
  if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
  const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];

@@ -26,14 +26,29 @@ export function parseTurn(reply,{location,startMinute,minute=startMinute,present
     return{valid:warnings.length===0,warning:warnings.join('；')||null,args:{startMinute,extraMinutes,location,present:actual},visible};
 }
 export function toolResultWithClock(result,{startMinute,minute}={}){
+    if(result?.receipt)result={...result,narrationContract:actionNarrationContract(result)};
     if(!Number.isSafeInteger(startMinute)||!Number.isSafeInteger(minute)||minute<startMinute)return result;
     return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
 }
 
 export function actionCompletion(saved){
- const receipt=saved?.result?.receipt;
+ const result=saved?.result??saved,receipt=result?.receipt;
  if(receipt?.status==='pending')return {ok:false,pending:true,error:'行动仍在等待裁决，尚未完成'};
- return {ok:saved?.result?.ok!==false};
+ if(receipt&&receipt.status!=='committed')return {ok:false,error:receipt.reason??(receipt.status==='preview'?'预览尚未执行':'行动未完成')};
+ return {ok:result?.ok!==false};
+}
+
+// This is a projection of a native receipt, never a proposal or executable plan.
+// In particular, pending/preview effects must not become accomplished facts.
+export function actionNarrationContract(result){
+ const receipt=result?.receipt??result?.result?.receipt;
+ if(!receipt)return null;
+ const settled=receipt.status==='committed',applied=settled?receipt.applied??[]:[];
+ return structuredClone({eventId:receipt.eventId,status:receipt.status,routed:receipt.routed??null,
+  applied,must:settled?receipt.narrate?.must??[]:[],mustNot:receipt.narrate?.mustNot??[],
+  check:receipt.check??null,trimmed:receipt.trimmed??[],consequences:settled?receipt.consequences??[]:[],
+  alternatives:receipt.alternatives??[],fallback:receipt.fallback??null,reason:receipt.reason??null,
+  instruction:settled?'只叙述实际 applied；must 必须保留，mustNot 不得写成发生。检定失败与裁剪不能补写成功。':'尚未完成：不得把提案、预览或等待裁决写成成功，不得补写物品、资金、移动或承诺。'});
 }
 
 // Speech generated after a wait does not itself authorize more elapsed time.

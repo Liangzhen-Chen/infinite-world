@@ -7,6 +7,9 @@ import {parseTurn,normalizeReplyProtocol} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {reviewNpcKnowledge,reviewHistoricalEvidence} from './consistency-evidence.mjs';
 import {appliedEffects} from './applied-effects.mjs';
+import {actionLines,refusalLine,sceneLines} from './action-text.mjs';
+import {actionOfCall,findAction} from './action-registry.mjs';
+import {primitiveActionRuntime} from './primitives.mjs';
 
 const safeError=error=>String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]').slice(0,1200);
 const readJSON=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -150,7 +153,7 @@ export function publicConsistencyResult(record){
  const r=record.result;
  return {reviewId:record.token,status:r.status,text:r.text,original:r.original,rewritten:r.rewritten,verified:r.review?.verified===true&&['verified','issues'].includes(r.status)&&!r.rewriteError,
   canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],originalIssues:r.firstReview?.issues??[],rewriteError:r.rewriteError,
-  attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
+  attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval,...(r.fallback?{fallback:r.fallback}:{})};
 }
 
 // Captures are authoritative snapshots. Client-provided receipts, clocks and
@@ -172,22 +175,30 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   if(state.document.releaseVersion!==1)throw Error('当前存档尚未启用新版');
   const events=state.events.filter(e=>state.active.has(e.sequence)&&e.sequence>record.sequence);
   if(events.some(e=>e.anchor!==record.anchor||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
+  const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
+  const registry=primitiveActionRuntime().registry(engine),templates=[];
+  const definition=(tool,args)=>tool==='world_act'?findAction(registry,args?.action):actionOfCall(registry,tool,args??{});
+  const failedTemplate=row=>templates.push(refusalLine(definition(row.tool,row.args),row.result.error));
   let projection=structuredClone(record.before);const receipts=[],failures=[...record.failedActions??[]];
   for(const event of events){
-   while(failures.length&&failures[0].sequence<event.sequence){const row=failures.shift();receipts.push({tool:row.tool,args:row.args,result:row.result});}
+   while(failures.length&&failures[0].sequence<event.sequence){const row=failures.shift();receipts.push({tool:row.tool,args:row.args,result:row.result});failedTemplate(row);}
    const output=await store.reducer(projection,event.input,{replay:true,result:event.result}),previous=projection;
    projection=applyPatches(projection,output.patches);
    // A1: each receipt carries the effects the engine actually applied (08 §8.4); review reads these, not a whole-turn diff.
-   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result,applied:appliedEffects(previous,projection,{result:output.result})});
+   if(event.input?.tool){
+    const {tool,args={}}=event.input,applied=appliedEffects(previous,projection,{result:output.result});
+    receipts.push({tool,args,result:output.result,applied});
+    templates.push(...actionLines({engine,action:definition(tool,args),before:previous,after:projection,args:tool==='world_act'?args.slots??{}:args,result:output.result,effects:applied}).lines);
+   }
   }
-  for(const row of failures)receipts.push({tool:row.tool,args:row.args,result:row.result});
+  for(const row of failures){receipts.push({tool:row.tool,args:row.args,result:row.result});failedTemplate(row);}
   if(digest(projection)!==digest(state.document))throw Error('本轮证据无法重建当前账本');
   const retrieval=record.retrieval=retrievalOf(record);
   if(retrieval.calls.some(row=>row.status!=='completed')){retrieval.status='unknown';retrieval.warnings.push('检索回执未完整保存');}
   if(retrieval.protocol===1&&retrieval.status==='open')retrieval.status='complete';
   retrieval.sealed=true;await atomicJSON(file,record);
   for(const call of retrieval.calls)if(call.status==='completed')receipts.push({tool:'world_search',args:{query:call.query,...(call.limit===undefined?{}:{limit:call.limit})},result:call.result});
-  const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document),s=state.document.state;
+  const s=state.document.state;
   blocklistPromise??=readJSON(new URL('../world/meta/blocklist.json',import.meta.url));
   const blocklist=await blocklistPromise;
   const present=Object.entries(s.npcs??{}).filter(([,n])=>n.location===s.location&&!n.scheduleTravel&&!n.cognitionTravel).map(([id])=>id);
@@ -231,6 +242,12 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   const tail=parseTurn(text,{...input.clock,outOfCharacter:isOutOfCharacter(input.playerText)});
   record.evidence={receipts,retrieval,scene,knowledge,priorEvidence,clock:input.clock,afterHash:digest(state.document)};
   record.result={original:draft,text,protocol,rewritten,review,firstReview:first,attempts,status,canCommit,feedback,rewriteError,tail,sequence:state.sequence};
+  // A failed text-only rewrite never executes again or authorizes its tail.
+  // The client can show these replay-derived templates and start the next turn.
+  if(record.enabled&&!isOutOfCharacter(record.playerText)&&(!canCommit||review?.model.status==='failed')){
+   const lines=[...templates,...sceneLines(engine,state.document)];
+   record.result.fallback={lines,text:lines.join('\n'),extraMinutes:0};
+  }
   await atomicJSON(file,record);return publicConsistencyResult(record);
  });
 }

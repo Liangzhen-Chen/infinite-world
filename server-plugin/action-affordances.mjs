@@ -9,6 +9,7 @@ import {weatherTravel} from './weather.mjs';
 import {currentShops} from './shop.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
+import {primitiveActionRuntime} from './primitives.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 export const QUICK=['交易','移动','等待','制作','账目','休息','观察'];
@@ -76,6 +77,17 @@ function consentPending(ctx,action,fill){
  if(action.id==='core:trade.borrow'&&ctx.bank&&fill.seller===ctx.bank.keepers?.[0])return false;
  return true;
 }
+function actionPermission(ctx,action,slots){
+ const runtime=primitiveActionRuntime();
+ if(typeof runtime?.actionPermission!=='function'||action.readOnly||action.projection)return null;
+ if(action.slots.some(slot=>slot.required&&!slot.consent&&slots[slot.name]===undefined))return null;
+ // A3-A7 owns normalization, capacity, custody and legacy restrictions.
+ // Missing connectors are visible query failures, never invented denials.
+ // /actions already supplies a scoped engine. Use A7's native implementation
+ // directly, since the WorldEngine wrapper scopes a root engine once more.
+ try{return runtime.actionPermission(ctx.engine,ctx.document,{action:action.id,slots});}
+ catch(error){return {allowed:null,error:error.message};}
+}
 function offer(ctx,action,target){
  const fill={};
  const slots=action.slots.map(slot=>{
@@ -92,10 +104,26 @@ function offer(ctx,action,target){
    else if(['place','location'].includes(slot.entity))choices=ctx.exits.map(e=>({value:e.id,label:`${e.direction} ${e.name}`}));
    else if(slot.entity==='skill')choices=ctx.skills.map(s=>({value:s.id,label:s.name}));
   }
+  // Existing array inputs use only currently reachable people and owned units.
+  if(slot.kind==='object'){
+   if(['helpers','workers','guests','beneficiaries'].includes(slot.name))choices=ctx.people.map(p=>({value:p.id,label:p.name}));
+   else if(slot.name==='skills')choices=ctx.skills.map(s=>({value:s.id,label:s.name}));
+   else if(slot.name==='tools')choices=ctx.inventory.map(i=>({value:i.id,label:i.name}));
+   else if(slot.name==='instances')choices=ctx.inventory.flatMap(i=>(ctx.s.inventory[i.id]?.instances??[]).filter(id=>ctx.s.itemInstances?.[id]?.owner==='player'&&ctx.s.itemInstances[id].status==='持有').map(id=>({value:id,label:`${i.name}（${id}）`})));
+   if(choices!==null)row.multiple=true;
+  }
   if(choices)row.options=choices;
   return row;
  });
- return {...catalogRow(action),slots,fill,...(action.ui?.quick?{quick:action.ui.quick}:{}),...(consentPending(ctx,action,fill)?{blocked:CONSENT_PENDING}:{})};
+ const selected={...fill};
+ for(const slot of action.slots)if(selected[slot.name]===undefined&&slot.default!==undefined&&slot.default!=='dawn')selected[slot.name]=slot.default;
+ const permission=actionPermission(ctx,action,selected);
+ for(const slot of slots)if(slot.options&&!slot.multiple)for(const option of slot.options){
+  const check=actionPermission(ctx,action,{...selected,[slot.name]:option.value,...option.fill});
+  if(check)option.permission=check;
+ }
+ return {...catalogRow(action),slots,fill,...(action.call?.tool&&slots.some(slot=>slot.kind==='object'&&!slot.multiple)?{inputTool:action.call.tool}:{}),...(permission?{permission}:{}),...(action.ui?.quick?{quick:action.ui.quick}:{}),
+  ...(permission?.allowed===false?{blocked:permission.reason}:consentPending(ctx,action,fill)?{blocked:CONSENT_PENDING}:{})};
 }
 // A keeper's sold-out restock goods and the day the next delivery comes (shop cycle data; L4 何时到货).
 function restockNotes(engine,ctx,keeper){
@@ -108,7 +136,7 @@ function restockNotes(engine,ctx,keeper){
 const kindOf=(ctx,engine,id)=>ctx.present.has(id)?'npc':ctx.inventory.some(r=>r.id===id)?'item':id===ctx.s.location||ctx.exits.some(e=>e.id===id)?'place':null;
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
 export function worldActions(engine,document,{target=null,query=null,limit=24,registry=loadActionRegistry()}={}){
- const ctx=context(engine,document);
+ const ctx={...context(engine,document),document};
  let id=null;
  if(target){try{id=engine.resolve(String(target));}catch{id=ctx.people.find(p=>p.name===target)?.id??ctx.inventory.find(r=>r.name===target)?.id??null;}}
  const kind=id?kindOf(ctx,engine,id):null;
@@ -124,7 +152,7 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:ctx.name(id),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
   scene:sceneLines(engine,document),actions:actions.slice(0,limit),quick,texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
-   exits:ctx.exits.map(e=>({id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{})})),
+   exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};
 }
 export {findAction};

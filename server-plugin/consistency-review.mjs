@@ -1,5 +1,5 @@
 import {visibleReply} from '../extension/message-view.mjs';
-import {parseTurn,stripTurn,fullyTimedWait} from '../extension/turn.mjs';
+import {parseTurn,stripTurn,fullyTimedWait,actionNarrationContract} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
 import {digest} from './storage.mjs';
@@ -63,6 +63,7 @@ function prepare(input){
  const evidence=[{id:'player',kind:'intent',text:input.playerText},{id:'before',kind:'ledger',text:JSON.stringify(compactState(input.before,stockIds))},{id:'after',kind:'ledger',text:JSON.stringify(compactState(input.after,stockIds))},
   {id:'applied',kind:'ledger',text:JSON.stringify(applied)},
   {id:'registry',kind:'registry',text:JSON.stringify(registry)},...receipts.map((r,i)=>({id:`receipt:${i}`,kind:'receipt',text:JSON.stringify(r)})),
+  ...receipts.flatMap((r,i)=>{const contract=actionNarrationContract(r.result);return contract?[{id:`action-contract:${i}`,kind:'action-contract',text:JSON.stringify(contract)}]:[];}),
   ...Object.entries(input.knowledge??{}).map(([id,k])=>({id:`knowledge:${id}`,kind:'knowledge',text:JSON.stringify(k)})),
   {id:'blocklist',kind:'registry',text:JSON.stringify(input.blocklist??[])}];
  if(input.clock){
@@ -267,6 +268,7 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  knowledge 必须填写 subject 为无渠道人物编号、privateContent 为原句实际披露的具体私密内容，并引用 knowledge:subject 的渠道证据。普通否认、没提上午问话、含糊的“你上午的事”没有说出秘密内容，不能计为泄漏；若确实说出委托货物、期限或债额，仍须报错。库存数量以 before/after 的 npcInventory 核对，不把缺少人物知识条目当作库存事实冲突。
  工具 ok=false 不能写成成功，保留失败原因和实际地点、分钟；移动意图不是移动结果。检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
  request.messages[0].content+='\nknowledge.lies是该人物已登记的有意谎言（claims为说法，truth为实情）。其台词说出这些说法是人物在撒谎，不算叙述矛盾；旁白把谎言写成事实、或人物说出未登记的假话，仍按证据报问题。';
+ request.messages[0].content+='\naction-contract 是引擎回执的叙述约束：仅 committed 的 applied 是已发生效果；must 应保留，mustNot、trimmed 不能写成成功。pending、preview、rejected、not_submitted 均不是完成，不能用提案中的 effects 或预览结果补写成功；后果只按真实结算回执，不凭模型添加处罚、赔付或承诺。';
  request.messages[0].content+='\nclock.currentTime是服务端换算好的当前时刻，elapsedMinutes是实际差值，不另算历法。正文当前时刻一致且额外为0时，不因许可早已到期或等待起点不同报time；reason若承认时间无误，就不列该项。缺经历来源用warning，直接矛盾须引用相反记录才用error。每条reason最多200字；草稿quote最多120字，证据quote最多160字，只摘短的连续原文。JSON引文不得删除aliases/kind等中间字段再拼接，不自行补闭合标签。';
  for(const branch of request.tools[0].function.parameters.properties.issues.items.oneOf){
   branch.properties.quote={...shortString,maxLength:120};branch.properties.reason={...shortString,maxLength:200};

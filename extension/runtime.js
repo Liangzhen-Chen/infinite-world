@@ -223,8 +223,8 @@ async function act(action,slots={},confirmation={}){
 async function modelActions(args){
     const result=await api('actions',{campaignId:view.reference.campaignId,target:args.target,query:args.query,limit:12});
     // Compact for the model: ids, slots and filled choices; no internals, at most 8 choices per slot.
-    return JSON.stringify({here:result.scene,actions:result.actions.map(a=>({id:a.id,label:a.label,...(a.hint?{hint:a.hint}:{}),...(Object.keys(a.fill??{}).length?{fill:a.fill}:{}),
-        slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value)}:{})}))}))});
+    return JSON.stringify({here:result.scene,actions:result.actions.map(a=>({id:a.id,label:a.label,...(a.hint?{hint:a.hint}:{}),...(a.blocked?{blocked:a.blocked}:{}),...(a.permission?{permission:a.permission}:{}),...(Object.keys(a.fill??{}).length?{fill:a.fill}:{}),
+        slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.multiple?{multiple:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value),restrictedOptions:s.options.slice(0,8).filter(o=>o.permission?.allowed===false).map(o=>({value:o.value,reason:o.permission.reason}))}:{})}))}))});
 }
 async function modelAct(args){
     const resolved=await api('actions',{campaignId:view.reference.campaignId,resolve:{action:args.action,slots:args.slots??{}}});
@@ -341,6 +341,13 @@ async function afterReply(index){
             if(!replyUnchanged())return;
             if(chatId!==ctx().chatId||session!==reviewTurn)throw new Error('审查期间聊天已切换，尾注未提交');
             message.extra.fields_consistency=review;
+            if(review.fallback){
+                message.mes=review.fallback.text;reviewedText=message.mes;
+                if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
+                ctx().updateMessageBlock?.(index,message);
+                message.extra.fields_turn={valid:false,fallback:true,warning:'叙述未通过验证，显示实际回执模板；未追加时间'};session.completed=true;
+                actionError(review.feedback??'叙述未通过验证，已显示实际回执模板。');await ctx().saveChat();render();return;
+            }
             message.mes=review.text;reviewedText=message.mes;
             if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
             ctx().updateMessageBlock?.(index,message);
