@@ -2,12 +2,16 @@
 // 06 §6.3 and A §A.15.7: identity, possession and legal ownership differ.
 import {registerSetupLoader} from './index.mjs';
 import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,aliveHoldings,isPhysicallyDead} from '../../server-plugin/holdings.mjs';
-import {trackTransferUnit,changeItems} from '../../server-plugin/items.mjs';
+import {trackTransferUnit,changeItems,writePhysicalItem,equipPhysicalItem,bindPurse,writeLiquidContents,registerPhysicalStock,bindContainerWater} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
 import {bodyRule,writeBodyNeed} from '../../server-plugin/primitives-body.mjs';
 import {derivedStats,monsterStats} from '../../server-plugin/combat.mjs';
 import {npcAgeAt} from '../../server-plugin/npc-state.mjs';
-import {environmentFeatures} from '../../server-plugin/environment.mjs';
+import {environmentFeatures,writeEnvironmentPremise,localSightClear,localPlayerPoint} from '../../server-plugin/environment.mjs';
+import {createRoutingContext} from '../../server-plugin/action-router.mjs';
+import {subjectiveView} from '../../server-plugin/subjective-view.mjs';
+import {presentWitnesses} from '../../server-plugin/world-events.mjs';
+import {mirrorPartyCoins,partyAccount,legacyMoney} from '../../server-plugin/money.mjs';
 
 const writer='a3-physical-setup';
 declareHoldingWriter(writer,{entities:['item','building'],kinds:['owns'],locations:true});
@@ -18,6 +22,14 @@ const point=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite);
 const reader=ctx=>({get:(...p)=>p.reduce((v,k)=>v?.[k],ctx.document)});
 const location= (ctx,value)=>ctx.engine.world.locations.some(p=>p.id===value);
 const actorPath=(ctx,actor)=>actor==='player'?['state','player']:ctx.document.state.npcs?.[actor]?['state','npcs',actor]:ctx.document.state.creatures?.[actor]?['state','creatures',actor]:null;
+const physicalFields=['damage','contaminated','appearance','material','scale','wearable','materialTraits','attachedLaces','toxic','medicinalEffect','access','armed','identified','mechanism','locked','reachable','fireIntensity'];
+const physicalFacts=row=>Object.fromEntries(physicalFields.filter(k=>row[k]!==undefined).map(k=>[k,row[k]]));
+function initialPhysical(ctx,d,nativeId,row){
+ const facts={...physicalFacts(row),...(row.condition!==undefined?{condition:row.condition}:{}),...(row.kind==='node'?{physicalKind:'node'}:{})};
+ writePhysicalItem(d,ctx.engine,nativeId,facts,{source:row.sourceEvent?ctx.ref(row.sourceEvent):null,alias:row.id,name:row.name??null});
+ if(row.wornBy!==undefined&&row.wornBy!==null)equipPhysicalItem(d,ctx.engine,ctx.ref(row.wornBy),nativeId);
+ if(row.access!==undefined)bindPurse(d,ctx.engine,nativeId,ctx.ref(row.carriedBy??row.owner));
+}
 const missing=(ctx,item,接点,章节)=>ctx.unmet(item,`缺少原生接点：${接点}（${章节}）`);
 function array(ctx,setup,field,load){
  if(!Array.isArray(setup[field])){ctx.unmet(field,'expected an array');return;}
@@ -28,7 +40,7 @@ function array(ctx,setup,field,load){
  }
 }
 function extras(ctx,row,item,allowed){
- for(const field of Object.keys(row))if(!allowed.includes(field))missing(ctx,`${item}.${field}`,`${field} 的初始事实写入口及消费者`,'01 §1.2；06 §6.3');
+ for(const field of Object.keys(row))if(!allowed.includes(field))missing(ctx,`${item}.${field}`,`${field} 的初始事实写入口及消费者`,['zone','tableSide'].includes(field)?'01 §1.2；S4':'01 §1.2；06 §6.3');
 }
 function owner(ctx,d,subject,holder,item){
  if(holder===null||holder===undefined)return;
@@ -121,21 +133,25 @@ function instance(ctx,row,item){
   const bank=definition&&!ctx.actor(holder)&&(ctx.engine.rules.economy?.credit?.banks??[]).some(b=>b.id===holder);
   place(ctx,d,nativeId,bank?{...row,carriedBy:null}:binding&&row.carriedBy===undefined&&row.wornBy===undefined?{...row,carriedBy:holder}:row);
   owner(ctx,d,nativeId,legal,item);
+  initialPhysical(ctx,d,nativeId,row);
+  if(!definition&&row.quantity!==undefined)registerPhysicalStock(d,ctx.engine,nativeId,holder,row.quantity);
  });
  if(!ok)return;
  ctx.bindings[row.id]=nativeId;
  if(!ctx.actor(holder)&&row.moisture!==undefined)missing(ctx,`${item}.moisture`,'非库存单件的含水量写入口和干燥消费者','01 §1.2；06 §6.3');
- if(row.wornBy!==undefined)missing(ctx,`${item}.wornBy`,'穿戴位置（carried 仅表示随身，不代表穿戴）','01 §1.2；S4');
  if(row.zone!==undefined)missing(ctx,`${item}.zone`,'物件在局部分区内的位置','01 §1.2；S4');
  if(row.contents!==undefined)contents(ctx,nativeId,row.contents,`${item}.contents`);
- extras(ctx,row,item,['id','template','kind','owner','location','item','inventoryBinding','condition','moisture','carriedBy','wornBy','zone','name','quantity','contents']);
+ extras(ctx,row,item,['id','template','kind','owner','location','item','inventoryBinding','condition','moisture','carriedBy','wornBy','zone','name','quantity','contents',...physicalFields]);
 }
 
 function contents(ctx,container,rows,item){
  if(!Array.isArray(rows)){ctx.unmet(item,'expected an array of original contents');return;}
+ const liquids=rows.filter(row=>row?.resourceAlias!==undefined);
+ if(liquids.length)ctx.native(item,d=>writeLiquidContents(d,ctx.engine,container,liquids));
  for(const [index,row] of rows.entries()){
   const name=`${item}[${index}]`,b=row?.inventoryBinding;
   if(!object(row)){ctx.unmet(name,'invalid content declaration');continue;}
+  if(row.resourceAlias!==undefined)continue;
   if(!b){missing(ctx,name,'容器内 resourceAlias 与原生液体账户的绑定（不另造一份液体）','01 §1.2/§1.6');continue;}
   const definition=ctx.engine.world.items.find(i=>i.id===b.item);
   if(!object(b)||b.mode!=='same_stock'||!definition||!Number.isSafeInteger(b.quantity)||b.quantity<1||Object.keys(b).some(k=>!['item','quantity','mode'].includes(k))){ctx.unmet(name,'invalid same_stock content binding');continue;}
@@ -194,9 +210,10 @@ function environmentalObject(ctx,row,item,feature){
  if(Number.isFinite(state.waterMl)&&(!Number.isSafeInteger(state.waterMl)||state.waterMl>state.capacityMl-(state.reservedWaterMl??0)))fail('waterLiters','water exceeds actual available capacity or millilitre precision');
  if(Number.isFinite(state.capacityMl)&&(!Number.isSafeInteger(state.capacityMl)||state.capacityMl<=0))fail('capacityLiters','capacity must be positive integral millilitres');
  for(const [field,key] of [['fromObject','source'],['toObject','destination']])if(row[field]!==undefined&&ctx.ref(row[field])!==feature.links?.[key])missing(ctx,`${item}.${field}`,'环境连接重设（当前消费者只读目录 links）','01 §1.2；S4');
- if(row.owner!==undefined&&ctx.ref(row.owner)!==feature.owner)missing(ctx,`${item}.owner`,'环境操作权限的当前所有者（当前消费者只读目录 owner）','01 §1.3；06 §6.3');
- if(row.location!==undefined&&row.location!==feature.location)missing(ctx,`${item}.location`,'环境对象迁位后供施法/环境操作读取的位置（当前消费者只读目录 location）','01 §1.2；S4');
- if(row.carriedBy!==undefined)missing(ctx,`${item}.carriedBy`,'环境对象随身后的实际位置消费者','01 §1.2；S4');
+ const pendingOwner=Array.isArray(ctx.setup.holdings)&&ctx.setup.holdings.some(h=>h.kind==='owns'&&ctx.ref(h.subject)===feature.id&&ctx.ref(h.holder)===ctx.ref(row.owner));
+ // The shared setup driver opens these original holdings after materializing
+ // physical endpoints. Its native openHolding validation remains authoritative.
+ if(row.owner!==undefined&&ctx.ref(row.owner)!==feature.owner&&!pendingOwner)missing(ctx,`${item}.owner`,'环境操作权限需要真实 owns 持有，不能只凭 owner 声明','01 §1.3；06 §6.3');
  // Do not translate "turbid" into an invented numeric turbidity.
  if(row.waterState!==undefined){
   if(row.waterState==='turbid'&&state.turbidity>0)ctx.note(`${item}.waterState: verified native turbidity > 0; salt/toxin/pathogens preserved`);
@@ -205,44 +222,90 @@ function environmentalObject(ctx,row,item,feature){
  if(row.sourceEvent!==undefined){
   const source=ctx.ref(row.sourceEvent);
   if(!ctx.document.state.records?.[source])ctx.unmet(`${item}.sourceEvent`,'unresolved native history event binding');
-  else missing(ctx,`${item}.sourceEvent`,'环境状态的来源事件关联（不伪造事件结果）','01 §1.2；06 §6.3');
  }
- if(valid&&changed)ctx.native(item,d=>holdingSet(d,ctx.engine,['state','records',`physical_feature:${feature.id}`],{id:feature.id,category:'physical_feature',location:feature.location,state},writer));
+ if(valid&&(changed||row.location!==undefined||row.carriedBy!==undefined||row.sourceEvent!==undefined))ctx.native(item,d=>writeEnvironmentPremise(d,ctx.engine,feature.id,{location:row.location,carriedBy:ctx.ref(row.carriedBy),state,source:row.sourceEvent?ctx.ref(row.sourceEvent):undefined}));
  ctx.bindings[row.id]=feature.id;
- extras(ctx,row,item,['id','location','owner','waterLiters','capacityLiters','turbidity','blockagePercent','availableCapacityLiters','fromObject','toObject','carriedBy','waterState','sourceEvent']);
+ if(row.contents!==undefined)contents(ctx,feature.id,row.contents,`${item}.contents`);
+ if(row.contents!==undefined)ctx.native(`${item}.contents`,d=>bindContainerWater(d,ctx.engine,feature.id,{declaredMl:row.waterLiters===undefined?undefined:row.waterLiters*1000}));
+ extras(ctx,row,item,['id','location','owner','waterLiters','capacityLiters','turbidity','blockagePercent','availableCapacityLiters','fromObject','toObject','carriedBy','waterState','sourceEvent','contents']);
 }
 function physicalObject(ctx,row,item){
  if(!id(row.id)){ctx.unmet(item,'missing object ID');return;}
- const feature=environmentFeatures(ctx.engine).find(f=>f.id===row.id);
+ const feature=environmentFeatures(ctx.engine,ctx.document).find(f=>f.id===row.id);
  if(feature){environmentalObject(ctx,row,item,feature);return;}
  const existing=ctx.ref(row.id),entity=ctx.document.holdings?.entities?.[existing];
  if(entity||ctx.document.state.itemInstances?.[existing]){
+  ctx.native(item,d=>initialPhysical(ctx,d,existing,row));
   if(row.contents!==undefined)contents(ctx,existing,row.contents,`${item}.contents`);
   if(row.sourceEvent!==undefined){
    const source=ctx.ref(row.sourceEvent);
    if(!ctx.document.state.records?.[source])ctx.unmet(`${item}.sourceEvent`,'unresolved native history event binding');
-   else missing(ctx,`${item}.sourceEvent`,'物件状态与原生历史来源事件关联','01 §1.2；06 §6.3');
   }
-  extras(ctx,row,item,['id','contents','sourceEvent']);return;
+  extras(ctx,row,item,['id','contents','sourceEvent',...physicalFields]);return;
  }
  if(row.template!=='thing'||!['item','building','node'].includes(row.kind)||typeof row.name!=='string'||!row.name.trim()||!location(ctx,row.location)){
   ctx.unmet(item,'new object requires thing template, native kind, name and location');return;
  }
- if(row.kind==='node'){
-  missing(ctx,item,'环境节点实体模板及对应机关/微火/树枝消费者','01 §1.2；06 §6.3');return;
- }
- const nativeId=row.id.startsWith(`${row.kind}_`)?row.id:`${row.kind}_${row.id}`;
+ const kind=row.kind==='node'?'item':row.kind;
+ const nativeId=row.id.startsWith(`${kind}_`)?row.id:`${kind}_${row.id}`;
  if(row.condition!==undefined&&!finite(row.condition,0,100)){ctx.unmet(`${item}.condition`,'expected 0..100');return;}
  if(ctx.native(item,d=>{
   if(ctx.engine.byId.has(nativeId))throw Error('object ID collides with catalog identity');
-  createEntity(d,{id:nativeId,kind:row.kind,facts:{name:row.name,aliases:[row.id],...(row.condition!==undefined?{condition:row.condition}:{})},source:`${writer}:${row.id}`,writer});
+  createEntity(d,{id:nativeId,kind,facts:{name:row.name,aliases:[row.id],...(row.condition!==undefined?{condition:row.condition}:{})},source:`${writer}:${row.id}`,writer});
   place(ctx,d,nativeId,row);
+  owner(ctx,d,nativeId,ctx.ref(row.owner),item);
+  initialPhysical(ctx,d,nativeId,row);
  }))ctx.bindings[row.id]=nativeId;
- extras(ctx,row,item,['id','template','kind','name','location','condition']);
+ extras(ctx,row,item,['id','template','kind','name','location','condition','carriedBy','owner',...physicalFields]);
 }
 
 // The resolver reads place.zones/areas from the authored catalog; movement
 // reads environment geometry. No runtime zone/path graph consumer exists.
+function verifiedSpatial(ctx,setup,field,row,item){
+ const d=ctx.engine.primitiveDraft(ctx.document),routing=createRoutingContext(ctx.engine,ctx.document);
+ if(field==='zones'){
+  const result=routing.resolve(row.id,'zone'),named=routing.resolve(row.name,'zone');
+  const zone=ctx.engine.byId.get(row.location)?.zones?.find(z=>z.id===(result.value??named.value))??ctx.engine.byId.get(row.location)?.areas?.find(z=>z.id===(result.value??named.value));
+  if(zone){ctx.bindings[row.id]=zone.id;ctx.note(`${item}: verified native local area ${zone.id}`);return true;}
+ }else if(field==='placements'){
+  const entity=ctx.ref(row.entity),zone=ctx.ref(row.zone),position=entity==='player'?ctx.document.state.records?.local_player_position:ctx.document.state.records?.[`local_actor_position:${entity}`];
+  if(!row.blocksPassage&&position?.anchor===zone){ctx.note(`${item}: verified native position anchor`);return true;}
+ }else if(field==='paths'){
+  const from=ctx.ref(row.fromZone),to=ctx.ref(row.toZone);
+  // Existing authored exits remain real paths; no inferred lock bypass.
+  if(row.passable&&!row.blockedBy&&ctx.engine.world.locations.some(p=>p.id===from)&&ctx.engine.world.locations.some(p=>p.id===to)){
+   try{const route=ctx.engine.route(from,to,'walk',ctx.document.state.minute,ctx.document.randomSeed),edge=ctx.engine.world.routes.find(e=>e.id===route.edges?.[0]);if(route.edges?.length===1&&edge?.lengthKm*1000===row.distanceMeters){ctx.note(`${item}: verified native route and distance`);return true;}}catch{}
+  }
+ }else if(field==='positions'){
+  const observer=ctx.ref(row.observer),target=ctx.ref(row.target),view=createRoutingContext(ctx.engine,ctx.document,{actor:observer});
+  const visible=view.resolve(target).value===target;
+  if(row.lineOfSight!==visible)return false;
+  let actual=ctx.engine.primitiveTargetFacts(d,observer,target);
+  const feature=environmentFeatures(ctx.engine,ctx.document).find(f=>f.id===target);
+  if(observer==='player'&&feature?.location===ctx.document.state.location&&Array.isArray(feature.position)){
+   const from=localPlayerPoint(d),to=feature.position;
+   actual={distanceMeters:Math.hypot(from[0]-to[0],from[1]-to[1]),lineOfSight:localSightClear(d,ctx.engine,feature.location,from,to)};
+  }
+  const carried=ctx.document.holdings?.locations?.[target];
+  if(carried?.mode==='carried'&&carried.at===observer)actual={distanceMeters:0,lineOfSight:true};
+  const spells=Array.isArray(setup.abilities?.spells)?setup.abilities.spells:[];
+  const touch=(Array.isArray(setup.objects)?setup.objects:[]).some(o=>ctx.ref(o?.id)===target&&(o?.fireIntensity>0||o?.armed===true))||(Array.isArray(setup.itemInstances)?setup.itemInstances:[]).some(o=>ctx.ref(o?.carriedBy)===target&&o?.access==='loose_open');
+  const precise=!!row.rayMeters||touch||spells.some(id=>{const spell=ctx.engine.byId.get(id);return spell?.rangeMeters!==undefined&&!['dry','repair','light'].includes(spell.effectSpec?.kind);});
+  if(precise&&(!actual||actual.lineOfSight!==row.lineOfSight||!Number.isFinite(actual.distanceMeters)||touch&&(row.distanceMeters<=1.5)!==(actual.distanceMeters<=1.5)||spells.some(id=>{const range=ctx.engine.byId.get(id)?.rangeMeters;return Number.isFinite(range)&&(row.distanceMeters<=range)!==(actual.distanceMeters<=range);})||row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9))return false;
+  const targetBody=ctx.actor(target),at=observer==='player'?ctx.document.state.location:ctx.actor(observer)?.location;
+  if(row.audible!==undefined){
+   if(!targetBody)return false;
+   const heard=target==='player'?subjectiveView(ctx.engine,ctx.document,observer).observable.location===ctx.document.state.location:presentWitnesses(ctx.document.state,at).includes(target);
+   if(heard!==row.audible)return false;
+  }
+  const listeners=presentWitnesses(ctx.document.state,at);
+  if(ctx.document.state.location===at)listeners.push('player');
+  if(row.audibleTo?.some(id=>!listeners.includes(ctx.ref(id))))return false;
+  if(row.thirdPartyListeners&&JSON.stringify(listeners.filter(id=>![observer,target].includes(id)).sort())!==JSON.stringify(row.thirdPartyListeners.map(ctx.ref).sort()))return false;
+  if(visible){ctx.note(`${item}: verified native perception${precise?' and range boundary':''}; no contact evidence created`);return true;}
+ }
+ return false;
+}
 function spatial(ctx,setup,fields){
  for(const field of fields)array(ctx,setup,field,(row,item)=>{
   let valid=false,接点;
@@ -269,6 +332,7 @@ function spatial(ctx,setup,fields){
    接点='局部落石危险区登记及进入危险区的结算消费者';
   }
   if(!valid){ctx.unmet(item,`invalid ${field} declaration`);return;}
+  if(verifiedSpatial(ctx,setup,field,row,item))return;
   missing(ctx,item,接点,'01 §1.2；S4');
  });
 }
@@ -353,7 +417,18 @@ function actors(ctx,setup){
 registerSetupLoader({fields:['itemInstances','objects'],order:40,load(ctx,setup,fields){
  for(const field of fields)array(ctx,setup,field,(row,item)=>(field==='itemInstances'?instance:physicalObject)(ctx,row,item));
 }});
-registerSetupLoader({fields:['zones','paths','placements','positions','obstacles','hazards'],order:50,load:spatial});
+registerSetupLoader({fields:['accounts'],rows:{accounts:row=>object(row)&&row.container!==undefined},order:45,load(ctx,setup){
+ array(ctx,setup,'accounts',(row,item)=>{
+  const actor=ctx.ref(row.owner),container=ctx.ref(row.container),source=ctx.document.state.records?.[ctx.ref(row.sourceEvent)];
+  if(Object.keys(row).some(k=>!['owner','resource','purpose','balance','sourceEvent','container','balanceMode'].includes(k))||row.resource!=='coin_river'||row.purpose!=='purse'||!Number.isSafeInteger(row.balance)||row.balance<0||!ctx.actor(actor)||![undefined,'ensure_existing'].includes(row.balanceMode)||source?.category!=='world_event'||source.verb!=='opening_balance'||source.payload?.owner!==actor||source.payload.resource!==row.resource||source.payload.balance!==row.balance){ctx.unmet(item,'invalid purse snapshot or mismatched native opening balance event');return;}
+  ctx.native(item,d=>{
+   const account=bindPurse(d,ctx.engine,container,actor);
+   if(account!==partyAccount(ctx.engine,d.document.state,actor))throw Error('Purse does not refer to the original cash account');
+   if(row.balanceMode!=='ensure_existing')mirrorPartyCoins(d,ctx.engine,actor,row.balance-(legacyMoney(ctx.engine,d.document.state).get(account)??0),source.id,writer);
+  });
+ });
+}});
+registerSetupLoader({fields:['zones','paths','placements','positions','obstacles','hazards'],order:90,load:spatial});
 registerSetupLoader({fields:['body','actorStates'],order:60,load(ctx,setup,fields){
  for(const field of fields)(field==='body'?bodies:actors)(ctx,setup);
 }});

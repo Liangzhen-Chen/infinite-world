@@ -1,5 +1,10 @@
 import {reject} from './action-rejection.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {declareHoldingWriter,holdingSet,setLocation,aliveHoldings,locationOf} from './holdings.mjs';
+import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater} from './items.mjs';
+import {authority} from './action-authority.mjs';
+import {moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
+declareHoldingWriter('environment',{kinds:[],locations:true});
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('environment',{sinks:['sink:consume']});
 import {facilityView,isFacility} from './facility-state.mjs';
@@ -18,9 +23,124 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
-export const environmentFeatures=engine=>engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-function feature(engine,name,location){
-    const matches=environmentFeatures(engine).filter(row=>row.id===name||row.location===location&&[row.name,...row.aliases??[]].some(label=>normalize(label)===normalize(name??'')));
+export const environmentFeatures=(engine,document=engine.airDraft?.document??engine.physicalDocument)=>{
+ const rows=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+ if(!document)return rows;
+ const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+ return rows.map(row=>{
+  const state=document.state.records?.[key(row.id)],p=locationOf(d,row.id),carrier=p?.mode==='carried'?p.at:null;
+  const location=p?physicalLocation(d,engine,row.id):state?.location??row.location;
+  const owners=aliveHoldings(d,{kind:'owns',subject:row.id}),owner=owners.length===1?owners[0].holder:row.owner;
+  const position=carrier==='player'?localPlayerPoint(d):state?.position??row.position;
+  return {...row,location,owner,position};
+ });
+};
+// Native restoration of a catalog object's current placement and state. The
+// source is retained as provenance; restoring it does not replay the event.
+export function writeEnvironmentPremise(d,engine,id,{location,carriedBy,state,source}={}){
+ const row=environmentFeatures(engine,d.document).find(r=>r.id===id);
+ if(!row)throw Error('Unknown catalog environment object');
+ if(source){
+  const event=d.get('state','records',source);
+  if(event?.category!=='world_event'||!Number.isSafeInteger(event.minute)||event.minute>d.get('state','minute')||(event.payload?.subject??event.target)!==id||location!==undefined&&event.payload?.location!==location)throw Error('Unknown or mismatched environment source event');
+ }
+ if(location!==undefined&&!engine.world.locations.some(p=>p.id===location))throw Error('Unknown object location');
+ if(state!==undefined){
+  if(!state||typeof state!=='object'||Array.isArray(state))throw Error('Invalid environment state');
+  for(const field of ['capacityMl','waterMl','reservedWaterMl','saltMg','toxinUg','pathogenRisk','turbidity','blockagePercent'])if(state[field]!==undefined&&(!Number.isFinite(state[field])||state[field]<0))throw Error(`Invalid environment ${field}`);
+  if(state.waterMl!==undefined&&(!Number.isSafeInteger(state.waterMl)||!Number.isSafeInteger(state.capacityMl)||state.capacityMl<=0||state.waterMl+(state.reservedWaterMl??0)>state.capacityMl))throw Error('Invalid environment water capacity');
+  if(['pathogenRisk','turbidity','blockagePercent'].some(k=>state[k]>100))throw Error('Invalid environment percentage');
+ }
+ const identity=d.get('state','itemInstances',id);
+ if(identity&&!identity.physicalFeature)throw Error('Catalog endpoint conflicts with an inventory unit');
+ if(!identity)holdingSet(d,engine,['state','itemInstances',id],{id,physicalFeature:true,name:row.name},'environment');
+ if(carriedBy!==undefined&&carriedBy!==null){
+  const at=carriedBy==='player'?d.get('state','location'):d.get('state','npcs',carriedBy,'location');
+  if(!at||location!==undefined&&at!==location)throw Error('Object carrier and location conflict');
+  setLocation(d,{entity:id,at:carriedBy,mode:'carried',writer:'environment',source,engine});
+ }else if(location!==undefined)setLocation(d,{entity:id,at:location,mode:'place',writer:'environment',source,engine});
+ const previous=d.get('state','records',key(id));
+ holdingSet(d,engine,['state','records',key(id)],{...previous,id,category:'physical_feature',location:location??row.location,state:structuredClone(state??previous?.state??row.state),...(source?{source}:{})},'environment');
+ return id;
+}
+function interactPhysicalItem(d,engine,args,eventId){
+ const id=args.target,record=d.get('state','records',`physical_item:${id}`),operation=args.operation??'inspect';
+ if(!record&&operation==='take_contents'&&d.get('state','records',key(id))){
+  const row=environmentFeatures(engine,d.document).find(f=>f.id===id);if(!row)throw Error('Unknown container');
+  inReach(d,row,1.5);permission(d,engine,row,args);
+  return {id,...takeContainerUnit(d,engine,id,args.instance,'player',eventId)};
+ }
+ if(!record)return null;
+ const facts=physicalItem(d,engine,id),here=physicalLocation(d,engine,id)===d.get('state','location');
+ if(!here)throw Error('Physical item is not present');
+ if(operation==='inspect'){
+  const purse=d.get('state','records',`purse:${id}`),contents=d.get('state','records',`contents:${id}`);
+  return {id,name:facts.name,physical:structuredClone(record.facts),worn:Object.entries(wornItems(d,engine,'player')).find(([,v])=>v===id)?.[0]??null,
+   ...(purse?{account:purseAccount(d,engine,id),access:facts.access}:{}),
+   ...(contents?{contents:contents.entries.map(e=>({quantity:e.quantity,drinkable:e.drinkable,...(e.identityKnownToPlayer?{resource:e.resource}:{identity:'unknown'})}))}:{}),units:containerUnits(d,id).map(u=>({instance:u.id,item:u.item})),actionScope:{kind:'instant',instantaneous:true}};
+ }
+ if(!['wear','unwear','disarm','unlock','tie','drink_contents','take_contents','transfer_purse','douse_fire'].includes(operation))return null;
+ if(args.actor!==undefined||args.success!==undefined||args.difficulty!==undefined)throw Error('Physical action cannot supply actor or outcome');
+ let mutationAuthority=authority({engine,document:d.document},'player','fact.set',id);
+ if(!mutationAuthority.allowed)mutationAuthority=authority({engine,document:d.document},'player',operation,id);
+ if(!mutationAuthority.allowed)throw Error(mutationAuthority.reason??'Physical item authority required');
+ if(operation==='wear'||operation==='unwear')return {id,slots:equipPhysicalItem(d,engine,'player',id,{slot:args.slot,remove:operation==='unwear',eventId})};
+ const p=locationOf(d,id),contact=p?.mode==='carried'&&p.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
+ if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)throw Error('Physical contact distance is not established');
+ if(operation==='drink_contents')return {id,...consumeLiquid(d,engine,id,args.resource,args.quantity??1,{eventId})};
+ if(operation==='take_contents')return {id,...takeContainerUnit(d,engine,id,args.instance,'player',eventId)};
+ if(operation==='transfer_purse'){
+  const from=purseAccount(d,engine,id),to=args.to;
+  if(facts.access!=='loose_open')throw Error('Purse is not open for access');
+  if(!authority({engine,document:d.document},'player','transfer',from).allowed)throw Error('The original cash account requires its own authority');
+  if(to!=='player'&&!d.get('state','npcs',to)||physicalLocation(d,engine,to)!==d.get('state','location'))throw Error('Cash recipient is not present');
+  integer(args.coins,1,100000,'现金数量');
+  const destination=partyAccount(engine,d.document.state,to),owner=d.get('state','records',`purse:${id}`,'actor');
+  if(from===destination)throw Error('Cash transfer endpoints must differ');
+  moveCoins(d,{from,to:destination,amount:args.coins,writer:'environment',eventId});
+  mirrorPartyCoins(d,engine,owner,-args.coins,eventId,'environment');
+  mirrorPartyCoins(d,engine,to,args.coins,eventId,'environment');
+  return {id,from,to,coins:args.coins};
+ }
+ if(operation==='tie'){
+  const branch=physicalItem(d,engine,args.destination);
+  if(!facts.attachedLaces||!facts.materialTraits?.includes('old_shoe')||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
+  const allowed=authority({engine,document:d.document},'player','fact.set',args.destination);
+  if(!allowed.allowed)throw Error('Support authority required');
+  setLocation(d,{entity:id,at:args.destination,mode:'container',writer:'environment',engine,source:eventId});return {id,attachedTo:args.destination};
+ }
+ if(operation==='douse_fire'){
+  if(facts.fireIntensity!==1||engine.quantity(d,'player','item_water')<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
+  engine.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
+  writePhysicalItem(d,engine,id,{fireIntensity:0},{eventId});engine.advance(d,1,eventId);return {id,fireIntensity:0,minutes:1};
+ }
+ const field=operation==='disarm'?'armed':'locked';
+ if(facts[field]!==true||operation==='disarm'&&(facts.identified!==true||facts.mechanism!=='tripwire_falling_log')||operation==='unlock'&&facts.mechanism!=='mechanical_lock')throw Error('No identified supported mechanism');
+ const tool=operation==='disarm'?'item_smith_tongs':'item_iron_wire';
+ if(engine.quantity(d,'player',tool)<1)throw Error('Mechanism requires its actual tool');
+ const rules=engine.world.openActionRules?.generic;
+ if(!rules)throw Error('Missing native physical work rules');
+ const check=engine.check(d,{attribute:'敏捷',difficulty:rules.physicalDifficulty,tools:[tool]},eventId);
+ engine.advance(d,rules.physicalMinutes,eventId);
+ if(check.success&&physicalLocation(d,engine,id)===d.get('state','location'))writePhysicalItem(d,engine,id,{[field]:false},{eventId});
+ const current=physicalItem(d,engine,id)[field],success=check.success&&current===false;
+ return {id,target:id,...check,check,success,status:success?'已解除':'未解除',[field]:current,minutes:rules.physicalMinutes};
+}
+// The existing registered site-disarm action consumes an authored generic
+// mechanism as well as the site's older fixed mechanism catalog. Do not turn
+// an unknown or ambiguous name into a replacement trap.
+export function physicalSiteAction(d,engine,tool,args,eventId){
+ if(tool!=='site'||args.operation!=='disarm')return null;
+ const nodes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='physical_item'&&r.facts.physicalKind==='node'&&physicalLocation(d,engine,r.id)===d.get('state','location'));
+ const matches=nodes.filter(r=>{
+  const item=physicalItem(d,engine,r.id);return [r.id,item.name,...item.aliases??[]].includes(args.target);
+ });
+ if(matches.length>1)throw Error('Ambiguous physical mechanism target');
+ if(!matches.length)return null;
+ return interactPhysicalItem(d,engine,{...args,operation:'disarm',target:matches[0].id},eventId);
+}
+function feature(engine,name,location,document){
+    const matches=environmentFeatures(engine,document).filter(row=>row.id===name||row.location===location&&[row.name,...row.aliases??[]].some(label=>normalize(label)===normalize(name??'')));
     if(matches.length!==1)throw new Error(matches.length?'环境对象称呼有歧义':'环境对象未登记');return matches[0];
 }
 const stateOf=(d,row)=>{
@@ -28,7 +148,7 @@ const stateOf=(d,row)=>{
     if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw new Error('环境动态状态的登记键发生冲突，拒绝覆盖');
     return record?.state??row.state;
 };
-const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
+const store=(d,row,state)=>{if(state.waterMl!==undefined)reconcileContainerWater(d,row.id,state.waterMl);d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});};
 function point(d){const row=d.get('state','records','local_player_position');return row?.location===d.get('state','location')?row.point:[0,0];}
 export function localPlayerPoint(d){return [...point(d)];}
 // A successful melee exchange supplies contact evidence, never mere co-presence.
@@ -47,7 +167,7 @@ export function localSightClear(d,engine,location,from,to,{waterCurtain=true,opt
     if(waterCurtain&&!waterEarthSightClear(d,location,from,to))return false;
     if(optical&&!opticalSightClear(d,engine,location,from,to))return false;
     if(fog&&!opticalVisibility(d,engine,location,from,to))return false;
-    for(const row of environmentFeatures(engine).filter(f=>f.location===location)){
+    for(const row of environmentFeatures(engine,d.document).filter(f=>f.location===location)){
         const state=stateOf(d,row);if(state?.blocksSight!==true)continue;
         const radius=state.sightRadiusMeters;
         if(!Number.isFinite(radius)||radius<0)return false;
@@ -83,13 +203,16 @@ import {forestView} from './forest-water.mjs';
 import {basinForLocation,basinState,waterBasins} from './water-cycle.mjs';
 export function environmentCatalog(engine,document,{entity}={}){
     const d={get:(...path)=>path.reduce((v,k)=>v?.[k],document)},location=document.state.location;
-    if(entity){const row=feature(engine,entity,location);inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));}
+    if(entity){
+        const row=environmentFeatures(engine,document).find(r=>r.id===entity);
+        if(!row)throw Error('环境对象未登记');inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));
+    }
     const forest=forestView(engine,document.state,location),basin=basinForLocation(engine,location,waterBasins(engine,document.state)),water=basin&&basinState(engine,document.state,basin);
-    return{kind:'feature',entries:environmentFeatures(engine).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row))),
+    return{kind:'feature',entries:environmentFeatures(engine,document).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row))),
         ...(forest?{forest}:{}),...(basin?{watershed:{id:basin.id,location:basin.location,waterMl:water.waterMl,capacityMl:water.capacityMl}}:{})};
 }
 export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
-    const source=feature(this,args.source,d.get('state','location')),destination=feature(this,args.destination,d.get('state','location'));
+    const source=feature(this,args.source,d.get('state','location'),d.document),destination=feature(this,args.destination,d.get('state','location'),d.document);
     if(source.id===destination.id)throw new Error('源与目标容器不能相同');
     if(!['water','container'].includes(source.kind)||destination.kind!=='container')throw new Error('役灵只能从水源或容器搬水到真实容器');
     for(const row of[source,destination]){inReach(d,row,3);permission(d,this,row,args);}
@@ -115,10 +238,10 @@ export function validateEnvironmentCatalog(catalog){
     return errors;
 }
 function watering(d,engine,row,operation,args,range,power){
-    const channel=operation==='irrigate'?row:feature(engine,row.links?.channel,d.get('state','location'));
+    const channel=operation==='irrigate'?row:feature(engine,row.links?.channel,d.get('state','location'),d.document);
     if(channel.kind!=='channel')reject('E-ACTION-CHANNEL','缺少真实引水沟',{missing:['需要真实存在的引水沟'],repair:['先修建引水沟，再选择其真实编号引水']});
-    const source=feature(engine,channel.links?.source,d.get('state','location')),
-        destination=feature(engine,channel.links?.destination,d.get('state','location'));
+    const source=feature(engine,channel.links?.source,d.get('state','location'),d.document),
+        destination=feature(engine,channel.links?.destination,d.get('state','location'),d.document);
     if(source.kind!=='water'||destination.kind!=='soil'||operation==='soil_water'&&destination.id!==row.id)throw new Error('沟渠源头或目标田垄不匹配');
     for(const target of[channel,source,destination]){inReach(d,target,range);permission(d,engine,target,args);}
     assertLiquidWater(engine,d,source);
@@ -130,7 +253,7 @@ function watering(d,engine,row,operation,args,range,power){
 }
 export function prepareEnvironmentMagic(d,catalog,args){
     if(!this.rules.environment)throw new Error('此世界尚无环境规则');
-    const row=feature(this,args.target,d.get('state','location')),spec=catalog.effectSpec;
+    const row=feature(this,args.target,d.get('state','location'),d.document),spec=catalog.effectSpec;
     inReach(d,row,catalog.rangeMeters);if(spec.operation!=='sense_water')permission(d,this,row,args);
     const current=stateOf(d,row),operation=spec.operation;
     if(['condense','clean_water','sense_water'].includes(operation)&&!['container','water'].includes(row.kind))throw new Error('法术需要实际水源或容器');
@@ -147,7 +270,7 @@ export function prepareEnvironmentMagic(d,catalog,args){
 }
 export function applyEnvironmentMagic(d,prepared,eventId){
     let valid;try{valid=prepareEnvironmentMagic.call(this,d,prepared.catalog,prepared.environment);}catch(error){return{target:prepared.target,effectFailed:error.message};}
-    const row=feature(this,valid.target,d.get('state','location')),current=structuredClone(stateOf(d,row)),{operation,power}=valid.spec;
+    const row=feature(this,valid.target,d.get('state','location'),d.document),current=structuredClone(stateOf(d,row)),{operation,power}=valid.spec;
     if(operation==='sense_water')return{target:row.id,observation:{salinityPpt:current.saltMg/current.waterMl,odor:current.odor,turbidity:current.turbidity,
         limits:'只辨盐分与气味，未检验毒素或病原，不能据此判断饮水安全'}};
     const before=visible(row,current);let result;
@@ -179,6 +302,7 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    const physical=interactPhysicalItem(d,this,args,eventId);if(physical)return physical;
     const building=args.target&&(d.get('state','created',args.target)??this.byId.get(args.target));
     if(isFacility(building)){
         if(building.id!==location&&building.parent!==location)throw Error('建筑不在近旁');
@@ -196,13 +320,14 @@ export function interactEnvironment(d,args,eventId){
         if(args.target){const care=inspectCare(d,this,args);if(care)return{care,actionScope:{kind:'instant',instantaneous:true}};}
         const result=environmentCatalog(this,d.document,{entity:args.target});
         if(!args.target)return result;
-        const row=feature(this,args.target,location),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
+        const row=feature(this,args.target,location,d.document),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
         if(check){inReach(d,row,3);permission(d,this,row,args);}
         return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),light:inspectLight(d,this,row),mindSpace:inspectMindSpace(d,this,row),actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation==='inspect_heat')return{...inspectObjectProcess(d,this,args.target,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='warm_touch')return{...touchWarmObject(d,this,args),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='douse_fire'){
+        if(args.source)releaseContainerWater(d,args.source,eventId);
         const result=douseObjectFire(d,this,args);this.advance(d,1,eventId);return{...result,minutes:1};
     }
     if(operation==='inspect_marks'){
@@ -214,7 +339,7 @@ export function interactEnvironment(d,args,eventId){
         const item=this.resolve(args.item,'item'),result=addObjectFuel(d,this,{...args,item},eventId);
         this.advance(d,1,eventId);return{...result,minutes:1,note:'燃料已从自有库存转入炉具；搬放经过一分钟，燃烧按实际时间继续'};
     }
-    const row=feature(this,args.target,location);inReach(d,row,Number.POSITIVE_INFINITY);
+    const row=feature(this,args.target,location,d.document);inReach(d,row,Number.POSITIVE_INFINITY);
     if(operation==='approach'){
         assertMindAwake(d);
         unlockMindSpaceDoor(d,this,args);
@@ -232,7 +357,7 @@ export function interactEnvironment(d,args,eventId){
         return{target:row.id,metres,minutes,mudMinutes,position:[...row.position]};
     }
     if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');
-    const destination=feature(this,args.destination,location),range=3;
+    const destination=feature(this,args.destination,location,d.document),range=3;
     if(row.kind!=='channel'||destination.kind!=='silt_heap')throw new Error('搬泥需要引水沟及登记堆泥处');
     for(const target of[row,destination]){inReach(d,target,range);permission(d,this,target,args);}
     const amount=integer(args.grams??this.rules.environment.carrySiltMaximumGrams,1,this.rules.environment.carrySiltMaximumGrams,'单次搬泥重量');

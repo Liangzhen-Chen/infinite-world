@@ -13,7 +13,15 @@ export function registerSetupLoader(module){modules.push(module);modules.sort((a
 export const setupLoaderFields=()=>modules.flatMap(m=>m.fields);
 export function runSetupLoaders(ctx,setup){
  for(const module of modules){
-  const fields=module.fields.filter(field=>Object.hasOwn(setup,field));
-  if(fields.length)module.load(ctx,setup,fields);
+  const fields=module.fields.filter(field=>Object.hasOwn(setup,field)&&(!module.rows?.[field]||Array.isArray(setup[field])&&setup[field].some(module.rows[field])));
+  if(!fields.length)continue;
+  const input={...setup};
+  for(const field of fields)if(Array.isArray(setup[field])){
+   const routes=modules.filter(m=>m.rows?.[field]);
+   if(routes.length)input[field]=setup[field].filter(row=>{
+    const target=routes.find(m=>m.rows[field](row));return target?target===module:!module.rows?.[field];
+   });
+  }
+  module.load(ctx,input,fields);
  }
 }
