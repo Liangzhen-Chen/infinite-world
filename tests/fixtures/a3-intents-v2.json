@@ -5,7 +5,7 @@
     "tricky": false,
     "category": "日常生活",
     "expected": {
-      "route": "core:wildlife.eat",
+      "route": "core:eat.meal",
       "signature": [
         "transfer(resource:item_ration,self->sink:consume)",
         "vital(person:self,body:satiety)"
@@ -13,7 +13,7 @@
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3 与附录A §A.15.7规定进食须真实消耗食物，再按营养恢复饱腹。"
+      "why": "06 §6.3 与附录A §A.15.7规定进食须真实消耗食物，再按营养恢复饱腹。 06 §6.8按真实动作职责路由；world/actions/core.json的core:eat.meal消耗自备饭食，wildlife.eat属于野外进食，不用于本题干粮。"
     },
     "proposal": {
       "intent": "肚子饿了，我把行囊里那份没坏的干粮吃掉。",
@@ -34,7 +34,8 @@
       ]
     },
     "proposalNotes": [
-      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。"
+      "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
+      "2026-10-20 v2r复审：同意改为core:eat.meal。自备干粮匹配目录“吃一份自备饭食”；保留干粮消耗与饱腹签名，不引入煮鱼所需材料（06 §6.3、§6.8）。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -1886,7 +1887,8 @@
     },
     "proposalNotes": [
       "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
-      "商旅行会联络处是真实地点，但不能假定它有木工认证授予权；须由目录或受理者指出有权机构，不直接开 certified。"
+      "商旅行会联络处是真实地点，但不能假定它有木工认证授予权；须由目录或受理者指出有权机构，不直接开 certified。",
+      "2026-10-20 v2r复审：世界内容缺口：world/meta/professions.json profession_life_6要求本地行业师傅或登记行会、技能100及作品；world/geo/locations.json的bld_bs_guild只作商旅行会联络。检索world/people、world/lore、world/geo、world/meta未找到明确木工考官/认证授予来源；baseline列出的阿砚等为学徒/帮工/修补工，木工职业或教学服务本身不足以证明考官资格。无可证实的合格考点可迁，保留地点、登记员和未解析考官选择器；不把receive_application/refer_examiner升级成授予权，不预置认证通过。"
     ],
     "setup": {
       "location": "bld_bs_guild",
@@ -2550,13 +2552,12 @@
     "expected": {
       "route": "core:craft.repair",
       "signature": [
-        "transfer(resource:repair_materials,self->sink:consume)",
         "fact.set(thing:own_item_staff,condition)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3的fact.set按技能、工具和时间限幅，§6.8优先匹配修理动作而不直接满耐久。"
+      "why": "06 §6.3的fact.set按技能、工具和时间限幅，§6.8优先匹配修理动作而不直接满耐久。 原文“有合适工具和修补料”仅声明持有，不等于要求使用；world/meta/rules.json的repair_staff_trim.materials=[]，故不要求耗料，工时、工位费及工具磨损仍按原生方案。"
     },
     "proposal": {
       "intent": "自己的旧木杖裂了一道，我有合适工具和修补料，照现有修理方案补牢。",
@@ -2578,7 +2579,8 @@
     },
     "proposalNotes": [
       "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
-      "world/meta/rules.json 的 repair_staff_trim.restore=20 且 materials=[]；不因原签名概括“修补料”而凭空扣料，实际工时与磨损交注册修理动作。"
+      "world/meta/rules.json 的 repair_staff_trim.restore=20 且 materials=[]；不因原签名概括“修补料”而凭空扣料，实际工时与磨损交注册修理动作。",
+      "2026-10-20 v2r复审：“有修补料”不是“用了修补料”；且明确“照现有修理方案”。world/meta/rules.json repair_staff_trim的materials=[]、restore=20、minutes=20、toolWear=1、maxLoss=1，删除expected虚构耗料。保留备用木料、工具、费用与实际修理检定，不把condition直接设满。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -2743,7 +2745,8 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "transfer(resource:wood+rope,self->sink:consume)",
+        "transfer(resource:item_wood,self->sink:consume)",
+        "transfer(resource:item_flax_cord,self->sink:consume)",
         "create(thing:crude_pot_stand,improvised)"
       ],
       "outOfBounds": false,
@@ -2799,7 +2802,8 @@
     },
     "proposalNotes": [
       "world/ontology/entity-templates.json的thing包含item种类，可按06 §6.7承接有实际材料的即兴crude物品。materials是同事务投入清单，不是第二次扣料。",
-      "本轮场景绑定：missing:crude_pot_stand_template → thing。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:crude_pot_stand_template → thing。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：01 §1.6账户按资源分立，06 §6.8签名为多重集：原文木料与绳子、proposal两次transfer一致，expected拆为item_wood与item_flax_cord两笔；即兴制作成功/失败及耗料分支不变。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -3943,14 +3947,14 @@
     "tricky": false,
     "category": "交易与借贷",
     "expected": {
-      "route": "core:promise.cancel",
+      "route": "open:waive_debt",
       "signature": [
         "obligation.cancel(obligation:ayan_debt_to_self,creditor_waiver)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3允许债权人取消自己的债权，免债不产生钱款也不改其他人的债务。"
+      "why": "06 §6.3允许债权人取消自己的债权，免债不产生钱款也不改其他人的债务。 06 §6.8须匹配债权人免除借款；core:promise.cancel的约定取消不代替本题免债，开放原语路由为open:waive_debt。"
     },
     "proposal": {
       "intent": "阿砚欠我的那笔十铜是我自己的债权，我现在免掉，不让他再还。",
@@ -3964,7 +3968,8 @@
       "target": "npc_hw_ayan"
     },
     "proposalNotes": [
-      "本轮场景绑定：missing:ayan_debt_to_self → 阿砚欠本人的唯一十铜借款。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:ayan_debt_to_self → 阿砚欠本人的唯一十铜借款。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：同意改为open:waive_debt。原文明确玩家是唯一十铜借款的债权人；06 §6.3 obligation.cancel允许免除自有债权。world/actions/core.json的promise.cancel为约定取消，不能据名称近似强配；取消签名及债权前提不变。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -4518,14 +4523,14 @@
     "tricky": false,
     "category": "社交与对话",
     "expected": {
-      "route": "core:dialogue.guide",
+      "route": "core:dialogue.guide_request",
       "signature": [
         "emit(person:npc_hw_zhengshuisheng,request:guide)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.9.2和world/actions/core.json的core:dialogue.guide明确承接请人带路，故保留注册路由。本次只发出带路请求，NPC按05 §5.7独立答复；原条件性service义务仍须真实接受后才能创建，不是本次必有的签名。若需确定具体渡河点，应由知情答复补齐，不能代填同意或直接移动。"
+      "why": "06 §6.9.2允许先请求并听取NPC答复；按§6.8及world/actions/core.json，guide_request承接询问意愿，guide需要具体destination并创建带路约定。本题只问意愿、渡河处未定，故用core:dialogue.guide_request；只要求emit，不预开义务、代填同意或直接移动。"
     },
     "proposal": {
       "intent": "郑水生在这里，我请他带我去他熟悉的渡河处，先听听他愿不愿意。",
@@ -4548,7 +4553,8 @@
       "target": "npc_hw_zhengshuisheng"
     },
     "proposalNotes": [
-      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。"
+      "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
+      "2026-10-20 v2r复审：同意改为core:dialogue.guide_request。目录guide的destination必填且调用world_promise.create；guide_request不要求已选具体地点。原文“先听听他愿不愿意”对应后者；撤回旧复审坚持guide的裁定。"
     ],
     "setup": {
       "location": "loc_hw_dock",
@@ -6459,7 +6465,8 @@
     },
     "proposalNotes": [
       "沿可见射线施术；不能以“避开石墙”删除遮挡或赋予法术绕墙能力。",
-      "本轮场景绑定：missing:visible_enemy → npc_hw_wushuo。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:visible_enemy → npc_hw_wushuo。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：按主会话新授权修正v2p：原意已会且可施放一次。world/meta/rules.json combat.character为mpBase=8、mpPerLevel=2、mpPerSpirit=2；保持原属性时，10级的基础与等级项已达28。world/meta/professions.json profession_mage.minimumLevel=10，故保留原法师认证的最低合法等级是10（不能为15点成本降到4级而保留认证）。body.player.level=10、mp=15，与world/meta/spells.json实际成本一致；无超上限写入。附录A §A.15的派生口径和开发指南3.3要求容量从事实派生；保留检定、材料、同意及空间前置。"
     ],
     "setup": {
       "location": "loc_hw_northwood",
@@ -6470,9 +6477,10 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_fire_08及skill_fire_08，熟练度满足该术施放阶段，魔力8；敌对吴朔在8米处且可见。",
+        "已学spell_fire_08及skill_fire_08，熟练度满足该术施放阶段，等级10，当前魔力15；敌对吴朔在8米处且可见。",
         "旁侧有石墙遮住一条直线，玩家当前站位另有无遮挡发射线，不能穿墙；没有无辜者占据选用的火矢路径。",
-        "本题已会该术，结构化起始熟练度为300（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+        "本题已会该术，结构化起始熟练度为300（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。",
+        "此前已取得的profession_mage最低等级为10；本场level=10，保留原属性和熟练度，不额外分配精神或自由属性点。当前MP只够本题施法一次，不直接写maxMp或预置法术效果。"
       ],
       "abilities": {
         "skills": {
@@ -6488,7 +6496,8 @@
       },
       "body": {
         "player": {
-          "mp": 8
+          "mp": 15,
+          "level": 10
         }
       },
       "positions": [
@@ -6582,7 +6591,8 @@
     },
     "proposalNotes": [
       "item_water 为真实物品资源；题设桶内实际水量与箱体须绑定，申请灭掉小火，实际降幅受水量和材质限制。",
-      "本轮场景绑定：missing:own_burning_box → item_bottle_divider_crate；missing:held_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_burning_box → item_bottle_divider_crate；missing:held_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：木箱itemInstances.owner已为player；在桶objects补owner=npc_hw_linsui，直接复用world/geo/locations.json feature_hw_kitchen_bucket.owner，非按酒馆老板身份猜测。水仍为玩家同一份库存，桶仍归林穗；沿用本人use_bucket同意事件，不改变持有与法律所有权之别（01 §1.3）。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -6666,7 +6676,8 @@
               },
               "owner": "player"
             }
-          ]
+          ],
+          "owner": "npc_hw_linsui"
         }
       ],
       "positions": [
@@ -6724,7 +6735,8 @@
       }
     },
     "proposalNotes": [
-      "持续90分钟与强度4来自法术；施法先结算，旅行另耗时，仍承受落石与灵活性代价。"
+      "持续90分钟与强度4来自法术；施法先结算，旅行另耗时，仍承受落石与灵活性代价。",
+      "2026-10-20 v2r复审：按主会话新授权修正v2p：原意已会且可施放一次。world/meta/rules.json combat.character为mpBase=8、mpPerLevel=2、mpPerSpirit=2；保持原属性时，10级的基础与等级项已达28。world/meta/professions.json profession_mage.minimumLevel=10，故保留原法师认证的最低合法等级是10（不能为15点成本降到4级而保留认证）。body.player.level=10、mp=28，与world/meta/spells.json实际成本一致；无超上限写入。附录A §A.15的派生口径和开发指南3.3要求容量从事实派生；保留检定、材料、同意及空间前置。"
     ],
     "setup": {
       "location": "site_w5_white_quarry",
@@ -6735,9 +6747,10 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_earth_11及skill_earth_11，熟练度满足该术施放阶段，魔力8；自有树脂一份。",
+        "已学spell_earth_11及skill_earth_11，熟练度满足该术施放阶段，等级10，当前魔力28；自有树脂一份。",
         "玩家在采坑塌石阶前的安全落脚处，眼前相邻窄路有持续落石且可尝试通过；没有石肤状态，施法和移动分步结算，护肤不保证免除所有落石伤害。",
-        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。",
+        "此前已取得的profession_mage最低等级为10；本场level=10，保留原属性和熟练度，不额外分配精神或自由属性点。当前MP只够本题施法一次，不直接写maxMp或预置法术效果。"
       ],
       "abilities": {
         "skills": {
@@ -6753,7 +6766,8 @@
       },
       "body": {
         "player": {
-          "mp": 8
+          "mp": 28,
+          "level": 10
         }
       },
       "zones": [
@@ -6827,7 +6841,8 @@
     },
     "proposalNotes": [
       "未给遗址机关与工具实例；不拿普通刀具冒充已经匹配的拆陷阱工具。",
-      "本轮场景绑定：missing:reachable_trap → 北林废观测塔入口已发现的绊索落木机关；missing:carried_disarm_tools → item_smith_tongs。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:reachable_trap → 北林废观测塔入口已发现的绊索落木机关；missing:carried_disarm_tools → item_smith_tongs。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：原文未指定机关所有者，按本次授权补场景事实：该入口简单绊索落木机关原属吴朔。world/people/baseline.json明确npc_hw_wushuo是北林猎人、会陷阱追踪，故选他而非虚构遗址管理员；这不声称整座废塔属于吴朔。 01 §1.3与06 §6.3：owner与历史许可actor、permit.issuer统一到同一真实主体；许可范围和期限不扩张，歧义、反例与其他空间前置保留。"
     ],
     "setup": {
       "location": "site_beilin_tower",
@@ -6841,7 +6856,8 @@
       "facts": [
         "北林废观测塔入口已发现的绊索落木机关：本独立场景在入口现存的唯一机械机关，armed=true，绊索、木楔与落木可触及且已识别。",
         "有权管理者先前已许可玩家解除此机关；玩家有拆解此类简单绊索的知识，铁钳可夹稳楔片、小刀可割绳，工具完好；拆解仍耗时并可失败。",
-        "该机关用thing/node通用模板在setup时登记，不借用world里已经锈断、没有危险的旧捕夹充当活动陷阱。"
+        "该机关用thing/node通用模板在setup时登记，不借用world里已经锈断、没有危险的旧捕夹充当活动陷阱。",
+        "原文未指定机关所有者，按本次授权补场景事实：该入口简单绊索落木机关原属吴朔。world/people/baseline.json明确npc_hw_wushuo是北林猎人、会陷阱追踪，故选他而非虚构遗址管理员；这不声称整座废塔属于吴朔。"
       ],
       "objects": [
         {
@@ -6852,7 +6868,8 @@
           "location": "site_beilin_tower",
           "armed": true,
           "mechanism": "tripwire_falling_log",
-          "identified": true
+          "identified": true,
+          "owner": "npc_hw_wushuo"
         }
       ],
       "history": [
@@ -6864,10 +6881,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-066"
           },
-          "actor": {
-            "role": "authorized_manager",
-            "of": "a3v2_066_trap"
-          },
+          "actor": "npc_hw_wushuo",
           "subject": "a3v2_066_trap",
           "to": "player",
           "scope": "disarm"
@@ -6879,10 +6893,7 @@
           "holder": "player",
           "subject": "a3v2_066_trap",
           "scope": "disarm",
-          "issuer": {
-            "role": "authorized_manager",
-            "of": "a3v2_066_trap"
-          },
+          "issuer": "npc_hw_wushuo",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_066_permit_0"
@@ -7311,7 +7322,8 @@
       }
     },
     "proposalNotes": [
-      "这里仅声明读取陶芷同意；题设当面同意须来自本人事件，提案未写granted:true。"
+      "这里仅声明读取陶芷同意；题设当面同意须来自本人事件，提案未写granted:true。",
+      "2026-10-20 v2r复审：按主会话新授权修正v2p：原意已会且可施放一次。world/meta/rules.json combat.character为mpBase=8、mpPerLevel=2、mpPerSpirit=2；保持原属性时，10级的基础与等级项已达28。world/meta/professions.json profession_mage.minimumLevel=10，故保留原法师认证的最低合法等级是10（不能为15点成本降到4级而保留认证）。body.player.level=10、mp=28，与world/meta/spells.json实际成本一致；无超上限写入。附录A §A.15的派生口径和开发指南3.3要求容量从事实派生；保留检定、材料、同意及空间前置。"
     ],
     "setup": {
       "location": "bld_hw_herbs",
@@ -7324,9 +7336,10 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，魔力8；自有树脂1份。",
+        "已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，等级10，当前魔力28；自有树脂1份。",
         "陶芷清醒、距离2米，已本人当面同意这一次隔焰罩，来源事件明确、有效且未撤销；没有既存fire_shield状态。",
-        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。",
+        "此前已取得的profession_mage最低等级为10；本场level=10，保留原属性和熟练度，不额外分配精神或自由属性点。当前MP只够本题施法一次，不直接写maxMp或预置法术效果。"
       ],
       "abilities": {
         "skills": {
@@ -7342,7 +7355,8 @@
       },
       "body": {
         "player": {
-          "mp": 8
+          "mp": 28,
+          "level": 10
         }
       },
       "history": [
@@ -8943,14 +8957,15 @@
       "minute": 600,
       "facts": [
         "桌上有两只真实、外观相同、各盛一份可饮液体的小瓶，均在手边且允许玩家使用；玩家不知道内容区别。",
-        "两只瓶是按thing/item通用模板事先登记的不同实例，各有独立位置与内容；没有选中标记，原话不能唯一确定哪瓶，不替玩家默认选择。"
+        "两只瓶是按thing/item通用模板事先登记的不同实例，各有独立位置与内容；没有选中标记，原话不能唯一确定哪瓶，不替玩家默认选择。",
+        "原文未指定瓶主，按本次授权将两只瓶及其已有内容明确为林穗提供的酒馆饮品；world/people/baseline.json确认她是青灯酒馆老板。此为本独立场景新增所有权事实，不能从任意摆在酒馆的物件自动推导。"
       ],
       "itemInstances": [
         {
           "id": "a3v2_085_bottle_left",
           "template": "thing",
           "kind": "item",
-          "owner": null,
+          "owner": "npc_hw_linsui",
           "location": "bld_hw_qingdeng",
           "name": "桌上相同的小瓶",
           "appearance": "identical_small_bottle",
@@ -8968,7 +8983,7 @@
           "id": "a3v2_085_bottle_right",
           "template": "thing",
           "kind": "item",
-          "owner": null,
+          "owner": "npc_hw_linsui",
           "location": "bld_hw_qingdeng",
           "name": "桌上相同的小瓶",
           "appearance": "identical_small_bottle",
@@ -8992,10 +9007,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-085"
           },
-          "actor": {
-            "role": "authorized_owner",
-            "of": "a3v2_085_bottle_left"
-          },
+          "actor": "npc_hw_linsui",
           "subject": "a3v2_085_bottle_left",
           "to": "player",
           "scope": "drink"
@@ -9008,10 +9020,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-085"
           },
-          "actor": {
-            "role": "authorized_owner",
-            "of": "a3v2_085_bottle_right"
-          },
+          "actor": "npc_hw_linsui",
           "subject": "a3v2_085_bottle_right",
           "to": "player",
           "scope": "drink"
@@ -9023,10 +9032,7 @@
           "holder": "player",
           "subject": "a3v2_085_bottle_left",
           "scope": "drink",
-          "issuer": {
-            "role": "authorized_owner",
-            "of": "a3v2_085_bottle_left"
-          },
+          "issuer": "npc_hw_linsui",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_085_permit_0"
@@ -9036,10 +9042,7 @@
           "holder": "player",
           "subject": "a3v2_085_bottle_right",
           "scope": "drink",
-          "issuer": {
-            "role": "authorized_owner",
-            "of": "a3v2_085_bottle_right"
-          },
+          "issuer": "npc_hw_linsui",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_085_permit_1"
@@ -9061,7 +9064,8 @@
       ]
     },
     "proposalNotes": [
-      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。"
+      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。",
+      "2026-10-20 v2r复审：原文未指定瓶主，按本次授权将两只瓶及其已有内容明确为林穗提供的酒馆饮品；world/people/baseline.json确认她是青灯酒馆老板。此为本独立场景新增所有权事实，不能从任意摆在酒馆的物件自动推导。 01 §1.3与06 §6.3：owner与历史许可actor、permit.issuer统一到同一真实主体；许可范围和期限不扩张，歧义、反例与其他空间前置保留。"
     ]
   },
   {
@@ -9162,7 +9166,8 @@
       "minute": 600,
       "facts": [
         "玩家自有唯一一张完整干燥羊皮纸，手边有获准使用的现成小火源与引火料，具备烧毁纸的物理条件。",
-        "该世界没有让同一张纸同时彻底成灰且原封不动的机制；不给复制品、保护法术或回档替代两项互斥要求。"
+        "该世界没有让同一张纸同时彻底成灰且原封不动的机制；不给复制品、保护法术或回档替代两项互斥要求。",
+        "原文未指定火源管理者，按本次授权声明该现成小火源是林穗的酒馆用火；world/people/baseline.json的酒馆老板身份及world/geo/locations.json厨房工位owner支持此场景选择。纸仍归玩家，两项互斥要求仍必须澄清。"
       ],
       "itemInstances": [
         {
@@ -9188,7 +9193,8 @@
           "kind": "node",
           "name": "手边现成的小火源",
           "location": "bld_hw_qingdeng",
-          "fireIntensity": 1
+          "fireIntensity": 1,
+          "owner": "npc_hw_linsui"
         }
       ],
       "history": [
@@ -9200,10 +9206,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-087"
           },
-          "actor": {
-            "role": "authorized_manager",
-            "of": "a3v2_087_small_fire"
-          },
+          "actor": "npc_hw_linsui",
           "subject": "a3v2_087_small_fire",
           "to": "player",
           "scope": "burn_paper"
@@ -9215,10 +9218,7 @@
           "holder": "player",
           "subject": "a3v2_087_small_fire",
           "scope": "burn_paper",
-          "issuer": {
-            "role": "authorized_manager",
-            "of": "a3v2_087_small_fire"
-          },
+          "issuer": "npc_hw_linsui",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_087_permit_0"
@@ -9226,7 +9226,8 @@
       ]
     },
     "proposalNotes": [
-      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。"
+      "本轮作者独立输入，未读取动作实现。保留原话中的未定指称/未定目标/同时互斥要求，不能将澄清答案或expected写成执行输入。",
+      "2026-10-20 v2r复审：原文未指定火源管理者，按本次授权声明该现成小火源是林穗的酒馆用火；world/people/baseline.json的酒馆老板身份及world/geo/locations.json厨房工位owner支持此场景选择。纸仍归玩家，两项互斥要求仍必须澄清。 01 §1.3与06 §6.3：owner与历史许可actor、permit.issuer统一到同一真实主体；许可范围和期限不扩张，歧义、反例与其他空间前置保留。"
     ]
   },
   {
@@ -9264,7 +9265,8 @@
     },
     "proposalNotes": [
       "眼前整座石城门按setup以通用thing/building模板登记为既存实体；不换成木门或铁栅。目标真实存在，玩家仍仅有初学木工与小刀，不能完成请求的整门修复。",
-      "本轮场景绑定：missing:present_stone_city_gate → 环城现役城门的开裂石砌门体。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_stone_city_gate → 环城现役城门的开裂石砌门体。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：原文未指定城门权属，按本次授权声明整座现役石门归环城共同体loc_far_huancheng；world/geo/locations.json确认环城及环城城墙，选公共主体而不冒名某个未登记官员。许可只允许检查尝试，不赋予石工能力、材料或必然成功。 01 §1.3与06 §6.3：owner与历史许可actor、permit.issuer统一到同一真实主体；许可范围和期限不扩张，歧义、反例与其他空间前置保留。"
     ],
     "setup": {
       "location": "loc_far_huancheng",
@@ -9277,7 +9279,8 @@
       "facts": [
         "环城现役城门的开裂石砌门体：本场已有的整座石砌城门building/thing实体，condition=40，石料体量远超手工一轮可修范围，玩家就在门前。",
         "玩家只有skill_life_6_core=10和一把完好小刀，无石工本领、石工工具、替换石材、施工队或修复法术；城门管理人允许尝试检查修补，以免许可缺失遮住能力不适配。",
-        "此门体按thing/building通用模板在setup登记并唯一命名；不把旧水门的铁栅误说成石城门。"
+        "此门体按thing/building通用模板在setup登记并唯一命名；不把旧水门的铁栅误说成石城门。",
+        "原文未指定城门权属，按本次授权声明整座现役石门归环城共同体loc_far_huancheng；world/geo/locations.json确认环城及环城城墙，选公共主体而不冒名某个未登记官员。许可只允许检查尝试，不赋予石工能力、材料或必然成功。"
       ],
       "abilities": {
         "skills": {
@@ -9296,7 +9299,8 @@
           "location": "loc_far_huancheng",
           "condition": 40,
           "material": "stone",
-          "scale": "whole_city_gate"
+          "scale": "whole_city_gate",
+          "owner": "loc_far_huancheng"
         }
       ],
       "history": [
@@ -9308,10 +9312,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-088"
           },
-          "actor": {
-            "role": "authorized_manager",
-            "of": "a3v2_088_stone_gate"
-          },
+          "actor": "loc_far_huancheng",
           "subject": "a3v2_088_stone_gate",
           "to": "player",
           "scope": "inspect_and_attempt_repair"
@@ -9323,10 +9324,7 @@
           "holder": "player",
           "subject": "a3v2_088_stone_gate",
           "scope": "inspect_and_attempt_repair",
-          "issuer": {
-            "role": "authorized_manager",
-            "of": "a3v2_088_stone_gate"
-          },
+          "issuer": "loc_far_huancheng",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_088_permit_0"
@@ -11628,6 +11626,7 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
+        "transfer(resource:item_stone,self->sink:consume)",
         "create(thing:mark,mark:sword_carving+mark:art)"
       ],
       "outOfBounds": false,
@@ -11669,7 +11668,8 @@
     },
     "proposalNotes": [
       "石料进入零价值刻痕载体，不能同时仍留在行囊可再消费；没有剑术经验或门派资格效果。",
-      "本轮场景绑定：missing:authorized_display_place → bld_hw_mill。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:authorized_display_place → bld_hw_mill。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：原文在自有石料上刻线并展示；一份石料从可消费库存投入刻痕载体，不能仍留在行囊重复使用。 06 §6.3 create的真实材料经transfer投入，01 §1.6逐资源记账；补齐expected，proposal不变。sink:consume表示退出可消费材料库存，不宣称物质消失。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -11724,7 +11724,8 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "transfer(resource:own_paper_and_ink,self->sink:consume)",
+        "transfer(resource:item_parchment,self->sink:consume)",
+        "transfer(resource:item_soot_ink,self->sink:consume)",
         "create(thing:mark,mark:invention+mark:public_display)"
       ],
       "outOfBounds": false,
@@ -11777,7 +11778,8 @@
     },
     "proposalNotes": [
       "用world现有羊皮纸和烟墨落实纸墨，画笔可用item_ink_brush且不消耗；不创建机器或已学配方。",
-      "本轮场景绑定：missing:current_drawing_place → bld_hw_school。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:current_drawing_place → bld_hw_school。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：01 §1.6、06 §6.8：纸和墨是两种真实资源，expected拆为item_parchment与item_soot_ink两笔，与proposal一致；画笔不耗掉，仍只生成草图标记而非机器。"
     ],
     "setup": {
       "location": "bld_hw_school",
@@ -11832,6 +11834,7 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
+        "transfer(resource:item_stone,self->sink:consume)",
         "create(thing:mark,mark:boundary)"
       ],
       "outOfBounds": false,
@@ -11872,7 +11875,8 @@
     },
     "proposalNotes": [
       "3块是“几块”的具体提议，须有真实自有石料；摆出后作为痕迹材料，不另开owns土地。",
-      "本轮场景绑定：missing:current_unowned_camp_plot → loc_hw_northwood。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:current_unowned_camp_plot → loc_hw_northwood。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：原文“自己带的几块石头摆条边界线”；保留proposal三块石料投入边界痕迹，不能凭摆石取得土地所有权。 06 §6.3 create的真实材料经transfer投入，01 §1.6逐资源记账；补齐expected，proposal不变。sink:consume表示退出可消费材料库存，不宣称物质消失。"
     ],
     "setup": {
       "location": "loc_hw_northwood",
@@ -11973,22 +11977,22 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
+        "move(thing:a3v2_117_old_shoe,place:loc_hw_orchard)",
         "create(thing:mark,mark:memorial)"
       ],
       "outOfBounds": false,
       "fallback": true,
       "constructor": true,
-      "why": "06 §6.9.5允许真实物件摆放成为纪念mark，记录作者与意图且由感知触发反应而不增加资源。"
+      "why": "06 §6.9.5允许真实物件摆放成为纪念mark，记录作者与意图且由感知触发反应而不增加资源。 01 §1.2、§1.6区分物品个体与可计量材料；悬挂原鞋是同一实体从携带转为放置，不能消费/销毁原鞋后另造替身。"
     },
     "proposal": {
       "intent": "我把自己那只不能穿的旧鞋挂在获准纪念的树枝上，纪念走过这条路的人，留下缘由。",
       "effects": [
         {
-          "op": "transfer",
-          "resource": "本人携带的唯一一只破底旧鞋",
-          "from": "self",
-          "to": "sink:consume",
-          "qty": 1
+          "op": "move",
+          "entity": "a3v2_117_old_shoe",
+          "to": "loc_hw_orchard",
+          "mode": "place"
         },
         {
           "op": "create",
@@ -12000,19 +12004,16 @@
             "intent": "我把自己那只不能穿的旧鞋挂在获准纪念的树枝上，纪念走过这条路的人，留下缘由。",
             "form": "树枝上悬挂的旧鞋及纪念缘由",
             "location": "loc_hw_orchard",
-            "author": "self"
-          },
-          "materials": [
-            {
-              "resource": "本人携带的唯一一只破底旧鞋",
-              "qty": 1
-            }
-          ]
+            "author": "self",
+            "object": "a3v2_117_old_shoe",
+            "support": "a3v2_117_branch"
+          }
         }
       ]
     },
     "proposalNotes": [
-      "本轮场景绑定：missing:own_unwearable_shoe → 本人携带的唯一一只破底旧鞋；missing:authorized_memorial_tree → loc_hw_orchard。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_unwearable_shoe → 本人携带的唯一一只破底旧鞋；missing:authorized_memorial_tree → loc_hw_orchard。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：纠正input而非追认旧耗料：原文“把自己那只不能穿的旧鞋挂在…树枝上”要求保留同一物品个体（01 §1.2、§1.6）。移除transfer及create.materials，改move原鞋至果园放置，mark事实引用原鞋与树枝；expected同步增加move。既有鞋带、许可、归属保留，悬挂不是销毁、穿戴或第二只鞋；实际悬挂/载体绑定仍须执行侧落实。"
     ],
     "setup": {
       "location": "loc_hw_orchard",
@@ -12025,7 +12026,7 @@
       "facts": [
         "本人携带的唯一一只破底旧鞋：此前已存在的自有thing/item实物，数量1、condition=0、不可穿，按该唯一名称绑定；不是靴撑、鞋垫或护靴片。",
         "果园有权管理者梅绫已许可在一根伸手可及的树枝悬挂纪念物；旧鞋上原有鞋带可用于悬挂，鞋与树枝可及，不伤树。",
-        "world无整鞋商品ID，故旧鞋不伪装成目录库存；由setup按通用物模板登记实物并绑定材料引用，悬挂后不能仍在可消费物中重复使用。"
+        "world无整鞋商品ID，旧鞋按通用物模板登记为同一已有实物；悬挂后从玩家携带转为果园放置，仍归玩家，纪念mark引用该鞋与获准树枝，不重复生成鞋或消费鞋。"
       ],
       "history": [
         {
@@ -12098,6 +12099,8 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
+        "transfer(resource:item_hemp_thread,self->sink:consume)",
+        "transfer(resource:item_wood,self->sink:consume)",
         "create(thing:mark,mark:trap+mark:decoy)"
       ],
       "outOfBounds": false,
@@ -12150,7 +12153,8 @@
     },
     "proposalNotes": [
       "用真实麻线和木料作零伤害布置；不直接添加恐惧状态或保证吓退。",
-      "本轮场景绑定：missing:authorized_corner → bld_hw_qingdeng。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:authorized_corner → bld_hw_qingdeng。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：原文用自有细绳、小木片布置假机关；两种材料分别投入痕迹，不能新增伤害或必定恐惧。 06 §6.3 create的真实材料经transfer投入，01 §1.6逐资源记账；补齐expected，proposal不变。sink:consume表示退出可消费材料库存，不宣称物质消失。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -12336,7 +12340,8 @@
       ]
     },
     "proposalNotes": [
-      "本轮场景绑定：missing:own_flowers → 本人携带的一束无毒野花；missing:authorized_wellside → site_w5_well_camp。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_flowers → 本人携带的一束无毒野花；missing:authorized_wellside → site_w5_well_camp。前提见setup，不将绑定当作动作成功。",
+      "2026-10-20 v2r复审：world/geo/locations.json明确断绳井场owner:null、site.owner:null、occupants:[]，history写旧帐户已各自迁走。保留无主事实，不把旧住户、邻近逐风集或路人杜撰成现任管理者。原intent“获准摆放”不改；原历史/permit的authorized_manager保留为未解决需求，明确是世界内容缺口，仍应setupUnmet，不能以无主自动授权或删除许可闸门。"
     ],
     "setup": {
       "location": "site_w5_well_camp",
@@ -12348,7 +12353,7 @@
       "minute": 600,
       "facts": [
         "本人携带的一束无毒野花：此前已采得且归本人的真实thing/item材料，数量1，按该唯一名称绑定；不假冒药草药效，不凭此次摆供再生成花。",
-        "已得到当地有权管理人的摆放许可，井旁有不承重、不妨碍取水的安全位置，井场松动井口另行避开；石子自有且实在。",
+        "断绳井场site_w5_well_camp的owner:null、site.owner:null、occupants:[]，旧共用帐户已搬走，无已确认现任权利人。原文“获准摆放”仍需真实许可来源；当前authorized_manager选择器未解析，登记为世界内容缺口，不能当作已获有效许可。井旁安全位置避开松动井口，石子仍为自有实物。",
         "玩家没有求雨神通或主持正式求雨仪轨的资格，当前天气按原状态保持；供台只留表达心意的mark，不保证降雨。",
         "world无花束商品ID，故由setup按通用物模板登记已有野花材料，和旧鞋一样须绑定实际实例后才可消费。"
       ],
