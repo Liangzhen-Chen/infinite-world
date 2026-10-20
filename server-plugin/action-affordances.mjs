@@ -10,6 +10,7 @@ import {currentShops} from './shop.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
+import {actionSchema} from './primitive-schema.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 
@@ -107,6 +108,10 @@ function offer(ctx,action,target){
  const fill={};
  const slots=action.slots.map(slot=>{
   const row={name:slot.name,kind:slot.kind,...(slot.entity?{entity:slot.entity}:{}),...(slot.required?{required:true}:{}),...(slot.consent?{consent:true}:{}),...(slot.default!==undefined?{default:slot.default}:{}),...(slot.presets?{presets:slot.presets}:{}),...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{})};
+  if(action.call?.tool==='world_propose'&&actionSchema.$defs.proposal.properties[slot.name]){
+   row.inputSchema=structuredClone(actionSchema.$defs.proposal.properties[slot.name]);
+   if(slot.name==='effects')row.inputSchema.items=structuredClone(actionSchema.$defs.primitive);
+  }
   if(slot.fill==='target'&&target)fill[slot.name]=target;
   if(slot.fill==='host'&&ctx.lodging)fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.[0])fill[slot.name]=ctx.bank.keepers[0];

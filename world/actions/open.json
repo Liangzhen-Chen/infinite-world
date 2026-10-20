@@ -3,6 +3,29 @@
   "namespace": "open",
   "actions": [
     {
+      "id": "open:proposal",
+      "label": "提出创意行动",
+      "verb": "提案",
+      "group": "创意",
+      "source": "catalog",
+      "narration": "open.proposal",
+      "synonyms": ["尝试新办法", "组合行动"],
+      "visibility": {"catalog": "llm", "witness": "present"},
+      "participants": {"actor": "player"},
+      "preconditions": [],
+      "slots": [
+        {"name":"intent","kind":"text","schema":"string","required":true},
+        {"name":"effects","kind":"object","schema":"array","required":true},
+        {"name":"means","kind":"object","schema":"object"},
+        {"name":"context","kind":"object","schema":"object"},
+        {"name":"participants","kind":"object","schema":"object"}
+      ],
+      "call": {"tool":"world_propose"},
+      "cost": {"owner":"handler"},
+      "check": "engine",
+      "hint": "先预览再确认。效果、资源和耗时由当前真实来源裁定；缺少来源或条件时补全方案，提案本身不保证成功。"
+    },
+    {
       "id": "open:leave_mark",
       "label": "留下痕迹",
       "verb": "留痕",

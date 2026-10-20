@@ -49,7 +49,9 @@ export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
  const participants={...proposal.participants,actor:context.actor??'player'};
  // No source, check, effects, consent or cost from a proposal can replace the definition.
- const actions=registry.actions.filter(a=>!a.readOnly&&!a.projection&&fits(a,participants,context.kindOf)&&context.visible(a,participants));
+ // The proposal gateway describes an entry point, not a concrete neighbour;
+ // routing back into it would recurse and distort the BM25 candidate corpus.
+ const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&!a.readOnly&&!a.projection&&fits(a,participants,context.kindOf)&&context.visible(a,participants));
  const texts=textScores(actions,proposal.intent??''),signature=effectSignature(proposal.effects??[],context);
  const candidates=actions.map((action,index)=>{
   const slots=context.slotsFor(action,proposal)??{},missing=(action.slots??[]).filter(s=>s.required&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);

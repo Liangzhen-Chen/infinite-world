@@ -2,7 +2,7 @@
 // obligation protocols. Only native callers supply frames and runtime options.
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
 import {canAct,legacyCanAct,legacyActionFamily} from './action-capacity.mjs';
-import {commitPrimitives,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime} from './primitives.mjs';
+import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {parseAccount,isSink,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount,mirrorPartyCoins} from './money.mjs';
@@ -13,15 +13,15 @@ import {obligationRow} from './obligation-state.mjs';
 import {loadActionRegistry,actionCall,findAction,actionOfCall} from './action-registry.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices,personLawRoles} from './entity-view.mjs';
-import {aliveHoldings,holdingKind,ensureHoldings} from './holdings.mjs';
+import {aliveHoldings,holdingKind,ensureHoldings,isPhysicallyDead,isGone} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
 import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
 import {consent,applyConsentEvent} from './action-consent.mjs';
 import {executeRuntimeEffect} from './primitives-effects.mjs';
-import {publishTransitionEvent,SOCIAL_VERBS,privateWorldEvent} from './world-events.mjs';
+import {publishTransitionEvent,SOCIAL_VERBS,privateWorldEvent,drainWorldReactions} from './world-events.mjs';
 import {accountKey} from './ledger.mjs';
-import {digest,applyPatches} from './storage.mjs';
+import {digest,applyPatches,recordsWhere} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
 import {moveLocally} from './primitives-movement.mjs';
@@ -31,7 +31,8 @@ import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {applyMarkPrimitive,executeLeaveMark} from './mark-actions.mjs';
 import {reactToMark} from './mark-reactions.mjs';
-import {executeRite} from './action-rite.mjs';
+import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {beginSleep,finishSleep} from './body-needs.mjs';
 import {openUsageEntry} from './action-limits.mjs';
 
@@ -124,7 +125,7 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
  }
 }
 
-export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy=engine.world.primitiveFacts??{},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null,limits={},prepare=null,finish=null,identity=null,purpose=source?.id,movementAuthority=null}={}){
+export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy=engine.world.primitiveFacts??{},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null,limits={},prepare=null,finish=null,identity=null,purpose=source?.id,movementAuthority=null,consequence=null}={}){
  const context=primitiveContext(engine,document,{source,identity,eventId});
  context.consentPurpose=purpose;
  if(movementAuthority!==null&&typeof movementAuthority!=='function')reject('E-PRIMITIVE-FRAME','Movement authority must be a native derivation');
@@ -159,7 +160,7 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
  const makeDraft=createDraft;
  createDraft=doc=>{const d=makeDraft(doc);ensureHoldings(d,engine);return d;};
  const factUsage=new Map();
- return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,
+ return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,consequence,
   validateFact:(d,effect,{row,value})=>{
    if(typeof value!=='number')return;
    const bound=(typeof limits==='function'?limits(d.document):limits).fact?.[effect.field];
@@ -178,6 +179,7 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
   },
   mirrorTransfer:(d,effect)=>mirrorPrimitiveTransfer(d,engine,effect),
   executePrimitive:(d,effect,{frame,index,requireAuthority,tags})=>{
+   if(consequence?.(d.document,effect)===true&&['vital','status'].includes(effect.op)&&(isPhysicallyDead(engine,d,effect.target)||isGone(engine,d,effect.target)))return {applied:false,reason:'target_not_living',target:effect.target};
    const child=`${frame.eventId}:${index}`,s=d.get('state');
    const signing=a=>({authorize:({state,actor,party})=>{
     const live={...context,document:{...d.document,state}},permission=canAct(live,actor,effect.op);
@@ -452,7 +454,59 @@ function actionResourceCosts(engine,document,action,slots,actor){
  });
 }
 
+// Consequences of an existing rite are not new initiatives by its officiant.
+// Re-derive the complete plan here; neither a caller's effects nor its claimed
+// reason can grant a rule frame. Ordinary action frames keep their capacity gate.
+function interruptRite(engine,document,requested,{scheduler=null,reactionContext=null}={}){
+ const plan=riteProjectInterruptions(engine,document).find(p=>p.project===requested.project);
+ if(!plan||digest(plan)!==digest(requested))reject('E-RITE-INTERRUPTION','The rite interruption is no longer current');
+ const action=findAction(primitiveRuntime.registry(engine),plan.action),limits=action.rite.limits??{},context=primitiveContext(engine,document),factUsage=new Map();
+ const frame=createPrimitiveFrame({actor:plan.actor,eventId:plan.eventId,source:{kind:'rule',id:`rite:${plan.action}:interrupt`},engine,
+  identity:{project:plan.project,reason:plan.reason},verbs:['tell','request','claim'],factPolicy:engine.world.primitiveFacts??{},
+  createDraft:doc=>{const d=engine.primitiveDraft(doc);ensureHoldings(d,engine);if(d.scheduler&&scheduler){d.scheduler.seq=Math.max(d.scheduler.seq,scheduler.seq);d.scheduler.lastSettled=scheduler.lastSettled;}return d;},
+  validate:current=>{const live=riteProjectInterruptions(engine,current).find(p=>p.project===plan.project);if(!live||digest(live)!==digest(plan))reject('E-RITE-INTERRUPTION','The rite interruption changed');},
+  canAct:()=>({allowed:true,tags:[]}),
+  // A rule may consume the officiant's own committed resources even when they
+  // are incapacitated. Third-party property still needs its actual authority.
+  authority:(current,actor,op,target,options)=>{
+   const owner=op==='transfer'?parseAccount(target).owner:target;
+   return op==='transfer'&&owner===actor?{allowed:true,tags:[],actedAs:null}:authority({...context,document:current},actor,op,target,options);
+  },
+  location:(current,id)=>id===plan.actor?plan.location:id==='player'?current.state.location:current.state.npcs?.[id]?.location??current.state.creatures?.[id]?.location,
+  mirrorTransfer:(d,effect)=>mirrorPrimitiveTransfer(d,engine,effect),
+  validateFact:(d,effect,{row,value})=>{
+   if(typeof value!=='number')return;
+   const bound=limits.fact?.[effect.field],used=(factUsage.get(effect.field)??0)+Math.abs(value-(row.facts?.[effect.field]??0));
+   if(!Number.isSafeInteger(bound)||bound<0||!Number.isSafeInteger(used)||used>bound)reject('E-FACT-BOUND','Rite consequence exceeds its declared bound');
+   factUsage.set(effect.field,used);
+  },
+  executePrimitive:(d,effect,meta)=>{
+   // A corpse cannot receive a second injury/status. Keep the actual no-effect
+   // result rather than aborting the project's already-triggered termination.
+   if(['vital','status'].includes(effect.op)&&(isPhysicallyDead(engine,d,effect.target)||isGone(engine,d,effect.target)))return {applied:false,reason:'target_not_living',target:effect.target};
+   return executeRuntimeEffect(d,engine,effect,meta,{...context,document:d.document},limits);
+  }});
+ return commitPrimitiveConsequences(document,plan.effects,frame,{reactionContext});
+}
+const settlingRites=new WeakSet();
+function settleRites(d,engine){
+ if(settlingRites.has(engine))return [];
+ settlingRites.add(engine);
+ try{const plans=settleRiteInterruptions(d,engine);if(plans.length)drainWorldReactions(d);return plans;}finally{settlingRites.delete(engine);}
+}
+function nextRiteMinute(engine,d,now){
+ let next=Infinity;
+ for(const project of recordsWhere(d.get('state','records'),'category','rite_project')){
+  if(project.status!=='active')continue;
+  const action=findAction(primitiveRuntime.registry(engine),project.action),stage=action?.rite?.stages?.[project.stage];
+  for(const at of [project.deadline,typeof stage?.window==='object'?stage.window.to:null,...(d.get('state','consentEvents')??[]).filter(e=>e.type==='consent_given'&&Object.values(project.slots.roles??{}).flat().includes(e.from)).map(e=>e.until)])if(Number.isSafeInteger(at)&&at>now)next=Math.min(next,at);
+ }
+ return next;
+}
+registerAdvanceHook('riteLifecycle',()=>({nextMinute:nextRiteMinute,settle:settleRites}));
+
 export const primitiveRuntime={
+ interruptRite,settleRites,
  beginSleep,finishSleep,
  applyMark(d,engine,effect,meta){
   const result=applyMarkPrimitive(d,engine,effect,meta);

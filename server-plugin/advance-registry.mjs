@@ -74,6 +74,7 @@ import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 export {registerAdvanceHook} from './advance-hooks.mjs';
 declareHoldingWriter('advance-registry',{kinds:[]});
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
+const riteLifecycle=()=>advanceHook('riteLifecycle')?.();
 const liveNation=(...args)=>{const hook=advanceHook('liveNation');return hook?hook(...args):true;};
 const sameScheduleInputs=(...args)=>{const hook=advanceHook('sameScheduleInputs');return hook?hook(...args):false;};
 const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleInputs');return hook?hook(...args):false;};
@@ -537,10 +538,15 @@ const dueCollectors={
     dying:(e,d,c)=>[{id:'dying',anchorId:'player',execute:()=>systems.find(s=>s.id==='dying').advance(e,d,c)}],
     deliveries:(e,d,c)=>Object.entries(d.get('state','obligations')??{}).map(([id,r])=>({id,anchorId:r.promisor??'player',registeredSeq:r.registeredSeq??r.seq??0,execute:()=>systems.find(s=>s.id==='deliveries').advance(e,d,{...c,obligationIds:[id]})})),
 };
+systems.push({id:'rite_projects',order:2900,
+ nextMinute:(engine,d,now)=>riteLifecycle()?.nextMinute(engine,d,now)??Infinity,
+ active:(engine,d)=>recordsWhere(d.get('state','records'),'category','rite_project').some(p=>p.status==='active'),
+ currentMinute:(engine,d)=>riteLifecycle()?.settle(d,engine),
+ advance:(engine,d)=>riteLifecycle()?.settle(d,engine)});
 for(const system of systems){
     if(system.id==='obligation_runtime'){dueSystems[system.id]='义务';dueCollectors[system.id]=automaticObligationItems;}
     const dueClass=dueSystems[system.id];
-    system.phase=dueClass?PHASE.due:PHASE.clock;
+    system.phase=system.id==='rite_projects'?PHASE.assertion:dueClass?PHASE.due:PHASE.clock;
     system.dueClass=dueClass;
     system.dueItems=dueCollectors[system.id];
     system.packId='core';

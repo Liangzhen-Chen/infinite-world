@@ -366,6 +366,7 @@ export class WorldEngine {
         // A read-only instant look (inspect, view) changes nothing and is no world event.
         const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
         if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
+        primitiveActionRuntime()?.settleRites?.(d,session);
         recordBusinessReceipt(d,document.state,{tool:resolved.tool,args,eventId:id,detail});
         settlePopulationLayers(d,session);
         // Social facts of an elapsed span (e.g. a debt falling overdue) join the
@@ -403,6 +404,7 @@ export class WorldEngine {
         return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:applyPatches(books.document,applied.patches).state.minute,messages:[],notices:[]}};
     }
     primitiveRiteDaylight(document,location){return localWeather(this,document,location).daylight;}
+    primitiveRiteInterruption(document,plan,options){return primitiveActionRuntime().interruptRite(this,document,plan,options);}
     primitiveApplyMark(d,effect,meta){return primitiveActionRuntime().applyMark(d,this,effect,meta);}
     primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
     primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
@@ -575,11 +577,12 @@ export class WorldEngine {
         // P2: one elapsed-time event shares each region's yearly weather
         // sequence (rules and seed cannot change inside it) across schedules.
         // Route topology (locations, routes) is likewise fixed for its duration.
-        if(this.weatherSequences)return this.advanceElapsed(d,minutes,id);
+        primitiveActionRuntime()?.settleRites?.(d,this);
+        if(this.weatherSequences){const result=this.advanceElapsed(d,minutes,id);primitiveActionRuntime()?.settleRites?.(d,this);return result;}
         this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{return withScheduleCache(this,d,()=>this.advanceElapsed(d,minutes,id));}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
+        try{const result=withScheduleCache(this,d,()=>this.advanceElapsed(d,minutes,id));primitiveActionRuntime()?.settleRites?.(d,this);return result;}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
@@ -638,6 +641,7 @@ export class WorldEngine {
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
     }
     time(d,args,id) {
+        primitiveActionRuntime()?.settleRites?.(d,this);
         if(isPhysicallyDead(this,d,'player'))this.revive(d,{},id);
         if(args.minutes!==undefined&&args.until!==undefined)throw new Error('minutes 与 until 只能选一个');
         let duration=args.minutes;
@@ -649,7 +653,9 @@ export class WorldEngine {
         }
         const minutes=number(duration,1,43200,'耗时');
         if(['睡眠','休息'].includes(args.activity))holdingSet(d,null,['state','records','mind_rest_activity'],true,'engine');
-        this.advance(d,minutes,id);
+        const sleeping=this.riteSleepingActors;
+        if(args.activity==='睡眠')this.riteSleepingActors=new Set([...sleeping??[],'player']);
+        try{this.advance(d,minutes,id);}finally{this.riteSleepingActors=sleeping;}
         if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){

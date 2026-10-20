@@ -73,10 +73,22 @@ test('E6 未知法术和直接提交法术拒绝，不能伪造学习来源',asy
     await assert.rejects(run(c,'world_learn',{entity:'照明术',source:'林穗'}),/资格/);
 });
 test('E7 未突破停299，同目标递减，每日上限',async()=>{
-    let c=fresh();c.state.skills.skill_light.proficiency=290;
+    // Match the production composition root explicitly; this must not depend
+    // on whether another --test-isolation=none file installed the runtime first.
+    await import('../server-plugin/primitives-runtime.mjs');
+    // 06 §6.6/6.7: public practice derives gain from the archived hourly rate,
+    // so start within one native session of the unchanged 299 breakthrough gate.
+    let c=fresh();c.state.skills.skill_light.proficiency=298;
     c=(await run(c,'world_practice',{skill:'照明术',gain:100,target:'木杖'})).document;assert.equal(c.state.skills.skill_light.proficiency,299);
     let d=fresh();const first=await run(d,'world_practice',{skill:'照明术',gain:10,target:'木杖'});const second=await run(first.document,'world_practice',{skill:'照明术',gain:10,target:'木杖'},'second');
-    assert.equal(first.result.gain,10);assert.equal(second.result.gain,5);
+    assert.equal(first.result.gain,2);assert.equal(second.result.gain,1);
+    assert.equal(first.result.cost.time,120);assert.equal(second.result.cost.time,120);
+    // Preserve the daily cap as an independent boundary, rather than relying
+    // on the caller's obsolete gain field to reach it.
+    d=fresh();const day=String(Math.floor((d.state.minute+120)/1440)),cap=engine.rules.practice.dailyCaps[0];
+    d.state.skills.skill_light.daily={[day]:{gain:cap-1,targets:{}}};
+    const capped=await run(d,'world_practice',{skill:'照明术',gain:100,target:'木杖'},'cap'),exhausted=await run(capped.document,'world_practice',{skill:'照明术',gain:100,target:'别的目标'},'exhausted');
+    assert.equal(capped.result.gain,1);assert.equal(exhausted.result.gain,0);assert.equal(exhausted.document.state.skills.skill_light.daily[day].gain,cap);
 });
 test('E8 别名同一编号、E9 基础人设只读，未成年关系受限',async()=>{
     const c=fresh();await assert.rejects(run(c,'world_relation',{npc:'林穗姐',eventType:'帮助',sourceEvent:'roof'}),/已核验证据/);
