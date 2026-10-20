@@ -8,7 +8,6 @@ import {interactionOf} from './interactions.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {npcProficiency} from './checks.mjs';
 import {digest} from './storage.mjs';
-import {obligationClosed} from './obligation-state.mjs';
 import {normalize} from './retrieval.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {applyBodyVital,beginBodyActivity,endBodyActivity} from './primitives-body.mjs';
@@ -199,11 +198,17 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
   here(d,frame.actor,source);
   if(capacity({...context,document:d.document},source,'learn').level==='none'||person.scheduleTravel||person.cognitionTravel)reject('E-LEARN-SOURCE','The teacher cannot currently teach');
   if(!personTeaching(engine,d.get('state'),source,effect.subject)&&npcProficiency(d,engine,source,subject.skill??subject.id)<1)reject('E-LEARN-SOURCE','The source does not know how to demonstrate this subject');
-  const until=d.get('state','minute')+(limits.learn?.minutes??subject.learnMinutes??120);
+   // First acquisition belongs to learning.learn: it validates the actual
+   // teacher/service, prerequisites, price and duration before deciding once.
+   if(!old){
+    if(effect.amount!==undefined)reject('E-LEARN-AMOUNT','First acquisition uses the registered learning protocol');
+    return engine.learn(d,{entity:effect.subject,source,kind:subject.id.split('_')[0]},child);
+   }
+   const minutes=integer(limits.learn?.minutes,1,43200,'E-LEARN-BOUND'),until=d.get('state','minute')+minutes;
   permission=consent({...context,document:d.document},source,learner,'teach',{purpose:effect.subject,until});
   if(!permission.allowed&&context.consentPurpose)permission=consent({...context,document:d.document},source,learner,'teach',{purpose:context.consentPurpose,until});
-  const service=Object.values(d.get('state','obligations')??{}).some(o=>(o.kind??o.obligationKind)==='service'&&o.debtor===source&&o.creditor===learner&&!obligationClosed(o)&&o.endedAt===undefined&&!o.revoked&&(o.start??o.createdAt??0)<=d.get('state','minute')&&(o.deadline??o.until??Infinity)>=until&&(o.subject===effect.subject||o.terms?.subject===effect.subject));
-  if(!permission.allowed&&!service){
+   if(!permission.allowed)permission=engine.primitiveTeachingConsent(d,{teacher:source,student:learner,subject:effect.subject,minutes,fee:0,eventId:child});
+   if(!permission.allowed){
    const activity=person.activity??'',skill=person.practicing??person.teaching;
    if(skill!==effect.subject||!/(练|教|演|practice|teach)/.test(activity))reject('E-LEARN-OBSERVE','There is no observable demonstration of this subject');
    const facts=engine.primitiveTargetFacts(d,frame.actor,source);

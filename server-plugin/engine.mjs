@@ -13,7 +13,7 @@ import {actorId,actorPath}from'./npc-state.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
-import {learn}from'./learning.mjs';
+import {learn,teachingConsent}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
 import {recordSpellViolation}from'./magic-consent.mjs';
 import {recordMagicEconomy}from'./magic-economy.mjs';
@@ -277,6 +277,7 @@ export class WorldEngine {
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
+        if(input.tool==='world_propose')return primitiveActionRuntime().propose(this,document,input,{options});
         if(input.tool==='world_act'){
             const runtime=primitiveActionRuntime();
             if(!runtime)throw Error('Action runtime is not installed');
@@ -284,7 +285,7 @@ export class WorldEngine {
             if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
-            const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session)});
+            const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session),openProposal:options.openProposal});
             const next=applyPatches(books.document,applied.patches);
             return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
         }
@@ -364,8 +365,13 @@ export class WorldEngine {
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
+    primitiveLegacyRestriction(document,tool,args){
+        try{enforceLegalRestriction(new Draft(clone(document),this),tool,args,this);return null;}catch(error){return error.message;}
+    }
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
+    primitiveTeachingConsent(d,args){return teachingConsent(d,this,args);}
     primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
     primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
         const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity],npc=d.get(...path),start=d.get('state','minute');
@@ -439,11 +445,13 @@ export class WorldEngine {
     primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
     async previewAction(document,input){
         const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
+        if(input.tool==='world_propose')return runtime.propose(this,document,input,{preview:true});
         const session=this.scoped(document),result=runtime.execute(session,withBooks(this,document).document,input,{createDraft:doc=>new Draft(doc,session),preview:true});
         if(!result.legacy)return result;
         const reduced=await this.reduce(clone(document),input);
-        return {receipt:{eventId:input.eventId,status:'preview',routed:result.legacy.action.id,applied:[],legacy:reduced.result}};
+        return {receipt:runtime.legacyPreview(this,document,input,result.legacy,reduced)};
     }
+    actionPermission(document,args){return primitiveActionRuntime().actionPermission(this.scoped(document),document,args);}
     scoped(document){
         const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.scoped(document);
         const created=Object.values(document.state.created??{});

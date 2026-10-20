@@ -120,6 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-rules.mjs','primitives-runtime.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -172,7 +173,7 @@ const SYSTEMS=[
  {id:'ui_client',layer:'ui',name:'浏览器界面',modules:['ext:ui-shell.mjs','ext:ui-affairs.mjs','ext:ui-art.mjs','ext:ui-history.mjs','ext:ui-map.mjs','ext:ui-messages.mjs','ext:ui-personal.mjs','ext:ui-settings.mjs',
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
    'ext:personal-panels.mjs','ext:topbar.mjs','ext:history-window.mjs','ext:ambient-audio.mjs','ext:state-read.mjs']},
- {id:'ui_actions',layer:'ui',name:'动作目录与界面可操作（A1）',modules:['action-registry.mjs','action-gateway.mjs','action-affordances.mjs','action-text.mjs','applied-effects.mjs','ext:ui-actions.mjs','ext:actions-view.mjs']},
+ {id:'ui_actions',layer:'ui',name:'动作目录与界面可操作（A1）',modules:['action-registry.mjs','action-gateway.mjs','action-affordances.mjs','action-text.mjs','applied-effects.mjs','ext:ui-actions.mjs','ext:actions-view.mjs','ext:action-builder.mjs']},
  {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},

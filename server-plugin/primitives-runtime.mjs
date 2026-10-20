@@ -1,7 +1,7 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
-import {canAct,legacyCanAct} from './action-capacity.mjs';
+import {canAct,legacyCanAct,legacyActionFamily} from './action-capacity.mjs';
 import {commitPrimitives,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {parseAccount,isSink,LEDGER_COIN} from './ledger.mjs';
@@ -19,15 +19,25 @@ import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedInteger,fixedMultiply,f
 import {createRXLibrary} from './rx-library.mjs';
 import {consent,applyConsentEvent} from './action-consent.mjs';
 import {executeRuntimeEffect} from './primitives-effects.mjs';
-import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
+import {publishTransitionEvent,SOCIAL_VERBS,privateWorldEvent} from './world-events.mjs';
 import {accountKey} from './ledger.mjs';
-import {digest} from './storage.mjs';
+import {digest,applyPatches} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
 import {moveLocally} from './primitives-movement.mjs';
 import {checkActor} from './primitives-checks.mjs';
 import {learnNpc} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+
+// B supplies current-world visibility, slots and source bounds at the native
+// composition root. This function is never read from proposal JSON or saves.
+let openContextFactory=null;
+export function registerOpenActionContext(factory){
+ if(factory!==null&&typeof factory!=='function')throw TypeError('Expected native open-action context factory');
+ const previous=openContextFactory;openContextFactory=factory;return previous;
+}
+const proposalRouting=(proposal,prepared)=>({intent:proposal.intent,proposal:structuredClone(proposal),...structuredClone(prepared)});
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
@@ -440,6 +450,69 @@ export const primitiveRuntime={
  moveLocally,
  checkActor,
  learnNpc,
+ async propose(engine,document,input,{preview=false,options={}}={}){
+  const proposal=input.args,eventId=input.eventId;
+  if(typeof eventId!=='string'||!eventId||eventId.length>120)reject('E-OPEN-EVENT','A valid event id is required');
+  const fingerprint=digest(proposal),key=`open_proposal:${eventId}`,prior=document.state.records?.[key];
+  if(prior){
+   if(prior.fingerprint!==fingerprint)reject('E-PRIMITIVE-DUPLICATE','Event id belongs to a different proposal');
+   const result=structuredClone(prior.result);result.receipt.duplicate=true;
+   return preview?{receipt:result.receipt,routing:result.receipt.routing}:{patches:[],result};
+  }
+  // open-actions already consumes this runtime for its registry. Load the
+  // service after runtime initialization so B can register its native context.
+  const {prepareOpenAction}=await import('./open-actions.mjs');
+  if(!openContextFactory)reject('E-OPEN-NATIVE','Native open-action context is not installed');
+  const native=openContextFactory(engine,document,proposal),prepared=prepareOpenAction(engine,document,proposal,native),routing=proposalRouting(proposal,prepared);
+  if(prepared.status!=='routed'){
+   if(!preview)reject('E-OPEN-NOT-ROUTED','Only matched registered actions can be submitted; preview this proposal first');
+   return {prepared,receipt:{eventId,actor:'player',status:'not_submitted',applied:[],routing,signature:prepared.signature,candidates:prepared.candidates,trimmed:prepared.trimmed??[]}};
+  }
+  const actionInput={tool:'world_act',eventId,args:{action:prepared.routed,slots:prepared.slots}};
+  if(preview){
+   const result=await engine.previewAction(document,actionInput);
+   Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
+   return {...result,routing};
+  }
+  const applied=await engine.reduce(document,actionInput,{...options,openProposal:{proposal,prepared}});
+  if(!applied.result.receipt){
+   const resolved=this.resolve(engine,actionInput);
+   applied.result.receipt={...this.legacyPreview(engine,document,actionInput,resolved,applied),status:'committed',routing,signature:prepared.signature,candidates:prepared.candidates};
+  }
+  const d=engine.primitiveDraft(document);
+  d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+  return {...applied,patches:[...applied.patches,...d.patches]};
+ },
+ actionPermission(engine,document,{action,slots={},actor='player'}={}){
+  const resolved=this.resolve(engine,{args:{action,slots}},{actor});
+  let checks;
+  if(resolved.effects){
+   const context=primitiveContext(engine,document);
+   checks=resolved.effects.map(effect=>({family:effect.op,...canAct(context,actor,effect.op,effect)}));
+  }else{
+   if(actor!=='player')reject('E-PRIMITIVE-ACTOR','Legacy actions use the player actor');
+   const call=engine.primitiveNormalizeCall(resolved.tool,resolved.args),tool=call.tool.replace(/^world_/,'');
+   const permission=legacyCanAct(engine,document,tool,call.args);
+   checks=[{family:legacyActionFamily(tool,call.args),...canAct(primitiveContext(engine,document),actor,legacyActionFamily(tool,call.args),{to:tool==='move'?engine.resolve(call.args.destination):undefined}),...(permission??{})}];
+   if(!permission){const old=engine.primitiveLegacyRestriction(document,tool,call.args);if(old)checks[0]={...checks[0],allowed:false,reason:old};}
+  }
+  const denied=checks.find(check=>!check.allowed);
+  return {action:resolved.action.id,actor,allowed:!denied,reason:denied?.reason??null,checks};
+ },
+ legacyPreview(engine,document,input,resolved,reduced){
+  const after=applyPatches(document,reduced.patches),detail=reduced.result;
+  const check=after.state.checks?.[input.eventId]??(typeof detail.success==='boolean'&&Number.isFinite(detail.roll)?detail:null);
+  const known=new Set(['player',...subjectiveView(engine,document,'player').observable.people.map(person=>person.id)]);
+  const events=Object.values(after.state.records??{}).filter(row=>row.category==='world_event'&&(row.id===input.eventId||row.sourceEvent===input.eventId)&&
+   (!privateWorldEvent(row)||row.actor==='player'||row.witnesses?.includes('player'))&&(row.actor==='player'||row.witnesses?.includes('player')));
+  const consequences=events.map(row=>({source:row.id,type:row.verb,tags:[...row.tags??[]],...(row.reason?{reason:row.reason}:{})}));
+  // Only the player's own/witnessed events and currently observable witnesses.
+  // Unknown details stay null; elapsed-span autonomous events aren't forecasts.
+  const witnesses=events.length?[...new Set(events.flatMap(row=>row.witnesses??[]).filter(id=>known.has(id)))].sort():null;
+  return {eventId:input.eventId,status:'preview',routed:resolved.action.id,applied:[],legacy:structuredClone(detail),
+   cost:{time:after.state.minute-document.state.minute,coins:Number.isFinite(detail.cost)?detail.cost:null,resources:null},
+   check,consequences,witnesses,permission:this.actionPermission(engine,document,{action:resolved.action.id,slots:input.args?.slots??{}})};
+ },
  registry(engine){
   if(engine.actionRegistry)return engine.actionRegistry;
   const snapshot=engine.world.actionDefinitions;
@@ -475,7 +548,7 @@ export const primitiveRuntime={
   if(!Array.isArray(program)||!program.length)reject('E-ACTION-OUTCOME','A primary success outcome is required');
   return {action,effects:actionEffects({outcomes:program},slots,actor)};
  },
- execute(engine,document,input,{createDraft,preview=false,actor='player',sourceKind='catalog'}={}){
+ execute(engine,document,input,{createDraft,preview=false,actor='player',sourceKind='catalog',openProposal=null}={}){
   const resolved=this.resolve(engine,input,{actor,sourceKind});
   if(!resolved.effects)return {legacy:resolved};
   const {action}=resolved;
@@ -484,7 +557,7 @@ export const primitiveRuntime={
   let limits,quote,start,resourceCosts,escapeCheck=null,escapeClosures=new Set();
   const effects=resolved.effects;
   const purpose=`action:${digest({action:action.id,eventId:input.eventId})}`;
-  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:sourceKind,id:action.id},createDraft,validate,identity:{action:action.id,slots},limits:()=>limits,purpose,
+   const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:sourceKind,id:action.id},createDraft,validate,identity:{action:action.id,slots,...(openProposal?{proposal:openProposal.proposal}:{})},limits:()=>limits,purpose,
    movementAuthority:({actor:who,to,custody,document:current})=>{
     if(who!==actor||to!==null||!escapeCheck?.success||!escapeClosures.has(custody.id)||custody.holder!==actor)return null;
     const guard=escapeCheck.opponent?.npc,state=current.state,place=actor==='player'?state.location:state.npcs?.[actor]?.location;
@@ -495,6 +568,7 @@ export const primitiveRuntime={
     return {allowed:true,kind:'escape',source:`${input.eventId}:action-check`};
    },
    prepare:(d,{receipt})=>{
+     if(openProposal)Object.assign(receipt,{routing:proposalRouting(openProposal.proposal,openProposal.prepared),signature:openProposal.prepared.signature,candidates:openProposal.prepared.candidates});
     limits=actionLimits(engine,d.document,action,slots,actor);limits.costManaged=true;quote=actionDuration(engine,d.document,action,slots,actor);start=d.get('state','minute');
     if(quote.duration||action.cost?.body||effects.some(e=>['move','learn','time'].includes(e.op)))beginBodyActivity(d,engine,actor,quote.activity);
     resourceCosts=actionResourceCosts(engine,d.document,action,slots,actor);

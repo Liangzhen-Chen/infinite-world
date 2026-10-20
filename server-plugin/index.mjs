@@ -138,7 +138,14 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     router.post('/propose',handle(async req=>{
         const {campaignId,eventId,args}=req.body,store=getStore(req),view=await store.read(campaignId);
         const selected=await store.worldRegistry.get(view.document.worldHash);
-        return {...await selected.previewAction(view.document,{tool:'world_act',args,eventId}),reference:view.reference};
+        const tool=req.body.tool??'world_act';
+        if(!['world_act','world_propose'].includes(tool))throw Error('预览只接受注册动作或开放提案');
+        return {...await selected.previewAction(view.document,{tool,args,eventId}),reference:view.reference};
+    }));
+    router.post('/actions/permission',handle(async req=>{
+        const {campaignId,action,slots}=req.body,store=getStore(req),view=await store.read(campaignId);
+        const selected=await store.worldRegistry.get(view.document.worldHash);
+        return {...selected.actionPermission(view.document,{action,slots}),reference:view.reference};
     }));
     router.post('/execute',handle(async req=>{
         const {campaignId,eventId,anchor,expectedSequence}=req.body;

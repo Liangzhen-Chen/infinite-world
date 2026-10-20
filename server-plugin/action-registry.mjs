@@ -54,7 +54,7 @@ export function findAction(registry,id){
  if(typeof id!=='string'||!id)return null;
  return registry.byId.get(id)??(id.includes(':')?null:registry.byId.get(`core:${id}`))??null;
 }
-export const CONSENT_PENDING='需要对方答应（对话功能完成后开放）';
+export const CONSENT_PENDING='需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）';
 // Is the party whose consent the action needs the player? `consent.from`: 'self' (the player is always the one acted on,
 // e.g. seeking care), 'party' (the person named in slot `consent.slot` is, and it is the player when that slot says so);
 // any other source ('target', a slot name) is somebody else's decision.
@@ -81,8 +81,8 @@ export function actionCall(registry,id,slots={}){
  }
  // Consent comes from the party the action acts on (05 §5.7, 06 §6.5), never from the caller on someone else's behalf.
  // An action that declares the player as that party takes it from the player (or derives it from the act itself);
- // for anyone else a caller-filled consent is refused, and until A2's NPC decision exists the legacy path's own judgement
- // (e.g. an innkeeper on trade duty) is all that applies.
+ // For anyone else a caller-filled consent is refused; native consent adapters
+ // and the legacy handler's own decision determine whether agreement exists.
  const own=consentIsOwn(action,slots);
  if('consent' in slots&&(!own||typeof slots.consent!=='boolean'))throw Error(own?'同意只能填是或否':CONSENT_PENDING);
  const allowed=new Set(action.slots.map(s=>s.name)),extra=Object.keys(slots).filter(k=>!allowed.has(k)&&k!=='operation');

@@ -30,9 +30,12 @@ export function custodyLocation(context,holding){
  const record=holding.source?.startsWith('custody:')?context.document.state?.records?.[holding.source.slice(8)]:null;
  return record?.location??context.document.holdings?.locations?.[holding.subject]?.at??actionEntity(context,holding.subject)?.location??holding.subject;
 }
+export function legacyActionFamily(tool,args={}){
+ return tool==='law'?({inspect:'observe',appeal:'appeal',hear:'appeal',hire_advocate:'obligation.create',confess:'talk',bribe:'transfer'})[args.operation??'inspect']??tool:({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
+}
 export function legacyCanAct(engine,document,tool,args){
  if(!aliveHoldings(actionReader(document),{kind:'guest_of',holder:'player'}).some(h=>h.variant==='detained'))return null;
- const family=tool==='law'?({inspect:'observe',appeal:'appeal',hear:'appeal',hire_advocate:'obligation.create',confess:'talk',bribe:'transfer'})[args.operation??'inspect']??tool:({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
+ const family=legacyActionFamily(tool,args);
  return canAct({engine,document},'player',family,{to:tool==='move'?(engine?.resolve(args.destination)??args.destination):undefined});
 }
 export function canAct(context,actor,family,{to,closing=null}={}){
