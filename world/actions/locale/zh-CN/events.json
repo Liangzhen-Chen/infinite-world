@@ -38,6 +38,10 @@
   "noExit": "看不出有别的路。"
  },
  "events": {
+  "festival.watch": "你观看节庆直到散场。",
+  "read.notice": "你读到告示原文：{content}",
+  "talk.overhear": "你在{sourceLabel}听到：{content}",
+  "site.gather": "你采得{quantity}份{item}。",
   "settlement.org_join": "{admissionText}",
   "trade.buy": "你向{seller}买下{quantity}份{item}，付了{cost}文。",
   "trade.sell": "你把{quantity}份{item}卖给{buyer}，得了{cost}文。",

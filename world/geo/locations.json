@@ -110,7 +110,15 @@
       "host": "npc_hw_linsui",
       "kind": "客房",
       "rooms": 3
-    }
+    },
+    "publicConversations": [
+      {
+        "id": "conversation_hw_trade",
+        "speaker": "npc_hw_linsui",
+        "rumor": "rumor_w5_1_02",
+        "label": "酒馆闲谈"
+      }
+    ]
   },
   {
     "id": "bld_hw_mill",
@@ -344,7 +352,33 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "site": {
+      "owner": null,
+      "occupants": [],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "clues": [],
+      "resources": [
+        {
+          "id": "nw_herb",
+          "name": "林缘药草",
+          "item": "item_herb",
+          "quantity": 20,
+          "minutes": 120,
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "truths": []
+    }
   },
   {
     "id": "bld_hw_herbs",
@@ -697,6 +731,13 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "notices": [
+      {
+        "id": "notice_hw_gate",
+        "text": "听来的消息尚待核实，请留意告示与讲述者的来源。",
+        "author": "npc_hw_chenbai"
       }
     ]
   },

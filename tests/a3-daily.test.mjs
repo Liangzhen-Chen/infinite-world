@@ -8,7 +8,7 @@ import {openHoldings} from '../server-plugin/holdings.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {trackSingleItem} from '../server-plugin/items.mjs';
-import {dieOf} from './helpers/daily-b2.mjs';
+import {dieOf,scene} from './helpers/daily-b2.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 
@@ -219,4 +219,141 @@ test('A3 D36: insufficient charter fees roll back the entire conversation, time,
  delete f.document.ledger;book(f);const before=structuredClone(f.document);
  await assert.rejects(act(f,'core:settlement.org_join',joinSlots,'a3-poor-join'),/入会费不足/);
  assert.deepEqual(f.document,before);assert.deepEqual(reconcile(f.engine,f.document).mismatches,[]);
+});
+
+
+async function gatherFixture(){
+ const f=fixture(),skill='skill_life_9_core';
+ // A3-A must pin yields with the other primitive tables for archived worlds.
+ // Supply that actual source table, without substituting an expected yield.
+ f.world.primitiveTables.yields=structuredClone(original.balance.yields);
+ f.document.state.location='loc_hw_northwood';
+ f.document.state.skills[skill]={proficiency:10,breakthroughs:[],daily:{}};
+ book(f);
+ const entered=await act(f,'core:site.enter',{},'a3-enter-herbs');f.document=entered.after;
+ return f;
+}
+test('A3 D14: two hours at the real local herb reserve transfers five herbs and gives capped, decaying work practice',async()=>{
+ const f=await gatherFixture(),before=structuredClone(f.document),skill='skill_life_9_core',slots={target:'nw_herb',minutes:120};
+ const {out,after}=await act(f,'core:site.gather_session',slots,'a3-herbs');
+ assert.equal(after.state.minute-before.state.minute,120);assert.equal(out.result.cost.time,120);
+ assert.equal(qty(f,after,'player','item_herb')-qty(f,before,'player','item_herb'),5);
+ assert.equal(after.state.records['site:loc_hw_northwood'].remaining.nw_herb,15);
+ assert.equal(after.state.skills[skill].proficiency-before.state.skills[skill].proficiency,3);
+ assert.equal(after.state.skills[skill].practiceCarry,.4);
+ assert.equal(out.result.training.learningSource,'practice');assert.equal(out.result.training.context,'work');
+ // gather.* is light work: body.stamina drainPerHour.light=3, once for 2h.
+ assert.equal(readBodyNeed(f.engine,after,'player','stamina'),94);
+ assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(auditLedger(after.ledger),[]);
+ assert.deepEqual(reconcile(f.engine,after).mismatches,[]);
+ f.document=JSON.parse(JSON.stringify(after));const repeat=await act(f,'core:site.gather_session',slots,'a3-herbs');
+ assert.deepEqual(repeat.out.patches,[]);assert.equal(repeat.out.result.duplicate,true);
+ await assert.rejects(act(f,'core:site.gather_session',{...slots,minutes:240},'a3-herbs'),/同一事件编号/);
+ const second=await act(f,'core:site.gather_session',slots,'a3-herbs-second');
+ assert.equal(second.after.state.skills[skill].proficiency-after.state.skills[skill].proficiency,2);
+ assert.equal(second.after.state.skills[skill].practiceCarry,.1);
+ f.document=second.after;const day=String(Math.floor(f.document.state.minute/1440));
+ f.document.state.skills[skill].daily[day].gain=f.engine.rules.practice.dailyCaps[0];
+ const capped=await act(f,'core:site.gather_session',slots,'a3-herbs-cap');
+ assert.equal(capped.out.result.training.gain,0);assert.equal(capped.out.result.quantity,5);
+});
+test('A3 D14: duration, local presence, season, permission, stock and prior commitments remain real gates',async()=>{
+ for(const fault of ['short','long','quantity','legacy_quantity','stock','winter','permission','busy','elsewhere']){
+  const f=await gatherFixture(),slots={target:'nw_herb',minutes:120},state=f.document.state;
+  if(fault==='short')slots.minutes=29;if(fault==='long')slots.minutes=481;if(fault==='quantity')slots.quantity=100;
+  if(fault==='legacy_quantity'){delete slots.minutes;slots.quantity=20;}
+  if(fault==='stock')state.records['site:loc_hw_northwood'].remaining.nw_herb=0;
+  if(fault==='winter')scene('loc_hw_northwood',(9*30+3)*1440+9*60)(state,f.document);
+  if(fault==='permission')f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
+  if(fault==='elsewhere')state.location=INN;
+  if(fault==='busy')state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:state.minute,deadline:state.minute+180,departures:{player:state.minute,[SELLER]:state.minute},status:'待履行',location:state.location};
+  const before=structuredClone(f.document);await assert.rejects(act(f,fault==='legacy_quantity'?'core:site.gather':'core:site.gather_session',slots,`a3-herbs-${fault}`));
+  assert.deepEqual(f.document,before);
+ }
+});
+test('A3 D14: both duration endpoints execute, and depleted herbs stay empty through the old alias',async()=>{
+ for(const [minutes,quantity]of [[30,1],[480,20]]){
+  const f=await gatherFixture(),before=structuredClone(f.document),gathered=await act(f,'core:site.gather_session',{target:'nw_herb',minutes},`a3-endpoint-${minutes}`);
+  assert.equal(gathered.after.state.minute-before.state.minute,minutes);assert.equal(gathered.out.result.quantity,quantity);
+  assert.equal(qty(f,gathered.after,'player','item_herb')-qty(f,before,'player','item_herb'),quantity);
+  assert.deepEqual(reconcile(f.engine,gathered.after).mismatches,[]);
+  if(minutes===480){
+   f.document=gathered.after;const empty=structuredClone(f.document);
+   await assert.rejects(act(f,'core:site.gather',{target:'nw_herb'},'a3-empty-legacy'),/存量|不足/);assert.deepEqual(f.document,empty);
+  }
+ }
+});
+
+function readingFixture(){
+ const f=fixture(),place=f.world.locations.find(p=>p.id===INN);
+ place.notices=[{id:'notice_d38',text:'四月初一起每户春税50文。',author:SELLER}];
+ place.publicConversations=[{id:'speech_d38',speaker:SELLER,rumor:'rumor_d38',label:'村口闲谈'}];
+ f.world.rumors.push({id:'rumor_d38',claim:'东头丢了一头牛。',source:SELLER,carriers:[SELLER],fact:'未在公开交谈提及的秘密'});
+ return book(f);
+}
+test('A3 D38: read the actual notice then overhear a registered public conversation in fifteen minutes, without spending money or revealing truth',async()=>{
+ const f=readingFixture(),before=structuredClone(f.document);
+ const read=await act(f,'core:read.notice',{notice:'notice_d38'},'a3-read');f.document=read.after;
+ assert.equal(read.out.result.content,'四月初一起每户春税50文。');assert.equal(read.out.result.cost.time,5);
+ const notice=read.after.memories[read.out.result.memoryId];assert.equal(notice.source,'notice_d38');assert.equal(notice.channel,'read');
+ assert.equal(notice.content,read.out.result.content);
+ const heard=await act(f,'core:talk.overhear',{conversation:'speech_d38'},'a3-overhear'),after=heard.after;
+ assert.equal(heard.out.result.cost.time,10);assert.equal(after.state.minute-before.state.minute,15);
+ const memory=after.memories[heard.out.result.memoryId];assert.equal(memory.sourceLabel,'村口闲谈');assert.equal(memory.source,SELLER);
+ assert.equal(memory.channel,'overhear');assert.equal(memory.reliability,'未核实');
+ assert.equal(memory.transmissionChain.at(-1).channel,'overhear');assert.ok(memory.content.includes('东头丢了一头牛'));
+ assert.ok(!JSON.stringify(after.memories).includes('未在公开交谈提及的秘密'));
+ assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.ledger,before.ledger);
+ // Reading proves the announced text, while S4's tax enactment is still separate.
+ assert.deepEqual(after.state.settlements,before.state.settlements);
+ f.document=JSON.parse(JSON.stringify(after));assert.deepEqual((await act(f,'core:talk.overhear',{conversation:'speech_d38'},'a3-overhear')).out.patches,[]);
+ assert.deepEqual((await act(f,'core:read.notice',{notice:'notice_d38'},'a3-read')).out.patches,[]);
+ await assert.rejects(act(f,'core:read.notice',{notice:'other'},'a3-read'),/同一事件编号/);
+});
+test('A3 D38: remote, missing, expired, future, private and absent-speaker sources cannot create knowledge',async()=>{
+ for(const fault of ['remote','expired','future','private','absent','busy']){
+  const f=readingFixture(),place=f.world.locations.find(p=>p.id===INN),now=f.document.state.minute;
+  let action='core:read.notice',slots={notice:'notice_d38'};
+  if(fault==='remote')f.document.state.location='loc_hw';
+  if(fault==='expired')place.notices[0].until=now;
+  if(fault==='future')place.notices[0].postedAt=now+1;
+  if(fault==='private'||fault==='absent'){action='core:talk.overhear';slots={conversation:fault==='private'?'unpublished':'speech_d38'};}
+  if(fault==='absent')f.document.state.npcs[SELLER].location='loc_hw';
+  if(fault==='busy')f.document.state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:now,deadline:now+60,departures:{player:now,[SELLER]:now},status:'待履行',location:INN};
+  const before=structuredClone(f.document);await assert.rejects(act(f,action,slots,`a3-read-${fault}`));assert.deepEqual(f.document,before);
+ }
+});
+
+async function festivalFixture(){
+ const f=fixture(),state=f.document.state;
+ // Real plan/authorization/attendance/clock paths produce the held record.
+ const cal=f.engine.calendar(state.minute),dayStart=Math.floor(state.minute/1440)*1440;
+ const start=19*60;
+ const festival={id:'festival_d35',name:'灯会测试场',calendar:{month:cal.month,day:cal.day},venue:{location:INN,precision:'existing_location'},custom:'在场观灯',resourceNeeds:[],runtime:{status:'active',host:SELLER,kind:'market',startMinute:start,durationMinutes:120,minimumParticipants:1}};
+ f.world.festivals=[festival];f.world.items.find(p=>p.id===BREAD).basePrice=6;state.player.coins=50;
+ f.engine=new WorldEngine(f.world);book(f);
+ const run=async(action,slots,id)=>{const r=await act(f,action,slots,id);f.document=r.after;return r;};
+ await run('core:trade.buy',{seller:SELLER,item:BREAD,quantity:2},'a3-festival-bread');
+ const planned=await run('core:settlement.festival_plan',{festival:festival.id,cost:0},'a3-festival-plan'),id=planned.out.result.festival;
+ // Reuse festival-runtime's existing native authorization fixture. A3's
+ // catalogue still blocks client-filled NPC consent; its migration is separate.
+ const authorized=await f.engine.reduce(f.document,{tool:'world_settlement',args:{operation:'festival_authorize',festival:id,speaker:SELLER,consent:true},eventId:'a3-festival-authorize'});
+ f.document=applyPatches(f.document,authorized.patches);
+ await run('core:settlement.festival_join',{festival:id,speaker:'player',consent:true},'a3-festival-join');
+ const out=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:dayStart+start-f.document.state.minute},eventId:'a3-festival-start'});
+ f.document=applyPatches(f.document,out.patches);assert.equal(f.document.state.records[id].status,'held');
+ return {...f,id};
+}
+test('A3 D35: watching a real held festival advances to its actual endsAt and cannot replay time or awards',async()=>{
+ const f=await festivalFixture(),before=structuredClone(f.document),event=before.state.records[f.id];
+ const watched=await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch');
+ assert.equal(watched.after.state.minute,event.endsAt);assert.equal(watched.out.result.cost.time,event.endsAt-before.state.minute);
+ assert.equal(watched.after.state.minute%1440,21*60);assert.equal(watched.out.result.cost.time,120);
+ assert.equal(qty(f,watched.after,'player',BREAD),2);assert.equal(watched.after.state.player.coins,38);
+ assert.deepEqual(watched.after.state.inventory,before.state.inventory);assert.equal(watched.after.state.player.coins,before.state.player.coins);
+ assert.equal(watched.after.state.records[f.id].paidCopper,event.paidCopper);assert.deepEqual(auditLedger(watched.after.ledger),[]);
+ f.document=JSON.parse(JSON.stringify(watched.after));assert.deepEqual((await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch')).out.patches,[]);
+ await assert.rejects(act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch-ended'),/没有正在举行/);
+ const remote=await festivalFixture();remote.document.state.location='loc_hw';const original=structuredClone(remote.document);
+ await assert.rejects(act(remote,'core:settlement.festival_watch',{festival:remote.id},'a3-watch-remote'),/没有正在举行/);assert.deepEqual(remote.document,original);
 });

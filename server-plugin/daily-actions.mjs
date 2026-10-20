@@ -76,3 +76,32 @@ export function eatMeal(d,engine,args,eventId){
  d.set(['state','records',key],{category:'daily_action',identity,result});
  return result;
 }
+
+export function readNotice(d,engine,args,eventId){
+ const key=`daily:${eventId}`,identity=digest({operation:'read_notice',notice:args.notice}),old=d.get('state','records',key);
+ if(old){if(old.identity!==identity)throw Error('同一事件编号不能更换告示');return {...old.result,duplicate:true};}
+ const location=d.get('state','location'),notice=engine.byId.get(location)?.notices?.find(n=>n.id===args.notice);
+ if(!notice||!notice.text?.trim()||notice.postedAt!==undefined&&notice.postedAt>d.get('state','minute')||notice.until!==undefined&&notice.until<=d.get('state','minute'))throw Error('这里没有这份有效告示');
+ const rule=actionCostRule(engine,'read.notice');assertActionTime(d,engine,rule.timeMin);
+ const span=beginActionActivity(d,engine,rule.activity);
+ engine.advance(d,rule.timeMin,eventId);
+ if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')throw Error('阅读完成前已离场或失去行动能力');
+ const memoryId=`player::notice:${notice.id}`,memory={subject:'player',key:`notice:${notice.id}`,content:notice.text,source:notice.id,sourceType:'阅读',channel:'read',reliability:'原文',location,minute:d.get('state','minute'),sourceEvent:eventId,participants:['player'],keywords:[],pinned:false};
+ d.set(['memories',memoryId],memory);
+ const result={notice:notice.id,memoryId,content:notice.text,source:notice.id,cost:finishActionActivity(d,engine,span),actionScope:{kind:'reading',clockManaged:true,minutes:rule.timeMin}};
+ d.set(['state','records',key],{category:'daily_action',identity,result});return result;
+}
+
+export function overhearRumor(d,engine,args,eventId){
+ const key=`daily:${eventId}`,identity=digest({operation:'overhear',conversation:args.conversation}),old=d.get('state','records',key);
+ if(old){if(old.identity!==identity)throw Error('同一事件编号不能更换旁听来源');return {...old.result,duplicate:true};}
+ const location=d.get('state','location'),speech=engine.byId.get(location)?.publicConversations?.find(n=>n.id===args.conversation);
+ if(!speech)throw Error('这里没有这段公开交谈');
+ const rumor=npcRumors(engine,speech.speaker,d.document).find(r=>r.id===speech.rumor);
+ if(!rumor)throw Error('讲述者当前不知道这条传闻');
+ const rule=actionCostRule(engine,'talk.overhear');assertRumorConversation(d,engine,speech.speaker,rule.timeMin);
+ const span=beginActionActivity(d,engine,rule.activity);
+ const heard=hearNpcRumor(d,engine,{subject:'player',key:rumor.id,rumor:rumor.id,source:speech.speaker,content:rumor.claim},eventId,{channel:'overhear',minutes:rule.timeMin,sourceLabel:speech.label??'当地闲谈'});
+ const result={...heard,cost:finishActionActivity(d,engine,span),actionScope:{kind:'overhearing',clockManaged:true,minutes:d.get('state','minute')-span.start}};
+ d.set(['state','records',key],{category:'daily_action',identity,result});return result;
+}

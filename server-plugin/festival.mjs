@@ -3,6 +3,7 @@ import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('festival',{sinks:['sink:consume']});
 import {digest} from './storage.mjs';
+import {assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
 import {recordFestivalRelations} from './npc-relations.mjs';
@@ -152,6 +153,19 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=nu
 }
 export function festivalAction(d,args,eventId){
  const now=d.get('state','minute');
+ if(args.operation==='festival_watch'){
+  const key=`festival-watch:${eventId}`,old=d.get(...path(key));
+  if(old){if(old.festival!==args.festival)throw Error('同一事件编号不能更换节庆');return {...old.result,duplicate:true};}
+  const row=d.get(...path(args.festival));
+  if(row?.category!=='festival'||!row.formal||row.status!=='held'||row.location!==d.get('state','location')||!Number.isSafeInteger(row.endsAt)||now<row.due||now>=row.endsAt)throw Error('这里没有正在举行的正式节庆');
+  const f=custom(this,row.custom);
+  if(!matches(f,row))throw Error('节庆来源与实际举办记录不一致');
+  const minutes=row.endsAt-now;assertActionTime(d,this,minutes);
+  const span=beginActionActivity(d,this,'light');this.advance(d,minutes,eventId);
+  if(d.get('state','location')!==row.location||d.get('state','player','status')!=='正常')throw Error('散场前已离开或失去行动能力');
+  const result={festival:row.id,endsAt:row.endsAt,watchedUntil:d.get('state','minute'),cost:finishActionActivity(d,this,span),actionScope:{kind:'festival',clockManaged:true,minutes}};
+  d.set(path(key),{category:'festival_watch',festival:row.id,result});return result;
+ }
  if(args.operation==='festival_inspect'){
   const calendar=festivalCalendar(this).filter(f=>f.location===d.get('state','location'));
   return {calendar,events:Object.values(d.get('state','records')??{}).filter(r=>r.category==='festival'&&calendar.some(f=>f.id===r.custom)),actionScope:{kind:'instant'}};

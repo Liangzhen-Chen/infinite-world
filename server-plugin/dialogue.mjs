@@ -7,7 +7,7 @@ import {npcDecision} from './npc-decision.mjs';
 import {moveCoins,purse} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {recordLie} from './lies.mjs';
-import {eatMeal,orderMeal,treatRumor} from './daily-actions.mjs';
+import {eatMeal,orderMeal,treatRumor,readNotice,overhearRumor} from './daily-actions.mjs';
 import {actionCostRule,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {assertRumorConversation} from './npc-rumors.mjs';
 import {advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -48,6 +48,8 @@ export function dialogueRequest(d,engine,args,eventId){
  return {...detail,...save(d,npc,eventId,'request',decision,line(engine,view,'request',decision))};
 }
 export function applyDialogue(d,engine,args,eventId){
+ if(args.key==='dialogue:read_notice')return readNotice(d,engine,args,eventId);
+ if(args.key==='dialogue:overhear')return overhearRumor(d,engine,args,eventId);
  if(args.key==='dialogue:eat_meal')return eatMeal(d,engine,args,eventId);
  if(args.key==='dialogue:order_meal')return orderMeal(d,engine,args,eventId);
  if(args.key==='dialogue:treat_rumor')return treatRumor(d,engine,args,eventId);

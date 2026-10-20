@@ -95,9 +95,24 @@ test('D38 听传闻 ③：村口听村民说“东头丢了牛”，已知传闻
  assert.ok(told.result.content.includes(ox.claim),'②已知传闻新增“丢牛”');assert.equal(after.memories[`player::${ox.id}::${GUCEN}`].sourceType,'听说');assert.equal(after.memories[`player::${ox.id}::${GUCEN}`].reliability,'未核实');
  assert.ok(!told.result.content.includes('脚夫')&&!told.result.content.includes(ox.fact),'③没有议论者未提及的细节');
 });
-test.todo('D38 ①看告示：已知信息新增“四月初一起每户春税 50 文”，与告示原文一致——引擎没有告示物品/告示栏阅读（只有委托公告栏）：缺“阅读 = tell(源 = 告示物品)”与告示 records（S6 知情集合与 tell；法典公告 S4）');
-test.todo('D38 ②来源标“村口闲谈”——引擎来源记的是具体讲述者与“交谈”通道，没有旁听（overhear）通道：缺 perceives 旁听 tell（S6 通道表 extend）');
-test.todo('D38 ④时间过去约一刻钟——引擎传闻交谈固定 10 分钟；缺旁听/阅读动作耗时读表（A3：action-costs 增 talk.overhear / read.notice 行；缺省值已补入表）');
+test('D38 read announcement preserves its exact original text and source',async t=>{const {after,read,place}=await d38Sources(t);assert.equal(after.memories[read.result.memoryId].source,place.notices[0].id);assert.equal(read.result.content,'\u56db\u6708\u521d\u4e00\u8d77\u6bcf\u6237\u6625\u7a0e50\u6587\u3002');});
+test('D38 overheard rumor preserves village conversation source label',async t=>{const {after,heard}=await d38Sources(t);assert.equal(after.memories[heard.result.memoryId].sourceLabel,'\u6751\u53e3\u95f2\u8c08');assert.equal(after.memories[heard.result.memoryId].transmissionChain.at(-1).channel,'overhear');});
+// A3 D38.4: public notice + public speech use native registered sources;
+// S4 taxation and the other S6 language/propagation criteria stay separate.
+async function d38Sources(t){
+ const world=rumorWorld(),place=world.locations.find(p=>p.id==='loc_hw_gate'),ox=world.rumors.find(r=>r.id==='rumor_d22_ox');
+ ox.source=GUCEN;ox.carriers=[GUCEN];
+ place.notices=[{id:'notice_d38',text:'\u56db\u6708\u521d\u4e00\u8d77\u6bcf\u6237\u6625\u7a0e50\u6587\u3002'}];
+ place.publicConversations=[{id:'speech_d38',speaker:GUCEN,rumor:ox.id,label:'\u6751\u53e3\u95f2\u8c08'}];
+ const ui=await uiSession(t,{world,mutate:scene('loc_hw_gate',monthDayMinute(3,28,8,0),(s,doc)=>{s.player.coins=20;Object.assign(s.npcs[GUCEN],{location:'loc_hw_gate',activity:'talking',status:'\u6b63\u5e38'});doc.ledger=openLedger(new WorldEngine(world),doc);})});
+ const before=await primed(ui),read=await ui.choose('read.notice',{notice:'notice_d38'},{search:true});assert.ok(read.ok,read.error);
+ const heard=await ui.choose('talk.overhear',{conversation:'speech_d38'},{search:true});assert.ok(heard.ok,heard.error);
+ const after=await ui.read();assert.equal(after.state.minute-before.state.minute,15);assert.equal(read.result.cost.time,5);assert.equal(heard.result.cost.time,10);
+ assert.equal(after.state.player.coins,20);assert.equal(after.memories[read.result.memoryId].content,place.notices[0].text);
+ assert.equal(after.memories[heard.result.memoryId].channel,'overhear');assert.ok(!heard.result.content.includes(ox.fact));conserved(before,after,'D38',new WorldEngine(world));
+ return {before,after,read,heard,place};
+}
+test('D38 A3 read.notice + talk.overhear take fifteen real minutes',d38Sources);
 test.todo('D38 ⑤告示内容与实际执行一致（四月初一起确实收 50 文）——缺“告示 records = 规范条目制定事件、征收按同一条目执行”（S4 法域规范栈；税表 recipient/exemption）');
 
 // ---- D23 接任务 / D24 交任务 ----

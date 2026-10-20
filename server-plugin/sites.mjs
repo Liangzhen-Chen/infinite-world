@@ -1,5 +1,7 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
+import {digest} from './storage.mjs';
+import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
 import {actorPath} from './npc-state.mjs';
@@ -134,6 +136,7 @@ export function validateSites(world,{edition=false}={}){
             if(row.failureDamage!==undefined&&(!Number.isSafeInteger(row.failureDamage)||row.failureDamage<0))fail(`${row.id}机关伤害无效`);
             if(kind==='resources'){
                 ownership(ownerOf(place,row));
+                if(row.gather&&(!world.skills.some(s=>s.id===row.gather.skill)||row.gather.yield!=='gather:herb'||!Array.isArray(row.gather.seasons)||!row.gather.seasons.length||row.gather.seasons.some(s=>!Number.isInteger(s)||s<0||s>3)))fail(`${row.id}持续采集须有有效技能、产量表和季节`);
                 if(!world.items.some(x=>x.id===row.item)||!Number.isSafeInteger(row.quantity)||row.quantity<0||row.quantity>100000)fail(`${row.id}有限库存无效`);
             }
             if(kind==='clues'&&(typeof row.text!=='string'||!row.text.trim()))fail(`${row.id}缺少发现正文`);
@@ -275,6 +278,8 @@ export function siteView(engine,document){
 }
 
 export function siteAction(d,args,eventId){
+    const receiptKey=`gather-session:${eventId}`,identity=digest(args),prior=args.operation==='gather'?d.get('state','records',receiptKey):null;
+    if(prior){if(prior.identity!==identity)throw Error('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
     const place=this.byId.get(d.get('state','location'));
     if(!place?.site)throw Error('所在地没有登记遗迹据点；须先沿道路抵达');
     const operation=args.operation??'inspect',s=place.site;
@@ -342,16 +347,35 @@ export function siteAction(d,args,eventId){
     if(operation==='gather'){
         if(!(target.requires??[]).every(id=>discovered(d.document,place.id,id)))throw Error('尚未实际发现这个资源');
         if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源另有物权，入内许可不能转让财物');
-        const quantity=args.quantity??1;
+        const timed=Boolean(target.gather)||args.minutes!==undefined,rule=timed?actionCostRule(this,'gather.*'):null;
+        let minutes=target.minutes,quantity=args.quantity??1;
+        if(timed){
+            if(!target.gather)throw Error('该资源未登记持续采集工序');
+            minutes=args.minutes??target.minutes;
+            if(!Number.isSafeInteger(minutes)||minutes<rule.durationMin||minutes>rule.durationMax)throw Error('采集时长须在30至480分钟之间');
+            if(args.quantity!==undefined)throw Error('持续采集产量由实际工时与资源存量决定');
+            if(!target.gather.seasons.includes(this.calendar(d.get('state','minute')).season)||!target.gather.seasons.includes(this.calendar(d.get('state','minute')+minutes).season))throw Error('当前季节没有可采的药草');
+            const yields=(this.world.primitiveTables?.yields??this.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
+            const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
+            if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw Error('采集产量与工日未登记');
+            quantity=Math.min(row.remaining[target.id],Math.floor(yields*minutes/day));
+            if(quantity<1)throw Error('资源存量或本次工时不足以采得一株');
+            assertActionTime(d,this,minutes);
+        }
         if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw Error('采集数量须为正整数');
         if(row.remaining[target.id]<quantity)throw Error('有限资源不足，不会因重访刷新');
-        advance(target.minutes);
+        const span=timed?beginActionActivity(d,this,rule.activity):null;
+        advance(minutes);
+        if(timed&&(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常'))throw Error('采集完成前已离开或失去行动能力');
         if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源许可已到期');
         const wood=target.item==='item_wood'&&forestView(this,d.get('state'),place.id);
         if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw Error('林木存量不足');
         row.remaining[target.id]-=quantity;putSite(d,this,place,row,{eventId,to:wood?null:{account:bag(this,'player',target.item),taken:{[target.id]:quantity}}});
         this.itemDelta(d,'player',target.item,quantity,STOCK_BOOKED);
-        return{target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player'};
+        const training=timed?learnFromWork(d,this,target.gather.skill,minutes,`gather:${place.id}:${target.id}`,eventId):null;
+        const result={target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player',...(timed?{training,cost:finishActionActivity(d,this,span),actionScope:{kind:'gathering',clockManaged:true,minutes}}:{})};
+        if(timed)d.set(['state','records',receiptKey],{category:'gather_session',identity,result});
+        return result;
     }
     if(discovered(d.document,place.id,target.id))return{target:target.id,duplicate:true,text:target.text};
     const check=target.check?this.check(d,target.check,eventId):{success:true};

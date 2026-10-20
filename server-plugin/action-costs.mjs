@@ -1,6 +1,20 @@
 // Legacy executors retain their clock. Body costs cover exactly that elapsed
 // interval, using the same lazy facts as primitive actions (no second advance).
 import {beginBodyActivity,endBodyActivity,readBodyNeed} from './primitives-body.mjs';
+import {fixedUnits,fixedMultiply,fixedNumber,checkedFixed} from './rx.mjs';
+
+// Work has already advanced the clock. Reuse practice's carry, repeated-target
+// decay, daily cap and breakthrough ceiling without charging a second interval.
+export function learnFromWork(d,engine,skill,minutes,target,eventId){
+ const old=d.get('state','skills',skill);
+ if(!old)return null;
+ const rows=engine.world.primitiveTables?.learning?.rows??[],stage=Math.floor(old.proficiency/300);
+ const rate=rows.find(r=>r.facet==='perHour'&&r.selector==='skill:*')?.perHour?.work;
+ const factor=rows.find(r=>r.facet==='tierFactor')?.tierFactor?.[stage];
+ if(!Number.isFinite(rate)||!Number.isFinite(factor))throw Error('工作学习数值未登记');
+ const gain=fixedNumber(checkedFixed(fixedMultiply(fixedUnits(rate),fixedUnits(factor))*BigInt(minutes)/60n));
+ return {...engine.practice(d,{skill,target},eventId,gain),learningSource:'practice',context:'work',minutes};
+}
 
 export function actionCostRule(engine,key){
  const row=engine.world.primitiveTables?.['action-costs']?.rows?.find(r=>r.selector===key);

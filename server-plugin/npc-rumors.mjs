@@ -63,7 +63,7 @@ export function assertRumorConversation(d,engine,speaker,minutes=10){
     }
 }
 
-export function hearNpcRumor(d,engine,args,eventId){
+export function hearNpcRumor(d,engine,args,eventId,{channel='conversation',minutes=10,sourceLabel=null}={}){
     const subject=engine.resolve(args.subject),speaker=engine.resolve(args.source,'npc');
     if(subject!=='player')throw Error('传闻获知主体须为玩家');
     if(args.key!==args.rumor)throw Error('传闻编号与记忆key须一致');
@@ -72,18 +72,18 @@ export function hearNpcRumor(d,engine,args,eventId){
     if(args.content!==rumor.claim)throw Error('传闻内容须与登记claim一致，不能请求真相或改写');
     const memoryId=`player::${rumor.id}::${speaker}`,old=d.get('memories',memoryId);
     if(old?.rumor===rumor.id&&old.source===speaker)return{memoryId,duplicate:true,rumor:old.rumor,source:speaker,content:old.content,reliability:'未核实'};
-    assertRumorConversation(d,engine,speaker);
+    assertRumorConversation(d,engine,speaker,minutes);
     const location=d.get('state','location'),start=d.get('state','minute');
     const origin=npcRumorSeeds(engine,speaker).find(r=>r.rumor===rumor.id);
     const rootMemoryId=rumor.rootMemoryId??origin?.rootMemoryId??rumor.memoryId;
-    const transmissionChain=[...rumor.transmissionChain??origin?.transmissionChain??[],{from:speaker,to:'player',minute:start,channel:'conversation',content:rumor.claim,distortion:'保留讲述者版本'}];
+    const transmissionChain=[...rumor.transmissionChain??origin?.transmissionChain??[],{from:speaker,to:'player',minute:start,channel,content:rumor.claim,distortion:'保留讲述者版本'}];
     // Ten minutes is the existing ordinary turn duration. Reserve the speaker
     // after validating the entire interval, as with other joint activities.
-    advanceWithNpcParticipants(d,engine,10,eventId,[speaker]);
+    advanceWithNpcParticipants(d,engine,minutes,eventId,[speaker]);
     const content=`${d.get('state','player','name')}在${engine.byId.get(location)?.name??location}于${engine.calendar(start).text}听到${engine.byId.get(speaker).name}说：“${rumor.claim}”；尚未核实。`;
     const memory={subject,key:rumor.id,rumor:rumor.id,content,source:speaker,sourceEvent:eventId,sourceType:'听说',reliability:'未核实',
         minute:d.get('state','minute'),location,participants:['player',speaker],keywords:[],pinned:false,
-        rumorSource:rumor.source,rootMemoryId,transmissionChain};
+        rumorSource:rumor.source,rootMemoryId,transmissionChain,...(sourceLabel?{sourceLabel,channel}:{})};
     d.set(['memories',memoryId],memory);
-    return{memoryId,rumor:rumor.id,source:speaker,content,reliability:'未核实',minutes:10,rootMemoryId,transmissionChain};
+    return{memoryId,rumor:rumor.id,source:speaker,content,reliability:'未核实',minutes,rootMemoryId,transmissionChain,...(sourceLabel?{sourceLabel,channel}:{})};
 }
