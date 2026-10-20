@@ -1,4 +1,5 @@
 // A1 可做之事（06 §6.9.1、08 §8.5）：只读 /actions 的投影；动作经 data.act → world_act 确定性结算，结果按事件流模板显示。
+import {ActionBuilder,renderActionBuilder} from './action-builder.mjs';
 const views=new WeakMap();
 const FEED='fields_event_feed';
 
@@ -7,12 +8,13 @@ function sleepUntil(minute){const hour=Math.floor(minute%1440/60);return {dayOff
 
 export async function renderActionsPanel(container,data){
     const doc=container.ownerDocument,state=views.get(container)??{target:null,quick:null,form:null,last:null,token:0};views.set(container,state);
+    state.data=data;
     const token=++state.token;container.classList.add('fields-actions');
     if(!data.view){container.textContent='请先在副本上启用新版。';return;}
     const here=await data.api('actions',state.target?{target:state.target}:{});
     if(token!==state.token||!container.isConnected)return;
     const node=(tag,text,className)=>{const e=doc.createElement(tag);if(text!==undefined)e.textContent=String(text);if(className)e.className=className;return e;};
-    const rerender=()=>renderActionsPanel(container,data);
+    const rerender=()=>renderActionsPanel(container,state.data);
     const section=(title,parent)=>{const e=node('section',undefined,'fields-actions-section');if(title)e.append(node('h3',title));parent.append(e);return e;};
     const button=(label,onclick,{pressed,className='fields-actions-button',disabled}={})=>{const b=node('button',label,className);b.type='button';if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));if(disabled)b.disabled=true;b.onclick=onclick;return b;};
     const fragment=doc.createDocumentFragment();
@@ -24,6 +26,13 @@ export async function renderActionsPanel(container,data){
         if(q.label==='观察'){state.quick=null;run({id:q.action,label:'观察四周'},{});return;}rerender();},{pressed:state.quick===q.label}));
     fragment.append(bar);
     const rows=here.actions,byQuick=label=>rows.find(a=>a.quick===label);
+    const other=button('其他…',()=>{
+        if(state.builder?.busy)return;
+        state.builder?.cancel();
+        state.form=null;state.quick=null;
+        state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;rerender();
+    },{disabled:state.builder?.busy});
+    fragment.append(other);
     const openForm=action=>{if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}state.form=action;rerender();};
     // 需要对方答应的动作照样列出，但按钮不可用并注明原因（A2 接入人物决策后开放）。
     const actionButton=a=>{const b=button(a.blocked?`${a.label}（${a.blocked}）`:a.label,()=>openForm(a),{disabled:Boolean(a.blocked)});return b;};
@@ -83,7 +92,15 @@ export async function renderActionsPanel(container,data){
         for(const i of here.objects.items)items.append(button(`${i.name}×${i.quantity}`,()=>{state.target=i.id;state.form=null;rerender();}));
     }
     // 表单
-    if(state.form){
+    if(state.builder){
+        const box=node('section');fragment.append(box);
+        renderActionBuilder(box,{builder:state.builder,here,api:data.api,onChange:rerender,
+            onClose:()=>{state.builder=null;rerender();},onResult:(result,action)=>{
+                state.last={label:action.label,...result};
+                if(result.ok)state.builder=null;
+            }});
+    }
+    if(state.form&&!state.builder){
         const action=state.form,form=node('form',undefined,'fields-actions-form');form.setAttribute('aria-label',action.label);
         form.append(node('h3',action.label));if(action.hint)form.append(node('p',action.hint,'fields-note'));
         const inputs=[];

@@ -12,6 +12,7 @@ import {settlementPresent} from './obligation-presence.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 export const QUICK=['交易','移动','等待','制作','账目','休息','观察'];
+const CHOICES={walk:'步行',horse:'骑马',cart:'乘车',boat:'乘船',cash:'现付',credit:'赊账',repay:'还账',attack:'攻击',defend:'防守',flee:'脱离',shove:'推搡'};
 
 function context(engine,document){
  const s=document.state,place=engine.byId.get(s.location),templates=loadTemplates();
@@ -82,7 +83,15 @@ function offer(ctx,action,target){
   if(slot.fill==='target'&&target)fill[slot.name]=target;
   if(slot.fill==='host'&&ctx.lodging)fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.[0])fill[slot.name]=ctx.bank.keepers[0];
-  const choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??v})):null;
+  let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
+  // Entity selectors are a projection of what the player can reach, never an
+  // invitation to type a hidden catalogue id. Explicit stock/recipe lists win.
+  if(choices===null&&slot.kind==='entity'){
+   if(['person','npc','agent'].includes(slot.entity))choices=ctx.people.map(p=>({value:p.id,label:p.name}));
+   else if(slot.entity==='item')choices=ctx.inventory.map(i=>({value:i.id,label:`${i.name}×${i.quantity}`}));
+   else if(['place','location'].includes(slot.entity))choices=ctx.exits.map(e=>({value:e.id,label:`${e.direction} ${e.name}`}));
+   else if(slot.entity==='skill')choices=ctx.skills.map(s=>({value:s.id,label:s.name}));
+  }
   if(choices)row.options=choices;
   return row;
  });
@@ -96,13 +105,16 @@ function restockNotes(engine,ctx,keeper){
  let next=today+1;while((next-shop.firstDay)%shop.cycleDays!==0||next<shop.firstDay)next++;
  return shop.restock.filter(r=>qty(stock[r.item])===0).map(r=>({item:r.item,name:ctx.name(r.item),nextMinute:next*1440,next:engine.calendar(next*1440).text.replace(/ \d\d:\d\d$/,'')}));
 }
-const kindOf=(ctx,engine,id)=>ctx.present.has(id)?'npc':ctx.inventory.some(r=>r.id===id)?'item':engine.byId.get(id)&&/^(loc|bld|site)_/.test(id)?'place':null;
+const kindOf=(ctx,engine,id)=>ctx.present.has(id)?'npc':ctx.inventory.some(r=>r.id===id)?'item':id===ctx.s.location||ctx.exits.some(e=>e.id===id)?'place':null;
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
 export function worldActions(engine,document,{target=null,query=null,limit=24,registry=loadActionRegistry()}={}){
  const ctx=context(engine,document);
  let id=null;
  if(target){try{id=engine.resolve(String(target));}catch{id=ctx.people.find(p=>p.name===target)?.id??ctx.inventory.find(r=>r.name===target)?.id??null;}}
  const kind=id?kindOf(ctx,engine,id):null;
+ // A globally resolvable name is not evidence of current access. In particular
+ // search must not use a remote person's private stock to populate selectors.
+ if(!kind)id=null;
  const visible=a=>(a.preconditions??[]).every(c=>holds(ctx,c,id));
  let actions;
  if(query)actions=searchActions(registry,query,{limit,include:['quick','here','target:npc','target:place','target:item','search','llm']}).map(a=>offer(ctx,a,id));

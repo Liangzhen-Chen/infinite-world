@@ -43,7 +43,7 @@ export function sceneCard(engine,document,query='',index=null){
     const compactPeople=Math.min(present.length,engine.rules.prompt.npcLimit)>4;
     const weather=localWeather(engine,document),path=[],seen=new Set();let location=place;
     while(location&&!seen.has(location.id)){seen.add(location.id);path.unshift(location.name);location=engine.byId.get(location.parent);}
-    const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.name}｜${weather.temperatureC}℃`:''}`,
+    const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.daylight?'白昼':'夜色已暗'}｜${weather.name}｜${weather.temperatureC}℃`:''}`,
         `【地点】${path.join(' › ')||s.location}（${s.location}）`,
         `【你】${name('player')}｜${p.level}级｜生命${p.hp}/${p.maxHp} 魔力${p.mp}/${p.maxMp}｜铜${p.coins}｜同行：${(p.companions??[]).map(name).join('、')||'无'}`,
         `【在场】共${present.length}人`];
