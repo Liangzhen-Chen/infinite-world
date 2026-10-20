@@ -109,7 +109,12 @@ test('L: worn slots are separate from custody, exclusive, validated and roundtri
 });
 
 test('K: a native mechanism action uses the registered physical check and persists its actual outcome',async t=>{
- const out=setup({inventory:{item_smith_tongs:1},objects:[{...generic('checked_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),kind:'node'}]});
+ // 05 §5.4 / 06 §6.3: the S consumer now requires its native practical premise.
+ // Keep the physical/check assertions and prove that an untrained actor fails.
+ const premise={inventory:{item_smith_tongs:1},objects:[{...generic('checked_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),kind:'node'}]};
+ const untrained=setup(premise);
+ await assert.rejects(engine.reduce(untrained.document,{tool:'world_act',eventId:'untrained-disarm',args:{action:'core:site.disarm',slots:{target:untrained.bindings.checked_trap}}}),{code:'E-DISARM-KNOWLEDGE'});
+ const out=setup({...premise,abilitiesByActor:{player:{practicalKnowledge:['simple_tripwire_disassembly']}}});
  assert.deepEqual(out.setupUnmet,[]);
  const id=out.bindings.checked_trap,saved=await roundtrip(t,out.document,{tool:'world_act',eventId:'native-disarm',args:{action:'core:site.disarm',slots:{target:id}}},result=>{
   assert.equal(result.receipt.routed,'core:site.disarm');

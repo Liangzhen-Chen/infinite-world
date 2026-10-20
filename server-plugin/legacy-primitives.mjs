@@ -68,18 +68,23 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  if(tool==='craft'&&result.clipped>0)receipt.trimmed.push({slot:'batches',requested:result.requestedBatches,applied:result.batches,reason:'按实际材料、工坊费、工具、工时及行动能力裁剪制造批数'});
  const add=(effect,role='outcome')=>{
   const target=effect.target??effect.entity??effect.subject;
-  const row={...effect,index:receipt.applied.length,source,role,appliedEvent:eventId,actedAs:effect.actedAs??null,...(target?{signatureKind:kindOf(engine,after,target)}:{})};
+  const row={...effect,index:receipt.applied.length,source,role,appliedEvent:eventId,actedAs:effect.actedAs??null,...(target?{signatureKind:effect.signatureKind??kindOf(engine,after,target)}:{})};
   receipt.applied.push(row);return row;
  };
  const involved=new Set(['player']);
- for(const value of [result.target,result.buyer,result.seller,result.teacher,result.dialogue?.npc,args.target,args.subject,args.student,args.seller,args.buyer,args.promisor,args.promisee]){
+ for(const value of [result.target,result.buyer,result.seller,result.teacher,result.dialogue?.npc,result.debt,result.obligation,args.target,args.subject,args.student,args.seller,args.buyer,args.promisor,args.promisee,args.summon]){
   if(typeof value!=='string')continue;
+  // Runtime instruments/summons have canonical IDs outside the world catalog.
+  if(b.obligations?.[value]||b.effects?.[value]||b.itemInstances?.[value])involved.add(value);
   try{involved.add(engine.resolve(value));}catch{/* A free text subject is not an entity. */}
  }
  const transfers=legacyLedgerEffects(before,after,d.patches);
  for(const effect of transfers){
   const owners=[parseAccount(effect.from).owner,parseAccount(effect.to).owner];
-  if(owners.some(owner=>involved.has(owner)))add(effect);
+  if(owners.some(owner=>involved.has(owner))){
+   const resourceTags=engine.byId.get(effect.resource)?.tags;
+   add({...effect,...(resourceTags?.length?{resourceTags:[...resourceTags]}:{})});
+  }
   // Autonomous postings stay internal, just like native time's world advance.
  }
  const posted=receipt.applied.filter(e=>e.op==='transfer');
@@ -94,6 +99,11 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  }
  const elapsed=a.minute-b.minute;
  if(elapsed&&tool==='time')add({op:'time',minutes:elapsed,mode:args.activity==='睡眠'?'sleep':'rest',...(args.until?{until:structuredClone(args.until)}:{}),result:{before:b.minute,after:a.minute}});
+ // Cast's declared MP debit is a resource cost, not injury to the caster.
+ // Require its actual native patch; a negative net delta alone is not proof.
+ const manaCost=tool==='cast'&&Number.isSafeInteger(result.mpCost)&&result.mpCost>0&&d.patches.some(p=>p.op==='set'&&same(p.path,['state','player','mp'])&&p.value===b.player.mp-result.mpCost)?result.mpCost:0;
+ const costs=[];
+ if(manaCost)costs.push(add({op:'vital',target:'player',need:'mp',type:'resource:mp',delta:-manaCost,result:{path:['state','player','mp'],before:b.player.mp,after:b.player.mp-manaCost}}));
  for(const id of involved){
   const path=actorPath(a,id);if(!path)continue;
   const old=at(before,path),now=at(after,path);if(!old||!now)continue;
@@ -101,7 +111,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    // Combat lazily initializes NPC HP. Its actual starting HP comes from the
    // exchange, not from treating an absent projection as zero health.
    const initial=need==='hp'&&tool==='combat'?result.vitals?.[id]?.before:undefined;
-   const was=initial??old[need],value=now[need];
+   const was=initial??(id==='player'&&need==='mp'?old[need]-manaCost:old[need]),value=now[need];
    if(!Number.isFinite(was)||!Number.isFinite(value))continue;
    const delta=value-was;
    if(delta){
@@ -116,8 +126,14 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    const delta=old.care.hunger-now.care.hunger;
    if(delta>0)add({op:'vital',target:id,type:'body:satiety',need:'satiety',delta,result:{before:{value:100-old.care.hunger},after:{value:100-now.care.hunger}}});
   }
-  for(const field of ['xp','level','attributes'])if(!same(old[field],now[field]))
-   add(stateEffect('fact.set',{entity:id,field,value:now[field]},[...path,field],before,after));
+  for(const field of ['xp','level','attributes'])if(!same(old[field],now[field])){
+   const change=stateEffect('fact.set',{entity:id,field,value:now[field]},[...path,field],before,after);
+   const awards=id==='player'?Object.values(a.experienceLedger??{}).filter(row=>row.eventId===eventId&&!same(b.experienceLedger?.[row.source],row)):[];
+   // 06 §6.3 / §6.10.3: experience is derived by progression, never an
+   // executable fact.set(xp) proposal. Retain its real evidence as a consequence.
+   if(awards.length)receipt.consequences.push({type:'progression',entity:id,field,value:now[field],result:change.result,awards:structuredClone(awards),reason:`${field}: ${JSON.stringify(old[field])} → ${JSON.stringify(now[field])}`});
+   else add(change);
+  }
   for(const need of ['stamina','satiety','hydration','fatigue']){
    if(!engine.world.primitiveTables?.body)continue;
    const initial=readBodyState(engine,before,id,need),value=readBodyState(engine,after,id,need);
@@ -133,6 +149,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   }
  }
  if(b.location!==a.location)add(stateEffect('move',{entity:'player',from:b.location,to:a.location,mode:args.mode??'walk'},['state','location'],before,after));
+ // A removed native summon is gone even though it never lived in creatures.
+ // Its real contract closure supplies the cause, not a requested transition.
+ if(tool==='summon'&&args.operation==='dismiss'&&result.dismissed){
+  const id=result.summon,old=b.effects?.[id],contract=old&&a.records?.[old.contract];
+  if(old?.kind==='summon'&&!a.effects?.[id]&&contract?.ended!==undefined)
+   add(stateEffect('transition',{entity:id,to:'gone',reason:'contract_ended',basis:'contract_ended',signatureKind:'creature'},['state','effects',id],before,after));
+ }
  for(const [id,row] of Object.entries(a.effects??{})){
   if(same(b.effects?.[id],row)||!involved.has(row.target)&&!String(row.source??id).startsWith(eventId))continue;
   // 06 §6.3: the native summon instance and its real upkeep contract map to
@@ -173,8 +196,15 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  }
 
  const relevant=row=>[row?.holder,row?.subject,row?.debtor,row?.creditor].some(id=>involved.has(id));
+ const disposed=new Set();
+ for(const change of result.dispositions??[]){
+  const old=before.holdings?.rows?.[change.holding],closed=after.holdings?.rows?.[change.holding],next=after.holdings?.rows?.[change.newHolding];
+  if(!old||old.until!==undefined||closed?.until===undefined||!next||next.subject!==old.subject||next.holder!==change.to||next.source!==old.source)continue;
+  disposed.add(old.id);disposed.add(next.id);
+  add({op:'holding.transfer',holding:old.id,newHolding:next.id,holdingKind:old.kind,subject:old.subject,holder:old.holder,newHolder:next.holder,tags:change.tags??[],actedAs:change.actedAs??null,result:{path:['holdings','rows',old.id],before:structuredClone(old),closed:structuredClone(closed),after:structuredClone(next)}});
+ }
  for(const {id,row,old,path} of rowChanges(before,d.patches,'holdings','rows')){
-  if(!row||!old&&row.writer==='genesis'||!relevant(row))continue;
+  if(disposed.has(id)||!row||!old&&row.writer==='genesis'||!relevant(row))continue;
   let op=!old?'holding.open':old.until===undefined&&row.until!==undefined?'holding.close':old.holder!==row.holder?'holding.transfer':null;
   if(!op)continue;
   add({op,holding:id,holdingKind:row.kind,variant:row.variant,holder:row.holder,subject:row.subject,terms:row.terms,grantedBy:row.grantedBy,...(op==='holding.transfer'?{newHolder:row.holder}:{}),...(op==='holding.close'?{reason:row.reason}: {}),result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
@@ -182,8 +212,9 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  for(const {id,row,old,path} of rowChanges(before,d.patches,'state','obligations')){
   if(!row||!relevant(row))continue;
   const paid=old?(row.paid??0)-(old.paid??0):0;
-  const op=!old?'obligation.create':paid>0?'obligation.settle':['cancelled','void'].includes(row.status)&&row.status!==old.status?'obligation.cancel':null;
-  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,from:row.debtor,to:row.creditor,subject:row.subject,terms:row.terms,amount:op==='obligation.settle'?paid:row.amount,deadline:row.deadline,actedAs:row.actedAs??row.terms?.actedAs??null,result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
+  const ended=old&&row.endedAt!==undefined&&old.endedAt===undefined;
+  const op=!old?'obligation.create':paid>0?'obligation.settle':ended||['cancelled','void'].includes(row.status)&&row.status!==old.status?'obligation.cancel':null;
+  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,from:row.debtor,to:row.creditor,subject:row.subject,terms:row.terms,amount:op==='obligation.settle'?paid:row.amount,deadline:row.deadline,...(op==='obligation.cancel'?{reason:row.endReason??row.status}:{}),actedAs:row.actedAs??row.terms?.actedAs??null,result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
   else {
    // A handler may finish the newly opened row's status/projection in another
    // patch. Keep that final row in the last actual lifecycle operation.
@@ -223,7 +254,6 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   for(const [field,value] of Object.entries(row.state??{}))if(!same(b.records?.[id]?.state?.[field],value))
    add(stateEffect('fact.set',{entity:row.id,field,value},['state','records',id,'state',field],before,after));
  }
- const costs=[];
  const usedRequests=new Set();
  const owner=value=>value==='self'?'player':typeof value==='string'?value.split('|')[0]:null;
  const resource=r=>r.resource??(typeof r.from==='string'&&r.from.includes('|')?parseAccount(r.from).resource:null);
@@ -237,12 +267,16 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const fee=receipt.applied.find(e=>e.op==='transfer'&&e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&parseAccount(e.to).owner===result.source?.id&&e.qty===result.cost);
   if(fee)costs.push(fee);
  }
+ if(tool==='cast')for(const material of engine.byId.get(result.spell)?.materials??[]){
+  const cost=posted.find(e=>!costs.includes(e)&&e.resource===material.item&&e.qty===material.amount&&parseAccount(e.from).owner==='player'&&parseAccount(e.to).owner==='sink:consume'&&parseAccount(e.to).purpose==='spell');
+  if(cost)costs.push(cost);
+ }
  if(tool==='craft'&&result.spent?.feePaid>0){
   // Each completed batch declares its actual station fee; never infer a fee
   // from a sink or from every coin posting in the elapsed simulation.
   for(const batch of result.results??[result]){
    if(!batch.spent?.feePaid)continue;
-   const station=a.crafted?.[batch.receipt]?.station;
+   const station=a.crafted?.[batch.receipt]?.station??a.records?.[batch.receipt]?.station;
    const fee=posted.find(e=>!costs.includes(e)&&e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&e.qty===batch.spent.feePaid&&(parseAccount(e.to).owner===station||parseAccount(e.to).owner===engine.byId.get(a.location)?.workstations?.find(s=>s.id===station)?.owner));
    if(fee)costs.push(fee);
   }

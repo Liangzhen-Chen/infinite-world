@@ -149,14 +149,22 @@ test('A3 checks r8: maximum dice that still fail are reported as impossible',asy
  assert.equal(result.checkBranches.failure.ok,true);
 });
 
-test('A3 checks r8: real manufacture has both native branches; XP remains an unlisted extra',async()=>{
+test('A3 checks r8: derived XP has native consequence evidence; an unlisted XP primitive still fails',async()=>{
  const row=v2Row('021'),result=(await scoreRows([row],options)).results[0];
  assert.equal(result.checkBranches.success.ok,true,JSON.stringify(result.checkBranches.success));
  assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
- assert.equal(result.scores.signature,false);
+ // 06 §6.3 / §6.10.3: progression owns XP; fact.set(xp) is forbidden.
+ // The adapter now reports its real reward as a consequence, not a proposal
+ // primitive. Keep the scorer's independent rejection of an extra XP effect.
+ assert.equal(result.scores.signature,true);
  const high=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.success.randomSeed},row);
- assert.ok(high.effects.some(e=>e.op==='fact.set'&&e.field==='xp'));
- const withoutXP=high.effects.filter(e=>!(e.op==='fact.set'&&e.field==='xp'));
+ const growth=high.receipt.consequences.find(c=>c.type==='progression'&&c.field==='xp');
+ assert.ok(growth);assert.equal(growth.result.after,high.document.state.player.xp);
+ assert.ok(growth.awards.some(a=>a.eventId===high.receipt.eventId));
+ assert.ok(!high.effects.some(e=>e.op==='fact.set'&&e.field==='xp'));
+ const injected=[...high.effects,{op:'fact.set',entity:'player',field:'xp',value:high.document.state.player.xp,role:'progression'}];
+ assert.equal(signatureMatches(row.expected.signature,injected,high.receipt,high.requested),false);
+ const withoutXP=injected.filter(e=>!(e.op==='fact.set'&&e.field==='xp'));
  assert.equal(signatureMatches(row.expected.signature,withoutXP,high.receipt,high.requested),true);
  const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
  low.effects.push({op:'create',kind:'item'});

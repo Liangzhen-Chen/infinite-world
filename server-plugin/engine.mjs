@@ -596,7 +596,7 @@ export class WorldEngine {
         let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
-        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:!this.replaying||Array.isArray(this.replayResult?.dispositions),eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
         receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
@@ -612,7 +612,7 @@ export class WorldEngine {
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
         this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         if(this.bookedWorkstation?.minutes===minutes)facilityRuntime().consumeWorkstationPrepayment(d,this.bookedWorkstation.receipt,id);

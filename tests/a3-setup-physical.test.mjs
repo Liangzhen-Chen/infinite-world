@@ -5,7 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {aliveHoldings,locationOf,located,auditHoldings} from '../server-plugin/holdings.mjs';
-import {heldUnit} from '../server-plugin/items.mjs';
+import {heldUnit,physicalItem} from '../server-plugin/items.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {derivedStats} from '../server-plugin/combat.mjs';
 import {environmentCatalog,environmentFeatures} from '../server-plugin/environment.mjs';
@@ -168,18 +168,32 @@ test('physical: invalid water state is atomic, and moving a catalog feature cann
   assert.equal(out.document.state.records['physical_feature:feature_hw_kitchen_bucket'],initial.state.records?.['physical_feature:feature_hw_kitchen_bucket']);
  }
  const moved=setup({objects:[{id:'feature_hw_kitchen_bucket',location:'loc_hw_dock',owner:'player',carriedBy:'player',sourceEvent:'unknown_history'}]});
- for(const key of ['location','owner','carriedBy','sourceEvent'])assert.ok(moved.setupUnmet.some(u=>u.item===`objects[0].${key}`),key);
+ // 01 §1.2 / §1.3: Y's native location writer exists; fake history and title
+ // remain rejected, and the combined invalid source must not move the object.
+ for(const key of ['owner','sourceEvent'])assert.ok(moved.setupUnmet.some(u=>u.item===`objects[0].${key}`),key);
+ assert.equal(moved.document.holdings?.locations?.feature_hw_kitchen_bucket,initial.holdings?.locations?.feature_hw_kitchen_bucket);
  assert.equal(environmentFeatures(engine).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
+ const carried=setup({location:'loc_hw_dock',objects:[{id:'feature_hw_kitchen_bucket',location:'loc_hw_dock',carriedBy:'player'}]});
+ assert.deepEqual(carried.setupUnmet,[]);
+ assert.equal(locationOf(engine.primitiveDraft(carried.document),'feature_hw_kitchen_bucket').at,'player');
+ assert.equal(environmentFeatures(engine,carried.document).find(f=>f.id==='feature_hw_kitchen_bucket').location,'loc_hw_dock');
+ assert.equal(environmentFeatures(engine,carried.document).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
+ books(carried.document);
 });
 
-test('physical: native object identity is usable, unsupported bed/lock/fire facts stay unmet',()=>{
+test('physical: native object identity and lock/fire facts are usable without fabricating missing objects',()=>{
  const bed={id:'bed',template:'thing',kind:'item',name:'已租床位',location:home};
  const out=setup({objects:[bed,{...bed,id:'cell_lock',locked:true,mechanism:'mechanical_lock'}]});
  assert.equal(createRoutingContext(engine,out.document).resolve('bed','item').value,'item_bed');
  assert.equal(Object.keys(out.document.holdings.entities).filter(id=>id==='item_bed').length,1);
- assert.ok(out.setupUnmet.some(u=>u.item==='objects[1].locked'));
+ // 01 §1.2 / 06 §6.3: J/K now write the facts consumed by environment actions.
+ assert.deepEqual(out.setupUnmet,[]);
+ assert.equal(physicalItem(engine.primitiveDraft(out.document),engine,out.bindings.cell_lock).locked,true);
  const fire=setup({objects:[{id:'fire',template:'thing',kind:'node',name:'微火',location:home,fireIntensity:1}]});
- assert.ok(fire.setupUnmet.some(u=>/接点/.test(u.reason)));assert.equal(fire.bindings.fire,undefined);
+ assert.deepEqual(fire.setupUnmet,[]);assert.ok(fire.bindings.fire);
+ assert.equal(physicalItem(engine.primitiveDraft(fire.document),engine,fire.bindings.fire).fireIntensity,1);
+ const invalid=setup({objects:[{...bed,id:'invalid_lock',locked:'true'}]});assert.ok(invalid.setupUnmet.length);
+ const invalidFire=setup({objects:[{id:'invalid_fire',template:'thing',kind:'node',location:home,fireIntensity:-1}]});assert.ok(invalidFire.setupUnmet.length);
  const bad=setup({objects:[{id:'bad'}]});assert.ok(bad.setupUnmet.length);
 });
 
@@ -195,7 +209,9 @@ const spatialExamples={
 };
 for(const [field,row] of Object.entries(spatialExamples))test(`physical: ${field} diagnoses valid missing native geometry and rejects invalid input`,()=>{
  const out=setup({[field]:[row]});
- assert.equal(out.setupUnmet.length,1);assert.match(out.setupUnmet[0].reason,/缺少原生接点.*S4/);
+ // Existing perceptual facts may be verified without importing new geometry.
+ if(field==='positions')assert.deepEqual(out.setupUnmet,[]);
+ else {assert.equal(out.setupUnmet.length,1);assert.match(out.setupUnmet[0].reason,/缺少原生接点.*S4/);}
  assert.equal(out.document.state[field],initial.state[field]);
  assert.deepEqual(out.document.state.records,initial.state.records);
  const invalid=setup({[field]:[{}]});assert.match(invalid.setupUnmet[0].reason,/invalid/);
@@ -252,10 +268,15 @@ test('physical: actor initial activity and location use native writes without gr
  assert.equal(bad.setupUnmet.length,3);
 });
 
-test('physical: unsupported attention, teaching and orientation facts do not disable guards or imply consent',()=>{
+test('physical: unsupported attention/orientation stay unmet; native teaching activity grants no consent',()=>{
  const out=setup({present:[npc],actorStates:{[npc]:{teachingBusy:false,facingAway:true,hearingActive:true,alertness:'normal',attention:'market_stall',demonstrating:false}}});
- assert.equal(out.setupUnmet.length,6);
- assert.equal(out.document.state.npcs[npc].facingAway,undefined);assert.equal(out.document.state.npcs[npc].teachingBusy,undefined);
+ // 05 §5.4 / 06 §6.3: U handles the two teaching fields, S4 still owns the rest.
+ assert.equal(out.setupUnmet.length,4);
+ for(const field of ['facingAway','hearingActive','alertness','attention'])assert.ok(out.setupUnmet.some(u=>u.item===`actorStates.${npc}.${field}`));
+ assert.equal(out.document.state.npcs[npc].facingAway,undefined);assert.equal(out.document.state.npcs[npc].teachingBusy,false);
+ assert.equal(out.document.state.npcs[npc].demonstrating,false);
+ assert.deepEqual(out.document.state.consentEvents,initial.state.consentEvents);
+ const invalid=setup({actorStates:{[npc]:{teachingBusy:'false'}}});assert.ok(invalid.setupUnmet.length);
  assert.equal(Object.values(out.document.state.records).some(r=>r.category==='authorization'),false);
 });
 

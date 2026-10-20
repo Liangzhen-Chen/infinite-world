@@ -1,7 +1,8 @@
 import {createHash}from'node:crypto';
 import {bag,bookStock,moveStock,BOOKED,registerLegacyStock,placed} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {declareHoldingWriter,holdingSet,updateEntity,locationOf,setLocation,clearLocation,templatesOf} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,updateEntity,locationOf,setLocation,clearLocation,templatesOf,aliveHoldings,runHoldingProtocol} from './holdings.mjs';
+import {authority} from './action-authority.mjs';
 import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
@@ -58,9 +59,17 @@ export function validateItemTransfer(d,engine,from,to,item,quantity,selection=nu
     if(selection&&selection.length>quantity)throw new Error('单件数超过转移数量');
     return units;
 }
-export function transferItems(d,engine,from,to,item,quantity,selection=null){
+export function transferItems(d,engine,from,to,item,quantity,selection=null,{disposition=false,eventId=null,authorityContext=null}={}){
     const units=validateItemTransfer(d,engine,from,to,item,quantity,selection);
     const chosen=selection?[...selection,...units.filter(unit=>!selection.includes(unit)).slice(0,Math.max(0,quantity-selection.length))]:units.slice(0,quantity);
+    // Possession and title are distinct. Only a native sale opts into disposal;
+    // gifts, loans and delivery keep the ordinary physical-transfer semantics.
+    const dispositions=disposition?chosen.flatMap(unit=>aliveHoldings(d,{kind:'owns',subject:unit}).map(row=>{
+        if(!eventId)throw Error('Sale disposition requires its native event');
+        const permission=authority({...authorityContext,engine,document:d.document},from,'holding.transfer',unit,{holding:row,kind:'owns',disposition:true});
+        if(!permission.allowed)throw Error(permission.reason);
+        return {holding:row.id,subject:unit,from:row.holder,to,tags:permission.tags??[],actedAs:permission.actedAs??null};
+    })):[];
     const moved=changeItems(d,engine,from,item,-quantity,{preserve:true,selection:chosen,books:BOOKED});
     changeItems(d,engine,to,item,quantity,{books:BOOKED});
     moveStock(d,{from:bag(engine,from,item),to:bag(engine,to,item),amount:quantity,writer:'items'});
@@ -74,6 +83,18 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null){
             else clearLocation(d,{entity:unit,writer:'items'});
         }
     }
+    for(const row of dispositions){
+        const cause=`${eventId}:ownership:${row.holding}`;
+        row.newHolding=runHoldingProtocol(d,engine,{op:'transfer',id:row.holding,holder:to,reason:'transferred',eventId:cause});
+        if(!row.newHolding)throw Error('Sale ownership protocol is not installed');
+        const key=`world_event:${cause}`,event=d.get('state','records',key);
+        if(event){
+            const annotated={...event,actor:from,parent:eventId,tags:[...new Set([...event.tags??[],...row.tags])],...(row.actedAs?{actedAs:row.actedAs}:{})};
+            holdingSet(d,engine,['state','records',key],annotated,'items',eventId);
+            for(const pending of d.reactionTick?.queue??[])pending.events=pending.events.map(e=>e.id===cause?annotated:e);
+        }
+    }
+    if(disposition)moved.dispositions=dispositions;
     return moved;
 }
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。

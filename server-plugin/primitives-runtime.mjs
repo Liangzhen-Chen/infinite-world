@@ -469,6 +469,11 @@ function settleActionCost(d,engine,action,slots,actor,start,quote,receipt,eventI
   }
  }
  receipt.cost={time:elapsed,body};
+ // Practice's native learning executor advances the world itself. Expose that
+ // committed span alongside learning, rather than leaving time only in cost.
+ if(elapsed&&receipt.applied.some(e=>e.op==='learn'&&e.learningSource==='practice')&&!receipt.applied.some(e=>e.op==='time')){
+  receipt.applied.push({op:'time',entity:'world',minutes:elapsed,mode:'practice',index:receipt.applied.length,source:receipt.source,role:'outcome',appliedEvent:eventId,result:{before:start,after:d.get('state','minute')}});
+ }
 }
 
 function actionResourceCosts(engine,document,action,slots,actor){
@@ -532,6 +537,7 @@ function nextRiteMinute(engine,d,now){
 registerAdvanceHook('riteLifecycle',()=>({nextMinute:nextRiteMinute,settle:settleRites}));
 
 export const primitiveRuntime={
+ context:primitiveContext,
  legacyAction(engine,tool,args,options={}){
   if(options.replay&&!options.result?.receipt)return null;
   // Unarchived raw legacy calls retain their historical event format. An
