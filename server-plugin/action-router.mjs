@@ -98,26 +98,31 @@ export function actorKnowledge(engine,document,actor='player'){
  return {skills:{...base.proficiencies,...skillMap(base.skills,base.proficiencies),...skillMap(current.skills,base.proficiencies)},spells:{...knownMap(base.spells),...knownMap(current.spells)},recipes:{...knownMap(base.recipes),...knownMap(current.recipes)}};
 }
 export function createRoutingContext(engine,document,{actor='player'}={}){
- const state=document.state,d=actionReader(document),location=actor==='player'?state.location:state.npcs?.[actor]?.location;
+ const state=document.state,d=actionReader(document);
+ const features=environmentFeatures(engine),featureById=new Map(features.map(row=>[row.id,row]));
+ const currentLocation=id=>located(d,id,x=>x==='player'?state.location:state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??featureById.get(x)?.location??engine.byId.get(x)?.location??null);
+ const location=currentLocation(actor);
  const pool=new Map(),add=(id,kind,row={})=>{
   if(id!==actor&&(row.hidden||row.private))return;
+  kind??=pool.get(id)?.kind;
+  if(!kind)return;
   if(id)pool.set(id,{id,kind,name:row.name??engine.byId.get(id)?.name??id,aliases:row.aliases??engine.byId.get(id)?.aliases??[]});
  };
  const banks=new Map((engine.rules.economy?.credit?.banks??[]).map(row=>[row.id,row]));
  for(const row of Object.values(state.records??{}))if(row.category==='bank')banks.set(row.id,{...banks.get(row.id),...row});
  add(actor,'person',actor==='player'?state.player:state.npcs?.[actor]);
  if(actor!=='player'&&state.location===location)add('player','person',state.player);
- for(const [id,row] of Object.entries(state.npcs??{}))if(row.location===location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(engine,d,id))add(id,'person',row);
- for(const [id,row] of Object.entries(state.creatures??{}))if(row.location===location&&!isPhysicallyDead(engine,d,id))add(id,'creature',row);
+ for(const [id,row] of Object.entries(state.npcs??{}))if(currentLocation(id)===location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(engine,d,id))add(id,'person',row);
+ for(const [id,row] of Object.entries(state.creatures??{}))if(currentLocation(id)===location&&!isPhysicallyDead(engine,d,id))add(id,'creature',row);
  const bag=actor==='player'?state.inventory:state.npcs?.[actor]?.inventory;
  for(const [id,row] of Object.entries(bag??{}))if((typeof row==='number'?row:row.quantity??0)>0)add(id,'item');
- for(const [id,row] of Object.entries(state.created??{}))if(row.location===location&&document.holdings?.entities?.[id]?.goneAt===undefined)add(id,row.kind,row);
- for(const [id,row] of Object.entries(document.holdings?.entities??{}))if(row.goneAt===undefined&&located(d,id,x=>state.npcs?.[x]?.location??engine.byId.get(x)?.location??null)===location)add(id,row.kind,row.facts);
+ for(const [id,row] of Object.entries(state.created??{}))if(currentLocation(id)===location&&document.holdings?.entities?.[id]?.goneAt===undefined)add(id,row.kind,row);
+ for(const [id,row] of Object.entries(document.holdings?.entities??{}))if(row.goneAt===undefined&&currentLocation(id)===location)add(id,row.kind,row.facts);
  for(const row of Object.values(state.records??{}))if(row.category==='rite_project'&&row.actor===actor&&row.status==='active'&&row.location===location)add(row.id,'project',{name:engine.byId.get(row.action)?.name??row.id});
  add(location,'place');
  for(const row of banks.values())if(row.location===location)add(row.id,'organization',row);
  const place=engine.byId.get(location);
- for(const feature of place?.features??[])if(!feature.hidden&&!feature.private)add(feature.id,feature.kind??'thing',feature);
+ for(const feature of features)if(currentLocation(feature.id)===location&&!feature.hidden&&!feature.private)add(feature.id,feature.kind??'thing',feature);
  // Use existing public local areas; a relative description never creates a
  // new space, position or passage. Traversal still checks the physical path.
  for(const zone of place?.zones??place?.areas??[])if(zone&&typeof zone==='object'&&zone.visible!==false&&zone.accessible!==false)add(zone.id,'zone',{...zone,name:zone.name??zone.label});
@@ -140,11 +145,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  for(const [field,kind] of [['skills','skill'],['spells','spell'],['recipes','recipe']])for(const [id,value] of Object.entries(knowledge[field]??{}))if(value||field==='skills'&&value===0)add(id,kind);
  const owner=id=>typeof id==='string'&&id.includes('|')?parseAccount(id).owner:id;
  const kindOf=id=>pool.get(owner(id))?.kind??null;
- const features=environmentFeatures(engine);
  const inaccessible=id=>{
   const feature=features.find(row=>row.id===id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.effects?.[id]??banks.get(id)??feature??engine.byId.get(id);
   if(!row&&!entity&&id!=='player')return 'unknown_entity';
-  const at=id==='player'?state.location:located(d,id,x=>state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??(x===id?row?.location:null)??null);
+  const at=currentLocation(id)??row?.location;
   if(entity?.goneAt!==undefined||at&&at!==location||row?.scheduleTravel||row?.cognitionTravel||!at&&/^npc_/.test(id))return 'not_present';
   return 'not_perceivable';
  };
@@ -174,6 +178,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(local.value===value&&candidates.length===1)return local;
   const known=destinations(),exact=known.get(value);
   if(exact)return {value:exact.id,candidates:[{id:exact.id,kind:'place',name:exact.name}]};
+  // Discovery records also cover buildings and other known places omitted by
+  // the map UI's hierarchy filter. They identify a destination, not visibility.
+  const discovery=state.discoveries?.[value],destination=engine.world.locations.find(row=>row.id===value);
+  if(destination&&!destination.hidden&&!destination.private&&discovery&&(discovery.minute??discovery.updated??0)<=state.minute&&(!discovery.private||(discovery.permittedRecipients??discovery.knownBy??[]).includes(actor))&&(!discovery.permittedRecipients||discovery.permittedRecipients.includes(actor)))return {value,candidates:[{id:value,kind:'place',name:destination.name}]};
   // Public map names are travel references, not physical perception. Search
   // only the player's known map and preserve ambiguity between equal names.
   if(engine.byId.has(value))return resolve(value,'place');
@@ -220,6 +228,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(teachers.length===1)value??=teachers[0].id;
    }
    if(action.call?.tool==='world_companion'&&action.call.operation==='summon_dismiss'&&slot.name==='summon'&&summons.has(target))value??=target;
+   if(action.call?.tool==='world_companion'&&action.call.operation==='pet_feed'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
    if(action.call?.tool==='world_remember'&&action.call.fixed?.key==='dialogue:eat_meal'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
@@ -333,6 +342,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  const labelsFor=(action,proposal)=>{
   const labels={
    'core:eat.meal':['吃','吃掉','进食'],
+   'core:pet.feed':['喂','喂它','喂养','口粮'],
    'core:trade.lodge':['租','床位','住宿'],
    'core:trade.deposit':['存','存进去','存入'],
    'core:trade.repay':['还清','还给'],
@@ -358,6 +368,24 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   // A named creditor/debtor must exist, but need not stand at the counter.
   // This grants no physical access, name search or consent on their behalf.
   if(result.value===null&&row&&!row.hidden&&!row.private&&!base?.hidden&&!base?.private&&['not_present','not_perceivable'].includes(result.reason))return {value,candidates:[{id:value,kind:'person'}]};
+  return result;
+ };
+ const resolveSubject=value=>{
+  const result=resolve(value);
+  if(result.value!==null)return result;
+  // A holding's organizational/legal subject need not be physically present.
+  // Only an existing subject of the actor's live holdings, or the current
+  // place's containing jurisdiction, may be referenced this way. Physical
+  // effect targets still use resolve() and get no access from these edges.
+  const subjects=new Set(aliveHoldings(d,{holder:actor}).map(row=>row.subject));
+  for(const h of aliveHoldings(d,{holder:actor,kind:'holds_office'})){
+   const office=document.holdings?.entities?.[h.subject];
+   if(office?.goneAt===undefined&&office?.facts?.organization)subjects.add(office.facts.organization);
+  }
+  let id=location;const seen=new Set();
+  while(id&&!seen.has(id)){seen.add(id);subjects.add(id);id=engine.byId.get(id)?.parent;}
+  const row=engine.byId.get(value)??document.holdings?.entities?.[value]?.facts;
+  if(subjects.has(value)&&row&&!row.hidden&&!row.private&&document.holdings?.entities?.[value]?.goneAt===undefined)return {value,candidates:[{id:value,kind:row.kind??'organization',name:row.name??value}]};
   return result;
  };
  const nativeSignatures=(action,slots,proposal)=>{
@@ -394,6 +422,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const consumed=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'),item=engine.byId.get(slots.item??(consumed&&resource(consumed)));
    if(item?.nutrition?.satiety)return [sign([transfer(item.id,actor,'sink:consume'),{op:'vital',target:actor,type:'body:satiety'}])];
   }
+   if(call?.tool==='world_companion'&&call.operation==='pet_feed'){
+    const creature=state.creatures?.[slots.target],species=engine.byId.get(creature?.species),food=species?.tamingRule?.food?.find(row=>row.item===slots.item);
+    if(creature&&food)return [sign([transfer(food.item,actor,'sink:consume'),{op:'vital',target:slots.target,type:'body:satiety'}])];
+   }
   if(call?.tool==='world_promise'&&call.operation==='cancel'&&!proposal.effects?.some(e=>e.reason==='creditor_waiver'))return [sign([{op:'obligation.cancel'}])];
   if(call?.tool==='world_settlement'&&call.operation==='faith_rite'){
    const spec=engine.rules.faith?.ordinaryRite;
@@ -420,7 +452,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss')return ['summon'];
   return [];
  };
- return {actor,kindOf,resolve,resolveDestination,resolveParty,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+ return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
   if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>e.op==='emit'&&e.verb==='request'&&e.payload?.kind==='guide'))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
@@ -448,7 +480,7 @@ export function resolveProposalEntities(proposal,context,{accounts=false,deferCo
  const entityFields=new Set(['actor','target','entity','subject','to','from','holder','newHolder','debtor','creditor']);
  const resolve=(value,path,role=null)=>{
   if(typeof value!=='string')return value;
-  const result=role==='party'&&context.resolveParty?context.resolveParty(value):role==='destination'&&context.resolveDestination?context.resolveDestination(value):context.resolve(value);
+  const result=role==='subject'&&context.resolveSubject?context.resolveSubject(value):role==='party'&&context.resolveParty?context.resolveParty(value):role==='destination'&&context.resolveDestination?context.resolveDestination(value):context.resolve(value);
   if(result.value===null){
    if(result.candidates.length>1||result.reason==='unresolved_reference')ambiguities.push({path,value,candidates:result.candidates});
    else rejections.push({path,value,reason:result.reason??'unknown_entity'});
@@ -472,7 +504,7 @@ export function resolveProposalEntities(proposal,context,{accounts=false,deferCo
   // Account owners are entity references; destinations such as coordinates or
   // canonical sink accounts remain the primitive validator's responsibility.
   if(typeof value==='string'&&/^(sink|src):/.test(value))continue;
-  effect[field]=resolve(value,`effects.${i}.${field}`,['debtor','creditor'].includes(field)?'party':effect.op==='move'&&field==='to'?'destination':null);
+  effect[field]=resolve(value,`effects.${i}.${field}`,field==='subject'&&effect.op.startsWith('holding.')?'subject':['debtor','creditor'].includes(field)?'party':effect.op==='move'&&field==='to'?'destination':null);
  }
  // A natural-language material reference names an actual accessible item,
  // never a new ledger resource. Canonical ids retain the account validator's

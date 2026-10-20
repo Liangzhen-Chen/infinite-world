@@ -261,7 +261,7 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   container.append(button('上一步',()=>{builder.step--;builder.quote=null;onChange();}));
  }
  if(builder.feedback?.missing?.length)container.append(node('p',`还需要：${builder.feedback.missing.join('、')}`));
- if(builder.feedback?.fallback?.available)container.append(button('就这样做，留下痕迹',()=>perform(async()=>{
+ if(builder.feedback?.fallback?.available)container.append(button(builder.feedback.fallback.label??'就这样做，留下痕迹',()=>perform(async()=>{
   const result=await api('actions',{query:builder.feedback.fallback.action,target:builder.target,limit:1});
   const mark=result.actions.find(a=>a.id===builder.feedback.fallback.action);if(mark){builder.intent=builder.slots.intent??builder.intent;builder.choose(mark);}
  })));
