@@ -1065,7 +1065,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-012"
           },
-          "actor": "npc_hw_ayan",
+          "actor": "loc_hw",
           "subject": "station_hw_mill_bench",
           "to": "player",
           "scope": "lesson_use"
@@ -1100,7 +1100,7 @@
           "holder": "player",
           "subject": "station_hw_mill_bench",
           "scope": "lesson_use",
-          "issuer": "npc_hw_ayan",
+          "issuer": "loc_hw",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_012_permit_0",
@@ -6470,7 +6470,7 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_fire_08及skill_fire_08，熟练度满足该术施放阶段，魔力15；敌对吴朔在8米处且可见。",
+        "已学spell_fire_08及skill_fire_08，熟练度满足该术施放阶段，魔力8；敌对吴朔在8米处且可见。",
         "旁侧有石墙遮住一条直线，玩家当前站位另有无遮挡发射线，不能穿墙；没有无辜者占据选用的火矢路径。",
         "本题已会该术，结构化起始熟练度为300（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
       ],
@@ -6488,7 +6488,7 @@
       },
       "body": {
         "player": {
-          "mp": 15
+          "mp": 8
         }
       },
       "positions": [
@@ -6735,7 +6735,7 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_earth_11及skill_earth_11，熟练度满足该术施放阶段，魔力28；自有树脂一份。",
+        "已学spell_earth_11及skill_earth_11，熟练度满足该术施放阶段，魔力8；自有树脂一份。",
         "玩家在采坑塌石阶前的安全落脚处，眼前相邻窄路有持续落石且可尝试通过；没有石肤状态，施法和移动分步结算，护肤不保证免除所有落石伤害。",
         "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
       ],
@@ -6753,7 +6753,7 @@
       },
       "body": {
         "player": {
-          "mp": 28
+          "mp": 8
         }
       },
       "zones": [
@@ -7324,7 +7324,7 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，魔力28；自有树脂1份。",
+        "已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，魔力8；自有树脂1份。",
         "陶芷清醒、距离2米，已本人当面同意这一次隔焰罩，来源事件明确、有效且未撤销；没有既存fire_shield状态。",
         "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
       ],
@@ -7342,7 +7342,7 @@
       },
       "body": {
         "player": {
-          "mp": 28
+          "mp": 8
         }
       },
       "history": [
