@@ -12,8 +12,7 @@ import {actorPath} from './npc-state.mjs';
 import {regionalTradePrice,regionalMaterialSupply} from './settlement-trade.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,persistable} from './storage.mjs';
-import {derivedBankAt,derivedBankById,financeChange} from './finance-bank.mjs';
-import {vault} from './money.mjs';
+import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
 
 const agreedKey=id=>`agreed_quote:${id}`;
@@ -62,7 +61,8 @@ export function resolveRedeemingBranch(engine,state,destination){
  return unique[0];
 }
 // The ordinary issuer still owns identity, closures, vault accounting and bill
-// obligations. This adapter applies only the already agreed fee differential.
+// obligations. Pass the validated fee to that issuer so the quote replaces
+// the native fee in the same single payment, including when the fee is zero.
 export async function executeAgreedRemittance(d,engine,args,eventId,issue){
  const state=d.get('state'),actor=engine.resolve(args.seller),recipient=args.buyer?engine.resolve(args.buyer,'npc'):null;
  const rows=agreedQuotes(state).filter(r=>r.service==='remittance'&&r.actor===actor&&r.to==='player'&&r.at<=state.minute&&state.minute<r.expires&&!state.records[`${agreedKey(r.id)}:used`]&&r.principal===args.coins&&r.recipient===recipient);
@@ -71,13 +71,7 @@ export async function executeAgreedRemittance(d,engine,args,eventId,issue){
  const bank=derivedBankAt(engine,state,state.location),branch=derivedBankById(engine,state,quote.destinationBranch),destination=engine.resolve(args.location);
  if(!bank?.keepers.includes(actor)||!branch||!bankWithin(engine,branch.location,quote.destination)||destination!==quote.destination&&destination!==branch.location&&destination!==branch.id)throw Error('Agreed remittance branch or keeper mismatch');
  if(state.player.coins<quote.principal+quote.fee)throw Error('Insufficient funds for the agreed remittance total');
- const nativeFee=Math.max(1,Math.ceil(quote.principal*engine.rules.economy.credit.remittance.feeRate)),delta=quote.fee-nativeFee;
- if(delta){
-  financeChange(d,engine,'player',-delta,eventId,{account:vault(bank.id),writer:'shop',eventId});
-  const key=['state','records',bank.id],row=d.get(...key)??{category:'bank',id:bank.id,name:bank.name,location:bank.location,coins:bank.reserveCopper??0,goods:{...bank.reserveCoins??{}},accounts:{}};
-  d.set(key,{...row,coins:row.coins+delta});
- }
- const result=await issue({...args,location:branch.location});
+ const result=await issue({...args,location:branch.location},{remittanceFee:quote.fee});
  const key=['state','records',result.contract],bill=d.get(...key);
  if(bill?.category!=='bank_bill'||bill.destination!==branch.id)throw Error('Native issuer did not create the agreed bill');
  d.set(key,{...bill,fee:quote.fee,agreedQuote:quote.id});consumeAgreedQuote(d,quote,eventId);

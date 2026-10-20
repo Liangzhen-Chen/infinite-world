@@ -546,7 +546,7 @@ export class WorldEngine {
         if(args.operation==='transport')return transportAction(d,this,args,id);
         if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
-        if(args.operation==='remit')return executeAgreedRemittance(d,this,args,id,next=>creditTrade.call(this,d,next,id));
+        if(args.operation==='remit')return executeAgreedRemittance(d,this,args,id,(next,terms)=>creditTrade.call(this,d,next,id,terms));
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');

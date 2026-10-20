@@ -197,7 +197,10 @@ test('A3 signature r9: role endpoints use resolved counterparties and exact acco
    }
   }
   // 06 §6.9: resolving a role never hides real transfers or holding closures.
-  if(['037','038','095'].includes(number))assert.equal(signatureMatches(row.expected.signature,run.effects,receipt,run.requested),false);
+  if(['037','095'].includes(number))assert.equal(signatureMatches(row.expected.signature,run.effects,receipt,run.requested),false);
+  // 01 §1.6 / 06 §6.8: the agreed remittance total is one native payment;
+  // resolving the role still exposes the full payment and bill obligation.
+  if(number==='038')assert.equal(signatureMatches(row.expected.signature,run.effects,receipt,run.requested),true);
   if(number==='095'){
    const effect=run.effects.find(e=>e.op==='holding.transfer');
    assert.equal(signatureMatches(['holding.transfer(new_holder:buyer)'],[effect],receipt),true);
