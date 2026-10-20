@@ -128,7 +128,7 @@ export class ActionBuilder{
  }
  invalidate(){this.revision++;this.quote=null;this.eventId=null;this.result=null;this.feedback=null;this.error=null;}
  setSlot(name,value){
-  if(!this.action?.slots.some(s=>s.name===name&&s.name!=='consent'))throw Error('这个动作没有此项选择');
+  if(!this.action?.slots.some(s=>s.name===name&&(s.name!=='consent'||s.kind==='object')))throw Error('这个动作没有此项选择');
   if(value===undefined||value==='')delete this.slots[name];else this.slots[name]=structuredClone(value);
   const option=this.action.slots.find(s=>s.name===name)?.options?.find(o=>o.value===value);
   if(option?.fill)Object.assign(this.slots,structuredClone(option.fill));
@@ -205,7 +205,7 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
  }else{
   container.append(node('h4',`${BUILDER_STEPS[builder.step]}：${builder.action.label}`));
   if(builder.action.hint)container.append(node('p',builder.action.hint));
-  const slots=builder.action.slots.filter(s=>s.name!=='consent'&&builderStep(s)===builder.step);
+  const slots=builder.action.slots.filter(s=>(s.name!=='consent'||s.kind==='object')&&builderStep(s)===builder.step);
   if(!slots.length)container.append(node('p',builder.step===1?'作用于自己或此处。':builder.step===2?'不需要另选物品或技能。':'采用这个动作原有的做法。'));
   for(const slot of slots){
    const label=node('label',`${slotLabel(slot)}${slot.required?'':'（可不填）'}`),id=`fields-builder-${slot.name}`;label.htmlFor=id;

@@ -699,7 +699,7 @@ export const primitiveRuntime={
  },
  legacyPreview(engine,document,input,resolved,reduced){
   const after=applyPatches(document,reduced.patches),detail=reduced.result;
-  const check=after.state.checks?.[input.eventId]??(typeof detail.success==='boolean'&&Number.isFinite(detail.roll)?detail:null);
+  const check=detail.receipt?.check??after.state.checks?.[input.eventId]??(typeof detail.success==='boolean'&&Number.isFinite(detail.roll)?detail:null);
   const known=new Set(['player',...subjectiveView(engine,document,'player').observable.people.map(person=>person.id)]);
   const events=Object.values(after.state.records??{}).filter(row=>row.category==='world_event'&&(row.id===input.eventId||row.sourceEvent===input.eventId)&&
    (!privateWorldEvent(row)||row.actor==='player'||row.witnesses?.includes('player'))&&(row.actor==='player'||row.witnesses?.includes('player')));

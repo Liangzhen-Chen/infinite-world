@@ -88,6 +88,40 @@ export function workstation(d,engine,recipe,args){
 }
 export function manufacture(d,args,eventId){
     if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult});
+    if(args.batches!==undefined){
+        const requested=integer(args.batches,1,100000,'制造批数');
+        const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
+        // Preserve the native precondition order before quoting a workstation.
+        if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw new Error('尚未学会这个配方');
+        if(!d.get('state','skills',recipe.skill))throw new Error('尚未掌握该配方所需技能');
+        if(recipe.location&&recipe.location!==d.get('state','location'))throw new Error('不在所需工坊');
+        if(effectiveProficiency(d,this,recipe.skill)<recipe.minimumProficiency)throw new Error('技能不足以使用这个配方');
+        const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+row.amount);
+        const station=workstation(d,this,recipe,args),minutes=station?.workMinutes??recipe.minutes;
+        let batches=Math.min(requested,Math.floor(43200/minutes));
+        for(const [item,amount] of materials)batches=Math.min(batches,Math.floor(this.quantity(d,'player',item)/amount));
+        if(station?.fee)batches=Math.min(batches,Math.floor(d.get('state','player','coins')/station.fee));
+        if(recipe.toolWear)for(const item of recipe.tools??[])batches=Math.min(batches,Math.ceil((heldUnit(d,this,'player',item).durability??this.byId.get(item).durability)/recipe.toolWear));
+        if(!batches)throw new Error('材料、工坊费、工具或可用工时不足以制作一批');
+        const single={...args};delete single.batches;
+        const results=[];
+        for(let i=0;i<batches;i++){
+            if(i&&(isPhysicallyDead(this,d,'player')||d.get('state','player','status')!=='正常'))break;
+            results.push(manufacture.call(this,d,single,i?`${eventId}:batch:${i}`:eventId));
+        }
+        batches=results.length;
+        const produced=new Map(),salvage=new Map();
+        for(const row of results){for(const product of row.produced)produced.set(product.item,{...product,amount:(produced.get(product.item)?.amount??0)+product.amount});for(const product of row.salvage)salvage.set(product.item,(salvage.get(product.item)??0)+product.amount);}
+        const successful=results.filter(row=>row.success).length;
+        return {...results[0],requestedBatches:requested,batches,clipped:requested-batches,results,
+            success:successful>0,degree:batches===1?results[0].degree:successful===batches?'成功':successful?'部分成功':'失败',receipts:results.map(row=>row.receipt),
+            healthDelta:results.reduce((n,row)=>n+row.healthDelta,0),
+            ...(results.at(-1).cost?{cost:{time:results.reduce((n,row)=>n+row.spent.minutes,0),body:results.at(-1).cost.body}}:{}),
+            ...(results.some(row=>row.experience!==undefined)?{experience:results.reduce((n,row)=>n+(row.experience??0),0)}:{}),
+            produced:[...produced.values()],salvage:[...salvage].map(([item,amount])=>({item,amount})),instances:results.flatMap(row=>row.instances),
+            spent:{feePaid:results.reduce((n,row)=>n+row.spent.feePaid,0),minutes:results.reduce((n,row)=>n+row.spent.minutes,0),materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity:quantity*batches})),toolWear:results.flatMap(row=>row.spent.toolWear)},
+            factSummary:`实际制作${batches}批（申请${requested}批）；${results.filter(row=>row.success).length}批成功，成品与副产品按各批检定真实入账。`};
+    }
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
     if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw new Error('尚未学会这个配方');
     if(!d.get('state','skills',recipe.skill))throw new Error('尚未掌握该配方所需技能');

@@ -83,7 +83,8 @@ test('A3 legacy receipt: sleep/rest expose effective body deltas and exact elaps
   assert.deepEqual(r.applied,preview.receipt.applied);assert.equal(r.applied.find(e=>e.op==='time').minutes,after.state.minute-document.state.minute);
   for(const need of ['stamina','fatigue']){
    const e=r.applied.find(e=>e.op==='vital'&&e.need===need);
-   if(action==='core:time.rest'){assert.deepEqual(readBodyState(engine,after,'player',need),readBodyState(engine,document,'player',need));assert.equal(e,undefined);continue;}
+   // 附录 A §A.15.7 explicitly gives awake rest the same body recovery
+   // primitive shape as sleep, while the time mode remains distinct.
    assert.ok(e,`${action}: ${need}`);
    assert.equal(e.target,'player');assert.equal(e.type,`body:${need}`);assert.deepEqual(e.result.before,readBodyState(engine,document,'player',need));assert.deepEqual(e.result.after,readBodyState(engine,after,'player',need));
   }

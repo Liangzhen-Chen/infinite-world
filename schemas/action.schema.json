@@ -2756,6 +2756,27 @@
         },
         "context": {
           "type": "object"
+        },
+        "target": {
+          "type": "string"
+        },
+        "consent": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "onRefusal": {
+              "enum": [
+                "abort",
+                "contest"
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

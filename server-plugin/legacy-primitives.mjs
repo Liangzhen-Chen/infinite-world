@@ -65,6 +65,7 @@ const kindOf=(engine,document,id)=>id==='player'||document.state.npcs?.[id]?'per
 export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,result,requested=[],persist=true}){
  const after=d.document,b=before.state,a=after.state,source={kind:'catalog',id:action.id};
  const receipt={eventId,actor:'player',source,routed:action.id,status:'committed',applied:[],trimmed:[],check:null,consequences:[],narrate:{must:[],mustNot:[]},cost:{time:a.minute-b.minute,resources:[],...(result.cost&&typeof result.cost==='object'?{body:result.cost.body}: {})}};
+ if(tool==='craft'&&result.clipped>0)receipt.trimmed.push({slot:'batches',requested:result.requestedBatches,applied:result.batches,reason:'按实际材料、工坊费、工具、工时及行动能力裁剪制造批数'});
  const add=(effect,role='outcome')=>{
   const target=effect.target??effect.entity??effect.subject;
   const row={...effect,index:receipt.applied.length,source,role,appliedEvent:eventId,actedAs:effect.actedAs??null,...(target?{signatureKind:kindOf(engine,after,target)}:{})};
@@ -128,10 +129,29 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  if(b.location!==a.location)add(stateEffect('move',{entity:'player',from:b.location,to:a.location,mode:args.mode??'walk'},['state','location'],before,after));
  for(const [id,row] of Object.entries(a.effects??{})){
   if(same(b.effects?.[id],row)||!involved.has(row.target)&&!String(row.source??id).startsWith(eventId))continue;
+  // 06 §6.3: the native summon instance and its real upkeep contract map to
+  // create + obligation, not an untargeted status on the caster.
+  if(row.kind==='summon'){
+   if(!b.effects?.[id]){
+    add(stateEffect('create',{entity:id,kind:'creature',template:row.summonType,owner:row.owner,location:row.location,expires:row.expires},['state','effects',id],before,after));
+    const contract=a.records?.[row.contract];
+    if(contract?.category==='summon_contract'&&contract.effect===id&&!b.records?.[row.contract])
+     add(stateEffect('obligation.create',{id:row.contract,obligationKind:'upkeep',debtor:row.owner,creditor:id,from:row.owner,to:id,terms:contract.terms,expires:contract.expires},['state','records',row.contract],before,after));
+   }
+   continue;
+  }
   add(stateEffect('status',{target:row.target,status:row.status??row.kind,power:row.power,duration:Math.max(0,(row.expires??a.minute)-a.minute)},['state','effects',id],before,after));
  }
  for(const [id,row] of Object.entries(a.inventory??{}))if(Number.isFinite(b.inventory?.[id]?.durability)&&row?.durability!==undefined&&row.durability!==b.inventory[id].durability)
   add(stateEffect('fact.set',{entity:id,field:'durability',value:row.durability},['state','inventory',id,'durability'],before,after));
+ // Drying writes the carried item's moisture, not the entity fact partition.
+ for(const [id,row] of Object.entries(a.inventory??{}))if(row?.moisture!==undefined&&!same(b.inventory?.[id]?.moisture,row.moisture))
+  add(stateEffect('fact.set',{entity:id,field:'moisture',value:row.moisture},['state','inventory',id,'moisture'],before,after));
+ // A research project is created at inception; it does not grant knowledge.
+ if(tool==='research'&&args.operation==='start'&&result.project&&a.projects?.[result.project]&&!b.projects?.[result.project]){
+  const row=a.projects[result.project];
+  add(stateEffect('create',{entity:result.project,kind:'project',facts:{name:row.name,concept:row.concept,skills:row.skills},stage:row.stage},['state','projects',result.project],before,after));
+ }
 
  // A failed lesson is an applied learning attempt, never a fabricated grant.
  for(const [id,lesson] of Object.entries(a.learning??{}))if(!same(b.learning?.[id],lesson)&&id===eventId)
@@ -164,6 +184,17 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    const effect=receipt.applied.findLast(e=>e.op.startsWith('obligation.')&&e.id===id);
    if(effect)effect.result.after=structuredClone(row);
   }
+ }
+ // Legacy deposit balances already are the bank's payable claim. Describe
+ // that actual liability in the receipt without creating a duplicate debt or
+ // a second money transfer. Interest and withdrawal keep their native writer.
+ if(tool==='trade'&&['deposit','withdraw'].includes(args.operation)&&result.bank){
+  const bank=result.bank,path=['state','records',bank,'accounts','player'];
+  const previous=at(before,path)??0,balance=at(after,path)??0,delta=balance-previous;
+  if(delta)add(stateEffect(delta>0?'obligation.create':'obligation.settle',{
+   id:`deposit:${bank}:player`,obligationKind:'deposit',debtor:bank,creditor:'player',from:bank,to:'player',
+   amount:Math.abs(delta),terms:{resource:'coin_river',principal:Math.abs(delta)},balance
+  },path,before,after));
  }
  const dialogue=result.dialogue;
  if(dialogue&&a.dialogues?.[dialogue.npc]?.sourceEvent===eventId){
@@ -200,12 +231,25 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const fee=receipt.applied.find(e=>e.op==='transfer'&&e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&parseAccount(e.to).owner===result.source?.id&&e.qty===result.cost);
   if(fee)costs.push(fee);
  }
+ if(tool==='craft'&&result.spent?.feePaid>0){
+  // Each completed batch declares its actual station fee; never infer a fee
+  // from a sink or from every coin posting in the elapsed simulation.
+  for(const batch of result.results??[result]){
+   if(!batch.spent?.feePaid)continue;
+   const station=a.crafted?.[batch.receipt]?.station;
+   const fee=posted.find(e=>!costs.includes(e)&&e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&e.qty===batch.spent.feePaid&&(parseAccount(e.to).owner===station||parseAccount(e.to).owner===engine.byId.get(a.location)?.workstations?.find(s=>s.id===station)?.owner));
+   if(fee)costs.push(fee);
+  }
+ }
  for(const effect of costs){
   const index=effect.requestIndex??-1;
   Object.assign(effect,{role:index<0?'additional_cost':'requested_consumption',costIndex:receipt.cost.resources.length,...(index>=0?{requestIndex:index}:{})});
   receipt.cost.resources.push(structuredClone(effect));
  }
- receipt.check=a.checks?.[eventId]??null;
+ receipt.check=tool==='craft'&&result.results?.length>1?{
+  kind:'batches',success:result.success,degree:result.degree,difficulty:Math.max(...result.results.map(row=>row.difficulty)),
+  batches:result.results.map(({die,rolls,modifier,total,difficulty,degree,success})=>({die,rolls,modifier,total,difficulty,degree,success}))
+ }:a.checks?.[eventId]??null;
  receipt.signature=receipt.applied.map(e=>e.op);
  receipt.narrate.must=receipt.applied.map(e=>({op:e.op,index:e.index}));
  receipt.legacy=structuredClone(result);

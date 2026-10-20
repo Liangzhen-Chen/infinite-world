@@ -125,7 +125,9 @@ export const activities={
         if(attack.hit&&attacker==='player')recordLocalContact(d,this,target,id);
         if(intent!=='flee')consumeTransientMagic(d,attacker,playerContext);
         const protection=consumeMagicProtection(d,target,intent==='shove'?(attack.hit?1:0):attack.damage,'physical');
-        const damage=nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
+        // The one-point probe above consumes a shove-blocking shield; it is
+        // never bodily damage. Shove movement requires a real spatial target.
+        const damage=intent==='shove'?0:nonlethal?Math.min(protection.damage,Math.max(0,hp-1)):protection.damage,remaining=Math.max(0,hp-damage);
         let escaped=false;if(intent==='flee'){
             const check={attribute:'敏捷',difficulty:counter.escapeDifficulty??15};
             escaped=(attacker==='player'?this.check(d,check,`${id}_escape`):npcEntryCheck(d,this,attacker,check,`${id}_escape`)).success;

@@ -342,7 +342,9 @@ export class WorldEngine {
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
         }
         settleMagicAreas(d,session);
-        const sleep=tool==='time'&&args.activity==='睡眠'?primitiveActionRuntime()?.beginSleep(d,session):null;
+        // A.15.7 gives both sleeping and awake rest body recovery. The time
+        // executor still distinguishes sleep for schedules and interruptions.
+        const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
         const detail = await session[tool](d,args,id);
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
