@@ -219,7 +219,7 @@ test('spatial: native co-presence suffices for sight/hearing, while contradictio
 });
 
 test('J/M: an explicit original generic item is consumed once by the real mark proposal and roundtrips',async t=>{
- const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8')),row=rows.find(r=>r.id==='A3V2-117');
+ const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8')),row=rows.find(r=>r.id==='A3V2-117');
  const run=await executeIntent(engine,initial,row);
  assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true);
  const shoe=Object.values(run.document.state.itemInstances).find(u=>u.physicalOnly&&u.item.includes('old_shoe'));

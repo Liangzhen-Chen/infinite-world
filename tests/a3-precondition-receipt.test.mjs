@@ -13,7 +13,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
-const nativeCorpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const nativeCorpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const ids=[15,17,18,25,27,28,32,34,39,43,51,52,53,55,56,58,63,64,68,69,71,95,96,97];
 const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'a3-precondition-receipt');
 const rowFor=n=>corpus.find(row=>row.id===`A3V2-${String(n).padStart(3,'0')}`);

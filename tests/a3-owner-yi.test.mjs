@@ -17,7 +17,7 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
-const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-yi');
 const save=document=>JSON.parse(JSON.stringify(document));
 const row=n=>corpus.find(r=>r.id===`A3V2-${String(n).padStart(3,'0')}`);

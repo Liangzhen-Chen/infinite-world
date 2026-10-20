@@ -10,7 +10,7 @@ import {environmentCatalog} from '../server-plugin/environment.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-r10');
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));
 const diagnostic=run=>JSON.stringify({actual:run.actual,setupUnmet:run.setupUnmet});
 

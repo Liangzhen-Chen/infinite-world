@@ -15,7 +15,7 @@ import {workstationDefinition} from '../server-plugin/workstation-services.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3e-institutions');
-const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const fixture=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`).setup);
 const run=setup=>applyIntentSetup(engine,initial,setup);
 const errors=(result,field)=>result.setupUnmet.filter(e=>e.item===field||e.item.startsWith(`${field}[`));

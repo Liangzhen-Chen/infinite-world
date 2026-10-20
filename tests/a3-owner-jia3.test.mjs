@@ -14,7 +14,7 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'jia3-test');
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=n=>structuredClone(corpus.find(r=>r.id===`A3V2-${n}`));
 const load=n=>applyIntentSetup(engine,initial,row(n).setup);
 const clean=document=>assert.deepEqual(reconcile(engine,document),{mismatches:[],lots:[],drift:[],audit:[]});

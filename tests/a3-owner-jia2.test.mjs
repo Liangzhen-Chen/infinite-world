@@ -14,7 +14,7 @@ import {createRuntimePrimitiveFrame} from '../server-plugin/primitives-runtime.m
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const initial=engine.initialFromLegacy(JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),'jia2-test');
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const save=x=>JSON.parse(JSON.stringify(x)),context=document=>({engine,document});
 const load=n=>applyIntentSetup(engine,initial,corpus.find(r=>r.id===`A3V2-${n}`).setup);
 function write(document,fn){const d=engine.primitiveDraft(document);fn(d);return {document:applyPatches(document,d.patches),patches:d.patches};}

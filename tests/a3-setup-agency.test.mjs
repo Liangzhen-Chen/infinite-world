@@ -16,7 +16,7 @@ import {summonAction} from '../server-plugin/summons.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-agency');
-const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const corpus=id=>rows.find(r=>r.id===`A3V2-${id}`).setup;
 // Domain contexts can receive bindings established by earlier loader modules.
 // These are fixture event records, not successful measured actions.

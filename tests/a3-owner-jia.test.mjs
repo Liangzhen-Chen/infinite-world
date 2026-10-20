@@ -19,7 +19,7 @@ import {hasSpellConsent} from '../server-plugin/magic-consent.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-jia');
-const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const npc='npc_hw_ayan',other='npc_hw_linsui',subject='feature_hw_kitchen_bucket';
 const scene=()=>applyIntentSetup(engine,initial,{minute:600,present:[npc,other],location:'bld_hw_mill'}).document;
 const context=document=>({engine,document});

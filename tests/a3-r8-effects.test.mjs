@@ -12,7 +12,7 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.createCharacter(seed,{},'a3-score-independent');
-const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const run=(id,{die}={})=>{
  const document=structuredClone(initial);
  if(die)for(let n=0;;n++){

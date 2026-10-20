@@ -14,7 +14,7 @@ import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-ji');
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=id=>corpus.find(r=>r.id===`A3V2-${id}`);
 const context={origin:'initial',eventId:'ji-initial'};
 function setup(id,change=()=>{}){

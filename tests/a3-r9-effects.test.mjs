@@ -11,7 +11,7 @@ import {executeIntent,scoreRows,signatureMatches} from '../tools/a3-score.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.createCharacter(seed,{},'a3-r9');
-const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
 const rowFor=id=>rows.find(r=>r.id===`A3V2-${id}`);
 async function run(id,die=20){
  const document=structuredClone(initial),eventId=`a3-score-A3V2-${id}`;
