@@ -15,7 +15,7 @@ import {capacity,canAct} from '../server-plugin/action-capacity.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const signatureMatches=(expected,effects,receipt,requested)=>matchSignature(expected,effects,receipt,requested,world);
 const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'a3-score-self');
-const v2Rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const v2Rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r5.json',import.meta.url),'utf8'));
 const v2Row=id=>v2Rows.find(row=>row.id===`A3V2-${id}`);
 // A known awake witness at the starting shop, as in the mark integration tests.
 initial.state.npcs.npc_hw_linsui.location=initial.state.location;

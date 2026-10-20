@@ -13,7 +13,7 @@ import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
 declareHoldingWriter('a3-native-state-test',{entities:['item','building'],locations:true,kinds:['*']});
 function fixture(suffix){
  const row=corpus.find(r=>r.id.endsWith(suffix)),engine=new WorldEngine(structuredClone(world)),initial=engine.createCharacter(seed,{},'a3-r9-native');
