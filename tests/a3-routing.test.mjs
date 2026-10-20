@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {routeAction,effectSignature,signatureJaccard,createRoutingContext,resolveProposalEntities} from '../server-plugin/action-router.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import '../server-plugin/primitives-runtime.mjs';
 import fs from 'node:fs/promises';
 import {localWeather} from '../server-plugin/weather.mjs';
 const kindOf=id=>id==='player'||id?.startsWith('npc_')?'person':id?.startsWith('item_')?'item':null;
@@ -84,7 +85,7 @@ test('A3 routing: primitive movement destination and learning source fill declar
  assert.equal(context.slotsFor(learn,{effects:[{op:'learn',subject:'skill_nonexistent',learningSource:'practice'}]}).skill,undefined);
 });
 
-test('A3 routing: spell routing accepts a reachable item, but does not invent missing spell knowledge',async()=>{
+test('A3 routing: catalog spell slots reach execution, which still refuses missing spell knowledge',async()=>{
  const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.createCharacter(seed,{},'a3-cast-slots');
  document.state.inventory.item_staff={quantity:1};
  document.state.skills.skill_light={proficiency:100};document.state.spells.spell_light={};
@@ -95,7 +96,13 @@ test('A3 routing: spell routing accepts a reachable item, but does not invent mi
  assert.deepEqual(document,before);
  delete document.state.spells.spell_light;
  const missing=routeAction(resolved,registry,createRoutingContext(engine,document));
- assert.equal(missing.routed,null);assert.equal(missing.needsSlots.action,'core:cast');assert.ok(missing.needsSlots.missing.includes('spell'));
+ // Routing establishes public catalog identity; the registered cast program
+ // owns learned-knowledge validation. Keep the original no-free-spell guarantee
+ // by requiring that program to reject and leave the document unchanged.
+ assert.equal(missing.routed,'core:cast');assert.equal(missing.nearest.slots.spell,'spell_light');
+ const withoutSpell=structuredClone(document);
+ await assert.rejects(engine.previewAction(document,{tool:'world_act',eventId:'a3-unknown-spell',args:{action:missing.routed,slots:missing.nearest.slots}}),/尚未学会这个法术/);
+ assert.deepEqual(document,withoutSpell);
 });
 
 test('A3 routing: payment promise slots use the requested terms and the actual next-day sunset',async()=>{

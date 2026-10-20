@@ -537,9 +537,10 @@ export const primitiveRuntime={
   const result=applyMarkPrimitive(d,engine,effect,meta);
   return {...result,...reactToMark(d,engine,d.get('state','created',result.entity),{eventId:meta.child,suppressed:result.suppressed})};
  },
- isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.id==='open:leave_mark'||Boolean(action?.rite);},
+ isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.projection==='scene'||action?.id==='open:leave_mark'||Boolean(action?.rite);},
  nativeAction(engine,document,input,{preview=false}={}){
   const action=findAction(this.registry(engine),input.args?.action);
+  if(action?.projection==='scene')return {patches:[],receipt:{eventId:input.eventId,actor:'player',routed:action.id,status:preview?'preview':'committed',applied:[],cost:{time:0},scene:engine.scene(document,'')}};
   if(action?.id==='open:leave_mark')return executeLeaveMark(engine,document,input,{preview});
   if(action?.rite)return executeRite(engine,document,input,{preview});
   return null;
@@ -561,8 +562,15 @@ export const primitiveRuntime={
    if(mode==='limited'&&proposal?.effects?.some(e=>!['fact.set','vital','move','emit','learn'].includes(e.op)&&!(e.op==='create'&&e.kind==='mark')||e.op==='emit'&&!['request','tell'].includes(e.verb)))reject('E-OPEN-MODE','受限模式下此效果须通过注册动作执行');
   // open-actions already consumes this runtime for its registry. Load the
   // service after runtime initialization so B can register its native context.
-   const {prepareOpenAction,createOpenActionContext}=await import('./open-actions.mjs');
+   const {prepareOpenAction,createOpenActionContext,executeOpenSequence}=await import('./open-actions.mjs');
    const native=(openContextFactory??createOpenActionContext)(engine,document,proposal),prepared=prepareOpenAction(engine,document,proposal,native),routing=proposalRouting(proposal,prepared);
+   if(prepared.status==='sequence'){
+    const applied=await executeOpenSequence(engine,document,input,prepared,{preview});
+    if(preview)return applied;
+    const d=engine.primitiveDraft(applyPatches(document,applied.patches));
+    d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+    return {...applied,patches:[...applied.patches,...d.patches]};
+   }
    if(prepared.status==='open'&&prepared.effects.length){
     const applied=engine.primitiveOpenAction(document,input,prepared,{preview});
     if(preview)return applied;
@@ -575,6 +583,11 @@ export const primitiveRuntime={
    return {prepared,receipt:{eventId,actor:'player',status:'not_submitted',applied:[],routing,signature:prepared.signature,candidates:prepared.candidates,trimmed:prepared.trimmed??[]}};
   }
   const actionInput={tool:'world_act',eventId,args:{action:prepared.routed,slots:prepared.slots}};
+  if(this.registry(engine).byId.get(prepared.routed)?.projection==='scene'){
+   const result=this.nativeAction(engine,document,actionInput,{preview});
+   Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
+   return preview?result:{patches:[],result:{action:prepared.routed,receipt:result.receipt}};
+  }
   if(preview){
    const result=await engine.previewAction(document,actionInput);
    Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
