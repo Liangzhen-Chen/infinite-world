@@ -58,7 +58,9 @@ test('jia3: native known-skill lessons charge the teacher fee, retain fractions 
   const replay=await engine.reduce(r.before,r.submitted);
   assert.deepEqual(applyPatches(r.before,replay.patches),r.document);clean(r.document);
   // The same explicit mode has the same behavior through the old alias.
-  const alias=await engine.reduce(r.before,{tool:'world_learn',eventId:`jia3-alias-${n}`,args:r.submitted.args.slots});
+  // 06 §6.9.1: confirmation retains the proposal; the old alias still receives
+  // the same routed native slots, not the proposal's effects as learn args.
+  const alias=await engine.reduce(r.before,{tool:'world_learn',eventId:`jia3-alias-${n}`,args:r.prepared.slots});
   const aliased=applyPatches(r.before,alias.patches);
   assert.equal(aliased.state.skills.skill_literacy.proficiency,r.document.state.skills.skill_literacy.proficiency);
   assert.equal(aliased.state.player.coins,r.document.state.player.coins);

@@ -395,6 +395,7 @@ const endpointRules=[
   if(endpoint.account)return account.join('|')===endpoint.account;
   return endpoint.purposes.includes(account[2])&&(!['buyer','seller'].includes(token)||account[2]===(account[1]==='coin_river'?'purse':'inventory'));
  }},
+ {accepts:token=>['existing_channel','adjacent_field','summon'].includes(token),matches:(token,account,effect,receipt,world)=>account[0]===nativeEffectEndpoint(token,effect,receipt,world)},
  {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
 ];
 function roleEndpoint(role,receipt){
@@ -416,12 +417,32 @@ function roleEndpoint(role,receipt){
  const owner=legacy[role]??slots[role];
  return owner?{owner,purposes:['purse','inventory']}:null;
 }
+// Descriptive endpoints still require native identities and state evidence.
+// The channel conducts water; its linked source is the debited endpoint.
+function nativeEffectEndpoint(token,effect,receipt,world){
+ if(token==='summon'){
+  const row=effect.result?.after;
+  return effect.op==='obligation.create'&&effect.obligationKind==='upkeep'&&row?.category==='summon_contract'&&
+   row.owner===(receipt.actor??'player')&&effect.from===row.owner&&effect.to===row.effect&&
+   effect.result.path?.[1]==='records'&&effect.result.path[2]===effect.id&&effect.result.before===null?row.effect:null;
+ }
+ const {source,destination}=effect.result??{};
+ if(effect.op!=='transfer'||effect.resource!=='water'||effect.unit!=='litre'||!(effect.qty>0)||
+  source?.path?.[2]!==`physical_feature:${effect.from}`||destination?.path?.[2]!==`physical_feature:${effect.to}`||
+  source.before?.waterMl-source.after?.waterMl!==effect.qty*1000||destination.after?.waterMl-destination.before?.waterMl!==effect.qty*1000)return null;
+ const features=(world.locations??[]).flatMap(place=>place.features??[]),channel=features.find(f=>f.kind==='channel'&&f.links?.source===effect.from&&f.links?.destination===effect.to);
+ if(!channel)return null;
+ return token==='existing_channel'?effect.from:features.find(f=>f.id===effect.to&&f.kind==='soil'&&f.location===channel.location)?.id??null;
+}
 function qualifierMatches(qualifier,effect,receipt,world){
  const actor=receipt.actor??'player';
  const normalize=value=>['self','player'].includes(value)?actor:value==='coin'?'coin_river':value;
  const actualId=value=>value==='self'?actor:value==='coin'?'coin_river':value;
  const recipeSource=qualifier.includes('->')?recipeEndpoint(qualifier.split('->')[0],world):null;
- const references=[...qualifier.matchAll(referenceCatalog(world))].map(m=>normalize(m[0])).filter(id=>id!==recipeSource);
+ // Bare resource words inside descriptive names (present_water_bucket) are
+ // not IDs. Registered compound IDs in teacher_/book_ descriptions remain IDs.
+ const references=[...qualifier.matchAll(referenceCatalog(world))].filter(m=>!resourceIds.includes(m[0])||m[0].includes('_')||
+  !/[A-Za-z0-9_]/.test(qualifier[m.index-1]??'')&&!/[A-Za-z0-9_]/.test(qualifier[m.index+m[0].length]??'')).map(m=>normalize(m[0])).filter(id=>id!==recipeSource);
  const atoms=[];
  function collect(value){
   if(typeof value==='string')atoms.push(...value.split('|').map(actualId));
@@ -582,7 +603,7 @@ export async function executeIntent(engine,initial,row){
    const call={...input,eventId};preview=await invokePreview(call);receipt=receiptOf(preview);
    prepared=preview.prepared??receipt?.routing??preview.routing;
    clarified=clarifyStates.has(prepared?.status);refused=receipt?.status==='rejected';
-   if(receipt?.status==='preview')await commit(prepared?.status==='routed'?{tool:'world_act',eventId,args:{action:prepared.routed,slots:prepared.slots}}:call);
+   if(receipt?.status==='preview')await commit(call);
    else if(prepared?.status==='needs_alternative'&&prepared.fallback?.available){
     // Accept the native alternative explicitly; availability earns no credit.
     const mark=(input.args?.effects??[]).find(e=>e.op==='create'&&e.kind==='mark');
@@ -754,8 +775,10 @@ export function validateCheckBranch(engine,run,row,outcome,target){
   const route=actual.route;
   if(route==='core:learn'){
    const subject=legacy.entity;
+   const paidLesson=e=>e.op==='transfer'&&e.resource==='coin_river'&&e.from===`${receipt.actor??'player'}|coin_river|purse`&&
+    e.to===`${legacy.source?.id}|coin_river|purse`&&e.qty===legacy.cost&&legacy.cost>0&&(receipt.cost?.resources??[]).some(cost=>sameValue(cost,e));
    if(document.state.learning?.[receipt.eventId]?.success!==false)issues.push('failed learning has no failed attempt');
-   if(selected.some(e=>!companionEffect(e,receipt)&&(e.op!=='learn'||e.subject!==subject||e.result?.path?.[1]!=='learning'||e.result?.after?.success!==false)))issues.push('failed learning granted unrelated effect');
+   if(selected.some(e=>!companionEffect(e,receipt)&&!paidLesson(e)&&(e.op!=='learn'||e.subject!==subject||e.result?.path?.[1]!=='learning'||e.result?.after?.success!==false)))issues.push('failed learning granted unrelated effect');
    for(const partition of ['skills','recipes','spells'])if(!sameValue(run.before.state[partition]?.[subject],document.state[partition]?.[subject]))issues.push('failed learning granted knowledge');
   }else if(route==='core:craft.repair'){
    validateRepairFailure(engine,run,issues);

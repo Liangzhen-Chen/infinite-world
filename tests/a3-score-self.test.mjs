@@ -270,7 +270,9 @@ test('A3 checks r8: a failed paid lesson keeps its fee and grants no knowledge',
  const row=v2Row('012'),result=(await scoreRows([row],options)).results[0];
  assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
  const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
- assert.ok(low.effects.some(e=>e.op==='transfer'&&e.role==='additional_cost'));
+ // 06 §6.7: confirming the original proposal preserves its explicitly requested
+ // payment. A failed lesson still pays the same native fee, with no knowledge.
+ assert.ok(low.effects.some(e=>e.op==='transfer'&&e.role==='requested_consumption'&&e.qty===4));
  assert.equal(low.document.state.recipes.recipe_wooden_pegs,undefined);
  // applyPatches shares unchanged branches; inject into a separate after-state.
  low.document=structuredClone(low.document);
@@ -657,7 +659,9 @@ for(const row of rows)test(`A3 scorer self: ${row.id} — ${row.intent}`,async()
   }
   if(row.id==='self-registered'){
    assert.equal(run.prepared.status,'routed');
-   assert.deepEqual(run.actual.calls.map(c=>[c.tool,c.action??null]),[['world_propose',null],['world_act','open:leave_mark']]);
+   // 06 §6.9.1: confirm the same proposal the UI previewed, retaining its
+   // request identity and requested costs instead of dropping into bare slots.
+   assert.deepEqual(run.actual.calls.map(c=>[c.tool,c.action??null]),[['world_propose',null],['world_propose',null]]);
    assert.equal(run.actual.calls[0].eventId,run.actual.calls[1].eventId);
    assert.equal(signatureMatches(['create','mark:warning'],run.effects),true);
   }
