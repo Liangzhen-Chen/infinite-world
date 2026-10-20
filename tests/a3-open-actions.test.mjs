@@ -75,3 +75,32 @@ test('A3 open: routed leave_mark uses the real mark adapter and native costs',as
  assert.equal(out.receipt.fallback.originalIntentFulfilled,false);assert.deepEqual(after.ledger.accounts,before.ledger.accounts);
  const duplicate=await executeRoutedOpenAction(engine,after,{eventId:'a3-routed-mark',args});assert.equal(duplicate.receipt.duplicate,true);assert.deepEqual(duplicate.patches,[]);
 });
+
+test('A3 open: primitive learning subject routes to real timed practice without injecting slot extraction',async()=>{
+ const engine=new WorldEngine(structuredClone(world)),document=withLedger(engine,engine.createCharacter(seed,{},'a3-route-practice')).document;
+ const action=engine.world.actionDefinitions.actions.find(a=>a.id==='core:practice.session');assert.ok(action);
+ // Isolate this authored program from other catalogue candidates; all source,
+ // learning, body and time writers remain the real engine's implementations.
+ engine.world.actionDefinitions={format:1,actions:[action]};
+ const skill='skill_light';assert.ok(engine.byId.has(skill));document.state.skills[skill]={proficiency:0};
+ const input={eventId:'a3-learn-route',args:{intent:action.label,means:{minutes:120},effects:[{op:'learn',entity:'player',subject:skill,learningSource:'practice',amount:99999}]}},before=structuredClone(document);
+ const preview=await executeRoutedOpenAction(engine,document,input,undefined,{preview:true});
+ assert.equal(preview.routing.routed,action.id);assert.deepEqual(document,before);
+ const out=await executeRoutedOpenAction(engine,document,input),after=applyPatches(document,out.patches);
+ assert.equal(out.routing.slots.skill,skill);assert.equal(after.state.minute,before.state.minute+120);
+ assert.ok(after.state.skills[skill].proficiency>before.state.skills[skill].proficiency);
+ assert.ok(after.state.skills[skill].proficiency-before.state.skills[skill].proficiency<99999);
+ assert.deepEqual(auditLedger(after.ledger),[]);
+ const duplicate=await executeRoutedOpenAction(engine,JSON.parse(JSON.stringify(after)),input);
+ assert.equal(duplicate.result.receipt.duplicate,true);assert.deepEqual(duplicate.patches,[]);
+});
+
+test('A3 open: a fully exhausted reward bound offers a trace instead of an empty executable plan',async()=>{
+ const f=fixture(),native={...f.native,limits:()=>({actor:'player',sourceFor:()=>({id:'native:heal',stage:0,time:1,bounds:{delta:4},rewardFields:['delta'],dailyCap:4}),usage:{repeats:0,produced:4}})};
+ const args={intent:'xyzzy',effects:[{op:'vital',target:'player',delta:4,type:'healing'}]},before=structuredClone(f.document);
+ const plan=prepareOpenAction(f.engine,f.document,args,native);
+ assert.equal(plan.status,'needs_alternative');assert.deepEqual(plan.effects,[]);assert.ok(plan.trimmed.length);
+ assert.equal(plan.fallback.action,'open:leave_mark');assert.ok(plan.fallback.reason);assert.equal(plan.fallback.intent,args.intent);
+ const out=await executeRoutedOpenAction(f.engine,f.document,{args,eventId:'a3-empty-cap'},native);
+ assert.equal(out.receipt.status,'not_submitted');assert.deepEqual(out.receipt.applied,[]);assert.deepEqual(f.document,before);
+});

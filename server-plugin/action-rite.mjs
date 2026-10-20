@@ -6,19 +6,20 @@ import {reject} from './primitive-policy.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
 import {subjectiveView} from './subjective-view.mjs';
-import {actionEntity,capacity,actionReader} from './action-capacity.mjs';
+import {actionEntity,canAct,actionReader} from './action-capacity.mjs';
 import {createEntity,updateEntity,declareHoldingWriter,isPhysicallyDead} from './holdings.mjs';
 import {accountKey} from './ledger.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {beginBodyActivity,endBodyActivity} from './primitives-body.mjs';
 import {consent} from './action-consent.mjs';
 import {findAction} from './action-registry.mjs';
 
 declareHoldingWriter('action-rite',{entities:['project']});
-const location=(document,id)=>id==='player'?document.state.location:document.state.npcs?.[id]?.location??document.holdings?.locations?.[id]?.at;
+const location=(document,id)=>id==='player'?document.state.location:document.state.npcs?.[id]?.location??document.state.creatures?.[id]?.location??document.holdings?.locations?.[id]?.at;
 const nonnegative=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)reject('E-RITE-DATA',`${label}须是非负整数`);return n;};
 const clone=structuredClone;
 const domainSlots=slots=>Object.fromEntries(Object.entries(slots).filter(([key])=>!['project','operation'].includes(key)));
+const disruption=error=>['E-RITE-PLACE','E-RITE-ACTOR','E-RITE-QUALIFICATION','E-RITE-DIAGNOSIS','E-RITE-TARGET','E-RITE-ROLE','E-RITE-WINDOW'].includes(error.code);
 function predicate(engine,document,source,{actor,target,candidate=actor,truth=false}={}){
  if(source===undefined)return true;
  if(typeof source!=='string')reject('E-RITE-DATA','仪式条件须是 RX 表达式');
@@ -36,7 +37,7 @@ function predicate(engine,document,source,{actor,target,candidate=actor,truth=fa
 }
 function present(engine,document,id,at){
  const body=id==='player'?document.state.player:document.state.npcs?.[id];
- return Boolean(id&&body&&!body.scheduleTravel&&!body.cognitionTravel&&location(document,id)===at&&capacity({engine,document},id,'rite').level!=='none'&&!isPhysicallyDead(engine,actionReader(document),id));
+ return Boolean(id&&body&&!body.scheduleTravel&&!body.cognitionTravel&&location(document,id)===at&&canAct({engine,document},id,'rite').allowed&&!['濒死','昏迷'].includes(body.status)&&!/(睡眠|熟睡|睡觉)/.test(body.activity??'')&&!isPhysicallyDead(engine,actionReader(document),id));
 }
 function visibleInputs(engine,document,action,slots,actor,stage,{until=document.state.minute+stage.minutes}={}){
  const rite=action.rite,target=slots.target??actor,at=location(document,actor);
@@ -46,10 +47,11 @@ function visibleInputs(engine,document,action,slots,actor,stage,{until=document.
  if(!predicate(engine,document,rite.officiant,{actor,target}))reject('E-RITE-QUALIFICATION','主祭尚不具备仪式要求的资格');
  if(!predicate(engine,document,rite.target,{actor,target}))reject('E-RITE-DIAGNOSIS','依你所知，这不是适合该仪式的对象');
  if(target!==actor&&location(document,target)!==at)reject('E-RITE-TARGET','仪式对象已不在这里');
+ if(slots.roles!==undefined&&(!slots.roles||typeof slots.roles!=='object'||Array.isArray(slots.roles)||Object.keys(slots.roles).some(name=>!(rite.roles??[]).some(role=>role.role===name))))reject('E-RITE-ROLE','请选择仪式实际声明的角色');
  const people=new Set([actor]);
  for(const role of rite.roles??[]){
   const ids=slots.roles?.[role.role]??[];
-  if(!Array.isArray(ids)||new Set(ids).size!==ids.length||ids.length<nonnegative(role.min??1,'角色人数'))reject('E-RITE-ROLE',`缺少仪式角色：${role.role}`);
+  if(!Array.isArray(ids)||new Set(ids).size!==ids.length||ids.length<nonnegative(role.min??1,'角色人数')||role.max!==undefined&&ids.length>nonnegative(role.max,'角色人数上限'))reject('E-RITE-ROLE',`缺少或超出仪式角色人数：${role.role}`);
   for(const id of ids){
    if(people.has(id)||!present(engine,document,id,at)||!predicate(engine,document,role.filter,{actor,target,candidate:id}))reject('E-RITE-ROLE',`角色不能履职：${role.role}`);
    if(!consent({engine,document},id,actor,'rite',{purpose:action.id,until,onRefusal:'abort'}).allowed)reject('E-RITE-ROLE',`角色尚未答应参与：${role.role}`);
@@ -84,6 +86,57 @@ function gradeEffects(action,slots,actor,degree,table){
  })};
 }
 
+function projectState(engine,document,action,slots,actor,stage,stored,operation='perform'){
+ const expired=Boolean(stored&&stored.deadline<=document.state.minute);
+ let interruption=operation==='interrupt'?'interrupted':expired?'expired':null,facts;
+ if(!interruption){
+  try{
+   facts=visibleInputs(engine,document,action,slots,actor,stage);
+   if(stored&&facts.location!==stored.location)interruption='place_changed';
+  }catch(error){
+   if(!stored||!disruption(error))throw error;
+   // A later stage may intentionally require waiting for its own window.
+   if(error.code==='E-RITE-WINDOW'&&!(typeof stage.window==='object'&&document.state.minute>=stage.window.to))return {expired,interruption:null,waiting:true};
+   interruption=error.code;
+  }
+ }
+ if(interruption)facts={target:slots.target??actor,location:stored.location};
+ return {expired,interruption,...facts};
+}
+
+// Read-only system input, including projects whose officiant can no longer
+// initiate an action. A3-A owns the scheduler and native system-effect frame.
+export function riteProjectInterruptions(engine,document){
+ const registry=primitiveRuntime.registry(engine),plans=[];
+ for(const stored of recordsWhere(document.state.records,'category','rite_project')){
+  if(stored.status!=='active')continue;
+  const action=findAction(registry,stored.action),stage=action?.rite?.stages?.[stored.stage];
+  if(!stage)reject('E-RITE-DATA','活动仪式工程缺少原有阶段定义');
+  const current=projectState(engine,document,action,stored.slots,stored.actor,stage,stored);
+  if(!current.interruption)continue;
+  const eventId=`rite-interrupt:${digest({project:stored.id,lastEvent:stored.lastEvent,reason:current.interruption,deadline:stored.deadline}).slice(0,48)}`;
+  plans.push({eventId,project:stored.id,action:action.id,actor:stored.actor,slots:clone(stored.slots),location:stored.location,reason:current.interruption,
+   effects:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'rite_unfinished',project:stored.id,action:action.id,reason:current.interruption}},...actionEffects({outcomes:action.rite.interrupt?.effects??[]},stored.slots,stored.actor)]});
+ }
+ return plans;
+}
+
+export function settleRiteInterruptions(d,engine){
+ const plans=riteProjectInterruptions(engine,d.document);
+ if(plans.length&&typeof engine.primitiveRiteInterruption!=='function')reject('E-PRIMITIVE-CONNECTOR','仪式自动中断尚缺系统后果事务接点');
+ for(const plan of plans){
+  // This is a consequence, not a new initiative by a sleeping/dead officiant.
+  // Do not forge a live actor frame here or bypass its capacity protection.
+  const result=engine.primitiveRiteInterruption(d.document,clone(plan));
+  if(result?.receipt?.status!=='committed')reject('E-RITE-INTERRUPTION','仪式中断后果尚未完成结算');
+  for(const patch of result.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
+  const key=`rite_project:${plan.project}`,stored=d.get('state','records',key);
+  d.set(['state','records',key],{...stored,status:'unfinished',outcome:plan.reason,lastEvent:plan.eventId,updatedAt:d.get('state','minute')});
+  updateEntity(d,{id:plan.project,facts:{status:'unfinished'},writer:'action-rite',eventId:plan.eventId});
+ }
+ return plans;
+}
+
 export function prepareRite(engine,document,input,{actor='player'}={}){
  const {action:id,slots={}}=input.args??{},project=input.args?.project??slots.project??null,operation=input.args?.operation??slots.operation??'perform',registry=primitiveRuntime.registry(engine),action=findAction(registry,id);
  if(!action?.rite||!action.outcomes)reject('E-RITE-ACTION','这不是已登记的仪式动作');
@@ -97,32 +150,32 @@ export function prepareRite(engine,document,input,{actor='player'}={}){
  if(operation==='interrupt'&&!stored)reject('E-RITE-PROJECT','没有可中断的仪式工程');
  const index=stored?.stage??0,stage=stages[index];if(!stage)reject('E-RITE-STAGE','这个仪式已经没有待完成阶段');
  const minutes=nonnegative(stage.minutes,'阶段耗时');if(minutes>43200)reject('E-RITE-DATA','阶段过长，须拆分工程');
- const expired=stored&&stored.deadline<=document.state.minute;
- const facts=operation==='interrupt'||expired?{target:slots.target??actor,location:stored.location}:visibleInputs(engine,document,action,slots,actor,stage);
- const costs=operation==='interrupt'||expired?[]:materialsFor(engine,actor,stage);
+ const {expired,interruption,waiting,...facts}=projectState(engine,document,action,slots,actor,stage,stored,operation);
+ if(waiting)reject('E-RITE-WINDOW','尚未到仪式所需的时窗');
+ const costs=interruption?[]:materialsFor(engine,actor,stage);
  const totals=new Map();for(const effect of costs)totals.set(effect.from,(totals.get(effect.from)??0)+effect.qty);
  for(const [key,qty] of totals)if((document.ledger?.accounts?.[key]??0)<qty)reject('E-RITE-MATERIAL','仪式所需的实际材料不足');
- return {action,slots:clone(slots),actor,project,stored,index,stage,minutes,costs,operation,expired,...facts};
+ return {action,slots:clone(slots),actor,project,stored,index,stage,minutes,costs,operation,expired,interruption,...facts};
 }
 
 export function executeRite(engine,document,input,{actor='player',preview=false}={}){
  const request=digest({actor,args:input.args}),old=document.state.records?.[`primitive:${input.eventId}`]?.receipt;
  if(old){if(old.rite?.request!==request)reject('E-PRIMITIVE-DUPLICATE','该事件编号已用于别的仪式');return {patches:[],events:[],receipt:{...clone(old),duplicate:true}};}
  const prepared=prepareRite(engine,document,input,{actor}),{action,slots,stage,index}=prepared;
- if(preview)return {receipt:{eventId:input.eventId,status:'preview',actor,routed:action.id,applied:[],cost:{time:prepared.expired||prepared.operation==='interrupt'?0:prepared.minutes,resources:prepared.costs},rite:{stage:stage.id,project:prepared.project,diagnosis:'依主祭当前所知判断，实际效力在仪式结束后揭晓'}}};
+ if(preview)return {receipt:{eventId:input.eventId,status:'preview',actor,routed:action.id,applied:[],cost:{time:prepared.interruption?0:prepared.minutes,resources:prepared.costs},rite:{stage:stage.id,project:prepared.project,...(prepared.interruption?{interruption:prepared.interruption}:{}),diagnosis:'依主祭当前所知判断，实际效力在仪式结束后揭晓'}}};
  const project=prepared.project??(action.rite.stages.length>1?`project_${digest({eventId:input.eventId}).slice(0,32)}`:null);
  const signal={op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'rite_attempt',action:action.id,stage:stage.id}};
  let minutes=0,terminal='active',outcome='success',limits=clone(action.rite.limits??{}),resultProject=null;
  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:'catalog',id:action.id},identity:{request},limits:()=>limits,
   prepare:(d,{receipt})=>{
    const current=prepareRite(engine,d.document,input,{actor}),now=d.get('state','minute');
-   const interrupted=current.operation==='interrupt'||current.expired;
+   const interrupted=Boolean(current.interruption);
    if(project&&!current.stored){
     const duration=action.rite.expiresWithin??Math.max(1,action.rite.stages.reduce((n,s)=>n+nonnegative(s.minutes,'阶段耗时'),0)*2);
     createEntity(d,{id:project,kind:'project',facts:{action:action.id,author:actor,progress:0,status:'active'},source:action.id,writer:'action-rite',eventId:input.eventId});
     resultProject={category:'rite_project',id:project,action:action.id,actor,slots:clone(domainSlots(slots)),location:current.location,stage:0,status:'active',startedAt:now,deadline:now+nonnegative(duration,'工程期限')};
    }else resultProject=current.stored;
-   if(interrupted){terminal='unfinished';outcome=current.expired?'expired':'interrupted';return [signal,...actionEffects({outcomes:action.rite.interrupt?.effects??[]},slots,actor)];}
+   if(interrupted){terminal='unfinished';outcome=current.interruption;return [signal,...actionEffects({outcomes:action.rite.interrupt?.effects??[]},slots,actor)];}
    const check=stage.check??action.check;
    if(check)receipt.check=engine.primitiveCheck(d,actionEffects({outcomes:check},slots,actor),`${input.eventId}:rite-check`,actor);
    const grade=gradeEffects(action,slots,actor,receipt.check?.degree,engine.world.openActionRules?.degrees);
@@ -131,11 +184,13 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
    // Recheck presence/qualification at completion. Losing a role or passing
    // the project deadline consumes this stage's resources but no success.
    let broken=resultProject&&d.get('state','minute')>=resultProject.deadline;
-   try{visibleInputs(engine,d.document,action,slots,actor,stage,{until:d.get('state','minute')});}catch(error){if(!error.code?.startsWith('E-RITE-'))throw error;broken=true;}
+   try{visibleInputs(engine,d.document,action,slots,actor,stage,{until:d.get('state','minute')});}catch(error){if(!disruption(error))throw error;broken=true;}
    if(broken){terminal='unfinished';outcome='interrupted';return [...current.costs,signal,...actionEffects({outcomes:action.rite.interrupt?.effects??[]},slots,actor)];}
    const success=grade.row.multiplier>0,final=index===action.rite.stages.length-1;
    terminal=success?(final?(grade.row.key==='partial'?'unfinished':'completed'):'active'):'unfinished';
-   let selected=success?(final?grade.effects:gradeEffects({...action,outcomes:stage.outcomes??stage.effects??[]},slots,actor,receipt.check?.degree,engine.world.openActionRules?.degrees).effects):[];
+   // Explicit outcomes also own failure/indivisible effects. Only a default
+   // array loses its success effects on failure; do not discard authored ones.
+   let selected=final?grade.effects:gradeEffects({...action,outcomes:stage.outcomes??stage.effects??[]},slots,actor,receipt.check?.degree,engine.world.openActionRules?.degrees).effects;
    if(success&&final&&!predicate(engine,d.document,action.rite.actualTarget,{actor,target:current.target,truth:true})){
     selected=actionEffects({outcomes:action.rite.misdiagnosis?.effects??[]},slots,actor);terminal='unfinished';outcome='ineffective';
    }

@@ -62,3 +62,15 @@ test('A3 routing: native names, aliases and slots use currently accessible entit
  const fresh=createRoutingContext(engine,document);
  assert.equal(routeAction(concrete,{actions:[a]},fresh).routed,null);
 });
+
+test('A3 routing: primitive movement destination and learning source fill declared domain slots',async()=>{
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.createCharacter(seed,{},'a3-structural-slots');
+ document.state.skills.skill_light={proficiency:0};const context=createRoutingContext(engine,document);
+ const next=context.entities.find(e=>e.kind==='place'&&e.id!==document.state.location);assert.ok(next);
+ const move={slots:[{name:'destination',entity:'place',required:true}]};
+ assert.deepEqual(context.slotsFor(move,{effects:[{op:'move',to:next.id}]}),{destination:next.id});
+ const skill=Object.keys(document.state.skills)[0];assert.ok(skill);
+ const learn={slots:[{name:'skill',entity:'skill',required:true},{name:'source',required:true}]};
+ assert.deepEqual(context.slotsFor(learn,{effects:[{op:'learn',subject:skill,learningSource:'practice'}]}),{skill,source:'practice'});
+ assert.equal(context.slotsFor(learn,{effects:[{op:'learn',subject:'skill_nonexistent',learningSource:'practice'}]}).skill,undefined);
+});

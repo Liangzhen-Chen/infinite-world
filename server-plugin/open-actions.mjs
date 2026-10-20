@@ -18,7 +18,8 @@ export function prepareOpenAction(engine,document,proposal,native){
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
  const limits=limitOpenEffects(proposal,native.limits(document,routing.nearest));
- return {...routing,...limits,status:limits.blocked.length?'needs_alternative':'open',fallback:limits.blocked.length?{action:'open:leave_mark',intent:proposal.intent,available:Boolean(engine.world.openActionRules&&engine.world.openReactions&&engine.world.openTagging)}:null};
+ const alternative=limits.blocked.length>0||limits.effects.length===0;
+ return {...routing,...limits,status:alternative?'needs_alternative':'open',fallback:alternative?{action:'open:leave_mark',intent:proposal.intent,available:Boolean(engine.world.openActionRules&&engine.world.openReactions&&engine.world.openTagging),...(!limits.effects.length&&!limits.blocked.length?{reason:'当前收益或工作量已达上限，可以换一种手段，或留下痕迹'}:{})}:null};
 }
 
 export function createOpenActionContext(engine,document,proposal,{actor='player'}={}){
