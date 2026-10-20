@@ -24,14 +24,29 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
+// One read view per document so the holdings index (cached per view and
+// invalidated by holdings.seq) is reused instead of rebuilt on every call.
+const views=new WeakMap();
+const documentView=document=>{let d=views.get(document);if(!d){d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)};views.set(document,d);}return d;};
+// Feature owners depend only on the holdings rows; documents produced by later
+// patches usually share that rows object, so reuse the lookup across ticks.
+const ownerCache=new WeakMap();
+const featureOwners=(d,document,id)=>{
+ const rows=document.holdings?.rows,seq=document.holdings?.seq??0;
+ if(!rows||typeof rows!=='object')return aliveHoldings(d,{kind:'owns',subject:id});
+ let cached=ownerCache.get(rows);
+ if(!cached||cached.seq!==seq)ownerCache.set(rows,cached={seq,byId:new Map()});
+ if(!cached.byId.has(id))cached.byId.set(id,aliveHoldings(d,{kind:'owns',subject:id}));
+ return cached.byId.get(id);
+};
 export const environmentFeatures=(engine,document=engine.airDraft?.document??engine.physicalDocument)=>{
  const rows=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
  if(!document)return rows;
- const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+ const d=documentView(document);
  return rows.map(row=>{
   const state=document.state.records?.[key(row.id)],p=locationOf(d,row.id),carrier=p?.mode==='carried'?p.at:null;
   const location=p?physicalLocation(d,engine,row.id):state?.location??row.location;
-  const owners=aliveHoldings(d,{kind:'owns',subject:row.id}),owner=owners.length===1?owners[0].holder:row.owner;
+  const owners=featureOwners(d,document,row.id),owner=owners.length===1?owners[0].holder:row.owner;
   const position=carrier==='player'?localPlayerPoint(d):state?.position??row.position;
   return {...row,location,owner,position};
  });
