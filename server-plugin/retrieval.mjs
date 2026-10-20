@@ -73,6 +73,11 @@ export class EntityResolver {
 
 // The engine's own resolver indexes exactly engine.entities (sessions extend it alongside entities).
 export const engineIndexOptions = engine => ({ entities: engine.entities, resolver: engine.resolver && engine.byId === engine.resolver.entities ? engine.resolver : null });
+// Shared by memory retrieval and action routing; callers choose normalization.
+export function bm25TermScore(tf,df,count,length,average){
+    if(!tf)return 0;
+    return Math.log(1+(count-df+0.5)/(df+0.5))*tf*2.2/(tf+1.2*(0.25+0.75*length/Math.max(1,average)));
+}
 export class MemoryIndex {
     constructor({ entities = [], dictionary = [], resolver = null } = {}) {
         // Per-scene indexes may reuse the engine's resolver for the same entities; it is never mutated here.
@@ -163,7 +168,7 @@ export class MemoryIndex {
             for (const term of terms) {
                 const tf = doc.frequencies.get(term) ?? 0; if (!tf) continue;
                 const df = this.postings.get(term)?.size ?? 0;
-                relevance += Math.log(1 + (n - df + 0.5) / (df + 0.5)) * tf * 2.2 / (tf + 1.2 * (0.25 + 0.75 * doc.length / Math.max(1, average)));
+                relevance += bm25TermScore(tf,df,n,doc.length,average);
             }
             if (doc.entities?.some(id => entities.has(id))) relevance += 2;
             const decay = doc.guardUntil>now?1:0.5 + 0.5 * Math.exp(-Math.max(0, now - doc.minute) / (1440 * 30));
