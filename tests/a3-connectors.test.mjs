@@ -8,10 +8,140 @@ import {openHoldings} from '../server-plugin/holdings.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {registerOpenActionContext,createRuntimePrimitiveFrame} from '../server-plugin/primitives-runtime.mjs';
 import {commitPrimitives} from '../server-plugin/primitives.mjs';
+import {riteProjectInterruptions} from '../server-plugin/action-rite.mjs';
+import {worldActions} from '../server-plugin/action-affordances.mjs';
+import {registerAdvance} from '../server-plugin/advance-registry.mjs';
+import {PHASE} from '../server-plugin/scheduler.mjs';
+import {modelActionCatalog} from '../extension/tools.mjs';
+import {registerWorldEventSubscriber} from '../server-plugin/world-events.mjs';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const from=accountKey('player','coin_river','purse');
+
+test('A9: the production proposal declaration is discoverable and runs the same native path via world_act',async()=>{
+ const f=fixture(),action=f.engine.world.actionDefinitions.actions.find(a=>a.id==='open:proposal');assert.ok(action);
+ const catalog=worldActions(f.engine,f.document,{query:action.label});
+ assert.ok(JSON.stringify(catalog).includes(action.id));
+ const gateway=modelActionCatalog(catalog).actions.find(a=>a.id===action.id),effectSchema=gateway.slots.find(s=>s.name==='effects').inputSchema;
+ assert.equal(effectSchema.type,'array');assert.equal(effectSchema.maxItems,64);assert.ok(effectSchema.items.properties.op.enum.includes('transfer'));assert.equal(effectSchema.items.additionalProperties,false);
+ assert.equal(gateway.slots.find(s=>s.name==='means').inputSchema.type,'object');
+ const slots={intent:'用一句独特问候表达平安祝愿',effects:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{text:'祝你路上平安'}}]},input={tool:'world_act',eventId:'a9-real-proposal',args:{action:action.id,slots}};
+ const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
+ const output=await f.engine.reduce(f.document,input),direct=await f.engine.reduce(f.document,{tool:'world_propose',eventId:input.eventId,args:slots});
+ assert.deepEqual(output,direct);assert.equal(output.result.receipt.status,'committed');
+ const after=applyPatches(f.document,output.patches);assert.deepEqual(output.result.receipt.routing.proposal,slots);
+ assert.equal(after.state.minute-before.state.minute,2);assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
+ const configured=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'off'}),off=applyPatches(f.document,configured.patches);
+ assert.equal(f.engine.actionPermission(off,input.args).allowed,false);await assert.rejects(f.engine.reduce(off,input),{code:'E-OPEN-DISABLED'});
+});
+
+async function activeRite(eventId,{role=false}={}){
+ const f=fixture(),item=Object.keys(f.document.state.inventory).find(id=>(f.document.ledger.accounts[accountKey('player',id,'inventory')]??0)>=2);assert.ok(item);
+ f.document.state.player.hp=10;f.document.state.player.maxHp=100;
+ const action={id:'test:a9-rite',label:'阶段仪式',narration:'rite',synonyms:[],visibility:{catalog:'here'},slots:[{name:'project',kind:'text'}],cost:{owner:'primitives',time:0},outcomes:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'rite_success'}}],
+  rite:{officiant:'actor == "player"',roles:[],expiresWithin:8,limits:{vital:{heal:0,harm:2,rangeMeters:1.5}},stages:[{id:'first',minutes:1,materials:[{resource:item,qty:1}]},{id:'last',minutes:1,materials:[{resource:item,qty:1}]}],interrupt:{effects:[{op:'vital',target:'$actor',delta:-2,type:'physical'}]}}};
+ f.engine.world.actionDefinitions={format:1,actions:[action]};
+ const slots={};
+ if(role){
+  action.slots.push({name:'roles',kind:'roles',required:true});action.rite.roles=[{role:'witness',min:1,max:1,filter:'true'}];
+  slots.roles={witness:[f.npc]};f.engine.byId.get(f.npc).tier='fixture';delete f.engine.byId.get(f.npc).schedule;
+  f.document.state.npcs[f.npc].activity='休息';
+  f.document.state.consentEvents=[{id:'a9-role-consent',type:'consent_given',from:f.npc,to:'player',scope:'rite',purpose:[action.id],at:f.document.state.minute,until:f.document.state.minute+4}];
+ }
+ const input={tool:'world_act',eventId,args:{action:action.id,slots}},first=await f.engine.reduce(f.document,input);
+ f.document=applyPatches(f.document,first.patches);f.project=first.result.receipt.rite.project;f.key=accountKey('player',item,'inventory');return f;
+}
+
+test('A9: world_time wakes a rite at its exact deadline, commits bounded consequences once and preserves the next material',async()=>{
+ const f=await activeRite('a9-deadline-start'),before=structuredClone(f.document),row=before.state.records[`rite_project:${f.project}`];
+ const input={tool:'world_time',eventId:'a9-deadline-wait',args:{minutes:12}},wait=await f.engine.reduce(before,input),after=applyPatches(before,wait.patches);
+ assert.equal(after.state.records[`rite_project:${f.project}`].status,'unfinished');assert.equal(after.state.records[`rite_project:${f.project}`].updatedAt,row.deadline);
+ assert.equal(after.holdings.entities[f.project].facts.status,'unfinished');assert.equal(after.ledger.accounts[f.key],before.ledger.accounts[f.key]);assert.deepEqual(auditLedger(after.ledger),[]);
+ const receipts=Object.values(after.state.records).filter(r=>r.category==='primitive_receipt'&&r.receipt.source.id===`rite:${row.action}:interrupt`);assert.equal(receipts.length,1);
+ assert.equal(receipts[0].receipt.status,'committed');assert.ok(receipts[0].receipt.applied.some(e=>e.op==='vital'&&e.delta===-2));
+ const events=Object.values(after.state.records).filter(r=>r.category==='world_event'&&r.payload?.kind==='rite_unfinished');assert.equal(events.length,1);assert.equal(events[0].minute,row.deadline);assert.ok(Number.isSafeInteger(events[0].seq));
+ const d=f.engine.primitiveDraft(JSON.parse(JSON.stringify(after)));f.engine.advance(d,0,'a9-deadline-repeat');assert.equal(d.document.state.player.hp,after.state.player.hp);
+ assert.equal(Object.values(d.document.state.records).filter(r=>r.category==='world_event'&&r.payload?.kind==='rite_unfinished').length,1);
+ assert.deepEqual(await f.engine.reduce(before,input),wait,'same inputs reproduce the interruption and scheduler sequence');
+});
+
+test('A9: native system interruptions handle lost capacity/location and reject forged or stale consequences',async()=>{
+ for(const reason of ['sleep','dead','left']){
+  const f=await activeRite(`a9-lost-${reason}`),beforeQty=f.document.ledger.accounts[f.key];
+  if(reason==='sleep')f.document.state.player.activity='睡眠';else if(reason==='dead')f.document.state.player.status='死亡';else f.document.state.location=f.engine.world.locations.find(p=>p.id!==f.document.state.location).id;
+  const plan=riteProjectInterruptions(f.engine,f.document)[0];assert.ok(plan);
+  const before=structuredClone(f.document);assert.throws(()=>f.engine.primitiveRiteInterruption(f.document,{...plan,effects:[{op:'vital',target:'player',delta:1000,type:'healing'}]}),{code:'E-RITE-INTERRUPTION'});assert.deepEqual(f.document,before);
+  if(reason==='sleep'){
+   const effects=f.engine.world.actionDefinitions.actions[0].rite.interrupt.effects;effects[0].delta=-3;
+   const invalid=f.engine.primitiveDraft(f.document);assert.throws(()=>f.engine.advance(invalid,0,'a9-overbound'),{code:'E-PRIMITIVE-AMOUNT'});assert.deepEqual(invalid.document,before);effects[0].delta=-2;
+  }
+  const d=f.engine.primitiveDraft(f.document);f.engine.advance(d,0,`a9-interrupt-${reason}`);
+  assert.equal(d.document.state.records[`rite_project:${f.project}`].status,'unfinished');assert.equal(d.document.ledger.accounts[f.key],beforeQty);assert.deepEqual(auditLedger(d.document.ledger),[]);
+  assert.throws(()=>f.engine.primitiveRiteInterruption(d.document,plan),{code:'E-RITE-INTERRUPTION'});
+  const receipt=Object.values(d.document.state.records).find(r=>r.category==='primitive_receipt'&&r.receipt.source.id==='rite:test:a9-rite:interrupt').receipt;
+  if(reason==='dead')assert.ok(receipt.trimmed.some(e=>e.reason==='target_not_living'));
+  // The consequence frame never grants the disabled actor a fresh initiative.
+  if(reason==='dead')assert.throws(()=>commitPrimitives(before,[{op:'emit',verb:'tell',visibility:'witnessed'}],createRuntimePrimitiveFrame(f.engine,before,{eventId:`a9-no-initiative-${reason}`,source:{kind:'open',id:'test:initiative'}})),{code:'E-CAPACITY'});
+  if(reason==='sleep')await assert.rejects(f.engine.reduce(before,{tool:'world_act',eventId:'a9-sleep-no-rite',args:{action:'test:a9-rite',slots:{}}}),{code:'E-RITE-ACTOR'});
+ }
+});
+
+test('A9: a real public sleep interrupts the rite before resting, without advancing or paying the next stage',async()=>{
+ const f=await activeRite('a9-sleep-start'),before=structuredClone(f.document),input={tool:'world_time',eventId:'a9-real-sleep',args:{minutes:2,activity:'睡眠'}};
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches),row=after.state.records[`rite_project:${f.project}`];
+ assert.equal(row.status,'unfinished');assert.equal(row.outcome,'E-RITE-ACTOR');assert.equal(row.updatedAt,before.state.minute);
+ assert.equal(after.state.minute,before.state.minute+2);assert.equal(out.result.cost.time,2);assert.equal(after.ledger.accounts[f.key],before.ledger.accounts[f.key]);
+ assert.equal(f.engine.riteSleepingActors,undefined);assert.deepEqual(auditLedger(after.ledger),[]);
+});
+
+test('A9: role consent expires at its own minute, while consent still valid now does not interrupt a waiting stage',async()=>{
+ const f=await activeRite('a9-role-start',{role:true}),before=structuredClone(f.document),expiry=before.state.consentEvents[0].until;
+ // The next stage would take longer than the remaining consent. Waiting is
+ // still legitimate; only a perform request needs consent for that whole span.
+ f.engine.world.actionDefinitions.actions[0].rite.stages[1].minutes=5;
+ const first=await f.engine.reduce(f.document,{tool:'world_time',eventId:'a9-role-wait',args:{minutes:1}}),a=applyPatches(f.document,first.patches);
+ assert.equal(a.state.records[`rite_project:${f.project}`].status,'active');assert.deepEqual(riteProjectInterruptions(f.engine,a),[]);
+ const second=await f.engine.reduce(a,{tool:'world_time',eventId:'a9-role-expire',args:{minutes:4}}),b=applyPatches(a,second.patches);
+ assert.equal(b.state.records[`rite_project:${f.project}`].status,'unfinished');assert.equal(b.state.records[`rite_project:${f.project}`].updatedAt,expiry);
+ assert.equal(b.state.records[`rite_project:${f.project}`].outcome,'E-RITE-ROLE');assert.equal(b.ledger.accounts[f.key],before.ledger.accounts[f.key]);
+ const events=Object.values(b.state.records).filter(r=>r.category==='world_event'&&Number.isSafeInteger(r.seq));assert.equal(new Set(events.map(e=>e.seq)).size,events.length);
+});
+
+test('A9: a real role-consent revocation interrupts in the same transaction with monotonic event sequence',async()=>{
+ const f=await activeRite('a9-role-revoke-start',{role:true}),before=structuredClone(f.document),out=commitPrimitives(before,[{op:'emit',verb:'consent_revoked',target:'player',visibility:'private',payload:{consent:'a9-role-consent'}}],createRuntimePrimitiveFrame(f.engine,before,{actor:f.npc,eventId:'a9-role-revoked',source:{kind:'catalog',id:'test:role-withdraw'}})),after=applyPatches(before,out.patches);
+ assert.equal(after.state.records[`rite_project:${f.project}`].status,'unfinished');assert.equal(after.state.records[`rite_project:${f.project}`].outcome,'E-RITE-ROLE');
+ assert.equal(after.state.minute,before.state.minute);assert.equal(after.ledger.accounts[f.key],before.ledger.accounts[f.key]);
+ const events=Object.values(after.state.records).filter(r=>r.category==='world_event'&&Number.isSafeInteger(r.seq)),termination=events.find(r=>r.payload?.kind==='rite_unfinished');assert.ok(termination);
+ assert.equal(new Set(events.map(e=>e.seq)).size,events.length);assert.ok(events.filter(r=>r.verb==='consent_revoked').every(r=>r.seq<termination.seq));assert.deepEqual(auditLedger(after.ledger),[]);
+});
+
+test('A9: incapacity during a running stage preserves its actual time and paid material instead of rolling back',async()=>{
+ for(const reason of ['coma','death']){
+  const f=await activeRite(`a9-stage-start-${reason}`),before=structuredClone(f.document),at=before.state.minute+1;
+  const unregister=registerAdvance({id:`a9-stage-${reason}`,order:2801,phase:PHASE.clock,packId:'test',ruleId:`stage-${reason}`,nextMinute:(_e,_d,now)=>now<at?at:Infinity,advance(engine,d){
+   if(d.get('state','minute')!==at)return;
+   if(reason==='death')engine.death(d);else d.set(['state','player','status'],'昏迷');
+  }});
+  let out;try{out=await f.engine.reduce(before,{tool:'world_act',eventId:`a9-stage-complete-${reason}`,args:{action:'test:a9-rite',slots:{project:f.project}}});}finally{unregister();}
+  const after=applyPatches(before,out.patches);assert.equal(out.result.receipt.rite.status,'unfinished');assert.equal(after.state.minute,at);
+  assert.equal(after.state.records[`rite_project:${f.project}`].status,'unfinished');assert.equal(after.holdings.entities[f.project].facts.status,'unfinished');
+  const cost=after.state.records[`primitive:${out.result.receipt.cost.resourceEvent}`].receipt;assert.equal(cost.applied[0].qty,1);assert.deepEqual(auditLedger(after.ledger),[]);
+  if(reason==='coma')assert.equal(after.ledger.accounts[f.key],before.ledger.accounts[f.key]-1);
+  else assert.ok(out.result.receipt.trimmed.some(e=>e.reason==='target_not_living'));
+  assert.ok(!out.result.receipt.applied.some(e=>e.payload?.kind==='rite_success'));
+ }
+});
+
+test('A9: a reaction to stage completion can immediately terminate the continuing rite and its receipt',async()=>{
+ const unregister=registerWorldEventSubscriber({id:'a9-rite-collapse',order:998,priorityClass:'social',on(d,_engine,events){
+  if(events.some(e=>e.payload?.kind==='rite_attempt'&&e.payload.action==='test:a9-rite'))d.set(['state','player','status'],'昏迷');
+ }});
+ let f;try{f=await activeRite('a9-post-stage-reaction');}finally{unregister();}
+ assert.equal(f.document.state.records[`rite_project:${f.project}`].status,'unfinished');
+ const receipt=f.document.state.records['primitive:a9-post-stage-reaction'].receipt;
+ assert.equal(receipt.rite.status,'unfinished');assert.ok(receipt.consequences.some(c=>c.type==='rite_unfinished'&&c.project===f.project));assert.ok(receipt.narrate.mustNot.some(c=>c.kind==='rite_fulfilled'));
+});
 
 test('A8: archived open assets drive public leave_mark, with real reactions, one cost and JSON retry',async()=>{
  const f=fixture(),input={tool:'world_act',eventId:'a8-mark',args:{action:'open:leave_mark',slots:{intent:'向过路人问好',form:'刻痕',tags:['问候']}}};
@@ -246,4 +376,23 @@ test('A3 connectors: HTTP proposals preserve intent through export/import replay
  const duplicate=await request('/execute',input);assert.equal(duplicate.body.duplicate,true);assert.deepEqual((await request('/read',{campaignId})).body,after);
  const bundle=(await request('/export',{campaignId})).body,imported=await request('/import',{bundle});assert.equal(imported.status,200,imported.body.error);assert.deepEqual(imported.body.document,after.document);
  const rolled=await request('/reconcile',{campaignId,validAnchors:[]});assert.equal(rolled.status,200,rolled.body.error);assert.equal(rolled.body.document.state.player.coins,before.document.state.player.coins);assert.equal(rolled.body.document.state.records['open_proposal:http-open-spend'],undefined);assert.equal(rolled.body.document.state.records['primitive:http-open-spend'],undefined);
+});
+
+test('A9: production HTTP exposes and executes the archived proposal gateway and mark assets',async t=>{
+ const {default:express}=await import('express'),{once}=await import('node:events'),{init}=await import('../server-plugin/index.mjs'),{tmpRoot}=await import('../tools/tmp-root.mjs'),path=await import('node:path');
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'a9-production-http-')),app=express();app.use(express.json({limit:'100mb'}));
+ const router=express.Router();await init(router,{world:structuredClone(world),baseRoot:root,npcPlanningEnabled:false,consistencyEnabled:false,populationProfilesEnabled:false});app.use(router);
+ const server=app.listen(0,'127.0.0.1');t.after(async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(root,{recursive:true,force:true});});await once(server,'listening');
+ const request=async(endpoint,body)=>{const response=await fetch(`http://127.0.0.1:${server.address().port}${endpoint}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const data=await response.json();assert.equal(response.status,200,data.error);return data;};
+ const created=await request('/create',{character:{}}),campaignId=created.reference.campaignId,before=await request('/read',{campaignId});
+ const catalog=await request('/actions',{campaignId,query:'提出创意行动'});assert.ok(JSON.stringify(catalog).includes('open:proposal'));
+ const input={campaignId,tool:'world_act',eventId:'a9-http-proposal',anchor:'a9-proposal',expectedSequence:before.reference.sequence,args:{action:'open:proposal',slots:{intent:'用一声独特问候传递好意',effects:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{text:'祝你平安'}}]}}};
+ const preview=await request('/propose',input);assert.equal(preview.receipt.status,'preview');assert.deepEqual(await request('/read',{campaignId}),before);
+ const committed=await request('/execute',input);assert.equal(committed.result.receipt.status,'committed');assert.deepEqual(committed.result.receipt.routing.proposal,input.args.slots);
+ const after=await request('/read',{campaignId});assert.equal(after.document.state.minute-before.document.state.minute,2);
+ const mark={campaignId,tool:'world_act',eventId:'a9-http-mark',anchor:'a9-mark',expectedSequence:after.reference.sequence,args:{action:'open:leave_mark',slots:{intent:'向旅人问好',form:'刻痕',tags:[world.openTagging.default]}}};
+ const markPreview=await request('/propose',mark);assert.equal(markPreview.receipt.status,'preview');assert.deepEqual(await request('/read',{campaignId}),after);
+ const placed=await request('/execute',mark),last=await request('/read',{campaignId});assert.equal(placed.result.receipt.status,'committed');assert.ok(last.document.state.created[placed.result.receipt.mark.entity]);
+ assert.equal(last.document.state.minute-after.document.state.minute,world.openActionRules.mark.minutes);assert.equal(placed.result.receipt.fallback.originalIntentFulfilled,false);assert.deepEqual(auditLedger(last.document.ledger),[]);
+ assert.equal((await request('/execute',mark)).duplicate,true);assert.deepEqual(await request('/read',{campaignId}),last);
 });

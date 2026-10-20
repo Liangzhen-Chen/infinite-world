@@ -45,6 +45,16 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
  assert.deepEqual(registry.actions.filter(a=>a.outcomes).map(a=>a.id),Object.keys(nativeOutcomes));
  for(const a of registry.actions){
   if(a.projection){assert.equal(a.call,null);continue;}
+  // 06 §6.9: the archived proposal gateway is reached via world_act and the
+  // existing HTTP proposal adapter, without adding a static tool definition.
+  if(a.id==='open:proposal'){
+   assert.equal(a.source,'catalog');assert.deepEqual(a.call,{tool:'world_propose'});
+   assert.equal(a.cost.owner,'handler');assert.equal(a.check,'engine');
+   const slots={intent:'尝试组合动作',effects:[{op:'emit',verb:'tell',visibility:'witnessed'}]};
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_propose',args:slots,action:a});
+   assert.deepEqual(a.slots.map(s=>s.name),['intent','effects','means','context','participants']);
+   assert.deepEqual(a.slots.filter(s=>s.required).map(s=>s.name),['intent','effects']);continue;
+  }
   if(a.outcomes){
    assert.equal(a.source,'catalog',a.id);assert.equal(a.cost.owner,'primitives',a.id);
    assert.ok(a.slots.every(s=>s.name&&s.kind),a.id);assert.deepEqual(a.outcomes,nativeOutcomes[a.id]);

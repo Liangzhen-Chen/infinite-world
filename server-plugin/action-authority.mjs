@@ -103,7 +103,7 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
 // L1 composition adapter. Context and options come from native engine code;
 // proposal JSON supplies only effects. mirrorTransfer is mandatory while the
 // migration still has legacy resource projections.
-export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
+export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null,consequence=null}){
  const withDocument=document=>({...context,document});
  const destination=(document,effect)=>{
   if(effect.op!=='move')return effect.to;
@@ -112,7 +112,12 @@ export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorT
  };
  return createPrimitiveFrame({actor,eventId,source,mirrorTransfer,factPolicy,verbs,createDraft,executePrimitive,engine:context.engine,accountExists,validateFact,prepare,finish,identity,
   validate:document=>{validate?.(document);if(capacity(withDocument(document),actor,'action').level==='none')reject('E-CAPACITY','The actor cannot currently initiate an action');},
-  canAct:(document,id,family,effect)=>canAct(withDocument(document),id,family==='time'?'wait':family==='emit'&&['tell','request','claim','consent_given','consent_revoked'].includes(effect.verb)?'talk':family,{to:destination(document,effect),closing:family==='holding.close'?effect:null}),
+  canAct:(document,id,family,effect)=>{
+   const permission=canAct(withDocument(document),id,family==='time'?'wait':family==='emit'&&['tell','request','claim','consent_given','consent_revoked'].includes(effect.verb)?'talk':family,{to:destination(document,effect),closing:family==='holding.close'?effect:null});
+   // Native staged programs can finish their already-triggered failure after
+   // losing capacity during prepare. validate above still gates the initiative.
+   return !permission.allowed&&consequence?.(document,effect)===true?{allowed:true,tags:[]}:permission;
+  },
   authority:(document,id,op,target,options)=>authority(withDocument(document),id,op,target,options),
   location:(document,id)=>located(actionReader(document),id,x=>x==='player'?document.state?.location:actionEntity(withDocument(document),x)?.location??context.engine?.byId?.get(x)?.location??null)});
 }

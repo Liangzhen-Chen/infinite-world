@@ -1,7 +1,7 @@
 // Native registered rite adapter (13 §13.5). The action program, roles,
 // predicates and costs always come from the archived registry, not a proposal.
 import {primitiveRuntime,createRuntimePrimitiveFrame,actionEffects} from './primitives-runtime.mjs';
-import {commitPrimitives} from './primitives.mjs';
+import {commitPrimitives,commitPrimitiveConsequences} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
@@ -13,11 +13,13 @@ import {digest,recordsWhere} from './storage.mjs';
 import {beginBodyActivity,endBodyActivity} from './primitives-body.mjs';
 import {consent} from './action-consent.mjs';
 import {findAction} from './action-registry.mjs';
+import {beginReactionTick} from './world-events.mjs';
 
 declareHoldingWriter('action-rite',{entities:['project']});
 const location=(document,id)=>id==='player'?document.state.location:document.state.npcs?.[id]?.location??document.state.creatures?.[id]?.location??document.holdings?.locations?.[id]?.at;
 const nonnegative=(n,label)=>{if(!Number.isSafeInteger(n)||n<0)reject('E-RITE-DATA',`${label}须是非负整数`);return n;};
 const clone=structuredClone;
+const performing=new WeakMap();
 const domainSlots=slots=>Object.fromEntries(Object.entries(slots).filter(([key])=>!['project','operation'].includes(key)));
 const disruption=error=>['E-RITE-PLACE','E-RITE-ACTOR','E-RITE-QUALIFICATION','E-RITE-DIAGNOSIS','E-RITE-TARGET','E-RITE-ROLE','E-RITE-WINDOW'].includes(error.code);
 function predicate(engine,document,source,{actor,target,candidate=actor,truth=false}={}){
@@ -36,6 +38,7 @@ function predicate(engine,document,source,{actor,target,candidate=actor,truth=fa
  return evaluateRX(compiled,bindings,{functions:library.functions})===true;
 }
 function present(engine,document,id,at){
+ if(engine.riteSleepingActors?.has(id))return false;
  const body=id==='player'?document.state.player:document.state.npcs?.[id];
  return Boolean(id&&body&&!body.scheduleTravel&&!body.cognitionTravel&&location(document,id)===at&&canAct({engine,document},id,'rite').allowed&&!['濒死','昏迷'].includes(body.status)&&!/(睡眠|熟睡|睡觉)/.test(body.activity??'')&&!isPhysicallyDead(engine,actionReader(document),id));
 }
@@ -86,12 +89,12 @@ function gradeEffects(action,slots,actor,degree,table){
  })};
 }
 
-function projectState(engine,document,action,slots,actor,stage,stored,operation='perform'){
+function projectState(engine,document,action,slots,actor,stage,stored,operation='perform',{until}={}){
  const expired=Boolean(stored&&stored.deadline<=document.state.minute);
  let interruption=operation==='interrupt'?'interrupted':expired?'expired':null,facts;
  if(!interruption){
   try{
-   facts=visibleInputs(engine,document,action,slots,actor,stage);
+   facts=visibleInputs(engine,document,action,slots,actor,stage,{until});
    if(stored&&facts.location!==stored.location)interruption='place_changed';
   }catch(error){
    if(!stored||!disruption(error))throw error;
@@ -107,12 +110,13 @@ function projectState(engine,document,action,slots,actor,stage,stored,operation=
 // Read-only system input, including projects whose officiant can no longer
 // initiate an action. A3-A owns the scheduler and native system-effect frame.
 export function riteProjectInterruptions(engine,document){
+ const active=recordsWhere(document.state.records,'category','rite_project').filter(stored=>stored.status==='active'&&!performing.get(engine)?.has(stored.id));
+ if(!active.length)return [];
  const registry=primitiveRuntime.registry(engine),plans=[];
- for(const stored of recordsWhere(document.state.records,'category','rite_project')){
-  if(stored.status!=='active')continue;
+ for(const stored of active){
   const action=findAction(registry,stored.action),stage=action?.rite?.stages?.[stored.stage];
   if(!stage)reject('E-RITE-DATA','活动仪式工程缺少原有阶段定义');
-  const current=projectState(engine,document,action,stored.slots,stored.actor,stage,stored);
+  const current=projectState(engine,document,action,stored.slots,stored.actor,stage,stored,'perform',{until:document.state.minute});
   if(!current.interruption)continue;
   const eventId=`rite-interrupt:${digest({project:stored.id,lastEvent:stored.lastEvent,reason:current.interruption,deadline:stored.deadline}).slice(0,48)}`;
   plans.push({eventId,project:stored.id,action:action.id,actor:stored.actor,slots:clone(stored.slots),location:stored.location,reason:current.interruption,
@@ -127,9 +131,11 @@ export function settleRiteInterruptions(d,engine){
  for(const plan of plans){
   // This is a consequence, not a new initiative by a sleeping/dead officiant.
   // Do not forge a live actor frame here or bypass its capacity protection.
-  const result=engine.primitiveRiteInterruption(d.document,clone(plan));
+  const result=engine.primitiveRiteInterruption(d.document,clone(plan),{scheduler:d.scheduler?{seq:d.scheduler.seq,lastSettled:d.scheduler.lastSettled}:null,reactionContext:d.reactionTick?.active});
   if(result?.receipt?.status!=='committed')reject('E-RITE-INTERRUPTION','仪式中断后果尚未完成结算');
   for(const patch of result.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
+  if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
+  if(result.reactionQueue?.length){if(!d.reactionTick)beginReactionTick(d);d.reactionTick.queue.push(...result.reactionQueue);}
   const key=`rite_project:${plan.project}`,stored=d.get('state','records',key);
   d.set(['state','records',key],{...stored,status:'unfinished',outcome:plan.reason,lastEvent:plan.eventId,updatedAt:d.get('state','minute')});
   updateEntity(d,{id:plan.project,facts:{status:'unfinished'},writer:'action-rite',eventId:plan.eventId});
@@ -165,8 +171,9 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
  if(preview)return {receipt:{eventId:input.eventId,status:'preview',actor,routed:action.id,applied:[],cost:{time:prepared.interruption?0:prepared.minutes,resources:prepared.costs},rite:{stage:stage.id,project:prepared.project,...(prepared.interruption?{interruption:prepared.interruption}:{}),diagnosis:'依主祭当前所知判断，实际效力在仪式结束后揭晓'}}};
  const project=prepared.project??(action.rite.stages.length>1?`project_${digest({eventId:input.eventId}).slice(0,32)}`:null);
  const signal={op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'rite_attempt',action:action.id,stage:stage.id}};
- let minutes=0,terminal='active',outcome='success',limits=clone(action.rite.limits??{}),resultProject=null;
+ let minutes=0,terminal='active',outcome='success',limits=clone(action.rite.limits??{}),resultProject=null,paid=null;
  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:'catalog',id:action.id},identity:{request},limits:()=>limits,
+  consequence:()=>terminal==='unfinished',
   prepare:(d,{receipt})=>{
    const current=prepareRite(engine,d.document,input,{actor}),now=d.get('state','minute');
    const interrupted=Boolean(current.interruption);
@@ -180,12 +187,21 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
    if(check)receipt.check=engine.primitiveCheck(d,actionEffects({outcomes:check},slots,actor),`${input.eventId}:rite-check`,actor);
    const grade=gradeEffects(action,slots,actor,receipt.check?.degree,engine.world.openActionRules?.degrees);
    outcome=grade.row.key;minutes=current.minutes*grade.row.timeMultiplier;
+   // Pay before the time span: death can move the inventory into a corpse,
+   // and the stage cannot consume the same material afterwards a second time.
+   if(current.costs.length){
+    const costFrame=createRuntimePrimitiveFrame(engine,d.document,{actor,eventId:`rite-materials:${digest({eventId:input.eventId}).slice(0,48)}`,source:{kind:'rule',id:`${action.id}:materials`},createDraft:doc=>{const child=engine.primitiveDraft(doc);if(child.scheduler&&d.scheduler)child.scheduler.seq=Math.max(child.scheduler.seq,d.scheduler.seq);return child;}});
+    paid=commitPrimitiveConsequences(d.document,current.costs,costFrame,{reactionContext:d.reactionTick?.active});
+    for(const patch of paid.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
+    if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
+    if(paid.reactionQueue?.length){if(!d.reactionTick)beginReactionTick(d);d.reactionTick.queue.push(...paid.reactionQueue);}
+   }
    beginBodyActivity(d,engine,actor,'light');engine.advance(d,minutes,`${input.eventId}:rite-time`);endBodyActivity(d,engine,actor);
    // Recheck presence/qualification at completion. Losing a role or passing
    // the project deadline consumes this stage's resources but no success.
    let broken=resultProject&&d.get('state','minute')>=resultProject.deadline;
    try{visibleInputs(engine,d.document,action,slots,actor,stage,{until:d.get('state','minute')});}catch(error){if(!disruption(error))throw error;broken=true;}
-   if(broken){terminal='unfinished';outcome='interrupted';return [...current.costs,signal,...actionEffects({outcomes:action.rite.interrupt?.effects??[]},slots,actor)];}
+   if(broken){terminal='unfinished';outcome='interrupted';return [signal,...actionEffects({outcomes:action.rite.interrupt?.effects??[]},slots,actor)];}
    const success=grade.row.multiplier>0,final=index===action.rite.stages.length-1;
    terminal=success?(final?(grade.row.key==='partial'?'unfinished':'completed'):'active'):'unfinished';
    // Explicit outcomes also own failure/indivisible effects. Only a default
@@ -195,7 +211,7 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
     selected=actionEffects({outcomes:action.rite.misdiagnosis?.effects??[]},slots,actor);terminal='unfinished';outcome='ineffective';
    }
    if(grade.row.key==='fumble')selected.push(...actionEffects({outcomes:action.rite.backlash?.effects??[]},slots,actor));
-   return [...current.costs,signal,...selected];
+   return [signal,...selected];
   },
   finish:(d,{receipt})=>{
    if(resultProject){
@@ -203,8 +219,12 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
     d.set(['state','records',`rite_project:${project}`],row);
     updateEntity(d,{id:project,facts:{progress:terminal==='completed'?100:Math.floor((index+(terminal==='active'?1:0))*100/action.rite.stages.length),status:terminal},writer:'action-rite',eventId:input.eventId});
    }
-   receipt.rite={request,project,stage:stage.id,status:terminal,outcome};receipt.cost={time:minutes,resources:prepared.costs};
+   receipt.rite={request,project,stage:stage.id,status:terminal,outcome};receipt.cost={time:minutes,resources:prepared.costs,...(paid?{resourceEvent:paid.receipt.eventId}:{})};
    if(terminal==='unfinished')receipt.narrate.mustNot.push({kind:'rite_fulfilled'});
+   // The stage is now settled. Reactions to its published events may invalidate
+   // a continuing project, so do not suppress its lifecycle during publication.
+   performing.get(engine)?.delete(project);
   }});
- return commitPrimitives(document,[signal],frame);
+ const active=performing.get(engine)??new Set();performing.set(engine,active);active.add(project);
+ try{return commitPrimitives(document,[signal],frame);}finally{active.delete(project);if(!active.size)performing.delete(engine);}
 }

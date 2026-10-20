@@ -52,7 +52,15 @@ test('A3 open: missing slots and unmatched plans never pretend effects were subm
  assert.equal(waiting.prepared.status,'needs_slots');assert.equal(waiting.receipt.status,'not_submitted');assert.deepEqual(waiting.receipt.applied,[]);
  const proposal={intent:'在门旁做一件奇怪的小东西',effects:[{op:'create',kind:'item',facts:{quantity:99}}]};
  const plan=prepareOpenAction(f.engine,f.document,proposal,{...f.native,limits:()=>({actor:'player',sourceFor:()=>null})});
- assert.equal(plan.status,'needs_alternative');assert.deepEqual(plan.effects,[]);assert.equal(plan.fallback.available,false);
+ // A8 archives the real mark assets. An alternative is available, while the
+ // requested item/quantity still has no executable effects and is not submitted.
+ assert.equal(plan.status,'needs_alternative');assert.deepEqual(plan.effects,[]);assert.equal(plan.fallback.available,true);
+ assert.equal(plan.fallback.action,'open:leave_mark');assert.equal(plan.fallback.intent,proposal.intent);
+ for(const key of ['openActionRules','openTagging','openReactions']){
+  const saved=f.engine.world[key];delete f.engine.world[key];
+  const absent=prepareOpenAction(f.engine,f.document,proposal,{...f.native,limits:()=>({actor:'player',sourceFor:()=>null})});
+  assert.equal(absent.fallback.available,false);assert.deepEqual(absent.effects,[]);f.engine.world[key]=saved;
+ }
 });
 
 test('A3 open: native routing executes an actual registered transfer without injected resolvers',async()=>{

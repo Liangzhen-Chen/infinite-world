@@ -107,6 +107,9 @@ test('A3 rite: continuation metadata fits registered world_act slots without cha
 
 test('A3 rite: day/night requires actual daylight data, not a guessed fixed clock window',()=>{
  const f=setup({stages:1});f.action.rite.stages[0].window='day';const before=structuredClone(f.document);
+ // The engine now supplies this connector. Explicitly remove it to retain
+ // this test's original guarantee: missing daylight never falls back to a clock.
+ f.engine.primitiveRiteDaylight=undefined;
  assert.throws(()=>executeRite(f.engine,f.document,input('rite-needs-daylight')),{code:'E-PRIMITIVE-CONNECTOR'});assert.deepEqual(f.document,before);
 });
 
@@ -169,7 +172,14 @@ test('A3 rite: a later stage can wait for its window; only a missed window termi
   assert.throws(()=>executeRite(f.engine,a,next),{code:'E-RITE-WINDOW'});assert.deepEqual(a,before);
   assert.equal(a.state.records[`rite_project:${project}`].status,'active');
   assert.deepEqual(riteProjectInterruptions(f.engine,a),[]);
-  const wait=await f.engine.reduce(a,{tool:'world_time',eventId:`rite-window-wait-${missed}`,args:{minutes:missed?10:4}}),b=applyPatches(a,wait.patches),out=executeRite(f.engine,b,next),after=applyPatches(b,out.patches);
+  const wait=await f.engine.reduce(a,{tool:'world_time',eventId:`rite-window-wait-${missed}`,args:{minutes:missed?10:4}}),b=applyPatches(a,wait.patches);
+  // A closed window is now settled by the scheduler, without a second perform.
+  if(missed){
+   assert.equal(b.state.records[`rite_project:${project}`].status,'unfinished');
+   assert.equal(b.ledger.accounts[f.key],a.ledger.accounts[f.key]);assert.equal(b.state.player.hp,a.state.player.hp);
+   assert.ok(Object.values(b.state.records).some(r=>r.category==='primitive_receipt'&&r.receipt.source.kind==='rule'&&r.receipt.applied.some(e=>e.payload?.kind==='rite_unfinished')));continue;
+  }
+  const out=executeRite(f.engine,b,next),after=applyPatches(b,out.patches);
   assert.equal(out.receipt.rite.status,missed?'unfinished':'completed');
   assert.equal(after.ledger.accounts[f.key],b.ledger.accounts[f.key]-(missed?0:1));
   assert.equal(after.state.player.hp,b.state.player.hp+(missed?0:4));
@@ -180,7 +190,9 @@ test('A3 rite: system interruption plans detect real expiry and unavailable offi
  for(const disabled of ['expired','sleeping','dead','left']){
   const f=setup(),first=executeRite(f.engine,f.document,input(`rite-system-start-${disabled}`));let a=applyPatches(f.document,first.patches);
   if(disabled==='expired'){
-   const wait=await f.engine.reduce(a,{tool:'world_time',eventId:'rite-system-real-wait',args:{minutes:21}});a=applyPatches(a,wait.patches);
+   // Unit coverage of the read-only plan and missing-connector failure stays
+   // separate from the actual automatic world_time integration below.
+   a.state.minute=a.state.records[`rite_project:${first.receipt.rite.project}`].deadline;
   }else if(disabled==='sleeping')a.state.player.activity='睡眠';
   else if(disabled==='dead')a.state.player.status='死亡';
   else a.state.location=f.engine.world.locations.find(row=>row.id!==a.state.location).id;
@@ -190,6 +202,7 @@ test('A3 rite: system interruption plans detect real expiry and unavailable offi
   assert.ok(plans[0].effects.some(e=>e.payload?.kind==='rite_unfinished'));assert.deepEqual(plans,riteProjectInterruptions(f.engine,JSON.parse(JSON.stringify(a))));
   assert.deepEqual(a,before);
   const draft=f.engine.primitiveDraft(structuredClone(a));
+  f.engine.primitiveRiteInterruption=undefined;
   assert.throws(()=>settleRiteInterruptions(draft,f.engine),{code:'E-PRIMITIVE-CONNECTOR'});
   assert.deepEqual(draft.document,before);assert.equal(a.state.records[`rite_project:${plans[0].project}`].status,'active');
  }

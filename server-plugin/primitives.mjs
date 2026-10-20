@@ -27,7 +27,7 @@ function draft(document){
   remove(path){let at=this.document;for(const k of path.slice(0,-1))at=at?.[k];if(at)delete at[path.at(-1)];this.patches.push({op:'delete',path});}};
 }
 const receiptBase=(effects,frame)=>({eventId:frame.eventId,actor:frame.actor,source:frame.source,routed:null,candidates:[],applied:[],trimmed:[],check:null,consequences:[],narrate:{must:[],mustNot:[]},alternatives:[],fallback:null,status:'ready',signature:effects.map(e=>e.op)});
-function execute(document,effects,frame,commit,{deferReactions=false,pending=null}={}){
+function execute(document,effects,frame,commit,{deferReactions=false,pending=null,reactionContext=null}={}){
  const policy=frames.get(frame);if(!policy)reject('E-PRIMITIVE-FRAME','原语只能由服务端行动框架调用');
  if(!Array.isArray(effects)||!effects.length||effects.length>64)reject('E-PRIMITIVE-LIST','原语列表须有 1 至 64 项');
  const original=clone(effects);original.forEach((effect,index)=>{try{validatePrimitive(effect);}catch(error){error.index=index;throw error;}});
@@ -38,6 +38,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
  if(frame.source.kind==='catalog')receipt.routed=frame.source.id;
  if(pending)receipt.pending=pending;
  if(policy.engine&&d.scheduler)beginReactionTick(d);
+ if(d.reactionTick&&reactionContext)d.reactionTick.active={...reactionContext};
  policy.validate?.(d.document);
  const selected=policy.prepare?.(d,{frame,receipt,effects:original})??original,resolutions=new Set();
  if(!Array.isArray(selected)||selected.length>64)reject('E-PRIMITIVE-LIST','Invalid native outcome list');
@@ -161,6 +162,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target,minute:d.get('state','minute'),location,visibility,witnesses,tags:child.tags,primitive:child.op,result:child.result,...(child.op==='emit'?{payload:child.payload??{}}:{})});
   }
   if(!deferReactions)drainWorldReactions(d);
+  const interruptions=actionRuntime?.settleRites?.(d,policy.engine)??[];
+  for(const plan of interruptions){
+   receipt.consequences.push({type:'rite_unfinished',source:plan.eventId,project:plan.project,reason:plan.reason});
+   if(receipt.rite?.project===plan.project){receipt.rite.status='unfinished';receipt.rite.outcome=plan.reason;receipt.narrate.mustNot.push({kind:'rite_fulfilled'});}
+  }
   if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
  }
  d.set(['state','records',key],{category:'primitive_receipt',fingerprint,receipt});
@@ -168,6 +174,9 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
 }
 export function planPrimitives(document,effects,frame){return execute(document,effects,frame,false);}
 export function commitPrimitives(document,effects,frame){return execute(document,effects,frame,true);}
+// System consequences join their caller's reaction queue, just like contest
+// proposals below. They must not restart reaction depth/proposal budgets.
+export function commitPrimitiveConsequences(document,effects,frame,{reactionContext=null}={}){return execute(document,effects,frame,true,{deferReactions:true,reactionContext});}
 
 // Native queue API: JSON cannot supply a frame or a contest callback. No effect
 // is applied until phase 3' invokes execute, which rechecks current facts.
