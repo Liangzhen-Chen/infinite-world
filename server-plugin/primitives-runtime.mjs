@@ -38,6 +38,7 @@ import {openUsageEntry} from './action-limits.mjs';
 import {resolvePrimitiveTransfer,primitiveStockProjection} from './primitive-accounts.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {holdingSet} from './holdings.mjs';
+import {adaptLegacyExecution,legacyReceiptKey,legacyIdentity} from './legacy-primitives.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -531,6 +532,21 @@ function nextRiteMinute(engine,d,now){
 registerAdvanceHook('riteLifecycle',()=>({nextMinute:nextRiteMinute,settle:settleRites}));
 
 export const primitiveRuntime={
+ legacyAction(engine,tool,args,options={}){
+  if(options.replay&&!options.result?.receipt)return null;
+  // Unarchived raw legacy calls retain their historical event format. An
+  // explicit world_act or an archived catalog opts into primitive receipts.
+  if(!options.legacyAction&&!engine.world.actionDefinitions)return null;
+  const registry=this.registry(engine);
+  return options.legacyAction?findAction(registry,options.legacyAction.id):actionOfCall(registry,tool,args);
+ },
+ legacyPrior(document,{action,tool,args,eventId}){
+  const row=document.state.records?.[legacyReceiptKey(eventId)];if(!row)return null;
+  if(row.fingerprint!==legacyIdentity(action,tool,args))reject('E-PRIMITIVE-DUPLICATE','同一事件编号不能改换动作或参数');
+  const receipt=structuredClone(row.receipt);receipt.duplicate=true;
+  return {patches:[],result:{...receipt.legacy,duplicate:true,receipt}};
+ },
+ completeLegacy(engine,before,d,context){return adaptLegacyExecution(engine,before,d,context);},
  interruptRite,settleRites,
  beginSleep,finishSleep,
  applyMark(d,engine,effect,meta){
@@ -690,8 +706,8 @@ export const primitiveRuntime={
   // Only the player's own/witnessed events and currently observable witnesses.
   // Unknown details stay null; elapsed-span autonomous events aren't forecasts.
   const witnesses=events.length?[...new Set(events.flatMap(row=>row.witnesses??[]).filter(id=>known.has(id)))].sort():null;
-   return {eventId:input.eventId,status:'preview',routed:resolved.action.id,applied:[],legacy:structuredClone(detail),
-    cost:{...(detail.cost&&typeof detail.cost==='object'?detail.cost:{}),time:after.state.minute-document.state.minute,coins:Number.isFinite(detail.paid)?detail.paid:Number.isFinite(detail.cost)?detail.cost:null,resources:detail.cost?.resources??null},
+   return {...structuredClone(detail.receipt??{}),eventId:input.eventId,status:'preview',routed:resolved.action.id,applied:structuredClone(detail.receipt?.applied??[]),legacy:structuredClone({...detail,receipt:undefined}),
+    cost:{...(detail.cost&&typeof detail.cost==='object'?detail.cost:{}),...detail.receipt?.cost,time:after.state.minute-document.state.minute,coins:Number.isFinite(detail.paid)?detail.paid:Number.isFinite(detail.cost)?detail.cost:null,resources:detail.receipt?.cost?.resources??detail.cost?.resources??null},
    check,consequences,witnesses,permission:this.actionPermission(engine,document,{action:resolved.action.id,slots:input.args?.slots??{}})};
  },
  registry(engine){

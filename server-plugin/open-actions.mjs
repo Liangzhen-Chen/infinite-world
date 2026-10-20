@@ -51,7 +51,21 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   const reduced=await engine.reduce(current,call),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
   current=applyPatches(current,reduced.patches);patches.push(...reduced.patches);receipts.push({...receipt,status:'committed'});
  }
- const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied:receipts.flatMap(r=>r.applied??[]),cost:{time:current.state.minute-document.state.minute,resources:receipts.flatMap(r=>r.cost?.resources??[])},steps:receipts,routing:prepared};
+ const applied=[],resources=[];
+ for(const [stepIndex,step] of receipts.entries()){
+  const byIndex=new Map();
+  for(const effect of step.applied??[]){
+   const row={...effect,index:applied.length,stepIndex,stepEffectIndex:effect.index};
+   applied.push(row);byIndex.set(effect.index,row);
+  }
+  for(const cost of step.cost?.resources??[]){
+   const effect=byIndex.get(cost.index);
+   if(!effect)reject('E-ACTION-COST','Sequence cost has no adopted primitive');
+   Object.assign(effect,{stepCostIndex:cost.costIndex,costIndex:resources.length});
+   resources.push({...cost,index:effect.index,stepIndex,stepEffectIndex:cost.index,stepCostIndex:cost.costIndex,costIndex:effect.costIndex});
+  }
+ }
+ const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied,cost:{time:current.state.minute-document.state.minute,resources},steps:receipts,routing:prepared};
  return preview?{receipt,routing:prepared}:{patches,result:{action:'open:proposal',receipt}};
 }
 

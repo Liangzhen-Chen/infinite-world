@@ -312,6 +312,9 @@ export class WorldEngine {
             const learned=result.result.receipt.applied.find(effect=>effect.op==='learn')?.result??{};
             return {...result,result:{...result.result,...learned,cost:result.result.receipt.cost}};
         }
+        const legacyAction=primitiveActionRuntime()?.legacyAction(this,resolved.tool,resolved.args,options);
+        const legacyContext=legacyAction?{action:legacyAction,tool:resolved.tool.replace(/^world_/,''),args:resolved.args,eventId:input.eventId,requested:options.openProposal?.proposal?.effects??[]}:null;
+        if(legacyContext){const prior=primitiveActionRuntime().legacyPrior(document,legacyContext);if(prior)return prior;}
         primitiveActionRuntime()?.validateLegacy(this,document,resolved.tool,resolved.args,options);
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
         const books=withBooks(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
@@ -378,7 +381,7 @@ export class WorldEngine {
         if(d.scheduler&&(document.state.scheduler||d.scheduler.seq!==d.schedulerBaseline.seq||d.scheduler.lastSettled!==d.schedulerBaseline.lastSettled)){
             d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);
         }
-        return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(d.obligationRuntimeVersion?{obligationRuntimeVersion:1}:{}),...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        const result={ok:true,...detail,...(d.obligationRuntimeVersion?{obligationRuntimeVersion:1}:{}),...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
             ...(d.loanSuccessionVersion?{loanSuccessionVersion:1}:{}),...(d.obligationSettlementVersion?{obligationSettlementVersion:1}:{}),
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
@@ -387,7 +390,9 @@ export class WorldEngine {
             ...(!session.replaying||session.replayResult?.serviceClaimsVersion===1?{serviceClaimsVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
-            notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
+            notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)};
+        if(legacyContext)primitiveActionRuntime().completeLegacy(session,books.document,d,{...legacyContext,result,persist:Boolean(options.legacyAction)});
+        return {patches:finishLedger(d.patches,books.opening),result};
     }
     primitiveDraft(document){return new Draft(document,this);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
