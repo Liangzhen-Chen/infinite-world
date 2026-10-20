@@ -11,6 +11,7 @@ import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {isGone,isPhysicallyDead} from '../server-plugin/holdings.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
+import {createRoutingContext} from '../server-plugin/action-router.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const oldCorpusPath=path.join(root,'tests/fixtures/a3-intents.json');
@@ -120,22 +121,70 @@ export function applyIntentSetup(engine,initial,setup){
 
 // routing.signature describes requested effects. Only committed applied effects
 // are evidence; the legacy corpus also includes exact entity/field/tag tokens.
-export function signatureMatches(expected,effects){
- const ops=unique(effects.map(e=>e.op));
- // v2 annotates primitives as op(subject, qualifiers). Its metric is the
- // primitive set; qualifiers remain in expected for the human explanation.
- const opOf=value=>PRIMITIVE_IDS.find(op=>value===op||value.startsWith(`${op}(`));
- if(!sameSet(expected.map(opOf).filter(Boolean),ops))return false;
- const atoms=new Set();
- const visit=value=>{if(Array.isArray(value))value.forEach(visit);else if(value&&typeof value==='object')Object.values(value).forEach(visit);else if(typeof value==='string'){atoms.add(value);if(value.includes('|'))value.split('|').forEach(x=>atoms.add(x));}};
- effects.forEach(({result,index,actedAs,...effect})=>visit(effect));
- return expected.filter(s=>!opOf(s)).every(s=>atoms.has(s));
+// Runtime resource costs are prepended to applied, and explicitly repeated in
+// cost.resources (primitives-runtime). actedAs is authority, NOT derivation.
+// Match each cost once; never infer cost from a negative delta or sink account.
+export function signatureEffects(effects,receipt={},requested=receipt.routing?.proposal?.effects??[]){
+ const costs=[...receipt.cost?.resources??[]],excluded=[];
+ const selected=effects.filter(effect=>{
+  const index=costs.findIndex(cost=>Object.keys(cost).length>0&&Object.entries(cost).every(([key,value])=>JSON.stringify(effect[key])===JSON.stringify(value)));
+  if(index<0)return true;
+  // Explicitly requested consumption remains part of the adopted signature,
+  // even if the registered action implements it as a resource cost.
+  const owner=value=>selfId(value?.split('|')[0]);
+  const resource=value=>value==='coin'?'coin_river':value;
+  const requestedCost=requested.some(request=>request.op==='transfer'&&effect.op==='transfer'&&owner(request.from)===owner(effect.from)&&owner(request.to)===owner(effect.to)&&resource(request.resource??request.from?.split('|')[1])===resource(effect.resource??effect.from?.split('|')[1]));
+  if(requestedCost){costs.splice(index,1);return true;}
+  excluded.push(effect);costs.splice(index,1);return false;
+ });
+ return {effects:selected,excluded,unmatchedCosts:costs};
+}
+const signatureOp=value=>PRIMITIVE_IDS.find(op=>value===op||value.startsWith(`${op}(`));
+const selfId=value=>value==='self'?'player':value;
+function qualifierMatches(qualifier,effect){
+ const subject=effect.target??effect.entity??effect.subject??effect.actor;
+ const typed=/^(person|creature|thing|collective|org|holding|obligation|resource):(.+)$/.exec(qualifier);
+ if(typed){
+  const [,kind,id]=typed;
+  if(kind==='resource')return [effect.resource,effect.from?.split('|')[1],effect.to?.split('|')[1]].some(resource=>resource===id||(id==='coin'&&resource==='coin_river'));
+  if(effect.op==='create')return effect.kind===id&&({thing:['thing','item','mark'],collective:['collective','project','case'],creature:['creature'],person:['person'],org:['organization']}[kind]??[]).includes(effect.kind);
+  const value=kind==='holding'?(effect.holding??effect.id):kind==='obligation'?(effect.id??effect.obligation):subject;
+  const actualKind=effect.signatureKind??(selfId(subject)==='player'?'person':null);
+  const kindMatches=kind==='holding'||kind==='obligation'||(kind==='org'?actualKind==='organization':kind==='thing'?['thing','item','mark'].includes(actualKind):kind===actualKind);
+  return kindMatches&&selfId(value)===selfId(id);
+ }
+ if(qualifier==='world')return effect.op==='time';
+ if(qualifier.includes('+'))return qualifier.split('+').every(q=>qualifierMatches(q,effect));
+ if(qualifier.includes('->')){
+  const [from,to]=qualifier.split('->');
+  const owner=value=>selfId(value?.split('|')[0]);
+  return owner(effect.from)===selfId(from)&&owner(effect.to)===selfId(to);
+ }
+ // Compare semantic fields only: prose, results and authority cannot satisfy
+ // a qualifier. Unbound scenario aliases stay unverified rather than guessed.
+ if((effect.tags??[]).includes(qualifier))return true;
+ if([effect.type,effect.field,effect.verb,effect.status,effect.kind,effect.reason,effect.mode,effect.to,effect.subject].includes(qualifier))return true;
+ const [head,...tail]=qualifier.split(':');
+ return tail.length>0&&head===effect.verb&&tail.join(':')===effect.payload?.kind;
+}
+export function signatureMatches(expected,effects,receipt={},requested){
+ const adopted=signatureEffects(effects,receipt,requested).effects;
+ if(!sameSet(expected.map(signatureOp).filter(Boolean),adopted.map(e=>e.op)))return false;
+ return expected.every(value=>{
+  const op=signatureOp(value);
+  if(!op)return adopted.some(effect=>qualifierMatches(value,effect));
+  if(value===op)return true;
+  if(!value.endsWith(')'))return false;
+  const qualifiers=value.slice(op.length+1,-1).split(',').map(q=>q.trim());
+  return adopted.some(effect=>effect.op===op&&qualifiers.every(q=>qualifierMatches(q,effect)));
+ });
 }
 
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
  let {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
+ const signatureContext=engine.byId?createRoutingContext(engine,document):null;
  const previews=[];
  const calls=[],eventId=`a3-score-${row.id}`;
  const input=row.input??(row.action?{tool:'world_act',args:typeof row.action==='string'?{action:row.action,slots:row.slots??{}}:row.action}:{tool:'world_propose',args:row.proposal});
@@ -204,7 +253,9 @@ export async function executeIntent(engine,initial,row){
  }catch(caught){error={code:caught.code??null,message:caught.message};refused=caught instanceof PrimitiveRejected;}
  const committed=receipt?.status==='committed',effects=committed?(receipt.applied??[]).map(effect=>{
   const created=effect.op==='create'&&document.state.created?.[effect.result?.entity];
-  return created?{...effect,tags:created.tags??effect.tags}:effect;
+  const subject=effect.target??effect.entity??effect.subject??effect.actor;
+  const signatureKind=signatureContext?.kindOf(selfId(subject))??null;
+  return {...effect,...(signatureKind?{signatureKind}:{}),...(created?{tags:created.tags??effect.tags}:{})};
  }):[];
  const entityId=receipt?.mark?.entity??receipt?.fallback?.entity??effects.find(e=>e.op==='create'&&e.kind==='mark')?.result?.entity;
  const entity=entityId&&document.state.created?.[entityId],holding=entityId&&document.holdings?.entities?.[entityId];
@@ -214,9 +265,11 @@ export async function executeIntent(engine,initial,row){
  });
  const fallback=Boolean(committed&&entity?.tags?.length&&holding?.kind==='mark'&&holding.goneAt===undefined&&reactions.length);
  const traceOnly=receipt?.fallback?.originalIntentFulfilled===false;
- const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(effects.map(e=>e.op)),refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
+ const requested=(row.proposal??(row.input?.tool==='world_propose'?row.input.args:null))?.effects;
+ const measured=signatureEffects(effects,receipt??{},requested);
+ const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(measured.effects.map(e=>e.op)),signatureEffects:measured.effects,excludedCosts:measured.excluded,unmatchedCosts:measured.unmatchedCosts,refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
  Object.assign(actual,{setupUnmet,preview:previews[0]??null,previews});
- return {actual,receipt,document,preview,prepared,effects,submitted,setupUnmet};
+ return {actual,receipt,document,preview,prepared,effects,submitted,setupUnmet,requested};
 }
 
 export async function scoreRows(rows,{world,seed,document:initial}={}){
@@ -227,7 +280,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const run=await executeIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===actual.route):routeName(expectedRoute)===actual.route);
-  const signature=ready&&(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects);
+  const signature=ready&&(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested);
   let constructor=false,builder=actual.builder;
   if(ready&&row.expected.constructor){
    if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
@@ -236,7 +289,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
     const slots=run.submitted?.args?.slots;
     if(action&&slots){
      const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});builder=built.actual.builder;
-     constructor=Boolean(route&&builder?.ok&&built.actual.route===actual.route&&signatureMatches(row.expected.signature,built.effects)&&(!row.expected.fallback||built.actual.fallback));
+     constructor=Boolean(route&&builder?.ok&&built.actual.route===actual.route&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
