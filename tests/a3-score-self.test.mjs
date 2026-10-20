@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup} from '../tools/a3-score.mjs';
+import {executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
@@ -32,6 +33,148 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+
+test('A3 loader r8: default uses the checked-in v2 corpus and explicit missing paths never fall back',async()=>{
+ const loaded=await loadCorpus();
+ assert.equal(loaded.corpusPath,v2CorpusPath);
+ assert.equal(v2CorpusPath,fileURLToPath(new URL('./fixtures/a3-intents-v2.json',import.meta.url)));
+ assert.deepEqual(loaded.rows,v2Rows);
+ const legacy=await loadCorpus({corpusPath:oldCorpusPath});
+ assert.equal(legacy.corpusPath,oldCorpusPath);assert.ok(legacy.rows.length);
+ await assert.rejects(loadCorpus({corpusPath:new URL('./fixtures/a3-r8-does-not-exist.json',import.meta.url)}),{code:'ENOENT'});
+});
+
+test('A3 signature r8: ledger endpoint aliases require exact purpose and recipe provenance',()=>{
+ const recipe=world.recipes.find(r=>r.id==='recipe_wooden_pegs');
+ const input={op:'transfer',resource:'item_wood',from:'player|item_wood|inventory',to:'sink:consume|item_wood|craft'};
+ assert.equal(signatureMatches(['transfer(resource:item_wood,self->sink:craft)'],[input]),true);
+ assert.equal(signatureMatches(['transfer(resource:item_wood,self->sink:craft)'],[{...input,to:'sink:consume|item_wood|meal'}]),false);
+ assert.equal(signatureMatches(['transfer(resource:item_wood,self->sink:craft)'],[{...input,to:'npc_hw_linsui|item_wood|craft'}]),false);
+ assert.equal(signatureMatches(['transfer(resource:item_wood,self->sink:craft)'],[{...input,to:'sink:craft|item_wood|meal'}]),false);
+ const output={op:'transfer',resource:recipe.output.item,from:`src:craft|${recipe.output.item}|craft`,to:`player|${recipe.output.item}|inventory`};
+ const receipt={legacy:{recipe:recipe.id}};
+ for(const endpoint of [recipe.id,`${recipe.name}的产出来源`]){
+  const signature=[`transfer(resource:${recipe.output.item},${endpoint}->self)`];
+  assert.equal(signatureMatches(signature,[output],receipt),true);
+  assert.equal(signatureMatches(signature,[output],{legacy:{recipe:'recipe_wrong'}}),false);
+  assert.equal(signatureMatches(signature,[{...output,from:`src:genesis|${recipe.output.item}|craft`}],receipt),false);
+  assert.equal(signatureMatches(signature,[{...output,from:`src:craft|${recipe.output.item}|other`}],receipt),false);
+ }
+ assert.equal(signatureMatches([`transfer(resource:${recipe.output.item},recipe_wooden_pegs_extra->self)`],[output],receipt),false);
+});
+
+test('A3 signature r8: required effects are a multiset and extras need companion evidence',()=>{
+ const emit={op:'emit',target:'npc_hw_linsui'},other={...emit,target:'npc_hw_wushuo'};
+ const learn={op:'learn',target:'player',subject:'skill_life_6_core',mode:'practice',result:{path:['state','skills','skill_life_6_core']}};
+ const wear={op:'fact.set',entity:'item_whittling_knife',field:'durability',value:79,result:{before:80,after:79}};
+ const time={op:'time',minutes:20},drain={op:'vital',target:'player',type:'body:fatigue',need:'fatigue',delta:1,result:{after:{value:1}}};
+ const receipt={actor:'player',cost:{time:20},legacy:{spent:{toolWear:[{item:wear.entity,before:80,after:79}]}}};
+ const signature=['emit(person:npc_hw_linsui)'];
+ assert.equal(signatureMatches(signature,[emit,learn,wear,time,drain],receipt),true);
+ assert.equal(signatureMatches(signature,[emit,other],receipt),false);
+ assert.equal(signatureMatches(['emit','emit'],[emit],receipt),false);
+ assert.equal(signatureMatches(['emit','emit'],[emit,other],receipt),true);
+ assert.equal(signatureMatches(Array(63).fill('emit'),[...Array(63).fill(emit),{op:'status'}],receipt),false);
+ const taught={...learn,subject:'skill_literacy',mode:'teacher'};
+ assert.equal(signatureMatches(['learn','learn(person:self,skill_life_6_core)'],[learn,taught],receipt),true);
+ assert.equal(signatureMatches(signature,[learn,wear],receipt),false);
+ assert.equal(signatureMatches(signature,[emit,{...learn,mode:'teacher'}],receipt),false);
+ assert.equal(signatureMatches(signature,[emit,{...learn,result:{path:['state','spells','spell_light']}}],receipt),false);
+ assert.equal(signatureMatches(signature,[emit,{...wear,value:81}],receipt),false);
+ assert.equal(signatureMatches(signature,[emit,wear]),false);
+ assert.equal(signatureMatches(signature,[emit,{...drain,delta:-1}],receipt),false);
+ assert.equal(signatureMatches(signature,[emit,{...wear,entity:'player',field:'xp',value:30}],receipt),false);
+ const fee={op:'transfer',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse',qty:2};
+ assert.equal(signatureMatches(signature,[emit,fee],{cost:{resources:[fee]}}),false);
+ const additional={...fee,role:'additional_cost'};
+ assert.equal(signatureMatches(signature,[emit,additional],{cost:{resources:[additional]}}),true);
+ assert.equal(signatureMatches([...signature,'transfer(resource:coin,self->npc_hw_linsui)'],[emit,additional],{cost:{resources:[additional]}}),true);
+ assert.equal(signatureMatches(signature,[emit,additional]),false);
+});
+
+const checkedAction=(id,outcomes,difficulty=10)=>({id,label:'check branch',narration:'test.check',synonyms:[],visibility:{catalog:'here'},slots:[],check:{attribute:engine.rules.attributes[0],difficulty},outcomes});
+const branchOptions=action=>{
+ const branchWorld=structuredClone(world);branchWorld.actionDefinitions={format:1,actions:[action]};
+ return {...options,world:branchWorld};
+};
+test('A3 checks r8: native seed input exercises both outcomes and expected selects one signature',async()=>{
+ const action=checkedAction('test:branches',[
+  {op:'emit',target:'npc_hw_linsui',verb:'tell',visibility:'public',payload:{kind:'branch_success'}},
+ ]),opts=branchOptions(action);
+ const row={id:'both-checks',action:action.id,expected:expected(action.id,['emit(person:npc_hw_linsui)'],{constructor:true})};
+ const scored=await scoreRows([row],opts),result=scored.results[0];
+ assert.equal(result.scores.signature,true,JSON.stringify(result));
+ assert.equal(result.scores.constructor,true,JSON.stringify(result));
+ assert.equal(result.checkBranches.success.checks[0].die,20);
+ assert.equal(result.checkBranches.failure.checks[0].die,1);
+ assert.equal(result.checkBranches.success.ok,true);assert.equal(result.checkBranches.failure.ok,true);
+ assert.equal(result.checkBranches.success.actual.committed,true);assert.equal(result.checkBranches.failure.actual.committed,true);
+ assert.equal(result.actual.signatureEffects[0].payload.kind,'branch_success');
+ const failed=await scoreRows([{...row,expected:expected(action.id,['emit'],{checkOutcome:'failure'})}],opts);
+ assert.equal(failed.results[0].scores.signature,true,JSON.stringify(failed.results[0]));
+ assert.equal(failed.results[0].actual.signatureEffects[0].payload.kind,'action_exposed');
+ const wrong=await scoreRows([{...row,expected:expected(action.id,['create'])}],opts);
+ assert.equal(wrong.results[0].scores.signature,false);
+ const checkEngine=new WorldEngine(opts.world),failureRow={...row,id:row.id};
+ const failDoc={...initial,randomSeed:result.checkBranches.failure.randomSeed};
+ const run=await executeIntent(checkEngine,failDoc,failureRow);
+ assert.equal(validateCheckBranch(checkEngine,run,failureRow,'failure').ok,true);
+ // A branch may commit and balance its books yet grant a forbidden effect.
+ run.effects.push({op:'create',kind:'item',result:{entity:'unexpected'}});
+ const invalid=validateCheckBranch(checkEngine,run,failureRow,'failure');
+ assert.equal(invalid.ok,false);assert.ok(invalid.issues.includes('failed action granted create'));
+});
+
+test('A3 checks r8: authored failure programs are allowed, undeclared outputs fail',async()=>{
+ const success={op:'emit',target:'npc_hw_linsui',verb:'tell',visibility:'public',payload:{kind:'won'}};
+ const failure={...success,target:'npc_hw_wushuo',payload:{kind:'lost'}};
+ const action=checkedAction('test:authored_branches',{success:[success],failure:[failure],fumble:[failure]}),opts=branchOptions(action);
+ const row={id:'authored-check',action:action.id,expected:expected(action.id,['emit(person:npc_hw_wushuo)'],{checkOutcome:'failure'})};
+ const result=(await scoreRows([row],opts)).results[0];
+ assert.equal(result.scores.signature,true,JSON.stringify(result));
+ assert.equal(result.checkBranches.failure.ok,true);assert.equal(result.checkBranches.success.ok,true);
+ const checkEngine=new WorldEngine(opts.world),run=await executeIntent(checkEngine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
+ run.effects.push({...failure,target:'npc_hw_luqing'});
+ assert.equal(validateCheckBranch(checkEngine,run,row,'failure').ok,false);
+});
+
+test('A3 checks r8: maximum dice that still fail are reported as impossible',async()=>{
+ const difficulty=Math.max(...Object.values(engine.rules.check.difficulties));
+ const action=checkedAction('test:impossible',[{op:'emit',verb:'tell',visibility:'public',payload:{kind:'won'}}],difficulty),opts=branchOptions(action);
+ const row={id:'impossible-check',action:action.id,setup:{facts:[{path:['state','player','attributes',engine.rules.attributes[0]],value:1}]},expected:expected(action.id,['emit'])};
+ const result=(await scoreRows([row],opts)).results[0];
+ assert.equal(result.checkBranches.success.checks[0].die,20);
+ assert.equal(result.checkBranches.success.impossible,true,JSON.stringify(result));
+ assert.equal(result.scores.signature,false);assert.equal(result.scores.supported,false);
+ assert.equal(result.checkBranches.failure.ok,true);
+});
+
+test('A3 checks r8: real manufacture has both native branches; XP remains an unlisted extra',async()=>{
+ const row=v2Row('021'),result=(await scoreRows([row],options)).results[0];
+ assert.equal(result.checkBranches.success.ok,true,JSON.stringify(result.checkBranches.success));
+ assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
+ assert.equal(result.scores.signature,false);
+ const high=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.success.randomSeed},row);
+ assert.ok(high.effects.some(e=>e.op==='fact.set'&&e.field==='xp'));
+ const withoutXP=high.effects.filter(e=>!(e.op==='fact.set'&&e.field==='xp'));
+ assert.equal(signatureMatches(row.expected.signature,withoutXP,high.receipt,high.requested),true);
+ const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
+ low.effects.push({op:'create',kind:'item'});
+ assert.equal(validateCheckBranch(engine,low,row,'failure').ok,false);
+});
+
+test('A3 checks r8: a failed paid lesson keeps its fee and grants no knowledge',async()=>{
+ const row=v2Row('012'),result=(await scoreRows([row],options)).results[0];
+ assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
+ const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
+ assert.ok(low.effects.some(e=>e.op==='transfer'&&e.role==='additional_cost'));
+ assert.equal(low.document.state.recipes.recipe_wooden_pegs,undefined);
+ // applyPatches shares unchanged branches; inject into a separate after-state.
+ low.document=structuredClone(low.document);
+ low.document.state.recipes.recipe_wooden_pegs={learnedAt:low.document.state.minute};
+ const invalid=validateCheckBranch(engine,low,row,'failure');
+ assert.equal(invalid.ok,false);assert.ok(invalid.issues.includes('failed learning granted knowledge'));
+});
 test('A3 constructor scorer: dynamic proposal uses the UI tool adapter and real four-step receipts',async()=>{
  // 06 §6.9.5: local composition also includes the dynamic open-proposal duty.
  // The independently supplied proposal, never expected, provides the inputs.
@@ -70,7 +213,8 @@ test('A3 constructor scorer: explicit trace alternative selects a catalogued for
 
 test('A3 signature: adopted effects exclude only receipt-proven derived resource costs',async()=>{
  const requested={op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}};
- const cost={op:'transfer',from:'player|item_charcoal|inventory',to:'sink:consume|item_charcoal|action',qty:1};
+ // 06 §6.7 / round 8: only receipt-labelled additional costs may be omitted.
+ const cost={op:'transfer',from:'player|item_charcoal|inventory',to:'sink:consume|item_charcoal|action',qty:1,role:'additional_cost'};
  const receipt={status:'committed',source:{id:'open:proposal'},actor:'player',applied:[{index:0,...cost,result:{transferred:1}},{index:1,...requested}],cost:{time:5,body:{stamina:{value:98}},resources:[cost]}};
  assert.equal(signatureMatches(['emit(person:self,tell)'],receipt.applied,receipt),true);
  assert.deepEqual(signatureEffects(receipt.applied,receipt).excluded,[receipt.applied[0]]);
@@ -338,7 +482,8 @@ test('A3 rejection signature: request descriptions earn credit only for actual r
  const committed=await scoreRows([{...rows[0],expected:rejected.expected}],options);
  assert.equal(committed.results[0].scores.signature,false);
  // A rejected receipt may not hide applied effects, even matching cost rows.
- const cost={op:'transfer',from:'player|coin_river|purse',to:'sink:consume|coin_river|purse',qty:1};
+ // Retain the rejection mutation guard even when this is a labelled cost.
+ const cost={op:'transfer',from:'player|coin_river|purse',to:'sink:consume|coin_river|purse',qty:1,role:'additional_cost'};
  t.mock.method(WorldEngine.prototype,'previewAction',async()=>({receipt:{status:'rejected',applied:[cost],cost:{resources:[cost]}}}));
  const mutated=await scoreRows([rejected],options);
  assert.equal(mutated.results[0].actual.refused,true);assert.equal(mutated.results[0].scores.signature,false);
