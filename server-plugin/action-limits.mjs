@@ -24,7 +24,7 @@ export function limitOpenEffects(proposal,native){
  finite(usage.repeats,'repeat count');finite(usage.produced,'daily usage');
  let minutes=0,difficulty=0;
  for(const [index,original] of proposal.effects.entries()){
-  if(original.op==='create'){
+  if(original.op==='create'&&original.kind!=='mark'){
    blocked.push({index,reason:'计量制造须使用已有配方；没有配方可留下无价值的痕迹',alternative:'recipe_or_mark'});continue;
   }
   const source=sourceFor(original,index);
@@ -136,6 +136,7 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
  }
  const cap=(family,stage)=>finite(caps[family]?.[stage],`${family} stage ${stage}`);
  const sourceFor=effect=>{
+  if(effect.op==='create'&&effect.kind==='mark')return {id:`mark:${actor}`,stage:0,time:finite(engine.world.openActionRules?.mark?.minutes,'mark time'),bounds:{}};
   if(effect.op==='transfer'){
    const from=parseAccount(effect.from),allowed=from.owner===actor||authority({engine,document},actor,'transfer',effect.from,{effect}).allowed;
    return {id:`account:${effect.from}`,stage:0,time:generic.transferMinutes,bounds:{},transferAuthorized:allowed};

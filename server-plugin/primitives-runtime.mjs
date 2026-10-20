@@ -2,7 +2,7 @@
 // obligation protocols. Only native callers supply frames and runtime options.
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
 import {canAct,legacyCanAct,legacyActionFamily} from './action-capacity.mjs';
-import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame} from './primitives.mjs';
+import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame,recordResourceCosts} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {parseAccount,isSink,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount,mirrorPartyCoins} from './money.mjs';
@@ -29,7 +29,7 @@ import {checkActor} from './primitives-checks.mjs';
 import {learnNpc} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
-import {applyMarkPrimitive,executeLeaveMark} from './mark-actions.mjs';
+import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects} from './mark-actions.mjs';
 import {reactToMark} from './mark-reactions.mjs';
 import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
@@ -186,7 +186,7 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
   prepare:(d,meta)=>{
    factUsage.clear();
    const normalize=effects=>effects.map(effect=>resolvePrimitiveTransfer(engine,d.document,effect,{actor}));
-   const normalized={...meta,effects:normalize(meta.effects)},selected=normalize(prepare?.(d,normalized)??normalized.effects);
+   const normalized={...meta,effects:normalize(meta.effects)},selected=prepareMarkEffects(engine,d.document,normalize(prepare?.(d,normalized)??normalized.effects),{actor});
    return declared?.theft===true?trimTheft(d,engine,declared,selected,actor,meta.receipt):selected;
   },
   accountExists:(document,key)=>{
@@ -595,7 +595,7 @@ export const primitiveRuntime={
  },
  executeOpen(engine,document,input,prepared,{preview=false}={}){
   const actor='player',eventId=input.eventId,proposal=input.args,effects=prepared.effects;
-  let limits,quote,start,resources;
+  let limits,quote,start,resources,resourceSources;
   const tested=prepared.sources.some(s=>s.difficulty>0),difficulty=Object.values(engine.rules.check.difficulties).sort((a,b)=>Math.abs(a-prepared.difficulty)-Math.abs(b-prepared.difficulty))[0];
   const action={id:'open:proposal',slots:[],outcomes:effects,check:tested?{attribute:prepared.sources.find(s=>s.skill)?engine.byId.get(prepared.sources.find(s=>s.skill).skill)?.attribute??'精神':'力量',...(prepared.sources.find(s=>s.skill)?{skill:prepared.sources.find(s=>s.skill).skill}:{}),difficulty,context:difficulty-prepared.difficulty,contextReason:prepared.context?.reason??'开放动作来源难度及无近邻修正'}:null};
   const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId,source:{kind:'open',id:'open:proposal'},identity:{proposal},limits:()=>limits,
@@ -607,14 +607,14 @@ export const primitiveRuntime={
     if(limits.vital)for(const kind of ['harm','heal'])limits.vital[kind]=Math.max(0,...prepared.sources.filter((s,i)=>effects[i].op==='vital'&&(effects[i].delta<0?'harm':'heal')===kind).map(s=>s.bounds.delta));
     quote={duration:prepared.cost.time,activity:'light'};start=d.get('state','minute');
     beginBodyActivity(d,engine,actor,quote.activity);
-    resources=[];let mp=0,stamina=0;
+    resources=[];resourceSources=[];let mp=0,stamina=0;
     // A shared source is paid once, even when it supplies several effects.
     for(const source of new Map(prepared.sources.map(s=>[s.id,s])).values()){
      const req=source.requirements??{};
      for(const [key,value] of Object.entries({mp:req.mp??0,stamina:req.stamina??0}))if(!Number.isSafeInteger(value)||value<0)reject('E-OPEN-COST',`Invalid native ${key}`);
      if(source.skill&&!d.get('state','skills',source.skill))reject('E-OPEN-SKILL','The source skill is no longer known');
      mp+=req.mp??0;stamina+=req.stamina??0;
-     for(const material of req.materials??[])resources.push({op:'transfer',from:accountKey(actor,material.item,'inventory'),to:accountKey('sink:consume',material.item,'action'),qty:material.amount});
+     for(const material of req.materials??[]){resources.push({op:'transfer',from:accountKey(actor,material.item,'inventory'),to:accountKey('sink:consume',material.item,'action'),qty:material.amount});resourceSources.push({kind:'open',id:source.id});}
     }
     if(d.get('state','player','mp')<mp)reject('E-OPEN-MP','法力不足');
     const body=readBodyState(engine,d.document,actor,'stamina');if(body.value<stamina)reject('E-OPEN-STAMINA','体力不足');
@@ -630,7 +630,9 @@ export const primitiveRuntime={
     return [...resources,...selected];
    },
    finish:(d,{receipt})=>{
-    settleActionCost(d,engine,action,{},actor,start,quote,receipt,eventId);receipt.cost.resources=resources;
+    settleActionCost(d,engine,action,{},actor,start,quote,receipt,eventId);recordResourceCosts(receipt,resources,{requested:effects,sources:resourceSources});
+    const mark=receipt.applied.find(e=>e.op==='create'&&e.kind==='mark');
+    if(mark)receipt.fallback={originalIntentFulfilled:false,entity:mark.result.entity};
     receipt.openUsage=openUsageEntry(prepared,receipt,d.get('state','minute'));
    }});
   const planned=planPrimitives(document,effects,frame);
@@ -744,7 +746,7 @@ export const primitiveRuntime={
     limits.consentChecks=receipt.consequences.filter(row=>row.tags?.includes('unconsented')&&row.from&&row.scope).map(row=>({target:row.from,scope:row.scope,id:`${input.eventId}:action-check`}));
     return [...resourceCosts,...selected];
    },
-   finish:(d,{receipt})=>{settleActionCost(d,engine,action,slots,actor,start,quote,receipt,input.eventId);receipt.cost.resources=resourceCosts;}});
+   finish:(d,{receipt})=>{settleActionCost(d,engine,action,slots,actor,start,quote,receipt,input.eventId);recordResourceCosts(receipt,resourceCosts,{requested:(openProposal?.proposal.effects??[]).map(effect=>resolvePrimitiveTransfer(engine,document,effect,{actor}))});}});
   const planned=planPrimitives(document,effects,frame),claims=primitiveClaims(engine,document,planned.receipt.applied);
   if(preview)return planned;
   if(claims.length&&!preview){

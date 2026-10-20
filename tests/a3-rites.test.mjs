@@ -25,6 +25,18 @@ function setup({stages=2,check=null,actual=true}={}){
 const input=(eventId,project=null)=>({eventId,args:{action:'test:rite',slots:{target:'player'},...(project?{project}:{})}});
 const rollId=(document,die)=>{for(let i=0;i<1000;i++){const id=`rite-die-${die}-${i}`,roll=createHash('sha256').update(`${document.randomSeed}:${id}:rite-check:d20`).digest().readUInt32LE(0)%20+1;if(roll===die)return id;}throw Error('missing deterministic die');};
 
+test('A3 rite: material provenance points to the actual child transaction, interrupted stages report no payment',()=>{
+ const f=setup(),first=executeRite(f.engine,f.document,input('rite-cost-origin')),after=applyPatches(f.document,first.patches);
+ const cost=first.receipt.cost.resources[0],child=after.state.records[`primitive:${cost.appliedEvent}`].receipt;
+ assert.equal(cost.appliedEvent,first.receipt.cost.resourceEvent);assert.equal(cost.role,'additional_cost');
+ assert.deepEqual(cost.source,{kind:'catalog',id:f.action.id});
+ for(const [key,value] of Object.entries(cost))assert.deepEqual(child.applied[cost.index][key],value);
+ const interrupted=input('rite-cost-interrupt',first.receipt.rite.project);interrupted.args.operation='interrupt';
+ const stop=executeRite(f.engine,after,interrupted),stopped=applyPatches(after,stop.patches);
+ assert.deepEqual(stop.receipt.cost.resources,[]);assert.equal(stop.receipt.cost.resourceEvent,undefined);
+ assert.equal(stopped.ledger.accounts[f.key],after.ledger.accounts[f.key]);assert.deepEqual(auditLedger(stopped.ledger),[]);
+});
+
 test('A3 rite: real multi-stage project consumes each finite source once, heals only at completion, survives save replay',()=>{
  const f=setup(),before=structuredClone(f.document),first=executeRite(f.engine,f.document,input('rite-stage-0'));
  const a=applyPatches(f.document,first.patches),project=first.receipt.rite.project;

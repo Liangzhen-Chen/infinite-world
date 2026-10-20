@@ -1,6 +1,6 @@
 import {createActionPrimitiveFrame} from './action-authority.mjs';
 import {primitiveContext,mirrorPrimitiveTransfer} from './primitives-runtime.mjs';
-import {commitPrimitives,planPrimitives} from './primitives.mjs';
+import {commitPrimitives,planPrimitives,recordResourceCosts} from './primitives.mjs';
 import {accountKey} from './ledger.mjs';
 import {createEntity,setLocation,endEntity,ensureHoldings,declareHoldingWriter} from './holdings.mjs';
 import {digest} from './storage.mjs';
@@ -16,6 +16,35 @@ function rulesFor(engine){
 }
 function location(document,actor){return actor==='player'?document.state.location:document.state.npcs?.[actor]?.location;}
 
+// Material declarations refer to transfers in this transaction; they cannot
+// provide a second way to consume or manufacture inventory.
+export function prepareMarkEffects(engine,document,effects,{actor='player'}={}){
+ if(!effects.some(effect=>effect.op==='create'&&effect.kind==='mark'))return effects;
+ const available=new Map();
+ for(const effect of effects)if(effect.op==='transfer'&&effect.from.startsWith(`${actor}|`)&&effect.to.startsWith('sink:consume|')){
+  const resource=effect.from.split('|')[1];available.set(resource,(available.get(resource)??0)+effect.qty);
+ }
+ return effects.map(effect=>{
+  if(effect.op!=='create'||effect.kind!=='mark')return effect;
+  const facts=effect.facts??{},at=location(document,actor);
+  if(facts.location!==undefined&&facts.location!==at)reject('E-MARK-LOCATION','只能在当前所在位置留下痕迹');
+  if(facts.author!==undefined&&![actor,'self','$actor'].includes(facts.author))reject('E-MARK-FACT','不能冒署他人之名');
+  if(facts.carrier!==undefined){
+   const item=engine.world.items.find(row=>row.id===facts.carrier),key=item&&accountKey(actor,item.id,'inventory');
+   if(!item||(document.ledger?.accounts?.[key]??0)<1)reject('E-MARK-MATERIAL','所用载体须是实际持有的物品');
+  }
+  const materials=effect.materials??[],{rules}=rulesFor(engine);
+  if(!Array.isArray(materials)||materials.length>rules.maximumMaterials)reject('E-MARK-MATERIAL','材料列表无效');
+  for(const material of materials){
+   if(!material||Object.keys(material).some(k=>!['resource','item','qty'].includes(k))||material.resource&&material.item&&material.resource!==material.item)reject('E-MARK-MATERIAL','材料无效');
+   const resource=material.resource??material.item,qty=material.qty;
+   if(!engine.world.items.some(row=>row.id===resource)||!Number.isSafeInteger(qty)||qty<1||(available.get(resource)??0)<qty)reject('E-MARK-MATERIAL','所用材料须由同一次行动实际消耗');
+   available.set(resource,available.get(resource)-qty);
+  }
+  return {...effect,materials:[],facts:Object.fromEntries(Object.entries(facts).filter(([key])=>!['location','author','carrier'].includes(key)))};
+ });
+}
+
 // Called by the primitive runtime for create(kind:mark). The native frame owns
 // actor/location and transfer costs; mark facts cannot provide numeric effects.
 export function applyMarkPrimitive(d,engine,effect,{frame,child=`${frame.eventId}:mark`}={}){
@@ -25,7 +54,6 @@ export function applyMarkPrimitive(d,engine,effect,{frame,child=`${frame.eventId
  const facts=effect.facts??{};
  if(Object.keys(facts).some(k=>!['intent','form','zone'].includes(k)))reject('E-MARK-FACT','留痕不能附带资源、账户或数值能力');
  const intent=text(facts.intent,2000,'意图'),form=text(facts.form,40,'形态');
- if(!rules.forms.includes(form))reject('E-MARK-FORM','请选择已有的留痕形态');
  const at=location(d.document,frame.actor);if(!at)reject('E-MARK-LOCATION','无法在旅途中留下固定痕迹');
  const restriction=engine.byId.get(at)?.primitiveLimits?.create;
  if(restriction===false||restriction==='forbidden'||restriction?.allowed===false)reject('E-PRIMITIVE-PLACE','这里不允许留下新的固定痕迹');
@@ -72,7 +100,7 @@ export function executeLeaveMark(engine,document,input,{actor='player',preview=f
   finish:(d,{receipt})=>{
    const mark=d.get('state','created',result.entity),reaction=reactToMark(d,engine,mark,{eventId:input.eventId,suppressed:result.suppressed});
    receipt.mark={...result,...reaction};receipt.fallback={originalIntentFulfilled:false,entity:result.entity};
-   engine.advance(d,rules.minutes,`${input.eventId}:cost`);receipt.cost={time:rules.minutes,resources};
+   engine.advance(d,rules.minutes,`${input.eventId}:cost`);receipt.cost={time:rules.minutes};recordResourceCosts(receipt,resources,{requested:resources});
   }});
  return preview?planPrimitives(document,[...resources,effect],frame):commitPrimitives(document,[...resources,effect],frame);
 }

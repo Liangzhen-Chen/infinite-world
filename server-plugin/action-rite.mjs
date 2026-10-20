@@ -1,7 +1,7 @@
 // Native registered rite adapter (13 §13.5). The action program, roles,
 // predicates and costs always come from the archived registry, not a proposal.
 import {primitiveRuntime,createRuntimePrimitiveFrame,actionEffects} from './primitives-runtime.mjs';
-import {commitPrimitives,commitPrimitiveConsequences} from './primitives.mjs';
+import {commitPrimitives,commitPrimitiveConsequences,recordResourceCosts} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
@@ -190,7 +190,7 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
    // Pay before the time span: death can move the inventory into a corpse,
    // and the stage cannot consume the same material afterwards a second time.
    if(current.costs.length){
-    const costFrame=createRuntimePrimitiveFrame(engine,d.document,{actor,eventId:`rite-materials:${digest({eventId:input.eventId}).slice(0,48)}`,source:{kind:'rule',id:`${action.id}:materials`},createDraft:doc=>{const child=engine.primitiveDraft(doc);if(child.scheduler&&d.scheduler)child.scheduler.seq=Math.max(child.scheduler.seq,d.scheduler.seq);return child;}});
+    const costFrame=createRuntimePrimitiveFrame(engine,d.document,{actor,eventId:`rite-materials:${digest({eventId:input.eventId}).slice(0,48)}`,source:{kind:'rule',id:`${action.id}:materials`},createDraft:doc=>{const child=engine.primitiveDraft(doc);if(child.scheduler&&d.scheduler)child.scheduler.seq=Math.max(child.scheduler.seq,d.scheduler.seq);return child;},finish:(_d,{receipt:costReceipt})=>{costReceipt.cost={};recordResourceCosts(costReceipt,current.costs,{sources:current.costs.map(()=>({kind:'catalog',id:action.id}))});}});
     paid=commitPrimitiveConsequences(d.document,current.costs,costFrame,{reactionContext:d.reactionTick?.active});
     for(const patch of paid.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
     if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
@@ -219,7 +219,7 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
     d.set(['state','records',`rite_project:${project}`],row);
     updateEntity(d,{id:project,facts:{progress:terminal==='completed'?100:Math.floor((index+(terminal==='active'?1:0))*100/action.rite.stages.length),status:terminal},writer:'action-rite',eventId:input.eventId});
    }
-   receipt.rite={request,project,stage:stage.id,status:terminal,outcome};receipt.cost={time:minutes,resources:prepared.costs,...(paid?{resourceEvent:paid.receipt.eventId}:{})};
+   receipt.rite={request,project,stage:stage.id,status:terminal,outcome};receipt.cost={time:minutes,resources:paid?.receipt.cost.resources??[],...(paid?{resourceEvent:paid.receipt.eventId}:{})};
    if(terminal==='unfinished')receipt.narrate.mustNot.push({kind:'rite_fulfilled'});
    // The stage is now settled. Reactions to its published events may invalidate
    // a continuing project, so do not suppress its lifecycle during publication.

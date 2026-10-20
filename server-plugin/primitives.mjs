@@ -27,6 +27,26 @@ function draft(document){
   remove(path){let at=this.document;for(const k of path.slice(0,-1))at=at?.[k];if(at)delete at[path.at(-1)];this.patches.push({op:'delete',path});}};
 }
 const receiptBase=(effects,frame)=>({eventId:frame.eventId,actor:frame.actor,source:frame.source,routed:null,candidates:[],applied:[],trimmed:[],check:null,consequences:[],narrate:{must:[],mustNot:[]},alternatives:[],fallback:null,status:'ready',signature:effects.map(e=>e.op)});
+
+// Native costs occupy the leading transaction indices. Attach provenance only
+// after execution, so clients cannot smuggle receipt fields into primitives.
+export function recordResourceCosts(receipt,resources,{requested=[],sources=[]}={}){
+ const requests=requested.map((effect,index)=>({effect,index,used:false}));
+ const same=(a,b)=>a.op==='transfer'&&b.op==='transfer'&&a.from===b.from&&a.to===b.to;
+ // A requested consumption implemented as an outcome must not also label an
+ // identical extra fee as the requested effect.
+ for(const effect of receipt.applied.filter(e=>e.index>=resources.length)){
+  const match=requests.find(row=>!row.used&&same(row.effect,effect));if(match)match.used=true;
+ }
+ receipt.cost.resources=resources.map((resource,costIndex)=>{
+  const applied=receipt.applied.find(effect=>effect.index===costIndex);
+  if(!applied||!same(resource,applied)||resource.qty!==applied.qty)reject('E-ACTION-COST','Resource cost has no matching applied effect');
+  const match=requests.find(row=>!row.used&&same(row.effect,applied));if(match)match.used=true;
+  const metadata={source:sources[costIndex]??receipt.source,role:match?'requested_consumption':'additional_cost',appliedEvent:receipt.eventId,costIndex,...(match?{requestIndex:match.index}:{})};
+  Object.assign(applied,metadata);
+  return {...resource,...metadata,index:applied.index};
+ });
+}
 function execute(document,effects,frame,commit,{deferReactions=false,pending=null,reactionContext=null}={}){
  const policy=frames.get(frame);if(!policy)reject('E-PRIMITIVE-FRAME','原语只能由服务端行动框架调用');
  if(!Array.isArray(effects)||!effects.length||effects.length>64)reject('E-PRIMITIVE-LIST','原语列表须有 1 至 64 项');
