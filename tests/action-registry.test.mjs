@@ -22,22 +22,37 @@ const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(fs.r
 const fresh=()=>engine.initialFromLegacy(seed,'a1-registry');
 
 test('注册表：数据声明、带命名空间、与 S0 动作清单一一对应且为最新同步',()=>{
- assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core']);
+ // A3 adds B's open namespace; the S0 set below remains exact and unchanged.
+ assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core','open']);
  const s0=registry.actions.filter(a=>a.source==='s0');
  assert.deepEqual(s0.map(a=>a.id).sort(),catalog.map(a=>a.id).sort());
  assert.ok(registry.actions.length>catalog.length,'注册表在 S0 别名之外还有模板动作');
  const doc=JSON.parse(fs.readFileSync(REGISTRY,'utf8'));
  assert.equal(fs.readFileSync(REGISTRY,'utf8').replace(/\r\n/g,'\n'),render(syncRegistry(doc,catalog).doc),'world/actions/core.json 须用 node tools/build-action-registry.mjs 同步');
  for(const a of registry.actions){
-  assert.match(a.id,/^core:[a-z]/,a.id);assert.ok(a.label&&a.group&&a.narration,a.id);assert.ok(Array.isArray(a.synonyms)&&Array.isArray(a.slots)&&Array.isArray(a.preconditions),a.id);
+  assert.match(a.id,new RegExp(`^${a.namespace}:[a-z]`),a.id);assert.ok(a.label&&a.group&&a.narration,a.id);assert.ok(Array.isArray(a.synonyms)&&Array.isArray(a.slots)&&Array.isArray(a.preconditions),a.id);
   assert.ok(a.visibility&&a.cost&&'check' in a&&a.participants?.actor==='player',a.id);
  }
 });
 
 test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由到原工具',()=>{
  const tools=new Map(toolDefinitions().map(d=>[d.function.name,d.function.parameters]));const byId=new Map(catalog.map(a=>[a.id,a]));
+ // 06 §6.4/6.9.5: native definitions use outcomes, not a fabricated old tool.
+ const nativeOutcomes={
+  'core:practice.session':[{op:'learn',entity:'$actor',subject:{slot:'skill'},learningSource:'practice'}],
+  'open:leave_mark':[{op:'create',kind:'mark',facts:{intent:{slot:'intent'},form:{slot:'form'}}}]
+ };
+ assert.deepEqual(registry.actions.filter(a=>a.outcomes).map(a=>a.id),Object.keys(nativeOutcomes));
  for(const a of registry.actions){
   if(a.projection){assert.equal(a.call,null);continue;}
+  if(a.outcomes){
+   assert.equal(a.source,'catalog',a.id);assert.equal(a.cost.owner,'primitives',a.id);
+   assert.ok(a.slots.every(s=>s.name&&s.kind),a.id);assert.deepEqual(a.outcomes,nativeOutcomes[a.id]);
+   const slots=a.id==='open:leave_mark'?{intent:'留下一幅画',form:'涂画'}:{skill:'skill_survival',minutes:120};
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_act',args:{action:a.id,slots},action:a});
+   if(a.id==='open:leave_mark'){assert.equal(a.call,undefined);continue;}
+   assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
+  }
   const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
   if(a.source==='catalog'){
    assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);

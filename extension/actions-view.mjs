@@ -35,6 +35,11 @@ export async function renderActionsPanel(container,data){
     fragment.append(other);
     const openForm=action=>{
         if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}
+        if(action.id==='open:leave_mark'){
+            state.builder?.cancel();state.form=null;
+            state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;
+            state.builder.choose(action);rerender();return;
+        }
         state.form=action;
         rerender();
     };
@@ -122,7 +127,7 @@ export async function renderActionsPanel(container,data){
                 if(!slot.multiple)input.value=filled??slot.default??(slot.required?slot.options.find(o=>o.permission?.allowed!==false)?.value:'')??'';
             }
             else if(slot.kind==='flag'){input=node('input');input.type='checkbox';input.id=id;input.checked=Boolean(filled);}
-            else if(['quantity','coins','minutes'].includes(slot.kind)){input=node('input');input.type='number';input.min='1';input.inputMode='numeric';input.id=id;input.value=filled??slot.default??'';}
+            else if(['quantity','coins','minutes'].includes(slot.kind)){input=node('input');input.type='number';input.min=String(slot.min??1);if(slot.max!==undefined)input.max=String(slot.max);input.inputMode='numeric';input.id=id;input.value=filled??slot.default??'';}
             else{input=node('input');input.type='text';input.id=id;input.value=filled??'';}
             if(filled!==undefined&&!slot.options&&slot.kind==='entity'){inputs.push({slot,read:()=>filled});continue;}
             form.append(label,input);

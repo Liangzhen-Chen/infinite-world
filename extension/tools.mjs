@@ -129,3 +129,17 @@ export const catalogTools=new Set(['world_actions','world_act']);
 // Per-tool schemas before grouping (world_farm, world_pet …): the action registry
 // reads a grouped operation's own parameters from here instead of the group union.
 export function memberDefinitions(){return structuredClone(definitions);}
+
+// Broad searches stay compact; a single action exposes its complete choices.
+// This is dynamic catalogue data, outside the static tool/prompt budget.
+export function modelActionCatalog(result){
+ const choices=slot=>result.actions.length===1?slot.options:slot.options?.slice(0,8);
+ return {here:result.scene,actions:result.actions.map(action=>({id:action.id,label:action.label,
+  ...(action.hint?{hint:action.hint}:{}),...(action.blocked?{blocked:action.blocked}:{}),...(action.permission?{permission:action.permission}:{}),...(Object.keys(action.fill??{}).length?{fill:action.fill}:{}),
+  slots:action.slots.map(slot=>({name:slot.name,kind:slot.kind,
+   ...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),...(slot.default!==undefined?{default:slot.default}:{}),
+   ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{}),...(slot.inputSchema?{inputSchema:slot.inputSchema}:{}),
+   ...(slot.options?{options:choices(slot).map(option=>option.value),restrictedOptions:choices(slot).filter(option=>option.permission?.allowed===false).map(option=>({value:option.value,reason:option.permission.reason}))}:{})
+  }))
+ }))};
+}
