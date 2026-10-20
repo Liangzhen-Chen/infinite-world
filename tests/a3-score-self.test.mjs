@@ -13,7 +13,7 @@ import {aliveHoldings,auditHoldings} from '../server-plugin/holdings.mjs';
 import {capacity,canAct} from '../server-plugin/action-capacity.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
-const signatureMatches=(expected,effects,receipt,requested)=>matchSignature(expected,effects,receipt,requested,world);
+const signatureMatches=(expected,effects,receipt,requested,document)=>matchSignature(expected,effects,receipt,requested,world,document);
 const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'a3-score-self');
 const v2Rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r5.json',import.meta.url),'utf8'));
 const v2Row=id=>v2Rows.find(row=>row.id===`A3V2-${id}`);
@@ -33,6 +33,86 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+
+test('A3 signature r10: conditional legal consequences require their native submission and recipient decision',async()=>{
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ for(const number of ['051','052','056','058']){
+  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(engine,initial,row);
+  const check=(effects=run.effects,receipt=run.receipt,document=run.document)=>signatureMatches(row.expected.signature,effects,receipt,run.requested,document);
+  assert.equal(run.actual.committed,true,row.id);
+  assert.equal(check(),true,`${row.id}: submitted, not accepted`);
+  assert.equal(signatureMatches(row.expected.signature,run.effects,run.receipt,run.requested),false,'conditional scoring needs native world records');
+  assert.equal(check([],run.receipt),false,'a missing request never earns conditional credit');
+  assert.equal(check(run.effects,{...run.receipt,legacy:{...run.receipt.legacy,accepted:true}}),true,'receipt acceptance alone is not a native decision');
+  const doc=structuredClone(run.document),requestId=run.receipt.legacy.request,request=doc.state.records[requestId];
+  const accepted={category:'world_event',id:'r10-accept',verb:'accept',actor:request.receiver,target:request.actor,minute:doc.state.minute,
+   payload:{request:requestId,kind:request.request.kind,case:request.case??'r10-new-case'}};
+  doc.state.records['world_event:r10-accept']=accepted;
+  let consequence;
+  if(number==='058')consequence={op:'transfer',resource:'coin_river',from:'player|coin_river|purse',to:`${request.receiver}|coin_river|purse`,qty:request.request.terms.amount};
+  else if(number==='052'){
+   const native=doc.state.records[request.case],before=native.stage;native.stage='appeal';
+   consequence={op:'fact.set',entity:request.case,field:'stage',value:'appeal',result:{path:['state','records',request.case,'stage'],before,after:'appeal'}};
+  }else{
+   const native={category:'legal_case',id:'r10-new-case',sourceEvent:accepted.id,stage:'pending',offense:request.request.kind,
+    victim:request.actor,offender:request.request.accused??request.request.carrier};
+   doc.state.records[native.id]=native;
+   consequence={op:'create',kind:'case',result:{path:['state','records',native.id],before:null,after:structuredClone(native)}};
+  }
+  const effects=[...run.effects,consequence];
+  assert.equal(check(run.effects,run.receipt,doc),false,`${row.id}: acceptance requires the consequence`);
+  assert.equal(check(effects,run.receipt,doc),true,`${row.id}: exact accepted consequence`);
+  const repeated=structuredClone(doc);repeated.state.records['world_event:r10-accept-again']={...structuredClone(accepted),id:'r10-accept-again'};
+  assert.equal(check(run.effects,run.receipt,repeated),false,'repeated acceptance cannot waive the consequence');
+  assert.equal(check(effects),false,`${row.id}: consequence before acceptance`);
+  const mutate=change=>{
+   const changed={effects:structuredClone(effects),document:structuredClone(doc)};change(changed);
+   assert.equal(check(changed.effects,run.receipt,changed.document),false,row.id);
+  };
+  mutate(({document})=>{document.state.records['world_event:r10-accept'].actor='npc_hw_wushuo';});
+  mutate(({document})=>{document.state.records['world_event:r10-accept'].payload.request='another-request';});
+  mutate(({document})=>{document.state.records['world_event:r10-accept'].minute++;});
+  mutate(({document})=>{delete document.state.records[requestId];});
+  mutate(({document})=>{document.state.records['world_event:r10-accept'].verb='tell';});
+  // A pre-existing case judgment without this request link is not acceptance.
+  mutate(({document})=>{const event=document.state.records['world_event:r10-accept'];event.verb='judged';event.payload.accepted=true;delete event.payload.request;});
+  const judged=structuredClone(doc);judged.state.records['world_event:r10-accept'].verb='judged';judged.state.records['world_event:r10-accept'].payload.accepted=true;
+  assert.equal(check(effects,run.receipt,judged),true,'a linked native adjudication can record acceptance');
+  if(number==='058'){
+   mutate(({effects})=>{effects.at(-1).to='npc_hw_wushuo|coin_river|purse';});
+   mutate(({effects})=>{effects.at(-1).to=`${request.receiver}|coin_river|legal_treasury`;});
+   mutate(({effects})=>{effects.at(-1).qty++;});
+   mutate(({effects})=>{effects.at(-1).resource='item_bread';});
+   const cost={...consequence,role:'additional_cost'};
+   assert.equal(check([...run.effects,cost],{...run.receipt,cost:{resources:[cost]}}),false,'cost filtering cannot hide an unaccepted payment');
+  }else if(number==='052'){
+   mutate(({effects})=>{effects.at(-1).entity='another-case';});
+   mutate(({effects})=>{effects.at(-1).value='closed';});
+   mutate(({document})=>{document.state.records[request.case].stage='judged';});
+  }else{
+   mutate(({document})=>{delete document.state.records['r10-new-case'];});
+   mutate(({effects})=>{effects.at(-1).kind='mark';});
+   mutate(({document})=>{document.state.records['r10-new-case'].sourceEvent='unrelated';});
+   mutate(({effects,document})=>{const native=document.state.records['r10-new-case'];native.offender='npc_hw_linsui';effects.at(-1).result.after=structuredClone(native);});
+   mutate(({effects,document})=>{const native=document.state.records['r10-new-case'];native.offense='unrelated';effects.at(-1).result.after=structuredClone(native);});
+  }
+ }
+ const score=await scoreRows(corpus.filter(r=>/-(051|052|056|058)$/.test(r.id)),options);
+ for(const result of score.results){
+  assert.equal(result.scores.signature,true,`${result.id}: scored submission`);
+  assert.equal(result.scores.constructor,true,`${result.id}: constructor submission`);
+ }
+});
+
+test('A3 signature r10: 055 quote-only negotiation does not satisfy a signed defence contract and payment',async()=>{
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ const row=corpus.find(r=>r.id==='A3V2-055'),run=await executeIntent(engine,initial,row);
+ assert.equal(row.proposal.effects[0].payload.terms.quoteOnly,true);
+ assert.equal(run.receipt.legacy.submitted,true);
+ assert.equal(run.receipt.legacy.accepted,null);
+ assert.deepEqual(run.effects.map(e=>e.op),['emit']);
+ assert.equal(signatureMatches(row.expected.signature,run.effects,run.receipt,run.requested,run.document),false);
+});
 
 test('A3 loader r8: default uses the checked-in v2 corpus and explicit missing paths never fall back',async()=>{
  const loaded=await loadCorpus();

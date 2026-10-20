@@ -468,7 +468,49 @@ function qualifierMatches(qualifier,effect,receipt,world){
  }
  return true;
 }
-export function signatureMatches(expected,effects,receipt={},requested,world){
+// Conditional consequences (05 §5.2.7 / 06 §6.7) never turn a submitted
+// accusation, appeal or bribe offer into an accepted outcome. Read only the
+// committed request and canonical world records, not prose or routing intent.
+function conditionalSignature(value){
+ const found=value.match(/(?:,\s*|_)if_(authority_accepts|accepted)\)$/);
+ return found?{condition:found[1],value:value.slice(0,found.index)+')'}:null;
+}
+function legalSubmission(effect,receipt,document){
+ const result=effect.result,id=result?.path?.[2],row=document?.state?.records?.[id];
+ if(effect.op!=='emit'||result?.path?.length!==3||result.path[0]!=='state'||result.path[1]!=='records'||
+  result.before!==null||row?.category!=='legal_request'||receipt.legacy?.request!==id||receipt.legacy?.submitted!==true||
+  row.actor!==(receipt.actor??'player')||row.sourceEvent!==receipt.eventId||row.verb!==effect.verb||row.target!==effect.target||
+  !row.receiver||row.payload?.receiver!==row.receiver||row.request?.kind!==effect.payload?.kind||
+  JSON.stringify(result.after)!==JSON.stringify(row)||JSON.stringify(row.payload)!==JSON.stringify(effect.payload))return null;
+ return {id,row};
+}
+function legalAcceptance(submission,document){
+ const {id,row}=submission;
+ // An acceptance is the recipient's decision about THIS submission. A
+ // judgment may also record that decision; an old judgment of the case cannot.
+ const events=Object.entries(document.state.records??{}).filter(([key,event])=>
+  event.category==='world_event'&&key===`world_event:${event.id}`&&
+  (event.verb==='accept'||event.verb==='judged'&&event.payload?.accepted===true)&&
+  event.actor===row.receiver&&event.target===row.actor&&event.payload?.request===id&&
+  event.payload?.kind===row.request.kind&&event.minute>=row.minute&&event.minute<=document.state.minute&&
+  (!row.case||event.payload.case===row.case));
+ return events[0]?.[1]??null;
+}
+function legalConsequence(effect,submission,acceptance,document){
+ const {row}=submission,kind=row.request.kind,result=effect.result;
+ if(kind==='bribe')return effect.op==='transfer'&&effect.from===`${row.actor}|coin_river|purse`&&
+  effect.to===`${row.receiver}|coin_river|purse`&&effect.resource==='coin_river'&&effect.qty===row.request.terms?.amount;
+ const id=result?.path?.[2],native=document.state.records?.[id];
+ if(result?.path?.[0]!=='state'||result.path[1]!=='records')return false;
+ if(kind==='appeal')return effect.op==='fact.set'&&effect.entity===row.case&&id===row.case&&effect.field==='stage'&&effect.value==='appeal'&&
+  result.path.length===4&&result.path[3]==='stage'&&result.before!==result.after&&result.after==='appeal'&&native?.category==='legal_case'&&native.stage==='appeal';
+ return ['theft','cargo_damage'].includes(kind)&&effect.op==='create'&&effect.kind==='case'&&
+  result.path.length===3&&result.before===null&&native?.category==='legal_case'&&native.id===id&&acceptance.payload?.case===id&&
+  native.sourceEvent===acceptance.id&&native.offense===kind&&native.victim===row.actor&&
+  native.offender===(kind==='theft'?row.request.accused:row.request.carrier)&&
+  JSON.stringify(result.after)===JSON.stringify(native);
+}
+export function signatureMatches(expected,effects,receipt={},requested,world,document){
  const adopted=effects,excluded=signatureEffects(effects,receipt,requested).excluded;
  const matches=(value,effect)=>{
   const op=signatureOp(value);
@@ -481,7 +523,29 @@ export function signatureMatches(expected,effects,receipt={},requested,world){
   return qualifiers.every(q=>qualifierMatches(q,effect,receipt,world));
  };
  if(!expected.filter(value=>!signatureOp(value)).every(value=>adopted.some(effect=>matches(value,effect))))return false;
- const required=expected.filter(signatureOp),candidates=required.map(value=>adopted.flatMap((effect,i)=>matches(value,effect)?[i]:[]));
+ const required=[];
+ const conditionalCandidates=new Map();
+ for(const value of expected.filter(signatureOp)){
+  const conditional=conditionalSignature(value);
+  if(!conditional){required.push(value);continue;}
+  if(!document)return false;
+  const submissions=adopted.filter(effect=>expected.some(signature=>!conditionalSignature(signature)&&signatureOp(signature)==='emit'&&matches(signature,effect)))
+   .map(effect=>legalSubmission(effect,receipt,document)).filter(Boolean).filter(({row})=>
+    conditional.condition==='authority_accepts'?row.request.kind==='theft':
+    value.startsWith('create(')?row.request.kind==='cargo_damage':value.startsWith('fact.set(')?row.request.kind==='appeal':value.startsWith('transfer(')&&row.request.kind==='bribe');
+  if(submissions.length!==1)return false;
+  const submission=submissions[0],acceptance=legalAcceptance(submission,document);
+  const consequenceValue=conditional.value.replace(/->officer(?=\))/,`->${submission.row.receiver}`);
+  if(!acceptance){
+   // Even a companion/cost-labelled consequence is forbidden before acceptance.
+   if(adopted.some(effect=>matches(consequenceValue,effect)))return false;
+   continue;
+  }
+  const index=required.length;required.push(consequenceValue);
+  conditionalCandidates.set(index,adopted.flatMap((effect,i)=>
+   matches(consequenceValue,effect)&&legalConsequence(effect,submission,acceptance,document)?[i]:[]));
+ }
+ const candidates=required.map((value,i)=>conditionalCandidates.get(i)??adopted.flatMap((effect,i)=>matches(value,effect)?[i]:[]));
  const mandatory=adopted.flatMap((effect,i)=>excluded.includes(effect)||companionEffect(effect,receipt)?[]:[i]);
  if(mandatory.length>required.length||candidates.some(list=>!list.length))return false;
  // First cover every non-companion, then fill the remaining requirements.
@@ -844,7 +908,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const signature=ready&&run.branchesOK&&(expectsRejection
    ?actual.refused&&zeroEffects
    :expectsClarification?actual.clarified&&!actual.refused&&!actual.error&&zeroEffects
-   :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world));
+   :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world,run.document));
   let constructor=false,builder=actual.builder;
   if(ready&&row.expected.constructor){
    if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
@@ -859,7 +923,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
      const built=await executeCheckedIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
      builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews,checkBranches:built.branches};
      const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(built.actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(built.actual.route);
-     constructor=Boolean(built.branchesOK&&builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world)&&(!row.expected.fallback||built.actual.fallback));
+     constructor=Boolean(built.branchesOK&&builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world,built.document)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
