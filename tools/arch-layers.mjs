@@ -35,7 +35,7 @@ const L4=['index','ui-routes','action-gateway'/* A1 world_act 翻译 */];
 
 const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
-put(L0,'L0');put(L1,'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
+put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 export const PACK_NAMES=Object.keys(PACKS);
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','body-needs'],'L1');
 

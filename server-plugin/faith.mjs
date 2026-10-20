@@ -4,14 +4,14 @@ import {store,bookStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
 declareLedgerWriter('faith',{sinks:['sink:export','sink:consume']});
 import {temples,templeById,placeAncestors,faithConflictClocks} from './faith-catalog.mjs';
 export {faithConflictClocks} from './faith-catalog.mjs';
-import {faithOf,faithCulture} from './faith-state.mjs';
+import {faithOf,faithCulture,hostedRites} from './faith-state.mjs';
 import {organizationState} from './organization-state.mjs';
 import {ensureGroupAccount,groupAccountPath,groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {actorPath} from './npc-state.mjs';
 import {personConstraint} from './entity-view.mjs';
 import {adjustStanding,collectivesOf} from './standing.mjs';
 import {registerEffect,applyEffects,clockTransaction} from './effects.mjs';
-import {registerWorldEventSubscriber,presentWitnesses} from './world-events.mjs';
+import {registerWorldEventSubscriber,presentWitnesses,worldEvent} from './world-events.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {createNpcObligation} from './npc-obligations.mjs';
@@ -22,6 +22,40 @@ import {changeLegacyHoldings} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {facilityView,facilityRepairMaterials,facilityRuntime} from './facility-state.mjs';
 import {recordsWhere} from './storage.mjs';
+import {consent} from './action-consent.mjs';
+
+// A hosted event is distinct from a temple office or a completed rite. It
+// confers only the declared host role for this one scheduled ceremony.
+export function initializeHostedRite(d,e,row,context){
+ const s=d.get('state'),source=worldEvent(s,row.sourceEvent);
+ if(context?.origin!=='initial'||!context.eventId||typeof row.id!=='string'||!row.id||s.records?.[`hosted_rite:${row.id}`]||!e.world.locations.some(l=>l.id===row.location)||row.hostAuthorized!==true||!Number.isSafeInteger(row.start)||row.start<0||!Number.isSafeInteger(row.end)||row.end<=row.start||!source||source.verb!=='rite_scheduled'||source.actor!==row.host||source.location!==row.location||source.minute>s.minute||!Array.isArray(row.offerings)||!row.offerings.length||new Set(row.offerings.map(o=>o.item)).size!==row.offerings.length||row.offerings.some(o=>Object.keys(o).some(k=>!['item','quantity'].includes(k))||!e.world.items.some(i=>i.id===o.item)||!Number.isSafeInteger(o.quantity)||o.quantity<1))throw Error('Invalid hosted rite, host authority, offerings or native source');
+ if(row.location!==s.location)throw Error('Hosted rite must be initialized at its location');
+ subject(d,e,row.host);
+ holdingSet(d,e,['state','records',`hosted_rite:${row.id}`],{...structuredClone(row),category:'hosted_rite',sourceEvent:`world_event:${source.id}`,initializedBy:context.eventId},'faith');
+}
+function participateHostedRite(d,e,args,eventId,rite){
+ const s=d.get('state'),source=worldEvent(s,rite.sourceEvent),who=subject(d,e,args.member??'player');
+ if(who!=='player')throw Error('Hosted participation requires the participant own action');
+ if(!rite.hostAuthorized||!source||source.verb!=='rite_scheduled'||source.actor!==rite.host||source.location!==rite.location||source.minute>s.minute)throw Error('Hosted rite authority is no longer valid');
+ subject(d,e,rite.host);
+ const minutes=e.rules.faith?.ordinaryRite?.minutes;
+ if(!Number.isSafeInteger(minutes)||minutes<1)throw Error('Missing registered rite stage duration');
+ if(s.minute<rite.start||s.minute>=rite.end||s.minute+minutes>rite.end)throw Object.assign(Error('Outside the hosted rite participation window'),{code:'E-RITE-WINDOW'});
+ const permission=consent({engine:e,document:d.document},rite.host,who,'participate',{purpose:rite.id,subject:rite.id,terms:{role:'participant'},until:s.minute+minutes,onRefusal:'abort'});
+ if(!permission.allowed)throw Object.assign(Error('Host has not permitted this participation'),{code:'E-RITE-ROLE'});
+ if(d.get('state','records',`hosted_participation:${rite.id}:${who}`))throw Error('Participant already completed this rite');
+ if(args.workers?.length)throw Error('Hosted participation cannot supply other participants consent');
+ e.assertNpcObligationAction?.(d,[rite.host],{minutes,location:rite.location});
+ e.assertNpcAutonomyAction?.(d.get('state'),[rite.host],{minutes});
+ for(const o of rite.offerings)if(e.quantity(d,who,o.item)<o.quantity)throw Error('Missing actual unconsumed offerings');
+ // Keep normal inventory and stock accounting: the imported schedule does
+ // not prepay, consume, mint an offering, or promise a divine response.
+ for(const o of rite.offerings)e.itemDelta(d,who,o.item,-o.quantity,{flow:'sink:consume',purpose:'ritual',writer:'faith',eventId});
+ advanceWithNpcParticipants(d,e,minutes,eventId,[rite.host]);
+ const row={category:'faith_ritual',rite:rite.id,host:rite.host,subject:who,participants:[who],minute:d.get('state','minute'),minutes,offerings:structuredClone(rite.offerings),permission:permission.source,response:{applied:false,reason:'participation'},sourceEvent:eventId};
+ holdingSet(d,e,['state','records',`hosted_participation:${rite.id}:${who}`],row,'faith');
+ return row;
+}
 declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of','permit'],entities:['office']});
 
 const DAY=1440,path=id=>['state','records',id],actor=(d,e,id)=>d.get(...actorPath(e.world,id));
@@ -200,6 +234,13 @@ function use(d,e,t,args,eventId){
 }
 export function faithAction(d,args,eventId){
  const e=this;
+ if(args.operation==='faith_rite'){
+  const rite=hostedRites(e,d.get('state')).find(r=>r.id===args.choice);
+  if(rite){
+   if(args.org!==rite.location&&args.org!==templeById(e,rite.location)?.id)throw Error('Hosted rite location does not match');
+   return participateHostedRite(d,e,args,eventId,rite);
+  }
+ }
  if(args.operation==='faith_inspect'&&!args.org)return {temples:temples(e).filter(t=>placeAncestors(e,d.get('state','location')).includes(t.seat)),uses:e.rules.faith?.uses};
  const t=temple(d,e,args.org,{local:args.operation!=='faith_pilgrim'});
  if(args.operation==='faith_inspect'){

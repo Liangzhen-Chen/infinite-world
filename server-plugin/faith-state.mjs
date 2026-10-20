@@ -1,5 +1,9 @@
 import {actorId,actorPath,npcHousehold} from './npc-state.mjs';
 import {temples,placeAncestors} from './faith-catalog.mjs';
+import {recordsWhere} from './storage.mjs';
+export function hostedRites(e,s,location=s.location){
+ return recordsWhere(s.records,'category','hosted_rite').filter(r=>r.location===location);
+}
 const fact=(value,source,override=false)=>({value:structuredClone(value),source,override});
 const base=(e,s,id)=>s.created?.[id]??s.family?.people?.[id]??e.byId.get(id);
 const actor=(e,s,id)=>actorPath(e.world,id).slice(1).reduce((o,k)=>o?.[k],s);

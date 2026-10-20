@@ -145,10 +145,23 @@ test('agency summons: a source-bound existing water cup opens its native contrac
  const expired=structuredClone(document);expired.state.minute=605;
  const bad=domain({summons:[declaration]},{document:expired,bindings});rejects(bad,'summons[0]',/upkeep/);assert.deepEqual(bad.document,expired);assert.equal(bad.bindings.agency_summon,undefined);
 });
-test('agency missing activity interfaces: valid unfinished combat and conversation cannot be fabricated',()=>{
+test('agency native activities: unfinished combat and conversation import premises without resolving them',()=>{
+ // A3 V/W / 06 §6.8–6.9: native initializers now exist. Preserve the
+ // original no-fabricated-outcome guarantee rather than demanding a gap.
  for(const [field,setup] of [['combats',corpus('059')],['conversations',corpus('050')]]){
-  const document=applyIntentSetup(engine,initial,{present:setup.present,location:setup.location}).document;
-  const result=domain({[field]:setup[field]},{document});rejects(result,`${field}[0]`,/no native/);assert.deepEqual(result.document,document);
+  const premise=structuredClone(setup);delete premise[field];
+  const document=applyIntentSetup(engine,initial,premise).document;
+  const result=domain({[field]:setup[field]},{document});assert.deepEqual(result.setupUnmet,[]);
+  const key=field==='combats'?'combat_encounter':'conversation',activity=result.document.state.records[`${key}:${setup[field][0].id}`];
+  assert.equal(activity.active,true);
+  if(field==='combats'){assert.equal(activity.round,1);assert.equal(activity.playerActedThisRound,false);}
+  else assert.equal(activity.mainTopicFinished,true);
+  for(const key of ['player','npcs','inventory','minute','consentEvents'])assert.deepEqual(result.document.state[key],document.state[key]);
+  assert.deepEqual(result.document.ledger,document.ledger);
+  if(field==='combats'){
+   const withoutHistory=structuredClone(document);delete withoutHistory.state.records['world_event:a3v2_059_hostile'];
+   const bad=domain({[field]:setup[field]},{document:withoutHistory});rejects(bad,`${field}[0]`,/native hostile event/);assert.deepEqual(bad.document,withoutHistory);
+  }
   rejects(domain({[field]:[{...setup[field][0],participants:['player','missing']}]}),`${field}[0]`);
  }
 });
@@ -182,10 +195,19 @@ test('agency vocations: qualified historical source is not replayed as a new cha
  const unqualified=domain({abilitiesByActor:{npc_hw_luqing:{skills:{skill_literacy:0}}}},{document:eventFixture(event)}).document;
  rejects(domain({vocations:[declaration]},{document:unqualified,bindings}),'vocations[0]',/invalid/i);
 });
-test('agency rites: valid host/time/offerings without a native project interface remain unmet and unconsumed',()=>{
- const declaration=corpus('074').rites[0],event={id:'native_rite',verb:'rite_scheduled',actor:declaration.host,location:declaration.location},document=eventFixture(event),bindings={[declaration.sourceEvent]:event.id};
- const result=domain({rites:[declaration]},{document,bindings});rejects(result,'rites[0]',/no native initializer/);assert.deepEqual(result.document,document);
- rejects(domain({rites:[{...declaration,offerings:[{item:'missing',quantity:1}]}]},{document,bindings}),'rites[0]',/invalid/);
+test('agency rites: native host/time/offerings remain scheduled and unconsumed until real participation',()=>{
+ // A3 X / 13 §13.5: importing a one-stage hosted schedule is now supported;
+ // it must still neither consume offerings nor fabricate a completed project.
+ const premise=structuredClone(corpus('074')),declaration=premise.rites[0];delete premise.rites;
+ const base=applyIntentSetup(engine,initial,premise),document=base.document,bindings=base.bindings;
+ const result=domain({rites:[declaration]},{document,bindings});assert.deepEqual(result.setupUnmet,[]);
+ const rite=result.document.state.records[`hosted_rite:${declaration.id}`];
+ assert.equal(rite.host,declaration.host);assert.equal(rite.start,declaration.start);assert.equal(rite.end,declaration.end);assert.equal(rite.hostAuthorized,true);
+ assert.deepEqual(rite.offerings,declaration.offerings);assert.equal(rite.sourceEvent,'world_event:a3v2_074_rite_scheduled');
+ for(const key of ['player','npcs','inventory','minute','effects','consentEvents'])assert.deepEqual(result.document.state[key],document.state[key]);
+ assert.deepEqual(result.document.ledger,document.ledger);assert.deepEqual(result.document.holdings.rows,document.holdings.rows);
+ assert.equal(Object.values(result.document.state.records).some(r=>r.category==='faith_ritual'||r.category==='rite_project'),false);
+ rejects(domain({rites:[{...declaration,offerings:[{item:'missing',quantity:1}]}]},{document,bindings}),'rites[0]',/invalid/i);
 });
 test('agency each field: illegal container and unknown declaration fields are unmet',()=>{
  for(const field of ['abilitiesByActor','vocations','reading','practiceState','knowledge','mapKnowledge','demonstrations','combats','conversations','summons','rites']){

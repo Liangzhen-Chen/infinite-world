@@ -1,4 +1,35 @@
 import {createHash}from'node:crypto';
+import {declareHoldingWriter,holdingSet,isPhysicallyDead} from './holdings.mjs';
+import {recordsWhere} from './storage.mjs';
+import {worldEvent} from './world-events.mjs';
+import {combatActor,combatLocation,activeEncounters} from './combat-state.mjs';
+export {activeEncounters} from './combat-state.mjs';
+declareHoldingWriter('combat-state');
+export function initializeEncounter(d,e,row,context){
+ const s=d.get('state');
+ if(context?.origin!=='initial'||!context.eventId||typeof row.id!=='string'||!row.id||s.records?.[`combat_encounter:${row.id}`]||row.active!==true||typeof row.playerActedThisRound!=='boolean'||!Array.isArray(row.participants)||row.participants.length<2||new Set(row.participants).size!==row.participants.length||!row.participants.includes('player')||row.participants.some(id=>!combatActor(s,id)||isPhysicallyDead(e,s,id)||combatLocation(s,id)!==s.location)||activeEncounters(e,s).some(r=>r.participants.some(id=>row.participants.includes(id))))throw Error('Invalid initial encounter or participants');
+ // Importing an encounter never attacks or creates hostility.
+ const sources=row.participants.filter(id=>id!=='player').map(id=>recordsWhere(s.records,'category','world_event').find(r=>r.verb==='hostile_encounter'&&r.minute<=s.minute&&((r.actor===id&&(r.target??r.payload?.target)==='player')||(r.actor==='player'&&(r.target??r.payload?.target)===id))));
+ if(sources.some(r=>!r||!worldEvent(s,r.id)))throw Error('Encounter requires a native hostile event for every opponent');
+ holdingSet(d,e,['state','records',`combat_encounter:${row.id}`],{...row,category:'combat_encounter',round:1,location:s.location,sourceEvent:context.eventId,hostileEvents:sources.map(r=>r.id)},'combat-state');
+}
+export function encounterForExchange(d,e,actor,target){
+ const rows=activeEncounters(e,d.get('state'),actor).filter(r=>r.participants.includes(target));
+ if(rows.length>1)throw Error('Ambiguous active encounter');
+ const row=rows[0];
+ if(actor==='player'&&row?.playerActedThisRound)throw Error('Player already acted this round');
+ return row??null;
+}
+export function settleEncounterExchange(d,e,encounter,{actor,target,intent,escaped,eventId,ended=false}){
+ const s=d.get('state'),id=encounter?.id??`exchange:${eventId}`,participants=encounter?.participants??[actor,target];
+ const active=!ended&&!escaped&&participants.every(id=>!isPhysicallyDead(e,s,id)&&combatLocation(s,id)===s.location);
+ // A legacy exchange includes the opponent's response. Preserve the spent
+ // round and open the next one, rather than locking out every later exchange.
+ const round=encounter?.round??1;
+ const row={...encounter,id,category:'combat_encounter',participants,location:s.location,active,round:active?round+1:round,playerActedThisRound:!active&&actor==='player',lastRound:{round,actor,intent,playerActed:actor==='player',sourceEvent:eventId},sourceEvent:encounter?.sourceEvent??eventId};
+ holdingSet(d,e,['state','records',`combat_encounter:${id}`],row,'combat-state');
+ return {id,active,round:row.round,playerActedThisRound:row.playerActedThisRound};
+}
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export const combatRandom=(document,eventId)=>seededRandom(createHash('sha256').update(`${document.randomSeed}:${eventId}:combat`).digest().readUInt32LE(0));
 export function derivedStats({level,attributes,profession=false,equipment={}},rules){

@@ -14,6 +14,8 @@ import {npcServices} from './npc-state.mjs';
 import {facilityRuntime} from './facility-state.mjs';
 import {activeDuel} from './duels.mjs';
 import {templeById} from './faith-catalog.mjs';
+import {activeEncounters} from './combat-state.mjs';
+import {hostedRites} from './faith-state.mjs';
 import {knownWorldEventReference} from './world-events.mjs';
 
 const tokenizer=new MemoryIndex();
@@ -276,7 +278,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
     if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
     if(slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined){
-     const opponents=[...pool.values()].filter(row=>row.id!==actor&&activeDuel({...d,document},engine,row.id,actor));
+     const encounters=activeEncounters(engine,state,actor);
+     const opponents=[...pool.values()].filter(row=>row.id!==actor&&(activeDuel({...d,document},engine,row.id,actor)||encounters.some(r=>r.participants.includes(row.id))));
      value=opponents.length===1?opponents[0].id:undefined;
      // A demonstrative enemy reference can bind the single other local agent.
      // Generic guarding cannot turn a bystander into an opponent; multiple
@@ -289,7 +292,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     }
    }
    if(action.id==='core:dialogue.guide_request'&&slot.name==='content')value??=proposal.intent;
-   if(action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'&&slot.name==='org')value??=templeById(engine,target??location)?.id;
+   if(action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'){
+    const rites=hostedRites(engine,state,target??location);
+    if(slot.name==='org')value??=templeById(engine,target??location)?.id??(rites.length===1?rites[0].location:undefined);
+    if(slot.name==='choice'&&rites.length===1)value??=rites[0].id;
+   }
    if(value===undefined&&slot.fill==='target')value=target;
    if(value===undefined)for(const e of proposal.effects??[]){
     if(slot.name==='destination'&&e.op==='move'){value=e.to;break;}
@@ -358,7 +365,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='location'&&engine.world.locations.some(row=>row.id===value&&!row.hidden&&!row.private)){slots[slot.name]=value;continue;}
     const publicKind=['skill','spell','recipe'].includes(slot.entity)||slot.entity==='item'&&slot.name==='item'&&['world_trade','world_law'].includes(action.call?.tool);
     const publicId=publicKind&&catalog(value,slot.entity);
-    if(publicId)value=publicId;
+    // Hosted rites accept their actual local venue here; it remains a place,
+    // rather than being reclassified as an organization or given a temple.
+    const hostedVenue=action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'&&slot.name==='org'&&hostedRites(engine,state).some(r=>r.location===value);
+    if(hostedVenue){/* Native faith handler verifies the scoped host and consent. */}
+    else if(publicId)value=publicId;
     else {const resolved=(action.call?.tool==='world_move'&&slot.name==='destination'||action.call?.tool==='world_trade'&&slot.name==='location')?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
    }
    if(typeof slot.options==='object'&&Array.isArray(slot.options)&&!slot.options.includes(value))continue;
@@ -464,7 +475,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    }
   if(call?.tool==='world_promise'&&call.operation==='cancel'&&!proposal.effects?.some(e=>e.reason==='creditor_waiver'))return [sign([{op:'obligation.cancel'}])];
   if(call?.tool==='world_settlement'&&call.operation==='faith_rite'){
-   const spec=engine.rules.faith?.ordinaryRite;
+   const hosted=hostedRites(engine,state,proposal.target??state.location).find(r=>r.id===slots.choice);
+   const spec=hosted?{offerings:Object.fromEntries(hosted.offerings.map(o=>[o.item,o.quantity]))}:engine.rules.faith?.ordinaryRite;
    if(!spec)return [];
    return [sign([...Object.entries(spec.offerings??{}).map(([item])=>transfer(item,actor,'sink:consume')),{op:'emit',target:proposal.target,verb:'settlement'}])];
   }

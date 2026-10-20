@@ -4,7 +4,7 @@ declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
 import {nationAction} from './nation-founding.mjs';
 import {appointmentSource} from './noble-state.mjs';
-import {derivedStats,monsterStats,strike,combatRandom}from'./combat.mjs';
+import {derivedStats,monsterStats,strike,combatRandom,encounterForExchange,settleEncounterExchange}from'./combat.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {careerEquipment,effectiveProficiency}from'./professions.mjs';
 import {magicStatusStats,withMagicStats,consumeTransientMagic}from'./magic-status.mjs';
@@ -87,6 +87,7 @@ export const activities={
         if(!isNpc&&!['monster_','boss_'].some(prefix=>target.startsWith(prefix)))throw new Error('这个实体不是交锋对象');
         if(!npc||npc.location!==d.get('state','location'))throw new Error('对手不在场');
         if(isPhysicallyDead(this,d,target))throw new Error('对手已经死亡');
+        const encounter=encounterForExchange(d,this,attacker,target);
         const weapon=args.weapon?this.resolve(args.weapon,'item'):null;
         if(weapon&&this.quantity(d,attacker,weapon)<1)throw new Error('没有这件武器');
         if(weapon){const held=heldUnit(d,this,attacker,weapon),definition=this.byId.get(weapon);
@@ -175,6 +176,7 @@ export const activities={
             bossAbilities[i]={ability:bossAbilities[i].ability,...this.applyMagicArea(d,catalog,{target:source},areaId,source)};
         }
         const war=warCombatResult(d,this,{target,damage,received,killed:!remaining,retreated:remaining>0&&remaining<maxHp*0.25},id);
+        settleEncounterExchange(d,this,encounter,{actor:attacker,target,intent,escaped,eventId:id,ended:!!duelResult||!remaining||attackerHp<=received});
         d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,vitals:{[attacker]:{before:attackerHp,after:d.get(...attackerPath,'hp')??attackerHp},[target]:{before:hp,after:d.get('state',partition,target,'hp')}},...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:this.rules.combat.exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){

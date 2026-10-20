@@ -258,6 +258,15 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    amount:Math.abs(delta),terms:{resource:'coin_river',principal:Math.abs(delta)},balance
   },path,before,after));
  }
+ // Adopt the committed hosted participation record, never the requested
+ // ritual text. Its normal stock transfer has already reconciled above.
+ if(tool==='settlement'&&args.operation==='faith_rite'&&result.rite){
+  const key=`hosted_participation:${result.rite}:${result.subject}`,row=a.records?.[key],rite=a.records?.[`hosted_rite:${result.rite}`];
+  if(row?.sourceEvent===eventId&&!b.records?.[key]&&rite&&row.minute===a.minute&&row.minutes===elapsed){
+   add(stateEffect('emit',{actor:row.subject,target:rite.location,verb:'settlement',visibility:'witnessed',payload:{kind:'ritual_participation',rite:row.rite,role:'participant',host:row.host}},['state','records',key],before,after));
+   if(elapsed>0)add({op:'time',minutes:elapsed,mode:'rite_stage',result:{before:b.minute,after:a.minute}});
+  }
+ }
  const dialogue=result.dialogue;
  if(dialogue&&a.dialogues?.[dialogue.npc]?.sourceEvent===eventId){
   const verb=['ask','interpreter','persuade','request'].includes(dialogue.action)?'request':dialogue.action;

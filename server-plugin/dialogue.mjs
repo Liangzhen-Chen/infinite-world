@@ -13,6 +13,19 @@ import {actionCostRule,beginActionActivity,finishActionActivity} from './action-
 import {assertRumorConversation} from './npc-rumors.mjs';
 import {advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {transferItems} from './items.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {recordsWhere} from './storage.mjs';
+declareHoldingWriter('dialogue-state');
+export function activeConversation(state,npc){
+ return recordsWhere(state.records,'category','conversation').find(r=>r.active&&r.participants.includes('player')&&r.participants.includes(npc)&&r.location===state.location&&state.npcs?.[npc]?.location===state.location)??null;
+}
+export function initializeConversation(d,e,row,context){
+ const s=d.get('state');
+ if(context?.origin!=='initial'||!context.eventId||typeof row.id!=='string'||!row.id||s.records?.[`conversation:${row.id}`]||row.active!==true||typeof row.mainTopicFinished!=='boolean'||!Array.isArray(row.participants)||row.participants.length!==2||!row.participants.includes('player')||new Set(row.participants).size!==2)throw Error('Invalid initial conversation');
+ const npc=row.participants.find(id=>id!=='player'),n=s.npcs?.[npc];
+ if(!n||n.location!==s.location||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(e,s,npc)||activeConversation(s,npc)||!language(subjectiveView(e,d.document,npc),e,d))throw Error('Conversation requires present communicating participants');
+ holdingSet(d,e,['state','records',`conversation:${row.id}`],{...row,category:'conversation',location:s.location,sourceEvent:context.eventId},'dialogue-state');
+}
 declareLedgerWriter('dialogue',{});
 const prefix='对话请求：';
 const templateRoot=new URL('../world/templates/dialogue/common/plain/',import.meta.url);
@@ -33,7 +46,10 @@ function line(engine,view,action,decision,detail=''){
  return selected.text.replace(/\{(\w+)\}/g,(_,k)=>vars[k]??'');
 }
 function save(d,npc,eventId,action,decision,text,extra={}){
- const dialogue={npc,action,decision,text,...extra};
+ const s=d.get('state'),previous=activeConversation(s,npc),id=previous?.id??`dialogue:${eventId}`;
+ const conversation={...previous,id,category:'conversation',participants:['player',npc],location:s.location,mainTopicFinished:previous?.mainTopicFinished??false,active:action!=='leave',sourceEvent:previous?.sourceEvent??eventId,lastReply:eventId,...(action==='leave'?{endedAt:s.minute}:{} )};
+ holdingSet(d,null,['state','records',`conversation:${id}`],conversation,'dialogue-state');
+ const dialogue={npc,action,decision,text,...extra,conversation:{id,active:conversation.active,mainTopicFinished:conversation.mainTopicFinished}};
  d.set(['state','dialogues',npc],{...dialogue,minute:d.get('state','minute'),sourceEvent:eventId});
  return {dialogue};
 }
