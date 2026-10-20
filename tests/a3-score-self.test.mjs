@@ -8,10 +8,14 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
 import {effectiveProficiency} from '../server-plugin/professions.mjs';
+import {aliveHoldings,auditHoldings} from '../server-plugin/holdings.mjs';
+import {capacity,canAct} from '../server-plugin/action-capacity.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const signatureMatches=(expected,effects,receipt,requested)=>matchSignature(expected,effects,receipt,requested,world);
 const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'a3-score-self');
+const v2Rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const v2Row=id=>v2Rows.find(row=>row.id===`A3V2-${id}`);
 // A known awake witness at the starting shop, as in the mark integration tests.
 initial.state.npcs.npc_hw_linsui.location=initial.state.location;
 initial.state.npcs.npc_hw_linsui.activity='闲逛';
@@ -201,6 +205,70 @@ test('A3 setup: existing creature instances and native special statuses are real
  assert.equal(baseline.state.creatures.test_creature.activity,'睡眠');
  const bad=applyIntentSetup(engine,baseline,{status:[{target:'player',status:'invented',power:2,duration:60}]});
  assert.equal(bad.setupUnmet[0].item,'status[0]');
+});
+
+test('A3 setup r7: all seven declared scenes open native entities, holdings and status without changing the source',()=>{
+ const before=structuredClone(initial),catalog=structuredClone(world.factionPeople);
+ for(const id of ['009','057','070','089','090','091','106']){
+  const result=applyIntentSetup(engine,initial,v2Row(id).setup);
+  assert.deepEqual(result.setupUnmet,[],id);
+  assert.deepEqual(auditHoldings(engine.primitiveDraft(result.document)),[],id);
+  assert.deepEqual(reconcile(engine,result.document),{mismatches:[],lots:[],drift:[],audit:[]},id);
+ }
+ assert.deepEqual(initial,before);assert.deepEqual(world.factionPeople,catalog);
+});
+
+test('A3 setup r7: existing pet uses its species body and native ownership books without withdrawing wildlife',()=>{
+ const {document,bindings}=applyIntentSetup(engine,initial,v2Row('009').setup),d=engine.primitiveDraft(document),id='a3v2_009_goat';
+ const pet=document.state.creatures[id],species=world.monsters.find(m=>m.id===pet.species);
+ assert.equal(pet.species,'monster_bent_horn_goat');assert.equal(pet.level,species.levelRange[0]);
+ assert.ok(pet.hp>0);assert.equal(pet.hp,pet.maxHp);assert.equal(pet.care.hunger,80);assert.equal(pet.care.bond,30);
+ assert.equal(pet.owner,'player');assert.equal(document.state.pets[id].following,true);
+ assert.equal(document.state.created[id].monster,species.id);
+ for(const kind of ['owns','tamed_by'])assert.equal(aliveHoldings(d,{kind,holder:'player',subject:id}).length,1);
+ assert.equal(d.get('holdings','rows',bindings.a3v2_009_owns,'terms','share'),1);
+ assert.deepEqual(Object.fromEntries(Object.entries(document.state.records).filter(([,r])=>r.category==='ecology')),Object.fromEntries(Object.entries(initial.state.records).filter(([,r])=>r.category==='ecology')));
+ assert.equal(document.state.inventory.item_oats.quantity,1);
+});
+
+test('A3 setup r7: office license aliases bind to native rows and fear stays a finite, non-incapacitating effect',()=>{
+ const office=applyIntentSetup(engine,initial,v2Row('057').setup),id=office.bindings.a3v2_057_arrest_office;
+ assert.equal(office.document.holdings.entities[id].kind,'office');
+ assert.equal(office.document.holdings.entities[id].facts.onDuty,true);
+ assert.deepEqual(office.document.holdings.entities[id].facts.authority,v2Row('057').setup.instances[0].authority);
+ assert.equal(office.document.holdings.rows[office.bindings.a3v2_057_holds_office].subject,id);
+ assert.equal(office.document.state.npcs.npc_bs_032_1.location,'bld_bs_watch');
+ assert.equal(office.document.state.player.onDuty,undefined);
+ const {document}=applyIntentSetup(engine,initial,v2Row('070').setup),effects=Object.values(document.state.effects).filter(e=>e.status==='fear');
+ assert.equal(effects.length,1);assert.equal(effects[0].power,1);assert.equal(effects[0].expires,630);
+ assert.equal(capacity({engine,document},'player','cast').level,'full');
+ assert.equal(magicStatusStats(engine.primitiveDraft(document),'player').hit,-0.02);
+});
+
+test('A3 setup r7: native custody keeps conversation and capacity while preventing ordinary departure',()=>{
+ for(const id of ['089','090','091']){
+  const {document}=applyIntentSetup(engine,initial,v2Row(id).setup),context={engine,document},d=engine.primitiveDraft(document);
+  const custody=aliveHoldings(d,{kind:'guest_of',holder:'player'}).filter(h=>h.variant==='detained');
+  assert.equal(custody.length,1,id);assert.equal(custody[0].subject,'loc_bs');
+  assert.equal(capacity(context,'player','talk').level,'full');assert.equal(canAct(context,'player','talk').allowed,true);
+  assert.equal(canAct(context,'player','move',{to:'loc_bs_nanshi'}).allowed,false);
+  assert.equal(canAct(context,'player','holding.close',{closing:{holding:custody[0].id,reason:'escaped'}}).allowed,false);
+  assert.equal(document.state.player.confined,undefined);
+ }
+ const {document}=applyIntentSetup(engine,initial,v2Row('106').setup),shares=aliveHoldings(engine.primitiveDraft(document),{kind:'share',subject:'faction_saltboat'});
+ assert.equal(document.state.npcs.npc_w5_saltboat_leader.location,'bld_bs_guild');
+ assert.equal(document.state.created.npc_w5_saltboat_leader.age,48);
+ assert.deepEqual(shares.map(h=>[h.holder,h.terms.share]).sort(),[['npc_w5_saltboat_leader',0.9],['player',0.1]]);
+});
+
+test('A3 setup r7: unknown structure and native share violations remain unmet, never narrative success',()=>{
+ const unknown=applyIntentSetup(engine,initial,{status:{player:{confined:true,fear:{magnitude:1,remainingMinutes:30,extra:true},onDuty:true}},holdings:[{id:'bad_regime',kind:'guest_of',holder:'player',subject:'loc_bs',terms:{mode:'detained',regime:'unknown'}}],instances:[{id:'unknown_creature',kind:'creature',template:'agent',species:'unknown',location:'loc_hw_fields'}]});
+ for(const item of ['status.player.confined','status.player.fear','status.player.onDuty','holdings[0]','instances[0]'])assert.ok(unknown.setupUnmet.some(r=>r.item===item),item);
+ const setup=structuredClone(v2Row('106').setup);setup.holdings[1].terms.share=1;
+ const badShares=applyIntentSetup(engine,initial,setup);
+ assert.ok(badShares.setupUnmet.some(r=>r.item==='holdings[1]'));
+ assert.equal(aliveHoldings(engine.primitiveDraft(badShares.document),{kind:'share',subject:'faction_saltboat'}).reduce((n,r)=>n+r.terms.share,0),0.1);
+ assert.equal(badShares.document.state.created.unknown_creature,undefined);
 });
 
 test('A3 setup: abilities populate native player knowledge and certification consumers',async()=>{
