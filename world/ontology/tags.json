@@ -5,6 +5,10 @@
  "version": 1,
  "note": "事件与实体标签词汇表（I18）。family 为标签族；pattern=true 表示“族:*”整族登记；broader 为上位词（12 §12.3.3）。mark:* 为兜底实体标签，goods:* 为商品类。trait 族由 traits.mjs 的 ELEMENTS/CREATURE_TAGS/FLAMMABLE 在加载时并入，不在此重复。",
  "entries": [
+  {"id":"unconsented","family":"event","source":"design","label":"未经有效同意","broader":"attempt"},
+  {"id":"unconsented:purpose","family":"event","source":"design","label":"同意用途不符","broader":"unconsented"},
+  {"id":"unauthorized_disposition","family":"event","source":"design","label":"占有人无权处分","broader":"attempt"},
+  {"id":"capacity:limited","family":"event","source":"design","label":"限制行为能力","broader":"attempt"},
   {"id":"business","family":"event","source":"code"},
   {"id":"contest","family":"event","source":"code"},
   {"id":"lottery","family":"event","source":"code"},
