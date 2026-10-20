@@ -14,10 +14,10 @@
 //                                 <记录键>|coin_river|escrow      records.<id>.escrow / state.quests.<id>.escrow / state.projects.<id>.public.escrow /
 //                                                                 records.organization_proposal.escrow / records.settlement_trade.escrowCopper
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）带用途，用途即流量类别（wage、tax、trade、interest、bounty、fee……）。
-import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,LEDGER_COIN} from './ledger.mjs';
+import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,registerTransferProjection,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
-import {holdingSet,declareHoldingWriter} from './holdings.mjs';
+import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
 import {priceRead} from './stock.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
@@ -100,6 +100,7 @@ export function legacyMoney(engine,state){
     for(const [key,row] of Object.entries(records)){
         if(!row||typeof row!=='object')continue;
         const c=row.category;
+        if(c==='money_account'){add(row.account,row.coins);continue;}
         if(c==='obligation_collection'){add(row.account,row.coins);continue;}
         if(c==='protocol_assets'){add(purse(null,row.owner),row.coins);for(const [purpose,n]of Object.entries(row.funds??{}))add(accountKey(row.owner,COIN,purpose),n);}
         else if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])add(treasury(id),row.treasury);}
@@ -150,3 +151,69 @@ export function bookSide(d,account,delta,books){
 // ---- S1c 价格输入读账户：货币量（现款、公库）经账户余额读取，旧字段只作过渡期对照 ----------
 // account: 账户键（partyAccount / purse / treasury …）；legacy: 取旧字段的函数。见 stock.priceRead。
 export const coinRead=(src,{point,account,legacy})=>priceRead(src,{point,scope:'coin',account,legacy});
+
+// Opening facts belong to an account, not to its owner's personal purse.
+export const dedicatedCoinKey=(owner,purpose)=>`money_account:${accountKey(owner,COIN,purpose)}`;
+export function dedicatedCoinAccount(state,owner,purpose){return state.records?.[dedicatedCoinKey(owner,purpose)]??null;}
+registerTransferProjection((d,{from,to,fromAccount:a,toAccount:b,amount,eventId,writer})=>{
+    const dedicated=ac=>ac.resource===COIN&&['counter','legal_treasury'].includes(ac.purpose);
+    if(!dedicated(a)&&!dedicated(b)||!d.document?.state)return;
+    const origin=dedicated(a)?dedicatedCoinAccount(d.get('state'),a.owner,a.purpose):null;
+    const destination=dedicated(b)?dedicatedCoinAccount(d.get('state'),b.owner,b.purpose):null;
+    if(origin)d.set(['state','records',dedicatedCoinKey(a.owner,a.purpose),'coins'],d.get('ledger','accounts',from)??0);
+    if(destination)d.set(['state','records',dedicatedCoinKey(b.owner,b.purpose),'coins'],d.get('ledger','accounts',to)??0);
+    else if(origin&&dedicated(b)&&a.purpose===b.purpose&&!b.owner.startsWith('sink:')&&!b.owner.startsWith('src:')){
+        d.set(['state','records',dedicatedCoinKey(b.owner,b.purpose)],{category:'money_account',owner:b.owner,purpose:b.purpose,account:to,
+            coins:d.get('ledger','accounts',to)??0,originAccount:from,transferredBy:eventId,...(origin.seat?{seat:origin.seat}:{})});
+    }
+    // transition.bookTransfer cannot mirror an unknown dedicated source. Its
+    // ordinary destination must still receive the single real booked payment.
+    const procedural=d.get('state','records',`protocol_assets:${a.owner}`,'funds',a.purpose)??0;
+    if(origin&&writer==='transition'&&procedural<amount&&to===partyAccount(d.engine,d.get('state'),b.owner))mirrorPartyCoins(d,d.engine,b.owner,amount,eventId,'money');
+});
+// A counter is this owner's free cash, distinct from earmarked public funds.
+export function counterClaimAccounts(d,owner){
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter'),amount=row&&Math.min(row.coins,d.get('ledger','accounts',row.account)??0);
+    return amount>0?[[row.account,amount]]:[];
+}
+declareLedgerWriter('money-snapshot',{sources:{'src:genesis':{[COIN]:Infinity}},sinks:['sink:pack_removed']});
+export function restoreCoinAccount(d,engine,{owner,purpose,balance:amount,sourceEvent,seat,balanceMode}){
+    const state=d.get('state'),event=state.records?.[sourceEvent],key=accountKey(owner,COIN,purpose);
+    if(!Number.isSafeInteger(amount)||amount<0||!['counter','legal_treasury','purse','vault','treasury'].includes(purpose)||
+        !event||event.category!=='world_event'||event.verb!=='opening_balance'||event.minute>state.minute||
+        event.payload?.owner!==owner||event.payload.resource!==COIN||event.payload.balance!==amount||
+        event.payload.purpose!==undefined&&event.payload.purpose!==purpose||
+        ![undefined,'ensure_existing'].includes(balanceMode))throw Error('Invalid coin account opening source');
+    const known=owner==='player'||state.npcs?.[owner]||state.creatures?.[owner]||engine.byId.has(owner)||engine.rules.economy?.credit?.banks?.some(b=>b.id===owner);
+    if(!known||seat!==undefined&&!engine.world.locations.some(l=>l.id===seat))throw Error('Unknown account owner or seat');
+    const dedicated=['counter','legal_treasury'].includes(purpose),record=dedicatedCoinKey(owner,purpose),opening=`money_opening:${sourceEvent}`,old=state.records?.[opening]??state.records?.[record];
+    if(old){if(old.account===key&&old.sourceEvent===sourceEvent&&old.openingBalance===amount&&old.seat===seat)return key;throw Error('Account opening already exists');}
+    if(!dedicated&&key!==partyAccount(engine,state,owner))throw Error('Account purpose does not match native owner');
+    const before=legacyMoney(engine,state).get(key)??0,value=balanceMode==='ensure_existing'?before:amount;
+    if(dedicated)holdingSet(d,engine,['state','records',record],{category:'money_account',owner,purpose,account:key,coins:value,openingBalance:amount,sourceEvent,...(seat?{seat}:{})},'money');
+    else mirrorPartyCoins(d,engine,owner,value-before,sourceEvent,'money');
+    const delta=value-before;
+    if(delta>0)transfer(d,{from:source('genesis','opening'),to:key,amount:delta,writer:'money-snapshot',eventId:sourceEvent});
+    else if(delta<0)transfer(d,{from:key,to:sink('pack_removed','opening'),amount:-delta,writer:'money-snapshot',eventId:sourceEvent});
+    holdingSet(d,engine,['state','records',opening],{category:'money_opening',account:key,sourceEvent,openingBalance:amount,...(seat?{seat}:{})},'money');
+    return key;
+}
+// Private counter spending is an owner's action. It cannot grant loan consent.
+export function spendCounterCoins(d,engine,{owner,actor,to,amount,eventId}){
+    if(typeof eventId!=='string'||!eventId)throw Error('Counter payment requires eventId');
+    const receipt=`counter_payment:${eventId}`,old=d.get('state','records',receipt);
+    if(old){if(old.owner!==owner||old.actor!==actor||old.to!==to||old.amount!==amount)throw Error('Counter payment eventId reused');return structuredClone(old.result);}
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(actor!==owner||!row||!Number.isSafeInteger(amount)||amount<1||row.coins<amount||!ledgerActive(d)||(d.get('ledger','accounts',row.account)??0)<amount||
+        !(to==='player'||d.get('state','npcs',to)||d.get('state','creatures',to)))throw Error('Counter payment requires its owner and sufficient funds');
+    const person=actor==='player'?d.get('state','player'):d.get('state','npcs',actor)??d.get('state','creatures',actor);
+    const target=to==='player'?d.get('state','location'):d.get('state','npcs',to,'location')??d.get('state','creatures',to,'location');
+    if(!person||!isEffective(engine,d,owner)||person.hp<=0||person.capacity==='none'||['死亡','昏迷','失能'].includes(person.status)||
+        target!==d.get('state','location')||row.seat!==undefined&&row.seat!==d.get('state','location')||aliveHoldings(d,{kind:'frozen',subject:row.account}).length||
+        (actor==='player'?d.get('state','location'):person.location)!==d.get('state','location'))throw Error('Counter owner cannot act here');
+    moveCoins(d,{from:row.account,to:partyAccount(engine,d.get('state'),to),amount,writer:'money-snapshot',eventId});
+    mirrorPartyCoins(d,engine,to,amount,eventId,'money');
+    const result={from:row.account,amount};
+    holdingSet(d,engine,['state','records',receipt],{category:'counter_payment',owner,actor,to,amount,result},'money');
+    return result;
+}

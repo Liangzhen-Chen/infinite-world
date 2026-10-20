@@ -84,6 +84,8 @@ import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
+import {hasSnapshotDeposit,withdrawSnapshotDeposit} from './finance-bank.mjs';
+import {counterClaimAccounts} from './money.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -187,6 +189,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 export class WorldEngine {
     constructor(world) {
         this.obligationClaimEnforceable=claimEnforceable;
+        this.protocolAdditionalClaimAccounts=(d,owner)=>counterClaimAccounts(d,owner);
         this.protocolScheduleAt=scheduleAt;
         this.protocolLiquidatePledge=(d,row)=>{
             if(!row.pledgeRecord)return 0;
@@ -531,6 +534,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta,{books});
     }
     async trade(d,args,id) {
+        if(args.operation==='withdraw'&&hasSnapshotDeposit(this,d,args))return withdrawSnapshotDeposit(d,this,args,id);
         if(args.operation==='transport')return transportAction(d,this,args,id);
         if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);

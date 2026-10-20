@@ -7,7 +7,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {ledgerActive} from './ledger.mjs';
 import {registerEarnedClaim,registerLoss,recoverLoss,lossView,settleClaim} from './obligation-claims.mjs';
 import {dueObligation} from './obligation-runtime.mjs';
-import {obligationRows} from './obligation-state.mjs';
+import {obligationRow,obligationRows} from './obligation-state.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {store,freight,bookStock} from './stock.mjs';
 // S1b: 托运期间货物记在 transport:<id>|<物品>|freight，交付时转给收货人（组织公库或行囊）。
@@ -327,8 +327,20 @@ export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}}
    }
   }});
 }
+export function deliveryClaimPremises(d,e,{id,actor='player'}){
+ const s=d.get('state'),row=obligationRow(s,id);
+ if(row?.kind!=='delivery'||row.snapshotVersion!==1||row.creditor!==actor)throw Error('Delivery inspection requires its existing customer claim');
+ const cargo=s.itemInstances?.[row.subject];if(!cargo)throw Error('Historical delivery cargo is missing');
+ const documents=Object.entries(s.itemInstances??{}).filter(([,p])=>p.owner===actor&&p.document?.obligation===row.id&&p.document.valid!==false).map(([id,p])=>({id,source:p.document.sourceEvent,links:[...p.document.links]}));
+ return {id:row.id,carrier:row.debtor,customer:row.creditor,subject:row.subject,delivered:row.delivered,lossAssessed:row.lossAssessed,
+  condition:cargo.maxDurability?100*cargo.durability/cargo.maxDurability:null,documents,compensation:null};
+}
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='inspect'&&obligationRow(d.get('state'),asset)?.snapshotVersion===1){
+  if(args.actor!==undefined&&args.actor!=='player')throw Error('Delivery inspection requires its player customer');
+  return deliveryClaimPremises(d,e,{id:asset,actor:'player'});
+ }
  if(task==='forward'){
   if(args.consent!==true)throw Error('远期买卖须有在场卖方本次同意');
   return openGoodsObligation(d,e,{kind:'forward',debtor:e.resolve(args.seller),creditor:'player',item:e.resolve(args.item,'item'),quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location:args.location?e.resolve(args.location):d.get('state','location')},eventId);

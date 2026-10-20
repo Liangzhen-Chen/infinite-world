@@ -5,6 +5,8 @@ import {prepareSummonWork,applySummonWork}from'./magic-ritual.mjs';
 import { servantCarryWater,environmentFeatures } from './environment.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import{effectiveProficiency}from'./professions.mjs';
+import {obligationRow,obligationView} from './obligation-state.mjs';
+import {closeObligation,endSummonUpkeep} from './obligation-runtime.mjs';
 
 export const summonTemplates=Object.freeze({
  dust_servant:{tasks:['clean'],maximumPower:100,maximumDuration:30,upkeepMp:1,upkeepMinutes:5,work:true},
@@ -99,6 +101,7 @@ export function applySummon(d, prepared, eventId) {
 function end(d, id, effect, status, minute) {
     const record = d.get('state', 'records', effect.contract);
     if (record?.category !== 'summon_contract' || record.effect !== id || record.owner !== effect.owner) throw new Error('召唤契约记录不一致，停止结算');
+    if(record.upkeepObligation)endSummonUpkeep(d,d.engine,{id:record.upkeepObligation,summon:id,minute,reason:status});
     d.set(['state', 'records', effect.contract], { ...record, status, ended: minute });
     for(const[key,e]of Object.entries(d.get('state','effects')))if(e.summonSource===id)d.remove(['state','effects',key]);
     d.remove(['state', 'effects', id]);
@@ -148,7 +151,16 @@ export function summonAction(d, args, eventId) {
     args = { ...args, summon: resolveSummon(this, d, args.summon) };
     const effect = d.get('state', 'effects', args.summon);
     if (effect?.kind !== 'summon' || effect.owner !== 'player' || effect.expires <= d.get('state', 'minute')) throw new Error('没有仍有效的自有召唤契约');
-    if (operation === 'dismiss') { end(d, args.summon, effect, '和平解离', d.get('state', 'minute')); return { summon: args.summon, dismissed: true }; }
+    if (operation === 'dismiss') {
+      const contract=d.get('state','records',effect.contract),id=contract?.upkeepObligation;
+      if(id){
+        const row=obligationRow(d.get('state'),id),view=obligationView(d.get('state'),id);
+        if(row?.kind!=='upkeep'||row.debtor!==effect.owner||row.creditor!==args.summon||view.closed||view.owed||
+            row.terms.peacefulDismissal!==true||row.terms.active!==true||row.terms.overdue!==false||row.terms.thirdPartyRights!==false)throw Error('Upkeep terms do not allow peaceful dismissal');
+        closeObligation(d,this,{id,actor:effect.owner,party:effect.owner,reason:'peaceful_dismissal'},eventId);
+      }
+      end(d, args.summon, effect, '和平解离', d.get('state', 'minute'));return {summon:args.summon,dismissed:true,...(id?{obligation:id}:{})};
+    }
     if(operation==='guard'){
       if(!effect.terms.tasks.includes('guard')||effect.location!==d.get('state','location')||!Number.isSafeInteger(effect.guardReserve)||effect.guardReserve<1)throw Error('没有可用的在场守卫额度');
       if(effect.waterFeature)waterSite(d,this,effect.waterFeature,args.authorization);

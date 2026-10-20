@@ -18,8 +18,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
-import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {isPhysicallyDead,isGone} from './lifecycle-state.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
 declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
@@ -105,6 +105,24 @@ function blocked(e,state,b,minute){
     if(!b||state.records?.[b.id]?.status==='倒闭')return true;
     const sid=placeSettlement(e,state,b.location).value;
     return Object.values(state.records??{}).some(r=>r.category==='war_disruption'&&r.since<=minute&&(r.until??Infinity)>minute&&r.locations?.some(l=>l===b.location||l===sid));
+}
+export function hasSnapshotDeposit(e,d,args){
+    const b=derivedBankAt(e,d.get('state'),d.get('state','location'));
+    return Boolean(b&&obligationRows(d.get('state')).some(o=>o.snapshotVersion===1&&o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'));
+}
+export function withdrawSnapshotDeposit(d,e,args,eventId){
+    return obligationTransaction(d,()=>{
+        const {b,keeper}=openBank(d,e,args.seller),s=d.get('state');
+        const claims=obligationRows(s).filter(o=>o.snapshotVersion===1&&o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'&&!obligationView(s,o).closed&&(!args.debt||o.id===args.debt));
+        if(claims.length!==1)throw Error('Withdrawal requires one identified active deposit');
+        const claim=claims[0],amount=financeInt(args.coins,1,obligationView(s,claim).owed,'Withdrawal amount');
+        if(!claim.terms.withdrawable||blocked(e,s,b,s.minute))throw Error('Deposit cannot currently be withdrawn');
+        const papers=Object.entries(s.itemInstances??{}).filter(([id,p])=>p.document?.obligation===claim.id&&p.document.valid===true&&p.document.namedHolder==='player'&&p.document.sourceEvent===claim.source&&
+            (p.owner==='player'||p.owner===null&&p.location===s.location&&aliveHoldings(d,{kind:'owns',holder:'player',subject:id}).length)&&p.durability>0&&!isGone(e,d,id));
+        if(papers.length!==1)throw Error('Withdrawal requires the original valid named deposit receipt');
+        const result=settleObligation(d,e,{id:claim.id,amount,actor:keeper,payer:b.id},eventId);
+        return {...result,withdrawn:amount,deposit:claim.id,document:papers[0][0]};
+    });
 }
 export function borrowerTerms(d,e,borrower,principal,days){
     const c=cfg(e),state=d.get('state'),n=state.npcs?.[borrower],base=state.created?.[borrower]??e.byId.get(borrower);
@@ -229,6 +247,14 @@ export function bankTrade(d,e,args,id){
         return {...loan,contract:loan.debt};
     }
     if(op==='redeem'){
+        const restored=obligationRow(d.get('state'),args.contract);
+        if(restored?.snapshotVersion===1&&restored.snapshotCollateral){
+            if(restored.debtor!=='player'||restored.creditor!==b.id||now>=restored.terms.redeemDeadline||obligationView(d.get('state'),restored).closed)throw Error('Historical pawn is not redeemable by this customer here');
+            const amount=obligationView(d.get('state'),restored).owed;
+            if(args.coins!==undefined&&args.coins!==amount)throw Error('Redemption requires the complete signed balance');
+            const result=settleObligation(d,e,{id:restored.id,actor:'player',amount},id);
+            return {...result,debt:restored.id,repaid:result.transferred,pledgeReturned:restored.snapshotCollateral};
+        }
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status==='流当'||pawnDeadline(debt,e,now,d.get('state'))<=now)throw Error('当票不存在或已经流当');
         return repayCredit(d,e,{seller:keeper,debt:args.contract},id);
     }
