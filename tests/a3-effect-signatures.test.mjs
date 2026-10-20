@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -68,7 +69,7 @@ test('A3 manufacturing: both successful and failed batches preserve actual stock
  }
  assert.deepEqual([...observed].sort(),[false,true]);
  const empty=structuredClone(document);empty.state.inventory.item_wood.quantity=0;empty.ledger=openLedger(engine,empty);
- const snapshot=structuredClone(empty);await assert.rejects(engine.reduce(empty,craft(10,'batch-empty')),/不足/);assert.deepEqual(empty,snapshot);
+ const snapshot=structuredClone(empty);const refusal=await assertActionRejected(engine.reduce(empty,craft(10,'batch-empty')),/不足/,null);assert.deepEqual(empty,snapshot);
 });
 
 test('A3 rest: awake rest recovers body needs at the registered rate and retains rest mode',async()=>{

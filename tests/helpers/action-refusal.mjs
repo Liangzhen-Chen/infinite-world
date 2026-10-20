@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 // original reason checks, and require the stronger zero-effects contract.
 export async function assertActionRejected(promise,reason,code='E-ACTION-PRECONDITION'){
  const value=await promise,reduced=value.out??value,receipt=reduced.result?.receipt??reduced.receipt;
- assert.equal(receipt?.status,'rejected');assert.equal(receipt.code,code);
+ assert.equal(receipt?.status,'rejected');if(code!==null)assert.equal(receipt.code,code);else assert.match(receipt.code,/^E-/);
  assert.ok(receipt.reason);
  if(reason)assert.match(receipt.reason,reason);
  assert.deepEqual(receipt.applied,[]);assert.deepEqual(receipt.events,[]);
