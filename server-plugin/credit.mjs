@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
 import {recordsWhere} from './storage.mjs';
@@ -44,7 +45,7 @@ export function counterpart(d,engine,name,{consent,minutes=5}){
     if(id==='player'||!id.startsWith('npc_')||!awake(row)||row.location!==d.get('state','location'))throw Error('契约对方须实际在场且清醒');
     if(personConstraint(engine,d.get('state'),id))throw Error('契约对方正在依法拘留，不能提供服务');
     if((personAge(engine,d.get('state'),id).value??0)<18)throw Error('未成年人不能订立借贷、雇佣或合伙契约');
-    if(consent!==true)throw Error('契约对方必须明确同意本次条款');
+    if(consent!==true)reject('E-ACTION-CONSENT','契约对方必须明确同意本次条款',{missing:['需要契约对方对本次条款的明确同意'],repair:['先向对方提出本次条款，取得明确同意后重试']});
     engine.assertNpcObligationAction(d,['player',id],{minutes});engine.assertNpcAutonomyAction(d.get('state'),['player',id],{minutes});
     const now=d.get('state','minute');
     for(let at=now;at<now+Math.max(1,minutes);){
@@ -250,7 +251,9 @@ export async function creditTrade(d,args,eventId){
             row.interestAt??=d.get('state','minute');
             moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount,writer:'credit',eventId});d.set(['state','player','coins'],coins-amount);detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper};
         }else if(op==='withdraw'){
-            const amount=int(args.coins,1,row.accounts.player??0,'支取铜钱');if(row.coins<amount)throw Error(`${b.name}现银不足，暂不能兑付`);
+            const balance=row.accounts.player??0;
+            if(!Number.isSafeInteger(args.coins)||args.coins<1||args.coins>balance)reject('E-ACTION-WITHDRAWAL',`支取铜钱必须在1到${balance}之间`,{missing:['支取数额须大于零且不超过当前存款'],repair:['核对当前存款，存入钱款或调低支取数额后重试']});
+            const amount=args.coins;if(row.coins<amount)throw Error(`${b.name}现银不足，暂不能兑付`);
             moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount,writer:'credit',eventId});row.coins-=amount;row.accounts.player-=amount;d.set(['state','player','coins'],coins+amount);detail={withdrawn:amount};
         }else{
             const item=engine.resolve(args.item,'item'),c=coinage(engine,item),quantity=int(args.quantity,1,100000,'兑换枚数');

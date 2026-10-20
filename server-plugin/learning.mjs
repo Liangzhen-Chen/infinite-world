@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -87,7 +88,7 @@ export function learn(d,args,id){
         const npc=d.get('state','npcs',source);
         if(!npc||npc.location!==d.get('state','location'))throw new Error('导师不在场');
         if(isPhysicallyDead(this,d,source))throw new Error('导师已经死亡');
-        if(!personTeaching(this,d.get('state'),source,entity,{stage}))throw new Error('导师没有教授这项内容的资格');
+        if(!personTeaching(this,d.get('state'),source,entity,{stage}))reject('E-ACTION-TEACHER','导师没有教授这项内容的资格',{missing:['需要具备教授该内容资格的导师'],repair:['寻找能教授该内容且在场的导师']});
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
         assertNpcService(d,this,source,'teach',minutes);
         if(d.get('state','player','coins')<fee)throw new Error('教学费不足');
@@ -113,7 +114,7 @@ export function learn(d,args,id){
         minutes=integer(Math.max(book.readingMinutes??0,this.rules.books.readingMinutes[bookStage]),'阅读时间',43200);
         sourceRecord={type:'book',id:source,author:book.author,edition:book.edition,...(copied?{copy:{instance:held.unit.id,grade:copied.grade,edition:copied.edition,chain:copied.chain}}:{})};
     }else throw new Error('学习需要合格导师、实际持有的技能书或对应的已登记研究成果');
-    if(d.get('state',partition,entity))throw new Error(`已经学会${catalog.name}`);
+    if(d.get('state',partition,entity))reject('E-ACTION-ALREADY-KNOWN',`已经学会${catalog.name}`,{missing:[`已经掌握${catalog.name}，无需重复学习`],repair:['选择尚未学会的内容，或练习已掌握的技能']});
     if(minutes<1)throw new Error('学习必须花费实际时间');
     const start=d.get('state','minute');
     if(fee){

@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
@@ -162,7 +163,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     if(available.services!==null&&!available.services.includes(service)){
         const next=nextNpcService(engine,npcId,state.minute,service,state);
         const plan=next?`；按作息计划在${engine.calendar(next.minute).text}于${engine.byId.get(next.location)?.name??next.location}接待，届时仍需确认在场且清醒`:'';
-        throw new Error(`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`);
+        reject('E-ACTION-SERVICE',`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`,{missing:[`对方需要在场、清醒且正在提供${service==='teach'?'授课':'交易'}服务`],repair:['按原因中列出的作息时间和地点寻找对方，再确认其在场且清醒']});
     }
     // Validate the whole action before any money, time or inventory changes.
     for(let cursor=state.minute;cursor<state.minute+minutes;){

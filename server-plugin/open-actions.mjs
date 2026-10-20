@@ -64,6 +64,12 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   }
   const call={tool:'world_act',eventId:`${input.eventId.slice(0,88)}:step:${index}:${digest({eventId:input.eventId,args:input.args}).slice(0,8)}`,args:{action:step.action,slots}};
   const reduced=await engine.reduce(current,call,{openProposal:{proposal:input.args,prepared}}),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
+  // Reject the whole sequence, including earlier staged costs and effects.
+  if(receipt.status==='rejected'){
+   const routing={...prepared,...receipt.routing,status:'sequence',intent:input.args.intent,proposal:structuredClone(input.args),failedStep:index,steps:prepared.steps,fallback:{...receipt.routing?.fallback,intent:input.args.intent}};
+   const rejected={...receipt,eventId:input.eventId,routing};
+   return preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}};
+  }
   current=applyPatches(current,reduced.patches);patches.push(...reduced.patches);receipts.push({...receipt,status:'committed'});
  }
  const applied=[],resources=[];

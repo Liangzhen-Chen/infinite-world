@@ -435,14 +435,18 @@ export async function executeIntent(engine,initial,row){
   let quote=builder.action?await builder.preview():null;
   // Model the UI's explicit “leave a trace” choice, then select a form actually
   // offered by the current scene. Requested fictional forms are not enum IDs.
-  const fallback=builder.feedback?.fallback;
+  // A primitive-policy refusal throws and has no routing receipt. The UI still
+  // offers the catalog's explicit trace action alongside creative proposals.
+  // Select that separate action from the real menu, never forward the failed
+  // primitive's facts (e.g. an object's name) as mark facts.
+  const fallback=builder.feedback?.fallback??(actionId==='open:proposal'&&slots.effects?.some(e=>e.op==='create'&&e.kind==='mark')?{action:'open:leave_mark',available:true}:null);
   if(!quote&&fallback?.available){
    const mark=worldActions(engine.scoped(document),document,{query:fallback.action,target,limit:100}).actions.find(a=>a.id===fallback.action);
-   if(mark){
+   if(mark&&!mark.blocked&&mark.permission?.allowed!==false){
     const requestedMark=slots.effects?.find(e=>e.op==='create'&&e.kind==='mark');
     const forms=mark.slots.find(s=>s.name==='form')?.options??[];
     const form=forms.find(f=>f.value===requestedMark?.facts?.form)?.value??forms[0]?.value;
-    fill(mark,{intent:slots.intent??row.intent,form,tags:requestedMark?.tags??[engine.world.openTagging.default]});
+    fill(mark,{intent:slots.intent??row.intent,form,...(requestedMark?.facts?.zone!==undefined?{zone:requestedMark.facts.zone}:{}),tags:requestedMark?.tags??[engine.world.openTagging.default]});
     quote=await builder.preview();
    }
   }
@@ -467,7 +471,7 @@ export async function executeIntent(engine,initial,row){
    else if(prepared?.status==='needs_alternative'&&prepared.fallback?.available){
     // Accept the native alternative explicitly; availability earns no credit.
     const mark=(input.args?.effects??[]).find(e=>e.op==='create'&&e.kind==='mark');
-    const slots={intent:prepared.fallback.intent,form:mark?.facts?.form??engine.world.openActionRules.mark.forms[0],tags:mark?.tags??[engine.world.openTagging.default]};
+    const slots={intent:prepared.fallback.intent,form:mark?.facts?.form??engine.world.openActionRules.mark.forms[0],...(mark?.facts?.zone!==undefined?{zone:mark.facts.zone}:{}),tags:mark?.tags??[engine.world.openTagging.default]};
     const fallback={tool:'world_act',eventId:`${eventId}-mark`,args:{action:prepared.fallback.action,slots}};
     preview=await invokePreview(fallback);
     if(receiptOf(preview)?.status==='preview')await commit(fallback);
@@ -492,7 +496,8 @@ export async function executeIntent(engine,initial,row){
  const requested=(row.proposal??(row.input?.tool==='world_propose'?row.input.args:null))?.effects;
  const measured=signatureEffects(effects,receipt??{},requested);
  const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(measured.effects.map(e=>e.op)),signatureEffects:measured.effects,excludedCosts:measured.excluded,unmatchedCosts:measured.unmatchedCosts,refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
- Object.assign(actual,{setupUnmet,preview:previews[0]??null,previews});
+ // Read the refusal contract; a routed refusal never earns execution credit.
+ Object.assign(actual,{routed:receipt?.routed??null,reasonCode:receipt?.code??null,reason:receipt?.reason??null,missing:receipt?.missing??[],repair:receipt?.repair??[],setupUnmet,preview:previews[0]??null,previews});
  return {actual,receipt,document,preview,prepared,effects,submitted,setupUnmet,requested};
 }
 

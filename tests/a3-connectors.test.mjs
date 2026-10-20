@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -310,7 +311,11 @@ test('A3 connectors: permission query uses normalized legacy families and primit
  const before=structuredClone(f.document);
  for(const action of [legacy.id,primitive.id]){
   const result=f.engine.actionPermission(f.document,{action});assert.equal(result.allowed,false);assert.equal(result.checks[0].family,'move');assert.equal(result.checks[0].regime,'a3_detained');
-  await assert.rejects(f.engine.reduce(f.document,{tool:'world_act',eventId:action,args:{action,slots:{}}}),/羁押|custody|detain|拘/);
+  const execution=f.engine.reduce(f.document,{tool:'world_act',eventId:action,args:{action,slots:{}}});
+  // Legacy business Error follows 06 §6.10.4; the primitive policy exception
+  // retains its existing thrown contract and custody reason.
+  if(action===legacy.id)await assertActionRejected(execution,/羁押|custody|detain|拘/);
+  else await assert.rejects(execution,/羁押|custody|detain|拘/);
  }
  assert.deepEqual(f.document,before);
 });

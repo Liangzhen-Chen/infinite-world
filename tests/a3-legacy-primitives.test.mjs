@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -63,7 +64,7 @@ test('A3 legacy receipt: buy preview/commit/reload use actual two-sided postings
  const retry=await engine.reduce(JSON.parse(JSON.stringify(after)),input);assert.deepEqual(retry.patches,[]);assert.equal(retry.result.receipt.duplicate,true);assert.equal(retry.result.duplicate,true);
  await assert.rejects(engine.reduce(after,call('core:trade.buy',{seller:SELLER,item:BREAD,quantity:1},input.eventId)),{code:'E-PRIMITIVE-DUPLICATE'});
  const poor=structuredClone(document);poor.state.player.coins=0;poor.ledger.accounts[money.from]=0;const snapshot=structuredClone(poor);
- await assert.rejects(engine.reduce(poor,{...input,eventId:'legacy-poor'}));assert.deepEqual(poor,snapshot);
+ await assertActionRejected(engine.reduce(poor,{...input,eventId:'legacy-poor'}));assert.deepEqual(poor,snapshot);
 });
 
 test('A3 legacy receipt: ordering and eating retains purchase and consumption even when bag net change is zero',async()=>{
@@ -98,7 +99,7 @@ test('A3 legacy receipt: teacher fee has A3-A provenance, lesson outcome equals 
  const learn=r.applied.find(e=>e.op==='learn'&&e.subject===SKILL);assert.equal(learn.learningSource,TEACHER);assert.equal(learn.mode,'teacher');assert.equal(learn.signatureKind,'person');assert.equal(learn.result.after.success,Boolean(after.state.skills[SKILL]));
  assert.deepEqual(learn.result.after,after.state.learning[input.eventId]);postings(document,after,r);books(engine,after);
  engine.world.npcs.find(n=>n.id===TEACHER).redLines=['teach'];const before=structuredClone(document);
- await assert.rejects(engine.reduce(document,{...input,eventId:'legacy-refused'}));assert.deepEqual(document,before);
+ await assertActionRejected(engine.reduce(document,{...input,eventId:'legacy-refused'}));assert.deepEqual(document,before);
 });
 
 test('A3 legacy receipt: an explicitly requested teacher payment keeps the actual cost index and source',async()=>{

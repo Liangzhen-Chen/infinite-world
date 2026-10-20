@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -262,7 +263,7 @@ test('A7 实际权限消费：受限出路携带原生拒绝原因，等待保�
  assert.ok(menu.objects.exits.length);assert.ok(menu.objects.exits.every(e=>e.permission.allowed===false&&/羁押/.test(e.permission.reason)));
  assert.ok(move.slots.find(s=>s.name==='destination').options.every(o=>o.permission.allowed===false));
  assert.equal(worldActions(engine,f.document,{query:'core:time'}).actions.find(a=>a.id==='core:time').permission.allowed,true);
- await assert.rejects(f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:move',slots:{destination:menu.objects.exits[0].id}},eventId:'detained-builder'}),/羁押|拘禁|离开/);
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:move',slots:{destination:menu.objects.exits[0].id}},eventId:'detained-builder'}),/羁押|拘禁|离开/);
  assert.deepEqual(f.document,before);
  const native=previewLines({receipt:{status:'preview',cost:{time:7,coins:3,resources:null},check:{dc:14},witnesses:['npc_visible'],permission:{allowed:false,reason:'仍在羁押'}}});
  assert.ok(native.includes('费用：3文'));assert.ok(native.includes('耗时：7分钟'));assert.ok(native.includes('难度：14'));assert.ok(native.includes('已知见证：1人'));assert.ok(native.includes('行为限制：仍在羁押'));

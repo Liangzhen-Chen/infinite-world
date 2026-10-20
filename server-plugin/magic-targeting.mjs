@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {digest}from'./storage.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
@@ -12,7 +13,7 @@ export function validateTargeting(catalog){
  return errors;
 }
 export function assertTargetFacts(catalog,facts){
- if(!facts||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters<0||facts.lineOfSight!==true)throw Error('缺少目标实际距离与无遮挡视线事实');
+ if(!facts||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters<0||facts.lineOfSight!==true)reject('E-ACTION-SPATIAL-FACTS','缺少目标实际距离与无遮挡视线事实',{missing:['需要目标实际距离及无遮挡视线的空间事实'],repair:['先观察并接近目标，确认实际距离和无遮挡视线后重试']});
  if(facts.distanceMeters>catalog.rangeMeters)throw Error('目标超过法术实际射程');
 }
 export function assertMagicTargeting(d,engine,catalog,args,target){

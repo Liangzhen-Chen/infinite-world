@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -78,7 +79,7 @@ export function workstation(d,engine,recipe,args){
         if(!permission||permission.category!=='authorization'||permission.subject!==station.id||permission.action!=='workshop_use'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw new Error('工作台需要有效使用许可');
     }
     const fee=integer(station.fee??0,0,100000,'工坊使用费');
-    if(d.get('state','player','coins')<fee)throw new Error('工坊使用费不足');
+    if(d.get('state','player','coins')<fee)reject('E-ACTION-FUNDS','工坊使用费不足',{missing:['需要足额工坊使用费'],repair:['补足工坊使用费后重试']});
     if(station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||isPhysicallyDead(engine,d,station.owner)||owner.status==='濒死')throw new Error('工坊主人无法履约');
     }

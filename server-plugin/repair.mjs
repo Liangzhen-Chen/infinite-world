@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('repair',{sinks:['sink:consume']});
@@ -26,14 +27,14 @@ export function repair(d,args,eventId){
     const plans=(this.rules.repairs??[]).filter(row=>row.item===item);
     const plan=args.repairPlan?plans.find(row=>row.id===args.repairPlan):plans.length===1?plans[0]:null;
     if(args.repairPlan&&!plan&&plans.length)throw new Error(`维修工序编号未识别；此物品已登记：${plans.map(row=>row.id).join('、')}。请使用已登记编号${plans.length===1?'，或省略repairPlan让唯一工序自动匹配':''}`);
-    if(!plan)throw new Error(plans.length>1?'需要明确维修工序':'该物品没有可用维修工序');
+    if(!plan)reject('E-ACTION-REPAIR-PROCESS',plans.length>1?'需要明确维修工序':'该物品没有可用维修工序',{missing:['需要适用于该物品的维修工序'],repair:['选择已登记维修工序的物品']});
     const before={durability:unit?.durability??held?.durability??definition.durability,
         maxDurability:unit?.maxDurability??held?.maxDurability??definition.durability};
     integer(before.maxDurability,1,100000,'单件耐久上限');integer(before.durability,0,before.maxDurability,'单件耐久');
     if(before.durability===0)throw new Error('物品已经折断或严重损坏，这种修整工序无法修复');
     const maxLoss=integer(plan.maxLoss,0,100,'维修上限损耗'),restore=integer(plan.restore,1,10000,'维修恢复量');
     const newMaximum=before.maxDurability-maxLoss;
-    if(newMaximum<=before.durability)throw new Error('这次修整已没有可恢复的耐久空间');
+    if(newMaximum<=before.durability)reject('E-ACTION-DURABILITY','这次修整已没有可恢复的耐久空间',{missing:['物品需要存在可恢复的耐久损耗'],repair:['选择有可恢复耐久损耗的物品']});
     if(!d.get('state','skills',plan.skill))throw new Error('尚未掌握维修所需技能');
     if(effectiveProficiency(d,this,plan.skill)<plan.minimumProficiency)throw new Error('技能不足以使用这项维修工序');
     const attribute=plan.attribute??this.byId.get(plan.skill)?.attribute??'智力',station=workstation(d,this,plan,args);

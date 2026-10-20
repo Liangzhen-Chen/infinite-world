@@ -1,3 +1,4 @@
+import {reject} from './action-rejection.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 添进炉具的燃料物品折成炉内燃料质量（热工状态），在账本上即消耗。
@@ -131,7 +132,7 @@ export function advanceThermalState(source,model,until,{effects=[],target,burnLi
  if(effects.some(e=>e.kind==='object_process'&&e.operation==='barrier'&&e.target===target&&e.expires<=until)){s.burning=false;s.burnRemainder=0;}
  s.lastMinute=until;validateThermalState(s,model);return s;
 }
-function locate(engine,name,location){const matches=environmentFeatures(engine).filter(f=>f.id===name||f.location===location&&[f.name,...f.aliases??[]].some(n=>normalize(n)===normalize(name??'')));if(matches.length!==1)throw new Error('热对象未登记或名称不唯一');const row=matches[0];if(row.kind!=='object')throw new Error('只支持登记的非活体物件，不兼作水源或土壤');validateThermalModel(row.thermalModel);return row;}
+function locate(engine,name,location){const matches=environmentFeatures(engine).filter(f=>f.id===name||f.location===location&&[f.name,...f.aliases??[]].some(n=>normalize(n)===normalize(name??'')));if(matches.length!==1)reject('E-ACTION-THERMAL-TARGET','热对象未登记或名称不唯一',{missing:['需要唯一的已登记热对象'],repair:['观察当地物件，使用唯一的已登记热对象编号']});const row=matches[0];if(row.kind!=='object')throw new Error('只支持登记的非活体物件，不兼作水源或土壤');validateThermalModel(row.thermalModel);return row;}
 function read(d,row){
  const record=d.get('state','records',recordKey(row.id));if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw new Error('物件状态记录键冲突');
  const state=clone(record?.state??row.state);if(!state||typeof state!=='object')throw new Error('缺少物件初始状态');
