@@ -102,7 +102,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const initialFeature=id=>engine.world.locations.flatMap(place=>place.features??[]).find(f=>f.id===id)?.state;
   const srcBefore=at(before,sourcePath)??initialFeature(result.source),srcAfter=at(after,sourcePath),dstBefore=at(before,destinationPath)??initialFeature(result.destination),dstAfter=at(after,destinationPath);
   if(srcBefore?.waterMl-srcAfter?.waterMl!==result.movedMl||dstAfter?.waterMl-dstBefore?.waterMl!==result.movedMl)reject('E-LEGACY-RECONCILE','Native environment water transfer does not conserve volume');
-  add({op:'transfer',resource:'water',from:result.source,to:result.destination,qty:result.movedMl/1000,unit:'litre',result:{source:{path:sourcePath,before:structuredClone(srcBefore),after:structuredClone(srcAfter)},destination:{path:destinationPath,before:structuredClone(dstBefore),after:structuredClone(dstAfter)}}});
+  add({op:'transfer',resource:'water',from:result.source,to:result.destination,destinationOwner:result.destinationOwner,qty:result.movedMl/1000,unit:'litre',result:{source:{path:sourcePath,before:structuredClone(srcBefore),after:structuredClone(srcAfter)},destination:{path:destinationPath,before:structuredClone(dstBefore),after:structuredClone(dstAfter)}}});
   waterEndpoints.add(result.source);waterEndpoints.add(result.destination);
  }
  if(posted.length){

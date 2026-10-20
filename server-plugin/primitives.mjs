@@ -152,7 +152,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    }else if(policy.executePrimitive){
     result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});
    }else reject('E-PRIMITIVE-CONNECTOR',`原语 ${effect.op} 尚缺执行接点`);
-   const applied={index,...effect,result,tags:[...new Set(tags)],...(actedAs?{actedAs}:{})};
+   // The protocol resolves signatories from the current obligation. Keep those
+   // identities on the adopted effect too; authority/result prose is not proof
+   // of whose claim was actually changed.
+   const obligation=effect.op.startsWith('obligation.')&&result?.id?d.get('state','obligations',result.id):null;
+   const applied={index,...effect,...(obligation?{obligationKind:obligation.kind,debtor:obligation.debtor,creditor:obligation.creditor,from:obligation.debtor,to:obligation.creditor}:{}),result,tags:[...new Set(tags)],...(actedAs?{actedAs}:{})};
    if(result?.check)receipt.check??=result.check;
    if(result?.applied===false||result?.resisted){receipt.trimmed.push({index,effect,reason:result.reason??(result.resisted?'resisted':'opposed_check_failed')});receipt.narrate.mustNot.push({op:effect.op,index});}
    else receipt.applied.push(applied);
