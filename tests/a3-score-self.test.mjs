@@ -25,6 +25,42 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+test('A3 constructor scorer: dynamic proposal uses the UI tool adapter and real four-step receipts',async()=>{
+ // 06 §6.9.5: local composition also includes the dynamic open-proposal duty.
+ // The independently supplied proposal, never expected, provides the inputs.
+ const before=structuredClone(initial),row={...rows[0],expected:expected('open:proposal',['emit'],{constructor:true})};
+ const scored=await scoreRows([row],options),result=scored.results[0];
+ assert.equal(result.scores.constructor,true,JSON.stringify(result));
+ assert.deepEqual(result.actual.builder.steps,[0,1,2,3]);
+ const direct=await executeIntent(engine,initial,{...row,id:'explicit-open-builder',builder:{action:'open:proposal',slots:row.proposal}});
+ assert.equal(direct.actual.builder.ok,true,JSON.stringify(direct.actual));
+ assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool,c.eventId]),[['preview','world_propose','a3-score-explicit-open-builder'],['confirm','world_propose','a3-score-explicit-open-builder']]);
+ assert.deepEqual(direct.actual.signature,['emit']);
+ assert.ok(Object.values(direct.document.state.records).some(r=>r.category==='world_event'&&r.payload?.text==='今天路上有一只鸟'));
+ const wrong=await scoreRows([{...row,expected:{...row.expected,signature:['vital']}}],options);
+ assert.equal(wrong.results[0].actual.builder.ok,true);
+ assert.equal(wrong.results[0].scores.constructor,false);
+ const refused=await scoreRows([{...rows[1],expected:{...row.expected,constructor:true}}],options);
+ assert.equal(refused.results[0].actual.builder.ok,false);
+ assert.equal(refused.results[0].scores.constructor,false);
+ assert.deepEqual(initial,before);
+});
+
+test('A3 constructor scorer: explicit trace alternative selects a catalogued form without fulfilling the original intent',async()=>{
+ const proposal={...rows[3].proposal,effects:[{op:'create',kind:'mark',facts:{name:'飞天茶壶',form:'虚构形态'},tags:['mark:art']}]};
+ const row={...rows[3],proposal,expected:expected('open:leave_mark',['create(thing:mark,mark:art)'],{fallback:true,constructor:true})};
+ const scored=await scoreRows([row],options),result=scored.results[0];
+ assert.equal(result.scores.constructor,true,JSON.stringify(result));
+ // The separate original execution still fails its invalid form; builder
+ // completion is measured from its own committed route, effects and reaction.
+ assert.equal(result.scores.route,false);
+ const direct=await executeIntent(engine,initial,{...row,id:'trace-builder',builder:{action:'open:proposal',slots:proposal}});
+ assert.equal(direct.actual.traceOnly,true);
+ assert.equal(direct.actual.fallback,true);
+ assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool]),[['preview','world_propose'],['preview','world_act'],['confirm','world_act']]);
+ assert.ok(world.openActionRules.mark.forms.includes(direct.document.state.created[direct.actual.entity].form));
+});
+
 test('A3 signature: adopted effects exclude only receipt-proven derived resource costs',async()=>{
  const requested={op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}};
  const cost={op:'transfer',from:'player|item_charcoal|inventory',to:'sink:consume|item_charcoal|action',qty:1};

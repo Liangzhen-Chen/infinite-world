@@ -8,6 +8,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {PRIMITIVE_IDS,PrimitiveRejected} from '../server-plugin/primitive-policy.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
+import {builderToolCall} from '../extension/tools.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {isGone,isPhysicallyDead} from '../server-plugin/holdings.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
@@ -214,14 +215,30 @@ export async function executeIntent(engine,initial,row){
   if(!offered)return {ok:false,error:'动作未出现在当前构造器目录',steps:[]};
   const steps=[0];
   const builder=new ActionBuilder({newEventId:()=>id,
-   preview:async(action,values,event)=>({...await invokePreview({tool:'world_act',args:{action,slots:values},eventId:event}),reference:{sequence:0}}),
-   act:async(action,values,{eventId:event,expectedSequence})=>expectedSequence!==0?{ok:false,stale:true}:commit({tool:'world_act',args:{action,slots:values},eventId:event})});
-  builder.intent=row.intent;builder.choose(offered);
-  if(builder.action)for(const step of [1,2,3]){
-   builder.step=step;steps.push(step);
-   for(const slot of offered.slots??[])if(builderStep(slot)===step&&Object.hasOwn(slots,slot.name))builder.setSlot(slot.name,slots[slot.name]);
+   preview:async(action,values,event)=>({...await invokePreview({...builderToolCall(action,values),eventId:event}),reference:{sequence:0}}),
+   act:async(action,values,{eventId:event,expectedSequence})=>expectedSequence!==0?{ok:false,stale:true}:commit({...builderToolCall(action,values),eventId:event})});
+  const fill=(action,values)=>{
+   builder.choose(action);
+   if(builder.action)for(const step of [1,2,3]){
+    builder.step=step;steps.push(step);
+    for(const slot of action.slots??[])if(builderStep(slot)===step&&Object.hasOwn(values,slot.name))builder.setSlot(slot.name,values[slot.name]);
+   }
+  };
+  builder.intent=row.intent;fill(offered,slots);
+  let quote=builder.action?await builder.preview():null;
+  // Model the UI's explicit “leave a trace” choice, then select a form actually
+  // offered by the current scene. Requested fictional forms are not enum IDs.
+  const fallback=builder.feedback?.fallback;
+  if(!quote&&fallback?.available){
+   const mark=worldActions(engine.scoped(document),document,{query:fallback.action,target,limit:100}).actions.find(a=>a.id===fallback.action);
+   if(mark){
+    const requestedMark=slots.effects?.find(e=>e.op==='create'&&e.kind==='mark');
+    const forms=mark.slots.find(s=>s.name==='form')?.options??[];
+    const form=forms.find(f=>f.value===requestedMark?.facts?.form)?.value??forms[0]?.value;
+    fill(mark,{intent:slots.intent??row.intent,form,tags:requestedMark?.tags??[engine.world.openTagging.default]});
+    quote=await builder.preview();
+   }
   }
-  const quote=builder.action?await builder.preview():null;
   if(!quote)return {ok:false,error:builder.error,steps};
   preview=quote.result;
   const result=await builder.confirm();
@@ -285,11 +302,17 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   if(ready&&row.expected.constructor){
    if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
    else{
-    const action=actual.committed&&actual.route!=='open:proposal'?actual.route:null;
-    const slots=run.submitted?.args?.slots;
+    // Replay the independently supplied input through the same four-step form
+    // and tool adapter as the UI. Open proposals are editable dynamic duties,
+    // not world_act slots, and a failed non-builder run must not suppress them.
+    const input=row.input??(row.action?{tool:'world_act',args:typeof row.action==='string'?{action:row.action,slots:row.slots??{}}:row.action}:row.proposal?{tool:'world_propose',args:row.proposal}:null);
+    const action=input?.tool==='world_propose'?'open:proposal':input?.tool==='world_act'?input.args.action:null;
+    const slots=input?.tool==='world_propose'?input.args:input?.args?.slots;
     if(action&&slots){
-     const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});builder=built.actual.builder;
-     constructor=Boolean(route&&builder?.ok&&built.actual.route===actual.route&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested)&&(!row.expected.fallback||built.actual.fallback));
+     const built=await executeIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
+     builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews};
+     const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===built.actual.route):routeName(expectedRoute)===built.actual.route;
+     constructor=Boolean(builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested)&&(!row.expected.fallback||built.actual.fallback));
     }
    }
   }
