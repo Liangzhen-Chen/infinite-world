@@ -1,8 +1,32 @@
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,digest,persistable} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
+
+const appointmentKey=id=>`service_appointment:${id}`;
+const serviceNames=services=>[...new Set(services.flatMap(s=>['deposit','withdraw','loan_quote','pawn_quote','redeem','remittance','lodging','buy_flatbread'].includes(s)?['trade']:s==='boat_passage'?['transport']:s))];
+// An appointment changes where/when an existing service is offered. It never
+// grants a career, skill, consent to a transaction, or a bilateral obligation.
+export function bookServiceAppointment(d,engine,row,{actor=row.actor}={}){
+ const state=d.get('state'),source=worldEvent(state,row.sourceEvent);
+ const place=engine.world.locations.some(l=>l.id===row.location)||row.location?.startsWith('bld_')&&state.created?.[row.location];
+ if(actor!==row.actor||!state.npcs?.[actor]||!row.id||d.get('state','records',appointmentKey(row.id))||!place||!Number.isSafeInteger(row.start)||!Number.isSafeInteger(row.end)||row.start<0||row.end<=row.start||!Array.isArray(row.services)||!row.services.length||row.services.some(s=>typeof s!=='string'||!s)||source?.verb!=='appointment_agreed'||source.actor!==actor||!row.services.includes(source.payload?.service)||source.minute>row.start)throw Error('Invalid service appointment or actor/source');
+ if(row.fee!==undefined&&(!Number.isSafeInteger(row.fee)||row.fee<0)||row.minutes!==undefined&&(!Number.isSafeInteger(row.minutes)||row.minutes<1||row.minutes>row.end-row.start))throw Error('Invalid appointment terms');
+ const other=serviceAppointments(state,actor).find(r=>r.start<row.end&&row.start<r.end&&r.location!==row.location);
+ if(other)throw Error('Conflicting service appointment locations');
+ const value={...persistable(row),category:'service_appointment'};
+ d.set(['state','records',appointmentKey(row.id)],value);
+ d.set(['state','records',`${appointmentKey(row.id)}:source`],{category:'service_appointment_receipt',digest:digest(value)});
+ return value;
+}
+export function serviceAppointments(state,actor){
+ return recordsWhere(state?.records,'category','service_appointment').filter(r=>{
+  const source=worldEvent(state,r.sourceEvent);
+  return r.actor===actor&&state.records[`${appointmentKey(r.id)}:source`]?.digest===digest(r)&&source?.verb==='appointment_agreed'&&source.actor===actor&&r.services.includes(source.payload?.service);
+ });
+}
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -24,6 +48,26 @@ export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'
 // A roster person or campaign-born child brought into the simulation by
 // npc-life keeps a home routine in campaign state instead of a catalog one.
 export function npcSchedule(engine,state,id,minute=state?.minute,constraints=null){
+ const base=baseNpcSchedule(engine,state,id,minute,constraints);
+ if(!state||personConstraint(engine,state,id,minute,constraints)||state.npcs?.[id]?.caring||state.npcs?.[id]?.levy)return base;
+ const day=Math.floor(minute/1440)*1440,appointments=serviceAppointments(state,id).filter(r=>r.start<day+1440&&day<r.end);
+ if(!appointments.length)return base;
+ const overlay=slots=>{
+  let result=slots??[{start:0,end:1440,location:state.npcs[id]?.location,activity:'日常起居',services:[]}];
+  for(const row of appointments){const start=Math.max(0,row.start-day),end=Math.min(1440,row.end-day);
+   result=result.flatMap(slot=>slot.end<=start||slot.start>=end?[slot]:[
+    ...(slot.start<start?[{...slot,end:start}]:[]),
+    {...slot,start:Math.max(slot.start,start),end:Math.min(slot.end,end),location:row.location,activity:'预约接待',services:[...new Set([...(slot.location===row.location?slot.services??[]:[]),...serviceNames(row.services)])]},
+    ...(slot.end>end?[{...slot,start:end}]:[])]);
+  }
+  return result;
+ };
+ const schedule={...base,default:overlay(base?.default)};
+ for(const key of ['market','rest'])if(base?.[key])schedule[key]=overlay(base[key]);
+ if(base?.seasonal)schedule.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,value])=>[key,Object.fromEntries(Object.entries(value).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
+ return schedule;
+}
+function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const hold=state&&personConstraint(engine,state,id,minute,constraints)?.value;
     if(hold)return {default:[{start:0,end:1440,location:hold.location,activity:'依法拘留',services:[]}]};
     const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;

@@ -10,6 +10,79 @@ import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradePrice,regionalMaterialSupply} from './settlement-trade.mjs';
+const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
+import {digest,recordsWhere,persistable} from './storage.mjs';
+import {derivedBankAt,derivedBankById,financeChange} from './finance-bank.mjs';
+import {vault} from './money.mjs';
+import {installFacilityRuntime} from './facility-state.mjs';
+
+const agreedKey=id=>`agreed_quote:${id}`;
+function quoteSource(state,row){
+ const source=worldEvent(state,row.sourceEvent),p=source?.payload;
+ return source?.verb==='quoted'&&source.actor===row.actor&&source.minute===row.at&&(row.service==='remittance'
+  ?p.subject==='remittance'&&p.principal===row.principal&&p.fee===row.fee
+  :p.to===row.to&&p.resource===row.resource&&p.quantity===row.quantity&&p.totalCoins===row.totalCoins);
+}
+export function recordAgreedQuote(d,engine,row,{actor=row.actor}={}){
+ const state=d.get('state');
+ if(actor!==row.actor||!state.npcs?.[actor]||row.to!=='player'||typeof row.id!=='string'||!row.id||d.get('state','records',agreedKey(row.id))||!integer(row.at)||row.at>state.minute||!integer(row.expires)||row.expires<=row.at||!quoteSource(state,row))throw Error('Invalid agreed quote actor, source or validity');
+ if(row.service==='remittance'){
+  const bank=derivedBankAt(engine,state,state.npcs[actor].location),branch=derivedBankById(engine,state,row.destinationBranch);
+  if(!integer(row.principal,1)||!integer(row.fee)||!state.npcs?.[row.recipient]||!engine.byId.has(row.destination)||row.recipientIdentityVerified!==true||!bank?.keepers.includes(actor)||!branch||branch.id===bank.id||!bankWithin(engine,branch.location,row.destination))throw Error('Invalid remittance terms or real redeeming branch');
+ }else if(!integer(row.quantity,1)||!integer(row.totalCoins)||!['sell_to_player','buy_from_player'].includes(row.direction)||!engine.world.items.some(i=>i.id===row.resource)&&row.resource!=='lodging_one_night')throw Error('Invalid agreed quantity, total or direction');
+ const value={...persistable(row),category:'agreed_quote'};
+ d.set(['state','records',agreedKey(row.id)],value);
+ d.set(['state','records',`${agreedKey(row.id)}:source`],{category:'agreed_quote_receipt',digest:digest(value)});
+ return value;
+}
+export function agreedQuotes(state){
+ return recordsWhere(state?.records,'category','agreed_quote').filter(row=>state.records[`${agreedKey(row.id)}:source`]?.digest===digest(row)&&quoteSource(state,row));
+}
+export function currentAgreedQuotes(state){return agreedQuotes(state).filter(r=>r.at<=state.minute&&state.minute<r.expires&&!state.records[`${agreedKey(r.id)}:used`]);}
+installFacilityRuntime({currentAgreedQuotes});
+export function agreedTradeQuote(state,{buyer,seller,item,quantity}){
+ const direction=buyer==='player'?'sell_to_player':'buy_from_player',actor=buyer==='player'?seller:buyer;
+ const matches=agreedQuotes(state).filter(r=>!r.service&&r.actor===actor&&r.direction===direction&&r.resource===item&&r.quantity===quantity&&r.at<=state.minute&&state.minute<r.expires&&!state.records[`${agreedKey(r.id)}:used`]);
+ if(matches.length>1)throw Error('Ambiguous agreed quote');
+ return matches[0]??null;
+}
+export function consumeAgreedQuote(d,row,eventId){
+ if(!row)return;
+ const key=`${agreedKey(row.id)}:used`;
+ if(d.get('state','records',key))throw Error('Agreed quote already consumed');
+ d.set(['state','records',key],{category:'agreed_quote_used',quote:row.id,sourceEvent:eventId,minute:d.get('state','minute')});
+}
+function bankWithin(engine,location,target){
+ const seen=new Set();for(let at=location;at&&!seen.has(at);at=engine.byId.get(at)?.parent){if(at===target)return true;seen.add(at);}return false;
+}
+export function resolveRedeemingBranch(engine,state,destination){
+ const candidates=engine.world.locations.filter(l=>bankWithin(engine,l.id,destination)).map(l=>derivedBankAt(engine,state,l.id)).filter(Boolean);
+ const unique=[...new Map(candidates.map(b=>[b.id,b])).values()];
+ if(unique.length!==1)throw Error('No unique real redeeming branch at the requested destination');
+ return unique[0];
+}
+// The ordinary issuer still owns identity, closures, vault accounting and bill
+// obligations. This adapter applies only the already agreed fee differential.
+export async function executeAgreedRemittance(d,engine,args,eventId,issue){
+ const state=d.get('state'),actor=engine.resolve(args.seller),recipient=args.buyer?engine.resolve(args.buyer,'npc'):null;
+ const rows=agreedQuotes(state).filter(r=>r.service==='remittance'&&r.actor===actor&&r.to==='player'&&r.at<=state.minute&&state.minute<r.expires&&!state.records[`${agreedKey(r.id)}:used`]&&r.principal===args.coins&&r.recipient===recipient);
+ if(rows.length>1)throw Error('Ambiguous agreed remittance quote');
+ const quote=rows[0];if(!quote)return issue(args);
+ const bank=derivedBankAt(engine,state,state.location),branch=derivedBankById(engine,state,quote.destinationBranch),destination=engine.resolve(args.location);
+ if(!bank?.keepers.includes(actor)||!branch||!bankWithin(engine,branch.location,quote.destination)||destination!==quote.destination&&destination!==branch.location&&destination!==branch.id)throw Error('Agreed remittance branch or keeper mismatch');
+ if(state.player.coins<quote.principal+quote.fee)throw Error('Insufficient funds for the agreed remittance total');
+ const nativeFee=Math.max(1,Math.ceil(quote.principal*engine.rules.economy.credit.remittance.feeRate)),delta=quote.fee-nativeFee;
+ if(delta){
+  financeChange(d,engine,'player',-delta,eventId,{account:vault(bank.id),writer:'shop',eventId});
+  const key=['state','records',bank.id],row=d.get(...key)??{category:'bank',id:bank.id,name:bank.name,location:bank.location,coins:bank.reserveCopper??0,goods:{...bank.reserveCoins??{}},accounts:{}};
+  d.set(key,{...row,coins:row.coins+delta});
+ }
+ const result=await issue({...args,location:branch.location});
+ const key=['state','records',result.contract],bill=d.get(...key);
+ if(bill?.category!=='bank_bill'||bill.destination!==branch.id)throw Error('Native issuer did not create the agreed bill');
+ d.set(key,{...bill,fee:quote.fee,agreedQuote:quote.id});consumeAgreedQuote(d,quote,eventId);
+ return {...result,fee:quote.fee,quote:quote.id};
+}
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -212,7 +285,9 @@ export function advanceShops(d,engine,before,after){
 
 // Material quotes read current supply even within a day; the existing daily
 // quotes remain for other markets until S5 replaces their pricing projections.
-export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
+export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base}){
+    const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});
+    if(agreed)return {...agreed,agreed:true,buyer,seller,item,listPrice:agreed.totalCoins/agreed.quantity};
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
     if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
@@ -234,6 +309,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     return row;
 }
 export function recordDeal(d,quote,price,quantity,eventId){
+    if(quote.agreed){consumeAgreedQuote(d,quote,eventId);return;}
     const key=`trade-quote:${quote.day}:${quote.seller}:${quote.buyer}:${quote.item}`,row=d.get('state','records',key);
     d.set(['state','records',key],{...row,dealPrice:price,bargainFactor:price/row.listPrice,deals:[...row.deals??[],{eventId,quantity,unitPrice:price,minute:d.get('state','minute')}]});
 }

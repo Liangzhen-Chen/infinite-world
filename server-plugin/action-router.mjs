@@ -10,6 +10,7 @@ import {localWeather} from './weather.mjs';
 import {mapView} from './ui-map.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {npcServices} from './npc-state.mjs';
+import {facilityRuntime} from './facility-state.mjs';
 import {activeDuel} from './duels.mjs';
 import {templeById} from './faith-catalog.mjs';
 import {knownWorldEventReference} from './world-events.mjs';
@@ -230,6 +231,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_profession'&&action.call.operation==='certify'&&slot.name==='teacher'){
     const profession=proposal.means?.profession??effects.find(e=>e.payload?.kind==='certification')?.payload?.terms?.profession;
     const teachers=[...pool.values()].filter(row=>row.kind==='person'&&row.id!==actor&&npcServices(engine,state,row.id).includes(profession));
+    const seats=(facilityRuntime().examinationSeats?.(engine,state,profession)??[]).filter(r=>r.available&&r.location===location&&!state.records[`examination_seat:${r.id}:used`]);
+    if(seats.length===1)value??=seats[0].examiner;
     if(teachers.length===1)value??=teachers[0].id;
    }
    if(action.call?.tool==='world_companion'&&action.call.operation==='summon_dismiss'&&slot.name==='summon'&&summons.has(target))value??=target;
@@ -293,7 +296,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='topic'&&e.op==='emit'){value=e.payload?.terms?.topic;if(value!==undefined)break;}
     if(e.op==='emit'&&e.payload?.terms?.[slot.name]!==undefined){value=e.payload.terms[slot.name];break;}
     if(e.op==='emit'&&e.payload?.kind==='haggle'&&['source','content'].includes(slot.name)){
-     const quotes=Object.values(state.records??{}).filter(r=>r.category==='trade_quote'&&r.seller===target&&r.day===Math.floor(state.minute/1440));
+     const agreed=(facilityRuntime().currentAgreedQuotes?.(state)??[]).filter(r=>!r.service&&r.actor===target&&r.direction==='sell_to_player').map(r=>({item:r.resource,listPrice:r.totalCoins/r.quantity}));
+     const quotes=agreed.length?agreed:Object.values(state.records??{}).filter(r=>r.category==='trade_quote'&&r.seller===target&&r.day===Math.floor(state.minute/1440));
      if(quotes.length===1){
       if(slot.name==='source')value=quotes[0].item;
       else if(Number.isSafeInteger(e.payload.terms?.discountCopper))value=String(quotes[0].listPrice-e.payload.terms.discountCopper);

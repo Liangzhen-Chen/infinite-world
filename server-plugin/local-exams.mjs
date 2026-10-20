@@ -4,7 +4,39 @@ import {settlementHead,personRegistrar,personAge,personConstraint} from './entit
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {profession} from './professions.mjs';
-import {digest} from './storage.mjs';
+import {digest,persistable} from './storage.mjs';
+import {npcServices} from './npc-state.mjs';
+import {aliveHoldings} from './holdings.mjs';
+import {installFacilityRuntime} from './facility-state.mjs';
+
+const seatKey=id=>`examination_seat:${id}`;
+export function qualifiedExaminers(engine,state,profession,location){
+ return Object.keys(state.npcs??{}).filter(id=>state.npcs[id].location===location&&awake(engine,state,id,state.npcs[id])&&!personConstraint(engine,state,id)&&npcServices(engine,state,id).includes(profession));
+}
+export function bookExaminationSeat(d,engine,row,{actor=row.registrar}={}){
+ const state=d.get('state'),role=engine.byId.get(row.profession);
+ if(actor!==row.registrar||!state.npcs?.[actor]||typeof row.id!=='string'||!row.id||d.get('state','records',seatKey(row.id))||!role||!qualifiedExaminers(engine,state,row.profession,row.location).includes(row.examiner)||!Number.isSafeInteger(row.minutes)||row.minutes<1||!Number.isSafeInteger(row.fee)||row.fee<0||typeof row.available!=='boolean'||row.passed!==false)throw Error('Invalid pending examination or unqualified examiner');
+ const offices=aliveHoldings(d,{kind:'holds_office',holder:actor}).map(h=>d.get('holdings','entities',h.subject)?.facts??state.created?.[h.subject]??engine.byId.get(h.subject));
+ if(actor!==row.examiner&&!offices.some(o=>o?.seat===row.location&&o.authority?.profession===row.profession&&o.authority.operations?.includes('refer_examiner')))throw Error('Registrar lacks examination referral authority');
+ if(row.minutes!==(role.entry?.minutes??120)||row.fee!==role.fee)throw Error('Examination seat must retain the native examination fee and duration');
+ const value={...persistable(row),category:'examination_seat'};
+ d.set(['state','records',seatKey(row.id)],value);
+ d.set(['state','records',`${seatKey(row.id)}:source`],{category:'examination_seat_receipt',digest:digest(value)});
+ return value;
+}
+export function examinationSeats(engine,state,profession){
+ return Object.values(state.records??{}).filter(r=>r.category==='examination_seat'&&r.profession===profession&&state.records[`${seatKey(r.id)}:source`]?.digest===digest(r)&&qualifiedExaminers(engine,state,r.profession,r.location).includes(r.examiner));
+}
+export function assertExaminationSeat(d,engine,args){
+ if((args.operation??'certify')!=='certify'||!args.profession)return null;
+ const role=engine.resolve(args.profession,'profession'),rows=Object.values(d.get('state','records')??{}).filter(r=>r.category==='examination_seat'&&r.profession===role);
+ if(!rows.length)return null;
+ const teacher=engine.resolve(args.teacher,'npc'),seat=examinationSeats(engine,d.get('state'),role).find(r=>r.available&&r.examiner===teacher&&r.location===d.get('state','location')&&!d.get('state','records',`${seatKey(r.id)}:used`));
+ if(!seat)throw Error('No available real examination seat for this examiner');
+ return seat;
+}
+export function consumeExaminationSeat(d,seat,eventId){if(seat)d.set(['state','records',`${seatKey(seat.id)}:used`],{category:'examination_seat_used',seat:seat.id,sourceEvent:eventId});}
+installFacilityRuntime({examinationSeats,assertExaminationSeat,consumeExaminationSeat});
 const path=id=>['state','records',id];
 const awake=(engine,state,id,n)=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 function policy(e,s,settlement){

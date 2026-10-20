@@ -46,7 +46,8 @@ import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
 import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';
-import {tradeQuote,recordDeal}from'./shop.mjs';
+import {tradeQuote,recordDeal,agreedTradeQuote,consumeAgreedQuote,executeAgreedRemittance}from'./shop.mjs';
+import {assertLodgingCapacity,assertRestBed,selectLodgingBed} from './facility-state.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
 import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
@@ -352,10 +353,15 @@ export class WorldEngine {
         settleMagicAreas(d,session);
         // A.15.7 gives both sleeping and awake rest body recovery. The time
         // executor still distinguishes sleep for schedules and interruptions.
+        if(tool==='time'&&['睡眠','休息'].includes(args.activity))assertRestBed(session,d.document);
         const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
         validatePhysicalAction(d,session,tool,args);
         initialKnowledgeAction(d,session,tool,args);assertVocationAction(session,d.get('state'),tool,args);
-        const detail = physicalSiteAction(d,session,tool,args,id)??await session[tool](d,args,id);
+        const bookedWorkstation=facilityRuntime().prepareBookedWorkstation?.(d,session,tool,args);
+        session.bookedWorkstation=bookedWorkstation;
+        const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
+        const detail = physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
+        if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
@@ -534,6 +540,7 @@ export class WorldEngine {
         if(args.operation==='transport')return transportAction(d,this,args,id);
         if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
+        if(args.operation==='remit')return executeAgreedRemittance(d,this,args,id,next=>creditTrade.call(this,d,next,id));
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
         if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -553,13 +560,18 @@ export class WorldEngine {
             if(facilityView(this,d.get('state'),place.id)?.factor===0)throw Error('住宿建筑已停用');
             assertLodgingHost(d,this,seller,place,args.consent);
             const economy=this.rules.economy,host=this.byId.get(seller).name;
-            const days=number(args.days??1,1,7,'住宿天数'),cost=days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight);
+            const days=number(args.days??1,1,7,'住宿天数');
+            const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item:'lodging_one_night',quantity:days});
+            const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
             if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('房钱不足');
             const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
+            assertLodgingCapacity(this,d.document,place.id,starts,starts+days*1440);
+            const bed=selectLodgingBed(this,d.document,place.id,starts,starts+days*1440);
             const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
-            holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,
+            holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,...(bed?{bed}:{}),
                 starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`},'engine');
+            consumeAgreedQuote(d,agreed,id);
             this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
         }
         if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
@@ -568,10 +580,11 @@ export class WorldEngine {
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
-        const quote=tradeQuote(d,this,{buyer,seller,item,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        const quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
-        const price=(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
-        const cost=quantity*price;
+        if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)throw Error('单价不符既定报价');
+        const price=quote.agreed?quote.listPrice:(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
+        const cost=quote.agreed?quote.totalCoins:quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
@@ -585,7 +598,7 @@ export class WorldEngine {
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
+        if(!quote.agreed)d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
         };
         if(d.scheduler){
             submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
@@ -598,6 +611,7 @@ export class WorldEngine {
         return {buyer,seller,item,quantity,cost,instances:moved.instances,...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
+        if(this.bookedWorkstation?.minutes===minutes)facilityRuntime().consumeWorkstationPrepayment(d,this.bookedWorkstation.receipt,id);
         // P2: one elapsed-time event shares each region's yearly weather
         // sequence (rules and seed cannot change inside it) across schedules.
         // Route topology (locations, routes) is likewise fixed for its duration.
@@ -945,7 +959,8 @@ export class WorldEngine {
         return learnWithInitialKnowledge(d,this,args,id,()=>learn.call(this,d,args,id));
     }
     profession(d,args,id){
-        return profession.call(this,d,args,id);
+        const seat=facilityRuntime().assertExaminationSeat?.(d,this,args),result=profession.call(this,d,args,id);
+        facilityRuntime().consumeExaminationSeat?.(d,seat,id);return result;
     }
     attributes(d,args,id){return allocateAttributes.call(this,d,args,id);}
     relation(d,args,id) {
