@@ -212,6 +212,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // Teaching, practice, and old education programs may write knowledge directly.
  for(const [partition,owner] of [['skills','player'],['recipes','player'],['spells','player']])for(const [subject,row] of Object.entries(a[partition]??{})){
   if(same(b[partition]?.[subject],row)||receipt.applied.some(e=>e.op==='learn'&&e.subject===subject))continue;
+  // Acquiring a formula also opens its zero-proficiency backing skill. This
+  // is evidence of that same lesson, not a second lesson in a different subject.
+  const lesson=receipt.applied.find(e=>e.op==='learn'&&e.result?.path?.[1]==='learning'&&e.result.after?.success===true&&engine.byId.get(e.subject)?.skill===subject);
+  if(partition==='skills'&&lesson&&!b.skills?.[subject]&&row.proficiency===0&&same(row.source,lesson.result.after.source)){
+   (lesson.result.initializedSkills??=[]).push({subject,...stateEffect('learn',{},['state','skills',subject],before,after).result});
+   continue;
+  }
   // A cast's source slot is its physical medium, not a teacher or a book.
   add(stateEffect('learn',{entity:owner,target:owner,subject,learningSource:tool==='cast'?'practice':row.source?.id??result.source?.id??args.source,mode:tool==='cast'?'practice':row.source?.type??'practice'},['state',partition,subject],before,after));
  }

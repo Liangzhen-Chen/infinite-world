@@ -505,19 +505,19 @@ export class WorldEngine {
         return primitiveActionRuntime().runScheduled(this,d,effect,context);
     }
     primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
-    async previewAction(document,input){
-        return actionBoundary(this,document,input,()=>this.previewActionResult(document,input),{preview:true});
+    async previewAction(document,input,options={}){
+        return actionBoundary(this,document,input,()=>this.previewActionResult(document,input,options),{preview:true});
     }
     primitiveActionDefinition(id){return primitiveActionRuntime()?.registry(this).byId.get(id);}
-    async previewActionResult(document,input){
+    async previewActionResult(document,input,options={}){
         const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
         if(input.tool==='world_propose')return runtime.propose(this,withBooks(this,document).document,input,{preview:true});
         const session=this.scoped(document),books=withBooks(this,document).document,native=runtime.nativeAction(session,books,input,{preview:true});
         if(native)return native;
-        const result=runtime.execute(session,books,input,{createDraft:doc=>new Draft(doc,session),preview:true});
+        const result=runtime.execute(session,books,input,{createDraft:doc=>new Draft(doc,session),preview:true,openProposal:options.openProposal});
         if(!result.legacy)return result;
         if(result.legacy.tool==='world_propose')return runtime.propose(this,books,{...input,tool:'world_propose',args:result.legacy.args},{preview:true});
-        const reduced=await this.reduce(clone(document),input);
+        const reduced=await this.reduce(clone(document),input,options);
         if(reduced.result?.receipt?.status==='rejected')return {receipt:reduced.result.receipt,routing:reduced.result.receipt.routing};
         return {receipt:runtime.legacyPreview(this,document,input,result.legacy,reduced)};
     }

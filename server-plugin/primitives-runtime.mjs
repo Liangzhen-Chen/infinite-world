@@ -626,7 +626,7 @@ export const primitiveRuntime={
    return preview?result:{patches:[],result:{action:prepared.routed,receipt:result.receipt}};
   }
   if(preview){
-   const result=await engine.previewAction(document,actionInput);
+   const result=await engine.previewAction(document,actionInput,{openProposal:{proposal,prepared}});
    if(result.receipt.status==='rejected'&&result.receipt.routing?.fallback){
     result.receipt.routing={...routing,...result.receipt.routing,intent:proposal.intent,proposal:structuredClone(proposal)};
     result.receipt.routing.fallback.intent=proposal.intent;
