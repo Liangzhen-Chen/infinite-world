@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadWorld} from './load-world.mjs';
-import {WorldEngine} from '../server-plugin/engine.mjs';
+import {WorldEngine,skillGrade} from '../server-plugin/engine.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {PRIMITIVE_IDS,PrimitiveRejected} from '../server-plugin/primitive-policy.mjs';
@@ -10,7 +10,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
-import {isGone,isPhysicallyDead} from '../server-plugin/holdings.mjs';
+import {isGone,isPhysicallyDead,bookHoldingsUpgrade,openHoldings,aliveHoldings} from '../server-plugin/holdings.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
 import {createRoutingContext} from '../server-plugin/action-router.mjs';
 
@@ -34,6 +34,9 @@ const routeName=route=>({拒绝:'reject',rejected:'reject',refuse:'reject',澄�
 // status: player status string, {entityId: statusString}, or an array of
 // {target, status, power, duration} for the native magic status writer.
 // facts: [{path:['state', ...existingFieldPath], value: ...}].
+// abilities are initial player knowledge, not successful learning actions:
+// skills/literacy -> state.skills; spells/recipes -> their native partitions;
+// profession licenses -> state.professions + the native holding projection.
 export function applyIntentSetup(engine,initial,setup){
  const document=structuredClone(initial),setupUnmet=[],notes=[],s=document.state;
  if(setup===undefined)return {document,setupUnmet};
@@ -41,7 +44,7 @@ export function applyIntentSetup(engine,initial,setup){
  const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
  const actor=id=>id==='player'||id==='self'?s.player:Object.hasOwn(s.npcs??{},id)?s.npcs[id]:Object.hasOwn(s.creatures??{},id)?s.creatures[id]:null;
  if(!object(setup)){unmet('setup','expected an object');return {document,setupUnmet};}
- for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts'].includes(key))unmet(key,'unsupported setup field');
+ for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities'].includes(key))unmet(key,'unsupported setup field');
  if(Object.hasOwn(setup,'minute')){
   if(Number.isSafeInteger(setup.minute)&&setup.minute>=0)s.minute=setup.minute;
   else unmet('minute','expected a nonnegative safe integer');
@@ -77,6 +80,60 @@ export function applyIntentSetup(engine,initial,setup){
  if(Object.hasOwn(setup,'coins')){
   if(Number.isSafeInteger(setup.coins)&&setup.coins>=0)s.player.coins=setup.coins;
   else unmet('coins','expected a nonnegative safe integer');
+ }
+ if(Object.hasOwn(setup,'abilities')){
+  const a=setup.abilities,validProficiency=value=>Number.isSafeInteger(value)&&value>=0&&value<=2699;
+  const setSkill=(id,value,item)=>{
+   if(!engine.world.skills.some(row=>row.id===id)||!validProficiency(value)){unmet(item,'unknown skill or proficiency outside 0..2699');return;}
+   s.skills??={};
+   s.skills[id]={...s.skills[id],proficiency:value,grade:skillGrade(value),daily:s.skills[id]?.daily??{},breakthroughs:s.skills[id]?.breakthroughs??[]};
+  };
+  if(!object(a))unmet('abilities','expected an object');
+  else{
+   for(const key of Object.keys(a))if(!['skills','spells','recipes','literacy','licenses'].includes(key))unmet(`abilities.${key}`,'unsupported ability field');
+   if(Object.hasOwn(a,'skills')){
+    if(!object(a.skills))unmet('abilities.skills','expected skill ID to proficiency mapping');
+    else for(const [id,value] of Object.entries(a.skills))setSkill(id,value,`abilities.skills.${id}`);
+   }
+   if(Object.hasOwn(a,'literacy')){
+    const value=typeof a.literacy==='boolean'?(a.literacy?engine.rules.books.minimumLiteracy:0):a.literacy;
+    if(Object.hasOwn(a.skills??{},'skill_literacy')&&a.skills.skill_literacy!==value)unmet('abilities.literacy','conflicts with abilities.skills.skill_literacy');
+    else setSkill('skill_literacy',value,'abilities.literacy');
+   }
+   for(const partition of ['spells','recipes'])if(Object.hasOwn(a,partition)){
+    if(!Array.isArray(a[partition]))unmet(`abilities.${partition}`,'expected an array of registered IDs');
+    else for(const [index,id] of a[partition].entries()){
+     const definition=engine.world[partition].find(row=>row.id===id);
+     if(!definition||!engine.world.skills.some(row=>row.id===definition.skill)){unmet(`abilities.${partition}[${index}]`,'unknown knowledge or supporting skill');continue;}
+     s[partition]??={};s[partition][id]={...s[partition][id],learnedAt:s[partition][id]?.learnedAt??s.minute};
+     // Native learn() creates a zero proficiency skill if it is absent. Do not
+     // invent proficiency, certification, teachers or successful study records.
+     if(!s.skills?.[definition.skill])setSkill(definition.skill,0,`abilities.${partition}[${index}]`);
+    }
+   }
+   if(Object.hasOwn(a,'licenses')){
+    if(!Array.isArray(a.licenses))unmet('abilities.licenses','expected an array of profession or loaded license holding IDs');
+    else for(const [index,id] of a.licenses.entries()){
+     const role=engine.world.professions.find(row=>row.id===id),item=`abilities.licenses[${index}]`;
+     if(!role){
+      // Non-profession IDs must name an already loaded native right. A string
+      // in abilities cannot create an office, authorization or consent event.
+      const rights=aliveHoldings(engine.primitiveDraft(document));
+      if(!rights.some(row=>row.id===id&&(['certified','holds_office'].includes(row.kind)&&row.holder==='player'||row.kind==='permit'&&row.subject==='player')))unmet(item,'unknown profession or missing active player license holding');
+      continue;
+     }
+     if(!['combat','life'].includes(role.kind)){unmet(item,'expected a combat/life profession certification');continue;}
+     s.professions??={combat:'',life:[],hidden:[]};
+     if(role.kind==='combat'){
+      if(s.professions.combat&&s.professions.combat!==id){unmet(item,'combat profession slot already occupied');continue;}
+      s.professions.combat=id;
+     }else if(!s.professions.life.includes(id)){
+      if(s.professions.life.length>=2){unmet(item,'life profession slots already occupied');continue;}
+      s.professions.life.push(id);
+     }
+    }
+   }
+  }
  }
  if(Object.hasOwn(setup,'status')){
   if(Array.isArray(setup.status)){
@@ -117,7 +174,14 @@ export function applyIntentSetup(engine,initial,setup){
  }
  try{document.ledger=openLedger(engine,document);for(const reason of auditLedger(document.ledger))unmet('ledger',reason);}
  catch(error){unmet('ledger',error.message);}
- return {document,setupUnmet,notes};
+ // Keep certification holdings in sync with the same native adapter used by
+ // engine.reduce; no generic "licenses" state field is read by the engine.
+ let prepared=document;
+ if(Array.isArray(setup.abilities?.licenses)&&setup.abilities.licenses.length)try{
+  prepared=applyPatches(document,bookHoldingsUpgrade({...initial,holdings:document.holdings},document,engine.world));
+  prepared.holdings??=openHoldings(engine,prepared);
+ }catch(error){unmet('abilities.licenses',error.message);}
+ return {document:prepared,setupUnmet,notes};
 }
 
 // routing.signature describes requested effects. Only committed applied effects
@@ -293,7 +357,7 @@ export async function executeIntent(engine,initial,row){
   }
   refused ||= receipt?.status==='rejected';
  }catch(caught){error={code:caught.code??null,message:caught.message};refused=caught instanceof PrimitiveRejected;}
- const committed=receipt?.status==='committed',effects=committed?(receipt.applied??[]).map(effect=>{
+ const committed=receipt?.status==='committed',effects=committed||receipt?.status==='rejected'?(receipt.applied??[]).map(effect=>{
   const created=effect.op==='create'&&document.state.created?.[effect.result?.entity];
   const subject=effect.target??effect.entity??effect.subject??effect.actor;
   const signatureKind=signatureContext?.kindOf(selfId(subject))??null;
@@ -322,7 +386,13 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const run=await executeIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>routeName(r)===actual.route):routeName(expectedRoute)===actual.route);
-  const signature=ready&&(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world);
+  // Rejection signatures describe the REQUEST, not an adopted effect set.
+  // Credit requires an actual refusal and zero raw applied effects, including
+  // costs (do not let cost filtering or a rejected receipt hide mutations).
+  const expectsRejection=row.expected.outOfBounds===true||(Array.isArray(expectedRoute)?expectedRoute.every(r=>routeName(r)==='reject'):routeName(expectedRoute)==='reject');
+  const signature=ready&&(expectsRejection
+   ?actual.refused&&!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0
+   :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world));
   let constructor=false,builder=actual.builder;
   if(ready&&row.expected.constructor){
    if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);

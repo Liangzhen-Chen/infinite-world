@@ -6,6 +6,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
+import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
+import {effectiveProficiency} from '../server-plugin/professions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const signatureMatches=(expected,effects,receipt,requested)=>matchSignature(expected,effects,receipt,requested,world);
@@ -199,6 +201,78 @@ test('A3 setup: existing creature instances and native special statuses are real
  assert.equal(baseline.state.creatures.test_creature.activity,'睡眠');
  const bad=applyIntentSetup(engine,baseline,{status:[{target:'player',status:'invented',power:2,duration:60}]});
  assert.equal(bad.setupUnmet[0].item,'status[0]');
+});
+
+test('A3 setup: abilities populate native player knowledge and certification consumers',async()=>{
+ const before=engine.createCharacter(seed,{},'setup-abilities'),snapshot=structuredClone(before);
+ const skill=world.skills.find(row=>world.professions.some(p=>p.id===row.profession&&p.kind==='life'));
+ const spell=world.spells.find(row=>row.id==='spell_light'),recipe=world.recipes[0];
+ const abilities={skills:{[skill.id]:450,[spell.skill]:125},spells:[spell.id],recipes:[recipe.id],literacy:100,licenses:[skill.profession]};
+ const built=applyIntentSetup(engine,before,{abilities});
+ assert.deepEqual(built.setupUnmet,[]);
+ const state=built.document.state;
+ assert.equal(knowledgeProficiency(engine,state,'player',skill.id),450);
+ assert.equal(effectiveProficiency(engine.primitiveDraft(built.document),engine,skill.id),450);
+ assert.equal(knowledgeProficiency(engine,state,'player','skill_literacy'),100);
+ assert.equal(knowsKnowledge(engine,state,'player',spell.id),true);
+ assert.equal(knowsKnowledge(engine,state,'player',recipe.id),true);
+ assert.equal(state.skills[spell.skill].proficiency,125);
+ assert.ok(state.skills[recipe.skill]);assert.deepEqual(state.skills[skill.id].daily,{});
+ assert.deepEqual(state.skills[skill.id].breakthroughs,[]);
+ assert.equal(state.spells[spell.id].learnedAt,state.minute);
+ assert.equal(state.professions.life.includes(skill.profession),true);
+ assert.ok(Object.values(built.document.holdings.rows).some(edge=>edge.kind==='certified'&&edge.holder==='player'&&edge.subject===`office_cert:${skill.profession}`));
+ const cast=await engine.reduce(built.document,{tool:'world_cast',args:{spell:spell.id,target:'item_staff'},eventId:'setup-known-spell'});
+ assert.equal(cast.result.spell,spell.id);
+ assert.equal(cast.patches.find(p=>p.path.join('.')==='state.player.mp').value,state.player.mp-spell.mp);
+ const projected=applyIntentSetup(engine,built.document,{abilities:{skills:{[skill.id]:600},licenses:[skill.profession]}});
+ assert.deepEqual(projected.setupUnmet,[]);
+ assert.equal(effectiveProficiency(engine.primitiveDraft(projected.document),engine,skill.id),600);
+ const license=Object.values(projected.document.holdings.rows).filter(edge=>edge.kind==='certified'&&edge.holder==='player'&&edge.subject===`office_cert:${skill.profession}`&&edge.until===undefined);
+ assert.equal(license.length,1);
+ assert.deepEqual(applyIntentSetup(engine,projected.document,{abilities:{licenses:[license[0].id]}}).setupUnmet,[]);
+ const closed=structuredClone(projected.document);closed.holdings.rows[license[0].id].until=closed.state.minute;
+ assert.ok(applyIntentSetup(engine,closed,{abilities:{licenses:[license[0].id]}}).setupUnmet.some(x=>x.item==='abilities.licenses[0]'));
+ const scored=await scoreRows([{...rows[0],setup:{abilities}}],{...options,document:before});
+ assert.equal(scored.setupUnmetCount,0);assert.equal(scored.results[0].scores.supported,true);
+ assert.deepEqual(before,snapshot);
+ const readable=applyIntentSetup(engine,before,{abilities:{literacy:true}});
+ assert.equal(readable.document.state.skills.skill_literacy.proficiency,engine.rules.books.minimumLiteracy);
+ const illiterate=applyIntentSetup(engine,readable.document,{abilities:{literacy:false}});
+ assert.equal(illiterate.document.state.skills.skill_literacy.proficiency,0);
+ assert.equal(knowsKnowledge(engine,illiterate.document.state,'player',spell.id),false);
+});
+
+test('A3 setup: invalid abilities are setupUnmet and cannot earn rejection credit',async()=>{
+ const abilities={skills:{missing_skill:5,skill_literacy:2700},spells:['missing_spell'],recipes:['missing_recipe'],literacy:-1,licenses:['missing_license'],invented:true};
+ const row={...rows[1],setup:{abilities},expected:{...rows[1].expected,signature:['transfer(resource:coin,self)']}};
+ const result=(await scoreRows([row],options)).results[0];
+ for(const key of ['skills.missing_skill','skills.skill_literacy','spells[0]','recipes[0]','literacy','licenses[0]','invented'])assert.ok(result.setupUnmet.some(x=>x.item===`abilities.${key}`),key);
+ assert.ok(Object.values(result.scores).every(value=>value===false));assert.deepEqual(result.actual.calls,[]);
+ const malformed=applyIntentSetup(engine,initial,{abilities:{skills:[],spells:{},recipes:'recipe',licenses:null}});
+ for(const key of ['skills','spells','recipes','licenses'])assert.ok(malformed.setupUnmet.some(x=>x.item===`abilities.${key}`),key);
+ assert.equal(applyIntentSetup(engine,initial,{abilities:null}).setupUnmet[0].item,'abilities');
+});
+
+test('A3 rejection signature: request descriptions earn credit only for actual refusal with zero applied effects',async t=>{
+ const rejected={...rows[1],expected:{...rows[1].expected,signature:['transfer(resource:coin,self)']}};
+ const variants=[rejected,{...rejected,expected:{...rejected.expected,outOfBounds:false}},{...rejected,expected:{...rejected.expected,route:'open:proposal'}}];
+ const report=await scoreRows(variants,options);
+ for(const result of report.results){assert.equal(result.actual.refused,true);assert.equal(result.scores.signature,true);assert.deepEqual(result.expected.signature,rejected.expected.signature);}
+ const clarification=await scoreRows([{...rows[2],expected:rejected.expected}],options);
+ assert.equal(clarification.results[0].scores.signature,false);
+ const committed=await scoreRows([{...rows[0],expected:rejected.expected}],options);
+ assert.equal(committed.results[0].scores.signature,false);
+ // A rejected receipt may not hide applied effects, even matching cost rows.
+ const cost={op:'transfer',from:'player|coin_river|purse',to:'sink:consume|coin_river|purse',qty:1};
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>({receipt:{status:'rejected',applied:[cost],cost:{resources:[cost]}}}));
+ const mutated=await scoreRows([rejected],options);
+ assert.equal(mutated.results[0].actual.refused,true);assert.equal(mutated.results[0].scores.signature,false);
+ assert.deepEqual(mutated.results[0].actual.excludedCosts,[cost]);
+ t.mock.restoreAll();
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw Error('implementation failure');});
+ const broken=await scoreRows([rejected],options);
+ assert.equal(broken.results[0].actual.refused,false);assert.equal(broken.results[0].scores.signature,false);
 });
 
 test('A3 preview: clarification, rejection and fallback retain original diagnostics',async()=>{

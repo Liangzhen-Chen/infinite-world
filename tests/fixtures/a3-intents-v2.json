@@ -438,21 +438,21 @@
         },
         {
           "op": "vital",
-          "target": "monster_bent_horn_goat",
+          "target": "a3v2_009_goat",
           "type": "body:satiety",
           "delta": 30
         }
       ],
-      "target": "monster_bent_horn_goat"
+      "target": "a3v2_009_goat"
     },
     "proposalNotes": [
-      "静态数据不能确定本题玩家所拥有的家畜实例；item_oats 是现有植物性饲料候选，须核验该家畜食性。不能把任意野物或怪物模板当作已拥有宠物。",
-      "本轮场景绑定：missing:own_pet → monster_bent_horn_goat。前提见setup，不将绑定当作动作成功。"
+      "物种依据world/meta/monsters.json的monster_bent_horn_goat：草食、可驯养，食物明确包含item_oats。",
+      "原物种占位改为setup.instances里的唯一既存个体a3v2_009_goat；实际执行前将场景ID绑定到加载后的实体ID，不能把物种ID当个体。"
     ],
     "setup": {
       "location": "loc_hw_fields",
       "present": [
-        "monster_bent_horn_goat"
+        "a3v2_009_goat"
       ],
       "inventory": {
         "item_oats": 1
@@ -460,8 +460,41 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "monster_bent_horn_goat指本场唯一、此前已实际驯养并归玩家的弯角山羊个体，不把物种目录当第二只动物；已跟随到身边。",
+        "a3v2_009_goat是本场唯一、此前已实际驯养并归玩家的山羊个体，species=monster_bent_horn_goat；加载既有个体、owns和tamed_by持有，已跟随到身边。本次不是捕捉或驯养，不额外扣野外种群，不另造第二只羊。",
         "该羊饥饿、清醒，燕麦可食，当前没有拒食或敌对；玩家有权喂养。"
+      ],
+      "instances": [
+        {
+          "id": "a3v2_009_goat",
+          "template": "agent",
+          "kind": "creature",
+          "species": "monster_bent_horn_goat",
+          "name": "本人已驯养的弯角山羊",
+          "location": "loc_hw_fields",
+          "facts": {
+            "hunger": 80,
+            "trust": 30,
+            "following": "player"
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_009_owns",
+          "kind": "owns",
+          "holder": "player",
+          "subject": "a3v2_009_goat",
+          "terms": {
+            "share": 1
+          }
+        },
+        {
+          "id": "a3v2_009_tamed",
+          "kind": "tamed_by",
+          "holder": "player",
+          "subject": "a3v2_009_goat",
+          "terms": {}
+        }
       ]
     }
   },
@@ -657,7 +690,17 @@
       "minute": 600,
       "facts": [
         "已获准使用安静角落；已学spell_light及skill_light，熟练度100，今日未练；体力充足、魔力至少1，本轮收益仍受日上限。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_light": 100
+        },
+        "spells": [
+          "spell_light"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -702,7 +745,16 @@
       "minute": 600,
       "facts": [
         "本人拥有完整可读的工序册，通用文字识字skill_literacy=100；尚未学recipe_spin_wool；已获准安静阅读，需实际学习时间。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_literacy": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": [],
+        "literacy": 100
+      }
     }
   },
   {
@@ -752,7 +804,16 @@
       "facts": [
         "陆青清醒可授课，skill_literacy=450；已本人明确同意以目录价2铜教一课，本人识字熟练度0，能听懂口头讲解。",
         "本课用田契常用字作教学内容，时间60分钟；付款仍须实际发生，不预设学习成功。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_literacy": 0
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": [],
+        "literacy": 0
+      }
     }
   },
   {
@@ -799,7 +860,15 @@
       "minute": 600,
       "facts": [
         "已获准练习，已学skill_monk_combat_01，熟练度100、今日未练；本题“基础吐纳”具体指三息定桩的调息练习，不添加新功法。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_monk_combat_01": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -847,7 +916,15 @@
       "facts": [
         "苏岚正在用现有织机织布，没有授课空档；本人仅获准站在可看清手法的位置旁观，未取得授课同意。",
         "本人已知skill_life_4_core基础、熟练度10，能感知完整工序片段；不把旁观判作完整授艺。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_4_core": 10
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -892,7 +969,16 @@
       "minute": 600,
       "facts": [
         "本人skill_literacy=100，已经学过本页字词，课本完整且文字可读；获准在此温习，尚未触及今日学习上限。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_literacy": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": [],
+        "literacy": 100
+      }
     }
   },
   {
@@ -950,7 +1036,15 @@
       "facts": [
         "自有木柄样品完好，已掌握skill_life_6_core=100，获准使用工作台观察；当前无同名研究项目。",
         "interim是world/ontology/entity-templates.json中包含project的通用模板；立项不自动产出新配方、耐久加成或资金。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -1007,7 +1101,15 @@
       "facts": [
         "本人等级1，skill_life_6_core=100；带有本人制作且满足本地验样要求的木柄作品，尚未取得profession_life_6认证。",
         "严辙在登记窗口受理，具有本次转交合格木工考官的登记授权；考官席位、120分钟考核及20铜费用可安排，申请不等于认证已通过。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -1063,7 +1165,17 @@
       "facts": [
         "已学recipe_wooden_pegs，skill_life_6_core=100；木料与完好小刀已摆在station_hw_mill_bench，本人仍持有且不重复生成。",
         "木作台空闲，公开使用费2铜尚待支付，需20分钟实际制作。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_wooden_pegs"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1143,7 +1255,17 @@
       "minute": 600,
       "facts": [
         "已学recipe_bake_flatbread，skill_life_3_core=100；station_hw_kitchen锅炉可用且获准使用，使用费3铜待付，材料新鲜，刨屑干燥可作燃料。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_3_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_bake_flatbread"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1208,7 +1330,17 @@
       "facts": [
         "已学recipe_salt_fish，skill_life_3_core=100；鱼已剖净仍新鲜，切刀完好，station_hw_kitchen有清洁台面与冷凉腌放处，许可有效、使用费3铜待付。",
         "需等待完整180分钟，不在setup预先生成咸鱼。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_3_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_salt_fish"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1262,7 +1394,17 @@
       "minute": 600,
       "facts": [
         "已学recipe_spin_wool，skill_life_4_core=100；洗净羊毛干燥、木纺锤完好，station_hw_loom_table可用、使用费2铜待付。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_4_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_spin_wool"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1324,7 +1466,17 @@
       "minute": 480,
       "facts": [
         "已学recipe_fire_cup，skill_life_14_core=100；station_bs_small_kiln与陶轮完好，租借许可覆盖完整600分钟工序，5铜窑费此前已付。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_14_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_fire_cup"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1396,7 +1548,17 @@
       "minute": 600,
       "facts": [
         "已学recipe_dip_candles，skill_life_3_core=100；station_hw_kitchen炉灶与煮锅可用，获得使用许可，3铜使用费待付，材料干燥。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_3_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_dip_candles"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -1450,7 +1612,15 @@
       "facts": [
         "自有木杖condition=60，裂口仅为repair_staff_trim可处理的表层毛裂；skill_life_6_core=100。",
         "station_hw_mill_bench可用、使用费2铜待付；刀完好，木料为题述备用修补料，现有修整方案不要求耗材，不强行扣掉木料。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -1510,7 +1680,15 @@
       "minute": 600,
       "facts": [
         "自有普通衣服仅袖口开线、condition=60；skill_life_4_core=100，已知补缝方法；针线可用，station_hw_loom_table使用费2铜待付。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_4_core": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -1593,7 +1771,15 @@
       "facts": [
         "skill_life_6_core=100，木料绳子和工具均自有且完好，station_hw_mill_bench可用、使用费2铜待付；现场没有成品罐架。",
         "已有小陶罐用于比对尺寸；thing通用物模板承接即兴crude支架，成品须由实际木料与绳子制成。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -1639,7 +1825,17 @@
       "minute": 600,
       "facts": [
         "本人穿着的唯一普通衣服潮湿但完好，不另生成一件；已学spell_fire_03及skill_fire_03=100，魔力3。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_fire_03": 100
+        },
+        "spells": [
+          "spell_fire_03"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -3129,14 +3325,54 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "onDuty": true
+        "player": {
+          "onDuty": true
+        }
       },
       "facts": [
         "本人当班持有的镇巡拘捕执行职位：按office模板建立的既有职位，由有权机关正式授予self，有本案逮捕与押解权限；npc_bs_032_1为接收看守。",
         "本案已生效且指向吴朔的拘捕决定：既有案件执行记录，身份已核验，仍在有效期；吴朔就在面前，尚未被押入拘禁室。",
         "镇巡值房内本案使用的拘禁室是该建筑内已登记的可用拘禁分区，步行可达；不是新建地点，押解需真实移动。",
-        "将建立的guest_of东道是白石镇地方共同体loc_bs，其有权拘禁机构驻bld_bs_watch；拘禁制度custody.default有效，指定分区为上述拘禁室。不预先完成逮捕、关押或检定。"
-      ]
+        "将建立的guest_of东道是白石镇地方共同体loc_bs，其有权拘禁机构驻bld_bs_watch；拘禁制度custody.default有效，指定分区为上述拘禁室。不预先完成逮捕、关押或检定。",
+        "abilities.licenses引用本场已存在的任职持有a3v2_057_holds_office；status.player.onDuty只落实当班，不自行授予逮捕权。职权仅覆盖题述有效拘捕决定和吴朔，不得据此取得一般删案、增发、任命或处分他人财物的权限。"
+      ],
+      "instances": [
+        {
+          "id": "a3v2_057_arrest_office",
+          "template": "office",
+          "kind": "office",
+          "name": "本人当班持有的镇巡拘捕执行职位",
+          "organization": "loc_bs",
+          "seat": "bld_bs_watch",
+          "authority": {
+            "target": "npc_hw_wushuo",
+            "basis": "本案已生效且指向吴朔的拘捕决定",
+            "operations": [
+              "holding.open",
+              "move"
+            ],
+            "holdingKind": "guest_of",
+            "mode": "detained"
+          }
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_057_holds_office",
+          "kind": "holds_office",
+          "holder": "player",
+          "subject": "a3v2_057_arrest_office",
+          "terms": {}
+        }
+      ],
+      "abilities": {
+        "skills": {},
+        "spells": [],
+        "recipes": [],
+        "licenses": [
+          "a3v2_057_holds_office"
+        ]
+      }
     }
   },
   {
@@ -3440,8 +3676,21 @@
       "minute": 600,
       "facts": [
         "已学spell_fire_08及skill_fire_08，熟练度满足该术施放阶段，魔力15；敌对吴朔在8米处且可见。",
-        "旁侧有石墙遮住一条直线，玩家当前站位另有无遮挡发射线，不能穿墙；没有无辜者占据选用的火矢路径。"
-      ]
+        "旁侧有石墙遮住一条直线，玩家当前站位另有无遮挡发射线，不能穿墙；没有无辜者占据选用的火矢路径。",
+        "本题已会该术，结构化起始熟练度为300（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+      ],
+      "abilities": {
+        "skills": {
+          "skill_fire_08": 300
+        },
+        "spells": [
+          "spell_fire_08"
+        ],
+        "recipes": [],
+        "licenses": [
+          "profession_mage"
+        ]
+      }
     }
   },
   {
@@ -3557,8 +3806,21 @@
       "minute": 600,
       "facts": [
         "已学spell_earth_11及skill_earth_11，熟练度满足该术施放阶段，魔力28；自有树脂一份。",
-        "玩家在采坑塌石阶前的安全落脚处，眼前相邻窄路有持续落石且可尝试通过；没有石肤状态，施法和移动分步结算，护肤不保证免除所有落石伤害。"
-      ]
+        "玩家在采坑塌石阶前的安全落脚处，眼前相邻窄路有持续落石且可尝试通过；没有石肤状态，施法和移动分步结算，护肤不保证免除所有落石伤害。",
+        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+      ],
+      "abilities": {
+        "skills": {
+          "skill_earth_11": 600
+        },
+        "spells": [
+          "spell_earth_11"
+        ],
+        "recipes": [],
+        "licenses": [
+          "profession_mage"
+        ]
+      }
     }
   },
   {
@@ -3657,7 +3919,17 @@
       "minute": 1320,
       "facts": [
         "当地此时已天黑；自有木杖在手，已学spell_light及skill_light=100，魔力1，尚无照明状态。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_light": 100
+        },
+        "spells": [
+          "spell_light"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -3705,7 +3977,17 @@
       "facts": [
         "已学spell_water_02及skill_water_02=100，魔力2；feature_hw_kitchen_bucket就在脚边，装有8升浑水、turbidity=55。",
         "林穗已本人许可玩家净化此桶水；保留原有溶解盐、毒素与病原风险，本题只去悬浮污物，不宣称可饮用。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_water_02": 100
+        },
+        "spells": [
+          "spell_water_02"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -3752,7 +4034,17 @@
         "已学spell_water_04及skill_water_04=100，魔力4；玩家在feature_hw_pool与feature_hw_plot均3米可及的位置。",
         "feature_hw_channel在此前已清淤至blockagePercent=0，feature_hw_pool现有30升水，feature_hw_plot可再容纳20升且干燥。",
         "本次公共取水和灌溉许可有效，沟渠物理相连；水从现存水源扣减，不从setup预先灌到田里。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_water_04": 100
+        },
+        "spells": [
+          "spell_water_04"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -3796,11 +4088,27 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "fear": 1
+        "player": {
+          "fear": {
+            "magnitude": 1,
+            "remainingMinutes": 30
+          }
+        }
       },
       "facts": [
-        "已学spell_mind_01及skill_mind_01=100，魔力1；玩家清醒，受一次magnitude=1且仍有效的fear影响，尚能施法。"
-      ]
+        "已学spell_mind_01及skill_mind_01=100，魔力1；玩家清醒，受一次magnitude=1且仍有效的fear影响，尚能施法。",
+        "status按actor索引，fear是spell_mind_01.effectSpec.statuses中的恐惧状态，强度1、剩余30分钟；本题不含impaired或capacity:none，不能把轻度恐惧当成失能。定息对象为本人，本次请求表达本人施术意愿；不替任何NPC补同意。"
+      ],
+      "abilities": {
+        "skills": {
+          "skill_mind_01": 100
+        },
+        "spells": [
+          "spell_mind_01"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -3855,8 +4163,21 @@
       "minute": 600,
       "facts": [
         "已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，魔力28；自有树脂1份。",
-        "陶芷清醒、距离2米，已本人当面同意这一次隔焰罩，来源事件明确、有效且未撤销；没有既存fire_shield状态。"
-      ]
+        "陶芷清醒、距离2米，已本人当面同意这一次隔焰罩，来源事件明确、有效且未撤销；没有既存fire_shield状态。",
+        "本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+      ],
+      "abilities": {
+        "skills": {
+          "skill_fire_11": 600
+        },
+        "spells": [
+          "spell_fire_11"
+        ],
+        "recipes": [],
+        "licenses": [
+          "profession_mage"
+        ]
+      }
     }
   },
   {
@@ -3908,8 +4229,21 @@
       "minute": 600,
       "facts": [
         "已学spell_summon_05及skill_summon_05，熟练度满足该术施放阶段；魔力7，足付召出6点及第一期维持1点，之后仍按实际余额处理。",
-        "已获准在此施法，召唤数量尚未到上限，目前没有本次火蜥投影或其维持义务；它仅照明、不当真火烧物。"
-      ]
+        "已获准在此施法，召唤数量尚未到上限，目前没有本次火蜥投影或其维持义务；它仅照明、不当真火烧物。",
+        "本题已会该术，结构化起始熟练度为300（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。"
+      ],
+      "abilities": {
+        "skills": {
+          "skill_summon_05": 300
+        },
+        "spells": [
+          "spell_summon_05"
+        ],
+        "recipes": [],
+        "licenses": [
+          "profession_mage"
+        ]
+      }
     }
   },
   {
@@ -4154,7 +4488,17 @@
       "facts": [
         "已学recipe_wooden_pegs，skill_life_6_core=100；station_hw_mill_bench可用、使用费2铜待付。",
         "唯一可借item_whittling_knife实际由阿砚拥有并持有，完好可用，玩家没有刀；阿砚尚未答应，后续须取得借用许可、实际交接，再制作并返还原刀。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_wooden_pegs"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -4224,7 +4568,17 @@
       "facts": [
         "已学spell_fire_03及skill_fire_03=100，魔力3；本人唯一穿着衣服仍湿，未烘干。",
         "已有本夜有效且已付款的lodges持有，所租床位在酒馆内相邻可达；体力30/100、疲劳70/100，尚未睡，次日日出按本地历法。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_fire_03": 100
+        },
+        "spells": [
+          "spell_fire_03"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -4354,7 +4708,19 @@
         "已学spell_water_04、spell_water_02及对应skill_water_04、skill_water_02，熟练度均100，魔力6。",
         "林穗已在本场开始前真实转让并交付feature_hw_kitchen_bucket给玩家；原后厨不再有它，此刻空桶容量10升，放在渡口玩家脚边，唯一实例归self。",
         "feature_hw_pool现有30升浑水；feature_hw_channel已清淤畅通，公共取水许可有效，水源、桶和玩家相距均不超过3米；先引入10升后净水，未预置清洁结果。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_water_04": 100,
+          "skill_water_02": 100
+        },
+        "spells": [
+          "spell_water_04",
+          "spell_water_02"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -4762,7 +5128,15 @@
         "环城现役城门的开裂石砌门体：本场已有的整座石砌城门building/thing实体，condition=40，石料体量远超手工一轮可修范围，玩家就在门前。",
         "玩家只有skill_life_6_core=10和一把完好小刀，无石工本领、石工工具、替换石材、施工队或修复法术；城门管理人允许尝试检查修补，以免许可缺失遮住能力不适配。",
         "此门体按thing/building通用模板在setup登记并唯一命名；不把旧水门的铁栅误说成石城门。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 10
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -4811,13 +5185,26 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "confined": true,
-        "conscious": true
+        "player": {}
       },
       "facts": [
         "本人受镇巡值房拘禁的有效持有已存在，host=loc_bs（白石镇地方共同体，拘禁机构驻bld_bs_watch），mode=detained，regime=custody.default；玩家在上锁的拘禁室，不能自由出门。",
         "吴朔是同室30岁成年人，清醒且在可交谈距离；玩家也清醒，拘禁制度允许聊天，未被堵嘴。",
-        "玩家知道入牢前亲眼观察的天气；天气话题不是读取此刻外界全知信息。"
+        "玩家知道入牢前亲眼观察的天气；天气话题不是读取此刻外界全知信息。",
+        "status.player为空，表示本题玩家没有失能或其他状态效果；清醒且为成年人，capacity按附录A派生为full。confined由此处仍存活的guest_of持有派生，不能写成confined/conscious两个状态。既有拘禁室及上锁边界仍按上文加载；不得因允许交谈而允许普通离开，不预先释放或成功逃脱。"
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_089_detained",
+          "name": "本人受镇巡值房拘禁的有效持有",
+          "kind": "guest_of",
+          "holder": "player",
+          "subject": "loc_bs",
+          "terms": {
+            "mode": "detained",
+            "regime": "custody.default"
+          }
+        }
       ]
     }
   },
@@ -4881,13 +5268,26 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "confined": true,
-        "conscious": true
+        "player": {}
       },
       "facts": [
         "本人受镇巡值房拘禁的有效持有仍在，host=loc_bs（白石镇地方共同体，拘禁机构驻bld_bs_watch）、mode=detained；所在拘禁室牢门关闭，未获释。",
         "镇巡值房本间拘禁室的门锁是唯一对应本门的机械锁，locked=true；细铁丝确在玩家身上且可取用，未被收走。",
-        "npc_bs_032_1是近处当班看守，刚转身但警觉与听觉仍有效；门外相邻通道存在，必须先过开锁与脱逃对抗，不预先关掉拘禁持有。"
+        "npc_bs_032_1是近处当班看守，刚转身但警觉与听觉仍有效；门外相邻通道存在，必须先过开锁与脱逃对抗，不预先关掉拘禁持有。",
+        "status.player为空，表示本题玩家没有失能或其他状态效果；清醒且为成年人，capacity按附录A派生为full。confined由此处仍存活的guest_of持有派生，不能写成confined/conscious两个状态。既有拘禁室及上锁边界仍按上文加载；不得因允许交谈而允许普通离开，不预先释放或成功逃脱。"
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_090_detained",
+          "name": "本人受镇巡值房拘禁的有效持有",
+          "kind": "guest_of",
+          "holder": "player",
+          "subject": "loc_bs",
+          "terms": {
+            "mode": "detained",
+            "regime": "custody.default"
+          }
+        }
       ]
     }
   },
@@ -4930,12 +5330,25 @@
       "coins": 0,
       "minute": 600,
       "status": {
-        "confined": true,
-        "conscious": true
+        "player": {}
       },
       "facts": [
         "本人受镇巡值房拘禁的有效持有仍在，host=loc_bs（白石镇地方共同体，拘禁机构驻bld_bs_watch）、mode=detained，拘禁室门锁locked=true，看守当班。",
-        "没有释放命令、押解许可、可穿过的缺口或脱逃动作；loc_bs_nanshi虽真实存在且为已知目的地，普通步行不能越过锁门与拘禁范围。"
+        "没有释放命令、押解许可、可穿过的缺口或脱逃动作；loc_bs_nanshi虽真实存在且为已知目的地，普通步行不能越过锁门与拘禁范围。",
+        "status.player为空，表示本题玩家没有失能或其他状态效果；清醒且为成年人，capacity按附录A派生为full。confined由此处仍存活的guest_of持有派生，不能写成confined/conscious两个状态。既有拘禁室及上锁边界仍按上文加载；不得因允许交谈而允许普通离开，不预先释放或成功逃脱。"
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_091_detained",
+          "name": "本人受镇巡值房拘禁的有效持有",
+          "kind": "guest_of",
+          "holder": "player",
+          "subject": "loc_bs",
+          "terms": {
+            "mode": "detained",
+            "regime": "custody.default"
+          }
+        }
       ]
     }
   },
@@ -5247,7 +5660,17 @@
       "facts": [
         "吴朔30岁、清醒，生命缺口至少4，距玩家1米内；已本人明确拒绝这一次治疗，拒绝事件有效且未撤回，仍能抵抗。",
         "玩家已学spell_s3_mend_palm及skill_s3_mend_palm=100，魔力3，持有本次所需短香；具备施法条件，不偷偷补同意，不预设对抗成功。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_s3_mend_palm": 100
+        },
+        "spells": [
+          "spell_s3_mend_palm"
+        ],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -5404,7 +5827,16 @@
       "facts": [
         "玩家自有完整《东学光术初课》，书可触及但skill_literacy=0，完全不认识书中文字，尚未学spell_light。",
         "现场无教师、通译、正在演示的人或辅助读字法术；不给阅读能力，书本实体存在本身不能满足识读前置。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_literacy": 0
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": [],
+        "literacy": 0
+      }
     }
   },
   {
@@ -5496,7 +5928,15 @@
       "facts": [
         "已获准使用练习位置，已学skill_monk_combat_01、熟练度1，今日未练；本题基础吐纳指三息定桩，能正常完成一次调息。",
         "不预先把熟练度升至2699、不增加日上限或额外训练轮次；保留普通练习所得，过量部分由规则裁剪。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_monk_combat_01": 1
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      }
     }
   },
   {
@@ -5551,7 +5991,17 @@
       "facts": [
         "已学recipe_wooden_pegs，skill_life_6_core=100，小刀完好，station_hw_mill_bench可用、使用费2铜待付。",
         "可用木料总共只有1份，附近没有可借或可领的额外木料；请求10批不意味着有10份材料，setup不补缺额。"
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_life_6_core": 100
+        },
+        "spells": [],
+        "recipes": [
+          "recipe_wooden_pegs"
+        ],
+        "licenses": []
+      }
     }
   },
   {
@@ -5713,7 +6163,41 @@
       "facts": [
         "本独立场景标的为world已有盐舟商会faction_saltboat：已存有效股权记录，玩家0.1、npc_w5_saltboat_leader持0.9，总和1；这与组织64名成员的会员身份分开，不赋予每位会员股权。",
         "商会首领此次到白石镇联络处出席当面股东会，真实在场，不把名册的联络锚点默认当作人在场；当前没有同意稀释或增发的表决。",
-        "玩家是普通小股东，没有章程增发权、法院裁决或其他股东同意；不得在setup把份额改成玩家0.9。"
+        "玩家是普通小股东，没有章程增发权、法院裁决或其他股东同意；不得在setup把份额改成玩家0.9。",
+        "闻禾取自world/lore/factionPeople.json的同一名册ID，按agent/person模板落实本场个体；目录location=null、availability为远方未落实，不能只列present就算已到场。本题事先已赴会的地点覆盖仅作用于独立场景，不改world、不推定其他题在场。"
+      ],
+      "instances": [
+        {
+          "id": "npc_w5_saltboat_leader",
+          "source": "world/lore/factionPeople.json",
+          "template": "agent",
+          "kind": "person",
+          "name": "闻禾",
+          "age": 48,
+          "culture": "culture_river",
+          "faction": "faction_saltboat",
+          "location": "bld_bs_guild"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "a3v2_106_player_share",
+          "kind": "share",
+          "holder": "player",
+          "subject": "faction_saltboat",
+          "terms": {
+            "share": 0.1
+          }
+        },
+        {
+          "id": "a3v2_106_leader_share",
+          "kind": "share",
+          "holder": "npc_w5_saltboat_leader",
+          "subject": "faction_saltboat",
+          "terms": {
+            "share": 0.9
+          }
+        }
       ]
     }
   },
