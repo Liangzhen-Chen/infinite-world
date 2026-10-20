@@ -10,11 +10,16 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
-import {isGone,isPhysicallyDead,bookHoldingsUpgrade,openHoldings,aliveHoldings} from '../server-plugin/holdings.mjs';
+import {isGone,isPhysicallyDead,bookHoldingsUpgrade,openHoldings,aliveHoldings,declareHoldingWriter,holdingSet,createEntity,updateEntity,openHolding,setLocation,ensureHoldings} from '../server-plugin/holdings.mjs';
+import {initialNpcState} from '../server-plugin/npc-state.mjs';
+import {monsterStats} from '../server-plugin/combat.mjs';
+import {spiritStateFor} from '../server-plugin/creature-nature.mjs';
 import {applyMagicStatus} from '../server-plugin/magic-status.mjs';
 import {createRoutingContext} from '../server-plugin/action-router.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const setupWriter='a3-score-setup';
+declareHoldingWriter(setupWriter,{kinds:['*'],entities:['office'],locations:true});
 export const oldCorpusPath=path.join(root,'tests/fixtures/a3-intents.json');
 export const v2CorpusPath='F:/dnd/logs/sessions/a3-intents-v2.json';
 export async function loadCorpus({corpusPath}={}){
@@ -38,13 +43,19 @@ const routeName=route=>({拒绝:'reject',rejected:'reject',refuse:'reject',澄�
 // skills/literacy -> state.skills; spells/recipes -> their native partitions;
 // profession licenses -> state.professions + the native holding projection.
 export function applyIntentSetup(engine,initial,setup){
- const document=structuredClone(initial),setupUnmet=[],notes=[],s=document.state;
+ let document=structuredClone(initial),s=document.state;
+ const setupUnmet=[],notes=[],bindings={};
  if(setup===undefined)return {document,setupUnmet};
  const unmet=(item,reason)=>setupUnmet.push({item,reason});
  const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
  const actor=id=>id==='player'||id==='self'?s.player:Object.hasOwn(s.npcs??{},id)?s.npcs[id]:Object.hasOwn(s.creatures??{},id)?s.creatures[id]:null;
  if(!object(setup)){unmet('setup','expected an object');return {document,setupUnmet};}
- for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities'].includes(key))unmet(key,'unsupported setup field');
+ const native=(item,write)=>{
+  try{const d=engine.primitiveDraft(document);if(!ensureHoldings(d,engine))throw Error('unsupported holdings version');write(d);document=d.document;s=document.state;return true;}
+  catch(error){unmet(item,error.message);return false;}
+ };
+ const ref=id=>bindings[id]??(id==='self'?'player':id);
+ for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities','instances','holdings'].includes(key))unmet(key,'unsupported setup field');
  if(Object.hasOwn(setup,'minute')){
   if(Number.isSafeInteger(setup.minute)&&setup.minute>=0)s.minute=setup.minute;
   else unmet('minute','expected a nonnegative safe integer');
@@ -57,9 +68,97 @@ export function applyIntentSetup(engine,initial,setup){
   if(engine.world.locations.some(l=>l.id===setup.location))move('player',s.player,setup.location);
   else unmet('location',`unknown location: ${setup.location}`);
  }
+ // 01 §1.2 / A.15.7: instantiate a declared individual from its world
+ // definition, not by capturing another wild animal or inventing a species.
+ if(Object.hasOwn(setup,'instances')){
+  if(!Array.isArray(setup.instances))unmet('instances','expected an array');
+  else for(const [index,row] of setup.instances.entries()){
+   const item=`instances[${index}]`;
+   if(!object(row)||typeof row.id!=='string'||!row.id.trim()||row.name!==undefined&&(typeof row.name!=='string'||!row.name.trim())){unmet(item,'missing instance ID or invalid name');continue;}
+   if(actor(row.id)||bindings[row.id]||Object.hasOwn(s.created??{},row.id)){unmet(item,'instance ID already exists');continue;}
+   if(!engine.world.locations.some(l=>l.id===row.location)&&row.kind!=='office'){unmet(item,'unknown instance location');continue;}
+   const allowed={creature:['id','template','kind','species','name','location','facts'],person:['id','source','template','kind','name','age','culture','faction','location'],office:['id','template','kind','name','organization','seat','authority']}[row.kind];
+   if(!allowed||Object.keys(row).some(k=>!allowed.includes(k))||row.template!==(row.kind==='office'?'office':'agent')){unmet(item,'unsupported instance template or field');continue;}
+   if(row.kind==='creature'){
+    const species=engine.world.monsters.find(m=>m.id===row.species),facts=row.facts??{};
+    if(!species||!object(facts)||Object.keys(facts).some(k=>!['hunger','trust','following'].includes(k))||Object.hasOwn(facts,'hunger')&&(!Number.isSafeInteger(facts.hunger)||facts.hunger<0||facts.hunger>100)||Object.hasOwn(facts,'trust')&&(!Number.isSafeInteger(facts.trust)||facts.trust<0||facts.trust>100)||Object.hasOwn(facts,'following')&&facts.following!=='player'){
+     unmet(item,'unknown species or unsupported creature facts');continue;
+    }
+    native(item,d=>{
+     const level=species.levelRange[0],stats=monsterStats({level,template:species.template},engine.rules);
+     holdingSet(d,engine,['state','created',row.id],{id:row.id,name:row.name??species.name,aliases:[],monster:species.id,template:species.template,scope:row.location},setupWriter);
+     holdingSet(d,engine,['state','creatures',row.id],{name:row.name??species.name,species:species.id,location:row.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(species),since:s.minute,
+      ...(Object.hasOwn(facts,'hunger')||Object.hasOwn(facts,'trust')?{care:{version:1,hunger:facts.hunger??20,fatigue:0,mood:60,loyalty:50,sickness:false,sickHours:0,neglectHours:0,nextTick:s.minute+60,bond:facts.trust??0,contactDay:-1,feedDay:-1,groomDay:-1,trainDay:-1,skills:{},experience:0}}:{})},setupWriter);
+     setLocation(d,{entity:row.id,at:row.location,mode:'place',writer:setupWriter,engine});
+    });
+   }else if(row.kind==='person'){
+    const person=(engine.world.factionPeople??[]).find(p=>p.id===row.id)??engine.world.npcs.find(p=>p.id===row.id)??engine.world.residents?.find(p=>p.id===row.id);
+    if(!person||row.source!==undefined&&row.source!=='world/lore/factionPeople.json'||['name','age','culture','faction'].some(k=>Object.hasOwn(row,k)&&row[k]!==person[k])){unmet(item,'missing world person or conflicting authored identity');continue;}
+    native(item,d=>{
+     const definition={...structuredClone(person),location:row.location};
+     holdingSet(d,engine,['state','created',row.id],definition,setupWriter);
+     holdingSet(d,engine,['state','npcs',row.id],initialNpcState(definition),setupWriter);
+     setLocation(d,{entity:row.id,at:row.location,mode:'place',writer:setupWriter,engine});
+    });
+   }else{
+    if(typeof row.name!=='string'||!engine.world.locations.some(l=>l.id===row.seat)||!engine.world.locations.some(l=>l.id===row.organization)&&!engine.world.factions.some(f=>f.id===row.organization)){unmet(item,'invalid office name, organization or seat');continue;}
+    const id=row.id.startsWith('office_')?row.id:`office_${row.id}`;
+    if(native(item,d=>{
+     const {id:alias,template,kind,...facts}=row;
+     createEntity(d,{id,kind:'office',facts:{...facts,aliases:[alias]},source:`${setupWriter}:${alias}`,writer:setupWriter});
+     setLocation(d,{entity:id,at:row.seat,mode:'place',writer:setupWriter,engine});
+    }))bindings[row.id]=id;
+   }
+  }
+ }
+ // 01 §1.3 / A.15.24: native IDs and variants remain authoritative. Corpus
+ // IDs are aliases for references such as abilities.licenses, never row IDs.
+ if(Object.hasOwn(setup,'holdings')){
+  if(!Array.isArray(setup.holdings))unmet('holdings','expected an array');
+  else for(const [index,row] of setup.holdings.entries()){
+   const item=`holdings[${index}]`;
+   if(!object(row)||typeof row.id!=='string'||bindings[row.id]||Object.keys(row).some(k=>!['id','name','kind','holder','subject','terms','grantedBy'].includes(k))||row.terms!==undefined&&!object(row.terms)){unmet(item,'invalid holding declaration');continue;}
+   const terms=structuredClone(row.terms??{}),variant=row.kind==='guest_of'?terms.mode:null;
+   if(row.kind==='guest_of'&&terms.regime!==undefined&&terms.regime!=='custody.default'){unmet(item,'unknown custody regime');continue;}
+   // The native canAct/effective readers implement custody.default when the
+   // regime override is absent. Preserve the registered reference as a note.
+   if(terms.regime==='custody.default')delete terms.regime;
+   let id;
+   if(native(item,d=>{
+    if(row.kind==='tamed_by'&&d.get('state','creatures',row.subject)){
+     if(Object.keys(terms).length||row.grantedBy!==undefined)throw Error('unsupported tamed_by terms');
+     if(d.get('state','creatures',row.subject,'owner'))throw Error('creature already has a keeper');
+     // Use the same owner writer as native tame(), which opens the tamed_by
+     // ledger edge via its registered source adapter. No taming roll is run.
+     holdingSet(d,engine,['state','creatures',row.subject,'owner'],ref(row.holder),setupWriter);
+     id=aliveHoldings(d,{kind:'tamed_by',holder:ref(row.holder),subject:row.subject}).find(h=>h.source===`tamed:${row.subject}`)?.id;
+     if(!id)throw Error('native tamed_by source did not establish the holding');
+    }else id=openHolding(d,{kind:row.kind,variant,holder:ref(row.holder),subject:ref(row.subject),terms,grantedBy:ref(row.grantedBy),source:`${setupWriter}:${row.id}`,writer:setupWriter,engine});
+   })){
+    bindings[row.id]=id;
+    if(row.terms?.regime==='custody.default')notes.push(`${item}.terms.regime: custody.default uses the native default canAct/effective policy`);
+   }
+  }
+ }
+ for(const [index,row] of (Array.isArray(setup.instances)?setup.instances:[]).entries())if(row?.kind==='creature'&&row.facts?.following!==undefined){
+  native(`instances[${index}].facts.following`,d=>{
+   const holder=ref(row.facts.following),rights=aliveHoldings(d,{holder,subject:row.id}),species=engine.world.monsters.find(m=>m.id===row.species);
+   if(!d.get('state','creatures',row.id)||!rights.some(h=>h.kind==='owns')||!rights.some(h=>h.kind==='tamed_by')||!species?.tamingRule)throw Error('following requires loaded owns/tamed_by holdings and a native pet rule');
+   holdingSet(d,engine,['state','pets',row.id],{petFormat:1,creature:row.id,category:species.tamingRule.category,status:'活跃',following:true,acquired:s.minute,source:setupWriter},setupWriter);
+  });
+ }
  if(Object.hasOwn(setup,'present')){
   if(!Array.isArray(setup.present))unmet('present','expected an array of existing actor IDs');
   else for(const [index,id] of setup.present.entries()){
+   // Active catalog residents can enter the simulated scene on demand. Remote
+   // faction rosters still require an explicit instances declaration.
+   if(!actor(id)){
+    const person=engine.world.npcs.find(p=>p.id===id)??engine.world.residents?.find(p=>p.id===id);
+    if(person)native(`present[${index}]`,d=>{
+     holdingSet(d,engine,['state','npcs',id],initialNpcState({...person,location:s.location}),setupWriter);
+     setLocation(d,{entity:id,at:s.location,mode:'place',writer:setupWriter,engine});
+    });
+   }
    const body=actor(id);
    if(typeof id!=='string'||!body||['self','player'].includes(id)){unmet(`present[${index}]`,`missing NPC/creature instance: ${id}`);continue;}
    if(isGone(engine,document,id)||isPhysicallyDead(engine,document,id)||body.hp<=0){unmet(`present[${index}]`,`actor is dead or gone: ${id}`);continue;}
@@ -119,7 +218,7 @@ export function applyIntentSetup(engine,initial,setup){
       // Non-profession IDs must name an already loaded native right. A string
       // in abilities cannot create an office, authorization or consent event.
       const rights=aliveHoldings(engine.primitiveDraft(document));
-      if(!rights.some(row=>row.id===id&&(['certified','holds_office'].includes(row.kind)&&row.holder==='player'||row.kind==='permit'&&row.subject==='player')))unmet(item,'unknown profession or missing active player license holding');
+      if(!rights.some(row=>row.id===ref(id)&&(['certified','holds_office'].includes(row.kind)&&row.holder==='player'||row.kind==='permit'&&row.subject==='player')))unmet(item,'unknown profession or missing active player license holding');
       continue;
      }
      if(!['combat','life'].includes(role.kind)){unmet(item,'expected a combat/life profession certification');continue;}
@@ -151,8 +250,25 @@ export function applyIntentSetup(engine,initial,setup){
   if(!entries)unmet('status','expected status string or actor ID to status mapping');
   else for(const [id,status] of entries){
    const body=actor(id);
-   if(!body||typeof status!=='string'||!status.trim())unmet(`status.${id}`,'missing actor or invalid status');
-   else body.status=status;
+   if(!body){unmet(`status.${id}`,'missing actor');continue;}
+   if(typeof status==='string'&&status.trim()){body.status=status;continue;}
+   if(!object(status)){unmet(`status.${id}`,'expected status string or registered status mapping');continue;}
+   // Empty mappings assert no additional effects. They do not turn confinement
+   // into incapacity, clear existing effects or grant a release (A.3/A.15.24).
+   for(const [key,value] of Object.entries(status)){
+    const item=`status.${id}.${key}`;
+    if(key==='onDuty'){
+     const d=engine.primitiveDraft(document),offices=aliveHoldings(d,{kind:'holds_office',holder:ref(id)});
+     if(typeof value!=='boolean'||offices.length!==1||!d.get('holdings','entities',offices[0].subject)){unmet(item,'onDuty requires exactly one loaded native office and a boolean');continue;}
+     // Duty is a fact of the existing office, not a new license or authority.
+     native(item,d=>updateEntity(d,{id:offices[0].subject,facts:{onDuty:value},writer:setupWriter}));
+    }else if(object(value)&&Object.keys(value).every(k=>['magnitude','remainingMinutes'].includes(k))){
+     native(item,d=>{
+      const result=applyMagicStatus(d,{target:ref(id),status:key,power:value.magnitude,duration:value.remainingMinutes,source:setupWriter},`${setupWriter}:status:${id}:${key}`);
+      if(result.resisted)throw Error('status resisted by the existing target state');
+     });
+    }else unmet(item,'unknown status field or ambiguous status shape');
+   }
   }
   }
  }
@@ -181,7 +297,7 @@ export function applyIntentSetup(engine,initial,setup){
   prepared=applyPatches(document,bookHoldingsUpgrade({...initial,holdings:document.holdings},document,engine.world));
   prepared.holdings??=openHoldings(engine,prepared);
  }catch(error){unmet('abilities.licenses',error.message);}
- return {document:prepared,setupUnmet,notes};
+ return {document:prepared,setupUnmet,notes,bindings};
 }
 
 // routing.signature describes requested effects. Only committed applied effects
@@ -429,7 +545,8 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
 export async function scoreCorpus(options={}){const {rows,corpusPath}=await loadCorpus(options);return {...await scoreRows(rows,options),corpusPath};}
 // Importing the scorer performs no run and emits no output.
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- const index=process.argv.indexOf('--corpus'),report=await scoreCorpus(index>=0?{corpusPath:process.argv[index+1]}:{});
+ const index=process.argv.indexOf('--corpus'),corpusPath=index>=0?process.argv[index+1]:process.argv.slice(2).find(arg=>!arg.startsWith('--'));
+ const report=await scoreCorpus(corpusPath?{corpusPath}:{});
  console.log(JSON.stringify(process.argv.includes('--summary')?{...report,results:undefined}:report,null,2));
 }
 export default scoreCorpus;
