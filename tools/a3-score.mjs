@@ -389,7 +389,12 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   // Rejection signatures describe the REQUEST, not an adopted effect set.
   // Credit requires an actual refusal and zero raw applied effects, including
   // costs (do not let cost filtering or a rejected receipt hide mutations).
-  const expectsRejection=row.expected.outOfBounds===true||(Array.isArray(expectedRoute)?expectedRoute.every(r=>routeName(r)==='reject'):routeName(expectedRoute)==='reject');
+  // Out-of-bounds requests come in two forms (06 §6.7): a reject route must be
+  // refused outright; a concrete route is a bounded outcome that must commit
+  // only the clipped effects its signature names.
+  const routeRejects=Array.isArray(expectedRoute)?expectedRoute.every(r=>routeName(r)==='reject'):routeName(expectedRoute)==='reject';
+  const bounded=row.expected.outOfBounds===true&&!routeRejects;
+  const expectsRejection=!bounded&&(row.expected.outOfBounds===true||routeRejects);
   const signature=ready&&(expectsRejection
    ?actual.refused&&!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0
    :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world));
@@ -411,15 +416,15 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
     }
    }
   }
-  const supported=row.expected.outOfBounds?actual.refused:routeName(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
-  results.push({id:row.id,text:row.intent,expected:row.expected,setupUnmet:run.setupUnmet,actual:{...actual,builder},scores:{route,signature,outOfBounds:ready&&actual.refused===row.expected.outOfBounds,supported:ready&&supported,constructor},repair:row.expected.repair});
+  const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:routeName(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
+  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,actual:{...actual,builder},scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&supported,constructor},repair:row.expected.repair});
  }
  const total=rows.length,tricky=rows.filter(r=>r.tricky).length,rate=(key,denominator=total)=>denominator?results.filter(r=>r.scores[key]).length/denominator:1;
  const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=rows.filter(r=>r.expected.constructor).length;
  // Preserve the acceptance gate's conservative definition: every expected
  // rejection must really be rejected. Applied violations are reported apart
  // from clarification/failure; those cannot earn rejection credit.
- return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.actual.refused).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&!r.actual.committed&&!r.actual.refused&&!r.actual.clarified).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructor:rate('constructor',constructorExpected),results};
+ return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.setupUnmet.length&&(r.bounded?!r.scores.outOfBounds:!r.actual.refused)).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly&&!(r.bounded&&r.scores.signature)).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&(r.setupUnmet.length||(!r.actual.committed&&!r.actual.refused&&!r.actual.clarified))).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructor:rate('constructor',constructorExpected),results};
 }
 export async function scoreCorpus(options={}){const {rows,corpusPath}=await loadCorpus(options);return {...await scoreRows(rows,options),corpusPath};}
 // Importing the scorer performs no run and emits no output.

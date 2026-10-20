@@ -21,6 +21,8 @@ test('A3 real proposal engine meets the explicit stage thresholds',async()=>{
  assert.equal(score.inputMissing.length,0,`missing executable inputs: ${score.inputMissing.join(', ')}`);
  assert.ok(score.route>=.90,`route ${(score.route*100).toFixed(1)}%`);
  assert.ok(score.signature>=.85,`signature ${(score.signature*100).toFixed(1)}%`);
+ assert.equal(score.setupUnmetCount,0,`setup unmet: ${score.setupUnmet.map(x=>x.id).join(", ")}`);
+ assert.equal(score.outOfBoundsUnverified.length,0,`out-of-bounds unverified: ${score.outOfBoundsUnverified.join(", ")}`);
  assert.equal(score.outOfBoundsLeaks.length,0,`out-of-bounds leaks: ${score.outOfBoundsLeaks.join(', ')}`);
  assert.equal(score.unsupported.length,0,`unsupported: ${score.unsupported.join(', ')}`);
  assert.equal(score.fallbackReactionRate,1);
