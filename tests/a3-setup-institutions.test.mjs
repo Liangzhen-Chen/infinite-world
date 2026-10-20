@@ -8,6 +8,7 @@ import {setupLoaderFields,registerSetupLoader} from '../tools/a3-setup/index.mjs
 import {consent} from '../server-plugin/action-consent.mjs';
 import {obligationRows,obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {purseAccount} from '../server-plugin/items.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3e-institutions');
@@ -78,10 +79,18 @@ test('accounts: opening snapshots replace NPC cash/stock once without changing t
  const result=run(setup);assert.deepEqual(result.setupUnmet,[]);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(result);
 });
 
-test('accounts: invalid, unsupported counter/container and mismatched sources stay unmet',()=>{
+test('accounts: native counter opening is separate from purse; invalid/container and mismatched sources stay unmet',()=>{
  const setup=fixture('002');setup.accounts[0].balance=-1;assert.equal(errors(run(setup),'accounts').length,1);
  setup.accounts[0].balance=3;assert.match(errors(run(setup),'accounts')[0].reason,/does not match/);
- for(const id of ['082','096']){const result=run(fixture(id));assert.match(errors(result,'accounts')[0].reason,/原生.*01/);}
+ // N is implemented: 01 §1.6 requires a distinct native counter, not an unmet placeholder.
+ const counter=run(fixture('082'));assert.deepEqual(errors(counter,'accounts'),[]);
+ assert.equal(counter.document.ledger.accounts['npc_hw_linsui|coin_river|counter'],100);
+ assert.equal(counter.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(counter);
+ // The physical M adapter now binds the original purse (01 §1.2/1.6), not a second coin store.
+ const container=run(fixture('096'));assert.deepEqual(errors(container,'accounts'),[]);
+ const account=purseAccount(engine.primitiveDraft(container.document),engine,container.bindings.a3v2_096_purse);
+ assert.equal(container.document.ledger.accounts[account],10);assert.equal(container.document.state.npcs.npc_hw_yanzhe.coins,10);clean(container);
+ const badContainer=fixture('096');badContainer.accounts[0].container='missing:purse';assert.equal(errors(run(badContainer),'accounts').length,1);
  const missing=fixture('002');missing.accounts[0].sourceEvent='missing';assert.match(errors(run(missing),'accounts')[0].reason,/unresolved sourceEvent/);
 });
 
@@ -100,28 +109,47 @@ test('obligations: native old loans retain amount/time and share one compatibili
  }
 });
 
-test('obligations: invalid or unsupported old deposits/pawns/fines are not newly funded or duplicated',()=>{
+test('obligations: native old deposits/pawns/fines/delivery/upkeep preserve claims without fresh funding',()=>{
  for(const id of ['032','037','054','056','073']){
-  const setup=fixture(id),result=run(setup);assert.ok(errors(result,'obligations').length,id);
+  const setup=fixture(id),result=run(setup);assert.deepEqual(errors(result,'obligations'),[],id);
   assert.equal(result.document.state.player.coins,setup.coins,id);
-  for(const row of setup.obligations)assert.equal(result.document.state.obligations[row.id],undefined,id);
+  // O imports existing obligations (01 §1.4, 06 §6.3); it must not open or fund them again.
+  for(const row of setup.obligations){
+   const native=result.document.state.obligations[result.bindings[row.id]];
+   assert.equal(native.amount,row.amount,id);assert.equal(native.paid,row.paid??0,id);
+   assert.equal(native.createdAt,row.openedAt,id);assert.equal(native.deadline,row.dueAt,id);
+   assert.equal(obligationRows(result.document.state).filter(o=>o.id===native.id).length,1,id);
+  }
+  clean(result);
  }
  const setup=fixture('035');setup.obligations[0].paid=31;
- assert.match(errors(run(setup),'obligations')[0].reason,/invalid old obligation/);
+ // Native O validation now rejects the same overpayment; no assertion of rejection is removed.
+ assert.match(errors(run(setup),'obligations')[0].reason,/Invalid historical obligation snapshot or source/);
  setup.obligations[0].paid=0;setup.obligations[0].sourceEvent='missing';assert.match(errors(run(setup),'obligations')[0].reason,/unresolved sourceEvent/);
 });
 
-test('documents: valid evidence reports missing paper/source importer, never creates a second sheet',()=>{
+test('documents: native evidence annotates the same original and preserves its source, never creates a second sheet',()=>{
  const result=run(fixture('051'));
- assert.match(errors(result,'documents')[0].reason,/原生.*05/);
- assert.equal(result.document.state.itemInstances?.a3v2_051_evidence,undefined);
- const setup=fixture('051');setup.documents[0].reviewed='yes';assert.match(errors(run(setup),'documents')[0].reason,/invalid document/);
+ // P is implemented: 01 §1.2 / 05 §5.2.7 bind evidence to its physical original.
+ assert.deepEqual(errors(result,'documents'),[]);
+ const id=result.bindings.a3v2_051_evidence,paper=result.document.state.itemInstances[id];
+ assert.equal(paper.document.sourceEvent,result.bindings.a3v2_051_purchase_receipt);
+ assert.equal(paper.document.describes,result.bindings.a3v2_051_grain_sack);
+ assert.equal(result.document.state.inventory.item_parchment.quantity,1);
+ assert.equal(Object.values(result.document.state.itemInstances).filter(p=>p.document?.sourceEvent===paper.document.sourceEvent).length,1);clean(result);
+ // Native P validates the same malformed reviewed flag at the existing-paper boundary.
+ const setup=fixture('051');setup.documents[0].reviewed='yes';assert.match(errors(run(setup),'documents')[0].reason,/Invalid existing paper, holder or document source/);
 });
 
-test('cases: valid historical phases require native import, never file/convict from an emit',()=>{
- const result=run(fixture('052'));assert.match(errors(result,'cases')[0].reason,/registerIncident.*05/);
- assert.ok(!Object.values(result.document.state.records).some(r=>r.category==='legal_case'&&r.sourceEvent?.includes('a3v2_052')));
- const setup=fixture('052');setup.cases[0].stage='erased';assert.match(errors(run(setup),'cases')[0].reason,/invalid case/);
+test('cases: native historical registration retains the existing phase and judgment, never convicts from an emit',()=>{
+ // Q is implemented: 05 §5.2.7 restores registration and judgment sources, not fresh decisions.
+ const result=run(fixture('052'));assert.deepEqual(errors(result,'cases'),[]);
+ const row=result.document.state.records[result.bindings.a3v2_052_case];
+ assert.equal(row.stage,'judged');assert.equal(row.sourceEvent,result.bindings.a3v2_052_case_registered);
+ assert.equal(row.judgment.sourceEvent,result.bindings.a3v2_052_judgment);assert.equal(row.appealDeadline,2040);
+ assert.equal(row.offense,undefined);assert.equal(row.judgment.fine,undefined);
+ assert.equal(Object.values(result.document.state.records).filter(r=>r.category==='legal_case'&&r.sourceEvent===row.sourceEvent).length,1);clean(result);
+ const setup=fixture('052');setup.cases[0].stage='erased';assert.match(errors(run(setup),'cases')[0].reason,/Invalid historical case/);
 });
 
 test('permits: native existing rental authority is retained; unresolved managers and expanded scopes are unmet',()=>{

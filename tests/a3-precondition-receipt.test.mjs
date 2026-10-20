@@ -13,9 +13,12 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
+const nativeCorpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
 const ids=[15,17,18,25,27,28,32,34,39,43,51,52,53,55,56,58,63,64,68,69,71,95,96,97];
 const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'a3-precondition-receipt');
 const rowFor=n=>corpus.find(row=>row.id===`A3V2-${String(n).padStart(3,'0')}`);
+const legalRequests=new Set([51,52,53,55,56,58]);
+const nativeRowFor=n=>nativeCorpus.find(row=>row.id===`A3V2-${String(n).padStart(3,'0')}`);
 const receiptOf=value=>value.result?.receipt??value.receipt;
 function assertRefusal(value){
  const receipt=receiptOf(value);
@@ -52,6 +55,23 @@ for(const n of ids)test(`A3 refusal ${n}: routed preview and direct commit prese
  assert.deepEqual(direct.patches,[]);
  assert.deepEqual(document,before);
  assert.deepEqual(auditLedger(document.ledger),[]);
+});
+
+for(const n of legalRequests)test(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
+ // 05 §5.2.7: current native premises submit requests; the original r5 inputs
+ // above still lack those premises and retain every atomic-refusal assertion.
+ const row=nativeRowFor(n),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
+ const before=structuredClone(document),input={tool:'world_propose',eventId:`legal-positive-${n}`,args:row.proposal};
+ const preview=await engine.previewAction(document,input),quoted=receiptOf(preview);assert.equal(quoted.status,'preview');assert.deepEqual(document,before);
+ const result=await engine.reduce(document,input),receipt=receiptOf(result);assert.equal(receipt.status,'committed');assert.equal(receipt.routed,row.expected.route);
+ assert.equal(receipt.applied.filter(e=>e.op==='emit').length,1);assert.ok(receipt.applied.every(e=>e.op==='emit'));
+ const after=applyPatches(document,result.patches);assert.equal(after.state.player.coins,document.state.player.coins);assert.deepEqual(auditLedger(after.ledger),[]);
+ for(const [id,c]of Object.entries(document.state.records).filter(([,c])=>c.category==='legal_case')){
+  assert.equal(after.state.records[id].stage,c.stage);assert.deepEqual(after.state.records[id].judgment,c.judgment);assert.equal(after.state.records[id].representation,c.representation);
+ }
+ const call={tool:'world_act',eventId:`legal-positive-direct-${n}`,args:{action:receipt.routed,slots:receipt.routing.slots}};
+ assert.equal(receiptOf(await engine.previewAction(document,call)).status,'preview');
+ const direct=await engine.reduce(document,call);assert.equal(receiptOf(direct).status,'committed');assert.deepEqual(document,before);
 });
 
 test('A3 refusal: program errors and non-public legacy calls still throw',async()=>{
@@ -132,7 +152,8 @@ test('A3 scorer reads refusal details without awarding successful routing or eff
  assert.equal(run.actual.committed,false);
  assert.equal(run.actual.route,'reject');
  assert.equal(run.actual.routed,run.receipt.routed);
- assert.equal(run.actual.reasonCode,'E-ACTION-CASE');
+ // The request consumer now owns this rejection: r5 has no native recipient.
+ assert.equal(run.actual.reasonCode,'E-ACTION-LEGAL-REQUEST');
  assert.ok(run.actual.missing.length&&run.actual.repair.length);
  assert.deepEqual(run.effects,[]);
 });

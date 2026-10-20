@@ -19,7 +19,9 @@ import {claimLimitation,recordClaimProcedure,registerLoss,lossView,recoverLoss,s
 import {obligationView,obligationRow} from './obligation-state.mjs';
 import {finePaymentContext,settleObligation} from './obligation-runtime.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
-import {legacyCanAct} from './action-capacity.mjs';
+import {legacyCanAct,canAct} from './action-capacity.mjs';
+import {consent} from './action-consent.mjs';
+import {worldEvent} from './world-events.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
@@ -63,7 +65,7 @@ export function currentCaseHandler(engine,document,caseId,actor){
     const row=document.state.records?.[caseId],office=row?.handlerOffice&&document.holdings?.entities?.[row.handlerOffice],n=actor==='player'?document.state.player:document.state.npcs?.[actor];
     return Boolean(office&&office.goneAt===undefined&&office.facts.authority?.case===caseId&&office.facts.authority.operations?.includes('handle_case')&&
         aliveHoldings(holdingReader(document),{kind:'holds_office',holder:actor,subject:row.handlerOffice}).length&&office.facts.onDuty===true&&n&&isEffective(engine,document,actor)&&
-        awake(n,holdingReader(document),actor)&&(actor==='player'?document.state.location:n.location)===office.facts.seat);
+        awake(n,holdingReader(document),actor)&&canAct({engine,document},actor,'talk').allowed&&(actor==='player'?document.state.location:n.location)===office.facts.seat);
 }
 export function caseProcedureView(engine,document,id,actor='player'){
     const row=document.state.records?.[id];if(row?.category!=='legal_case')return null;
@@ -167,6 +169,78 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
         }
     }
     return id;
+}
+// A request has a recipient and verifiable premises, but does not decide a case.
+const rejectLegalRequest=reason=>reject('E-ACTION-LEGAL-REQUEST',reason,{missing:[reason],repair:[`先满足当前条件：${reason}；再向有权且在场的人提出原请求`]});
+function receiveLegalRequest(d,engine,args,eventId){
+    const request=args.request,operation=args.operation,s=d.get('state'),caseId=existingSnapshotCase(d,request?.terms?.case??args.case),row=s.records?.[caseId];
+    const kinds={report:'theft',confess:'confession',claim:'cargo_damage',appeal:'appeal',hire_advocate:'defense',bribe:'bribe'};
+    if(!Object.hasOwn(kinds,operation)||!request||typeof request!=='object'||Array.isArray(request)||request.kind!==kinds[operation])rejectLegalRequest('Invalid legal request kind');
+    const key=`legal_request:${eventId}`,old=s.records?.[key];
+    if(old){if(JSON.stringify(old.request)!==JSON.stringify(request))throw Error('Legal request event reused');return {request:key,case:old.case,submitted:true};}
+    const papers=Object.entries(s.itemInstances??{}).filter(([id,p])=>p.owner==='player'&&(!p.carriedBy||p.carriedBy==='player')&&
+        (p.location===s.location||p.location===undefined&&s.inventory?.[p.item]?.instances?.includes(id))&&p.durability>0&&!isGone(engine,d,id)&&p.document&&p.document.valid!==false);
+    const sourceEvents=[],evidence=[];let receiver,target=request.target,verb=['report','confess','claim'].includes(operation)?'claim':'request';
+    const canReceive=id=>awake(s.npcs?.[id],d,id)&&canAct({engine,document:d.document},id,'talk').allowed;
+    const receive=(permission)=>{
+        const candidates=aliveHoldings(d,{kind:'holds_office'}).filter(h=>{
+            const office=d.get('holdings','entities',h.subject),f=office?.facts,n=s.npcs?.[h.holder];
+            return office?.goneAt===undefined&&f?.seat===s.location&&f.onDuty===true&&f.authority?.operations?.includes(permission)&&
+                (!f.authority.case||f.authority.case===caseId)&&n?.location===s.location&&canReceive(h.holder)&&isEffective(engine,d,h.holder)&&
+                (!args.authority||args.authority===h.holder)&&(!target||target===s.location||target===h.holder);
+        });
+        if(candidates.length!==1)rejectLegalRequest('Legal request requires one present on-duty authorized recipient');
+        receiver=candidates[0].holder;
+    };
+    if(operation==='report'||operation==='confess'){
+        receive(operation==='report'?'receive_report':'receive_surrender');
+        const known=Object.entries(s.records??{}).filter(([,r])=>r.category==='world_event'&&r.verb==='theft'&&r.minute<=s.minute&&
+            (operation==='confess'?r.actor==='player':r.payload?.owner==='player'&&(r.witnesses?.includes('player')||r.observer==='player'))&&
+            (!request.incident||request.incident===r.id||request.incident===r.payload?.name||request.incident===r.summary)&&
+            (!request.accused||request.accused===r.actor));
+        if(known.length!==1)rejectLegalRequest('Legal request requires one identified personally known incident');
+        const [source,event]=known[0];sourceEvents.push(source);
+        if(operation==='report'){
+            const originals=papers.filter(([,p])=>p.document.describes&&identifies(d,event.payload?.subject,p.document.describes));
+            if(!originals.length)rejectLegalRequest('Theft report requires the original identifying evidence');
+            evidence.push(...originals.map(([id])=>id));
+        }
+        target=operation==='confess'?receiver:s.location;
+    }else if(operation==='claim'){
+        receive('receive_claim');
+        const claims=Object.values(s.obligations??{}).filter(o=>o.snapshotVersion===1&&o.kind==='delivery'&&o.creditor==='player'&&o.terms.delivered===true&&o.terms.lossAssessed===false&&(!request.carrier||o.debtor===request.carrier));
+        if(claims.length!==1)rejectLegalRequest('Cargo claim requires one existing unassessed delivery');
+        const claim=claims[0],cargo=s.itemInstances?.[claim.subject],originals=papers.filter(([,p])=>p.document.obligation===claim.id&&['accepted_cargo','delivered'].every(verb=>p.document.links?.some(id=>{
+            const event=worldEvent(s,id);return event?.verb===verb&&event.actor===claim.debtor&&identifies(d,event.payload?.subject,claim.subject);
+        })));
+        if(!cargo||!Number.isFinite(cargo.maxDurability)||cargo.durability>=cargo.maxDurability||!originals.length)rejectLegalRequest('Cargo claim requires the damaged original and handover evidence');
+        sourceEvents.push(claim.source);evidence.push(...originals.map(([id])=>id));target=s.location;
+    }else{
+        if(!caseProcedureView(engine,d.document,caseId)?.party)rejectLegalRequest('Legal request requires the caller’s existing case');
+        if(row.sourceEvent)sourceEvents.push(row.sourceEvent);
+        if(operation==='appeal'){
+            if(!caseProcedureView(engine,d.document,caseId).canRequestAppeal)rejectLegalRequest('Appeal requires an eligible party, existing judgment and open appeal period');
+            receive('receive_appeal');
+            const originals=papers.filter(([,p])=>p.document.case===caseId&&p.document.reviewed===false);
+            if(!originals.length)rejectLegalRequest('Appeal requires the original new case document');
+            for(const [id]of originals){if(!row.evidence.some(e=>e.document===id))submitCaseDocument(d,engine,{case:caseId,document:id},eventId);evidence.push(id);}
+            target=s.location;
+        }else if(operation==='hire_advocate'){
+            receiver=present(d,engine,args.authority??target);target=receiver;
+            if(!canReceive(receiver))rejectLegalRequest('Recipient cannot currently receive the request');
+            const vocation=s.npcs[receiver]?.vocation;
+            if(vocation?.id!=='vocation_advocate'||vocation.conflictOfInterest||[...row.parties??[],row.offender,row.victim,...row.witnesses??[],row.judgment?.judge].includes(receiver)||!consent({engine,document:d.document},receiver,'player','negotiate_defence',{subject:caseId,purpose:caseId}).allowed)rejectLegalRequest('Defence negotiation requires a qualified disinterested willing advocate');
+            if(request.terms?.quoteOnly!==true)rejectLegalRequest('Defence fee and service scope must be negotiated before signing');
+        }else{
+            receiver=present(d,engine,args.authority??target);target=receiver;
+            if(!canReceive(receiver))rejectLegalRequest('Recipient cannot currently receive the request');
+            const amount=integer(request.terms?.amount,1,1e6,'Bribe offer');
+            if(!currentCaseHandler(engine,d.document,caseId,receiver)||s.player.coins<amount)rejectLegalRequest('Bribe offer requires this case’s current handler and the offered cash');
+        }
+    }
+    const payload={...structuredClone(request),...(row?.category==='legal_case'?{case:caseId}:{}),sourceEvents,evidence,receiver};
+    holdingSet(d,engine,path(key),{category:'legal_request',actor:'player',minute:s.minute,location:s.location,sourceEvent:eventId,request:structuredClone(request),verb,target,receiver,payload,...(row?.category==='legal_case'?{case:caseId}:{})},'law');
+    return {request:key,...(row?.category==='legal_case'?{case:caseId}:{}),submitted:true,accepted:null,worldEvent:{verb,actor:'player',target,payload,tags:['legal_request'],visibility:request.visibility==='private'?'private':'public'}};
 }
 
 // A transfer is a fact, not a conviction. Provenance survives resale; witnesses
@@ -525,16 +599,23 @@ export function lawAction(d,args,eventId){
     const operation=args.operation??'inspect';
     if(operation==='inspect')return lawView(this,d.document);
     if(args.actor!==undefined&&args.actor!=='player')throw Error('Law action caller must be the player');
+    if(args.request!==undefined)return receiveLegalRequest(d,this,args,eventId);
     args={...args,case:existingSnapshotCase(d,args.case,'player')};
+    const historical=d.get('state','records',args.case);
+    if(historical?.snapshotVersion===1&&['appeal','hire_advocate','bribe'].includes(operation)){
+        const kind={appeal:'appeal',hire_advocate:'defense',bribe:'bribe'}[operation];
+        return receiveLegalRequest(d,this,{...args,request:{kind,target:args.authority??historical.court,
+            terms:{case:args.case,...(operation==='hire_advocate'?{quoteOnly:true}:operation==='bribe'?{amount:args.coins}:{})},
+            visibility:operation==='bribe'?'private':'witnessed'}},eventId);
+    }
     if(operation==='pay'&&d.get('state','records',args.case)?.snapshotVersion===1){
         const payment=finePaymentContext(this,d.document,{caseId:args.case,payer:args.actor??'player',amount:args.coins});
         if(!payment||args.authority!==undefined&&args.authority!==payment.collector)throw Error('Fine payment requires its existing claim and authorized public collector');
-        return {...settleObligation(d,this,{id:payment.id,actor:args.actor??'player',amount:payment.amount},eventId),case:args.case,fine:payment.amount};
+        const result=settleObligation(d,this,{id:payment.id,actor:args.actor??'player',amount:payment.amount},eventId);
+        this.advance(d,10,eventId);
+        return {...result,case:args.case,fine:payment.amount};
     }
     if(operation==='submit_document')return submitCaseDocument(d,this,args,eventId);
-    if(operation==='appeal'&&d.get('state','records',args.case)?.snapshotVersion===1){
-        if(!caseProcedureView(this,d.document,args.case,args.actor??'player')?.canRequestAppeal)throw Error('Appeal requires an eligible party, existing judgment and open appeal period');
-    }
     if(operation==='grant_magic_permit'){
         unique(d,`magic_permission:${eventId}`);
         const code=currentCode(d,this),location=this.resolve(args.location),issuer=present(d,this,args.authority);
@@ -792,13 +873,14 @@ export function lawAction(d,args,eventId){
 }
 
 export function lawView(engine,document){
+    const requests=Object.entries(document.state.records??{}).filter(([,r])=>r.category==='legal_request'&&r.actor==='player').map(([id,r])=>({id,kind:r.request.kind,case:r.case,receiver:r.receiver,evidence:r.payload.evidence,sourceEvents:r.payload.sourceEvents,minute:r.minute,accepted:null}));
     const code=codeFor(engine,document.state.location,document.state);
     const d={document,get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
     const notifications=localObservers(d).flatMap(from=>(d.get('state','npcs',from,'memoryStream')??[]).filter(memory=>memory.kind==='law'&&memory.visibility==='public'&&!memory.private&&memory.minute<=document.state.minute&&memory.legalCase).map(memory=>({from,memory:memory.id,case:memory.legalCase,stage:memory.legalStage,sourceType:memory.sourceType,sourceEvent:memory.sourceEvent})));
     const wanted=activeWanted(document.state).filter(w=>w.subject==='player').map(w=>({id:w.id,case:w.case,law:w.law,reason:w.reason,scope:[...w.scope],bounty:w.bounty,reachedHere:wantedReachedAt(engine,w,document.state.location,document.state.minute,document.state)}));
     const bounties=Object.values(document.state.quests??{}).filter(q=>q.bounty&&['公开','进行中'].includes(q.status)&&(q.taker==='player'||q.location===document.state.location))
         .map(q=>({quest:q.id,content:q.content,reward:q.reward,status:q.status,takenBy:q.taker==='player'?'player':q.taker?'他人':null}));
-    return{advocates:Object.keys(document.state.npcs??{}).filter(id=>document.state.npcs[id].location===document.state.location).map(id=>advocateService(engine,document.state,id)).filter(Boolean),law:code?structuredClone(code):null,courts:code?courtHierarchy(engine,document.state,code):null,executionAuthority:Boolean(code),reputation:reputationView(document),notifications,wanted,bounties,cases:cases(d).filter(([,row])=>row.offender==='player'||row.parties?.includes('player')).map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,confessed:row.evidence.some(entry=>entry.kind==='confession'&&entry.subject==='player'),
+    return{requests,advocates:Object.keys(document.state.npcs??{}).filter(id=>document.state.npcs[id].location===document.state.location).map(id=>advocateService(engine,document.state,id)).filter(Boolean),law:code?structuredClone(code):null,courts:code?courtHierarchy(engine,document.state,code):null,executionAuthority:Boolean(code),reputation:reputationView(document),notifications,wanted,bounties,cases:cases(d).filter(([,row])=>row.offender==='player'||row.parties?.includes('player')).map(([id,row])=>({id,law:row.law,victim:row.victim,offense:row.offense,status:row.status,reported:row.reported,confessed:row.evidence.some(entry=>entry.kind==='confession'&&entry.subject==='player'),
         ...(row.snapshotVersion?{procedure:caseProcedureView(engine,document,id),documents:row.evidence.filter(e=>e.kind==='document').map(e=>caseDocumentEvidence(d,id,e.document,e.submittedBy)).filter(Boolean)}:{}),
         settlement:row.settlement??null,faction:row.faction??null,appeal:structuredClone(row.appeal),
         judgment:structuredClone(row.judgment),location:row.location,stolen:structuredClone(row.stolen),

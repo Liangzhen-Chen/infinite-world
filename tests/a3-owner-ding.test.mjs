@@ -121,10 +121,17 @@ test('N/O: full corpus fine proposal routes to the real public collection and em
  assert.equal(row.scores.signature,false);assert.equal(row.scores.constructor,false);
 });
 
+test('N/O: paying a restored fine retains the ordinary ten-minute action cost',()=>{
+ const document=save(load('054').document),out=write(document,d=>lawAction.call(engine,d,{operation:'pay',case:'a3v2_054_case',authority:'npc_bs_032_1',coins:10},'timed-fine'));
+ assert.equal(out.document.state.minute,document.state.minute+10);assert.equal(out.result.fine,10);
+ assert.equal(obligationView(out.document.state,'a3v2_054_fine').owed,0);clean(out.document);
+});
+
 test('O/P: restored deposit withdraws through the real bank action and updates one canonical claim and bank projection',async()=>{
  const loaded=load('032');assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document),bank='bank_hw_post';
  assert.equal(document.state.records[bank].accounts.player,100);assert.equal(obligationView(document.state,'a3v2_032_deposit').owed,100);
  const out=await writeAsync(document,d=>engine.trade(d,{operation:'withdraw',seller:'npc_hw_shendu',coins:50},'withdraw-old'));
+ assert.equal(out.document.state.minute,document.state.minute+5);
  assert.equal(out.result.withdrawn,50);assert.equal(out.document.state.player.coins,50);assert.equal(out.document.state.records[bank].coins,0);
  assert.equal(out.document.state.records[bank].accounts.player,50);assert.equal(obligationView(out.document.state,'a3v2_032_deposit').owed,50);
  assert.equal(obligationRows(out.document.state).filter(o=>o.id==='a3v2_032_deposit').length,1);clean(out.document);
@@ -150,6 +157,8 @@ test('O: restored pawn redemption returns the exact original, clears canonical a
  const loaded=load('037',s=>s.inventory.item_staff=0);assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document),unit=loaded.bindings.a3v2_037_staff;
  assert.equal(document.state.inventory.item_staff?.quantity??0,0);assert.equal(document.state.player.coins,2);
  const out=await writeAsync(document,d=>engine.trade(d,{operation:'redeem',seller:'npc_hw_shendu',contract:'a3v2_037_pawn_loan',coins:2},'redeem-old'));
+ assert.equal(out.document.state.minute,document.state.minute+5);
+ assert.equal(out.result.pledgeReturned,'item_staff');assert.equal(out.result.pledgeReturnedInstance,unit);
  assert.equal(out.document.state.player.coins,0);assert.equal(out.document.state.inventory.item_staff.quantity,1);assert.ok(out.document.state.inventory.item_staff.instances.includes(unit));
  assert.equal(out.document.state.itemInstances[unit].owner,'player');assert.equal(obligationView(out.document.state,'a3v2_037_pawn_loan').owed,0);
  assert.equal(out.document.state.records.a3v2_037_pawn_loan.paid,2);assert.equal(aliveHoldings(reader(out.document),{kind:'pledged',holder:'a3v2_037_pawn_loan'}).length,0);clean(out.document);
@@ -253,6 +262,88 @@ test('Q: unrelated judgments, forged registration and nonexistent parties are re
   const bad=load('052',change);assert.ok(ownedErrors(bad).some(e=>e.item==='cases[0]'));assert.equal(bad.document.state.records.a3v2_052_case,undefined);
  }
  const document=save(load('055').document);assert.throws(()=>write(document,d=>restoreCaseSnapshot(d,engine,{id:'forged',court:document.state.location,stage:'pending',parties:['player'],sourceEvent:'missing'})),/registration/);
+});
+
+const legalRequests=[['051','report'],['052','appeal'],['053','confess'],['055','hire_advocate'],['056','claim'],['058','bribe']];
+const legalArgs=(id,operation)=>{const effect=corpus.find(r=>r.id===`A3V2-${id}`).proposal.effects[0];return {operation,request:{...save(effect.payload),target:effect.target,visibility:effect.visibility}};};
+
+test('P/Q: legal requests consume native incidents, papers, cases and current offices without inventing outcomes',()=>{
+ for(const [id,operation]of legalRequests){
+  const document=save(load(id).document),before=save(document),eventId=`legal-${id}`;
+  const out=write(document,d=>lawAction.call(engine,d,legalArgs(id,operation),eventId)),request=lawView(engine,out.document).requests.find(r=>r.id===out.result.request);
+  assert.equal(out.result.submitted,true,id);assert.equal(out.result.accepted,null,id);assert.ok(request,id);assert.ok(request.sourceEvents.length,id);
+  assert.equal(out.document.state.player.coins,before.state.player.coins,id);assert.equal(out.document.state.minute,before.state.minute,id);
+  assert.equal(Object.values(out.document.state.records).filter(r=>r.category==='legal_case').length,Object.values(before.state.records).filter(r=>r.category==='legal_case').length,id);
+  for(const [key,row]of Object.entries(before.state.records).filter(([,r])=>r.category==='legal_case')){
+   assert.equal(out.document.state.records[key].stage,row.stage,id);assert.deepEqual(out.document.state.records[key].judgment,row.judgment,id);
+   assert.equal(out.document.state.records[key].representation,undefined,id);
+  }
+  if(['051','052','056'].includes(id))assert.equal(request.evidence.length,1,id);
+  const replay=write(out.document,d=>lawAction.call(engine,d,legalArgs(id,operation),eventId));assert.deepEqual(replay.patches,[],id);clean(out.document);
+ }
+});
+
+test('Q: ordinary law actions also read restored cases before demanding adjudication powers',()=>{
+ for(const [id,operation,authority]of [['052','appeal','npc_bs_031_1'],['055','hire_advocate','npc_hw_luqing'],['058','bribe','npc_bs_032_1']]){
+  const document=save(load(id).document),out=write(document,d=>lawAction.call(engine,d,{operation,case:`a3v2_${id}_case`,authority,...(id==='058'?{coins:10}:{})},`direct-${id}`));
+  assert.equal(out.result.submitted,true,id);assert.equal(out.result.accepted,null,id);assert.equal(out.document.state.player.coins,document.state.player.coins,id);
+  assert.equal(lawView(engine,out.document).requests[0].case,`a3v2_${id}_case`,id);clean(out.document);
+ }
+});
+
+test('P/Q: absent authority, private incidents, expired appeal, forged paper and unagreed defence remain rejected',()=>{
+ const badCases=[
+  ['051','report',s=>s.status.npc_bs_032_1.onDuty=false],
+  ['051','report',s=>{s.history[0].witnesses=[];s.knowledge=[];}],
+  ['052','appeal',s=>s.cases[0].appealDeadline=599],
+  ['052','appeal',s=>s.documents[0].reviewed=true],
+  ['053','confess',s=>{s.history[0].actor='npc_hw_wushuo';s.knowledge=[];}],
+  ['055','hire_advocate',s=>s.vocations[0].conflictOfInterest=true],
+  ['055','hire_advocate',s=>s.history.find(h=>h.scope==='negotiate_defence').revoked=true],
+  ['056','claim',s=>s.documents[0].links=[]],
+  ['058','bribe',s=>s.status.npc_bs_032_1.onDuty=false],
+ ];
+ for(const [id,operation,change]of badCases){
+  const document=save(load(id,change).document),before=save(document);
+  assert.throws(()=>write(document,d=>lawAction.call(engine,d,legalArgs(id,operation),`bad-${id}`)),undefined,id);assert.deepEqual(document,before,id);clean(document);
+ }
+ const document=save(load('058').document);
+ assert.throws(()=>write(document,d=>lawAction.call(engine,d,{...legalArgs('058','bribe'),actor:'npc_bs_032_1'},'forged-request')),/caller/);
+ assert.throws(()=>write(document,d=>lawAction.call(engine,d,{operation:'pay',request:{}},'invalid-kind')),/kind/);
+});
+
+test('P/Q: native legal requests survive real campaign export/import and replay',async t=>{
+ const directory=await fs.mkdtemp(path.join(process.cwd(),'.a3-owner-ding-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const reducer=async(document,input)=>{const out=write(document,d=>lawAction.call(engine,d,input.args,input.eventId));return {patches:out.patches,result:out.result};};
+ const store=new CampaignStorage(directory,{reducer,snapshotEvery:3});
+ for(const [id,operation]of legalRequests){
+  const document=save(load(id).document),campaign=`request_${id}`,input={args:legalArgs(id,operation),eventId:`saved-request-${id}`},request={id:input.eventId,input};
+  await store.create({id:campaign,worldVersion:'a3-owner-ding2',document});const first=await store.transact(campaign,request,reducer);
+  const bundle=save(await store.export(campaign)),fresh=new CampaignStorage(directory,{reducer}),restored=await fresh.import(bundle,`${campaign}_copy`);
+  assert.deepEqual(save(restored.document),save((await store.read(campaign)).document));
+  assert.deepEqual((await fresh.transact(`${campaign}_copy`,request,reducer)).result,first.result);assert.equal(lawView(engine,restored.document).requests.length,1);clean(restored.document);
+ }
+});
+
+test('Q: an incapacitated incumbent cannot receive a new request or appear as a current handler',()=>{
+ for(const status of ['昏迷','失能']){
+  const document=save(load('058').document);document.state.npcs.npc_bs_032_1.status=status;
+  assert.equal(currentCaseHandler(engine,document,'a3v2_058_case','npc_bs_032_1'),false);
+  assert.throws(()=>write(document,d=>lawAction.call(engine,d,legalArgs('058','bribe'),`incapacitated-${status}`)),/cannot currently/);
+  assert.equal(document.state.player.coins,10);assert.equal(lawView(engine,document).requests.length,0);clean(document);
+ }
+});
+
+test('Q: legacy cases retain party identity through offender without a new parties projection',()=>{
+ const document=save(load('055').document),row=document.state.records.a3v2_055_case;
+ delete row.parties;delete row.snapshotVersion;delete row.sourceEvent;
+ // registerIncident's existing row shape identifies its party as offender/victim.
+ assert.equal(row.offender,'player');
+ const args=legalArgs('055','hire_advocate');args.request.terms.case=row.id;
+ const out=write(document,d=>lawAction.call(engine,d,args,'legacy-party-request'));
+ assert.equal(out.result.submitted,true);assert.equal(out.result.case,row.id);
+ assert.deepEqual(lawView(engine,out.document).requests[0].sourceEvents,[]);
+ assert.equal(out.document.state.player.coins,document.state.player.coins);assert.equal(out.document.state.records[row.id].representation,undefined);clean(out.document);
 });
 
 test('N–Q: all owned setup premises are loaded; E appointments and S4 spatial premises remain separately owned',()=>{

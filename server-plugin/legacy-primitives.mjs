@@ -83,6 +83,11 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   // Autonomous postings stay internal, just like native time's world advance.
  }
  const posted=receipt.applied.filter(e=>e.op==='transfer');
+ if(tool==='law'&&result.request){
+  const row=a.records?.[result.request];
+  if(row?.category==='legal_request'&&row.sourceEvent===eventId&&!b.records?.[result.request])
+   add(stateEffect('emit',{target:row.target,verb:row.verb,visibility:row.request.visibility==='private'?'private':'witnessed',payload:row.payload},['state','records',result.request],before,after));
+ }
  if(posted.length){
   // Opening adapters read the old state projections without changing them.
   // A journal alone is insufficient: the carried goods/purse must agree too.

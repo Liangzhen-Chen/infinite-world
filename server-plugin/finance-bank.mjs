@@ -121,6 +121,7 @@ export function withdrawSnapshotDeposit(d,e,args,eventId){
             (p.owner==='player'||p.owner===null&&p.location===s.location&&aliveHoldings(d,{kind:'owns',holder:'player',subject:id}).length)&&p.durability>0&&!isGone(e,d,id));
         if(papers.length!==1)throw Error('Withdrawal requires the original valid named deposit receipt');
         const result=settleObligation(d,e,{id:claim.id,amount,actor:keeper,payer:b.id},eventId);
+        e.advance(d,5,eventId);
         return {...result,withdrawn:amount,deposit:claim.id,document:papers[0][0]};
     });
 }
@@ -252,8 +253,10 @@ export function bankTrade(d,e,args,id){
             if(restored.debtor!=='player'||restored.creditor!==b.id||now>=restored.terms.redeemDeadline||obligationView(d.get('state'),restored).closed)throw Error('Historical pawn is not redeemable by this customer here');
             const amount=obligationView(d.get('state'),restored).owed;
             if(args.coins!==undefined&&args.coins!==amount)throw Error('Redemption requires the complete signed balance');
+            const item=d.get('state','itemInstances',restored.snapshotCollateral,'item');
             const result=settleObligation(d,e,{id:restored.id,actor:'player',amount},id);
-            return {...result,debt:restored.id,repaid:result.transferred,pledgeReturned:restored.snapshotCollateral};
+            e.advance(d,5,id);
+            return {...result,debt:restored.id,repaid:result.transferred,pledgeReturned:item,pledgeReturnedInstance:restored.snapshotCollateral};
         }
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status==='流当'||pawnDeadline(debt,e,now,d.get('state'))<=now)throw Error('当票不存在或已经流当');
         return repayCredit(d,e,{seller:keeper,debt:args.contract},id);

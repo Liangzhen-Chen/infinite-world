@@ -204,6 +204,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
    const obligation=effects.find(e=>e.op==='obligation.create'),settlement=effects.find(e=>e.op==='obligation.settle');
+   if(action.call?.tool==='world_law'&&slot.name==='request'){
+    const request=effects.find(e=>e.op==='emit'&&['claim','request'].includes(e.verb));
+    if(request)value={...request.payload,target:request.target,visibility:request.visibility};
+   }
    if(action.call?.tool==='world_law'&&action.call.operation==='pay'&&settlement){
     const fine=finePaymentContext(engine,document,{reference:settlement.id,payer:actor,amount:settlement.amount});
     if(fine)value??=({case:fine.case,authority:fine.collector,coins:fine.amount})[slot.name];
@@ -455,7 +459,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_law'&&call.operation==='pay'){
    const fine=finePaymentContext(engine,document,{caseId:slots.case,payer:actor,amount:slots.coins});
    const settlement=proposal.effects?.find(e=>e.op==='obligation.settle');
-   if(fine&&money?.qty===fine.amount&&settlement?.amount===fine.amount&&owner(money.from)===actor&&[fine.site,fine.account].includes(money.to))return [sign([transfer(LEDGER_COIN,actor,money.to===fine.account?fine.account:fine.site),{op:'obligation.settle'}])];
+   if(fine&&money?.qty===fine.amount&&settlement?.amount===fine.amount&&owner(money.from)===actor&&[fine.site,fine.account,owner(fine.account)].includes(money.to))return [sign([transfer(LEDGER_COIN,actor,money.to),{op:'obligation.settle'}])];
   }
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss'&&summons.has(slots.summon))return [sign([{op:'obligation.cancel'},{op:'transition',entity:slots.summon}])];
   if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];

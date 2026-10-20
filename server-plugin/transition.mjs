@@ -1087,7 +1087,7 @@ function legacyClaimAccounts(d,e,entity,resource){
     if(resource!=='coin_river')throw Error('Recorded debt requires a declared monetary settlement adapter');
     const accounts=[[purse(e,entity),read(d,'ledger','accounts',purse(e,entity))??0]];
     for(const [id,b]of Object.entries(read(d,'state','records')??{}).sort(([a],[b])=>a.localeCompare(b)))if(b.category==='bank'&&b.accounts?.[entity]>0)accounts.push([vault(id),Math.min(b.accounts[entity],b.coins??0)]);
-    return accounts;
+    return [...accounts,...(e.protocolAdditionalClaimAccounts?.(d,entity)??[])];
 }
 function payLegacyClaim(d,e,entity,from,creditor,amount,eventId){
     const bank=read(d,'state','records',creditor),base=(e.rules.economy?.credit?.banks??[]).find(b=>b.id===creditor);
