@@ -35,7 +35,7 @@ export async function renderActionsPanel(container,data){
     fragment.append(other);
     const openForm=action=>{
         if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}
-        if(action.id==='open:leave_mark'){
+        if(['open:leave_mark','open:proposal'].includes(action.id)){
             state.builder?.cancel();state.form=null;
             state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;
             state.builder.choose(action);rerender();return;
@@ -43,6 +43,16 @@ export async function renderActionsPanel(container,data){
         state.form=action;
         rerender();
     };
+    if(data.actionSuggestion){
+        const suggestion=data.actionSuggestion;
+        fragment.append(button(`主持人建议：${suggestion.action.label}（尚未执行）`,()=>{
+            state.builder?.cancel();state.form=null;
+            state.builder=new ActionBuilder({preview:data.preview,act:data.act});
+            state.builder.choose(suggestion.action);
+            for(const slot of suggestion.action.slots)if(slot.name!=='consent'&&Object.hasOwn(suggestion.slots,slot.name))state.builder.setSlot(slot.name,suggestion.slots[slot.name]);
+            data.clearActionSuggestion?.();state.data={...state.data,actionSuggestion:null};rerender();
+        }));
+    }
     // 需要对方答应的动作照样列出，但按钮不可用并注明原因（A2 接入人物决策后开放）。
     const actionButton=a=>{const b=button(a.blocked?`${a.label}（${a.blocked}）`:a.label,()=>openForm(a),{disabled:Boolean(a.blocked)});return b;};
     async function run(action,slots){

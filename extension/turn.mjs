@@ -1,4 +1,14 @@
 // Domain lookup failures can be corrected; transport and storage failures propagate.
+export function actionModes(value={}){
+ return {intent:['off','match','propose'].includes(value.intent)?value.intent:'propose',
+  narration:['off','async','sync'].includes(value.narration)?value.narration:'sync'};
+}
+export function modelToolAllowed(name,settings={}){
+ const {intent}=actionModes(settings);
+ const reads=['world_read','world_search','world_catalog','world_actions'];
+ return intent==='propose'||reads.includes(name)||intent==='match'&&name==='world_act';
+}
+
 export async function lookupToolResult(action){
     try{return await action();}
     catch(error){

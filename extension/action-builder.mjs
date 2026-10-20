@@ -8,19 +8,21 @@ const implementsSlot=new Set(['item','weapon','skill','spell','recipe','instance
 const effectNames={transfer:'交付物品或款项',move:'移动',learn:'学习',vital:'身体变化',time:'时间推进',status:'状态变化',emit:'表达或请求',create:'留下实体','fact.set':'对象变化','holding.open':'建立关系','holding.close':'结束关系','obligation.create':'订立约定','obligation.fulfill':'履行约定','obligation.close':'结束约定',schedule:'预约行动',transition:'身份变化',invoke:'施展能力'};
 export async function findBuilderActions(api,{query,target}){
  const result=await api('actions',{query,target,limit:24});
- if(result.actions?.some(action=>!action.readOnly))return result.actions;
- // Offer the fallback only when it is registered in this campaign.
- const fallback=await api('actions',{query:'open:leave_mark',target,limit:1});
- return fallback.actions.filter(action=>action.id==='open:leave_mark'&&!action.readOnly);
+ // A partial text match does not remove the creative path or mark alternative.
+ const extra=await Promise.all(['open:proposal','open:leave_mark'].filter(id=>!result.actions?.some(a=>a.id===id)).map(async id=>{
+  const found=await api('actions',{query:id,target,limit:1});return found.actions.filter(a=>a.id===id&&!a.readOnly);
+ }));
+ return [...result.actions??[],...extra.flat()];
 }
 export function builderStep(slot){
+ if([1,2,3].includes(slot.builderStep))return slot.builderStep;
  if(implementsSlot.has(slot.name)||['instances','tools','skills'].includes(slot.name))return 2;
  if(slot.multiple&&['helpers','workers','guests','beneficiaries'].includes(slot.name))return 1;
  if(slot.kind==='entity'||['zone','direction'].includes(slot.kind)||['zone','direction'].includes(slot.name))return 1;
  return 3;
 }
 export function slotLabel(slot){
- const names={seller:'向谁',buyer:'交给谁',target:'对象',destination:'去处',item:'物品',weapon:'武器',skill:'技能',spell:'法术',recipe:'配方',instance:'哪一件',
+ const names={participants:'作用对象',means:'采用的手段',effects:'希望产生的效果',context:'情境与理由',seller:'向谁',buyer:'交给谁',target:'对象',destination:'去处',item:'物品',weapon:'武器',skill:'技能',spell:'法术',recipe:'配方',instance:'哪一件',
  quantity:'数量',coins:'钱数（文）',minutes:'时长（分钟）',days:'天数',mode:'走法',intent:'出手方式',activity:'做什么',payment:'付款方式',creditMinutes:'赊账期限（分钟）',until:'等到',debt:'哪笔账',zone:'位置',direction:'朝哪个方向',tags:'痕迹的含义与材质',materials:'使用的材料',form:'留下什么形态'};
  const compound={helpers:'帮手',workers:'参与者',guests:'同行者',beneficiaries:'受益者',instances:'具体物件',tools:'工具',skills:'技能',attributes:'分配属性点',data:'详细设置',objective:'约定目标',materials:'材料',output:'产出'};
  return names[slot.name]??compound[slot.name]??slot.name;
@@ -56,7 +58,28 @@ export function previewLines(result,{label='这样做',startMinute,names={}}={})
 // Nested objects and lists use controls instead of asking for JSON.
 function structuredInput(doc,{schema,value,id,label,disabled,onChange}){
  const make=(tag,text)=>{const n=doc.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
+ if(Array.isArray(schema.type))schema={...schema,type:schema.type.find(type=>type!=='null')};
+ const variants=schema.oneOf??schema.anyOf;
+ if(variants){
+  const group=make('fieldset');group.append(make('legend',label));
+  const index=Math.max(0,variants.findIndex(s=>s.properties?.op?.const?value?.op===s.properties.op.const:s.type===typeof value));
+  const select=make('select');select.id=`${id}-kind`;select.disabled=disabled;select.setAttribute('aria-label',`${label}种类`);
+  variants.forEach((s,i)=>{const o=make('option',effectNames[s.properties?.op?.const]??s.title??s.type);o.value=String(i);select.append(o);});select.value=String(index);
+  const initial=s=>s.type==='object'?Object.fromEntries(Object.entries(s.properties??{}).filter(([,v])=>v.const!==undefined).map(([k,v])=>[k,v.const])):s.type==='number'?0:s.type==='boolean'?false:'';
+  select.onchange=()=>onChange(initial(variants[Number(select.value)]));group.append(select);
+  group.append(structuredInput(doc,{schema:variants[index],value,id,label,disabled,onChange}));return group;
+ }
+ if(schema.const!==undefined){const input=make('input');input.type='hidden';input.value=schema.const;return input;}
  const names={type:'种类',name:'名称',quantity:'数量',qty:'数量',item:'物品',location:'地点',project:'工程',template:'模板',power:'规模',age:'年龄',occupation:'身份',notes:'说明',skill:'技能',minimumProficiency:'熟练度要求',materials:'材料',amount:'份量',minutes:'分钟',difficulty:'难度',output:'产出',tools:'工具',workstation:'设施',byproducts:'副产物',toolWear:'工具磨损',failure:'失败处理',recoverFraction:'可回收比例',injury:'受伤',spec:'规则说明'};
+ if(schema.type==='object'&&!schema.properties){
+  const group=make('fieldset');group.append(make('legend',label));
+  for(const [key,entry]of Object.entries(value??{})){
+   const row=make('div');row.append(structuredInput(doc,{schema:{oneOf:[{type:'string',title:'文字'},{type:'number',title:'数值'},{type:'boolean',title:'是或否'},{type:'object',title:'详细条款'}]},value:entry,id:`${id}-${key}`,label:key,disabled,onChange:next=>onChange({...value,[key]:next})}));
+   const remove=make('button','移除');remove.type='button';remove.disabled=disabled;remove.onclick=()=>{const next={...value};delete next[key];onChange(Object.keys(next).length?next:undefined);};row.append(remove);group.append(row);
+  }
+  const key=make('input');key.setAttribute('aria-label',`${label}字段名`);key.disabled=disabled;
+  const add=make('button','添加字段');add.type='button';add.disabled=disabled;add.onclick=()=>{const name=key.value.trim();if(name&&!['__proto__','constructor','prototype'].includes(name))onChange({...value,[name]:''});};group.append(key,add);return group;
+ }
  if(schema.type==='object'&&schema.properties){
   const group=make('fieldset');group.id=id;group.disabled=disabled;group.append(make('legend',label));
   for(const [key,child]of Object.entries(schema.properties))group.append(structuredInput(doc,{schema:child,value:value?.[key],id:`${id}-${key}`,label:`${names[key]??key}${schema.required?.includes(key)?'':'（可不填）'}`,disabled,onChange:next=>{const changed={...value};if(next===undefined)delete changed[key];else changed[key]=next;onChange(Object.keys(changed).length?changed:undefined);}}));
@@ -67,7 +90,11 @@ function structuredInput(doc,{schema,value,id,label,disabled,onChange}){
   const values=Array.isArray(value)?value:[];
   const button=(text,run)=>{const b=make('button',text);b.type='button';b.className='fields-actions-button';b.disabled=disabled;b.onclick=run;return b;};
   values.forEach((entry,index)=>{const row=make('div');row.append(structuredInput(doc,{schema:schema.items,value:entry,id:`${id}-${index}`,label:`第${index+1}项`,disabled,onChange:next=>onChange(values.map((old,i)=>i===index?next:old))}),button('移除这一项',()=>{const next=values.filter((_,i)=>i!==index);onChange(next.length?next:undefined);}));group.append(row);});
-  if(values.length<(schema.maxItems??Infinity))group.append(button('添加一项',()=>onChange([...values,schema.items.type==='object'?{}:schema.items.enum?.[0]??''])));
+  if(values.length<(schema.maxItems??Infinity))group.append(button('添加一项',()=>{
+   const first=schema.items.oneOf?.[0]??schema.items;
+   const entry=first.type==='object'?Object.fromEntries(Object.entries(first.properties??{}).filter(([,s])=>s.const!==undefined).map(([k,s])=>[k,s.const])):first.enum?.[0]??'';
+   onChange([...values,entry]);
+  }));
   return group;
  }
  const row=make('div'),caption=make('label',label);caption.htmlFor=id;let input;
@@ -92,14 +119,14 @@ export class ActionBuilder{
  choose(action){
   if(action.blocked){this.error=action.blocked;return;}
   this.action=structuredClone(action);this.slots={...action.fill};
-  if(action.id==='open:leave_mark'){
+  if(['open:leave_mark','open:proposal'].includes(action.id)){
    const intentSlot=action.slots.find(slot=>['intent','text'].includes(slot.name)&&slot.kind==='text');
    if(intentSlot&&this.intent)this.slots[intentSlot.name]=this.intent;
   }
   for(const slot of action.slots??[])if(this.slots[slot.name]===undefined&&slot.default!==undefined&&typeof slot.default!=='object'&&slot.default!=='dawn')this.slots[slot.name]=slot.default;
   this.invalidate();this.step=1;
  }
- invalidate(){this.revision++;this.quote=null;this.eventId=null;this.result=null;this.error=null;}
+ invalidate(){this.revision++;this.quote=null;this.eventId=null;this.result=null;this.feedback=null;this.error=null;}
  setSlot(name,value){
   if(!this.action?.slots.some(s=>s.name===name&&s.name!=='consent'))throw Error('这个动作没有此项选择');
   if(value===undefined||value==='')delete this.slots[name];else this.slots[name]=structuredClone(value);
@@ -130,7 +157,11 @@ export class ActionBuilder{
    if(this.cancelled||revision!==this.revision)return null;
    if(result?.ok===false)throw Error(result.error??'未能取得预览');
    const receipt=result?.receipt??result?.result?.receipt;
-   if(receipt?.status!=='preview')throw Error('未取得可确认的预览');
+   if(receipt?.status!=='preview'){
+    this.feedback=structuredClone(result.prepared??receipt?.routing??result.routing??{});
+    const details=(this.feedback.ambiguities??[]).map(row=>`${row.path}：${row.value}`).join('；');
+    throw Error(receipt?.reason??this.feedback.reason??(details?`请明确目标：${details}`:'请补全选择，或采用下面的替代做法'));
+   }
    this.quote={args,eventId,revision,result,sequence:result.reference?.sequence};return this.quote;
   }catch(error){if(!this.cancelled&&revision===this.revision)this.error=error.message;return null;}
   finally{this.busy=false;}
@@ -173,6 +204,7 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   for(const a of choices)container.append(button(a.label,()=>{builder.choose(a);onChange();}));
  }else{
   container.append(node('h4',`${BUILDER_STEPS[builder.step]}：${builder.action.label}`));
+  if(builder.action.hint)container.append(node('p',builder.action.hint));
   const slots=builder.action.slots.filter(s=>s.name!=='consent'&&builderStep(s)===builder.step);
   if(!slots.length)container.append(node('p',builder.step===1?'作用于自己或此处。':builder.step===2?'不需要另选物品或技能。':'采用这个动作原有的做法。'));
   for(const slot of slots){
@@ -228,6 +260,11 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   if(builder.step<3)container.append(button('下一步',()=>{builder.step++;onChange();}));
   container.append(button('上一步',()=>{builder.step--;builder.quote=null;onChange();}));
  }
+ if(builder.feedback?.missing?.length)container.append(node('p',`还需要：${builder.feedback.missing.join('、')}`));
+ if(builder.feedback?.fallback?.available)container.append(button('就这样做，留下痕迹',()=>perform(async()=>{
+  const result=await api('actions',{query:builder.feedback.fallback.action,target:builder.target,limit:1});
+  const mark=result.actions.find(a=>a.id===builder.feedback.fallback.action);if(mark){builder.intent=builder.slots.intent??builder.intent;builder.choose(mark);}
+ })));
  if(builder.error){const error=node('p',builder.error);error.setAttribute('role','alert');container.append(error);}
  container.append(button('取消',()=>{builder.cancel();onClose();}));
 }

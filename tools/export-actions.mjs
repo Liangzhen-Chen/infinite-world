@@ -17,7 +17,9 @@ const lineOf=(text,index)=>text.slice(0,index).split('\n').length;
 // Parameters that name an acting or affected agent (participants); the rest are objects, amounts and options.
 const AGENT_PARAMS=['target','seller','buyer','npc','member','speaker','promisor','promisee','student','teacher','authority','publisher','taker','steward','sponsor','reporter','claimant','from','to','maker','helpers','workers','beneficiaries','escort','opponent','subject','actor','supplier','guests','knowers'];
 const VARIANT_PARAMS=['task','action','choice','intent','term','pact','channel','kind','type','phase','payment','mode','activity','service','opinion','facilityType'];
-const SERVER=fs.readdirSync(path.join(ROOT,'server-plugin')).filter(f=>f.endsWith('.mjs')).map(f=>`server-plugin/${f}`);
+// Affordance schemas describe proposed op/kind values; they never dispatch a
+// domain operation. Scanning them links promise.create to the UI's create form.
+const SERVER=fs.readdirSync(path.join(ROOT,'server-plugin')).filter(f=>f.endsWith('.mjs')&&f!=='action-affordances.mjs').map(f=>`server-plugin/${f}`);
 
 function methodLocation(internal){
  const name=internal.replace(/^world_/,'');

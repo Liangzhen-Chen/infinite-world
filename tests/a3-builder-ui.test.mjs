@@ -7,8 +7,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 
 test('真实后端无模型构造器：手机/桌面四步、预览取消、确认、stale及拒绝',{timeout:120000},async t=>{
  const world=await loadWorld(),json=async path=>JSON.parse(await fs.readFile(path,'utf8'));
- // A still owns archive-loader/mark dispatch. These are B's actual data files;
- // this UI block only edits and cancels. Native settlement is tested separately.
+  // Use B's actual tables pinned with the world, never test-only UI vocabulary.
  Object.assign(world,{openActionRules:await json('world/rules/tables/open-actions.json'),openTagging:await json('world/rules/open-tagging.json'),openReactions:await json('world/rules/open-reactions.json')});
  const server=await createPlaytestServer({world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
@@ -86,7 +85,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await dialog.getByRole('button',{name:'其他…',exact:true}).click();await builder.locator('#fields-builder-intent').fill('open:leave_mark');await builder.getByRole('button',{name:'找相近的动作',exact:true}).click();
   await builder.getByRole('button',{name:mark.label,exact:true}).click();
   assert.equal(await builder.locator('#fields-builder-zone').evaluate(node=>node.tagName),'SELECT');
-  await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.getByRole('button',{name:'增加一项',exact:true}).click();
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.getByRole('button',{name:'添加一项',exact:true}).click();
   await builder.locator('#fields-builder-materials-0-item').selectOption({label:'面包'});
   await builder.locator('#fields-builder-materials-0-qty').fill('1');await builder.locator('#fields-builder-materials-0-qty').press('Tab');
   await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.locator('#fields-builder-form').selectOption({label:'涂画'});
@@ -94,6 +93,45 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   assert.equal(await builder.locator('#fields-builder-tags').evaluate(node=>node.multiple),true);
   assert.equal(await builder.locator('#fields-builder-tags').evaluate(node=>[...node.selectedOptions].map(option=>option.text).join('、')),'警告、纸');
   await builder.getByRole('button',{name:'取消',exact:true}).click();assert.deepEqual((await read()).document,timed.document);
+  // 06 §6.9.1: compose an unregistered effect through actual controls and the
+  // native HTTP proposal pipeline, with no model or raw JSON entry.
+  await dialog.getByRole('button',{name:'其他…',exact:true}).click();
+  await builder.getByRole('button',{name:'组合自己的做法',exact:true}).click();
+  await builder.locator('#fields-builder-participants-target').selectOption({label:'自己'});
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();
+  await builder.locator('#fields-builder-intent').fill('对自己说今天的行程');await builder.locator('#fields-builder-intent').press('Tab');
+  await builder.locator('#fields-builder-effects').getByRole('button',{name:'添加一项',exact:true}).click();
+  await builder.locator('#fields-builder-effects-0-kind').selectOption({label:'发布或交谈'});
+  await builder.locator('#fields-builder-effects-0-target').selectOption({label:'自己'});
+  await builder.locator('#fields-builder-effects-0-verb').selectOption({label:'tell'});
+  await builder.locator('#fields-builder-effects-0-visibility').selectOption({label:'private'});
+  await builder.locator('#fields-builder-effects-0-payload-text').fill('今天先观察周围');await builder.locator('#fields-builder-effects-0-payload-text').press('Tab');
+  await builder.getByRole('button',{name:'预览代价与结果',exact:true}).click();await builder.locator('.fields-builder-preview').waitFor();
+  assert.deepEqual((await read()).document,timed.document);
+  const openPreview=requests.filter(r=>r.endpoint==='propose').at(-1);assert.equal(openPreview.body.tool,'world_propose');
+  const quoted=await server.api('propose',openPreview.body);assert.equal(quoted.receipt.routing.status,'open');
+  await builder.getByRole('button',{name:'确认执行',exact:true}).click();
+  await page.waitForFunction(minute=>window.infiniteFieldsV2.view.document.state.minute===minute,timed.document.state.minute+quoted.receipt.cost.time);
+  const composed=await read();assert.ok(Object.values(composed.document.state.records).some(r=>r.category==='world_event'&&r.verb==='tell'&&r.payload?.text==='今天先观察周围'));
+  const openExecution=requests.filter(r=>r.endpoint==='execute').at(-1);assert.equal(openExecution.body.tool,'world_propose');assert.equal(openExecution.body.eventId,openPreview.body.eventId);
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'match',narration:'sync'});});
+  const suggestedAt=await read(),writesBeforeSuggestion=requests.filter(r=>r.endpoint==='execute').length;
+  const suggestion=await page.evaluate(async()=>window.fixtureTools.get('world_act').action({action:'core:time',slots:{minutes:1}}));
+  assert.equal(suggestion.status,'suggested');assert.deepEqual((await read()).document,suggestedAt.document);
+  assert.equal(requests.filter(r=>r.endpoint==='execute').length,writesBeforeSuggestion);
+  assert.equal(await page.evaluate(()=>window.fixtureTools.get('world_move').shouldRegister()),false);
+  await dialog.getByRole('button',{name:/^主持人建议：/}).click();
+  await builder.getByRole('button',{name:'下一步',exact:true}).click();await builder.getByRole('button',{name:'下一步',exact:true}).click();
+  await builder.getByRole('button',{name:'预览代价与结果',exact:true}).click();await builder.locator('.fields-builder-preview').waitFor();
+  await builder.getByRole('button',{name:'确认执行',exact:true}).click();
+  await page.waitForFunction(minute=>window.infiniteFieldsV2.view.document.state.minute===minute,suggestedAt.document.state.minute+1);
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'off',narration:'off'});});
+  const localOnly=await read();
+  const disabled=await page.evaluate(async()=>({act:await window.fixtureTools.get('world_act').action({action:'core:time',slots:{minutes:5}}),move:await window.fixtureTools.get('world_move').action({destination:'out'}),registered:window.fixtureTools.get('world_act').shouldRegister()}));
+  assert.equal(disabled.act.ok,false);assert.equal(disabled.move.ok,false);assert.equal(disabled.registered,false);assert.deepEqual((await read()).document,localOnly.document);
+  assert.equal(await page.evaluate(async()=>{try{await fetch('/api/backends/chat-completions/generate',{method:'POST'});return false;}catch{return true;}}),true);
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'propose',narration:'sync'});});
   // Real reply review uses an offline client. Runtime must display replayed
   // templates and finish the UI turn without committing the narrator's tail.
   await page.evaluate(async()=>{
