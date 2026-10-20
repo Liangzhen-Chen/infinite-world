@@ -29,10 +29,20 @@ function scheduledQuestion(engine,document,proposal,context){
 
 // These are compositions of existing domain programs. No proposed transfer,
 // nutrition or settlement is executed directly by the composition itself.
-function prepareOpenSequence(proposal,registry,context){
+function prepareOpenSequence(proposal,registry,context,engine){
  const effects=proposal.effects??[],actor=context.actor??'player',owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
  const resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null),coin=e=>['coin',LEDGER_COIN].includes(resource(e));
  const find=predicate=>registry.actions.find(predicate)?.id;
+ // Known environment spells run their native programs in order. The second
+ // cast sees the first cast's staged water, pays its own MP/time, and a failed
+ // prerequisite discards the whole staged sequence (06 §6.3 / §6.7).
+ if(effects.length===2&&Array.isArray(proposal.means?.spells)&&proposal.means.spells.length===2){
+  const [water,clean]=effects,spells=proposal.means.spells.map(id=>context.resolve(id,'spell').value),cast=find(a=>a.call?.tool==='world_cast');
+  if(cast&&water.op==='transfer'&&water.resource==='water'&&clean.op==='fact.set'&&clean.entity===water.to&&clean.field==='turbidity'&&clean.delta<0){
+   const source=engine.byId.get(spells[0]),purifier=engine.byId.get(spells[1]);
+   if(source?.effectSpec?.operation==='irrigate'&&purifier?.effectSpec?.operation==='clean_water')return {status:'sequence',routed:'open:proposal',signature:[],candidates:[],effects:[],cost:null,steps:[{action:cast,slots:{spell:spells[0],source:water.from,target:water.to,millilitres:water.qty*1000}},{action:cast,slots:{spell:spells[1],target:water.to}}]};
+  }
+ }
  if(effects.length===4){
   const [payment,goods,consume,nutrition]=effects;
   if(payment.op==='transfer'&&coin(payment)&&owner(payment.from)===actor&&goods.op==='transfer'&&owner(goods.to)===actor&&owner(goods.from)===owner(payment.to)&&consume.op==='transfer'&&owner(consume.from)===actor&&owner(consume.to)==='sink:consume'&&consume.qty===1&&resource(consume)===resource(goods)&&nutrition.op==='vital'&&nutrition.target===actor&&nutrition.type==='body:satiety'){
@@ -55,7 +65,7 @@ function prepareOpenSequence(proposal,registry,context){
 }
 
 export async function executeOpenSequence(engine,document,input,prepared,{preview=false}={}){
- let current=document;const patches=[],receipts=[];
+ let current=document,failedStep=null;const patches=[],receipts=[];
  for(const [index,step] of prepared.steps.entries()){
   const slots={...step.slots};
   if(step.debtReference){
@@ -73,6 +83,9 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
    return preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}};
   }
   current=applyPatches(current,reduced.patches);patches.push(...reduced.patches);receipts.push({...receipt,status:'committed'});
+  // A rolled failure is a performed attempt, not a failed precondition. Keep
+  // its native costs and stop dependent steps instead of offering a free retry.
+  if(reduced.result.success===false){failedStep=index;break;}
  }
  const applied=[],resources=[];
  for(const [stepIndex,step] of receipts.entries()){
@@ -88,8 +101,9 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
    resources.push({...cost,index:effect.index,stepIndex,stepEffectIndex:cost.index,stepCostIndex:cost.costIndex,costIndex:effect.costIndex});
   }
  }
- const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied,cost:{time:current.state.minute-document.state.minute,resources},steps:receipts,routing:prepared};
- return preview?{receipt,routing:prepared}:{patches,result:{action:'open:proposal',receipt}};
+ const routing=failedStep===null?prepared:{...prepared,failedStep};
+ const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied,cost:{time:current.state.minute-document.state.minute,resources},steps:receipts,routing};
+ return preview?{receipt,routing}:{patches,result:{action:'open:proposal',...(failedStep===null?{}:{success:false,failedStep}),receipt}};
 }
 
 export function prepareOpenAction(engine,document,proposal,native){
@@ -116,11 +130,15 @@ export function prepareOpenAction(engine,document,proposal,native){
   proposal=entities.proposal;
  }
  proposal=scheduledQuestion(engine,document,proposal,native.routing);
- const registry=primitiveRuntime.registry(engine),sequence=prepareOpenSequence(proposal,registry,native.routing);
+ const registry=primitiveRuntime.registry(engine),sequence=prepareOpenSequence(proposal,registry,native.routing,engine);
  if(sequence)return sequence;
  const routing=routeAction(proposal,registry,native.routing);
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
+ // 06 §6.5: an identified person does not determine what to do to them.
+ // Scene-only registered actions can still route above. An unresolved goal
+ // asks the player and creates no request or NPC commitment.
+ if(Array.isArray(proposal.effects)&&proposal.effects.length===0&&native.routing.kindOf?.(proposal.target)==='person')return {...routing,status:'needs_slots',routed:null,effects:[],cost:null,missing:['goal'],reason:'请说明想对目标具体做什么：交谈、治疗、攻击，还是别的事？'};
  for(const effect of proposal.effects??[])if(effect.op==='holding.rescale'){
   const permission=authority(primitiveContext(engine,document),native.routing.actor,effect.op,effect.subject,{shares:effect.shares,effect});
   if(!permission.allowed)reject('E-AUTHORITY',permission.reason);

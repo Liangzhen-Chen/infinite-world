@@ -74,6 +74,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  const involved=new Set(['player']);
  for(const value of [result.target,result.buyer,result.seller,result.teacher,result.dialogue?.npc,args.target,args.subject,args.student,args.seller,args.buyer,args.promisor,args.promisee]){
   if(typeof value!=='string')continue;
+  if(a.records?.[`physical_feature:${value}`]?.id===value){involved.add(value);continue;}
   try{involved.add(engine.resolve(value));}catch{/* A free text subject is not an entity. */}
  }
  const transfers=legacyLedgerEffects(before,after,d.patches);
@@ -83,6 +84,17 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   // Autonomous postings stay internal, just like native time's world advance.
  }
  const posted=receipt.applied.filter(e=>e.op==='transfer');
+ // Environment water is measured in the native feature state, not an item
+ // ledger account. Adopt its conserved before/after pair, never the request.
+ const waterEndpoints=new Set();
+ if(tool==='cast'&&result.movedMl>0&&result.source&&result.destination){
+  const sourcePath=['state','records',`physical_feature:${result.source}`,'state'],destinationPath=['state','records',`physical_feature:${result.destination}`,'state'];
+  const initialFeature=id=>engine.world.locations.flatMap(place=>place.features??[]).find(f=>f.id===id)?.state;
+  const srcBefore=at(before,sourcePath)??initialFeature(result.source),srcAfter=at(after,sourcePath),dstBefore=at(before,destinationPath)??initialFeature(result.destination),dstAfter=at(after,destinationPath);
+  if(srcBefore?.waterMl-srcAfter?.waterMl!==result.movedMl||dstAfter?.waterMl-dstBefore?.waterMl!==result.movedMl)reject('E-LEGACY-RECONCILE','Native environment water transfer does not conserve volume');
+  add({op:'transfer',resource:'water',from:result.source,to:result.destination,qty:result.movedMl/1000,unit:'litre',result:{source:{path:sourcePath,before:structuredClone(srcBefore),after:structuredClone(srcAfter)},destination:{path:destinationPath,before:structuredClone(dstBefore),after:structuredClone(dstAfter)}}});
+  waterEndpoints.add(result.source);waterEndpoints.add(result.destination);
+ }
  if(posted.length){
   // Opening adapters read the old state projections without changing them.
   // A journal alone is insufficient: the carried goods/purse must agree too.
@@ -148,6 +160,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   }
   add(stateEffect('status',{target:row.target,status:row.status??row.kind,power:row.power,duration:Math.max(0,(row.expires??a.minute)-a.minute)},['state','effects',id],before,after));
  }
+ // A native relief can remove the last point and delete the status row.
+ // Its actual change list distinguishes removal from expiry during time advance.
+ if(tool==='cast'&&result.relieved>0)for(const change of result.changes??[]){
+  const old=b.effects?.[change.effect];
+  if(old?.kind==='status'&&old.target===result.target&&!a.effects?.[change.effect]&&change.relieved===old.power)
+   add(stateEffect('status',{target:old.target,status:old.status,power:0,magnitude:-change.relieved,duration:0,removed:true},['state','effects',change.effect],before,after));
+ }
  for(const [id,row] of Object.entries(a.inventory??{}))if(Number.isFinite(b.inventory?.[id]?.durability)&&row?.durability!==undefined&&row.durability!==b.inventory[id].durability)
   add(stateEffect('fact.set',{entity:id,field:'durability',value:row.durability},['state','inventory',id,'durability'],before,after));
  // Drying writes the carried item's moisture, not the entity fact partition.
@@ -165,7 +184,8 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // Teaching, practice, and old education programs may write knowledge directly.
  for(const [partition,owner] of [['skills','player'],['recipes','player'],['spells','player']])for(const [subject,row] of Object.entries(a[partition]??{})){
   if(same(b[partition]?.[subject],row)||receipt.applied.some(e=>e.op==='learn'&&e.subject===subject))continue;
-  add(stateEffect('learn',{entity:owner,target:owner,subject,learningSource:row.source?.id??result.source?.id??args.source,mode:row.source?.type??'practice'},['state',partition,subject],before,after));
+  // A cast's source slot is its physical medium, not a teacher or a book.
+  add(stateEffect('learn',{entity:owner,target:owner,subject,learningSource:tool==='cast'?'practice':row.source?.id??result.source?.id??args.source,mode:tool==='cast'?'practice':row.source?.type??'practice'},['state',partition,subject],before,after));
  }
  for(const [id,row] of Object.entries(a.npcs??{}))if(involved.has(id))for(const [subject,value] of Object.entries(row.skills??{})){
   if(same(b.npcs?.[id]?.skills?.[subject],value))continue;
@@ -219,7 +239,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const old=before.holdings?.entities?.[id];if(!old)continue;
   for(const [field,value] of Object.entries(row.facts??{}))if(!same(old.facts?.[field],value))add(stateEffect('fact.set',{entity:id,field,value},['holdings','entities',id,'facts',field],before,after));
  }
- for(const [id,row] of Object.entries(a.records??{}))if(row.category==='physical_feature'&&involved.has(row.id)){
+ for(const [id,row] of Object.entries(a.records??{}))if(row.category==='physical_feature'&&involved.has(row.id)&&!waterEndpoints.has(row.id)){
   for(const [field,value] of Object.entries(row.state??{}))if(!same(b.records?.[id]?.state?.[field],value))
    add(stateEffect('fact.set',{entity:row.id,field,value},['state','records',id,'state',field],before,after));
  }

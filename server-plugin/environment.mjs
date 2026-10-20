@@ -238,17 +238,22 @@ export function validateEnvironmentCatalog(catalog){
     return errors;
 }
 function watering(d,engine,row,operation,args,range,power){
-    const channel=operation==='irrigate'?row:feature(engine,row.links?.channel,d.get('state','location'),d.document);
+    // A bucket beside a working channel is a real destination too. Derive the
+    // unique existing channel from its source; never invent a water account.
+    const intoContainer=operation==='irrigate'&&row.kind==='container';
+    const channels=intoContainer?environmentFeatures(engine,d.document).filter(f=>f.kind==='channel'&&f.location===row.location&&f.links?.source===args.source):[];
+    const channel=intoContainer?(channels.length===1?channels[0]:{}):operation==='irrigate'?row:feature(engine,row.links?.channel,d.get('state','location'),d.document);
     if(channel.kind!=='channel')reject('E-ACTION-CHANNEL','缺少真实引水沟',{missing:['需要真实存在的引水沟'],repair:['先修建引水沟，再选择其真实编号引水']});
     const source=feature(engine,channel.links?.source,d.get('state','location'),d.document),
-        destination=feature(engine,channel.links?.destination,d.get('state','location'),d.document);
-    if(source.kind!=='water'||destination.kind!=='soil'||operation==='soil_water'&&destination.id!==row.id)throw new Error('沟渠源头或目标田垄不匹配');
+        destination=intoContainer?row:feature(engine,channel.links?.destination,d.get('state','location'),d.document);
+    if(source.kind!=='water'||!['soil',...(intoContainer?['container']:[])].includes(destination.kind)||operation==='soil_water'&&destination.id!==row.id||args.source&&args.source!==source.id)throw new Error('沟渠源头或目标田垄不匹配');
     for(const target of[channel,source,destination]){inReach(d,target,range);permission(d,engine,target,args);}
     assertLiquidWater(engine,d,source);
     const ch=stateOf(d,channel),src=stateOf(d,source),dst=stateOf(d,destination);
     if(operation==='soil_water'&&!dst.worked)throw new Error('回潮前需要耕作者实际处理土壤');
-    const amountMl=Math.floor(Math.min(power*1000,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0),waterEarthFlow(d,channel,ch)*(1-ch.blockagePercent/100)));
-    if(amountMl<=0)throw new Error('水源不足、田垄已满或沟渠被堵住');
+    const requested=args.millilitres===undefined?power*1000:integer(args.millilitres,1,power*1000,'引水量');
+    const amountMl=Math.floor(Math.min(requested,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0),waterEarthFlow(d,channel,ch)*(1-ch.blockagePercent/100)));
+    if(amountMl<=0)reject('E-ACTION-WATER-FLOW','水源不足、田垄已满或沟渠被堵住',{missing:['需要足够的原水、目标余量与畅通沟渠'],repair:['先检查水源和目标容量，实际清淤后再引水']});
     return{channel,source,destination,amountMl};
 }
 export function prepareEnvironmentMagic(d,catalog,args){
@@ -289,12 +294,12 @@ export function applyEnvironmentMagic(d,prepared,eventId){
         const salt=src.saltMg*amount/src.waterMl,toxin=src.toxinUg*amount/src.waterMl;
         dst.turbidity=(dst.turbidity*dst.waterMl+src.turbidity*amount)/(dst.waterMl+amount);
         dst.pathogenRisk=Math.max(dst.pathogenRisk,src.pathogenRisk);dst.waterMl+=amount;dst.saltMg+=salt;dst.toxinUg+=toxin;
-        dst.moisturePercent=Math.min(100,dst.baseMoisturePercent+100*dst.waterMl/dst.capacityMl);
+        if(transfer.destination.kind==='soil')dst.moisturePercent=Math.min(100,dst.baseMoisturePercent+100*dst.waterMl/dst.capacityMl);
         src.waterMl-=amount;src.saltMg-=salt;src.toxinUg-=toxin;
         store(d,transfer.source,src);store(d,transfer.destination,dst);
         return{target:row.id,movedMl:amount,source:transfer.source.id,destination:transfer.destination.id,
-            sourceWaterMl:src.waterMl,destinationWaterMl:dst.waterMl,moisturePercent:dst.moisturePercent,
-            factSummary:`实际只移动${amount}毫升水到田垄，剩余${src.waterMl}毫升仍留在原水源。沟渠未另存任何水；田垄现在${dst.waterMl}毫升，湿度${dst.moisturePercent}%。`,
+            sourceWaterMl:src.waterMl,destinationWaterMl:dst.waterMl,...(transfer.destination.kind==='soil'?{moisturePercent:dst.moisturePercent}:{}),
+            factSummary:`实际只移动${amount}毫升水到${transfer.destination.name}，剩余${src.waterMl}毫升仍留在原水源。沟渠未另存任何水；目标现在${dst.waterMl}毫升${transfer.destination.kind==='soil'?`，湿度${dst.moisturePercent}%`:''}。`,
             note:'只转移既有水；污染物随水转移，未获得消毒或净化效果'};
     }
     store(d,row,current);return{target:row.id,...result,before,after:visible(row,current),sourceEvent:eventId};

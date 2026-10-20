@@ -5,7 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {aliveHoldings,locationOf,located,auditHoldings} from '../server-plugin/holdings.mjs';
-import {heldUnit} from '../server-plugin/items.mjs';
+import {heldUnit,physicalItem} from '../server-plugin/items.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {derivedStats} from '../server-plugin/combat.mjs';
 import {environmentCatalog,environmentFeatures} from '../server-plugin/environment.mjs';
@@ -168,23 +168,34 @@ test('physical: invalid water state is atomic, and moving a catalog feature cann
   assert.equal(out.document.state.records['physical_feature:feature_hw_kitchen_bucket'],initial.state.records?.['physical_feature:feature_hw_kitchen_bucket']);
  }
  const moved=setup({objects:[{id:'feature_hw_kitchen_bucket',location:'loc_hw_dock',owner:'player',carriedBy:'player',sourceEvent:'unknown_history'}]});
- for(const key of ['location','owner','carriedBy','sourceEvent'])assert.ok(moved.setupUnmet.some(u=>u.item===`objects[0].${key}`),key);
+ // Y now restores placement through the native location protocol. An unknown
+ // historical source and unbacked title still fail (01 §1.2–1.3 / 04 §4.2).
+ for(const key of ['owner','sourceEvent'])assert.ok(moved.setupUnmet.some(u=>u.item===`objects[0].${key}`),key);
+ assert.deepEqual(moved.document.holdings?.locations?.feature_hw_kitchen_bucket,initial.holdings?.locations?.feature_hw_kitchen_bucket);
+ const valid=setup({location:'loc_hw_dock',objects:[{id:'feature_hw_kitchen_bucket',location:'loc_hw_dock',carriedBy:'player'}]});
+ assert.deepEqual(valid.setupUnmet,[]);
+ assert.equal(environmentFeatures(engine,valid.document).find(f=>f.id==='feature_hw_kitchen_bucket').location,'loc_hw_dock');
+ assert.equal(environmentFeatures(engine,valid.document).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
  assert.equal(environmentFeatures(engine).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
 });
 
-test('physical: native object identity is usable, unsupported bed/lock/fire facts stay unmet',()=>{
+test('physical: native object identity, locks and small fire reach physical consumers',()=>{
  const bed={id:'bed',template:'thing',kind:'item',name:'已租床位',location:home};
  const out=setup({objects:[bed,{...bed,id:'cell_lock',locked:true,mechanism:'mechanical_lock'}]});
  assert.equal(createRoutingContext(engine,out.document).resolve('bed','item').value,'item_bed');
  assert.equal(Object.keys(out.document.holdings.entities).filter(id=>id==='item_bed').length,1);
- assert.ok(out.setupUnmet.some(u=>u.item==='objects[1].locked'));
+ // K's implemented facts are consumed by physical action validation (06 §6.3).
+ assert.deepEqual(out.setupUnmet,[]);
+ assert.equal(physicalItem(engine.primitiveDraft(out.document),engine,out.bindings.cell_lock).locked,true);
  const fire=setup({objects:[{id:'fire',template:'thing',kind:'node',name:'微火',location:home,fireIntensity:1}]});
- assert.ok(fire.setupUnmet.some(u=>/接点/.test(u.reason)));assert.equal(fire.bindings.fire,undefined);
+ assert.deepEqual(fire.setupUnmet,[]);
+ assert.equal(physicalItem(engine.primitiveDraft(fire.document),engine,fire.bindings.fire).fireIntensity,1);
+ assert.ok(setup({objects:[{id:'bad_fire',template:'thing',kind:'node',name:'bad',location:home,fireIntensity:-1}]}).setupUnmet.length);
  const bad=setup({objects:[{id:'bad'}]});assert.ok(bad.setupUnmet.length);
 });
 
-// Every spatial field has a valid declaration and an invalid shape. The positive
-// expectation is a diagnosed missing S4 connector, never unused state geometry.
+// Every spatial field has a valid declaration and an invalid shape. Existing
+// native perception is verified; new geometry still requires an S4 connector.
 const spatialExamples={
  zones:{id:'zone_a',name:'门内',location:home},
  paths:{id:'path_a',fromZone:'zone_a',toZone:'zone_b',distanceMeters:1,passable:false,blockedBy:'lock_a'},
@@ -193,9 +204,14 @@ const spatialExamples={
  obstacles:{id:'wall_a',kind:'stone_wall',segmentMeters:[[2,1],[6,1]]},
  hazards:{id:'rocks_a',zone:'zone_b',kind:'falling_rocks',active:true},
 };
-for(const [field,row] of Object.entries(spatialExamples))test(`physical: ${field} diagnoses valid missing native geometry and rejects invalid input`,()=>{
+for(const [field,row] of Object.entries(spatialExamples))test(`physical: ${field} ${field==='positions'?'verifies existing native perception':'diagnoses valid missing native geometry'} and rejects invalid input`,()=>{
  const out=setup({[field]:[row]});
- assert.equal(out.setupUnmet.length,1);assert.match(out.setupUnmet[0].reason,/缺少原生接点.*S4/);
+ // The positions connector can verify already available native perception;
+ // it does not create coordinates/contact or disable a range boundary.
+ if(field==='positions'){
+  assert.deepEqual(out.setupUnmet,[]);
+  assert.ok(setup({positions:[{...row,lineOfSight:false}]}).setupUnmet.length);
+ }else {assert.equal(out.setupUnmet.length,1);assert.match(out.setupUnmet[0].reason,/缺少原生接点.*S4/);}
  assert.equal(out.document.state[field],initial.state[field]);
  assert.deepEqual(out.document.state.records,initial.state.records);
  const invalid=setup({[field]:[{}]});assert.match(invalid.setupUnmet[0].reason,/invalid/);
@@ -252,10 +268,13 @@ test('physical: actor initial activity and location use native writes without gr
  assert.equal(bad.setupUnmet.length,3);
 });
 
-test('physical: unsupported attention, teaching and orientation facts do not disable guards or imply consent',()=>{
+test('physical: native teaching flags and unsupported attention/orientation never imply consent',()=>{
  const out=setup({present:[npc],actorStates:{[npc]:{teachingBusy:false,facingAway:true,hearingActive:true,alertness:'normal',attention:'market_stall',demonstrating:false}}});
- assert.equal(out.setupUnmet.length,6);
- assert.equal(out.document.state.npcs[npc].facingAway,undefined);assert.equal(out.document.state.npcs[npc].teachingBusy,undefined);
+ // U restores the actual teaching flags; orientation/attention remain S4.
+ assert.equal(out.setupUnmet.length,4);
+ assert.equal(out.document.state.npcs[npc].facingAway,undefined);assert.equal(out.document.state.npcs[npc].teachingBusy,false);
+ assert.equal(out.document.state.npcs[npc].demonstrating,false);
+ assert.ok(setup({present:[npc],actorStates:{[npc]:{demonstrating:true}}}).setupUnmet.length);
  assert.equal(Object.values(out.document.state.records).some(r=>r.category==='authorization'),false);
 });
 

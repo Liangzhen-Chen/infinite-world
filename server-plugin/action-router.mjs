@@ -254,7 +254,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_cast'){
     const transfer=transfers[0],spell=engine.byId.get(proposal.means?.spell);
     if(slot.name==='source'&&transfer)value??=transfer.from;
-    if(slot.name==='target')value??=target??transfer?.to??(spell?.effectSpec?.kind==='summon'?actor:undefined);
+    if(slot.name==='millilitres'&&spell?.effectSpec?.operation==='irrigate'&&transfer)value??=transfer.qty*1000;
+    if(slot.name==='target'){
+     if(spell?.effectSpec?.operation==='irrigate'&&transfer){
+      const channels=environmentFeatures(engine,document).filter(f=>f.kind==='channel'&&f.location===location&&f.links?.source===transfer.from&&f.links?.destination===transfer.to);
+      if(channels.length===1)value??=channels[0].id;
+     }
+     value??=target??transfer?.to??(spell?.effectSpec?.kind==='summon'?actor:undefined);
+    }
    }
    if(action.call?.tool==='world_combat'){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
@@ -458,7 +465,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(fine&&money?.qty===fine.amount&&settlement?.amount===fine.amount&&owner(money.from)===actor&&[fine.site,fine.account].includes(money.to))return [sign([transfer(LEDGER_COIN,actor,money.to===fine.account?fine.account:fine.site),{op:'obligation.settle'}])];
   }
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss'&&summons.has(slots.summon))return [sign([{op:'obligation.cancel'},{op:'transition',entity:slots.summon}])];
-  if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];
+  if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate'){
+   const channel=environmentFeatures(engine,document).find(f=>f.id===slots.target&&f.kind==='channel');
+   return channel?[sign([transfer('water',channel.links?.source,channel.links?.destination)])]:[];
+  }
   return [];
  };
  const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0;
