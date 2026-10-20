@@ -54,7 +54,7 @@ export const actionSchema={
    anyOf:[{required:['call'],properties:{call:{type:'object'}}},{required:['projection']},{required:['outcomes']}],additionalProperties:false,
    allOf:[{if:{required:['outcomes']},then:{properties:{check:{anyOf:[{type:'null'},object]},cost:{required:['owner'],properties:{owner:{const:'primitives'}}}}}}]
   },
-  proposal:{type:'object',required:['intent','effects'],properties:{intent:{type:'string',minLength:1,maxLength:4000},participants:object,effects:{type:'array',maxItems:64,items:{$ref:'#/$defs/primitive'}},means:object,context:object},additionalProperties:false},
+  proposal:{type:'object',required:['intent','effects'],properties:{intent:{type:'string',minLength:1,maxLength:4000},participants:object,effects:{type:'array',maxItems:64,items:{$ref:'#/$defs/primitive'}},means:object,context:object,target:{type:'string'},consent:{type:'object',properties:{from:{type:'string'},scope:{type:'string'},onRefusal:{enum:['abort','contest']}},additionalProperties:false}},additionalProperties:false},
   receipt:{type:'object',required:['eventId','routed','candidates','applied','trimmed','check','consequences','narrate','alternatives','fallback','status'],properties:{
    eventId:string,actor:string,source:{type:'object',required:['kind','id'],properties:{kind:{enum:['catalog','open','rule']},id:string}},routed:{type:['string','null']},candidates:array,
    applied:{type:'array',items:{type:'object',required:['index','op','result','tags'],properties:{index:{type:'integer',minimum:0},op:{enum:ops},tags:{type:'array',items:{type:'string'}}}}},trimmed:array,check:{type:['object','null']},consequences:array,

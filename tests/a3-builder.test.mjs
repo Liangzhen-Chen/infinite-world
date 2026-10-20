@@ -27,7 +27,9 @@ test('开放提案是动态目录职责，四步输入不需原语 JSON；只使
  const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'builder-open-catalog');
  const menu=worldActions(engine.scoped(document),document,{query:'open:proposal'}),action=menu.actions.find(a=>a.id==='open:proposal');
  assert.ok(action);assert.equal(action.inputTool,'world_propose');
- assert.deepEqual(action.slots.map(s=>[s.name,builderStep(s)]),[['intent',3],['participants',1],['means',2],['effects',3],['context',3]]);
+ // 06 §6.5: selecting a target and requesting consent must survive the form;
+ // the structured request grants no authority on the counterparty's behalf.
+ assert.deepEqual(action.slots.map(s=>[s.name,builderStep(s)]),[['intent',3],['target',1],['consent',1],['participants',1],['means',2],['effects',3],['context',3]]);
  const target=action.slots.find(s=>s.name==='participants').inputSchema.properties.target;
  const remote=Object.keys(document.state.npcs).find(id=>document.state.npcs[id].location!==document.state.location);
  assert.ok(remote);assert.ok(!target.enum.includes(remote));assert.ok(target.enum.includes('player'));

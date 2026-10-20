@@ -59,6 +59,8 @@ function openProposalOffer(ctx){
  });
  return {id:'open:proposal',label:'组合自己的做法',hint:'选择效果并预览；实际能力、同意、代价和法律后果由引擎裁决。',readOnly:false,inputTool:'world_propose',fill:{},slots:[
   {name:'intent',kind:'text',required:true},
+  {name:'target',kind:'entity',entity:'entity',builderStep:1,options:entities},
+  {name:'consent',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{from:select(entities),scope:{type:'string'},onRefusal:{type:'string',enum:['abort','contest']}}}},
   {name:'participants',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{target:select(entities)}}},
   {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
   {name:'effects',kind:'object',required:true,inputSchema:{type:'array',minItems:1,maxItems:63,items:{oneOf:variants}}},
