@@ -177,6 +177,12 @@ test('physical: invalid water state is atomic, and moving a catalog feature cann
  assert.equal(environmentFeatures(engine,valid.document).find(f=>f.id==='feature_hw_kitchen_bucket').location,'loc_hw_dock');
  assert.equal(environmentFeatures(engine,valid.document).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
  assert.equal(environmentFeatures(engine).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
+ const carried=setup({location:'loc_hw_dock',objects:[{id:'feature_hw_kitchen_bucket',location:'loc_hw_dock',carriedBy:'player'}]});
+ assert.deepEqual(carried.setupUnmet,[]);
+ assert.equal(locationOf(engine.primitiveDraft(carried.document),'feature_hw_kitchen_bucket').at,'player');
+ assert.equal(environmentFeatures(engine,carried.document).find(f=>f.id==='feature_hw_kitchen_bucket').location,'loc_hw_dock');
+ assert.equal(environmentFeatures(engine,carried.document).find(f=>f.id==='feature_hw_kitchen_bucket').owner,npc);
+ books(carried.document);
 });
 
 test('physical: native object identity, locks and small fire reach physical consumers',()=>{

@@ -6,8 +6,10 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {runSetupLoaders,registerSetupLoader} from '../tools/a3-setup/index.mjs';
 import {ensureHoldings,openHoldings,aliveHoldings,holdingSet} from '../server-plugin/holdings.mjs';
-import {knowledgeProficiency} from '../server-plugin/education-state.mjs';
-import {subjectiveView} from '../server-plugin/subjective-view.mjs';
+import {knowledgeProficiency,knowsPracticalKnowledge,demonstrationAt,teachingAvailable} from '../server-plugin/education-state.mjs';
+import {subjectiveView,personLanguages,canReadLanguage} from '../server-plugin/subjective-view.mjs';
+import {personCareer} from '../server-plugin/entity-view.mjs';
+import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {mapView} from '../server-plugin/ui-map.mjs';
 import {summonAction} from '../server-plugin/summons.mjs';
 
@@ -44,13 +46,22 @@ test('agency abilities: declared NPC skills use native facts; teachers retain qu
  const bad=domain({abilitiesByActor:{npc_hw_luqing:{skills:{skill_literacy:-1,missing_skill:10},teaches:['missing_recipe']},missing_actor:{skills:{skill_literacy:10}}}});
  for(const item of ['abilitiesByActor.npc_hw_luqing.skills.skill_literacy','abilitiesByActor.npc_hw_luqing.skills.missing_skill','abilitiesByActor.npc_hw_luqing.teaches[0]','abilitiesByActor.missing_actor'])rejects(bad,item);
 });
-test('agency abilities: language/practical premises report missing native interfaces rather than false literacy or credentials',()=>{
+test('agency abilities: native language/practical premises retain literacy and credential boundaries',()=>{
  const result=domain({abilitiesByActor:{player:{spokenLanguages:['river'],writtenLanguages:[],practicalKnowledge:['simple_tripwire_disassembly']}}});
- for(const field of ['spokenLanguages','writtenLanguages','practicalKnowledge'])rejects(result,`abilitiesByActor.player.${field}`,/no native/);
- assert.deepEqual(result.document.state.player,initial.state.player);
+ // 05 §5.4 / 06 §6.3: R/S initial writers now exist; assert the actual readers.
+ assert.deepEqual(result.setupUnmet,[]);
+ assert.deepEqual(personLanguages(engine,result.document.state,'player'),['lang:river']);
+ assert.equal(canReadLanguage(engine,result.document.state,'player','river'),false);
+ assert.ok(knowsPracticalKnowledge(engine,result.document.state,'player','simple_tripwire_disassembly'));
+ assert.deepEqual(result.document.state.skills,initial.state.skills);
+ assert.deepEqual(result.document.state.professions,initial.state.professions);
+ assert.equal(result.document.state.minute,initial.state.minute);
+ assert.equal(result.document.state.player.coins,initial.state.player.coins);
  rejects(domain({abilitiesByActor:{player:{spokenLanguages:42}}}),'abilitiesByActor.player.spokenLanguages');
  // An empty spoken list must not silently retain lang:common defaults.
- rejects(domain({abilitiesByActor:{player:{spokenLanguages:[]}}}),'abilitiesByActor.player.spokenLanguages',/no native/);
+ const empty=domain({abilitiesByActor:{player:{spokenLanguages:[]}}});
+ assert.deepEqual(empty.setupUnmet,[]);assert.deepEqual(personLanguages(engine,empty.document.state,'player'),[]);
+ rejects(domain({abilitiesByActor:{player:{practicalKnowledge:['missing']}}}),'abilitiesByActor.player.practicalKnowledge');
 });
 test('agency abilities: known spells/recipes and literacy initialize no lessons, money or elapsed time',()=>{
  const spell=world.spells.find(s=>world.skills.some(k=>k.id===s.skill)),recipe=world.recipes.find(s=>world.skills.some(k=>k.id===s.skill));
@@ -141,15 +152,35 @@ test('agency missing activity interfaces: valid unfinished combat and conversati
   rejects(domain({[field]:[{...setup[field][0],participants:['player','missing']}]}),`${field}[0]`);
  }
 });
-test('agency missing timed demonstration: no timeless activity or teaching consent is manufactured',()=>{
- const setup=corpus('017'),result=domain({demonstrations:setup.demonstrations});rejects(result,'demonstrations[0]',/no native timed/);assert.deepEqual(result.document,initial);
- rejects(domain({demonstrations:[{...setup.demonstrations[0],toMinute:0}]}),'demonstrations[0]',/invalid/);
+test('agency timed demonstration: native active window never manufactures teaching consent',()=>{
+ // 05 §5.4 / 06 §6.3: U now imports a real workstation-bound timed record.
+ const setup=corpus('017'),document=applyIntentSetup(engine,initial,{minute:setup.minute,location:setup.location,present:setup.present}).document;
+ const result=domain({demonstrations:setup.demonstrations},{document}),row=setup.demonstrations[0];
+ assert.deepEqual(result.setupUnmet,[]);
+ assert.ok(demonstrationAt(engine,result.document.state,row.actor,row.subject,row.toMinute));
+ assert.equal(demonstrationAt(engine,result.document.state,row.actor,row.subject,row.toMinute+1),null);
+ assert.equal(teachingAvailable(engine,result.document.state,row.actor),false);
+ assert.deepEqual(result.document.state.consentEvents,document.state.consentEvents);
+ assert.equal(result.document.state.minute,document.state.minute);
+ const expired=structuredClone(result.document);expired.state.minute=row.toMinute;
+ assert.equal(demonstrationAt(engine,expired.state,row.actor,row.subject),null);
+ rejects(domain({demonstrations:[{...row,toMinute:0}]},{document}),'demonstrations[0]',/invalid/i);
 });
 test('agency vocations: qualified historical source is not replayed as a new change, no false credentials',()=>{
- const event={id:'native_qualified',verb:'qualified',actor:'npc_hw_luqing',vocation:'vocation_advocate'},document=eventFixture(event),bindings={alias:event.id};
+ // 05 §5.7 / 06 §6.5: T restores qualification, but still requires its skill.
+ const event={id:'native_qualified',verb:'qualified',actor:'npc_hw_luqing',vocation:'vocation_advocate'},document=domain({abilitiesByActor:{npc_hw_luqing:{skills:{skill_literacy:450}}}},{document:eventFixture(event)}).document,bindings={alias:event.id};
  const declaration={actor:'npc_hw_luqing',id:'vocation_advocate',sourceEvent:'alias',conflictOfInterest:false};
- const result=domain({vocations:[declaration]},{document,bindings});rejects(result,'vocations[0]',/no native initial vocation/);assert.deepEqual(result.document,document);
- rejects(domain({vocations:[{...declaration,id:'missing'}]},{document,bindings}),'vocations[0]',/invalid/);
+ const result=domain({vocations:[declaration]},{document,bindings});assert.deepEqual(result.setupUnmet,[]);
+ assert.equal(result.document.state.npcs.npc_hw_luqing.vocation.sourceEvent,event.id);
+ assert.equal(advocateService(engine,result.document.state,event.actor).proficiency,450);
+ assert.ok(personCareer(engine,result.document.state,event.actor).value.occupation);
+ assert.deepEqual(result.document.state.npcs[event.actor].growth,document.state.npcs[event.actor].growth);
+ assert.deepEqual(result.document.state.npcs[event.actor].certifications,document.state.npcs[event.actor].certifications);
+ assert.deepEqual(result.document.state.records,document.state.records);
+ assert.equal(result.document.state.minute,document.state.minute);
+ rejects(domain({vocations:[{...declaration,id:'missing'}]},{document,bindings}),'vocations[0]',/invalid/i);
+ const unqualified=domain({abilitiesByActor:{npc_hw_luqing:{skills:{skill_literacy:0}}}},{document:eventFixture(event)}).document;
+ rejects(domain({vocations:[declaration]},{document:unqualified,bindings}),'vocations[0]',/invalid/i);
 });
 test('agency rites: valid host/time/offerings without a native project interface remain unmet and unconsumed',()=>{
  const declaration=corpus('074').rites[0],event={id:'native_rite',verb:'rite_scheduled',actor:declaration.host,location:declaration.location},document=eventFixture(event),bindings={[declaration.sourceEvent]:event.id};
