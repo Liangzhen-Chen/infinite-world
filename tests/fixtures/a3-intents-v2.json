@@ -3509,12 +3509,14 @@
       "signature": [
         "transfer(resource:coin,self->pawnshop)",
         "obligation.settle(obligation:own_pawn_loan,full)",
-        "holding.close(holding:own_staff_pledge,redeemed)"
+        "holding.close(holding:own_staff_pledge,redeemed)",
+        "transfer(resource:item_staff,pledge:a3v2_037_pawn_loan->self)",
+        "holding.close(holding:pledged,subject:pledge:a3v2_037_pawn_loan)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3要求清偿、资金与质押解除一致结算，解除后才能取回标的。"
+      "why": "01 §1.3区分所有权、质押与实物占有，§1.6要求原物账户转移；06 §6.3要求本息付款、借款清偿、原杖质押解除、托管质押关闭与原物返还在同一结算中完成。原杖所有权始终归self，不能以清偿或解押替代实物交付，也不能重造木杖。"
     },
     "proposal": {
       "intent": "我的木杖还在这家当铺，赎期也没过，我把本息付清取回来。",
@@ -5436,13 +5438,12 @@
     "expected": {
       "route": "core:law.hire_advocate",
       "signature": [
-        "obligation.create(person:advocate->self,service:defense)",
-        "transfer(resource:coin,self->advocate)"
+        "emit(person:npc_hw_luqing,request:defense,quoteOnly:true)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "05 §5.2.7把讼师建模为service义务并影响证据评分，聘请不能保证胜诉。"
+      "why": "原文“费用和服务范围谈妥后签下来”以谈妥为签约条件；setup明确未签委托、费用范围待定，proposal为quoteOnly=true，故本次只向陆青询价并协商辩护范围。06 §6.3的emit(request)不决定对方答复；05 §5.2.7的service义务及付款应在谈妥后另行成立，本次不得提前创建或扣款。"
     },
     "proposal": {
       "intent": "我想请眼前愿意接案的讼师替我辩护，费用和服务范围谈妥后签下来。",
@@ -9946,12 +9947,13 @@
       "route": "core:trade.sell_to",
       "signature": [
         "holding.transfer(holding:borrowed_knife_owns,new_holder:buyer)",
-        "transfer(resource:coin,buyer->self)"
+        "transfer(resource:coin,buyer->self)",
+        "transfer(resource:item_whittling_knife,self->buyer)"
       ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "06 §6.3与附录A §A.15.12允许无权但实际占有者处分并标unauthorized_disposition，效力和追偿交法典判断。"
+      "why": "01 §1.3、§1.6与06 §6.3要求出售同时包含买方付款、同一借刀实物交付及所有权持有转移；三者都是主效果。06 §6.3及附录A §A.15.12允许无权但实际占有者处分并标unauthorized_disposition，效力和追偿交法典判断，不补原所有者出售许可。"
     },
     "proposal": {
       "intent": "这把借来的刀归别人，但现在确实在我身上；眼前买家愿意出钱，我偷偷把它卖了。",
@@ -12341,7 +12343,7 @@
     },
     "proposalNotes": [
       "本轮场景绑定：missing:own_flowers → 本人携带的一束无毒野花；missing:authorized_wellside → site_w5_well_camp。前提见setup，不将绑定当作动作成功。",
-      "2026-10-20 v2r复审：world/geo/locations.json明确断绳井场owner:null、site.owner:null、occupants:[]，history写旧帐户已各自迁走。保留无主事实，不把旧住户、邻近逐风集或路人杜撰成现任管理者。原intent“获准摆放”不改；原历史/permit的authorized_manager保留为未解决需求，明确是世界内容缺口，仍应setupUnmet，不能以无主自动授权或删除许可闸门。"
+      "2026-10-20 主会话本轮裁定覆盖v2r：world/geo/locations.json确认井场无主且原住户已搬走；删除setup中虚构管理者的历史许可与permit，按无主处安全摆放处理。id与intent原文（含“获准摆放”）保持锁定，该措辞不再作为存在管理者授权的事实声明；不把此修正推广为任意无主地点均可任意操作。"
     ],
     "setup": {
       "location": "site_w5_well_camp",
@@ -12353,7 +12355,7 @@
       "minute": 600,
       "facts": [
         "本人携带的一束无毒野花：此前已采得且归本人的真实thing/item材料，数量1，按该唯一名称绑定；不假冒药草药效，不凭此次摆供再生成花。",
-        "断绳井场site_w5_well_camp的owner:null、site.owner:null、occupants:[]，旧共用帐户已搬走，无已确认现任权利人。原文“获准摆放”仍需真实许可来源；当前authorized_manager选择器未解析，登记为世界内容缺口，不能当作已获有效许可。井旁安全位置避开松动井口，石子仍为自有实物。",
+        "断绳井场site_w5_well_camp的owner:null、site.owner:null、occupants:[]，原共用帐户已各自搬走。本场仅在井旁不妨碍取水的安全空地摆放自有花石，无现任私有权利人的许可前提；不建立authorized_manager、许可事件或许可持有。位置避开松动井口，不取得土地或井的所有权，不免除机关和实际空间限制。",
         "玩家没有求雨神通或主持正式求雨仪轨的资格，当前天气按原状态保持；供台只留表达心意的mark，不保证降雨。",
         "world无花束商品ID，故由setup按通用物模板登记已有野花材料，和旧鞋一样须绑定实际实例后才可消费。"
       ],
@@ -12372,39 +12374,6 @@
           ],
           "toxic": false,
           "medicinalEffect": false
-        }
-      ],
-      "history": [
-        {
-          "id": "a3v2_120_permit_0",
-          "verb": "permission_granted",
-          "at": 599,
-          "source": {
-            "kind": "corpus_premise",
-            "row": "A3V2-120"
-          },
-          "actor": {
-            "role": "authorized_manager",
-            "of": "site_w5_well_camp"
-          },
-          "subject": "site_w5_well_camp",
-          "to": "player",
-          "scope": "place_small_offering"
-        }
-      ],
-      "permits": [
-        {
-          "id": "a3v2_120_permit_0",
-          "holder": "player",
-          "subject": "site_w5_well_camp",
-          "scope": "place_small_offering",
-          "issuer": {
-            "role": "authorized_manager",
-            "of": "site_w5_well_camp"
-          },
-          "fromMinute": 599,
-          "toMinute": 2040,
-          "sourceEvent": "a3v2_120_permit_0"
         }
       ],
       "zones": [
