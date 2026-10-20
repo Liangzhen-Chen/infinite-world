@@ -57,7 +57,7 @@ import {sceneCard}from'./scene-card.mjs';
 import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
-import {assertNpcService,advanceNpcSchedules,scheduleAt}from'./npc-schedule.mjs';
+import {assertNpcService,advanceNpcSchedules,scheduleAt,withScheduleCache}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
@@ -440,7 +440,7 @@ export class WorldEngine {
         this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{return this.advanceElapsed(d,minutes,id);}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
+        try{return withScheduleCache(this,d,()=>this.advanceElapsed(d,minutes,id));}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');

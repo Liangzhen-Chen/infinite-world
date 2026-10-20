@@ -98,5 +98,7 @@ export function prepareFacilityProject(engine,state,args,settlement){
 }
 
 // Installed consumers keep fire, storage and repair calls out of pack imports.
+import {registerAdvanceHook} from './advance-hooks.mjs';
 export function facilityRuntime(){return facilityRuntime.handlers??={};}
 export function installFacilityRuntime(handlers){Object.assign(facilityRuntime(),handlers);}
+registerAdvanceHook('facilityRuntime',facilityRuntime);

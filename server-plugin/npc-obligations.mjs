@@ -10,10 +10,18 @@ import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
 import {employmentReservation} from './employment-state.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
+import {recordsWhere,recordsMemo} from './storage.mjs';
 declareHoldingWriter('npc-obligations',{kinds:['resides','devotee_of','certified']});
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
 const full=(engine,id)=>personSimulation(engine,{},id).value;
+const reservationRows=Symbol('live schedule reservations');
+export const liveNpcReservations=state=>recordsMemo(state.obligations,reservationRows,()=>{
+ // Pre-S3 saves have no kind. Keep that compatibility bucket; new unified
+ // finance/law/work obligations never enter the reservation projection.
+ const rows=['promise','delivery',undefined].flatMap(kind=>recordsWhere(state.obligations,'kind',kind)).filter(live);
+ return rows.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));
+});
 const capable=row=>row&&!['死亡','濒死','昏迷','患病'].includes(row.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}必须在${min}到${max}之间`);return n;};
 const parties=o=>[o.promisor,o.promisee];
@@ -27,7 +35,7 @@ function signReservation(d,engine,row,eventId){
  return d.get('state','obligations',row.id);
 }
 export function npcObligationAt(state,id,minute=state.minute){
- return Object.values(state.obligations??{}).filter(live).filter(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline).sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id))[0]??null;
+ return liveNpcReservations(state).find(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline)??null;
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
  const finish=start+minutes;
@@ -131,7 +139,7 @@ export function assertCourierRouteAccess(engine,id,from,to,route){
  for(const edgeId of route.edges){const edge=engine.world.routes?.find(row=>row.id===edgeId);if(edge)for(const place of [edge.from,edge.to])if(place!==from)assertCourierAccess(engine,id,place);}
 }
 export function nextNpcObligationMinute(state,after){
- return Math.min(Infinity,...Object.values(state.obligations??{}).filter(o=>live(o)&&o.deliveryVersion===1).flatMap(o=>[o.start,o.deadline]).filter(minute=>minute>after));
+ return Math.min(Infinity,...liveNpcReservations(state).filter(o=>o.deliveryVersion===1).flatMap(o=>[o.start,o.deadline]).filter(minute=>minute>after));
 }
 
 // A reserved actor follows the same route/coin rules as the routine scheduler.
@@ -175,7 +183,7 @@ function simulateNpc(d,engine,id,before,after,bookings,beforeState){
 export function advanceNpcObligations(d,engine,before,after,eventId,{beforeState=null}={}){
  before=Math.max(before,d.get('state','npcObligationClock')??before);
  if(after<=before)return;
- const state=d.get('state'),bookings=Object.values(state.obligations??{}).filter(live).sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));
+ const state=d.get('state'),bookings=liveNpcReservations(state);
  if(!bookings.length){if(state.npcObligationClock!==undefined)d.set(['state','npcObligationClock'],after);advanceNpcSchedules(d,engine,before,after,{beforeState});return;}
  d.set(['state','npcObligationClock'],after);
  const ids=new Set(bookings.flatMap(reservedActors).filter(id=>id!=='player'));

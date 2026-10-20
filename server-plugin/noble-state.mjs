@@ -2,6 +2,7 @@
 import {regionOf} from './regions.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 
 export const nobleRules=e=>e.rules.governance?.sovereignty;
 export const highTitle=t=>['男爵','子爵','伯爵','侯爵','公爵'].includes(t?.title)&&['受封','停俸'].includes(t.status);
@@ -21,6 +22,7 @@ export function nobleLords(e,s){
 }
 export const nationRows=s=>Object.values(s.records??{}).filter(r=>r.category==='nation');
 export const liveNation=(s,id)=>nationRows(s).find(n=>n.id===id&&['独立待定','独立','谈判中','内乱'].includes(n.status));
+registerAdvanceHook('liveNation',liveNation);
 export const rulerNation=(s,who)=>nationRows(s).find(n=>n.ruler===who&&liveNation(s,n.id));
 export const localLevel=(e,s,id)=>adminLevel(e,s,id)?.level??e.world.settlementProfiles?.find(p=>p.id===id)?.level??e.world.regions?.find(r=>r.id===id)?.level??null;
 const settlementIds=(e,s)=>[...new Set([...(e.world.settlementProfiles??[]).map(p=>p.id),...Object.keys(e.rules.governance?.promotion?.jurisdiction??{}),...Object.keys(s.settlements??{})])];

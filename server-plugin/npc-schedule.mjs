@@ -14,6 +14,71 @@ import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
+import {recordsWhere,canonicalEqual,PatchCursor} from './storage.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('npc-schedule',{kinds:[]});
+// The cache belongs to one draft and one elapsed-time action. Cursor writes
+// invalidate it without exposing/copying the entire NPC map for every read.
+export function withScheduleCache(engine,d,task){
+    const previous=engine.scheduleReadCache,own=Object.hasOwn(engine,'scheduleReadCache');
+    if(previous?.draft===d)return task();
+    const cursor=d.cursor,observer=cursor?.onPatch;
+    const cache=cursor instanceof PatchCursor?{draft:d,people:new Map(),snapshots:new WeakMap()}:null;
+    engine.scheduleReadCache=cache;
+    if(cache)cursor.onPatch=patch=>{observer?.(patch);invalidateSchedule(cache,patch);};
+    try{return task();}finally{
+        if(cache)cursor.onPatch=observer;
+        if(own)engine.scheduleReadCache=previous;else delete engine.scheduleReadCache;
+    }
+}
+registerAdvanceHook('withScheduleCache',withScheduleCache);
+const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
+const ignoredNpcScheduleFields=new Set(['memoryStream','developments','growth','cognition','coins','trust','affection']);
+export function sameNpcScheduleInputs(a,b){
+    if(a===b)return true;if(!a||!b)return false;
+    for(const k in a)if(!ignoredNpcScheduleFields.has(k)&&a[k]!==b[k])return false;
+    for(const k in b)if(!ignoredNpcScheduleFields.has(k)&&!Object.hasOwn(a,k))return false;
+    return true;
+}
+registerAdvanceHook('sameNpcScheduleInputs',sameNpcScheduleInputs);
+function invalidateSchedule(cache,{path,value,op}){
+    if(path[0]!=='state'){if(!path.length)cache.people.clear();return;}
+    if(['minute','scheduler','npcObligationClock'].includes(path[1]))return;
+    if(path[1]==='npcs'&&path.length>=3){if(!ignoredNpcScheduleFields.has(path[3]))cache.people.delete(path[2]);return;}
+    if(path[1]==='records'&&path.length>=3){
+        const old=cache.draft.cursor.root.state.records?.[path[2]];
+        const category=path.length===3?value?.category:path[3]==='category'?value:old?.category;
+        if((!old||ignoredScheduleRecords.has(old.category))&&(op==='delete'&&path.length===3||ignoredScheduleRecords.has(category)))return;
+    }
+    if(path[1]==='obligations'&&path.length>=3){
+        const state=cache.draft.cursor.root.state,old=state.obligations?.[path[2]];
+        const reservation=old?.reservationVersion===1||(path.length===3?value?.reservationVersion===1:path[3]==='reservationVersion'&&value===1);
+        if(!reservation&&!recordsWhere(state.records,'kind','workshop').some(r=>r.serviceObligation===path[2]))return;
+    }
+    cache.people.clear();
+}
+const sameCourses=(a,b)=>a===b||a?.length===b?.length&&a?.every((c,i)=>c===b[i]);
+function cachedSchedule(engine,npcId,minute,state,constraints,read){
+    const cache=engine.scheduleReadCache;if(!cache||!state)return read();
+    let people=cache.people;
+    if(state!==cache.draft.cursor.root.state){
+        people=cache.snapshots.get(state);
+        if(!people){people=new Map();cache.snapshots.set(state,people);}
+    }
+    let person=people.get(npcId);
+    const actor=state.npcs?.[npcId],courses=engine.educationCourseContext;
+    if(!person||!sameNpcScheduleInputs(person.actor,actor)||person.constraints!==constraints||!sameCourses(person.courses,courses)){
+        person={actor,constraints,courses,minutes:new Map()};people.set(npcId,person);
+    }
+    const key=`${state.minute}:${minute}`;
+    if(person.minutes.has(key)){
+        const hit=person.minutes.get(key);
+        if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(hit,read()))throw Error(`schedule cache mismatch: ${npcId} at ${minute}`);
+        return hit;
+    }
+    const slot=read();person.minutes.set(key,slot);return slot;
+}
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     const previous=engine.educationCourseContext;
@@ -21,8 +86,8 @@ export function scheduleAt(engine,npcId,minute,state,constraints=null){
         const day=Math.floor(minute/1440);let courses=engine.educationScheduleCourses.get(day);
         if(!courses){courses=educationCourses(engine,{...state,minute});engine.educationScheduleCourses.set(day,courses);}
         engine.educationCourseContext=courses;
-    }
-    try{return scheduledSlot(engine,npcId,minute,state,constraints);}finally{engine.educationCourseContext=previous;}
+    }else if(!previous&&engine.scheduleReadCache&&state)engine.educationCourseContext=educationCourses(engine,state);
+    try{return cachedSchedule(engine,npcId,minute,state,constraints,()=>scheduledSlot(engine,npcId,minute,state,constraints));}finally{engine.educationCourseContext=previous;}
 }
 function scheduledSlot(engine,npcId,minute,state,constraints=null){
     if(state&&!isEffective(engine,state,npcId))return null;
@@ -43,7 +108,15 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
-    let until=minute-offset+slot.end;
+    let end=slot.end;
+    // Adjacent identical slots have no transition to observe. Course openings
+    // and festival overrides below still impose their own real boundaries.
+    for(let i=slots.indexOf(slot)+1;i<slots.length;i++){
+        const next=slots[i];
+        if(next.start!==end||next.location!==slot.location||next.activity!==slot.activity||[...new Set([...Object.keys(slot),...Object.keys(next)])].some(key=>key!=='start'&&key!=='end'&&!canonicalEqual(slot[key],next[key])))break;
+        end=next.end;
+    }
+    let until=minute-offset+end;
     if(state)for(const c of personCourses(engine,state,npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
     const current=festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
     // education.teaching uses the recipe's minimumProficiency as its threshold.
@@ -104,17 +177,55 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
     const previous=engine.educationScheduleCourses;engine.educationScheduleCourses??=new Map();
-    try{return settleSchedules(d,engine,before,after,{promote,beforeState});}finally{engine.educationScheduleCourses=previous;}
+    try{return withScheduleCache(engine,d,()=>settleSchedules(d,engine,before,after,{promote,beforeState}));}finally{engine.educationScheduleCourses=previous;}
 }
 function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
-    const jobs=new Map(Object.values(peekState(d).records??{}).filter(employmentActive).map(r=>[r.worker,r]));
+    const jobs=new Map(recordsWhere(peekState(d).records,'kind','workshop').filter(employmentActive).map(r=>[r.worker,r]));
     const prepared=d.scheduleEducation,state=peekState(d),courses=engine.educationCourseContext;
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
-    for(const npcId of Object.keys(d.get('state','npcs'))){
+    let candidates;
+    if(!promote&&!batch&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
+        const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
+        for(const c of [...prepared.courses,...courses??[]])for(const id of [c.teacher,...c.students])if(id)due.add(id);
+        let replaced=false;
+        for(let i=prepared.patchStart;i<d.patches.length;i++){
+            const p=d.patches[i].path;
+            if(p[0]==='state'&&p.length===1){replaced=true;break;}
+            if(p[0]==='state'&&p[1]==='npcs'){
+                if(p.length<3){replaced=true;break;}
+                if(!ignoredNpcScheduleFields.has(p[3]))due.add(p[2]);
+            }
+            if(p[0]==='state'&&['records','obligations'].includes(p[1])){
+                if(p.length<3){replaced=true;break;}
+                if(p[1]==='records'&&p[2].startsWith('transition:')){due.add(p[2].slice(11));continue;}
+                for(const row of [prepared.state[p[1]]?.[p[2]],state[p[1]]?.[p[2]]]){
+                    if(!row)continue;
+                    if(p[1]==='obligations'){
+                        if(row.reservationVersion===1){due.add(row.promisor);due.add(row.promisee);}
+                        for(const job of jobs.values())if(job.serviceObligation===p[2])due.add(job.worker);
+                    }else if(!ignoredScheduleRecords.has(row.category)){
+                        if(row.kind==='workshop')due.add(row.worker);
+                        else if(['legal_detention','legal_custody'].includes(row.category))due.add(row.subject??state.records?.[row.case]?.offender);
+                        else if(row.category!=='education_course'){replaced=true;break;}
+                    }
+                }
+                if(replaced)break;
+            }
+        }
+        // Preserve actor enumeration order: travel payments and their patches
+        // must keep the same deterministic ordering as the unfiltered pass.
+        if(!replaced){
+            candidates=[...due].filter(id=>state.npcs[id]);
+            const order=candidates.some(id=>!prepared.npcOrder.has(id))?new Map(Object.keys(state.npcs).map((id,i)=>[id,i])):prepared.npcOrder;
+            candidates.sort((a,b)=>order.get(a)-order.get(b));
+        }
+    }
+    candidates??=Object.keys(state.npcs);
+    for(const npcId of candidates){
         const regional=jobs.has(npcId)?null:batch?.persons.get(npcId);
         if(promote&&!regional)continue;
         if(regional&&!regional.due)continue;
@@ -132,10 +243,14 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
         const current=peekState(d).npcs[npcId],slot=reuse&&prepared.state.npcs[npcId]===current?prepared.slots?.get(npcId):null;
+        if(current.scheduleTravel?.arrive>after&&!incapacitated(current)&&!state.player.companions?.includes(npcId))continue;
         // The heap already read this exact actor and all schedule inputs. A
         // stationary, unchanged slot has no work until its boundary. Teaching,
         // employment attendance, companions and furnaces retain the full path.
-        if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId))continue;
+        if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId)){
+            if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(slot,scheduleAt(engine,npcId,before,peekState(d),constraints)))throw Error(`schedule settlement cache mismatch: ${npcId} at ${before}`);
+            continue;
+        }
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
         const activity=value=>{npc.activity=value;};
         const since=regional?.before??before;
@@ -193,7 +308,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
             if(npc[field]===undefined)d.remove([...path,field]);else d.set([...path,field],npc[field]);
         }
     }
-    if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)d.set(['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after});
+    if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)holdingSet(d,null,['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after},'npc-schedule');
 }
 
 export function advanceWithNpcParticipants(d,engine,minutes,eventId,participants){
