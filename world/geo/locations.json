@@ -23565,7 +23565,7 @@
       0,
       1440
     ],
-    "owner": "npc_ms_hx_yiheng",
+    "owner": "faction_ms_huixi",
     "purpose": "存放处",
     "rooms": [],
     "inventory": {},
@@ -23577,11 +23577,12 @@
         "卷席压在空架上"
       ],
       "entryRule": "存粮有主，须看管者许可",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huixi.resources 列有旧芦棚与接岸储备；漪衡为看管者，公账与本人库存分开。"
     },
     "description": "回汐存芦棚靠着认岸芦门，芦席包住换来的干粮。漪衡看管棚里的储备，棚壁留着空棚去留的芦记。接岸派与静滩派都在这里核过粮份，尚未议定以前，空席仍卷着。绕棚可走公共岸路，进棚取粮要先问漪衡。",
     "site": {
-      "owner": "npc_ms_hx_yiheng",
+      "owner": "faction_ms_huixi",
       "manager": "npc_ms_hx_yiheng",
       "occupants": [
         "npc_ms_hx_yiheng"
@@ -23772,7 +23773,7 @@
       0,
       1440
     ],
-    "owner": null,
+    "owner": "faction_ms_huipeng",
     "purpose": "公共设施",
     "rooms": [],
     "inventory": {},
@@ -23784,7 +23785,8 @@
         "折签把空盘抬给人看"
       ],
       "entryRule": "公共设施，公秤不代替当事人同意",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公秤；公共通行与各族轮值的争议仍按原文处理。"
     },
     "description": "灰棚公秤台搭在集路中央，空秤先亮给双方看，货放下以后才递绳签。折签白天守着旧签，怕不会读签的外族误认货主；散钩则想让各族轮值。秤台是公共地方，这些习惯不另收一份称量钱，也不能替任何人承诺货的成色。",
     "access": {
@@ -24012,7 +24014,7 @@
       0,
       1440
     ],
-    "owner": "npc_ms_gs_shenge",
+    "owner": "faction_ms_huipeng",
     "purpose": "存放处",
     "rooms": [],
     "inventory": {},
@@ -24024,11 +24026,12 @@
         "柜脚垫着平石"
       ],
       "entryRule": "公货有看管者，取货须许可",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公货柜；绳额为看管者，分物仍须议定。"
     },
     "description": "灰棚公货柜设在迎车口内侧，绳额保管议签棚留下的修绳与木柄储备。柜门的绳结完整，断下来的旧签收在旁边。守签派与共秤派尚未议定轮值以前，柜里的货不提前分给任何一棚。柜外是公共集路，打开柜门要先问绳额。",
     "site": {
-      "owner": "npc_ms_gs_shenge",
+      "owner": "faction_ms_huipeng",
       "manager": "npc_ms_gs_shenge",
       "occupants": [
         "npc_ms_gs_shenge"
