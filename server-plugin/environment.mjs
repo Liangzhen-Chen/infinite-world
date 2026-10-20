@@ -3,6 +3,7 @@ import {isEffective} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet,setLocation,aliveHoldings,locationOf} from './holdings.mjs';
 import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater} from './items.mjs';
 import {authority} from './action-authority.mjs';
+import {consent} from './action-consent.mjs';
 import {moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 declareHoldingWriter('environment',{kinds:[],locations:true});
 import {declareLedgerWriter} from './ledger.mjs';
@@ -182,8 +183,9 @@ function inReach(d,row,range){
     if(row.location!==d.get('state','location'))throw new Error('环境对象不在当前位置');
     if(distance(point(d),row.position)>range)throw new Error('环境对象超过实际施法距离');
 }
-function permission(d,engine,row,args){
+function permission(d,engine,row,args,{spell=null,until=d.get('state','minute')}={}){
     if(row.owner==='player'||row.access==='public')return;
+    if(spell&&consent({engine,document:d.document},row.owner,'player','cast',{purpose:spell,subject:row.id,terms:{spell,waterBatch:'current'},until,onRefusal:'abort'}).allowed)return;
     const keys=args.authorizations??[];
     if(!Array.isArray(keys)||keys.length>8)throw new Error('环境授权编号列表无效');
     const authorization=[args.authorization,...keys].filter(Boolean).map(id=>d.get('state','records',id)).find(record=>record?.subject===row.id);
@@ -254,7 +256,7 @@ function watering(d,engine,row,operation,args,range,power){
 export function prepareEnvironmentMagic(d,catalog,args){
     if(!this.rules.environment)throw new Error('此世界尚无环境规则');
     const row=feature(this,args.target,d.get('state','location'),d.document),spec=catalog.effectSpec;
-    inReach(d,row,catalog.rangeMeters);if(spec.operation!=='sense_water')permission(d,this,row,args);
+    inReach(d,row,catalog.rangeMeters);if(spec.operation!=='sense_water')permission(d,this,row,args,{spell:catalog.id,until:d.get('state','minute')+(catalog.minutes??0)});
     const current=stateOf(d,row),operation=spec.operation;
     if(['condense','clean_water','sense_water'].includes(operation)&&!['container','water'].includes(row.kind))throw new Error('法术需要实际水源或容器');
     if(operation==='condense'){

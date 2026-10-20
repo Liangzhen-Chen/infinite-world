@@ -34,12 +34,34 @@ function assertRefusal(value){
  return receipt;
 }
 
-// 06 §6.10.4: these native preconditions must still reject. Natural-language
-// setup notes never create a case, a deposit, a permission or spatial facts.
+// 06 §6.10.4: real missing preconditions still reject. 06 §6.3 now permits
+// continuous study of known skills through core:learn (15/18); those cases
+// retain negative controls with an unavailable teacher or missing real book.
 for(const n of ids)test(`A3 refusal ${n}: routed preview and direct commit preserve conditions and zero effects`,async()=>{
  const row=rowFor(n),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setupUnmet,[]);
  const before=structuredClone(document),input={tool:'world_propose',eventId:`refusal-${n}`,args:row.proposal};
+ if([15,18].includes(n)){
+  const preview=await engine.previewAction(document,input),receipt=receiptOf(preview);
+  assert.equal(receipt.status,'preview');assert.equal(receipt.routed,'core:learn');assert.deepEqual(document,before);
+  for(const call of [input,{tool:'world_act',eventId:`study-direct-${n}`,args:{action:receipt.routed,slots:receipt.routing.slots}}]){
+   const out=await engine.reduce(document,call),after=applyPatches(document,out.patches);
+   assert.equal(out.result.ok,true);assert.equal(out.result.receipt.status,'committed');
+   assert.equal(after.state.minute-before.state.minute,n===15?60:120);
+   assert.equal(before.state.player.coins-after.state.player.coins,n===15?2:0);
+   assert.ok(after.state.skills.skill_literacy.proficiency>before.state.skills.skill_literacy.proficiency);
+   assert.deepEqual(after.state.skills.skill_literacy.source,before.state.skills.skill_literacy.source);
+   assert.deepEqual(auditLedger(after.ledger),[]);
+  }
+  const unavailable=structuredClone(document);
+  if(n===15)unavailable.state.npcs.npc_hw_luqing.status='昏迷';else delete unavailable.state.inventory.item_literacy_primer;
+  const unchanged=structuredClone(unavailable);
+  const direct={tool:'world_act',eventId:`study-unavailable-${n}`,args:{action:receipt.routed,slots:receipt.routing.slots}};
+  assert.equal(assertRefusal(await engine.previewAction(unavailable,direct)).code,'E-ACTION-LEARN-SOURCE');
+  const rejected=await engine.reduce(unavailable,direct);assertRefusal(rejected);
+  assert.deepEqual(rejected.patches,[]);assert.deepEqual(unavailable,unchanged);assert.deepEqual(document,before);
+  return;
+ }
  const preview=await engine.previewAction(document,input),receipt=assertRefusal(preview);
  assert.notEqual(receipt.code,'E-ACTION-PRECONDITION','the migrated source must supply its own stable code');
  assert.equal(receipt.routing.proposal.intent,row.proposal.intent);
@@ -76,7 +98,8 @@ for(const n of legalRequests)test(`A3 native legal ${n}: original premises submi
 
 test('A3 refusal: program errors and non-public legacy calls still throw',async()=>{
  const row=rowFor(15),{document}=applyIntentSetup(engine,initial,row.setup);
- const routed=assertRefusal(await engine.previewAction(document,{tool:'world_propose',eventId:'route-error',args:row.proposal}));
+ const routed=receiptOf(await engine.previewAction(document,{tool:'world_propose',eventId:'route-error',args:row.proposal}));
+ assert.equal(routed.status,'preview');assert.equal(routed.routed,'core:learn');
  const call={tool:'world_act',eventId:'program-error',args:{action:routed.routed,slots:routed.routing.slots}};
  const isolated=new WorldEngine(world);
  for(const error of [new TypeError('已经学会识字'),new RangeError('中文程序范围错误'),new Error('unexpected invariant failure'),new PrimitiveRejected('E-POLICY-TEST','原语策略拒绝')]){
@@ -132,7 +155,8 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
 });
 
 test('A3 refusal: explicit mark alternative reacts, never grants the rejected effect',async()=>{
- const row=rowFor(15),{document}=applyIntentSetup(engine,initial,row.setup);
+ // Keep an actually missing case as the refusal trigger now that 15 is valid.
+ const row=rowFor(51),{document}=applyIntentSetup(engine,initial,row.setup);
  const before=structuredClone(document),receipt=assertRefusal(await engine.previewAction(document,{tool:'world_propose',eventId:'fallback-quote',args:row.proposal}));
  assert.deepEqual(document,before);
  assert.equal(receipt.routing.fallback.available,true);
@@ -168,7 +192,7 @@ test('A3 refusal: rejected proposals do not persist implicit ledger initializati
 });
 
 test('A3 refusal: later sequence precondition rolls back earlier time and world changes',async()=>{
- const row=rowFor(15),{document}=applyIntentSetup(engine,initial,row.setup),before=structuredClone(document);
+ const row=rowFor(51),{document}=applyIntentSetup(engine,initial,row.setup),before=structuredClone(document);
  const input={tool:'world_propose',eventId:'sequence-refusal',args:row.proposal};
  const routed=assertRefusal(await engine.previewAction(document,input));
  const prepared={status:'sequence',steps:[{action:'core:time',slots:{minutes:1}},{action:routed.routed,slots:routed.routing.slots}]};

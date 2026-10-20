@@ -133,7 +133,9 @@ test('C: authority selectors use current real owner, never a present bystander; 
 });
 
 test('B/C: actual destruction reads owner-issued subject permission, and rejects an expired saved grant',()=>{
- const setup={minute:600,present:[other],location:'bld_hw_mill',itemInstances:[{id:'jia_crate',template:'thing',kind:'item',name:'permit test crate',owner:other,location:'bld_hw_mill',quantity:1}]};
+ // The physical stock connector requires an existing carried item. Custody
+ // does not change title: permission still has to come from `other`.
+ const setup={minute:600,present:[other],location:'bld_hw_mill',itemInstances:[{id:'jia_crate',template:'thing',kind:'item',name:'permit test crate',owner:other,carriedBy:'player',location:'bld_hw_mill',quantity:1}]};
  const loaded=applyIntentSetup(engine,initial,setup);assert.deepEqual(loaded.setupUnmet,[]);
  const target=loaded.bindings.jia_crate,document=save(permit(loaded.document,{target,quantityLiters:null}).document);
  const effects=[{op:'destroy',entity:target}],frame=createRuntimePrimitiveFrame(engine,document,{eventId:'permitted-destroy',source:{kind:'catalog',id:'test:finite-permit'}});
@@ -171,7 +173,8 @@ test('A/B/D corpus premises load via native writers, with other-card blockers st
  }
  for(const num of ['008','012']){
   const row=corpus.find(r=>r.id===`A3V2-${num}`),result=applyIntentSetup(engine,initial,row.setup);
-  assert.ok(result.setupUnmet.some(x=>x.item.startsWith('permits')&&x.reason.includes('current owner/manager')),row.id);
+  // 05 §5.3 / 01 §1.3: these issuers now have actual native authority.
+  assert.deepEqual(result.setupUnmet.filter(x=>x.item.startsWith('permits')),[],row.id);
  }
 
 });

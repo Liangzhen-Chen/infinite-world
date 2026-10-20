@@ -422,6 +422,8 @@ export class WorldEngine {
     }
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
+    primitiveStudySkill(d,args,id){return primitiveActionRuntime().studyPlayer(d,this,args,id);}
+    primitiveAssertTeachingService(d,teacher,minutes){return assertNpcService(d,this,teacher,'teach',minutes);}
     primitiveTeachingConsent(d,args){return activityTeachingConsent(d,this,args,()=>{const session=Object.create(this);session.nativeConsentRequest={from:args.teacher,to:args.student??'player',scope:'teach',purpose:args.subject,terms:{fee:args.fee??0,minutes:args.minutes}};return teachingConsent(d,session,args);});}
     primitiveOpenAction(document,input,prepared,{preview=false}={}){
         const books=withBooks(this,document),session=this.scoped(document);
@@ -1020,10 +1022,17 @@ export class WorldEngine {
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
         if(type==='付款'){
             obligation.coins=number(args.coins,1,1e9);
+            if(args.obligation!==undefined){
+                const claim=dueObligation(d.get('state'),args.obligation);
+                if(!claim||claim.closed||claim.row.debtor!==promisor||claim.row.creditor!==promisee||claim.owed<obligation.coins)throw Error('履约承诺须指向本人对该债权人的未清债务，金额不得超过余额');
+                if(args.location!==undefined&&this.resolve(args.location)!==d.get('state','location'))throw Error('付款承诺须在约定交付地点作出');
+                obligation.location=args.location??d.get('state','location');
+                obligation.terms={fulfills:claim.row.id,promisedAmount:obligation.coins,place:obligation.location};
+            }
             if(!this.replaying||this.replayResult?.obligation?.recordCompletionTime===true)obligation.recordCompletionTime=true;
             if(!this.replaying){
                 const existing=Object.entries(d.get('state','records')??{}).find(([,row])=>row.category==='debt'&&row.debtor===promisor&&row.creditor===promisee&&row.status!=='已还清'&&row.amount-row.paid===obligation.coins);
-                if(existing)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
+                if(existing&&!obligation.terms?.fulfills)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
             }
         }
         if(type==='协助'){
@@ -1033,7 +1042,9 @@ export class WorldEngine {
             if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))throw new Error('协助者技能不足');
         }
         if(type==='付款'&&(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)){
-            openObligation(d,this,{...obligation,kind:'promise',debtor:promisor,creditor:promisee,actor:promisor,amount:obligation.coins},id);
+            // A performance promise is a zero-principal obligation linked to
+            // the existing claim; it must never count the same debt twice.
+            openObligation(d,this,{...obligation,kind:'promise',debtor:promisor,creditor:promisee,actor:promisor,amount:obligation.terms?.fulfills?0:obligation.coins},id);
             d.set(['state','obligations',obligation.id,'status'],obligation.status);
             return {obligation:d.get('state','obligations',obligation.id)};
         }
@@ -1060,7 +1071,14 @@ export class WorldEngine {
             else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
         }
         if(o.type==='付款'){
-            if(o.runtimeVersion===1)settleObligation(d,this,{id:key,payer:o.promisor,amount:dueObligation(d.get('state'),key).owed},`${id}:deliver:${key}`);
+            if(o.runtimeVersion===1&&o.terms?.fulfills){
+                const place=o.promisor==='player'?d.get('state','location'):source.location;
+                if(place!==o.terms.place)throw Error('履约者未在约定交付地点');
+                const claim=dueObligation(d.get('state'),o.terms.fulfills);
+                if(!claim||claim.row.debtor!==o.promisor||claim.row.creditor!==o.promisee)throw Error('原债当事人已变化，不能按旧承诺付款');
+                const amount=Math.min(o.terms.promisedAmount,claim.owed);
+                if(amount)settleObligation(d,this,{id:o.terms.fulfills,payer:o.promisor,actor:o.promisor,amount},`${id}:deliver:${key}`);
+            }else if(o.runtimeVersion===1)settleObligation(d,this,{id:key,payer:o.promisor,amount:dueObligation(d.get('state'),key).owed},`${id}:deliver:${key}`);
             else{if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
         }
         d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);

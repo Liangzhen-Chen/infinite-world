@@ -45,7 +45,10 @@ test('C: current collective head, host and temple principal derive from existing
 });
 
 test('C: missing ownership is not inferred from proximity, a teacher, or a building containing an object',()=>{
- for(const n of ['008','012','014','018','066','072','085','087','088','120']){
+ // 05 §5.3: world now explicitly names the school manager; the mill's
+ // collective issuer is already represented by its current head.
+ for(const n of ['008','012','014','018','072'])assert.deepEqual(load(n).setupUnmet.filter(x=>x.item.startsWith('history')||x.item.startsWith('permits')),[],n);
+ for(const n of ['066','085','087','088','120']){
   const out=load(n);
   assert.ok(out.setupUnmet.some(x=>x.item.startsWith('history')||x.item.startsWith('permits')),n);
  }

@@ -48,8 +48,12 @@ test('history: only explicit unconditional donor consent becomes native scoped c
 
 test('history: conditional consent and refusals never grant broader agreement',()=>{
  const conditional=run(fixture('012'));
- assert.ok(errors(conditional,'history').some(e=>e.reason.includes('terms')));
- assert.ok(!conditional.document.state.consentEvents?.some(e=>e.from==='npc_hw_ayan'));
+ // Native conditional consent now exists (06 §6.4); it only covers its terms.
+ assert.deepEqual(errors(conditional,'history'),[]);
+ const context={engine,document:conditional.document};
+ assert.equal(consent(context,'npc_hw_ayan','player','teach',{purpose:'recipe_wooden_pegs',terms:{fee:4,minutes:30},until:630}).allowed,true);
+ assert.equal(consent(context,'npc_hw_ayan','player','teach',{purpose:'recipe_wooden_pegs',terms:{fee:3,minutes:30},until:630}).allowed,false);
+ assert.equal(consent(context,'npc_hw_ayan','player','teach',{purpose:'other',terms:{fee:4,minutes:30}}).allowed,false);
  const refusal=run(fixture('097'));
  assert.deepEqual(errors(refusal,'history'),[]);
  assert.equal(refusal.document.state.records[refusal.bindings.a3v2_097_refused_heal].payload.verb,'refused');
@@ -65,7 +69,10 @@ test('history: illegal/future/duplicate/unknown-donor events are unmet and indep
  assert.equal(errors(duplicate,'history').length,1);
  assert.equal(Object.values(duplicate.document.state.records).filter(r=>r.id==='same').length,1);
  const noActor=run({minute:600,history:[{id:'fire','verb':'ignited',at:599,source:{kind:'corpus_premise',row:'A3V2-TEST'},subject:'box',fireIntensity:1}]});
- assert.match(errors(noActor,'history')[0].reason,/原生.*01/);assert.equal(noActor.bindings.fire,undefined);
+ // 01 §1.7 supports actorless physical history without forging an actor.
+ assert.deepEqual(errors(noActor,'history'),[]);
+ assert.equal(noActor.document.state.records[noActor.bindings.fire].actor,null);
+ assert.equal(noActor.document.state.records[noActor.bindings.fire].payload.fireIntensity,1);
 });
 
 test('accounts: opening snapshots replace NPC cash/stock once without changing the player',()=>{
@@ -154,7 +161,9 @@ test('cases: native historical registration retains the existing phase and judgm
 
 test('permits: native existing rental authority is retained; unresolved managers and expanded scopes are unmet',()=>{
  assert.deepEqual(errors(run(fixture('003')),'permits'),[]);
- const result=run(fixture('008'));assert.match(errors(result,'permits')[0].reason,/原生.*06/);
+ // The authored school manager now signs a real limited grant (05 §5.3).
+ const result=run(fixture('008'));assert.deepEqual(errors(result,'permits'),[]);
+ assert.equal(result.document.state.records['limited_permit:a3v2_008_permit_0'].issuer,'npc_hw_luqing');
  const invalid=fixture('008');invalid.permits[0].toMinute=1;assert.match(errors(run(invalid),'permits')[0].reason,/invalid permit interval/);
  invalid.permits[0].toMinute=2040;invalid.permits[0].scope='unlimited';assert.match(errors(run(invalid),'permits')[0].reason,/mismatch/);
  const unknown=fixture('013');unknown.permits[0].issuer={role:'authorized_manager',of:'missing:place'};
