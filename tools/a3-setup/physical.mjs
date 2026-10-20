@@ -1,7 +1,7 @@
 // Initial physical premises, not successful actions. 01 §1.2/§1.3/§1.6,
 // 06 §6.3 and A §A.15.7: identity, possession and legal ownership differ.
 import {registerSetupLoader} from './index.mjs';
-import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,aliveHoldings,isPhysicallyDead} from '../../server-plugin/holdings.mjs';
+import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,aliveHoldings,isPhysicallyDead,templatesOf} from '../../server-plugin/holdings.mjs';
 import {trackTransferUnit,changeItems,writePhysicalItem,equipPhysicalItem,bindPurse,writeLiquidContents,registerPhysicalStock,bindContainerWater} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
 import {bodyRule,writeBodyNeed} from '../../server-plugin/primitives-body.mjs';
@@ -44,6 +44,8 @@ function extras(ctx,row,item,allowed){
 }
 function owner(ctx,d,subject,holder,item){
  if(holder===null||holder===undefined)return;
+ const templates=templatesOf(d,holder,ctx.engine);
+ if(templates?.length===1&&templates[0]==='place')throw Error('owner cannot be a place; use its existing legal managing organization or office (05 §5.3); a permit must identify that principal or its authorized representative');
  const existing=aliveHoldings(d,{kind:'owns',subject});
  if(existing.length){if(existing.length!==1||existing[0].holder!==holder)throw Error('conflicting legal ownership');return;}
  openHolding(d,{kind:'owns',holder,subject,terms:{share:1},source:`${writer}:${item}`,writer,engine:ctx.engine});
