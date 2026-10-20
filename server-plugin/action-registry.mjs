@@ -40,6 +40,7 @@ export function loadActionRegistry(dir=DIR){
  }
  const byId=new Map();
  for(const a of actions){if(byId.has(a.id))errors.push(`动作 id 重复：${a.id}`);byId.set(a.id,a);}
+ for(const a of actions)if(a.canonical&&(!byId.has(a.canonical)||byId.get(a.canonical).canonical))errors.push(`${a.id}：规范名须指向一个已登记的规范动作`);
  for(const patch of patches){
   const action=findAction({byId},patch.target);
   if(!action){errors.push(`${patch.id}: unknown action patch target`);continue;}
@@ -53,6 +54,12 @@ export function loadActionRegistry(dir=DIR){
 export function findAction(registry,id){
  if(typeof id!=='string'||!id)return null;
  return registry.byId.get(id)??(id.includes(':')?null:registry.byId.get(`core:${id}`))??null;
+}
+// A migrated program may retain its executable id while sharing the stable
+// public name of its legacy entry. This is catalogue data, not a scorer alias.
+export function canonicalActionId(registry,id){
+ const action=findAction(registry,id);
+ return action?.canonical??action?.id??id;
 }
 export const CONSENT_PENDING='需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）';
 // Is the party whose consent the action needs the player? `consent.from`: 'self' (the player is always the one acted on,
@@ -110,7 +117,7 @@ export function actionOfCall(registry,tool,args={}){
 }
 // Compact catalog rows for world_actions and /actions: id, label, group, slots, hint. No handler internals.
 export function catalogRow(action){
- return {id:action.id,label:action.label,group:action.group,...(action.readOnly?{readOnly:true}:{}),
+ return {id:action.id,...(action.canonical?{canonical:action.canonical}:{}),label:action.label,group:action.group,...(action.readOnly?{readOnly:true}:{}),
   slots:action.slots.map(s=>({name:s.name,kind:s.kind,...(s.entity?{entity:s.entity}:{}),...(s.required?{required:true}:{}),...(s.options&&Array.isArray(s.options)?{options:s.options}:{})})),
   ...(action.hint?{hint:action.hint}:{}),...(action.consent?{consent:action.consent.from}:{})};
 }
