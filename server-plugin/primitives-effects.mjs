@@ -1,7 +1,7 @@
 // L1 runtime adapters. Limits are native derivations, never proposal fields.
 import {reject} from './primitive-policy.mjs';
 import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone} from './holdings.mjs';
-import {transition,executeProtocolPrimitive} from './transition.mjs';
+import {transition,executeProtocolPrimitive,applyProtocolJudgment} from './transition.mjs';
 import {consent} from './action-consent.mjs';
 import {capacity,canAct,actionEntity} from './action-capacity.mjs';
 import {interactionOf} from './interactions.mjs';
@@ -68,6 +68,12 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
    if(!limits.costManaged||entity!==actor)endBodyActivity(d,engine,entity);
    return result;
   }
+  if(d.get('state','npcs',effect.to)||d.get('state','creatures',effect.to)||effect.to==='player'){
+   if(!limits.costManaged)beginBodyActivity(d,engine,actor,'travel');
+   const result=engine.primitiveMoveLocal(d,{entity,destination:effect.to,mode:effect.mode??'walk'},child);
+   if(!limits.costManaged)endBodyActivity(d,engine,actor);
+   return result;
+  }
   const feature=engine.world.locations.some(l=>l.features?.some(f=>f.id===effect.to));
   if(feature&&effect.mode!==undefined&&effect.mode!=='walk')reject('E-MOVE-MODE','Local approach uses walking');
   const old=engine.npcObligationAction;engine.npcObligationAction=feature?{tool:'environment',args:{operation:'approach',target:effect.to}}:{tool:'move',args:{destination:effect.to,mode:effect.mode??'walk'}};
@@ -118,6 +124,17 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
  }
  if(effect.op==='destroy'||effect.op==='transition'){
   const entity=effect.entity,types=templatesOf(d,entity,engine)??[];
+  if(effect.op==='transition'&&['declared','declaration_revoked','insolvency'].includes(effect.cause)){
+   const expected=effect.cause==='declaration_revoked'?'restored':'gone';
+   if(effect.kind!==expected)reject('E-TRANSITION-KIND',`Judicial ${effect.cause} requires kind ${expected}`);
+   const proof=requireAuthority('transition',entity,{effect}).sources.find(source=>source.kind==='judgment'&&source.case===effect.id);
+   if(!proof)reject('E-TRANSITION-PROOF','A current court and authenticated judgment must establish this transition');
+   const applied=d.get('holdings','protocol','judgments',proof.id),life=d.get('holdings','protocol','entities',entity);
+   if(applied&&(effect.cause==='declared'&&!life?.gone||effect.cause==='declaration_revoked'&&life?.gone))reject('E-TRANSITION-PROOF','This judgment has been superseded by the current lifecycle state');
+   const result=applyProtocolJudgment(d,engine,{id:proof.id,verb:'judgment',case:proof.case});
+   if(!result)reject('E-TRANSITION-PROOF','The judgment no longer establishes this transition');
+   return result;
+  }
   if(!types.length||isGone(engine,d,entity))reject('E-TRANSITION-ENTITY','The entity is missing or already gone');
   const basis=effect.op==='destroy'?'destruction':effect.cause;
   if(effect.op==='transition'&&effect.kind!=='gone')reject('E-TRANSITION-KIND','A registered lifecycle transition is required');
@@ -126,6 +143,13 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
    requireAuthority('destroy',entity);
    const location=currentLocation(d,entity),at=currentLocation(d,actor);
    if(location!==actor&&location!==at)reject('E-PRIMITIVE-REACH','The object is not present or carried');
+  }else if(basis==='dissolution'){
+   if(!types.includes('collective'))reject('E-TRANSITION-KIND','Dissolution requires an organization');
+   // Executing the organization's actual approved resolution is the source,
+   // not a proposal-supplied "approved" flag (05 §5.3 / 06 §6.3).
+   const permission=requireAuthority('transition',entity,{effect});
+   if(!permission.sources.some(source=>source.kind==='resolution'))reject('E-TRANSITION-PROOF','Dissolution requires a current approved execution resolution');
+   return transition(d,engine,{entity,kind:'gone',basis,origin:'dissolution',eventId:child,location:currentLocation(d,entity),causes:[frame.eventId]});
   }else if(basis==='death'){
    const body=actionEntity({...context,document:d.document},entity);
    if(!types.includes('agent')||!Number.isFinite(body?.hp)||body.hp>0)reject('E-TRANSITION-PROOF','Death requires an actual lethal vital result');

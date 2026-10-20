@@ -1,7 +1,7 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
-import {createActionPrimitiveFrame,authority} from './action-authority.mjs';
-import {canAct} from './action-capacity.mjs';
+import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
+import {canAct,legacyCanAct} from './action-capacity.mjs';
 import {commitPrimitives,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {parseAccount,isSink,LEDGER_COIN} from './ledger.mjs';
@@ -24,6 +24,7 @@ import {accountKey} from './ledger.mjs';
 import {digest} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
+import {moveLocally} from './primitives-movement.mjs';
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
@@ -52,9 +53,13 @@ export function primitiveClaims(engine,document,effects){
 }
 
 export function primitiveContext(engine,document,{source=null,identity=null,eventId=null}={}){
- return {engine,document,rescaleConsent:({document,actor,holder,subject})=>consent({engine,document},holder,actor,'property',{purpose:`holding.rescale:${subject}`,onRefusal:'abort'}),authoritySources:({actor,op,target,kind,holding,document:current})=>{
+  return {engine,document,rescaleConsent:({document,actor,holder,subject})=>consent({engine,document},holder,actor,'property',{purpose:`holding.rescale:${subject}`,onRefusal:'abort'}),authoritySources:({actor,op,target,kind,holding,effect,document:current})=>{
   const state=current.state,location=actor==='player'?state.location:state.npcs?.[actor]?.location;
   const sources=[];
+   if(op==='transition'&&effect?.id){
+    const row=state.records?.[effect.id],judgment=row?.judgment,record=judgment?.eventId&&state.records?.[`world_event:${judgment.eventId}`],law=row?.law&&legalCodeById(engine,row.law,state);
+    if(row?.category==='legal_case'&&row.status==='已裁定'&&(row.subject??row.offender)===target&&judgment?.effect===effect.cause&&record?.verb==='judgment'&&record.id===judgment.eventId&&record.case===effect.id&&record.target===target&&record.actor===judgment.judge&&law&&location===law.court&&personLawRoles(engine,state,actor,law).includes('judge'))sources.push({kind:'judgment',id:judgment.eventId,case:effect.id,law:law.id,version:digest({row,law,record}),allowed:true});
+   }
   for(const office of personOffices(engine,state,actor)){
    // Existing powers are scoped to their settlement, never universal money access.
    if(office.value.settlement===target&&office.value.powers?.includes(op))sources.push({kind:'office',id:office.source,version:digest(office.value),allowed:true});
@@ -160,9 +165,14 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
     const a=requireAuthority(effect.op,effect.debtor,{effect});
     let terms=effect.terms;
     if(effect.obligationKind==='mandate'){
+      if(!validMandateScope(terms?.scope)||terms.subdelegate!==undefined&&typeof terms.subdelegate!=='boolean'||['until','expires'].some(k=>terms[k]!==undefined&&(!Number.isSafeInteger(terms[k])||terms[k]<=s.minute))||terms.parentMandate!==undefined&&(typeof terms.parentMandate!=='string'||!terms.parentMandate))reject('E-MANDATE-SCOPE','A mandate needs a valid scope and future expiry');
+      const live={...context,document:d.document},parent=terms.parentMandate?mandateParent(live,effect):null;
      const permission=consent({...context,document:d.document},effect.creditor,frame.actor,'mandate',{purpose:context.consentPurpose,onRefusal:'abort'});
      if(!permission.allowed)reject('E-CONSENT','A mandate requires its principal to authorize this commission');
-     if(permission.kind==='proxy')reject('E-PRIMITIVE-CONNECTOR','Subdelegation requires its parent scope adapter');
+      if(permission.kind==='proxy'){
+       const grant=d.get('state','consentEvents')?.find(e=>e.id===permission.source);
+       if(!parent||grant?.by!==parent.debtor)reject('E-MANDATE-SCOPE','Proxy commission requires its actual parent mandate and delegating agent');
+      }
      terms={...terms,principalConsent:{source:permission.source,at:s.minute,purpose:context.consentPurpose}};
     }
     // Signing facts and protocol capabilities always come from the frame.
@@ -419,6 +429,7 @@ function actionResourceCosts(engine,document,action,slots,actor){
 }
 
 export const primitiveRuntime={
+ moveLocally,
  registry(engine){
   if(engine.actionRegistry)return engine.actionRegistry;
   const snapshot=engine.world.actionDefinitions;
@@ -429,10 +440,7 @@ export const primitiveRuntime={
   return loadActionRegistry();
  },
  legacyPermission(engine,document,tool,args){
-  if(!aliveHoldings(actionReader(document),{kind:'guest_of',holder:'player'}).some(h=>h.variant==='detained'))return null;
-  const family=({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
-  const to=tool==='move'?engine.resolve(args.destination):undefined;
-  return this.canAct(engine,document,'player',family,{to});
+   return legacyCanAct(engine,document,tool,args);
  },
  validateLegacy(engine,document,tool,args,{replay=false,legacyAction=null}={}){
   if(replay&&!engine.world.actionDefinitions)return;

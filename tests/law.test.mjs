@@ -161,7 +161,15 @@ test('劳役/监禁必须经过真实时长，禁止期间自由行动；赔偿�
         const{document,run}=await setup(),incident=await theft(run,document);let c=await judged(run,incident.document,incident.result.case);
         const sentenced=await run(c,'world_law',{operation,case:incident.result.case,authority:judge},`sentence_${operation}`);c=sentenced.document;
         assert.equal(c.state.records[incident.result.case].status,'服役中');
-        await assert.rejects(run(c,'world_trade',{seller:victim,item:'item_bread',quantity:1},'buy_in_prison'),/服役/);
+        // 06 §6.5（第192行）/ A.15.24：按 regime.allows 过滤；在押仍可与在场者交易随身财产。
+        await assert.rejects(run(c,'world_trade',{seller:victim,item:'item_bread',quantity:1},'remote_buy_in_prison'),/不在场/);
+        await assert.rejects(run(c,'world_move',{destination:'loc_hw'},'leave_in_prison'),/羁押/);
+        const visiting=structuredClone(c);visiting.state.npcs[victim].location=c.state.location;
+        const bought=await run(visiting,'world_trade',{seller:victim,item:'item_bread',quantity:1},'buy_in_prison');
+        assert.equal(bought.document.state.inventory.item_bread.quantity,(visiting.state.inventory.item_bread?.quantity??0)+1);
+        assert.equal(bought.document.state.npcs[victim].inventory.item_bread.quantity,visiting.state.npcs[victim].inventory.item_bread.quantity-1);
+        assert.equal(bought.document.state.records[incident.result.case].status,'服役中');
+        assert.equal(money(bought.document),money(visiting));
         c=(await run(c,'world_time',{minutes:sentenced.result.sentenceMinutes-1},'almost_done')).document;
         assert.equal(c.state.records[incident.result.case].status,'服役中');
         c=(await run(c,'world_time',{minutes:1},'finished')).document;

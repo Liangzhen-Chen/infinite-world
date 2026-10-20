@@ -8,6 +8,27 @@ import {digest} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
 
 const scoped=(scope,op,target)=>Array.isArray(scope)&&scope.some(s=>typeof s==='string'?s===op:s?.op===op&&(s.target===undefined||s.target===target));
+const scopeEntry=s=>typeof s==='string'?s.length>0:s&&typeof s==='object'&&!Array.isArray(s)&&typeof s.op==='string'&&s.op.length>0&&Object.keys(s).every(k=>['op','target'].includes(k))&&(s.target===undefined||typeof s.target==='string');
+export const validMandateScope=scope=>Array.isArray(scope)&&scope.length>0&&scope.every(scopeEntry);
+const scopeWithin=(child,parent)=>validMandateScope(child)&&validMandateScope(parent)&&child.every(s=>{const op=typeof s==='string'?s:s.op,target=typeof s==='string'?undefined:s.target;return scoped(parent,op,target);});
+const mandateUntil=m=>Math.min(m.until??Infinity,m.expires??Infinity,m.terms?.until??Infinity,m.terms?.expires??Infinity);
+// Child mandates keep a live dependency on every ancestor, including scope and
+// expiry. Persisted terms alone cannot outlive a revoked delegation (01 §1.4).
+export function currentMandates(context){
+ const rows=obligationRows(context.document.state??{}),now=context.document.state?.minute??0,byId=new Map(rows.map(m=>[m.id,m]));
+ const live=(m,seen=new Set())=>{
+  if(!m||(m.kind??m.obligationKind)!=='mandate'||seen.has(m.id)||obligationClosed(m)||m.endedAt!==undefined||m.revoked||(m.since??m.createdAt??0)>now||mandateUntil(m)<=now)return false;
+  if(!m.terms?.parentMandate)return true;
+  const p=byId.get(m.terms.parentMandate);seen.add(m.id);
+  return live(p,seen)&&p.creditor===m.creditor&&p.debtor!==m.debtor&&p.terms?.subdelegate===true&&scopeWithin(m.terms.scope,p.terms.scope)&&mandateUntil(m)<=mandateUntil(p);
+ };
+ return rows.filter(m=>live(m));
+}
+export function mandateParent(context,{creditor,debtor,terms}){
+ const p=currentMandates(context).find(m=>m.id===terms?.parentMandate);
+ if(!p||p.creditor!==creditor||p.debtor===debtor||p.terms?.subdelegate!==true||!scopeWithin(terms.scope,p.terms.scope)||mandateUntil({terms})>mandateUntil(p))reject('E-MANDATE-SCOPE','Subdelegation must stay within a current parent mandate scope and expiry');
+ return p;
+}
 const propertyObligations=new Set(['loan','deposit','bill','rent','wage','dividend','salary','tax','compensation','forward','bounty']);
 export function possessor(context,target){
  const d=actionReader(context.document),seen=new Set();let id=target;
@@ -40,13 +61,12 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
   else if(scoped(powers,op,subject))sources.push({kind:h.kind,id:h.id,subject:h.subject});
   else if(!legal&&h.subject===subject&&['holds_office','appointed','commands','operates'].includes(h.kind)&&Array.isArray(powers)&&powers.length)excess.push({kind:h.kind,id:h.id,subject:h.subject,version:digest(h),tags:['ultra_vires']});
  }
- const now=context.document.state?.minute??0;
- const mandates=obligationRows(context.document.state??{}).filter(o=>(o.kind??o.obligationKind)==='mandate'&&o.debtor===actor&&!obligationClosed(o)&&o.endedAt===undefined&&(o.until??o.expires??o.terms?.until??o.terms?.expires??Infinity)>now&&(o.since??o.createdAt??0)<=now&&!o.revoked);
+ const mandates=currentMandates(context).filter(o=>o.debtor===actor);
  for(const m of mandates){
   const principalControls=subject===m.creditor||aliveHoldings(d,{holder:m.creditor,subject}).some(h=>h.kind==='owns'?effective(d,h.id):['operates','guardian_of'].includes(h.kind)&&usable(h));
   if(!principalControls)continue;
   const source={kind:'mandate',id:m.id,source:m.id,principal:m.creditor,scope:structuredClone(m.terms?.scope??[]),version:digest(m)};
-  if(scoped(m.terms?.scope,op,subject)||op==='consent'&&consentScope&&scoped(m.terms?.scope,consentScope,subject))sources.push(source);
+  if(scoped(m.terms?.scope,op,subject)||op==='consent'&&consentScope&&(scoped(m.terms?.scope,consentScope,subject)||consentScope==='mandate'&&m.terms?.subdelegate===true))sources.push(source);
   else if(!legal&&subject===m.creditor&&m.terms?.scope?.length)excess.push({...source,tags:['ultra_vires']});
  }
  // Trusted composition-root provider covers law/charter/motions/recognition.

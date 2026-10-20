@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {emptyHoldings} from '../server-plugin/holdings.mjs';
 import {authority,possessor} from '../server-plugin/action-authority.mjs';
 import {consent} from '../server-plugin/action-consent.mjs';
-import {canAct,capacity} from '../server-plugin/action-capacity.mjs';
+import {canAct,capacity,legacyCanAct} from '../server-plugin/action-capacity.mjs';
 import {appendActionPatches} from '../server-plugin/primitive-policy.mjs';
 import {loadActionRegistry,actionCall} from '../server-plugin/action-registry.mjs';
 import fs from 'node:fs/promises';
@@ -78,6 +78,18 @@ test('A3 policy: limited may act, none cannot; custody preserves learning and bl
  assert.equal(canAct(c,'player','move',{to:'loc_outside'}).allowed,true);
  c.document.state.player.status='昏迷';assert.equal(canAct(c,'player','learn').allowed,false);
 });
+test('A3 policy: legacy legal remedies share regime filtering; a broad movement family cannot authorize leaving custody',()=>{
+ const c=context(),id=holding(c,{kind:'guest_of',variant:'detained',holder:'player',subject:'loc_cell'});
+ // 06 §6.5 / A.15.24: inspect, appeal and contract remain available under
+ // the regime; departure still needs actual escort/escape evidence (A.3).
+ for(const operation of ['inspect','appeal','hear','hire_advocate','confess','bribe'])assert.equal(legacyCanAct(null,c.document,'law',{operation}).allowed,true,operation);
+ c.document.holdings.rows[id].terms={regime:{allows:['observe','move']}};
+ assert.equal(legacyCanAct(null,c.document,'law',{operation:'inspect'}).allowed,true);
+ assert.equal(legacyCanAct(null,c.document,'law',{operation:'appeal'}).allowed,false);
+ assert.equal(canAct(c,'player','move',{to:'loc_cell'}).allowed,true);
+ assert.equal(canAct(c,'player','move',{to:'loc_outside'}).allowed,false);
+});
+
 test('A3 policy: given consent covers purpose/time and revocation, never client consent:true',()=>{
  const c=context();c.document.state.npcs.npc_a.consent=true;
  assert.equal(consent(c,'npc_a','player','mind').check,'contest');

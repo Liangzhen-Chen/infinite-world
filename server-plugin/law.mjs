@@ -17,6 +17,7 @@ import {installFacilityRuntime} from './facility-state.mjs';
 import {claimLimitation,recordClaimProcedure,registerLoss,lossView,recoverLoss,settleClaim,wagePriorityClaims} from './obligation-claims.mjs';
 import {obligationView,obligationRow} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
+import {legacyCanAct} from './action-capacity.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
@@ -242,7 +243,9 @@ export function recordViolence(d,engine,{attacker='player',victim,damage,killed,
     return registerIncident(d,engine,{offender:attacker,victim,offense:killed?'homicide':damage?'assault':'assault_attempt',witnesses,eventId,relationshipApplied:true});
 }
 
-export function enforceLegalRestriction(d,tool,args){
+export function enforceLegalRestriction(d,tool,args,engine=null){
+    const permission=legacyCanAct(engine,d.document,tool,args);
+    if(permission){if(!permission.allowed)throw Error(permission.reason);return;}
     const lock=Object.values(d.get('state','records')??{}).find(row=>row?.category==='legal_custody'&&row.status==='生效'&&(row.subject??d.get('state','records',row.case,'offender')??'player')==='player');
     if(!lock)return;
     if(['time','turn','health','revive'].includes(tool)||tool==='law'&&(args.operation??'inspect')==='inspect')return;

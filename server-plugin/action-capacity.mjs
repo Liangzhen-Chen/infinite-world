@@ -30,6 +30,11 @@ export function custodyLocation(context,holding){
  const record=holding.source?.startsWith('custody:')?context.document.state?.records?.[holding.source.slice(8)]:null;
  return record?.location??context.document.holdings?.locations?.[holding.subject]?.at??actionEntity(context,holding.subject)?.location??holding.subject;
 }
+export function legacyCanAct(engine,document,tool,args){
+ if(!aliveHoldings(actionReader(document),{kind:'guest_of',holder:'player'}).some(h=>h.variant==='detained'))return null;
+ const family=tool==='law'?({inspect:'observe',appeal:'appeal',hear:'appeal',hire_advocate:'obligation.create',confess:'talk',bribe:'transfer'})[args.operation??'inspect']??tool:({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
+ return canAct({engine,document},'player',family,{to:tool==='move'?(engine?.resolve(args.destination)??args.destination):undefined});
+}
 export function canAct(context,actor,family,{to,closing=null}={}){
  const result=capacity(context,actor,family),tags=result.level==='limited'?['capacity:limited']:[];
  if(result.level==='none')return {...result,allowed:false,tags};
@@ -41,7 +46,7 @@ export function canAct(context,actor,family,{to,closing=null}={}){
   const proof=family==='move'||escapeClose?context.movementAuthority?.({actor,to:escapeClose?null:to,custody:h,document:context.document}):null;
   const movement=family==='move'&&(to===host||proof?.allowed===true&&['escape','escort'].includes(proof.kind)&&typeof proof.source==='string');
   const released=escapeClose&&proof?.allowed===true&&proof.kind==='escape'&&typeof proof.source==='string';
-  if(!movement&&!released&&!allows.some(k=>k===family||family.startsWith(`${k}.`)))return {...result,allowed:false,tags,reason:family==='move'?'受限期间不能自行离开东道分区':'当前拘禁制度不允许这类行动',regime:h.id};
+  if(family==='move'?!movement:!released&&!allows.some(k=>k===family||family.startsWith(`${k}.`)))return {...result,allowed:false,tags,reason:family==='move'?'羁押受限期间不能自行离开东道分区':'当前拘禁制度不允许这类行动',regime:h.id};
  }
  return {...result,allowed:true,tags};
 }

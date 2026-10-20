@@ -17,6 +17,7 @@ import {recordLocalContact} from '../server-plugin/environment.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {isGone} from '../server-plugin/holdings.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
+import {adjudicateLegalCase} from '../server-plugin/law.mjs';
 const a=accountKey('player','coin_river','purse'),b=accountKey('npc_a','coin_river','purse');
 function fixture(){
  const document={state:{minute:2,records:{}},ledger:emptyLedger(),holdings:emptyHoldings()};document.ledger.accounts={[a]:10,[b]:0};
@@ -138,6 +139,49 @@ test('A3 effects: NPC route movement charges the actual traveller once, preserve
  assert.deepEqual(auditLedger(next.ledger),[]);assert.equal(f.engine.npcScheduleReservations,undefined);
  assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),effects,frame).patches,[]);
  assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:'loc_not_registered'}],frame));
+ assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: NPC local approach walks actual distance, retains shared position evidence and rejects remote or unknown origins',()=>{
+ const f=effectFixture(),{engine,npc}=f,place=engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0)));
+ const feature=place.features.find(row=>row.position?.some(n=>n!==0));
+ f.document.state.location=place.id;f.document.state.npcs[npc].location=place.id;
+ const d=engine.primitiveDraft(f.document);assert.equal(recordLocalContact(d,engine,npc,'local-npc-start'),true);f.document=applyPatches(f.document,d.patches);
+ const effects=[{op:'move',to:feature.id}],frame=createRuntimePrimitiveFrame(engine,f.document,{actor:npc,eventId:'npc-local-feature',source:{kind:'catalog',id:'test:native'}}),before=structuredClone(f.document);
+ const preview=planPrimitives(f.document,effects,frame);assert.deepEqual(f.document,before);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches),metres=Math.hypot(...feature.position);
+ assert.deepEqual(preview.receipt.applied[0].result,result.receipt.applied[0].result);
+ assert.deepEqual(next.state.records[`local_actor_position:${npc}`].point,feature.position);
+ assert.equal(next.state.minute,before.state.minute+Math.ceil(metres/engine.rules.environment.walkingMetresPerMinute));
+ assert.equal(next.state.location,place.id);assert.equal(next.state.npcs[npc].location,place.id);assert.equal(next.state.npcs[npc].coins,before.state.npcs[npc].coins);
+ assert.deepEqual(engine.magicAreaTargetFacts(engine.primitiveDraft(next),npc,place.id).point,feature.position);
+ assert.deepEqual(auditLedger(next.ledger),[]);assert.equal(engine.npcScheduleReservations,undefined);
+ assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),effects,frame).patches,[]);
+ const unknown=structuredClone(before);delete unknown.state.records[`local_actor_position:${npc}`];
+ assert.throws(()=>commitPrimitives(unknown,effects,frame),{code:'E-MOVE-POSITION'});
+ const remote=engine.world.locations.find(l=>l.id!==place.id&&l.features?.length);
+ assert.throws(()=>commitPrimitives(before,[{op:'move',to:remote.features[0].id}],frame),{code:'E-MOVE-POSITION'});
+ const aboard=structuredClone(before);aboard.state.records.a3_transport={category:'transport',status:'moving',passengers:[npc]};
+ assert.throws(()=>commitPrimitives(aboard,effects,frame),/active transport/);
+ assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: walking toward a person consumes distance rather than teleporting; absent coordinates cannot be guessed',()=>{
+ const f=effectFixture(),{engine,npc}=f,place=engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0))),feature=place.features.find(row=>row.position?.some(n=>n!==0));
+ f.document.state.location=place.id;f.document.state.npcs[npc].location=place.id;
+ const d=engine.primitiveDraft(f.document);recordLocalContact(d,engine,npc,'person-approach-start');f.document=applyPatches(f.document,d.patches);
+ const npcFrame=createRuntimePrimitiveFrame(engine,f.document,{actor:npc,eventId:'person-walks-away',source:{kind:'catalog',id:'test:native'}});
+ f.document=applyPatches(f.document,commitPrimitives(f.document,[{op:'move',to:feature.id}],npcFrame).patches);
+ const before=structuredClone(f.document),effects=[{op:'move',to:npc}],frame=f.frame('approach-person');
+ planPrimitives(f.document,effects,frame);assert.deepEqual(f.document,before);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
+ assert.deepEqual(next.state.records.local_player_position.point,feature.position);
+ assert.equal(next.state.minute,before.state.minute+Math.ceil(Math.hypot(...feature.position)/engine.rules.environment.walkingMetresPerMinute));
+ assert.equal(next.state.npcs[npc].location,place.id);assert.equal(next.state.location,place.id);assert.deepEqual(auditLedger(next.ledger),[]);
+ const unknown=structuredClone(before);delete unknown.state.records[`local_actor_position:${npc}`];
+ assert.throws(()=>commitPrimitives(unknown,effects,frame),{code:'E-MOVE-POSITION'});
+ const remote=structuredClone(before);remote.state.npcs[npc].location='loc_hw';
+ assert.throws(()=>commitPrimitives(remote,effects,frame),{code:'E-MOVE-POSITION'});
  assert.deepEqual(f.document,before);
 });
 
@@ -379,6 +423,18 @@ test('A3 effects: scheduled successful action executes exactly once after JSON r
  assert.equal(again.state.player.coins,final.state.player.coins);assert.equal(again.state.records[id].status,'completed');assert.deepEqual(auditLedger(again.ledger),[]);
 });
 
+test('A3 effects: a scheduled action with elapsed cost commits once without losing its clock or ledger during reentry',()=>{
+ const f=effectFixture(),action={id:'test:long_scheduled',slots:[],cost:{owner:'primitives',time:3},outcomes:[{op:'transfer',from:a,to:accountKey(f.npc,'coin_river','purse'),qty:1}]};
+ program(f,action);
+ const effect={op:'schedule',at:f.document.state.minute+1,action:action.id},scheduled=commitPrimitives(f.document,[effect],f.frame('schedule-long-gift')),next=JSON.parse(JSON.stringify(applyPatches(f.document,scheduled.patches))),id=scheduled.receipt.applied[0].result;
+ const d=f.engine.primitiveDraft(next);f.engine.advance(d,2,'run-long-gift');const final=applyPatches(next,d.patches),receipt=final.state.records[`primitive_schedule_result:${id}`];
+ assert.equal(receipt.status,'committed');assert.equal(receipt.receipt.cost.time,3);
+ assert.ok(final.state.minute>=next.state.minute+4,'the nested action must retain the three minutes after its due time');
+ assert.equal(final.state.player.coins,next.state.player.coins-1);assert.equal(final.state.npcs[f.npc].coins,next.state.npcs[f.npc].coins+1);assert.deepEqual(auditLedger(final.ledger),[]);
+ const again=f.engine.primitiveDraft(final);f.engine.advance(again,1,'after-long-gift');
+ assert.equal(again.get('state','player','coins'),final.state.player.coins);assert.ok(again.get('state','minute')>final.state.minute);
+});
+
 test('A3 body: timestamped closed-form needs are equivalent across split durations',async()=>{
  const f=effectFixture(),action={id:'test:body-travel',slots:[{name:'minutes',kind:'minutes',min:1,max:60}],durationSlot:{slot:'minutes',min:1,max:60},activity:'travel',cost:{owner:'primitives'},outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'working'}}]},input=program(f,action);
  const whole=applyPatches(f.document,(await f.engine.reduce(f.document,{...input,eventId:'whole-body',args:{action:action.id,slots:{minutes:3}}})).patches);
@@ -509,6 +565,61 @@ test('A3 authority: approved execution binds action and slots, consumes resoluti
  assert.ok(office);
 });
 
+test('A3 transition: dissolution consumes a real approved resolution and uses the existing liquidation protocol atomically',async()=>{
+ const f=normativeFixture(),{engine,org}=f,effect={op:'transition',entity:org,kind:'gone',cause:'dissolution'},input=program(f,{id:'test:dissolve_org',outcomes:[effect]}),motion='motion_a3_dissolution';
+ assert.throws(()=>commitPrimitives(f.document,[effect],f.frame('unapproved-dissolution')),{code:'E-AUTHORITY'});
+ f.document.holdings.entities[motion]={id:motion,kind:'motion',facts:{body:org,phase:'approved',resolution:{kind:'execute',action:input.args.action,args:{}}}};
+ const before=structuredClone(f.document),preview=await engine.previewAction(f.document,input);
+ assert.equal(preview.receipt.applied[0].actedAs.id,motion);assert.deepEqual(f.document,before);
+ const frame=createRuntimePrimitiveFrame(engine,f.document,{eventId:input.eventId,source:{kind:'catalog',id:input.args.action},identity:{action:input.args.action,slots:{}}});
+ assert.throws(()=>commitPrimitives(f.document,[effect,{op:'destroy',entity:'missing'}],frame));
+ assert.equal(f.document.holdings.entities[motion].facts.phase,'approved');assert.equal(isGone(engine,f.document,org),false);
+ const result=commitPrimitives(f.document,[effect],frame),next=applyPatches(f.document,result.patches),transition=result.receipt.applied[0].result;
+ assert.equal(transition.basis,'dissolution');assert.ok(transition.successor);assert.equal(isGone(engine,next,org),true);
+ assert.equal(next.holdings.entities[transition.successor].kind,'liquidation');assert.equal(next.holdings.entities[motion].facts.phase,'executed');
+ assert.deepEqual(auditLedger(next.ledger),[]);assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),[effect],frame).patches,[]);
+ assert.deepEqual(f.document,before);
+});
+
+test('A3 transition: judicial declaration and revocation require the real case event and current court authority',()=>{
+ const f=effectFixture(),{engine}=f,person='npc_hw_linsui',code=legalCodeAt(engine,f.document.state.location,f.document.state),judge=code.judges[0];
+ assert.notEqual(person,judge);f.document.state.npcs[judge].location=code.court;
+ const d=engine.primitiveDraft(f.document),row={id:'legal_case:a3_declare',category:'legal_case',law:code.id,subject:person,offender:person,civilMatter:'declared',evidence:[],procedure:{successors:['player']}};
+ d.set(['state','records',row.id],row);adjudicateLegalCase(d,engine,row,{...code,evidenceRequired:0},judge,'a3-declare-judgment');f.document=applyPatches(f.document,d.patches);
+ assert.equal(isGone(engine,f.document,person),true);
+ const effect={op:'transition',entity:person,kind:'gone',cause:'declared',id:row.id},frame=createRuntimePrimitiveFrame(engine,f.document,{actor:judge,eventId:'a3-apply-declaration',source:{kind:'catalog',id:'test:judgment'}}),before=structuredClone(f.document);
+ const preview=planPrimitives(f.document,[effect],frame);assert.equal(preview.receipt.applied[0].actedAs.kind,'judgment');assert.deepEqual(f.document,before);
+ const result=commitPrimitives(f.document,[effect],frame),next=applyPatches(f.document,result.patches);
+ assert.equal(result.receipt.applied[0].result.replayed,true,'the existing judgment hook already applied its lifecycle effect');
+ assert.deepEqual(next.holdings.protocol.entities,before.holdings.protocol.entities);assert.deepEqual(next.ledger,before.ledger);
+ assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),[effect],frame).patches,[]);
+ for(const mutate of [doc=>{delete doc.state.records['world_event:a3-declare-judgment:judgment'];},doc=>{doc.state.records[row.id].judgment.effect='insolvency';},doc=>{doc.state.npcs[judge].location='loc_hw';}]){
+  const changed=structuredClone(before);mutate(changed);assert.throws(()=>commitPrimitives(changed,[effect],frame),{code:'E-AUTHORITY'});
+ }
+ const revoke={...row,id:'legal_case:a3_revoke',civilMatter:'declaration_revoked'},r=engine.primitiveDraft(next);
+ r.set(['state','records',revoke.id],revoke);adjudicateLegalCase(r,engine,revoke,{...code,evidenceRequired:0},judge,'a3-revoke-judgment');
+ const restored=applyPatches(next,r.patches),restore={...effect,id:revoke.id,kind:'restored',cause:'declaration_revoked'},restoreFrame=createRuntimePrimitiveFrame(engine,restored,{actor:judge,eventId:'a3-apply-revocation',source:{kind:'catalog',id:'test:judgment'}});
+ assert.equal(isGone(engine,restored,person),false);assert.equal(commitPrimitives(restored,[restore],restoreFrame).receipt.applied[0].actedAs.kind,'judgment');
+ // A fresh event requests reapplication; the original event must retain its
+ // immutable duplicate receipt for replay (06 §6.3 / I31).
+ const reapplyFrame=createRuntimePrimitiveFrame(engine,restored,{actor:judge,eventId:'a3-reapply-old-declaration',source:{kind:'catalog',id:'test:judgment'}});
+ assert.throws(()=>commitPrimitives(restored,[effect],reapplyFrame),{code:'E-TRANSITION-PROOF'},'a revoked declaration cannot be reapplied to claim the living person is gone');
+ assert.throws(()=>commitPrimitives(restored,[{...restore,kind:'gone'}],restoreFrame),{code:'E-TRANSITION-KIND'});
+});
+
+test('A3 transition: a personal bankruptcy judgment preserves the living body and cannot transfer the assets twice',()=>{
+ const f=effectFixture(),{engine}=f,person='npc_hw_linsui',code=legalCodeAt(engine,f.document.state.location,f.document.state),judge=code.judges[0];
+ f.document.state.npcs[judge].location=code.court;
+ const body=structuredClone(f.document.state.npcs[person]),d=engine.primitiveDraft(f.document),row={id:'legal_case:a3_bankruptcy',category:'legal_case',law:code.id,subject:person,offender:person,civilMatter:'insolvency',evidence:[],procedure:{exemptAmount:2,discharge:false,durations:{notice:10,acceptance:10,claims:10}}};
+ d.set(['state','records',row.id],row);adjudicateLegalCase(d,engine,row,{...code,evidenceRequired:0},judge,'a3-bankruptcy-judgment');f.document=applyPatches(f.document,d.patches);
+ const effect={op:'transition',entity:person,kind:'gone',cause:'insolvency',id:row.id},frame=createRuntimePrimitiveFrame(engine,f.document,{actor:judge,eventId:'a3-apply-bankruptcy',source:{kind:'catalog',id:'test:judgment'}}),before=structuredClone(f.document);
+ const result=commitPrimitives(f.document,[effect],frame),next=applyPatches(f.document,result.patches);
+ assert.equal(result.receipt.applied[0].actedAs.kind,'judgment');assert.equal(isGone(engine,next,person),false);
+ assert.equal(next.state.npcs[person].hp,body.hp);assert.equal(next.state.npcs[person].status,body.status);
+ assert.ok(next.ledger.accounts[accountKey(person,'coin_river','purse')]<=2);assert.deepEqual(next.ledger,before.ledger);assert.deepEqual(auditLedger(next.ledger),[]);
+ assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),[effect],frame).patches,[]);
+});
+
 test('A3 signing: an agent cannot manufacture its own mandate; the principal really authorizes the commission',()=>{
  const f=runtimeFixture(),{engine,npc}=f,purpose='test:mandate.accept';
  const effect={op:'obligation.create',id:'a3_real_mandate',obligationKind:'mandate',debtor:'player',creditor:npc,terms:{scope:[{op:'transfer',target:npc}]}},frame=doc=>createRuntimePrimitiveFrame(engine,doc,{eventId:'accept-real-mandate',source:{kind:'catalog',id:purpose}}),before=structuredClone(f.document);
@@ -531,6 +642,34 @@ test('A3 signing: current mandate reaches the S3 protocol with its source and re
  document.state.obligations.a3_signing.revoked=true;
  assert.throws(()=>commitPrimitives(document,effects,frame),{code:'E-AUTHORITY'});
  assert.equal(document.state.obligations.a3_proxy_loan,undefined);
+});
+
+test('A3 signing: subdelegation preserves parent scope, expiry, actual consent and live revocation',()=>{
+ const f=effectFixture(),{engine,npc}=f,agent='npc_hw_gucen',now=f.document.state.minute,purpose='test:subdelegate';
+ assert.notEqual(npc,agent);assert.ok(f.document.state.npcs[agent]);
+ f.document.state.npcs[agent].location=f.document.state.location;
+ const scope=[{op:'transfer',target:npc}],parent={id:'a3_parent',kind:'mandate',debtor:'player',creditor:npc,status:'active',createdAt:now,terms:{scope,subdelegate:true,until:now+100}};
+ f.document.state.obligations.a3_parent=parent;
+ const grantFrame=createRuntimePrimitiveFrame(engine,f.document,{eventId:'delegate-consent',source:{kind:'catalog',id:'test:consent'}});
+ const grant=commitPrimitives(f.document,[{op:'emit',verb:'consent_given',target:agent,visibility:'private',payload:{from:npc,scope:'mandate',purpose:[purpose],until:now+100}}],grantFrame);
+ f.document=applyPatches(f.document,grant.patches);
+ assert.equal(f.document.state.consentEvents.at(-1).by,'player');
+ const effect={op:'obligation.create',id:'a3_child',obligationKind:'mandate',debtor:agent,creditor:npc,terms:{scope,parentMandate:parent.id,until:now+50}},frame=createRuntimePrimitiveFrame(engine,f.document,{actor:agent,eventId:'accept-subdelegate',source:{kind:'catalog',id:purpose}}),before=structuredClone(f.document);
+ planPrimitives(f.document,[effect],frame);assert.deepEqual(f.document,before);
+ for(const terms of [{...effect.terms,scope:['transfer']},{...effect.terms,scope:[{op:'transfer',target:'player'}]},{...effect.terms,until:now+101},{scope}]){
+  assert.throws(()=>commitPrimitives(f.document,[{...effect,terms}],frame),{code:'E-MANDATE-SCOPE'});
+ }
+ const accepted=commitPrimitives(f.document,[effect],frame),next=applyPatches(f.document,accepted.patches);
+ assert.equal(next.state.obligations.a3_child.terms.parentMandate,parent.id);
+ assert.equal(next.state.obligations.a3_child.terms.principalConsent.source,'delegate-consent:0');
+ assert.equal(authority(primitiveContext(engine,next),agent,'transfer',accountKey(npc,'coin_river','purse')).actedAs.id,'a3_child');
+ const saved=JSON.parse(JSON.stringify(next));saved.state.obligations.a3_parent.revoked=true;
+ assert.equal(authority(primitiveContext(engine,saved),agent,'transfer',accountKey(npc,'coin_river','purse')).allowed,false);
+ for(const mutate of [p=>{p.revoked=true;},p=>{p.terms.subdelegate=false;},p=>{p.terms.scope=[{op:'transfer',target:'player'}];},p=>{p.terms.until=now;}]){
+  const changed=structuredClone(before);mutate(changed.state.obligations.a3_parent);
+  assert.throws(()=>commitPrimitives(changed,[effect],frame),{code:'E-MANDATE-SCOPE'});
+ }
+ assert.deepEqual(f.document,before);
 });
 
 test('A3 signing: property guardianship can bind a loan but cannot bind personal service or move its ward',()=>{

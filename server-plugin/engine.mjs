@@ -18,7 +18,7 @@ import {prepareMagic,applyMagic}from'./magic.mjs';
 import {recordSpellViolation}from'./magic-consent.mjs';
 import {recordMagicEconomy}from'./magic-economy.mjs';
 import {settleMagicAreas,prepareAreaMagic,applyAreaMagic,areaTargetFacts}from'./magic-area.mjs';
-import {assertFireTravel}from'./magic-object.mjs';
+import {assertFireTravel,assertFirePath}from'./magic-object.mjs';
 import {adjustAirTravel}from'./magic-air.mjs';
 import {assertWaterEarthMovement,waterEarthWalkMinutes}from'./magic-water-earth.mjs';
 import {strainCare}from'./magic-care.mjs';
@@ -32,7 +32,7 @@ import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mj
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
 import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
-import {environmentCatalog}from'./environment.mjs';
+import {environmentCatalog,environmentFeatures,localPlayerPoint}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
@@ -305,7 +305,7 @@ export class WorldEngine {
         }
         settleAgricultureExpiry(d,this);
         const permission=primitiveActionRuntime()?.legacyPermission(this,d.document,tool,args);
-        if(permission){if(!permission.allowed)throw Error(permission.reason);}else enforceLegalRestriction(d,tool,args);
+        if(permission){if(!permission.allowed)throw Error(permission.reason);}else enforceLegalRestriction(d,tool,args,this);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
@@ -364,10 +364,12 @@ export class WorldEngine {
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath});}
     primitiveMoveNpc(d,{entity,destination,mode},eventId){
         const path=['state','npcs',entity],npc=d.get(...path),start=d.get('state','minute');
         if(!npc||!npc.location||npc.scheduleTravel||npc.cognitionTravel)throw Error('NPC is missing or already travelling');
         if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes(entity)))throw Error('NPC is aboard an active transport');
+        const local=primitiveActionRuntime()?this.primitiveMoveLocal(d,{entity,destination,mode},eventId):null;if(local)return local;
         assertMindAwake(d,entity);assertWaterEarthMovement(d,entity);assertLightMovement(d,this,entity);
         destination=this.resolve(destination);
         if(destination===npc.location)return {destination,minutes:0,cost:0,edges:[]};
