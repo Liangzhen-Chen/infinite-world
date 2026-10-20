@@ -396,6 +396,15 @@ const endpointRules=[
   return endpoint.purposes.includes(account[2])&&(!['buyer','seller'].includes(token)||account[2]===(account[1]==='coin_river'?'purse':'inventory'));
  }},
  {accepts:token=>['existing_channel','adjacent_field','summon'].includes(token),matches:(token,account,effect,receipt,world)=>account[0]===nativeEffectEndpoint(token,effect,receipt,world)},
+ {accepts:token=>['authorized_channel','own_bucket'].includes(token),matches:(token,account,effect,receipt,world)=>{
+  const {source,destination}=effect.result??{};
+  if(effect.op!=='transfer'||effect.resource!=='water'||effect.unit!=='litre'||!(effect.qty>0)||
+   source?.path?.[2]!==`physical_feature:${effect.from}`||destination?.path?.[2]!==`physical_feature:${effect.to}`||
+   source.before?.waterMl-source.after?.waterMl!==effect.qty*1000||destination.after?.waterMl-destination.before?.waterMl!==effect.qty*1000)return false;
+  const features=(world.locations??[]).flatMap(place=>place.features??[]);
+  if(token==='authorized_channel')return account[0]===effect.from&&features.some(row=>row.kind==='channel'&&row.links?.source===effect.from);
+  return account[0]===effect.to&&effect.destinationOwner===(receipt.actor??'player')&&features.some(row=>row.id===effect.to&&row.kind==='container');
+ }},
  {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
 ];
 function roleEndpoint(role,receipt){

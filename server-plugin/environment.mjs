@@ -299,7 +299,7 @@ export function applyEnvironmentMagic(d,prepared,eventId){
         if(transfer.destination.kind==='soil')dst.moisturePercent=Math.min(100,dst.baseMoisturePercent+100*dst.waterMl/dst.capacityMl);
         src.waterMl-=amount;src.saltMg-=salt;src.toxinUg-=toxin;
         store(d,transfer.source,src);store(d,transfer.destination,dst);
-        return{target:row.id,movedMl:amount,source:transfer.source.id,destination:transfer.destination.id,
+        return{target:row.id,movedMl:amount,source:transfer.source.id,destination:transfer.destination.id,destinationOwner:transfer.destination.owner,
             sourceWaterMl:src.waterMl,destinationWaterMl:dst.waterMl,...(transfer.destination.kind==='soil'?{moisturePercent:dst.moisturePercent}:{}),
             factSummary:`实际只移动${amount}毫升水到${transfer.destination.name}，剩余${src.waterMl}毫升仍留在原水源。沟渠未另存任何水；目标现在${dst.waterMl}毫升${transfer.destination.kind==='soil'?`，湿度${dst.moisturePercent}%`:''}。`,
             note:'只转移既有水；污染物随水转移，未获得消毒或净化效果'};
