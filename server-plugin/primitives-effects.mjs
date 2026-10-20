@@ -3,7 +3,7 @@ import {reject} from './primitive-policy.mjs';
 import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone} from './holdings.mjs';
 import {transition,executeProtocolPrimitive} from './transition.mjs';
 import {consent} from './action-consent.mjs';
-import {capacity,actionEntity} from './action-capacity.mjs';
+import {capacity,canAct,actionEntity} from './action-capacity.mjs';
 import {interactionOf} from './interactions.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {npcProficiency} from './checks.mjs';
@@ -56,13 +56,24 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
  }
  if(effect.op==='move'){
   const entity=effect.entity??actor;
-  if(entity!==actor)requireAuthority('move',entity);
-  if(entity!=='player')reject('E-PRIMITIVE-CONNECTOR','NPC travel requires its movement adapter');
+  if(entity!==actor){requireAuthority('move',entity);here(d,actor,entity);}
   if(typeof effect.to!=='string')reject('E-MOVE-DESTINATION','A registered destination is required');
-  const old=engine.npcObligationAction;engine.npcObligationAction={tool:'move',args:{destination:effect.to,mode:effect.mode??'walk'}};
+  if(entity!=='player'){
+   if(effect.mode==='horse')reject('E-PRIMITIVE-CONNECTOR','NPC riding requires its actual mount, load and care adapter');
+   const permission=canAct({...context,document:d.document},entity,'move',{to:effect.to});
+   if(!permission.allowed)reject('E-CAPACITY',permission.reason);
+   tags.push(...permission.tags??[]);
+   if(!limits.costManaged||entity!==actor)beginBodyActivity(d,engine,entity,'travel');
+   const result=engine.primitiveMoveNpc(d,{entity,destination:effect.to,mode:effect.mode??'walk'},child);
+   if(!limits.costManaged||entity!==actor)endBodyActivity(d,engine,entity);
+   return result;
+  }
+  const feature=engine.world.locations.some(l=>l.features?.some(f=>f.id===effect.to));
+  if(feature&&effect.mode!==undefined&&effect.mode!=='walk')reject('E-MOVE-MODE','Local approach uses walking');
+  const old=engine.npcObligationAction;engine.npcObligationAction=feature?{tool:'environment',args:{operation:'approach',target:effect.to}}:{tool:'move',args:{destination:effect.to,mode:effect.mode??'walk'}};
   try{
    if(!limits.costManaged)beginBodyActivity(d,engine,actor,'travel');
-   const result=engine.move(d,{destination:effect.to,mode:effect.mode??'walk'},child);
+   const result=feature?engine.environment(d,{operation:'approach',target:effect.to},child):engine.move(d,{destination:effect.to,mode:effect.mode??'walk'},child);
    if(!limits.costManaged)endBodyActivity(d,engine,actor);
    return result;
   }finally{engine.npcObligationAction=old;}

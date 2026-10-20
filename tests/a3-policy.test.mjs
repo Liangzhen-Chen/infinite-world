@@ -20,12 +20,29 @@ test('A3 policy: self, current holdings, mandate scope and protected purposes',(
  c.document.state.obligations.m={id:'m',kind:'mandate',debtor:'player',creditor:'npc_a',status:'active',terms:{scope:[{op:'transfer',target:'npc_a'}]}};
  assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').actedAs.kind,'mandate');
  assert.equal(authority(c,'player','holding.close','npc_a').allowed,false);
+ // 05 §5.3 / A.15.9: a live mandate's excess civil act occurs with a tag;
+ // it does not grant custody release or access to another principal's account.
+ assert.deepEqual(authority(c,'player','obligation.create','npc_a').tags,['ultra_vires']);
+ assert.equal(authority(c,'player','transfer','npc_guard|coin_river|purse').allowed,false);
+ c.document.state.obligations.m.terms.scope=['transfer'];
+ assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,true);
+ assert.equal(authority(c,'player','transfer','npc_guard|coin_river|purse').allowed,false,'operation-only mandate cannot grant another principal account');
+ c.document.state.obligations.m.terms.scope=[{op:'transfer',target:'npc_a'}];
  assert.equal(authority(c,'player','transfer','npc_a|coin_river|escrow:m').allowed,false);
  assert.equal(authority(c,'player','transfer','npc_a|coin_river|collected:tax').allowed,false);
  for(const purpose of ['escrow','collected'])assert.equal(authority(c,'player','transfer',`npc_a|coin_river|${purpose}`).allowed,false);
  c.document.state.obligations.m.revoked=true;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
  c.document.state.obligations.m.revoked=false;c.document.state.obligations.m.endedAt=10;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
  delete c.document.state.obligations.m.endedAt;c.document.state.obligations.m.terms.expires=10;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
+});
+
+test('A3 policy: a living impaired principal retains property for an existing mandate, not functional powers',()=>{
+ const c=context(),owned=holding(c,{kind:'owns',holder:'npc_a',subject:'item_a'});
+ c.document.state.obligations.m={id:'m',kind:'mandate',debtor:'player',creditor:'npc_a',status:'active',terms:{scope:[{op:'fact.set',target:'item_a'}]}};
+ c.document.state.npcs.npc_a.status='昏迷';
+ assert.equal(authority(c,'player','fact.set','item_a').actedAs.kind,'mandate');
+ c.document.holdings.rows[owned].until=c.document.state.minute;
+ assert.equal(authority(c,'player','fact.set','item_a').allowed,false);
 });
 
 test('A3 policy: an explicitly closed patchable field cannot be appended',()=>{
@@ -52,6 +69,10 @@ test('A3 policy: limited may act, none cannot; custody preserves learning and bl
  holding(c,{kind:'guest_of',variant:'detained',holder:'player',subject:'loc_prison'});
  for(const family of ['talk','learn','service','obligation.create','transfer','observe','wait'])assert.equal(canAct(c,'player',family).allowed,true,family);
  assert.equal(canAct(c,'player','move',{to:'loc_outside'}).allowed,false);assert.equal(canAct(c,'player','move',{to:'loc_prison'}).allowed,true);
+ const custody=Object.values(c.document.holdings.rows).find(h=>h.kind==='guest_of');custody.source='custody:record';
+ c.document.state.records.record={category:'legal_custody',location:'loc_cell'};
+ assert.equal(canAct(c,'player','move',{to:'loc_cell'}).allowed,true,'logical host organization does not replace the actual cell');
+ assert.equal(canAct(c,'player','move',{to:'loc_prison'}).allowed,false);
  assert.equal(canAct(c,'player','move',{to:'loc_outside',escape:true,escort:true}).allowed,false,'客户端布尔值不能冒充脱逃或押解裁决');
  c.movementAuthority=()=>({allowed:true,kind:'escape',source:'escape-check:success'});
  assert.equal(canAct(c,'player','move',{to:'loc_outside'}).allowed,true);

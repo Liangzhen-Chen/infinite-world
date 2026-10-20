@@ -1,6 +1,6 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
-import {createActionPrimitiveFrame} from './action-authority.mjs';
+import {createActionPrimitiveFrame,authority} from './action-authority.mjs';
 import {canAct} from './action-capacity.mjs';
 import {commitPrimitives,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
@@ -11,7 +11,7 @@ import {changeItems} from './items.mjs';
 import {openObligation,settleObligation,closeObligation} from './obligation-protocol.mjs';
 import {obligationRow} from './obligation-state.mjs';
 import {loadActionRegistry,actionCall,findAction,actionOfCall} from './action-registry.mjs';
-import {legalCodeAt} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices,personLawRoles} from './entity-view.mjs';
 import {aliveHoldings,holdingKind,ensureHoldings} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
@@ -23,6 +23,7 @@ import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
 import {accountKey} from './ledger.mjs';
 import {digest} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
+import {normativeAuthoritySources} from './action-authority-sources.mjs';
 
 export function primitiveClaims(engine,document,effects){
  const claims=new Map(),draw=new Map(),occupancy=new Map(),d=actionReader(document);
@@ -50,13 +51,13 @@ export function primitiveClaims(engine,document,effects){
  return [...claims.values()].filter(claim=>claim.quantity>0);
 }
 
-export function primitiveContext(engine,document){
+export function primitiveContext(engine,document,{source=null,identity=null,eventId=null}={}){
  return {engine,document,rescaleConsent:({document,actor,holder,subject})=>consent({engine,document},holder,actor,'property',{purpose:`holding.rescale:${subject}`,onRefusal:'abort'}),authoritySources:({actor,op,target,kind,holding,document:current})=>{
   const state=current.state,location=actor==='player'?state.location:state.npcs?.[actor]?.location;
   const sources=[];
   for(const office of personOffices(engine,state,actor)){
    // Existing powers are scoped to their settlement, never universal money access.
-   if(office.value.settlement===target&&office.value.powers?.includes(op))sources.push({kind:'office',id:office.source,allowed:true});
+   if(office.value.settlement===target&&office.value.powers?.includes(op))sources.push({kind:'office',id:office.source,version:digest(office.value),allowed:true});
   }
   const code=legalCodeAt(engine,location,state),legalKind=kind??holding?.kind;
   if(code&&['holding.open','holding.close'].includes(op)&&(['wanted','banished','frozen'].includes(legalKind)||legalKind==='guest_of')){
@@ -64,15 +65,16 @@ export function primitiveContext(engine,document){
    const roles=personLawRoles(engine,state,actor,code);
    if((code.locations.includes(targetLocation)||targetLocation===code.court||targetLocation===code.settlement||targetLocation===code.faction)&&roles.length){
     const record=holding?.source?.startsWith('custody:')?state.records?.[holding.source.slice(8)]:null,expired=(record?.expires??holding?.terms?.until??Infinity)<=state.minute;
-    sources.push({kind:'law',id:code.id,role:roles[0],allowed:true,...(op==='holding.close'&&!expired?{tags:['offense:unlawful_release']}:{})});
+    sources.push({kind:'law',id:code.id,role:roles[0],version:digest(code),allowed:true,...(op==='holding.close'&&!expired?{tags:['offense:unlawful_release']}:{})});
    }
   }
   // S3's actual, revocable authorizations are not proposal-supplied actedAs.
   for(const [id,row] of Object.entries(state.records??{})){
    if(row.category!=='authorization'||row.grantee!==actor||row.grantor!==target||row.revoked||row.endedAt!==undefined||(row.since??row.createdAt??0)>state.minute||(row.expires??Infinity)<=state.minute)continue;
-   const operation=op.startsWith('obligation.')?'contract':op;
-   if(row.action===operation||row.actions?.includes(operation))sources.push({kind:'authorization',id,source:id,allowed:true});
+   const operation=op==='obligation.settle'?'payment':op.startsWith('obligation.')?'contract':op;
+   if(row.action===operation||row.actions?.includes(operation))sources.push({kind:'authorization',id,source:id,version:digest(row),allowed:true});
   }
+  sources.push(...normativeAuthoritySources({engine,document:current},{actor,op,target,code,roles:code?personLawRoles(engine,state,actor,code):[],source,identity,eventId}));
   return sources;
  }};
 }
@@ -99,9 +101,11 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
  }
 }
 
-export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy={},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null,limits={},prepare=null,finish=null,identity=null,purpose=source?.id}={}){
- const context=primitiveContext(engine,document);
+export function createRuntimePrimitiveFrame(engine,document,{actor='player',eventId,source,createDraft,factPolicy=engine.world.primitiveFacts??{},verbs=['tell','request','claim','consent_given','consent_revoked'],validate=null,limits={},prepare=null,finish=null,identity=null,purpose=source?.id,movementAuthority=null}={}){
+ const context=primitiveContext(engine,document,{source,identity,eventId});
  context.consentPurpose=purpose;
+ if(movementAuthority!==null&&typeof movementAuthority!=='function')reject('E-PRIMITIVE-FRAME','Movement authority must be a native derivation');
+ context.movementAuthority=movementAuthority;
  if(typeof limits!=='function')limits=structuredClone(limits);
  const declared=source?.kind==='catalog'?findAction(primitiveRuntime.registry(engine),source.id):null;
  {
@@ -125,8 +129,17 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
  createDraft??=doc=>engine.primitiveDraft(doc);
  const makeDraft=createDraft;
  createDraft=doc=>{const d=makeDraft(doc);ensureHoldings(d,engine);return d;};
+ const factUsage=new Map();
  return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,
+  validateFact:(d,effect,{row,value})=>{
+   if(typeof value!=='number')return;
+   const bound=(typeof limits==='function'?limits(d.document):limits).fact?.[effect.field];
+   const change=Math.abs(value-(row.facts?.[effect.field]??0)),used=(factUsage.get(effect.field)??0)+change;
+   if(!Number.isSafeInteger(bound)||bound<0||!Number.isSafeInteger(used)||used>bound)reject('E-FACT-BOUND','Fact work exceeds its native source bound');
+   factUsage.set(effect.field,used);
+  },
   prepare:(d,meta)=>{
+   factUsage.clear();
    const selected=prepare?.(d,meta)??meta.effects;
    return declared?.theft===true?trimTheft(d,engine,declared,selected,actor,meta.receipt):selected;
   },
@@ -137,25 +150,40 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
   mirrorTransfer:(d,effect)=>mirrorPrimitiveTransfer(d,engine,effect),
   executePrimitive:(d,effect,{frame,index,requireAuthority,tags})=>{
    const child=`${frame.eventId}:${index}`,s=d.get('state');
+   const signing=a=>({authorize:({state,actor,party})=>{
+    const live={...context,document:{...d.document,state}},permission=canAct(live,actor,effect.op);
+    const current=authority(live,actor,effect.op,party,{effect});
+    return {allowed:permission.allowed&&current.allowed&&current.actedAs?.id===a.actedAs?.id};
+   }});
    if(effect.op==='emit'&&['consent_given','consent_revoked'].includes(effect.verb))return applyConsentEvent(d,primitiveContext(engine,d.document),{actor:frame.actor,eventId:child,verb:effect.verb,to:effect.target,payload:effect.payload});
    if(effect.op==='obligation.create'){
-    const a=requireAuthority(effect.op,effect.debtor);
+    const a=requireAuthority(effect.op,effect.debtor,{effect});
+    let terms=effect.terms;
+    if(effect.obligationKind==='mandate'){
+     const permission=consent({...context,document:d.document},effect.creditor,frame.actor,'mandate',{purpose:context.consentPurpose,onRefusal:'abort'});
+     if(!permission.allowed)reject('E-CONSENT','A mandate requires its principal to authorize this commission');
+     if(permission.kind==='proxy')reject('E-PRIMITIVE-CONNECTOR','Subdelegation requires its parent scope adapter');
+     terms={...terms,principalConsent:{source:permission.source,at:s.minute,purpose:context.consentPurpose}};
+    }
     // Signing facts and protocol capabilities always come from the frame.
-    return openObligation(d,engine,{id:effect.id,obligationKind:effect.obligationKind,debtor:effect.debtor,creditor:effect.creditor,amount:effect.amount,deadline:effect.deadline,subject:effect.subject,terms:effect.terms,actor:frame.actor,actedAs:a.actedAs?.source?{source:a.actedAs.source}:null},child);
+    return openObligation(d,engine,{id:effect.id,obligationKind:effect.obligationKind,debtor:effect.debtor,creditor:effect.creditor,amount:effect.amount,deadline:effect.deadline,subject:effect.subject,terms,actor:frame.actor,actedAs:a.actedAs},child,signing(a));
    }
    if(effect.op==='obligation.settle'){
     const row=obligationRow(s,effect.id);if(!row)reject('E-OBLIGATION','Obligation does not exist');
-    const payer=effect.payer??row.debtor,a=requireAuthority(effect.op,payer);
+    const payer=effect.payer??row.debtor,a=requireAuthority(effect.op,payer,{effect});
     if(effect.with!==undefined)reject('E-PRIMITIVE-CONNECTOR','In-kind settlement requires its performance adapter');
-    return settleObligation(d,engine,{id:effect.id,amount:effect.amount,payer,actor:frame.actor,actedAs:a.actedAs?.source?{source:a.actedAs.source}:null},child);
+    return settleObligation(d,engine,{id:effect.id,amount:effect.amount,payer,actor:frame.actor,actedAs:a.actedAs},child,signing(a));
    }
    if(effect.op==='obligation.cancel'){
     const row=obligationRow(s,effect.id);if(!row)reject('E-OBLIGATION','Obligation does not exist');
-    const a=requireAuthority(effect.op,row.creditor);
+    const a=requireAuthority(effect.op,row.creditor,{effect});
     // closeObligation retains earned claims; cancellation cannot erase money.
-    return closeObligation(d,engine,{id:effect.id,party:row.creditor,actor:frame.actor,reason:effect.reason,actedAs:a.actedAs?.source?{source:a.actedAs.source}:null},child);
+    return closeObligation(d,engine,{id:effect.id,party:row.creditor,actor:frame.actor,reason:effect.reason,actedAs:a.actedAs},child,signing(a));
    }
-   return executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthority,tags},context,typeof limits==='function'?limits(d.document):limits);
+   const oldDraft=engine.airDraft;
+   if(effect.op==='move')engine.airDraft=d;
+   try{return executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthority,tags},context,typeof limits==='function'?limits(d.document):limits);}
+   finally{if(effect.op==='move')engine.airDraft=oldDraft;}
   }});
 }
 
@@ -202,7 +230,7 @@ function validateSlots(engine,document,action,slots,actor){
 // Numeric effects authored as constants are their own bound. Client-bound
 // magnitude slots must have a finite catalog maximum, evaluated on current facts.
 function actionLimits(engine,document,action,slots,actor){
- const outcomes=Array.isArray(action.outcomes)?[action.outcomes]:Object.values(action.outcomes),limits={time:0};
+ const outcomes=Array.isArray(action.outcomes)?[action.outcomes]:Object.values(action.outcomes),limits={time:0,fact:{}};
  const numeric=(value)=>{
   if(value&&typeof value==='object'&&typeof value.slot==='string'){
    const slot=action.slots.find(s=>s.name===value.slot),max=slot?.max===undefined?undefined:rxValue(engine,document,action,slots,slot.max,actor),min=slot?.min===undefined?0:rxValue(engine,document,action,slots,slot.min,actor);
@@ -213,8 +241,16 @@ function actionLimits(engine,document,action,slots,actor){
   return Math.abs(value);
  };
  for(const effects of outcomes){
+  const factTotal={};
   if(!Array.isArray(effects))reject('E-ACTION-OUTCOME','An outcome must be a primitive list');
   for(const effect of effects){
+   if(effect.op==='fact.set'){
+    if(typeof effect.field!=='string')reject('E-ACTION-BOUND','Fact fields must be authored');
+    const entity=actionEffects({outcomes:effect.entity},slots,actor),kind=document.holdings?.entities?.[entity]?.kind,rule=engine.world.primitiveFacts?.[kind]?.[effect.field];
+    if(!rule)reject('E-FACT-FIELD','Fact field is not registered for this entity kind');
+    const bound=effect.delta===undefined?rule.max-rule.min:numeric(effect.delta);
+    factTotal[effect.field]=(factTotal[effect.field]??0)+bound;
+   }
    if(effect.op==='time')limits.time+=numeric(effect.minutes);
    if(effect.op==='vital'){
     const n=numeric(effect.delta);limits.vital??={harm:0,heal:0,rangeMeters:action.rangeMeters??1.5};
@@ -229,6 +265,7 @@ function actionLimits(engine,document,action,slots,actor){
     limits.status.statuses.push(effect.status);limits.status.magnitude=Math.max(limits.status.magnitude,numeric(effect.magnitude));limits.status.duration=Math.max(limits.status.duration,numeric(effect.duration));
    }
   }
+  for(const [field,total] of Object.entries(factTotal))limits.fact[field]=Math.max(limits.fact[field]??0,total);
  }
  return limits;
 }
@@ -393,14 +430,15 @@ export const primitiveRuntime={
  },
  legacyPermission(engine,document,tool,args){
   if(!aliveHoldings(actionReader(document),{kind:'guest_of',holder:'player'}).some(h=>h.variant==='detained'))return null;
-  const family=({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create'})[tool]??tool;
+  const family=({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
   const to=tool==='move'?engine.resolve(args.destination):undefined;
   return this.canAct(engine,document,'player',family,{to});
  },
- validateLegacy(engine,document,tool,args,{replay=false}={}){
+ validateLegacy(engine,document,tool,args,{replay=false,legacyAction=null}={}){
   if(replay&&!engine.world.actionDefinitions)return;
-  const action=actionOfCall(this.registry(engine),tool,args);if(!action)return;
-  validatePreconditions(engine,document,action,args,(action.preconditions??[]).filter(condition=>condition?.source));
+  const registry=this.registry(engine),action=legacyAction?findAction(registry,legacyAction.id):actionOfCall(registry,tool,args);if(!action)return;
+  if(action.cost?.owner==='primitives')reject('E-ACTION-COST','A legacy handler owns its cost until its outcomes are migrated');
+  validatePreconditions(engine,document,action,legacyAction?.slots??args,(action.preconditions??[]).filter(condition=>condition?.source));
   if(action.consent?.scope?.some?.(scope=>scope?.source))reject('E-PRIMITIVE-CONNECTOR','Additional consent scope requires its adjudication connector');
  },
  resolve(engine,input,{actor='player'}={}){
@@ -425,16 +463,26 @@ export const primitiveRuntime={
   const {action}=resolved;
   if(action.cost?.owner!=='primitives'&&action.cost!==undefined)reject('E-ACTION-COST','Primitive actions must declare their cost owner');
   const slots=input.args?.slots??{},validate=current=>{validateSlots(engine,current,action,slots,actor);validatePreconditions(engine,current,action,slots,action.preconditions??[],actor);};
-  let limits,quote,start,resourceCosts;
+  let limits,quote,start,resourceCosts,escapeCheck=null,escapeClosures=new Set();
   const effects=resolved.effects;
   const purpose=`action:${digest({action:action.id,eventId:input.eventId})}`;
   const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId:input.eventId,source:{kind:'catalog',id:action.id},createDraft,validate,identity:{action:action.id,slots},limits:()=>limits,purpose,
+   movementAuthority:({actor:who,to,custody,document:current})=>{
+    if(who!==actor||to!==null||!escapeCheck?.success||!escapeClosures.has(custody.id)||custody.holder!==actor)return null;
+    const guard=escapeCheck.opponent?.npc,state=current.state,place=actor==='player'?state.location:state.npcs?.[actor]?.location;
+    const record=custody.source?.startsWith('custody:')?state.records?.[custody.source.slice(8)]:null;
+    const caseRow=record?.case&&state.records?.[record.case],code=caseRow&&legalCodeById(engine,caseRow.law,state);
+    const currentGuard=record?.captor??custody.terms?.guard;
+    if(!guard||state.npcs?.[guard]?.location!==place||!canAct({engine,document:current},guard,'observe').allowed||!(currentGuard?guard===currentGuard:code&&personLawRoles(engine,state,guard,code).includes('officer')))return null;
+    return {allowed:true,kind:'escape',source:`${input.eventId}:action-check`};
+   },
    prepare:(d,{receipt})=>{
     limits=actionLimits(engine,d.document,action,slots,actor);limits.costManaged=true;quote=actionDuration(engine,d.document,action,slots,actor);start=d.get('state','minute');
     if(quote.duration||action.cost?.body||effects.some(e=>['move','learn','time'].includes(e.op)))beginBodyActivity(d,engine,actor,quote.activity);
     resourceCosts=actionResourceCosts(engine,d.document,action,slots,actor);
     if(effects.some(e=>e.op==='learn'))limits.learn={minutes:quote.duration};
     const selected=adjudicateAction(d,engine,action,slots,actor,input.eventId,effects,receipt,{duration:Math.max(quote.duration,limits.status?.duration??0),purpose,limits,quote});
+    escapeCheck=receipt.check;escapeClosures=new Set(selected.filter(e=>e.op==='holding.close'&&e.reason==='escaped').map(e=>e.holding??e.id));
     limits.consentChecks=receipt.consequences.filter(row=>row.tags?.includes('unconsented')&&row.from&&row.scope).map(row=>({target:row.from,scope:row.scope,id:`${input.eventId}:action-check`}));
     return [...resourceCosts,...selected];
    },

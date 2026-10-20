@@ -8,6 +8,8 @@ import {resolveContest,Scheduler} from '../server-plugin/scheduler.mjs';
 import {registerWorldEventSubscriber} from '../server-plugin/world-events.mjs';
 import {createRuntimePrimitiveFrame,primitiveContext} from '../server-plugin/primitives-runtime.mjs';
 import {consent} from '../server-plugin/action-consent.mjs';
+import {authority} from '../server-plugin/action-authority.mjs';
+import {legalCodeAt} from '../server-plugin/law-codes.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import fs from 'node:fs/promises';
@@ -65,6 +67,7 @@ function effectFixture(){
  const f=runtimeFixture();
  f.engine.world.primitiveTables=structuredClone(runtimeWorld.primitiveTables);
  f.engine.world.primitiveTemplates=structuredClone(runtimeWorld.primitiveTemplates);
+ f.engine.world.primitiveFacts=structuredClone(runtimeWorld.primitiveFacts);
  const d=f.engine.primitiveDraft(f.document);recordLocalContact(d,f.engine,f.npc,'a3-contact');
  f.document=applyPatches(f.document,d.patches);
  f.frame=(id,limits={})=>createRuntimePrimitiveFrame(f.engine,f.document,{eventId:id,source:{kind:'catalog',id:'test:native'},limits});
@@ -75,6 +78,20 @@ function program(f,action){
  f.engine.actionRegistry={actions:[action],byId:new Map([[action.id,action]]),errors:[]};
  return {tool:'world_act',eventId:`event-${action.id}`,args:{action:action.id,slots:{}}};
 }
+
+test('A3 facts: archived kind whitelist and authored work bounds apply through the registered action',async()=>{
+ const f=effectFixture(),made=commitPrimitives(f.document,[{op:'create',kind:'item',template:'core:item',facts:{name:'A3事实纸折'}}],f.frame('fact-item'));
+ f.document=applyPatches(f.document,made.patches);const item=made.receipt.applied[0].result.entity;
+ const input=program(f,{id:'test:fact_work',cost:{owner:'primitives',time:2},outcomes:[{op:'fact.set',entity:item,field:'condition',delta:5}]}),before=structuredClone(f.document);
+ const preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.applied[0].result,item);assert.deepEqual(f.document,before);
+ const result=await f.engine.reduce(f.document,input),next=applyPatches(f.document,result.patches);
+ assert.equal(next.holdings.entities[item].facts.condition,5);assert.equal(next.state.minute,before.state.minute+2);assert.equal(result.result.receipt.cost.time,2);
+ const frame=createRuntimePrimitiveFrame(f.engine,f.document,{eventId:'fact-budget',source:{kind:'open',id:'native-builder'},limits:{fact:{condition:5}}});
+ const work={op:'fact.set',entity:item,field:'condition',delta:3};
+ assert.throws(()=>commitPrimitives(f.document,[work,work],frame),{code:'E-FACT-BOUND'});assert.deepEqual(f.document,before);
+ const noBound=f.frame('unbounded-fact');assert.throws(()=>commitPrimitives(f.document,[work],noBound),{code:'E-FACT-BOUND'});
+ assert.throws(()=>commitPrimitives(f.document,[{...work,field:'coins'}],frame),{code:'E-FACT-FIELD'});
+});
 
 test('A3 effects: native time bound, preview isolation, JSON idempotency and rollback',()=>{
  const f=effectFixture(),before=structuredClone(f.document),effects=[{op:'time',minutes:2}],frame=f.frame('two-minutes',{time:2});
@@ -93,6 +110,58 @@ test('A3 effects: movement consumes its actual route once and rejects teleportat
  for(const npc of f.document.state.player.companions)assert.equal(next.state.npcs[npc].location,to);
  assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:'loc_not_registered'}],f.frame('bad-route')));
  assert.equal(f.document.state.location,origin);assert.deepEqual(auditLedger(next.ledger),[]);
+});
+
+test('A3 effects: move can approach a registered local feature using real distance and rejects a remote feature',()=>{
+ const f=effectFixture(),place=f.engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0)));
+ const feature=place.features.find(row=>row.position?.some(n=>n!==0));f.document.state.location=place.id;
+ const before=structuredClone(f.document),metres=Math.hypot(...feature.position),minutes=Math.ceil(metres/f.engine.rules.environment.walkingMetresPerMinute);
+ const result=commitPrimitives(f.document,[{op:'move',to:feature.id}],f.frame('local-approach')),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.location,place.id);assert.deepEqual(next.state.records.local_player_position.point,feature.position);
+ assert.equal(next.state.minute,before.state.minute+minutes);assert.equal(result.receipt.applied[0].result.metres,metres);
+ const remote=f.engine.world.locations.find(l=>l.id!==place.id&&l.features?.length);assert.ok(remote);
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:remote.features[0].id}],f.frame('remote-approach')));
+ assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: NPC route movement charges the actual traveller once, preserves player and replays',()=>{
+ const f=effectFixture(),npc=f.npc,origin=f.document.state.npcs[npc].location;
+ const edge=f.engine.world.routes.find(r=>r.from===origin||r.to===origin);assert.ok(edge);
+ const to=edge.from===origin?edge.to:edge.from,route=f.engine.route(origin,to,'walk',f.document.state.minute,f.document.randomSeed);
+ const frame=createRuntimePrimitiveFrame(f.engine,f.document,{actor:npc,eventId:'npc-route',source:{kind:'catalog',id:'test:native'}});
+ const effects=[{op:'move',to}],before=structuredClone(f.document),preview=planPrimitives(f.document,effects,frame);
+ assert.equal(preview.receipt.applied[0].result.destination,to);assert.deepEqual(f.document,before);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.npcs[npc].location,to);assert.equal(next.state.npcs[npc].scheduleTravel,undefined);
+ assert.equal(next.state.location,origin);assert.equal(next.state.minute,before.state.minute+route.minutes);
+ assert.equal(next.state.npcs[npc].coins,before.state.npcs[npc].coins-route.cost);
+ assert.deepEqual(auditLedger(next.ledger),[]);assert.equal(f.engine.npcScheduleReservations,undefined);
+ assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),effects,frame).patches,[]);
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to:'loc_not_registered'}],frame));
+ assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: both travellers re-read current route closures rather than planning against an empty state',()=>{
+ const f=effectFixture(),origin=f.document.state.location,edge=f.engine.world.routes.find(r=>r.from===origin||r.to===origin),to=edge.from===origin?edge.to:edge.from;
+ f.document.state.records.a3_closed_routes={category:'war_disruption',since:f.document.state.minute,until:f.document.state.minute+1440,routes:f.engine.world.routes.map(r=>r.id)};
+ const effects=[{op:'move',to}],before=structuredClone(f.document);
+ assert.throws(()=>commitPrimitives(f.document,effects,f.frame('blocked-player-route')),/没有当前季节/);
+ const frame=createRuntimePrimitiveFrame(f.engine,f.document,{actor:f.npc,eventId:'blocked-npc-route',source:{kind:'catalog',id:'test:native'}});
+ assert.throws(()=>commitPrimitives(f.document,effects,frame),/没有当前季节/);
+ assert.equal(f.engine.airDraft,undefined);assert.deepEqual(f.document,before);
+});
+
+test('A3 effects: moving another NPC requires real authority and rechecks detention',()=>{
+ const f=effectFixture(),npc=f.npc,origin=f.document.state.npcs[npc].location;
+ const edge=f.engine.world.routes.find(r=>r.from===origin||r.to===origin),to=edge.from===origin?edge.to:edge.from;
+ const effects=[{op:'move',entity:npc,to}],frame=f.frame('npc-no-authority');
+ assert.throws(()=>commitPrimitives(f.document,effects,frame),{code:'E-AUTHORITY'});
+ const own=createRuntimePrimitiveFrame(f.engine,f.document,{actor:npc,eventId:'npc-detained',source:{kind:'catalog',id:'test:native'}});
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to,mode:'horse'}],own),{code:'E-PRIMITIVE-CONNECTOR'});
+ f.document.holdings.rows.a3_custody={id:'a3_custody',kind:'guest_of',variant:'detained',holder:npc,subject:origin};
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],own),{code:'E-CAPACITY'});
+ delete f.document.holdings.rows.a3_custody;f.document.state.npcs[npc].scheduleTravel={from:origin,to,depart:0,arrive:f.document.state.minute+1,edges:[]};
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],own),/already travelling/);
 });
 
 test('A3 effects: core narrative templates reject resources; destruction uses actual lifecycle and wreck',()=>{
@@ -390,6 +459,115 @@ test('A3 runtime: real purse projection and obligation opening share one atomic 
  assert.deepEqual(document,before);
 });
 
+function normativeFixture(){
+ const f=effectFixture(),org=f.engine.world.factions[0].id,office=`office_org:${org}:executor`;
+ f.document.state.records[`organization:${org}`]={id:org,category:'organization',charter:{offices:[{id:'executor',powers:['execute']}],authority:[{offices:['executor'],scope:[{op:'obligation.create',target:org}]}]}};
+ f.document.holdings.entities[office]={id:office,kind:'office',facts:{org,role:'executor'}};
+ f.document.holdings.rows.a3_executor={id:'a3_executor',kind:'holds_office',holder:'player',subject:office};
+ return {...f,org,office};
+}
+
+test('A3 authority: current law delegation, issuer recognition and charter powers expose their sources',()=>{
+ const f=normativeFixture(),{engine,document,npc,org}=f;
+ const c=primitiveContext(engine,document),grant=authority(c,'player','obligation.create',org);
+ assert.equal(grant.actedAs.kind,'charter');assert.ok(grant.actedAs.version);
+ assert.deepEqual(authority(c,'player','transfer',org).tags,['ultra_vires']);
+ assert.equal(authority(c,'player','transfer',npc).allowed,false);
+ const code=legalCodeAt(engine,document.state.location,document.state);assert.ok(code);
+ const definition=engine.rules.law.codes.find(row=>row.id===code.id);assert.ok(definition);
+ definition.delegation=[{id:'a3_native_grant',actor:'player',scope:[{op:'transfer',target:npc}],until:document.state.minute+5}];
+ const permission=authority(c,'player','transfer',npc);
+ assert.equal(permission.actedAs.kind,'delegation');assert.ok(permission.actedAs.version);
+ definition.delegation[0].revoked=true;assert.equal(authority(c,'player','transfer',npc).allowed,false);
+ definition.recognition={issuers:{mint:['player'],notes:[f.office]}};
+ assert.equal(authority(c,'player','mint','coin_river').actedAs.kind,'recognition');
+ assert.equal(authority(c,'player','issue','coin_river').actedAs.kind,'recognition');
+ document.holdings.rows.a3_executor.until=document.state.minute;
+ assert.equal(authority(c,'player','issue','coin_river').allowed,false);
+ assert.equal(authority(c,'player','obligation.create',org).allowed,false);
+});
+
+test('A3 authority: approved execution binds action and slots, consumes resolution atomically and preserves replay',async()=>{
+ const f=normativeFixture(),{engine,org,office}=f;
+ const created=commitPrimitives(f.document,[{op:'create',kind:'item',template:'core:item',facts:{name:'A3决议纸折'}}],f.frame('resolution-item'));
+ f.document=applyPatches(f.document,created.patches);
+ const item=created.receipt.applied[0].result.entity;
+ Object.values(f.document.holdings.rows).find(h=>h.kind==='owns'&&h.subject===item&&h.until===undefined).holder=org;
+ const input=program(f,{id:'test:execute_resolution',outcomes:[{op:'destroy',entity:item}]}),motion='motion_a3_execution';
+ f.document.holdings.entities[motion]={id:motion,kind:'motion',facts:{body:org,phase:'approved',resolution:{kind:'execute',action:input.args.action,args:{}}}};
+ const before=structuredClone(f.document),preview=await engine.previewAction(f.document,input);
+ assert.equal(preview.receipt.applied[0].actedAs.kind,'resolution');assert.deepEqual(f.document,before);
+ const frame=createRuntimePrimitiveFrame(engine,f.document,{eventId:input.eventId,source:{kind:'catalog',id:input.args.action},identity:{action:input.args.action,slots:{}}});
+ assert.throws(()=>commitPrimitives(f.document,[{op:'destroy',entity:item},{op:'destroy',entity:'missing'}],frame));
+ assert.equal(f.document.holdings.entities[motion].facts.phase,'approved');
+ const committed=commitPrimitives(f.document,[{op:'destroy',entity:item}],frame),next=applyPatches(f.document,committed.patches);
+ assert.equal(committed.receipt.applied[0].actedAs.id,motion);assert.equal(next.holdings.entities[motion].facts.phase,'executed');
+ assert.equal(next.holdings.entities[motion].facts.executionEvent,input.eventId);assert.equal(isGone(engine,next,item),true);
+ assert.deepEqual(commitPrimitives(JSON.parse(JSON.stringify(next)),[{op:'destroy',entity:item}],frame).patches,[]);
+ const context=primitiveContext(engine,before,{source:{kind:'catalog',id:input.args.action},identity:{action:input.args.action,slots:{wrong:1}}});
+ assert.ok(!authority(context,'player','destroy',item).sources.some(s=>s.kind==='resolution'));
+ assert.ok(office);
+});
+
+test('A3 signing: an agent cannot manufacture its own mandate; the principal really authorizes the commission',()=>{
+ const f=runtimeFixture(),{engine,npc}=f,purpose='test:mandate.accept';
+ const effect={op:'obligation.create',id:'a3_real_mandate',obligationKind:'mandate',debtor:'player',creditor:npc,terms:{scope:[{op:'transfer',target:npc}]}},frame=doc=>createRuntimePrimitiveFrame(engine,doc,{eventId:'accept-real-mandate',source:{kind:'catalog',id:purpose}}),before=structuredClone(f.document);
+ assert.throws(()=>commitPrimitives(f.document,[effect],frame(f.document)),{code:'E-CONSENT'});assert.deepEqual(f.document,before);
+ const donor=createRuntimePrimitiveFrame(engine,f.document,{actor:npc,eventId:'principal-grant',source:{kind:'catalog',id:'test:consent'}});
+ f.document=applyPatches(f.document,commitPrimitives(f.document,[{op:'emit',verb:'consent_given',target:'player',visibility:'private',payload:{scope:'mandate',purpose:[purpose],until:f.document.state.minute+10}}],donor).patches);
+ const result=commitPrimitives(f.document,[effect,{op:'transfer',from:accountKey(npc,'coin_river','purse'),to:a,qty:1}],frame(f.document)),next=applyPatches(f.document,result.patches);
+ assert.equal(next.state.obligations.a3_real_mandate.terms.principalConsent.source,'principal-grant:0');
+ assert.equal(result.receipt.applied[1].actedAs.kind,'mandate');assert.equal(next.state.npcs[npc].coins,f.document.state.npcs[npc].coins-1);assert.deepEqual(auditLedger(next.ledger),[]);
+});
+
+test('A3 signing: current mandate reaches the S3 protocol with its source and revocation is rechecked',()=>{
+ const {engine,document,npc}=runtimeFixture(),effects=[{op:'obligation.create',id:'a3_proxy_loan',obligationKind:'loan',debtor:npc,creditor:'player',amount:5}];
+ document.state.obligations.a3_signing={id:'a3_signing',kind:'mandate',debtor:'player',creditor:npc,status:'active',createdAt:document.state.minute,terms:{scope:[{op:'obligation.create',target:npc}]}};
+ const frame=createRuntimePrimitiveFrame(engine,document,{eventId:'proxy-sign',source:{kind:'catalog',id:'test:loan'}}),before=structuredClone(document);
+ planPrimitives(document,effects,frame);assert.deepEqual(document,before);
+ const result=commitPrimitives(document,effects,frame),next=applyPatches(document,result.patches),loan=next.state.obligations.a3_proxy_loan;
+ assert.equal(loan.debtor,npc);assert.equal(loan.terms.actor,'player');assert.equal(loan.terms.actedAs.kind,'mandate');assert.equal(loan.terms.actedAs.id,'a3_signing');
+ assert.equal(result.receipt.applied[0].actedAs.id,'a3_signing');
+ document.state.obligations.a3_signing.revoked=true;
+ assert.throws(()=>commitPrimitives(document,effects,frame),{code:'E-AUTHORITY'});
+ assert.equal(document.state.obligations.a3_proxy_loan,undefined);
+});
+
+test('A3 signing: property guardianship can bind a loan but cannot bind personal service or move its ward',()=>{
+ const f=runtimeFixture(),{engine,document,npc}=f;
+ document.holdings.rows.a3_property_guardian={id:'a3_property_guardian',kind:'guardian_of',holder:'player',subject:npc,terms:{scope:'property_only'}};
+ const frame=createRuntimePrimitiveFrame(engine,document,{eventId:'guardian-sign',source:{kind:'catalog',id:'test:loan'}});
+ const effect={op:'obligation.create',id:'a3_guardian_loan',obligationKind:'loan',debtor:npc,creditor:'player',amount:1};
+ const result=commitPrimitives(document,[effect],frame),next=applyPatches(document,result.patches);
+ assert.equal(next.state.obligations.a3_guardian_loan.terms.actedAs.kind,'guardian_of');
+ assert.throws(()=>commitPrimitives(document,[{...effect,obligationKind:'service'}],frame),{code:'E-AUTHORITY'});
+ assert.equal(authority(primitiveContext(engine,document),'player','move',npc).allowed,false);
+ document.holdings.rows.a3_property_guardian.until=document.state.minute;
+ assert.throws(()=>commitPrimitives(document,[effect],frame),{code:'E-AUTHORITY'});
+});
+
+test('A3 signing: legacy payment authorization reaches settlement and does not expand contract permission',()=>{
+ const f=runtimeFixture(),{engine,npc}=f,create=createRuntimePrimitiveFrame(engine,f.document,{actor:npc,eventId:'proxy-pay-loan',source:{kind:'catalog',id:'test:loan'}});
+ f.document=applyPatches(f.document,commitPrimitives(f.document,[{op:'obligation.create',id:'a3_proxy_payment',obligationKind:'loan',debtor:npc,creditor:'player',amount:1}],create).patches);
+ f.document.state.records.a3_payment_permission={category:'authorization',grantor:npc,grantee:'player',action:'payment',createdAt:f.document.state.minute,expires:f.document.state.minute+10};
+ const effects=[{op:'obligation.settle',id:'a3_proxy_payment',amount:1}],frame=createRuntimePrimitiveFrame(engine,f.document,{eventId:'proxy-pay',source:{kind:'catalog',id:'test:payment'}});
+ planPrimitives(f.document,effects,frame);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
+ assert.equal(result.receipt.applied[0].actedAs.kind,'authorization');assert.equal(next.state.npcs[npc].coins,f.document.state.npcs[npc].coins-1);
+ assert.equal(next.state.player.coins,f.document.state.player.coins+1);assert.deepEqual(auditLedger(next.ledger),[]);
+ f.document.state.records.a3_payment_permission.action='contract';
+ assert.throws(()=>commitPrimitives(f.document,effects,frame),{code:'E-AUTHORITY'});
+});
+
+test('A3 signing: limited capacity can sign and remains tagged; no-source proxy cannot sign',()=>{
+ const {engine,document,npc}=runtimeFixture();document.state.player.age=10;
+ const frame=createRuntimePrimitiveFrame(engine,document,{eventId:'limited-sign',source:{kind:'catalog',id:'test:loan'}});
+ const effect={op:'obligation.create',id:'a3_limited_loan',obligationKind:'loan',debtor:'player',creditor:npc,amount:1};
+ const result=commitPrimitives(document,[effect],frame),next=applyPatches(document,result.patches);
+ assert.equal(next.state.obligations.a3_limited_loan.amount,1);assert.ok(result.receipt.applied[0].tags.includes('capacity:limited'));
+ assert.throws(()=>commitPrimitives(document,[{...effect,debtor:npc,creditor:'player'}],frame),{code:'E-AUTHORITY'});
+});
+
 test('A3 runtime: zero-balance recipient is a real account, unknown recipients and remote mandates reject',()=>{
  const {engine,document,npc}=runtimeFixture(),from=accountKey('player','coin_river','purse'),to=accountKey(npc,'coin_river','purse');
  document.state.npcs[npc].coins=0;delete document.ledger.accounts[to];
@@ -428,6 +606,59 @@ test('A3 consent: existing spell authorization keeps purpose/location/expiry lim
  const frame=createRuntimePrimitiveFrame(engine,document,{actor:npc,eventId:'revoke-legacy-consent',source:{kind:'catalog',id:'core:consent.revoke'}});
  const after=applyPatches(document,commitPrimitives(document,[{op:'emit',verb:'consent_revoked',target:'player',visibility:'private',payload:{consent:'a3_permission'}}],frame).patches);
  assert.equal(after.state.records.a3_permission.revoked,true);assert.equal(document.state.records.a3_permission.revoked,undefined);assert.equal(consent(primitiveContext(engine,after),npc,'player','mind',{purpose:spell}).allowed,false);
+});
+
+test('A3 capacity: an unconscious actor cannot roll or pay a failed action with empty effects',async()=>{
+ const f=effectFixture();f.document.state.player.status='昏迷';
+ const input=program(f,{id:'test:incapacitated',check:{attribute:'精神',difficulty:10},outcomes:{success:[{op:'emit',verb:'tell',visibility:'private'}],failure:[],fumble:[]},cost:{owner:'primitives',time:1}}),before=structuredClone(f.document);
+ await assert.rejects(()=>f.engine.reduce(f.document,input),{code:'E-CAPACITY'});assert.deepEqual(f.document,before);
+});
+
+test('A3 legacy: exact registered identity and appended guards survive dispatch and preview',async()=>{
+ const {engine,document}=runtimeFixture(),loose={id:'test:loose_wait',label:'wait',slots:[{name:'minutes',kind:'minutes',required:true}],call:{tool:'world_time'},preconditions:[]};
+ const strict={...loose,id:'test:guarded_wait',preconditions:[{value:'false',source:'test:restriction',reason:'restricted by the second package'}]};
+ engine.actionRegistry={actions:[loose,strict],byId:new Map([[loose.id,loose],[strict.id,strict]]),errors:[]};
+ const input={tool:'world_act',eventId:'legacy-guarded',args:{action:strict.id,slots:{minutes:1}}},before=structuredClone(document);
+ await assert.rejects(()=>engine.reduce(document,input),{code:'E-PRECONDITION'});
+ await assert.rejects(()=>engine.previewAction(document,input),{code:'E-PRECONDITION'});
+ assert.deepEqual(document,before);
+ strict.preconditions[0].value='true';
+ const accepted=await engine.reduce(document,input),next=applyPatches(document,accepted.patches);
+ assert.equal(next.state.minute,document.state.minute+1,'legacy handler retains sole time ownership');
+ strict.cost={owner:'primitives',time:1};
+ await assert.rejects(()=>engine.reduce(document,input),{code:'E-ACTION-COST'});
+});
+
+test('A3 custody: native escape check closes custody; failure, wrong guard and forged old check cannot release',async()=>{
+ const f=effectFixture(),{engine,document}=f,code=engine.rules.law.codes.find(code=>code.officers?.some(id=>document.state.npcs[id]));
+ const officer=code.officers.find(id=>document.state.npcs[id]);
+ document.state.location=code.court;document.state.npcs[officer].location=code.court;
+ document.state.records.a3_escape_case={id:'a3_escape_case',category:'legal_case',law:code.id,location:code.court,offender:'player',status:'服役中'};
+ document.state.records.a3_escape_custody={category:'legal_custody',case:'a3_escape_case',subject:'player',location:code.court,reason:'监禁',status:'生效',started:document.state.minute,expires:document.state.minute+120};
+ document.holdings=openHoldings(engine,document);
+ const holding=Object.values(document.holdings.rows).find(h=>h.source==='custody:a3_escape_custody'&&h.until===undefined);assert.ok(holding);
+ const effect={op:'holding.close',holding:holding.id,reason:'escaped'};
+ const input=program(f,{id:'test:escape',check:{attribute:'敏捷',opponent:{npc:officer,attribute:'敏捷'}},outcomes:{success:[effect],partial:[effect],critical:[effect],failure:[],fumble:[]},cost:{owner:'primitives',time:1}});
+ let won,lost;
+ for(let i=0;i<40&&(!won||!lost);i++){
+  const attempt={...input,eventId:`a3-escape-${i}`},preview=await engine.previewAction(document,attempt);
+  if(preview.receipt.check.success)won=attempt;else lost=attempt;
+ }
+ assert.ok(won&&lost,'requires both native contest outcomes');
+ const before=structuredClone(document),failure=await engine.reduce(document,lost),failed=applyPatches(document,failure.patches);
+ assert.equal(failure.result.receipt.applied.length,0);assert.equal(failed.holdings.rows[holding.id].until,undefined);assert.equal(failed.state.records.a3_escape_custody.status,'生效');
+ const success=await engine.reduce(document,won),next=applyPatches(document,success.patches);
+ assert.equal(next.holdings.rows[holding.id].until,document.state.minute);assert.equal(next.holdings.rows[holding.id].reason,'escaped');
+ assert.equal(next.state.records.a3_escape_custody.status,'已中断');assert.equal(next.state.records.a3_escape_case.remainingSentence.minutes,120);
+ assert.ok(success.result.receipt.applied[0].tags.includes('escaped'));assert.equal(success.result.receipt.applied[0].actedAs.kind,'escape');assert.deepEqual(document,before);
+ const forged=createRuntimePrimitiveFrame(engine,document,{eventId:'forged-escape',source:{kind:'catalog',id:input.args.action}});
+ document.state.checks['forged-escape:action-check']={success:true,opponent:{npc:officer}};
+ assert.throws(()=>commitPrimitives(document,[effect],forged),{code:'E-CAPACITY'});
+ // A registered escape must oppose the actual present jailer, not an ally.
+ const outsider=Object.keys(document.state.npcs).find(id=>!code.officers.includes(id));document.state.npcs[outsider].location=code.court;
+ engine.actionRegistry.byId.get(input.args.action).check.opponent.npc=outsider;
+ const dishonest={...won,eventId:'wrong-jailer'};
+ await assert.rejects(()=>engine.reduce(document,dishonest),{code:'E-CAPACITY'});
 });
 
 test('A3 custody: direct self release refuses, current officer release updates the actual law projection and tags its missing basis',()=>{

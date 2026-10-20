@@ -26,16 +26,22 @@ export function capacity(context,actor,family){
  return {level:limited?'limited':'full',reason:limited?'限制行为能力，行为效力待依法判断':null,sources:['current age/status']};
 }
 const defaultAllows=['talk','communicate','learn','service','obligation.create','transfer','holding.open','appeal','observe','wait','rite'];
-export function canAct(context,actor,family,{to}={}){
+export function custodyLocation(context,holding){
+ const record=holding.source?.startsWith('custody:')?context.document.state?.records?.[holding.source.slice(8)]:null;
+ return record?.location??context.document.holdings?.locations?.[holding.subject]?.at??actionEntity(context,holding.subject)?.location??holding.subject;
+}
+export function canAct(context,actor,family,{to,closing=null}={}){
  const result=capacity(context,actor,family),tags=result.level==='limited'?['capacity:limited']:[];
  if(result.level==='none')return {...result,allowed:false,tags};
  const custody=aliveHoldings(actionReader(context.document),{kind:'guest_of',holder:actor}).filter(h=>h.variant==='detained');
  for(const h of custody){
   const regime=h.terms?.regime,allows=regime?.allows??defaultAllows;
-  const host=context.document.holdings?.locations?.[h.subject]?.at??actionEntity(context,h.subject)?.location??h.subject;
-  const proof=family==='move'?context.movementAuthority?.({actor,to,custody:h}):null;
+  const host=custodyLocation(context,h);
+  const escapeClose=family==='holding.close'&&closing?.reason==='escaped'&&(closing.holding??closing.id)===h.id;
+  const proof=family==='move'||escapeClose?context.movementAuthority?.({actor,to:escapeClose?null:to,custody:h,document:context.document}):null;
   const movement=family==='move'&&(to===host||proof?.allowed===true&&['escape','escort'].includes(proof.kind)&&typeof proof.source==='string');
-  if(!movement&&!allows.some(k=>k===family||family.startsWith(`${k}.`)))return {...result,allowed:false,tags,reason:family==='move'?'受限期间不能自行离开东道分区':'当前拘禁制度不允许这类行动',regime:h.id};
+  const released=escapeClose&&proof?.allowed===true&&proof.kind==='escape'&&typeof proof.source==='string';
+  if(!movement&&!released&&!allows.some(k=>k===family||family.startsWith(`${k}.`)))return {...result,allowed:false,tags,reason:family==='move'?'受限期间不能自行离开东道分区':'当前拘禁制度不允许这类行动',regime:h.id};
  }
  return {...result,allowed:true,tags};
 }

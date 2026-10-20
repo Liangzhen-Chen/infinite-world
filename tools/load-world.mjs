@@ -73,7 +73,9 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // programs. Legacy hashes and archived reducers retain their original shape.
     let narrativeTemplates=[];
     try{narrativeTemplates=JSON.parse(await fs.readFile(path.join(root,'ontology/entity-templates.json'),'utf8')).entries.flatMap(e=>e.narrative??[]);}catch(error){if(error.code!=='ENOENT')throw error;}
-    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveTables:Object.fromEntries(['body','learning','action-costs'].map(name=>[name,world.balance[name]]))};
+    let primitiveFacts={};
+    try{primitiveFacts=JSON.parse(await fs.readFile(path.join(root,'ontology/primitives.json'),'utf8')).entries.find(e=>e.id==='fact.set')?.writable??{};}catch(error){if(error.code!=='ENOENT')throw error;}
+    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs'].map(name=>[name,world.balance[name]]))};
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));

@@ -268,6 +268,13 @@
    "onCreditorGone": "heirs"
   },
   {
+   "id": "mandate",
+   "label": "委托代办",
+   "schedule": "continuous",
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
+  },
+  {
    "id": "vow",
    "label": "还愿",
    "schedule": "condition",

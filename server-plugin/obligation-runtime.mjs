@@ -83,9 +83,16 @@ export function obligationCommunication(e,s,a,b,{minimum=1,interpreter=null}={})
     }
     return {degree:0,language:null,interpreter:null};
 }
-export function assertObligationAuthority(e,s,{actor,debtor,actedAs,inName},action='contract'){
+export function assertObligationAuthority(e,s,{actor,debtor,actedAs,inName},action='contract',authorize=null){
     if(!actor||!debtor)throw Error('Signing requires actor and debtor');
     const who=actor==='player'?s.player:s.npcs?.[actor]??s.creatures?.[actor]??s.created?.[actor];
+    // Optional native composition callback: A3 rechecks the current holding,
+    // mandate and confinement regime. It is never part of the serialized args.
+    if(authorize!==null){
+        if(typeof authorize!=='function'||!who||authorize({engine:e,state:s,actor,party:debtor,action}).allowed!==true)throw Error('Signer lacks current primitive authority');
+        if(inName&&!identities(e,s,actor).some(i=>i.key===inName))throw Error('Signing identity is not held');
+        return;
+    }
     if(!who||!isEffective(e,s,actor)||['死亡','昏迷','濒死'].includes(who.status))throw Error('Signer cannot act');
     const code=legalCodeAt(e,settlementLocation(e,s,actor),s),capacity=code?.civil?.capacity;
     const age=actor==='player'?who.age:npcAgeAt(e,s,actor),majority=code?.civil?.majority?.[action]??capacity?.majority?.[action];
@@ -154,12 +161,12 @@ function settlementFunding(e,s,row,args,amount){
     }
     return null;
 }
-export function openObligation(d,e,args,eventId){
+export function openObligation(d,e,args,eventId,{authorize=null}={}){
     const id=args.id??`obligation_${eventId}`;
     return receipt(d,e,id,eventId,'obligation_opened',args,()=>{
         if(obligationRow(read(d,'state'),id))throw Error('Obligation id already exists');
         const {debtor,creditor,actor=debtor}=args,s=read(d,'state');
-        assertObligationAuthority(e,s,{...args,actor,debtor});
+        assertObligationAuthority(e,s,{...args,actor,debtor},'contract',authorize);
         if(!creditor)throw Error('Obligation requires creditor');
         if(!obligationCommunication(e,s,actor,creditor,{interpreter:args.interpreter}).degree)throw Error('Parties cannot communicate signed terms');
         const place=settlementLocation(e,s,actor);
@@ -205,14 +212,14 @@ export function amendObligation(d,e,{id,actor,changes,...facts},eventId){
         write(d,e,next);return {id,transferred:0,remaining:obligationView(s,next).owed,evidence:eventId};
     });
 }
-export function closeObligation(d,e,{id,actor,reason,...facts},eventId){
+export function closeObligation(d,e,{id,actor,reason,...facts},eventId,{authorize=null}={}){
     const args={id,actor,reason,...facts};
     return receipt(d,e,id,eventId,'obligation_closed',args,()=>{
         const row=requireRow(d,id),s=read(d,'state');
         // Either signatory may end future service. Earned claims survive.
         const party=facts.party??row.debtor;
         if(![row.debtor,row.creditor].includes(party))throw Error('Only a party may close an obligation');
-        assertObligationAuthority(e,s,{...facts,actor,debtor:party});
+        assertObligationAuthority(e,s,{...facts,actor,debtor:party},'contract',authorize);
         const next={...row,endedAt:row.endedAt??s.minute,endReason:reason??'terminated'};
         write(d,e,next);return {id,transferred:0,remaining:obligationView(s,next).owed,evidence:eventId};
     });
@@ -233,7 +240,7 @@ export function performObligation(d,e,{id,actor},eventId){
         return {id,transferred:0,delivered:row.quantity,item:row.item,remaining:0,evidence:eventId};
     });
 }
-export function settleObligation(d,e,args,eventId){
+export function settleObligation(d,e,args,eventId,{authorize=null}={}){
     if(!ledgerActive(d))throw Error('Settlement requires an opened ledger transaction');
     const resolved=requireRow(d,args.id),id=resolved.id;
     args={...args,id};
@@ -251,7 +258,7 @@ export function settleObligation(d,e,args,eventId){
         }else if(args.automatic){
             if(!row.terms?.autoSettle||payer!==row.debtor||amount>view.amountDue)throw Error('Automatic settlement exceeds the signed due authority');
         }else {
-            assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment');
+            assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment',authorize);
             if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
         }
         if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');

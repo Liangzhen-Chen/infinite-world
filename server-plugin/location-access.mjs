@@ -8,16 +8,17 @@ import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('location-access',{kinds:['permit']});
 // Existing authorization records govern entry; the route alone is not consent.
-export function assertLocationAccess(d,engine,destination,{authorization,companions=[],arrivalMinute=d.get('state','minute')}={}){
+export function assertLocationAccess(d,engine,destination,{authorization,actor='player',companions=[],arrivalMinute=d.get('state','minute')}={}){
  if(facilityView(engine,d.get('state'),destination)?.factor===0)throw Error('建筑已停用，不能居住或进入服务区');
  const place=engine.byId.get(destination),access=place?.access;
  if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return;
- const permission=authorization?d.get('state','records',authorization):null;
+ const permissions=authorization?[d.get('state','records',authorization)]:actor==='player'?[]:Object.values(d.get('state','records')??{});
  const residents=new Set(access.mode==='council'?[access.authority]:homeResidents(engine,d.get('state'),destination).value);
- const allowed=permission?.category==='authorization'&&permission.subject===destination&&(permission.action===(access.mode==='council'?'enter_council':'enter_home')||place.site&&permission.action==='site_use'&&permission.operations?.includes('enter'))
-  &&permission.grantee==='player'&&residents.has(permission.grantor)&&(personAge(engine,d.get('state'),permission.grantor,arrivalMinute).value??0)>=18
+ if(actor!=='player'&&residents.has(actor)&&companions.every(id=>residents.has(id)))return;
+ const allowed=permissions.some(permission=>permission?.category==='authorization'&&permission.subject===destination&&(permission.action===(access.mode==='council'?'enter_council':'enter_home')||place.site&&permission.action==='site_use'&&permission.operations?.includes('enter'))
+  &&permission.grantee===actor&&residents.has(permission.grantor)&&(personAge(engine,d.get('state'),permission.grantor,arrivalMinute).value??0)>=18
   &&permission.revoked!==true&&Number.isSafeInteger(permission.expires)&&permission.expires>arrivalMinute
-  &&companions.every(id=>residents.has(id)||permission.guests?.includes(id));
+  &&companions.every(id=>residents.has(id)||permission.guests?.includes(id)));
  if(!allowed)throw new Error(`进入${place.name}需要成年住户给本人及同行者的有效许可；许可须覆盖抵达时刻，未进入或扣除路费`);
 }
 

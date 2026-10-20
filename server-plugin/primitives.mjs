@@ -15,11 +15,11 @@ const clone=value=>structuredClone(value);
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 // Native composition root only. JSON proposals cannot manufacture this token.
 // Every policy sees the transaction's CURRENT document, including prior effects.
-export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,prepare=null,finish=null,identity=null}){
+export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
  if(typeof actor!=='string'||!actor||typeof eventId!=='string'||!eventId||eventId.length>120||!['catalog','open','rule'].includes(source?.kind)||typeof source.id!=='string'||!source.id)reject('E-PRIMITIVE-FRAME','缺少服务端行动者、事件编号或来源');
  for(const [name,fn] of Object.entries({canAct,authority,location,mirrorTransfer}))if(typeof fn!=='function')reject('E-PRIMITIVE-FRAME',`缺少服务端 ${name} 接点`);
  const frame=Object.freeze({actor,eventId,source:Object.freeze({...source})});
- frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,prepare,finish,identity:clone(identity)});return frame;
+ frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,validateFact,prepare,finish,identity:clone(identity)});return frame;
 }
 function draft(document){
  return {document:clone(document),patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},peek(...p){return this.get(...p);},
@@ -39,7 +39,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
  if(pending)receipt.pending=pending;
  if(policy.engine&&d.scheduler)beginReactionTick(d);
  policy.validate?.(d.document);
- const selected=policy.prepare?.(d,{frame,receipt,effects:original})??original;
+ const selected=policy.prepare?.(d,{frame,receipt,effects:original})??original,resolutions=new Set();
  if(!Array.isArray(selected)||selected.length>64)reject('E-PRIMITIVE-LIST','Invalid native outcome list');
  selected.forEach(validatePrimitive);
  for(let index=0;index<selected.length;index++){
@@ -48,7 +48,15 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    const capability=policy.canAct(d.document,frame.actor,effect.op,effect);
    if(!capability?.allowed)reject('E-CAPACITY',capability?.reason??'当前不能进行这类行动');
    const tags=[...capability.tags??[]];let actedAs=null,result;
-   const requireAuthority=(op,target,options)=>{const a=policy.authority(d.document,frame.actor,op,target,options);if(!a?.allowed)reject('E-AUTHORITY',a?.reason??'没有动用权限');tags.push(...a.tags??[]);actedAs=a.actedAs;return a;};
+   const requireAuthority=(op,target,options)=>{
+    const a=policy.authority(d.document,frame.actor,op,target,options);if(!a?.allowed)reject('E-AUTHORITY',a?.reason??'没有动用权限');
+    tags.push(...a.tags??[]);actedAs=a.actedAs;
+    if(actedAs?.kind==='resolution'){
+     resolutions.add(actedAs.id);
+     updateEntity(d,{id:actedAs.id,facts:{phase:'executing',executionEvent:frame.eventId},writer:'primitives',eventId:frame.eventId});
+    }
+    return a;
+   };
    if(effect.op==='transfer'){
     const a=parseAccount(effect.from),b=parseAccount(effect.to),qty=effect.qty;
     for(const key of [effect.from,...(isSink(b.owner)?[]:[effect.to])])if(policy.accountExists?.(d.document,key)&&!Object.hasOwn(d.get('ledger','accounts')??{},key))d.set(['ledger','accounts',key],0);
@@ -109,6 +117,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(Object.hasOwn(effect,'value')===Object.hasOwn(effect,'delta'))reject('E-FACT-VALUE','事实写入须指定 value 或 delta 之一');
     const value=Object.hasOwn(effect,'delta')?(row.facts?.[effect.field]??0)+effect.delta:effect.value;
     writableFact(policy.factPolicy,row.kind,effect.field,value);
+    policy.validateFact?.(d,effect,{row,value});
     result=updateEntity(d,{id:effect.entity,facts:{[effect.field]:value},writer:'primitives',eventId:frame.eventId});
    }else if(effect.op==='emit'){
     if(!policy.verbs.has(effect.verb)||!['public','private','witnessed'].includes(effect.visibility))reject('E-EMIT-VERB','事件动词或可见性未登记');
@@ -136,6 +145,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
   }catch(error){if(error instanceof PrimitiveRejected){error.index=index;throw error;}throw new PrimitiveRejected(error.code??'E-PRIMITIVE-EXECUTION',error.message,index);}
  }
  policy.finish?.(d,{frame,receipt});
+ for(const id of resolutions)updateEntity(d,{id,facts:{phase:'executed',executedAt:d.get('state','minute')},writer:'primitives',eventId:frame.eventId});
  receipt.status=commit?'committed':'preview';receipt.narrate.must=receipt.applied.map(e=>({op:e.op,index:e.index}));
  if(!commit)return {receipt};
  if(policy.engine){

@@ -140,6 +140,10 @@ export function releasePrimitiveCustody(d,engine,holding,reason,eventId){
  if(!['legal_custody','legal_detention'].includes(old?.category)||old.status!=='生效')throw Error('Custody source is not active');
  const escaped=reason==='escaped';
  endCustody(d,engine,id,{...old,status:escaped?'已中断':'已释放',ended:now,...(escaped?{remaining:Math.max(0,(old.expires??now)-now)}:{})},reason,eventId);
+ if(escaped){
+  const row=d.get(...path(old.case));
+  if(row?.category==='legal_case'&&old.reason!=='待审')holdingSet(d,null,path(old.case),{...row,status:'已裁决',remainingSentence:{type:old.reason==='劳役'?'labor':'prison',minutes:Math.max(0,(old.expires??now)-now)}},'law');
+ }
 }
 function endCustody(d,engine,id,next,reason,eventId){
  return changeLegacyHoldings(d,engine,{source:`custody:${id}`,kinds:['guest_of'],reason,eventId},()=>writeHoldingProjection(d,null,path(id),{...next,endReason:reason},'law'));

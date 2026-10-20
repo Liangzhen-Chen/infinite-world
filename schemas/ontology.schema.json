@@ -1208,6 +1208,10 @@
         "params"
       ],
       "properties": {
+        "writable": {
+          "type":"object",
+          "additionalProperties":{"type":"object","additionalProperties":{"type":"object","required":["type","min","max"],"properties":{"type":{"const":"number"},"min":{"type":"integer"},"max":{"type":"integer"}},"additionalProperties":false}}
+        },
         "id": {
           "type": "string",
           "pattern": "^[a-z]+(\\.[a-z]+)?$"

@@ -1,7 +1,7 @@
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
-import {facilityView,facilityRouteStates} from './facility-state.mjs';
+import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {hiddenCheckBonus} from './hidden-passives.mjs';
@@ -281,7 +281,7 @@ export class WorldEngine {
             const runtime=primitiveActionRuntime();
             if(!runtime)throw Error('Action runtime is not installed');
             const translated=runtime.resolve(this,input);
-            if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},options);
+            if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
             const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session)});
@@ -364,6 +364,40 @@ export class WorldEngine {
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveMoveNpc(d,{entity,destination,mode},eventId){
+        const path=['state','npcs',entity],npc=d.get(...path),start=d.get('state','minute');
+        if(!npc||!npc.location||npc.scheduleTravel||npc.cognitionTravel)throw Error('NPC is missing or already travelling');
+        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes(entity)))throw Error('NPC is aboard an active transport');
+        assertMindAwake(d,entity);assertWaterEarthMovement(d,entity);assertLightMovement(d,this,entity);
+        destination=this.resolve(destination);
+        if(destination===npc.location)return {destination,minutes:0,cost:0,edges:[]};
+        const route=this.route(npc.location,destination,mode,start,d.get('randomSeed'));
+        let from=npc.location;
+        assertFireTravel({...d,get:(...p)=>p.length===2&&p[0]==='state'&&p[1]==='location'?npc.location:d.get(...p)},this,route);
+        for(const edgeId of route.edges){
+            const edge=this.world.routes.find(r=>r.id===edgeId);
+            const to=edge.from===from?edge.to:edge.from;
+            assertMindSpacePath(d,this,from,[0,0],[0,0],{destination:to,eventId,signal:true});
+            assertLocationAccess(d,this,to,{actor:entity,arrivalMinute:start+route.minutes});
+            from=to;
+        }
+        assertNpcObligationAction(d,this,[entity],{minutes:route.minutes,location:destination,kind:'move'});
+        assertNpcAutonomyAction(d.get('state'),[entity],{minutes:route.minutes});
+        if(npc.coins<route.cost)throw Error('NPC cannot afford this route');
+        facilityRuntime().recordFurnaceDeparture?.(d,this,entity,npc.location,start);
+        transfer(d,{from:accountKey(entity,LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId});
+        d.set([...path,'coins'],npc.coins-route.cost);
+        d.set([...path,'scheduleTravel'],{from:npc.location,to:destination,depart:start,arrive:start+route.minutes,edges:route.edges});
+        d.set([...path,'location'],null);
+        const previous=this.npcScheduleReservations;
+        this.npcScheduleReservations=new Set([...previous??[],entity]);
+        try{this.advance(d,route.minutes,eventId);}finally{this.npcScheduleReservations=previous;}
+        d.remove([...path,'scheduleTravel']);
+        if(isPhysicallyDead(this,d,entity))return {entity,destination:d.get(...path,'location'),...route,interrupted:true};
+        d.set([...path,'location'],destination);
+        if(d.get('state','records',`local_actor_position:${entity}`))holdingRemove(d,null,['state','records',`local_actor_position:${entity}`],'engine');
+        return {entity,destination,...route};
+    }
     primitiveTargetFacts(d,actor,target){
         if(actor==='player')return this.magicTargetFacts(d,target);
         const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
@@ -393,7 +427,7 @@ export class WorldEngine {
         const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
         const session=this.scoped(document),result=runtime.execute(session,withBooks(this,document).document,input,{createDraft:doc=>new Draft(doc,session),preview:true});
         if(!result.legacy)return result;
-        const reduced=await this.reduce(clone(document),{...input,tool:result.legacy.tool,args:result.legacy.args});
+        const reduced=await this.reduce(clone(document),input);
         return {receipt:{eventId:input.eventId,status:'preview',routed:result.legacy.action.id,applied:[],legacy:reduced.result}};
     }
     scoped(document){
