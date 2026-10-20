@@ -46,9 +46,13 @@ const eventFields=['id','verb','at','source','actor','subject','service','to','r
 const verbs=new Set(['appointment_agreed','quoted','opening_balance','paid','permission_granted','consented','crafted','obligation_opened','observed','theft','purchase_receipt','case_registered','judged','evidence_found','qualified','accepted_cargo','delivered','arrest_order','hostile_encounter','ignited','summoned','rite_scheduled','ownership_transferred_and_delivered','trade_completed','refused','wanted_issued']);
 function loadHistory(ctx,setup,{selectors=false}={}){
  const ids=new Set();
+ const physicalIds=new Set(['itemInstances','objects'].flatMap(field=>Array.isArray(setup[field])?setup[field]:[]).map(row=>row?.id).filter(text));
  rows(ctx,setup,'history',(row,item)=>{
-  // Object authority selectors may refer to physical instances loaded at 40.
-  if(object(row.actor)!==selectors)return;
+  // Physical premises acquire native identities at 40. Import their permits
+  // afterwards so the source event and its consumers refer to the same object.
+  // Other history can be a physical premise's own source and must load first.
+  const deferred=object(row.actor)||row.verb==='permission_granted'&&['actor','to','target','owner','observer','debtor','creditor','court','subject','case','location'].some(key=>physicalIds.has(row[key]));
+  if(deferred!==selectors)return;
   requireShape(keys(row,eventFields)&&alias(row.id)&&!ids.has(row.id)&&!Object.hasOwn(ctx.bindings,row.id)&&!state(ctx).records?.[`world_event:${row.id}`]&&verbs.has(row.verb)&&integer(row.at)&&row.at<=state(ctx).minute&&object(row.source)&&keys(row.source,['kind','row'])&&row.source.kind==='corpus_premise'&&text(row.source.row),'invalid history identity, verb, time or corpus premise source');
   ids.add(row.id);
   for(const field of ['balance','amount','quantity','totalCoins','principal','fee','expires','fine','fireIntensity','atDay'])if(Object.hasOwn(row,field))requireShape(integer(row[field]),`invalid history ${field}`);
