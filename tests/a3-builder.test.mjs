@@ -17,9 +17,75 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
 import {withLedger,accountKey,auditLedger} from '../server-plugin/ledger.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
-import {modelActionCatalog} from '../extension/tools.mjs';
+import {modelActionCatalog,builderToolCall} from '../extension/tools.mjs';
+import {actionModes,modelToolAllowed} from '../extension/turn.mjs';
+import {normalizeSettings} from '../extension/ui-settings.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+
+test('开放提案是动态目录职责，四步输入不需原语 JSON；只使用当前可及实体和自己的手段',()=>{
+ const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'builder-open-catalog');
+ const menu=worldActions(engine.scoped(document),document,{query:'open:proposal'}),action=menu.actions.find(a=>a.id==='open:proposal');
+ assert.ok(action);assert.equal(action.inputTool,'world_propose');
+ assert.deepEqual(action.slots.map(s=>[s.name,builderStep(s)]),[['intent',3],['participants',1],['means',2],['effects',3],['context',3]]);
+ const target=action.slots.find(s=>s.name==='participants').inputSchema.properties.target;
+ const remote=Object.keys(document.state.npcs).find(id=>document.state.npcs[id].location!==document.state.location);
+ assert.ok(remote);assert.ok(!target.enum.includes(remote));assert.ok(target.enum.includes('player'));
+ const means=action.slots.find(s=>s.name==='means').inputSchema.properties;
+ assert.deepEqual(means.skill.enum,Object.keys(document.state.skills));
+ assert.ok(means.item.enum.every(id=>(document.state.inventory[id]?.quantity??document.state.inventory[id])>0));
+ const effects=action.slots.find(s=>s.name==='effects').inputSchema;
+ assert.equal(effects.maxItems,63);assert.equal(effects.items.oneOf.find(s=>s.properties.op.const==='emit').properties.target.enum.includes(remote),false);
+ assert.equal(JSON.stringify(action).includes('"outcomes"'),false);
+ const model=modelActionCatalog(menu).actions[0];assert.equal(model.submission.action,'open:proposal');assert.deepEqual(model.slots.find(s=>s.name==='effects').inputSchema,effects);
+ const before=structuredClone(document);document.state.records.action_config={category:'action_config',openActions:'off'};
+ assert.equal(worldActions(engine.scoped(document),document,{query:'open:proposal'}).actions.length,0);
+ assert.ok(worldActions(engine.scoped(document),document,{query:'open:leave_mark'}).actions.some(a=>a.id==='open:leave_mark'));
+ document.state.records.action_config.openActions='limited';
+ const limited=worldActions(engine.scoped(document),document,{query:'open:proposal'}).actions[0].slots.find(s=>s.name==='effects').inputSchema.items.oneOf;
+ assert.deepEqual(limited.map(s=>s.properties.op.const),['move','emit','vital','learn','create','fact.set']);
+ assert.ok(before.state.records.action_config===undefined);
+});
+
+test('真实 HTTP 开放提案：四步预览不写、确认同编号结算、重放不重复产生事件、stale 不提交',async t=>{
+ const server=await createPlaytestServer({world});t.after(()=>server.close());
+ const created=await server.api('create',{}),campaignId=created.reference.campaignId,initial=await server.api('read',{campaignId});
+ const action=(await server.api('actions',{campaignId,query:'open:proposal'})).actions.find(a=>a.id==='open:proposal');
+ let submits=0;
+ const services={newEventId:()=>`builder-open-${submits}`,
+  preview:async(action,slots,eventId)=>server.api('propose',{campaignId,...builderToolCall(action,slots),eventId}),
+  act:async(action,slots,{eventId,expectedSequence})=>{
+   const now=await server.api('read',{campaignId});if(expectedSequence!==now.reference.sequence)return {ok:false,stale:true};
+   submits++;const saved=await server.api('execute',{campaignId,...builderToolCall(action,slots),eventId,expectedSequence,anchor:null});return {ok:true,result:saved.result};
+  }};
+ const builder=new ActionBuilder(services);builder.intent='对自己说今天的行程';builder.choose(action);
+ builder.step=1;builder.setSlot('participants',{target:'player'});builder.step=2;builder.setSlot('means',{manner:'careful'});
+ builder.step=3;builder.setSlot('effects',[{op:'emit',verb:'tell',target:'player',visibility:'private',payload:{text:'今天先观察周围'}}]);
+ const quote=await builder.preview();assert.ok(quote);assert.equal(quote.result.receipt.routing.status,'open');
+ assert.deepEqual((await server.api('read',{campaignId})).document,initial.document);
+ assert.equal((await builder.confirm()).ok,true);const saved=await server.api('read',{campaignId});
+ // 06 §6.6: native source/nearest-action cost is authoritative, not a UI constant.
+ assert.ok(quote.result.receipt.cost.time>0);assert.equal(saved.document.state.minute,initial.document.state.minute+quote.result.receipt.cost.time);
+ assert.equal(builder.result.result.receipt.status,'committed');assert.deepEqual(builder.result.result.receipt.applied.map(e=>e.op),['emit']);
+ const event=Object.values(saved.document.state.records).find(r=>r.category==='world_event'&&r.verb==='tell'&&r.payload?.text==='今天先观察周围');assert.ok(event);
+ await server.api('execute',{campaignId,...builderToolCall(quote.args.action,quote.args.slots),eventId:quote.eventId,expectedSequence:saved.reference.sequence,anchor:null});
+ assert.deepEqual((await server.api('read',{campaignId})).document,saved.document);assert.equal(await builder.confirm(),null);
+ builder.setSlot('intent','再对自己说今天的行程');await builder.preview();assert.ok(builder.quote);
+ await server.api('execute',{campaignId,tool:'world_act',args:{action:'core:time',slots:{minutes:1}},eventId:'builder-open-external',expectedSequence:saved.reference.sequence,anchor:null});
+ const changed=await server.api('read',{campaignId});assert.equal((await builder.confirm()).stale,true);assert.deepEqual((await server.api('read',{campaignId})).document,changed.document);
+});
+
+test('模式归一化和设置持久化字段：关闭/目录匹配不暴露旧写工具，纯本地构造始终可用',()=>{
+ assert.deepEqual(actionModes(),{intent:'propose',narration:'sync'});
+ for(const intent of ['off','match','propose'])for(const narration of ['off','async','sync']){
+  const settings=normalizeSettings({intent,narration});assert.deepEqual(actionModes(settings),{intent,narration});
+  for(const tool of ['world_move','world_trade','world_time'])assert.equal(modelToolAllowed(tool,settings),intent==='propose');
+  assert.equal(modelToolAllowed('world_actions',settings),true);assert.equal(modelToolAllowed('world_act',settings),intent!=='off');
+  assert.deepEqual(builderToolCall('open:proposal',{intent:'画画',effects:[]}),{tool:'world_propose',args:{intent:'画画',effects:[]}});
+ }
+ assert.deepEqual(actionModes({intent:'invalid',narration:'invalid'}),actionModes());
+ const slots={minutes:1},call=builderToolCall('core:time',slots);call.args.slots.minutes=5;assert.equal(slots.minutes,1);
+});
 function fixture(){
  const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'a3-builder'),sequence=0,calls=[];
  const services={newEventId:()=> 'builder-buy',
@@ -203,7 +269,9 @@ test('A7 实际权限消费：受限出路携带原生拒绝原因，等待保�
 test('未知意图只在目录实际返回 leave_mark 时提供留痕选择，不伪造注册或完成',async()=>{
  const calls=[],fallback={id:'open:leave_mark',label:'留下记号',slots:[{name:'intent',kind:'text',required:true}]};
  const api=async(endpoint,args)=>{calls.push({endpoint,args});return {actions:args.query==='open:leave_mark'?[fallback]:[]};};
- const actions=await findBuilderActions(api,{query:'在河岸摆一幅树枝画',target:'bank'});assert.deepEqual(actions,[fallback]);assert.deepEqual(calls.map(c=>c.args.query),['在河岸摆一幅树枝画','open:leave_mark']);
+ // 06 §6.9.1/6.9.5: search also discovers the dynamic proposal duty;
+ // neither creative path is fabricated when absent from this campaign.
+ const actions=await findBuilderActions(api,{query:'在河岸摆一幅树枝画',target:'bank'});assert.deepEqual(actions,[fallback]);assert.deepEqual(calls.map(c=>c.args.query),['在河岸摆一幅树枝画','open:proposal','open:leave_mark']);
  let writes=0;const builder=new ActionBuilder({preview:async()=>{writes++;},act:async()=>{writes++;}});builder.intent='在河岸摆一幅树枝画';builder.choose(actions[0]);assert.equal(builder.slots.intent,builder.intent);assert.equal(builder.quote,null);assert.equal(writes,0);
  assert.deepEqual(await findBuilderActions(async()=>({actions:[]}),{query:'未知意图'}),[]);
 });

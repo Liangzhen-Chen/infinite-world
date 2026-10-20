@@ -1,7 +1,7 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, lookupToolResult, actionCompletion } from './turn.mjs';
+import { parseTurn, toolResultWithClock, lookupToolResult, actionCompletion, modelToolAllowed, actionModes } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
-import { toolDefinitions, modelActionCatalog } from './tools.mjs';
+import { toolDefinitions, modelActionCatalog, builderToolCall } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
 import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
@@ -12,6 +12,7 @@ import {ambientAudio,registerUI as registerAudioUI} from './ambient-audio.mjs';
 import {updateBackground,clearBackground} from './background-view.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
+const getActionModes=()=>actionModes(getSettings());
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
 let view=null,loadedChat=null,blocked=null,chain=Promise.resolve(),mode='normal',turnStart=null;
 let indexedChat=null,indexedMessages=[];
@@ -20,6 +21,7 @@ let reviewTurn=null;
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
 let startTransition=false;
+let actionSuggestion=null;
 registerAudioUI({registerSettingsSection});
 ambientAudio.onStatus=()=>updateAudioControls(getSettings());
 ambientAudio.applySettings(getSettings());
@@ -52,7 +54,7 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,preview:previewUIAction,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
+    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,preview:previewUIAction,actionSuggestion,clearActionSuggestion:()=>{actionSuggestion=null;},api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
@@ -68,6 +70,7 @@ const originalFetch=window.fetch.bind(window);
 window.fetch=async function(input,options){
     const url=new URL(typeof input==='string'?input:input.url,location.origin);
     if(active()&&blocked&&url.pathname==='/api/backends/chat-completions/generate')throw new Error(`已阻止生成：${blocked}`);
+    if(active()&&view&&getActionModes().intent==='off'&&getActionModes().narration==='off'&&url.pathname==='/api/backends/chat-completions/generate')throw new Error('已关闭输入理解和叙述，请使用可做之事面板');
     return originalFetch(input,options);
 };
 async function load(){
@@ -75,6 +78,7 @@ async function load(){
     if(view&&loadedChat===ctx().chatId)return;
     ambientAudio.stop();
     reviewTurn=null;
+    actionSuggestion=null;
     document.querySelector('#fields-dialog')?.remove();
     const chatId=ctx().chatId,reference=ctx().chatMetadata[KEY];
     if(reference?.format!==2){view=null;loadedChat=chatId;labels={};feedback=[];blocked=null;turnStart=null;return;}
@@ -164,10 +168,12 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
             const startMinute=turnStart??view.document.state.minute;
             const currentUser=[...ctx().chat].reverse().find(message=>message.is_user)?.mes??'';
             if(isOutOfCharacter(currentUser)&&tool!=='world_turn')throw new Error('场外提问不推进时间或写入世界状态');
+            if(tool!=='world_turn'&&(getActionModes().intent!=='propose'||!modelToolAllowed(tool,getSettings())))throw new Error('当前模式只允许目录建议或本地动作确认');
             document.querySelector('#fields-error')?.setAttribute('hidden','');
             sent=true;
             const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
             view=await api('read',{campaignId:view.reference.campaignId});
+            if(!actionCompletion(result).pending&&result.narration?.lines?.length)recordFeed(result.narration.lines);
             ambientAudio.noteAction(result.result,view.document.state.player,tool);
             await persist();await refresh();
             const completion=result.result?.receipt?actionCompletion(result):{};
@@ -192,7 +198,7 @@ async function previewUIAction(action,slots={},eventId=`ui_${crypto.randomUUID()
     return queue(async()=>{
         await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
         const campaignId=view.reference.campaignId,current=await api('read',{campaignId});
-        const result=await api('propose',{campaignId,args:{action,slots},eventId});
+        const result=await api('propose',{campaignId,...builderToolCall(action,slots),eventId});
         return {...result,startMinute:current.document.state.minute};
     });
 }
@@ -207,10 +213,11 @@ async function act(action,slots={},confirmation={}){
                 if(current.reference.sequence!==confirmation.expectedSequence)return {ok:false,stale:true,error:'此刻情形已变化，请重新预览后再确认',lines:[]};
                 view=current;
             }
-            const resolved=await api('actions',{campaignId,resolve:{action,slots}});
+            const call=builderToolCall(action,slots);
+            const resolved=call.tool==='world_propose'?{tool:call.tool}:await api('actions',{campaignId,resolve:{action,slots}});
             if(resolved.projection){const here=await api('actions',{campaignId});recordFeed(here.scene,'look');await ctx().saveChat();return {ok:true,lines:here.scene};}
             if(resolved.clientRead)return {ok:true,read:readStateSection(view.document.state,resolved.args.section,resolved.args.npc),lines:[]};
-            const result=await api('execute',{campaignId,tool:'world_act',args:{action,slots},eventId:confirmation.eventId??`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
+            const result=await api('execute',{campaignId,...call,eventId:confirmation.eventId??`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
             view=await api('read',{campaignId});
             const completion=actionCompletion(result);
             const lines=completion.pending?['行动仍在等待裁决，尚未完成。']:result.narration?.lines??[];
@@ -222,9 +229,26 @@ async function act(action,slots={},confirmation={}){
 }
 async function modelActions(args){
     const result=await api('actions',{campaignId:view.reference.campaignId,target:args.target,query:args.query,limit:12});
+    if(getActionModes().intent!=='propose')result.actions=result.actions.filter(a=>a.id!=='open:proposal');
     return JSON.stringify(modelActionCatalog(result));
 }
 async function modelAct(args){
+    const intent=getActionModes().intent;
+    if(intent==='off')return {ok:false,error:'自由输入理解已关闭，请使用可做之事面板'};
+    if(intent==='match'){
+        if(args.action==='open:proposal')return {ok:false,error:'目录匹配模式只推荐已登记动作'};
+        const result=await api('actions',{campaignId:view.reference.campaignId,query:args.action,target:args.slots?.target??args.slots?.seller??args.slots?.buyer,limit:1});
+        const action=result.actions.find(a=>a.id===args.action&&!a.readOnly);
+        if(!action)return {ok:false,error:'请从当前动作目录选择'};
+        if(action.blocked)return {ok:false,error:action.blocked};
+        actionSuggestion={action,slots:structuredClone(args.slots??{})};render();
+        return {ok:true,status:'suggested',instruction:'只是动作建议，尚未执行；请玩家在可做之事面板预览并确认。'};
+    }
+    if(args.action==='open:proposal'){
+        const offered=await api('actions',{campaignId:view.reference.campaignId,query:'open:proposal',limit:1});
+        if(!offered.actions.some(a=>a.id==='open:proposal'))return {ok:false,error:'此战役已关闭开放提案，请使用注册动作'};
+        const call=builderToolCall(args.action,args.slots??{});return execute(call.tool,call.args);
+    }
     const resolved=await api('actions',{campaignId:view.reference.campaignId,resolve:{action:args.action,slots:args.slots??{}}});
     if(resolved.projection)return JSON.stringify({ok:true,here:(await api('actions',{campaignId:view.reference.campaignId})).scene});
     if(resolved.clientRead){
@@ -237,9 +261,10 @@ async function modelAct(args){
 for(const definition of toolDefinitions()){
  const {name,description,parameters}=definition.function;
  ctx().registerFunctionTool({name,displayName:name,description,parameters,formatMessage:()=>'',
-  shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked,
+  shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked&&modelToolAllowed(name,getSettings()),
   action:async args=>{
    await load();if(!view)throw new Error('请先在副本上启用新版');
+   if(!modelToolAllowed(name,getSettings()))return {ok:false,error:'当前输入理解模式不允许执行这个工具'};
    if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section,args.npc));
    if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
@@ -326,13 +351,23 @@ async function afterReply(index){
     if(!message||message.is_user||message.is_system||message.extra?.tool_invocations||turnStart===null)return;
     if(message.extra?.fields_turn)return;
     if(reviewing.has(message))return reviewing.get(message);
+    if(getActionModes().narration==='off'){
+        message.extra??={};message.extra.fields_no_narration=true;
+        message.extra.fields_original_narration=message.mes;message.mes='本轮实际结果见事件流。';
+        if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
+        const prose=document.querySelector(`.mes[mesid="${index}"] .mes_text`);if(prose)prose.hidden=true;
+        // The model's prose cannot authorize extra time when narration is off.
+        message.extra.fields_turn={valid:true,narration:'off',extraMinutes:0};
+        if(reviewTurn)reviewTurn.completed=true;
+        await ctx().saveChat();render();return;
+    }
     reviewsPending++;
     const pending=(async()=>{
         const user=[...ctx().chat].reverse().find(message=>message.is_user),session=reviewTurn,chatId=ctx().chatId;
         let reviewedText=message.mes;const editVersion=reviewEdits.get(message)??0;
         const replyUnchanged=()=>ctx().chat[index]===message&&message.mes===reviewedText&&!message.extra?.fields_invalidated&&(reviewEdits.get(message)??0)===editVersion;
-        const prose=document.querySelector(`.mes[mesid="${index}"] .mes_text`);if(prose)prose.hidden=true;
         message.extra??={};
+        message.extra.fields_narration_pending=getActionModes().narration;render();
         try{
             if(!session||session.chatId!==chatId||session.anchor!==anchor())throw new Error('本轮审查快照缺失，尾注未提交');
             const review=await api('review/reply',{campaignId:view.reference.campaignId,token:session.token,draft:message.mes,query:user?.mes??'',expectedSequence:view.reference.sequence});
@@ -350,6 +385,10 @@ async function afterReply(index){
             if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
             ctx().updateMessageBlock?.(index,message);
             if(!review.canCommit){actionError(review.feedback);await ctx().saveChat();render();return;}
+            if(getActionModes().intent!=='propose'||getActionModes().narration==='async'){
+                session.completed=true;message.extra.fields_turn={valid:true,extraMinutes:0};
+                await ctx().saveChat();render();return;
+            }
             const state=view.document.state;
             const parsed=parseTurn(message.mes,{location:state.location,startMinute:turnStart,minute:state.minute,
                 present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location&&!npc.scheduleTravel&&!npc.cognitionTravel).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
@@ -359,8 +398,13 @@ async function afterReply(index){
             message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
             if(review.feedback)actionError(review.feedback);
             await ctx().saveChat();render();
-        }catch(error){if(!replyUnchanged())return;message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
-        finally{if(prose)prose.hidden=false;}
+        }catch(error){if(!replyUnchanged())return;message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,original:message.mes,feedback:error.message};
+            if(getActionModes().narration==='async'){
+                message.mes='叙述暂未完成；是否完成及实际结果见事件流。';
+                if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
+            }
+            if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
+        finally{delete message.extra.fields_narration_pending;if(chatId===ctx().chatId)render();}
     })().finally(()=>{reviewsPending=Math.max(0,reviewsPending-1);});reviewing.set(message,pending);return pending;
 }
 const context=ctx();

@@ -130,14 +130,21 @@ export const catalogTools=new Set(['world_actions','world_act']);
 // reads a grouped operation's own parameters from here instead of the group union.
 export function memberDefinitions(){return structuredClone(definitions);}
 
+// The proposal duty is discovered through world_actions and submitted through
+// the existing execution transport. It adds no static function definition.
+export function builderToolCall(action,slots={}){
+ return action==='open:proposal'?{tool:'world_propose',args:structuredClone(slots)}:{tool:'world_act',args:{action,slots:structuredClone(slots)}};
+}
+
 // Broad searches stay compact; a single action exposes its complete choices.
 // This is dynamic catalogue data, outside the static tool/prompt budget.
 export function modelActionCatalog(result){
  const choices=slot=>result.actions.length===1?slot.options:slot.options?.slice(0,8);
- return {here:result.scene,actions:result.actions.map(action=>({id:action.id,label:action.label,
+ return {here:result.scene,...(result.configuration?{configuration:result.configuration}:{}),actions:result.actions.map(action=>({id:action.id,label:action.label,
+  ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:'intent, participants, effects, means, context'}}:{}),
   ...(action.hint?{hint:action.hint}:{}),...(action.blocked?{blocked:action.blocked}:{}),...(action.permission?{permission:action.permission}:{}),...(Object.keys(action.fill??{}).length?{fill:action.fill}:{}),
   slots:action.slots.map(slot=>({name:slot.name,kind:slot.kind,
-   ...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),...(slot.default!==undefined?{default:slot.default}:{}),
+   ...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),...(slot.builderStep?{builderStep:slot.builderStep}:{}),...(slot.default!==undefined?{default:slot.default}:{}),
    ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{}),...(slot.inputSchema?{inputSchema:slot.inputSchema}:{}),
    ...(slot.options?{options:choices(slot).map(option=>option.value),restrictedOptions:choices(slot).filter(option=>option.permission?.allowed===false).map(option=>({value:option.value,reason:option.permission.reason}))}:{})
   }))
