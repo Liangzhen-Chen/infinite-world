@@ -38,7 +38,7 @@ test('A3 loader r8: default uses the checked-in v2 corpus and explicit missing p
  const loaded=await loadCorpus();
  assert.equal(loaded.corpusPath,v2CorpusPath);
  assert.equal(v2CorpusPath,fileURLToPath(new URL('./fixtures/a3-intents-v2.json',import.meta.url)));
- assert.deepEqual(loaded.rows,v2Rows);
+ assert.deepEqual(loaded.rows,JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8')));
  const legacy=await loadCorpus({corpusPath:oldCorpusPath});
  assert.equal(legacy.corpusPath,oldCorpusPath);assert.ok(legacy.rows.length);
  await assert.rejects(loadCorpus({corpusPath:new URL('./fixtures/a3-r8-does-not-exist.json',import.meta.url)}),{code:'ENOENT'});
