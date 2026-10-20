@@ -3,6 +3,8 @@ import {MemoryIndex,bm25TermScore} from './retrieval.mjs';
 import {isPhysicallyDead,located} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
 import {parseAccount} from './ledger.mjs';
+import {PrimitiveRejected} from './primitive-policy.mjs';
+import {environmentFeatures} from './environment.mjs';
 
 const tokenizer=new MemoryIndex();
 const multiset=values=>{const out=new Map();for(const value of values)out.set(value,(out.get(value)??0)+1);return out;};
@@ -73,6 +75,7 @@ export function actorKnowledge(engine,document,actor='player'){
 export function createRoutingContext(engine,document,{actor='player'}={}){
  const state=document.state,d=actionReader(document),location=actor==='player'?state.location:state.npcs?.[actor]?.location;
  const pool=new Map(),add=(id,kind,row={})=>{
+  if(id!==actor&&(row.hidden||row.private))return;
   if(id)pool.set(id,{id,kind,name:row.name??engine.byId.get(id)?.name??id,aliases:row.aliases??engine.byId.get(id)?.aliases??[]});
  };
  add(actor,'person',actor==='player'?state.player:state.npcs?.[actor]);
@@ -95,10 +98,23 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  for(const [field,kind] of [['skills','skill'],['spells','spell'],['recipes','recipe']])for(const [id,value] of Object.entries(knowledge[field]??{}))if(value||field==='skills'&&value===0)add(id,kind);
  const owner=id=>typeof id==='string'&&id.includes('|')?parseAccount(id).owner:id;
  const kindOf=id=>pool.get(owner(id))?.kind??null;
+ const features=environmentFeatures(engine);
+ const inaccessible=id=>{
+  const feature=features.find(row=>row.id===id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??feature??engine.byId.get(id);
+  if(!row&&!entity&&id!=='player')return 'unknown_entity';
+  const at=id==='player'?state.location:located(d,id,x=>state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??(x===id?row?.location:null)??null);
+  if(entity?.goneAt!==undefined||at&&at!==location||row?.scheduleTravel||row?.cognitionTravel||!at&&/^npc_/.test(id))return 'not_present';
+  return 'not_perceivable';
+ };
  const resolve=(value,kind=null)=>{
   const raw=owner(value),normalize=x=>String(x).trim().normalize('NFKC').toLowerCase(),q=normalize(raw);
-  const choices=[...pool.values()].filter(r=>(!kind||r.kind===kind||['npc','agent'].includes(kind)&&r.kind==='person')&&[r.id,r.name,...r.aliases].some(n=>normalize(n)===q)).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
-  return {value:choices.length===1?(typeof value==='string'&&value.includes('|')?value.replace(raw,choices[0].id):choices[0].id):null,candidates:choices};
+  const id=['self','me','myself','i','我','自己','本人','自身','$actor'].includes(q)?actor:raw;
+  const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||document.holdings?.entities?.[id]||features.some(row=>row.id===id);
+  const matchesKind=r=>!kind||r.kind===kind||['npc','agent'].includes(kind)&&r.kind==='person';
+  // Exact ids (including inaccessible ones) never fall through to name matching.
+  const choices=(known?(exact&&matchesKind(exact)?[exact]:[]):[...pool.values()].filter(r=>matchesKind(r)&&[r.name,...r.aliases].some(n=>normalize(n)===q))).map(({aliases,...r})=>r).sort((a,b)=>a.id.localeCompare(b.id));
+  if(choices.length===1)return {value:typeof value==='string'&&value.includes('|')?value.replace(raw,choices[0].id):choices[0].id,candidates:choices};
+  return {value:null,candidates:choices,...(!choices.length?{reason:known?inaccessible(id):'unknown_entity'}:{})};
  };
  const slotsFor=(action,proposal)=>{
   const slots={},target=proposal.participants?.target;
@@ -141,12 +157,16 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
 }
 
 export function resolveProposalEntities(proposal,context){
- const resolved=structuredClone(proposal),ambiguities=[];
+ const resolved=structuredClone(proposal),ambiguities=[],rejections=[];
  const entityFields=new Set(['target','entity','subject','to','from','holder','newHolder','debtor','creditor']);
  const resolve=(value,path)=>{
   if(typeof value!=='string')return value;
   const result=context.resolve(value);
-  if(result.value===null){ambiguities.push({path,value,candidates:result.candidates});return value;}
+  if(result.value===null){
+   if(result.candidates.length>1)ambiguities.push({path,value,candidates:result.candidates});
+   else rejections.push({path,value,reason:result.reason??'unknown_entity'});
+   return value;
+  }
   return result.value;
  };
  for(const [role,value] of Object.entries(resolved.participants??{}))if(role!=='actor')resolved.participants[role]=resolve(value,`participants.${role}`);
@@ -155,6 +175,11 @@ export function resolveProposalEntities(proposal,context){
   // canonical sink accounts remain the primitive validator's responsibility.
   if(typeof value==='string'&&/^(sink|src):/.test(value))continue;
   effect[field]=resolve(value,`effects.${i}.${field}`);
+ }
+ // A failed reference takes precedence over clarification of another reference.
+ if(rejections.length){
+  const error=new PrimitiveRejected('E-OPEN-ENTITY',`${rejections[0].reason}: ${rejections[0].path}`);
+  Object.assign(error,{reason:rejections[0].reason,rejections});throw error;
  }
  return {proposal:resolved,ambiguities};
 }
