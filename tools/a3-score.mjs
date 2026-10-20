@@ -33,7 +33,7 @@ const routeName=route=>({拒绝:'reject',rejected:'reject',refuse:'reject',澄�
 // {target, status, power, duration} for the native magic status writer.
 // facts: [{path:['state', ...existingFieldPath], value: ...}].
 export function applyIntentSetup(engine,initial,setup){
- const document=structuredClone(initial),setupUnmet=[],s=document.state;
+ const document=structuredClone(initial),setupUnmet=[],notes=[],s=document.state;
  if(setup===undefined)return {document,setupUnmet};
  const unmet=(item,reason)=>setupUnmet.push({item,reason});
  const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -100,6 +100,8 @@ export function applyIntentSetup(engine,initial,setup){
  if(Object.hasOwn(setup,'facts')){
   if(!Array.isArray(setup.facts))unmet('facts','expected [{path:["state",...],value}]');
   else for(const [index,fact] of setup.facts.entries()){
+   // Free-text facts are the corpus author's narrative preconditions (spec: “其它前提，文字说明”); keep them as notes, never as unmet structure.
+   if(typeof fact==='string'){notes.push(`facts[${index}]: ${fact}`);continue;}
    const p=fact?.path;
    if(!Array.isArray(p)||p.length<2||p[0]!=='state'||p.some(k=>typeof k!=='string'||['__proto__','prototype','constructor'].includes(k))||!Object.hasOwn(fact,'value')){unmet(`facts[${index}]`,'invalid state field path/value');continue;}
    const parent=p.slice(0,-1).reduce((v,k)=>v?.[k],document),key=p.at(-1);
@@ -113,7 +115,7 @@ export function applyIntentSetup(engine,initial,setup){
  }
  try{document.ledger=openLedger(engine,document);for(const reason of auditLedger(document.ledger))unmet('ledger',reason);}
  catch(error){unmet('ledger',error.message);}
- return {document,setupUnmet};
+ return {document,setupUnmet,notes};
 }
 
 // routing.signature describes requested effects. Only committed applied effects
