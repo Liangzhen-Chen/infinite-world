@@ -1,5 +1,7 @@
-import {aliveHoldings,holdingKind,locationOf,located,declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {settlementGovernment} from './entity-view.mjs';
+import {aliveHoldings,holdingKind,locationOf,located,declareHoldingWriter,holdingSet,isEffective} from './holdings.mjs';
+import {settlementGovernment,groupView} from './entity-view.mjs';
+import {temples} from './faith-catalog.mjs';
+import {initialNpcState} from './npc-state.mjs';
 import {worldEvent} from './world-events.mjs';
 import {consent} from './action-consent.mjs';
 import {effective} from './holding-kinds.mjs';
@@ -11,38 +13,63 @@ import {digest} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
 
 declareHoldingWriter('action-authority',{kinds:[]});
+// Catalog NPCs outside the active simulation already exist. Read their native
+// initial body without moving/materializing them or creating an office holder.
+function controllerCapacity(context,id){
+ const s=context.document.state,base=context.engine?.world.npcs.find(n=>n.id===id);
+ if(!isEffective(context.engine,context.document,id))return {level:'none'};
+ if(id==='player'||s.npcs?.[id]||s.creatures?.[id]||!base)return capacity(context,id,'consent');
+ return capacity({...context,document:{...context.document,state:{...s,npcs:{...s.npcs,[id]:initialNpcState(base)}}}},id,'consent');
+}
 // Native title/operation holdings override catalog ownership. Custody and
 // merely being present never confer issuing authority.
 export function currentControllers(context,subject,{ownerOnly=false}={}){
  const d=actionReader(context.document),kinds=ownerOnly?['owns']:['operates','owns'];
  const held=aliveHoldings(d,{subject}).filter(h=>kinds.includes(h.kind)&&effective(d,h.id));
  const operators=held.filter(h=>h.kind==='operates');
- if(held.length)return [...new Set((!ownerOnly&&operators.length?operators:held).map(h=>h.holder))];
- if(Object.values(context.document.holdings?.rows??{}).some(h=>h.kind==='owns'&&h.subject===subject))return [];
  const s=context.document.state,e=context.engine;
+ const representatives=ids=>[...new Set(ids.flatMap(id=>{
+  if(id==='player'||s.npcs?.[id]||s.creatures?.[id]||e?.world.npcs.some(n=>n.id===id))return [id];
+  // A collective retains its title; its current legal representative signs.
+  // Vacant offices and organizations without a leader confer no signature.
+  const head=e&&settlementGovernment(e,s,id).head.value,leader=e&&groupView(e,s,id)?.leader.value;
+  return [...new Set([head,leader].filter(Boolean))];
+ }))];
  const feature=e?.world.locations.flatMap(p=>(p.features??[]).map(f=>({...f,location:p.id}))).find(f=>f.id===subject);
  const station=e?.world.locations.flatMap(p=>p.workstations??[]).find(f=>f.id===subject);
- const catalog=e?.byId.get(subject)??feature??station;
+ const catalog={...e?.byId.get(subject)??feature??station,...s.created?.[subject],...context.document.holdings?.entities?.[subject]?.facts};
  const building=s.buildings?.[subject];
- const owner=building&&Object.hasOwn(building,'owner')?building.owner:catalog?.owner;
- return typeof owner==='string'?[owner]:[];
+ const override=building&&Object.hasOwn(building,'owner');
+ if(operators.length)return representatives(operators.map(h=>h.holder));
+ if(held.length&&(ownerOnly||held.some(h=>h.holder!==catalog?.owner)))return representatives(held.map(h=>h.holder));
+ // A terminated native title/management grant cannot revive catalog rights.
+ if(!held.length&&Object.values(context.document.holdings?.rows??{}).some(h=>kinds.includes(h.kind)&&h.subject===subject))return [];
+ if(override)return typeof building.owner==='string'?representatives([building.owner]):[];
+ if(!ownerOnly){
+  const manager=catalog?.site?.manager??catalog?.lodging?.host;
+  if(manager)return representatives([manager]);
+  // Native temple organizations already define the institution's principal.
+  const organizations=e?temples(e).filter(t=>t.seat===subject):[];
+  if(organizations.length)return representatives(organizations.map(t=>groupView(e,s,t.id)?.leader.value).filter(Boolean));
+ }
+ return held.length?representatives(held.map(h=>h.holder)):typeof catalog?.owner==='string'?representatives([catalog.owner]):[];
 }
 export function resolveAuthoritySelector(context,value){
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['role','of'].includes(k))||typeof value.of!=='string')reject('E-AUTHORITY-SELECTOR','Invalid authority selector');
  if(value.role==='existing_legal_town_head'){
   const id=settlementGovernment(context.engine,context.document.state,value.of).head.value;
-  if(id&&actionEntity(context,id))return id;
+  if(id&&actionEntity(context,id)&&controllerCapacity(context,id).level==='full')return id;
   reject('E-AUTHORITY-SELECTOR','No existing legal town head');
  }
  if(!['authorized_owner','authorized_manager'].includes(value.role))reject('E-AUTHORITY-SELECTOR','Unknown authority selector');
  const ids=currentControllers(context,value.of,{ownerOnly:value.role==='authorized_owner'});
- if(ids.length!==1||ids[0]!=='player'&&!context.document.state.npcs?.[ids[0]]&&!context.document.state.creatures?.[ids[0]]||capacity(context,ids[0],'consent').level!=='full')reject('E-AUTHORITY-SELECTOR','Authority selector needs one existing capable owner/manager agent');
+ if(ids.length!==1||controllerCapacity(context,ids[0]).level!=='full')reject('E-AUTHORITY-SELECTOR',`Authority selector needs one existing capable owner/manager agent: ${value.of}`);
  return ids[0];
 }
 export function grantLimitedPermit(d,context,grant){
  const {actor,id,holder,subject,scope,fromMinute,toMinute,sourceEvent,quantityLiters,includedInLessonFee}=grant,live={...context,document:d.document};
  if(Object.keys(grant).some(k=>!['actor','id','holder','subject','scope','fromMinute','toMinute','sourceEvent','quantityLiters','includedInLessonFee'].includes(k))||![id,holder,subject,scope].every(v=>typeof v==='string'&&v.length>0)||!actionEntity(live,holder)||!Number.isSafeInteger(fromMinute)||fromMinute<0||!Number.isSafeInteger(toMinute)||toMinute<=fromMinute||quantityLiters!==undefined&&(!Number.isSafeInteger(quantityLiters*1000)||quantityLiters<=0)||includedInLessonFee!==undefined&&typeof includedInLessonFee!=='boolean')reject('E-PERMIT','Invalid limited permit');
- if(!currentControllers(live,subject).includes(actor)||capacity(live,actor,'consent').level!=='full')reject('E-PERMIT-AUTHORITY','Only the current owner/manager may grant this permit');
+ if(!currentControllers(live,subject).includes(actor)||controllerCapacity(live,actor).level!=='full')reject('E-PERMIT-AUTHORITY','Only the current owner/manager may grant this permit');
  const event=worldEvent(d.get('state'),sourceEvent);
  if(!event||event.verb!=='permission_granted'||event.actor!==actor||event.subject!==subject||event.to!==holder||event.scope!==scope||event.minute!==fromMinute)reject('E-PERMIT-SOURCE','Permit does not match its source event');
  const key=`limited_permit:${id}`;
@@ -54,7 +81,7 @@ export function limitedPermit(context,holder,subject,scope,{until=context.docume
  const now=context.document.state.minute;
  const millilitres=quantityLiters*1000;
  if(!Number.isSafeInteger(until)||until<now||!Number.isSafeInteger(millilitres)||millilitres<0)return null;
- return Object.values(context.document.state.records??{}).find(r=>r.category==='limited_permit'&&r.holder===holder&&r.subject===subject&&r.scope===scope&&!r.revoked&&r.fromMinute<=now&&until<r.toMinute&&currentControllers(context,subject).includes(r.issuer)&&(r.quantityLiters===undefined||millilitres>0&&r.usedMl+millilitres<=r.quantityLiters*1000))??null;
+ return Object.values(context.document.state.records??{}).find(r=>r.category==='limited_permit'&&r.holder===holder&&r.subject===subject&&r.scope===scope&&!r.revoked&&r.fromMinute<=now&&until<r.toMinute&&currentControllers(context,subject).includes(r.issuer)&&controllerCapacity(context,r.issuer).level==='full'&&(r.quantityLiters===undefined||millilitres>0&&r.usedMl+millilitres<=r.quantityLiters*1000))??null;
 }
 export function consumeLimitedPermit(d,context,id,liters){
  const row=d.get('state','records',`limited_permit:${id}`),live={...context,document:d.document};
@@ -63,7 +90,7 @@ export function consumeLimitedPermit(d,context,id,liters){
 }
 export function revokeLimitedPermit(d,context,{actor,id}){
  const key=`limited_permit:${id}`,row=d.get('state','records',key),live={...context,document:d.document};
- if(!row||row.category!=='limited_permit'||actor!==row.issuer&&!currentControllers(live,row.subject).includes(actor)||capacity(live,actor,'consent').level!=='full')reject('E-PERMIT-AUTHORITY','No authority to revoke this permit');
+ if(!row||row.category!=='limited_permit'||actor!==row.issuer&&!currentControllers(live,row.subject).includes(actor)||controllerCapacity(live,actor).level!=='full')reject('E-PERMIT-AUTHORITY','No authority to revoke this permit');
  if(row.revoked)return row;
  const revoked={...row,revoked:true,revokedAt:d.get('state','minute'),revokedBy:actor};
  holdingSet(d,context.engine,['state','records',key],revoked,'action-authority');return revoked;
