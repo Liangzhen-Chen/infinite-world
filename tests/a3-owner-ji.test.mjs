@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {applyIntentSetup,scoreRows} from '../tools/a3-score.mjs';
+import {applyIntentSetup,scoreRows,executeIntent,signatureMatches,validateCheckBranch} from '../tools/a3-score.mjs';
 import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {initializeEncounter,activeEncounters} from '../server-plugin/combat.mjs';
@@ -151,4 +151,63 @@ test('V/W/X: native state and real consumers survive storage reload, export/impo
 test('W/X: unchanged corpus routes, commits, signs and constructs through native consumers',async()=>{
  const result=await scoreRows([row('050'),row('074')],{world});
  for(const r of result.results)assert.deepEqual(r.scores,{route:true,signature:true,outOfBounds:true,supported:true,constructor:true});
+});
+
+test('V: unchanged attack, defense and retreat signatures include real native outcomes and both escape branches',async()=>{
+ const scored=await scoreRows(['059','060','061'].map(row),{world});
+ for(const r of scored.results)assert.deepEqual(r.scores,{route:true,signature:true,outOfBounds:true,supported:true,constructor:true},JSON.stringify({id:r.id,effects:r.actual.signatureEffects,branches:r.checkBranches}));
+ const attack=scored.results[0];
+ assert.ok(attack.actual.signatureEffects.some(e=>e.op==='vital'&&e.target==='npc_hw_wushuo'&&e.weapon==='item_staff'));
+ const defend=scored.results[1].actual.signatureEffects.find(e=>e.op==='status'&&e.status==='combat_defense');
+ assert.equal(defend.consumed,true);assert.equal(defend.result.after.defense.incomingMultiplier,0.5);
+ const retreat=scored.results[2];
+ for(const branch of ['success','failure'])assert.equal(retreat.checkBranches[branch].ok,true);
+ assert.ok(retreat.checkBranches.success.actual.signatureEffects.some(e=>e.op==='move'&&e.to==='loc_hw_gate'));
+ assert.equal(retreat.checkBranches.failure.actual.signatureEffects.some(e=>e.op==='move'),false);
+});
+
+test('V: retreat success walks every edge of the known path; failure preserves position and the live encounter',async()=>{
+ const scored=(await scoreRows([row('061')],{world})).results[0];
+ for(const branch of ['success','failure']){
+  const base={...initial,randomSeed:scored.checkBranches[branch].randomSeed};
+  const run=await executeIntent(engine,base,row('061'));
+  assert.equal(run.actual.error,null);const s=run.document.state,r=s.records['combat_encounter:a3v2_061_combat'];
+  assert.equal(r.lastRound.escaped,branch==='success');
+  if(branch==='success'){
+   assert.equal(s.location,'loc_hw_gate');assert.equal(r.active,false);
+   // The authored northwood -> gate route passes through loc_hw. Preserve both
+   // native edges and their travel time; do not invent a direct adjacent edge.
+   const route=engine.route('loc_hw_northwood','loc_hw_gate','walk',600,base.randomSeed);
+   assert.ok(r.lastRound.movement.minutes>0);assert.deepEqual(r.lastRound.movement.edges,route.edges);
+   assert.equal((s.minute-600)*60+(s.subMinuteSeconds??0),r.lastRound.movement.minutes*60+engine.rules.combat.exchangeSeconds);
+   assert.equal(r.location,'loc_hw_northwood');
+  }else{
+   assert.equal(s.location,'loc_hw_northwood');assert.equal(r.active,true);assert.equal(r.lastRound.movement,undefined);
+   // The branch validator must catch a forged successful movement on failure.
+   const forged=structuredClone(run);forged.document.state.location='loc_hw_gate';
+   assert.equal(validateCheckBranch(engine,forged,row('061'),'failure').ok,false);
+  }
+ }
+ const document=setup('061'),snapshot=structuredClone(document);
+ await assert.rejects(engine.reduce(document,act('core:combat',{target:'npc_hw_wushuo',intent:'flee',destination:'loc_bs'},'ji-remote-retreat')),/known passable path/);
+ await assert.rejects(engine.reduce(document,act('core:combat',{target:'npc_hw_wushuo',intent:'flee',destination:'invented moon'},'ji-unknown-retreat')),/Unknown/);
+ assert.deepEqual(document,snapshot);
+ const privatePath=structuredClone(document);
+ Object.assign(privatePath.memories['loc_hw_gate::a3-map:known_path'],{private:true,permittedRecipients:['npc_hw_wushuo']});
+ const privateBefore=structuredClone(privatePath);
+ await assert.rejects(engine.reduce(privatePath,act('core:combat',{target:'npc_hw_wushuo',intent:'flee',destination:'loc_hw_gate'},'ji-private-path')),/known passable path/);
+ assert.deepEqual(privatePath,privateBefore);
+});
+
+test('V: native retaliation and wear evidence cannot excuse unrelated or inflated effects',async()=>{
+ const run=await executeIntent(engine,initial,row('059'));
+ assert.equal(signatureMatches(row('059').expected.signature,run.effects,run.receipt,run.requested,world),true);
+ const retaliation=run.effects.find(e=>e.op==='vital'&&e.target==='player');assert.ok(retaliation);
+ const inflated=structuredClone(run.effects);inflated.find(e=>e===retaliation||e.op==='vital'&&e.target==='player').delta--;
+ assert.equal(signatureMatches(row('059').expected.signature,inflated,run.receipt,run.requested,world),false);
+ const extra={...structuredClone(retaliation),target:'npc_hw_ayan'};
+ assert.equal(signatureMatches(row('059').expected.signature,[...run.effects,extra],run.receipt,run.requested,world),false);
+ const wear=run.effects.find(e=>e.op==='fact.set'&&e.field==='durability');assert.ok(wear);
+ const receipt=structuredClone(run.receipt);receipt.legacy.spent.toolWear[0].after--;
+ assert.equal(signatureMatches(row('059').expected.signature,run.effects,receipt,run.requested,world),false);
 });

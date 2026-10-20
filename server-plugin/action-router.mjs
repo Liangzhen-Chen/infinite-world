@@ -277,6 +277,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_combat'){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
     if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
+    if(slot.name==='destination')value??=effects.find(e=>e.op==='move'&&e.mode==='disengage')?.to;
     if(slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined){
      const encounters=activeEncounters(engine,state,actor);
      const opponents=[...pool.values()].filter(row=>row.id!==actor&&(activeDuel({...d,document},engine,row.id,actor)||encounters.some(r=>r.participants.includes(row.id))));
