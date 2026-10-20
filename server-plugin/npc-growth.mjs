@@ -11,6 +11,22 @@ import {npcSchedule,npcHousehold}from'./npc-state.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
 import {personSimulation,personConstraint,personCertified}from'./entity-view.mjs';
 import {hiddenCheckBonus}from'./hidden-passives.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('vocation-initial');
+// Restores an already qualified livelihood; it is not a new switch and does
+// not invent practice sessions, certification, appointment or consent.
+export function initializeVocation(d,engine,{actor,id,sourceEvent,conflictOfInterest},{origin,eventId}={}){
+ const s=d.get('state'),v=engine.rules.npcGrowth?.vocations?.find(v=>v.id===id),raw=s.records?.[sourceEvent]??s.records?.[`world_event:${sourceEvent}`],event=raw&&{...raw.payload,...raw};
+ if(origin!=='initial'||!eventId||!s.npcs?.[actor]||!v||typeof conflictOfInterest!=='boolean'||raw?.category!=='world_event'||![raw.id,`world_event:${raw.id}`].includes(sourceEvent)||event.verb!=='qualified'||event.actor!==actor||event.vocation!==id||!Number.isSafeInteger(event.minute)||event.minute<0||event.minute>s.minute||npcProficiency(engine,s,actor,v.skill)<v.minimumProficiency||s.npcs[actor].vocation)throw Error('Invalid existing vocation or qualification source');
+ holdingSet(d,engine,['state','npcs',actor,'vocation'],{id,since:event.minute,sourceEvent:raw.id,conflictOfInterest,home:npcHousehold(engine,s,actor)?.homeLocation??s.npcs[actor].location},'vocation-initial',eventId);
+ return {actor,vocation:id};
+}
+export function assertVocationAction(engine,state,tool,args){
+ if(tool==='law'&&args.operation==='hire_advocate'&&args.authority!==undefined){
+  const actor=engine.resolve(args.authority,'npc');
+  if(state.npcs?.[actor]?.vocation?.conflictOfInterest===true)throw Error('代理人与本案存在利害冲突');
+ }
+}
 
 const DAY=1440,unable=['濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};

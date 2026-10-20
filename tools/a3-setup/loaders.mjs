@@ -3,3 +3,4 @@
 import './institutions.mjs';
 import './physical.mjs';
 import './agency.mjs';
+import './activities.mjs';

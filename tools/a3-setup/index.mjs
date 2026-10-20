@@ -12,8 +12,14 @@ const modules=[];
 export function registerSetupLoader(module){modules.push(module);modules.sort((a,b)=>a.order-b.order);}
 export const setupLoaderFields=()=>modules.flatMap(m=>m.fields);
 export function runSetupLoaders(ctx,setup){
+ const activityFields=new Set(modules.flatMap(m=>m.actorStateFields??[]));
  for(const module of modules){
   const fields=module.fields.filter(field=>Object.hasOwn(setup,field));
-  if(fields.length)module.load(ctx,setup,fields);
+  let selected=setup;
+  if(fields.includes('actorStates')&&setup.actorStates&&typeof setup.actorStates==='object'&&!Array.isArray(setup.actorStates)){
+   const actors=Object.entries(setup.actorStates).map(([id,row])=>[id,row&&typeof row==='object'?Object.fromEntries(Object.entries(row).filter(([k])=>module.actorStateFields?module.actorStateFields.includes(k):!activityFields.has(k))):row]).filter(([,row])=>!row||typeof row!=='object'||Object.keys(row).length);
+   selected={...setup,actorStates:Object.fromEntries(actors)};
+  }
+  if(fields.length)module.load(ctx,selected,fields);
  }
 }

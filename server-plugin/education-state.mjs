@@ -11,6 +11,58 @@ import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('education-initial');
+export const practicalKnowledgeRegistry=Object.freeze({simple_tripwire_disassembly:{mechanisms:['tripwire_falling_log']}});
+const personPath=id=>id==='player'?['state','player']:['state','npcs',id];
+function initialAuthority(d,id,context){
+ if(context?.origin!=='initial'||!context.eventId||!d.get(...personPath(id)))throw Error('Initial person authority required');
+}
+export function initializePracticalKnowledge(d,e,id,knowledge,context){
+ initialAuthority(d,id,context);
+ if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry,k)))throw Error('Unregistered practical knowledge');
+ holdingSet(d,e,[...personPath(id),'practicalKnowledge'],[...knowledge],'education-initial',context.eventId);
+}
+export function knowsPracticalKnowledge(e,s,id,knowledge){
+ return Object.hasOwn(practicalKnowledgeRegistry,knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
+}
+export function demonstrationAt(e,s,id,subject,until=s.minute){
+ const n=id==='player'?s.player:s.npcs?.[id],location=id==='player'?s.location:n?.location;
+ if(n?.demonstrating===false)return null;
+ return recordsWhere(s.records,'category','education_demonstration').find(r=>r.actor===id&&(!subject||r.subject===subject)&&r.fromMinute<=s.minute&&r.toMinute>=until&&s.minute<r.toMinute&&r.workstation===location&&facilityView(e,s,r.workstation)?.factor!==0)??null;
+}
+export function initializeDemonstration(d,e,row,context){
+ initialAuthority(d,row.actor,context);
+ const s=d.get('state'),n=s.npcs?.[row.actor],subject=e.byId.get(row.subject),station=e.byId.get(row.workstation)??s.created?.[row.workstation];
+ if(Object.keys(row).some(k=>!['id','actor','subject','workstation','fromMinute','toMinute','teaching'].includes(k))||!row.id||typeof row.id!=='string'||s.records?.[row.id]||!n||isPhysicallyDead(e,s,row.actor)||['濒死','昏迷'].includes(n.status)||n.scheduleTravel||n.cognitionTravel||!subject||!station||n.location!==row.workstation||!e.world.locations.some(p=>p.id===row.workstation)||!Number.isSafeInteger(row.fromMinute)||row.fromMinute<0||!Number.isSafeInteger(row.toMinute)||row.toMinute<=row.fromMinute||row.fromMinute>s.minute||row.toMinute<=s.minute||row.teaching!==false||!knowsKnowledge(e,s,row.actor,row.subject))throw Error('Invalid demonstration subject, workstation or active window');
+ const facility=facilityView(e,s,row.workstation),stations=facility?.workstations??station.workstations??[];
+ if(facility?.factor===0||!stations.some(st=>e.world.recipes.some(r=>r.skill===(subject.skill??subject.id)&&r.workstation===st.kind))||recordsWhere(s.records,'category','education_demonstration').some(r=>r.actor===row.actor&&r.fromMinute<row.toMinute&&r.toMinute>row.fromMinute))throw Error('Demonstration requires a working subject workstation and an unoccupied window');
+ holdingSet(d,e,['state','records',row.id],{...row,category:'education_demonstration',sourceEvent:context.eventId,activityBefore:n.activity??'',practicingBefore:n.practicing??null},'education-initial',context.eventId);
+ // Legacy observation reads these fields; the timed record remains authoritative.
+ holdingSet(d,e,[...personPath(row.actor),'practicing'],row.subject,'education-initial',context.eventId);
+ holdingSet(d,e,[...personPath(row.actor),'activeDemonstration'],row.id,'education-initial',context.eventId);
+ holdingSet(d,e,[...personPath(row.actor),'activity'],`演示：${subject.name}`,'education-initial',context.eventId);
+}
+export function initializeTeachingActivity(d,e,id,values,context){
+ initialAuthority(d,id,context);
+ if(!Object.keys(values).length||Object.entries(values).some(([k,v])=>!['teachingBusy','demonstrating'].includes(k)||typeof v!=='boolean')||values.demonstrating===true&&!demonstrationAt(e,d.get('state'),id))throw Error('Invalid teaching activity');
+ for(const [k,v]of Object.entries(values))holdingSet(d,e,[...personPath(id),k],v,'education-initial',context.eventId);
+ if(values.demonstrating===false)for(const field of ['practicing','teaching'])holdingSet(d,e,[...personPath(id),field],null,'education-initial',context.eventId);
+}
+export function teachingAvailable(e,s,id,until=s.minute){
+ const n=id==='player'?s.player:s.npcs?.[id];
+ return !n?.teachingBusy&&!demonstrationAt(e,s,id,undefined,Math.min(until,s.minute));
+}
+export function settleDemonstrations(d,e){
+ const s=d.get('state');
+ for(const r of recordsWhere(s.records,'category','education_demonstration'))if(r.toMinute<=s.minute&&s.npcs?.[r.actor]?.activeDemonstration===r.id){
+  const path=personPath(r.actor),activity=`演示：${e.byId.get(r.subject)?.name}`;
+  if(d.get(...path,'activity')===activity)holdingSet(d,e,[...path,'activity'],r.activityBefore,'education-initial');
+  holdingSet(d,e,[...path,'practicing'],r.practicingBefore,'education-initial');
+  holdingSet(d,e,[...path,'activeDemonstration'],null,'education-initial');
+  holdingSet(d,e,[...personPath(r.actor),'teachingBusy'],false,'education-initial');
+ }
+}
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');

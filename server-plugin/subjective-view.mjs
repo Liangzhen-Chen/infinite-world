@@ -1,6 +1,28 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('person-languages');
+export const languageAliases=Object.freeze({river:'lang:river',coast:'lang:coast'});
+const languageIds=new Set(['lang:common',...Object.values(languageAliases)]);
+const languageId=id=>languageAliases[id]??id;
+// Initialization is a trusted campaign operation, never a proposal effect.
+export function initializePersonLanguages(d,e,person,values,{origin,eventId}={}){
+ if(origin!=='initial'||!eventId)throw Error('Language initialization requires initial campaign authority');
+ const path=person==='player'?['state','player']:['state','npcs',person];
+ if(!d.get(...path))throw Error('Unknown person');
+ const entries=Object.entries(values);
+ if(!entries.length||entries.some(([k,v])=>!['spokenLanguages','writtenLanguages'].includes(k)||!Array.isArray(v)||v.some(id=>!languageIds.has(languageId(id)))||new Set(v.map(languageId)).size!==v.length))throw Error('Invalid person language declaration');
+ for(const [field,ids] of entries)holdingSet(d,e,[...path,field],ids.map(languageId),'person-languages',eventId);
+}
+export function personLanguages(e,s,id,{written=false}={}){
+ const n=id==='player'?s.player:s.npcs?.[id],b=s.created?.[id]??e.byId.get(id)??{};
+ const raw=n?.[written?'writtenLanguages':'spokenLanguages']??(written?b.writtenLanguages:undefined)??n?.languages??b.languages??e.rules.languages?.default??['lang:common'];
+ return (Array.isArray(raw)?raw:Object.keys(raw??{}).filter(k=>raw[k]>0)).map(languageId);
+}
+export function canReadLanguage(e,s,id,language='lang:common'){
+ return personLanguages(e,s,id,{written:true}).includes(languageId(language));
+}
 const ownedAccounts=Symbol('subjective own accounts');
 const ownedHoldings=Symbol('subjective own holdings');
 
@@ -65,7 +87,8 @@ export function subjectiveView(engine,document,observer){
   }return groups;
  });
  const accounts=Object.fromEntries((byOwner.get(observer)??[]).map(([key,balance])=>[key,{balance,lots:(document.ledger?.lots?.[key]??[]).map(l=>l.purports?{...copy(l.purports),amount:l.amount}:copy(l))}]));
- const busyUntil=Math.max(now,...Object.values(s.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.npc===observer&&t.start<=now).map(t=>t.finish));
+ const demonstrations=recordsWhere(s.records,'category','education_demonstration').filter(r=>r.actor===observer&&r.workstation===here&&r.fromMinute<=now&&r.toMinute>now&&n.demonstrating!==false);
+ const busyUntil=Math.max(now,...demonstrations.map(r=>r.toMinute),...Object.values(s.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.npc===observer&&t.start<=now).map(t=>t.finish));
  const self={id:observer,name:n.name??b.name??observer,status:n.status,location:here,coins:n.coins??0,inventory:copy(observer==='player'?s.inventory??{}:n.inventory??{}),
   mental:copy(n.mental??{}),activity:n.activity??'',traits:copy(b.personality??{}),redLines:copy(b.redLines??[]),minor:Boolean(b.flags?.minor||(n.age??b.age??100)<18),culture:b.culture??'common',
   body:{hp:n.hp??null,mp:n.mp??null,status:n.status??null},accounts,relations,goals:copy(n.goals??b.goals??{}),plan:copy(n.plan??null),busyUntil,clauses,obligations,holdings,events:ownEvents};
@@ -79,10 +102,8 @@ export const knownActiveObligations=view=>view.self.obligations.filter(active);
 
 // Shared spoken-language/interpreter check for conversations and admission.
 export function conversationLanguage(view,engine,d){
- const b=engine.byId.get(view.observer),player=d.get('state','player');
- const a=player.languages??engine.rules.languages?.default??['lang:common'],n=b.languages??['lang:common'];
- const ids=x=>Array.isArray(x)?x:Object.keys(x).filter(k=>x[k]>0);
- if(ids(a).some(x=>ids(n).includes(x)))return {degree:2,interpreter:null};
- const interpreter=view.observable.people.find(p=>{const langs=ids(engine.byId.get(p.id)?.languages??[]);return p.id!==view.observer&&langs.some(l=>ids(a).includes(l))&&langs.some(l=>ids(n).includes(l));});
+ const s=d.get('state'),a=personLanguages(engine,s,'player'),n=personLanguages(engine,s,view.observer);
+ if(a.some(x=>n.includes(x)))return {degree:2,interpreter:null};
+ const interpreter=view.observable.people.find(p=>{const langs=personLanguages(engine,s,p.id);return p.id!==view.observer&&p.status!=='昏迷'&&langs.some(l=>a.includes(l))&&langs.some(l=>n.includes(l));});
  return interpreter?{degree:1,interpreter:interpreter.id}:null;
 }
