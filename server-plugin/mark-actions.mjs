@@ -5,6 +5,7 @@ import {accountKey} from './ledger.mjs';
 import {createEntity,setLocation,endEntity,ensureHoldings,declareHoldingWriter} from './holdings.mjs';
 import {digest} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
+import {physicalLocation} from './items.mjs';
 import {reactToMark} from './mark-reactions.mjs';
 
 declareHoldingWriter('mark-actions',{entities:['mark'],locations:true});
@@ -52,9 +53,24 @@ export function applyMarkPrimitive(d,engine,effect,{frame,child=`${frame.eventId
  if(effect.op!=='create'||effect.kind!=='mark')reject('E-MARK-KIND','这里只能留下痕迹');
  if(effect.template!==undefined||effect.population!==undefined||effect.materials?.length)reject('E-MARK-MATERIAL','材料须先在同一事务中真实转出');
  const facts=effect.facts??{};
- if(Object.keys(facts).some(k=>!['intent','form','zone'].includes(k)))reject('E-MARK-FACT','留痕不能附带资源、账户或数值能力');
+ if(Object.keys(facts).some(k=>!['intent','form','zone','object','support'].includes(k)))reject('E-MARK-FACT','留痕不能附带资源、账户或数值能力');
  const intent=text(facts.intent,2000,'意图'),form=text(facts.form,40,'形态');
  const at=location(d.document,frame.actor);if(!at)reject('E-MARK-LOCATION','无法在旅途中留下固定痕迹');
+ const references={};
+ if(facts.support!==undefined&&facts.object===undefined)reject('E-MARK-FACT','支撑物须与实际摆放的原物件一起指定');
+ for(const field of ['object','support'])if(facts[field]!==undefined){
+  const id=facts[field],entity=typeof id==='string'&&d.get('holdings','entities',id),position=entity&&d.get('holdings','locations',id);
+  if(!entity||entity.goneAt!==undefined||physicalLocation(d,engine,id)!==at)reject('E-MARK-LOCATION','纪念物及支撑物必须真实存在于当前地点');
+  if(field==='object'&&(entity.kind!=='item'||position?.mode!=='place'||position.at!==at))reject('E-MARK-FACT','纪念物必须是实际放下的原物件');
+  if(field==='support'){
+   const contact=engine.primitiveTargetFacts(d,frame.actor,id);
+   // Physical objects may carry an authored local reachability fact without
+   // coordinates. A concrete sight/range result takes precedence when present.
+   const reachable=contact?contact.lineOfSight&&Number.isFinite(contact.distanceMeters)&&contact.distanceMeters>=0&&contact.distanceMeters<=1.5:entity.facts?.reachable===true;
+   if(!reachable)reject('E-MARK-LOCATION','支撑物必须在伸手可及处');
+  }
+  references[field]=id;
+ }
  const restriction=engine.byId.get(at)?.primitiveLimits?.create;
  if(restriction===false||restriction==='forbidden'||restriction?.allowed===false)reject('E-PRIMITIVE-PLACE','这里不允许留下新的固定痕迹');
  const zone=facts.zone??null;
@@ -72,7 +88,7 @@ export function applyMarkPrimitive(d,engine,effect,{frame,child=`${frame.eventId
   endEntity(d,{id:replaced.id,basis:'destruction',writer:'mark-actions',eventId:child});
   d.remove(['state','created',replaced.id]);d.set(['state','records',`mark:${replaced.id}`],{...replaced,active:false,replacedBy:id});
  }
- const mark={id,intent,form,location:at,zone,author:frame.actor,tags:[...selected]};
+ const mark={id,intent,form,location:at,zone,author:frame.actor,tags:[...selected],...references};
  createEntity(d,{id,kind:'mark',facts:mark,source:frame.source.id,writer:'mark-actions',eventId:child});
  setLocation(d,{entity:id,at,mode:'place',writer:'mark-actions',eventId:child,engine});
  d.set(['state','created',id],{...mark,kind:'mark',name:`${form}：${intent.slice(0,40)}`});

@@ -130,6 +130,15 @@ export function prepareOpenAction(engine,document,proposal,native){
   proposal=entities.proposal;
  }
  proposal=scheduledQuestion(engine,document,proposal,native.routing);
+ // Absolute writes to one field describe the desired final state, not a
+ // sequence. Mutually exclusive values need the player's choice (06 §6.10.4).
+ const assignments=new Map(),conflicts=[];
+ for(const [index,effect] of (proposal.effects??[]).entries())if(effect.op==='fact.set'&&effect.value!==undefined){
+  const key=JSON.stringify([effect.entity,effect.field]),previous=assignments.get(key);
+  if(previous&&JSON.stringify(previous.value)!==JSON.stringify(effect.value))conflicts.push({entity:effect.entity,field:effect.field,indices:[previous.index,index],values:[previous.value,effect.value]});
+  else assignments.set(key,{index,value:effect.value});
+ }
+ if(conflicts.length)return {status:'needs_slots',routed:null,effects:[],cost:null,candidates:[],missing:['goal'],conflicts,reason:'同一对象的同一属性不能同时取不同的最终值，请选择想要的结果'};
  const registry=primitiveRuntime.registry(engine),sequence=prepareOpenSequence(proposal,registry,native.routing,engine);
  if(sequence)return sequence;
  const routing=routeAction(proposal,registry,native.routing);

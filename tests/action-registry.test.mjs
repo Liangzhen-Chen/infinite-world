@@ -72,16 +72,35 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);
    assert.ok(a.preconditions.length&&a.consent?.from,`${a.id} 声明前置和同意来源`);
    const r=resolveToolCall(a.call.tool,{operation:a.call.operation});
-   // The registered extinguisher reuses the existing environment handler via
-   // a catalog-only alias; do not expand the static schema to expose it.
-   if(a.id==='core:environment.douse_fire'){
-    assert.deepEqual(r,{tool:'world_environment',args:{operation:'douse_fire'}});continue;
+   // 06 §6.10.1: catalog-only aliases reuse the existing site/environment
+   // handlers, without exposing new static tools. Check the exact dispatch.
+   const catalogAliases={
+    'core:environment.douse_fire':{tool:'world_environment',args:{operation:'douse_fire'}},
+    'core:site.gather_session':{tool:'world_site',args:{operation:'gather'}}
+   };
+   if(catalogAliases[a.id]){
+    assert.deepEqual(r,catalogAliases[a.id]);continue;
    }
    assert.equal(r.tool,a.call.tool,a.id);assert.equal(r.args.operation,a.call.operation,a.id);
    continue;
   }
   if(a.call.operation)assert.ok(schema.properties.operation.enum.includes(a.call.operation),a.id);
-  for(const s of a.slots)assert.ok(s.name in schema.properties,`${a.id} 槽位 ${s.name} 不是旧参数`);
+  // 06 §6.10.1: catalog slots may grow without widening static aliases.
+  // A3 added exact loan terms, irrigation quantity, study mode, retreat target
+  // and manufacture batches to their native programs. Check the complete slot
+  // shapes, retaining rejection of every unlisted addition to a static alias.
+  const catalogAdditions={
+   'core:trade.lend':[{name:'interest',kind:'quantity'}],
+   'core:cast':[{name:'millilitres',kind:'quantity'}],
+   'core:learn':[{name:'mode',kind:'choice',options:['acquire','study','observe']}],
+   'core:combat':[{name:'destination',kind:'text'}],
+   'core:craft.manufacture':[{name:'batches',kind:'quantity',min:1,max:100000,default:1}]
+  };
+  assert.deepEqual(a.slots.filter(s=>!(s.name in schema.properties)),catalogAdditions[a.id]??[],`${a.id} 未登记的目录新增槽位`);
+  if(a.id==='core:trade.lend'){
+   assert.equal(a.slots.find(s=>s.name==='interest').kind,'quantity');
+   assert.equal(translateCall('world_act',{action:a.id,slots:{seller:'npc_hw_wushuo',coins:50,days:10,interest:0}}).args.interest,0,'同意中的零利息原样传入真实借款核验');
+  }
   const r=resolveToolCall(a.call.tool,{...Object.fromEntries(a.slots.map(s=>[s.name,'x'])),...a.call.fixed,...(a.call.operation?{operation:a.call.operation}:{})});
   const s0=a.source==='s0'?byId.get(a.id):catalog.find(x=>x.tool===a.call.tool&&x.operation===(a.call.operation??null));
   assert.equal(r.tool,s0.internalTool,a.id);if(s0.internalOperation)assert.equal(r.args.operation,s0.internalOperation,a.id);
@@ -107,8 +126,8 @@ test('world_act 翻译成旧调用：id 可省 core:，模板固定参数生效�
  assert.throws(()=>translateCall('world_act',{action:'trade.buy',slots:{seller:'林穗'}}),/还缺：item、quantity/);
  assert.throws(()=>translateCall('world_act',{action:'core:look'}),/不写进账本/);
  // A3-A7 replaces the obsolete dialogue promise with actual consent sources.
- // Accept the two migration versions; caller-supplied consent must still throw.
- assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/^Error: 需要对方答应（(?:对话功能完成后开放|须有同意事件、有效服务约定或对方当前决策，不能代填同意)）$/,'任何动作都不接受调用方替对方答应');
+ // 06 §6.10.4: require the current world-facing reason; forged consent still throws.
+ assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/^Error: 需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）$/,'任何动作都不接受调用方替对方答应');
  assert.throws(()=>translateCall('world_act',{action:'core:read',slots:{section:'行囊'}}),/只读查询/);
  assert.equal(actionOfCall(registry,'world_trade',{operation:'trade',service:'住宿'}).id,'core:trade.lodge');
  assert.equal(actionOfCall(registry,'world_trade',{seller:'林穗',item:'x'}).id,'core:trade.trade','模型常用的无 operation 交易调用归到同名子操作');
@@ -142,7 +161,7 @@ test('world_actions：此处可做、对人可做、快捷栏七项；槽位可�
  const lodge2=worldActions(s,doc).actions.find(a=>a.id==='core:trade.lodge');assert.equal(lodge2.blocked,undefined,'当班店主出租客房由旧判定决定');
  const home={...doc,state:{...doc.state,location:'bld_hw_riverhome',npcs:{...doc.state.npcs,npc_hw_xuling:{...doc.state.npcs.npc_hw_xuling,location:'bld_hw_riverhome'}}}};
  // A3-A7 changes the explanation, while private lodging still needs its host.
- assert.match(worldActions(engine.scoped(home),home).actions.find(a=>a.id==='core:trade.lodge').blocked,/^需要对方答应（(?:对话功能完成后开放|须有同意事件、有效服务约定或对方当前决策，不能代填同意)）$/,'私宅借住要房东答应，暂不开放');
+ assert.match(worldActions(engine.scoped(home),home).actions.find(a=>a.id==='core:trade.lodge').blocked,/^需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）$/,'私宅借住仍须房东真实答应');
  const search=worldActions(s,doc,{query:'钓鱼'});assert.equal(search.actions[0].id,'core:wildlife.fish');
  assert.deepEqual(doc,fresh(),'只读投影');
 });

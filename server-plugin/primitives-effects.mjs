@@ -62,6 +62,13 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
   if(effect.mount!==undefined&&entity==='player')reject('E-MOVE-MOUNT','Player boarding uses the existing pet mount action');
   if(entity!==actor){requireAuthority('move',entity);here(d,actor,entity);}
   if(typeof effect.to!=='string')reject('E-MOVE-DESTINATION','A registered destination is required');
+  if(effect.mode==='place'){
+   const object=d.get('holdings','entities',entity),at=d.get('holdings','locations',entity),location=currentLocation(d,actor);
+   if(object?.kind!=='item'||object.goneAt!==undefined||at?.mode!=='carried'||at.at!==actor||!location||effect.to!==location)reject('E-MOVE-PLACE','只能在当前地点放下本人携带的原物件');
+   placeLimit(engine,d,location,'move');
+   setLocation(d,{entity,at:location,mode:'place',writer:'primitives',eventId:child,engine});
+   return {entity,destination:location,mode:'place'};
+  }
   if(entity!=='player'){
    const permission=canAct({...context,document:d.document},entity,'move',{to:effect.to});
    if(!permission.allowed)reject('E-CAPACITY',permission.reason);

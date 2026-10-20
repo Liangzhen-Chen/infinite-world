@@ -161,6 +161,12 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   }
   if(improvised(effect))return {id:`improvised:${skill.id}`,stage:tier(skill.id),skill:skill.id,time:generic.improvisedMinutes,difficulty:generic.physicalDifficulty,bounds:{},improvised:true};
   if(effect.op==='create'&&effect.kind==='mark')return {id:`mark:${actor}`,stage:0,time:finite(engine.world.openActionRules?.mark?.minutes,'mark time'),bounds:{}};
+  // Placing a carried object is not travel or manufacture. The primitive
+  // rechecks ownership, carriage and the local destination at execution.
+  if(effect.op==='move'&&effect.mode==='place'&&document.holdings?.entities?.[effect.entity]?.kind==='item'){
+   const at=document.holdings.locations?.[effect.entity],location=actor==='player'?s.location:s.npcs?.[actor]?.location;
+   if(at?.mode==='carried'&&at.at===actor&&effect.to===location)return {id:`place:${actor}`,stage:0,time:generic.transferMinutes,bounds:{}};
+  }
   if(effect.op==='transfer'){
    const from=parseAccount(effect.from),allowed=from.owner===actor||authority({engine,document},actor,'transfer',effect.from,{effect}).allowed;
    return {id:`account:${effect.from}`,stage:0,time:generic.transferMinutes,bounds:{},transferAuthorized:allowed};

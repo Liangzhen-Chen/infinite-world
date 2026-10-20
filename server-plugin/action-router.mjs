@@ -573,6 +573,7 @@ export function resolveProposalEntities(proposal,context,{accounts=false,deferCo
   ambiguities.push({path,value,candidates:result.candidates});return value;
  };
  for(const [i,effect] of (resolved.effects??[]).entries()){
+  if(effect.op==='create'&&effect.kind==='mark')for(const field of ['object','support'])if(effect.facts?.[field]!==undefined)effect.facts[field]=resolve(effect.facts[field],`effects.${i}.facts.${field}`);
   if(effect.op==='transfer'&&effect.resource!==undefined)effect.resource=material(effect.resource,`effects.${i}.resource`);
   if(effect.op==='create')for(const [j,row] of (Array.isArray(effect.materials)?effect.materials:[]).entries())if(row&&typeof row==='object')for(const field of ['resource','item'])if(row[field]!==undefined)row[field]=material(row[field],`effects.${i}.materials.${j}.${field}`);
  }
