@@ -1,8 +1,6 @@
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
-import {liveNation} from './noble-state.mjs';
 import {advanceEducation,nextEducationMinute,prepareEducation,educationCourses} from './education.mjs';
-import {sameScheduleInputs} from './education-state.mjs';
 import {prepareMedicine,advanceMedicine,nextMedicineMinute} from './medicine.mjs';
 import {advanceFacilities,nextFacilityMinute,completeFacilityProject} from './facilities.mjs';
 // Time-advance registry. Every system that reacts to elapsed time registers here:
@@ -71,9 +69,16 @@ import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,com
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {advanceWanted}from'./bounty.mjs';
 import {auditLedger}from'./ledger.mjs';
-import {facilityRuntime}from'./facility-state.mjs';
-import {withScheduleCache,sameNpcScheduleInputs}from'./npc-schedule.mjs';
+import {holdingRemove,declareHoldingWriter} from './holdings.mjs';
+import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
+export {registerAdvanceHook} from './advance-hooks.mjs';
+declareHoldingWriter('advance-registry',{kinds:[]});
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
+const liveNation=(...args)=>{const hook=advanceHook('liveNation');return hook?hook(...args):true;};
+const sameScheduleInputs=(...args)=>{const hook=advanceHook('sameScheduleInputs');return hook?hook(...args):false;};
+const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleInputs');return hook?hook(...args):false;};
+const facilityRuntime=()=>{const hook=advanceHook('facilityRuntime');return hook?hook():{hasUnattendedFurnace:()=>true,recordFurnaceDeparture:()=>{}};};
+const withScheduleCache=(engine,d,task)=>{const hook=advanceHook('withScheduleCache');return hook?hook(engine,d,task):task();};
 export const advanceRegistry=[];
 export function registerAdvance(system){
     if(!system||typeof system.id!=='string'||!Number.isFinite(system.order)||typeof system.advance!=='function')throw new Error('推进系统需要 id、order 和 advance');
@@ -455,7 +460,7 @@ const systems=[
  {id:'local_actor_positions',order:1700,nextMinute:(e,d,now)=>nextRecordDeadline(d.get('state'),now,['local_position'],['expires']),advance(e,d,{after}){
     for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
         const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
-        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)d.remove(['state','records',key]);
+        if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)holdingRemove(d,null,['state','records',key],'advance-registry');
     }
  }},
  {id:'magic_care',order:1800,nextMinute:(e,d,now)=>Math.min(Infinity,...Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='preserve'&&x.expires>now&&x.upkeepMp>0).map(x=>now+Math.max(1,Math.floor(d.get('state','player','mp')/x.upkeepMp)+1))),advance:(e,d,{before,after})=>{if(!d.scheduler)advanceCare(d,e,before,after);}},

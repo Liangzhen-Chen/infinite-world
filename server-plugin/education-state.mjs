@@ -10,6 +10,7 @@ import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
@@ -32,6 +33,7 @@ export function sameScheduleInputs(a,b){
  const x=rows(a),y=rows(b);
  return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
 }
+registerAdvanceHook('sameScheduleInputs',sameScheduleInputs);
 // Catalog identity follows immutable world/created partitions, never the clock,
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});

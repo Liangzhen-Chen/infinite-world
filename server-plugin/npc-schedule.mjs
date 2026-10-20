@@ -15,6 +15,9 @@ import {recordEmploymentAttendance,employmentActive} from './employment-state.mj
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
 import {recordsWhere,canonicalEqual,PatchCursor} from './storage.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+declareHoldingWriter('npc-schedule',{kinds:[]});
 // The cache belongs to one draft and one elapsed-time action. Cursor writes
 // invalidate it without exposing/copying the entire NPC map for every read.
 export function withScheduleCache(engine,d,task){
@@ -29,6 +32,7 @@ export function withScheduleCache(engine,d,task){
         if(own)engine.scheduleReadCache=previous;else delete engine.scheduleReadCache;
     }
 }
+registerAdvanceHook('withScheduleCache',withScheduleCache);
 const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
 const ignoredNpcScheduleFields=new Set(['memoryStream','developments','growth','cognition','coins','trust','affection']);
 export function sameNpcScheduleInputs(a,b){
@@ -37,6 +41,7 @@ export function sameNpcScheduleInputs(a,b){
     for(const k in b)if(!ignoredNpcScheduleFields.has(k)&&!Object.hasOwn(a,k))return false;
     return true;
 }
+registerAdvanceHook('sameNpcScheduleInputs',sameNpcScheduleInputs);
 function invalidateSchedule(cache,{path,value,op}){
     if(path[0]!=='state'){if(!path.length)cache.people.clear();return;}
     if(['minute','scheduler','npcObligationClock'].includes(path[1]))return;
@@ -303,7 +308,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
             if(npc[field]===undefined)d.remove([...path,field]);else d.set([...path,field],npc[field]);
         }
     }
-    if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)d.set(['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after});
+    if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)holdingSet(d,null,['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after},'npc-schedule');
 }
 
 export function advanceWithNpcParticipants(d,engine,minutes,eventId,participants){
