@@ -127,7 +127,9 @@ const rulesText={
  settlement:'回汐埠先有四十八名常住者，与野生种群分开。新增结缘者须本人到场、自愿留居，每九十日检查一次，可并入登记的精怪之乡；在其他栖地结群须至少两名自愿成员且口粮足够，不满足则保持游居。原生态转出的个体不回填野生数量，死亡或离开不凭空补一只。'
 };
 export const routeRules=rulesText;
-export function applySpiritRules(rules){const r=structuredClone(rules);r.wildlifeAwakening.spiritLands=[...r.wildlifeAwakening.spiritLands.filter(x=>x.location!==hx.garden),{location:hx.garden,pointsPerDay:2}];r.wildlifeAwakening.society.homes=[...new Set([...r.wildlifeAwakening.society.homes,HX])];return r;}
+export function applySpiritRules(rules){const r=structuredClone(rules);r.wildlifeAwakening.spiritLands=[...r.wildlifeAwakening.spiritLands.filter(x=>x.location!==hx.garden),{location:hx.garden,pointsPerDay:2}];r.wildlifeAwakening.society.homes=[...new Set([...r.wildlifeAwakening.society.homes,HX])];
+ // A3-内容1：组织原文的公共储备；治理首长沿现有公库来源读取现任首领。
+ r.questSources.funds={...r.questSources.funds,[HX]:'faction_ms_huixi',[GS]:'faction_ms_huipeng'};return r;}
 export const cultures=[
  {id:'culture_ms_huixi',name:'回汐认岸俗',settlement:HX,anchor:HX,witness:P.qiaosui,region:'苇汀下游雾滩外',prose:{focus:'保留本相、自愿认岸的精怪共居',naming:'自取一声易认的称呼，同窝者常共用起首音；并不因此认定血缘。',facts:['回汐埠的居民已经立意，野外未立意的同类另记生态。','苔灯坞的猎道传来的消息可在认岸芦门打听，远方砾耳社会仍独立。'],
  dailyLife:'獭在水边拆鱼，龟在高岸晒席，狐看草根，穴鼬补芦棚。居民多以本相过日子，借形后仍认原来的称呼。新来的先说愿不愿留，空棚是否接人由议汐棚商量；接岸派和静滩派都要为口粮留余地。',
@@ -194,7 +196,13 @@ export function buildLocation(place){
  if(place.kind==='facility'||place.kind==='district')base.access={mode:'public'};
  if(place.kind==='home'){const h=households.find(h=>h.homeLocation===place.id);base.access={mode:'private',requiresConsent:true,residents:h.members};}
  if(place.kind==='council'){base.access={mode:'council',requiresConsent:true,authority:place.authority};}
- if(place.kind==='store'){const owner=s.id===HX?P.yiheng:P.shenge;base.owner=owner;base.site={owner,manager:owner,occupants:[owner],entryMechanisms:[],mechanisms:[],resources:[],clues:[],truths:[],infiltration:{minutes:30,check:{attribute:'敏捷',difficulty:15},damage:3}};}
+ // A3-内容1：与正式数据同一来源。所有权属于组织，看管与进门许可仍由原人物负责。
+ if(place.kind==='store'){
+  const manager=s.id===HX?P.yiheng:P.shenge,owner=s.id===HX?'faction_ms_huixi':'faction_ms_huipeng';
+  base.owner=owner;base.site={owner,manager,occupants:[manager],entryMechanisms:[],mechanisms:[],resources:[],clues:[],truths:[],infiltration:{minutes:30,check:{attribute:'敏捷',difficulty:15},damage:3}};
+  base.authoredFacts.ownershipBasis=s.id===HX?'A3-内容1：world/lore/factions.json#faction_ms_huixi.resources 列有旧芦棚与接岸储备；漪衡为看管者，公账与本人库存分开。':'A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公货柜；绳额为看管者，分物仍须议定。';
+ }
+ if(place.id===gs.scale){base.owner='faction_ms_huipeng';base.authoredFacts.ownershipBasis='A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公秤；公共通行与各族轮值的争议仍按原文处理。';}
  return base;
 }
 

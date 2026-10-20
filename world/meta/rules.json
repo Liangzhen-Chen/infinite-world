@@ -10821,7 +10821,7 @@
   },
   "questSources": {
     "version": 1,
-    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post",
+    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post；A3-内容1：回汐认岸议与灰棚明签会的公库来源见 world/lore/factions.json 对应 resources 与 method，聚落首长随现任组织首领派生。",
     "limits": {
       "perNpcByLevel": {
         "0": 0,
@@ -11014,7 +11014,9 @@
       "loc_ms_tanjie": "faction_ms_tanjie",
       "loc_ms_taideng": "faction_ms_taideng",
       "loc_ms_yugen": "faction_ms_yugen",
-      "loc_ms_lielu": "faction_ms_lielu"
+      "loc_ms_lielu": "faction_ms_lielu",
+      "loc_ms_huixi": "faction_ms_huixi",
+      "loc_ms_huipeng": "faction_ms_huipeng"
     },
     "ledgers": [
       {
