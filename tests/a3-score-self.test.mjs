@@ -256,9 +256,15 @@ test('A3 setup: invalid abilities are setupUnmet and cannot earn rejection credi
 
 test('A3 rejection signature: request descriptions earn credit only for actual refusal with zero applied effects',async t=>{
  const rejected={...rows[1],expected:{...rows[1].expected,signature:['transfer(resource:coin,self)']}};
- const variants=[rejected,{...rejected,expected:{...rejected.expected,outOfBounds:false}},{...rejected,expected:{...rejected.expected,route:'open:proposal'}}];
+ const variants=[rejected,{...rejected,expected:{...rejected.expected,outOfBounds:false}}];
  const report=await scoreRows(variants,options);
  for(const result of report.results){assert.equal(result.actual.refused,true);assert.equal(result.scores.signature,true);assert.deepEqual(result.expected.signature,rejected.expected.signature);}
+ // Out of bounds with a concrete route is a bounded outcome (06 §6.7): a
+ // refusal there neither earns signature credit nor counts as supported.
+ const bounded=await scoreRows([{...rejected,expected:{...rejected.expected,route:'open:proposal'}}],options);
+ assert.equal(bounded.results[0].actual.refused,true);assert.equal(bounded.results[0].bounded,true);
+ assert.equal(bounded.results[0].scores.signature,false);assert.equal(bounded.results[0].scores.supported,false);
+ assert.deepEqual(bounded.outOfBoundsLeaks,[bounded.results[0].id]);
  const clarification=await scoreRows([{...rows[2],expected:rejected.expected}],options);
  assert.equal(clarification.results[0].scores.signature,false);
  const committed=await scoreRows([{...rows[0],expected:rejected.expected}],options);
