@@ -3,11 +3,42 @@
 import {reject} from './primitive-policy.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
-import {knowledgeProficiency,knowsKnowledge} from './education-state.mjs';
+import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge,practicalKnowledgeRegistry} from './education-state.mjs';
+import {canReadLanguage} from './subjective-view.mjs';
 import {personCertified} from './entity-view.mjs';
 import {obligationClosed} from './obligation-state.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
 import {digest} from './storage.mjs';
+
+export function initialKnowledgeAction(d,e,tool,args){
+ const s=d.get('state');
+ if(tool==='site'&&args.operation==='disarm'){
+  const target=s.created?.[args.target]??d.get('holdings','entities',args.target)?.facts??e.byId.get(s.location)?.site?.mechanisms?.find(r=>[r.id,r.name].includes(args.target));
+  const required=Object.entries(practicalKnowledgeRegistry).find(([,r])=>r.mechanisms.includes(target?.mechanism))?.[0];
+  if(required&&!knowsPracticalKnowledge(e,s,'player',required))reject('E-DISARM-KNOWLEDGE','Unknown tripwire disassembly procedure');
+ }
+}
+export function activityTeachingConsent(d,e,args,next){
+ const s=d.get('state');
+ if(!teachingAvailable(e,s,args.teacher,s.minute+args.minutes)){
+  const demo=demonstrationAt(e,s,args.teacher,args.subject);
+  if(demo&&demo.toMinute<s.minute+args.minutes)reject('E-LEARN-OBSERVE','The demonstration does not cover the study window');
+  return {allowed:false,kind:'busy',reason:'导师没有授课空档'};
+ }
+ return next();
+}
+export function learnWithInitialKnowledge(d,e,args,id,next){
+ if(args.operation)return next();
+ const s=d.get('state');let source=args.source;
+ if(typeof source==='string'&&!s.itemInstances?.[source]&&!s.projects?.[source])try{source=e.resolve(source);}catch{/* The native executor owns missing/ambiguous-source diagnostics. */}
+ const unit=s.itemInstances?.[source],book=unit?.book??e.byId.get(unit?.item??source)?.book;
+ if(book&&args.student===undefined){
+  const language=unit?.language??e.byId.get(unit?.item??source)?.language??book.language??'lang:common';
+  if(!canReadLanguage(e,s,'player',language))reject('E-LEARN-LANGUAGE','The learner cannot read the book language');
+ }
+ if(s.npcs?.[source]&&!teachingAvailable(e,s,source))reject('E-LEARN-SOURCE','The teacher is occupied and cannot provide a complete lesson');
+ return next();
+}
 
 // Same education source gates, expressed against the L1 knowledge/holding
 // view. education.mjs is owned by C and cannot become an upward L1 dependency.
@@ -18,6 +49,7 @@ function studyBook(d,e,holder,source,entity){
  if(held?.durability===0||!unit&&copies.length>=e.quantity(d,holder,item))reject('E-LEARN-SOURCE','A readable physical copy must be selected');
  const book=unit?.book??b?.book;
  if(!book||!book.teaches?.includes(entity)||!content)reject('E-LEARN-SOURCE','This book does not contain the registered subject');
+ if(!canReadLanguage(e,s,holder,unit?.language??b?.language??book.language??'lang:common'))reject('E-LEARN-LANGUAGE','The learner cannot read the book language');
  if(knowledgeProficiency(e,s,holder,'skill_literacy')<e.rules.books.minimumLiteracy)reject('E-LEARN-LITERACY','The learner cannot read this book');
  const grade=e.rules.books.grades.indexOf(book.grade),stage=content.stage??Math.floor((content.minimumProficiency??0)/300);
  if(grade<0||grade<Math.min(stage,4)||entity.startsWith('spell_')&&stage>=4&&book.rare!==true)reject('E-LEARN-SOURCE','The book grade or rarity does not cover this subject');
@@ -50,10 +82,11 @@ export function learnNpc(d,engine,effect,{frame,child,tags,requireAuthority,cont
   if(!knowsKnowledge(engine,state,source,effect.subject))reject('E-LEARN-SOURCE','The teacher does not know this subject');
   if(kind==='spell'&&stage>=4)reject('E-LEARN-SOURCE','Advanced spells require research or a rare book');
   const until=state.minute+minutes;
-  permission=teachingPermission(d.document,until);
+  permission=teachingAvailable(engine,state,source,until)?teachingPermission(d.document,until):{allowed:false,kind:'busy'};
   const service=serviceAt(state,until);
   if(!permission.allowed&&!service){
-   if((teacher.practicing??teacher.teaching)!==effect.subject||!/(练|教|演|practice|teach)/.test(teacher.activity??''))reject('E-LEARN-OBSERVE','There is no observable demonstration');
+   const timed=demonstrationAt(engine,state,source,effect.subject,until);
+   if(!timed&&((teacher.practicing??teacher.teaching)!==effect.subject||!/(练|教|演|practice|teach)/.test(teacher.activity??'')||teacher.demonstrating===false||Object.values(state.records??{}).some(r=>r.category==='education_demonstration'&&r.actor===source)))reject('E-LEARN-OBSERVE','There is no observable demonstration');
    const facts=engine.primitiveTargetFacts(d,learner,source);
    if(!facts?.lineOfSight||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters>30)reject('E-LEARN-OBSERVE','The demonstration is not actually visible');
    observed=true;tags.push('unconsented');detection=engine.primitiveCheck(d,{attribute:'敏捷',opponent:{npc:source,attribute:'精神'}},`${child}:notice`,learner);

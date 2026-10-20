@@ -2,12 +2,14 @@ import {worldEvent} from '../../server-plugin/world-events.mjs';
 import {registerSetupLoader} from './index.mjs';
 import {executeProtocolPrimitive} from '../../server-plugin/transition.mjs';
 import {skillGrade} from '../../server-plugin/engine.mjs';
-import {knowledgeProficiency} from '../../server-plugin/education-state.mjs';
+import {initializePersonLanguages,canReadLanguage} from '../../server-plugin/subjective-view.mjs';
+import {initializeVocation} from '../../server-plugin/npc-growth.mjs';
+import {initializePracticalKnowledge,initializeDemonstration,initializeTeachingActivity,knowledgeProficiency} from '../../server-plugin/education-state.mjs';
 import {personCareer,personTeaching} from '../../server-plugin/entity-view.mjs';
 import {prepareSummon,applySummon,validateSummonCatalog} from '../../server-plugin/summons.mjs';
 
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
-const fields=['abilitiesByActor','vocations','reading','practiceState','knowledge','mapKnowledge','demonstrations','combats','conversations','summons','rites'];
+const fields=['abilitiesByActor','vocations','reading','practiceState','knowledge','mapKnowledge','demonstrations','summons'];
 const shape=(v,keys)=>object(v)&&Object.keys(v).every(k=>keys.includes(k));
 const integer=(v,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
 const fail=message=>{throw Error(message);};
@@ -71,11 +73,11 @@ function abilities(ctx,setup){
     if(!careerTeaches&&!personTeaching(ctx.engine,state(ctx),actor,subject))fail('no native initial teaching qualification writer (05 §5.4/§5.7); teaches cannot confer a profession');
    });
   }
-  for(const field of ['spokenLanguages','writtenLanguages','practicalKnowledge'])if(row[field]!==undefined){
-   const value=row[field];
-   if(!Array.isArray(value)||value.some(v=>typeof v!=='string'||!v))ctx.unmet(`${item}.${field}`,'expected an array of knowledge IDs');
-   else if(field!=='practicalKnowledge'||value.length)ctx.unmet(`${item}.${field}`,field==='practicalKnowledge'?'no native practical-knowledge registry/initialization interface (05 §5.6)':'no native per-actor spoken/written language initializer or river/coast registry mapping (05 §5.6/§5.7; conversationLanguage reads catalog languages)');
-  }
+  for(const field of ['spokenLanguages','writtenLanguages','practicalKnowledge'])if(row[field]!==undefined)ctx.native(`${item}.${field}`,d=>{
+   const context={origin:'initial',eventId:`a3-agency:${item}.${field}`};
+   if(field==='practicalKnowledge')initializePracticalKnowledge(d,ctx.engine,actor,row[field],context);
+   else initializePersonLanguages(d,ctx.engine,actor,{[field]:row[field]},context);
+  });
  }
 }
 registerSetupLoader({fields,order:80,load(ctx,setup,selected){
@@ -91,7 +93,8 @@ registerSetupLoader({fields,order:80,load(ctx,setup,selected){
   if(field==='reading')array(ctx,setup,field,['reader','item','canRead','source'],r=>{
    const actor=requireActor(ctx,r.reader),id=ctx.ref(r.item),s=state(ctx),unit=s.itemInstances?.[id],def=ctx.engine.byId.get(unit?.item??id),d=ctx.engine.primitiveDraft(ctx.document);
    if(typeof r.canRead!=='boolean'||r.source!=='setup.facts'||!def||!unit||unit.owner!==actor||unit.status!=='持有'||ctx.engine.quantity(d,actor,unit.item)<1)fail('reading requires the same held native item instance');
-   const canRead=knowledgeProficiency(ctx.engine,s,actor,'skill_literacy')>=ctx.engine.rules.books.minimumLiteracy&&unit.durability!==0&&Boolean(unit.book??def.book);
+   const book=unit.book??def.book;
+   const canRead=knowledgeProficiency(ctx.engine,s,actor,'skill_literacy')>=ctx.engine.rules.books.minimumLiteracy&&unit.durability!==0&&Boolean(book)&&canReadLanguage(ctx.engine,s,actor,unit.language??def.language??book?.language??'lang:common');
    if(canRead!==r.canRead)fail('reading premise conflicts with native literacy/book state (05 §5.4); no canRead override');
   });
   if(field==='knowledge')array(ctx,setup,field,['holder','event','source','only','currentOutsideWeather'],(r,item,d)=>{
@@ -128,26 +131,17 @@ registerSetupLoader({fields,order:80,load(ctx,setup,selected){
    // Bind only after every potentially failing native operation has succeeded.
    ctx.bindings[r.id]=result.summon;
   });
-  if(field==='vocations')array(ctx,setup,field,['actor','id','sourceEvent','conflictOfInterest'],r=>{
-   const actor=requireActor(ctx,r.actor);sourceEvent(ctx,r.sourceEvent);
-   if(!ctx.engine.rules.npcGrowth.vocations.some(v=>v.id===r.id)||typeof r.conflictOfInterest!=='boolean')fail('invalid vocation');
-   fail('no native initial vocation/conflict-of-interest restoration interface; switchVocation performs a new change and enforces tenure (05 §5.4/§5.7)');
+  if(field==='vocations')array(ctx,setup,field,['actor','id','sourceEvent','conflictOfInterest'],(r,item,d)=>{
+   const actor=requireActor(ctx,r.actor),event=sourceEvent(ctx,r.sourceEvent);
+   initializeVocation(d,ctx.engine,{...r,actor,sourceEvent:event.id},{origin:'initial',eventId:`a3-agency:${item}`});
   });
-  if(field==='demonstrations')array(ctx,setup,field,['id','actor','subject','workstation','fromMinute','toMinute','teaching'],r=>{
-   requireActor(ctx,r.actor);
-   if(typeof r.id!=='string'||!ctx.engine.byId.has(r.subject)||!ctx.engine.byId.has(r.workstation)||!integer(r.fromMinute)||!integer(r.toMinute,r.fromMinute+1)||r.teaching!==false)fail('invalid demonstration premise');
-   fail('no native timed demonstration initializer with workstation binding; observe reads practicing/activity but has no source/window lifecycle (05 §5.4/§5.7)');
-  });
-  if(field==='combats'||field==='conversations')array(ctx,setup,field,field==='combats'?['id','participants','active','playerActedThisRound']:['id','participants','active','mainTopicFinished'],r=>{
-   if(typeof r.id!=='string'||!r.id||!Array.isArray(r.participants)||r.participants.length<2||new Set(r.participants.map(ctx.ref)).size!==r.participants.length||r.active!==true)fail('invalid active activity declaration');
-   for(const participant of r.participants)requireActor(ctx,participant);
-   if(field==='combats'&&r.playerActedThisRound!==false||field==='conversations'&&r.mainTopicFinished!==true)fail('invalid pending activity flags');
-   fail(field==='combats'?'no native unfinished encounter/round initializer; combat resolves the encounter (05 §5.4; 06 §6.8)':'no native active conversation/topic-completion initializer; dialogue stores individual replies (05 §5.7; 06 §6.8)');
-  });
-  if(field==='rites')array(ctx,setup,field,['id','name','location','host','start','end','hostAuthorized','offerings','sourceEvent'],r=>{
-   requireActor(ctx,r.host);sourceEvent(ctx,r.sourceEvent);
-   if(typeof r.id!=='string'||!ctx.engine.world.locations.some(l=>l.id===r.location)||!integer(r.start)||!integer(r.end,r.start+1)||r.hostAuthorized!==true||!Array.isArray(r.offerings)||r.offerings.some(o=>!shape(o,['item','quantity'])||!ctx.engine.world.items.some(i=>i.id===o.item)||!integer(o.quantity,1)))fail('invalid rite premise');
-   fail('no native initializer for an existing hosted rite with schedule, authority and unconsumed offerings; faith_rite executes and consumes, rite_project requires a registered action (13 §13.5; 06 §6.8)');
+  if(field==='demonstrations')array(ctx,setup,field,['id','actor','subject','workstation','fromMinute','toMinute','teaching'],(r,item,d)=>{
+   initializeDemonstration(d,ctx.engine,{...r,actor:requireActor(ctx,r.actor),workstation:ctx.ref(r.workstation)},{origin:'initial',eventId:`a3-agency:${item}`});
   });
  }
+}});
+
+registerSetupLoader({fields:['actorStates'],actorStateFields:['teachingBusy','demonstrating'],order:81,load(ctx,setup){
+ if(!object(setup.actorStates)){ctx.unmet('actorStates','expected actor state mapping');return;}
+ for(const [alias,row]of Object.entries(setup.actorStates))ctx.native(`actorStates.${alias}`,d=>initializeTeachingActivity(d,ctx.engine,requireActor(ctx,alias),row,{origin:'initial',eventId:`a3-activity:${alias}`}));
 }});

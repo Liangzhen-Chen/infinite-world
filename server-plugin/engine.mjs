@@ -1,3 +1,6 @@
+import {initialKnowledgeAction,activityTeachingConsent,learnWithInitialKnowledge} from './primitives-learning.mjs';
+import {assertVocationAction} from './npc-growth.mjs';
+import {settleDemonstrations} from './education-state.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
@@ -351,6 +354,7 @@ export class WorldEngine {
         // executor still distinguishes sleep for schedules and interruptions.
         const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
         validatePhysicalAction(d,session,tool,args);
+        initialKnowledgeAction(d,session,tool,args);assertVocationAction(session,d.get('state'),tool,args);
         const detail = physicalSiteAction(d,session,tool,args,id)??await session[tool](d,args,id);
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
@@ -409,7 +413,7 @@ export class WorldEngine {
     }
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
-    primitiveTeachingConsent(d,args){const session=Object.create(this);session.nativeConsentRequest={from:args.teacher,to:args.student??'player',scope:'teach',purpose:args.subject,terms:{fee:args.fee??0,minutes:args.minutes}};return teachingConsent(d,session,args);}
+    primitiveTeachingConsent(d,args){return activityTeachingConsent(d,this,args,()=>{const session=Object.create(this);session.nativeConsentRequest={from:args.teacher,to:args.student??'player',scope:'teach',purpose:args.subject,terms:{fee:args.fee??0,minutes:args.minutes}};return teachingConsent(d,session,args);});}
     primitiveOpenAction(document,input,prepared,{preview=false}={}){
         const books=withBooks(this,document),session=this.scoped(document);
         const applied=primitiveActionRuntime().executeOpen(session,books.document,input,prepared,{preview});
@@ -659,6 +663,7 @@ export class WorldEngine {
         const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
         if(d.scheduler)catchUpLocal(this,d,after);
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
+        settleDemonstrations(d,this);
     }
     time(d,args,id) {
         primitiveActionRuntime()?.settleRites?.(d,this);
@@ -937,7 +942,7 @@ export class WorldEngine {
         return {spell,...result,...effect,...(backlash?{backlash}:{}),...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp,...(economy?{economy}:{})};
     }
     learn(d,args,id) {
-        return learn.call(this,d,args,id);
+        return learnWithInitialKnowledge(d,this,args,id,()=>learn.call(this,d,args,id));
     }
     profession(d,args,id){
         return profession.call(this,d,args,id);

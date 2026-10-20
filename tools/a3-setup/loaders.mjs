@@ -5,3 +5,4 @@ import './claims.mjs';
 import './services.mjs';
 import './physical.mjs';
 import './agency.mjs';
+import './activities.mjs';
