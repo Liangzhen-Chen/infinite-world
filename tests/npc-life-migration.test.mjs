@@ -9,6 +9,7 @@ import {npcAvailability} from '../server-plugin/npc-schedule.mjs';
 import {npcSchedule} from '../server-plugin/npc-state.mjs';
 import {npcContext} from '../server-plugin/npc-memory.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
+import {obligationView} from '../server-plugin/obligation-state.mjs';
 
 const source=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,start=10*DAY+600,firstNight=11*DAY;
@@ -54,6 +55,23 @@ function onlyLifeAdditions(s,ids,people={},created={}){
 }
 const hungry=s=>{s.doc.state.settlements.loc_hw.starvation=5;return s;};
 
+test('托养允许受托人正常作息离场，真实迁居才中断，动物留在原处且不消失',async()=>{
+ const s=hungry(fixture()),id='s3_migration_pet';
+ s.engine.byId.set(id,{id,name:'托养岸犬',intelligence:1,tamingRule:{category:'support',food:[{item:'item_ration',hungerRelief:50}],skills:[]}});
+ s.doc.state.creatures??={};s.doc.state.pets??={};
+ s.doc.state.creatures[id]={name:'托养岸犬',hp:100,maxHp:100,level:1,status:'正常',owner:'player',location:shop};
+ s.doc.state.pets[id]={petFormat:1,creature:id,category:'support',status:'活跃',following:true};
+ npc(s,mover).inventory.item_ration={quantity:1000};npc(s,mover).coins=100;s.doc.state.location=shop;
+ const signed=await s.engine.reduce(s.doc,{tool:'world_pet',args:{operation:'custody',target:id,keeper:mover,days:360,consent:true},eventId:'migration-custody-sign'});
+ s.doc=applyPatches(s.doc,signed.patches);const claim=s.doc.state.pets[id].custody.obligation;
+ await until(s,firstNight+1,'custody-night');
+ assert.notEqual(npc(s,mover).location,shop);assert.equal(s.doc.state.pets[id].custody.status,'active','睡觉或下班回家不取消托养');
+ const move=moves(s).find(m=>m.person===mover);assert.ok(move);
+ await until(s,move.departAt+61,'custody-move');
+ assert.equal(s.doc.state.pets[id].custody.status,'interrupted');assert.equal(obligationView(s.doc.state,claim).closed,true);
+ assert.equal(s.doc.state.creatures[id].location,shop);assert.equal(s.doc.state.creatures[id].owner,'player');assert.ok(s.doc.state.creatures[id].hp>0);
+});
+
 test('迁居参数有效；没有原因或没有愿意接纳的人家时谁也不搬',async()=>{
  assert.deepEqual(validateNpcLifeRules(source),[]);
  const bad=structuredClone(source);bad.rules.npcLife.migration={...bad.rules.npcLife.migration,departMinute:0,livelihood:{starvationDays:0,chancePerDay:2}};
@@ -77,6 +95,8 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.equal(m.departAt,firstNight+DAY+300);
  assert.equal(knows(s,mover,`${m.id}:plan`).sourceType,'亲历');
  meeting(s,'obl_road',{at:m.departAt+600});meeting(s,'obl_old',{at:m.departAt+6*DAY});meeting(s,'obl_new',{with:host,location:toHome,at:m.departAt+8*DAY});
+ s.doc.state.obligations.migration_payment={id:'migration_payment',type:'付款',promisor:mover,promisee:friend,coins:5,start:m.departAt+600,deadline:m.departAt+30*DAY,status:'待履行',location:shop};
+ const payment=structuredClone(s.doc.state.obligations.migration_payment);
  await until(s,firstNight+660,'b');
  const heard=knows(s,friend,`${m.id}:plan`);assert.equal(heard?.sourceType,'听说');assert.equal(heard.heardFrom,mover,'同在药铺的朋友白天从本人口中得知');
  const route=s.engine.route(npc(s,mover).location===shop?fromHome:npc(s,mover).location,toHome,'walk',m.departAt,s.doc.randomSeed);
@@ -88,6 +108,7 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.deepEqual(npcAvailability(s.engine,s.doc.state,mover),{activity:'赶路',services:[]});
  assert.equal(s.doc.state.obligations.obl_road.status,'取消');assert.equal(s.doc.state.obligations.obl_road.endedByMigration,m.id);
  assert.equal(s.doc.state.obligations.obl_old.status,'待履行','途中赶不上的才先退掉');
+ assert.deepEqual(s.doc.state.obligations.migration_payment,payment,'搬走不能取消已经承诺的付款');
  await until(s,go.arriveAt-1,'d');
  assert.equal(npc(s,mover).location,null);assert.equal(npcHousehold(s.engine,s.doc.state,mover).id,'house_hw_03','未抵达前户籍不变');
  const before={hw:s.doc.state.settlements.loc_hw.population,yp:s.doc.state.settlements.loc_bs_yupo.population};
@@ -101,6 +122,7 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.equal(s.doc.state.obligations.obl_old.status,'取消');assert.match(s.doc.state.obligations.obl_old.reason,/迁居/);
  assert.equal(s.doc.state.obligations.obl_new.status,'待履行','新住处的约定照旧');
  assert.deepEqual(done.obligations,['obl_road','obl_old']);
+ assert.deepEqual(s.doc.state.obligations.migration_payment,payment,'抵达后原金额及到期仍保留，不因迁居免债');
  const day=npcSchedule(s.engine,s.doc.state,mover).default;
  assert.ok(!day.some(x=>[fromHome,shop].includes(x.location)),'旧家和旧工作地点不再出现在作息里');
  const work=day.find(x=>x.start===480);assert.equal(work.location,away);assert.deepEqual(work.services,[]);assert.match(work.activity,/帮冯雅/);

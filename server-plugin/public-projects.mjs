@@ -17,6 +17,8 @@ import {changeItems} from './items.mjs';
 import {prepareFacilityProject} from './facility-state.mjs';
 import {completeFacilityProject} from './facilities.mjs';
 import {currentEmployment,employmentReservation} from './employment-state.mjs';
+import {registerEarnedClaim} from './obligation-claims.mjs';
+import {personConstraint} from './entity-view.mjs';
 
 // T125 public works. A sitting official (works deputy or village head) starts
 // a project in their own village: materials leave the village stock and the
@@ -121,11 +123,12 @@ export function advancePublicProjects(d,engine,{before,after,id}){
         const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&isEffective(engine,state,w)&&able(state.npcs[w])&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
+            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&isEffective(engine,state,w)&&able(state.npcs[w])&&!personConstraint(engine,state,w)&&!state.npcs[w].scheduleTravel&&!state.npcs[w].cognitionTravel&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
             const pub=structuredClone(p.public);
             if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
             for(const w of present){
                 moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pub.wage,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
+                registerEarnedClaim(d,engine,{id:`public_wage:${key}:${day}:${w}`,kind:'wage',debtor:p.public.payer??p.settlement,creditor:w,amount:pub.wage,paid:pub.wage,status:'已还清',createdAt:(day+1)*DAY,deadline:(day+1)*DAY,location:p.location,source:key,project:key,minutes:480});
                 pub.escrow-=pub.wage;pub.paid[w]=(pub.paid[w]??0)+pub.wage;pub.labor[w]=(pub.labor[w]??0)+1;
                 (pub.lastPaidDay??={})[w]=day;worked.add(w);
             }

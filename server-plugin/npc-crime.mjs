@@ -1,8 +1,8 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
-import {purse,fund as fundAccount,moveCoins} from './money.mjs';
+import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('npc-crime');
+declareLedgerWriter('npc-crime',{sinks:['sink:export']});
 import {npcNeedGoals,intelligenceOf} from './npc-intelligence.mjs';
 import {personConstraint,personSimulation,lawAuthorities} from './entity-view.mjs';
 import {npcAgeAt} from './npc-state.mjs';
@@ -10,7 +10,8 @@ import {standing} from './standing.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {presentWitnesses,publishTransitionEvent} from './world-events.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
-import {registerIncident,evidenceScore,adjudicateLegalCase} from './law.mjs';
+import {registerIncident,evidenceScore,adjudicateLegalCase,caseLoss} from './law.mjs';
+import {recoverLoss} from './obligation-claims.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {issueWanted,wantedOfCase,WANTED_REASONS} from './bounty.mjs';
 import {monsterStats} from './combat.mjs';
@@ -43,6 +44,8 @@ export function npcCrimePlan(e,s,id){
  if(!food&&!money)return null;
  const cargo=mind>=2&&reckless&&!restraint&&cargoAt(e,s,id);if(cargo)return{actor:id,victim:peers.find(p=>p!==cargo.checkpoint.guards?.[0])??peers[0],offense:'smuggling',need:money?.need??food.need,intelligence:mind,item:cargo.item};
  if(!food&&(!reckless||restraint))return null;
+ const grant=money&&mind>=3&&Object.values(s.records??{}).find(r=>r.category==='authorization'&&r.action==='payment'&&r.grantee===id&&peers.includes(r.grantor)&&!r.revoked&&(r.createdAt??0)<=s.minute&&r.expires>s.minute&&(s.npcs[r.grantor]?.coins??0)>0);
+ if(grant)return {actor:id,victim:grant.grantor,offense:'fraud',embezzlement:true,authorization:grant.id??Object.keys(s.records).find(k=>s.records[k]===grant),need:'money',intelligence:mind};
  const victim=peers.find(other=>(s.npcs[other].coins??0)>0&&standing(e,s,id,other)<30);if(!victim)return null;
  return{actor:id,victim,offense:!food&&mind>=3?'fraud':'theft',need:food?.need??money.need,intelligence:mind};
 }
@@ -50,6 +53,10 @@ export function commitNpcCrime(d,e,plan,minute){
  const {actor,victim,offense}=plan,state=d.get('state'),n=state.npcs[actor],v=state.npcs[victim];
  const id=`npc_crime:${actor}:${Math.floor(minute/DAY)}`,caseId=`legal_case:${id}`;
  if(d.get(...path(caseId))||!available(e,state,actor)||!alive(e,state,victim,v)||n.location!==v.location||!legalCodeAt(e,n.location,state))return null;
+ if(plan.embezzlement){
+  const grant=state.records?.[plan.authorization];
+  if(offense!=='fraud'||grant?.category!=='authorization'||grant.action!=='payment'||grant.grantee!==actor||grant.grantor!==victim||grant.revoked||grant.expires<=minute||(grant.createdAt??0)>minute)return null;
+ }
  const location=n.location,witnesses=presentWitnesses(state,location,[actor]);let value=0,stolen=null,harm=0;
  if(offense==='theft'||offense==='fraud'){
   value=Math.min(v.coins??0,e.rules.law.npcCrime.maximumCoins);if(value<1)return null;
@@ -66,7 +73,18 @@ export function commitNpcCrime(d,e,plan,minute){
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
  if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
- holdingSet(d,null,path(key),{...d.get(...path(key)),npcCrime:{version:1,motive:plan.need,intelligence:plan.intelligence,reportAt,reportRoute,sourceEvent:id},nextHearing:reportAt===null?null:reportAt+code.hearingMinutes},'npc-crime');
+ let flight=null;
+ const destinations=plan.destination?[plan.destination]:plan.embezzlement?(e.rules.law.codes??[]).filter(c=>c.id!==code.id).map(c=>c.court).filter(Boolean).sort():[];
+ for(const destination of destinations){
+  try{const route=e.route(location,destination,'walk',minute,d.document.randomSeed),coins=d.get('state','npcs',actor,'coins');
+   if(route.minutes>0&&Number.isFinite(route.minutes)&&(route.cost??0)<=coins){
+    const cost=route.cost??0;if(cost){moveCoins(d,{from:purse(null,actor),to:sink('export','travel'),amount:cost,writer:'npc-crime',eventId:id});d.set(['state','npcs',actor,'coins'],coins-cost);}
+    flight={from:location,to:destination,depart:minute,arrive:minute+route.minutes,edges:route.edges,cost};
+    d.set(['state','npcs',actor,'scheduleTravel'],flight);d.set(['state','npcs',actor,'location'],null);d.set(['state','npcs',actor,'activity'],'携款逃亡');
+   }if(flight)break;
+  }catch(error){if(!/路线|通行|可达|路径|route|destination/i.test(error.message))throw error;}
+ }
+ holdingSet(d,null,path(key),{...d.get(...path(key)),npcCrime:{version:1,motive:plan.need,intelligence:plan.intelligence,reportAt,reportRoute,sourceEvent:id,...(plan.embezzlement?{embezzlement:true,authorization:plan.authorization}:{}),...(flight?{flight}:{})},nextHearing:reportAt===null?null:reportAt+code.hearingMinutes},'npc-crime');
  const verb=offense==='assault'?'harm':offense==='fraud'?'deceive':offense==='smuggling'?'breach':'steal';
  publishTransitionEvent(d,e,{id,verb,actor,target:victim,value,harm,case:key,location,minute,witnesses,
   tags:['crime','npc_crime','hostile',offense,...(witnesses.length?['discovered','exposed']:[])]});
@@ -75,12 +93,14 @@ export function commitNpcCrime(d,e,plan,minute){
 function localOfficer(d,e,code,kind){return lawAuthorities(e,d.get('state'),code,kind).find(id=>available(e,d.get('state'),id)&&d.get('state','npcs',id,'location')===code.court);}
 function settleNpcSentence(d,e,row,code,minute){
  const n=d.get('state','npcs',row.offender);if(!alive(e,d.get('state'),row.offender,n)||n.location!==code.court)return;
- const fine=row.fineDischarged?0:row.judgment.fine,compensation=row.compensationPaid?0:row.judgment.compensation;
+ const loss=row.victim?caseLoss(d,e,row):null;
+ const fine=row.fineDischarged?0:Math.max(0,row.judgment.fine-(row.finePaid??0)),compensation=row.compensationPaid?0:Math.min(row.judgment.compensation,loss?.remaining??row.judgment.compensation);
  if((n.coins??0)>=fine+compensation){
   moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
   d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
   const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
   if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
+  if(compensation&&loss)recoverLoss(d,e,{id:loss.id,amount:compensation,payer:row.offender,kind:'deposit'},`${row.id}:sentence`);
   holdingSet(d,null,path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute},'npc-crime');
  }else if(!row.fineDischarged){
   const key=`legal_custody:${row.id}`;if(d.get(...path(key)))return;

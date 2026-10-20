@@ -1,6 +1,9 @@
 // A1 动作注册表（06 §6.4，L1 数据）：读 world/actions/*.json 的数据声明动作，按 id（带命名空间，core 可省略）查找，
 // 把 world_act {action, slots} 翻译成它所别名的旧公开工具调用（engine 照旧经 resolveToolCall 执行，结算不变）。
 // 不 import 接口层（extension/tools.mjs）：call 映射本身就是数据，由 tests/action-registry.test.mjs 对照工具定义校验。
+// source=s0 mirrors static legacy aliases; source=catalog declares slots for
+// operations reachable through world_act without expanding the static tools.
+// Both dispatch to the existing engine handlers and retain their checks.
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';

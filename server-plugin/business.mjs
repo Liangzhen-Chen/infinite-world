@@ -1,4 +1,5 @@
 import {contractTerms} from './contract-state.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
@@ -12,6 +13,8 @@ import {assessTradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
+import {entityTransition} from './entity-transitions.mjs';
+import {presentWitnesses} from './world-events.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -232,7 +235,8 @@ export function businessReport(d,engine,shop){
     const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0)
         +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.location===shop.location&&r.createdAt>=shop.createdAt).reduce((n,r)=>n+r.paid,0);
     const taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&r.minute>=shop.createdAt&&r.minute<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.amount,0);
-    const debts=Object.entries(d.get('state','records')??{}).filter(([id,r])=>r.category==='debt'&&contracts.some(c=>c.debt===id||c.loan===id)).map(([id,r])=>({id,amount:r.amount-r.paid,status:r.status}));
+    const state=d.get('state'),claimIds=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),debts=obligationRows(state).filter(r=>claimIds.has(r.id)||claimIds.has(r.legacyRecord))
+        .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
         cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
         profit:{revenue,stockCostOfSales,rent,wages,taxes,net:revenue-stockCostOfSales-rent-wages-taxes,method:'已成交收入减先进先出销货成本、整期租金、已付工钱与实缴税；未售库存为资产，期初旧货按目录基价估值'},
@@ -256,10 +260,12 @@ export function businessAction(d,args,eventId){
     const bankrupt=args.operation==='business_bankrupt';
     if(bankrupt){
         const contracts=Object.values(d.get('state','records')??{}).filter(r=>r.category==='contract'&&r.business===shop.id);
-        const debt=contracts.reduce((sum,c)=>sum+[c.debt,c.loan].reduce((n,key)=>{const row=key&&d.get(...path(key));return n+(row?row.amount-row.paid:0);},0),0);
+        const keys=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),state=d.get('state');
+        const debt=obligationRows(state).filter(r=>keys.has(r.id)||keys.has(r.legacyRecord)).reduce((sum,r)=>sum+obligationView(state,r).owed,0);
         const refundable=contracts.reduce((sum,c)=>sum+c.escrow,0);
         if(debt<=d.get('state','player','coins')+refundable)throw Error('现有现金和托管款足以偿债，不符合现金破产条件');
     }
     endShop(d,this,shop,bankrupt?'破产':'停业',eventId,bankrupt?'无力用现金偿还现有欠款，欠款保留':'店主主动停业');
+    if(bankrupt)entityTransition(d,this,{id:`${eventId}:business-breach`,verb:'breach',actor:shop.id,location:shop.location,visibility:'public',witnesses:presentWitnesses(d.get('state'),shop.location),participants:[shop.owner],tags:['business'],summary:`${shop.id}无力偿还经营欠款，宣告破产；债务保留`});
     return {business:shop.id,status:bankrupt?'破产':'停业',inventoryRetained:true,note:'剩余实物保留，未偿欠款仍在原债务记录中。'};
 }

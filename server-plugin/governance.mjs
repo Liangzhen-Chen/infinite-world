@@ -5,6 +5,7 @@ import {entityTransition} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
+import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {societyGovernance} from './monster-society.mjs';
@@ -111,12 +112,13 @@ function proposal(d,engine,args,eventId,settlement){
 
 function permission(d,engine,id,settlement,at){
     const a=record(d,id,'authorization',settlement),{g}=profile(engine,settlement);
+    const signedFacts=row=>{const {registeredSeq,...facts}=row;return facts;};
     // Only the normal grant tool's receipt and the unchanged source appointment
     // support this permission; a bare category/action record is insufficient.
     const receipt=d.get(...path(`governance_source:${a.sourceEvent}`));
-    if(a.action!=='account_report'||a.grantor!==g.head||a.appointmentSource!==source(engine,settlement,at)||
+    if(a.action!=='account_report'||a.grantor!==settlementHead(engine,d.get('state'),settlement).value||a.appointmentSource!==source(engine,settlement,at,d.get('state'))||
         receipt?.result?.authorization!==id||receipt?.result?.permission?.sourceEvent!==a.sourceEvent||
-        receipt.result.permission.grantee!==a.grantee||digest(a)!==digest(receipt.result.permission)||
+        receipt.result.permission.grantee!==a.grantee||digest(signedFacts(a))!==digest(signedFacts(receipt.result.permission))||
         !safe(a.createdAt)||a.createdAt>at||!safe(a.expires)||a.expires<=at||a.revoked||
         a.scope?.actions?.length!==1||a.scope.actions[0]!=='account_report'||a.scope.budget!==0||a.scope.fee!==0||
         !eligible(engine,settlement,d.get('state')).includes(a.grantee))throw Error('授权来源不成立、已撤销、到期或超出范围');
@@ -145,6 +147,7 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
         report:{treasury:account.treasury,wood:account.wood,stone:account.stone??null,
             fiscal:structuredClone(d.get(...path(`village-fiscal:${request.settlement}`))??null)}};
     holdingSet(d,null,path(result.sourceEvent),result,'governance');holdingSet(d,null,path(requestId),{...request,status:'已完成'},'governance');
+    if(request.obligation)closeObligation(d,engine,{id:request.obligation,actor:a.grantee,reason:'performed',execution:result.sourceEvent},`${result.sourceEvent}:fulfilled`);
     d.set(['state','npcs',a.grantee,'memoryStream'],[...d.get('state','npcs',a.grantee,'memoryStream')??[],{
         id:result.sourceEvent,sourceEvent:result.sourceEvent,kind:'governance',minute:at,location:a.scope.counter,
         participants:[a.grantee],sourceType:'亲历',content:`按限期授权核对${engine.byId.get(request.settlement).name}现存公账：公款${account.treasury}铜，木料${account.wood}。`,salience:3}]);
@@ -244,7 +247,9 @@ function action(d,args,eventId){
         if(due>=a.expires)throw Error('约定办理时间超出授权期限');
         const id=`governance_request:${eventId}`;unique(d,id);
         const row={category:'governance_request',id,settlement,authorization:args.authorization,steward:a.grantee,kind:args.action,proposal,
-            status:'待办理',due,minute:now,sourceEvent:eventId};holdingSet(d,null,path(id),row,'governance');return {request:id,pending:row};
+            status:'待办理',due,minute:now,sourceEvent:eventId,obligation:`approval:${id}`};
+        openObligation(d,this,{id:row.obligation,kind:'approval',debtor:a.grantee,creditor:'player',actor:a.grantee,subject:id,amount:0,deadline:due,terms:{authorization:args.authorization,expires:a.expires}},`${eventId}:approval`);
+        holdingSet(d,null,path(id),row,'governance');return {request:id,pending:row};
     }
     case 'governance_process':{
         const a=permission(d,this,args.authorization,settlement,now);
@@ -273,6 +278,14 @@ export function advanceGovernance(d,engine,before,after,{beforeState}={}){
         const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
         for(const [id,r]of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(r.category!=='governance_request'||r.status!=='待办理'||r.due>at||presence.npcs[r.steward]?.location===presence.location)continue;
+            const grant=d.get(...path(r.authorization));
+            if(grant?.revoked||grant?.expires<=at){
+                holdingSet(d,null,path(id),{...r,status:'已退回',resolvedAt:at,reason:'授权已撤销或到期'},'governance');
+                const key=`governance_attempt:${day}:${id}`;
+                if(!d.get(...path(key)))holdingSet(d,null,path(key),{category:'governance_attempt',settlement:r.settlement,request:id,steward:r.steward,minute:at,sourceEvent:key,status:'未执行',reason:'授权已撤销或到期',charged:0},'governance');
+                if(r.obligation&&isEffective(engine,d,r.steward)&&!['昏迷','濒死','死亡'].includes(d.get('state','npcs',r.steward,'status')))closeObligation(d,engine,{id:r.obligation,actor:r.steward,reason:'authorization_expired'},`${id}:expired`);
+                continue;
+            }
             try{results.push(runRequest(d,engine,id,r.authorization,at,presence));}
             catch(error){
                 const key=`governance_attempt:${day}:${id}`;

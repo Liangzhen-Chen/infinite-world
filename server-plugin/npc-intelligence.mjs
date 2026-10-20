@@ -151,7 +151,7 @@ function detectNeeds(engine,state,id,level,minute,events,debts){
  const cash=base?.wealth?.cashRange?.[0]??base?.coins??0,coins=npc.coins??base?.coins??0;
  const home=homeSettlement(engine,state,id),famine=home?famineAt(state,home,minute):null;
  if(famine)needs.push({kind:'food',content:'冬荒缺粮，设法弄到过冬的口粮',motives:FOOD_MOTIVES,cause:famine.sourceEvent});
- const overdue=debts.some(r=>r.debtor===id&&r.deadline<minute);
+ const overdue=debts.some(r=>r.debtor===id&&obligationView(state,r,minute).overdueCount>0);
  if(overdue)needs.push({kind:'money',content:'还清逾期的欠款'});
  else if(cash>0&&coins===0)needs.push({kind:'money',content:'先凑够眼下过日子的钱'});
  else if(level>=2&&cash>=10&&coins<Math.floor(cash/2))needs.push({kind:'money',content:'把手头的钱攒回来'});
@@ -167,7 +167,7 @@ export function advanceNpcNeeds(d,engine,minute){
  if(!intelligenceFresh(engine))return;
  const state=d.get('state'),day=Math.floor(minute/DAY),records=Object.values(state.records??{});
  const events=records.filter(r=>r.category==='world_event'&&!r.legacy&&r.minute<=minute&&minute-r.minute<=30*DAY&&(r.verb==='harm'||r.verb==='steal'));
- const debts=records.filter(r=>r.category==='debt'&&r.status!=='已还清'&&Number.isFinite(r.deadline));
+ const debts=obligationRows(state).filter(r=>obligationView(state,r,minute).owed>0);
  for(const id of Object.keys(state.npcs??{}).sort()){
   const npc=state.npcs[id],base=engine.byId.get(id);
   if(!personSimulation(engine,state,id).value||isPhysicallyDead(engine,state,id)||npc.status==='濒死')continue;
@@ -194,3 +194,4 @@ export function goalsWithinHorizon(goals,horizonDays,today){
 }
 // World-event subscriber; settlement order is the `order` field.
 registerWorldEventSubscriber({id:'npc_intelligence',order:70,on:(d,engine,events,c)=>recordIntelligenceEvents(d,engine,events,c)});
+import {obligationRows,obligationView} from './obligation-state.mjs';

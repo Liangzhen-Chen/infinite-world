@@ -5,7 +5,8 @@ import {createNpcObligation,advanceNpcObligations,assertNpcObligationAction,npcO
 class Draft{constructor(document){this.document=document;this.patches=[];}get(...p){return p.reduce((x,k)=>x?.[k],this.document);}set(path,value){const p={op:'set',path,value};this.document=applyPatches(this.document,[p]);this.patches.push(p);}remove(path){const p={op:'delete',path};this.document=applyPatches(this.document,[p]);this.patches.push(p);}}
 function setup(){
  const locations=[{id:'home'},{id:'market'}],npcs=['a','b'].map(id=>({id,tier:'full',schedule:{default:[{start:0,end:1440,location:'home',activity:'营业',services:['trade']}]}}));
- const engine={world:{npcs,locations},byId:new Map([...npcs,...locations].map(x=>[x.id,x])),resolve:x=>x,calendar:()=>({market:false,day:1,season:0}),actor:(d,id)=>d.get('state',id==='player'?'player':'npcs',...(id==='player'?[]:[id])),route:(from,to)=>{if(!from)throw new Error('不在地点');return {minutes:from===to?0:10,cost:from===to?0:2,edges:from===to?[]:['road']};}};
+ const rules={};
+ const engine={rules,world:{npcs,locations,rules,professions:[]},byId:new Map([...npcs,...locations].map(x=>[x.id,x])),resolve:x=>x,calendar:()=>({market:false,day:1,season:0}),actor:(d,id)=>d.get('state',id==='player'?'player':'npcs',...(id==='player'?[]:[id])),route:(from,to)=>{if(!from)throw new Error('不在地点');return {minutes:from===to?0:10,cost:from===to?0:2,edges:from===to?[]:['road']};}};
  const document={randomSeed:'obligation',state:{minute:100,location:'home',player:{coins:30,status:'正常',companions:[]},npcs:Object.fromEntries(npcs.map(n=>[n.id,{location:'home',coins:30,status:'正常',inventory:{}}])),obligations:{}}};
  const advance=(doc,minutes,action={tool:'time',args:{}})=>{const d=new Draft(doc),before=doc.state.minute;d.set(['state','minute'],before+minutes);engine.npcObligationAction=action;advanceNpcObligations(d,engine,before,before+minutes,'advance');return d;};
  return {engine,document,advance};

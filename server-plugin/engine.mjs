@@ -33,7 +33,7 @@ import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -73,6 +73,9 @@ import './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
+import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
+import {claimEnforceable} from './obligation-protocol.mjs';
+import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
 import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
@@ -177,6 +180,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 }
 export class WorldEngine {
     constructor(world) {
+        this.obligationClaimEnforceable=claimEnforceable;
         this.protocolScheduleAt=scheduleAt;
         this.protocolLiquidatePledge=(d,row)=>{
             if(!row.pledgeRecord)return 0;
@@ -333,11 +337,13 @@ export class WorldEngine {
         if(d.scheduler&&(document.state.scheduler||d.scheduler.seq!==d.schedulerBaseline.seq||d.scheduler.lastSettled!==d.schedulerBaseline.lastSettled)){
             d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);
         }
-        return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+        return { patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(d.obligationRuntimeVersion?{obligationRuntimeVersion:1}:{}),...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
+            ...(d.loanSuccessionVersion?{loanSuccessionVersion:1}:{}),...(d.obligationSettlementVersion?{obligationSettlementVersion:1}:{}),
             ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.medicineVersion===1?{medicineVersion:1}:{}),
+            ...(!session.replaying||session.replayResult?.serviceClaimsVersion===1?{serviceClaimsVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
@@ -399,16 +405,17 @@ export class WorldEngine {
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
         const quote=tradeQuote(d,this,{buyer,seller,item,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
-        const price=existing ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
+        const price=(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
-        let payment,moved,tax,rejected;
+        let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
         moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null);
+        receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
@@ -423,7 +430,7 @@ export class WorldEngine {
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
         this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(tax.amount?{tax}:{}),...payment};
+        return {buyer,seller,item,quantity,cost,instances:moved.instances,...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         // P2: one elapsed-time event shares each region's yearly weather
@@ -773,6 +780,25 @@ export class WorldEngine {
         return {npc,trustDelta:trust};
     }
     promise(d,args,id) {
+        if(['settle','close','file_claim','receive_collection','resume_estate'].includes(args.operation)){
+            if(args.actor&&args.actor!=='player')throw Error('Public settlement must be performed by the player');
+            if(args.operation==='settle')return settleObligation(d,this,{id:args.obligation,payer:'player',actor:'player',...(args.coins!==undefined?{amount:args.coins}:{})},id);
+            if(args.operation==='close'){
+                const row=dueObligation(d.get('state'),args.obligation)?.row;
+                if(!row)throw Error('Unknown obligation');
+                return closeObligation(d,this,{id:args.obligation,actor:'player',party:row.creditor==='player'?'player':row.debtor},id);
+            }
+            if(args.operation==='receive_collection')return receiveObligationCollection(d,this,{id:args.obligation,actor:'player'},id);
+            if(args.operation==='file_claim'){
+                const claim=dueObligation(d.get('state'),args.obligation);
+                if(claim?.row.creditor!=='player')throw Error('Only the creditor can file this claim');
+                const result=fileClosedObligation(d,this,{estate:args.estate,obligation:args.obligation,eventId:id});
+                advanceProcedure(d,this,args.estate);return result;
+            }
+            const p=d.get('holdings','protocol','procedures',args.estate);
+            if(!p?.reopenedClaims?.some(oid=>{const row=dueObligation(d.get('state'),oid)?.row;return row&&[row.debtor,row.creditor].includes('player');}))throw Error('No reopened estate claim involving the player');
+            advanceProcedure(d,this,args.estate);return {estate:args.estate,phase:d.get('holdings','protocol','procedures',args.estate,'phase')};
+        }
         const conversation=dialogueRequest(d,this,args,id);if(conversation)return conversation;
         const permission=homePermission(d,this,args,id);if(permission)return permission;
         const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
@@ -805,6 +831,11 @@ export class WorldEngine {
             obligation.skill=args.skill?this.resolve(args.skill,'skill'):null;
             if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))throw new Error('协助者技能不足');
         }
+        if(type==='付款'&&(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)){
+            openObligation(d,this,{...obligation,kind:'promise',debtor:promisor,creditor:promisee,actor:promisor,amount:obligation.coins},id);
+            d.set(['state','obligations',obligation.id,'status'],obligation.status);
+            return {obligation:d.get('state','obligations',obligation.id)};
+        }
         d.set(['state','obligations',obligation.id],obligation);return {obligation,...(routePreview?{routePreview}:{})};
     }
     deliver(d,key,o,id){
@@ -822,8 +853,15 @@ export class WorldEngine {
             if(!from||!to||from!==to)throw new Error('双方尚未在同一地点交付，不能隔空转移钱物');
             if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');
         }
-        if(o.type==='送货'){if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);}
-        if(o.type==='付款'){if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
+        if(o.type==='送货'){
+            if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');
+            if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},o.deliveryVersion===1?`delivery:${key}:${o.deadline}`:`${id}:deliver:${key}`);
+            else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
+        }
+        if(o.type==='付款'){
+            if(o.runtimeVersion===1)settleObligation(d,this,{id:key,payer:o.promisor,amount:dueObligation(d.get('state'),key).owed},`${id}:deliver:${key}`);
+            else{if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
+        }
         d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
     remember(d,args,id) {

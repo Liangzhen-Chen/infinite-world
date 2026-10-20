@@ -9,6 +9,7 @@ import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
+import {regionalTradePrice,regionalMaterialSupply} from './settlement-trade.mjs';
 
 // Shops (guide 3.7, 3.13): each registered shop restocks on its own cycle from
 // local production, the settlement's own stock, or trade-route arrivals, never
@@ -20,7 +21,18 @@ const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 const clamp=(v,[a,b])=>Math.max(a,Math.min(b,v));
 export const shopRules=engine=>engine.rules.economy?.shops??null;
 
-function settlementIds(world,rules){return new Set([...(world.settlementProfiles??[]).map(p=>p.id),...(rules?.quality?.capitals??[])]);}
+const catalogs=new WeakMap();
+function catalog(world,rules){
+    let byRules=catalogs.get(world.locations);if(!byRules)catalogs.set(world.locations,byRules=new WeakMap());
+    let value=rules&&byRules.get(rules);
+    if(!value||value.items!==world.items||value.profiles!==world.settlementProfiles){
+        value={items:world.items,profiles:world.settlementProfiles,places:new Set([...(world.settlementProfiles??[]).map(p=>p.id),...(rules?.quality?.capitals??[])]),
+            locations:new Map(world.locations.map(l=>[l.id,l])),itemById:new Map(world.items.map(i=>[i.id,i])),origins:new Map()};
+        if(rules)byRules.set(rules,value);
+    }
+    return value;
+}
+function settlementIds(world,rules){return catalog(world,rules).places;}
 const held=(npc,item)=>{const v=npc?.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;};
 const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[]).some(s=>s?.kind==='trade');
 // Derived shops: a person who offers trade (services or serviceCatalog) and whose
@@ -33,7 +45,7 @@ const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[])
 export function derivedShops(world,rules=world.rules.economy?.shops){
     const types=rules?.types??{},keepers=new Set((rules?.stores??[]).map(s=>s.keeper));
     if(!rules||!Object.keys(types).length)return[];
-    const places=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),rows=[];
+    const places=settlementIds(world,rules),byId=catalog(world,rules).locations,rows=[];
     const settle=npc=>{for(let at of [npc.settlement,npc.workplace?.location,npc.home?.location??npc.home,npc.location]){const seen=new Set();
         while(typeof at==='string'&&!seen.has(at)){if(places.has(at))return at;seen.add(at);at=byId.get(at)?.parent;}}return null;};
     for(const npc of world.npcs){
@@ -83,10 +95,11 @@ export function currentShops(engine,state){
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
 // The settlement an item is produced in: walk its origin up the location tree.
 export function originSettlement(world,item,rules=world.rules.economy?.shops){
-    const ids=settlementIds(world,rules),byId=new Map(world.locations.map(l=>[l.id,l])),seen=new Set();
-    let at=world.items.find(i=>i.id===item)?.origin??null;
-    while(at&&!seen.has(at)){if(ids.has(at))return at;seen.add(at);at=byId.get(at)?.parent??null;}
-    return null;
+    const c=catalog(world,rules);if(c.origins.has(item))return c.origins.get(item);
+    const ids=c.places,byId=c.locations,seen=new Set();
+    let at=c.itemById.get(item)?.origin??null,result=null;
+    while(at&&!seen.has(at)){if(ids.has(at)){result=at;break;}seen.add(at);at=byId.get(at)?.parent??null;}
+    c.origins.set(item,result);return result;
 }
 export function settlementScale(world,settlement,rules=world.rules.economy?.shops,population=null){
     if(rules.quality.capitals.includes(settlement))return 'capital';
@@ -96,7 +109,7 @@ export function settlementScale(world,settlement,rules=world.rules.economy?.shop
 // Up to `open` any shop may stock it; above that a tier must admit the shop by
 // settlement scale or by one of its channel tags.
 export function qualityAllowed(world,shop,item,rules=world.rules.economy?.shops,population=null){
-    const order=world.rules.equipment.qualities,quality=world.items.find(i=>i.id===item)?.quality,grade=order.indexOf(quality);
+    const order=world.rules.equipment.qualities,quality=catalog(world,rules).itemById.get(item)?.quality,grade=order.indexOf(quality);
     if(grade<0)return false;if(grade<=order.indexOf(rules.quality.open))return true;
     const tier=rules.quality.tiers.find(t=>t.quality===quality);if(!tier)return false;
     return tier.scales.includes(settlementScale(world,shop.settlement,rules,population))||shop.channels.some(c=>tier.channels.includes(c));
@@ -158,7 +171,8 @@ function restockRow(d,engine,shop,row,minute){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
-    const base=engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
+    const material=regionalMaterialSupply(d,engine,row.item,shop.settlement);
+    const base=material?Math.ceil(regionalTradePrice(d,engine,row.item,shop.settlement,minute)):engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
     const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins})/base));
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
     if(row.source==='local'){entry.added=want;}
@@ -196,11 +210,11 @@ export function advanceShops(d,engine,before,after){
         for(const shop of stores)if(day>=shop.firstDay&&(day-shop.firstDay)%shop.cycleDays===0)restockShop(d,engine,shop,day*DAY);
 }
 
-// The day's list price between a player and an NPC. Written once per day and
-// counterpart into the ledger; later calls that day read it back unchanged.
+// Material quotes read current supply even within a day; the existing daily
+// quotes remain for other markets until S5 replaces their pricing projections.
 export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
-    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');return old;}
+    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
     const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
     let relation=1,keeperRegard=null,settlementRegard=null;
@@ -213,6 +227,8 @@ export function tradeQuote(d,engine,{buyer,seller,item,location,base}){
     }
     const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location,d)));
     const row={category:'trade_quote',day,buyer,seller,item,shop:shop?.id??null,settlement:place,basePrice:engine.byId.get(item).basePrice,regionalPrice:price,
+        ...(regionalMaterialSupply(d,engine,item,location)?{dynamic:true}:{}),
+        ...(old?.deals?{deals:old.deals}:{}),
         shopFactor:markup,relationFactor:relation,keeperRegard,settlementRegard,listPrice,quotedAt:minute};
     d.set(['state','records',key],row);
     return row;

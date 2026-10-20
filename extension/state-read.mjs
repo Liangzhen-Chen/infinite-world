@@ -25,7 +25,9 @@ export function readStateSection(state,section,npc){
     }
     // An NPC's own lessons with another NPC are not public knowledge; the player sees only studies they take part in.
     const npcPrivate=row=>row?.category==='education_study'&&row.student!=='player'&&row.source!=='player';
-    if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration','site'].includes(row?.category)&&!npcPrivate(row)).map(([id,row])=>{
+    // Internal attitude and reputation accounts have their own player views;
+    // exposing the raw accounts here leaks private opinions and crowds out documents.
+    if(key==='records')result=Object.fromEntries(Object.entries(result).filter(([,row])=>!['ecology','lair','wildlifeMigration','site','standing','reputation'].includes(row?.category)&&!npcPrivate(row)).map(([id,row])=>{
         if(row?.category==='legal_case'){
             const{evidence,witnesses,...view}=row;return[id,{...view,note:'证据与见证者认知通过在场报案和审理查证，不由全局记录直接透露'}];
         }

@@ -2,12 +2,15 @@
  "$schema": "../../schemas/ontology.schema.json",
  "kind": "obligations",
  "namespace": "core",
- "version": 1,
- "note": "义务种类目录（01 §1.4）。schedule 为日程形状；条款、累计闭式与违约规则由包数据声明，S0 只登记种类。",
+ "version": 2,
+ "note": "义务种类声明；条款快照与两端消失规则由统一义务接口读取。",
  "entries": [
   {
    "id": "loan",
-   "aliases": ["player_loan", "pawn"],
+   "aliases": [
+    "player_loan",
+    "pawn"
+   ],
    "label": "借贷",
    "schedule": "installments",
    "handover": {
@@ -68,7 +71,9 @@
   },
   {
    "id": "dividend",
-   "aliases": ["partnership"],
+   "aliases": [
+    "partnership"
+   ],
    "label": "分红",
    "schedule": "periodic",
    "handover": {
@@ -166,7 +171,9 @@
   },
   {
    "id": "compensation",
-   "aliases": ["medicine"],
+   "aliases": [
+    "medicine"
+   ],
    "label": "赔偿抚恤",
    "schedule": "installments",
    "handover": {
@@ -224,6 +231,48 @@
    },
    "onDebtorGone": "void",
    "onCreditorGone": "void"
+  },
+  {
+   "id": "forward",
+   "label": "远期交付",
+   "schedule": "single",
+   "onDebtorGone": "substitute_performance",
+   "onCreditorGone": "estate"
+  },
+  {
+   "id": "bounty",
+   "label": "开放悬赏",
+   "schedule": "condition",
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
+  },
+  {
+   "id": "approval",
+   "label": "批复",
+   "schedule": "single",
+   "onDebtorGone": "substitute_performance",
+   "onCreditorGone": "estate"
+  },
+  {
+   "id": "pact",
+   "label": "生灵契约",
+   "schedule": "condition",
+   "onDebtorGone": "pursue",
+   "onCreditorGone": "heirs"
+  },
+  {
+   "id": "gratitude",
+   "label": "报恩",
+   "schedule": "condition",
+   "onDebtorGone": "pursue",
+   "onCreditorGone": "heirs"
+  },
+  {
+   "id": "vow",
+   "label": "还愿",
+   "schedule": "condition",
+   "onDebtorGone": "pursue",
+   "onCreditorGone": "heirs"
   }
  ]
 }

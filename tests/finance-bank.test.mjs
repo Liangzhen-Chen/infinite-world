@@ -39,7 +39,8 @@ test('玩家向NPC放贷实际转本金，信用立场灵智收支派生利率�
     const bad=await f.act({operation:'lend',seller:worker,coins:100,days:1,consent:true,item:'item_bread',quantity:1},'bad');
     const current=f.doc.state.npcs[worker].coins;f.doc.state.npcs[worker].coins=0;f.doc.state.player.coins+=current;
     f.tick(f.doc.state.records[bad.debt].deadline+DAY);const row=f.doc.state.records[bad.debt];assert.ok(row.defaulted.case);assert.ok(row.paid>0);assert.equal(f.doc.state.records[row.defaulted.case].offender,worker);assert.equal(f.doc.state.records[row.defaulted.case].victim,'player');assert.equal(cash(f.doc),total);
-    f.doc.state.location='bld_hw_council';for(const n of ['npc_hw_chenbai','npc_hw_gucen']){f.doc.state.npcs[n].location='bld_hw_council';delete f.w.npcs.find(x=>x.id===n).schedule;}
+    // 15 §15.1.1：价值有位置；追偿前债务人与法官、执法者须同在法院，才能从其随身资金执行。
+    f.doc.state.location='bld_hw_council';for(const n of ['npc_hw_chenbai','npc_hw_gucen',worker]){f.doc.state.npcs[n].location='bld_hw_council';delete f.w.npcs.find(x=>x.id===n).schedule;}
     await f.act({operation:'hear',case:row.defaulted.case,authority:'npc_hw_chenbai'},'hear','world_law');
     await assert.rejects(f.act({operation:'pay',case:row.defaulted.case,authority:'npc_hw_gucen'},'empty','world_law'),/没有可执行资金/);
     f.doc.state.npcs[worker].coins=200;f.doc.state.player.coins-=200;

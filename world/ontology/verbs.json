@@ -483,6 +483,31 @@
    "id": "judgment",
    "label": "判决",
    "family": "design"
+  },
+  {
+   "id": "obligation_opened",
+   "label": "义务开立",
+   "family": "primitive"
+  },
+  {
+   "id": "obligation_amended",
+   "label": "义务条款变更",
+   "family": "primitive"
+  },
+  {
+   "id": "obligation_performed",
+   "label": "义务履行",
+   "family": "code"
+  },
+  {
+   "id": "obligation_closed",
+   "label": "义务履行关闭",
+   "family": "primitive"
+  },
+  {
+   "id": "obligation_settled",
+   "label": "义务清偿",
+   "family": "primitive"
   }
  ]
 }

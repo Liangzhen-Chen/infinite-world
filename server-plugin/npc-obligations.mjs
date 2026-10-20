@@ -1,5 +1,6 @@
 import {purse,sink,moveCoins} from './money.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
+import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-obligations',{sinks:['sink:export']});
 import {educationReservation} from './education-state.mjs';
@@ -19,6 +20,12 @@ const parties=o=>[o.promisor,o.promisee];
 const reservedActors=o=>o.deliveryVersion===1?[o.promisor]:parties(o);
 const released=(o,id)=>o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0;
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs[id]?.location;
+function signReservation(d,engine,row,eventId){
+ if(engine.replaying&&engine.replayResult?.obligation?.runtimeVersion!==1&&engine.replayResult?.obligationRuntimeVersion!==1){d.set(['state','obligations',row.id],row);return row;}
+ openObligation(d,engine,{...row,kind:row.deliveryVersion===1?'delivery':'promise',debtor:row.promisor,creditor:row.promisee,actor:row.promisor,amount:0},eventId);
+ d.set(['state','obligations',row.id,'status'],row.status);
+ return d.get('state','obligations',row.id);
+}
 export function npcObligationAt(state,id,minute=state.minute){
  return Object.values(state.obligations??{}).filter(live).filter(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline).sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id))[0]??null;
 }
@@ -46,7 +53,11 @@ export function createNpcObligation(d,engine,args,eventId){
   const old=d.get('state','obligations',args.obligation);if(!live(old))throw new Error('需要尚有效的等候、会面或NPC送货约定');
   const actor=engine.resolve(args.actor??'player');if(!parties(old).includes(actor))throw new Error('只有约定当事人能取消');
   const now=d.get('state','minute'),begun=now>=old.start;
-  const obligation={...old,status:begun?'违约':'取消',reason:begun?'约定开始后单方取消':'当事人提前取消',resolvedAt:now,breachedBy:begun?[actor]:[],cancelledBy:actor};
+  if(old.runtimeVersion===1){
+   if(actor===old.debtor)closeObligation(d,engine,{id:old.id,actor,reason:'reservation_cancelled'},eventId);
+   else d.set(['state','obligations',old.id,'endedAt'],now);
+  }
+  const obligation={...d.get('state','obligations',old.id),status:begun?'违约':'取消',reason:begun?'约定开始后单方取消':'当事人提前取消',resolvedAt:now,breachedBy:begun?[actor]:[],cancelledBy:actor};
   d.set(['state','obligations',old.id],obligation);return {obligation};
  }
  if(args.type==='送货'&&engine.resolve(args.promisor)!=='player'&&full(engine,engine.resolve(args.promisor))){
@@ -81,7 +92,7 @@ export function createNpcObligation(d,engine,args,eventId){
  const id=`obl_${eventId}`;if(state.obligations?.[id])throw new Error('义务编号已存在');
  const obligation=snapshotObligationTerms({id,reservationVersion:1,type:args.type,promisor,promisee,content:args.content.trim(),location,start,deadline,departures,createdAt:now,
   status:start===now?'进行中':'待履行',attendance:{[promisor]:0,[promisee]:0},togetherMinutes:0});
- d.set(['state','obligations',id],obligation);return {obligation};
+ return {obligation:signReservation(d,engine,obligation,eventId)};
 }
 
 // Delivery goes to the mutually agreed fixed place, never a live recipient
@@ -109,7 +120,7 @@ function createNpcDelivery(d,engine,args,eventId){
  if(Object.values(state.obligations??{}).some(o=>['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(promisor)))throw Error('已有带路承诺，不能同时送货');
  const id=`obl_${eventId}`;if(state.obligations?.[id])throw Error('义务编号已存在');
  const obligation=snapshotObligationTerms({id,reservationVersion:1,deliveryVersion:1,type:'送货',promisor,promisee,content:args.content.trim(),item,quantity,location,start,deadline,departures:{[promisor]:start},createdAt:now,status:start===now?'进行中':'待履行'});
- d.set(['state','obligations',id],obligation);return {obligation};
+ return {obligation:signReservation(d,engine,obligation,eventId)};
 }
 function assertCourierAccess(engine,id,location){
  const access=engine.byId.get(location)?.access;

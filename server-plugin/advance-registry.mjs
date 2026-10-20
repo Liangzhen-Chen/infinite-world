@@ -16,6 +16,8 @@ import {advanceCare}from'./magic-care.mjs';
 import {advanceMindSpace}from'./magic-mind-space.mjs';
 import {advanceShadowContracts,advanceContracts,advanceRituals,advanceRitualEffects}from'./contracts.mjs';
 import {advanceCredit,nextCreditMinute}from'./credit.mjs';
+import {addObligationSchedule} from './obligation-protocol.mjs';
+import {automaticObligationItems} from './obligation-protocol.mjs';
 import {advanceLaborMarket,nextLaborMinute} from './labor-market.mjs';
 import {settleMagicAreas,nextMagicAreaMinute}from'./magic-area.mjs';
 import {milestone}from'./progression.mjs';
@@ -153,6 +155,7 @@ function buildScheduleHeap(engine,d,now,end){
     for(const effect of Object.values(state.effects??{})){due(effect.expires,['effect_expiry','summons']);due(effect.nextUpkeep,['summons','contracts']);}
     if(state.player.status==='濒死')due(state.player.dyingSince+engine.rules.death.dyingMinutes,['dying']);
     for(const row of [...Object.values(state.obligations??{}),...Object.values(state.records??{})]){
+        addObligationSchedule(heap,engine,row,now,end,state);
         due(row.deadline);due(row.expires);due(row.nextAt);
         if(row.category==='society_news'&&row.status==='在途')due(row.arrivesAt);
         if(row.category==='society_agreement'&&row.status==='有效')due(row.nextDue);
@@ -264,6 +267,7 @@ function runAdvanceSystems(engine,d,ctx){
 
 // Order mirrors the original hand-written WorldEngine.advanceInterval sequence.
 const systems=[
+ {id:'obligation_runtime',order:199,advance:(e,d,c)=>{for(const item of automaticObligationItems(e,d,c))item.execute();}},
  {id:'transition_protocol',order:0,nextMinute:nextProtocolMinute,advance:(e,d,c)=>{for(const item of protocolDueItems(e,d,c))item.execute();}},
  {id:'education_enrollment',order:50,advance:(e,d,ctx)=>prepareEducation(d,e,ctx)},
  {id:'medicine_booking',order:60,nextMinute:(e,d,now)=>{
@@ -304,7 +308,11 @@ const systems=[
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
  {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
- {id:'shop_restock',order:850,advance:(e,d,{before,after})=>advanceShops(d,e,before,after)},
+ {id:'shop_restock',order:850,advance:(e,d,{before,after})=>{
+    // Restocking has no effects outside midnight boundaries. Deriving every
+    // shop during unrelated school/travel ticks repeatedly scans the world.
+    if(Math.floor(after/1440)>Math.floor(before/1440))advanceShops(d,e,before,after);
+ }},
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
     if(days)for(const [key,project]of Object.entries(d.get('state','projects')))if(project.type==='工程'&&project.status==='施工中'&&!isPublicProject(project)){
@@ -385,7 +393,7 @@ const systems=[
         return o?.deliveryVersion===1&&['待履行','进行中'].includes(o.status)&&o.deadline<=after;
     }))advanceNpcObligations(d,e,before,after,id,{beforeState});
     for(const [key,obligation] of (obligationIds?obligationIds.map(key=>[key,d.get('state','obligations',key)]):Object.entries(d.get('state','obligations')))) {
-        if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
+        if((obligation.status==='待履行'||obligation.deliveryVersion===1&&obligation.status==='进行中'||obligation.runtimeVersion===1&&obligation.type==='付款'&&obligation.status==='pending') && obligation.deadline<=after && ['送货','付款'].includes(obligation.type)) {
             try { e.deliver(d,key,obligation,id); } catch(error) {
                 const courier=obligation.deliveryVersion===1;
                 d.set(['state','obligations',key],{...obligation,status:'违约',reason:error.message,...(courier?{resolvedAt:after,breachedBy:[error.deliveryResponsibility??obligation.promisor]}:{})});
@@ -433,6 +441,7 @@ const dueCollectors={
     deliveries:(e,d,c)=>Object.entries(d.get('state','obligations')??{}).map(([id,r])=>({id,anchorId:r.promisor??'player',registeredSeq:r.registeredSeq??r.seq??0,execute:()=>systems.find(s=>s.id==='deliveries').advance(e,d,{...c,obligationIds:[id]})})),
 };
 for(const system of systems){
+    if(system.id==='obligation_runtime'){dueSystems[system.id]='义务';dueCollectors[system.id]=automaticObligationItems;}
     const dueClass=dueSystems[system.id];
     system.phase=dueClass?PHASE.due:PHASE.clock;
     system.dueClass=dueClass;

@@ -1,4 +1,6 @@
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
+import {currentGrace} from './obligation-state.mjs';
+import {openObligation,adoptLegacyObligation} from './obligation-runtime.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
 // by its fineness; any registered guest room or spare house can be rented; the
@@ -8,7 +10,7 @@ import {contractTerms,partyInProcedure} from './contract-state.mjs';
 // grace period is a default: the pledge is forfeited, a legal case opens under
 // the code where it was signed, and a `breach` world event reaches standing.
 import {changeItems}from'./items.mjs';
-import {purse,vault,escrow as escrowAccount,moveCoins}from'./money.mjs';
+import {purse,vault,partyAccount,mirrorPartyCoins,escrow as escrowAccount,moveCoins}from'./money.mjs';
 import {declareLedgerWriter}from'./ledger.mjs';
 import {bag,store,pledged,vaultGoods,moveStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
 declareLedgerWriter('credit');
@@ -18,7 +20,7 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance}from'./finance-bank.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim}from'./finance-bank.mjs';
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 
@@ -71,20 +73,20 @@ export function pledge(d,engine,key,item,quantity,owner='player'){
         const account=ensureGroupAccount(d,engine,owner);if((account.items[item]??0)<quantity)throw Error('组织公库没有足够抵押实物');
         moveStock(d,{from:store(engine,owner,item),to:pledged(engine,key,item),amount:quantity,writer:'credit',eventId:key});
         d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:account.items[item]-quantity},ledger:[...account.ledger,{kind:'pledge',sourceEvent:key,items:{[item]:-quantity},minute:d.get('state','minute')}]});
-        const row={category:'pledge',owner,item,quantity,instances:[],value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};holdingSet(d,null,rec(key),row,'credit');return row;
+        const row={category:'pledge',owner,item,quantity,instances:[],value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};holdingSet(d,engine,rec(key),row,'credit');return row;
     }
     if(engine.quantity(d,owner,item)<quantity)throw Error('抵押物不在当事人的行囊中');
     const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true,books:{account:pledged(engine,key,item),writer:'credit',eventId:key}});
-    for(const unit of moved.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:key,status:'质押'},'credit');
+    for(const unit of moved.instances)holdingSet(d,engine,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:key,status:'质押'},'credit');
     const row={category:'pledge',owner,item,quantity,instances:moved.instances,value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};
-    holdingSet(d,null,rec(key),row,'credit');return row;
+    holdingSet(d,engine,rec(key),row,'credit');return row;
 }
 export function releasePledge(d,engine,key,to,bank=null){
     const p=d.get(...rec(key));if(p?.category!=='pledge'||p.status!=='质押中')return null;
     if(bank){
-        const row=bankRow(d,bank);row.goods[p.item]=(row.goods[p.item]??0)+p.quantity;holdingSet(d,null,rec(bank.id),row,'credit');
+        const row=bankRow(d,bank);row.goods[p.item]=(row.goods[p.item]??0)+p.quantity;holdingSet(d,engine,rec(bank.id),row,'credit');
         moveStock(d,{from:pledged(engine,key,p.item),to:vaultGoods(engine,bank.id,p.item),amount:p.quantity,writer:'credit',eventId:key});
-        for(const unit of p.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:bank.id,status:'没收'},'credit');
+        for(const unit of p.instances)holdingSet(d,engine,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:bank.id,status:'没收'},'credit');
     }else if(groupAccountView(engine,d.get('state'),to)){
         const account=ensureGroupAccount(d,engine,to);moveStock(d,{from:pledged(engine,key,p.item),to:store(engine,to,p.item),amount:p.quantity,writer:'credit',eventId:key});d.set(groupAccountPath(to),{...account,items:{...account.items,[p.item]:(account.items[p.item]??0)+p.quantity},ledger:[...account.ledger,{kind:'pledge_return',sourceEvent:key,items:{[p.item]:p.quantity},minute:d.get('state','minute')}]});
     }else{
@@ -92,10 +94,10 @@ export function releasePledge(d,engine,key,to,bank=null){
         if(p.instances.length){
             const bag=[...engine.bagPath(to),p.item,'instances'];d.set(bag,[...d.get(...bag)??[],...p.instances]);
             const estateOwner=d.get('holdings','entities',to,'facts','of'),container=estateOwner&&d.get('holdings','protocol','entities',estateOwner,'wreck');
-            for(const unit of p.instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有',...(container?{container}:{})},'credit');
+            for(const unit of p.instances)holdingSet(d,engine,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:to,status:'持有',...(container?{container}:{})},'credit');
         }
     }
-    const next={...p,status:to===(p.owner??'player')?'已退还':'已没收',releasedAt:d.get('state','minute'),holder:bank?.id??to};holdingSet(d,null,rec(key),next,'credit');return next;
+    const next={...p,status:to===(p.owner??'player')?'已退还':'已没收',releasedAt:d.get('state','minute'),holder:bank?.id??to};holdingSet(d,engine,rec(key),next,'credit');return next;
 }
 
 // ---- loans -----------------------------------------------------------------
@@ -121,22 +123,32 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue})
 }
 // Creates the debt; the principal goes to the player or into a contract's escrow.
 // S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
-export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null}){
+export function loanSuccessionTerms(d,engine){
+    if(engine.replaying&&engine.replayResult?.loanSuccessionVersion!==1)return null;
+    d.loanSuccessionVersion=1;
+    return {onDebtorGone:'assume_by_heirs'};
+}
+export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(engine,collateral.item,collateral.quantity):0;
     const {rate,interest}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw Error('借据编号已存在');
     const now=d.get('state','minute'),pledgeKey=collateral?`pledge:${id}`:null;
-    if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity);
+    if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity,debtor);
     if(!toPlayer&&!escrowTo)throw Error('借款本金须有去处');
-    moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?purse(engine,'player'):escrowTo,amount:principal,writer:'credit',eventId});
-    if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,null,rec(bank.id),row,'credit');}
+    moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?partyAccount(engine,d.get('state'),debtor):escrowTo,amount:principal,writer:'credit',eventId});
+    if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');}
     else d.set([...engine.actorPath(lender),'coins'],engine.actor(d,lender).coins-principal);
-    if(toPlayer)d.set(['state','player','coins'],d.get('state','player','coins')+principal);
-    const terms={debtor:'player',creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null};
-    const row={category:'debt',kind:'loan',name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),
+    if(toPlayer)mirrorPartyCoins(d,engine,debtor,principal,eventId,'credit');
+    // New loans explicitly continue their signed schedule through the estate.
+    // Old records without this clause retain the package's accelerate route.
+    const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
+    const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
+        ...(succession?{terms:succession}:{})};
+    const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
         amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms)};
-    holdingSet(d,null,rec(id),row,'credit');
+    holdingSet(d,engine,rec(id),row,'credit');
+    openObligation(d,engine,{...row,id:`finance:${id}`,legacyRecord:id,actor,...(actedAs?{actedAs}:{})},`${eventId}:claim`);
     return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{})};
 }
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
@@ -150,28 +162,27 @@ export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
     counterpart(d,engine,seller,{consent:true});
     const amount=partial===undefined?row.amount-row.paid:int(partial,1,row.amount-row.paid,'还款金额'),coins=d.get('state','player','coins');
     if(coins<amount)throw Error(`还款${amount}铜，现钱不足`);
-    moveCoins(d,{from:purse(engine,'player'),to:bank?vault(bank.id):purse(engine,row.creditor),amount,writer:'credit',eventId});
-    d.set(['state','player','coins'],coins-amount);
-    if(bank){const b=bankRow(d,bank);b.coins+=amount;holdingSet(d,null,rec(bank.id),b,'credit');}
-    else d.set([...engine.actorPath(row.creditor),'coins'],engine.actor(d,row.creditor).coins+amount);
+    const priorPledge=row.pledgeRecord&&d.get(...rec(row.pledgeRecord));
+    settleFinancialClaim(d,engine,{claim:id,payer:'player',amount},eventId);
     const now=d.get('state','minute');
     const paid=row.paid+amount,status=paid===row.amount?'已还清':row.status;
-    holdingSet(d,null,rec(id),{...row,paid,status,...(status==='已还清'?{paidAt:now}:{})},'credit');
-    const returned=status==='已还清'&&row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,'player'):null;
-    if(status==='已还清'&&row.defaulted?.case)settleCreditCase(d,engine,row.defaulted.case,eventId);
-    if(status!=='已还清'&&row.defaulted?.case){const claim=d.get(...rec(row.defaulted.case));if(claim)holdingSet(d,null,rec(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})},'credit');}
+    holdingSet(d,engine,rec(id),{...d.get(...rec(id)),kind:row.kind,paid,status,...(status==='已还清'?{paidAt:now}:{})},'credit');
+    const returned=status==='已还清'&&row.pledgeRecord?(releasePledge(d,engine,row.pledgeRecord,'player')??(priorPledge?.status==='质押中'?d.get(...rec(row.pledgeRecord)):null)):null;
+    if(status==='已还清'&&row.defaulted?.case&&!d.get(...rec(row.defaulted.case),'compensationPaid'))settleCreditCase(d,engine,row.defaulted.case,eventId);
+    if(status!=='已还清'&&row.defaulted?.case){const claim=d.get(...rec(row.defaulted.case));if(claim)holdingSet(d,engine,rec(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})},'credit');}
     engine.advance(d,5,eventId);d.say(`偿还${bank?.name??nameOf(engine,row.creditor)}欠款${amount}铜，${status}${returned?`，取回抵押${nameOf(engine,returned.item)}×${returned.quantity}`:''}`);
     return {debt:id,repaid:amount,status,...(returned?{pledgeReturned:returned.item}:{})};
 }
 function defaultDebt(d,engine,id,row){
-    const minute=(row.installmentOverdueAt??row.deadline)+(rules(engine).loan.defaultGraceMinutes??0),bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
+    const allowance=currentGrace(engine,d.get('state'),row,d.get('state','minute'),{fallbackMinutes:rules(engine).loan.defaultGraceMinutes??0});
+    const minute=(row.installmentOverdueAt??row.deadline)+allowance.minutes,bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
     let next={...row};
     const forfeited=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,row.creditor,bank):null;
     if(forfeited){const covered=Math.min(forfeited.value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
     const remaining=next.amount-next.paid;
     const legalCase=remaining>0?registerCreditDefault(d,engine,{debt:id,row:next,value:remaining,minute}):null;
-    next.defaulted={minute,remaining,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
-    holdingSet(d,null,rec(id),next,'credit');
+    next.defaulted={minute,remaining,grace:allowance,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
+    holdingSet(d,engine,rec(id),next,'credit');
     d.say(`欠${bank?.name??nameOf(engine,row.creditor)}的${row.kind==='loan'?'借款':'合伙款'}过宽限仍未还，按契约违约${forfeited?`，抵押${nameOf(engine,forfeited.item)}已归债主`:''}${legalCase?`，已在当地立案（${legalCase}）`:''}`);
 }
 
@@ -183,10 +194,11 @@ function settlePartnership(d,engine,id,row,{minute,eventId}){
     let debt=null;
     if(payout>0){
         debt=`debt_partner_${eventId}`;
-        holdingSet(d,null,rec(debt),{category:'debt',kind:'partnership',name:`${nameOf(engine,row.partner)}合伙退股与分成`,debtor:'player',creditor:row.partner,amount:payout,paid:0,principal:payout,interest:0,
+        holdingSet(d,engine,rec(debt),{category:'debt',kind:'partnership',name:`${nameOf(engine,row.partner)}合伙退股与分成`,debtor:'player',creditor:row.partner,amount:payout,paid:0,principal:payout,interest:0,
             createdAt:minute,deadline:minute+rules(engine).partnership.payoutDays*1440,status:'待偿还',location:row.location,contract:id,source:eventId},'credit');
+        adoptLegacyObligation(d,engine,debt);
     }
-    const next={...row,status:'已结算',settledAt:minute,profit,payout,debt};holdingSet(d,null,rec(id),next,'credit');
+    const next={...row,status:'已结算',settledAt:minute,profit,payout,debt};holdingSet(d,engine,rec(id),next,'credit');
     d.say(`与${nameOf(engine,row.partner)}的合伙结算：期间盈亏${profit}铜，应付退股与分成${payout}铜`);
     return next;
 }
@@ -206,7 +218,7 @@ export function assertLodgingHost(d,engine,host,place,consent){
 export function grantLodgingAccess(d,engine,place,host,{starts,expires,eventId}){
     if(!['private','council'].includes(place.access?.mode))return null;
     const key=`permission_room_${eventId}`;
-    holdingSet(d,null,rec(key),{category:'authorization',action:'enter_home',subject:place.id,grantor:host,grantee:'player',guests:[],createdAt:starts,expires,revoked:false,content:`租住${place.name}`,sourceEvent:eventId},'credit');
+    holdingSet(d,engine,rec(key),{category:'authorization',action:'enter_home',subject:place.id,grantor:host,grantee:'player',guests:[],createdAt:starts,expires,revoked:false,content:`租住${place.name}`,sourceEvent:eventId},'credit');
     return key;
 }
 
@@ -221,8 +233,9 @@ export async function creditTrade(d,args,eventId){
         let bank=null,keeper=null;
         if(bankHere?.keepers.includes(lender)){({b:bank,keeper}=openBank(d,engine,lender));}
         else counterpart(d,engine,lender,{consent:args.consent,minutes:5});
-        const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId});
-        if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));holdingSet(d,null,rec(loan.debt),{...row,installments:count,nextInstallment:1},'credit');}
+        const installments=args.quantity&&!args.item?int(args.quantity,1,days,'分期期数'):1;
+        const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId,installments});
+        if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));holdingSet(d,engine,rec(loan.debt),{...row,installments:count,nextInstallment:1},'credit');}
         engine.advance(d,5,eventId);
         d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，月息${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);
         return {lender:bank?.id??lender,...loan};
@@ -254,7 +267,7 @@ export async function creditTrade(d,args,eventId){
                 moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount:paid,writer:'credit',eventId});d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
             }
         }
-        holdingSet(d,null,rec(b.id),row,'credit');engine.advance(d,5,eventId);
+        holdingSet(d,engine,rec(b.id),row,'credit');engine.advance(d,5,eventId);
         return {bank:b.id,keeper,balance:row.accounts.player??0,...detail};
     }
     if(op==='work'){
@@ -266,13 +279,13 @@ export async function creditTrade(d,args,eventId){
         const id=`contract_work_${eventId}`,location=d.get('state','location');if(d.get(...rec(id)))throw Error('雇佣契约编号已存在');
         moveCoins(d,{from:purse(engine,employer),to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);
         const terms={parties:['player',employer],minutes,wage,skill,location};
-        holdingSet(d,null,rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:wage,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)},'credit');
+        holdingSet(d,engine,rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:wage,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)},'credit');
         advanceWithNpcParticipants(d,engine,minutes,eventId,[employer]);
         const finished=d.get('state','location')===location&&d.get('state','player','status')==='正常';
         const row=d.get(...rec(id));
-        if(!finished){moveCoins(d,{from:escrowAccount(id),to:purse(engine,employer),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);holdingSet(d,null,rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')},'credit');return {contract:id,employer,status:'中止'};}
+        if(!finished){moveCoins(d,{from:escrowAccount(id),to:purse(engine,employer),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);holdingSet(d,engine,rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')},'credit');return {contract:id,employer,status:'中止'};}
         moveCoins(d,{from:escrowAccount(id),to:purse(engine,'player'),amount:wage,writer:'credit',eventId});d.set(['state','player','coins'],d.get('state','player','coins')+wage);
-        holdingSet(d,null,rec(id),{...row,escrow:0,paid:wage,status:'已完成',endedAt:d.get('state','minute')},'credit');
+        holdingSet(d,engine,rec(id),{...row,escrow:0,paid:wage,status:'已完成',endedAt:d.get('state','minute')},'credit');
         const practiced=skill&&d.get('state','skills',skill)?engine.practice(d,{skill,gain:Math.max(1,Math.floor(minutes/80)),target:`受雇:${employer}`},eventId):null;
         d.say(`为${nameOf(engine,employer)}做工${minutes}分钟，得工钱${wage}铜`);
         return {contract:id,employer,minutes,wage,status:'已完成',skill,skillGain:practiced?.gain??0};
@@ -296,7 +309,7 @@ export async function creditTrade(d,args,eventId){
         const now=d.get('state','minute'),baselineNet=businessReport(d,engine,shop).profit.net;
         moveCoins(d,{from:purse(engine,partner),to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);
         const terms={parties:['player',partner],partner,business:shop.id,stake,share,deadline:now+days*1440};
-        holdingSet(d,null,rec(id),{category:'contract',kind:'partnership',version:2,name:`与${nameOf(engine,partner)}合伙经营`,...terms,baselineNet,location:shop.location,status:'有效',createdAt:now,source:eventId,signedTerms:structuredClone(terms)},'credit');
+        holdingSet(d,engine,rec(id),{category:'contract',kind:'partnership',version:2,name:`与${nameOf(engine,partner)}合伙经营`,...terms,baselineNet,location:shop.location,status:'有效',createdAt:now,source:eventId,signedTerms:structuredClone(terms)},'credit');
         engine.advance(d,5,eventId);d.say(`${nameOf(engine,partner)}出资${stake}铜入伙，期满按${share}%分成并退股`);
         return {contract:id,partner,business:shop.id,stake,share,deadline:terms.deadline};
     }
@@ -318,5 +331,5 @@ export function advanceCredit(d,engine,minute,recordIds){
     for(const [id,row]of rows())
         if(row.category==='contract'&&row.kind==='partnership'&&row.status==='有效'&&row.deadline<=minute)settlePartnership(d,engine,id,row,{minute:row.deadline,eventId:`deadline_${id}`});
     for(const [id,row]of rows())
-        if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+(c.loan.defaultGraceMinutes??0)<=minute)defaultDebt(d,engine,id,row);
+        if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+currentGrace(engine,d.get('state'),row,minute,{fallbackMinutes:c.loan.defaultGraceMinutes??0}).minutes<=minute)defaultDebt(d,engine,id,row);
 }

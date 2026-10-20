@@ -6,8 +6,23 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('office-salary');
 import {actorPath} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
+import {aliveHoldings,entityRow} from './holdings.mjs';
+import {effective} from './holding-kinds.mjs';
+import {personConstraint} from './entity-view.mjs';
 
 const MONTH=30*1440,rec=id=>['state','records',id];
+export function salaryEffective(d,engine,office,minute=d.get('state','minute')){
+    if(!isEffective(engine,d,office.holder))return false;
+    const actor=d.get(...actorPath(engine.world,office.holder));
+    const impaired=()=>['昏迷','濒死','出神','附身'].includes(actor?.status);
+    const edges=aliveHoldings(d,{kind:'holds_office',holder:office.holder}).filter(h=>{
+        const facts=entityRow(d,h.subject)?.facts;
+        return facts?.settlement===office.settlement&&facts?.office===office.office;
+    });
+    if(edges.length)return edges.some(h=>effective(d,h.id,{alive:id=>isEffective(engine,d,id),impaired}));
+    // Old saves without a holdings partition retain the same factual gates.
+    return !impaired()&&!personConstraint(engine,d.get('state'),office.holder,minute);
+}
 export function nextSalaryMinute(engine,now){return engine.rules.governance?.salaries?(Math.floor(now/MONTH)+1)*MONTH:Infinity;}
 // Pay the office held immediately before the monthly boundary. Once assessed,
 // the amount and creditor are a debt fact even if the office is later lost.
@@ -21,7 +36,7 @@ export function advanceOfficeSalaries(d,engine,{before,after}){
         const offices=[...ids].flatMap(id=>personOffices(engine,prior,id)).map(e=>e.value).sort((a,b)=>a.id.localeCompare(b.id));
         for(const office of offices){
             const key=`office_salary:${office.settlement}:${office.office}:${office.holder}:${at}`;
-            if(!isEffective(engine,d,office.holder)||!office.monthlySalaryCopper||d.get(...rec(key)))continue;
+            if(!salaryEffective(d,engine,office,at-1)||!office.monthlySalaryCopper||d.get(...rec(key)))continue;
             d.set(rec(key),{category:'office_salary',id:key,holder:office.holder,office:office.office,officeName:office.name,settlement:office.settlement,
                 assessedAt:at,monthlyCopper:office.monthlySalaryCopper,paid:0,arrears:office.monthlySalaryCopper,status:'待付',payments:[],source:office.source??'rules.governance.salaries'});
         }

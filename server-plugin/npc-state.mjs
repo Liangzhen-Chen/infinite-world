@@ -2,6 +2,7 @@
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
 import {recordsWhere} from './storage.mjs';
+import {currentWorkstationRecipes} from './workstation-services.mjs';
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -61,7 +62,7 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
 export const activeRental=(state,id,minute=state?.minute,constraints=null)=>(constraints?.leases?constraints.leases.get(id)??[]:recordsWhere(state?.records,'kind','asset_lease')).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
 export function npcServices(engine,state,id){
     if(state&&personConstraint(engine,state,id))return [];
-    return personCareer(engine,state??{},id).value.services.filter(service=>{
+    return [...new Set([...personCareer(engine,state??{},id).value.services,...(state?currentWorkstationRecipes(engine,state,id).map(r=>r.id):[])])].filter(service=>{
         if(!['judge','officer','law','register'].includes(service))return true;
         return engine.rules.law?.codes?.some(c=>personLawRoles(engine,state??{},id,c).length);
     });

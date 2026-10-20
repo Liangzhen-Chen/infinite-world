@@ -619,6 +619,9 @@ function residenceSchedule(engine,state,m){
 function endObligations(d,engine,id,test,reason,mid,minute){
  const ended=[];
  for(const o of Object.values(d.get('state','obligations')??{}).sort((a,b)=>a.id.localeCompare(b.id)))if(['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)&&test(o)){
+  // Relocation does not forgive money or goods. Their normal performance
+  // consumer retains the same deadline, cargo and eventual breach decision.
+  if(['付款','送货'].includes(o.type))continue;
   d.set(['state','obligations',o.id],{...o,status:'取消',reason,resolvedAt:minute,endedByMigration:mid});ended.push(o.id);
  }
  return ended;

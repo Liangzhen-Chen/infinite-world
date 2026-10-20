@@ -9,13 +9,13 @@ declareLedgerWriter('organizations');
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {storedOrganization} from './organization-state.mjs';
 import {orgLeaderOffice} from './holding-sources.mjs';
-declareHoldingWriter('organizations',{kinds:['member_of','holds_office'],entities:['office','motion']});
+declareHoldingWriter('organizations',{kinds:['member_of','business_member_of','holds_office'],entities:['office','motion']});
 import {entityTransition} from './entity-transitions.mjs';
 import {personName} from './entity-view.mjs';
 import {presentWitnesses,registerWorldEventSubscriber} from './world-events.mjs';
 import {resolveCreature} from './wildlife.mjs';
 import {standing,adjustStanding} from './standing.mjs';
-import {opinionAmong} from './public-opinion.mjs';
+import {opinionAmong,knownTopics} from './public-opinion.mjs';
 import {assertAcademyAdmission} from './notables.mjs';
 import {familyOrganizationProjection,familyAdult} from './family-state.mjs';
 
@@ -42,6 +42,7 @@ const within=(engine,location,place)=>{const seen=new Set();while(location&&!see
 // Shared selector keeps current removals, vacancies and actor aliases consistent.
 export const organization=(engine,state,id)=>groupView(engine,state,id)?.organization.value??null;
 export function organizationsOf(state,member,engine=null){
+    if(engine&&state.records?.[member]?.category==='business')return Object.values(state.records??{}).filter(r=>r.category==='organization'&&organization(engine,state,r.id)?.members[member]).map(r=>r.id).sort();
     if(engine)return (personView(engine,state,member)?.organizations??[]).map(o=>o.value.id).sort();
     return Object.values(state.records??{}).filter(r=>r.category==='organization'&&r.members?.[member]).map(r=>r.id).sort();
 }
@@ -59,11 +60,11 @@ function saveMembership(d,row,engine,eventId){
     for(const [m,entry]of Object.entries(row.members??{}))members[m]=entry.position;
     const leader=Object.hasOwn(row,'leader')?row.leader:before.leader;
     const changed=Object.keys(before.members).filter(m=>before.members[m]!==members[m]);
-    const closures=changed.map(holder=>({holder,kinds:['member_of']}));
+    const closures=changed.map(holder=>({holder,kinds:['member_of','business_member_of']}));
     if(before.leader&&before.leader!==leader)closures.push({holder:before.leader,kinds:['holds_office']});
     const apply=()=>{
         for(const [holder,rank]of Object.entries(members))if(before.members[holder]!==rank)
-            changeHolding(d,engine,{op:'open',kind:'member_of',holder,subject:row.id,terms:{rank},source:`org:${row.id}`,eventId:`${eventId}:member:${holder}`});
+            changeHolding(d,engine,{op:'open',kind:membershipKind(d.get('state'),holder),holder,subject:row.id,terms:membershipTerms(d.get('state'),row,holder,rank),source:`org:${row.id}`,eventId:`${eventId}:member:${holder}`});
         if(leader&&leader!==before.leader)
             changeHolding(d,engine,{op:'open',kind:'holds_office',holder:leader,subject:orgLeaderOffice(row.id),source:`org:${row.id}`,eventId:`${eventId}:leader`});
         return save(d,row,engine);
@@ -71,7 +72,20 @@ function saveMembership(d,row,engine,eventId){
     const close=i=>i===closures.length?apply():changeLegacyHoldings(d,engine,{...closures[i],source:`org:${row.id}`,reason:'vacated',eventId:`${eventId}:close:${i}`},()=>close(i+1));
     return close(0);
 }
-const coinPath=(engine,who)=>[...actorPath(engine.world,who),'coins'];
+const memberOwner=(state,who)=>state.records?.[who]?.category==='business'?state.records[who].owner:who;
+const coinPath=(engine,who,state)=>[...actorPath(engine.world,memberOwner(state,who)),'coins'];
+const memberPurse=(d,engine,who)=>purse(engine,memberOwner(d.get('state'),who));
+const membershipKind=(state,who)=>state.records?.[who]?.category==='business'?'business_member_of':'member_of';
+const membershipTerms=(state,row,who,rank)=>({rank,...(state.records?.[who]?.category==='business'?{representative:row.members[who].representative,feeAccount:row.members[who].feeAccount}:{})});
+function businessMembership(d,engine,org,who,consent){
+    const shop=d.get('state','records',who);if(shop?.category!=='business')return null;
+    if(!['行会','商会'].includes(org.kind))throw Error('商号须加入商会或行会');
+    if(!['筹备','营业'].includes(shop.status)||!isEffective(engine,d,shop.owner))throw Error('需要有效商号与现任代表');
+    if(!within(engine,d.get('state','location'),org.seat))throw Error('请到商会驻地办理');
+    if(shop.owner!=='player')present(d,engine,shop.owner);
+    if(consent!==true)throw Error('商号代表须当面同意会籍与会费');
+    return {representative:shop.owner,feeAccount:purse(engine,shop.owner)};
+}
 const actor=(d,engine,who)=>d.get(...actorPath(engine.world,who));
 const resolveActor=(engine,state,name)=>{
     const direct=actorId(engine.world,name);
@@ -86,10 +100,10 @@ function move(d,engine,row,{kind,amount,party,minute,sourceEvent,reason,balance}
     row.ledger=[...row.ledger??[],{kind,amount,party,minute,sourceEvent,reason,balance}];
 }
 function pay(d,engine,who,amount){
-    const p=coinPath(engine,who),have=d.get(...p)??0;if(have<amount)return false;d.set(p,have-amount);return true;
+    const p=coinPath(engine,who,d.get('state')),have=d.get(...p)??0;if(have<amount)return false;d.set(p,have-amount);return true;
 }
 function deciders(state,org){
-    const all=Object.keys(org.members).sort();
+    const all=Object.keys(org.members).filter(m=>state.records?.[m]?.category!=='business').sort();
     if(org.charter.mode==='leader'&&org.leader&&all.includes(org.leader))return {mode:'leader',people:[org.leader]};
     if(org.charter.mode!=='vote'){const e=all.filter(m=>m===org.leader||org.members[m].position===ELDER);if(e.length)return {mode:'elders',people:e};}
     return {mode:'vote',people:all};
@@ -116,7 +130,7 @@ function execute(d,engine,org,p,minute,sourceEvent){
     const row=rowOf(d,engine,org),m=p.motion,treasury=()=>['faction','temple'].includes(row.source)?groupView(engine,d.get('state'),org.id).treasury.value:row.treasury;
     let outcome='已执行';
     if(m.action==='admit'){
-        row.members[m.member]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[m.member];
+        row.members[m.member]={position:MEMBER,joinedAt:minute,arrears:0,...m.membership};delete row.removed?.[m.member];
         if(p.escrow){move(d,engine,row,{kind:'入会费',amount:p.escrow,party:m.member,minute,sourceEvent,balance:treasury()+p.escrow},{account:escrowAccount(p.id),writer:'organizations',eventId:sourceEvent});}
     }else if(m.action==='expel'){
         if(org.members[m.member]){delete row.members[m.member];row.removed={...row.removed,[m.member]:{minute,sourceEvent}};}
@@ -133,8 +147,8 @@ function execute(d,engine,org,p,minute,sourceEvent){
         if(org.treasury<m.coins)outcome='执行失败：公库不足';
         else if(!isEffective(engine,d,m.member))outcome='执行失败：收款人不在世';
         else{
-            d.set(coinPath(engine,m.member),(d.get(...coinPath(engine,m.member))??0)+m.coins);
-            move(d,engine,row,{kind:'支取',amount:-m.coins,party:m.member,minute,sourceEvent,reason:p.content,balance:treasury()-m.coins},{account:purse(engine,m.member),writer:'organizations',eventId:sourceEvent});
+            d.set(coinPath(engine,m.member,d.get('state')),(d.get(...coinPath(engine,m.member,d.get('state')))??0)+m.coins);
+            move(d,engine,row,{kind:'支取',amount:-m.coins,party:m.member,minute,sourceEvent,reason:p.content,balance:treasury()-m.coins},{account:memberPurse(d,engine,m.member),writer:'organizations',eventId:sourceEvent});
         }
     }else if(m.action==='charter'){
         row.charter={...row.charter,...m.charter};
@@ -156,7 +170,7 @@ function settle(d,engine,proposalId,minute,sourceEvent){
     if(!status)return p;
     let outcome=null;
     if(status==='通过')outcome=execute(d,engine,org,p,minute,sourceEvent);
-    else if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:purse(engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:sourceEvent});d.set(coinPath(engine,p.motion.member),(d.get(...coinPath(engine,p.motion.member))??0)+p.escrow);outcome='入会费已退还';}
+    else if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:memberPurse(d,engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:sourceEvent});d.set(coinPath(engine,p.motion.member,d.get('state')),(d.get(...coinPath(engine,p.motion.member,d.get('state')))??0)+p.escrow);outcome='入会费已退还';}
     const closed={...p,status,outcome,closedAt:minute,closeEvent:sourceEvent};holdingSet(d,null,['state','records',proposalId],closed,'organizations');
     worldEvent(d,engine,org,`${proposalId}:close`,minute,{target:closed.motion.member??null,participants:[...closed.deciders,closed.motion.member].filter(Boolean),
         tags:['organization','org:decide',`motion:${closed.motion.action}`,status==='通过'?'passed':'rejected'],
@@ -178,9 +192,9 @@ function motionOf(engine,d,org,args){
         return {action,charter};
     }
     if(!['expel','appoint','withdraw'].includes(action))throw Error('组织议案须为expel、appoint、withdraw或charter');
-    const member=args.member==='player'?'player':resolveActor(engine,state,args.member);
+    const member=state.records?.[args.member]?.category==='business'?args.member:args.member==='player'?'player':resolveActor(engine,state,args.member);
     if(action==='expel'){if(!org.members[member])throw Error('此人不是成员');if(member===org.leader)throw Error('不能除名现任首脑，先改任');}
-    if(action==='appoint'){if(!org.members[member])throw Error('只能任命现有成员');return {action,member,name:text(args.name)};}
+    if(action==='appoint'){if(state.records?.[member]?.category==='business')throw Error('职位须由人物担任，商号会籍不授予人物职位');if(!org.members[member])throw Error('只能任命现有成员');return {action,member,name:text(args.name)};}
     if(action==='withdraw'){
         if(!isEffective(engine,d,member))throw Error('收款人须是现存人物');
         return {action,member,coins:int(args.coins,1,1e9)};
@@ -191,7 +205,7 @@ function propose(d,engine,org,motion,proposer,eventId,{escrow=0,content=null}={}
     const id=`organization_proposal:${eventId}`;if(d.get('state','records',id))throw Error('议案编号已占用');
     const {mode,people}=deciders(d.get('state'),org),minute=d.get('state','minute');
     const votes=people.includes(proposer)&&motion.action!=='admit'?[{voter:proposer,opinion:'approve',minute,sourceEvent:eventId}]:[];
-    if(escrow)moveCoins(d,{from:purse(engine,motion.member),to:escrowAccount(id),amount:escrow,writer:'organizations',eventId});
+    if(escrow)moveCoins(d,{from:memberPurse(d,engine,motion.member),to:escrowAccount(id),amount:escrow,writer:'organizations',eventId});
     holdingSet(d,null,['state','records',id],{category:'organization_proposal',id,org:org.id,motion,proposer,mode,deciders:people,votes,escrow,content,status:'议事中',minute,sourceEvent:eventId},'organizations');
     return settle(d,engine,id,minute,eventId);
 }
@@ -215,6 +229,10 @@ function npcVote(engine,state,org,voter,p){
     const m=p.motion,regard=who=>personView(engine,state,voter)?standing(engine,state,voter,who):standing(engine,state,org.id,who);
     if(m.member===voter)return ['approve','本人事项'];
     if(m.action==='admit')return regard(m.member)>-20?['approve','不反感申请人']:['reject','对申请人有敌意'];
+    if(m.action==='expel'&&state.records?.[m.member]?.category==='business'){
+        const topics=[...knownTopics(engine,{state},voter).values()].filter(t=>t.actor===m.member&&t.act==='harm');
+        if(topics.length)return ['approve',`商号失信：${topics.map(t=>t.memoryId).join(',')}`];
+    }
     if(m.action==='expel')return org.members[m.member]?.arrears>0||regard(m.member)<=-30?['approve','欠费或交恶']:['reject','无除名理由'];
     if(m.action==='appoint')return regard(m.member)>=10?['approve','信任被任命者']:['reject','信任不足'];
     if(m.action==='withdraw')return m.coins*5<=org.treasury&&org.members[m.member]&&regard(m.member)>=0?['approve','支出在公库五分之一内且付给成员']:['reject','支出过大或付给外人'];
@@ -293,7 +311,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             holdingSet(d,null,['state','records',id],{...p,votes},'organizations');
             const closed=settle(d,engine,id,at,`${id}:${day}`);
             if(closed.status==='议事中'&&at-p.minute>=PROPOSAL_LAPSE){
-                if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:purse(engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:id});}if(p.escrow)d.set(coinPath(engine,p.motion.member),(d.get(...coinPath(engine,p.motion.member))??0)+p.escrow);
+                if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:memberPurse(d,engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:id});}if(p.escrow)d.set(coinPath(engine,p.motion.member,d.get('state')),(d.get(...coinPath(engine,p.motion.member,d.get('state')))??0)+p.escrow);
                 holdingSet(d,null,['state','records',id],{...closed,status:'搁置',closedAt:at,outcome:p.escrow?'逾期未决，入会费已退还':'逾期未决'},'organizations');
             }
         }
@@ -306,10 +324,10 @@ export function advanceOrganizations(d,engine,{before,after}){
             let balance=org.treasury;
             if(!dues){delete row.nextDues;break;}
             for(const m of Object.keys(org.members).sort()){
-                if(!isEffective(engine,d,m))continue;
-                const entry=org.members[m],owed=dues*(1+(entry.arrears??0)),have=d.get(...coinPath(engine,m))??0;
+                if(!isEffective(engine,d,memberOwner(d.get('state'),m)))continue;
+                const entry=org.members[m],owed=dues*(1+(entry.arrears??0)),have=d.get(...coinPath(engine,m,d.get('state')))??0;
                 const paid=have>=owed?owed:have>=dues?dues:0,settled=paid?paid/dues:0,arrears=(entry.arrears??0)+1-settled;
-                if(paid){d.set(coinPath(engine,m),have-paid);move(d,engine,row,{kind:org.kind==='教会'?'香火供献':'会费',amount:paid,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,balance:balance+=paid},{account:purse(engine,m),writer:'organizations'});}
+                if(paid){d.set(coinPath(engine,m,d.get('state')),have-paid);move(d,engine,row,{kind:org.kind==='教会'?'香火供献':'会费',amount:paid,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,balance:balance+=paid},{account:memberPurse(d,engine,m),writer:'organizations'});}
                 else move(d,engine,row,{kind:'欠费',amount:0,party:m,minute:at,sourceEvent:`organization_dues:${row.id}:${at}`});
                 if(arrears>=EXPEL_ARREARS&&m!==org.leader){
                     delete row.members[m];row.removed={...row.removed,[m]:{minute:at,sourceEvent:`organization_dues:${row.id}:${at}`,reason:`欠费${EXPEL_ARREARS}期除名`}};
@@ -356,7 +374,8 @@ export function organizationAction(d,args,eventId){
     case 'org_inspect':return inspectOrganization(engine,d.document,org);
     case 'org_join':{
         if(['household','family'].includes(org.source))throw Error('家户家族成员随亲属迁居变化，不能申请加入');
-        const who=args.member&&args.member!=='player'?present(d,engine,args.member):'player';
+        const membership=businessMembership(d,engine,org,args.member,args.consent);
+        const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&args.consent!==true)throw Error('入会须本人当面同意');
         if(org.members[who])throw Error('已是成员');
         if(org.source==='faction'){
@@ -368,19 +387,20 @@ export function organizationAction(d,args,eventId){
         const fee=org.charter.fee??0;
         if(fee&&!pay(d,engine,who,fee))throw Error('入会费不足');
         if(!org.charter.approval){
-            const row=rowOf(d,engine,org);row.members[who]={position:MEMBER,joinedAt:minute,arrears:0};delete row.removed?.[who];
-            if(fee){move(d,engine,row,{kind:'入会费',amount:fee,party:who,minute,sourceEvent:eventId,balance:org.treasury+fee},{account:purse(engine,who),writer:'organizations',eventId});}
+            const row=rowOf(d,engine,org);row.members[who]={position:MEMBER,joinedAt:minute,arrears:0,...membership};delete row.removed?.[who];
+            if(fee){move(d,engine,row,{kind:'入会费',amount:fee,party:who,minute,sourceEvent:eventId,balance:org.treasury+fee},{account:memberPurse(d,engine,who),writer:'organizations',eventId});}
             saveMembership(d,row,engine,eventId);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
             worldEvent(d,engine,org,`${eventId}:join`,minute,{target:who,value:fee,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:join'],summary:`${personName(engine,d.get('state'),who).value??who}加入${org.name}`});
             return {organization:org.id,member:who,joined:true};
         }
-        const p=propose(d,engine,org,{action:'admit',member:who},who,eventId,{escrow:fee});
+        const p=propose(d,engine,org,{action:'admit',member:who,membership},membership?.representative??who,eventId,{escrow:fee});
         if(p.status==='通过'&&who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
         return {organization:org.id,member:who,proposal:p.id,status:p.status,joined:p.status==='通过',note:'入会须按章程议决；入会费暂存，否决或逾期退还。',organizationEvent:event(org,'apply',{member:who,value:fee})};
     }
     case 'org_leave':{
         if(org.source==='family')throw Error('退出居住家户用分家，族亲关系不因组织退会消失');
-        const who=args.member&&args.member!=='player'?present(d,engine,args.member):'player';
+        const membership=businessMembership(d,engine,org,args.member,args.consent);
+        const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&args.consent!==true)throw Error('退会须本人当面同意');
         if(!org.members[who])throw Error('不是成员');
         if(who===org.leader&&Object.keys(org.members).length>1)throw Error('首脑须先改任他人再退会');

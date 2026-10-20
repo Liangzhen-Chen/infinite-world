@@ -102,7 +102,7 @@ test('玩家可查看招工、出资担保与当面调解；担保用完不印�
     let next=shift(f,f.doc.state.records[row.id]);assert.equal(next.paid,row.wage);assert.equal(next.escrow,0);assert.equal(cash(f.doc),money);
     next=shift(f,next);assert.equal(next.status,'罢工');advance(f,next.nextWork+DAY);
     const debt=Object.values(f.doc.state.records).find(r=>r.kind==='wage'),due=debt.amount-debt.paid;
-    f.doc.state.player.coins-=due;f.doc.state.npcs[host].coins+=due;
+    const funding=f.draft();financeTransfer(funding,f.e,'player',host,due,'mediate-funding');funding.done();
     await assert.rejects(f.act({operation:'labor_mediate',seller:host,contract:row.id},'no-consent'),/同意/);
     await f.act({operation:'labor_mediate',seller:host,contract:row.id,consent:true,coins:row.wage},'mediate');assert.equal(f.doc.state.records[debt.id].status,'已还清');assert.equal(cash(f.doc),money);
     const q=await f.act({operation:'inspect'},'notices','world_quest');assert.ok(Array.isArray(q.notices));
@@ -124,7 +124,7 @@ test('欠薪后换雇主仍按原合同投诉，调解可还旧薪且不恢复�
     f.doc.state.npcs[clerk].inventory={item_bread:{quantity:20},item_wood:{quantity:100},item_whittling_knife:{quantity:1,durability:100}};f.doc.state.npcs[clerk].coins=5000;order(f,clerk,500,'order:new');
     const fresh=await f.act({operation:'labor_poach',seller:worker,contract:old.id,business:clerk,coins:old.wage*2,consent:true},'switch-unpaid');
     advance(f,old.nextWork+3*DAY);assert.ok(f.doc.state.records[debt.id].defaulted.case);assert.equal(f.doc.state.records[old.id].status,'已辞工');
-    const due=debt.amount-debt.paid;f.doc.state.player.coins-=due;f.doc.state.npcs[host].coins=due;
+    const due=debt.amount-debt.paid,funding=f.draft();financeTransfer(funding,f.e,'player',host,due,'old-wage-funding');funding.done();
     await f.act({operation:'labor_mediate',seller:host,contract:old.id,consent:true},'pay-old');
     assert.equal(f.doc.state.records[debt.id].status,'已还清');assert.equal(f.doc.state.records[old.id].status,'已辞工');assert.equal(personEmployment(f.e,f.doc.state,worker).value.id,fresh.contract);
 });

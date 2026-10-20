@@ -1,11 +1,17 @@
 import {transportSegment,stepTransport} from './transport-route.mjs';
+import {openGoodsObligation,performGoodsObligation,extendGoodsObligation} from './obligation-conditional.mjs';
 import {transition} from './transition.mjs';
 import {financeBalance,financeTransfer,financeChange} from './finance-bank.mjs';
 import {escrow as escrowAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {ledgerActive} from './ledger.mjs';
+import {registerEarnedClaim,registerLoss,recoverLoss,lossView,settleClaim} from './obligation-claims.mjs';
+import {dueObligation} from './obligation-runtime.mjs';
+import {obligationRows} from './obligation-state.mjs';
+import {obligationTransaction} from './transition.mjs';
 import {store,freight,bookStock} from './stock.mjs';
 // S1b: 托运期间货物记在 transport:<id>|<物品>|freight，交付时转给收货人（组织公库或行囊）。
-declareLedgerWriter('transport',{sinks:['sink:consume']});
+declareLedgerWriter('transport',{sinks:['sink:consume','sink:destroy']});
 import {assessTradeTax,tradeTax} from './finance-tax.mjs';
 import {changeItems} from './items.mjs';
 import {personOccupation,personConstraint,personAge,groupView,groupRepresentative} from './entity-view.mjs';
@@ -109,6 +115,9 @@ function moveGoods(d,e,owner,item,quantity,{take=false,instances=[],trip,books=n
  return moved;
 }
 export function bookTransport(d,e,args,eventId){
+ return obligationTransaction(d,()=>bookTransportInner(d,e,args,eventId));
+}
+function bookTransportInner(d,e,args,eventId){
  const {owner='player',recipient=owner,to,cargo=[],passengers=[],asset,escort=null,receiptOf=null}=args,s=d.get('state'),from=args.from??actorLocation(s,owner),now=s.minute;
  const postal=args.post&&s.records?.[args.post],previous=postal&&s.records?.[postal.shipment];
  const forwarding=postal?.category==='post'&&postal.from===owner&&previous?.status==='delivered'&&previous.to===from;
@@ -155,7 +164,17 @@ export function bookTransport(d,e,args,eventId){
   // The existing board's verifiable record objective provides the escort contract.
   const quest=postGeneratedQuest(d,e,{key:`transport:${eventId}`,generator:'npc_needs',label:'承运护送',grade:'D',reward:escortFee,days:Math.max(1,Math.ceil((q.estimatedArrivalAt-now)/DAY)+1),content:`护送运单${id}抵达${to}`,objective:{type:'record',record:id,field:'status',equals:['delivered']},board:from,publisher:owner,funding:{npc:owner},minute:now,cause:id});
   if(!quest)throw Error('护送委托无法登记');row.escortQuest=quest.id;row.escortEscrow=0;
-  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id});
+  // The quoted mobilization fee is prepaid. Time wages are earned throughout
+  // actual custody, including weather waits, rather than the route estimate.
+  if(ledgerActive(d)&&(!e.replaying||e.replayResult?.transportObligationVersion===1)){
+   const daily=args.escortDailyWage??escortFee;int(daily,0,'护送日薪');
+   row.transportObligationVersion=1;row.escortTerms={base:escortFee,daily,starts:now};
+   row.escortWage=`${id}:escort-wage`;
+   registerEarnedClaim(d,e,{id:row.escortWage,kind:'wage',debtor:owner,creditor:escort,amount:escortFee,createdAt:now,deadline:Number.MAX_SAFE_INTEGER,source:id,
+    terms:{accrual:{per:'day',value:daily},onDebtorGone:'accelerate',onCreditorGone:'estate'}});
+   holdingSet(d,e,path(quest.id),{category:'contract',id:quest.id,kind:'wage',parties:[owner,escort],debt:`${id}:escort-wage`,escrow:quest.escrow,status:'履行中',createdAt:now},'transport');
+  }
+  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(row.transportObligationVersion===1?{escrow:0}:{} )});
  }
  for(const actor of actors)if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:id,from,to,depart:departAt,arrive:q.estimatedArrivalAt});
  if(departAt===now){const t=row.transport;t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,now);t.segmentStartedAt=now;t.nextAt=now+t.segment.minutes;row.status=t.segment.kind==='wait'?'delayed':'moving';
@@ -189,9 +208,10 @@ export function advanceTransport(d,e,minute){
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
    if(!handover)row.status='arrived';
-   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q?.escrow&&q.status==='进行中'){
-    financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});
-    holdingSet(d,null,path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:q.escrow,refund:0,source:'npc_needs'},'transport');
+   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(row.transportObligationVersion===1?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
+    if(row.transportObligationVersion===1)settleEscort(d,e,row,q,minute);
+    else{financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});}
+    holdingSet(d,null,path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:row.escortPaid??q.escrow,refund:0,source:'npc_needs'},'transport');
    }}
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});
   }else{
@@ -204,6 +224,29 @@ export function advanceTransport(d,e,minute){
   }
   holdingSet(d,null,path(row.id),row,'transport');
  }
+}
+function settleEscort(d,e,row,q,minute){
+ return obligationTransaction(d,()=>{
+  const id=row.escortWage;
+  // Arrival is an observed end of work, including for a protocol successor.
+  // No signer is invented for this natural service boundary.
+  for(const claim of obligationRows(d.get('state')).filter(o=>o.kind==='wage'&&o.source===row.id&&o.endedAt===undefined))
+   d.set(['state','obligations',claim.id],{...claim,endedAt:minute,deadline:minute});
+  const view=dueObligation(d.get('state'),id),procedure=d.get('state','records',`transition_procedure:${row.owner}`);
+  if(view.row.debtor!==row.owner||!view.owed||procedure&&procedure.phase!=='closed'){
+   row.escortEarned=obligationRows(d.get('state')).filter(o=>o.kind==='wage'&&o.source===row.id).reduce((n,o)=>n+dueObligation(d.get('state'),o).owed,0);
+   row.escortPaid=0;d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,resolvedAt:minute,rewardPaid:0});return;
+  }
+  // Transfer custody of the existing escrow mirror; the ledger account stays
+  // unchanged. It must never be represented in quests and contracts at once.
+  d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,resolvedAt:minute});
+  const escrow=d.get(...path(q.id));
+  holdingSet(d,e,path(q.id),{...escrow,status:'已终止',endedAt:minute},'transport');
+  const paid=settleClaim(d,e,{id,payer:row.owner,amount:Math.min(escrow.escrow,dueObligation(d.get('state'),id).owed),escrowContract:q.id},`${row.id}:escort`);
+  d.set(['state','quests',q.id,'rewardPaid'],paid.transferred);
+  row.escortWage=id;row.escortEarned=paid.transferred+paid.remaining;row.escortPaid=paid.transferred;
+  return paid;
+ });
 }
 export function transportIncident(d,e,{shipment,actor='player',recover=false,consent=false},eventId){
  const old=d.get(...path(shipment));if(old?.category!=='transport'||!['moving','delayed','intercepted'].includes(old.status))throw Error('运单不在可追查的途中');
@@ -228,6 +271,38 @@ export function transportPosition(e,s,row){
 export function collectTransport(d,e,id,actor='player'){
  const old=d.get(...path(id));if(old?.category!=='transport'||old.status!=='arrived'||old.recipient!==actor||actorLocation(d.get('state'),actor)!==old.to)throw Error('收货人须亲到到货地点提取实际货物');
  const row=clone(old);for(const c of row.cargo)moveGoods(d,e,actor,c.item,c.quantity,{instances:c.instances,trip:id});row.deliveredCargo=clone(row.cargo);row.cargo=[];row.status='delivered';row.collectedAt=d.get('state','minute');holdingSet(d,null,path(id),row,'transport');return row;
+}
+// A loss consumes the actual freight first. Its compensation and any legal
+// recovery share C's loss id, so restitution cannot pay the same loss twice.
+export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',cause='cargo_damage'},eventId){
+ return obligationTransaction(d,()=>{
+  const key=`transport_loss:${shipment}:${eventId}`,prior=lossView(d.get('state'),key);
+  if(prior){const facts=d.get(...path(`${key}:facts`));if(facts?.item!==item||facts?.quantity!==quantity||facts?.actor!==actor||facts?.cause!==cause)throw Error('货损事件编号冲突');return prior;}
+  const old=d.get(...path(shipment)),s=d.get('state');
+  if(old?.category!=='transport'||!['booked','moving','delayed','intercepted','arrived'].includes(old.status))throw Error('没有仍在承运或托存的货物');
+  const position=transportPosition(e,s,old),onboard=[old.driver,...old.passengers,...old.escort?[old.escort]:[]].includes(actor);
+  if(![old.carrier,old.driver].includes(actor)||!onboard&&(position.location===null||actorLocation(s,actor)!==position.location))throw Error('货损须由现场承运人确认；货主单方索赔须经法律裁定');
+  int(quantity,1,'损失数量');const row=clone(old),cargo=row.cargo.find(c=>c.item===item);
+  if(!cargo||cargo.quantity<quantity)throw Error('货损超过实际承运数量');
+  const value=quantity*(e.byId.get(item)?.basePrice??0);int(value,0,'货损价值');
+  bookStock(d,e,freight(e,shipment,item),-quantity,{flow:'sink:destroy',purpose:'cargo_loss',writer:'transport',eventId});
+  const units=(cargo.instances??[]).splice(0,quantity);
+  for(const unit of units)holdingSet(d,e,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),status:'损毁',destroyedAt:s.minute,container:shipment},'transport');
+  cargo.quantity-=quantity;row.cargo=row.cargo.filter(c=>c.quantity>0);row.losses=[...row.losses??[],key];
+  holdingSet(d,e,path(row.id),row,'transport');
+  holdingSet(d,e,path(`${key}:facts`),{category:'transport_loss_facts',shipment,item,quantity,actor,cause,minute:s.minute},'transport');
+  const loss=registerLoss(d,e,{id:key,victim:row.owner,amount:value,source:shipment});
+  registerEarnedClaim(d,e,{id:`${key}:claim`,kind:'compensation',debtor:row.carrier,creditor:row.owner,amount:value,createdAt:s.minute,deadline:s.minute,source:key});
+  return loss;
+ });
+}
+export function compensateTransportLoss(d,e,{loss,amount,payer,actor=payer},eventId){
+ return obligationTransaction(d,()=>{
+  const row=lossView(d.get('state'),loss);if(!row)throw Error('没有已登记的承运货损');
+  let result;
+  const recovery=recoverLoss(d,e,{id:loss,amount,payer},eventId,n=>{result=settleClaim(d,e,{id:`${loss}:claim`,payer,actor,amount:n},eventId);});
+  return result??settleClaim(d,e,{id:`${loss}:claim`,payer,actor,amount:recovery.amount},eventId);
+ });
 }
 export function transportScene(e,document){
  const s=document.state,row=unfinished(s).find(r=>r.passengers.includes('player'));if(!row)return null;
@@ -254,6 +329,12 @@ export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}}
 }
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='forward'){
+  if(args.consent!==true)throw Error('远期买卖须有在场卖方本次同意');
+  return openGoodsObligation(d,e,{kind:'forward',debtor:e.resolve(args.seller),creditor:'player',item:e.resolve(args.item,'item'),quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location:args.location?e.resolve(args.location):d.get('state','location')},eventId);
+ }
+ if(task==='fulfill')return performGoodsObligation(d,e,{id:args.business??asset,actor:'player',quantity:args.quantity},eventId);
+ if(task==='extend')return extendGoodsObligation(d,e,{id:args.business??asset,actor:'player',deadline:args.deadline},eventId);
  if(task==='destroy'){
   const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.location!==d.get('state','location'))throw Error('Only the present owner can destroy this asset');
   return destroyTransportAsset(d,e,{asset:a.id},eventId);

@@ -58,7 +58,7 @@ export function organizationState(engine,state,id){
     for(const [m,entry]of Object.entries(b.members))members[actorId(engine.world,m)]={...entry};
     for(const m of Object.keys(row?.removed??{}))delete members[actorId(engine.world,m)];
     for(const [m,entry]of Object.entries(row?.members??{}))members[actorId(engine.world,m)]={...entry};
-    for(const m of Object.keys(members))if(!living(engine,state,m))delete members[m];
+    for(const m of Object.keys(members))if(state.records?.[m]?.category!=='business'&&!living(engine,state,m))delete members[m];
     const leader=Object.hasOwn(row??{},'leader')?row.leader:b.leader;
     const current=leader&&members[actorId(engine.world,leader)]?actorId(engine.world,leader):null;
     for(const [m,entry]of Object.entries(members)){

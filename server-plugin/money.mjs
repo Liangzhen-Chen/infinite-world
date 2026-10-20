@@ -38,6 +38,7 @@ export const sink=(kind,purpose)=>accountKey(`sink:${kind}`,COIN,purpose);
 
 // 资金当事人（玩家、人物、聚落、势力、组织）的账户：与 finance-bank.financeBalance 的取数顺序一致。
 export function partyAccount(engine,state,id){
+    if(state?.records?.[id]?.category==='bank'||engine?.rules.economy?.credit?.banks?.some(b=>b.id===id))return vault(id);
     if(state?.settlements?.[id])return treasury(id);
     if(groupAccountView(engine,state,id))return treasury(id);
     if(state?.records?.[`organization:${id}`]?.category==='organization')return treasury(id);
@@ -47,6 +48,12 @@ export function partyAccount(engine,state,id){
 // same owner resolution as ordinary finance payments. No new booking occurs.
 export function mirrorPartyCoins(d,engine,id,delta,eventId,writer){
     const state=d.get('state');
+    const bank=state.records?.[id],base=engine.rules.economy?.credit?.banks?.find(b=>b.id===id);
+    if(bank?.category==='bank'||base){
+        const row=bank??{category:'bank',id,name:base.name,location:base.location,coins:base.reserveCopper??0,goods:{...base.reserveCoins??{}},accounts:{}};
+        const coins=row.coins+delta;if(!Number.isSafeInteger(coins)||coins<0)throw Error('Invalid bank balance');
+        holdingSet(d,engine,['state','records',id],{...row,coins},writer,eventId);return coins;
+    }
     if(groupAccountView(engine,state,id))return changeGroupCoins(d,engine,id,delta,{kind:'金融契约',sourceEvent:eventId,minute:state.minute},BOOKED);
     if(state.settlements?.[id]){
         const value=(state.settlements[id].treasury??0)+delta;
@@ -93,6 +100,7 @@ export function legacyMoney(engine,state){
     for(const [key,row] of Object.entries(records)){
         if(!row||typeof row!=='object')continue;
         const c=row.category;
+        if(c==='obligation_collection'){add(row.account,row.coins);continue;}
         if(c==='protocol_assets'){add(purse(null,row.owner),row.coins);for(const [purpose,n]of Object.entries(row.funds??{}))add(accountKey(row.owner,COIN,purpose),n);}
         else if(c==='organization'){const id=key.slice('organization:'.length);if(!groupAccountView(engine,state,id)&&!state.settlements?.[id])add(treasury(id),row.treasury);}
         else if(c==='polity_treasury'){polities.delete(key.slice('polity:'.length));add(accountKey(key,COIN,'treasury'),row.coins);}

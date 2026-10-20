@@ -58,6 +58,10 @@ export function stateNotices(before,after,resolveName=id=>id){
         const old=before.records?.[id];
         if(!old||old.status!==row.status)push('contract',`${row.name??'契约'}：${row.status}`,playerDocuments(after,resolveName).find(card=>card.id===`record:${id}`));
     }
+    for(const row of obligationRows(after).filter(r=>after.obligations?.[r.id]&&r.debtor==='player'&&!r.legacyRecord&&!r.reservationVersion)){
+        const old=obligationRow(before,row.id),current=obligationView(after,row);
+        if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${current.owed}铜 · ${row.status}`);
+    }
     for(const [id,row] of Object.entries(after.learning??{}))if(!before.learning?.[id]&&row.success===false)push('learning',`${name(row.entity)}尚未学会，本次已花费 ${row.cost??0}铜、${row.end-row.start} 分钟`);
     for(const [id,skill] of Object.entries(after.skills??{})){
         const old=before.skills?.[id]?.proficiency??0;
@@ -110,3 +114,4 @@ export function playerDocuments(state,resolveName=id=>id){
     for(const [id,row]of Object.entries(state.npcCognition?.messages??{}))if(row.to==='player'&&row.status==='已交付'&&row.channel==='magic')cards.push({id:`message:${id}`,kind:'letter',title:'传讯来信',text:row.content??'',from:name(row.from)});
     return cards;
 }
+import {obligationRows,obligationView,obligationRow} from './obligation-state.mjs';

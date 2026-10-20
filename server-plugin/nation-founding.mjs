@@ -14,6 +14,7 @@ import {declareHoldingWriter,aliveHoldings,ensureHoldings,templatesOf,holdingsAc
 import {syncHoldings,syncHoldingRecord,holdingSet,orgLeaderOffice} from './holding-sources.mjs';
 import {changeHolding,changeLegacyHoldings} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {contractState} from './contract-state.mjs';
 import {householdMembers,npcHousehold} from './npc-state.mjs';
 declareHoldingWriter('nation-founding',{kinds:['member_of','holds_office','fief','governs','controls','allied_with'],entities:['office']});
 const DAY=1440,rec=id=>['state','records',id],pair=(a,b)=>[a,b].sort().join(':'),rows=s=>Object.values(s.records??{});
@@ -116,7 +117,7 @@ export function defectFromNation(d,e,{nation,member},src){
  const units=armies(s).filter(a=>a.party===nation&&s.records?.[`organization:${a.id}`]?.leader===member&&armyStrength(a)>0);
  const titles=titlesOf(s,member).filter(highTitle),domains=[...new Set([...titles.flatMap(t=>t.domains??[t.fief]),...rows(s).filter(o=>o.category==='governance_office'&&o.status==='在任'&&o.holder===member).map(o=>o.settlement)])].filter(domain=>n.domains.some(id=>containsDomain(e,s,id,domain))&&units.some(a=>containsDomain(e,s,domain,a.location)));
  const kin=npcHousehold(e,s,member),related=new Set([...Object.keys(org.members),...units.flatMap(a=>Object.keys(s.records?.[`organization:${a.id}`]?.members??{})),...(kin?householdMembers(e,s,kin.id):[]),
-  ...rows(s).filter(r=>r.category==='contract'&&r.status==='有效'&&[member,nation,n.ruler].includes(r.owner)).map(r=>r.worker)].filter(Boolean));
+  ...rows(s).filter(r=>r.category==='contract'&&contractState(r,s.minute).active&&[member,nation,n.ruler].includes(r.owner)).map(r=>r.worker)].filter(Boolean));
  const margin=nobleRules(e).defection?.followMargin;if(!Number.isFinite(margin))throw Error('未登记部下分流规则');
  const decisions=[...related].filter(id=>id!==member&&id!==n.ruler&&isEffective(e,d,id)).sort().map(id=>({id,rebel:standing(e,s,id,member),original:standing(e,s,id,nation)}));
  const followers=decisions.filter(v=>v.rebel-v.original>=margin).map(v=>v.id);
@@ -148,7 +149,7 @@ export function defectFromNation(d,e,{nation,member},src){
  }
  for(const domain of domains)changeTerritoryControl(d,e,domain,member,{src:`${src}:${domain}`});
  // A follower leaves national employment only after making their own choice.
- for(const contract of rows(s).filter(r=>r.category==='contract'&&r.status==='有效'&&followers.includes(r.worker)&&[nation,n.ruler].includes(r.owner)))
+ for(const contract of rows(s).filter(r=>r.category==='contract'&&contractState(r,s.minute).active&&followers.includes(r.worker)&&[nation,n.ruler].includes(r.owner)))
   changeLegacyHoldings(d,e,{holder:contract.worker,source:`contract:${contract.id}`,kinds:['employed_by'],reason:'defected',eventId:`${src}:${contract.id}`},()=>holdingSet(d,e,rec(contract.id),{...contract,status:'已终止',endedAt:s.minute,reason:'自愿跟随叛离者'},'nation-founding'));
  const row={category:'nation_defection',id:key,nation,member,followers,retinue:retinueId,decisions,domains,minute:s.minute,sourceEvent:src};holdingSet(d,e,rec(key),row,'nation-founding');
  holdingSet(d,e,rec(`nation:${n.id}`),{...n,status:'内乱',splits:[...n.splits??[],{ruler:member,domains,minute:s.minute,sourceEvent:src}]},'nation-founding');

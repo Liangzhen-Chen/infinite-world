@@ -13,6 +13,7 @@ import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {workstationRecipes} from './workstation-services.mjs';
 // A travelling NPC occupies neither endpoint until the route has finished.
 export function scheduleAt(engine,npcId,minute,state,constraints=null){
     const previous=engine.educationCourseContext;
@@ -44,7 +45,10 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
     let until=minute-offset+slot.end;
     if(state)for(const c of personCourses(engine,state,npcId)){const w=courseWindow(c,minute);if(w&&w.start>minute)until=Math.min(until,w.start);}
-    return festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
+    const current=festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
+    // education.teaching uses the recipe's minimumProficiency as its threshold.
+    const recipes=workstationRecipes(engine,state,npcId,current);
+    return recipes.length?{...current,services:[...new Set([...(current.services??[]),...recipes.map(r=>r.id),'teach'])]}:current;
 }
 
 const incapacitated=npc=>['濒死','昏迷','患病'].includes(npc.status);

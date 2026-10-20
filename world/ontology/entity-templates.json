@@ -121,6 +121,19 @@
    "obligationParty": true,
    "located": false,
    "inheritance": false
+  },
+  {
+   "id": "business",
+   "label": "商号",
+   "kinds": [
+    "business"
+   ],
+   "accounts": false,
+   "holder": true,
+   "subject": true,
+   "obligationParty": false,
+   "located": true,
+   "inheritance": false
   }
  ],
  "idPrefixes": [

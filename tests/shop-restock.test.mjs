@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {validateShopRules,qualityAllowed,originSettlement} from '../server-plugin/shop.mjs';
+import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',forge='bld_hw_forge',town='loc_bs';
@@ -75,13 +76,14 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     // Forge buys iron from the village stock down to its reserve.
     f.doc.state.settlements.loc_hw.iron=5;const smithCoins=f.doc.state.npcs[smith].coins;
     f.doc.state.npcs[smith].inventory.item_iron=0;resyncBooks(f.engine,f.doc);
+    const ironPrice=Math.ceil(regionalTradePrice({get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)},f.engine,'item_iron','loc_hw',DAY));
     await f.act('world_time',{minutes:DAY},'day1');
     const row=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration');
     assert.deepEqual([row.source,row.from,row.added,row.paidCopper],['route',town,2,6]);
     assert.equal(qty(f.doc,host,'item_ration'),2);assert.equal(f.doc.state.npcs[host].coins,coins-6);assert.equal(f.doc.state.settlements[town].treasury,treasury+6);
     const iron=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_iron');
-    assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,36],'聚落只放出保留量以上的铁料');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
-    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-36);assert.equal(qty(f.doc,smith,'item_iron'),3);
+    assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,3*ironPrice],'聚落只放出保留量以上的铁料，按实际材料行情支付');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
+    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice);assert.equal(qty(f.doc,smith,'item_iron'),3);
     assert.equal(cash(f.doc),total,'铜钱守恒');
 
     // No producing settlement in this campaign: nothing arrives, the refusal is on the ledger.

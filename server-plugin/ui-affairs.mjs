@@ -1,5 +1,6 @@
 import {questPublishingRights} from './quest-board.mjs';
 import {placeView,personName} from './entity-view.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
 const closed=new Set(['已完成','取消','已取消','已还清','已终止','已到期','已否决','违约','失败','超期']);
 const finite=value=>Number.isFinite(value)?value:null;
 const pick=(row,keys)=>Object.fromEntries(keys.map(key=>[key,row?.[key]??null]));
@@ -20,11 +21,14 @@ export function affairs(engine,document){
     };
     const tasks=Object.entries(s.quests??{}).filter(([,r])=>r&&[r.publisher,r.taker].includes('player'))
         .map(([id,r])=>commitment(id,r,'任务',r.publisher,r.taker,r.deadline,{grade:r.grade??null,reward:r.reward??null})).sort(byDeadline);
-    const obligations=Object.entries(s.obligations??{}).filter(([,r])=>r&&[r.promisor,r.promisee].includes('player'))
+    const obligations=Object.entries(s.obligations??{}).filter(([,r])=>r&&!r.runtimeVersion&&[r.promisor,r.promisee].includes('player'))
         .map(([id,r])=>commitment(id,r,r.type??'约定',r.promisor,r.promisee,r.deadline,
             {reason:r.reason??null,item:r.item?name(r.item):null,quantity:r.quantity??null,coins:r.coins??null}));
+    for(const r of obligationRows(s))if([r.debtor,r.creditor].includes('player')){
+        const view=obligationView(s,r);
+        obligations.push(commitment(r.id,r,r.resource&&!['coin_river','core:coin_river'].includes(r.resource)?'实物义务':r.kind==='service'?'服务':'债务',r.debtor,r.creditor,r.deadline,{resource:r.resource??'coin_river',outstanding:view.owed,active:!view.closed,overdue:view.overdueCount>0,amountDue:view.amountDue}));
+    }
     for(const [id,r]of Object.entries(records)){
-        if(r?.category==='debt'&&[r.debtor,r.creditor].includes('player'))obligations.push(commitment(id,r,'债务',r.debtor,r.creditor,r.deadline,{outstanding:r.amount!==undefined&&r.paid!==undefined?r.amount-r.paid:null}));
         if(r?.category==='contract'&&r.parties?.includes('player'))obligations.push(commitment(id,r,'合同','player',r.parties.find(id=>id!=='player'),r.deadline??r.expires,
             {content:r.content??r.name??(r.subject?name(r.subject):'内容未记录'),kindName:r.kind??null,cost:r.cost??null,paid:r.paid??null,fulfilled:r.fulfilled??null,quantity:r.quantity??null}));
     }

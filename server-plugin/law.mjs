@@ -14,6 +14,9 @@ import {holdingSet as writeHoldingProjection} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {isGone,isEffective} from './lifecycle-state.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
+import {claimLimitation,recordClaimProcedure,registerLoss,lossView,recoverLoss,settleClaim,wagePriorityClaims} from './obligation-claims.mjs';
+import {obligationView,obligationRow} from './obligation-state.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
@@ -94,6 +97,28 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
     return id;
 }
 
+// A transfer is a fact, not a conviction. Provenance survives resale; witnesses
+// must still report and the court must still examine evidence in the usual way.
+export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eventId,location=d.get('state','location')}){
+ const units=instances.filter(unit=>{
+  const origin=d.get('state','itemInstances',unit,'stolenOrigin');
+  if(!origin||origin.recoveredAt!==undefined)return false;
+  if(origin.victim===seller){holdingSet(d,null,['state','itemInstances',unit,'stolenOrigin'],{...origin,recoveredAt:d.get('state','minute'),recoveryEvent:eventId},'law');return false;}
+  return true;
+ });
+ if(!units.length)return [];
+ const code=legalCodeAt(engine,location,d.get('state'));
+ if(!code||!codePenalty(engine,code,'receiving_stolen'))return [];
+ const witnesses=Object.entries(d.get('state','npcs')??{}).filter(([id,n])=>id!==buyer&&id!==seller&&n.location===location&&awake(n,d,id)).map(([id])=>id);
+ return units.map((unit,index)=>{
+  const origin=d.get('state','itemInstances',unit,'stolenOrigin');
+  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:engine.byId.get(item).basePrice,
+   stolen:{item,quantity:1,unit},witnesses,eventId:`${eventId}:receiving:${index}`,location,code});
+  holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}],'law');
+  return incident;
+ });
+}
+
 export function registerFireDamage(d,engine,{building,damage,grain,origin,eventId,minute}){
  const fact=d.get('state','records',origin);
  if(fact?.category!=='unattended_furnace'||!fact.responsible||!fact.burning||fact.attendants?.length)return null;
@@ -122,13 +147,15 @@ import {placed as placedStock} from './stock.mjs';
 declareLedgerWriter('law');
 const books=(d,from,to,amount,eventId)=>moveCoins(d,{from,to,amount,writer:'law',eventId});
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
-    const code=codeFor(engine,row.location);if(!code)return null;
+    if(!claimLimitation(d.get('state'),debt,minute).enforceable)return null;
+    const code=codeFor(engine,row.location,d.get('state'));if(!code)return null;
     const id=`legal_case:default:${debt}`;if(d.get(...path(id)))return id;
     const receiver=code.officers[0];
     holdingSet(d,null,path(id),{category:'legal_case',id,law:code.id,procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:row.source,witnesses:[],
         offender:row.debtor??'player',victim:row.keeper??row.creditor,...(row.bank?{bank:row.bank}:{}),debt,offense:'debt_default',value,stolen:null,location:row.location,minute,
         status:'已报案',reported:true,receiver,reportedAt:minute,evidence:[{kind:'contract',debt,minute}]},'law');
     if(d.get('state','npcs',receiver))knowledge(d,receiver,id,minute);
+    if(obligationRow(d.get('state'),debt)?.terms?.limitation)recordClaimProcedure(d,engine,{claim:debt,action:'suspend',minute,evidence:id},`${id}:filed`);
     return id;
 }
 // U10: a cast past the village's fee, licence or limit (magic-economy.mjs) is
@@ -255,10 +282,16 @@ export function advanceLaw(d,after,engine,recordIds){
 
 function localObservers(d){return Object.entries(d.get('state','npcs')??{}).filter(([id,npc])=>awake(npc,d,id)&&npc.location===d.get('state','location')).map(([id])=>id);}
 
+export function caseLoss(d,engine,row){
+    if(!row.victim)return null;
+    const source=row.lossSource??row.sourceEvent??row.id,id=row.loss??`loss:${source}`;
+    return registerLoss(d,engine,{id,victim:row.victim,amount:row.lossAmount??row.value,source});
+}
 function deposit(d,engine,row,{fine=0,compensate=true}={}){
     const unit=row.stolen?.unit,record=unit?d.get('state','itemInstances',unit):null;
     const returnUnit=Boolean(compensate&&record?.owner==='player'&&record.status==='持有'&&d.get('state','inventory',record.item,'instances')?.includes(unit));
-    const compensation=compensate?returnUnit?0:row.value:0,total=fine+compensation;
+    const loss=compensate?caseLoss(d,engine,row):null;
+    const compensation=compensate?returnUnit?0:loss?.remaining??row.value:0,total=fine+compensation;
     if(d.get('state','player','coins')<total)throw new Error('余额不足支付罚款和赔偿；可以选择劳役或服刑处理罚款，赔偿债务仍保留');
     const treasuryKey=`legal_treasury:${row.law}`,escrowKey=`legal_deposit:${row.id}`;
     const treasury=safeFund(d,treasuryKey,'legal_treasury',{law:row.law}),escrow=safeFund(d,escrowKey,'legal_deposit',{case:row.id,beneficiary:row.victim,units:[]});
@@ -273,6 +306,7 @@ function deposit(d,engine,row,{fine=0,compensate=true}={}){
         }
         holdingSet(d,null,path(escrowKey),{...escrow,coins:escrow.coins+compensation,units},'law');
     }
+    if(loss)recoverLoss(d,engine,{id:loss.id,amount:returnUnit?loss.remaining:compensation,payer:row.offender,kind:returnUnit?'restitution':'deposit'},`${row.id}:deposit`);
     return{cost:total,fine,compensation,returnedUnit:returnUnit?unit:null,deposit:compensate?escrowKey:null};
 }
 
@@ -387,7 +421,8 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
         }
         const penalty=codePenalty(engine,code,row.offense)??engine.rules.law.spellConsent?.penalties?.[row.offense]??engine.rules.law.bribery?.penalties?.[row.offense]??engine.rules.law.activityPenalties?.[row.offense]??(row.offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[row.offense];if(!penalty)throw new Error('本案罪名没有判罚规则');
         const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
-        const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.victim?row.value:0,evidenceScore:score,
+        const loss=row.victim&&!row.debt?caseLoss(d,engine,row):null;
+        const judgment={...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.debt?obligationView(d.get('state'),row.debt)?.owed??row.value:loss?.remaining??0,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,penalty.detentionMinutes??fine*code.prisonMinutesPerCopper)};
         holdingSet(d,null,path(row.id),{...row,status:'已裁定',judgment},'law');
         recordLegalNotification(d,engine,d.get(...path(row.id)),'conviction',eventId,observers,{fresh:true,location:code.court});
@@ -462,22 +497,60 @@ export function lawAction(d,args,eventId){
             return {case:row.id,recovered:amount,remaining:due-amount};
         }
     }
-    const creditorClaim=row.debt&&d.get(...path(row.debt),'creditor')==='player';
-    if(row.offender!=='player'&&creditorClaim){
+    const creditorClaim=row.debt&&(d.get(...path(row.debt),'creditor')==='player'||d.get(...path(row.debt),'kind')==='wage');
+    if(row.offender!=='player'&&creditorClaim&&operation!=='claim'){
         if(!['hear','pay'].includes(operation))throw Error('债权追讨须由法院审理后执行');
         if(operation==='pay'){
-            authority(d,this,code,args.authority,'officer');
+            const officer=authority(d,this,code,args.authority,'officer');
             if(d.get('state','location')!==code.court||row.status!=='已裁定')throw Error('须在法院持有效裁判执行，不能重复追讨');
-            const debt=d.get(...path(row.debt)),balance=financeBalance(d,this,debt.debtor),amount=Math.min(debt.amount-debt.paid,balance);
-            const fine=Math.min(balance-amount,Math.max(0,row.judgment.fine-(row.finePaid??0)));
-            if(amount+fine<=0)throw Error('债务人没有可执行资金，欠款保留');
-            if(amount)financeTransfer(d,this,debt.debtor,'player',amount,eventId);
+            const debt=d.get(...path(row.debt));
+            if(!claimLimitation(d.get('state'),row.debt,now).enforceable)throw Error('债权已过诉讼时效，余额保留');
+            // Earned wage claims are executed before an ordinary creditor or
+            // a fine. Unreachable senior creditors retain the reserved assets.
+            const initialOwed=obligationView(d.get('state'),row.debt).owed;let executed=0;
+            const shareholderExecutions=[];
+            const fundLiability=needed=>{
+                let shortfall=Math.max(0,needed-financeBalance(d,this,debt.debtor));
+                for(const equity of Object.values(d.get('state','records')??{})){
+                    const terms=equity.clauses?.liability;
+                    if(!shortfall)break;
+                    if(equity.kind!=='equity'||equity.status!=='有效'||equity.share<=0||equity.issuer!==debt.debtor||
+                        terms?.form!=='unlimited'||terms.issuer!==debt.debtor||terms.holder!==equity.holder||!terms.consentEvent)continue;
+                    const holder=equity.holder,at=holder==='player'?d.get('state','location'):d.get('state','npcs',holder,'location');
+                    if(at!==code.court||holder===debt.debtor||isGone(this,d.get('state'),holder))continue;
+                    const seized=Math.min(shortfall,financeBalance(d,this,holder));
+                    if(!seized)continue;
+                    financeTransfer(d,this,holder,debt.debtor,seized,`${eventId}:shareholder:${equity.id}`);
+                    shareholderExecutions.push({contract:equity.id,holder,form:terms.form,amount:seized,consentEvent:terms.consentEvent});
+                    shortfall-=seized;
+                }
+            };
+            for(const senior of wagePriorityClaims(d.get('state'),debt.debtor)){
+                if([senior.id,senior.legacyRecord].includes(row.debt)){
+                    fundLiability(obligationView(d.get('state'),senior).owed);
+                    const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
+                    if(payment){settleClaim(d,this,{id:senior.id,amount:payment,judicial:{case:row.id,authority:officer}},`${eventId}:wage:${senior.id}`);executed+=payment;}
+                    if(obligationView(d.get('state'),senior.id).owed)break;
+                    continue;
+                }
+                if(!settlementPresent(this,d.get('state'),debt.debtor,senior.creditor))throw Error('优先工资债权人须到场领取或安排法庭托存');
+                const payment=Math.min(obligationView(d.get('state'),senior).owed,financeBalance(d,this,debt.debtor));
+                if(payment){settleClaim(d,this,{id:senior.id,amount:payment},`${eventId}:wage:${senior.id}`);executed+=payment;}
+                if(obligationView(d.get('state'),senior.id).owed)break;
+            }
+            const reserved=wagePriorityClaims(d.get('state'),debt.debtor).filter(r=>![r.id,r.legacyRecord].includes(row.debt)).reduce((n,r)=>n+obligationView(d.get('state'),r).owed,0);
+            if(!reserved)fundLiability(obligationView(d.get('state'),row.debt).owed);
+            const balance=financeBalance(d,this,debt.debtor),amount=Math.min(obligationView(d.get('state'),row.debt).owed,Math.max(0,balance-reserved));
+            const fine=Math.min(Math.max(0,balance-amount-reserved),Math.max(0,row.judgment.fine-(row.finePaid??0)));
+            if(amount+fine+executed<=0&&obligationView(d.get('state'),row.debt).owed)throw Error('债务人没有可执行资金，欠款保留');
+            if(amount)settleClaim(d,this,{id:row.debt,amount,judicial:{case:row.id,authority:officer}},`${eventId}:claim`);
             if(fine){financeChange(d,this,debt.debtor,-fine,eventId,{account:fundAccount(`legal_treasury:${row.law}`),writer:'law',eventId});const key=`legal_treasury:${row.law}`,fund=safeFund(d,key,'legal_treasury',{law:row.law});holdingSet(d,null,path(key),{...fund,coins:fund.coins+fine},'law');}
-            const paid=debt.paid+amount,remaining=debt.amount-paid;
-            holdingSet(d,null,path(row.debt),{...debt,paid,status:remaining?'逾期':'已还清',settledBy:row.id},'law');
+            const remaining=obligationView(d.get('state'),row.debt).owed;
+            const recovered=initialOwed-remaining;
             const finePaid=(row.finePaid??0)+fine,closed=!remaining&&finePaid===row.judgment.fine;
-            holdingSet(d,null,path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+amount},'law');
-            return {case:row.id,recovered:amount,fine,remaining,closed};
+            holdingSet(d,null,path(row.id),{...row,value:remaining,status:closed?'已结案':'已裁定',finePaid,fineDischarged:finePaid===row.judgment.fine,compensationPaid:!remaining,judgment:{...row.judgment,compensation:remaining},recovered:(row.recovered??0)+recovered},'law');
+            if(shareholderExecutions.length)holdingSet(d,null,path(row.id),{...d.get(...path(row.id)),shareholderExecutions:[...row.shareholderExecutions??[],...shareholderExecutions]},'law');
+            return {case:row.id,recovered,fine,remaining,closed,shareholderExecutions};
         }
     }
     if(row.offender!=='player'&&!creditorClaim){
@@ -603,18 +676,19 @@ export function lawAction(d,args,eventId){
     }
     if(operation==='claim'){
         authority(d,this,code,args.authority,'officer');if(d.get('state','location')!==code.court)throw new Error('领取须亲自在法院');
-        const recipient=present(d,this,args.claimant);if(recipient!==row.victim)throw new Error('只有本案受害人可领取，不能擅改受益人');
+        const recipient=args.claimant==='player'?'player':present(d,this,args.claimant);if(recipient!==row.victim)throw new Error('只有本案受害人可领取，不能擅改受益人');
         const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));
-        if(escrow?.category!=='legal_deposit'||escrow.claimed)throw new Error('赔偿没有交存或已经领取');
+        if(escrow?.category!=='legal_deposit'||escrow.claimed||escrow.beneficiary!==recipient)throw new Error('赔偿没有交存或已经领取');
         for(const unit of escrow.units){
             const record=d.get('state','itemInstances',unit);if(record?.owner!==key||record.status!=='保管')throw new Error('返还物单件不在法院保管，拒绝复制');
             this.itemDelta(d,recipient,record.item,1,{account:placedStock(this,key,record.item),writer:'law',eventId});const bag=[...this.bagPath(recipient),record.item,'instances'];
-            d.set(bag,[...d.get(...bag)??[],unit]);holdingSet(d,null,['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id)},'law');
+            d.set(bag,[...d.get(...bag)??[],unit]);holdingSet(d,null,['state','itemInstances',unit],{...record,owner:recipient,status:'持有',legalClaims:(record.legalClaims??[]).filter(claim=>claim.case!==row.id),
+                ...(record.stolenOrigin?.victim===recipient?{stolenOrigin:{...record.stolenOrigin,recoveredAt:now,recoveryEvent:eventId}}:{})},'law');
         }
         const bank=row.bank&&d.get(...path(row.bank));
         books(d,fundAccount(key),bank?.category==='bank'?vault(row.bank):purse(this,recipient),escrow.coins,eventId);
         if(bank?.category==='bank')holdingSet(d,null,path(row.bank),{...bank,coins:bank.coins+escrow.coins},'law');
-        else d.set(['state','npcs',recipient,'coins'],d.get('state','npcs',recipient,'coins')+escrow.coins);
+        else {const target=recipient==='player'?['state','player','coins']:['state','npcs',recipient,'coins'];d.set(target,(d.get(...target)??0)+escrow.coins);}
         holdingSet(d,null,path(key),{...escrow,coins:0,units:[],claimed:true,claimedAt:now},'law');knowledge(d,recipient,row.id,now);
         this.advance(d,10,eventId);return{case:row.id,recipient,coins:escrow.coins,units:escrow.units,claimed:true};
     }

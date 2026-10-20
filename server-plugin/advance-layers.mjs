@@ -1,6 +1,7 @@
 // Distance is derived from the player's current county and the authored
 // county links. Only progress is persisted; a tier is never copied into people.
 const DAY=1440;
+import {obligationClosed} from './obligation-protocol.mjs';
 export const ADVANCE_LAYERS=Object.freeze({intelligent:1,rule:DAY,statistics:7*DAY});
 export const advanceLayersFresh=engine=>!engine.replaying||engine.replayResult?.advanceLayerVersion===1;
 export const regionProgressKey=county=>`advance_region:${county}`;
@@ -38,7 +39,7 @@ export function remoteScheduleBatch(engine,state,before,after,{promote=false}={}
         const layer=plan.layers.get(county)??'statistics',through=state.records?.[regionProgressKey(county)]?.scheduleThrough??remote.minute;
         groups.set(county,{county,layer,before:Math.min(before,through),after,due:layer==='intelligent'||layer==='rule'&&(promote||Math.floor(before/DAY)<Math.floor(after/DAY)),people:[]});
     }
-    const companions=new Set(state.player?.companions??[]),booked=new Set(Object.values(state.obligations??{}).filter(o=>['待履行','进行中'].includes(o.status)).flatMap(o=>[o.promisor,o.promisee]));
+    const companions=new Set(state.player?.companions??[]),booked=new Set(Object.values(state.obligations??{}).filter(o=>['待履行','进行中'].includes(o.status)||o.runtimeVersion===1&&o.endedAt===undefined&&!obligationClosed(o)).flatMap(o=>[o.promisor,o.promisee,...(o.runtimeVersion===1?[o.debtor,o.creditor]:[])]));
     const pinned=new Set();
     for(const r of Object.values(state.records??{})){
         if(r.category==='governance_office')pinned.add(r.holder);
