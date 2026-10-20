@@ -118,12 +118,14 @@ export function applyIntentSetup(engine,initial,setup){
  }
  // 01 §1.3 / A.15.24: native IDs and variants remain authoritative. Corpus
  // IDs are aliases for references such as abilities.licenses, never row IDs.
- if(Object.hasOwn(setup,'holdings')){
-  if(!Array.isArray(setup.holdings))unmet('holdings','expected an array');
-  else for(const [index,row] of setup.holdings.entries()){
+ const deferredHoldings=[];
+ const resolveRefs=value=>Array.isArray(value)?value.map(resolveRefs):object(value)?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,resolveRefs(v)])):typeof value==='string'?ref(value):value;
+ const loadHoldings=entries=>{
+  for(const [index,row] of entries){
    const item=`holdings[${index}]`;
    if(!object(row)||typeof row.id!=='string'||bindings[row.id]||Object.keys(row).some(k=>!['id','name','kind','holder','subject','terms','grantedBy'].includes(k))||row.terms!==undefined&&!object(row.terms)){unmet(item,'invalid holding declaration');continue;}
-   const terms=structuredClone(row.terms??{}),variant=row.kind==='guest_of'?terms.mode:null;
+   if(object(row.holder)){unmet(item,'no uniquely resolved native existing_legal_town_head selector (05 §5.4/§5.7; S4); cannot substitute the present clerk or create an incumbent');continue;}
+   const terms=resolveRefs(row.terms??{}),variant=row.kind==='guest_of'?terms.mode:null;
    if(row.kind==='guest_of'&&terms.regime!==undefined&&terms.regime!=='custody.default'){unmet(item,'unknown custody regime');continue;}
    // The native canAct/effective readers implement custody.default when the
    // regime override is absent. Preserve the registered reference as a note.
@@ -138,11 +140,23 @@ export function applyIntentSetup(engine,initial,setup){
      holdingSet(d,engine,['state','creatures',row.subject,'owner'],ref(row.holder),setupWriter);
      id=aliveHoldings(d,{kind:'tamed_by',holder:ref(row.holder),subject:row.subject}).find(h=>h.source===`tamed:${row.subject}`)?.id;
      if(!id)throw Error('native tamed_by source did not establish the holding');
-    }else id=openHolding(d,{kind:row.kind,variant,holder:ref(row.holder),subject:ref(row.subject),terms,grantedBy:ref(row.grantedBy),source:`${setupWriter}:${row.id}`,writer:setupWriter,engine});
+    }else{
+     const existing=aliveHoldings(d,{kind:row.kind,holder:ref(row.holder),subject:ref(row.subject)}).find(h=>(h.variant??null)===variant&&JSON.stringify(h.terms??{})===JSON.stringify(terms)&&h.grantedBy===ref(row.grantedBy));
+     id=existing?.id??openHolding(d,{kind:row.kind,variant,holder:ref(row.holder),subject:ref(row.subject),terms,grantedBy:ref(row.grantedBy),source:`${setupWriter}:${row.id}`,writer:setupWriter,engine});
+    }
    })){
     bindings[row.id]=id;
     if(row.terms?.regime==='custody.default')notes.push(`${item}.terms.regime: custody.default uses the native default canAct/effective policy`);
    }
+  }
+ };
+ if(Object.hasOwn(setup,'holdings')){
+  if(!Array.isArray(setup.holdings))unmet('holdings','expected an array');
+  else{
+   const declared=new Set(['itemInstances','objects','obligations','documents','cases'].flatMap(field=>Array.isArray(setup[field])?setup[field].map(r=>r?.id):[]));
+   const early=[];
+   for(const entry of setup.holdings.entries())(declared.has(entry[1]?.holder)||declared.has(entry[1]?.subject)?deferredHoldings:early).push(entry);
+   loadHoldings(early);
   }
  }
  for(const [index,row] of (Array.isArray(setup.instances)?setup.instances:[]).entries())if(row?.kind==='creature'&&row.facts?.following!==undefined){
@@ -293,9 +307,16 @@ export function applyIntentSetup(engine,initial,setup){
  // presence and ledger audits.
  const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),native,get document(){return document;},set document(value){document=value;s=value.state;}};
  runSetupLoaders(ctx,setup);
+ loadHoldings(deferredHoldings);
+ // Office authority may cite history/case aliases loaded by domain modules.
+ for(const row of Array.isArray(setup.instances)?setup.instances:[])if(row?.kind==='office'&&bindings[row.id]&&row.authority){
+  const authority=resolveRefs(row.authority);
+  if(JSON.stringify(authority)!==JSON.stringify(row.authority))native(`instances.${row.id}.authority`,d=>updateEntity(d,{id:ref(row.id),facts:{authority},writer:setupWriter}));
+ }
  for(const id of Array.isArray(setup.present)?setup.present:[]){
   const body=actor(id);
-  if(body&&(body.location!==s.location||['死亡','昏迷','失能'].includes(body.status)||/睡|昏迷/.test(body.activity??'')||body.capacity==='none'||isGone(engine,document,id)))unmet(`present.${id}`,'actor is not awake and present after setup');
+  const explicitStatus=object(setup.status)&&typeof setup.status[id]==='string'?setup.status[id]:null;
+  if(body&&(body.location!==s.location||isGone(engine,document,id)||isPhysicallyDead(engine,document,id)||!explicitStatus&&(['死亡','昏迷','失能'].includes(body.status)||/睡|昏迷/.test(body.activity??'')||body.capacity==='none')))unmet(`present.${id}`,'actor is not awake and present after setup');
  }
  try{document.ledger=openLedger(engine,document);for(const reason of auditLedger(document.ledger))unmet('ledger',reason);}
  catch(error){unmet('ledger',error.message);}
