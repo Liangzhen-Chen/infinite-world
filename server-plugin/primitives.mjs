@@ -32,11 +32,13 @@ const receiptBase=(effects,frame)=>({eventId:frame.eventId,actor:frame.actor,sou
 // after execution, so clients cannot smuggle receipt fields into primitives.
 export function recordResourceCosts(receipt,resources,{requested=[],sources=[]}={}){
  const requests=requested.map((effect,index)=>({effect,index,used:false}));
- const same=(a,b)=>a.op==='transfer'&&b.op==='transfer'&&a.from===b.from&&a.to===b.to;
+ const same=(a,b)=>a.op==='transfer'&&b.op==='transfer'&&a.from===b.from&&a.to===b.to&&a.qty===b.qty;
  // A requested consumption implemented as an outcome must not also label an
  // identical extra fee as the requested effect.
  for(const effect of receipt.applied.filter(e=>e.index>=resources.length)){
-  const match=requests.find(row=>!row.used&&same(row.effect,effect));if(match)match.used=true;
+  const match=requests.find(row=>!row.used&&same(row.effect,effect));
+  Object.assign(effect,{source:receipt.source,role:match?'requested_consumption':'outcome',appliedEvent:receipt.eventId,...(match?{requestIndex:match.index}:{})});
+  if(match)match.used=true;
  }
  receipt.cost.resources=resources.map((resource,costIndex)=>{
   const applied=receipt.applied.find(effect=>effect.index===costIndex);

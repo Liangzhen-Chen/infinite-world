@@ -48,7 +48,7 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
    slots.debt=matches[0].legacyRecord??matches[0].id;
   }
   const call={tool:'world_act',eventId:`${input.eventId.slice(0,88)}:step:${index}:${digest({eventId:input.eventId,args:input.args}).slice(0,8)}`,args:{action:step.action,slots}};
-  const reduced=await engine.reduce(current,call),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
+  const reduced=await engine.reduce(current,call,{openProposal:{proposal:input.args,prepared}}),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
   current=applyPatches(current,reduced.patches);patches.push(...reduced.patches);receipts.push({...receipt,status:'committed'});
  }
  const applied=[],resources=[];

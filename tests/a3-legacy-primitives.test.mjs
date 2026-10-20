@@ -153,3 +153,36 @@ test('A3 legacy sequence: parent indices are unique and retain actual child prov
  for(const cost of r.cost.resources)for(const [key,value] of Object.entries(cost))assert.deepEqual(r.applied[cost.index][key],value);
  postings(document,after,r);books(engine,after);
 });
+
+test('A3 legacy combat: absent NPC HP uses the exchange initial value, never a fabricated heal',async()=>{
+ const {engine,document}=fixture();delete document.state.npcs[SELLER].hp;
+ const input=call('core:combat',{target:SELLER,intent:'attack'},'legacy-combat-initial-hp'),before=structuredClone(document);
+ const preview=await engine.previewAction(document,input);assert.deepEqual(document,before);
+ const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=out.result.receipt;
+ assert.deepEqual(preview.receipt.applied,r.applied);
+ const vitals=out.result.vitals[SELLER],effect=r.applied.find(e=>e.op==='vital'&&e.target===SELLER&&e.need==='hp');
+ assert.ok(vitals.before>0);assert.equal(vitals.after,after.state.npcs[SELLER].hp);
+ assert.equal(vitals.before-vitals.after,out.result.damage);
+ if(out.result.damage){assert.equal(effect.type,'harm');assert.equal(effect.delta,-out.result.damage);assert.equal(effect.result.before,vitals.before);assert.equal(effect.result.after,vitals.after);}
+ else assert.equal(effect,undefined);
+ assert.ok(!r.applied.some(e=>e.op==='vital'&&e.target===SELLER&&e.type==='heal'));books(engine,after);
+});
+
+test('A3 legacy obligations: adopted payment promise exposes actual parties, amount and deadline',async()=>{
+ const {engine,document}=fixture(),deadline=document.state.minute+1440;
+ const out=await engine.reduce(document,call('core:dialogue.promise',{promisee:SELLER,type:'付款',coins:10,deadline,content:'Pay ten coins tomorrow'},'legacy-payment-promise'));
+ const after=applyPatches(document,out.patches),e=out.result.receipt.applied.find(e=>e.op==='obligation.create');
+ assert.ok(e);assert.equal(e.from,'player');assert.equal(e.to,SELLER);assert.equal(e.amount,10);assert.equal(e.deadline,deadline);
+ assert.deepEqual(e.result.after,after.state.obligations[e.id]);assert.equal(e.debtor,e.from);assert.equal(e.creditor,e.to);books(engine,after);
+});
+
+test('A3 legacy sequence: explicit teacher fee keeps parent request and cost provenance',async()=>{
+ const {engine,document}=fixture(),fee={op:'transfer',from:'self',to:TEACHER,resource:'coin',qty:12};
+ const input={eventId:'legacy-sequence-fee',args:{intent:'Learn and buy bread',effects:[fee]}};
+ const prepared={steps:[{action:'core:learn',slots:{entity:SKILL,source:TEACHER}},{action:'core:trade.buy',slots:{seller:SELLER,item:BREAD,quantity:1}}]};
+ const out=await executeOpenSequence(engine,document,input,prepared),r=out.result.receipt,cost=r.cost.resources[0],e=r.applied[cost.index];
+ assert.equal(cost.role,'requested_consumption');assert.equal(cost.requestIndex,0);assert.equal(cost.stepIndex,0);assert.equal(cost.stepCostIndex,0);
+ for(const [key,value] of Object.entries(cost))assert.deepEqual(e[key],value);
+ assert.deepEqual(e.source,{kind:'catalog',id:'core:learn'});assert.equal(e.appliedEvent,r.steps[0].eventId);
+ const after=applyPatches(document,out.patches);assert.equal(after.state.player.coins,80);postings(document,after,r);books(engine,after);
+});

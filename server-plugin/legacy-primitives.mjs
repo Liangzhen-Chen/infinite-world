@@ -47,9 +47,15 @@ function stateEffect(op,fields,path,before,after){
 function rowChanges(before,patches,root,part){
  const rows=new Map(Object.entries(before[root]?.[part]??{})),out=[];
  for(const p of patches){
-  if(p.path[0]!==root||p.path[1]!==part||p.path.length!==3)continue;
-  const id=p.path[2],old=rows.get(id),row=p.op==='delete'?null:p.value;
-  rows.set(id,row);if(!same(old,row))out.push({id,old,row,path:p.path});
+  if(p.path[0]!==root||p.path[1]!==part||p.path.length<3)continue;
+  const id=p.path[2],old=rows.get(id);
+  let row=p.op==='delete'?null:p.value;
+  if(p.path.length>3){
+   row=structuredClone(old??{});let parent=row;
+   for(const key of p.path.slice(3,-1))parent=parent[key]??={};
+   if(p.op==='delete')delete parent[p.path.at(-1)];else parent[p.path.at(-1)]=structuredClone(p.value);
+  }
+  rows.set(id,row);if(!same(old,row))out.push({id,old,row,path:[root,part,id]});
  }
  return out;
 }
@@ -91,8 +97,16 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const path=actorPath(a,id);if(!path)continue;
   const old=at(before,path),now=at(after,path);if(!old||!now)continue;
   for(const need of ['hp','mp']){
-   const delta=(now[need]??0)-(old[need]??0);
-   if(delta)add(stateEffect('vital',{target:id,need,type:delta<0?'harm':'heal',delta},[...path,need],before,after));
+   // Combat lazily initializes NPC HP. Its actual starting HP comes from the
+   // exchange, not from treating an absent projection as zero health.
+   const initial=need==='hp'&&tool==='combat'?result.vitals?.[id]?.before:undefined;
+   const was=initial??old[need],value=now[need];
+   if(!Number.isFinite(was)||!Number.isFinite(value))continue;
+   const delta=value-was;
+   if(delta){
+    const effect=stateEffect('vital',{target:id,need,type:delta<0?'harm':'heal',delta},[...path,need],before,after);
+    effect.result.before=was;add(effect);
+   }
   }
   if(old.status!==now.status)add(stateEffect('status',{target:id,status:now.status},[...path,'status'],before,after));
   for(const field of ['xp','level','attributes'])if(!same(old[field],now[field]))
@@ -143,7 +157,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(!row||!relevant(row))continue;
   const paid=old?(row.paid??0)-(old.paid??0):0;
   const op=!old?'obligation.create':paid>0?'obligation.settle':['cancelled','void'].includes(row.status)&&row.status!==old.status?'obligation.cancel':null;
-  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,subject:row.subject,terms:row.terms,actedAs:row.actedAs??row.terms?.actedAs??null,...(op==='obligation.settle'?{amount:paid}:{}),result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
+  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,from:row.debtor,to:row.creditor,subject:row.subject,terms:row.terms,amount:op==='obligation.settle'?paid:row.amount,deadline:row.deadline,actedAs:row.actedAs??row.terms?.actedAs??null,result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
+  else {
+   // A handler may finish the newly opened row's status/projection in another
+   // patch. Keep that final row in the last actual lifecycle operation.
+   const effect=receipt.applied.findLast(e=>e.op.startsWith('obligation.')&&e.id===id);
+   if(effect)effect.result.after=structuredClone(row);
+  }
  }
  const dialogue=result.dialogue;
  if(dialogue&&a.dialogues?.[dialogue.npc]?.sourceEvent===eventId){
@@ -167,6 +187,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
    add(stateEffect('fact.set',{entity:row.id,field,value},['state','records',id,'state',field],before,after));
  }
  const costs=[];
+ const usedRequests=new Set();
+ const owner=value=>value==='self'?'player':typeof value==='string'?value.split('|')[0]:null;
+ const resource=r=>r.resource??(typeof r.from==='string'&&r.from.includes('|')?parseAccount(r.from).resource:null);
+ for(const effect of posted){
+  const index=requested.findIndex((r,index)=>!usedRequests.has(index)&&r.op==='transfer'&&owner(r.from)===owner(effect.from)&&owner(r.to)===owner(effect.to)&&['coin',effect.resource].includes(resource(r))&&r.qty===effect.qty);
+  if(index>=0){Object.assign(effect,{role:'requested_consumption',requestIndex:index});usedRequests.add(index);}
+ }
  // Only a handler's declared fee is an additional resource cost. Endpoints or
  // negative deltas alone do not establish that something was a fee (A3-A).
  if(tool==='learn'&&typeof result.cost==='number'&&result.cost>0){
@@ -174,9 +201,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(fee)costs.push(fee);
  }
  for(const effect of costs){
-  const owner=value=>value==='self'?'player':typeof value==='string'?value.split('|')[0]:null;
-  const resource=r=>r.resource??(typeof r.from==='string'&&r.from.includes('|')?parseAccount(r.from).resource:null);
-  const index=requested.findIndex(r=>r.op==='transfer'&&owner(r.from)===owner(effect.from)&&owner(r.to)===owner(effect.to)&&['coin',effect.resource].includes(resource(r)));
+  const index=effect.requestIndex??-1;
   Object.assign(effect,{role:index<0?'additional_cost':'requested_consumption',costIndex:receipt.cost.resources.length,...(index>=0?{requestIndex:index}:{})});
   receipt.cost.resources.push(structuredClone(effect));
  }

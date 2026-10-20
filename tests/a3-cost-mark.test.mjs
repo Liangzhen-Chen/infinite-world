@@ -76,7 +76,20 @@ test('A3 mark: descriptive form consumes once, creates a real mark and notifies 
   const event=after.state.records[`world_event:${reaction.event}`];assert.equal(event.payload.kind,'mark_reaction');assert.equal(event.payload.mark,id);assert.equal(event.actor,reaction.observer);
  }
  assert.equal(receipt.cost.resources.length,0);checkBooks(engine,after);
+ const consumed=receipt.applied.find(e=>e.op==='transfer');
+ assert.equal(consumed.role,'requested_consumption');assert.equal(consumed.requestIndex,0);
+ assert.deepEqual(consumed.source,receipt.source);assert.equal(consumed.appliedEvent,input.eventId);
+ assert.equal(effect.role,'outcome');assert.deepEqual(effect.source,receipt.source);
  const again=await engine.reduce(JSON.parse(JSON.stringify(after)),input);assert.equal(again.result.receipt.duplicate,true);assert.deepEqual(again.patches,[]);
+});
+
+test('A3 costs: a different requested quantity cannot relabel a derived fee',()=>{
+ const {engine,document}=fixture(),action=install(engine,[tell]);
+ const out=primitiveRuntime.execute(engine,document,{eventId:'cost-different-quantity',args:{action:action.id,slots:{}}},{openProposal:{proposal:{effects:[{...consume,qty:2}]},prepared:{}}});
+ const fee=out.receipt.cost.resources[0];
+ assert.equal(fee.role,'additional_cost');assert.equal(fee.requestIndex,undefined);
+ assert.equal(fee.qty,1);assert.equal(applyPatches(document,out.patches).state.player.coins,19);
+ checkBooks(engine,applyPatches(document,out.patches));
 });
 
 test('A3 mark: declarations cannot fake consumption, authors, locations or numeric effects',async()=>{
