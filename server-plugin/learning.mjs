@@ -10,9 +10,25 @@ import {teachNpc}from'./npc-growth.mjs';
 import {spiritStudent,teachSpirit}from'./wildlife-society.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
 import {heldBookGrade}from'./works.mjs';
+import {consent} from './action-consent.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {obligationClosed} from './obligation-state.mjs';
 const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
+
+// Native callers supply the actual teacher, subject, price and duration after
+// qualification checks. A caller's consent flag is never a teaching source.
+export function teachingConsent(d,engine,{teacher,student='player',subject,minutes,fee=0,eventId}){
+    const state=d.get('state'),until=state.minute+minutes;
+    const permission=consent({engine,document:d.document},teacher,student,'teach',{purpose:subject,until,onRefusal:'abort'});
+    if(permission.allowed)return permission;
+    const service=Object.values(state.obligations??{}).find(o=>(o.kind??o.obligationKind)==='service'&&o.debtor===teacher&&o.creditor===student&&!obligationClosed(o)&&o.endedAt===undefined&&!o.revoked&&(o.start??o.createdAt??0)<=state.minute&&(o.deadline??o.until??Infinity)>=until&&(o.subject===subject||o.terms?.subject===subject));
+    if(service)return {allowed:true,kind:'service',source:service.id,check:null,tags:[]};
+    const decision=npcDecision(subjectiveView(engine,d.document,teacher),{kind:'teach',from:student,tags:[subject],cost:{minutes},reward:fee});
+    return {allowed:decision.outcome==='agree',kind:'decision',source:eventId,decision,reason:decision.reason,check:decision.outcome==='agree'?null:'abort',tags:[]};
+}
 
 export function learn(d,args,id){
     if(args.operation)return educationAction.call(this,d,args,id);
@@ -75,7 +91,9 @@ export function learn(d,args,id){
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
         assertNpcService(d,this,source,'teach',minutes);
         if(d.get('state','player','coins')<fee)throw new Error('教学费不足');
-        sourceRecord={type:'teacher',id:source};
+        const permission=teachingConsent(d,this,{teacher:source,subject:entity,minutes,fee,eventId:id});
+        if(!permission.allowed)throw new Error(`导师未同意授课：${permission.reason}`);
+        sourceRecord={type:'teacher',id:source,consent:permission};
     }else if(source.startsWith('item_')){
         if(this.quantity(d,'player',source)<1)throw new Error('没有这本书');
         if(d.get('state','inventory',source,'durability')===0)throw new Error('书页已损坏，不能作为完整学习来源');
