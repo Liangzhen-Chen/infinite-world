@@ -21,6 +21,8 @@ import {BANK_OPERATIONS} from './finance-operations.mjs';
 import {isPhysicallyDead,isGone} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
+import {consent as nativeConsent,agreedLoan} from './action-consent.mjs';
+import {authority} from './action-authority.mjs';
 declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
@@ -212,8 +214,10 @@ export function bankTrade(d,e,args,id){
         const borrower=args.business?e.resolve(args.business):e.resolve(args.seller);
         const representative=args.business?groupRepresentative(e,d.get('state'),borrower,args.seller):borrower;
         if(!representative)throw Error('组织没有可签约的现任代表');
-        counterpart(d,e,representative,{consent:args.consent});
-        const terms=borrowerTerms(d,e,borrower,principal,days),key=`debt_lend_${id}`;
+        const agreement=borrower===representative?agreedLoan({engine:e,document:d.document},borrower,'player',{principal,days,interest:args.interest,until:now+5}):null;
+        if(args.interest!==undefined&&!agreement)counterpart(d,e,representative,{consent:false});
+        counterpart(d,e,representative,{consent:agreement?.permission.allowed||args.consent});
+        const quoted=borrowerTerms(d,e,borrower,principal,days),terms=agreement?{...quoted,interest:agreement.terms.interest,rate:agreement.terms.interest*30/(principal*days)}:quoted,key=`debt_lend_${id}`;
         const pledgeKey=args.item?`pledge:${key}`:null;
         if(pledgeKey)pledge(d,e,pledgeKey,e.resolve(args.item,'item'),financeInt(args.quantity??1,1,100000,'抵押数量'),borrower);
         financeTransfer(d,e,'player',borrower,principal,id);
@@ -222,7 +226,7 @@ export function bankTrade(d,e,args,id){
         holdingSet(d,e,financePath(key),{category:'debt',kind:'player_loan',debtor:borrower,representative,creditor:'player',principal,interest:terms.interest,monthlyInterest:terms.rate,
             amount:principal+terms.interest,paid:0,status:'待偿还',installments:count,nextInstallment:1,createdAt:now,deadline:now+days*DAY,nextPayment:now+Math.ceil(days*DAY/count),
             pledgeRecord:pledgeKey,location,source:id,...(succession?{terms:succession}:{}),
-            signedTerms:{principal,days,rate:terms.rate,installments:count,...succession}},'finance-bank');
+            signedTerms:{principal,days,rate:terms.rate,installments:count,...(agreement?{consent:agreement.permission.source}:{}),...succession}},'finance-bank');
         if(borrower===representative){
             openObligation(d,e,{...d.get(...financePath(key)),id:`finance:${key}`,legacyRecord:key,actor:borrower},`${id}:claim`);
             holdingSet(d,e,financePath(key),{...d.get(...financePath(key)),kind:'player_loan'},'finance-bank');
@@ -230,7 +234,17 @@ export function bankTrade(d,e,args,id){
         return {debt:key,borrower,principal,interest:terms.interest,monthlyInterest:terms.rate};
     }
     if(op==='collect'){
-        const key=args.debt,row=d.get(...financePath(key));if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent'].includes(row.kind))throw Error('没有本人可追收的未清欠款');
+        const key=args.debt,row=d.get(...financePath(key)),canonical=obligationRow(d.get('state'),key);
+        if(canonical?.kind==='loan'&&!['player_loan','rent'].includes(row?.kind)&&canonical.creditor==='player'&&!obligationView(d.get('state'),canonical).closed){
+            const view=obligationView(d.get('state'),canonical),amount=financeInt(args.coins??view.owed,1,view.owed,'追收金额');
+            const agreement=nativeConsent({engine:e,document:d.document},canonical.debtor,'player','repay',{purpose:canonical.id,subject:canonical.id,terms:{amount},until:now,onRefusal:'abort'});
+            // Settlement is instantaneous. Validate the real present signer,
+            // rather than a five-minute service reservation that is not used.
+            counterpart(d,e,canonical.debtor,{consent:agreement.allowed,minutes:0});
+            const result=settleObligation(d,e,{id:canonical.id,payer:canonical.debtor,actor:'player',amount},id,{authorize:request=>authority({engine:e,document:d.document},request.actor,'obligation.settle',request.party,{effect:{id:canonical.id,amount}})});
+            return {debt:key,repaid:amount,settlement:result};
+        }
+        if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent'].includes(row.kind))throw Error('没有本人可追收的未清欠款');
         const representative=row.representative??row.debtor;counterpart(d,e,representative,{consent:args.consent});
         const amount=financeInt(args.coins??row.amount-row.paid,1,row.amount-row.paid,'追收金额');
         loanPayment(d,e,key,row,amount,now,id);return {debt:key,repaid:amount};

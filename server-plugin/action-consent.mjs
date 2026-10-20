@@ -14,6 +14,18 @@ export function validConsentTerms(terms){
 }
 const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>Array.isArray(v)?Array.isArray(actual?.[k])&&v.length===actual[k].length&&v.every((x,i)=>x===actual[k][i]):actual?.[k]===v);
 
+// A legacy lending call has principal/days slots but no interest slot. Read an
+// actual borrower's offer, never a proposal's claim that the borrower agreed.
+export function agreedLoan(context,borrower,creditor,{principal,days,interest,until=context.document.state.minute}){
+ const offers=(context.document.state.consentEvents??[]).filter(row=>row.type==='consent_given'&&row.from===borrower&&row.to===creditor&&row.scope==='loan'&&row.subject===creditor&&row.terms?.principal===principal&&row.terms?.days===days&&Number.isSafeInteger(row.terms.interest)&&row.terms.interest>=0&&(interest===undefined||row.terms.interest===interest));
+ const valid=offers.map(row=>{
+  const terms={principal,days,interest:row.terms.interest};
+  return {terms,permission:consent(context,borrower,creditor,'loan',{purpose:creditor,subject:creditor,terms,until,onRefusal:'abort'})};
+ }).filter(row=>row.permission.allowed);
+ const terms=[...new Set(valid.map(row=>JSON.stringify(row.terms)))];
+ return terms.length===1?valid[0]:null;
+}
+
 // The legacy learning handler has already derived the registered subject,
 // price and duration. Proposal flags never supply these agreement terms.
 function nativeConsentTerms(context,from,to,scope,purpose){

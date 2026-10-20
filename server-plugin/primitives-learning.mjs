@@ -1,6 +1,6 @@
 // NPC learning consumes real sources and elapsed time. Education's knowledge
 // and book gates remain authoritative; native practice owns rate/carry/caps.
-import {reject} from './primitive-policy.mjs';
+import {reject,PrimitiveRejected} from './primitive-policy.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
 import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge,practicalKnowledgeRegistry} from './education-state.mjs';
@@ -9,6 +9,7 @@ import {personCertified} from './entity-view.mjs';
 import {obligationClosed} from './obligation-state.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
 import {digest} from './storage.mjs';
+import {reject as rejectAction} from './action-rejection.mjs';
 
 export function initialKnowledgeAction(d,e,tool,args){
  const s=d.get('state');
@@ -36,13 +37,33 @@ export function learnWithInitialKnowledge(d,e,args,id,next){
   const language=unit?.language??e.byId.get(unit?.item??source)?.language??book.language??'lang:common';
   if(!canReadLanguage(e,s,'player',language))reject('E-LEARN-LANGUAGE','The learner cannot read the book language');
  }
+ // Explicit source protocol, shared by native actions and legacy aliases.
+ // Omitting mode retains the old first-acquisition/replay contract.
+ if(args.student===undefined&&['study','observe'].includes(args.mode)){
+  let subject;try{subject=e.resolve(args.entity,args.kind);}catch{/* Native learn diagnoses invalid subjects. */}
+  if(subject?.startsWith('skill_')&&s.skills?.[subject]){
+   // Resolve an actual unique intact copy; a catalog id cannot choose between
+   // different physical editions or silently read a damaged copy.
+   if(book&&!unit){
+    const copies=(s.inventory?.[source]?.instances??[]).map(key=>s.itemInstances?.[key]).filter(row=>row?.owner==='player'&&row.status==='持有'&&row.durability!==0);
+    if(copies.length===1&&e.quantity(d,'player',source)===1)source=copies[0].id;
+   }
+   try{return e.primitiveStudySkill(d,{subject,source,mode:args.mode},id);}
+   catch(error){
+    if(!(error instanceof PrimitiveRejected)||!['E-LEARN-SOURCE','E-LEARN-LANGUAGE','E-LEARN-LITERACY','E-LEARN-PREREQUISITE','E-LEARN-OBSERVE','E-LEARN-ACTOR'].includes(error.code))throw error;
+    const observation=error.code==='E-LEARN-OBSERVE',reason=observation?'缺少完整时段内、实际可见且在三十米内的演示，不能旁观学习':'当前学习来源不满足在场、内容、完好或读写条件';
+    rejectAction(`E-ACTION-${error.code.slice(2)}`,reason,{missing:[reason],repair:[observation?'到能看清演示的位置，确认距离、视线和完整演示时段后再试':'确认导师能授课，或选择本人持有、完好且能读懂相应内容的书籍']});
+   }
+  }
+  if(args.mode==='observe')rejectAction('E-ACTION-LEARN-SOURCE','旁观需要能够理解演示的既有技能基础',{missing:['需要这项演示的基础技能'],repair:['先学习基础，再从真实演示中积累经验']});
+ }
  if(s.npcs?.[source]&&!teachingAvailable(e,s,source))reject('E-LEARN-SOURCE','The teacher is occupied and cannot provide a complete lesson');
  return next();
 }
 
 // Same education source gates, expressed against the L1 knowledge/holding
 // view. education.mjs is owned by C and cannot become an upward L1 dependency.
-function studyBook(d,e,holder,source,entity){
+export function studyBook(d,e,holder,source,entity){
  const s=d.get('state'),unit=s.itemInstances?.[source],item=unit?.item??source,b=e.byId.get(item)??s.created?.[item],content=e.byId.get(entity)??s.created?.[entity];
  if(e.quantity(d,holder,item)<1||unit&&(unit.owner!==holder||unit.status!=='持有'||unit.durability===0))reject('E-LEARN-SOURCE','The learner does not hold this intact book');
  const held=d.get(...e.bagPath(holder),item),copies=(held?.instances??[]).map(id=>s.itemInstances?.[id]).filter(u=>u&&u.owner===holder&&u.status==='持有');

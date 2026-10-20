@@ -12,6 +12,9 @@ import {digest} from './storage.mjs';
 import {normalize} from './retrieval.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {applyBodyVital,beginBodyActivity,endBodyActivity} from './primitives-body.mjs';
+import {demonstrationAt,teachingAvailable} from './education-state.mjs';
+import {studyBook} from './primitives-learning.mjs';
+import {moveCoins,purse} from './money.mjs';
 export {applyBodyVital} from './primitives-body.mjs';
 
 declareHoldingWriter('primitives',{entities:['person','creature','item','building','mark'],locations:true,kinds:['owns']});
@@ -207,16 +210,24 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
     return engine.learn(d,{entity:effect.subject,source,kind:subject.id.split('_')[0]},child);
    }
    const minutes=integer(limits.learn?.minutes,1,43200,'E-LEARN-BOUND'),until=d.get('state','minute')+minutes;
-  permission=consent({...context,document:d.document},source,learner,'teach',{purpose:effect.subject,until});
-  if(!permission.allowed&&context.consentPurpose)permission=consent({...context,document:d.document},source,learner,'teach',{purpose:context.consentPurpose,until});
-   if(!permission.allowed)permission=engine.primitiveTeachingConsent(d,{teacher:source,student:learner,subject:effect.subject,minutes,fee:0,eventId:child});
+  const fee=limits.studyFee??0;
+  permission=!limits.observeOnly&&teachingAvailable(engine,d.get('state'),source,until)?consent({...context,document:d.document},source,learner,'teach',{purpose:effect.subject,terms:{fee,minutes},until}):{allowed:false,kind:limits.observeOnly?'observation':'busy'};
+  if(!permission.allowed&&!limits.observeOnly&&context.consentPurpose)permission=consent({...context,document:d.document},source,learner,'teach',{purpose:context.consentPurpose,until});
+   if(!permission.allowed&&!limits.observeOnly)permission=engine.primitiveTeachingConsent(d,{teacher:source,student:learner,subject:effect.subject,minutes,fee,eventId:child});
    if(!permission.allowed){
    const activity=person.activity??'',skill=person.practicing??person.teaching;
-   if(skill!==effect.subject||!/(练|教|演|practice|teach)/.test(activity))reject('E-LEARN-OBSERVE','There is no observable demonstration of this subject');
+   const timed=demonstrationAt(engine,d.get('state'),source,effect.subject,until);
+   if(!timed&&(skill!==effect.subject||!/(练|教|演|practice|teach)/.test(activity)||Object.values(d.get('state','records')??{}).some(r=>r.category==='education_demonstration'&&r.actor===source)))reject('E-LEARN-OBSERVE','There is no observable demonstration of this subject');
    const facts=engine.primitiveTargetFacts(d,frame.actor,source);
    if(!facts?.lineOfSight||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters>30)reject('E-LEARN-OBSERVE','The demonstration is not actually visible');
    observed=true;tags.push('unconsented');
    detection=engine.check(d,{attribute:'敏捷',opponent:{npc:source,attribute:'精神'}},`${child}:notice`);
+  }
+  if(!observed&&limits.studyFee!==undefined)engine.primitiveAssertTeachingService(d,source,minutes);
+  if(!observed&&fee){
+   moveCoins(d,{from:purse(null,'player'),to:purse(null,source),amount:fee,writer:'learning',eventId:child});
+   d.set(['state','player','coins'],d.get('state','player','coins')-fee);
+   d.set(['state','npcs',source,'coins'],d.get('state','npcs',source,'coins')+fee);
   }
  }
  if(old){
@@ -228,6 +239,7 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
   if(!sourceKind){
    const instance=d.get('state','itemInstances',source),bookId=instance?.item??source,definition=engine.byId.get(bookId),book=instance?.book??definition?.book;
    if(book){
+    studyBook(d,engine,'player',source,effect.subject);
     if(!(book.teaches??[]).includes(effect.subject)||(instance?instance.owner!=='player'||instance.status!=='持有'||instance.durability===0:engine.quantity(d,'player',bookId)<1||d.get('state','inventory',bookId,'durability')===0))reject('E-LEARN-SOURCE','The required book is not actually held and readable');
     if((d.get('state','skills','skill_literacy','proficiency')??0)<engine.rules.books.minimumLiteracy)reject('E-LEARN-LITERACY','The learner cannot read this book');
     sourceKind='book';
@@ -244,8 +256,10 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
   const requested=effect.amount===undefined?ceiling:integer(effect.amount,0,100000),gain=Math.min(requested,ceiling);
   engine.advance(d,minutes,child);
   if(person&&(currentLocation(d,source)!==currentLocation(d,learner)||capacity({...context,document:d.document},source,'learn').level==='none'))reject('E-LEARN-SOURCE','The demonstration ended before the study period was complete');
-  const result=engine.practice(d,{skill:effect.subject,target:`primitive:${source}`},child,gain);
-  return {...result,minutes,observed,sourceKind,...(person?{teacher:source}:{}),...(permission?{permission}:{}),...(detection?{detection,noticedBy:detection.success?[]:[source]}:{})};
+  if(person&&!observed&&['given','proxy'].includes(permission?.kind)&&!consent({...context,document:d.document},source,learner,'teach',{purpose:effect.subject,terms:{fee:limits.studyFee??0,minutes},until:d.get('state','minute')}).allowed)reject('E-LEARN-SOURCE','Instruction was withdrawn before study completed');
+  if(sourceKind==='book')studyBook(d,engine,'player',source,effect.subject);
+  const result=engine.practice(d,{skill:effect.subject,target:`primitive:${source}`},child,gain,'player',bound.ceiling??2699);
+  return {...result,entity:effect.subject,source:{type:sourceKind,id:source},cost:observed?0:limits.studyFee??0,minutes,observed,sourceKind,...(person?{teacher:source}:{}),...(permission?{permission}:{}),...(detection?{detection,noticedBy:detection.success?[]:[source]}:{})};
  }
  if(observed)reject('E-LEARN-OBSERVE','A first acquisition from observation requires its reduced-rate adapter');
  if(effect.amount!==undefined)reject('E-LEARN-AMOUNT','First acquisition uses the registered learning protocol');

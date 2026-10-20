@@ -215,6 +215,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='coins'&&money)value??=money.qty;
     if(slot.name==='seller'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.debtor;
     if(slot.name==='days'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.terms?.days;
+    if(slot.name==='interest'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.terms?.interest;
     if(slot.fill==='banker'){
      const bank=banks.get(proposal.target);value??=bank?.keepers?.find(id=>kindOf(id)==='person');
     }
@@ -256,6 +257,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='source'&&transfer)value??=transfer.from;
     if(slot.name==='target')value??=target??transfer?.to??(spell?.effectSpec?.kind==='summon'?actor:undefined);
    }
+   if(value===undefined&&action.id==='core:learn'&&slot.name==='mode'){
+    if(proposal.means?.manner==='observe')value='observe';
+    else if(effects.some(e=>e.op==='learn'&&e.subject?.startsWith('skill_')&&state.skills?.[e.subject]))value='study';
+   }
    if(action.call?.tool==='world_combat'){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
     if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
@@ -288,6 +293,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      value=rows.find(row=>row.id===e.id||row.legacyRecord===e.id)?.id??(!/^[a-z][a-z0-9_:.-]*$/i.test(e.id??'')&&rows.length===1?rows[0].id:action.id==='open:waive_debt'?undefined:e.id);break;
     }
     if(e.op==='obligation.create'&&e.obligationKind==='promise'){
+     if(slot.name==='obligation'&&typeof e.terms?.fulfills==='string'){
+      const matches=obligationRows(state).filter(row=>!obligationClosed(row)&&row.debtor===actor&&row.creditor===target&&[row.id,row.legacyRecord,row.name].includes(e.terms.fulfills));
+      if(matches.length===1){value=matches[0].id;break;}
+     }
+     if(slot.name==='location')value=e.terms?.place;
      if(slot.name==='type'&&['coin',LEDGER_COIN].includes(e.terms?.resource)){value='付款';break;}
      if(slot.name==='coins'){value=e.terms?.amount;if(value!==undefined)break;}
      if(slot.name==='content'){value=proposal.intent;break;}

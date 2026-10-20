@@ -804,6 +804,9 @@
   {
     "id": "bld_hw_school",
     "name": "小学堂",
+    "site": {
+      "manager": "npc_hw_luqing"
+    },
     "coordinates": [
       0.4,
       0.1

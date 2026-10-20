@@ -41,6 +41,7 @@ const valueOf=(engine,item,quantity)=>(engine.byId.get(item)?.basePrice??0)*quan
 
 // A present, awake adult who agreed now and has a waking window at this place.
 export function counterpart(d,engine,name,{consent,minutes=5}){
+    if(!Number.isSafeInteger(minutes)||minutes<0)throw Error('契约占用时间无效');
     const id=engine.resolve(name),row=engine.actor(d,id),base=engine.byId.get(id);
     if(id==='player'||!id.startsWith('npc_')||!awake(row)||row.location!==d.get('state','location'))throw Error('契约对方须实际在场且清醒');
     if(personConstraint(engine,d.get('state'),id))throw Error('契约对方正在依法拘留，不能提供服务');
@@ -48,7 +49,7 @@ export function counterpart(d,engine,name,{consent,minutes=5}){
     if(consent!==true)reject('E-ACTION-CONSENT','契约对方必须明确同意本次条款',{missing:['需要契约对方对本次条款的明确同意'],repair:['先向对方提出本次条款，取得明确同意后重试']});
     engine.assertNpcObligationAction(d,['player',id],{minutes});engine.assertNpcAutonomyAction(d.get('state'),['player',id],{minutes});
     const now=d.get('state','minute');
-    for(let at=now;at<now+Math.max(1,minutes);){
+    for(let at=now;at<now+minutes;){
         const slot=scheduleAt(engine,id,at,d.get('state'));if(!slot)break;
         if(slot.location!==row.location||/睡眠|睡觉|熟睡/.test(slot.activity))throw Error('对方作息没有清醒且在场的履约窗口');at=slot.until;
     }

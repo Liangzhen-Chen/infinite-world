@@ -74,7 +74,11 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  const involved=new Set(['player']);
  for(const value of [result.target,result.buyer,result.seller,result.teacher,result.dialogue?.npc,args.target,args.subject,args.student,args.seller,args.buyer,args.promisor,args.promisee]){
   if(typeof value!=='string')continue;
-  try{involved.add(engine.resolve(value));}catch{/* A free text subject is not an entity. */}
+  try{involved.add(engine.resolve(value));}catch{
+   // Physical features have native records but are not catalog entities in
+   // the general name resolver. Preserve the actual selected feature's diff.
+   if(a.records?.[`physical_feature:${value}`]?.id===value)involved.add(value);
+  }
  }
  const transfers=legacyLedgerEffects(before,after,d.patches);
  for(const effect of transfers){

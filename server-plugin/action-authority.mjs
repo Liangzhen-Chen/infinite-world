@@ -23,12 +23,13 @@ function controllerCapacity(context,id){
 }
 // Native title/operation holdings override catalog ownership. Custody and
 // merely being present never confer issuing authority.
-export function currentControllers(context,subject,{ownerOnly=false}={}){
+export function currentControllers(context,subject,{ownerOnly=false,principals=false}={}){
  const d=actionReader(context.document),kinds=ownerOnly?['owns']:['operates','owns'];
  const held=aliveHoldings(d,{subject}).filter(h=>kinds.includes(h.kind)&&effective(d,h.id));
  const operators=held.filter(h=>h.kind==='operates');
  const s=context.document.state,e=context.engine;
  const representatives=ids=>[...new Set(ids.flatMap(id=>{
+  if(principals)return [id];
   if(id==='player'||s.npcs?.[id]||s.creatures?.[id]||e?.world.npcs.some(n=>n.id===id))return [id];
   // A collective retains its title; its current legal representative signs.
   // Vacant offices and organizations without a leader confer no signature.
@@ -54,6 +55,13 @@ export function currentControllers(context,subject,{ownerOnly=false}={}){
  }
  return held.length?representatives(held.map(h=>h.holder)):typeof catalog?.owner==='string'?representatives([catalog.owner]):[];
 }
+function currentIssuer(context,subject,issuer){
+ if(currentControllers(context,subject).includes(issuer))return controllerCapacity(context,issuer).level==='full';
+ // A corpus event can be issued in the collective's own name. Its existing
+ // current representative supplies capacity; a bystander cannot sign for it.
+ const agents=currentControllers(context,subject);
+ return currentControllers(context,subject,{principals:true}).includes(issuer)&&agents.length===1&&controllerCapacity(context,agents[0]).level==='full';
+}
 export function resolveAuthoritySelector(context,value){
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['role','of'].includes(k))||typeof value.of!=='string')reject('E-AUTHORITY-SELECTOR','Invalid authority selector');
  if(value.role==='existing_legal_town_head'){
@@ -69,7 +77,7 @@ export function resolveAuthoritySelector(context,value){
 export function grantLimitedPermit(d,context,grant){
  const {actor,id,holder,subject,scope,fromMinute,toMinute,sourceEvent,quantityLiters,includedInLessonFee}=grant,live={...context,document:d.document};
  if(Object.keys(grant).some(k=>!['actor','id','holder','subject','scope','fromMinute','toMinute','sourceEvent','quantityLiters','includedInLessonFee'].includes(k))||![id,holder,subject,scope].every(v=>typeof v==='string'&&v.length>0)||!actionEntity(live,holder)||!Number.isSafeInteger(fromMinute)||fromMinute<0||!Number.isSafeInteger(toMinute)||toMinute<=fromMinute||quantityLiters!==undefined&&(!Number.isSafeInteger(quantityLiters*1000)||quantityLiters<=0)||includedInLessonFee!==undefined&&typeof includedInLessonFee!=='boolean')reject('E-PERMIT','Invalid limited permit');
- if(!currentControllers(live,subject).includes(actor)||controllerCapacity(live,actor).level!=='full')reject('E-PERMIT-AUTHORITY','Only the current owner/manager may grant this permit');
+ if(!currentIssuer(live,subject,actor))reject('E-PERMIT-AUTHORITY','Only the current owner/manager may grant this permit');
  const event=worldEvent(d.get('state'),sourceEvent);
  if(!event||event.verb!=='permission_granted'||event.actor!==actor||event.subject!==subject||event.to!==holder||event.scope!==scope||event.minute!==fromMinute)reject('E-PERMIT-SOURCE','Permit does not match its source event');
  const key=`limited_permit:${id}`;
@@ -81,7 +89,7 @@ export function limitedPermit(context,holder,subject,scope,{until=context.docume
  const now=context.document.state.minute;
  const millilitres=quantityLiters*1000;
  if(!Number.isSafeInteger(until)||until<now||!Number.isSafeInteger(millilitres)||millilitres<0)return null;
- return Object.values(context.document.state.records??{}).find(r=>r.category==='limited_permit'&&r.holder===holder&&r.subject===subject&&r.scope===scope&&!r.revoked&&r.fromMinute<=now&&until<r.toMinute&&currentControllers(context,subject).includes(r.issuer)&&controllerCapacity(context,r.issuer).level==='full'&&(r.quantityLiters===undefined||millilitres>0&&r.usedMl+millilitres<=r.quantityLiters*1000))??null;
+ return Object.values(context.document.state.records??{}).find(r=>r.category==='limited_permit'&&r.holder===holder&&r.subject===subject&&r.scope===scope&&!r.revoked&&r.fromMinute<=now&&until<r.toMinute&&currentIssuer(context,subject,r.issuer)&&(r.quantityLiters===undefined||millilitres>0&&r.usedMl+millilitres<=r.quantityLiters*1000))??null;
 }
 export function consumeLimitedPermit(d,context,id,liters){
  const row=d.get('state','records',`limited_permit:${id}`),live={...context,document:d.document};

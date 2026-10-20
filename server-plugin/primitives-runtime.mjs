@@ -26,7 +26,7 @@ import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitiv
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
 import {moveLocally} from './primitives-movement.mjs';
 import {checkActor} from './primitives-checks.mjs';
-import {learnNpc} from './primitives-learning.mjs';
+import {learnNpc,studyBook} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects} from './mark-actions.mjs';
@@ -564,6 +564,20 @@ export const primitiveRuntime={
  moveLocally,
  checkActor,
  learnNpc,
+ studyPlayer(d,engine,{subject,source,mode},eventId){
+  const state=d.get('state'),catalog=engine.byId.get(subject),person=state.npcs?.[source],project=state.projects?.[source];
+  if(mode==='observe'&&!person)reject('E-LEARN-SOURCE','Observation requires a present demonstrator');
+  const book=person||project?null:studyBook(d,engine,'player',source,subject);
+  const minutes=book?.minutes??catalog.learnMinutes??120;
+  const context=primitiveContext(engine,d.document),frame={actor:'player',eventId,source:{kind:'catalog',id:'core:learn'}};
+  const result=executeRuntimeEffect(d,engine,{op:'learn',entity:'player',subject,learningSource:source},{frame,index:0,tags:[],requireAuthority:()=>reject('E-AUTHORITY','Study only controls the learner')},context,{learn:{minutes,multiplier:1,ceiling:book?.ceiling??2699},studyFee:person?(catalog.learnFee??12):0,observeOnly:mode==='observe'});
+  const unit=state.itemInstances?.[source];
+  // Keep learning.learn's catalog source identity and retain the exact physical
+  // copy separately; instance selection is not a new book definition.
+  if(result.source.type==='book'&&unit?.item)result.source={type:'book',id:unit.item,instance:source};
+  d.set(['state','learning',eventId],{entity:subject,source:{...result.source,type:result.observed?'observation':result.source.type},start:state.minute,end:d.get('state','minute'),cost:result.cost,success:true});
+  return result;
+ },
  async propose(engine,document,input,{preview=false,options={}}={}){
   const proposal=input.args,eventId=input.eventId;
   if(typeof eventId!=='string'||!eventId||eventId.length>120)reject('E-OPEN-EVENT','A valid event id is required');

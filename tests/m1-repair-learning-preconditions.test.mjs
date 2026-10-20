@@ -62,7 +62,10 @@ async function session(t,id){
             assert.equal(document.state.inventory.item_whittling_knife.durability,before.state.inventory.item_whittling_knife.durability-1);
             assert.deepEqual(result.spent.materials,[]);assert.deepEqual(document.state.inventory.item_wood,before.state.inventory.item_wood);
             assert.equal(qty(document.state.inventory.item_staff),qty(before.state.inventory.item_staff));
-            assert.equal(document.state.records[result.receipt].success,result.success);
+            // A3 wraps the unchanged native repair record inside its primitive receipt.
+            const repairReceipt=result.receipt.legacy.receipt;
+            assert.equal(typeof repairReceipt,'string');
+            assert.equal(document.state.records[repairReceipt].success,result.success);
             if(result.success){assert.equal(result.after.maxDurability,result.before.maxDurability-1);assert.ok(result.restored>0);}
             else{assert.deepEqual(result.after,result.before);assert.equal(result.restored,0);}
             repairs.push({eventId,success:result.success,die:result.die,total:result.total,helpers:result.helpers??[],before:result.before,after:result.after});
