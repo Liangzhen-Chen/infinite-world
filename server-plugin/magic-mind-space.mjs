@@ -12,7 +12,7 @@ declareLedgerWriter('magic-mind-space');
 import {magicContractTrace}from'./contracts.mjs';
 import {prepareAnchorCargo}from'./magic-movement.mjs';
 import {monsterStats}from'./combat.mjs';
-import {assertSpellConsent,hasSpellConsent}from'./magic-consent.mjs';
+import {assertSpellConsent,hasSpellConsent,spellConsentGrant}from'./magic-consent.mjs';
 import {personMental}from'./entity-view.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('magic-mind-space',{kinds:[],locations:true});
@@ -106,6 +106,8 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
  const p={catalog:c,spec:c.effectSpec,args:clone(args),location,origin:localPlayerPoint(d),op};
  if(mental.has(op)){
   Object.assign(p,targetMind(d,this,c,args,until));
+  const grant=spellConsentGrant(d,p.id,args.authorization,'mental_magic',c,until,this);
+  if(grant?.id)p.args.authorization=grant.id;
   if(op==='sleep'&&mindSleeping(d,p.id))throw Error('目标已经在自愿睡眠，不能重复叠加');
   if(op==='memory_guard'){
    const memories=p.id==='player'?Object.entries(d.get('memories')??{}).filter(([,m])=>m.subject==='player').map(([id,m])=>({...m,id})):p.actor.memoryStream??[];
@@ -278,7 +280,7 @@ export function memoryGuardUntil(d,id,memory,now){
 export function mindSleeping(d,id){return effects(d,'sleep').some(([,e])=>e.target===id&&e.sleeping&&effective(d,e,d.get('state','minute')));}
 export function mindSleepUntil(d,id,now){
  return effects(d,'sleep').filter(([,e])=>e.target===id&&e.sleeping&&effective(d,e,now)).reduce((n,[,e])=>{
-  const permission=e.target==='player'?null:d.get('state','records',e.authorization);
+  const permission=spellConsentGrant(d,e.target,e.authorization,'mental_magic',{id:e.spell,location:e.location},now);
   return Math.max(n,Math.min(e.expires,permission?.expires??Infinity));
  },now);
 }
@@ -289,8 +291,9 @@ export function advanceMindSpace(d,engine,before,after){
  const byTarget=new Map();
  for(const [id,e]of effects(d)){
   let end=Math.min(after,e.expires),start=Math.max(before,e.started);
-  if(e.authorization&&e.target!=='player'&&!e.forced){
-   const r=d.get('state','records',e.authorization);end=r?.revoked||!r?start:Math.min(end,r.expires);
+  if(mental.has(e.operation)&&e.target!=='player'&&!e.forced){
+   const grant=spellConsentGrant(d,e.target,e.authorization,'mental_magic',{id:e.spell,location:e.location},start,engine);
+   end=!grant?start:Math.min(end,grant.expires);
   }
   if(e.permission){const r=d.get('state','records',e.permission);end=r?.revoked||!r?start:Math.min(end,r.expires);}
   const minutes=Math.max(0,end-start);
