@@ -20,6 +20,8 @@ import {createRoutingContext} from '../server-plugin/action-router.mjs';
 import {canonicalActionId,findAction} from '../server-plugin/action-registry.mjs';
 import {primitiveRuntime,actionEffects} from '../server-plugin/primitives-runtime.mjs';
 import {resolvePrimitiveTransfer} from '../server-plugin/primitive-accounts.mjs';
+import {facilityView} from '../server-plugin/facility-state.mjs';
+import {heldUnit} from '../server-plugin/items.mjs';
 import {runSetupLoaders,setupLoaderFields} from './a3-setup/index.mjs';
 import './a3-setup/loaders.mjs';
 
@@ -386,8 +388,34 @@ function recipeEndpoint(value,world){
 const endpointRules=[
  {accepts:token=>token.startsWith('sink:'),matches:(token,account)=>account[0]?.startsWith('sink:')&&(account[2]===token.slice(5)||token==='sink:consume'&&account[0]===token)},
  {accepts:(token,world)=>Boolean(recipeEndpoint(token,world)),matches:(token,account,effect,receipt,world)=>account[0]==='src:craft'&&account[2]==='craft'&&recipeEndpoint(token,world)===(effect.recipe??receipt.legacy?.recipe)},
+ {accepts:token=>['bank','local_bank','pawnshop','buyer','seller','court','authorized_collector','creditor','recipient'].includes(token),matches:(token,account,effect,receipt)=>{
+  const endpoint=roleEndpoint(token,receipt);
+  if(!endpoint||account[0]!==endpoint.owner)return false;
+  if(effect.op!=='transfer')return true;
+  if(endpoint.account)return account.join('|')===endpoint.account;
+  return endpoint.purposes.includes(account[2])&&(!['buyer','seller'].includes(token)||account[2]===(account[1]==='coin_river'?'purse':'inventory'));
+ }},
  {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
 ];
+function roleEndpoint(role,receipt){
+ const legacy=receipt.legacy??{},route=receipt.routed??receipt.source?.id,slots=receipt.routing?.slots??{};
+ const payment=legacy.payment,accounts=legacy.accounts??payment?.accounts;
+ if(['court','authorized_collector'].includes(role)){
+  if(route!=='core:law.pay'||!payment?.creditor||role==='authorized_collector'&&!payment.collector)return null;
+  const account=accounts?.to;
+  return account===`${payment.creditor}|coin_river|legal_treasury`?{owner:payment.creditor,account}:null;
+ }
+ if(['bank','local_bank','pawnshop'].includes(role)){
+  if(!['core:trade.deposit','core:trade.withdraw','core:trade.redeem','core:trade.remit'].includes(route)||role==='pawnshop'&&route!=='core:trade.redeem')return null;
+  const owner=legacy.bank??(route==='core:trade.withdraw'?payment?.debtor:route==='core:trade.redeem'?payment?.creditor:null);
+  return owner?{owner,purposes:['vault']}:null;
+ }
+ if(role==='creditor')return payment?.creditor&&accounts?.to?{owner:payment.creditor,account:accounts.to}:null;
+ if(role==='recipient')return route==='core:trade.remit'&&legacy.beneficiary?{owner:legacy.beneficiary,purposes:['purse']}:null;
+ if(!['core:trade.sell_to','core:trade.buy','core:trade.sell'].includes(route))return null;
+ const owner=legacy[role]??slots[role];
+ return owner?{owner,purposes:['purse','inventory']}:null;
+}
 function qualifierMatches(qualifier,effect,receipt,world){
  const actor=receipt.actor??'player';
  const normalize=value=>['self','player'].includes(value)?actor:value==='coin'?'coin_river':value;
@@ -404,6 +432,10 @@ function qualifierMatches(qualifier,effect,receipt,world){
  }
  collect(effect);
  if(!references.every(id=>atoms.includes(id)))return false;
+ if(qualifier.startsWith('new_holder:')){
+  const token=endpointToken(qualifier.slice('new_holder:'.length)),rule=endpointRules.find(rule=>rule.accepts(token,world));
+  return rule.matches(token,[actualId(effect.newHolder??effect.to)],effect,receipt,world,normalize);
+ }
  if(qualifier.includes('->')){
   const parts=qualifier.split('->');
   if(parts.length!==2)return false;
@@ -587,31 +619,81 @@ export async function executeIntent(engine,initial,row){
 const dieFor=(seed,id,label)=>createHash('sha256').update(`${seed}:${id}:${label}`).digest().readUInt32LE(0)%20+1;
 function intentChecks(run,row){
  const prefix=`a3-score-${row.id}`;
- return Object.entries(run.document.state.checks??{}).filter(([id,value])=>([prefix,`${prefix}:action-check`,`${prefix}:rite-check`,`${prefix}_escape`].includes(id)||id.startsWith(`${prefix}:batch:`)&&/^\d+$/.test(id.slice(`${prefix}:batch:`.length)))&&Number.isInteger(value.die));
+ const children=new Set((run.receipt?.steps??[]).flatMap(step=>[step.eventId,`${step.eventId}:action-check`,`${step.eventId}:rite-check`,`${step.eventId}_escape`]));
+ return Object.entries(run.document.state.checks??{}).filter(([id,value])=>(children.has(id)||[prefix,`${prefix}:action-check`,`${prefix}:rite-check`,`${prefix}_escape`].includes(id)||id.startsWith(`${prefix}:batch:`)&&/^\d+$/.test(id.slice(`${prefix}:batch:`.length)))&&Number.isInteger(value.die));
 }
 // Select the existing document seed input, never override check()/its result.
 // Both extremes include advantage/disadvantage and the opposing die. Keep the
 // same event IDs in preview, confirmation and constructor replay.
-function branchSeed(initial,checks,outcome){
- const wanted=outcome==='success'?20:1,opposed=21-wanted;
+function branchSeed(initial,checks,outcome,target){
  for(let nonce=0;nonce<1000000;nonce++){
   const seed=`${initial.randomSeed}:a3:${outcome}:${nonce}`;
-  if(checks.every(([id,check])=>dieFor(seed,id,'d20')===wanted&&(!(check.rolls?.length>1)||dieFor(seed,id,'second')===wanted)&&(!check.opponent||dieFor(seed,id,'opponent:d20')===opposed)))return seed;
+  if(checks.every(([id,check])=>{
+   const wanted=outcome==='success'||target&&id!==target?20:1,opposed=21-wanted;
+   return dieFor(seed,id,'d20')===wanted&&(!(check.rolls?.length>1)||dieFor(seed,id,'second')===wanted)&&(!check.opponent||dieFor(seed,id,'opponent:d20')===opposed);
+  }))return seed;
  }
  return null;
 }
 const sameValue=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+function validateRepairFailure(engine,run,issues){
+ const {receipt,document,before}=run,legacy=receipt.legacy,plan=engine.rules.repairs?.find(p=>p.id===legacy.plan);
+ const record=document.state.records?.[legacy.receipt],unit=document.state.itemInstances?.[legacy.instance];
+ if(!plan||!record||record.category!=='repair'||record.plan!==plan.id){issues.push('missing native repair plan/record');return;}
+ const held=before.state.inventory?.[legacy.item],old=before.state.itemInstances?.[legacy.instance]??held;
+ const durability=old?.durability??engine.byId.get(legacy.item)?.durability,maxDurability=old?.maxDurability??engine.byId.get(legacy.item)?.durability;
+ const unchanged={durability,maxDurability};
+ if(legacy.success!==false||record.success!==false||legacy.restored!==0||!sameValue(legacy.before,unchanged)||!sameValue(legacy.after,unchanged)||!sameValue(record.before,unchanged)||!sameValue(record.after,unchanged)||unit?.durability!==durability||unit?.maxDurability!==maxDurability)issues.push('failed repair changed target durability');
+ const stations=facilityView(engine,before.state,before.state.location)?.workstations??engine.byId.get(before.state.location)?.workstations;
+ const station=stations?.find(s=>s.kind===plan.workstation),fee=station?.fee??0;
+ if(record.station!==(station?.id??null))issues.push('repair native workstation mismatch');
+ if(record.fee!==fee||legacy.spent?.feePaid!==fee||record.minutes!==plan.minutes||legacy.spent?.minutes!==plan.minutes)issues.push('repair native fee/time mismatch');
+ const materials=new Map();for(const m of plan.materials??[])materials.set(m.item,(materials.get(m.item)??0)+m.amount);
+ const expected=[...materials].map(([item,qty])=>({from:`player|${item}|inventory`,to:`sink:consume|${item}|repair`,qty}));
+ if(fee)expected.push({from:'player|coin_river|purse',to:station?.owner?.startsWith('npc_')?`${station.owner}|coin_river|purse`:`${record.station}|coin_river|fund`,qty:fee});
+ for(const effect of run.effects){
+  if(effect.op==='transfer'){
+   const index=expected.findIndex(e=>e.from===effect.from&&e.to===effect.to&&e.qty===effect.qty);
+   if(index<0)issues.push('failed repair has undeclared transfer');else expected.splice(index,1);
+  }else if(!companionEffect(effect,receipt))issues.push(`failed repair granted ${effect.op}`);
+ }
+ if(expected.length)issues.push('repair native materials/fee missing');
+ if(!sameValue([...materials].map(([item,quantity])=>({item,quantity})),(legacy.spent?.materials??[]).map(({item,quantity})=>({item,quantity}))))issues.push('repair material receipt mismatch');
+ const wear=legacy.spent?.toolWear??[];
+ if(wear.length!==plan.tools.length)issues.push('repair tool wear missing');
+ for(const tool of plan.tools){
+  const oldTool=heldUnit(engine.primitiveDraft(before),engine,'player',tool),instance=oldTool?.instance;
+  const start=oldTool?.durability??engine.byId.get(tool)?.durability,end=Math.max(0,start-plan.toolWear);
+  const row=wear.find(w=>w.item===tool),current=instance?document.state.itemInstances?.[instance]:document.state.inventory?.[tool];
+  if(row?.before!==start||row?.after!==end||current?.durability!==end||start!==end&&!run.effects.some(e=>e.op==='fact.set'&&e.entity===tool&&e.field==='durability'&&e.value===end))issues.push('repair native tool wear mismatch');
+ }
+}
 // The other branch has no corpus signature. Check its native outcome contract,
 // raw effects and books rather than treating any committed receipt as success.
-export function validateCheckBranch(engine,run,row,outcome){
+export function validateCheckBranch(engine,run,row,outcome,target){
  const issues=[],{receipt,actual,document}=run,success=outcome==='success';
  const checks=intentChecks(run,row);
  if(!actual.committed||actual.error)issues.push('branch did not commit');
- if(!checks.length||checks.some(([,check])=>check.success!==success))issues.push('requested check outcome is impossible at the selected dice extreme');
+ if(!checks.length||checks.some(([id,check])=>check.success!==(success||Boolean(target&&id!==target)))||target&&!checks.some(([id])=>id===target))issues.push('requested check outcome is impossible at the selected dice extreme');
  if(auditLedger(document.ledger).length)issues.push('ledger audit failed');
  const preview=receiptOf(run.preview);
  if(preview&&preview.status==='preview'&&!sameValue(preview.applied,receipt?.applied))issues.push('preview and committed effects differ');
  if(!receipt)return {ok:false,issues};
+ if(receipt.steps){
+  const canonical=({signatureKind,...effect})=>({...effect,index:0,stepIndex:0,stepEffectIndex:0,costIndex:0,stepCostIndex:0});
+  const flattened=receipt.steps.flatMap(step=>(step.applied??[]).map(canonical));
+  const rootEffects=run.effects.map(canonical);
+  if(!sameValue(flattened,rootEffects))issues.push('sequence effects differ from child receipts');
+  for(const [index,step] of receipt.steps.entries()){
+   const childChecks=checks.filter(([id])=>id===step.eventId||id.startsWith(`${step.eventId}:`));
+   if(!childChecks.length)continue;
+   const childSuccess=childChecks.every(([,check])=>check.success);
+   const child={...run,receipt:step,effects:step.applied??[],preview:{receipt:receiptOf(run.preview)?.steps?.[index]},actual:{...actual,route:step.routed??step.source?.id},submitted:{args:{slots:receipt.routing?.steps?.[index]?.slots??{}}}};
+   const result=validateCheckBranch(engine,child,{...row,id:step.eventId.slice('a3-score-'.length)},childSuccess?'success':'failure');
+   issues.push(...result.issues.map(issue=>`step ${index}: ${issue}`));
+  }
+  return {ok:issues.length===0,issues:unique(issues)};
+ }
  const selected=signatureEffects(run.effects,receipt,[]).effects;
  const legacy=receipt.legacy,action=findAction(primitiveRuntime.registry(engine),actual.route);
  if(legacy?.recipe){
@@ -675,6 +757,8 @@ export function validateCheckBranch(engine,run,row,outcome){
    if(document.state.learning?.[receipt.eventId]?.success!==false)issues.push('failed learning has no failed attempt');
    if(selected.some(e=>!companionEffect(e,receipt)&&(e.op!=='learn'||e.subject!==subject||e.result?.path?.[1]!=='learning'||e.result?.after?.success!==false)))issues.push('failed learning granted unrelated effect');
    for(const partition of ['skills','recipes','spells'])if(!sameValue(run.before.state[partition]?.[subject],document.state[partition]?.[subject]))issues.push('failed learning granted knowledge');
+  }else if(route==='core:craft.repair'){
+   validateRepairFailure(engine,run,issues);
   }else if(route==='core:cast'){
    for(const effect of selected){
     if(companionEffect(effect,receipt))continue;
@@ -690,15 +774,27 @@ async function executeCheckedIntent(engine,initial,row){
  const first=await executeIntent(engine,initial,row),checks=intentChecks(first,row);
  if(!checks.length||first.setupUnmet.length)return {...first,branches:null,branchesOK:true};
  const runs={},branches={};
- for(const outcome of ['success','failure']){
-  const randomSeed=branchSeed(initial,checks,outcome);
-  if(!randomSeed){branches[outcome]={ok:false,issues:['unable to select deterministic dice'],impossible:false};continue;}
+ const sequence=Boolean(first.receipt?.steps);
+ const cases=[{key:'success',outcome:'success',checks}];
+ if(!sequence)cases.push({key:'failure',outcome:'failure',checks});
+ for(let index=0;index<cases.length;index++){
+  const {key,outcome,checks:branchChecks,target}=cases[index];
+  const randomSeed=branchSeed(initial,branchChecks,outcome,target);
+  if(!randomSeed){branches[key]={ok:false,issues:['unable to select deterministic dice'],impossible:false};continue;}
   const document={...initial,randomSeed},run=await executeIntent(engine,document,row);
-  const validation=validateCheckBranch(engine,run,row,outcome),actualChecks=intentChecks(run,row);
-  runs[outcome]=run;
-  branches[outcome]={...validation,randomSeed,checks:actualChecks.map(([id,check])=>({id,...check})),impossible:actualChecks.some(([,check])=>check.success!==(outcome==='success')),actual:run.actual};
+  const actualChecks=intentChecks(run,row);
+  // A failed first child can hide later checks. Discover them on the native
+  // successful replay, then fail each child with its predecessors succeeding.
+  if(sequence&&key==='success'){
+   const discovered=actualChecks.filter(([id])=>!branchChecks.some(([old])=>old===id));
+   if(discovered.length){cases.push({key:'success',outcome:'success',checks:actualChecks});continue;}
+   for(const [child,idCheck] of actualChecks.entries())cases.push({key:`failure:${child}`,outcome:'failure',target:idCheck[0],checks:actualChecks.slice(0,child+1)});
+  }
+  const validation=validateCheckBranch(engine,run,row,outcome,target);
+  runs[key]=run;
+  branches[key]={...validation,randomSeed,...(target?{target}:{}),checks:actualChecks.map(([id,check])=>({id,...check})),impossible:actualChecks.some(([id,check])=>check.success!==(outcome==='success'||Boolean(target&&id!==target))),actual:run.actual};
  }
- const selected=row.expected.checkOutcome==='failure'?'failure':'success',run=runs[selected]??first;
+ const selected=row.expected.checkOutcome==='failure'?(sequence?'failure:0':'failure'):'success',run=runs[selected]??first;
  return {...run,branches,branchesOK:Object.values(branches).every(branch=>branch.ok)};
 }
 
@@ -720,8 +816,11 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const routeRejects=Array.isArray(expectedRoute)?expectedRoute.every(r=>normalizeRoute(r)==='reject'):normalizeRoute(expectedRoute)==='reject';
   const bounded=row.expected.outOfBounds===true&&!routeRejects;
   const expectsRejection=!bounded&&(row.expected.outOfBounds===true||routeRejects);
+  const expectsClarification=!expectsRejection&&(Array.isArray(expectedRoute)?expectedRoute.every(r=>normalizeRoute(r)==='clarify'):normalizeRoute(expectedRoute)==='clarify');
+  const zeroEffects=!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0;
   const signature=ready&&run.branchesOK&&(expectsRejection
-   ?actual.refused&&!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0
+   ?actual.refused&&zeroEffects
+   :expectsClarification?actual.clarified&&!actual.refused&&!actual.error&&zeroEffects
    :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world));
   let constructor=false,builder=actual.builder;
   if(ready&&row.expected.constructor){

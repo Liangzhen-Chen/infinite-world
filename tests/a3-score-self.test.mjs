@@ -97,6 +97,101 @@ const branchOptions=action=>{
  const branchWorld=structuredClone(world);branchWorld.actionDefinitions={format:1,actions:[action]};
  return {...options,world:branchWorld};
 };
+
+test('A3 signature r9: role endpoints use resolved counterparties and exact account purposes',async()=>{
+ const {rows:corpus}=await loadCorpus();
+ for(const number of ['031','032','037','038','039','054','095']){
+  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(engine,initial,row),receipt=run.receipt;
+  assert.equal(run.actual.committed,true,row.id);
+  const signatures=row.expected.signature.filter(s=>s.includes('->'));
+  for(const signature of signatures){
+   const effect=run.effects.find(e=>signatureMatches([signature],[e],receipt));
+   assert.ok(effect,`${row.id}: ${signature}`);
+   assert.equal(signatureMatches([signature],[effect],{}),false,'roles need native resolution');
+   const counterpart=effect.from==='player'||effect.from?.startsWith('player|')?'to':'from';
+   const wrong={...effect,[counterpart]:effect[counterpart].replace(/^[^|]+/,'wrong_counterparty')};
+   assert.equal(signatureMatches([signature],[wrong],receipt),false,'exact entity required');
+   assert.equal(signatureMatches([signature],[{...effect,from:effect.to,to:effect.from}],receipt),false,'direction required');
+   if(effect.op==='transfer'){
+    assert.equal(signatureMatches([signature],[{...effect,[counterpart]:effect[counterpart].replace(/[^|]+$/,'wrong_purpose')}],receipt),false,'account purpose required');
+   }
+  }
+  // 06 §6.9: resolving a role never hides real transfers or holding closures.
+  if(['037','038','095'].includes(number))assert.equal(signatureMatches(row.expected.signature,run.effects,receipt,run.requested),false);
+  if(number==='095'){
+   const effect=run.effects.find(e=>e.op==='holding.transfer');
+   assert.equal(signatureMatches(['holding.transfer(new_holder:buyer)'],[effect],receipt),true);
+   assert.equal(signatureMatches([`holding.transfer(new_holder:${receipt.legacy.buyer})`],[effect],receipt),true);
+   assert.equal(signatureMatches(['holding.transfer(new_holder:buyer)'],[{...effect,newHolder:'wrong_buyer'}],receipt),false);
+  }
+  if(number==='054'){
+   const effect=run.effects.find(e=>e.op==='transfer');
+   for(const role of ['court','creditor']){
+    assert.equal(signatureMatches([`transfer(self->${role})`],[effect],receipt),true);
+    assert.equal(signatureMatches([`transfer(self->${role})`],[{...effect,to:`${receipt.legacy.payment.collector}|coin_river|purse`}],receipt),false);
+   }
+  }
+ }
+ const receipt={routed:'core:trade.buy',legacy:{seller:'npc_hw_linsui'}};
+ const effect={op:'transfer',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse'};
+ assert.equal(signatureMatches(['transfer(self->seller)'],[effect],receipt),true);
+ assert.equal(signatureMatches(['transfer(self->seller_extra)'],[effect],receipt),false);
+ assert.equal(signatureMatches(['transfer(self->seller)'],[{...effect,to:'npc_hw_wushuo|coin_river|purse'}],receipt),false);
+});
+
+test('A3 checks r9: failed native repair preserves durability and pays materials, fee and tool wear',async()=>{
+ const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-028'),result=(await scoreRows([row],options)).results[0];
+ assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
+ const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
+ assert.equal(validateCheckBranch(engine,low,row,'failure').ok,true);
+ const mutate=change=>{
+  const run={...low,document:structuredClone(low.document),receipt:structuredClone(low.receipt),effects:structuredClone(low.effects)};
+  change(run);assert.equal(validateCheckBranch(engine,run,row,'failure').ok,false);
+ };
+ mutate(run=>{run.document.state.itemInstances[run.receipt.legacy.instance].durability++;});
+ mutate(run=>{run.receipt.legacy.after.durability++;});
+ mutate(run=>{run.effects=run.effects.filter(e=>!(e.op==='transfer'&&e.resource==='item_hemp_thread'));});
+ mutate(run=>{run.effects=run.effects.filter(e=>!(e.op==='transfer'&&e.resource==='coin_river'));});
+ mutate(run=>{run.effects.find(e=>e.op==='transfer'&&e.resource==='coin_river').qty++;});
+ mutate(run=>{run.receipt.legacy.spent.toolWear[0].after++;});
+ mutate(run=>{run.effects=run.effects.filter(e=>!(e.op==='fact.set'&&e.entity==='item_sewing_needle'));});
+ mutate(run=>{run.effects.push({op:'create',kind:'item'});});
+});
+
+test('A3 checks r9: native sequence exercises each child failure after successful predecessors',async()=>{
+ const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-079'),result=(await scoreRows([row],options)).results[0];
+ const branches=result.checkBranches;
+ assert.deepEqual(Object.keys(branches),['success','failure:0','failure:1']);
+ for(const branch of Object.values(branches))assert.equal(branch.ok,true,JSON.stringify(branch));
+ assert.deepEqual(branches.success.checks.map(c=>c.success),[true,true]);
+ assert.deepEqual(branches['failure:0'].checks.map(c=>c.success),[false]);
+ assert.deepEqual(branches['failure:1'].checks.map(c=>c.success),[true,false]);
+ const low=await executeIntent(engine,{...initial,randomSeed:branches['failure:1'].randomSeed},row);
+ assert.equal(validateCheckBranch(engine,low,row,'failure',branches['failure:1'].target).ok,true);
+ // A balanced committed sequence cannot smuggle a success into its failed child.
+ low.receipt.steps[1].applied.push({op:'create',kind:'item'});
+ low.effects.push({op:'create',kind:'item',stepIndex:1});
+ assert.equal(validateCheckBranch(engine,low,row,'failure',branches['failure:1'].target).ok,false);
+ const hidden=(await scoreRows([row],{...options,document:{...initial,randomSeed:branches['failure:0'].randomSeed}})).results[0];
+ assert.deepEqual(Object.keys(hidden.checkBranches),['success','failure:0','failure:1']);
+ assert.ok(Object.values(hidden.checkBranches).every(b=>b.ok));
+});
+
+test('A3 signature r9: clarification earns request-signature credit only with zero raw effects',async t=>{
+ const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-086');
+ assert.ok(row.expected.signature.length);
+ const result=(await scoreRows([row],options)).results[0];
+ assert.equal(result.actual.clarified,true);assert.equal(result.scores.signature,true);
+ assert.deepEqual(result.expected.signature,row.expected.signature);
+ for(const source of [rows[0],rows[1]]){
+  const wrong=(await scoreRows([{...source,expected:row.expected}],options)).results[0];
+  assert.equal(wrong.scores.signature,false);
+ }
+ const cost={op:'transfer',from:'player|coin_river|purse',to:'sink:consume|coin_river|purse',qty:1,role:'additional_cost'};
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>({receipt:{status:'not_submitted',applied:[cost],cost:{resources:[cost]},routing:{status:'needs_entities'}}}));
+ const mutated=(await scoreRows([row],options)).results[0];
+ assert.equal(mutated.actual.clarified,true);assert.equal(mutated.scores.signature,false);
+});
 test('A3 checks r8: native seed input exercises both outcomes and expected selects one signature',async()=>{
  const action=checkedAction('test:branches',[
   {op:'emit',target:'npc_hw_linsui',verb:'tell',visibility:'public',payload:{kind:'branch_success'}},
