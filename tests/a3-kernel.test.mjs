@@ -38,7 +38,9 @@ test('A3 kernel: insufficient balance cannot use the legacy drift repair source'
 });
 test('A3 kernel: JSON cannot forge server frame, writer, authority or rule source',()=>{
  const {document,frame,effects}=setup();assert.throws(()=>commitPrimitives(document,effects,JSON.parse(JSON.stringify(frame))),{code:'E-PRIMITIVE-FRAME'});
- for(const field of ['writer','source','actedAs','checkResult'])assert.throws(()=>commitPrimitives(document,[{...effects[0],[field]:'forged'}],frame),{code:'E-PRIMITIVE-SOURCE'});
+ for(const field of ['writer','source','actedAs','checkResult','parent','index','eventId','tags','result'])assert.throws(()=>commitPrimitives(document,[{...effects[0],[field]:'forged'}],frame),{code:'E-PRIMITIVE-SOURCE'});
+ assert.throws(()=>commitPrimitives(document,[{...effects[0],actor:'npc_a'}],frame),{code:'E-PRIMITIVE-ACTOR'});
+ assert.throws(()=>commitPrimitives(document,[{op:'holding.open',holdingKind:'leases',holder:'__proto__',subject:'item_a'}],frame),{code:'E-PRIMITIVE-FIELD'});
  for(const from of ['src:craft|coin_river|output','src:mint|coin_river|mint'])assert.throws(()=>commitPrimitives(document,[{...effects[0],from}],frame),{code:'E-TRANSFER-ENDPOINT'});
 });
 test('A3 kernel: shared action adapter rereads location/capacity and preserves resource lots',()=>{

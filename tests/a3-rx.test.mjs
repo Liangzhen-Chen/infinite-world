@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fc from 'fast-check';
 import {compileRX,evaluateRX,extractGuards} from '../server-plugin/rx.mjs';
+import {createRXLibrary} from '../server-plugin/rx-library.mjs';
 test('A3 RX: fixed four-place arithmetic and truncation toward zero',()=>{
  assert.equal(evaluateRX(compileRX('0.1 + 0.2 == 0.3')),true);
  assert.equal(evaluateRX(compileRX('-1 / 3')),-0.3333);
@@ -19,10 +20,55 @@ test('A3 RX: bounded lambda collections, views, conditional and null coalescing'
  assert.throws(()=>compileRX('items.map(x => x.qty)',{schema}),{code:'E-RX-CALL'});
 });
 test('A3 RX: host escape, dynamic properties, assignment, unknown fields/functions reject',()=>{
- for(const s of ['globalThis.process','actor.constructor','actor[slot]','actor.name = 1','eval(1)','new Function(1)','actor.missing','log(2)'])assert.throws(()=>compileRX(s,{schema:{actor:{name:'string'},slot:'string'}}));
+ // 12 §12.8.1 and 14 §14.6 require log/exp as deterministic math functions.
+ // Keep the unknown-function assertion using an actually undeclared function.
+ for(const s of ['globalThis.process','actor.constructor','actor[slot]','actor.name = 1','eval(1)','new Function(1)','actor.missing','unknownMath(2)'])assert.throws(()=>compileRX(s,{schema:{actor:{name:'string'},slot:'string'}}));
  assert.throws(()=>evaluateRX(compileRX('actor.name',{schema:{actor:{name:'string'}}}),{actor:{get name(){throw Error('getter executed');}}}),{code:'E-RX-VIEW'});
  for(const source of ["min('text')",'clamp(1, 2)',"'text' < 2",'-true'])assert.throws(()=>compileRX(source),{code:'E-RX-TYPE'});
  assert.throws(()=>compileRX('sum(items, x => x.name)',{schema:{items:[{name:'string'}]}}),{code:'E-RX-TYPE'});
+});
+test('A3 RX: deterministic fixed log/exp, domain errors and overflow',()=>{
+ assert.equal(evaluateRX(compileRX('log(1)')),0);
+ assert.equal(evaluateRX(compileRX('log(2)')),0.6931);
+ assert.equal(evaluateRX(compileRX('log(0.5)')),-0.6931);
+ assert.equal(evaluateRX(compileRX('exp(1)')),2.7182);
+ assert.equal(evaluateRX(compileRX('exp(-1)')),0.3678);
+ assert.equal(evaluateRX(compileRX('exp(-100)')),0);
+ assert.throws(()=>evaluateRX(compileRX('log(0)')),{code:'E-RX-NUMBER'});
+ assert.throws(()=>evaluateRX(compileRX('exp(100)')),{code:'E-RX-NUMBER'});
+ assert.throws(()=>compileRX('exp(1)',{budget:65}),{code:'E-RX-BUDGET'});
+ assert.throws(()=>evaluateRX(compileRX('log(2)'),{},{budget:30}),{code:'E-RX-BUDGET'});
+ fc.assert(fc.property(fc.integer({min:1,max:1000000}),n=>{
+  const result=evaluateRX(compileRX('log(n)',{schema:{n:'number'}}),{n:n/10000});
+  assert.ok(Math.abs(result-Math.log(n/10000))<0.000101);
+  return result===evaluateRX(compileRX('log(n)',{schema:{n:'number'}}),{n:n/10000});
+ }));
+});
+
+test('A3 RX: native library NPC decision uses current subjective facts, without exposing traces',async()=>{
+ const {loadWorld}=await import('../tools/load-world.mjs'),{WorldEngine}=await import('../server-plugin/engine.mjs'),fs=await import('node:fs/promises');
+ const engine=new WorldEngine(await loadWorld()),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=engine.initialFromLegacy(seed,'rx-library');
+ const target=Object.keys(document.state.npcs)[0],before=structuredClone(document),library=createRXLibrary(engine,document);
+ const compiled=compileRX('npcDecision(target, request).outcome',{schema:{target:'string',request:{kind:'string',from:'string'}},functions:library.signatures});
+ const binding={target,request:{kind:'greet',from:'forged-speaker'}};
+ const result=evaluateRX(compiled,binding,{functions:library.functions});assert.ok(['agree','refuse','defer','conditional'].includes(result));
+ assert.deepEqual(library.functions.npcDecision(target,binding.request),library.functions.npcDecision(target,{...binding.request,from:'player'}));
+ assert.deepEqual(Object.keys(library.functions.npcDecision(target,binding.request)).sort(),['outcome','reason']);
+ assert.equal(evaluateRX(compileRX('month()',{functions:library.signatures}),{},{functions:library.functions}),engine.calendar(document.state.minute).month);
+ assert.throws(()=>compileRX('npcDecision(target, request).trace',{schema:{target:'string',request:{}},functions:library.signatures}),{code:'E-RX-FIELD'});
+ assert.deepEqual(document,before);
+});
+
+test('A3 RX: templates only render in narration and cannot evaluate code or whole private views',()=>{
+ const source='`hello ${actor.name}: ${0.1 + 0.2}`',schema={actor:{name:'string'}};
+ assert.throws(()=>compileRX(source,{schema}),{code:'E-RX-TEMPLATE'});
+ const compiled=compileRX(source,{schema,mode:'narration'});
+ assert.equal(evaluateRX(compiled,{actor:{name:'Lin'}}),'hello Lin: 0.3');
+ assert.equal(evaluateRX(compiled,{actor:{name:'${process.exit()}'}}),'hello ${process.exit()}: 0.3');
+ assert.equal(evaluateRX(compileRX('`say ${"}"}`',{mode:'narration'})),'say }');
+ assert.throws(()=>compileRX('`${actor}`',{schema,mode:'narration'}),{code:'E-RX-TYPE'});
+ assert.throws(()=>compileRX('`${globalThis.process}`',{mode:'narration'}),{code:'E-RX-NAME'});
+ assert.throws(()=>evaluateRX(compiled,{actor:{name:'x'.repeat(16001)}}),{code:'E-RX-BUDGET'});
 });
 test('A3 RX: compile/runtime budgets and collection bounds are enforced',()=>{
  assert.throws(()=>compileRX('sum(items, x => x.qty)',{schema:{items:[{qty:'number'}]},budget:20}),{code:'E-RX-BUDGET'});

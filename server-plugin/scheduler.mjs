@@ -117,6 +117,7 @@ function lotteryWinner(group, seed, minute) {
 }
 // 按 (标的 id, contest 结果) 排序的结果数组。返回每组的 {target, contest, winners, losers, reason}。
 export function resolveContest(proposals, { seed, minute }) {
+    if(proposals.some(p=>p.claims))return resolveCompositeContest(proposals,{seed,minute});
     const byTarget = new Map();
     for (const proposal of proposals) {
         const target = proposal.target;
@@ -156,6 +157,51 @@ export function resolveContest(proposals, { seed, minute }) {
         results.push({ target, contest, winners, losers, reason: '刚被人抢先了' });
     }
     return results;
+}
+
+// A proposal may need several scarce resources. Allocate its complete demand
+// once, and return its callback once; no group can execute half a proposal.
+// Resource ids give a deterministic priority between unlike contest policies;
+// within each resource the existing price/arrival/rank/lottery policy orders it.
+function resolveCompositeContest(proposals,context){
+    const resources=new Map(),demands=new Map();
+    for(const proposal of proposals){
+        const claims=proposal.claims??[proposal],byTarget=new Map();
+        if(!Array.isArray(claims)||!claims.length)throw Error('Empty composite contest');
+        for(const claim of claims){
+            if(typeof claim.target!=='string'||!claim.target||!Number.isSafeInteger(claim.quantity??1)||(claim.quantity??1)<=0||!Number.isSafeInteger(claim.capacity??1)||(claim.capacity??1)<0)throw Error('Invalid composite resource demand');
+            if(byTarget.has(claim.target))throw Error('Composite demands must aggregate each resource');
+            byTarget.set(claim.target,{...claim,quantity:claim.quantity??1,capacity:claim.capacity??1});
+            const rule=normalizeContest(claim.contest??contestRuleFor(claim.targetKind));
+            if(!resources.has(claim.target))resources.set(claim.target,{rule,capacity:claim.capacity??1,proposals:[]});
+            const resource=resources.get(claim.target);
+            if(resource.rule!==rule)throw Error(`Inconsistent composite contest rule: ${claim.target}`);
+            resource.capacity=Math.min(resource.capacity,claim.capacity??1);resource.proposals.push(proposal);
+        }
+        demands.set(proposal,byTarget);
+    }
+    const ordered=[...resources].sort(([a],[b])=>a<b?-1:a>b?1:0),priority=new Map();
+    for(const [index,[target,resource]]of ordered.entries()){
+        const [ranking]=resolveContest(resource.proposals.map((p,compositeIndex)=>({...p,compositeIndex,claims:undefined,target,contest:resource.rule,quantity:1,capacity:resource.proposals.length})),context);
+        for(const [rank,p]of ranking.winners.entries()){
+            const original=resource.proposals[p.compositeIndex];
+            if(!priority.has(original))priority.set(original,[index,rank]);
+        }
+    }
+    const sorted=[...proposals].sort((a,b)=>lex([...priority.get(a),a.id??''],[...priority.get(b),b.id??''])),won=new Set();
+    for(const proposal of sorted){
+        const claims=demands.get(proposal);
+        if([...claims].some(([target,claim])=>claim.quantity>resources.get(target).capacity))continue;
+        for(const [target,claim]of claims)resources.get(target).capacity-=claim.quantity;
+        won.add(proposal);
+    }
+    const outcomes=new Map();
+    for(const proposal of proposals){
+        const target=proposal.target??[...demands.get(proposal).keys()][0],contest=resources.get(target).rule;
+        if(!outcomes.has(target))outcomes.set(target,{target,contest,winners:[],losers:[],reason:'刚被人抢先了'});
+        outcomes.get(target)[won.has(proposal)?'winners':'losers'].push(proposal);
+    }
+    return [...outcomes.values()].sort((a,b)=>a.target<b.target?-1:a.target>b.target?1:0);
 }
 
 // ---- 反应队列（14 §14.2 阶段 4，广度优先 + 深度/提案上限）----

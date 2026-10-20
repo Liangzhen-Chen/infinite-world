@@ -22,9 +22,11 @@ import {worldActions} from './action-affordances.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
+import {primitiveRuntime} from './primitives-runtime.mjs';
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
 export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20, populationGenerator, populationProfilesEnabled=Boolean(process.env.DEEPSEEK_API_KEY)||Boolean(populationGenerator) }={}){
     world ??= await loadWorld();
+    const actionRegistry=loadActionRegistry();if(actionRegistry.errors.length)throw Error(actionRegistry.errors.join('; '));
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map(),modelClients=new Map();
     const getModelClient=store=>{
         if(!modelClients.has(store.root))modelClients.set(store.root,sharedModelClient(store,{client:consistencyClient===undefined?npcPlanningOptions.client:consistencyClient,budgetYuan:consistencyBudgetYuan}));
@@ -133,13 +135,19 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const scene=selected.scene(view.document,String(req.body.query??'').slice(0,20000),index);
         return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat:index.chatMessages,sceneSequence:view.reference.sequence,client:getModelClient(store)});
     }));
+    router.post('/propose',handle(async req=>{
+        const {campaignId,eventId,args}=req.body,store=getStore(req),view=await store.read(campaignId);
+        const selected=await store.worldRegistry.get(view.document.worldHash);
+        return {...await selected.previewAction(view.document,{tool:'world_act',args,eventId}),reference:view.reference};
+    }));
     router.post('/execute',handle(async req=>{
         const {campaignId,eventId,anchor,expectedSequence}=req.body;
+        const store=getStore(req),view=await store.read(campaignId);
+        const selected=await store.worldRegistry.get(view.document.worldHash);
         // A1: world_act is stored as the legacy call it aliases, so replay and review see the old tool.
-        const translated=translateCall(req.body.tool,req.body.args),{tool,args}=translated;
+        const translated=translateCall(req.body.tool,req.body.args,primitiveRuntime.registry(selected)),{tool,args}=translated;
         // Health is an internal combat primitive, not a model-controlled tool.
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
-        const store=getStore(req),view=await store.read(campaignId);
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
         if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
         // A wait longer than one event may span (engine cap, see action-gateway) runs as several world_time events, one per segment,
@@ -183,7 +191,10 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     }));
     // A1 动作目录（只读）：不带 campaignId 时列注册表；带 campaignId 时按此处与对象派生可做之事；resolve 只翻译不执行。
     router.post('/actions',handle(async req=>{
-        const registry=loadActionRegistry(),{campaignId,target,query,resolve}=req.body??{};
+        const {campaignId,target,query,resolve}=req.body??{};
+        let view,scoped;
+        if(campaignId){const store=getStore(req);view=await store.read(campaignId);scoped=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);}
+        const registry=scoped?primitiveRuntime.registry(scoped):loadActionRegistry();
         if(resolve){
             const call=actionCall(registry,resolve.action,resolve.slots??{});
             return call.projection?{action:call.action.id,projection:call.projection}:{action:call.action.id,tool:call.tool,args:call.args,clientRead:CLIENT_READS.has(call.tool)};
@@ -193,7 +204,6 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             const rows=(query?searchActions(registry,query,{limit}):registry.actions.filter(a=>a.visibility.catalog!=='llm')).map(catalogRow);
             return {namespaces:registry.namespaces,count:registry.actions.length,actions:rows};
         }
-        const store=getStore(req),view=await store.read(campaignId),scoped=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);
         return {...worldActions(scoped,view.document,{target:target??null,query:query??null,limit,registry}),reference:view.reference};
     }));
     router.post('/reconcile',handle(async req=>{

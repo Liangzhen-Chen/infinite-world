@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {appendActionPatches} from './primitive-policy.mjs';
 
 const DIR=fileURLToPath(new URL('../world/actions/',import.meta.url));
 const ID=/^[a-z][a-z0-9_-]*:[a-z][a-z0-9_.-]*$/;
@@ -16,22 +17,31 @@ let cached=null;
 // Every *.json file directly under world/actions/ declares one namespace (core.json = core; a content pack adds its own file).
 export function loadActionRegistry(dir=DIR){
  if(dir===DIR&&cached)return cached;
- const files=fs.readdirSync(dir).filter(f=>f.endsWith('.json')).sort(),actions=[],namespaces=new Set(),errors=[];
+ const files=fs.readdirSync(dir).filter(f=>f.endsWith('.json')).sort(),actions=[],patches=[],namespaces=new Set(),errors=[];
  for(const file of files){
   const doc=JSON.parse(fs.readFileSync(path.join(dir,file),'utf8'));
   if(doc.format!==1||typeof doc.namespace!=='string'||!Array.isArray(doc.actions)){errors.push(`${file}：缺 format/namespace/actions`);continue;}
   if(namespaces.has(doc.namespace))errors.push(`${file}：命名空间 ${doc.namespace} 重复`);
   namespaces.add(doc.namespace);
+  for(const patch of doc.patches??[]){
+   if(!patch.id?.startsWith(`${doc.namespace}:`)||typeof patch.target!=='string')errors.push(`${file}: action patch needs a namespaced id and target`);
+   else patches.push(patch);
+  }
   for(const a of doc.actions){
    if(!ID.test(a.id??'')||!a.id.startsWith(`${doc.namespace}:`))errors.push(`${file}：动作 id 须带本文件命名空间：${a.id}`);
    if(!VISIBILITY.includes(a.visibility?.catalog))errors.push(`${a.id}：可见性无效`);
-   if(!a.call&&!a.projection)errors.push(`${a.id}：既无 call 也无 projection`);
+   if(!a.call&&!a.projection&&!a.outcomes)errors.push(`${a.id}：既无 call、outcomes 也无 projection`);
    if(typeof a.label!=='string'||!a.label||typeof a.narration!=='string'||!Array.isArray(a.slots)||!Array.isArray(a.synonyms))errors.push(`${a.id}：缺标签、模板键、槽位或同义词`);
    actions.push({...a,namespace:doc.namespace});
   }
  }
  const byId=new Map();
  for(const a of actions){if(byId.has(a.id))errors.push(`动作 id 重复：${a.id}`);byId.set(a.id,a);}
+ for(const patch of patches){
+  const action=findAction({byId},patch.target);
+  if(!action){errors.push(`${patch.id}: unknown action patch target`);continue;}
+  try{const updated=appendActionPatches(action,[patch]);byId.set(action.id,updated);actions[actions.findIndex(a=>a.id===action.id)]=updated;}catch(error){errors.push(`${patch.id}: ${error.code??'E-PATCH'} ${error.message}`);}
+ }
  const registry={actions,byId,namespaces:[...namespaces],errors};
  if(dir===DIR)cached=registry;
  return registry;
@@ -55,10 +65,17 @@ export function consentIsOwn(action,slots={}){
 // world_act → the legacy public tool call it aliases. Slot names are the legacy parameter names;
 // a template's fixed parameters win over slots of the same name.
 export function actionCall(registry,id,slots={}){
+ if(registry.errors?.length)throw Error(registry.errors.join('; '));
  const action=findAction(registry,id);
  if(!action)throw Error(`没有这个动作：${String(id).slice(0,80)}；先用 world_actions 查此处可做之事`);
  if(slots===null||typeof slots!=='object'||Array.isArray(slots))throw Error('slots 须是对象');
  if(action.projection)return {action,projection:action.projection};
+ if(action.outcomes){
+  const allowed=new Set(action.slots.map(slot=>slot.name));
+  if(Object.keys(slots).some(key=>!allowed.has(key)))throw Error('Invalid primitive action slots');
+  for(const slot of action.slots)if(slot.required&&!Object.hasOwn(slots,slot.name))throw Error(`Missing slot: ${slot.name}`);
+  return {action,tool:'world_act',args:{action:action.id,slots},readOnly:false};
+ }
  // Consent comes from the party the action acts on (05 §5.7, 06 §6.5), never from the caller on someone else's behalf.
  // An action that declares the player as that party takes it from the player (or derives it from the act itself);
  // for anyone else a caller-filled consent is refused, and until A2's NPC decision exists the legacy path's own judgement

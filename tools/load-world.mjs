@@ -3,6 +3,7 @@ import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
+import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -68,6 +69,15 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // basis); a bad table stops the load and names file and field. Attached as a non-enumerable property so the
     // world's serialized form, hash and clones are unchanged; consumers read world.balance (tables by name).
     Object.defineProperty(world,'balance',{value:requireBalanceTables(root),enumerable:false,writable:true,configurable:true});
+    try{
+        await fs.access(path.join(root,'actions'));
+        const registry=loadActionRegistry(path.join(root,'actions'));
+        if(registry.errors.length)throw Error(registry.errors.join('; '));
+        // Historical legacy editions do not acquire a new serialized field.
+        // Once programs/patches exist their exact definitions belong to the
+        // archived world, just like recipes and dialogue templates.
+        if(registry.actions.some(a=>a.outcomes||a.preconditions?.some(p=>p?.source)||a.consent?.scope?.some?.(p=>p?.source)))world.actionDefinitions={format:1,actions:registry.actions};
+    }catch(error){if(error.code!=='ENOENT')throw error;}
     return world;
 }
 

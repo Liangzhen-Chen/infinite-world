@@ -697,6 +697,10 @@
           "type": "boolean",
           "description": "开立时由内核写缔结快照 {place, lawVersion, time, form, inName?}"
         },
+        "transferable": {
+          "type": "boolean",
+          "description": "Whether an authorized holding.transfer may assign this kind"
+        },
         "functional": {
           "type": "boolean",
           "description": "职能读 effective(holding)（附录 A §A.15.25）"

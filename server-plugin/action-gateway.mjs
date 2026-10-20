@@ -8,6 +8,8 @@ export const CLIENT_READS=new Set(['world_read','world_search','world_catalog'])
 export function translateCall(tool,args,registry=loadActionRegistry()){
  if(tool==='world_actions')throw Error('world_actions 只查目录，请用 /actions');
  if(tool!=='world_act')return {tool,args,action:null};
+ const definition=findAction(registry,args?.action);
+ if(definition?.outcomes)return {tool,args,action:definition};
  const call=actionCall(registry,args?.action,args?.slots??{});
  if(call.projection)throw Error(`${call.action.label}只是看一看，不写进账本；请用 /actions 读取`);
  if(CLIENT_READS.has(call.tool))throw Error(`${call.action.label}是只读查询，请直接调用 ${call.tool}`);

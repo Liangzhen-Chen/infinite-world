@@ -5,11 +5,16 @@ import {authority,possessor} from '../server-plugin/action-authority.mjs';
 import {consent} from '../server-plugin/action-consent.mjs';
 import {canAct,capacity} from '../server-plugin/action-capacity.mjs';
 import {appendActionPatches} from '../server-plugin/primitive-policy.mjs';
+import {loadActionRegistry,actionCall} from '../server-plugin/action-registry.mjs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {tmpRoot} from '../tools/tmp-root.mjs';
 
 function context(){return {document:{state:{minute:10,player:{age:20},npcs:{npc_a:{age:20,location:'loc'},npc_guard:{age:30,location:'loc'}},effects:{},records:{},obligations:{}},holdings:emptyHoldings()}};}
 function holding(c,row){const id=`h${Object.keys(c.document.holdings.rows).length+1}`;c.document.holdings.rows[id]={id,...row};c.document.holdings.seq++;return id;}
 test('A3 policy: self, current holdings, mandate scope and protected purposes',()=>{
  const c=context();assert.equal(authority(c,'player','transfer','player|coin_river|purse').allowed,true);
+ assert.equal(authority(c,'player','holding.open','player',{kind:'permit',holder:'player'}).allowed,false,'being the subject does not grant an issuing power');
  const id=holding(c,{kind:'owns',holder:'player',subject:'item_a'});assert.equal(authority(c,'player','holding.transfer','item_a').actedAs.id,id);
  c.document.holdings.rows[id].until=9;assert.equal(authority(c,'player','holding.transfer','item_a').allowed,false);
  c.document.state.obligations.m={id:'m',kind:'mandate',debtor:'player',creditor:'npc_a',status:'active',terms:{scope:[{op:'transfer',target:'npc_a'}]}};
@@ -17,7 +22,18 @@ test('A3 policy: self, current holdings, mandate scope and protected purposes',(
  assert.equal(authority(c,'player','holding.close','npc_a').allowed,false);
  assert.equal(authority(c,'player','transfer','npc_a|coin_river|escrow:m').allowed,false);
  assert.equal(authority(c,'player','transfer','npc_a|coin_river|collected:tax').allowed,false);
+ for(const purpose of ['escrow','collected'])assert.equal(authority(c,'player','transfer',`npc_a|coin_river|${purpose}`).allowed,false);
  c.document.state.obligations.m.revoked=true;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
+ c.document.state.obligations.m.revoked=false;c.document.state.obligations.m.endedAt=10;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
+ delete c.document.state.obligations.m.endedAt;c.document.state.obligations.m.terms.expires=10;assert.equal(authority(c,'player','transfer','npc_a|coin_river|purse').allowed,false);
+});
+
+test('A3 policy: minor NPC cannot consent to intimacy, including proxy and explicit given events',()=>{
+ const c=context();c.document.state.npcs.npc_a.age=17;
+ c.document.state.consentEvents=[{id:'romantic',type:'consent_given',from:'npc_a',to:'player',scope:'romance',at:5,until:20}];
+ const decision=consent(c,'npc_a','player','romance');assert.equal(decision.allowed,false);assert.equal(decision.check,'abort');
+ c.document.state.npcs.npc_a.age=20;assert.equal(consent(c,'npc_a','player','romance').allowed,true);
+ c.document.state.npcs.npc_a.flags={minor:true};assert.equal(consent(c,'npc_a','player','romance').allowed,false);
 });
 test('A3 policy: possession permits tagged disposition, no possession rejects; loops terminate',()=>{
  const c=context();c.document.holdings.locations.item_a={mode:'container',at:'item_b'};c.document.holdings.locations.item_b={mode:'carried',at:'player'};
@@ -40,6 +56,7 @@ test('A3 policy: given consent covers purpose/time and revocation, never client 
  assert.equal(consent(c,'npc_a','player','mind').check,'contest');
  c.document.state.consentEvents=[{id:'c1',type:'consent_given',from:'npc_a',to:'player',scope:'mind',purpose:['diagnose'],at:5,until:20}];
  assert.equal(consent(c,'npc_a','player','mind',{purpose:'diagnose'}).kind,'given');assert.equal(consent(c,'npc_a','player','mind',{purpose:'interrogate'}).allowed,false);
+ assert.equal(consent(c,'npc_a','player','mind',{purpose:'diagnose',until:9}).allowed,false,'a past endpoint cannot revive expired permission');
  assert.ok(consent(c,'npc_a','player','mind',{purpose:'interrogate'}).tags.includes('unconsented:purpose'));
  assert.equal(consent(c,'npc_a','player','mind',{purpose:'diagnose',until:20}).allowed,false);
  c.document.state.consentEvents.push({id:'r1',type:'consent_revoked',from:'npc_a',consent:'c1',at:10});assert.equal(consent(c,'npc_a','player','mind',{purpose:'diagnose'}).allowed,false);
@@ -62,4 +79,20 @@ test('A3 policy: independent append patches commute and retain sources; outcomes
  assert.deepEqual(appendActionPatches(ab,[a,b]),ab);
  for(const patch of [{...a,field:'outcomes'},{...a,op:'remove'},{...a,reason:''}])assert.throws(()=>appendActionPatches(def,[patch]),{code:'E-PATCH'});
  assert.throws(()=>appendActionPatches({...def,reserved:['preconditions']},[a]),{code:'E-PATCH'});
+});
+
+test('A3 policy: the real loader composes two pack patches and execution rejects invalid patches',async t=>{
+ const dir=await fs.mkdtemp(path.join(tmpRoot(),'a3-action-patches-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ const action={id:'core:test',label:'test',narration:'test',slots:[],synonyms:[],visibility:{catalog:'here'},outcomes:[{op:'emit',verb:'tell',visibility:'private'}]};
+ const a={id:'a:condition',target:action.id,field:'preconditions',op:'append',value:'true',reason:'local A'},b={...a,id:'b:condition',value:'false',reason:'local B'};
+ await fs.writeFile(path.join(dir,'core.json'),JSON.stringify({format:1,namespace:'core',actions:[action]}));
+ const write=async(reverse=false)=>{
+  await fs.writeFile(path.join(dir,'first.json'),JSON.stringify({format:1,namespace:reverse?'b':'a',actions:[],patches:[reverse?b:a]}));
+  await fs.writeFile(path.join(dir,'last.json'),JSON.stringify({format:1,namespace:reverse?'a':'b',actions:[],patches:[reverse?a:b]}));
+  return loadActionRegistry(dir);
+ };
+ const first=await write(),second=await write(true);assert.deepEqual(first.errors,[]);assert.deepEqual(first.byId.get(action.id),second.byId.get(action.id));
+ assert.deepEqual(first.byId.get(action.id).preconditions.map(p=>p.source),['a:condition','b:condition']);
+ await fs.writeFile(path.join(dir,'last.json'),JSON.stringify({format:1,namespace:'a',actions:[],patches:[{...a,field:'outcomes'}]}));
+ const invalid=loadActionRegistry(dir);assert.ok(invalid.errors.some(error=>error.includes('E-PATCH')));assert.throws(()=>actionCall(invalid,action.id));
 });

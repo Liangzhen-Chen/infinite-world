@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './holdings.mjs';
+import {primitiveActionRuntime} from './primitives.mjs';
 import {facilityView,facilityRouteStates} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching} from './entity-view.mjs';
@@ -33,7 +34,7 @@ import {changeItems,transferItems,validateItemTransfer}from'./items.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
 import {localWeather,weatherEdge}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -275,7 +276,18 @@ export class WorldEngine {
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
+        if(input.tool==='world_act'){
+            const runtime=primitiveActionRuntime();
+            if(!runtime)throw Error('Action runtime is not installed');
+            const translated=runtime.resolve(this,input);
+            if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},options);
+            if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
+            const books=withBooks(this,document),session=this.scoped(document);
+            const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session)});
+            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:books.document.state.minute,messages:[],notices:[]}};
+        }
         const resolved=resolveToolCall(input.tool,input.args??{});
+        primitiveActionRuntime()?.validateLegacy(this,document,resolved.tool,resolved.args,options);
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
         const books=withBooks(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
@@ -290,7 +302,8 @@ export class WorldEngine {
             for(const patch of planPreR1Partitions(document,this.world))holdingSet(d,this,patch.path,patch.value,'engine');
         }
         settleAgricultureExpiry(d,this);
-        enforceLegalRestriction(d,tool,args);
+        const permission=primitiveActionRuntime()?.legacyPermission(this,d.document,tool,args);
+        if(permission){if(!permission.allowed)throw Error(permission.reason);}else enforceLegalRestriction(d,tool,args);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
@@ -347,6 +360,15 @@ export class WorldEngine {
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)} };
+    }
+    primitiveDraft(document){return new Draft(document,this);}
+    primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
+    async previewAction(document,input){
+        const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
+        const session=this.scoped(document),result=runtime.execute(session,withBooks(this,document).document,input,{createDraft:doc=>new Draft(doc,session),preview:true});
+        if(!result.legacy)return result;
+        const reduced=await this.reduce(clone(document),{...input,tool:result.legacy.tool,args:result.legacy.args});
+        return {receipt:{eventId:input.eventId,status:'preview',routed:result.legacy.action.id,applied:[],legacy:reduced.result}};
     }
     scoped(document){
         const overlay=remoteEngine(this,document,world=>new WorldEngine(world));if(overlay!==this)return overlay.scoped(document);

@@ -134,6 +134,13 @@ export function registerFireDamage(d,engine,{building,damage,grain,origin,eventI
  return id;
 }
 
+export function releasePrimitiveCustody(d,engine,holding,reason,eventId){
+ if(!holding.source?.startsWith('custody:'))return;
+ const id=holding.source.slice(8),old=d.get('state','records',id),now=d.get('state','minute');
+ if(!['legal_custody','legal_detention'].includes(old?.category)||old.status!=='生效')throw Error('Custody source is not active');
+ const escaped=reason==='escaped';
+ endCustody(d,engine,id,{...old,status:escaped?'已中断':'已释放',ended:now,...(escaped?{remaining:Math.max(0,(old.expires??now)-now)}:{})},reason,eventId);
+}
 function endCustody(d,engine,id,next,reason,eventId){
  return changeLegacyHoldings(d,engine,{source:`custody:${id}`,kinds:['guest_of'],reason,eventId},()=>writeHoldingProjection(d,null,path(id),{...next,endReason:reason},'law'));
 }

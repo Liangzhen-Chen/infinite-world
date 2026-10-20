@@ -9,6 +9,8 @@
   {"id":"unconsented:purpose","family":"event","source":"design","label":"同意用途不符","broader":"unconsented"},
   {"id":"unauthorized_disposition","family":"event","source":"design","label":"占有人无权处分","broader":"attempt"},
   {"id":"capacity:limited","family":"event","source":"design","label":"限制行为能力","broader":"attempt"},
+  {"id":"escaped","family":"event","source":"design","label":"脱逃","broader":"attempt"},
+  {"id":"offense:unlawful_release","family":"event","source":"design","label":"无依据释放","broader":"attempt"},
   {"id":"business","family":"event","source":"code"},
   {"id":"contest","family":"event","source":"code"},
   {"id":"lottery","family":"event","source":"code"},

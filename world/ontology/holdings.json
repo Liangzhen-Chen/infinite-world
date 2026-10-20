@@ -267,6 +267,7 @@
   },
   {
    "id": "owns",
+   "transferable": true,
    "label": "所有",
    "holderKinds": [
     "agent",
@@ -307,6 +308,7 @@
   },
   {
    "id": "share",
+   "transferable": true,
    "label": "股份",
    "holderKinds": [
     "agent",

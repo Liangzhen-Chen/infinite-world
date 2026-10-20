@@ -1,19 +1,25 @@
 import {transfer,balance,parseAccount,isSource,isSink,declareLedgerWriter} from './ledger.mjs';
-import {updateEntity,declareHoldingWriter,ENTITY_KINDS} from './holdings.mjs';
+import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,holdingKindIds,runHoldingProtocol} from './holdings.mjs';
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
+import {beginReactionTick,drainWorldReactions,publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
+import {submitContest} from './scheduler.mjs';
 
 declareLedgerWriter('primitives',{sinks:['sink:consume']});
 declareHoldingWriter('primitives',{entities:Object.keys(ENTITY_KINDS)});
 const frames=new WeakMap();
+let actionRuntime=null;
+// Installed once by the native composition root, never from a tool payload.
+export function registerPrimitiveActionRuntime(runtime){actionRuntime=runtime;}
+export const primitiveActionRuntime=()=>actionRuntime;
 const clone=value=>structuredClone(value);
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 // Native composition root only. JSON proposals cannot manufacture this token.
 // Every policy sees the transaction's CURRENT document, including prior effects.
-export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[]}){
+export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null}){
  if(typeof actor!=='string'||!actor||typeof eventId!=='string'||!eventId||eventId.length>120||!['catalog','open','rule'].includes(source?.kind)||typeof source.id!=='string'||!source.id)reject('E-PRIMITIVE-FRAME','缺少服务端行动者、事件编号或来源');
  for(const [name,fn] of Object.entries({canAct,authority,location,mirrorTransfer}))if(typeof fn!=='function')reject('E-PRIMITIVE-FRAME',`缺少服务端 ${name} 接点`);
  const frame=Object.freeze({actor,eventId,source:Object.freeze({...source})});
- frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs)});return frame;
+ frames.set(frame,{canAct,authority,location,mirrorTransfer,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate});return frame;
 }
 function draft(document){
  return {document:clone(document),patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},peek(...p){return this.get(...p);},
@@ -21,37 +27,79 @@ function draft(document){
   remove(path){let at=this.document;for(const k of path.slice(0,-1))at=at?.[k];if(at)delete at[path.at(-1)];this.patches.push({op:'delete',path});}};
 }
 const receiptBase=(effects,frame)=>({eventId:frame.eventId,actor:frame.actor,source:frame.source,routed:null,candidates:[],applied:[],trimmed:[],check:null,consequences:[],narrate:{must:[],mustNot:[]},alternatives:[],fallback:null,status:'ready',signature:effects.map(e=>e.op)});
-function execute(document,effects,frame,commit){
+function execute(document,effects,frame,commit,{deferReactions=false,pending=null}={}){
  const policy=frames.get(frame);if(!policy)reject('E-PRIMITIVE-FRAME','原语只能由服务端行动框架调用');
  if(!Array.isArray(effects)||!effects.length||effects.length>64)reject('E-PRIMITIVE-LIST','原语列表须有 1 至 64 项');
  const original=clone(effects);original.forEach((effect,index)=>{try{validatePrimitive(effect);}catch(error){error.index=index;throw error;}});
  const fingerprint=canonical({actor:frame.actor,source:frame.source,effects:original}),key=`primitive:${frame.eventId}`;
  const old=document.state?.records?.[key];
  if(old){if(old.category!=='primitive_receipt'||old.fingerprint!==fingerprint)reject('E-PRIMITIVE-DUPLICATE','事件编号已用于不同提案');return {patches:[],events:[],receipt:{...clone(old.receipt),duplicate:true}};}
- const d=draft(document),receipt=receiptBase(original,frame),children=[];
+ const d=policy.createDraft?policy.createDraft(clone(document)):draft(document),receipt=receiptBase(original,frame),children=[];
+ if(frame.source.kind==='catalog')receipt.routed=frame.source.id;
+ if(pending)receipt.pending=pending;
+ if(policy.engine&&d.scheduler)beginReactionTick(d);
+ policy.validate?.(d.document);
  for(let index=0;index<original.length;index++){
-  const effect=original[index];try{
+  const effect=original[index],patchStart=d.patches.length;try{
+   if(effect.actor!==undefined&&effect.actor!==frame.actor)reject('E-PRIMITIVE-ACTOR','Effect actor must be the native frame actor');
    const capability=policy.canAct(d.document,frame.actor,effect.op,effect);
    if(!capability?.allowed)reject('E-CAPACITY',capability?.reason??'当前不能进行这类行动');
    const tags=[...capability.tags??[]];let actedAs=null,result;
    const requireAuthority=(op,target,options)=>{const a=policy.authority(d.document,frame.actor,op,target,options);if(!a?.allowed)reject('E-AUTHORITY',a?.reason??'没有动用权限');tags.push(...a.tags??[]);actedAs=a.actedAs;return a;};
    if(effect.op==='transfer'){
     const a=parseAccount(effect.from),b=parseAccount(effect.to),qty=effect.qty;
+    for(const key of [effect.from,...(isSink(b.owner)?[]:[effect.to])])if(policy.accountExists?.(d.document,key)&&!Object.hasOwn(d.get('ledger','accounts')??{},key))d.set(['ledger','accounts',key],0);
+    if(effect.from===effect.to)reject('E-TRANSFER-ENDPOINT','Transfer accounts must differ');
     if(isSource(a.owner)||isSink(a.owner)||isSource(b.owner)||a.resource!==b.resource||effect.resource&&effect.resource!==a.resource)reject('E-TRANSFER-ENDPOINT','提案不能动用资源源或跨资源账户');
     if(!Number.isSafeInteger(qty)||qty<=0)reject('E-TRANSFER-QTY','转移数量须为正整数');
     if(!d.get('ledger','accounts')||!Object.hasOwn(d.get('ledger','accounts'),effect.from)||!isSink(b.owner)&&!Object.hasOwn(d.get('ledger','accounts'),effect.to))reject('E-TRANSFER-ACCOUNT','两端账户必须已经存在');
     if(d.get('ledger','version')!==1)reject('E-TRANSFER-BOOKS','账本尚未开立');
-    if(/^(escrow:|collected:)/.test(a.purpose))reject('E-TRANSFER-PURPOSE','托管资金不能由普通转移提案动用');
+    if(/^(escrow|collected)(:|$)/.test(a.purpose))reject('E-TRANSFER-PURPOSE','托管资金不能由普通转移提案动用');
     requireAuthority('transfer',effect.from);
     if(isSink(b.owner)&&(a.owner!==frame.actor||b.owner!=='sink:consume'))reject('E-TRANSFER-SINK','本接点只允许消耗自己账户中的资源');
     if(!isSink(b.owner)){
      const from=policy.location(d.document,a.owner),to=policy.location(d.document,b.owner);
+     if(!from||policy.location(d.document,frame.actor)!==from)reject('E-TRANSFER-REACH','Actor must be physically present at the source');
      if(!from||!to||from!==to)reject('E-TRANSFER-REACH','两端不在同一节点，需要显式运送或汇兑载体');
     }
     // New primitives cannot use the migration ledger's drift repair branch.
     if(balance(d,effect.from)<qty)reject('E-TRANSFER-BALANCE','账户余额不足');
     result=transfer(d,{from:effect.from,to:effect.to,amount:qty,writer:'primitives',eventId:frame.eventId,pick:effect.lot??null});
     policy.mirrorTransfer(d,{...effect,actor:frame.actor,eventId:frame.eventId});
+   }else if(effect.op.startsWith('holding.')){
+    if(d.get('holdings','version')!==1)reject('E-HOLDING-BOOKS','Holdings are not initialized');
+    const row=effect.op==='holding.open'||effect.op==='holding.rescale'?null:holdingRow(d,effect.holding??effect.id);
+    if(!row&&['holding.close','holding.transfer'].includes(effect.op))reject('E-HOLDING-ENTITY','Holding does not exist');
+    const kind=holdingKind(effect.holdingKind??row?.kind);
+    if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
+    if(effect.op==='holding.open'&&effect.terms!==undefined&&effect.terms!==null&&(typeof effect.terms!=='object'||Array.isArray(effect.terms)||Object.keys(effect.terms).some(field=>!kind.terms?.includes(field))))reject('E-HOLDING-TERMS','Holding terms must be declared by the holding kind');
+    declareHoldingWriter('primitives',{kinds:holdingKindIds()});
+    const subject=row?.subject??effect.subject;
+    requireAuthority(effect.op,subject,{holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
+    const base={writer:'primitives',eventId:frame.eventId,engine:policy.engine};
+    const mutate=(op,args,native)=>{
+     const value=policy.engine?runHoldingProtocol(d,policy.engine,{...base,...args,op,eventId:`${frame.eventId}:${index}`}):native(d,{...base,...args});
+     if(value===null)reject('E-PRIMITIVE-CONNECTOR','Holding lifecycle protocol is not installed');
+     return value;
+    };
+    if(effect.op==='holding.open')result=mutate('open',{kind:kind.id,variant:effect.variant??null,holder:effect.holder,subject,terms:effect.terms??null,grantedBy:frame.actor,source:frame.source.id,inName:actedAs?.id??frame.actor},openHolding);
+    else if(effect.op==='holding.close')result=mutate('close',{id:row.id,reason:effect.reason??'released'},closeHolding);
+    else if(effect.op==='holding.transfer'){
+     if(kind.transferable!==true)reject('E-HOLDING-TRANSFER','This holding kind is not transferable');
+     result=mutate('transfer',{id:row.id,holder:effect.newHolder??effect.holder},transferHolding);
+    }else{
+     // Rescaling affects every holder: the native policy must establish issuance
+     // authority and agreement, rather than treating ownership as issuance.
+     result=mutate('rescale',{kind:kind.id,subject,shares:effect.shares,source:frame.source.id},rescaleHolding);
+    }
+    for(const id of Array.isArray(result)?result:[result]){
+     const created=holdingRow(d,id);
+     if(created&&tags.length)d.set(['holdings','rows',id],{...created,flags:[...new Set([...created.flags??[],...tags])],...(created.concluded?{concluded:{...created.concluded,tags:[...tags]}}:{})});
+    }
+    if(effect.op==='holding.close'&&row.source?.startsWith('custody:')){
+     if(typeof policy.engine?.primitiveHoldingChanged!=='function')reject('E-PRIMITIVE-CONNECTOR','Legacy custody projection requires its law connector');
+     policy.engine.primitiveHoldingChanged(d,row,effect.reason??'released',`${frame.eventId}:${index}`);
+    }
    }else if(effect.op==='fact.set'){
     const row=d.get('holdings','entities',effect.entity);if(!row)reject('E-FACT-ENTITY','实体不存在');
     requireAuthority('fact.set',effect.entity);
@@ -64,17 +112,62 @@ function execute(document,effects,frame,commit){
     if(effect.actor!==undefined&&effect.actor!==frame.actor)reject('E-EMIT-ACTOR','不能冒充其他行动者');
     // tell/request are observational events. impress must use bounded standing
     // rules; it is intentionally not an executable numeric effect in this slice.
-    if(!['tell','request','claim'].includes(effect.verb))reject('E-PRIMITIVE-CONNECTOR','该事件动词尚缺幅度与消费者接点');
-    result={verb:effect.verb,target:effect.target??null,payload:clone(effect.payload??{}),visibility:effect.visibility};
+    if(!['tell','request','claim'].includes(effect.verb)){if(policy.executePrimitive)result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});else reject('E-PRIMITIVE-CONNECTOR','Missing native event connector');}
+    else result={verb:effect.verb,target:effect.target??null,payload:clone(effect.payload??{}),visibility:effect.visibility};
+   }else if(policy.executePrimitive){
+    result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});
    }else reject('E-PRIMITIVE-CONNECTOR',`原语 ${effect.op} 尚缺执行接点`);
    const applied={index,...effect,result,tags:[...new Set(tags)],...(actedAs?{actedAs}:{})};receipt.applied.push(applied);
-   children.push({id:`${frame.eventId}:${index}`,parent:frame.eventId,actor:frame.actor,source:frame.source,...applied});
+   const protocolId=`${frame.eventId}:${index}`,eventKeys=new Set(d.patches.slice(patchStart).filter(p=>p.op==='set'&&p.path.length===3&&p.path[0]==='state'&&p.path[1]==='records'&&p.value?.category==='world_event').map(p=>p.path[2]));
+   for(const key of eventKeys){
+    const event=d.get('state','records',key),canonical=event.id===protocolId||event.id.startsWith('obligation:')&&event.id.endsWith(`:${protocolId}`);
+    const annotate=event=>({...event,...(canonical?{actor:frame.actor}:{}),parent:frame.eventId,source:frame.source,tags:[...new Set([...event.tags??[],...applied.tags])],...(actedAs?{actedAs}:{})});
+    d.set(['state','records',key],annotate(event));
+    for(const item of d.reactionTick?.queue??[])item.events=item.events.map(row=>row.id===event.id?annotate(row):row);
+   }
+   children.push({...applied,id:`${frame.eventId}:${index}`,parent:frame.eventId,actor:frame.actor,source:frame.source});
   }catch(error){if(error instanceof PrimitiveRejected){error.index=index;throw error;}throw new PrimitiveRejected(error.code??'E-PRIMITIVE-EXECUTION',error.message,index);}
  }
  receipt.status=commit?'committed':'preview';receipt.narrate.must=receipt.applied.map(e=>({op:e.op,index:e.index}));
  if(!commit)return {receipt};
+ if(policy.engine){
+  for(const child of children){
+   // Holding/obligation protocols already publish their own canonical events.
+   if(child.op.startsWith('holding.')||child.op.startsWith('obligation.'))continue;
+   const verb=child.op==='emit'?child.verb:child.op;
+   SOCIAL_VERBS.add(verb);
+   publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target:child.target??null,minute:d.get('state','minute'),location:policy.location(d.document,frame.actor),visibility:child.visibility??'private',witnesses:[],tags:child.tags,primitive:child.op,...(child.op==='emit'?{payload:child.payload??{}}:{})});
+  }
+  if(!deferReactions)drainWorldReactions(d);
+  if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
+ }
  d.set(['state','records',key],{category:'primitive_receipt',fingerprint,receipt});
- return {patches:d.patches,receipt,events:[{id:frame.eventId,type:'primitives',actor:frame.actor,source:frame.source,effects:original,receipt},...children]};
+ return {patches:d.patches,receipt,events:[{id:frame.eventId,type:'primitives',actor:frame.actor,source:frame.source,effects:original,receipt},...children],...(deferReactions?{reactionQueue:d.reactionTick?.queue??[]}:{})};
 }
 export function planPrimitives(document,effects,frame){return execute(document,effects,frame,false);}
 export function commitPrimitives(document,effects,frame){return execute(document,effects,frame,true);}
+
+// Native queue API: JSON cannot supply a frame or a contest callback. No effect
+// is applied until phase 3' invokes execute, which rechecks current facts.
+export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,onCommitted}={}){
+ if(!frames.has(frame))reject('E-PRIMITIVE-FRAME','Native frame required');
+ const preview=planPrimitives(d.document,effects,frame).receipt;
+ if(preview.duplicate)return {...commitPrimitives(d.document,effects,frame),receipt:preview};
+ if(!Array.isArray(claims)||!claims.length)reject('E-PRIMITIVE-CONTEST','Native resource claims required');
+ const receipt={...preview,status:'pending',applied:[],narrate:{must:[],mustNot:[]},pending:frame.eventId};
+ submitContest(d,{id:frame.eventId,actor:frame.actor,objectId:frame.actor,ruleId:frame.source.id,target:claims[0].target,targetKind:claims[0].targetKind,claims,bid,rank,arrival,
+  execute(){
+   const committed=execute(d.document,effects,frame,true,{deferReactions:true,pending:frame.eventId});
+   for(const patch of committed.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
+   if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
+   onCommitted?.(committed);
+   if(committed.reactionQueue.length){
+    if(!d.reactionTick)beginReactionTick(d);
+    d.reactionTick.queue.push(...committed.reactionQueue);
+   }
+   Object.assign(receipt,committed.receipt,{pending:frame.eventId});
+  },
+  reject(reason){Object.assign(receipt,{status:'rejected',reason,applied:[],narrate:{must:[],mustNot:[]}});}
+ });
+ return {receipt};
+}

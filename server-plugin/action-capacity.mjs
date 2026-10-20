@@ -1,10 +1,15 @@
 import {aliveHoldings} from './holdings.mjs';
 import {npcAgeAt} from './npc-state.mjs';
+import {legalCodeAt} from './law-codes.mjs';
 
 export const actionReader=document=>({get:(...path)=>path.reduce((v,k)=>v?.[k],document)});
 export function actionEntity({document,engine},id){
  const s=document.state??{},catalog=engine?.byId?.get(id);
  return id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id]??document.holdings?.entities?.[id]?.facts??catalog??null;
+}
+export function actionAge(context,id){
+ const row=actionEntity(context,id);
+ return id!=='player'&&context.engine?.byId?npcAgeAt(context.engine,context.document.state,id):row?.age;
 }
 export function capacity(context,actor,family){
  const state=context.document.state??{},row=actor==='player'?state.player:state.npcs?.[actor]??state.creatures?.[actor];
@@ -13,9 +18,10 @@ export function capacity(context,actor,family){
  const flags=[row,...effects];
  const none=flags.some(r=>r.capacity==='none'||r.status==='capacity:none'||['死亡','昏迷','失能'].includes(r.status)||r.diedAt!==undefined)||context.document.holdings?.protocol?.entities?.[actor]?.gone;
  if(none)return {level:'none',reason:'当前失能，无法发起行动',sources:['current body/status']};
- const catalog=context.engine?.byId?.get(actor),maturity=catalog?.lifecycle?.maturity??16;
- const majority=context.engine?.rules?.actions?.majority?.[family]??(['trade','transfer'].includes(family)?12:16);
- const age=actor!=='player'&&context.engine?.byId?npcAgeAt(context.engine,context.document.state,actor):row.age??catalog?.age;
+ const catalog=context.engine?.byId?.get(actor),species=context.engine?.byId?.get(row.species??catalog?.species),maturity=species?.lifecycle?.maturity??catalog?.lifecycle?.maturity??16;
+ const location=actor==='player'?state.location:row.location,code=context.engine&&legalCodeAt(context.engine,location,state),action=family.startsWith('obligation.')?'contract':family==='transfer'?'trade':family;
+ const majority=code?.civil?.majority?.[action]??code?.civil?.capacity?.majority?.[action]??context.engine?.rules?.actions?.majority?.[family]??(['trade','transfer'].includes(family)?12:16);
+ const age=actionAge(context,actor)??catalog?.age;
  const limited=Number.isFinite(age)&&age<majority*maturity/16||flags.some(r=>r.capacity==='limited'&&(r.scope===undefined||r.scope.includes(family))||r.status==='capacity:limited');
  return {level:limited?'limited':'full',reason:limited?'限制行为能力，行为效力待依法判断':null,sources:['current age/status']};
 }
