@@ -7,6 +7,11 @@ import {npcDecision} from './npc-decision.mjs';
 import {moveCoins,purse} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {recordLie} from './lies.mjs';
+import {eatMeal,orderMeal,treatRumor} from './daily-actions.mjs';
+import {actionCostRule,beginActionActivity,finishActionActivity} from './action-costs.mjs';
+import {assertRumorConversation} from './npc-rumors.mjs';
+import {advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {transferItems} from './items.mjs';
 declareLedgerWriter('dialogue',{});
 const prefix='对话请求：';
 const templateRoot=new URL('../world/templates/dialogue/common/plain/',import.meta.url);
@@ -51,14 +56,29 @@ export function dialogueRequest(d,engine,args,eventId){
  return {...detail,...save(d,npc,eventId,'request',decision,line(engine,view,'request',decision))};
 }
 export function applyDialogue(d,engine,args,eventId){
+ if(args.key==='dialogue:eat_meal')return eatMeal(d,engine,args,eventId);
+ if(args.key==='dialogue:order_meal')return orderMeal(d,engine,args,eventId);
+ if(args.key==='dialogue:treat_rumor')return treatRumor(d,engine,args,eventId);
  if(!args.key?.startsWith('dialogue:'))return null;
  const npc=present(d,engine,args.subject),view=subjectiveView(engine,d.document,npc),action=args.key.slice(9);
  const previous=d.get('state','dialogues',npc),communicates=language(view,engine,d);
  if(!communicates&&!['greet','leave','interpreter'].includes(action))return save(d,npc,eventId,action,npcDecision(view,{kind:'greet'}),'言语不通，只能寒暄、手势交易，或找通译。');
- let decision=npcDecision(view,{kind:action,from:'player'}),detail='';
+ let decision=npcDecision(view,{kind:action,from:'player'}),detail='',cost,gift;
  if(action==='ask'){
   const known=subjectiveFact(view,args.content);
   detail=known?`${known.kind==='belief'?'我猜':known.kind==='prior'?'按常理说':'我知道'}：${typeof known.value==='string'?known.value:JSON.stringify(known.value)}`:'这件事我不知道。';
+  const rule=engine.replaying&&!engine.replayResult?.cost?null:actionCostRule(engine,'talk.ask');
+  if(rule){
+  assertRumorConversation(d,engine,npc,rule.timeMin);
+  if(args.source){
+   const item=engine.resolve(args.source,'item');
+   transferItems(d,engine,'player',npc,item,1);
+   gift={item,quantity:1};
+  }
+  const span=beginActionActivity(d,engine,rule.activity);
+  advanceWithNpcParticipants(d,engine,rule.timeMin,eventId,[npc]);
+  cost=finishActionActivity(d,engine,span);
+  }
  }else if(action==='greet'){
   const memory=[...view.knowledge.memories].reverse().find(m=>m.participants?.includes('player')&&m.kind!=='dialogue');
   const clause=memory&&view.self.clauses.find(c=>memory.id?.endsWith(`:obligation_${c.id}`));
@@ -112,6 +132,7 @@ export function applyDialogue(d,engine,args,eventId){
  }else if(action==='interpreter')detail=view.observable.people.filter(p=>p.id!==npc).map(p=>p.name).join('、')||'这里没有可找的通译。';
  else if(action==='leave')detail='回头见。';
  else if(action!=='greet')throw Error('未知对话动作');
- return save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{});
+ return {...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{}),
+  ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:engine.byId.get(gift.item).basePrice??0,tags:['dialogue','gift']}}:{})};
 }
 export {npcDecision,subjectiveView};

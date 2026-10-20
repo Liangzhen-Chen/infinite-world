@@ -14,6 +14,7 @@ import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
+import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 // Replacement value of actual recipe inputs, shared with market quotations.
 // S5 adds labor valuation here; this never charges for already-owned materials.
 export function recipeInputCost(d,engine,recipe,location=d.get('state','location')){
@@ -116,7 +117,9 @@ export function manufacture(d,args,eventId){
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);
     }
+    const span=beginActionActivity(d,this,'heavy');
     this.advance(d,workMinutes,eventId);
+    const cost=finishActionActivity(d,this,span);
     if(facilityView(this,d.get('state'),d.get('state','location'))?.factor===0){outcome.success=false;outcome.degree='工坊停用，未能完成';}
     const thermal=kilnWorkResult(d,station?.thermalPlan,outcome,recipe.output.quantity,eventId);
     if(thermal)products[0].amount-=thermal.crackedQuantity;
@@ -141,7 +144,7 @@ export function manufacture(d,args,eventId){
         degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
     recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'manufacturing',eventId});
-    return{recipe:recipe.id,...outcome,receipt:receipt.id,instances:ids,workmanship,...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
+    return{recipe:recipe.id,...outcome,...(cost?{cost}:{}),receipt:receipt.id,instances:ids,workmanship,...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
         healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.filter(row=>row.amount).map(row=>({...row,name:this.byId.get(row.item).name})):[],
         factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${workMinutes}分钟。`,

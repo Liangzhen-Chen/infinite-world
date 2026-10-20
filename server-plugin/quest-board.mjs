@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {ledgerActive} from './ledger.mjs';
@@ -161,7 +162,13 @@ export function questBoardAction(d,engine,args,eventId){
    const row=acceptNpc(d,engine,q,taker,now);return {quest:q.id,status:row.status,taker};
   }
   if(q.publisher!=='player'&&standing(engine,d.get('state'),q.publisher)<=HOSTILE)throw Error('委托人对你怀有敌意，不肯把委托交给你');
-  d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player',...(['creature','pact'].includes(q.objective.type)?{acceptedAt:now,evidenceBefore:existingWildlifeEvidence(d.get('state'),q.objective)}:{})});return {quest:q.id,status:'进行中'};
+  const rule=engine.replaying&&!engine.replayResult?.cost?null:actionCostRule(engine,'quest.accept');
+  if(rule&&q.deadline!==undefined&&now+rule.timeMin>=q.deadline)throw Error('任务剩余期限不足以办完接任手续');
+  if(rule)assertActionTime(d,engine,rule.timeMin);
+  const span=rule?beginActionActivity(d,engine,rule.activity):null;
+  d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player',...(['creature','pact'].includes(q.objective.type)?{acceptedAt:now,evidenceBefore:existingWildlifeEvidence(d.get('state'),q.objective)}:{})});
+  if(rule)engine.advance(d,rule.timeMin,eventId);
+  return {quest:q.id,status:d.get('state','quests',q.id,'status'),...(span?{cost:finishActionActivity(d,engine,span)}:{})};
  }
  if(q.status!=='进行中'||q.taker!=='player')throw Error('任务不在可结算状态；NPC履约由世界时间验证');
  const o=q.objective;let done=false;

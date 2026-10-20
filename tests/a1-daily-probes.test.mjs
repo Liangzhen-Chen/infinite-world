@@ -103,11 +103,14 @@ test('D19 拜师学配方：在阿砚当班时付学费学会木楔，钱给师�
  assert.ok(fee>0);assert.equal(after.state.npcs[AYAN].coins-before.state.npcs[AYAN].coins,fee,'学费给师傅');assert.ok(after.state.minute-before.state.minute>=30*tries);conserved(before,after,'D19');
 });
 
-test('D20 练习技能：熟练度小幅增加，不凭空得物',async t=>{
+test('D20 练习一个时辰：熟练度小幅增加，时间和体力落地，不凭空得物',async t=>{
  const ui=await uiSession(t,{mutate:at('loc_hw',9*60,s=>{s.skills.skill_life_6_core={proficiency:20,daily:{},breakthroughs:[]};})}),before=await primed(ui);
- const r=await ui.choose('practice',{skill:'skill_life_6_core'});assert.ok(r.ok,r.error);const after=await ui.read();
+ // A3 §6.6: practice is deterministic growth with a duration slot, retaining
+ // the original small-gain, inventory and money guarantees.
+ const r=await ui.choose('practice.session',{skill:'skill_life_6_core',minutes:120});assert.ok(r.ok,r.error);const after=await ui.read();
  const gain=after.state.skills.skill_life_6_core.proficiency-20;assert.ok(gain>0&&gain<100,`小幅增加：${gain}`);
  assert.deepEqual(after.state.inventory,before.state.inventory);assert.equal(after.state.player.coins,before.state.player.coins);
+ assert.equal(after.state.minute-before.state.minute,120);assert.equal(after.state.player.body.stamina.value,94);
 });
 
 test('D27 存钱 / D28 三个月后取钱：存入进钱庄账户，利息出自钱庄，取回本息守恒',async t=>{

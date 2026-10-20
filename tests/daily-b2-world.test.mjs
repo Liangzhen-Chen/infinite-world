@@ -7,6 +7,7 @@ import {weatherAt} from '../server-plugin/weather.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {monsterStats} from '../server-plugin/combat.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {variant,item,setPrice,scene,stack,tool,monthDayMinute,conserved,primed,held,baseEngine,DAY} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',HEZHOU='npc_hw_hezhou',CHENBAI='npc_hw_chenbai',GUCEN='npc_hw_gucen',VILLAGE='loc_hw',TOWN='loc_bs';
@@ -49,18 +50,22 @@ const rumorWorld=(extra=[])=>variant(w=>{
 });
 const hear=(ui,rumor,speaker)=>ui.choose('remember',{subject:'player',key:rumor.id,rumor:rumor.id,source:speaker,content:rumor.claim},{search:true});
 
-test('D22 打听消息 ①②③④：请小六喝酒 5 文（铜钱 −5，酒肆 +5），他讲出“东头丢了牛”，不知道偷牛者；已知传闻新增，来源标小六',async t=>{
+async function treatForNews(t){
  // 小六→伙计贺舟（npc_hw_hezhou，青灯酒馆）；酒一碗 5 文→牛乳一份改价 5 文；夏季六月十二酉时；玩家 50 文。
  const world=rumorWorld(),rumor=world.rumors.find(r=>r.id==='rumor_d22_ox'),thief=world.rumors.find(r=>r.id==='rumor_d22_thief');
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(6,12,18,0),s=>{s.player.coins=50;Object.assign(s.npcs[HEZHOU],{location:INN,activity:'前厅接待',status:'正常'});})});
  const before=await primed(ui);
- const drink=await ui.choose('trade.buy',{item:'item_milk',quantity:1},{target:LINSUI});assert.ok(drink.ok,drink.error);
- const mid=await ui.read();
+ const menu=await ui.server.api('actions',{campaignId:ui.campaignId,query:'dialogue.treat_rumor',target:HEZHOU});
+ assert.ok(menu.actions.some(a=>a.id==='core:dialogue.treat_rumor'),'目录搜索可找到请客动作');
+ const told=await ui.choose('dialogue.treat_rumor',{subject:HEZHOU,seller:LINSUI,item:'item_milk',rumor:rumor.id},{target:HEZHOU,search:true});assert.ok(told.ok,told.error);
+ const after=await ui.read();return {world,rumor,thief,ui,before,told,after};
+}
+test('D22 打听消息 ①②③④：请小六喝酒5文，讲出丢牛版本、不透露偷牛者，真实交付饮品',async t=>{
+ const {world,rumor,thief,ui,before,told,after}=await treatForNews(t),mid=after;
  assert.equal(before.state.player.coins-mid.state.player.coins,5,'①铜钱 −5');assert.equal(mid.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,5,'①酒肆 +5');
- const told=await hear(ui,rumor,HEZHOU);assert.ok(told.ok,told.error);
  assert.ok(told.result.content.includes(rumor.claim),'②小六讲出东头丢了牛');
  assert.ok(!told.result.content.includes('脚夫')&&!told.result.content.includes(rumor.fact),'③不说出偷牛者');
- const after=await ui.read(),memory=after.memories[`player::${rumor.id}::${HEZHOU}`];
+ const memory=after.memories[`player::${rumor.id}::${HEZHOU}`];
  assert.equal(memory.source,HEZHOU,'④来源标为小六');assert.equal(memory.sourceType,'听说');assert.equal(memory.reliability,'未核实');
  assert.ok(!Object.values(after.memories).some(m=>m.rumor===thief.id),'没有获得偷牛者的传闻');
  const forged=await ui.choose('remember',{subject:'player',key:thief.id,rumor:thief.id,source:HEZHOU,content:thief.claim},{search:true});
@@ -69,8 +74,16 @@ test('D22 打听消息 ①②③④：请小六喝酒 5 文（铜钱 −5，酒�
  assert.equal(seeded.ok,false,'③不能把作者设定的真相当传闻内容请出来');
  conserved(before,after,'D22',new WorldEngine(world));
 });
-test.todo('D22 ⑤时间过去约 15 分钟——引擎传闻交谈固定 10 分钟（npc-rumors.mjs），题面约一刻钟；缺“打听”动作耗时读表（A3：action-costs 增 talk.ask 行 15 分钟，cost.time 读表；缺省值已补入 balance/action-costs.json）');
-test.todo('D22 ①请小六喝酒——引擎没有“请人喝酒”的赠予动作（酒归玩家背包，小六没喝）：缺 gift/treat 动作与 impress 事件（A3 动作 outcomes；S6 event-weights gift 行）');
+test('D22 ⑤购买饮品并打听的整次动作15分钟',async t=>{
+ const {before,after,told}=await treatForNews(t);assert.equal(after.state.minute-before.state.minute,15);assert.equal(told.result.cost.time,15);
+});
+test('D22 ①饮品从酒肆经玩家真实交给小六，玩家没有留下这份酒',async t=>{
+ const {before,after}=await treatForNews(t);
+ assert.equal(held(after.state.inventory,'item_milk'),held(before.state.inventory,'item_milk'));
+ assert.equal(held(after.state.npcs[HEZHOU].inventory,'item_milk')-held(before.state.npcs[HEZHOU].inventory,'item_milk'),1);
+ assert.equal(held(before.state.npcs[LINSUI].inventory,'item_milk')-held(after.state.npcs[LINSUI].inventory,'item_milk'),1);
+ // A3 proves transfer; the full S6 impression propagation remains separate.
+});
 
 test('D38 听传闻 ③：村口听村民说“东头丢了牛”，已知传闻新增（未核实），不含议论者没提的细节，不花钱',async t=>{
  // 村口闲谈→河湾村村口（loc_hw_gate）的村民顾岑（npc_hw_gucen）；春季三月二十八辰时；玩家 20 文。
@@ -124,6 +137,16 @@ test('D23 接任务 + D24 交任务：接下不收钱不先给钱，截止四月
  const again=await ui.choose('quest.complete',{quest:'quest_d23'},{search:true,target:CHENBAI});assert.equal(again.ok,false,'D24④不能重复领赏');assert.equal((await ui.read()).state.player.coins,70);
  assert.equal(held(after.state.npcs[CHENBAI].inventory,HERBS),10,'收下的 10 株在村长手里');
 });
-test.todo('D23 ④时间过去约 5–10 分钟——引擎接委托不耗时（0 分钟）；缺动作耗时读表（A3：action-costs 增 quest.accept 行 5 分钟；缺省值已补入表）');
+test('D23 ④实际接任手续7分钟、无钱物变化，资金仍在原托管',async t=>{
+ const start=monthDayMinute(4,6,9,30),world=variant(),engine=new WorldEngine(world),ui=await uiSession(t,{world,mutate:scene(BOARD,start,(s,doc)=>{
+  s.player.coins=30;s.npcs[CHENBAI].coins=460;s.quests={quest_d23:questRow(start)};
+  // This is opening fixture escrow, not a running-world free source.
+  resyncBooks(engine,doc);
+ })});
+ const before=await primed(ui),accepted=await ui.choose('quest.accept',{quest:'quest_d23'},{search:true});assert.ok(accepted.ok,accepted.error);
+ const after=await ui.read();assert.equal(after.state.minute-before.state.minute,7);assert.equal(accepted.result.cost.time,7);
+ assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory);
+ assert.equal(after.state.quests.quest_d23.escrow,40);conserved(before,after,'D23',engine);
+});
 test.todo('D24 ⑤村长好感小幅上升——引擎交付委托不产生立场事件（standing 不变）；缺 complete_bounty 事件进立场（S6 立场改可重建缓存，读 event-weights complete_bounty/trust = 4）');
 test.todo('D24 ③村长公库——引擎酬金出自发布者个人钱袋托管，委托发布时即扣；题面“公库 500→460”按托管口径等价，村长以执行人动用公库（actedAs）属 S2 职位与 S3 义务');
