@@ -254,7 +254,7 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
 // Recipe manufacture, population individuation and mark reactions belong to
 // their domain adapters and cannot be smuggled through these generic templates.
 function createNarrative(d,engine,effect,{frame,child}){
- if(effect.kind==='mark')reject('E-PRIMITIVE-CONNECTOR','Mark creation requires its vocabulary and reaction adapter');
+ if(effect.kind==='mark')return engine.primitiveApplyMark(d,effect,{frame,child});
  const templates=engine.world.primitiveTemplates??[],template=templates.find(t=>t.id===effect.template&&t.kind===effect.kind);
  if(!template)reject('E-CREATE-TEMPLATE','A core narrative template is required');
  const facts=effect.facts;

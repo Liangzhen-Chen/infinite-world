@@ -120,7 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
- {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-rules.mjs','primitives-runtime.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs']},
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-rules.mjs','primitives-runtime.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','body-needs.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -149,7 +149,7 @@ const SYSTEMS=[
  {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs']},
  {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['obligation-protocol.mjs','holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-conditional.mjs','obligation-claims.mjs','service-queue.mjs']},
  // 模拟系统层
- {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
+ {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','daily-actions.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','hidden-passives.mjs','spell-research.mjs','training.mjs','learning.mjs','education.mjs','education-state.mjs','education-cohorts.mjs','local-exams.mjs','checks.mjs','revival.mjs']},
  {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','duels.mjs']},

@@ -12,6 +12,101 @@ import {recordLocalContact} from '../server-plugin/environment.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const from=accountKey('player','coin_river','purse');
+
+test('A8: archived open assets drive public leave_mark, with real reactions, one cost and JSON retry',async()=>{
+ const f=fixture(),input={tool:'world_act',eventId:'a8-mark',args:{action:'open:leave_mark',slots:{intent:'向过路人问好',form:'刻痕',tags:['问候']}}};
+ // Use the archived vocabulary rather than inventing a tag for the fixture.
+ input.args.slots.tags=[f.engine.world.openTagging.default];
+ const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);
+ assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches);
+ assert.equal(after.state.minute-before.state.minute,f.engine.world.openActionRules.mark.minutes);
+ assert.ok(after.state.created[out.result.receipt.mark.entity]);assert.ok(out.result.receipt.mark.triggered);
+ assert.equal(out.result.receipt.fallback.originalIntentFulfilled,false);
+ const again=await f.engine.reduce(JSON.parse(JSON.stringify(after)),input);assert.deepEqual(again.patches,[]);
+});
+
+test('A8: native unmatched proposal commits bounded transfers, persists usage/routing, and rechecks funds',async()=>{
+ const f=fixture();f.engine.world.actionDefinitions={format:1,actions:[]};
+ const to=accountKey(f.npc,'coin_river','purse'),input={tool:'world_propose',eventId:'a8-unmatched',args:{intent:'一项未登记的递钱安排',effects:[{op:'transfer',from,to,qty:3}]}};
+ const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);assert.deepEqual(f.document,before);
+ assert.equal(preview.receipt.status,'preview');
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches),receipt=out.result.receipt;
+ assert.equal(after.ledger.accounts[from],before.ledger.accounts[from]-3);assert.equal(after.ledger.accounts[to],before.ledger.accounts[to]+3);
+ assert.equal(after.state.minute-before.state.minute,2);assert.deepEqual(auditLedger(after.ledger),[]);
+ assert.deepEqual(receipt.routing.proposal,input.args);assert.ok(receipt.openUsage);
+ assert.deepEqual(after.state.records['primitive:a8-unmatched'].receipt,receipt);
+ assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
+ f.document.ledger.accounts[from]=0;await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'a8-no-funds'}),{code:'E-TRANSFER-BALANCE'});
+});
+
+test('A8: openActions config is archived and enforced at execution while leave_mark stays available',async()=>{
+ const f=fixture(),input={tool:'world_propose',eventId:'a8-disabled',args:{intent:'告知',effects:[{op:'emit',verb:'tell',payload:{text:'你好'}}]}};
+ let change=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'off'});f.document=applyPatches(f.document,change.patches);
+ await assert.rejects(f.engine.reduce(f.document,input),{code:'E-OPEN-DISABLED'});
+ const mark=await f.engine.reduce(f.document,{tool:'world_act',eventId:'a8-off-mark',args:{action:'open:leave_mark',slots:{intent:'问好',form:'刻痕'}}});assert.equal(mark.result.receipt.status,'committed');
+ change=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'limited'});f.document=applyPatches(f.document,change.patches);
+ await assert.rejects(f.engine.reduce(f.document,{...input,args:{...input.args,effects:[{op:'transfer',from,to:accountKey(f.npc,'coin_river','purse'),qty:1}]}}),{code:'E-OPEN-MODE'});
+ await assert.rejects(f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'invalid'}));
+});
+
+test('A8: legacy practice now consumes native duration and ignores caller gain; old no-cost replay stays exact',async()=>{
+ const f=fixture(),skill='skill_light';f.document.state.skills[skill]={proficiency:10,breakthroughs:[],daily:{}};
+ const input={tool:'world_practice',eventId:'a8-practice',args:{skill,gain:100000}},before=structuredClone(f.document);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches);
+ assert.equal(after.state.minute-before.state.minute,120);assert.ok(out.result.gain<100000);assert.equal(out.result.cost.time,120);
+ assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
+ const historical=await f.engine.reduce(before,{...input,args:{skill,gain:1}},{replay:true,result:{}}),old=applyPatches(before,historical.patches);
+ assert.equal(old.state.minute,before.state.minute);assert.equal(historical.result.gain,1);
+});
+
+test('A8: public sleep charges body once and preserves historical no-cost replay',async()=>{
+ const f=fixture(),now=f.document.state.minute;f.document.state.player.body={stamina:{value:20,asOf:now,activity:'rest'}};
+ const input={tool:'world_time',eventId:'a8-sleep',args:{minutes:60,activity:'睡眠'}},before=structuredClone(f.document);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches);
+ assert.equal(after.state.minute-now,60);assert.equal(out.result.cost.sleep.minutes,60);assert.equal(out.result.cost.sleep.coveredMinutes,0);
+ assert.equal(after.state.player.body.stamina.value,27.2);
+ const old=await f.engine.reduce(before,input,{replay:true,result:{}});assert.equal(old.result.cost,undefined);
+});
+
+test('A8: unmatched known magic pays its real MP/materials on every grade and cannot exceed its native healing source',async()=>{
+ const f=fixture(),spell=f.engine.world.spells.find(s=>s.id==='spell_s3_mend_palm');
+ f.engine.world.actionDefinitions={format:1,actions:[]};
+ f.document.state.skills[spell.skill]={proficiency:10,breakthroughs:[],daily:{}};f.document.state.spells[spell.id]={};
+ f.document.state.inventory[spell.materials[0].item]={quantity:2};delete f.document.ledger;
+ f.document=withLedger(f.engine,f.document).document;
+ f.document.state.player.mp=20;f.document.state.player.hp=10;f.document.state.player.maxHp=100;
+ const input={tool:'world_propose',eventId:'a8-magic',args:{intent:'用掌心的术法抚平我身上的伤',means:{spell:spell.id},effects:[{op:'vital',target:'player',delta:999,type:'healing'}]}};
+ const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);assert.deepEqual(f.document,before);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches),receipt=out.result.receipt,key=accountKey('player',spell.materials[0].item,'inventory');
+ assert.equal(after.state.player.mp,before.state.player.mp-spell.mp);assert.equal(after.ledger.accounts[key],before.ledger.accounts[key]-1);
+ assert.ok(after.state.player.hp-before.state.player.hp<=spell.effectSpec.power);assert.deepEqual(auditLedger(after.ledger),[]);
+ assert.equal(receipt.requirements.mp,spell.mp);assert.equal(receipt.check.degree,preview.receipt.check.degree);
+ assert.equal(receipt.openUsage.produced['vital:heal']??0,receipt.applied.filter(e=>e.op==='vital'&&e.delta>0).reduce((n,e)=>n+(e.result.healed??0),0));
+ f.document.state.player.mp=0;await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'a8-no-mp'}),{code:'E-OPEN-MP'});
+ assert.equal(f.document.ledger.accounts[key],before.ledger.accounts[key]);
+});
+
+test('A8: a catalog call to world_propose uses the native open executor through world_act and permission/preview',async()=>{
+ const f=fixture(),action={id:'test:proposal',label:'提出行动',narration:'proposal',synonyms:[],visibility:{catalog:'search'},slots:[{name:'intent',kind:'text',required:true},{name:'effects',kind:'object',required:true}],call:{tool:'world_propose'}};
+ f.engine.world.actionDefinitions={format:1,actions:[action]};
+ const slots={intent:'向身边的人报信',effects:[{op:'emit',verb:'tell',target:f.npc,visibility:'witnessed',payload:{text:'路上平安'}}]},input={tool:'world_act',eventId:'a8-catalog-proposal',args:{action:action.id,slots}};
+ assert.equal(f.engine.actionPermission(f.document,input.args).allowed,true);
+ const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches);
+ assert.equal(out.result.receipt.status,'committed');assert.equal(out.result.receipt.routing.proposal.intent,slots.intent);assert.equal(after.state.minute-before.state.minute,2);
+});
+
+test('A8: public rite dispatch uses the archived stage and true daylight once, retaining no-cost preview and retry',async()=>{
+ const f=fixture(),action={id:'test:a8-rite',label:'祈愿',narration:'rite',synonyms:[],visibility:{catalog:'here'},slots:[],cost:{owner:'primitives',time:0},outcomes:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'prayer'}}],rite:{officiant:'actor == "player"',roles:[],stages:[{id:'prayer',minutes:2,window:f.engine.primitiveRiteDaylight(f.document,f.document.state.location)?'day':'night',materials:[]}]}};
+ f.engine.world.actionDefinitions={format:1,actions:[action]};
+ const input={tool:'world_act',eventId:'a8-public-rite',args:{action:action.id,slots:{}}},before=structuredClone(f.document);
+ assert.equal(f.engine.actionPermission(f.document,input.args).allowed,true);
+ const preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.cost.time,2);assert.deepEqual(f.document,before);
+ const out=await f.engine.reduce(f.document,input),after=applyPatches(f.document,out.patches);
+ assert.equal(out.result.receipt.rite.status,'completed');assert.equal(after.state.minute-before.state.minute,2);
+ assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
+});
 function fixture(){
  const engine=new WorldEngine(structuredClone(world)),document=withLedger(engine,engine.createCharacter(seed,{},'a3-connectors')).document;
  document.holdings=openHoldings(engine,document);

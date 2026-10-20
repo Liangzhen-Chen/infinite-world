@@ -77,6 +77,9 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     let primitiveFacts={};
     try{primitiveFacts=JSON.parse(await fs.readFile(path.join(root,'ontology/primitives.json'),'utf8')).entries.find(e=>e.id==='fact.set')?.writable??{};}catch(error){if(error.code!=='ENOENT')throw error;}
     const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs'].map(name=>[name,world.balance[name]]))};
+    for(const [key,file] of Object.entries({openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json'})){
+        try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
+    }
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));

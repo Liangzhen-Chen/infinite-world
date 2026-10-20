@@ -29,6 +29,11 @@ import {checkActor} from './primitives-checks.mjs';
 import {learnNpc} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
+import {applyMarkPrimitive,executeLeaveMark} from './mark-actions.mjs';
+import {reactToMark} from './mark-reactions.mjs';
+import {executeRite} from './action-rite.mjs';
+import {beginSleep,finishSleep} from './body-needs.mjs';
+import {openUsageEntry} from './action-limits.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -363,11 +368,12 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
 }
 
 function defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote}){
+  const row=Object.values(engine.world.openActionRules?.degrees??{}).find(row=>row.key===grade);
  if(grade==='failure'||grade==='fumble'){
   receipt.narrate.mustNot.push(...effects.map((e,index)=>({op:e.op,index})));
   receipt.trimmed.push(...effects.map((effect,index)=>({effect,index,reason:'check_failed'})));
   receipt.consequences.push({kind:'exposure',actor,action:action.id});
-  if(grade==='fumble')quote.duration*=2;
+   quote.duration*=row?.timeMultiplier??(grade==='fumble'?2:1);
   const backfire=effects.find(e=>e.op==='vital'&&e.delta<0);
   const target=slotsTarget(effects,actor);
   return [...(grade==='fumble'&&backfire?[{op:'vital',target:actor,delta:-Math.max(1,fixedInteger(fixedDivide(fixedUnits(Math.abs(backfire.delta)),fixedUnits(4)))),type:'physical'}]:[]),
@@ -378,15 +384,15 @@ function defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote}
  return effects.flatMap((effect,index)=>{
   let next=effect;
   if(effect.op==='vital'){
-   const multiplier=grade==='partial'?.5:effect.delta<0?engine.rules.combat.criticalMultiplier:1;
+    const multiplier=grade==='partial'?row?.multiplier??.5:effect.delta<0?engine.rules.combat.criticalMultiplier:1;
    next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(multiplier)))};
   }else if(effect.op==='fact.set'&&grade==='partial'){
-   if(typeof effect.delta==='number')next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(.5)))};
+    if(typeof effect.delta==='number')next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(row?.multiplier??.5)))};
    else if(typeof effect.value==='number'){
-    const old=d.get('holdings','entities',effect.entity,'facts',effect.field)??0;next={...effect,value:old+fixedInteger(fixedMultiply(checkedFixed(fixedUnits(effect.value)-fixedUnits(old)),fixedUnits(.5)))};
+     const old=d.get('holdings','entities',effect.entity,'facts',effect.field)??0;next={...effect,value:old+fixedInteger(fixedMultiply(checkedFixed(fixedUnits(effect.value)-fixedUnits(old)),fixedUnits(row?.multiplier??.5)))};
    }
   }else if(effect.op==='learn'&&effect.learningSource!=='practice'){
-   const multiplier=grade==='partial'?.5:2;
+    const multiplier=grade==='partial'?row?.multiplier??.5:2;
    if(limits.learn)limits.learn.multiplier=multiplier;
    if(effect.amount!==undefined)next={...effect,amount:fixedInteger(fixedMultiply(fixedUnits(effect.amount),fixedUnits(multiplier)))};
   }
@@ -447,6 +453,18 @@ function actionResourceCosts(engine,document,action,slots,actor){
 }
 
 export const primitiveRuntime={
+ beginSleep,finishSleep,
+ applyMark(d,engine,effect,meta){
+  const result=applyMarkPrimitive(d,engine,effect,meta);
+  return {...result,...reactToMark(d,engine,d.get('state','created',result.entity),{eventId:meta.child,suppressed:result.suppressed})};
+ },
+ isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.id==='open:leave_mark'||Boolean(action?.rite);},
+ nativeAction(engine,document,input,{preview=false}={}){
+  const action=findAction(this.registry(engine),input.args?.action);
+  if(action?.id==='open:leave_mark')return executeLeaveMark(engine,document,input,{preview});
+  if(action?.rite)return executeRite(engine,document,input,{preview});
+  return null;
+ },
  moveLocally,
  checkActor,
  learnNpc,
@@ -459,12 +477,21 @@ export const primitiveRuntime={
    const result=structuredClone(prior.result);result.receipt.duplicate=true;
    return preview?{receipt:result.receipt,routing:result.receipt.routing}:{patches:[],result};
   }
+   const mode=document.state.records?.action_config?.openActions??'full';
+   if(mode==='off')reject('E-OPEN-DISABLED','此战役已关闭开放提案，请使用注册动作');
+   if(mode==='limited'&&proposal?.effects?.some(e=>!['fact.set','vital','move','emit','learn'].includes(e.op)&&!(e.op==='create'&&e.kind==='mark')||e.op==='emit'&&!['request','tell'].includes(e.verb)))reject('E-OPEN-MODE','受限模式下此效果须通过注册动作执行');
   // open-actions already consumes this runtime for its registry. Load the
   // service after runtime initialization so B can register its native context.
-  const {prepareOpenAction}=await import('./open-actions.mjs');
-  if(!openContextFactory)reject('E-OPEN-NATIVE','Native open-action context is not installed');
-  const native=openContextFactory(engine,document,proposal),prepared=prepareOpenAction(engine,document,proposal,native),routing=proposalRouting(proposal,prepared);
-  if(prepared.status!=='routed'){
+   const {prepareOpenAction,createOpenActionContext}=await import('./open-actions.mjs');
+   const native=(openContextFactory??createOpenActionContext)(engine,document,proposal),prepared=prepareOpenAction(engine,document,proposal,native),routing=proposalRouting(proposal,prepared);
+   if(prepared.status==='open'&&prepared.effects.length){
+    const applied=engine.primitiveOpenAction(document,input,prepared,{preview});
+    if(preview)return applied;
+    const d=engine.primitiveDraft(applyPatches(document,applied.patches));
+    d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+    return {...applied,patches:[...applied.patches,...d.patches]};
+   }
+   if(prepared.status!=='routed'){
    if(!preview)reject('E-OPEN-NOT-ROUTED','Only matched registered actions can be submitted; preview this proposal first');
    return {prepared,receipt:{eventId,actor:'player',status:'not_submitted',applied:[],routing,signature:prepared.signature,candidates:prepared.candidates,trimmed:prepared.trimmed??[]}};
   }
@@ -479,12 +506,72 @@ export const primitiveRuntime={
    const resolved=this.resolve(engine,actionInput);
    applied.result.receipt={...this.legacyPreview(engine,document,actionInput,resolved,applied),status:'committed',routing,signature:prepared.signature,candidates:prepared.candidates};
   }
-  const d=engine.primitiveDraft(document);
+   Object.assign(applied.result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
+   applied.result.receipt.openUsage=openUsageEntry(prepared,applied.result.receipt,applyPatches(document,applied.patches).state.minute);
+   const d=engine.primitiveDraft(applyPatches(document,applied.patches));
+   const primitive=d.get('state','records',`primitive:${eventId}`);
+   if(primitive)d.set(['state','records',`primitive:${eventId}`],{...primitive,receipt:applied.result.receipt});
   d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
   return {...applied,patches:[...applied.patches,...d.patches]};
  },
+ executeOpen(engine,document,input,prepared,{preview=false}={}){
+  const actor='player',eventId=input.eventId,proposal=input.args,effects=prepared.effects;
+  let limits,quote,start,resources;
+  const tested=prepared.sources.some(s=>s.difficulty>0),difficulty=Object.values(engine.rules.check.difficulties).sort((a,b)=>Math.abs(a-prepared.difficulty)-Math.abs(b-prepared.difficulty))[0];
+  const action={id:'open:proposal',slots:[],outcomes:effects,check:tested?{attribute:prepared.sources.find(s=>s.skill)?engine.byId.get(prepared.sources.find(s=>s.skill).skill)?.attribute??'精神':'力量',...(prepared.sources.find(s=>s.skill)?{skill:prepared.sources.find(s=>s.skill).skill}:{}),difficulty,context:difficulty-prepared.difficulty,contextReason:prepared.context?.reason??'开放动作来源难度及无近邻修正'}:null};
+  const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId,source:{kind:'open',id:'open:proposal'},identity:{proposal},limits:()=>limits,
+   prepare:(d,{receipt})=>{
+    Object.assign(receipt,{routing:proposalRouting(proposal,prepared),signature:prepared.signature,candidates:prepared.candidates});
+    receipt.trimmed.push(...prepared.trimmed);
+    limits=actionLimits(engine,d.document,action,{},actor);limits.costManaged=true;
+    for(const op of ['vital','status'])if(limits[op])limits[op].rangeMeters=Math.min(...prepared.sources.filter((s,i)=>effects[i].op===op).map(s=>s.rangeMeters??1.5));
+    if(limits.vital)for(const kind of ['harm','heal'])limits.vital[kind]=Math.max(0,...prepared.sources.filter((s,i)=>effects[i].op==='vital'&&(effects[i].delta<0?'harm':'heal')===kind).map(s=>s.bounds.delta));
+    quote={duration:prepared.cost.time,activity:'light'};start=d.get('state','minute');
+    beginBodyActivity(d,engine,actor,quote.activity);
+    resources=[];let mp=0,stamina=0;
+    // A shared source is paid once, even when it supplies several effects.
+    for(const source of new Map(prepared.sources.map(s=>[s.id,s])).values()){
+     const req=source.requirements??{};
+     for(const [key,value] of Object.entries({mp:req.mp??0,stamina:req.stamina??0}))if(!Number.isSafeInteger(value)||value<0)reject('E-OPEN-COST',`Invalid native ${key}`);
+     if(source.skill&&!d.get('state','skills',source.skill))reject('E-OPEN-SKILL','The source skill is no longer known');
+     mp+=req.mp??0;stamina+=req.stamina??0;
+     for(const material of req.materials??[])resources.push({op:'transfer',from:accountKey(actor,material.item,'inventory'),to:accountKey('sink:consume',material.item,'action'),qty:material.amount});
+    }
+    if(d.get('state','player','mp')<mp)reject('E-OPEN-MP','法力不足');
+    const body=readBodyState(engine,d.document,actor,'stamina');if(body.value<stamina)reject('E-OPEN-STAMINA','体力不足');
+    if(mp)d.set(['state','player','mp'],d.get('state','player','mp')-mp);
+    if(stamina)writeBodyNeed(d,engine,actor,'stamina',body.value-stamina,{activity:'light',remainder:body.remainder});
+    receipt.requirements={mp,stamina};
+    const selected=adjudicateAction(d,engine,action,{},actor,eventId,effects,receipt,{duration:quote.duration,limits,quote}).map(effect=>{
+     if(effect.op!=='vital')return effect;
+     const cap=limits.vital[effect.delta<0?'harm':'heal'],delta=Math.sign(effect.delta)*Math.min(Math.abs(effect.delta),cap);
+     if(delta!==effect.delta)receipt.trimmed.push({effect,applied:delta,reason:'source_final_bound'});
+     return {...effect,delta};
+    });
+    return [...resources,...selected];
+   },
+   finish:(d,{receipt})=>{
+    settleActionCost(d,engine,action,{},actor,start,quote,receipt,eventId);receipt.cost.resources=resources;
+    receipt.openUsage=openUsageEntry(prepared,receipt,d.get('state','minute'));
+   }});
+  const planned=planPrimitives(document,effects,frame);
+  if(preview)return planned;
+  const claims=primitiveClaims(engine,document,planned.receipt.applied);
+  if(!claims.length)return commitPrimitives(document,effects,frame);
+  const d=engine.primitiveDraft(structuredClone(document));let events=[];
+  const pending=queuePrimitiveProposal(d,effects,frame,{claims,preview:planned.receipt,onCommitted:result=>{events=result.events;}});
+  if(pending.receipt.duplicate)return {patches:[],events:[],receipt:pending.receipt};
+  if(pending.receipt.status==='pending')engine.advance(d,0,eventId);
+  if(pending.receipt.status==='pending')reject('E-PRIMITIVE-CONTEST','Scheduler did not finalize the proposal');
+  if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
+  return {patches:d.patches,receipt:pending.receipt,events};
+ },
  actionPermission(engine,document,{action,slots={},actor='player'}={}){
   const resolved=this.resolve(engine,{args:{action,slots}},{actor});
+   if(resolved.tool==='world_propose'){
+    const allowed=document.state.records?.action_config?.openActions!=='off';
+    return {action:resolved.action.id,actor,allowed,reason:allowed?null:'此战役已关闭开放提案',checks:[]};
+   }
   let checks;
   if(resolved.effects){
    const context=primitiveContext(engine,document);
@@ -509,8 +596,8 @@ export const primitiveRuntime={
   // Only the player's own/witnessed events and currently observable witnesses.
   // Unknown details stay null; elapsed-span autonomous events aren't forecasts.
   const witnesses=events.length?[...new Set(events.flatMap(row=>row.witnesses??[]).filter(id=>known.has(id)))].sort():null;
-  return {eventId:input.eventId,status:'preview',routed:resolved.action.id,applied:[],legacy:structuredClone(detail),
-   cost:{time:after.state.minute-document.state.minute,coins:Number.isFinite(detail.cost)?detail.cost:null,resources:null},
+   return {eventId:input.eventId,status:'preview',routed:resolved.action.id,applied:[],legacy:structuredClone(detail),
+    cost:{...(detail.cost&&typeof detail.cost==='object'?detail.cost:{}),time:after.state.minute-document.state.minute,coins:Number.isFinite(detail.paid)?detail.paid:Number.isFinite(detail.cost)?detail.cost:null,resources:detail.cost?.resources??null},
    check,consequences,witnesses,permission:this.actionPermission(engine,document,{action:resolved.action.id,slots:input.args?.slots??{}})};
  },
  registry(engine){
@@ -543,7 +630,6 @@ export const primitiveRuntime={
   for(const slot of action.slots)if(slot.required&&!Object.hasOwn(slots,slot.name))reject('E-ACTION-SLOT',`Missing slot: ${slot.name}`);
   // Programs needing adjudication must use its connector; never run them as
   // unconditional effects merely because an outcomes array exists.
-  if(action.rite)reject('E-PRIMITIVE-CONNECTOR','This action requires its rite connector');
   const program=Array.isArray(action.outcomes)?action.outcomes:action.outcomes.success??action.outcomes.accepted;
   if(!Array.isArray(program)||!program.length)reject('E-ACTION-OUTCOME','A primary success outcome is required');
   return {action,effects:actionEffects({outcomes:program},slots,actor)};
@@ -552,6 +638,7 @@ export const primitiveRuntime={
   const resolved=this.resolve(engine,input,{actor,sourceKind});
   if(!resolved.effects)return {legacy:resolved};
   const {action}=resolved;
+   if(action.rite)reject('E-PRIMITIVE-CONNECTOR','This action requires its rite connector');
   if(action.cost?.owner!=='primitives'&&action.cost!==undefined)reject('E-ACTION-COST','Primitive actions must declare their cost owner');
   const slots=input.args?.slots??{},validate=current=>{validateSlots(engine,current,action,slots,actor);validatePreconditions(engine,current,action,slots,action.preconditions??[],actor);};
   let limits,quote,start,resourceCosts,escapeCheck=null,escapeClosures=new Set();

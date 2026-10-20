@@ -263,7 +263,15 @@ export class WorldEngine {
         if(input.type==='release_migration'&&input.release==='R1'){const migration=planR1(document,this.world);return{patches:booked(migration.patches),result:migration.report};}
         if(input.type==='rules_state_migration')return{patches:booked(planRuleStateMigration(document,this.rules)),result:{migration:true,runtimeRuleVersion}};
         // 14 §14.2：调度配置（反应深度上限、每刻提案上限）是输入事件 config_set{key,value}，写入存档的 state.scheduler。
-        if(input.type==='config_set'){const d=new Draft(document,this);const scheduler=applyConfigSet(d.get('state'),input.key,input.value);d.set(['state','scheduler'],scheduler);return{patches:d.patches,result:{ok:true,scheduler}};}
+        if(input.type==='config_set'){
+            const d=new Draft(document,this);
+            if(input.key==='openActions'){
+                if(!['off','limited','full'].includes(input.value))throw Error('openActions 须为 off、limited 或 full');
+                d.set(['state','records','action_config'],{...d.get('state','records','action_config'),category:'action_config',openActions:input.value});
+                return {patches:d.patches,result:{ok:true,openActions:input.value}};
+            }
+            const scheduler=applyConfigSet(d.get('state'),input.key,input.value);d.set(['state','scheduler'],scheduler);return{patches:d.patches,result:{ok:true,scheduler}};
+        }
         if(input.type==='population_profile'){
             if(document.releaseVersion!==1)throw new Error('按需人物需要完成战役初始化');
             const books=withBooks(this,document),d=new Draft(books.document,this),detail=acceptPopulationProfile(d,this.scoped(document),input);
@@ -277,10 +285,19 @@ export class WorldEngine {
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
-        if(input.tool==='world_propose')return primitiveActionRuntime().propose(this,document,input,{options});
+        if(input.tool==='world_propose'){
+            const books=withBooks(this,document),applied=await primitiveActionRuntime().propose(this,books.document,input,{options});
+            return {...applied,patches:finishLedger(applied.patches,books.opening)};
+        }
         if(input.tool==='world_act'){
             const runtime=primitiveActionRuntime();
             if(!runtime)throw Error('Action runtime is not installed');
+            if(runtime.isNativeAction(this,input)){
+                if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
+                const books=withBooks(this,document),native=runtime.nativeAction(this.scoped(document),books.document,input);
+                const next=applyPatches(books.document,native.patches);
+                return {patches:finishLedger(native.patches,books.opening),result:{ok:true,action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
+            }
             const translated=runtime.resolve(this,input);
             if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
@@ -290,6 +307,11 @@ export class WorldEngine {
             return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
+        if(resolved.tool==='world_practice'&&!resolved.args.breakthroughSource&&(!options.replay||options.result?.cost)&&this.world.actionDefinitions&&primitiveActionRuntime()?.registry(this).byId.has('core:practice.session')){
+            const result=await this.reduce(document,{tool:'world_act',eventId:input.eventId,args:{action:'core:practice.session',slots:{skill:this.resolve(resolved.args.skill,'skill'),minutes:resolved.args.minutes??120}}},options);
+            const learned=result.result.receipt.applied.find(effect=>effect.op==='learn')?.result??{};
+            return {...result,result:{...result.result,...learned,cost:result.result.receipt.cost}};
+        }
         primitiveActionRuntime()?.validateLegacy(this,document,resolved.tool,resolved.args,options);
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
         const books=withBooks(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
@@ -317,7 +339,9 @@ export class WorldEngine {
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
         }
         settleMagicAreas(d,session);
+        const sleep=tool==='time'&&args.activity==='睡眠'?primitiveActionRuntime()?.beginSleep(d,session):null;
         const detail = await session[tool](d,args,id);
+        if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
@@ -372,6 +396,14 @@ export class WorldEngine {
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
     primitiveTeachingConsent(d,args){return teachingConsent(d,this,args);}
+    primitiveOpenAction(document,input,prepared,{preview=false}={}){
+        const books=withBooks(this,document),session=this.scoped(document);
+        const applied=primitiveActionRuntime().executeOpen(session,books.document,input,prepared,{preview});
+        if(preview)return applied;
+        return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:applyPatches(books.document,applied.patches).state.minute,messages:[],notices:[]}};
+    }
+    primitiveRiteDaylight(document,location){return localWeather(this,document,location).daylight;}
+    primitiveApplyMark(d,effect,meta){return primitiveActionRuntime().applyMark(d,this,effect,meta);}
     primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
     primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
         const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity],npc=d.get(...path),start=d.get('state','minute');
@@ -445,9 +477,12 @@ export class WorldEngine {
     primitiveHoldingChanged(d,holding,reason,eventId){return releasePrimitiveCustody(d,this,holding,reason,eventId);}
     async previewAction(document,input){
         const runtime=primitiveActionRuntime();if(!runtime)throw Error('Action runtime is not installed');
-        if(input.tool==='world_propose')return runtime.propose(this,document,input,{preview:true});
-        const session=this.scoped(document),result=runtime.execute(session,withBooks(this,document).document,input,{createDraft:doc=>new Draft(doc,session),preview:true});
+        if(input.tool==='world_propose')return runtime.propose(this,withBooks(this,document).document,input,{preview:true});
+        const session=this.scoped(document),books=withBooks(this,document).document,native=runtime.nativeAction(session,books,input,{preview:true});
+        if(native)return native;
+        const result=runtime.execute(session,books,input,{createDraft:doc=>new Draft(doc,session),preview:true});
         if(!result.legacy)return result;
+        if(result.legacy.tool==='world_propose')return runtime.propose(this,books,{...input,tool:'world_propose',args:result.legacy.args},{preview:true});
         const reduced=await this.reduce(clone(document),input);
         return {receipt:runtime.legacyPreview(this,document,input,result.legacy,reduced)};
     }

@@ -20,7 +20,7 @@ const PACKS={
   'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
- npc:['dialogue','npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
+  npc:['dialogue','daily-actions','npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
  military:['military','war-diplomacy'],
  companion:['pets'],
  remote:['remote-generation','population','population-service'],
@@ -37,7 +37,7 @@ const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
 put(L0,'L0');put(L1,'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','rx-library','action-authority-sources','action-router','action-limits','open-actions'],'L1');
+put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','body-needs'],'L1');
 
 // {layer, pack} for a repository-relative file, or null when unassigned.
 export function layerOf(file){
