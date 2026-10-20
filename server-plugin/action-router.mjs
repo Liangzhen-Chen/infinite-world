@@ -1,5 +1,5 @@
 // Native routing policy (06 §6.8). Never executes a proposal's declared result.
-import {MemoryIndex,bm25TermScore} from './retrieval.mjs';
+import {MemoryIndex,bm25TermScore,normalize} from './retrieval.mjs';
 import {isPhysicallyDead,located} from './holdings.mjs';
 import {actionReader} from './action-capacity.mjs';
 import {parseAccount,accountKey,LEDGER_COIN} from './ledger.mjs';
@@ -22,8 +22,8 @@ export function effectSignature(effects,{kindOf=()=>null,bindings={},actor='play
   const target=bind(effect.target??effect.entity??effect.subject??effect.to);
   const slot=(effect.target??effect.entity??effect.subject??effect.to)?.slot;
   const kind=(effect.op==='create'?effect.kind:null)??kindOf(target)??(slot?bindings[`kind:${slot}`]:null)??'*';
-  const resource=effect.op==='transfer'?String(bind(effect.from)??'').split('|')[1]:null;
-  return JSON.stringify([effect.op,kind,effect.field??effect.resource??resource??effect.verb??effect.status??effect.type??'']);
+  const resource=effect.op==='transfer'?effect.resource??String(bind(effect.from)??'').split('|')[1]:null;
+  return JSON.stringify([effect.op,kind,effect.field??(resource==='coin'?LEDGER_COIN:resource)??effect.verb??effect.status??effect.type??'']);
  }).sort();
 }
 function actionSignature(action,context,slots){
@@ -33,21 +33,27 @@ function actionSignature(action,context,slots){
  const bindings={...slots};for(const slot of action.slots??[])if(slot.entity)bindings[`kind:${slot.name}`]=slot.entity;
  return effectSignature(effects,{...context,bindings});
 }
-function actionSignatures(action,context,slots){
- return action.signature?.variants??[actionSignature(action,context,slots)];
+function actionSignatures(action,context,slots,proposal){
+ return [...(action.signature?.variants??[actionSignature(action,context,slots)]),...(context.nativeSignatures?.(action,slots,proposal)??[])];
 }
 function textScores(actions,intent){
+ const termsFor=text=>/^[\u3400-\u9fff]$/.test(text)?[normalize(text)]:tokenizer.terms(text);
  const query=new Set(tokenizer.terms(intent)),rows=actions.map(action=>{
   const fields=[action.label,action.verb,...action.synonyms??[],...action.llm?.examples??[]].filter(Boolean);
-  const terms=fields.flatMap(text=>tokenizer.terms(text));return {terms,frequencies:multiset(terms)};
+  const terms=fields.flatMap(termsFor);return {terms,frequencies:multiset(terms)};
  });
+ // The retrieval tokenizer uses Chinese bigrams in a sentence, while the
+ // catalogue also authors one-character verbs such as 买/卖/做/偷. Include
+ // those authored terms when present so they can receive the same BM25 weight.
+ const text=normalize(intent);
+ for(const action of actions)for(const field of [action.label,action.verb,...action.synonyms??[]])if(typeof field==='string'&&/^[\u3400-\u9fff]$/.test(field)&&text.includes(normalize(field)))query.add(normalize(field));
  const df=new Map();for(const row of rows)for(const term of row.frequencies.keys())df.set(term,(df.get(term)??0)+1);
  const average=rows.reduce((sum,row)=>sum+row.terms.length,0)/Math.max(1,rows.length);
  // Normalize each authored phrase against its own BM25 score. Extra words in
  // an intent must not dilute a complete action phrase; unrelated text stays 0,
  // including when there is only one candidate.
  return actions.map((action,index)=>Math.max(0,...[action.label,action.verb,...action.synonyms??[],...action.llm?.examples??[]].filter(Boolean).map(field=>{
-  const terms=new Set(tokenizer.terms(field)),row=rows[index];
+  const terms=new Set(termsFor(field)),row=rows[index];
   const weight=term=>bm25TermScore(row.frequencies.get(term)??0,df.get(term)??0,rows.length,row.terms.length,average);
   const maximum=[...terms].reduce((sum,term)=>sum+weight(term),0);
   return maximum?[...terms].filter(term=>query.has(term)).reduce((sum,term)=>sum+weight(term),0)/maximum:0;
@@ -66,11 +72,13 @@ export function routeAction(proposal,registry,context){
  // The proposal gateway describes an entry point, not a concrete neighbour;
  // routing back into it would recurse and distort the BM25 candidate corpus.
  const requestKinds=proposal.effects?.filter(e=>e.op==='emit').map(e=>e.payload?.kind).filter(Boolean)??[];
- const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&!a.readOnly&&!a.projection&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
+ const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.canProject?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
  const texts=textScores(actions.map(action=>({...action,synonyms:[...action.synonyms??[],...context.labelsFor?.(action,proposal)??[]]})),proposal.intent??''),signature=effectSignature(proposal.effects??[],context);
  const candidates=actions.map((action,index)=>{
-  const slots=context.slotsFor(action,proposal)??{},missing=(action.slots??[]).filter(s=>s.required&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
-  const signatureScore=Math.max(0,...actionSignatures(action,context,slots).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
+  const slots=context.slotsFor(action,proposal)??{},required=new Set(context.requiredSlots?.(action,slots)??[]),missing=(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
+  // A selected read projection has an exactly empty effect footprint. Generic
+  // empty proposals still have zero Jaccard and cannot select a write action.
+  const signatureScore=context.canProject?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
  const best=candidates[0],matched=best&&best.score>=.7;
@@ -111,6 +119,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(ends.includes(location))for(const id of ends)if(id&&id!==location)add(id,'place');
  }
  const knowledge=actorKnowledge(engine,document,actor);
+ const catalog=(value,kind)=>{
+  const rows=({skill:engine.world.skills,spell:engine.world.spells,recipe:engine.world.recipes,item:engine.world.items})[kind]??[];
+  // Catalog identity is public; ownership and learned proficiency are checked
+  // by the selected program, never inferred from a proposal's assertion.
+  return rows.find(row=>row.id===value)?.id;
+ };
  for(const [field,kind] of [['skills','skill'],['spells','spell'],['recipes','recipe']])for(const [id,value] of Object.entries(knowledge[field]??{}))if(value||field==='skills'&&value===0)add(id,kind);
  const owner=id=>typeof id==='string'&&id.includes('|')?parseAccount(id).owner:id;
  const kindOf=id=>pool.get(owner(id))?.kind??null;
@@ -150,6 +164,24 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const guarding=action.call?.tool==='world_combat'&&proposal.means?.manner==='guard';
    if(guarding&&slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined)continue;
    let value=proposal.participants?.[slot.name]??proposal.means?.[slot.name];
+   const effects=proposal.effects??[],transfers=effects.filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
+   const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
+   const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
+   if(action.call?.tool==='world_trade'||action.call?.tool==='world_law'&&action.call.operation==='steal'){
+    if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(proposal.means?.manner==='secret_sale'?proposal.means.tools?.[0]:undefined);
+    if(slot.name==='quantity'&&goods)value??=goods.qty;
+    if(slot.name==='coins'&&money)value??=money.qty;
+    if(slot.name==='seller'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.debtor;
+    if(slot.name==='days'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.terms?.days;
+    if(slot.fill==='banker'){
+     const bank=banks.get(proposal.target);value??=bank?.keepers?.find(id=>kindOf(id)==='person');
+    }
+   }
+   if(action.call?.tool==='world_cast'){
+    const transfer=transfers[0],spell=engine.byId.get(proposal.means?.spell);
+    if(slot.name==='source'&&transfer)value??=transfer.from;
+    if(slot.name==='target')value??=target??transfer?.to??(spell?.effectSpec?.kind==='summon'?actor:undefined);
+   }
    if(action.call?.tool==='world_combat'){
     if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
     if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
@@ -176,14 +208,24 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='content'&&e.op==='emit'){value=e.payload?.content??e.payload?.version??e.payload?.text??e.payload?.terms?.topic; if(value!==undefined)break;}
     if(slot.name==='source'&&e.op==='emit'){value=e.payload?.source==='self'?actor:e.payload?.source;if(value!==undefined)break;}
     if(slot.name==='topic'&&e.op==='emit'){value=e.payload?.terms?.topic;if(value!==undefined)break;}
+    if(e.op==='emit'&&e.payload?.terms?.[slot.name]!==undefined){value=e.payload.terms[slot.name];break;}
+    if(e.op==='emit'&&e.payload?.kind==='haggle'&&['source','content'].includes(slot.name)){
+     const quotes=Object.values(state.records??{}).filter(r=>r.category==='trade_quote'&&r.seller===target&&r.day===Math.floor(state.minute/1440));
+     if(quotes.length===1){
+      if(slot.name==='source')value=quotes[0].item;
+      else if(Number.isSafeInteger(e.payload.terms?.discountCopper))value=String(quotes[0].listPrice-e.payload.terms.discountCopper);
+     }
+     if(value!==undefined)break;
+    }
+    if(slot.name==='content'&&e.op==='emit'&&e.payload?.kind!=='haggle'&&['request','tell','claim'].includes(e.verb)){value=proposal.intent;break;}
     if(e[slot.name]!==undefined){value=e[slot.name];break;}
     if(e.op==='create'&&e.facts?.[slot.name]!==undefined){value=e.facts[slot.name];break;}
     if(slot.name==='operation'&&e.op==='create'&&e.kind==='project'&&action.call?.tool==='world_research'){value='start';break;}
     if(slot.name==='skills'&&e.op==='create'&&e.kind==='project'&&e.facts?.skill){value=[e.facts.skill];break;}
     if(['skill','spell','recipe'].includes(slot.entity)&&e.op==='learn'&&e.subject!==undefined){
-     const subject=resolve(e.subject,slot.entity);if(subject.value!==null){value=subject.value;break;}
+     const subject=catalog(e.subject,slot.entity)??resolve(e.subject,slot.entity).value;if(subject!==null){value=subject;break;}
     }
-    if(slot.name==='quantity'&&e.qty!==undefined){value=e.qty;break;}
+    if(slot.name==='quantity'&&e.qty!==undefined&&!(e.op==='transfer'&&['coin',LEDGER_COIN].includes(resource(e)))){value=e.qty;break;}
     if(slot.entity&&slot.required&&target!==undefined&&(slot.entity==='entity'||kindOf(target)===(slot.entity==='npc'?'person':slot.entity))){value=target;break;}
    }
    if(value===undefined&&slot.name==='intent')value=proposal.intent;
@@ -196,7 +238,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(!Number.isSafeInteger(sunrise))continue;
     value={dayOffset,hour:Math.floor(sunrise/60),minute:sunrise%60};
    }
-   if(slot.entity){const resolved=action.call?.tool==='world_move'&&slot.name==='destination'?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
+   if(slot.entity){
+    const publicKind=['skill','spell','recipe'].includes(slot.entity)||slot.entity==='item'&&slot.name==='item'&&['world_trade','world_law'].includes(action.call?.tool);
+    const publicId=publicKind&&catalog(value,slot.entity);
+    if(publicId)value=publicId;
+    else {const resolved=action.call?.tool==='world_move'&&slot.name==='destination'?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
+   }
    if(typeof slot.options==='object'&&Array.isArray(slot.options)&&!slot.options.includes(value))continue;
    slots[slot.name]=value;
   }
@@ -214,6 +261,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(action.call?.tool==='world_move'){
    const target=proposal.effects?.find(e=>e.op==='move')?.to,row=destinations().get(target);return row?[row.name]:[];
   }
+  if(action.call?.tool==='world_craft'&&action.call.operation==='manufacture'){
+   const recipe=engine.byId.get(proposal.means?.recipe),item=engine.byId.get(recipe?.output?.item);
+   return [recipe?.name,...recipe?.aliases??[],item?.name,...item?.aliases??[]].filter(Boolean);
+  }
   const id=action.call?.tool==='world_cast'?proposal.means?.spell:['world_learn','world_practice'].includes(action.call?.tool)?proposal.effects?.find(e=>e.op==='learn')?.subject:null;
   const row=id&&engine.byId.get(id);return row?[row.name,...row.aliases??[]].filter(Boolean):[];
  };
@@ -224,7 +275,34 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(result.value===null&&row&&!row.hidden&&!row.private&&!base?.hidden&&!base?.private&&['not_present','not_perceivable'].includes(result.reason))return {value,candidates:[{id:value,kind:'person'}]};
   return result;
  };
- return {actor,kindOf,resolve,resolveDestination,resolveParty,transferAccount,labelsFor,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+ const nativeSignatures=(action,slots,proposal)=>{
+  const call=action.call,sign=effects=>effectSignature(effects,{kindOf,actor}),transfer=(resource,from,to)=>({op:'transfer',resource,from,to});
+  const owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
+  const transfers=(proposal.effects??[]).filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
+  const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e))),goods=transfers.find(e=>!['coin',LEDGER_COIN].includes(resource(e)));
+  // Legacy handlers do not declare primitive outcomes. Derive their request
+  // footprints from registered recipes and domain slots, never from requested
+  // success, quantity or consent. Execution still owns the complete protocol.
+  if(call?.tool==='world_craft'&&call.operation==='manufacture'){
+   const recipe=engine.byId.get(slots.recipe);
+   return recipe?.materials?[sign(recipe.materials.map(m=>transfer(m.item,actor,'sink:craft')))]:[];
+  }
+  if(call?.tool==='world_trade'){
+   if(action.verb==='trade.buy'&&slots.item&&money&&goods&&owner(money.from)===actor&&owner(goods.to)===actor&&owner(money.to)===owner(goods.from))return [sign([transfer(LEDGER_COIN,actor,slots.seller),transfer(slots.item,slots.seller,actor)])];
+   if(call.fixed?.seller==='player'&&slots.item&&money&&owner(money.to)===actor){
+    if(goods&&owner(goods.from)===actor&&owner(goods.to)===owner(money.from))return [sign([transfer(slots.item,actor,slots.buyer),transfer(LEDGER_COIN,slots.buyer,actor)])];
+    if(proposal.means?.manner==='secret_sale')return [sign([{op:'holding.transfer',newHolder:slots.buyer},transfer(LEDGER_COIN,slots.buyer,actor)])];
+   }
+   if(call.operation==='withdraw')return [sign([transfer(LEDGER_COIN,proposal.target,actor),{op:'obligation.settle'}])];
+   if(call.operation==='lend')return [sign([transfer(LEDGER_COIN,actor,slots.seller),{op:'obligation.create',obligationKind:'loan'}])];
+  }
+  if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
+  if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate')return [sign([transfer('water',slots.source,slots.target)])];
+  return [];
+ };
+ const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0;
+ const requiredSlots=(action,slots)=>action.call?.tool==='world_profession'&&action.call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden'?['teacher']:[];
+ return {actor,kindOf,resolve,resolveDestination,resolveParty,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
   if(learning&&action.call?.tool==='world_learn'&&learning.learningSource==='practice')return false;
@@ -239,7 +317,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(typeof condition!=='string')return true;
    if(condition==='present(target)')return kindOf(target)==='person';
    if(condition==='hasItems')return Object.values(bag??{}).some(v=>(typeof v==='number'?v:v.quantity??0)>0);
-   if(condition==='hasSkill')return Object.keys(knowledge.skills??{}).length>0;
+   if(condition==='hasSkill')return proposal?.effects?.some(e=>e.op==='learn')||Object.keys(knowledge.skills??{}).length>0;
    return true; // Execution owns the complete precondition/authority check.
   });
  }};

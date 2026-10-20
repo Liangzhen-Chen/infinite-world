@@ -193,6 +193,7 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
  // Initial acquisition keeps the existing prerequisite, book, fee, time and
  // research proof checks. Person willingness is additionally checked here.
  const source=effect.learningSource,person=d.get('state','npcs',source);
+ if(source==='practice'&&!old)reject('E-LEARN-SOURCE','Practice requires a known skill');
  let permission,detection,observed=false;
  if(person){
   here(d,frame.actor,source);

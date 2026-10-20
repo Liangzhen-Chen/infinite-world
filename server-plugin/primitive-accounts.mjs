@@ -20,7 +20,7 @@ export function resolvePrimitiveTransfer(engine,document,effect,{actor='player'}
   try{explicit[field]=parseAccount(effect[field]);}catch(error){reject('E-TRANSFER-ACCOUNT',error.message);}
  }
  let resource;
- try{resource=resourceKey(effect.resource===undefined?explicit.from?.resource??explicit.to?.resource:itemResource(engine,effect.resource));}
+ try{resource=resourceKey(effect.resource===undefined?explicit.from?.resource??explicit.to?.resource:effect.resource==='coin'?LEDGER_COIN:itemResource(engine,effect.resource));}
  catch{reject('E-TRANSFER-RESOURCE','实体转移须指定有效资源，或由完整账户键提供资源');}
  if(Object.values(explicit).some(account=>account.resource!==resource))reject('E-TRANSFER-ENDPOINT','转移资源与两端账户资源必须一致');
  const state=document.state;
