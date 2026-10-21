@@ -12,7 +12,8 @@ test('390×844 对话面板：点击在场者、寒暄、询问、告辞，无 L
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.exposeFunction('a2Api',(endpoint,body)=>ui.server.api(endpoint,{...body,campaignId:ui.campaignId}));
  await page.exposeFunction('a2Act',async(action,slots)=>({result:await ui.choose(action,slots,{search:true}),document:await ui.read()}));
- await page.route('**/actions-view.mjs',async route=>route.fulfill({contentType:'text/javascript',body:await fs.readFile('extension/actions-view.mjs','utf8')}));
+ // Serve the panel and every extension module it imports (A3 added action-builder.mjs).
+ await page.route(url=>url.pathname.endsWith(".mjs"),async route=>{const name=new URL(route.request().url()).pathname.slice(1);route.fulfill({contentType:'text/javascript',body:await fs.readFile(`extension/${name}`,'utf8')});});
  await page.route('**/actions-view.css',async route=>route.fulfill({contentType:'text/css',body:await fs.readFile('extension/actions-view.css','utf8')}));
  await page.route('**/fixture',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width"><link rel="stylesheet" href="/actions-view.css"><div id="panel"></div>'}));
  await page.goto('http://localhost/fixture');
