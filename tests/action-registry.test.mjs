@@ -80,7 +80,9 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
     // A3 daily22 exposes the existing private-field executor through the
     // catalogue without widening the static field-tool operation enum.
     'core:farm.private_sow':{tool:'world_farm',args:{operation:'private_sow'}},
-    'core:farm.private_harvest':{tool:'world_farm',args:{operation:'private_harvest'}}
+    'core:farm.private_harvest':{tool:'world_farm',args:{operation:'private_harvest'}},
+    // 指南11.3 F5：取出施法后的原水须走目录入口，仍核对精确分派。
+    'core:environment.take_contents':{tool:'world_environment',args:{operation:'take_contents'}}
    };
    if(catalogAliases[a.id]){
     assert.deepEqual(r,catalogAliases[a.id]);continue;
@@ -95,6 +97,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
    'core:trade.lend':[{name:'interest',kind:'quantity'}],
+   // 指南11.3 L5：仅扩动态目录；保留未登记槽位一律拒绝的断言。
+   'core:trade.sell_to':[{name:'allowPartial',kind:'flag',label:'允许部分收购'}],
    'core:cast':[{name:'millilitres',kind:'quantity'}],
    'core:learn':[{name:'mode',kind:'choice',options:['acquire','study','observe']}],
    'core:combat':[{name:'destination',kind:'text'}],

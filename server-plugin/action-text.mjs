@@ -71,6 +71,9 @@ function variables(engine,action,before,after,args,result,templates){
  if(!vars.mode&&args?.destination)vars.mode=MODES.walk;
  const resolved=k=>{const raw=args?.[k];if(typeof raw!=='string')return;try{const id=engine.resolve(raw);vars[k]=nameOf(engine,s,id);}catch{}};
  for(const k of ['seller','buyer','target','item','destination','skill','recipe'])resolved(k);
+ // A seller can explicitly permit a smaller cash purchase; describe the
+ // settled quantity rather than the original requested quantity.
+ if(result?.partial===true)vars.quantity=result.quantity;
  const elapsed=(s.minute??0)-(before.state.minute??0);
  vars.duration=durationText(Math.max(0,elapsed),templates);vars.clock=clockText(s.minute??0);vars.place=nameOf(engine,s,s.location);
  vars.actor=nameOf(engine,s,result?.actor??'player');

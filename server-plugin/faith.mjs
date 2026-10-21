@@ -168,12 +168,17 @@ registerEffect('faith_omen',{validate(e,v){if(!e.rules.faith?.rites?.some(r=>r.i
 
 function ritual(d,e,t,args,eventId){
  requireOpen(d,e,t,1+(args.workers?.length??0));
- const who=subject(d,e,args.member??'player');if(who!=='player'&&args.consent!==true)throw Error('NPC 祭仪须本人当面同意');
+ const who=subject(d,e,args.member??'player');
  const r=e.rules.faith?.rites?.find(r=>r.id===args.choice&&r.deity===t.deity);
  const ordinary=e.rules.faith?.ordinaryRite;if(!ordinary)throw Error('未登记祭仪规则');
  const spec=r??ordinary,host=steward(d,e,t,spec.minutes);
  const at=d.get('state','minute'),members=[...new Set([who,...args.workers??[]])];
- if(members.some(id=>id!=='player')&&args.consent!==true)throw Error('集体祈愿须在场参与者同意');
+ // The public action cannot supply consent on an NPC's behalf. Read each
+ // participant's scoped native grant; old recorded boolean calls still replay.
+ if(args.consent!==true)for(const id of members.filter(id=>id!=='player')){
+  const permission=consent({engine:e,document:d.document},id,'player','rite',{purpose:t.id,subject:t.id,terms:{purpose:r?.id??'ordinary'},until:at+spec.minutes,onRefusal:'abort'});
+  if(!permission.allowed)throw Error('集体祈愿须在场参与者同意');
+ }
  for(const id of members)subject(d,e,id);
  e.assertNpcObligationAction?.(d,members,{minutes:spec.minutes,location:d.get('state','location')});
  e.assertNpcAutonomyAction?.(d.get('state'),members,{minutes:spec.minutes});
