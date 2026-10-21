@@ -274,6 +274,14 @@ test('A3 checks r11: failed native certification consumes time but never charges
  mutate(run=>{run.effects.push({op:'holding.open',kind:'certified',holder:'player',subject:`office_cert:${role.id}`});});
  mutate(run=>{run.receipt.cost.time--;});
  mutate(run=>{run.document.state.minute--;});
+ // 05 §5.7: the failed attempt keeps exactly one native application record to
+ // the institution the receipt names; a second, misdirected or altered record fails.
+ const application=low.effects.find(e=>e.op==='emit'&&e.verb==='request'&&e.payload?.kind==='certification');
+ assert.ok(application);assert.equal(application.target,low.receipt.legacy.institution);
+ mutate(run=>{run.effects.push(structuredClone(application));});
+ mutate(run=>{run.effects.find(e=>e.op==='emit'&&e.verb==='request').target='faction_not_examining';});
+ mutate(run=>{run.effects.find(e=>e.op==='emit'&&e.verb==='request').payload.terms.profession='profession_other';});
+ mutate(run=>{run.effects.push({op:'emit',verb:'announce',target:application.target,payload:{kind:'certification'}});});
  // The native entry gate rejects insufficient skill before rolling or charging.
  const unskilled=structuredClone(row);unskilled.setup.abilities.skills.skill_light=role.entry.minimumProficiency-1;
  const rejected=await executeIntent(engine,initial,unskilled);

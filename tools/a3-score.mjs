@@ -885,7 +885,18 @@ export function validateCheckBranch(engine,run,row,outcome,target){
    if(!sameValue(rights(before),rights(document)))issues.push('failed certification wrote certification holding');
    if(document.state.player.coins!==before.state.player.coins||
     document.ledger.accounts['player|coin_river|purse']!==before.ledger.accounts['player|coin_river|purse'])issues.push('failed certification charged fee');
-   for(const effect of run.effects)if(!companionEffect(effect,receipt))issues.push(`failed certification granted ${effect.op}`);
+   // 05 §5.7 / 06 §6.6: a failed examination still leaves the native
+   // application record (one request emit to the examining institution the
+   // receipt names: office organization, mentor's faction or the mentor), but
+   // nothing else.
+   const application=legacy.institution?{teacher:legacy.teacher,institution:legacy.institution}:null;
+   let applications=0;
+   for(const effect of run.effects){
+    if(companionEffect(effect,receipt))continue;
+    if(application&&effect.op==='emit'&&effect.verb==='request'&&effect.payload?.kind==='certification'&&effect.target===application.institution&&
+     effect.payload?.receiver===application.teacher&&effect.payload?.terms?.profession===legacy.profession&&++applications===1)continue;
+    issues.push(`failed certification granted ${effect.op}`);
+   }
   }else if(route==='core:cast'){
    for(const effect of selected){
     if(companionEffect(effect,receipt))continue;
