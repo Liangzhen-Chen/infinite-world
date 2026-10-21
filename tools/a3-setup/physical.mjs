@@ -4,7 +4,12 @@ import {registerSetupLoader} from './index.mjs';
 import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,aliveHoldings,isPhysicallyDead,templatesOf} from '../../server-plugin/holdings.mjs';
 import {trackTransferUnit,changeItems,writePhysicalItem,equipPhysicalItem,bindPurse,writeLiquidContents,registerPhysicalStock,bindContainerWater} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
-import {bodyRule,writeBodyNeed} from '../../server-plugin/primitives-body.mjs';
+import {bodyRule,writeBodyNeed,restoreBodySnapshot,restoreRevivalBinding,restoreDeathSnapshot} from '../../server-plugin/primitives-body.mjs';
+import {restorePhysicalSnapshot,restoreLiquidSnapshot} from '../../server-plugin/primitives-effects.mjs';
+import {restoreBossInstance,restoreBossTactic} from '../../server-plugin/bosses.mjs';
+import {restoreWoundSnapshot} from '../../server-plugin/medicine-state.mjs';
+import {recordHistoricalEvent} from '../../server-plugin/world-events.mjs';
+import {historicalMinute} from '../../server-plugin/weather.mjs';
 import {derivedStats,monsterStats} from '../../server-plugin/combat.mjs';
 import {npcAgeAt} from '../../server-plugin/npc-state.mjs';
 import {environmentFeatures,writeEnvironmentPremise,localSightClear,localPlayerPoint} from '../../server-plugin/environment.mjs';
@@ -27,6 +32,11 @@ const physicalFacts=row=>Object.fromEntries(physicalFields.filter(k=>row[k]!==un
 function initialPhysical(ctx,d,nativeId,row){
  const facts={...physicalFacts(row),...(row.condition!==undefined?{condition:row.condition}:{}),...(row.kind==='node'?{physicalKind:'node'}:{})};
  writePhysicalItem(d,ctx.engine,nativeId,facts,{source:row.sourceEvent?ctx.ref(row.sourceEvent):null,alias:row.id,name:row.name??null});
+ const extra=Object.fromEntries(['inscription','maxCondition','turbidity','qualityTest'].filter(k=>row[k]!==undefined).map(k=>[k,row[k]]));
+ if(Object.keys(extra).length){
+  if(extra.maxCondition!==undefined&&!d.get('state','itemInstances',nativeId)&&ctx.ref(row.carriedBy??row.owner))registerPhysicalStock(d,ctx.engine,nativeId,ctx.ref(row.carriedBy??row.owner),1);
+  restorePhysicalSnapshot(d,ctx.engine,nativeId,{...extra,...(row.condition!==undefined?{condition:row.condition}:{})},{origin:'initial',sourceEvent:`${writer}:${row.id}`});
+ }
  if(row.wornBy!==undefined&&row.wornBy!==null)equipPhysicalItem(d,ctx.engine,ctx.ref(row.wornBy),nativeId);
  if(row.access!==undefined)bindPurse(d,ctx.engine,nativeId,ctx.ref(row.carriedBy??row.owner));
 }
@@ -143,7 +153,7 @@ function instance(ctx,row,item){
  if(!ctx.actor(holder)&&row.moisture!==undefined)missing(ctx,`${item}.moisture`,'非库存单件的含水量写入口和干燥消费者','01 §1.2；06 §6.3');
  if(row.zone!==undefined)missing(ctx,`${item}.zone`,'物件在局部分区内的位置','01 §1.2；S4');
  if(row.contents!==undefined)contents(ctx,nativeId,row.contents,`${item}.contents`);
- extras(ctx,row,item,['id','template','kind','owner','location','item','inventoryBinding','condition','moisture','carriedBy','wornBy','zone','name','quantity','contents',...physicalFields]);
+ extras(ctx,row,item,['id','template','kind','owner','location','item','inventoryBinding','condition','moisture','carriedBy','wornBy','zone','name','quantity','contents','inscription','maxCondition',...physicalFields]);
 }
 
 function contents(ctx,container,rows,item){
@@ -160,6 +170,7 @@ function contents(ctx,container,rows,item){
   if(row.weightKg!==undefined&&(!finite(row.weightKg)||row.weightKg!==definition.weight*b.quantity)){
    ctx.unmet(`${name}.weightKg`,'content weight conflicts with its native catalog mass');continue;
   }
+  if(row.resource!==undefined&&row.resource!==b.item||row.quantity!==undefined&&row.quantity!==b.quantity){ctx.unmet(name,'Content identity/amount conflicts with original same-stock binding');continue;}
   ctx.native(name,d=>{
    const path=ctx.engine.bagPath('player'),held=d.get(...path,b.item),tracked=held?.instances??[];
    if(ctx.engine.quantity(d,'player',b.item)<b.quantity)throw Error('insufficient original same_stock contents');
@@ -180,8 +191,12 @@ function contents(ctx,container,rows,item){
     if(row.owner!==undefined)owner(ctx,d,unit,ctx.ref(row.owner),name);
    }
   });
-  extras(ctx,row,name,['inventoryBinding','weightKg','owner']);
+  extras(ctx,row,name,['inventoryBinding','weightKg','owner','resource','quantity']);
  }
+ if(ctx.document.state.records?.[`physical_item:${container}`]?.facts?.turbidity!==undefined)ctx.native(item,d=>{
+  restoreLiquidSnapshot(d,ctx.engine,container,{origin:'initial',sourceEvent:`${writer}:${item}`});
+  bindContainerWater(d,ctx.engine,container);
+ });
 }
 
 function environmentalObject(ctx,row,item,feature){
@@ -258,7 +273,8 @@ function physicalObject(ctx,row,item){
   owner(ctx,d,nativeId,ctx.ref(row.owner),item);
   initialPhysical(ctx,d,nativeId,row);
  }))ctx.bindings[row.id]=nativeId;
- extras(ctx,row,item,['id','template','kind','name','location','condition','carriedBy','owner',...physicalFields]);
+ if(row.contents!==undefined)contents(ctx,nativeId,row.contents,`${item}.contents`);
+ extras(ctx,row,item,['id','template','kind','name','location','condition','carriedBy','owner','contents','turbidity','qualityTest',...physicalFields]);
 }
 
 // The resolver reads place.zones/areas from the authored catalog; movement
@@ -351,9 +367,11 @@ function bodies(ctx,setup){
  for(const [alias,row] of Object.entries(setup.body)){
   const actor=ctx.ref(alias),path=actorPath(ctx,actor),item=`body.${alias}`;
   if(!path||!object(row)){ctx.unmet(item,'unknown actor or invalid body mapping');continue;}
+  if(row.hp!==undefined||row.maxHp!==undefined)ctx.native(item,d=>restoreBodySnapshot(d,ctx.engine,actor,{hp:row.hp,maxHp:row.maxHp},{origin:'initial',sourceEvent:row.maxHpSource?ctx.ref(row.maxHpSource):`${writer}:${item}`}));
   const ordered=Object.entries(row).sort(([a],[b])=>Number(b==='level')-Number(a==='level'));
   for(const [field,value] of ordered){
    const name=`${item}.${field}`;
+   if(['hp','maxHp','maxHpSource'].includes(field))continue;
    if(['satiety','stamina','fatigue','hydration'].includes(field)){
     if(!finite(value,0,100)){ctx.unmet(name,'expected a 0..100 body scale');continue;}
     ctx.native(name,d=>writeBodyNeed(d,ctx.engine,actor,field,value*bodyRule(ctx.engine,field).max/100));
@@ -384,9 +402,7 @@ function bodies(ctx,setup){
     const age=actor==='player'?ctx.actor(actor).age:npcAgeAt(ctx.engine,ctx.document.state,actor);
     if(age!==value)missing(ctx,name,'不改作者身份/出生日期的年龄覆盖','01 §1.2；A §A.15.7');
    }else if(field==='conscious'){
-    if(typeof value!=='boolean'){ctx.unmet(name,'expected a boolean');continue;}
-    const body=ctx.actor(actor),awake=!isPhysicallyDead(ctx.engine,reader(ctx),actor)&&!['昏迷','失能'].includes(body.status)&&!/睡|昏迷/.test(body.activity??'')&&body.capacity!=='none';
-    if(value!==awake)missing(ctx,name,'保留死亡、能力与睡眠原因的意识初态设置','01 §1.2；06 §6.3');
+    ctx.native(name,d=>restoreBodySnapshot(d,ctx.engine,actor,{conscious:value},{origin:'initial',sourceEvent:`${writer}:${name}`}));continue;
    }else if(field==='safeCarryKg'){
     if(!finite(value)){ctx.unmet(name,'expected a nonnegative carry capacity');continue;}
     if(stats(ctx,actor).carryKg!==value)missing(ctx,name,'安全负重上限覆盖（原生上限从力量派生）','01 §1.2；A §A.15.7');
@@ -403,7 +419,10 @@ function actors(ctx,setup){
    const name=`${item}.${field}`;
    if(field==='activity'){
     if(typeof value!=='string'||!value.trim()){ctx.unmet(name,'expected nonempty initial activity');continue;}
-    ctx.native(name,d=>holdingSet(d,ctx.engine,[...path,'activity'],value,writer));
+    if(value==='sleeping')ctx.native(name,d=>restoreBodySnapshot(d,ctx.engine,actor,{activity:value,conscious:row.conscious??false},{origin:'initial',sourceEvent:`${writer}:${name}`}));
+    else ctx.native(name,d=>holdingSet(d,ctx.engine,[...path,'activity'],value,writer));
+   }else if(field==='conscious'){
+    ctx.native(name,d=>restoreBodySnapshot(d,ctx.engine,actor,{conscious:value,...(row.activity==='sleeping'?{activity:'sleeping'}:{})},{origin:'initial',sourceEvent:`${writer}:${name}`}));
    }else if(field==='location'){
     if(!location(ctx,value)){ctx.unmet(name,'unknown actor location');continue;}
     if(ctx.actor(actor).scheduleTravel||ctx.actor(actor).cognitionTravel){ctx.unmet(name,'actor has an active journey; location alone cannot cancel it');continue;}
@@ -418,6 +437,43 @@ function actors(ctx,setup){
 
 registerSetupLoader({fields:['itemInstances','objects'],order:40,load(ctx,setup,fields){
  for(const field of fields)array(ctx,setup,field,(row,item)=>(field==='itemInstances'?instance:physicalObject)(ctx,row,item));
+}});
+registerSetupLoader({fields:['instances'],rows:{instances:r=>r?.template==='creature'&&r.kind===undefined},order:5,load(ctx,setup){
+ array(ctx,setup,'instances',(row,item)=>{
+  if(Object.keys(row).some(k=>!['id','template','name','location','boss'].includes(k))||!id(row.id)||!location(ctx,row.location)){ctx.unmet(item,'Invalid boss instance premise');return;}
+  const candidates=ctx.engine.world.bosses.filter(b=>b.residence?.location===row.location&&(row.boss===undefined||b.id===row.boss));
+  if(candidates.length!==1){ctx.unmet(item,'Boss premise needs an unambiguous native definition');return;}
+  let nativeId;
+  if(ctx.native(item,d=>{nativeId=restoreBossInstance(d,ctx.engine,{boss:candidates[0].id,location:row.location},{origin:'initial',sourceEvent:`${writer}:${row.id}`});}))ctx.bindings[row.id]=nativeId;
+ });
+}});
+registerSetupLoader({fields:['history'],rows:{history:r=>['died','revival_bound','combat_observed','body_initialized'].includes(r?.verb)},order:15,load(ctx,setup){
+ array(ctx,setup,'history',(row,item)=>{
+  const allowed=['id','verb','at','source','actor','subject','cause','experienceBeforeDeath','target','tactic','count','daysAgo','maxHp'];
+  if(Object.keys(row).some(k=>!allowed.includes(k))||!id(row.id)||!ctx.actor(ctx.ref(row.actor))||!Number.isSafeInteger(row.at)||row.at<0||row.at>ctx.document.state.minute||!object(row.source)||row.source.kind!=='corpus_premise'||typeof row.source.row!=='string'){ctx.unmet(item,'Invalid physical history source or fields');return;}
+  if(row.daysAgo!==undefined){try{historicalMinute(ctx.document,row);}catch(error){ctx.unmet(item,error.message);return;}}
+  const payload=Object.fromEntries(Object.entries(row).filter(([k])=>!['id','verb','at'].includes(k)).map(([k,v])=>[k,['actor','subject','target'].includes(k)?ctx.ref(v):v]));
+  if(ctx.native(item,d=>recordHistoricalEvent(d,ctx.engine,{id:row.id,verb:row.verb,actor:ctx.ref(row.actor),minute:row.at,source:row.source,payload})))ctx.bindings[row.id]=`world_event:${row.id}`;
+ });
+}});
+registerSetupLoader({fields:['objects'],rows:{objects:r=>r?.kind==='revival_binding'},order:42,load(ctx,setup){
+ array(ctx,setup,'objects',(row,item)=>{
+  if(Object.keys(row).some(k=>!['id','kind','actor','location','sourceEvent'].includes(k))||!id(row.id)){ctx.unmet(item,'Invalid revival binding declaration');return;}
+  ctx.native(item,d=>restoreRevivalBinding(d,ctx.engine,{actor:ctx.ref(row.actor),location:row.location,sourceEvent:ctx.ref(row.sourceEvent)},{origin:'initial'}));
+ });
+}});
+registerSetupLoader({fields:['history','status','knowledge'],rows:{knowledge:r=>r?.source==='direct_combat'},order:70,load(ctx,setup,fields){
+ if(fields.includes('history'))for(const row of Array.isArray(ctx.setup.history)?ctx.setup.history:[])if(row?.verb==='died'&&ctx.bindings[row.id])ctx.native(`history.${row.id}`,d=>restoreDeathSnapshot(d,ctx.engine,{sourceEvent:ctx.ref(row.id)},{origin:'initial'}));
+ if(fields.includes('status')&&object(setup.status))for(const [alias,value] of Object.entries(setup.status))if(object(value)&&value.bite_wound!==undefined){
+  const wound=value.bite_wound,item=`status.${alias}.bite_wound`;
+  if(!object(wound)||Object.keys(wound).some(k=>!['site','treated'].includes(k))){ctx.unmet(item,'Invalid initial bite wound fields');continue;}
+  ctx.native(item,d=>restoreWoundSnapshot(d,ctx.engine,ctx.ref(alias),wound,{origin:'initial',sourceEvent:`${writer}:${item}`}));
+ }
+ if(fields.includes('knowledge'))for(const [i,row] of (Array.isArray(setup.knowledge)?setup.knowledge:[]).entries())if(row?.source==='direct_combat'){
+  const item=`knowledge[${i}]`,source=ctx.document.state.records?.[ctx.ref(row.event)];
+  if(Object.keys(row).some(k=>!['holder','event','source'].includes(k))||!source){ctx.unmet(item,'Missing native combat observation');continue;}
+  ctx.native(item,d=>restoreBossTactic(d,ctx.engine,ctx.ref(row.holder),{sourceEvent:ctx.ref(row.event),tactic:source.payload?.tactic,count:source.payload?.count??1},{origin:'initial'}));
+ }
 }});
 registerSetupLoader({fields:['accounts'],rows:{accounts:row=>object(row)&&row.container!==undefined},order:45,load(ctx,setup){
  array(ctx,setup,'accounts',(row,item)=>{

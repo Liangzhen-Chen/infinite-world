@@ -75,6 +75,24 @@ export function rememberBossTactic(d,engine,target,tactic,eventId){
     const publicAttitude=bossPublicAttitude(d,engine,target);
     if(publicAttitude)d.say(`${actor.name}：${publicAttitude.attitude}。${publicAttitude.reason}`);
 }
+export function restoreBossInstance(d,engine,{boss,location},{origin,sourceEvent}={}){
+ const definition=engine.world.bosses?.find(b=>b.id===boss),record=definition&&d.get(...key(definition));
+ if(origin!=='initial'||!sourceEvent||!definition||definition.residence.location!==location||record?.occupant?.kind!=='boss'||record.occupant.definition!==boss)throw Error('Initial boss must be the existing native lair occupant');
+ const target=record.occupant.actor??definition.actor??boss,existing=engine.actor(d,target);
+ if(existing){if(existing.boss!==boss||existing.location!==location||!living(d,target))throw Error('Existing boss identity conflicts');return target;}
+ instantiate(d,engine,{id:target,species:definition.monster,boss,location,lair:definition.residence.id,eventId:sourceEvent});
+ writeLair(d,engine,definition,{...record,occupant:{...record.occupant,actor:target}});
+ return target;
+}
+export function restoreBossTactic(d,engine,target,{sourceEvent,tactic,count=1},{origin}={}){
+ const actor=engine.actor(d,target),source=d.get('state','records',sourceEvent),boss=engine.byId.get(actor?.boss);
+ if(origin!=='initial'||source?.category!=='world_event'||source.verb!=='combat_observed'||source.actor!==target||source.payload?.target!=='player'||source.payload.tactic!==tactic||!Number.isSafeInteger(source.minute)||source.minute<0||source.minute>d.get('state','minute')||!boss?.mechanics?.adaptation.tactics.includes(tactic)||!Number.isSafeInteger(count)||count<1||count>100000||(source.payload?.count??1)!==count)throw Error('Invalid native boss observation or tactic/count contract');
+ const memory=clone(actor.battleMemory??{tactics:{},lastEvent:null});
+ if(memory.sources?.includes(sourceEvent))return memory;
+ if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw Error('Invalid existing boss battle memory');
+ memory.tactics[tactic]=(memory.tactics[tactic]??0)+count;memory.lastEvent=sourceEvent;memory.lastMinute=source.minute;memory.sources=[...memory.sources??[],sourceEvent];
+ d.set([...engine.actorPath(target),'battleMemory'],memory);return memory;
+}
 export function defeatBoss(d,engine,target,eventId){
     const actor=engine.actor(d,target),boss=engine.byId.get(actor?.boss);if(!boss?.residence||living(d,target))return null;
     const r=clone(d.get(...key(boss)));if(r.occupant?.actor!==target)return null;

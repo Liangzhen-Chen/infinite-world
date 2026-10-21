@@ -1,4 +1,5 @@
 import {advanceHook} from './advance-hooks.mjs';
+import {initialPhysicalFeatures} from './primitives-effects.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
@@ -533,6 +534,11 @@ export class WorldEngine {
         const physical=physicalCatalog(this,document),session=Object.create(this);session.physicalDocument=document;
         session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         if(physical.length)session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(this.world),items:{value:[...this.world.items,...physical],enumerable:true,writable:true,configurable:true}});
+        const features=initialPhysicalFeatures(document);
+        if(features.length){
+            const locations=this.world.locations.map(place=>{const added=features.filter(f=>f.location===place.id&&!place.features?.some(r=>r.id===f.id));return added.length?{...place,features:[...place.features??[],...added]}:place;});
+            session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(session.world),locations:{value:locations,enumerable:true,writable:true,configurable:true}});
+        }
         session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }

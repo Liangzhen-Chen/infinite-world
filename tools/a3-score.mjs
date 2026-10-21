@@ -22,7 +22,7 @@ import {primitiveRuntime,actionEffects} from '../server-plugin/primitives-runtim
 import {resolvePrimitiveTransfer} from '../server-plugin/primitive-accounts.mjs';
 import {facilityView} from '../server-plugin/facility-state.mjs';
 import {heldUnit} from '../server-plugin/items.mjs';
-import {runSetupLoaders,setupLoaderFields} from './a3-setup/index.mjs';
+import {runSetupLoaders,setupLoaderFields,setupRowLoader} from './a3-setup/index.mjs';
 import './a3-setup/loaders.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -81,6 +81,7 @@ export function applyIntentSetup(engine,initial,setup){
   if(!Array.isArray(setup.instances))unmet('instances','expected an array');
   else for(const [index,row] of setup.instances.entries()){
    const item=`instances[${index}]`;
+   if(setupRowLoader('instances',row))continue;
    if(!object(row)||typeof row.id!=='string'||!row.id.trim()||row.name!==undefined&&(typeof row.name!=='string'||!row.name.trim())){unmet(item,'missing instance ID or invalid name');continue;}
    if(actor(row.id)||bindings[row.id]||Object.hasOwn(s.created??{},row.id)){unmet(item,'instance ID already exists');continue;}
    if(!engine.world.locations.some(l=>l.id===row.location)&&row.kind!=='office'){unmet(item,'unknown instance location');continue;}
@@ -277,6 +278,7 @@ export function applyIntentSetup(engine,initial,setup){
    // Empty mappings assert no additional effects. They do not turn confinement
    // into incapacity, clear existing effects or grant a release (A.3/A.15.24).
    for(const [key,value] of Object.entries(status)){
+    if(key==='bite_wound')continue; // P's native medical initial-fact loader.
     const item=`status.${id}.${key}`;
     if(key==='onDuty'){
      const d=engine.primitiveDraft(document),held=aliveHoldings(d,{kind:'holds_office',holder:ref(id)});
@@ -322,7 +324,8 @@ export function applyIntentSetup(engine,initial,setup){
  for(const id of Array.isArray(setup.present)?setup.present:[]){
   const body=actor(id);
   const explicitStatus=object(setup.status)&&typeof setup.status[id]==='string'?setup.status[id]:null;
-  if(body&&(body.location!==s.location||isGone(engine,document,id)||isPhysicallyDead(engine,document,id)||!explicitStatus&&(['死亡','昏迷','失能'].includes(body.status)||/睡|昏迷/.test(body.activity??'')||body.capacity==='none')))unmet(`present.${id}`,'actor is not awake and present after setup');
+  const sleeping=setup.actorStates?.[id]?.activity==='sleeping'&&setup.actorStates[id].conscious===false&&/睡/.test(body?.activity??'')&&body.status==='正常';
+  if(body&&(body.location!==s.location||isGone(engine,document,id)||isPhysicallyDead(engine,document,id)||!explicitStatus&&!sleeping&&(['死亡','昏迷','失能'].includes(body.status)||/睡|昏迷/.test(body.activity??'')||body.capacity==='none')))unmet(`present.${id}`,'actor is not awake and present after setup');
  }
  try{document.ledger=openLedger(engine,document);for(const reason of auditLedger(document.ledger))unmet('ledger',reason);}
  catch(error){unmet('ledger',error.message);}

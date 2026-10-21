@@ -3,8 +3,53 @@
 import {reject} from './primitive-policy.mjs';
 import {fixedUnits,fixedNumber,checkedFixed} from './rx.mjs';
 import {physicalItem} from './items.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
+import {revivalPoint} from './rule-state-migration.mjs';
 const pathOf=(document,actor)=>actor==='player'?['state','player']:document.state.npcs?.[actor]?['state','npcs',actor]:document.state.creatures?.[actor]?['state','creatures',actor]:null;
 const atPath=(document,path)=>path?.reduce((v,k)=>v?.[k],document);
+// Campaign initial facts are not action proposals. Keep the explicit override
+// and its provenance; never manufacture levels or constitution to reach an HP.
+export function restoreBodySnapshot(d,engine,actor,row,{origin,sourceEvent}={}){
+ const path=pathOf(d.document,actor),body=atPath(d.document,path);
+ if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent||!path||!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).some(k=>!['hp','maxHp','conscious','activity'].includes(k))||isPhysicallyDead(engine,d,actor))throw Error('Invalid initial body authority or target');
+ const hasHp=Object.hasOwn(row,'hp')||Object.hasOwn(row,'maxHp');
+ if(hasHp&&(!Number.isSafeInteger(row.hp)||!Number.isSafeInteger(row.maxHp)||row.maxHp<1||row.maxHp>1000000||row.hp<0||row.hp>row.maxHp))throw Error('Initial hp/maxHp must be a complete bounded pair');
+ if(hasHp&&row.maxHp!==body.maxHp){
+  const proof=d.get('state','records',sourceEvent);
+  if(proof?.category!=='world_event'||proof.verb!=='body_initialized'||proof.actor!==actor||proof.payload?.maxHp!==row.maxHp||proof.minute>d.get('state','minute'))throw Error('Changed maximum HP needs a structured constitution or ability source (initial body contract)');
+ }
+ if(row.conscious!==undefined&&typeof row.conscious!=='boolean'||row.activity!==undefined&&(!['sleeping','awake'].includes(row.activity)))throw Error('Invalid initial consciousness');
+ const sleeping=row.activity==='sleeping'||/睡|sleep/i.test(row.activity??body.activity??'');
+ if(sleeping&&row.conscious===true)throw Error('Sleeping actor cannot be declared awake');
+ if(hasHp){d.set([...path,'hp'],row.hp);d.set([...path,'maxHp'],row.maxHp);d.set([...path,'vitalOverride'],{maxHp:row.maxHp,sourceEvent,origin});}
+ if(row.activity!==undefined)d.set([...path,'activity'],row.activity==='sleeping'?'睡眠':'闲暇');
+ if(row.conscious!==undefined){
+  if(!row.conscious&&!sleeping)d.set([...path,'status'],'昏迷');
+  else if(body.status==='昏迷')d.set([...path,'status'],'正常');
+  // Coma uses the existing status/capacity consumers. Services and witnesses
+  // distinguish sleeping activity from coma and from waking presence.
+  if(!row.conscious&&!sleeping)d.set([...path,'capacity'],'none');
+  else if(body.status==='昏迷'&&body.capacity==='none')d.remove([...path,'capacity']);
+ }
+ return atPath(d.document,path);
+}
+export function restoreRevivalBinding(d,engine,{actor,location,sourceEvent},{origin}={}){
+ const source=d.get('state','records',sourceEvent);
+ const point=revivalPoint(engine.rules,location);
+ if(origin!=='initial'||actor!=='player'||source?.category!=='world_event'||source.verb!=='revival_bound'||source.actor!==actor||source.payload?.subject!==location||source.minute>d.get('state','minute')||!point||d.get('state','buildings',point.location,'condition')===0)throw Error('Invalid initial revival binding source or point');
+ location=point.location;
+ d.set(['state','revivalPoints',location],{location,registeredAt:source.minute,source:sourceEvent});d.set(['state','player','revivalAnchor'],location);
+ return location;
+}
+export function restoreDeathSnapshot(d,engine,{sourceEvent},{origin}={}){
+ const source=d.get('state','records',sourceEvent),xp=source?.payload?.experienceBeforeDeath;
+ if(origin!=='initial'||source?.category!=='world_event'||source.verb!=='died'||source.actor!=='player'||!Number.isSafeInteger(source.minute)||source.minute<0||source.minute>d.get('state','minute')||!Number.isSafeInteger(xp)||xp<0)throw Error('Invalid initial death source');
+ if(isPhysicallyDead(engine,d,'player'))throw Error('Death is already settled');
+ const minute=d.get('state','minute');
+ d.set(['state','player','xp'],xp);d.set(['state','player','hp'],0);d.set(['state','minute'],source.minute);
+ engine.death(d);d.set(['state','minute'],minute);
+ d.set(['state','player','deathSource'],sourceEvent);return d.get('state','player');
+}
 export function bodyRule(engine,need){
  const row=engine.world.primitiveTables?.body?.rows?.find(r=>r.need===need&&r.selector==='person');
  if(!row)reject('E-BODY-TABLE','The archived body table is required');

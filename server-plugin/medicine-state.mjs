@@ -6,6 +6,16 @@ import {contractTerms} from './contract-state.mjs';
 import {recordsWhere} from './storage.mjs';
 // Consultations, stock use and appointments are facts; staff and capacity are views.
 export const MEDICAL_SKILL='skill_life_19_core';
+// A bite site and treatment history do not establish depth, blood volume,
+// infection or pain. Preserve unknown measurements instead of fabricating them.
+export function restoreWoundSnapshot(d,engine,patient,{site,treated},{origin,sourceEvent}={}){
+ const path=patient==='player'?['state','player']:d.get('state','npcs',patient)?['state','npcs',patient]:null;
+ if(origin!=='initial'||!sourceEvent||!path||isPhysicallyDead(engine,d,patient)||!['left_arm','right_arm','left_leg','right_leg','head','torso'].includes(site)||typeof treated!=='boolean')throw Error('Invalid initial bite wound');
+ const old=d.get(...path,'medical')??{},id=`bite:${patient}:${site}`;
+ if(old.wounds?.some(w=>w.id===id))throw Error('Wound already initialized');
+ const wound={id,kind:'bite',site,treated,closed:treated,healed:false,sourceEvent};
+ d.set([...path,'medical'],{...old,wounds:[...old.wounds??[],wound]});return wound;
+}
 export const medicineFresh=e=>!e.replaying||e.replayResult?.medicineVersion===1;
 export const medicineRows=s=>recordsWhere(s.records,'category','medicine_visit');
 export const medicineReservation=(s,id,start,minutes=1)=>medicineRows(s).find(r=>r.status==='预约'&&[r.patient,r.doctor,...r.assistants??[]].includes(id)&&start<r.end&&start+Math.max(1,minutes)>r.depart);
@@ -41,7 +51,7 @@ export function medicineSites(e,s){
 }
 export function medicalConditions(s,id){
  const a=id==='player'?s.player:s.npcs?.[id];
- return [...Object.values(s.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中').map(r=>({kind:'illness',id:r.id,severity:r.severity,record:r})),...(a?.medical?.wounds??[]).filter(w=>!w.healed&&(!w.closed||w.infected)).map(w=>({kind:'wound',id:w.id,severity:w.infected||w.depthMm>3?'重':'轻',record:w}))];
+ return [...Object.values(s.family?.illnesses??{}).filter(r=>r.patient===id&&r.status==='患病中').map(r=>({kind:'illness',id:r.id,severity:r.severity,record:r})),...(a?.medical?.wounds??[]).filter(w=>!w.healed&&(!w.closed||w.infected)).map(w=>({kind:'wound',id:w.id,severity:w.infected||Number.isFinite(w.depthMm)?(w.infected||w.depthMm>3?'重':'轻'):null,record:w}))];
 }
 // RW-04 may publish exposures without giving medicine ownership of hydrology.
 export function waterDiseaseExposure(s,location){

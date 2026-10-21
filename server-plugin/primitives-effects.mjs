@@ -8,7 +8,7 @@ import {capacity,canAct,actionEntity} from './action-capacity.mjs';
 import {interactionOf} from './interactions.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {npcProficiency} from './checks.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {normalize} from './retrieval.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {applyBodyVital,beginBodyActivity,endBodyActivity} from './primitives-body.mjs';
@@ -19,6 +19,42 @@ export {applyBodyVital} from './primitives-body.mjs';
 
 declareHoldingWriter('primitives',{entities:['person','creature','item','building','mark'],locations:true,kinds:['owns']});
 const integer=(n,min,max,code='E-PRIMITIVE-AMOUNT')=>{if(!Number.isSafeInteger(n)||n<min||n>max)reject(code,'Amount is outside the native bound');return n;};
+// Initial physical facts use the same records as inspection, repair and water
+// magic. They do not grant custody, service capabilities or a future outcome.
+export function restorePhysicalSnapshot(d,engine,id,row,{origin,sourceEvent}={}){
+ if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent||!d.get('holdings','entities',id)||!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).some(k=>!['inscription','maxCondition','condition','turbidity','qualityTest'].includes(k)))throw Error('Invalid initial physical authority or object');
+ if(row.inscription!==undefined&&(typeof row.inscription!=='string'||!row.inscription.trim()||row.inscription.length>1000))throw Error('Invalid inscription');
+ if(row.maxCondition!==undefined&&(!Number.isSafeInteger(row.maxCondition)||row.maxCondition<1||row.maxCondition>1000000)||row.condition!==undefined&&(!Number.isFinite(row.condition)||row.condition<0||row.condition>100)||row.turbidity!==undefined&&(!Number.isFinite(row.turbidity)||row.turbidity<0||row.turbidity>100))throw Error('Invalid physical scale');
+ const test=row.qualityTest;
+ if(test!==undefined&&(!test||typeof test!=='object'||Array.isArray(test)||Object.keys(test).some(k=>!['dissolvedToxins','pathogens'].includes(k))||Object.values(test).some(v=>typeof v!=='boolean')))throw Error('Invalid initial water examination');
+ const path=['state','records',`physical_item:${id}`],old=d.get(...path);
+ if(old?.category!=='physical_item')throw Error('Physical identity must be registered first');
+ const unit=d.get('state','itemInstances',id),condition=row.condition??old.facts?.condition;
+ if(row.maxCondition!==undefined&&(!unit?.physicalOnly||!Number.isFinite(condition)))throw Error('Explicit durability needs the same original stock and initial condition');
+ holdingSet(d,engine,path,{...old,facts:{...old.facts,...structuredClone(row)},initialSource:sourceEvent},'primitives');
+ if(row.maxCondition!==undefined){
+  holdingSet(d,engine,['state','itemInstances',id],{...unit,maxDurability:row.maxCondition,durability:row.maxCondition*condition/100,inscription:row.inscription??unit.inscription},'primitives');
+ }
+ return id;
+}
+export function restoreLiquidSnapshot(d,engine,id,{origin,sourceEvent}={}){
+ const facts=d.get('state','records',`physical_item:${id}`)?.facts;
+ if(origin!=='initial'||!sourceEvent||!facts||!Number.isFinite(facts.turbidity))throw Error('Invalid initial liquid authority or turbidity');
+ if(d.get('state','records',`initial_feature:${id}`))throw Error('Original liquid is already initialized');
+ const units=Object.values(d.get('state','itemInstances')??{}).filter(u=>u.container===id&&u.item==='item_water');
+ if(!units.length||engine.byId.get('item_water')?.weight!==.25)throw Error('Liquid needs existing same-stock water portions');
+ // A negative test establishes zero. Positive tests give no concentration;
+ // they cannot be converted into an invented toxin amount or infection risk.
+ if(facts.qualityTest?.dissolvedToxins!==false||facts.qualityTest?.pathogens!==false)throw Error('Water toxin/pathogen amounts need explicit examination results');
+ const location=physicalLocation(d,engine,id),name=d.get('state','records',`physical_item:${id}`)?.name??id;
+ const state={waterMl:units.length*250,turbidity:facts.turbidity,toxinUg:0,pathogenRisk:0};
+ holdingSet(d,engine,['state','records',`initial_feature:${id}`],{category:'initial_physical_feature',id,location,name,kind:'container',aliases:d.get('state','records',`physical_item:${id}`)?.aliases??[],sourceEvent},'primitives');
+ holdingSet(d,engine,['state','records',`physical_feature:${id}`],{category:'physical_feature',id,location,state},'primitives');
+ return state;
+}
+// Scoped engine projection makes the saved originals visible to the existing
+// environment/magic consumers; the global authored world is never mutated.
+export function initialPhysicalFeatures(document){return recordsWhere(document.state.records,'category','initial_physical_feature');}
 const pathOf=(d,id)=>id==='player'?['state','player']:d.get('state','npcs',id)?['state','npcs',id]:d.get('state','creatures',id)?['state','creatures',id]:null;
 const currentLocation=(d,id)=>physicalLocation(d,null,id);
 const here=(d,actor,target)=>{const place=currentLocation(d,actor);if(!place||currentLocation(d,target)!==place)reject('E-PRIMITIVE-REACH','The target is not present');return place;};
