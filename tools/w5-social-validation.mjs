@@ -21,10 +21,21 @@ export function validateSocialWorld(world,{reference,blocked=[]}){
         if(!world.locations.some(place=>place.id===row.contactAnchor))errors.push(`联系锚点不是地点：${row.id}`);
         const expected=[row.culture,row.contactAnchor];
         if(category==='factions'){
+            for(const office of row.offices??[]){
+                reference(office.seat,`${office.id}.seat`);
+                if(office.holder)reference(office.holder,`${office.id}.holder`);
+                const holder=world.npcs.find(n=>n.id===office.holder);
+                if(office.holder&&!holder)errors.push(`组织职位缺少已落实人物：${office.id}`);
+                if(!world.locations.some(p=>p.id===office.seat))errors.push(`组织职位缺少可达地点：${office.id}`);
+                if(office.authority.operations.includes('certify')){
+                    const role=world.professions.find(p=>p.id===office.authority.profession);
+                    if(!role||role.kind==='hidden'||holder&&(holder.proficiencies?.[role.entry?.skill]??0)<(role.entry?.minimumProficiency??100))errors.push(`职业考官未满足职业技能门槛：${office.id}`);
+                }
+            }
             const members=[row.leader,...row.coreMembers];
             if(new Set(members).size!==members.length||row.resources.memberCount<members.length)errors.push(`势力成员数量不一致：${row.id}`);
             // A settlement organisation is run by registered residents of the seat it is anchored to.
-            const resident=member=>world.locations.find(place=>place.id===row.contactAnchor)?.monsterSociety&&world.npcs.some(npc=>npc.id===member&&npc.society===row.contactAnchor);
+            const resident=member=>world.npcs.some(npc=>npc.id===member&&(npc.faction===row.id&&npc.scope===row.contactAnchor||world.locations.find(place=>place.id===row.contactAnchor)?.monsterSociety&&npc.society===row.contactAnchor));
             for(const member of members){if(!people.some(person=>person.id===member&&person.faction===row.id)&&!resident(member))errors.push(`势力成员未登记或归属不符：${row.id}/${member}`);}
             for(const relation of row.relations)requireKind(relation.faction,'faction',`${row.id}.relations`);
             expected.push(...members,...row.relations.map(peer=>peer.faction));

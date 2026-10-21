@@ -11016,7 +11016,8 @@
       "loc_ms_yugen": "faction_ms_yugen",
       "loc_ms_lielu": "faction_ms_lielu",
       "loc_ms_huixi": "faction_ms_huixi",
-      "loc_ms_huipeng": "faction_ms_huipeng"
+      "loc_ms_huipeng": "faction_ms_huipeng",
+      "loc_far_huancheng": "faction_huancheng_government"
     },
     "ledgers": [
       {

@@ -5,7 +5,7 @@ import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
 import {recordsWhere,recordEntriesWhere,recordsMemo} from './storage.mjs';
-import {organizationState,memberOrganizations} from './organization-state.mjs';
+import {organizationState,memberOrganizations,organizationOffices} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
@@ -98,12 +98,20 @@ export function questBoards(engine,state){
 export function personCareer(engine,state,requested){
     const id=actorId(engine.world,requested),base=baseOf(engine,state,id),actor=at(state,actorPath(engine.world,id).slice(1));
     const vocation=actor?.vocation,def=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id);
-    const services=id==='player'?[]:vocation?(def?.teaches??vocation.services??[]):base?.services??[];
+    const services=id==='player'?[]:[...(vocation?(def?.teaches??vocation.services??[]):base?.services??[])],appointments=[];
+    if(id!=='player'&&isEffective(engine,state,id))for(const faction of engine.world.factions??[]){
+        if(!faction.offices?.length)continue;
+        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder===id&&actor?.location===office.seat&&office.authority?.operations?.includes('certify')){
+            if(!isEffective(engine,state,faction.id))continue;
+            const role=engine.byId.get(office.authority.profession),skill=role?.entry?.skill;
+            if(role&&(actor?.proficiencies?.[skill]??base?.proficiencies?.[skill]??0)>=(role.entry?.minimumProficiency??100)){services.push(role.id);appointments.push(office.id);}
+        }
+    }
     const roles=id==='player'?[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean):[...new Set([...Object.keys(actor?.certifications??{}),...services.filter(s=>s.startsWith('profession_')),...(!vocation?[base?.combatProfession,...base?.lifeProfessions??[]].filter(Boolean):[])])];
     if(id!=='player')for(const role of actor?.hiddenProfessions??base?.hiddenProfessions??[])if(!roles.includes(role))roles.push(role);
     const apprenticeships=id==='player'?Object.entries(state.careers??{}).filter(([,r])=>r.initiation?.status==='守戒中').map(([r])=>r):[];
     return fact({occupation:vocation?(def?.name??vocation.name):actor?.occupation??base?.occupation??'',roles,apprenticeships,services:[...services],vocation:def??vocation??null},
-        id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`,Boolean(vocation||id==='player'));
+        (id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`)+(appointments.length?` + current organization offices (${appointments.join(',')}) + proficiency`:''),Boolean(vocation||id==='player'));
 }
 export function personCertified(engine,state,id,skill){
     const c=personCareer(engine,state,id).value,s=engine.byId.get(skill),roles=s?.learningProfessions??(s?.profession?[s.profession]:[]);

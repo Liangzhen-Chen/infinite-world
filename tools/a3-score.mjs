@@ -279,7 +279,11 @@ export function applyIntentSetup(engine,initial,setup){
    for(const [key,value] of Object.entries(status)){
     const item=`status.${id}.${key}`;
     if(key==='onDuty'){
-     const d=engine.primitiveDraft(document),offices=aliveHoldings(d,{kind:'holds_office',holder:ref(id)});
+     const d=engine.primitiveDraft(document),held=aliveHoldings(d,{kind:'holds_office',holder:ref(id)});
+     // A person can hold several genuine offices. At a declared counter,
+     // on-duty refers to that seat; two offices at the same seat remain
+     // ambiguous and a boolean still cannot create an appointment.
+     const offices=held.length===1?held:held.filter(h=>d.get('holdings','entities',h.subject)?.facts?.seat===s.location);
      if(typeof value!=='boolean'||offices.length!==1||!d.get('holdings','entities',offices[0].subject)){unmet(item,'onDuty requires exactly one loaded native office and a boolean');continue;}
      // Duty is a fact of the existing office, not a new license or authority.
      native(item,d=>updateEntity(d,{id:offices[0].subject,facts:{onDuty:value},writer:setupWriter}));
