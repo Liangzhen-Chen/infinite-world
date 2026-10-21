@@ -412,7 +412,7 @@ const endpointRules=[
  {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
 ];
 function roleEndpoint(role,receipt){
- const legacy=receipt.legacy??{},route=receipt.routed??receipt.source?.id,slots=receipt.routing?.slots??{};
+ const legacy=receipt.legacy??{},route=receipt.routed??receipt.source?.id;
  const payment=legacy.payment,accounts=legacy.accounts??payment?.accounts;
  if(['court','authorized_collector'].includes(role)){
   if(route!=='core:law.pay'||!payment?.creditor||role==='authorized_collector'&&!payment.collector)return null;
@@ -427,7 +427,8 @@ function roleEndpoint(role,receipt){
  if(role==='creditor')return payment?.creditor&&accounts?.to?{owner:payment.creditor,account:accounts.to}:null;
  if(role==='recipient')return route==='core:trade.remit'&&legacy.beneficiary?{owner:legacy.beneficiary,purposes:['purse']}:null;
  if(!['core:trade.sell_to','core:trade.buy','core:trade.sell'].includes(route))return null;
- const owner=legacy[role]??slots[role];
+ // Requested slots are not evidence that the native action resolved a party.
+ const owner=legacy[role];
  return owner?{owner,purposes:['purse','inventory']}:null;
 }
 // Descriptive endpoints still require native identities and state evidence.
@@ -871,6 +872,20 @@ export function validateCheckBranch(engine,run,row,outcome,target){
    for(const partition of ['skills','recipes','spells'])if(!sameValue(run.before.state[partition]?.[subject],document.state[partition]?.[subject]))issues.push('failed learning granted knowledge');
   }else if(route==='core:craft.repair'){
    validateRepairFailure(engine,run,issues);
+  }else if(route==='core:profession.certify'){
+   // professions.profession charges and writes certification only on success;
+   // a failed native check still consumes the catalog's examination time.
+   const role=engine.byId.get(legacy.profession),before=run.before;
+   if(!role||!['combat','life'].includes(role.kind)||legacy.certified!==false||legacy.success!==false)issues.push('failed certification has no native failed attempt');
+   const minutes=role?.entry?.minutes??120;
+   if(receipt.cost?.time!==minutes||document.state.minute-before.state.minute!==minutes)issues.push('failed certification native time mismatch');
+   if(!sameValue(before.state.professions,document.state.professions)||
+    !sameValue(before.state.careers?.[legacy.profession]?.certification,document.state.careers?.[legacy.profession]?.certification))issues.push('failed certification granted career');
+   const rights=doc=>Object.entries(doc.holdings?.rows??{}).filter(([,h])=>h.kind==='certified'&&h.holder==='player'&&h.subject===`office_cert:${legacy.profession}`);
+   if(!sameValue(rights(before),rights(document)))issues.push('failed certification wrote certification holding');
+   if(document.state.player.coins!==before.state.player.coins||
+    document.ledger.accounts['player|coin_river|purse']!==before.ledger.accounts['player|coin_river|purse'])issues.push('failed certification charged fee');
+   for(const effect of run.effects)if(!companionEffect(effect,receipt))issues.push(`failed certification granted ${effect.op}`);
   }else if(route==='core:cast'){
    for(const effect of selected){
     if(companionEffect(effect,receipt))continue;

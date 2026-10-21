@@ -179,7 +179,9 @@ const branchOptions=action=>{
 };
 
 test('A3 signature r9: role endpoints use resolved counterparties and exact account purposes',async()=>{
- const {rows:corpus}=await loadCorpus();
+ // r9 added explicit endpoints to the live corpus; this regression exercises
+ // the earlier role-only signatures and must keep that original contract.
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
  for(const number of ['031','032','037','038','039','054','095']){
   const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(engine,initial,row),receipt=run.receipt;
   assert.equal(run.actual.committed,true,row.id);
@@ -220,6 +222,65 @@ test('A3 signature r9: role endpoints use resolved counterparties and exact acco
  assert.equal(signatureMatches(['transfer(self->seller)'],[effect],receipt),true);
  assert.equal(signatureMatches(['transfer(self->seller_extra)'],[effect],receipt),false);
  assert.equal(signatureMatches(['transfer(self->seller)'],[{...effect,to:'npc_hw_wushuo|coin_river|purse'}],receipt),false);
+});
+
+test('A3 signature r11: role endpoints require a native counterparty even when literal endpoints match',()=>{
+ const roles=['bank','local_bank','pawnshop','buyer','seller','court','authorized_collector','creditor','recipient'];
+ for(const role of roles){
+  for(const to of [`${role}|coin_river|purse`,'npc_hw_linsui|coin_river|purse']){
+   const effect={op:'transfer',from:'player|coin_river|purse',to};
+   for(const receipt of [undefined,{}, {routed:'core:trade.buy',legacy:{}},
+    {routed:'core:trade.buy',legacy:{buyer:'npc_hw_wushuo'},routing:{slots:{seller:'npc_hw_linsui'}}}]){
+    assert.equal(signatureMatches([`transfer(self->${role})`],[effect],receipt),false,role);
+   }
+  }
+  const effect={op:'holding.transfer',newHolder:role};
+  assert.equal(signatureMatches([`holding.transfer(new_holder:${role})`],[effect]),false,role);
+ }
+});
+
+test('A3 checks r11: failed native certification consumes time but never charges or grants certification',async()=>{
+ const row={id:'certification-r11',action:'core:profession.certify',slots:{profession:'profession_mage',teacher:'npc_hw_xuling'},
+  setup:{location:'bld_hw_riverhome',present:['npc_hw_xuling'],minute:540,coins:1000,
+   abilities:{skills:{skill_light:100},spells:[],recipes:[],licenses:[]},
+   body:{player:{level:10}}},
+  expected:expected('core:profession.certify',['holding.open','transfer'])};
+ const result=(await scoreRows([row],options)).results[0];
+ assert.deepEqual(result.setupUnmet,[]);
+ assert.equal(result.checkBranches.success.ok,true,JSON.stringify(result.checkBranches.success));
+ assert.equal(result.checkBranches.failure.ok,true,JSON.stringify(result.checkBranches.failure));
+ const high=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.success.randomSeed},row);
+ const low=await executeIntent(engine,{...initial,randomSeed:result.checkBranches.failure.randomSeed},row);
+ const role=engine.byId.get('profession_mage');
+ assert.equal(high.receipt.legacy.certified,true);
+ assert.equal(high.document.state.player.coins,high.before.state.player.coins-role.fee);
+ assert.ok(aliveHoldings(engine.primitiveDraft(high.document),{kind:'certified',holder:'player'}).some(h=>h.subject==='office_cert:profession_mage'));
+ assert.equal(low.receipt.legacy.certified,false);
+ assert.equal(low.document.state.player.coins,low.before.state.player.coins);
+ assert.equal(low.document.state.minute-low.before.state.minute,role.entry.minutes);
+ assert.equal(validateCheckBranch(engine,low,row,'failure').ok,true);
+ const mutate=change=>{
+  const run={...low,document:structuredClone(low.document),receipt:structuredClone(low.receipt),effects:structuredClone(low.effects)};
+  change(run);assert.equal(validateCheckBranch(engine,run,row,'failure').ok,false);
+ };
+ mutate(run=>{run.receipt.legacy.certified=true;});
+ mutate(run=>{run.receipt.legacy.success=true;});
+ mutate(run=>{run.document.state.professions.combat=role.id;});
+ mutate(run=>{run.document.state.careers??={};run.document.state.careers[role.id]={certification:{source:run.receipt.eventId}};});
+ mutate(run=>{run.document.holdings.rows.injected={kind:'certified',holder:'player',subject:`office_cert:${role.id}`};});
+ mutate(run=>{run.document.state.player.coins-=role.fee;});
+ mutate(run=>{run.document.ledger=structuredClone(high.document.ledger);});
+ mutate(run=>{run.effects.push({op:'transfer',from:'player|coin_river|purse',to:'npc_hw_xuling|coin_river|purse',qty:role.fee});});
+ mutate(run=>{run.effects.push({op:'holding.open',kind:'certified',holder:'player',subject:`office_cert:${role.id}`});});
+ mutate(run=>{run.receipt.cost.time--;});
+ mutate(run=>{run.document.state.minute--;});
+ // The native entry gate rejects insufficient skill before rolling or charging.
+ const unskilled=structuredClone(row);unskilled.setup.abilities.skills.skill_light=role.entry.minimumProficiency-1;
+ const rejected=await executeIntent(engine,initial,unskilled);
+ assert.equal(rejected.actual.committed,false);
+ assert.equal(rejected.document.state.player.coins,rejected.before.state.player.coins);
+ assert.deepEqual(rejected.document.state.professions,rejected.before.state.professions);
+ assert.deepEqual(rejected.document.holdings,rejected.before.holdings);
 });
 
 test('A3 checks r9: failed native repair preserves durability and pays materials, fee and tool wear',async()=>{
