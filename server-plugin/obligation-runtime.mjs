@@ -354,7 +354,7 @@ export function adoptLegacyObligation(d,e,id){
 export function restoreObligationSnapshot(d,e,args){
     return obligationTransaction(d,()=>{
         const {id,kind,debtor,creditor,amount,paid,openedAt,dueAt,sourceEvent,terms={}}=args,s=read(d,'state'),event=s.records?.[sourceEvent];
-        if(typeof id!=='string'||!id||['__proto__','prototype','constructor'].includes(id)||!['loan','deposit','fine','delivery','upkeep'].includes(kind)||
+        if(typeof id!=='string'||!id||['__proto__','prototype','constructor'].includes(id)||!['loan','deposit','fine','delivery','upkeep','promise','rent'].includes(kind)||
             !debtor||!creditor||debtor===creditor||![amount,paid,openedAt,dueAt].every(n=>Number.isSafeInteger(n)&&n>=0)||paid>amount||openedAt>s.minute||dueAt<openedAt||
             !terms||typeof terms!=='object'||Array.isArray(terms)||event?.category!=='world_event'||event.verb!=='obligation_opened'||event.minute>s.minute||
             event.payload?.subject!==id||event.payload.debtor!==debtor||event.payload.creditor!==creditor||event.payload.amount!==amount)throw Error('Invalid historical obligation snapshot or source');

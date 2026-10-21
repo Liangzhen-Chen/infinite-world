@@ -3,6 +3,7 @@ import {reviewUpperOffice} from './high-nobility.mjs';
 import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
+import {knowledgeProficiency} from './education-state.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
 import {digest} from './storage.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
@@ -13,18 +14,107 @@ import {opinionAmong} from './public-opinion.mjs';
 import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
+import {institutionOriginal,institutionPhysicalReference} from './obligation-state.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
-import {declareHoldingWriter,holdingSet,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity,updateEntity,setLocation} from './holdings.mjs';
 import {changeHolding} from './transition.mjs';
 import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import fs from 'node:fs';
 import {registerWorldEventSubscriber} from './world-events.mjs';
 const successionRules=JSON.parse(fs.readFileSync(new URL('../world/lore/office-succession.json',import.meta.url),'utf8'));
-declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion']});
+declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion','item'],locations:true});
 
 const DAY=1440;
+export function restoreInstitutionOffice(d,engine,row){
+    if(!ensureHoldings(d,engine))throw Error('Office requires native holdings');
+    const s=d.get('state'),organization=row.organization,seat=row.seat??row.location,id=row.id?.startsWith('office_')?row.id:`office_${row.id}`;
+    const org=engine.byId.get(organization)??entityRow(d,organization);
+    const powers=Array.isArray(row.authority)?row.authority:row.authority?.operations;
+    if(typeof row.id!=='string'||!row.id||['__proto__','constructor','prototype'].includes(row.id)||entityRow(d,id)||
+        row.template!=='office'||typeof row.name!=='string'||!row.name.trim()||!org||
+        !engine.world.locations.some(l=>l.id===seat)||!Array.isArray(powers)||!powers.length||powers.some(p=>typeof p!=='string'||!p.trim()))throw Error('Office requires its existing organization, seat and explicit powers');
+    createEntity(d,{id,kind:'office',facts:{name:row.name,organization,seat,authority:structuredClone(row.authority),aliases:[row.id]},source:`institution_office:${row.id}`,writer:'governance'});
+    setLocation(d,{entity:id,at:seat,mode:'place',writer:'governance',engine});
+    return id;
+}
+export function restoreOfficeRemovalSnapshot(d,engine,{sourceEvent}){
+    const s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload;
+    const prior=Object.values(s.records??{}).filter(r=>r.category==='governance_office'&&r.holder===p?.subject&&r.office===p?.office&&r.status==='在任'&&r.since<=event.minute&&(r.until??Infinity)>event.minute);
+    if(event?.category!=='world_event'||event.verb!=='removed_from_office'||event.minute>s.minute||prior.length!==1||prior[0].appointedBy!==event.actor)throw Error('Removal requires the actual prior appointment and its appointing institution');
+    const row=prior[0],subject=currentOfficeSubject(d,row.settlement,row.office),held=aliveHoldings(d,{kind:'holds_office',holder:row.holder,subject});
+    if(held.length!==1||held[0].since>event.minute||!row.sourceEvent)throw Error('Removal lacks its original office holding and appointment source');
+    const now=s.minute;d.set(['state','minute'],event.minute);
+    closeOfficeIncumbents(d,engine,row.settlement,row.office,event.minute,event.id);
+    d.set(['state','minute'],now);return row.id;
+}
+// Historical institutional inputs are not grants or successful decisions.
+// Missing voters, charters and land rights remain missing after import.
+export function restoreInstitutionSnapshot(d,engine,{row,sourceEvent}){
+    const s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload;
+    if(!row||typeof row.id!=='string'||!row.id||['__proto__','constructor','prototype'].includes(row.id)||s.records?.[row.id]||
+        !engine.world.locations.some(l=>l.id===row.location)||typeof row.name!=='string'||!row.name.trim()||
+        event?.category!=='world_event'||event.minute>s.minute||p?.subject!==row.id)throw Error('Invalid institutional snapshot source');
+    let result;
+    if(row.kind==='application'){
+        if(event.verb!=='application_filed'||row.status!=='pending'||event.actor!==row.applicant||!s.npcs?.[row.applicant]||typeof row.plot!=='string'||!row.plot)throw Error('Application requires its actual applicant and pending filing');
+        result={category:'governance_application',id:row.id,name:row.name,settlement:row.location,applicant:row.applicant,plot:row.plot,status:'pending',sourceEvent,minute:event.minute};
+    }else if(row.kind==='proposal'){
+        if(event.verb!=='votes_recorded'||row.status!=='voting'||![p.yes,p.no].every(n=>Number.isSafeInteger(n)&&n>=0))throw Error('Proposal requires its recorded voting snapshot');
+        result={category:'governance_motion_snapshot',id:row.id,name:row.name,settlement:row.location,status:'voting',tally:{yes:p.yes,no:p.no},sourceEvent,minute:event.minute};
+    }else throw Error('Unsupported institutional snapshot');
+    holdingSet(d,engine,['state','records',row.id],result,'governance');
+    if(row.kind==='proposal'){
+        const id=`motion_${row.id}`;
+        createEntity(d,{id,kind:'motion',facts:{name:row.name,aliases:[row.id],body:row.location,phase:'voting',tally:result.tally},source:sourceEvent,writer:'governance'});
+        setLocation(d,{entity:id,at:row.location,mode:'place',writer:'governance',engine});return id;
+    }
+    return row.id;
+}
+export function restoreInstitutionDocument(d,engine,args){
+    const {id,owner,sourceEvent,content,valid,public:published}=args,s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload,paper=institutionOriginal(engine,d.document,id);
+    if(typeof id!=='string'||!id||['__proto__','constructor','prototype'].includes(id)||typeof content!=='string'||!content.trim()||
+        [valid,published].some(v=>v!==undefined&&typeof v!=='boolean')||event?.category!=='world_event'||event.minute>s.minute||
+        (paper?paper.owner!==owner||paper.document:s.records?.[`institution_document:${id}`]))throw Error('Invalid institutional document original or source');
+    const subject=institutionPhysicalReference(d.document,p.subject);
+    let kind,describes;
+    if(event.verb==='notice_posted'&&subject===id&&event.actor===owner&&published===true&&paper){kind='notice';describes=id;}
+    else if(event.verb==='application_filed'&&s.records?.[p.subject]?.category==='governance_application'&&s.records[p.subject].settlement===owner){kind='building_rule';describes=p.subject;}
+    else if(event.verb==='observed'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===owner&&p.observer===owner&&Number.isSafeInteger(p.terms?.delayMinutes)&&p.terms.delayMinutes>=0&&typeof p.terms.cause==='string'&&p.terms.compensated===false){kind='transport_claim';describes=subject;}
+    else if(event.verb==='ownership_transferred_and_delivered'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===p.to&&p.owner===owner&&p.terms?.cause==='expired_pawn_sale'&&p.terms.oldTicketValid===false&&valid===false){kind='expired_pawn_ticket';describes=subject;}
+    else if(event.verb==='deceived'&&paper&&p.to===owner&&typeof p.claim==='string'&&typeof p.truth==='string'){kind='debt_evidence';}
+    else throw Error('Document source does not support this institutional text');
+    if(published&&kind!=='notice')throw Error('Only an explicitly posted notice is public');
+    const document={kind,owner,sourceEvent,content,links:[],...(describes?{describes}:{}),...(valid!==undefined?{valid}:{}),public:published===true};
+    if(s.itemInstances?.[id])holdingSet(d,engine,['state','itemInstances',id],{...s.itemInstances[id],document,records:[...new Set([...paper.records??[],sourceEvent])]},'governance');
+    else if(paper)updateEntity(d,{id,facts:{document,records:[...new Set([...paper.records??[],sourceEvent])]},writer:'governance'});
+    else holdingSet(d,engine,['state','records',`institution_document:${id}`],{category:'governance_document',id,settlement:owner,...document},'governance');
+    return id;
+}
+export function institutionInputsFor(engine,document,settlement,actor='player'){
+    const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)},s=document.state;
+    const reviewer=aliveHoldings(d,{kind:'holds_office',holder:actor}).some(h=>{
+        const facts=entityRow(d,h.subject)?.facts;
+        const powers=h.terms?.authority??facts?.authority?.operations??facts?.authority;
+        return isEffective(engine,s,actor)&&facts?.organization===settlement&&Array.isArray(powers)&&powers.includes('review_building_application');
+    });
+    const applications=Object.values(s.records??{}).filter(r=>r.category==='governance_application'&&r.settlement===settlement&&(reviewer||r.applicant===actor));
+    const ids=new Set(applications.map(r=>r.id));
+    return {applications:structuredClone(applications),documents:Object.values(s.records??{}).filter(r=>r.category==='governance_document'&&ids.has(r.describes)).map(r=>({id:r.id,content:r.content,sourceEvent:r.sourceEvent}))};
+}
+// A text document is evidence of its text/source, never a monetary claim or
+// an executable ordinance. Public visibility does not reveal private history.
+export function institutionDocumentView(engine,document,id,actor='player'){
+    const s=document.state,paper=institutionOriginal(engine,document,id),row=paper?.document??s.records?.[`institution_document:${id}`];
+    const location=actor==='player'?s.location:s.npcs?.[actor]?.location;
+    if(!row?.kind||!s.records?.[row.sourceEvent]||row.owner!==actor&&!(row.public===true&&paper?.location===location)||paper&&(paper.location!==location||row.public!==true&&paper.owner!==actor||paper.durability<=0||paper.destroyedAt!==undefined))return null;
+    if(row.public===true&&knowledgeProficiency(engine,s,actor,'skill_literacy')<engine.rules.books.minimumLiteracy)return null;
+    return {id,kind:row.kind,content:row.content,valid:row.valid??null,sourceEvent:row.sourceEvent,describes:row.describes??null,public:row.public};
+}
+function publicInstitutionDocuments(engine,document){
+    return [...new Set([...Object.keys(document.state.itemInstances??{}),...Object.keys(document.holdings?.entities??{})])].map(id=>institutionDocumentView(engine,document,id)).filter(r=>r?.public);
+}
 const path=id=>['state','records',id];
 const safe=n=>Number.isSafeInteger(n)&&n>=0;
 const awake=n=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -163,11 +253,15 @@ function action(d,args,eventId){
         const present=this.world.npcs.filter(n=>n.society===society.id&&awake(state.npcs[n.id])&&state.npcs[n.id].location===meeting).map(n=>n.id).sort();
         return {...out,publicOpinion:{place:meeting,present,topics:opinionAmong(this,d.document,present),note:'只计在场且实际获知的成员；未获知者不计入比例。'}};
     }
-    const settlement=this.resolve(args.settlement,'loc'),{g,p}=profile(this,settlement),now=d.get('state','minute');
+    const settlement=this.resolve(args.settlement,'loc'),now=d.get('state','minute');
+    if(args.operation==='governance_inspect'&&!this.world.settlementProfiles?.find(p=>p.id===settlement)?.details?.governance?.appointment){
+        return {settlement,institutionalInputs:institutionInputsFor(this,d.document,settlement),documents:publicInstitutionDocuments(this,d.document),actionScope:{kind:'instant'}};
+    }
+    const {g,p}=profile(this,settlement);
     switch(args.operation){
     case 'governance_inspect':{
         const state=d.get('state'),head=settlementHead(this,state,settlement).value,office=head&&personOffices(this,state,head,{settlement}).find(o=>o.value.office==='office_village_head');
-        return {settlement,appointment:office?.override?{...office.value,head}:head?structuredClone(g.appointment):null,
+        return {settlement,documents:publicInstitutionDocuments(this,d.document),institutionalInputs:institutionInputsFor(this,d.document,settlement),appointment:office?.override?{...office.value,head}:head?structuredClone(g.appointment):null,
         permissions:office?.override?{head:office.value.powers,scope:settlement}:head?structuredClone(g.permissions):{head:[]},foundingAppointment:structuredClone(g.appointment),
         eligible:eligible(this,settlement,d.get('state')),referral:structuredClone(g.referral),note:unavailable,
         offices:playerOffices(d.get('state'),{settlement},this),applyAt:authorityOf(this)?.superiors?.auth_bs_office_charter?.seat??null,publicOpinion:hallOpinion(d,this,settlement),

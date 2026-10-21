@@ -69,6 +69,15 @@ export function contributionTotal(state,settlement,subject='player'){
     return Object.values(state.records??{}).filter(r=>r.category==='civic_contribution'&&r.settlement===settlement&&r.subject===subject).reduce((n,r)=>n+r.points,0);
 }
 const total=(d,settlement,subject='player')=>contributionTotal(d.get('state'),settlement,subject);
+// Import an accepted work once without performing it or funding it again.
+export function restoreContributionSnapshot(d,engine,{sourceEvent}){
+    const event=d.get('state','records',sourceEvent),p=event?.payload;
+    if(event?.category!=='world_event'||event.verb!=='public_work_completed'||event.minute>d.get('state','minute')||
+        event.source?.kind!=='corpus_premise'||!engine.rules.agriculture?.settlements.some(s=>s.settlement===p?.subject)||
+        !(event.actor==='player'||d.get('state','npcs',event.actor))||typeof p.work!=='string'||!p.work.trim()||
+        !Number.isSafeInteger(p.contribution)||p.contribution<1)throw Error('Invalid accepted public work contribution source');
+    return credit(d,{sourceEvent,settlement:p.subject,subject:event.actor,kind:'project',points:p.contribution,minute:event.minute});
+}
 function credit(d,{sourceEvent,settlement,subject='player',kind,points,minute}){
     const id=`civic_source:${sourceEvent}`,old=d.get(...recordPath(id));
     if(old){
@@ -142,7 +151,10 @@ export function civicAction(d,args,eventId){
         let proof=null;try{proof=residenceProof(d,this,settlement);}catch{}
         return {settlement,residence:proof,resident:resident??null,citizen:citizen??null,contribution:points,canApplyCitizen:Boolean(resident&&proof?.days>=civicRules.citizen.days&&points>=civicRules.citizen.contribution),requirements:civicRules,note:'达标只开放申请；土地与官职另需授权。',actionScope:{kind:'instant'}};
     }
-    if(operation==='civic_contribution')return {contribution:contribution(d,this,args,settlement)};
+    if(operation==='civic_contribution'){
+        if(args.sourceEvent!==undefined)return {contribution:contribution(d,this,args,settlement)};
+        return {settlement,total:total(d,settlement),sources:Object.values(d.get('state','records')??{}).filter(r=>r.category==='civic_contribution'&&r.settlement===settlement&&r.subject==='player'),actionScope:{kind:'instant'}};
+    }
     if(operation==='civic_residence'){
         const proof=residenceProof(d,this,settlement),row={category:'civic_residence',subject:'player',settlement,...proof};
         const id=key('residence',settlement),old=d.get(...recordPath(id));

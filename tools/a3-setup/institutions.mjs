@@ -2,6 +2,8 @@ import {registerSetupLoader} from './index.mjs';
 import {recordHistoricalEvent,worldEvent} from '../../server-plugin/world-events.mjs';
 import {applyConsentEvent} from '../../server-plugin/action-consent.mjs';
 import {resolveAuthoritySelector,grantLimitedPermit} from '../../server-plugin/action-authority.mjs';
+import {restoreContributionSnapshot} from '../../server-plugin/civic.mjs';
+import {restoreInstitutionSnapshot,restoreInstitutionOffice,restoreOfficeRemovalSnapshot} from '../../server-plugin/governance.mjs';
 
 // Historical premises are not actions to replay. In particular a paid event
 // never calls trade/transfer, and a case event never calls crime/report/judge.
@@ -44,6 +46,8 @@ function historyPayload(ctx,row){
 }
 const eventFields=['id','verb','at','source','actor','subject','service','to','resource','item','quantity','totalCoins','principal','fee','owner','balance','purpose','scope','terms','expires','revoked','debtor','creditor','amount','observer','location','currentlyVisible','atBeforeDetention','name','witnesses','court','case','vocation','condition','damage','target','fine','effective','fireIntensity','spell','atDay','netCoins','acquired','openingStockOnly'];
 const verbs=new Set(['appointment_agreed','quoted','opening_balance','paid','permission_granted','consented','crafted','obligation_opened','observed','theft','purchase_receipt','case_registered','judged','evidence_found','qualified','accepted_cargo','delivered','arrest_order','hostile_encounter','ignited','summoned','rite_scheduled','ownership_transferred_and_delivered','trade_completed','refused','wanted_issued']);
+eventFields.push('work','contribution','yes','no','office','claim','truth','daysAgo','content','knowsThief');
+for(const verb of ['public_work_completed','votes_recorded','application_filed','notice_posted','removed_from_office','deceived','said'])verbs.add(verb);
 function loadHistory(ctx,setup,{selectors=false}={}){
  const ids=new Set();
  const physicalIds=new Set(['itemInstances','objects'].flatMap(field=>Array.isArray(setup[field])?setup[field]:[]).map(row=>row?.id).filter(text));
@@ -61,12 +65,24 @@ function loadHistory(ctx,setup,{selectors=false}={}){
   if(['consented','refused'].includes(row.verb))requireShape(text(row.actor)&&text(row.scope)&&text(row.subject??row.spell)&&integer(row.expires)&&row.expires>row.at&&row.revoked===false&&(row.verb==='refused'||text(row.to)&&object(row.terms)),'invalid explicit consent/refusal scope, terms or expiry');
   if(row.verb==='opening_balance')requireShape(text(row.owner)&&text(row.resource)&&integer(row.balance),'opening_balance needs owner/resource/balance');
   if(row.verb==='obligation_opened')requireShape(text(row.subject)&&text(row.debtor)&&text(row.creditor)&&integer(row.amount),'obligation_opened needs claim and parties');
+  if(row.verb==='public_work_completed')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.subject))&&text(row.work)&&integer(row.contribution)&&row.contribution>0,'invalid accepted public work');
+  if(row.verb==='votes_recorded')requireShape(text(row.subject)&&integer(row.yes)&&integer(row.no),'invalid recorded tally');
+  if(row.verb==='application_filed')requireShape(text(row.actor)&&text(row.subject),'invalid application filing');
+  if(row.verb==='notice_posted')requireShape(text(row.actor)&&text(row.subject),'invalid posted notice');
+  if(row.verb==='deceived')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.to))&&text(row.claim)&&text(row.truth)&&(row.daysAgo===undefined||integer(row.daysAgo)),'invalid historical claim');
+  if(row.verb==='said')requireShape(text(row.actor)&&text(row.content)&&(row.knowsThief===undefined||typeof row.knowsThief==='boolean'),'invalid historical statement');
+  if(row.verb==='removed_from_office')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.subject))&&text(row.office),'invalid office removal source');
   const actor=row.actor===undefined?null:selector(ctx,row.actor);
   if(actor!==null)requireShape(known(ctx,actor),'history actor does not exist');
   const payload=historyPayload(ctx,row),key=`world_event:${row.id}`;
   if(actor!==null)payload.actor=actor;
-  if(ctx.native(item,d=>recordHistoricalEvent(d,ctx.engine,{id:row.id,verb:row.verb,actor,minute:row.at,location:payload.location??null,witnesses:payload.witnesses??[],source:payload.source,payload})))ctx.bindings[row.id]=key;
+  if(ctx.native(item,d=>{
+   recordHistoricalEvent(d,ctx.engine,{id:row.id,verb:row.verb,actor,minute:row.at,location:payload.location??null,witnesses:payload.witnesses??[],source:payload.source,payload});
+   if(row.verb==='public_work_completed')restoreContributionSnapshot(d,ctx.engine,{sourceEvent:key});
+   if(row.verb==='removed_from_office')restoreOfficeRemovalSnapshot(d,ctx.engine,{sourceEvent:key});
+  }))ctx.bindings[row.id]=key;
   else return;
+  if(row.verb==='deceived'&&row.daysAgo!==undefined&&state(ctx).minute-row.at!==row.daysAgo*1440)ctx.unmet(`${item}.daysAgo`,'Historical at and daysAgo disagree; temporal source must be resolved without inventing a date (T1)');
   if(row.verb!=='consented')return;
   if(row.expires<=state(ctx).minute)return;
   ctx.native(item,d=>{
@@ -92,6 +108,31 @@ function loadPermits(ctx,setup){rows(ctx,setup,'permits',(row,item)=>{
 });}
 
 export {object,text,alias,integer,keys,gap,rows,requireShape,state,known,selector,eventSource};
+function loadInstitutionInputs(ctx,setup){
+ for(const [index,row]of (Array.isArray(setup.instances)?setup.instances:[]).entries()){
+  if(row?.template==='office'&&!ctx.bindings[row.id]){
+   const item=`instances[${index}]`;
+   try{
+    requireShape(keys(row,['id','template','kind','name','location','organization','seat','authority']),'invalid institution office fields');
+    let id;
+    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization:ctx.ref(row.organization)});}))ctx.bindings[row.id]=id;
+   }catch(error){ctx.unmet(item,error.message);}
+   continue;
+  }
+  if(!['proposal','application'].includes(row?.kind))continue;
+  const item=`instances[${index}]`;
+  try{
+   const allowed=['id','template','kind','name','location','status',...(row.kind==='application'?['applicant','plot']:[])];
+   requireShape(keys(row,allowed)&&row.template==='thing'&&alias(row.id),'invalid institutional instance');
+   const source=(setup.history??[]).find(e=>e.subject===row.id&&e.verb===(row.kind==='proposal'?'votes_recorded':'application_filed'));
+   requireShape(source,'institutional snapshot has no filing/tally source');
+   const event=eventSource(ctx,source.id);
+   let id;
+   if(ctx.native(item,d=>{id=restoreInstitutionSnapshot(d,ctx.engine,{row:{...row,applicant:row.applicant&&ctx.ref(row.applicant),plot:row.plot&&ctx.ref(row.plot)},sourceEvent:`world_event:${event.id}`});}))ctx.bindings[row.id]=id;
+  }catch(error){ctx.unmet(item,error.message);}
+ }
+}
 registerSetupLoader({fields:['history'],order:10,load:loadHistory});
 registerSetupLoader({fields:['history'],order:65,load(ctx,setup){loadHistory(ctx,setup,{selectors:true});}});
+registerSetupLoader({fields:['instances'],order:66,load:loadInstitutionInputs});
 registerSetupLoader({fields:['permits'],order:70,load:loadPermits});
