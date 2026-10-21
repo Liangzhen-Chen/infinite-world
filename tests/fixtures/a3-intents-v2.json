@@ -1887,13 +1887,14 @@
     },
     "proposalNotes": [
       "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
-      "商旅行会联络处是真实地点，但不能假定它有木工认证授予权；须由目录或受理者指出有权机构，不直接开 certified。",
-      "2026-10-20 v2r复审：世界内容缺口：world/meta/professions.json profession_life_6要求本地行业师傅或登记行会、技能100及作品；world/geo/locations.json的bld_bs_guild只作商旅行会联络。检索world/people、world/lore、world/geo、world/meta未找到明确木工考官/认证授予来源；baseline列出的阿砚等为学徒/帮工/修补工，木工职业或教学服务本身不足以证明考官资格。无可证实的合格考点可迁，保留地点、登记员和未解析考官选择器；不把receive_application/refer_examiner升级成授予权，不预置认证通过。"
+      "商旅行会联络处是本场接待地点；木工认证授予权来自灯桥工匠会office_exam_life_6及其现任尹葛，不来自建筑名称或登记员。仍须完成真实考核，不直接开certified。",
+      "2026-10-21续审：原文“想去行会办个正式认证”要求认证，不限于登记转交，保留core:profession.certify及原expected。world/lore/factions.json的faction_lampbridge.offices已任命npc_hw_yinge，席位bld_bs_guild、receptionHours=[[540,720]]；本场minute=600并将考官列入present。baseline原劳动作息保留，接待位置按当前职位派生（tests/world-content2.test.mjs明确600分钟在联络处、780分钟回磨坊）；不伪造常驻或改写人物作息。撤回v2r“无真实考官来源”的旧判断，保留考试passed=false、费用及本人作品前提。"
     ],
     "setup": {
       "location": "bld_bs_guild",
       "present": [
-        "npc_hw_yanzhe"
+        "npc_hw_yanzhe",
+        "npc_hw_yinge"
       ],
       "inventory": {
         "item_tool_handle": 1
@@ -1902,7 +1903,7 @@
       "minute": 600,
       "facts": [
         "本人等级1，skill_life_6_core=100；带有本人制作且满足本地验样要求的木柄作品，尚未取得profession_life_6认证。",
-        "严辙在登记窗口受理，具有本次转交合格木工考官的登记授权；考官席位、120分钟考核及20铜费用可安排，申请不等于认证已通过。"
+        "严辙在登记窗口受理并转交；尹葛（npc_hw_yinge）按灯桥工匠会木工考官职位office_exam_life_6在bld_bs_guild当值验样，职位接待时段为540—720分钟，本场600分钟开始、120分钟考核可在720分钟结束，费用20铜。考官资格与接待位置由当前任职派生；申请不等于认证已通过。"
       ],
       "abilities": {
         "skills": {
@@ -9267,7 +9268,7 @@
     "proposalNotes": [
       "眼前整座石城门按setup以通用thing/building模板登记为既存实体；不换成木门或铁栅。目标真实存在，玩家仍仅有初学木工与小刀，不能完成请求的整门修复。",
       "本轮场景绑定：missing:present_stone_city_gate → 环城现役城门的开裂石砌门体。前提见setup，不将绑定当作动作成功。",
-      "2026-10-20 v2r复审：原文未指定城门权属，按本次授权声明整座现役石门归环城共同体loc_far_huancheng；world/geo/locations.json确认环城及环城城墙，选公共主体而不冒名某个未登记官员。许可只允许检查尝试，不赋予石工能力、材料或必然成功。 01 §1.3与06 §6.3：owner与历史许可actor、permit.issuer统一到同一真实主体；许可范围和期限不扩张，歧义、反例与其他空间前置保留。"
+      "2026-10-21续审：依据05 §5.3，治理主体是组织，首长权限由当前职位派生。world/lore/factions.json已登记faction_huancheng_government及现任首长npc_hc_yicen、公共城墙与石门治理职责；owner改为该郡署，历史许可actor与permit.issuer改为现任首长。撤回v2r把地点loc_far_huancheng当作治理主体的设定。许可范围与期限、整座石门、初学木工与小刀、空间前提和expected拒绝均不变；空间问题仍归S4。"
     ],
     "setup": {
       "location": "loc_far_huancheng",
@@ -9281,7 +9282,7 @@
         "环城现役城门的开裂石砌门体：本场已有的整座石砌城门building/thing实体，condition=40，石料体量远超手工一轮可修范围，玩家就在门前。",
         "玩家只有skill_life_6_core=10和一把完好小刀，无石工本领、石工工具、替换石材、施工队或修复法术；城门管理人允许尝试检查修补，以免许可缺失遮住能力不适配。",
         "此门体按thing/building通用模板在setup登记并唯一命名；不把旧水门的铁栅误说成石城门。",
-        "原文未指定城门权属，按本次授权声明整座现役石门归环城共同体loc_far_huancheng；world/geo/locations.json确认环城及环城城墙，选公共主体而不冒名某个未登记官员。许可只允许检查尝试，不赋予石工能力、材料或必然成功。"
+        "整座现役石门归环城郡署faction_huancheng_government；本场既有检查修补尝试许可由该组织现任首长npc_hc_yicen按职权签发，许可事件actor与issuer一致。首长身份取本场当前世界任职，不是地点loc_far_huancheng或个人私有产权。许可不赋予石工能力、材料或必然成功。"
       ],
       "abilities": {
         "skills": {
@@ -9301,7 +9302,7 @@
           "condition": 40,
           "material": "stone",
           "scale": "whole_city_gate",
-          "owner": "loc_far_huancheng"
+          "owner": "faction_huancheng_government"
         }
       ],
       "history": [
@@ -9313,7 +9314,7 @@
             "kind": "corpus_premise",
             "row": "A3V2-088"
           },
-          "actor": "loc_far_huancheng",
+          "actor": "npc_hc_yicen",
           "subject": "a3v2_088_stone_gate",
           "to": "player",
           "scope": "inspect_and_attempt_repair"
@@ -9325,7 +9326,7 @@
           "holder": "player",
           "subject": "a3v2_088_stone_gate",
           "scope": "inspect_and_attempt_repair",
-          "issuer": "loc_far_huancheng",
+          "issuer": "npc_hc_yicen",
           "fromMinute": 599,
           "toMinute": 2040,
           "sourceEvent": "a3v2_088_permit_0"
