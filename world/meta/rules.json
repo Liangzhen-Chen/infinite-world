@@ -1875,6 +1875,12 @@
               "maximum": 2
             },
             {
+              "item": "item_mining_pick",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2
+            },
+            {
               "item": "item_steel_arming_sword",
               "source": "local",
               "amount": 1,

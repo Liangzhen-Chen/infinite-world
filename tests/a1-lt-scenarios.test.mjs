@@ -56,17 +56,18 @@ test('L3 同一天再买同一件东西，报价一致（当日报价入账）',
  const d=await ui.read(),quote=d.state.records[`trade-quote:0:${LINSUI}:player:item_bread`];assert.equal(quote.listPrice,a.result.cost);
 });
 
-test('L4 库存有限：铁匠铺的刀卖完后买不到，菜单说明下次进货的日子，到货后能再买',async t=>{
+// 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
+for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐']])test(`L4 库存有限：铁匠铺的${label}卖完后买不到，菜单说明下次进货的日子，到货后能再买`,async t=>{
  const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;})});
- const stock=qty((await ui.read()).state.npcs[SMITH].inventory.item_kitchen_knife);assert.ok(stock>0);
- const all=await ui.choose('trade.buy',{item:'item_kitchen_knife',quantity:stock},{target:SMITH});assert.ok(all.ok,all.error);
- const none=await ui.choose('trade.buy',{item:'item_kitchen_knife',quantity:1},{search:true,target:SMITH});
+ const stock=qty((await ui.read()).state.npcs[SMITH].inventory[item]);assert.ok(stock>0);
+ const all=await ui.choose('trade.buy',{item,quantity:stock},{target:SMITH});assert.ok(all.ok,all.error);
+ const none=await ui.choose('trade.buy',{item,quantity:1},{search:true,target:SMITH});
  assert.equal(none.ok,false);assert.match(none.error,/只剩0/);
- const menu=await ui.menu(SMITH),note=menu.target.soldOut.find(r=>r.item==='item_kitchen_knife');
+ const menu=await ui.menu(SMITH),note=menu.target.soldOut.find(r=>r.item===item);
  assert.ok(note&&note.nextMinute>(await ui.read()).state.minute,'告诉玩家何时到货');assert.match(note.next,/年/);
- assert.ok(!menu.actions.find(a=>a.id==='core:trade.buy').slots.find(s=>s.name==='item').options.some(o=>o.value==='item_kitchen_knife'),'卖完的货不再出现在可选项');
+ assert.ok(!menu.actions.find(a=>a.id==='core:trade.buy').slots.find(s=>s.name==='item').options.some(o=>o.value===item),'卖完的货不再出现在可选项');
  const now=(await ui.read()).state.minute;await ui.choose('time',{minutes:note.nextMinute+10*60-now});
- const again=await ui.choose('trade.buy',{item:'item_kitchen_knife',quantity:1},{target:SMITH});assert.ok(again.ok,again.error);
+ const again=await ui.choose('trade.buy',{item,quantity:1},{target:SMITH});assert.ok(again.ok,again.error);
 });
 
 test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动',async t=>{
@@ -75,7 +76,25 @@ test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动'
  assert.equal(r.ok,false);assert.match(r.error,/余额不足/);
  const after=await ui.read();assert.equal(after.state.npcs[LINSUI].coins,1);assert.equal(qty(after.state.inventory.item_bread),5);assert.deepEqual(after.state,before.state);
 });
-test.todo('L5 对方钱不够时还价或部分收购：引擎只整笔拒绝，没有部分收购或还价（交涉归 A2 的 NPC 决策）');
+// 指南11.3 L5：卖方明确允许部分成交；原整笔拒绝断言保留。
+test('L5 对方钱不够时部分收购：只转付得起的原货，不足一件则回滚',async t=>{
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=5;s.inventory.item_bread={quantity:20};})});
+ const before=await ui.read(),menu=await ui.menu(LINSUI);
+ assert.ok(menu.actions.find(a=>a.id==='core:trade.sell_to').slots.some(s=>s.name==='allowPartial'));
+ const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
+ assert.ok(r.ok,r.error);assert.equal(r.result.partial,true);assert.equal(r.result.requestedQuantity,20);
+ assert.ok(r.lines[0].includes(`${r.result.quantity}份`),'界面只报实际成交数量');
+ assert.ok(r.result.quantity>0&&r.result.quantity<20);const after=await ui.read();
+ assert.equal(qty(after.state.inventory.item_bread),20-r.result.quantity);
+ assert.equal(qty(after.state.npcs[LINSUI].inventory.item_bread)-qty(before.state.npcs[LINSUI].inventory.item_bread),r.result.quantity);
+ assert.equal(after.state.player.coins-before.state.player.coins,r.result.cost);
+ assert.equal(before.state.npcs[LINSUI].coins-after.state.npcs[LINSUI].coins,r.result.cost);
+ assert.equal(after.state.minute-before.state.minute,5);conserved(before,after,'部分收购');
+ assert.equal((await ui.retry('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},r.eventId,LINSUI)).duplicate,true);
+ assert.deepEqual((await ui.read()).state,after.state);
+ const denied=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
+ assert.equal(denied.ok,false);assert.match(denied.error,/余额不足/);assert.deepEqual((await ui.read()).state,after.state);
+});
 
 test('L6 重试：同一次界面请求重复提交（同一事件编号）不重复扣款',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60)});

@@ -76,6 +76,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    // handlers, without exposing new static tools. Check the exact dispatch.
    const catalogAliases={
     'core:environment.douse_fire':{tool:'world_environment',args:{operation:'douse_fire'}},
+    // 指南11.3 F5：取出施法后的原水须走目录入口，仍核对精确分派。
+    'core:environment.take_contents':{tool:'world_environment',args:{operation:'take_contents'}},
     'core:site.gather_session':{tool:'world_site',args:{operation:'gather'}}
    };
    if(catalogAliases[a.id]){
@@ -91,6 +93,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
    'core:trade.lend':[{name:'interest',kind:'quantity'}],
+   // 指南11.3 L5：仅扩动态目录；保留未登记槽位一律拒绝的断言。
+   'core:trade.sell_to':[{name:'allowPartial',kind:'flag',label:'允许部分收购'}],
    'core:cast':[{name:'millilitres',kind:'quantity'}],
    'core:learn':[{name:'mode',kind:'choice',options:['acquire','study','observe']}],
    'core:combat':[{name:'destination',kind:'text'}],
