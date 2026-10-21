@@ -20,6 +20,9 @@ export function mergeT142(world,batch){
 export function withoutT142(world,batch=buildBatch()){
  const ids=batchIds(batch),next=structuredClone(world);
  for(const [,key] of FILES)next[key]=(next[key]??[]).filter(r=>!ids.has(r.id));
+ // Later resident officials (e.g. Huancheng's governor and deputy) depend on
+ // these places too. They cannot stand in an edition predating their seat.
+ next.npcs=(next.npcs??[]).filter(n=>!ids.has(n.location));
  if(!next.regions.length)delete next.regions;
  // Later cards answer the polities on other rows (reverse relations) and run
  // their clocks from rules.factionClock; neither existed before this batch.

@@ -18,12 +18,23 @@ function factionBase(engine,id){
     const listed=reputationFactions(engine).find(r=>r.id===id);
     const f=engine.world.factions?.find(f=>f.id===id)??(listed?{id,name:id}:null);if(!f)return null;
     const members={},add=(m,position)=>{if(m&&!members[m])members[m]={position,joinedAt:null,arrears:0};};
-    add(f.leader,'首领');for(const m of f.coreMembers??[])add(m,ELDER);
+    add(f.leader,f.leaderTitle??'首领');for(const m of f.coreMembers??[])add(m,ELDER);
+    // A specialist appointment grants only its own authority. It does not make
+    // an examiner a council elder able to represent all organisation assets.
+    for(const office of f.offices??[])add(office.holder,MEMBER);
     for(const m of listed?.members??[])add(m,MEMBER);
     for(const n of (engine.world.npcs??[]))if(n.faction===id)add(n.id,MEMBER);
     const mode=['地方议会','居民筹备组织'].includes(f.kind)?'vote':['教会','学派','学院'].includes(f.kind)?'elders':'leader';
-    return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:'首领',members,treasury:f.resources?.treasuryCopper??0,
+    return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:f.leaderTitle??'首领',members,treasury:f.resources?.treasuryCopper??0,
         charter:{mode,approval:true,fee:0,dues:0,rules:[f.method,f.demands].filter(Boolean)}};
+}
+// Appointments belong to the organisation. An explicit vacancy never restores
+// the catalogue holder; changing the holder changes the service at read time.
+export function organizationOffices(engine,state,id,faction=engine.world.factions?.find(f=>f.id===id)){
+    const row=state.records?.[key(id)];
+    if(!faction)return [];
+    return (faction.offices??[]).map(office=>({...office,organization:id,
+        holder:Object.hasOwn(row?.offices??{},office.id)?row.offices[office.id]?.holder??null:office.holder}));
 }
 function householdBase(engine,state,id){
     const h=engine.world.households?.find(h=>h.id===id);if(!h)return null;

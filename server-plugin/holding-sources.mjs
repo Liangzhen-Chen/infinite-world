@@ -16,7 +16,7 @@ import {ensureHoldings,holdingsActive,aliveHoldings,openHolding,closeHolding,cre
 import './holding-kinds.mjs';
 import {holdingKind} from './holdings.mjs';
 import {appendFileSync as fsAppend} from 'node:fs';
-import {storedOrganization,storedOrganizationIds} from './organization-state.mjs';
+import {storedOrganization,storedOrganizationIds,organizationOffices} from './organization-state.mjs';
 import {actorId} from './npc-state.mjs';
 import {snapshotContractTerms} from './contract-state.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
@@ -254,10 +254,13 @@ defineHoldingSource('org',{
     units:(engine,state)=>storedOrganizationIds(engine,state),
     extract(engine,state,id){
         const o=storedOrganization(engine,state,id);if(!o)return null;
-        const office=orgLeaderOffice(id);
-        return {entities:[{id:office,kind:'office',facts:{org:id,role:'leader'}}],
+        const office=orgLeaderOffice(id),positions=organizationOffices(engine,state,id);
+        const title=engine.world.factions?.find(f=>f.id===id)?.leaderTitle;
+        return {entities:[{id:office,kind:'office',facts:{org:id,role:'leader',...(title?{name:title}:{})}},
+                ...positions.map(({holder,...p})=>({id:p.id,kind:'office',facts:{...p,org:id}}))],
             holdings:[...Object.entries(o.members).map(([m,rank])=>({kind:state.records?.[m]?.category==='business'?'business_member_of':'member_of',holder:m,subject:id,terms:{rank,...(state.records?.[m]?.category==='business'?{representative:state.records[`organization:${id}`]?.members?.[m]?.representative,feeAccount:state.records[`organization:${id}`]?.members?.[m]?.feeAccount}:{})}})),
-                ...(o.leader?[{kind:'holds_office',holder:o.leader,subject:office}]:[])]};
+                ...(o.leader?[{kind:'holds_office',holder:o.leader,subject:office}]:[]),
+                ...positions.filter(p=>p.holder).map(p=>({kind:'holds_office',holder:p.holder,subject:p.id}))]};
     },
 });
 

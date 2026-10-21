@@ -6075,5 +6075,31 @@
   "closedSeasons": [],
   "toll": 0,
   "risk": 0
-}
+},
+  {
+    "id": "route_hc_wall",
+    "from": "loc_far_huancheng",
+    "to": "bld_hc_citywall",
+    "lengthKm": 0,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  },
+  {
+    "id": "route_hc_gate",
+    "from": "loc_far_huancheng",
+    "to": "bld_hc_stone_gate",
+    "lengthKm": 0,
+    "terrainMultiplier": 1,
+    "modes": [
+      "walk"
+    ],
+    "closedSeasons": [],
+    "toll": 0,
+    "risk": 0
+  }
 ]
