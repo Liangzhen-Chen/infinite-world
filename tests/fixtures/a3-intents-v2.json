@@ -13829,8 +13829,8 @@
       "accounts": [
         {
           "owner": "npc_hw_ayan",
-          "resource": "本柜镐库存",
-          "purpose": "stock",
+          "resource": "item_mining_pick",
+          "purpose": "inventory",
           "balance": 0,
           "sourceEvent": "a3v2_124_event"
         }
@@ -13838,14 +13838,15 @@
       "history": [
         {
           "id": "a3v2_124_event",
-          "verb": "stock_sold_out",
+          "verb": "opening_balance",
           "at": 599,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-124"
           },
-          "actor": "npc_hw_ayan",
-          "resource": "本柜镐库存"
+          "owner": "npc_hw_ayan",
+          "resource": "item_mining_pick",
+          "balance": 0
         }
       ]
     },
@@ -13928,22 +13929,6 @@
           "resource": "coin_river",
           "balance": 6
         }
-      ],
-      "itemInstances": [
-        {
-          "id": "a3v2_125_item_clay_cup",
-          "template": "thing",
-          "kind": "item",
-          "item": "item_clay_cup",
-          "owner": "player",
-          "location": "bld_hw_qingdeng",
-          "carriedBy": "player",
-          "inventoryBinding": {
-            "item": "item_clay_cup",
-            "quantity": 2,
-            "mode": "same_stock"
-          }
-        }
       ]
     },
     "source": {
@@ -14003,22 +13988,6 @@
           "quantity": 2,
           "totalCoins": 4,
           "requestId": "a3v2_126_paid_once"
-        }
-      ],
-      "itemInstances": [
-        {
-          "id": "a3v2_126_item_bread",
-          "template": "thing",
-          "kind": "item",
-          "item": "item_bread",
-          "owner": "player",
-          "location": "bld_hw_qingdeng",
-          "carriedBy": "player",
-          "inventoryBinding": {
-            "item": "item_bread",
-            "quantity": 2,
-            "mode": "same_stock"
-          }
         }
       ]
     },
@@ -14514,7 +14483,7 @@
       ],
       "inventory": {},
       "coins": 0,
-      "minute": 600,
+      "minute": 4920,
       "facts": [
         "林穗正在柜台做普通店务，听得见招呼，双方有共同语言；不提前写好她的答复。",
         "三天前玩家确实帮林穗修了青灯酒馆屋顶，林穗在场亲见；没有预写她今天的好感或台词。"
@@ -14531,16 +14500,24 @@
       "history": [
         {
           "id": "a3v2_134_event",
-          "verb": "roof_repaired",
-          "at": 599,
+          "verb": "observed",
+          "at": 600,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-134"
           },
           "actor": "player",
-          "to": "npc_hw_linsui",
+          "observer": "npc_hw_linsui",
+          "witnesses": [
+            "npc_hw_linsui"
+          ],
           "subject": "bld_hw_qingdeng",
-          "daysAgo": 3
+          "location": "bld_hw_qingdeng",
+          "name": "林穗亲见玩家修好青灯酒馆屋顶",
+          "terms": {
+            "work": "roof_repair",
+            "completed": true
+          }
         }
       ],
       "knowledge": [
@@ -15333,7 +15310,7 @@
       ],
       "inventory": {},
       "coins": 0,
-      "minute": 600,
+      "minute": 7800,
       "facts": [
         "林穗正在柜台做普通店务，听得见招呼，双方有共同语言；不提前写好她的答复。",
         "玩家四天前对林穗的付款承诺已违约，林穗知道；未预置本次赊账许可。",
@@ -15351,28 +15328,33 @@
       "history": [
         {
           "id": "a3v2_144_event",
-          "verb": "defaulted",
-          "at": 599,
+          "verb": "observed",
+          "at": 2040,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-144"
           },
-          "actor": "player",
-          "to": "npc_hw_linsui",
+          "observer": "npc_hw_linsui",
           "subject": "a3v2_144_old_promise",
-          "daysAgo": 4
+          "location": "bld_hw_qingdeng",
+          "name": "林穗亲见十铜付款承诺到期未偿",
+          "terms": {
+            "amount": 10,
+            "paid": 0,
+            "dueAt": 2040
+          }
         },
         {
           "id": "a3v2_144_opened",
           "verb": "obligation_opened",
-          "at": -6600,
+          "at": 600,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-144"
           },
-          "actor": "player",
-          "to": "npc_hw_linsui",
           "subject": "a3v2_144_old_promise",
+          "debtor": "player",
+          "creditor": "npc_hw_linsui",
           "amount": 10
         }
       ],
@@ -15380,7 +15362,7 @@
         {
           "holder": "npc_hw_linsui",
           "event": "a3v2_144_event",
-          "source": "direct_experience"
+          "source": "direct_observation"
         }
       ],
       "obligations": [
@@ -15391,8 +15373,8 @@
           "creditor": "npc_hw_linsui",
           "amount": 10,
           "paid": 0,
-          "openedAt": -6600,
-          "dueAt": -5160,
+          "openedAt": 600,
+          "dueAt": 2040,
           "sourceEvent": "a3v2_144_opened",
           "terms": {
             "resource": "coin_river",
@@ -15576,8 +15558,7 @@
             "row": "A3V2-146"
           },
           "actor": "npc_hw_linsui",
-          "subject": "照顾家人",
-          "start": 605
+          "service": "照顾家人"
         }
       ]
     },
@@ -16159,9 +16140,24 @@
       "knowledge": [
         {
           "holder": "player",
-          "subject": "npc_hw_linsui",
-          "fact": "青灯酒馆经营者",
-          "source": "previous_introduction"
+          "event": "a3v2_154_introduction",
+          "source": "direct_observation"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_154_introduction",
+          "verb": "observed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-154"
+          },
+          "actor": "npc_hw_linsui",
+          "observer": "player",
+          "subject": "bld_hw_qingdeng",
+          "location": "bld_hw_qingdeng",
+          "name": "林穗自我介绍经营青灯酒馆"
         }
       ]
     },
@@ -16207,14 +16203,20 @@
       "history": [
         {
           "id": "a3v2_155_event",
-          "verb": "said",
+          "verb": "observed",
           "at": 599,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-155"
           },
           "actor": "player",
-          "content": "我有一百铜"
+          "observer": "player",
+          "subject": "player",
+          "name": "玩家上一句声称“我有一百铜”",
+          "terms": {
+            "statement": "我有一百铜",
+            "assertedBy": "player"
+          }
         }
       ]
     },
@@ -17057,9 +17059,7 @@
         {
           "actor": "player",
           "subject": "skill_light",
-          "practicedToday": false,
-          "atStageCap": true,
-          "breakthroughCompleted": false
+          "practicedToday": false
         }
       ]
     },
@@ -17397,15 +17397,16 @@
       "instances": [
         {
           "id": "a3v2_169_boar",
-          "template": "creature",
+          "template": "agent",
           "name": "冲撞中的野猪",
           "location": "loc_hw_northwood",
-          "hostile": true
+          "kind": "creature",
+          "species": "monster_bristle_boar"
         }
       ],
       "body": {
         "player": {
-          "hp": 1
+          "hpDeficit": 7
         }
       },
       "combats": [
@@ -17433,6 +17434,19 @@
             "quantity": 1,
             "mode": "same_stock"
           }
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_169_hostile",
+          "verb": "hostile_encounter",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-169"
+          },
+          "actor": "a3v2_169_boar",
+          "target": "player"
         }
       ]
     },
@@ -17493,7 +17507,7 @@
       ],
       "body": {
         "player": {
-          "hp": 0
+          "hpDeficit": 8
         }
       },
       "history": [
@@ -17624,7 +17638,7 @@
       ],
       "body": {
         "npc_hw_wushuo": {
-          "hp": 1
+          "hpDeficit": 43
         }
       },
       "itemInstances": [
@@ -17798,9 +17812,11 @@
       "instances": [
         {
           "id": "a3v2_173_animal",
-          "template": "creature",
+          "template": "agent",
           "name": "挡路的成年野兽",
-          "location": "loc_hw_northwood"
+          "location": "loc_hw_northwood",
+          "kind": "creature",
+          "species": "monster_bristle_boar"
         }
       ],
       "itemInstances": [
@@ -17861,9 +17877,11 @@
       "instances": [
         {
           "id": "a3v2_174_strong",
-          "template": "creature",
+          "template": "agent",
           "name": "远高于玩家阶段的生物",
-          "location": "loc_hw_northwood"
+          "location": "loc_hw_northwood",
+          "kind": "creature",
+          "species": "monster_cone_spine_tiger"
         }
       ],
       "positions": [
@@ -18085,13 +18103,16 @@
     },
     "setup": {
       "location": "loc_hw",
-      "present": [],
+      "present": [
+        "npc_hw_anhuai"
+      ],
       "coins": 0,
       "inventory": {},
       "minute": 600,
       "facts": [
         "严辙在本独立场景合法任管事，只有建房审批权限；申请人已提交一份待审申请且自有10铜，条例审过才收10铜；玩家不预定批准。",
-        "申请所指地块在本地，地权和建设许可尚待管事核查，未在题面确认通过；申请人是独立成年村民。"
+        "申请所指地块在本地，地权和建设许可尚待管事核查，未在题面确认通过；申请人是独立成年村民。",
+        "本题匿名人物对应既有世界人物npc_hw_anhuai；原场景别名a3v2_178_applicant指同一人，不另造人物。"
       ],
       "instances": [
         {
@@ -18101,25 +18122,22 @@
           "name": "待办建房申请",
           "location": "loc_hw",
           "status": "pending",
-          "applicant": "a3v2_178_applicant",
+          "applicant": "npc_hw_anhuai",
           "plot": "a3v2_178_plot"
         },
         {
           "id": "a3v2_178_office",
           "template": "office",
           "name": "本题有权职位",
-          "location": "loc_hw",
           "organization": "loc_hw",
-          "authority": [
-            "review_building_application"
-          ]
-        },
-        {
-          "id": "a3v2_178_applicant",
-          "template": "person",
-          "name": "已提交申请的成年村民",
-          "age": 30,
-          "location": "loc_hw"
+          "authority": {
+            "scope": "本地建房审批",
+            "operations": [
+              "review_building_application"
+            ]
+          },
+          "kind": "office",
+          "seat": "loc_hw"
         }
       ],
       "holdings": [
@@ -18138,11 +18156,11 @@
       ],
       "accounts": [
         {
-          "owner": "a3v2_178_applicant",
+          "owner": "npc_hw_anhuai",
           "resource": "coin_river",
           "purpose": "purse",
           "balance": 10,
-          "sourceEvent": "a3v2_178_event"
+          "sourceEvent": "a3v2_178_opening"
         }
       ],
       "history": [
@@ -18154,8 +18172,20 @@
             "kind": "corpus_premise",
             "row": "A3V2-178"
           },
-          "actor": "a3v2_178_applicant",
+          "actor": "npc_hw_anhuai",
           "subject": "a3v2_178_application"
+        },
+        {
+          "id": "a3v2_178_opening",
+          "verb": "opening_balance",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-178"
+          },
+          "owner": "npc_hw_anhuai",
+          "resource": "coin_river",
+          "balance": 10
         }
       ],
       "objects": [
@@ -18344,28 +18374,42 @@
       "cases": [
         {
           "id": "a3v2_180_case",
-          "court": "loc_bs",
-          "stage": "hearing",
+          "court": "bld_bs_watch",
+          "stage": "pending",
           "parties": [
             "player"
           ],
-          "sourceEvent": "a3v2_180_event"
+          "sourceEvent": "a3v2_180_registered",
+          "defendant": "player"
         }
       ],
       "history": [
         {
           "id": "a3v2_180_event",
-          "verb": "caught_stealing",
+          "verb": "theft",
           "at": 599,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-180"
           },
           "actor": "player",
-          "witness": "npc_hw_yanzhe",
           "subject": "a3v2_180_case",
           "resource": "item_bread",
-          "quantity": 1
+          "quantity": 1,
+          "witnesses": [
+            "npc_hw_yanzhe"
+          ]
+        },
+        {
+          "id": "a3v2_180_registered",
+          "verb": "case_registered",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-180"
+          },
+          "subject": "a3v2_180_case",
+          "court": "bld_bs_watch"
         }
       ]
     },
@@ -18468,22 +18512,16 @@
     },
     "setup": {
       "location": "loc_bs_nanshi",
-      "present": [],
+      "present": [
+        "npc_hw_linsui"
+      ],
       "coins": 200,
       "inventory": {},
       "minute": 600,
       "facts": [
         "玩家无既有店铺、租约或进货合同；现有200铜，尚未和出租方、供货人谈妥。",
-        "在场成年铺主确有一间空铺的所有权，愿意听租铺询价但尚未报价或同意出租。"
-      ],
-      "instances": [
-        {
-          "id": "a3v2_182_landlord",
-          "template": "person",
-          "name": "在场铺主",
-          "location": "loc_bs_nanshi",
-          "age": 45
-        }
+        "在场成年铺主确有一间空铺的所有权，愿意听租铺询价但尚未报价或同意出租。",
+        "本题未具名角色对应既有人物npc_hw_linsui；场景别名a3v2_182_landlord指同一人，年龄沿世界档案，不另造人物。"
       ],
       "objects": [
         {
@@ -18492,16 +18530,7 @@
           "kind": "building",
           "name": "可谈租的空铺面",
           "location": "loc_bs_nanshi",
-          "owner": "a3v2_182_landlord"
-        }
-      ],
-      "holdings": [
-        {
-          "id": "a3v2_182_owns",
-          "kind": "owns",
-          "holder": "a3v2_182_landlord",
-          "subject": "a3v2_182_shop",
-          "terms": {}
+          "owner": "npc_hw_linsui"
         }
       ]
     },
@@ -18601,13 +18630,16 @@
     },
     "setup": {
       "location": "bld_hw_school",
-      "present": [],
+      "present": [
+        "npc_hw_anhuai"
+      ],
       "coins": 0,
       "inventory": {},
       "minute": 600,
       "facts": [
         "玩家能读写河谷话，学堂准用一小时；30岁村民同意600至660分钟的免费识字课，尚未上课。",
-        "本题教师的识字熟练度100；学生仅学本课几个字，授课来源是玩家本人。"
+        "本题教师的识字熟练度100；学生仅学本课几个字，授课来源是玩家本人。",
+        "本题匿名人物对应既有世界人物npc_hw_anhuai；原场景别名a3v2_184_learner指同一人，不另造人物。"
       ],
       "abilities": {
         "skills": {
@@ -18617,22 +18649,6 @@
         "recipes": [],
         "licenses": []
       },
-      "reading": [
-        {
-          "actor": "player",
-          "language": "river",
-          "canRead": true
-        }
-      ],
-      "instances": [
-        {
-          "id": "a3v2_184_learner",
-          "template": "person",
-          "name": "愿学识字的成年村民",
-          "location": "bld_hw_school",
-          "age": 30
-        }
-      ],
       "history": [
         {
           "id": "a3v2_184_event",
@@ -18642,16 +18658,29 @@
             "kind": "corpus_premise",
             "row": "A3V2-184"
           },
-          "actor": "a3v2_184_learner",
+          "actor": "npc_hw_anhuai",
           "to": "player",
           "scope": "lesson",
-          "subject": "literacy",
+          "subject": "skill_literacy",
           "terms": {
             "minutes": 60,
             "fee": 0
           },
           "expires": 720,
           "revoked": false
+        },
+        {
+          "id": "a3v2_184_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-184"
+          },
+          "actor": "npc_hw_luqing",
+          "to": "player",
+          "subject": "bld_hw_school",
+          "scope": "literacy_lesson"
         }
       ],
       "permits": [
@@ -18660,9 +18689,19 @@
           "holder": "player",
           "subject": "bld_hw_school",
           "scope": "literacy_lesson",
-          "source": "setup.facts"
+          "issuer": "npc_hw_luqing",
+          "fromMinute": 599,
+          "toMinute": 660,
+          "sourceEvent": "a3v2_184_permission_source"
         }
-      ]
+      ],
+      "abilitiesByActor": {
+        "player": {
+          "writtenLanguages": [
+            "river"
+          ]
+        }
+      }
     },
     "source": {
       "kind": "guide",
@@ -19874,7 +19913,7 @@
       },
       "history": [
         {
-          "id": "a3v2_198_event",
+          "id": "a3v2_198_quote_flatbread",
           "verb": "quoted",
           "at": 719,
           "source": {
@@ -19883,71 +19922,101 @@
           },
           "actor": "npc_hw_linsui",
           "to": "player",
-          "items": [
-            {
-              "resource": "item_oat_flatbread",
-              "quantity": 1,
-              "coins": 8
-            },
-            {
-              "resource": "item_mutton",
-              "quantity": 1,
-              "coins": 15
-            }
-          ]
+          "resource": "item_oat_flatbread",
+          "quantity": 1,
+          "totalCoins": 8
         },
         {
-          "id": "a3v2_198_stock",
-          "verb": "opening_stock",
+          "id": "a3v2_198_stock_flatbread",
+          "verb": "opening_balance",
+          "at": 719,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-198"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "item_oat_flatbread",
+          "balance": 1
+        },
+        {
+          "id": "a3v2_198_quote_mutton",
+          "verb": "quoted",
           "at": 719,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-198"
           },
           "actor": "npc_hw_linsui",
-          "items": {
-            "item_oat_flatbread": 1,
-            "item_mutton": 1
-          }
+          "to": "player",
+          "resource": "item_mutton",
+          "quantity": 1,
+          "totalCoins": 15
+        },
+        {
+          "id": "a3v2_198_stock_mutton",
+          "verb": "opening_balance",
+          "at": 719,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-198"
+          },
+          "owner": "npc_hw_linsui",
+          "resource": "item_mutton",
+          "balance": 1
+        },
+        {
+          "id": "a3v2_198_meal_service_event",
+          "verb": "appointment_agreed",
+          "at": 719,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-198"
+          },
+          "actor": "npc_hw_linsui",
+          "subject": "player",
+          "service": "order_meal"
         }
       ],
       "quotes": [
         {
-          "id": "a3v2_198_meal_quote",
+          "id": "a3v2_198_flatbread_quote",
           "actor": "npc_hw_linsui",
           "to": "player",
-          "items": [
-            {
-              "resource": "item_oat_flatbread",
-              "quantity": 1,
-              "coins": 8
-            },
-            {
-              "resource": "item_mutton",
-              "quantity": 1,
-              "coins": 15
-            }
-          ],
-          "totalCoins": 23,
+          "resource": "item_oat_flatbread",
+          "quantity": 1,
+          "totalCoins": 8,
+          "direction": "sell_to_player",
           "at": 719,
           "expires": 780,
-          "sourceEvent": "a3v2_198_event"
+          "sourceEvent": "a3v2_198_quote_flatbread"
+        },
+        {
+          "id": "a3v2_198_mutton_quote",
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "resource": "item_mutton",
+          "quantity": 1,
+          "totalCoins": 15,
+          "direction": "sell_to_player",
+          "at": 719,
+          "expires": 780,
+          "sourceEvent": "a3v2_198_quote_mutton"
         }
       ],
       "accounts": [
         {
           "owner": "npc_hw_linsui",
           "resource": "item_oat_flatbread",
-          "purpose": "stock",
+          "purpose": "inventory",
           "balance": 1,
-          "sourceEvent": "a3v2_198_stock"
+          "sourceEvent": "a3v2_198_stock_flatbread"
         },
         {
           "owner": "npc_hw_linsui",
           "resource": "item_mutton",
-          "purpose": "stock",
+          "purpose": "inventory",
           "balance": 1,
-          "sourceEvent": "a3v2_198_stock"
+          "sourceEvent": "a3v2_198_stock_mutton"
         }
       ],
       "itemInstances": [
@@ -19976,7 +20045,7 @@
           "services": [
             "order_meal"
           ],
-          "sourceEvent": "a3v2_198_event"
+          "sourceEvent": "a3v2_198_meal_service_event"
         }
       ]
     },
@@ -20143,7 +20212,8 @@
           "owner": "player",
           "location": "loc_hw",
           "condition": 100,
-          "carriedBy": "player"
+          "carriedBy": "player",
+          "item": "item_hoe"
         }
       ],
       "body": {
@@ -20275,7 +20345,8 @@
           "owner": "player",
           "location": "loc_hw",
           "condition": 100,
-          "carriedBy": "player"
+          "carriedBy": "player",
+          "item": "item_sickle"
         }
       ],
       "body": {
@@ -20984,6 +21055,18 @@
           },
           "expires": 4920,
           "revoked": false
+        },
+        {
+          "id": "a3v2_206_appointment",
+          "verb": "appointment_agreed",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-206"
+          },
+          "actor": "npc_hw_ayan",
+          "subject": "skill_life_1_core",
+          "service": "teach"
         }
       ],
       "appointments": [
@@ -20998,8 +21081,7 @@
           ],
           "subject": "skill_life_1_core",
           "fee": 100,
-          "days": 3,
-          "sourceEvent": "a3v2_206_event"
+          "sourceEvent": "a3v2_206_appointment"
         }
       ],
       "abilitiesByActor": {
@@ -21192,27 +21274,31 @@
           "to": "player",
           "resource": "wound_care",
           "totalCoins": 30,
-          "medicineDays": 3
+          "quantity": 1,
+          "terms": {
+            "medicineDays": 3,
+            "medicineItem": "item_external_medicine",
+            "medicineQuantity": 3
+          }
         },
         {
           "id": "a3v2_208_stock",
-          "verb": "opening_stock",
+          "verb": "opening_balance",
           "at": 599,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-208"
           },
           "owner": "npc_hw_taozhi",
-          "resource": "外敷药",
-          "quantity": 3,
-          "unit": "日份"
+          "resource": "item_external_medicine",
+          "balance": 3
         }
       ],
       "accounts": [
         {
           "owner": "npc_hw_taozhi",
-          "resource": "外敷药",
-          "purpose": "stock",
+          "resource": "item_external_medicine",
+          "purpose": "inventory",
           "balance": 3,
           "sourceEvent": "a3v2_208_stock"
         }
@@ -21291,15 +21377,6 @@
           "available": true,
           "lodging": "room"
         }
-      ],
-      "holdings": [
-        {
-          "id": "a3v2_209_home",
-          "kind": "owns",
-          "holder": "player",
-          "subject": "a3v2_209_bed",
-          "terms": {}
-        }
       ]
     },
     "source": {
@@ -21354,22 +21431,35 @@
     },
     "setup": {
       "location": "loc_hw",
-      "present": [],
+      "present": [
+        "npc_hw_chenbai"
+      ],
       "coins": 38,
       "inventory": {},
       "minute": 1200,
       "facts": [
-        "中秋20时灯会仍在举行，21时散场；已买2月饼余38铜；主办人库存花灯1，题为“一口咬掉牛尾巴”，标准答案“告”，尚未领奖。"
+        "中秋20时灯会仍在举行，21时散场；已买2月饼余38铜；主办人库存花灯1，题为“一口咬掉牛尾巴”，标准答案“告”，尚未领奖。",
+        "本题未具名角色对应既有人物npc_hw_chenbai；场景别名a3v2_210_host指同一人，年龄沿世界档案，不另造人物。"
       ],
       "itemInstances": [
         {
           "id": "a3v2_210_cakes",
           "template": "thing",
           "kind": "item",
-          "name": "已购月饼两只",
+          "name": "已购月饼第一只",
           "owner": "player",
           "location": "loc_hw",
-          "quantity": 2,
+          "quantity": 1,
+          "carriedBy": "player"
+        },
+        {
+          "id": "a3v2_210_cakes_2",
+          "template": "thing",
+          "kind": "item",
+          "name": "已购月饼第二只",
+          "owner": "player",
+          "location": "loc_hw",
+          "quantity": 1,
           "carriedBy": "player"
         },
         {
@@ -21377,18 +21467,16 @@
           "template": "thing",
           "kind": "item",
           "name": "主办方奖品花灯",
-          "owner": "a3v2_210_host",
+          "owner": "npc_hw_chenbai",
           "location": "loc_hw",
-          "quantity": 1
-        }
-      ],
-      "instances": [
-        {
-          "id": "a3v2_210_host",
-          "template": "person",
-          "name": "本次灯会主办人",
-          "location": "loc_hw",
-          "age": 40
+          "quantity": 1,
+          "item": "item_lantern",
+          "carriedBy": "npc_hw_chenbai",
+          "inventoryBinding": {
+            "item": "item_lantern",
+            "quantity": 1,
+            "mode": "same_stock"
+          }
         }
       ],
       "rites": [
@@ -21398,7 +21486,7 @@
           "location": "loc_hw",
           "startsAt": 1080,
           "endsAt": 1260,
-          "host": "a3v2_210_host",
+          "host": "npc_hw_chenbai",
           "riddle": {
             "id": "a3v2_210_riddle",
             "question": "一口咬掉牛尾巴，打一字",
@@ -21411,27 +21499,24 @@
       "history": [
         {
           "id": "a3v2_210_resource_opening",
-          "verb": "opening_stock",
+          "verb": "opening_balance",
           "at": 1199,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-210"
           },
-          "owner": "a3v2_210_host",
-          "resource": "花灯",
-          "balance": 1,
-          "unit": "盏"
+          "owner": "npc_hw_chenbai",
+          "resource": "item_lantern",
+          "balance": 1
         }
       ],
       "accounts": [
         {
-          "owner": "a3v2_210_host",
-          "resource": "花灯",
-          "purpose": "physical_stock",
+          "owner": "npc_hw_chenbai",
+          "resource": "item_lantern",
+          "purpose": "inventory",
           "balance": 1,
-          "unit": "盏",
-          "sourceEvent": "a3v2_210_resource_opening",
-          "balanceMode": "same_stock"
+          "sourceEvent": "a3v2_210_resource_opening"
         }
       ]
     },
@@ -21681,13 +21766,6 @@
           "carriedBy": null
         }
       ],
-      "reading": [
-        {
-          "actor": "player",
-          "language": "river",
-          "canRead": true
-        }
-      ],
       "positions": [
         {
           "observer": "player",
@@ -21696,7 +21774,22 @@
           "lineOfSight": true,
           "audible": true
         }
-      ]
+      ],
+      "abilities": {
+        "skills": {
+          "skill_literacy": 100
+        },
+        "spells": [],
+        "recipes": [],
+        "licenses": []
+      },
+      "abilitiesByActor": {
+        "player": {
+          "writtenLanguages": [
+            "river"
+          ]
+        }
+      }
     },
     "source": {
       "kind": "daily",
@@ -21740,14 +21833,6 @@
       "minute": 600,
       "facts": [
         "本场柳溪升镇流程已完成，玩家镇长任职今天被正式罢免；无其他公库授权。"
-      ],
-      "instances": [
-        {
-          "id": "a3v2_213_mayor",
-          "template": "person",
-          "name": "已被罢免的前镇长（玩家角色）",
-          "location": "loc_hw"
-        }
       ],
       "history": [
         {
@@ -21810,20 +21895,15 @@
     },
     "setup": {
       "location": "loc_hw_dock",
-      "present": [],
+      "present": [
+        "npc_hw_zhengshuisheng"
+      ],
       "coins": 0,
       "inventory": {},
-      "minute": 600,
+      "minute": 402360,
       "facts": [
-        "冬季托运已因风暴滞留9天，玩家拥有的丝绸箱受潮且完好度60；在场承运人和运单可核验，尚未赔付。"
-      ],
-      "instances": [
-        {
-          "id": "a3v2_214_carrier",
-          "template": "person",
-          "name": "在场承运人",
-          "location": "loc_hw_dock"
-        }
+        "冬季托运已因风暴滞留9天，玩家拥有的丝绸箱受潮且完好度60；在场承运人和运单可核验，尚未赔付。",
+        "本题匿名人物对应既有世界人物npc_hw_zhengshuisheng；原场景别名a3v2_214_carrier指同一人，不另造人物。"
       ],
       "itemInstances": [
         {
@@ -21848,16 +21928,27 @@
       "history": [
         {
           "id": "a3v2_214_event",
-          "verb": "transport_delayed",
-          "at": 599,
+          "verb": "observed",
+          "at": 402359,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-214"
           },
-          "actor": "a3v2_214_carrier",
-          "days": 9,
-          "cause": "storm",
-          "subject": "a3v2_214_cargo"
+          "actor": "npc_hw_zhengshuisheng",
+          "observer": "player",
+          "witnesses": [
+            "player",
+            "npc_hw_zhengshuisheng"
+          ],
+          "subject": "a3v2_214_cargo",
+          "location": "loc_hw_dock",
+          "condition": 60,
+          "name": "风暴滞留九日后的丝绸箱受潮",
+          "terms": {
+            "delayMinutes": 12960,
+            "cause": "storm",
+            "compensated": false
+          }
         }
       ],
       "documents": [
@@ -22139,7 +22230,7 @@
       "history": [
         {
           "id": "a3v2_217_event",
-          "verb": "pawn_sold",
+          "verb": "ownership_transferred_and_delivered",
           "at": 599,
           "source": {
             "kind": "corpus_premise",
@@ -22147,7 +22238,11 @@
           },
           "subject": "a3v2_217_sword",
           "to": "a3v2_217_buyer",
-          "originalOwner": "player"
+          "owner": "player",
+          "terms": {
+            "cause": "expired_pawn_sale",
+            "oldTicketValid": false
+          }
         }
       ],
       "documents": [
@@ -22330,22 +22425,6 @@
           "location": "bld_hw_riverhome",
           "condition": 0
         }
-      ],
-      "itemInstances": [
-        {
-          "id": "a3v2_219_item_wood",
-          "template": "thing",
-          "kind": "item",
-          "item": "item_wood",
-          "owner": "player",
-          "location": "bld_hw_riverhome",
-          "carriedBy": "player",
-          "inventoryBinding": {
-            "item": "item_wood",
-            "quantity": 2,
-            "mode": "same_stock"
-          }
-        }
       ]
     },
     "source": {
@@ -22405,16 +22484,16 @@
       "history": [
         {
           "id": "a3v2_220_event",
-          "verb": "rent_agreed",
-          "at": 599,
+          "verb": "obligation_opened",
+          "at": 0,
           "source": {
             "kind": "corpus_premise",
             "row": "A3V2-220"
           },
-          "actor": "player",
-          "to": "a3v2_220_tenant",
-          "amount": 100,
-          "resource": "coin_river"
+          "subject": "a3v2_220_rent",
+          "debtor": "a3v2_220_tenant",
+          "creditor": "player",
+          "amount": 100
         }
       ],
       "obligations": [
@@ -22649,7 +22728,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_222_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_222_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-222"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -22759,7 +22856,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_223_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_223_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-223"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -22837,7 +22952,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_224_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_224_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-224"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -22931,7 +23064,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_225_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_225_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-225"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -22994,13 +23145,16 @@
     },
     "setup": {
       "location": "bld_hw_school",
-      "present": [],
+      "present": [
+        "npc_hw_anhuai"
+      ],
       "coins": 0,
       "inventory": {},
       "minute": 600,
       "facts": [
         "玩家有自己的旧纸条，获准贴在学堂门边，来上课的成年村民可见；只写示例不预授能力。",
-        "玩家另有自有可用炭笔，只画写粗浅记号，不要求专业作品效果。"
+        "玩家另有自有可用炭笔，只画写粗浅记号，不要求专业作品效果。",
+        "本题匿名人物对应既有世界人物npc_hw_anhuai；原场景别名a3v2_226_reader指同一人，不另造人物。"
       ],
       "itemInstances": [
         {
@@ -23024,18 +23178,9 @@
           "condition": 100
         }
       ],
-      "instances": [
-        {
-          "id": "a3v2_226_reader",
-          "template": "person",
-          "name": "来上课的成年村民",
-          "location": "bld_hw_school",
-          "age": 30
-        }
-      ],
       "positions": [
         {
-          "observer": "a3v2_226_reader",
+          "observer": "npc_hw_anhuai",
           "target": "player",
           "distanceMeters": 2,
           "lineOfSight": true,
@@ -23048,7 +23193,25 @@
           "holder": "player",
           "subject": "bld_hw_school",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_luqing",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_226_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_226_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-226"
+          },
+          "actor": "npc_hw_luqing",
+          "to": "player",
+          "subject": "bld_hw_school",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -23158,7 +23321,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_227_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_227_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-227"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -23354,7 +23535,25 @@
           "holder": "player",
           "subject": "bld_hw_qingdeng",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": "npc_hw_linsui",
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_229_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_229_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-229"
+          },
+          "actor": "npc_hw_linsui",
+          "to": "player",
+          "subject": "bld_hw_qingdeng",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -23464,7 +23663,31 @@
           "holder": "player",
           "subject": "bld_hw_mill",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "bld_hw_mill"
+          },
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_230_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_230_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-230"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "bld_hw_mill"
+          },
+          "to": "player",
+          "subject": "bld_hw_mill",
+          "scope": "display_or_perform"
         }
       ]
     },
@@ -23541,7 +23764,31 @@
           "holder": "player",
           "subject": "loc_hw",
           "scope": "display_or_perform",
-          "source": "setup.facts"
+          "issuer": {
+            "role": "authorized_manager",
+            "of": "loc_hw"
+          },
+          "fromMinute": 599,
+          "toMinute": 720,
+          "sourceEvent": "a3v2_231_permission_source"
+        }
+      ],
+      "history": [
+        {
+          "id": "a3v2_231_permission_source",
+          "verb": "permission_granted",
+          "at": 599,
+          "source": {
+            "kind": "corpus_premise",
+            "row": "A3V2-231"
+          },
+          "actor": {
+            "role": "authorized_manager",
+            "of": "loc_hw"
+          },
+          "to": "player",
+          "subject": "loc_hw",
+          "scope": "display_or_perform"
         }
       ]
     },
