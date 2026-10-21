@@ -315,7 +315,8 @@ export function advanceCare(d,engine,before,after){
  // is minute by minute (e.g. only an illness fever), so it is not stepped.
  const changing=a=>a?.medical&&(a.status==='濒死'||!(a.medical.bloodMl>0)||a.medical.tendon?.ruptured||a.medical.wounds?.some(w=>w.bleedingMlPerMinute>0||w.closed&&w.contamination>0&&w.infectionRisk>=50)||!Array.isArray(a.medical.wounds));
  const actors=['player',...Object.keys(d.get('state','npcs')??{}),...Object.keys(d.get('state','creatures')??{})].filter(id=>changing(d.get(...actorPath(id)))&&!isPhysicallyDead(engine,d,id));
- const rows=environmentFeatures(engine).filter(r=>r.careProcess==='plant'||r.careProcess==='food'||Object.values(d.get('state','effects')??{}).some(e=>e.kind==='care'&&e.target===r.id));
+ const targets=new Set(Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='care').map(e=>e.target));
+ const rows=environmentFeatures(engine,undefined,r=>r.careProcess==='plant'||r.careProcess==='food'||targets.has(r.id));
  if(!actors.length&&!rows.length)return;
  for(let minute=before;minute<after;minute++){
   for(const target of actors)advanceMedical(d,engine,target,minute);

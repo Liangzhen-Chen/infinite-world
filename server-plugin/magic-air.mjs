@@ -225,7 +225,7 @@ function settleLift(d,engine,e){
 }
 export function advanceAirEffects(d,engine,before,after){
  // Heat rooms own the per-minute clock. Air-only scenes use the same loop.
- if(!environmentFeatures(engine).some(r=>r.kind==='room'&&r.airModel))for(let minute=before;minute<after;minute++)advanceAirMinute(d,engine,[],minute);
+ if(!environmentFeatures(engine,null,r=>r.kind==='room'&&r.airModel).length)for(let minute=before;minute<after;minute++)advanceAirMinute(d,engine,[],minute);
  for(const [id,e]of Object.entries(d.get('state','effects')??{}))if(e.kind==='air'&&e.expires<=after){settleLift(d,engine,e);d.set(['state','effects',id],e);}
 }
 export function windArmorMultiplier(material){return ['iron','steel','stone','metal','铁','钢','石'].includes(material)?.25:1;}

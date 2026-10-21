@@ -220,7 +220,7 @@ function drain(d,from,to,amount){
  storeFresh(d,from,a);storeFresh(d,to,b);return amount;
 }
 export function advanceWaterEarth(d,engine,before,after){
- const rows=environmentFeatures(engine).filter(r=>r.waterEarthProcess);
+ const rows=environmentFeatures(engine,undefined,r=>r.waterEarthProcess);
  if(!rows.length&&!Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'))return;
  const index=featureIndex(engine);
  for(let minute=before;minute<after;minute++){

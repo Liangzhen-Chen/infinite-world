@@ -330,7 +330,9 @@ export function advanceMindSpace(d,engine,before,after){
   const m=mind(d,target,engine);m.fatigue=Math.max(0,m.fatigue-minutes/4);m.stress=Math.max(0,m.stress-minutes/10);holdingSet(d,null,[...path(target),'mental'],m,'magic-mind-space');
  }
  // Physical water ingress continues without a spell; holes always leak.
- for(const row of environmentFeatures(engine)){
+ // Preserve validation of every materialized record, including non-containers.
+ // Untouched non-containers have neither ingress nor a state-key conflict.
+ for(const row of environmentFeatures(engine,undefined,r=>r.kind==='container'&&Number.isFinite(r.state?.mouthIngressMlPerMinute)||d.get('state','records',key(r.id)))){
   const s=mindSpaceState(d,row);
   if(row.kind!=='container'||!Number.isFinite(s.mouthIngressMlPerMinute))continue;
   const seals=effects(d,'bag_seal').filter(([,e])=>e.target===row.id),cuts=new Set([before,after]);
