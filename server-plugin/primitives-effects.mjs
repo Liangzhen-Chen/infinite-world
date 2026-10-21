@@ -278,7 +278,7 @@ function learnEffect(d,engine,effect,{frame,child,tags,requireAuthority,context,
 // their domain adapters and cannot be smuggled through these generic templates.
 function createNarrative(d,engine,effect,{frame,child,limits={}}){
  if(effect.kind==='mark')return engine.primitiveApplyMark(d,effect,{frame,child});
- const crude=limits.improvised===true&&frame.source.kind==='open'&&effect.kind==='item'&&effect.facts?.quality==='crude';
+ const crude=limits.improvised===true&&effect.kind==='item'&&['crude',limits.quality].includes(effect.facts?.quality);
  const templates=engine.world.primitiveTemplates??[],template=templates.find(t=>t.id===(crude&&effect.template==='thing'?'core:item':effect.template)&&t.kind===effect.kind);
  if(!template)reject('E-CREATE-TEMPLATE','A core narrative template is required');
  const facts=effect.facts;
@@ -289,7 +289,7 @@ function createNarrative(d,engine,effect,{frame,child,limits={}}){
  const name=facts.name.trim(),key=normalize(name),names=[...engine.byId.values(),d.get('state','player'),...Object.values(d.get('state','npcs')??{}),...Object.values(d.get('state','creatures')??{}),...Object.values(d.get('state','created')??{}),...Object.values(d.get('holdings','entities')??{}).map(e=>e.facts)];
  if(names.some(e=>normalize(e?.name??'')===key||e?.aliases?.some(alias=>normalize(alias)===key)))reject('E-CREATE-NAME','This name is already registered');
  const id=`${effect.kind}_${digest({eventId:frame.eventId,child}).slice(0,32)}`;
- const nativeFacts={...facts,name,author:frame.actor,...(crude?{quality:'crude',durability:10,location}: {})};
+ const nativeFacts={...facts,name,author:frame.actor,...(crude?{quality:limits.quality??'crude',durability:({crude:10,ordinary:30,fine:50})[limits.quality]??10,location}: {})};
  createEntity(d,{id,kind:effect.kind,facts:nativeFacts,source:frame.source.id,writer:'primitives',eventId:child});
  setLocation(d,{entity:id,at:location,mode:'place',writer:'primitives',eventId:child,engine});
  // The authoritative object remains in holdings. The legacy resolver only

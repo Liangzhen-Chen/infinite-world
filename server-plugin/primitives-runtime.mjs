@@ -40,6 +40,7 @@ import {ensureGroupAccount} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('primitives-runtime',{kinds:['owns','contains']});
 import {adaptLegacyExecution,legacyReceiptKey,legacyIdentity} from './legacy-primitives.mjs';
+import {familyDegree,degreeFamily,degreeConsequences,finishDegreeConsequences} from './action-degrees.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -390,13 +391,15 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
  const grade=receipt.check?({'大失败':'fumble','失败':'failure','勉强成功':'partial','成功':'success','大成功':'critical'})[receipt.check.degree]:'success';
  if(Array.isArray(action.outcomes)){
   receipt.outcome=grade;
-  return defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote});
+  return defaultGrade(d,engine,action,effects,slots,actor,receipt,grade,{limits,quote});
  }
  const selected=action.outcomes[grade]??(failed?[]:action.outcomes.success??action.outcomes.accepted??[]);
  receipt.outcome=grade;return actionEffects({outcomes:selected},slots,actor);
 }
 
-function defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote}){
+function defaultGrade(d,engine,action,effects,slots,actor,receipt,grade,{limits,quote}){
+ if(!receipt.check)return effects;
+ degreeConsequences(d,engine,action,effects,slots,actor,receipt,grade,{limits,quote});
   const row=Object.values(engine.world.openActionRules?.degrees??{}).find(row=>row.key===grade);
  if(grade==='failure'||grade==='fumble'){
   receipt.narrate.mustNot.push(...effects.map((e,index)=>({op:e.op,index})));
@@ -404,27 +407,39 @@ function defaultGrade(d,engine,action,effects,actor,receipt,grade,{limits,quote}
   receipt.consequences.push({kind:'exposure',actor,action:action.id});
    quote.duration*=row?.timeMultiplier??(grade==='fumble'?2:1);
   const backfire=effects.find(e=>e.op==='vital'&&e.delta<0);
-  const target=slotsTarget(effects,actor);
-  return [...(grade==='fumble'&&backfire?[{op:'vital',target:actor,delta:-Math.max(1,fixedInteger(fixedDivide(fixedUnits(Math.abs(backfire.delta)),fixedUnits(4)))),type:'physical'}]:[]),
+  const target=slotsTarget(effects,actor),extra=[];
+  if(grade==='fumble'){
+   const fall=effects.some(e=>e.op==='move')?familyDegree(engine,'move',grade).fallDamage:0;
+   const harm=backfire?Math.max(1,Math.floor(Math.abs(backfire.delta)*familyDegree(engine,'vital',grade).selfHarmRatio)):fall;
+   if(harm){limits.vital??={harm:0,heal:0,rangeMeters:1.5};limits.vital.harm=Math.max(limits.vital.harm,harm);extra.push({op:'vital',target:actor,delta:-harm,type:'physical'});}
+   for(const effect of effects.filter(e=>e.op==='fact.set')){
+    const entity=d.get('holdings','entities',effect.entity),rule=engine.world.primitiveFacts?.[entity?.kind]?.condition,old=entity?.facts?.condition;
+    if(rule&&Number.isSafeInteger(old)&&old>rule.min){const loss=Math.min(old-rule.min,familyDegree(engine,'fact.set',grade).conditionLoss);limits.fact.condition=(limits.fact.condition??0)+loss;extra.push({op:'fact.set',entity:effect.entity,field:'condition',delta:-loss});}
+   }
+  }
+  return [...extra,...effects.filter(e=>degreeFamily(e)==='request').map(e=>({...e,payload:{...e.payload,outcome:receipt.decisions?.find(row=>row.target===e.target)?.outcome??'refuse'}})),
    {op:'emit',verb:'tell',...(target?{target}:{}),visibility:'witnessed',payload:{kind:'action_exposed',action:action.id,outcome:grade}}];
  }
- if(grade!=='partial'&&grade!=='critical')return effects;
- if(grade==='critical'&&effects.some(e=>e.op==='fact.set'))quote.duration=fixedInteger(fixedDivide(fixedUnits(quote.duration),fixedUnits(2)));
+ if(!['partial','success','critical'].includes(grade))return effects;
  return effects.flatMap((effect,index)=>{
   let next=effect;
   if(effect.op==='vital'){
-    const multiplier=grade==='partial'?row?.multiplier??.5:effect.delta<0?engine.rules.combat.criticalMultiplier:1;
+    const family=familyDegree(engine,'vital',grade),multiplier=family.multiplier==='combat.criticalMultiplier'?(effect.delta<0?engine.rules.combat.criticalMultiplier:1):family.multiplier??1;
    next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(multiplier)))};
   }else if(effect.op==='fact.set'&&grade==='partial'){
-    if(typeof effect.delta==='number')next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(row?.multiplier??.5)))};
+    const multiplier=familyDegree(engine,'fact.set',grade).multiplier;
+    if(typeof effect.delta==='number')next={...effect,delta:fixedInteger(fixedMultiply(fixedUnits(effect.delta),fixedUnits(multiplier)))};
    else if(typeof effect.value==='number'){
-     const old=d.get('holdings','entities',effect.entity,'facts',effect.field)??0;next={...effect,value:old+fixedInteger(fixedMultiply(checkedFixed(fixedUnits(effect.value)-fixedUnits(old)),fixedUnits(row?.multiplier??.5)))};
+     const old=d.get('holdings','entities',effect.entity,'facts',effect.field)??0;next={...effect,value:old+fixedInteger(fixedMultiply(checkedFixed(fixedUnits(effect.value)-fixedUnits(old)),fixedUnits(multiplier)))};
    }
   }else if(effect.op==='learn'&&effect.learningSource!=='practice'){
-    const multiplier=grade==='partial'?row?.multiplier??.5:2;
+    const multiplier=familyDegree(engine,'learn',grade).multiplier;
    if(limits.learn)limits.learn.multiplier=multiplier;
    if(effect.amount!==undefined)next={...effect,amount:fixedInteger(fixedMultiply(fixedUnits(effect.amount),fixedUnits(multiplier)))};
   }
+  if(effect.op==='create')next={...effect,facts:{...effect.facts,quality:limits.quality??familyDegree(engine,'create',grade).quality}};
+  if(degreeFamily(effect)==='request')next={...effect,payload:{...effect.payload,outcome:receipt.decisions?.find(row=>row.target===effect.target)?.outcome??familyDegree(engine,'request',grade).response}};
+  if(['move','fact.set'].includes(effect.op)&&familyDegree(engine,effect.op,grade).unnoticed)next={...next,visibility:'private'};
   if(next!==effect)receipt.trimmed.push({index,effect,applied:next,reason:`degree:${grade}`});
   if(next.op==='vital'&&next.delta===0){receipt.narrate.mustNot.push({op:next.op,index});return [];}
   return [next];
@@ -470,6 +485,7 @@ function settleActionCost(d,engine,action,slots,actor,start,quote,receipt,eventI
   }
  }
  receipt.cost={time:elapsed,body};
+ finishDegreeConsequences(d,engine,receipt);
  // Practice's native learning executor advances the world itself. Expose that
  // committed span alongside learning, rather than leaving time only in cost.
  if(elapsed&&receipt.applied.some(e=>e.op==='learn'&&e.learningSource==='practice')&&!receipt.applied.some(e=>e.op==='time')){
@@ -659,6 +675,7 @@ export const primitiveRuntime={
   let limits,quote,start,resources,resourceSources;
   const tested=prepared.sources.some(s=>s.difficulty>0),difficulty=Object.values(engine.rules.check.difficulties).sort((a,b)=>Math.abs(a-prepared.difficulty)-Math.abs(b-prepared.difficulty))[0];
   const action={id:'open:proposal',slots:[],outcomes:effects,check:tested?{attribute:prepared.sources.find(s=>s.skill)?engine.byId.get(prepared.sources.find(s=>s.skill).skill)?.attribute??'精神':'力量',...(prepared.sources.find(s=>s.skill)?{skill:prepared.sources.find(s=>s.skill).skill}:{}),difficulty,context:difficulty-prepared.difficulty,contextReason:prepared.context?.reason??'开放动作来源难度及无近邻修正'}:null};
+  const degreeSlots={tool:prepared.sources.find(source=>engine.byId.get(source.id)?.tags?.includes('tool'))?.id};
   const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId,source:{kind:'open',id:'open:proposal'},identity:{proposal},limits:()=>limits,
    prepare:(d,{receipt})=>{
     Object.assign(receipt,{routing:proposalRouting(proposal,prepared),signature:prepared.signature,candidates:prepared.candidates});
@@ -683,12 +700,13 @@ export const primitiveRuntime={
     if(mp)d.set(['state','player','mp'],d.get('state','player','mp')-mp);
     if(stamina)writeBodyNeed(d,engine,actor,'stamina',body.value-stamina,{activity:'light',remainder:body.remainder});
     receipt.requirements={mp,stamina};
-    const selected=adjudicateAction(d,engine,action,{},actor,eventId,effects,receipt,{duration:quote.duration,limits,quote}).map(effect=>{
+    const selected=adjudicateAction(d,engine,action,degreeSlots,actor,eventId,effects,receipt,{duration:quote.duration,limits,quote}).map(effect=>{
      if(effect.op!=='vital')return effect;
      const cap=limits.vital[effect.delta<0?'harm':'heal'],delta=Math.sign(effect.delta)*Math.min(Math.abs(effect.delta),cap);
      if(delta!==effect.delta)receipt.trimmed.push({effect,applied:delta,reason:'source_final_bound'});
      return {...effect,delta};
     });
+    if(quote.materialMultiplier!==undefined)resources=resources.map(effect=>({...effect,qty:Math.ceil(effect.qty*quote.materialMultiplier)})).filter(effect=>effect.qty>0);
     return [...resources,...selected];
    },
    finish:(d,{receipt})=>{
@@ -804,6 +822,7 @@ export const primitiveRuntime={
     resourceCosts=actionResourceCosts(engine,d.document,action,slots,actor);
     if(effects.some(e=>e.op==='learn'))limits.learn={minutes:quote.duration};
     const selected=adjudicateAction(d,engine,action,slots,actor,input.eventId,effects,receipt,{duration:Math.max(quote.duration,limits.status?.duration??0),purpose,limits,quote});
+    if(quote.materialMultiplier!==undefined)resourceCosts=resourceCosts.map(effect=>parseAccount(effect.from).resource===LEDGER_COIN?effect:{...effect,qty:Math.ceil(effect.qty*quote.materialMultiplier)}).filter(effect=>effect.qty>0);
     escapeCheck=receipt.check;escapeClosures=new Set(selected.filter(e=>e.op==='holding.close'&&e.reason==='escaped').map(e=>e.holding??e.id));
     limits.consentChecks=receipt.consequences.filter(row=>row.tags?.includes('unconsented')&&row.from&&row.scope).map(row=>({target:row.from,scope:row.scope,id:`${input.eventId}:action-check`}));
     return [...resourceCosts,...selected];

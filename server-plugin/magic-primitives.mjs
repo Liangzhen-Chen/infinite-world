@@ -1,5 +1,6 @@
 import {magicEffect}from'./magic-effects.mjs';
 import {ritualProtectionValid}from'./magic-ritual.mjs';
+import {nativePrimitiveTransaction}from'./native-primitives.mjs';
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 import {SPELL_DAMAGE_TYPES}from'./traits.mjs';
 // Spell damage types are the first eight entries of the unified element list.
@@ -46,6 +47,12 @@ export function resolveVitalityPrimitive({spec,hp,maxHp,defense=0,resistance=0,m
  return {amount:Math.abs(nextHp-hp),rawAmount:amount,nextHp,delta:nextHp-hp};
 }
 export function applyProtectionPrimitive(d,{spec,target,spell,duration},eventId){
+ if(d.get('state','effects',eventId))throw new Error('效果编号已存在，拒绝重复创建防护');
+ const out=nativePrimitiveTransaction(d,{family:'m4:protection',sourceEvent:eventId,program:{spec,target,spell,duration},
+  primitives:[{op:'status',target,status:'protection',duration,magnitude:spec.power}],apply:tx=>applyProtectionState(tx,{spec,target,spell,duration},eventId)});
+ return out.results[0];
+}
+function applyProtectionState(d,{spec,target,spell,duration},eventId){
  const errors=validateEffectSpec(spec);if(spec.kind!=='protection')errors.push('此处理器只接受防护');if(errors.length)throw new Error(errors.join('；'));
  if(!Number.isSafeInteger(duration)||duration<1||duration>43200)throw new Error('防护持续时间非法');
  if(d.get('state','effects',eventId))throw new Error('效果编号已存在，拒绝重复创建防护');

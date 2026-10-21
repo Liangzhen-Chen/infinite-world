@@ -22,6 +22,16 @@
     "成功": {"key":"success","multiplier":1,"timeMultiplier":1,"exposed":false},
     "大成功": {"key":"critical","multiplier":1,"timeMultiplier":1,"exposed":false}
   },
+  "families": {
+    "fact.set": {"fumble":{"toolWear":2,"conditionLoss":1,"exposed":true},"failure":{"toolWear":1,"exposed":true},"partial":{"multiplier":0.5,"toolWear":1},"success":{"multiplier":1,"toolWear":1},"critical":{"multiplier":1,"timeMultiplier":0.5,"toolWear":1,"unnoticed":true}},
+    "vital": {"fumble":{"selfHarmRatio":0.25},"failure":{},"partial":{"multiplier":0.5},"success":{"multiplier":1},"critical":{"multiplier":"combat.criticalMultiplier"}},
+    "request": {"fumble":{"standing":-2,"response":"refuse","exposed":true},"failure":{"response":"refuse"},"partial":{"response":"conditional"},"success":{"response":"agree"},"critical":{"response":"agree","standing":2}},
+    "move": {"fumble":{"fallDamage":1,"exposed":true},"failure":{"exposed":true},"partial":{"status":"suspected","duration":60},"success":{},"critical":{"unnoticed":true}},
+    "create": {"fumble":{"materials":1},"failure":{"materials":0.5},"partial":{"quality":"crude"},"success":{"quality":"ordinary"},"critical":{"quality":"fine"}},
+    "learn": {"fumble":{"misunderstanding":1},"failure":{},"partial":{"multiplier":0.5},"success":{"multiplier":1},"critical":{"multiplier":2}},
+    "rite": {"fumble":{"backlash":true,"unfinished":true},"failure":{"unfinished":true},"partial":{"multiplier":0.5,"unfinished":true},"success":{"multiplier":1},"critical":{"multiplier":1,"materials":0.5,"unnoticed":true}}
+  },
+  "rites": {"cultureAffinity":{"same":1,"foreign":0.5,"unknown":0.5}},
   "mark": {
     "minutes": 5,
     "maximumPerAuthorPlace": 8,
