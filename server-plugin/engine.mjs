@@ -3,7 +3,7 @@ import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
-import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
+import {facilityView,facilityRouteStates,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
@@ -33,7 +33,7 @@ import {createCharacter}from'./character.mjs';
 import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mjs';
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
-import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,physicalCatalog}from'./items.mjs';
+import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,physicalCatalog,physicalItem,writePhysicalItem,takeContainerUnit}from'./items.mjs';
 import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction,recordLocalContact}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
@@ -360,9 +360,12 @@ export class WorldEngine {
         // executor still distinguishes sleep for schedules and interruptions.
         if(tool==='time'&&['睡眠','休息'].includes(args.activity))assertRestBed(session,d.document);
         const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
+        if(sleep)facilityRuntime().coverOwnedRest?.(d,session,sleep);
         validatePhysicalAction(d,session,tool,args);
         const bookedWorkstation=facilityRuntime().prepareBookedWorkstation?.(d,session,tool,args);
         session.bookedWorkstation=bookedWorkstation;
+        session.requestedServiceQuote=options.openProposal?.proposal?.means?.quote;
+        session.requestedLearningCompletion=options.openProposal?.proposal?.means?.manner==='teacher';
         const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
@@ -533,7 +536,11 @@ export class WorldEngine {
         const physical=physicalCatalog(this,document),session=Object.create(this);session.physicalDocument=document;
         session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         if(physical.length)session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(this.world),items:{value:[...this.world.items,...physical],enumerable:true,writable:true,configurable:true}});
-        session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;return session;
+        session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;
+        const overrides=[...(facilityRuntime().personCapabilityCatalog?.(session,document)??[]),...(facilityRuntime().recipeOverrideCatalog?.(session,document)??[])];
+        if(overrides.length){session.byId=new Map(session.byId);for(const row of overrides)session.byId.set(row.id,row);session.resolver.entities=session.byId;session.entities=session.entities.map(row=>session.byId.get(row.id)??row);}
+        facilityRuntime().installServiceConsumers?.(session,document);
+        return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
@@ -591,7 +598,7 @@ export class WorldEngine {
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
-        const quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        const quote=facilityRuntime().conditionalTradeQuote?.(d,this,{buyer,seller,item,quantity,eventId:id,instances:args.instances})??tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
         if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)throw Error('单价不符既定报价');
         const price=quote.agreed?quote.listPrice:(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
@@ -605,11 +612,11 @@ export class WorldEngine {
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
-        validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
+        validateItemTransfer(d,this,seller,buyer,item,quantity,quote.instances??args.instances??null);
         let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
-        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:!this.replaying||Array.isArray(this.replayResult?.dispositions),eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
+        moved=transferItems(d,this,seller,buyer,item,quantity,quote.instances??args.instances??null,{disposition:!this.replaying||Array.isArray(this.replayResult?.dispositions),eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
         receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
@@ -1132,3 +1139,4 @@ export class WorldEngine {
 
 }
 Object.assign(WorldEngine.prototype,activities);
+installFacilityRuntime({serviceTakeContainerUnit:takeContainerUnit,servicePhysicalItem:physicalItem,serviceWritePhysicalItem:writePhysicalItem});

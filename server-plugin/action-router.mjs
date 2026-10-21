@@ -76,7 +76,7 @@ const fits=(action,participants,kindOf)=>Object.entries(action.participants??{})
 });
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
- const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
+ const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??(proposal.means?.manner==='order_and_eat'?proposal.effects?.find(e=>e.op==='transfer'&&['coin','coin_river'].includes(e.resource))?.to:undefined)??inferred;
  const participants={...(target!==undefined?{target}:{}),...proposal.participants,actor};
  // No source, check, effects, consent or cost from a proposal can replace the definition.
  // The proposal gateway describes an entry point, not a concrete neighbour;
@@ -284,6 +284,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_companion'&&action.call.operation==='summon_dismiss'&&slot.name==='summon'&&summons.has(target))value??=target;
    if(action.call?.tool==='world_companion'&&action.call.operation==='pet_feed'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
    if(action.call?.tool==='world_remember'&&action.call.fixed?.key==='dialogue:eat_meal'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
+   if(action.id==='core:eat.order'){
+    const bought=transfers.filter(e=>owner(e.to)===actor&&!['coin',LEDGER_COIN].includes(resource(e)));
+    if(slot.name==='subject')value??=money&&owner(money.to);
+    if(slot.name==='item')value??=bought[0]&&resource(bought[0]);
+    if(slot.name==='side')value??=bought[1]&&resource(bought[1]);
+   }
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
     if(slot.name==='source')value??=proposal.means?.tools?.[0];
@@ -414,7 +420,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      const recipient=resolveParty(value);if(recipient.value!==null)slots[slot.name]=recipient.value;continue;
     }
     if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='location'&&engine.world.locations.some(row=>row.id===value&&!row.hidden&&!row.private)){slots[slot.name]=value;continue;}
-    const publicKind=['skill','spell','recipe'].includes(slot.entity)||slot.entity==='item'&&slot.name==='item'&&['world_trade','world_law'].includes(action.call?.tool);
+    const publicKind=['skill','spell','recipe'].includes(slot.entity)||slot.entity==='item'&&(slot.name==='item'&&['world_trade','world_law'].includes(action.call?.tool)||action.id==='core:eat.order'&&['item','side'].includes(slot.name));
     const publicId=publicKind&&catalog(value,slot.entity);
     // Hosted rites accept their actual local venue here; it remains a place,
     // rather than being reclassified as an organization or given a temple.
@@ -437,6 +443,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','转移须指定有效的资源与账户');}
  };
  const labelsFor=(action,proposal)=>{
+  if(action.id==='core:eat.order')return ['点','点餐','现成饭菜','当场吃掉'];
   if(action.id==='core:research')return ['研究','融合','检查缺什么'];
   if(action.id==='core:read')return ['能花多少钱','钱袋','账目','余额'];
   if(action.id==='core:catalog')return ['场外','角色面板','在哪里打开'];
@@ -499,6 +506,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
   const transfers=(proposal.effects??[]).filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
   const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e))),goods=transfers.find(e=>!['coin',LEDGER_COIN].includes(resource(e)));
+  if(action.id==='core:eat.order'&&slots.subject&&slots.item){
+   const items=[slots.item,...slots.side?[slots.side]:[]];
+   if(items.some(item=>!engine.byId.get(item)?.tags?.includes('food'))||new Set(items).size!==items.length)return [];
+   return [sign([transfer(LEDGER_COIN,actor,slots.subject),...items.flatMap(item=>[transfer(item,slots.subject,actor),transfer(item,actor,'sink:consume')]),{op:'vital',target:actor,type:'body:satiety'}])];
+  }
   // Legacy handlers do not declare primitive outcomes. Derive their request
   // footprints from registered recipes and domain slots, never from requested
   // success, quantity or consent. Execution still owns the complete protocol.

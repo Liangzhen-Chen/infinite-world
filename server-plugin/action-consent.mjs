@@ -3,16 +3,18 @@ import {authority} from './action-authority.mjs';
 import {PrimitiveRejected} from './primitive-policy.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {legalCodeAt} from './law-codes.mjs';
+import {installFacilityRuntime} from './facility-state.mjs';
 
 declareHoldingWriter('action-consent',{kinds:['permit']});
 const minorIntimacy=(context,from,to,scope,purpose)=>/romance|intima|恋爱|亲密/.test(`${scope} ${purpose??''}`)&&[from,to].some(id=>id!=='player'&&(actionEntity(context,id)?.minor||actionEntity(context,id)?.flags?.minor||actionAge(context,id)<18));
 
-const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute']);
+const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute','resource','quantity','maxTurbidity','conditionAfter']);
 export function validConsentTerms(terms){
  if(!terms||typeof terms!=='object'||Array.isArray(terms)||Object.keys(terms).some(k=>!termKeys.has(k)))return false;
- return Object.entries(terms).every(([k,v])=>['purpose','spell','waterBatch','role'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0);
+ return Object.entries(terms).every(([k,v])=>['purpose','spell','waterBatch','role','resource'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0&&(!['maxTurbidity','conditionAfter'].includes(k)||v<=100));
 }
 const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>Array.isArray(v)?Array.isArray(actual?.[k])&&v.length===actual[k].length&&v.every((x,i)=>x===actual[k][i]):actual?.[k]===v);
+installFacilityRuntime({serviceConsent:consent});
 
 // A legacy lending call has principal/days slots but no interest slot. Read an
 // actual borrower's offer, never a proposal's claim that the borrower agreed.
@@ -38,7 +40,7 @@ function nativeConsentTerms(context,from,to,scope,purpose){
   let teacher,subject;try{teacher=e.resolve(args.source);subject=e.resolve(args.entity,args.kind);}catch{return null;}
   if(teacher!==from||subject!==purpose)return null;
   const catalog=e.byId.get(subject);
-  return {fee:catalog.learnFee??12,minutes:catalog.learnMinutes??120};
+  return catalog.learnDays?{fee:catalog.learnFee??12,days:catalog.learnDays}:{fee:catalog.learnFee??12,minutes:catalog.learnMinutes??120};
  }
  return null;
 }

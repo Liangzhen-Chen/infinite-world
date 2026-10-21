@@ -51,6 +51,20 @@ export function registerLodgingBed(d,engine,{id,location}){
  if(Object.values(state.records??{}).filter(r=>r.category==='lodging_bed'&&r.location===location).length>=capacity)throw Error('Bed allocations exceed lodging capacity');
  const row={category:'lodging_bed',id,location};holdingSet(d,engine,['state','records',key],row,'facility-state');return row;
 }
+export function registerOwnedRestBed(d,engine,{id,location,lodging},{origin,eventId}={}){
+ if(origin!=='initial'||!eventId||lodging!=='room'||d.get('holdings','locations',id)?.at!==location||d.get('holdings','locations',id)?.mode!=='place'||!aliveHoldings(d,{kind:'owns',subject:id,holder:'player'}).length)throw Error('An owned room bed needs its real physical placement and ownership');
+ if(facilityView(engine,d.get('state'),location)?.factor===0)throw Error('The rest room is unusable');
+ holdingSet(d,engine,['state','records',`owned_rest_bed:${id}`],{category:'owned_rest_bed',id,location,lodging,sourceEvent:eventId},'facility-state',eventId);
+}
+export function ownedRestBed(engine,document,actor='player',location=document.state.location){
+ const d={get:(...path)=>path.reduce((v,k)=>v?.[k],document)};
+ if(facilityView(engine,document.state,location)?.factor===0)return null;
+ return Object.values(document.state.records??{}).find(r=>r.category==='owned_rest_bed'&&r.location===location&&document.holdings?.locations?.[r.id]?.at===location&&document.holdings?.locations?.[r.id]?.mode==='place'&&aliveHoldings(d,{kind:'owns',subject:r.id,holder:actor}).length&&!lodgingOccupancy(document,location).some(h=>h.holder!==actor&&h.bed===r.id))??null;
+}
+export function coverOwnedRest(d,engine,span){
+ const bed=ownedRestBed(engine,d.document,span.actor,span.location);
+ if(bed){span.lodgingKind=bed.lodging;span.bookings.push({start:span.start,end:Number.MAX_SAFE_INTEGER});}
+}
 export function lodgingOccupancy(document,location,minute=document.state.minute){
  const state=document.state,rows=[];
  for(const h of aliveHoldings({get:(...path)=>path.reduce((value,key)=>value?.[key],document)},{kind:'lodges',subject:location})){
@@ -65,6 +79,7 @@ export function lodgingOccupancy(document,location,minute=document.state.minute)
  return rows;
 }
 export function lodgingAvailability(engine,document,location,{actor='player',bed=null,minute=document.state.minute}={}){
+ if(bed&&ownedRestBed(engine,document,actor,location)?.id===bed)return {available:true,free:1,capacity:1};
  const state=document.state,place=facilityDefinition(engine,state,location),view=facilityView(engine,state,location);
  if(!place?.lodging||view?.factor===0)return {available:false,free:0,capacity:0};
  const capacity=view?.capacity??place.lodging.rooms,occupants=lodgingOccupancy(document,location,minute);
@@ -92,6 +107,7 @@ export function selectLodgingBed(engine,document,location,start,end){
  return Object.values(document.state.records??{}).find(row=>row.category==='lodging_bed'&&row.location===location&&[...boundaries].every(minute=>lodgingAvailability(engine,document,location,{bed:row.id,minute}).available))?.id??null;
 }
 export function assertRestBed(engine,document){
+ if(ownedRestBed(engine,document))return;
  const state=document.state,beds=Object.values(state.records??{}).filter(r=>r.category==='lodging_bed'&&r.location===state.location);
  if(!beds.length)return; // Worlds without allocated physical beds retain their native rest rules.
  if(!beds.some(b=>lodgingAvailability(engine,document,state.location,{bed:b.id}).available))throw Error('没有可供本人使用的床位');
@@ -163,4 +179,5 @@ export function prepareFacilityProject(engine,state,args,settlement){
 import {registerAdvanceHook} from './advance-hooks.mjs';
 export function facilityRuntime(){return facilityRuntime.handlers??={};}
 export function installFacilityRuntime(handlers){Object.assign(facilityRuntime(),handlers);}
+installFacilityRuntime({coverOwnedRest});
 registerAdvanceHook('facilityRuntime',facilityRuntime);

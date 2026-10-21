@@ -4,8 +4,7 @@ import {executeProtocolPrimitive} from '../../server-plugin/transition.mjs';
 import {skillGrade} from '../../server-plugin/engine.mjs';
 import {initializePersonLanguages,canReadLanguage} from '../../server-plugin/subjective-view.mjs';
 import {initializeVocation} from '../../server-plugin/npc-growth.mjs';
-import {initializePracticalKnowledge,initializeDemonstration,initializeTeachingActivity,knowledgeProficiency} from '../../server-plugin/education-state.mjs';
-import {personCareer,personTeaching} from '../../server-plugin/entity-view.mjs';
+import {initializePracticalKnowledge,initializeDemonstration,initializeTeachingActivity,knowledgeProficiency,initializePersonCapabilities} from '../../server-plugin/education-state.mjs';
 import {prepareSummon,applySummon,validateSummonCatalog} from '../../server-plugin/summons.mjs';
 
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -36,7 +35,7 @@ function abilities(ctx,setup){
  if(!object(setup.abilitiesByActor)){ctx.unmet('abilitiesByActor','expected actor to ability mapping');return;}
  for(const [alias,row] of Object.entries(setup.abilitiesByActor)){
   const item=`abilitiesByActor.${alias}`;
-  if(!shape(row,['skills','spells','recipes','literacy','teaches','spokenLanguages','writtenLanguages','practicalKnowledge'])){ctx.unmet(item,'invalid ability declaration');continue;}
+  if(!shape(row,['skills','spells','recipes','literacy','teaches','serviceCapability','spokenLanguages','writtenLanguages','practicalKnowledge'])){ctx.unmet(item,'invalid ability declaration');continue;}
   let actor;try{actor=requireActor(ctx,alias);}catch(error){ctx.unmet(item,error.message);continue;}
   const path=actor==='player'?['state']:['state','npcs',actor];
   if(actor!=='player'&&!state(ctx).npcs?.[actor]){ctx.unmet(item,'abilities require a person, not a creature');continue;}
@@ -65,14 +64,17 @@ function abilities(ctx,setup){
   }
   if(row.teaches!==undefined){
    if(!Array.isArray(row.teaches))ctx.unmet(`${item}.teaches`,'expected registered teaching subjects');
-   else for(const [i,subject] of row.teaches.entries())ctx.native(`${item}.teaches[${i}]`,()=>{
+   else for(const [i,subject] of row.teaches.entries())ctx.native(`${item}.teaches[${i}]`,d=>{
     if(typeof subject!=='string'||!ctx.engine.byId.has(subject))fail('unknown teaching subject');
-    const career=personCareer(ctx.engine,state(ctx),actor).value,def=ctx.engine.byId.get(subject),skill=def.skill?ctx.engine.byId.get(def.skill):def;
     // Ability survives unconsciousness; availability/consent are separate gates.
-    const careerTeaches=career.services.includes(subject)||career.roles.some(role=>(ctx.engine.byId.get(role)?.skillTree??[]).includes(skill.id));
-    if(!careerTeaches&&!personTeaching(ctx.engine,state(ctx),actor,subject))fail('no native initial teaching qualification writer (05 §5.4/§5.7); teaches cannot confer a profession');
+    const previous=d.get('state','records',`person_capabilities:${actor}`)??{};
+    initializePersonCapabilities(d,ctx.engine,actor,{teaches:[...new Set([...(previous.teaches??[]),subject])],...(previous.serviceCapability?{serviceCapability:previous.serviceCapability}:{})},{origin:'initial',eventId:`a3-agency:${item}`});
    });
   }
+  if(row.serviceCapability!==undefined)ctx.native(`${item}.serviceCapability`,d=>{
+   const previous=d.get('state','records',`person_capabilities:${actor}`)??{};
+   initializePersonCapabilities(d,ctx.engine,actor,{...(previous.teaches?{teaches:previous.teaches}:{}),serviceCapability:row.serviceCapability},{origin:'initial',eventId:`a3-agency:${item}`});
+  });
   for(const field of ['spokenLanguages','writtenLanguages','practicalKnowledge'])if(row[field]!==undefined)ctx.native(`${item}.${field}`,d=>{
    const context={origin:'initial',eventId:`a3-agency:${item}.${field}`};
    if(field==='practicalKnowledge')initializePracticalKnowledge(d,ctx.engine,actor,row[field],context);

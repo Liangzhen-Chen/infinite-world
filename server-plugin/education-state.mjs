@@ -3,7 +3,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordsWhere,recordsMemo,recordIndexActive} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
-import {facilityView} from './facility-state.mjs';
+import {facilityView,installFacilityRuntime} from './facility-state.mjs';
 import {npcSchedule,npcAgeAt} from './npc-state.mjs';
 import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
@@ -13,6 +13,23 @@ import {contractTerms} from './contract-state.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('education-initial');
+// Explicit initial qualifications describe this person, without conferring a
+// profession, consent, attendance or a learner's proficiency.
+export function initializePersonCapabilities(d,e,id,values,context){
+ initialAuthority(d,id,context);
+ if(id==='player'||Object.keys(values).some(k=>!['teaches','serviceCapability'].includes(k)))throw Error('Invalid person capability mapping');
+ if(values.teaches!==undefined&&(!Array.isArray(values.teaches)||new Set(values.teaches).size!==values.teaches.length||values.teaches.some(subject=>!e.byId.has(subject)||!['skill_','spell_','recipe_'].some(prefix=>subject.startsWith(prefix)))))throw Error('Unknown teaching qualification');
+ if(values.serviceCapability!==undefined&&(!values.serviceCapability||typeof values.serviceCapability!=='object'||Array.isArray(values.serviceCapability)||Object.entries(values.serviceCapability).some(([key,v])=>key!=='repairMetal'||typeof v!=='boolean')))throw Error('Unknown service capability');
+ holdingSet(d,e,['state','records',`person_capabilities:${id}`],{category:'person_capabilities',actor:id,...values,sourceEvent:context.eventId},'education-initial',context.eventId);
+}
+export function personCapabilityCatalog(e,document){
+ const s=document.state;
+ return recordsWhere(s.records,'category','person_capabilities').map(row=>{
+  const base=s.created?.[row.actor]??e.byId.get(row.actor);
+  return {...base,services:[...new Set([...(base?.services??[]),...(row.teaches??[])])],serviceCapability:{...(base?.serviceCapability??{}),...row.serviceCapability}};
+ });
+}
+installFacilityRuntime({personCapabilityCatalog});
 export const practicalKnowledgeRegistry=Object.freeze({simple_tripwire_disassembly:{mechanisms:['tripwire_falling_log']}});
 const personPath=id=>id==='player'?['state','player']:['state','npcs',id];
 function initialAuthority(d,id,context){
@@ -136,6 +153,7 @@ export const knowledgeProficiency=(e,s,id,skill)=>{
 };
 export function knowsKnowledge(e,s,id,entity){
  const b=s.created?.[entity]??e.byId.get(entity);if(!b)return false;
+ if(id!=='player'&&s.records?.[`person_capabilities:${id}`]?.teaches?.includes(entity))return true;
  if(entity.startsWith('skill_'))return knowledgeProficiency(e,s,id,entity)>0;
  const partition=entity.startsWith('recipe_')?'recipes':'spells';
  return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id));
