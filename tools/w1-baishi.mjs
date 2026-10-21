@@ -80,15 +80,22 @@ export function integrate(world,b){
  assert.deepEqual(next.locations.find(l=>l.id==='loc_bs').workstations,world.locations.find(l=>l.id==='loc_bs').workstations);
  return next;
 }
-export async function publish({contactRoutineOnly=false}={}){
+export async function publish({contactRoutineOnly=false,facilitySourceOnly=null}={}){
  const {world,b}=await approved();
+ if(contactRoutineOnly&&facilitySourceOnly)throw Error('定向恢复入口不能同时使用');
  // This targeted regeneration still verifies the original L1/L2/L4 approval.
  // New office services belong in the runtime view, not the frozen routine.
- const next=contactRoutineOnly?{...world,npcs:world.npcs.map(p=>p.id===b.yan.id?{...p,schedule:structuredClone(b.yan.schedule)}:p)}:integrate(world,b);
+ let next=contactRoutineOnly?{...world,npcs:world.npcs.map(p=>p.id===b.yan.id?{...p,schedule:structuredClone(b.yan.schedule)}:p)}:integrate(world,b);
+ if(facilitySourceOnly){
+  const reviewed=b.locations.find(l=>l.id===facilitySourceOnly);if(!reviewed)throw Error('不在原已审批设施中');
+  const source=await read('world/geo/locations.json');
+  if(!source.some(l=>l.id===reviewed.id))throw Error('正式设施缺失');
+  next={...world,locations:source.map(l=>l.id===reviewed.id?structuredClone(reviewed):l)};
+ }
  const files={'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/locations.json':next.locations,'geo/routes.json':next.routes,'geo/settlements.json':next.settlementProfiles};
- const changed=[];for(const [file,value] of Object.entries(files)){if(contactRoutineOnly&&file!=='people/baseline.json')continue;const target=path.join('world',file);if(hashContent(await read(target))!==hashContent(value)){await write(target,value);changed.push(file);}}
+ const changed=[];for(const [file,value] of Object.entries(files)){if(contactRoutineOnly&&file!=='people/baseline.json'||facilitySourceOnly&&file!=='geo/locations.json')continue;const target=path.join('world',file);if(hashContent(await read(target))!==hashContent(value)){await write(target,value);changed.push(file);}}
  const ledger=await read(path.join(budgetRoot,'budget.json')),card=ledger.cards.T90;
  const result={changed,registered:306,seed:694,households:90,pendingHouseholds:210,reviewCalls:Object.values(ledger.requests).filter(r=>r.card==='T90'&&!['reserved','cancelled-unissued'].includes(r.status)).length,spentYuan:card.spentYuan,reservedYuan:card.reservedYuan};
  await write(path.join(root,'published.json'),result);return result;
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){const command=process.argv[2]??'prepare';if(command==='prepare'){const {bones}=await prepare();console.log(JSON.stringify({entries:bones.entries.length,residents:bones.residents.length,households:bones.households.length}));}else if(command==='review'){const r=await review();console.log(JSON.stringify({total:r.summary.total,passed:r.summary.passed,manual:r.summary.manual,pending:r.summary.pending,budget:r.summary.budget.cards.T90}));}else if(command==='publish')console.log(JSON.stringify(await publish({contactRoutineOnly:process.argv.includes('--contact-routine-only')})));else throw Error('命令须为prepare/review/publish');}
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){const command=process.argv[2]??'prepare';if(command==='prepare'){const {bones}=await prepare();console.log(JSON.stringify({entries:bones.entries.length,residents:bones.residents.length,households:bones.households.length}));}else if(command==='review'){const r=await review();console.log(JSON.stringify({total:r.summary.total,passed:r.summary.passed,manual:r.summary.manual,pending:r.summary.pending,budget:r.summary.budget.cards.T90}));}else if(command==='publish'){const at=process.argv.indexOf('--facility-source-only');if(at>=0&&(!process.argv[at+1]||process.argv[at+1].startsWith('--')))throw Error('需要原已审批设施ID');console.log(JSON.stringify(await publish({contactRoutineOnly:process.argv.includes('--contact-routine-only'),facilitySourceOnly:at<0?null:process.argv[at+1]})));}else throw Error('命令须为prepare/review/publish');}

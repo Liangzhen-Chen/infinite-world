@@ -308,6 +308,15 @@ function buildPersonConstraints(engine,state){
         const subject=r.subject??state.records?.[r.case]?.offender??(r.category==='legal_custody'?'player':null),id=actorId(engine.world,subject);
         const entries=out.get(id)??[];entries.push({key,r});out.set(id,entries);
     }
+    // Reuse the schedule's existing records memo for current office holders.
+    // Transfers/vacancies invalidate it through the organization record writer.
+    out.examinerReceptions=new Map();
+    for(const faction of engine.world.factions??[]){
+        if(!faction.offices?.some(o=>o.receptionHours?.length))continue;
+        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder&&office.receptionHours?.length){
+            const rows=out.examinerReceptions.get(office.holder)??[];rows.push(office);out.examinerReceptions.set(office.holder,rows);
+        }
+    }
     return out;
 }
 export function personConstraint(engine,state,id,minute=state.minute??0,index=null){

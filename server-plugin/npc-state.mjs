@@ -1,8 +1,9 @@
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
+import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
 import {recordsWhere,digest,persistable} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
@@ -51,6 +52,21 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
  const base=baseNpcSchedule(engine,state,id,minute,constraints);
  if(!state||personConstraint(engine,state,id,minute,constraints)||state.npcs?.[id]?.caring||state.npcs?.[id]?.levy)return base;
  const day=Math.floor(minute/1440)*1440,appointments=serviceAppointments(state,id).filter(r=>r.start<day+1440&&day<r.end);
+ // Reception belongs to the current office, not the frozen biography. Keep
+ // sleep, meals and rest days, and let an explicit personal booking take priority.
+ const calendar=engine.calendar(minute),variant=calendar.market?'market':base?.restDays?.includes(calendar.day)?'rest':'default';
+ const receptions=(constraints??personConstraints(engine,state)).examinerReceptions.get(id)??[];
+ if(receptions.length&&variant!=='rest'&&isEffective(engine,state,id))for(const office of receptions){
+   if(!isEffective(engine,state,office.organization)||!office.authority?.operations?.includes('certify'))continue;
+   const role=engine.byId.get(office.authority.profession),actor=state.npcs?.[id],person=engine.byId.get(id);
+   if(!role||(actor?.proficiencies?.[role.entry?.skill]??person?.proficiencies?.[role.entry?.skill]??0)<(role.entry?.minimumProficiency??100))continue;
+   const slots=base?.seasonal?.[String(calendar.season)]?.[variant]??base?.[variant]??base?.default??[];
+   for(const [start,end]of office.receptionHours??[])for(const slot of slots){
+    if(slot.location!==person?.workplace?.location)continue;
+    const from=Math.max(start,slot.start),to=Math.min(end,slot.end);
+    if(from<to&&!appointments.some(r=>r.start<day+to&&day+from<r.end))appointments.push({start:day+from,end:day+to,location:office.seat,services:['teach']});
+   }
+ }
  if(!appointments.length)return base;
  const overlay=slots=>{
   let result=slots??[{start:0,end:1440,location:state.npcs[id]?.location,activity:'日常起居',services:[]}];

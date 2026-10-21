@@ -15,5 +15,6 @@ export function pruneRuleDependents(rules,gone){
  if(Array.isArray(w?.sources)){const armies=new Set((m?.armies??[]).map(a=>a.id));w.sources=w.sources.filter(s=>!names(s)&&(s.armies??[]).every(id=>armies.has(id)));}
  const q=rules.questSources;
  if(q)for(const k of ['wildlife','commissions'])if(Array.isArray(q[k]))q[k]=q[k].filter(r=>!names(r));
+ if(q)for(const k of ['funds','publishers'])if(q[k])q[k]=Object.fromEntries(Object.entries(q[k]).filter(([board,source])=>!gone.has(board)&&!gone.has(source)));
  return rules;
 }

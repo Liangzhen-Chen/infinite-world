@@ -176,7 +176,47 @@ export async function publishNpcDepth(options={}){
  const prepared=await preparedPublication(options);return options.publish?prepared.apply():prepared.preview;
 }
 
+// Explicitly restore a reviewed routine without rebasing or changing any frozen
+// evidence. The normal publisher continues to reject all unreviewed drift.
+export async function restoreReviewedNpcRoutines({manifest,worldRoot,publish=false,batchManifest}={}){
+ assert.equal(typeof manifest,'string','需要人物发布清单');
+ assert.ok(!batchManifest,'定向恢复只接受单个人物审批清单');
+ const plan=await read(manifest),target=path.resolve(worldRoot??path.resolve(path.dirname(path.resolve(manifest)),plan.worldRoot));
+ const root=inside(target,plan.root),base=await read(path.join(root,'base.json'));
+ const file=path.join(target,'people/baseline.json'),bytes=await fs.readFile(file,'utf8'),world=await loadWorld(target),sourceHash=hashContent(world);
+ assert.deepEqual(JSON.parse(bytes),world.npcs,'人物源在读取期间已改变');
+ const schedules=new Map(base.map(n=>[n.id,n.schedule]));
+ const restored={...world,npcs:world.npcs.map(n=>{
+  if(!schedules.has(n.id))return n;
+  const row={...n,schedule:structuredClone(schedules.get(n.id))};
+  // Appointment authority already lives on the organization office. A copied
+  // annotation on a frozen person is not a reviewed biographical amendment.
+  if(n.authoredFacts?.examinerAppointment){row.location=base.find(p=>p.id===n.id).location;const {examinerAppointment,...facts}=n.authoredFacts;if(Object.keys(facts).length)row.authoredFacts=facts;else delete row.authoredFacts;}
+  return row;
+ })};
+ // Includes frozen foundation, source replay, complete L1/L2/L4 and all hashes.
+ const card=await prepareNpcDepth({manifest,worldRoot:target,world:restored});
+ const approved=new Map(card.entries.map(e=>[e.id,e.facts.schedule]));
+ const next=restored.npcs.map(n=>approved.has(n.id)?{...n,schedule:structuredClone(approved.get(n.id))}:world.npcs.find(p=>p.id===n.id));
+ assert.deepEqual(validateNpcProfiles({...world,npcs:next}),[],'恢复作息后人物结构不合法');
+ const ids=next.filter((n,i)=>hashContent(n)!==hashContent(world.npcs[i])).map(n=>n.id);
+ const result={published:publish,changed:ids.length?['people/baseline.json']:[],restoredNpcIds:ids,modelCalls:0};
+ if(!publish||!ids.length)return result;
+ const unchanged=async()=>{assert.equal(await fs.readFile(file,'utf8'),bytes,'人物源在恢复前已改变');assert.equal(hashContent(await loadWorld(target)),sourceHash,'世界在恢复前已改变');};
+ const lockFile=file+'.depth-publication.lock';let lock,temp;
+ try{
+  lock=await fs.open(lockFile,'wx');
+  await unchanged();
+  const fresh=await prepareNpcDepth({manifest,worldRoot:target,world:restored});
+  assert.deepEqual([fresh.manifestHash,fresh.entries,fresh.drafts],[card.manifestHash,card.entries,card.drafts],'审批证据在恢复前已改变');
+  temp=file+'.'+randomUUID()+'.tmp';await fs.writeFile(temp,JSON.stringify(next,null,2)+'\n');
+  await unchanged();
+  await fs.rename(temp,file);temp=null;
+ }finally{if(temp)await fs.rm(temp,{force:true});if(lock){await lock.close();await fs.rm(lockFile,{force:true});}}
+ return result;
+}
+
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
- if(process.argv.includes('--help'))console.log(publishDepthHelp);
- else{const value=flag=>{const at=process.argv.indexOf(flag);if(at<0)return undefined;assert.ok(process.argv[at+1]&&!process.argv[at+1].startsWith('--'),`缺少参数 ${flag}`);return process.argv[at+1];};console.log(JSON.stringify(await publishNpcDepth({manifest:value('--manifest'),batchManifest:value('--batch-manifest'),publish:process.argv.includes('--publish')})));}
+ if(process.argv.includes('--help'))console.log(publishDepthHelp+'\n--restore-reviewed-routines: restore schedules, initial routine location and duplicate examiner annotations from a single original approved manifest; no review rebasing.');
+ else{const value=flag=>{const at=process.argv.indexOf(flag);if(at<0)return undefined;assert.ok(process.argv[at+1]&&!process.argv[at+1].startsWith('--'),`缺少参数 ${flag}`);return process.argv[at+1];};const options={manifest:value('--manifest'),batchManifest:value('--batch-manifest'),publish:process.argv.includes('--publish')};console.log(JSON.stringify(await (process.argv.includes('--restore-reviewed-routines')?restoreReviewedNpcRoutines(options):publishNpcDepth(options))));}
 }

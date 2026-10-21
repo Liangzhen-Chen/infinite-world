@@ -14001,7 +14001,7 @@
       480,
       1080
     ],
-    "purpose": "货单与担保联络；灯桥工匠会木工验样桌",
+    "purpose": "货单与担保联络",
     "owner": "loc_bs",
     "rooms": [
       {
@@ -14012,10 +14012,7 @@
       }
     ],
     "inventory": {},
-    "description": "商旅行会联络处用于货单与担保联络，可见货单桌、担保人名簿。可询问代理，签约以当事人实际同意为准。前厅接洽时间为每日8时至18时，打烊后另约。 灯桥工匠会在公开前厅设木工验样桌，尹葛每日9时至12时主持入职考核；这是工匠会的任职窗口，商旅代理只转交申请，不代授资格。",
-    "authoredFacts": {
-      "examinationDesk": "A3-内容2新增授权：灯桥工匠会的office_exam_life_6在此任职；内室、库存与其他商旅业务权限不变。"
-    }
+    "description": "商旅行会联络处用于货单与担保联络，可见货单桌、担保人名簿。可询问代理，签约以当事人实际同意为准。前厅接洽时间为每日8时至18时，打烊后另约。"
   },
   {
     "id": "bld_bs_office",
@@ -22822,10 +22819,7 @@
     ],
     "region": "county_xichui_huancheng",
     "farNode": "seat",
-    "description": "环城是西陲的省治，城墙绕着旧仓城修成一圈。官道从西边的白石镇过来，在城北的驿站换车，再往东通王都；城里织染坊多，官仓占了城北一大片。",
-    "authoredFacts": {
-      "governanceBasis": "world/geo/regions.json#prov_xichui、#county_xichui_huancheng：巡抚伊岑·衡阶驻环城兼领本郡，郡丞黎望打理城中日常；公共城墙、现役石门由环城郡署承担治理责任，不转移私人坊产、官仓粮或已发许可。"
-    }
+    "description": "环城是西陲的省治，城墙绕着旧仓城修成一圈。官道从西边的白石镇过来，在城北的驿站换车，再往东通王都；城里织染坊多，官仓占了城北一大片。"
   },
   {
     "id": "loc_far_tongji",
@@ -30989,7 +30983,24 @@
       420,
       1350
     ],
-    "mapHierarchy": [{"id":"known-continent","name":"已知大陆片区"},{"id":"known-region","name":"已知地区片区"},{"id":"known-county","name":"已知郡级片区"},{"id":"loc_hw","name":"河湾村"}]
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_hw",
+        "name": "河湾村"
+      }
+    ]
   },
   {
     "id": "bld_hc_citywall",

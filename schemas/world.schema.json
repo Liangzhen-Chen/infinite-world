@@ -542,6 +542,15 @@
                   ],
                   "additionalProperties": false
                 },
+                "receptionHours": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": { "type": "integer", "minimum": 0, "maximum": 1440 },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
                 "source": {
                   "type": "string",
                   "minLength": 1

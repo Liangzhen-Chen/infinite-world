@@ -129,7 +129,9 @@ test('旧战役升级只追加本批巢穴，钱物与旧首领伤势记忆保�
 
 test('隔离正式发布与重发零写；候选、审核及L4篡改均在写入前拒绝',async t=>{
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-b1-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore','rules','templates'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // 03 §3.2: preserve the same A3 executable definitions and vocabulary in the
+ // isolated edition; the full-world equality and all tamper rejections remain.
+ for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w4-b1'),path.join(root,'drafts/w4-b1'),{recursive:true});
  const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses));const bytes=await fs.readFile(file,'utf8');
  const preview=await publishB1({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);assert.equal(await fs.readFile(file,'utf8'),bytes);

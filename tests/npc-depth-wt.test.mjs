@@ -40,7 +40,9 @@ test('苇汀正式30人等于已审批完整档，其他人、旧记忆和钱物
 test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅更新苇汀',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'t73-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
- for(const dir of ['meta','geo','people','lore','design','rules','templates'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // 03 §3.2: the publication fixture must include the edition's A3 programs and
+ // ontology. Preserve the complete loaded-world equality assertion.
+ for(const dir of ['meta','geo','people','lore','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/wt-depth/sourced/manifest.json'),before=await fs.readFile(baseline);
@@ -267,7 +269,7 @@ test('钉死T07来源仅接受完整LF或原CRLF，字段篡改、混合换行�
 test('换行凭证贯穿官方准备、mock复审收据及发布重放，不授予真实审核或发布',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'wt-checkout-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
- for(const dir of ['meta','geo','people','lore','rules','templates'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ for(const dir of ['meta','geo','people','lore','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.writeFile(path.join(worldRoot,'people/baseline.json'),JSON.stringify(world.npcs));
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  for(const file of ['w1-wt-depth.mjs','w1-villages-weiting.mjs'])await fs.copyFile(path.resolve('world/design',file),path.join(worldRoot,'design',file));

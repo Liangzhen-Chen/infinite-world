@@ -2689,10 +2689,9 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_forge",
-          "activity": "打铁与检查工具；兼接本行业入职验样",
+          "activity": "打铁与检查工具",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -2706,10 +2705,9 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_forge",
-          "activity": "打铁与检查工具；兼接本行业入职验样",
+          "activity": "打铁与检查工具",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -2794,28 +2792,22 @@
           "start": 480,
           "end": 660,
           "location": "bld_hw_forge",
-          "activity": "吃饭和家务；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "吃饭和家务",
+          "services": []
         },
         {
           "start": 660,
           "end": 900,
           "location": "bld_hw_forge",
-          "activity": "清炉、修整工作台；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "清炉、修整工作台",
+          "services": []
         },
         {
           "start": 900,
           "end": 1200,
           "location": "bld_hw_forge",
-          "activity": "休息和与熟人说话；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "休息和与熟人说话",
+          "services": []
         },
         {
           "start": 1200,
@@ -2851,10 +2843,9 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_forge",
-              "activity": "打铁与检查工具；兼接本行业入职验样",
+              "activity": "打铁与检查工具",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -2868,20 +2859,17 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_forge",
-              "activity": "打铁与检查工具；兼接本行业入职验样",
+              "activity": "打铁与检查工具",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_forge",
-              "activity": "清炉、修整工作台；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "清炉、修整工作台",
+              "services": []
             },
             {
               "start": 1200,
@@ -2935,10 +2923,8 @@
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_forge",
-              "activity": "清炉、修整工作台；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "清炉、修整工作台",
+              "services": []
             },
             {
               "start": 1200,
@@ -2960,28 +2946,22 @@
               "start": 480,
               "end": 660,
               "location": "bld_hw_forge",
-              "activity": "吃饭和家务；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "吃饭和家务",
+              "services": []
             },
             {
               "start": 660,
               "end": 900,
               "location": "bld_hw_forge",
-              "activity": "清炉、修整工作台；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "清炉、修整工作台",
+              "services": []
             },
             {
               "start": 900,
               "end": 1200,
               "location": "bld_hw_forge",
-              "activity": "休息和与熟人说话；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "休息和与熟人说话",
+              "services": []
             },
             {
               "start": 1200,
@@ -3299,14 +3279,6 @@
         "old": 30,
         "new": 42,
         "basis": "tools/bootstrap-world.mjs:18 对林穗和段禾之外的人统一赋30；tools/world-content.mjs:61 写有女儿段禾，段禾原说明明确16岁。42是本次设计值，父女差26岁，满足指南10.6至少15岁；不补写婚育经历。"
-      }
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_5",
-        "organization": "faction_lampbridge",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_5要求本地行业师傅或登记行会，skill_life_5_core熟练度至少100；段岩现有熟练度220。组织职责见world/lore/factions.json#faction_lampbridge。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
       }
     }
   },
@@ -3958,10 +3930,9 @@
           "start": 480,
           "end": 720,
           "location": "loc_hw_northwood",
-          "activity": "在林缘查看足迹；兼接本行业入职验样",
+          "activity": "在林缘查看足迹",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -3975,10 +3946,9 @@
           "start": 780,
           "end": 1080,
           "location": "loc_hw_northwood",
-          "activity": "在林缘查看足迹；兼接本行业入职验样",
+          "activity": "在林缘查看足迹",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -4070,10 +4040,8 @@
           "start": 660,
           "end": 900,
           "location": "loc_hw_northwood",
-          "activity": "照料灰尾、整理绳结；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "照料灰尾、整理绳结",
+          "services": []
         },
         {
           "start": 900,
@@ -4116,10 +4084,9 @@
               "start": 540,
               "end": 720,
               "location": "loc_hw_northwood",
-              "activity": "在林缘查看足迹；兼接本行业入职验样",
+              "activity": "在林缘查看足迹",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -4133,10 +4100,9 @@
               "start": 780,
               "end": 1020,
               "location": "loc_hw_northwood",
-              "activity": "在林缘查看足迹；兼接本行业入职验样",
+              "activity": "在林缘查看足迹",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -4228,10 +4194,8 @@
               "start": 660,
               "end": 900,
               "location": "loc_hw_northwood",
-              "activity": "照料灰尾、整理绳结；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "照料灰尾、整理绳结",
+              "services": []
             },
             {
               "start": 900,
@@ -4549,14 +4513,6 @@
     "authoredBasis": {
       "existingNotes": "独居，有一只老猎犬灰尾。想恢复北林猎场，但担心捕猎影响繁殖季；会陷阱和追踪。带路需要具体目的、合理费用或熟人关系，答应带路后应实际移动并记时。讨厌别人随便逗弄他的犬。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_1",
-        "organization": "faction_fieldguild",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_1要求本地行业师傅或登记行会，skill_life_1_core熟练度至少100；吴朔现有熟练度240。组织职责见world/lore/factions.json#faction_fieldguild。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
     }
   },
   {
@@ -4608,10 +4564,9 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_herbs",
-          "activity": "分拣草药和照护；兼接本行业入职验样",
+          "activity": "分拣草药和照护",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -4625,10 +4580,9 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_herbs",
-          "activity": "分拣草药和照护；兼接本行业入职验样",
+          "activity": "分拣草药和照护",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -4713,28 +4667,22 @@
           "start": 480,
           "end": 660,
           "location": "bld_hw_herbs",
-          "activity": "吃饭和家务；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "吃饭和家务",
+          "services": []
         },
         {
           "start": 660,
           "end": 900,
           "location": "bld_hw_herbs",
-          "activity": "记录母亲的近况；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "记录母亲的近况",
+          "services": []
         },
         {
           "start": 900,
           "end": 1200,
           "location": "bld_hw_herbs",
-          "activity": "休息和与熟人说话；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "休息和与熟人说话",
+          "services": []
         },
         {
           "start": 1200,
@@ -4770,10 +4718,9 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_herbs",
-              "activity": "分拣草药和照护；兼接本行业入职验样",
+              "activity": "分拣草药和照护",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -4787,20 +4734,17 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_herbs",
-              "activity": "分拣草药和照护；兼接本行业入职验样",
+              "activity": "分拣草药和照护",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_herbs",
-              "activity": "记录母亲的近况；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "记录母亲的近况",
+              "services": []
             },
             {
               "start": 1200,
@@ -4854,10 +4798,8 @@
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_herbs",
-              "activity": "记录母亲的近况；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "记录母亲的近况",
+              "services": []
             },
             {
               "start": 1200,
@@ -4879,28 +4821,22 @@
               "start": 480,
               "end": 660,
               "location": "bld_hw_herbs",
-              "activity": "吃饭和家务；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "吃饭和家务",
+              "services": []
             },
             {
               "start": 660,
               "end": 900,
               "location": "bld_hw_herbs",
-              "activity": "记录母亲的近况；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "记录母亲的近况",
+              "services": []
             },
             {
               "start": 900,
               "end": 1200,
               "location": "bld_hw_herbs",
-              "activity": "休息和与熟人说话；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "休息和与熟人说话",
+              "services": []
             },
             {
               "start": 1200,
@@ -5209,14 +5145,6 @@
     "authoredBasis": {
       "existingNotes": "许苓的朋友，照顾患关节病的母亲；希望建立稳定草药园，避免被采药商垄断。可以教识草，治病需诊断而非所有病都套一个药。帮助她家会影响信任及后续进门权限，不自动赠送珍药。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_19",
-        "organization": "faction_furroworder",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_19要求本地行业师傅或登记行会，skill_life_19_core熟练度至少100；陶芷现有熟练度250。组织职责见world/lore/factions.json#faction_furroworder。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
     }
   },
   {
@@ -9057,15 +8985,7 @@
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
     },
     "settlement": "loc_bs",
-    "householdId": "house_bs_001",
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_12",
-        "organization": "faction_saltboat",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_12要求本地行业师傅或登记行会，skill_life_12_core熟练度至少100；严辙现有熟练度310。组织职责见world/lore/factions.json#faction_saltboat。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
-    }
+    "householdId": "house_bs_001"
   },
   {
     "id": "npc_hw_luqing",
@@ -9851,10 +9771,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_qingdeng",
-          "activity": "雕刻试作与访谈记录；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "雕刻试作与访谈记录",
+          "services": []
         },
         {
           "start": 720,
@@ -9867,10 +9785,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_qingdeng",
-          "activity": "雕刻试作与访谈记录；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "雕刻试作与访谈记录",
+          "services": []
         },
         {
           "start": 1080,
@@ -9906,10 +9822,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_qingdeng",
-          "activity": "交换现有货物；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "交换现有货物",
+          "services": []
         },
         {
           "start": 720,
@@ -9922,10 +9836,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_qingdeng",
-          "activity": "核对集市货单；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "核对集市货单",
+          "services": []
         },
         {
           "start": 1080,
@@ -9954,28 +9866,22 @@
           "start": 480,
           "end": 660,
           "location": "bld_hw_qingdeng",
-          "activity": "吃饭和家务；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "吃饭和家务",
+          "services": []
         },
         {
           "start": 660,
           "end": 900,
           "location": "bld_hw_qingdeng",
-          "activity": "整理草图和木屑；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "整理草图和木屑",
+          "services": []
         },
         {
           "start": 900,
           "end": 1200,
           "location": "bld_hw_qingdeng",
-          "activity": "休息和与熟人说话；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "休息和与熟人说话",
+          "services": []
         },
         {
           "start": 1200,
@@ -10011,10 +9917,8 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_qingdeng",
-              "activity": "雕刻试作与访谈记录；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "雕刻试作与访谈记录",
+              "services": []
             },
             {
               "start": 720,
@@ -10027,19 +9931,15 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_qingdeng",
-              "activity": "雕刻试作与访谈记录；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "雕刻试作与访谈记录",
+              "services": []
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_qingdeng",
-              "activity": "整理草图和木屑；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理草图和木屑",
+              "services": []
             },
             {
               "start": 1200,
@@ -10068,10 +9968,8 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_qingdeng",
-              "activity": "交换现有货物；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "交换现有货物",
+              "services": []
             },
             {
               "start": 720,
@@ -10084,19 +9982,15 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_qingdeng",
-              "activity": "核对集市货单；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "核对集市货单",
+              "services": []
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_qingdeng",
-              "activity": "整理草图和木屑；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理草图和木屑",
+              "services": []
             },
             {
               "start": 1200,
@@ -10118,28 +10012,22 @@
               "start": 480,
               "end": 660,
               "location": "bld_hw_qingdeng",
-              "activity": "吃饭和家务；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "吃饭和家务",
+              "services": []
             },
             {
               "start": 660,
               "end": 900,
               "location": "bld_hw_qingdeng",
-              "activity": "整理草图和木屑；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理草图和木屑",
+              "services": []
             },
             {
               "start": 900,
               "end": 1200,
               "location": "bld_hw_qingdeng",
-              "activity": "休息和与熟人说话；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "休息和与熟人说话",
+              "services": []
             },
             {
               "start": 1200,
@@ -10440,14 +10328,6 @@
     "authoredBasis": {
       "existingNotes": "来村里暂住，想在沿河村落收集渡河者的故事，再做一组公共雕刻。珍惜作品署名和人物同意。可能触发艺术与记忆魔法的融合路线，但需真实体验、材料和研究。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_14",
-        "organization": "faction_civicartisans",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_14要求本地行业师傅或登记行会，skill_life_14_core熟练度至少100；贺舟现有熟练度330。组织职责见world/lore/factions.json#faction_civicartisans。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
     }
   },
   {
@@ -10501,10 +10381,9 @@
           "start": 480,
           "end": 720,
           "location": "loc_hw_apiary",
-          "activity": "查看蜂群与采集记录；兼接本行业入职验样",
+          "activity": "查看蜂群与采集记录",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -10518,10 +10397,9 @@
           "start": 780,
           "end": 1080,
           "location": "loc_hw_apiary",
-          "activity": "查看蜂群与采集记录；兼接本行业入职验样",
+          "activity": "查看蜂群与采集记录",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -10606,28 +10484,22 @@
           "start": 480,
           "end": 660,
           "location": "loc_hw_apiary",
-          "activity": "吃饭和家务；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "吃饭和家务",
+          "services": []
         },
         {
           "start": 660,
           "end": 900,
           "location": "loc_hw_apiary",
-          "activity": "整理蜂具和花期笔记；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "整理蜂具和花期笔记",
+          "services": []
         },
         {
           "start": 900,
           "end": 1200,
           "location": "loc_hw_apiary",
-          "activity": "休息和与熟人说话；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "休息和与熟人说话",
+          "services": []
         },
         {
           "start": 1200,
@@ -10663,10 +10535,9 @@
               "start": 540,
               "end": 720,
               "location": "loc_hw_apiary",
-              "activity": "查看蜂群与采集记录；兼接本行业入职验样",
+              "activity": "查看蜂群与采集记录",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -10680,20 +10551,17 @@
               "start": 780,
               "end": 1020,
               "location": "loc_hw_apiary",
-              "activity": "查看蜂群与采集记录；兼接本行业入职验样",
+              "activity": "查看蜂群与采集记录",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "loc_hw_apiary",
-              "activity": "整理蜂具和花期笔记；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理蜂具和花期笔记",
+              "services": []
             },
             {
               "start": 1200,
@@ -10747,10 +10615,8 @@
               "start": 1020,
               "end": 1200,
               "location": "loc_hw_apiary",
-              "activity": "整理蜂具和花期笔记；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理蜂具和花期笔记",
+              "services": []
             },
             {
               "start": 1200,
@@ -10772,28 +10638,22 @@
               "start": 480,
               "end": 660,
               "location": "loc_hw_apiary",
-              "activity": "吃饭和家务；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "吃饭和家务",
+              "services": []
             },
             {
               "start": 660,
               "end": 900,
               "location": "loc_hw_apiary",
-              "activity": "整理蜂具和花期笔记；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "整理蜂具和花期笔记",
+              "services": []
             },
             {
               "start": 900,
               "end": 1200,
               "location": "loc_hw_apiary",
-              "activity": "休息和与熟人说话；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "休息和与熟人说话",
+              "services": []
             },
             {
               "start": 1200,
@@ -11104,14 +10964,6 @@
     "authoredBasis": {
       "existingNotes": "住在南坡租地，村民还不熟悉他，担心蜜蜂扰民。希望借助风术保护授粉，愿参与共同农业试验。与本地果园有潜在合作，不会因为外乡身份天然敌对。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_9",
-        "organization": "faction_seedcourt",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_9要求本地行业师傅或登记行会，skill_life_9_core熟练度至少100；安槐现有熟练度340。组织职责见world/lore/factions.json#faction_seedcourt。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
     }
   },
   {
@@ -11161,10 +11013,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_post",
-          "activity": "登记时刻与公开公告；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "登记时刻与公开公告",
+          "services": []
         },
         {
           "start": 720,
@@ -11177,10 +11027,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_post",
-          "activity": "登记时刻与公开公告；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "登记时刻与公开公告",
+          "services": []
         },
         {
           "start": 1080,
@@ -11216,10 +11064,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_hw_post",
-          "activity": "交换现有货物；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "交换现有货物",
+          "services": []
         },
         {
           "start": 720,
@@ -11232,10 +11078,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_hw_post",
-          "activity": "核对集市货单；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "核对集市货单",
+          "services": []
         },
         {
           "start": 1080,
@@ -11264,28 +11108,22 @@
           "start": 480,
           "end": 660,
           "location": "bld_hw_post",
-          "activity": "吃饭和家务；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "吃饭和家务",
+          "services": []
         },
         {
           "start": 660,
           "end": 900,
           "location": "bld_hw_post",
-          "activity": "核对抄记和封缄；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "核对抄记和封缄",
+          "services": []
         },
         {
           "start": 900,
           "end": 1200,
           "location": "bld_hw_post",
-          "activity": "休息和与熟人说话；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "休息和与熟人说话",
+          "services": []
         },
         {
           "start": 1200,
@@ -11321,10 +11159,8 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_post",
-              "activity": "登记时刻与公开公告；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "登记时刻与公开公告",
+              "services": []
             },
             {
               "start": 720,
@@ -11337,19 +11173,15 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_post",
-              "activity": "登记时刻与公开公告；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "登记时刻与公开公告",
+              "services": []
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_post",
-              "activity": "核对抄记和封缄；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "核对抄记和封缄",
+              "services": []
             },
             {
               "start": 1200,
@@ -11378,10 +11210,8 @@
               "start": 540,
               "end": 720,
               "location": "bld_hw_post",
-              "activity": "交换现有货物；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "交换现有货物",
+              "services": []
             },
             {
               "start": 720,
@@ -11394,19 +11224,15 @@
               "start": 780,
               "end": 1020,
               "location": "bld_hw_post",
-              "activity": "核对集市货单；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "核对集市货单",
+              "services": []
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "bld_hw_post",
-              "activity": "核对抄记和封缄；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "核对抄记和封缄",
+              "services": []
             },
             {
               "start": 1200,
@@ -11428,28 +11254,22 @@
               "start": 480,
               "end": 660,
               "location": "bld_hw_post",
-              "activity": "吃饭和家务；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "吃饭和家务",
+              "services": []
             },
             {
               "start": 660,
               "end": 900,
               "location": "bld_hw_post",
-              "activity": "核对抄记和封缄；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "核对抄记和封缄",
+              "services": []
             },
             {
               "start": 900,
               "end": 1200,
               "location": "bld_hw_post",
-              "activity": "休息和与熟人说话；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "休息和与熟人说话",
+              "services": []
             },
             {
               "start": 1200,
@@ -11750,14 +11570,6 @@
     "authoredBasis": {
       "existingNotes": "保存官道时刻、信件和公开公告，强调隐私，不随便交出别人私人邮件。可以检验地图、寄信或登记首发现；允许信息的运输时间，不给所有NPC瞬时共享记忆。",
       "newFacts": "住处锚点、日程、具体外貌与关系细节为M2手工设计；不生成产权、债务或额外库存。"
-    },
-    "authoredFacts": {
-      "examinerAppointment": {
-        "office": "office_exam_life_22",
-        "organization": "faction_quietledger",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_22要求本地行业师傅或登记行会，skill_life_22_core熟练度至少100；沈渡现有熟练度350。组织职责见world/lore/factions.json#faction_quietledger。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
     }
   },
   {
@@ -14130,10 +13942,8 @@
           "start": 540,
           "end": 1080,
           "location": "loc_hw_fields",
-          "activity": "查看田埂与自家沟段；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "查看田埂与自家沟段",
+          "services": []
         },
         {
           "start": 1080,
@@ -14169,10 +13979,8 @@
           "start": 540,
           "end": 1080,
           "location": "loc_hw_fields",
-          "activity": "查看田埂与自家沟段；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "查看田埂与自家沟段",
+          "services": []
         },
         {
           "start": 1080,
@@ -14252,10 +14060,8 @@
               "start": 540,
               "end": 990,
               "location": "loc_hw_fields",
-              "activity": "查看田埂与自家沟段；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "查看田埂与自家沟段",
+              "services": []
             },
             {
               "start": 990,
@@ -14291,10 +14097,8 @@
               "start": 540,
               "end": 990,
               "location": "loc_hw_fields",
-              "activity": "查看田埂与自家沟段；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "查看田埂与自家沟段",
+              "services": []
             },
             {
               "start": 990,
@@ -14580,13 +14384,7 @@
         "华慈走泥路险滑后开始给她挑较干的路"
       ],
       "work": "查看田埂与自家沟段",
-      "rest": "整理次日的轻重活次序",
-      "examinerAppointment": {
-        "office": "office_exam_life_0",
-        "organization": "faction_furroworder",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_0要求本地行业师傅或登记行会，skill_life_0_core熟练度至少100；邢芦现有熟练度330。组织职责见world/lore/factions.json#faction_furroworder。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "rest": "整理次日的轻重活次序"
     }
   },
   {
@@ -14711,10 +14509,8 @@
           "start": 540,
           "end": 1080,
           "location": "bld_hw_weaving",
-          "activity": "在织坊检查松紧与结头；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "在织坊检查松紧与结头",
+          "services": []
         },
         {
           "start": 1080,
@@ -14750,10 +14546,8 @@
           "start": 540,
           "end": 1080,
           "location": "bld_hw_weaving",
-          "activity": "在织坊检查松紧与结头；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "在织坊检查松紧与结头",
+          "services": []
         },
         {
           "start": 1080,
@@ -14833,10 +14627,8 @@
               "start": 540,
               "end": 990,
               "location": "bld_hw_weaving",
-              "activity": "在织坊检查松紧与结头；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "在织坊检查松紧与结头",
+              "services": []
             },
             {
               "start": 990,
@@ -14872,10 +14664,8 @@
               "start": 540,
               "end": 990,
               "location": "bld_hw_weaving",
-              "activity": "在织坊检查松紧与结头；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "在织坊检查松紧与结头",
+              "services": []
             },
             {
               "start": 990,
@@ -15158,13 +14948,7 @@
         "邓苔把废线缠成一团后自己教他慢慢解开"
       ],
       "work": "在织坊检查松紧与结头",
-      "rest": "给旧衣拢好散线",
-      "examinerAppointment": {
-        "office": "office_exam_life_4",
-        "organization": "faction_lampbridge",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_4要求本地行业师傅或登记行会，skill_life_4_core熟练度至少100；冉默现有熟练度360。组织职责见world/lore/factions.json#faction_lampbridge。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "rest": "给旧衣拢好散线"
     }
   },
   {
@@ -19134,7 +18918,7 @@
       "day": 16
     },
     "culture": "culture_river",
-    "location": "bld_bs_guild",
+    "location": "bld_hw_home_22",
     "coins": 49,
     "inventory": {},
     "skills": [
@@ -19226,34 +19010,18 @@
           "start": 0,
           "end": 480,
           "location": "bld_hw_home_22",
-          "activity": "睡眠与家务",
+          "activity": "睡眠",
           "services": []
         },
         {
           "start": 480,
           "end": 540,
-          "location": "bld_bs_guild",
-          "activity": "前往白石行会验样桌，整理木样",
+          "location": "bld_hw_home_22",
+          "activity": "吃饭与家务",
           "services": []
         },
         {
           "start": 540,
-          "end": 720,
-          "location": "bld_bs_guild",
-          "activity": "受灯桥工匠会委任，验看木工入职作品",
-          "services": [
-            "teach"
-          ]
-        },
-        {
-          "start": 720,
-          "end": 780,
-          "location": "bld_bs_guild",
-          "activity": "午饭与整理验样记录",
-          "services": []
-        },
-        {
-          "start": 780,
           "end": 1080,
           "location": "bld_hw_mill",
           "activity": "查看经物主同意的旧木件接缝",
@@ -19261,9 +19029,16 @@
         },
         {
           "start": 1080,
+          "end": 1260,
+          "location": "bld_hw_home_22",
+          "activity": "整理手边木器的修补记号",
+          "services": []
+        },
+        {
+          "start": 1260,
           "end": 1440,
           "location": "bld_hw_home_22",
-          "activity": "回家整理木器记号并休息",
+          "activity": "睡眠",
           "services": []
         }
       ],
@@ -19272,34 +19047,18 @@
           "start": 0,
           "end": 480,
           "location": "bld_hw_home_22",
-          "activity": "睡眠与家务",
+          "activity": "睡眠",
           "services": []
         },
         {
           "start": 480,
           "end": 540,
-          "location": "bld_bs_guild",
-          "activity": "前往白石行会验样桌，整理木样",
+          "location": "bld_hw_home_22",
+          "activity": "吃饭与家务",
           "services": []
         },
         {
           "start": 540,
-          "end": 720,
-          "location": "bld_bs_guild",
-          "activity": "受灯桥工匠会委任，验看木工入职作品",
-          "services": [
-            "teach"
-          ]
-        },
-        {
-          "start": 720,
-          "end": 780,
-          "location": "bld_bs_guild",
-          "activity": "午饭与整理验样记录",
-          "services": []
-        },
-        {
-          "start": 780,
           "end": 1080,
           "location": "bld_hw_mill",
           "activity": "查看经物主同意的旧木件接缝",
@@ -19307,9 +19066,16 @@
         },
         {
           "start": 1080,
+          "end": 1260,
+          "location": "bld_hw_home_22",
+          "activity": "整理手边木器的修补记号",
+          "services": []
+        },
+        {
+          "start": 1260,
           "end": 1440,
           "location": "bld_hw_home_22",
-          "activity": "回家整理木器记号并休息",
+          "activity": "睡眠",
           "services": []
         }
       ],
@@ -19318,44 +19084,35 @@
           "start": 0,
           "end": 480,
           "location": "bld_hw_home_22",
-          "activity": "睡眠与家务",
+          "activity": "睡眠",
           "services": []
         },
         {
           "start": 480,
           "end": 540,
-          "location": "bld_bs_guild",
-          "activity": "前往白石行会验样桌，整理木样",
+          "location": "bld_hw_home_22",
+          "activity": "吃饭与家务",
           "services": []
         },
         {
           "start": 540,
-          "end": 720,
-          "location": "bld_bs_guild",
-          "activity": "受灯桥工匠会委任，验看木工入职作品",
-          "services": [
-            "teach"
-          ]
-        },
-        {
-          "start": 720,
-          "end": 780,
-          "location": "bld_bs_guild",
-          "activity": "午饭与整理验样记录",
-          "services": []
-        },
-        {
-          "start": 780,
           "end": 1080,
-          "location": "bld_hw_mill",
-          "activity": "查看经物主同意的旧木件接缝",
+          "location": "bld_hw_home_22",
+          "activity": "整理手边木器的修补记号",
           "services": []
         },
         {
           "start": 1080,
+          "end": 1260,
+          "location": "bld_hw_home_22",
+          "activity": "整理手边木器的修补记号",
+          "services": []
+        },
+        {
+          "start": 1260,
           "end": 1440,
           "location": "bld_hw_home_22",
-          "activity": "回家整理木器记号并休息",
+          "activity": "睡眠",
           "services": []
         }
       ],
@@ -19371,44 +19128,35 @@
               "start": 0,
               "end": 480,
               "location": "bld_hw_home_22",
-              "activity": "睡眠与家务",
+              "activity": "睡眠",
               "services": []
             },
             {
               "start": 480,
               "end": 540,
-              "location": "bld_bs_guild",
-              "activity": "前往白石行会验样桌，整理木样",
+              "location": "bld_hw_home_22",
+              "activity": "吃饭与家务",
               "services": []
             },
             {
               "start": 540,
-              "end": 720,
-              "location": "bld_bs_guild",
-              "activity": "受灯桥工匠会委任，验看木工入职作品",
-              "services": [
-                "teach"
-              ]
-            },
-            {
-              "start": 720,
-              "end": 780,
-              "location": "bld_bs_guild",
-              "activity": "午饭与整理验样记录",
-              "services": []
-            },
-            {
-              "start": 780,
-              "end": 1080,
+              "end": 990,
               "location": "bld_hw_mill",
               "activity": "查看经物主同意的旧木件接缝",
               "services": []
             },
             {
-              "start": 1080,
+              "start": 990,
+              "end": 1260,
+              "location": "bld_hw_home_22",
+              "activity": "整理手边木器的修补记号",
+              "services": []
+            },
+            {
+              "start": 1260,
               "end": 1440,
               "location": "bld_hw_home_22",
-              "activity": "回家整理木器记号并休息",
+              "activity": "睡眠",
               "services": []
             }
           ],
@@ -19417,44 +19165,35 @@
               "start": 0,
               "end": 480,
               "location": "bld_hw_home_22",
-              "activity": "睡眠与家务",
+              "activity": "睡眠",
               "services": []
             },
             {
               "start": 480,
               "end": 540,
-              "location": "bld_bs_guild",
-              "activity": "前往白石行会验样桌，整理木样",
+              "location": "bld_hw_home_22",
+              "activity": "吃饭与家务",
               "services": []
             },
             {
               "start": 540,
-              "end": 720,
-              "location": "bld_bs_guild",
-              "activity": "受灯桥工匠会委任，验看木工入职作品",
-              "services": [
-                "teach"
-              ]
-            },
-            {
-              "start": 720,
-              "end": 780,
-              "location": "bld_bs_guild",
-              "activity": "午饭与整理验样记录",
-              "services": []
-            },
-            {
-              "start": 780,
-              "end": 1080,
+              "end": 990,
               "location": "bld_hw_mill",
               "activity": "查看经物主同意的旧木件接缝",
               "services": []
             },
             {
-              "start": 1080,
+              "start": 990,
+              "end": 1260,
+              "location": "bld_hw_home_22",
+              "activity": "整理手边木器的修补记号",
+              "services": []
+            },
+            {
+              "start": 1260,
               "end": 1440,
               "location": "bld_hw_home_22",
-              "activity": "回家整理木器记号并休息",
+              "activity": "睡眠",
               "services": []
             }
           ],
@@ -19463,44 +19202,35 @@
               "start": 0,
               "end": 480,
               "location": "bld_hw_home_22",
-              "activity": "睡眠与家务",
+              "activity": "睡眠",
               "services": []
             },
             {
               "start": 480,
               "end": 540,
-              "location": "bld_bs_guild",
-              "activity": "前往白石行会验样桌，整理木样",
+              "location": "bld_hw_home_22",
+              "activity": "吃饭与家务",
               "services": []
             },
             {
               "start": 540,
-              "end": 720,
-              "location": "bld_bs_guild",
-              "activity": "受灯桥工匠会委任，验看木工入职作品",
-              "services": [
-                "teach"
-              ]
-            },
-            {
-              "start": 720,
-              "end": 780,
-              "location": "bld_bs_guild",
-              "activity": "午饭与整理验样记录",
+              "end": 990,
+              "location": "bld_hw_home_22",
+              "activity": "整理手边木器的修补记号",
               "services": []
             },
             {
-              "start": 780,
-              "end": 1080,
-              "location": "bld_hw_mill",
-              "activity": "查看经物主同意的旧木件接缝",
+              "start": 990,
+              "end": 1260,
+              "location": "bld_hw_home_22",
+              "activity": "整理手边木器的修补记号",
               "services": []
             },
             {
-              "start": 1080,
+              "start": 1260,
               "end": 1440,
               "location": "bld_hw_home_22",
-              "activity": "回家整理木器记号并休息",
+              "activity": "睡眠",
               "services": []
             }
           ]
@@ -19735,13 +19465,7 @@
         "靳苹提醒过自己不要替别人决定修旧还是换新"
       ],
       "work": "查看经物主同意的旧木件接缝",
-      "rest": "整理手边木器的修补记号",
-      "examinerAppointment": {
-        "office": "office_exam_life_6",
-        "organization": "faction_lampbridge",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_6要求本地行业师傅或登记行会，skill_life_6_core熟练度至少100；尹葛现有熟练度320。组织职责见world/lore/factions.json#faction_lampbridge。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "rest": "整理手边木器的修补记号"
     }
   },
   {
@@ -23148,10 +22872,8 @@
           "start": 510,
           "end": 720,
           "location": "bld_yp_kitchen",
-          "activity": "共灶做饭人的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "共灶做饭人的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -23164,10 +22886,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_yp_kitchen",
-          "activity": "帮饭的人总把洗碗排在最后；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "帮饭的人总把洗碗排在最后",
+          "services": []
         },
         {
           "start": 1080,
@@ -23203,10 +22923,8 @@
           "start": 510,
           "end": 720,
           "location": "bld_yp_kitchen",
-          "activity": "共灶做饭人的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "共灶做饭人的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -23219,10 +22937,8 @@
           "start": 780,
           "end": 1080,
           "location": "bld_yp_kitchen",
-          "activity": "帮饭的人总把洗碗排在最后；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "帮饭的人总把洗碗排在最后",
+          "services": []
         },
         {
           "start": 1080,
@@ -23316,10 +23032,8 @@
               "start": 510,
               "end": 720,
               "location": "bld_yp_kitchen",
-              "activity": "共灶做饭人的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "共灶做饭人的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -23332,10 +23046,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_yp_kitchen",
-              "activity": "帮饭的人总把洗碗排在最后；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "帮饭的人总把洗碗排在最后",
+              "services": []
             },
             {
               "start": 990,
@@ -23371,10 +23083,8 @@
               "start": 510,
               "end": 720,
               "location": "bld_yp_kitchen",
-              "activity": "共灶做饭人的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "共灶做饭人的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -23387,10 +23097,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_yp_kitchen",
-              "activity": "帮饭的人总把洗碗排在最后；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "帮饭的人总把洗碗排在最后",
+              "services": []
             },
             {
               "start": 990,
@@ -23686,13 +23394,7 @@
         "一次备饭前重新分过容器",
         "为洗碗次序和帮工争执过"
       ],
-      "privateFact": "曾把忘刷的碗挪到暗处后又补刷",
-      "examinerAppointment": {
-        "office": "office_exam_life_3",
-        "organization": "faction_furroworder",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_3要求本地行业师傅或登记行会，skill_life_3_core熟练度至少100；朱笙现有熟练度320。组织职责见world/lore/factions.json#faction_furroworder。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "privateFact": "曾把忘刷的碗挪到暗处后又补刷"
     },
     "socialProfile": {
       "conflicts": [
@@ -27129,10 +26831,8 @@
           "start": 570,
           "end": 720,
           "location": "loc_yp_path",
-          "activity": "坡路巡看人的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "坡路巡看人的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -27145,10 +26845,8 @@
           "start": 780,
           "end": 1080,
           "location": "loc_yp_path",
-          "activity": "近路上一块松土被脚印踩薄；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "近路上一块松土被脚印踩薄",
+          "services": []
         },
         {
           "start": 1080,
@@ -27184,10 +26882,8 @@
           "start": 570,
           "end": 720,
           "location": "loc_yp_path",
-          "activity": "坡路巡看人的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "坡路巡看人的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -27200,10 +26896,8 @@
           "start": 780,
           "end": 1080,
           "location": "loc_yp_path",
-          "activity": "近路上一块松土被脚印踩薄；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "近路上一块松土被脚印踩薄",
+          "services": []
         },
         {
           "start": 1080,
@@ -27297,10 +26991,8 @@
               "start": 570,
               "end": 720,
               "location": "loc_yp_path",
-              "activity": "坡路巡看人的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "坡路巡看人的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -27313,10 +27005,8 @@
               "start": 780,
               "end": 990,
               "location": "loc_yp_path",
-              "activity": "近路上一块松土被脚印踩薄；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "近路上一块松土被脚印踩薄",
+              "services": []
             },
             {
               "start": 990,
@@ -27352,10 +27042,8 @@
               "start": 570,
               "end": 720,
               "location": "loc_yp_path",
-              "activity": "坡路巡看人的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "坡路巡看人的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -27368,10 +27056,8 @@
               "start": 780,
               "end": 990,
               "location": "loc_yp_path",
-              "activity": "近路上一块松土被脚印踩薄；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "近路上一块松土被脚印踩薄",
+              "services": []
             },
             {
               "start": 990,
@@ -27655,13 +27341,7 @@
         "亲自绕过一段松边坡",
         "回去把含糊的路标画清了"
       ],
-      "privateFact": "有次嫌问路人烦只含糊指了方向",
-      "examinerAppointment": {
-        "office": "office_exam_life_11",
-        "organization": "faction_fieldguild",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_11要求本地行业师傅或登记行会，skill_life_11_core熟练度至少100；任泊现有熟练度320。组织职责见world/lore/factions.json#faction_fieldguild。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "privateFact": "有次嫌问路人烦只含糊指了方向"
     },
     "socialProfile": {
       "conflicts": [
@@ -30372,10 +30052,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_yp_yard",
-          "activity": "房基垫石帮工的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "房基垫石帮工的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -30388,10 +30066,8 @@
           "start": 780,
           "end": 1050,
           "location": "bld_yp_yard",
-          "activity": "一块垫石下的泥始终不干；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "一块垫石下的泥始终不干",
+          "services": []
         },
         {
           "start": 1050,
@@ -30427,10 +30103,8 @@
           "start": 480,
           "end": 720,
           "location": "bld_yp_yard",
-          "activity": "房基垫石帮工的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "房基垫石帮工的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -30443,10 +30117,8 @@
           "start": 780,
           "end": 1050,
           "location": "bld_yp_yard",
-          "activity": "一块垫石下的泥始终不干；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "一块垫石下的泥始终不干",
+          "services": []
         },
         {
           "start": 1050,
@@ -30540,10 +30212,8 @@
               "start": 480,
               "end": 720,
               "location": "bld_yp_yard",
-              "activity": "房基垫石帮工的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "房基垫石帮工的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -30556,10 +30226,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_yp_yard",
-              "activity": "一块垫石下的泥始终不干；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "一块垫石下的泥始终不干",
+              "services": []
             },
             {
               "start": 990,
@@ -30595,10 +30263,8 @@
               "start": 480,
               "end": 720,
               "location": "bld_yp_yard",
-              "activity": "房基垫石帮工的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "房基垫石帮工的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -30611,10 +30277,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_yp_yard",
-              "activity": "一块垫石下的泥始终不干；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "一块垫石下的泥始终不干",
+              "services": []
             },
             {
               "start": 990,
@@ -30898,13 +30562,7 @@
         "雨后在墙边看过回水",
         "说明不确定后改为等地干再验"
       ],
-      "privateFact": "曾把判断不准装成还要观察",
-      "examinerAppointment": {
-        "office": "office_exam_life_7",
-        "organization": "faction_lampbridge",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_7要求本地行业师傅或登记行会，skill_life_7_core熟练度至少100；耿麓现有熟练度320。组织职责见world/lore/factions.json#faction_lampbridge。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "privateFact": "曾把判断不准装成还要观察"
     }
   },
   {
@@ -40567,10 +40225,8 @@
           "start": 540,
           "end": 720,
           "location": "loc_wt_bank",
-          "activity": "浅滩渔户的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "浅滩渔户的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -40583,10 +40239,8 @@
           "start": 780,
           "end": 1080,
           "location": "loc_wt_bank",
-          "activity": "自己的下水处被苇束堵住；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "自己的下水处被苇束堵住",
+          "services": []
         },
         {
           "start": 1080,
@@ -40622,10 +40276,8 @@
           "start": 540,
           "end": 720,
           "location": "loc_wt_bank",
-          "activity": "浅滩渔户的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "浅滩渔户的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -40638,10 +40290,8 @@
           "start": 780,
           "end": 1080,
           "location": "loc_wt_bank",
-          "activity": "自己的下水处被苇束堵住；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "自己的下水处被苇束堵住",
+          "services": []
         },
         {
           "start": 1080,
@@ -40735,10 +40385,8 @@
               "start": 540,
               "end": 720,
               "location": "loc_wt_bank",
-              "activity": "浅滩渔户的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "浅滩渔户的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -40751,10 +40399,8 @@
               "start": 780,
               "end": 990,
               "location": "loc_wt_bank",
-              "activity": "自己的下水处被苇束堵住；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "自己的下水处被苇束堵住",
+              "services": []
             },
             {
               "start": 990,
@@ -40790,10 +40436,8 @@
               "start": 540,
               "end": 720,
               "location": "loc_wt_bank",
-              "activity": "浅滩渔户的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "浅滩渔户的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -40806,10 +40450,8 @@
               "start": 780,
               "end": 990,
               "location": "loc_wt_bank",
-              "activity": "自己的下水处被苇束堵住；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "自己的下水处被苇束堵住",
+              "services": []
             },
             {
               "start": 990,
@@ -41095,13 +40737,7 @@
         "雨后退回过湿滑岸沿",
         "为挪苇向物主说明过"
       ],
-      "privateFact": "曾挪过邻户未捆的苇",
-      "examinerAppointment": {
-        "office": "office_exam_life_2",
-        "organization": "faction_saltboat",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_2要求本地行业师傅或登记行会，skill_life_2_core熟练度至少100；周渚现有熟练度320。组织职责见world/lore/factions.json#faction_saltboat。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "privateFact": "曾挪过邻户未捆的苇"
     },
     "socialProfile": {
       "conflicts": [
@@ -64438,10 +64074,8 @@
           "start": 510,
           "end": 720,
           "location": "bld_lq_yard",
-          "activity": "碎石筛拣工的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "碎石筛拣工的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -64454,10 +64088,8 @@
           "start": 780,
           "end": 1020,
           "location": "bld_lq_yard",
-          "activity": "大块石与细料被混回一起；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "大块石与细料被混回一起",
+          "services": []
         },
         {
           "start": 1020,
@@ -64493,10 +64125,8 @@
           "start": 510,
           "end": 720,
           "location": "bld_lq_yard",
-          "activity": "碎石筛拣工的日常劳动；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "碎石筛拣工的日常劳动",
+          "services": []
         },
         {
           "start": 720,
@@ -64509,10 +64139,8 @@
           "start": 780,
           "end": 1020,
           "location": "bld_lq_yard",
-          "activity": "大块石与细料被混回一起；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "大块石与细料被混回一起",
+          "services": []
         },
         {
           "start": 1020,
@@ -64606,10 +64234,8 @@
               "start": 510,
               "end": 720,
               "location": "bld_lq_yard",
-              "activity": "碎石筛拣工的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "碎石筛拣工的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -64622,10 +64248,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_lq_yard",
-              "activity": "大块石与细料被混回一起；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "大块石与细料被混回一起",
+              "services": []
             },
             {
               "start": 990,
@@ -64661,10 +64285,8 @@
               "start": 510,
               "end": 720,
               "location": "bld_lq_yard",
-              "activity": "碎石筛拣工的日常劳动；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "碎石筛拣工的日常劳动",
+              "services": []
             },
             {
               "start": 720,
@@ -64677,10 +64299,8 @@
               "start": 780,
               "end": 990,
               "location": "bld_lq_yard",
-              "activity": "大块石与细料被混回一起；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "大块石与细料被混回一起",
+              "services": []
             },
             {
               "start": 990,
@@ -64969,13 +64589,7 @@
         "把混料重新分过",
         "与搬工对照过落料处"
       ],
-      "privateFact": "曾把别人的石块踢回去",
-      "examinerAppointment": {
-        "office": "office_exam_life_17",
-        "organization": "faction_stonethread",
-        "basis": "A3-内容2新增任职；world/meta/professions.json#profession_life_17要求本地行业师傅或登记行会，skill_life_17_core熟练度至少100；霍霁现有熟练度320。组织职责见world/lore/factions.json#faction_stonethread。",
-        "limit": "仅主持本职业入职认证；费用、作品、技能、本人同意与考核结果仍按原流程。"
-      }
+      "privateFact": "曾把别人的石块踢回去"
     },
     "socialProfile": {
       "conflicts": [

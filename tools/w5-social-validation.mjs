@@ -22,6 +22,7 @@ export function validateSocialWorld(world,{reference,blocked=[]}){
         const expected=[row.culture,row.contactAnchor];
         if(category==='factions'){
             for(const office of row.offices??[]){
+                if(office.receptionHours?.some(([start,end],i,hours)=>start>=end||hours.some(([a,b],j)=>j<i&&a<end&&start<b)))errors.push(`职位接待时段无效：${office.id}`);
                 reference(office.seat,`${office.id}.seat`);
                 if(office.holder)reference(office.holder,`${office.id}.holder`);
                 const holder=world.npcs.find(n=>n.id===office.holder);

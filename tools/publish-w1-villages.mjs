@@ -99,7 +99,7 @@ export async function publishVillages({root=path.resolve(import.meta.dirname,'..
  // Persist authored source fields, not D1 biome tags or K8 habitats that
  // loadWorld materializes for runtime consumers.
  const sourceLocations=new Map(JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8')).map(l=>[l.id,l]));
- const locations=next.locations.map(l=>{const row={...l},source=sourceLocations.get(l.id);for(const key of ['biome','areaKm2'])if(source&&!Object.hasOwn(source,key))delete row[key];return row;});
+ const locations=next.locations.map(l=>{const row={...l},source=sourceLocations.get(l.id);for(const key of ['biome','areaKm2','mapHierarchy'])if(source&&!Object.hasOwn(source,key))delete row[key];return row;});
  const sourceRules=JSON.parse(await fs.readFile(path.join(root,'meta/rules.json'),'utf8'));
  const outputs={...(profileAmendments.length?{'meta/rules.json':withVillageLedgerRules({...merged,rules:sourceRules}).rules}:{}),'people/baseline.json':next.npcs,'people/residents.json':next.residents,'people/households.json':next.households,'geo/settlements.json':next.settlementProfiles,'geo/locations.json':locations,'geo/routes.json':next.routes};
  const changed=[];

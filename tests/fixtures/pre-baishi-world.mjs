@@ -8,7 +8,7 @@ import * as sites3 from '../../world/design/w5-sites-3.mjs';
 // Older publishers replay onto a catalog from before Baishi town was integrated.
 // Strip the town's places, roster, households, later promoted npc_bs_* full profiles,
 // their primer books and law-code places so that frozen pre-Baishi people stay consistent.
-export const preBaishiNpc=n=>!n.id.startsWith('npc_bs_');
+export const preBaishiNpc=n=>!n.id.startsWith('npc_bs_')&&!n.id.startsWith('npc_a3_exam_');
 export async function writePreBaishiWorld(dir,world){
  // T113–T115 sites depend on the town's later people and spell materials.
  for(const design of [sites3,sites2,sites1])world=withoutSites(world,buildBatch(design.sites,world),design.priorNoMechanics);
@@ -32,7 +32,10 @@ export async function writePreBaishiWorld(dir,world){
  const festivalCandidate=JSON.parse(await fs.readFile('world/drafts/w5/festivals-candidate.json','utf8'));
  const festivals=(world.festivals??[]).map(f=>f.id==='festival_borrowbench'?festivalCandidate.festivals.find(old=>old.id===f.id):f);
  await fs.writeFile(path.join(dir,'lore/festivals.json'),JSON.stringify(festivals));
- const files={'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':catalog.items,'meta/spells.json':catalog.spells,'meta/recipes.json':catalog.recipes};
+ // A3 offices and newly authored examiners did not exist before the town.
+ // Existing people keep their pre-town facts, without seats in removed buildings.
+ const factions=world.factions.map(f=>({...f,...(f.offices?{offices:f.offices.filter(o=>placeIds.has(o.seat)&&(!o.holder||preBaishiNpc({id:o.holder})))}:{})}));
+ const files={'lore/factions.json':factions,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':catalog.items,'meta/spells.json':catalog.spells,'meta/recipes.json':catalog.recipes};
  for(const [file,value] of Object.entries(files))await fs.writeFile(path.join(dir,file),JSON.stringify(value));
 }
 // Remove catalog rows (items/spells/recipes) that reference removed ids, to a fixpoint.
