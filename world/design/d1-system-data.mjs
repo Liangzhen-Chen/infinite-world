@@ -19,6 +19,9 @@ export const funds={
  loc_ms_taideng:'faction_ms_taideng',
  loc_ms_yugen:'faction_ms_yugen',
  loc_ms_lielu:'faction_ms_lielu',
+ loc_ms_huixi:'faction_ms_huixi',
+ loc_ms_huipeng:'faction_ms_huipeng',
+ loc_far_huancheng:'faction_huancheng_government',
 };
 // 聚落公账：五村已由农事开局登记（公款1200铜，河湾沿用旧档），这里只给白石镇开账。
 // 初值按五村村账人均公款（1200铜／约96人，约12铜每人）乘镇上登记人口1000，取整12000铜；

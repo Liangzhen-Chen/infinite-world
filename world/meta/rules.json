@@ -5904,7 +5904,8 @@
         "id": "faction_lampbridge",
         "members": [
           "npc_w5_lampbridge_leader",
-          "npc_w5_lampbridge_steward"
+          "npc_w5_lampbridge_steward",
+          "npc_a3_exam_life_20"
         ],
         "relations": [
           {
@@ -5919,7 +5920,8 @@
         "id": "faction_reedpact",
         "members": [
           "npc_w5_reedpact_leader",
-          "npc_w5_reedpact_steward"
+          "npc_w5_reedpact_steward",
+          "npc_a3_exam_summoner"
         ],
         "relations": [
           {
@@ -5964,7 +5966,8 @@
         "id": "faction_silvermirror",
         "members": [
           "npc_w5_silvermirror_leader",
-          "npc_w5_silvermirror_steward"
+          "npc_w5_silvermirror_steward",
+          "npc_a3_exam_spellblade"
         ],
         "relations": [
           {
@@ -6049,7 +6052,9 @@
         "id": "faction_civicartisans",
         "members": [
           "npc_w5_civicartisans_leader",
-          "npc_w5_civicartisans_steward"
+          "npc_w5_civicartisans_steward",
+          "npc_a3_exam_life_16",
+          "npc_a3_exam_life_18"
         ],
         "relations": [
           {
@@ -6079,7 +6084,10 @@
         "id": "faction_fieldguild",
         "members": [
           "npc_w5_fieldguild_leader",
-          "npc_w5_fieldguild_steward"
+          "npc_w5_fieldguild_steward",
+          "npc_a3_exam_assassin",
+          "npc_a3_exam_archer",
+          "npc_a3_exam_life_10"
         ],
         "relations": [
           {
@@ -6099,7 +6107,9 @@
         "id": "faction_lanternmerc",
         "members": [
           "npc_w5_lanternmerc_leader",
-          "npc_w5_lanternmerc_steward"
+          "npc_w5_lanternmerc_steward",
+          "npc_a3_exam_warrior",
+          "npc_a3_exam_knight"
         ],
         "relations": [
           {
@@ -6134,7 +6144,8 @@
         "id": "faction_hoofguild",
         "members": [
           "npc_w5_hoofguild_leader",
-          "npc_w5_hoofguild_steward"
+          "npc_w5_hoofguild_steward",
+          "npc_a3_exam_life_15"
         ],
         "relations": [
           {
@@ -6489,7 +6500,8 @@
         "id": "faction_furroworder",
         "members": [
           "npc_w5_furroworder_leader",
-          "npc_w5_furroworder_steward"
+          "npc_w5_furroworder_steward",
+          "npc_a3_exam_life_21"
         ],
         "relations": [
           {
@@ -6504,7 +6516,8 @@
         "id": "faction_returnorder",
         "members": [
           "npc_w5_returnorder_leader",
-          "npc_w5_returnorder_steward"
+          "npc_w5_returnorder_steward",
+          "npc_a3_exam_life_13"
         ],
         "relations": [
           {

@@ -37,6 +37,9 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 });
 // Golden hashes: first recorded from the hand-written advance() before the registry refactor (K7, equivalence verified at merge).
 // They are now a regression snapshot; after an intended behaviour change regenerate with UPDATE_ADVANCE_GOLDEN=1.
+// A3 content refresh: 10 §10.5 permits per-stage regeneration. PLAN records the
+// new examiners, actual travel and resulting occupancy wear; historical service
+// versions still use their own complete state + patches + messages fixture.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const HISTORICAL=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-pre-s3-services.json',import.meta.url),'utf8'));
 const SCENARIOS={

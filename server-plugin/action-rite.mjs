@@ -32,7 +32,8 @@ function predicate(engine,document,source,{actor,target,candidate=actor,truth=fa
  if(truth){
   const row=actionEntity({engine,document},target)??{},definition=engine.byId.get(target)??{};
   bindings.truth={tags:[...new Set([...(row.tags??[]),...(definition.truth?.tags??[]),...(row.truth?.tags??[])])],dead:isPhysicallyDead(engine,actionReader(document),target)};
-  schema.truth={tags:['string'],dead:'boolean'};
+  const tagTypes=['string']; // RX type metadata, not literal ontology tag values.
+  schema.truth={tags:tagTypes,dead:'boolean'};
  }
  const compiled=compileRX(source,{schema,functions:library.signatures});
  return evaluateRX(compiled,bindings,{functions:library.functions})===true;

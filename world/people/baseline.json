@@ -8498,10 +8498,9 @@
           "start": 480,
           "end": 720,
           "location": "loc_bs",
-          "activity": "核对货单与实际交易；兼接本行业入职验样",
+          "activity": "核对货单与实际交易",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -8515,10 +8514,9 @@
           "start": 780,
           "end": 1080,
           "location": "loc_bs",
-          "activity": "核对货单与实际交易；兼接本行业入职验样",
+          "activity": "核对货单与实际交易",
           "services": [
-            "trade",
-            "teach"
+            "trade"
           ]
         },
         {
@@ -8564,10 +8562,8 @@
           "start": 840,
           "end": 1200,
           "location": "loc_bs",
-          "activity": "沿既有官道返回白石镇；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "沿既有官道返回白石镇",
+          "services": []
         },
         {
           "start": 1200,
@@ -8605,10 +8601,8 @@
           "start": 840,
           "end": 1200,
           "location": "loc_bs",
-          "activity": "沿既有官道返回白石镇；兼接本行业入职验样",
-          "services": [
-            "teach"
-          ]
+          "activity": "沿既有官道返回白石镇",
+          "services": []
         },
         {
           "start": 1200,
@@ -8644,10 +8638,9 @@
               "start": 540,
               "end": 720,
               "location": "loc_bs",
-              "activity": "核对货单与实际交易；兼接本行业入职验样",
+              "activity": "核对货单与实际交易",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
@@ -8661,20 +8654,17 @@
               "start": 780,
               "end": 1020,
               "location": "loc_bs",
-              "activity": "核对货单与实际交易；兼接本行业入职验样",
+              "activity": "核对货单与实际交易",
               "services": [
-                "trade",
-                "teach"
+                "trade"
               ]
             },
             {
               "start": 1020,
               "end": 1200,
               "location": "loc_bs",
-              "activity": "走既有官道收货；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "走既有官道收货",
+              "services": []
             },
             {
               "start": 1200,
@@ -8712,10 +8702,8 @@
               "start": 840,
               "end": 1200,
               "location": "loc_bs",
-              "activity": "沿既有官道返回白石镇；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "沿既有官道返回白石镇",
+              "services": []
             },
             {
               "start": 1200,
@@ -8753,10 +8741,8 @@
               "start": 840,
               "end": 1200,
               "location": "loc_bs",
-              "activity": "沿既有官道返回白石镇；兼接本行业入职验样",
-              "services": [
-                "teach"
-              ]
+              "activity": "沿既有官道返回白石镇",
+              "services": []
             },
             {
               "start": 1200,
