@@ -5,14 +5,14 @@ import {actionReader} from './action-capacity.mjs';
 import {parseAccount,accountKey,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {PrimitiveRejected} from './primitive-policy.mjs';
-import {environmentFeatures} from './environment.mjs';
+import {environmentFeatures} from './environment-state.mjs';
 import {localWeather} from './weather.mjs';
-import {mapView} from './ui-map.mjs';
+import {mapKnowledge} from './map-state.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {finePaymentContext} from './obligation-runtime.mjs';
 import {npcServices} from './npc-state.mjs';
 import {facilityRuntime} from './facility-state.mjs';
-import {activeDuel} from './duels.mjs';
+import {activeDuel} from './combat-state.mjs';
 import {templeById} from './faith-catalog.mjs';
 import {activeEncounters} from './combat-state.mjs';
 import {hostedRites} from './faith-state.mjs';
@@ -178,7 +178,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  };
  let knownDestinations;
  const destinations=()=>{
-  if(!knownDestinations){const map=actor==='player'?mapView(engine,document):null;knownDestinations=new Map([...(map?.locations??[]),...(map?.transit??[])].map(row=>[row.id,row]));}
+  if(!knownDestinations){const map=actor==='player'?mapKnowledge(engine,document):null;knownDestinations=new Map([...(map?.known??[])].map(([id])=>[id,map.places.get(id)]));}
   return knownDestinations;
  };
  const resolveDestination=value=>{

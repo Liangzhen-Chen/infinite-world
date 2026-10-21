@@ -210,11 +210,7 @@ function survey(d,engine,args,id){
 }
 
 // Map items held by the player reveal their places on the player's map.
-export function heldMapLocations(state){
-    const ids=new Set();
-    for(const row of Object.values(state.itemInstances??{}))if(row?.owner==='player'&&row.status==='持有'&&row.map)for(const id of row.map.locations??[])ids.add(id);
-    return [...ids].sort();
-}
+export {heldMapLocations} from './map-state.mjs';
 
 const related=(engine,a,b)=>{
     const x=engine.byId.get(a),y=engine.byId.get(b),pre=row=>(row?.prerequisites??[]).map(r=>typeof r==='string'?r:r.skill);

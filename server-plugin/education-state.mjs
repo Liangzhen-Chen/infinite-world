@@ -277,3 +277,5 @@ export function educationStatistics(e,s,location){
  }
  return {residents:count,literate,literacyRate:count?literate/count:0,distribution};
 }
+
+registerAdvanceHook('settleDemonstrations',settleDemonstrations);

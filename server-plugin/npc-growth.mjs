@@ -21,12 +21,7 @@ export function initializeVocation(d,engine,{actor,id,sourceEvent,conflictOfInte
  holdingSet(d,engine,['state','npcs',actor,'vocation'],{id,since:event.minute,sourceEvent:raw.id,conflictOfInterest,home:npcHousehold(engine,s,actor)?.homeLocation??s.npcs[actor].location},'vocation-initial',eventId);
  return {actor,vocation:id};
 }
-export function assertVocationAction(engine,state,tool,args){
- if(tool==='law'&&args.operation==='hire_advocate'&&args.authority!==undefined){
-  const actor=engine.resolve(args.authority,'npc');
-  if(state.npcs?.[actor]?.vocation?.conflictOfInterest===true)throw Error('代理人与本案存在利害冲突');
- }
-}
+export {assertVocationAction} from './employment-state.mjs';
 
 const DAY=1440,unable=['濒死','昏迷','患病'],sleeping=/睡眠|睡觉|熟睡/;
 const rules=engine=>{const r=engine.rules.npcGrowth;if(!r)throw Error('世界规则没有登记人物成长');return r;};

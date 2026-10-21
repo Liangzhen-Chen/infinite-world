@@ -1,5 +1,6 @@
 import {recordsMemo} from './storage.mjs';
-import {aliveHoldings} from './holdings.mjs';
+import {aliveHoldings,holdingSet,declareHoldingWriter} from './holdings.mjs';
+declareHoldingWriter('facility-state');
 import {workstationFee} from './workstation-services.mjs';
 // Facility projections import no runtime modules; domain callbacks are installed below.
 const rebuildCatalog=Symbol('facility rebuilds');
@@ -48,7 +49,7 @@ export function registerLodgingBed(d,engine,{id,location}){
  if(old){if(old.location!==location)throw Error('Bed allocation location mismatch');return old;}
  const capacity=facilityView(engine,state,location)?.capacity??place.lodging.rooms;
  if(Object.values(state.records??{}).filter(r=>r.category==='lodging_bed'&&r.location===location).length>=capacity)throw Error('Bed allocations exceed lodging capacity');
- const row={category:'lodging_bed',id,location};d.set(['state','records',key],row);return row;
+ const row={category:'lodging_bed',id,location};holdingSet(d,engine,['state','records',key],row,'facility-state');return row;
 }
 export function lodgingOccupancy(document,location,minute=document.state.minute){
  const state=document.state,rows=[];

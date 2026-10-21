@@ -156,7 +156,7 @@ const SYSTEMS=[
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
- {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
+ {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','environment-state.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},
  // magic-economy.mjs (U10): settlement-scale prices, losses and reactions to life magic.
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','finance-bank.mjs','finance-assets.mjs','finance-tax.mjs','finance-operations.mjs','labor-market.mjs','employment-state.mjs','settlement-trade.mjs','manufacturing.mjs','workstation-services.mjs','repair.mjs','magic-economy.mjs','extraction.mjs','smuggling.mjs']},

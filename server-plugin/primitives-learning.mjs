@@ -9,6 +9,8 @@ import {personCertified} from './entity-view.mjs';
 import {obligationClosed} from './obligation-state.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
 import {digest} from './storage.mjs';
+import {holdingSet,declareHoldingWriter} from './holdings.mjs';
+declareHoldingWriter('primitives-learning');
 import {reject as rejectAction} from './action-rejection.mjs';
 
 export function initialKnowledgeAction(d,e,tool,args){
@@ -155,7 +157,7 @@ export function learnNpc(d,engine,effect,{frame,child,tags,requireAuthority,cont
  }else{
   const key=`primitive_study:${digest({learner,subject:effect.subject,source})}`,old=d.get('state','records',key),effective=minutes*(observed?.25:1)*multiplier,total=Math.min(required,(old?.minutes??0)+effective),learned=total>=required;
   d.set(['state','records',key],{category:'primitive_study',learner,subject:effect.subject,source,minutes:total,required,lastAt:d.get('state','minute')});
-  if(learned)d.set(['state','npcs',learner,kind==='spell'?'spells':'recipes',effect.subject],{source:{type:sourceKind,id:source},learnedAt:d.get('state','minute'),sourceEvent:child});
+  if(learned)holdingSet(d,engine,['state','npcs',learner,kind==='spell'?'spells':'recipes',effect.subject],{source:{type:sourceKind,id:source},learnedAt:d.get('state','minute'),sourceEvent:child},'primitives-learning',child);
   result={subject:effect.subject,learned,studiedMinutes:total,required,gain:0};
  }
  return {...result,learner,minutes,sourceKind,observed,...(teacher?{teacher:source}:{}),...(permission?{permission}:{}),...(detection?{detection,noticedBy:detection.success?[]:[source]}:{})};

@@ -1,6 +1,6 @@
 // L1 runtime adapters. Limits are native derivations, never proposal fields.
 import {reject} from './primitive-policy.mjs';
-import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone} from './holdings.mjs';
+import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone,holdingSet} from './holdings.mjs';
 import {physicalLocation} from './items.mjs';
 import {transition,executeProtocolPrimitive,applyProtocolJudgment} from './transition.mjs';
 import {consent} from './action-consent.mjs';
@@ -294,7 +294,7 @@ function createNarrative(d,engine,effect,{frame,child,limits={}}){
  setLocation(d,{entity:id,at:location,mode:'place',writer:'primitives',eventId:child,engine});
  // The authoritative object remains in holdings. The legacy resolver only
  // receives descriptive fields; there is no bag, balance, HP or numeric value.
- d.set(['state','created',id],{id,kind:effect.kind,...nativeFacts,name,location,scope:location,author:frame.actor,template:template.id});
+ holdingSet(d,engine,['state','created',id],{id,kind:effect.kind,...nativeFacts,name,location,scope:location,author:frame.actor,template:template.id},'primitives',child);
  if(['item','building'].includes(effect.kind))openHolding(d,{kind:'owns',holder:frame.actor,subject:id,terms:{share:1},writer:'primitives',eventId:child,engine});
  return {entity:id,template:template.id,location};
 }
