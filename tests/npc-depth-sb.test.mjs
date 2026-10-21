@@ -47,7 +47,8 @@ test('桑坂正式30人等于已审批完整档，其他人、旧记忆和钱物
 test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅更新桑坂',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
- for(const dir of ['meta','geo','people','lore','design','rules','templates'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // A3 archives actions and ontology in loadWorld; the isolated edition must carry both for the unchanged full-world equality check.
+ for(const dir of ['meta','geo','people','lore','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/sb-depth/first-review/manifest.json'),before=await fs.readFile(baseline);
