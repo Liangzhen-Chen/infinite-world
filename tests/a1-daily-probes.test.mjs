@@ -71,7 +71,8 @@ test('D10 打工日结：缺有效同意时界面列出但不可执行，world_a
 });
 
 test('D15 钓鱼：渔获来自河滩真实鱼群，种群扣减与背包增加相等，花去时间',async t=>{
- const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,s=>{s.inventory.item_kitchen_knife=tool('item_kitchen_knife','铁');s.inventory.item_water={quantity:4,quality:'木',durability:100,weight:0.5};})}),before=await primed(ui);
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+ const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,s=>{s.inventory.item_fishing_bait={quantity:10};s.inventory.item_kitchen_knife=tool('item_kitchen_knife','铁');s.inventory.item_water={quantity:4,quality:'木',durability:100,weight:0.5};})}),before=await primed(ui);
  const key='ecology:habitat_hw_water',fish=Object.keys(before.state.records[key].populations).find(k=>/perch|fish|carp|鱼/.test(k))??Object.keys(before.state.records[key].populations)[0];
  const r=await ui.choose('wildlife.fish',{species:fish});assert.ok(r.ok,r.error);const after=await ui.read();
  const caught=qty(after.state.inventory.item_fish)-qty(before.state.inventory.item_fish),drop=before.state.records[key].populations[fish].count-after.state.records[key].populations[fish].count;

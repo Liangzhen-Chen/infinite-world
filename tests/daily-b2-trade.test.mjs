@@ -90,7 +90,24 @@ test('D35 参加节庆 ①④：摊位月饼 6 文/个买 2 个：铜钱 50→38
  const engine=new WorldEngine(world);assert.ok(standing(engine,after.state,LINSUI,'player')>=standing(engine,before.state,LINSUI,'player'),'④在场村民对玩家的好感没有下降（题面“可小幅上升”，不变也符合）');
  conserved(before,after,'D35',engine);
 });
-test.todo('D35 ②猜灯谜答对奖 1 盏花灯——引擎没有“答对即奖”的动作 outcomes（谜面判定属对话 A2，奖品转移属动作 outcomes A3）');
+test('D35.2 true riddle answer transfers one host-stock lantern, preserves two bought mooncakes and cannot award twice',async t=>{
+ const HOST=LINSUI,FESTIVAL='festival_daily_lantern';
+ const world=variant(w=>{setPrice(w,'item_oat_flatbread',6);w.festivals=[{id:FESTIVAL,name:'Lantern riddles',calendar:{month:8,day:15},venue:{location:INN,precision:'existing_location'},custom:'Riddles at the inn',resourceNeeds:[],runtime:{status:'active',host:HOST,kind:'market',startMinute:19*60,durationMinutes:120,minimumParticipants:1,riddles:[{id:'moon',question:'A round mirror in the sky',answers:['moon'],reward:{item:'item_lantern',quantity:1}}]}}];const host=w.npcs.find(n=>n.id===HOST);host.schedule={default:[{start:0,end:1440,location:INN,activity:'market',services:['trade']}]};});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(8,15,18,0),s=>{s.player.coins=50;s.npcs[HOST].trust=100;s.npcs[HOST].inventory.item_lantern=stack(1);})});
+ const before=await primed(ui),buy=await ui.choose('trade.trade',{seller:HOST,item:'item_oat_flatbread',quantity:2,unitPrice:6},{target:HOST,search:true});assert.ok(buy.ok,buy.error);
+ const plan=await ui.choose('settlement.festival_plan',{festival:FESTIVAL,cost:0},{search:true});assert.ok(plan.ok,plan.error);const id=plan.result.festival;
+ const permission=await ui.choose('settlement.festival_authorize',{festival:id,speaker:HOST},{search:true});assert.ok(permission.ok,permission.error);assert.equal(permission.result.agreement.decision.outcome,'agree');
+ const join=await ui.choose('settlement.festival_join',{festival:id,speaker:'player'},{search:true});assert.ok(join.ok,join.error);const wait=await ui.choose('time',{until:{dayOffset:0,hour:19}});assert.ok(wait.ok,wait.error);
+ const heldEvent=await ui.read();assert.equal(heldEvent.state.records[id].status,'held');
+ const wrong=await ui.choose('settlement.festival_answer',{festival:id,request:'moon',choice:'sun'},{search:true});assert.ok(wrong.ok,wrong.error);assert.equal(wrong.result.correct,false);assert.equal(held((await ui.read()).state.npcs[HOST].inventory,'item_lantern'),1);
+ const pre=await ui.read();
+ const inspected=await new WorldEngine(world).reduce(pre,{tool:'world_settlement',args:{operation:'festival_inspect'},eventId:'d35-inspect'}),visible=inspected.result.calendar.find(f=>f.publishedId===FESTIVAL).runtime.riddles[0];
+ assert.equal(visible.question,'A round mirror in the sky');assert.equal(visible.answers,undefined,'public festival inspection must not disclose the host answer');
+ const slots={festival:id,request:'moon',choice:'moon'},win=await ui.choose('settlement.festival_answer',slots,{search:true,eventId:'d35-prize'});assert.ok(win.ok,win.error);const after=await ui.read();
+ assert.equal(win.result.correct,true);assert.equal(held(after.state.inventory,'item_lantern')-held(pre.state.inventory,'item_lantern'),1);assert.equal(held(after.state.npcs[HOST].inventory,'item_lantern'),0);assert.equal(held(after.state.inventory,'item_oat_flatbread'),2);assert.equal(after.state.player.coins,38);assert.equal(after.state.minute,pre.state.minute);conserved(before,after,'D35 riddle',new WorldEngine(world));
+ const retry=await ui.choose('settlement.festival_answer',slots,{search:true,eventId:'d35-prize'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);
+ const again=await ui.choose('settlement.festival_answer',slots,{search:true});assert.equal(again.ok,false);assert.deepEqual(await ui.read(),after);
+});
 test.todo('D35 ③节庆只在八月十五当晚出现，次日恢复平常——引擎有按历法日期运行的节庆（festival-runtime.test.mjs），但没有中秋灯会与摊位的节庆数据（C1 内容接入；摊位随节庆开闭属 S4 营业时间 schedule 表）');
 test.todo('D35 ④好感可小幅上升——引擎无参节庆的立场事件（S6 立场事件权重表 event-weights 增 attend_festival 行后读表）');
 test.todo('D35 lantern-festival end-to-end content remains: festival_watch now consumes a real held event endsAt (A3 integration covered), while the specific eighth-month fifteenth lantern event and award data are still absent');

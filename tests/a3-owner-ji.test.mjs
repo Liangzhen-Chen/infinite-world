@@ -179,7 +179,9 @@ test('V: retreat success walks every edge of the known path; failure preserves p
    // native edges and their travel time; do not invent a direct adjacent edge.
    const route=engine.route('loc_hw_northwood','loc_hw_gate','walk',600,base.randomSeed);
    assert.ok(r.lastRound.movement.minutes>0);assert.deepEqual(r.lastRound.movement.edges,route.edges);
-   assert.equal((s.minute-600)*60+(s.subMinuteSeconds??0),r.lastRound.movement.minutes*60+engine.rules.combat.exchangeSeconds);
+   // D31.4: the native exchange now reads A3's one-minute bout; the full
+   // retreat path must still account for every additional travel minute.
+   assert.equal((s.minute-600)*60+(s.subMinuteSeconds??0),r.lastRound.movement.minutes*60+60);
    assert.equal(r.location,'loc_hw_northwood');
   }else{
    assert.equal(s.location,'loc_hw_northwood');assert.equal(r.active,true);assert.equal(r.lastRound.movement,undefined);

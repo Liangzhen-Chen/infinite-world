@@ -30,7 +30,8 @@ const view=(f,id,value)=>f.doc.state.records[`standing:${id}:player`]={category:
 
 test('钓鱼按真实鱼种、时段和季节检定；渔获可售，种群扣减守恒，失败仍耗时磨刀',async()=>{
     const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water');f.doc.state.location=h.location;
-    f.put('item_kitchen_knife');f.put('item_water',20);const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+    f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',20);const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
     const before=f.doc.state.records[key].populations[fish].count,minute=f.doc.state.minute;
     const out=await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(20,'fish'));
     assert.equal(out.success,true);assert.equal(qty(f,'item_fish'),1);assert.equal(out.season,0);assert.equal(out.check.difficulty,10);
@@ -50,7 +51,8 @@ test('钓鱼按真实鱼种、时段和季节检定；渔获可售，种群扣�
 });
 
 test('过度捕捞耗尽当地可用鱼群；无鱼时成功骰也不能凭空生成渔获',async()=>{
-    const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water'),species='monster_black_fin_perch';f.doc.state.location=h.location;f.put('item_kitchen_knife');f.put('item_water',4);
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+    const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water'),species='monster_black_fin_perch';f.doc.state.location=h.location;f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',4);
     const p=f.doc.state.records[`ecology:${h.id}`].populations[species];p.count=1;p.withdrawn=p.initial-1;
     const first=await f.act('world_field',{operation:'wildlife_fish',species},f.event(20,'last_fish'));assert.equal(first.success,true);
     const second=await f.act('world_field',{operation:'wildlife_fish',species},f.event(20,'empty_fish'));assert.equal(second.success,false);assert.equal(qty(f,'item_fish'),1);assert.equal(f.doc.state.records[`ecology:${h.id}`].populations[species].count,0);

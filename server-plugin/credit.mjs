@@ -272,8 +272,10 @@ export async function creditTrade(d,args,eventId,terms){
                 moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount:paid,writer:'credit',eventId});d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
             }
         }
-        holdingSet(d,engine,rec(b.id),row,'credit');engine.advance(d,5,eventId);
-        return {bank:b.id,keeper,balance:row.accounts.player??0,...detail};
+        const depositMinutes=engine.world.primitiveTables?.['action-costs']?.rows?.find(r=>r.selector==='bank.deposit')?.timeMin;
+        const calibratedDeposit=op==='deposit'&&depositMinutes&&(!engine.replaying||engine.replayResult?.dailyCostsVersion===1);
+        holdingSet(d,engine,rec(b.id),row,'credit');engine.advance(d,calibratedDeposit?depositMinutes:5,eventId);
+        return {bank:b.id,keeper,balance:row.accounts.player??0,...detail,...(calibratedDeposit?{dailyCostsVersion:1}: {})};
     }
     if(op==='work'){
         const minutes=int(args.minutes??240,30,480,'工时'),employer=counterpart(d,engine,args.seller,{consent:args.consent,minutes});

@@ -112,6 +112,7 @@ export function toolDefinitions(){return structuredClone(publicDefinitions);}
 export function resolveToolCall(tool,args={}){
     // Catalog-only alias: retain the static tool schema and its prompt budget.
     if(tool==='world_field'&&args.operation==='environment_douse_fire')return {tool:'world_environment',args:{...args,operation:'douse_fire'}};
+    if(tool==='world_field'&&['farm_private_sow','farm_private_harvest'].includes(args.operation))return {tool:'world_farm',args:{...args,operation:args.operation.slice(5)}};
     if(tool==='world_law'&&args.operation==='steal')return{tool:'world_crime',args};
     const mapping=routes.get(tool);if(!mapping)return{tool,args};
     const route=mapping.get(args.operation);

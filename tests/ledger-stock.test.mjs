@@ -91,7 +91,8 @@ function campaign(){
     Object.assign(doc.state.npcs[host],{location:inn,activity:'营业',status:'正常'});
     // 制作与钓鱼的工具与材料、配方许可（与 manufacturing / verbs-extra 测试的夹具相同）。
     const put=(item,quantity,durability=100)=>doc.state.inventory[item]={quantity,quality:w.items.find(i=>i.id===item).quality,durability,weight:w.items.find(i=>i.id===item).weight};
-    put('item_wood',6);put('item_whittling_knife',1,80);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+    put('item_wood',6);put('item_whittling_knife',1,80);put('item_fishing_bait',10);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
     doc.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};doc.state.recipes.recipe_wooden_pegs={source:{type:'teacher',id:'npc_hw_ayan'}};
     return {engine,doc,host,inn};
 }

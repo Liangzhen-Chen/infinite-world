@@ -39,7 +39,9 @@ test('双 NPC 点到为止复用真实实力、伤害、时钟，双方保命且
  assert.equal(event.actor,A);assert.equal(event.target,B);assert.equal(event.verb,'duel');
  const text=actionLines({engine:S.engine,action:{narration:'combat'},before,after:doc,args:{actor:A,target:B},result}).lines[0];
  assert.equal(text,`${doc.state.npcs[A].name}对${doc.state.npcs[B].name}出手。`);
- assert.equal((doc.state.minute-before.state.minute)*60+(doc.state.subMinuteSeconds??0)-(before.state.subMinuteSeconds??0),exchanges.length*S.engine.rules.combat.exchangeSeconds);
+ // D31.4 / action-costs combat.bout: preserve exact total time for every
+ // real exchange, including sub-minute carry, at the new one-minute rate.
+ assert.equal((doc.state.minute-before.state.minute)*60+(doc.state.subMinuteSeconds??0)-(before.state.subMinuteSeconds??0),exchanges.length*60);
 });
 test('双 NPC 生死战与反击均走死亡协议，仅有一个终止回执且玩家无经验收益',async()=>{
  for(const [a,b,winner,loser] of [[25,1,A,B],[1,25,B,A]]){

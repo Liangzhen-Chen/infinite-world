@@ -76,7 +76,11 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    // handlers, without exposing new static tools. Check the exact dispatch.
    const catalogAliases={
     'core:environment.douse_fire':{tool:'world_environment',args:{operation:'douse_fire'}},
-    'core:site.gather_session':{tool:'world_site',args:{operation:'gather'}}
+    'core:site.gather_session':{tool:'world_site',args:{operation:'gather'}},
+    // A3 daily22 exposes the existing private-field executor through the
+    // catalogue without widening the static field-tool operation enum.
+    'core:farm.private_sow':{tool:'world_farm',args:{operation:'private_sow'}},
+    'core:farm.private_harvest':{tool:'world_farm',args:{operation:'private_harvest'}}
    };
    if(catalogAliases[a.id]){
     assert.deepEqual(r,catalogAliases[a.id]);continue;
@@ -94,7 +98,9 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    'core:cast':[{name:'millilitres',kind:'quantity'}],
    'core:learn':[{name:'mode',kind:'choice',options:['acquire','study','observe']}],
    'core:combat':[{name:'destination',kind:'text'}],
-   'core:craft.manufacture':[{name:'batches',kind:'quantity',min:1,max:100000,default:1}]
+   'core:craft.manufacture':[{name:'batches',kind:'quantity',min:1,max:100000,default:1}],
+   // D18.2: read-only service quote, retaining the exact allowed-slot check.
+   'core:craft.repair':[{name:'quote',kind:'flag'}]
   };
   assert.deepEqual(a.slots.filter(s=>!(s.name in schema.properties)),catalogAdditions[a.id]??[],`${a.id} 未登记的目录新增槽位`);
   if(a.id==='core:trade.lend'){

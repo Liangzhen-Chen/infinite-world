@@ -324,6 +324,10 @@ export class WorldEngine {
         const legacyContext=legacyAction?{action:legacyAction,tool:resolved.tool.replace(/^world_/,''),args:resolved.args,eventId:input.eventId,requested:options.openProposal?.proposal?.effects??[]}:null;
         if(legacyContext){const prior=primitiveActionRuntime().legacyPrior(document,legacyContext);if(prior)return prior;}
         primitiveActionRuntime()?.validateLegacy(this,document,resolved.tool,resolved.args,options);
+        if(resolved.tool==='world_craft'&&resolved.args.operation==='repair'&&resolved.args.quote===true){
+            const d=new Draft(document,this),detail=await this.scoped(document).craft(d,resolved.args,text(input.eventId,120));
+            return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
+        }
         // S1a: a document without books opens them on the draft's own copy (ledger.withLedger).
         const books=withBooks(this,document),d = new Draft(books.document,this), args=resolved.args, id=text(input.eventId,120);
         const tool=resolved.tool.replace(/^world_/, '');
@@ -403,6 +407,7 @@ export class WorldEngine {
             ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.medicineVersion===1?{medicineVersion:1}:{}),
+            ...(d.prescriptionVersion?{prescriptionVersion:1}:{}),
             ...(!session.replaying||session.replayResult?.serviceClaimsVersion===1?{serviceClaimsVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
             ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),

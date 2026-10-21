@@ -44,6 +44,12 @@ export function conserved(before,after,label,engine=baseEngine){
 // 先做一次无害观察，让账本打开后再取“之前”快照（与 A1 同法）。
 export async function primed(ui){await ui.choose('time',{minutes:1});return ui.read();}
 export const held=(inventory,id)=>{const v=inventory?.[id];return typeof v==='number'?v:v?.quantity??0;};
+export async function replayed(ui,expected){
+ const bundle=await ui.server.api('export',{campaignId:ui.campaignId});
+ const {reference}=await ui.server.api('import',{bundle});
+ const {document}=await ui.server.api('read',{campaignId:reference.campaignId});
+ assert.deepEqual(document,expected,'export/import replays the real public events without state or ledger drift');
+}
 
 // 没有界面动作的旧工具（寄信、托运、求医）：与界面动作同一条 /execute 通道，直接给旧工具参数。
 export async function legacy(ui,tool,args,eventId){

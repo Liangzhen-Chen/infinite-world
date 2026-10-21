@@ -27,6 +27,10 @@ async function act(f,action,slots,eventId='a3-body-act'){
  const out=await f.engine.reduce(f.document,{tool:'world_act',args:{action,slots},eventId});
  return {out,after:applyPatches(f.document,out.patches)};
 }
+async function sleepPublic(f,minutes,id){
+ const clock=f.document.state.minute%1440+minutes;
+ return act(f,'core:time.sleep',{until:{dayOffset:Math.floor(clock/1440),hour:Math.floor(clock%1440/60),minute:clock%60}},id);
+}
 
 test('A3 D20: 120 minutes of practice deterministically grows skill, charges body/time once and survives JSON replay',async()=>{
  const f=book(fixture()),skill=Object.keys(f.document.state.skills)[0],before=structuredClone(f.document);
@@ -90,8 +94,7 @@ test('A3 eating: cannot consume tools, fabricate nutrition or exceed satiety cap
 });
 
 // The sleep boundary is C's native connector for A's locked time executor.
-// Exercise the real time/HP/MP executor here; this is not yet a public-action
-// assertion for D04/D33 until A wires these two calls into engine.time.
+// Keep native connector equivalence and verify D04/D33 through world_act.
 function sleepNative(f,minutes,id='native-sleep'){
  const engine=f.engine.scoped(f.document),d=engine.primitiveDraft(f.document),span=beginSleep(d,engine);
  const time=engine.time(d,{minutes,activity:'睡眠'},id),cost=finishSleep(d,engine,span);
@@ -103,9 +106,9 @@ test('A3 sleep connector: a real paid room recovers capped stamina while preserv
  Object.assign(f.document.state.player,{hp:50,maxHp:100});
  f.document.state.player.body={stamina:{value:30,asOf:1250,activity:'rest'},satiety:{value:100,asOf:1250,activity:'rest'}};
  book(f);
- const booking=await f.engine.reduce(f.document,{tool:'world_trade',args:{seller:'npc_hw_linsui',service:'住宿',days:1},eventId:'sleep-room'});
- f.document=applyPatches(f.document,booking.patches);assert.equal(booking.result.cost,40);
- const before=structuredClone(f.document),{after,time,cost}=sleepNative(f,540);
+ const booking=await act(f,'core:trade.lodge',{seller:'npc_hw_linsui',days:1},'sleep-room');
+ f.document=booking.after;assert.equal(booking.out.result.cost,40);
+ const before=structuredClone(f.document),{out,after}=await sleepPublic(f,540,'paid-nine-hours'),time=out.result,cost=out.result.cost;
  assert.equal(after.state.minute-before.state.minute,540);assert.equal(time.elapsed,540);assert.equal(cost.time,540);
  assert.equal(cost.sleep.lodging,'room');assert.equal(cost.sleep.coveredMinutes,540);
  assert.equal(readBodyNeed(f.engine,after,'player','stamina'),100);
@@ -119,12 +122,15 @@ test('A3 sleep connector: a real paid room recovers capped stamina while preserv
  assert.deepEqual(after.ledger,native.document.ledger);assert.deepEqual(auditLedger(after.ledger),[]);
 });
 
-test('A3 sleep connector: being inside an inn without a contract gives camp recovery, not free room recovery',()=>{
+test('A3 D33 public sleep: paid lodging reaches 100 and unbooked camp preserves 77.6',async()=>{
  const f=fixture(),now=f.document.state.minute;
  f.document.state.player.body={stamina:{value:20,asOf:now,activity:'rest'},satiety:{value:100,asOf:now,activity:'rest'},fatigue:{value:60,asOf:now,activity:'rest'}};book(f);
- const {after,cost}=sleepNative(f,480);
+ const {after,out}=await sleepPublic(f,480,'camp-eight-hours'),cost=out.result.cost;
  assert.equal(cost.sleep.coveredMinutes,0);assert.equal(readBodyNeed(f.engine,after,'player','stamina'),77.6);
  assert.equal(readBodyNeed(f.engine,after,'player','satiety'),92);assert.equal(readBodyNeed(f.engine,after,'player','fatigue'),0);
+ const paid=fixture(),at=paid.document.state.minute;paid.document.state.player.coins=120;paid.document.state.player.body={stamina:{value:20,asOf:at,activity:'rest'},satiety:{value:100,asOf:at,activity:'rest'}};book(paid);
+ const booking=await act(paid,'core:trade.lodge',{seller:'npc_hw_linsui',days:1},'d33-room');paid.document=booking.after;
+ const room=await sleepPublic(paid,480,'room-eight-hours');assert.equal(readBodyNeed(paid.engine,room.after,'player','stamina'),100);assert.equal(room.out.result.cost.sleep.coveredMinutes,480);assert.deepEqual(auditLedger(room.after.ledger),[]);
 });
 
 test('A3 sleep connector: calibration carries and overlapping/expiring rentals preserve split/whole-minute equivalence',()=>{

@@ -1997,6 +1997,24 @@
       "toolWear": 1,
       "restore": 20,
       "maxLoss": 0
+    },
+    {
+      "id": "repair_sword_service",
+      "name": "铁剑修整服务",
+      "item": "item_steel_arming_sword",
+      "skill": "skill_life_5_core",
+      "minimumProficiency": 100,
+      "tools": [],
+      "materials": [],
+      "workstation": "smithing",
+      "minutes": 30,
+      "difficulty": 10,
+      "toolWear": 0,
+      "restore": 100,
+      "maxLoss": 0,
+      "service": {
+        "fee": 25
+      }
     }
   ],
   "environment": {
@@ -12226,7 +12244,11 @@
         15,
         10,
         20
-      ]
+      ],
+      "bait": {
+        "item": "item_fishing_bait",
+        "quantity": 1
+      }
     },
     "mining": {
       "tool": "item_mining_pick",
@@ -12715,5 +12737,12 @@
         "text": "灰棚签课采用行会考核，以读交易明签、核共同账目检验识字与记事。报考须成年，识字熟练度至少100，实际考核120分钟，难度15。须由现任地方头人或在岗登记人当面主持，通过后记名。此凭据可随任职申请递交；既有公民、贡献、举荐、住户意见与上级审定条件继续生效，缺少已登记任命机构的地方只保留资格，不自行授官。行会及门派的职业资格另由现任合格导师依职业目录完成实际入职任务；入门守戒与仪式资格仍沿原规章办理。"
       }
     ]
+  },
+  "medicine": {
+    "takeHome": {
+      "item": "item_external_medicine",
+      "quantity": 3,
+      "days": 3
+    }
   }
 }

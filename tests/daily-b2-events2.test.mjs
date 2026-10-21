@@ -8,12 +8,12 @@ import {monsterStats} from '../server-plugin/combat.mjs';
 import {MEDICAL_SKILL} from '../server-plugin/medicine-state.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {variant,item,setPrice,scene,stack,monthDayMinute,conserved,primed,held,baseEngine,baseWorld} from './helpers/daily-b2.mjs';
+import {variant,item,setPrice,scene,stack,monthDayMinute,conserved,primed,held,baseEngine,baseWorld,replayed} from './helpers/daily-b2.mjs';
 
 const ZHENG='npc_hw_zhengshuisheng',LINSUI='npc_hw_linsui';
 
 // ---- D31 普通打斗 ----
-test('D31 普通打斗 ②③⑤：落单野狼被打死，留下可剥取的尸体（只有兽皮、没有钱财），铁剑耐久每回合 −1，地域野狼数不因死亡回流、次日不复活；玩家生命差 = 各回合受伤之和',async t=>{
+async function fightD31(t){
  // 铁剑→直刃单手剑（铁档，item_steel_arming_sword）；野狼→灰脊林狼 7 级；玩家 1 级入门，生命 80/80；秋季九月十八申时，北林边。
  const WOOD='loc_hw_northwood',HABITAT='habitat_hw_wood',WOLF='monster_instance_d31',SPECIES='monster_grey_ridge_wolf',SWORD='item_steel_arming_sword';
  const stats=monsterStats({level:7,template:1},baseWorld.rules);
@@ -24,21 +24,23 @@ test('D31 普通打斗 ②③⑤：落单野狼被打死，留下可剥取的尸
   s.creatures={...s.creatures,[WOLF]:{name:'灰脊林狼·d31',species:SPECIES,location:WOOD,hp:stats.maxHp,maxHp:stats.maxHp,level:7,status:'正常',ecology:HABITAT,owner:null}};
  })});
  const before=await primed(ui),count=s=>s.state.records[`ecology:${HABITAT}`].populations[SPECIES].count,rounds=[];
- for(let i=0;i<300;i++){const r=await ui.choose('combat',{target:WOLF,weapon:SWORD},{search:true});assert.ok(r.ok,r.error);rounds.push(r.result);if(r.result.targetHp===0)break;}
- const after=await ui.read(),wolf=after.state.creatures[WOLF];
+ for(let i=0;i<300;i++){const roundStart=(await ui.read()).state.minute;const r=await ui.choose('combat',{target:WOLF,weapon:SWORD},{search:true});assert.ok(r.ok,r.error);assert.equal((await ui.read()).state.minute-roundStart,1,'D31.4 per round');rounds.push(r.result);if(r.result.targetHp===0)break;}
+ const after=await ui.read(),wolf=after.state.creatures[WOLF];assert.equal(after.state.minute-before.state.minute,rounds.length);
  assert.equal(rounds.at(-1).targetHp,0,'打到野狼毙命');assert.equal(wolf.status,'死亡');
  assert.ok(wolf.corpse&&wolf.corpse.items.length>0,'②留下可剥取的尸体');assert.deepEqual(wolf.corpse.items.map(i=>i.item),['item_rawhide'],'普通野狼不掉钱财宝物');
  assert.equal(after.state.player.coins,before.state.player.coins);
  assert.equal(before.state.inventory[SWORD].durability-after.state.inventory[SWORD].durability,rounds.length,'③铁剑耐久每回合小幅下降');
  const received=rounds.reduce((n,r)=>n+r.received,0);assert.ok(received>0,'玩家确实受了伤');assert.equal(before.state.player.hp-after.state.player.hp,received,'①生命损失 = 各回合结算的受伤之和');
  assert.equal(count(after),count(before),'⑤战斗不改变地域种群账（个体化时已 −1，死亡不回流）');assert.equal(count(before),3);
+ await replayed(ui,after);
  const wait=await ui.choose('time',{until:{dayOffset:1,hour:16}});assert.ok(wait.ok,wait.error);
  const next=await ui.read();assert.equal(next.state.creatures[WOLF].status,'死亡','次日不复活');assert.equal(Object.values(next.state.creatures).filter(c=>c.species===SPECIES&&c.status!=='死亡').length,0,'原地没有新狼');
-});
-test.todo('D31 ④时间过去几分钟到一刻钟——引擎一回合 10 秒（combat.exchangeSeconds），一只普通野狼几回合不到 1 分钟；设计缺省 combat.bout = 1 分钟/回合（balance/action-costs.json）：缺 combat.bout 读表（A3 cost.time = rounds × minutesPerBout）');
+}
+test('D31 普通打斗 ②③⑤：落单野狼被打死，留下可剥取的尸体（只有兽皮、没有钱财），铁剑耐久每回合 −1，地域野狼数不因死亡回流、次日不复活；玩家生命差 = 各回合受伤之和',fightD31);
+test('D31.4 public combat advances one minute per round, with real HP, weapon and ecology assertions',fightD31);
 
 // ---- D32 受伤求医 ----
-test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 +30），咬伤止血留下医治记录，医师药材 −1，生命不会瞬间回满而是逐夜回升',async t=>{
+async function treatmentD32(t){
  // 医师林大夫→陶芝（药草院）；诊金加药 30 文=半个日薪 24 + 药价 6（世界副本：初级日工钱 48，药 6）；秋季九月十九辰时；玩家 70 文，生命 60/80，咬伤。
  const CLINIC='bld_hw_herbs',DOCTOR='npc_hw_taozhi';
  const world=variant(w=>{
@@ -66,8 +68,17 @@ test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 
  await ui.choose('time',{until:{dayOffset:0,hour:22}});const n2=await ui.choose('time.sleep',{until:{dayOffset:1,hour:6}});assert.ok(n2.ok,n2.error);
  const hp2=(await ui.read()).state.player.hp;assert.ok(hp2>hp1,`⑤第二夜 ${hp1}→${hp2}`);
  assert.equal((await ui.read()).state.player.medical.wounds[0].healed,true,'复诊期满伤口愈合');
+ return {ui,before,treated,visit,world};
+}
+test('D32 受伤求医 ①②④⑤：诊金加药 30 文（70→40，林大夫 +30），咬伤止血留下医治记录，医师药材 −1，生命不会瞬间回满而是逐夜回升',treatmentD32);
+test('D32.2 public medical service delivers three daily dressings from the actual doctor herb, with balanced source and replay',async t=>{
+ const {ui,before,treated,visit,world}=await treatmentD32(t),done=treated.state.records[visit.id],drug='item_external_medicine',dispensed=done.prescription.dispensed;
+ assert.equal(held(treated.state.inventory,drug)-held(before.state.inventory,drug),3);assert.equal(dispensed.days,3);assert.equal(dispensed.patient,'player');assert.equal(dispensed.source,visit.id);assert.deepEqual(dispensed.material,{item:'item_herb',quantity:1,from:visit.doctor});
+ assert.equal(treated.ledger.flows['src:craft|item_external_medicine|prescription']-(before.ledger?.flows['src:craft|item_external_medicine|prescription']??0),3);
+ assert.equal(treated.ledger.flows['sink:consume|item_herb|treatment']-(before.ledger?.flows['sink:consume|item_herb|treatment']??0),1);conserved(before,treated,'D32 prescription',new WorldEngine(world));
+ const pre=await ui.read();await replayed(ui,pre);const retry=await ui.choose('settlement.medicine_seek',{},{search:true,eventId:'seek-d32'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),pre);
+ const repeat=await ui.choose('settlement.medicine_seek',{},{search:true});assert.equal(repeat.ok,false);assert.deepEqual(await ui.read(),pre);
 });
-test.todo('D32 ③背包 +外敷药（3 天份）——引擎医治只从医师药材里扣 1 份、写处方记录，不给病人药物品：缺“服务 outcomes 产出处方物品”（A3 动作 outcomes；S1 transfer）');
 test.todo('D32 ⑤生命“几天逐步回升”的速率——引擎睡眠/休息每 30 分钟 +1 生命（engine.time），伤愈时钟 health.json wound:light 的病程未被消费：缺 health:recoveryRate 闭式（S5 health.json；缺省值见表）');
 
 // ---- D36 加入组织 ----

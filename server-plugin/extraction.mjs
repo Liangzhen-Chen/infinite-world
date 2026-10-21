@@ -40,10 +40,14 @@ export function fish(d,args,id){
     // The product is the existing cleaned fish. Its knife and water cost remain real.
     const tool=this.rules.extraction.fishing.tool;usable(d,this,tool);
     if(this.quantity(d,'player','item_water')<1)throw Error('剖洗渔获需要一份水');
+    const bait=!this.replaying||this.replayResult?.fishingBaitVersion===1?this.rules.extraction.fishing.bait:null;
+    if(bait&&this.quantity(d,'player',bait.item)<bait.quantity)throw Error('钓饵不足');
     const minutes=this.rules.extraction.fishing.minutes,season=this.calendar(d.get('state','minute')).season;
     const difficulty=this.rules.extraction.fishing.difficultyBySeason[season];
     const check=this.check(d,{attribute:'敏捷',skill:'skill_life_2_core',difficulty},id);
-    wearItem(d,this,'player',tool,1);this.itemDelta(d,'player','item_water',-1,USE('fishing',id));this.advance(d,minutes,id);
+    wearItem(d,this,'player',tool,1);this.itemDelta(d,'player','item_water',-1,USE('fishing',id));
+    if(bait)this.itemDelta(d,'player',bait.item,-bait.quantity,USE('fishing_bait',id));
+    this.advance(d,minutes,id);
     const now=d.get('state','minute'),latest=d.get(...path(`ecology:${habitat.id}`));
     const frozen=features.some(f=>f.kind==='water'&&traitsOf(this,d.get('state'),f.id)?.tags.includes('frozen'));
     const eligible=species.filter(s=>(!requested||s.id===requested)&&latest.populations[s.id].count>0&&active(s.wildlife.activeHours,now%1440));
@@ -56,7 +60,7 @@ export function fish(d,args,id){
         holdingSet(d,null,path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id},'extraction');
     }
     const training=able(d)?practice(d,this,'skill_life_2_core',`钓鱼:${habitat.id}`):null;
-    return {success,check,species:success?selected.id:null,obtained:success?[{item:'item_fish',quantity:1}]:[],training,season,
+    return {success,check,species:success?selected.id:null,obtained:success?[{item:'item_fish',quantity:1}]:[],training,season,...(bait?{fishingBaitVersion:1}:{}),
         reason:success?null:frozen?'水面封冻':!eligible.length?'此时无可捕鱼群':'钓鱼未成',actionScope:{kind:'fishing',clockManaged:true,minutes}};
 }
 

@@ -11,7 +11,7 @@ import {store,moveStock} from './stock.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('medicine',{kinds:['employed_by']});
 // S1b: 诊疗与防疫用掉的药材进 sink:consume。
-declareLedgerWriter('medicine',{sinks:['sink:consume']});
+declareLedgerWriter('medicine',{sources:{'src:craft':{item_external_medicine:100000}},sinks:['sink:consume']});
 const HERB_USE=(purpose,eventId)=>({flow:'sink:consume',purpose,writer:'medicine',eventId});
 import {transferItems} from './items.mjs';
 import {clockRoll} from './world-clock.mjs';
@@ -131,7 +131,14 @@ function finish(d,e,r){
  }
  const wages=[];
  for(const who of [r.doctor,...r.assistants]){const job=currentEmployment(d.get('state'),who,r.start);if(job?.medicine===1&&job.location===r.location)wages.push({worker:who,...settleEmploymentPay(d,e,job,r.end,r.end-r.start)});}
- const row={...r,status:'已诊',endedAt:r.end,payment,wages,prescription:{item:'item_herb',quantity:1,identified:correct,consumedFrom:stock.temple??stock.holder},diagnosis:{correct,skill:medicalSkill(e,s,r.doctor),roll},outcome,followUpAt:r.end+DAY};
+ const takeHome=e.rules.medicine?.takeHome;
+ let dispensed=null;
+ if(takeHome&&correct&&r.conditions.some(c=>c.kind==='wound')&&(!e.replaying||e.replayResult?.prescriptionVersion===1)){
+  e.itemDelta(d,r.patient,takeHome.item,takeHome.quantity,{flow:'src:craft',purpose:'prescription',writer:'medicine',eventId:r.id});
+  dispensed={...takeHome,material:{item:'item_herb',quantity:1,from:stock.temple??stock.holder},patient:r.patient,source:r.id};
+  d.prescriptionVersion=1;
+ }
+ const row={...r,status:'已诊',endedAt:r.end,payment,wages,prescription:{item:'item_herb',quantity:1,identified:correct,consumedFrom:stock.temple??stock.holder,...(dispensed?{dispensed}:{})},diagnosis:{correct,skill:medicalSkill(e,s,r.doctor),roll},outcome,followUpAt:r.end+DAY};
  holdingSet(d,null,rec(r.id),row,'medicine');
 }
 export function nextMedicineMinute(e,d,now){
