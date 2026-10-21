@@ -74,7 +74,7 @@ import {resolveToolCall}from'../extension/tools.mjs';
 import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-events.mjs';
 import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
-import './standing.mjs';// world-event subscriber (registers itself)
+import {adjustStanding} from './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh,trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
@@ -500,6 +500,7 @@ export class WorldEngine {
         prepared.catalog={id:source,duration};
         return applyMagic.call(this,d,prepared,eventId);
     }
+    primitiveAdjustStanding(d,holder,target,delta,context){return adjustStanding(d,this,holder,target,delta,context);}
     primitiveValidateScheduledAction(d,{action,rule,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,rule,slots},actor);}
     executeProtocolPrimitive(d,effect,context){
         if(!['primitive.action','primitive.rule'].includes(effect.op))throw Error(`Protocol primitive is not installed: ${effect.op}`);

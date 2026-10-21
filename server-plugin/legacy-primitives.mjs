@@ -301,7 +301,12 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const old=before.holdings?.entities?.[id];if(!old)continue;
   for(const [field,value] of Object.entries(row.facts??{}))if(!same(old.facts?.[field],value))add(stateEffect('fact.set',{entity:id,field,value},['holdings','entities',id,'facts',field],before,after));
  }
- for(const [id,row] of Object.entries(a.records??{}))if(row.category==='physical_feature'&&involved.has(row.id)&&!waterEndpoints.has(row.id)){
+ // A sensory spell returns its saved observation, not the hidden object state
+ // materialized by world advance during the cast (e.g. a plant's private recipe).
+ const observation=tool==='cast'&&result.observation&&result.evidence&&a.records?.[result.evidence];
+ if(observation?.category==='care_observation'&&observation.source===eventId)
+  add(stateEffect('emit',{target:result.target,verb:'tell',visibility:'private',payload:{observation:result.observation}},['state','records',result.evidence],before,after));
+ for(const [id,row] of Object.entries(a.records??{}))if(row.category==='physical_feature'&&involved.has(row.id)&&!waterEndpoints.has(row.id)&&!observation){
   for(const [field,value] of Object.entries(row.state??{}))if(!same(b.records?.[id]?.state?.[field],value))
    add(stateEffect('fact.set',{entity:row.id,field,value},['state','records',id,'state',field],before,after));
  }

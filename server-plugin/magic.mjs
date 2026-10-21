@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {nativePrimitiveTransaction} from './native-primitives.mjs';
 // Effect families register their effectSpec.kind values in magic-effects.mjs;
 // importing them here loads them before the first cast.
 import './magic-ritual.mjs';
@@ -91,6 +92,14 @@ export function prepareMagic(d,catalog,args,context={}){
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
+    const spec=prepared.spec,target=prepared.target??prepared.id??'player';
+    const primitive=['damage','heal'].includes(spec.kind)&&!prepared.elementObject&&!prepared.windObject&&!prepared.stoneObject?{op:'vital',target,delta:spec.kind==='damage'?-spec.power:spec.power,type:spec.damageType??'healing'}:
+      {op:'status',target,status:spec.status??spec.kind,duration:prepared.catalog?.duration??0,magnitude:spec.power};
+    const out=nativePrimitiveTransaction(d,{engine:this,family:'m4:magic',sourceEvent:id,actor:prepared.context?.source??'player',program:{spec,target,spell:prepared.catalog?.id},primitives:[primitive],
+      apply:tx=>applyMagicState.call(this,tx,prepared,id),describe:(effect,result)=>effect.op==='vital'?{delta:spec.kind==='heal'?result.healed??0:-(result.damage??0)}:{}});
+    return out.results[0];
+}
+function applyMagicState(d,prepared,id){
     let{spec,target,path,catalog}=prepared;
     const effect=magicEffect(spec.kind);
     if(effect?.apply)return effect.apply.call(this,d,prepared,id);

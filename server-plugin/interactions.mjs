@@ -7,6 +7,7 @@ import {environmentFeatures}from'./environment.mjs';
 import {applyFacilityInteraction}from'./facilities.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {readObjectState,storeObjectState}from'./magic-object.mjs';
+import {nativePrimitiveTransaction}from'./native-primitives.mjs';
 
 export const multiplierBounds=Object.freeze({min:0.5,max:1.5});
 const MARKS=['char','temper','stain'],STATES=['burning','wet','frozen'];
@@ -84,6 +85,14 @@ function writeItem(d,owner,id,outcome){
 // writes burning/wet/frozen onto existing feature/item state. Creatures only
 // receive the combat multiplier, which the caller applies to its own damage.
 export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes,minute,sourceEvent}){
+ const program={agent,target,owner,traits,moistureMg,minutes,minute,sourceEvent};
+ const out=nativePrimitiveTransaction(d,{engine,family:'k2:interaction',sourceEvent,actor:owner,program,
+  primitives:[{op:'status',target,status:agentOf(agent),duration:minutes??0,magnitude:0}],
+  apply:tx=>applyInteractionState(tx,engine,program),
+  describe:(_effect,result)=>({status:result.added[0]??result.removed[0]??result.agent,duration:result.added.includes('frozen')?result.minutes:0,magnitude:result.added.length?1:result.removed.length?-1:0})});
+ return out.results[0];
+}
+function applyInteractionState(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes,minute,sourceEvent}){
  const t=traits??traitsOf(engine,d.get('state'),target);
  const outcome=resolveInteraction(agent,t);
  if(moistureMg!==undefined)outcome.moistureMg=moistureMg;

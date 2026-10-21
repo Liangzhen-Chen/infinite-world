@@ -15,11 +15,12 @@ const clone=value=>structuredClone(value);
 const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 // Native composition root only. JSON proposals cannot manufacture this token.
 // Every policy sees the transaction's CURRENT document, including prior effects.
-export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,transferLot=null,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,engine=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
+export function createPrimitiveFrame({actor,eventId,source,canAct,authority,location,mirrorTransfer,transferLot=null,factPolicy={},verbs=[],createDraft=null,executePrimitive=null,applyNative=null,engine=null,accountExists=null,validate=null,validateFact=null,prepare=null,finish=null,identity=null}){
  if(typeof actor!=='string'||!actor||typeof eventId!=='string'||!eventId||eventId.length>120||!['catalog','open','rule'].includes(source?.kind)||typeof source.id!=='string'||!source.id)reject('E-PRIMITIVE-FRAME','缺少服务端行动者、事件编号或来源');
  for(const [name,fn] of Object.entries({canAct,authority,location,mirrorTransfer}))if(typeof fn!=='function')reject('E-PRIMITIVE-FRAME',`缺少服务端 ${name} 接点`);
  const frame=Object.freeze({actor,eventId,source:Object.freeze({...source})});
- frames.set(frame,{canAct,authority,location,mirrorTransfer,transferLot,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,engine,accountExists,validate,validateFact,prepare,finish,identity:clone(identity)});return frame;
+ if(applyNative!==null&&typeof applyNative!=='function')reject('E-PRIMITIVE-FRAME','Native interpreter must be a server function');
+ frames.set(frame,{canAct,authority,location,mirrorTransfer,transferLot,factPolicy:clone(factPolicy),verbs:new Set(verbs),createDraft,executePrimitive,applyNative,engine,accountExists,validate,validateFact,prepare,finish,identity:clone(identity)});return frame;
 }
 function draft(document){
  return {document:clone(document),patches:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},peek(...p){return this.get(...p);},
@@ -80,7 +81,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     }
     return a;
    };
-   if(effect.op==='transfer'){
+   if(policy.applyNative){
+    // Only a native frame can install this interpreter. Its caller has already
+    // validated the source-specific program (K2/K6/M4); JSON never selects it.
+    result=policy.applyNative(d,effect,{frame,index});
+   }else if(effect.op==='transfer'){
     const a=parseAccount(effect.from),b=parseAccount(effect.to),qty=effect.qty;
     for(const key of [effect.from,...(isSink(b.owner)?[]:[effect.to])])if(policy.accountExists?.(d.document,key)&&!Object.hasOwn(d.get('ledger','accounts')??{},key))d.set(['ledger','accounts',key],0);
     if(effect.from===effect.to)reject('E-TRANSFER-ENDPOINT','Transfer accounts must differ');
