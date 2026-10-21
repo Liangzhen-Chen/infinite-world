@@ -8,6 +8,7 @@ import {declareHoldingWriter,holdingSet,isPhysicallyDead} from './holdings.mjs';
 import {catalogDefinition} from './catalog.mjs';
 import {MemoryIndex} from './retrieval.mjs';
 import {saveDialogue} from './dialogue.mjs';
+import {SOCIAL_VERBS} from './world-events.mjs';
 const tokenizer=new MemoryIndex();
 declareHoldingWriter('routing-programs');
 
@@ -46,6 +47,7 @@ export function executeRoutingProgram(d,engine,tool,args,eventId){
  if(tool!=='remember')return null;
  const kind=({'dialogue:delivery_request':'delivery','dialogue:ask_request':'ask','dialogue:persuade_request':'make_way','dialogue:self_tell':'tell'})[args.key];
  if(!kind)return null;
+ if(args.topic!==undefined&&(kind!=='make_way'||!['surrender','make_way'].includes(args.topic)))reject('E-ACTION-TALK-TOPIC','劝说只能发出停战或让路请求，不能预写投降结果');
  const npc=engine.resolve(args.subject,'npc'),state=d.get('state'),body=state.npcs?.[npc];
  if(!body||body.location!==state.location||body.scheduleTravel||body.cognitionTravel||isPhysicallyDead(engine,d,npc)||['昏迷','濒死'].includes(body.status))reject('E-ACTION-TALK-PRESENT','对方须清醒且真实在场');
  for(const actor of ['player',npc]){const permission=canAct({engine,document:d.document},actor,'talk');if(!permission.allowed)reject('E-ACTION-TALK-CAPACITY',permission.reason);}
@@ -67,9 +69,13 @@ export function executeRoutingProgram(d,engine,tool,args,eventId){
  if(kind==='tell')text=language?'我听到你这样说了，尚未核实。':text;
  const action=kind==='tell'?'tell':kind==='ask'?'ask':kind==='make_way'?'persuade':'request';
  const judgement=language&&kind==='make_way'?engine.check(d,{attribute:'魅力',opponent:{npc,attribute:'精神'}},eventId):null;
- const {dialogue}=saveDialogue(d,npc,eventId,action,decision,text,{content:args.content,requestKind:kind,...(judgement?{judgement}:{})});
- holdingSet(d,engine,['state','records',`speech:${eventId}`],{category:'speech',actor:'player',target:npc,content:args.content,kind,minute:state.minute,sourceEvent:eventId,verified:false},'routing-programs');
- return {dialogue,actionScope:{kind:'instant'},socialEvent:{verb:kind==='tell'?'tell':'request',target:npc,visibility:kind==='tell'?'witnessed':'private',witnesses:[npc],tags:['dialogue',kind],payload:{kind,content:args.content,source:'player',verified:false}}};
+ const topic=args.topic??kind;
+ const {dialogue}=saveDialogue(d,npc,eventId,action,decision,text,{content:args.content,requestKind:kind,...(args.topic?{requestSubject:topic}:{}),...(judgement?{judgement}:{})});
+ holdingSet(d,engine,['state','records',`speech:${eventId}`],{category:'speech',actor:'player',target:npc,content:args.content,kind,...(args.topic?{topic}:{}),minute:state.minute,sourceEvent:eventId,verified:false},'routing-programs');
+ // Like native emit, register this actual speech verb before the engine
+ // publishes it; persistence must not depend on an earlier unrelated emit.
+ SOCIAL_VERBS.add(kind==='tell'?'tell':'request');
+ return {dialogue,actionScope:{kind:'instant'},socialEvent:{verb:kind==='tell'?'tell':'request',target:npc,visibility:kind==='tell'?'witnessed':'private',witnesses:[npc],tags:['dialogue',kind],payload:{kind:topic,content:args.content,source:'player',verified:false}}};
 }
 
 // Initial snapshots contain a pending proposal only. No permit or enrollment

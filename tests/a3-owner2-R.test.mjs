@@ -116,7 +116,7 @@ test('R3: a rejected future enquiry preserves completed lodging and elapsed time
  const native=Object.create(engine),reduce=engine.reduce.bind(engine);
  // Inject the executor's actual rejection contract at the future request,
  // while both the rental and time advancement use their real native programs.
- native.reduce=async(d,i,o)=>i.args?.action==='open:question'?{patches:[],result:{ok:false,receipt:{eventId:i.eventId,routed:'open:question',status:'rejected',reason:'对方已经离场',applied:[],cost:{time:0,resources:[]}}}}:reduce(d,i,o);
+ native.reduce=async(d,i,o)=>i.args?.action===prepared.steps[2].action?{patches:[],result:{ok:false,receipt:{eventId:i.eventId,routed:prepared.steps[2].action,status:'rejected',reason:'对方已经离场',applied:[],cost:{time:0,resources:[]}}}}:reduce(d,i,o);
  const out=await executeOpenSequence(native,document,input,prepared),after=applyPatches(document,out.patches);
  assert.equal(out.result.failedStep,2);assert.equal(out.result.receipt.steps[2].status,'rejected');
  assert.equal(document.state.player.coins-after.state.player.coins,6);assert.equal(after.state.minute,2640);

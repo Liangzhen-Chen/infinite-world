@@ -291,7 +291,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  const dialogue=result.dialogue;
  if(dialogue&&a.dialogues?.[dialogue.npc]?.sourceEvent===eventId){
   const verb=['ask','interpreter','persuade','request'].includes(dialogue.action)?'request':dialogue.action;
-  add(stateEffect('emit',{target:dialogue.npc,verb,visibility:dialogue.action==='tell'&&args.key==='dialogue:self_tell'?'witnessed':'private',payload:{kind:dialogue.action,content:args.content??null},...(dialogue.actedAs?{actedAs:dialogue.actedAs}:{})},['state','dialogues',dialogue.npc],before,after));
+  add(stateEffect('emit',{target:dialogue.npc,verb,visibility:dialogue.action==='tell'&&args.key==='dialogue:self_tell'?'witnessed':'private',payload:{kind:dialogue.requestSubject??dialogue.action,content:args.content??null},...(dialogue.actedAs?{actedAs:dialogue.actedAs}:{})},['state','dialogues',dialogue.npc],before,after));
  }
  for(const [id,memory] of Object.entries(after.memories??{})){
   if(memory.sourceEvent!==eventId||same(before.memories?.[id],memory))continue;

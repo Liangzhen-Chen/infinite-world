@@ -37,7 +37,7 @@ function prepareOpenSequence(proposal,registry,context,engine){
   const [payment,holding,question]=effects;
   if(payment.op==='transfer'&&coin(payment)&&owner(payment.from)===actor&&holding.op==='holding.open'&&holding.holdingKind==='lodges'&&question.op==='emit'&&question.verb==='request'&&question.payload?.subject==='renewal_quote'&&question.target===owner(payment.to)){
    const lodge=routeAction({...proposal,target:question.target,effects:[payment,holding]},registry,context);
-   if(lodge.routed)return {status:'sequence',routed:'open:proposal',preserveCompleted:true,signature:lodge.signature,candidates:lodge.candidates,effects:[],cost:null,steps:[{action:lodge.routed,slots:lodge.candidates[0].slots},{action:'core:time',slots:{},untilCheckout:true},{action:'open:question',slots:{target:question.target,content:'询问下一晚续住报价；尚未同意续租'}}]};
+   if(lodge.routed)return {status:'sequence',routed:'open:proposal',preserveCompleted:true,signature:lodge.signature,candidates:lodge.candidates,effects:[],cost:null,steps:[{action:lodge.routed,slots:lodge.candidates[0].slots},{action:'core:time',slots:{},untilCheckout:true},{action:'open:renewal_question',slots:{target:question.target,content:'询问下一晚续住报价；尚未同意续租'}}]};
   }
  }
  // Known environment spells run their native programs in order. The second

@@ -1,12 +1,14 @@
 import {ActionRejection} from './action-rejection.mjs';
 
-// Only routed catalog actions have a public refusal contract. Plain Error
+// Routed catalog actions and typed proposal preconditions have a public refusal
+// contract. Untyped proposal/policy failures still propagate. Plain Error
 // messages containing Chinese are legacy world-facing preconditions. Error
 // subclasses (including primitive policy) and English invariants propagate.
 export async function actionBoundary(engine,document,input,run,{preview=false}={}){
  try{return await run();}
  catch(error){
-  const action=input.tool==='world_act'&&engine.primitiveActionDefinition(input.args?.action);
+  const action=input.tool==='world_act'?engine.primitiveActionDefinition(input.args?.action):
+   input.tool==='world_propose'&&error instanceof ActionRejection?engine.primitiveActionDefinition('open:proposal'):null;
   if(!action||!(error instanceof ActionRejection||error?.constructor===Error&&/\p{Script=Han}/u.test(error.message)))throw error;
   const typed=error instanceof ActionRejection,slots=structuredClone(input.args?.slots??{});
   // The archived catalog's scene projection needs no invented slot, resource,

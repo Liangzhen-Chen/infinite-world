@@ -5,6 +5,7 @@ import {actionReader} from './action-capacity.mjs';
 import {parseAccount,accountKey,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {PrimitiveRejected} from './primitive-policy.mjs';
+import {reject as rejectAction} from './action-rejection.mjs';
 import {environmentFeatures} from './environment-state.mjs';
 import {localWeather} from './weather.mjs';
 import {mapKnowledge} from './map-state.mjs';
@@ -76,6 +77,7 @@ const fits=(action,participants,kindOf)=>Object.entries(action.participants??{})
 });
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
+ context.assertRequest?.(proposal);
  const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
  const participants={...(target!==undefined?{target}:{}),...proposal.participants,actor};
  // No source, check, effects, consent or cost from a proposal can replace the definition.
@@ -327,6 +329,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     }
    }
    if((action.id==='core:dialogue.guide_request'||['open:ask_request','open:delivery_request','open:persuade_request','open:self_tell'].includes(action.id))&&slot.name==='content')value??=intentText(proposal);
+   if(action.id==='open:persuade_request'&&slot.name==='topic')value??=effects.find(e=>e.op==='emit'&&e.verb==='request')?.payload?.subject;
    if(action.call?.tool==='world_research'&&proposal.means?.manner==='research'){
     const project=effects.find(e=>e.op==='create'&&e.kind==='project');
     if(slot.name==='name')value??=project?.facts?.name??project?.facts?.topic;
@@ -578,7 +581,26 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss')return ['summon'];
   return [];
  };
- return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,emptyRequest,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+ // An empty footprint cannot turn an impossible displacement into a slot
+ // question. Read the actor's actual knowledge, never the scenario preamble
+ // or a caller's claim to possess (or lack) a spell. Concrete casts continue
+ // through the native cast program, including its anchors and permissions.
+ const assertRequest=proposal=>{
+  if(proposal.effects?.length!==0)return;
+  const text=intentText(proposal),declared=engine.byId.get(proposal.means?.spell),explicit=['teleport','blink'].includes(proposal.means?.manner)||['teleport','blink'].includes(declared?.effectSpec?.kind);
+  if(!explicit&&/(?:怎样|如何|怎么|想|准备|先|请教).{0,6}(?:学|研究)|^(?:如果|假如|要是).{0,8}(?:传送|瞬移)/.test(text))return;
+  const command=/(?:把|将)我(?:传送|瞬移)|(?:^|[，。；！]|请|现在|立即|马上|立刻|直接)(?:传送|瞬移)(?:我|到|去)|(?:马上|立即|立刻|直接|现在)(?:把|将)?我.{0,8}(?:送到|带到|到)/.test(text);
+  if(!explicit&&(!/(?:传送|瞬移)/.test(text)||!command))return;
+  const kind=proposal.means?.manner==='blink'||declared?.effectSpec?.kind==='blink'||/瞬移/.test(text)&&!/传送/.test(text)?'blink':'teleport';
+  if((engine.world.spells??[]).some(spell=>spell.effectSpec?.kind===kind&&knowledge.spells[spell.id]))return;
+  const repair=['在地图查看已知路线与实际耗时；目的地尚未知晓时，先向当地向导询路，不能推定远方路线或天数。','取得真实法术后，通过施法动作核对射程、载荷、锚点与许可。'];
+  const reason=kind==='blink'?'本人尚未掌握瞬移法术，不能立即移动到另一处。':'本人尚未掌握传送法术，不能立即送到远方。';
+  rejectAction('E-OPEN-ABILITY',reason+repair[0],{
+   missing:['本人已掌握的位移法术及其真实落脚点或锚点来源'],
+   repair
+  });
+ };
+ return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,emptyRequest,requiredSlots,assertRequest,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
   const utterance=proposal?.effects?.find(e=>e.op==='emit');
   if(action.id==='open:ask_request'&&!['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
   if(action.id==='core:dialogue.ask'&&['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
