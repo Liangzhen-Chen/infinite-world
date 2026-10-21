@@ -2475,6 +2475,141 @@
     "prompt": "原创河谷日常职业纹章；散钩，26岁，拆绳认结。以woodworker工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
   },
   {
+    "id": "npc_a3_exam_warrior",
+    "name": "申盾",
+    "occupation": "战士认证导师",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；申盾，44岁，战士认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_knight",
+    "name": "罗缰",
+    "occupation": "骑士认证导师",
+    "age": 46,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；罗缰，46岁，骑士认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_spellblade",
+    "name": "褚弦",
+    "occupation": "魔武士认证导师",
+    "age": 39,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；褚弦，39岁，魔武士认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_assassin",
+    "name": "薛隐",
+    "occupation": "刺客认证导师",
+    "age": 37,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；薛隐，37岁，刺客认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_archer",
+    "name": "蒋翎",
+    "occupation": "弓箭手认证导师",
+    "age": 42,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；蒋翎，42岁，弓箭手认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_summoner",
+    "name": "芦晏",
+    "occupation": "元素召唤师认证导师",
+    "age": 40,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；芦晏，40岁，元素召唤师认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_10",
+    "name": "俞鉴",
+    "occupation": "鉴定师认证导师",
+    "age": 51,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；俞鉴，51岁，鉴定师认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_13",
+    "name": "闻笛",
+    "occupation": "音乐家认证导师",
+    "age": 38,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；闻笛，38岁，音乐家认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_15",
+    "name": "梁驯",
+    "occupation": "驯兽师认证导师",
+    "age": 43,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；梁驯，43岁，驯兽师认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_16",
+    "name": "舒砚",
+    "occupation": "画师认证导师",
+    "age": 47,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；舒砚，47岁，画师认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_18",
+    "name": "温镶",
+    "occupation": "首饰工匠认证导师",
+    "age": 49,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；温镶，49岁，首饰工匠认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_20",
+    "name": "蒲鞣",
+    "occupation": "制皮匠认证导师",
+    "age": 45,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；蒲鞣，45岁，制皮匠认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_a3_exam_life_21",
+    "name": "葛醪",
+    "occupation": "酿酒师认证导师",
+    "age": 53,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；葛醪，53岁，酿酒师认证导师。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_hc_yicen",
+    "name": "伊岑·衡阶",
+    "occupation": "西陲巡抚兼领环城郡",
+    "age": 50,
+    "minor": false,
+    "crest": "crests/warden.svg",
+    "prompt": "原创河谷日常职业纹章；伊岑·衡阶，50岁，西陲巡抚兼领环城郡。以warden工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
+    "id": "npc_hc_liwang",
+    "name": "黎望",
+    "occupation": "环城郡丞",
+    "age": 44,
+    "minor": false,
+    "crest": "crests/household.svg",
+    "prompt": "原创河谷日常职业纹章；黎望，44岁，环城郡丞。以household工具图形置于圆角盾牌，松绿底与麦金轮廓，无文字，无肖像，无亲密或恋爱元素。仅采用已登记日常职业，不绘制人物私事。"
+  },
+  {
     "id": "npc_hw_fangqin",
     "name": "方芩",
     "occupation": "家务与旧账抄录",

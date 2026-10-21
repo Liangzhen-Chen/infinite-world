@@ -34,7 +34,7 @@ import {planRuleStateMigration,runtimeRuleVersion}from'./rule-state-migration.mj
 import {registerRevival,revivePlayer}from'./revival.mjs';
 import {check,npcProficiency}from'./checks.mjs';
 import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,physicalCatalog}from'./items.mjs';
-import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction}from'./environment.mjs';
+import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction,recordLocalContact}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
@@ -430,7 +430,7 @@ export class WorldEngine {
     primitiveRiteDaylight(document,location){return localWeather(this,document,location).daylight;}
     primitiveRiteInterruption(document,plan,options){return primitiveActionRuntime().interruptRite(this,document,plan,options);}
     primitiveApplyMark(d,effect,meta){return primitiveActionRuntime().applyMark(d,this,effect,meta);}
-    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
+    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
     primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
         const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity],npc=d.get(...path),start=d.get('state','minute');
         if(!npc||!npc.location||npc.scheduleTravel||npc.cognitionTravel)throw Error('NPC is missing or already travelling');
@@ -646,7 +646,7 @@ export class WorldEngine {
             if(d.contestPool.length){this.advanceInterval(d,0,id,d.scheduler.lastSettled);d.scheduler.lastSettled=d.get('state','minute');}
             return;
         }
-        const patchStart=d.patches.length,npcsBefore=d.get('state','npcs');
+        const patchStart=d.patches?.length,npcsBefore=d.get('state','npcs');
         while(d.get('state','minute')<end){
             const now=d.get('state','minute');
             if(d.scheduler){
@@ -673,7 +673,7 @@ export class WorldEngine {
         }
         // Intermediate clock boundaries matter to simulation, not to replay.
         // Keep one final NPC patch per changed person in this elapsed-time event.
-        compactNpcPatches(d,patchStart,npcsBefore);
+        if(patchStart!==undefined)compactNpcPatches(d,patchStart,npcsBefore);
     }
     advanceInterval(d,minutes,id,settledBefore){
         const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
@@ -780,6 +780,9 @@ export class WorldEngine {
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
+        if(primitiveActionRuntime()&&(d.get('state','npcs',args.destination)||d.get('state','creatures',args.destination))){
+            return this.primitiveMoveLocal(d,{entity:'player',destination:args.destination,mode:args.mode??'walk'},id);
+        }
         let destination=this.resolve(args.destination);const requestedDestination=destination,old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
         let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);

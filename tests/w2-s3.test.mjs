@@ -131,7 +131,22 @@ test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、�
  doc.state.effects.fixture_push={kind:'status',target:'player',status:'compulsion',power:2,expires:doc.state.minute+30,source:'fixture_push'};
  const eased=await cast(doc,{spell:id('startle_ease'),target:'player',permit:p});assert.equal(eased.result.relieved,3);
  assert.equal(eased.doc.state.effects.fixture_fear,undefined);assert.equal(eased.doc.state.effects.fixture_push.power,1);
- await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('startle_ease'),target:'player'},eventId:'ease-no-permit'}),/许可/);
+ // 06 §6.3/§6.7: relieving one's own existing status uses one's own consent;
+ // A3 r10 does not require an external mind permit for this self-only action.
+ const self=await cast(structuredClone(doc),{spell:id('startle_ease'),target:'player'});
+ assert.equal(self.result.relieved,3);assert.equal(self.doc.state.effects.fixture_fear,undefined);
+ assert.equal(self.doc.state.effects.fixture_push.power,1);
+ // Keep the license counterexample on another mind. 06 §6.10.4 makes the
+ // registered action return an atomic refusal, including on an explicit force
+ // attempt; it must not inherit the self-relief exemption.
+ await import('../server-plugin/primitives-runtime.mjs');
+ const other=structuredClone(doc);other.state.npcs[SHU].location=other.state.location;
+ assert.equal(recordLocalContact(writer(other),engine,SHU,'s3-relief-contact'),true);
+ const unchanged=structuredClone(other),denied=await engine.reduce(other,{tool:'world_act',args:{action:'core:cast',slots:{spell:id('startle_ease'),target:SHU,force:true}},eventId:'ease-other-no-permit'});
+ assert.equal(denied.result.ok,false);assert.equal(denied.result.receipt.status,'rejected');
+ assert.match(denied.result.receipt.reason,/许可/);assert.deepEqual(denied.result.receipt.applied,[]);
+ assert.deepEqual(denied.result.receipt.cost,{time:0,resources:[]});assert.deepEqual(denied.patches,[]);
+ assert.ok(denied.result.receipt.missing.length);assert.ok(denied.result.receipt.repair.length);assert.deepEqual(other,unchanged);
  const scared=structuredClone(doc);delete scared.state.effects.fixture_push;const plain=magicStatusStats(reader(scared),'player').hit;
  const calm=await cast(scared,{spell:id('calm_guard'),target:'player'});assert.equal(plain,-.04);assert.equal(magicStatusStats(reader(calm.doc),'player').hit,0);assert.ok(calm.doc.state.effects.fixture_fear);
  const ward=await cast(fresh(),{spell:id('shade_ward'),target:'player'});assert.equal(magicStatusStats(reader(ward.doc),'player').shadowResistance,.3);

@@ -8,6 +8,7 @@ import {readS4Publication,mergeS4Publication,publishS4,withoutS4,designPublicati
 import {spells,books,items,placements,mentors,routes,routeOf,ritualScopes,TABLET} from '../world/design/w2-s4.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {wildlifeEncounterAt} from '../server-plugin/wildlife.mjs';
@@ -46,6 +47,13 @@ async function cast(doc,args){const prior=doc,r=await success(doc,'world_cast',a
  for(const m of s.materials)assert.equal(r.doc.state.inventory[m.item]?.quantity??0,(prior.state.inventory[m.item]?.quantity??0)-m.amount);
  return r;}
 async function track(doc,species){const r=await success(doc,'world_wildlife',{operation:'track',species});assert.equal(r.result.found.species,world.monsters.find(m=>m.id===species).name);return{doc:r.doc,target:r.result.found.id};}
+async function approachContact(doc,target){
+ await import('../server-plugin/primitives-runtime.mjs');
+ const close=await run(doc,'world_move',{destination:target});assert.equal(close.result.arrived,true);
+ const position=close.doc.state.records[`local_actor_position:${target}`];
+ assert.equal(position.minute,close.doc.state.minute);assert.equal(position.expires,position.minute+10);
+ return close.doc;
+}
 async function takeT155(doc,cause,target){
  // Public templates run through their registered U17 generator after tracking.
  const q=world.rules.questSources.wildlife.find(r=>r.id===cause),saved=world.rules.questSources.wildlife;
@@ -117,7 +125,10 @@ test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超�
  await assert.rejects(engine.reduce(wisp.doc,{tool:'world_cast',args:{spell:id('ferry'),target:JI,permit:p},eventId:'ferry-npc'}),/游魂|复活|在场/);
  const found=await track(doc,SOUL);doc=found.doc;
  assert.equal(eco(doc,'habitat_wt_mist_flat')[SOUL].count+present(doc,SOUL,MIST),total0);
- const job=await takeT155(doc,'t155_wt_soul',found.target);doc=job.doc;
+ const job=await takeT155(doc,'t155_wt_soul',found.target);
+ // 06 §6.7/§6.5: the seven-minute acceptance plus this five-minute rite
+ // exceeds the original contact proof; approach the still visible soul first.
+ doc=await approachContact(job.doc,found.target);
  const f=await cast(doc,{spell:id('ferry'),target:found.target,permit:p});doc=f.doc;
  doc=await settleT155(doc,job.quest);
  assert.equal(f.result.ferried,true);assert.equal(f.result.revived,false);assert.equal(f.result.destination,TABLET);
@@ -150,6 +161,9 @@ test('佛门守戒与立愿：持戒护身吸收刀棍与暗影伤害，立愿�
  const contract=vow.doc.state.records[vow.result.contract];assert.equal(contract.kind,'oath');assert.equal(contract.church,'止波师承');assert.deepEqual(contract.parties,['player']);
  // The general primer is bought and read at the Hewan bookshop like any other volume.
  let doc=vow.doc;doc.state.location='bld_hw_school';skipTo(engine,doc,Math.ceil(doc.state.minute/1440)*1440+540);doc.state.skills.skill_literacy={proficiency:100,daily:{},breakthroughs:[]};doc.state.player.coins+=200;doc.state.inventory.item_charcoal={quantity:3,durability:100};
+ // 01 §1.6 / 15: accounts are authoritative. Synchronize this test-only
+ // resource fixture before the real trade; keep A3's reconciliation intact.
+ resyncBooks(engine,doc);
  const primer=books.find(b=>b.book.teaches.includes(id('contract_read')));doc=(await run(doc,'world_trade',{seller:LU,item:primer.id,quantity:1})).doc;
  doc=(await success(doc,'world_learn',{kind:'spell',entity:id('contract_read'),source:primer.id})).doc;
  const read=await cast(doc,{spell:id('contract_read'),target:vow.result.contract});assert.deepEqual(read.result.changes,[]);assert.equal(read.result.legalJudgement,false);
@@ -195,7 +209,19 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
 test('灯祠祭礼：净场与镇窑灯礼作用于废窑瓦灯魅，净坛、灯前立誓与门印守戒按教派资格生效',async()=>{
  const base=learnedByRoute.祭;assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
  const night=await field(fresh(),KILN,1200);const t=await track(night,LAMP);
- const job=await takeT155(t.doc,'t155_bs_lamp',t.target);const purify=await cast(job.doc,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);await settleT155(purify.doc,job.quest);
+ const job=await takeT155(t.doc,'t155_bs_lamp',t.target);
+ // 06 §6.7 and §6.5: accepting a quest spends its registered time; local
+ // contact must still be valid when the rite completes. Seven minutes of
+ // acceptance plus three of casting reaches the original evidence's expiry.
+ const saved=structuredClone(job.doc);
+ // Search independent real dice events as elsewhere in this file: a failed
+ // check never reaches completion validation and cannot prove stale contact.
+ await assert.rejects(success(job.doc,'world_cast',{spell:id('purify'),permit:p}),/邪秽/);
+ assert.deepEqual(job.doc,saved);
+ // Reconfirm by actually approaching the still visible body, without extending
+ // the old proof or granting coordinates to an unobserved creature.
+ const close=await approachContact(job.doc,t.target);
+ const purify=await cast(close,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);await settleT155(purify.doc,job.quest);
  const settle=await cast(night,{spell:id('kiln_settle'),permit:p});assert.deepEqual(settle.result.species,[LAMP]);
  await assert.rejects(engine.reduce(await field(fresh(),MIST,1290),{tool:'world_cast',args:{spell:id('kiln_settle'),permit:p},eventId:'kiln-mist'}),/这类/);
  let doc=await attend(fresh(),MIAO,home.祭,600);

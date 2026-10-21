@@ -122,6 +122,9 @@ export function personTeaching(engine,state,id,entity,{stage=null}={}){
     if(entity.startsWith('recipe_')&&currentWorkstationRecipes(engine,state,id).some(r=>r.id===entity))return true;
     const c=personCareer(engine,state,id).value,base=baseOf(engine,state,id),catalog=engine.byId.get(entity);
     if(c.services.includes(entity))return true;
+    // Certification/skill instruction does not grant every recipe of that skill.
+    // Recipes need their own authored service or a currently usable workstation.
+    if(entity.startsWith('recipe_'))return false;
     const skill=catalog?.skill?engine.byId.get(catalog.skill):catalog,role=skill?.profession;
     return Boolean(role&&c.roles.includes(role)&&(engine.byId.get(role)?.skillTree??[]).includes(skill.id)&&(stage===null||stage<=(base?.teachingStages?.[role]??0)));
 }

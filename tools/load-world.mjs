@@ -13,6 +13,12 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const optional=async file=>{try{return await read(file);}catch(error){if(error.code==='ENOENT')return [];throw error;}};
     const [rules,npcs,locations,routes,items,professions,skills,spells] = await Promise.all([
         read('meta/rules.json'),read('people/baseline.json'),read('geo/locations.json'),read('geo/routes.json'),read('meta/items.json'),read('meta/professions.json'),read('meta/skills.json'),read('meta/spells.json')]);
+    // A building belongs to the same map hierarchy as its parent settlement.
+    // Derive missing mappings without rewriting reviewed location records.
+    for(const place of locations){
+        const hierarchy=locations.find(parent=>parent.id===place.parent)?.mapHierarchy;
+        if(place.id.startsWith('bld_')&&place.scope===place.parent&&place.mapHierarchy===undefined&&hierarchy?.length===4)place.mapHierarchy=structuredClone(hierarchy);
+    }
     const [recipes,monsters,bosses]=await Promise.all(['recipes','monsters','bosses'].map(name=>optional(`meta/${name}.json`)));
     const [autonomyCandidates,bargaining]=await Promise.all([optional('autonomy/candidates.json'),optional('rules/tables/bargaining.json')]);
     if(bargaining.length)rules.bargaining=bargaining;
