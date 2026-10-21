@@ -3,7 +3,7 @@
 import {isPhysicallyDead} from './holdings.mjs';
 import {reject} from './primitive-policy.mjs';
 
-export function moveLocally(d,engine,{entity,destination,mode},eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets}){
+export function moveLocally(d,engine,{entity,destination,mode},eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets}){
  const partition=d.get('state','npcs',entity)?'npcs':'creatures',body=entity==='player'?d.get('state','player'):d.get('state',partition,entity),feature=environmentFeatures(engine).find(row=>row.id===destination);
  const agent=destination==='player'||d.get('state','npcs',destination)||d.get('state','creatures',destination);
  if(!feature&&!agent)return null;
@@ -53,6 +53,7 @@ export function moveLocally(d,engine,{entity,destination,mode},eventId,{environm
  if(mount)storePosition(mount,d.get('state','creatures',mount,'activity')??null);
  if(entity==='player'){
   d.set(['state','records','local_player_position'],{category:'local_position',subject:entity,location,point,source:eventId,minute,anchor:destination,...height});
+  if(agent&&destination!=='player')recordLocalContact(d,engine,destination,eventId);
   return {entity,target:destination,metres,minutes,mudMinutes,position:point,arrived:true};
  }
  storePosition(entity,d.get('state',partition,entity,'activity')??null);
