@@ -7,7 +7,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {ledgerActive} from './ledger.mjs';
 import {registerEarnedClaim,registerLoss,recoverLoss,lossView,settleClaim} from './obligation-claims.mjs';
 import {dueObligation} from './obligation-runtime.mjs';
-import {obligationRow,obligationRows} from './obligation-state.mjs';
+import {obligationRow,obligationRows,institutionOriginal,institutionPhysicalReference} from './obligation-state.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {store,freight,bookStock} from './stock.mjs';
 // S1b: 托运期间货物记在 transport:<id>|<物品>|freight，交付时转给收货人（组织公库或行囊）。
@@ -327,6 +327,14 @@ export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}}
    }
   }});
 }
+export function historicalTransportDocument(d,e,{id,actor='player'}){
+ const s=d.get('state'),paper=institutionOriginal(e,d.document,id),doc=paper?.document,event=s.records?.[doc?.sourceEvent],cargo=institutionOriginal(e,d.document,doc?.describes),p=event?.payload;
+ const identifies=institutionPhysicalReference(d.document,p?.subject)===doc?.describes;
+ const location=actor==='player'?s.location:s.npcs?.[actor]?.location;
+ if(doc?.kind!=='transport_claim'||doc.owner!==actor||paper.owner!==actor||paper.location!==location||paper.durability<=0||paper.destroyedAt!==undefined||event?.verb!=='observed'||p.observer!==actor||cargo?.owner!==actor||cargo.location!==location||!identifies)throw Error('Transport inspection requires the customer original and actual cargo');
+ return {document:id,source:doc.sourceEvent,carrier:event.actor,customer:actor,subject:doc.describes,delayMinutes:p.terms.delayMinutes,cause:p.terms.cause,compensated:p.terms.compensated,
+  condition:cargo.maxDurability?100*cargo.durability/cargo.maxDurability:cargo.condition??null,compensation:null};
+}
 export function deliveryClaimPremises(d,e,{id,actor='player'}){
  const s=d.get('state'),row=obligationRow(s,id);
  if(row?.kind!=='delivery'||row.snapshotVersion!==1||row.creditor!==actor)throw Error('Delivery inspection requires its existing customer claim');
@@ -337,6 +345,10 @@ export function deliveryClaimPremises(d,e,{id,actor='player'}){
 }
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='inspect'&&institutionOriginal(e,d.document,asset)?.document?.kind==='transport_claim'){
+  if(args.actor!==undefined&&args.actor!=='player')throw Error('Transport inspection requires its player customer');
+  return historicalTransportDocument(d,e,{id:asset});
+ }
  if(task==='inspect'&&obligationRow(d.get('state'),asset)?.snapshotVersion===1){
   if(args.actor!==undefined&&args.actor!=='player')throw Error('Delivery inspection requires its player customer');
   return deliveryClaimPremises(d,e,{id:asset,actor:'player'});

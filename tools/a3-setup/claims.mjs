@@ -6,6 +6,7 @@ import {changeItems} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
 import {restoreObligationSnapshot} from '../../server-plugin/obligation-runtime.mjs';
 import {restoreCaseSnapshot,restoreDocumentSnapshot} from '../../server-plugin/law.mjs';
+import {restoreInstitutionDocument} from '../../server-plugin/governance.mjs';
 
 function loadAccounts(ctx,setup){
  const seen=new Set();
@@ -40,8 +41,12 @@ function loadObligations(ctx,setup){rows(ctx,setup,'obligations',(row,item)=>{
  if(ctx.native(item,d=>restoreObligationSnapshot(d,ctx.engine,{...row,debtor:ctx.ref(row.debtor),creditor:ctx.ref(row.creditor),sourceEvent:ctx.ref(row.sourceEvent),terms})))ctx.bindings[row.id]=row.id;
 });}
 function loadDocuments(ctx,setup){rows(ctx,setup,'documents',(row,item)=>{
- requireShape(keys(row,['id','owner','sourceEvent','obligation','case','links','content','reviewed','valid','namedHolder','describes'])&&text(row.id)&&known(ctx,ctx.ref(row.owner))&&(row.links===undefined||Array.isArray(row.links)&&row.links.every(text)),'invalid document');
+ requireShape(keys(row,['id','owner','sourceEvent','obligation','case','links','content','reviewed','valid','namedHolder','describes','public'])&&text(row.id)&&known(ctx,ctx.ref(row.owner))&&(row.links===undefined||Array.isArray(row.links)&&row.links.every(text)),'invalid document');
  eventSource(ctx,row.sourceEvent);for(const id of row.links??[])eventSource(ctx,id);
+ if(typeof row.content==='string'){
+  requireShape(keys(row,['id','owner','sourceEvent','content','valid','public']),'institutional text cannot override structured claim evidence');
+  ctx.native(item,d=>restoreInstitutionDocument(d,ctx.engine,{...row,id:ctx.ref(row.id),owner:ctx.ref(row.owner),sourceEvent:ctx.ref(row.sourceEvent)}));return;
+ }
  ctx.native(item,d=>restoreDocumentSnapshot(d,ctx.engine,{...row,id:ctx.ref(row.id),owner:ctx.ref(row.owner),sourceEvent:ctx.ref(row.sourceEvent),obligation:row.obligation&&ctx.ref(row.obligation),case:row.case&&ctx.ref(row.case),links:(row.links??[]).map(ctx.ref),namedHolder:row.namedHolder&&ctx.ref(row.namedHolder),describes:row.describes&&ctx.ref(row.describes)}));
 });}
 registerSetupLoader({fields:['accounts'],order:20,load:loadAccounts});

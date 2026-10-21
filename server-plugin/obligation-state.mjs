@@ -1,5 +1,6 @@
 import {registerObligationProtocol} from './obligation-protocol.mjs';
-// Shared L1 obligation arithmetic. Queries do not mutate a document or inspect
+import {aliveHoldings,entityRow} from './holdings.mjs';
+// Shared L1 obligation arithmetic. Arithmetic queries do not mutate or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
 import {accrualFraction,addAccrual,fraction} from './obligation-calendar.mjs';
 // Installed by the engine composition root. Pure consumer queries must not
@@ -8,6 +9,20 @@ let civilGrace=null;
 export const registerObligationCivilGrace=resolve=>{civilGrace=resolve;};
 
 export const DAY=1440;
+// Original instruments can be native generic items or catalog units. Both
+// readers use current title/location; a paper never becomes a second claim.
+export function institutionPhysicalReference(document,reference){
+    if(document.state.itemInstances?.[reference])return reference;
+    const matches=Object.entries(document.holdings?.entities??{}).filter(([,row])=>row.kind==='item'&&row.facts?.aliases?.includes(reference));
+    return matches.length===1?matches[0][0]:reference;
+}
+export function institutionOriginal(engine,document,id){
+    const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)},entity=entityRow(d,id),unit=document.state.itemInstances?.[id];
+    if(!unit&&entity?.kind!=='item')return null;
+    const titles=aliveHoldings(d,{kind:'owns',subject:id}),owner=titles.length===1?titles[0].holder:titles.length?null:unit?.owner;
+    const placed=document.holdings?.locations?.[id],location=placed?.mode==='carried'?(placed.at==='player'?document.state.location:document.state.npcs?.[placed.at]?.location):placed?.at??unit?.location;
+    return {...entity?.facts,...unit,owner,location,...(entity?.goneAt!==undefined?{destroyedAt:entity.goneAt}:{})};
+}
 const ended=new Set(['settled','void','cancelled','bad_debt','closed','completed','terminated','expired','已还清','已取消','坏账','已完成','已终止','已到期','取消']);
 export const obligationClosed=row=>ended.has(row.status);
 
