@@ -29,7 +29,7 @@ import {checkActor} from './primitives-checks.mjs';
 import {learnNpc,studyBook} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
-import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects} from './mark-actions.mjs';
+import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects,markMaterialCosts} from './mark-actions.mjs';
 import {reactToMark} from './mark-reactions.mjs';
 import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
@@ -686,7 +686,8 @@ export const primitiveRuntime={
     if(limits.vital)for(const kind of ['harm','heal'])limits.vital[kind]=Math.max(0,...prepared.sources.filter((s,i)=>effects[i].op==='vital'&&(effects[i].delta<0?'harm':'heal')===kind).map(s=>s.bounds.delta));
     quote={duration:prepared.cost.time,activity:'light'};start=d.get('state','minute');
     beginBodyActivity(d,engine,actor,quote.activity);
-    resources=[];resourceSources=[];let mp=0,stamina=0;
+    resources=effects.some(e=>e.op==='create'&&e.kind==='mark')?markMaterialCosts(engine,d.document,effects,{actor}):[];
+    resourceSources=resources.map(()=>({kind:'open',id:'open:proposal'}));let mp=0,stamina=0;
     // A shared source is paid once, even when it supplies several effects.
     for(const source of new Map(prepared.sources.map(s=>[s.id,s])).values()){
      const req=source.requirements??{};

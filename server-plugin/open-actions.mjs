@@ -110,7 +110,7 @@ export function prepareOpenAction(engine,document,proposal,native){
  if(!proposal||typeof proposal.intent!=='string'||!proposal.intent.trim())reject('E-OPEN-INTENT','请说明你想做什么');
  for(const effect of proposal.effects??[]){
   if(effect.op==='fact.set')writableFactField(effect.field);
-  if(effect.tags!==undefined&&(!Array.isArray(effect.tags)||effect.tags.length>0)&&!(effect.op==='create'&&effect.kind==='mark'))reject('E-PRIMITIVE-SOURCE','原语不能自报 tags');
+  if(effect.tags!==undefined&&(!Array.isArray(effect.tags)||effect.tags.length>0)&&!(effect.op==='create'&&effect.kind==='mark')&&!(effect.op==='create'&&effect.kind==='project'&&proposal.means?.manner==='research'&&Array.isArray(effect.tags)&&effect.tags.length===1&&effect.tags[0]==='research'))reject('E-PRIMITIVE-SOURCE','原语不能自报 tags');
  }
  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
  native??=createOpenActionContext(engine,document,proposal);
@@ -144,6 +144,7 @@ export function prepareOpenAction(engine,document,proposal,native){
  const routing=routeAction(proposal,registry,native.routing);
  if(routing.needsSlots)return {...routing,status:'needs_slots',effects:[],cost:null};
  if(routing.routed)return {...routing,status:'routed',slots:routing.candidates[0].slots,effects:[],cost:null};
+ for(const effect of proposal.effects??[])if(effect.tags!==undefined&&(!Array.isArray(effect.tags)||effect.tags.length>0)&&!(effect.op==='create'&&effect.kind==='mark'))reject('E-PRIMITIVE-SOURCE','原语不能自报 tags');
  // 06 §6.5: an identified person does not determine what to do to them.
  // Scene-only registered actions can still route above. An unresolved goal
  // asks the player and creates no request or NPC commitment.

@@ -75,19 +75,26 @@ const fits=(action,participants,kindOf)=>Object.entries(action.participants??{})
 });
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
- const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
+ const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
  const participants={...(target!==undefined?{target}:{}),...proposal.participants,actor};
  // No source, check, effects, consent or cost from a proposal can replace the definition.
  // The proposal gateway describes an entry point, not a concrete neighbour;
  // routing back into it would recurse and distort the BM25 candidate corpus.
- const requestKinds=proposal.effects?.filter(e=>e.op==='emit').map(e=>e.payload?.kind).filter(Boolean)??[];
+ const requestKinds=proposal.effects?.filter(e=>e.op==='emit').map(e=>{
+  const kind=e.payload?.kind;
+  if(kind!=='request')return kind;
+  const subject=e.payload?.subject;
+  // A generic request is not necessarily a factual question: negotiating
+  // credit, teaching or a service must retain its own request protocol.
+  return ({greeting:'greet',public_key:'public_key'})[subject]??(/^guide(?:_|$)/.test(subject??'')?'guide':/^deliver(?:_|$)/.test(subject??'')?'delivery':/(?:_quote|_terms|_availability|_conditions|_detail)$/.test(subject??'')||/[?？]/.test(proposal.intent??'')?'ask':'request');
+ }).filter(Boolean)??[];
  const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.canProject?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
  const texts=textScores(actions.map(action=>({...action,synonyms:[...action.synonyms??[],...context.labelsFor?.(action,proposal)??[]]})),proposal.intent??''),signature=effectSignature(proposal.effects??[],context);
  const candidates=actions.map((action,index)=>{
   const slots=context.slotsFor(action,proposal)??{},required=new Set(context.requiredSlots?.(action,slots)??[]),missing=(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
   // A selected read projection has an exactly empty effect footprint. Generic
   // empty proposals still have zero Jaccard and cannot select a write action.
-  const signatureScore=context.canProject?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
+  const signatureScore=context.canProject?.(action,proposal)||context.emptyRequest?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
  const best=candidates[0],matched=best&&best.score>=.7;
@@ -293,6 +300,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     }
    }
    if(action.id==='core:dialogue.guide_request'&&slot.name==='content')value??=proposal.intent;
+   if(action.call?.tool==='world_research'&&proposal.means?.manner==='research'){
+    const project=effects.find(e=>e.op==='create'&&e.kind==='project');
+    if(slot.name==='name')value??=project?.facts?.name??project?.facts?.topic;
+    if(slot.name==='concept')value??=project?.facts?.goal??proposal.intent;
+    if(slot.name==='skills'&&proposal.means.skill)value??=[proposal.means.skill];
+   }
+   if(action.call?.tool==='world_move'&&slot.name==='destination')value??=effects.find(e=>e.op==='move'&&e.entity===actor)?.to;
    if(action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'){
     const rites=hostedRites(engine,state,target??location);
     if(slot.name==='org')value??=templeById(engine,target??location)?.id??(rites.length===1?rites[0].location:undefined);
@@ -326,7 +340,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      }
     }
     if(slot.name==='content'&&e.op==='emit'){value=e.payload?.content??e.payload?.version??e.payload?.text??e.payload?.terms?.topic; if(value!==undefined)break;}
-    if(slot.name==='source'&&e.op==='emit'){value=action.id==='core:dialogue.tell'?knownWorldEventReference(state,actor,{reference:e.payload?.source,content:e.payload?.version??e.payload?.content}):undefined;value??=e.payload?.source==='self'?actor:e.payload?.source;if(value!==undefined)break;}
+    if(slot.name==='source'&&e.op==='emit'){
+     value=action.id==='core:dialogue.tell'?knownWorldEventReference(state,actor,{reference:e.payload?.source,content:e.payload?.version??e.payload?.content}):undefined;
+     // A request's self attribution is not an item offered as a gift.
+     if(slot.entity!=='item')value??=e.payload?.source==='self'?actor:e.payload?.source;
+     if(value!==undefined)break;
+    }
     if(slot.name==='topic'&&e.op==='emit'){value=e.payload?.terms?.topic;if(value!==undefined)break;}
     if(e.op==='emit'&&e.payload?.terms?.[slot.name]!==undefined){value=e.payload.terms[slot.name];break;}
     if(e.op==='emit'&&e.payload?.kind==='haggle'&&['source','content'].includes(slot.name)){
@@ -359,6 +378,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(!Number.isSafeInteger(sunrise))continue;
     value={dayOffset,hour:Math.floor(sunrise/60),minute:sunrise%60};
    }
+    if(slot.name==='until'&&typeof value==='string'){
+     const clock=value.match(/^(?:(次日|明天|今日|今天))?(\d{1,2}):(\d{2})$/);
+     if(clock)value={dayOffset:['次日','明天'].includes(clock[1])?1:0,hour:Number(clock[2]),minute:Number(clock[3])};
+    }
    if(slot.entity){
     if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='buyer'){
      const recipient=resolveParty(value);if(recipient.value!==null)slots[slot.name]=recipient.value;continue;
@@ -396,6 +419,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    'core:trade.repay':['还清','还给'],
    'core:trade.redeem':['赎','取回来','本息付清'],
    'core:trade.remit':['寄','汇票','汇款'],
+    'core:time':['等待','散步','休息一天'],
    'core:promise.cancel':['免掉','免除','不让他再还'],
    'core:environment.douse_fire':['灭火','泼水'],
    'core:settlement.faith_rite':['仪式','参与','供品']
@@ -498,7 +522,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }
   return [];
  };
- const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0;
+ // Explicit temporal/casting arguments identify a native command even when
+ // no success effects were claimed. Its executor still owns all preconditions.
+ const emptyRequest=(action,proposal)=>proposal.effects?.length===0&&(
+  action.id==='core:time'&&Number.isSafeInteger(proposal.means?.minutes)&&['wait','waiting','wait_without_quests'].includes(proposal.means.manner)||
+  action.call?.tool==='world_cast'&&catalog(proposal.means?.spell,'spell')&&proposal.target!==undefined);
+ const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0&&!emptyRequest({id:'core:time'},proposal)&&!emptyRequest({call:{tool:'world_cast'}},proposal);
  const requiredSlots=(action,slots)=>{
   const call=action.call;
   if(call?.tool==='world_profession'&&call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden')return ['teacher'];
@@ -509,9 +538,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss')return ['summon'];
   return [];
  };
- return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+ return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,emptyRequest,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+  if(action.id==='open:leave_mark'){
+   const mark=proposal?.effects?.find(e=>e.op==='create'&&e.kind==='mark'),forms=action.slots?.find(s=>s.name==='form')?.options;
+   if(mark&&mark.facts?.form&&!forms?.includes(mark.facts.form))return false;
+  }
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
-  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>e.op==='emit'&&e.verb==='request'&&e.payload?.kind==='guide'))return false;
+  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>e.op==='emit'&&e.verb==='request'&&(e.payload?.kind==='guide'||e.payload?.kind==='request'&&/^guide(?:_|$)/.test(e.payload?.subject??''))))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
   if(learning&&action.call?.tool==='world_learn'&&learning.learningSource==='practice')return false;
   if(learning&&action.call?.tool==='world_practice'&&learning.learningSource!=='practice')return false;
@@ -575,7 +608,10 @@ export function resolveProposalEntities(proposal,context,{accounts=false,deferCo
  for(const [i,effect] of (resolved.effects??[]).entries()){
   if(effect.op==='create'&&effect.kind==='mark')for(const field of ['object','support'])if(effect.facts?.[field]!==undefined)effect.facts[field]=resolve(effect.facts[field],`effects.${i}.facts.${field}`);
   if(effect.op==='transfer'&&effect.resource!==undefined)effect.resource=material(effect.resource,`effects.${i}.resource`);
-  if(effect.op==='create')for(const [j,row] of (Array.isArray(effect.materials)?effect.materials:[]).entries())if(row&&typeof row==='object')for(const field of ['resource','item'])if(row[field]!==undefined)row[field]=material(row[field],`effects.${i}.materials.${j}.${field}`);
+  if(effect.op==='create')for(const [j,row] of (Array.isArray(effect.materials)?effect.materials:[]).entries())if(row&&typeof row==='object'){
+   for(const field of ['resource','item'])if(row[field]!==undefined)row[field]=material(row[field],`effects.${i}.materials.${j}.${field}`);
+   if(row.entity!==undefined)row.entity=resolve(row.entity,`effects.${i}.materials.${j}.entity`);
+  }
  }
  for(const effect of resolved.effects??[])if(accounts&&!ambiguities.length&&!rejections.length&&effect.op==='transfer'&&context.transferAccount){
   effect.from=context.transferAccount(effect.from,effect.resource);

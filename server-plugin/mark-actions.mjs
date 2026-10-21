@@ -17,6 +17,36 @@ function rulesFor(engine){
 }
 function location(document,actor){return actor==='player'?document.state.location:document.state.npcs?.[actor]?.location;}
 
+function materialResource(engine,document,material,actor){
+ if(!material||Object.keys(material).some(k=>!['resource','item','entity','qty'].includes(k)))reject('E-MARK-MATERIAL','材料无效');
+ const unit=material.entity&&document.state.itemInstances?.[material.entity];
+ if(material.entity&&(!unit?.physicalOnly||unit.item!==material.entity||unit.owner!==actor||unit.status!=='持有'))reject('E-MARK-MATERIAL','所用单件须是本人实际持有的原物件');
+ const refs=[material.resource,material.item,unit?.item].filter(v=>v!==undefined);
+ if(!refs.length||new Set(refs).size!==1||!engine.world.items.some(row=>row.id===refs[0])||!Number.isSafeInteger(material.qty)||material.qty<1)reject('E-MARK-MATERIAL','须使用真实物品与正整数数量');
+ return refs[0];
+}
+
+// Declarations become ordinary own-stock consumption in the same transaction.
+// Explicit transfers already offered by the caller are counted only once.
+export function markMaterialCosts(engine,document,effects,{actor='player'}={}){
+ const needed=new Map(),offered=new Map(),{rules}=rulesFor(engine);
+ for(const effect of effects){
+  if(effect.op==='transfer'&&effect.from?.startsWith(`${actor}|`)&&effect.to?.startsWith('sink:consume|')){
+   const resource=effect.from.split('|')[1];offered.set(resource,(offered.get(resource)??0)+effect.qty);
+  }
+  if(effect.op!=='create'||effect.kind!=='mark')continue;
+  const materials=effect.materials??[];
+  if(!Array.isArray(materials)||materials.length>rules.maximumMaterials)reject('E-MARK-MATERIAL','材料列表无效');
+  for(const material of materials){
+   const resource=materialResource(engine,document,material,actor);
+   // Existing resource/item declarations attest an explicit transfer. Only a
+   // newly supported single physical entity needs the own-stock cost adapter.
+   if(material.entity!==undefined)needed.set(resource,(needed.get(resource)??0)+material.qty);
+  }
+ }
+ return [...needed].flatMap(([resource,qty])=>qty>(offered.get(resource)??0)?[{op:'transfer',from:accountKey(actor,resource,'inventory'),to:accountKey('sink:consume',resource,'action'),qty:qty-(offered.get(resource)??0)}]:[]);
+}
+
 // Material declarations refer to transfers in this transaction; they cannot
 // provide a second way to consume or manufacture inventory.
 export function prepareMarkEffects(engine,document,effects,{actor='player'}={}){
@@ -37,9 +67,8 @@ export function prepareMarkEffects(engine,document,effects,{actor='player'}={}){
   const materials=effect.materials??[],{rules}=rulesFor(engine);
   if(!Array.isArray(materials)||materials.length>rules.maximumMaterials)reject('E-MARK-MATERIAL','材料列表无效');
   for(const material of materials){
-   if(!material||Object.keys(material).some(k=>!['resource','item','qty'].includes(k))||material.resource&&material.item&&material.resource!==material.item)reject('E-MARK-MATERIAL','材料无效');
-   const resource=material.resource??material.item,qty=material.qty;
-   if(!engine.world.items.some(row=>row.id===resource)||!Number.isSafeInteger(qty)||qty<1||(available.get(resource)??0)<qty)reject('E-MARK-MATERIAL','所用材料须由同一次行动实际消耗');
+    const resource=materialResource(engine,document,material,actor),qty=material.qty;
+    if((available.get(resource)??0)<qty)reject('E-MARK-MATERIAL','所用材料须由同一次行动实际消耗');
    available.set(resource,available.get(resource)-qty);
   }
   return {...effect,materials:[],facts:Object.fromEntries(Object.entries(facts).filter(([key])=>!['location','author','carrier'].includes(key)))};

@@ -4,6 +4,7 @@
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {bodyRule,readBodyState,writeBodyNeed} from './primitives-body.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply} from './rx.mjs';
+import {aliveHoldings} from './holdings.mjs';
 
 export function beginSleep(d,engine,actor='player'){
  const span=beginActionActivity(d,engine,'rest',actor),s=d.get('state');
@@ -13,6 +14,12 @@ export function beginSleep(d,engine,actor='player'){
  // intervals, including legitimate credit bookings, rather than copying a
  // derived "has lodging" flag into the body.
  const bookings=lodgingKind?Object.values(s.records??{}).filter(r=>r.category==='contract'&&r.status==='有效'&&r.room===location&&r.parties?.includes(actor)&&Number.isSafeInteger(r.starts)&&Number.isSafeInteger(r.expires)).map(r=>({start:r.starts,end:r.expires})):[];
+ // Native lodges holdings may have no legacy contract projection (06 §6.3).
+ // Only their actual bounded term covers sleep; presence is not a booking.
+ if(lodgingKind)for(const row of aliveHoldings(d,{kind:'lodges',holder:actor,subject:location})){
+  const {from,until}=row.terms??{};
+  if(Number.isSafeInteger(from)&&Number.isSafeInteger(until)&&until>from)bookings.push({start:from,end:until});
+ }
  return {...span,location,lodgingKind,bookings};
 }
 export function finishSleep(d,engine,span){
