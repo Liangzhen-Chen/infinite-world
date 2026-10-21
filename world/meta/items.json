@@ -3,5 +3,85 @@
   {"id": "item_sickle", "name": "铁镰", "basePrice": 10, "weight": 0.5, "aliases": [], "quality": "木", "durability": 100, "scope": null, "origin": "loc_hw", "use": "收割成熟谷物的手工农具。", "description": "收割成熟谷物的手工农具。"},
   {"id": "item_fishing_bait", "name": "钓饵", "basePrice": 1, "weight": 0.01, "aliases": [], "quality": "木", "durability": 100, "scope": null, "origin": "loc_hw", "use": "按份计的谷粒钓饵，每次抛竿消耗一份。", "description": "按份计的谷粒钓饵，每次抛竿消耗一份。"},
   {"id": "item_external_medicine", "name": "外敷药", "basePrice": 2, "weight": 0.03, "aliases": [], "quality": "木", "durability": 100, "scope": null, "origin": "loc_hw", "use": "医者用一份药草碾配的外敷药，每份为一天用量。", "description": "医者用一份药草碾配的外敷药，每份为一天用量。"},
-  {"id": "item_lantern", "name": "纸花灯", "basePrice": 6, "weight": 0.15, "aliases": [], "quality": "木", "durability": 100, "scope": null, "origin": "loc_hw", "use": "纸面竹骨的小花灯，可由主办者从实际库存发作灯谜奖品。", "description": "纸面竹骨的小花灯，可由主办者从实际库存发作灯谜奖品。"}
+  {"id": "item_lantern", "name": "纸花灯", "basePrice": 6, "weight": 0.15, "aliases": [], "quality": "木", "durability": 100, "scope": null, "origin": "loc_hw", "use": "纸面竹骨的小花灯，可由主办者从实际库存发作灯谜奖品。", "description": "纸面竹骨的小花灯，可由主办者从实际库存发作灯谜奖品。"},
+  {
+    "id": "item_wheat_seed",
+    "name": "麦种",
+    "aliases": [
+      "小麦种子"
+    ],
+    "quality": "木",
+    "weight": 0.5,
+    "durability": 100,
+    "basePrice": 5,
+    "scope": null,
+    "origin": "loc_bs",
+    "use": "供播种的小麦种子，不是已经煮熟的食物。",
+    "description": "供播种的小麦种子，不是已经煮熟的食物。",
+    "tags": [
+      "seed",
+      "wheat"
+    ],
+    "unit": "斤"
+  },
+  {
+    "id": "item_earthworm_bait",
+    "name": "蚯蚓饵",
+    "aliases": [
+      "蚯蚓鱼饵"
+    ],
+    "quality": "木",
+    "weight": 0.01,
+    "durability": 100,
+    "basePrice": 1,
+    "scope": null,
+    "origin": "loc_hw",
+    "use": "以蚯蚓作钓饵，按条计数；与谷粒钓饵分开存放。",
+    "description": "以蚯蚓作钓饵，按条计数；与谷粒钓饵分开存放。",
+    "tags": [
+      "bait",
+      "earthworm"
+    ],
+    "unit": "条"
+  },
+  {
+    "id": "item_bamboo_fishing_rod",
+    "name": "竹鱼竿",
+    "aliases": [
+      "竹竿",
+      "竹钓竿"
+    ],
+    "quality": "木",
+    "weight": 1,
+    "durability": 100,
+    "basePrice": 4,
+    "scope": null,
+    "origin": "bld_hw_mill",
+    "use": "竹制钓竿；钓饵须另备。",
+    "description": "竹制钓竿；钓饵须另备。",
+    "tags": [
+      "tool",
+      "fishing_rod",
+      "bamboo"
+    ]
+  },
+  {
+    "id": "item_herb_hoe",
+    "name": "药锄",
+    "aliases": [
+      "采药锄"
+    ],
+    "quality": "木",
+    "weight": 1.5,
+    "durability": 100,
+    "basePrice": 12,
+    "scope": null,
+    "origin": "loc_hw",
+    "use": "用于采挖药草的手工药锄。",
+    "description": "用于采挖药草的手工药锄。",
+    "tags": [
+      "tool",
+      "herb_hoe"
+    ]
+  }
 ]
