@@ -24,6 +24,7 @@ import {facilityView} from '../server-plugin/facility-state.mjs';
 import {heldUnit} from '../server-plugin/items.mjs';
 import {runSetupLoaders,setupLoaderFields} from './a3-setup/index.mjs';
 import './a3-setup/loaders.mjs';
+import {executeSessionFixture} from './a3-session-fixture.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const setupWriter='a3-score-setup';
@@ -617,6 +618,7 @@ function companionEffect(effect,receipt){
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
+ const session=await executeSessionFixture(engine,initial,row,{applyIntentSetup,executeIntent});if(session)return session;
  let {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
  const before=document;
  const signatureContext=engine.byId?createRoutingContext(engine,document):null;
