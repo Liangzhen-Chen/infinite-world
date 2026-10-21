@@ -413,7 +413,8 @@ export class WorldEngine {
     primitiveDraft(document){return new Draft(document,this);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
     primitiveLegacyRestriction(document,tool,args){
-        try{enforceLegalRestriction(new Draft(clone(document),this),tool,args,this);return null;}catch(error){return error.message;}
+        // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
+        try{enforceLegalRestriction(new Draft(document,this),tool,args,this);return null;}catch(error){return error.message;}
     }
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}

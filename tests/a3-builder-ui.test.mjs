@@ -37,7 +37,9 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();});
   const modelMenu=await page.evaluate(async()=>JSON.parse(await window.fixtureTools.get('world_actions').action({query:'core:craft'})));
   assert.ok(modelMenu.actions.some(a=>a.slots.some(s=>s.name==='helpers'&&s.multiple===true)));
-  await page.locator('.fields-menu-toggle').click();await page.locator('#fields-toolbar [data-panel="actions"]').click();
+  // The panel toggle exists only at phone width (style.css); desktop shows the toolbar directly.
+  if(await page.locator('.fields-menu-toggle').isVisible())await page.locator('.fields-menu-toggle').click();
+  await page.locator('#fields-toolbar [data-panel="actions"]').click();
   const dialog=page.locator('#fields-dialog');await page.locator('.fields-actions-scene').waitFor();
   await dialog.getByRole('button',{name:/^林穗/}).click();
   const builder=dialog.locator('.fields-action-builder');

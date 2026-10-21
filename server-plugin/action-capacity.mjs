@@ -2,7 +2,10 @@ import {aliveHoldings} from './holdings.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 
-export const actionReader=document=>({get:(...path)=>path.reduce((v,k)=>v?.[k],document)});
+// One reader per document: the holdings index is cached per reader and
+// invalidated by holdings.seq, so a fresh reader per call rebuilt it every time.
+const readers=new WeakMap();
+export const actionReader=document=>{if(!document||typeof document!=='object')return {get:(...path)=>path.reduce((v,k)=>v?.[k],document)};let r=readers.get(document);if(!r){r={get:(...path)=>path.reduce((v,k)=>v?.[k],document)};readers.set(document,r);}return r;};
 export function actionEntity({document,engine},id){
  const s=document.state??{},catalog=engine?.byId?.get(id);
  return id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id]??document.holdings?.entities?.[id]?.facts??catalog??null;
