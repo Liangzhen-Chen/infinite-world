@@ -37,7 +37,8 @@ import {beginSleep,finishSleep} from './body-needs.mjs';
 import {openUsageEntry} from './action-limits.mjs';
 import {resolvePrimitiveTransfer,primitiveStockProjection} from './primitive-accounts.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
-import {holdingSet} from './holdings.mjs';
+import {holdingSet,declareHoldingWriter} from './holdings.mjs';
+declareHoldingWriter('primitives-runtime',{kinds:['owns','contains']});
 import {adaptLegacyExecution,legacyReceiptKey,legacyIdentity} from './legacy-primitives.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
@@ -126,7 +127,7 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
   if(projection.group)ensureGroupAccount(d,engine,projection.group);
   const value=(d.get(...projection.path)??0)+delta;
   if(!Number.isSafeInteger(value)||value<0)reject('E-TRANSFER-BALANCE','库存不足或溢出');
-  if(projection.path[1]==='records')holdingSet(d,engine,projection.path,value,'primitives',effect.eventId);
+  if(projection.path[1]==='records')holdingSet(d,engine,projection.path,value,'primitives-runtime',effect.eventId);
   else d.set(projection.path,value);
   return {instances:[]};
  };
@@ -136,7 +137,7 @@ export function mirrorPrimitiveTransfer(d,engine,effect){
   if(moved.instances.length){
    const path=[...engine.bagPath(to.owner),destination.item,'instances'];
    d.set(path,[...d.get(...path)??[],...moved.instances]);
-   for(const id of moved.instances)d.set(['state','itemInstances',id,'owner'],to.owner);
+   for(const id of moved.instances)holdingSet(d,engine,['state','itemInstances',id,'owner'],to.owner,'primitives-runtime',effect.eventId);
   }
  }
 }
@@ -605,14 +606,14 @@ export const primitiveRuntime={
     if(preview)return applied;
     if(applied.result.receipt.status==='rejected')return applied;
     const d=engine.primitiveDraft(applyPatches(document,applied.patches));
-    d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+    holdingSet(d,engine,['state','records',key],{category:'open_proposal',fingerprint,result:applied.result},'primitives-runtime',eventId);
     return {...applied,patches:[...applied.patches,...d.patches]};
    }
    if(prepared.status==='open'&&prepared.effects.length){
     const applied=engine.primitiveOpenAction(document,input,prepared,{preview});
     if(preview)return applied;
     const d=engine.primitiveDraft(applyPatches(document,applied.patches));
-    d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+    holdingSet(d,engine,['state','records',key],{category:'open_proposal',fingerprint,result:applied.result},'primitives-runtime',eventId);
     return {...applied,patches:[...applied.patches,...d.patches]};
    }
    if(prepared.status!=='routed'){
@@ -649,8 +650,8 @@ export const primitiveRuntime={
    applied.result.receipt.openUsage=openUsageEntry(prepared,applied.result.receipt,applyPatches(document,applied.patches).state.minute);
    const d=engine.primitiveDraft(applyPatches(document,applied.patches));
    const primitive=d.get('state','records',`primitive:${eventId}`);
-   if(primitive)d.set(['state','records',`primitive:${eventId}`],{...primitive,receipt:applied.result.receipt});
-  d.set(['state','records',key],{category:'open_proposal',fingerprint,result:applied.result});
+   if(primitive)holdingSet(d,engine,['state','records',`primitive:${eventId}`],{...primitive,receipt:applied.result.receipt},'primitives-runtime',eventId);
+  holdingSet(d,engine,['state','records',key],{category:'open_proposal',fingerprint,result:applied.result},'primitives-runtime',eventId);
   return {...applied,patches:[...applied.patches,...d.patches]};
  },
  executeOpen(engine,document,input,prepared,{preview=false}={}){
@@ -833,14 +834,14 @@ export const primitiveRuntime={
    const result=this.execute(engine,d.document,{eventId:`scheduled:${digest({schedule:context.eventId})}`,args:{action:effect.rule??effect.action,slots:effect.slots}},{actor:effect.actor,sourceKind:effect.op==='primitive.rule'?'rule':'catalog'});
    for(const patch of result.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
    if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
-   d.set(['state','records',key],{category:'primitive_schedule_result',status:'committed',receipt:result.receipt});
+   holdingSet(d,engine,['state','records',key],{category:'primitive_schedule_result',status:'committed',receipt:result.receipt},'primitives-runtime',context.eventId);
    return result.receipt;
   }catch(error){
    // Domain rejection is a terminal result, not an immortal due item that
    // prevents the whole world advancing. Unexpected engine errors still abort.
    if(!error.code?.startsWith('E-'))throw error;
    const result={category:'primitive_schedule_result',status:'rejected',code:error.code,reason:error.message};
-   d.set(['state','records',key],result);return result;
+   holdingSet(d,engine,['state','records',key],result,'primitives-runtime',context.eventId);return result;
   }
  },
  canAct(engine,document,actor,family,effect){return canAct(primitiveContext(engine,document),actor,family,effect);}

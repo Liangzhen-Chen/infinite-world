@@ -19,12 +19,9 @@ function willing(engine,state,npc,opponent,rule){
     const score=(brave?25:0)-(peaceful?20:0)-regard/2-(rule==='death'?mind*10+20:0);
     return {accept:score>=0,score,regard,intelligence:mind,temperament:brave?'尚武':peaceful?'慎战':'平常'};
 }
-export function activeDuel(d,engine,target,challenger='player'){
-    const now=d.get('state','minute'),location=d.get('state','location');
-    return Object.values(d.get('state','records')??{}).find(r=>r.category==='duel'&&r.status==='已接受'&&[r.challenger,r.target].includes(challenger)&&[r.challenger,r.target].includes(target)&&challenger!==target&&r.location===location&&r.expires>now
-        &&[r.challenger,r.target].every(id=>awake(id==='player'?d.get('state','player'):d.get('state','npcs',id),engine,d,id)&&(id==='player'||d.get('state','npcs',id,'location')===location))
-        &&awake(d.get('state','npcs',r.witness),engine,d,r.witness)&&d.get('state','npcs',r.witness,'location')===location);
-}
+import {activeDuel} from './combat-state.mjs';
+export {activeDuel} from './combat-state.mjs';
+
 export function duelAction(d,args,id){
     if(args.operation==='duel_challenge'){
         const challenger=present(d,this,args.speaker??'player'),target=present(d,this,args.member);

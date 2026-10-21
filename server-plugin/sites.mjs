@@ -1,3 +1,4 @@
+import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {digest} from './storage.mjs';
@@ -223,7 +224,9 @@ export function assertSiteHarvest(d,engine,place,args){
  }
  if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw Error('采伐需所有者的采集许可');
  assertOccupants(d,engine,place,authorizations);
- if(!inside(d,place))throw Error('须先进入据点再采伐');
+ // Woodcut already operates at the actor's physical location. An outdoor
+ // forest needs no separate site-menu visit; property, occupants and every
+ // entrance mechanism still gate harvesting here and after elapsed time.
  unblocked(ledger(d,place),place.site.entryMechanisms??[]);
 }
 function watchers(d,engine,place){
@@ -278,6 +281,7 @@ export function siteView(engine,document){
 }
 
 export function siteAction(d,args,eventId){
+ initialKnowledgeAction(d,this,'site',args);
     const receiptKey=`gather-session:${eventId}`,identity=digest(args),prior=args.operation==='gather'?d.get('state','records',receiptKey):null;
     if(prior){if(prior.identity!==identity)throw Error('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
     const place=this.byId.get(d.get('state','location'));
@@ -374,7 +378,7 @@ export function siteAction(d,args,eventId){
         this.itemDelta(d,'player',target.item,quantity,STOCK_BOOKED);
         const training=timed?learnFromWork(d,this,target.gather.skill,minutes,`gather:${place.id}:${target.id}`,eventId):null;
         const result={target:target.id,item:target.item,quantity,remaining:row.remaining[target.id],owner:'player',...(timed?{training,cost:finishActionActivity(d,this,span),actionScope:{kind:'gathering',clockManaged:true,minutes}}:{})};
-        if(timed)d.set(['state','records',receiptKey],{category:'gather_session',identity,result});
+        if(timed)holdingSet(d,this,['state','records',receiptKey],{category:'gather_session',identity,result},'sites',eventId);
         return result;
     }
     if(discovered(d.document,place.id,target.id))return{target:target.id,duplicate:true,text:target.text};

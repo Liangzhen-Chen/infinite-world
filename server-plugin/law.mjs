@@ -1,3 +1,4 @@
+import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
@@ -596,6 +597,7 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
             note:'已裁判，尚未支付或开始服役；选择由玩家明确决定'};
 }
 export function lawAction(d,args,eventId){
+ assertVocationAction(this,d.get('state'),'law',args);
     const operation=args.operation??'inspect';
     if(operation==='inspect')return lawView(this,d.document);
     if(args.actor!==undefined&&args.actor!=='player')throw Error('Law action caller must be the player');

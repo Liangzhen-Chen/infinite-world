@@ -111,16 +111,28 @@ test('G1正式暮纹术经购书、识字练习及实际学习后扣木炭/魔�
     await turn(10,async()=>await literacy());
     for(const i of[11,12])await turn(i,async()=>s.document.state.skills.skill_literacy?[]:await literacy());
     await turn(13,async()=>[await s.call('world_trade',{seller:'陆青',item:'纸土留痕初抄',quantity:1}),await s.call('world_trade',{seller:'陆青',item:'刮薄羊皮纸',quantity:1})]);
-    await turn(14,async()=>{const calls=[];for(let day=0;day<4;day++){
+    // 06 §6.7: practice gain comes from balance/learning perHour and actual
+    // duration, never the caller's gain request. Eleven eight-hour days at
+    // 1.2/hour reach the same literacy prerequisite without granting it.
+    await turn(14,async()=>{const calls=[];for(let day=0;day<11;day++){
         if(day)calls.push(await s.call('world_time',{until:{dayOffset:1,hour:9},activity:'休息'}));
-        calls.push(await s.call('world_practice',{skill:'识字',target:'纸土留痕初抄',gain:30}));
+        const practice=await s.call('world_practice',{skill:'识字',target:'纸土留痕初抄',minutes:480,gain:30});
+        assert.ok(practice.result.gain<=10,'请求三十点不能越过实际八小时的学习速率');
+        calls.push(practice);
     }return calls;});
     const learnShadow=()=>s.call('world_learn',{entity:'暮纹术',source:'纸土留痕初抄'});
     await turn(15,async()=>[await learnShadow()]);
     await turn(16,async()=>{const calls=[];for(let attempt=0;attempt<2&&!s.document.state.spells.spell_shadow_03;attempt++)calls.push(await learnShadow());return calls;});
     assert.deepEqual(s.document.state.spells.spell_shadow_03.source,{type:'book',id:'item_book_m4_surface',author:world.items.find(row=>row.id==='item_book_m4_surface').book.author,edition:world.items.find(row=>row.id==='item_book_m4_surface').book.edition});
     await turn(17);await s.reject('world_cast',{spell:'暮纹术',target:'刮薄羊皮纸',text:'明早到小学堂读书'},/缺少材料/);
-    await turn(18,async()=>[await s.call('world_move',{destination:'河湾村'}),await s.call('world_trade',{seller:'段岩',item:'木炭小袋',quantity:1})]);
+    await turn(18,async()=>{
+        // Longer, rate-based study changes the date. Keep the original market
+        // purchase and presence/conservation assertions by actually waiting.
+        const now=s.document.state.minute,day=Math.floor(now/1440);let dayOffset=0;
+        while(!world.rules.calendar.marketDays.includes((day+dayOffset)%30+1)||(day+dayOffset)*1440+540<=now)dayOffset++;
+        return[await s.call('world_time',{until:{dayOffset,hour:9},activity:'休息'}),
+            await s.call('world_move',{destination:'河湾村'}),await s.call('world_trade',{seller:'段岩',item:'木炭小袋',quantity:1})];
+    });
     const bought=structuredClone(s.document),seller=s.document.state.npcs.npc_hw_duanyan;
     assert.equal(qty(seller.inventory.item_charcoal),7);assert.equal(qty(s.document.state.inventory.item_charcoal),1);
     const casts=await turn(19,async()=>[await s.call('world_cast',{spell:'暮纹术',target:'刮薄羊皮纸',text:'明早到小学堂读书'})]);

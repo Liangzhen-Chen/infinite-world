@@ -144,7 +144,13 @@ test('审稿专用人物知识不进入纯文字改写提示，已有严重问�
 test('审稿沿用人物遗忘及转述视图，不能从原始记忆偷偷补回精确数额',async()=>{
  const engine=new WorldEngine(await loadWorld()),document={state:{minute:600,location:'bld_hw_qingdeng',player:{name:'旅人'},npcs:{npc_hw_linsui:{location:'bld_hw_qingdeng',memoryStream:[{id:'heard-private',sourceEvent:'past-trade',kind:'trade',minute:540,participants:['player','npc_hw_linsui'],content:'玩家付了918铜，私有原始细节',sourceType:'听说',heardFrom:'npc_hw_hezhou',reliability:'未经亲历核实',salience:3}],cognition:{blurred:{'heard-private':{content:'玩家曾办理过交易，具体数额记不清'}}}}}}};
  const knowledge=reviewNpcKnowledge(engine,document,{query:'交易'}).npc_hw_linsui;
- assert.equal(knowledge.memories.length,1);assert.equal(knowledge.memories[0].blurred,true);assert.equal(knowledge.memories[0].sourceType,'听说');assert.equal(knowledge.memories[0].heardFrom,'npc_hw_hezhou');assert.ok(!JSON.stringify(knowledge).includes('918'));assert.ok(!JSON.stringify(knowledge).includes('私有原始细节'));
+ // 05 §5.4: author knowledge seeds belong to the knowledge set alongside
+ // witnessed/told memories. Keep exact membership and the blurred-memory
+ // provenance/privacy counterexamples rather than assuming no world seeds.
+ const {npcRumorSeeds}=await import('../server-plugin/npc-rumors.mjs');
+ assert.deepEqual(knowledge.memories.map(m=>m.id).sort(),['heard-private',...npcRumorSeeds(engine,'npc_hw_linsui').map(m=>m.id)].sort());
+ const heard=knowledge.memories.find(m=>m.id==='heard-private');
+ assert.equal(heard.blurred,true);assert.equal(heard.sourceType,'听说');assert.equal(heard.heardFrom,'npc_hw_hezhou');assert.ok(!JSON.stringify(knowledge).includes('918'));assert.ok(!JSON.stringify(knowledge).includes('私有原始细节'));
 });
 
 // Saved real failures; dates and original text remain immutable regression evidence.

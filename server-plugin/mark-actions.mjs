@@ -2,7 +2,7 @@ import {createActionPrimitiveFrame} from './action-authority.mjs';
 import {primitiveContext,mirrorPrimitiveTransfer} from './primitives-runtime.mjs';
 import {commitPrimitives,planPrimitives,recordResourceCosts} from './primitives.mjs';
 import {accountKey} from './ledger.mjs';
-import {createEntity,setLocation,endEntity,ensureHoldings,declareHoldingWriter} from './holdings.mjs';
+import {createEntity,setLocation,endEntity,ensureHoldings,declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 import {digest} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
 import {physicalLocation} from './items.mjs';
@@ -86,12 +86,12 @@ export function applyMarkPrimitive(d,engine,effect,{frame,child=`${frame.eventId
  const replaced=previous.length>=rules.maximumPerAuthorPlace?previous[0]:null;
  if(replaced){
   endEntity(d,{id:replaced.id,basis:'destruction',writer:'mark-actions',eventId:child});
-  d.remove(['state','created',replaced.id]);d.set(['state','records',`mark:${replaced.id}`],{...replaced,active:false,replacedBy:id});
+  holdingRemove(d,engine,['state','created',replaced.id],'mark-actions',child);d.set(['state','records',`mark:${replaced.id}`],{...replaced,active:false,replacedBy:id});
  }
  const mark={id,intent,form,location:at,zone,author:frame.actor,tags:[...selected],...references};
  createEntity(d,{id,kind:'mark',facts:mark,source:frame.source.id,writer:'mark-actions',eventId:child});
  setLocation(d,{entity:id,at,mode:'place',writer:'mark-actions',eventId:child,engine});
- d.set(['state','created',id],{...mark,kind:'mark',name:`${form}：${intent.slice(0,40)}`});
+ holdingSet(d,engine,['state','created',id],{...mark,kind:'mark',name:`${form}：${intent.slice(0,40)}`},'mark-actions',child);
  d.set(['state','records',`mark:${id}`],{category:'mark',...mark,minute:now,active:true,replaced:replaced?.id??null,suppressed:Boolean(replaced)});
  return {entity:id,location:at,replaced:replaced?.id??null,suppressed:Boolean(replaced)};
 }

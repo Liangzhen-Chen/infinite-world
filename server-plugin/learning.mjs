@@ -1,3 +1,5 @@
+import {learnWithInitialKnowledge} from './primitives-learning.mjs';
+export {activityTeachingConsent} from './primitives-learning.mjs';
 import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
@@ -32,6 +34,9 @@ export function teachingConsent(d,engine,{teacher,student='player',subject,minut
 }
 
 export function learn(d,args,id){
+ return learnWithInitialKnowledge(d,this,args,id,()=>learnNative.call(this,d,args,id));
+}
+function learnNative(d,args,id){
     if(args.operation)return educationAction.call(this,d,args,id);
     if(args.student!==undefined){
         const spirit=spiritStudent(d,args.student);if(!spirit)return teachNpc(d,this,args,id);

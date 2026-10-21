@@ -26,7 +26,9 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
-        const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        // Long synchronous world advances delay the local server's idle-socket
+        // timers. A subsequent request must not reuse a socket being closed.
+        const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
         const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`HTTP ${response.status}`);error.httpStatus=response.status;throw error;}return data;
     };
     return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};

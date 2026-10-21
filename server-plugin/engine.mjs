@@ -1,6 +1,4 @@
-import {initialKnowledgeAction,activityTeachingConsent,learnWithInitialKnowledge} from './primitives-learning.mjs';
-import {assertVocationAction} from './npc-growth.mjs';
-import {settleDemonstrations} from './education-state.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
@@ -17,7 +15,7 @@ import {actorId,actorPath}from'./npc-state.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {validateSites}from'./sites.mjs';
 import {WorldEngine as Phase1Engine}from'./compat/v2-phase1-engine.mjs';
-import {learn,teachingConsent}from'./learning.mjs';
+import {learn,teachingConsent,activityTeachingConsent}from'./learning.mjs';
 import {prepareMagic,applyMagic}from'./magic.mjs';
 import {recordSpellViolation}from'./magic-consent.mjs';
 import {recordMagicEconomy}from'./magic-economy.mjs';
@@ -84,9 +82,7 @@ import {openObligation,settleObligation,closeObligation,performObligation,receiv
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
-import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge}from'./credit.mjs';
-import {hasSnapshotDeposit,withdrawSnapshotDeposit} from './finance-bank.mjs';
-import {counterClaimAccounts} from './money.mjs';
+import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge,withdrawDepositIfSnapshot}from'./credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -190,7 +186,7 @@ function compactNpcPatches(d,patchStart,npcsBefore){
 export class WorldEngine {
     constructor(world) {
         this.obligationClaimEnforceable=claimEnforceable;
-        this.protocolAdditionalClaimAccounts=(d,owner)=>counterClaimAccounts(d,owner);
+        this.protocolAdditionalClaimAccounts=(d,owner)=>advanceHook('counterClaimAccounts')(d,owner);
         this.protocolScheduleAt=scheduleAt;
         this.protocolLiquidatePledge=(d,row)=>{
             if(!row.pledgeRecord)return 0;
@@ -278,7 +274,7 @@ export class WorldEngine {
             const d=new Draft(document,this);
             if(input.key==='openActions'){
                 if(!['off','limited','full'].includes(input.value))throw Error('openActions 须为 off、limited 或 full');
-                d.set(['state','records','action_config'],{...d.get('state','records','action_config'),category:'action_config',openActions:input.value});
+                holdingSet(d,this,['state','records','action_config'],{...d.get('state','records','action_config'),category:'action_config',openActions:input.value},'engine');
                 return {patches:d.patches,result:{ok:true,openActions:input.value}};
             }
             const scheduler=applyConfigSet(d.get('state'),input.key,input.value);d.set(['state','scheduler'],scheduler);return{patches:d.patches,result:{ok:true,scheduler}};
@@ -359,7 +355,6 @@ export class WorldEngine {
         if(tool==='time'&&['睡眠','休息'].includes(args.activity))assertRestBed(session,d.document);
         const sleep=tool==='time'&&['睡眠','休息'].includes(args.activity)?primitiveActionRuntime()?.beginSleep(d,session):null;
         validatePhysicalAction(d,session,tool,args);
-        initialKnowledgeAction(d,session,tool,args);assertVocationAction(session,d.get('state'),tool,args);
         const bookedWorkstation=facilityRuntime().prepareBookedWorkstation?.(d,session,tool,args);
         session.bookedWorkstation=bookedWorkstation;
         const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
@@ -542,7 +537,7 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta,{books});
     }
     async trade(d,args,id) {
-        if(args.operation==='withdraw'&&hasSnapshotDeposit(this,d,args))return withdrawSnapshotDeposit(d,this,args,id);
+        if(args.operation==='withdraw'){const withdrawal=withdrawDepositIfSnapshot(d,this,args,id);if(withdrawal)return withdrawal;}
         if(args.operation==='transport')return transportAction(d,this,args,id);
         if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);
@@ -683,7 +678,7 @@ export class WorldEngine {
         const beforeState=d.get('state'),before=settledBefore??beforeState.minute,after=beforeState.minute+minutes;d.set(['state','minute'],after);
         if(d.scheduler)catchUpLocal(this,d,after);
         runAdvance(this,d,{before,after,id,beforeState,days:Math.floor(after/1440)-Math.floor(before/1440)});
-        settleDemonstrations(d,this);
+        advanceHook('settleDemonstrations')?.(d,this);
     }
     time(d,args,id) {
         primitiveActionRuntime()?.settleRites?.(d,this);
@@ -962,7 +957,7 @@ export class WorldEngine {
         return {spell,...result,...effect,...(backlash?{backlash}:{}),...(legalCase?{case:legalCase}:{}),checkSuccess:result.success,success:completed,mpCost:catalog.mp,...(economy?{economy}:{})};
     }
     learn(d,args,id) {
-        return learnWithInitialKnowledge(d,this,args,id,()=>learn.call(this,d,args,id));
+        return learn.call(this,d,args,id);
     }
     profession(d,args,id){
         const seat=facilityRuntime().assertExaminationSeat?.(d,this,args),result=profession.call(this,d,args,id);

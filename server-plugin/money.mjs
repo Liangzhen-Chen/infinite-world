@@ -19,6 +19,7 @@ import {actorId} from './npc-state.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
 import {priceRead} from './stock.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
 declareHoldingWriter('money',{kinds:[]});
@@ -160,11 +161,11 @@ registerTransferProjection((d,{from,to,fromAccount:a,toAccount:b,amount,eventId,
     if(!dedicated(a)&&!dedicated(b)||!d.document?.state)return;
     const origin=dedicated(a)?dedicatedCoinAccount(d.get('state'),a.owner,a.purpose):null;
     const destination=dedicated(b)?dedicatedCoinAccount(d.get('state'),b.owner,b.purpose):null;
-    if(origin)d.set(['state','records',dedicatedCoinKey(a.owner,a.purpose),'coins'],d.get('ledger','accounts',from)??0);
-    if(destination)d.set(['state','records',dedicatedCoinKey(b.owner,b.purpose),'coins'],d.get('ledger','accounts',to)??0);
+    if(origin)holdingSet(d,d.engine,['state','records',dedicatedCoinKey(a.owner,a.purpose),'coins'],d.get('ledger','accounts',from)??0,'money',eventId);
+    if(destination)holdingSet(d,d.engine,['state','records',dedicatedCoinKey(b.owner,b.purpose),'coins'],d.get('ledger','accounts',to)??0,'money',eventId);
     else if(origin&&dedicated(b)&&a.purpose===b.purpose&&!b.owner.startsWith('sink:')&&!b.owner.startsWith('src:')){
-        d.set(['state','records',dedicatedCoinKey(b.owner,b.purpose)],{category:'money_account',owner:b.owner,purpose:b.purpose,account:to,
-            coins:d.get('ledger','accounts',to)??0,originAccount:from,transferredBy:eventId,...(origin.seat?{seat:origin.seat}:{})});
+        holdingSet(d,d.engine,['state','records',dedicatedCoinKey(b.owner,b.purpose)],{category:'money_account',owner:b.owner,purpose:b.purpose,account:to,
+            coins:d.get('ledger','accounts',to)??0,originAccount:from,transferredBy:eventId,...(origin.seat?{seat:origin.seat}:{})},'money',eventId);
     }
     // transition.bookTransfer cannot mirror an unknown dedicated source. Its
     // ordinary destination must still receive the single real booked payment.
@@ -176,6 +177,7 @@ export function counterClaimAccounts(d,owner){
     const row=dedicatedCoinAccount(d.get('state'),owner,'counter'),amount=row&&Math.min(row.coins,d.get('ledger','accounts',row.account)??0);
     return amount>0?[[row.account,amount]]:[];
 }
+registerAdvanceHook('counterClaimAccounts',counterClaimAccounts);
 declareLedgerWriter('money-snapshot',{sources:{'src:genesis':{[COIN]:Infinity}},sinks:['sink:pack_removed']});
 export function restoreCoinAccount(d,engine,{owner,purpose,balance:amount,sourceEvent,seat,balanceMode}){
     const state=d.get('state'),event=state.records?.[sourceEvent],key=accountKey(owner,COIN,purpose);

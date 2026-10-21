@@ -133,7 +133,14 @@ test('实际伐木与据点木料采集同扣林木；无许可不能绕过据�
  assert.equal(result.obtained[0].quantity,2);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
  const place=engine.byId.get(location);place.site={owner:'npc_hw_miller',mechanisms:[],entryMechanisms:[],resources:[{id:'rw_wood',name:'木料',item:'item_wood',quantity:5,minutes:1}],clues:[],changes:[]};
  assert.throws(()=>woodcut.call(engine,d,{},'private'),/许可/);
- place.site.owner=null;d.set(['state','records','site_presence'],{site:location,actor:'player'});
+ // 06 §6.3: physical presence does not bypass property or entrance gates.
+ // A public outdoor forest needs no menu visit, but a blocked entrance still
+ // rejects before harvesting or spending time; retain the private-owner case.
+ place.site.owner=null;place.site.entryMechanisms=['rw_gate'];
+ const blockedMinute=d.get('state','minute');
+ assert.throws(()=>woodcut.call(engine,d,{},'blocked'),/机关/);
+ assert.equal(d.get('state','minute'),blockedMinute);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
+ place.site.entryMechanisms=[];d.set(['state','records','site_presence'],{site:location,actor:'player'});
  const gathered=siteAction.call(engine,d,{operation:'gather',target:'rw_wood',quantity:1},'gather');assert.equal(gathered.quantity,1);
  assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
 });
