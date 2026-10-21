@@ -246,7 +246,7 @@ export function applyObjectMagic(d,prepared,eventId){
 export function advanceMagicObjects(d,engine,afterMinute){
  integer(afterMinute,0,Number.MAX_SAFE_INTEGER,'推进时刻');
  advanceHeatScenes(d,engine,afterMinute);
- for(const row of environmentFeatures(engine).filter(f=>f.thermalModel)){
+ for(const row of environmentFeatures(engine,undefined,f=>f.thermalModel&&d.get('state','records',recordKey(f.id),'state','thermal'))){
   const record=d.get('state','records',recordKey(row.id));if(!record?.state?.thermal)continue;
   if(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location)throw new Error('物件状态记录键冲突');
   const state=clone(record.state);state.thermal=advanceThermalState(state.thermal,row.thermalModel,afterMinute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});store(d,row,state);
@@ -323,14 +323,14 @@ function rawFeatureState(d,row,minute){
  return state;
 }
 function roomOf(engine,name,location){
- const rows=environmentFeatures(engine).filter(x=>x.id===name||x.location===location&&normalize(x.name)===normalize(name));
+ const rows=environmentFeatures(engine,undefined,x=>x.id===name||normalize(x.name)===normalize(name)).filter(x=>x.id===name||x.location===location&&normalize(x.name)===normalize(name));
  if(rows.length!==1||rows[0].kind!=='room')throw new Error('封焰需要登记的实际房间');
  const row=rows[0],m=row.airModel;
  if(!m)throw new Error('房间没有真实通风与空气容量');
  integer(m.capacityMg,1,100000000,'室内氧气容量');integer(m.ventilationMgPerMinute,0,m.capacityMg,'通风量');
  row.fireLinks??=[];
  if(!Array.isArray(row.fireLinks)||row.fireLinks.some(pair=>!Array.isArray(pair)||pair.length!==2||pair[0]===pair[1]))throw new Error('房间火势连接无效');
- for(const pair of row.fireLinks)for(const id of pair){const f=environmentFeatures(engine).find(x=>x.id===id);if(!f?.thermalModel||f.location!==row.location)throw new Error('火势连接缺少同地真实燃料对象');}
+ for(const pair of row.fireLinks)for(const id of pair){const f=environmentFeatures(engine,undefined,x=>x.id===id).find(x=>x.id===id);if(!f?.thermalModel||f.location!==row.location)throw new Error('火势连接缺少同地真实燃料对象');}
  return row;
 }
 function validateRoomState(state,row){
@@ -401,7 +401,9 @@ function handState(actor,minute){
  return h;
 }
 function advanceHeatScenes(d,engine,after){
- const features=environmentFeatures(engine),effects=Object.entries(d.get('state','effects')??{}).sort(([a],[b])=>a.localeCompare(b));
+ const roomDefinitions=environmentFeatures(engine,null,x=>x.kind==='room'&&x.airModel);
+ const ids=new Set(roomDefinitions.flatMap(r=>[r.id,...(Array.isArray(r.fireLinks)?r.fireLinks.flat():[])]));
+ const features=environmentFeatures(engine,undefined,x=>ids.has(x.id)),effects=Object.entries(d.get('state','effects')??{}).sort(([a],[b])=>a.localeCompare(b));
  const rooms=features.filter(x=>x.kind==='room'&&x.airModel).map(row=>{
   row=roomOf(engine,row.id,row.location);
   const linked=features.filter(f=>row.fireLinks.flat().includes(f.id));
