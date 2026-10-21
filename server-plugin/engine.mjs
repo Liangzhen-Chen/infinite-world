@@ -38,7 +38,7 @@ import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteActi
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
-import {localWeather,weatherEdge}from'./weather.mjs';
+import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
@@ -251,6 +251,7 @@ export class WorldEngine {
     }
     createCharacter(legacy,options,seed){return initializeR1(openSettlementLedgers(this,initializeAgriculture(this,createCharacter.call(this,legacy,options,seed))),this.world);}
     calendar(minute) {
+        if(this.calendarId)return calendarDateAt(this,minute,this.calendarId);
         number(minute,0,Number.MAX_SAFE_INTEGER,'分钟');
         const day=Math.floor(minute/1440),month=Math.floor(day/30)%12,year=Math.floor(day/360)+1;
         const ten=this.rules.calendar.tens?.[Math.floor(day%30/10)],market=this.rules.calendar.marketDays?.includes(day%30+1)??false;
@@ -530,6 +531,7 @@ export class WorldEngine {
         const created=Object.values(document.state.created??{});
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
         const physical=physicalCatalog(this,document),session=Object.create(this);session.physicalDocument=document;
+        session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         if(physical.length)session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(this.world),items:{value:[...this.world.items,...physical],enumerable:true,writable:true,configurable:true}});
         session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;return session;
     }
@@ -1118,6 +1120,7 @@ export class WorldEngine {
         if(!hit||hit.location!==document.state.location||hit.npcs!==document.state.npcs){hit={location:document.state.location,npcs:document.state.npcs,created,resolver:this.resolver.extend(created)};this.promptResolvers.set(branch,hit);}
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
         const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
+        session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         return session;
     }
     // A scene reads one fixed state: per-person schedule reads share one course derivation.

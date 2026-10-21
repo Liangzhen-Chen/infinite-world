@@ -18,7 +18,10 @@ import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
 import {laborNotices} from './labor-market.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('quest-board',{kinds:[]});
+import {createEntity,isEffective} from './holdings.mjs';
+import {worldEvent} from './world-events.mjs';
+import {calendarDateAt} from './weather.mjs';
+declareHoldingWriter('quest-board',{kinds:[],entities:['office'],locations:true});
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
@@ -26,12 +29,77 @@ const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('任
 const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/(睡眠|睡觉|熟睡)/.test(n.activity??'');
 const place=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
+const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9_:-]+$/i.test(id)&&!['__proto__','constructor','prototype'].includes(id);
+const sameLocality=(engine,a,b)=>a===b||Boolean(engine.byId.get(a)&&engine.byId.get(b)&&(engine.byId.get(a).scope??a)===(engine.byId.get(b).scope??b));
 
 // The player's quota comes only from offices actually held (appointed by the
 // Baishi office and still in term) and a granted title, the larger of the two;
 // a self-declared office adds none. A notable's quota covers cultural quests only.
-export function questPublishingRights(engine,state,publisher='player',{cultural=false}={}){
- return personQuestRights(engine,state,publisher,{cultural});
+export function questPublishingRights(engine,state,publisher='player',{cultural=false,document=engine.physicalDocument}={}){
+ const base=personQuestRights(engine,state,publisher,{cultural});
+ if(document?.state.records?.['calendar:active']?.calendar==='core:calendar_default'){
+  // core:calendar_default skips leap-month obligation anchors; its inserted
+  // month shares the preceding month's allowance rather than minting another.
+  const date=calendarDateAt(engine,state.minute,'core:calendar_default'),month=`core:${date.year}:${date.month}`;
+  base.month=month;base.usedD=state.questQuota?.[`${month}_${publisher}`]??0;
+ }
+ // Native holdings are passed through the same current-state view as other
+ // offices. The optional document is attached by engine.scoped().
+ const offices=document?Object.values(document.holdings?.rows??{}).filter(h=>h.kind==='holds_office'&&h.holder===publisher&&h.until===undefined&&h.since<=state.minute):[];
+ const extra=offices.flatMap(h=>{
+  const e=document.holdings.entities[h.subject],f=e?.facts;
+  return e?.goneAt===undefined&&Number.isSafeInteger(f?.questPublishing?.monthlyQuotaD)&&f.questPublishing.monthlyQuotaD>0&&f.questPublishing.operations?.length===1&&f.questPublishing.operations[0]==='quest.publish'&&
+   sameLocality(engine,f.seat,publisher==='player'?state.location:state.npcs[publisher]?.location)&&isEffective(engine,state,publisher)?
+   [{value:f.questPublishing.monthlyQuotaD,source:`holdings.entities.${e.id}.facts.questPublishing + ${h.id}`,override:false}]:[];
+ });
+ if(!extra.length)return base;
+ const limitD=base.override?.value??Math.max(base.limitD,...extra.map(r=>r.value));
+ return {...base,limitD,sources:[...base.sources,...extra],kinds:limitD>0?[...new Set([...base.kinds,'official'])]:base.kinds};
+}
+
+// Trusted historical restoration never repeats a reward or invents its amount,
+// deadline, objective, acceptance or completion check.
+export function restoreQuestSnapshot(d,engine,row){
+ const {id,status,issuer,assignee,sourceEvent,rewardSettled,progress}=row,source=worldEvent(d.get('state'),sourceEvent);
+ if(Object.keys(row).some(k=>!['id','kind','status','issuer','assignee','sourceEvent','rewardSettled','progress'].includes(k))||
+  !validId(id)||row.kind!=='quest'||d.get('state','quests',id)||!source||source.payload?.subject!==id||source.actor!==assignee||source.payload?.to!==issuer||
+  !['completed','active'].includes(status)||!d.get(...actorPath(issuer))||!d.get(...actorPath(assignee))||issuer===assignee||
+  status==='completed'&&(source.verb!=='quest_completed'||rewardSettled!==true||progress!==undefined)||
+  status==='active'&&(source.verb!=='quest_progress_reported'||rewardSettled!==undefined||typeof progress!=='number'||progress<0||progress>=1||!Number.isFinite(progress)||typeof source.payload?.progress!=='string'))throw Error('Invalid historical quest or mismatched source');
+ if(status==='active'&&source.witnesses?.some(w=>![issuer,assignee].includes(w)))throw Error('Private quest report has unrelated witnesses');
+ const q={id,snapshotVersion:1,publisher:issuer,taker:assignee,status:status==='completed'?'已完成':'进行中',escrow:0,
+  content:source.payload.subject,sourceEvent:source.id,...(status==='completed'?{rewardSettled:true,resolvedAt:source.minute}:{progress})};
+ holdingSet(d,engine,['state','quests',id],q,'quest-board');
+ if(status==='active'){
+  const stream=d.get(...actorPath(issuer),'memoryStream')??[];
+  holdingSet(d,engine,[...actorPath(issuer),'memoryStream'],[...stream,{id:`quest-report:${source.id}`,sourceEvent:source.id,kind:'quest',private:true,
+   minute:source.minute,participants:[issuer,assignee],content:source.payload.progress,sourceType:'亲历',quest:id,salience:3}],'quest-board');
+ }
+ return q;
+}
+
+export function restoreQuestPublishingOffice(d,engine,row,{origin,sourceEvent}={}){
+ if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent||Object.keys(row).some(k=>!['id','template','name','location','authority','monthlyQuotaD'].includes(k))||
+  !validId(row.id)||row.template!=='office'||typeof row.name!=='string'||!row.name.trim()||
+  !engine.world.locations.some(l=>l.id===row.location)||!Array.isArray(row.authority)||row.authority.length!==1||row.authority[0]!=='quest.publish'||
+  !Number.isSafeInteger(row.monthlyQuotaD)||row.monthlyQuotaD<1||row.monthlyQuotaD>10000)throw Error('Invalid limited quest publishing office');
+ const id=row.id.startsWith('office_')?row.id:`office_${row.id}`;
+ createEntity(d,{id,kind:'office',facts:{name:row.name,seat:row.location,questPublishing:{operations:[...row.authority],monthlyQuotaD:row.monthlyQuotaD},aliases:[row.id]},source:sourceEvent,writer:'quest-board'});
+ return id;
+}
+
+export function restoreQuestEscrow(d,engine,row,{origin,sourceEvent}={}){
+ const source=worldEvent(d.get('state'),sourceEvent);
+ if(origin!=='initial'||Object.keys(row).some(k=>!['id','template','name','seat','purpose'].includes(k))||!validId(row.id)||
+  row.template!=='instrument'||row.purpose!=='quest_escrow'||typeof row.name!=='string'||!row.name.trim()||!engine.world.locations.some(l=>l.id===row.seat)||
+  !source||source.verb!=='escrow_opened'||source.payload?.owner!==row.id||d.get('state','records',row.id)||d.get('state','quests',row.id))throw Error('Invalid dedicated quest escrow or source');
+ holdingSet(d,engine,['state','records',row.id],{category:'quest_escrow',id:row.id,name:row.name,seat:row.seat,purpose:'quest_escrow',escrow:0,sourceEvent:source.id},'quest-board');
+ return row.id;
+}
+export function verifyQuestEscrowOpening(d,engine,{owner,resource,purpose,balance,sourceEvent}){
+ const row=d.get('state','records',owner),source=worldEvent(d.get('state'),sourceEvent);
+ if(resource!=='coin_river'||purpose!=='quest_escrow'||balance!==0||row?.category!=='quest_escrow'||!source||source.id!==row.sourceEvent||source.verb!=='escrow_opened'||source.payload?.owner!==owner)throw Error('Quest escrow opening must match its original empty native account');
+ return escrowAccount(owner);
 }
 function notice(d,engine,q,minute,stage,location=q.location){
  const id=`${q.id}:${stage}`,participants=[q.publisher,q.taker].filter(Boolean);
@@ -123,14 +191,19 @@ export function questBoardAction(d,engine,args,eventId){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
   if(!awake(engine,d.get('state'),publisher,actor))throw Error('任务发布者无法清醒履约');
   if(!(grade in engine.rules.quests.quotaUnits))throw Error('任务等级无效');
-  const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
+  const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true,document:d.document}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
   if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw Error('身份或本月任务发布额度不足');
   if(personal&&grade!=='D')throw Error('未登记官职的私人任务只能发布D级，身份额度不足');
   const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
   if(!publicFund&&actor.coins<reward)throw Error('发布者无法托管报酬');
   const verified=objective(engine,d,args,publisher),content=text(args.content),location=d.get('state','location');
   if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw Error('私人发单须在合法公共地点张贴');
-  const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=`quest_${eventId}`;
+  const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=args.escrow??`quest_${eventId}`;
+  if(args.escrow!==undefined){
+   const account=d.get('state','records',args.escrow);
+   if(account?.category!=='quest_escrow'||account.purpose!=='quest_escrow'||!sameLocality(engine,account.seat,location)||account.escrow!==0||account.quest||d.get('state','quests',quest))throw Error('发布只能绑定本地未使用的专用任务托管');
+   d.set(['state','records',quest],{...account,quest,publisher,openedFor:eventId});
+  }
   let fundedBy=null;
   if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest,books:{account:escrowAccount(quest),writer:'quest-board',eventId:quest}});fundedBy={settlement,month:spend.month,spend:spend.id};}
   else{moveCoins(d,{from:purse(engine,publisher),to:escrowAccount(quest),amount:reward,writer:'quest-board',eventId:quest});d.set([...actorPath(publisher),'coins'],actor.coins-reward);}
@@ -147,6 +220,7 @@ export function questBoardAction(d,engine,args,eventId){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw Error('没有获知该委托进度的渠道');
   return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
  }
+ if(q.snapshotVersion)throw Error('历史任务快照缺少变更或重复结算所需的目标、期限与报酬来源');
  if(args.operation==='cancel'){
   if(![q.publisher,q.taker].includes('player'))throw Error('只有委托当事人能取消');
   if(!active(q))throw Error('任务不在可取消状态');

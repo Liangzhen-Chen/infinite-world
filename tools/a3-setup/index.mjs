@@ -11,6 +11,9 @@
 const modules=[];
 export function registerSetupLoader(module){modules.push(module);modules.sort((a,b)=>a.order-b.order);}
 export const setupLoaderFields=()=>modules.flatMap(m=>m.fields);
+// Generic instance/holding initialization can defer a row owned by a domain.
+// The same selector is used by the domain stage, so it cannot drift from it.
+export const setupRowLoader=(field,row)=>modules.find(m=>m.rows?.[field]?.(row));
 export function runSetupLoaders(ctx,setup){
  const activityFields=new Set(modules.flatMap(m=>m.actorStateFields??[]));
  const objectFields=new Set(modules.flatMap(m=>m.objectStateFields??[]));
@@ -21,7 +24,7 @@ export function runSetupLoaders(ctx,setup){
   for(const field of fields)if(Array.isArray(setup[field])){
    const routes=modules.filter(m=>m.rows?.[field]);
    if(routes.length)input[field]=setup[field].filter(row=>{
-    const target=routes.find(m=>m.rows[field](row));return target?target===module:!module.rows?.[field];
+    const target=setupRowLoader(field,row);return target?target===module:!module.rows?.[field];
    });
   }
   if(fields.includes('actorStates')&&input.actorStates&&typeof input.actorStates==='object'&&!Array.isArray(input.actorStates)){

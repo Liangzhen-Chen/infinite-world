@@ -11,8 +11,52 @@ import {changeItems,transferItems} from './items.mjs';
 import {applyEffects,hookedEffects} from './effects.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
+import {minuteForCalendarDate} from './weather.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
+declareHoldingWriter('festival',{kinds:[]});
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
+const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9_:-]+$/i.test(id)&&!['__proto__','constructor','prototype'].includes(id);
+// Ordinary local events use their declared time window, not a religious rite
+// or an invented annual calendar entry. Initial restoration does not pay prizes.
+export function restoreOrdinaryFestival(d,engine,row,{origin,sourceEvent}={}){
+ const {id,name,location,startsAt,endsAt,host,riddle}=row,now=d.get('state','minute');
+ if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent||Object.keys(row).some(k=>!['id','name','location','startsAt','endsAt','host','riddle'].includes(k))||
+  !validId(id)||d.get(...path(id))||typeof name!=='string'||!name.trim()||!engine.world.locations.some(l=>l.id===location)||
+  !d.get('state','npcs',host)||!safe(startsAt)||!safe(endsAt)||startsAt>now||startsAt>=endsAt||endsAt-startsAt>DAY||
+  Math.floor(startsAt/DAY)!==Math.floor((endsAt-1)/DAY)||!riddle||Object.keys(riddle).some(k=>!['id','question','answer','reward','claimed'].includes(k))||
+  !validId(riddle.id)||typeof riddle.question!=='string'||!riddle.question.trim()||typeof riddle.answer!=='string'||!riddle.answer.trim()||riddle.claimed!==false)throw Error('Invalid ordinary festival initial declaration');
+ const unit=d.get('state','itemInstances',riddle.reward),item=unit?.item;
+ // A prize is one real inventory unit, with its existing owner and location.
+ const owned=aliveHoldings(d,{kind:'owns',holder:host,subject:riddle.reward});
+ const actualItem=item??d.get('holdings','entities',riddle.reward,'facts','item');
+ if(!owned.length||!engine.world.items.some(i=>i.id===actualItem)||engine.quantity(d,host,actualItem)<1)throw Error('Festival prize is not a real host-owned inventory unit');
+ const event={category:'festival',ordinary:true,id,name,location,host,due:startsAt,endsAt,status:now<endsAt?'held':'ended',sourceEvent,
+  riddles:[{id:riddle.id,question:riddle.question,answers:[riddle.answer],reward:{item:actualItem,quantity:1,unit:riddle.reward}}]};
+ holdingSet(d,engine,path(id),event,'festival');return event;
+}
+
+function ordinaryFestivalAction(d,engine,args,eventId,row){
+ const now=d.get('state','minute');
+ if(row.status!=='held'||row.location!==d.get('state','location')||now<row.due||now>=row.endsAt)throw Error('这里没有正在举行的普通灯会');
+ if(args.operation==='festival_answer'){
+  if(!available(engine,d.get('state'),row.host,row.location,now))throw Error('主办人不在场，无法核对答案并发奖');
+  const puzzle=row.riddles.find(p=>p.id===args.request);if(!puzzle)throw Error('没有这道灯谜');
+  const key=`festival-prize:${row.id}:${puzzle.id}:player`;if(d.get(...path(key)))throw Error('这道灯谜已经领奖');
+  if(typeof args.choice!=='string'||!puzzle.answers.includes(args.choice.trim()))return {correct:false,festival:row.id,riddle:puzzle.id};
+  if(!aliveHoldings(d,{kind:'owns',holder:row.host,subject:puzzle.reward.unit}).length)throw Error('原花灯已不属于主办人');
+  transferItems(d,engine,row.host,'player',puzzle.reward.item,1,[puzzle.reward.unit],{disposition:true,eventId});
+  const result={correct:true,festival:row.id,riddle:puzzle.id,host:row.host,reward:puzzle.reward};
+  holdingSet(d,engine,path(key),{category:'festival_prize',...result,sourceEvent:eventId,minute:now},'festival');return result;
+ }
+ if(args.operation==='festival_watch'){
+  const minutes=row.endsAt-now;assertActionTime(d,engine,minutes);const span=beginActionActivity(d,engine,'light');engine.advance(d,minutes,eventId);
+  if(d.get('state','location')!==row.location||d.get('state','player','status')!=='正常')throw Error('散场前已离开或失去行动能力');
+  holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
+  return {festival:row.id,endsAt:row.endsAt,watchedUntil:d.get('state','minute'),cost:finishActionActivity(d,engine,span),actionScope:{kind:'festival',clockManaged:true,minutes}};
+ }
+ throw Error('普通灯会不提供祭仪或其他权限');
+}
 const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病','睡眠'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 // Only already published village customs are adapted here. The 24 W5 draft
 // candidates are never imported and this adapter does not promote customs.
@@ -21,7 +65,12 @@ export function localFestivalCalendar(engine){
   ...f,id:`custom:${p.id}:${i}`,settlement:p.id,source:`world/geo/settlements.json#${p.id}/calendar/${i}`,kind:'local-custom'
  })));
 }
-const when=(f,year)=>((year-1)*360+(f.month-1)*30+f.day-1)*DAY+(f.runtime?.startMinute??720);
+const when=(f,year,engine)=>{
+ if(!engine?.calendarId)return ((year-1)*360+(f.month-1)*30+f.day-1)*DAY+(f.runtime?.startMinute??720);
+ const offset=f.runtime?.startMinute??720;
+ try{return minuteForCalendarDate(engine,{calendar:engine.calendarId,year,month:f.month,day:f.day,hour:Math.floor(offset/60),minute:offset%60});}
+ catch{return null;} // A short month does not invent a missing festival date.
+};
 const occurrence=(f,year)=>`festival:${f.id}:${year}`;
 // Published runtime contract: active, host, kind (market/ritual), startMinute,
 // durationMinutes, minimumParticipants; resourceNeeds use owner='host' or an
@@ -92,8 +141,8 @@ function visibleFestival(f){
  if(!f.runtime?.riddles)return f;
  return {...f,runtime:{...f.runtime,riddles:f.runtime.riddles.map(({answers,...puzzle})=>puzzle)}};
 }
-const matches=(f,row)=>row.definition===digest(f)&&row.host===f.host&&row.location===f.location&&row.kind===f.kind&&
- row.due===when(f,row.year)&&row.endsAt===row.due+f.runtime?.durationMinutes&&digest(row.resources)===digest(needs(f));
+const matches=(f,row,engine)=>row.definition===digest(f)&&row.host===f.host&&row.location===f.location&&row.kind===f.kind&&
+ row.due===when(f,row.year,engine)&&row.endsAt===row.due+f.runtime?.durationMinutes&&digest(row.resources)===digest(needs(f));
 const required=(engine,f,row)=>[...new Set([row.host,...(row.cost?[row.supplier]:[]),...needs(f).map(n=>n.owner),engine.byId.get(row.location)?.owner].filter(Boolean))];
 function venueAvailable(engine,state,f){
  const l=engine.byId.get(f.location),hours=l.openHours,offset=(f.runtime?.startMinute??720),end=offset+(f.runtime?.durationMinutes??1);
@@ -146,7 +195,7 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=nu
  const d={get:(...p)=>p.slice(1).reduce((x,k)=>x?.[k],state)};
  for(const row of constraints?.festivals??Object.values(state.records??{})){
   if(row.category!=='festival'||!row.formal||!['planned','held'].includes(row.status)||minute>=row.endsAt)continue;
-  if(row.status==='planned'){const f=festivalCalendar(engine).find(f=>f.id===row.custom);if(!f?.formal||!matches(f,row))continue;}
+  if(row.status==='planned'){const f=festivalCalendar(engine).find(f=>f.id===row.custom);if(!f?.formal||!matches(f,row,engine))continue;}
   const attending=row.status==='held'?row.participants.includes(npcId)||row.supplier===npcId:
    (row.host===npcId||row.supplier===npcId||enrollment(d,row,npcId))&&agreement(d,row,row.host);
   if(!attending)continue;
@@ -160,10 +209,12 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=nu
 }
 export function festivalAction(d,args,eventId){
  const now=d.get('state','minute');
+ const ordinary=d.get(...path(args.festival));
+ if(ordinary?.category==='festival'&&ordinary.ordinary===true&&['festival_answer','festival_watch'].includes(args.operation))return ordinaryFestivalAction(d,this,args,eventId,ordinary);
  if(args.operation==='festival_answer'){
   const row=d.get(...path(args.festival));
   if(row?.category!=='festival'||!row.formal||row.status!=='held'||row.location!==d.get('state','location')||now<row.due||now>=row.endsAt)throw Error('这里没有正在举行的正式节庆');
-  const f=custom(this,row.custom);if(!matches(f,row))throw Error('节庆来源与实际举办记录不一致');
+  const f=custom(this,row.custom);if(!matches(f,row,this))throw Error('节庆来源与实际举办记录不一致');
   if(!available(this,d.get('state'),row.host,row.location,now))throw Error('主办人不在场，无法核对答案并发奖');
   const puzzle=f.runtime.riddles?.find(r=>r.id===args.request);if(!puzzle)throw Error('没有这道灯谜');
   const key=`festival-prize:${row.id}:${puzzle.id}:player`;
@@ -179,7 +230,7 @@ export function festivalAction(d,args,eventId){
   const row=d.get(...path(args.festival));
   if(row?.category!=='festival'||!row.formal||row.status!=='held'||row.location!==d.get('state','location')||!Number.isSafeInteger(row.endsAt)||now<row.due||now>=row.endsAt)throw Error('这里没有正在举行的正式节庆');
   const f=custom(this,row.custom);
-  if(!matches(f,row))throw Error('节庆来源与实际举办记录不一致');
+  if(!matches(f,row,this))throw Error('节庆来源与实际举办记录不一致');
   const minutes=row.endsAt-now;assertActionTime(d,this,minutes);
   const span=beginActionActivity(d,this,'light');this.advance(d,minutes,eventId);
   if(d.get('state','location')!==row.location||d.get('state','player','status')!=='正常')throw Error('散场前已离开或失去行动能力');
@@ -188,12 +239,15 @@ export function festivalAction(d,args,eventId){
  }
  if(args.operation==='festival_inspect'){
   const calendar=festivalCalendar(this).filter(f=>f.location===d.get('state','location')).map(visibleFestival);
-  return {calendar,events:Object.values(d.get('state','records')??{}).filter(r=>r.category==='festival'&&calendar.some(f=>f.id===r.custom)),actionScope:{kind:'instant'}};
+  const records=d.get('state','records')??{},ordinary=Object.values(records).filter(r=>r.category==='festival'&&r.ordinary&&r.location===d.get('state','location')).map(r=>{
+   const {riddles,...event}=r;return {...event,riddles:riddles.map(({answers,...p})=>({...p,claimed:Boolean(records[`festival-prize:${r.id}:${p.id}:player`])}))};
+  });
+  return {calendar,events:[...Object.values(records).filter(r=>r.category==='festival'&&calendar.some(f=>f.id===r.custom)),...ordinary],actionScope:{kind:'instant'}};
  }
  if(args.operation==='festival_plan'){
   const f=custom(this,args.festival);local(d,f);
   const year=args.year??this.calendar(now).year;if(!Number.isSafeInteger(year)||year<1)throw Error('节俗年份无效');
-  const due=when(f,year),id=occurrence(f,year);if(due<=now||due-now>360*DAY)throw Error('只能预约未来一年内的实际节俗日期');
+  const due=when(f,year,this),id=occurrence(f,year);if(due===null||due<=now||due-now>360*DAY)throw Error('只能预约未来一年内的实际节俗日期');
   if(f.formal&&!venueAvailable(this,d.get('state'),f))throw Error('节日场地不可用或不在开放窗口');
   if(d.get(...path(id)))throw Error('该年节俗已有预约或结果，不能重复组织');
   if(args.authorization!==undefined)throw Error('现有公账报告授权没有节庆支出权限，不能扣公款');
@@ -207,7 +261,7 @@ export function festivalAction(d,args,eventId){
  }
  const row=d.get(...path(args.festival));if(row?.category!=='festival')throw Error('没有该节俗预约');
  const f=args.operation==='festival_cancel'?row:custom(this,row.custom);local(d,f);
- if(row.formal&&args.operation!=='festival_cancel'&&!matches(f,row))throw Error('已授权节日参数变化，须取消原预约');
+ if(row.formal&&args.operation!=='festival_cancel'&&!matches(f,row,this))throw Error('已授权节日参数变化，须取消原预约');
  if(row.status!=='planned'||now>=row.due)throw Error('该节俗已结束，不能改写结果');
  const who=args.speaker==='player'?'player':this.resolve(args.speaker,'npc');
  if(!available(this,d.get('state'),who,f.location,now))throw Error('当事人须真实在场且可以行动');
@@ -242,11 +296,13 @@ export function festivalAction(d,args,eventId){
 export function nextFestivalMinute(state,engine,now){
  const pending=Object.values(state.records??{}).filter(r=>r.category==='festival'&&r.status==='planned'&&r.due>now).map(r=>r.due);
  const year=engine.calendar(now).year;
- for(const f of festivalCalendar(engine)){const at=when(f,year);pending.push(at>now?at:when(f,year+1));}
+ for(const f of festivalCalendar(engine)){const at=when(f,year,engine),next=at!==null&&at>now?at:when(f,year+1,engine);if(next!==null)pending.push(next);}
  for(const r of Object.values(state.records??{}))if(r.category==='festival'&&r.status==='held'&&r.endsAt>now)pending.push(r.endsAt);
  return Math.min(Infinity,...pending);
 }
 export function advanceFestivals(d,engine,at){
+ for(const row of Object.values(d.get('state','records')??{}))if(row.category==='festival'&&row.ordinary&&row.status==='held'&&row.endsAt<=at)
+  holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
  const year=engine.calendar(at).year;
  const calendar=festivalCalendar(engine);
  for(const old of Object.values(d.get('state','records')??{}))if(old.category==='festival'&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
@@ -254,12 +310,12 @@ export function advanceFestivals(d,engine,at){
  }
  for(const f of calendar){
   const state=d.get('state');
-  if(when(f,year)!==at)continue;
+  if(when(f,year,engine)!==at)continue;
   const id=occurrence(f,year),old=d.get(...path(id));if(old&&old.status!=='planned')continue;
   const row=old??{category:'festival',id,custom:f.id,kind:f.kind,name:f.name,source:f.source,settlement:f.settlement,location:f.location,host:f.host,year,due:at,cost:0,participants:[],paidCopper:0};
   let reason=null,status='held',participants=[];
   if(!old){status='not-scheduled';reason='只有当地节俗日期，没有组织与费用授权';}
-  else if(f.formal&&!row.formal||row.formal&&(!f.formal||!matches(f,row)||!venueAvailable(engine,state,f))){status='unavailable';reason='已授权节日参数变化或场地不可用';}
+  else if(f.formal&&!row.formal||row.formal&&(!f.formal||!matches(f,row,engine)||!venueAvailable(engine,state,f))){status='unavailable';reason='已授权节日参数变化或场地不可用';}
   else if(!(row.formal?required(engine,f,row):[row.host,...(row.cost?[row.supplier]:[])]).every(who=>agreement(d,row,who))){status='unauthorized';reason='组织、材料、场地或收费授权缺失、到期或来源不成立';}
   else if(!available(engine,state,row.host,row.location,at)||row.cost&&!available(engine,state,row.supplier,row.location,at)){status='unavailable';reason='组织者或收费服务者未实际到场或正忙';}
   else{
@@ -310,6 +366,8 @@ export function advanceFestivals(d,engine,at){
  }
 }
 export function festivalScene(engine,document){
- return Object.values(document.state.records??{}).filter(r=>r.category==='festival'&&r.location===document.state.location&&r.resolvedAt<=document.state.minute)
-  .sort((a,b)=>b.resolvedAt-a.resolvedAt).slice(0,3).map(r=>`${engine.calendar(r.due).text} ${r.name}：${r.status==='held'?'已举行当地节俗活动':r.reason}。`).join('\n');
+ const ordinary=Object.values(document.state.records??{}).filter(r=>r.category==='festival'&&r.ordinary&&r.location===document.state.location&&r.due<=document.state.minute)
+  .map(r=>`${r.name}：${document.state.minute<r.endsAt?`正在举行，${engine.calendar(r.endsAt).text}散场。${r.riddles.map(p=>`灯谜${p.id}：${p.question}`).join('；')}`:'已散场。'}`);
+ return [...ordinary,...Object.values(document.state.records??{}).filter(r=>r.category==='festival'&&!r.ordinary&&r.location===document.state.location&&r.resolvedAt<=document.state.minute)
+  .sort((a,b)=>b.resolvedAt-a.resolvedAt).slice(0,3).map(r=>`${engine.calendar(r.due).text} ${r.name}：${r.status==='held'?'已举行当地节俗活动':r.reason}。`)].join('\n');
 }
