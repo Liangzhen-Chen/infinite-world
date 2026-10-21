@@ -1,4 +1,4 @@
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead,isEffective} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('professions',{sinks:['sink:export']});
@@ -12,6 +12,8 @@ import {personCertified}from'./entity-view.mjs';
 import {compensateHidden}from'./hidden-passives.mjs';
 import {acquireHiddenProfession,variantProgress,professionUltimate,completeProfessionUltimate,careerOf}from'./career-metrics.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {organizationOffices} from './organization-state.mjs';
+import {presentWitnesses,publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
 declareHoldingWriter('professions',{kinds:['certified','mentor_of','permit'],entities:['office']});
 const int=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
 export function effectiveProficiency(d,engine,skill){
@@ -102,6 +104,21 @@ export function profession(d,args,id){
         if(effectiveProficiency(d,this,entry.skill)<entry.minimumProficiency)throw new Error('尚未达到入职手艺或基础技能要求');
     }
     assertNpcService(d,this,teacher,'teach',entry?.minutes??120);
+    let application=null;
+    // Old event logs must replay without acquiring a new application or fee
+    // receipt. New receipts carry the native request reference themselves.
+    if(!this.replaying||this.replayResult?.request){
+        const state=d.get('state'),office=(this.world.factions??[]).filter(f=>isEffective(this,state,f.id))
+            .flatMap(f=>organizationOffices(this,state,f.id,f)).find(o=>o.holder===teacher&&o.seat===state.location&&o.authority?.profession===role&&o.authority.operations?.includes('certify'));
+        // The current examining office owns the application, not the reception
+        // building or a registrar. Independent masters retain their own requests.
+        const institution=office?.organization??mentor.faction??teacher,request=`${id}:certification_request`;
+        SOCIAL_VERBS.add('request');
+        publishTransitionEvent(d,this,{id:request,sourceEvent:id,tool:'profession',verb:'request',actor:'player',target:institution,
+            minute:state.minute,location:state.location,visibility:'witnessed',witnesses:presentWitnesses(state,state.location,['player']),tags:['certification'],
+            payload:{kind:'certification',receiver:teacher,...(office?{office:office.id}:{}),terms:{profession:role,...(entry?.skill?{skill:entry.skill}:{})}}});
+        application={teacher,institution,request};
+    }
     const outcome=this.check(d,{attribute:catalog.attribute??'智力',skill:entry?.skill,difficulty:entry?.difficulty??15},id);this.advance(d,entry?.minutes??120,id);
     if(outcome.success){
         moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:catalog.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],player.coins-catalog.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);
@@ -109,5 +126,5 @@ export function profession(d,args,id){
         d.set(['state','careers',role,'certification'],{teacher,minute:d.get('state','minute'),source:id,...(task?{task:task.name}:{})});
         d.say(`通过${catalog.name}职业认证`);
     }
-    return{profession:role,certified:outcome.success,...(task?{entryTask:task.name}:{}),...outcome};
+    return{profession:role,...(application?{...application,cost:outcome.success?catalog.fee:0}:{}),certified:outcome.success,...(task?{entryTask:task.name}:{}),...outcome};
 }

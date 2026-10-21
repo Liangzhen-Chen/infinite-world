@@ -94,6 +94,11 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(row?.category==='legal_request'&&row.sourceEvent===eventId&&!b.records?.[result.request])
    add(stateEffect('emit',{target:row.target,verb:row.verb,visibility:row.request.visibility==='private'?'private':'witnessed',payload:row.payload},['state','records',result.request],before,after));
  }
+ if(tool==='profession'&&result.request){
+  const key=`world_event:${result.request}`,row=a.records?.[key];
+  if(row?.category==='world_event'&&row.sourceEvent===eventId&&row.verb==='request'&&row.payload?.kind==='certification'&&!b.records?.[key])
+   add(stateEffect('emit',{actor:row.actor,target:row.target,verb:row.verb,visibility:row.visibility,payload:row.payload},['state','records',key],before,after));
+ }
  // Environment water is measured in the native feature state, not an item
  // ledger account. Adopt its conserved before/after pair, never the request.
  const waterEndpoints=new Set();
@@ -311,6 +316,10 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // negative deltas alone do not establish that something was a fee (A3-A).
  if(tool==='learn'&&typeof result.cost==='number'&&result.cost>0){
   const fee=receipt.applied.find(e=>e.op==='transfer'&&e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&parseAccount(e.to).owner===result.source?.id&&e.qty===result.cost);
+  if(fee)costs.push(fee);
+ }
+ if(tool==='profession'&&result.certified===true&&result.cost>0){
+  const fee=posted.find(e=>e.resource==='coin_river'&&parseAccount(e.from).owner==='player'&&parseAccount(e.to).owner===result.teacher&&e.qty===result.cost);
   if(fee)costs.push(fee);
  }
  if(tool==='cast')for(const material of engine.byId.get(result.spell)?.materials??[]){
