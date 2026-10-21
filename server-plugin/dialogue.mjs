@@ -53,6 +53,8 @@ function save(d,npc,eventId,action,decision,text,extra={}){
  d.set(['state','dialogues',npc],{...dialogue,minute:d.get('state','minute'),sourceEvent:eventId});
  return {dialogue};
 }
+// Native request adapters share the same conversation lifecycle and archive.
+export {save as saveDialogue};
 export function dialogueRequest(d,engine,args,eventId){
  if(!args.content?.startsWith(prefix))return null;
  const npc=present(d,engine,args.promisor),view=subjectiveView(engine,d.document,npc);

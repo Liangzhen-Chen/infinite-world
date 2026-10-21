@@ -64,6 +64,7 @@ import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService,advanceNpcSchedules,scheduleAt,withScheduleCache,advanceWithNpcParticipants}from'./npc-schedule.mjs';
 import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
+import {executeRoutingProgram} from './routing-programs.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
@@ -362,7 +363,7 @@ export class WorldEngine {
         const bookedWorkstation=facilityRuntime().prepareBookedWorkstation?.(d,session,tool,args);
         session.bookedWorkstation=bookedWorkstation;
         const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
-        const detail = physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
+        const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};

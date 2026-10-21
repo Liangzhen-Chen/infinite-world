@@ -33,6 +33,13 @@ function prepareOpenSequence(proposal,registry,context,engine){
  const effects=proposal.effects??[],actor=context.actor??'player',owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
  const resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null),coin=e=>['coin',LEDGER_COIN].includes(resource(e));
  const find=predicate=>registry.actions.find(predicate)?.id;
+ if(effects.length===3){
+  const [payment,holding,question]=effects;
+  if(payment.op==='transfer'&&coin(payment)&&owner(payment.from)===actor&&holding.op==='holding.open'&&holding.holdingKind==='lodges'&&question.op==='emit'&&question.verb==='request'&&question.payload?.subject==='renewal_quote'&&question.target===owner(payment.to)){
+   const lodge=routeAction({...proposal,target:question.target,effects:[payment,holding]},registry,context);
+   if(lodge.routed)return {status:'sequence',routed:'open:proposal',preserveCompleted:true,signature:lodge.signature,candidates:lodge.candidates,effects:[],cost:null,steps:[{action:lodge.routed,slots:lodge.candidates[0].slots},{action:'core:time',slots:{},untilCheckout:true},{action:'open:question',slots:{target:question.target,content:'询问下一晚续住报价；尚未同意续租'}}]};
+  }
+ }
  // Known environment spells run their native programs in order. The second
  // cast sees the first cast's staged water, pays its own MP/time, and a failed
  // prerequisite discards the whole staged sequence (06 §6.3 / §6.7).
@@ -68,6 +75,11 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
  let current=document,failedStep=null;const patches=[],receipts=[];
  for(const [index,step] of prepared.steps.entries()){
   const slots={...step.slots};
+  if(step.untilCheckout){
+   const contracts=Object.values(current.state.records??{}).filter(r=>r.category==='contract'&&r.room===current.state.location&&r.parties?.includes('player')&&r.status==='有效'&&r.expires>current.state.minute);
+   if(contracts.length!==1)reject('E-OPEN-CHECKOUT','须有唯一有效住宿合同才能等到退房再询价');
+   slots.minutes=contracts[0].expires-current.state.minute;
+  }
   if(step.debtReference){
    const ref=step.debtReference,rows=obligationRows(current.state).filter(row=>!obligationClosed(row)&&row.debtor===ref.debtor&&row.creditor===ref.creditor&&(row.amount??row.principal??row.terms?.principal??0)-(row.paid??0)>=ref.amount);
    const exact=rows.find(row=>row.id===ref.id||row.legacyRecord===ref.id),matches=exact?[exact]:/^[a-z][a-z0-9_:.-]*$/i.test(ref.id??'')?[]:rows;
@@ -78,6 +90,9 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   const reduced=await engine.reduce(current,call,{openProposal:{proposal:input.args,prepared}}),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
   // Reject the whole sequence, including earlier staged costs and effects.
   if(receipt.status==='rejected'){
+   // An unavailable question tomorrow cannot undo a night already paid for
+   // and lived through. Ordinary same-time compositions remain atomic.
+   if(prepared.preserveCompleted&&receipts.length){failedStep=index;receipts.push(receipt);break;}
    const routing={...prepared,...receipt.routing,status:'sequence',intent:input.args.intent,proposal:structuredClone(input.args),failedStep:index,steps:prepared.steps,fallback:{...receipt.routing?.fallback,intent:input.args.intent}};
    const rejected={...receipt,eventId:input.eventId,routing};
    return preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}};
@@ -102,7 +117,7 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   }
  }
  const routing=failedStep===null?prepared:{...prepared,failedStep};
- const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied,cost:{time:current.state.minute-document.state.minute,resources},steps:receipts,routing};
+ const receipt={eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},routed:'open:proposal',status:preview?'preview':'committed',applied,cost:{time:current.state.minute-document.state.minute,resources},steps:receipts,routing,...(receipts.at(-1)?.status==='rejected'?{reason:receipts.at(-1).reason}:{})};
  return preview?{receipt,routing}:{patches,result:{action:'open:proposal',...(failedStep===null?{}:{success:false,failedStep}),receipt}};
 }
 
@@ -110,7 +125,10 @@ export function prepareOpenAction(engine,document,proposal,native){
  if(!proposal||typeof proposal.intent!=='string'||!proposal.intent.trim())reject('E-OPEN-INTENT','请说明你想做什么');
  for(const effect of proposal.effects??[]){
   if(effect.op==='fact.set')writableFactField(effect.field);
-  if(effect.tags!==undefined&&(!Array.isArray(effect.tags)||effect.tags.length>0)&&!(effect.op==='create'&&effect.kind==='mark')&&!(effect.op==='create'&&effect.kind==='project'&&proposal.means?.manner==='research'&&Array.isArray(effect.tags)&&effect.tags.length===1&&effect.tags[0]==='research'))reject('E-PRIMITIVE-SOURCE','原语不能自报 tags');
+  if(effect.op==='create'&&effect.kind==='project'&&effect.tags?.includes('festival')){
+   if(effect.template!=='interim'||!Array.isArray(effect.materials)||effect.materials.length||!effect.facts||Object.keys(effect.facts).some(k=>!['budget','author','location','name'].includes(k))||effect.facts.author!==undefined&&!['self','player'].includes(effect.facts.author))reject('E-PRIMITIVE-SOURCE','节庆构想仅登记本人的预算与拟征询地点，不能代填许可、参与者或投入材料');
+  }
+  if(effect.tags!==undefined&&(!Array.isArray(effect.tags)||effect.tags.length>0)&&!(effect.op==='create'&&effect.kind==='mark')&&!(effect.op==='create'&&effect.kind==='project'&&Array.isArray(effect.tags)&&effect.tags.length===1&&(proposal.means?.manner==='research'&&effect.tags[0]==='research'||effect.tags[0]==='festival')))reject('E-PRIMITIVE-SOURCE','原语不能自报 tags');
  }
  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
  native??=createOpenActionContext(engine,document,proposal);
@@ -149,6 +167,7 @@ export function prepareOpenAction(engine,document,proposal,native){
  // Scene-only registered actions can still route above. An unresolved goal
  // asks the player and creates no request or NPC commitment.
  if(Array.isArray(proposal.effects)&&proposal.effects.length===0&&native.routing.kindOf?.(proposal.target)==='person')return {...routing,status:'needs_slots',routed:null,effects:[],cost:null,missing:['goal'],reason:'请说明想对目标具体做什么：交谈、治疗、攻击，还是别的事？'};
+ if(proposal.effects?.length===0&&proposal.target===undefined)return {...routing,status:'needs_slots',routed:'open:proposal',needsSlots:{action:'open:proposal',missing:['effects']},effects:[],cost:null,missing:['effects'],reason:'此意图尚需具体行动与规则接点；不会按观察结算或预写成功'};
  for(const effect of proposal.effects??[])if(effect.op==='holding.rescale'){
   const permission=authority(primitiveContext(engine,document),native.routing.actor,effect.op,effect.subject,{shares:effect.shares,effect});
   if(!permission.allowed)reject('E-AUTHORITY',permission.reason);

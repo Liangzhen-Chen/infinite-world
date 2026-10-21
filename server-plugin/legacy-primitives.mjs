@@ -211,6 +211,10 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  for(const [id,row] of Object.entries(a.inventory??{}))if(row?.moisture!==undefined&&!same(b.inventory?.[id]?.moisture,row.moisture))
   add(stateEffect('fact.set',{entity:id,field:'moisture',value:row.moisture},['state','inventory',id,'moisture'],before,after));
  // A research project is created at inception; it does not grant knowledge.
+ if(tool==='settlement'&&args.operation==='festival_plan'&&result.project&&a.projects?.[result.project]?.type==='节庆筹办'&&!b.projects?.[result.project]){
+  const row=a.projects[result.project];
+  add(stateEffect('create',{entity:result.project,kind:'project',tags:['festival'],facts:{budget:row.budget,author:row.actor,location:row.location},stage:row.stage},['state','projects',result.project],before,after));
+ }
  if(tool==='research'&&args.operation==='start'&&result.project&&a.projects?.[result.project]&&!b.projects?.[result.project]){
   const row=a.projects[result.project];
   add(stateEffect('create',{entity:result.project,kind:'project',facts:{name:row.name,concept:row.concept,skills:row.skills},stage:row.stage},['state','projects',result.project],before,after));
@@ -287,7 +291,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  const dialogue=result.dialogue;
  if(dialogue&&a.dialogues?.[dialogue.npc]?.sourceEvent===eventId){
   const verb=['ask','interpreter','persuade','request'].includes(dialogue.action)?'request':dialogue.action;
-  add(stateEffect('emit',{target:dialogue.npc,verb,visibility:'private',payload:{kind:dialogue.action,content:args.content??null},...(dialogue.actedAs?{actedAs:dialogue.actedAs}:{})},['state','dialogues',dialogue.npc],before,after));
+  add(stateEffect('emit',{target:dialogue.npc,verb,visibility:dialogue.action==='tell'&&args.key==='dialogue:self_tell'?'witnessed':'private',payload:{kind:dialogue.action,content:args.content??null},...(dialogue.actedAs?{actedAs:dialogue.actedAs}:{})},['state','dialogues',dialogue.npc],before,after));
  }
  for(const [id,memory] of Object.entries(after.memories??{})){
   if(memory.sourceEvent!==eventId||same(before.memories?.[id],memory))continue;

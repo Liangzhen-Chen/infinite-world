@@ -41,6 +41,7 @@ import {holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('primitives-runtime',{kinds:['owns','contains']});
 import {adaptLegacyExecution,legacyReceiptKey,legacyIdentity} from './legacy-primitives.mjs';
 import {familyDegree,degreeFamily,degreeConsequences,finishDegreeConsequences} from './action-degrees.mjs';
+import {routingRead} from './routing-programs.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -576,9 +577,10 @@ export const primitiveRuntime={
   const result=applyMarkPrimitive(d,engine,effect,meta);
   return {...result,...reactToMark(d,engine,d.get('state','created',result.entity),{eventId:meta.child,suppressed:result.suppressed})};
  },
- isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.projection==='scene'||action?.id==='open:leave_mark'||Boolean(action?.rite);},
+ isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.projection==='scene'||action?.readOnly&&['world_read','world_catalog'].includes(action.call?.tool)||action?.id==='open:leave_mark'||Boolean(action?.rite);},
  nativeAction(engine,document,input,{preview=false}={}){
   const action=findAction(this.registry(engine),input.args?.action);
+  const read=routingRead(engine,document,action,input,{preview});if(read)return read;
   if(action?.projection==='scene')return {patches:[],receipt:{eventId:input.eventId,actor:'player',routed:action.id,status:preview?'preview':'committed',applied:[],cost:{time:0},scene:engine.scene(document,'')}};
   if(action?.id==='open:leave_mark')return executeLeaveMark(engine,document,input,{preview});
   if(action?.rite)return executeRite(engine,document,input,{preview});
@@ -637,7 +639,7 @@ export const primitiveRuntime={
    return {prepared,receipt:{eventId,actor:'player',status:'not_submitted',applied:[],routing,signature:prepared.signature,candidates:prepared.candidates,trimmed:prepared.trimmed??[]}};
   }
   const actionInput={tool:'world_act',eventId,args:{action:prepared.routed,slots:prepared.slots}};
-  if(this.registry(engine).byId.get(prepared.routed)?.projection==='scene'){
+  if(this.registry(engine).byId.get(prepared.routed)?.projection==='scene'||this.registry(engine).byId.get(prepared.routed)?.readOnly){
    const result=this.nativeAction(engine,document,actionInput,{preview});
    Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
    return preview?result:{patches:[],result:{action:prepared.routed,receipt:result.receipt}};

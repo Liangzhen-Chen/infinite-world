@@ -17,6 +17,7 @@ import {templeById} from './faith-catalog.mjs';
 import {activeEncounters} from './combat-state.mjs';
 import {hostedRites} from './faith-state.mjs';
 import {knownWorldEventReference} from './world-events.mjs';
+import {intentText,requestKind} from './routing-programs.mjs';
 
 const tokenizer=new MemoryIndex();
 const multiset=values=>{const out=new Map();for(const value of values)out.set(value,(out.get(value)??0)+1);return out;};
@@ -81,6 +82,7 @@ export function routeAction(proposal,registry,context){
  // The proposal gateway describes an entry point, not a concrete neighbour;
  // routing back into it would recurse and distort the BM25 candidate corpus.
  const requestKinds=proposal.effects?.filter(e=>e.op==='emit').map(e=>{
+  const classified=requestKind(e);if(classified!=='request')return classified;
   const kind=e.payload?.kind;
   if(kind!=='request')return kind;
   const subject=e.payload?.subject;
@@ -88,7 +90,7 @@ export function routeAction(proposal,registry,context){
   // credit, teaching or a service must retain its own request protocol.
   return ({greeting:'greet',public_key:'public_key'})[subject]??(/^guide(?:_|$)/.test(subject??'')?'guide':/^deliver(?:_|$)/.test(subject??'')?'delivery':/(?:_quote|_terms|_availability|_conditions|_detail)$/.test(subject??'')||/[?？]/.test(proposal.intent??'')?'ask':'request');
  }).filter(Boolean)??[];
- const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.canProject?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
+ const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.canProject?.(a,proposal)||context.emptyRequest?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
  const texts=textScores(actions.map(action=>({...action,synonyms:[...action.synonyms??[],...context.labelsFor?.(action,proposal)??[]]})),proposal.intent??''),signature=effectSignature(proposal.effects??[],context);
  const candidates=actions.map((action,index)=>{
   const slots=context.slotsFor(action,proposal)??{},required=new Set(context.requiredSlots?.(action,slots)??[]),missing=(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
@@ -214,7 +216,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
    const obligation=effects.find(e=>e.op==='obligation.create'),settlement=effects.find(e=>e.op==='obligation.settle');
    if(action.call?.tool==='world_law'&&slot.name==='request'){
-    const request=effects.find(e=>e.op==='emit'&&['claim','request'].includes(e.verb));
+    const request=effects.find(e=>e.op==='emit'&&(['claim','request'].includes(e.verb)||e.payload?.kind==='confession'));
     if(request)value={...request.payload,target:request.target,visibility:request.visibility};
    }
    if(action.call?.tool==='world_law'&&action.call.operation==='pay'&&settlement){
@@ -222,6 +224,31 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(fine)value??=({case:fine.case,authority:fine.collector,coins:fine.amount})[slot.name];
    }
    const holding=effects.find(e=>e.op==='holding.open');
+   const text=intentText(proposal),empty=effects.length===0;
+   if(empty&&action.id==='core:trade.buy'){
+    const quotes=(facilityRuntime().currentAgreedQuotes?.(state)??[]).filter(q=>q.to===actor&&q.direction==='sell_to_player'&&!q.service&&catalog(q.resource,'item'));
+    const named=quotes.filter(q=>{const item=engine.byId.get(q.resource);return [item?.name,...item?.aliases??[]].filter(Boolean).some(n=>text.includes(n));});
+    if(named.length===1){const q=named[0];if(slot.name==='seller')value??=q.actor;if(slot.name==='item')value??=q.resource;if(slot.name==='quantity'){
+     const count=text.match(/(\d+|[一二两三四五六七八九十]+)(?:块|份|个|张|瓶)/);
+     const number=count&&(Number(count[1])||({'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10})[count[1]]);
+     if(number)value??=number;
+    }}
+   }
+   if(empty&&action.id==='core:practice'&&slot.name==='skill'){
+    const named=engine.world.spells?.filter(s=>[s.name,...s.aliases??[]].filter(Boolean).some(n=>text.includes(n)))??[];
+    if(named.length===1)value??=named[0].skill;
+   }
+   if(empty&&action.id==='core:research'){
+    if(slot.name==='operation')value='start';if(slot.name==='name'||slot.name==='concept')value??=text;
+    if(slot.name==='skills'){
+     const spells=engine.world.spells?.filter(s=>[s.name,...s.aliases??[]].filter(Boolean).some(n=>text.includes(n)))??[];
+     if(spells.length)value??=[...new Set(spells.map(s=>s.skill).filter(Boolean))];
+    }
+   }
+   if(action.call?.tool==='world_settlement'&&action.call.operation==='festival_plan'){
+    const project=effects.find(e=>e.op==='create'&&e.kind==='project'&&e.tags?.length===1&&e.tags[0]==='festival');
+    if(project){if(slot.name==='budget')value??=project.facts?.budget;if(slot.name==='settlement')value??=project.facts?.location;if(slot.name==='name')value??=project.facts?.name;}
+   }
    if(action.call?.tool==='world_trade'||action.call?.tool==='world_law'&&action.call.operation==='steal'){
     if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(proposal.means?.manner==='secret_sale'?proposal.means.tools?.[0]:undefined);
     if(slot.name==='quantity'&&goods)value??=goods.qty;
@@ -282,13 +309,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     else if(effects.some(e=>e.op==='learn'&&e.subject?.startsWith('skill_')&&state.skills?.[e.subject]))value='study';
    }
    if(action.call?.tool==='world_combat'){
-    if(slot.name==='intent')value=({guard:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
-    if(slot.name==='weapon')value??=proposal.means?.tools?.[0];
+    if(slot.name==='intent')value=({guard:'defend',defend:'defend',attack:'attack',retreat:'flee',shove:'shove'})[proposal.means?.manner]??value;
+    if(slot.name==='weapon')value??=proposal.means?.weapon??proposal.means?.tools?.[0];
     if(slot.name==='destination')value??=effects.find(e=>e.op==='move'&&e.mode==='disengage')?.to;
     if(slot.name==='target'&&proposal.target===undefined&&proposal.participants?.target===undefined){
      const encounters=activeEncounters(engine,state,actor);
      const opponents=[...pool.values()].filter(row=>row.id!==actor&&(activeDuel({...d,document},engine,row.id,actor)||encounters.some(r=>r.participants.includes(row.id))));
-     value=opponents.length===1?opponents[0].id:undefined;
+     value=proposal.means?.opponent&&opponents.some(p=>p.id===proposal.means.opponent)?proposal.means.opponent:opponents.length===1?opponents[0].id:undefined;
      // A demonstrative enemy reference can bind the single other local agent.
      // Generic guarding cannot turn a bystander into an opponent; multiple
      // agents (or conflicting duels) must still be disambiguated by the player.
@@ -299,7 +326,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      if(value===undefined)continue;
     }
    }
-   if(action.id==='core:dialogue.guide_request'&&slot.name==='content')value??=proposal.intent;
+   if((action.id==='core:dialogue.guide_request'||['open:ask_request','open:delivery_request','open:persuade_request','open:self_tell'].includes(action.id))&&slot.name==='content')value??=intentText(proposal);
    if(action.call?.tool==='world_research'&&proposal.means?.manner==='research'){
     const project=effects.find(e=>e.op==='create'&&e.kind==='project');
     if(slot.name==='name')value??=project?.facts?.name??project?.facts?.topic;
@@ -394,7 +421,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     const hostedVenue=action.call?.tool==='world_settlement'&&action.call.operation==='faith_rite'&&slot.name==='org'&&hostedRites(engine,state).some(r=>r.location===value);
     if(hostedVenue){/* Native faith handler verifies the scoped host and consent. */}
     else if(publicId)value=publicId;
-    else {const resolved=(action.call?.tool==='world_move'&&slot.name==='destination'||action.call?.tool==='world_trade'&&slot.name==='location')?resolveDestination(value):resolve(value,slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
+    else {const resolved=(action.call?.tool==='world_move'&&slot.name==='destination'||action.call?.tool==='world_trade'&&slot.name==='location')?resolveDestination(value):resolve(value,action.call?.tool==='world_combat'&&slot.name==='target'?null:slot.entity);if(resolved.value!==null)value=resolved.value;else continue;}
    }
    if(typeof slot.options==='object'&&Array.isArray(slot.options)&&!slot.options.includes(value))continue;
    slots[slot.name]=value;
@@ -410,6 +437,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','转移须指定有效的资源与账户');}
  };
  const labelsFor=(action,proposal)=>{
+  if(action.id==='core:research')return ['研究','融合','检查缺什么'];
+  if(action.id==='core:read')return ['能花多少钱','钱袋','账目','余额'];
+  if(action.id==='core:catalog')return ['场外','角色面板','在哪里打开'];
+  if(action.id==='core:settlement.festival_plan')return ['灯会','筹办','节庆'];
+  if(action.id==='core:law.confess')return ['供述','陈述经过','自首'];
   if(action.call?.tool==='world_law'&&action.call.operation==='pay')return ['缴款','缴清','罚款','罚金'];
   const labels={
    'core:eat.meal':['吃','吃掉','进食'],
@@ -462,6 +494,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  };
  const nativeSignatures=(action,slots,proposal)=>{
   const call=action.call,sign=effects=>effectSignature(effects,{kindOf,actor}),transfer=(resource,from,to)=>({op:'transfer',resource,from,to});
+  if(call?.tool==='world_settlement'&&call.operation==='festival_plan'&&proposal.effects?.some(e=>e.op==='create'&&e.kind==='project'&&e.tags?.length===1&&e.tags[0]==='festival'))return [sign([{op:'create',kind:'project'}])];
+  if(call?.tool==='world_law'&&call.operation==='confess'&&proposal.effects?.some(e=>e.op==='emit'&&e.payload?.kind==='confession'))return [sign([{op:'emit',target:slots.request?.target,verb:'tell'}])];
   const owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
   const transfers=(proposal.effects??[]).filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
   const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e))),goods=transfers.find(e=>!['coin',LEDGER_COIN].includes(resource(e)));
@@ -526,8 +560,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  // no success effects were claimed. Its executor still owns all preconditions.
  const emptyRequest=(action,proposal)=>proposal.effects?.length===0&&(
   action.id==='core:time'&&Number.isSafeInteger(proposal.means?.minutes)&&['wait','waiting','wait_without_quests'].includes(proposal.means.manner)||
-  action.call?.tool==='world_cast'&&catalog(proposal.means?.spell,'spell')&&proposal.target!==undefined);
- const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0&&!emptyRequest({id:'core:time'},proposal)&&!emptyRequest({call:{tool:'world_cast'}},proposal);
+  action.call?.tool==='world_cast'&&catalog(proposal.means?.spell,'spell')&&proposal.target!==undefined||
+  action.id==='core:trade.buy'&&/购买|买下|买两|买一/.test(intentText(proposal))||
+  action.id==='core:practice'&&/练一轮|再练|练习/.test(intentText(proposal))||
+  action.id==='core:research'&&/研究|融合/.test(intentText(proposal))||
+  action.id==='core:combat'&&['defend','guard'].includes(proposal.means?.manner)||
+  action.id==='core:read'&&/能花多少钱|钱袋|账目|余额/.test(intentText(proposal))||
+  action.id==='core:catalog'&&/场外|面板.*打开/.test(intentText(proposal)));
+ const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0&&/(?:看看|观察|环顾|打量)(?:一下)?(?:四周|周围|现场)|^看一看[。！]?\s*$/.test(intentText(proposal));
  const requiredSlots=(action,slots)=>{
   const call=action.call;
   if(call?.tool==='world_profession'&&call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden')return ['teacher'];
@@ -539,20 +579,25 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   return [];
  };
  return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,emptyRequest,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+  const utterance=proposal?.effects?.find(e=>e.op==='emit');
+  if(action.id==='open:ask_request'&&!['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
+  if(action.id==='core:dialogue.ask'&&['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
+  if(action.id==='open:self_tell'&&!(utterance?.verb==='tell'&&utterance.payload?.source==='self'))return false;
   if(action.id==='open:leave_mark'){
    const mark=proposal?.effects?.find(e=>e.op==='create'&&e.kind==='mark'),forms=action.slots?.find(s=>s.name==='form')?.options;
    if(mark&&mark.facts?.form&&!forms?.includes(mark.facts.form))return false;
   }
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
-  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>e.op==='emit'&&e.verb==='request'&&(e.payload?.kind==='guide'||e.payload?.kind==='request'&&/^guide(?:_|$)/.test(e.payload?.subject??''))))return false;
+  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>requestKind(e)==='guide'))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
   if(learning&&action.call?.tool==='world_learn'&&learning.learningSource==='practice')return false;
   if(learning&&action.call?.tool==='world_practice'&&learning.learningSource!=='practice')return false;
   const traveling=action.call?.tool==='world_move'&&participants.target===proposal?.effects?.find(e=>e.op==='move')?.to&&resolveDestination(participants.target).value!==null;
   if(Object.entries(participants).some(([role,id])=>role!=='actor'&&typeof id==='string'&&!kindOf(id)&&!(role==='target'&&traveling)))return false;
   const target=participants.target,catalog=action.visibility?.catalog;
-  if(!target&&action.call?.tool==='world_combat'&&proposal?.means?.manner==='guard')return true; // Missing opponent is a slot question, not an invented fight.
+  if(!target&&action.call?.tool==='world_combat'&&['guard','defend'].includes(proposal?.means?.manner))return true; // Missing opponent is a slot question, not an invented fight.
   if(!target&&action.call?.tool==='world_combat'&&['retreat','shove'].includes(proposal?.means?.manner))return true;
+  if(!target&&action.id==='core:trade.buy'&&emptyRequest(action,proposal))return true;
   if(catalog?.startsWith('target:')&&!target)return false;
   if(catalog==='target:npc'&&kindOf(target)!=='person'||catalog==='target:item'&&kindOf(target)!=='item'||catalog==='target:place'&&!traveling&&kindOf(target)!=='place')return false;
   return (action.preconditions??[]).every(condition=>{
