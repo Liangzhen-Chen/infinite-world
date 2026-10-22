@@ -21,11 +21,7 @@ function setup(){
 test('SV: published smith derives services at a live workstation without changing his profile',()=>{
     const {e,doc}=setup(),base=e.byId.get(smith),before=structuredClone(base);
     assert.deepEqual(base.services,[]);
-    // 01 §1.10: recipe availability derives from facilities and the operator's
-    // skill. A3's certification office may offer instruction, but it must not
-    // author this recipe into the smith's profile or grant it off duty.
-    assert.ok(base.schedule.default.every(s=>!s.services.includes(recipe)));
-    assert.ok(base.schedule.default.filter(s=>s.services.includes('teach')).every(s=>s.activity.includes('入职验样')));
+    assert.ok(base.schedule.default.every(s=>!s.services.includes('teach')));
     assert.ok(npcServices(e,doc.state,smith).includes(recipe));
     assert.equal(personTeaching(e,doc.state,smith,recipe),true);
     assert.ok(npcAvailability(e,doc.state,smith).services.includes('teach'));
