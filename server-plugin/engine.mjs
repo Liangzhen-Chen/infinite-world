@@ -1,7 +1,8 @@
 import {advanceHook} from './advance-hooks.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
-import {primitiveActionRuntime} from './primitives.mjs';
+import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
+import {reject} from './action-rejection.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
 import {NPC_CRIME_VERSION} from './npc-crime.mjs';
@@ -72,7 +73,7 @@ import {createNpcObligation,assertNpcObligationAction,npcObligationAt,advanceNpc
 import {applyNpcRelation}from'./npc-relations.mjs';
 import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
-import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION}from'./world-events.mjs';
+import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION,SOCIAL_VERBS}from'./world-events.mjs';
 import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import {adjustStanding} from './standing.mjs';// world-event subscriber (registers itself)
@@ -102,13 +103,16 @@ import {applyConfigSet,Scheduler,schedulerConfig,schedulerWired} from './schedul
 const withBooks=(engine,document)=>withLedger(engine,document);
 // 引擎自己的写入（同行、客房）与旧存档分区补齐（巢穴、农事等迁移补丁的转运，可落到任何来源）。
 declareHoldingWriter('engine',{kinds:['*'],entities:['*'],locations:true});
+// Static load-time registration of the closed set of verbs primitive
+// transactions publish; never added while executing (replay determinism).
+for(const verb of PRIMITIVE_EVENT_VERBS)SOCIAL_VERBS.add(verb);
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
-    if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
+    if (!Number.isSafeInteger(value) || value < min || value > max) reject('E-ACTION-PRECONDITION',`${label}必须在${min}到${max}之间`);
     return value;
 };
-const text = (value, max = 1200) => { if (typeof value !== 'string' || !value.trim() || value.length > max) throw new Error('文字为空或过长'); return value.trim(); };
+const text = (value, max = 1200) => { if (typeof value !== 'string' || !value.trim() || value.length > max) reject('E-ACTION-PRECONDITION','文字为空或过长'); return value.trim(); };
 export{xpRequired};
 export const skillGrade = value => `${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 class Draft {
@@ -220,7 +224,7 @@ export class WorldEngine {
             if(!scoped.length&&candidates.length===1)return candidates[0];
         }
         const id = name === 'player' ? name : this.resolver.resolve(name, scope, kind);
-        if (kind && !id.startsWith(kind + '_')) throw new Error(`需要${kind}类型编号`);
+        if (kind && !id.startsWith(kind + '_')) reject('E-ACTION-PRECONDITION',`需要${kind}类型编号`);
         return !kind?actorId(this.world,id):id;
     }
     initialFromLegacy(legacy, randomSeed = 'default-campaign', {prepare=true}={}) {
@@ -345,10 +349,10 @@ export class WorldEngine {
         }
         settleAgricultureExpiry(d,this);
         const permission=primitiveActionRuntime()?.legacyPermission(this,d.document,tool,args);
-        if(permission){if(!permission.allowed)throw Error(permission.reason);}else enforceLegalRestriction(d,tool,args,this);
+        if(permission){if(!permission.allowed)reject('E-ACTION-PRECONDITION',permission.reason);}else enforceLegalRestriction(d,tool,args,this);
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
-        if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))throw new Error('你已经死亡，需要在登记点醒来后行动');
-        if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))throw new Error('你处于濒死状态，只能等待救治或尝试自救');
+        if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))reject('E-ACTION-PRECONDITION','你已经死亡，需要在登记点醒来后行动');
+        if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))reject('E-ACTION-PRECONDITION','你处于濒死状态，只能等待救治或尝试自救');
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
@@ -554,27 +558,27 @@ export class WorldEngine {
         if(args.operation==='remit')return executeAgreedRemittance(d,this,args,id,(next,terms)=>creditTrade.call(this,d,next,id,terms));
         if(CREDIT_OPERATIONS.has(args.operation))return creditTrade.call(this,d,args,id);
         if(args.operation&&args.operation!=='trade')return businessTrade.call(this,d,args,id);
-        if(args.service!==undefined&&args.service!=='住宿')throw new Error('未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
+        if(args.service!==undefined&&args.service!=='住宿')reject('E-ACTION-PRECONDITION','未登记该服务；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const buyer=this.resolve(args.buyer ?? 'player'),seller=this.resolve(args.seller);
-        if(buyer===seller) throw new Error('交易双方不能相同');
-        if(!this.actor(d,buyer)||!this.actor(d,seller)) throw new Error('交易对象不在战役中');
-        for(const actor of[buyer,seller])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor).status==='濒死'))throw new Error('交易一方无法清醒履约');
+        if(buyer===seller) reject('E-ACTION-PRECONDITION','交易双方不能相同');
+        if(!this.actor(d,buyer)||!this.actor(d,seller)) reject('E-ACTION-PRECONDITION','交易对象不在战役中');
+        for(const actor of[buyer,seller])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor).status==='濒死'))reject('E-ACTION-PRECONDITION','交易一方无法清醒履约');
         const playerLocation=d.get('state','location');
-        for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) throw new Error('交易对方不在场');
+        for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) reject('E-ACTION-PRECONDITION','交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
         if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
         // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
         const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
-        if(args.service==='住宿'&&!place)throw new Error('这个人没有登记住宿服务');
+        if(args.service==='住宿'&&!place)reject('E-ACTION-PRECONDITION','这个人没有登记住宿服务');
         for(const actor of [buyer,seller])if(actor!=='player'&&!place)assertNpcService(d,this,actor,'trade',5);
         if(place){
-            if(facilityView(this,d.get('state'),place.id)?.factor===0)throw Error('住宿建筑已停用');
+            if(facilityView(this,d.get('state'),place.id)?.factor===0)reject('E-ACTION-PRECONDITION','住宿建筑已停用');
             assertLodgingHost(d,this,seller,place,args.consent);
             const economy=this.rules.economy,host=this.byId.get(seller).name;
             const days=number(args.days??1,1,7,'住宿天数');
             const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item:'lodging_one_night',quantity:days});
             const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
-            if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('房钱不足');
+            if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
             const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             assertLodgingCapacity(this,d.document,place.id,starts,starts+days*1440);
@@ -585,7 +589,7 @@ export class WorldEngine {
             consumeAgreedQuote(d,agreed,id);
             this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
         }
-        if(!args.item)throw new Error('缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
+        if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');
         let quantity=number(args.quantity,1,100000,'数量');const requestedQuantity=quantity,catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
@@ -593,17 +597,17 @@ export class WorldEngine {
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
         const quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
-        if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)throw Error('单价不符既定报价');
+        if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)reject('E-ACTION-PRECONDITION','单价不符既定报价');
         const price=quote.agreed?quote.listPrice:(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         // Explicit seller consent to a smaller cash sale. Keep the normal
         // all-or-nothing path, agreed terms and selected unique units intact.
         if(args.allowPartial===true&&seller==='player'&&buyer!=='player'&&(args.payment??'cash')==='cash'&&!quote.agreed&&!args.instances){
             quantity=Math.min(quantity,Math.floor(this.actor(d,buyer).coins/price));
-            if(quantity<1)throw new Error('买方余额不足，连一件也收不起');
+            if(quantity<1)reject('E-ACTION-PRECONDITION','买方余额不足，连一件也收不起');
         }
         const cost=quote.agreed?quote.totalCoins:quantity*price;
-        if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)throw new Error('买方余额不足');
+        if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
+        if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected,receivingCases=[];
@@ -699,13 +703,13 @@ export class WorldEngine {
     time(d,args,id) {
         primitiveActionRuntime()?.settleRites?.(d,this);
         if(isPhysicallyDead(this,d,'player'))this.revive(d,{},id);
-        if(args.minutes!==undefined&&args.until!==undefined)throw new Error('minutes 与 until 只能选一个');
+        if(args.minutes!==undefined&&args.until!==undefined)reject('E-ACTION-PRECONDITION','minutes 与 until 只能选一个');
         let duration=args.minutes;
         if(args.until!==undefined){
-            const until=args.until;if(!until||typeof until!=='object'||Array.isArray(until))throw new Error('until 需要 dayOffset、hour 和可选 minute');
+            const until=args.until;if(!until||typeof until!=='object'||Array.isArray(until))reject('E-ACTION-PRECONDITION','until 需要 dayOffset、hour 和可选 minute');
             const day=number(until.dayOffset,0,30,'相对日期'),hour=number(until.hour,0,23,'小时'),minute=number(until.minute??0,0,59,'分钟');
             const now=d.get('state','minute');duration=(Math.floor(now/1440)+day)*1440+hour*60+minute-now;
-            if(duration<=0)throw new Error('目标钟点必须晚于现在，请核对 dayOffset');
+            if(duration<=0)reject('E-ACTION-PRECONDITION','目标钟点必须晚于现在，请核对 dayOffset');
         }
         const minutes=number(duration,1,43200,'耗时');
         if(['睡眠','休息'].includes(args.activity))holdingSet(d,null,['state','records','mind_rest_activity'],true,'engine');
@@ -778,7 +782,7 @@ export class WorldEngine {
                 if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
             }
         }
-        if(!distances.has(to))throw new Error('没有当前季节可通行的路线，不能瞬移');
+        if(!distances.has(to))reject('E-ACTION-PRECONDITION','没有当前季节可通行的路线，不能瞬移');
         const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
         const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
         const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
@@ -791,7 +795,7 @@ export class WorldEngine {
         return adjusted;
     }
     move(d,args,id) {
-        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes('player')))throw Error('仍在承运班次中，须抵达或处理滞留后再自行移动');
+        if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes('player')))reject('E-ACTION-PRECONDITION','仍在承运班次中，须抵达或处理滞留后再自行移动');
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
@@ -815,7 +819,7 @@ export class WorldEngine {
         for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
-        if(d.get('state','player','coins')<route.cost)throw new Error('路费不足');
+        if(d.get('state','player','coins')<route.cost)reject('E-ACTION-PRECONDITION','路费不足');
         transfer(d,{from:accountKey('player',LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId:id});
         d.set(['state','player','coins'],d.get('state','player','coins')-route.cost);
         d.set(['state','location'],destination);
@@ -856,19 +860,19 @@ export class WorldEngine {
         if(args.outOfCharacter)return {outOfCharacter:true};
         if(d.get('state','turns',id))return {duplicate:true};
         const start=number(args.startMinute,0,Number.MAX_SAFE_INTEGER,'回合起始时间'),now=d.get('state','minute');
-        if(start>now)throw new Error('回合起始时间晚于当前时间');
+        if(start>now)reject('E-ACTION-PRECONDITION','回合起始时间晚于当前时间');
         // Old event logs keep their total-duration semantics; new tails only add extra time.
         const remaining=args.extraMinutes!==undefined?number(args.extraMinutes,0,43200,'额外时长'):
             Math.max(0,number(args.minutes??10,0,43200,'回合时长')-(now-start));
-        if(args.location&&this.resolve(args.location)!==d.get('state','location'))throw new Error('尾注地点与实际账本不一致，需先沿路线移动');
+        if(args.location&&this.resolve(args.location)!==d.get('state','location'))reject('E-ACTION-PRECONDITION','尾注地点与实际账本不一致，需先沿路线移动');
         const present=(args.present??[]).map(name=>this.resolve(name,'npc'));
-        if(present.some(npc=>d.get('state','npcs',npc,'location')!==d.get('state','location')))throw new Error('尾注包含不在场的人物');
+        if(present.some(npc=>d.get('state','npcs',npc,'location')!==d.get('state','location')))reject('E-ACTION-PRECONDITION','尾注包含不在场的人物');
         if(remaining)this.advance(d,remaining,id);d.set(['state','turns',id],{start,end:d.get('state','minute'),present});
         return {elapsed:remaining,present};
     }
     health(d,args,id) {
         const amount=number(args.delta,-1e9,1e9,'生命变化'),p=d.get('state','player');
-        if(isPhysicallyDead(this,d,'player'))throw new Error('死亡后需要复活，不能直接治疗');
+        if(isPhysicallyDead(this,d,'player'))reject('E-ACTION-PRECONDITION','死亡后需要复活，不能直接治疗');
         d.set(['state','player','hp'],Math.max(0,Math.min(p.maxHp,p.hp+amount)));
         if(p.hp+amount<=0){d.set(['state','player','status'],'濒死');if(p.status!=='濒死')d.set(['state','player','dyingSince'],d.get('state','minute'));
             if(d.get('state','player','mount'))d.remove(['state','player','mount']);
@@ -900,17 +904,17 @@ export class WorldEngine {
         const raw=d.get(...path)??(nativeActor==='player'?null:this.byId.get(nativeActor)?.skills?.[skill]??this.byId.get(nativeActor)?.proficiencies?.[skill]);
         const old=typeof raw==='number'?{proficiency:raw,breakthroughs:[],daily:{}}:raw;
         if(nativeActor!=='player'&&(nativeGain===null||!d.get('state','npcs',nativeActor)))throw Error('NPC practice requires its native actor and gain');
-        if(!old)throw new Error('尚未学会这项技能');
+        if(!old)reject('E-ACTION-PRECONDITION','尚未学会这项技能');
         const stage=Math.floor(old.proficiency/300),day=String(Math.floor(d.get('state','minute')/1440));
         if(args.breakthroughSource){
             if(nativeActor!=='player')throw Error('NPC breakthrough requires its native evidence adapter');
             // Masterpiece, completed research or a key battle recorded by career metrics.
             const evidence=evidenceBreakthrough(d,this,skill,args.breakthroughSource,old);if(evidence)return evidence;
             const teacher=this.resolve(args.breakthroughSource,'npc'),base=this.byId.get(teacher),role=this.byId.get(skill).profession;
-            if(!personTeaching(this,d.get('state'),teacher,skill)||d.get('state','npcs',teacher,'location')!==d.get('state','location'))throw new Error('突破导师不具备资格或不在场');
+            if(!personTeaching(this,d.get('state'),teacher,skill)||d.get('state','npcs',teacher,'location')!==d.get('state','location'))reject('E-ACTION-PRECONDITION','突破导师不具备资格或不在场');
             assertNpcService(d,this,teacher,'teach',120);
-            if(old.proficiency%300!==299)throw new Error('尚未达到当前阶段上限');
-            if(!certifiedForSkill(d,this,skill))throw new Error('未认证职业不能跨越初级阶段');
+            if(old.proficiency%300!==299)reject('E-ACTION-PRECONDITION','尚未达到当前阶段上限');
+            if(!certifiedForSkill(d,this,skill))reject('E-ACTION-PRECONDITION','未认证职业不能跨越初级阶段');
             const outcome=this.check(d,{attribute:this.byId.get(skill).attribute,difficulty:20},id);
             this.advance(d,120,id);
             if(outcome.success)d.set(['state','skills',skill,'breakthroughs'],[...new Set([...old.breakthroughs??[],stage+1])]);
@@ -946,13 +950,13 @@ export class WorldEngine {
     magicStatusContext(d,target){return statusContext(d,this,target);}
     cast(d,args,id) {
         const spell=this.resolve(args.spell,'spell'),known=d.get('state','spells',spell),catalog=this.byId.get(spell);
-        if(!known)throw new Error('尚未学会这个法术');
+        if(!known)reject('E-ACTION-PRECONDITION','尚未学会这个法术');
         const band=this.rules.magic.stageMpRanges[catalog.stage];
         if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw new Error('法术消耗不符合阶段规则');
         const prepared=prepareMagic.call(this,d,catalog,args);
-        if(d.get('state','player','status')==='濒死'&&(!(catalog.effectSpec?.kind==='heal'||catalog.effectSpec?.kind==='care'&&['stabilize','hemostasis','clean_wound'].includes(catalog.effectSpec.operation))||prepared?.target!=='player'))throw new Error('濒死时只能尝试对自己施放救治法术');
-        if(d.get('state','player','mp')<catalog.mp)throw new Error('魔力不足');
-        for(const material of catalog.materials)if(this.quantity(d,'player',material.item)<material.amount)throw new Error(`缺少材料${this.byId.get(material.item).name}`);
+        if(d.get('state','player','status')==='濒死'&&(!(catalog.effectSpec?.kind==='heal'||catalog.effectSpec?.kind==='care'&&['stabilize','hemostasis','clean_wound'].includes(catalog.effectSpec.operation))||prepared?.target!=='player'))reject('E-ACTION-PRECONDITION','濒死时只能尝试对自己施放救治法术');
+        if(d.get('state','player','mp')<catalog.mp)reject('E-ACTION-PRECONDITION','魔力不足');
+        for(const material of catalog.materials)if(this.quantity(d,'player',material.item)<material.amount)reject('E-ACTION-PRECONDITION',`缺少材料${this.byId.get(material.item).name}`);
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);
         for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount,{flow:'sink:consume',purpose:'spell',writer:'engine',eventId:id});
         const result=this.check(d,{attribute:'精神',skill:catalog.skill,difficulty:catalog.difficulty},id);
@@ -986,10 +990,10 @@ export class WorldEngine {
     relation(d,args,id) {
         const recorded=applyNpcRelation(d,this,args,id);if(recorded)return recorded;
         const npc=this.resolve(args.npc,'npc'),base=this.byId.get(npc),row=d.get('state','npcs',npc);
-        if(args.notes!==undefined)throw new Error('基础人设只读，变化应追加发展记录');
-        const allowed=['信守约定','违约','帮助','欺骗','威胁','冲突','交谈'];if(!allowed.includes(args.eventType))throw new Error('关系变化需引用已知事件类型');
-        if(!args.sourceEvent)throw new Error('关系变化缺少来源事件');
-        if(args.romance&&base.flags.minor)throw new Error('未成年人物拒绝恋爱关系写入');
+        if(args.notes!==undefined)reject('E-ACTION-PRECONDITION','基础人设只读，变化应追加发展记录');
+        const allowed=['信守约定','违约','帮助','欺骗','威胁','冲突','交谈'];if(!allowed.includes(args.eventType))reject('E-ACTION-PRECONDITION','关系变化需引用已知事件类型');
+        if(!args.sourceEvent)reject('E-ACTION-PRECONDITION','关系变化缺少来源事件');
+        if(args.romance&&base.flags.minor)reject('E-ACTION-PRECONDITION','未成年人物拒绝恋爱关系写入');
         const defaultTrust={信守约定:3,违约:-5,帮助:3,欺骗:-5,威胁:-3,冲突:-3,交谈:0}[args.eventType];
         const trust=number(args.trustDelta??defaultTrust,defaultTrust-2,defaultTrust+2,'信任变化');
         d.set(['state','npcs',npc,'trust'],Math.max(-100,Math.min(100,row.trust+trust)));
@@ -1020,17 +1024,17 @@ export class WorldEngine {
         const permission=homePermission(d,this,args,id);if(permission)return permission;
         const reserved=createNpcObligation(d,this,args,id);if(reserved)return reserved;
         const promisor=this.resolve(args.promisor),promisee=this.resolve(args.promisee??'player'),type=args.type;
-        if(!['带路','送货','付款','等候','会面','协助'].includes(type))throw new Error('义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
-        if(promisor!=='player'&&!d.get('state','npcs',promisor))throw new Error('承诺者不在战役中');
-        for(const actor of[promisor,promisee])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor)?.status==='濒死'))throw new Error('义务当事人无法清醒履约');
-        for(const actor of[promisor,promisee])if(actor!=='player'&&personConstraint(this,d.get('state'),actor))throw new Error('义务当事人正在依法拘留，不能自由行动');
+        if(!['带路','送货','付款','等候','会面','协助'].includes(type))reject('E-ACTION-PRECONDITION','义务类别不支持；type 可选：带路、送货、付款、等候、会面、协助');
+        if(promisor!=='player'&&!d.get('state','npcs',promisor))reject('E-ACTION-PRECONDITION','承诺者不在战役中');
+        for(const actor of[promisor,promisee])if((isPhysicallyDead(this,d,actor)||this.actor(d,actor)?.status==='濒死'))reject('E-ACTION-PRECONDITION','义务当事人无法清醒履约');
+        for(const actor of[promisor,promisee])if(actor!=='player'&&personConstraint(this,d.get('state'),actor))reject('E-ACTION-PRECONDITION','义务当事人正在依法拘留，不能自由行动');
         const obligation={id:`obl_${id}`,type,promisor,promisee,content:text(args.content),status:'待履行',deadline:number(args.deadline??d.get('state','minute')+1440,0,Number.MAX_SAFE_INTEGER)};
         let routePreview;
         if(type==='带路'){
             obligation.destination=this.resolve(args.destination);
             const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.document.randomSeed);
             routePreview={from,destination:obligation.destination,minutes:route.minutes,movingMinutes:route.movingMinutes,cost:route.cost,calculatedAt,estimate:true};
-            if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))throw new Error('带路者必须在场');
+            if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))reject('E-ACTION-PRECONDITION','带路者必须在场');
             obligation.status='进行中';holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])],'engine');
         }
         if(type==='送货'){obligation.item=this.resolve(args.item,'item');obligation.quantity=number(args.quantity,1,100000);}
@@ -1038,22 +1042,22 @@ export class WorldEngine {
             obligation.coins=number(args.coins,1,1e9);
             if(args.obligation!==undefined){
                 const claim=dueObligation(d.get('state'),args.obligation);
-                if(!claim||claim.closed||claim.row.debtor!==promisor||claim.row.creditor!==promisee||claim.owed<obligation.coins)throw Error('履约承诺须指向本人对该债权人的未清债务，金额不得超过余额');
-                if(args.location!==undefined&&this.resolve(args.location)!==d.get('state','location'))throw Error('付款承诺须在约定交付地点作出');
+                if(!claim||claim.closed||claim.row.debtor!==promisor||claim.row.creditor!==promisee||claim.owed<obligation.coins)reject('E-ACTION-PRECONDITION','履约承诺须指向本人对该债权人的未清债务，金额不得超过余额');
+                if(args.location!==undefined&&this.resolve(args.location)!==d.get('state','location'))reject('E-ACTION-PRECONDITION','付款承诺须在约定交付地点作出');
                 obligation.location=args.location??d.get('state','location');
                 obligation.terms={fulfills:claim.row.id,promisedAmount:obligation.coins,place:obligation.location};
             }
             if(!this.replaying||this.replayResult?.obligation?.recordCompletionTime===true)obligation.recordCompletionTime=true;
             if(!this.replaying){
                 const existing=Object.entries(d.get('state','records')??{}).find(([,row])=>row.category==='debt'&&row.debtor===promisor&&row.creditor===promisee&&row.status!=='已还清'&&row.amount-row.paid===obligation.coins);
-                if(existing&&!obligation.terms?.fulfills)throw new Error(`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
+                if(existing&&!obligation.terms?.fulfills)reject('E-ACTION-PRECONDITION',`这笔付款已有欠款记录 ${existing[0]}，不能再登记会重复扣款的付款约定；还款请按该欠款编号办理，赊账期限应在交易时用 creditMinutes 设置`);
             }
         }
         if(type==='协助'){
-            if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))throw new Error('协助者必须在场');
-            obligation.attribute=args.attribute??'精神';if(!this.rules.attributes.includes(obligation.attribute))throw new Error('协助属性不在规则表');
+            if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))reject('E-ACTION-PRECONDITION','协助者必须在场');
+            obligation.attribute=args.attribute??'精神';if(!this.rules.attributes.includes(obligation.attribute))reject('E-ACTION-PRECONDITION','协助属性不在规则表');
             obligation.skill=args.skill?this.resolve(args.skill,'skill'):null;
-            if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))throw new Error('协助者技能不足');
+            if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))reject('E-ACTION-PRECONDITION','协助者技能不足');
         }
         if(type==='付款'&&(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)){
             // A performance promise is a zero-principal obligation linked to
@@ -1065,35 +1069,35 @@ export class WorldEngine {
         d.set(['state','obligations',obligation.id],obligation);return {obligation,...(routePreview?{routePreview}:{})};
     }
     deliver(d,key,o,id){
-        const source=this.actor(d,o.promisor),target=this.actor(d,o.promisee);if(!source||!target)throw new Error('义务当事人不存在');
+        const source=this.actor(d,o.promisor),target=this.actor(d,o.promisee);if(!source||!target)reject('E-ACTION-PRECONDITION','义务当事人不存在');
         if(o.deliveryVersion===1){
             const to=o.promisee==='player'?d.get('state','location'):target.location;
-            if(source.location!==o.location||source.scheduleTravel||source.cognitionTravel)throw new Error('送货者未能按时抵达约定地点');
+            if(source.location!==o.location||source.scheduleTravel||source.cognitionTravel)reject('E-ACTION-PRECONDITION','送货者未能按时抵达约定地点');
             if(to!==o.location||target.scheduleTravel||target.cognitionTravel)throw Object.assign(new Error('收件人未在约定地点，货物仍由送货者持有'),{deliveryResponsibility:o.promisee});
             if((o.promisee==='player'||d.get('state','player','companions')?.includes(o.promisee))&&this.npcObligationAction?.tool==='move'&&d.get('state','minute')<this.npcObligationAction.arrivalMinute)throw Object.assign(new Error('收件人仍在途中，尚未到达约定地点'),{deliveryResponsibility:o.promisee});
         }
         if(o.deliveryVersion===1&&(['死亡','濒死','昏迷','患病'].includes(target.status)||/(睡眠|熟睡|睡觉)/.test(target.activity??'')||o.promisee==='player'&&this.npcObligationAction?.args?.activity==='睡眠'))throw Object.assign(new Error('收件人无法清醒接收货物'),{deliveryResponsibility:o.promisee});
-        if([source,target].some(actor=>['死亡','濒死'].includes(actor.status)))throw new Error('义务当事人无法清醒履约');
+        if([source,target].some(actor=>['死亡','濒死'].includes(actor.status)))reject('E-ACTION-PRECONDITION','义务当事人无法清醒履约');
         if([o.promisor,o.promisee].some(actor=>personSimulation(this,d.get('state'),actor).value)){
             const from=o.promisor==='player'?d.get('state','location'):source.location,to=o.promisee==='player'?d.get('state','location'):target.location;
-            if(!from||!to||from!==to)throw new Error('双方尚未在同一地点交付，不能隔空转移钱物');
-            if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))throw new Error('义务当事人尚不能清醒交付');
+            if(!from||!to||from!==to)reject('E-ACTION-PRECONDITION','双方尚未在同一地点交付，不能隔空转移钱物');
+            if([source,target].some(actor=>['昏迷','患病'].includes(actor.status)||/(睡眠|熟睡|睡觉)/.test(actor.activity??'')))reject('E-ACTION-PRECONDITION','义务当事人尚不能清醒交付');
         }
         if(o.type==='送货'){
-            if(this.quantity(d,o.promisor,o.item)<o.quantity)throw new Error('承诺者缺少货物');
+            if(this.quantity(d,o.promisor,o.item)<o.quantity)reject('E-ACTION-PRECONDITION','承诺者缺少货物');
             if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},o.deliveryVersion===1?`delivery:${key}:${o.deadline}`:`${id}:deliver:${key}`);
             else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
         }
         if(o.type==='付款'){
             if(o.runtimeVersion===1&&o.terms?.fulfills){
                 const place=o.promisor==='player'?d.get('state','location'):source.location;
-                if(place!==o.terms.place)throw Error('履约者未在约定交付地点');
+                if(place!==o.terms.place)reject('E-ACTION-PRECONDITION','履约者未在约定交付地点');
                 const claim=dueObligation(d.get('state'),o.terms.fulfills);
-                if(!claim||claim.row.debtor!==o.promisor||claim.row.creditor!==o.promisee)throw Error('原债当事人已变化，不能按旧承诺付款');
+                if(!claim||claim.row.debtor!==o.promisor||claim.row.creditor!==o.promisee)reject('E-ACTION-PRECONDITION','原债当事人已变化，不能按旧承诺付款');
                 const amount=Math.min(o.terms.promisedAmount,claim.owed);
                 if(amount)settleObligation(d,this,{id:o.terms.fulfills,payer:o.promisor,actor:o.promisor,amount},`${id}:deliver:${key}`);
             }else if(o.runtimeVersion===1)settleObligation(d,this,{id:key,payer:o.promisor,amount:dueObligation(d.get('state'),key).owed},`${id}:deliver:${key}`);
-            else{if(source.coins<o.coins)throw new Error('承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
+            else{if(source.coins<o.coins)reject('E-ACTION-PRECONDITION','承诺者资金不足');transfer(d,{from:accountKey(this.actorPath(o.promisor).at(-1)==='player'?'player':this.actorPath(o.promisor).at(-1),LEDGER_COIN,'purse'),to:accountKey(this.actorPath(o.promisee).at(-1)==='player'?'player':this.actorPath(o.promisee).at(-1),LEDGER_COIN,'purse'),amount:o.coins,writer:'engine'});d.set([...this.actorPath(o.promisor),'coins'],source.coins-o.coins);d.set([...this.actorPath(o.promisee),'coins'],target.coins+o.coins);}
         }
         d.set(['state','obligations',key,'status'],'已完成');if(o.deliveryVersion===1||o.recordCompletionTime)d.set(['state','obligations',key,'resolvedAt'],d.get('state','minute'));d.say(`${o.content}已履行`);
     }
@@ -1101,10 +1105,10 @@ export class WorldEngine {
         const conversation=applyDialogue(d,this,args,id);if(conversation)return conversation;
         if(args.rumor!==undefined)return hearNpcRumor(d,this,args,id);
         if(args.truth!==undefined)return recordLie(d,this,args,id);
-        if(args.motive!==undefined||args.knowers!==undefined)throw new Error('motive/knowers只用于带truth的谎言登记');
+        if(args.motive!==undefined||args.knowers!==undefined)reject('E-ACTION-PRECONDITION','motive/knowers只用于带truth的谎言登记');
         const exposed=exposeLieCall(d,this,args,id);if(exposed)return exposed;
         const subject=this.resolve(args.subject),content=validateMemory(args.content),key=text(args.key,100),memoryId=`${subject}::${key}`;
-        if(d.get('memories',memoryId,'rumor'))throw new Error('登记传闻的获知记录只能由受校验的交谈生成');
+        if(d.get('memories',memoryId,'rumor'))reject('E-ACTION-PRECONDITION','登记传闻的获知记录只能由受校验的交谈生成');
         d.set(['memories',memoryId],{subject,key,content,keywords:args.keywords??[],pinned:d.get('memories',memoryId,'pinned')??false,minute:d.get('state','minute'),source:args.source??'亲历'});
         return {memoryId};
     }

@@ -4,6 +4,7 @@ import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} fr
 import {canAct,legacyCanAct,legacyActionFamily} from './action-capacity.mjs';
 import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame,recordResourceCosts} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
+import {isDomainRejection} from './action-rejection.mjs';
 import {parseAccount,isSink,LEDGER_COIN} from './ledger.mjs';
 import {partyAccount,mirrorPartyCoins} from './money.mjs';
 import {BOOKED} from './stock.mjs';
@@ -19,7 +20,7 @@ import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedInteger,fixedMultiply,f
 import {createRXLibrary} from './rx-library.mjs';
 import {consent,applyConsentEvent} from './action-consent.mjs';
 import {executeRuntimeEffect} from './primitives-effects.mjs';
-import {publishTransitionEvent,SOCIAL_VERBS,privateWorldEvent,drainWorldReactions} from './world-events.mjs';
+import {publishTransitionEvent,privateWorldEvent,drainWorldReactions} from './world-events.mjs';
 import {accountKey} from './ledger.mjs';
 import {digest,applyPatches,recordsWhere} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
@@ -368,7 +369,6 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
     if(decision.outcome==='agree'){
      const id=`${eventId}:consent:${receipt.decisions.length}`,payload={scope,purpose:[purpose],until:until+1};
      applyConsentEvent(d,primitiveContext(engine,d.document),{actor:from,eventId:id,verb:'consent_given',to:actor,payload});
-     SOCIAL_VERBS.add('consent_given');
      publishTransitionEvent(d,engine,{id,parent:eventId,verb:'consent_given',actor:from,target:actor,minute:d.get('state','minute'),location:d.get('state','location'),visibility:'private',witnesses:[],tags:[],payload,source:{kind:'catalog',id:action.id}});
      permission=consent(primitiveContext(engine,d.document),from,actor,scope,{purpose,until,onRefusal});
     }
@@ -860,8 +860,9 @@ export const primitiveRuntime={
    return result.receipt;
   }catch(error){
    // Domain rejection is a terminal result, not an immortal due item that
-   // prevents the whole world advancing. Unexpected engine errors still abort.
-   if(!error.code?.startsWith('E-'))throw error;
+   // prevents the whole world advancing. Engine faults are not rejections: a
+   // TypeError or plain Error aborts instead of being recorded as terminal.
+   if(!isDomainRejection(error))throw error;
    const result={category:'primitive_schedule_result',status:'rejected',code:error.code,reason:error.message};
    holdingSet(d,engine,['state','records',key],result,'primitives-runtime',context.eventId);return result;
   }

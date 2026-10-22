@@ -1,11 +1,23 @@
 import {transfer,balance,parseAccount,isSource,isSink,declareLedgerWriter} from './ledger.mjs';
-import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,holdingKindIds,runHoldingProtocol} from './holdings.mjs';
+import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,runHoldingProtocol} from './holdings.mjs';
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
 import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitnesses,SOCIAL_VERBS} from './world-events.mjs';
 import {submitContest} from './scheduler.mjs';
+import {isDomainRejection} from './action-rejection.mjs';
 
 declareLedgerWriter('primitives',{sinks:['sink:consume']});
-declareHoldingWriter('primitives',{entities:Object.keys(ENTITY_KINDS)});
+// Static registration (load time only): every registered holding kind goes
+// through runHoldingProtocol after holdingKind()/authority checks, so the
+// writer covers all kinds by declaration rather than by execution history.
+declareHoldingWriter('primitives',{kinds:['*'],entities:Object.keys(ENTITY_KINDS)});
+// Every world-event verb a primitive transaction can publish, derived from the
+// closed primitive vocabulary and the emit verbs a native frame may permit.
+// The composition root (engine.mjs) registers them as social verbs once at
+// module load, so replay never depends on what ran before in the process.
+const EMIT_VERBS=Object.freeze(['tell','request','claim','consent_given','consent_revoked']);
+const OP_VERBS=Object.freeze({vital:null,status:'status_applied',move:'moved',create:'created',destroy:'destroyed',schedule:'scheduled',learn:'learned','fact.set':'fact_changed',transfer:'transfer',transition:'transition'});
+export const PRIMITIVE_EVENT_VERBS=Object.freeze([...new Set([...EMIT_VERBS,'heal','harm','steal',...Object.values(OP_VERBS).filter(Boolean)])]);
+const childVerb=child=>child.op==='emit'?child.verb:child.op==='transfer'&&child.actedAs?.kind==='theft'?'steal':child.op==='vital'?(child.delta>0?'heal':'harm'):OP_VERBS[child.op];
 const frames=new WeakMap();
 let actionRuntime=null;
 // Installed once by the native composition root, never from a tool payload.
@@ -112,7 +124,6 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     const kind=holdingKind(effect.holdingKind??row?.kind);
     if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
     if(effect.op==='holding.open'&&effect.terms!==undefined&&effect.terms!==null&&(typeof effect.terms!=='object'||Array.isArray(effect.terms)||Object.keys(effect.terms).some(field=>!kind.terms?.includes(field))))reject('E-HOLDING-TERMS','Holding terms must be declared by the holding kind');
-    declareHoldingWriter('primitives',{kinds:holdingKindIds()});
     const subject=row?.subject??effect.subject;
     requireAuthority(effect.op,subject,{holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
     const base={writer:'primitives',eventId:frame.eventId,engine:policy.engine};
@@ -174,7 +185,14 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     for(const item of d.reactionTick?.queue??[])item.events=item.events.map(row=>row.id===event.id?annotate(row):row);
    }
    children.push({...applied,id:`${frame.eventId}:${index}`,parent:frame.eventId,actor:frame.actor,source:frame.source});
-  }catch(error){if(error instanceof PrimitiveRejected){error.index=index;throw error;}throw new PrimitiveRejected(error.code??'E-PRIMITIVE-EXECUTION',error.message,index);}
+  }catch(error){
+   if(error instanceof PrimitiveRejected){error.index=index;throw error;}
+   // A typed domain refusal keeps its own code and the failing index. Engine
+   // faults (TypeError, plain Error, ...) propagate unchanged: they are not
+   // world outcomes and must never be recorded as a terminal refusal.
+   if(isDomainRejection(error))throw Object.assign(new PrimitiveRejected(error.code,error.message,index),{cause:error});
+   throw error;
+  }
  }
  policy.finish?.(d,{frame,receipt});
  for(const id of resolutions)updateEntity(d,{id,facts:{phase:'executed',executedAt:d.get('state','minute')},writer:'primitives',eventId:frame.eventId});
@@ -185,8 +203,8 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    if(child.op==='time'||child.result?.applied===false||child.result?.resisted)continue;
    // Holding/obligation protocols already publish their own canonical events.
    if(child.op.startsWith('holding.')||child.op.startsWith('obligation.'))continue;
-   const verb=child.op==='emit'?child.verb:child.op==='transfer'&&child.actedAs?.kind==='theft'?'steal':({vital:child.delta>0?'heal':'harm',status:'status_applied',move:'moved',create:'created',destroy:'destroyed',schedule:'scheduled',learn:'learned','fact.set':'fact_changed'})[child.op]??child.op;
-   SOCIAL_VERBS.add(verb);
+   const verb=childVerb(child);
+   if(!SOCIAL_VERBS.has(verb))throw Error(`Primitive event verb is not statically registered: ${verb}`);
    const location=policy.location(d.document,frame.actor),visibility=child.visibility??'private',witnesses=[...new Set([...(['public','witnessed'].includes(visibility)?presentWitnesses(d.get('state'),location,[frame.actor]):[]),...child.result?.noticedBy??[]])];
    const party=child.op==='transfer'?parseAccount(verb==='steal'?child.from:child.to).owner:null;
    const target=child.target??(party&&!isSink(party)?party:null)??(child.op==='learn'?child.result?.teacher:null)??child.entity??null;
