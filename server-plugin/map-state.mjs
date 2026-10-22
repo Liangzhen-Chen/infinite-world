@@ -15,7 +15,7 @@ export function heldMapLocations(state){
 }
 
 export function mapKnowledge(engine,document){
-    const state=document.state,now=state.minute,places=new Map(engine.world.locations.filter(row=>row.mapHierarchy||['loc_bs','bld_bs_shrine'].includes(row.id)).map(row=>[row.id,row]));
+    const state=document.state,now=state.minute,transit=new Set(engine.world.domainRules?.map?.transitPlaces??[]),places=new Map(engine.world.locations.filter(row=>row.mapHierarchy||transit.has(row.id)).map(row=>[row.id,row]));
     const known=new Map(),edgeKnowledge=new Map();
     const add=(id,kind)=>{if(places.has(id)&&rank[kind]>(rank[known.get(id)]??0))known.set(id,kind);};
     for(const [id,row]of Object.entries(state.discoveries??{}))if(visible(row,now)){

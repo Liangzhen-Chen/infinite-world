@@ -20,6 +20,7 @@ import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {domainRules} from './domain-rules.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -442,10 +443,10 @@ function privateFarmAction(d,engine,p,args,eventId){
     const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu,calibrated=areaMu!==undefined;
     const labor=engine.world.primitiveTables?.yields?.rows?.find(r=>r.selector==='field:wheat'&&r.laborSow!==undefined);
     const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
-    const tool=calibrated?(args.operation==='private_sow'?'item_hoe':'item_sickle'):null;
+    const fieldRule=domainRules(engine).privateField,tool=calibrated?(args.operation==='private_sow'?fieldRule?.sowTool:fieldRule?.harvestTool):null;
     if(calibrated){
         int(areaMu,1,10000);
-        if(!labor||!Number.isSafeInteger(workday))throw Error('私田劳动数值未登记');
+        if(!labor||!Number.isSafeInteger(workday)||!fieldRule||!tool)throw Error('私田劳动数值未登记');
         const held=heldUnit(d,engine,'player',tool);
         if(engine.quantity(d,'player',tool)<1||(held?.durability??0)<=0)throw Error('需要实际完好的田间工具');
     }
@@ -472,10 +473,10 @@ function privateFarmAction(d,engine,p,args,eventId){
         const available=(field,atDay=day)=>Math.max(0,field.areaUnits-Math.max(field.cohorts.reduce((n,c)=>n+c.areaUnits-c.harvestedUnits,0),field.sownYear===Math.floor(atDay/360)?field.sownUnits:0));
         const field=d.get(...path(p.settlement),'field'),capacityUnits=old?.capacityUnits??old?.areaUnits??available(field);
         if(capacityUnits<1)throw Error('登记田地没有可划出的空闲面积');
-        const areaUnits=calibrated?areaMu*crop.areaUnitsPerHa/15:int(args.quantity,1,capacityUnits);
+        const areaUnits=calibrated?areaMu*crop.areaUnitsPerHa/fieldRule.muPerHectare:int(args.quantity,1,capacityUnits);
         if(areaUnits>capacityUnits)throw Error('登记田地没有足够面积');
-        // Both private-field table quantities are jin; one jin is 0.5 kg.
-        const seed=calibrated?Math.ceil(areaMu*engine.world.primitiveTables.yields.rows.find(r=>r.key==='field:wheat/seed').seedPerUnit.qty*.5/engine.rules.agriculture.foodUnitKg):Math.ceil(areaUnits*crop.seedPerHa/crop.areaUnitsPerHa);
+        // Both private-field table quantities are jin; kgPerJin comes from the domain table.
+        const seed=calibrated?Math.ceil(areaMu*engine.world.primitiveTables.yields.rows.find(r=>r.key==='field:wheat/seed').seedPerUnit.qty*fieldRule.kgPerJin/engine.rules.agriculture.foodUnitKg):Math.ceil(areaUnits*crop.seedPerHa/crop.areaUnitsPerHa);
         if(engine.quantity(d,'player',item)<seed)throw Error('没有实际种粮');
         if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
         const completedDay=Math.floor(d.get('state','minute')/1440);
@@ -512,7 +513,7 @@ function advancePrivateFarms(d,engine,settlement,day){
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;
                     const perMu=engine.world.primitiveTables?.yields?.rows?.find(r=>r.key==='field:wheat')?.perUnit.qty;
-                    const portions=farm.areaMu!==undefined?farm.areaMu*perMu*.5/engine.rules.agriculture.foodUnitKg:farm.areaUnits*crop.yieldPerHa/crop.areaUnitsPerHa;
+                    const portions=farm.areaMu!==undefined?farm.areaMu*perMu*domainRules(engine).privateField.kgPerJin/engine.rules.agriculture.foodUnitKg:farm.areaUnits*crop.yieldPerHa/crop.areaUnitsPerHa;
                     farm.yield=Math.floor(portions*farm.qualitySum/Math.max(1,farm.qualityDays));
                 }
             }

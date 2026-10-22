@@ -3,7 +3,8 @@
 import {reject,PrimitiveRejected} from './primitive-policy.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
-import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge,practicalKnowledgeRegistry} from './education-state.mjs';
+import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge} from './education-state.mjs';
+import {practicalKnowledgeRegistry} from './domain-rules.mjs';
 import {canReadLanguage} from './subjective-view.mjs';
 import {personCertified} from './entity-view.mjs';
 import {obligationClosed} from './obligation-state.mjs';
@@ -17,7 +18,7 @@ export function initialKnowledgeAction(d,e,tool,args){
  const s=d.get('state');
  if(tool==='site'&&args.operation==='disarm'){
   const target=s.created?.[args.target]??d.get('holdings','entities',args.target)?.facts??e.byId.get(s.location)?.site?.mechanisms?.find(r=>[r.id,r.name].includes(args.target));
-  const required=Object.entries(practicalKnowledgeRegistry).find(([,r])=>r.mechanisms.includes(target?.mechanism))?.[0];
+  const required=Object.entries(practicalKnowledgeRegistry(e)).find(([,r])=>r.mechanisms.includes(target?.mechanism))?.[0];
   if(required&&!knowsPracticalKnowledge(e,s,'player',required))reject('E-DISARM-KNOWLEDGE','Unknown tripwire disassembly procedure');
  }
 }

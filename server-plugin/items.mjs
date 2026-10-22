@@ -5,6 +5,7 @@ import {declareHoldingWriter,holdingSet,updateEntity,locationOf,setLocation,clea
 import {authority} from './action-authority.mjs';
 import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
+import {handRepairRefused,liquidItem,liquidPortionMl} from './domain-rules.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 declareLedgerWriter('items',{sinks:['sink:consume']});
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw new Error('物品数量无效');return value;};
@@ -27,10 +28,11 @@ export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=
     const current=engine.quantity(d,owner,item),amount=current+delta;
     if(amount<0)throw new Error(`${engine.byId.get(owner)?.name??'你'}缺少${engine.byId.get(item)?.name}`);
     const path=[...engine.bagPath(owner),item],existing=d.get(...path),definition=engine.byId.get(item);
-    if(delta<0&&['meal','drink','eat'].includes(books?.purpose))assertEdibleItem(d,engine,owner,item);
     const units=typeof existing==='object'?existing.instances??[]:[];
     const removed=delta<0?(selection??units.slice(0,Math.min(-delta,units.length))):[];
     if(removed.length>Math.max(0,-delta)||new Set(removed).size!==removed.length||removed.some(unit=>!units.includes(unit)))throw new Error('单件选择与库存不符');
+    // The safety check reads the units actually being consumed, not whichever instance is listed first.
+    if(delta<0&&['meal','drink','eat'].includes(books?.purpose))assertEdibleItem(d,engine,owner,item,removed);
     for(const unit of removed){
         const record=d.get('state','itemInstances',unit);
         if(!record||record.owner!==owner||record.item!==item||record.status!=='持有')throw new Error('单件归属与库存不符');
@@ -191,9 +193,13 @@ export function writePhysicalItem(d,engine,id,facts,{source=null,eventId=null,al
  if(entity&&['item','building'].includes(entity.kind))updateEntity(d,{id,facts,writer:'items',eventId});
  return id;
 }
-export function assertEdibleItem(d,engine,actor,item){
- const held=d.get(...engine.bagPath(actor),item),unit=held?.instances?.[0],facts=physicalItem(d,engine,unit??item);
- if(facts.contaminated===true||facts.toxic===true||facts.condition===0)throw Error('Food or drink is contaminated, toxic or spoiled');
+export function assertEdibleItem(d,engine,actor,item,units=null){
+ const chosen=units?.length?units:[d.get(...engine.bagPath(actor),item)?.instances?.[0]??item];
+ let facts;
+ for(const unit of chosen){
+  facts=physicalItem(d,engine,unit);
+  if(facts.contaminated===true||facts.toxic===true||facts.condition===0)throw Error('Food or drink is contaminated, toxic or spoiled');
+ }
  return facts;
 }
 function clearWornItem(d,actor,id){
@@ -282,20 +288,21 @@ export function takeContainerUnit(d,engine,container,id,actor,eventId){
  setLocation(d,{entity:id,at:actor,mode:'carried',writer:'items',engine});
  return {item:unit.item,instance:id,quantity:1};
 }
-// A catalog water portion is 250 ml (item_water), not the bucket's authored
+// A catalog water portion (the item tagged water; weight x density gives its ml), not the bucket's authored
 // default fill. Full contents declarations restore that SAME original water.
 export function bindContainerWater(d,engine,container,{declaredMl}={}){
  const feature=d.get('state','records',`physical_feature:${container}`);
  if(!feature||feature.state?.waterMl===undefined)return;
- const units=containerUnits(d,container).filter(u=>u.item==='item_water');if(!units.length)return;
+ const water=liquidItem(engine,'water'),units=water?containerUnits(d,container).filter(u=>u.item===water):[];if(!units.length)return;
  if(d.get('state','records',`liquid_binding:${container}`))throw Error('Container water is already bound');
- if(engine.byId.get('item_water')?.weight!==.25)throw Error('This water portion has no registered millilitre conversion');
- const unitMl=250,waterMl=units.length*unitMl,before=feature.state;
+ const unitMl=liquidPortionMl(engine,'water');
+ if(!unitMl)throw Error('This water portion has no registered millilitre conversion');
+ const waterMl=units.length*unitMl,before=feature.state;
  if(declaredMl!==undefined&&declaredMl!==waterMl||waterMl+(before.reservedWaterMl??0)>before.capacityMl)throw Error('Original stock water conflicts with declared volume or capacity');
  const state={...before,waterMl};
  for(const field of ['saltMg','toxinUg'])state[field]=before.waterMl?(before[field]??0)*waterMl/before.waterMl:before[field]??0;
  holdingSet(d,engine,['state','records',`physical_feature:${container}`],{...feature,state},'items');
- holdingSet(d,engine,['state','records',`liquid_binding:${container}`],{category:'physical_liquid_binding',container,unitMl,units:units.map(u=>u.id)},'items');
+ holdingSet(d,engine,['state','records',`liquid_binding:${container}`],{category:'physical_liquid_binding',container,item:water,unitMl,units:units.map(u=>u.id)},'items');
 }
 // A partly poured original portion becomes loose liquid. Retire the item
 // token once, retaining the measured remainder in the existing fluid state.
@@ -303,7 +310,7 @@ export function reconcileContainerWater(d,container,waterMl,eventId=null){
  const binding=d.get('state','records',`liquid_binding:${container}`);if(!binding)return;
  const units=containerUnits(d,container).filter(u=>binding.units.includes(u.id)),keep=Math.floor(waterMl/binding.unitMl);
  for(const unit of units.slice(Math.max(0,keep))){
-  moveStock(d,{from:accountKey(container,'item_water','placed'),to:accountKey('sink:consume','item_water','decant'),amount:1,writer:'items',eventId});
+  moveStock(d,{from:accountKey(container,binding.item??unit.item,'placed'),to:accountKey('sink:consume',binding.item??unit.item,'decant'),amount:1,writer:'items',eventId});
   holdingSet(d,null,['state','itemInstances',unit.id],{...unit,status:'散装液体',convertedAt:d.get('state','minute'),...(eventId?{conversionEvent:eventId}:{})},'items');
   clearLocation(d,{entity:unit.id,writer:'items'});
  }
@@ -347,6 +354,6 @@ export function validatePhysicalAction(d,engine,tool,args){
   let item=args.item;if(item)try{item=engine.resolve(item,'item');}catch{return;}
   const id=args.instance??d.get(...engine.bagPath('player'),item)?.instances?.[0]??item,facts=physicalItem(d,engine,id);
   if(facts.damage?.kind==='cracked_body')throw Error('This repair does not restore a cracked vessel body');
-  if(facts.material==='stone'||facts.scale==='whole_city_gate')throw Error('Hand-tool item repair cannot restore a stone city gate');
+  if(handRepairRefused(engine,facts))throw Error('Hand-tool item repair cannot restore a stone city gate');
  }
 }

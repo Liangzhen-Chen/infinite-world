@@ -23,6 +23,7 @@ import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import fs from 'node:fs';
 import {registerWorldEventSubscriber} from './world-events.mjs';
+import {domainRules} from './domain-rules.mjs';
 const successionRules=JSON.parse(fs.readFileSync(new URL('../world/lore/office-succession.json',import.meta.url),'utf8'));
 declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion','item'],locations:true});
 
@@ -79,11 +80,14 @@ export function restoreInstitutionDocument(d,engine,args){
         (paper?paper.owner!==owner||paper.document:s.records?.[`institution_document:${id}`]))throw Error('Invalid institutional document original or source');
     const subject=institutionPhysicalReference(d.document,p.subject);
     let kind,describes;
-    if(event.verb==='notice_posted'&&subject===id&&event.actor===owner&&published===true&&paper){kind='notice';describes=id;}
-    else if(event.verb==='application_filed'&&s.records?.[p.subject]?.category==='governance_application'&&s.records[p.subject].settlement===owner){kind='building_rule';describes=p.subject;}
-    else if(event.verb==='observed'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===owner&&p.observer===owner&&Number.isSafeInteger(p.terms?.delayMinutes)&&p.terms.delayMinutes>=0&&typeof p.terms.cause==='string'&&p.terms.compensated===false){kind='transport_claim';describes=subject;}
-    else if(event.verb==='ownership_transferred_and_delivered'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===p.to&&p.owner===owner&&p.terms?.cause==='expired_pawn_sale'&&p.terms.oldTicketValid===false&&valid===false){kind='expired_pawn_ticket';describes=subject;}
-    else if(event.verb==='deceived'&&paper&&p.to===owner&&typeof p.claim==='string'&&typeof p.truth==='string'){kind='debt_evidence';}
+    // Which event verbs can originate which kind of institutional text is the
+    // domain table's; the relations each kind must satisfy stay below.
+    const origin=domainRules(engine).governance?.documentSources?.[event.verb],source=origin?.kind;
+    if(source==='notice'&&subject===id&&event.actor===owner&&published===true&&paper){kind='notice';describes=id;}
+    else if(source==='building_rule'&&s.records?.[p.subject]?.category==='governance_application'&&s.records[p.subject].settlement===owner){kind='building_rule';describes=p.subject;}
+    else if(source==='transport_claim'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===owner&&p.observer===owner&&Number.isSafeInteger(p.terms?.delayMinutes)&&p.terms.delayMinutes>=0&&typeof p.terms.cause==='string'&&p.terms.compensated===false){kind='transport_claim';describes=subject;}
+    else if(source==='expired_pawn_ticket'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===p.to&&p.owner===owner&&p.terms?.cause===origin.cause&&p.terms.oldTicketValid===false&&valid===false){kind='expired_pawn_ticket';describes=subject;}
+    else if(source==='debt_evidence'&&paper&&p.to===owner&&typeof p.claim==='string'&&typeof p.truth==='string'){kind='debt_evidence';}
     else throw Error('Document source does not support this institutional text');
     if(published&&kind!=='notice')throw Error('Only an explicitly posted notice is public');
     const document={kind,owner,sourceEvent,content,links:[],...(describes?{describes}:{}),...(valid!==undefined?{valid}:{}),public:published===true};
@@ -97,7 +101,7 @@ export function institutionInputsFor(engine,document,settlement,actor='player'){
     const reviewer=aliveHoldings(d,{kind:'holds_office',holder:actor}).some(h=>{
         const facts=entityRow(d,h.subject)?.facts;
         const powers=h.terms?.authority??facts?.authority?.operations??facts?.authority;
-        return isEffective(engine,s,actor)&&facts?.organization===settlement&&Array.isArray(powers)&&powers.includes('review_building_application');
+        return isEffective(engine,s,actor)&&facts?.organization===settlement&&Array.isArray(powers)&&powers.includes(domainRules(engine).governance?.reviewOperation);
     });
     const applications=Object.values(s.records??{}).filter(r=>r.category==='governance_application'&&r.settlement===settlement&&(reviewer||r.applicant===actor));
     const ids=new Set(applications.map(r=>r.id));

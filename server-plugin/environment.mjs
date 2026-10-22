@@ -14,6 +14,7 @@ import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
+import {mechanismRule,liquidItem}from'./domain-rules.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
@@ -96,19 +97,20 @@ function interactPhysicalItem(d,engine,args,eventId){
  }
  if(operation==='tie'){
   const branch=physicalItem(d,engine,args.destination);
-  if(!facts.attachedLaces||!facts.materialTraits?.includes('old_shoe')||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
+  if(!facts.attachedLaces||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
   const allowed=authority({engine,document:d.document},'player','fact.set',args.destination);
   if(!allowed.allowed)throw Error('Support authority required');
   setLocation(d,{entity:id,at:args.destination,mode:'container',writer:'environment',engine,source:eventId});return {id,attachedTo:args.destination};
  }
  if(operation==='douse_fire'){
-  if(facts.fireIntensity!==1||engine.quantity(d,'player','item_water')<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
-  engine.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
+  const water=liquidItem(engine,'water');
+  if(facts.fireIntensity!==1||!water||engine.quantity(d,'player',water)<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
+  engine.itemDelta(d,'player',water,-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
   writePhysicalItem(d,engine,id,{fireIntensity:0},{eventId});engine.advance(d,1,eventId);return {id,fireIntensity:0,minutes:1};
  }
- const field=operation==='disarm'?'armed':'locked';
- if(facts[field]!==true||operation==='disarm'&&(facts.identified!==true||facts.mechanism!=='tripwire_falling_log')||operation==='unlock'&&facts.mechanism!=='mechanical_lock')throw Error('No identified supported mechanism');
- const tool=operation==='disarm'?'item_smith_tongs':'item_iron_wire';
+ const mechanism=mechanismRule(engine,facts.mechanism),field=mechanism?.state;
+ if(!mechanism||mechanism.operation!==operation||facts[field]!==true||mechanism.requiresIdentified&&facts.identified!==true)throw Error('No identified supported mechanism');
+ const tool=mechanism.tool;
  if(engine.quantity(d,'player',tool)<1)throw Error('Mechanism requires its actual tool');
  const rules=engine.world.openActionRules?.generic;
  if(!rules)throw Error('Missing native physical work rules');
@@ -306,8 +308,9 @@ export function interactEnvironment(d,args,eventId){
         if(building.id!==location&&building.parent!==location)throw Error('建筑不在近旁');
         if(operation==='inspect')return {facility:facilityView(this,d.get('state'),building.id),actionScope:{kind:'instant',instantaneous:true}};
         if(operation==='douse_fire'){
-            if(this.quantity(d,'player','item_water')<1)throw Error('没有可用来灭火的水');
-            this.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
+            const water=liquidItem(this,'water');
+            if(!water||this.quantity(d,'player',water)<1)throw Error('没有可用来灭火的水');
+            this.itemDelta(d,'player',water,-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
             const changed=applyInteraction(d,this,{agent:'water',target:building.id});this.advance(d,1,eventId);return {target:building.id,...changed,minutes:1};
         }
     }

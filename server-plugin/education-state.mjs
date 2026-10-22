@@ -12,19 +12,19 @@ import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {practicalKnowledgeRegistry} from './domain-rules.mjs';
 declareHoldingWriter('education-initial');
-export const practicalKnowledgeRegistry=Object.freeze({simple_tripwire_disassembly:{mechanisms:['tripwire_falling_log']}});
 const personPath=id=>id==='player'?['state','player']:['state','npcs',id];
 function initialAuthority(d,id,context){
  if(context?.origin!=='initial'||!context.eventId||!d.get(...personPath(id)))throw Error('Initial person authority required');
 }
 export function initializePracticalKnowledge(d,e,id,knowledge,context){
  initialAuthority(d,id,context);
- if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry,k)))throw Error('Unregistered practical knowledge');
+ if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry(e),k)))throw Error('Unregistered practical knowledge');
  holdingSet(d,e,[...personPath(id),'practicalKnowledge'],[...knowledge],'education-initial',context.eventId);
 }
 export function knowsPracticalKnowledge(e,s,id,knowledge){
- return Object.hasOwn(practicalKnowledgeRegistry,knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
+ return Object.hasOwn(practicalKnowledgeRegistry(e),knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
 }
 export function demonstrationAt(e,s,id,subject,until=s.minute){
  const n=id==='player'?s.player:s.npcs?.[id],location=id==='player'?s.location:n?.location;
