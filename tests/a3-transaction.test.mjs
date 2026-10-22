@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {emptyLedger,accountKey,withLedger,openLedger} from '../server-plugin/ledger.mjs';
-import {emptyHoldings,openHoldings} from '../server-plugin/holdings.mjs';
+import {emptyHoldings,openHoldings,openHolding,closeHolding,declareHoldingWriter} from '../server-plugin/holdings.mjs';
+declareHoldingWriter('a3-transaction-test',{kinds:['guest_of']});
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {createPrimitiveFrame,planPrimitives,commitPrimitives,queuePrimitiveProposal} from '../server-plugin/primitives.mjs';
 import {resolveContest,Scheduler} from '../server-plugin/scheduler.mjs';
@@ -414,10 +415,15 @@ test('A3 effects: moving another NPC requires real authority and rechecks detent
  // A3-A round 6 installs riding: absent mounts must still fail, now at the
  // actual mount/load/care gate rather than the former missing-connector gate.
  assert.throws(()=>commitPrimitives(f.document,[{op:'move',to,mode:'horse'}],own),{code:'E-MOVE-MOUNT'});
- f.document.holdings.rows.a3_custody={id:'a3_custody',kind:'guest_of',variant:'detained',holder:npc,subject:origin};
- assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],own),{code:'E-CAPACITY'});
- delete f.document.holdings.rows.a3_custody;f.document.state.npcs[npc].scheduleTravel={from:origin,to,depart:0,arrive:f.document.state.minute+1,edges:[]};
- assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],own),/already travelling/);
+ // Detention is written through the holdings interface (which advances holdings.seq and so
+ // invalidates the read-view index); a row slipped into the document would be invisible to it.
+ const custodyDraft=f.engine.primitiveDraft(f.document);const custody=openHolding(custodyDraft,{kind:'guest_of',variant:'detained',holder:npc,subject:Object.keys(f.document.state.npcs).find(id=>id!==npc),writer:'a3-transaction-test',eventId:'a3-custody',engine:f.engine});
+ f.document=applyPatches(f.document,custodyDraft.patches);
+ const detained=createRuntimePrimitiveFrame(f.engine,f.document,{actor:npc,eventId:'npc-detained-now',source:{kind:'catalog',id:'test:native'}});
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],detained),{code:'E-CAPACITY'});
+ const releaseDraft=f.engine.primitiveDraft(f.document);closeHolding(releaseDraft,{id:custody,reason:'released',writer:'a3-transaction-test',eventId:'a3-release'});
+ f.document=applyPatches(f.document,releaseDraft.patches);f.document.state.npcs[npc].scheduleTravel={from:origin,to,depart:0,arrive:f.document.state.minute+1,edges:[]};
+ assert.throws(()=>commitPrimitives(f.document,[{op:'move',to}],createRuntimePrimitiveFrame(f.engine,f.document,{actor:npc,eventId:'npc-travelling',source:{kind:'catalog',id:'test:native'}})),/already travelling/);
 });
 
 test('A3 effects: core narrative templates reject resources; destruction uses actual lifecycle and wreck',()=>{
