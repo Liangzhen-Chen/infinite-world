@@ -150,12 +150,29 @@ test('V/W/X: native state and real consumers survive storage reload, export/impo
 
 test('W/X: unchanged corpus routes, commits, signs and constructs through native consumers',async()=>{
  const result=await scoreRows([row('050'),row('074')],{world});
- for(const r of result.results)assert.deepEqual(r.scores,{route:true,signature:true,outOfBounds:true,supported:true,constructor:true});
+ // 标杆 B07.4 / review 10-22 P0: constructor credit is the model-free form search; signature descriptors are verified
+ // structurally. 074's resource:own_offering names no catalog resource (corpus label, reported to the main session),
+ // so its full signature is unverifiable; the same rite with the offered item named natively earns it.
+ const [leave,rite]=result.results;
+ assert.deepEqual(leave.scores,{route:true,signature:true,outOfBounds:true,supported:true,constructor:true});
+ assert.equal(rite.scores.route,true);assert.equal(rite.scores.signature,false);
+ assert.deepEqual(rite.signatureDiagnostics.map(d=>d.reason),['unverified qualifiers: resource:own_offering']);
+ // time(world,rite_stage) can only be met by the rite's own time cost, which is a companion that never counts as a
+ // required effect (review 10-22 P0); the corpus names no stage-advance effect, so it is left out of the native check.
+ const named=row('074');named.expected.signature=['transfer(resource:item_ration,self->sink:consume)',named.expected.signature[1]];
+ const native=(await scoreRows([named],{world})).results[0];
+ assert.equal(native.scores.route,true);assert.equal(native.scores.signature,true);
+ for(const r of [leave,rite,native])assert.equal(r.scores.constructor,Boolean(r.constructorSearch.matched));
 });
 
 test('V: unchanged attack, defense and retreat signatures include real native outcomes and both escape branches',async()=>{
  const scored=await scoreRows(['059','060','061'].map(row),{world});
- for(const r of scored.results)assert.deepEqual(r.scores,{route:true,signature:true,outOfBounds:true,supported:true,constructor:true},JSON.stringify({id:r.id,effects:r.actual.signatureEffects,branches:r.checkBranches}));
+ // Constructor credit is the model-free form search (标杆 B07.4), so it is reported but no longer replayed to true.
+ for(const r of scored.results){
+  const {constructor,...rest}=r.scores;
+  assert.deepEqual(rest,{route:true,signature:true,outOfBounds:true,supported:true},JSON.stringify({id:r.id,effects:r.actual.signatureEffects,branches:r.checkBranches}));
+  assert.equal(constructor,Boolean(r.constructorSearch.matched),r.id);
+ }
  const attack=scored.results[0];
  assert.ok(attack.actual.signatureEffects.some(e=>e.op==='vital'&&e.target==='npc_hw_wushuo'&&e.weapon==='item_staff'));
  const defend=scored.results[1].actual.signatureEffects.find(e=>e.op==='status'&&e.status==='combat_defense');
@@ -203,13 +220,15 @@ test('V: retreat success walks every edge of the known path; failure preserves p
 
 test('V: native retaliation and wear evidence cannot excuse unrelated or inflated effects',async()=>{
  const run=await executeIntent(engine,initial,row('059'));
- assert.equal(signatureMatches(row('059').expected.signature,run.effects,run.receipt,run.requested,world),true);
+ // Signature tokens such as present_enemy bind through the setup aliases of the run (scorer context).
+ const check=(effects,receipt=run.receipt)=>signatureMatches(row('059').expected.signature,effects,receipt,run.requested,world,run.document,{before:run.before,bindings:run.bindings,engine});
+ assert.equal(check(run.effects),true);
  const retaliation=run.effects.find(e=>e.op==='vital'&&e.target==='player');assert.ok(retaliation);
  const inflated=structuredClone(run.effects);inflated.find(e=>e===retaliation||e.op==='vital'&&e.target==='player').delta--;
- assert.equal(signatureMatches(row('059').expected.signature,inflated,run.receipt,run.requested,world),false);
+ assert.equal(check(inflated),false);
  const extra={...structuredClone(retaliation),target:'npc_hw_ayan'};
- assert.equal(signatureMatches(row('059').expected.signature,[...run.effects,extra],run.receipt,run.requested,world),false);
+ assert.equal(check([...run.effects,extra]),false);
  const wear=run.effects.find(e=>e.op==='fact.set'&&e.field==='durability');assert.ok(wear);
  const receipt=structuredClone(run.receipt);receipt.legacy.spent.toolWear[0].after--;
- assert.equal(signatureMatches(row('059').expected.signature,run.effects,receipt,run.requested,world),false);
+ assert.equal(check(run.effects,receipt),false);
 });
