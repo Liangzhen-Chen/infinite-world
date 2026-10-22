@@ -1,5 +1,5 @@
-import {recordsMemo} from './storage.mjs';
-import {aliveHoldings,holdingSet,declareHoldingWriter} from './holdings.mjs';
+import {recordsMemo,recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {aliveHoldings,holdingsView,holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('facility-state');
 import {workstationFee} from './workstation-services.mjs';
 // Facility projections import no runtime modules; domain callbacks are installed below.
@@ -38,7 +38,7 @@ export function facilityView(engine,state,id,holder='player'){
  const units=1+(row.expansions??0),capacity=Math.floor((base.lodging?.rooms??base.capacity??spec.capacity)*units*factor);
  const services=factor?[...new Set([...(base.services??[]),...spec.services])]:[];
  return {kind,material,condition,burning,factor,status:factor===0?'停用':factor<1?'降级':'可用',services,capacity,
-  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(state,station,holder)})):[],units};
+  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(engine,state,station,holder)})):[],units};
 }
 
 // A bed is a physical allocation within a lodging facility, not a stored
@@ -54,12 +54,12 @@ export function registerLodgingBed(d,engine,{id,location}){
 }
 export function lodgingOccupancy(document,location,minute=document.state.minute){
  const state=document.state,rows=[];
- for(const h of aliveHoldings({get:(...path)=>path.reduce((value,key)=>value?.[key],document)},{kind:'lodges',subject:location})){
+ for(const h of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location})){
   if(h.source?.startsWith('contract:room|'))continue; // Legacy projection has no time/bed terms; its contracts below are authoritative.
   const start=h.terms?.from??h.terms?.starts??h.since??0,end=h.terms?.until??h.terms?.expires??Infinity;
   if(start<=minute&&minute<end)rows.push({holder:h.holder,bed:h.terms?.bed??null,source:h.source});
  }
- for(const [id,r] of Object.entries(state.records??{}))if(r.category==='contract'&&r.room===location&&r.status==='有效'&&r.starts<=minute&&minute<r.expires){
+ for(const [id,r] of recordEntriesWhere(state.records,'category','contract'))if(r.room===location&&r.status==='有效'&&r.starts<=minute&&minute<r.expires){
   const old=rows.find(h=>h.source===id||h.holder===r.parties?.[0]);
   if(old){old.bed??=r.bed??null;}else rows.push({holder:r.parties?.[0],bed:r.bed??null,source:id});
  }
@@ -82,14 +82,14 @@ export function lodgingAvailability(engine,document,location,{actor='player',bed
 }
 export function assertLodgingCapacity(engine,document,location,start,end){
  const boundaries=new Set([start]);
- for(const h of aliveHoldings({get:(...path)=>path.reduce((value,key)=>value?.[key],document)},{kind:'lodges',subject:location}))for(const minute of [h.terms?.from,h.terms?.starts,h.terms?.until,h.terms?.expires])if(start<minute&&minute<end)boundaries.add(minute);
- for(const r of Object.values(document.state.records??{}))if(r.room===location)for(const minute of [r.starts,r.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const h of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location}))for(const minute of [h.terms?.from,h.terms?.starts,h.terms?.until,h.terms?.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const r of recordsWhere(document.state.records,'category','contract'))if(r.room===location)for(const minute of [r.starts,r.expires])if(start<minute&&minute<end)boundaries.add(minute);
  for(const minute of boundaries)if(!lodgingAvailability(engine,document,location,{minute}).available)throw Error('住宿床位已满');
 }
 export function selectLodgingBed(engine,document,location,start,end){
  const boundaries=new Set([start]);
- for(const row of Object.values(document.holdings?.rows??{}))if(row.kind==='lodges'&&row.subject===location&&row.until===undefined)for(const minute of [row.terms?.from,row.terms?.until])if(start<minute&&minute<end)boundaries.add(minute);
- for(const row of Object.values(document.state.records??{}))if(row.room===location)for(const minute of [row.starts,row.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const row of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location}))for(const minute of [row.terms?.from,row.terms?.until])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const row of recordsWhere(document.state.records,'category','contract'))if(row.room===location)for(const minute of [row.starts,row.expires])if(start<minute&&minute<end)boundaries.add(minute);
  return Object.values(document.state.records??{}).find(row=>row.category==='lodging_bed'&&row.location===location&&[...boundaries].every(minute=>lodgingAvailability(engine,document,location,{bed:row.id,minute}).available))?.id??null;
 }
 export function assertRestBed(engine,document){

@@ -1,3 +1,4 @@
+import {vocabulary} from './domain-rules.mjs';
 import {registerObligationProtocol} from './obligation-protocol.mjs';
 import {requireRestoreOrigin} from './restore-origin.mjs';
 import {registerObligationCivilGrace} from './obligation-state.mjs';
@@ -138,7 +139,7 @@ function collectionAt(e,s,row,payer,document){
         const holders=aliveHoldings({get:(...p)=>p.reduce((v,k)=>v?.[k],document)},{kind:'holds_office'});
         for(const h of holders){
             const office=document.holdings?.entities?.[h.subject],facts=office?.facts,a=facts?.authority,n=h.holder==='player'?s.player:s.npcs?.[h.holder];
-            if(!office||office.goneAt!==undefined||facts?.organization!==row.creditor||facts.seat!==account.seat||a?.obligation!==row.id||!a.operations?.includes('collect_fine')||
+            if(!office||office.goneAt!==undefined||facts?.organization!==row.creditor||facts.seat!==account.seat||a?.obligation!==row.id||!a.operations?.includes(vocabulary(e,'law','fineCollectOperation'))||
                 a.collectionAccount?.owner!==row.creditor||a.collectionAccount?.purpose!=='legal_treasury'||a.collectionAccount?.resource!=='coin_river'||
                 !n||facts.onDuty!==true||!isEffective(e,s,h.holder)||personConstraint(e,s,h.holder)||!settlementPresent(e,s,payer,h.holder)||/睡|昏|失能/.test(n.activity??n.status??''))continue;
             return {collector:h.holder,seat:account.seat,account:account.account,dedicated:true,creditor:row.creditor};

@@ -1,3 +1,4 @@
+import {pruneRecords} from './record-cleanup.mjs';
 // Mark reactions are observations, never fulfillment of the original intent.
 import {presentWitnesses,publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber} from './world-events.mjs';
 import {digest,recordsWhere} from './storage.mjs';
@@ -33,7 +34,11 @@ export function reactToMark(d,engine,mark,{eventId,suppressed=false}={}){
    // C owns that consumer; this L1 producer must not import its L3 writer.
    reactions.push({observer,tag,event:id,delta,text:rule.response});triggered=true;
   }
-  if(triggered&&!batch)d.set(['state','records',key],{category:'mark_reaction_batch',mark:mark.id,author:mark.author,location:mark.location,tag,minute:now,suppressed,delta});
+  if(triggered&&!batch){
+   d.set(['state','records',key],{category:'mark_reaction_batch',mark:mark.id,author:mark.author,location:mark.location,tag,minute:now,suppressed,delta});
+   // Only batches inside the exposure window matter to later marks; the rest is capped.
+   pruneRecords(d,'mark_reaction_batch',{exempt:r=>r.minute>now-window,max:128});
+  }
  }
  return {triggered:reactions.length>0,suppressed,reactions};
 }

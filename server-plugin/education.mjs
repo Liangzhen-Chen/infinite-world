@@ -1,6 +1,7 @@
 import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation,sameScheduleInputs} from './education-state.mjs';
 export {educationCourses};
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
+import {readBook} from './book-gates.mjs';
 import {personConstraint,personHousehold,personAge,personCertified} from './entity-view.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {facilityView} from './facility-state.mjs';
@@ -51,19 +52,7 @@ function teaching(e,s,teacher,entity){
  return entity.startsWith('skill_')||knowledgeProficiency(e,s,teacher,b.skill)>=(b.minimumProficiency??0);
 }
 export function studyBook(d,e,holder,source,entity){
- const s=d.get('state'),unit=s.itemInstances?.[source],item=unit?.item??source,b=definition(e,s,item);
- if(e.quantity(d,holder,item)<1||unit&&(unit.owner!==holder||unit.status!=='持有'||unit.durability===0))throw Error('读者没有持有完好书本');
- const held=d.get(...e.bagPath(holder),item);if(held?.durability===0)throw Error('书页已损坏');
- const copies=(held?.instances??[]).map(id=>s.itemInstances?.[id]).filter(u=>u&&u.owner===holder&&u.status==='持有');
- if(!unit&&copies.length>=e.quantity(d,holder,item))throw Error('抄本须指定实际单件');
- const book=unit?.book??b?.book,teaches=unit?.book?.teaches??b?.book?.teaches??[];
- if(!book||!teaches.includes(entity)||!definition(e,s,entity))throw Error('书中没有这项已登记成果');
- if(knowledgeProficiency(e,s,holder,'skill_literacy')<e.rules.books.minimumLiteracy)throw Error('读者识字能力不足');
- const grade=e.rules.books.grades.indexOf(book.grade),content=definition(e,s,entity),stage=content.stage??Math.floor((content.minimumProficiency??0)/300);
- if(entity.startsWith('spell_')&&stage>=4&&book.rare!==true)throw Error('专家级以上法术需要稀有典籍');
- if(grade<0||grade<Math.min(stage,4))throw Error('书籍品级不足');
- for(const r of b?.book?.prerequisites??[]){const sk=typeof r==='string'?r:r.skill;if(knowledgeProficiency(e,s,holder,sk)<(typeof r==='string'?1:r.minimum))throw Error('未满足书籍前置技能');}
- return {item,book,minutes:Math.max(content.learnMinutes??0,b?.book?.readingMinutes??0,e.rules.books.readingMinutes[grade]),ceiling:Math.min((grade+1)*300,book.ceilings?.[entity]??Infinity)};
+ return readBook(d,e,holder,source,entity,{fail:(code,english,chinese)=>{throw Error(chinese);}});
 }
 function compatible(e,s,student,entity){
  const b=definition(e,s,entity),skill=entity.startsWith('skill_')?entity:b?.skill;if(!b||!skill)return false;

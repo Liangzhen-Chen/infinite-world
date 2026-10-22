@@ -10,6 +10,7 @@ import {personCertified} from './entity-view.mjs';
 import {obligationClosed} from './obligation-state.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
 import {digest} from './storage.mjs';
+import {readBook} from './book-gates.mjs';
 import {holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('primitives-learning');
 import {reject as rejectAction} from './action-rejection.mjs';
@@ -67,18 +68,10 @@ export function learnWithInitialKnowledge(d,e,args,id,next){
 // Same education source gates, expressed against the L1 knowledge/holding
 // view. education.mjs is owned by C and cannot become an upward L1 dependency.
 export function studyBook(d,e,holder,source,entity){
- const s=d.get('state'),unit=s.itemInstances?.[source],item=unit?.item??source,b=e.byId.get(item)??s.created?.[item],content=e.byId.get(entity)??s.created?.[entity];
- if(e.quantity(d,holder,item)<1||unit&&(unit.owner!==holder||unit.status!=='持有'||unit.durability===0))reject('E-LEARN-SOURCE','The learner does not hold this intact book');
- const held=d.get(...e.bagPath(holder),item),copies=(held?.instances??[]).map(id=>s.itemInstances?.[id]).filter(u=>u&&u.owner===holder&&u.status==='持有');
- if(held?.durability===0||!unit&&copies.length>=e.quantity(d,holder,item))reject('E-LEARN-SOURCE','A readable physical copy must be selected');
- const book=unit?.book??b?.book;
- if(!book||!book.teaches?.includes(entity)||!content)reject('E-LEARN-SOURCE','This book does not contain the registered subject');
- if(!canReadLanguage(e,s,holder,unit?.language??b?.language??book.language??'lang:common'))reject('E-LEARN-LANGUAGE','The learner cannot read the book language');
- if(knowledgeProficiency(e,s,holder,'skill_literacy')<e.rules.books.minimumLiteracy)reject('E-LEARN-LITERACY','The learner cannot read this book');
- const grade=e.rules.books.grades.indexOf(book.grade),stage=content.stage??Math.floor((content.minimumProficiency??0)/300);
- if(grade<0||grade<Math.min(stage,4)||entity.startsWith('spell_')&&stage>=4&&book.rare!==true)reject('E-LEARN-SOURCE','The book grade or rarity does not cover this subject');
- for(const row of b?.book?.prerequisites??[])if(knowledgeProficiency(e,s,holder,typeof row==='string'?row:row.skill)<(typeof row==='string'?1:row.minimum))reject('E-LEARN-PREREQUISITE','A book prerequisite is not met');
- return {minutes:Math.max(content.learnMinutes??0,book.readingMinutes??0,e.rules.books.readingMinutes[grade]),ceiling:Math.min((grade+1)*300,book.ceilings?.[entity]??Infinity)};
+ return readBook(d,e,holder,source,entity,{
+  fail:(code,english)=>reject(code,english),
+  language:({unit,b,book})=>{if(!canReadLanguage(e,d.get('state'),holder,unit?.language??b?.language??book.language??'lang:common'))reject('E-LEARN-LANGUAGE','The learner cannot read the book language');}
+ });
 }
 export function learnNpc(d,engine,effect,{frame,child,tags,requireAuthority,context,limits},{advanceWithNpcParticipants}){
  const learner=effect.entity??frame.actor,state=d.get('state'),body=state.npcs?.[learner],subject=engine.byId.get(effect.subject),source=effect.learningSource;

@@ -18,17 +18,17 @@ export function spellConsentGrant(d,target,authorization,action,catalog,until=d.
  const legacy=r?.category==='authorization'&&r.action===action&&r.subject===target&&r.grantor===target&&r.grantee==='player'&&!r.revoked&&r.endedAt===undefined&&Number.isSafeInteger(r.expires)&&r.expires>until&&
   (r.createdAt===undefined||r.createdAt<=d.get('state','minute'))&&(!r.scope?.spell||r.scope.spell===catalog?.id)&&(!r.scope?.location||r.scope.location===(catalog?.location??d.get('state','location')));
  // Old category-wide grants keep their scope. New grants use exact purposes;
- // neither an unrelated authorization nor proposal consent:true is evidence.
- const records=Object.fromEntries(Object.entries(state.records??{}).filter(([,row])=>row.category!=='authorization'));
- if(legacy)records[authorization]={...r,purpose:r.purpose??[purpose]};
+ // neither an unrelated authorization nor proposal consent:true is evidence:
+ // consent() is shown only the one legacy grant, never the whole record set.
+ const authorizationRecords=legacy?[[authorization,{...r,purpose:r.purpose??[purpose]}]]:[];
  const events=state.consentEvents??[];
  const selected=authorization?events.filter(e=>e.id===authorization||e.type==='consent_revoked'):events;
  // Continuous consumers may settle an interval whose start precedes now.
  // An already observed revocation still takes effect immediately.
  const at=Math.min(state.minute,until);
  const consentEvents=selected.map(e=>e.type==='consent_revoked'&&e.at<=state.minute?{...e,at:Math.min(e.at,at)}:e);
- const document={...d.document,state:{...state,minute:at,records,consentEvents}};
- const permission=consent({engine,document,emergencyConsent:()=>({allowed:false})},target,'player',action,{purpose,until,onRefusal:'abort'});
+ const document={...d.document,state:{...state,minute:at,consentEvents}};
+ const permission=consent({engine,document,authorizationRecords,emergencyConsent:()=>({allowed:false})},target,'player',action,{purpose,until,onRefusal:'abort'});
  if(!permission.allowed)return null;
  const event=events.find(e=>e.id===permission.source);
  return {id:permission.source,expires:event?.until??r?.expires??Infinity,kind:permission.kind};

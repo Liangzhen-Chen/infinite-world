@@ -1,3 +1,4 @@
+import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
@@ -7,7 +8,8 @@ import {isEffective} from './lifecycle-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
-const serviceNames=services=>[...new Set(services.flatMap(s=>['deposit','withdraw','loan_quote','pawn_quote','redeem','remittance','lodging','buy_flatbread'].includes(s)?['trade']:s==='boat_passage'?['transport']:s))];
+// Appointment services are reported under the category the world vocabulary gives them.
+const serviceNames=(engine,services)=>[...new Set(services.map(s=>vocabulary(engine,'services','categories',s)??s))];
 // An appointment changes where/when an existing service is offered. It never
 // grants a career, skill, consent to a transaction, or a bilateral obligation.
 export function bookServiceAppointment(d,engine,row,{actor=row.actor}={}){
@@ -73,7 +75,7 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
   for(const row of appointments){const start=Math.max(0,row.start-day),end=Math.min(1440,row.end-day);
    result=result.flatMap(slot=>slot.end<=start||slot.start>=end?[slot]:[
     ...(slot.start<start?[{...slot,end:start}]:[]),
-    {...slot,start:Math.max(slot.start,start),end:Math.min(slot.end,end),location:row.location,activity:'预约接待',services:[...new Set([...(slot.location===row.location?slot.services??[]:[]),...serviceNames(row.services)])]},
+    {...slot,start:Math.max(slot.start,start),end:Math.min(slot.end,end),location:row.location,activity:'预约接待',services:[...new Set([...(slot.location===row.location?slot.services??[]:[]),...serviceNames(engine,row.services)])]},
     ...(slot.end>end?[{...slot,start:end}]:[])]);
   }
   return result;

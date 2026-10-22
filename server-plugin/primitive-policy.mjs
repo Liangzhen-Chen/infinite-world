@@ -13,7 +13,7 @@ export function validatePrimitive(effect){
  if(!valid(effect))reject('E-PRIMITIVE-SCHEMA',`Invalid primitive shape: ${valid.errors[0].instancePath} ${valid.errors[0].message}`);
  return effect;
 }
-const blocked=new Set(['__proto__','constructor','prototype','coin','coins','money','treasury','inventory','stock','accounts','balance','holdings','obligations','identity','id','inName','birth','age','skills','xp','minute','belief','capacity','status','hp','location','history','derived_progression']);
+const blocked=new Set(['__proto__','constructor','prototype','coin','coins','money','treasury','inventory','stock','accounts','balance','holdings','obligations','identity','id','inName','birth','age','skills','xp','minute','belief','capacity','status','hp','location','history']);
 export function writableFactField(field){
  if(typeof field!=='string'||blocked.has(field)||field.includes('.')||field.includes('|'))reject('E-FACT-FIELD','该字段不允许由事实原语改写');
 }

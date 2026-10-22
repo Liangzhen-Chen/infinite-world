@@ -1,3 +1,4 @@
+import {vocabulary} from './domain-rules.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('summons',{sinks:['sink:consume']});
@@ -157,7 +158,7 @@ export function summonAction(d, args, eventId) {
         const row=obligationRow(d.get('state'),id),view=obligationView(d.get('state'),id);
         if(row?.kind!=='upkeep'||row.debtor!==effect.owner||row.creditor!==args.summon||view.closed||view.owed||
             row.terms.peacefulDismissal!==true||row.terms.active!==true||row.terms.overdue!==false||row.terms.thirdPartyRights!==false)throw Error('Upkeep terms do not allow peaceful dismissal');
-        closeObligation(d,this,{id,actor:effect.owner,party:effect.owner,reason:'peaceful_dismissal'},eventId);
+        closeObligation(d,this,{id,actor:effect.owner,party:effect.owner,reason:vocabulary(this,'closeReasons','dismissal')},eventId);
       }
       end(d, args.summon, effect, '和平解离', d.get('state', 'minute'));return {summon:args.summon,dismissed:true,...(id?{obligation:id}:{})};
     }

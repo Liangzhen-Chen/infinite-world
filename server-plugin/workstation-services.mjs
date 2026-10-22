@@ -1,5 +1,6 @@
 import {facilityView,installFacilityRuntime} from './facility-state.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
+import {vocabulary} from './domain-rules.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,persistable} from './storage.mjs';
 
@@ -11,9 +12,9 @@ export function workstationDefinition(engine,state,id){
  return null;
 }
 const accessKey=id=>`workstation_access:${id}`;
-function paidSource(state,row){
+function paidSource(engine,state,row){
  const event=worldEvent(state,row.paymentEvent),p=event?.payload;
- return event?.verb==='paid'&&event.actor===row.holder&&event.minute<=row.fromMinute&&p.amount===row.fee&&p.purpose==='workstation_use'&&p.resource==='coin_river'&&(p.subject===row.station||p.to?.role==='fee_recipient'&&p.to.of===row.station);
+ return event?.verb==='paid'&&event.actor===row.holder&&event.minute<=row.fromMinute&&p.amount===row.fee&&p.purpose===vocabulary(engine,'workstation','paymentPurpose')&&p.resource==='coin_river'&&(p.subject===row.station||p.to?.role===vocabulary(engine,'workstation','feeRecipientRole')&&p.to.of===row.station);
 }
 export function recordWorkstationAccess(d,engine,row,{actor=row.holder}={}){
  const state=d.get('state'),found=workstationDefinition(engine,state,row.station);
@@ -21,7 +22,7 @@ export function recordWorkstationAccess(d,engine,row,{actor=row.holder}={}){
  if(row.usable!==undefined&&row.usable!==((facilityView(engine,state,found.location)?.factor??1)>0))throw Error('Declared workstation usability conflicts with the real facility condition');
  if(found.station.access!=='public'&&found.station.owner!==actor)throw Error('Private workstation requires actual owner permission');
  if(row.paid){
-  if(!paidSource(state,row))throw Error('Invalid workstation prepayment source');
+  if(!paidSource(engine,state,row))throw Error('Invalid workstation prepayment source');
   if(recordsWhere(state.records,'category','workstation_access').some(r=>r.paymentEvent===row.paymentEvent))throw Error('Prepayment already assigned');
  }else if(row.paymentEvent!==undefined)throw Error('Unpaid access cannot claim a payment');
  const {usable,...facts}=row,value={...persistable(facts),category:'workstation_access'};
@@ -29,12 +30,12 @@ export function recordWorkstationAccess(d,engine,row,{actor=row.holder}={}){
  d.set(['state','records',`${accessKey(row.id)}:source`],{category:'workstation_access_receipt',digest:digest(value)});
  return value;
 }
-export function workstationAccess(state,station,holder='player',minutes=0){
+export function workstationAccess(engine,state,station,holder='player',minutes=0){
  // The receipt digest is the costly check, so it runs only on rows that already match.
- return recordsWhere(state?.records,'category','workstation_access').filter(r=>r.station===station&&r.holder===holder&&r.fromMinute<=state.minute&&state.minute<r.toMinute&&state.minute+minutes<=r.toMinute&&(!r.paid||paidSource(state,r))&&state.records[`${accessKey(r.id)}:source`]?.digest===digest(r));
+ return recordsWhere(state?.records,'category','workstation_access').filter(r=>r.station===station&&r.holder===holder&&r.fromMinute<=state.minute&&state.minute<r.toMinute&&state.minute+minutes<=r.toMinute&&(!r.paid||paidSource(engine,state,r))&&state.records[`${accessKey(r.id)}:source`]?.digest===digest(r));
 }
-export function workstationFee(state,station,holder='player'){
- const receipt=workstationAccess(state,station.id,holder).find(r=>r.paid&&!state.records[`${accessKey(r.id)}:used`]);
+export function workstationFee(engine,state,station,holder='player'){
+ const receipt=workstationAccess(engine,state,station.id,holder).find(r=>r.paid&&!state.records[`${accessKey(r.id)}:used`]);
  return receipt?Math.max(0,(station.fee??0)-receipt.fee):station.fee??0;
 }
 export function prepareBookedWorkstation(d,engine,tool,args){
@@ -53,7 +54,7 @@ export function prepareBookedWorkstation(d,engine,tool,args){
  const rows=recordsWhere(state.records,'category','workstation_access').filter(r=>r.station===station.id&&r.holder==='player');
  if(!rows.length)return null;
  const minutes=repairing?recipe.minutes:Math.ceil(recipe.minutes/(facilityView(engine,state,state.location)?.factor??1));
- const valid=workstationAccess(state,station.id,'player',minutes);
+ const valid=workstationAccess(engine,state,station.id,'player',minutes);
  if(!valid.length)throw Error('Workstation booking does not cover the complete production time');
  const receipt=valid.find(r=>r.paid&&!state.records[`${accessKey(r.id)}:used`])??null;
  const native=workstationDefinition(engine,state,station.id)?.station??station;

@@ -5,7 +5,7 @@ import {declareHoldingWriter,holdingSet,updateEntity,locationOf,setLocation,clea
 import {authority} from './action-authority.mjs';
 import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
-import {handRepairRefused,liquidItem,liquidPortionMl} from './domain-rules.mjs';
+import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary,domainRules} from './domain-rules.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 declareLedgerWriter('items',{sinks:['sink:consume']});
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw new Error('物品数量无效');return value;};
@@ -176,7 +176,7 @@ export function writePhysicalItem(d,engine,id,facts,{source=null,eventId=null,al
   else if(textFacts.has(field)){if(!token(value))throw Error(`Invalid ${field}`);}
   else if(field==='materialTraits'){if(!Array.isArray(value)||value.length>16||value.some(v=>!token(v)))throw Error('Invalid material traits');}
   else if(field==='damage'){
-   if(!value||typeof value!=='object'||Array.isArray(value)||!['surface_hairline_crack','seam_open','cracked_body'].includes(value.kind)||Object.keys(value).some(k=>!['kind','part'].includes(k))||value.part!==undefined&&!token(value.part))throw Error('Invalid damage');
+   if(!value||typeof value!=='object'||Array.isArray(value)||!vocabulary(engine,'damageKinds')?.includes(value.kind)||Object.keys(value).some(k=>!['kind','part'].includes(k))||value.part!==undefined&&!token(value.part))throw Error('Invalid damage');
   }else if(['condition','moisture'].includes(field)){if(!Number.isFinite(value)||value<0||value>100)throw Error(`Invalid ${field}`);}
   else if(field==='fireIntensity'){if(!Number.isSafeInteger(value)||value<0||value>100)throw Error('Invalid fire intensity');}
   else throw Error(`Unknown physical fact ${field}`);
@@ -353,7 +353,7 @@ export function validatePhysicalAction(d,engine,tool,args){
  if(tool==='repair'){
   let item=args.item;if(item)try{item=engine.resolve(item,'item');}catch{return;}
   const id=args.instance??d.get(...engine.bagPath('player'),item)?.instances?.[0]??item,facts=physicalItem(d,engine,id);
-  if(facts.damage?.kind==='cracked_body')throw Error('This repair does not restore a cracked vessel body');
+  if(facts.damage?.kind!==undefined&&domainRules(engine).handRepair?.refusedDamageKinds?.includes(facts.damage.kind))throw Error('This repair does not restore a cracked vessel body');
   if(handRepairRefused(engine,facts))throw Error('Hand-tool item repair cannot restore a stone city gate');
  }
 }

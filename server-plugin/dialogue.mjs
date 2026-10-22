@@ -1,3 +1,4 @@
+import {pruneRecords} from './record-cleanup.mjs';
 import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
@@ -49,6 +50,8 @@ function save(d,npc,eventId,action,decision,text,extra={}){
  const s=d.get('state'),previous=activeConversation(s,npc),id=previous?.id??`dialogue:${eventId}`;
  const conversation={...previous,id,category:'conversation',participants:['player',npc],location:s.location,mainTopicFinished:previous?.mainTopicFinished??false,active:action!=='leave',sourceEvent:previous?.sourceEvent??eventId,lastReply:eventId,...(action==='leave'?{endedAt:s.minute}:{} )};
  holdingSet(d,null,['state','records',`conversation:${id}`],conversation,'dialogue-state');
+ // Ended conversations are history: keep only the latest few.
+ pruneRecords(d,'conversation',{exempt:r=>r.active,max:32});
  const dialogue={npc,action,decision,text,...extra,conversation:{id,active:conversation.active,mainTopicFinished:conversation.mainTopicFinished}};
  d.set(['state','dialogues',npc],{...dialogue,minute:d.get('state','minute'),sourceEvent:eventId});
  return {dialogue};

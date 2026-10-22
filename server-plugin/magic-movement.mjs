@@ -1,3 +1,4 @@
+import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
@@ -137,6 +138,7 @@ export function applyMovement(d,p,eventId){
   const source=`physical_contact:${eventId}:${id}`,expires=now+10,activity=d.get('state','npcs',id,'activity')??null;
   d.set(['state','records',source],{category:'physical_contact',subject:id,location:destination,point:[...p.row.position],visibleFrom:[...p.row.position],event:eventId,minute:now,expires,activity});
   d.set(['state','records',`local_actor_position:${id}`],{category:'local_position',subject:id,location:destination,point:[...p.row.position],source,minute:now,expires,activity});
+  prunePhysicalContacts(d);
  }
  if(p.sourceAnchor)for(const row of [p.sourceAnchor,p.row])d.set(['state','records',knownKey(row.id),'permission'],p.permitIds[row===p.sourceAnchor?0:1]);
  const key=`magic_movement:${eventId}`;

@@ -17,7 +17,7 @@ import {personQuestRights} from './entity-view.mjs';
 import {refundQuestFunding,settleQuestOutcome} from './quest-sources.mjs';
 import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from './quest-wildlife.mjs';
 import {laborNotices} from './labor-market.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings} from './holdings.mjs';
 import {createEntity,isEffective} from './holdings.mjs';
 import {worldEvent} from './world-events.mjs';
 import {calendarDateAt} from './weather.mjs';
@@ -48,7 +48,7 @@ export function questPublishingRights(engine,state,publisher='player',{cultural=
  }
  // Native holdings are passed through the same current-state view as other
  // offices. The optional document is attached by engine.scoped().
- const offices=document?Object.values(document.holdings?.rows??{}).filter(h=>h.kind==='holds_office'&&h.holder===publisher&&h.until===undefined&&h.since<=state.minute):[];
+ const offices=document?aliveHoldings(holdingsView(document),{kind:'holds_office',holder:publisher}).filter(h=>h.since<=state.minute):[];
  const extra=offices.flatMap(h=>{
   const e=document.holdings.entities[h.subject],f=e?.facts;
   return e?.goneAt===undefined&&Number.isSafeInteger(f?.questPublishing?.monthlyQuotaD)&&f.questPublishing.monthlyQuotaD>0&&f.questPublishing.operations?.length===1&&f.questPublishing.operations[0]==='quest.publish'&&

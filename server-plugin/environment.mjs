@@ -15,6 +15,7 @@ import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
 import {mechanismRule,liquidItem}from'./domain-rules.mjs';
+import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
@@ -154,6 +155,7 @@ export function recordLocalContact(d,engine,target,eventId){
     const height=Number.isFinite(elevation)?{elevationMeters:elevation}:{};
     const evidence={category:'physical_contact',subject:target,location,point:[...position],visibleFrom:[...position],event:eventId,minute,expires,activity:actor.activity??null,...height};
     d.set(['state','records',source],evidence);
+    prunePhysicalContacts(d);
     d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null,...height});
     return true;
 }

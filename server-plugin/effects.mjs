@@ -40,7 +40,7 @@ export function applyEffect(d,engine,effect,context,source='world'){
 }
 function effectTransaction(d,engine,effects,context,source='world'){
  return nativePrimitiveTransaction(d,{engine,family:`k6:${source}`,sourceEvent:context.sourceEvent,actor:context.faction??'player',program:{effects,context},
-  primitives:effects.map(effect=>({op:'emit',verb:'tell',visibility:'private',payload:effect})),
+  primitives:effects.map(effect=>({op:'emit',verb:'effect_applied',visibility:'private',payload:effect})),
   apply(tx,index){const effect=effects[index];assertEffect(engine,effect,source);const result=effectConsumer(engine,effect.kind,source).apply(tx,engine,effect,context);if(!result||typeof result.applied!=='boolean')throw Error(`效果缺少 applied 回执：${effect.kind}`);return result;}});
 }
 // A refused effect cannot leave costs or partial identity changes in the draft.

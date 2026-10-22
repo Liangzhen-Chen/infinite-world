@@ -1,3 +1,4 @@
+import {vocabulary} from './domain-rules.mjs';
 import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
 import {requireRestoreOrigin} from './restore-origin.mjs';
@@ -56,7 +57,7 @@ export function restoreCaseSnapshot(d,engine,args,{origin}={}){
         defendant!==undefined&&!parties.includes(defendant)||appealDeadline!==undefined&&(!Number.isSafeInteger(appealDeadline)||appealDeadline<source.minute))throw Error('Invalid historical case registration or parties');
     const judgment=judgmentEvent&&s.records?.[judgmentEvent];
     if(judgmentEvent&&(!judgment||judgment.verb!=='judged'||judgment.payload?.subject!==id||judgment.minute>s.minute||judgment.payload.court!==undefined&&judgment.payload.court!==court||stage!=='judged'))throw Error('Judgment does not belong to this case');
-    if(handlerOffice){const o=d.get('holdings','entities',handlerOffice);if(o?.kind!=='office'||o.goneAt!==undefined||o.facts?.authority?.case!==id||!o.facts.authority.operations?.includes('handle_case')||o.facts.seat!==court)throw Error('Invalid case handler office');}
+    if(handlerOffice){const o=d.get('holdings','entities',handlerOffice);if(o?.kind!=='office'||o.goneAt!==undefined||o.facts?.authority?.case!==id||!o.facts.authority.operations?.includes(vocabulary(engine,'law','caseHandlerOperation'))||o.facts.seat!==court)throw Error('Invalid case handler office');}
     const code=legalCodeAt(engine,court,s);
     const row={category:'legal_case',id,snapshotVersion:1,law:code?.id??null,court,stage,parties:[...parties],sourceEvent,minute:source.minute,location:court,
         status:{judged:'已裁定',pending:'已报案',execution:'执行中',prosecution:'追诉中'}[stage],reported:true,evidence:[],witnesses:[],
@@ -66,7 +67,7 @@ export function restoreCaseSnapshot(d,engine,args,{origin}={}){
 }
 export function currentCaseHandler(engine,document,caseId,actor){
     const row=document.state.records?.[caseId],office=row?.handlerOffice&&document.holdings?.entities?.[row.handlerOffice],n=actor==='player'?document.state.player:document.state.npcs?.[actor];
-    return Boolean(office&&office.goneAt===undefined&&office.facts.authority?.case===caseId&&office.facts.authority.operations?.includes('handle_case')&&
+    return Boolean(office&&office.goneAt===undefined&&office.facts.authority?.case===caseId&&office.facts.authority.operations?.includes(vocabulary(engine,'law','caseHandlerOperation'))&&
         aliveHoldings(holdingReader(document),{kind:'holds_office',holder:actor,subject:row.handlerOffice}).length&&office.facts.onDuty===true&&n&&isEffective(engine,document,actor)&&
         awake(n,holdingReader(document),actor)&&canAct({engine,document},actor,'talk').allowed&&(actor==='player'?document.state.location:n.location)===office.facts.seat);
 }
@@ -178,7 +179,7 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 const rejectLegalRequest=reason=>reject('E-ACTION-LEGAL-REQUEST',reason,{missing:[reason],repair:[`先满足当前条件：${reason}；再向有权且在场的人提出原请求`]});
 function receiveLegalRequest(d,engine,args,eventId){
     const request=args.request,operation=args.operation,s=d.get('state'),caseId=existingSnapshotCase(d,request?.terms?.case??args.case),row=s.records?.[caseId];
-    const kinds={report:'theft',confess:'confession',claim:'cargo_damage',appeal:'appeal',hire_advocate:'defense',bribe:'bribe'};
+    const kinds={report:'theft',confess:'confession',claim:vocabulary(engine,'law','cargoClaimKind'),appeal:'appeal',hire_advocate:'defense',bribe:'bribe'};
     if(!Object.hasOwn(kinds,operation)||!request||typeof request!=='object'||Array.isArray(request)||request.kind!==kinds[operation])rejectLegalRequest('Invalid legal request kind');
     const key=`legal_request:${eventId}`,old=s.records?.[key];
     if(old){if(JSON.stringify(old.request)!==JSON.stringify(request))throw Error('Legal request event reused');return {request:key,case:old.case,submitted:true};}
@@ -197,7 +198,7 @@ function receiveLegalRequest(d,engine,args,eventId){
         receiver=candidates[0].holder;
     };
     if(operation==='report'||operation==='confess'){
-        receive(operation==='report'?'receive_report':'receive_surrender');
+        receive(vocabulary(engine,'law','receiveOperations',operation==='report'?'report':'confess'));
         const known=Object.entries(s.records??{}).filter(([,r])=>r.category==='world_event'&&r.verb==='theft'&&r.minute<=s.minute&&
             (operation==='confess'?r.actor==='player':r.payload?.owner==='player'&&(r.witnesses?.includes('player')||r.observer==='player'))&&
             (!request.incident||request.incident===r.id||request.incident===r.payload?.name||request.incident===r.summary)&&
@@ -211,7 +212,7 @@ function receiveLegalRequest(d,engine,args,eventId){
         }
         target=operation==='confess'?receiver:s.location;
     }else if(operation==='claim'){
-        receive('receive_claim');
+        receive(vocabulary(engine,'law','receiveOperations','claim'));
         const claims=Object.values(s.obligations??{}).filter(o=>o.snapshotVersion===1&&o.kind==='delivery'&&o.creditor==='player'&&o.terms.delivered===true&&o.terms.lossAssessed===false&&(!request.carrier||o.debtor===request.carrier));
         if(claims.length!==1)rejectLegalRequest('Cargo claim requires one existing unassessed delivery');
         const claim=claims[0],cargo=s.itemInstances?.[claim.subject],originals=papers.filter(([,p])=>p.document.obligation===claim.id&&['accepted_cargo','delivered'].every(verb=>p.document.links?.some(id=>{
@@ -224,7 +225,7 @@ function receiveLegalRequest(d,engine,args,eventId){
         if(row.sourceEvent)sourceEvents.push(row.sourceEvent);
         if(operation==='appeal'){
             if(!caseProcedureView(engine,d.document,caseId).canRequestAppeal)rejectLegalRequest('Appeal requires an eligible party, existing judgment and open appeal period');
-            receive('receive_appeal');
+            receive(vocabulary(engine,'law','receiveOperations','appeal'));
             const originals=papers.filter(([,p])=>p.document.case===caseId&&p.document.reviewed===false);
             if(!originals.length)rejectLegalRequest('Appeal requires the original new case document');
             for(const [id]of originals){if(!row.evidence.some(e=>e.document===id))submitCaseDocument(d,engine,{case:caseId,document:id},eventId);evidence.push(id);}
@@ -233,7 +234,7 @@ function receiveLegalRequest(d,engine,args,eventId){
             receiver=present(d,engine,args.authority??target);target=receiver;
             if(!canReceive(receiver))rejectLegalRequest('Recipient cannot currently receive the request');
             const vocation=s.npcs[receiver]?.vocation;
-            if(vocation?.id!=='vocation_advocate'||vocation.conflictOfInterest||[...row.parties??[],row.offender,row.victim,...row.witnesses??[],row.judgment?.judge].includes(receiver)||!consent({engine,document:d.document},receiver,'player','negotiate_defence',{subject:caseId,purpose:caseId}).allowed)rejectLegalRequest('Defence negotiation requires a qualified disinterested willing advocate');
+            if(vocation?.id!=='vocation_advocate'||vocation.conflictOfInterest||[...row.parties??[],row.offender,row.victim,...row.witnesses??[],row.judgment?.judge].includes(receiver)||!consent({engine,document:d.document},receiver,'player',vocabulary(engine,'law','defenceConsentScope'),{subject:caseId,purpose:caseId}).allowed)rejectLegalRequest('Defence negotiation requires a qualified disinterested willing advocate');
             if(request.terms?.quoteOnly!==true)rejectLegalRequest('Defence fee and service scope must be negotiated before signing');
         }else{
             receiver=present(d,engine,args.authority??target);target=receiver;

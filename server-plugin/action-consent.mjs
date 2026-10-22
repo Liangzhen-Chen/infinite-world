@@ -68,7 +68,8 @@ export function consent(context,from,to,scope,{purpose=null,subject=null,terms=n
  // Existing spell permissions are factual grants, with their actual purpose,
  // spell/location limits and revocation. Free text is never widened to all uses.
  const action=({mind:'mental_magic',memory:'mental_magic'})[scope]??scope;
- if(!needsProxy)for(const [id,row] of Object.entries(context.document.state?.records??{})){
+ // A caller that already knows the only authorization in play passes it as context.authorizationRecords.
+ if(!needsProxy)for(const [id,row] of context.authorizationRecords??Object.entries(context.document.state?.records??{})){
   if(row.category!=='authorization'||row.action!==action||row.subject!==from||row.grantor!==from||row.grantee!==to||row.revoked||row.endedAt!==undefined||!Number.isSafeInteger(row.expires)||row.expires<=until||(row.createdAt??0)>now)continue;
   const location=to==='player'?context.document.state.location:actionEntity(context,to)?.location;
   if(row.scope?.location&&row.scope.location!==location)continue;

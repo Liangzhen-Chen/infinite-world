@@ -1,3 +1,4 @@
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('world-events',{kinds:[]});
 import {isPhysicallyDead} from './holdings.mjs';
@@ -34,8 +35,8 @@ export function recordHistoricalEvent(d,engine,event){
 // "I saw this" resolves only an exact version already known to the speaker.
 // This adapter grants neither knowledge nor access to private event records.
 export function knownWorldEventReference(state,observer,{reference,content}={}){
-    const known=new Set(Object.values(state.records??{}).filter(r=>r.category==='knowledge'&&r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
-    const rows=Object.entries(state.records??{}).filter(([key,r])=>r.category==='world_event'&&key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
+    const known=new Set(recordsWhere(state.records,'category','knowledge').filter(r=>r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
+    const rows=recordEntriesWhere(state.records,'category','world_event').filter(([key,r])=>key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
     const matches=rows.filter(r=>reference===r.id||reference===`world_event:${r.id}`||reference==='self'&&typeof content==='string'&&content===(r.summary??r.payload?.name));
     return matches.length===1?matches[0].id:null;
 }

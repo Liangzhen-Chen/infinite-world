@@ -1,3 +1,4 @@
+import {vocabulary} from './domain-rules.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {openGoodsObligation,performGoodsObligation,extendGoodsObligation} from './obligation-conditional.mjs';
 import {transition} from './transition.mjs';
@@ -274,7 +275,7 @@ export function collectTransport(d,e,id,actor='player'){
 }
 // A loss consumes the actual freight first. Its compensation and any legal
 // recovery share C's loss id, so restitution cannot pay the same loss twice.
-export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',cause='cargo_damage'},eventId){
+export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',cause=vocabulary(e,'law','cargoClaimKind')},eventId){
  return obligationTransaction(d,()=>{
   const key=`transport_loss:${shipment}:${eventId}`,prior=lossView(d.get('state'),key);
   if(prior){const facts=d.get(...path(`${key}:facts`));if(facts?.item!==item||facts?.quantity!==quantity||facts?.actor!==actor||facts?.cause!==cause)throw Error('货损事件编号冲突');return prior;}

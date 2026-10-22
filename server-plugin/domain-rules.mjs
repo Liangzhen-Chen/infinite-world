@@ -13,6 +13,8 @@ const memo=(table,key,build)=>{
  return slot.get(key);
 };
 export const domainRules=engine=>engine?.world?.domainRules??NONE;
+// A named identifier of the world vocabulary (operation names, damage kinds, payment purposes...).
+export const vocabulary=(engine,...path)=>path.reduce((v,k)=>v?.[k],domainRules(engine).vocabulary);
 
 // ---- physical mechanisms ----------------------------------------------------
 export function mechanismRule(engine,mechanism){
@@ -67,7 +69,7 @@ export function validateDomainRules(world){
  const items=new Map((world.items??[]).map(i=>[i.id,i]));
  const locations=new Set((world.locations??[]).map(l=>l.id));
  if(!table||typeof table!=='object'||Array.isArray(table)||table.version!==1)fail('缺少 version 1');
- const known=new Set(['version','note','physicalMechanisms','liquids','handRepair','privateField','languages','map','governance']);
+ const known=new Set(['version','note','physicalMechanisms','liquids','handRepair','privateField','languages','map','governance','vocabulary']);
  for(const key of Object.keys(table))if(!known.has(key))fail(`未知分区 ${key}`);
  const tool=(id,where)=>{if(!items.has(id))fail(`${where} 引用了不存在的物品 ${id}`);};
  for(const [id,row] of Object.entries(table.physicalMechanisms??{})){
@@ -97,6 +99,15 @@ export function validateDomainRules(world){
    if(!/^lang:[a-z][a-z0-9_-]*$/.test(id)||!list(row.aliases??[]))fail(`languages.${id} 无效`);
    for(const alias of row.aliases??[]){if(seen.has(alias))fail(`语言别名重复：${alias}`);seen.add(alias);}
   }
+ }
+ if(table.vocabulary!==undefined){
+  const check=(value,where)=>{
+   if(typeof value==='string'){if(!value)fail(`${where} 为空`);}
+   else if(Array.isArray(value)){if(value.some(x=>typeof x!=='string'||!x))fail(`${where} 须为字符串列表`);}
+   else if(value&&typeof value==='object'){for(const [k,v] of Object.entries(value))if(k!=='note')check(v,`${where}.${k}`);}
+   else fail(`${where} 类型无效`);
+  };
+  check(table.vocabulary,'vocabulary');
  }
  if(table.governance!==undefined){
   const rule=table.governance,kinds=['notice','building_rule','transport_claim','expired_pawn_ticket','debt_evidence'];

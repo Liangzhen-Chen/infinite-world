@@ -224,9 +224,7 @@ export function assertSiteHarvest(d,engine,place,args){
  }
  if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw Error('采伐需所有者的采集许可');
  assertOccupants(d,engine,place,authorizations);
- // Woodcut already operates at the actor's physical location. An outdoor
- // forest needs no separate site-menu visit; property, occupants and every
- // entrance mechanism still gate harvesting here and after elapsed time.
+ if(!inside(d,place))throw Error('须先进入据点再采伐');
  unblocked(ledger(d,place),place.site.entryMechanisms??[]);
 }
 function watchers(d,engine,place){

@@ -1,14 +1,12 @@
 // Native NPC checks share the legacy dice keys, proficiency, hidden passives,
 // equipment bounds and five degrees. The public check tool remains player-only.
-import {createHash} from 'node:crypto';
-import {npcProficiency} from './checks.mjs';
-import {heldUnit} from './items.mjs';
+import {npcProficiency,checkDie,checkDegree,helperSucceeds,toolBonuses} from './checks.mjs';
 import {capacity} from './action-capacity.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {reject} from './primitive-policy.mjs';
 
 const integer=(n,min,max)=>{if(!Number.isSafeInteger(n)||n<min||n>max)reject('E-CHECK-BOUND','Check input is outside its native bounds');return n;};
-const die=(d,id,label)=>createHash('sha256').update(`${d.document.randomSeed}:${id}:${label}`).digest().readUInt32LE(0)%20+1;
+const die=(d,id,label)=>checkDie(d.document,id,label);
 export function checkActor(d,engine,args,eventId,actor='player',{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh}={}){
  if(actor==='player')return engine.check(d,args,eventId);
  const context={engine,document:d.document},state=d.get('state'),body=state.npcs?.[actor];
@@ -50,30 +48,16 @@ export function checkActor(d,engine,args,eventId,actor='player',{effectiveProfic
   if(!o||o.type!=='协助'||o.promisee!==actor||!['待履行','进行中'].includes(o.status)||o.deadline<=state.minute||people.has(npc)||o.skill!==skill||o.attribute!==attribute)reject('E-CHECK-HELPER','The helper obligation does not cover this check');
   people.add(npc);present(npc);
   if(skill&&npcProficiency(d,engine,npc,skill)<(engine.rules.check.helperMinimumProficiency??100))reject('E-CHECK-HELPER','Helper proficiency is insufficient');
-  const roll=die(d,eventId,`helper:${npc}`),modifier=modifierFor(npc,attribute,skill),success=roll!==1&&(roll===20||roll+modifier>=10);
+  const roll=die(d,eventId,`helper:${npc}`),modifier=modifierFor(npc,attribute,skill),success=helperSucceeds(roll,modifier);
   helpers.push({obligation:key,npc,die:roll,modifier,total:roll+modifier,success,bonus:success?engine.rules.check.helperBonus??2:0});
  }
- const tools=args.tools??[];
- if(!Array.isArray(tools)||tools.length>8)reject('E-CHECK-TOOLS','Invalid tools');
- const ids=tools.map(id=>engine.resolve(id,'item'));
- if(new Set(ids).size!==ids.length)reject('E-CHECK-TOOLS','A tool cannot be counted twice');
- const details=ids.map(item=>{
-  if(engine.quantity(d,actor,item)<1)reject('E-CHECK-TOOLS','The actor does not hold this tool');
-  const held=heldUnit(d,engine,actor,item),definition=engine.byId.get(item),grade=engine.rules.equipment.qualities.indexOf(held.quality??definition.quality);
-  if((held.durability??definition.durability)<=0||grade<0||body.level<engine.rules.equipment.requiredLevels[grade])reject('E-CHECK-TOOLS','The tool is unusable by this actor');
-  const spec=definition.checkBonus,matches=spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(skill));
-  return {item,bonus:matches?integer(spec.bonus,0,5):0};
- });
- const toolBonus=Math.min(engine.rules.check.maximumToolBonus??5,details.reduce((n,r)=>n+r.bonus,0)),hidden=hiddenCheckBonus(engine,state,actor,domain);
+ let tools;
+ try{tools=toolBonuses(d,engine,args.tools??[],attribute,skill,actor,body.level);}catch(error){reject('E-CHECK-TOOLS',error.message);}
+ const details=tools.details,toolBonus=tools.bonus,hidden=hiddenCheckBonus(engine,state,actor,domain);
  const modifier=modifierFor(actor,attribute,skill)+contextBonus+toolBonus+helpers.reduce((n,r)=>n+r.bonus,0),rolls=[die(d,eventId,'d20')];
  if(args.advantage||args.disadvantage)rolls.push(die(d,eventId,'second'));
  const roll=args.advantage===args.disadvantage?rolls[0]:args.advantage?Math.max(...rolls):Math.min(...rolls),total=roll+modifier;
- let degree,success;
- if(opponent){
-  const rank=n=>n===20?1:n===1?-1:0;
-  success=rank(roll)===rank(opponent.die)?total>opponent.total:rank(roll)>rank(opponent.die);
-  degree=success?(roll===20||total-difficulty>=10?'大成功':total-difficulty>=5?'成功':'勉强成功'):(roll===1||total-difficulty<=-10?'大失败':'失败');
- }else{degree=roll===1||total<=difficulty-10?'大失败':roll===20||total>=difficulty+10?'大成功':total<difficulty?'失败':total<difficulty+5?'勉强成功':'成功';success=['勉强成功','成功','大成功'].includes(degree);}
+ const {degree,success}=checkDegree(roll,total,difficulty,opponent);
  const result={actor,die:roll,rolls,modifier,total,difficulty,degree,success,...(hidden.bonus?{hiddenPassive:{domain,...hidden}}:{}),...(opponent?{opponent}:{}),...(helpers.length?{helpers}:{}),...(details.length?{tools:details,toolBonus}:{})};
  d.set(['state','checks',eventId],result);
  if(opponent&&opponent.npc!=='player'&&success)noteTrick(d,engine,opponent.npc,trick,eventId);

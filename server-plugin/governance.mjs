@@ -17,7 +17,7 @@ import {contributionTotal} from './civic.mjs';
 import {institutionOriginal,institutionPhysicalReference} from './obligation-state.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
-import {declareHoldingWriter,holdingSet,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity,updateEntity,setLocation} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity,updateEntity,setLocation} from './holdings.mjs';
 import {changeHolding} from './transition.mjs';
 import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 import {isEffective} from './lifecycle-state.mjs';
@@ -104,7 +104,7 @@ export function restoreInstitutionDocument(d,engine,args,{origin}={}){
     return id;
 }
 export function institutionInputsFor(engine,document,settlement,actor='player'){
-    const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)},s=document.state;
+    const d=holdingsView(document),s=document.state;
     const reviewer=aliveHoldings(d,{kind:'holds_office',holder:actor}).some(h=>{
         const facts=entityRow(d,h.subject)?.facts;
         const powers=h.terms?.authority??facts?.authority?.operations??facts?.authority;
@@ -124,7 +124,9 @@ export function institutionDocumentView(engine,document,id,actor='player'){
     return {id,kind:row.kind,content:row.content,valid:row.valid??null,sourceEvent:row.sourceEvent,describes:row.describes??null,public:row.public};
 }
 function publicInstitutionDocuments(engine,document){
-    return [...new Set([...Object.keys(document.state.itemInstances??{}),...Object.keys(document.holdings?.entities??{})])].map(id=>institutionDocumentView(engine,document,id)).filter(r=>r?.public);
+    // Only objects that carry an institutional text (on the unit, its entity, or a stored record) can be public documents.
+    const s=document.state,carries=id=>s.itemInstances?.[id]?.document!==undefined||document.holdings?.entities?.[id]?.facts?.document!==undefined||s.records?.[`institution_document:${id}`]!==undefined;
+    return [...new Set([...Object.keys(s.itemInstances??{}),...Object.keys(document.holdings?.entities??{})])].filter(carries).map(id=>institutionDocumentView(engine,document,id)).filter(r=>r?.public);
 }
 const path=id=>['state','records',id];
 const safe=n=>Number.isSafeInteger(n)&&n>=0;

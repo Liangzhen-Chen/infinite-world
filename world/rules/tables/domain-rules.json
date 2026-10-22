@@ -28,6 +28,9 @@
     ],
     "refusedScales": [
       "whole_city_gate"
+    ],
+    "refusedDamageKinds": [
+      "cracked_body"
     ]
   },
   "privateField": {
@@ -76,6 +79,65 @@
       "deceived": {
         "kind": "debt_evidence"
       }
+    }
+  },
+  "vocabulary": {
+    "note": "世界词汇：领域模块比较用的操作名、损伤种类、付款用途、关闭原因等标识。代码按名读取，不在源码里写死。",
+    "damageKinds": [
+      "surface_hairline_crack",
+      "seam_open",
+      "cracked_body"
+    ],
+    "law": {
+      "caseHandlerOperation": "handle_case",
+      "receiveOperations": {
+        "report": "receive_report",
+        "confess": "receive_surrender",
+        "claim": "receive_claim",
+        "appeal": "receive_appeal"
+      },
+      "defenceConsentScope": "negotiate_defence",
+      "cargoClaimKind": "cargo_damage",
+      "fineCollectOperation": "collect_fine"
+    },
+    "examinations": {
+      "referralOperation": "refer_examiner"
+    },
+    "workstation": {
+      "paymentPurpose": "workstation_use",
+      "feeRecipientRole": "fee_recipient"
+    },
+    "services": {
+      "categories": {
+        "deposit": "trade",
+        "withdraw": "trade",
+        "loan_quote": "trade",
+        "pawn_quote": "trade",
+        "redeem": "trade",
+        "remittance": "trade",
+        "lodging": "trade",
+        "buy_flatbread": "trade",
+        "boat_passage": "transport"
+      }
+    },
+    "lodging": {
+      "agreedResource": "lodging_one_night"
+    },
+    "closeReasons": {
+      "dismissal": "peaceful_dismissal"
+    },
+    "relativeBearings": {
+      "note": "06 §6.3 move.to 允许“朝某方位”：这些词表示相对方位而非地名，逃离时交由已知可通行路径决定。",
+      "terms": [
+        "旁",
+        "附近",
+        "身边",
+        "身后",
+        "小路",
+        "path",
+        "nearby",
+        "adjacent"
+      ]
     }
   }
 }
