@@ -290,10 +290,18 @@ function verifiedSpatial(ctx,setup,field,row,item){
   }
   const carried=ctx.document.holdings?.locations?.[target];
   if(carried?.mode==='carried'&&carried.at===observer)actual={distanceMeters:0,lineOfSight:true};
-  const spells=Array.isArray(setup.abilities?.spells)?setup.abilities.spells:[];
-  const touch=(Array.isArray(setup.objects)?setup.objects:[]).some(o=>ctx.ref(o?.id)===target&&(o?.fireIntensity>0||o?.armed===true))||(Array.isArray(setup.itemInstances)?setup.itemInstances:[]).some(o=>ctx.ref(o?.carriedBy)===target&&o?.access==='loose_open');
-  const precise=!!row.rayMeters||touch||spells.some(id=>{const spell=ctx.engine.byId.get(id);return spell?.rangeMeters!==undefined&&!['dry','repair','light'].includes(spell.effectSpec?.kind);});
-  if(precise&&(!actual||actual.lineOfSight!==row.lineOfSight||!Number.isFinite(actual.distanceMeters)||touch&&(row.distanceMeters<=1.5)!==(actual.distanceMeters<=1.5)||spells.some(id=>{const range=ctx.engine.byId.get(id)?.rangeMeters;return Number.isFinite(range)&&(row.distanceMeters<=range)!==(actual.distanceMeters<=range);})||row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9))return false;
+  // Review 10-22 P1: a declared distance is always measured. It is equivalent
+  // to the native geometry when both fall on the same side of every range
+  // boundary any registered adjudication reads (contact reach 1.5 m used by
+  // the primitive runtime, every catalog action rangeMeters, every spell
+  // rangeMeters), or equal to the declared ray. No spell kind is exempt and
+  // no distance is recorded as verified without this comparison.
+  if(row.distanceMeters!==undefined){
+   if(!actual||!Number.isFinite(actual.distanceMeters)||actual.lineOfSight!==row.lineOfSight)return false;
+   if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return false;
+   const boundaries=new Set([1.5,...(ctx.engine.world.actionDefinitions?.actions??[]).map(a=>a.rangeMeters),...(ctx.engine.world.spells??[]).map(spell=>spell.rangeMeters)].filter(Number.isFinite));
+   for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return false;
+  }
   const targetBody=ctx.actor(target),at=observer==='player'?ctx.document.state.location:ctx.actor(observer)?.location;
   if(row.audible!==undefined){
    if(!targetBody)return false;
@@ -304,7 +312,7 @@ function verifiedSpatial(ctx,setup,field,row,item){
   if(ctx.document.state.location===at)listeners.push('player');
   if(row.audibleTo?.some(id=>!listeners.includes(ctx.ref(id))))return false;
   if(row.thirdPartyListeners&&JSON.stringify(listeners.filter(id=>![observer,target].includes(id)).sort())!==JSON.stringify(row.thirdPartyListeners.map(ctx.ref).sort()))return false;
-  if(visible){ctx.note(`${item}: verified native perception${precise?' and range boundary':''}; no contact evidence created`);return true;}
+  if(visible){ctx.note(`${item}: verified native perception${row.distanceMeters!==undefined?' and distance at every catalog range boundary':''}; no contact evidence created`);return true;}
  }
  return false;
 }

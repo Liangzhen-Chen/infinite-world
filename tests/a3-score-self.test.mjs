@@ -33,11 +33,27 @@ const rows=[
  {id:'self-registered',intent:'留下痕迹',proposal:{intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:markSlots.intent,form:markSlots.form},tags:markSlots.tags}]},expected:expected('open:leave_mark',['create'],{fallback:true})},
 ];
 const options={world,seed,document:initial};
+// 05 §5.3 / review 10-22 P1: a corpus office is loaded only as a narrowed
+// instance of an office in its organization's charter. The shipped world has
+// no charter for the white-stone watch and registry desks yet (reported to the
+// main session), so the legal regressions attach a test-local charter to
+// loc_bs instead of letting corpus rows grant themselves powers.
+const charterWorld=structuredClone(world);
+charterWorld.locations.find(l=>l.id==='loc_bs').offices=[
+ {id:'office_test_bs_watch_desk',seat:'bld_bs_watch',authority:{operations:['receive_report','collect_fine','handle_case','guard']}},
+ {id:'office_test_bs_arrest',seat:'bld_bs_watch',authority:{operations:['holding.open','move']}},
+ {id:'office_test_bs_registry',seat:'bld_bs_office',authority:{operations:['receive_appeal','receive_claim']}},
+];
+const charterEngine=new WorldEngine(charterWorld),charterOptions={...options,world:charterWorld};
+// A declared distance is a premise only when native geometry measures it
+// (review 10-22 P1); person-to-person distances are a reported S4 gap. The
+// regressions below do not read distance, so they drop that premise.
+const withoutPositions=row=>{const {positions,...setup}=row.setup??{};return {...row,setup};};
 
 test('A3 signature r10: conditional legal consequences require their native submission and recipient decision',async()=>{
- const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8')).map(withoutPositions);
  for(const number of ['051','052','056','058']){
-  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(engine,initial,row);
+  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(charterEngine,initial,row);
   const check=(effects=run.effects,receipt=run.receipt,document=run.document)=>signatureMatches(row.expected.signature,effects,receipt,run.requested,document);
   assert.equal(run.actual.committed,true,row.id);
   assert.equal(check(),true,`${row.id}: submitted, not accepted`);
@@ -54,8 +70,9 @@ test('A3 signature r10: conditional legal consequences require their native subm
    const native=doc.state.records[request.case],before=native.stage;native.stage='appeal';
    consequence={op:'fact.set',entity:request.case,field:'stage',value:'appeal',result:{path:['state','records',request.case,'stage'],before,after:'appeal'}};
   }else{
+   // A cargo claim is a civil matter (law.mjs civilMatter); theft is not.
    const native={category:'legal_case',id:'r10-new-case',sourceEvent:accepted.id,stage:'pending',offense:request.request.kind,
-    victim:request.actor,offender:request.request.accused??request.request.carrier};
+    victim:request.actor,offender:request.request.accused??request.request.carrier,...(number==='056'?{civilMatter:'cargo_damage'}:{})};
    doc.state.records[native.id]=native;
    consequence={op:'create',kind:'case',result:{path:['state','records',native.id],before:null,after:structuredClone(native)}};
   }
@@ -95,9 +112,11 @@ test('A3 signature r10: conditional legal consequences require their native subm
    mutate(({document})=>{document.state.records['r10-new-case'].sourceEvent='unrelated';});
    mutate(({effects,document})=>{const native=document.state.records['r10-new-case'];native.offender='npc_hw_linsui';effects.at(-1).result.after=structuredClone(native);});
    mutate(({effects,document})=>{const native=document.state.records['r10-new-case'];native.offense='unrelated';effects.at(-1).result.after=structuredClone(native);});
+   // Review 10-22 P0: civil_claim is checked on the native case, not ignored.
+   if(number==='056')mutate(({effects,document})=>{const native=document.state.records['r10-new-case'];delete native.civilMatter;effects.at(-1).result.after=structuredClone(native);});
   }
  }
- const score=await scoreRows(corpus.filter(r=>/-(051|052|056|058)$/.test(r.id)),options);
+ const score=await scoreRows(corpus.filter(r=>/-(051|052|056|058)$/.test(r.id)),charterOptions);
  for(const result of score.results){
   assert.equal(result.scores.signature,true,`${result.id}: scored submission`);
   assert.equal(result.scores.constructor,true,`${result.id}: constructor submission`);
@@ -156,7 +175,10 @@ test('A3 signature r8: required effects are a multiset and extras need companion
  assert.equal(signatureMatches(['emit','emit'],[emit,other],receipt),true);
  assert.equal(signatureMatches(Array(63).fill('emit'),[...Array(63).fill(emit),{op:'status'}],receipt),false);
  const taught={...learn,subject:'skill_literacy',mode:'teacher'};
- assert.equal(signatureMatches(['learn','learn(person:self,skill_life_6_core)'],[learn,taught],receipt),true);
+ // Review 10-22 P0: a companion (here practice XP) never satisfies a required
+ // effect even when its qualifiers would match; two non-companion learns do.
+ assert.equal(signatureMatches(['learn','learn(person:self,skill_life_6_core)'],[learn,taught],receipt),false);
+ assert.equal(signatureMatches(['learn','learn(person:self,skill_life_6_core)'],[{...learn,mode:'teacher'},taught],receipt),true);
  assert.equal(signatureMatches(signature,[learn,wear],receipt),false);
  assert.equal(signatureMatches(signature,[emit,{...learn,mode:'teacher'}],receipt),false);
  assert.equal(signatureMatches(signature,[emit,{...learn,result:{path:['state','spells','spell_light']}}],receipt),false);
@@ -168,7 +190,10 @@ test('A3 signature r8: required effects are a multiset and extras need companion
  assert.equal(signatureMatches(signature,[emit,fee],{cost:{resources:[fee]}}),false);
  const additional={...fee,role:'additional_cost'};
  assert.equal(signatureMatches(signature,[emit,additional],{cost:{resources:[additional]}}),true);
- assert.equal(signatureMatches([...signature,'transfer(resource:coin,self->npc_hw_linsui)'],[emit,additional],{cost:{resources:[additional]}}),true);
+ // Review 10-22 P0: an excluded cost cannot satisfy a requirement; the same
+ // payment counts only when the request itself asked for it.
+ assert.equal(signatureMatches([...signature,'transfer(resource:coin,self->npc_hw_linsui)'],[emit,additional],{cost:{resources:[additional]}}),false);
+ assert.equal(signatureMatches([...signature,'transfer(resource:coin,self->npc_hw_linsui)'],[emit,additional],{cost:{resources:[additional]}},[{op:'transfer',resource:'coin',from:'self',to:'npc_hw_linsui',qty:2}]),true);
  assert.equal(signatureMatches(signature,[emit,additional]),false);
 });
 
@@ -183,7 +208,7 @@ test('A3 signature r9: role endpoints use resolved counterparties and exact acco
  // the earlier role-only signatures and must keep that original contract.
  const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
  for(const number of ['031','032','037','038','039','054','095']){
-  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(engine,initial,row),receipt=run.receipt;
+  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(charterEngine,initial,row),receipt=run.receipt;
   assert.equal(run.actual.committed,true,row.id);
   const signatures=row.expected.signature.filter(s=>s.includes('->'));
   for(const signature of signatures){
@@ -311,7 +336,7 @@ test('A3 checks r9: failed native repair preserves durability and pays materials
 });
 
 test('A3 checks r9: native sequence exercises each child failure after successful predecessors',async()=>{
- const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-079'),result=(await scoreRows([row],options)).results[0];
+ const row=withoutPositions((await loadCorpus()).rows.find(r=>r.id==='A3V2-079')),result=(await scoreRows([row],options)).results[0];
  const branches=result.checkBranches;
  assert.deepEqual(Object.keys(branches),['success','failure:0','failure:1']);
  for(const branch of Object.values(branches))assert.equal(branch.ok,true,JSON.stringify(branch));
@@ -330,7 +355,7 @@ test('A3 checks r9: native sequence exercises each child failure after successfu
 });
 
 test('A3 signature r9: clarification earns request-signature credit only with zero raw effects',async t=>{
- const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-086');
+ const row=withoutPositions((await loadCorpus()).rows.find(r=>r.id==='A3V2-086'));
  assert.ok(row.expected.signature.length);
  const result=(await scoreRows([row],options)).results[0];
  assert.equal(result.actual.clarified,true);assert.equal(result.scores.signature,true);
@@ -499,28 +524,39 @@ test('A3 signature: qualifiers belong to the same adopted primitive, never prose
  const effects=[{op:'emit',target:'npc_hw_linsui',signatureKind:'person',verb:'tell',payload:{text:'npc_hw_wushuo greet'}},{op:'status',target:'player',status:'fear'}];
  assert.equal(signatureMatches(['emit(person:npc_hw_linsui,tell)','status(person:self,fear)'],effects),true);
  assert.equal(signatureMatches(['emit(person:npc_hw_wushuo,tell)','status'],effects),false);
- // Round 5 rule 4: greet/tell are descriptions; the same real NPC is the evidence.
- assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],effects),true);
+ // Review 10-22 P0 (06 §6.7): description words are structured evidence, not
+ // ignorable prose. greet must be the adopted verb; prose mentioning greet is not.
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,greet)','status'],[{...effects[0],verb:'greet'},effects[1]]),true);
  assert.equal(signatureMatches(['emit(person:self,tell)','status'],effects),false);
- // Round 5 rules 2/4: type labels and fear are descriptions, not registered IDs.
- assert.equal(signatureMatches(['emit(thing:npc_hw_linsui,tell)','status'],effects),true);
- assert.equal(signatureMatches(['emit(person:npc_hw_linsui,fear)','status'],effects),true);
+ // Type labels are checked against the referenced entity: an NPC is a person.
+ assert.equal(signatureMatches(['emit(thing:npc_hw_linsui,tell)','status'],effects),false);
+ // An unrecognised descriptor never matches; fear is a status, not an emit word.
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,fear)','status'],effects),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_linsui,tell)','status(person:self,fear)'],[effects[0],{...effects[1],status:'calm'}]),false);
  assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning','mark:art']}]),true);
- // Round 5 rule 4: mark tags in parentheses are descriptive, not world IDs.
- assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning']}]),true);
+ // Every listed mark tag must be on the created mark.
+ assert.equal(signatureMatches(['create(thing:mark,mark:warning+mark:art)'],[{op:'create',kind:'mark',tags:['mark:warning']}]),false);
 });
 test('A3 signature v2: real references, initiator and direction are machine checked',()=>{
- const effect={op:'transfer',resource:'coin_river',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse'};
+ const effect={op:'transfer',resource:'coin_river',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse',qty:30};
  const signature=['transfer(resource:coin,self->npc_hw_linsui)'];
  assert.equal(signatureMatches(signature,[effect]),true);
  assert.equal(signatureMatches(signature,[{...effect,to:'npc_hw_wushuo|coin_river|purse'}]),false);
  assert.equal(signatureMatches(signature,[{...effect,from:effect.to,to:effect.from}]),false);
  assert.equal(signatureMatches(['transfer(resource:item_bread,self->npc_hw_linsui)'],[effect]),false);
+ // Review 10-22 P0: a trailing quantity is the exact committed quantity.
  assert.equal(signatureMatches(['transfer(resource:coin,self->npc_hw_linsui:30)'],[effect]),true);
- const emit={op:'emit',target:'npc_hw_xuling',verb:'tell',payload:{kind:'different_description'}};
+ assert.equal(signatureMatches(['transfer(resource:coin,self->npc_hw_linsui:30)'],[{...effect,qty:999}]),false);
+ assert.equal(signatureMatches(['transfer(resource:coin,self->npc_hw_linsui:30_or_so)'],[effect]),false);
+ const emit={op:'emit',target:'npc_hw_xuling',verb:'request',payload:{kind:'different_description'}};
  assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[emit]),false);
- assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[{...emit,payload:{spell:'spell_light'}}]),true);
- assert.equal(signatureMatches(['emit(person:npc_hw_xuling,other_description)'],[emit]),true);
+ // request:teach_spell_light = the request kind teach about the registered spell.
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[{...emit,payload:{kind:'teach',terms:{subject:'spell_light'}}}]),true);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[{...emit,payload:{kind:'teach',terms:{subject:'spell_fire_01'}}}]),false);
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:teach_spell_light)'],[{...emit,verb:'tell',payload:{kind:'teach',terms:{subject:'spell_light'}}}]),false);
+ // Unrecognised descriptions are not ignored.
+ assert.equal(signatureMatches(['emit(person:npc_hw_xuling,other_description)'],[emit]),false);
  assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[emit]),false);
  assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[{...emit,payload:{spell:'spell_light'}}]),true);
  assert.equal(signatureMatches(['emit(person:npc_hw_xuling,request:spell_light)'],[emit,{op:'emit',payload:{spell:'spell_light'}}]),false);
@@ -528,11 +564,31 @@ test('A3 signature v2: real references, initiator and direction are machine chec
  assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',actor:'npc_hw_xuling'}],{actor:'npc_hw_xuling'}),true);
  assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',target:'npc_hw_linsui'}],{actor:'npc_hw_xuling'}),false);
  assert.equal(signatureMatches(['emit(person:self)'],[{op:'emit',actor:'player'}],{actor:'npc_hw_xuling'}),false);
- // Embedded book_/teacher_ prefixes still carry real IDs; similar longer IDs
- // must not accidentally require their shorter registered prefix as well.
- assert.equal(signatureMatches(['learn(person:self,teacher_npc_hw_luqing)'],[{op:'learn',target:'player',source:'npc_hw_luqing'}]),true);
+ // Embedded book_/teacher_ IDs are the native learning source and mode.
+ const taught={op:'learn',target:'player',subject:'skill_literacy',mode:'teacher',learningSource:'npc_hw_luqing'};
+ assert.equal(signatureMatches(['learn(person:self,teacher_npc_hw_luqing)'],[taught]),true);
+ assert.equal(signatureMatches(['learn(person:self,teacher_npc_hw_luqing)'],[{...taught,learningSource:'npc_hw_ayan'}]),false);
+ assert.equal(signatureMatches(['learn(person:self,teacher_npc_hw_luqing)'],[{...taught,mode:'book'}]),false);
  assert.equal(signatureMatches(['transfer(resource:item_wood_shavings)'],[{op:'transfer',resource:'item_wood_shavings'}]),true);
  assert.equal(signatureMatches(['transfer(resource:item_wood_shavings)'],[{op:'transfer',resource:'item_wood'}]),false);
+ // Sign words: heal needs a positive delta, harm a negative one.
+ const vital={op:'vital',target:'npc_hw_linsui',need:'hp',type:'heal',delta:5};
+ assert.equal(signatureMatches(['vital(person:npc_hw_linsui,heal)'],[vital]),true);
+ assert.equal(signatureMatches(['vital(person:npc_hw_linsui,heal)'],[{...vital,type:'harm',delta:-5}]),false);
+ assert.equal(signatureMatches(['vital(person:npc_hw_linsui,harm)'],[{...vital,type:'harm',delta:-5}]),true);
+ assert.equal(signatureMatches(['vital(person:npc_hw_linsui,harm:staff)'],[{...vital,type:'harm',delta:-5,weapon:'item_staff'}]),true);
+ assert.equal(signatureMatches(['vital(person:npc_hw_linsui,harm:staff)'],[{...vital,type:'harm',delta:-5,weapon:'item_whittling_knife'}]),false);
+ // Direction words: fear:reduce needs the native status to weaken.
+ const fear={op:'status',target:'player',status:'fear',removed:true,result:{before:{power:1},after:null}};
+ assert.equal(signatureMatches(['status(person:self,fear:reduce)'],[fear]),true);
+ assert.equal(signatureMatches(['status(person:self,fear:reduce)'],[{...fear,removed:false,result:{before:{power:1},after:{power:2}}}]),false);
+ assert.equal(signatureMatches(['status(person:self,fear)'],[fear]),false);
+ // Settlement amounts and completion are read from the native obligation.
+ const settle={op:'obligation.settle',id:'o1',obligationKind:'deposit',debtor:'bank_hw_post',creditor:'player',from:'bank_hw_post',to:'player',amount:50,result:{before:{amount:100,paid:0},after:{amount:100,paid:50}}};
+ assert.equal(signatureMatches(['obligation.settle(obligation:own_deposit,partial:50)'],[settle]),true);
+ assert.equal(signatureMatches(['obligation.settle(obligation:own_deposit,partial:50)'],[{...settle,amount:999}]),false);
+ assert.equal(signatureMatches(['obligation.settle(obligation:own_deposit,full)'],[settle]),false);
+ assert.equal(signatureMatches(['obligation.settle(obligation:own_loan,partial:50)'],[settle]),false);
 });
 test('A3 signature: real registered action pays derived costs without adding them to the requested signature',async()=>{
  const action={id:'test:score_cost',label:'说一句话',narration:'test.score_cost',slots:[],cost:{owner:'primitives',time:1,resources:[{resource:'coin_river',qty:1}]},outcomes:[{op:'emit',actor:'player',verb:'tell',visibility:'public',payload:{text:'hello'}}]};
@@ -550,18 +606,17 @@ test('A3 signature: real registered action pays derived costs without adding the
  assert.equal(scored.results[0].scores.signature,true);
 });
 test('A3 setup: two independent scenes execute the two-phase protocol with balanced opening books',async()=>{
- const baseline=structuredClone(initial),asleep=structuredClone(initial);
- asleep.state.npcs.npc_hw_linsui.activity='睡眠';
- asleep.state.npcs.npc_hw_linsui.status='昏迷';
- asleep.state.npcs.npc_hw_linsui.scheduleTravel={to:'loc_hw'};
+ // The witness is awake at the starting shop; each scene places it with the
+ // native location writer.
+ const baseline=structuredClone(initial),awake=structuredClone(initial);
  const locations=world.locations.filter(l=>l.id!==initial.state.location).slice(0,2).map(l=>l.id);
  assert.equal(locations.length,2);
  const setups=locations.map((location,i)=>({location,present:['npc_hw_linsui'],inventory:{item_ration:i+2},coins:41+i,minute:initial.state.minute+10+i,status:'正常',facts:[{path:['state','player','hp'],value:initial.state.player.maxHp-1}]}));
  const cases=[{...rows[0],id:'setup-say',setup:setups[0]},{...rows[5],id:'setup-mark',setup:setups[1]}];
- const scored=await scoreRows(cases,{...options,document:asleep});
+ const scored=await scoreRows(cases,{...options,document:awake});
  assert.equal(scored.setupUnmetCount,0);assert.deepEqual(scored.setupUnmet,[]);
  for(const [i,row] of cases.entries()){
-  const result=scored.results[i],run=await executeIntent(engine,asleep,row);
+  const result=scored.results[i],run=await executeIntent(engine,awake,row);
   assert.equal(result.scores.route,true,JSON.stringify(result));
   assert.equal(result.scores.signature,true,JSON.stringify(result));
   assert.equal(result.scores.supported,true,JSON.stringify(result));
@@ -569,7 +624,8 @@ test('A3 setup: two independent scenes execute the two-phase protocol with balan
   assert.equal(result.actual.calls[0].phase,'preview');assert.equal(result.actual.calls.at(-1).phase,'confirm');
   assert.equal(run.document.state.location,setups[i].location);
   assert.equal(run.document.state.npcs.npc_hw_linsui.location,setups[i].location);
-  assert.equal(run.document.state.npcs.npc_hw_linsui.status,'正常');
+  // Presence places the witness but never rewrites its status (02 I3).
+  assert.equal(run.document.state.npcs.npc_hw_linsui.status,awake.state.npcs.npc_hw_linsui.status);
   assert.equal(run.document.state.npcs.npc_hw_linsui.scheduleTravel,null);
   assert.equal(run.document.state.inventory.item_ration.quantity,i+2);
   assert.equal(run.document.state.player.coins,41+i);
@@ -577,12 +633,29 @@ test('A3 setup: two independent scenes execute the two-phase protocol with balan
   assert.equal(run.document.ledger.accounts['player|coin_river|purse'],41+i);
   assert.equal(run.document.ledger.accounts['player|item_ration|inventory'],i+2);
   assert.deepEqual(reconcile(engine,run.document),{mismatches:[],lots:[],drift:[],audit:[]});
-  const fixture=applyIntentSetup(engine,asleep,setups[i]);
+  const fixture=applyIntentSetup(engine,awake,setups[i]);
   assert.equal(fixture.document.state.minute,setups[i].minute);
  }
- assert.deepEqual(initial,baseline);assert.equal(asleep.state.npcs.npc_hw_linsui.status,'昏迷');
+ assert.deepEqual(initial,baseline);
+ // 02 I3/I16, review 10-22 P1: presence is verified, never written. A
+ // comatose, sleeping or travelling witness stays so and the scene is unmet.
+ const asleep=structuredClone(initial);
+ asleep.state.npcs.npc_hw_linsui.activity='睡眠';
+ asleep.state.npcs.npc_hw_linsui.status='昏迷';
+ const kept=applyIntentSetup(engine,asleep,setups[0]);
+ assert.ok(kept.setupUnmet.some(x=>x.item.startsWith('present')),JSON.stringify(kept.setupUnmet));
+ assert.equal(kept.document.state.npcs.npc_hw_linsui.status,'昏迷');
+ assert.equal(kept.document.state.npcs.npc_hw_linsui.activity,'睡眠');
+ const travelling=structuredClone(initial);
+ travelling.state.npcs.npc_hw_linsui.scheduleTravel={to:'loc_hw'};
+ const away=applyIntentSetup(engine,travelling,setups[0]);
+ assert.ok(away.setupUnmet.some(x=>x.item==='present[0]'),JSON.stringify(away.setupUnmet));
+ assert.deepEqual(away.document.state.npcs.npc_hw_linsui.scheduleTravel,{to:'loc_hw'});
+ const unmet=await scoreRows([cases[0]],{...options,document:asleep});
+ assert.equal(unmet.setupUnmetCount,1);assert.equal(unmet.results[0].scores.signature,false);
+ assert.equal(asleep.state.npcs.npc_hw_linsui.status,'昏迷');
  // The builder replay must receive the same setup as the initial execution.
- const built=await scoreRows([{...rows[4],setup:setups[0]}],{...options,document:asleep});
+ const built=await scoreRows([{...rows[4],setup:setups[0]}],{...options,document:awake});
  assert.equal(built.results[0].scores.constructor,true,JSON.stringify(built.results[0]));
 });
 
@@ -600,7 +673,7 @@ test('A3 setup: unmet items are reported separately and earn no credit, even emp
 
 test('A3 setup: existing creature instances and native special statuses are real state',()=>{
  const baseline=structuredClone(initial);
- baseline.state.creatures={test_creature:{name:'fixture creature',species:world.monsters[0].id,location:initial.state.location,hp:20,maxHp:20,status:'正常',activity:'睡眠'}};
+ baseline.state.creatures={test_creature:{name:'fixture creature',species:world.monsters[0].id,location:initial.state.location,hp:20,maxHp:20,status:'正常',activity:'闲逛'}};
  const setup={location:world.locations.find(l=>l.id!==initial.state.location).id,present:['test_creature'],minute:initial.state.minute+30,status:[{target:'player',status:'fear',power:2,duration:60}]};
  const built=applyIntentSetup(engine,baseline,setup);
  assert.deepEqual(built.setupUnmet,[]);
@@ -608,7 +681,12 @@ test('A3 setup: existing creature instances and native special statuses are real
  assert.equal(built.document.state.creatures.test_creature.activity,'闲逛');
  assert.equal(magicStatusStats(engine.primitiveDraft(built.document),'player').hit,-0.04);
  assert.equal(built.document.state.effects['a3-score:setup-status:0'].expires,setup.minute+60);
- assert.equal(baseline.state.creatures.test_creature.activity,'睡眠');
+ assert.equal(baseline.state.creatures.test_creature.location,initial.state.location);
+ // 02 I3/I16, review 10-22 P1: a sleeping creature is not woken by presence.
+ const sleeping=structuredClone(baseline);sleeping.state.creatures.test_creature.activity='睡眠';
+ const kept=applyIntentSetup(engine,sleeping,setup);
+ assert.ok(kept.setupUnmet.some(x=>x.item==='present.test_creature'),JSON.stringify(kept.setupUnmet));
+ assert.equal(kept.document.state.creatures.test_creature.activity,'睡眠');
  const bad=applyIntentSetup(engine,baseline,{status:[{target:'player',status:'invented',power:2,duration:60}]});
  assert.equal(bad.setupUnmet[0].item,'status[0]');
 });
@@ -616,7 +694,8 @@ test('A3 setup: existing creature instances and native special statuses are real
 test('A3 setup r7: all seven declared scenes open native entities, holdings and status without changing the source',()=>{
  const before=structuredClone(initial),catalog=structuredClone(world.factionPeople);
  for(const id of ['009','057','070','089','090','091','106']){
-  const result=applyIntentSetup(engine,initial,v2Row(id).setup);
+  // 057/090/091 offices are narrowed instances of the test-local charter.
+  const result=applyIntentSetup(charterEngine,initial,v2Row(id).setup);
   assert.deepEqual(result.setupUnmet,[],id);
   assert.deepEqual(auditHoldings(engine.primitiveDraft(result.document)),[],id);
   assert.deepEqual(reconcile(engine,result.document),{mismatches:[],lots:[],drift:[],audit:[]},id);
@@ -638,7 +717,7 @@ test('A3 setup r7: existing pet uses its species body and native ownership books
 });
 
 test('A3 setup r7: office license aliases bind to native rows and fear stays a finite, non-incapacitating effect',()=>{
- const office=applyIntentSetup(engine,initial,v2Row('057').setup),id=office.bindings.a3v2_057_arrest_office;
+ const office=applyIntentSetup(charterEngine,initial,v2Row('057').setup),id=office.bindings.a3v2_057_arrest_office;
  assert.equal(office.document.holdings.entities[id].kind,'office');
  assert.equal(office.document.holdings.entities[id].facts.onDuty,true);
  assert.deepEqual(office.document.holdings.entities[id].facts.authority,v2Row('057').setup.instances[0].authority);
