@@ -9,6 +9,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {appendActionPatches} from './primitive-policy.mjs';
 import {schemaValidator} from './primitive-schema.mjs';
+import {reject} from './action-rejection.mjs';
 
 const DIR=fileURLToPath(new URL('../world/actions/',import.meta.url));
 const ID=/^[a-z][a-z0-9_-]*:[a-z][a-z0-9_.-]*$/;
@@ -91,11 +92,12 @@ export function actionCall(registry,id,slots={}){
  // For anyone else a caller-filled consent is refused; native consent adapters
  // and the legacy handler's own decision determine whether agreement exists.
  const own=consentIsOwn(action,slots);
- if('consent' in slots&&(!own||typeof slots.consent!=='boolean'))throw Error(own?'同意只能填是或否':CONSENT_PENDING);
+ if('consent' in slots&&(!own||typeof slots.consent!=='boolean'))reject('E-ACTION-PRECONDITION',own?'同意只能填是或否':CONSENT_PENDING);
  const allowed=new Set(action.slots.map(s=>s.name)),extra=Object.keys(slots).filter(k=>!allowed.has(k)&&k!=='operation');
- if(extra.length)throw Error(`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
+ // 06 §6.10.4: a slot the catalog form does not offer is a world-facing, typed refusal naming what can be filled.
+ if(extra.length)reject('E-ACTION-PRECONDITION',`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
  const missing=action.slots.filter(s=>s.required&&s.consent!==true&&slots[s.name]===undefined&&action.call.fixed?.[s.name]===undefined).map(s=>s.name);
- if(missing.length)throw Error(`${action.label}还缺：${missing.join('、')}`);
+ if(missing.length)reject('E-ACTION-PRECONDITION',`${action.label}还缺：${missing.join('、')}`);
  // A tool with a free-form operation (world_learn, world_research) takes it as a slot; a fixed sub-operation always wins.
  const args={...slots,...action.call.fixed??{}};
  if(action.call.operation)args.operation=action.call.operation;

@@ -20,16 +20,23 @@ function fixture(n){
  const row=corpus.find(r=>r.id===`A3V2-${n}`),setup=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setup.setupUnmet,[],`${n} premises`);return {row,document:setup.document};
 }
-async function run(n){
- const {row,document}=fixture(n),before=persistable(document),input={tool:'world_propose',args:row.proposal,eventId:`owner2-R-${n}`};
+async function run(n,adjust){
+ const {row,document}=fixture(n),before=persistable(document);
+ if(adjust)adjust(row.proposal);
+ const input={tool:'world_propose',args:row.proposal,eventId:`owner2-R-${n}`};
  const preview=await engine.previewAction(document,input),out=await engine.reduce(document,input),after=applyPatches(document,out.patches);
  assert.deepEqual(persistable(document),before);assert.deepEqual(auditLedger(after.ledger),[]);
  return {row,document,after,input,preview,out,receipt:out.result.receipt};
 }
 
 test('R1: cash failure, missing spell and fusion prerequisites retain registered routes and zero writes',async()=>{
- for(const [n,route,reason] of [[122,'core:trade.buy',/余额不足/],[162,'core:cast',/尚未学会/],[166,'core:research',/没有掌握/]]){
-  const r=await run(n);assert.equal(r.preview.receipt.status,'rejected');assert.equal(r.preview.receipt.routing.routed,route);
+ // 06 §6.10.3 / review 10-22 P0: a quantity is a structured proposal field (means.quantity), never parsed from
+ // the intent's prose. The frozen 122 proposal names "两块面包" only in prose, so it buys the registered default of
+ // one and is affordable (negative control below); the structured two-loaf order is the cash failure.
+ const prose=await run(122);assert.equal(prose.receipt.routed,'core:trade.buy');assert.equal(prose.receipt.status,'committed');
+ assert.equal(prose.document.state.player.coins-prose.after.state.player.coins,2,'prose does not become a larger order');
+ for(const [n,route,reason,adjust] of [[122,'core:trade.buy',/余额不足/,p=>{p.means={...p.means,quantity:2};}],[162,'core:cast',/尚未学会/],[166,'core:research',/没有掌握/]]){
+  const r=await run(n,adjust);assert.equal(r.preview.receipt.status,'rejected');assert.equal(r.preview.receipt.routing.routed,route);
   assert.equal(r.receipt.routed,route);assert.match(r.receipt.reason,reason);assert.deepEqual(r.out.patches,[]);assert.deepEqual(r.receipt.applied,[]);
  }
  const {document}=fixture(122);
@@ -100,28 +107,33 @@ test('R2: a followup cannot disclose a private NPC memory through exact keys or 
  }
 });
 
-test('R3: rent, native checkout and renewal enquiry are three real steps with one payment and replay idempotence',async()=>{
- const r=await run(121);assert.equal(r.receipt.routed,'open:proposal');assert.equal(r.receipt.steps.length,3);
+test('R3: renting commits one native lodging payment; the next-day enquiry is no longer fabricated into a fixed sequence',async()=>{
+ // Review 10-22 P0 (open-actions): the renewal_quote-keyed three-step sequence (rent, wait to checkout, enquire)
+ // was a corpus special case. The proposal now routes to the real lodging action alone: one payment, the lodging
+ // holding and contract, replay idempotent; the enquiry is a later real action (next test), not a label-built step.
+ const r=await run(121);assert.equal(r.receipt.routed,'core:trade.lodge');assert.equal(r.receipt.steps,undefined);
  assert.equal(r.document.state.player.coins-r.after.state.player.coins,6);
  const contract=Object.values(r.after.state.records).find(x=>x.category==='contract'&&x.parties?.includes('player')&&x.room==='bld_hw_qingdeng'&&x.starts===1200);
- assert.ok(contract);assert.equal(r.after.state.minute,contract.expires);
+ assert.ok(contract);assert.ok(r.after.state.minute<contract.expires,'no automatic wait until checkout');
  assert.ok(r.receipt.applied.some(e=>e.op==='holding.open'&&e.holdingKind==='lodges'));
- assert.ok(r.receipt.applied.some(e=>e.op==='emit'&&e.verb==='request'));
+ assert.ok(r.receipt.applied.every(e=>!(e.op==='emit'&&e.verb==='request')),'no renewal enquiry is invented');
  const replay=await engine.reduce(persistable(r.after),r.input);assert.deepEqual(replay.patches,[]);
  assert.equal(Object.values(r.after.state.records).filter(x=>x.category==='contract'&&x.room==='bld_hw_qingdeng'&&x.starts>=1200).length,1);
 });
 
-test('R3: a rejected future enquiry preserves completed lodging and elapsed time',async()=>{
- const {row,document}=fixture(121),prepared=prepareOpenAction(engine,document,row.proposal),input={tool:'world_propose',eventId:'owner2-R-checkout-absent',args:row.proposal};
- const native=Object.create(engine),reduce=engine.reduce.bind(engine);
- // Inject the executor's actual rejection contract at the future request,
- // while both the rental and time advancement use their real native programs.
- native.reduce=async(d,i,o)=>i.args?.action==='open:question'?{patches:[],result:{ok:false,receipt:{eventId:i.eventId,routed:'open:question',status:'rejected',reason:'对方已经离场',applied:[],cost:{time:0,resources:[]}}}}:reduce(d,i,o);
- const out=await executeOpenSequence(native,document,input,prepared),after=applyPatches(document,out.patches);
- assert.equal(out.result.failedStep,2);assert.equal(out.result.receipt.steps[2].status,'rejected');
- assert.equal(document.state.player.coins-after.state.player.coins,6);assert.equal(after.state.minute,2640);
- assert.ok(out.result.receipt.applied.some(e=>e.op==='holding.close'&&e.reason==='expired'));
- assert.ok(out.result.receipt.applied.every(e=>e.op!=='emit'));assert.deepEqual(auditLedger(after.ledger),[]);
+test('R3: a rejected checkout enquiry leaves the completed lodging and elapsed time intact',async()=>{
+ // The rent -> wait -> enquire composition was removed with the renewal_quote special case (review 10-22 P0), so the
+ // steps are separate real actions: lodging commits, the native wait runs to checkout and expires the holding, and
+ // the enquiry then fails alone (the host has left) without touching anything already completed.
+ const r=await run(121),contract=Object.values(r.after.state.records).find(x=>x.category==='contract'&&x.room==='bld_hw_qingdeng'&&x.starts===1200);
+ const wait=await engine.reduce(r.after,{tool:'world_act',eventId:'owner2-R-checkout-wait',args:{action:'core:time',slots:{minutes:contract.expires-r.after.state.minute}}});
+ const waited=applyPatches(r.after,wait.patches);
+ assert.equal(waited.state.minute,contract.expires);assert.ok(wait.result.receipt.applied.some(e=>e.op==='holding.close'&&e.reason==='expired'));
+ waited.state.npcs.npc_hw_linsui.location='loc_hw_gate';
+ const settled=persistable(waited);
+ await assert.rejects(engine.reduce(waited,{tool:'world_act',eventId:'owner2-R-checkout-absent',args:{action:'open:question',slots:{target:'npc_hw_linsui',content:'询问下一晚续住报价'}}}),{code:'E-PRECONDITION'});
+ assert.deepEqual(persistable(waited),settled);
+ assert.equal(r.document.state.player.coins-waited.state.player.coins,6);assert.equal(waited.state.minute,2640);assert.deepEqual(auditLedger(waited.ledger),[]);
 });
 
 test('R4: native festival project is only a private budget and pending enquiries; fake sources stay refused',async()=>{

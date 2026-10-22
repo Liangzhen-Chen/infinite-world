@@ -187,5 +187,13 @@ test('D: actual tell routes from a known historical version without granting an 
  const result=await scoreRows([row],{world,document:initial});
  assert.deepEqual(result.results[0].setupUnmet,[]);
  assert.equal(result.results[0].scores.route,true);
- assert.equal(result.results[0].scores.signature,true);
+ // 06 §6.7 / review 10-22 P0: every signature descriptor must be structurally verified. The corpus label
+ // tell:witnessed_beast names no payload topic, event id or catalog term (corpus-owned, reported to the main
+ // session), so the full row no longer earns the signature; the verifiable part (a tell to this person) does.
+ assert.equal(result.results[0].scores.signature,false);
+ assert.equal(result.results[0].signatureDiagnostics[0].reason,'unverified qualifiers: tell:witnessed_beast');
+ const subjectOnly=structuredClone(row);subjectOnly.expected.signature=['emit(person:npc_hw_wushuo)'];
+ const verified=await scoreRows([subjectOnly],{world,document:initial});
+ assert.equal(verified.results[0].scores.route,true);
+ assert.equal(verified.results[0].scores.signature,true);
 });
