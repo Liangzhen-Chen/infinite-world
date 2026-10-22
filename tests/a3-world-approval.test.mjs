@@ -20,7 +20,7 @@ const entry = id => contentEntries(files).find(e => e.id === id);
 test('fix3-world 条目：每一行都有 L1/L2/L4 回执且与正式文件逐字相同', async () => {
   const result = await verifyPublished(world, files);
   assert.equal(result.entries, contentEntries(files).length);
-  assert.equal(result.entries, 33);
+  assert.equal(result.entries, 34);
 });
 
 test('手改已审批的行会使回执失效：职位职权、目录价、营养值、拘禁室、人物归属', async () => {

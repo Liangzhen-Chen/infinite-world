@@ -1,9 +1,10 @@
 {
   "index": 1,
-  "fingerprint": "7289bd47ef442b06512511ca5aa456f9d309c9e14b2fc4020d1d004cb3625011",
-  "count": 13,
-  "passed": 13,
+  "fingerprint": "590449d56d6985dfc0ee5298f66f4a92eef15b87e4dd7fa9c134e099cb19a17d",
+  "count": 14,
+  "passed": 14,
   "ids": [
+    "recipe_w3_fish_broth",
     "recipe_fishing_bait",
     "nutrition_item_ration",
     "nutrition_item_bread",
@@ -21,21 +22,23 @@
   "rewritten": 0,
   "manual": [],
   "pending": [],
-  "flagged": [
-    "nutrition_item_milk"
-  ],
+  "flagged": [],
   "sample": [
     "nutrition_item_milk",
-    "nutrition_item_bread",
+    "recipe_w3_fish_broth",
     "medicine_takeHome",
-    "repair_sword_service",
+    "shop_hw_forge_mining_pick",
     "nutrition_item_ration"
   ],
   "l4": {
     "approved": true,
-    "reader": "Claude (A3 收口修复 fix3-world)",
+    "reader": "Claude (A3 数据修复 fix4-data)",
     "readAt": "2026-10-22",
     "notes": [
+      {
+        "id": "recipe_w3_fish_broth",
+        "note": "通读清煮鱼汤配方：耗时恢复为60分钟，依据D16.5“时间过去约半个时辰”（一时辰两小时）；材料/工具/传授人林穗不变，process只把“全程30分钟”改为“全程60分钟”，其余原文不动。boundary写明只定点修正这一条。无硬问题。"
+      },
       {
         "id": "recipe_fishing_bait",
         "note": "通读钓饵配方：传授人林穗厨师基础手艺180，一份燕麦、切刀、烹饪台10分钟出10份；与钓饵目录价相容。无硬问题。"
@@ -54,7 +57,7 @@
       },
       {
         "id": "nutrition_item_milk",
-        "note": "通读牛奶satiety 15+hydration 25：hydration合表；satiety 15低于一餐下限30，body表没有半份饮品的规定，属无依据数值——软问题，交主会话裁决(可改为只给hydration或写明半餐规则)。"
+        "note": "通读牛奶：已删除手加的satiety 15，只留hydration 25，等于body表一次饮水25；body表没有半餐饮品规则，故不再给satiety。无硬问题。"
       },
       {
         "id": "nutrition_item_oat_flatbread",
@@ -70,11 +73,11 @@
       },
       {
         "id": "repair_clothes_seam",
-        "note": "通读衣物补缝：裁缝基础手艺100起，一团麻线加缝针，织作台20分钟、每次修复20点，与既有修理方案(20分钟/20点)同量级。无硬问题。"
+        "note": "通读衣物补缝：裁缝基础手艺100起，一团麻线加缝针，织作台20分钟、每次修复20点；仅其引用的同类修理方案（铁剑）工时更新，本条不变。无硬问题。"
       },
       {
         "id": "repair_sword_service",
-        "note": "通读铁剑修整服务：铁匠基础手艺100起，30分钟修满，服务费25铜取自题面D18.2，非独立标定；题面承诺的60分钟与方案30分钟之别已在boundary写明。无硬问题(数值来源软问题交主会话)。"
+        "note": "通读铁剑修整服务：铁匠基础手艺100起，工时改为60分钟，依据日常题D18.2“修理耗时按铁匠说的时间推进（如半个时辰）”；服务费保留25铜（D18.2报价）。无硬问题。"
       },
       {
         "id": "shop_hw_forge_mining_pick",
@@ -90,7 +93,7 @@
       }
     ]
   },
-  "costUpperYuan": 0.12231759999999998,
+  "costUpperYuan": 0.14103688,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

@@ -82,7 +82,7 @@ test('A3 daily entry cannot hide real elapsed work inside remember to bypass a p
  assert.deepEqual(f.document,before);
 });
 
-test('A3 D16: the actual fish broth recipe takes its published minutes, consumes exact ingredients, wears tools and charges body once',async()=>{
+test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact ingredients, wears tools and charges body once',async()=>{
  const f=fixture(),recipe=f.world.recipes.find(r=>r.id==='recipe_w3_fish_broth'),s=f.document.state;
  for(const [item,n] of [['item_fish',2],['item_water',2],['item_salt',3],['item_wood_shavings',3]])s.inventory[item]=stack(n);
  for(const item of recipe.tools)s.inventory[item]=stack(1);
@@ -91,6 +91,7 @@ test('A3 D16: the actual fish broth recipe takes its published minutes, consumes
  book(f);const before=structuredClone(f.document),id=Array.from({length:100},(_,i)=>`a3-fish-broth-${i}`).find(id=>dieOf(f.document.randomSeed,id)>=15);
  const {out,after}=await act(f,'core:craft.manufacture',{recipe:recipe.id},id);
  assert.equal(out.result.success,true);
+ assert.equal(recipe.minutes,60,'D16.5 half a shichen = 60 minutes (events.md D16.5; A3-astra-plan section 4 D16.5)');
  assert.equal(after.state.minute-before.state.minute,recipe.minutes);
  assert.equal(out.result.spent.minutes,recipe.minutes);assert.equal(out.result.cost.time,recipe.minutes);
  for(const row of recipe.materials)assert.equal(qty(f,before,'player',row.item)-qty(f,after,'player',row.item),row.amount);

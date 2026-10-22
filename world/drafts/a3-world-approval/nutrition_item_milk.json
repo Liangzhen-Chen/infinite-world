@@ -1,13 +1,12 @@
 {
   "id": "nutrition_item_milk",
-  "fingerprint": "1c3a9b3d03a67c116d19dd2181f15adc4e18383f3397e262d5079ae2b8a72923",
+  "fingerprint": "5317bceb207d7c18989164ef17493ed47f174a82f5f32b52f8ca9b871309bec6",
   "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "nutrition_item_milk",
     "row": {
       "nutrition": {
-        "satiety": 15,
         "hydration": 25
       }
     }
@@ -16,27 +15,20 @@
     "contradictions": []
   },
   "errors": [],
-  "warnings": [
-    {
-      "quote": "item_milk",
-      "field": "nutrition",
-      "severity": "soft",
-      "reason": "饮品同时给 satiety 15，body 表只规定一餐 30–40 与一次饮水 25"
-    }
-  ],
+  "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "226e5923abdd2c3ba693b657b473cd6b5038eda86b765f2d9f17684421be4931",
-    "draftHash": "008d93eb374708d8e9e956dc5c17a6fcef478b634396c6fba5201b79535ea7d8"
+    "entryHash": "0cd4a3c21eeaeb6e5c487f7781bcdf4c1e4acc973f756d7895a25c224834aa1c",
+    "draftHash": "b9e33c44cad05313ca918a067dce851f18e3ae4092e4c6e36cdddbb5f16f715f"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "92afd575-ded7-47d2-bf69-54dd1d81e241",
-      "file": "budget-responses/92afd575-ded7-47d2-bf69-54dd1d81e241.json",
-      "requestHash": "9cba662c5284825884fb60f76db0686b49251abba6a99383c04d7e44282e28b0",
-      "responseHash": "8b020996ae34783ac117d3ad8e37897c2daf5acc9a27b3dbf46302fd7dbd9504"
+      "requestId": "ecbfb2b4-1bc5-4d5c-8042-e3a53f21eeae",
+      "file": "budget-responses/ecbfb2b4-1bc5-4d5c-8042-e3a53f21eeae.json",
+      "requestHash": "c73c071cd6d424e4aa5aca3af7103748921def9ecf151d7be8e7b654bbab90bd",
+      "responseHash": "29fd94304bb01d0e7dffcad8ef262cfb0a94bb201fbe0fcf51a8410570c6e27c"
     }
   ],
   "measurements": [
@@ -45,19 +37,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 636,
+        "prompt_tokens": 618,
         "completion_tokens": 7,
-        "total_tokens": 643,
+        "total_tokens": 625,
         "prompt_tokens_details": {
           "cached_tokens": 128
         },
         "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 508
+        "prompt_cache_miss_tokens": 490
       },
-      "costUpperYuan": 0.00107712,
-      "cumulativeUpperYuan": 0.09343119999999998,
-      "latencyMs": 497.170900000001,
-      "timestamp": "2026-10-22T20:07:42.350Z"
+      "costUpperYuan": 0.00104112,
+      "cumulativeUpperYuan": 0.13785992000000002,
+      "latencyMs": 809.2648000000008,
+      "timestamp": "2026-10-22T22:40:59.973Z"
     }
   ]
 }

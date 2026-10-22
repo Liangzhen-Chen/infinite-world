@@ -1,18 +1,18 @@
 {
-  "total": 33,
-  "passed": 33,
+  "total": 34,
+  "passed": 34,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 0.12231759999999998,
+  "costUpperYuan": 0.14103688,
   "budget": {
-    "spentYuan": 0.12231759999999998,
+    "spentYuan": 0.14103688,
     "reservedYuan": 0,
     "waveLimitYuan": 1,
     "note": "fix3-world：基层司法职位/猎户会候选与此前手加目录条目的补审；总上限 1 元。",
     "cards": {
       "A3FW": {
         "limitYuan": 1,
-        "spentYuan": 0.12231759999999998,
+        "spentYuan": 0.14103688,
         "reservedYuan": 0,
         "maxRequests": 88
       }
@@ -1617,6 +1617,326 @@
           "latencyMs": 1219.7068,
           "timestamp": "2026-10-22T20:31:19.552Z"
         }
+      },
+      "bb71a2d8-dab0-4b46-981d-3d9e0ad4fb40": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-item_hoe-review0",
+        "requestHash": "92cbf8cc72471dca0236edcce413953afd598d815f11b9e7895ff90f9e7650c3",
+        "reservedYuan": 0.018834,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/bb71a2d8-dab0-4b46-981d-3d9e0ad4fb40.json",
+          "requestHash": "92cbf8cc72471dca0236edcce413953afd598d815f11b9e7895ff90f9e7650c3",
+          "responseHash": "7c02b72410c5bb0849b8ded9742a7b2219cc2f26915c9fa383cc9aec7fe07f29"
+        },
+        "costUpperYuan": 0.00218024,
+        "measurement": {
+          "label": "content-a3-world-approval-item_hoe-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1313,
+            "completion_tokens": 7,
+            "total_tokens": 1320,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 1057
+          },
+          "costUpperYuan": 0.00218024,
+          "cumulativeUpperYuan": 0.12449783999999998,
+          "latencyMs": 1354.4735,
+          "timestamp": "2026-10-22T22:40:54.761Z"
+        }
+      },
+      "ab56054b-798d-4f98-bf20-aefb74cbd1eb": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-item_sickle-review0",
+        "requestHash": "3e3e1864d26ca498ea21532bb18520944c9a7903af03c8333adb542a81a60d88",
+        "reservedYuan": 0.018362,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/ab56054b-798d-4f98-bf20-aefb74cbd1eb.json",
+          "requestHash": "3e3e1864d26ca498ea21532bb18520944c9a7903af03c8333adb542a81a60d88",
+          "responseHash": "ee8729af119dd2f8b7973a897befe84f74d7d9a4094041e9c172b570fef79c29"
+        },
+        "costUpperYuan": 0.00196824,
+        "measurement": {
+          "label": "content-a3-world-approval-item_sickle-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1207,
+            "completion_tokens": 7,
+            "total_tokens": 1214,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 951
+          },
+          "costUpperYuan": 0.00196824,
+          "cumulativeUpperYuan": 0.12646607999999998,
+          "latencyMs": 639.4227999999994,
+          "timestamp": "2026-10-22T22:40:55.419Z"
+        }
+      },
+      "18c2c9f6-9d8a-4d58-8b1a-fb25ef0e6b94": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-item_fishing_bait-review0",
+        "requestHash": "ee29c0a4e52c7ecc33ad1b48fcc9ad115a63bf97f8de3ecc7ba2d12abe8137cd",
+        "reservedYuan": 0.018226,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/18c2c9f6-9d8a-4d58-8b1a-fb25ef0e6b94.json",
+          "requestHash": "ee29c0a4e52c7ecc33ad1b48fcc9ad115a63bf97f8de3ecc7ba2d12abe8137cd",
+          "responseHash": "4c0c4fa8831575f88b8c5b2845fe9b2e06842b948de1ac198962d7b3b42162de"
+        },
+        "costUpperYuan": 0.00202224,
+        "measurement": {
+          "label": "content-a3-world-approval-item_fishing_bait-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1234,
+            "completion_tokens": 7,
+            "total_tokens": 1241,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 978
+          },
+          "costUpperYuan": 0.00202224,
+          "cumulativeUpperYuan": 0.12848832,
+          "latencyMs": 845.6171000000004,
+          "timestamp": "2026-10-22T22:40:56.281Z"
+        }
+      },
+      "d25d3803-c2e5-4e77-99ea-ef0cc0f37114": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-item_external_medicine-review0",
+        "requestHash": "4589da5325d5b444af4896dc0cf7675eab226c0920f082d4b50cb6c4732508d6",
+        "reservedYuan": 0.018204,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/d25d3803-c2e5-4e77-99ea-ef0cc0f37114.json",
+          "requestHash": "4589da5325d5b444af4896dc0cf7675eab226c0920f082d4b50cb6c4732508d6",
+          "responseHash": "82a25f9c9d5b3c134b9e45570c4bc05273f67a02b65e110e2cfb5dc198707f84"
+        },
+        "costUpperYuan": 0.0022091199999999997,
+        "measurement": {
+          "label": "content-a3-world-approval-item_external_medicine-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1202,
+            "completion_tokens": 7,
+            "total_tokens": 1209,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1074
+          },
+          "costUpperYuan": 0.0022091199999999997,
+          "cumulativeUpperYuan": 0.13069744,
+          "latencyMs": 938.3842999999997,
+          "timestamp": "2026-10-22T22:40:57.235Z"
+        }
+      },
+      "9f07c883-e78e-4724-b9de-aa2c6f3487f0": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-item_lantern-review0",
+        "requestHash": "f8b9628335e11522fe3d1aa4e54c620faadc5012c1a99bbd0eac272ba3a7972c",
+        "reservedYuan": 0.017972,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/9f07c883-e78e-4724-b9de-aa2c6f3487f0.json",
+          "requestHash": "f8b9628335e11522fe3d1aa4e54c620faadc5012c1a99bbd0eac272ba3a7972c",
+          "responseHash": "96e699a670ec84387c70427f2493f112e0e37647d499fdfc99c884f668318751"
+        },
+        "costUpperYuan": 0.00185424,
+        "measurement": {
+          "label": "content-a3-world-approval-item_lantern-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1150,
+            "completion_tokens": 7,
+            "total_tokens": 1157,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 894
+          },
+          "costUpperYuan": 0.00185424,
+          "cumulativeUpperYuan": 0.13255168,
+          "latencyMs": 948.0967,
+          "timestamp": "2026-10-22T22:40:58.201Z"
+        }
+      },
+      "e5a452f9-9c28-4109-bb9f-7b44a56ccb9f": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-recipe_w3_fish_broth-review0",
+        "requestHash": "dec4beadc78e2d3fb461d26345d87e73d268aebe16ffbd850788943d07f97ba3",
+        "reservedYuan": 0.02516,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/e5a452f9-9c28-4109-bb9f-7b44a56ccb9f.json",
+          "requestHash": "dec4beadc78e2d3fb461d26345d87e73d268aebe16ffbd850788943d07f97ba3",
+          "responseHash": "1430c5c4fc54c309aac78ac45f4269421e0ffe1e191598768e330fb19c0e495d"
+        },
+        "costUpperYuan": 0.00426712,
+        "measurement": {
+          "label": "content-a3-world-approval-recipe_w3_fish_broth-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2231,
+            "completion_tokens": 7,
+            "total_tokens": 2238,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 2103
+          },
+          "costUpperYuan": 0.00426712,
+          "cumulativeUpperYuan": 0.13681880000000002,
+          "latencyMs": 926.2345000000005,
+          "timestamp": "2026-10-22T22:40:59.145Z"
+        }
+      },
+      "ecbfb2b4-1bc5-4d5c-8042-e3a53f21eeae": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-nutrition_item_milk-review0",
+        "requestHash": "c73c071cd6d424e4aa5aca3af7103748921def9ecf151d7be8e7b654bbab90bd",
+        "reservedYuan": 0.014218,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/ecbfb2b4-1bc5-4d5c-8042-e3a53f21eeae.json",
+          "requestHash": "c73c071cd6d424e4aa5aca3af7103748921def9ecf151d7be8e7b654bbab90bd",
+          "responseHash": "29fd94304bb01d0e7dffcad8ef262cfb0a94bb201fbe0fcf51a8410570c6e27c"
+        },
+        "costUpperYuan": 0.00104112,
+        "measurement": {
+          "label": "content-a3-world-approval-nutrition_item_milk-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 618,
+            "completion_tokens": 7,
+            "total_tokens": 625,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 490
+          },
+          "costUpperYuan": 0.00104112,
+          "cumulativeUpperYuan": 0.13785992000000002,
+          "latencyMs": 809.2648000000008,
+          "timestamp": "2026-10-22T22:40:59.973Z"
+        }
+      },
+      "cd75b503-eed1-4421-9d19-dd260bf10c7a": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-repair_clothes_seam-review0",
+        "requestHash": "dc0c6f5ec7a843532a77b8085e57f4964f7e0fc981e6d5cd853c88ed94b71202",
+        "reservedYuan": 0.016656,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/cd75b503-eed1-4421-9d19-dd260bf10c7a.json",
+          "requestHash": "dc0c6f5ec7a843532a77b8085e57f4964f7e0fc981e6d5cd853c88ed94b71202",
+          "responseHash": "25b2b6ef5e7b1a669defa510c3420efe13f4d9fa44cddd23aeed22a0da5ed8ae"
+        },
+        "costUpperYuan": 0.0007756,
+        "measurement": {
+          "label": "content-a3-world-approval-repair_clothes_seam-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 987,
+            "completion_tokens": 7,
+            "total_tokens": 994,
+            "prompt_tokens_details": {
+              "cached_tokens": 640
+            },
+            "prompt_cache_hit_tokens": 640,
+            "prompt_cache_miss_tokens": 347
+          },
+          "costUpperYuan": 0.0007756,
+          "cumulativeUpperYuan": 0.13863552,
+          "latencyMs": 632.4656000000014,
+          "timestamp": "2026-10-22T22:41:00.622Z"
+        }
+      },
+      "200a1a10-f6d5-4b41-907b-85de7a243573": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-repair_sword_service-review0",
+        "requestHash": "18be729294ab20b9b1cd4394721b2ff248657f6ab5ea5a711163438bc0b74e22",
+        "reservedYuan": 0.016396,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/200a1a10-f6d5-4b41-907b-85de7a243573.json",
+          "requestHash": "18be729294ab20b9b1cd4394721b2ff248657f6ab5ea5a711163438bc0b74e22",
+          "responseHash": "338c596933849ec6c550616e0e7e6a5618455dba6cd8e3e3086972393b3614cc"
+        },
+        "costUpperYuan": 0.0017231199999999999,
+        "measurement": {
+          "label": "content-a3-world-approval-repair_sword_service-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 959,
+            "completion_tokens": 7,
+            "total_tokens": 966,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 831
+          },
+          "costUpperYuan": 0.0017231199999999999,
+          "cumulativeUpperYuan": 0.14035864,
+          "latencyMs": 564.325499999999,
+          "timestamp": "2026-10-22T22:41:01.204Z"
+        }
+      },
+      "b47854a8-99ca-4b53-acf4-4c3a82c95f1d": {
+        "card": "A3FW",
+        "label": "content-a3-world-approval-medicine_takeHome-review0",
+        "requestHash": "697c74382286f29f2d85934a3a6181158d4221d2b19e8ea34d673fb1bf4504e6",
+        "reservedYuan": 0.013698,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/b47854a8-99ca-4b53-acf4-4c3a82c95f1d.json",
+          "requestHash": "697c74382286f29f2d85934a3a6181158d4221d2b19e8ea34d673fb1bf4504e6",
+          "responseHash": "6431cae2ce427fd3370e3d43dddde6e20fef14cfef438fbd30249eac245a0be3"
+        },
+        "costUpperYuan": 0.00067824,
+        "measurement": {
+          "label": "content-a3-world-approval-medicine_takeHome-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 562,
+            "completion_tokens": 7,
+            "total_tokens": 569,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 306
+          },
+          "costUpperYuan": 0.00067824,
+          "cumulativeUpperYuan": 0.14103688,
+          "latencyMs": 702.6818999999996,
+          "timestamp": "2026-10-22T22:41:01.924Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0
@@ -1624,7 +1944,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "64e2b5178427001e89e05788d5e661cad2940f323ed40c2cf996c0364c956626",
+      "fingerprint": "924bcbbf50df46dc6c0e53ff978e5ad6e46b7d5688786591b6fc515350e62cc5",
       "count": 20,
       "passed": 20,
       "ids": [
@@ -1657,26 +1977,27 @@
         "item_lantern"
       ],
       "sample": [
-        "item_hoe",
-        "office_bs_town_head",
-        "office_bs_arrest_officer",
-        "item_lantern",
-        "patch_npc_bs_034_1_faction"
+        "npc_bs_townhead",
+        "faction_bs_government",
+        "patch_loc_bs_governance",
+        "item_external_medicine",
+        "office_bs_claim_desk"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 0.12231759999999998,
+      "costUpperYuan": 0.13255168,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {
       "index": 1,
-      "fingerprint": "7289bd47ef442b06512511ca5aa456f9d309c9e14b2fc4020d1d004cb3625011",
-      "count": 13,
-      "passed": 13,
+      "fingerprint": "590449d56d6985dfc0ee5298f66f4a92eef15b87e4dd7fa9c134e099cb19a17d",
+      "count": 14,
+      "passed": 14,
       "ids": [
+        "recipe_w3_fish_broth",
         "recipe_fishing_bait",
         "nutrition_item_ration",
         "nutrition_item_bread",
@@ -1694,21 +2015,19 @@
       "rewritten": 0,
       "manual": [],
       "pending": [],
-      "flagged": [
-        "nutrition_item_milk"
-      ],
+      "flagged": [],
       "sample": [
         "nutrition_item_milk",
-        "nutrition_item_bread",
+        "recipe_w3_fish_broth",
         "medicine_takeHome",
-        "repair_sword_service",
+        "shop_hw_forge_mining_pick",
         "nutrition_item_ration"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 0.12231759999999998,
+      "costUpperYuan": 0.14103688,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

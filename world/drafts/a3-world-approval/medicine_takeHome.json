@@ -1,6 +1,6 @@
 {
   "id": "medicine_takeHome",
-  "fingerprint": "f575a7769a5153ab1d8b17ae6835abe777cf1978b3a51566194e676cc90a398f",
+  "fingerprint": "d83fc515c8d3cc7579c61e60064a0d03f6374d0922d01bcb6bb32c7a7c5801be",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -27,10 +27,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "c197ad92-93f2-4031-9b68-3191208013db",
-      "file": "budget-responses/c197ad92-93f2-4031-9b68-3191208013db.json",
-      "requestHash": "e5e1d669af8f9a40a79ff06c9305f0f601cb0faf2a5539770060341b664faf6a",
-      "responseHash": "48764808e21bd427843a4159a16eeb7b24ab00f06eeac9c7fa95e299f3411b3e"
+      "requestId": "b47854a8-99ca-4b53-acf4-4c3a82c95f1d",
+      "file": "budget-responses/b47854a8-99ca-4b53-acf4-4c3a82c95f1d.json",
+      "requestHash": "697c74382286f29f2d85934a3a6181158d4221d2b19e8ea34d673fb1bf4504e6",
+      "responseHash": "6431cae2ce427fd3370e3d43dddde6e20fef14cfef438fbd30249eac245a0be3"
     }
   ],
   "measurements": [
@@ -43,15 +43,15 @@
         "completion_tokens": 7,
         "total_tokens": 569,
         "prompt_tokens_details": {
-          "cached_tokens": 128
+          "cached_tokens": 256
         },
-        "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 434
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 306
       },
-      "costUpperYuan": 0.00092912,
-      "cumulativeUpperYuan": 0.10380815999999998,
-      "latencyMs": 903.4449999999997,
-      "timestamp": "2026-10-22T20:07:49.271Z"
+      "costUpperYuan": 0.00067824,
+      "cumulativeUpperYuan": 0.14103688,
+      "latencyMs": 702.6818999999996,
+      "timestamp": "2026-10-22T22:41:01.924Z"
     }
   ]
 }
