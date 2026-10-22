@@ -1,6 +1,6 @@
 {
   "output": {
-    "energy": 0.00038276004951349996,
+    "energy": 0.00038284562045705654,
     "sampleRate": 48000,
     "tracks": [
       "room",
@@ -18,7 +18,7 @@
         "market",
         "music:town"
       ],
-      "energy": 0.00015315636110795175
+      "energy": 0.00016041598742765975
     },
     {
       "music": "tavern",
@@ -27,7 +27,7 @@
         "fire",
         "music:tavern"
       ],
-      "energy": 0.000055422120240974105
+      "energy": 0.00005495960664189564
     },
     {
       "music": "wild",
@@ -36,7 +36,7 @@
         "birds",
         "music:wild"
       ],
-      "energy": 0.0000693346625822403
+      "energy": 0.00006666586172850554
     },
     {
       "music": "dungeon",
@@ -44,7 +44,7 @@
         "cave",
         "music:dungeon"
       ],
-      "energy": 0.00003400482490978737
+      "energy": 0.000035782421030872144
     },
     {
       "music": "battle",
@@ -53,7 +53,7 @@
         "birds",
         "music:battle"
       ],
-      "energy": 0.00005603185367037898
+      "energy": 0.00006433481936577034
     }
   ],
   "firstClickSilent": true,
