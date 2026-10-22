@@ -15,6 +15,13 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const make=()=>{const engine=new WorldEngine(structuredClone(world));return {engine,document:engine.createCharacter(seed,{},'content2')};};
 declareHoldingWriter('content2-test',{kinds:['*'],entities:['*'],locations:true});
+// Settlement root of a place: follow parents to the place with none (loc_hw, loc_bs ...).
+const locationById=new Map(world.locations.map(l=>[l.id,l]));
+const settlementOf=id=>{for(let i=0;i<12&&locationById.has(id);i++){const parent=locationById.get(id).parent;if(!parent)return id;id=parent;}return null;};
+const examOffice=id=>world.factions.flatMap(f=>f.offices??[]).find(o=>o.id===id);
+// Carpentry examiner Yinge's published seat. It must be his own settlement (the former
+// Baishi guild seat made him commute 24 km every morning); see also the all-offices test.
+const carpentrySeat=examOffice('office_exam_life_6').seat;
 
 test('考官接待从当前职位派生，保留原档作息、家务与非接待劳动',()=>{
  const {engine,document}=make(),s=document.state,person=world.npcs.find(n=>n.id==='npc_hw_yinge');
@@ -22,7 +29,8 @@ test('考官接待从当前职位派生，保留原档作息、家务与非接�
  assert.equal(person.location,'bld_hw_home_22');
  assert.equal(scheduleAt(engine,person.id,500,s).location,'bld_hw_home_22');
  assert.equal(scheduleAt(engine,person.id,500,s).services.includes('teach'),false);
- assert.equal(scheduleAt(engine,person.id,600,s).location,'bld_bs_guild');
+ assert.equal(carpentrySeat,'bld_hw_mill');assert.equal(settlementOf(carpentrySeat),settlementOf(person.location),'席位与考官住处同一聚落');
+ assert.equal(scheduleAt(engine,person.id,600,s).location,carpentrySeat);
  assert.ok(scheduleAt(engine,person.id,600,s).services.includes('teach'));
  assert.equal(scheduleAt(engine,person.id,780,s).location,'bld_hw_mill');
  assert.equal(scheduleAt(engine,person.id,780,s).services.includes('teach'),false);
@@ -37,6 +45,7 @@ test('每个普通职业都有路线可达、按真实作息能完成考核的�
  for(let changed=true;changed;){changed=false;for(const r of world.routes)for(const [a,b] of [[r.from,r.to],[r.to,r.from]])if(reachable.has(a)&&!reachable.has(b)){reachable.add(b);changed=true;}}
  const offices=world.factions.flatMap(f=>f.offices??[]).filter(o=>o.authority.operations.includes('certify'));
  assert.equal(offices.length,28);
+ for(const o of offices){const holder=world.npcs.find(n=>n.id===o.holder);assert.equal(settlementOf(o.seat),settlementOf(holder.location),`${o.id} 的席位须与考官 ${o.holder} 的住处同一聚落`);}
  for(const role of world.professions.filter(p=>p.kind!=='hidden')){
   const holders=world.npcs.filter(n=>n.services?.includes(role.id)||offices.some(o=>o.authority.profession===role.id&&o.holder===n.id));
   assert.ok(holders.some(n=>{
@@ -54,11 +63,15 @@ test('每个普通职业都有路线可达、按真实作息能完成考核的�
  }
 });
 
-test('020 原题前提能唯一找到白石窗口木工考官，申请不预先授予资格',async()=>{
+test('020 题设按真实席位（旧磨坊）搭建后，能唯一找到木工考官，申请不预先授予资格；白石行会窗口没有木工考官',async()=>{
  const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
- const row=corpus.find(r=>r.id==='A3V2-020'),setup=applyIntentSetup(engine,document,row.setup);
+ // Corpus A3V2-020 stages the window at bld_bs_guild with the Hewan carpenter present. The
+ // examiner's published seat is bld_hw_mill, so the premise is staged at that seat; the corpus
+ // row is not edited (premise/seat mismatch is reported to the coordinator).
+ const row=corpus.find(r=>r.id==='A3V2-020'),setup=applyIntentSetup(engine,document,JSON.parse(JSON.stringify(row.setup).replaceAll('bld_bs_guild',carpentrySeat)));
  assert.deepEqual(setup.setupUnmet,[]);
- assert.deepEqual(qualifiedExaminers(engine,setup.document.state,'profession_life_6','bld_bs_guild'),['npc_hw_yinge']);
+ assert.deepEqual(qualifiedExaminers(engine,setup.document.state,'profession_life_6',carpentrySeat),['npc_hw_yinge']);
+ assert.ok(!qualifiedExaminers(engine,setup.document.state,'profession_life_6','bld_bs_guild').includes('npc_hw_yinge'),'白石行会不是尹葛的席位');
  assert.equal(setup.document.state.professions.life.includes('profession_life_6'),false);
  assert.equal(setup.document.state.player.coins,20);
  const d=engine.primitiveDraft(setup.document);ensureHoldings(d,engine);
@@ -80,7 +93,7 @@ test('同一窗口多个登记职位仍需消歧，在岗布尔值不能代造�
 
 test('考官换任与免职经持有协议更新当前授予者，明确空缺不恢复原任',()=>{
  const {engine,document}=make(),d=engine.primitiveDraft(document);ensureHoldings(d,engine);
- d.set(['state','minute'],600);holdingSet(d,engine,['state','npcs','npc_sb_yexun','location'],'bld_bs_guild','content2-test');
+ d.set(['state','minute'],600);holdingSet(d,engine,['state','npcs','npc_sb_yexun','location'],carpentrySeat,'content2-test');
  holdingSet(d,engine,['state','npcs','npc_hw_yinge','location'],scheduleAt(engine,'npc_hw_yinge',600,d.get('state')).location,'content2-test');
  assert.ok(npcServices(engine,d.get('state'),'npc_hw_yinge').includes('profession_life_6'));
  const office=aliveHoldings(d,{kind:'holds_office',subject:'office_exam_life_6'})[0];
@@ -97,7 +110,7 @@ test('考官换任与免职经持有协议更新当前授予者，明确空缺�
 });
 
 test('考官职位不绕过入职技能或费用，失败不写认证与扣款',async()=>{
- const {engine,document}=make();document.state.location='bld_bs_guild';document.state.minute=600;
+ const {engine,document}=make();document.state.location=carpentrySeat;document.state.minute=600;
  // 05 §5.8: the office projects his duty route; moving the clock in a fixture
  // does not physically move a person out of his frozen initial home location.
  document.state.npcs.npc_hw_yinge.location=scheduleAt(engine,'npc_hw_yinge',600,document.state).location;
