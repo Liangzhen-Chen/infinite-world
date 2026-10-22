@@ -2785,16 +2785,9 @@
       "type": "object",
       "required": [
         "eventId",
-        "routed",
-        "candidates",
-        "applied",
-        "trimmed",
-        "check",
-        "consequences",
-        "narrate",
-        "alternatives",
-        "fallback",
-        "status"
+        "actor",
+        "status",
+        "applied"
       ],
       "properties": {
         "eventId": {
@@ -2840,9 +2833,7 @@
             "type": "object",
             "required": [
               "index",
-              "op",
-              "result",
-              "tags"
+              "op"
             ],
             "properties": {
               "index": {
@@ -2918,7 +2909,8 @@
             "preview",
             "committed",
             "pending",
-            "rejected"
+            "rejected",
+            "not_submitted"
           ]
         },
         "signature": {
@@ -2951,7 +2943,47 @@
         "outcome": {
           "type": "string",
           "minLength": 1
-        }
+        },
+        "routing": {
+          "type": "object"
+        },
+        "legacy": {
+          "type": "object"
+        },
+        "witnesses": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "permission": {
+          "type": "object"
+        },
+        "openUsage": {
+          "type": "object"
+        },
+        "requirements": {
+          "type": "object"
+        },
+        "missing": {
+          "type": "array"
+        },
+        "repair": {
+          "type": "array"
+        },
+        "events": {
+          "type": "array"
+        },
+        "steps": {
+          "type": "array"
+        },
+        "rite": {
+          "type": "object"
+        },
+        "scene": {
+          "type": "string"
+        },
+        "data": {}
       },
       "additionalProperties": false
     },

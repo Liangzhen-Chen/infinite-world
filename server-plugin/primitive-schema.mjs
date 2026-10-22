@@ -55,10 +55,14 @@ export const actionSchema={
    allOf:[{if:{required:['outcomes']},then:{properties:{check:{anyOf:[{type:'null'},object]},cost:{required:['owner'],properties:{owner:{const:'primitives'}}}}}}]
   },
   proposal:{type:'object',required:['intent','effects'],properties:{intent:{type:'string',minLength:1,maxLength:4000},participants:object,effects:{type:'array',maxItems:64,items:{$ref:'#/$defs/primitive'}},means:object,context:object,target:{type:'string'},consent:{type:'object',properties:{from:{type:'string'},scope:{type:'string'},onRefusal:{enum:['abort','contest']}},additionalProperties:false}},additionalProperties:false},
-  receipt:{type:'object',required:['eventId','routed','candidates','applied','trimmed','check','consequences','narrate','alternatives','fallback','status'],properties:{
+  // Every receipt the runtime actually returns or persists: native primitive,
+  // legacy-adapted, catalog refusal, open sequence, rite, scene and read
+  // projection. Only the fields all of them carry are required.
+  receipt:{type:'object',required:['eventId','actor','status','applied'],properties:{
    eventId:string,actor:string,source:{type:'object',required:['kind','id'],properties:{kind:{enum:['catalog','open','rule']},id:string}},routed:{type:['string','null']},candidates:array,
-   applied:{type:'array',items:{type:'object',required:['index','op','result','tags'],properties:{index:{type:'integer',minimum:0},op:{enum:ops},tags:{type:'array',items:{type:'string'}}}}},trimmed:array,check:{type:['object','null']},consequences:array,
-   narrate:{type:'object',required:['must','mustNot'],properties:{must:array,mustNot:array}},alternatives:array,fallback:{},status:{enum:['ready','preview','committed','pending','rejected']},signature:{type:'array',items:string},pending:{type:'string'},duplicate:{type:'boolean'},reason:{},code:string,cost:object,consent:object,decisions:array,outcome:string
+   applied:{type:'array',items:{type:'object',required:['index','op'],properties:{index:{type:'integer',minimum:0},op:{enum:ops},tags:{type:'array',items:{type:'string'}}}}},trimmed:array,check:{type:['object','null']},consequences:array,
+   narrate:{type:'object',required:['must','mustNot'],properties:{must:array,mustNot:array}},alternatives:array,fallback:{},status:{enum:['ready','preview','committed','pending','rejected','not_submitted']},signature:{type:'array',items:string},pending:{type:'string'},duplicate:{type:'boolean'},reason:{},code:string,cost:object,consent:object,decisions:array,outcome:string,
+   routing:object,legacy:object,witnesses:{type:['array','null']},permission:object,openUsage:object,requirements:object,missing:array,repair:array,events:array,steps:array,rite:object,scene:{type:'string'},data:{}
   },additionalProperties:false}
  }
 };
