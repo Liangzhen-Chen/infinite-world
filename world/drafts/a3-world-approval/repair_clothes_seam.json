@@ -1,0 +1,73 @@
+{
+  "id": "repair_clothes_seam",
+  "fingerprint": "fe684d25cff5a7a6fd3ae0e1d1b4c73c56e367ecd1b06a77d5cb72ec511d1300",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "repair_clothes_seam",
+    "row": {
+      "id": "repair_clothes_seam",
+      "name": "衣物补缝",
+      "item": "item_clothes",
+      "skill": "skill_life_4_core",
+      "attribute": "敏捷",
+      "minimumProficiency": 100,
+      "tools": [
+        "item_sewing_needle"
+      ],
+      "materials": [
+        {
+          "item": "item_hemp_thread",
+          "amount": 1
+        }
+      ],
+      "workstation": "weaving",
+      "minutes": 20,
+      "difficulty": 10,
+      "toolWear": 1,
+      "restore": 20,
+      "maxLoss": 0
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "22017f57845c829fab2c51696d2caf26e39f6bf4940e0f3087d2bd3329e0feaf",
+    "draftHash": "b61cb9989675521ef89ff4ee3e0f3b530642e3b8b90f569356a8faf00f42ebdc"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "3afacd8e-ca54-43fa-b55c-d4ad9b77f7cc",
+      "file": "budget-responses/3afacd8e-ca54-43fa-b55c-d4ad9b77f7cc.json",
+      "requestHash": "d798698d1be1a762e78e85e9895a48bdbf53178e7ce62dd0f5ff0c72b4c459d6",
+      "responseHash": "a1f26e38ab104a2e4ec2deb4ed1d9b41a8f0ff999029bb5d95af850f5673191c"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-repair_clothes_seam-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 987,
+        "completion_tokens": 7,
+        "total_tokens": 994,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 859
+      },
+      "costUpperYuan": 0.00177912,
+      "cumulativeUpperYuan": 0.09852567999999998,
+      "latencyMs": 935.6935000000012,
+      "timestamp": "2026-10-22T20:07:45.596Z"
+    }
+  ]
+}

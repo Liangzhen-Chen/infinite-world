@@ -76,6 +76,8 @@ delete source.rules.warDiplomacy;
  }
  // Offices appointed later (A3 examiners) leave with their removed holders/seats,
  // like other rows bound to omitted villages.
+ // 白石镇镇务署（fix3-world：镇长与值房受理职位）属白石镇整合，早期河湾夹具没有。
+ if(source.factions)source.factions=source.factions.filter(f=>f.id!=='faction_bs_government');
  for(const faction of source.factions??[])if(faction.offices)faction.offices=faction.offices.filter(office=>!bound(office));
  for(let changed=true;changed;){changed=false;for(const key of ['bosses','cultures','factionPeople']){const rows=source[key]??[],next=rows.filter(row=>!bound(row));if(next.length!==rows.length){for(const row of rows)if(!next.includes(row))removed.add(row.id);source[key]=next;changed=true;}}}
  // K6效果表：属主时钟已移出或效果对象（栖地、人物、地点）已移出的挂钩与季节条目一并移出。

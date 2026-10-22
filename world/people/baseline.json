@@ -117649,7 +117649,8 @@
     "ttsVoice": "zh_male_resident_01",
     "portraitPrompt": "原创河谷成年居民杜澄，50岁，腰带上系着一小片刻姓木牌。，朴素衣着，公署递件",
     "notes": "职责：记录摊位申请的摆放范围与争议，约请摊位整理者说明；不授予占地权。怕递件的人误认屋门，准备给家门添一条布记号。愿先把棚布漏处说给工程递件人。",
-    "description": "杜澄是白石镇的公署递件住户，50岁。腰带上系着一小片刻姓木牌。职责是记录摊位申请的摆放范围与争议，约请摊位整理者说明；不授予占地权。陪孩子抄家门方位时把左右写反，同户带到门外才改清。孩子能按门外视角认左右是近来惦记的事，说话时说左右时转身比划。遇到遮雨与回执的讨论，愿先把棚布漏处说给工程递件人。"
+    "description": "杜澄是白石镇的公署递件住户，50岁。腰带上系着一小片刻姓木牌。职责是记录摊位申请的摆放范围与争议，约请摊位整理者说明；不授予占地权。陪孩子抄家门方位时把左右写反，同户带到门外才改清。孩子能按门外视角认左右是近来惦记的事，说话时说左右时转身比划。遇到遮雨与回执的讨论，愿先把棚布漏处说给工程递件人。",
+    "faction": "faction_bs_government"
   },
   {
     "id": "npc_bs_049_1",
@@ -154873,5 +154874,74 @@
       ]
     },
     "currentConcern": "想把田里的损失与账上的数目分别讲明白，不愿只凭急话争高低。"
+  },
+  {
+    "id": "npc_bs_townhead",
+    "name": "仲岳",
+    "aliases": [
+      "白石镇长"
+    ],
+    "tier": "roster",
+    "scope": "loc_bs",
+    "culture": "culture_river",
+    "age": 54,
+    "occupation": "白石镇长",
+    "location": "loc_bs",
+    "coins": 0,
+    "inventory": {},
+    "skills": [],
+    "services": [],
+    "flags": {
+      "minor": false,
+      "romanceable": false
+    },
+    "faction": "faction_bs_government",
+    "notes": "白石镇公署首长，按镇长职权统管镇务，把受理、收款、羁押、拘捕和案件经办分给不同的人，自己不兼办。来源：rules.governance.promotion（村长升镇后改称镇长，公款上限与税率上限随级别）与rules.governance.sovereignty（镇长任期三百六十日）。姓名、年龄与履历为本次落实实体新增的成年任职事实。",
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 420,
+          "location": "loc_bs",
+          "activity": "休息",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 480,
+          "location": "loc_bs",
+          "activity": "前往公署",
+          "services": []
+        },
+        {
+          "start": 480,
+          "end": 720,
+          "location": "bld_bs_office",
+          "activity": "在公署处理镇务、听取受理与案情汇报",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "loc_bs",
+          "activity": "午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "bld_bs_office",
+          "activity": "在公署处理镇务、听取受理与案情汇报",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1440,
+          "location": "loc_bs",
+          "activity": "整理文书后休息",
+          "services": []
+        }
+      ]
+    }
   }
 ]

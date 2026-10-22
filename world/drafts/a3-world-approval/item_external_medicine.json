@@ -1,0 +1,76 @@
+{
+  "id": "item_external_medicine",
+  "fingerprint": "c5b4b59a7dfb3142d49d0ac3958cdaeb204ff9b8a71366bb5ec70f4733786a83",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_external_medicine",
+    "row": {
+      "id": "item_external_medicine",
+      "name": "外敷药",
+      "basePrice": 2,
+      "weight": 0.03,
+      "aliases": [],
+      "quality": "木",
+      "durability": 100,
+      "scope": null,
+      "origin": "loc_hw",
+      "use": "医者用一份药草碾配的外敷药，每份为一天用量。",
+      "description": "医者用一份药草碾配的外敷药，每份为一天用量。"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "item_external_medicine",
+      "field": "recipe",
+      "severity": "style",
+      "reason": "没有配方登记"
+    },
+    {
+      "quote": "item_external_medicine",
+      "field": "basePrice",
+      "severity": "soft",
+      "reason": "目录价 2 低于所用药草 3"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "27c1d47de17162eb2615e3f604a784ae6bc17135179886fdf23a2df92e837472",
+    "draftHash": "5020fecef279785ac6618d102f001ce78a82fe589da4317336178ba2613cf8c8"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "e0bb3b29-8c0c-4cfe-b9ea-08268483ea32",
+      "file": "budget-responses/e0bb3b29-8c0c-4cfe-b9ea-08268483ea32.json",
+      "requestHash": "64357560c2827a09a28c39f901ba48c95535c0f5aa11d48737172af32b2b4172",
+      "responseHash": "ef38547411799c193a2481d0bdaed4907e02342e72fb6b1b80947a70a212fe7c"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-item_external_medicine-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1134,
+        "completion_tokens": 7,
+        "total_tokens": 1141,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1006
+      },
+      "costUpperYuan": 0.00207312,
+      "cumulativeUpperYuan": 0.07896223999999998,
+      "latencyMs": 660.9399999999987,
+      "timestamp": "2026-10-22T20:07:35.345Z"
+    }
+  ]
+}

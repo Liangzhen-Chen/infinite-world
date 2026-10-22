@@ -1,0 +1,63 @@
+{
+  "id": "item_fishing_bait",
+  "fingerprint": "07faffea3a9cc5ba46d0723418b56a8dcbf6463694d9b83641f3aa0bc5c965a6",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_fishing_bait",
+    "row": {
+      "id": "item_fishing_bait",
+      "name": "钓饵",
+      "basePrice": 1,
+      "weight": 0.01,
+      "aliases": [],
+      "quality": "木",
+      "durability": 100,
+      "scope": null,
+      "origin": "loc_hw",
+      "use": "按份计的谷粒钓饵，每次抛竿消耗一份。",
+      "description": "按份计的谷粒钓饵，每次抛竿消耗一份。"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "305c89e2878e6ca9e194c3eeb7cd86f3fa21673e35429285de1a16a45df8c59c",
+    "draftHash": "94cd0dc230f7453cb2744c74fb71114a3e389bf8587f41bcb9286c4724c9b78e"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "d724a777-0436-41f2-a6ea-47aa1640bbd8",
+      "file": "budget-responses/d724a777-0436-41f2-a6ea-47aa1640bbd8.json",
+      "requestHash": "a24b68a1059d430678d1f383ae09f25b11f6c5ed058ac176fb579482d9651dc6",
+      "responseHash": "1aa05778cc19cd2dec336e151c3442912489e202a2459d85ef6e83d541ec95e6"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-item_fishing_bait-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1182,
+        "completion_tokens": 7,
+        "total_tokens": 1189,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1054
+      },
+      "costUpperYuan": 0.00216912,
+      "cumulativeUpperYuan": 0.07688911999999998,
+      "latencyMs": 991.4562000000005,
+      "timestamp": "2026-10-22T20:07:34.667Z"
+    }
+  ]
+}

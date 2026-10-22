@@ -1,0 +1,63 @@
+{
+  "id": "item_sickle",
+  "fingerprint": "5122a5d490cfa5bcc3492f5e46504571e2f3c86a98ffc843737d5f2384f9dc20",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_sickle",
+    "row": {
+      "id": "item_sickle",
+      "name": "铁镰",
+      "basePrice": 10,
+      "weight": 0.5,
+      "aliases": [],
+      "quality": "木",
+      "durability": 100,
+      "scope": null,
+      "origin": "loc_hw",
+      "use": "收割成熟谷物的手工农具。",
+      "description": "收割成熟谷物的手工农具。"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "a7b6a43694b5a55c156437735739c22a0a7fa0d03a157f9e10b1431c3a3eb34e",
+    "draftHash": "0a3d199e8193f6ab511517c2479998b920a8bd0239639809c0fdca1592476bc0"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "33258679-8f6a-4fdd-9237-0fd8e6441fc2",
+      "file": "budget-responses/33258679-8f6a-4fdd-9237-0fd8e6441fc2.json",
+      "requestHash": "e60f4fec5599d7adedfed87b3eb440d7a57a8ecf37ed2247819c8a1a83b5b683",
+      "responseHash": "064c312c654b5ebc1651882e71f39c83abc91a8dda13daa4602ebe3c9ab4c5ce"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-item_sickle-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1181,
+        "completion_tokens": 7,
+        "total_tokens": 1188,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1053
+      },
+      "costUpperYuan": 0.00216712,
+      "cumulativeUpperYuan": 0.07471999999999998,
+      "latencyMs": 879.4014000000025,
+      "timestamp": "2026-10-22T20:07:33.659Z"
+    }
+  ]
+}

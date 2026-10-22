@@ -14066,6 +14066,12 @@
         "name": "公开接洽前厅",
         "purpose": "值更板、失物登记桌",
         "access": "营业时接洽；内室和财物另须许可"
+      },
+      {
+        "id": "room_bs_watch_lockup",
+        "name": "拘禁室",
+        "purpose": "短期羁押候审或候押",
+        "access": "仅看守与经办人员进出；探视另须许可"
       }
     ],
     "inventory": {},

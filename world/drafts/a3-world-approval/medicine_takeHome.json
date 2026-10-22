@@ -1,0 +1,57 @@
+{
+  "id": "medicine_takeHome",
+  "fingerprint": "f575a7769a5153ab1d8b17ae6835abe777cf1978b3a51566194e676cc90a398f",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "medicine_takeHome",
+    "row": {
+      "takeHome": {
+        "item": "item_external_medicine",
+        "quantity": 3,
+        "days": 3
+      }
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "8e9f7a646280f5adfc45c4bb3f0dbb7aea7a93101cf36b1004cd30c28c26c4ca",
+    "draftHash": "7838f9a01dbb503d98640241c5f5663d0493ce58dc52e34613c47ffbdab8390f"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "c197ad92-93f2-4031-9b68-3191208013db",
+      "file": "budget-responses/c197ad92-93f2-4031-9b68-3191208013db.json",
+      "requestHash": "e5e1d669af8f9a40a79ff06c9305f0f601cb0faf2a5539770060341b664faf6a",
+      "responseHash": "48764808e21bd427843a4159a16eeb7b24ab00f06eeac9c7fa95e299f3411b3e"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-medicine_takeHome-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 562,
+        "completion_tokens": 7,
+        "total_tokens": 569,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 434
+      },
+      "costUpperYuan": 0.00092912,
+      "cumulativeUpperYuan": 0.10380815999999998,
+      "latencyMs": 903.4449999999997,
+      "timestamp": "2026-10-22T20:07:49.271Z"
+    }
+  ]
+}
