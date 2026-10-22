@@ -1496,9 +1496,12 @@ function* slotCombos(slots,lists,limit){
  }
 }
 export function constructorCandidates(engine,document,row,limits=CONSTRUCTOR_LIMITS){
- const scoped=engine.scoped(document),errors=[];
- // A catalog projection that throws offers the player nothing to choose.
- const offer=options=>{try{return worldActions(scoped,document,options);}catch(error){errors.push(error.message);return {actions:[],objects:{}};}};
+ const errors=[];
+ // A catalog projection that throws offers the player nothing to choose; the
+ // error is reported with the row instead of aborting the corpus.
+ let scoped=null;
+ try{scoped=engine.scoped(document);}catch(error){errors.push(error.message);}
+ const offer=options=>{if(!scoped)return {actions:[],objects:{}};try{return worldActions(scoped,document,options);}catch(error){errors.push(error.message);return {actions:[],objects:{}};}};
  const here=offer({limit:1});
  const entities=[...new Set([...(here.objects?.people??[]).map(p=>p.id),...(here.objects?.items??[]).map(i=>i.id),...(here.objects?.exits??[]).map(e=>e.id)])];
  const candidates=[],seen=new Set();
