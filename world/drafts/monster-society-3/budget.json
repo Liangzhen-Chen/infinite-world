@@ -1,12 +1,12 @@
 {
-  "spentYuan": 0.46458536,
+  "spentYuan": 0.47982608000000004,
   "reservedYuan": 0,
   "limitYuan": 25,
   "waveLimitYuan": 25,
   "cards": {
     "T162": {
       "limitYuan": 1.8,
-      "spentYuan": 0.46458536,
+      "spentYuan": 0.47982608000000004,
       "reservedYuan": 0,
       "maxRequests": 150
     }
@@ -3018,6 +3018,102 @@
         "cumulativeUpperYuan": 0.46458536,
         "latencyMs": 818.7655000000013,
         "timestamp": "2026-10-15T09:30:49.016Z"
+      }
+    },
+    "63b842c4-2f2a-43b1-b2f6-c33605cbe5cb": {
+      "card": "T162",
+      "label": "content-monster-society-3-site_ms_hx_store-review0",
+      "requestHash": "9bd2dca46d4a498d766185d05b984fe20f7f27eb6e10fbf25c2ef94b8cb925f4",
+      "reservedYuan": 0.039458,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/63b842c4-2f2a-43b1-b2f6-c33605cbe5cb.json",
+        "requestHash": "9bd2dca46d4a498d766185d05b984fe20f7f27eb6e10fbf25c2ef94b8cb925f4",
+        "responseHash": "3ad02ecc9ddb78d561e203e3b9e08ce33947634f2ef707b29a688895771323e0"
+      },
+      "costUpperYuan": 0.006394,
+      "measurement": {
+        "label": "content-monster-society-3-site_ms_hx_store-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 3169,
+          "completion_tokens": 7,
+          "total_tokens": 3176,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 3169
+        },
+        "costUpperYuan": 0.006394,
+        "cumulativeUpperYuan": 0.47097936,
+        "latencyMs": 1252.6569999999997,
+        "timestamp": "2026-10-22T10:42:21.239Z"
+      }
+    },
+    "16a5cf4b-bb48-4303-990b-f89769a84882": {
+      "card": "T162",
+      "label": "content-monster-society-3-site_ms_gs_scale-review0",
+      "requestHash": "ec99dcdd41e17a2d9cdc775107401109a6ddbb791b313da5ca70867cda2c359d",
+      "reservedYuan": 0.03476,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/16a5cf4b-bb48-4303-990b-f89769a84882.json",
+        "requestHash": "ec99dcdd41e17a2d9cdc775107401109a6ddbb791b313da5ca70867cda2c359d",
+        "responseHash": "a7bbbc8eeb549ce3da6e22438cee9ae13fb4cc5b934310e04de8fffa4f4c3de7"
+      },
+      "costUpperYuan": 0.00439936,
+      "measurement": {
+        "label": "content-monster-society-3-site_ms_gs_scale-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2548,
+          "completion_tokens": 7,
+          "total_tokens": 2555,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 2164
+        },
+        "costUpperYuan": 0.00439936,
+        "cumulativeUpperYuan": 0.47537872000000003,
+        "latencyMs": 824.9613999999997,
+        "timestamp": "2026-10-22T10:42:22.099Z"
+      }
+    },
+    "d64cf11e-7779-4fa1-ba64-44e46448690c": {
+      "card": "T162",
+      "label": "content-monster-society-3-site_ms_gs_store-review0",
+      "requestHash": "870ac238d1d0653558df9d149c697f25e03bd94263a64b1b72ee2d18ce3178ac",
+      "reservedYuan": 0.034936,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d64cf11e-7779-4fa1-ba64-44e46448690c.json",
+        "requestHash": "870ac238d1d0653558df9d149c697f25e03bd94263a64b1b72ee2d18ce3178ac",
+        "responseHash": "f18334b67d653d00dea1d30508a980f3791a473d16ce0698a18acc39653f9a72"
+      },
+      "costUpperYuan": 0.00444736,
+      "measurement": {
+        "label": "content-monster-society-3-site_ms_gs_store-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2572,
+          "completion_tokens": 7,
+          "total_tokens": 2579,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 2188
+        },
+        "costUpperYuan": 0.00444736,
+        "cumulativeUpperYuan": 0.47982608000000004,
+        "latencyMs": 707.0963999999999,
+        "timestamp": "2026-10-22T10:42:22.834Z"
       }
     }
   },

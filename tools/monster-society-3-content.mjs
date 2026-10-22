@@ -17,6 +17,8 @@ const allPeople=people,allPlaces=places;
 const itemName=id=>world.items.find(i=>i.id===id)?.name??id;
 const placeName=id=>allPlaces.find(p=>p.id===id)?.name??world.locations.find(l=>l.id===id)?.name??id;
 const personName=id=>allPeople.find(p=>p.id===id)?.name??id;
+// A3 收口修复：存放处/公秤改归组织后，骨架须让审查看到所有者和归属依据。
+const ownerName=id=>allPeople.find(p=>p.id===id)?.name??organizations.find(o=>o.id===id)?.name??id;
 const clock=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 const speciesName=id=>world.monsters.find(m=>m.id===id).name;
 const seatOf=id=>settlements.find(s=>s.id===id);
@@ -57,7 +59,8 @@ export const entries=[
   const present=people.filter(x=>x.tier==='full'&&x.schedule.some(r=>r[2]===p.id)).map(x=>({name:x.name,times:x.schedule.filter(r=>r[2]===p.id).map(([a,b,,act])=>`${clock(a)}-${clock(b)} ${act}`)}));
   return{id:p.id,category:'place',name:p.name,kind:p.kind,registeredFacts:p.facts,settlement:s.name,parent:placeName(loc.parent),access:loc.access??null,present,
    residents:p.kind==='home'?households.find(h=>h.homeLocation===p.id).members.map(personName):undefined,
-   site:loc.site?{owner:personName(loc.site.owner),manager:personName(loc.site.manager),watchers:loc.site.occupants.map(personName),resources:loc.site.resources.map(r=>({name:r.name,item:itemName(r.item),quantity:r.quantity})),infiltration:loc.site.infiltration}:undefined,
+   ...(loc.owner?{owner:ownerName(loc.owner)}:{}),...(loc.authoredFacts?.ownershipBasis?{ownershipBasis:loc.authoredFacts.ownershipBasis}:{}),
+   site:loc.site?{owner:ownerName(loc.site.owner),manager:personName(loc.site.manager),watchers:loc.site.occupants.map(personName),resources:loc.site.resources.map(r=>({name:r.name,item:itemName(r.item),quantity:r.quantity})),infiltration:loc.site.infiltration}:undefined,
    ...(p.kind==='seat'?{population:s.population,households:s.householdCount,registered:people.filter(x=>x.settlement===s.id).length,pendingHouseholds:s.pendingHouseholdCount,
     speciesQuota:Object.entries(s.pendingSpeciesStructure).map(([sp,g])=>({species:speciesName(sp),named:people.filter(x=>x.settlement===s.id&&x.species===sp).length,pending:g.population,pendingHouseholds:g.households,district:placeName(g.districts[0])})),
     districts:places.filter(x=>x.settlement===s.id&&x.kind==='district').map(x=>x.name),facilities:places.filter(x=>x.settlement===s.id&&x.kind==='facility').map(x=>x.name),
@@ -196,7 +199,10 @@ export async function reviewMonsterSociety3({retryManual=false,ids=null}={}){
   client:new DeepSeekClient({budgetYuan:25,logFile:path.join(draftRoot,'usage.jsonl')}),
   buildDraftRequest:()=>{throw Error('T162正文由执行会话起草，禁止模型起草');},buildReviewRequest,
   requestTransform:async({body,entry})=>{const ledger=JSON.parse(await fs.readFile(path.join(budgetRoot,'budget.json'),'utf8'));const sent=Object.values(ledger.requests??{}).filter(r=>r.card===CARD&&['sent','settled','unknown'].includes(r.status)),issued=sent.length;
-   if(sent.filter(r=>r.label.startsWith(`content-monster-society-3-${entry.id}-review`)).length>=2)throw Object.assign(Error(`${entry.id}已首审及重跑，不再调用`),{code:'CONTENT_BUDGET_STOP'});
+   // site_ms_hx_store 已在 T162 期间发出两次审核；A3 收口修复把所有者由私人改为组织、改变了骨架，
+   // 因此该条目允许一次基于新骨架的审核（其余条目仍是首审加一次重跑）。
+   const allowance=2+(entry.id==='site_ms_hx_store'?1:0);
+   if(sent.filter(r=>r.label.startsWith(`content-monster-society-3-${entry.id}-review`)).length>=allowance)throw Object.assign(Error(`${entry.id}已首审及重跑，不再调用`),{code:'CONTENT_BUDGET_STOP'});
    if(issued>=MAX_REQUESTS)throw Object.assign(Error(`${CARD}已达${MAX_REQUESTS}次L2调用上限`),{code:'CONTENT_BUDGET_STOP'});return{body};}});
 }
 

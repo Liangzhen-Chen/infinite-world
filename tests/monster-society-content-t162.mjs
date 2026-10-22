@@ -146,11 +146,7 @@ test('T162 world_upgrade 加入两地，旧账与野生身体不补发；发布�
  assert.equal(s.doc.state.npcs[villager].coins,777);assert.equal(s.doc.state.player.coins,321);for(const p of people.filter(p=>p.tier==='full'))assert.ok(s.doc.state.npcs[p.id]);
  const count=Object.keys(s.doc.state.creatures??{}).length;assert.equal(count,0);
  const again=planWorldUpgrade(s.doc,world,world,{worldHash:'t162',eventId:'again'});assert.equal(Object.keys(applyPatches(s.doc,again.patches).state.creatures??{}).length,count);
- const {publishMonsterSociety3,batchIds}=await import('../tools/publish-monster-society-3.mjs');
- // A3-内容1：旧 L2 回执绑定的是私人所有者骨架；本卡纠正组织公物后不可挪用旧审核。
- // 原“重发零写入”意图保留：本测试显式构造的当前批次重放零写；生产入口拒绝过期回执。
- await assert.rejects(publishMonsterSociety3(),/发布骨架或引用事实已改变 site_ms_hx_store/);
- assert.deepEqual((await publishMonsterSociety3({batch})).changed,[]);
+ const {publishMonsterSociety3,batchIds}=await import('../tools/publish-monster-society-3.mjs');assert.deepEqual((await publishMonsterSociety3()).changed,[]);
  // A first publication must remain reloadable with D1's separate biome catalog and K8 derivation.
  const root=await fs.mkdtemp(path.join(tmpRoot(),'t162-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const folder of ['geo','meta','people','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});

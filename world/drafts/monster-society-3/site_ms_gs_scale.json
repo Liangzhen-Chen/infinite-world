@@ -1,6 +1,6 @@
 {
   "id": "site_ms_gs_scale",
-  "fingerprint": "c6cb9a472f608905aa1ab16d1d7d6ad5a65f5cf19e482db9c652b5a8bf4f330f",
+  "fingerprint": "7df021a6bb5efe4ff898847df74dd2c7b344e7e81c3519ce10c5d3df93acf989",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -23,17 +23,17 @@
   "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "3fe59ae53b80a0b2731acc81bb3b4609a3ab47122b39178c8e4abac6651db067",
+    "entryHash": "94cf45c529131c24b6e825c65524efe168ffe85fc35968a542bdbce6e73c3459",
     "draftHash": "deee681dbb3259b931019f65d8c4a8de653f2d28103c9dadbc25210e194a9ff9"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "ba75c277-17e5-42a0-991e-34bf211c3735",
-      "file": "budget-responses/ba75c277-17e5-42a0-991e-34bf211c3735.json",
-      "requestHash": "7e04d91cf90880f38900110eb4ce061e967670ca6538c3de4de42aca9b567f80",
-      "responseHash": "562b99d8c69d2ca2553a387808b785e857e29afd42d328aa342ef7f946871d1e"
+      "requestId": "16a5cf4b-bb48-4303-990b-f89769a84882",
+      "file": "budget-responses/16a5cf4b-bb48-4303-990b-f89769a84882.json",
+      "requestHash": "ec99dcdd41e17a2d9cdc775107401109a6ddbb791b313da5ca70867cda2c359d",
+      "responseHash": "a7bbbc8eeb549ce3da6e22438cee9ae13fb4cc5b934310e04de8fffa4f4c3de7"
     }
   ],
   "measurements": [
@@ -42,19 +42,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 2495,
+        "prompt_tokens": 2548,
         "completion_tokens": 7,
-        "total_tokens": 2502,
+        "total_tokens": 2555,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 2111
+        "prompt_cache_miss_tokens": 2164
       },
-      "costUpperYuan": 0.0042933599999999995,
-      "cumulativeUpperYuan": 0.25822784,
-      "latencyMs": 978.9837000000043,
-      "timestamp": "2026-10-15T09:27:08.460Z"
+      "costUpperYuan": 0.00439936,
+      "cumulativeUpperYuan": 0.47537872000000003,
+      "latencyMs": 824.9613999999997,
+      "timestamp": "2026-10-22T10:42:22.099Z"
     }
   ]
 }

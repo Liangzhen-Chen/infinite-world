@@ -1,6 +1,6 @@
 {
   "id": "site_ms_gs_store",
-  "fingerprint": "61e4e01f2b664400224ca79467b0c6a10842bd64a28b3450e1b7bb01e56c9485",
+  "fingerprint": "f28c614e7c0a0c47dfcac1432f1e366cac0578d1e0bc3b9ec1abc4c5244a74b5",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -23,17 +23,17 @@
   "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "f55dcc1713c78bb2a4e3d916e86075b367b05672f8bdb83b2936a709c22b3ed0",
+    "entryHash": "fa2b5ca71573fff33d1d34eba410ea7bf9a56a6fc28e1042139f3ebd926d0e3f",
     "draftHash": "7ea3e098ebe568f2c9b8b36ec294cf884dee10a7881664f24c0ca5666be5ba57"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "760ef4c3-d7b5-4c4c-b05d-c3a3483fc101",
-      "file": "budget-responses/760ef4c3-d7b5-4c4c-b05d-c3a3483fc101.json",
-      "requestHash": "0acbbf05df00a9861e0e0281fb20c6b9385314f9f9beb2ebe6bc4f2200fe05c1",
-      "responseHash": "b2cc2fc6a27275ae4b4a591ee445431928307bdbf842c1ec6d8a4e794d6c20b3"
+      "requestId": "d64cf11e-7779-4fa1-ba64-44e46448690c",
+      "file": "budget-responses/d64cf11e-7779-4fa1-ba64-44e46448690c.json",
+      "requestHash": "870ac238d1d0653558df9d149c697f25e03bd94263a64b1b72ee2d18ce3178ac",
+      "responseHash": "f18334b67d653d00dea1d30508a980f3791a473d16ce0698a18acc39653f9a72"
     }
   ],
   "measurements": [
@@ -42,19 +42,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 2514,
+        "prompt_tokens": 2572,
         "completion_tokens": 7,
-        "total_tokens": 2521,
+        "total_tokens": 2579,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 2130
+        "prompt_cache_miss_tokens": 2188
       },
-      "costUpperYuan": 0.004331359999999999,
-      "cumulativeUpperYuan": 0.28834336000000005,
-      "latencyMs": 1012.5650999999998,
-      "timestamp": "2026-10-15T09:27:14.943Z"
+      "costUpperYuan": 0.00444736,
+      "cumulativeUpperYuan": 0.47982608000000004,
+      "latencyMs": 707.0963999999999,
+      "timestamp": "2026-10-22T10:42:22.834Z"
     }
   ]
 }

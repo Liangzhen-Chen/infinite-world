@@ -3,16 +3,16 @@
   "passed": 65,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 0.46458536,
+  "costUpperYuan": 0.47982608000000004,
   "budget": {
-    "spentYuan": 0.46458536,
+    "spentYuan": 0.47982608000000004,
     "reservedYuan": 0,
     "limitYuan": 25,
     "waveLimitYuan": 25,
     "cards": {
       "T162": {
         "limitYuan": 1.8,
-        "spentYuan": 0.46458536,
+        "spentYuan": 0.47982608000000004,
         "reservedYuan": 0,
         "maxRequests": 150
       }
@@ -3025,6 +3025,102 @@
           "latencyMs": 818.7655000000013,
           "timestamp": "2026-10-15T09:30:49.016Z"
         }
+      },
+      "63b842c4-2f2a-43b1-b2f6-c33605cbe5cb": {
+        "card": "T162",
+        "label": "content-monster-society-3-site_ms_hx_store-review0",
+        "requestHash": "9bd2dca46d4a498d766185d05b984fe20f7f27eb6e10fbf25c2ef94b8cb925f4",
+        "reservedYuan": 0.039458,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/63b842c4-2f2a-43b1-b2f6-c33605cbe5cb.json",
+          "requestHash": "9bd2dca46d4a498d766185d05b984fe20f7f27eb6e10fbf25c2ef94b8cb925f4",
+          "responseHash": "3ad02ecc9ddb78d561e203e3b9e08ce33947634f2ef707b29a688895771323e0"
+        },
+        "costUpperYuan": 0.006394,
+        "measurement": {
+          "label": "content-monster-society-3-site_ms_hx_store-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 3169,
+            "completion_tokens": 7,
+            "total_tokens": 3176,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 3169
+          },
+          "costUpperYuan": 0.006394,
+          "cumulativeUpperYuan": 0.47097936,
+          "latencyMs": 1252.6569999999997,
+          "timestamp": "2026-10-22T10:42:21.239Z"
+        }
+      },
+      "16a5cf4b-bb48-4303-990b-f89769a84882": {
+        "card": "T162",
+        "label": "content-monster-society-3-site_ms_gs_scale-review0",
+        "requestHash": "ec99dcdd41e17a2d9cdc775107401109a6ddbb791b313da5ca70867cda2c359d",
+        "reservedYuan": 0.03476,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/16a5cf4b-bb48-4303-990b-f89769a84882.json",
+          "requestHash": "ec99dcdd41e17a2d9cdc775107401109a6ddbb791b313da5ca70867cda2c359d",
+          "responseHash": "a7bbbc8eeb549ce3da6e22438cee9ae13fb4cc5b934310e04de8fffa4f4c3de7"
+        },
+        "costUpperYuan": 0.00439936,
+        "measurement": {
+          "label": "content-monster-society-3-site_ms_gs_scale-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2548,
+            "completion_tokens": 7,
+            "total_tokens": 2555,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 2164
+          },
+          "costUpperYuan": 0.00439936,
+          "cumulativeUpperYuan": 0.47537872000000003,
+          "latencyMs": 824.9613999999997,
+          "timestamp": "2026-10-22T10:42:22.099Z"
+        }
+      },
+      "d64cf11e-7779-4fa1-ba64-44e46448690c": {
+        "card": "T162",
+        "label": "content-monster-society-3-site_ms_gs_store-review0",
+        "requestHash": "870ac238d1d0653558df9d149c697f25e03bd94263a64b1b72ee2d18ce3178ac",
+        "reservedYuan": 0.034936,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/d64cf11e-7779-4fa1-ba64-44e46448690c.json",
+          "requestHash": "870ac238d1d0653558df9d149c697f25e03bd94263a64b1b72ee2d18ce3178ac",
+          "responseHash": "f18334b67d653d00dea1d30508a980f3791a473d16ce0698a18acc39653f9a72"
+        },
+        "costUpperYuan": 0.00444736,
+        "measurement": {
+          "label": "content-monster-society-3-site_ms_gs_store-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 2572,
+            "completion_tokens": 7,
+            "total_tokens": 2579,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 2188
+          },
+          "costUpperYuan": 0.00444736,
+          "cumulativeUpperYuan": 0.47982608000000004,
+          "latencyMs": 707.0963999999999,
+          "timestamp": "2026-10-22T10:42:22.834Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0,
@@ -3100,10 +3196,146 @@
         "npc_ms_hx_qiaosui"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewer": "T162 Sol 人工阅读",
+        "notes": [
+          {
+            "id": "site_ms_gs_carts",
+            "note": "车棚、修具与兽人体格联系具体，公共圈外路和私棚边界一致。"
+          },
+          {
+            "id": "npc_ms_hx_qiaoyou",
+            "note": "幼龟认归汐芦记与甲纹呼应，没有做工或亲密内容。"
+          },
+          {
+            "id": "npc_ms_gs_shengya",
+            "note": "幼哥布林认睡棚绳结，灰迹与家棚对应，没有摊位劳动。"
+          },
+          {
+            "id": "site_ms_hx_council",
+            "note": "傍晚四名完整档同议，敲穗许可与作息一致；芦记、停顿和汛粮分歧对应两派，公共入口不能代替议事许可。"
+          },
+          {
+            "id": "npc_ms_hx_qiaosui",
+            "note": "旧水痕决定静滩主张，甲窝、听潮矮台与傍晚作息一致；认知与秘密留在个人视角。关系备注的泛用代词可在后续内容起草避免。"
+          },
+          {
+            "id": "npc_ms_hx_xianduan",
+            "note": "幼狐以闻叶背认草，尾尖草屑与露根圃相连；无亲密或劳动内容。名册篇幅短，声音辨识有限。"
+          },
+          {
+            "id": "site_ms_gs_gate",
+            "note": "白天本人有限绳货，认货主而不索贡；旧车辙和解绳示货形成地上集市接触方法。"
+          },
+          {
+            "id": "site_ms_gs_scale",
+            "note": "空秤先亮、货签随货主；折签与散钩分歧具体，未把文化写成新增收费功能。"
+          },
+          {
+            "id": "rule_t162_spirit_land",
+            "note": "逐日两分对应三处灵地；观察只读、无产权效果，与实际消费者一致。"
+          },
+          {
+            "id": "site_ms_gs_tents",
+            "note": "哥布林矮棚与公开车道分开，绳额、折签、散钩住处对应名册；幼体不看摊，许可边界清楚。"
+          },
+          {
+            "id": "loc_ms_huipeng",
+            "note": "72人18户与分物种配额相加一致；白天、地上、货签自负差错与炭阶共灶有明确区别，轮值提供可操作议题。"
+          },
+          {
+            "id": "rule_t162_borrow_form",
+            "note": "核对代码支持额外野生形貌，但两次L2仅标记扩展分句。现删除“或已登记野生物种之形”，余下正文逐字不变；三次修习、三加一药草、两小时与半小时、六小时、身体不变均已核对。不再调用第三次。"
+          }
+        ],
+        "wave": [
+          {
+            "id": "npc_ms_hx_xianduan",
+            "scores": [
+              4,
+              3,
+              5,
+              4,
+              4,
+              3
+            ],
+            "note": "幼狐以闻叶背认草，尾尖草屑与露根圃相连；无亲密或劳动内容。名册篇幅短，声音辨识有限。"
+          },
+          {
+            "id": "site_ms_hx_council",
+            "scores": [
+              5,
+              4,
+              5,
+              4,
+              5,
+              5
+            ],
+            "note": "傍晚四名完整档同议，敲穗许可与作息一致；芦记、停顿和汛粮分歧对应两派，公共入口不能代替议事许可。"
+          },
+          {
+            "id": "site_ms_gs_gate",
+            "scores": [
+              4,
+              4,
+              5,
+              4,
+              4,
+              4
+            ],
+            "note": "白天本人有限绳货，认货主而不索贡；旧车辙和解绳示货形成地上集市接触方法。"
+          },
+          {
+            "id": "site_ms_gs_scale",
+            "scores": [
+              5,
+              4,
+              5,
+              4,
+              5,
+              5
+            ],
+            "note": "空秤先亮、货签随货主；折签与散钩分歧具体，未把文化写成新增收费功能。"
+          },
+          {
+            "id": "rule_t162_spirit_land",
+            "scores": [
+              5,
+              4,
+              5,
+              5,
+              5,
+              4
+            ],
+            "note": "逐日两分对应三处灵地；观察只读、无产权效果，与实际消费者一致。"
+          },
+          {
+            "id": "site_ms_gs_tents",
+            "scores": [
+              4,
+              4,
+              5,
+              4,
+              4,
+              4
+            ],
+            "note": "哥布林矮棚与公开车道分开，绳额、折签、散钩住处对应名册；幼体不看摊，许可边界清楚。"
+          },
+          {
+            "id": "loc_ms_huipeng",
+            "scores": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              4
+            ],
+            "note": "72人18户与分物种配额相加一致；白天、地上、货签自负差错与炭阶共灶有明确区别，轮值提供可操作议题。"
+          }
+        ]
       },
-      "costUpperYuan": 0.4422684800000001,
+      "costUpperYuan": 0.47537872000000003,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -3141,10 +3373,78 @@
         "faction_ms_huipeng"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewer": "T162 Sol 人工阅读",
+        "notes": [
+          {
+            "id": "culture_ms_huixi",
+            "note": "四种本相食性、共居照幼、归汐葬与短长芦记齐备；四类条件、三阶段及按季定居逐条对照现有消费者。借形句已收窄人形，无新增事实。"
+          },
+          {
+            "id": "bld_ms_gs_01",
+            "note": "四名住户与户籍一致，散枝为同住成年者，幼体由成年者照看。私宅许可准确；睡席细节与其他住处相近。"
+          },
+          {
+            "id": "culture_ms_huipeng",
+            "note": "各棚认货而非共灶分份，先亮空秤、绳签、归签葬与不同口音完整；远方矿货只作联系，不移动人口。"
+          },
+          {
+            "id": "boss_ms_huixi",
+            "note": "与漪衡同一完整档身体，有限库存和公共辖区准确；半血第四次恐惧一分钟、眩光绕适应与结构一致。"
+          },
+          {
+            "id": "faction_ms_huipeng",
+            "note": "两派围绕错签责任与轮值争执，公账支出和分物来源明确；公开说明未泄私下焦虑。"
+          },
+          {
+            "id": "faction_ms_huixi",
+            "note": "公账和本人库存分开，空棚议决按三阶段花粮；私下互信焦虑只在内部说明，和接岸、静滩两派相容。"
+          },
+          {
+            "id": "site_ms_gs_store",
+            "note": "绳额看管公共储备，物资在势力公账且议定后才分；未写成可任取的场景库存。"
+          }
+        ],
+        "wave": [
+          {
+            "id": "faction_ms_huixi",
+            "scores": [
+              5,
+              5,
+              5,
+              4,
+              5,
+              4
+            ],
+            "note": "公账和本人库存分开，空棚议决按三阶段花粮；私下互信焦虑只在内部说明，和接岸、静滩两派相容。"
+          },
+          {
+            "id": "bld_ms_gs_01",
+            "scores": [
+              4,
+              3,
+              5,
+              4,
+              4,
+              3
+            ],
+            "note": "四名住户与户籍一致，散枝为同住成年者，幼体由成年者照看。私宅许可准确；睡席细节与其他住处相近。"
+          },
+          {
+            "id": "site_ms_gs_store",
+            "scores": [
+              4,
+              4,
+              5,
+              4,
+              4,
+              4
+            ],
+            "note": "绳额看管公共储备，物资在势力公账且议定后才分；未写成可任取的场景库存。"
+          }
+        ]
       },
-      "costUpperYuan": 0.46458536,
+      "costUpperYuan": 0.47982608000000004,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }
