@@ -23,7 +23,8 @@ initial.state.npcs.npc_hw_linsui.activity='闲逛';
 initial.state.npcs.npc_hw_linsui.scheduleTravel=null;
 initial.state.npcs.npc_hw_linsui.cognitionTravel=null;
 const expected=(route,signature,other={})=>({route,signature,outOfBounds:false,fallback:false,constructor:false,...other});
-const markSlots={intent:'在店门边刻下提醒路人的记号',form:'刻痕',tags:['mark:warning']};
+// The intent names the offered tag label (警告), as a form user would pick it.
+const markSlots={intent:'在店门边刻下警告路人的记号',form:'刻痕',tags:['mark:warning']};
 const rows=[
  {id:'self-open',intent:'说一句今天的见闻',proposal:{intent:'xyzzy说见闻',effects:[{op:'emit',verb:'tell',visibility:'public',payload:{text:'今天路上有一只鸟'}}]},expected:expected('open:proposal',['emit'])},
  {id:'self-refuse',intent:'凭空给自己一百枚铜钱',proposal:{intent:'xyzzy凭空造钱',effects:[{op:'transfer',from:'src:genesis|coin_river|purse',to:'player|coin_river|purse',qty:100}]},expected:expected('reject',[],{outOfBounds:true})},
@@ -119,7 +120,9 @@ test('A3 signature r10: conditional legal consequences require their native subm
  const score=await scoreRows(corpus.filter(r=>/-(051|052|056|058)$/.test(r.id)),charterOptions);
  for(const result of score.results){
   assert.equal(result.scores.signature,true,`${result.id}: scored submission`);
-  assert.equal(result.scores.constructor,true,`${result.id}: constructor submission`);
+  // 标杆 B07.4 / review 10-22: constructor credit is the model-free form
+  // search, judged separately; it is no longer a replay of this proposal.
+  assert.equal(result.constructorSearch.method,'model-free form',result.id);
  }
 });
 
@@ -457,43 +460,61 @@ test('A3 checks r8: a failed paid lesson keeps its fee and grants no knowledge',
  const invalid=validateCheckBranch(engine,low,row,'failure');
  assert.equal(invalid.ok,false);assert.ok(invalid.issues.includes('failed learning granted knowledge'));
 });
-test('A3 constructor scorer: dynamic proposal uses the UI tool adapter and real four-step receipts',async()=>{
- // 06 §6.9.5: local composition also includes the dynamic open-proposal duty.
- // The independently supplied proposal, never expected, provides the inputs.
- const before=structuredClone(initial),row={...rows[0],expected:expected('open:proposal',['emit'],{constructor:true})};
- const scored=await scoreRows([row],options),result=scored.results[0];
- assert.equal(result.scores.constructor,true,JSON.stringify(result));
- assert.deepEqual(result.actual.builder.steps,[0,1,2,3]);
- const direct=await executeIntent(engine,initial,{...row,id:'explicit-open-builder',builder:{action:'open:proposal',slots:row.proposal}});
- assert.equal(direct.actual.builder.ok,true,JSON.stringify(direct.actual));
- assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool,c.eventId]),[['preview','world_propose','a3-score-explicit-open-builder'],['confirm','world_propose','a3-score-explicit-open-builder']]);
- assert.deepEqual(direct.actual.signature,['emit']);
- assert.ok(Object.values(direct.document.state.records).some(r=>r.category==='world_event'&&r.payload?.text==='今天路上有一只鸟'));
- const wrong=await scoreRows([{...row,expected:{...row.expected,signature:['vital']}}],options);
- assert.equal(wrong.results[0].actual.builder.ok,true);
+test('A3 constructor scorer: credit comes from the model-free form, never from the corpus proposal',async()=>{
+ // 标杆 B07.4 / review 10-22 P1: the intent text is the form's catalog search;
+ // slots take only offered options. The row has no proposal at all.
+ const before=structuredClone(initial);
+ const greet={id:'ctor-greet',intent:'向林穗打个招呼，寒暄两句',expected:expected('core:dialogue.greet',['emit(person:npc_hw_linsui,greet)'])};
+ const scored=await scoreRows([greet],options),result=scored.results[0];
+ assert.equal(result.actual.error.code,'A3-SCORE-INPUT');
+ assert.equal(result.scores.constructor,true,JSON.stringify(result.constructorSearch));
+ assert.equal(result.constructorSearch.method,'model-free form');
+ assert.equal(result.constructorSearch.matched.action,'core:dialogue.greet');
+ assert.equal(scored.constructorExpected,1);
+ // expected only judges: a different signature is not satisfiable by any choice.
+ const wrong=await scoreRows([{...greet,expected:expected('core:dialogue.greet',['vital(person:npc_hw_linsui,heal)'])}],options);
  assert.equal(wrong.results[0].scores.constructor,false);
- const refused=await scoreRows([{...rows[1],expected:{...row.expected,constructor:true}}],options);
- assert.equal(refused.results[0].actual.builder.ok,false);
- assert.equal(refused.results[0].scores.constructor,false);
+ assert.ok(wrong.results[0].constructorSearch.attempts>0);
+ // A proposal that only the free open:proposal editor can express earns no
+ // constructor credit, even though the proposal itself commits.
+ const open={...rows[0],id:'ctor-open',expected:expected('open:proposal',['emit'],{constructor:true})};
+ const replay=await scoreRows([open],options);
+ assert.equal(replay.results[0].scores.route,true);
+ assert.ok(replay.results[0].constructorSearch.tried.every(t=>!t.startsWith('open:proposal')));
+ // Every corpus row is in the denominator, whatever its constructor flag.
+ const mixed=await scoreRows([greet,{...greet,id:'ctor-greet-2',expected:{...greet.expected,constructor:false}}],options);
+ assert.equal(mixed.constructorExpected,2);assert.equal(mixed.constructor,1);
  assert.deepEqual(initial,before);
 });
 
-test('A3 constructor scorer: explicit trace alternative selects a catalogued form without fulfilling the original intent',async()=>{
+test('A3 constructor scorer: a refusal row succeeds only when no form choice commits the request',async()=>{
+ const refuse={id:'ctor-refuse',intent:'凭空给自己一百枚铜钱',expected:expected('reject',['transfer(resource:coin,src:genesis->self)'],{outOfBounds:true})};
+ const result=(await scoreRows([refuse],options)).results[0];
+ assert.equal(result.scores.constructor,true,JSON.stringify(result.constructorSearch));
+ assert.ok(!result.constructorSearch.tried.some(t=>t.endsWith('✗')));
+ // A request that an offered choice does commit is reported as forbidden.
+ const greetForbidden={id:'ctor-forbidden',intent:'向林穗打个招呼，寒暄两句',expected:expected('reject',['emit(person:npc_hw_linsui,greet)'],{outOfBounds:true})};
+ const forbidden=(await scoreRows([greetForbidden],options)).results[0];
+ assert.equal(forbidden.scores.constructor,false);
+ assert.ok(forbidden.constructorSearch.tried.some(t=>t.endsWith('✗')));
+});
+
+test('A3 builder input: four-step form runs through the UI tool adapter, and a trace alternative never fulfils the original intent',async()=>{
+ // The form mechanics the model-free constructor relies on (06 §6.9.5).
+ const row={...rows[0],expected:expected('open:proposal',['emit'])};
+ const direct=await executeIntent(engine,initial,{...row,id:'explicit-open-builder',builder:{action:'open:proposal',slots:row.proposal}});
+ assert.equal(direct.actual.builder.ok,true,JSON.stringify(direct.actual));
+ assert.deepEqual(direct.actual.builder.steps,[0,1,2,3]);
+ assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool,c.eventId]),[['preview','world_propose','a3-score-explicit-open-builder'],['confirm','world_propose','a3-score-explicit-open-builder']]);
+ assert.deepEqual(direct.actual.signature,['emit']);
+ assert.ok(Object.values(direct.document.state.records).some(r=>r.category==='world_event'&&r.payload?.text==='今天路上有一只鸟'));
  const proposal={...rows[3].proposal,effects:[{op:'create',kind:'mark',facts:{name:'飞天茶壶',form:'虚构形态'},tags:['mark:art']}]};
- const row={...rows[3],proposal,expected:expected('open:leave_mark',['create(thing:mark,mark:art)'],{fallback:true,constructor:true})};
- const scored=await scoreRows([row],options),result=scored.results[0];
- assert.equal(result.scores.constructor,true,JSON.stringify(result));
- // The separate original execution still fails its invalid form; builder
- // completion is measured from its own committed route, effects and reaction.
- assert.equal(result.scores.route,false);
- const direct=await executeIntent(engine,initial,{...row,id:'trace-builder',builder:{action:'open:proposal',slots:proposal}});
- assert.equal(direct.actual.traceOnly,true);
- assert.equal(direct.actual.fallback,true);
- assert.deepEqual(direct.actual.calls.map(c=>[c.phase,c.tool]),[['preview','world_propose'],['preview','world_act'],['confirm','world_act']]);
- assert.ok(world.openActionRules.mark.forms.includes(direct.document.state.created[direct.actual.entity].form));
- // The selected alternative carries only mark facts; the fictional object's
- // name remains prose in the original intent, never a primitive fact field.
- const mark=direct.effects.find(e=>e.op==='create'&&e.kind==='mark');
+ const trace=await executeIntent(engine,initial,{...rows[3],proposal,id:'trace-builder',builder:{action:'open:proposal',slots:proposal}});
+ assert.equal(trace.actual.traceOnly,true);
+ assert.equal(trace.actual.fallback,true);
+ assert.deepEqual(trace.actual.calls.map(c=>[c.phase,c.tool]),[['preview','world_propose'],['preview','world_act'],['confirm','world_act']]);
+ assert.ok(world.openActionRules.mark.forms.includes(trace.document.state.created[trace.actual.entity].form));
+ const mark=trace.effects.find(e=>e.op==='create'&&e.kind==='mark');
  assert.deepEqual(Object.keys(mark.facts).sort(),['form','intent']);
  assert.equal(mark.facts.intent,proposal.intent);
 });
@@ -885,7 +906,9 @@ for(const row of rows)test(`A3 scorer self: ${row.id} — ${row.intent}`,async()
   assert.equal(run.receipt.fallback.originalIntentFulfilled,false);
   if(row.id==='self-builder'){
    assert.equal(result.scores.constructor,true);assert.deepEqual(run.actual.builder.steps,[0,1,2,3]);
-   assert.equal(report.constructorExpected,1);assert.equal(report.constructor,1);
+   // 标杆 B07.4: every row is in the constructor denominator.
+   assert.equal(report.constructorExpected,rows.length);
+   assert.equal(report.constructor,report.results.filter(r=>r.scores.constructor).length/rows.length);
    assert.equal(report.fallbackExpected,3);assert.equal(report.fallbackReacted,3);assert.equal(report.fallbackReactionRate,1);
   }
   if(row.id==='self-registered'){

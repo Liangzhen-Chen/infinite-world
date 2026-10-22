@@ -1459,6 +1459,90 @@ export function rejectionReason(signature,actual,requested=[]){
  if(effect&&!(domain.includes(effect.op)&&ops.has(effect.op)))return {ok:false,code,reason:`the refused request effect ${index} (${effect.op}) is not in the expected request`};
  return {ok:true,code};
 }
+// ---- Model-free constructor (06 §6.4/§6.9, 标杆 B07.4, review 10-22) ----
+// The metric asks whether a player WITHOUT a model can compose the intent with
+// the four-step form. The intent text is the form's local catalog search
+// (找相近的动作 = searchActions over labels and synonyms, once per
+// perceivable target); slots take only what the form offers: listed options,
+// declared defaults, scene entities for entity slots, the intent text for
+// free-text slots and the slot minimum for counts. The corpus proposal, input
+// and expected never fill a slot; expected only judges the committed result.
+// Free primitive composition (open:proposal's effect editor) is not
+// enumerated, and an automatic trace alternative earns no credit (不经兜底).
+export const CONSTRUCTOR_LIMITS=Object.freeze({attempts:24,combosPerAction:4,searchResults:24});
+// The player reads option labels: options whose label or value occurs in the
+// intent text are tried first, the rest keep their offered order.
+const mentioned=(option,row)=>[option.label,option.value].some(text=>typeof text==='string'&&text.length>=2&&row.intent?.includes(text));
+function slotChoices(slot,row,entities){
+ if(slot.name==='consent'&&slot.kind!=='object')return [undefined];
+ const allowed=(slot.options??[]).filter(option=>option.permission?.allowed!==false);
+ const offered=[...allowed.filter(o=>mentioned(o,row)),...allowed.filter(o=>!mentioned(o,row))].map(option=>slot.multiple?[option.value]:option.value);
+ if(offered.length)return slot.required?offered:[...offered,undefined];
+ if(slot.default!==undefined)return [undefined];
+ if(['intent','text','content'].includes(slot.name))return [row.intent];
+ if(slot.kind==='text')return slot.required?[row.intent]:[undefined];
+ if(slot.kind==='entity')return slot.required?entities:[undefined,...entities];
+ if(['quantity','coins','minutes','days'].includes(slot.kind)||Number.isFinite(slot.min))return slot.required?[slot.min??1]:[undefined];
+ return slot.required?[]:[undefined];
+}
+function* slotCombos(slots,lists,limit){
+ if(lists.some(list=>!list.length))return;
+ const index=lists.map(()=>0);
+ for(let produced=0;produced<limit;produced++){
+  yield Object.fromEntries(slots.map((slot,i)=>[slot.name,lists[i][index[i]]]).filter(([,value])=>value!==undefined));
+  let k=lists.length-1;
+  for(;k>=0;k--){index[k]++;if(index[k]<lists[k].length)break;index[k]=0;}
+  if(k<0)return;
+ }
+}
+export function constructorCandidates(engine,document,row,limits=CONSTRUCTOR_LIMITS){
+ const scoped=engine.scoped(document),errors=[];
+ // A catalog projection that throws offers the player nothing to choose.
+ const offer=options=>{try{return worldActions(scoped,document,options);}catch(error){errors.push(error.message);return {actions:[],objects:{}};}};
+ const here=offer({limit:1});
+ const entities=[...new Set([...(here.objects?.people??[]).map(p=>p.id),...(here.objects?.items??[]).map(i=>i.id),...(here.objects?.exits??[]).map(e=>e.id)])];
+ const candidates=[],seen=new Set();
+ const mentions=action=>(action.slots??[]).flatMap(slot=>slot.options??[]).filter(option=>mentioned(option,row)).length;
+ const add=(action,target)=>{
+  if(!action||action.readOnly||action.blocked||action.inputTool==='world_propose')return;
+  const key=`${action.id}|${target??''}`;
+  if(seen.has(key))return;
+  seen.add(key);candidates.push({action,target,mentions:mentions(action)});
+ };
+ // 找相近的动作 with 留下点什么 always beside it (06 §6.9.5), then the scene
+ // menu and each target's object menu; menu actions whose offered option
+ // labels occur in the intent come first.
+ for(const target of [null,...entities])for(const action of offer({query:row.intent,target,limit:limits.searchResults}).actions)add(action,target);
+ add(offer({query:'open:leave_mark',limit:1}).actions.find(a=>a.id==='open:leave_mark'),null);
+ const menu=[];
+ for(const target of [null,...entities])for(const action of offer({target,limit:limits.searchResults}).actions)menu.push({action,target,mentions:mentions(action)});
+ for(const {action,target} of menu.filter(m=>m.mentions>0).sort((a,b)=>b.mentions-a.mentions))add(action,target);
+ for(const {action,target} of menu.filter(m=>!m.mentions))add(action,target);
+ return {candidates,entities,errors};
+}
+export async function constructWithoutModel(engine,initial,row,judge,limits=CONSTRUCTOR_LIMITS){
+ const setup=applyIntentSetup(engine,initial,row.setup);
+ if(setup.setupUnmet.length)return {ready:false,attempts:[],matched:null};
+ const base=setup.document,{candidates,entities,errors}=constructorCandidates(engine,base,row,limits),attempts=[];
+ const bare={id:row.id,intent:row.intent,expected:row.expected};
+ for(const {action,target,mentions} of candidates){
+  const slots=action.slots??[];
+  // Without a mentioned option the player tries the form's first choice only.
+  for(const values of slotCombos(slots,slots.map(slot=>slotChoices(slot,row,entities)),mentions?limits.combosPerAction:1)){
+   if(attempts.length>=limits.attempts)return {ready:true,attempts,matched:null,truncated:true,errors};
+   const chosen={...structuredClone(action.fill??{}),...values};
+   const run=await executeCheckedIntent(engine,base,{...bare,id:`${row.id}-ctor-${attempts.length}`,builder:{action:action.id,slots:chosen}});
+   Object.assign(run,{before:base,bindings:setup.bindings,notes:setup.notes});
+   // A trace alternative taken automatically after a failed preview is 兜底.
+   const fallbackTaken=run.actual.calls.some(call=>call.action!==action.id);
+   const verdict=judge(run,{fallbackTaken});
+   attempts.push({action:action.id,target,slots:chosen,route:run.actual.route,committed:run.actual.committed,fallbackTaken,ok:verdict.ok,forbidden:verdict.forbidden??false});
+   if(verdict.stop)return {ready:true,attempts,matched:attempts.at(-1),errors};
+  }
+ }
+ return {ready:true,attempts,matched:null,errors};
+}
+
 export async function scoreRows(rows,{world,seed,document:initial}={}){
  world??=await loadWorld();seed??=JSON.parse(await fs.readFile(path.join(root,'tests/fixtures/legacy/seed.json'),'utf8'));
  const engine=new WorldEngine(world);initial??=engine.createCharacter(seed,{},'a3-score-independent');
@@ -1487,33 +1571,33 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
    ?actual.refused&&zeroEffects&&rejection.ok
    :expectsClarification?actual.clarified&&!actual.refused&&!actual.error&&zeroEffects
    :Boolean(matched?.ok)&&boundIssues.length===0);
-  let constructor=false,builder=actual.builder;
-  if(ready&&row.expected.constructor){
-   if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
-   else{
-    // Replay the independently supplied input through the same four-step form
-    // and tool adapter as the UI. Open proposals are editable dynamic duties,
-    // not world_act slots, and a failed non-builder run must not suppress them.
-    const input=row.input??(row.action?{tool:'world_act',args:typeof row.action==='string'?{action:row.action,slots:row.slots??{}}:row.action}:row.proposal?{tool:'world_propose',args:row.proposal}:null);
-    const action=input?.tool==='world_propose'?'open:proposal':input?.tool==='world_act'?input.args.action:null;
-    const slots=input?.tool==='world_propose'?input.args:input?.args?.slots;
-    if(action&&slots){
-     const built=await executeCheckedIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
-     builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews,checkBranches:built.branches};
-     const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(built.actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(built.actual.route);
-     constructor=Boolean(built.branchesOK&&builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world,built.document,contextOf(built))&&(!bounded||boundedIssues(engine,built).length===0)&&(!row.expected.fallback||built.actual.fallback));
-    }
+  // 标杆 B07.4 / review 10-22 P1: constructor credit comes from the model-free
+  // form (constructWithoutModel), never from replaying the corpus proposal or
+  // builder input, and every corpus row is in the denominator. A refusal or
+  // clarification row succeeds when no form choice commits the request.
+  const routeMatches=r=>Array.isArray(expectedRoute)?expectedRoute.some(e=>normalizeRoute(e)===normalizeRoute(r)):normalizeRoute(expectedRoute)===normalizeRoute(r);
+  const refusing=expectsRejection||expectsClarification;
+  const formed=ready?await constructWithoutModel(engine,initial,row,(attempt,{fallbackTaken})=>{
+   if(refusing){
+    const forbidden=row.expected.signature.length>0&&attempt.actual.committed&&signatureMatches(row.expected.signature,attempt.effects,attempt.receipt??{},attempt.requested,world,attempt.document,contextOf(attempt));
+    return {ok:!forbidden,forbidden,stop:forbidden};
    }
-  }
+   const ok=!fallbackTaken&&attempt.branchesOK&&attempt.actual.committed&&routeMatches(attempt.actual.route)&&
+    signatureMatches(row.expected.signature,attempt.effects,attempt.receipt??{},attempt.requested,world,attempt.document,contextOf(attempt))&&
+    (!bounded||boundedIssues(engine,attempt).length===0)&&(!row.expected.fallback||attempt.actual.fallback);
+   return {ok,stop:ok};
+  }):{ready:false,attempts:[],matched:null};
+  const constructor=formed.ready&&(refusing?!formed.attempts.some(a=>a.forbidden):Boolean(formed.matched));
+  const constructorSearch={method:'model-free form',matched:formed.matched,attempts:formed.attempts.length,truncated:Boolean(formed.truncated),catalogErrors:formed.errors??[],tried:formed.attempts.map(a=>`${a.action}${a.target?`@${a.target}`:''}${a.ok&&!refusing?' ✓':''}${a.forbidden?' ✗':''}`)};
   const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:normalizeRoute(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
-  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,notes:run.notes??[],signatureDiagnostics:matched?.diagnostics??[],boundIssues,rejection,actual:{...actual,builder},checkBranches:run.branches,scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&run.branchesOK&&supported,constructor},repair:row.expected.repair});
+  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,notes:run.notes??[],signatureDiagnostics:matched?.diagnostics??[],boundIssues,rejection,constructorSearch,actual,checkBranches:run.branches,scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&run.branchesOK&&supported,constructor},repair:row.expected.repair});
  }
  const total=rows.length,tricky=rows.filter(r=>r.tricky).length,rate=(key,denominator=total)=>denominator?results.filter(r=>r.scores[key]).length/denominator:1;
- const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=rows.filter(r=>r.expected.constructor).length;
+ const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=total;
  // Preserve the acceptance gate's conservative definition: every expected
  // rejection must really be rejected. Applied violations are reported apart
  // from clarification/failure; those cannot earn rejection credit.
- return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.setupUnmet.length&&(r.bounded?!r.scores.outOfBounds:!r.actual.refused)).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly&&!(r.bounded&&r.scores.signature)).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&(r.setupUnmet.length||(!r.actual.committed&&!r.actual.refused&&!r.actual.clarified))).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructor:rate('constructor',constructorExpected),results};
+ return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.setupUnmet.length&&(r.bounded?!r.scores.outOfBounds:!r.actual.refused)).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly&&!(r.bounded&&r.scores.signature)).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&(r.setupUnmet.length||(!r.actual.committed&&!r.actual.refused&&!r.actual.clarified))).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructorMethod:'model-free form search over the catalog (标杆 B07.4)',constructor:rate('constructor',constructorExpected),results};
 }
 export async function scoreCorpus(options={}){const {rows,corpusPath}=await loadCorpus(options);return {...await scoreRows(rows,options),corpusPath};}
 // Importing the scorer performs no run and emits no output.
