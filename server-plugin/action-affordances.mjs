@@ -75,7 +75,7 @@ function zoneOptions(ctx){
 }
 function featureOptions(ctx){
  const d={get:(...path)=>path.reduce((value,key)=>value?.[key],ctx.document)},origin=localPlayerPoint(d);
- return environmentFeatures(ctx.engine).filter(row=>row.location===ctx.s.location&&!row.hidden&&!row.private&&row.visible!==false&&localSightClear(d,ctx.engine,ctx.s.location,origin,row.position))
+ return environmentFeatures(ctx.engine,ctx.document).filter(row=>row.location===ctx.s.location&&!row.hidden&&!row.private&&row.visible!==false&&localSightClear(d,ctx.engine,ctx.s.location,origin,row.position))
   .map(row=>({value:row.id,label:row.name}));
 }
 
@@ -213,9 +213,16 @@ function offer(ctx,action,target){
  const selected={...fill};
  for(const slot of action.slots)if(selected[slot.name]===undefined&&slot.default!==undefined&&slot.default!=='dawn')selected[slot.name]=slot.default;
  const permission=actionPermission(ctx,action,selected);
- for(const slot of slots)if(slot.options&&!slot.multiple)for(const option of slot.options){
-  const check=actionPermission(ctx,action,{...selected,[slot.name]:option.value,...option.fill});
-  if(check)option.permission=check;
+ // Only options of slots the permission actually reads are checked one by one;
+ // an independent slot's options share one check (same result for any value).
+ const runtime=primitiveActionRuntime(),dependent=typeof runtime?.actionPermissionSlots==='function'?runtime.actionPermissionSlots(ctx.engine,action):null;
+ for(const slot of slots)if(slot.options&&!slot.multiple){
+  let shared;
+  for(const option of slot.options){
+   const independent=dependent&&![slot.name,...Object.keys(option.fill??{})].some(name=>dependent.has(name));
+   const check=independent?(shared===undefined?(shared=actionPermission(ctx,action,{...selected,[slot.name]:option.value})):shared):actionPermission(ctx,action,{...selected,[slot.name]:option.value,...option.fill});
+   if(check)option.permission=check;
+  }
  }
  return {...catalogRow(action),slots,fill,...(action.call?.tool&&slots.some(slot=>slot.kind==='object'&&!slot.multiple)?{inputTool:action.call.tool}:{}),...(permission?{permission}:{}),...(action.ui?.quick?{quick:action.ui.quick}:{}),
   ...(permission?.allowed===false?{blocked:permission.reason}:consentPending(ctx,action,fill)?{blocked:CONSENT_PENDING}:{})};

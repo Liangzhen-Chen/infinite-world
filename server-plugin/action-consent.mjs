@@ -69,16 +69,16 @@ export function consent(context,from,to,scope,{purpose=null,subject=null,terms=n
  terms??=nativeConsentTerms(context,from,to,scope,purpose);
  const now=context.document.state?.minute??0,level=capacity(context,from,scope).level;
  if(!Number.isSafeInteger(until)||until<now)return {allowed:false,kind:'none',source:null,check:'abort',tags:[],reason:'Consent must cover the current or a future minute'};
- // Only this donor/recipient pair's rows can grant or revoke (a revocation
- // names its consent's own donor and recipient), newest first.
- const events=consentIndex(context.consentEvents??context.document.state?.consentEvents).pair(from,to);
+ // Only the donor's own rows can grant or revoke this consent (a revocation
+ // always names its donor; it may name the consent id instead of a recipient).
+ const events=consentIndex(context.consentEvents??context.document.state?.consentEvents).from(from);
  const result=(kind,source)=>({allowed:true,kind,source,check:null,tags:[]});
  const needsProxy=level==='none'||level==='limited'&&['mind','memory','property','transfer','mental_magic'].includes(scope);
  let purposeMismatch=false,conditionalMismatch=false;
  const revokedIds=new Set();let scopeRevoked=false;
  for(let i=events.length-1;i>=0;i--){
   const e=events[i];
-  if(e.type==='consent_revoked'&&(e.at??0)<=now){if(e.consent!==undefined)revokedIds.add(e.consent);if(e.scope===undefined||e.scope===scope)scopeRevoked=true;continue;}
+  if(e.type==='consent_revoked'&&(e.at??0)<=now){if(e.consent!==undefined)revokedIds.add(e.consent);if(e.to===to&&(e.scope===undefined||e.scope===scope))scopeRevoked=true;continue;}
   const cast=e.scope==='cast'&&['mental_magic','support_magic','healing'].includes(scope)&&e.subject===from&&e.terms?.spell===purpose;
   if(e.type!=='consent_given'||typeof e.id!=='string'||!Number.isSafeInteger(e.at)||e.from!==from||e.to!==to||!(cast||(Array.isArray(e.scope)?e.scope.includes(scope):e.scope===scope))||e.at>now||e.until!==undefined&&(!Number.isSafeInteger(e.until)||e.until<=until))continue;
   if(revokedIds.has(e.id)||scopeRevoked)continue;
@@ -136,7 +136,7 @@ export function applyConsentEvent(d,context,{actor,eventId,verb,to,payload={}}){
   d.set(['state','consentEvents'],[...events,row]);
   return row;
  }
- if(verb!=='consent_revoked'||!old||old.revoked||(old.until??old.expires??Infinity)<=now||index.pair(old.from??old.subject,old.to??old.grantee).some(e=>e.type==='consent_revoked'&&e.consent===payload.consent&&e.at<=now))fail('No active consent to revoke');
+ if(verb!=='consent_revoked'||!old||old.revoked||(old.until??old.expires??Infinity)<=now||index.from(old.from??old.subject).some(e=>e.type==='consent_revoked'&&e.consent===payload.consent&&e.at<=now))fail('No active consent to revoke');
  if(old.category&&old.category!=='authorization')fail('Record is not a consent authorization');
  const row={id:eventId,type:verb,from,to:recipient,consent:payload.consent,at:now};
  if(old.category==='authorization')holdingSet(d,context.engine,['state','records',payload.consent],{...old,revoked:true,revokedAt:now,revokedBy:actor},'action-consent',eventId);

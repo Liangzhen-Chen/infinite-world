@@ -754,6 +754,19 @@ export const primitiveRuntime={
   if(d.scheduler){d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);}
   return {patches:d.patches,receipt:pending.receipt,events};
  },
+ // Slots an action's permission can depend on: a primitive program's movement
+ // destinations (canAct reads only effect.to), or a legacy call's operation and
+ // destination (legacy capacity/legal restriction read only those). Any other
+ // slot value leaves the permission unchanged.
+ actionPermissionSlots(engine,action){
+  const program=Array.isArray(action?.outcomes)?action.outcomes:action?.outcomes?.success??action?.outcomes?.accepted;
+  if(Array.isArray(program)){
+   const names=new Set(),collect=value=>{if(value&&typeof value==='object'){if(typeof value.slot==='string'&&Object.keys(value).length===1)names.add(value.slot);else Object.values(value).forEach(collect);}};
+   for(const effect of program)if(effect.op==='move')collect(effect.to);
+   return names;
+  }
+  return new Set(['operation','destination']);
+ },
  actionPermission(engine,document,{action,slots={},actor='player'}={}){
   const resolved=this.resolve(engine,{args:{action,slots}},{actor});
    if(resolved.tool==='world_propose'){
