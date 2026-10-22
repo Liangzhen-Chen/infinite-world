@@ -12,7 +12,7 @@
     },
     {
       "id":"open:waive_debt","label":"免除本人的债权","verb":"免债","group":"账目","source":"catalog","narration":"open.waive_debt",
-      "synonyms":["免掉","免除","不让他再还"],"visibility":{"catalog":"here","witness":"present"},"participants":{"actor":"player"},"preconditions":[],
+      "synonyms":["免掉","免除"],"visibility":{"catalog":"here","witness":"present"},"participants":{"actor":"player"},"preconditions":[],
       "slots":[{"name":"obligation","kind":"text","required":true}],"cost":{"owner":"primitives","time":1},"check":null,
       "outcomes":[{"op":"obligation.cancel","id":{"slot":"obligation"},"reason":"creditor_waiver"}],
       "hint":"须为本人拥有且可免除的真实债权；债务人与余额由义务记录核对。"
