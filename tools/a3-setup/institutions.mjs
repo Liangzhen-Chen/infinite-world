@@ -12,7 +12,7 @@ const text=x=>typeof x==='string'&&x.trim().length>0;
 const alias=x=>text(x)&&!['__proto__','constructor','prototype'].includes(x);
 const integer=x=>Number.isSafeInteger(x)&&x>=0;
 const keys=(row,allowed)=>Object.keys(row).every(k=>allowed.includes(k));
-const sections={history:'01 §1.7、06 §6.3（历史事件与本人同意）',accounts:'01 §1.6（账户开账）',obligations:'01 §1.4、05 §5.2.7（旧义务与案件）',documents:'01 §1.2、05 §5.2.7（同一凭证与证据来源）',cases:'05 §5.2.7（案件程序）',permits:'01 §1.3、06 §6.3（有限许可）',examinations:'06 §6.3（真实考官与认证）',appointments:'06 §6.3（服务与预约）',quotes:'01 §1.6（真实报价）',workstationAccess:'06 §6.6（工位与费用）'};
+const sections={history:'01 §1.7、06 §6.3（历史事件与本人同意）',accounts:'01 §1.6（账户开账）',obligations:'01 §1.4、05 §5.2.7（旧义务与案件）',documents:'01 §1.2、05 §5.2.7（同一凭证与证据来源）',cases:'05 §5.2.7（案件程序）',permits:'01 §1.3、06 §6.3（有限许可）',examinations:'06 §6.3（真实考官与认证）',offices:'05 §5.3（组织章程的可设职位表）',appointments:'06 §6.3（服务与预约）',quotes:'01 §1.6（真实报价）',workstationAccess:'06 §6.6（工位与费用）'};
 const gap=(ctx,item,field,reason)=>ctx.unmet(item,`${reason}；设计 ${sections[field]}`);
 function rows(ctx,setup,field,load,{skipInvalid=false}={}){
  if(!Array.isArray(setup[field])){if(!skipInvalid)ctx.unmet(field,'expected an array');return;}
@@ -108,14 +108,41 @@ function loadPermits(ctx,setup){rows(ctx,setup,'permits',(row,item)=>{
 });}
 
 export {object,text,alias,integer,keys,gap,rows,requireShape,state,known,selector,eventSource};
+// 05 §5.3: an organization's charter lists the offices it may have
+// (「可设职位表」: kind, powers, seat). A corpus office instance is a premise
+// only when it is one of those catalog offices, possibly narrowed to one
+// matter (case/obligation/scope); it can never carry powers the catalog does
+// not grant (review 10-22 P1). Catalog sources are world data only: the
+// organization's own offices table and governance.authority.offices.
+const powersOf=authority=>Array.isArray(authority)?authority:Array.isArray(authority?.operations)?authority.operations:null;
+export function officeCatalog(engine,organization){
+ const rows=[...(engine.byId.get(organization)?.offices??[])];
+ for(const office of Object.values(engine.rules.governance?.authority?.offices??{}))
+  if((office.settlements??[]).includes(organization))rows.push({id:office.id,seat:null,authority:{operations:office.powers??[]}});
+ return rows;
+}
+export function catalogOffice(engine,row,organization){
+ const powers=powersOf(row.authority),seat=row.seat??row.location;
+ if(!powers?.length)return null;
+ return officeCatalog(engine,organization).find(office=>{
+  const granted=powersOf(office.authority)??[];
+  return powers.every(p=>granted.includes(p))&&(!office.seat||office.seat===seat)&&
+   (office.authority?.profession??null)===(Array.isArray(row.authority)?null:row.authority?.profession??null);
+ })??null;
+}
+const officeRow=row=>row?.template==='office'&&row?.monthlyQuotaD===undefined;
+const institutionRow=row=>['proposal','application'].includes(row?.kind);
 function loadInstitutionInputs(ctx,setup){
  for(const [index,row]of (Array.isArray(setup.instances)?setup.instances:[]).entries()){
-  if(row?.template==='office'&&!ctx.bindings[row.id]){
+  if(officeRow(row)){
    const item=`instances[${index}]`;
    try{
-    requireShape(keys(row,['id','template','kind','name','location','organization','seat','authority']),'invalid institution office fields');
+    requireShape(keys(row,['id','template','kind','name','location','organization','seat','authority'])&&alias(row.id)&&!Object.hasOwn(ctx.bindings,row.id)&&(row.kind===undefined||row.kind==='office'),'invalid institution office fields');
+    const organization=ctx.ref(row.organization),office=catalogOffice(ctx.engine,row,organization);
+    if(!office){gap(ctx,item,'offices',`organization ${row.organization} has no catalog office granting ${JSON.stringify(powersOf(row.authority)??row.authority)} at ${row.seat??row.location}`);continue;}
     let id;
-    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization:ctx.ref(row.organization)});}))ctx.bindings[row.id]=id;
+    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization});}))ctx.bindings[row.id]=id;
+    ctx.note(`${item}: office loaded as a narrowed instance of catalog office ${office.id}`);
    }catch(error){ctx.unmet(item,error.message);}
    continue;
   }
@@ -134,5 +161,8 @@ function loadInstitutionInputs(ctx,setup){
 }
 registerSetupLoader({fields:['history'],order:10,load:loadHistory});
 registerSetupLoader({fields:['history'],order:65,load(ctx,setup){loadHistory(ctx,setup,{selectors:true});}});
-registerSetupLoader({fields:['instances'],order:66,load:loadInstitutionInputs});
+// Offices load before accounts, cases and obligations that name them as
+// handler or collector (order 25+); institutional inputs need loaded history.
+registerSetupLoader({fields:['instances'],rows:{instances:officeRow},order:12,load:loadInstitutionInputs});
+registerSetupLoader({fields:['instances'],rows:{instances:institutionRow},order:66,load:loadInstitutionInputs});
 registerSetupLoader({fields:['permits'],order:70,load:loadPermits});

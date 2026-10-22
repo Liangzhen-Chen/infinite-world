@@ -290,10 +290,50 @@ function verifiedSpatial(ctx,setup,field,row,item){
   }
   const carried=ctx.document.holdings?.locations?.[target];
   if(carried?.mode==='carried'&&carried.at===observer)actual={distanceMeters:0,lineOfSight:true};
-  const spells=Array.isArray(setup.abilities?.spells)?setup.abilities.spells:[];
-  const touch=(Array.isArray(setup.objects)?setup.objects:[]).some(o=>ctx.ref(o?.id)===target&&(o?.fireIntensity>0||o?.armed===true))||(Array.isArray(setup.itemInstances)?setup.itemInstances:[]).some(o=>ctx.ref(o?.carriedBy)===target&&o?.access==='loose_open');
-  const precise=!!row.rayMeters||touch||spells.some(id=>{const spell=ctx.engine.byId.get(id);return spell?.rangeMeters!==undefined&&!['dry','repair','light'].includes(spell.effectSpec?.kind);});
-  if(precise&&(!actual||actual.lineOfSight!==row.lineOfSight||!Number.isFinite(actual.distanceMeters)||touch&&(row.distanceMeters<=1.5)!==(actual.distanceMeters<=1.5)||spells.some(id=>{const range=ctx.engine.byId.get(id)?.rangeMeters;return Number.isFinite(range)&&(row.distanceMeters<=range)!==(actual.distanceMeters<=range);})||row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9))return false;
+  // Review 10-22 P1 + main-session ruling 10-22 (docs/A3-接点归属.md, S4 row 3):
+  // a declared distance is compared with native geometry whenever the engine
+  // can measure it, on every range boundary any adjudication reads (contact
+  // reach 1.5 m of the primitive runtime, every catalog action rangeMeters,
+  // every spell rangeMeters) or exactly for a declared ray; a contradiction is
+  // unmet. When the engine cannot measure it, the premise holds only as
+  // native co-location and perception, and is handed to the scorer as
+  // pending: an evaluated action that declares a spatial need (world/actions
+  // `spatial`) turns it into an S4 setupUnmet. It is never noted as verified.
+  let measured=false;
+  if(row.distanceMeters!==undefined){
+   if(actual&&Number.isFinite(actual.distanceMeters)){
+    const contradiction=reason=>{ctx.unmet(item,`声明前提与原生几何矛盾：${reason}（01 §1.2；不改题面）`);return 'reported';};
+    if(actual.lineOfSight!==undefined&&actual.lineOfSight!==null&&actual.lineOfSight!==row.lineOfSight)return contradiction(`视线 声明${row.lineOfSight} 原生${actual.lineOfSight}`);
+    if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return contradiction(`射线距离 声明${row.distanceMeters}米 原生${actual.distanceMeters}米`);
+    const boundaries=new Set([1.5,...(ctx.engine.world.actionDefinitions?.actions??[]).map(a=>a.rangeMeters),...(ctx.engine.world.spells??[]).map(spell=>spell.rangeMeters)].filter(Number.isFinite));
+    for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return contradiction(`距离 声明${row.distanceMeters}米 原生${Math.round(actual.distanceMeters*100)/100}米，跨越${boundary}米边界`);
+    measured=true;
+   }else{
+    if(row.rayMeters)return false;
+    // Native place of each end: body, located/carried entity, active effect,
+    // environment feature, or the place itself.
+    const placeOf=(id,depth=0)=>{
+     if(id==='player')return ctx.document.state.location;
+     if(ctx.actor(id)?.location)return ctx.actor(id).location;
+     const held=ctx.document.holdings?.locations?.[id];
+     if(held&&depth<4)return held.mode==='carried'?placeOf(held.at,depth+1):held.at??null;
+     if(ctx.document.state.effects?.[id]?.location)return ctx.document.state.effects[id].location;
+     if(id===feature?.id)return feature.location??null;
+     return ctx.engine.world.locations.some(l=>l.id===id)?id:null;
+    };
+    const here=placeOf(observer);
+    if(!here||placeOf(target)!==here||!visible)return false;
+    // A person target must be among the people the observer's native
+    // subjective view can perceive here; other targets rely on the native
+    // perception check above.
+    if(Object.hasOwn(ctx.document.state.npcs??{},target)){
+     let people=[];
+     try{people=subjectiveView(ctx.engine,ctx.document,observer).observable.people;}catch{return false;}
+     if(!people.some(p=>p.id===target))return false;
+    }
+    ctx.spatial?.({item,observer,target,distanceMeters:row.distanceMeters,lineOfSight:row.lineOfSight});
+   }
+  }
   const targetBody=ctx.actor(target),at=observer==='player'?ctx.document.state.location:ctx.actor(observer)?.location;
   if(row.audible!==undefined){
    if(!targetBody)return false;
@@ -304,7 +344,7 @@ function verifiedSpatial(ctx,setup,field,row,item){
   if(ctx.document.state.location===at)listeners.push('player');
   if(row.audibleTo?.some(id=>!listeners.includes(ctx.ref(id))))return false;
   if(row.thirdPartyListeners&&JSON.stringify(listeners.filter(id=>![observer,target].includes(id)).sort())!==JSON.stringify(row.thirdPartyListeners.map(ctx.ref).sort()))return false;
-  if(visible){ctx.note(`${item}: verified native perception${precise?' and range boundary':''}; no contact evidence created`);return true;}
+  if(visible){ctx.note(`${item}: native perception established${measured?'; declared distance measured at every catalog range boundary':''}; no contact evidence created`);return true;}
  }
  return false;
 }
@@ -334,7 +374,8 @@ function spatial(ctx,setup,fields){
    接点='局部落石危险区登记及进入危险区的结算消费者';
   }
   if(!valid){ctx.unmet(item,`invalid ${field} declaration`);return;}
-  if(verifiedSpatial(ctx,setup,field,row,item))return;
+  const verified=verifiedSpatial(ctx,setup,field,row,item);
+  if(verified)return;
   missing(ctx,item,接点,'01 §1.2；S4');
  });
 }

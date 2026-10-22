@@ -22,12 +22,19 @@ import {primitiveRuntime,actionEffects} from '../server-plugin/primitives-runtim
 import {resolvePrimitiveTransfer} from '../server-plugin/primitive-accounts.mjs';
 import {facilityView} from '../server-plugin/facility-state.mjs';
 import {heldUnit} from '../server-plugin/items.mjs';
-import {runSetupLoaders,setupLoaderFields} from './a3-setup/index.mjs';
+import {runSetupLoaders,setupLoaderFields,setupRowLoader} from './a3-setup/index.mjs';
+import {localWeather} from '../server-plugin/weather.mjs';
 import './a3-setup/loaders.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const setupWriter='a3-score-setup';
-declareHoldingWriter(setupWriter,{kinds:['*'],entities:['office'],locations:true});
+// Review 10-22 P1: the corpus premise writer may open only the relationship
+// kinds that the generic setup fields declare (01 §1.3 registered writers),
+// never a wildcard. Offices themselves are created by the governance writer
+// after catalog validation (tools/a3-setup/institutions.mjs); this writer may
+// only record duty/authority references on an already loaded office.
+export const SETUP_HOLDING_KINDS=Object.freeze(['owns','tamed_by','lodges','pledged','guest_of','share','wanted','guardian_of','holds_office']);
+declareHoldingWriter(setupWriter,{kinds:SETUP_HOLDING_KINDS,entities:['office'],locations:true});
 export const oldCorpusPath=path.join(root,'tests/fixtures/a3-intents.json');
 export const v2CorpusPath=path.join(root,'tests/fixtures/a3-intents-v2.json');
 export async function loadCorpus({corpusPath}={}){
@@ -53,7 +60,7 @@ export function applyIntentSetup(engine,initial,setup){
  let document=structuredClone(initial),s=document.state;
  const setupUnmet=[],notes=[],bindings={};
  if(setup===undefined)return {document,setupUnmet};
- const unmet=(item,reason)=>setupUnmet.push({item,reason});
+ const unmet=(item,reason)=>setupUnmet.push({item,reason}),afterDomain=[],spatialPending=[];
  const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
  const actor=id=>id==='player'||id==='self'?s.player:Object.hasOwn(s.npcs??{},id)?s.npcs[id]:Object.hasOwn(s.creatures??{},id)?s.creatures[id]:null;
  if(!object(setup)){unmet('setup','expected an object');return {document,setupUnmet};}
@@ -81,11 +88,15 @@ export function applyIntentSetup(engine,initial,setup){
   if(!Array.isArray(setup.instances))unmet('instances','expected an array');
   else for(const [index,row] of setup.instances.entries()){
    const item=`instances[${index}]`;
+   // Review 10-22 P1: rows owned by a domain loader (offices, institutional
+   // inputs, quest instruments) are loaded there by the same selector that
+   // runSetupLoaders uses; the generic loop never half-loads or rejects them.
+   if(setupRowLoader('instances',row))continue;
    if(!object(row)||typeof row.id!=='string'||!row.id.trim()||row.name!==undefined&&(typeof row.name!=='string'||!row.name.trim())){unmet(item,'missing instance ID or invalid name');continue;}
    if(actor(row.id)||bindings[row.id]||Object.hasOwn(s.created??{},row.id)){unmet(item,'instance ID already exists');continue;}
-   if(!engine.world.locations.some(l=>l.id===row.location)&&row.kind!=='office'){unmet(item,'unknown instance location');continue;}
-   const allowed={creature:['id','template','kind','species','name','location','facts'],person:['id','source','template','kind','name','age','culture','faction','location'],office:['id','template','kind','name','organization','seat','authority']}[row.kind];
-   if(!allowed||Object.keys(row).some(k=>!allowed.includes(k))||row.template!==(row.kind==='office'?'office':'agent')){unmet(item,'unsupported instance template or field');continue;}
+   if(!engine.world.locations.some(l=>l.id===row.location)){unmet(item,'unknown instance location');continue;}
+   const allowed={creature:['id','template','kind','species','name','location','facts'],person:['id','source','template','kind','name','age','culture','faction','location']}[row.kind];
+   if(!allowed||Object.keys(row).some(k=>!allowed.includes(k))||row.template!=='agent'){unmet(item,'unsupported instance template or field');continue;}
    if(row.kind==='creature'){
     const species=engine.world.monsters.find(m=>m.id===row.species),facts=row.facts??{};
     if(!species||!object(facts)||Object.keys(facts).some(k=>!['hunger','trust','following'].includes(k))||Object.hasOwn(facts,'hunger')&&(!Number.isSafeInteger(facts.hunger)||facts.hunger<0||facts.hunger>100)||Object.hasOwn(facts,'trust')&&(!Number.isSafeInteger(facts.trust)||facts.trust<0||facts.trust>100)||Object.hasOwn(facts,'following')&&facts.following!=='player'){
@@ -98,7 +109,7 @@ export function applyIntentSetup(engine,initial,setup){
       ...(Object.hasOwn(facts,'hunger')||Object.hasOwn(facts,'trust')?{care:{version:1,hunger:facts.hunger??20,fatigue:0,mood:60,loyalty:50,sickness:false,sickHours:0,neglectHours:0,nextTick:s.minute+60,bond:facts.trust??0,contactDay:-1,feedDay:-1,groomDay:-1,trainDay:-1,skills:{},experience:0}}:{})},setupWriter);
      setLocation(d,{entity:row.id,at:row.location,mode:'place',writer:setupWriter,engine});
     });
-   }else if(row.kind==='person'){
+   }else{
     const person=(engine.world.factionPeople??[]).find(p=>p.id===row.id)??engine.world.npcs.find(p=>p.id===row.id)??engine.world.residents?.find(p=>p.id===row.id);
     if(!person||row.source!==undefined&&row.source!=='world/lore/factionPeople.json'||['name','age','culture','faction'].some(k=>Object.hasOwn(row,k)&&row[k]!==person[k])){unmet(item,'missing world person or conflicting authored identity');continue;}
     native(item,d=>{
@@ -107,14 +118,6 @@ export function applyIntentSetup(engine,initial,setup){
      holdingSet(d,engine,['state','npcs',row.id],initialNpcState(definition),setupWriter);
      setLocation(d,{entity:row.id,at:row.location,mode:'place',writer:setupWriter,engine});
     });
-   }else{
-    if(typeof row.name!=='string'||!engine.world.locations.some(l=>l.id===row.seat)||!engine.world.locations.some(l=>l.id===row.organization)&&!engine.world.factions.some(f=>f.id===row.organization)){unmet(item,'invalid office name, organization or seat');continue;}
-    const id=row.id.startsWith('office_')?row.id:`office_${row.id}`;
-    if(native(item,d=>{
-     const {id:alias,template,kind,...facts}=row;
-     createEntity(d,{id,kind:'office',facts:{...facts,aliases:[alias]},source:`${setupWriter}:${alias}`,writer:setupWriter});
-     setLocation(d,{entity:id,at:row.seat,mode:'place',writer:setupWriter,engine});
-    }))bindings[row.id]=id;
    }
   }
  }
@@ -132,8 +135,12 @@ export function applyIntentSetup(engine,initial,setup){
    // The native canAct/effective readers implement custody.default when the
    // regime override is absent. Preserve the registered reference as a note.
    if(terms.regime==='custody.default')delete terms.regime;
+   if(!SETUP_HOLDING_KINDS.includes(row.kind)){unmet(item,`holding kind ${row.kind} is not a declared setup premise`);continue;}
    let id;
    if(native(item,d=>{
+    // An appointment premise needs an office that the domain stage loaded and
+    // validated against its organization's office catalog (05 §5.3).
+    if(row.kind==='holds_office'){const office=d.get('holdings','entities',ref(row.subject));if(office?.kind!=='office'||office.goneAt!==undefined)throw Error('holds_office requires a loaded catalog office');}
     if(row.kind==='tamed_by'&&d.get('state','creatures',row.subject)){
      if(Object.keys(terms).length||row.grantedBy!==undefined)throw Error('unsupported tamed_by terms');
      if(d.get('state','creatures',row.subject,'owner'))throw Error('creature already has a keeper');
@@ -155,9 +162,15 @@ export function applyIntentSetup(engine,initial,setup){
  if(Object.hasOwn(setup,'holdings')){
   if(!Array.isArray(setup.holdings))unmet('holdings','expected an array');
   else{
-   const declared=new Set(['itemInstances','objects','obligations','documents','cases'].flatMap(field=>Array.isArray(setup[field])?setup[field].map(r=>r?.id):[]));
+   // Domain-owned instances (offices, institutional inputs) load in the
+   // domain stage, so holdings that cite them are deferred until after it.
+   const claimedInstances=(Array.isArray(setup.instances)?setup.instances:[]).filter(r=>setupRowLoader('instances',r)).map(r=>r?.id);
+   const declared=new Set([...['itemInstances','objects','obligations','documents','cases'].flatMap(field=>Array.isArray(setup[field])?setup[field].map(r=>r?.id):[]),...claimedInstances]);
    const early=[];
-   for(const entry of setup.holdings.entries())(declared.has(entry[1]?.holder)||declared.has(entry[1]?.subject)?deferredHoldings:early).push(entry);
+   for(const entry of setup.holdings.entries()){
+    if(setupRowLoader('holdings',entry[1]))continue;
+    (declared.has(entry[1]?.holder)||declared.has(entry[1]?.subject)?deferredHoldings:early).push(entry);
+   }
    loadHoldings(early);
   }
  }
@@ -183,10 +196,11 @@ export function applyIntentSetup(engine,initial,setup){
    const body=actor(id);
    if(typeof id!=='string'||!body||['self','player'].includes(id)){unmet(`present[${index}]`,`missing NPC/creature instance: ${id}`);continue;}
    if(isGone(engine,document,id)||isPhysicallyDead(engine,document,id)||body.hp<=0){unmet(`present[${index}]`,`actor is dead or gone: ${id}`);continue;}
+   // Review 10-22 P1: presence is a premise to verify, not a state rewrite.
+   // A travelling, sleeping or incapacitated actor stays so and is reported
+   // as setupUnmet below; only the scene placement itself is written.
+   if(body.scheduleTravel||body.cognitionTravel){unmet(`present[${index}]`,`actor is travelling: ${id}`);continue;}
    move(id,body,s.location);
-   Object.assign(body,{status:'正常',activity:'闲逛',scheduleTravel:null,cognitionTravel:null});
-   delete body.capacity;
-   for(const [key,effect] of Object.entries(s.effects??{}))if(effect.target===id&&(effect.capacity==='none'||['capacity:none','昏迷','失能','睡眠'].includes(effect.status)))delete s.effects[key];
   }
  }
  if(Object.hasOwn(setup,'inventory')){
@@ -238,8 +252,11 @@ export function applyIntentSetup(engine,initial,setup){
      if(!role){
       // Non-profession IDs must name an already loaded native right. A string
       // in abilities cannot create an office, authorization or consent event.
-      const rights=aliveHoldings(engine.primitiveDraft(document));
-      if(!rights.some(row=>row.id===ref(id)&&(['certified','holds_office'].includes(row.kind)&&row.holder==='player'||row.kind==='permit'&&row.subject==='player')))unmet(item,'unknown profession or missing active player license holding');
+      // Offices load in the domain stage, so the check runs after it.
+      afterDomain.push(()=>{
+       const rights=aliveHoldings(engine.primitiveDraft(document));
+       if(!rights.some(row=>row.id===ref(id)&&(['certified','holds_office'].includes(row.kind)&&row.holder==='player'||row.kind==='permit'&&row.subject==='player')))unmet(item,'unknown profession or missing active player license holding');
+      });
       continue;
      }
      if(!['combat','life'].includes(role.kind)){unmet(item,'expected a combat/life profession certification');continue;}
@@ -278,16 +295,16 @@ export function applyIntentSetup(engine,initial,setup){
    // into incapacity, clear existing effects or grant a release (A.3/A.15.24).
    for(const [key,value] of Object.entries(status)){
     const item=`status.${id}.${key}`;
-    if(key==='onDuty'){
+    if(key==='onDuty'){afterDomain.push(()=>{
      const d=engine.primitiveDraft(document),held=aliveHoldings(d,{kind:'holds_office',holder:ref(id)});
      // A person can hold several genuine offices. At a declared counter,
      // on-duty refers to that seat; two offices at the same seat remain
      // ambiguous and a boolean still cannot create an appointment.
      const offices=held.length===1?held:held.filter(h=>d.get('holdings','entities',h.subject)?.facts?.seat===s.location);
-     if(typeof value!=='boolean'||offices.length!==1||!d.get('holdings','entities',offices[0].subject)){unmet(item,'onDuty requires exactly one loaded native office and a boolean');continue;}
+     if(typeof value!=='boolean'||offices.length!==1||!d.get('holdings','entities',offices[0].subject)){unmet(item,'onDuty requires exactly one loaded native office and a boolean');return;}
      // Duty is a fact of the existing office, not a new license or authority.
      native(item,d=>updateEntity(d,{id:offices[0].subject,facts:{onDuty:value},writer:setupWriter}));
-    }else if(object(value)&&Object.keys(value).every(k=>['magnitude','remainingMinutes'].includes(k))){
+    });}else if(object(value)&&Object.keys(value).every(k=>['magnitude','remainingMinutes'].includes(k))){
      native(item,d=>{
       const result=applyMagicStatus(d,{target:ref(id),status:key,power:value.magnitude,duration:value.remainingMinutes,source:setupWriter},`${setupWriter}:status:${id}:${key}`);
       if(result.resisted)throw Error('status resisted by the existing target state');
@@ -311,11 +328,12 @@ export function applyIntentSetup(engine,initial,setup){
  }
  // Domain premises (tools/a3-setup/) run after built-in scene fields and before
  // presence and ledger audits.
- const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),native,get document(){return document;},set document(value){document=value;s=value.state;}};
+ const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
  runSetupLoaders(ctx,setup);
  loadHoldings(deferredHoldings);
+ for(const check of afterDomain)check();
  // Office authority may cite history/case aliases loaded by domain modules.
- for(const row of Array.isArray(setup.instances)?setup.instances:[])if(row?.kind==='office'&&bindings[row.id]&&row.authority){
+ for(const row of Array.isArray(setup.instances)?setup.instances:[])if(row?.template==='office'&&bindings[row.id]&&row.authority){
   const authority=resolveRefs(row.authority);
   if(JSON.stringify(authority)!==JSON.stringify(row.authority))native(`instances.${row.id}.authority`,d=>updateEntity(d,{id:ref(row.id),facts:{authority},writer:setupWriter}));
  }
@@ -333,7 +351,7 @@ export function applyIntentSetup(engine,initial,setup){
   prepared=applyPatches(document,bookHoldingsUpgrade({...initial,holdings:document.holdings},document,engine.world));
   prepared.holdings??=openHoldings(engine,prepared);
  }catch(error){unmet('abilities.licenses',error.message);}
- return {document:prepared,setupUnmet,notes,bindings};
+ return {document:prepared,setupUnmet,notes,bindings,spatialPending};
 }
 
 // routing.signature describes requested effects. Only committed applied effects
@@ -365,51 +383,226 @@ function legacyQualifierMatches(qualifier,effect){
  const [head,...tail]=qualifier.split(':');
  return tail.length>0&&head===effect.verb&&tail.join(':')===effect.payload?.kind;
 }
-// V2 qualifiers are descriptions, not literal effect values. Extract registered
-// world IDs (longest first, including IDs in teacher_/book_ descriptions) and
-// self/player references; require ALL of them in ONE adopted effect of this op.
-// Direction is an additional from/to check, never an unordered reference check.
-// Prose, authority and results are not evidence. Other descriptive words are
-// ignored for scoring; expected.signature remains verbatim in every report.
-const referenceCatalogs=new WeakMap();
+// ---- Structured qualifier vocabulary (review 10-22 P0; 06 §6.7) ----
+// A v2 signature op(q0,q1,...) is parsed into typed tokens. q0 names the
+// effect's subject (`world`, `<type>:<ref>`, `resource:<ref>`, or the party
+// flow of obligation.create); later qualifiers are flows (`A->B[:qty]`) or
+// descriptors from the vocabulary of that primitive. Every token has a
+// structural predicate over ONE adopted effect and the native records:
+// quantity, direction, sign and description words are all checked. Prose,
+// authority and results are never evidence. A token the vocabulary cannot
+// recognise never matches; signatureDiagnostics names it instead of
+// silently ignoring it. expected.signature remains verbatim in every report.
+const TYPE_LABELS=new Set(['person','creature','thing','collective','org','place','holding','obligation','resource']);
+const HOLDING_OPS=new Set(['holding.open','holding.close','holding.transfer','holding.rescale']);
+const OBLIGATION_OPS=new Set(['obligation.create','obligation.settle','obligation.cancel']);
 const resourceIds=JSON.parse(await fs.readFile(path.join(root,'world/ontology/resources.json'),'utf8')).entries.map(row=>row.id);
-function referenceCatalog(world){
- if(referenceCatalogs.has(world))return referenceCatalogs.get(world);
- const ids=new Set(resourceIds);
- for(const key of ['npcs','residents','items','skills','spells','recipes','locations','monsters','bosses','factions','households']){
-  for(const row of world[key]??[])if(row.id)ids.add(row.id);
+const catalogs=new WeakMap();
+function catalog(world){
+ if(catalogs.has(world))return catalogs.get(world);
+ const ids=new Set(resourceIds),names=new Map(),people=new Map();
+ for(const key of ['npcs','residents','factionPeople','items','skills','spells','recipes','locations','monsters','bosses','factions','households','professions']){
+  for(const row of world[key]??[]){
+   if(!row?.id)continue;
+   ids.add(row.id);
+   if(['npcs','residents','factionPeople'].includes(key)&&!people.has(row.id))people.set(row.id,row);
+   if(key==='items'&&typeof row.name==='string')names.set(row.name,[...names.get(row.name)??[],row.id]);
+  }
  }
- const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
- const pattern=new RegExp(`(?<![A-Za-z0-9])(?:${[...ids].sort((a,b)=>b.length-a.length).map(escape).join('|')}|self|player|coin)(?![A-Za-z0-9])`,'g');
- referenceCatalogs.set(world,pattern);return pattern;
+ const banks=new Set((world.rules?.economy?.credit?.banks??[]).map(bank=>bank.id));
+ for(const id of banks)ids.add(id);
+ const features=new Map();
+ for(const place of world.locations??[])for(const feature of place.features??[])features.set(feature.id,{...feature,location:feature.location??place.id});
+ const value={ids,names,people,banks,features,
+  parents:new Map((world.locations??[]).map(l=>[l.id,l.parent??null])),locations:new Set((world.locations??[]).map(l=>l.id)),
+  monsters:new Set([...(world.monsters??[]),...(world.bosses??[])].map(m=>m.id)),items:new Set((world.items??[]).map(i=>i.id)),
+  skills:new Map((world.skills??[]).map(s=>[s.id,s])),spells:new Map((world.spells??[]).map(s=>[s.id,s])),recipes:new Set((world.recipes??[]).map(r=>r.id)),
+  professions:new Map((world.professions??[]).map(p=>[p.id,p])),factions:new Set((world.factions??[]).map(f=>f.id)),
+  households:new Set((world.households??[]).map(h=>h.id)),routes:new Map((world.routes??[]).map(r=>[r.id,r]))};
+ catalogs.set(world,value);return value;
 }
-const endpointToken=value=>value.trim().replace(/^(person|creature|thing|collective|org|holding|obligation|resource):/,'').replace(/:(?:\d.*|requested_.*|bounded_output)$/,'');
-function recipeEndpoint(value,world){
- const token=endpointToken(value);
- return (world.recipes??[]).find(recipe=>token===recipe.id||token===`${recipe.id}的产出来源`||token===`${recipe.name}的产出来源`)?.id;
+function signatureScope(receipt,world,document,context={}){
+ const before=context.before??null;
+ return {actor:receipt.actor??'player',receipt,world,document:document??null,before,bindings:context.bindings??{},engine:context.engine??null,
+  bounds:context.bounds??null,roles:context.roles??{},docs:[document,before].filter(doc=>doc?.state),catalog:catalog(world)};
 }
+const stateOf=doc=>doc?.state??{};
+const prior=S=>S.before??S.document;
+// Registered IDs, setup aliases, self, catalog item names and the catalog's own
+// item_/skill_/spell_/recipe_ naming (only when exactly one ID matches).
+function resolveToken(token,S,{short=true}={}){
+ if(typeof token!=='string'||!token)return null;
+ if(token==='self'||token==='player')return S.actor;
+ if(token==='coin')return 'coin_river';
+ if(Object.hasOwn(S.roles,token))return S.roles[token];
+ if(Object.hasOwn(S.bindings,token))return S.bindings[token];
+ if(S.catalog.ids.has(token))return token;
+ const named=S.catalog.names.get(token);
+ if(named?.length===1)return named[0];
+ if(!short)return null;
+ const forms=['item_','skill_','spell_','recipe_'].map(prefix=>prefix+token).filter(id=>S.catalog.ids.has(id));
+ return forms.length===1?forms[0]:null;
+}
+const resolveCompound=(token,S)=>token.split(':').map(part=>part==='self'?S.actor:Object.hasOwn(S.bindings,part)?S.bindings[part]:part).join(':');
+function sameEntity(actual,expected,S){
+ if(actual===undefined||actual===null||expected===null||expected===undefined)return false;
+ if(actual===expected)return true;
+ return S.docs.some(doc=>stateOf(doc).itemInstances?.[actual]?.item===expected||doc.holdings?.entities?.[actual]?.facts?.item===expected);
+}
+function entityLocation(id,doc,S,depth=0){
+ const s=stateOf(doc);
+ if(!id||depth>4)return null;
+ if(id===S.actor&&id==='player')return s.location??null;
+ const body=s.npcs?.[id]??s.creatures?.[id];
+ if(body)return body.location??null;
+ const placed=doc?.holdings?.locations?.[id];
+ if(placed)return placed.mode==='carried'?entityLocation(placed.at,doc,S,depth+1):placed.at??null;
+ const unit=s.itemInstances?.[id];
+ if(unit)return unit.carriedBy?entityLocation(unit.carriedBy,doc,S,depth+1):unit.location??null;
+ if(S.actor==='player'&&s.inventory?.[id]?.quantity>0)return s.location??null;
+ if(s.effects?.[id]?.location)return s.effects[id].location;
+ return S.catalog.features.get(id)?.location??null;
+}
+const CASE_PARTIES=['victim','offender','accused','defendant','claimant','plaintiff','appellant'];
+function ownedBy(id,S){
+ const doc=prior(S),s=stateOf(doc),actor=S.actor;
+ if(!id||!doc)return false;
+ if(Object.values(doc.holdings?.rows??{}).some(h=>h.kind==='owns'&&h.holder===actor&&h.subject===id&&h.until===undefined))return true;
+ if(actor==='player'&&s.inventory?.[id]?.quantity>0)return true;
+ const record=s.records?.[id];
+ if(record?.category==='legal_case'&&(Array.isArray(record.parties)&&record.parties.includes(actor)||CASE_PARTIES.some(key=>record[key]===actor)))return true;
+ return s.itemInstances?.[id]?.owner===actor||s.creatures?.[id]?.owner===actor||s.effects?.[id]?.owner===actor;
+}
+const aliveRows=(S,filter)=>S.docs.flatMap(doc=>Object.values(doc.holdings?.rows??{})).filter(h=>h.until===undefined&&Object.entries(filter).every(([k,v])=>h[k]===v));
+function officeSeat(id,S){
+ return S.docs.some(doc=>Object.entries(doc.holdings?.entities??{}).some(([key,entity])=>entity.kind==='office'&&entity.goneAt===undefined&&entity.facts?.seat===id&&aliveRows(S,{kind:'holds_office',subject:key}).length>0));
+}
+function locationChain(id,S){const chain=[];for(let at=id;at&&!chain.includes(at)&&chain.length<16;at=S.catalog.parents.get(at))chain.push(at);return chain;}
+// Reference words for people, creatures, things and places. Modifiers
+// (noun:false) only narrow; a reference also needs a noun or an embedded ID.
+const ENTITY_WORDS={
+ own:{noun:false,test:(id,S)=>ownedBy(id,S)},
+ present:{noun:false,test:(id,S)=>{const at=entityLocation(S.actor,prior(S),S);return Boolean(at)&&entityLocation(id,prior(S),S)===at;}},
+ remote:{noun:false,test:(id,S)=>{const at=entityLocation(S.actor,prior(S),S),there=entityLocation(id,prior(S),S);return Boolean(at&&there)&&there!==at;}},
+ local:{noun:false,test:(id,S)=>{
+  const at=entityLocation(S.actor,prior(S),S),place=S.catalog.locations.has(id)?id:entityLocation(id,prior(S),S);
+  return Boolean(at&&place)&&(locationChain(at,S).includes(place)||locationChain(place,S).includes(at));
+ }},
+ pet:{noun:true,test:(id,S)=>Boolean(stateOf(prior(S)).pets?.[id])&&stateOf(prior(S)).creatures?.[id]?.owner===S.actor},
+ summon:{noun:true,test:(id,S)=>stateOf(prior(S)).effects?.[id]?.kind==='summon'},
+ enemy:{noun:true,test:(id,S)=>{const exchange=S.receipt.legacy?.exchange;return Boolean(exchange)&&exchange.actor===S.actor&&exchange.target===id;}},
+ officer:{noun:true,test:(id,S)=>aliveRows(S,{kind:'holds_office',holder:id}).length>0},
+ merchant:{noun:true,test:(id,S)=>(S.catalog.people.get(id)?.serviceCatalog??[]).some(row=>row.kind==='trade')},
+ bank:{noun:true,test:(id,S)=>S.catalog.banks.has(id)},
+ authority:{noun:true,test:(id,S)=>officeSeat(id,S)},
+ case:{noun:true,test:(id,S)=>S.docs.some(doc=>stateOf(doc).records?.[id]?.category==='legal_case')},
+};
+// Split a descriptive reference into embedded IDs (longest first) and words.
+// A single token that is a vocabulary word is a word, never an ID short form.
+function parseDescribed(ref,S,words){
+ const parts=ref.split('_'),embedded=[],plain=[];
+ for(let i=0;i<parts.length;){
+  let found=null,end=i+1;
+  for(let j=parts.length;j>i;j--){
+   const token=parts.slice(i,j).join('_');
+   if(j-i===1&&Object.hasOwn(words,token))break;
+   const id=resolveToken(token,S,{short:j-i===1});
+   if(id){found=id;end=j;break;}
+  }
+  if(found){embedded.push(found);i=end;}else{plain.push(parts[i]);i++;}
+ }
+ return {embedded,plain};
+}
+function describedMatches(ref,S,words,{embedded:embeddedTest,word:dynamicWord=()=>false}){
+ const {embedded,plain}=parseDescribed(ref,S,words);
+ const known=w=>Object.hasOwn(words,w)||dynamicWord(w);
+ if(!plain.every(known))return false;
+ if(!embedded.length&&!plain.some(w=>dynamicWord(w)||words[w]?.noun))return false;
+ return embedded.every(embeddedTest)&&plain.every(w=>dynamicWord(w)||words[w].test());
+}
+function entityRef(ref,id,S){
+ if(id===undefined||id===null||typeof ref!=='string')return false;
+ const direct=resolveToken(ref,S);
+ if(direct)return sameEntity(id,direct,S);
+ const words=Object.fromEntries(Object.entries(ENTITY_WORDS).map(([w,row])=>[w,{noun:row.noun,test:()=>row.test(id,S)}]));
+ return describedMatches(ref,S,words,{embedded:e=>sameEntity(id,e,S)});
+}
+const KIND_LABELS={person:['person'],npc:['person'],creature:['creature'],item:['thing'],feature:['thing'],object:['thing'],place:['place'],location:['place'],office:['org','collective']};
+function typeLabels(id,effect,S){
+ const labels=new Set(),states=S.docs.map(stateOf),c=S.catalog;
+ if(id===S.actor||id==='player'||c.people.has(id)||states.some(s=>s.npcs?.[id]))labels.add('person');
+ if(c.monsters.has(id)||states.some(s=>s.creatures?.[id]||s.effects?.[id]?.kind==='summon'))labels.add('creature');
+ if(c.items.has(id)||c.features.has(id)||states.some(s=>s.itemInstances?.[id]||s.inventory?.[id])||S.docs.some(doc=>['item','object','mark'].includes(doc.holdings?.entities?.[id]?.kind)))labels.add('thing');
+ if(c.locations.has(id))labels.add('place');
+ if(c.factions.has(id)||c.households.has(id)||c.banks.has(id)||officeSeat(id,S)||states.some(s=>s.records?.[id]?.category==='legal_case'||s.projects?.[id])||
+  S.docs.some(doc=>['office','organization','collective'].includes(doc.holdings?.entities?.[id]?.kind))){labels.add('org');labels.add('collective');}
+ if((effect.target??effect.entity)===id)for(const label of KIND_LABELS[effect.signatureKind]??[])labels.add(label);
+ return labels;
+}
+function legalCaseOf(effect,S){
+ const id=S.receipt.legacy?.request,row=stateOf(S.document).records?.[id];
+ return row?.category==='legal_request'&&row.sourceEvent===S.receipt.eventId&&row.verb===effect.verb&&row.target===effect.target?row.case??null:null;
+}
+function referents(effect,ref,S){
+ switch(effect.op){
+  case 'emit':return ref==='self'?[effect.actor]:[effect.target,legalCaseOf(effect,S)];
+  case 'holding.open':return [effect.holder];
+  case 'schedule':return [effect.args?.target??effect.target];
+  case 'vital':case 'status':case 'learn':return [effect.target??effect.entity];
+  default:return [effect.entity??effect.target];
+ }
+}
+function holdingRef(ref,effect,S){
+ const direct=resolveToken(ref,S,{short:false});
+ if(direct)return effect.holding===direct;
+ const variant=effect.variant??effect.terms?.mode??effect.result?.before?.variant??effect.result?.before?.terms?.mode;
+ const words={own:{noun:false,test:()=>effect.holder===S.actor||ownedBy(effect.subject,S)},self:{noun:false,test:()=>effect.holder===S.actor}};
+ return describedMatches(ref,S,words,{embedded:e=>sameEntity(effect.subject,e,S)||effect.holder===e,word:w=>w===effect.holdingKind||w===variant});
+}
+function obligationRef(ref,effect,S){
+ const direct=resolveToken(ref,S,{short:false});
+ if(direct)return effect.id===direct;
+ const debtor=effect.debtor??effect.from,creditor=effect.creditor??effect.to,record=effect.result?.before??stateOf(prior(S)).obligations?.[effect.id];
+ const summon=id=>stateOf(prior(S)).effects?.[id]?.kind==='summon';
+ const words={own:{noun:false,test:()=>debtor===S.actor||creditor===S.actor},self:{noun:false,test:()=>debtor===S.actor},
+  debt:{noun:true,test:()=>record?.category==='debt'},summon:{noun:false,test:()=>summon(creditor)||summon(effect.subject)}};
+ return describedMatches(ref,S,words,{embedded:e=>[debtor,creditor,effect.subject].includes(e),word:w=>w===effect.obligationKind});
+}
+function resourceRef(ref,effect,S){
+ const from=typeof effect.from==='string'?effect.from.split('|'):[];
+ // The moved resource is the effect's resource, else the debited account's.
+ const resource=effect.resource??from[1]??null,direct=resolveToken(ref,S);
+ if(direct)return resource===direct;
+ const words={own:{noun:false,test:()=>from[0]===S.actor&&((prior(S)?.ledger?.accounts?.[effect.from]??0)>0||stateOf(prior(S)).inventory?.[resource]?.quantity>0)}};
+ const {embedded}=parseDescribed(ref,S,words);
+ return embedded.length>0&&describedMatches(ref,S,words,{embedded:e=>resource===e});
+}
+const recipeEndpoint=(token,world)=>(world.recipes??[]).find(recipe=>token===recipe.id||token===`${recipe.id}的产出来源`||token===`${recipe.name}的产出来源`)?.id;
 // 01 §1.6 / §1.12: one table, exact owners/purposes and native recipe metadata.
 const endpointRules=[
  {accepts:token=>token.startsWith('sink:'),matches:(token,account)=>account[0]?.startsWith('sink:')&&(account[2]===token.slice(5)||token==='sink:consume'&&account[0]===token)},
- {accepts:(token,world)=>Boolean(recipeEndpoint(token,world)),matches:(token,account,effect,receipt,world)=>account[0]==='src:craft'&&account[2]==='craft'&&recipeEndpoint(token,world)===(effect.recipe??receipt.legacy?.recipe)},
- {accepts:token=>['bank','local_bank','pawnshop','buyer','seller','court','authorized_collector','creditor','recipient'].includes(token),matches:(token,account,effect,receipt)=>{
-  const endpoint=roleEndpoint(token,receipt);
+ {accepts:(token,S)=>Boolean(recipeEndpoint(token,S.world)),matches:(token,account,effect,S)=>account[0]==='src:craft'&&account[2]==='craft'&&recipeEndpoint(token,S.world)===(effect.recipe??S.receipt.legacy?.recipe)},
+ {accepts:token=>['bank','local_bank','pawnshop','buyer','seller','court','authorized_collector','creditor','recipient'].includes(token),matches:(token,account,effect,S)=>{
+  const endpoint=roleEndpoint(token,S.receipt);
   if(!endpoint||account[0]!==endpoint.owner)return false;
   if(effect.op!=='transfer')return true;
   if(endpoint.account)return account.join('|')===endpoint.account;
   return endpoint.purposes.includes(account[2])&&(!['buyer','seller'].includes(token)||account[2]===(account[1]==='coin_river'?'purse':'inventory'));
  }},
- {accepts:token=>['existing_channel','adjacent_field','summon'].includes(token),matches:(token,account,effect,receipt,world)=>account[0]===nativeEffectEndpoint(token,effect,receipt,world)},
- {accepts:token=>['authorized_channel','own_bucket'].includes(token),matches:(token,account,effect,receipt,world)=>{
+ {accepts:token=>['existing_channel','adjacent_field','summon'].includes(token),matches:(token,account,effect,S)=>account[0]===nativeEffectEndpoint(token,effect,S.receipt,S.world)},
+ {accepts:token=>['authorized_channel','own_bucket'].includes(token),matches:(token,account,effect,S)=>{
   const {source,destination}=effect.result??{};
   if(effect.op!=='transfer'||effect.resource!=='water'||effect.unit!=='litre'||!(effect.qty>0)||
    source?.path?.[2]!==`physical_feature:${effect.from}`||destination?.path?.[2]!==`physical_feature:${effect.to}`||
    source.before?.waterMl-source.after?.waterMl!==effect.qty*1000||destination.after?.waterMl-destination.before?.waterMl!==effect.qty*1000)return false;
-  const features=(world.locations??[]).flatMap(place=>place.features??[]);
+  const features=(S.world.locations??[]).flatMap(place=>place.features??[]);
   if(token==='authorized_channel')return account[0]===effect.from&&features.some(row=>row.kind==='channel'&&row.links?.source===effect.from);
-  return account[0]===effect.to&&effect.destinationOwner===(receipt.actor??'player')&&features.some(row=>row.id===effect.to&&row.kind==='container');
+  return account[0]===effect.to&&effect.destinationOwner===S.actor&&features.some(row=>row.id===effect.to&&row.kind==='container');
  }},
- {accepts:()=>true,matches:(token,account,effect,receipt,world,normalize)=>account[0]===normalize(token)},
+ {accepts:()=>true,matches:(token,account,effect,S)=>{
+  const id=resolveToken(token,S)??(token.includes(':')?resolveCompound(token,S):null);
+  return id!==null?account[0]===id:entityRef(token,account[0],S);
+ }},
 ];
 function roleEndpoint(role,receipt){
  const legacy=receipt.legacy??{},route=receipt.routed??receipt.source?.id;
@@ -448,43 +641,256 @@ function nativeEffectEndpoint(token,effect,receipt,world){
  if(!channel)return null;
  return token==='existing_channel'?effect.from:features.find(f=>f.id===effect.to&&f.kind==='soil'&&f.location===channel.location)?.id??null;
 }
-function qualifierMatches(qualifier,effect,receipt,world){
- const actor=receipt.actor??'player';
- const normalize=value=>['self','player'].includes(value)?actor:value==='coin'?'coin_river':value;
- const actualId=value=>value==='self'?actor:value==='coin'?'coin_river':value;
- const recipeSource=qualifier.includes('->')?recipeEndpoint(qualifier.split('->')[0],world):null;
- // Bare resource words inside descriptive names (present_water_bucket) are
- // not IDs. Registered compound IDs in teacher_/book_ descriptions remain IDs.
- const references=[...qualifier.matchAll(referenceCatalog(world))].filter(m=>!resourceIds.includes(m[0])||m[0].includes('_')||
-  !/[A-Za-z0-9_]/.test(qualifier[m.index-1]??'')&&!/[A-Za-z0-9_]/.test(qualifier[m.index+m[0].length]??'')).map(m=>normalize(m[0])).filter(id=>id!==recipeSource);
- const atoms=[];
- function collect(value){
-  if(typeof value==='string')atoms.push(...value.split('|').map(actualId));
-  else if(Array.isArray(value))value.forEach(collect);
-  else if(value&&typeof value==='object')for(const [key,child] of Object.entries(value)){
-   if(!['text','intent','description','narration','reason','actedAs','result','signatureKind'].includes(key))collect(child);
-  }
+// `A->B` names the debited and credited endpoints in that order; a trailing
+// `:N` on the destination is the exact quantity. Requested/bounded markers are
+// verified only by the bounded-outcome audit; any other suffix is unknown.
+function splitEndpoint(raw){
+ const token=raw.trim().replace(/^(person|creature|thing|collective|org|holding|obligation|resource|place):/,'');
+ const parts=token.split(':'),head=['sink','src','pledge'].includes(parts[0])&&parts.length>1?2:1;
+ return {endpoint:parts.slice(0,head).join(':'),rest:parts.length>head?parts.slice(head).join(':'):null};
+}
+const QUANTITY=/^\d+(?:\.\d+)?$/,BOUNDED_MARKER=/^(?:requested_[a-z0-9_]+|bounded_output)$/;
+function flowMatches(q,effect,S){
+ const parts=q.split('->');
+ if(parts.length!==2)return false;
+ const from=splitEndpoint(parts[0]),to=splitEndpoint(parts[1]);
+ if(from.rest!==null)return false;
+ if(effect.op==='move'){
+  if(to.rest!==null)return false;
+  return entityRef(from.endpoint,effect.from,S)&&entityRef(to.endpoint,effect.to,S);
  }
- collect(effect);
- if(!references.every(id=>atoms.includes(id)))return false;
- if(qualifier.startsWith('new_holder:')){
-  const token=endpointToken(qualifier.slice('new_holder:'.length)),rule=endpointRules.find(rule=>rule.accepts(token,world));
-  return rule.matches(token,[actualId(effect.newHolder??effect.to)],effect,receipt,world,normalize);
+ const account=value=>typeof value==='string'?value.split('|'):[];
+ const endpoint=(token,value)=>endpointRules.find(rule=>rule.accepts(token,S)).matches(token,account(value),effect,S);
+ if(!endpoint(from.endpoint,effect.from)||!endpoint(to.endpoint,effect.to))return false;
+ if(to.rest===null)return true;
+ if(QUANTITY.test(to.rest))return effect.qty===Number(to.rest);
+ if(BOUNDED_MARKER.test(to.rest))return Boolean(S.bounds?.(effect));
+ return false;
+}
+function partyFlow(label,ref,effect,S){
+ if(!ref.includes('->')||!flowMatches(ref,effect,S))return false;
+ // Obligation parties are legal persons: a person label admits organizations.
+ return [effect.from,effect.to].every(id=>{const labels=typeLabels(id,effect,S);return labels.has(label)||label==='person'&&labels.has('org');});
+}
+const CREATE_LABELS={mark:['thing'],item:['thing'],object:['thing'],project:['thing','collective','org'],case:['collective','org'],creature:['creature'],organization:['collective','org'],office:['collective','org']};
+function createdRecord(effect,S){
+ const path=effect.result?.path,record=path?.[0]==='state'&&path[1]==='records'&&path.length===3?path[2]:null;
+ if(record)return stateOf(S.document).records?.[record]??null;
+ const id=effect.entity??effect.result?.entity;
+ return id?S.docs.map(doc=>stateOf(doc).created?.[id]??stateOf(doc).effects?.[id]??stateOf(doc).projects?.[id]??doc.holdings?.entities?.[id]).find(Boolean)??null:null;
+}
+// Created-entity words beyond tags: a civil claim is a native case that
+// carries a civil matter (law.mjs civilMatter), not a criminal offense.
+const CREATE_WORDS={civil_claim:record=>record?.category==='legal_case'&&typeof record.civilMatter==='string'};
+function createSubject(label,noun,effect,S){
+ if(!(CREATE_LABELS[effect.kind]??[]).includes(label))return false;
+ if(noun===effect.kind)return true;
+ const record=createdRecord(effect,S);
+ return Boolean(record)&&[record.kind,record.template,record.summonType,record.monster,record.species].includes(noun);
+}
+function subjectMatches(q,effect,S){
+ if(q==='world')return effect.op==='time'&&effect.target===undefined&&(effect.entity===undefined||effect.entity==='world');
+ const found=/^([a-z]+):(.+)$/.exec(q??'');
+ if(!found||!TYPE_LABELS.has(found[1]))return false;
+ const [,label,ref]=found;
+ if(effect.op==='transfer')return label==='resource'&&resourceRef(ref,effect,S);
+ if(label==='resource')return false;
+ if(effect.op==='obligation.create')return partyFlow(label,ref,effect,S);
+ if(OBLIGATION_OPS.has(effect.op))return label==='obligation'&&obligationRef(ref,effect,S);
+ if(HOLDING_OPS.has(effect.op)&&effect.op!=='holding.open')return label==='holding'&&holdingRef(ref,effect,S);
+ if(label==='holding'||label==='obligation')return false;
+ if(effect.op==='create')return createSubject(label,ref,effect,S);
+ return referents(effect,ref,S).some(id=>id!==undefined&&id!==null&&typeLabels(id,effect,S).has(label)&&entityRef(ref,id,S));
+}
+const camel=word=>word.replace(/_([a-z])/g,(_,c)=>c.toUpperCase());
+const literal=raw=>raw==='true'?true:raw==='false'?false:/^-?\d+(?:\.\d+)?$/.test(raw)?Number(raw):raw;
+const split=q=>{const [head,...rest]=q.split(':');return [head,rest.length?rest.join(':'):null];};
+// Field vocabulary: `condition` is the native durability field; other field
+// words are the camelCase native field name.
+const FIELD_WORDS={condition:'durability'};
+const VERB_WORDS={greeting:'greet'};
+// Identifier-like strings outside prose fields are structured evidence.
+const PROSE_KEYS=new Set(['text','content','intent','description','narration','reason','purpose','remedy','incident','summary','note','notes','why','name','title','label']);
+function structuredStrings(value,out=[]){
+ if(typeof value==='string'){if(/^[A-Za-z0-9_:|.-]+$/.test(value))out.push(value);}
+ else if(Array.isArray(value))for(const entry of value)structuredStrings(entry,out);
+ else if(value&&typeof value==='object')for(const [key,entry] of Object.entries(value))if(!PROSE_KEYS.has(key))structuredStrings(entry,out);
+ return out;
+}
+const evidenceOf=payload=>[...(Array.isArray(payload.evidence)?payload.evidence:[]),...(Array.isArray(payload.terms?.evidence)?payload.terms.evidence:[])];
+const TOPIC_SUFFIXES={
+ quote:payload=>payload.quoteOnly===true||payload.terms?.quoteOnly===true,
+ with_evidence:payload=>evidenceOf(payload).length>0,
+ with_document:(payload,S)=>evidenceOf(payload).some(id=>S.docs.some(doc=>stateOf(doc).itemInstances?.[id]?.document||doc.holdings?.entities?.[id]?.facts?.document)),
+};
+function topicMatches(topic,effect,S){
+ const payload=effect.payload??{},fields=[payload.kind,payload.subject,payload.terms?.subject,payload.terms?.kind].filter(x=>typeof x==='string');
+ if(fields.includes(topic))return true;
+ const refs=new Set(structuredStrings(payload));
+ const id=resolveToken(topic,S,{short:false});
+ if(id&&refs.has(id))return true;
+ return fields.some(field=>{
+  if(!topic.startsWith(`${field}_`))return false;
+  const rest=topic.slice(field.length+1);
+  if(Object.hasOwn(TOPIC_SUFFIXES,rest))return TOPIC_SUFFIXES[rest](payload,S);
+  const ref=resolveToken(rest,S,{short:false});
+  return Boolean(ref)&&refs.has(ref);
+ });
+}
+function emitDescriptor(q,effect,S){
+ const payload=effect.payload??{},[head,arg]=split(q);
+ const verb=word=>{const value=VERB_WORDS[word]??word;return effect.verb===value||payload.kind===value;};
+ if(arg===null)return verb(head);
+ if(typeof literal(arg)!=='string')return [effect,payload,payload.terms].some(row=>row&&Object.hasOwn(row,head)&&row[head]===literal(arg));
+ return verb(head)&&topicMatches(arg,effect,S)||head==='request'&&effect.verb===arg;
+}
+function vitalDescriptor(q,effect,S){
+ const [head,arg]=split(q);
+ if(head==='body')return arg!==null&&effect.type===`body:${arg}`;
+ if(head==='harm')return effect.type==='harm'&&effect.delta<0&&(arg===null||harmMeans(arg,effect,S));
+ if(arg!==null)return false;
+ if(head==='heal')return effect.delta>0&&(effect.type==='heal'||effect.need==='hp');
+ if(head==='hp')return effect.need==='hp';
+ if(head==='magic_cost')return effect.need==='mp'&&effect.delta<0&&(effect.target??effect.entity)===S.actor;
+ return false;
+}
+function harmMeans(means,effect,S){
+ const id=resolveToken(means,S),exchange=S.receipt.legacy?.exchange,spell=S.catalog.spells.get(effect.spell??S.receipt.legacy?.spell);
+ if(id&&[effect.weapon,effect.spell,exchange?.target===effect.target?exchange.weapon:undefined].includes(id))return true;
+ return [effect.element,spell?.element,spell?.effectSpec?.element].includes(means);
+}
+function statusDescriptor(q,effect){
+ const [status,arg]=split(q);
+ if(effect.status!==status)return false;
+ if(arg===null)return effect.removed!==true&&!(effect.magnitude<0);
+ if(arg==='reduce')return effect.removed===true||effect.magnitude<0||Number.isFinite(effect.result?.before?.power)&&(effect.result?.after?.power??0)<effect.result.before.power;
+ return false;
+}
+const LEARN_SOURCES=new Set(['practice','teacher','book','observation']);
+function learnSource(part,effect,S){
+ if(BOUNDED_MARKER.test(part))return Boolean(S.bounds?.(effect));
+ const [mode,...tail]=part.split('_'),ref=tail.join('_');
+ if(!LEARN_SOURCES.has(mode))return null;
+ const actual=effect.mode??(effect.learningSource==='practice'?'practice':null);
+ if(actual!==mode)return false;
+ if(!ref)return true;
+ const id=resolveToken(ref,S);
+ return Boolean(id)&&sameEntity(effect.learningSource,id,S);
+}
+function learnSubject(part,effect,S){
+ const subject=effect.subject,id=resolveToken(part,S);
+ if(id)return subject===id;
+ const s=stateOf(prior(S)),skill=S.catalog.skills.get(subject),known=Boolean(s.skills?.[subject]||s.recipes?.[subject]||s.spells?.[subject]);
+ const words={known:{noun:false,test:()=>known},new:{noun:false,test:()=>!known},
+  skill:{noun:true,test:()=>Boolean(skill)},recipe:{noun:true,test:()=>S.catalog.recipes.has(subject)},spell:{noun:true,test:()=>S.catalog.spells.has(subject)},
+  // A cultivation technique is a skill taught by a combat profession.
+  cultivation:{noun:false,test:()=>S.catalog.professions.get(skill?.profession)?.kind==='combat'}};
+ return describedMatches(part,S,words,{embedded:e=>subject===e});
+}
+function learnDescriptor(q,effect,S){
+ return q.split(':').every(part=>learnSource(part,effect,S)??learnSubject(part,effect,S));
+}
+function atDawn(effect,S){
+ const arrival=effect.result?.after,doc=prior(S);
+ if(!S.engine||!doc||!Number.isSafeInteger(arrival)||!effect.until)return false;
+ const sunrise=localWeather(S.engine,doc,stateOf(doc).location,arrival)?.sunriseMinute;
+ return Number.isSafeInteger(sunrise)&&arrival%1440===sunrise;
+}
+function timeDescriptor(q,effect,S){
+ const [head,arg]=split(q);
+ if(head==='until')return arg==='dawn'&&atDawn(effect,S);
+ if(head==='minutes')return QUANTITY.test(arg??'')&&effect.minutes===Number(arg);
+ return arg===null&&effect.mode===head;
+}
+function moveDescriptor(q,effect,S){
+ if(q.includes('->'))return flowMatches(q,effect,S);
+ const [head,arg]=split(q);
+ if(head==='place'&&arg!==null)return entityRef(arg,effect.to,S);
+ if(arg!==null)return false;
+ const id=resolveToken(q,S);
+ if(id)return effect.to===id;
+ const route=Array.isArray(effect.route)&&effect.route.length>0;
+ const words={reachable:{noun:false,test:()=>route&&effect.route.every(r=>S.catalog.routes.get(r)?.modes?.includes('walk'))},
+  escape:{noun:false,test:()=>['disengage','flee'].includes(effect.mode)},
+  route:{noun:true,test:()=>route&&S.catalog.locations.has(effect.to)},
+  push:{noun:true,test:()=>effect.mode==='push'}};
+ const {embedded}=parseDescribed(q,S,words);
+ return !embedded.length&&describedMatches(q,S,words,{embedded:()=>false});
+}
+function factDescriptor(q,effect){
+ const [head,arg]=split(q);
+ if(effect.field!==(FIELD_WORDS[head]??camel(head)))return false;
+ return arg===null||sameValue(effect.value,literal(arg));
+}
+function createDescriptor(q,effect,S){
+ const record=createdRecord(effect,S),tags=new Set([...(effect.tags??[]),...(record?.tags??[])]);
+ if(Object.hasOwn(CREATE_WORDS,q))return CREATE_WORDS[q](record);
+ return q.split('+').every(tag=>tags.has(tag));
+}
+function holdingOpenDescriptor(q,effect,S){
+ const [kind,arg]=split(q);
+ if(effect.holdingKind!==kind)return false;
+ if(arg===null)return true;
+ const variant=effect.variant??effect.terms?.mode??effect.result?.after?.variant??effect.result?.after?.terms?.mode;
+ return arg===variant||entityRef(arg,effect.subject,S);
+}
+function holdingDescriptor(q,effect,S){
+ const [head,arg]=split(q);
+ if(head==='new_holder'&&arg!==null){
+  const token=splitEndpoint(arg).endpoint;
+  return endpointRules.find(rule=>rule.accepts(token,S)).matches(token,[effect.newHolder??effect.to],effect,S);
  }
- if(qualifier.includes('->')){
-  const parts=qualifier.split('->');
-  if(parts.length!==2)return false;
-  const matches=(value,account)=>{
-   const token=endpointToken(value),rule=endpointRules.find(rule=>rule.accepts(token,world));
-   return rule.matches(token,typeof account==='string'?account.split('|').map(actualId):[],effect,receipt,world,normalize);
-  };
-  if(!matches(parts[0],effect.from)||!matches(parts[1],effect.to))return false;
+ if(head==='subject'&&arg!==null)return effect.subject===resolveCompound(arg,S);
+ if(head==='reason'&&arg!==null)return effect.reason===arg;
+ return arg===null&&effect.reason===head;
+}
+function obligationDescriptor(q,effect){
+ const [head,arg]=split(q),after=effect.result?.after;
+ const remaining=after?.remaining??(Number.isFinite(after?.amount)&&Number.isFinite(after?.paid)?after.amount-after.paid:effect.result?.remaining);
+ if(effect.op==='obligation.create')return arg===null&&effect.obligationKind===head;
+ if(head==='amount')return QUANTITY.test(arg??'')&&effect.amount===Number(arg);
+ if(head==='partial')return QUANTITY.test(arg??'')&&effect.amount===Number(arg)&&remaining>0;
+ if(head==='full')return arg===null&&remaining===0;
+ return arg===null&&effect.reason===head;
+}
+function descriptorMatches(q,effect,S){
+ if(!q)return false;
+ switch(effect.op){
+  case 'transfer':return q.includes('->')&&flowMatches(q,effect,S);
+  case 'emit':return emitDescriptor(q,effect,S);
+  case 'vital':return vitalDescriptor(q,effect,S);
+  case 'status':return statusDescriptor(q,effect);
+  case 'learn':return learnDescriptor(q,effect,S);
+  case 'time':return timeDescriptor(q,effect,S);
+  case 'move':return moveDescriptor(q,effect,S);
+  case 'fact.set':return factDescriptor(q,effect);
+  case 'create':return createDescriptor(q,effect,S);
+  case 'holding.open':return holdingOpenDescriptor(q,effect,S);
+  case 'holding.close':case 'holding.transfer':case 'holding.rescale':return holdingDescriptor(q,effect,S);
+  case 'obligation.create':case 'obligation.settle':case 'obligation.cancel':return obligationDescriptor(q,effect);
+  case 'transition':{const [to,reason]=split(q);return effect.to===to&&(reason===null||effect.reason===reason||effect.basis===reason);}
+  default:return false;
  }
- return true;
+}
+function parseSignature(value){
+ const op=signatureOp(value);
+ if(!op)return null;
+ if(value===op)return {op,qualifiers:[]};
+ if(value[op.length]!=='('||!value.endsWith(')'))return null;
+ return {op,qualifiers:value.slice(op.length+1,-1).split(',').map(q=>q.trim())};
+}
+// The first qualifier is the subject when it has subject form; a signature
+// may also omit the subject, and then every qualifier is a descriptor.
+const subjectForm=q=>q==='world'||TYPE_LABELS.has(/^([a-z]+):/.exec(q??'')?.[1]);
+function qualifierFailures(parsed,effect,S){
+ if(!parsed.qualifiers.length)return [];
+ const [first,...rest]=parsed.qualifiers,subject=subjectForm(first)?first:null,descriptors=subject?rest:parsed.qualifiers;
+ return [...(subject===null||subjectMatches(subject,effect,S)?[]:[subject]),...descriptors.filter(q=>!descriptorMatches(q,effect,S))];
 }
 // Conditional consequences (05 §5.2.7 / 06 §6.7) never turn a submitted
-// accusation, appeal or bribe offer into an accepted outcome. Read only the
-// committed request and canonical world records, not prose or routing intent.
+// accusation, appeal or bribe offer into an accepted outcome. The request kind
+// and the decision are read from the native request and decision records the
+// receipt points to; no signature wording is mapped to a request kind.
 function conditionalSignature(value){
  const found=value.match(/(?:,\s*|_)if_(authority_accepts|accepted)\)$/);
  return found?{condition:found[1],value:value.slice(0,found.index)+')'}:null;
@@ -510,81 +916,144 @@ function legalAcceptance(submission,document){
   (!row.case||event.payload.case===row.case));
  return events[0]?.[1]??null;
 }
+// The accepted consequence is the native result of that decision: a record it
+// created (sourceEvent = the decision, same requested kind, parties drawn from
+// the request), a change to a record the decision names, or a personal-account
+// payment of exactly the requested terms from requester to recipient.
+const RECORD_PARTIES=['victim','offender','claimant','respondent','debtor','creditor','appellant'];
 function legalConsequence(effect,submission,acceptance,document){
- const {row}=submission,kind=row.request.kind,result=effect.result;
- if(kind==='bribe')return effect.op==='transfer'&&effect.from===`${row.actor}|coin_river|purse`&&
-  effect.to===`${row.receiver}|coin_river|purse`&&effect.resource==='coin_river'&&effect.qty===row.request.terms?.amount;
- const id=result?.path?.[2],native=document.state.records?.[id];
- if(result?.path?.[0]!=='state'||result.path[1]!=='records')return false;
- if(kind==='appeal')return effect.op==='fact.set'&&effect.entity===row.case&&id===row.case&&effect.field==='stage'&&effect.value==='appeal'&&
-  result.path.length===4&&result.path[3]==='stage'&&result.before!==result.after&&result.after==='appeal'&&native?.category==='legal_case'&&native.stage==='appeal';
- return ['theft','cargo_damage'].includes(kind)&&effect.op==='create'&&effect.kind==='case'&&
-  result.path.length===3&&result.before===null&&native?.category==='legal_case'&&native.id===id&&acceptance.payload?.case===id&&
-  native.sourceEvent===acceptance.id&&native.offense===kind&&native.victim===row.actor&&
-  native.offender===(kind==='theft'?row.request.accused:row.request.carrier)&&
-  JSON.stringify(result.after)===JSON.stringify(native);
+ const {row}=submission,request=row.request,result=effect.result;
+ if(effect.op==='transfer'){
+  const terms=request.terms??{},resource=terms.resource==='coin'?'coin_river':terms.resource,personal=resource==='coin_river'?'purse':'inventory';
+  return Number.isFinite(terms.amount)&&effect.qty===terms.amount&&effect.resource===resource&&
+   effect.from===`${row.actor}|${resource}|${personal}`&&effect.to===`${row.receiver}|${resource}|${personal}`;
+ }
+ if(result?.path?.[0]!=='state'||result.path[1]!=='records'||typeof result.path[2]!=='string')return false;
+ const id=result.path[2],native=document.state.records?.[id];
+ if(!native||!sameValue(result.path.slice(3).reduce((value,key)=>value?.[key],native),result.after))return false;
+ if(result.before===null&&result.path.length===3){
+  const parties=new Set([row.actor,row.receiver,...structuredStrings(request)]);
+  return native.sourceEvent===acceptance.id&&(native.offense??native.kind)===request.kind&&RECORD_PARTIES.every(key=>native[key]===undefined||parties.has(native[key]));
+ }
+ return result.before!==null&&(effect.entity??id)===id&&Object.values(acceptance.payload??{}).includes(id);
 }
-export function signatureMatches(expected,effects,receipt={},requested,world,document){
- const adopted=effects,excluded=signatureEffects(effects,receipt,requested).excluded;
- const matches=(value,effect)=>{
+export function signatureMatches(expected,effects,receipt={},requested,world,document,context={}){
+ return signatureCheck(expected,effects,receipt,requested,world,document,context).ok;
+}
+// Why a signature did not match: the first unmet requirement and, for an
+// effect of the right primitive, the qualifiers the vocabulary could not verify.
+export function signatureDiagnostics(expected,effects,receipt={},requested,world,document,context={}){
+ return signatureCheck(expected,effects,receipt,requested,world,document,context).diagnostics;
+}
+function signatureCheck(expected,effects,receipt,requested,world,document,context){
+ const S=world?signatureScope(receipt,world,document,context):null,diagnostics=[];
+ const adopted=effects,{excluded}=signatureEffects(effects,receipt,requested);
+ const failures=(value,effect,scope=S)=>{
   const op=signatureOp(value);
-  if(!op)return legacyQualifierMatches(value,effect);
-  if(effect.op!==op)return false;
-  if(value===op)return true;
-  if(!value.endsWith(')'))return false;
-  const qualifiers=value.slice(op.length+1,-1).split(',').map(q=>q.trim());
+  if(!op)return legacyQualifierMatches(value,effect)?[]:[value];
+  if(effect.op!==op)return [value];
+  const parsed=parseSignature(value);
+  if(!parsed)return [value];
+  if(!parsed.qualifiers.length)return [];
   if(!world)throw new TypeError('Qualified signature matching requires the scored world');
-  return qualifiers.every(q=>qualifierMatches(q,effect,receipt,world));
+  return qualifierFailures(parsed,effect,scope);
  };
- if(!expected.filter(value=>!signatureOp(value)).every(value=>adopted.some(effect=>matches(value,effect))))return false;
- const required=[];
- const conditionalCandidates=new Map();
+ const matches=(value,effect,scope)=>failures(value,effect,scope).length===0;
+ const fail=(value,reason)=>{diagnostics.push({value,reason});return {ok:false,diagnostics};};
+ for(const value of expected.filter(value=>!signatureOp(value)))if(!adopted.some(effect=>matches(value,effect)))return fail(value,'no adopted effect carries this legacy token');
+ // Review 10-22 P0: companions and receipt-proven costs accompany the
+ // request; they never satisfy a required signature effect.
+ const eligible=adopted.flatMap((effect,i)=>excluded.includes(effect)||companionEffect(effect,receipt)?[]:[i]);
+ const required=[],candidates=[];
  for(const value of expected.filter(signatureOp)){
   const conditional=conditionalSignature(value);
-  if(!conditional){required.push(value);continue;}
-  if(!document)return false;
-  const submissions=adopted.filter(effect=>expected.some(signature=>!conditionalSignature(signature)&&signatureOp(signature)==='emit'&&matches(signature,effect)))
-   .map(effect=>legalSubmission(effect,receipt,document)).filter(Boolean).filter(({row})=>
-    conditional.condition==='authority_accepts'?row.request.kind==='theft':
-    value.startsWith('create(')?row.request.kind==='cargo_damage':value.startsWith('fact.set(')?row.request.kind==='appeal':value.startsWith('transfer(')&&row.request.kind==='bribe');
-  if(submissions.length!==1)return false;
+  if(!conditional){required.push(value);candidates.push(eligible.filter(i=>matches(value,adopted[i])));continue;}
+  if(!document)return fail(value,'conditional consequence needs native world records');
+  const submissions=adopted.flatMap(effect=>{
+   if(!expected.some(signature=>!conditionalSignature(signature)&&signatureOp(signature)==='emit'&&matches(signature,effect)))return [];
+   const found=legalSubmission(effect,receipt,document);
+   return found?[found]:[];
+  });
+  if(submissions.length!==1)return fail(value,`${submissions.length} native legal submissions carry the condition`);
   const submission=submissions[0],acceptance=legalAcceptance(submission,document);
-  const consequenceValue=conditional.value.replace(/->officer(?=\))/,`->${submission.row.receiver}`);
+  // Role words in the consequence denote the submission's native recipient.
+  const scoped={...S,roles:{...S.roles,officer:submission.row.receiver,receiver:submission.row.receiver}};
+  const parsed=parseSignature(conditional.value);
   if(!acceptance){
-   // Even a companion/cost-labelled consequence is forbidden before acceptance.
-   if(adopted.some(effect=>matches(consequenceValue,effect)))return false;
+   // Even a companion/cost-labelled consequence is forbidden before acceptance:
+   // the subject and direction alone identify it.
+   if(adopted.some(effect=>effect.op===parsed.op&&(!subjectForm(parsed.qualifiers[0])||subjectMatches(parsed.qualifiers[0],effect,scoped))&&parsed.qualifiers.filter(q=>q.includes('->')&&!subjectForm(q)).every(q=>flowMatches(q,effect,scoped))))
+    return fail(value,'consequence committed before the recipient accepted');
    continue;
   }
-  const index=required.length;required.push(consequenceValue);
-  conditionalCandidates.set(index,adopted.flatMap((effect,i)=>
-   matches(consequenceValue,effect)&&legalConsequence(effect,submission,acceptance,document)?[i]:[]));
+  required.push(conditional.value);
+  candidates.push(eligible.filter(i=>matches(conditional.value,adopted[i],scoped)&&legalConsequence(adopted[i],submission,acceptance,document)));
  }
- const candidates=required.map((value,i)=>conditionalCandidates.get(i)??adopted.flatMap((effect,i)=>matches(value,effect)?[i]:[]));
- const mandatory=adopted.flatMap((effect,i)=>excluded.includes(effect)||companionEffect(effect,receipt)?[]:[i]);
- if(mandatory.length>required.length||candidates.some(list=>!list.length))return false;
- // First cover every non-companion, then fill the remaining requirements.
- // Augmenting paths preserve that coverage and handle overlapping qualifiers
- // without factorial enumeration of repeated primitive names (up to 64).
- const assigned=required.map(()=>-1);
- const cover=(effect,seen)=>{
-  for(let r=0;r<required.length;r++)if(!seen.has(r)&&candidates[r].includes(effect)){
-   seen.add(r);
-   if(assigned[r]<0||cover(assigned[r],seen)){assigned[r]=effect;return true;}
+ for(const [r,list] of candidates.entries())if(!list.length){
+  const op=signatureOp(required[r]),same=eligible.filter(i=>adopted[i].op===op);
+  const closest=same.map(i=>failures(required[r],adopted[i])).sort((a,b)=>a.length-b.length)[0];
+  return fail(required[r],closest?`unverified qualifiers: ${closest.join(' | ')}`:`no non-companion ${op} effect`);
+ }
+ if(eligible.length!==required.length){
+  const extra=eligible.filter(i=>!candidates.some(list=>list.includes(i))).map(i=>adopted[i].op);
+  return fail(null,`${eligible.length} non-companion effects for ${required.length} required${extra.length?`; unrequested: ${extra.join(', ')}`:''}`);
+ }
+ // Required effects are a multiset: each takes a distinct adopted effect.
+ const owner=new Map();
+ const assign=(r,seen)=>{
+  for(const i of candidates[r])if(!seen.has(i)){
+   seen.add(i);
+   if(!owner.has(i)||assign(owner.get(i),seen)){owner.set(i,r);return true;}
   }
   return false;
  };
- if(!mandatory.every(effect=>cover(effect,new Set())))return false;
- const owners=new Map(assigned.flatMap((effect,r)=>effect<0?[]:[[effect,r]]));
- const fill=(r,seen)=>{
-  for(const effect of candidates[r])if(!seen.has(effect)){
-   seen.add(effect);const owner=owners.get(effect);
-   if(owner===undefined||fill(owner,seen)){owners.set(effect,r);assigned[r]=effect;return true;}
-  }
-  return false;
- };
- return assigned.every((effect,r)=>effect>=0||fill(r,new Set()));
+ for(let r=0;r<required.length;r++)if(!assign(r,new Set()))return fail(required[r],'competes with another requirement for the same adopted effect');
+ return {ok:true,diagnostics};
 }
 
+const timePassingActions=new Set((await Promise.all((await fs.readdir(path.join(root,'world/actions'))).filter(f=>f.endsWith('.json')).map(async f=>JSON.parse((await fs.readFile(path.join(root,'world/actions',f),'utf8')).replace(/^﻿/,''))))).flatMap(file=>file.actions??[]).filter(action=>action.call?.tool==='world_time').map(action=>action.id));
+// Spatial needs are declared by the action catalog (world/actions `spatial`,
+// main-session ruling 10-22): an entry applies unconditionally, for listed
+// values of one slot, or when the run requests/commits one of the listed
+// primitives. An unknown slot value counts as applying.
+const catalogActions=(await Promise.all((await fs.readdir(path.join(root,'world/actions'))).filter(f=>f.endsWith('.json')).map(async f=>JSON.parse((await fs.readFile(path.join(root,'world/actions',f),'utf8')).replace(/^﻿/,''))))).flatMap(file=>file.actions??[]);
+const spatialCatalog=new Map(catalogActions.filter(action=>Array.isArray(action.spatial)).map(action=>[action.id,action.spatial]));
+const DISTANCE_NEEDS=new Set(['range','reach','lineOfSight']);
+const featureIds=new Set();
+export function spatialNeeds(actionIds,run){
+ if(!featureIds.size)for(const place of run.world?.locations??[])for(const feature of place.features??[])featureIds.add(feature.id);
+ const actor=run.receipt?.actor??'player',states=[run.document?.state,run.before?.state].filter(Boolean);
+ const kinds=effect=>{
+  const id=effect.op==='move'?effect.to:effect.target??effect.entity,out=new Set();
+  if(id&&!['self','player',actor].includes(id))out.add('other');
+  if(id==='player'||states.some(s=>s.npcs?.[id]||s.creatures?.[id]))out.add('agent');
+  if(featureIds.has(id))out.add('feature');
+  return out;
+ };
+ const effects=[...(run.requested??[]),...(run.effects??[])].filter(effect=>effect?.op);
+ const slots=run.submitted?.args?.slots??{};
+ const needs=new Map();
+ for(const id of actionIds)for(const entry of spatialCatalog.get(id)??[]){
+  const need=typeof entry==='string'?entry:entry.need;
+  const applies=typeof entry==='string'||(!entry.slot||!Object.hasOwn(slots,entry.slot)||entry.values?.includes(slots[entry.slot]))&&
+   (!entry.effects||effects.some(effect=>entry.effects.includes(effect.op)&&(!entry.targets||entry.targets.some(kind=>kinds(effect).has(kind)))));
+  if(applies)needs.set(need,[...(needs.get(need)??[]),id]);
+ }
+ return needs;
+}
+// Pending distance premises (no native measurement) become S4 setupUnmet for
+// an evaluated action that reads distance or sight; otherwise they stand as
+// co-location and perception only, with the number recorded as unbuilt S4.
+export function settleSpatial(pending,actionIds,run){
+ const unmet=[],notes=[];
+ if(!pending?.length)return {unmet,notes};
+ const needs=[...spatialNeeds(actionIds,run)].filter(([need])=>DISTANCE_NEEDS.has(need));
+ for(const row of pending){
+  if(needs.length)unmet.push({item:row.item,reason:`S4：${needs.map(([need,ids])=>`${unique(ids).join('/')} 读取 ${need}`).join('；')}，声明距离 ${row.distanceMeters} 米无原生测量（docs/A3-接点归属.md 接点3）`});
+  else notes.push(`${row.item}: 距离 ${row.distanceMeters} 米 S4 未建立、本题动作不读取；仅以原生同地与可感知为前提`);
+ }
+ return {unmet,notes};
+}
 function companionEffect(effect,receipt){
  const actor=receipt.actor??'player',target=effect.target??effect.entity??effect.actor;
  const exchange=receipt.routed==='core:combat'?receipt.legacy?.exchange:null;
@@ -606,7 +1075,9 @@ function companionEffect(effect,receipt){
  if(effect.op==='fact.set'&&effect.field==='durability'){
   return (receipt.legacy?.spent?.toolWear??[]).some(row=>row.item===effect.entity&&row.before===effect.result?.before&&row.after===effect.value&&row.after<row.before);
  }
- if(effect.op==='time')return effect.minutes>0&&effect.minutes===receipt.cost?.time;
+ // Elapsed time accompanies an action, except for the catalog's time-passing
+ // actions (adapter world_time), whose passage of time is the request itself.
+ if(effect.op==='time')return effect.minutes>0&&effect.minutes===receipt.cost?.time&&!timePassingActions.has(receipt.routed??receipt.source?.id);
  if(effect.op==='vital'&&target===actor&&effect.type===`body:${effect.need}`){
   const drain=['stamina','satiety','hydration'].includes(effect.need)&&effect.delta<0||effect.need==='fatigue'&&effect.delta>0;
   return Boolean(drain&&receipt.cost?.time>0&&effect.result?.after);
@@ -617,7 +1088,7 @@ function companionEffect(effect,receipt){
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
- let {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
+ let {document,setupUnmet,notes=[],bindings={},spatialPending=[]}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
  const before=document;
  const signatureContext=engine.byId?createRoutingContext(engine,document):null;
  const previews=[];
@@ -704,7 +1175,7 @@ export async function executeIntent(engine,initial,row){
    }
   }
   refused ||= receipt?.status==='rejected';
- }catch(caught){error={code:caught.code??null,message:caught.message};refused=caught instanceof PrimitiveRejected;}
+ }catch(caught){error={code:caught.code??null,message:caught.message,...(Number.isInteger(caught.index)?{index:caught.index}:{})};refused=caught instanceof PrimitiveRejected;}
  const committed=receipt?.status==='committed',effects=committed||receipt?.status==='rejected'?(receipt.applied??[]).map(effect=>{
   const created=effect.op==='create'&&document.state.created?.[effect.result?.entity];
   const subject=effect.target??effect.entity??effect.subject??effect.actor;
@@ -723,8 +1194,8 @@ export async function executeIntent(engine,initial,row){
  const measured=signatureEffects(effects,receipt??{},requested);
  const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(measured.effects.map(e=>e.op)),signatureEffects:measured.effects,excludedCosts:measured.excluded,unmatchedCosts:measured.unmatchedCosts,refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
  // Read the refusal contract; a routed refusal never earns execution credit.
- Object.assign(actual,{routed:receipt?.routed??null,reasonCode:receipt?.code??null,reason:receipt?.reason??null,missing:receipt?.missing??[],repair:receipt?.repair??[],setupUnmet,preview:previews[0]??null,previews});
- return {actual,receipt,document,before,preview,prepared,effects,submitted,setupUnmet,requested};
+ Object.assign(actual,{routed:receipt?.routed??null,reasonCode:receipt?.code??null,reason:receipt?.reason??null,missing:receipt?.missing??[],repair:receipt?.repair??[],setupUnmet,notes,preview:previews[0]??null,previews});
+ return {actual,receipt,document,before,preview,prepared,effects,submitted,setupUnmet,requested,notes,bindings,spatialPending};
 }
 
 const dieFor=(seed,id,label)=>createHash('sha256').update(`${seed}:${id}:${label}`).digest().readUInt32LE(0)%20+1;
@@ -903,7 +1374,33 @@ export function validateCheckBranch(engine,run,row,outcome,target){
     if(effect.op==='vital'&&effect.target==='player'&&['hp','mp'].includes(effect.need)&&effect.delta<0)continue;
     issues.push(`failed cast granted ${effect.op}`);
    }
-  }else if(!['core:dialogue.persuade','core:combat'].includes(route))issues.push('no native failure contract available');
+  }else if(canonicalActionId(primitiveRuntime.registry(engine),route)==='core:dialogue.persuade'){
+   // dialogue.mjs contested persuasion (review 10-22 P1): a failed judgement
+   // leaves exactly the utterance to the person addressed and nothing else.
+   const dialogue=legacy.dialogue;
+   if(dialogue?.judgement?.success!==false)issues.push('failed persuasion has no native failed judgement');
+   let utterances=0;
+   for(const effect of run.effects){
+    if(companionEffect(effect,receipt))continue;
+    if(effect.op==='emit'&&dialogue&&effect.target===dialogue.npc&&effect.payload?.kind===dialogue.action&&++utterances===1)continue;
+    issues.push(`failed persuasion granted ${effect.op}`);
+   }
+   if(utterances!==1)issues.push('failed persuasion has no native utterance');
+  }else if(route==='core:combat'){
+   // combat exchange: a failed check never harms or affects the opponent.
+   // Retaliation and practice are companions; the only other effect is the
+   // actor's own weapon wear recorded by the exchange.
+   const exchange=legacy.exchange;
+   if(!exchange)issues.push('failed combat has no native exchange');
+   for(const effect of run.effects){
+    if(companionEffect(effect,receipt))continue;
+    if(effect.op==='fact.set'&&effect.field==='durability'&&effect.entity===exchange?.weapon&&effect.result?.after<effect.result?.before)continue;
+    // A failed escape's movement is checked against the encounter below.
+    if(exchange?.intent==='flee'&&effect.op==='move')continue;
+    issues.push(`failed combat granted ${effect.op}`);
+   }
+   if(exchange&&exchange.intent!=='flee'&&exchange.vitals?.[exchange.target]&&exchange.vitals[exchange.target].after!==exchange.vitals[exchange.target].before)issues.push('failed combat changed the opponent');
+  }else issues.push('no native failure contract available');
  }
  if(actual.route==='core:combat'&&legacy?.exchange?.intent==='flee'){
   const exchange=legacy.exchange,record=document.state.records?.[`combat_encounter:${legacy.encounter?.id}`];
@@ -943,6 +1440,156 @@ async function executeCheckedIntent(engine,initial,row){
  return {...run,branches,branchesOK:Object.values(branches).every(branch=>branch.ok)};
 }
 
+// Bounded outcomes (06 §6.7, review 10-22 P0): a clipped result is asserted
+// against the rule tables, not merely accepted because it committed. Learning
+// gains obey the practice table (daily cap of the starting stage, global
+// maximum); spending never exceeds the opening balance of the account spent;
+// recipe outputs never exceed output-per-batch times the batches the opening
+// materials allow.
+export function boundedIssues(engine,run){
+ const issues=[],before=run.before,actor=run.receipt?.actor??'player',accounts=before?.ledger?.accounts??{},practice=engine.rules.practice;
+ const spent=new Map(),produced=new Map();
+ for(const effect of run.effects??[]){
+  if(effect.op==='learn'){
+   const result=effect.result??{},after=result.after?.proficiency??result.proficiency;
+   const start=result.before?.proficiency??(Number.isFinite(result.proficiency)&&Number.isFinite(result.gain)?result.proficiency-result.gain:undefined);
+   if(!Number.isFinite(after)&&!Number.isFinite(start))continue;
+   if(!Number.isFinite(after)||!Number.isFinite(start)){issues.push(`learn ${effect.subject}: proficiency change is not recorded`);continue;}
+   if(after>practice.maximum)issues.push(`learn ${effect.subject}: ${after} exceeds the proficiency maximum ${practice.maximum}`);
+   const source=[effect.learningSource,effect.mode,result.sourceKind,result.source?.type];
+   if(source.includes('practice')){
+    const cap=practice.dailyCaps[Math.min(Math.floor(start/practice.stageSize),practice.dailyCaps.length-1)];
+    if(after-start>cap)issues.push(`learn ${effect.subject}: practice gain ${after-start} exceeds the daily cap ${cap}`);
+   }
+  }
+  if(effect.op==='transfer'&&typeof effect.from==='string'){
+   if(effect.from.split('|')[0]===actor)spent.set(effect.from,(spent.get(effect.from)??0)+effect.qty);
+   if(effect.from.startsWith('src:craft|'))produced.set(effect.resource,(produced.get(effect.resource)??0)+effect.qty);
+  }
+ }
+ for(const [account,qty] of spent)if(qty>(accounts[account]??0))issues.push(`${account}: spends ${qty} from an opening balance of ${accounts[account]??0}`);
+ const recipe=engine.world.recipes.find(r=>r.id===run.receipt?.legacy?.recipe);
+ if(produced.size&&!recipe)issues.push('craft output without a native recipe');
+ if(recipe){
+  const batches=Math.min(...(recipe.materials??[]).map(m=>Math.floor((accounts[`${actor}|${m.item}|inventory`]??0)/m.amount)));
+  const perBatch=new Map([[recipe.output.item,recipe.output.quantity],...(recipe.byproducts??[]).map(b=>[b.item,b.amount])]);
+  for(const [item,qty] of produced){
+   const limit=(perBatch.get(item)??0)*batches;
+   if(qty>limit)issues.push(`${item}: produced ${qty} exceeds ${limit} (${batches} feasible batches)`);
+  }
+ }
+ return unique(issues);
+}
+// A credited refusal must give a reason about the requested boundary: the
+// native code names a domain (vocabulary below) that the expected request
+// contains, and an indexed rejection points at a requested effect of that
+// domain. Codes outside the vocabulary (e.g. schema errors) earn no credit.
+const REJECTION_DOMAINS={TRANSFER:['transfer'],LEARN:['learn'],MOVE:['move'],OBLIGATION:[...OBLIGATION_OPS],FACT:['fact.set'],REPAIR:['fact.set'],
+ TIME:['time'],DURATION:['time','status'],HOLDING:[...HOLDING_OPS],AUTHORITY:[...HOLDING_OPS,'transfer','fact.set','move','obligation.create'],
+ PERMIT:[...HOLDING_OPS,'transfer','move'],VITAL:['vital'],STATUS:['status'],SCHEDULE:['schedule'],MARK:['create'],CONSENT:'*',ENTITY:'*',EFFECTS:[]};
+export function rejectionReason(signature,actual,requested=[]){
+ const code=actual.error?.code??actual.reasonCode??actual.preview?.code??null;
+ if(typeof code!=='string')return {ok:false,code,reason:'refusal carries no native reason code'};
+ const domain=code.replace(/^E-/,'').split('-').map(part=>REJECTION_DOMAINS[part]).find(Boolean);
+ if(!domain)return {ok:false,code,reason:'reason code is outside the rejection vocabulary'};
+ const ops=new Set(signature.map(signatureOp).filter(Boolean));
+ if(domain==='*')return {ok:true,code};
+ if(!domain.length)return ops.size?{ok:false,code,reason:'refused as an empty request although effects were requested'}:{ok:true,code};
+ if(!ops.size)return {ok:true,code};
+ if(!domain.some(op=>ops.has(op)))return {ok:false,code,reason:`reason concerns ${domain.join('/')} but the request is ${[...ops].join('/')}`};
+ const index=actual.error?.index,effect=Number.isInteger(index)?requested?.[index]:null;
+ if(effect&&!(domain.includes(effect.op)&&ops.has(effect.op)))return {ok:false,code,reason:`the refused request effect ${index} (${effect.op}) is not in the expected request`};
+ return {ok:true,code};
+}
+// ---- Model-free constructor (06 §6.4/§6.9, 标杆 B07.4, review 10-22) ----
+// The metric asks whether a player WITHOUT a model can compose the intent with
+// the four-step form. The intent text is the form's local catalog search
+// (找相近的动作 = searchActions over labels and synonyms, once per
+// perceivable target); slots take only what the form offers: listed options,
+// declared defaults, scene entities for entity slots, the intent text for
+// free-text slots and the slot minimum for counts. The corpus proposal, input
+// and expected never fill a slot; expected only judges the committed result.
+// Free primitive composition (open:proposal's effect editor) is not
+// enumerated, and an automatic trace alternative earns no credit (不经兜底).
+export const CONSTRUCTOR_LIMITS=Object.freeze({attempts:24,combosPerAction:4,searchResults:24});
+// The player reads option labels: options whose label or value occurs in the
+// intent text are tried first, the rest keep their offered order.
+const mentioned=(option,row)=>[option.label,option.value].some(text=>typeof text==='string'&&text.length>=2&&row.intent?.includes(text));
+function slotChoices(slot,row,entities){
+ if(slot.name==='consent'&&slot.kind!=='object')return [undefined];
+ const allowed=(slot.options??[]).filter(option=>option.permission?.allowed!==false);
+ const offered=[...allowed.filter(o=>mentioned(o,row)),...allowed.filter(o=>!mentioned(o,row))].map(option=>slot.multiple?[option.value]:option.value);
+ if(offered.length)return slot.required?offered:[...offered,undefined];
+ if(slot.default!==undefined)return [undefined];
+ if(['intent','text','content'].includes(slot.name))return [row.intent];
+ if(slot.kind==='text')return slot.required?[row.intent]:[undefined];
+ if(slot.kind==='entity')return slot.required?entities:[undefined,...entities];
+ if(['quantity','coins','minutes','days'].includes(slot.kind)||Number.isFinite(slot.min))return slot.required?[slot.min??1]:[undefined];
+ return slot.required?[]:[undefined];
+}
+function* slotCombos(slots,lists,limit){
+ if(lists.some(list=>!list.length))return;
+ const index=lists.map(()=>0);
+ for(let produced=0;produced<limit;produced++){
+  yield Object.fromEntries(slots.map((slot,i)=>[slot.name,lists[i][index[i]]]).filter(([,value])=>value!==undefined));
+  let k=lists.length-1;
+  for(;k>=0;k--){index[k]++;if(index[k]<lists[k].length)break;index[k]=0;}
+  if(k<0)return;
+ }
+}
+export function constructorCandidates(engine,document,row,limits=CONSTRUCTOR_LIMITS){
+ const errors=[];
+ // A catalog projection that throws offers the player nothing to choose; the
+ // error is reported with the row instead of aborting the corpus.
+ let scoped=null;
+ try{scoped=engine.scoped(document);}catch(error){errors.push(error.message);}
+ const offer=options=>{if(!scoped)return {actions:[],objects:{}};try{return worldActions(scoped,document,options);}catch(error){errors.push(error.message);return {actions:[],objects:{}};}};
+ const here=offer({limit:1});
+ const entities=[...new Set([...(here.objects?.people??[]).map(p=>p.id),...(here.objects?.items??[]).map(i=>i.id),...(here.objects?.exits??[]).map(e=>e.id)])];
+ const candidates=[],seen=new Set();
+ const mentions=action=>(action.slots??[]).flatMap(slot=>slot.options??[]).filter(option=>mentioned(option,row)).length;
+ const add=(action,target)=>{
+  if(!action||action.readOnly||action.blocked||action.inputTool==='world_propose')return;
+  const key=`${action.id}|${target??''}`;
+  if(seen.has(key))return;
+  seen.add(key);candidates.push({action,target,mentions:mentions(action)});
+ };
+ // 找相近的动作 with 留下点什么 always beside it (06 §6.9.5), then the scene
+ // menu and each target's object menu; menu actions whose offered option
+ // labels occur in the intent come first.
+ for(const target of [null,...entities])for(const action of offer({query:row.intent,target,limit:limits.searchResults}).actions)add(action,target);
+ add(offer({query:'open:leave_mark',limit:1}).actions.find(a=>a.id==='open:leave_mark'),null);
+ const menu=[];
+ for(const target of [null,...entities])for(const action of offer({target,limit:limits.searchResults}).actions)menu.push({action,target,mentions:mentions(action)});
+ for(const {action,target} of menu.filter(m=>m.mentions>0).sort((a,b)=>b.mentions-a.mentions))add(action,target);
+ for(const {action,target} of menu.filter(m=>!m.mentions))add(action,target);
+ return {candidates,entities,errors};
+}
+export async function constructWithoutModel(engine,initial,row,judge,limits=CONSTRUCTOR_LIMITS){
+ const setup=applyIntentSetup(engine,initial,row.setup);
+ if(setup.setupUnmet.length)return {ready:false,attempts:[],matched:null};
+ const base=setup.document,{candidates,entities,errors}=constructorCandidates(engine,base,row,limits),attempts=[],pending=setup.spatialPending??[];
+ const bare={id:row.id,intent:row.intent,expected:row.expected};
+ for(const {action,target,mentions} of candidates){
+  const slots=action.slots??[];
+  // Without a mentioned option the player tries the form's first choice only.
+  for(const values of slotCombos(slots,slots.map(slot=>slotChoices(slot,row,entities)),mentions?limits.combosPerAction:1)){
+   if(attempts.length>=limits.attempts)return {ready:true,attempts,matched:null,truncated:true,errors};
+   const chosen={...structuredClone(action.fill??{}),...values};
+   const run=await executeCheckedIntent(engine,base,{...bare,id:`${row.id}-ctor-${attempts.length}`,builder:{action:action.id,slots:chosen}});
+   Object.assign(run,{before:base,bindings:setup.bindings,notes:setup.notes});
+   // A trace alternative taken automatically after a failed preview is 兜底.
+   const fallbackTaken=run.actual.calls.some(call=>call.action!==action.id);
+   // A chosen action that reads distance cannot rely on an unmeasured premise.
+   const spatialGap=settleSpatial(pending,unique([action.id,run.actual.route].filter(Boolean)),{...run,world:engine.world}).unmet.length>0;
+   const verdict=spatialGap?{ok:false,forbidden:false,stop:false}:judge(run,{fallbackTaken});
+   attempts.push({action:action.id,target,slots:chosen,route:run.actual.route,committed:run.actual.committed,fallbackTaken,ok:verdict.ok,forbidden:verdict.forbidden??false});
+   if(verdict.stop)return {ready:true,attempts,matched:attempts.at(-1),errors};
+  }
+ }
+ return {ready:true,attempts,matched:null,errors};
+}
+
 export async function scoreRows(rows,{world,seed,document:initial}={}){
  world??=await loadWorld();seed??=JSON.parse(await fs.readFile(path.join(root,'tests/fixtures/legacy/seed.json'),'utf8'));
  const engine=new WorldEngine(world);initial??=engine.createCharacter(seed,{},'a3-score-independent');
@@ -950,6 +1597,10 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
  const results=[];
  for(const row of rows){
   const run=await executeCheckedIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
+  // Evaluated actions: the expected route(s) and the route actually taken.
+  const evaluated=unique([...[].concat(expectedRoute),actual.route].filter(r=>typeof r==='string').flatMap(r=>[r,normalizeRoute(r)]));
+  const spatial=settleSpatial(run.spatialPending,evaluated,{...run,world});
+  run.setupUnmet=[...run.setupUnmet,...spatial.unmet];run.notes=[...(run.notes??[]),...spatial.notes];
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(actual.route));
   // Rejection signatures describe the REQUEST, not an adopted effect set.
@@ -963,37 +1614,41 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const expectsRejection=!bounded&&(row.expected.outOfBounds===true||routeRejects);
   const expectsClarification=!expectsRejection&&(Array.isArray(expectedRoute)?expectedRoute.every(r=>normalizeRoute(r)==='clarify'):normalizeRoute(expectedRoute)==='clarify');
   const zeroEffects=!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0;
+  const contextOf=r=>({before:r.before,bindings:r.bindings,engine,bounds:bounded?effect=>boundedIssues(engine,{...r,effects:[effect]}).length===0:null});
+  const boundIssues=bounded&&ready?boundedIssues(engine,run):[];
+  const rejection=expectsRejection&&ready&&actual.refused?rejectionReason(row.expected.signature,actual,run.requested):null;
+  const matched=!expectsRejection&&!expectsClarification&&ready&&(!actual.error||actual.refused)?signatureCheck(row.expected.signature,run.effects,run.receipt??{},run.requested,world,run.document,contextOf(run)):null;
   const signature=ready&&run.branchesOK&&(expectsRejection
-   ?actual.refused&&zeroEffects
+   ?actual.refused&&zeroEffects&&rejection.ok
    :expectsClarification?actual.clarified&&!actual.refused&&!actual.error&&zeroEffects
-   :(!actual.error||actual.refused)&&signatureMatches(row.expected.signature,run.effects,run.receipt??{},run.requested,world,run.document));
-  let constructor=false,builder=actual.builder;
-  if(ready&&row.expected.constructor){
-   if(builder)constructor=builder.ok&&route&&signature&&(!row.expected.fallback||actual.fallback);
-   else{
-    // Replay the independently supplied input through the same four-step form
-    // and tool adapter as the UI. Open proposals are editable dynamic duties,
-    // not world_act slots, and a failed non-builder run must not suppress them.
-    const input=row.input??(row.action?{tool:'world_act',args:typeof row.action==='string'?{action:row.action,slots:row.slots??{}}:row.action}:row.proposal?{tool:'world_propose',args:row.proposal}:null);
-    const action=input?.tool==='world_propose'?'open:proposal':input?.tool==='world_act'?input.args.action:null;
-    const slots=input?.tool==='world_propose'?input.args:input?.args?.slots;
-    if(action&&slots){
-     const built=await executeCheckedIntent(engine,initial,{...row,id:`${row.id}-builder`,builder:{action,slots}});
-     builder={...built.actual.builder,route:built.actual.route,signature:built.actual.signature,signatureEffects:built.actual.signatureEffects,fallback:built.actual.fallback,traceOnly:built.actual.traceOnly,calls:built.actual.calls,previews:built.actual.previews,checkBranches:built.branches};
-     const builtRoute=Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(built.actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(built.actual.route);
-     constructor=Boolean(built.branchesOK&&builtRoute&&builder?.ok&&signatureMatches(row.expected.signature,built.effects,built.receipt??{},built.requested,world,built.document)&&(!row.expected.fallback||built.actual.fallback));
-    }
+   :Boolean(matched?.ok)&&boundIssues.length===0);
+  // 标杆 B07.4 / review 10-22 P1: constructor credit comes from the model-free
+  // form (constructWithoutModel), never from replaying the corpus proposal or
+  // builder input, and every corpus row is in the denominator. A refusal or
+  // clarification row succeeds when no form choice commits the request.
+  const routeMatches=r=>Array.isArray(expectedRoute)?expectedRoute.some(e=>normalizeRoute(e)===normalizeRoute(r)):normalizeRoute(expectedRoute)===normalizeRoute(r);
+  const refusing=expectsRejection||expectsClarification;
+  const formed=ready?await constructWithoutModel(engine,initial,row,(attempt,{fallbackTaken})=>{
+   if(refusing){
+    const forbidden=row.expected.signature.length>0&&attempt.actual.committed&&signatureMatches(row.expected.signature,attempt.effects,attempt.receipt??{},attempt.requested,world,attempt.document,contextOf(attempt));
+    return {ok:!forbidden,forbidden,stop:forbidden};
    }
-  }
+   const ok=!fallbackTaken&&attempt.branchesOK&&attempt.actual.committed&&routeMatches(attempt.actual.route)&&
+    signatureMatches(row.expected.signature,attempt.effects,attempt.receipt??{},attempt.requested,world,attempt.document,contextOf(attempt))&&
+    (!bounded||boundedIssues(engine,attempt).length===0)&&(!row.expected.fallback||attempt.actual.fallback);
+   return {ok,stop:ok};
+  }):{ready:false,attempts:[],matched:null};
+  const constructor=formed.ready&&(refusing?!formed.attempts.some(a=>a.forbidden):Boolean(formed.matched));
+  const constructorSearch={method:'model-free form',matched:formed.matched,attempts:formed.attempts.length,truncated:Boolean(formed.truncated),catalogErrors:formed.errors??[],tried:formed.attempts.map(a=>`${a.action}${a.target?`@${a.target}`:''}${a.ok&&!refusing?' ✓':''}${a.forbidden?' ✗':''}`)};
   const supported=bounded?actual.committed&&signature:row.expected.outOfBounds?actual.refused:normalizeRoute(expectedRoute)==='clarify'?actual.clarified:actual.committed&&(row.expected.fallback?actual.fallback:run.receipt?.fallback?.originalIntentFulfilled!==false);
-  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,actual:{...actual,builder},checkBranches:run.branches,scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&run.branchesOK&&supported,constructor},repair:row.expected.repair});
+  results.push({id:row.id,text:row.intent,expected:row.expected,bounded,setupUnmet:run.setupUnmet,notes:run.notes??[],signatureDiagnostics:matched?.diagnostics??[],boundIssues,rejection,constructorSearch,actual,checkBranches:run.branches,scores:{route,signature,outOfBounds:ready&&(bounded?actual.committed&&signature:actual.refused===row.expected.outOfBounds),supported:ready&&run.branchesOK&&supported,constructor},repair:row.expected.repair});
  }
  const total=rows.length,tricky=rows.filter(r=>r.tricky).length,rate=(key,denominator=total)=>denominator?results.filter(r=>r.scores[key]).length/denominator:1;
- const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=rows.filter(r=>r.expected.constructor).length;
+ const fallbackExpected=rows.filter(r=>r.expected.fallback).length,fallbackReacted=results.filter(r=>r.expected.fallback&&r.actual.fallback).length,constructorExpected=total;
  // Preserve the acceptance gate's conservative definition: every expected
  // rejection must really be rejected. Applied violations are reported apart
  // from clarification/failure; those cannot earn rejection credit.
- return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.setupUnmet.length&&(r.bounded?!r.scores.outOfBounds:!r.actual.refused)).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly&&!(r.bounded&&r.scores.signature)).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&(r.setupUnmet.length||(!r.actual.committed&&!r.actual.refused&&!r.actual.clarified))).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructor:rate('constructor',constructorExpected),results};
+ return {setupUnmet:results.filter(r=>r.setupUnmet.length).map(r=>({id:r.id,items:r.setupUnmet})),setupUnmetCount:results.filter(r=>r.setupUnmet.length).length,total,tricky,trickyRate:total?tricky/total:0,route:rate('route'),signature:rate('signature'),outOfBoundsLeaks:results.filter(r=>r.expected.outOfBounds&&!r.setupUnmet.length&&(r.bounded?!r.scores.outOfBounds:!r.actual.refused)).map(r=>r.id),outOfBoundsApplied:results.filter(r=>r.expected.outOfBounds&&r.actual.committed&&!r.actual.traceOnly&&!(r.bounded&&r.scores.signature)).map(r=>r.id),outOfBoundsUnverified:results.filter(r=>r.expected.outOfBounds&&(r.setupUnmet.length||(!r.actual.committed&&!r.actual.refused&&!r.actual.clarified))).map(r=>r.id),inputMissing:results.filter(r=>r.actual.error?.code==='A3-SCORE-INPUT').map(r=>r.id),unsupported:results.filter(r=>!r.scores.supported).map(r=>r.id),fallbackExpected,fallbackReacted,fallbackReactionRate:fallbackExpected?fallbackReacted/fallbackExpected:1,constructorExpected,constructorMethod:'model-free form search over the catalog (标杆 B07.4)',constructor:rate('constructor',constructorExpected),results};
 }
 export async function scoreCorpus(options={}){const {rows,corpusPath}=await loadCorpus(options);return {...await scoreRows(rows,options),corpusPath};}
 // Importing the scorer performs no run and emits no output.
