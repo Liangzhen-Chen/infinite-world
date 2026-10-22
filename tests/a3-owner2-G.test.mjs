@@ -33,13 +33,13 @@ test('G1: accepted public work enters the local source ledger once and is read w
  assert.equal(view.sources[0].sourceEvent,r.bindings.a3v2_176_event);
  assert.equal(contributionTotal(d.document.state,'loc_bs'),0);
  assert.throws(()=>civicAction.call(engine,d,{operation:'civic_contribution',settlement:'loc_hw',sourceEvent:''},'bad-read'),/sourceEvent/);
- assert.equal(restoreContributionSnapshot(d,engine,{sourceEvent:r.bindings.a3v2_176_event}).duplicate,true);
+ assert.equal(restoreContributionSnapshot(d,engine,{sourceEvent:r.bindings.a3v2_176_event},{origin:'initial'}).duplicate,true);
  assert.equal(contributionTotal(d.document.state,'loc_hw'),3);
  assert.deepEqual(d.document.ledger,r.document.ledger);noDrift(d.document);
  const bad=setup(176);bad.history[0].contribution=-1;
  assert.ok(errors(run(bad),'history').length);assert.equal(contributionTotal(run(bad).document.state,'loc_hw'),0);
  d=engine.primitiveDraft(r.document);
- assert.throws(()=>restoreContributionSnapshot(d,engine,{sourceEvent:'missing'}),/source/);
+ assert.throws(()=>restoreContributionSnapshot(d,engine,{sourceEvent:'missing'},{origin:'initial'}),/source/);
 });
 
 test('G4: overdue payment promise remains promise, retains dates, creates no loan or consent',()=>{
@@ -57,7 +57,7 @@ test('G4: overdue payment promise remains promise, retains dates, creates no loa
 
 test('G2: native office has explicit powers and holder; it cannot manufacture a different authority',()=>{
  const d=engine.primitiveDraft(initial),row={id:'g_native_chair',template:'office',name:'Recorded membership chair',organization:'loc_hw',location:'loc_hw',authority:['admit_members']};
- const office=restoreInstitutionOffice(d,engine,row);
+ const office=restoreInstitutionOffice(d,engine,row,{origin:'initial'});
  const id=openHolding(d,{kind:'holds_office',holder:'npc_hw_yanzhe',subject:office,terms:{authority:['admit_members']},writer:'governance',source:'recorded-current-office',engine});
  const document=roundtrip(d.document);
  assert.equal(aliveHoldings(engine.primitiveDraft(document),{kind:'holds_office',holder:'npc_hw_yanzhe',subject:office})[0].id,id);
@@ -66,8 +66,8 @@ test('G2: native office has explicit powers and holder; it cannot manufacture a 
  assert.equal(authority({engine,document},'player','transfer','loc_hw|coin_river|treasury').allowed,false);
  const removed=engine.primitiveDraft(document);closeHolding(removed,{id,writer:'governance',reason:'vacated',eventId:'remove-native-chair'});
  assert.equal(authority({engine,document:roundtrip(removed.document)},'npc_hw_yanzhe','admit_members',office).allowed,false);
- assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',organization:'nonexistent'}),/organization/);
- assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',authority:[]}),/powers/);
+ assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',organization:'nonexistent'},{origin:'initial'}),/organization/);
+ assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',authority:[]},{origin:'initial'}),/powers/);
  // No unnamed council, synthetic promotion date or previous incumbent is supplied.
  const missing=run(setup(213));assert.ok(errors(missing,'history').length);
  assert.equal(aliveHoldings(engine.primitiveDraft(missing.document),{kind:'holds_office',holder:'player'}).length,0);
@@ -87,7 +87,7 @@ test('G3: pending application and ordinance retain source; inspection never appr
  const rule=d.document.state.records['institution_document:a3v2_178_rule'];
  assert.equal(rule.sourceEvent,r.bindings.a3v2_178_event);assert.equal(rule.public,false);
  assert.equal(institutionDocumentView(engine,d.document,'a3v2_178_rule'),null);
- assert.throws(()=>restoreInstitutionSnapshot(d,engine,{row:{...setup(178).instances[0],id:'forged'},sourceEvent:r.bindings.a3v2_178_event}),/source/);
+ assert.throws(()=>restoreInstitutionSnapshot(d,engine,{row:{...setup(178).instances[0],id:'forged'},sourceEvent:r.bindings.a3v2_178_event},{origin:'initial'}),/source/);
  noDrift(d.document);
 });
 
@@ -97,12 +97,12 @@ test('G2: historical removal closes the real prior holding at its recorded time,
  d.set(['state','minute'],600);const before=roundtrip(d.document);
  const load=(draft,actor,eventId)=>recordHistoricalEvent(draft,engine,{id:eventId,verb:'removed_from_office',actor,minute:599,source:{kind:'corpus_premise',row:'G-removal-protocol'},payload:{subject:'player',office:'office_g_prior'}});
  const source=load(d,'npc_hw_yanzhe','recorded-removal');
- restoreOfficeRemovalSnapshot(d,engine,{sourceEvent:source});
+ restoreOfficeRemovalSnapshot(d,engine,{sourceEvent:source},{origin:'initial'});
  assert.equal(d.document.state.minute,600);assert.equal(d.document.state.records[id].since,100);assert.equal(d.document.state.records[id].removedAt,599);
  assert.equal(d.document.state.records[id].sourceEvent,'recorded-appointment');
  assert.equal(aliveHoldings(engine.primitiveDraft(roundtrip(d.document)),{kind:'holds_office',holder:'player'}).length,0);
  const forged=engine.primitiveDraft(before),wrong=load(forged,'npc_hw_linsui','forged-removal');
- assert.throws(()=>restoreOfficeRemovalSnapshot(forged,engine,{sourceEvent:wrong}),/appointing institution/);
+ assert.throws(()=>restoreOfficeRemovalSnapshot(forged,engine,{sourceEvent:wrong},{origin:'initial'}),/appointing institution/);
  assert.equal(aliveHoldings(forged,{kind:'holds_office',holder:'player'}).length,1);
 });
 
@@ -151,7 +151,7 @@ test('G4: invalid pawn ticket stays invalid and grants neither ownership nor red
  assert.equal(institutionOriginal(engine,document,r.bindings.a3v2_217_sword).owner,'npc_hw_yanzhe');
  assert.equal(authority({engine,document},'player','transfer',r.bindings.a3v2_217_sword).allowed,false);
  const d=engine.primitiveDraft(document);
- assert.throws(()=>restoreInstitutionDocument(d,engine,{id,owner:'player',sourceEvent:r.bindings.a3v2_217_event,content:'forged new redemption',valid:true}),/original|source/);
+ assert.throws(()=>restoreInstitutionDocument(d,engine,{id,owner:'player',sourceEvent:r.bindings.a3v2_217_event,content:'forged new redemption',valid:true},{origin:'initial'}),/original|source/);
  noDrift(document);
 });
 
@@ -163,7 +163,7 @@ test('G4: rent imports as rent, creditor waiver is local, unauthorised waiver fa
  const rent=r.document.state.obligations.a3v2_220_rent;
  assert.equal(rent.kind,'rent');assert.equal(rent.terms.fieldAreaMu,10);assert.equal(obligationView(r.document.state,rent).owed,100);
  assert.throws(()=>closeObligation(engine.primitiveDraft(r.document),engine,{id:rent.id,actor:'npc_hw_yanzhe',party:'player',reason:'creditor_waiver'},'bad-waiver'),/authority/);
- assert.throws(()=>restoreObligationSnapshot(engine.primitiveDraft(r.document),engine,{...s.obligations[0],id:'other',sourceEvent:r.bindings.a3v2_220_event}),/source/);
+ assert.throws(()=>restoreObligationSnapshot(engine.primitiveDraft(r.document),engine,{...s.obligations[0],id:'other',sourceEvent:r.bindings.a3v2_220_event},{origin:'initial'}),/source/);
  const directory=await fs.mkdtemp(new URL('../.a3-g-storage-',import.meta.url));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const reducer=(document,input)=>{const d=engine.primitiveDraft(document),result=closeObligation(d,engine,input,'waiver');return {patches:d.patches,result};};
  const store=new CampaignStorage(directory,{reducer,snapshotEvery:2});

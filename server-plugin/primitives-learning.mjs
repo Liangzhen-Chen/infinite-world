@@ -3,7 +3,7 @@
 import {reject,PrimitiveRejected} from './primitive-policy.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
-import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge} from './education-state.mjs';
+import {knowledgeProficiency,knowsKnowledge,demonstrationAt,teachingAvailable,knowsPracticalKnowledge,practisingOpenly} from './education-state.mjs';
 import {practicalKnowledgeRegistry} from './domain-rules.mjs';
 import {canReadLanguage} from './subjective-view.mjs';
 import {personCertified} from './entity-view.mjs';
@@ -110,7 +110,7 @@ export function learnNpc(d,engine,effect,{frame,child,tags,requireAuthority,cont
   const service=serviceAt(state,until);
   if(!permission.allowed&&!service){
    const timed=demonstrationAt(engine,state,source,effect.subject,until);
-   if(!timed&&((teacher.practicing??teacher.teaching)!==effect.subject||!/(练|教|演|practice|teach)/.test(teacher.activity??'')||teacher.demonstrating===false||Object.values(state.records??{}).some(r=>r.category==='education_demonstration'&&r.actor===source)))reject('E-LEARN-OBSERVE','There is no observable demonstration');
+   if(!timed&&!practisingOpenly(engine,state,source,effect.subject))reject('E-LEARN-OBSERVE','There is no observable demonstration');
    const facts=engine.primitiveTargetFacts(d,learner,source);
    if(!facts?.lineOfSight||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters>30)reject('E-LEARN-OBSERVE','The demonstration is not actually visible');
    observed=true;tags.push('unconsented');detection=engine.primitiveCheck(d,{attribute:'敏捷',opponent:{npc:source,attribute:'精神'}},`${child}:notice`,learner);

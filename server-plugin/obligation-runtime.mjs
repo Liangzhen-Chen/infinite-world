@@ -1,4 +1,5 @@
 import {registerObligationProtocol} from './obligation-protocol.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 import {registerObligationCivilGrace} from './obligation-state.mjs';
 // Shared mutation entry points. Records remain compatibility projections of
 // the existing protocol obligation; all money uses the existing ledger.
@@ -351,7 +352,8 @@ export function adoptLegacyObligation(d,e,id){
 }
 
 // Restore signed facts, never re-sign, pay, charge a fee or run a delivery.
-export function restoreObligationSnapshot(d,e,args){
+export function restoreObligationSnapshot(d,e,args,{origin}={}){
+ requireRestoreOrigin(origin,'restoreObligationSnapshot');
     return obligationTransaction(d,()=>{
         const {id,kind,debtor,creditor,amount,paid,openedAt,dueAt,sourceEvent,terms={}}=args,s=read(d,'state'),event=s.records?.[sourceEvent];
         if(typeof id!=='string'||!id||['__proto__','prototype','constructor'].includes(id)||!['loan','deposit','fine','delivery','upkeep','promise','rent'].includes(kind)||

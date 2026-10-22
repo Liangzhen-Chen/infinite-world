@@ -78,8 +78,8 @@ function loadHistory(ctx,setup,{selectors=false}={}){
   if(actor!==null)payload.actor=actor;
   if(ctx.native(item,d=>{
    recordHistoricalEvent(d,ctx.engine,{id:row.id,verb:row.verb,actor,minute:row.at,location:payload.location??null,witnesses:payload.witnesses??[],source:payload.source,payload});
-   if(row.verb==='public_work_completed')restoreContributionSnapshot(d,ctx.engine,{sourceEvent:key});
-   if(row.verb==='removed_from_office')restoreOfficeRemovalSnapshot(d,ctx.engine,{sourceEvent:key});
+   if(row.verb==='public_work_completed')restoreContributionSnapshot(d,ctx.engine,{sourceEvent:key},{origin:'initial'});
+   if(row.verb==='removed_from_office')restoreOfficeRemovalSnapshot(d,ctx.engine,{sourceEvent:key},{origin:'initial'});
   }))ctx.bindings[row.id]=key;
   else return;
   if(row.verb==='deceived'&&row.daysAgo!==undefined&&state(ctx).minute-row.at!==row.daysAgo*1440)ctx.unmet(`${item}.daysAgo`,'Historical at and daysAgo disagree; temporal source must be resolved without inventing a date (T1)');
@@ -115,7 +115,7 @@ function loadInstitutionInputs(ctx,setup){
    try{
     requireShape(keys(row,['id','template','kind','name','location','organization','seat','authority']),'invalid institution office fields');
     let id;
-    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization:ctx.ref(row.organization)});}))ctx.bindings[row.id]=id;
+    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization:ctx.ref(row.organization)},{origin:'initial'});}))ctx.bindings[row.id]=id;
    }catch(error){ctx.unmet(item,error.message);}
    continue;
   }
@@ -128,7 +128,7 @@ function loadInstitutionInputs(ctx,setup){
    requireShape(source,'institutional snapshot has no filing/tally source');
    const event=eventSource(ctx,source.id);
    let id;
-   if(ctx.native(item,d=>{id=restoreInstitutionSnapshot(d,ctx.engine,{row:{...row,applicant:row.applicant&&ctx.ref(row.applicant),plot:row.plot&&ctx.ref(row.plot)},sourceEvent:`world_event:${event.id}`});}))ctx.bindings[row.id]=id;
+   if(ctx.native(item,d=>{id=restoreInstitutionSnapshot(d,ctx.engine,{row:{...row,applicant:row.applicant&&ctx.ref(row.applicant),plot:row.plot&&ctx.ref(row.plot)},sourceEvent:`world_event:${event.id}`},{origin:'initial'});}))ctx.bindings[row.id]=id;
   }catch(error){ctx.unmet(item,error.message);}
  }
 }

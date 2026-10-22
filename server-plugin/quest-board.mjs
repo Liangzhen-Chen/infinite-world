@@ -22,6 +22,7 @@ import {createEntity,isEffective} from './holdings.mjs';
 import {worldEvent} from './world-events.mjs';
 import {calendarDateAt} from './weather.mjs';
 import {obligationCalendar} from './obligation-calendar.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 declareHoldingWriter('quest-board',{kinds:[],entities:['office'],locations:true});
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
@@ -61,7 +62,8 @@ export function questPublishingRights(engine,state,publisher='player',{cultural=
 
 // Trusted historical restoration never repeats a reward or invents its amount,
 // deadline, objective, acceptance or completion check.
-export function restoreQuestSnapshot(d,engine,row){
+export function restoreQuestSnapshot(d,engine,row,{origin}={}){
+ requireRestoreOrigin(origin,'restoreQuestSnapshot');
  const {id,status,issuer,assignee,sourceEvent,rewardSettled,progress}=row,source=worldEvent(d.get('state'),sourceEvent);
  if(Object.keys(row).some(k=>!['id','kind','status','issuer','assignee','sourceEvent','rewardSettled','progress'].includes(k))||
   !validId(id)||row.kind!=='quest'||d.get('state','quests',id)||!source||source.payload?.subject!==id||source.actor!==assignee||source.payload?.to!==issuer||

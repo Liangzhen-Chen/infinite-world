@@ -87,7 +87,7 @@ test('T3: mismatched issuer, forged source, false settlement and unrelated repor
  const setup=setupOf(149);setup.knowledge[0].holder='npc_hw_wushuo';
  assert.ok(load(setup).setupUnmet.some(r=>r.item.startsWith('knowledge')));
  const loaded=load(setupOf(149));
- assert.throws(()=>restoreQuestSnapshot(engine.primitiveDraft(loaded.document),engine,{...setupOf(149).objects[0],id:'another',sourceEvent:'a3v2_149_event'}),/Invalid historical/);
+ assert.throws(()=>restoreQuestSnapshot(engine.primitiveDraft(loaded.document),engine,{...setupOf(149).objects[0],id:'another',sourceEvent:'a3v2_149_event'},{origin:'initial'}),/Invalid historical/);
 });
 
 test('T2: ordinary lantern event consumes its exact real prize once and watches to declared ending',async()=>{

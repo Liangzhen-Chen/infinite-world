@@ -20,6 +20,7 @@ import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
 import {priceRead} from './stock.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
 declareHoldingWriter('money',{kinds:[]});
@@ -178,8 +179,11 @@ export function counterClaimAccounts(d,owner){
     return amount>0?[[row.account,amount]]:[];
 }
 registerAdvanceHook('counterClaimAccounts',counterClaimAccounts);
+// Runtime payments out of a dedicated account post as 'money'; 'money-snapshot' is only for restoring openings.
+declareLedgerWriter('money');
 declareLedgerWriter('money-snapshot',{sources:{'src:genesis':{[COIN]:Infinity}},sinks:['sink:pack_removed']});
-export function restoreCoinAccount(d,engine,{owner,purpose,balance:amount,sourceEvent,seat,balanceMode}){
+export function restoreCoinAccount(d,engine,{owner,purpose,balance:amount,sourceEvent,seat,balanceMode},{origin}={}){
+    requireRestoreOrigin(origin,'restoreCoinAccount');
     const state=d.get('state'),event=state.records?.[sourceEvent],key=accountKey(owner,COIN,purpose);
     if(!Number.isSafeInteger(amount)||amount<0||!['counter','legal_treasury','purse','vault','treasury'].includes(purpose)||
         !event||event.category!=='world_event'||event.verb!=='opening_balance'||event.minute>state.minute||
@@ -213,7 +217,7 @@ export function spendCounterCoins(d,engine,{owner,actor,to,amount,eventId}){
     if(!person||!isEffective(engine,d,owner)||person.hp<=0||person.capacity==='none'||['死亡','昏迷','失能'].includes(person.status)||
         target!==d.get('state','location')||row.seat!==undefined&&row.seat!==d.get('state','location')||aliveHoldings(d,{kind:'frozen',subject:row.account}).length||
         (actor==='player'?d.get('state','location'):person.location)!==d.get('state','location'))throw Error('Counter owner cannot act here');
-    moveCoins(d,{from:row.account,to:partyAccount(engine,d.get('state'),to),amount,writer:'money-snapshot',eventId});
+    moveCoins(d,{from:row.account,to:partyAccount(engine,d.get('state'),to),amount,writer:'money',eventId});
     mirrorPartyCoins(d,engine,to,amount,eventId,'money');
     const result={from:row.account,amount};
     holdingSet(d,engine,['state','records',receipt],{category:'counter_payment',owner,actor,to,amount,result},'money');

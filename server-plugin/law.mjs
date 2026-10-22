@@ -1,5 +1,6 @@
 import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {lawAuthorities,personName} from './entity-view.mjs';
 import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation,codePenalty} from './law-codes.mjs';
@@ -46,7 +47,8 @@ export function existingSnapshotCase(d,reference,actor='player'){
 }
 
 // Historical registration is not a fresh accusation or adjudication.
-export function restoreCaseSnapshot(d,engine,args){
+export function restoreCaseSnapshot(d,engine,args,{origin}={}){
+ requireRestoreOrigin(origin,'restoreCaseSnapshot');
     const {id,court,stage,parties,sourceEvent,judgmentEvent,appealDeadline,handlerOffice,defendant,name}=args,s=d.get('state'),source=s.records?.[sourceEvent];
     if(typeof id!=='string'||!id||['__proto__','prototype','constructor'].includes(id)||s.records?.[id]||!engine.world.locations.some(l=>l.id===court)||
         !['judged','pending','execution','prosecution'].includes(stage)||!Array.isArray(parties)||!parties.length||parties.some(p=>!(p==='player'||s.npcs?.[p]||s.creatures?.[p]||engine.byId.has(p)))||
@@ -76,7 +78,8 @@ export function caseProcedureView(engine,document,id,actor='player'){
         handler:row.handlerOffice?aliveHoldings(holdingReader(document),{kind:'holds_office',subject:row.handlerOffice}).map(h=>h.holder).filter(p=>currentCaseHandler(engine,document,id,p)):[],
         judgmentSource:row.judgment?.sourceEvent??null};
 }
-export function restoreDocumentSnapshot(d,engine,args){
+export function restoreDocumentSnapshot(d,engine,args,{origin}={}){
+ requireRestoreOrigin(origin,'restoreDocumentSnapshot');
     const {id,owner,sourceEvent,obligation,case:caseId,links=[],content,reviewed,valid,namedHolder,describes}=args,s=d.get('state'),paper=s.itemInstances?.[id],source=s.records?.[sourceEvent];
     if(!paper||paper.owner!==owner&&!aliveHoldings(d,{kind:'owns',holder:owner,subject:id}).length||!engine.byId.get(paper.item)||source?.category!=='world_event'||!['purchase_receipt','evidence_found','obligation_opened','accepted_cargo','delivered'].includes(source.verb)||source.minute>s.minute||paper.document||
         !Array.isArray(links)||links.some(key=>s.records?.[key]?.category!=='world_event'||s.records[key].minute>s.minute)||

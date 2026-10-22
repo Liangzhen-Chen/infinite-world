@@ -39,14 +39,25 @@ export function beginBodyActivity(d,engine,actor,activity){
  for(const need of ['stamina','satiety','hydration','fatigue']){const state=readBodyState(engine,d.document,actor,need);writeBodyNeed(d,engine,actor,need,state.value,{activity,remainder:state.remainder});}
 }
 export function endBodyActivity(d,engine,actor){beginBodyActivity(d,engine,actor,'rest');}
-export function applyBodyVital(d,engine,actor,need,delta,bound){
+// The units this nourishment comes from: those consumed at this minute that
+// are food or drink (a caller that knows them passes `consumed`). Without the
+// draft's patches, or an explicit list, the source cannot be verified.
+function nourishingUnits(d,engine,minute,consumed){
+ if(Array.isArray(consumed))return consumed;
+ if(!Array.isArray(d.patches))reject('E-BODY-FOOD','The consumed food cannot be verified without the action patches');
+ const latest=new Map();
+ for(const patch of d.patches)if(patch.op==='set'&&patch.path?.[1]==='itemInstances'&&patch.path.length===3)latest.set(patch.path[2],patch.value);
+ return [...latest].filter(([,unit])=>{
+  if(unit?.status!=='已消耗'||unit.consumedAt!==minute)return false;
+  const catalog=engine.byId.get(unit.item);
+  return unit.physicalOnly===true||catalog?.nutrition!==undefined||catalog?.tags?.some(t=>t==='food'||t==='water');
+ }).map(([id])=>id);
+}
+export function applyBodyVital(d,engine,actor,need,delta,bound,{consumed}={}){
  if(delta>0&&['satiety','hydration'].includes(need)){
-  for(const patch of d.patches??[]){
-   const unit=patch.path?.[1]==='itemInstances'&&patch.path.length===3?patch.value:null;
-   if(unit?.status==='已消耗'){
-    const facts=physicalItem(d,engine,unit.id);
-    if(facts.contaminated===true||facts.toxic===true||facts.condition===0)reject('E-BODY-FOOD','Unsafe consumed food cannot supply this nourishment');
-   }
+  for(const id of nourishingUnits(d,engine,d.get('state','minute'),consumed)){
+   const facts=physicalItem(d,engine,id);
+   if(facts.contaminated===true||facts.toxic===true||facts.condition===0)reject('E-BODY-FOOD','Unsafe consumed food cannot supply this nourishment');
   }
  }
  if(!['stamina','satiety','hydration','fatigue'].includes(need)||!Number.isFinite(delta)||Math.abs(delta)>(bound.body?.[need]??0))reject('E-BODY-BOUND','Body change exceeds its native bound');

@@ -174,8 +174,9 @@ function ritual(d,e,t,args,eventId){
  const spec=r??ordinary,host=steward(d,e,t,spec.minutes);
  const at=d.get('state','minute'),members=[...new Set([who,...args.workers??[]])];
  // The public action cannot supply consent on an NPC's behalf. Read each
- // participant's scoped native grant; old recorded boolean calls still replay.
- if(args.consent!==true)for(const id of members.filter(id=>id!=='player')){
+ // participant's scoped native grant. Only a replay of an old record, which
+ // carried the boolean when it was made, is let through on that record.
+ if(!(e.replaying&&args.consent===true))for(const id of members.filter(id=>id!=='player')){
   const permission=consent({engine:e,document:d.document},id,'player','rite',{purpose:t.id,subject:t.id,terms:{purpose:r?.id??'ordinary'},until:at+spec.minutes,onRefusal:'abort'});
   if(!permission.allowed)throw Error('集体祈愿须在场参与者同意');
  }

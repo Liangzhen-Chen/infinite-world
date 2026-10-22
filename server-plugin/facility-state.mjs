@@ -26,7 +26,8 @@ export function facilityKind(base){
  return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':base.workstations?.length?'workshop':
   /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
 }
-export function facilityView(engine,state,id){
+// `holder` is whose prepaid workstation bookings reduce the fees shown.
+export function facilityView(engine,state,id,holder='player'){
  const base=facilityDefinition(engine,state,id);if(!isFacility(base)&&!base?.workstations?.length)return null;
  // A place can host an authored station without itself becoming a building
  // that public-works/repair consumers may treat as a whole workshop.
@@ -37,7 +38,7 @@ export function facilityView(engine,state,id){
  const units=1+(row.expansions??0),capacity=Math.floor((base.lodging?.rooms??base.capacity??spec.capacity)*units*factor);
  const services=factor?[...new Set([...(base.services??[]),...spec.services])]:[];
  return {kind,material,condition,burning,factor,status:factor===0?'停用':factor<1?'降级':'可用',services,capacity,
-  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(state,station)})):[],units};
+  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(state,station,holder)})):[],units};
 }
 
 // A bed is a physical allocation within a lodging facility, not a stored

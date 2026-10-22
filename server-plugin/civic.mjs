@@ -8,6 +8,7 @@ import {npcHousehold} from './npc-life.mjs';
 import {workContribution} from './works.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 declareHoldingWriter('civic',{kinds:['resides','resident_of']});
 
 const recordPath=id=>['state','records',id];
@@ -70,7 +71,8 @@ export function contributionTotal(state,settlement,subject='player'){
 }
 const total=(d,settlement,subject='player')=>contributionTotal(d.get('state'),settlement,subject);
 // Import an accepted work once without performing it or funding it again.
-export function restoreContributionSnapshot(d,engine,{sourceEvent}){
+export function restoreContributionSnapshot(d,engine,{sourceEvent},{origin}={}){
+ requireRestoreOrigin(origin,'restoreContributionSnapshot');
     const event=d.get('state','records',sourceEvent),p=event?.payload;
     if(event?.category!=='world_event'||event.verb!=='public_work_completed'||event.minute>d.get('state','minute')||
         event.source?.kind!=='corpus_premise'||!engine.rules.agriculture?.settlements.some(s=>s.settlement===p?.subject)||

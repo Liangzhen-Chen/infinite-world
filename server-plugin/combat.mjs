@@ -39,11 +39,17 @@ export function combatEscapeDestination(d,e,requested){
  for(const memory of Object.values(d.document.memories??{}))if(memory.source==='known_path'&&visible(memory))paths.add(memory.subject);
  const adjacent=[...new Set(e.world.routes.filter(r=>r.from===s.location||r.to===s.location).map(r=>r.from===s.location?r.to:r.from))];
  let exact;try{exact=e.resolve(requested);}catch{}
+ // A description that names no place is judged by the known paths themselves;
+ // one that names a place must name a passable known destination.
+ if(!exact){
+  const named=[...e.resolver.mentions(String(requested??''))].filter(id=>e.world.locations.some(l=>l.id===id));
+  if(named.length>1)throw Error('Unknown escape destination');
+  if(named.length===1)exact=named[0];
+ }
  const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
  const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
   try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
  });
- if(!exact&&!/(?:旁|附近|身边|小路|path|nearby|adjacent)/i.test(requested))throw Error('Unknown escape destination');
  if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
  return candidates[0];
 }

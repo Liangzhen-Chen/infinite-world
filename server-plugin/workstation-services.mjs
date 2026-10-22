@@ -30,7 +30,8 @@ export function recordWorkstationAccess(d,engine,row,{actor=row.holder}={}){
  return value;
 }
 export function workstationAccess(state,station,holder='player',minutes=0){
- return recordsWhere(state?.records,'category','workstation_access').filter(r=>r.station===station&&r.holder===holder&&state.records[`${accessKey(r.id)}:source`]?.digest===digest(r)&&(!r.paid||paidSource(state,r))&&r.fromMinute<=state.minute&&state.minute<r.toMinute&&state.minute+minutes<=r.toMinute);
+ // The receipt digest is the costly check, so it runs only on rows that already match.
+ return recordsWhere(state?.records,'category','workstation_access').filter(r=>r.station===station&&r.holder===holder&&r.fromMinute<=state.minute&&state.minute<r.toMinute&&state.minute+minutes<=r.toMinute&&(!r.paid||paidSource(state,r))&&state.records[`${accessKey(r.id)}:source`]?.digest===digest(r));
 }
 export function workstationFee(state,station,holder='player'){
  const receipt=workstationAccess(state,station.id,holder).find(r=>r.paid&&!state.records[`${accessKey(r.id)}:used`]);
