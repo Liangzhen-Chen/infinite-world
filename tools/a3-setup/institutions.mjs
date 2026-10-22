@@ -133,6 +133,7 @@ export function catalogOffice(engine,row,organization){
 const officeRow=row=>row?.template==='office'&&row?.monthlyQuotaD===undefined;
 const institutionRow=row=>['proposal','application'].includes(row?.kind);
 function loadInstitutionInputs(ctx,setup){
+ const loadedOffices=[];
  for(const [index,row]of (Array.isArray(setup.instances)?setup.instances:[]).entries()){
   if(officeRow(row)){
    const item=`instances[${index}]`;
@@ -141,7 +142,7 @@ function loadInstitutionInputs(ctx,setup){
     const organization=ctx.ref(row.organization),office=catalogOffice(ctx.engine,row,organization);
     if(!office){gap(ctx,item,'offices',`organization ${row.organization} has no catalog office granting ${JSON.stringify(powersOf(row.authority)??row.authority)} at ${row.seat??row.location}`);continue;}
     let id;
-    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization},{origin:'initial'});}))ctx.bindings[row.id]=id;
+    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization},{origin:'initial'});})){ctx.bindings[row.id]=id;loadedOffices.push(row.id);}
     ctx.note(`${item}: office loaded as a narrowed instance of catalog office ${office.id}`);
    }catch(error){ctx.unmet(item,error.message);}
    continue;
@@ -158,6 +159,7 @@ function loadInstitutionInputs(ctx,setup){
    if(ctx.native(item,d=>{id=restoreInstitutionSnapshot(d,ctx.engine,{row:{...row,applicant:row.applicant&&ctx.ref(row.applicant),plot:row.plot&&ctx.ref(row.plot)},sourceEvent:`world_event:${event.id}`},{origin:'initial'});}))ctx.bindings[row.id]=id;
   }catch(error){ctx.unmet(item,error.message);}
  }
+ if(loadedOffices.length)ctx.loadOfficeHoldings?.(loadedOffices);
 }
 registerSetupLoader({fields:['history'],order:10,load:loadHistory});
 registerSetupLoader({fields:['history'],order:65,load(ctx,setup){loadHistory(ctx,setup,{selectors:true});}});

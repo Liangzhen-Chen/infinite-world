@@ -11,7 +11,9 @@ const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-r10');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
-const row=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));
+// 069 and 079 declare feature distances that contradict native geometry (3 m declared vs 0.5/1.5/1 m native, 01 §1.2;
+// corpus-owned, reported to the main session). These mechanism regressions drop only that premise.
+const row=id=>{const r=structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));if(['069','079'].includes(id))delete r.setup.positions;return r;};
 const diagnostic=run=>JSON.stringify({actual:run.actual,setupUnmet:run.setupUnmet});
 
 test('r10: clothing repair consumes thread and preserves the same unit and paid workstation',async()=>{

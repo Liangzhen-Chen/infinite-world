@@ -4,7 +4,7 @@
 // (reported to the main session; world data is approved through the content pipeline,
 // not here). Legal-request regressions therefore attach this test-local charter to a
 // clone of the world, instead of letting corpus rows grant themselves powers.
-export function charteredWorld(world){
+export function charteredWorld(world,extra={}){
  const clone=structuredClone(world);
  clone.locations.find(l=>l.id==='loc_bs').offices=[
   {id:'office_test_bs_watch_desk',seat:'bld_bs_watch',authority:{operations:['receive_report','collect_fine','handle_case','guard']}},
@@ -14,5 +14,6 @@ export function charteredWorld(world){
  clone.locations.find(l=>l.id==='loc_hw').offices=[
   {id:'office_test_hw_gate',seat:'loc_hw_gate',authority:{operations:['receive_surrender']}},
  ];
+ for(const [id,offices] of Object.entries(extra)){const place=clone.locations.find(l=>l.id===id);place.offices=[...(place.offices??[]),...offices];}
  return clone;
 }

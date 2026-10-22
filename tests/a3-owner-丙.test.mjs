@@ -215,7 +215,11 @@ test('spatial: native co-presence suffices for sight/hearing, while contradictio
  assert.ok(setup({present:[npc],positions:[{...position,distanceMeters:8,rayMeters:[[0,0],[8,0]]}]}).setupUnmet.length);
  assert.ok(setup({present:[npc],actorStates:{[npc]:{location:'loc_hw_dock'}},positions:[position]}).setupUnmet.some(u=>u.item==='positions[0]'));
  const trap={...generic('near_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),carriedBy:undefined,kind:'node'};
- assert.ok(setup({objects:[trap],positions:[{observer:'player',target:'near_trap',distanceMeters:.5,lineOfSight:true}]}).setupUnmet.some(u=>u.item==='positions[0]'));
+ // 06 §6.3 spatial declarations / 01 §1.2: a bare distance premise is graded by the evaluated action. Setup keeps it
+ // as pending (settled to unmet only if the action reads distance and native geometry cannot verify it), instead of
+ // rejecting every distance outright as the old loader did.
+ const near=setup({objects:[trap],positions:[{observer:'player',target:'near_trap',distanceMeters:.5,lineOfSight:true}]});
+ assert.ok(near.spatialPending.some(u=>u.item==='positions[0]'));assert.ok(!near.setupUnmet.some(u=>u.item==='positions[0]'));
 });
 
 test('J/M: an explicit original generic item is consumed once by the real mark proposal and roundtrips',async t=>{

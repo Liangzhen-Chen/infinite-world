@@ -328,7 +328,10 @@ export function applyIntentSetup(engine,initial,setup){
  }
  // Domain premises (tools/a3-setup/) run after built-in scene fields and before
  // presence and ledger audits.
- const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
+ // Offices load in the domain stage (institutions order 12); the incumbents' holds_office holdings load right after
+ // them, so later domain loaders (examination referral, handlers) see the holder instead of an empty office.
+ const loadOfficeHoldings=offices=>{const own=new Set(offices),mine=deferredHoldings.filter(([,row])=>row?.kind==='holds_office'&&own.has(row.subject));for(const entry of mine)deferredHoldings.splice(deferredHoldings.indexOf(entry),1);loadHoldings(mine);};
+ const ctx={engine,setup,bindings,ref,actor,unmet,loadOfficeHoldings,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
  runSetupLoaders(ctx,setup);
  loadHoldings(deferredHoldings);
  for(const check of afterDomain)check();

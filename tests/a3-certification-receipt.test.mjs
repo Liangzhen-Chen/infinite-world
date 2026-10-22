@@ -10,8 +10,9 @@ import {applyIntentSetup,signatureMatches} from '../tools/a3-score.mjs';
 import {knownWorldEventReference,presentWitnesses} from '../server-plugin/world-events.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
+import {charteredWorld} from './helpers/charter-world.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+const shipped=await loadWorld();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const row=corpus.find(r=>r.id==='A3V2-020');
@@ -19,7 +20,11 @@ const row=corpus.find(r=>r.id==='A3V2-020');
 // carpentry examiner's seat is his own workplace in Hewan (office_exam_life_6), so the
 // mechanism is exercised at the seat the world actually publishes. The corpus row is not
 // edited; the premise/seat mismatch is reported separately.
-const seat=world.factions.flatMap(f=>f.offices??[]).find(o=>o.id==='office_exam_life_6').seat;
+// 05 §5.3 / review 10-22 P1: the corpus registrar office loads only as a narrowed instance of a charter office. The
+// shipped world charters no registrar desk at the examiner's seat yet (reported to the main session), so the
+// mechanism runs in a test-local chartered clone.
+const seat=shipped.factions.flatMap(f=>f.offices??[]).find(o=>o.id==='office_exam_life_6').seat;
+const world=charteredWorld(shipped,{loc_bs:[{id:'office_test_exam_registry',seat,authority:{operations:['receive_application','refer_examiner'],profession:'profession_life_6'}}]}),engine=new WorldEngine(world);
 const stagedSetup=JSON.parse(JSON.stringify(row.setup).replaceAll('bld_bs_guild',seat));
 function fixture(){
  const initial=engine.createCharacter(seed,{},'a3-score-independent');
@@ -71,7 +76,11 @@ for(const success of [true,false])test(`认证${success?'成功':'失败'}：机
   assert.equal(fees[0].from,'player|coin_river|purse');assert.equal(fees[0].to,'npc_hw_yinge|coin_river|purse');
   assert.equal(fees[0].qty,20);assert.equal(fees[0].role,'additional_cost');
   assert.deepEqual(receipt.cost.resources,[fees[0]]);
-  assert.equal(signatureMatches(row.expected.signature,receipt.applied,receipt,row.proposal.effects,world,after),true);
+  // Review 10-22 P0: the org token local_guild must bind to a native organization. The corpus alias is not a setup alias
+  // (corpus-owned, reported to the main session; likewise the profession label woodworking), so unbound it is unverifiable; bound to the guild the request
+  // actually targets (asserted above) the whole signature is verified structurally.
+  assert.equal(signatureMatches(row.expected.signature,receipt.applied,receipt,row.proposal.effects,world,after),false);
+  assert.equal(signatureMatches(row.expected.signature,receipt.applied,receipt,row.proposal.effects,world,after,{bindings:{local_guild:request.target,woodworking:'office_cert:profession_life_6'}}),true);
  }else{
   assert.deepEqual(receipt.cost.resources,[]);assert.equal(after.state.careers?.profession_life_6?.certification,undefined);
  }
