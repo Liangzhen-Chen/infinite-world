@@ -46,27 +46,17 @@ test('A3-fix3 trade: with enough coins the same two-loaf order is sold whole at 
  assert.deepEqual(auditLedger(after.ledger),[]);
 });
 
-// ---- 2. a capability the actor lacks is refused before any clarification ----
-test('A3-fix3 capability: an unlearned instant displacement is refused with a basis, not clarified; knowing the means or a source lifts the refusal',async()=>{
+// ---- 2. a structured move without a source is refused with its basis before any entity is clarified ----
+test('A3-fix3 displacement: a structured teleport move is refused (E-OPEN-MOVE) before entity resolution; a spell means keeps the program path',async()=>{
  const row=rowFor(130),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
  const before=structuredClone(document);
- const refused=text=>engine.previewAction(document,{tool:'world_propose',eventId:'fix3-cap',args:{intent:text,effects:[]}});
- for(const text of [row.proposal.intent,'马上把我瞬移到王都'])
-  await assert.rejects(refused(text),error=>error instanceof ActionRejection&&error.code==='E-ACTION-CAPABILITY'&&error.missing.length>0&&error.repair.some(line=>line.includes('core:move')));
+ const propose=(to,means)=>engine.previewAction(document,{tool:'world_propose',eventId:'fix3-teleport',args:{intent:'马上把我送到远方',effects:[{op:'move',entity:'self',to,mode:'teleport'}],...(means?{means}:{})}});
+ // A name that would need clarification and an exact id that is not perceivable both meet the same basis first.
+ for(const to of ['王都','loc_capital'])await assert.rejects(propose(to),error=>error.code==='E-OPEN-MOVE'&&/传送来源/.test(error.message));
  assert.deepEqual(document,before);
- // Same class of request without the capability word keeps its ordinary clarification.
- const ordinary=receiptOf(await refused('我想了解一下附近的情况'));
- assert.notEqual(ordinary?.code,'E-ACTION-CAPABILITY');
- // A known spell of the declared mechanism lifts the refusal (the request then needs its normal slots).
- const knowing=structuredClone(document);knowing.state.spells={...knowing.state.spells,spell_s1_anchor_cross:true};
- const lifted=await refused(row.proposal.intent).then(value=>value,error=>error);
- assert.ok(lifted instanceof ActionRejection);
- const result=await engine.previewAction(knowing,{tool:'world_propose',eventId:'fix3-cap-known',args:{intent:row.proposal.intent,effects:[]}}).then(value=>value,error=>error);
- assert.ok(!(result instanceof ActionRejection&&result.code==='E-ACTION-CAPABILITY'),'a known displacement spell is not a missing capability');
- // A structured request is judged by its own effects, never by the words of its intent.
- const structured=await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-cap-structured',args:{intent:'传送一件小东西',effects:[{op:'emit',verb:'tell',target:'npc_hw_linsui',visibility:'witnessed',payload:{kind:'tell',content:'你好'}}]}}).then(value=>value,error=>error);
- assert.ok(!(result instanceof ActionRejection&&result.code==='E-ACTION-CAPABILITY'));
- assert.ok(!(structured instanceof ActionRejection&&structured.code==='E-ACTION-CAPABILITY'));
+ // With a spell named as the means the proposal is not refused by this check (the spell program judges it).
+ const viaSpell=await propose('王都',{spell:'spell_s1_anchor_cross'}).then(value=>value,error=>error);
+ assert.ok(!(viaSpell?.code==='E-OPEN-MOVE'));
 });
 
 // ---- 3. combat opponent identity is the creature record, not an id prefix ----

@@ -110,11 +110,6 @@
    "file": "world/actions (open:ask_request)",
    "token": "最近怎么样",
    "reason": "问候询问的通用口语，指向询问动作，不含场景。"
-  },
-  {
-   "file": "world/actions (core:dialogue.ask)",
-   "token": "还没答应",
-   "reason": "谈价阶段表示尚未成交、先听价的通用口语，指向询价动作；移除会使 a3-r13 第192题失去路由（已在汇报中标注为边缘项）。"
   }
  ]
 }

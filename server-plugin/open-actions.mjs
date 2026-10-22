@@ -12,7 +12,6 @@ import {applyPatches,digest} from './storage.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {parseAccount,LEDGER_COIN} from './ledger.mjs';
 import {resolveTimeSlot} from './action-time.mjs';
-import {capabilityRefusal} from './capability-gate.mjs';
 
 // Scheduling a question records the player's own future request. The authored
 // question program rechecks presence when due and grants no NPC commitment.
@@ -120,14 +119,15 @@ export function prepareOpenAction(engine,document,proposal,native){
  }
  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
  native??=createOpenActionContext(engine,document,proposal);
- // A capability the actor lacks is refused before any entity or slot clarification.
- capabilityRefusal(engine,document,proposal,native.routing,primitiveRuntime.registry(engine));
  // Walking cannot release an existing custody holding. Report that native
  // restriction even when the proposed outside destination needs clarification.
  for(const effect of proposal.effects??[])if(effect.op==='move'&&effect.mode==='walk'&&native.routing.resolve?.(effect.entity).value===native.routing.actor){
   const permission=canAct(primitiveContext(engine,document),native.routing.actor,'move',{to:effect.to});
   if(!permission.allowed)reject('E-CAPACITY',permission.reason);
  }
+ // A bare teleport move has no source of its own: a real displacement comes from a learned spell (means.spell)
+ // routed to its program. Refuse it with its basis before any entity is clarified or resolved.
+ if(!proposal.means?.spell)for(const effect of proposal.effects??[])if(effect.op==='move'&&effect.mode==='teleport')reject('E-OPEN-MOVE','普通搬动不能隔空取物，请先靠近或使用真实的传送来源');
  if(typeof native.routing.resolve==='function'){
   const entities=resolveProposalEntities(proposal,native.routing,{deferCombatDestination:true});
   if(entities.ambiguities.length){

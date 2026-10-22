@@ -892,31 +892,27 @@ test('A3 rejection signature: request descriptions earn credit only for actual r
 
 test('A3 rejection vocabulary: routed action refusals earn credit only for the request that action governs',()=>{
  const registry={actions:[
-  {id:'core:cast',spatial:['range','lineOfSight'],signature:{variants:[['["status","person","light"]'],['["vital","person","heal"]']]}},
+  {id:'core:cast',signature:{variants:[['["status","person","light"]'],['["vital","person","heal"]']]}},
   {id:'core:trade.buy',signature:{bareIntent:{mention:true}}}]};
  const refusal=(code,routed)=>({reasonCode:code,routed});
  // Empty expected request: any precondition of a routed registered action counts.
  assert.deepEqual(rejectionReason([],refusal('E-ACTION-PRECONDITION','core:trade.buy'),[],{registry}),{ok:true,code:'E-ACTION-PRECONDITION'});
- assert.equal(rejectionReason([],refusal('E-ACTION-SPATIAL-FACTS','core:cast'),[],{registry}).ok,true);
+ // A different reason than the expected one earns nothing: a spatial-facts refusal is outside the vocabulary.
+ assert.equal(rejectionReason([],refusal('E-ACTION-SPATIAL-FACTS','core:cast'),[],{registry}).ok,false);
  // Negative: a refusal that no routed registered action produced is not credited.
  assert.equal(rejectionReason([],refusal('E-ACTION-PRECONDITION',null),[],{registry}).ok,false);
  assert.equal(rejectionReason([],refusal('E-ACTION-PRECONDITION','core:not_in_catalog'),[],{registry}).ok,false);
- // Negative: a spatial refusal needs the catalog to declare a spatial requirement for the routed action.
- assert.equal(rejectionReason([],refusal('E-ACTION-SPATIAL-FACTS','core:trade.buy'),[],{registry}).ok,false);
  // Negative: the routed action must govern the expected request effects; a vital request is not answered by a status-only action.
  assert.equal(rejectionReason(['vital(person:self)'],refusal('E-ACTION-PRECONDITION','core:cast'),[],{registry}).ok,true);
  assert.equal(rejectionReason(['transfer(resource:coin,self)'],refusal('E-ACTION-PRECONDITION','core:cast'),[],{registry}).ok,false);
  assert.equal(rejectionReason(['transfer(resource:coin,self)'],refusal('E-ACTION-PRECONDITION','core:trade.buy'),[],{registry}).ok,false);
- // A capability refusal is an empty-request refusal: it never answers a request that has effects.
- assert.equal(rejectionReason([],{error:{code:'E-ACTION-CAPABILITY'}},[],{registry}).ok,true);
- assert.equal(rejectionReason(['move(person:self)'],{error:{code:'E-ACTION-CAPABILITY'}},[],{registry}).ok,false);
  // Unknown codes stay outside the vocabulary.
  assert.equal(rejectionReason([],{reasonCode:'E-ACTION-SLOT',routed:'core:cast'},[],{registry}).ok,false);
 });
 
 test('A3 refusal by throw: any typed domain rejection is a refusal, a plain engine error is not',async t=>{
  const row={...rows[1],expected:{...rows[1].expected,signature:[]}};
- t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw new ActionRejection('E-ACTION-CAPABILITY','没有此能力',{missing:['x'],repair:['y']});});
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw new ActionRejection('E-OPEN-MOVE','没有此能力',{missing:['x'],repair:['y']});});
  const typed=await scoreRows([row],options);
  assert.equal(typed.results[0].actual.refused,true);assert.equal(typed.results[0].scores.signature,true);
  t.mock.restoreAll();

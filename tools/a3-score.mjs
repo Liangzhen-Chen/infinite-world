@@ -1489,18 +1489,15 @@ export function boundedIssues(engine,run){
 // contains, and an indexed rejection points at a requested effect of that
 // domain. Codes outside the vocabulary (e.g. schema errors) earn no credit.
 const REJECTION_DOMAINS={TRANSFER:['transfer'],LEARN:['learn'],MOVE:['move'],OBLIGATION:[...OBLIGATION_OPS],FACT:['fact.set'],REPAIR:['fact.set'],
- CAPABILITY:[],TIME:['time'],DURATION:['time','status'],HOLDING:[...HOLDING_OPS],AUTHORITY:[...HOLDING_OPS,'transfer','fact.set','move','obligation.create'],
+ TIME:['time'],DURATION:['time','status'],HOLDING:[...HOLDING_OPS],AUTHORITY:[...HOLDING_OPS,'transfer','fact.set','move','obligation.create'],
  PERMIT:[...HOLDING_OPS,'transfer','move'],VITAL:['vital'],STATUS:['status'],SCHEDULE:['schedule'],MARK:['create'],CONSENT:'*',ENTITY:'*',EFFECTS:[]};
-// Action-level business refusals (06 §6.10.4) carry no effect domain in their
-// code: the routed catalog action's own precondition failed. They earn credit
-// only when the refusal really comes from a routed registered action, and only
-// for the request that action governs: E-ACTION-SPATIAL-FACTS additionally
-// needs the action to declare a spatial requirement in the catalog, and an
-// expected request with effects needs the routed action's declared effect
-// footprint to overlap it. An empty expected request (nothing may be applied)
-// accepts any such refusal. E-ACTION-CAPABILITY (a capability the actor lacks,
-// refused before routing) is an empty-request refusal like EFFECTS.
-const ROUTED_REFUSAL_CODES=['E-ACTION-PRECONDITION','E-ACTION-SPATIAL-FACTS'];
+// An action-level business refusal (E-ACTION-PRECONDITION, 06 §6.10.4) carries no effect domain in its
+// code: the routed catalog action's own precondition failed. It earns credit only when the refusal really
+// comes from a routed registered action and, for an expected request with effects, the routed action's
+// declared effect footprint overlaps it. An empty expected request (nothing may be applied) accepts any
+// such precondition. More specific codes (e.g. E-ACTION-SPATIAL-FACTS) stay outside this vocabulary: a
+// refusal for a different reason than the expected one earns no credit.
+const ROUTED_REFUSAL_CODES=['E-ACTION-PRECONDITION'];
 const actionOps=action=>{
  const variants=action?.signature?.variants??(Array.isArray(action?.signature)?[action.signature]:[]);
  return new Set(variants.flat().map(row=>{try{return typeof row==='string'?JSON.parse(row)[0]:row?.[0];}catch{return null;}}).filter(op=>typeof op==='string'));
@@ -1508,7 +1505,6 @@ const actionOps=action=>{
 function routedRefusal(code,ops,actual,registry){
  const action=typeof actual.routed==='string'?registry?.actions?.find(a=>a.id===actual.routed):null;
  if(!action)return {ok:false,code,reason:'the refusal does not come from a routed registered action'};
- if(code==='E-ACTION-SPATIAL-FACTS'&&!(Array.isArray(action.spatial)&&action.spatial.length))return {ok:false,code,reason:'the routed action declares no spatial requirement'};
  if(!ops.size)return {ok:true,code};
  const declared=actionOps(action);
  return [...ops].some(op=>declared.has(op))?{ok:true,code}:{ok:false,code,reason:`the routed action ${action.id} does not govern the requested ${[...ops].join('/')}`};
