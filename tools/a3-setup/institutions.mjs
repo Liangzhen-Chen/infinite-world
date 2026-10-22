@@ -1,9 +1,7 @@
-import {registerSetupLoader} from './index.mjs';
+import {registerSetupLoader,preludeOnly,PRELUDE_REASON} from './index.mjs';
 import {recordHistoricalEvent,worldEvent} from '../../server-plugin/world-events.mjs';
 import {applyConsentEvent} from '../../server-plugin/action-consent.mjs';
 import {resolveAuthoritySelector,grantLimitedPermit} from '../../server-plugin/action-authority.mjs';
-import {restoreContributionSnapshot} from '../../server-plugin/civic.mjs';
-import {restoreInstitutionSnapshot,restoreInstitutionOffice,restoreOfficeRemovalSnapshot} from '../../server-plugin/governance.mjs';
 
 // Historical premises are not actions to replay. In particular a paid event
 // never calls trade/transfer, and a case event never calls crime/report/judge.
@@ -47,7 +45,7 @@ function historyPayload(ctx,row){
 const eventFields=['id','verb','at','source','actor','subject','service','to','resource','item','quantity','totalCoins','principal','fee','owner','balance','purpose','scope','terms','expires','revoked','debtor','creditor','amount','observer','location','currentlyVisible','atBeforeDetention','name','witnesses','court','case','vocation','condition','damage','target','fine','effective','fireIntensity','spell','atDay','netCoins','acquired','openingStockOnly'];
 const verbs=new Set(['appointment_agreed','quoted','opening_balance','paid','permission_granted','consented','crafted','obligation_opened','observed','theft','purchase_receipt','case_registered','judged','evidence_found','qualified','accepted_cargo','delivered','arrest_order','hostile_encounter','ignited','summoned','rite_scheduled','ownership_transferred_and_delivered','trade_completed','refused','wanted_issued']);
 eventFields.push('work','contribution','yes','no','office','claim','truth','daysAgo','content','knowsThief');
-for(const verb of ['public_work_completed','votes_recorded','application_filed','notice_posted','removed_from_office','deceived','said'])verbs.add(verb);
+for(const verb of ['votes_recorded','application_filed','notice_posted','deceived','said'])verbs.add(verb);
 function loadHistory(ctx,setup,{selectors=false}={}){
  const ids=new Set();
  const physicalIds=new Set(['itemInstances','objects'].flatMap(field=>Array.isArray(setup[field])?setup[field]:[]).map(row=>row?.id).filter(text));
@@ -57,6 +55,8 @@ function loadHistory(ctx,setup,{selectors=false}={}){
   // Other history can be a physical premise's own source and must load first.
   const deferred=object(row.actor)||row.verb==='permission_granted'&&['actor','to','target','owner','observer','debtor','creditor','court','subject','case','location'].some(key=>physicalIds.has(row[key]));
   if(deferred!==selectors)return;
+  // Their consequences (a counted contribution, a vacated office) exist only if a real action produced them.
+  if(['public_work_completed','removed_from_office'].includes(row.verb)){ctx.unmet(item,PRELUDE_REASON);return;}
   requireShape(keys(row,eventFields)&&alias(row.id)&&!ids.has(row.id)&&!Object.hasOwn(ctx.bindings,row.id)&&!state(ctx).records?.[`world_event:${row.id}`]&&verbs.has(row.verb)&&integer(row.at)&&row.at<=state(ctx).minute&&object(row.source)&&keys(row.source,['kind','row'])&&row.source.kind==='corpus_premise'&&text(row.source.row),'invalid history identity, verb, time or corpus premise source');
   ids.add(row.id);
   for(const field of ['balance','amount','quantity','totalCoins','principal','fee','expires','fine','fireIntensity','atDay'])if(Object.hasOwn(row,field))requireShape(integer(row[field]),`invalid history ${field}`);
@@ -65,21 +65,17 @@ function loadHistory(ctx,setup,{selectors=false}={}){
   if(['consented','refused'].includes(row.verb))requireShape(text(row.actor)&&text(row.scope)&&text(row.subject??row.spell)&&integer(row.expires)&&row.expires>row.at&&row.revoked===false&&(row.verb==='refused'||text(row.to)&&object(row.terms)),'invalid explicit consent/refusal scope, terms or expiry');
   if(row.verb==='opening_balance')requireShape(text(row.owner)&&text(row.resource)&&integer(row.balance),'opening_balance needs owner/resource/balance');
   if(row.verb==='obligation_opened')requireShape(text(row.subject)&&text(row.debtor)&&text(row.creditor)&&integer(row.amount),'obligation_opened needs claim and parties');
-  if(row.verb==='public_work_completed')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.subject))&&text(row.work)&&integer(row.contribution)&&row.contribution>0,'invalid accepted public work');
   if(row.verb==='votes_recorded')requireShape(text(row.subject)&&integer(row.yes)&&integer(row.no),'invalid recorded tally');
   if(row.verb==='application_filed')requireShape(text(row.actor)&&text(row.subject),'invalid application filing');
   if(row.verb==='notice_posted')requireShape(text(row.actor)&&text(row.subject),'invalid posted notice');
   if(row.verb==='deceived')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.to))&&text(row.claim)&&text(row.truth)&&(row.daysAgo===undefined||integer(row.daysAgo)),'invalid historical claim');
   if(row.verb==='said')requireShape(text(row.actor)&&text(row.content)&&(row.knowsThief===undefined||typeof row.knowsThief==='boolean'),'invalid historical statement');
-  if(row.verb==='removed_from_office')requireShape(text(row.actor)&&known(ctx,ctx.ref(row.subject))&&text(row.office),'invalid office removal source');
   const actor=row.actor===undefined?null:selector(ctx,row.actor);
   if(actor!==null)requireShape(known(ctx,actor),'history actor does not exist');
   const payload=historyPayload(ctx,row),key=`world_event:${row.id}`;
   if(actor!==null)payload.actor=actor;
   if(ctx.native(item,d=>{
    recordHistoricalEvent(d,ctx.engine,{id:row.id,verb:row.verb,actor,minute:row.at,location:payload.location??null,witnesses:payload.witnesses??[],source:payload.source,payload});
-   if(row.verb==='public_work_completed')restoreContributionSnapshot(d,ctx.engine,{sourceEvent:key},{origin:'initial'});
-   if(row.verb==='removed_from_office')restoreOfficeRemovalSnapshot(d,ctx.engine,{sourceEvent:key},{origin:'initial'});
   }))ctx.bindings[row.id]=key;
   else return;
   if(row.verb==='deceived'&&row.daysAgo!==undefined&&state(ctx).minute-row.at!==row.daysAgo*1440)ctx.unmet(`${item}.daysAgo`,'Historical at and daysAgo disagree; temporal source must be resolved without inventing a date (T1)');
@@ -108,63 +104,9 @@ function loadPermits(ctx,setup){rows(ctx,setup,'permits',(row,item)=>{
 });}
 
 export {object,text,alias,integer,keys,gap,rows,requireShape,state,known,selector,eventSource};
-// 05 §5.3: an organization's charter lists the offices it may have
-// (「可设职位表」: kind, powers, seat). A corpus office instance is a premise
-// only when it is one of those catalog offices, possibly narrowed to one
-// matter (case/obligation/scope); it can never carry powers the catalog does
-// not grant (review 10-22 P1). Catalog sources are world data only: the
-// organization's own offices table and governance.authority.offices.
-const powersOf=authority=>Array.isArray(authority)?authority:Array.isArray(authority?.operations)?authority.operations:null;
-export function officeCatalog(engine,organization){
- const rows=[...(engine.byId.get(organization)?.offices??[])];
- for(const office of Object.values(engine.rules.governance?.authority?.offices??{}))
-  if((office.settlements??[]).includes(organization))rows.push({id:office.id,seat:null,authority:{operations:office.powers??[]}});
- return rows;
-}
-export function catalogOffice(engine,row,organization){
- const powers=powersOf(row.authority),seat=row.seat??row.location;
- if(!powers?.length)return null;
- return officeCatalog(engine,organization).find(office=>{
-  const granted=powersOf(office.authority)??[];
-  return powers.every(p=>granted.includes(p))&&(!office.seat||office.seat===seat)&&
-   (office.authority?.profession??null)===(Array.isArray(row.authority)?null:row.authority?.profession??null);
- })??null;
-}
-const officeRow=row=>row?.template==='office'&&row?.monthlyQuotaD===undefined;
-const institutionRow=row=>['proposal','application'].includes(row?.kind);
-function loadInstitutionInputs(ctx,setup){
- const loadedOffices=[];
- for(const [index,row]of (Array.isArray(setup.instances)?setup.instances:[]).entries()){
-  if(officeRow(row)){
-   const item=`instances[${index}]`;
-   try{
-    requireShape(keys(row,['id','template','kind','name','location','organization','seat','authority'])&&alias(row.id)&&!Object.hasOwn(ctx.bindings,row.id)&&(row.kind===undefined||row.kind==='office'),'invalid institution office fields');
-    const organization=ctx.ref(row.organization),office=catalogOffice(ctx.engine,row,organization);
-    if(!office){gap(ctx,item,'offices',`organization ${row.organization} has no catalog office granting ${JSON.stringify(powersOf(row.authority)??row.authority)} at ${row.seat??row.location}`);continue;}
-    let id;
-    if(ctx.native(item,d=>{id=restoreInstitutionOffice(d,ctx.engine,{...row,organization},{origin:'initial'});})){ctx.bindings[row.id]=id;loadedOffices.push(row.id);}
-    ctx.note(`${item}: office loaded as a narrowed instance of catalog office ${office.id}`);
-   }catch(error){ctx.unmet(item,error.message);}
-   continue;
-  }
-  if(!['proposal','application'].includes(row?.kind))continue;
-  const item=`instances[${index}]`;
-  try{
-   const allowed=['id','template','kind','name','location','status',...(row.kind==='application'?['applicant','plot']:[])];
-   requireShape(keys(row,allowed)&&row.template==='thing'&&alias(row.id),'invalid institutional instance');
-   const source=(setup.history??[]).find(e=>e.subject===row.id&&e.verb===(row.kind==='proposal'?'votes_recorded':'application_filed'));
-   requireShape(source,'institutional snapshot has no filing/tally source');
-   const event=eventSource(ctx,source.id);
-   let id;
-   if(ctx.native(item,d=>{id=restoreInstitutionSnapshot(d,ctx.engine,{row:{...row,applicant:row.applicant&&ctx.ref(row.applicant),plot:row.plot&&ctx.ref(row.plot)},sourceEvent:`world_event:${event.id}`},{origin:'initial'});}))ctx.bindings[row.id]=id;
-  }catch(error){ctx.unmet(item,error.message);}
- }
- if(loadedOffices.length)ctx.loadOfficeHoldings?.(loadedOffices);
-}
 registerSetupLoader({fields:['history'],order:10,load:loadHistory});
 registerSetupLoader({fields:['history'],order:65,load(ctx,setup){loadHistory(ctx,setup,{selectors:true});}});
-// Offices load before accounts, cases and obligations that name them as
-// handler or collector (order 25+); institutional inputs need loaded history.
-registerSetupLoader({fields:['instances'],rows:{instances:officeRow},order:12,load:loadInstitutionInputs});
-registerSetupLoader({fields:['instances'],rows:{instances:institutionRow},order:66,load:loadInstitutionInputs});
 registerSetupLoader({fields:['permits'],order:70,load:loadPermits});
+// Offices, proposals/applications and quest escrows are institutional holdings: they exist only through the actions that create them.
+const prelude=row=>row?.template==='office'||['proposal','application'].includes(row?.kind)||row?.template==='instrument'&&row?.purpose==='quest_escrow';
+registerSetupLoader({fields:['instances'],rows:{instances:prelude},order:12,load:(ctx,setup)=>preludeOnly(ctx,setup,'instances')});

@@ -9,7 +9,6 @@ import {npcHousehold} from './npc-life.mjs';
 import {workContribution} from './works.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
-import {requireRestoreOrigin} from './restore-origin.mjs';
 declareHoldingWriter('civic',{kinds:['resides','resident_of']});
 
 const recordPath=id=>['state','records',id];
@@ -71,16 +70,6 @@ export function contributionTotal(state,settlement,subject='player'){
     return Object.values(state.records??{}).filter(r=>r.category==='civic_contribution'&&r.settlement===settlement&&r.subject===subject).reduce((n,r)=>n+r.points,0);
 }
 const total=(d,settlement,subject='player')=>contributionTotal(d.get('state'),settlement,subject);
-// Import an accepted work once without performing it or funding it again.
-export function restoreContributionSnapshot(d,engine,{sourceEvent},{origin}={}){
- requireRestoreOrigin(origin,'restoreContributionSnapshot');
-    const event=d.get('state','records',sourceEvent),p=event?.payload;
-    if(event?.category!=='world_event'||event.verb!=='public_work_completed'||event.minute>d.get('state','minute')||
-        event.source?.kind!=='corpus_premise'||!engine.rules.agriculture?.settlements.some(s=>s.settlement===p?.subject)||
-        !(event.actor==='player'||d.get('state','npcs',event.actor))||typeof p.work!=='string'||!p.work.trim()||
-        !Number.isSafeInteger(p.contribution)||p.contribution<1)throw Error('Invalid accepted public work contribution source');
-    return credit(d,{sourceEvent,settlement:p.subject,subject:event.actor,kind:'project',points:p.contribution,minute:event.minute});
-}
 function credit(d,{sourceEvent,settlement,subject='player',kind,points,minute}){
     const id=`civic_source:${sourceEvent}`,old=d.get(...recordPath(id));
     if(old){

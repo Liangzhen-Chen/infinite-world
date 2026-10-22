@@ -3,8 +3,6 @@ import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
 import { hazardRouteClosed } from './hazard-calendar.mjs';
 import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-declareHoldingWriter('calendar-clock');
 
 // Old campaigns retain their published 30-day display calendar. Explicit
 // campaign dates name a native calendar; no season/daylight override is stored.
@@ -30,15 +28,6 @@ export function minuteForCalendarDate(engine,date){
     const minute=c.epochMinute+lo*DAY+date.hour*60+date.minute;
     if(compare(calendarDateAt(engine,minute,date.calendar))!==0)throw Error('Date does not exist on the native calendar');
     return minute;
-}
-export function restoreCalendarSnapshot(d,engine,{date,minute,sourceEvent,origin}={}){
-    if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent)throw Error('Calendar initialization requires initial campaign authority');
-    const at=minuteForCalendarDate(engine,date);
-    if(minute!==undefined&&minute!==at)throw Error('Absolute minute and native date disagree');
-    if(d.get('state','records','calendar:active'))throw Error('Calendar is already initialized');
-    holdingSet(d,engine,['state','records','calendar:active'],{category:'calendar_context',calendar:date.calendar,sourceEvent},'calendar-clock');
-    holdingSet(d,engine,['state','minute'],at,'calendar-clock');
-    return calendarDateAt(engine,at,date.calendar);
 }
 export function historicalMinute(document,{at,daysAgo}={}){
     const now=document.state.minute;

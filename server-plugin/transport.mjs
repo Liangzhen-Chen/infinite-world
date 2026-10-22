@@ -337,23 +337,11 @@ export function historicalTransportDocument(d,e,{id,actor='player'}){
  return {document:id,source:doc.sourceEvent,carrier:event.actor,customer:actor,subject:doc.describes,delayMinutes:p.terms.delayMinutes,cause:p.terms.cause,compensated:p.terms.compensated,
   condition:cargo.maxDurability?100*cargo.durability/cargo.maxDurability:cargo.condition??null,compensation:null};
 }
-export function deliveryClaimPremises(d,e,{id,actor='player'}){
- const s=d.get('state'),row=obligationRow(s,id);
- if(row?.kind!=='delivery'||row.snapshotVersion!==1||row.creditor!==actor)throw Error('Delivery inspection requires its existing customer claim');
- const cargo=s.itemInstances?.[row.subject];if(!cargo)throw Error('Historical delivery cargo is missing');
- const documents=Object.entries(s.itemInstances??{}).filter(([,p])=>p.owner===actor&&p.document?.obligation===row.id&&p.document.valid!==false).map(([id,p])=>({id,source:p.document.sourceEvent,links:[...p.document.links]}));
- return {id:row.id,carrier:row.debtor,customer:row.creditor,subject:row.subject,delivered:row.delivered,lossAssessed:row.lossAssessed,
-  condition:cargo.maxDurability?100*cargo.durability/cargo.maxDurability:null,documents,compensation:null};
-}
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
  if(task==='inspect'&&institutionOriginal(e,d.document,asset)?.document?.kind==='transport_claim'){
   if(args.actor!==undefined&&args.actor!=='player')throw Error('Transport inspection requires its player customer');
   return historicalTransportDocument(d,e,{id:asset});
- }
- if(task==='inspect'&&obligationRow(d.get('state'),asset)?.snapshotVersion===1){
-  if(args.actor!==undefined&&args.actor!=='player')throw Error('Delivery inspection requires its player customer');
-  return deliveryClaimPremises(d,e,{id:asset,actor:'player'});
  }
  if(task==='forward'){
   if(args.consent!==true)throw preconditionFailure('远期买卖须有在场卖方本次同意');

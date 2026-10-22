@@ -20,7 +20,6 @@ import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
 import {priceRead} from './stock.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
-import {requireRestoreOrigin} from './restore-origin.mjs';
 
 // 本地记账铜钱（rules.economy.credit.coinages 中 item 为 null 的 coinage_river）。其他铸币仍是物品，S1b 迁。
 declareHoldingWriter('money',{kinds:[]});
@@ -179,31 +178,8 @@ export function counterClaimAccounts(d,owner){
     return amount>0?[[row.account,amount]]:[];
 }
 registerAdvanceHook('counterClaimAccounts',counterClaimAccounts);
-// Runtime payments out of a dedicated account post as 'money'; 'money-snapshot' is only for restoring openings.
+// Runtime payments out of a dedicated account post as 'money'.
 declareLedgerWriter('money');
-declareLedgerWriter('money-snapshot',{sources:{'src:genesis':{[COIN]:Infinity}},sinks:['sink:pack_removed']});
-export function restoreCoinAccount(d,engine,{owner,purpose,balance:amount,sourceEvent,seat,balanceMode},{origin}={}){
-    requireRestoreOrigin(origin,'restoreCoinAccount');
-    const state=d.get('state'),event=state.records?.[sourceEvent],key=accountKey(owner,COIN,purpose);
-    if(!Number.isSafeInteger(amount)||amount<0||!['counter','legal_treasury','purse','vault','treasury'].includes(purpose)||
-        !event||event.category!=='world_event'||event.verb!=='opening_balance'||event.minute>state.minute||
-        event.payload?.owner!==owner||event.payload.resource!==COIN||event.payload.balance!==amount||
-        event.payload.purpose!==undefined&&event.payload.purpose!==purpose||
-        ![undefined,'ensure_existing'].includes(balanceMode))throw Error('Invalid coin account opening source');
-    const known=owner==='player'||state.npcs?.[owner]||state.creatures?.[owner]||engine.byId.has(owner)||engine.rules.economy?.credit?.banks?.some(b=>b.id===owner);
-    if(!known||seat!==undefined&&!engine.world.locations.some(l=>l.id===seat))throw Error('Unknown account owner or seat');
-    const dedicated=['counter','legal_treasury'].includes(purpose),record=dedicatedCoinKey(owner,purpose),opening=`money_opening:${sourceEvent}`,old=state.records?.[opening]??state.records?.[record];
-    if(old){if(old.account===key&&old.sourceEvent===sourceEvent&&old.openingBalance===amount&&old.seat===seat)return key;throw Error('Account opening already exists');}
-    if(!dedicated&&key!==partyAccount(engine,state,owner))throw Error('Account purpose does not match native owner');
-    const before=legacyMoney(engine,state).get(key)??0,value=balanceMode==='ensure_existing'?before:amount;
-    if(dedicated)holdingSet(d,engine,['state','records',record],{category:'money_account',owner,purpose,account:key,coins:value,openingBalance:amount,sourceEvent,...(seat?{seat}:{})},'money');
-    else mirrorPartyCoins(d,engine,owner,value-before,sourceEvent,'money');
-    const delta=value-before;
-    if(delta>0)transfer(d,{from:source('genesis','opening'),to:key,amount:delta,writer:'money-snapshot',eventId:sourceEvent});
-    else if(delta<0)transfer(d,{from:key,to:sink('pack_removed','opening'),amount:-delta,writer:'money-snapshot',eventId:sourceEvent});
-    holdingSet(d,engine,['state','records',opening],{category:'money_opening',account:key,sourceEvent,openingBalance:amount,...(seat?{seat}:{})},'money');
-    return key;
-}
 // Private counter spending is an owner's action. It cannot grant loan consent.
 export function spendCounterCoins(d,engine,{owner,actor,to,amount,eventId}){
     if(typeof eventId!=='string'||!eventId)throw Error('Counter payment requires eventId');
