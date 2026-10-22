@@ -189,6 +189,12 @@ test('T1/T4: a native skipped leap month does not create another publishing allo
  const setup=setupOf(179),date={calendar:'core:calendar_default',year:3,month:6,day:29,hour:23,minute:59};
  setup.date=date;setup.minute=minuteForCalendarDate(engine,date);
  const loaded=loadPublisher(setup);assert.deepEqual(loaded.setupUnmet,[]);
+ // A premise placed on a far date (day 884 here) must start the day-bound ledgers (farm, lair, ecology, migration)
+ // at that day, exactly as a mid-campaign import does (agriculture-migration.mjs: lastDay = day - 1, no backfilled
+ // harvest). The setup loader only moves the clock, so without this the first real day boundary is correctly
+ // refused as a non-contiguous settlement ("顺序不连续"), which this test is not about.
+ const day=Math.floor(loaded.document.state.minute/1440);
+ for(const record of Object.values(loaded.document.state.records))if(Number.isInteger(record?.lastDay)&&record.lastDay<day-1)record.lastDay=day-1;
  const posted=await run(loaded.document,'world_quest',{...publication,deadline:setup.minute+60},'before-leap');
  const rights=questPublishingRights(engine.scoped(posted.document),posted.document.state);assert.equal(rights.usedD,1);
  const entered=await run(posted.document,'world_time',{minutes:1},'enter-leap');
