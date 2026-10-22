@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
@@ -37,7 +38,7 @@ function putSite(d,engine,place,row,{to=null,eventId=null}={}){
         const base=before??r.quantity,taken=to?.taken?.[r.id]??0,grown=after+taken-base;
         if(grown>0)moveStock(d,{from:`src:regrowth|${resource}|site`,to:acct,amount:grown,writer:'sites',eventId});
         if(taken)moveStock(d,{from:acct,to:to.account,amount:taken,writer:'sites',eventId});
-        if(grown<0)throw Error('据点资源减少却没有去处');
+        if(grown<0)throw preconditionFailure('据点资源减少却没有去处');
     }
     holdingSet(d,null,['state','records',siteKey(place.id)],row,'sites');
 }
@@ -183,11 +184,11 @@ function assertOccupants(d,engine,place,authorization){
     }
     for(const id of ids){
         const actor=engine.actor(d,id),isNpc=engine.actorPath(id)[1]==='npcs';
-        if(!actor)throw Error('登记占据者状态尚未落实，不能视为空置');
+        if(!actor)throw preconditionFailure('登记占据者状态尚未落实，不能视为空置');
         if(actor.location!==place.id||!living(engine,d,id,actor))continue;
         if(isNpc&&place.access?.mode==='public')continue;
         const managed=s.manager&&ownerOf(place)&&allowed(d.document,place,ownerOf(place),authorization);
-        if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw Error('占据者仍在场，需取得许可或实际解决占据关系');
+        if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw preconditionFailure('占据者仍在场，需取得许可或实际解决占据关系');
     }
 }
 
@@ -212,7 +213,7 @@ function ledger(d,place){
     for(const resource of place.site.resources??[])if(!Object.hasOwn(row.remaining,resource.id))row.remaining[resource.id]=resource.quantity;
     return settle(place,row,d.get('state','minute'));
 }
-const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw Error('机关尚未解除');};
+const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw preconditionFailure('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
 export function assertSiteHarvest(d,engine,place,args){
@@ -222,9 +223,9 @@ export function assertSiteHarvest(d,engine,place,args){
   const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
   assertLocationAccess(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
  }
- if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw Error('采伐需所有者的采集许可');
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw preconditionFailure('采伐需所有者的采集许可');
  assertOccupants(d,engine,place,authorizations);
- if(!inside(d,place))throw Error('须先进入据点再采伐');
+ if(!inside(d,place))throw preconditionFailure('须先进入据点再采伐');
  unblocked(ledger(d,place),place.site.entryMechanisms??[]);
 }
 function watchers(d,engine,place){
@@ -235,9 +236,9 @@ function watchers(d,engine,place){
 }
 function infiltrate(d,engine,place,eventId){
     const plan=place.site.infiltration;
-    if(!plan)throw Error('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
+    if(!plan)throw preconditionFailure('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
-    if(d.get('state','player','companions')?.length)throw Error('潜入不能带同行者');
+    if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
     unblocked(ledger(d,place),place.site.entryMechanisms??[]);
     engine.advance(d,plan.minutes,eventId);
     if(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常')return{entered:false,note:'潜入途中失去行动能力或离开此地'};
@@ -281,15 +282,15 @@ export function siteView(engine,document){
 export function siteAction(d,args,eventId){
  initialKnowledgeAction(d,this,'site',args);
     const receiptKey=`gather-session:${eventId}`,identity=digest(args),prior=args.operation==='gather'?d.get('state','records',receiptKey):null;
-    if(prior){if(prior.identity!==identity)throw Error('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
+    if(prior){if(prior.identity!==identity)throw preconditionFailure('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
     const place=this.byId.get(d.get('state','location'));
-    if(!place?.site)throw Error('所在地没有登记遗迹据点；须先沿道路抵达');
+    if(!place?.site)throw preconditionFailure('所在地没有登记遗迹据点；须先沿道路抵达');
     const operation=args.operation??'inspect',s=place.site;
-    if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw Error('据点许可名单最多8项');
+    if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('据点许可名单最多8项');
     const authorizations=[args.authorization,...args.authorizations??[]];
     if(operation==='inspect')return siteView(this,d.document);
     if(operation==='infiltrate')return infiltrate(d,this,place,eventId);
-    if(!['enter','investigate','disarm','gather'].includes(operation))throw Error('据点操作须为inspect、enter、investigate、disarm、gather或infiltrate');
+    if(!['enter','investigate','disarm','gather'].includes(operation))throw preconditionFailure('据点操作须为inspect、enter、investigate、disarm、gather或infiltrate');
     const assertAccess=()=>{
         if(operation==='investigate'&&covert(d,place))return;
         assertSocietyEntry(d,this,place);
@@ -297,7 +298,7 @@ export function siteAction(d,args,eventId){
             const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
             assertLocationAccess(d,this,place.id,{authorization,companions:d.get('state','player','companions')??[]});
         }
-        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw Error('据点物权要求所有者的有效许可');
+        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw preconditionFailure('据点物权要求所有者的有效许可');
         assertOccupants(d,this,place,authorizations);
     };
     const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();};
@@ -310,7 +311,7 @@ export function siteAction(d,args,eventId){
         return{...siteView(this,d.document),truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
     }
     const mechanism=(s.mechanisms??[]).find(m=>[m.id,m.name].includes(args.target));
-    if(!inside(d,place)&&!((s.entryMechanisms??[]).includes(mechanism?.id)&&['investigate','disarm'].includes(operation)))throw Error('须先进入据点');
+    if(!inside(d,place)&&!((s.entryMechanisms??[]).includes(mechanism?.id)&&['investigate','disarm'].includes(operation)))throw preconditionFailure('须先进入据点');
     if(operation==='investigate'&&mechanism){
         const key=observationKey(place.id,mechanism.id);
         if(d.get('state','records',key))return{target:mechanism.id,duplicate:true};
@@ -320,9 +321,9 @@ export function siteAction(d,args,eventId){
         return{target:mechanism.id,description:mechanism.description??'',tool:mechanism.tool??null,materials:mechanism.materials??[],...(element?{element}:{})};
     }
     if(operation==='disarm'){
-        if(!mechanism)throw Error('没有这个登记机关');
+        if(!mechanism)throw preconditionFailure('没有这个登记机关');
         if(row.mechanisms[mechanism.id]?.status==='已解除')return{target:mechanism.id,duplicate:true};
-        if(!d.get('state','records',observationKey(place.id,mechanism.id)))throw Error('须先调查机关');
+        if(!d.get('state','records',observationKey(place.id,mechanism.id)))throw preconditionFailure('须先调查机关');
         // A burning, soaked, frozen or heated feature does the work instead of tools and a check.
         const state=mechanism.element&&traitsOf(this,d.get('state'),mechanism.element.feature)?.tags.find(t=>mechanism.element.tags.includes(t));
         if(state){
@@ -331,9 +332,9 @@ export function siteAction(d,args,eventId){
             putSite(d,this,place,row,{eventId});
             return{target:mechanism.id,element:{feature:mechanism.element.feature,state},damage:0,status:'已解除'};
         }
-        if(mechanism.tool){const held=heldUnit(d,this,'player',mechanism.tool);if(!held||held.durability<=0)throw Error('缺少可用机关工具');}
+        if(mechanism.tool){const held=heldUnit(d,this,'player',mechanism.tool);if(!held||held.durability<=0)throw preconditionFailure('缺少可用机关工具');}
         const costs=new Map();for(const cost of mechanism.materials??[])costs.set(cost.item,(costs.get(cost.item)??0)+cost.quantity);
-        for(const[item,quantity]of costs)if(this.quantity(d,'player',item)<quantity)throw Error('机关消耗材料不足');
+        for(const[item,quantity]of costs)if(this.quantity(d,'player',item)<quantity)throw preconditionFailure('机关消耗材料不足');
         for(const[item,quantity]of costs)this.itemDelta(d,'player',item,-quantity,{flow:'sink:consume',purpose:'mechanism',writer:'sites',eventId});
         const check=this.check(d,{...mechanism.check,...(mechanism.tool?{tools:[mechanism.tool]}:{})},eventId);
         advance(mechanism.minutes);
@@ -344,34 +345,34 @@ export function siteAction(d,args,eventId){
         return{target:mechanism.id,check,damage,status:row.mechanisms[mechanism.id].status};
     }
     const target=(s[operation==='gather'?'resources':'clues']??[]).find(r=>[r.id,r.name].includes(args.target));
-    if(!target)throw Error('没有这个登记调查或资源目标');
+    if(!target)throw preconditionFailure('没有这个登记调查或资源目标');
     unblocked(row,target.mechanisms??[]);
     if(operation==='gather'){
-        if(!(target.requires??[]).every(id=>discovered(d.document,place.id,id)))throw Error('尚未实际发现这个资源');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源另有物权，入内许可不能转让财物');
+        if(!(target.requires??[]).every(id=>discovered(d.document,place.id,id)))throw preconditionFailure('尚未实际发现这个资源');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源另有物权，入内许可不能转让财物');
         const timed=Boolean(target.gather)||args.minutes!==undefined,rule=timed?actionCostRule(this,'gather.*'):null;
         let minutes=target.minutes,quantity=args.quantity??1;
         if(timed){
-            if(!target.gather)throw Error('该资源未登记持续采集工序');
+            if(!target.gather)throw preconditionFailure('该资源未登记持续采集工序');
             minutes=args.minutes??target.minutes;
-            if(!Number.isSafeInteger(minutes)||minutes<rule.durationMin||minutes>rule.durationMax)throw Error('采集时长须在30至480分钟之间');
-            if(args.quantity!==undefined)throw Error('持续采集产量由实际工时与资源存量决定');
-            if(!target.gather.seasons.includes(this.calendar(d.get('state','minute')).season)||!target.gather.seasons.includes(this.calendar(d.get('state','minute')+minutes).season))throw Error('当前季节没有可采的药草');
+            if(!Number.isSafeInteger(minutes)||minutes<rule.durationMin||minutes>rule.durationMax)throw preconditionFailure('采集时长须在30至480分钟之间');
+            if(args.quantity!==undefined)throw preconditionFailure('持续采集产量由实际工时与资源存量决定');
+            if(!target.gather.seasons.includes(this.calendar(d.get('state','minute')).season)||!target.gather.seasons.includes(this.calendar(d.get('state','minute')+minutes).season))throw preconditionFailure('当前季节没有可采的药草');
             const yields=(this.world.primitiveTables?.yields??this.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
             const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
-            if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw Error('采集产量与工日未登记');
+            if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
             quantity=Math.min(row.remaining[target.id],Math.floor(yields*minutes/day));
-            if(quantity<1)throw Error('资源存量或本次工时不足以采得一株');
+            if(quantity<1)throw preconditionFailure('资源存量或本次工时不足以采得一株');
             assertActionTime(d,this,minutes);
         }
-        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw Error('采集数量须为正整数');
-        if(row.remaining[target.id]<quantity)throw Error('有限资源不足，不会因重访刷新');
+        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw preconditionFailure('采集数量须为正整数');
+        if(row.remaining[target.id]<quantity)throw preconditionFailure('有限资源不足，不会因重访刷新');
         const span=timed?beginActionActivity(d,this,rule.activity):null;
         advance(minutes);
-        if(timed&&(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常'))throw Error('采集完成前已离开或失去行动能力');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw Error('资源许可已到期');
+        if(timed&&(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常'))throw preconditionFailure('采集完成前已离开或失去行动能力');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源许可已到期');
         const wood=target.item==='item_wood'&&forestView(this,d.get('state'),place.id);
-        if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw Error('林木存量不足');
+        if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw preconditionFailure('林木存量不足');
         row.remaining[target.id]-=quantity;putSite(d,this,place,row,{eventId,to:wood?null:{account:bag(this,'player',target.item),taken:{[target.id]:quantity}}});
         this.itemDelta(d,'player',target.item,quantity,STOCK_BOOKED);
         const training=timed?learnFromWork(d,this,target.gather.skill,minutes,`gather:${place.id}:${target.id}`,eventId):null;
@@ -392,28 +393,28 @@ export function sitePermission(d,engine,args,eventId){
     const old=args.authorization?d.get('state','records',args.authorization):null,target=args.location??args.destination??old?.subject;
     const place=engine.world.locations.find(row=>row.site&&[row.id,row.name,...row.aliases??[]].includes(target));
     if(!place&&old?.action!=='site_use')return null;
-    if(!place)throw Error('许可所属据点已不存在');
+    if(!place)throw preconditionFailure('许可所属据点已不存在');
     const grantor=engine.resolve(args.promisor,'npc'),base=engine.byId.get(grantor),actor=d.get('state','npcs',grantor),now=d.get('state','minute');
     const owners=[ownerOf(place),...(place.site.resources??[]).map(row=>ownerOf(place,row)),...place.site.occupants??[]];
     const owned=[...new Set(owners.filter(owner=>authorityOf(place,owner)===grantor))],owner=owned[0];
     const propertyOwners=[ownerOf(place),...(place.site.resources??[]).map(row=>ownerOf(place,row))];
     const onlyOccupant=owner&&!propertyOwners.includes(owner)&&!place.site.manager;
-    if(!owner||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw Error('据点许可须由现场清醒成年所有者、管理人或占据者签发');
-    if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw Error('据点许可只登记给玩家');
-    if(place.access?.mode==='private'&&place.access.requiresConsent&&!place.access.residents?.includes(grantor))throw Error('私宅据点许可仍须由登记住户签发');
-    if(place.access?.mode==='council'&&place.access.authority!==grantor)throw Error('议事区许可须由登记负责人签发');
+    if(!owner||(personAge(engine,d.get('state'),grantor).value??0)<18||personConstraint(engine,d.get('state'),grantor)||!actor||onlyOccupant&&actor.location!==place.id||actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel||isPhysicallyDead(engine,d,grantor)||['濒死','昏迷','患病'].includes(actor.status)||/睡眠|熟睡|睡觉/.test(actor.activity??''))throw preconditionFailure('据点许可须由现场清醒成年所有者、管理人或占据者签发');
+    if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player')throw preconditionFailure('据点许可只登记给玩家');
+    if(place.access?.mode==='private'&&place.access.requiresConsent&&!place.access.residents?.includes(grantor))throw preconditionFailure('私宅据点许可仍须由登记住户签发');
+    if(place.access?.mode==='council'&&place.access.authority!==grantor)throw preconditionFailure('议事区许可须由登记负责人签发');
     if(args.operation==='revoke_access'){
-        if(old?.action!=='site_use'||old.subject!==place.id||old.grantor!==grantor)throw Error('只有原签发者能撤销据点许可');
+        if(old?.action!=='site_use'||old.subject!==place.id||old.grantor!==grantor)throw preconditionFailure('只有原签发者能撤销据点许可');
         const permission={...old,revoked:true,revokedAt:now};holdingSet(d,null,['state','records',args.authorization],permission,'sites');return{authorization:args.authorization,permission};
     }
     const minutes=args.minutes??60;
-    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>10080||typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('据点许可须有用途及1至10080分钟期限');
+    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>10080||typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw preconditionFailure('据点许可须有用途及1至10080分钟期限');
     const operations={site_visit:['enter','investigate'],site_disarm:['enter','investigate','disarm'],site_gather:['enter','investigate','gather']}[args.type??'site_visit'];
-    if(!operations)throw Error('据点许可类型须为site_visit、site_disarm或site_gather');
-    const authorization=`permission_${eventId}`;if(d.get('state','records',authorization))throw Error('许可编号已经存在');
-    if(args.guests!==undefined&&(!Array.isArray(args.guests)||args.guests.length>8))throw Error('据点许可同行名单最多8人');
+    if(!operations)throw preconditionFailure('据点许可类型须为site_visit、site_disarm或site_gather');
+    const authorization=`permission_${eventId}`;if(d.get('state','records',authorization))throw preconditionFailure('许可编号已经存在');
+    if(args.guests!==undefined&&(!Array.isArray(args.guests)||args.guests.length>8))throw preconditionFailure('据点许可同行名单最多8人');
     const guests=(args.guests??[]).map(name=>engine.resolve(name,'npc'));
-    if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==actor.location||!d.get('state','player','companions')?.includes(id)))throw Error('获准同行者须为实际在场且不重复的同行人');
+    if(new Set(guests).size!==guests.length||guests.some(id=>d.get('state','npcs',id,'location')!==actor.location||!d.get('state','player','companions')?.includes(id)))throw preconditionFailure('获准同行者须为实际在场且不重复的同行人');
     const permission={category:'authorization',action:'site_use',subject:place.id,owner,owners:owned,grantor,grantee:'player',operations,guests,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
     holdingSet(d,null,['state','records',authorization],permission,'sites');return{authorization,permission};
 }
@@ -421,16 +422,16 @@ export function sitePermission(d,engine,args,eventId){
 // RW-04 woodcutting lives with site harvest boundaries in the ecology pack.
 function usableTool(d,engine,tool){
     const held=heldUnit(d,engine,'player',tool),definition=engine.byId.get(tool);
-    if(!engine.quantity(d,'player',tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
+    if(!engine.quantity(d,'player',tool)||(held?.durability??definition?.durability??0)<=0)throw preconditionFailure('需要实际完好的工具');
     if(typeof held==='number')d.set([...engine.bagPath('player'),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
 }
 export function woodcut(d,args,id){
  const location=d.get('state','location'),rules=this.rules.forestWater?.forest,forest=forestView(this,d.get('state'),location);
- if(!forest||!rules)throw Error('此地没有可采林木');
- const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw Error('单次采伐量越界');
+ if(!forest||!rules)throw preconditionFailure('此地没有可采林木');
+ const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw preconditionFailure('单次采伐量越界');
  const place=this.byId.get(location);
  // A new harvesting entry cannot bypass a site's property or consent boundary.
- const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw Error('采伐需所有者的采集许可');};
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw preconditionFailure('采伐需所有者的采集许可');};
  access();
  usableTool(d,this,rules.tool);
  const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);

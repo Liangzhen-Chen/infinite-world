@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personView,personMental}from'./entity-view.mjs';
 import {standing}from'./standing.mjs';
@@ -51,30 +52,30 @@ export function spellConsentPermission(d,engine,args,eventId){
  const action=args.location??args.destination??old?.action??native?.scope;
  if(!spellConsentActions.includes(action))return null;
  const target=engine.resolve(args.promisor,'npc'),now=d.get('state','minute');
- if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player'||args.guests?.length)throw Error('施法同意只由本人给玩家，不能代替他人同意');
+ if(args.promisee!==undefined&&engine.resolve(args.promisee)!=='player'||args.guests?.length)throw preconditionFailure('施法同意只由本人给玩家，不能代替他人同意');
  if(args.operation==='revoke_access'){
   if(native&&!old){
-   if(native.from!==target||native.to!=='player'||native.scope!==action)throw Error('只有原签发本人能撤销同意');
-   if(d.get('state','npcs',target,'location')!==d.get('state','location'))throw Error('撤销同意须本人在场');
+   if(native.from!==target||native.to!=='player'||native.scope!==action)throw preconditionFailure('只有原签发本人能撤销同意');
+   if(d.get('state','npcs',target,'location')!==d.get('state','location'))throw preconditionFailure('撤销同意须本人在场');
    if(events.some(e=>e.type==='consent_revoked'&&e.consent===native.id&&e.at<=now))return{authorization:native.id,consent:native,duplicate:true};
    const row=applyConsentEvent(d,{engine,document:d.document},{actor:target,eventId:`${eventId}:consent`,verb:'consent_revoked',to:'player',payload:{consent:native.id}});
    return{authorization:native.id,consent:row};
   }
-  if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==target||old.grantee!=='player')throw Error('只有原签发本人能撤销同意');
-  if(d.get('state','npcs',target,'location')!==d.get('state','location'))throw Error('撤销同意须本人在场');
+  if(old?.category!=='authorization'||old.action!==action||old.subject!==target||old.grantor!==target||old.grantee!=='player')throw preconditionFailure('只有原签发本人能撤销同意');
+  if(d.get('state','npcs',target,'location')!==d.get('state','location'))throw preconditionFailure('撤销同意须本人在场');
   if(old.revoked)return{authorization:args.authorization,consent:old,duplicate:true};
   const row={...old,revoked:true,revokedAt:now,revokedBy:target};holdingSet(d,null,['state','records',args.authorization],row,'magic-consent');return{authorization:args.authorization,consent:row};
  }
- if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('施法同意须明确用途');
- const minutes=args.minutes??60;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>1440)throw Error('同意期限须为1至1440分钟');
+ if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw preconditionFailure('施法同意须明确用途');
+ const minutes=args.minutes??60;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>1440)throw preconditionFailure('同意期限须为1至1440分钟');
  const spell=args.skill?engine.resolve(args.skill,'spell'):null;
- if(spell&&spellConsentAction(engine.byId.get(spell))!==action)throw Error('指定法术不在请求同意的类别内');
+ if(spell&&spellConsentAction(engine.byId.get(spell))!==action)throw preconditionFailure('指定法术不在请求同意的类别内');
  const decision=personSpellConsent(engine,d.get('state'),target,action,{document:d.document,spell});
  if(['refuse','defer'].includes(decision.decision)||args.consent!==true)return{target,action,...decision,registered:false};
  if(minutes>decision.conditions.maximumMinutes||decision.conditions.specificSpell&&!spell)return{target,action,...decision,registered:false};
  const authorization=`permission_${eventId}`,row={category:'authorization',action,subject:target,grantor:target,grantee:'player',createdAt:now,expires:now+minutes,revoked:false,
   scope:{location:d.get('state','location'),...(spell?{spell}:{})},content:args.content.trim(),sourceEvent:eventId};
- if(d.get('state','records',authorization))throw Error('同意登记编号已存在');
+ if(d.get('state','records',authorization))throw preconditionFailure('同意登记编号已存在');
  holdingSet(d,null,['state','records',authorization],row,'magic-consent');d.say(`${engine.byId.get(target).name}明确同意所述施法用途，可随时撤销`);
  return{target,action,...decision,registered:true,authorization,consent:row};
 }

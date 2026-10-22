@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
@@ -23,7 +24,7 @@ export const liveNpcReservations=state=>recordsMemo(state.obligations,reservatio
  return rows.sort((a,b)=>a.start-b.start||a.id.localeCompare(b.id));
 });
 const capable=row=>row&&!['死亡','濒死','昏迷','患病'].includes(row.status);
-const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw new Error(`${label}必须在${min}到${max}之间`);return n;};
+const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}必须在${min}到${max}之间`);return n;};
 const parties=o=>[o.promisor,o.promisee];
 const reservedActors=o=>o.deliveryVersion===1?[o.promisor]:parties(o);
 const released=(o,id)=>o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0;
@@ -39,9 +40,9 @@ export function npcObligationAt(state,id,minute=state.minute){
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
  const finish=start+minutes;
- if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw Error('与诊疗预约冲突');
- if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw Error('与已登记授业课时冲突');
- if(kind!=='employment')for(const actor of actors)if(employmentReservation(d.get('state'),actor,start,minutes,engine.byId.get(actor)?.schedule?.restDays??[]))throw Error('与雇佣合同的实际工时冲突');
+ if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw preconditionFailure('与诊疗预约冲突');
+ if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw preconditionFailure('与已登记授业课时冲突');
+ if(kind!=='employment')for(const actor of actors)if(employmentReservation(d.get('state'),actor,start,minutes,engine.byId.get(actor)?.schedule?.restDays??[]))throw preconditionFailure('与雇佣合同的实际工时冲突');
  if(kind==='wait'||kind==='meeting')return;
  for(const o of Object.values(d.get('state','obligations')??{}).filter(live))for(const actor of actors){
   if(!reservedActors(o).includes(actor))continue;
@@ -49,17 +50,17 @@ export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','
   const arriving=o.deliveryVersion!==1&&kind==='move'&&location===o.location&&(o.type==='等候'&&actor===o.promisee?finish<o.deadline:finish<=o.start);
   if(arriving)continue;
   const begin=o.departures[actor]??o.start;
-  if(start<o.deadline&&(minutes?finish>begin:start>=begin))throw new Error(`与${o.id}的${o.type}时段冲突；需先取消约定`);
+  if(start<o.deadline&&(minutes?finish>begin:start>=begin))throw preconditionFailure(`与${o.id}的${o.type}时段冲突；需先取消约定`);
   if(kind==='move'&&finish<=begin&&location&&location!==o.location){
-   let route;try{route=engine.route(location,o.location,'walk',finish,d.document.randomSeed);}catch{throw new Error('行程结束后无法赶赴约定地点');}
-   if(finish+route.minutes>o.start)throw new Error('行程结束后无法按时赴约');
+   let route;try{route=engine.route(location,o.location,'walk',finish,d.document.randomSeed);}catch{throw preconditionFailure('行程结束后无法赶赴约定地点');}
+   if(finish+route.minutes>o.start)throw preconditionFailure('行程结束后无法按时赴约');
   }
  }
 }
 export function createNpcObligation(d,engine,args,eventId){
  if(args.operation==='cancel'){
-  const old=d.get('state','obligations',args.obligation);if(!live(old))throw new Error('需要尚有效的等候、会面或NPC送货约定');
-  const actor=engine.resolve(args.actor??'player');if(!parties(old).includes(actor))throw new Error('只有约定当事人能取消');
+  const old=d.get('state','obligations',args.obligation);if(!live(old))throw preconditionFailure('需要尚有效的等候、会面或NPC送货约定');
+  const actor=engine.resolve(args.actor??'player');if(!parties(old).includes(actor))throw preconditionFailure('只有约定当事人能取消');
   const now=d.get('state','minute'),begun=now>=old.start;
   if(old.runtimeVersion===1){
    if(actor===old.debtor)closeObligation(d,engine,{id:old.id,actor,reason:'reservation_cancelled'},eventId);
@@ -75,29 +76,29 @@ export function createNpcObligation(d,engine,args,eventId){
  if(!['等候','会面'].includes(args.type))return null;
  const promisor=engine.resolve(args.promisor),promisee=engine.resolve(args.promisee??'player');
  if(![promisor,promisee].some(id=>full(engine,id)))return null;
- if(promisor===promisee)throw new Error('不能向自己登记会面约定');
+ if(promisor===promisee)throw preconditionFailure('不能向自己登记会面约定');
  const state=d.get('state'),now=state.minute,start=integer(args.start??now,now,now+30*1440,'开始时间');
  const deadline=integer(args.deadline??start+(args.minutes??30),start+1,start+1440,'结束时间');
  const location=engine.resolve(args.location??args.destination??state.location);
- if(!engine.world.locations.some(row=>row.id===location))throw new Error('约定地点必须是正式地点');
- if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw new Error('约定内容为空或过长');
+ if(!engine.world.locations.some(row=>row.id===location))throw preconditionFailure('约定地点必须是正式地点');
+ if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw preconditionFailure('约定内容为空或过长');
  const departures={};
  for(const actor of [promisor,promisee]){
-  if(educationReservation(engine,state,actor,start,deadline-start))throw Error('与已登记授业课时冲突');
-  const row=engine.actor(d,actor);if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??''))throw new Error('义务当事人无法清醒履约');
-  if(actor!=='player'&&(row.scheduleTravel||row.cognitionTravel||state.player.companions?.includes(actor)))throw new Error('在途或同行人物不能另占会面时段');
-  const from=locationOf(state,actor);if(!from)throw new Error('当事人没有可用的出发地点');
+  if(educationReservation(engine,state,actor,start,deadline-start))throw preconditionFailure('与已登记授业课时冲突');
+  const row=engine.actor(d,actor);if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??''))throw preconditionFailure('义务当事人无法清醒履约');
+  if(actor!=='player'&&(row.scheduleTravel||row.cognitionTravel||state.player.companions?.includes(actor)))throw preconditionFailure('在途或同行人物不能另占会面时段');
+  const from=locationOf(state,actor);if(!from)throw preconditionFailure('当事人没有可用的出发地点');
   const route=from===location?{minutes:0,cost:0}:engine.route(from,location,'walk',now,d.document.randomSeed);
-  if(now+route.minutes>start)throw new Error('剩余时间不足以按真实路线赴约');
-  if(row.coins<route.cost)throw new Error('赴约路费不足');
+  if(now+route.minutes>start)throw preconditionFailure('剩余时间不足以按真实路线赴约');
+  if(row.coins<route.cost)throw preconditionFailure('赴约路费不足');
   departures[actor]=start-route.minutes;
   for(const o of Object.values(state.obligations??{})){
-   if(['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(actor))throw new Error('已有带路承诺，不能另占会面时段');
-   if(live(o)&&reservedActors(o).includes(actor)&&departures[actor]<o.deadline&&deadline>(o.departures[actor]??o.start))throw new Error('约定时间或赶路时段冲突');
+   if(['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(actor))throw preconditionFailure('已有带路承诺，不能另占会面时段');
+   if(live(o)&&reservedActors(o).includes(actor)&&departures[actor]<o.deadline&&deadline>(o.departures[actor]??o.start))throw preconditionFailure('约定时间或赶路时段冲突');
   }
  }
- if(locationOf(state,promisor)!==locationOf(state,promisee))throw new Error('登记约定时双方必须实际在同一地点');
- const id=`obl_${eventId}`;if(state.obligations?.[id])throw new Error('义务编号已存在');
+ if(locationOf(state,promisor)!==locationOf(state,promisee))throw preconditionFailure('登记约定时双方必须实际在同一地点');
+ const id=`obl_${eventId}`;if(state.obligations?.[id])throw preconditionFailure('义务编号已存在');
  const obligation=snapshotObligationTerms({id,reservationVersion:1,type:args.type,promisor,promisee,content:args.content.trim(),location,start,deadline,departures,createdAt:now,
   status:start===now?'进行中':'待履行',attendance:{[promisor]:0,[promisee]:0},togetherMinutes:0});
  return {obligation:signReservation(d,engine,obligation,eventId)};
@@ -107,32 +108,32 @@ export function createNpcObligation(d,engine,args,eventId){
 // location. Only the courier is reserved; the recipient remains free to leave.
 function createNpcDelivery(d,engine,args,eventId){
  const state=d.get('state'),now=state.minute,promisor=engine.resolve(args.promisor),promisee=engine.resolve(args.promisee??'player');
- if(promisor===promisee)throw Error('不能向自己送货');
+ if(promisor===promisee)throw preconditionFailure('不能向自己送货');
  for(const actor of [promisor,promisee]){
   const row=engine.actor(d,actor);
-  if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??'')||row.scheduleTravel||row.cognitionTravel||locationOf(state,actor)!==state.location)throw Error('送货约定须由实际在场且清醒的当事人登记');
+  if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??'')||row.scheduleTravel||row.cognitionTravel||locationOf(state,actor)!==state.location)throw preconditionFailure('送货约定须由实际在场且清醒的当事人登记');
  }
- if(state.player.companions?.includes(promisor))throw Error('同行人物不能同时独自送货');
+ if(state.player.companions?.includes(promisor))throw preconditionFailure('同行人物不能同时独自送货');
  const start=integer(args.start??now,now,now+30*1440,'出发时间'),deadline=integer(args.deadline??start+60,start+1,start+1440,'交付时间');
  const location=engine.resolve(args.location??args.destination??state.location);
- if(!engine.world.locations.some(row=>row.id===location))throw Error('交付地点必须是正式地点');
- if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw Error('约定内容为空或过长');
+ if(!engine.world.locations.some(row=>row.id===location))throw preconditionFailure('交付地点必须是正式地点');
+ if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw preconditionFailure('约定内容为空或过长');
  const item=engine.resolve(args.item,'item'),quantity=integer(args.quantity,1,100000,'货物数量');
- if(engine.quantity(d,promisor,item)<quantity)throw Error('承诺者当前缺少约定货物');
+ if(engine.quantity(d,promisor,item)<quantity)throw preconditionFailure('承诺者当前缺少约定货物');
  const from=locationOf(state,promisor),route=from===location?{minutes:0,cost:0,edges:[]}:engine.route(from,location,'walk',start,d.document.randomSeed);
- if(start+route.minutes>deadline)throw Error('剩余时间不足以按真实路线送货');
- if(engine.actor(d,promisor).coins<route.cost)throw Error('送货路费不足');
+ if(start+route.minutes>deadline)throw preconditionFailure('剩余时间不足以按真实路线送货');
+ if(engine.actor(d,promisor).coins<route.cost)throw preconditionFailure('送货路费不足');
  assertCourierRouteAccess(engine,promisor,from,location,route);
  assertNpcObligationAction(d,engine,[promisor],{start,minutes:deadline-start,kind:'delivery'});
  engine.assertNpcAutonomyAction?.(state,[promisor],{start,minutes:deadline-start});
- if(Object.values(state.obligations??{}).some(o=>['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(promisor)))throw Error('已有带路承诺，不能同时送货');
- const id=`obl_${eventId}`;if(state.obligations?.[id])throw Error('义务编号已存在');
+ if(Object.values(state.obligations??{}).some(o=>['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(promisor)))throw preconditionFailure('已有带路承诺，不能同时送货');
+ const id=`obl_${eventId}`;if(state.obligations?.[id])throw preconditionFailure('义务编号已存在');
  const obligation=snapshotObligationTerms({id,reservationVersion:1,deliveryVersion:1,type:'送货',promisor,promisee,content:args.content.trim(),item,quantity,location,start,deadline,departures:{[promisor]:start},createdAt:now,status:start===now?'进行中':'待履行'});
  return {obligation:signReservation(d,engine,obligation,eventId)};
 }
 function assertCourierAccess(engine,id,location){
  const access=engine.byId.get(location)?.access;
- if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw Error('送货者不能擅入他人私宅，请约在公共地点交付');
+ if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw preconditionFailure('送货者不能擅入他人私宅，请约在公共地点交付');
 }
 export function assertCourierRouteAccess(engine,id,from,to,route){
  assertCourierAccess(engine,id,to);

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
@@ -43,9 +44,9 @@ export function forestSites(engine){
 }
 function stock(d,engine,site,minute){
  const old=d.get(...path(site.location));
- if(old&&(old.category!=='forest'||old.location!==site.location||old.initial+old.grown-old.harvested!==old.reserve||old.reserve<0))throw Error('林木存量账不守恒');
+ if(old&&(old.category!=='forest'||old.location!==site.location||old.initial+old.grown-old.harvested!==old.reserve||old.reserve<0))throw preconditionFailure('林木存量账不守恒');
  const row=clone(old??{category:'forest',location:site.location,initial:site.capacity,reserve:site.capacity,grown:0,harvested:0,updatedAt:minute});
- if(minute<row.updatedAt)throw Error('林木更新时间倒退');
+ if(minute<row.updatedAt)throw preconditionFailure('林木更新时间倒退');
  const days=Math.floor((minute-row.updatedAt)/DAY);
  if(days){const grown=Math.min(Math.max(0,site.capacity-row.reserve),growth(site,row.updatedAt,days));row.reserve+=grown;row.grown+=grown;row.updatedAt+=days*DAY;}
  return row;
@@ -64,7 +65,7 @@ export function forestHabitatCapacity(engine,state,habitat,species,forest=forest
 }
 // S1b: to = 采得木料的去处（聚落木料或采伐者行囊的账户键）。
 export function harvestForest(d,engine,location,quantity,minute=d.get('state','minute'),{to,eventId=null}={}){
- if(!Number.isSafeInteger(quantity)||quantity<0)throw Error('采伐量须为非负整数');
+ if(!Number.isSafeInteger(quantity)||quantity<0)throw preconditionFailure('采伐量须为非负整数');
  const site=forestSites(engine).find(s=>s.location===location);if(!site)return 0;
  const old=d.get(...path(location)),row=stock(d,engine,site,minute),taken=Math.min(quantity,row.reserve),before=row.reserve;
  row.reserve-=taken;row.harvested+=taken;bookForest(d,engine,location,old,row,eventId);

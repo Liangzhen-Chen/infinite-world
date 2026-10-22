@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
@@ -32,7 +33,7 @@ const location=(s,id)=>id==='player'?s.location:actor(s,id)?.location;
 const base=(e,s,id)=>s.created?.[id]??s.family?.people?.[id]??e.byId.get(id)??{};
 const dimensions=['trust','affection','respect','fear','romance','competition'];
 export function subjectiveView(engine,document,observer){
- const s=document.state,n=actor(s,observer);if(!n)throw Error('观察者不存在');
+ const s=document.state,n=actor(s,observer);if(!n)throw preconditionFailure('观察者不存在');
  const b=base(engine,s,observer),here=location(s,observer),now=s.minute??0;
  const present=id=>Boolean(here&&location(s,id)===here&&!actor(s,id)?.scheduleTravel&&!actor(s,id)?.cognitionTravel);
  const registeredRumors=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])];

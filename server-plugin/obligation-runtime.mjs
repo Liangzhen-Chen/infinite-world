@@ -41,7 +41,7 @@ function receipt(d,e,id,eventId,verb,args,fn){
     const key=`obligation:${id}:${eventId}`,old=read(d,'state','records',`world_event:${key}`),signature=canonical({verb,args});
     if(old){if(old.signature!==signature)throw Error('Obligation eventId reused with different input');return structuredClone(old.result);}
     return obligationTransaction(d,()=>{
-        const result=fn();SOCIAL_VERBS.add(verb);
+        const result=fn();
         const row=obligationRow(read(d,'state'),id);
         const payment=result.payment;
         publishTransitionEvent(d,e,{id:key,verb,actor:payment?.actor??args.actor??args.payer??row.debtor,minute:read(d,'state','minute'),

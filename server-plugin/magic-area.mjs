@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 // Areas use trusted world/state coordinates. Presence alone never implies range.
@@ -51,25 +52,25 @@ function targetArgs(d,engine,area,target){
 export function prepareAreaMagic(d,catalog,args,context={}){
  const errors=validateAreaCatalog(catalog);if(errors.length)throw Error(errors.join('；'));
  const source=context.source??'player',location=context.location??locationOf(d,source),origin=facts(d,this,source,location);
- if(!origin||origin.lineOfSight!==true)throw Error('区域来源缺少实际位置与视线事实');
- if(source!=='player'&&catalog.effectSpec.effect.kind!=='damage')throw Error('非玩家区域目前只支持伤害消费者');
+ if(!origin||origin.lineOfSight!==true)throw preconditionFailure('区域来源缺少实际位置与视线事实');
+ if(source!=='player'&&catalog.effectSpec.effect.kind!=='damage')throw preconditionFailure('非玩家区域目前只支持伤害消费者');
  let center;
  const target=args.target??source;
  if(target===source||target==='player'&&source==='player')center=origin.point;
  else{
   const feature=environmentFeatures(this).find(row=>row.location===location&&(row.id===target||row.name===target));
-  if(!feature||!pointValid(feature.position))throw Error('区域中心须为来源当前位置或已登记环境对象');
+  if(!feature||!pointValid(feature.position))throw preconditionFailure('区域中心须为来源当前位置或已登记环境对象');
   center=feature.position;
   // Existing physical resolver knows clear sight only at contact.
-  if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw Error('缺少区域中心无遮挡视线事实');
+  if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw preconditionFailure('缺少区域中心无遮挡视线事实');
  }
- if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw Error('区域中心超过实际施法射程');
+ if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw preconditionFailure('区域中心超过实际施法射程');
  const authorizations=[...new Set([args.authorization,...args.authorizations??[]].filter(Boolean))];
- if(authorizations.length>8||authorizations.some(k=>typeof k!=='string'))throw Error('区域授权编号无效');
+ if(authorizations.length>8||authorizations.some(k=>typeof k!=='string'))throw preconditionFailure('区域授权编号无效');
  return{spec:catalog.effectSpec,catalog,target,location,center:[...center],owner:source,authorizations,permit:args.permit,completionArgs:{...args},context};
 }
 export function applyAreaMagic(d,prepared,id){
- if(d.get('state','effects',id))throw Error('区域效果编号重复');
+ if(d.get('state','effects',id))throw preconditionFailure('区域效果编号重复');
  try{prepared=prepareAreaMagic.call(this,d,prepared.catalog,prepared.completionArgs,prepared.context);}
  catch(error){return{target:prepared.target,effectFailed:`施法完成前条件失效：${error.message}`};}
  const now=d.get('state','minute'),s=prepared.spec;
@@ -86,8 +87,8 @@ function leave(d,id,target,member){
 }
 function assertAreaRecord(area,now){
  const errors=validateAreaCatalog(area.catalog),interval=area.catalog?.effectSpec?.intervalMinutes;
- if(errors.length||typeof area.source!=='string'||!area.source||typeof area.owner!=='string'||typeof area.location!=='string'||!pointValid(area.center)||area.radiusMeters!==area.catalog.effectSpec.radiusMeters||!Number.isSafeInteger(area.created)||area.created>now||area.expires!==area.created+area.catalog.duration||!Number.isSafeInteger(area.nextPulse)||area.nextPulse<=area.created||(area.nextPulse-area.created)%interval!==0||!Number.isSafeInteger(area.cursor)||area.cursor<area.created||area.cursor>now||!area.members||Array.isArray(area.members)||!Array.isArray(area.authorizations)||area.authorizations.some(k=>typeof k!=='string'))throw Error('区域记录或触发游标损坏，拒绝结算');
- for(const member of Object.values(area.members))if(typeof member?.inside!=='boolean'||!Number.isSafeInteger(member.lastTrigger)||member.lastTrigger>now||member.lastTrigger < -1||member.remaining!==undefined&&(!Number.isSafeInteger(member.remaining)||member.remaining<0||member.remaining>area.catalog.effectSpec.power))throw Error('区域成员游标损坏，拒绝结算');
+ if(errors.length||typeof area.source!=='string'||!area.source||typeof area.owner!=='string'||typeof area.location!=='string'||!pointValid(area.center)||area.radiusMeters!==area.catalog.effectSpec.radiusMeters||!Number.isSafeInteger(area.created)||area.created>now||area.expires!==area.created+area.catalog.duration||!Number.isSafeInteger(area.nextPulse)||area.nextPulse<=area.created||(area.nextPulse-area.created)%interval!==0||!Number.isSafeInteger(area.cursor)||area.cursor<area.created||area.cursor>now||!area.members||Array.isArray(area.members)||!Array.isArray(area.authorizations)||area.authorizations.some(k=>typeof k!=='string'))throw preconditionFailure('区域记录或触发游标损坏，拒绝结算');
+ for(const member of Object.values(area.members))if(typeof member?.inside!=='boolean'||!Number.isSafeInteger(member.lastTrigger)||member.lastTrigger>now||member.lastTrigger < -1||member.remaining!==undefined&&(!Number.isSafeInteger(member.remaining)||member.remaining<0||member.remaining>area.catalog.effectSpec.power))throw preconditionFailure('区域成员游标损坏，拒绝结算');
 }
 function settleOne(d,engine,id,area,pulse=false){
  const now=d.get('state','minute');assertAreaRecord(area,now);
@@ -138,7 +139,7 @@ export function settleMagicAreas(d,engine){
   if(changed)d.set(['state','effects',id],{...area,members});
  }
  for(const[id,area]of Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='area').sort(([a],[b])=>a.localeCompare(b))){
-  if(area.nextPulse<now&&area.nextPulse<area.expires)throw Error('区域触发游标被跳过，须沿世界时间边界结算');
+  if(area.nextPulse<now&&area.nextPulse<area.expires)throw preconditionFailure('区域触发游标被跳过，须沿世界时间边界结算');
   outcomes.push(...settleOne(d,engine,id,area,area.nextPulse===now));
  }
  return outcomes;
@@ -146,7 +147,7 @@ export function settleMagicAreas(d,engine){
 export function nextMagicAreaMinute(state,now){
  let next=Infinity;
  for(const area of Object.values(state.effects??{}))if(area.kind==='area'){
-  if(!Number.isSafeInteger(area.nextPulse)||area.nextPulse<=now||!Number.isSafeInteger(area.expires)||area.expires<=now)throw Error('区域触发游标损坏');
+  if(!Number.isSafeInteger(area.nextPulse)||area.nextPulse<=now||!Number.isSafeInteger(area.expires)||area.expires<=now)throw preconditionFailure('区域触发游标损坏');
   next=Math.min(next,area.nextPulse,area.expires);
   for(const row of Object.values(state.records??{}))if(row.category==='local_position'&&row.subject!=='player'&&Number.isSafeInteger(row.expires)&&row.expires>now)next=Math.min(next,row.expires);
   for(const key of [...area.authorizations,area.permit].filter(Boolean)){const expires=state.records?.[key]?.expires;if(Number.isSafeInteger(expires)&&expires>now)next=Math.min(next,expires);}

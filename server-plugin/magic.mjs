@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {nativePrimitiveTransaction} from './native-primitives.mjs';
 // Effect families register their effectSpec.kind values in magic-effects.mjs;
@@ -61,19 +62,19 @@ export function prepareMagic(d,catalog,args,context={}){
     if(spec.kind==='damage'&&args.target?.startsWith('feature_'))return prepareElementObject.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
-        if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
+        if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw preconditionFailure('施法需要实际持有的目标物品');
         const held=heldUnit(d,this,'player',target),definition=this.byId.get(target);
-        if(held.quantity!==1)throw new Error('需要分出单件目标，不能对整叠物品施法');
+        if(held.quantity!==1)throw preconditionFailure('需要分出单件目标，不能对整叠物品施法');
         const traits=itemTraits(definition,held);
-        if(spec.kind==='repair'&&!hasTrait(traits,'metal'))throw new Error('目标不是可修缮的金属器具');
-        if(spec.kind==='dry'&&!hasTrait(traits,'clothing'))throw new Error('目标不是一件衣物');
+        if(spec.kind==='repair'&&!hasTrait(traits,'metal'))throw preconditionFailure('目标不是可修缮的金属器具');
+        if(spec.kind==='dry'&&!hasTrait(traits,'clothing'))throw preconditionFailure('目标不是一件衣物');
         return{target,path:['state','inventory',target],held,definition,spec,catalog};
     }
     const partition=target.startsWith('npc_')?'npcs':target.startsWith('monster_')||target.startsWith('boss_')?'creatures':null;
-    if(target!=='player'&&!partition)throw new Error('法术需要实际生命目标');
+    if(target!=='player'&&!partition)throw preconditionFailure('法术需要实际生命目标');
     const actor=target==='player'?d.get('state','player'):d.get('state',partition,target),definition=this.byId.get(target);
-    if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw new Error('法术目标不在场');
-    if(isPhysicallyDead(this,d,target))throw new Error('目标已经死亡，此法术不能使死者复生');
+    if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw preconditionFailure('法术目标不在场');
+    if(isPhysicallyDead(this,d,target))throw preconditionFailure('目标已经死亡，此法术不能使死者复生');
     const targetingEngine=Object.create(this);
     if(context.targetFacts)targetingEngine.magicTargetFacts=()=>context.targetFacts;
     assertMagicTargeting(d,targetingEngine,catalog,args,target);
@@ -81,7 +82,7 @@ export function prepareMagic(d,catalog,args,context={}){
     const derived=target==='player'?{maxHp:actor.maxHp,defense:0}:partition==='npcs'
         ?derivedStats({level:actor.level??definition.level??1,attributes:definition.attributes,profession:Boolean(definition.combatProfession)},this.rules)
         :monsterStats({level:actor.level??definition.level??definition.levelRange?.[0]??1,template:definition.template??this.byId.get(definition.monster)?.template??2,bossTier:definition.tier??0},this.rules);
-    if(derived.divine&&!d.get('state','divinePermissions',target))throw new Error('此法术无法越过神性屏障');
+    if(derived.divine&&!d.get('state','divinePermissions',target))throw preconditionFailure('此法术无法越过神性屏障');
     if(spec.kind==='heal')assertSpellConsent(d,this,catalog,args,target,'healing');
     if((spec.kind==='protection'||spec.kind==='status'&&magicStatuses[spec.status].beneficial)&&target!=='player'){
         assertSpellConsent(d,this,catalog,args,target,'support_magic');

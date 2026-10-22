@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {environmentCatalog}from'./environment.mjs';
 import {publicLore}from'./lore.mjs';
 import {regionOf}from'./regions.mjs';
@@ -6,25 +7,25 @@ import {siteKnowledge}from'./sites.mjs';
 const publicKinds=new Set(['profession','skill','spell','recipe','item','loc','bld','site','culture','deity','faction','history','prov','county','festival']);
 export function catalogDefinition(engine,document,{entity,kind,offset=0}={}){
     const selected=engine.scoped(document);
-    if(!Number.isSafeInteger(offset)||offset<0)throw new Error('目录 offset 必须为非负整数');
+    if(!Number.isSafeInteger(offset)||offset<0)throw preconditionFailure('目录 offset 必须为非负整数');
     const locationKinds=new Set(['loc','bld','site']);
     if(kind==='feature'||entity?.startsWith('feature_'))return environmentCatalog(selected,document,{entity});
     if(!entity){
-        if(!publicKinds.has(kind)&&kind!=='location'&&kind!=='region')throw new Error('目录列表需指定profession、skill、spell、recipe、item、location、culture、deity、faction、history或region');
+        if(!publicKinds.has(kind)&&kind!=='location'&&kind!=='region')throw preconditionFailure('目录列表需指定profession、skill、spell、recipe、item、location、culture、deity、faction、history或region');
         // T142: region lists the provinces and their counties.
         const rows=selected.entities.filter(row=>(kind==='location'?locationKinds.has(row.id.split('_')[0]):kind==='region'?/^(prov|county)_/.test(row.id):row.id.startsWith(`${kind}_`))&&!(kind==='profession'&&row.kind==='hidden'));
         const end=offset+40;
         return{kind,count:rows.length,entries:rows.slice(offset,end).map(row=>({id:row.id,name:row.name})),truncated:rows.length>end,nextOffset:rows.length>end?end:null};
     }
     const id=selected.resolve(entity,kind==='location'||kind==='region'?undefined:kind),row=selected.byId.get(id),category=id.split('_')[0];
-    if(!publicKinds.has(category))throw new Error('这个实体不属于公开规则目录');
+    if(!publicKinds.has(category))throw preconditionFailure('这个实体不属于公开规则目录');
     if(category==='history'){
         const known=siteKnowledge(selected.world,document).filter(truth=>truth.history===id);
         if(known.length)return{...publicLore(row),description:known.map(truth=>truth.text).join('\n'),verified:true,source:'遗迹发现',evidence:known.flatMap(truth=>truth.evidence)};
     }
     if(category==='county'){const occupation=document.state.records?.[`territory:${id}`];return {...publicLore(row),...(occupation?{occupation}:{} )};}
     if(['culture','deity','faction','history','prov','festival'].includes(category))return publicLore(row);
-    if(kind==='location'&&!locationKinds.has(category))throw new Error('需要地点名称或编号');
+    if(kind==='location'&&!locationKinds.has(category))throw preconditionFailure('需要地点名称或编号');
     if(locationKinds.has(category))return{id,name:row.name,description:row.description??'',parent:row.parent??null,
         ...(publicSettlement(selected.world,id,document)?{settlement:publicSettlement(selected.world,id,document)}:{}),
         ...((r=>r?{region:{province:r.province.name,county:r.county.name,ruler:r.county.ruler.title,polity:r.county.ruler.polity}}:{})(regionOf(selected.world,id))),

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {magicEffect}from'./magic-effects.mjs';
 import {ritualProtectionValid}from'./magic-ritual.mjs';
 import {nativePrimitiveTransaction}from'./native-primitives.mjs';
@@ -37,25 +38,25 @@ export function validateEffectSpec(spec){
  }
  return errors;
 }
-const finite=(value,min,max,name)=>{if(!Number.isFinite(value)||value<min||value>max)throw new Error(`${name}超出有效范围`);return value;};
+const finite=(value,min,max,name)=>{if(!Number.isFinite(value)||value<min||value>max)throw preconditionFailure(`${name}超出有效范围`);return value;};
 export function resolveVitalityPrimitive({spec,hp,maxHp,defense=0,resistance=0,multiplier=1}){
  const errors=validateEffectSpec(spec);if(errors.length)throw new Error(errors.join('；'));
- if(!['damage','heal'].includes(spec.kind))throw new Error('此处理器只接受伤害或治疗');
+ if(!['damage','heal'].includes(spec.kind))throw preconditionFailure('此处理器只接受伤害或治疗');
  finite(maxHp,1,Number.MAX_SAFE_INTEGER,'生命上限');finite(hp,0,maxHp,'当前生命');finite(defense,0,Number.MAX_SAFE_INTEGER,'防御');finite(resistance,0,1,'抗性');finite(multiplier,0,3,'适应伤害系数');
  const amount=spec.kind==='heal'?spec.power:(spec.coldDecay||spec.lightDecay||spec.shadowDecay)&&multiplier===0?0:Math.max(1,Math.round((spec.power-defense*(spec.armorFactor??0.25))*(1-resistance)*multiplier));
  const nextHp=Math.max(0,Math.min(maxHp,hp+(spec.kind==='heal'?amount:-amount)));
  return {amount:Math.abs(nextHp-hp),rawAmount:amount,nextHp,delta:nextHp-hp};
 }
 export function applyProtectionPrimitive(d,{spec,target,spell,duration},eventId){
- if(d.get('state','effects',eventId))throw new Error('效果编号已存在，拒绝重复创建防护');
+ if(d.get('state','effects',eventId))throw preconditionFailure('效果编号已存在，拒绝重复创建防护');
  const out=nativePrimitiveTransaction(d,{family:'m4:protection',sourceEvent:eventId,program:{spec,target,spell,duration},
   primitives:[{op:'status',target,status:'protection',duration,magnitude:spec.power}],apply:tx=>applyProtectionState(tx,{spec,target,spell,duration},eventId)});
  return out.results[0];
 }
 function applyProtectionState(d,{spec,target,spell,duration},eventId){
  const errors=validateEffectSpec(spec);if(spec.kind!=='protection')errors.push('此处理器只接受防护');if(errors.length)throw new Error(errors.join('；'));
- if(!Number.isSafeInteger(duration)||duration<1||duration>43200)throw new Error('防护持续时间非法');
- if(d.get('state','effects',eventId))throw new Error('效果编号已存在，拒绝重复创建防护');
+ if(!Number.isSafeInteger(duration)||duration<1||duration>43200)throw preconditionFailure('防护持续时间非法');
+ if(d.get('state','effects',eventId))throw preconditionFailure('效果编号已存在，拒绝重复创建防护');
  const expires=d.get('state','minute')+duration;
  d.set(['state','effects',eventId],{kind:'protection',spell,target,power:spec.power,remaining:spec.power,damageTypes:[...spec.damageTypes],stacking:'strongest',expires,source:eventId});
  return {target,effect:eventId,expires,absorption:spec.power,damageTypes:[...spec.damageTypes]};
@@ -63,8 +64,8 @@ function applyProtectionState(d,{spec,target,spell,duration},eventId){
 // One strongest applicable layer per hit. Smaller layers never stack onto it.
 // Stable ordering makes ties and replay independent of object insertion order.
 export function consumeMagicProtection(d,target,amount,damageType='physical'){
- if(!Number.isSafeInteger(amount)||amount<0)throw new Error('待吸收伤害必须是非负整数');
- if(!damageTypes.includes(damageType))throw new Error('待吸收伤害门类未知');
+ if(!Number.isSafeInteger(amount)||amount<0)throw preconditionFailure('待吸收伤害必须是非负整数');
+ if(!damageTypes.includes(damageType))throw preconditionFailure('待吸收伤害门类未知');
  const now=d.get('state','minute'),available=[];
  for(const [id,e] of Object.entries(d.get('state','effects')??{})){
   if(e.kind!=='protection'||(e.target!==target&&!e.ritualBinding?.members.some(m=>m.id===target))||e.expires<=now||!ritualProtectionValid(d,e))continue;
@@ -78,7 +79,7 @@ export function consumeMagicProtection(d,target,amount,damageType='physical'){
    }
   }
   const errors=validateEffectSpec({kind:'protection',power:e.power,damageTypes:e.damageTypes,stacking:e.stacking});
-  if(errors.length||!Number.isSafeInteger(e.expires)||!Number.isSafeInteger(e.remaining)||e.remaining<0||e.remaining>e.power)throw new Error('防护记录损坏，拒绝错误抵扣');
+  if(errors.length||!Number.isSafeInteger(e.expires)||!Number.isSafeInteger(e.remaining)||e.remaining<0||e.remaining>e.power)throw preconditionFailure('防护记录损坏，拒绝错误抵扣');
   if(e.remaining>0&&e.damageTypes.includes(damageType))available.push({...e,id});
  }
  available.sort((a,b)=>b.remaining-a.remaining||a.expires-b.expires||a.id.localeCompare(b.id));

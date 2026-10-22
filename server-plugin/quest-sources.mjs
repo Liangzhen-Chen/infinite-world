@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -60,9 +61,9 @@ const inRange=(engine,grade,reward)=>{const [lo,hi]=rewardRange(engine,grade);re
 // ---- 生成器登记 -----------------------------------------------------------------
 const generators=new Map();
 export function registerQuestGenerator(spec){
- if(typeof spec?.id!=='string'||!spec.id||!Number.isFinite(spec.order))throw Error('任务生成器需要 id 与 order');
- if(generators.has(spec.id))throw Error(`任务生成器重复：${spec.id}`);
- if(spec.scan!==undefined&&typeof spec.scan!=='function')throw Error(`任务生成器${spec.id}的 scan 必须是函数`);
+ if(typeof spec?.id!=='string'||!spec.id||!Number.isFinite(spec.order))throw preconditionFailure('任务生成器需要 id 与 order');
+ if(generators.has(spec.id))throw preconditionFailure(`任务生成器重复：${spec.id}`);
+ if(spec.scan!==undefined&&typeof spec.scan!=='function')throw preconditionFailure(`任务生成器${spec.id}的 scan 必须是函数`);
  generators.set(spec.id,Object.freeze({...spec}));return ()=>generators.delete(spec.id);
 }
 export const questGenerators=()=>[...generators.values()].sort((a,b)=>a.order-b.order);
@@ -71,62 +72,62 @@ export const questGenerators=()=>[...generators.values()].sort((a,b)=>a.order-b.
 const locationKnown=(engine,id)=>engine.world.locations.some(l=>l.id===id);
 const ref=v=>typeof v==='string'&&v.startsWith('$');
 function assertObjective(engine,o,label){
- if(!o||!OBJECTIVES.includes(o.type))throw Error(`${label}完成条件必须可验证`);
- if(o.type==='deliver'&&(!engine.world.items.some(i=>i.id===o.item)||!int(o.quantity,1,100000)))throw Error(`${label}交付物或数量无效`);
- if(o.type==='visit'&&!ref(o.location)&&!locationKnown(engine,o.location))throw Error(`${label}目的地未登记`);
- if(o.type==='record'&&(typeof o.record!=='string'||!o.record||typeof o.field!=='string'||!Array.isArray(o.equals)||!o.equals.length))throw Error(`${label}记录条件无效`);
+ if(!o||!OBJECTIVES.includes(o.type))throw preconditionFailure(`${label}完成条件必须可验证`);
+ if(o.type==='deliver'&&(!engine.world.items.some(i=>i.id===o.item)||!int(o.quantity,1,100000)))throw preconditionFailure(`${label}交付物或数量无效`);
+ if(o.type==='visit'&&!ref(o.location)&&!locationKnown(engine,o.location))throw preconditionFailure(`${label}目的地未登记`);
+ if(o.type==='record'&&(typeof o.record!=='string'||!o.record||typeof o.field!=='string'||!Array.isArray(o.equals)||!o.equals.length))throw preconditionFailure(`${label}记录条件无效`);
 }
 function assertOffer(engine,row,label){
- if(!GRADES.includes(row.grade)||!inRange(engine,row.grade,row.reward))throw Error(`${label}等级或报酬不在规格区间`);
- if(!int(row.days,1,30)||typeof row.content!=='string'||!row.content.trim()||row.content.length>200)throw Error(`${label}期限或内容无效`);
+ if(!GRADES.includes(row.grade)||!inRange(engine,row.grade,row.reward))throw preconditionFailure(`${label}等级或报酬不在规格区间`);
+ if(!int(row.days,1,30)||typeof row.content!=='string'||!row.content.trim()||row.content.length>200)throw preconditionFailure(`${label}期限或内容无效`);
  assertObjective(engine,row.objective,label);
 }
 function assertOutcome(engine,o,label){
  if(o===undefined)return;
  const clock=factionClockRules(engine).find(r=>r.id===o?.clock);
- if(!clock||!OUTCOMES.includes(o.effect)||o.effect==='redirect'&&!clock.stages.some(s=>s.id===o.nextStage))throw Error(`${label}委托结果的时钟或阶段未登记`);
- if(o.standing!==undefined&&(!Array.isArray(o.standing)||o.standing.some(s=>typeof s?.holder!=='string'||!int(Math.abs(s.delta),1,100))))throw Error(`${label}委托立场变化无效`);
+ if(!clock||!OUTCOMES.includes(o.effect)||o.effect==='redirect'&&!clock.stages.some(s=>s.id===o.nextStage))throw preconditionFailure(`${label}委托结果的时钟或阶段未登记`);
+ if(o.standing!==undefined&&(!Array.isArray(o.standing)||o.standing.some(s=>typeof s?.holder!=='string'||!int(Math.abs(s.delta),1,100))))throw preconditionFailure(`${label}委托立场变化无效`);
 }
 export const NEED_KINDS=Object.freeze(['food','medicine','repair','escort','missing']);
 const checked=new WeakSet();
 export function assertQuestSources(engine){
  const t=rules(engine);if(!t||checked.has(t))return;
- if(t.version!==1||!Array.isArray(t.npcNeeds??[])||!Array.isArray(t.events??[]))throw Error('任务来源规则版本无效');
+ if(t.version!==1||!Array.isArray(t.npcNeeds??[])||!Array.isArray(t.events??[]))throw preconditionFailure('任务来源规则版本无效');
  const l=t.limits??{};
  if(!int(l.perBoard,1,50)||!int(l.perDay,1,50)||!int(l.cooldownDays,0,360)||!int(l.monthlyUnitsDPerBoard,1,1e6)||
-  [0,1,2,3,4,5].some(k=>!int(l.perNpcByLevel?.[k],0,5)||!int(l.minUrgencyByLevel?.[k],1,4)))throw Error('任务来源节流参数无效');
- for(const [board,npc] of Object.entries(t.publishers??{}))if(!locationKnown(engine,board)||!engine.world.npcs.some(n=>n.id===npc))throw Error(`公告栏主事人未登记：${board}`);
+  [0,1,2,3,4,5].some(k=>!int(l.perNpcByLevel?.[k],0,5)||!int(l.minUrgencyByLevel?.[k],1,4)))throw preconditionFailure('任务来源节流参数无效');
+ for(const [board,npc] of Object.entries(t.publishers??{}))if(!locationKnown(engine,board)||!engine.world.npcs.some(n=>n.id===npc))throw preconditionFailure(`公告栏主事人未登记：${board}`);
  // D1: a board whose public money is an organization treasury (monster settlements, T159).
- for(const [board,faction] of Object.entries(t.funds??{}))if(!questPublisher(engine,{},board).value||!engine.world.factions?.some(f=>f.id===faction))throw Error(`公告栏公库未登记：${board}`);
+ for(const [board,faction] of Object.entries(t.funds??{}))if(!questPublisher(engine,{},board).value||!engine.world.factions?.some(f=>f.id===faction))throw preconditionFailure(`公告栏公库未登记：${board}`);
  for(const row of t.ledgers??[]){const o=row.opening;
-  if(!locationKnown(engine,row.settlement)||!o?.name||['population','treasury','wood','iron'].some(k=>!int(o[k],0,1e9)))throw Error(`聚落公账开账无效：${row.settlement}`);}
+  if(!locationKnown(engine,row.settlement)||!o?.name||['population','treasury','wood','iron'].some(k=>!int(o[k],0,1e9)))throw preconditionFailure(`聚落公账开账无效：${row.settlement}`);}
  const needs=new Set();
  for(const r of t.npcNeeds??[]){
-  if(!NEED_KINDS.includes(r.need)||needs.has(r.need))throw Error(`人物需求任务种类无效或重复：${r.need}`);needs.add(r.need);
+  if(!NEED_KINDS.includes(r.need)||needs.has(r.need))throw preconditionFailure(`人物需求任务种类无效或重复：${r.need}`);needs.add(r.need);
   assertOffer(engine,r,`需求任务${r.need}`);
-  if(r.objective.type==='record')throw Error(`需求任务${r.need}不能用记录条件`);
+  if(r.objective.type==='record')throw preconditionFailure(`需求任务${r.need}不能用记录条件`);
  }
  const ids=new Set();
  for(const r of t.events??[]){
-  if(typeof r.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(r.id)||ids.has(r.id))throw Error(`事件任务编号无效或重复：${r.id}`);ids.add(r.id);
-  if(!r.match||typeof r.match.category!=='string'||typeof r.board!=='string')throw Error(`事件任务订阅条件无效：${r.id}`);
+  if(typeof r.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(r.id)||ids.has(r.id))throw preconditionFailure(`事件任务编号无效或重复：${r.id}`);ids.add(r.id);
+  if(!r.match||typeof r.match.category!=='string'||typeof r.board!=='string')throw preconditionFailure(`事件任务订阅条件无效：${r.id}`);
   assertOffer(engine,r,`事件任务${r.id}`);
  }
  for(const r of t.wildlife??[]){
-  if(typeof r.id!=='string'||ids.has(r.id))throw Error(`生物委托编号无效或重复：${r.id}`);ids.add(r.id);
-  if(!questPublisher(engine,{},r.board).value)throw Error(`生物委托没有公告栏主事人：${r.id}`);
+  if(typeof r.id!=='string'||ids.has(r.id))throw preconditionFailure(`生物委托编号无效或重复：${r.id}`);ids.add(r.id);
+  if(!questPublisher(engine,{},r.board).value)throw preconditionFailure(`生物委托没有公告栏主事人：${r.id}`);
   if(r.objective.type==='deliver')assertOffer(engine,r,`生物委托${r.id}`);
   else{
    assertOffer(engine,{...r,objective:{type:'visit',location:r.objective.location}},`生物委托${r.id}`);
    const o=r.objective;
    if(o.type==='creature'){
     const s=engine.world.monsters.find(s=>s.id===o.species),h=engine.rules.wildlife?.habitats.find(h=>h.location===o.location);
-    if(!s||!h||!speciesInHabitat(engine.rules,engine.world.monsters,h.id).some(s=>s.id===o.species)||!o.outcomes?.length||o.outcomes.some(x=>!['death','expelled','ferried'].includes(x)))throw Error(`生物委托物种、栖地或结果无效：${r.id}`);
-    if(o.outcomes.includes('expelled')&&s.nature?.spirit?.nature!=='malevolent'||o.outcomes.includes('ferried')&&s.nature?.kind!=='游魂')throw Error(`生物委托仪式不适用：${r.id}`);
+    if(!s||!h||!speciesInHabitat(engine.rules,engine.world.monsters,h.id).some(s=>s.id===o.species)||!o.outcomes?.length||o.outcomes.some(x=>!['death','expelled','ferried'].includes(x)))throw preconditionFailure(`生物委托物种、栖地或结果无效：${r.id}`);
+    if(o.outcomes.includes('expelled')&&s.nature?.spirit?.nature!=='malevolent'||o.outcomes.includes('ferried')&&s.nature?.kind!=='游魂')throw preconditionFailure(`生物委托仪式不适用：${r.id}`);
    }else if(o.type==='pact'){
     const b=engine.world.bosses.find(b=>(b.actor??b.id)===o.target);
-    if(!b||b.intelligence<=0||b.residence.location!==o.location||!['respect_territory','nonaggression'].includes(o.pact)||!Array.isArray(o.offer)||!Array.isArray(o.request)||[...o.offer,...o.request].some(x=>!engine.world.items.some(i=>i.id===x.item)||!int(x.quantity,1,100000))||o.offer.some(x=>!b.negotiation?.accepts?.includes(x.item)))throw Error(`生物委托交涉条件无效：${r.id}`);
-   }else throw Error(`生物委托目标不支持：${r.id}`);
+    if(!b||b.intelligence<=0||b.residence.location!==o.location||!['respect_territory','nonaggression'].includes(o.pact)||!Array.isArray(o.offer)||!Array.isArray(o.request)||[...o.offer,...o.request].some(x=>!engine.world.items.some(i=>i.id===x.item)||!int(x.quantity,1,100000))||o.offer.some(x=>!b.negotiation?.accepts?.includes(x.item)))throw preconditionFailure(`生物委托交涉条件无效：${r.id}`);
+   }else throw preconditionFailure(`生物委托目标不支持：${r.id}`);
   }
  }
  checked.add(t);
@@ -170,9 +171,9 @@ export function refundQuestFunding(d,engine,q,amount,minute){
  * board,publisher,funding:{npc|faction|treasury},minute,outcome?,cause?}。出不起或已有同源任务时返回 null。
  */
 export function postGeneratedQuest(d,engine,offer){
- if(!generators.has(offer.generator))throw Error(`未登记的任务生成器：${offer.generator}`);
+ if(!generators.has(offer.generator))throw preconditionFailure(`未登记的任务生成器：${offer.generator}`);
  const state=d.get('state'),minute=offer.minute;
- if(!GRADES.includes(offer.grade)||!inRange(engine,offer.grade,offer.reward))throw Error('生成任务的等级或报酬不在规格区间');
+ if(!GRADES.includes(offer.grade)||!inRange(engine,offer.grade,offer.reward))throw preconditionFailure('生成任务的等级或报酬不在规格区间');
  if(generated(state).some(q=>q.source.key===offer.key))return null;
  if(!locationKnown(engine,offer.board)||!state.npcs?.[offer.publisher]&&offer.publisher!=='player')return null;
  const quest=`quest_src_${digest([offer.key])}`;if(state.quests?.[quest])return null;
@@ -200,7 +201,7 @@ export function settleQuestOutcome(d,engine,q,minute){
  if(q.source?.generator==='effect_table'&&q.source.cause==='royal_commission'&&q.fundedBy?.treasury===engine.rules.governance?.sovereignty?.royal.questBoard&&q.objective.type==='deliver'){
   const prior=d.get('state','records',`${q.id}:outcome`);if(prior)return prior;
   const n=q.objective.quantity,board=q.fundedBy.treasury;
-  if(engine.quantity(d,q.publisher,q.objective.item)<n)throw Error('王都委托未收到实际物资');
+  if(engine.quantity(d,q.publisher,q.objective.item)<n)throw preconditionFailure('王都委托未收到实际物资');
   engine.itemDelta(d,q.publisher,q.objective.item,-n,BOOKED_STOCK);deliverStock(d,engine,q.publisher,q.objective.item,settlementStock(engine,board,'wood'),n,`${q.id}:outcome`);
   d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
   const result={category:'quest_outcome',quest:q.id,royal:true,settlement:board,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
@@ -384,9 +385,9 @@ export function advanceQuestSources(d,engine,{before,after}){
 // 只回执 posted:false。势力出资默认由势力公库托管，其他来源由聚落公账托管。
 registerEffect('quest_post',{
  validate(engine,e){
-  if(typeof e.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(e.id))throw Error('委托效果编号无效');
+  if(typeof e.id!=='string'||!/^[a-z0-9_]{1,40}$/.test(e.id))throw preconditionFailure('委托效果编号无效');
   assertOffer(engine,e,`委托效果${e.id}`);
-  if(e.board!==undefined&&!locationKnown(engine,e.board)||e.publisher!==undefined&&!engine.world.npcs.some(n=>n.id===e.publisher)||e.funding!==undefined&&!FUNDING.includes(e.funding))throw Error(`委托效果${e.id}地点、发布人或出资方无效`);
+  if(e.board!==undefined&&!locationKnown(engine,e.board)||e.publisher!==undefined&&!engine.world.npcs.some(n=>n.id===e.publisher)||e.funding!==undefined&&!FUNDING.includes(e.funding))throw preconditionFailure(`委托效果${e.id}地点、发布人或出资方无效`);
   assertOutcome(engine,e.onComplete,`委托效果${e.id}`);
  },
  apply(d,engine,e,context){

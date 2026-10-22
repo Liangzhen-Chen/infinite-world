@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // L0 调度器：同刻全序（14 §14.2）第一版。
 // 目标：给定存档与输入，任意两次推进产生的事件序列逐字节相同（I31）。
 // 本模块只依赖 node:crypto，供推进路径、后续到期项/时钟规则转换与 I31 夹具共用。
@@ -36,7 +37,7 @@ export const phaseName = phase => PHASE_NAMES[phase] ?? String(phase);
 const LAYER_RANK = { intelligent: 0, rule: 1, statistical: 2, 智能: 0, 规则: 1, 统计: 2 };
 export function layerRank(layer) {
     const rank = LAYER_RANK[layer];
-    if (rank === undefined) throw new Error(`未知层级：${layer}`);
+    if (rank === undefined) throw preconditionFailure(`未知层级：${layer}`);
     return rank;
 }
 
@@ -70,8 +71,8 @@ export function compareClock(seed, minute) {
 export class ScheduleHeap {
     constructor() { this.entries = []; }
     add(entry) {
-        if (!Number.isInteger(entry.minute)) throw new Error('日程项缺少整数 minute');
-        if (!['due', 'clock'].includes(entry.kind)) throw new Error(`日程项 kind 无效：${entry.kind}`);
+        if (!Number.isInteger(entry.minute)) throw preconditionFailure('日程项缺少整数 minute');
+        if (!['due', 'clock'].includes(entry.kind)) throw preconditionFailure(`日程项 kind 无效：${entry.kind}`);
         this.entries.push(entry);
     }
     // (start, end] 内有到期项或时钟规则的刻（升序、去重）。
@@ -102,7 +103,7 @@ export function contestRuleFor(kind) {
     return ({goods:'price',daily_volume:'price',office:'rank',detained:'rank',bounty:'lottery',lodges:'lottery',service:'lottery',residence:'lottery',repayment:'rank'})[kind]??'lottery';
 }
 export function submitContest(d,proposal){
-    if(!Array.isArray(d.contestPool))throw new Error('调度器未接线，不能提交争夺提案');
+    if(!Array.isArray(d.contestPool))throw preconditionFailure('调度器未接线，不能提交争夺提案');
     d.contestPool.push({...proposal});
     return {status:'pending',id:proposal.id};
 }
@@ -128,7 +129,7 @@ export function resolveContest(proposals, { seed, minute }) {
     const results = [];
     for (const [target, group] of [...byTarget.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
         const declarations=new Set(group.map(p=>normalizeContest(p.contest??contestRuleFor(p.targetKind))));
-        if(declarations.size!==1)throw new Error(`争夺标的规则不一致：${target}`);
+        if(declarations.size!==1)throw preconditionFailure(`争夺标的规则不一致：${target}`);
         const contest = [...declarations][0];
         let remaining=group[0].capacity??1;
         const winners=[];
@@ -253,8 +254,8 @@ export function schedulerConfig(state) {
     };
 }
 export function applyConfigSet(state, key, value) {
-    if (!SCHEDULER_CONFIG_KEYS.includes(key)) throw new Error(`未知调度配置键：${key}；可选 ${SCHEDULER_CONFIG_KEYS.join('、')}`);
-    if (!Number.isInteger(value) || value < 0 || value > 100000) throw new Error('调度配置值必须是 0 到 100000 的整数');
+    if (!SCHEDULER_CONFIG_KEYS.includes(key)) throw preconditionFailure(`未知调度配置键：${key}；可选 ${SCHEDULER_CONFIG_KEYS.join('、')}`);
+    if (!Number.isInteger(value) || value < 0 || value > 100000) throw preconditionFailure('调度配置值必须是 0 到 100000 的整数');
     return { ...(state?.scheduler ?? {}), ...schedulerConfig(state), [key]: value };
 }
 // 推进路径接线开关：默认开启，world_time 推进经调度器（每事件 seq、日程堆刻集、阶段归序、争夺池）。

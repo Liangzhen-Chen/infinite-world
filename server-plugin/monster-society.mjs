@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {transferItems} from './items.mjs';
@@ -227,13 +228,13 @@ export function assertSocietyTrade(d,engine,buyer,seller){
     for(const [npc,other]of [[buyer,seller],[seller,buyer]]){
         if(other!=='player'||npc==='player')continue;
         const state=d.get('state'),society=societyOfActor(engine,npc,state),village=personView(engine,state,npc)?.settlement.value;
-        if(society&&standing(engine,state,society,'player')<=HOSTILE)throw Error('聚居地对你敌对，成员拒绝交易');
-        if(!society&&village&&state.records?.[`stance:${village}:player`]?.stance==='敌对')throw Error('本村已对你敌对，拒绝交易');
+        if(society&&standing(engine,state,society,'player')<=HOSTILE)throw preconditionFailure('聚居地对你敌对，成员拒绝交易');
+        if(!society&&village&&state.records?.[`stance:${village}:player`]?.stance==='敌对')throw preconditionFailure('本村已对你敌对，拒绝交易');
     }
 }
 export function assertSocietyEntry(d,engine,place){
     const society=societyAt(engine,place.id);
-    if(society&&standing(engine,d.get('state'),society.id,'player')<=HOSTILE)throw Error('聚居地对你敌对，拒绝你进入');
+    if(society&&standing(engine,d.get('state'),society.id,'player')<=HOSTILE)throw preconditionFailure('聚居地对你敌对，拒绝你进入');
 }
 // Passage and tribute agreements open only the leader's committed sites.
 export function passageAllows(document,place,owner,operation){
@@ -251,30 +252,30 @@ export function societyView(state,engine,boss){
 export function societyAgreement(d,engine,boss,args,eventId,negotiate){
     if(args.contract!==undefined){
         const signed=d.get(...rec(args.contract));
-        if(signed?.category!=='society_agreement'||signed.leader!==boss.actor)throw Error('没有与这位首领订立的约定');
+        if(signed?.category!=='society_agreement'||signed.leader!==boss.actor)throw preconditionFailure('没有与这位首领订立的约定');
         return installment(d,engine,boss,signed.society,args.contract,eventId);
     }
     const key=`society_agreement:${eventId}`,prior=d.get(...rec(key));
     if(prior)return{...negotiate(),agreement:key,terms:prior,duplicate:true};
     const society=societyOfActor(engine,boss.actor,d.get('state'));
-    if(!society)throw Error('只有登记聚居地的首领能立约');
+    if(!society)throw preconditionFailure('只有登记聚居地的首领能立约');
     const now=d.get('state','minute');
-    if(boss.actor!==leaderOf(engine,d.get('state'),society))throw Error('须由现任聚居地首领立约');
-    if(!KINDS.has(args.term))throw Error('约定须为trade贸易、tribute朝贡或passage通行');
-    if(!Number.isSafeInteger(args.days)||args.days<1||args.days>90)throw Error('约定期限须为1至90天');
-    if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw Error('聚居地对你敌对，首领不肯立约');
-    if(args.term==='trade'&&(!args.offer?.length||!args.request?.length))throw Error('贸易约定须同时有交物与索物');
-    if(args.term==='tribute'&&(!args.offer?.length||args.request?.length))throw Error('朝贡约定只由你按期交物');
+    if(boss.actor!==leaderOf(engine,d.get('state'),society))throw preconditionFailure('须由现任聚居地首领立约');
+    if(!KINDS.has(args.term))throw preconditionFailure('约定须为trade贸易、tribute朝贡或passage通行');
+    if(!Number.isSafeInteger(args.days)||args.days<1||args.days>90)throw preconditionFailure('约定期限须为1至90天');
+    if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw preconditionFailure('聚居地对你敌对，首领不肯立约');
+    if(args.term==='trade'&&(!args.offer?.length||!args.request?.length))throw preconditionFailure('贸易约定须同时有交物与索物');
+    if(args.term==='tribute'&&(!args.offer?.length||args.request?.length))throw preconditionFailure('朝贡约定只由你按期交物');
     const stances=termPositions(d.get('state'),engine,society,args.term);
     if(stances.refused)throw Error(stances.refused);
     const territory=boss.cognition?.territory??[boss.residence.location];
     let locations=[];
     if(args.term!=='trade'){
         const wanted=args.location?[engine.resolve(args.location)]:territory;
-        if(wanted.some(id=>!engine.world.locations.some(l=>l.id===id)))throw Error('通行约定须指向实际地点');
-        if(wanted.some(id=>!territory.includes(id)))throw Error('首领只能承诺其辖区');
+        if(wanted.some(id=>!engine.world.locations.some(l=>l.id===id)))throw preconditionFailure('通行约定须指向实际地点');
+        if(wanted.some(id=>!territory.includes(id)))throw preconditionFailure('首领只能承诺其辖区');
         const consent=id=>['private','council'].includes(engine.byId.get(id)?.access?.mode);
-        if(args.location&&consent(wanted[0]))throw Error('私宅与议事区仍须住户或负责人当面许可');
+        if(args.location&&consent(wanted[0]))throw preconditionFailure('私宅与议事区仍须住户或负责人当面许可');
         locations=wanted.filter(id=>!consent(id));
     }
     const c=id=>seat(engine,society).monsterSociety.positions.find(p=>p.id===id).name;
@@ -290,12 +291,12 @@ export function societyAgreement(d,engine,boss,args,eventId,negotiate){
 }
 function installment(d,engine,boss,society,id,eventId){
     const a=d.get(...rec(id));
-    if(a?.category!=='society_agreement'||a.society!==society)throw Error('没有与这位首领订立的约定');
+    if(a?.category!=='society_agreement'||a.society!==society)throw preconditionFailure('没有与这位首领订立的约定');
     if(a.installments.some(i=>i.event===eventId))return{agreement:id,terms:a,duplicate:true};
-    if(a.status!=='有效'||a.nextDue===null)throw Error('约定已结束或本期无须交付');
+    if(a.status!=='有效'||a.nextDue===null)throw preconditionFailure('约定已结束或本期无须交付');
     const actor=engine.actor(d,boss.actor);
-    if(!awake(engine,d.get('state'),boss.actor,actor)||actor.location!==d.get('state','location'))throw Error('履约需要首领清醒在场');
-    if(a.offer.some(r=>engine.quantity(d,'player',r.item)<r.quantity))throw Error('你没有足够的实际物资履约');
+    if(!awake(engine,d.get('state'),boss.actor,actor)||actor.location!==d.get('state','location'))throw preconditionFailure('履约需要首领清醒在场');
+    if(a.offer.some(r=>engine.quantity(d,'player',r.item)<r.quantity))throw preconditionFailure('你没有足够的实际物资履约');
     if(a.request.some(r=>engine.quantity(d,boss.actor,r.item)<r.quantity)){
         breach(d,engine,id,a,boss.actor,'首领库存不足，未能交付约定物资',eventId);
         return{agreement:id,kept:false,breachedBy:boss.actor};
@@ -330,7 +331,7 @@ export function infiltrationSucceeded(d,engine,place,eventId){
 // motion is a stable record that T109 clock stages read with a record condition.
 export function societyGovernance(d,engine,args,eventId,society){
     const c=seat(engine,society).monsterSociety,now=d.get('state','minute'),meeting=c.meetingPlace??engine.world.bosses.find(b=>b.id===c.leader)?.residence.location;
-    const motion=m=>{const row=c.motions?.find(x=>x.id===m);if(!row)throw Error('没有登记的议题');return row;};
+    const motion=m=>{const row=c.motions?.find(x=>x.id===m);if(!row)throw preconditionFailure('没有登记的议题');return row;};
     const key=m=>`society_motion:${society}:${m}`;
     if(args.operation==='governance_inspect'){
         // Public claims and stances are known to anyone asking; an organisation's
@@ -343,22 +344,22 @@ export function societyGovernance(d,engine,args,eventId,society){
             issues:Object.entries(d.get('state','records')??{}).filter(([,r])=>r.category==='society_issue'&&r.settlement===society).map(([id,r])=>({id,issue:r.issue,status:r.status,outcome:r.outcome??null}))}}:{}),
         actionScope:{kind:'instant'}};
     }
-    if(d.get('state','location')!==meeting)throw Error('须在聚居地议事处办理');
+    if(d.get('state','location')!==meeting)throw preconditionFailure('须在聚居地议事处办理');
     const present=name=>{const id=actorId(engine.world,resolveCreature(engine,d,name)),view=personView(engine,d.get('state'),id),n=view&&d.get(...view.actorPath.value);
-        if(!societyMember(engine,d.get('state'),society,id)||!(view?.age.value>=18)||!awake(engine,d.get('state'),id,n)||n.location!==meeting)throw Error('需要本聚居地清醒在场的成年成员');return id;};
+        if(!societyMember(engine,d.get('state'),society,id)||!(view?.age.value>=18)||!awake(engine,d.get('state'),id,n)||n.location!==meeting)throw preconditionFailure('需要本聚居地清醒在场的成年成员');return id;};
     if(args.operation==='governance_propose'){
         const m=motion(args.issue),old=d.get(...rec(key(m.id)));
-        if(old?.status==='议事中')throw Error('该议题正在议事');
-        if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw Error('聚居地对你敌对，不接受你提议');
+        if(old?.status==='议事中')throw preconditionFailure('该议题正在议事');
+        if(standing(engine,d.get('state'),society,'player')<=HOSTILE)throw preconditionFailure('聚居地对你敌对，不接受你提议');
         const row={category:'society_motion',society,motion:m.id,name:m.name,proposer:'player',status:'议事中',opinions:[],minute:now,sourceEvent:eventId,rounds:[...old?.rounds??[],...old?[{status:old.status,closedAt:old.closedAt}]:[]]};
         holdingSet(d,null,rec(key(m.id)),row,'monster-society');return{proposal:key(m.id),meeting:row};
     }
     const id=args.proposal??key(args.issue),row=d.get(...rec(id));
-    if(row?.category!=='society_motion'||row.society!==society)throw Error('没有该议题记录');
+    if(row?.category!=='society_motion'||row.society!==society)throw preconditionFailure('没有该议题记录');
     if(args.operation==='governance_opinion'){
-        if(row.status!=='议事中')throw Error('议题已闭合');
+        if(row.status!=='议事中')throw preconditionFailure('议题已闭合');
         const speaker=present(args.speaker);
-        if(!['approve','reject','abstain'].includes(args.opinion)||typeof args.content!=='string'||!args.content.trim())throw Error('意见须为approve、reject或abstain并附原话');
+        if(!['approve','reject','abstain'].includes(args.opinion)||typeof args.content!=='string'||!args.content.trim())throw preconditionFailure('意见须为approve、reject或abstain并附原话');
         const old=row.opinions.find(o=>o.speaker===speaker);if(old)return{proposal:id,opinion:old,duplicate:true};
         // A member speaks for its registered position; departing from it needs
         // the player's persuasion, otherwise the member holds the position's line.
@@ -373,7 +374,7 @@ export function societyGovernance(d,engine,args,eventId,society){
     }
     if(args.operation==='governance_close'){
         if(row.status!=='议事中')return{proposal:id,meeting:row,duplicate:true};
-        if(present(args.authority)!==leaderOf(engine,d.get('state'),society))throw Error('须由聚居地首领在场闭合议题');
+        if(present(args.authority)!==leaderOf(engine,d.get('state'),society))throw preconditionFailure('须由聚居地首领在场闭合议题');
         // Present adult members who did not speak are counted by their position's stance.
         const state=d.get('state'),spoken=new Set(row.opinions.map(o=>o.speaker));
         const implicit=members(engine,state,society).map(id=>personView(engine,state,id)).filter(v=>v?.age.value>=18&&!spoken.has(v.id.value)&&awake(engine,d.get('state'),v.id.value,d.get(...v.actorPath.value))&&v.location.value===meeting).map(v=>({id:v.id.value}))
@@ -384,14 +385,14 @@ export function societyGovernance(d,engine,args,eventId,society){
         holdingSet(d,null,rec(id),closed,'monster-society');
         return{proposal:id,meeting:closed,note:'实际后果由已发布的势力时钟按此记录推进'};
     }
-    throw Error('聚居地议事只支持governance_inspect、propose、opinion、close');
+    throw preconditionFailure('聚居地议事只支持governance_inspect、propose、opinion、close');
 }
 
 // Faction clock consumer: one settlement's act against or for another travels
 // as a message; the receiver changes its stance toward the actor on arrival.
 export const societyNewsConsumer={
     validate(engine,effect){
-        if(!engine.world.locations.some(l=>l.id===effect.target)||!['harm','aid'].includes(effect.act))throw Error('聚居地消息效果无效');
+        if(!engine.world.locations.some(l=>l.id===effect.target)||!['harm','aid'].includes(effect.act))throw preconditionFailure('聚居地消息效果无效');
     },
     apply(d,engine,effect,context){
         if(effect.target===context.settlement)return{applied:false,reason:'不能对自身传消息'};
@@ -407,14 +408,14 @@ const OUTCOME_KEYS=['result','cost','shares','news'];
 export const societyIssueConsumer={
     validate(engine,effect){
         const place=seat(engine,effect.settlement),c=place?.monsterSociety;
-        if(!c||!/^\w{1,60}$/.test(effect.issue??'')||typeof effect.status!=='string'||!effect.status.trim())throw Error('聚居地议题效果须指向登记聚居地、议题与阶段');
+        if(!c||!/^\w{1,60}$/.test(effect.issue??'')||typeof effect.status!=='string'||!effect.status.trim())throw preconditionFailure('聚居地议题效果须指向登记聚居地、议题与阶段');
         if(effect.motion===undefined&&effect.outcomes===undefined)return;
-        if(!c.motions?.some(m=>m.id===effect.motion)||!plain(effect.outcomes)||Object.keys(effect.outcomes).sort().join()!=='否决,通过')throw Error('议题结果须按已登记议题的通过与否决分别给出');
+        if(!c.motions?.some(m=>m.id===effect.motion)||!plain(effect.outcomes)||Object.keys(effect.outcomes).sort().join()!=='否决,通过')throw preconditionFailure('议题结果须按已登记议题的通过与否决分别给出');
         for(const o of Object.values(effect.outcomes)){
-            if(!plain(o)||Object.keys(o).some(k=>!OUTCOME_KEYS.includes(k))||typeof o.result!=='string'||!o.result.trim())throw Error('议题结果参数无效');
-            if(o.cost!==undefined&&(!plain(o.cost)||Object.keys(o.cost).some(k=>k!=='items')||Object.entries(o.cost.items??{}).some(([id,n])=>!engine.world.items.some(i=>i.id===id)||!Number.isSafeInteger(n)||n<1)))throw Error('议题结果代价无效');
-            for(const r of o.shares??[])if(engine.world.npcs.find(n=>n.id===r.to)?.society!==effect.settlement||!engine.world.items.some(i=>i.id===r.item)||!Number.isSafeInteger(r.quantity)||r.quantity<1)throw Error('议题分配须给本聚居地具名成员实际物品');
-            for(const n of o.news??[])if(!c.neighbors?.[n.target]||!['harm','aid'].includes(n.act))throw Error('议题消息须送往登记邻地');
+            if(!plain(o)||Object.keys(o).some(k=>!OUTCOME_KEYS.includes(k))||typeof o.result!=='string'||!o.result.trim())throw preconditionFailure('议题结果参数无效');
+            if(o.cost!==undefined&&(!plain(o.cost)||Object.keys(o.cost).some(k=>k!=='items')||Object.entries(o.cost.items??{}).some(([id,n])=>!engine.world.items.some(i=>i.id===id)||!Number.isSafeInteger(n)||n<1)))throw preconditionFailure('议题结果代价无效');
+            for(const r of o.shares??[])if(engine.world.npcs.find(n=>n.id===r.to)?.society!==effect.settlement||!engine.world.items.some(i=>i.id===r.item)||!Number.isSafeInteger(r.quantity)||r.quantity<1)throw preconditionFailure('议题分配须给本聚居地具名成员实际物品');
+            for(const n of o.news??[])if(!c.neighbors?.[n.target]||!['harm','aid'].includes(n.act))throw preconditionFailure('议题消息须送往登记邻地');
         }
     },
     apply(d,engine,effect,context){

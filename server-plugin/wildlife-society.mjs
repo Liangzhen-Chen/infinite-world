@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
@@ -21,7 +22,7 @@ const societyEntity=(key,row)=>row?.entity??`society_${key.replaceAll(':','_')}`
 const DAY=1440,clone=v=>structuredClone(v);
 const alive=(a,source,id)=>a&&isEffective(null,source,id)&&a.hp>0;
 const sapient=a=>Boolean(a?.mind?.awakened);
-const rulesOf=engine=>{const r=engine.rules.wildlifeAwakening;if(!r)throw Error('当前世界未启用开灵规则');return r;};
+const rulesOf=engine=>{const r=engine.rules.wildlifeAwakening;if(!r)throw preconditionFailure('当前世界未启用开灵规则');return r;};
 const partner=a=>a?.companion?.with==='player';
 const knowsPlayer=a=>partner(a)||Boolean(a?.mind?.sources?.some(s=>s.by==='player'));
 const nameOf=(engine,id,a)=>a?.name??engine.byId.get(a?.species)?.name??id;
@@ -33,15 +34,15 @@ function logEvent(d,id,row){
 }
 function presentSpirit(d,engine,id,{label='它'}={}){
     const actor=d.get('state','creatures',id);
-    if(!actor||!sapient(actor))throw Error(`${label}尚未立意，不能以精怪身份修习、交谈或结社`);
-    if(!alive(actor,d,id))throw Error(`${label}已经死亡或失去行动资格`);
-    if(actor.location!==d.get('state','location'))throw Error(`${label}不在场`);
-    if(d.get('state','player','status')!=='正常')throw Error('你此时无法行动');
+    if(!actor||!sapient(actor))throw preconditionFailure(`${label}尚未立意，不能以精怪身份修习、交谈或结社`);
+    if(!alive(actor,d,id))throw preconditionFailure(`${label}已经死亡或失去行动资格`);
+    if(actor.location!==d.get('state','location'))throw preconditionFailure(`${label}不在场`);
+    if(d.get('state','player','status')!=='正常')throw preconditionFailure('你此时无法行动');
     return actor;
 }
 const stillHere=(d,id)=>{const a=d.get('state','creatures',id);return alive(a,d,id)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
 function spend(d,engine,rows,eventId){
-    for(const row of rows)if(engine.quantity(d,'player',row.item)<row.amount)throw Error(`缺少${engine.byId.get(row.item)?.name??row.item}${row.amount}份`);
+    for(const row of rows)if(engine.quantity(d,'player',row.item)<row.amount)throw preconditionFailure(`缺少${engine.byId.get(row.item)?.name??row.item}${row.amount}份`);
     for(const row of rows)engine.itemDelta(d,'player',row.item,-row.amount,{flow:'sink:consume',purpose:'form',writer:'wildlife-society',eventId});
     return clone(rows);
 }
@@ -80,26 +81,26 @@ export function spiritStudent(d,name){
     return rows.length===1?rows[0][0]:null;
 }
 export function teachSpirit(d,engine,args,eventId,id){
-    const growth=engine.rules.npcGrowth;if(!growth)throw Error('世界规则没有登记传授参数');
+    const growth=engine.rules.npcGrowth;if(!growth)throw preconditionFailure('世界规则没有登记传授参数');
     const r=growth.teach,actor=presentSpirit(d,engine,id,{label:'学生'});
-    if(args.source!==undefined&&!['player','玩家'].includes(args.source))throw Error('传授精怪时source须为player');
-    if(!knowsPlayer(actor))throw Error('它与你没有往来，不愿受教');
+    if(args.source!==undefined&&!['player','玩家'].includes(args.source))throw preconditionFailure('传授精怪时source须为player');
+    if(!knowsPlayer(actor))throw preconditionFailure('它与你没有往来，不愿受教');
     const entity=engine.resolve(args.entity,args.kind),kind=entity.split('_')[0],catalog=engine.byId.get(entity);
-    if(!['skill','recipe'].includes(kind))throw Error('只能向精怪传授技能或配方');
+    if(!['skill','recipe'].includes(kind))throw preconditionFailure('只能向精怪传授技能或配方');
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),c=clone(actor.cultivation??{skills:{},recipes:{},sessions:[]});
     const today=c.today?.day===day?c.today:{day,teach:0};
-    if(today.teach>=r.dailySessions)throw Error('今天已经教过它，需隔日再教');
+    if(today.teach>=r.dailySessions)throw preconditionFailure('今天已经教过它，需隔日再教');
     let gain=0,skill;
     if(kind==='skill'){
-        skill=entity;if(!d.get('state','skills',skill))throw Error('你没有掌握这项技能');
+        skill=entity;if(!d.get('state','skills',skill))throw preconditionFailure('你没有掌握这项技能');
         const current=c.skills[skill]??0;
         gain=Math.min(r.gain,effectiveProficiency(d,engine,skill)-r.teacherMargin-current,growth.maximumProficiency-current);
-        if(gain<=0)throw Error('它已接近你的水平或达到成长上限，再教也不会进步');
+        if(gain<=0)throw preconditionFailure('它已接近你的水平或达到成长上限，再教也不会进步');
     }else{
-        if(!d.get('state','recipes',entity))throw Error('你没有学会这个配方');
-        if(c.recipes[entity])throw Error('它已经会这个配方');
-        if(c.skills[catalog.skill]===undefined)throw Error('它还没修习过这个配方所需的技能');
-        if(c.skills[catalog.skill]<(catalog.minimumProficiency??0))throw Error('它的相关技能不足以学这个配方');
+        if(!d.get('state','recipes',entity))throw preconditionFailure('你没有学会这个配方');
+        if(c.recipes[entity])throw preconditionFailure('它已经会这个配方');
+        if(c.skills[catalog.skill]===undefined)throw preconditionFailure('它还没修习过这个配方所需的技能');
+        if(c.skills[catalog.skill]<(catalog.minimumProficiency??0))throw preconditionFailure('它的相关技能不足以学这个配方');
     }
     const minutes=kind==='recipe'?catalog.learnMinutes??r.minutes:r.minutes;
     engine.advance(d,minutes,eventId);
@@ -117,19 +118,19 @@ export function teachSpirit(d,engine,args,eventId,id){
 
 // world_craft 带 maker：结缘精怪按自己学会的配方和熟练度代工；材料、工具与工坊费由你出，成品归你，制作者记为精怪。
 export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
-    if((args.operation??'manufacture')!=='manufacture')throw Error('精怪只能代工制造，不能代做维修');
+    if((args.operation??'manufacture')!=='manufacture')throw preconditionFailure('精怪只能代工制造，不能代做维修');
     const here=d.get('state','location'),id=spiritStudent(d,args.maker)??args.maker,actor=presentSpirit(d,this,id,{label:'代工者'});
-    if(!partner(actor))throw Error('只有与你结缘的精怪会替你动手');
+    if(!partner(actor))throw preconditionFailure('只有与你结缘的精怪会替你动手');
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe')),c=actor.cultivation??{};
-    if(recipe.learningRequired&&!c.recipes?.[recipe.id])throw Error('它尚未学会这个配方');
+    if(recipe.learningRequired&&!c.recipes?.[recipe.id])throw preconditionFailure('它尚未学会这个配方');
     const proficiency=c.skills?.[recipe.skill];
-    if(proficiency===undefined)throw Error('它尚未修习该配方所需技能');
-    if(proficiency<recipe.minimumProficiency)throw Error('它的技能不足以使用这个配方');
-    if(recipe.location&&recipe.location!==here)throw Error('不在所需工坊');
+    if(proficiency===undefined)throw preconditionFailure('它尚未修习该配方所需技能');
+    if(proficiency<recipe.minimumProficiency)throw preconditionFailure('它的技能不足以使用这个配方');
+    if(recipe.location&&recipe.location!==here)throw preconditionFailure('不在所需工坊');
     const station=workstation(d,this,recipe,args);
-    for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw Error(`缺少完好的${this.byId.get(item).name}`);
+    for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw preconditionFailure(`缺少完好的${this.byId.get(item).name}`);
     const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+row.amount);
-    for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw Error(`缺少${this.byId.get(item).name}`);
+    for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${this.byId.get(item).name}`);
     const die=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:spirit-craft`).digest().readUInt32LE(0)%20+1;
     const modifier=Math.floor(proficiency/(this.rules.check.skillDivisor??150)),total=die+modifier,diff=recipe.difficulty;
     const degree=die===1||total<=diff-10?'大失败':die===20||total>=diff+10?'大成功':total<diff?'失败':total<diff+5?'勉强成功':'成功';
@@ -174,15 +175,15 @@ export function spiritAction(d,args,eventId,target){
             note:'它以固定声响和动作表意，只说自己亲历与所知；恩仇只认具体当事人，不受命令驱使'};
     }
     if(op==='follow'||op==='stay'){
-        if(!partner(actor))throw Error('它未与你结缘，不会跟随你');
-        if(op==='follow'&&actor.status==='濒死')throw Error('它伤重，无法同行');
+        if(!partner(actor))throw preconditionFailure('它未与你结缘，不会跟随你');
+        if(op==='follow'&&actor.status==='濒死')throw preconditionFailure('它伤重，无法同行');
         holdingSet(d,null,['state','creatures',target,'companion'],{...actor.companion,following:op==='follow'},'wildlife-society');
         if(op==='follow'&&actor.mind.settle){const mind=clone(actor.mind);delete mind.settle;holdingSet(d,null,['state','creatures',target,'mind'],mind,'wildlife-society');}
         return{target,following:op==='follow',note:'结缘同行出于它自己的同意，可随时留下'};
     }
     if(op==='settle'){
-        if(!partner(actor))throw Error('只有与你结缘的精怪会和你商量去留；野居的精怪自行决定');
-        if(actor.society)throw Error('它已属于一处精怪聚落，须先离群');
+        if(!partner(actor))throw preconditionFailure('只有与你结缘的精怪会和你商量去留；野居的精怪自行决定');
+        if(actor.society)throw preconditionFailure('它已属于一处精怪聚落，须先离群');
         const r=rules.society;
         holdingSet(d,null,['state','creatures',target,'mind','settle'],{location:actor.location,minute,event:eventId,by:'player'},'wildlife-society');
         holdingSet(d,null,['state','creatures',target,'companion'],{...actor.companion,following:false},'wildlife-society');
@@ -191,8 +192,8 @@ export function spiritAction(d,args,eventId,target){
         return{target,intent:{location:actor.location},nextCheck:next,note:'它愿在此定居；结社检查按季度看自愿成员、可居住地点和口粮，满足才成社或并入，不足则仍游居'};
     }
     if(op==='leave'){
-        if(!actor.society)throw Error('它没有加入任何精怪聚落');
-        if(!partner(actor))throw Error('它未与你结缘，去留不由你商量');
+        if(!actor.society)throw preconditionFailure('它没有加入任何精怪聚落');
+        if(!partner(actor))throw preconditionFailure('它未与你结缘，去留不由你商量');
         const key=actor.society.id,row=clone(d.get('state','records',key));
         delete row.members[target];row.history=[...row.history,{minute,event:eventId,left:[target]}];
         const dissolved=!Object.keys(row.members).length&&row.kind==='formed';
@@ -205,15 +206,15 @@ export function spiritAction(d,args,eventId,target){
         logEvent(d,target,{kind:'离群',party:'player',event:eventId,minute,society:key});
         return{target,left:key,remaining:Object.keys(row.members).length};
     }
-    if(op!=='borrow_form')throw Error('未知精怪操作');
+    if(op!=='borrow_form')throw preconditionFailure('未知精怪操作');
     const bf=rules.borrowForm,c=actor.cultivation??{};
     if(!c.borrowForm){
-        if(!partner(actor))throw Error('借形之术须由结缘者陪同求取');
+        if(!partner(actor))throw preconditionFailure('借形之术须由结缘者陪同求取');
         const sessions=(c.sessions??[]).length;
-        if(sessions<bf.sessions)throw Error(`修习经历不足：已修习${sessions}次，借形至少需${bf.sessions}次`);
-        if(!args.permit)throw Error('求取借形需要有效的仪式主持资格');
+        if(sessions<bf.sessions)throw preconditionFailure(`修习经历不足：已修习${sessions}次，借形至少需${bf.sessions}次`);
+        if(!args.permit)throw preconditionFailure('求取借形需要有效的仪式主持资格');
         const {entry}=assertTrainingRitual(d,this,args.permit,minute+bf.acquireMinutes);
-        if(!entry.ritualOperations.includes(rules.mentor.operation))throw Error('师承没有登记灵觉一类的主持范围');
+        if(!entry.ritualOperations.includes(rules.mentor.operation))throw preconditionFailure('师承没有登记灵觉一类的主持范围');
         const spent=spend(d,this,bf.acquireItems,eventId);this.advance(d,bf.acquireMinutes,eventId);
         if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.acquireMinutes},note:'仪式未完成，灵物已耗'};
         const at=d.get('state','minute');
@@ -224,14 +225,14 @@ export function spiritAction(d,args,eventId,target){
     }
     const current=activeForm(actor,minute);
     if(args.species===undefined){
-        if(!current)throw Error('借形须明说借何形，没有默认形貌');
+        if(!current)throw preconditionFailure('借形须明说借何形，没有默认形貌');
         d.remove(['state','creatures',target,'form']);
         logEvent(d,target,{kind:'散形',event:eventId,minute});
         return{success:true,target,form:null,note:'恢复本相'};
     }
     let form=bf.forms.includes(args.species)?{id:args.species,name:args.species}:null;
-    if(!form){const s=this.resolve(args.species,'monster'),def=this.byId.get(s);if(!def?.wildlife)throw Error('只能借登记的形貌或已登记的野生物种之形');form={id:s,name:def.name};}
-    if(form.id===actor.species)throw Error('那是它的本相；散形请不带species');
+    if(!form){const s=this.resolve(args.species,'monster'),def=this.byId.get(s);if(!def?.wildlife)throw preconditionFailure('只能借登记的形貌或已登记的野生物种之形');form={id:s,name:def.name};}
+    if(form.id===actor.species)throw preconditionFailure('那是它的本相；散形请不带species');
     const spent=spend(d,this,bf.useItems,eventId);this.advance(d,bf.useMinutes,eventId);
     if(!stillHere(d,target))return{success:false,spent:{items:spent,minutes:bf.useMinutes},note:'施术未成，灵物已耗'};
     const at=d.get('state','minute'),row={as:form.id,name:form.name,since:at,until:at+bf.durationMinutes,event:eventId};
@@ -312,8 +313,8 @@ export function advanceSpiritSocieties(d,engine,day){
 // T109 势力时钟的结社效果：立即对某地或全境做一次检查；无人成社或并入则拒绝，阶段不推进。
 export const spiritSocietyConsumer=Object.freeze({
     validate(engine,effect){
-        if(!engine.rules.wildlifeAwakening?.society)throw Error('当前世界未启用精怪结社规则');
-        if(effect.location!==undefined&&!engine.world.locations.some(l=>l.id===effect.location))throw Error('结社效果地点未登记');
+        if(!engine.rules.wildlifeAwakening?.society)throw preconditionFailure('当前世界未启用精怪结社规则');
+        if(effect.location!==undefined&&!engine.world.locations.some(l=>l.id===effect.location))throw preconditionFailure('结社效果地点未登记');
     },
     apply(d,engine,effect,context){
         const result=checkSpiritSocieties(d,engine,context.minute,context.sourceEvent,effect.location??null);

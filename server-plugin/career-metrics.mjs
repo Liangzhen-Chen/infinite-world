@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U4: long-term career metrics. A world-event subscriber reads each settled
 // tool call (events plus before/after state) and keeps observable counters in
@@ -150,12 +151,12 @@ function grantUltimate(d,engine,skill,source){
 // check that costs time); success fills one of the limited places in the world.
 export function acquireHiddenProfession(d,engine,role,id){
     const catalog=engine.byId.get(role),state=d.get('state'),m=state.careerMetrics;
-    if(state.professions.hidden.includes(role))throw new Error('已经取得这个隐藏身份');
-    if(state.player.level<catalog.minimumLevel)throw new Error(`隐藏身份需要至少${catalog.minimumLevel}级`);
+    if(state.professions.hidden.includes(role))throw preconditionFailure('已经取得这个隐藏身份');
+    if(state.player.level<catalog.minimumLevel)throw preconditionFailure(`隐藏身份需要至少${catalog.minimumLevel}级`);
     const met=metricValue(m,state,d.get('privateState'),catalog.trigger.metric)>=catalog.trigger.minimum;
-    if(!m?.opportunities?.[role]&&!met)throw new Error('隐藏职业必须满足独立触发条件，尚未出现契机');
-    if(hiddenHolders(engine,state,role)>=catalog.capacity)throw new Error(`${catalog.uniqueness}，已无空缺`);
-    if((m?.attempts?.[role]??0)>state.minute)throw new Error('上次经历未竟，契机尚需时日再次成熟');
+    if(!m?.opportunities?.[role]&&!met)throw preconditionFailure('隐藏职业必须满足独立触发条件，尚未出现契机');
+    if(hiddenHolders(engine,state,role)>=catalog.capacity)throw preconditionFailure(`${catalog.uniqueness}，已无空缺`);
+    if((m?.attempts?.[role]??0)>state.minute)throw preconditionFailure('上次经历未竟，契机尚需时日再次成熟');
     const career=careerOf(engine,role),rule=career.initiationCheck??{attribute:'精神',difficulty:20,minutes:240,retryMinutes:1440};
     const outcome=engine.check(d,{attribute:rule.attribute,difficulty:rule.difficulty},id);engine.advance(d,rule.minutes,id);
     const now=d.get('state','minute');
@@ -175,15 +176,15 @@ export function acquireHiddenProfession(d,engine,role,id){
 // at 900, a qualified examiner, the fee and a hard trial check.
 export function professionUltimate(d,engine,role,teacher,mentor,id){
     const rule=careerOf(engine,role).ultimate,player=d.get('state','player');
-    if(!rule)throw new Error('这个职业没有登记终极技能任务');
-    if(d.get('state','professions','combat')!==role)throw new Error('需要当前正式战斗职业才能接受终极技能任务');
-    if(d.get('state','skills',rule.skill))throw new Error('已经掌握这项终极技能');
+    if(!rule)throw preconditionFailure('这个职业没有登记终极技能任务');
+    if(d.get('state','professions','combat')!==role)throw preconditionFailure('需要当前正式战斗职业才能接受终极技能任务');
+    if(d.get('state','skills',rule.skill))throw preconditionFailure('已经掌握这项终极技能');
     const history=d.get('state','careers',role,'promotions')??[];
-    if(history.length<rule.minimumPromotions)throw new Error(`终极技能任务需要完成${rule.minimumPromotions}次升职`);
-    if((mentor.promotionRanks?.[role]??0)<rule.minimumPromotions)throw new Error('导师不具备主持终极技能任务的资格');
+    if(history.length<rule.minimumPromotions)throw preconditionFailure(`终极技能任务需要完成${rule.minimumPromotions}次升职`);
+    if((mentor.promotionRanks?.[role]??0)<rule.minimumPromotions)throw preconditionFailure('导师不具备主持终极技能任务的资格');
     const proficiency=d.get('state','skills',rule.requiredSkill,'proficiency')??0;
-    if(proficiency<rule.minimumProficiency||!certifiedForSkill(d,engine,rule.requiredSkill))throw new Error('终极技能任务所需技能不足');
-    if(player.coins<rule.fee)throw new Error('终极技能任务费用不足');
+    if(proficiency<rule.minimumProficiency||!certifiedForSkill(d,engine,rule.requiredSkill))throw preconditionFailure('终极技能任务所需技能不足');
+    if(player.coins<rule.fee)throw preconditionFailure('终极技能任务费用不足');
     return{rule,history};
 }
 export function completeProfessionUltimate(d,engine,role,teacher,rule,outcome,id){
@@ -198,11 +199,11 @@ export function completeProfessionUltimate(d,engine,role,teacher,rule,outcome,id
 export function evidenceBreakthrough(d,engine,skill,source,old){
     const m=d.get('state','careerMetrics'),kind=EVIDENCE_KIND[source],direct=typeof source==='string'&&m?.evidence?.[source];
     if(!kind&&!direct)return null;
-    if(old.proficiency%300!==299)throw new Error('尚未达到当前阶段上限');
-    if(!certifiedForSkill(d,engine,skill))throw new Error('未认证职业不能跨越初级阶段');
+    if(old.proficiency%300!==299)throw preconditionFailure('尚未达到当前阶段上限');
+    if(!certifiedForSkill(d,engine,skill))throw preconditionFailure('未认证职业不能跨越初级阶段');
     const stage=Math.floor(old.proficiency/300);
     const found=Object.entries(m?.evidence??{}).find(([key,row])=>!row.usedFor&&(direct?key===source:row.kind===kind)&&row.skills[skill]===stage);
-    if(!found)throw new Error(`没有本阶段这项技能可用的${EVIDENCE_LABEL[kind??direct.kind]}记录`);
+    if(!found)throw preconditionFailure(`没有本阶段这项技能可用的${EVIDENCE_LABEL[kind??direct.kind]}记录`);
     const [key,row]=found;
     d.set(['state','careerMetrics','evidence',key,'usedFor'],{skill,stage:stage+1,minute:d.get('state','minute')});
     d.set(['state','skills',skill,'breakthroughs'],[...new Set([...old.breakthroughs??[],stage+1])]);

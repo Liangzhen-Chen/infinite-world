@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {reject} from './action-rejection.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -108,7 +109,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
-    if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
+    if(!slot)throw preconditionFailure(`${npcId}的作息没有覆盖当前钟点`);
     let end=slot.end;
     // Adjacent identical slots have no transition to observe. Course openings
     // and festival overrides below still impose their own real boundaries.
@@ -153,9 +154,9 @@ export function npcAvailability(engine,state,npcId){
 
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
-    if(facilityView(engine,state,npc?.location)?.factor===0)throw Error('服务场所已停用');
-    if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
-    if(personConstraint(engine,state,npcId))throw new Error('服务者正在依法拘留，不能提供服务');
+    if(facilityView(engine,state,npc?.location)?.factor===0)throw preconditionFailure('服务场所已停用');
+    if(!npc||npc.location!==state.location)throw preconditionFailure('服务者不在场');
+    if(personConstraint(engine,state,npcId))throw preconditionFailure('服务者正在依法拘留，不能提供服务');
     engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});
     engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
     if(!engine.byId.get(npcId)?.schedule&&!scheduleAt(engine,npcId,state.minute,state))return; // Archived worlds retain their original service semantics.
@@ -168,7 +169,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     // Validate the whole action before any money, time or inventory changes.
     for(let cursor=state.minute;cursor<state.minute+minutes;){
         const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)break;
-        if(slot.location!==npc.location||!slot.services.includes(service))throw new Error('剩余服务时间不足，无法在休息或离开前完成');
+        if(slot.location!==npc.location||!slot.services.includes(service))throw preconditionFailure('剩余服务时间不足，无法在休息或离开前完成');
         cursor=slot.until;
     }
 }

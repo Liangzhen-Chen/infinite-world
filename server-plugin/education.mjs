@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {educationCourses,educationSites,educationStatistics,knowledgeProficiency,knowsKnowledge,courseWindow,educationReservation,sameScheduleInputs} from './education-state.mjs';
 export {educationCourses};
 import {npcLessonGain,settleNpcLesson} from './npc-growth.mjs';
@@ -22,7 +23,7 @@ declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
 const able=(s,id)=>capable(s,id)&&(id==='player'||!s.npcs[id].cognitionTravel&&!s.npcs[id].scheduleTravel);
-const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}无效`);return n;};
+const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效`);return n;};
 const actor=(e,name)=>['player','玩家'].includes(name)?'player':e.resolve(name,'npc');
 const location=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const definition=(e,s,id)=>s.created?.[id]??e.byId.get(id);
@@ -44,7 +45,7 @@ export function prepareEducation(d,e,{before,after}){
   e.educationAttendance.set(id,[]);
  }
 }
-function present(d,e,id){const s=d.get('state');if(!able(s,id)||location(s,id)!==s.location||personConstraint(e,s,id))throw Error('参与者须清醒在场且不受拘留');}
+function present(d,e,id){const s=d.get('state');if(!able(s,id)||location(s,id)!==s.location||personConstraint(e,s,id))throw preconditionFailure('参与者须清醒在场且不受拘留');}
 function teaching(e,s,teacher,entity){
  if(entity.startsWith('recipe_')&&currentWorkstationRecipes(e,s,teacher).some(r=>r.id===entity))return true;
  if(!knowsKnowledge(e,s,teacher,entity))return false;
@@ -144,55 +145,55 @@ export function educationAction(d,args,id){
  if(operation==='school_inspect')return {schools:educationSites(e,s),courses:educationCourses(e,s),statistics:educationStatistics(e,s,args.location?e.resolve(args.location):personHousehold(e,s,'player').value?.settlement??e.byId.get(s.location)?.parent??s.location)};
  if(operation==='book_give'){
   const student=actor(e,args.student);present(d,e,student);const unit=s.itemInstances?.[args.source],item=unit?.item??e.resolve(args.source,'item');
-  if(!definition(e,s,item)?.book&&!unit?.book)throw Error('只能转交已登记书本');
+  if(!definition(e,s,item)?.book&&!unit?.book)throw preconditionFailure('只能转交已登记书本');
   transferItems(d,e,'player',student,item,1,unit?[unit.id]:null);return {student,item,instance:unit?.id};
  }
  if(operation==='school_fund'){
-  const org=args.org,school=educationSites(e,s).find(o=>o.id===org);if(!school||school.seat!==s.location)throw Error('须在学馆资助');
+  const org=args.org,school=educationSites(e,s).find(o=>o.id===org);if(!school||school.seat!==s.location)throw preconditionFailure('须在学馆资助');
   if(!s.records?.[`organization:${org}`]&&!e.world.factions?.some(f=>f.id===org)&&!org.startsWith('temple:'))holdingSet(d,null,path(`organization:${org}`),{category:'organization',id:org,source:'education',name:school.name,kind:school.kind,seat:school.seat,treasury:0,members:{},ledger:[]},'education'),syncHoldings(d,e,'org',org,{writer:'education'});
   const coins=int(args.coins,1,1e6,'资助');financeTransfer(d,e,'player',org,coins,id);return {org,coins,balance:financeBalance(d,e,org)};
  }
  if(operation==='school_close'){
-  const c=s.records?.[args.course];if(!c||c.category!=='education_course'||c.founder!=='player')throw Error('只能停办自己的课程');
+  const c=s.records?.[args.course];if(!c||c.category!=='education_course'||c.founder!=='player')throw preconditionFailure('只能停办自己的课程');
   holdingSet(d,null,path(c.id),{...c,status:'停课',until:s.minute},'education');if(c.contract)changeLegacyHoldings(d,e,{holder:c.teacher,source:`contract:${c.contract}`,eventId:id},()=>holdingSet(d,null,path(c.contract),{...s.records[c.contract],status:'已到期',endedAt:s.minute},'education'));return {course:c.id};
  }
  if(operation==='school_open'||operation==='book_study'){
   const book=operation==='book_study',teacher=book?null:actor(e,args.source),entity=e.resolve(args.entity,args.kind),b=definition(e,s,entity);
-  if(!['skill','recipe','spell'].includes(entity.split('_')[0]))throw Error('课程只接已登记技能、配方或法术');
-  const students=[...new Set((args.students??[args.student]).filter(Boolean).map(n=>actor(e,n)))];if(!students.length||students.includes('player'))throw Error('须指定实际居民学生');
+  if(!['skill','recipe','spell'].includes(entity.split('_')[0]))throw preconditionFailure('课程只接已登记技能、配方或法术');
+  const students=[...new Set((args.students??[args.student]).filter(Boolean).map(n=>actor(e,n)))];if(!students.length||students.includes('player'))throw preconditionFailure('须指定实际居民学生');
   for(const who of students)if(!d.get('state','npcs',who)&&args.consent===true){
    const student=rosterLifeState(e,d.get('state'),who,s.minute,'报名受教',{minor:(e.byId.get(who)?.age??18)<18});
    if(student&&student.location===s.location)holdingSet(d,null,['state','npcs',who],student,'education');
   }
   for(const who of [...students,...teacher?[teacher]:[]])present(d,e,who);
-  if(teacher&&!teaching(e,s,teacher,entity))throw Error('先生没有实际掌握所授内容');
-  if(students.includes(teacher))throw Error('先生不能同时作自己的学生');
-  if(book){if(students.length!==1)throw Error('一本书同时只能供一位读者学习');studyBook(d,e,students[0],args.source,entity);}
-  const location=s.location,view=facilityView(e,s,location);if(!book&&(!view||view.capacity<students.length||view.factor===0))throw Error('场所没有足够的可用教学容量');
-  const start=int(args.start??480,0,1439,'每日开课时刻'),minutes=int(args.minutes??e.rules.npcGrowth.teach.minutes,30,480,'课时'),end=start+minutes;if(end>1440)throw Error('每日课程不能跨午夜');
+  if(teacher&&!teaching(e,s,teacher,entity))throw preconditionFailure('先生没有实际掌握所授内容');
+  if(students.includes(teacher))throw preconditionFailure('先生不能同时作自己的学生');
+  if(book){if(students.length!==1)throw preconditionFailure('一本书同时只能供一位读者学习');studyBook(d,e,students[0],args.source,entity);}
+  const location=s.location,view=facilityView(e,s,location);if(!book&&(!view||view.capacity<students.length||view.factor===0))throw preconditionFailure('场所没有足够的可用教学容量');
+  const start=int(args.start??480,0,1439,'每日开课时刻'),minutes=int(args.minutes??e.rules.npcGrowth.teach.minutes,30,480,'课时'),end=start+minutes;if(end>1440)throw preconditionFailure('每日课程不能跨午夜');
   const occupied=educationCourses(e,s).filter(c=>c.location===location&&c.start<end&&c.end>start).reduce((n,c)=>n+c.students.length,0);
-  if(!book&&occupied+students.length>view.capacity)throw Error('同期课程占用后教学容量不足');
+  if(!book&&occupied+students.length>view.capacity)throw preconditionFailure('同期课程占用后教学容量不足');
   const since=s.minute,until=since+int(args.days??30,1,360,'开课天数')*DAY;
   for(const who of [...students,...teacher?[teacher]:[]]){
-   if(educationReservation(e,s,who,Math.floor(since/DAY)*DAY+start,minutes))throw Error('已有重叠课程');
-   if(employmentReservation(s,who,Math.floor(since/DAY)*DAY+start,minutes))throw Error('与既有雇佣冲突');
+   if(educationReservation(e,s,who,Math.floor(since/DAY)*DAY+start,minutes))throw preconditionFailure('已有重叠课程');
+   if(employmentReservation(s,who,Math.floor(since/DAY)*DAY+start,minutes))throw preconditionFailure('与既有雇佣冲突');
   }
   const course=`education:${id}`,org=args.org??`school:${location}`,existing=organizationState(e,s,org);
   const owner=s.buildings?.[location]?.owner??definition(e,s,location)?.owner;
-  if(!book&&owner&&owner!=='player'&&!(existing?.members?.player)&&args.consent!==true)throw Error('借用场所须负责人同意');
+  if(!book&&owner&&owner!=='player'&&!(existing?.members?.player)&&args.consent!==true)throw preconditionFailure('借用场所须负责人同意');
   if(!book&&(!existing||existing.source==='education'))holdingSet(d,null,path(`organization:${org}`),{category:'organization',id:org,source:'created',name:args.name??definition(e,s,location)?.name??'授业班',kind:args.schoolKind??'私塾',seat:location,founder:'player',leader:'player',members:{player:{position:'先生',joinedAt:since,arrears:0}},treasury:0,charter:{mode:'leader',fee:0,dues:0}},'education'),syncHoldings(d,e,'org',org,{writer:'education'});
   if(!book&&(args.coins??0)>0)financeTransfer(d,e,'player',org,int(args.coins,1,1e6,'办学款'),id);
   let contract=null;
   if(teacher&&teacher!=='player'&&(args.wage??0)>0){
-   if(args.consent!==true||(personAge(e,s,teacher)?.value??0)<18||currentEmployment(s,teacher))throw Error('先生须成年同意且没有其他雇佣');
+   if(args.consent!==true||(personAge(e,s,teacher)?.value??0)<18||currentEmployment(s,teacher))throw preconditionFailure('先生须成年同意且没有其他雇佣');
    const wage=int(args.wage,1,1e6,'先生日薪');contract=`education_contract:${id}`;
-   if(financeBalance(d,e,org)<Math.ceil(wage*minutes/480))throw Error('学馆不足以支付首课工钱，请先资助');
+   if(financeBalance(d,e,org)<Math.ceil(wage*minutes/480))throw preconditionFailure('学馆不足以支付首课工钱，请先资助');
    holdingSet(d,null,path(contract),{category:'contract',kind:'workshop',education:1,id:contract,owner:org,worker:teacher,location,wage,workMinutes:minutes,task:'授业',starts:since,createdAt:since,deadline:until,status:'有效',paid:0,workedMinutes:0,source:id},'education');
   }
   const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students,start,end,since,until,status:'开课',founder:'player',contract};
   holdingSet(d,null,path(course),row,'education');return {course,...row};
  }
- throw Error('未知授业操作');
+ throw preconditionFailure('未知授业操作');
 }
 
 // Existing certification remains the player's entrance. Resident candidates
@@ -200,16 +201,16 @@ export function educationAction(d,args,id){
 export function examineNpc(d,e,args,id){
  const student=actor(e,args.student),teacher=actor(e,args.teacher),role=e.resolve(args.profession,'profession'),b=e.byId.get(role),s=d.get('state');
  present(d,e,student);present(d,e,teacher);
- if(student===teacher||!npcServices(e,s,teacher).includes(role))throw Error('考官没有本职业认证资格');
- if(!['life','combat'].includes(b.kind))throw Error('隐藏身份不由普通考试授予');
- const entry=b.entry;if((s.npcs[student]?.level??e.byId.get(student)?.level??1)<b.minimumLevel||entry&&knowledgeProficiency(e,s,student,entry.skill)<entry.minimumProficiency)throw Error('尚未达到报考技能或等级要求');
- if(s.npcs[student]?.certifications?.[role])throw Error('已经通过该职业考核');
- const roles=Object.keys(s.npcs[student]?.certifications??{}).map(r=>e.byId.get(r));if(b.kind==='combat'&&roles.some(r=>r?.kind==='combat')||b.kind==='life'&&roles.filter(r=>r?.kind==='life').length>=2)throw Error('正式职业名额已满');
- if((s.npcs[student]?.coins??0)<b.fee)throw Error('考生认证费用不足');
+ if(student===teacher||!npcServices(e,s,teacher).includes(role))throw preconditionFailure('考官没有本职业认证资格');
+ if(!['life','combat'].includes(b.kind))throw preconditionFailure('隐藏身份不由普通考试授予');
+ const entry=b.entry;if((s.npcs[student]?.level??e.byId.get(student)?.level??1)<b.minimumLevel||entry&&knowledgeProficiency(e,s,student,entry.skill)<entry.minimumProficiency)throw preconditionFailure('尚未达到报考技能或等级要求');
+ if(s.npcs[student]?.certifications?.[role])throw preconditionFailure('已经通过该职业考核');
+ const roles=Object.keys(s.npcs[student]?.certifications??{}).map(r=>e.byId.get(r));if(b.kind==='combat'&&roles.some(r=>r?.kind==='combat')||b.kind==='life'&&roles.filter(r=>r?.kind==='life').length>=2)throw preconditionFailure('正式职业名额已满');
+ if((s.npcs[student]?.coins??0)<b.fee)throw preconditionFailure('考生认证费用不足');
  const minutes=entry?.minutes??120;
  e.assertNpcObligationAction?.(d,[teacher,student],{minutes,kind:'exam'});e.assertNpcAutonomyAction?.(s,[teacher,student],{minutes});
  advanceWithNpcParticipants(d,e,minutes,id,[student,teacher]);
- const current=d.get('state');if(!able(current,student)||!able(current,teacher))throw Error('考核中途失去行动能力');
+ const current=d.get('state');if(!able(current,student)||!able(current,teacher))throw preconditionFailure('考核中途失去行动能力');
  // A real completed entry task, with skill and attribute requirements, is the
  // evidence. No rumour or donation can manufacture this certification.
  const attribute=current.npcs[student]?.attributes?.[b.attribute]??e.byId.get(student)?.attributes?.[b.attribute]??10;

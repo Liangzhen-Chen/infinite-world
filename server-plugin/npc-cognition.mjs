@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -27,7 +28,7 @@ export function permitted(memory,to){
 }
 export function memoryFor(engine,state,from,id,at){
  const row=state.npcs[from]?.memoryStream?.find(x=>x.id===id)??npcRumorSeeds(engine,from).find(x=>x.id===id);
- if(!row||row.minute>at||!['亲历','目击','听说','约定核对'].includes(row.sourceType))throw Error('传话者没有这条已发生的个人记忆');
+ if(!row||row.minute>at||!['亲历','目击','听说','约定核对'].includes(row.sourceType))throw preconditionFailure('传话者没有这条已发生的个人记忆');
  return row;
 }
 function retell(engine,state,from,memory){
@@ -63,18 +64,18 @@ function occupied(state,id,start,end){return state.player.companions?.includes(i
 
 export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation',eventId}){
  const state=d.get('state'),at=state.minute,a=state.npcs[from],b=state.npcs[to];
- if(working(state,from,at,at+1)||channel==='conversation'&&working(state,to,at,at+1))throw Error('人物正在完成已经开始的自主工作');
- if(from===to||!a||!b||!personSimulation(engine,state,to).value||!awake(engine,state,from,a)||personConstraint(engine,state,from))throw Error('传话双方须是可行动的已登记人物');
- if(!relation(engine,state,from,to)||(relation(engine,state,from,to).trust??0)<0)throw Error('没有可传话的人物关系渠道');
- const memory=memoryFor(engine,state,from,memoryId,at);if(!permitted(memory,to))throw Error('这条私密记忆没有向收件人披露的渠道');
+ if(working(state,from,at,at+1)||channel==='conversation'&&working(state,to,at,at+1))throw preconditionFailure('人物正在完成已经开始的自主工作');
+ if(from===to||!a||!b||!personSimulation(engine,state,to).value||!awake(engine,state,from,a)||personConstraint(engine,state,from))throw preconditionFailure('传话双方须是可行动的已登记人物');
+ if(!relation(engine,state,from,to)||(relation(engine,state,from,to).trust??0)<0)throw preconditionFailure('没有可传话的人物关系渠道');
+ const memory=memoryFor(engine,state,from,memoryId,at);if(!permitted(memory,to))throw preconditionFailure('这条私密记忆没有向收件人披露的渠道');
  if(known(engine,state,to,memory))return {duplicate:true};
  const messageId=`message_${key(originalId(memory),from,to,channel)}`;
  if(channel==='conversation'){
   assertNpcObligationAction(d,engine,[from,to],{start:at,minutes:0,location:a.location,kind:'conversation'});
-  if(!awake(engine,state,to,b)||a.location!==b.location)throw Error('当面转述需要同一地点且双方清醒');
+  if(!awake(engine,state,to,b)||a.location!==b.location)throw preconditionFailure('当面转述需要同一地点且双方清醒');
   appendHeard(d,engine,from,to,memory,at,'conversation',messageId);return {messageId,delivered:true,minute:at};
  }
- if(channel!=='carry')throw Error('未登记的消息渠道');
+ if(channel!=='carry')throw preconditionFailure('未登记的消息渠道');
  // NPCs purchase an available carrier before taking the letter themselves.
  // The ordinary walking path remains available when no paid service can run.
  if(b.location&&a.location!==b.location){
@@ -86,14 +87,14 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
    return {messageId:posted.id,delivered:false,arrive:posted.estimatedArrivalAt,channel:'post'};
   }
  }
- if(waterEarthHeldUntil(state,from,at)>at)throw Error('水绳束缚期间不能携信离开');
- if(occupied(state,from,at,at+1))throw Error('携信者正受同行或义务占用');
- if(!b.location)throw Error('收件人正在途中，没有可确认的投递地址');
+ if(waterEarthHeldUntil(state,from,at)>at)throw preconditionFailure('水绳束缚期间不能携信离开');
+ if(occupied(state,from,at,at+1))throw preconditionFailure('携信者正受同行或义务占用');
+ if(!b.location)throw preconditionFailure('收件人正在途中，没有可确认的投递地址');
  const messages=state.npcCognition?.messages??{};if(messages[messageId])return {duplicate:true,messageId};
  const route=engine.route(a.location,b.location,'walk',at,d.document.randomSeed);
  assertNpcObligationAction(d,engine,[from],{start:at,minutes:route.minutes,location:b.location,kind:'move'});
- if(a.coins<route.cost)throw Error('携信者路费不足');
- if(occupied(state,from,at,at+route.minutes+1))throw Error('携信路线与既有义务冲突');
+ if(a.coins<route.cost)throw preconditionFailure('携信者路费不足');
+ if(occupied(state,from,at,at+route.minutes+1))throw preconditionFailure('携信路线与既有义务冲突');
  const trip={from:a.location,to:b.location,depart:at,arrive:at+route.minutes,edges:route.edges,messageId};
  moveCoins(d,{from:purse(null,from),to:sink('export','travel'),amount:route.cost,writer:'npc-cognition',eventId:eventId});d.set(['state','npcs',from,'coins'],a.coins-route.cost);d.set(['state','npcs',from,'cognitionTravel'],trip);d.set(['state','npcs',from,'location'],null);d.set(['state','npcs',from,'activity'],'携信赶路');
  d.set(['state','npcCognition','messages',messageId],{id:messageId,from,to,memoryId,rootMemoryId:originalId(memory),channel,depart:at,arrive:trip.arrive,destination:b.location,status:'在途',sourceEvent:eventId,routeCost:route.cost,

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {reputationFactions,reputationSettlements}from'./reputation-registry.mjs';
 import {digest} from './storage.mjs';
@@ -33,7 +34,7 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
     for(const scope of scopes) {
         const id=`reputation:${key(row.offender,scope.scope,scope.id)}`;
         const prior=d.get(...path(id));
-        if(prior&&prior.category!=='reputation')throw Error('声望账记录编号冲突');
+        if(prior&&prior.category!=='reputation')throw preconditionFailure('声望账记录编号冲突');
         const account=prior??{category:'reputation',subject:row.offender,scope:scope.scope,target:scope.id,reputation:0,fame:0,notoriety:0,deltas:[]};
         if(account.deltas.some(delta=>delta.sourceEvent===event.sourceEvent&&delta.case===row.id))continue;
         const convicted=account.deltas.find(delta=>delta.case===row.id&&delta.sourceEvent===event.reverses&&delta.stage==='conviction');

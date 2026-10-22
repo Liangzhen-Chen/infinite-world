@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {bodyLiving} from './lifecycle-state.mjs';
 import {openObligation} from './obligation-runtime.mjs';
 import {createHash} from 'node:crypto';
@@ -97,8 +98,8 @@ export function validateWildlifeAwakening(world){
 // T109 世界/势力时钟的觉醒效果：只作用于已存在的个体，阶段代价由时钟事务负责回滚。
 export const wildlifeAwakeningConsumer=Object.freeze({
     validate(engine,effect){
-        if(!engine.rules.wildlifeAwakening)throw Error('当前世界未启用开灵规则，不能推进觉醒效果');
-        if(effect.points!==undefined&&!(Number.isSafeInteger(effect.points)&&effect.points>=1&&effect.points<=100))throw Error('觉醒效果点数无效');
+        if(!engine.rules.wildlifeAwakening)throw preconditionFailure('当前世界未启用开灵规则，不能推进觉醒效果');
+        if(effect.points!==undefined&&!(Number.isSafeInteger(effect.points)&&effect.points>=1&&effect.points<=100))throw preconditionFailure('觉醒效果点数无效');
     },
     apply(d,engine,effect,context){
         const id=effect.target,actor=d.get('state','creatures',id),minute=context.minute,day=Math.floor(minute/DAY);
@@ -114,19 +115,19 @@ export const wildlifeAwakeningConsumer=Object.freeze({
 // world_wildlife 的 nurture / enlighten / pact；立意后的交谈、跟随、结社与借形在 wildlife-society。观察只读，不在此处。
 export const awakeningOperations=['nurture','enlighten','pact',...spiritOperations];
 export function awakeningAction(d,args,eventId,target){
-    const rules=this.rules.wildlifeAwakening;if(!rules)throw Error('当前世界未启用开灵规则');
+    const rules=this.rules.wildlifeAwakening;if(!rules)throw preconditionFailure('当前世界未启用开灵规则');
     if(spiritOperations.includes(args.operation))return spiritAction.call(this,d,args,eventId,target);
     const op=args.operation,actor=d.get('state','creatures',target),start=d.get('state','minute'),day=Math.floor(start/DAY);
-    if(!awakeningEligible(this,actor))throw Error('需要存活的普通野兽个体');
-    if(actor.location!==d.get('state','location'))throw Error('动物不在场');
-    if(d.get('state','player','status')!=='正常')throw Error('你此时无法行动');
-    if(actor.owner&&actor.owner!=='player')throw Error('动物归其他所有者，不能擅自施为');
+    if(!awakeningEligible(this,actor))throw preconditionFailure('需要存活的普通野兽个体');
+    if(actor.location!==d.get('state','location'))throw preconditionFailure('动物不在场');
+    if(d.get('state','player','status')!=='正常')throw preconditionFailure('你此时无法行动');
+    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自施为');
     const present=()=>{const a=d.get('state','creatures',target);return alive(a)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
     if(op==='pact'){
-        if(!sapient(actor))throw Error('尚未立意，不能以同意结缘；驯养仍走宠物照料');
-        if(actor.companion?.with==='player')throw Error('已与你结缘');
-        if(actor.companion)throw Error('它已与别人结缘');
-        if(!actor.mind.sources.some(s=>s.by==='player'))throw Error('它与你没有往来，不同意结缘');
+        if(!sapient(actor))throw preconditionFailure('尚未立意，不能以同意结缘；驯养仍走宠物照料');
+        if(actor.companion?.with==='player')throw preconditionFailure('已与你结缘');
+        if(actor.companion)throw preconditionFailure('它已与别人结缘');
+        if(!actor.mind.sources.some(s=>s.by==='player'))throw preconditionFailure('它与你没有往来，不同意结缘');
         this.advance(d,rules.pactMinutes,eventId);
         if(!present())return{success:false,note:'结缘完成前一方离开或失去行动能力'};
         const companion={with:'player',consent:true,since:d.get('state','minute'),sourceEvent:eventId,formerPet:false,terms:clone(rules.pactTerms)};
@@ -138,24 +139,24 @@ export function awakeningAction(d,args,eventId,target){
         holdingSet(d,null,['state','creatures',target,'companion'],companion,'wildlife-awakening');
         return{success:true,target,companion,note:'双方同意的有边界关系，不是宠物或财产'};
     }
-    if(sapient(actor))throw Error('已经立意；修习改用world_learn的student传授，借形用borrow_form');
+    if(sapient(actor))throw preconditionFailure('已经立意；修习改用world_learn的student传授，借形用borrow_form');
     if(op==='nurture'){
         const item=args.item?this.resolve(args.item,'item'):null,spec=rules.spiritItems.find(r=>r.item===item);
-        if(!spec)throw Error('这不是登记的灵物');
-        if(actor.mind?.lastItemDay===day)throw Error('今天已喂过灵物，灵气不能叠加');
-        if(this.quantity(d,'player',item)<1)throw Error('身上没有实际的灵物');
+        if(!spec)throw preconditionFailure('这不是登记的灵物');
+        if(actor.mind?.lastItemDay===day)throw preconditionFailure('今天已喂过灵物，灵气不能叠加');
+        if(this.quantity(d,'player',item)<1)throw preconditionFailure('身上没有实际的灵物');
         this.itemDelta(d,'player',item,-1,{flow:'sink:consume',purpose:'nurture',writer:'wildlife-awakening',eventId});this.advance(d,rules.nurtureMinutes,eventId);
         if(!present())return{success:false,spent:{item,quantity:1},note:'灵物已耗去，但动物在喂食完成前离开或你失去行动能力'};
         addSource(d,target,day,'item',spec.points,{minute:d.get('state','minute'),event:eventId,item,by:'player'});
     }else if(op==='enlighten'){
-        if(!args.permit)throw Error('点化需要有效的仪式主持资格');
+        if(!args.permit)throw preconditionFailure('点化需要有效的仪式主持资格');
         const until=start+rules.mentor.minutes,{entry}=assertTrainingRitual(d,this,args.permit,until);
-        if(!entry.ritualOperations.includes(rules.mentor.operation))throw Error('师承没有登记灵觉一类的主持范围');
-        if(actor.mind?.lastMentorDay===day)throw Error('今天已点化过，须隔日再行');
+        if(!entry.ritualOperations.includes(rules.mentor.operation))throw preconditionFailure('师承没有登记灵觉一类的主持范围');
+        if(actor.mind?.lastMentorDay===day)throw preconditionFailure('今天已点化过，须隔日再行');
         this.advance(d,rules.mentor.minutes,eventId);
         if(!present())return{success:false,spent:{minutes:rules.mentor.minutes},note:'点化未完成'};
         addSource(d,target,day,'mentor',rules.mentor.points,{minute:d.get('state','minute'),event:eventId,permit:args.permit,institution:entry.institution,by:'player'});
-    }else throw Error('未知野外操作');
+    }else throw preconditionFailure('未知野外操作');
     const awakened=settle(d,this,target,op==='nurture'?'item':'mentor',d.get('state','minute'),eventId);
     const after=d.get('state','creatures',target);
     return{success:true,target,source:op==='nurture'?'item':'mentor',mind:awakeningView(this,d.document.randomSeed,target,after,d.get('state','minute'))??{stage:null},

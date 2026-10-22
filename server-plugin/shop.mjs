@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
@@ -266,7 +267,7 @@ function restockShop(d,engine,shop,minute){
     const entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute)).filter(Boolean);
     if(!entries.length)return;
     const key=`shop:${shop.id}`,old=d.get('state','records',key);
-    if(old&&old.category!=='shop_ledger')throw Error('商店账编号冲突，拒绝覆盖');
+    if(old&&old.category!=='shop_ledger')throw preconditionFailure('商店账编号冲突，拒绝覆盖');
     d.set(['state','records',key],{category:'shop_ledger',shop:shop.id,keeper:shop.keeper,settlement:shop.settlement,lastRestockAt:minute,entries:[...old?.entries??[],...entries].slice(-LEDGER_ROWS)});
 }
 // Registered with the advance registry. Restock happens at the midnight that opens
@@ -284,7 +285,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base}){
     const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});
     if(agreed)return {...agreed,agreed:true,buyer,seller,item,listPrice:agreed.totalCoins/agreed.quantity};
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
-    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
+    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw preconditionFailure('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
     const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
     let relation=1,keeperRegard=null,settlementRegard=null;

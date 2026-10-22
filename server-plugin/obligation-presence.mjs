@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // Settlement is physical: a claim does not make a remote purse reachable.
 // This query is deliberately separate from due/default arithmetic (I29).
 export function settlementLocation(engine,state,id,seen=new Set()){
@@ -25,5 +26,5 @@ export function settlementPresent(engine,state,payer,collector){
     return source!==null&&source===target;
 }
 export function assertSettlementPresent(engine,state,payer,collector){
-    if(!settlementPresent(engine,state,payer,collector))throw Error('清偿双方须实际在场；异地款项须经钱庄寄汇或承运送达');
+    if(!settlementPresent(engine,state,payer,collector))throw preconditionFailure('清偿双方须实际在场；异地款项须经钱庄寄汇或承运送达');
 }

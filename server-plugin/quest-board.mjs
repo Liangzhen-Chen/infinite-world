@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
@@ -26,8 +27,8 @@ import {requireRestoreOrigin} from './restore-origin.mjs';
 declareHoldingWriter('quest-board',{kinds:[],entities:['office'],locations:true});
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
-const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}必须在${min}到${max}之间`);return n;};
-const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw Error('任务内容为空或过长');return n.trim();};
+const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}必须在${min}到${max}之间`);return n;};
+const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>1200)throw preconditionFailure('任务内容为空或过长');return n.trim();};
 const awake=(engine,state,id,n)=>n&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/(睡眠|睡觉|熟睡)/.test(n.activity??'');
 const place=(s,id)=>id==='player'?s.location:s.npcs[id]?.location;
 const actorPath=id=>id==='player'?['state','player']:['state','npcs',id];
@@ -144,43 +145,43 @@ function closeQuest(d,engine,q,status,reason,minute){
  notice(d,engine,row,minute,status);return row;
 }
 function objective(engine,d,args,publisher){
- const o=args.objective;if(!o||!['deliver','visit','build'].includes(o.type))throw Error('任务完成条件必须可验证');
+ const o=args.objective;if(!o||!['deliver','visit','build'].includes(o.type))throw preconditionFailure('任务完成条件必须可验证');
  if(o.type==='deliver'||o.type==='visit'){
   const location=engine.resolve(o.location??(o.type==='deliver'?d.get('state','location'):undefined));
-  if(!engine.world.locations.some(l=>l.id===location))throw Error('委托目的地必须已登记');
+  if(!engine.world.locations.some(l=>l.id===location))throw preconditionFailure('委托目的地必须已登记');
   return o.type==='deliver'?{type:o.type,item:engine.resolve(o.item,'item'),quantity:integer(o.quantity,1,100000,'任务数量'),location}:{type:o.type,location};
  }
- const project=text(o.project),p=d.get('state','projects',project);if(!p)throw Error('任务工程未登记');
- if(publisher==='player'&&(p.creator!=='player'||p.type!=='工程'||p.status!=='施工中'||!((p.wood??0)+(p.stone??0)>0)))throw Error('私人建造委托需要本人已授权且已投入材料的在建工程');
+ const project=text(o.project),p=d.get('state','projects',project);if(!p)throw preconditionFailure('任务工程未登记');
+ if(publisher==='player'&&(p.creator!=='player'||p.type!=='工程'||p.status!=='施工中'||!((p.wood??0)+(p.stone??0)>0)))throw preconditionFailure('私人建造委托需要本人已授权且已投入材料的在建工程');
  return {type:o.type,project};
 }
 function construction(engine,d,q,id){
- const p=d.get('state','projects',q.objective.project);if(!p||!['施工中','已完成'].includes(p.status))throw Error('委托工程已停止或不存在');
+ const p=d.get('state','projects',q.objective.project);if(!p||!['施工中','已完成'].includes(p.status))throw preconditionFailure('委托工程已停止或不存在');
  const value=d.get('state','npcs',id,'skills','skill_life_6_core')??engine.byId.get(id)?.proficiencies?.skill_life_6_core??0;
- if((typeof value==='object'?value.proficiency:value)<100)throw Error('承接工程的木工能力不足');
- if(!((p.wood??0)+(p.stone??0)>0)||engine.quantity(d,id,'item_whittling_knife')<1||(heldUnit(d,engine,id,'item_whittling_knife')?.durability??engine.byId.get('item_whittling_knife')?.durability??0)<=0)throw Error('工程材料或完好工具不足');
+ if((typeof value==='object'?value.proficiency:value)<100)throw preconditionFailure('承接工程的木工能力不足');
+ if(!((p.wood??0)+(p.stone??0)>0)||engine.quantity(d,id,'item_whittling_knife')<1||(heldUnit(d,engine,id,'item_whittling_knife')?.durability??engine.byId.get('item_whittling_knife')?.durability??0)<=0)throw preconditionFailure('工程材料或完好工具不足');
  return p;
 }
 function acceptNpc(d,engine,q,id,now,state=d.get('state')){
- if(!['deliver','visit','build'].includes(q.objective.type))throw Error('NPC尚无执行这种目标的能力，不能接单');
+ if(!['deliver','visit','build'].includes(q.objective.type))throw preconditionFailure('NPC尚无执行这种目标的能力，不能接单');
  const actor=state.npcs[id];
- if(engine.byId.get(id)?.tier!=='full'||!awake(engine,state,id,actor)||actor.scheduleTravel||actor.cognitionTravel||state.player.companions?.includes(id))throw Error('承接者须是可独立行动的现有full人物');
- if(id===q.publisher||actor.location!==q.location)throw Error('承接者没有实际看到该地点告示');
+ if(engine.byId.get(id)?.tier!=='full'||!awake(engine,state,id,actor)||actor.scheduleTravel||actor.cognitionTravel||state.player.companions?.includes(id))throw preconditionFailure('承接者须是可独立行动的现有full人物');
+ if(id===q.publisher||actor.location!==q.location)throw preconditionFailure('承接者没有实际看到该地点告示');
  const target=q.objective.type==='build'?(construction(engine,d,q,id).location??d.get('state','projects',q.objective.project,'settlement')):q.objective.location;
- if(!engine.world.locations.some(l=>l.id===target))throw Error('委托目的地必须已登记');
+ if(!engine.world.locations.some(l=>l.id===target))throw preconditionFailure('委托目的地必须已登记');
  const route=actor.location===target?{minutes:0,cost:0,edges:[]}:engine.route(actor.location,target,'walk',now,d.document.randomSeed);
  assertCourierRouteAccess(engine,id,actor.location,target,route);
  const work=q.objective.type==='build'?30:1,finish=now+route.minutes+work;
- if(finish>q.deadline)throw Error('无法在期限内按实际路线履约');
- if(actor.coins<route.cost)throw Error('履约路费不足');
- if(q.objective.type==='deliver'&&engine.quantity(d,id,q.objective.item)<q.objective.quantity)throw Error('承接者实际交付材料不足');
- if(route.minutes+work>240)throw Error('委托超过单日自主工作窗口');
+ if(finish>q.deadline)throw preconditionFailure('无法在期限内按实际路线履约');
+ if(actor.coins<route.cost)throw preconditionFailure('履约路费不足');
+ if(q.objective.type==='deliver'&&engine.quantity(d,id,q.objective.item)<q.objective.quantity)throw preconditionFailure('承接者实际交付材料不足');
+ if(route.minutes+work>240)throw preconditionFailure('委托超过单日自主工作窗口');
  const spent=d.get('state','npcs',id,'autonomy','minutesByDay',String(Math.floor(now/DAY)))??0;
- if(spent+route.minutes+work>240)throw Error('每日自主工作时间已用尽');
- for(let t=now;t<finish;){const slot=scheduleAt(engine,id,t,state);if(!slot||slot.production===false||/(睡眠|睡觉|熟睡|前往|返回|赶路)/.test(slot.activity))throw Error('实际作息没有清醒履约窗口');t=slot.until;}
+ if(spent+route.minutes+work>240)throw preconditionFailure('每日自主工作时间已用尽');
+ for(let t=now;t<finish;){const slot=scheduleAt(engine,id,t,state);if(!slot||slot.production===false||/(睡眠|睡觉|熟睡|前往|返回|赶路)/.test(slot.activity))throw preconditionFailure('实际作息没有清醒履约窗口');t=slot.until;}
  assertNpcObligationAction(d,engine,[id],{start:now,minutes:finish-now,kind:'quest'});
  engine.assertNpcAutonomyAction?.(d.get('state'),[id],{start:now,minutes:finish-now});
- if(Object.values(d.get('state','obligations')??{}).some(o=>o.type==='带路'&&['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)))throw Error('承接者已有带路义务');
+ if(Object.values(d.get('state','obligations')??{}).some(o=>o.type==='带路'&&['待履行','进行中'].includes(o.status)&&[o.promisor,o.promisee].includes(id)))throw preconditionFailure('承接者已有带路义务');
  const reservation=`obl_${q.id}`,booking={id:reservation,quest:q.id,reservationVersion:1,deliveryVersion:1,type:'委托履约',promisor:id,promisee:q.publisher,
   content:q.content,location:target,start:now,deadline:finish,departures:{[id]:now},createdAt:now,status:'进行中',workMinutes:0};
  d.set(['state','obligations',reservation],booking);
@@ -190,22 +191,22 @@ function acceptNpc(d,engine,q,id,now,state=d.get('state')){
 
 export function questBoardAction(d,engine,args,eventId){
  const now=d.get('state','minute');
- if(!['publish','accept','complete','cancel','inspect'].includes(args.operation))throw Error('未知任务操作；发布用publish，接受用accept，完成用complete');
+ if(!['publish','accept','complete','cancel','inspect'].includes(args.operation))throw preconditionFailure('未知任务操作；发布用publish，接受用accept，完成用complete');
  if(args.operation==='publish'){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
-  if(!awake(engine,d.get('state'),publisher,actor))throw Error('任务发布者无法清醒履约');
-  if(!(grade in engine.rules.quests.quotaUnits))throw Error('任务等级无效');
+  if(!awake(engine,d.get('state'),publisher,actor))throw preconditionFailure('任务发布者无法清醒履约');
+  if(!(grade in engine.rules.quests.quotaUnits))throw preconditionFailure('任务等级无效');
   const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true,document:d.document}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
-  if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw Error('身份或本月任务发布额度不足');
-  if(personal&&grade!=='D')throw Error('未登记官职的私人任务只能发布D级，身份额度不足');
+  if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw preconditionFailure('身份或本月任务发布额度不足');
+  if(personal&&grade!=='D')throw preconditionFailure('未登记官职的私人任务只能发布D级，身份额度不足');
   const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
-  if(!publicFund&&actor.coins<reward)throw Error('发布者无法托管报酬');
+  if(!publicFund&&actor.coins<reward)throw preconditionFailure('发布者无法托管报酬');
   const verified=objective(engine,d,args,publisher),content=text(args.content),location=d.get('state','location');
-  if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw Error('私人发单须在合法公共地点张贴');
+  if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw preconditionFailure('私人发单须在合法公共地点张贴');
   const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=args.escrow??`quest_${eventId}`;
   if(args.escrow!==undefined){
    const account=d.get('state','records',args.escrow);
-   if(account?.category!=='quest_escrow'||account.purpose!=='quest_escrow'||!sameLocality(engine,account.seat,location)||account.escrow!==0||account.quest||d.get('state','quests',quest))throw Error('发布只能绑定本地未使用的专用任务托管');
+   if(account?.category!=='quest_escrow'||account.purpose!=='quest_escrow'||!sameLocality(engine,account.seat,location)||account.escrow!==0||account.quest||d.get('state','quests',quest))throw preconditionFailure('发布只能绑定本地未使用的专用任务托管');
    d.set(['state','records',quest],{...account,quest,publisher,openedFor:eventId});
   }
   let fundedBy=null;
@@ -217,38 +218,38 @@ export function questBoardAction(d,engine,args,eventId){
   notice(d,engine,row,now,'publish');return {quest,status:row.status};
  }
  if(args.operation==='inspect'&&!args.quest)return {notices:laborNotices(engine,d.get('state'))};
- const q=d.get('state','quests',args.quest);if(!q)throw Error('不存在这个任务');
+ const q=d.get('state','quests',args.quest);if(!q)throw preconditionFailure('不存在这个任务');
  // Court bounties: rewards sit in the code treasury; capture goes through world_law arrest.
  if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);
  if(args.operation==='inspect'){
-  if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw Error('没有获知该委托进度的渠道');
+  if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw preconditionFailure('没有获知该委托进度的渠道');
   return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
  }
- if(q.snapshotVersion)throw Error('历史任务快照缺少变更或重复结算所需的目标、期限与报酬来源');
+ if(q.snapshotVersion)throw preconditionFailure('历史任务快照缺少变更或重复结算所需的目标、期限与报酬来源');
  if(args.operation==='cancel'){
-  if(![q.publisher,q.taker].includes('player'))throw Error('只有委托当事人能取消');
-  if(!active(q))throw Error('任务不在可取消状态');
+  if(![q.publisher,q.taker].includes('player'))throw preconditionFailure('只有委托当事人能取消');
+  if(!active(q))throw preconditionFailure('任务不在可取消状态');
   return {quest:q.id,...close(d,engine,q,'取消','当事人取消；未付报酬退回发布者，已付路费不退',now)};
  }
- if(q.deadline!==undefined&&now>=q.deadline)throw Error('任务已超期');
+ if(q.deadline!==undefined&&now>=q.deadline)throw preconditionFailure('任务已超期');
  if(args.operation==='accept'){
-  if(q.status!=='公开')throw Error('任务当前不能接受');
+  if(q.status!=='公开')throw preconditionFailure('任务当前不能接受');
   const taker=args.taker?engine.resolve(args.taker):'player';
-  if(taker===q.publisher)throw Error('不能承接本人发布的任务');
+  if(taker===q.publisher)throw preconditionFailure('不能承接本人发布的任务');
   if(taker!=='player'){
-   if(args.consent!==true||place(d.get('state'),taker)!==d.get('state','location'))throw Error('NPC接单须实际在场并同意');
+   if(args.consent!==true||place(d.get('state'),taker)!==d.get('state','location'))throw preconditionFailure('NPC接单须实际在场并同意');
    const row=acceptNpc(d,engine,q,taker,now);return {quest:q.id,status:row.status,taker};
   }
-  if(q.publisher!=='player'&&standing(engine,d.get('state'),q.publisher)<=HOSTILE)throw Error('委托人对你怀有敌意，不肯把委托交给你');
+  if(q.publisher!=='player'&&standing(engine,d.get('state'),q.publisher)<=HOSTILE)throw preconditionFailure('委托人对你怀有敌意，不肯把委托交给你');
   const rule=engine.replaying&&!engine.replayResult?.cost?null:actionCostRule(engine,'quest.accept');
-  if(rule&&q.deadline!==undefined&&now+rule.timeMin>=q.deadline)throw Error('任务剩余期限不足以办完接任手续');
+  if(rule&&q.deadline!==undefined&&now+rule.timeMin>=q.deadline)throw preconditionFailure('任务剩余期限不足以办完接任手续');
   if(rule)assertActionTime(d,engine,rule.timeMin);
   const span=rule?beginActionActivity(d,engine,rule.activity):null;
   d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player',...(['creature','pact'].includes(q.objective.type)?{acceptedAt:now,evidenceBefore:existingWildlifeEvidence(d.get('state'),q.objective)}:{})});
   if(rule)engine.advance(d,rule.timeMin,eventId);
   return {quest:q.id,status:d.get('state','quests',q.id,'status'),...(span?{cost:finishActionActivity(d,engine,span)}:{})};
  }
- if(q.status!=='进行中'||q.taker!=='player')throw Error('任务不在可结算状态；NPC履约由世界时间验证');
+ if(q.status!=='进行中'||q.taker!=='player')throw preconditionFailure('任务不在可结算状态；NPC履约由世界时间验证');
  const o=q.objective;let done=false;
  if(['creature','pact'].includes(o.type)){
   const evidence=wildlifeQuestEvidence(d,q);done=Boolean(evidence);
@@ -259,11 +260,11 @@ export function questBoardAction(d,engine,args,eventId){
  // U17 generated quests: a world record reaching the stated state (a lair cleared, a motion decided).
  if(o.type==='record')done=o.equals.includes(d.get('state','records',o.record,o.field));
  if(o.type==='deliver'){
-  const target=engine.actor(d,q.publisher);if(isPhysicallyDead(engine,d,q.publisher)||target?.status==='濒死')throw Error('委托人无法接收交付，需先处理委托变更');
-  if(place(d.get('state'),q.publisher)!==d.get('state','location'))throw Error('委托人不在场，不能交付');
-  if(engine.quantity(d,'player',o.item)<o.quantity)throw Error('任务交付物品不足');transferItems(d,engine,'player',q.publisher,o.item,o.quantity);done=true;
+  const target=engine.actor(d,q.publisher);if(isPhysicallyDead(engine,d,q.publisher)||target?.status==='濒死')throw preconditionFailure('委托人无法接收交付，需先处理委托变更');
+  if(place(d.get('state'),q.publisher)!==d.get('state','location'))throw preconditionFailure('委托人不在场，不能交付');
+  if(engine.quantity(d,'player',o.item)<o.quantity)throw preconditionFailure('任务交付物品不足');transferItems(d,engine,'player',q.publisher,o.item,o.quantity);done=true;
  }
- if(!done)throw Error('没有可验证的完成证据');
+ if(!done)throw preconditionFailure('没有可验证的完成证据');
  close(d,engine,q,'已完成','已验证目标',now);d.say(`任务完成，获得${q.reward}铜`);
  const experience=awardExperience(d,engine,{kind:'quest',subject:`${q.publisher}:${o.type}:${o.item??o.location??o.project??o.record}`,source:`quest:${q.id}`,base:engine.rules.quests.experienceRanges[q.grade][0],repeat:true},eventId);
  return {quest:q.id,reward:q.reward,...experience};
@@ -281,14 +282,14 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
    const booking=d.get('state','obligations',q.reservation);
    try{
     if(!booking||['取消','违约'].includes(booking.status))throw Error(booking?.reason??'委托占时记录失效');
-    if(q.workEvidence){const p=d.get('state','projects',q.objective.project);if(!p||!['施工中','已完成'].includes(p.status))throw Error('委托工程已停止或不存在');if(p.status==='已完成'){results.push(close(d,engine,q,'已完成','实际施工记录与工程完成状态已核对',after));continue;}}
+    if(q.workEvidence){const p=d.get('state','projects',q.objective.project);if(!p||!['施工中','已完成'].includes(p.status))throw preconditionFailure('委托工程已停止或不存在');if(p.status==='已完成'){results.push(close(d,engine,q,'已完成','实际施工记录与工程完成状态已核对',after));continue;}}
     else if(booking.deadline<=after){
-     const actor=d.get('state','npcs',q.taker);if(!awake(engine,d.get('state'),q.taker,actor)||actor.scheduleTravel||actor.cognitionTravel||actor.location!==booking.location||booking.workMinutes<q.workRequired)throw Error('未能清醒到场完成约定工作');
+     const actor=d.get('state','npcs',q.taker);if(!awake(engine,d.get('state'),q.taker,actor)||actor.scheduleTravel||actor.cognitionTravel||actor.location!==booking.location||booking.workMinutes<q.workRequired)throw preconditionFailure('未能清醒到场完成约定工作');
      if(q.objective.type==='deliver'){
       const recipient=engine.actor(d,q.publisher),action=engine.npcObligationAction;
-      if(place(d.get('state'),q.publisher)!==booking.location||!awake(engine,d.get('state'),q.publisher,recipient)||recipient.scheduleTravel||recipient.cognitionTravel||q.publisher==='player'&&action?.args?.activity==='睡眠')throw Error('收件人未在约定地点清醒接收，货物仍由承接者持有');
-      if((q.publisher==='player'||d.get('state','player','companions')?.includes(q.publisher))&&action?.tool==='move'&&after<action.arrivalMinute)throw Error('收件人仍在途中，货物仍由承接者持有');
-      if(engine.quantity(d,q.taker,q.objective.item)<q.objective.quantity)throw Error('承接者实际交付材料不足');
+      if(place(d.get('state'),q.publisher)!==booking.location||!awake(engine,d.get('state'),q.publisher,recipient)||recipient.scheduleTravel||recipient.cognitionTravel||q.publisher==='player'&&action?.args?.activity==='睡眠')throw preconditionFailure('收件人未在约定地点清醒接收，货物仍由承接者持有');
+      if((q.publisher==='player'||d.get('state','player','companions')?.includes(q.publisher))&&action?.tool==='move'&&after<action.arrivalMinute)throw preconditionFailure('收件人仍在途中，货物仍由承接者持有');
+      if(engine.quantity(d,q.taker,q.objective.item)<q.objective.quantity)throw preconditionFailure('承接者实际交付材料不足');
       transferItems(d,engine,q.taker,q.publisher,q.objective.item,q.objective.quantity);
      }
      const day=String(Math.floor(booking.start/DAY)),spent=d.get('state','npcs',q.taker,'autonomy','minutesByDay',day)??0;

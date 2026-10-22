@@ -137,7 +137,7 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
   legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='尚未学会这个配方';
  }
  const before=structuredClone(document);
- await assert.rejects(engine.reduce(document,{...legacy,eventId:`generic-legacy-${module}`}),error=>error.constructor===Error&&error.message===reason);
+ await assert.rejects(engine.reduce(document,{...legacy,eventId:`generic-legacy-${module}`}),error=>error.name==='ActionRejection'&&error.code==='E-ACTION-PRECONDITION'&&error.message===reason);// the source now declares the rejection (action-rejection.mjs) instead of the boundary guessing from Han text
  const offered=worldActions(engine.scoped(document),document).actions;
  const call={tool:'world_act',eventId:`generic-${module}`,args:{action,slots}};
  for(const preview of [true,false]){

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {cloneData} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -28,18 +29,18 @@ const mental=new Set(['sense_mind','sleep','memory_guard','rest_bless','comfort'
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const path=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
-const number=(n,min,max,label)=>{if(!Number.isFinite(n)||n<min||n>max)throw Error(`${label}未登记或超出范围`);return n;};
+const number=(n,min,max,label)=>{if(!Number.isFinite(n)||n<min||n>max)throw preconditionFailure(`${label}未登记或超出范围`);return n;};
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const effects=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='mind_space'&&(!op||e.operation===op));
 export function mindSpaceState(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('心契空间对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('心契空间对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const storeState=(d,row,state)=>d.set(['state','records',key(row.id)],{category:'physical_feature',id:row.id,location:row.location,state});
 function locate(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>(!location||r.location===location)&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('需要登记的真实环境对象');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('需要登记的真实环境对象');return rows[0];
 }
 function permission(d,row,args,until,action='environment_use'){
  if(action==='environment_use'&&row.owner==='player')return null;
@@ -47,11 +48,11 @@ function permission(d,row,args,until,action='environment_use'){
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.action===action&&r.subject===row.id&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>until;
  });
- if(!id)throw Error('对象需要有效所有者许可');return id;
+ if(!id)throw preconditionFailure('对象需要有效所有者许可');return id;
 }
 function access(d,engine,row,c,args,until,read=false){
  const from=localPlayerPoint(d);
- if(!point(row.position)||distance(from,row.position)>c.rangeMeters||!localSightClear(d,engine,row.location,from,row.position))throw Error('对象超过实际距离或视线被遮挡');
+ if(!point(row.position)||distance(from,row.position)>c.rangeMeters||!localSightClear(d,engine,row.location,from,row.position))throw preconditionFailure('对象超过实际距离或视线被遮挡');
  return read?null:permission(d,row,args,until);
 }
 function consent(d,id,authorization,until,spell,location){
@@ -59,18 +60,18 @@ function consent(d,id,authorization,until,spell,location){
 }
 function mind(d,id,engine){
  const m=clone(d.get(...path(id),'mental')??(engine?personMental(engine,d.get('state'),id).value:null));
- if(!m)throw Error('目标没有登记实际精神与疲劳状态');
+ if(!m)throw preconditionFailure('目标没有登记实际精神与疲劳状态');
  for(const k of ['fatigue','alertness','stress'])number(m[k],0,100,k);
- if(!Array.isArray(m.interference))throw Error('精神干扰状态未知');return m;
+ if(!Array.isArray(m.interference))throw preconditionFailure('精神干扰状态未知');return m;
 }
 function targetMind(d,engine,c,args,until){
  const id=resolveCreature(engine,d,args.target??'player'),a=d.get(...path(id));
- if(!a||isPhysicallyDead(engine,d,id)||['濒死','昏迷'].includes(a.status)||id!=='player'&&a.location!==d.get('state','location'))throw Error('精神观察目标不在场或无法同意');
+ if(!a||isPhysicallyDead(engine,d,id)||['濒死','昏迷'].includes(a.status)||id!=='player'&&a.location!==d.get('state','location'))throw preconditionFailure('精神观察目标不在场或无法同意');
  assertMagicTargeting(d,engine,c,args,id);
  assertSpellConsent(d,engine,c,args,id,'mental_magic',until);
  if(!id.startsWith('npc_')&&id!=='player'){
   const base=engine.byId.get(id),template=base?.template??engine.byId.get(base?.monster)?.template;
-  if(!Number.isFinite(template)||monsterStats({level:a.level??base?.levelRange?.[0]??1,template,bossTier:base?.tier??0},engine.rules).divine)throw Error('不能越过神性屏障或未知生命规则');
+  if(!Number.isFinite(template)||monsterStats({level:a.level??base?.levelRange?.[0]??1,template,bossTier:base?.tier??0},engine.rules).divine)throw preconditionFailure('不能越过神性屏障或未知生命规则');
  }
  // Existing memories and status effects do not require a fatigue subsystem.
  const needsVitals=['sleep','rest_bless','comfort'].includes(c.effectSpec.operation);
@@ -78,20 +79,20 @@ function targetMind(d,engine,c,args,until){
 }
 function unit(d,engine,id){
  const u=d.get('state','itemInstances',id),def=u&&engine.byId.get(u.item);
- if(!u||!def||u.owner!=='player'||!Number.isFinite(u.durability)||u.durability<0)throw Error('需要真实自有且状态已登记的单件物品');
+ if(!u||!def||u.owner!=='player'||!Number.isFinite(u.durability)||u.durability<0)throw preconditionFailure('需要真实自有且状态已登记的单件物品');
  number(def.weight,0,5000,'单件重量');return{...clone(u),weight:def.weight};
 }
 function contents(d,engine,row,s){
- if(row.kind!=='container'||!Array.isArray(s.contents))throw Error('需要实际袋内单件清单');
+ if(row.kind!=='container'||!Array.isArray(s.contents))throw preconditionFailure('需要实际袋内单件清单');
  number(s.capacityKg,.01,5000,'袋内容量');
- if(new Set(s.contents).size!==s.contents.length)throw Error('袋内单件重复');
+ if(new Set(s.contents).size!==s.contents.length)throw preconditionFailure('袋内单件重复');
  let weight=0;
  const rows=s.contents.map(id=>{
   const u=unit(d,engine,id);
-  if(u.status!=='袋内'||u.container!==row.id)throw Error('袋内归属与清单不符');
+  if(u.status!=='袋内'||u.container!==row.id)throw preconditionFailure('袋内归属与清单不符');
   weight+=u.weight;return u;
  });
- if(weight>s.capacityKg)throw Error('袋内物品超过实际容量');return rows;
+ if(weight>s.capacityKg)throw preconditionFailure('袋内物品超过实际容量');return rows;
 }
 export function validateMindSpaceCatalog(c){
  const s=c.effectSpec,m=mindSpaceMechanisms[s.operation],errors=[];
@@ -108,28 +109,28 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
   Object.assign(p,targetMind(d,this,c,args,until));
   const grant=spellConsentGrant(d,p.id,args.authorization,'mental_magic',c,until,this);
   if(grant?.id)p.args.authorization=grant.id;
-  if(op==='sleep'&&mindSleeping(d,p.id))throw Error('目标已经在自愿睡眠，不能重复叠加');
+  if(op==='sleep'&&mindSleeping(d,p.id))throw preconditionFailure('目标已经在自愿睡眠，不能重复叠加');
   if(op==='memory_guard'){
    const memories=p.id==='player'?Object.entries(d.get('memories')??{}).filter(([,m])=>m.subject==='player').map(([id,m])=>({...m,id})):p.actor.memoryStream??[];
    p.memory=memories.find(m=>m.id===args.source);
-   if(!p.memory||p.memory.minute>d.get('state','minute')||d.get(...path(p.id),'cognition','blurred',p.memory.id))throw Error('护印只能保护本人已有且未模糊的具体记忆');
+   if(!p.memory||p.memory.minute>d.get('state','minute')||d.get(...path(p.id),'cognition','blurred',p.memory.id))throw preconditionFailure('护印只能保护本人已有且未模糊的具体记忆');
   }
   return p;
  }
  if(op==='record_feeling'){
   p.item=this.resolve(args.target,'item');
-  if(this.quantity(d,'player',p.item)!==1)throw Error('感受载体必须是实际持有单件');
-  if(typeof args.text!=='string'||!args.text.trim()||args.text.length>80)throw Error('只能封存自己的80字以内简短感受');
+  if(this.quantity(d,'player',p.item)!==1)throw preconditionFailure('感受载体必须是实际持有单件');
+  if(typeof args.text!=='string'||!args.text.trim()||args.text.length>80)throw preconditionFailure('只能封存自己的80字以内简短感受');
   p.feeling=args.text.trim();return p;
  }
  if(['contract_sense','counter_contract'].includes(op)){
   p.contract=magicContractTrace(d,args.target);
-  if(!p.contract.parties?.includes('player'))throw Error('只能接触本人持有的契约');
+  if(!p.contract.parties?.includes('player'))throw preconditionFailure('只能接触本人持有的契约');
   if(op==='counter_contract'){
    const e=p.contract.enforcement;
-   if(!e||e.channel!=='shadow'||!e.active||!(e.remaining>0)||e.started>d.get('state','minute')||e.expires<=until)throw Error('只能反制正在执行的暗影契约');
+   if(!e||e.channel!=='shadow'||!e.active||!(e.remaining>0)||e.started>d.get('state','minute')||e.expires<=until)throw preconditionFailure('只能反制正在执行的暗影契约');
    p.id=e.target;
-   if(!p.contract.parties.includes(p.id))throw Error('契约执行对象不在签约双方');
+   if(!p.contract.parties.includes(p.id))throw preconditionFailure('契约执行对象不在签约双方');
    for(const id of [...new Set(p.contract.parties)]){
     const authorization=[args.authorization,...args.authorizations??[]].find(key=>d.get('state','records',key,'subject')===id);
     targetMind(d,this,{...c,targeting:{lineOfSight:true,consent:'mental_magic',permit:'mental_magic'}},{...args,target:id,authorization},until);
@@ -139,14 +140,14 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
  }
  if(['store','anchor_cargo'].includes(op)){
   p.item=this.resolve(args.target,'item');
-  if(this.quantity(d,'player',p.item)!==1)throw Error('封存或货运需要持有自有单件');
+  if(this.quantity(d,'player',p.item)!==1)throw preconditionFailure('封存或货运需要持有自有单件');
   const def=this.byId.get(p.item);number(def.weight,0,c.effectSpec.power,'轻物载荷');
   if(op==='anchor_cargo')p.cargo=prepareAnchorCargo.call(this,d,c,args,{completion});
   return p;
  }
  if(op==='retrieve'&&d.get('state','itemInstances',args.target)){
   p.unit=unit(d,this,args.target);
-  if(p.unit.status!=='落地'||p.unit.location!==location||!point(p.unit.position)||distance(p.origin,p.unit.position)>c.rangeMeters||!localSightClear(d,this,location,p.origin,p.unit.position))throw Error('取回目标不在视野内或仍在别人手中');
+  if(p.unit.status!=='落地'||p.unit.location!==location||!point(p.unit.position)||distance(p.origin,p.unit.position)>c.rangeMeters||!localSightClear(d,this,location,p.origin,p.unit.position))throw preconditionFailure('取回目标不在视野内或仍在别人手中');
   number(p.unit.weight,0,c.effectSpec.power,'取回载荷');return p;
  }
  const row=locate(this,args.target,location),s=mindSpaceState(d,row);p.row=row;p.state=s;
@@ -154,35 +155,35 @@ export function prepareMindSpace(d,c,args,{completion=false}={}){
  p.permission=access(d,this,row,c,args,until,['measure','calibrate_anchor'].includes(op));
  if(op==='measure'){
   p.other=locate(this,args.destination,location);access(d,this,p.other,c,args,until,true);
-  if(!localSightClear(d,this,location,row.position,p.other.position))throw Error('两个可见点之间不能隔墙测距');
+  if(!localSightClear(d,this,location,row.position,p.other.position))throw preconditionFailure('两个可见点之间不能隔墙测距');
  }
  if(['organize','retrieve','bag_seal'].includes(op)){
   p.contents=contents(d,this,row,s);
-  if(row.owner!=='player')throw Error('袋内整理取物只能作用于自有袋');
+  if(row.owner!=='player')throw preconditionFailure('袋内整理取物只能作用于自有袋');
   if(op==='retrieve'){
-   if(s.locked===true)throw Error('袋口上锁，不能隔锁取物');
+   if(s.locked===true)throw preconditionFailure('袋口上锁，不能隔锁取物');
    p.unit=p.contents.find(u=>u.id===args.source);
-   if(!p.unit)throw Error('须用source选择真实袋内单件');number(p.unit.weight,0,c.effectSpec.power,'取回载荷');
+   if(!p.unit)throw preconditionFailure('须用source选择真实袋内单件');number(p.unit.weight,0,c.effectSpec.power,'取回载荷');
   }
-  if(op==='bag_seal'&&(s.closed!==true||!(s.integrity>0)))throw Error('隔湿袋需要完整密封袋口');
+  if(op==='bag_seal'&&(s.closed!==true||!(s.integrity>0)))throw preconditionFailure('隔湿袋需要完整密封袋口');
  }
  if(op==='corrode'){
-  if(row.kind==='plant'||s.alive||!['metal','wood','stone'].includes(s.material))throw Error('腐蚀只作用于登记的无生命材料');
+  if(row.kind==='plant'||s.alive||!['metal','wood','stone'].includes(s.material))throw preconditionFailure('腐蚀只作用于登记的无生命材料');
   number(s.integrity,.01,100,'材料完整度');number(s.corrosionResistance,0,1,'材料抗蚀性');
  }
  if(['lock_space','alarm','block_space'].includes(op)){
-  if(row.kind!=='door'||!point(row.position))throw Error('必须使用登记的实际门框或通道');
+  if(row.kind!=='door'||!point(row.position))throw preconditionFailure('必须使用登记的实际门框或通道');
   number(s.blockRadiusMeters,.01,1,'狭小通道半径');
-  if(op==='lock_space'&&(!s.keyItem||!this.byId.get(s.keyItem)||s.locked!==true||!Number.isFinite(s.lockGapMm)))throw Error('锁隙术需要真实机械锁与钥匙登记');
-  if(op==='block_space'&&(!Array.isArray(row.connects)||row.connects.length!==2))throw Error('封界必须有实际通道及公开标示');
+  if(op==='lock_space'&&(!s.keyItem||!this.byId.get(s.keyItem)||s.locked!==true||!Number.isFinite(s.lockGapMm)))throw preconditionFailure('锁隙术需要真实机械锁与钥匙登记');
+  if(op==='block_space'&&(!Array.isArray(row.connects)||row.connects.length!==2))throw preconditionFailure('封界必须有实际通道及公开标示');
  }
  if(op==='calibrate_anchor'){
-  if(row.spaceAnchor!==true||s.anchorIntact!==true||!point(s.anchorOffsetMeters)||distance(s.anchorOffsetMeters,[0,0])>.5)throw Error('只能校准已有锚点的小幅偏移');
+  if(row.spaceAnchor!==true||s.anchorIntact!==true||!point(s.anchorOffsetMeters)||distance(s.anchorOffsetMeters,[0,0])>.5)throw preconditionFailure('只能校准已有锚点的小幅偏移');
   p.permission=permission(d,row,args,until,'teleport_anchor');
  }
  if(op==='repair_space'){
   const a=s.spaceAnomaly;
-  if(!a||a.divine!==false||a.radiusMeters>.5||!(a.radiusMeters>0)||!(a.intensity>0)||a.intensity>1)throw Error('只能修补小型非神性空间异常');
+  if(!a||a.divine!==false||a.radiusMeters>.5||!(a.radiusMeters>0)||!(a.intensity>0)||a.intensity>1)throw preconditionFailure('只能修补小型非神性空间异常');
  }
  return p;
 }
@@ -204,7 +205,7 @@ function pickup(d,engine,u){
 }
 export function applyMindSpace(d,initial,eventId){
  const p=prepareMindSpace.call(this,d,initial.catalog,initial.args,{completion:true});
- if(p.location!==initial.location||distance(p.origin,initial.origin)!==0)throw Error('施法期间位置改变，效果已回滚');
+ if(p.location!==initial.location||distance(p.origin,initial.origin)!==0)throw preconditionFailure('施法期间位置改变，效果已回滚');
  const now=d.get('state','minute'),op=p.op,result={target:p.id??p.row?.id??p.item??p.unit?.id,operation:op};
  if(op==='sense_mind'){
   const count=(p.mind?.interference.length??0)+Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='status'&&e.target===p.id&&['illusion','compulsion'].includes(e.status)&&e.expires>now&&e.remainingUses!==0).length;
@@ -285,7 +286,7 @@ export function mindSleepUntil(d,id,now){
  },now);
 }
 export function assertMindAwake(d,id='player'){
- if(mindSleeping(d,id))throw Error('正在自愿睡眠，只能等待休养结束');
+ if(mindSleeping(d,id))throw preconditionFailure('正在自愿睡眠，只能等待休养结束');
 }
 export function advanceMindSpace(d,engine,before,after){
  const byTarget=new Map();
@@ -356,7 +357,7 @@ export function assertMindSpacePath(d,engine,location,from,to,{destination,event
   const row=locate(engine,e.target),s=mindSpaceState(d,row);
   const hit=destination?row.connects?.includes(location)&&row.connects.includes(destination):row.location===location&&crosses(row,s,from,to);
   if(!hit)continue;
-  if(e.operation==='block_space'||e.operation==='lock_space'&&s.locked)throw Error('封界或机械锁阻断通道');
+  if(e.operation==='block_space'||e.operation==='lock_space'&&s.locked)throw preconditionFailure('封界或机械锁阻断通道');
   if(e.operation==='alarm'&&signal){
    const signals=[...e.signals??[]];if(signals.some(r=>r.eventId===eventId))continue;
    signals.push({minute:d.get('state','minute'),eventId,identified:false});d.set(['state','effects',id,'signals'],signals);
@@ -370,8 +371,8 @@ export function unlockMindSpaceDoor(d,engine,args){
  if(!row||!effects(d,'lock_space').some(([,e])=>e.target===row.id&&effective(d,e,d.get('state','minute'))))return;
  const s=mindSpaceState(d,row);
  if(!s.locked)return;
- if(args.item!==s.keyItem||engine.quantity(d,'player',s.keyItem)<1)throw Error('机械锁必须用实际持有的真实钥匙打开');
- if(distance(localPlayerPoint(d),row.position)>1)throw Error('开锁需要实际接触门锁');
+ if(args.item!==s.keyItem||engine.quantity(d,'player',s.keyItem)<1)throw preconditionFailure('机械锁必须用实际持有的真实钥匙打开');
+ if(distance(localPlayerPoint(d),row.position)>1)throw preconditionFailure('开锁需要实际接触门锁');
  s.locked=false;s.open=true;storeState(d,row,s);
 }
 export function inspectMindSpace(d,engine,row){
@@ -386,7 +387,7 @@ export function inspectMindSpace(d,engine,row){
 export function inspectMindCarrier(d,engine,args){
  if(!args.target?.startsWith('item_'))return null;
  const item=engine.resolve(args.target,'item');
- if(engine.quantity(d,'player',item)<1)throw Error('感受载体需要实际持有');
+ if(engine.quantity(d,'player',item)<1)throw preconditionFailure('感受载体需要实际持有');
  const held=heldUnit(d,engine,'player',item),now=d.get('state','minute');
  const feelings=Object.values(d.get('state','records')??{}).filter(r=>r.category==='feeling_carrier'&&r.owner==='player'&&r.targetInstance===held?.instance&&r.expires>now).map(r=>({feeling:r.feeling,minute:r.minute,sourceEvent:r.sourceEvent}));
  return{item,feelings,actionScope:{kind:'instant',instantaneous:true}};

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
@@ -14,13 +15,13 @@ export const waterEarthMechanisms=Object.freeze({
 });
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}无效`);return v;};
-const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw Error(`${label}无效`);return v;};
+const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}无效`);return v;};
+const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw preconditionFailure(`${label}无效`);return v;};
 // P2: rows are read here only to be copied (peek), and the per-minute
 // simulation hands each freshly built row to the draft (adopt).
 export function waterEarthState(d,row){
  const r=typeof d.peek==='function'?d.peek('state','records',key(row.id)):d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('水土对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('水土对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
@@ -30,15 +31,15 @@ const storeFresh=(d,row,state)=>{const path=['state','records',key(row.id)],valu
 const featureIndex=engine=>{const index=new Map();for(const r of environmentFeatures(engine)){if(!index.has(r.location))index.set(r.location,[]);index.get(r.location).push(r);}return index;};
 function locate(engine,id,location,index=null){
  const rows=(index?index.get(location)??[]:environmentFeatures(engine)).filter(r=>r.location===location&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('需要同地登记的真实水土对象');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('需要同地登记的真实水土对象');return rows[0];
 }
 function access(d,engine,row,args,range,read=false){
- if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw Error('水土对象超过实际距离或视线被遮挡');
+ if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw preconditionFailure('水土对象超过实际距离或视线被遮挡');
  if(read||row.owner==='player'||row.access==='public')return;
  const allowed=[args.authorization,...args.authorizations??[]].some(id=>{
   const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
  });
- if(!allowed)throw Error('水土对象需要有效所有者授权');
+ if(!allowed)throw preconditionFailure('水土对象需要有效所有者授权');
 }
 const active=(d,op,minute=d.get('state','minute'))=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='water_earth'&&e.operation===op&&e.started<=minute&&e.expires>minute);
 const strongest=(d,op,target,minute)=>active(d,op,minute).filter(([,e])=>e.target===target).reduce((n,[,e])=>Math.max(n,e.power),0);
@@ -54,7 +55,7 @@ const readOperations=new Set(['survey_water','sense_soil','survey_earth','ore','
 function water(s){
  integer(s.waterMl,0,100000000,'实际水量');integer(s.capacityMl,1,100000000,'容量');
  integer(s.reservedWaterMl??0,0,100000000,'预留水量');
- if(s.waterMl+(s.reservedWaterMl??0)>s.capacityMl)throw Error('实际水量与预留水量超过容量');
+ if(s.waterMl+(s.reservedWaterMl??0)>s.capacityMl)throw preconditionFailure('实际水量与预留水量超过容量');
  for(const f of ['saltMg','toxinUg'])number(s[f]??0,0,1e12,f);
 }
 function reserveWater(d,row,amount){
@@ -77,7 +78,7 @@ export function prepareWaterEarthMagic(d,c,args){
  if(op==='bind_water'&&!args.target?.startsWith('feature_')){
   const target=args.target??'player';actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
   facts=areaTargetFacts(d,this,target,location,localPlayerPoint(d));
-  if(!actor||isPhysicallyDead(this,d,target)||!facts)throw Error('水绳缺少真实在场肢体');
+  if(!actor||isPhysicallyDead(this,d,target)||!facts)throw preconditionFailure('水绳缺少真实在场肢体');
   const limbMass=actor.limbMassGrams??this.byId.get(target)?.limbMassGrams??(target==='player'||target.startsWith('npc_')?1500:undefined);
   assertMagicTargeting(d,this,c,args,target);integer(limbMass,1,c.effectSpec.power,'肢体载荷');
  }else{
@@ -85,60 +86,60 @@ export function prepareWaterEarthMagic(d,c,args){
  }
  const s=row?waterEarthState(d,row):{},p={target:row?.id??args.target??'player',row,actor,catalog:c,spec:c.effectSpec,args:clone(args),location};
  if(['seal','mud_seal'].includes(op)){
-  if(!['container','seam'].includes(row.kind)||op==='seal'&&row.kind!=='container')throw Error('密封需要真实容器漏口或泥缝');
-  if(row.waterEarthProcess!=='leak')throw Error('漏口没有实际泄漏过程');
+  if(!['container','seam'].includes(row.kind)||op==='seal'&&row.kind!=='container')throw preconditionFailure('密封需要真实容器漏口或泥缝');
+  if(row.waterEarthProcess!=='leak')throw preconditionFailure('漏口没有实际泄漏过程');
   number(s.leakMlPerMinute,1,100000,'实际漏口');number(s.pressureKpa,0,c.effectSpec.power,'漏口压力');
   p.receiver=locate(this,row.links?.drain,location);access(d,this,p.receiver,args,c.rangeMeters);water(s);water(waterEarthState(d,p.receiver));
   if(op==='mud_seal'){
    p.source=locate(this,args.source,location);access(d,this,p.source,args,c.rangeMeters);const clay=waterEarthState(d,p.source);
-   if(p.source.kind!=='soil'||clay.texture!=='clay')throw Error('泥封需要现有黏土');integer(clay.clayGrams,200,100000000,'可用黏土');
+   if(p.source.kind!=='soil'||clay.texture!=='clay')throw preconditionFailure('泥封需要现有黏土');integer(clay.clayGrams,200,100000000,'可用黏土');
   }
  }
  if(['survey_water','slow_flow'].includes(op)){
-  if(row.kind!=='channel')throw Error('需要真实小段水道');number(s.lengthMeters,.1,5,'水道段长度');
+  if(row.kind!=='channel')throw preconditionFailure('需要真实小段水道');number(s.lengthMeters,.1,5,'水道段长度');
   number(s.depthCm,0,500,'实测水深');number(s.flowLimitMl,1,100000,'实测流量');number(s.velocityMetersPerSecond,0,10,'实测流速');
-  if(op==='slow_flow'&&(s.floodPeak||s.flowLimitMl>20000))throw Error('缓流不能阻断洪峰');
+  if(op==='slow_flow'&&(s.floodPeak||s.flowLimitMl>20000))throw preconditionFailure('缓流不能阻断洪峰');
  }
  if(['bind_water','veil_water'].includes(op)){
   p.source=locate(this,args.source,location);access(d,this,p.source,args,c.rangeMeters);const src=waterEarthState(d,p.source);water(src);
-  if(!['container','water'].includes(p.source.kind)||src.waterMl<c.effectSpec.power)throw Error('媒介实际水量不足');
+  if(!['container','water'].includes(p.source.kind)||src.waterMl<c.effectSpec.power)throw preconditionFailure('媒介实际水量不足');
   assertLiquidWater(this,d,p.source);
-  const point=row?.position??facts.point;if(dist(p.source.position,point)>3)throw Error('水体媒介与目标不连通');
-  if(op==='bind_water'&&row){integer(s.massGrams,1,c.effectSpec.power,'物件载荷');if(s.fixed)throw Error('水绳不能牵动固定物');}
+  const point=row?.position??facts.point;if(dist(p.source.position,point)>3)throw preconditionFailure('水体媒介与目标不连通');
+  if(op==='bind_water'&&row){integer(s.massGrams,1,c.effectSpec.power,'物件载荷');if(s.fixed)throw preconditionFailure('水绳不能牵动固定物');}
   if(op==='veil_water'){
-   if(row.kind!=='passage')throw Error('水帘需要真实通道');number(s.widthMeters,.1,2,'通道宽度');
+   if(row.kind!=='passage')throw preconditionFailure('水帘需要真实通道');number(s.widthMeters,.1,2,'通道宽度');
   }
  }
  if(['sense_soil','till','level_ground','mud_trap'].includes(op)){
-  if(row.kind!=='soil')throw Error('需要实际耕土');
-  if(op==='sense_soil'&&!['clay','sand','loam'].includes(s.texture))throw Error('土样缺少真实质地');
-  if(op!=='sense_soil'){number(s.areaM2,.1,c.effectSpec.power,'有限表土面积');if(s.frozen||s.bedrock)throw Error('冻结或基岩不能作为软表土处理');}
+  if(row.kind!=='soil')throw preconditionFailure('需要实际耕土');
+  if(op==='sense_soil'&&!['clay','sand','loam'].includes(s.texture))throw preconditionFailure('土样缺少真实质地');
+  if(op!=='sense_soil'){number(s.areaM2,.1,c.effectSpec.power,'有限表土面积');if(s.frozen||s.bedrock)throw preconditionFailure('冻结或基岩不能作为软表土处理');}
   if(op==='till'){number(s.compactionPercent,1,100,'土壤板结');}
   if(op==='level_ground'){number(s.reliefCm,1,10,'表土高差');number(s.soilVolumeLitres,1,100000,'实际表土体积');}
-  if(op==='mud_trap'){number(s.moisturePercent,60,100,'湿土湿度');if(s.planked)throw Error('铺板已隔离湿土');number(s.radiusMeters,.1,2,'湿土范围');}
+  if(op==='mud_trap'){number(s.moisturePercent,60,100,'湿土湿度');if(s.planked)throw preconditionFailure('铺板已隔离湿土');number(s.radiusMeters,.1,2,'湿土范围');}
  }
  if(['survey_earth','ore','fracture'].includes(op)){
-  if(row.kind!=='rock')throw Error('需要真实岩层');
+  if(row.kind!=='rock')throw preconditionFailure('需要真实岩层');
   if(op==='survey_earth'){
-   if(!Array.isArray(s.strata)||!s.strata.length||!s.strata.every(x=>Number.isFinite(x.depthMeters)&&x.depthMeters>=0&&typeof x.material==='string'&&Number.isFinite(x.echoMs)&&x.echoMs>=0))throw Error('缺少岩层回声样本');
+   if(!Array.isArray(s.strata)||!s.strata.length||!s.strata.every(x=>Number.isFinite(x.depthMeters)&&x.depthMeters>=0&&typeof x.material==='string'&&Number.isFinite(x.echoMs)&&x.echoMs>=0))throw preconditionFailure('缺少岩层回声样本');
    number(s.echoErrorMeters,0,3,'岩层回声误差');
   }
-  if(op==='ore'&&(!Array.isArray(s.oreBands)||!s.oreBands.length||!s.oreBands.every(x=>typeof x.mineral==='string'&&Number.isFinite(x.depthMeters)&&x.depthMeters>=0)))throw Error('缺少可见矿物条带');
+  if(op==='ore'&&(!Array.isArray(s.oreBands)||!s.oreBands.length||!s.oreBands.every(x=>typeof x.mineral==='string'&&Number.isFinite(x.depthMeters)&&x.depthMeters>=0)))throw preconditionFailure('缺少可见矿物条带');
   if(op==='fracture'){
    number(s.crackMm,.1,100,'已有岩石裂隙');integer(s.integrity,1,100000,'岩石完整度');
    p.neighbors=(row.links?.structures??[]).map(id=>locate(this,id,location));
-   for(const other of p.neighbors){access(d,this,other,args,c.rangeMeters);if(dist(row.position,other.position)>3)throw Error('震动邻接距离无效');integer(waterEarthState(d,other).integrity,1,100000,'邻接结构完整度');}
+   for(const other of p.neighbors){access(d,this,other,args,c.rangeMeters);if(dist(row.position,other.position)>3)throw preconditionFailure('震动邻接距离无效');integer(waterEarthState(d,other).integrity,1,100000,'邻接结构完整度');}
   }
  }
  if(['structural_sense','support'].includes(op)){
-  if(row.kind!=='structure')throw Error('需要真实承重结构');number(s.loadKg,1,100000,'结构实际受力');number(s.capacityKg,1,100000,'结构承载');
-  if(op==='support'){if(row.waterEarthProcess!=='sink')throw Error('顶板没有实际下沉过程');number(s.sinkMmPerMinute,.1,100,'顶板下沉速度');integer(s.integrity,1,100000,'顶板完整度');if(s.loadKg<=s.capacityKg||s.loadKg>s.capacityKg+c.effectSpec.power)throw Error('支撑只适用于有限超载的下沉顶板');}
+  if(row.kind!=='structure')throw preconditionFailure('需要真实承重结构');number(s.loadKg,1,100000,'结构实际受力');number(s.capacityKg,1,100000,'结构承载');
+  if(op==='support'){if(row.waterEarthProcess!=='sink')throw preconditionFailure('顶板没有实际下沉过程');number(s.sinkMmPerMinute,.1,100,'顶板下沉速度');integer(s.integrity,1,100000,'顶板完整度');if(s.loadKg<=s.capacityKg||s.loadKg>s.capacityKg+c.effectSpec.power)throw preconditionFailure('支撑只适用于有限超载的下沉顶板');}
  }
  if(op==='levee'){
-  if(row.kind!=='levee')throw Error('需要真实土堤');integer(s.earthGrams,1,100000000,'土堤土量');number(s.erosionGramsPerMinute,1,100000,'冲刷量');
-  if(row.waterEarthProcess!=='erosion')throw Error('土堤没有实际冲刷过程');
+  if(row.kind!=='levee')throw preconditionFailure('需要真实土堤');integer(s.earthGrams,1,100000000,'土堤土量');number(s.erosionGramsPerMinute,1,100000,'冲刷量');
+  if(row.waterEarthProcess!=='erosion')throw preconditionFailure('土堤没有实际冲刷过程');
   p.receiver=locate(this,row.links?.silt,location);access(d,this,p.receiver,args,c.rangeMeters);
-  if(p.receiver.kind!=='silt_heap')throw Error('土堤需要真实冲刷沉积处');
+  if(p.receiver.kind!=='silt_heap')throw preconditionFailure('土堤需要真实冲刷沉积处');
  }
  return p;
 }
@@ -186,7 +187,7 @@ export function waterEarthHeldUntil(state,target,minute,knownAt=minute){
  return Object.values(state.effects??{}).filter(e=>e.kind==='water_earth'&&e.operation==='bind_water'&&e.target===target&&e.started<=knownAt&&e.expires>minute).reduce((n,e)=>Math.max(n,e.expires),minute);
 }
 export function assertWaterEarthMovement(d,target='player'){
- if(waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute'))throw Error('水绳束住一肢或轻物，须先切断水体媒介或等其失效');
+ if(waterEarthHeldUntil(d.get('state'),target,d.get('state','minute'))>d.get('state','minute'))throw preconditionFailure('水绳束住一肢或轻物，须先切断水体媒介或等其失效');
 }
 export function waterEarthMudPenalty(d,engine,target='player'){
  const location=d.get('state','location'),f=areaTargetFacts(d,engine,target,location);if(!f)return 0;
@@ -268,11 +269,11 @@ export function cutWaterMedium(d,engine,target){
 // Stone ammunition remains an actual physical object after the hit.
 export function prepareStone(d,c,args){
  const source=locate(this,args.source,d.get('state','location'));access(d,this,source,args,c.rangeMeters);const s=waterEarthState(d,source);
- if(source.kind!=='stones'||s.fixed||!s.loose)throw Error('石弹需要已有松散小石');integer(s.massGrams,1,500,'小石质量');integer(s.stoneCount,1,100000,'已有小石数量');
+ if(source.kind!=='stones'||s.fixed||!s.loose)throw preconditionFailure('石弹需要已有松散小石');integer(s.massGrams,1,500,'小石质量');integer(s.stoneCount,1,100000,'已有小石数量');
  let row,point;
  if(args.target?.startsWith('feature_')){row=locate(this,args.target,source.location);access(d,this,row,args,c.rangeMeters);integer(waterEarthState(d,row).integrity,1,100000,'实体目标完整度');point=row.position;}
- else{assertMagicTargeting(d,this,c,args,args.target);const f=areaTargetFacts(d,this,args.target,source.location,localPlayerPoint(d));if(!f)throw Error('石弹缺少实际目标位置');point=f.point;}
- if(dist(source.position,point)>c.rangeMeters)throw Error('小石飞行距离超过实际射程');
+ else{assertMagicTargeting(d,this,c,args,args.target);const f=areaTargetFacts(d,this,args.target,source.location,localPlayerPoint(d));if(!f)throw preconditionFailure('石弹缺少实际目标位置');point=f.point;}
+ if(dist(source.position,point)>c.rangeMeters)throw preconditionFailure('小石飞行距离超过实际射程');
  return{source,row,point:clone(point),massGrams:s.massGrams,catalog:c,args:clone(args)};
 }
 export function launchStone(d,p,id){

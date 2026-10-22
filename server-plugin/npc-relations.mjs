@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {cloneData} from './storage.mjs';
 import {debtDue,currentGrace} from './obligation-state.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
@@ -116,24 +117,24 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
 export function applyNpcRelation(d,engine,args,eventId){
  const from=engine.resolve(args.from??args.subject??args.npc),to=engine.resolve(args.to??args.target??'player');
  if(!enabled(engine,from,to))return null;
- if(args.notes!==undefined)throw new Error('基础人设只读，变化应追加发展记录');
- if(!actor(d.get('state'),from)||!actor(d.get('state'),to)||from===to)throw new Error('关系双方必须是不同的真实人物');
+ if(args.notes!==undefined)throw preconditionFailure('基础人设只读，变化应追加发展记录');
+ if(!actor(d.get('state'),from)||!actor(d.get('state'),to)||from===to)throw preconditionFailure('关系双方必须是不同的真实人物');
  const romantic=args.romance||args.romanceDelta||args.eventType==='恋慕';
  if(romantic){
   const minor=id=>{const base=engine.byId.get(id),current=actor(d.get('state'),id);return base?.flags?.minor||base?.minor||base?.age<18||current?.age<18;};
-  if(minor(from)||minor(to))throw new Error('未成年人物拒绝恋爱关系写入');
-  throw new Error('没有可核验的恋慕事件，不能通过关系工具生成恋慕');
+  if(minor(from)||minor(to))throw preconditionFailure('未成年人物拒绝恋爱关系写入');
+  throw preconditionFailure('没有可核验的恋慕事件，不能通过关系工具生成恋慕');
  }
- if(!args.sourceEvent)throw new Error('关系变化缺少来源事件');
+ if(!args.sourceEvent)throw preconditionFailure('关系变化缺少来源事件');
  const candidates=Object.values(d.get('state','relationEvidence')??{}).filter(e=>(e.key===args.sourceEvent||e.sourceEvent===args.sourceEvent)&&e.from===from&&e.to===to&&e.eventType===args.eventType);
- if(!candidates.length)throw new Error('来源事件没有对应双方及类型的已核验证据');
- if(dimensions.some(key=>args[`${key}Delta`]!==undefined)||args.favor!==undefined)throw new Error('关系幅度由实际事件确定，不能手填加分或欠情');
+ if(!candidates.length)throw preconditionFailure('来源事件没有对应双方及类型的已核验证据');
+ if(dimensions.some(key=>args[`${key}Delta`]!==undefined)||args.favor!==undefined)throw preconditionFailure('关系幅度由实际事件确定，不能手填加分或欠情');
  return {npc:from,from,to,changes:candidates.map(e=>applyEvidence(d,engine,e)),relationship:relationView(engine,d.get('state'),from,to)};
 }
 // Family events from npc-life: both people must be adults before any romance
 // enters the ledger; the evidence key keeps replays from counting twice.
 export function recordLifeRelation(d,engine,evidence,isMinor){
- if(evidence.delta.romance&&(isMinor(evidence.from)||isMinor(evidence.to)))throw new Error('未成年人物拒绝恋爱关系写入');
+ if(evidence.delta.romance&&(isMinor(evidence.from)||isMinor(evidence.to)))throw preconditionFailure('未成年人物拒绝恋爱关系写入');
  return register(d,engine,evidence);
 }
 export function recordFestivalRelations(d,engine,event){

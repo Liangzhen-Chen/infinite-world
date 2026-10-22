@@ -110,7 +110,6 @@ export function fileClosedObligation(d,e,{estate,obligation,eventId}){
     });
 }
 function emit(d,engine,event){
-    SOCIAL_VERBS.add(event.verb);
     const row={minute:now(d),actor:event.entity??event.holder??'core:protocol',visibility:'private',witnesses:[],participants:[],tags:['entity-transition','protocol'],...event};
     const phaseNames={notice:'公告遗产程序',filing:'受理债权申报',settlement:'清偿遗产债务',distribution:'分配遗产',closed:'完成遗产程序'};
     row.summary??=`${engine.byId?.get(row.entity??row.holder)?.name??row.entity??row.holder??'当事人'}：${phaseNames[row.phase]??({transition:'依法办理交接',succession:'职位出现空缺',holding_transferred:'持有关系已交接',holding_closed:'持有关系已结束',restored:'恢复法律身份'}[row.verb]??'登记权利义务变更')}`;

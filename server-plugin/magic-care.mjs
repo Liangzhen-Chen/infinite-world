@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
@@ -19,7 +20,7 @@ export const careMechanisms=Object.freeze({
 });
 const medicalOps=new Set(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon']);
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
-const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}无效或未登记`);return v;};
+const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}无效或未登记`);return v;};
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const actorPath=target=>target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
 const active=(d,target,op,minute=d.get('state','minute'))=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='care'&&e.target===target&&e.operation===op&&e.started<=minute&&e.expires>minute);
@@ -29,33 +30,33 @@ const strongest=(d,target,op,minute)=>active(d,target,op,minute).reduce((n,e)=>M
 const peekRecord=(d,id)=>typeof d.peek==='function'?d.peek('state','records',id):d.get('state','records',id);
 function stateOf(d,row){
  const r=peekRecord(d,key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('照护对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('照护对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});
 const storeFresh=(d,row,state)=>{const path=['state','records',key(row.id)],value={id:row.id,category:'physical_feature',location:row.location,state};if(typeof d.adopt==='function')d.adopt(path,value);else d.set(path,value);};
 function locate(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>r.location===location&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('需要同地登记的真实植物、食物或容器');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('需要同地登记的真实植物、食物或容器');return rows[0];
 }
 function featureAccess(d,engine,row,args,range,read=false){
- if(!Array.isArray(row.position)||row.position.some(v=>!Number.isFinite(v))||distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw Error('照护对象超出实际距离或视线');
+ if(!Array.isArray(row.position)||row.position.some(v=>!Number.isFinite(v))||distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw preconditionFailure('照护对象超出实际距离或视线');
  if(read||row.owner==='player')return;
  const ids=[args.authorization,...args.authorizations??[]];
  if(!ids.some(id=>{
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));
- }))throw Error('照护对象需要所有者有效授权');
+ }))throw preconditionFailure('照护对象需要所有者有效授权');
 }
 function medical(d,target){
  const m=clone(d.get(...actorPath(target),'medical'));
- if(!m||!Array.isArray(m.wounds))throw Error('目标没有登记具体伤病状态');
+ if(!m||!Array.isArray(m.wounds))throw preconditionFailure('目标没有登记具体伤病状态');
  number(m.bloodMl,0,10000,'实际血量');number(m.pain,0,10,'局部疼痛');
  return m;
 }
 function wound(m,args){
  const rows=m.wounds.filter(w=>w.id===args.source);
- if(rows.length!==1)throw Error('须用source选择已登记的具体创面');
+ if(rows.length!==1)throw preconditionFailure('须用source选择已登记的具体创面');
  const w=rows[0];
  number(w.depthMm,0,100,'创面深度');number(w.areaCm2,0,10000,'创面面积');
  number(w.bleedingMlPerMinute,0,1000,'出血速度');number(w.contamination,0,100,'创面污染');
@@ -64,29 +65,29 @@ function wound(m,args){
 }
 function living(d,engine,c,args){
  const target=resolveCreature(engine,d,args.target??'player'),path=actorPath(target),a=d.get(...path),location=d.get('state','location');
- if(!a||target!=='player'&&a.location!==location||isPhysicallyDead(engine,d,target))throw Error('治疗目标不在场或已经死亡');
+ if(!a||target!=='player'&&a.location!==location||isPhysicallyDead(engine,d,target))throw preconditionFailure('治疗目标不在场或已经死亡');
  assertMagicTargeting(d,engine,c,args,target);
  assertSpellConsent(d,engine,c,args,target,'healing');
  if(target!=='player'){
   const def=engine.byId.get(target),stats=target.startsWith('npc_')?derivedStats({level:a.level??def.level??1,attributes:def.attributes,profession:Boolean(def.combatProfession)},engine.rules):monsterStats({level:a.level??def.level??def.levelRange?.[0]??1,template:def.template??engine.byId.get(def.monster)?.template??2,bossTier:def.tier??0},engine.rules);
-  if(stats.divine&&!d.get('state','divinePermissions',target))throw Error('不能越过神性屏障');
+  if(stats.divine&&!d.get('state','divinePermissions',target))throw preconditionFailure('不能越过神性屏障');
  }
  return{target,path,actor:a,medical:medical(d,target)};
 }
 function plantState(s){
  const p=s.plant;
- if(!p||p.alive!==true||!['seedling','mature'].includes(p.stage))throw Error('缺少实际活植株状态');
+ if(!p||p.alive!==true||!['seedling','mature'].includes(p.stage))throw preconditionFailure('缺少实际活植株状态');
  number(p.health,0,100,'植株活力');number(s.waterMl,0,100000000,'植株水量');number(s.nutrientMg,0,100000000,'植株营养');
  number(p.waterMlPerMinute,.001,100,'植株耗水');number(p.nutrientMgPerMinute,.001,100,'植株耗肥');
  return p;
 }
 function foodState(row,s){
- if(row.kind!=='container'||s.closed!==true||!(s.integrity>0)||!Array.isArray(s.foodLots)||!s.foodLots.length)throw Error('保鲜需要完整封闭容器和实际食物批次');
+ if(row.kind!=='container'||s.closed!==true||!(s.integrity>0)||!Array.isArray(s.foodLots)||!s.foodLots.length)throw preconditionFailure('保鲜需要完整封闭容器和实际食物批次');
  for(const b of s.foodLots){
   number(b.amountGrams,0,100000000,'食物重量');number(b.spoiledGrams,0,100000000,'已腐坏重量');
   number(b.decayGramsPerMinute,0,100000,'腐败速度');
   number(b.badGrams??0,0,100000000,'未剔除坏果重量');
-  if(!b.id||b.badGrams>0||b.rotten===true||b.amountGrams<=0)throw Error('必须先剔除坏果，不能保鲜已腐败批次');
+  if(!b.id||b.badGrams>0||b.rotten===true||b.amountGrams<=0)throw preconditionFailure('必须先剔除坏果，不能保鲜已腐败批次');
  }
 }
 export function validateCareCatalog(c){
@@ -105,69 +106,69 @@ export function prepareCare(d,c,args){
   Object.assign(p,living(d,this,c,args));const m=p.medical;
   if(['hemostasis','close_wound','clean_wound'].includes(op)){
    const w=wound(m,args);p.wound=w.id;
-   if(w.closed)throw Error('创面已经闭合');
-   if(op==='hemostasis'&&(w.depthMm>3||w.areaCm2>20||w.bleedingMlPerMinute<=0||w.bleedingMlPerMinute>c.effectSpec.power))throw Error('止血只支持有限浅表出血');
-   if(op==='close_wound'&&(w.depthMm>5||w.areaCm2>c.effectSpec.power||w.simple!==true||w.foreignBody||w.toxinUg>0||w.bleedingMlPerMinute>0))throw Error('闭合需要简单、已止血且无异物毒素的创面');
-   if(op==='clean_wound'&&w.contamination<=0)throw Error('创面没有可清洁的污染');
+   if(w.closed)throw preconditionFailure('创面已经闭合');
+   if(op==='hemostasis'&&(w.depthMm>3||w.areaCm2>20||w.bleedingMlPerMinute<=0||w.bleedingMlPerMinute>c.effectSpec.power))throw preconditionFailure('止血只支持有限浅表出血');
+   if(op==='close_wound'&&(w.depthMm>5||w.areaCm2>c.effectSpec.power||w.simple!==true||w.foreignBody||w.toxinUg>0||w.bleedingMlPerMinute>0))throw preconditionFailure('闭合需要简单、已止血且无异物毒素的创面');
+   if(op==='clean_wound'&&w.contamination<=0)throw preconditionFailure('创面没有可清洁的污染');
   }
   if(op==='disease_sense'){
-   if(!Array.isArray(m.symptoms)||!m.symptoms.some(s=>s.observable===true&&['fever','redness','swelling','discharge'].includes(s.kind)))throw Error('没有已登记的常见感染征象');
+   if(!Array.isArray(m.symptoms)||!m.symptoms.some(s=>s.observable===true&&['fever','redness','swelling','discharge'].includes(s.kind)))throw preconditionFailure('没有已登记的常见感染征象');
   }
-  if(op==='pain'&&m.pain<=0)throw Error('没有已登记的局部疼痛');
+  if(op==='pain'&&m.pain<=0)throw preconditionFailure('没有已登记的局部疼痛');
   if(op==='stabilize'){
-   if(p.actor.status!=='濒死'||!Number.isFinite(p.actor.dyingSince)||m.bloodMl<=0||m.wounds.some(w=>w.bleedingMlPerMinute>0))throw Error('稳定需要已止血、仍有血量的实际濒死者');
-   if(active(d,p.target,op).length)throw Error('濒死稳定不能叠加');
+   if(p.actor.status!=='濒死'||!Number.isFinite(p.actor.dyingSince)||m.bloodMl<=0||m.wounds.some(w=>w.bleedingMlPerMinute>0))throw preconditionFailure('稳定需要已止血、仍有血量的实际濒死者');
+   if(active(d,p.target,op).length)throw preconditionFailure('濒死稳定不能叠加');
   }
   if(op==='parasite'){
    const rows=m.parasites?.filter(r=>r.id===args.source);
-   if(rows?.length!==1||rows[0].identified!==true||rows[0].accessible!==true||!Number.isFinite(rows[0].sizeMm)||rows[0].sizeMm<=0||rows[0].sizeMm>5||!Number.isSafeInteger(rows[0].count)||rows[0].count<1)throw Error('驱除需要可识别、可达的小型寄生物');
+   if(rows?.length!==1||rows[0].identified!==true||rows[0].accessible!==true||!Number.isFinite(rows[0].sizeMm)||rows[0].sizeMm<=0||rows[0].sizeMm>5||!Number.isSafeInteger(rows[0].count)||rows[0].count<1)throw preconditionFailure('驱除需要可识别、可达的小型寄生物');
    p.parasite=rows[0].id;number(rows[0].hostDamage,0,10,'驱除宿主损伤');
   }
   if(op==='restore_tendon'){
    const t=m.tendon;
-   if(!t||t.ruptured!==true||t.aligned!==true||t.infection!==false||t.foreignBody)throw Error('肌腱恢复需要对齐、无感染的实际断裂肌腱');
+   if(!t||t.ruptured!==true||t.aligned!==true||t.infection!==false||t.foreignBody)throw preconditionFailure('肌腱恢复需要对齐、无感染的实际断裂肌腱');
    number(t.integrity,0,100,'肌腱完整度');number(t.maxLoadKg,0,100,'恢复负重上限');
-   if(active(d,p.target,op).length)throw Error('肌腱修复不能叠加');
+   if(active(d,p.target,op).length)throw preconditionFailure('肌腱修复不能叠加');
   }
   return p;
  }
  p.row=locate(this,args.target,p.location);p.target=p.row.id;
  featureAccess(d,this,p.row,args,c.rangeMeters,op==='herb_sense');const s=stateOf(d,p.row);
  if(['preserve','preserve_food'].includes(op)){
-  if(p.row.careProcess!=='food')throw Error('食物缺少实际腐败过程登记');
+  if(p.row.careProcess!=='food')throw preconditionFailure('食物缺少实际腐败过程登记');
   foodState(p.row,s);
-  if(op==='preserve_food'&&s.foodLots.some(b=>b.kind!=='fruit'))throw Error('果藏只支持真实果实批次');
+  if(op==='preserve_food'&&s.foodLots.some(b=>b.kind!=='fruit'))throw preconditionFailure('果藏只支持真实果实批次');
   if(op==='preserve'){
    number(s.temperatureC,1,40,'储柜温度');number(s.insulationPercent,0,100,'储柜隔热率');
    const upkeep=1+Math.ceil((100-s.insulationPercent)/25);
-   if(d.get('state','player','mp')<c.mp+upkeep)throw Error('隔热差的储柜缺少额外维持魔力');
+   if(d.get('state','player','mp')<c.mp+upkeep)throw preconditionFailure('隔热差的储柜缺少额外维持魔力');
   }
  }else{
-  if(p.row.kind!=='plant'||p.row.careProcess!=='plant')throw Error('需要实际植株与生理过程登记');const plant=plantState(s);
+  if(p.row.kind!=='plant'||p.row.careProcess!=='plant')throw preconditionFailure('需要实际植株与生理过程登记');const plant=plantState(s);
   if(op==='herb_sense'){
-   if(plant.herbKnown!==true||!Array.isArray(plant.commonProperties)||!plant.commonProperties.length)throw Error('未知药草仍需研究');
+   if(plant.herbKnown!==true||!Array.isArray(plant.commonProperties)||!plant.commonProperties.length)throw preconditionFailure('未知药草仍需研究');
   }
   if(op==='seedling'){
-   if(plant.stage!=='seedling')throw Error('护芽只作用于幼苗');number(plant.frostToleranceC,-20,10,'幼苗耐霜温度');
+   if(plant.stage!=='seedling')throw preconditionFailure('护芽只作用于幼苗');number(plant.frostToleranceC,-20,10,'幼苗耐霜温度');
   }
   if(op==='roots'){
-   if(plant.stage!=='seedling')throw Error('根系引导只作用于幼根');
+   if(plant.stage!=='seedling')throw preconditionFailure('根系引导只作用于幼根');
    number(plant.rootLengthMeters,0,10,'幼根长度');
    p.source=locate(this,args.source,p.location);featureAccess(d,this,p.source,args,c.rangeMeters);
    const water=stateOf(d,p.source);number(water.waterMl,1,100000000,'现有水源');
-   if(p.source.id===p.target||distance(p.row.position,p.source.position)>1||!localSightClear(d,this,p.location,p.row.position,p.source.position))throw Error('幼根水源须在一米内可达');
-   if(s.waterMl<plant.waterMlPerMinute||s.nutrientMg<plant.nutrientMgPerMinute)throw Error('幼根生长仍需实际水肥');
+   if(p.source.id===p.target||distance(p.row.position,p.source.position)>1||!localSightClear(d,this,p.location,p.row.position,p.source.position))throw preconditionFailure('幼根水源须在一米内可达');
+   if(s.waterMl<plant.waterMlPerMinute||s.nutrientMg<plant.nutrientMgPerMinute)throw preconditionFailure('幼根生长仍需实际水肥');
   }
   if(op==='graft'){
    p.source=locate(this,args.source,p.location);featureAccess(d,this,p.source,args,c.rangeMeters);const scion=stateOf(d,p.source),sp=plantState(scion),g=plant.graft;
-   if(p.source.id===p.target||!g||g.scion!==p.source.id||g.cutAligned!==true||g.attached!==true||plant.graftGroup!==sp.graftGroup||!plant.graftGroup)throw Error('嫁接需要已接合且兼容的真实砧木和接穗');
+   if(p.source.id===p.target||!g||g.scion!==p.source.id||g.cutAligned!==true||g.attached!==true||plant.graftGroup!==sp.graftGroup||!plant.graftGroup)throw preconditionFailure('嫁接需要已接合且兼容的真实砧木和接穗');
    const skill=this.world.skills.find(r=>r.id==='skill_gardening'||r.name.includes('园艺'));
-   if(!skill||(d.get('state','skills',skill.id,'proficiency')??0)<100)throw Error('嫁接需要实际园艺手艺');
+   if(!skill||(d.get('state','skills',skill.id,'proficiency')??0)<100)throw preconditionFailure('嫁接需要实际园艺手艺');
    number(g.rejection,0,100,'嫁接排异');number(g.union,0,100,'嫁接口愈合');
-   if(s.waterMl<plant.waterMlPerMinute||s.nutrientMg<plant.nutrientMgPerMinute)throw Error('嫁接仍需实际水肥');
+   if(s.waterMl<plant.waterMlPerMinute||s.nutrientMg<plant.nutrientMgPerMinute)throw preconditionFailure('嫁接仍需实际水肥');
   }
  }
- if(c.duration&&active(d,p.target,op).length)throw Error('同类照护不能叠加');
+ if(c.duration&&active(d,p.target,op).length)throw preconditionFailure('同类照护不能叠加');
  return p;
 }
 export function applyCare(d,p,id){

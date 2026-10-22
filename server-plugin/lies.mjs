@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U8 谎言账（指南5.7）：撒谎时说法与真相成对记账，谁对谁说、动机、知情者
 // 都在 records 的 `lie:<id>` 里。被骗者把说法当事实记住，并作为 K5 传闻
@@ -16,7 +17,7 @@ export const LIE_EXPOSURE={trust:-15,affection:-5,respect:-5};
 export const LIE_ROUTES=Object.freeze({contradiction:'矛盾证据',knower:'知情者开口',evidence:'玩家出示证据',insight:'识破'});
 const FIRSTHAND=new Set(['亲历','目击','约定核对']);
 const clone=v=>structuredClone(v);
-const text=(value,max)=>{if(typeof value!=='string'||!value.trim()||value.length>max)throw Error('文字为空或过长');return value.trim();};
+const text=(value,max)=>{if(typeof value!=='string'||!value.trim()||value.length>max)throw preconditionFailure('文字为空或过长');return value.trim();};
 const awake=(state,id,n)=>n&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 const minor=(engine,state,id)=>{const base=engine.byId.get(id),now=state.npcs?.[id];return Boolean(base?.flags?.minor||base?.minor||base?.age<18||now?.flags?.minor||now?.age<18);};
 const nameOf=(engine,state,id)=>id==='player'?state.player?.name??'你':engine.byId.get(id)?.name??state.npcs?.[id]?.name??id;
@@ -26,12 +27,12 @@ export const liesToldBy=(state,liar)=>lies(state).filter(r=>r.liar===liar);
 const toldTo=(lie,id)=>lie.tellings.some(t=>t.to===id);
 
 function person(engine,state,value,role){
-    let id;try{id=engine.resolve(value);}catch{throw Error(`${role}须为已登记人物或玩家`);}
-    if(id!=='player'&&!state.npcs?.[id])throw Error(`${role}须为已登记人物或玩家`);
+    let id;try{id=engine.resolve(value);}catch{throw preconditionFailure(`${role}须为已登记人物或玩家`);}
+    if(id!=='player'&&!state.npcs?.[id])throw preconditionFailure(`${role}须为已登记人物或玩家`);
     return id;
 }
 function here(state,id){return id==='player'?state.player?.hp>0&&awake(state,'player',state.player):state.npcs[id]?.location===state.location&&awake(state,id,state.npcs[id]);}
-function assertPresent(state,ids,why){for(const id of ids)if(!here(state,id))throw Error(`${why}须在场且清醒`);}
+function assertPresent(state,ids,why){for(const id of ids)if(!here(state,id))throw preconditionFailure(`${why}须在场且清醒`);}
 
 // 被骗者把说法当事实记住；完整人物的记忆流里它是一条可转述的传闻。
 function believe(d,engine,lie,to,eventId){
@@ -57,18 +58,18 @@ function liarKnows(d,engine,lie,to,eventId){
 // world_remember{subject:被骗者,source:说谎者,key,content:说法,truth,motive,knowers,keywords}
 export function recordLie(d,engine,args,eventId){
     const state=d.get('state'),liar=person(engine,state,args.source,'说谎者source'),to=person(engine,state,args.subject,'被骗者subject');
-    if(liar===to)throw Error('说谎者与被骗者不能是同一人');
+    if(liar===to)throw preconditionFailure('说谎者与被骗者不能是同一人');
     const key=text(args.key,100),claim=validateMemory(args.content),truth=validateMemory(args.truth);
-    if(normalize(claim)===normalize(truth))throw Error('说法与真相相同，不是谎言');
+    if(normalize(claim)===normalize(truth))throw preconditionFailure('说法与真相相同，不是谎言');
     const motive=args.motive===undefined?'未说明':text(args.motive,200);
-    if(args.knowers!==undefined&&(!Array.isArray(args.knowers)||args.knowers.length>8))throw Error('知情者最多8人');
+    if(args.knowers!==undefined&&(!Array.isArray(args.knowers)||args.knowers.length>8))throw preconditionFailure('知情者最多8人');
     const knowers=[...new Set([liar,...(args.knowers??[]).map(v=>person(engine,state,v,'知情者'))])].sort();
-    if(knowers.includes(to))throw Error('被骗者不能同时是知情者');
+    if(knowers.includes(to))throw preconditionFailure('被骗者不能同时是知情者');
     assertPresent(state,[liar,to],'说谎者与被骗者');
     const keywords=(args.keywords??[]).map(v=>text(v,60)).slice(0,12),entities=[];
     for(const word of keywords){try{const id=engine.resolve(word);if(!entities.includes(id))entities.push(id);}catch{}}
     const id=lieRecordKey(liar,key),old=state.records?.[id];
-    if(old&&old.truth!==truth)throw Error('同一谎言的真相已登记，不能改写');
+    if(old&&old.truth!==truth)throw preconditionFailure('同一谎言的真相已登记，不能改写');
     if(old?.tellings.some(t=>t.to===to&&t.claim===claim))return{lie:id,duplicate:true};
     const place=engine.byId.get(state.location);
     const isPrivate=Boolean(old?.private)||['private','secret'].includes(place?.access?.mode)||[liar,to,...knowers,...entities].some(x=>minor(engine,state,x));
@@ -102,18 +103,18 @@ export function exposeLieCall(d,engine,args,eventId){
     const state=d.get('state');let to;try{to=engine.resolve(args.subject);}catch{return null;}
     const found=lies(state).filter(r=>r.key===args.key&&toldTo(r,to)&&!r.exposures?.[to]);
     if(!found.length)return null;
-    if(found.length>1)throw Error('多名说谎者对此人用了同一谎言key，无法确定揭穿对象');
-    const lie=found[0],source=args.source;if(typeof source!=='string'||!source.trim())throw Error('揭穿谎言须在source写明知情者、证据物品或记忆编号');
+    if(found.length>1)throw preconditionFailure('多名说谎者对此人用了同一谎言key，无法确定揭穿对象');
+    const lie=found[0],source=args.source;if(typeof source!=='string'||!source.trim())throw preconditionFailure('揭穿谎言须在source写明知情者、证据物品或记忆编号');
     validateMemory(args.content);
     let id=null;try{id=engine.resolve(source);}catch{}
     if(id&&(id==='player'||state.npcs?.[id])){
-        if(!lie.knowers.includes(id)||id===to)throw Error('开口者不是这条谎言的知情者');
+        if(!lie.knowers.includes(id)||id===to)throw preconditionFailure('开口者不是这条谎言的知情者');
         assertPresent(state,[id,to],'知情者与被骗者');
         return exposeLies(d,engine,[lie],to,{route:LIE_ROUTES.knower,by:id,evidence:args.content},eventId);
     }
     if(id?.startsWith('item_')){
-        if(!lie.entities.includes(id))throw Error('该物品与这条谎言无关');
-        if(engine.quantity(d,'player',id)<=0)throw Error('玩家没有可出示的这件证据');
+        if(!lie.entities.includes(id))throw preconditionFailure('该物品与这条谎言无关');
+        if(engine.quantity(d,'player',id)<=0)throw preconditionFailure('玩家没有可出示的这件证据');
         assertPresent(state,['player',to],'出示证据双方');
         return exposeLies(d,engine,[lie],to,{route:to==='player'?LIE_ROUTES.contradiction:LIE_ROUTES.evidence,by:'player',evidence:id},eventId);
     }
@@ -121,10 +122,10 @@ export function exposeLieCall(d,engine,args,eventId){
     const playerMemory=d.get('memories',source)?.subject==='player'?d.get('memories',source):null;
     const own=to==='player'?playerMemory:state.npcs[to]?.memoryStream?.find(r=>r.id===source)??null;
     const memory=own??(to!=='player'?playerMemory:null);
-    if(!memory)throw Error('揭穿证据不存在：source须为知情者、相关物品或已有记忆编号');
+    if(!memory)throw preconditionFailure('揭穿证据不存在：source须为知情者、相关物品或已有记忆编号');
     const firsthand=own&&to!=='player'?FIRSTHAND.has(memory.sourceType):!memory.rumor&&memory.sourceType!=='听说'&&memory.reliability!=='未核实'&&memory.source!==lie.liar&&!memory.exposedLie;
-    if(!firsthand||fromLie(lie,memory))throw Error('揭穿证据须是亲历或有源记录，不能是听来的话或谎言本身');
-    if(!relevant(engine,state,lie,memory))throw Error('该记录与这条谎言无关');
+    if(!firsthand||fromLie(lie,memory))throw preconditionFailure('揭穿证据须是亲历或有源记录，不能是听来的话或谎言本身');
+    if(!relevant(engine,state,lie,memory))throw preconditionFailure('该记录与这条谎言无关');
     if(!own)assertPresent(state,['player',to],'出示证据双方');
     return exposeLies(d,engine,[lie],to,{route:own?LIE_ROUTES.contradiction:LIE_ROUTES.evidence,by:own?to:'player',evidence:source},eventId);
 }

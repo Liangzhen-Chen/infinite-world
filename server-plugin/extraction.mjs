@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView,personConstraint} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
@@ -24,7 +25,7 @@ function practice(d,engine,skill,target){
 }
 function usable(d,engine,tool,actor='player'){
     const held=heldUnit(d,engine,actor,tool),definition=engine.byId.get(tool);
-    if(!engine.quantity(d,actor,tool)||(held?.durability??definition?.durability??0)<=0)throw Error('需要实际完好的工具');
+    if(!engine.quantity(d,actor,tool)||(held?.durability??definition?.durability??0)<=0)throw preconditionFailure('需要实际完好的工具');
     if(typeof held==='number')d.set([...engine.bagPath(actor),tool],{quantity:held,quality:definition.quality,durability:definition.durability,weight:definition.weight});
 }
 export function fish(d,args,id){
@@ -34,14 +35,14 @@ export function fish(d,args,id){
         ||features.some(f=>traitsOf(this,d.get('state'),f.id)?.tags.includes('water'));
     const ecology=habitat&&d.get(...path(`ecology:${habitat.id}`));
     const species=this.world.monsters.filter(s=>s.wildlife&&creatureTraits(s).tags.includes('fish')&&populationView(this,d.get('state'),habitat?.id,s.id)?.population.value);
-    if(!habitat||!ecology||!water&&!species.length)throw Error('这里没有水域鱼类栖地');
+    if(!habitat||!ecology||!water&&!species.length)throw preconditionFailure('这里没有水域鱼类栖地');
     const requested=args.species?this.resolve(args.species,'monster'):null;
-    if(requested&&!species.some(s=>s.id===requested))throw Error('该鱼种不在本地栖地');
+    if(requested&&!species.some(s=>s.id===requested))throw preconditionFailure('该鱼种不在本地栖地');
     // The product is the existing cleaned fish. Its knife and water cost remain real.
     const tool=this.rules.extraction.fishing.tool;usable(d,this,tool);
-    if(this.quantity(d,'player','item_water')<1)throw Error('剖洗渔获需要一份水');
+    if(this.quantity(d,'player','item_water')<1)throw preconditionFailure('剖洗渔获需要一份水');
     const bait=!this.replaying||this.replayResult?.fishingBaitVersion===1?this.rules.extraction.fishing.bait:null;
-    if(bait&&this.quantity(d,'player',bait.item)<bait.quantity)throw Error('钓饵不足');
+    if(bait&&this.quantity(d,'player',bait.item)<bait.quantity)throw preconditionFailure('钓饵不足');
     const minutes=this.rules.extraction.fishing.minutes,season=this.calendar(d.get('state','minute')).season;
     const difficulty=this.rules.extraction.fishing.difficultyBySeason[season];
     const check=this.check(d,{attribute:'敏捷',skill:'skill_life_2_core',difficulty},id);
@@ -65,7 +66,7 @@ export function fish(d,args,id){
 }
 
 export function eatFish(d,args,id){
-    if(this.quantity(d,'player','item_fish')<1||this.quantity(d,'player','item_water')<1||this.quantity(d,'player','item_charcoal')<1)throw Error('煮食渔获需要鲜鱼、一份水和一袋自有木炭');
+    if(this.quantity(d,'player','item_fish')<1||this.quantity(d,'player','item_water')<1||this.quantity(d,'player','item_charcoal')<1)throw preconditionFailure('煮食渔获需要鲜鱼、一份水和一袋自有木炭');
     const before=d.get('state','player','hp');
     for(const item of ['item_fish','item_water','item_charcoal'])this.itemDelta(d,'player',item,-1,USE('meal',id));
     this.advance(d,20,id);if(able(d))this.health(d,{delta:2},id);
@@ -80,7 +81,7 @@ export function mine(d,args,id){
 export function mineEmployment(d,e,row,at,minutes){
     const current=d.get('state','records',row.id),n=d.get('state','npcs',row.worker);
     const receipt=`mining_work:${row.id}:${at}`,old=d.get(...path(receipt));
-    if(old){if(old.minutes!==minutes)throw Error('同次采矿工时事实不一致');return old.result;}
+    if(old){if(old.minutes!==minutes)throw preconditionFailure('同次采矿工时事实不一致');return old.result;}
     const attendance=current?.attendance?.[String(Math.floor((at-540)/1440))]??0;
     if(current?.worker!==row.worker||current.owner!==row.owner||current.task!=='矿脉开采'||current.endedAt!==undefined||current.status==='罢工'||minutes>attendance||n?.location!==row.location||n.status!=='正常'||personConstraint(e,d.get('state'),row.worker)||n.scheduleTravel||n.cognitionTravel)return null;
     if(minutes<e.rules.extraction.mining.minutes)return null;
@@ -99,9 +100,9 @@ function mineActor(d,args,id,actor,advance){
     const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location'),place=d.get('state','created',location)??this.byId.get(location),rules=this.rules.extraction.mining;
     const tags=locationTraits(place).tags;
     const deposits=place.minerals??rules.locations?.[location]??rules.terrain.find(r=>tags.includes(r.tag))?.minerals;
-    if(!deposits?.length)throw Error('这里没有可开采矿脉');
+    if(!deposits?.length)throw preconditionFailure('这里没有可开采矿脉');
     const item=args.item?this.resolve(args.item,'item'):deposits[0].item,spec=deposits.find(s=>s.item===item);
-    if(!spec)throw Error('这里没有该矿产');
+    if(!spec)throw preconditionFailure('这里没有该矿产');
     usable(d,this,rules.tool,actor);
     const key=`mineral:${location}:${item}`,now=d.get('state','minute');
     const old=d.get(...path(key))??{category:'mineral',location,item,initial:spec.reserve,reserve:spec.reserve,extracted:0,recovered:0,updatedAt:now};
@@ -109,7 +110,7 @@ function mineActor(d,args,id,actor,advance){
     const periods=spec.recoveryDays?Math.floor((now-old.updatedAt)/(spec.recoveryDays*1440)):0;
     const recovered=Math.min(spec.reserve-old.reserve,periods*(spec.recoveryAmount??1));
     const row={...old,reserve:old.reserve+recovered,recovered:old.recovered+recovered,updatedAt:periods?old.updatedAt+periods*spec.recoveryDays*1440:old.updatedAt};
-    if(!row.reserve)throw Error('矿脉已枯竭或尚未恢复');
+    if(!row.reserve)throw preconditionFailure('矿脉已枯竭或尚未恢复');
     const owner=spec.owner??place.owner,permit=args.authorization&&d.get(...path(args.authorization));
     const job=args.employment;
     const licensed=owner===actor||job?.owner===owner&&job.worker===actor&&job.location===location&&job.endedAt===undefined&&job.deadline>now||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee===actor&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
@@ -149,8 +150,8 @@ function mineActor(d,args,id,actor,advance){
 
 export function miningPermit(d,args,id){
     const location=d.get('state','location'),place=this.byId.get(location),owner=this.rules.extraction.mining.locations?.[location]?.find(m=>m.owner)?.owner??place.owner;
-    if(!owner||owner!==this.resolve(args.authority,'npc')||d.get('state','npcs',owner,'location')!==location||d.get('state','npcs',owner,'status')!=='正常'||args.consent!==true)throw Error('须由本矿区在场所有者明确同意');
-    const permit=this.rules.extraction.mining.permit,minutes=args.minutes??permit.defaultMinutes;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>permit.maxMinutes)throw Error('开采许可期限无效');
+    if(!owner||owner!==this.resolve(args.authority,'npc')||d.get('state','npcs',owner,'location')!==location||d.get('state','npcs',owner,'status')!=='正常'||args.consent!==true)throw preconditionFailure('须由本矿区在场所有者明确同意');
+    const permit=this.rules.extraction.mining.permit,minutes=args.minutes??permit.defaultMinutes;if(!Number.isSafeInteger(minutes)||minutes<1||minutes>permit.maxMinutes)throw preconditionFailure('开采许可期限无效');
     const key=`mining_permit:${id}`,permission={category:'authorization',action:'mining',location,grantee:'player',grantor:owner,expires:d.get('state','minute')+minutes,revoked:false,sourceEvent:id};
     holdingSet(d,null,path(key),permission,'extraction');return {permit:key,permission};
 }
