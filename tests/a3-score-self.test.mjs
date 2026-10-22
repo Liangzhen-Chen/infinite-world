@@ -696,9 +696,14 @@ test('A3 setup: unmeasured distance premises bind only actions that read distanc
  // Conditional declarations: observation reads range and sight, teaching does not.
  assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'acquire'}}}}).unmet.length,0);
  assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'observe'}}}}).unmet.length,1);
- // A free proposal reads reach only for bodily or physical effects.
- assert.equal(settleSpatial(loaded.spatialPending,['open:proposal'],{requested:[{op:'emit'}]}).unmet.length,0);
- assert.equal(settleSpatial(loaded.spatialPending,['open:proposal'],{requested:[{op:'vital'}]}).unmet.length,1);
+ // A free proposal reads reach only for bodily or physical effects on another
+ // entity, and range only for a local approach to an agent or feature.
+ const proposal=requested=>settleSpatial(loaded.spatialPending,['open:proposal'],{requested,world,document:loaded.document}).unmet.length;
+ assert.equal(proposal([{op:'emit',target:'npc_hw_linsui'}]),0);
+ assert.equal(proposal([{op:'vital',target:'player',type:'body:satiety'}]),0);
+ assert.equal(proposal([{op:'vital',target:'npc_hw_linsui',type:'harm'}]),1);
+ assert.equal(proposal([{op:'move',entity:'player',to:'loc_bs'}]),0);
+ assert.equal(proposal([{op:'move',entity:'player',to:'npc_hw_linsui'}]),1);
  // A declared sight that native perception contradicts is unmet for every action.
  const blind=applyIntentSetup(engine,initial,{...scene,positions:[{...scene.positions[0],lineOfSight:false}]});
  assert.ok(blind.setupUnmet.some(x=>x.item==='positions[0]'));

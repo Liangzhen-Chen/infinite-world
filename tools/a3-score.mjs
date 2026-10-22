@@ -1019,13 +1019,24 @@ const timePassingActions=new Set((await Promise.all((await fs.readdir(path.join(
 const catalogActions=(await Promise.all((await fs.readdir(path.join(root,'world/actions'))).filter(f=>f.endsWith('.json')).map(async f=>JSON.parse((await fs.readFile(path.join(root,'world/actions',f),'utf8')).replace(/^﻿/,''))))).flatMap(file=>file.actions??[]);
 const spatialCatalog=new Map(catalogActions.filter(action=>Array.isArray(action.spatial)).map(action=>[action.id,action.spatial]));
 const DISTANCE_NEEDS=new Set(['range','reach','lineOfSight']);
+const featureIds=new Set();
 export function spatialNeeds(actionIds,run){
- const ops=new Set([...(run.requested??[]),...(run.effects??[])].map(effect=>effect?.op).filter(Boolean));
+ if(!featureIds.size)for(const place of run.world?.locations??[])for(const feature of place.features??[])featureIds.add(feature.id);
+ const actor=run.receipt?.actor??'player',states=[run.document?.state,run.before?.state].filter(Boolean);
+ const kinds=effect=>{
+  const id=effect.op==='move'?effect.to:effect.target??effect.entity,out=new Set();
+  if(id&&!['self','player',actor].includes(id))out.add('other');
+  if(id==='player'||states.some(s=>s.npcs?.[id]||s.creatures?.[id]))out.add('agent');
+  if(featureIds.has(id))out.add('feature');
+  return out;
+ };
+ const effects=[...(run.requested??[]),...(run.effects??[])].filter(effect=>effect?.op);
  const slots=run.submitted?.args?.slots??{};
  const needs=new Map();
  for(const id of actionIds)for(const entry of spatialCatalog.get(id)??[]){
   const need=typeof entry==='string'?entry:entry.need;
-  const applies=typeof entry==='string'||(!entry.slot||!Object.hasOwn(slots,entry.slot)||entry.values?.includes(slots[entry.slot]))&&(!entry.effects||entry.effects.some(op=>ops.has(op)));
+  const applies=typeof entry==='string'||(!entry.slot||!Object.hasOwn(slots,entry.slot)||entry.values?.includes(slots[entry.slot]))&&
+   (!entry.effects||effects.some(effect=>entry.effects.includes(effect.op)&&(!entry.targets||entry.targets.some(kind=>kinds(effect).has(kind)))));
   if(applies)needs.set(need,[...(needs.get(need)??[]),id]);
  }
  return needs;
@@ -1570,7 +1581,7 @@ export async function constructWithoutModel(engine,initial,row,judge,limits=CONS
    // A trace alternative taken automatically after a failed preview is 兜底.
    const fallbackTaken=run.actual.calls.some(call=>call.action!==action.id);
    // A chosen action that reads distance cannot rely on an unmeasured premise.
-   const spatialGap=settleSpatial(pending,unique([action.id,run.actual.route].filter(Boolean)),run).unmet.length>0;
+   const spatialGap=settleSpatial(pending,unique([action.id,run.actual.route].filter(Boolean)),{...run,world:engine.world}).unmet.length>0;
    const verdict=spatialGap?{ok:false,forbidden:false,stop:false}:judge(run,{fallbackTaken});
    attempts.push({action:action.id,target,slots:chosen,route:run.actual.route,committed:run.actual.committed,fallbackTaken,ok:verdict.ok,forbidden:verdict.forbidden??false});
    if(verdict.stop)return {ready:true,attempts,matched:attempts.at(-1),errors};
@@ -1588,7 +1599,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const run=await executeCheckedIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
   // Evaluated actions: the expected route(s) and the route actually taken.
   const evaluated=unique([...[].concat(expectedRoute),actual.route].filter(r=>typeof r==='string').flatMap(r=>[r,normalizeRoute(r)]));
-  const spatial=settleSpatial(run.spatialPending,evaluated,run);
+  const spatial=settleSpatial(run.spatialPending,evaluated,{...run,world});
   run.setupUnmet=[...run.setupUnmet,...spatial.unmet];run.notes=[...(run.notes??[]),...spatial.notes];
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(actual.route));

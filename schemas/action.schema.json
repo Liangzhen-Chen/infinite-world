@@ -2555,6 +2555,17 @@
                       "minLength": 1
                     },
                     "minItems": 1
+                  },
+                  "targets": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "other",
+                        "agent",
+                        "feature"
+                      ]
+                    },
+                    "minItems": 1
                   }
                 },
                 "required": [
@@ -3433,6 +3444,17 @@
                     "items": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "targets": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "other",
+                        "agent",
+                        "feature"
+                      ]
                     },
                     "minItems": 1
                   }

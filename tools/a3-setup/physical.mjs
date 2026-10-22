@@ -302,19 +302,31 @@ function verifiedSpatial(ctx,setup,field,row,item){
   let measured=false;
   if(row.distanceMeters!==undefined){
    if(actual&&Number.isFinite(actual.distanceMeters)){
-    if(actual.lineOfSight!==undefined&&actual.lineOfSight!==null&&actual.lineOfSight!==row.lineOfSight)return false;
-    if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return false;
+    const contradiction=reason=>{ctx.unmet(item,`声明前提与原生几何矛盾：${reason}（01 §1.2；不改题面）`);return 'reported';};
+    if(actual.lineOfSight!==undefined&&actual.lineOfSight!==null&&actual.lineOfSight!==row.lineOfSight)return contradiction(`视线 声明${row.lineOfSight} 原生${actual.lineOfSight}`);
+    if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return contradiction(`射线距离 声明${row.distanceMeters}米 原生${actual.distanceMeters}米`);
     const boundaries=new Set([1.5,...(ctx.engine.world.actionDefinitions?.actions??[]).map(a=>a.rangeMeters),...(ctx.engine.world.spells??[]).map(spell=>spell.rangeMeters)].filter(Number.isFinite));
-    for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return false;
+    for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return contradiction(`距离 声明${row.distanceMeters}米 原生${Math.round(actual.distanceMeters*100)/100}米，跨越${boundary}米边界`);
     measured=true;
    }else{
     if(row.rayMeters)return false;
-    const placeOf=id=>id==='player'?ctx.document.state.location:ctx.actor(id)?.location??feature?.location??null;
+    // Native place of each end: body, located/carried entity, active effect,
+    // environment feature, or the place itself.
+    const placeOf=(id,depth=0)=>{
+     if(id==='player')return ctx.document.state.location;
+     if(ctx.actor(id)?.location)return ctx.actor(id).location;
+     const held=ctx.document.holdings?.locations?.[id];
+     if(held&&depth<4)return held.mode==='carried'?placeOf(held.at,depth+1):held.at??null;
+     if(ctx.document.state.effects?.[id]?.location)return ctx.document.state.effects[id].location;
+     if(id===feature?.id)return feature.location??null;
+     return ctx.engine.world.locations.some(l=>l.id===id)?id:null;
+    };
     const here=placeOf(observer);
     if(!here||placeOf(target)!==here||!visible)return false;
     // A person target must be among the people the observer's native
-    // subjective view can perceive here.
-    if(ctx.actor(target)&&target!=='player'){
+    // subjective view can perceive here; other targets rely on the native
+    // perception check above.
+    if(Object.hasOwn(ctx.document.state.npcs??{},target)){
      let people=[];
      try{people=subjectiveView(ctx.engine,ctx.document,observer).observable.people;}catch{return false;}
      if(!people.some(p=>p.id===target))return false;
@@ -362,7 +374,8 @@ function spatial(ctx,setup,fields){
    接点='局部落石危险区登记及进入危险区的结算消费者';
   }
   if(!valid){ctx.unmet(item,`invalid ${field} declaration`);return;}
-  if(verifiedSpatial(ctx,setup,field,row,item))return;
+  const verified=verifiedSpatial(ctx,setup,field,row,item);
+  if(verified)return;
   missing(ctx,item,接点,'01 §1.2；S4');
  });
 }
