@@ -17,25 +17,26 @@ const receiptOf=value=>value.result?.receipt??value.receipt;
 const coinsOf=document=>document.state.player.coins;
 const held=(document,item)=>{const row=document.state.inventory[item];return typeof row==='number'?row:row?.quantity??0;};
 
-// ---- 1. a priced lot is bought as quoted; the purse must cover its total (06 §6.10.4) ----
-test('A3-fix3 trade: the named agreed lot is bought whole; 3 coins against a 4 coin lot is a structured refusal with zero writes',async()=>{
- const row=rowFor(122),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
+// ---- 1. an order the purse cannot cover is refused with zero writes; one it can cover is sold whole ----
+// 06 §6.10.3: a quantity is a structured field (means.quantity); the frozen 122 prose alone buys the
+// registered default of one loaf (a3-owner2-R), so the structured two-loaf order is the cash failure.
+const order=(row,quantity)=>{row.proposal.means={...row.proposal.means,quantity};return row;};
+test('A3-fix3 trade: a two-loaf order with 3 coins is a structured refusal with zero writes in preview, commit and direct call',async()=>{
+ const row=order(rowFor(122),2),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setupUnmet,[]);assert.equal(coinsOf(document),3);
  const before=structuredClone(document),input={tool:'world_propose',eventId:'fix3-buy-short',args:row.proposal};
  const preview=receiptOf(await engine.previewAction(document,input));
  assert.equal(preview.status,'rejected');assert.equal(preview.code,'E-ACTION-PRECONDITION');assert.equal(preview.routed,'core:trade.buy');
  assert.match(preview.reason,/余额不足/);assert.deepEqual(preview.applied,[]);assert.ok(preview.missing.length&&preview.repair.length);
- assert.equal(preview.routing.slots.quantity,2,'the lot size comes from the agreed quote, not from prose or the catalog default');
  const committed=await engine.reduce(document,input);
  assert.equal(committed.result.ok,false);assert.equal(receiptOf(committed).status,'rejected');assert.deepEqual(committed.patches,[]);
- // The direct call with the routed slots refuses identically and writes nothing.
  const direct=await engine.reduce(document,{tool:'world_act',eventId:'fix3-buy-short-direct',args:{action:'core:trade.buy',slots:preview.routing.slots}});
  assert.equal(receiptOf(direct).status,'rejected');assert.deepEqual(direct.patches,[]);
  assert.deepEqual(document,before);assert.equal(coinsOf(document),3);assert.deepEqual(auditLedger(document.ledger),[]);
 });
 
-test('A3-fix3 trade: with enough coins the same lot is sold whole at the quoted total and the ledger stays balanced',async()=>{
- const row=rowFor(122);row.setup.coins=4;
+test('A3-fix3 trade: with enough coins the same two-loaf order is sold whole at the quoted total and the ledger stays balanced',async()=>{
+ const row=order(rowFor(122),2);row.setup.coins=4;
  const {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
  const before=structuredClone(document),input={tool:'world_propose',eventId:'fix3-buy-enough',args:row.proposal};
  assert.equal(receiptOf(await engine.previewAction(document,input)).status,'preview');assert.deepEqual(document,before);

@@ -262,12 +262,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     const quotes=(facilityRuntime().currentAgreedQuotes?.(state)??[]).filter(q=>q.to===actor&&q.direction==='sell_to_player'&&!q.service&&catalog(q.resource,'item'));
     const named=quotes.filter(q=>{const item=engine.byId.get(q.resource);return [item?.name,...item?.aliases??[]].filter(Boolean).some(n=>text.includes(n));});
     // Quantity is a structured slot (means.quantity or the catalog default);
-    // it is never parsed out of the intent's prose. The one agreed quote the
-    // intent names is structured state, though: its seller, item and quantity
-    // are the lot the player was offered, so a priced lot is bought as
-    // quoted (and refused when the purse cannot cover its total) rather than
-    // silently shrunk to the catalog default quantity.
-    if(named.length===1){const q=named[0];if(slot.name==='seller')value??=q.actor;if(slot.name==='item')value??=q.resource;if(slot.name==='quantity')value??=q.quantity;}
+    // it is never parsed out of the intent's prose.
+    if(named.length===1){const q=named[0];if(slot.name==='seller')value??=q.actor;if(slot.name==='item')value??=q.resource;}
    }
    if(empty&&action.id==='core:practice'&&slot.name==='skill'){
     const named=engine.world.spells?.filter(s=>[s.name,...s.aliases??[]].filter(Boolean).some(n=>text.includes(n)))??[];

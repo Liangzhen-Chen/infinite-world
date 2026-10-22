@@ -64,9 +64,14 @@ test('R1: capped practice binds the actual skill without a breakthrough, defense
  const {row,document}=fixture(169),prepared=prepareOpenAction(engine,document,row.proposal);
  assert.equal(prepared.routed,'core:combat');assert.equal(prepared.slots.intent,'defend');assert.equal(prepared.slots.target,'a3v2_169_boar');
  assert.equal(prepared.slots.weapon,'item_staff');
- // The creature executor's historical prefix restriction belongs to P/Q;
- // routing must preserve the actual instance identity rather than rename it.
- const refused=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance'});
+ // Routing preserves the actual instance identity rather than renaming it. The executor used to refuse it
+ // by id prefix (a historical restriction left to the executor's owner); an opponent is now the unowned
+ // creature record of a catalogued monster, whatever its id (01 世界本体: ids are permanent labels, the kind
+ // is the record's; 12 §本地 id: a prefix is only the initial judgement). An owned creature stays refused.
+ const accepted=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance'});
+ assert.equal(accepted.receipt.routed,'core:combat');assert.equal(accepted.receipt.status,'preview');
+ const owned=structuredClone(document);owned.state.creatures.a3v2_169_boar.owner='player';
+ const refused=await engine.previewAction(owned,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-owned'});
  assert.equal(refused.receipt.routed,'core:combat');assert.equal(refused.receipt.status,'rejected');assert.match(refused.receipt.reason,/交锋对象/);
 });
 
