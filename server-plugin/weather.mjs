@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import { createHash } from 'node:crypto';
 import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
@@ -49,7 +50,7 @@ export function historicalMinute(document,{at,daysAgo}={}){
 const cache = new Map();
 const kinds = ['clear','cloudy','rain','storm','snow','fog'];
 const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
-const validMinute = minute => { if (!Number.isSafeInteger(minute) || minute < 0) throw new Error('天气分钟必须是非负整数'); };
+const validMinute = minute => { if (!Number.isSafeInteger(minute) || minute < 0) throw preconditionFailure('天气分钟必须是非负整数'); };
 function dailySequence(rules, seed, region, year) {
     // New local regions must not reshuffle the weather history of existing regions.
     const sequenceRules={...rules,regions:rules.regions.filter(row=>row.sequenceScope!=='local')};
@@ -166,7 +167,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         const chunk=Math.min(remainingBudget,toMidnight,Math.max(1,Math.ceil(distance/rate)));
         distance=Math.max(0,distance-chunk*rate);moving+=chunk;elapsed+=chunk;
     }
-    throw new Error('天气路线超过规划步数限制');
+    throw preconditionFailure('天气路线超过规划步数限制');
 }
 export function cropProduction(engine, seed, settlement, minute, nominal) {
     const row = weatherAt(engine,seed,settlement,minute);

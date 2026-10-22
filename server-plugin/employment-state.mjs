@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
@@ -48,6 +49,6 @@ export function recordEmploymentAttendance(d,id,start,end,location){
 export function assertVocationAction(engine,state,tool,args){
  if(tool==='law'&&args.operation==='hire_advocate'&&args.authority!==undefined){
   const actor=engine.resolve(args.authority,'npc');
-  if(state.npcs?.[actor]?.vocation?.conflictOfInterest===true)throw Error('代理人与本案存在利害冲突');
+  if(state.npcs?.[actor]?.vocation?.conflictOfInterest===true)throw preconditionFailure('代理人与本案存在利害冲突');
  }
 }

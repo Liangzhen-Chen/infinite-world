@@ -6,7 +6,13 @@ import {applyPatches,digest} from './storage.mjs';
 class Refused extends Error{constructor(result){super(result.reason??'Native effect refused');this.code='E-NATIVE-REFUSED';this.result=result;}}
 const savedData=value=>value===undefined?null:JSON.parse(JSON.stringify(value));
 export function nativePrimitiveTransaction(d,{family,sourceEvent,actor='player',program,primitives,apply,describe=null,engine=d.engine}){
- const eventId=`native:${digest({family,sourceEvent,program,minute:d.get('state','minute'),ordinal:[d.patches?.length??0,Object.keys(d.get('state','records')??{}).length]}).slice(0,56)}`;
+ // Identity is the source event, the program and the minute, plus how many
+ // transactions of exactly that identity already have receipts; unrelated
+ // patches or records elsewhere in the document never move it.
+ const read=(...path)=>typeof d.peek==='function'?d.peek(...path):d.get(...path);
+ const base=`native:${digest({family,sourceEvent,program,minute:d.get('state','minute')}).slice(0,50)}`;
+ let ordinal=0;while(read('state','records',`primitive:${base}:${ordinal}`)!==undefined)ordinal++;
+ const eventId=`${base}:${ordinal}`;
  const results=[],messages=[];let refused=null,child=null;
  const frame=createPrimitiveFrame({actor,eventId,source:{kind:'rule',id:family},identity:program,
   canAct:()=>({allowed:true,tags:[]}),authority:()=>({allowed:true,tags:[]}),location:doc=>doc.state.location,mirrorTransfer(){},

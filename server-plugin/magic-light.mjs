@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
@@ -15,26 +16,26 @@ export const lightMechanisms=Object.freeze({
 });
 const clone=x=>structuredClone(x),distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const active=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='optics'&&(!op||e.operation===op)&&e.started<=d.get('state','minute')&&e.expires>d.get('state','minute'));
-const numeric=(v,min,max,name)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${name}无效`);return v;};
+const numeric=(v,min,max,name)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${name}无效`);return v;};
 const stateOf=(d,row)=>{
  const r=d.get('state','records',`physical_feature:${row.id}`);
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('光学对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('光学对象状态键冲突');
  return clone(r?.state??row.state??{});
 };
 const store=(d,row,state)=>d.set(['state','records',`physical_feature:${row.id}`],{category:'physical_feature',id:row.id,location:row.location,state});
 function locate(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>r.location===location&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('需要同地登记的真实光学对象');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('需要同地登记的真实光学对象');return rows[0];
 }
 function permission(d,engine,row,args){
  if(row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  if(!ids.some(id=>{
   const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
- }))throw Error('光学对象需要有效所有者授权');
+ }))throw preconditionFailure('光学对象需要有效所有者授权');
 }
 function access(d,engine,row,args,range,read=false){
- if(distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw Error('光学对象超过实际距离或视线被遮挡');
+ if(distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw preconditionFailure('光学对象超过实际距离或视线被遮挡');
  if(!read)permission(d,engine,row,args);
 }
 function touches(point,radius,from,to){
@@ -71,10 +72,10 @@ function lightOrigin(d,e){
 function source(d,engine,id,location){
  const e=d.get('state','effects',id);
  if(e?.kind==='light'){
-  const o=lightOrigin(d,e);if(!o||o.location!==location)throw Error('光源已经遮挡、熄灭或离开');return{...o,id};
+  const o=lightOrigin(d,e);if(!o||o.location!==location)throw preconditionFailure('光源已经遮挡、熄灭或离开');return{...o,id};
  }
  const row=locate(engine,id,location),s=stateOf(d,row);
- if(s.covered||s.lit===false)throw Error('光源已遮挡或熄灭');
+ if(s.covered||s.lit===false)throw preconditionFailure('光源已遮挡或熄灭');
  numeric(s.emissionLuxAt1m,.01,100000,'实际光源强度');
  return{id:row.id,row,point:row.position,location,lux:s.emissionLuxAt1m,height:s.heightMeters};
 }
@@ -137,11 +138,11 @@ export function validateLightCatalog(c){
 export function prepareLight(d,c,args){
  const target=args.target??'player';
  if(target==='player'){
-  if(d.get('state','player','status')!=='正常')throw Error('掌心光源需要清醒持有者');
+  if(d.get('state','player','status')!=='正常')throw preconditionFailure('掌心光源需要清醒持有者');
   return{target,catalog:c,spec:c.effectSpec,args:clone(args)};
  }
  const id=this.resolve(target,'item');
- if(this.quantity(d,'player',id)!==1)throw Error('光源需要实际持有的单件物品');
+ if(this.quantity(d,'player',id)!==1)throw preconditionFailure('光源需要实际持有的单件物品');
  heldUnit(d,this,'player',id);return{target:id,catalog:c,spec:c.effectSpec,args:{...clone(args),target:id}};
 }
 export function applyLight(d,p,id){
@@ -172,58 +173,58 @@ export function prepareOptics(d,c,args){
  }
  if(['bind_shadow','decoy','reveal'].includes(op)){
   p.target=args.target??'player';p.facts=areaTargetFacts(d,this,p.target,location);
-  if(!p.facts)throw Error('缺少真实在场目标位置');assertMagicTargeting(d,this,c,args,p.target);
+  if(!p.facts)throw preconditionFailure('缺少真实在场目标位置');assertMagicTargeting(d,this,c,args,p.target);
   p.point=p.facts.point;
   if(op==='bind_shadow'){
-   const l=lightAt(d,this,location,p.point);if(l.illumination!=='dim')throw Error('阴影束缚需要实际微光阴影');
+   const l=lightAt(d,this,location,p.point);if(l.illumination!=='dim')throw preconditionFailure('阴影束缚需要实际微光阴影');
   }
   if(op==='decoy'){
-   p.observer=args.destination;if(!p.observer||p.observer===p.target)throw Error('分影需要另一名实际观察者');
+   p.observer=args.destination;if(!p.observer||p.observer===p.target)throw preconditionFailure('分影需要另一名实际观察者');
    const f=areaTargetFacts(d,this,p.observer,location);
-   if(!f||!f.lineOfSight||distance(f.point,p.point)>c.rangeMeters||distance(f.point,localPlayerPoint(d))>c.rangeMeters||!localSightClear(d,this,location,localPlayerPoint(d),f.point)||!localSightClear(d,this,location,f.point,p.point)||lightAt(d,this,location,p.point).lux<=0)throw Error('分影观察者缺少有效视觉光路');
+   if(!f||!f.lineOfSight||distance(f.point,p.point)>c.rangeMeters||distance(f.point,localPlayerPoint(d))>c.rangeMeters||!localSightClear(d,this,location,localPlayerPoint(d),f.point)||!localSightClear(d,this,location,f.point,p.point)||lightAt(d,this,location,p.point).lux<=0)throw preconditionFailure('分影观察者缺少有效视觉光路');
    const actor=d.get('state',p.observer.startsWith('npc_')?'npcs':'creatures',p.observer);
-   if(actor.hasVision===false||actor.eyesClosed||['睡眠','熟睡','昏迷'].includes(actor.activity)||['昏迷','濒死'].includes(actor.status))throw Error('闭眼或无视觉者不受分影干扰');
+   if(actor.hasVision===false||actor.eyesClosed||['睡眠','熟睡','昏迷'].includes(actor.activity)||['昏迷','濒死'].includes(actor.status))throw preconditionFailure('闭眼或无视觉者不受分影干扰');
   }
   return p;
  }
  if(op==='waymark'){
   const route=this.world.routes.find(r=>r.id===args.target);
-  if(!route||![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw Error('光标只能标记已亲历两端的实际路线');
+  if(!route||![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw preconditionFailure('光标只能标记已亲历两端的实际路线');
   // Reuse the normal route resolver; markers never grant access or reveal routes.
   const destination=route.from===location?route.to:route.from;
   const usable=this.route(location,destination,'walk',d.get('state','minute'),d.document.randomSeed);
-  if(!usable.edges.includes(route.id))throw Error('指定路线当前不可通行');
+  if(!usable.edges.includes(route.id))throw preconditionFailure('指定路线当前不可通行');
   return{...p,target:route.id,route:clone(route),point:localPlayerPoint(d)};
  }
  p.row=locate(this,args.target,location);p.target=p.row.id;p.point=p.row.position;
  access(d,this,p.row,args,c.rangeMeters,readOps.has(op));const s=stateOf(d,p.row);
- if(readOps.has(op)&&lightAt(d,this,location,p.point).lux<=0)throw Error('完全无光不能读取表面证据');
+ if(readOps.has(op)&&lightAt(d,this,location,p.point).lux<=0)throw preconditionFailure('完全无光不能读取表面证据');
  if(op==='color'){
-  if(p.row.kind!=='sample'||!['mineral','dye'].includes(s.sampleType)||!(s.sampleGrams>0)||!Array.isArray(s.spectrum)||!s.spectrum.length||s.spectrum.some(x=>!Number.isFinite(x.wavelengthNm)||x.wavelengthNm<380||x.wavelengthNm>780||!Number.isFinite(x.reflectance)||x.reflectance<0||x.reflectance>1))throw Error('辨色需要真实矿物或染料样品光谱');
+  if(p.row.kind!=='sample'||!['mineral','dye'].includes(s.sampleType)||!(s.sampleGrams>0)||!Array.isArray(s.spectrum)||!s.spectrum.length||s.spectrum.some(x=>!Number.isFinite(x.wavelengthNm)||x.wavelengthNm<380||x.wavelengthNm>780||!Number.isFinite(x.reflectance)||x.reflectance<0||x.reflectance>1))throw preconditionFailure('辨色需要真实矿物或染料样品光谱');
  }
- if(op==='reveal_wear'&&!Array.isArray(s.wear))throw Error('材料缺少真实表面磨损记录');
- if(op==='trace'&&!Array.isArray(s.traces))throw Error('材料缺少真实表面痕迹记录');
+ if(op==='reveal_wear'&&!Array.isArray(s.wear))throw preconditionFailure('材料缺少真实表面磨损记录');
+ if(op==='trace'&&!Array.isArray(s.traces))throw preconditionFailure('材料缺少真实表面痕迹记录');
  if(['focus_light','reflect','shadow_measure'].includes(op)){
   p.source=source(d,this,args.source,location);
   if(p.source.row)access(d,this,p.source.row,args,c.rangeMeters,op==='shadow_measure');
-  else if(op!=='shadow_measure'&&d.get('state','effects',p.source.id,'owner')!=='player')throw Error('光源需要所有者授权');
-  if(!localSightClear(d,this,location,p.source.point,p.point))throw Error('已有光源到表面的光路被遮挡');
-  if(['focus_light','reflect'].includes(op)&&active(d).some(([,e])=>e.medium===p.source.id&&['focus_light','reflect'].includes(e.operation)))throw Error('光源已有分光，不能重复放大');
+  else if(op!=='shadow_measure'&&d.get('state','effects',p.source.id,'owner')!=='player')throw preconditionFailure('光源需要所有者授权');
+  if(!localSightClear(d,this,location,p.source.point,p.point))throw preconditionFailure('已有光源到表面的光路被遮挡');
+  if(['focus_light','reflect'].includes(op)&&active(d).some(([,e])=>e.medium===p.source.id&&['focus_light','reflect'].includes(e.operation)))throw preconditionFailure('光源已有分光，不能重复放大');
  }
  if(op==='reflect'){
   numeric(s.reflectivityPercent,1,100,'表面反射率');numeric(s.reflectionAreaM2,.1,1,'有限反射面积');p.observer=locate(this,args.destination,location);access(d,this,p.observer,args,c.rangeMeters,true);
-  if(!localSightClear(d,this,location,p.point,p.observer.position))throw Error('反射方向被遮挡');
+  if(!localSightClear(d,this,location,p.point,p.observer.position))throw preconditionFailure('反射方向被遮挡');
  }
  if(op==='focus_light')numeric(s.focusAreaM2,.1,1,'聚光表面面积');
  if(op==='shadow_measure'){
-  if(p.row.kind!=='surface')throw Error('投影需要真实墙面或测量表面');
+  if(p.row.kind!=='surface')throw preconditionFailure('投影需要真实墙面或测量表面');
   p.sample=locate(this,args.destination,location);access(d,this,p.sample,args,c.rangeMeters,true);const sample=stateOf(d,p.sample);
   numeric(sample.heightMeters,.01,10,'被测物高度');numeric(p.source.height,sample.heightMeters+.01,20,'光源高度');
-  if(!localSightClear(d,this,location,p.source.point,p.sample.position)||!localSightClear(d,this,location,p.sample.position,p.point))throw Error('投影光路被遮挡');
+  if(!localSightClear(d,this,location,p.source.point,p.sample.position)||!localSightClear(d,this,location,p.sample.position,p.point))throw preconditionFailure('投影光路被遮挡');
  }
  if(['light_screen','privacy'].includes(op)){
-  if(!['passage','aperture'].includes(p.row.kind))throw Error('遮光需要真实通道或缝隙');numeric(s.widthMeters,.01,2,'遮光宽度');
-  if(op==='privacy'){numeric(s.apertureMeters,.001,.1,'私密缝隙');if(s.open!==false)throw Error('私密遮光只能覆盖闭合的小缝隙');}
+  if(!['passage','aperture'].includes(p.row.kind))throw preconditionFailure('遮光需要真实通道或缝隙');numeric(s.widthMeters,.01,2,'遮光宽度');
+  if(op==='privacy'){numeric(s.apertureMeters,.001,.1,'私密缝隙');if(s.open!==false)throw preconditionFailure('私密遮光只能覆盖闭合的小缝隙');}
  }
  if(['fog_light','dark_area'].includes(op))numeric(s.radiusMeters,.1,3,'有限光照范围');
  if(op==='dim')p.source=source(d,this,p.target,location);
@@ -271,7 +272,7 @@ export function shadowBound(d,engine,target='player'){
  return active(d,'bind_shadow').some(([,e])=>e.target===target&&e.location===location&&distance(f.point,e.point)<=.5&&lightAt(d,engine,location,f.point).illumination==='dim');
 }
 export function assertLightMovement(d,engine,target='player'){
- if(shadowBound(d,engine,target))throw Error('阴影扰乱脚步，须先照亮、移出阴影或等其失效');
+ if(shadowBound(d,engine,target))throw preconditionFailure('阴影扰乱脚步，须先照亮、移出阴影或等其失效');
 }
 export function decoyPenalty(d,target,context){
  if(context.eyesClosed!==false||!['lit','dim'].includes(context.illumination))return 0;
@@ -312,29 +313,29 @@ export function lightEnvironmentAction(d,args){
  const operation=args.operation,location=d.get('state','location');
  if(operation==='inspect_light'&&this.world.routes.some(r=>r.id===args.target)){
   const route=this.world.routes.find(r=>r.id===args.target);
-  if(![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw Error('光标检查需要已亲历的邻接路线');
+  if(![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw preconditionFailure('光标检查需要已亲历的邻接路线');
   return{target:route.id,markers:active(d,'waymark').filter(([,e])=>e.target===route.id&&e.location===location&&localSightClear(d,this,location,localPlayerPoint(d),e.point)).map(([,e])=>({route:clone(e.route),point:clone(e.point),expires:e.expires})),actionScope:{kind:'instant',instantaneous:true}};
  }
  if(['cover_light','uncover_light','extinguish_light'].includes(operation)){
   const e=d.get('state','effects',args.target);
   if(e?.kind==='light'){
-   if(!lightOrigin(d,{...e,covered:false}))throw Error('没有实际持有的光源');
+   if(!lightOrigin(d,{...e,covered:false}))throw preconditionFailure('没有实际持有的光源');
    if(operation==='extinguish_light')d.remove(['state','effects',args.target]);else d.set(['state','effects',args.target,'covered'],operation==='cover_light');
    return{target:args.target,covered:operation==='cover_light',extinguished:operation==='extinguish_light',actionScope:{kind:'instant',instantaneous:true}};
   }
  }
  const row=locate(this,args.target,location);
  if(operation==='inspect_light')access(d,this,row,args,3,true);
- else if(distance(localPlayerPoint(d),row.position)>3||!clearRay(d,this,location,localPlayerPoint(d),row.position))throw Error('光学操作超过接触距离或实体遮挡');
+ else if(distance(localPlayerPoint(d),row.position)>3||!clearRay(d,this,location,localPlayerPoint(d),row.position))throw preconditionFailure('光学操作超过接触距离或实体遮挡');
  if(operation==='inspect_light')return{target:row.id,...inspectLight(d,this,row),actionScope:{kind:'instant',instantaneous:true}};
  permission(d,this,row,args);const s=stateOf(d,row);
  if(['open_aperture','close_aperture'].includes(operation)){
-  if(row.kind!=='aperture')throw Error('需要实际可开合缝隙');s.open=operation==='open_aperture';
+  if(row.kind!=='aperture')throw preconditionFailure('需要实际可开合缝隙');s.open=operation==='open_aperture';
  }else{
   numeric(s.emissionLuxAt1m,.01,100000,'实际光源');
   if(operation==='extinguish_light'){
    // Optical controls never rewrite combustion, oxygen or fuel accounts.
-   throw Error('燃烧光源请用实际灭火操作；光学操作只能遮挡');
+   throw preconditionFailure('燃烧光源请用实际灭火操作；光学操作只能遮挡');
   }
   s.covered=operation==='cover_light';
  }

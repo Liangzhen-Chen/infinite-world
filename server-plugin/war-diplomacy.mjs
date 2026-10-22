@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {sink,BOOKED} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('war-diplomacy',{sinks:['sink:export']});
@@ -54,7 +55,7 @@ export function startWar(d,e,spec,at,src){
  ensureArmies(d,e,at);
  const w={category:'war',id:spec.id,name:spec.name,aggressor:spec.aggressor,defender:spec.defender,front:spec.front,armyIds:[...spec.armies],routes:spec.routes??[],villages:spec.villages??[],territory:spec.territory??null,
   status:'交战',since:at,nextAt:at+rules(e).intervalDays*DAY,rounds:0,score:0,history:[],supplyCut:{},sourceEvent:src,source:spec.source??'diplomacy',initial:{}};
- for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row||row.war)throw Error('参战队伍不存在或已在别处出征');const a=copy(row);if(![w.aggressor,w.defender].includes(a.party))throw Error('军队不属于交战双方');raiseLevy(d,e,a,at,src);a.war=w.id;a.status='出征';a.location=w.front;w.initial[a.party]=(w.initial[a.party]??0)+armyStrength(a);holdingSet(d,null,path(armyKey(id)),a,'war-diplomacy');}
+ for(const id of w.armyIds){const row=d.get(...path(armyKey(id)));if(!row||row.war)throw preconditionFailure('参战队伍不存在或已在别处出征');const a=copy(row);if(![w.aggressor,w.defender].includes(a.party))throw preconditionFailure('军队不属于交战双方');raiseLevy(d,e,a,at,src);a.war=w.id;a.status='出征';a.location=w.front;w.initial[a.party]=(w.initial[a.party]??0)+armyStrength(a);holdingSet(d,null,path(armyKey(id)),a,'war-diplomacy');}
  relations(d,e,w.aggressor,w.defender,rules(e).declareStanding,src,at);save(d,w);
  announce(d,e,w,`${w.name}已经开战，行旅须避开交战地。`,at,src);return w;
 }
@@ -148,34 +149,34 @@ export function advanceWarDiplomacy(d,e,{before,after}){
 }
 function controlled(e,s,party){return party==='player'||s.records?.[`organization:${party}`]?.leader==='player';}
 export function warAction(d,args,src){
- const e=this,r=rules(e),state=d.get('state');if(!r)throw Error('未登记战争外交规则');
+ const e=this,r=rules(e),state=d.get('state');if(!r)throw preconditionFailure('未登记战争外交规则');
  if(args.operation==='war_inspect')return {wars:wars(state),relations:args.org&&args.member?standing(e,state,args.org,args.member):null,territories:Object.values(state.records??{}).filter(t=>t.category==='territory'),tribute:Object.values(state.records??{}).filter(t=>t.category==='tribute'),choices:['declare','truce','peace','ally','tribute'],actionScope:{kind:'instant'}};
  if(args.operation==='diplomacy'&&args.choice==='recognize')return recognizeIndependence(d,e,args.org,args.member,src);
  const w=copy(wars(state).find(w=>w.id===args.clock));
  if(args.operation==='war_join'){
-  if(!w||w.status!=='交战')throw Error('clock 须指定双方正在交涉的战事');const service=state.records['military_service:player'],a=state.records[armyKey(args.org??service?.army)];if(!a||!controlled(e,state,a.party)&&a.id!==service?.army)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
-  if(state.location!==w.front||a.location!==state.location)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');const side=[w.aggressor,w.defender].find(p=>p===a.party||state.records[`diplomacy:${pair(p,a.party)}`]?.status==='结盟');if(!side)throw Error('须先以外交结盟参战方');if(a.war&&a.war!==w.id)throw Error('队伍已在别处出征');
+  if(!w||w.status!=='交战')throw preconditionFailure('clock 须指定双方正在交涉的战事');const service=state.records['military_service:player'],a=state.records[armyKey(args.org??service?.army)];if(!a||!controlled(e,state,a.party)&&a.id!==service?.army)throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+  if(state.location!==w.front||a.location!==state.location)throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');const side=[w.aggressor,w.defender].find(p=>p===a.party||state.records[`diplomacy:${pair(p,a.party)}`]?.status==='结盟');if(!side)throw preconditionFailure('须先以外交结盟参战方');if(a.war&&a.war!==w.id)throw preconditionFailure('队伍已在别处出征');
   holdingSet(d,e,path(armyKey(a.id)),{...a,war:w.id,warSide:side,status:'出征'},'war-diplomacy');if(!w.armyIds.includes(a.id))w.armyIds.push(a.id);save(d,w);return {war:w.id,army:a.id,note:'前线交锋用 world_combat；击溃参战人物回写战役'};
  }
  const a=args.org,b=args.member,choice=args.choice;
- if(!standingKind(e,state,a)||!standingKind(e,state,b)||a===b)throw Error('org 与 member 须为不同的已登记交涉方');
+ if(!standingKind(e,state,a)||!standingKind(e,state,b)||a===b)throw preconditionFailure('org 与 member 须为不同的已登记交涉方');
  const own=controlled(e,state,a),local=w&&state.location===w.front;
- if(!own&&!(local&&['truce','peace'].includes(choice)&&standing(e,state,a,'player')>=r.mediationStanding&&standing(e,state,b,'player')>=r.mediationStanding))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+ if(!own&&!(local&&['truce','peace'].includes(choice)&&standing(e,state,a,'player')>=r.mediationStanding&&standing(e,state,b,'player')>=r.mediationStanding))throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  const score=a==='player'?standing(e,state,b,a):Math.min(standing(e,state,a,b),standing(e,state,b,a)),at=state.minute;
  if(choice==='declare'){
-  if(!own||score>r.declareStanding)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');const ids=armies(state).filter(x=>[a,b].includes(x.party)&&!x.war).map(x=>x.id);if(!ids.some(id=>state.records[armyKey(id)].party===a)||!ids.some(id=>state.records[armyKey(id)].party===b))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+  if(!own||score>r.declareStanding)throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');const ids=armies(state).filter(x=>[a,b].includes(x.party)&&!x.war).map(x=>x.id);if(!ids.some(id=>state.records[armyKey(id)].party===a)||!ids.some(id=>state.records[armyKey(id)].party===b))throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
   const war=startWar(d,e,{id:`player_${src}`.replace(/[^a-z0-9_]/gi,'_'),name:'边地争战',aggressor:a,defender:b,front:state.location,armies:ids},at,src);return {war:war?.id};
  }
  if(choice==='ally'){
-  if(score<r.allianceStanding||wars(state).some(w=>active(w)&&pair(w.aggressor,w.defender)===pair(a,b)))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+  if(score<r.allianceStanding||wars(state).some(w=>active(w)&&pair(w.aggressor,w.defender)===pair(a,b)))throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
   holdingSet(d,e,path(`diplomacy:${pair(a,b)}`),{category:'diplomacy',parties:[a,b],status:'结盟',minute:at,sourceEvent:src},'war-diplomacy');relations(d,e,a,b,r.allianceStanding+r.allianceGain,src,at);return {status:'结盟'};
  }
- if(!w||!active(w)||pair(a,b)!==pair(w.aggressor,w.defender))throw Error('clock 须指定双方正在交涉的战事');
- if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false,books:{account:sink('export','mediation'),writer:'war-diplomacy',eventId:src}})!==r.mediationCopper)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
- if(choice==='truce'&&own&&score<r.truceStanding&&Math.abs(w.score)<r.peaceScore)throw Error('对方尚不愿停战，须改善立场或打出战果');
+ if(!w||!active(w)||pair(a,b)!==pair(w.aggressor,w.defender))throw preconditionFailure('clock 须指定双方正在交涉的战事');
+ if(!own&&partyPay(d,e,'player',r.mediationCopper,{sourceEvent:src,reason:'战事结算',partial:false,books:{account:sink('export','mediation'),writer:'war-diplomacy',eventId:src}})!==r.mediationCopper)throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+ if(choice==='truce'&&own&&score<r.truceStanding&&Math.abs(w.score)<r.peaceScore)throw preconditionFailure('对方尚不愿停战，须改善立场或打出战果');
  if(choice==='truce'){w.status='停战';w.truceUntil=Math.ceil((at+r.truceDays*DAY)/DAY)*DAY;save(d,w);holdingRemove(d,null,path(`war-disruption:${w.id}`),'war-diplomacy');relations(d,e,a,b,r.truceStanding,src,at);return {war:w.id,status:w.status,until:w.truceUntil};}
- if(!['peace','tribute'].includes(choice))throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
- if(choice==='peace'&&own&&score<r.peaceStanding&&Math.abs(w.score)<r.peaceScore)throw Error('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+ if(!['peace','tribute'].includes(choice))throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
+ if(choice==='peace'&&own&&score<r.peaceStanding&&Math.abs(w.score)<r.peaceScore)throw preconditionFailure('此项交涉未满足权限、立场或前线条件；用 war_inspect 查看');
  return endWar(d,e,w,{winner:choice==='tribute'?b:null,tribute:choice==='tribute'?r.tributeCopperMonth:0,at,src});
 }
 // Activities call this once when a real combat exchange defeats a listed participant.

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {initialNpcState,householdDefinition} from './npc-state.mjs';
@@ -47,7 +48,7 @@ function shuffle(rng,list){const out=[...list];for(let i=out.length-1;i>0;i--){c
 // Largest-remainder apportionment keeps every quota exact.
 function apportion(total,weights){
     const keys=Object.keys(weights).sort(),sum=keys.reduce((n,k)=>n+weights[k],0);
-    if(!sum)throw Error('人口模板缺少可分配的权重');
+    if(!sum)throw preconditionFailure('人口模板缺少可分配的权重');
     const raw=keys.map(k=>({k,v:total*weights[k]/sum})),out=Object.fromEntries(raw.map(r=>[r.k,Math.floor(r.v)]));
     let left=total-Object.values(out).reduce((n,v)=>n+v,0);
     for(const r of [...raw].sort((a,b)=>(b.v-Math.floor(b.v))-(a.v-Math.floor(a.v))||a.k.localeCompare(b.k))){if(!left)break;out[r.k]++;left--;}
@@ -110,10 +111,10 @@ export function populationPlan(template,basis){
     const key=hashText([template,basis]);if(planCache.has(key))return planCache.get(key);
     const rng=stream(`${template.seed}:population-plan:v${POPULATION_VERSION}`);
     const H=basis.pendingHouseholdCount,P=basis.pendingPopulation;
-    if(!Number.isInteger(H)||!Number.isInteger(P)||H<0||P<H||(H===0&&P>0))throw Error('待生成人口与户数不成立');
-    if(AGE_KEYS.reduce((n,k)=>n+(basis.pendingAgeStructure?.[k]??NaN),0)!==P)throw Error('待生成年龄配额与人数不符');
+    if(!Number.isInteger(H)||!Number.isInteger(P)||H<0||P<H||(H===0&&P>0))throw preconditionFailure('待生成人口与户数不成立');
+    if(AGE_KEYS.reduce((n,k)=>n+(basis.pendingAgeStructure?.[k]??NaN),0)!==P)throw preconditionFailure('待生成年龄配额与人数不符');
     function buildHomes(H,P,ages){
-        if(P-ages.children<H)throw Error('成年人数不足以为每户安排户主');
+        if(P-ages.children<H)throw preconditionFailure('成年人数不足以为每户安排户主');
         const base=Math.floor(P/(H||1)),extra=H?P%H:0;
         const sizes=shuffle(rng,Array.from({length:H},(_,i)=>base+(i<extra?1:0)));
         const pool=Object.fromEntries(AGE_KEYS.map(k=>[k,Array.from({length:ages[k]},()=>{const [lo,hi]=AGE_RANGES[k];return lo+Math.floor(rng()*(hi-lo+1));}).sort((a,b)=>b-a)]));
@@ -122,7 +123,7 @@ export function populationPlan(template,basis){
         const homes=sizes.map((size,i)=>({size,members:[{age:headAges[i],role:'户主'}]}));
         for(const age of pool.children){
             const eligible=homes.filter(h=>h.members.length<h.size&&h.members[0].age-age>=MIN_PARENT_GAP);
-            if(!eligible.length)throw Error('未成年人找不到年龄相符的户主，人口模板不可生成');
+            if(!eligible.length)throw preconditionFailure('未成年人找不到年龄相符的户主，人口模板不可生成');
             pick(rng,eligible).members.push({age,role:'子女'});
         }
         for(const age of shuffle(rng,otherAdults)){
@@ -142,9 +143,9 @@ export function populationPlan(template,basis){
         homes=[];districtSlots=[];speciesSlots=[];
         const groups=Object.entries(basis.bySpecies).sort(([a],[b])=>a.localeCompare(b));
         if(groups.reduce((n,[,g])=>n+g.population,0)!==P||groups.reduce((n,[,g])=>n+g.households,0)!==H||
-            AGE_KEYS.some(k=>groups.reduce((n,[,g])=>n+(g.ageStructure?.[k]??NaN),0)!==basis.pendingAgeStructure[k]))throw Error('分物种待生成配额与总数不符');
+            AGE_KEYS.some(k=>groups.reduce((n,[,g])=>n+(g.ageStructure?.[k]??NaN),0)!==basis.pendingAgeStructure[k]))throw preconditionFailure('分物种待生成配额与总数不符');
         for(const [species,g] of groups){
-            if(AGE_KEYS.reduce((n,k)=>n+g.ageStructure[k],0)!==g.population||g.households<1&&g.population>0)throw Error(`分物种待生成配额不成立：${species}`);
+            if(AGE_KEYS.reduce((n,k)=>n+g.ageStructure[k],0)!==g.population||g.households<1&&g.population>0)throw preconditionFailure(`分物种待生成配额不成立：${species}`);
             homes.push(...buildHomes(g.households,g.population,g.ageStructure));
             districtSlots.push(...shuffle(rng,Object.entries(apportion(g.households,weights(g.districts))).flatMap(([id,n])=>Array(n).fill(id))));
             speciesSlots.push(...Array(g.households).fill(species));
@@ -167,7 +168,7 @@ export function populationPlan(template,basis){
             const name=dot<0?base+extra:base.slice(0,dot)+extra+base.slice(dot);
             if(nameOk(name)){taken.add(name);return name;}
         }
-        throw Error('人口模板姓名库不足');
+        throw preconditionFailure('人口模板姓名库不足');
     }
     const households=homes.map((h,i)=>{
         const index=i+1,district=districtSlots[i],species=speciesSlots[i]||null,headSex=rng()<0.5?'男':'女';
@@ -316,11 +317,11 @@ export function unfoldPopulationAt(d,engine,location){
         record.remaining.households--;
         for(const member of household.members){
             record.remaining.population--;record.remaining.ages[bucketOf(member.age)]--;
-            if(d.get('state','created',member.id)||d.get('state','npcs',member.id))throw Error(`按需人口编号已被占用：${member.id}`);
+            if(d.get('state','created',member.id)||d.get('state','npcs',member.id))throw preconditionFailure(`按需人口编号已被占用：${member.id}`);
             holdingSet(d,null,['state','created',member.id],rosterEntity(record.template,household,member),'population');people.push(member.id);
         }
     }
-    if(record.remaining.households<0||record.remaining.population<0||AGE_KEYS.some(k=>record.remaining.ages[k]<0))throw Error('按需人口超出剩余配额，拒绝生成');
+    if(record.remaining.households<0||record.remaining.population<0||AGE_KEYS.some(k=>record.remaining.ages[k]<0))throw preconditionFailure('按需人口超出剩余配额，拒绝生成');
     record.districts[location]={households:rows.map(h=>h.id),people:people.length,minute:state.minute};
     d.set(['state','population',settlementId],record);
     return {version:POPULATION_VERSION,settlement:settlementId,district:location,households:rows.length,people:people.length,remaining:record.remaining.population};
@@ -411,19 +412,19 @@ export function acceptPopulationProfile(d,engine,input){
     const person=String(input.person??''),entity=d.get('state','created',person);
     if(!entity&&engine.byId?.get(person)?.generated==='remote')
         return acceptRemoteProfile(d,engine,input,{check:(e,p)=>checkGeneratedProfile(e,p),maxFailures:MAX_PROFILE_FAILURES,fields:PROFILE_FIELDS});
-    if(!entity||entity.generated!=='population')throw Error('只有按需登记的名册人物才能建立按需完整档');
-    const record=d.get('state','population',entity.settlement);if(!record)throw Error('按需人口记录缺失');
+    if(!entity||entity.generated!=='population')throw preconditionFailure('只有按需登记的名册人物才能建立按需完整档');
+    const record=d.get('state','population',entity.settlement);if(!record)throw preconditionFailure('按需人口记录缺失');
     const status=record.profiles?.[person];
-    if(status?.status==='full'||entity.profileStatus==='full')throw Error('完整档已入库，之后不再改变');
+    if(status?.status==='full'||entity.profileStatus==='full')throw preconditionFailure('完整档已入库，之后不再改变');
     const minute=d.get('state','minute');
     if(input.outcome==='failed'){
         const failures=(status?.failures??0)+1;
         d.set(['state','population',entity.settlement,'profiles',person],{status:'failed',failures,lastReason:String(input.reason??'生成失败').slice(0,300),minute});
         return {person,status:'failed',failures,identityKept:true};
     }
-    if((status?.failures??0)>=MAX_PROFILE_FAILURES)throw Error('该人物完整档生成已连续失败，保留名册身份');
+    if((status?.failures??0)>=MAX_PROFILE_FAILURES)throw preconditionFailure('该人物完整档生成已连续失败，保留名册身份');
     const errors=checkGeneratedProfile(entity,input.profile,{template:record.template});
-    if(errors.length)throw Error(`完整档未通过硬约束：${errors.join('；')}`);
+    if(errors.length)throw preconditionFailure(`完整档未通过硬约束：${errors.join('；')}`);
     const profile=Object.fromEntries(Object.entries(input.profile).filter(([k])=>PROFILE_FIELDS[k]));
     const full={...entity,...profile,profileStatus:'full'};
     holdingSet(d,null,['state','created',person],full,'population');

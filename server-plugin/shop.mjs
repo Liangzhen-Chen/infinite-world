@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {vocabulary} from './domain-rules.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -28,7 +30,7 @@ export function recordAgreedQuote(d,engine,row,{actor=row.actor}={}){
  if(row.service==='remittance'){
   const bank=derivedBankAt(engine,state,state.npcs[actor].location),branch=derivedBankById(engine,state,row.destinationBranch);
   if(!integer(row.principal,1)||!integer(row.fee)||!state.npcs?.[row.recipient]||!engine.byId.has(row.destination)||row.recipientIdentityVerified!==true||!bank?.keepers.includes(actor)||!branch||branch.id===bank.id||!bankWithin(engine,branch.location,row.destination))throw Error('Invalid remittance terms or real redeeming branch');
- }else if(!integer(row.quantity,1)||!integer(row.totalCoins)||!['sell_to_player','buy_from_player'].includes(row.direction)||!engine.world.items.some(i=>i.id===row.resource)&&row.resource!=='lodging_one_night')throw Error('Invalid agreed quantity, total or direction');
+ }else if(!integer(row.quantity,1)||!integer(row.totalCoins)||!['sell_to_player','buy_from_player'].includes(row.direction)||!engine.world.items.some(i=>i.id===row.resource)&&row.resource!==vocabulary(engine,'lodging','agreedResource'))throw Error('Invalid agreed quantity, total or direction');
  const value={...persistable(row),category:'agreed_quote'};
  d.set(['state','records',agreedKey(row.id)],value);
  d.set(['state','records',`${agreedKey(row.id)}:source`],{category:'agreed_quote_receipt',digest:digest(value)});
@@ -265,7 +267,7 @@ function restockShop(d,engine,shop,minute){
     const entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute)).filter(Boolean);
     if(!entries.length)return;
     const key=`shop:${shop.id}`,old=d.get('state','records',key);
-    if(old&&old.category!=='shop_ledger')throw Error('商店账编号冲突，拒绝覆盖');
+    if(old&&old.category!=='shop_ledger')throw preconditionFailure('商店账编号冲突，拒绝覆盖');
     d.set(['state','records',key],{category:'shop_ledger',shop:shop.id,keeper:shop.keeper,settlement:shop.settlement,lastRestockAt:minute,entries:[...old?.entries??[],...entries].slice(-LEDGER_ROWS)});
 }
 // Registered with the advance registry. Restock happens at the midnight that opens
@@ -283,7 +285,7 @@ export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base}){
     const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});
     if(agreed)return {...agreed,agreed:true,buyer,seller,item,listPrice:agreed.totalCoins/agreed.quantity};
     const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
-    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
+    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw preconditionFailure('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
     const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
     let relation=1,keeperRegard=null,settlementRegard=null;

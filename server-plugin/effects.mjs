@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {registerEffect,effectConsumer} from './effect-registry.mjs';
 export {EFFECT_SOURCES,registerEffect,effectKinds,effectConsumer} from './effect-registry.mjs';
 import {damageFacilities} from './facilities.mjs';
@@ -29,8 +30,8 @@ declareHoldingWriter('effects',{kinds:['*'],entities:['*'],locations:true});
 const DAY=1440,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 export function assertEffect(engine,effect,source='world'){
  const consumer=effectConsumer(engine,effect?.kind,source);
- if(!consumer)throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');
- if(typeof consumer.validate!=='function'||typeof consumer.apply!=='function')throw Error(`势力效果消费者未实现：${effect.kind}`);
+ if(!consumer)throw preconditionFailure('世界时钟未知效果或缺少贸易消费者，拒绝推进');
+ if(typeof consumer.validate!=='function'||typeof consumer.apply!=='function')throw preconditionFailure(`势力效果消费者未实现：${effect.kind}`);
  return consumer.validate(engine,effect);
 }
 export function applyEffect(d,engine,effect,context,source='world'){
@@ -40,8 +41,8 @@ export function applyEffect(d,engine,effect,context,source='world'){
 }
 function effectTransaction(d,engine,effects,context,source='world'){
  return nativePrimitiveTransaction(d,{engine,family:`k6:${source}`,sourceEvent:context.sourceEvent,actor:context.faction??'player',program:{effects,context},
-  primitives:effects.map(effect=>({op:'emit',verb:'tell',visibility:'private',payload:effect})),
-  apply(tx,index){const effect=effects[index];assertEffect(engine,effect,source);const result=effectConsumer(engine,effect.kind,source).apply(tx,engine,effect,context);if(!result||typeof result.applied!=='boolean')throw Error(`效果缺少 applied 回执：${effect.kind}`);return result;}});
+  primitives:effects.map(effect=>({op:'emit',verb:'effect_applied',visibility:'private',payload:effect})),
+  apply(tx,index){const effect=effects[index];assertEffect(engine,effect,source);const result=effectConsumer(engine,effect.kind,source).apply(tx,engine,effect,context);if(!result||typeof result.applied!=='boolean')throw preconditionFailure(`效果缺少 applied 回执：${effect.kind}`);return result;}});
 }
 // A refused effect cannot leave costs or partial identity changes in the draft.
 export function clockTransaction(d,apply){
@@ -66,13 +67,13 @@ export function applyEffects(d,engine,effects,context,source){
 // parameters. They use the same interpreter as ordinary and magical contact.
 registerEffect('interaction',{
  validate(engine,effect){
-  if(!['fire','cold','water','rain','flood','ink'].includes(effect.agent)||!environmentFeatures(engine).some(f=>f.id===effect.target)||effect.minutes!==undefined&&!int(effect.minutes,1,360*DAY)||effect.moistureMg!==undefined&&!int(effect.moistureMg,0,1000000000))throw Error('物理交互的施力、目标或参数无效');
+  if(!['fire','cold','water','rain','flood','ink'].includes(effect.agent)||!environmentFeatures(engine).some(f=>f.id===effect.target)||effect.minutes!==undefined&&!int(effect.minutes,1,360*DAY)||effect.moistureMg!==undefined&&!int(effect.moistureMg,0,1000000000))throw preconditionFailure('物理交互的施力、目标或参数无效');
  },
  apply(d,engine,effect,context){return {applied:true,...applyInteraction(d,engine,{agent:effect.agent,target:effect.target,minutes:effect.minutes,moistureMg:effect.moistureMg,minute:context.minute,sourceEvent:context.sourceEvent})};},
 });
 // Price quote (formerly world-clock regional_quote).
 registerEffect('regional_quote',{
- validate(engine,effect){if(effect.item!==engine.rules.settlementTrade?.item)throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');},
+ validate(engine,effect){if(effect.item!==engine.rules.settlementTrade?.item)throw preconditionFailure('世界时钟未知效果或缺少贸易消费者，拒绝推进');},
  apply:(d,engine,effect,context)=>({applied:true,...effect,price:regionalTradePrice(d,engine,effect.item,context.settlement,context.minute)}),
 });
 // Spirit awakening (formerly world-clock awakening/awaken), consumed by T160.
@@ -81,9 +82,9 @@ for(const kind of ['awakening','awaken'])registerEffect(kind,{
  apply:(d,engine,effect,context)=>applyWildlifeAwakeningEffect(d,engine,effect,context),
 });
 // Wildlife unrest: encounters at the habitat become likelier until it calms.
-const habitat=(engine,id)=>{const h=engine.rules.wildlife?.habitats.find(h=>h.id===id);if(!h)throw Error(`野物效果栖地未登记：${id}`);return h;};
+const habitat=(engine,id)=>{const h=engine.rules.wildlife?.habitats.find(h=>h.id===id);if(!h)throw preconditionFailure(`野物效果栖地未登记：${id}`);return h;};
 registerEffect('wildlife_stir',{
- validate(engine,effect){habitat(engine,effect.habitat);if(!int(effect.minutes,1,360*DAY)||effect.factor!==undefined&&!(effect.factor>1&&effect.factor<=3))throw Error('野物躁动时长或倍率无效');},
+ validate(engine,effect){habitat(engine,effect.habitat);if(!int(effect.minutes,1,360*DAY)||effect.factor!==undefined&&!(effect.factor>1&&effect.factor<=3))throw preconditionFailure('野物躁动时长或倍率无效');},
  apply(d,engine,effect,context){
   const key=`wildlife:stir:${effect.habitat}`,factor=effect.factor??2,until=context.minute+effect.minutes;
   holdingSet(d,null,['state','records',key],{category:'wildlife_stir',habitat:effect.habitat,factor,since:context.minute,until,sourceEvent:context.sourceEvent},'effects');
@@ -93,8 +94,8 @@ registerEffect('wildlife_stir',{
 // Wildlife migration: part of a species' population leaves one habitat for another.
 registerEffect('wildlife_migrate',{
  validate(engine,effect){
-  for(const id of [effect.from,effect.to]){habitat(engine,id);if(!speciesInHabitat(engine.rules,engine.world.monsters,id).some(s=>s.id===effect.species))throw Error('迁移物种不在该栖地分布范围');}
-  if(effect.from===effect.to||!int(effect.count,1,1000))throw Error('野物迁移参数无效');
+  for(const id of [effect.from,effect.to]){habitat(engine,id);if(!speciesInHabitat(engine.rules,engine.world.monsters,id).some(s=>s.id===effect.species))throw preconditionFailure('迁移物种不在该栖地分布范围');}
+  if(effect.from===effect.to||!int(effect.count,1,1000))throw preconditionFailure('野物迁移参数无效');
  },
  apply(d,engine,effect){
   const path=h=>['state','records',`ecology:${h}`],from=structuredClone(d.get(...path(effect.from))),to=structuredClone(d.get(...path(effect.to)));
@@ -110,9 +111,9 @@ registerEffect('wildlife_migrate',{
 // the K5 event-rumor path (npcRumors / hearNpcRumor).
 registerEffect('rumor',{
  validate(engine,effect){
-  if(typeof effect.id!=='string'||!/^[a-z0-9_-]{1,40}$/.test(effect.id)||typeof effect.claim!=='string'||!effect.claim.trim()||effect.claim.length>200)throw Error('传闻效果编号或内容无效');
-  if(!Array.isArray(effect.carriers)||!effect.carriers.length||effect.carriers.some(id=>!engine.world.npcs.some(n=>n.id===id)))throw Error('传闻携带者未登记');
-  if(effect.salience!==undefined&&!int(effect.salience,1,5))throw Error('传闻显著度无效');
+  if(typeof effect.id!=='string'||!/^[a-z0-9_-]{1,40}$/.test(effect.id)||typeof effect.claim!=='string'||!effect.claim.trim()||effect.claim.length>200)throw preconditionFailure('传闻效果编号或内容无效');
+  if(!Array.isArray(effect.carriers)||!effect.carriers.length||effect.carriers.some(id=>!engine.world.npcs.some(n=>n.id===id)))throw preconditionFailure('传闻携带者未登记');
+  if(effect.salience!==undefined&&!int(effect.salience,1,5))throw preconditionFailure('传闻显著度无效');
  },
  apply(d,engine,effect,context){
   const id=`${context.sourceEvent}:rumor:${effect.id}`,rumor=`rumor_event:${id}`,state=d.get('state');
@@ -131,8 +132,8 @@ registerEffect('rumor',{
 registerEffect('standing',{
  validate(engine,effect){
   const known=id=>id==='player'||engine.byId.has(id)||isReputationSettlement(engine,id)||String(id).startsWith('spirit_society:');
-  if(typeof effect.holder!=='string'||typeof effect.target!=='string'||effect.holder===effect.target||!known(effect.holder)||effect.holder==='player'||!known(effect.target))throw Error('立场效果双方未登记');
-  if(!int(Math.abs(effect.delta),1,100))throw Error('立场变化幅度无效');
+  if(typeof effect.holder!=='string'||typeof effect.target!=='string'||effect.holder===effect.target||!known(effect.holder)||effect.holder==='player'||!known(effect.target))throw preconditionFailure('立场效果双方未登记');
+  if(!int(Math.abs(effect.delta),1,100))throw preconditionFailure('立场变化幅度无效');
  },
  apply(d,engine,effect,context){
   if(!standingKind(engine,d.get('state'),effect.holder))return {applied:false,reason:'立场持有者不可记账'};
@@ -144,8 +145,8 @@ registerEffect('standing',{
 // freezes still water; a dry season dries fuel so it can catch fire again.
 registerEffect('environment',{
  validate(engine,effect){
-  if(!['frozen','dry'].includes(effect.state)||!Array.isArray(effect.locations)||!effect.locations.length||effect.locations.some(id=>!engine.world.locations.some(l=>l.id===id)))throw Error('环境效果状态或地点无效');
-  if(effect.state==='frozen'&&!int(effect.minutes,1,360*DAY))throw Error('结冰时长无效');
+  if(!['frozen','dry'].includes(effect.state)||!Array.isArray(effect.locations)||!effect.locations.length||effect.locations.some(id=>!engine.world.locations.some(l=>l.id===id)))throw preconditionFailure('环境效果状态或地点无效');
+  if(effect.state==='frozen'&&!int(effect.minutes,1,360*DAY))throw preconditionFailure('结冰时长无效');
  },
  apply(d,engine,effect,context){
   const changed=[],now=d.get('state','minute');
@@ -168,7 +169,7 @@ registerEffect('environment',{
 // ---- Rules effect table (world/meta/rules.json effectTable) ---------------
 registerEffect('facility',{
  validate(engine,e){
-  if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!engine.byId.has(id))||!['damage','fire','water'].includes(e.action)||e.action==='damage'&&!int(e.amount,1,100))throw Error('设施效果地点、动作或损毁量无效');
+  if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!engine.byId.has(id))||!['damage','fire','water'].includes(e.action)||e.action==='damage'&&!int(e.amount,1,100))throw preconditionFailure('设施效果地点、动作或损毁量无效');
  },
  apply(d,engine,e,context){
   if(e.action==='damage')return {applied:true,changed:damageFacilities(d,engine,e.locations,e.amount,{cause:'灾害',minute:context.minute,sourceEvent:context.sourceEvent})};
@@ -186,14 +187,14 @@ export function hookedEffects(engine,source,owner,stage=null){
 export function assertEffectTable(engine){
  for(const f of engine.world.festivals??[])if(f.runtime?.status==='active')for(const e of f.runtime.effects??[])assertEffect(engine,e,'festival');
  const t=effectTable(engine);if(!t)return;
- if(t.version!==1||!Array.isArray(t.hooks??[])||!Array.isArray(t.seasons??[]))throw Error('效果表版本无效');
+ if(t.version!==1||!Array.isArray(t.hooks??[])||!Array.isArray(t.seasons??[]))throw preconditionFailure('效果表版本无效');
  for(const h of t.hooks??[]){
-  if(!['faction','festival'].includes(h.source)||typeof h.owner!=='string'||!Array.isArray(h.effects)||!h.effects.length)throw Error('效果挂接来源无效');
+  if(!['faction','festival'].includes(h.source)||typeof h.owner!=='string'||!Array.isArray(h.effects)||!h.effects.length)throw preconditionFailure('效果挂接来源无效');
   for(const e of h.effects)assertEffect(engine,e,h.source);
  }
  const ids=new Set();
  for(const s of t.seasons??[]){
-  if(!s.id||ids.has(s.id)||!int(s.season,0,3)||!engine.world.locations.some(l=>l.id===s.settlement)||!Array.isArray(s.effects)||!s.effects.length)throw Error('季节效果编号、季节或地点无效');
+  if(!s.id||ids.has(s.id)||!int(s.season,0,3)||!engine.world.locations.some(l=>l.id===s.settlement)||!Array.isArray(s.effects)||!s.effects.length)throw preconditionFailure('季节效果编号、季节或地点无效');
   ids.add(s.id);for(const e of s.effects)assertEffect(engine,e,'season');
  }
 }

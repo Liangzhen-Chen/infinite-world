@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 // U12a 军队与兵役（指南3.11爵位义务、4.6势力资源、3.13经济）。
 // 势力、郡府、村庄和玩家的兵员都记在 army:<id>，每支队伍同时是一个 U1 组织
@@ -376,7 +377,7 @@ export function advanceMilitary(d,engine,{before,after}){
 const service=state=>state.records?.['military_service:player']??null;
 function findArmy(engine,d,name,{here=true}={}){
  const state=d.get('state'),list=armies(state);
- if(name){const a=list.find(a=>a.id===name||a.id===`army_${name}`||a.name===name);if(!a)throw Error('没有这支队伍');return clone(a);}
+ if(name){const a=list.find(a=>a.id===name||a.id===`army_${name}`||a.name===name);if(!a)throw preconditionFailure('没有这支队伍');return clone(a);}
  const local=list.filter(a=>within(engine,state.location,a.location)||a.location===state.location);
  if(here&&local.length===1)return clone(local[0]);
  throw Error(local.length?'此处有几支队伍，请指明 org':'此处没有驻扎的队伍');
@@ -396,11 +397,11 @@ function inspect(engine,d,args){
 }
 function enlist(engine,d,args,eventId){
  const state=d.get('state'),a=findArmy(engine,d,args.org);
- if(!within(engine,state.location,a.location))throw Error('须到该队伍营地当面报到');
- if(!a.post&&a.party!=='player')throw Error('这支队伍不收外人报到');
- if(a.status==='溃散')throw Error('这支队伍已经溃散');
- if(partyKind(engine,state,a.party)!=='polity'&&standing(engine,state,a.party,'player')<=HOSTILE)throw Error('所属方视你为敌，不收你入营');
- const prior=service(state);if(prior?.status==='在营'&&prior.army!==a.id&&state.records?.[`organization:${prior.army}`]?.members?.player)throw Error('你已在别的队伍服役，先退营（org_leave）');
+ if(!within(engine,state.location,a.location))throw preconditionFailure('须到该队伍营地当面报到');
+ if(!a.post&&a.party!=='player')throw preconditionFailure('这支队伍不收外人报到');
+ if(a.status==='溃散')throw preconditionFailure('这支队伍已经溃散');
+ if(partyKind(engine,state,a.party)!=='polity'&&standing(engine,state,a.party,'player')<=HOSTILE)throw preconditionFailure('所属方视你为敌，不收你入营');
+ const prior=service(state);if(prior?.status==='在营'&&prior.army!==a.id&&state.records?.[`organization:${prior.army}`]?.members?.player)throw preconditionFailure('你已在别的队伍服役，先退营（org_leave）');
  const minute=state.minute,org=clone(d.get(...rec(`organization:${a.id}`)));org.members.player={position:'兵',joinedAt:minute,arrears:0};delete org.removed?.player;holdingSet(d,null,rec(`organization:${a.id}`),org,'military');syncHoldings(d,engine,'org',a.id,{writer:'military',eventId});
  holdingSet(d,null,rec('military_service:player'),{category:'military_service',holder:'player',army:a.id,party:a.party,status:'在营',since:minute,days:0,campaignDays:0,paid:0,history:[...prior?.history??[],...(prior?[{army:prior.army,until:minute}]:[])],sourceEvent:eventId},'military');
  engine.advance(d,30,eventId);
@@ -409,12 +410,12 @@ function enlist(engine,d,args,eventId){
 }
 function duty(engine,d,args,eventId){
  const m=rules(engine),s=service(d.get('state'));
- if(s?.status!=='在营'||!d.get('state','records',`organization:${s.army}`)?.members?.player)throw Error('你不在任何队伍的名册上，先 army_enlist 报到');
- let a=armyOf(d,s.army);if(!within(engine,d.get('state','location'),a.location))throw Error(`须到${a.name}所在地执勤`);
- const days=args.days??1;if(!int(days,1,30))throw Error('执勤日数须在1到30之间');
+ if(s?.status!=='在营'||!d.get('state','records',`organization:${s.army}`)?.members?.player)throw preconditionFailure('你不在任何队伍的名册上，先 army_enlist 报到');
+ let a=armyOf(d,s.army);if(!within(engine,d.get('state','location'),a.location))throw preconditionFailure(`须到${a.name}所在地执勤`);
+ const days=args.days??1;if(!int(days,1,30))throw preconditionFailure('执勤日数须在1到30之间');
  let campaignDays=0,men=0;
  for(let day=0;day<days;day++){
-  a=armyOf(d,s.army);if(!within(engine,d.get('state','location'),a.location))throw Error(`须到${a.name}所在地继续执勤`);
+  a=armyOf(d,s.army);if(!within(engine,d.get('state','location'),a.location))throw preconditionFailure(`须到${a.name}所在地继续执勤`);
   if(a.status==='出征')campaignDays++;
   const t=playerTitle(d.get('state'));
   // Credit each actual day before its annual inspection, including a duty crossing the due date.
@@ -438,36 +439,36 @@ function duty(engine,d,args,eventId){
 function payer(engine,d,args){
  if(!args.org)return 'player';
  const state=d.get('state');let id=args.org;
- if(!state.records?.[`organization:${id}`])try{id=engine.resolve(args.org);}catch{throw Error('没有这个组织');}
- const org=organization(engine,state,id);if(!org||org.source!=='created'||org.kind==='军团')throw Error('私兵须挂在你创立或领导的组织名下（world_create org）');
- if(org.leader!=='player')throw Error('只有组织首领能以组织名义募兵');
+ if(!state.records?.[`organization:${id}`])try{id=engine.resolve(args.org);}catch{throw preconditionFailure('没有这个组织');}
+ const org=organization(engine,state,id);if(!org||org.source!=='created'||org.kind==='军团')throw preconditionFailure('私兵须挂在你创立或领导的组织名下（world_create org）');
+ if(org.leader!=='player')throw preconditionFailure('只有组织首领能以组织名义募兵');
  return id;
 }
 function recruit(engine,d,args,eventId){
  const m=rules(engine),state=d.get('state'),party=payer(engine,d,args),quantity=args.quantity??m.recruit.perCall;
- if(!int(quantity,1,m.recruit.perCall))throw Error(`一次至多招${m.recruit.perCall}人`);
+ if(!int(quantity,1,m.recruit.perCall))throw preconditionFailure(`一次至多招${m.recruit.perCall}人`);
  const id=`army_p_${party==='player'?'player':party.replace(/[^a-z0-9_]/gi,'_').toLowerCase()}`.slice(0,46);
  let a=armyOf(d,id);
  const merc=args.choice==='mercenary';
  const company=merc?(m.mercenaries??[]).find(c=>within(engine,state.location,c.location)||c.location===state.location):null;
- if(merc&&!company)throw Error('此处没有可雇的佣兵团');
- if(!merc&&!m.recruit.places.some(p=>within(engine,state.location,p)||p===state.location))throw Error('此处招不到愿意吃粮当兵的人');
+ if(merc&&!company)throw preconditionFailure('此处没有可雇的佣兵团');
+ if(!merc&&!m.recruit.places.some(p=>within(engine,state.location,p)||p===state.location))throw preconditionFailure('此处招不到愿意吃粮当兵的人');
  const minute=state.minute;
  if(!a)a=clone(createArmy(d,engine,{id,name:`${partyName(engine,state,party)}私兵`,party,base:state.location,location:state.location,supply:'purchase',regular:0,training:10,morale:m.soldier.moraleBase,payCopperMonth:m.recruit.payCopperMonth,leader:'player'},minute,eventId));
  if(a.status==='溃散')a.status='驻守';
- if(armyStrength(a)+quantity>m.recruit.maxPrivate)throw Error(`私兵至多${m.recruit.maxPrivate}人`);
+ if(armyStrength(a)+quantity>m.recruit.maxPrivate)throw preconditionFailure(`私兵至多${m.recruit.maxPrivate}人`);
  if(merc){
   const hired=armies(state).reduce((n,x)=>n+(x.mercenary?.org===company.org?x.mercenary.count:0),0);
-  if(hired+quantity>company.soldiers)throw Error(`${nameOf(engine,company.org)}眼下只剩${company.soldiers-hired}人可雇`);
-  if(a.mercenary&&a.mercenary.org!==company.org)throw Error('一支队伍只与一家佣兵团订约');
+  if(hired+quantity>company.soldiers)throw preconditionFailure(`${nameOf(engine,company.org)}眼下只剩${company.soldiers-hired}人可雇`);
+  if(a.mercenary&&a.mercenary.org!==company.org)throw preconditionFailure('一支队伍只与一家佣兵团订约');
   const cost=quantity*company.payCopperMonth;
-  if(partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',partial:false,books:{account:partyAccount(engine,d.get('state'),company.org),writer:'military',eventId}})!==cost)throw Error(`首月佣金${cost}铜付不出；可先存入组织公库或向钱庄借款`);
+  if(partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',partial:false,books:{account:partyAccount(engine,d.get('state'),company.org),writer:'military',eventId}})!==cost)throw preconditionFailure(`首月佣金${cost}铜付不出；可先存入组织公库或向钱庄借款`);
   partyCredit(d,engine,company.org,cost,{sourceEvent:eventId,reason:'佣兵首月佣金',books:BOOKED});
   a.mercenary={org:company.org,count:(a.mercenary?.count??0)+quantity,payCopperMonth:company.payCopperMonth};
   a.training=Math.round((a.training*(armyStrength(a)-quantity)+company.training*quantity)/armyStrength(a));
  }else{
   const cost=quantity*m.recruit.signOnCopper;
-  if(cost&&partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'募兵安家钱',partial:false,books:{account:sink('export','recruit'),writer:'military',eventId}})!==cost)throw Error(`安家钱${cost}铜付不出；可先存入组织公库或向钱庄借款`);
+  if(cost&&partyPay(d,engine,party,cost,{sourceEvent:eventId,reason:'募兵安家钱',partial:false,books:{account:sink('export','recruit'),writer:'military',eventId}})!==cost)throw preconditionFailure(`安家钱${cost}铜付不出；可先存入组织公库或向钱庄借款`);
   a.private+=quantity;
  }
  log(a,{kind:merc?'雇佣':'招募',quantity,minute,sourceEvent:eventId});saveArmy(d,a);
@@ -477,9 +478,9 @@ function recruit(engine,d,args,eventId){
 }
 function dismiss(engine,d,args,eventId){
  const a=findArmy(engine,d,args.org,{here:false}),state=d.get('state');
- const lead=a.party==='player'||state.records?.[`organization:${a.party}`]?.leader==='player';if(!lead)throw Error('只能遣散自己的私兵');
- if(a.war&&a.status==='出征')throw Error('出征中的队伍不能就地遣散');
- const n=args.quantity??armyStrength(a);if(!int(n,1,armyStrength(a)))throw Error('遣散人数无效');
+ const lead=a.party==='player'||state.records?.[`organization:${a.party}`]?.leader==='player';if(!lead)throw preconditionFailure('只能遣散自己的私兵');
+ if(a.war&&a.status==='出征')throw preconditionFailure('出征中的队伍不能就地遣散');
+ const n=args.quantity??armyStrength(a);if(!int(n,1,armyStrength(a)))throw preconditionFailure('遣散人数无效');
  let left=n;const fromPrivate=Math.min(left,a.private);a.private-=fromPrivate;left-=fromPrivate;
  if(left&&a.mercenary){const k=Math.min(left,a.mercenary.count);a.mercenary.count-=k;left-=k;if(!a.mercenary.count)a.mercenary=null;}
  if(!armyStrength(a))a.status='溃散';
@@ -487,7 +488,7 @@ function dismiss(engine,d,args,eventId){
  return {army:a.id,dismissed:n-left,strength:armyStrength(a)};
 }
 export function militaryAction(d,args,eventId){
- const engine=this;if(!rules(engine))throw Error('此世界尚未登记军务规则');assertMilitary(engine);
+ const engine=this;if(!rules(engine))throw preconditionFailure('此世界尚未登记军务规则');assertMilitary(engine);
  if(args.operation!=='army_inspect')ensureArmies(d,engine,d.get('state','minute'));
  switch(args.operation){
  case 'army_inspect':return inspect(engine,d,args);
@@ -495,7 +496,7 @@ export function militaryAction(d,args,eventId){
  case 'army_duty':return duty(engine,d,args,eventId);
  case 'army_recruit':return recruit(engine,d,args,eventId);
  case 'army_dismiss':return dismiss(engine,d,args,eventId);
- default:throw Error('未知军务操作');
+ default:throw preconditionFailure('未知军务操作');
  }
 }
 
@@ -503,10 +504,10 @@ export function militaryAction(d,args,eventId){
 export function titleMilitaryService(d,engine,days,eventId){
  ensureArmies(d,engine,d.get('state','minute'));
  const state=d.get('state'),post=armies(state).find(a=>a.post&&within(engine,state.location,a.location)&&a.status!=='溃散');
- if(!post)throw Error('此处没有可登记爵位兵役的驻营');
+ if(!post)throw preconditionFailure('此处没有可登记爵位兵役的驻营');
  if(service(state)?.army!==post.id||!state.records[`organization:${post.id}`]?.members?.player)enlist(engine,d,{org:post.id},`${eventId}:enlist`);
  for(let left=days;left>0;left-=30)duty(engine,d,{days:Math.min(30,left)},`${eventId}:duty:${left}`);
- const t=playerTitle(d.get('state'));if(!t)throw Error('爵位已除');
+ const t=playerTitle(d.get('state'));if(!t)throw preconditionFailure('爵位已除');
  if(!days)holdingSet(d,engine,rec('title:player'),{...t,levy:{...t.levy,attended:true}},'military');
  return {title:t.title,army:post.id,served:t.levy.served,required:t.levy.men*t.levy.days,men:t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0))};
 }

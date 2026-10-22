@@ -134,6 +134,15 @@ export function aliveHoldings(d,{kind,holder,subject,source}={}){
         .sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));
 }
 export const holdingRow=(d,id)=>rowOf(d,id);
+// A read-only view of a plain document. It is cached per document object, so
+// repeated aliveHoldings queries on one document share an index that is rebuilt
+// only when holdings.seq moves, instead of scanning every row each time.
+const views=new WeakMap();
+export function holdingsView(document){
+    let view=views.get(document);
+    if(!view){view={get:(...path)=>path.reduce((value,key)=>value?.[key],document)};views.set(document,view);}
+    return view;
+}
 // 某个来源单元在存储里的存活持有、存活实体与位置事实（双写按单元比对时用，不扫全表）。
 export function holdingsOfSource(d,source){
     if(!holdingsActive(d))return {holdings:[],entities:[],locations:[]};

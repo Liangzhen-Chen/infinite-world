@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // U6: signed works. Through world_research operations a player writes and
 // publishes books, copies skill books, performs, surveys maps and runs skill
 // fusion experiments; finished crafts by painters and sculptors register as
@@ -32,8 +33,8 @@ export const WORK_RULES=Object.freeze({
 const QUALITY=['粗糙','普通','精良','优秀','杰作'];
 const OPERATIONS=new Set(['write','publish','copy','perform','survey','fuse']);
 export const isWorkOperation=operation=>OPERATIONS.has(operation);
-const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}需在${min}到${max}之间`);return value;};
-const text=(value,label)=>{if(typeof value!=='string'||!value.trim()||value.length>200)throw new Error(`${label}无效`);return value.trim();};
+const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}需在${min}到${max}之间`);return value;};
+const text=(value,label)=>{if(typeof value!=='string'||!value.trim()||value.length>200)throw preconditionFailure(`${label}无效`);return value.trim();};
 const grade=value=>`${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 // Same scale as manufacturing workmanship.
 export const workQuality=(outcome,proficiency)=>!outcome.success?null:outcome.degree==='勉强成功'?'粗糙':outcome.degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
@@ -41,14 +42,14 @@ const factor=(engine,quality)=>engine.rules.equipment.workmanship?.find(row=>row
 
 function learned(d,engine,name,label){
     const skill=engine.resolve(name,'skill');
-    if(!d.get('state','skills',skill))throw new Error(`尚未掌握${label??engine.byId.get(skill)?.name??skill}`);
+    if(!d.get('state','skills',skill))throw preconditionFailure(`尚未掌握${label??engine.byId.get(skill)?.name??skill}`);
     return skill;
 }
 function literate(d,engine){
-    if((d.get('state','skills',WORK_RULES.literacySkill,'proficiency')??0)<engine.rules.books.minimumLiteracy)throw new Error('识字熟练度不足');
+    if((d.get('state','skills',WORK_RULES.literacySkill,'proficiency')??0)<engine.rules.books.minimumLiteracy)throw preconditionFailure('识字熟练度不足');
 }
 function spend(d,engine,rows,eventId,recipe){
-    for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw new Error(`缺少${engine.byId.get(item)?.name??item}`);
+    for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${engine.byId.get(item)?.name??item}`);
     for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount,craftInput('works',eventId));
     recordCraft(d,{recipe,batches:1,inputs:Object.fromEntries(rows),outputs:{},writer:'works',eventId});
 }
@@ -69,7 +70,7 @@ function save(d,work){d.set(['state','works',work.id],work);return work;}
 export function addFame(d,engine,settlement,fame,sourceEvent,reason){
     if(!settlement||!fame)return null;
     const id=`reputation:${digest(['player','settlement',settlement]).slice(0,24)}`,old=d.get('state','records',id);
-    if(old&&old.category!=='reputation')throw new Error('声望账记录编号冲突');
+    if(old&&old.category!=='reputation')throw preconditionFailure('声望账记录编号冲突');
     const account=old??{category:'reputation',subject:'player',scope:'settlement',target:settlement,reputation:0,fame:0,notoriety:0,deltas:[]};
     if(account.deltas.some(row=>row.sourceEvent===sourceEvent&&row.stage==='work'))return null;
     const minute=d.get('state','minute');
@@ -85,7 +86,7 @@ function write(d,engine,args,id){
     literate(d,engine);
     const title=text(args.name,'书名'),concept=text(args.concept,'内容提要'),skill=learned(d,engine,(args.skills??[])[0]??WORK_RULES.literacySkill);
     const teaches=[...new Set((args.entities??[skill]).map(x=>engine.resolve(x)))];
-    for(const entity of teaches)if(!['skill','recipe','spell'].includes(entity.split('_')[0])||!knowsKnowledge(engine,d.get('state'),'player',entity))throw Error('只能写入本人已掌握的已登记技能、配方或法术');
+    for(const entity of teaches)if(!['skill','recipe','spell'].includes(entity.split('_')[0])||!knowsKnowledge(engine,d.get('state'),'player',entity))throw preconditionFailure('只能写入本人已掌握的已登记技能、配方或法术');
     const minutes=integer(args.minutes??240,120,480,'写作时间');
     spend(d,engine,[[WORK_RULES.paper,1]],id,'works:write');
     engine.advance(d,minutes,id);
@@ -105,12 +106,12 @@ function write(d,engine,args,id){
 
 function publish(d,engine,args,id){
     const work=d.get('state','works',args.project);
-    if(!work||work.kind!=='manuscript'||work.author!=='player')throw new Error('需要自己写成的署名书稿');
+    if(!work||work.kind!=='manuscript'||work.author!=='player')throw preconditionFailure('需要自己写成的署名书稿');
     const unit=d.get('state','itemInstances',work.instance);
-    if(!unit||unit.owner!=='player'||unit.status!=='持有')throw new Error('书稿不在手边');
-    const{location,settlement}=placeOf(d,engine);if(!settlement)throw new Error('出版需要在有印坊书肆的聚落');
+    if(!unit||unit.owner!=='player'||unit.status!=='持有')throw preconditionFailure('书稿不在手边');
+    const{location,settlement}=placeOf(d,engine);if(!settlement)throw preconditionFailure('出版需要在有印坊书肆的聚落');
     const coins=integer(args.coins,WORK_RULES.printCost,WORK_RULES.printCost*200,'印刷费'),printed=Math.floor(coins/WORK_RULES.printCost);
-    if(d.get('state','player','coins')<coins)throw new Error('印刷费不足');
+    if(d.get('state','player','coins')<coins)throw preconditionFailure('印刷费不足');
     moveCoins(d,{from:purse(engine,'player'),to:sink('export','printing'),amount:coins,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,60,id);
@@ -141,10 +142,10 @@ export function heldBookGrade(d,engine,item){
 
 function copy(d,engine,args,id){
     const selected=d.get('state','itemInstances',args.project),item=selected?.item??engine.resolve(args.project,'item'),definition=engine.byId.get(item);
-    if(!definition.book&&!selected?.book)throw new Error('只能抄写技能书');
-    if(engine.quantity(d,'player',item)<1)throw new Error('抄写需要手头有原本');
+    if(!definition.book&&!selected?.book)throw preconditionFailure('只能抄写技能书');
+    if(engine.quantity(d,'player',item)<1)throw preconditionFailure('抄写需要手头有原本');
     literate(d,engine);learned(d,engine,WORK_RULES.scribeSkill,'抄写员技能');
-    const source=selected?.book&&selected.owner==='player'&&selected.status==='持有'&&selected.durability!==0?{unit:selected,index:engine.rules.books.grades.indexOf(selected.book.grade)}:heldBookGrade(d,engine,item);if(!source||source.index<0)throw new Error('原本已损坏，不能作为抄写底本');
+    const source=selected?.book&&selected.owner==='player'&&selected.status==='持有'&&selected.durability!==0?{unit:selected,index:engine.rules.books.grades.indexOf(selected.book.grade)}:heldBookGrade(d,engine,item);if(!source||source.index<0)throw preconditionFailure('原本已损坏，不能作为抄写底本');
     const grades=engine.rules.books.grades,scribe=effectiveProficiency(d,engine,WORK_RULES.scribeSkill);
     const index=Math.min(source.index,Math.floor(scribe/300),grades.length-1),minutes=engine.rules.books.readingMinutes[source.index];
     spend(d,engine,[[WORK_RULES.paper,source.index+1],[WORK_RULES.ink,1]],id,'works:copy');
@@ -166,9 +167,9 @@ function copy(d,engine,args,id){
 
 function perform(d,engine,args,id){
     const title=text(args.name,'曲目'),skill=learned(d,engine,(args.skills??[])[0]??'skill_life_13_core');
-    const{location,settlement}=placeOf(d,engine);if(!settlement)throw new Error('表演需要在聚落里的场地');
+    const{location,settlement}=placeOf(d,engine);if(!settlement)throw preconditionFailure('表演需要在聚落里的场地');
     const before=d.get('state'),audience=presentWitnesses(before,location);
-    if(!audience.length)throw new Error('场地没有观众');
+    if(!audience.length)throw preconditionFailure('场地没有观众');
     const minutes=integer(args.minutes??60,30,240,'表演时间');
     engine.advance(d,minutes,id);
     const proficiency=effectiveProficiency(d,engine,skill),outcome=engine.check(d,{attribute:engine.byId.get(skill)?.attribute??'魅力',skill,difficulty:15},id),quality=workQuality(outcome,proficiency);
@@ -221,16 +222,16 @@ const related=(engine,a,b)=>{
 };
 function fuse(d,engine,args,id){
     const rule=WORK_RULES.fusion,skills=(args.skills??[]).map(name=>engine.resolve(name,'skill'));
-    if(skills.length!==2||skills[0]===skills[1])throw new Error('融合需要两项不同技能');
-    const values=skills.map(skill=>{if(!d.get('state','skills',skill))throw new Error('尚未掌握参与融合的技能');return effectiveProficiency(d,engine,skill);});
-    if(values.some(v=>v<rule.minimumProficiency))throw new Error('两项技能都需至少高级1等');
-    if(!related(engine,...skills))throw new Error('两项技能缺少共同机制，不能融合');
+    if(skills.length!==2||skills[0]===skills[1])throw preconditionFailure('融合需要两项不同技能');
+    const values=skills.map(skill=>{if(!d.get('state','skills',skill))throw preconditionFailure('尚未掌握参与融合的技能');return effectiveProficiency(d,engine,skill);});
+    if(values.some(v=>v<rule.minimumProficiency))throw preconditionFailure('两项技能都需至少高级1等');
+    if(!related(engine,...skills))throw preconditionFailure('两项技能缺少共同机制，不能融合');
     const name=text(args.name,'融合技能名'),mechanism=text(args.concept,'共同机制');
     const pair=[...skills].sort();
-    if(Object.values(d.get('state','created')??{}).some(row=>row.fusion&&row.fusion.join('+')===pair.join('+')))throw new Error('这两项技能已经融合过');
-    try{engine.resolve(name);throw new Error('名称已存在');}catch(error){if(!error.message.includes('未登记'))throw error;}
+    if(Object.values(d.get('state','created')??{}).some(row=>row.fusion&&row.fusion.join('+')===pair.join('+')))throw preconditionFailure('这两项技能已经融合过');
+    try{engine.resolve(name);throw preconditionFailure('名称已存在');}catch(error){if(!error.message.includes('未登记'))throw error;}
     const coins=integer(args.coins??rule.minimumCoins,rule.minimumCoins,10000,'实验材料费'),minutes=integer(args.minutes??rule.minimumMinutes,rule.minimumMinutes,480,'实验时间');
-    if(d.get('state','player','coins')<coins)throw new Error('实验材料费不足');
+    if(d.get('state','player','coins')<coins)throw preconditionFailure('实验材料费不足');
     moveCoins(d,{from:purse(engine,'player'),to:sink('export','research'),amount:coins,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,minutes,id);
@@ -254,7 +255,7 @@ export function workAction(d,args,id){
     if(op==='perform')return perform(d,this,args,id);
     if(op==='survey')return survey(d,this,args,id);
     if(op==='fuse')return fuse(d,this,args,id);
-    throw new Error('未知作品操作');
+    throw preconditionFailure('未知作品操作');
 }
 
 // Painting and sculpture from the existing manufacture flow: a skilled finish

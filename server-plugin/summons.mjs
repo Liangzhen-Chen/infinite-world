@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {vocabulary} from './domain-rules.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('summons',{sinks:['sink:consume']});
@@ -36,35 +38,35 @@ export function validateSummonCatalog(catalog) {
 
 function waterSite(d,engine,target,authorization){
  const row=environmentFeatures(engine).find(x=>x.id===target&&x.location===d.get('state','location'));
- if(!row||!['water','container'].includes(row.kind))throw Error('水中守卫需要所在地真实水体');
+ if(!row||!['water','container'].includes(row.kind))throw preconditionFailure('水中守卫需要所在地真实水体');
  const state=d.get('state','records',`physical_feature:${row.id}`)?.state??row.state;
  const position=d.get('state','records','local_player_position');const point=position?.location===row.location?position.point:[0,0];
- if(!Number.isFinite(state.waterMl)||state.waterMl<2000||!Array.isArray(row.position)||row.position.length!==2||row.position.some(x=>!Number.isFinite(x))||!Array.isArray(point)||point.some(x=>!Number.isFinite(x))||Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>1)throw Error('水中守卫须接触至少两升现有水体');
+ if(!Number.isFinite(state.waterMl)||state.waterMl<2000||!Array.isArray(row.position)||row.position.length!==2||row.position.some(x=>!Number.isFinite(x))||!Array.isArray(point)||point.some(x=>!Number.isFinite(x))||Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>1)throw preconditionFailure('水中守卫须接触至少两升现有水体');
  if(row.owner!=='player'&&row.access!=='public'){
-  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw Error('水体所有者未授权');
+  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw preconditionFailure('水体所有者未授权');
  }
  return{waterFeature:row.id,initialWaterMl:state.waterMl,waterPoint:[...row.position]};
 }
 
 export function prepareSummon(d, catalog, args, {completion=false}={}) {
-    if (!this.rules.petCare) throw new Error('世界尚未登记召唤契约规则');
+    if (!this.rules.petCare) throw preconditionFailure('世界尚未登记召唤契约规则');
     if(catalog.effectSpec.kind==='summon_contract'){
       const summon=resolveSummon(this,d,args.target??args.summon),effect=d.get('state','effects',summon);
-      if(effect.location!==d.get('state','location'))throw Error('召唤契约主体不在场');
+      if(effect.location!==d.get('state','location'))throw preconditionFailure('召唤契约主体不在场');
       if(catalog.effectSpec.operation==='extend'){
         const offer=catalog.effectSpec.offering;
-        if(!this.byId.has(offer.item)||this.quantity(d,'player',offer.item)<offer.amount)throw Error('续约缺少真实供品');
-        if(effect.expires+catalog.effectSpec.power-d.get('state','minute')>summonTemplates[effect.summonType].maximumDuration)throw Error('续约超过模板剩余时限');
+        if(!this.byId.has(offer.item)||this.quantity(d,'player',offer.item)<offer.amount)throw preconditionFailure('续约缺少真实供品');
+        if(effect.expires+catalog.effectSpec.power-d.get('state','minute')>summonTemplates[effect.summonType].maximumDuration)throw preconditionFailure('续约超过模板剩余时限');
       }
       return{catalog,spec:catalog.effectSpec,target:summon,args:{...args,target:summon}};
     }
     const template=summonTemplates[catalog.effectSpec.summonType];
     const proficiency=d.get('state','skills',catalog.skill,'proficiency')??0;
-    if(!Number.isSafeInteger(proficiency)||proficiency<0||proficiency>2699)throw Error('召唤熟练度记录无效');
+    if(!Number.isSafeInteger(proficiency)||proficiency<0||proficiency>2699)throw preconditionFailure('召唤熟练度记录无效');
     const medium=template.waterOnly?waterSite(d,this,args.target,args.authorization):template.work?prepareSummonWork.call(this,d,catalog,args,{completion}):{};
-    if (!template.work&&!template.waterOnly&&!['player', d.get('state', 'location')].includes(args.target ?? 'player')) throw new Error('只能在施术者当前位置召唤');
+    if (!template.work&&!template.waterOnly&&!['player', d.get('state', 'location')].includes(args.target ?? 'player')) throw preconditionFailure('只能在施术者当前位置召唤');
     const count = Object.values(d.get('state', 'effects')).filter(effect => effect.kind === 'summon' && effect.owner === 'player').length;
-    if (count >= this.rules.petCare.maximumSummons) throw new Error('同时维持召唤的名额已满');
+    if (count >= this.rules.petCare.maximumSummons) throw preconditionFailure('同时维持召唤的名额已满');
     return { catalog, spec: catalog.effectSpec, target: 'player',args:{...args},medium };
 }
 
@@ -75,7 +77,7 @@ export function applySummon(d, prepared, eventId) {
     if(spec.kind==='summon_contract'){
       if(spec.operation!=='extend')return summonAction.call(this,d,{operation:spec.operation,summon:prepared.target},eventId);
       const effect=d.get('state','effects',prepared.target),record=d.get('state','records',effect.contract);
-      if(record?.category!=='summon_contract'||record.effect!==prepared.target)throw Error('续约记录不一致');
+      if(record?.category!=='summon_contract'||record.effect!==prepared.target)throw preconditionFailure('续约记录不一致');
       this.itemDelta(d,'player',spec.offering.item,-spec.offering.amount,{flow:'sink:consume',purpose:'offering',writer:'summons',eventId});
       const expires=effect.expires+spec.power;
       d.set(['state','effects',prepared.target,'expires'],expires);
@@ -100,7 +102,7 @@ export function applySummon(d, prepared, eventId) {
 
 function end(d, id, effect, status, minute) {
     const record = d.get('state', 'records', effect.contract);
-    if (record?.category !== 'summon_contract' || record.effect !== id || record.owner !== effect.owner) throw new Error('召唤契约记录不一致，停止结算');
+    if (record?.category !== 'summon_contract' || record.effect !== id || record.owner !== effect.owner) throw preconditionFailure('召唤契约记录不一致，停止结算');
     if(record.upkeepObligation)endSummonUpkeep(d,d.engine,{id:record.upkeepObligation,summon:id,minute,reason:status});
     d.set(['state', 'records', effect.contract], { ...record, status, ended: minute });
     for(const[key,e]of Object.entries(d.get('state','effects')))if(e.summonSource===id)d.remove(['state','effects',key]);
@@ -121,7 +123,7 @@ export function advanceSummons(d, after, effectIds) {
         if (effect.expires <= due) { end(d, id, effect, '期满', effect.expires); continue; }
         if (player.mp < effect.terms.upkeepMp) { end(d, id, effect, '维持魔力不足', due); continue; }
         const record = d.get('state', 'records', effect.contract);
-        if (record?.category !== 'summon_contract' || record.effect !== id) throw new Error('召唤维持契约丢失，停止结算');
+        if (record?.category !== 'summon_contract' || record.effect !== id) throw preconditionFailure('召唤维持契约丢失，停止结算');
         d.set(['state', 'player', 'mp'], player.mp - effect.terms.upkeepMp);
         d.set(['state', 'records', effect.contract], { ...record, paidUpkeep: record.paidUpkeep + effect.terms.upkeepMp });
         d.set(['state', 'effects', id, 'nextUpkeep'], effect.nextUpkeep + effect.terms.upkeepMinutes);
@@ -140,9 +142,9 @@ function resolveSummon(engine, d, requested) {
     if (direct) return direct.id;
     const matches = active.filter(row => row.name === requested || engine.byId.get(d.get('state', 'effects', row.id, 'spell'))?.aliases?.includes(requested));
     if (matches.length === 1) return matches[0].id;
-    if (matches.length > 1) throw new Error(`同名役灵不止一只，请选择真实实例编号：${matches.map(row => row.id).join('、')}`);
-    if (active.length) throw new Error('召唤编号未匹配；你仍有有效契约，请用world_summon inspect查编号，不应宣称没有役灵');
-    throw new Error('没有仍有效的自有召唤契约');
+    if (matches.length > 1) throw preconditionFailure(`同名役灵不止一只，请选择真实实例编号：${matches.map(row => row.id).join('、')}`);
+    if (active.length) throw preconditionFailure('召唤编号未匹配；你仍有有效契约，请用world_summon inspect查编号，不应宣称没有役灵');
+    throw preconditionFailure('没有仍有效的自有召唤契约');
 }
 
 export function summonAction(d, args, eventId) {
@@ -150,26 +152,26 @@ export function summonAction(d, args, eventId) {
     if (operation === 'inspect') return { summons: summonView(this, d.document).filter(row=>!args.summon||row.id===resolveSummon(this,d,args.summon)) };
     args = { ...args, summon: resolveSummon(this, d, args.summon) };
     const effect = d.get('state', 'effects', args.summon);
-    if (effect?.kind !== 'summon' || effect.owner !== 'player' || effect.expires <= d.get('state', 'minute')) throw new Error('没有仍有效的自有召唤契约');
+    if (effect?.kind !== 'summon' || effect.owner !== 'player' || effect.expires <= d.get('state', 'minute')) throw preconditionFailure('没有仍有效的自有召唤契约');
     if (operation === 'dismiss') {
       const contract=d.get('state','records',effect.contract),id=contract?.upkeepObligation;
       if(id){
         const row=obligationRow(d.get('state'),id),view=obligationView(d.get('state'),id);
         if(row?.kind!=='upkeep'||row.debtor!==effect.owner||row.creditor!==args.summon||view.closed||view.owed||
             row.terms.peacefulDismissal!==true||row.terms.active!==true||row.terms.overdue!==false||row.terms.thirdPartyRights!==false)throw Error('Upkeep terms do not allow peaceful dismissal');
-        closeObligation(d,this,{id,actor:effect.owner,party:effect.owner,reason:'peaceful_dismissal'},eventId);
+        closeObligation(d,this,{id,actor:effect.owner,party:effect.owner,reason:vocabulary(this,'closeReasons','dismissal')},eventId);
       }
       end(d, args.summon, effect, '和平解离', d.get('state', 'minute'));return {summon:args.summon,dismissed:true,...(id?{obligation:id}:{})};
     }
     if(operation==='guard'){
-      if(!effect.terms.tasks.includes('guard')||effect.location!==d.get('state','location')||!Number.isSafeInteger(effect.guardReserve)||effect.guardReserve<1)throw Error('没有可用的在场守卫额度');
+      if(!effect.terms.tasks.includes('guard')||effect.location!==d.get('state','location')||!Number.isSafeInteger(effect.guardReserve)||effect.guardReserve<1)throw preconditionFailure('没有可用的在场守卫额度');
       if(effect.waterFeature)waterSite(d,this,effect.waterFeature,args.authorization);
       const result=applyProtectionPrimitive(d,{spec:{kind:'protection',power:effect.guardReserve,damageTypes:['physical'],stacking:'strongest'},target:'player',spell:effect.spell,duration:effect.expires-d.get('state','minute')},eventId);
       d.set(['state','effects',eventId,'summonSource'],args.summon);d.set(['state','effects',args.summon,'guardReserve'],0);
       return{summon:args.summon,...result};
     }
-    if (operation !== 'carry_water' || effect.summonType !== 'water_cup') throw new Error('这只役灵没有所请求的契约能力');
-    if (effect.location !== d.get('state', 'location')) throw new Error('役灵不在场');
+    if (operation !== 'carry_water' || effect.summonType !== 'water_cup') throw preconditionFailure('这只役灵没有所请求的契约能力');
+    if (effect.location !== d.get('state', 'location')) throw preconditionFailure('役灵不在场');
     servantCarryWater.call(this, d, args, effect.terms.maximumWaterMl, true);
     this.advance(d, effect.terms.actionMinutes, eventId);
     const current = d.get('state', 'effects', args.summon);

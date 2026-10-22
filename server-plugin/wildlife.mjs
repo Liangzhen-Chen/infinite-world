@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView} from './forest-water.mjs';
@@ -24,16 +25,16 @@ const alive=(a,d,id)=>a&&isLiving(null,d,id)&&a.hp>0;
 // source event; an absent consumer must never masquerade as an awakening.
 export function assertWildlifeAwakeningEffect(engine,effect){
     const consumer=engine.wildlifeAwakening;
-    if(typeof consumer?.validate!=='function'||typeof consumer?.apply!=='function')throw Error('野兽觉醒效果未实现：需要 T160 wildlifeAwakening 消费者');
-    if(typeof effect.target!=='string'||!effect.target)throw Error('野兽觉醒需要具体个体编号');
+    if(typeof consumer?.validate!=='function'||typeof consumer?.apply!=='function')throw preconditionFailure('野兽觉醒效果未实现：需要 T160 wildlifeAwakening 消费者');
+    if(typeof effect.target!=='string'||!effect.target)throw preconditionFailure('野兽觉醒需要具体个体编号');
     consumer.validate(engine,effect);
 }
 export function applyWildlifeAwakeningEffect(d,engine,effect,context){
     assertWildlifeAwakeningEffect(engine,effect);
     const actor=d.get('state','creatures',effect.target);
-    if(!alive(actor,d,effect.target)||!actor.species||!actor.ecology)throw Error('野兽觉醒目标不是存活的生态个体');
+    if(!alive(actor,d,effect.target)||!actor.species||!actor.ecology)throw preconditionFailure('野兽觉醒目标不是存活的生态个体');
     const result=engine.wildlifeAwakening.apply(d,engine,effect,context);
-    if(!result||typeof result.applied!=='boolean')throw Error('野兽觉醒消费者缺少 applied 回执');
+    if(!result||typeof result.applied!=='boolean')throw preconditionFailure('野兽觉醒消费者缺少 applied 回执');
     return result;
 }
 const random=(engine,seed,label)=>seededRandom(createHash('sha256').update(`${seed}:${canonical(engine.rules.wildlife)}:${label}`).digest().readUInt32LE(0));
@@ -81,7 +82,7 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const latest=clone(d.get(...path(habitat.id))),p=latest.populations[s.id];
     if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return null;
     const hash=createHash('sha256').update(`${d.document.randomSeed}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
-    if(d.get('state','created',id)||d.get('state','creatures',id))throw new Error('个体编号已存在，拒绝重复接触');
+    if(d.get('state','created',id)||d.get('state','creatures',id))throw preconditionFailure('个体编号已存在，拒绝重复接触');
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
     p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
     holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location},'wildlife');
@@ -146,8 +147,8 @@ export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
     // Ranges founded during this advance (tribal-awakening.mjs) join the day's settlement at once.
     for(const habitat of [...engine.rules.wildlife.habitats,...(engine.runtimeHabitats??[])]){
-        const r=clone(d.get(...path(habitat.id)));if(!r)throw new Error('生态记录未迁移');
-        if(r.lastDay!==day-1)throw new Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
+        const r=clone(d.get(...path(habitat.id)));if(!r)throw preconditionFailure('生态记录未迁移');
+        if(r.lastDay!==day-1)throw preconditionFailure(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
         const species=speciesAt(engine,habitat),forest=forestView(engine,lookState(d),habitat.location);
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
@@ -177,15 +178,15 @@ export function advanceWildlife(d,engine,day){
     advanceWildlifeAwakening(d,engine,day);
 }
 export function resolveCreature(engine,d,name){
-    if(typeof name!=='string'||!name.trim())throw new Error('需要实际动物名称或实例编号');
+    if(typeof name!=='string'||!name.trim())throw preconditionFailure('需要实际动物名称或实例编号');
     const candidates=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===d.get('state','location')&&
         [id,a.name,engine.byId.get(a.species)?.name].includes(name));
-    if(candidates.length>1)throw new Error('同场景有多个同名动物，请使用实际实例编号');
+    if(candidates.length>1)throw preconditionFailure('同场景有多个同名动物，请使用实际实例编号');
     return candidates.length===1?candidates[0][0]:engine.resolve(name);
 }
 export function recordWildlifeDeath(d,engine,target,eventId){
     const actor=d.get('state','creatures',target);if(!actor?.ecology||actor.corpse)return null;
-    const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw new Error('生态个体缺物种定义');
+    const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw preconditionFailure('生态个体缺物种定义');
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
     const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
         items:clone(bone.drops)};holdingSet(d,null,['state','creatures',target,'corpse'],corpse,'wildlife');
@@ -206,19 +207,19 @@ export function wildlifePriceFactor(engine,document,item,location){
 }
 const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.randomSeed,id,a,d.get('state','minute'));return mind?{mind}:{};};
 export function wildlifeAction(d,args,eventId){
-    if(!this.rules.wildlife)throw new Error('当前世界没有启用野外生态');
+    if(!this.rules.wildlife)throw preconditionFailure('当前世界没有启用野外生态');
     const operation=args.operation??'observe';
     if(awakeningOperations.includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
     const habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
-    if(!habitat)throw new Error('这里没有登记可接触的野外栖地');
+    if(!habitat)throw preconditionFailure('这里没有登记可接触的野外栖地');
     if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
         ...(a.corpse?{corpse:{status:a.corpse.status,expires:a.corpse.expires,hasMaterials:a.corpse.items.length>0}}:{})})),traces:wildlifeEncounterView(d.document).filter(r=>r.kind==='trace'),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='track'){
         const r=clone(d.get(...path(habitat.id))),here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===habitat.location&&alive(a,d,id)).map(([,a])=>a);
-        if(here.length>=this.rules.wildlife.maximumPresent)throw new Error('这里已有可接触动物，先处理当前局面');
+        if(here.length>=this.rules.wildlife.maximumPresent)throw preconditionFailure('这里已有可接触动物，先处理当前局面');
         const hour=d.get('state','minute')%1440,requested=args.species?this.resolve(args.species,'monster'):null;
         const eligible=speciesAt(this,habitat).filter(s=>(!requested||s.id===requested)&&r.populations[s.id].count>0&&activeAt(s.wildlife.activeHours,hour));
-        if(!eligible.length)throw new Error('此时没有该物种的活动线索，不能凭目录召出动物');
+        if(!eligible.length)throw preconditionFailure('此时没有该物种的活动线索，不能凭目录召出动物');
         const skill='skill_life_1_core',known=d.get('state','skills',skill),check=this.check(d,{attribute:'敏捷',...(known?{skill}:{}),difficulty:10},eventId);
         this.advance(d,this.rules.wildlife.trackMinutes,eventId);if(!check.success)return{success:false,...check,found:null,note:'已花追踪时间，没有接触动物'};
         if(d.get('state','location')!==habitat.location||d.get('state','player','status')!=='正常')return{success:false,found:null,note:'完成追踪前已失去行动能力或离开栖地'};
@@ -229,14 +230,14 @@ export function wildlifeAction(d,args,eventId){
         if(found)recordLocalContact(d,this,found.id,eventId);
         return{success:true,found,note:'接触一个实际个体，已从未见种群扣除；未打架、驯服或获得材料'};
     }
-    if(operation!=='gather')throw new Error('未知野外操作');
+    if(operation!=='gather')throw preconditionFailure('未知野外操作');
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
-    if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw new Error('没有这里已死亡且可验证的尸体');
-    if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw new Error('尸体已处理或已经腐坏');
-    if(actor.owner&&actor.owner!=='player')throw new Error('动物归其他所有者，不能擅自取材');
-    const recipe=s.wildlife.gather;if(!corpse.items.length)throw new Error('这个物种没有登记可加工材料');
-    if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw new Error('需要实际完好的取材刀具');
-    for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw new Error('取材实际耗材不足');
+    if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
+    if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw preconditionFailure('尸体已处理或已经腐坏');
+    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自取材');
+    const recipe=s.wildlife.gather;if(!corpse.items.length)throw preconditionFailure('这个物种没有登记可加工材料');
+    if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw preconditionFailure('需要实际完好的取材刀具');
+    for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw preconditionFailure('取材实际耗材不足');
     for(const m of recipe.consumes)this.itemDelta(d,'player',m.item,-m.amount,{flow:'sink:consume',purpose:'butcher',writer:'wildlife',eventId});
     const known=d.get('state','skills','skill_life_1_core'),check=this.check(d,{attribute:'敏捷',...(known?{skill:'skill_life_1_core'}:{}),difficulty:10},eventId);
     if(recipe.tool)wearItem(d,this,'player',recipe.tool,1);this.advance(d,recipe.minutes,eventId);

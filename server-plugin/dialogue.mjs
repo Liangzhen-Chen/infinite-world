@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {pruneRecords} from './record-cleanup.mjs';
 import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
@@ -33,7 +35,7 @@ const bargaining=JSON.parse(fs.readFileSync(new URL('../world/rules/tables/barga
 const row=(d,npc)=>d.get('state','npcs',npc);
 function present(d,engine,raw){
  const npc=engine.resolve(raw,'npc'),n=row(d,npc);
- if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,npc)||['濒死','昏迷'].includes(n.status))throw Error('对方不在这里或无法交谈');
+ if(!n||n.location!==d.get('state','location')||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,npc)||['濒死','昏迷'].includes(n.status))throw preconditionFailure('对方不在这里或无法交谈');
  return npc;
 }
 function line(engine,view,action,decision,detail=''){
@@ -49,6 +51,8 @@ function save(d,npc,eventId,action,decision,text,extra={}){
  const s=d.get('state'),previous=activeConversation(s,npc),id=previous?.id??`dialogue:${eventId}`;
  const conversation={...previous,id,category:'conversation',participants:['player',npc],location:s.location,mainTopicFinished:previous?.mainTopicFinished??false,active:action!=='leave',sourceEvent:previous?.sourceEvent??eventId,lastReply:eventId,...(action==='leave'?{endedAt:s.minute}:{} )};
  holdingSet(d,null,['state','records',`conversation:${id}`],conversation,'dialogue-state');
+ // Ended conversations are history: keep only the latest few.
+ pruneRecords(d,'conversation',{exempt:r=>r.active,max:32});
  const dialogue={npc,action,decision,text,...extra,conversation:{id,active:conversation.active,mainTopicFinished:conversation.mainTopicFinished}};
  d.set(['state','dialogues',npc],{...dialogue,minute:d.get('state','minute'),sourceEvent:eventId});
  return {dialogue};
@@ -109,7 +113,7 @@ export function applyDialogue(d,engine,args,eventId){
    const q=previous.pendingTrade;d.remove(['state','quotes',`${Math.floor(view.minute/1440)}_${npc}_player_${q.item}`]);
    return engine.trade(d,previous.pendingTrade,eventId).then(trade=>({...trade,...save(d,npc,eventId,action,decision,`${view.self.name}：依谈好的价格成交。`),socialEvent:{verb:'trade',actor:'player',target:npc,value:trade.cost,tags:['trade','dialogue','cash']}}));
   }
-  if(!previous?.pending||previous.decision.outcome!=='conditional')throw Error('没有待接受的条件');
+  if(!previous?.pending||previous.decision.outcome!=='conditional')throw preconditionFailure('没有待接受的条件');
   const price=previous.decision.conditions.prepay;
   const confirmed=npcDecision(view,{kind:previous.pending.type,from:'player',prepaid:true,reward:price,cost:{minutes:previous.pending.minutes??0}});
   if(confirmed.outcome!=='agree')return save(d,npc,eventId,'request',confirmed,line(engine,view,'request',confirmed),{pending:previous.pending});
@@ -127,7 +131,7 @@ export function applyDialogue(d,engine,args,eventId){
   let lie=null;
   if(action==='deceive'&&judgement.success){
    const known=subjectiveView(engine,d.document,'player').knowledge.memories.find(m=>m.id===args.source||m.sourceEvent===args.source);
-   if(!known)throw Error('欺骗需要本人已知的实情来源编号');
+   if(!known)throw preconditionFailure('欺骗需要本人已知的实情来源编号');
    lie=recordLie(d,engine,{subject:npc,source:'player',key:`dialogue_${eventId}`,content:args.content,truth:known.content,motive:'对话欺骗'},eventId);
   }
   return {...lie,...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),{judgement,tags:[action],...(communicates?.interpreter?{actedAs:communicates.interpreter}:{})}),
@@ -135,12 +139,12 @@ export function applyDialogue(d,engine,args,eventId){
  }else if(action==='tell'){
   const known=subjectiveView(engine,d.document,'player').knowledge.memories.find(m=>m.id===args.source||m.sourceEvent===args.source);
   if(!known)reject('E-ACTION-KNOWLEDGE','告知需要本人已知的来源编号',{missing:['需要本人已知的消息来源编号'],repair:['先取得消息，再用本人已知的真实来源编号告知']});
-  if(args.content!==known.content)throw Error('告知须保留已知版本；改编说法请用欺骗动作');
+  if(args.content!==known.content)throw preconditionFailure('告知须保留已知版本；改编说法请用欺骗动作');
   const memory={...structuredClone(known),id:`tell_${eventId}`,sourceEvent:known.sourceEvent??known.id,sourceType:'转述',minute:view.minute,participants:['player',npc],content:args.content};
-  if(known.private&&!(known.permittedRecipients??known.knownBy??[]).includes(npc))throw Error('这份私密信息不能转述给对方');
+  if(known.private&&!(known.permittedRecipients??known.knownBy??[]).includes(npc))throw preconditionFailure('这份私密信息不能转述给对方');
   d.set(['state','npcs',npc,'memoryStream'],[...row(d,npc).memoryStream??[],memory]);detail=args.content;
  }else if(action==='haggle'){
-  const offered=Number(args.content);if(!Number.isSafeInteger(offered)||offered<1)throw Error('还价须是正整数文钱');
+  const offered=Number(args.content);if(!Number.isSafeInteger(offered)||offered<1)throw preconditionFailure('还价须是正整数文钱');
   const rules=engine.rules.bargaining??bargaining,rule=Array.isArray(rules)?rules.find(r=>!r.selector.culture||r.selector.culture===view.self.culture):rules;
   const rounds=(previous?.action==='haggle'?previous.rounds??0:0)+1,max=rule.maxRounds;
   decision=npcDecision(view,{kind:'haggle',reward:offered});
@@ -151,7 +155,7 @@ export function applyDialogue(d,engine,args,eventId){
   return save(d,npc,eventId,action,decision,line(engine,view,action,decision,`你的出价是${offered}文；成交仍须确认具体交易。`),{rounds,offer:offered,...(item?{pendingTrade:{seller:npc,item,quantity:1,unitPrice:offered}}:{})});
  }else if(action==='interpreter')detail=view.observable.people.filter(p=>p.id!==npc).map(p=>p.name).join('、')||'这里没有可找的通译。';
  else if(action==='leave')detail='回头见。';
- else if(action!=='greet')throw Error('未知对话动作');
+ else if(action!=='greet')throw preconditionFailure('未知对话动作');
  return {...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{}),
   ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:engine.byId.get(gift.item).basePrice??0,tags:['dialogue','gift']}}:{})};
 }

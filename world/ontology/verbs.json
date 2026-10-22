@@ -508,8 +508,13 @@
   },
   {
    "id": "obligation_settled",
-   "label": "义务清偿",
+   "label": "履行清算",
    "family": "primitive"
+  },
+  {
+   "id": "effect_applied",
+   "label": "世界效果落地",
+   "family": "code"
   }
  ]
 }

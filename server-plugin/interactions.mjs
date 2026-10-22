@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // K2: one executor for the interaction table in world/design/interaction-rules.mjs.
 // resolveInteraction is pure (traits in, outcome out); applyInteraction also
 // writes the resulting state onto the target's existing storage.
@@ -110,7 +111,7 @@ function applyInteractionState(d,engine,{agent,target,owner='player',traits=null
 }
 export function assertLiquidWater(engine,d,row){
  const until=d.get('state','records',`physical_feature:${row.id}`)?.state?.frozenUntil;
- if(Number.isFinite(until)&&until>d.get('state','minute'))throw new Error('水面已经冻结，须等融化或用火解冻');
+ if(Number.isFinite(until)&&until>d.get('state','minute'))throw preconditionFailure('水面已经冻结，须等融化或用火解冻');
 }
 export function validateInteractionRules(rules=interactionRules.rules){
  const errors=[],ids=new Set(),known=new Set([...CREATURE_TAGS,'creature','item','feature','location','flammable','conductive','wet','burning','frozen','water','metal','paper','cloth','wood','fiber','grass','leather','indoor']);

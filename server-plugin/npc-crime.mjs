@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
 import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
@@ -69,7 +70,7 @@ export function commitNpcCrime(d,e,plan,minute){
   const cargo=cargoAt(e,state,actor);if(!cargo||cargo.item!==plan.item)return null;
   // Contraband really changes hands at the checkpoint; no sale proceeds are invented.
   value=e.byId.get(plan.item).basePrice;transferItems(d,e,actor,victim,plan.item,1);stolen=null;
- }else throw Error('未登记的NPC犯罪来源');
+ }else throw preconditionFailure('未登记的NPC犯罪来源');
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
  if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
@@ -98,8 +99,8 @@ function settleNpcSentence(d,e,row,code,minute){
  if((n.coins??0)>=fine+compensation){
   moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
   d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
-  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
-  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
+  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw preconditionFailure('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
+  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw preconditionFailure('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
   if(compensation&&loss)recoverLoss(d,e,{id:loss.id,amount:compensation,payer:row.offender,kind:'deposit'},`${row.id}:sentence`);
   holdingSet(d,null,path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute},'npc-crime');
  }else if(!row.fineDischarged){

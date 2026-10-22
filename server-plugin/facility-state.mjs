@@ -1,5 +1,6 @@
-import {recordsMemo} from './storage.mjs';
-import {aliveHoldings,holdingSet,declareHoldingWriter} from './holdings.mjs';
+import {preconditionFailure} from './precondition.mjs';
+import {recordsMemo,recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {aliveHoldings,holdingsView,holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('facility-state');
 import {workstationFee} from './workstation-services.mjs';
 // Facility projections import no runtime modules; domain callbacks are installed below.
@@ -26,7 +27,8 @@ export function facilityKind(base){
  return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':base.workstations?.length?'workshop':
   /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
 }
-export function facilityView(engine,state,id){
+// `holder` is whose prepaid workstation bookings reduce the fees shown.
+export function facilityView(engine,state,id,holder='player'){
  const base=facilityDefinition(engine,state,id);if(!isFacility(base)&&!base?.workstations?.length)return null;
  // A place can host an authored station without itself becoming a building
  // that public-works/repair consumers may treat as a whole workshop.
@@ -37,7 +39,7 @@ export function facilityView(engine,state,id){
  const units=1+(row.expansions??0),capacity=Math.floor((base.lodging?.rooms??base.capacity??spec.capacity)*units*factor);
  const services=factor?[...new Set([...(base.services??[]),...spec.services])]:[];
  return {kind,material,condition,burning,factor,status:factor===0?'停用':factor<1?'降级':'可用',services,capacity,
-  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(state,station)})):[],units};
+  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(engine,state,station,holder)})):[],units};
 }
 
 // A bed is a physical allocation within a lodging facility, not a stored
@@ -53,12 +55,12 @@ export function registerLodgingBed(d,engine,{id,location}){
 }
 export function lodgingOccupancy(document,location,minute=document.state.minute){
  const state=document.state,rows=[];
- for(const h of aliveHoldings({get:(...path)=>path.reduce((value,key)=>value?.[key],document)},{kind:'lodges',subject:location})){
+ for(const h of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location})){
   if(h.source?.startsWith('contract:room|'))continue; // Legacy projection has no time/bed terms; its contracts below are authoritative.
   const start=h.terms?.from??h.terms?.starts??h.since??0,end=h.terms?.until??h.terms?.expires??Infinity;
   if(start<=minute&&minute<end)rows.push({holder:h.holder,bed:h.terms?.bed??null,source:h.source});
  }
- for(const [id,r] of Object.entries(state.records??{}))if(r.category==='contract'&&r.room===location&&r.status==='有效'&&r.starts<=minute&&minute<r.expires){
+ for(const [id,r] of recordEntriesWhere(state.records,'category','contract'))if(r.room===location&&r.status==='有效'&&r.starts<=minute&&minute<r.expires){
   const old=rows.find(h=>h.source===id||h.holder===r.parties?.[0]);
   if(old){old.bed??=r.bed??null;}else rows.push({holder:r.parties?.[0],bed:r.bed??null,source:id});
  }
@@ -81,20 +83,20 @@ export function lodgingAvailability(engine,document,location,{actor='player',bed
 }
 export function assertLodgingCapacity(engine,document,location,start,end){
  const boundaries=new Set([start]);
- for(const h of aliveHoldings({get:(...path)=>path.reduce((value,key)=>value?.[key],document)},{kind:'lodges',subject:location}))for(const minute of [h.terms?.from,h.terms?.starts,h.terms?.until,h.terms?.expires])if(start<minute&&minute<end)boundaries.add(minute);
- for(const r of Object.values(document.state.records??{}))if(r.room===location)for(const minute of [r.starts,r.expires])if(start<minute&&minute<end)boundaries.add(minute);
- for(const minute of boundaries)if(!lodgingAvailability(engine,document,location,{minute}).available)throw Error('住宿床位已满');
+ for(const h of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location}))for(const minute of [h.terms?.from,h.terms?.starts,h.terms?.until,h.terms?.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const r of recordsWhere(document.state.records,'category','contract'))if(r.room===location)for(const minute of [r.starts,r.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const minute of boundaries)if(!lodgingAvailability(engine,document,location,{minute}).available)throw preconditionFailure('住宿床位已满');
 }
 export function selectLodgingBed(engine,document,location,start,end){
  const boundaries=new Set([start]);
- for(const row of Object.values(document.holdings?.rows??{}))if(row.kind==='lodges'&&row.subject===location&&row.until===undefined)for(const minute of [row.terms?.from,row.terms?.until])if(start<minute&&minute<end)boundaries.add(minute);
- for(const row of Object.values(document.state.records??{}))if(row.room===location)for(const minute of [row.starts,row.expires])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const row of aliveHoldings(holdingsView(document),{kind:'lodges',subject:location}))for(const minute of [row.terms?.from,row.terms?.until])if(start<minute&&minute<end)boundaries.add(minute);
+ for(const row of recordsWhere(document.state.records,'category','contract'))if(row.room===location)for(const minute of [row.starts,row.expires])if(start<minute&&minute<end)boundaries.add(minute);
  return Object.values(document.state.records??{}).find(row=>row.category==='lodging_bed'&&row.location===location&&[...boundaries].every(minute=>lodgingAvailability(engine,document,location,{bed:row.id,minute}).available))?.id??null;
 }
 export function assertRestBed(engine,document){
  const state=document.state,beds=Object.values(state.records??{}).filter(r=>r.category==='lodging_bed'&&r.location===state.location);
  if(!beds.length)return; // Worlds without allocated physical beds retain their native rest rules.
- if(!beds.some(b=>lodgingAvailability(engine,document,state.location,{bed:b.id}).available))throw Error('没有可供本人使用的床位');
+ if(!beds.some(b=>lodgingAvailability(engine,document,state.location,{bed:b.id}).available))throw preconditionFailure('没有可供本人使用的床位');
 }
 export function allFacilities(engine,state){
  return [...new Map([...engine.world.locations,...Object.values(state.created??{})].filter(isFacility).map(b=>[b.id,b])).values()];
@@ -130,32 +132,32 @@ export function granaryCapacity(engine,state,settlement,baseCapacity){
   (state.buildings?.[b.id]?.owner??b.owner)===settlement)capacity+=facilityView(engine,state,b.id).capacity;
  return capacity;
 }
-const positive=(n,label)=>{if(!Number.isSafeInteger(n)||n<1||n>1000)throw Error(`${label}无效`);return n;};
+const positive=(n,label)=>{if(!Number.isSafeInteger(n)||n<1||n>1000)throw preconditionFailure(`${label}无效`);return n;};
 // Shared preparation for public works, private work, and NPC housing callers.
 export function prepareFacilityProject(engine,state,args,settlement){
- const projectWork=args.projectWork??(['repair','expand'].includes(args.action)?args.action:'build');if(!['build','repair','expand'].includes(projectWork))throw Error('工程工序无效');
+ const projectWork=args.projectWork??(['repair','expand'].includes(args.action)?args.action:'build');if(!['build','repair','expand'].includes(projectWork))throw preconditionFailure('工程工序无效');
  const requested=args.building??(projectWork!=='build'?args.plot:null);
  const target=requested?engine.resolve(requested):null,base=target?facilityDefinition(engine,state,target):null,view=target?facilityView(engine,state,target):null;
- if(projectWork!=='build'&&!view)throw Error('修缮或扩建需要现有建筑');
- if(projectWork==='build'&&target)throw Error('新建不能覆盖已有建筑');
- const kind=args.facilityType??view?.kind??'public';if(!FACILITY_TYPES[kind])throw Error('设施用途类型无效');
- if(view&&kind!==view.kind)throw Error('修缮扩建不能改变原用途');
+ if(projectWork!=='build'&&!view)throw preconditionFailure('修缮或扩建需要现有建筑');
+ if(projectWork==='build'&&target)throw preconditionFailure('新建不能覆盖已有建筑');
+ const kind=args.facilityType??view?.kind??'public';if(!FACILITY_TYPES[kind])throw preconditionFailure('设施用途类型无效');
+ if(view&&kind!==view.kind)throw preconditionFailure('修缮扩建不能改变原用途');
  const location=base?.parent??engine.resolve(args.plot??settlement);
- if(!within(engine,state,location,settlement))throw Error('工程地点不在本村');
- if(target&&Object.values(state.projects??{}).some(p=>p.building===target&&p.status==='施工中'))throw Error('该建筑已有施工工程');
- if(projectWork==='repair'&&view.condition===100&&!view.burning)throw Error('建筑无需修缮');
+ if(!within(engine,state,location,settlement))throw preconditionFailure('工程地点不在本村');
+ if(target&&Object.values(state.projects??{}).some(p=>p.building===target&&p.status==='施工中'))throw preconditionFailure('该建筑已有施工工程');
+ if(projectWork==='repair'&&view.condition===100&&!view.burning)throw preconditionFailure('建筑无需修缮');
  const spec=FACILITY_TYPES[kind],units=projectWork==='repair'?Math.max(1,Math.ceil((100-view.condition)/25)):1;
  const required=projectWork==='repair'?facilityRepairMaterials(view):spec;
  const route=args.route??view?.route;
  if(['road','bridge'].includes(kind)){
   const edge=engine.world.routes.find(r=>r.id===route);
-  if(!edge||![edge.from,edge.to].some(id=>within(engine,state,id,settlement)))throw Error('桥路工程须连接本村的已登记路线');
+  if(!edge||![edge.from,edge.to].some(id=>within(engine,state,id,settlement)))throw preconditionFailure('桥路工程须连接本村的已登记路线');
  }
  const material=view?.material??args.material??((args.stone??0)>(args.wood??0)?'stone':'wood');
- if(!['wood','stone'].includes(material))throw Error('建筑材质须为木或石');
- if((args.wood??0)<required.wood||(args.stone??0)<required.stone)throw Error(`工程材料不足，须木料${required.wood}、石料${required.stone}`);
+ if(!['wood','stone'].includes(material))throw preconditionFailure('建筑材质须为木或石');
+ if((args.wood??0)<required.wood||(args.stone??0)<required.stone)throw preconditionFailure(`工程材料不足，须木料${required.wood}、石料${required.stone}`);
  const days=positive(args.days,'工期');
- if(days*(args.workers?.length??1)<required.work)throw Error('工程工时不足');
+ if(days*(args.workers?.length??1)<required.work)throw preconditionFailure('工程工时不足');
  return {facilityType:kind,projectWork,location,material,...(target?{building:target}:{}),...(route?{route}:{}),requiredWork:required.work};
 }
 

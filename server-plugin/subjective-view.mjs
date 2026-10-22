@@ -1,27 +1,27 @@
+import {preconditionFailure} from './precondition.mjs';
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {languageId,isLanguage} from './domain-rules.mjs';
 declareHoldingWriter('person-languages');
-export const languageAliases=Object.freeze({river:'lang:river',coast:'lang:coast'});
-const languageIds=new Set(['lang:common',...Object.values(languageAliases)]);
-const languageId=id=>languageAliases[id]??id;
+// The language catalogue (ids and short aliases) is world/rules/tables/domain-rules.json.
 // Initialization is a trusted campaign operation, never a proposal effect.
 export function initializePersonLanguages(d,e,person,values,{origin,eventId}={}){
  if(origin!=='initial'||!eventId)throw Error('Language initialization requires initial campaign authority');
  const path=person==='player'?['state','player']:['state','npcs',person];
  if(!d.get(...path))throw Error('Unknown person');
  const entries=Object.entries(values);
- if(!entries.length||entries.some(([k,v])=>!['spokenLanguages','writtenLanguages'].includes(k)||!Array.isArray(v)||v.some(id=>!languageIds.has(languageId(id)))||new Set(v.map(languageId)).size!==v.length))throw Error('Invalid person language declaration');
- for(const [field,ids] of entries)holdingSet(d,e,[...path,field],ids.map(languageId),'person-languages',eventId);
+ if(!entries.length||entries.some(([k,v])=>!['spokenLanguages','writtenLanguages'].includes(k)||!Array.isArray(v)||v.some(id=>!isLanguage(e,id))||new Set(v.map(id=>languageId(e,id))).size!==v.length))throw Error('Invalid person language declaration');
+ for(const [field,ids] of entries)holdingSet(d,e,[...path,field],ids.map(id=>languageId(e,id)),'person-languages',eventId);
 }
 export function personLanguages(e,s,id,{written=false}={}){
  const n=id==='player'?s.player:s.npcs?.[id],b=s.created?.[id]??e.byId.get(id)??{};
  const raw=n?.[written?'writtenLanguages':'spokenLanguages']??(written?b.writtenLanguages:undefined)??n?.languages??b.languages??e.rules.languages?.default??['lang:common'];
- return (Array.isArray(raw)?raw:Object.keys(raw??{}).filter(k=>raw[k]>0)).map(languageId);
+ return (Array.isArray(raw)?raw:Object.keys(raw??{}).filter(k=>raw[k]>0)).map(id=>languageId(e,id));
 }
 export function canReadLanguage(e,s,id,language='lang:common'){
- return personLanguages(e,s,id,{written:true}).includes(languageId(language));
+ return personLanguages(e,s,id,{written:true}).includes(languageId(e,language));
 }
 const ownedAccounts=Symbol('subjective own accounts');
 const ownedHoldings=Symbol('subjective own holdings');
@@ -33,7 +33,7 @@ const location=(s,id)=>id==='player'?s.location:actor(s,id)?.location;
 const base=(e,s,id)=>s.created?.[id]??s.family?.people?.[id]??e.byId.get(id)??{};
 const dimensions=['trust','affection','respect','fear','romance','competition'];
 export function subjectiveView(engine,document,observer){
- const s=document.state,n=actor(s,observer);if(!n)throw Error('观察者不存在');
+ const s=document.state,n=actor(s,observer);if(!n)throw preconditionFailure('观察者不存在');
  const b=base(engine,s,observer),here=location(s,observer),now=s.minute??0;
  const present=id=>Boolean(here&&location(s,id)===here&&!actor(s,id)?.scheduleTravel&&!actor(s,id)?.cognitionTravel);
  const registeredRumors=[...(engine.world.rumors??[]),...(engine.world.settlementProfiles??[]).flatMap(p=>p.details?.rumors??[])];

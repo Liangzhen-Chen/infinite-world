@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // Native sleep boundary for A's time executor. Call begin after validating the
 // actual duration, finish after the existing advance/HP/MP recovery. Neither
 // function advances time or touches money, HP or NPC schedules.
@@ -25,7 +26,7 @@ export function beginSleep(d,engine,actor='player'){
 export function finishSleep(d,engine,span){
  if(!span.enabled)return null;
  const end=d.get('state','minute'),s=d.get('state'),location=span.actor==='player'?s.location:s.npcs?.[span.actor]?.location;
- if(location!==span.location)throw Error('睡眠结束前已离开原住处，须按实际中断时段结算');
+ if(location!==span.location)throw preconditionFailure('睡眠结束前已离开原住处，须按实际中断时段结算');
  const intervals=span.bookings.map(r=>({start:Math.max(span.start,r.start),end:Math.min(end,r.end)})).filter(r=>r.end>r.start).sort((a,b)=>a.start-b.start);
  let covered=0,cursor=span.start;
  for(const row of intervals){covered+=Math.max(0,row.end-Math.max(cursor,row.start));cursor=Math.max(cursor,row.end);}

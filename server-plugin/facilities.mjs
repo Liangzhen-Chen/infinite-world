@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // RW-03. Construction facts live in created/buildings; availability and service
 // capacity are read from those facts. No second stored service/road status.
 import {traitsOf} from './traits.mjs';
@@ -137,9 +138,9 @@ export function completeFacilityProject(d,engine,p,minute=d.get('state','minute'
  const target=p.building,kind=p.facilityType??'public';
  if(target){
   const row=d.get('state','buildings',target)??{},view=facilityView(engine,d.get('state'),target);
-  if(!view)throw Error('施工建筑不存在');
+  if(!view)throw preconditionFailure('施工建筑不存在');
   if(isGone(engine,d,target)){
-   if(p.projectWork!=='repair'||!p.public||p.remainingDays>0||p.remainingWork>0)throw Error('建筑已毁灭，须以实际完工工程重建');
+   if(p.projectWork!=='repair'||!p.public||p.remainingDays>0||p.remainingWork>0)throw preconditionFailure('建筑已毁灭，须以实际完工工程重建');
    const id=`bld_rebuilt_${p.id.replace(/[^a-zA-Z0-9_-]/g,'_')}`,base=facilityDefinition(engine,d.get('state'),target);
    const owner=p.public&&!p.public.payer||p.civicApproval?p.settlement:p.creator??'player';
    holdingSet(d,null,['state','created',id],{...base,id,owner,rebuiltFrom:target,builtProject:p.id},'facilities');

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -19,7 +20,7 @@ const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadl
 const contractPath=id=>['state','records',id];
 export function magicContractTrace(d,id){
  const row=d.get(...contractPath(id));
- if(row?.category!=='contract'||!row.signedTerms)throw Error('需要本人持有且有原签条款的真实契约');
+ if(row?.category!=='contract'||!row.signedTerms)throw preconditionFailure('需要本人持有且有原签条款的真实契约');
  const current=signedTerms(row),changes=[];
  for(const [field,value]of Object.entries(row.signedTerms))if(canonical(current[field])!==canonical(value))changes.push({field,before:structuredClone(value),after:structuredClone(current[field])});
  return{parties:row.parties,changes,enforcement:row.enforcement};
@@ -28,7 +29,7 @@ export function advanceShadowContracts(d,before,after){
  for(const [id,row]of Object.entries(d.get('state','records')??{})){
   const e=row.category==='contract'&&row.enforcement;
   if(!e?.active||e.channel!=='shadow')continue;
-  if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw Error('暗影契约执行状态损坏');
+  if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw preconditionFailure('暗影契约执行状态损坏');
   const permission=d.get('state','records',e.authorization);
   if(e.target!=='player'&&(permission?.category!=='authorization'||permission.action!=='mental_magic'||permission.subject!==e.target||permission.grantor!==e.target||permission.grantee!=='player'||permission.revoked||permission.expires<=before)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const until=Math.min(after,e.expires,e.target==='player'?Infinity:permission.expires),minutes=Math.max(0,until-Math.max(before,e.started));
@@ -41,7 +42,7 @@ export function advanceShadowContracts(d,before,after){
 }
 export function createBusinessContract(d,{kind,parties,subject,quantity,deadline,business,cost,escrow=0,...terms},eventId){
     const id=`contract_${kind}_${eventId}`;
-    if(d.get(...contractPath(id)))throw new Error('合同编号已存在');
+    if(d.get(...contractPath(id)))throw preconditionFailure('合同编号已存在');
     const row=snapshotContractTerms({...terms,id,category:'contract',version:1,kind,parties,subject,quantity,deadline,business,cost,
         escrow,paid:0,fulfilled:0,status:'待履行',createdAt:d.get('state','minute'),source:eventId,performance:[],breaches:[]});
     row.signedTerms=structuredClone(signedTerms(row));
@@ -80,24 +81,24 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     return finishBusinessContract(d,row,{status,reason,by:reason?'player':undefined,source});
 }
 export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description},eventId){
-    if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw new Error('交易当事人或金额无效');
+    if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw preconditionFailure('交易当事人或金额无效');
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
-        if(source.coins<cost)throw new Error('买方余额不足');
+        if(source.coins<cost)throw preconditionFailure('买方余额不足');
         return {payment:'cash'};
     }
-    if(payment!=='credit'||buyer!=='player')throw new Error('只支持玩家按商家的赊账规则购买');
+    if(payment!=='credit'||buyer!=='player')throw preconditionFailure('只支持玩家按商家的赊账规则购买');
     const policy=engine.byId.get(seller)?.creditPolicy;
-    if(!policy)throw new Error('该商家尚未接受赊账');
+    if(!policy)throw preconditionFailure('该商家尚未接受赊账');
     if(!Number.isSafeInteger(policy.limitCopper)||policy.limitCopper<1||!Number.isSafeInteger(policy.maximumMinutes)||policy.maximumMinutes<1
-        ||!Number.isSafeInteger(policy.minimumTrust))throw new Error('商家赊账规则无效');
-    if(engine.actor(d,seller).trust<policy.minimumTrust)throw new Error('商家目前不信任你的还款承诺，要求现付');
+        ||!Number.isSafeInteger(policy.minimumTrust))throw preconditionFailure('商家赊账规则无效');
+    if(engine.actor(d,seller).trust<policy.minimumTrust)throw preconditionFailure('商家目前不信任你的还款承诺，要求现付');
     const debts=debtRows(d).map(([,row])=>row).filter(row=>row.debtor===buyer&&row.creditor===seller&&row.status!=='已还清');
-    if(debts.some(row=>row.status==='逾期'))throw new Error('旧欠款已逾期，先还清才能继续申请赊账');
+    if(debts.some(row=>row.status==='逾期'))throw preconditionFailure('旧欠款已逾期，先还清才能继续申请赊账');
     const outstanding=debts.reduce((sum,row)=>sum+row.amount-row.paid,0);
-    if(outstanding+cost>policy.limitCopper)throw new Error(`未还欠款与本次合计不得超过${policy.limitCopper}铜，当前已欠${outstanding}铜`);
+    if(outstanding+cost>policy.limitCopper)throw preconditionFailure(`未还欠款与本次合计不得超过${policy.limitCopper}铜，当前已欠${outstanding}铜`);
     const minutes=creditMinutes??policy.maximumMinutes;
-    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>policy.maximumMinutes)throw new Error(`赊账期限必须为1至${policy.maximumMinutes}分钟`);
+    if(!Number.isSafeInteger(minutes)||minutes<1||minutes>policy.maximumMinutes)throw preconditionFailure(`赊账期限必须为1至${policy.maximumMinutes}分钟`);
     return {payment:'credit',minutes};
 }
 export function chargeTrade(d,engine,args,eventId){
@@ -109,7 +110,7 @@ export function chargeTrade(d,engine,args,eventId){
         d.set([...engine.actorPath(seller),'coins'],target.coins+cost);
         return{};
     }
-    const id=`debt_${eventId}`;if(d.get('state','records',id))throw new Error('欠款编号已存在');
+    const id=`debt_${eventId}`;if(d.get('state','records',id))throw preconditionFailure('欠款编号已存在');
     const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:cost,paid:0,createdAt:d.get('state','minute'),
         deadline:d.get('state','minute')+minutes,status:'待偿还',source:eventId};
     holdingSet(d,null,['state','records',id],debt,'contracts');
@@ -118,8 +119,8 @@ export function chargeTrade(d,engine,args,eventId){
 }
 export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     const row=d.get('state','records',id);
-    if(row?.category!=='debt'||row.debtor!==buyer||row.creditor!==seller||buyer!=='player')throw new Error('需要 debt 指定本人对该商家的真实欠款');
-    if(row.status==='已还清')throw new Error('这笔欠款已经还清，不重复付款');
+    if(row?.category!=='debt'||row.debtor!==buyer||row.creditor!==seller||buyer!=='player')throw preconditionFailure('需要 debt 指定本人对该商家的真实欠款');
+    if(row.status==='已还清')throw preconditionFailure('这笔欠款已经还清，不重复付款');
     assertSettlementPresent(engine,d.get('state'),buyer,seller);
     const amount=row.amount-row.paid;
     const runtime=!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1;

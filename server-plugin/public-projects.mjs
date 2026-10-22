@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -28,44 +29,44 @@ import {personConstraint} from './entity-view.mjs';
 // advances; on completion the unspent escrow returns to the treasury and a
 // public facility is registered. Aborting returns unused materials and escrow.
 const DAY=1440;
-const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>80)throw Error('需要工程名称');return n.trim();};
-const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}须在${min}到${max}之间`);return n;};
+const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>80)throw preconditionFailure('需要工程名称');return n.trim();};
+const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}须在${min}到${max}之间`);return n;};
 const able=n=>n&&!['濒死','昏迷','患病'].includes(n.status);
 const awake=n=>able(n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
 
 export const isPublicProject=p=>p?.type==='工程'&&Boolean(p.public);
 export function startPublicProject(d,engine,args,eventId,settlement){
-    if(args.funding!==undefined&&!['private','public'].includes(args.funding))throw Error('工程出资须为private或public');
+    if(args.funding!==undefined&&!['private','public'].includes(args.funding))throw preconditionFailure('工程出资须为private或public');
     const state=d.get('state'),privateFunding=args.funding==='private',offices=playerOffices(state,{settlement,power:'public_project'},engine);
-    if(!privateFunding&&!offices.length)throw Error('没有在任官职授予本村公共工程权限');
+    if(!privateFunding&&!offices.length)throw preconditionFailure('没有在任官职授予本村公共工程权限');
     const name=text(args.name),days=int(args.days,1,365,'工期'),wood=int(args.wood??0,0,10000,'木料'),stone=int(args.stone??0,0,10000,'石料');
     const plan=prepareFacilityProject(engine,state,args,settlement),location=plan.location;
-    if(privateFunding&&!plan.building&&plan.facilityType==='house')throw Error('私人住宅新建须使用本人宅基批文');
+    if(privateFunding&&!plan.building&&plan.facilityType==='house')throw preconditionFailure('私人住宅新建须使用本人宅基批文');
     const owner=plan.building?(state.buildings?.[plan.building]?.owner??state.created?.[plan.building]?.owner??engine.byId.get(plan.building)?.owner):null;
-    if(plan.building&&owner!==(privateFunding?'player':settlement))throw Error('工程出资方没有该建筑的修缮扩建权');
-    if(privateFunding&&!plan.building&&(state.created?.[location]??engine.byId.get(location))?.owner!=='player')throw Error('私人新建须有本人名下场地；住宅使用宅基批文');
-    if(!within(engine,location,settlement))throw Error('工程地点不在本村');
+    if(plan.building&&owner!==(privateFunding?'player':settlement))throw preconditionFailure('工程出资方没有该建筑的修缮扩建权');
+    if(privateFunding&&!plan.building&&(state.created?.[location]??engine.byId.get(location))?.owner!=='player')throw preconditionFailure('私人新建须有本人名下场地；住宅使用宅基批文');
+    if(!within(engine,location,settlement))throw preconditionFailure('工程地点不在本村');
     const beneficiaries=args.beneficiaries??[settlement];
-    if(!privateFunding&&(!beneficiaries.includes(settlement)||beneficiaries.includes('player')))throw Error('公款工程的受益人须为本村，不能是本人');
+    if(!privateFunding&&(!beneficiaries.includes(settlement)||beneficiaries.includes('player')))throw preconditionFailure('公款工程的受益人须为本村，不能是本人');
     const workers=[...new Set((args.workers??[]).map(w=>engine.resolve(w,'npc')))].sort();
-    if(!workers.length||workers.length>20)throw Error('需要1到20名实际做工的人');
-    if(days*workers.length<plan.requiredWork)throw Error('工程实际工时不足');
+    if(!workers.length||workers.length>20)throw preconditionFailure('需要1到20名实际做工的人');
+    if(days*workers.length<plan.requiredWork)throw preconditionFailure('工程实际工时不足');
     for(const id of workers){
         const n=state.npcs[id];
-        if(currentEmployment(state,id))throw Error('做工的人已有未结束的雇佣排班');
-        if(!isEffective(engine,state,id)||!awake(n)||n.location!==state.location)throw Error('做工的人须当面在场且清醒');
-        if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw Error('做工的人须是本村成年住户');
+        if(currentEmployment(state,id))throw preconditionFailure('做工的人已有未结束的雇佣排班');
+        if(!isEffective(engine,state,id)||!awake(n)||n.location!==state.location)throw preconditionFailure('做工的人须当面在场且清醒');
+        if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw preconditionFailure('做工的人须是本村成年住户');
     }
-    if(args.consent!==true)throw Error('做工的人须当面同意工期与工钱');
+    if(args.consent!==true)throw preconditionFailure('做工的人须当面同意工期与工钱');
     const row=state.settlements[settlement];
-    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&bagStock(d,engine,{point:'projects.stock',id:'player',item,legacy:()=>engine.quantity(d,'player',item)})<n)throw Error('自备工程材料不足');}
-    else if(priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'wood'),legacy:()=>row.wood??0})<wood||priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'stone'),legacy:()=>row.stone??0})<stone)throw Error('公共工程材料不足');
+    if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&bagStock(d,engine,{point:'projects.stock',id:'player',item,legacy:()=>engine.quantity(d,'player',item)})<n)throw preconditionFailure('自备工程材料不足');}
+    else if(priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'wood'),legacy:()=>row.wood??0})<wood||priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'stone'),legacy:()=>row.stone??0})<stone)throw preconditionFailure('公共工程材料不足');
     const wage=authorityOf(engine).treasury.wagePerWorkerDayCopper,bill=wage*workers.length*days;
     const project=`project_${eventId}`;
     let spend;
     if(privateFunding){
-        if(coinRead(d,{point:'projects.cash',account:purse(engine,'player'),legacy:()=>state.player.coins})<bill)throw Error('私人工程工钱不足');
+        if(coinRead(d,{point:'projects.cash',account:purse(engine,'player'),legacy:()=>state.player.coins})<bill)throw preconditionFailure('私人工程工钱不足');
         for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n)changeItems(d,engine,'player',item,-n,{books:STOCK_BOOKED});
         holdWorks(d,engine,project,{wood,stone},{from:{party:'player'},writer:'public-projects',eventId:project});
         moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);
@@ -111,9 +112,9 @@ function finish(d,engine,p,status,minute,eventId){
 }
 export function abortPublicProject(d,engine,args){
     const p=d.get('state','projects',args.project);
-    if(!isPublicProject(p))throw Error('没有这个公款工程');
+    if(!isPublicProject(p))throw preconditionFailure('没有这个公款工程');
     if(p.status!=='施工中')return {project:p.id,status:p.status,duplicate:true};
-    if(!p.public.payer&&!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'},engine).length)throw Error('没有在任官职可中止本村工程');
+    if(!p.public.payer&&!playerOffices(d.get('state'),{settlement:p.settlement,power:'public_project'},engine).length)throw preconditionFailure('没有在任官职可中止本村工程');
     const row=finish(d,engine,p,'已中止',d.get('state','minute'));
     return {project:p.id,status:row.status,returned:row.returned};
 }
@@ -156,26 +157,26 @@ function plotsOf(engine,settlement){return Object.values(authorityOf(engine)?.pl
 function plotByArg(engine,settlement,arg){
     const plots=plotsOf(engine,settlement),place=()=>{try{return engine.resolve(arg);}catch{return null;}};
     const id=arg&&(plots.find(p=>p.id===arg||p.name===arg)?.id??plots.find(p=>p.location===place())?.id);
-    const plot=plots.find(p=>p.id===id);if(!plot)throw Error('不是本村登记的宅基地块');
+    const plot=plots.find(p=>p.id===id);if(!plot)throw preconditionFailure('不是本村登记的宅基地块');
     return plot;
 }
 function adultResident(engine,state,id,settlement){return npcHousehold(engine,state,id)?.settlement===settlement&&(npcAgeAt(engine,state,id)??0)>=18&&isEffective(engine,state,id);}
 export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
     const state=d.get('state');
-    if(!playerOffices(state,{settlement,power:'steward'},engine).length)throw Error('没有在任村长官职，未登记建房审批与派管事的权限');
-    if(state.location!==hall)throw Error('须在本村登记议事屋当面交代');
+    if(!playerOffices(state,{settlement,power:'steward'},engine).length)throw preconditionFailure('没有在任村长官职，未登记建房审批与派管事的权限');
+    if(state.location!==hall)throw preconditionFailure('须在本村登记议事屋当面交代');
     const steward=engine.resolve(args.steward,'npc'),n=state.npcs[steward];
-    if(!isEffective(engine,state,steward)||!awake(n)||n.location!==hall||!adultResident(engine,state,steward,settlement)||args.consent!==true)throw Error('管事须为在场清醒的本村成年住户并明确同意');
+    if(!isEffective(engine,state,steward)||!awake(n)||n.location!==hall||!adultResident(engine,state,steward,settlement)||args.consent!==true)throw preconditionFailure('管事须为在场清醒的本村成年住户并明确同意');
     const office=authorityOf(engine).offices.office_village_steward;
     const plots=args.plot?[plotByArg(engine,settlement,args.plot)]:plotsOf(engine,settlement);
     const fees=Object.fromEntries(plots.map(p=>{
         const fee=args.proposedFee??p.feeCopper;
-        if(!Number.isSafeInteger(fee)||fee<0||fee>p.feeCopper*2)throw Error(`宅基费须在0到${p.feeCopper*2}铜之间`);
+        if(!Number.isSafeInteger(fee)||fee<0||fee>p.feeCopper*2)throw preconditionFailure(`宅基费须在0到${p.feeCopper*2}铜之间`);
         return [p.id,fee];
     }));
     const minutes=Math.min(args.minutes??office.termDays*DAY,office.termDays*DAY);
-    if(!Number.isSafeInteger(minutes)||minutes<DAY)throw Error('管事期限至少一日');
-    const id=`housing_steward:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
+    if(!Number.isSafeInteger(minutes)||minutes<DAY)throw preconditionFailure('管事期限至少一日');
+    const id=`housing_steward:${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     const row={category:'housing_steward',id,settlement,grantor:'player',steward,hall,rules:{plots:plots.map(p=>p.id),fees,eligibility:'resident'},
         createdAt:state.minute,expires:state.minute+minutes,revoked:false,source:office.source,sourceEvent:eventId};
     holdingSet(d,null,rec(id),row,'public-projects');syncHoldingRecord(d,engine,id,{writer:'public-projects',eventId});
@@ -184,19 +185,19 @@ export function grantHousingSteward(d,engine,args,eventId,settlement,hall){
 }
 export function revokeHousingSteward(d,a,engine){
     if(a.revoked)return {authorization:a.id,steward:a,duplicate:true};
-    if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw Error('只有在任村长可撤回管事');
+    if(!playerOffices(d.get('state'),{settlement:a.settlement,power:'steward'},engine).length)throw preconditionFailure('只有在任村长可撤回管事');
     const row={...a,revoked:true,revokedAt:d.get('state','minute')};holdingSet(d,null,rec(a.id),row,'public-projects');syncHoldingRecord(d,engine,a.id,{writer:'public-projects'});
     entityTransition(d,engine,{id:`${a.id}:dismiss`,verb:'dismiss',actor:'player',target:a.steward,location:a.hall,office:'office_village_steward',summary:`${engine.byId.get(a.steward)?.name??a.steward}不再担任宅基管事`});
     return {authorization:a.id,steward:row};
 }
 export function fileHousingApplication(d,engine,args,eventId,settlement,a){
     const state=d.get('state');
-    if(state.location!==a.hall)throw Error('须在本村登记议事屋递交建房申请');
+    if(state.location!==a.hall)throw preconditionFailure('须在本村登记议事屋递交建房申请');
     const applicant=!args.speaker||args.speaker==='player'?'player':engine.resolve(args.speaker,'npc');
-    if(applicant!=='player'&&((!isEffective(engine,state,applicant)||!awake(state.npcs[applicant]))||state.npcs[applicant].location!==a.hall||args.consent!==true))throw Error('申请人须本人在场并同意');
+    if(applicant!=='player'&&((!isEffective(engine,state,applicant)||!awake(state.npcs[applicant]))||state.npcs[applicant].location!==a.hall||args.consent!==true))throw preconditionFailure('申请人须本人在场并同意');
     const plot=plotByArg(engine,settlement,args.plot);
     const now=state.minute,day=Math.floor(now/DAY),due=now<day*DAY+PROCESS_MINUTE?day*DAY+PROCESS_MINUTE:(day+1)*DAY+PROCESS_MINUTE;
-    const id=`housing_application:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
+    const id=`housing_application:${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     const row={category:'housing_application',id,settlement,applicant,plot:plot.id,authorization:a.id,steward:a.steward,status:'待管事办理',due,filedAt:now,sourceEvent:eventId};
     holdingSet(d,null,rec(id),row,'public-projects');return {application:id,pending:row,note:'管事在约定办理时刻按村长写定的规矩处理；批准只给宅基，不代建。'};
 }
@@ -258,11 +259,11 @@ export function advanceHousing(d,engine,{after}){
 export function startHouse(d,engine,args,eventId,permitId){
     const p=d.get(...rec(permitId)),state=d.get('state');
     const holder=args.speaker&&args.speaker!=='player'?engine.resolve(args.speaker,'npc'):'player';
-    if(p?.category!=='housing_permit'||p.holder!==holder)throw Error('没有本人名下的宅基批文');
-    if(holder!=='player'&&((!isEffective(engine,state,holder)||!awake(state.npcs[holder]))||state.npcs[holder].location!==state.location||args.consent!==true))throw Error('建房人须本人在场同意');
-    if(p.status!=='已批准')throw Error('这块宅基已开工或已收回');
-    if(state.location!==p.location)throw Error('须到宅基所在地开工');
-    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,holder,item)<n)throw Error('自备建房材料不足');
+    if(p?.category!=='housing_permit'||p.holder!==holder)throw preconditionFailure('没有本人名下的宅基批文');
+    if(holder!=='player'&&((!isEffective(engine,state,holder)||!awake(state.npcs[holder]))||state.npcs[holder].location!==state.location||args.consent!==true))throw preconditionFailure('建房人须本人在场同意');
+    if(p.status!=='已批准')throw preconditionFailure('这块宅基已开工或已收回');
+    if(state.location!==p.location)throw preconditionFailure('须到宅基所在地开工');
+    for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n&&engine.quantity(d,holder,item)<n)throw preconditionFailure('自备建房材料不足');
     for(const [item,n]of [['item_wood',p.materials.wood],['item_stone',p.materials.stone]])if(n)changeItems(d,engine,holder,item,-n,{books:STOCK_BOOKED});
     const project=`project_${eventId}`;holdWorks(d,engine,project,p.materials,{from:{party:holder},writer:'public-projects',eventId});
     d.set(['state','projects',project],{id:project,type:'建房',creator:holder,name:text(args.name??'自家宅屋'),settlement:p.settlement,location:p.location,permit:p.id,facilityType:'house',material:p.materials.stone>p.materials.wood?'stone':'wood',

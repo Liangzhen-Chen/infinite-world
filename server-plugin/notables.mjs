@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personRegistrar} from './entity-view.mjs';
 import {authorityOf} from './governance.mjs';
@@ -83,18 +84,18 @@ function appraise(engine,state,petition){
 }
 function registrar(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
-    if(!charter||state.location!==charter.seat)throw Error('须在白石镇公署前厅递件转呈');
+    if(!charter||state.location!==charter.seat)throw preconditionFailure('须在白石镇公署前厅递件转呈');
     const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(engine,state,n.id,state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
-    if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
+    if(!staff.length)throw preconditionFailure('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0];
 }
 function petition(d,engine,args,eventId){
-    const rules=notableRules(engine);if(!rules)throw Error('名士章程未登记');
+    const rules=notableRules(engine);if(!rules)throw preconditionFailure('名士章程未登记');
     const clerk=registrar(d,engine),state=d.get('state');
-    if(playerNotable(state))throw Error('已在名士册上');
-    if(Object.values(state.records??{}).some(r=>r.category==='notable_petition'&&r.status==='待审定'))throw Error('已有待审定的名士申请');
+    if(playerNotable(state))throw preconditionFailure('已在名士册上');
+    if(Object.values(state.records??{}).some(r=>r.category==='notable_petition'&&r.status==='待审定'))throw preconditionFailure('已有待审定的名士申请');
     const sponsor=args.sponsor?(engine.world.factions?.some(f=>f.id===args.sponsor)||engine.world.factionPeople?.some(p=>p.id===args.sponsor)?args.sponsor:resolveCreature(engine,d,args.sponsor)):null;
-    const id=`notable_petition:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
+    const id=`notable_petition:${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     const row={category:'notable_petition',id,sponsor,registrar:clerk,institution:rules.registry.name,filedAt:state.minute,due:state.minute+rules.registry.decisionDays*DAY,status:'待审定',source:rules.source,sourceEvent:eventId};
     const now=appraise(engine,state,row);
     if(!now.recommendation)throw Error(now.reasons.find(r=>/举荐/.test(r))??'需要举荐者');
@@ -120,16 +121,16 @@ function review(d,engine,n,at){
 // awake. The meeting is recorded and the house's regard rises a little.
 function audience(d,engine,args,eventId){
     const rules=notableRules(engine),state=d.get('state');
-    if(!playerNotable(state)&&!playerTitle(state))throw Error('觐见贵族须有名士身份或爵位');
+    if(!playerNotable(state)&&!playerTitle(state))throw preconditionFailure('觐见贵族须有名士身份或爵位');
     const sponsor=actorId(engine.world,args.sponsor);
     const house=engine.world.factions?.find(f=>rules.rights.nobleKinds.includes(f.kind)&&(f.id===sponsor||groupView(engine,state,f.id)?.officials.value.includes(sponsor)));
-    if(!house)throw Error('对方不是贵族家族或其首领、长老');
+    if(!house)throw preconditionFailure('对方不是贵族家族或其首领、长老');
     const target=house.id===sponsor?groupView(engine,state,house.id).leader.value:sponsor;
-    if(!target)throw Error('家族首领职位空缺');
-    if(!within(engine,state.location,house.contactAnchor))throw Error(`须到${house.name}所在地求见`);
+    if(!target)throw preconditionFailure('家族首领职位空缺');
+    if(!within(engine,state.location,house.contactAnchor))throw preconditionFailure(`须到${house.name}所在地求见`);
     const view=personView(engine,state,target),npc=view?.actorPath.value.slice(1).reduce((o,k)=>o?.[k],state);
-    if(npc&&(!awake(engine,state,target,npc)||!within(engine,npc.location,house.contactAnchor)))throw Error('主人不在府中或不便见客');
-    const id=`notable_audience:${eventId}`;if(d.get(...rec(id)))throw Error('事务编号已占用');
+    if(npc&&(!awake(engine,state,target,npc)||!within(engine,npc.location,house.contactAnchor)))throw preconditionFailure('主人不在府中或不便见客');
+    const id=`notable_audience:${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     engine.advance(d,rules.rights.audienceMinutes,eventId);
     const at=d.get('state','minute');
     d.set(rec(id),{category:'notable_audience',id,house:house.id,host:target,minute:at,basis:playerNotable(state)?'名士':'爵位',sourceEvent:eventId});
@@ -143,7 +144,7 @@ function audience(d,engine,args,eventId){
 // Academies admit only notables (the academy right).
 export function assertAcademyAdmission(engine,state,org,who){
     const rules=notableRules(engine);
-    if(rules&&who==='player'&&org.source==='faction'&&rules.rights.academyKinds.includes(org.kind)&&!playerNotable(state))throw Error(`${org.name}只收名士入院，须先经典籍署认定`);
+    if(rules&&who==='player'&&org.source==='faction'&&rules.rights.academyKinds.includes(org.kind)&&!playerNotable(state))throw preconditionFailure(`${org.name}只收名士入院，须先经典籍署认定`);
 }
 export function notableAction(d,args,eventId){
     if(args.operation==='notable_petition')return petition(d,this,args,eventId);
@@ -153,7 +154,7 @@ export function notableAction(d,args,eventId){
         return {notable:state.records?.[KEY]??null,achievements:notableAchievements(this,state),fame:notableFame(state),culturalQuotaD:notableCulturalQuotaD(this,state),
             petitions:Object.values(state.records??{}).filter(r=>r.category==='notable_petition'),actionScope:{kind:'instant'}};
     }
-    throw Error('未知名士事务');
+    throw preconditionFailure('未知名士事务');
 }
 const dueOf=r=>r.category==='notable_petition'?r.due:r.nextReview;
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='notable_petition'&&r.status==='待审定'||r.category==='notable'&&r.status==='在册');

@@ -1,4 +1,6 @@
+import {vocabulary} from './domain-rules.mjs';
 import {registerObligationProtocol} from './obligation-protocol.mjs';
+import {requireRestoreOrigin} from './restore-origin.mjs';
 import {registerObligationCivilGrace} from './obligation-state.mjs';
 // Shared mutation entry points. Records remain compatibility projections of
 // the existing protocol obligation; all money uses the existing ledger.
@@ -39,7 +41,7 @@ function receipt(d,e,id,eventId,verb,args,fn){
     const key=`obligation:${id}:${eventId}`,old=read(d,'state','records',`world_event:${key}`),signature=canonical({verb,args});
     if(old){if(old.signature!==signature)throw Error('Obligation eventId reused with different input');return structuredClone(old.result);}
     return obligationTransaction(d,()=>{
-        const result=fn();SOCIAL_VERBS.add(verb);
+        const result=fn();
         const row=obligationRow(read(d,'state'),id);
         const payment=result.payment;
         publishTransitionEvent(d,e,{id:key,verb,actor:payment?.actor??args.actor??args.payer??row.debtor,minute:read(d,'state','minute'),
@@ -137,7 +139,7 @@ function collectionAt(e,s,row,payer,document){
         const holders=aliveHoldings({get:(...p)=>p.reduce((v,k)=>v?.[k],document)},{kind:'holds_office'});
         for(const h of holders){
             const office=document.holdings?.entities?.[h.subject],facts=office?.facts,a=facts?.authority,n=h.holder==='player'?s.player:s.npcs?.[h.holder];
-            if(!office||office.goneAt!==undefined||facts?.organization!==row.creditor||facts.seat!==account.seat||a?.obligation!==row.id||!a.operations?.includes('collect_fine')||
+            if(!office||office.goneAt!==undefined||facts?.organization!==row.creditor||facts.seat!==account.seat||a?.obligation!==row.id||!a.operations?.includes(vocabulary(e,'law','fineCollectOperation'))||
                 a.collectionAccount?.owner!==row.creditor||a.collectionAccount?.purpose!=='legal_treasury'||a.collectionAccount?.resource!=='coin_river'||
                 !n||facts.onDuty!==true||!isEffective(e,s,h.holder)||personConstraint(e,s,h.holder)||!settlementPresent(e,s,payer,h.holder)||/睡|昏|失能/.test(n.activity??n.status??''))continue;
             return {collector:h.holder,seat:account.seat,account:account.account,dedicated:true,creditor:row.creditor};
@@ -351,7 +353,8 @@ export function adoptLegacyObligation(d,e,id){
 }
 
 // Restore signed facts, never re-sign, pay, charge a fee or run a delivery.
-export function restoreObligationSnapshot(d,e,args){
+export function restoreObligationSnapshot(d,e,args,{origin}={}){
+ requireRestoreOrigin(origin,'restoreObligationSnapshot');
     return obligationTransaction(d,()=>{
         const {id,kind,debtor,creditor,amount,paid,openedAt,dueAt,sourceEvent,terms={}}=args,s=read(d,'state'),event=s.records?.[sourceEvent];
         if(typeof id!=='string'||!id||['__proto__','prototype','constructor'].includes(id)||!['loan','deposit','fine','delivery','upkeep','promise','rent'].includes(kind)||

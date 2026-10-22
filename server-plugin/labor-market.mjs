@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {serviceClaimsFresh} from './service-queue.mjs';
 import {settleStewardRequests} from './high-nobility.mjs';
 import {currentDomains,containsDomain} from './noble-state.mjs';
@@ -183,11 +184,11 @@ function conflict(d,e,row,start){
 export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
  if(!serviceClaimsFresh(e))return settleEmploymentPayV1(d,e,row,at,minutes,{earnedOverride});
     row=contractTerms(row,at);
-    if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw Error('工资与实际工时须为非负整数');
+    if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw preconditionFailure('工资与实际工时须为非负整数');
     const key=`employment_pay:${row.id}:${at}`,previous=d.get(...rec(key));
-    if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw Error('同次工时结算事实不一致');return previous.result;}
+    if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw preconditionFailure('同次工时结算事实不一致');return previous.result;}
     const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
-    if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
+    if(!Number.isSafeInteger(total))throw preconditionFailure('累计工钱超出整数范围');
     const earned=Math.ceil(total/480)-Math.ceil(units/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
@@ -344,19 +345,19 @@ export function laborNotices(e,s,location=s.location){
 export function laborTrade(d,e,args,id){
     const s=d.get('state'),now=s.minute;
     if(args.operation==='labor_inspect')return {notices:laborNotices(e,s),contracts:rows(s).filter(r=>r.laborMarket===1&&placeSettlement(e,s,r.location).value===placeSettlement(e,s,s.location).value)};
-    const row=s.records?.[args.contract];if(row?.laborMarket!==1&&row?.education!==1||row.kind!=='workshop')throw Error('需要已有的NPC雇佣合同');
-    if(row.location!==s.location)throw Error('须到履约地点介入合同');
+    const row=s.records?.[args.contract];if(row?.laborMarket!==1&&row?.education!==1||row.kind!=='workshop')throw preconditionFailure('需要已有的NPC雇佣合同');
+    if(row.location!==s.location)throw preconditionFailure('须到履约地点介入合同');
     if(args.operation==='labor_guarantee'){
-        if(!employmentActive(row))throw Error('雇佣已结束');
+        if(!employmentActive(row))throw preconditionFailure('雇佣已结束');
         const coins=financeInt(args.coins,1,1e6,'担保款');financeChange(d,e,'player',-coins,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});
         writeJob(d,e,{...row,guarantor:'player',escrow:(row.escrow??0)+coins});return {contract:row.id,escrow:(row.escrow??0)+coins};
     }
-    if(args.consent!==true||s.npcs[row.worker]?.location!==s.location||!able(s,row.worker)||/睡眠|睡觉|熟睡/.test(s.npcs[row.worker]?.activity??'')||personConstraint(e,s,row.worker))throw Error('须由清醒在场的雇工同意');
+    if(args.consent!==true||s.npcs[row.worker]?.location!==s.location||!able(s,row.worker)||/睡眠|睡觉|熟睡/.test(s.npcs[row.worker]?.activity??'')||personConstraint(e,s,row.worker))throw preconditionFailure('须由清醒在场的雇工同意');
     if(args.operation==='labor_mediate'){
         const representative=s.npcs[row.owner]?row.owner:groupRepresentative(e,s,row.owner);
-        if(!representative||representative!=='player'&&(s.npcs[representative]?.location!==s.location||!able(s,representative))||personConstraint(e,s,representative))throw Error('须由当前雇主或代表在场同意');
+        if(!representative||representative!=='player'&&(s.npcs[representative]?.location!==s.location||!able(s,representative))||personConstraint(e,s,representative))throw preconditionFailure('须由当前雇主或代表在场同意');
         const debts=outstanding(s,row.id),due=debts.reduce((n,r)=>n+r.amount-r.paid,0);
-        if(financeBalance(d,e,row.owner)+(row.escrow??0)<due)throw Error('现有款项不足以清偿欠薪');
+        if(financeBalance(d,e,row.owner)+(row.escrow??0)<due)throw preconditionFailure('现有款项不足以清偿欠薪');
         let escrow=row.escrow??0;
         for(const debt of debts){const amount=dueObligation(d.get('state'),debt.id).owed,cash=Math.min(amount,financeBalance(d,e,row.owner));
             if(cash)settleClaim(d,e,{id:debt.id,payer:row.owner,amount:cash},`${id}:${debt.id}:cash`);
@@ -370,17 +371,17 @@ export function laborTrade(d,e,args,id){
         return {contract:row.id,paid:due,wage:nextWage};
     }
     if(args.operation==='labor_poach'){
-        if(currentEmployment(s,row.worker,now)?.id!==row.id)throw Error('原雇佣已结束或已更换，须查看当前合同');
+        if(currentEmployment(s,row.worker,now)?.id!==row.id)throw preconditionFailure('原雇佣已结束或已更换，须查看当前合同');
         const offer=laborOffers(e,s,now).find(o=>o.owner===e.resolve(args.business??args.buyer)&&(!args.item||o.item===e.resolve(args.item)));
-        if(!offer)throw Error('新雇主当前没有真实用工缺口');
+        if(!offer)throw preconditionFailure('新雇主当前没有真实用工缺口');
         if(args.coins!==undefined)offer.wage=financeInt(args.coins,offer.wage,1e6,'新日薪');
-        if(financeBalance(d,e,offer.owner)<offer.wage)throw Error('新雇主现钱不足以接受所议日薪');
-        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true});if(!app)throw Error('工匠不接受新雇主或工钱');
+        if(financeBalance(d,e,offer.owner)<offer.wage)throw preconditionFailure('新雇主现钱不足以接受所议日薪');
+        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true});if(!app)throw preconditionFailure('工匠不接受新雇主或工钱');
         const rep=s.npcs[offer.owner]?offer.owner:groupRepresentative(e,s,offer.owner);
-        if(!rep||s.npcs[rep]?.location!==s.location||!able(s,rep))throw Error('新雇主或当前代表须在场同意');
+        if(!rep||s.npcs[rep]?.location!==s.location||!able(s,rep))throw preconditionFailure('新雇主或当前代表须在场同意');
         const fresh=sign(d,e,offer,app,now,id);return {contract:fresh.id,previous:row.id};
     }
-    throw Error('未知用工操作');
+    throw preconditionFailure('未知用工操作');
 }
 
 // Historical service receipts retain their recorded cash and scheduling semantics.

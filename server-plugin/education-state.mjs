@@ -12,19 +12,26 @@ import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {practicalKnowledgeRegistry} from './domain-rules.mjs';
 declareHoldingWriter('education-initial');
-export const practicalKnowledgeRegistry=Object.freeze({simple_tripwire_disassembly:{mechanisms:['tripwire_falling_log']}});
+declareHoldingWriter('education');
 const personPath=id=>id==='player'?['state','player']:['state','npcs',id];
 function initialAuthority(d,id,context){
  if(context?.origin!=='initial'||!context.eventId||!d.get(...personPath(id)))throw Error('Initial person authority required');
 }
 export function initializePracticalKnowledge(d,e,id,knowledge,context){
  initialAuthority(d,id,context);
- if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry,k)))throw Error('Unregistered practical knowledge');
+ if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry(e),k)))throw Error('Unregistered practical knowledge');
  holdingSet(d,e,[...personPath(id),'practicalKnowledge'],[...knowledge],'education-initial',context.eventId);
 }
 export function knowsPracticalKnowledge(e,s,id,knowledge){
- return Object.hasOwn(practicalKnowledgeRegistry,knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
+ return Object.hasOwn(practicalKnowledgeRegistry(e),knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
+}
+// A person visibly practising or teaching a subject without a timed
+// demonstration record: the native practising field is the evidence.
+export function practisingOpenly(e,s,id,subject){
+ const n=id==='player'?s.player:s.npcs?.[id];
+ return Boolean(n)&&(n.practicing??n.teaching)===subject&&n.demonstrating!==false&&!recordsWhere(s.records,'category','education_demonstration').some(r=>r.actor===id);
 }
 export function demonstrationAt(e,s,id,subject,until=s.minute){
  const n=id==='player'?s.player:s.npcs?.[id],location=id==='player'?s.location:n?.location;
@@ -53,14 +60,15 @@ export function teachingAvailable(e,s,id,until=s.minute){
  const n=id==='player'?s.player:s.npcs?.[id];
  return !n?.teachingBusy&&!demonstrationAt(e,s,id,undefined,Math.min(until,s.minute));
 }
+// Runtime settlement is the education module's own write, not an initial-campaign one.
 export function settleDemonstrations(d,e){
  const s=d.get('state');
  for(const r of recordsWhere(s.records,'category','education_demonstration'))if(r.toMinute<=s.minute&&s.npcs?.[r.actor]?.activeDemonstration===r.id){
   const path=personPath(r.actor),activity=`演示：${e.byId.get(r.subject)?.name}`;
-  if(d.get(...path,'activity')===activity)holdingSet(d,e,[...path,'activity'],r.activityBefore,'education-initial');
-  holdingSet(d,e,[...path,'practicing'],r.practicingBefore,'education-initial');
-  holdingSet(d,e,[...path,'activeDemonstration'],null,'education-initial');
-  holdingSet(d,e,[...personPath(r.actor),'teachingBusy'],false,'education-initial');
+  if(d.get(...path,'activity')===activity)holdingSet(d,e,[...path,'activity'],r.activityBefore,'education');
+  holdingSet(d,e,[...path,'practicing'],r.practicingBefore,'education');
+  holdingSet(d,e,[...path,'activeDemonstration'],null,'education');
+  holdingSet(d,e,[...personPath(r.actor),'teachingBusy'],false,'education');
  }
 }
 const DAY=1440;

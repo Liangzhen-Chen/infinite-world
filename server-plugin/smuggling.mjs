@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins,coinRead} from './money.mjs';
 import {bagStock} from './stock.mjs';
@@ -24,28 +25,28 @@ function checkpoints(engine,route,state){
 export function smuggleTrade(d,args,id){
     if(args.operation==='smuggle'){
         const item=this.resolve(args.item,'item'),buyer=this.resolve(args.seller,'npc'),destination=this.resolve(args.location),quantity=args.quantity;
-        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw Error('走私数量无效');
+        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw preconditionFailure('走私数量无效');
         const reserved=cargo(d.get('state')).filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
-        if(this.quantity(d,'player',item)<quantity+reserved)throw Error('没有足量未托运的货物');
-        if(!awake(d.get('state'),buyer,d.get('state','npcs',buyer)))throw Error('没有可履约的买方');
+        if(this.quantity(d,'player',item)<quantity+reserved)throw preconditionFailure('没有足量未托运的货物');
+        if(!awake(d.get('state'),buyer,d.get('state','npcs',buyer)))throw preconditionFailure('没有可履约的买方');
         const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.document.randomSeed);
         const checks=checkpoints(this,route,d.get('state')),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
-        if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw Error('路线没有违禁或逃税货物检查点');
-        const bribe=args.coins??0;if(!Number.isSafeInteger(bribe)||bribe<0||bribe>1000000)throw Error('贿金数额无效');
+        if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw preconditionFailure('路线没有违禁或逃税货物检查点');
+        const bribe=args.coins??0;if(!Number.isSafeInteger(bribe)||bribe<0||bribe>1000000)throw preconditionFailure('贿金数额无效');
         const org=args.business?organization(this,d.get('state'),this.resolve(args.business)):null;
-        if(args.business&&(!org?.members.player||!org.charter.rules?.some(r=>/走私|私运/.test(r))))throw Error('须先按U1章程加入该走私组织');
+        if(args.business&&(!org?.members.player||!org.charter.rules?.some(r=>/走私|私运/.test(r))))throw preconditionFailure('须先按U1章程加入该走私组织');
         const key=`smuggling:${id}`,row={category:'smuggling',id:key,item,quantity,buyer,destination,origin:d.get('state','location'),mode,bribe,
             org:org?.id??null,originPrice:regionalTradePrice(d,this,item,d.get('state','location')),contraband:Boolean(banned),status:'运输中',checks:[],minute:d.get('state','minute'),sourceEvent:id};
         d.set(path(key),row);return {shipment:key,status:row.status,destination,note:'货物仍在行囊；沿路移动接受查验，到目的地当面deliver_smuggled结款。'};
     }
-    const row=d.get(...path(args.contract));if(row?.category!=='smuggling'||row.status!=='运输中')throw Error('没有待交付的走私货物');
-    if(row.destination!==d.get('state','location'))throw Error('未到约定目的地');
+    const row=d.get(...path(args.contract));if(row?.category!=='smuggling'||row.status!=='运输中')throw preconditionFailure('没有待交付的走私货物');
+    if(row.destination!==d.get('state','location'))throw preconditionFailure('未到约定目的地');
     const buyer=d.get('state','npcs',row.buyer);
-    if(!awake(d.get('state'),row.buyer,buyer)||buyer.location!==row.destination)throw Error('买方不在场或不能履约');
-    if(bagStock(d,this,{point:'smuggling.stock',id:'player',item:row.item,legacy:()=>this.quantity(d,'player',row.item)})<row.quantity)throw Error('实际货物不足');
-    if(!row.checks.length)throw Error('未实际经过本批货物检查点');
+    if(!awake(d.get('state'),row.buyer,buyer)||buyer.location!==row.destination)throw preconditionFailure('买方不在场或不能履约');
+    if(bagStock(d,this,{point:'smuggling.stock',id:'player',item:row.item,legacy:()=>this.quantity(d,'player',row.item)})<row.quantity)throw preconditionFailure('实际货物不足');
+    if(!row.checks.length)throw preconditionFailure('未实际经过本批货物检查点');
     const price=Math.ceil(regionalTradePrice(d,this,row.item,row.destination)*(row.contraband?this.rules.smuggling.contrabandPremium:1)),cost=price*row.quantity;
-    if(coinRead(d,{point:'smuggling.cash',account:purse(this,row.buyer),legacy:()=>buyer.coins})<cost)throw Error('买方货款不足');
+    if(coinRead(d,{point:'smuggling.cash',account:purse(this,row.buyer),legacy:()=>buyer.coins})<cost)throw preconditionFailure('买方货款不足');
     transferItems(d,this,'player',row.buyer,row.item,row.quantity);
     moveCoins(d,{from:purse(this,row.buyer),to:purse(this,'player'),amount:cost,writer:'smuggling',eventId:id});d.set(['state','npcs',row.buyer,'coins'],buyer.coins-cost);d.set(['state','player','coins'],d.get('state','player','coins')+cost);
     d.set(path(row.id),{...row,status:'已交付',paid:cost,price,deliveredAt:d.get('state','minute'),deliveredBy:id});

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {purse,fund as fundAccount,moveCoins} from './money.mjs';
@@ -77,7 +78,7 @@ function remember(d,engine,npc,w,minute,content,{visibility='public',kind='law'}
     d.set(['state','npcs',npc,'memoryStream'],[...stream??[],{id,sourceEvent:`${w.id}:${minute}`,kind,minute,location:d.get('state','npcs',npc,'location'),
         participants:[w.subject,npc],sourceType:'亲历',visibility,salience:3,emotion:'留意',legalCase:w.case,legalStage:'wanted',content}]);
 }
-function treasury(d,law){const key=`legal_treasury:${law}`,row=d.get(...rec(key));if(row&&row.category!=='legal_treasury')throw Error('法律资金登记键冲突');return {key,row:row??{category:'legal_treasury',law,coins:0}};}
+function treasury(d,law){const key=`legal_treasury:${law}`,row=d.get(...rec(key));if(row&&row.category!=='legal_treasury')throw preconditionFailure('法律资金登记键冲突');return {key,row:row??{category:'legal_treasury',law,coins:0}};}
 function releaseReward(d,w){
     if(!w.bounty)return;const {key,row}=treasury(d,w.law);
     holdingSet(d,null,rec(key),{...row,reserved:Math.max(0,(row.reserved??0)-w.bounty)},'bounty');
@@ -342,29 +343,29 @@ export function bribeStake(engine,row,w){
 export function bountyQuestAction(d,engine,q,args,eventId){
     const now=d.get('state','minute'),w=d.get(...rec(q.bounty));
     if(args.operation==='inspect'){
-        if(q.taker!=='player'&&q.location!==d.get('state','location'))throw Error('没有获知该悬赏进度的渠道');
+        if(q.taker!=='player'&&q.location!==d.get('state','location'))throw preconditionFailure('没有获知该悬赏进度的渠道');
         return {quest:q.id,status:q.status,content:q.content,reward:q.reward,wanted:w?{status:w.status,reason:w.reason,scope:w.scope}:null};
     }
-    if(!w||w.status!==ACTIVE)throw Error('此悬赏的通缉已经解除');
+    if(!w||w.status!==ACTIVE)throw preconditionFailure('此悬赏的通缉已经解除');
     if(args.operation==='accept'){
-        if(args.taker&&engine.resolve(args.taker)!=='player')throw Error('NPC猎手按世界时间自行接赏');
-        if(w.subject==='player')throw Error('不能悬赏缉拿自己');
-        if(q.status!=='公开')throw Error('这份赏金已有人接下');
+        if(args.taker&&engine.resolve(args.taker)!=='player')throw preconditionFailure('NPC猎手按世界时间自行接赏');
+        if(w.subject==='player')throw preconditionFailure('不能悬赏缉拿自己');
+        if(q.status!=='公开')throw preconditionFailure('这份赏金已有人接下');
         d.set(['state','quests',q.id],{...q,status:'进行中',taker:'player',acceptedAt:now});
         return {quest:q.id,status:'进行中',target:w.subject,targetName:nameOf(engine,d.get('state'),w.subject),scope:w.scope,
             note:'在通缉范围内找到逃犯后用world_law arrest对其案件缉拿，押到发布法院再complete交付领赏'};
     }
-    if(q.taker!=='player'||q.status!=='进行中')throw Error('你没有接下这份赏金');
+    if(q.taker!=='player'||q.status!=='进行中')throw preconditionFailure('你没有接下这份赏金');
     if(args.operation==='cancel'){
         d.set(['state','quests',q.id],{...q,status:'公开',taker:null});
         if(w.captive?.by==='player'){holdingSet(d,null,['state','player','companions'],(d.get('state','player','companions')??[]).filter(n=>n!==w.subject),'bounty');save(d,{...w,captive:null});}
         return {quest:q.id,status:'公开',note:'放弃赏金；押着的人已放走'};
     }
     const code=codeById(engine,w.law),here=d.get('state','location');
-    if(here!==code.court)throw Error(`须把逃犯押到${engine.byId.get(code.court)?.name??code.court}交付`);
-    if(w.captive?.by!=='player'||!d.get('state','player','companions')?.includes(w.subject))throw Error('逃犯不在你押解之下，没有可交付的人');
+    if(here!==code.court)throw preconditionFailure(`须把逃犯押到${engine.byId.get(code.court)?.name??code.court}交付`);
+    if(w.captive?.by!=='player'||!d.get('state','player','companions')?.includes(w.subject))throw preconditionFailure('逃犯不在你押解之下，没有可交付的人');
     const receiver=enforcersOf(engine,code.id,d.get('state')).find(id=>{const n=d.get('state','npcs',id);return awake(n,d.get('state'),id)&&n.location===here&&!dismissed(d.get('state'),id);});
-    if(!receiver)throw Error('法院没有清醒在场的执法或审判人员接收');
+    if(!receiver)throw preconditionFailure('法院没有清醒在场的执法或审判人员接收');
     const paid=deliverFugitive(d,engine,w,'player',now);
     d.say(`把${nameOf(engine,d.get('state'),w.subject)}交给${engine.byId.get(receiver)?.name}，领赏${paid}铜`);
     const experience=awardExperience(d,engine,{kind:'quest',subject:`bounty:${w.id}`,source:`quest:${q.id}`,base:engine.rules.quests.experienceRanges[q.grade][0],repeat:true},eventId);

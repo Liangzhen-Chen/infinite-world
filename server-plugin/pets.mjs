@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead,isLiving,bodyLiving} from './lifecycle-state.mjs';
 import {petTrustGain} from './hidden-passives.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -28,7 +29,7 @@ export function petCapacity(engine, combat, category) {
 export function checkPetCareer(d, engine, combat) {
     for (const category of Object.keys(categoryNames)) {
         const count = Object.values(d.get('state', 'pets') ?? {}).filter(row => active(row) && categoryOf(row) === category).length;
-        if (count > petCapacity(engine, combat, category)) throw new Error(`现有${categoryNames[category]}宠物超过新职业名额，须先妥善安置或解除归属`);
+        if (count > petCapacity(engine, combat, category)) throw preconditionFailure(`现有${categoryNames[category]}宠物超过新职业名额，须先妥善安置或解除归属`);
     }
 }
 
@@ -36,14 +37,14 @@ function animal(d, engine, name, { owned = false, owner = 'player', location = d
     const id = resolveCreature(engine,d,name), actor = d.get('state', 'creatures', id), definition = engine.byId.get(id);
     const species = definition?.monster ? engine.byId.get(definition.monster) : definition;
     const rule = definition?.tamingRule ?? species?.tamingRule;
-    if (!actor || !rule || !engine.rules.petCare) throw new Error('没有已登记的动物实例或驯养规则');
-    if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw new Error('动物健康或等级记录无效');
-    if (actor.location !== location) throw new Error('动物不在场');
-    if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw new Error('动物已经死亡，照料不能复活');
-    if (actor.owner && actor.owner !== owner) throw new Error('动物已有其他所有者，不能擅自操作');
-    if (sapient(actor)) throw new Error('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
+    if (!actor || !rule || !engine.rules.petCare) throw preconditionFailure('没有已登记的动物实例或驯养规则');
+    if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw preconditionFailure('动物健康或等级记录无效');
+    if (actor.location !== location) throw preconditionFailure('动物不在场');
+    if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw preconditionFailure('动物已经死亡，照料不能复活');
+    if (actor.owner && actor.owner !== owner) throw preconditionFailure('动物已有其他所有者，不能擅自操作');
+    if (sapient(actor)) throw preconditionFailure('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
     const pet = d.get('state', 'pets', id);
-    if (owned && (actor.owner !== owner || pet?.petFormat !== 1 || !active(pet))) throw new Error('这不是仍归你所有的宠物');
+    if (owned && (actor.owner !== owner || pet?.petFormat !== 1 || !active(pet))) throw preconditionFailure('这不是仍归你所有的宠物');
     return { id, actor, definition, rule, pet, ownedRequired:owned };
 }
 
@@ -149,7 +150,7 @@ export function petAction(d, args, eventId) {
     if (operation === 'inspect') {
         const view=petView(this,d.document);if(!args.target)return view;
         const id=resolveCreature(this,d,args.target),actor=d.get('state','creatures',id);
-        if(!actor||actor.location!==d.get('state','location')||isPhysicallyDead(this,d,id))throw new Error('这不是当前在场的活体动物');
+        if(!actor||actor.location!==d.get('state','location')||isPhysicallyDead(this,d,id))throw preconditionFailure('这不是当前在场的活体动物');
         return{target:id,animal:view.presentAnimals.find(row=>row.id===id),pet:view.pets.find(row=>row.id===id)??null};
     }
     const row = animal(d, this, args.target, { owned: !['feed', 'contact', 'tame'].includes(operation) });
@@ -157,10 +158,10 @@ export function petAction(d, args, eventId) {
     const care = careOf(actor, now);
     if(operation==='custody'){
         const keeper=this.resolve(args.keeper??args.member,'npc'),person=d.get('state','npcs',keeper);
-        if(args.consent!==true||!person||!isEffective(this,d,keeper)||person.location!==actor.location||person.scheduleTravel||['昏迷','濒死'].includes(person.status))throw Error('托养须受托人实际在场、清醒并同意');
-        if(!Number.isSafeInteger(args.days)||args.days<1||args.days>360)throw Error('托养期限须为1到360天');
-        if(row.pet.custody?.status==='active')throw Error('已有生效托养，不能重复委托');
-        if(d.get('state','player','mount')===id)throw Error('须先下坐骑再托养');
+        if(args.consent!==true||!person||!isEffective(this,d,keeper)||person.location!==actor.location||person.scheduleTravel||['昏迷','濒死'].includes(person.status))throw preconditionFailure('托养须受托人实际在场、清醒并同意');
+        if(!Number.isSafeInteger(args.days)||args.days<1||args.days>360)throw preconditionFailure('托养期限须为1到360天');
+        if(row.pet.custody?.status==='active')throw preconditionFailure('已有生效托养，不能重复委托');
+        if(d.get('state','player','mount')===id)throw preconditionFailure('须先下坐骑再托养');
         const until=now+args.days*1440,obligation=`pet-custody:${eventId}`;
         openObligation(d,this,{id:obligation,kind:'service',debtor:keeper,creditor:'player',actor:keeper,subject:id,deadline:until,
             terms:{exclusive:{scope:'subject',family:'pet-custody',policy:'forbid'},expires:until,service:'custody',foodOwner:keeper}},eventId);
@@ -169,20 +170,20 @@ export function petAction(d, args, eventId) {
         return{target:id,obligation,keeper,until,owner:'player',foodOwner:keeper};
     }
     if(operation==='collect'){
-        const service=row.pet.custody;if(!service)throw Error('没有托养记录');
+        const service=row.pet.custody;if(!service)throw preconditionFailure('没有托养记录');
         const keeper=d.get('state','npcs',service.keeper);
-        if(service.status==='active'&&(!keeper||keeper.location!==actor.location||!isEffective(this,d,service.keeper)))throw Error('须由实际在场的受托人交还');
+        if(service.status==='active'&&(!keeper||keeper.location!==actor.location||!isEffective(this,d,service.keeper)))throw preconditionFailure('须由实际在场的受托人交还');
         if(service.status==='active')closeObligation(d,this,{id:service.obligation,actor:service.keeper,reason:'animal_returned'},eventId);
         d.set(['state','pets',id],{...row.pet,status:'活跃',following:true,custody:{...service,status:'returned',returnedAt:now}});
         return{target:id,obligation:service.obligation,returned:true,owner:'player'};
     }
-    if(row.pet?.custody?.status==='active'&&!['inspect','feed','treat'].includes(operation))throw Error('托养期间须先实际领回宠物');
-    if (actor.status === '濒死' && !['feed', 'treat'].includes(operation)) throw new Error('动物伤重，不能驯服、训练或骑乘');
+    if(row.pet?.custody?.status==='active'&&!['inspect','feed','treat'].includes(operation))throw preconditionFailure('托养期间须先实际领回宠物');
+    if (actor.status === '濒死' && !['feed', 'treat'].includes(operation)) throw preconditionFailure('动物伤重，不能驯服、训练或骑乘');
     if (operation === 'feed') {
         const item = this.resolve(args.item, 'item'), food = rule.food.find(entry => entry.item === item);
-        if (!food) throw new Error('这种食物不符合已登记食性');
-        if (care.hunger === 0) throw new Error('动物已经吃饱');
-        if (this.quantity(d, 'player', item) < 1) throw new Error('没有实际持有的食物');
+        if (!food) throw preconditionFailure('这种食物不符合已登记食性');
+        if (care.hunger === 0) throw preconditionFailure('动物已经吃饱');
+        if (this.quantity(d, 'player', item) < 1) throw preconditionFailure('没有实际持有的食物');
         this.itemDelta(d, 'player', item, -1, {flow:'sink:consume',purpose:'feed',writer:'pets',eventId});
         care.hunger = clamp(care.hunger - food.hungerRelief); care.mood = clamp(care.mood + 2);
         if (care.feedDay !== day) { care.bond = clamp(care.bond + petTrustGain(this,d.get('state'),id,food.trustGain)); care.feedDay = day; }
@@ -191,20 +192,20 @@ export function petAction(d, args, eventId) {
     }
     if (operation === 'contact' || operation === 'tame') {
         const proficiency = effectiveProficiency(d, this, rules.tamingSkill);
-        if (!d.get('state', 'skills', rules.tamingSkill) || proficiency < rule.minimumSkill) throw new Error('驯兽技能不足');
-        if (actor.owner === 'player') throw new Error('已经归你所有，无需重复驯服');
-        if (care.hunger >= rules.hungryThreshold || care.sickness) throw new Error('动物饥病，先照料再建立信任');
-        if (operation === 'contact' && care.contactDay === day) throw new Error('今天已接触过，信任不能重复刷取');
+        if (!d.get('state', 'skills', rules.tamingSkill) || proficiency < rule.minimumSkill) throw preconditionFailure('驯兽技能不足');
+        if (actor.owner === 'player') throw preconditionFailure('已经归你所有，无需重复驯服');
+        if (care.hunger >= rules.hungryThreshold || care.sickness) throw preconditionFailure('动物饥病，先照料再建立信任');
+        if (operation === 'contact' && care.contactDay === day) throw preconditionFailure('今天已接触过，信任不能重复刷取');
         if (operation === 'tame') {
-            if (care.bond < rule.trustThreshold || d.get('state', 'player', 'level') < Math.max(rule.minimumPlayerLevel, actor.level ?? 0)) throw new Error('信任或等级不足以驯服这个动物');
+            if (care.bond < rule.trustThreshold || d.get('state', 'player', 'level') < Math.max(rule.minimumPlayerLevel, actor.level ?? 0)) throw preconditionFailure('信任或等级不足以驯服这个动物');
             if (row.definition.tier) {
                 const permission = d.get('state', 'records', args.authorization);
-                if (!permission || permission.category !== 'boss_taming' || permission.subject !== id || permission.condition !== rule.bossCondition || permission.expires <= now) throw new Error('首领需要已验证且有效的特殊驯服条件');
+                if (!permission || permission.category !== 'boss_taming' || permission.subject !== id || permission.condition !== rule.bossCondition || permission.expires <= now) throw preconditionFailure('首领需要已验证且有效的特殊驯服条件');
             }
             const reserved = d.get('state', 'pets', id);
-            if (reserved && (reserved.petFormat !== 1 || active(reserved))) throw new Error('已有宠物记录，不能覆盖或重复登记');
+            if (reserved && (reserved.petFormat !== 1 || active(reserved))) throw preconditionFailure('已有宠物记录，不能覆盖或重复登记');
             const count = Object.values(d.get('state', 'pets') ?? {}).filter(pet => active(pet) && categoryOf(pet) === rule.category).length;
-            if (count >= petCapacity(this, d.get('state', 'professions', 'combat'), rule.category)) throw new Error('宠物名额已满或当前职业不允许');
+            if (count >= petCapacity(this, d.get('state', 'professions', 'combat'), rule.category)) throw preconditionFailure('宠物名额已满或当前职业不允许');
         }
         const result = this.check(d, { attribute: '魅力', skill: rules.tamingSkill, difficulty: rule.difficulty }, eventId);
         if (operation === 'contact') care.contactDay = day;
@@ -234,33 +235,33 @@ export function petAction(d, args, eventId) {
                 note:'仅解除归属，动物仍在登记地点；没有牵绳物品操作、生命变化或迁徙。没有其他独立动作时本回合0分钟。'} };
     }
     if (operation === 'dismount') {
-        if (d.get('state', 'player', 'mount') !== id) throw new Error('当前没有骑着这只坐骑');
+        if (d.get('state', 'player', 'mount') !== id) throw preconditionFailure('当前没有骑着这只坐骑');
         d.remove(['state', 'player', 'mount']); return { target: id, mounted: false };
     }
     if (operation === 'follow' || operation === 'stay') {
-        if (operation === 'stay' && d.get('state', 'player', 'mount') === id) throw new Error('先下坐骑再留守');
-        if (operation === 'follow' && (care.loyalty < 20 || care.sickness)) throw new Error('宠物暂不愿或无法跟随');
+        if (operation === 'stay' && d.get('state', 'player', 'mount') === id) throw preconditionFailure('先下坐骑再留守');
+        if (operation === 'follow' && (care.loyalty < 20 || care.sickness)) throw preconditionFailure('宠物暂不愿或无法跟随');
         d.set(['state', 'pets', id], { ...row.pet, following: operation === 'follow', status: operation === 'follow' ? '活跃' : '留守' });
         return { target: id, following: operation === 'follow' };
     }
     if (operation === 'mount') {
-        if (rule.category !== 'mount' || !rule.rideable) throw new Error('动物不能作为坐骑');
-        if (care.sickness || care.fatigue >= rules.maximumRideFatigue || care.hunger >= rules.hungryThreshold || care.loyalty < 20 || actor.hp < actor.maxHp / 2) throw new Error('坐骑状态不足以骑乘');
+        if (rule.category !== 'mount' || !rule.rideable) throw preconditionFailure('动物不能作为坐骑');
+        if (care.sickness || care.fatigue >= rules.maximumRideFatigue || care.hunger >= rules.hungryThreshold || care.loyalty < 20 || actor.hp < actor.maxHp / 2) throw preconditionFailure('坐骑状态不足以骑乘');
         const weight = Object.entries(d.get('state', 'inventory')).reduce((sum, [item, entry]) => sum + this.quantity(d, 'player', item) * (this.byId.get(item)?.weight ?? 0), 0);
-        if (weight + rule.riderWeightKg > rule.carryKg) throw new Error('坐骑负重不足');
-        if (d.get('state', 'player', 'mount') && d.get('state', 'player', 'mount') !== id) throw new Error('先从现有坐骑下来');
+        if (weight + rule.riderWeightKg > rule.carryKg) throw preconditionFailure('坐骑负重不足');
+        if (d.get('state', 'player', 'mount') && d.get('state', 'player', 'mount') !== id) throw preconditionFailure('先从现有坐骑下来');
         writeCare(d, id, care); d.set(['state', 'player', 'mount'], id);
         d.set(['state', 'pets', id], { ...row.pet, following: true, status: '活跃' });
         return { target: id, mounted: true, loadKg: weight + rule.riderWeightKg };
     }
     if (operation === 'rest') {
-        if (!Number.isSafeInteger(args.minutes) || args.minutes < 60 || args.minutes > 1440) throw new Error('休息时长须为60至1440分钟');
-        if (d.get('state', 'player', 'mount') === id) throw new Error('先下坐骑再休息');
+        if (!Number.isSafeInteger(args.minutes) || args.minutes < 60 || args.minutes > 1440) throw preconditionFailure('休息时长须为60至1440分钟');
+        if (d.get('state', 'player', 'mount') === id) throw preconditionFailure('先下坐骑再休息');
         writeCare(d, id, care); this.advance(d, args.minutes, eventId);
         return { target: id, elapsed: args.minutes, care: d.get('state', 'creatures', id, 'care') };
     }
     if (operation === 'groom') {
-        if (care.groomDay === day) throw new Error('今天已经照料，忠诚不能反复刷取');
+        if (care.groomDay === day) throw preconditionFailure('今天已经照料，忠诚不能反复刷取');
         care.groomDay = day; writeCare(d, id, care); this.advance(d, rules.groomMinutes, eventId);
         const failed = stillPresent(d, this, row), latest = structuredClone(d.get('state', 'creatures', id, 'care'));
         if (!failed) { latest.loyalty = clamp(latest.loyalty + rules.groomLoyalty); latest.mood = clamp(latest.mood + 5); writeCare(d, id, latest); }
@@ -269,15 +270,15 @@ export function petAction(d, args, eventId) {
     if (operation === 'treat' || operation === 'train') {
         const skill = operation === 'treat' ? rules.medicineSkill : rules.tamingSkill;
         const minimum = operation === 'treat' ? rules.treatmentMinimumSkill : rules.trainMinimumSkill;
-        if (effectiveProficiency(d, this, skill) < minimum) throw new Error('照料技能不足');
+        if (effectiveProficiency(d, this, skill) < minimum) throw preconditionFailure('照料技能不足');
         if (operation === 'treat') {
-            if (!care.sickness && actor.hp >= actor.maxHp) throw new Error('动物没有可治疗的病伤');
-            if (this.quantity(d, 'player', rules.treatmentItem) < 1) throw new Error('缺少实际药材');
+            if (!care.sickness && actor.hp >= actor.maxHp) throw preconditionFailure('动物没有可治疗的病伤');
+            if (this.quantity(d, 'player', rules.treatmentItem) < 1) throw preconditionFailure('缺少实际药材');
             this.itemDelta(d, 'player', rules.treatmentItem, -1, {flow:'sink:consume',purpose:'treat',writer:'pets',eventId});
         } else {
-            if (!rule.skills.includes(args.skill)) throw new Error('训练目标不在这种动物的技能目录');
-            if (care.trainDay === day) throw new Error('今天已训练，不能重复刷成长');
-            if (care.hunger >= rules.hungryThreshold || care.sickness || care.fatigue >= 80) throw new Error('宠物状态不足以训练');
+            if (!rule.skills.includes(args.skill)) throw preconditionFailure('训练目标不在这种动物的技能目录');
+            if (care.trainDay === day) throw preconditionFailure('今天已训练，不能重复刷成长');
+            if (care.hunger >= rules.hungryThreshold || care.sickness || care.fatigue >= 80) throw preconditionFailure('宠物状态不足以训练');
             care.trainDay = day;
         }
         const result = this.check(d, { attribute: operation === 'treat' ? '智力' : '魅力', skill, difficulty: 15 }, eventId);
@@ -303,7 +304,7 @@ export function petAction(d, args, eventId) {
         writeCare(d, id, latest);
         return { target: id, operation, ...result, checkSuccess: result.success, success: result.success && !failed, ...(failed ? { effectFailed: failed } : {}), care: latest, hp: d.get('state', 'creatures', id, 'hp'), level: d.get('state', 'creatures', id, 'level') };
     }
-    throw new Error('未登记的宠物操作');
+    throw preconditionFailure('未登记的宠物操作');
 }
 
 const mindOf = (engine, document, id, actor) => { const mind = actor && awakeningView(engine, document.randomSeed, id, actor, document.state.minute); return mind ? { mind } : {}; };
@@ -323,16 +324,16 @@ export function petView(engine, document) {
 export function preparePetTravel(d, engine, mode, movingMinutes, rider = 'player', selectedMount = null) {
     const path=rider==='player'?['state','player']:['state','npcs',rider];
     const existing=d.get(...path,'mount'),mounted = selectedMount??existing,location=rider==='player'?d.get('state','location'):d.get(...path,'location');
-    if(selectedMount&&existing&&existing!==selectedMount)throw Error('先从现有坐骑下来');
+    if(selectedMount&&existing&&existing!==selectedMount)throw preconditionFailure('先从现有坐骑下来');
     if (mode === 'horse') {
-        if (!mounted) throw new Error('骑行需要实际骑乘已归属的坐骑');
+        if (!mounted) throw preconditionFailure('骑行需要实际骑乘已归属的坐骑');
         const { actor, rule } = animal(d, engine, mounted, { owned: true, owner:rider, location }), care = careOf(actor, d.get('state', 'minute'));
-        if([['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{})].some(([id,body])=>id!==rider&&body.mount===mounted))throw Error('坐骑已被其他骑手占用');
+        if([['player',d.get('state','player')],...Object.entries(d.get('state','npcs')??{})].some(([id,body])=>id!==rider&&body.mount===mounted))throw preconditionFailure('坐骑已被其他骑手占用');
         const fatigue = Math.ceil(movingMinutes / 30) * engine.rules.petCare.travelFatiguePer30Minutes;
         const load=Object.entries(d.get(...engine.bagPath(rider))??{}).reduce((sum,[item])=>sum+engine.quantity(d,rider,item)*(engine.byId.get(item)?.weight??0),rule.riderWeightKg);
-        if(load>rule.carryKg)throw new Error('当前物品增加后坐骑负重不足，无法骑行');
-        if (!rule.rideable || ['昏迷','濒死','失能'].includes(actor.status) || care.sickness || care.hunger >= engine.rules.petCare.hungryThreshold || care.fatigue + fatigue > engine.rules.petCare.maximumRideFatigue || actor.hp < actor.maxHp / 2) throw new Error('坐骑无法完成这段路，须休息、照料或分段走');
-    } else if (mounted) throw new Error('先下坐骑，再选择其他出行方式');
+        if(load>rule.carryKg)throw preconditionFailure('当前物品增加后坐骑负重不足，无法骑行');
+        if (!rule.rideable || ['昏迷','濒死','失能'].includes(actor.status) || care.sickness || care.hunger >= engine.rules.petCare.hungryThreshold || care.fatigue + fatigue > engine.rules.petCare.maximumRideFatigue || actor.hp < actor.maxHp / 2) throw preconditionFailure('坐骑无法完成这段路，须休息、照料或分段走');
+    } else if (mounted) throw preconditionFailure('先下坐骑，再选择其他出行方式');
 }
 
 // Native move.mount boards an actual NPC-owned animal. It uses the same
@@ -341,7 +342,7 @@ export function mountNpcPet(d,engine,rider,id){
     const body=d.get('state','npcs',rider);
     if(!body)throw Error('NPC rider is missing');
     const {actor,rule,pet}=animal(d,engine,id,{owned:true,owner:rider,location:body.location}),care=careOf(actor,d.get('state','minute'));
-    if(rule.category!=='mount'||!rule.rideable||care.loyalty<20||care.fatigue>=engine.rules.petCare.maximumRideFatigue)throw Error('坐骑状态不足以骑乘');
+    if(rule.category!=='mount'||!rule.rideable||care.loyalty<20||care.fatigue>=engine.rules.petCare.maximumRideFatigue)throw preconditionFailure('坐骑状态不足以骑乘');
     preparePetTravel(d,engine,'horse',0,rider,id);
     writeCare(d,id,care);d.set(['state','npcs',rider,'mount'],id);
     d.set(['state','pets',id],{...pet,following:true,status:'活跃'});

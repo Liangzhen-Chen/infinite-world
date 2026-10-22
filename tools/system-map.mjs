@@ -120,7 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
- {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','body-needs.mjs']},
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','restore-origin.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','body-needs.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -133,7 +133,7 @@ const SYSTEMS=[
  {id:'data_drafts',layer:'data',name:'内容草稿',dir:'world/drafts',modules:[]},
  {id:'data_ontology',layer:'data',name:'词汇表（L1，S0）',dir:'world/ontology',modules:[]},
  {id:'data_actions',layer:'data',name:'动作注册表与事件模板（A1）',dir:'world/actions',modules:[]},
- {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:[]},
+ {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:['domain-rules.mjs']},
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs','scheduler.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',

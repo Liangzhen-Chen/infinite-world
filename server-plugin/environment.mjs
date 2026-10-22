@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {reject} from './action-rejection.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet,setLocation,aliveHoldings,locationOf} from './holdings.mjs';
@@ -14,6 +15,8 @@ import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
 import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
+import {mechanismRule,liquidItem}from'./domain-rules.mjs';
+import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {waterMechanisms}from'../world/design/water-foundation.mjs';
 import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,assertFirePath}from'./magic-object.mjs';
 import{inspectMagicMarks}from'./magic-marks.mjs';
@@ -22,7 +25,7 @@ import {airEnvironmentAction}from'./magic-air.mjs';
 import {waterEarthSightClear,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
 import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,assertLightMovement}from'./magic-light.mjs';
 
-const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}无效`);return value;};
+const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
 import {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
@@ -96,19 +99,20 @@ function interactPhysicalItem(d,engine,args,eventId){
  }
  if(operation==='tie'){
   const branch=physicalItem(d,engine,args.destination);
-  if(!facts.attachedLaces||!facts.materialTraits?.includes('old_shoe')||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
+  if(!facts.attachedLaces||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
   const allowed=authority({engine,document:d.document},'player','fact.set',args.destination);
   if(!allowed.allowed)throw Error('Support authority required');
   setLocation(d,{entity:id,at:args.destination,mode:'container',writer:'environment',engine,source:eventId});return {id,attachedTo:args.destination};
  }
  if(operation==='douse_fire'){
-  if(facts.fireIntensity!==1||engine.quantity(d,'player','item_water')<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
-  engine.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
+  const water=liquidItem(engine,'water');
+  if(facts.fireIntensity!==1||!water||engine.quantity(d,'player',water)<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
+  engine.itemDelta(d,'player',water,-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
   writePhysicalItem(d,engine,id,{fireIntensity:0},{eventId});engine.advance(d,1,eventId);return {id,fireIntensity:0,minutes:1};
  }
- const field=operation==='disarm'?'armed':'locked';
- if(facts[field]!==true||operation==='disarm'&&(facts.identified!==true||facts.mechanism!=='tripwire_falling_log')||operation==='unlock'&&facts.mechanism!=='mechanical_lock')throw Error('No identified supported mechanism');
- const tool=operation==='disarm'?'item_smith_tongs':'item_iron_wire';
+ const mechanism=mechanismRule(engine,facts.mechanism),field=mechanism?.state;
+ if(!mechanism||mechanism.operation!==operation||facts[field]!==true||mechanism.requiresIdentified&&facts.identified!==true)throw Error('No identified supported mechanism');
+ const tool=mechanism.tool;
  if(engine.quantity(d,'player',tool)<1)throw Error('Mechanism requires its actual tool');
  const rules=engine.world.openActionRules?.generic;
  if(!rules)throw Error('Missing native physical work rules');
@@ -138,7 +142,7 @@ function feature(engine,name,location,document){
 }
 const stateOf=(d,row)=>{
     const record=d.get('state','records',key(row.id));
-    if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw new Error('环境动态状态的登记键发生冲突，拒绝覆盖');
+    if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw preconditionFailure('环境动态状态的登记键发生冲突，拒绝覆盖');
     return record?.state??row.state;
 };
 const store=(d,row,state)=>{if(state.waterMl!==undefined)reconcileContainerWater(d,row.id,state.waterMl);d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});};
@@ -152,6 +156,7 @@ export function recordLocalContact(d,engine,target,eventId){
     const height=Number.isFinite(elevation)?{elevationMeters:elevation}:{};
     const evidence={category:'physical_contact',subject:target,location,point:[...position],visibleFrom:[...position],event:eventId,minute,expires,activity:actor.activity??null,...height};
     d.set(['state','records',source],evidence);
+    prunePhysicalContacts(d);
     d.set(['state','records',`local_actor_position:${target}`],{category:'local_position',subject:target,location,point:[...position],source,minute,expires,activity:actor.activity??null,...height});
     return true;
 }
@@ -171,18 +176,18 @@ export function localSightClear(d,engine,location,from,to,{waterCurtain=true,opt
 }
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function inReach(d,row,range){
-    if(row.location!==d.get('state','location'))throw new Error('环境对象不在当前位置');
-    if(distance(point(d),row.position)>range)throw new Error('环境对象超过实际施法距离');
+    if(row.location!==d.get('state','location'))throw preconditionFailure('环境对象不在当前位置');
+    if(distance(point(d),row.position)>range)throw preconditionFailure('环境对象超过实际施法距离');
 }
 function permission(d,engine,row,args,{spell=null,until=d.get('state','minute')}={}){
     if(row.owner==='player'||row.access==='public')return;
     if(spell&&consent({engine,document:d.document},row.owner,'player','cast',{purpose:spell,subject:row.id,terms:{spell,waterBatch:'current'},until,onRefusal:'abort'}).allowed)return;
     const keys=args.authorizations??[];
-    if(!Array.isArray(keys)||keys.length>8)throw new Error('环境授权编号列表无效');
+    if(!Array.isArray(keys)||keys.length>8)throw preconditionFailure('环境授权编号列表无效');
     const authorization=[args.authorization,...keys].filter(Boolean).map(id=>d.get('state','records',id)).find(record=>record?.subject===row.id);
     if(!authorization||authorization.category!=='authorization'||authorization.subject!==row.id||authorization.action!=='environment_use'||
         authorization.grantor!==row.owner||authorization.expires!==undefined&&authorization.expires<=d.get('state','minute'))reject('E-ACTION-OWNER-AUTHORITY','私人环境对象需要有效所有者授权',{missing:['需要所有者的有效授权'],repair:['先取得所有者对该环境对象的有效授权']});
-    if(row.owner.startsWith('npc_')&&(!isEffective(engine,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw new Error('对象所有者无法继续履约');
+    if(row.owner.startsWith('npc_')&&(!isEffective(engine,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw preconditionFailure('对象所有者无法继续履约');
 }
 function visible(row,state){
     const out={id:row.id,name:row.name,kind:row.kind,owner:row.owner,access:row.access,position:[...row.position],links:{...row.links??{}}};
@@ -198,7 +203,7 @@ export function environmentCatalog(engine,document,{entity}={}){
     const d={get:(...path)=>path.reduce((v,k)=>v?.[k],document)},location=document.state.location;
     if(entity){
         const row=environmentFeatures(engine,document).find(r=>r.id===entity);
-        if(!row)throw Error('环境对象未登记');inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));
+        if(!row)throw preconditionFailure('环境对象未登记');inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));
     }
     const forest=forestView(engine,document.state,location),basin=basinForLocation(engine,location,waterBasins(engine,document.state)),water=basin&&basinState(engine,document.state,basin);
     return{kind:'feature',entries:environmentFeatures(engine,document).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row))),
@@ -206,13 +211,13 @@ export function environmentCatalog(engine,document,{entity}={}){
 }
 export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
     const source=feature(this,args.source,d.get('state','location'),d.document),destination=feature(this,args.destination,d.get('state','location'),d.document);
-    if(source.id===destination.id)throw new Error('源与目标容器不能相同');
-    if(!['water','container'].includes(source.kind)||destination.kind!=='container')throw new Error('役灵只能从水源或容器搬水到真实容器');
+    if(source.id===destination.id)throw preconditionFailure('源与目标容器不能相同');
+    if(!['water','container'].includes(source.kind)||destination.kind!=='container')throw preconditionFailure('役灵只能从水源或容器搬水到真实容器');
     for(const row of[source,destination]){inReach(d,row,3);permission(d,this,row,args);}
     assertLiquidWater(this,d,source);
     const src=structuredClone(stateOf(d,source)),dst=structuredClone(stateOf(d,destination));
     const amount=integer(args.millilitres,1,maximumMl,'搬水量');
-    if(src.waterMl<amount||dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)<amount)throw new Error('水源不足或目标容器容量不足');
+    if(src.waterMl<amount||dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)<amount)throw preconditionFailure('水源不足或目标容器容量不足');
     if(inspectOnly)return{source:source.id,destination:destination.id,amountMl:amount};
     for(const field of['saltMg','toxinUg']){const moved=src[field]*amount/src.waterMl;src[field]-=moved;dst[field]+=moved;}
     dst.turbidity=(dst.turbidity*dst.waterMl+src.turbidity*amount)/(dst.waterMl+amount);
@@ -239,30 +244,30 @@ function watering(d,engine,row,operation,args,range,power){
     if(channel.kind!=='channel')reject('E-ACTION-CHANNEL','缺少真实引水沟',{missing:['需要真实存在的引水沟'],repair:['先修建引水沟，再选择其真实编号引水']});
     const source=feature(engine,channel.links?.source,d.get('state','location'),d.document),
         destination=intoContainer?row:feature(engine,channel.links?.destination,d.get('state','location'),d.document);
-    if(source.kind!=='water'||!['soil',...(intoContainer?['container']:[])].includes(destination.kind)||operation==='soil_water'&&destination.id!==row.id||args.source&&args.source!==source.id)throw new Error('沟渠源头或目标田垄不匹配');
+    if(source.kind!=='water'||!['soil',...(intoContainer?['container']:[])].includes(destination.kind)||operation==='soil_water'&&destination.id!==row.id||args.source&&args.source!==source.id)throw preconditionFailure('沟渠源头或目标田垄不匹配');
     for(const target of[channel,source,destination]){inReach(d,target,range);permission(d,engine,target,args);}
     assertLiquidWater(engine,d,source);
     const ch=stateOf(d,channel),src=stateOf(d,source),dst=stateOf(d,destination);
-    if(operation==='soil_water'&&!dst.worked)throw new Error('回潮前需要耕作者实际处理土壤');
+    if(operation==='soil_water'&&!dst.worked)throw preconditionFailure('回潮前需要耕作者实际处理土壤');
     const requested=args.millilitres===undefined?power*1000:integer(args.millilitres,1,power*1000,'引水量');
     const amountMl=Math.floor(Math.min(requested,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0),waterEarthFlow(d,channel,ch)*(1-ch.blockagePercent/100)));
     if(amountMl<=0)reject('E-ACTION-WATER-FLOW','水源不足、田垄已满或沟渠被堵住',{missing:['需要足够的原水、目标余量与畅通沟渠'],repair:['先检查水源和目标容量，实际清淤后再引水']});
     return{channel,source,destination,amountMl};
 }
 export function prepareEnvironmentMagic(d,catalog,args){
-    if(!this.rules.environment)throw new Error('此世界尚无环境规则');
+    if(!this.rules.environment)throw preconditionFailure('此世界尚无环境规则');
     const row=feature(this,args.target,d.get('state','location'),d.document),spec=catalog.effectSpec;
     inReach(d,row,catalog.rangeMeters);if(spec.operation!=='sense_water')permission(d,this,row,args,{spell:catalog.id,until:d.get('state','minute')+(catalog.minutes??0)});
     const current=stateOf(d,row),operation=spec.operation;
-    if(['condense','clean_water','sense_water'].includes(operation)&&!['container','water'].includes(row.kind))throw new Error('法术需要实际水源或容器');
+    if(['condense','clean_water','sense_water'].includes(operation)&&!['container','water'].includes(row.kind))throw preconditionFailure('法术需要实际水源或容器');
     if(operation==='condense'){
-        if(row.kind!=='container')throw new Error('凝露需要有杯壁的真实容器');
+        if(row.kind!=='container')throw preconditionFailure('凝露需要有杯壁的真实容器');
         const humidity=humidityAt(this,d.document,row.location);
-        if(!Number.isFinite(humidity)||humidity<this.rules.environment.minimumCondensationHumidity||humidity>100)throw new Error('空气湿度不足或没有可靠湿度数据');
-        if(current.waterMl+(current.reservedWaterMl??0)>=current.capacityMl)throw new Error('容器已满');
+        if(!Number.isFinite(humidity)||humidity<this.rules.environment.minimumCondensationHumidity||humidity>100)throw preconditionFailure('空气湿度不足或没有可靠湿度数据');
+        if(current.waterMl+(current.reservedWaterMl??0)>=current.capacityMl)throw preconditionFailure('容器已满');
     }
-    if(['clean_water','sense_water'].includes(operation)&&current.waterMl<=0)throw new Error('对象中没有实际水');
-    if(operation==='clear_silt'&&(row.kind!=='channel'||current.loosenedSiltGrams>=current.siltGrams))throw new Error('沟渠没有可继续松动的淤泥');
+    if(['clean_water','sense_water'].includes(operation)&&current.waterMl<=0)throw preconditionFailure('对象中没有实际水');
+    if(operation==='clear_silt'&&(row.kind!=='channel'||current.loosenedSiltGrams>=current.siltGrams))throw preconditionFailure('沟渠没有可继续松动的淤泥');
     if(['irrigate','soil_water'].includes(operation))watering(d,this,row,operation,args,catalog.rangeMeters,spec.power);
     return{target:row.id,spec,catalog,environment:{...args,target:row.id}};
 }
@@ -303,11 +308,12 @@ export function interactEnvironment(d,args,eventId){
     const physical=interactPhysicalItem(d,this,args,eventId);if(physical)return physical;
     const building=args.target&&(d.get('state','created',args.target)??this.byId.get(args.target));
     if(isFacility(building)){
-        if(building.id!==location&&building.parent!==location)throw Error('建筑不在近旁');
+        if(building.id!==location&&building.parent!==location)throw preconditionFailure('建筑不在近旁');
         if(operation==='inspect')return {facility:facilityView(this,d.get('state'),building.id),actionScope:{kind:'instant',instantaneous:true}};
         if(operation==='douse_fire'){
-            if(this.quantity(d,'player','item_water')<1)throw Error('没有可用来灭火的水');
-            this.itemDelta(d,'player','item_water',-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
+            const water=liquidItem(this,'water');
+            if(!water||this.quantity(d,'player',water)<1)throw preconditionFailure('没有可用来灭火的水');
+            this.itemDelta(d,'player',water,-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
             const changed=applyInteraction(d,this,{agent:'water',target:building.id});this.advance(d,1,eventId);return {target:building.id,...changed,minutes:1};
         }
     }
@@ -332,7 +338,7 @@ export function interactEnvironment(d,args,eventId){
         const target=args.target?.startsWith('feature_')?args.target:this.resolve(args.target,'item');
         return{marks:inspectMagicMarks(d,this,{...args,target},this.magicStatusContext(d,'player')),actionScope:{kind:'instant',instantaneous:true}};
     }
-    if(!this.rules.environment)throw new Error('此世界尚无环境操作规则');
+    if(!this.rules.environment)throw preconditionFailure('此世界尚无环境操作规则');
     if(operation==='load_fuel'){
         const item=this.resolve(args.item,'item'),result=addObjectFuel(d,this,{...args,item},eventId);
         this.advance(d,1,eventId);return{...result,minutes:1,note:'燃料已从自有库存转入炉具；搬放经过一分钟，燃烧按实际时间继续'};
@@ -354,12 +360,12 @@ export function interactEnvironment(d,args,eventId){
         d.set(['state','records','local_player_position'],{category:'local_position',subject:'player',location,point:[...row.position],source:eventId,anchor:row.id,minute:d.get('state','minute'),...height});
         return{target:row.id,metres,minutes,mudMinutes,position:[...row.position]};
     }
-    if(operation!=='carry_silt')throw new Error('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');
+    if(operation!=='carry_silt')throw preconditionFailure('环境操作需为inspect、inspect_heat、load_fuel、approach或carry_silt');
     const destination=feature(this,args.destination,location,d.document),range=3;
-    if(row.kind!=='channel'||destination.kind!=='silt_heap')throw new Error('搬泥需要引水沟及登记堆泥处');
+    if(row.kind!=='channel'||destination.kind!=='silt_heap')throw preconditionFailure('搬泥需要引水沟及登记堆泥处');
     for(const target of[row,destination]){inReach(d,target,range);permission(d,this,target,args);}
     const amount=integer(args.grams??this.rules.environment.carrySiltMaximumGrams,1,this.rules.environment.carrySiltMaximumGrams,'单次搬泥重量');
-    if(stateOf(d,row).loosenedSiltGrams<amount)throw new Error('没有足够松动的淤泥可以搬走');
+    if(stateOf(d,row).loosenedSiltGrams<amount)throw preconditionFailure('没有足够松动的淤泥可以搬走');
     const outcome=this.check(d,{attribute:'力量',difficulty:10},eventId),minutes=this.rules.environment.carrySiltMinutes;
     this.advance(d,minutes,eventId);
     if(outcome.success){

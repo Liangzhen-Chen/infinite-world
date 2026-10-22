@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {MEDICAL_SKILL,medicineFresh,medicineRows,medicineSites,medicineReservation,medicalConditions,medicalSkill,waterDiseaseExposure} from './medicine-state.mjs';
 import {npcSchedule} from './npc-state.mjs';
@@ -52,16 +53,16 @@ function book(d,e,args,id){if(!serviceClaimsFresh(e))return bookV1(d,e,args,id);
 export {book as bookMedicine};
 function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
  let s=d.get('state');const now=s.minute;
- if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
- const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
- const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw Error('医馆不存在或已停用');
- if(patient==='player'&&s.location!==site.seat)throw Error('须到医馆求医');
- if(patient!=='player'&&!consent)throw Error('诊疗须病人自愿求医');
+ if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw preconditionFailure('病人不能赴诊或已有预约');
+ const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw preconditionFailure('没有登记的疾病或未愈创伤');
+ const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw preconditionFailure('医馆不存在或已停用');
+ if(patient==='player'&&s.location!==site.seat)throw preconditionFailure('须到医馆求医');
+ if(patient!=='player'&&!consent)throw preconditionFailure('诊疗须病人自愿求医');
  // A bedridden grave patient is visited at home; everyone else walks to the clinic.
  const house=patient!=='player'&&actor(s,patient).status==='患病'&&conditions.some(c=>c.severity==='重'),place=house?present(s,patient):site.seat;
  let travel=0;
- if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw Error('病人没有可行赴诊路线');}}
- if(!Number.isFinite(travel)||travel>DAY)throw Error('病人路程过远，需先安排运输');
+ if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw preconditionFailure('病人没有可行赴诊路线');}}
+ if(!Number.isFinite(travel)||travel>DAY)throw preconditionFailure('病人路程过远，需先安排运输');
  const urgency=serviceUrgency(conditions),displaced=[];
  // A new acute patient may take an unstarted lower-priority appointment.
  // The displaced patient remains in the queue with their original arrival.
@@ -79,9 +80,9 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
   const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round((e.byId.get('item_herb')?.basePrice??3)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
   chosen={doctor,assistants,start:at,end,fee};break;
  }
- if(!chosen)throw Error('医师七日内没有可用排期');
+ if(!chosen)throw preconditionFailure('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
- if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw Error('诊费不足，可求赊欠或义诊');
+ if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw preconditionFailure('诊费不足，可求赊欠或义诊');
  const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,urgency,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
  holdingSet(d,null,rec(row.id),row,'medicine');return row;
 }
@@ -223,30 +224,30 @@ export function advanceMedicine(d,e,{before,after}){
 export function medicineAction(d,args,id){
  const e=this,s=d.get('state'),op=args.operation,site=medicineSites(e,s).find(c=>c.id===args.business||c.seat===args.business||c.name===args.business||!args.business&&c.seat===s.location);
  if(op==='medicine_cancel'){
-  const visit=s.records?.[args.contract];if(!visit||visit.patient!=='player'||!['预约','排队'].includes(visit.status)||visit.status==='预约'&&visit.start<=s.minute)throw Error('只能取消本人尚未开始的诊疗');
+  const visit=s.records?.[args.contract];if(!visit||visit.patient!=='player'||!['预约','排队'].includes(visit.status)||visit.status==='预约'&&visit.start<=s.minute)throw preconditionFailure('只能取消本人尚未开始的诊疗');
   const row={...visit,status:'已取消',endedAt:s.minute};holdingSet(d,null,rec(visit.id),row,'medicine');return row;
  }
  if(op==='medicine_inspect')return {clinics:medicineSites(e,s),visits:medicineRows(s).filter(r=>r.patient==='player'||r.location===s.location),conditions:medicalConditions(s,'player'),funds:Object.values(s.records??{}).filter(r=>r.category==='medicine_fund'&&r.location===s.location)};
- if(!site||site.seat!==s.location)throw Error('须到医馆办理');
+ if(!site||site.seat!==s.location)throw preconditionFailure('须到医馆办理');
  if(op==='medicine_seek'){
-  if(args.beneficiaries?.some(x=>x!=='player'))throw Error('NPC须自主求医，不能代替其同意');
-  if(!args.consent)throw Error('求医需本人同意');
+  if(args.beneficiaries?.some(x=>x!=='player'))throw preconditionFailure('NPC须自主求医，不能代替其同意');
+  if(!args.consent)throw preconditionFailure('求医需本人同意');
   return book(d,e,{clinic:site.id,credit:args.action==='credit',charity:args.action==='charity',consent:true},id);
  }
  if(op==='medicine_fund'){
-  const coins=financeInt(args.budget??0,0,1e8,'义诊资助'),quantity=financeInt(args.quantity??args.wood??0,0,100000,'施药数量');if(!coins&&!quantity)throw Error('须提供实际钱或药材');
+  const coins=financeInt(args.budget??0,0,1e8,'义诊资助'),quantity=financeInt(args.quantity??args.wood??0,0,100000,'施药数量');if(!coins&&!quantity)throw preconditionFailure('须提供实际钱或药材');
   const key=`medicine_fund:${site.seat}`,old=d.get(...rec(key));
   // Escrow is counted here once and paid out only for an actual consultation.
   if(coins)financeChange(d,e,'player',-coins,id,{account:fundAccount(key),writer:'medicine',eventId:id});
-  const holder=old?.holder??site.owner;if(!holder)throw Error('医馆没有接收药材的经营者');
+  const holder=old?.holder??site.owner;if(!holder)throw preconditionFailure('医馆没有接收药材的经营者');
   if(quantity)transferItems(d,e,'player',holder,'item_herb',quantity);
   const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,minute:s.minute}]};holdingSet(d,null,rec(key),row,'medicine');return row;
  }
  if(op==='medicine_hire'){
   // The clinic owner signs; doctor or helper role follows the worker's current skill.
-  if(site.owner!=='player')throw Error('须是本人经营的医馆才能雇人');
+  if(site.owner!=='player')throw preconditionFailure('须是本人经营的医馆才能雇人');
   const worker=e.resolve(args.member);counterpart(d,e,worker,{consent:args.consent});
-  if(currentEmployment(s,worker)||personOffices(e,s,worker).length)throw Error('对方已有雇佣或公职');
+  if(currentEmployment(s,worker)||personOffices(e,s,worker).length)throw preconditionFailure('对方已有雇佣或公职');
   const wage=financeInt(args.proposedFee,1,1e6,'日薪'),days=financeInt(args.days??30,1,360,'雇佣天数'),key=`medicine_contract:${id}`;
   const task=medicalSkill(e,s,worker)>0?'医师诊疗':'药童';
   const row={category:'contract',kind:'workshop',medicine:1,id:key,owner:'player',worker,location:site.seat,wage,workMinutes:480,task,starts:s.minute,createdAt:s.minute,deadline:s.minute+days*DAY,status:'有效',paid:0,workedMinutes:0,source:id};
@@ -255,33 +256,33 @@ export function medicineAction(d,args,id){
  if(op==='medicine_health'){
   // U3 public-health measures run through the registered epidemic effect; the clinic supplies staff and herbs.
   const settlement=placeSettlement(e,s,site.seat).value,ep=Object.values(s.records??{}).find(r=>r.category==='epidemic'&&r.status==='流行'&&r.settlements.includes(settlement));
-  if(!ep)throw Error('本地眼下没有流行疫病');
-  const measure=args.choice??'treatment';if(!['treatment','quarantine'].includes(measure))throw Error('医馆只能施治或隔离');
-  const doctor=site.doctors.find(who=>present(s,who)===site.seat&&!personConstraint(e,s,who));if(!doctor)throw Error('医馆眼下没有在场医师');
+  if(!ep)throw preconditionFailure('本地眼下没有流行疫病');
+  const measure=args.choice??'treatment';if(!['treatment','quarantine'].includes(measure))throw preconditionFailure('医馆只能施治或隔离');
+  const doctor=site.doctors.find(who=>present(s,who)===site.seat&&!personConstraint(e,s,who));if(!doctor)throw preconditionFailure('医馆眼下没有在场医师');
   const sick=Object.values(ep.households).filter(h=>h.settlement===settlement&&h.status==='发病').length,need=measure==='treatment'?Math.max(1,sick):0;
-  const holder=[site.owner,doctor,'player'].find(h=>h&&e.quantity(d,h,'item_herb')>=need);if(need&&!holder)throw Error(`药材短缺，施治需${need}份`);
+  const holder=[site.owner,doctor,'player'].find(h=>h&&e.quantity(d,h,'item_herb')>=need);if(need&&!holder)throw preconditionFailure(`药材短缺，施治需${need}份`);
   const clock=ep.id.slice(9,ep.id.lastIndexOf(':')),minutes=financeInt(args.days??7,1,90,'防疫天数')*DAY;
   const receipt=applyEffects(d,e,[{kind:'epidemic_measure',measure,minutes,settlement}],{settlement,minute:s.minute,sourceEvent:id,clock},'world');
   if(!receipt.applied)throw Error(receipt.reason??'防疫没有作用对象');
   if(need)e.itemDelta(d,holder,'item_herb',-need,HERB_USE('epidemic',id));
   return {epidemic:ep.id,measure,doctor,herbs:need,consumedFrom:holder??null};
  }
- throw Error('未知诊疗操作');
+ throw preconditionFailure('未知诊疗操作');
 }
 
 // Historical service receipts retain their recorded cash and scheduling semantics.
 function bookV1(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
  let s=d.get('state');const now=s.minute;
- if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw Error('病人不能赴诊或已有预约');
- const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw Error('没有登记的疾病或未愈创伤');
- const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw Error('医馆不存在或已停用');
- if(patient==='player'&&s.location!==site.seat)throw Error('须到医馆求医');
- if(patient!=='player'&&!consent)throw Error('诊疗须病人自愿求医');
+ if(!capable(e,s,patient)||personConstraint(e,s,patient)||pending(s,patient))throw preconditionFailure('病人不能赴诊或已有预约');
+ const conditions=medicalConditions(s,patient).filter(only);if(!conditions.length)throw preconditionFailure('没有登记的疾病或未愈创伤');
+ const site=medicineSites(e,s).find(c=>c.id===clinic||c.seat===clinic||c.name===clinic);if(!site||site.factor===0||!site.capacity)throw preconditionFailure('医馆不存在或已停用');
+ if(patient==='player'&&s.location!==site.seat)throw preconditionFailure('须到医馆求医');
+ if(patient!=='player'&&!consent)throw preconditionFailure('诊疗须病人自愿求医');
  // A bedridden grave patient is visited at home; everyone else walks to the clinic.
  const house=patient!=='player'&&actor(s,patient).status==='患病'&&conditions.some(c=>c.severity==='重'),place=house?present(s,patient):site.seat;
  let travel=0;
- if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw Error('病人没有可行赴诊路线');}}
- if(!Number.isFinite(travel)||travel>DAY)throw Error('病人路程过远，需先安排运输');
+ if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw preconditionFailure('病人没有可行赴诊路线');}}
+ if(!Number.isFinite(travel)||travel>DAY)throw preconditionFailure('病人路程过远，需先安排运输');
  let chosen=null;
  for(let day=Math.floor(now/DAY);day<=Math.floor(now/DAY)+7&&!chosen;day++)for(let at=Math.max(day*DAY+480,Math.ceil((now+travel)/30)*30);at+30<=day*DAY+1080;at+=30){
   const end=at+30;
@@ -292,9 +293,9 @@ function bookV1(d,e,{patient='player',clinic,source=null,credit=false,charity=fa
   const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round((e.byId.get('item_herb')?.basePrice??3)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
   chosen={doctor,assistants,start:at,end,fee};break;
  }
- if(!chosen)throw Error('医师七日内没有可用排期');
+ if(!chosen)throw preconditionFailure('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
- if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw Error('诊费不足，可求赊欠或义诊');
+ if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw preconditionFailure('诊费不足，可求赊欠或义诊');
  const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
  holdingSet(d,null,rec(row.id),row,'medicine');return row;
 }

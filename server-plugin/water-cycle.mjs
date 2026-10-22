@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // Basin water shares physical_feature state with spells and manual transfers.
 import {locationHabitatTypes} from './wildlife-habitats.mjs';
 import {weatherAt} from './weather.mjs';
@@ -63,7 +64,7 @@ export function waterConnections(engine,basins=waterBasins(engine)){
 }
 export function basinState(engine,state,basin){
  const physical=state.records?.[`physical_feature:${basin.id}`];
- if(basin.feature&&physical&&(physical.category!=='physical_feature'||physical.id!==basin.id))throw Error('流域环境登记键冲突');
+ if(basin.feature&&physical&&(physical.category!=='physical_feature'||physical.id!==basin.id))throw preconditionFailure('流域环境登记键冲突');
  return basin.feature?(state.records?.[`physical_feature:${basin.id}`]?.state??basin.feature.state):state.records?.[`water-cycle:${basin.id}`]?.water??{capacityMl:basin.capacity,waterMl:Math.floor(basin.capacity*engine.rules.forestWater.water.initialShare),saltMg:0,toxinUg:0,turbidity:0,pathogenRisk:0,odor:'原水'};
 }
 function store(d,b,water,ledger){
@@ -104,11 +105,11 @@ export function advanceWaterCycle(d,engine,day){
  const rules=engine.rules.forestWater?.water;if(!rules)return;
  const basins=waterBasins(engine,d.get('state')),{edges,order}=waterConnections(engine,basins),rows=new Map();
  for(const b of basins){
-  const old=d.get(...record(b.id));if(old?.day>=day){if(old.day===day)continue;throw Error('流域日结时间倒退');}
-  if(old&&old.category!=='water_cycle')throw Error('流域账登记键冲突');
+  const old=d.get(...record(b.id));if(old?.day>=day){if(old.day===day)continue;throw preconditionFailure('流域日结时间倒退');}
+  if(old&&old.category!=='water_cycle')throw preconditionFailure('流域账登记键冲突');
   const w=clone(basinState(engine,d.get('state'),b));
   if(b.feature)b.capacity=w.capacityMl;
-  if(!Number.isSafeInteger(b.capacity)||b.capacity<=0||!Number.isSafeInteger(w.waterMl)||w.waterMl<0||w.waterMl+(w.reservedWaterMl??0)>b.capacity)throw Error('流域实际水量越界');
+  if(!Number.isSafeInteger(b.capacity)||b.capacity<=0||!Number.isSafeInteger(w.waterMl)||w.waterMl<0||w.waterMl+(w.reservedWaterMl??0)>b.capacity)throw preconditionFailure('流域实际水量越界');
   // Existing spells can add/remove water between days. Observe the actual change
   // separately from rainfall, so it cannot be reported as natural regeneration.
   const external=w.waterMl-(old?.water.waterMl??w.waterMl),weather=basinWeather(engine,d.document.randomSeed,b.location,day*DAY+720);
@@ -143,7 +144,7 @@ export function advanceWaterCycle(d,engine,day){
    const next=rows.get(e.to);receive(next.w,part);next.ledger.inflow+=part.waterMl;
   }}
   const overflow=withdraw(w,Math.max(0,w.waterMl-capacity));ledger.overflow+=overflow.waterMl;
-  if(Math.abs(ledger.initial+ledger.rain+ledger.inflow+ledger.externalDelta-ledger.outflow-ledger.consumed-ledger.evaporated-ledger.overflow-w.waterMl)>0.001)throw Error('流域水量账不守恒');
+  if(Math.abs(ledger.initial+ledger.rain+ledger.inflow+ledger.externalDelta-ledger.outflow-ledger.consumed-ledger.evaporated-ledger.overflow-w.waterMl)>0.001)throw preconditionFailure('流域水量账不守恒');
   store(d,b,w,ledger);
   const polluted=Math.max(w.pathogenRisk??0,...Object.values(ledger.drinking).map(r=>r.pathogenRisk))>=rules.diseaseThreshold,dry=w.waterMl<b.capacity*rules.shortageShare;
   const priorPolluted=Math.max(old?.water.pathogenRisk??0,...Object.values(old?.drinking??{}).map(r=>r?.pathogenRisk??0))>=rules.diseaseThreshold,priorDry=old?old.water.waterMl<b.capacity*rules.shortageShare:false;

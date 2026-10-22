@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
@@ -43,35 +44,35 @@ function duration(engine,action){if(action.kind==='craft')return engine.byId.get
 function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
 export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
- for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw Error('人物正在完成已经开始的自主工作');
+ for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
- if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw Error('人物不具备独立行动条件');
- if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw Error('人物当前无法完成工作');
- if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(engine,state,who,state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw Error('工作完成时人物已离开或不能继续行动');
- if(!safe(minutes)||minutes>480)throw Error('行动耗时未登记或超过单日上限');
+ if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw preconditionFailure('人物不具备独立行动条件');
+ if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw preconditionFailure('人物当前无法完成工作');
+ if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(engine,state,who,state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw preconditionFailure('工作完成时人物已离开或不能继续行动');
+ if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
  assertNpcObligationAction(d,engine,[id,action.seller].filter(Boolean),{start:at,minutes,location:actor.location,kind:'autonomy'});
  const day=String(Math.floor(at/DAY)),spent=state.npcs[id].autonomy?.minutesByDay?.[day]??0,mind=intelligenceOf(engine,state,id);
- if(spent+minutes>Math.max(240,mind.dailyMinutes))throw Error('每日自主工作时间已用尽');
+ if(spent+minutes>Math.max(240,mind.dailyMinutes))throw preconditionFailure('每日自主工作时间已用尽');
  // 觉悟以上的人会在不安排生产的清醒时段另起炉灶；睡眠与赶路仍不可占用。
- for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor,state);if(!slot||slot.production===false&&!mind.offSchedule||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw Error('实际作息没有完整工作窗口');cursor=slot.until;}
+ for(let cursor=at;cursor<at+minutes;){const slot=scheduleAt(engine,id,cursor,state);if(!slot||slot.production===false&&!mind.offSchedule||slot.location!==actor.location||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(slot.activity))throw preconditionFailure('实际作息没有完整工作窗口');cursor=slot.until;}
  if(action.kind==='audit_inventory'){
   const goals=state.npcs[id].goals??base.goals,goal=Object.values(goals).flat().find(g=>g.id===action.goal);
-  if(!goal||!auditGoal(goal)||goal.progress>=100)throw Error('这项目标不能通过盘点本人库存直接完成');
+  if(!goal||!auditGoal(goal)||goal.progress>=100)throw preconditionFailure('这项目标不能通过盘点本人库存直接完成');
  }else if(action.kind==='craft'){
-  const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw Error('配方未登记');
-  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw Error('人物没有学会该配方');
-  if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw Error('人物技能不足');
-  if(recipe.location&&recipe.location!==actor.location)throw Error('不在配方地点');
+  const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw preconditionFailure('配方未登记');
+  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw preconditionFailure('人物没有学会该配方');
+  if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('人物技能不足');
+  if(recipe.location&&recipe.location!==actor.location)throw preconditionFailure('不在配方地点');
   const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
-  for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw Error('实际制造材料不足');
-  for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw Error('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw Error('没有完好的实际工具');}
+  for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw preconditionFailure('实际制造材料不足');
+  for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw preconditionFailure('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw preconditionFailure('没有完好的实际工具');}
   const station=(facilityView(engine,state,actor.location)?.workstations??engine.byId.get(actor.location)?.workstations)?.find(s=>s.kind===recipe.workstation);
-  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||facilityView(engine,state,actor.location)?.factor===0)throw Error('没有可用且获准的工作台');
-  const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw Error('工坊费用不足');
-  if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw Error('工坊收费人无法履约');
+  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||facilityView(engine,state,actor.location)?.factor===0)throw preconditionFailure('没有可用且获准的工作台');
+  const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw preconditionFailure('工坊费用不足');
+  if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
   if(station?.thermalRequirement&&!ignoreTask){
    work=draft(d.document,at);work.set(['state','npcs',id,'location'],actor.location);
@@ -82,11 +83,11 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   }
  }else if(action.kind==='trade'){
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
-  if(action.seller===id||!awake(engine,presence,action.seller,seller)||personConstraint(engine,state,action.seller,at)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw Error('没有同地且愿意出售现有库存的卖家');
-  if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw Error('交易品种或数量未登记');
-  if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||coinRead(d,{point:'npc.cash',account:purse(engine,id),legacy:()=>state.npcs[id].coins})<tradeQuote(d,engine,id,action,actor.location).cost)throw Error('真实钱款或库存不足');
-  for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw Error('交易没有完整接待窗口');cursor=s.until;}
- }else throw Error('自主行动类型未实现');
+  if(action.seller===id||!awake(engine,presence,action.seller,seller)||personConstraint(engine,state,action.seller,at)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw preconditionFailure('没有同地且愿意出售现有库存的卖家');
+  if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw preconditionFailure('交易品种或数量未登记');
+  if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||coinRead(d,{point:'npc.cash',account:purse(engine,id),legacy:()=>state.npcs[id].coins})<tradeQuote(d,engine,id,action,actor.location).cost)throw preconditionFailure('真实钱款或库存不足');
+  for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw preconditionFailure('交易没有完整接待窗口');cursor=s.until;}
+ }else throw preconditionFailure('自主行动类型未实现');
  return {minutes,location:actor.location,furnace,work};
 }
 // R25: a person whose state has no current activity yet (e.g. a fresh save before the first
@@ -104,12 +105,12 @@ export function catchUpFurnaces(d,engine,after){
 }
 function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
- if(!awake(engine,d.get('state'),task.npc,actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw Error('照管炉火的人物已离岗或失能');
+ if(!awake(engine,d.get('state'),task.npc,actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw preconditionFailure('照管炉火的人物已离岗或失能');
  const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
- if(!station||station.access!=='public'&&station.owner!==task.npc||facilityView(engine,d.get('state'),location)?.factor===0)throw Error('炉火工坊已不可用');
+ if(!station||station.access!=='public'&&station.owner!==task.npc||facilityView(engine,d.get('state'),location)?.factor===0)throw preconditionFailure('炉火工坊已不可用');
  const work=draft(d.document,task.furnace.checkedUntil);
  const row=engine.byId.get(location)?.features?.find(f=>f.id===task.furnace.plan.feature);
- if(!row||row.owner!==task.npc&&row.access!=='public')throw Error('人物没有热源的使用权限');
+ if(!row||row.owner!==task.npc&&row.access!=='public')throw preconditionFailure('人物没有热源的使用权限');
  if(until>task.furnace.checkedUntil){
   const projection=prepareThermalWorkstation(work,engine,station,until-task.furnace.checkedUntil,{location});
   if(projection.projectedStress!==undefined)d.set(['state','npcAutonomy','tasks',task.id,'furnace','endStress'],projection.projectedStress);
@@ -119,13 +120,13 @@ function advanceFurnace(d,engine,task,until){
 function npcToolBonus(d,engine,id,recipe){
  const attribute=recipe.attribute??engine.byId.get(recipe.skill)?.attribute??'智力';let sum=0;
  for(const item of recipe.tools??[]){const definition=engine.byId.get(item),held=heldUnit(d,engine,id,item),grade=engine.rules.equipment.qualities.indexOf(held?.quality??definition.quality);
-  if(grade<0||(d.get('state','npcs',id,'level')??engine.byId.get(id).level??1)<engine.rules.equipment.requiredLevels[grade])throw Error('人物等级不足以使用工具');
+  if(grade<0||(d.get('state','npcs',id,'level')??engine.byId.get(id).level??1)<engine.rules.equipment.requiredLevels[grade])throw preconditionFailure('人物等级不足以使用工具');
   const spec=definition.checkBonus;if(spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
  }return Math.min(engine.rules.check.maximumToolBonus??5,sum);
 }
 function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
  const definition=engine.byId.get(item),instances=[];
- for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
+ for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw preconditionFailure('重复制造单件');instances.push(unit);
   const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
   holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'npc-autonomy');
  }
@@ -242,7 +243,7 @@ export function npcPlanFingerprint(document){return digest({minute:document.stat
 // R25: a plan frozen before the fix fingerprinted task presence with activity:undefined.
 function legacyPlanFingerprint(document){const actions=withLegacyUndefinedActivity(document.state.npcAutonomy,['state','npcAutonomy']);return actions?digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions}):null;}
 export function npcPlanningContext(engine,document,{limit=12}={}){
- if(!Number.isInteger(limit)||limit<8||limit>20)throw Error('智能层人数须在8到20之间');
+ if(!Number.isInteger(limit)||limit<8||limit>20)throw preconditionFailure('智能层人数须在8到20之间');
  const ranked=Object.keys(document.state.npcs).filter(id=>personSimulation(engine,document.state,id).value&&!personConstraint(engine,document.state,id)).map(id=>document.state.created?.[id]??engine.byId.get(id)).sort((a,b)=>{
   const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
@@ -251,19 +252,19 @@ export function npcPlanningContext(engine,document,{limit=12}={}){
   intelligence:{maxActions:mind.maxActions,horizonDays:mind.horizonDays,breaksRoutine:mind.offSchedule},goals:clone(goalsWithinHorizon(view.self.goals,mind.horizonDays,day)),memories:view.knowledge.memories.slice(-5),knownRecipes:engine.world.recipes.filter(r=>r.teachers?.includes(n.id)||document.state.npcs[n.id].recipes?.[r.id]).map(r=>({id:r.id,minutes:r.minutes,materials:r.materials})),relations:Object.entries(view.self.relations).map(([withId,r])=>({with:withId,trust:r.trust})),vocations:npcVocationOptions(engine,document.state,n.id)};})};
 }
 export function applyNpcPlan(d,engine,input,eventId){
- if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document)&&input.stateFingerprint!==legacyPlanFingerprint(d.document))throw Error('智能层计划不是当前状态的冻结输入');
- if(!Array.isArray(input.proposals)||input.proposals.length>20)throw Error('计划人数超限');
+ if(input.kind!=='npc-plan'||input.version!==1||input.minute!==d.get('state','minute')||input.stateFingerprint!==npcPlanFingerprint(d.document)&&input.stateFingerprint!==legacyPlanFingerprint(d.document))throw preconditionFailure('智能层计划不是当前状态的冻结输入');
+ if(!Array.isArray(input.proposals)||input.proposals.length>20)throw preconditionFailure('计划人数超限');
  const ids=new Set(),results=[];
  // 计划长度由灵智决定：超出本人谋算的后续步骤逐条拒绝；旧事件重放仍按每人两步。
  const fresh=intelligenceFresh(engine),most=fresh?INTELLIGENCE_LEVELS[5].maxActions:2;
- for(const proposal of input.proposals){if(ids.has(proposal.npc)||!full(engine,proposal.npc)||!Array.isArray(proposal.actions)||proposal.actions.length>most)throw Error('计划人物重复或单人行动超限');ids.add(proposal.npc);}
+ for(const proposal of input.proposals){if(ids.has(proposal.npc)||!full(engine,proposal.npc)||!Array.isArray(proposal.actions)||proposal.actions.length>most)throw preconditionFailure('计划人物重复或单人行动超限');ids.add(proposal.npc);}
  for(const proposal of input.proposals){const reach=fresh?intelligenceOf(engine,d.get('state'),proposal.npc).maxActions:2;for(const [index,action]of proposal.actions.entries()){
   const id=`npc_plan_${digest([input.stateFingerprint,proposal.npc,index,action]).slice(0,24)}`;
   try{
-   if(index>=reach)throw Error('计划步数超出本人灵智所及');
+   if(index>=reach)throw preconditionFailure('计划步数超出本人灵智所及');
    const allowed={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel'],switch_vocation:['kind','vocation']}[action.kind];
-   if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw Error('计划包含未实现字段或直接改账请求');
-   if(action.kind==='switch_vocation'&&!d.get('state','npcs',proposal.npc))throw Error('人物没有独立成长记录');
+   if(!allowed||Object.keys(action).some(k=>!allowed.includes(k)))throw preconditionFailure('计划包含未实现字段或直接改账请求');
+   if(action.kind==='switch_vocation'&&!d.get('state','npcs',proposal.npc))throw preconditionFailure('人物没有独立成长记录');
    const decision=npcDecision(subjectiveView(engine,d.document,proposal.npc),{kind:action.kind,from:proposal.npc,needSatisfaction:100});
    if(decision.outcome!=='agree')throw Error(decision.reason);
    if(action.kind==='switch_vocation'){results.push({id,status:'已完成',detail:switchVocation(d,engine,proposal.npc,action.vocation,id)});continue;}

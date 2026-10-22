@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('world-events',{kinds:[]});
 import {isPhysicallyDead} from './holdings.mjs';
@@ -34,8 +36,8 @@ export function recordHistoricalEvent(d,engine,event){
 // "I saw this" resolves only an exact version already known to the speaker.
 // This adapter grants neither knowledge nor access to private event records.
 export function knownWorldEventReference(state,observer,{reference,content}={}){
-    const known=new Set(Object.values(state.records??{}).filter(r=>r.category==='knowledge'&&r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
-    const rows=Object.entries(state.records??{}).filter(([key,r])=>r.category==='world_event'&&key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
+    const known=new Set(recordsWhere(state.records,'category','knowledge').filter(r=>r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
+    const rows=recordEntriesWhere(state.records,'category','world_event').filter(([key,r])=>key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
     const matches=rows.filter(r=>reference===r.id||reference===`world_event:${r.id}`||reference==='self'&&typeof content==='string'&&content===(r.summary??r.payload?.name));
     return matches.length===1?matches[0].id:null;
 }
@@ -43,7 +45,10 @@ export const SOCIAL_VERBS=new Set(['harm','clash','steal','gift','help','trade',
 const awake=(state,id,n)=>n&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/(睡眠|熟睡|睡觉)/.test(n.activity??'');
 SOCIAL_VERBS.add('proposal_rejected');
 for(const verb of ['obligation_opened','obligation_amended','obligation_closed','obligation_settled','obligation_performed'])SOCIAL_VERBS.add(verb);
-for(const verb of ['transition','holding_opened','holding_closed','holding_transferred','succession','claim','protocol_stage','restored','shortfall','judgment'])SOCIAL_VERBS.add(verb);
+// Registered at load, never while an action runs: the verbs published by obligation receipts, protocol stages,
+// mark reactions ('tell') and profession entry requests ('request').
+for(const verb of ['tell','request'])SOCIAL_VERBS.add(verb);
+for(const verb of ['transition','holding_opened','holding_closed','holding_transferred','holding_rescaled','succession','claim','protocol_stage','restored','shortfall','judgment'])SOCIAL_VERBS.add(verb);
 const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(value);}catch{return null;}};
 
 export function presentWitnesses(state,location,exclude=[]){
@@ -135,9 +140,9 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
 function subscriberStore(){return subscriberStore.rows??=[];}
 export function registerWorldEventSubscriber(subscriber){
     const {id,order,on,priorityClass='social',packId='core',ruleId=id}=subscriber??{};
-    if(typeof id!=='string'||!id||!Number.isFinite(order)||typeof on!=='function')throw Error('世界事件订阅者须有 id、order 与 on');
+    if(typeof id!=='string'||!id||!Number.isFinite(order)||typeof on!=='function')throw preconditionFailure('世界事件订阅者须有 id、order 与 on');
     const rows=subscriberStore();
-    if(rows.some(s=>s.id===id))throw Error(`世界事件订阅者重复登记：${id}`);
+    if(rows.some(s=>s.id===id))throw preconditionFailure(`世界事件订阅者重复登记：${id}`);
     rows.push({id,order,on,priorityClass,packId,ruleId});rows.sort((a,b)=>a.order-b.order);
     return()=>{const i=rows.findIndex(s=>s.id===id);if(i>=0)rows.splice(i,1);};
 }
@@ -152,7 +157,7 @@ export function drainWorldReactions(d){
     try{
         while(tick.cursor<tick.queue.length){
             const {engine,events,context,subscribers,depth,metrics}=tick.queue[tick.cursor++];
-            if(depth>16)throw new Error('反应总深度超过 16，回滚本次推进');
+            if(depth>16)throw preconditionFailure('反应总深度超过 16，回滚本次推进');
             for(const s of subscribers){
                 const key=`${s.id}:${events.map(e=>e.seq??e.id).join(',')}`;
                 if(tick.seen.has(key))continue;

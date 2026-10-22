@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {learnWithInitialKnowledge} from './primitives-learning.mjs';
 export {activityTeachingConsent} from './primitives-learning.mjs';
 import {reject} from './action-rejection.mjs';
@@ -18,7 +19,7 @@ import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {obligationClosed} from './obligation-state.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
-const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error(`${label}不在允许范围`);return value;};
+const integer=(value,label,maximum=1e9)=>{if(!Number.isSafeInteger(value)||value<0||value>maximum)throw preconditionFailure(`${label}不在允许范围`);return value;};
 const grades=['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'];
 const grade=value=>`${grades[Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 
@@ -55,30 +56,30 @@ function learnNative(d,args,id){
     }
     const catalog=this.byId.get(entity);
     const kind=entity.split('_')[0];
-    if(!['spell','skill','recipe'].includes(kind)||args.kind&&args.kind!==kind)throw new Error('学习类型必须与目录一致');
+    if(!['spell','skill','recipe'].includes(kind)||args.kind&&args.kind!==kind)throw preconditionFailure('学习类型必须与目录一致');
     const partition={spell:'spells',skill:'skills',recipe:'recipes'}[kind];
     const skill=kind==='skill'?catalog:this.byId.get(catalog.skill);
-    if(!skill)throw new Error('学习内容缺少关联技能');
+    if(!skill)throw preconditionFailure('学习内容缺少关联技能');
     const requirements=[...catalog.prerequisites??[],...skill.prerequisites??[]];
     for(const requirement of requirements){
         const requirementId=typeof requirement==='string'?requirement:requirement.skill;
         const minimum=typeof requirement==='string'?1:requirement.minimum;
-        if(effectiveProficiency(d,this,requirementId)<minimum)throw new Error(`前置技能不足：${this.byId.get(requirementId)?.name??requirementId}`);
+        if(effectiveProficiency(d,this,requirementId)<minimum)throw preconditionFailure(`前置技能不足：${this.byId.get(requirementId)?.name??requirementId}`);
     }
     const stage=integer(catalog.stage??(kind==='recipe'?Math.floor((catalog.minimumProficiency??0)/300):skill.stage??0),'内容阶段');
-    if(stage>8)throw new Error('内容阶段超过技能上限');
+    if(stage>8)throw preconditionFailure('内容阶段超过技能上限');
     if(kind==='spell'){
         const band=this.rules.magic.stageMpRanges[stage];
-        if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw new Error('法术消耗不符合阶段目录');
+        if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw preconditionFailure('法术消耗不符合阶段目录');
     }
     const roles=d.get('state','professions'),certified=[roles.combat,...roles.life,...roles.hidden];
-    if(stage>0&&!certifiedForSkill(d,this,skill.id))throw new Error('高阶职业内容需要相关职业认证');
+    if(stage>0&&!certifiedForSkill(d,this,skill.id))throw preconditionFailure('高阶职业内容需要相关职业认证');
     // Shared traditions retain the existing mage path. Alternative routes must
     // demonstrate their own foundation before studying an advanced formula.
     if(stage>0&&skill.learningProfessions&&!certified.includes(skill.profession)){
         const route=skill.learningProfessions.find(role=>certified.includes(role));
         const foundation=this.byId.get(route)?.entry?.skill;
-        if(!foundation||effectiveProficiency(d,this,foundation)<stage*300)throw new Error('共享术式所需路线基础熟练度不足');
+        if(!foundation||effectiveProficiency(d,this,foundation)<stage*300)throw preconditionFailure('共享术式所需路线基础熟练度不足');
     }
     const project=d.get('state','projects',args.source);
     const sourceInstance=d.get('state','itemInstances',args.source);
@@ -86,18 +87,18 @@ function learnNative(d,args,id){
     let sourceRecord,fee=0,minutes,course,courseKey;
     if(project){
         if(project.type!=='研究'||project.stage!=='打磨'||catalog.source!==source||!d.get('state','created',entity)
-            ||project.result!==entity)throw new Error('研究项目不是这项已登记成果的完成来源');
+            ||project.result!==entity)throw preconditionFailure('研究项目不是这项已登记成果的完成来源');
         minutes=integer(catalog.learnMinutes??120,'研习时间',43200);
         sourceRecord={type:'research',id:source};
     }else if(source.startsWith('npc_')){
-        if(kind==='spell'&&stage>=4)throw new Error('专家级以上法术只能通过研究或稀有典籍获得');
+        if(kind==='spell'&&stage>=4)throw preconditionFailure('专家级以上法术只能通过研究或稀有典籍获得');
         const npc=d.get('state','npcs',source);
-        if(!npc||npc.location!==d.get('state','location'))throw new Error('导师不在场');
-        if(isPhysicallyDead(this,d,source))throw new Error('导师已经死亡');
+        if(!npc||npc.location!==d.get('state','location'))throw preconditionFailure('导师不在场');
+        if(isPhysicallyDead(this,d,source))throw preconditionFailure('导师已经死亡');
         if(!personTeaching(this,d.get('state'),source,entity,{stage}))reject('E-ACTION-TEACHER','导师没有教授这项内容的资格',{missing:['需要具备教授该内容资格的导师'],repair:['寻找能教授该内容且在场的导师']});
         fee=integer(catalog.learnFee??12,'教学费');minutes=integer(catalog.learnMinutes??120,'教学时间',43200);
         if(catalog.learnDays){
-            const days=integer(catalog.learnDays,'授课天数',30);if(days<2)throw Error('分段课程至少两天');
+            const days=integer(catalog.learnDays,'授课天数',30);if(days<2)throw preconditionFailure('分段课程至少两天');
             courseKey=`teaching-course:${source}:${entity}`;course=d.get('state','records',courseKey);
             // A completed course may fail its final acquisition check, just
             // like a native lesson. A new paid course remains possible;
@@ -106,38 +107,38 @@ function learnNative(d,args,id){
             minutes=Math.ceil(minutes/days);
             if(course){
                 const service=d.get('state','obligations',course.service);
-                if(!service||obligationClosed(service)||service.endedAt!==undefined||service.revoked)throw Error('授课服务已终止');
-                if((service.deadline??Infinity)<d.get('state','minute')+minutes)throw Error('授课服务已到期');
-                if(Math.floor(d.get('state','minute')/1440)<course.nextDay)throw Error('下一课须到下一授课日');
+                if(!service||obligationClosed(service)||service.endedAt!==undefined||service.revoked)throw preconditionFailure('授课服务已终止');
+                if((service.deadline??Infinity)<d.get('state','minute')+minutes)throw preconditionFailure('授课服务已到期');
+                if(Math.floor(d.get('state','minute')/1440)<course.nextDay)throw preconditionFailure('下一课须到下一授课日');
                 fee=0;
             }
         }
         assertNpcService(d,this,source,'teach',minutes);
-        if(d.get('state','player','coins')<fee)throw new Error('教学费不足');
+        if(d.get('state','player','coins')<fee)throw preconditionFailure('教学费不足');
         const permission=teachingConsent(d,this,{teacher:source,subject:entity,minutes,fee,eventId:id});
-        if(!permission.allowed)throw new Error(`导师未同意授课：${permission.reason}`);
+        if(!permission.allowed)throw preconditionFailure(`导师未同意授课：${permission.reason}`);
         sourceRecord={type:'teacher',id:source,consent:permission};
     }else if(source.startsWith('item_')){
-        if(this.quantity(d,'player',source)<1)throw new Error('没有这本书');
-        if(d.get('state','inventory',source,'durability')===0)throw new Error('书页已损坏，不能作为完整学习来源');
+        if(this.quantity(d,'player',source)<1)throw preconditionFailure('没有这本书');
+        if(d.get('state','inventory',source,'durability')===0)throw preconditionFailure('书页已损坏，不能作为完整学习来源');
         const held=sourceInstance?{unit:sourceInstance,index:this.rules.books.grades.indexOf(sourceInstance.book?.grade)}:heldBookGrade(d,this,source);
-        if(sourceInstance&&(sourceInstance.owner!=='player'||sourceInstance.status!=='持有'||sourceInstance.durability===0))throw Error('没有完好的这册书');
+        if(sourceInstance&&(sourceInstance.owner!=='player'||sourceInstance.status!=='持有'||sourceInstance.durability===0))throw preconditionFailure('没有完好的这册书');
         const book=held?.unit?.book?.teaches?{...sourceDefinition.book,...held.unit.book}:sourceDefinition.book;
-        if(!book||!(book.teaches??[]).includes(entity))throw new Error('这本书没有所需学习内容');
+        if(!book||!(book.teaches??[]).includes(entity))throw preconditionFailure('这本书没有所需学习内容');
         // A copy carries its own grade, never above its original (works.mjs).
         const copied=held?.unit?.book,bookStage=copied?held.index:this.rules.books.grades.indexOf(book.grade);
-        if(bookStage<0||bookStage<Math.min(stage,4))throw new Error('书籍品级不足或未登记');
-        if(kind==='spell'&&stage>=4&&book.rare!==true)throw new Error('专家级以上法术需要稀有典籍');
-        if((d.get('state','skills','skill_literacy','proficiency')??0)<this.rules.books.minimumLiteracy)throw new Error('识字熟练度不足以阅读技能书');
+        if(bookStage<0||bookStage<Math.min(stage,4))throw preconditionFailure('书籍品级不足或未登记');
+        if(kind==='spell'&&stage>=4&&book.rare!==true)throw preconditionFailure('专家级以上法术需要稀有典籍');
+        if((d.get('state','skills','skill_literacy','proficiency')??0)<this.rules.books.minimumLiteracy)throw preconditionFailure('识字熟练度不足以阅读技能书');
         for(const requirement of book.prerequisites??[]){
             const requirementId=typeof requirement==='string'?requirement:requirement.skill,minimum=typeof requirement==='string'?1:requirement.minimum;
-            if(effectiveProficiency(d,this,requirementId)<minimum)throw new Error('未满足书籍前置技能');
+            if(effectiveProficiency(d,this,requirementId)<minimum)throw preconditionFailure('未满足书籍前置技能');
         }
         minutes=integer(Math.max(book.readingMinutes??0,this.rules.books.readingMinutes[bookStage]),'阅读时间',43200);
         sourceRecord={type:'book',id:source,author:book.author,edition:book.edition,...(copied?{copy:{instance:held.unit.id,grade:copied.grade,edition:copied.edition,chain:copied.chain}}:{})};
-    }else throw new Error('学习需要合格导师、实际持有的技能书或对应的已登记研究成果');
+    }else throw preconditionFailure('学习需要合格导师、实际持有的技能书或对应的已登记研究成果');
     if(d.get('state',partition,entity))reject('E-ACTION-ALREADY-KNOWN',`已经学会${catalog.name}`,{missing:[`已经掌握${catalog.name}，无需重复学习`],repair:['选择尚未学会的内容，或练习已掌握的技能']});
-    if(minutes<1)throw new Error('学习必须花费实际时间');
+    if(minutes<1)throw preconditionFailure('学习必须花费实际时间');
     const start=d.get('state','minute');
     if(courseKey&&!course){
         const service=openObligation(d,this,{obligationKind:'service',debtor:source,creditor:'player',actor:source,subject:entity,deadline:start+catalog.learnDays*1440+minutes,terms:{service:'teach',subject:entity,days:catalog.learnDays,minutesPerDay:minutes,fee}},`${id}:course`);

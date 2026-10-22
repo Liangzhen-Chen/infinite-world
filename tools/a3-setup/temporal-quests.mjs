@@ -52,7 +52,7 @@ registerSetupLoader({fields:['history'],rows:{history:questEvent},order:10,load(
 registerSetupLoader({fields:['objects'],rows:{objects:questObject},order:50,load(ctx,setup){
  rows(ctx,setup,'objects',(row,item)=>{
   require(text(row.id)&&!Object.hasOwn(ctx.bindings,row.id)&&row.kind==='quest','Invalid quest alias');
-  if(ctx.native(item,d=>restoreQuestSnapshot(d,ctx.engine,{...row,issuer:ctx.ref(row.issuer),assignee:ctx.ref(row.assignee),sourceEvent:ctx.ref(row.sourceEvent)})))ctx.bindings[row.id]=row.id;
+  if(ctx.native(item,d=>restoreQuestSnapshot(d,ctx.engine,{...row,issuer:ctx.ref(row.issuer),assignee:ctx.ref(row.assignee),sourceEvent:ctx.ref(row.sourceEvent)},{origin:'initial'})))ctx.bindings[row.id]=row.id;
  });
 }});
 registerSetupLoader({fields:['knowledge'],rows:{knowledge:r=>r?.source==='private_report'},order:80,load(ctx,setup){

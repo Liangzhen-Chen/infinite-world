@@ -38,9 +38,9 @@ test('N: counter opening persists independently from the personal purse; only it
  const out=write(document,d=>spendCounterCoins(d,engine,{owner:npc,actor:npc,to:'player',amount:20,eventId:'owner-payment'}));
  assert.equal(dedicatedCoinAccount(out.document.state,npc,'counter').coins,80);assert.equal(out.document.state.player.coins,20);assert.equal(out.document.state.npcs[npc].coins,purse);clean(out.document);
  const replay=write(out.document,d=>spendCounterCoins(d,engine,{owner:npc,actor:npc,to:'player',amount:20,eventId:'owner-payment'}));assert.deepEqual(replay.patches,[]);
- const reopened=write(out.document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'counter',balance:100,sourceEvent:'world_event:a3v2_082_account_0'}));
+ const reopened=write(out.document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'counter',balance:100,sourceEvent:'world_event:a3v2_082_account_0'},{origin:'initial'}));
  assert.equal(dedicatedCoinAccount(reopened.document.state,npc,'counter').coins,80);assert.deepEqual(reopened.patches,[]);
- assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'purse',balance:100,sourceEvent:'world_event:a3v2_082_account_0'})),/already exists/);
+ assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'purse',balance:100,sourceEvent:'world_event:a3v2_082_account_0'},{origin:'initial'})),/already exists/);
 });
 
 test('N: invalid opening source, purpose, owner and negative balances cannot initialize accounts',()=>{
@@ -48,7 +48,7 @@ test('N: invalid opening source, purpose, owner and negative balances cannot ini
   const loaded=load('082',change);assert.equal(ownedErrors(loaded).length,1);assert.equal(loaded.document.state.player.coins,0);
  }
  const loaded=load('082'),document=save(loaded.document);
- assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:'npc_hw_linsui',purpose:'counter',balance:100,sourceEvent:'not-an-event'})),/source/);
+ assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:'npc_hw_linsui',purpose:'counter',balance:100,sourceEvent:'not-an-event'},{origin:'initial'})),/source/);
  const remote=load('082',s=>s.accounts[0].seat=engine.world.locations.find(l=>l.id!==s.location).id);
  assert.throws(()=>write(save(remote.document),d=>spendCounterCoins(d,engine,{owner:'npc_hw_linsui',actor:'npc_hw_linsui',to:'player',amount:1,eventId:'remote-counter'})),/cannot act here/);
  clean(document);
@@ -174,7 +174,7 @@ test('O: mismatched collateral custody, expired redemption and invalid paid amou
 test('O: the native snapshot writer books the existing collateral without relying on the corpus ledger rebuild',()=>{
  const premise=setup('037').obligations[0],loaded=load('037',s=>{s.obligations=[];s.holdings=s.holdings.filter(h=>h.kind!=='pledged');});
  assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document);clean(document);
- const out=write(document,d=>restoreObligationSnapshot(d,engine,{...premise,sourceEvent:loaded.bindings[premise.sourceEvent],terms:{...premise.terms,collateral:loaded.bindings[premise.terms.collateral]}}));
+ const out=write(document,d=>restoreObligationSnapshot(d,engine,{...premise,sourceEvent:loaded.bindings[premise.sourceEvent],terms:{...premise.terms,collateral:loaded.bindings[premise.terms.collateral]}},{origin:'initial'}));
  assert.equal(obligationView(out.document.state,premise.id).owed,2);assert.equal(out.document.state.player.coins,2);assert.equal(out.document.state.records[premise.id].kind,'pawn');
  assert.equal(out.document.state.records[premise.id].terms.grace.minutes,1440);clean(out.document);
 });
@@ -204,7 +204,7 @@ test('O: snapshot provenance, parties and values are validated before native wri
   const loaded=load('032',change);assert.ok(ownedErrors(loaded).some(e=>e.item==='obligations[0]'));assert.equal(loaded.document.state.player.coins,0);
  }
  const document=save(load('032').document),before=save(document);
- assert.throws(()=>write(document,d=>restoreObligationSnapshot(d,engine,{id:'forged',kind:'loan',debtor:'player',creditor:'npc_hw_shendu',amount:10,paid:0,openedAt:540,dueAt:600,sourceEvent:'missing',terms:{}})),/source/);
+ assert.throws(()=>write(document,d=>restoreObligationSnapshot(d,engine,{id:'forged',kind:'loan',debtor:'player',creditor:'npc_hw_shendu',amount:10,paid:0,openedAt:540,dueAt:600,sourceEvent:'missing',terms:{}},{origin:'initial'})),/source/);
  assert.deepEqual(document,before);
 });
 
@@ -233,7 +233,7 @@ test('P: source links identify the same physical subject, and unrelated, missing
  for(const change of [s=>s.documents[0].sourceEvent='a3v2_051_theft_missing',s=>s.documents[0].sourceEvent='a3v2_051_theft',s=>s.documents[0].owner='npc_hw_shendu',s=>s.documents[0].describes='missing-item',s=>s.documents[0].content.identifies='wrong-cargo',s=>s.documents[0].links=['missing-event']]){
   const bad=load('051',change);assert.equal(ownedErrors(bad).length,1);
  }
- const document=save(good.document);assert.throws(()=>write(document,d=>restoreDocumentSnapshot(d,engine,{id:'missing',owner:'player',sourceEvent:'world_event:a3v2_051_purchase_receipt',describes:good.bindings.a3v2_051_grain_sack})),/paper/);clean(document);
+ const document=save(good.document);assert.throws(()=>write(document,d=>restoreDocumentSnapshot(d,engine,{id:'missing',owner:'player',sourceEvent:'world_event:a3v2_051_purchase_receipt',describes:good.bindings.a3v2_051_grain_sack},{origin:'initial'})),/paper/);clean(document);
 });
 
 test('Q: existing stages, judgment, appeal period and defendant persist without inventing charges or penalties',()=>{
@@ -261,7 +261,7 @@ test('Q: unrelated judgments, forged registration and nonexistent parties are re
  for(const change of [s=>s.cases[0].sourceEvent='a3v2_052_judgment',s=>s.cases[0].parties=['missing'],s=>s.cases[0].defendant='npc_hw_shendu',s=>s.history.find(h=>h.verb==='judged').subject='other-case']){
   const bad=load('052',change);assert.ok(ownedErrors(bad).some(e=>e.item==='cases[0]'));assert.equal(bad.document.state.records.a3v2_052_case,undefined);
  }
- const document=save(load('055').document);assert.throws(()=>write(document,d=>restoreCaseSnapshot(d,engine,{id:'forged',court:document.state.location,stage:'pending',parties:['player'],sourceEvent:'missing'})),/registration/);
+ const document=save(load('055').document);assert.throws(()=>write(document,d=>restoreCaseSnapshot(d,engine,{id:'forged',court:document.state.location,stage:'pending',parties:['player'],sourceEvent:'missing'},{origin:'initial'})),/registration/);
 });
 
 const legalRequests=[['051','report'],['052','appeal'],['053','confess'],['055','hire_advocate'],['056','claim'],['058','bribe']];

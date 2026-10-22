@@ -1,3 +1,5 @@
+import {pruneRecords} from './record-cleanup.mjs';
+import {vocabulary} from './domain-rules.mjs';
 import {createHash}from'node:crypto';
 import {declareHoldingWriter,holdingSet,isPhysicallyDead} from './holdings.mjs';
 import {recordsWhere} from './storage.mjs';
@@ -27,7 +29,9 @@ export function settleEncounterExchange(d,e,encounter,{actor,target,intent,escap
  // round and open the next one, rather than locking out every later exchange.
  const round=encounter?.round??1;
  const row={...encounter,id,category:'combat_encounter',participants,location:encounter?.location??exchange.origin??s.location,active,round:active?round+1:round,playerActedThisRound:!active&&actor==='player',lastRound:{round,actor,intent,playerActed:actor==='player',sourceEvent:eventId,...exchange},sourceEvent:encounter?.sourceEvent??eventId};
- holdingSet(d,e,['state','records',`combat_encounter:${id}`],row,'combat-state');
+  holdingSet(d,e,['state','records',`combat_encounter:${id}`],row,'combat-state');
+ // Finished encounters are history: keep only the latest few.
+ pruneRecords(d,'combat_encounter',{exempt:r=>r.active,max:32});
  return {id,active,round:row.round,playerActedThisRound:row.playerActedThisRound};
 }
 // A descriptive retreat names a known path, never an arbitrary map node.
@@ -39,11 +43,19 @@ export function combatEscapeDestination(d,e,requested){
  for(const memory of Object.values(d.document.memories??{}))if(memory.source==='known_path'&&visible(memory))paths.add(memory.subject);
  const adjacent=[...new Set(e.world.routes.filter(r=>r.from===s.location||r.to===s.location).map(r=>r.from===s.location?r.to:r.from))];
  let exact;try{exact=e.resolve(requested);}catch{}
+ // move.to is a place or a bearing (06 §6.3). A place the catalogue names is
+ // that place; a bearing term from the world vocabulary leaves the choice to
+ // the known paths; anything else is not a destination.
+ if(!exact){
+  const named=[...e.resolver.mentions(String(requested??''))].filter(id=>e.world.locations.some(l=>l.id===id));
+  const bearing=vocabulary(e,'relativeBearings','terms')?.some(t=>String(requested??'').toLowerCase().includes(t.toLowerCase()));
+  if(named.length>1||!named.length&&!bearing)throw Error('Unknown escape destination');
+  if(named.length)exact=named[0];
+ }
  const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
  const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
   try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
  });
- if(!exact&&!/(?:旁|附近|身边|小路|path|nearby|adjacent)/i.test(requested))throw Error('Unknown escape destination');
  if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
  return candidates[0];
 }

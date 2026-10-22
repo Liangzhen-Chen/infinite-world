@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
@@ -9,17 +10,17 @@ declareLedgerWriter('daily-actions',{sinks:['sink:consume']});
 
 function food(engine,raw){
  const item=engine.resolve(raw,'item'),nutrition=engine.byId.get(item)?.nutrition;
- if(!nutrition||!Number.isFinite(nutrition.satiety)||nutrition.satiety<=0||nutrition.satiety>100)throw Error('这件物品没有登记为可食用的一餐');
+ if(!nutrition||!Number.isFinite(nutrition.satiety)||nutrition.satiety<=0||nutrition.satiety>100)throw preconditionFailure('这件物品没有登记为可食用的一餐');
  return {item,satiety:nutrition.satiety};
 }
 
 export async function treatRumor(d,engine,args,eventId){
  const speaker=engine.resolve(args.subject,'npc'),seller=engine.resolve(args.seller,'npc'),item=engine.resolve(args.item,'item');
- if(!engine.byId.get(item)?.nutrition?.hydration)throw Error('请客须选择登记的饮品');
+ if(!engine.byId.get(item)?.nutrition?.hydration)throw preconditionFailure('请客须选择登记的饮品');
  const rumor=npcRumors(engine,speaker,d.document).find(r=>r.id===args.rumor);
- if(!rumor)throw Error('讲述者没有这条登记传闻');
+ if(!rumor)throw preconditionFailure('讲述者没有这条登记传闻');
  const key=`daily:${eventId}`,identity=digest({operation:'treat_rumor',speaker,seller,item,rumor:rumor.id}),old=d.get('state','records',key);
- if(old){if(old.identity!==identity)throw Error('同一事件编号不能改换打听内容');return {...old.result,duplicate:true};}
+ if(old){if(old.identity!==identity)throw preconditionFailure('同一事件编号不能改换打听内容');return {...old.result,duplicate:true};}
  const rule=actionCostRule(engine,'talk.ask');assertRumorConversation(d,engine,speaker,rule.timeMin);
  const span=beginActionActivity(d,engine,rule.activity);
  const purchase=await engine.trade(d,{seller,item,quantity:1},`${eventId}:drink`);
@@ -36,7 +37,7 @@ export async function treatRumor(d,engine,args,eventId){
 export async function orderMeal(d,engine,args,eventId){
  const seller=engine.resolve(args.subject,'npc'),foods=[args.item,...args.side?[args.side]:[]].map(raw=>food(engine,raw));
  const identity=digest({operation:'order_meal',seller,foods}),key=`daily:${eventId}`,previous=d.get('state','records',key);
- if(previous){if(previous.identity!==identity)throw Error('同一事件编号不能改换用餐内容');return {...previous.result,duplicate:true};}
+ if(previous){if(previous.identity!==identity)throw preconditionFailure('同一事件编号不能改换用餐内容');return {...previous.result,duplicate:true};}
  const rule=actionCostRule(engine,'eat.meal');assertActionTime(d,engine,rule.timeMin);
  const span=beginActionActivity(d,engine,rule.activity),purchases=[];
  for(let i=0;i<foods.length;i++){
@@ -62,10 +63,10 @@ export async function orderMeal(d,engine,args,eventId){
 // never supply nutrition. The registered meal action selects the food.
 export function eatMeal(d,engine,args,eventId){
  const {item,satiety}=food(engine,args.item);
- if(args.quantity!==undefined&&args.quantity!==1)throw Error('用餐一次食用一份');
+ if(args.quantity!==undefined&&args.quantity!==1)throw preconditionFailure('用餐一次食用一份');
  const key=`daily:${eventId}`,identity=digest({operation:'eat',item}),previous=d.get('state','records',key);
- if(previous){if(previous.identity!==identity)throw Error('同一事件编号不能改换用餐内容');return {...previous.result,duplicate:true};}
- if(engine.quantity(d,'player',item)<1)throw Error('没有持有这份食物');
+ if(previous){if(previous.identity!==identity)throw preconditionFailure('同一事件编号不能改换用餐内容');return {...previous.result,duplicate:true};}
+ if(engine.quantity(d,'player',item)<1)throw preconditionFailure('没有持有这份食物');
  const rule=actionCostRule(engine,'eat.meal');assertActionTime(d,engine,rule.timeMin);
  const span=beginActionActivity(d,engine,rule.activity);
  engine.itemDelta(d,'player',item,-1,{flow:'sink:consume',purpose:'meal',writer:'daily-actions',eventId});
@@ -79,13 +80,13 @@ export function eatMeal(d,engine,args,eventId){
 
 export function readNotice(d,engine,args,eventId){
  const key=`daily:${eventId}`,identity=digest({operation:'read_notice',notice:args.notice}),old=d.get('state','records',key);
- if(old){if(old.identity!==identity)throw Error('同一事件编号不能更换告示');return {...old.result,duplicate:true};}
+ if(old){if(old.identity!==identity)throw preconditionFailure('同一事件编号不能更换告示');return {...old.result,duplicate:true};}
  const location=d.get('state','location'),notice=engine.byId.get(location)?.notices?.find(n=>n.id===args.notice);
- if(!notice||!notice.text?.trim()||notice.postedAt!==undefined&&notice.postedAt>d.get('state','minute')||notice.until!==undefined&&notice.until<=d.get('state','minute'))throw Error('这里没有这份有效告示');
+ if(!notice||!notice.text?.trim()||notice.postedAt!==undefined&&notice.postedAt>d.get('state','minute')||notice.until!==undefined&&notice.until<=d.get('state','minute'))throw preconditionFailure('这里没有这份有效告示');
  const rule=actionCostRule(engine,'read.notice');assertActionTime(d,engine,rule.timeMin);
  const span=beginActionActivity(d,engine,rule.activity);
  engine.advance(d,rule.timeMin,eventId);
- if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')throw Error('阅读完成前已离场或失去行动能力');
+ if(d.get('state','location')!==location||d.get('state','player','status')!=='正常')throw preconditionFailure('阅读完成前已离场或失去行动能力');
  const memoryId=`player::notice:${notice.id}`,memory={subject:'player',key:`notice:${notice.id}`,content:notice.text,source:notice.id,sourceType:'阅读',channel:'read',reliability:'原文',location,minute:d.get('state','minute'),sourceEvent:eventId,participants:['player'],keywords:[],pinned:false};
  d.set(['memories',memoryId],memory);
  const result={notice:notice.id,memoryId,content:notice.text,source:notice.id,cost:finishActionActivity(d,engine,span),actionScope:{kind:'reading',clockManaged:true,minutes:rule.timeMin}};
@@ -94,11 +95,11 @@ export function readNotice(d,engine,args,eventId){
 
 export function overhearRumor(d,engine,args,eventId){
  const key=`daily:${eventId}`,identity=digest({operation:'overhear',conversation:args.conversation}),old=d.get('state','records',key);
- if(old){if(old.identity!==identity)throw Error('同一事件编号不能更换旁听来源');return {...old.result,duplicate:true};}
+ if(old){if(old.identity!==identity)throw preconditionFailure('同一事件编号不能更换旁听来源');return {...old.result,duplicate:true};}
  const location=d.get('state','location'),speech=engine.byId.get(location)?.publicConversations?.find(n=>n.id===args.conversation);
- if(!speech)throw Error('这里没有这段公开交谈');
+ if(!speech)throw preconditionFailure('这里没有这段公开交谈');
  const rumor=npcRumors(engine,speech.speaker,d.document).find(r=>r.id===speech.rumor);
- if(!rumor)throw Error('讲述者当前不知道这条传闻');
+ if(!rumor)throw preconditionFailure('讲述者当前不知道这条传闻');
  const rule=actionCostRule(engine,'talk.overhear');assertRumorConversation(d,engine,speech.speaker,rule.timeMin);
  const span=beginActionActivity(d,engine,rule.activity);
  const heard=hearNpcRumor(d,engine,{subject:'player',key:rumor.id,rumor:rumor.id,source:speech.speaker,content:rumor.claim},eventId,{channel:'overhear',minutes:rule.timeMin,sourceLabel:speech.label??'当地闲谈'});
