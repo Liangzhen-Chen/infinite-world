@@ -13,7 +13,7 @@ import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const row=corpus.find(r=>r.id==='A3V2-020');
 function fixture(){
  const initial=engine.createCharacter(seed,{},'a3-score-independent');

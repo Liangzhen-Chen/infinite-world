@@ -20,7 +20,7 @@ const entries = contentEntries(originalWorld);
 // 未发布时明确测试候选世界；不会把候选写进正式目录或篡改评分语料。
 const world = previewWorld(originalWorld, entries), engine = new WorldEngine(world);
 const seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
-const corpus = JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json', 'utf8'));
+const corpus = JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json', 'utf8'));
 const initial = () => engine.initialFromLegacy(seed, 'a3-owner2-w');
 const child = 'npc_a3_herb_apprentice', father = 'npc_a3_apprentice_father', uncle = 'npc_a3_apprentice_uncle';
 const context = document => ({engine, document});

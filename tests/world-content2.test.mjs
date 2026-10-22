@@ -55,7 +55,7 @@ test('每个普通职业都有路线可达、按真实作息能完成考核的�
 });
 
 test('020 原题前提能唯一找到白石窗口木工考官，申请不预先授予资格',async()=>{
- const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+ const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
  const row=corpus.find(r=>r.id==='A3V2-020'),setup=applyIntentSetup(engine,document,row.setup);
  assert.deepEqual(setup.setupUnmet,[]);
  assert.deepEqual(qualifiedExaminers(engine,setup.document.state,'profession_life_6','bld_bs_guild'),['npc_hw_yinge']);
@@ -68,7 +68,7 @@ test('020 原题前提能唯一找到白石窗口木工考官，申请不预先�
 });
 
 test('同一窗口多个登记职位仍需消歧，在岗布尔值不能代造授予权',async()=>{
- const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+ const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
  const setup=structuredClone(corpus.find(r=>r.id==='A3V2-020').setup);
  const office={...structuredClone(setup.instances[0]),id:'a3_content2_second_referral'};
  setup.instances.push(office);

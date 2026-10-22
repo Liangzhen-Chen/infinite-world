@@ -15,7 +15,7 @@ import {standing} from '../server-plugin/standing.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const INN='bld_hw_qingdeng',NPC='npc_hw_linsui',BUCKET='feature_hw_kitchen_bucket';
 const row=n=>structuredClone(corpus.find(r=>r.id===`A3V2-${n}`));
 function fixture(id='a3-scenes'){
