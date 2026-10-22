@@ -36,8 +36,8 @@ async function fightD31(t){
  const wait=await ui.choose('time',{until:{dayOffset:1,hour:16}});assert.ok(wait.ok,wait.error);
  const next=await ui.read();assert.equal(next.state.creatures[WOLF].status,'死亡','次日不复活');assert.equal(Object.values(next.state.creatures).filter(c=>c.species===SPECIES&&c.status!=='死亡').length,0,'原地没有新狼');
 }
-test('D31 普通打斗 ②③⑤：落单野狼被打死，留下可剥取的尸体（只有兽皮、没有钱财），铁剑耐久每回合 −1，地域野狼数不因死亡回流、次日不复活；玩家生命差 = 各回合受伤之和',fightD31);
-test('D31.4 public combat advances one minute per round, with real HP, weapon and ecology assertions',fightD31);
+// fightD31 asserts D31.4 (one minute per round) together with ②③⑤ in a single run; one registration only.
+test('D31 普通打斗 ②③⑤ 与 D31.4：落单野狼被打死，留下可剥取的尸体（只有兽皮、没有钱财），铁剑耐久每回合 −1，每回合 1 分钟，地域野狼数不因死亡回流、次日不复活；玩家生命差 = 各回合受伤之和',fightD31);
 
 // ---- D32 受伤求医 ----
 async function treatmentD32(t){

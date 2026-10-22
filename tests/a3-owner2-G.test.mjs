@@ -18,7 +18,7 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner2-g');
-const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2.json',import.meta.url),'utf8'));
+const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r12.json',import.meta.url),'utf8'));
 const setup=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`).setup);
 const run=s=>applyIntentSetup(engine,initial,s);
 const errors=(r,field)=>r.setupUnmet.filter(e=>e.item===field||e.item.startsWith(`${field}[`));

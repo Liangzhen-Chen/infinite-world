@@ -52,7 +52,10 @@ for(const [name,scenario]of Object.entries(SCENARIOS))test(`对照：${name}存�
  assert.deepEqual(got,GOLDEN[name]);
 });
 for(const [name,scenario]of Object.entries(SCENARIOS))test(`历史服务回执：${name}仍逐字节回放S3之前的推进`,async()=>{
- assert.deepEqual(await trace({...scenario,historical:true}),HISTORICAL[name]);
+ const got=await trace({...scenario,historical:true});
+ // Same per-stage regeneration rule as the golden (10 §10.5): the complete state hash moves with any world/engine content change.
+ if(process.env.UPDATE_ADVANCE_GOLDEN){HISTORICAL[name]=got;await fs.writeFile(new URL('./fixtures/advance-registry-pre-s3-services.json',import.meta.url),JSON.stringify(HISTORICAL,null,1)+'\n');return;}
+ assert.deepEqual(got,HISTORICAL[name]);
 });
 test('注册表按order排序、编号唯一，并覆盖原有推进系统',()=>{
  const orders=advanceRegistry.map(s=>s.order),ids=advanceRegistry.map(s=>s.id);

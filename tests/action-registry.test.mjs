@@ -104,7 +104,10 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    'core:combat':[{name:'destination',kind:'text'}],
    'core:craft.manufacture':[{name:'batches',kind:'quantity',min:1,max:100000,default:1}],
    // D18.2: read-only service quote, retaining the exact allowed-slot check.
-   'core:craft.repair':[{name:'quote',kind:'flag'}]
+   'core:craft.repair':[{name:'quote',kind:'flag'}],
+   // 06 §6.10.1: the legal request object is a catalog slot of the six request-taking law
+   // actions; it is not in world_law's static schema (static prompt budget, review 10-22).
+   ...Object.fromEntries(['report','confess','appeal','claim','bribe','hire_advocate'].map(op=>[`core:law.${op}`,[{name:'request',kind:'object'}]]))
   };
   assert.deepEqual(a.slots.filter(s=>!(s.name in schema.properties)),catalogAdditions[a.id]??[],`${a.id} 未登记的目录新增槽位`);
   if(a.id==='core:trade.lend'){

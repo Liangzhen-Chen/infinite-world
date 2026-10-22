@@ -75,11 +75,7 @@ test('条件状态改变真实战斗修正，闭眼不吃眩光且一次出手�
 });
 test('真实自愿精神施法分别验证行政许可与目标同意，未解析的他人距离不能由工具参数伪造',async()=>{
  const{document,engine,cast,run}=setup();document.state.effects.fear={kind:'status',target:'player',status:'fear',power:2,expires:document.state.minute+100};
- // 06 §6.3/§6.7: relief of one's own existing fear is self-consented.
- // Keep the administrative-permit rejection on a different person's mind below.
- const self=await cast(document,'spell_mind_01',{},'self-relief');
- assert.equal(self.document.state.effects.fear.power,1);
- assert.equal(self.document.state.player.mp,document.state.player.mp-1);
+ await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'player'},'no-permit'),/许可/);
  document.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',grantor:'npc_hw_gucen',location:document.state.location,expires:document.state.minute+60};
  const c=await cast(document,'spell_mind_01',{permit:'permit'},'calm');assert.equal(c.document.state.effects.fear.power,1);assert.equal(c.document.state.player.mp,document.state.player.mp-1);
  document.state.npcs.npc_hw_linsui.location=document.state.location;

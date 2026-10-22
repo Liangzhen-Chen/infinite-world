@@ -12,7 +12,7 @@ import {auditLedger} from '../server-plugin/ledger.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.createCharacter(seed,{},'r13-regression');
-const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 function fixture(n){
  const row=rows.find(r=>r.id===`A3V2-${n}`),setup=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setup.setupUnmet,[]);

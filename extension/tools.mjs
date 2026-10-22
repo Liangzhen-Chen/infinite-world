@@ -99,9 +99,7 @@ field.function.parameters.properties.item={...str,description:'farm_buy仅燕麦
 field.function.parameters.properties.quantity={...int,description:'买粮0.5公斤/份；采集份数'};
 const companion=group('world_companion','照料驯骑；召唤契约/搬水/限额守卫',companionTools);
 const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));
-law.function.parameters.properties.request={};
-law.function.description='法典声望/在场偷窃；在场authority办案公示携信';
-law.function.parameters.properties.memory.description='from案记忆ID';
+law.function.description='法典声望/在场偷窃；在场authority办案/公示携信';
 Object.assign(law.function.parameters.properties,definitions.find(row=>row.function.name==='world_crime').function.parameters.properties);
 law.function.parameters.properties.operation={type:'string',enum:['steal',...definitions.find(row=>row.function.name==='world_law').function.parameters.properties.operation.enum]};
 const hidden=new Set([...fieldTools,...companionTools,'world_crime','world_law']);

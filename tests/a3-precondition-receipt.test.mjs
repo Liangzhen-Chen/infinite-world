@@ -9,6 +9,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {executeOpenSequence} from '../server-plugin/open-actions.mjs';
 import {PrimitiveRejected} from '../server-plugin/primitive-policy.mjs';
+import {ActionRejection} from '../server-plugin/action-rejection.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -117,6 +118,18 @@ test('A3 refusal: program errors and non-public legacy calls still throw',async(
 
 // These are real, unconverted domain preconditions outside the 24 corpus
 // failures: no text entries may be added to the boundary to make them work.
+// 06 §6.10.4 counterexample: only a typed business rejection becomes a refusal receipt. A plain
+// program error, even one whose message is world-facing Chinese, is an engine fault and must
+// propagate unchanged from both preview and commit (no receipt, no patches, document intact).
+test('A3 generic refusal: a plain program error is never turned into a refusal receipt',async()=>{
+ const faulty=new WorldEngine(world),document=faulty.createCharacter(seed,{},'a3-plain-error');
+ const recipe=world.recipes.find(r=>r.learningRequired);document.state.recipes[recipe.id]={source:{type:'teacher',id:'npc_hw_linsui'}};
+ faulty.craft=function(){throw new Error('制造台账损坏');};
+ const before=structuredClone(document),call={tool:'world_act',eventId:'plain-program-error',args:{action:'core:craft.manufacture',slots:{recipe:recipe.id}}};
+ for(const run of [()=>faulty.previewAction(document,call),()=>faulty.reduce(document,call)])
+  await assert.rejects(run(),error=>error.constructor===Error&&error.message==='制造台账损坏');
+ assert.deepEqual(document,before);
+});
 for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refusal: ${module} legacy precondition is atomic in preview and commit`,async()=>{
  const document=structuredClone(initial);
  let action,slots,legacy,reason;
@@ -137,12 +150,18 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
   legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='尚未学会这个配方';
  }
  const before=structuredClone(document);
- await assert.rejects(engine.reduce(document,{...legacy,eventId:`generic-legacy-${module}`}),error=>error.constructor===Error&&error.message===reason);
+ // 06 §6.10.4: a business precondition rejects at its source with a stable code. The legacy
+ // direct tool call therefore throws the typed rejection (same world-facing reason) and the
+ // catalog receipt below must carry that very code, not a boundary-invented generic one.
+ let sourceCode;
+ await assert.rejects(engine.reduce(document,{...legacy,eventId:`generic-legacy-${module}`}),error=>{
+  sourceCode=error.code;return error instanceof ActionRejection&&error.message===reason&&/^E-ACTION-/.test(error.code);
+ });
  const offered=worldActions(engine.scoped(document),document).actions;
  const call={tool:'world_act',eventId:`generic-${module}`,args:{action,slots}};
  for(const preview of [true,false]){
   const result=preview?await engine.previewAction(document,call):await engine.reduce(document,call),receipt=assertRefusal(result);
-  assert.equal(receipt.code,'E-ACTION-PRECONDITION');
+  assert.equal(receipt.code,sourceCode);
   assert.equal(receipt.reason,reason);assert.deepEqual(receipt.missing,[reason]);
   assert.ok(receipt.repair.some(s=>s.includes(reason)));
   assert.ok(receipt.routing.alternatives.length);

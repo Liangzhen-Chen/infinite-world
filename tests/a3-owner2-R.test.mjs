@@ -14,7 +14,7 @@ import {auditLedger} from '../server-plugin/ledger.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.createCharacter(seed,{},'owner2-R');
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const canonical=id=>canonicalActionId(primitiveRuntime.registry(engine),id);
 function fixture(n){
  const row=corpus.find(r=>r.id===`A3V2-${n}`),setup=applyIntentSetup(engine,initial,row.setup);

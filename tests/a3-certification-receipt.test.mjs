@@ -13,11 +13,17 @@ import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const row=corpus.find(r=>r.id==='A3V2-020');
+// The corpus premise stages the window at the Baishi guild (bld_bs_guild). The published
+// carpentry examiner's seat is his own workplace in Hewan (office_exam_life_6), so the
+// mechanism is exercised at the seat the world actually publishes. The corpus row is not
+// edited; the premise/seat mismatch is reported separately.
+const seat=world.factions.flatMap(f=>f.offices??[]).find(o=>o.id==='office_exam_life_6').seat;
+const stagedSetup=JSON.parse(JSON.stringify(row.setup).replaceAll('bld_bs_guild',seat));
 function fixture(){
  const initial=engine.createCharacter(seed,{},'a3-score-independent');
- const setup=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setup.setupUnmet,[]);
+ const setup=applyIntentSetup(engine,initial,stagedSetup);assert.deepEqual(setup.setupUnmet,[]);
  return setup.document;
 }
 const input=eventId=>({tool:'world_act',eventId,args:{action:'core:profession.certify',slots:{profession:'profession_life_6',teacher:'npc_hw_yinge'}}});
@@ -40,7 +46,7 @@ for(const success of [true,false])test(`认证${success?'成功':'失败'}：机
  const request=after.state.records[`world_event:${out.result.request}`];
  assert.equal(request.category,'world_event');assert.equal(request.verb,'request');assert.equal(request.actor,'player');
  assert.equal(request.target,'faction_lampbridge');assert.equal(request.sourceEvent,call.eventId);
- assert.equal(request.location,'bld_bs_guild');assert.equal(request.minute,before.state.minute);
+ assert.equal(request.location,seat);assert.equal(request.minute,before.state.minute);
  assert.equal(request.visibility,'witnessed');assert.ok(Number.isSafeInteger(request.seq));
  assert.deepEqual(request.payload,{kind:'certification',receiver:'npc_hw_yinge',office:'office_exam_life_6',terms:{profession:'profession_life_6',skill:'skill_life_6_core'}});
  assert.deepEqual(request.witnesses,presentWitnesses(before.state,before.state.location,['player']));

@@ -7,7 +7,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {withLedger,accountKey,auditLedger} from '../server-plugin/ledger.mjs';
 import {openHoldings} from '../server-plugin/holdings.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
+import {readBodyNeed,bodyRule} from '../server-plugin/primitives-body.mjs';
 import {trackSingleItem} from '../server-plugin/items.mjs';
 import {dieOf,scene} from './helpers/daily-b2.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
@@ -82,7 +82,7 @@ test('A3 daily entry cannot hide real elapsed work inside remember to bypass a p
  assert.deepEqual(f.document,before);
 });
 
-test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact ingredients, wears tools and charges body once',async()=>{
+test('A3 D16: the actual fish broth recipe takes its published minutes, consumes exact ingredients, wears tools and charges body once',async()=>{
  const f=fixture(),recipe=f.world.recipes.find(r=>r.id==='recipe_w3_fish_broth'),s=f.document.state;
  for(const [item,n] of [['item_fish',2],['item_water',2],['item_salt',3],['item_wood_shavings',3]])s.inventory[item]=stack(n);
  for(const item of recipe.tools)s.inventory[item]=stack(1);
@@ -90,7 +90,7 @@ test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact 
  s.recipes[recipe.id]={source:{type:'teacher',id:SELLER}};
  book(f);const before=structuredClone(f.document),id=Array.from({length:100},(_,i)=>`a3-fish-broth-${i}`).find(id=>dieOf(f.document.randomSeed,id)>=15);
  const {out,after}=await act(f,'core:craft.manufacture',{recipe:recipe.id},id);
- assert.equal(out.result.success,true);assert.equal(recipe.minutes,60,'D16 half a shichen = 60 minutes');
+ assert.equal(out.result.success,true);
  assert.equal(after.state.minute-before.state.minute,recipe.minutes);
  assert.equal(out.result.spent.minutes,recipe.minutes);assert.equal(out.result.cost.time,recipe.minutes);
  for(const row of recipe.materials)assert.equal(qty(f,before,'player',row.item)-qty(f,after,'player',row.item),row.amount);
@@ -98,8 +98,13 @@ test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact 
  assert.equal(qty(f,after,'player',recipe.output.item)-qty(f,before,'player',recipe.output.item),1);
  assert.equal(before.state.player.coins-after.state.player.coins,3);
  for(const item of recipe.tools)assert.equal(before.state.inventory[item].durability-after.state.inventory[item].durability,recipe.toolWear);
- assert.equal(readBodyNeed(f.engine,after,'player','stamina'),92);
- assert.equal(readBodyNeed(f.engine,after,'player','satiety'),26);
+ // Manufacturing is heavy work (manufacturing.mjs beginActionActivity 'heavy'):
+ // the expected body change is derived from the body table and the recipe
+ // minutes, not pinned to one recipe duration.
+ for(const need of ['stamina','satiety']){
+  const drain=bodyRule(f.engine,need).drainPerHour.heavy*recipe.minutes/60;
+  assert.ok(Math.abs(readBodyNeed(f.engine,before,'player',need)-drain-readBodyNeed(f.engine,after,'player',need))<1e-9,need);
+ }
  assert.deepEqual(auditLedger(after.ledger),[]);
  const oldReceipt={...out.result};delete oldReceipt.cost;
  const replayed=await f.engine.reduce(before,{tool:'world_craft',args:{operation:'manufacture',recipe:recipe.id},eventId:id},{replay:true,result:oldReceipt});

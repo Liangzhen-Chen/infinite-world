@@ -17,7 +17,7 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const initial=()=>engine.createCharacter(seed,{},'a3-owner2-t');
 const setupOf=n=>structuredClone(corpus.find(r=>r.id===`A3V2-${n}`).setup);
 const load=setup=>applyIntentSetup(engine,initial(),setup);

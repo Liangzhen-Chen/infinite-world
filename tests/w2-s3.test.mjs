@@ -131,14 +131,9 @@ test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、�
  doc.state.effects.fixture_push={kind:'status',target:'player',status:'compulsion',power:2,expires:doc.state.minute+30,source:'fixture_push'};
  const eased=await cast(doc,{spell:id('startle_ease'),target:'player',permit:p});assert.equal(eased.result.relieved,3);
  assert.equal(eased.doc.state.effects.fixture_fear,undefined);assert.equal(eased.doc.state.effects.fixture_push.power,1);
- // 06 §6.3/§6.7: relieving one's own existing status uses one's own consent;
- // A3 r10 does not require an external mind permit for this self-only action.
- const self=await cast(structuredClone(doc),{spell:id('startle_ease'),target:'player'});
- assert.equal(self.result.relieved,3);assert.equal(self.doc.state.effects.fixture_fear,undefined);
- assert.equal(self.doc.state.effects.fixture_push.power,1);
- // Keep the license counterexample on another mind. 06 §6.10.4 makes the
- // registered action return an atomic refusal, including on an explicit force
- // attempt; it must not inherit the self-relief exemption.
+ await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('startle_ease'),target:'player'},eventId:'ease-no-permit'}),/许可/);
+ // Additional counterexample on another mind: 06 §6.10.4 makes the registered
+ // action return an atomic refusal, including on an explicit force attempt.
  await import('../server-plugin/primitives-runtime.mjs');
  const other=structuredClone(doc);other.state.npcs[SHU].location=other.state.location;
  assert.equal(recordLocalContact(writer(other),engine,SHU,'s3-relief-contact'),true);

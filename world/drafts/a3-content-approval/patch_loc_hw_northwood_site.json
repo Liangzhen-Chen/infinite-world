@@ -1,0 +1,78 @@
+{
+  "id": "patch_loc_hw_northwood_site",
+  "fingerprint": "fcac1292a5fb454f4427581f43eda5f7e1a9392799a3b056884e9940c4ecc3b1",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "patch_loc_hw_northwood_site",
+    "row": {
+      "site": {
+        "owner": null,
+        "occupants": [],
+        "entryMechanisms": [],
+        "mechanisms": [],
+        "clues": [],
+        "resources": [
+          {
+            "id": "nw_herb",
+            "name": "林缘药草",
+            "item": "item_herb",
+            "quantity": 20,
+            "minutes": 120,
+            "gather": {
+              "yield": "gather:herb",
+              "skill": "skill_life_9_core",
+              "seasons": [
+                0,
+                1,
+                2
+              ]
+            }
+          }
+        ],
+        "truths": []
+      }
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "db482c692f6fe24edf073de6c6483ccbe3cefc69a9d9c1670919dd7e9c056b58",
+    "draftHash": "a66359c99ce7d096af74c45ec50cab4712240de167d1bf49560f3e9c741f7b36"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "49ac7ddc-1f57-4621-b528-5d7bf988bab1",
+      "file": "budget-responses/49ac7ddc-1f57-4621-b528-5d7bf988bab1.json",
+      "requestHash": "e452c1e1450980dca3d08702e733f4a0890c34ecf01eab377aaec1612f8264a2",
+      "responseHash": "4d1c6db24387df57ce730da7ff2de2cfb88f073fa42bdafa13172f1db81b4aba"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-content-approval-patch_loc_hw_northwood_site-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 707,
+        "completion_tokens": 7,
+        "total_tokens": 714,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 579
+      },
+      "costUpperYuan": 0.00121912,
+      "cumulativeUpperYuan": 0.10816176000000002,
+      "latencyMs": 996.648000000001,
+      "timestamp": "2026-10-22T10:38:06.785Z"
+    }
+  ]
+}
