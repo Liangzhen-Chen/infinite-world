@@ -860,7 +860,7 @@
     "expected": {
       "route": "core:pet.feed",
       "signature": [
-        "transfer(resource:species_food,self->sink:consume)",
+        "transfer(resource:item_oats,self->sink:consume)",
         "vital(creature:own_pet,body:satiety)"
       ],
       "outOfBounds": false,
@@ -889,7 +889,8 @@
     },
     "proposalNotes": [
       "物种依据world/meta/monsters.json的monster_bent_horn_goat：草食、可驯养，食物明确包含item_oats。",
-      "原物种占位改为setup.instances里的唯一既存个体a3v2_009_goat；实际执行前将场景ID绑定到加载后的实体ID，不能把物种ID当个体。"
+      "原物种占位改为setup.instances里的唯一既存个体a3v2_009_goat；实际执行前将场景ID绑定到加载后的实体ID，不能把物种ID当个体。",
+      "第13轮复审（描述词结构化）：resource:species_food是散文词；包里“它能吃的一份口粮”在setup里是item_oats（inventory与山羊种可食），改为真实资源ID。"
     ],
     "setup": {
       "location": "loc_hw_fields",
@@ -1242,8 +1243,7 @@
     "expected": {
       "route": "core:practice",
       "signature": [
-        "learn(person:self,skill_light:practice)",
-        "time(world,practice)"
+        "learn(person:self,skill_light:practice)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -1267,7 +1267,8 @@
       }
     },
     "proposalNotes": [
-      "练习幅度与 time 均由练习规则按正常一轮、阶段及当日衰减裁决。"
+      "练习幅度与 time 均由练习规则按正常一轮、阶段及当日衰减裁决。",
+      "第13轮复审（伴随耗时）：练习耗时是练习动作的伴随效果（判分口径把time当伴随，不满足也不能凑数），本意不是“等待”，从必需签名删去time(world,practice)，只保留练习学习。"
     ],
     "setup": {
       "location": "bld_hw_riverhome",
@@ -1594,8 +1595,7 @@
     "expected": {
       "route": "core:practice",
       "signature": [
-        "learn(person:self,known_cultivation_skill:practice)",
-        "time(world,practice)"
+        "learn(person:self,known_cultivation_skill:practice)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -1620,7 +1620,8 @@
     },
     "proposalNotes": [
       "本轮按任务要求将未具名的基础吐纳具体绑定为world已有skill_monk_combat_01（三息定桩）的呼吸训练；setup明确它是玩家原已掌握的那套功法，不凭空学会，也不把它改成驱散恐惧的定息术。",
-      "本轮场景绑定：missing:known_basic_breathing_skill → skill_monk_combat_01。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:known_basic_breathing_skill → skill_monk_combat_01。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（伴随耗时）：练习耗时是练习动作的伴随效果（判分口径把time当伴随，不满足也不能凑数），本意不是“等待”，从必需签名删去time(world,practice)，只保留练习学习。"
     ],
     "setup": {
       "location": "bld_bs_still_temple",
@@ -1934,7 +1935,7 @@
     "expected": {
       "route": "core:research",
       "signature": [
-        "create(collective:project,research_tool_handle)"
+        "create(collective:project)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -1967,7 +1968,8 @@
     },
     "proposalNotes": [
       "world/ontology/entity-templates.json的interim明确包含project种类，本轮据此替换此前误报缺失的模板；立项不提前提交研究成果或凭空学习奖励。",
-      "本轮场景绑定：missing:research_project_template → interim。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:research_project_template → interim。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：research_tool_handle是散文描述，立项记录不暴露可核标签；研究对象（木柄样品item_tool_handle、skill_life_6_core）由setup.inventory/abilities与proposal.facts结构化承载。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -2039,8 +2041,8 @@
     "expected": {
       "route": "core:profession.certify",
       "signature": [
-        "emit(org:local_guild,request:certification)",
-        "holding.open(person:self,certified:woodworking)"
+        "emit(org:faction_lampbridge,request:certification)",
+        "holding.open(person:self,certified)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -2054,7 +2056,7 @@
           "op": "emit",
           "verb": "request",
           "actor": "self",
-          "target": "bld_bs_guild",
+          "target": "bld_hw_mill",
           "tags": [],
           "payload": {
             "kind": "certification",
@@ -2066,17 +2068,17 @@
           "visibility": "present"
         }
       ],
-      "target": "bld_bs_guild"
+      "target": "bld_hw_mill"
     },
     "proposalNotes": [
       "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
       "商旅行会联络处是本场接待地点；木工认证授予权来自灯桥工匠会office_exam_life_6及其现任尹葛，不来自建筑名称或登记员。仍须完成真实考核，不直接开certified。",
-      "2026-10-21续审：原文“想去行会办个正式认证”要求认证，不限于登记转交，保留core:profession.certify及原expected。world/lore/factions.json的faction_lampbridge.offices已任命npc_hw_yinge，席位bld_bs_guild、receptionHours=[[540,720]]；本场minute=600并将考官列入present。baseline原劳动作息保留，接待位置按当前职位派生（tests/world-content2.test.mjs明确600分钟在联络处、780分钟回磨坊）；不伪造常驻或改写人物作息。撤回v2r“无真实考官来源”的旧判断，保留考试passed=false、费用及本人作品前提。"
+      "2026-10-21续审：原文“想去行会办个正式认证”要求认证，不限于登记转交，保留core:profession.certify及原expected。world/lore/factions.json的faction_lampbridge.offices已任命npc_hw_yinge，席位bld_bs_guild、receptionHours=[[540,720]]；本场minute=600并将考官列入present。baseline原劳动作息保留，接待位置按当前职位派生（tests/world-content2.test.mjs明确600分钟在联络处、780分钟回磨坊）；不伪造常驻或改写人物作息。撤回v2r“无真实考官来源”的旧判断，保留考试passed=false、费用及本人作品前提。",
+      "第13轮复审：世界数据已把木工考官尹葛的考核席位定在其实际工作地河湾旧磨坊bld_hw_mill（world/lore/factions.json office_exam_life_6，接待540—720分钟）。原文“想去行会办个正式认证”的本意是去找当值考官认证，故场景移到bld_hw_mill、minute=600，present只列尹葛，不在白石另造考官；删去白石登记员严辙的自编office/holds_office/onDuty（目录无receive_application/refer_examiner职位，也不是认证的授予权来源），考核登记人改为尹葛本人。上一条“bld_bs_guild联络处”口径作废；intent、route、考试未通过、20铜费用与本人作品前提不变。"
     ],
     "setup": {
-      "location": "bld_bs_guild",
+      "location": "bld_hw_mill",
       "present": [
-        "npc_hw_yanzhe",
         "npc_hw_yinge"
       ],
       "inventory": {
@@ -2086,7 +2088,7 @@
       "minute": 600,
       "facts": [
         "本人等级1，skill_life_6_core=100；带有本人制作且满足本地验样要求的木柄作品，尚未取得profession_life_6认证。",
-        "严辙在登记窗口受理并转交；尹葛（npc_hw_yinge）按灯桥工匠会木工考官职位office_exam_life_6在bld_bs_guild当值验样，职位接待时段为540—720分钟，本场600分钟开始、120分钟考核可在720分钟结束，费用20铜。考官资格与接待位置由当前任职派生；申请不等于认证已通过。"
+        "尹葛（npc_hw_yinge）按灯桥工匠会木工考官职位office_exam_life_6在其实际工作地河湾旧磨坊bld_hw_mill当值验样，职位接待时段为540—720分钟，本场600分钟开始、120分钟考核可在720分钟结束，费用20铜。考官资格与接待位置由当前任职派生；申请不等于认证已通过。"
       ],
       "abilities": {
         "skills": {
@@ -2096,47 +2098,15 @@
         "recipes": [],
         "licenses": []
       },
-      "instances": [
-        {
-          "id": "a3v2_020_office_npc_hw_yanzhe",
-          "template": "office",
-          "kind": "office",
-          "name": "木工执业申请登记与转交",
-          "organization": "loc_bs",
-          "seat": "bld_bs_guild",
-          "authority": {
-            "scope": "木工执业申请登记与转交",
-            "profession": "profession_life_6",
-            "operations": [
-              "receive_application",
-              "refer_examiner"
-            ]
-          }
-        }
-      ],
-      "holdings": [
-        {
-          "id": "a3v2_020_office_holding_npc_hw_yanzhe",
-          "kind": "holds_office",
-          "holder": "npc_hw_yanzhe",
-          "subject": "a3v2_020_office_npc_hw_yanzhe",
-          "terms": {}
-        }
-      ],
-      "status": {
-        "npc_hw_yanzhe": {
-          "onDuty": true
-        }
-      },
       "examinations": [
         {
           "id": "a3v2_020_exam",
           "profession": "profession_life_6",
-          "registrar": "npc_hw_yanzhe",
+          "registrar": "npc_hw_yinge",
           "examiner": {
             "role": "qualified_examiner",
             "profession": "profession_life_6",
-            "at": "bld_bs_guild"
+            "at": "bld_hw_mill"
           },
           "minutes": 120,
           "fee": 20,
@@ -2150,7 +2120,7 @@
           "template": "thing",
           "kind": "item",
           "owner": "player",
-          "location": "bld_bs_guild",
+          "location": "bld_hw_mill",
           "item": "item_tool_handle",
           "inventoryBinding": {
             "item": "item_tool_handle",
@@ -2925,7 +2895,7 @@
     "expected": {
       "route": "core:craft.repair",
       "signature": [
-        "transfer(resource:cloth_repair_materials,self->sink:consume)",
+        "transfer(resource:item_hemp_thread,self->sink:consume)",
         "fact.set(thing:own_item_clothes,condition)"
       ],
       "outOfBounds": false,
@@ -2960,7 +2930,8 @@
     },
     "proposalNotes": [
       "self 是设计中的发起者引用；物品目录 ID 指题目声明的自有物，实际执行仍须解析到自有且唯一的物品实例，不能凭目录 ID 获得物品。",
-      "针、麻线及裁缝技能均有真实 ID；world 的 repairs 未列衣物修补方案，20 只是请求修复幅度，不能据此声称已有可用注册方案。"
+      "针、麻线及裁缝技能均有真实 ID；world 的 repairs 未列衣物修补方案，20 只是请求修复幅度，不能据此声称已有可用注册方案。",
+      "第13轮复审（描述词结构化）：resource:cloth_repair_materials是散文词，补袖口用的线是setup.inventory里的item_hemp_thread，改为真实资源ID。"
     ],
     "setup": {
       "location": "bld_hw_weaving",
@@ -3039,7 +3010,7 @@
       "signature": [
         "transfer(resource:item_wood,self->sink:consume)",
         "transfer(resource:item_flax_cord,self->sink:consume)",
-        "create(thing:crude_pot_stand,improvised)"
+        "create(thing:item)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -3095,7 +3066,8 @@
     "proposalNotes": [
       "world/ontology/entity-templates.json的thing包含item种类，可按06 §6.7承接有实际材料的即兴crude物品。materials是同事务投入清单，不是第二次扣料。",
       "本轮场景绑定：missing:crude_pot_stand_template → thing。前提见setup，不将绑定当作动作成功。",
-      "2026-10-20 v2r复审：01 §1.6账户按资源分立，06 §6.8签名为多重集：原文木料与绳子、proposal两次transfer一致，expected拆为item_wood与item_flax_cord两笔；即兴制作成功/失败及耗料分支不变。"
+      "2026-10-20 v2r复审：01 §1.6账户按资源分立，06 §6.8签名为多重集：原文木料与绳子、proposal两次transfer一致，expected拆为item_wood与item_flax_cord两笔；即兴制作成功/失败及耗料分支不变。",
+      "第13轮复审（描述词结构化）：crude_pot_stand、improvised是散文描述，create词表只认标签；原文“临时扎个粗架子”的材料（木料、麻绳）与quality=crude在proposal.materials/facts结构化，签名只验“用两样材料造出一件新物品”。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -3700,7 +3672,7 @@
       "route": "core:trade.repay",
       "signature": [
         "transfer(resource:coin,self->npc_hw_linsui)",
-        "obligation.settle(obligation:own_debt_to_linsui,amount:30)"
+        "obligation.settle(obligation:a3v2_035_loan,amount:30)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -3727,7 +3699,8 @@
       "target": "npc_hw_linsui"
     },
     "proposalNotes": [
-      "本轮场景绑定：missing:own_debt_to_linsui → 本人欠林穗的唯一三十铜借款。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_debt_to_linsui → 本人欠林穗的唯一三十铜借款。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：obligation:own_debt_to_linsui不是可核引用；改为setup.obligations里那笔唯一借款的别名a3v2_035_loan（债务人本人、债权人林穗、30铜）。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -3886,8 +3859,8 @@
       "route": "core:trade.redeem",
       "signature": [
         "transfer(resource:coin,self->pawnshop)",
-        "obligation.settle(obligation:own_pawn_loan,full)",
-        "holding.close(holding:own_staff_pledge,redeemed)",
+        "obligation.settle(obligation:a3v2_037_pawn_loan,full)",
+        "holding.close(holding:own_pledged,released)",
         "transfer(resource:item_staff,pledge:a3v2_037_pawn_loan->self)",
         "holding.close(holding:pledged,subject:pledge:a3v2_037_pawn_loan)"
       ],
@@ -3922,7 +3895,8 @@
     },
     "proposalNotes": [
       "当铺、质押与借款均是题设运行时引用，静态 world 未给出；2 铜仅为旧杖 basePrice=4 × collateralRatio=0.5 的本金示例，真实本息须查询借据后替换，不宣称已足额赎回。",
-      "本轮场景绑定：missing:present_pawnshop → bank_hw_post；missing:own_pawn_loan → 本人以旧木杖质押的唯一未结清借款；missing:own_staff_pledge → 该旧木杖在小驿站汇兑柜的有效质押持有。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_pawnshop → bank_hw_post；missing:own_pawn_loan → 本人以旧木杖质押的唯一未结清借款；missing:own_staff_pledge → 该旧木杖在小驿站汇兑柜的有效质押持有。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：obligation:own_pawn_loan、holding:own_staff_pledge是散文引用，改为setup.obligations的别名a3v2_037_pawn_loan与“本人所有+质押”的结构化限定；关闭原因redeemed不在持有原因词表（holdings.json reasons），赎回后质押解除的词表原因是released。"
     ],
     "setup": {
       "location": "bld_hw_post",
@@ -4350,7 +4324,7 @@
     "expected": {
       "route": "open:waive_debt",
       "signature": [
-        "obligation.cancel(obligation:ayan_debt_to_self,creditor_waiver)"
+        "obligation.cancel(obligation:a3v2_040_loan,creditor_waiver)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -4370,7 +4344,8 @@
     },
     "proposalNotes": [
       "本轮场景绑定：missing:ayan_debt_to_self → 阿砚欠本人的唯一十铜借款。前提见setup，不将绑定当作动作成功。",
-      "2026-10-20 v2r复审：同意改为open:waive_debt。原文明确玩家是唯一十铜借款的债权人；06 §6.3 obligation.cancel允许免除自有债权。world/actions/core.json的promise.cancel为约定取消，不能据名称近似强配；取消签名及债权前提不变。"
+      "2026-10-20 v2r复审：同意改为open:waive_debt。原文明确玩家是唯一十铜借款的债权人；06 §6.3 obligation.cancel允许免除自有债权。world/actions/core.json的promise.cancel为约定取消，不能据名称近似强配；取消签名及债权前提不变。",
+      "第13轮复审（描述词结构化）：obligation:ayan_debt_to_self不是可核引用；改为setup.obligations里阿砚欠本人十铜那一笔的别名a3v2_040_loan，creditor_waiver是取消原因，结构化可核。"
     ],
     "setup": {
       "location": "bld_hw_mill",
@@ -4505,7 +4480,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_zhengshuisheng,request:known_route_conditions)"
+        "emit(person:npc_hw_zhengshuisheng,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -4565,7 +4540,10 @@
         "docs/probes/daily/executable-status.md D07",
         "docs/A3-退出审计.md 日常22条（如适用）"
       ]
-    }
+    },
+    "proposalNotes": [
+      "第13轮复审（描述词结构化）：原签名限定词“request:known_route_conditions”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问河上哪里不好走），无对应结构化前提承载，intent原文不变。"
+    ]
   },
   {
     "id": "A3V2-043",
@@ -4575,7 +4553,7 @@
     "expected": {
       "route": "core:dialogue.tell",
       "signature": [
-        "emit(person:npc_hw_wushuo,tell:witnessed_beast)"
+        "emit(person:npc_hw_wushuo,tell)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -4602,7 +4580,8 @@
       "target": "npc_hw_wushuo"
     },
     "proposalNotes": [
-      "这里只转述玩家所声称的目击；不创建野兽、不直接写吴朔的 belief。"
+      "这里只转述玩家所声称的目击；不创建野兽、不直接写吴朔的 belief。",
+      "第13轮复审（描述词结构化）：原签名限定词“tell:witnessed_beast”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出tell”这一结构化事实。原文要求的话题由setup.history/knowledge（北林边亲眼见monster_bent_horn_goat的observed事件，含地点loc_hw_northwood）承载，intent原文不变。"
     ],
     "setup": {
       "location": "loc_hw_northwood",
@@ -4793,7 +4772,7 @@
     "expected": {
       "route": "core:dialogue.interpreter",
       "signature": [
-        "emit(person:present_interpreter,request:interpret)"
+        "emit(person:npc_hw_shendu,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -4822,7 +4801,8 @@
     },
     "proposalNotes": [
       "仅凭静态目录不能识别眼前通译、商人与双方语言；不凭空赋予任何现有 NPC 双语能力。",
-      "本轮场景绑定：missing:present_interpreter → npc_hw_shendu；missing:present_foreign_merchant → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_interpreter → npc_hw_shendu；missing:present_foreign_merchant → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:interpret”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.abilitiesByActor与history.consented（沈渡会两种语言并愿当通译）承载，intent原文不变。"
     ],
     "setup": {
       "location": "bld_hw_post",
@@ -4892,7 +4872,7 @@
     "expected": {
       "route": "core:dialogue.persuade",
       "signature": [
-        "emit(person:present_blocker,request:make_way)"
+        "emit(person:npc_hw_zhengshuisheng,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -4923,7 +4903,8 @@
       }
     },
     "proposalNotes": [
-      "本轮场景绑定：missing:present_blocker → npc_hw_zhengshuisheng。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_blocker → npc_hw_zhengshuisheng。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：原签名限定词“person:present_blocker,request:make_way”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（请挡在渡口路上的人让路）；present_blocker不是引用词，改为在场的郑水生承载，intent原文不变。"
     ],
     "setup": {
       "location": "loc_hw_dock",
@@ -4985,7 +4966,7 @@
     "expected": {
       "route": "core:dialogue.guide_request",
       "signature": [
-        "emit(person:npc_hw_zhengshuisheng,request:guide)"
+        "emit(person:npc_hw_zhengshuisheng,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -5014,7 +4995,8 @@
     },
     "proposalNotes": [
       "本次只提交请求；询价、同意或受理尚未成立，后续 learn、transfer、holding 或 obligation 效果不得提前执行。完整意图仍保留在 intent 中。",
-      "2026-10-20 v2r复审：同意改为core:dialogue.guide_request。目录guide的destination必填且调用world_promise.create；guide_request不要求已选具体地点。原文“先听听他愿不愿意”对应后者；撤回旧复审坚持guide的裁定。"
+      "2026-10-20 v2r复审：同意改为core:dialogue.guide_request。目录guide的destination必填且调用world_promise.create；guide_request不要求已选具体地点。原文“先听听他愿不愿意”对应后者；撤回旧复审坚持guide的裁定。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:guide”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（请他带路去渡河处）承载，intent原文不变。"
     ],
     "setup": {
       "location": "loc_hw_dock",
@@ -5053,7 +5035,7 @@
     "expected": {
       "route": "core:dialogue.assist",
       "signature": [
-        "emit(person:npc_hw_ayan,request:assist)"
+        "emit(person:npc_hw_ayan,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -5139,7 +5121,10 @@
       "section": "11.3 N1",
       "adaptation": "旧题后补主题出处：原场景的日常/权限/创意边界变体；仅建立判据对应，不称原日志原话。",
       "excerpt": "帮林穗修屋顶，三天后再来：态度变化，并提到具体的事。"
-    }
+    },
+    "proposalNotes": [
+      "第13轮复审（描述词结构化）：原签名限定词“request:assist”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由proposal.terms（搬运我的木料箱、item_wood）承载，intent原文不变。"
+    ]
   },
   {
     "id": "A3V2-049",
@@ -5149,7 +5134,7 @@
     "expected": {
       "route": "core:dialogue.promise",
       "signature": [
-        "obligation.create(person:self->npc_hw_linsui,payment:10_before_tomorrow_sunset)"
+        "obligation.create(person:self->npc_hw_linsui,promise)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -5170,14 +5155,16 @@
             "due": "明天日落前",
             "place": "bld_hw_qingdeng",
             "fulfills": "本人欠林穗的唯一十铜借款"
-          }
+          },
+          "amount": 10
         }
       ],
       "target": "npc_hw_linsui"
     },
     "proposalNotes": [
       "这是一项对已有债务的履行承诺；fulfills 指向原债，不能重复增加10铜贷款本金。相对期限由历法解析。",
-      "本轮场景绑定：missing:own_ten_coin_debt → 本人欠林穗的唯一十铜借款。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_ten_coin_debt → 本人欠林穗的唯一十铜借款。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审：判分记录显示承诺义务amount=0（金额只写在terms.amount，obligation.create效果本体缺amount），题面“十铜”要求10。在效果本体补amount=10，terms.amount、到期、地点、清偿对象不变。签名里的“payment:10_before_tomorrow_sunset”是散文描述词，词表无法核验，改为义务种类promise；金额10与“明天日落前”由proposal terms和setup旧借款结构化承载。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -7597,7 +7584,7 @@
     "expected": {
       "route": "core:cast",
       "signature": [
-        "fact.set(thing:present_water_bucket,turbidity)"
+        "fact.set(thing:present_feature_hw_kitchen_bucket,turbidity)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -7621,7 +7608,8 @@
     },
     "proposalNotes": [
       "题中的水桶没有实例ID，不能替换成属于林穗的后厨水桶；净水术幅度40只作用于浑浊度。",
-      "本轮场景绑定：missing:present_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：thing:present_water_bucket是散文词；脚边的那只桶是setup.objects里的feature_hw_kitchen_bucket，改为真实ID并用present限定在场。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -7729,7 +7717,8 @@
       }
     },
     "proposalNotes": [
-      "取真实水源feature_hw_pool，经真实feature_hw_channel到feature_hw_plot；20的单位为法术数据的升。沟是通路而非虚构水源账户，须核验当前水量、通行与许可。"
+      "取真实水源feature_hw_pool，经真实feature_hw_channel到feature_hw_plot；20的单位为法术数据的升。沟是通路而非虚构水源账户，须核验当前水量、通行与许可。",
+      "第13轮复审：原声明“水池与田均3米”与该处原生几何不符（水池0.5米、渠口1.5米，判分报告“声明前提与原生几何矛盾”）。按原文（获准用水、水沟相通、水从池扣到田）与世界几何把水池距离改为0.5米、渠口1.5米，田仍3米；不改intent、expected、取水量与许可。"
     ],
     "setup": {
       "location": "loc_hw_dock",
@@ -7738,7 +7727,7 @@
       "coins": 0,
       "minute": 600,
       "facts": [
-        "已学spell_water_04及skill_water_04=100，魔力4；玩家在feature_hw_pool与feature_hw_plot均3米可及的位置。",
+        "已学spell_water_04及skill_water_04=100，魔力4；玩家站在feature_hw_pool旁0.5米、渠口feature_hw_channel 1.5米、feature_hw_plot约3米处，均在引水术可及范围内。",
         "feature_hw_channel在此前已清淤至blockagePercent=0，feature_hw_pool现有30升水，feature_hw_plot可再容纳20升且干燥。",
         "本次公共取水和灌溉许可有效，沟渠物理相连；水从现存水源扣减，不从setup预先灌到田里。"
       ],
@@ -7815,13 +7804,13 @@
         {
           "observer": "player",
           "target": "feature_hw_pool",
-          "distanceMeters": 3,
+          "distanceMeters": 0.5,
           "lineOfSight": true
         },
         {
           "observer": "player",
           "target": "feature_hw_channel",
-          "distanceMeters": 3,
+          "distanceMeters": 1.5,
           "lineOfSight": true
         },
         {
@@ -8036,9 +8025,8 @@
     "expected": {
       "route": "core:cast",
       "signature": [
-        "create(creature:fire_projection,illusionary)",
-        "obligation.create(person:self->summon,upkeep)",
-        "vital(person:self,magic_cost)"
+        "create(creature:fire_projection)",
+        "obligation.create(upkeep)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -8067,7 +8055,8 @@
       }
     },
     "proposalNotes": [
-      "fire_projection 是该法术effectSpec.summonType；没有静态实例ID。新实体ID尚未生成，提案不捏造债权人，upkeep及6魔力施法成本由同一注册动作创建，投影不能充燃料。"
+      "fire_projection 是该法术effectSpec.summonType；没有静态实例ID。新实体ID尚未生成，提案不捏造债权人，upkeep及6魔力施法成本由同一注册动作创建，投影不能充燃料。",
+      "第13轮复审（描述词结构化）：illusionary是散文描述（“仅照明、不烧物”），create词表不核；obligation.create的当事人流向词表要求两端同为person或org，而召唤物是creature，person:self->summon无法核验，改只验义务种类upkeep（债务人本人、债权人为召唤物，见效果本体）；同时删去vital(person:self,magic_cost)：魔力消耗是施法的成本，由回执cost.resources排除，不是可单独要求的效果。召唤创造与维持义务保留。"
     ],
     "setup": {
       "location": "bld_hw_school",
@@ -8276,9 +8265,8 @@
     "expected": {
       "route": "core:settlement.faith_rite",
       "signature": [
-        "transfer(resource:own_offering,self->sink:consume)",
-        "emit(person:self,ritual_participation)",
-        "time(world,rite_stage)"
+        "transfer(resource:own_item_ration,self->sink:consume)",
+        "emit(person:self,ritual_participation)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -8315,7 +8303,8 @@
       }
     },
     "proposalNotes": [
-      "干粮作为真实供品候选；是否合该仪式要求须由主持者与仪式条款校验，不保证获赐。仪式阶段time由注册动作生成。"
+      "干粮作为真实供品候选；是否合该仪式要求须由主持者与仪式条款校验，不保证获赐。仪式阶段time由注册动作生成。",
+      "第13轮复审（伴随耗时）：仪式耗时是参与动作的伴随效果，本意不是“等待”，从必需签名删去time(world,rite_stage)；供品own_offering是散文词，改为setup里的真实干粮item_ration（own_item_ration），供品要求在setup.rites.offerings结构化。"
     ],
     "setup": {
       "location": "bld_hw_altar",
@@ -8846,9 +8835,9 @@
       "route": "open:proposal",
       "signature": [
         "transfer(resource:coin,npc_hw_wushuo->self:50)",
-        "obligation.settle(obligation:wushuo_debt,amount:50)",
+        "obligation.settle(obligation:a3v2_078_receivable,amount:50)",
         "transfer(resource:coin,self->npc_hw_linsui:30)",
-        "obligation.settle(obligation:self_debt,amount:30)"
+        "obligation.settle(obligation:a3v2_078_payable,amount:30)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -8889,7 +8878,8 @@
     },
     "proposalNotes": [
       "两笔真实债务须分别绑定并核验付款授权；吴朔欠钱不自动允许玩家动用他的钱袋。首笔未收到不得预支执行后笔，不能抹去第一笔失败。",
-      "本轮场景绑定：missing:wushuo_due_debt_to_self → 吴朔欠本人的唯一到期五十铜借款；missing:self_debt_to_linsui → 本人欠林穗的唯一三十铜借款。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:wushuo_due_debt_to_self → 吴朔欠本人的唯一到期五十铜借款；missing:self_debt_to_linsui → 本人欠林穗的唯一三十铜借款。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：obligation:wushuo_debt、self_debt不是可核引用；改为setup.obligations里两笔借款的别名a3v2_078_receivable（吴朔欠本人50铜）与a3v2_078_payable（本人欠林穗30铜）。"
     ],
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -9027,7 +9017,7 @@
       "route": "open:proposal",
       "signature": [
         "transfer(resource:water,authorized_channel->own_bucket)",
-        "fact.set(thing:own_water_bucket,turbidity)"
+        "fact.set(thing:own_feature_hw_kitchen_bucket,turbidity)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -9063,7 +9053,8 @@
     },
     "proposalNotes": [
       "桶实例、所有权及渡口位置已由setup写明；沿feature_hw_channel从真实源水引取10升，不超过桶容量和源水存量。两个法术各收成本且不除毒，原后厨不保留同一只桶的复制品。",
-      "本轮场景绑定：missing:own_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:own_water_bucket → feature_hw_kitchen_bucket。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审：原声明“水源、桶和玩家均3米”与原生几何不符（水池0.5米、渠口1.5米、桶1米）。按世界几何改正三处距离；不改intent、route、许可与取水量。第二条签名的thing:own_water_bucket是散文词，改为setup.objects里的feature_hw_kitchen_bucket（own限定本人所有）。"
     ],
     "setup": {
       "location": "loc_hw_dock",
@@ -9074,7 +9065,7 @@
       "facts": [
         "已学spell_water_04、spell_water_02及对应skill_water_04、skill_water_02，熟练度均100，魔力6。",
         "林穗已在本场开始前真实转让并交付feature_hw_kitchen_bucket给玩家；原后厨不再有它，此刻空桶容量10升，放在渡口玩家脚边，唯一实例归self。",
-        "feature_hw_pool现有30升浑水；feature_hw_channel已清淤畅通，公共取水许可有效，水源、桶和玩家相距均不超过3米；先引入10升后净水，未预置清洁结果。"
+        "feature_hw_pool现有30升浑水；feature_hw_channel已清淤畅通，公共取水许可有效；玩家距水池0.5米、渠口1.5米、脚边的桶1米，均在可及范围内；先引入10升后净水，未预置清洁结果。"
       ],
       "abilities": {
         "skills": {
@@ -9167,19 +9158,19 @@
         {
           "observer": "player",
           "target": "feature_hw_pool",
-          "distanceMeters": 3,
+          "distanceMeters": 0.5,
           "lineOfSight": true
         },
         {
           "observer": "player",
           "target": "feature_hw_channel",
-          "distanceMeters": 3,
+          "distanceMeters": 1.5,
           "lineOfSight": true
         },
         {
           "observer": "player",
           "target": "feature_hw_kitchen_bucket",
-          "distanceMeters": 3,
+          "distanceMeters": 1,
           "lineOfSight": true
         }
       ],
@@ -9211,7 +9202,7 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "emit(person:present_interpreter,request:translate_terms)"
+        "emit(person:npc_hw_shendu,request:translate_terms)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -9243,7 +9234,8 @@
     },
     "proposalNotes": [
       "玩家明确保留确认权。本轮只有翻译请求，不伪造通译发言、玩家接受或交易转移；译完仍须等待玩家确认。",
-      "本轮场景绑定：missing:present_interpreter → npc_hw_shendu；missing:present_buyer → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_interpreter → npc_hw_shendu；missing:present_buyer → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：原签名person:present_interpreter不是可核验的引用；通译是setup里的沈渡npc_hw_shendu，改为真实ID。request:translate_terms是提案payload.kind，结构化可核。"
     ],
     "setup": {
       "location": "bld_hw_post",
@@ -10141,7 +10133,7 @@
     "expected": {
       "route": "core:dialogue.tell",
       "signature": [
-        "emit(person:present_cellmate,tell:known_weather)"
+        "emit(person:npc_hw_wushuo,tell)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -10168,7 +10160,8 @@
     },
     "proposalNotes": [
       "没有新的天气消息时只谈自己已知的天气，不读取全局天气真相；同牢成年人由场景绑定。",
-      "本轮场景绑定：missing:present_adult_cellmate → npc_hw_wushuo。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:present_adult_cellmate → npc_hw_wushuo。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：person:present_cellmate、tell:known_weather是散文引用；同牢者是setup.present里的吴朔npc_hw_wushuo，天气话题只在intent与proposal.version，对话payload不暴露可核话题，改为只验向他tell。"
     ],
     "setup": {
       "location": "bld_bs_watch",
@@ -10780,7 +10773,7 @@
     "expected": {
       "route": "core:trade.sell_to",
       "signature": [
-        "holding.transfer(holding:borrowed_knife_owns,new_holder:buyer)",
+        "holding.transfer(holding:a3v2_095_knife_owns,new_holder:buyer)",
         "transfer(resource:coin,buyer->self)",
         "transfer(resource:item_whittling_knife,self->buyer)"
       ],
@@ -10820,7 +10813,8 @@
     },
     "proposalNotes": [
       "本场买家真实报价3铜并有付款能力。借来的刀由玩家实际占有但所有权仍属于阿砚，禁止仅因非所有者就一概拒绝，效力与追偿交无权处分规则。",
-      "本轮场景绑定：missing:borrowed_knife_owns → 阿砚对本人借用的削木小刀的有效所有权持有；missing:present_buyer → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。"
+      "本轮场景绑定：missing:borrowed_knife_owns → 阿砚对本人借用的削木小刀的有效所有权持有；missing:present_buyer → npc_hw_yanzhe。前提见setup，不将绑定当作动作成功。",
+      "第13轮复审（描述词结构化）：holding:borrowed_knife_owns不是可核引用；改为setup.holdings里阿砚对那把刀的所有权持有别名a3v2_095_knife_owns。"
     ],
     "setup": {
       "location": "loc_bs_nanshi",
@@ -12340,8 +12334,8 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "schedule(person:npc_hw_wushuo,request:guide_via_npc_autonomy)",
-        "emit(person:npc_hw_wushuo,request:guide_when_due)"
+        "schedule(person:npc_hw_wushuo)",
+        "emit(person:npc_hw_wushuo,tell)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -12367,7 +12361,8 @@
       "target": "npc_hw_wushuo"
     },
     "proposalNotes": [
-      "action是world目录真实的打听动作；只排期明早当面询问意愿和目的地，不提前调用缺少目的地的带路签约动作。时刻按历法解析，via:npc-autonomy按附录A §A.6交未来决策，届时仍须核验在场并由吴朔决定，不直接生成带路义务。"
+      "action是world目录真实的打听动作；只排期明早当面询问意愿和目的地，不提前调用缺少目的地的带路签约动作。时刻按历法解析，via:npc-autonomy按附录A §A.6交未来决策，届时仍须核验在场并由吴朔决定，不直接生成带路义务。",
+      "第13轮复审（描述词结构化）：schedule的描述词词表不支持，仅验对象吴朔；排期时对他发出的告知（tell）是同一动作的结构化记录，原“emit request:guide_when_due”要到次日到点才会发生，不是此刻效果，不能作为现在的必需签名；带路的请求与吴朔自己的决定仍留在到点之后。intent不变。"
     ],
     "setup": {
       "location": "loc_hw_northwood",
@@ -13584,17 +13579,17 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "core:trade.buy",
+      "route": "reject",
       "signature": [],
-      "outOfBounds": false,
+      "outOfBounds": true,
       "fallback": false,
-      "constructor": true,
-      "why": "可解析的正常购买走注册动作，但余额不足应拒绝成交；资金和库存均不变，不是语言越权。"
+      "constructor": false,
+      "why": "可解析的正常购买走注册动作，但余额不足应拒绝成交；资金和库存均不变，不是语言越权。 第13轮：题面“我只有三铜、不赊账、请直接购买”两块四铜面包，购买必须因余额不足被拒绝，资金与库存不变；预期为reject，不是提交空效果。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_qingdeng；当日分钟600；本人现钱3铜；随身目录物品{}；在场目录人物[\"npc_hw_linsui\"]。林穗在柜台可受理交易，持有至少2份新鲜item_bread；本场报价每份2铜，尚未成交。 本次可用钱仅3铜；此前报价不变，无赊欠或垫付安排。【本次意图】两块面包合计四铜，我只有三铜，不赊账；请直接购买。",
       "effects": [],
-      "expect": "可解析的正常购买走注册动作，但余额不足应拒绝成交；资金和库存均不变，不是语言越权。"
+      "expect": "可解析的正常购买走注册动作，但余额不足应拒绝成交；资金和库存均不变，不是语言越权。 第13轮：题面“我只有三铜、不赊账、请直接购买”两块四铜面包，购买必须因余额不足被拒绝，资金与库存不变；预期为reject，不是提交空效果。"
     },
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -13693,7 +13688,8 @@
       "excerpt": "余额不足：工具拒绝，叙事没有声称成功。"
     },
     "proposalNotes": [
-      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。"
+      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
+      "第13轮复审（空签名配提交路由）：原route=core:trade.buy且signature=[]，等于要求“提交了买卖却没有任何效果”，自相矛盾；本意是3铜买4铜货被拒，改route=reject、outOfBounds=true（守恒）、constructor=false，签名仍为空（拒绝回执且无任何应用效果）。"
     ]
   },
   {
@@ -13704,7 +13700,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:bread_quote)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -13779,7 +13775,8 @@
       "excerpt": "议价：同一天再问同一件东西，报价一致。"
     },
     "proposalNotes": [
-      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。"
+      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:bread_quote”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.quotes（一块面包2铜的报价）与history.quoted承载，intent原文不变。"
     ]
   },
   {
@@ -13948,17 +13945,17 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "core:trade.buy",
+      "route": "reject",
       "signature": [],
-      "outOfBounds": false,
+      "outOfBounds": true,
       "fallback": false,
-      "constructor": true,
-      "why": "相同交易身份只返回原回执，新增applied与余额差均为0；不是第二次购买。"
+      "constructor": false,
+      "why": "相同交易身份只返回原回执，新增applied与余额差均为0；不是第二次购买。 第13轮：同requestId重发的第二次购买不得再扣款、再给货，预期为reject（只返回原回执，不新增applied）。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_qingdeng；当日分钟600；本人现钱16铜；随身目录物品{\"item_bread\": 2}；在场目录人物[\"npc_hw_linsui\"]。原请求a3v2_126_paid_once已经完成并扣款；此刻16铜、2面包是成交后余额；本次为同requestId重发。【本次意图】刚付过四铜买的两块面包已在包里，网络重发了同一笔购买请求；核对原回执，别再买一份。",
       "effects": [],
-      "expect": "相同交易身份只返回原回执，新增applied与余额差均为0；不是第二次购买。"
+      "expect": "相同交易身份只返回原回执，新增applied与余额差均为0；不是第二次购买。 第13轮：同requestId重发的第二次购买不得再扣款、再给货，预期为reject（只返回原回执，不新增applied）。"
     },
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -14001,7 +13998,8 @@
     "proposalNotes": [
       "执行器保留proposalNotes指定的原请求身份a3v2_126_paid_once，不能生成新nonce。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "a3v2_126_paid_once是原请求标识而非实体ID，历史trade_completed须绑定同一真实请求与已提交回执；重放不可生成新请求身份。"
+      "a3v2_126_paid_once是原请求标识而非实体ID，历史trade_completed须绑定同一真实请求与已提交回执；重放不可生成新请求身份。",
+      "第13轮复审（空签名配提交路由）：原route=core:trade.buy且signature=[]；本意是核对原回执、不再买第二份，与84/103/104的重复花费同类，改route=reject、outOfBounds=true、constructor=false，签名为空。原trade_completed历史事件仍待原生回执索引接点，见第11轮待支持。"
     ]
   },
   {
@@ -14306,7 +14304,9 @@
     "expected": {
       "route": "core:time.sleep",
       "signature": [
-        "vital(person:self,body:stamina)"
+        "time(world,until:dawn)",
+        "vital(person:self,body:stamina)",
+        "vital(person:self,body:fatigue)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14390,7 +14390,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审：core:time.sleep的时间推进是请求本身，不是伴随效果，且体力、疲劳同时结算；原签名只列stamina使判分要求“1个必需效果”却出现time与fatigue。按005/004同形补time(until:dawn)与fatigue；饱食、水分消耗仍是睡眠伴随，不入签名。"
     ]
   },
   {
@@ -14399,12 +14400,12 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "open:proposal",
+      "route": "core:catalog",
       "signature": [],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "封闭路段不能普通移动；绕路按地图与可知路线，未选定路线不出发。"
+      "why": "封闭路段不能普通移动；绕路按地图与可知路线，未选定路线不出发。 第13轮：题面“先查能否绕道，不要把封闭抹掉”是地图与路线查询，不是出发移动；预期走只读core:catalog，不产生任何世界写入。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw_gate；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。冬季，已知北境山口因积雪封闭；玩家只掌握该山口的夏季路线，没有破雪能力。【本次意图】地图上的北境山口已被冬雪封闭，我想照夏天路线穿过去；先查能否绕道，不要把封闭抹掉。",
@@ -14440,7 +14441,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（空签名配提交路由）：原route=open:proposal+空签名；原话主动作是先查北境山口封闭时的绕路，穿越被冬雪封闭的山口本身不做，因此改只读core:catalog（查地区/地点），签名为空。封闭物件boundary仍待原生接点，见第11轮待支持。"
     ]
   },
   {
@@ -14451,7 +14453,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:roof_followup)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14537,7 +14539,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:roof_followup”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.history/knowledge（三天前林穗亲见修屋顶的observed事件）承载，intent原文不变。"
     ]
   },
   {
@@ -14707,7 +14710,7 @@
     "expected": {
       "route": "core:dialogue.guide",
       "signature": [
-        "emit(person:npc_hw_wushuo,request:guide_to_observatory)"
+        "emit(person:npc_hw_wushuo,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14754,7 +14757,8 @@
     "proposalNotes": [
       "接受后的连续动作包括沿路同行与到达后清偿同一义务，不把到达预置入setup。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。"
+      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:guide_to_observatory”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（请带路去废观测塔）承载，intent原文不变。"
     ]
   },
   {
@@ -14765,7 +14769,7 @@
     "expected": {
       "route": "core:dialogue.delivery",
       "signature": [
-        "emit(person:npc_hw_wushuo,request:deliver_letter)"
+        "emit(person:npc_hw_wushuo,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14822,7 +14826,8 @@
       "excerpt": "托人送货：到期送到，或者有具体原因没送到。"
     },
     "proposalNotes": [
-      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。"
+      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:deliver_letter”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.itemInstances（那封给林穗的封口信）承载，intent原文不变。"
     ]
   },
   {
@@ -14833,7 +14838,7 @@
     "expected": {
       "route": "core:dialogue.tell",
       "signature": [
-        "emit(person:npc_hw_linsui,tell:meeting)"
+        "emit(person:npc_hw_linsui,tell)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14922,7 +14927,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“tell:meeting”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出tell”这一结构化事实。原文要求的话题由intent原文（约明早去旧渡口见面）承载，intent原文不变。"
     ]
   },
   {
@@ -14933,7 +14939,7 @@
     "expected": {
       "route": "core:dialogue.tell",
       "signature": [
-        "emit(person:npc_hw_linsui,tell:boast)"
+        "emit(person:npc_hw_linsui,tell)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -14990,7 +14996,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“tell:boast”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出tell”这一结构化事实。原文要求的话题由intent原文（当众吹牛）；说法不实由facts说明，不在信息通道里预写真假承载，intent原文不变。"
     ]
   },
   {
@@ -15212,7 +15219,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:room_availability)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -15267,7 +15274,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:room_availability”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问今天还有无空床）承载，intent原文不变。"
     ]
   },
   {
@@ -15278,7 +15286,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:credit_terms)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -15392,7 +15400,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:credit_terms”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.obligations与history（四天前到期未偿的十铜旧承诺）承载，intent原文不变。"
     ]
   },
   {
@@ -15489,7 +15498,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:personal_news)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -15571,7 +15580,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:personal_news”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.appointments（五分钟后照顾家人）承载，intent原文不变。"
     ]
   },
   {
@@ -15806,7 +15816,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:ten_days_news)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -15890,7 +15900,8 @@
     "proposalNotes": [
       "setup.history需由时间推进生成10天实际事件，不拿作者预写行动代替；玩家离开起点不从最终快照偷造。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:ten_days_news”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问离开十天的变化）承载，intent原文不变。"
     ]
   },
   {
@@ -16091,7 +16102,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:tavern_keeper)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -16170,7 +16181,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:tavern_keeper”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.history/knowledge（林穗自我介绍经营青灯酒馆）承载，intent原文不变。"
     ]
   },
   {
@@ -16660,12 +16672,12 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "core:cast",
+      "route": "reject",
       "signature": [],
-      "outOfBounds": false,
+      "outOfBounds": true,
       "fallback": false,
-      "constructor": true,
-      "why": "正常法术路由，魔力不足应在提交前失败；不得出现护罩、负魔力或成功旁白。"
+      "constructor": false,
+      "why": "正常法术路由，魔力不足应在提交前失败；不得出现护罩、负魔力或成功旁白。 第13轮：魔力为0，施法必须在提交前失败，不出护罩，预期为reject。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_herbs；当日分钟600；本人现钱0铜；随身目录物品{\"item_resin\": 1}；在场目录人物[\"npc_hw_taozhi\"]。已学spell_fire_11及skill_fire_11，熟练度满足该术施放阶段，等级10，当前魔力0；自有树脂1份。 陶芷清醒、距离2米，已本人当面同意这一次隔焰罩，来源事件明确、有效且未撤销；没有既存fire_shield状态。 本题已会该术，结构化起始熟练度为600（world规则每阶段300）；此前已取得profession_mage认证，非本次施法临时认证；仍保留检定、材料、魔力与实际施法成本。 此前已取得的profession_mage最低等级为10；本场level=10，保留原属性和熟练度，不额外分配精神或自由属性点。当前MP为0，不足施法，不直接写maxMp或预置法术效果。【本次意图】材料齐、陶芷同意，但我的魔力已经空了；试施隔焰罩，失败就明确说没放出来。",
@@ -16675,7 +16687,7 @@
         "spell": "spell_fire_11"
       },
       "target": "npc_hw_taozhi",
-      "expect": "正常法术路由，魔力不足应在提交前失败；不得出现护罩、负魔力或成功旁白。"
+      "expect": "正常法术路由，魔力不足应在提交前失败；不得出现护罩、负魔力或成功旁白。 第13轮：魔力为0，施法必须在提交前失败，不出护罩，预期为reject。"
     },
     "setup": {
       "location": "bld_hw_herbs",
@@ -16766,7 +16778,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审（空签名配提交路由）：原route=core:cast+空签名；题面魔力已空而试施，why已写明“魔力不足应在提交前失败”，改route=reject、outOfBounds=true（魔力守恒）、constructor=false；同意、材料、认证前提不变。"
     ]
   },
   {
@@ -16775,12 +16788,12 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "core:cast",
+      "route": "reject",
       "signature": [],
-      "outOfBounds": false,
+      "outOfBounds": true,
       "fallback": false,
-      "constructor": true,
-      "why": "识别施法请求后以未掌握拒绝，不偷偷补技能；可建议寻师，不直接产生光。"
+      "constructor": false,
+      "why": "识别施法请求后以未掌握拒绝，不偷偷补技能；可建议寻师，不直接产生光。 第13轮：未学会照明术且无其他施法来源，施法被拒，不偷补技能，预期为reject。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_qingdeng；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。照明术未学、无可替代卷轴或其他施法来源。 眼前确有一张桌子；施法失败原因是未学，不是目标不存在。【本次意图】我从没学过照明术，也没可用卷轴；现在直接施照明术照亮桌面。",
@@ -16789,7 +16802,7 @@
         "spell": "spell_light"
       },
       "target": "眼前桌面",
-      "expect": "识别施法请求后以未掌握拒绝，不偷偷补技能；可建议寻师，不直接产生光。"
+      "expect": "识别施法请求后以未掌握拒绝，不偷偷补技能；可建议寻师，不直接产生光。 第13轮：未学会照明术且无其他施法来源，施法被拒，不偷补技能，预期为reject。"
     },
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -16826,7 +16839,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审（空签名配提交路由）：原route=core:cast+空签名；未学会的法术直接施放必须被拒（why已写“以未掌握拒绝”），改route=reject、outOfBounds=true（能力）、constructor=false。"
     ]
   },
   {
@@ -16893,7 +16907,7 @@
     "expected": {
       "route": "core:research",
       "signature": [
-        "create(thing:project,research:rain_grip)"
+        "create(thing:project)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -16982,7 +16996,8 @@
       "excerpt": "自创技能：提出构想 → 立项 → 多日实验 → 成功或失败都有记录；成功时出现系统提示和世界公告。"
     },
     "proposalNotes": [
-      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。"
+      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
+      "第13轮复审（描述词结构化）：research:rain_grip是散文描述，立项记录不暴露可核标签；研究课题rain_grip在proposal.facts.topic结构化。"
     ]
   },
   {
@@ -16992,11 +17007,13 @@
     "category": "刁钻意图",
     "expected": {
       "route": "core:practice",
-      "signature": [],
+      "signature": [
+        "learn(person:self,skill_light:practice)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "熟练度受阶段门槛，练习不直接晋阶；消耗/诊断照实，突破条件来自规则。"
+      "why": "熟练度受阶段门槛，练习不直接晋阶；消耗/诊断照实，突破条件来自规则。 第13轮：练习是产生效果的请求，会有一笔受阶段上限约束的学习结算，不是空效果；签名列出练习学习，晋阶仍不得发生。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_riverhome；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。已获准使用安静角落；已学spell_light及skill_light，熟练度299且卡在当前阶段上限，尚无突破事件，今日未练；体力充足、魔力至少1，本轮收益仍受日上限。【本次意图】照明术卡在当前阶段上限了，我今天再练一轮，看还差什么突破条件，不要自动跨阶。",
@@ -17073,7 +17090,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审（空签名配提交路由）：原route=core:practice+空签名；“我今天再练一轮”会产生练习学习（013、194同形，受日上限与阶段上限约束，增量可为0），补signature=learn(person:self,skill_light:practice)。耗时是伴随效果，不入签名；不自动跨阶由练习结果与breakthrough缺席另验。"
     ]
   },
   {
@@ -17082,17 +17100,17 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "core:research",
+      "route": "reject",
       "signature": [],
-      "outOfBounds": false,
+      "outOfBounds": true,
       "fallback": false,
-      "constructor": true,
-      "why": "缺前置时拒绝直接融合，指出缺净水知识与研究条件；不能登记新法术当成功。"
+      "constructor": false,
+      "why": "缺前置时拒绝直接融合，指出缺净水知识与研究条件；不能登记新法术当成功。 第13轮：缺净水术前置，直接融合被拒并指出缺项，预期为reject，不登记新法术。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_qingdeng；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。仅学会spell_light及skill_light=100；spell_water_02未学，无融合研究成果。【本次意图】我只会照明术，不会净水术；想把两者融合成会发光的净水法术，先检查缺什么。",
       "effects": [],
-      "expect": "缺前置时拒绝直接融合，指出缺净水知识与研究条件；不能登记新法术当成功。"
+      "expect": "缺前置时拒绝直接融合，指出缺净水知识与研究条件；不能登记新法术当成功。 第13轮：缺净水术前置，直接融合被拒并指出缺项，预期为reject，不登记新法术。"
     },
     "setup": {
       "location": "bld_hw_qingdeng",
@@ -17123,7 +17141,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。"
+      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。",
+      "第13轮复审（空签名配提交路由）：原route=core:research+空签名；why已写“缺前置时拒绝直接融合”，原话“先检查缺什么”得到的是缺前置的拒绝理由，改route=reject、outOfBounds=true（知识前置）、constructor=false。"
     ]
   },
   {
@@ -17367,11 +17386,13 @@
     "category": "刁钻意图",
     "expected": {
       "route": "core:combat",
-      "signature": [],
+      "signature": [
+        "status(person:self,combat_defense)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "防守可能挡住也可能死亡；生命下限0，实际致死可进入死亡流程。 主动意图是防守，不要求必定受伤；伤害与0钳制另由敌方反击分支验。"
+      "why": "防守可能挡住也可能死亡；生命下限0，实际致死可进入死亡流程。 主动意图是防守，不要求必定受伤；伤害与0钳制另由敌方反击分支验。 第13轮：举杖防守是会产生效果的交锋，签名为防守姿态；是否受伤、是否致死仍按实际结算，不预写。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw_northwood；当日分钟600；本人现钱0铜；随身目录物品{\"item_staff\": 1}；在场目录人物[]。玩家生命1，野猪在近身冲撞，已有活动战斗；未固定命中和伤害骰。【本次意图】我只剩一点生命，野猪正冲过来；我举杖防守，照实际伤害结算，别为了保我活命改骰。",
@@ -17461,7 +17482,8 @@
       "签名只在本次实际受伤分支核对；另固定合法致死骰分支验证钳制，不以必伤替换随机规则。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "有检定的主效果签名按真实成功/命中分支核对；失败分支不得假报成功，仍核对真实成本、时间、守恒及后果。T0固定两组合法输入检验两分支，T2不强改骰。",
-      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。"
+      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
+      "第13轮复审（空签名配提交路由）：原route=core:combat+空签名；“我举杖防守”会写入防守姿态，与60题同形，补signature=status(person:self,combat_defense)。野猪反击的伤害属本地反击伴随效果，不入签名，也不预定伤害。"
     ]
   },
   {
@@ -17564,7 +17586,7 @@
     "expected": {
       "route": "core:dialogue.persuade",
       "signature": [
-        "emit(person:npc_hw_wushuo,request:surrender)"
+        "emit(person:npc_hw_wushuo,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -17667,7 +17689,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:surrender”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.combats与body（吴朔只剩1点生命、正与玩家交锋）承载，intent原文不变。"
     ]
   },
   {
@@ -17677,11 +17700,13 @@
     "category": "刁钻意图",
     "expected": {
       "route": "core:combat",
-      "signature": [],
+      "signature": [
+        "vital(creature:enemy,harm:staff)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "保持首领身份和记忆，第二战战术可变；不复制刷新首领或预写胜负。"
+      "why": "保持首领身份和记忆，第二战战术可变；不复制刷新首领或预写胜负。 第13轮：正面试探是用木杖实际出手的交锋，签名为对该首领的杖击伤害；首领记忆与第二战战术变化另验，不预写胜负。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw_northwood；当日分钟600；本人现钱0铜；随身目录物品{\"item_staff\": 1}；在场目录人物[]。同一首领三天前存活并观察过玩家反复正面突进；当前双方在同一交锋范围。【本次意图】三天前我反复正面突进被这个首领记住了；今天再交手，我还是正面试探，观察它是否应对。",
@@ -17762,7 +17787,8 @@
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "有检定的主效果签名按真实成功/命中分支核对；失败分支不得假报成功，仍核对真实成本、时间、守恒及后果。T0固定两组合法输入检验两分支，T2不强改骰。",
       "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
-      "交锋主效果依实际检定；战术变化查首领实际决策/行动回执，不造combat:exchange类tell替代战斗。"
+      "交锋主效果依实际检定；战术变化查首领实际决策/行动回执，不造combat:exchange类tell替代战斗。",
+      "第13轮复审（空签名配提交路由）：原route=core:combat+空签名；“我还是正面试探”是用手中木杖正面出手，与59题同形，补signature=vital(creature:enemy,harm:staff)（enemy指本次交锋对手）。首领身份与三天前记忆的setup缺口仍见第11轮待支持。"
     ]
   },
   {
@@ -17854,12 +17880,12 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "open:proposal",
+      "route": "core:look",
       "signature": [],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "不得因遇强敌自动开战；树后视线、察觉与绕路实际裁决，不直接瞬移脱战。"
+      "why": "不得因遇强敌自动开战；树后视线、察觉与绕路实际裁决，不直接瞬移脱战。 第13轮：题面主动作是隐在树后先观察有无绕路，属于只读观察；不开战、不移动脱战。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw_northwood；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。目标距玩家30米、当前可见，路边有树作遮挡；尚未开战，未保证隐蔽成功。【本次意图】远处那生物明显比我强，我停下脚步隐在树后，先观察有没有不招惹它的绕路。",
@@ -17903,7 +17929,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
-      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。"
+      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。",
+      "第13轮复审（空签名配提交路由）：原route=open:proposal+空签名；“停下脚步隐在树后，先观察有没有不招惹它的绕路”没有要写入的世界效果（世界无潜行状态原语，隐蔽成败本来就“未保证”），本意是观察，改只读core:look，签名为空。"
     ]
   },
   {
@@ -17913,15 +17940,29 @@
     "category": "来源扩展：S1",
     "expected": {
       "route": "open:proposal",
-      "signature": [],
+      "signature": [
+        "holding.open(person:self,resident_of)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "按真实居住、担保、贡献流程申请，不一次授予三种身份；不补题面没有的资格。"
+      "why": "按真实居住、担保、贡献流程申请，不一次授予三种身份；不补题面没有的资格。 第13轮：只有“登记居住”一步在题面条件下直接办理，会开居留持有；查询户籍/公民条件是只读，且不一次授予公民或户籍。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。玩家为无本地户籍的成年人；未声明担保、居住年限或贡献达标。【本次意图】我想先在河湾登记居住，再查申请户籍和公民还差哪些条件；符合哪一步才办哪一步。",
-      "effects": []
+      "effects": [
+        {
+          "op": "holding.open",
+          "holdingKind": "resident_of",
+          "holder": "self",
+          "subject": "loc_hw",
+          "terms": {},
+          "grantedBy": {
+            "role": "authorized_grantor",
+            "of": "loc_hw"
+          }
+        }
+      ]
     },
     "setup": {
       "location": "loc_hw",
@@ -17942,7 +17983,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。"
+      "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。",
+      "第13轮复审（空签名配提交路由）：原route=open:proposal+空签名；“先在河湾登记居住”是要办的一步，补signature=holding.open(person:self,resident_of)（居留，01 §1.3 resident_of），proposal补对应效果；其后“查还差哪些条件”是只读，“符合哪一步才办哪一步”意味着户籍、公民不在此刻开，签名也不列。"
     ]
   },
   {
@@ -18086,11 +18128,13 @@
     "category": "来源扩展：S4",
     "expected": {
       "route": "core:time",
-      "signature": [],
+      "signature": [
+        "time(world,minutes:1440)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "管事日结按地块与权限判定，真实账户付款；被拒不收费，不从玩家钱袋代扣。"
+      "why": "管事日结按地块与权限判定，真实账户付款；被拒不收费，不从玩家钱袋代扣。 第13轮：“出门一天后再看结果”是玩家明确要求推进一天，时间推进本身就是请求，故签名为time；审批是否通过、是否收10铜由管事日结决定，不预定。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。严辙在本独立场景合法任管事，只有建房审批权限；申请人已提交一份待审申请且自有10铜，条例审过才收10铜；玩家不预定批准。 申请所指地块在本地，地权和建设许可尚待管事核查，未在题面确认通过；申请人是独立成年村民。【本次意图】领地里这份建房申请交给有权管事，照既有规则日结审批和收十铜；我出门一天后再看结果。",
@@ -18133,7 +18177,7 @@
           "authority": {
             "scope": "本地建房审批",
             "operations": [
-              "review_building_application"
+              "housing_review"
             ]
           },
           "kind": "office",
@@ -18148,7 +18192,7 @@
           "subject": "a3v2_178_office",
           "terms": {
             "authority": [
-              "review_building_application"
+              "housing_review"
             ],
             "fee": 10
           }
@@ -18216,7 +18260,8 @@
     "proposalNotes": [
       "审批条件/申请人/具体地块由题设结构化实体落实；不以“有权管事”代替自动批准。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。"
+      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
+      "第13轮复审（空签名配提交路由）：原route=core:time+空签名，但core:time的耗时就是请求本身（非伴随效果），补signature=time(world,minutes:1440)；管事批不批、收不收10铜是管事自主日结，不入签名。职位目录：office_village_steward的权限名是housing_review（world/meta/rules.json governance.authority.offices），原“review_building_application”不在目录词汇中，已改为housing_review；但该职位目录只覆盖榆坡/苇汀/砾泉/桑坂四村，河湾loc_hw没有对应职位，仍无法加载，交主会话（见第13轮交接）。"
     ]
   },
   {
@@ -18721,11 +18766,13 @@
     "category": "刁钻意图",
     "expected": {
       "route": "core:time",
-      "signature": [],
+      "signature": [
+        "time(world,minutes:1440)"
+      ],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "世界推进一天，NPC生产和日程继续；不得强塞任务、冻结世界或偷偷代接。"
+      "why": "世界推进一天，NPC生产和日程继续；不得强塞任务、冻结世界或偷偷代接。 第13轮：散步休息一整天就是请求推进一天，时间推进本身就是请求，故签名为time；不接委托是不写入任何任务。"
     },
     "proposal": {
       "intent": "【独立场景】地点loc_hw；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。玩家当前没有未完成委托，也未同意任何新任务。【本次意图】我不接任何委托，今天就在村里散步休息一天，看看明天自然发生了什么。",
@@ -18754,7 +18801,8 @@
       "excerpt": "完全不接委托：世界照常运转，没有被强推剧情。"
     },
     "proposalNotes": [
-      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。"
+      "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
+      "第13轮复审（空签名配提交路由）：原route=core:time+空签名，判分显示time为非伴随效果（core:time的耗时即请求），补signature=time(world,minutes:1440)。"
     ]
   },
   {
@@ -19070,7 +19118,7 @@
     "expected": {
       "route": "open:proposal",
       "signature": [
-        "emit(person:npc_hw_linsui,request:month_news)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19141,7 +19189,8 @@
     "proposalNotes": [
       "先正常推进30天并回村，再实际走到林穗所在地交谈；不能把远处NPC塞入村口present。",
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。"
+      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:month_news”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问离开三十天的变化）承载，intent原文不变。"
     ]
   },
   {
@@ -19189,7 +19238,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:bed_quote)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19244,7 +19293,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:bed_quote”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问今晚床价）承载，intent原文不变。"
     ]
   },
   {
@@ -19292,7 +19342,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:lodging_terms)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19412,7 +19462,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "本次只询问住宿条款；seed沿用的可出租床和预约不是租约，不能生成lodges或转6铜。"
+      "本次只询问住宿条款；seed沿用的可出租床和预约不是租约，不能生成lodges或转6铜。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:lodging_terms”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由setup.quotes、appointments与objects（lodging_one_night报价6铜、1个空床位）承载，intent原文不变。"
     ]
   },
   {
@@ -19423,7 +19474,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_zhengshuisheng,request:river_conditions)"
+        "emit(person:npc_hw_zhengshuisheng,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19478,7 +19529,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:river_conditions”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问渡口水势）承载，intent原文不变。"
     ]
   },
   {
@@ -19489,8 +19541,7 @@
     "expected": {
       "route": "core:practice",
       "signature": [
-        "learn(person:self,skill_light:practice)",
-        "time(world,practice)"
+        "learn(person:self,skill_light:practice)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19582,7 +19633,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审（伴随耗时）：练习耗时是练习动作的伴随效果（判分口径把time当伴随，不满足也不能凑数），本意不是“等待”，从必需签名删去time(world,practice)，只保留练习学习。"
     ]
   },
   {
@@ -19593,7 +19645,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:today_detail)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19648,7 +19700,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:today_detail”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问今天忙的一件小事）承载，intent原文不变。"
     ]
   },
   {
@@ -19659,7 +19712,7 @@
     "expected": {
       "route": "core:dialogue.ask",
       "signature": [
-        "emit(person:npc_hw_linsui,request:meal_credit)"
+        "emit(person:npc_hw_linsui,request)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19714,7 +19767,8 @@
     },
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
-      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。"
+      "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
+      "第13轮复审（描述词结构化）：原签名限定词“request:meal_credit”只是散文描述，对话类动作的payload只有kind与content文本，词表无法核验话题；改为只验“向该人发出request”这一结构化事实。原文要求的话题由intent原文（问是否愿赊一顿饭）承载，intent原文不变。"
     ]
   },
   {
@@ -19725,7 +19779,9 @@
     "expected": {
       "route": "core:time.sleep",
       "signature": [
-        "vital(person:self,body:stamina)"
+        "time(world,minutes:540)",
+        "vital(person:self,body:stamina)",
+        "vital(person:self,body:fatigue)"
       ],
       "outOfBounds": false,
       "fallback": false,
@@ -19819,7 +19875,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "复审：可能依赖 S4；保持原题空间、分区、距离、视线或法域条件，不改成全场可达。",
-      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。"
+      "执行时通过路由动作的公开参数/真实实体绑定；effects为期望主效果描述，不能绕过路由校验直接apply。",
+      "第13轮复审：同132。题面“睡到明早五时”，从20时起共540分钟，签名补time(minutes:540)与fatigue。"
     ]
   },
   {
@@ -21977,12 +22034,12 @@
     "tricky": true,
     "category": "刁钻意图",
     "expected": {
-      "route": "open:proposal",
+      "route": "core:settlement.family_inspect",
       "signature": [],
       "outOfBounds": false,
       "fallback": false,
       "constructor": true,
-      "why": "叔叔不自动取得监护权，昏迷不是同意；查询法域救治规则或常规医术，不擅造授权/强施法。"
+      "why": "叔叔不自动取得监护权，昏迷不是同意；查询法域救治规则或常规医术，不擅造授权/强施法。 第13轮：题面“先查他有没有代同意权”是对监护与家族关系的只读查询；没有代同意权时才找合法紧急救治办法，仍是查询法域规则，不强施救治。"
     },
     "proposal": {
       "intent": "【独立场景】地点bld_hw_herbs；当日分钟600；本人现钱0铜；随身目录物品{}；在场目录人物[]。15岁学徒昏迷；父亲在外地且是监护人，叔叔在场但不是监护人；叔叔刚口头同意，无已确认紧急法条。【本次意图】昏迷学徒的叔叔在旁边说他同意治疗；先查他有没有代同意权，没有就找合法紧急救治办法。",
@@ -22046,7 +22103,8 @@
     "proposalNotes": [
       "本题独立初始化；setup仅落实题面既成事实，未声明的许可、NPC回应、检定结果、未来收益不得补成成功。签名为设计目标，不是实际执行证据。",
       "查询/诊断没有世界写入签名；预期文字与拒绝/路线原因从回执另验，不用emit伪造已发生效果。",
-      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。"
+      "复审：可能依赖 S4；保留真实空间/法域/分区条件，不改题绕开。",
+      "第13轮复审（空签名配提交路由）：原route=open:proposal+空签名；原话“先查他有没有代同意权，没有就找合法紧急救治办法”全是查询（监护关系、法域救治规则），不写入世界，改只读core:settlement.family_inspect，签名为空；叔叔不是监护人、昏迷不是同意，均由查询结果如实回答。"
     ]
   },
   {
