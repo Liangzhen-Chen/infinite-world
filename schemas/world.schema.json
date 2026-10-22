@@ -531,9 +531,30 @@
                       "items": {
                         "enum": [
                           "certify",
-                          "administer_public_assets"
+                          "administer_public_assets",
+                          "receive_report",
+                          "receive_appeal",
+                          "receive_claim",
+                          "collect_fine",
+                          "keep_custody",
+                          "execute_arrest",
+                          "handle_case",
+                          "public_project",
+                          "quest_publish",
+                          "housing",
+                          "tax",
+                          "steward"
                         ]
                       },
+                      "uniqueItems": true
+                    },
+                    "scope": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "limits": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
                       "uniqueItems": true
                     }
                   },
@@ -9021,15 +9042,15 @@
                   "minItems": 1
                 },
                 "head": {
-                  "type": "null"
+                  "type": ["string", "null"],
+                  "minLength": 1
                 },
                 "enforcers": {
                   "type": "array",
                   "items": {
                     "type": "string",
                     "minLength": 1
-                  },
-                  "maxItems": 0
+                  }
                 },
                 "authority": {
                   "type": "string",

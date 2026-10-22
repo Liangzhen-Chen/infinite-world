@@ -42,7 +42,9 @@ test('C: current collective head, host and temple principal derive from existing
   if(!row.setup.present.includes(id)&&!initial.state.npcs[id])assert.equal(restored.state.npcs[id],undefined,n);
  }
  assert.deepEqual(currentControllers(context(load('013').document),'bld_hw_riverhome',{ownerOnly:true}),[]);
- assert.throws(()=>resolveAuthoritySelector(context(initial),{role:'existing_legal_town_head',of:'loc_bs'}),{code:'E-AUTHORITY-SELECTOR'});
+ // fix3-world：白石镇已有经审批的合法镇长（npc_bs_townhead，镇务署首领）；无首长的聚落仍被选择器拒绝。
+ assert.equal(resolveAuthoritySelector(context(initial),{role:'existing_legal_town_head',of:'loc_bs'}),'npc_bs_townhead');
+ assert.throws(()=>resolveAuthoritySelector(context(initial),{role:'existing_legal_town_head',of:'missing'}),{code:'E-AUTHORITY-SELECTOR'});
  const dead=save(load('016').document);dead.state.records['transition:npc_bs_076_3']={entity:'npc_bs_076_3',gone:true,basis:'death'};
  assert.equal(limitedPermit(context(dead),'player','bld_bs_still_temple','practice'),null);
 });

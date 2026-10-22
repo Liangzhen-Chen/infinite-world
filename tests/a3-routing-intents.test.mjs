@@ -82,16 +82,20 @@ test('A3 ordinary intent: real debt references bind uniquely; absent and conflic
  p=prepareOpenAction(f.engine,f.document,args);assert.deepEqual(p.needsSlots.missing,['debt']);
 });
 
+// fix3-world: 白石镇有了合法镇长后，派生钱庄设在首长席位（finance-bank bankSite → settlementGovernment seat = bld_bs_office），不再是镇口商旅代理的柜面。
+const TOWN_BANK='bld_bs_office';
 test('A3 ordinary intent: named remittance creates the recipient claim and pays only that person at the destination bank',async()=>{
  const f=fixture('bld_hw_post'),banker='npc_hw_shendu';
  Object.assign(f.document.state.npcs[banker],{location:'bld_hw_post',status:'正常',activity:'闲逛',scheduleTravel:null,cognitionTravel:null});
  f.document.state.npcs[host].location='loc_hw';book(f);
  const recipientCash=f.document.state.npcs[host].coins;
- const issued=await act(f,{intent:'寄五十铜给收款人，按汇票走',target:'bank_hw_post',effects:[{op:'transfer',resource:'coin',from:'self',to:'bank_hw_post',qty:50},{op:'transfer',resource:'coin',from:'self',to:'bank_hw_post',qty:999},{op:'obligation.create',obligationKind:'bill',debtor:'bank_hw_post',creditor:host,terms:{principal:50,resource:'coin',destination:'loc_bs'}}]},'named-remittance');
+ const issued=await act(f,{intent:'寄五十铜给收款人，按汇票走',target:'bank_hw_post',effects:[{op:'transfer',resource:'coin',from:'self',to:'bank_hw_post',qty:50},{op:'transfer',resource:'coin',from:'self',to:'bank_hw_post',qty:999},{op:'obligation.create',obligationKind:'bill',debtor:'bank_hw_post',creditor:host,terms:{principal:50,resource:'coin',destination:TOWN_BANK}}]},'named-remittance');
  assert.equal(issued.preview.receipt.routing.slots.buyer,host);assert.equal(issued.after.state.npcs[host].coins,recipientCash);
  const bill=Object.values(issued.after.state.records).find(row=>row.category==='bank_bill'&&row.beneficiary===host);assert.ok(bill?.payable);
  assert.equal(obligationView(issued.after.state,bill.payable).owed,50);assert.equal(issued.after.state.player.coins,149);
- f.document=JSON.parse(JSON.stringify(issued.after));const dest=derivedBankAt(f.engine,f.document.state,'loc_bs'),keeper=dest.keepers[0];
+ f.document=JSON.parse(JSON.stringify(issued.after));const dest=derivedBankAt(f.engine,f.document.state,TOWN_BANK),keeper=dest.keepers[0];
+ // 镇长是名册外按需落档的人物：与河湾钱庄掌柜同形地补一份落档（不改世界）。
+ if(!f.document.state.npcs[keeper])f.document.state.npcs[keeper]={...structuredClone(f.document.state.npcs[banker]),id:keeper,name:f.engine.byId.get(keeper).name,coins:f.engine.byId.get(keeper).coins,inventory:structuredClone(f.engine.byId.get(keeper).inventory)};
  f.document.state.location=dest.location;Object.assign(f.document.state.npcs[keeper],{location:dest.location,status:'正常',activity:'闲逛',scheduleTravel:null,cognitionTravel:null});
  const funded=await f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:trade.deposit',slots:{seller:keeper,coins:101}},eventId:'fund-destination'});f.document=applyPatches(f.document,funded.patches);
  const call={tool:'world_act',args:{action:'core:trade.cash_bill',slots:{seller:keeper,contract:bill.payable.replace(/:payable$/,'')}} ,eventId:'named-cash'};

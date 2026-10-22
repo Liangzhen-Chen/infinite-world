@@ -124,7 +124,9 @@ test('C: authority selectors use current real owner, never a present bystander; 
  assert.equal(resolveAuthoritySelector(context(document),{role:'authorized_manager',of:subject}),other);
  assert.equal(resolveAuthoritySelector(context(save(document)),{role:'authorized_manager',of:subject}),other);
  assert.throws(()=>resolveAuthoritySelector(context(document),{role:'authorized_manager',of:'missing'}),{code:'E-AUTHORITY-SELECTOR'});
- assert.throws(()=>resolveAuthoritySelector(context(document),{role:'existing_legal_town_head',of:'loc_bs'}),{code:'E-AUTHORITY-SELECTOR'});
+ // fix3-world：白石镇已有经审批的合法镇长（npc_bs_townhead，镇务署首领）；无首长的聚落仍被选择器拒绝。
+ assert.equal(resolveAuthoritySelector(context(document),{role:'existing_legal_town_head',of:'loc_bs'}),'npc_bs_townhead');
+ assert.throws(()=>resolveAuthoritySelector(context(document),{role:'existing_legal_town_head',of:'missing'}),{code:'E-AUTHORITY-SELECTOR'});
  assert.throws(()=>resolveAuthoritySelector(context(document),{role:'authorized_manager',of:subject,holder:other}),{code:'E-AUTHORITY-SELECTOR'});
  const school='bld_hw_qingdeng',owner=currentControllers(context(document),school)[0];
  assert.ok(owner);

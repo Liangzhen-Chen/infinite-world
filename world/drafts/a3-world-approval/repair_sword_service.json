@@ -1,0 +1,68 @@
+{
+  "id": "repair_sword_service",
+  "fingerprint": "64df1c3012f327523118b1670639292e5e68b6d46ebaabcc71e61ca62b453cc3",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "repair_sword_service",
+    "row": {
+      "id": "repair_sword_service",
+      "name": "铁剑修整服务",
+      "item": "item_steel_arming_sword",
+      "skill": "skill_life_5_core",
+      "minimumProficiency": 100,
+      "tools": [],
+      "materials": [],
+      "workstation": "smithing",
+      "minutes": 30,
+      "difficulty": 10,
+      "toolWear": 0,
+      "restore": 100,
+      "maxLoss": 0,
+      "service": {
+        "fee": 25
+      }
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "19409e9bd5eeef0b0960f1e9694c51ccafa05e143dc7dde3fe9453ba2d6f0ba4",
+    "draftHash": "a23c9bcc2a2980ac789188f2b0b9630f26035de1935c8735dd295a2fdf19557e"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "702812d4-7709-43fb-a0fa-1eef68aa6ef5",
+      "file": "budget-responses/702812d4-7709-43fb-a0fa-1eef68aa6ef5.json",
+      "requestHash": "02b5a99a0b5f8b95cbcc255d221d5eeeafb95ff0c8379996a7c7a49d7a852da7",
+      "responseHash": "c0c45a4f937fc19993bcc987dc97d1394510dd23bde633d9b8082984d4ae89b7"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-repair_sword_service-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 923,
+        "completion_tokens": 7,
+        "total_tokens": 930,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 795
+      },
+      "costUpperYuan": 0.0016511199999999998,
+      "cumulativeUpperYuan": 0.10017679999999998,
+      "latencyMs": 955.1422999999995,
+      "timestamp": "2026-10-22T20:07:46.568Z"
+    }
+  ]
+}

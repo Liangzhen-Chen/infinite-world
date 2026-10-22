@@ -1,0 +1,96 @@
+{
+  "index": 1,
+  "fingerprint": "7289bd47ef442b06512511ca5aa456f9d309c9e14b2fc4020d1d004cb3625011",
+  "count": 13,
+  "passed": 13,
+  "ids": [
+    "recipe_fishing_bait",
+    "nutrition_item_ration",
+    "nutrition_item_bread",
+    "nutrition_item_water",
+    "nutrition_item_milk",
+    "nutrition_item_oat_flatbread",
+    "nutrition_item_fish_broth",
+    "nutrition_item_mutton_turnip_stew",
+    "repair_clothes_seam",
+    "repair_sword_service",
+    "shop_hw_forge_mining_pick",
+    "fishing_bait",
+    "medicine_takeHome"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [
+    "nutrition_item_milk"
+  ],
+  "sample": [
+    "nutrition_item_milk",
+    "nutrition_item_bread",
+    "medicine_takeHome",
+    "repair_sword_service",
+    "nutrition_item_ration"
+  ],
+  "l4": {
+    "approved": true,
+    "reader": "Claude (A3 收口修复 fix3-world)",
+    "readAt": "2026-10-22",
+    "notes": [
+      {
+        "id": "recipe_fishing_bait",
+        "note": "通读钓饵配方：传授人林穗厨师基础手艺180，一份燕麦、切刀、烹饪台10分钟出10份；与钓饵目录价相容。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_ration",
+        "note": "通读干粮satiety 30：落在body表一餐30–40内。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_bread",
+        "note": "通读面包satiety 30：落在一餐30–40内。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_water",
+        "note": "通读清水hydration 25：等于body表一次饮水25。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_milk",
+        "note": "通读牛奶satiety 15+hydration 25：hydration合表；satiety 15低于一餐下限30，body表没有半份饮品的规定，属无依据数值——软问题，交主会话裁决(可改为只给hydration或写明半餐规则)。"
+      },
+      {
+        "id": "nutrition_item_oat_flatbread",
+        "note": "通读燕麦薄饼satiety 30：落在一餐30–40内。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_fish_broth",
+        "note": "通读鱼汤satiety 35：落在一餐30–40内。无硬问题。"
+      },
+      {
+        "id": "nutrition_item_mutton_turnip_stew",
+        "note": "通读羊肉萝卜炖satiety 35：落在一餐30–40内。无硬问题。"
+      },
+      {
+        "id": "repair_clothes_seam",
+        "note": "通读衣物补缝：裁缝基础手艺100起，一团麻线加缝针，织作台20分钟、每次修复20点，与既有修理方案(20分钟/20点)同量级。无硬问题。"
+      },
+      {
+        "id": "repair_sword_service",
+        "note": "通读铁剑修整服务：铁匠基础手艺100起，30分钟修满，服务费25铜取自题面D18.2，非独立标定；题面承诺的60分钟与方案30分钟之别已在boundary写明。无硬问题(数值来源软问题交主会话)。"
+      },
+      {
+        "id": "shop_hw_forge_mining_pick",
+        "note": "通读铁匠铺补货矿镐：矿镐目录物origin即bld_hw_forge，铺内已有同类铁器补货；没有文本明写铺子出售矿镐，软问题，已在boundary写明并列入交主会话清单。"
+      },
+      {
+        "id": "fishing_bait",
+        "note": "通读钓鱼耗饵：quantity 1对应目录物“每次抛竿消耗一份”。无硬问题。"
+      },
+      {
+        "id": "medicine_takeHome",
+        "note": "通读带回药：quantity 3/days 3对应目录物“每份为一天用量”与题面含三日份。无硬问题。"
+      }
+    ]
+  },
+  "costUpperYuan": 0.12231759999999998,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}
