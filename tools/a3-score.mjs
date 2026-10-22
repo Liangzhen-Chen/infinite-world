@@ -6,7 +6,8 @@ import {loadWorld} from './load-world.mjs';
 import {WorldEngine,skillGrade} from '../server-plugin/engine.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {PRIMITIVE_IDS,PrimitiveRejected} from '../server-plugin/primitive-policy.mjs';
+import {PRIMITIVE_IDS} from '../server-plugin/primitive-policy.mjs';
+import {isDomainRejection} from '../server-plugin/action-rejection.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
@@ -1104,7 +1105,7 @@ export async function executeIntent(engine,initial,row){
    previews.push({status:r?.status??null,reason:r?.reason??routing?.reason??routing?.fallback?.reason??null,ambiguities:r?.ambiguities??routing?.ambiguities??value.ambiguities??null,routingStatus:routing?.status??null});
    return value;
   }catch(error){
-   previews.push({status:error instanceof PrimitiveRejected?'rejected':'error',reason:error.message,ambiguities:null,code:error.code??null});throw error;
+   previews.push({status:isDomainRejection(error)?'rejected':'error',reason:error.message,ambiguities:null,code:error.code??null});throw error;
   }
  };
  const commit=async call=>{
@@ -1178,7 +1179,7 @@ export async function executeIntent(engine,initial,row){
    }
   }
   refused ||= receipt?.status==='rejected';
- }catch(caught){error={code:caught.code??null,message:caught.message,...(Number.isInteger(caught.index)?{index:caught.index}:{})};refused=caught instanceof PrimitiveRejected;}
+ }catch(caught){error={code:caught.code??null,message:caught.message,...(Number.isInteger(caught.index)?{index:caught.index}:{})};refused=isDomainRejection(caught);}
  const committed=receipt?.status==='committed',effects=committed||receipt?.status==='rejected'?(receipt.applied??[]).map(effect=>{
   const created=effect.op==='create'&&document.state.created?.[effect.result?.entity];
   const subject=effect.target??effect.entity??effect.subject??effect.actor;

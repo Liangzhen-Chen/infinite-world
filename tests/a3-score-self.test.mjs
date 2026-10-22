@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {rejectionReason,settleSpatial,executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
+import {ActionRejection} from '../server-plugin/action-rejection.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
@@ -911,6 +912,17 @@ test('A3 rejection vocabulary: routed action refusals earn credit only for the r
  assert.equal(rejectionReason(['move(person:self)'],{error:{code:'E-ACTION-CAPABILITY'}},[],{registry}).ok,false);
  // Unknown codes stay outside the vocabulary.
  assert.equal(rejectionReason([],{reasonCode:'E-ACTION-SLOT',routed:'core:cast'},[],{registry}).ok,false);
+});
+
+test('A3 refusal by throw: any typed domain rejection is a refusal, a plain engine error is not',async t=>{
+ const row={...rows[1],expected:{...rows[1].expected,signature:[]}};
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw new ActionRejection('E-ACTION-CAPABILITY','没有此能力',{missing:['x'],repair:['y']});});
+ const typed=await scoreRows([row],options);
+ assert.equal(typed.results[0].actual.refused,true);assert.equal(typed.results[0].scores.signature,true);
+ t.mock.restoreAll();
+ t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw Error('没有此能力');});
+ const plain=await scoreRows([row],options);
+ assert.equal(plain.results[0].actual.refused,false);assert.equal(plain.results[0].scores.signature,false);
 });
 
 test('A3 preview: clarification, rejection and fallback retain original diagnostics',async()=>{
