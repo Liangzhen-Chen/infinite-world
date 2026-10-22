@@ -196,7 +196,7 @@ export function nextTransportMinute(state,now){return Math.min(Infinity,...live(
 export function advanceTransport(d,e,minute){
  for(const old of live(d.get('state'))){const row=clone(old),t=row.transport;
   if(t.nextAt>minute)continue;
-  if(t.nextAt<minute)throw preconditionFailure('承运时钟越过未处理节点');
+  if(t.nextAt<minute)throw Error('承运时钟越过未处理节点');
   const asset=transportAssetView(e,d.get('state'),row.asset);
   if(!asset?.factor||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
    row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';holdingSet(d,null,path(row.id),row,'transport');continue;

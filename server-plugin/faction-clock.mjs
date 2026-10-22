@@ -20,7 +20,7 @@ const uint=n=>Number.isSafeInteger(n)&&n>=0;
 export function factionClockRules(engine){
  if(engine.replaying&&engine.replayResult?.factionClockVersion!==1)return [];
  const configured=engine.rules.factionClock;
- if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw preconditionFailure('势力时钟规则版本无效');
+ if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
  // Authored clocks first (configured rules, then each faction's own plan), so a
  // faction's primary clock is the first rule carrying its id; the RW-07 faith
  // competition rows that materializeFaithClocks derived into rules come last.
@@ -50,7 +50,7 @@ function faction(engine,id){
 function assertCost(engine,cost={}){
  if(!cost||typeof cost!=='object'||Array.isArray(cost)||Object.keys(cost).some(k=>!['coins','items'].includes(k))||
   cost.items!==undefined&&(!cost.items||typeof cost.items!=='object'||Array.isArray(cost.items))||
-  !uint(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>!engine.world.items.some(i=>i.id===id)||!uint(n)))throw preconditionFailure('势力资源代价无效');
+  !uint(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>!engine.world.items.some(i=>i.id===id)||!uint(n)))throw Error('势力资源代价无效');
 }
 // K6: relation/dispute/trade are faction-only kinds in the unified effect table;
 // engine.factionEffectConsumers and the shared kinds resolve through it too.
@@ -66,45 +66,45 @@ export function assertFactionClockRules(engine){
   const f=faction(engine,rule.faction);
   if(!rule.id||ids.has(rule.id)||!rule.source||!engine.world.locations.some(l=>l.id===rule.settlement)||
    ![1,7,30].includes(rule.intervalDays)||!Number.isFinite(rule.probability)||rule.probability<0||rule.probability>1||
-   !['once','year'].includes(rule.cycle??'once')||!Array.isArray(rule.stages)||!rule.stages.length)throw preconditionFailure('势力时钟来源、地点或日周周期无效');
+   !['once','year'].includes(rule.cycle??'once')||!Array.isArray(rule.stages)||!rule.stages.length)throw Error('势力时钟来源、地点或日周周期无效');
   ids.add(rule.id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
-  if(!uint(f.resources?.treasuryCopper))throw preconditionFailure('势力初始公库未登记');
+  if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
   const stageIds=new Set();
   for(const stage of rule.stages){
-   if(!stage.id||stageIds.has(stage.id))throw preconditionFailure('势力阶段编号缺失或重复');stageIds.add(stage.id);
+   if(!stage.id||stageIds.has(stage.id))throw Error('势力阶段编号缺失或重复');stageIds.add(stage.id);
    const c=stage.condition;
-   if(!['always','asset','relation','dispute','record','intervention','motion'].includes(c?.kind))throw preconditionFailure('势力阶段条件未实现');
-   if(c.kind==='motion'&&(typeof c.id!=='string'||!c.id.startsWith('society_motion:')||c.statuses!==undefined&&(!Array.isArray(c.statuses)||!c.statuses.length||c.statuses.some(v=>!['议事中','通过','否决'].includes(v)))))throw preconditionFailure('议题阶段条件无效');
+   if(!['always','asset','relation','dispute','record','intervention','motion'].includes(c?.kind))throw Error('势力阶段条件未实现');
+   if(c.kind==='motion'&&(typeof c.id!=='string'||!c.id.startsWith('society_motion:')||c.statuses!==undefined&&(!Array.isArray(c.statuses)||!c.statuses.length||c.statuses.some(v=>!['议事中','通过','否决'].includes(v)))))throw Error('议题阶段条件无效');
    if(c.kind==='asset')assertCost(engine,c.minimum);
-   if(c.kind==='relation'){faction(engine,c.target);if(!Number.isSafeInteger(c.minimum)||Math.abs(c.minimum)>100)throw preconditionFailure('势力关系阈值无效');}
-   if(c.kind==='dispute'){faction(engine,c.target);if(!c.id||!['open','settled','escalated'].includes(c.status))throw preconditionFailure('势力争端条件无效');}
-   if(['record','intervention'].includes(c.kind)&&(!c.id||c.kind==='record'&&(!c.field||!['string','boolean','number'].includes(typeof c.equals))))throw preconditionFailure('势力阶段证据条件无效');
+   if(c.kind==='relation'){faction(engine,c.target);if(!Number.isSafeInteger(c.minimum)||Math.abs(c.minimum)>100)throw Error('势力关系阈值无效');}
+   if(c.kind==='dispute'){faction(engine,c.target);if(!c.id||!['open','settled','escalated'].includes(c.status))throw Error('势力争端条件无效');}
+   if(['record','intervention'].includes(c.kind)&&(!c.id||c.kind==='record'&&(!c.field||!['string','boolean','number'].includes(typeof c.equals))))throw Error('势力阶段证据条件无效');
    assertCost(engine,stage.cost);
-   if(!effects(stage).length)throw preconditionFailure('势力阶段缺少效果');
-   for(const effect of stageEffects(engine,rule,stage)){if(effect.target===rule.faction&&['trade','relation','dispute'].includes(effect.kind))throw preconditionFailure('势力效果不能以自身为对手');assertEffect(engine,effect);}
+   if(!effects(stage).length)throw Error('势力阶段缺少效果');
+   for(const effect of stageEffects(engine,rule,stage)){if(effect.target===rule.faction&&['trade','relation','dispute'].includes(effect.kind))throw Error('势力效果不能以自身为对手');assertEffect(engine,effect);}
   }
   for(const action of rule.interventions??[]){
    if(!action.id||!engine.world.locations.some(l=>l.id===action.location)||!Number.isSafeInteger(action.minutes)||action.minutes<1||action.minutes>1440||
-    !['pause','resume','redirect'].includes(action.effect)||!stageIds.has(action.stage)||action.effect==='redirect'&&!stageIds.has(action.nextStage))throw preconditionFailure('势力干预参数无效');
-   if(action.difficulty!==undefined&&(!Number.isSafeInteger(action.difficulty)||action.difficulty<1||!['力量','敏捷','体质','智力','精神','魅力'].includes(action.attribute)))throw preconditionFailure('势力干预检定无效');
-   if(action.representative&&![f.leader,...f.coreMembers??[]].includes(action.representative))throw preconditionFailure('势力干预代表不属于该组织');
+    !['pause','resume','redirect'].includes(action.effect)||!stageIds.has(action.stage)||action.effect==='redirect'&&!stageIds.has(action.nextStage))throw Error('势力干预参数无效');
+   if(action.difficulty!==undefined&&(!Number.isSafeInteger(action.difficulty)||action.difficulty<1||!['力量','敏捷','体质','智力','精神','魅力'].includes(action.attribute)))throw Error('势力干预检定无效');
+   if(action.representative&&![f.leader,...f.coreMembers??[]].includes(action.representative))throw Error('势力干预代表不属于该组织');
    assertCost(engine,action.cost);
   }
   // A contact without a representative is the faction's registration point
   // (contactAnchor): enquiries and contributions are lodged, nobody is summoned.
-  if(rule.contact&&(!engine.world.locations.some(l=>l.id===rule.contact.location)||rule.contact.representative!==undefined&&![f.leader,...f.coreMembers??[]].includes(rule.contact.representative)))throw preconditionFailure('势力供资接点未登记代表');
+  if(rule.contact&&(!engine.world.locations.some(l=>l.id===rule.contact.location)||rule.contact.representative!==undefined&&![f.leader,...f.coreMembers??[]].includes(rule.contact.representative)))throw Error('势力供资接点未登记代表');
  }
  const published=factionClockRules(engine);// Hooks for clocks absent from this world stay inert.
- for(const h of published.length?engine.rules.effectTable?.hooks??[]:[])if(h.source==='faction'&&published.some(r=>r.id===h.owner&&!r.stages.some(s=>s.id===h.stage)))throw preconditionFailure(`效果挂接的势力时钟阶段未登记：${h.owner}`);
+ for(const h of published.length?engine.rules.effectTable?.hooks??[]:[])if(h.source==='faction'&&published.some(r=>r.id===h.owner&&!r.stages.some(s=>s.id===h.stage)))throw Error(`效果挂接的势力时钟阶段未登记：${h.owner}`);
  for(const c of published.length?engine.rules.questSources?.commissions??[]:[]){
-  if(!Array.isArray(c.effects)||!c.effects.length||c.effects.some(e=>e.kind!=='quest_post'))throw preconditionFailure(`势力委托只能登记 quest_post：${c.owner}`);
-  if(published.some(r=>r.id===c.owner&&!r.stages.some(s=>s.id===c.stage)))throw preconditionFailure(`势力委托的时钟阶段未登记：${c.owner}`);
+  if(!Array.isArray(c.effects)||!c.effects.length||c.effects.some(e=>e.kind!=='quest_post'))throw Error(`势力委托只能登记 quest_post：${c.owner}`);
+  if(published.some(r=>r.id===c.owner&&!r.stages.some(s=>s.id===c.stage)))throw Error(`势力委托的时钟阶段未登记：${c.owner}`);
  }
 }
 function ensureAccount(d,engine,id){
  if(!d.get(...accountPath(id))){
   const f=faction(engine,id);assertCost(engine,{coins:f.resources?.treasuryCopper,items:f.resources?.items});
-  if(!uint(f.resources?.treasuryCopper))throw preconditionFailure('势力初始公库未登记');
+  if(!uint(f.resources?.treasuryCopper))throw Error('势力初始公库未登记');
  }
  return ensureGroupAccount(d,engine,id);
 }
@@ -150,16 +150,16 @@ function condition(d,rule,clock,assets){
 }
 function applyEffect(d,engine,effect,context){
  const result=applyTableEffect(d,engine,effect,context,'faction');
- if(!result||typeof result.applied!=='boolean')throw preconditionFailure(`势力效果缺少 applied 回执：${effect.kind}`);
+ if(!result||typeof result.applied!=='boolean')throw Error(`势力效果缺少 applied 回执：${effect.kind}`);
  return result;
 }
 const owned=(engine,effect)=>faction(engine,effect.target);
 import {assessTradeTax} from './finance-tax.mjs';
 registerEffect('trade',{sources:['faction'],
- validate(engine,effect){owned(engine,effect);if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw preconditionFailure('势力交易参数无效');},
+ validate(engine,effect){owned(engine,effect);if(!engine.world.items.some(i=>i.id===effect.item)||!Number.isSafeInteger(effect.quantity)||effect.quantity<1||!uint(effect.unitPrice))throw Error('势力交易参数无效');},
  apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
   const seller=ensureAccount(d,engine,owner),buyer=ensureAccount(d,engine,effect.target),payment=effect.quantity*effect.unitPrice;
-  if(!uint(payment))throw preconditionFailure('势力交易金额溢出');
+  if(!uint(payment))throw Error('势力交易金额溢出');
   if(!affordable(seller,{items:{[effect.item]:effect.quantity}})||!affordable(buyer,{coins:payment}))return {applied:false,reason:'交易对手资金或卖方库存不足'};
   const event={sourceEvent,minute,kind:'trade',counterparty:effect.target};
   changeAssets(d,engine,owner,{items:{[effect.item]:effect.quantity}},-1,event,undefined,{party:effect.target,purpose:'store',writer:'faction-clock',eventId:sourceEvent});changeAssets(d,engine,effect.target,{items:{[effect.item]:effect.quantity}},1,{...event,counterparty:owner},undefined,STOCK_BOOKED);
@@ -169,14 +169,14 @@ registerEffect('trade',{sources:['faction'],
   return {applied:true,...effect,payment};
  }});
 registerEffect('relation',{sources:['faction'],
- validate(engine,effect){owned(engine,effect);if(!Number.isSafeInteger(effect.delta)||Math.abs(effect.delta)>100)throw preconditionFailure('势力关系变化无效');},
+ validate(engine,effect){owned(engine,effect);if(!Number.isSafeInteger(effect.delta)||Math.abs(effect.delta)>100)throw Error('势力关系变化无效');},
  apply(d,engine,effect,{faction:owner}){
   const account=ensureAccount(d,engine,owner),score=Math.max(-100,Math.min(100,(account.relations[effect.target]??0)+effect.delta));
   holdingSet(d,null,accountPath(owner),{...account,relations:{...account.relations,[effect.target]:score}},'faction-clock');
   return {applied:true,...effect,score};
  }});
 registerEffect('dispute',{sources:['faction'],
- validate(engine,effect){owned(engine,effect);if(!effect.id||!['open','settled','escalated'].includes(effect.status))throw preconditionFailure('势力争端阶段无效');},
+ validate(engine,effect){owned(engine,effect);if(!effect.id||!['open','settled','escalated'].includes(effect.status))throw Error('势力争端阶段无效');},
  apply(d,engine,effect,{faction:owner,sourceEvent,minute}){
   const account=ensureAccount(d,engine,owner),key=`${effect.target}:${effect.id}`;
   holdingSet(d,null,accountPath(owner),{...account,disputes:{...account.disputes,[key]:{status:effect.status,sourceEvent,minute}}},'faction-clock');
@@ -185,7 +185,7 @@ registerEffect('dispute',{sources:['faction'],
 export function advanceFactionClocks(d,engine,at){
  for(const rule of factionClockRules(engine)){
   let row=d.get(...clockPath(rule.id));if(!row)continue;
-  if(row.nextAt<at)throw preconditionFailure('势力时钟越过未处理的日期');if(row.nextAt!==at)continue;
+  if(row.nextAt<at)throw Error('势力时钟越过未处理的日期');if(row.nextAt!==at)continue;
   const year=Math.floor(at/DAY/360)+1;
   row={...row,nextAt:at+rule.intervalDays*DAY,lastAt:at,...(rule.cycle==='year'&&row.year!==year?{phase:0,paused:false,interventions:[]}:{}),year};
   const stage=rule.stages[row.phase],roll=clockRoll(d.document.randomSeed,rule.id,at/DAY);row.lastRoll=roll;

@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {seededRandom} from './combat.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
@@ -9,7 +8,7 @@ const profiles=e=>e.rules.wildlife?.farmPests?.fields??[];
 export function farmPestProfile(engine,settlement){return profiles(engine).find(p=>p.settlement===settlement);}
 function count(d,e,species,habitat){
     const record=d.get(...path(habitat),'populations',species),h=e.rules.wildlife.habitats.find(h=>h.id===habitat);
-    if(!record||!Number.isSafeInteger(record.count)||record.count<0)throw preconditionFailure('害兽关联种群缺失或损坏');
+    if(!record||!Number.isSafeInteger(record.count)||record.count<0)throw Error('害兽关联种群缺失或损坏');
     return record.count+Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===species&&a.location===h.location&&a.ecology===habitat&&!a.owner&&!sapient(a)&&alive(d,id,a)).length;
 }
 function open(e,rule,season){return rule.path.every(id=>!e.world.routes.find(r=>r.id===id).closedSeasons.includes(season));}

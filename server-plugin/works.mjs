@@ -70,7 +70,7 @@ function save(d,work){d.set(['state','works',work.id],work);return work;}
 export function addFame(d,engine,settlement,fame,sourceEvent,reason){
     if(!settlement||!fame)return null;
     const id=`reputation:${digest(['player','settlement',settlement]).slice(0,24)}`,old=d.get('state','records',id);
-    if(old&&old.category!=='reputation')throw preconditionFailure('声望账记录编号冲突');
+    if(old&&old.category!=='reputation')throw Error('声望账记录编号冲突');
     const account=old??{category:'reputation',subject:'player',scope:'settlement',target:settlement,reputation:0,fame:0,notoriety:0,deltas:[]};
     if(account.deltas.some(row=>row.sourceEvent===sourceEvent&&row.stage==='work'))return null;
     const minute=d.get('state','minute');

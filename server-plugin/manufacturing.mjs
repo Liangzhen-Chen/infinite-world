@@ -59,7 +59,7 @@ export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
     if(plan?.startStress===undefined)return null;
     const state=d.get('state','records',`physical_feature:${plan.feature}`,'state','thermal');
     const finalStress=endStress??state?.crackStressUnits;
-    if(!Number.isSafeInteger(finalStress)||finalStress<plan.startStress)throw preconditionFailure('烧制裂损状态缺失或回退');
+    if(!Number.isSafeInteger(finalStress)||finalStress<plan.startStress)throw Error('烧制裂损状态缺失或回退');
     const stress=finalStress-plan.startStress,riskPermille=Math.min(1000,stress*plan.crackPermillePerStress);
     let crackedQuantity=0;
     if(outcome.success)for(let i=0;i<quantity;i++){

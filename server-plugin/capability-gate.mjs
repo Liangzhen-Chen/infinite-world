@@ -8,7 +8,7 @@
 // provide it without a spell (e.g. a registered anchor). Nothing about any
 // capability is written in code. This runs before entity clarification: a
 // request that cannot be satisfied is not a request for more details.
-import {reject} from './primitive-policy.mjs';
+import {reject} from './action-rejection.mjs';
 import {environmentFeatures} from './environment.mjs';
 import {intentText} from './routing-programs.mjs';
 import {actorKnowledge} from './action-router.mjs';

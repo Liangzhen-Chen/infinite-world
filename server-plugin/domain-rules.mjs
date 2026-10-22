@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 // Scenario facts the domain modules used to hard-code (mechanisms and their
 // tools, the water portion, hand-repair limits, private-field tools and unit
 // conversions, the language catalogue, map transit places) live in
@@ -66,7 +65,7 @@ export const isLanguage=(engine,id)=>languageTable(engine).ids.has(languageId(en
 // ---- world check -----------------------------------------------------------
 export function validateDomainRules(world){
  const table=world.domainRules;if(table===undefined)return;
- const fail=message=>{throw preconditionFailure(`领域规则表无效：${message}`);};
+ const fail=message=>{throw Error(`领域规则表无效：${message}`);};
  const items=new Map((world.items??[]).map(i=>[i.id,i]));
  const locations=new Set((world.locations??[]).map(l=>l.id));
  if(!table||typeof table!=='object'||Array.isArray(table)||table.version!==1)fail('缺少 version 1');

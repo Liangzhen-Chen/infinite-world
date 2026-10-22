@@ -21,7 +21,7 @@ const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)thro
 // simulation hands each freshly built row to the draft (adopt).
 export function waterEarthState(d,row){
  const r=typeof d.peek==='function'?d.peek('state','records',key(row.id)):d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('水土对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('水土对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});

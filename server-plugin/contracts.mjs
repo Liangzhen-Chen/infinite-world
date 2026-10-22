@@ -29,7 +29,7 @@ export function advanceShadowContracts(d,before,after){
  for(const [id,row]of Object.entries(d.get('state','records')??{})){
   const e=row.category==='contract'&&row.enforcement;
   if(!e?.active||e.channel!=='shadow')continue;
-  if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw preconditionFailure('暗影契约执行状态损坏');
+  if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw Error('暗影契约执行状态损坏');
   const permission=d.get('state','records',e.authorization);
   if(e.target!=='player'&&(permission?.category!=='authorization'||permission.action!=='mental_magic'||permission.subject!==e.target||permission.grantor!==e.target||permission.grantee!=='player'||permission.revoked||permission.expires<=before)){holdingSet(d,null,[...contractPath(id),'enforcement','active'],false,'contracts');continue;}
   const until=Math.min(after,e.expires,e.target==='player'?Infinity:permission.expires),minutes=Math.max(0,until-Math.max(before,e.started));

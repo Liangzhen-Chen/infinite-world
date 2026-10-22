@@ -215,7 +215,7 @@ export function festivalAction(d,args,eventId){
  if(args.operation==='festival_answer'){
   const row=d.get(...path(args.festival));
   if(row?.category!=='festival'||!row.formal||row.status!=='held'||row.location!==d.get('state','location')||now<row.due||now>=row.endsAt)throw preconditionFailure('这里没有正在举行的正式节庆');
-  const f=custom(this,row.custom);if(!matches(f,row,this))throw preconditionFailure('节庆来源与实际举办记录不一致');
+  const f=custom(this,row.custom);if(!matches(f,row,this))throw Error('节庆来源与实际举办记录不一致');
   if(!available(this,d.get('state'),row.host,row.location,now))throw preconditionFailure('主办人不在场，无法核对答案并发奖');
   const puzzle=f.runtime.riddles?.find(r=>r.id===args.request);if(!puzzle)throw preconditionFailure('没有这道灯谜');
   const key=`festival-prize:${row.id}:${puzzle.id}:player`;
@@ -231,7 +231,7 @@ export function festivalAction(d,args,eventId){
   const row=d.get(...path(args.festival));
   if(row?.category!=='festival'||!row.formal||row.status!=='held'||row.location!==d.get('state','location')||!Number.isSafeInteger(row.endsAt)||now<row.due||now>=row.endsAt)throw preconditionFailure('这里没有正在举行的正式节庆');
   const f=custom(this,row.custom);
-  if(!matches(f,row,this))throw preconditionFailure('节庆来源与实际举办记录不一致');
+  if(!matches(f,row,this))throw Error('节庆来源与实际举办记录不一致');
   const minutes=row.endsAt-now;assertActionTime(d,this,minutes);
   const span=beginActionActivity(d,this,'light');this.advance(d,minutes,eventId);
   if(d.get('state','location')!==row.location||d.get('state','player','status')!=='正常')throw preconditionFailure('散场前已离开或失去行动能力');

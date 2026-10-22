@@ -44,9 +44,9 @@ export function forestSites(engine){
 }
 function stock(d,engine,site,minute){
  const old=d.get(...path(site.location));
- if(old&&(old.category!=='forest'||old.location!==site.location||old.initial+old.grown-old.harvested!==old.reserve||old.reserve<0))throw preconditionFailure('林木存量账不守恒');
+ if(old&&(old.category!=='forest'||old.location!==site.location||old.initial+old.grown-old.harvested!==old.reserve||old.reserve<0))throw Error('林木存量账不守恒');
  const row=clone(old??{category:'forest',location:site.location,initial:site.capacity,reserve:site.capacity,grown:0,harvested:0,updatedAt:minute});
- if(minute<row.updatedAt)throw preconditionFailure('林木更新时间倒退');
+ if(minute<row.updatedAt)throw Error('林木更新时间倒退');
  const days=Math.floor((minute-row.updatedAt)/DAY);
  if(days){const grown=Math.min(Math.max(0,site.capacity-row.reserve),growth(site,row.updatedAt,days));row.reserve+=grown;row.grown+=grown;row.updatedAt+=days*DAY;}
  return row;

@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 // Domain facts (earned wages, delivered care and adjudicated losses) import
 // through the existing legacy bridge. There is only one payable claim.
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -37,7 +36,7 @@ export {claimLimitation,claimEnforceable} from './obligation-state.mjs';
 export function settleClaim(d,e,args,eventId){
     // The runtime returns the actual ledger transfer. A legacy, unopened
     // draft would otherwise debit its mirror while reporting transferred=0.
-    if(!ledgerActive(d))throw preconditionFailure('须在已开账的引擎事务中清偿债权');
+    if(!ledgerActive(d))throw Error('须在已开账的引擎事务中清偿债权');
     const adapter=Object.create(e);adapter.obligationClaimEnforceable=claimEnforceable;
     return obligationTransaction(d,()=>{
         adoptLegacyObligation(d,e,args.id);

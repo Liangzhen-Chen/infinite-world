@@ -121,9 +121,9 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
 export function trackSingleItem(d,engine,owner,item,eventId){
     const held=d.get(...engine.bagPath(owner),item);
     if(engine.quantity(d,owner,item)!==1)throw preconditionFailure('需要单件物品才能确定受术对象');
-    if(held.instances?.length){const unit=heldUnit(d,engine,owner,item);if(!unit.instance)throw preconditionFailure('单件登记缺失');return unit.instance;}
+    if(held.instances?.length){const unit=heldUnit(d,engine,owner,item);if(!unit.instance)throw Error('单件登记缺失');return unit.instance;}
     const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:existing:${owner}:${item}`).digest('hex').slice(0,24)}`;
-    if(d.get('state','itemInstances',id))throw preconditionFailure('既有物品的编号重复');
+    if(d.get('state','itemInstances',id))throw Error('既有物品的编号重复');
     const definition=engine.byId.get(item);
     holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
         origin:'既有物品登记，制作者未知',quality:held.quality??definition.quality,durability:held.durability??definition.durability,maxDurability:held.maxDurability??definition.durability},'items');
@@ -143,7 +143,7 @@ export function trackTransferUnit(d,engine,owner,item,eventId,requested=null){
     }
     if(units.length>=quantity)throw preconditionFailure('没有未登记的单件');
     const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:transfer:${owner}:${item}`).digest('hex').slice(0,24)}`;
-    if(d.get('state','itemInstances',id))throw preconditionFailure('既有单件登记编号冲突');
+    if(d.get('state','itemInstances',id))throw Error('既有单件登记编号冲突');
     const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity,quality:definition.quality,durability:definition.durability,weight:definition.weight};
     holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
         origin:'既有库存单件登记，制作者未知',quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability},'items');

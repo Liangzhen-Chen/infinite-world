@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {genesisBag,genesisSettlement} from './stock.mjs';
@@ -332,13 +331,13 @@ function remoteHazards(county,seat,settlements,routes,profiles){
 }
 
 export function generateCounty(world,countyId,campaignSeed){
-    const o=outline(world),county=o.byId.get(countyId);if(!county||county.category!=='county')throw preconditionFailure(`未登记的远方郡：${countyId}`);
-    if(o.home.has(countyId))throw preconditionFailure('本郡已有成文聚落，不按种子生成');
+    const o=outline(world),county=o.byId.get(countyId);if(!county||county.category!=='county')throw Error(`未登记的远方郡：${countyId}`);
+    if(o.home.has(countyId))throw Error('本郡已有成文聚落，不按种子生成');
     const seed=`${campaignSeed}:remote:${countyId}:v${REMOTE_VERSION}`,rng=stream(seed),short=remoteShort(countyId),kind=countyKind(county),culture=mainCulture(county);
     const province=o.byId.get(county.province),seat=seatOf(world,county),text=KIND_TEXT[kind==='shared'?'beast':kind];
     const used=new Set();
     for(const row of [...world.npcs,...world.residents??[],...world.locations,...world.factionPeople??[],...world.factions??[],...world.items])if(row.generated!=='remote')for(const n of [row.name,...row.aliases??[]])if(n)used.add(n);
-    const fresh=(make,tries=60)=>{for(let i=0;i<tries;i++){const n=make(i);if(!used.has(n)){used.add(n);return n;}}throw preconditionFailure('远方地名库不足');};
+    const fresh=(make,tries=60)=>{for(let i=0;i<tries;i++){const n=make(i);if(!used.has(n)){used.add(n);return n;}}throw Error('远方地名库不足');};
     const {naming:names,clans}=naming(world,kind,county,rng);
     const locations=[],routes=[],people=[],households=[],settlements=[],profiles=[],rumors=[],offices=[],jurisdiction={},officials={};
     const seatShort=[...seat.name].slice(0,2).join('');
@@ -589,7 +588,7 @@ export function unfoldRemoteAt(d,engine,location){
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
     for(const p of skeleton.people)if(active(p,skeleton)){
-        if(d.get('state','npcs',p.id))throw preconditionFailure(`远方人物编号已被占用：${p.id}`);
+        if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
         moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
         genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
         holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation},'remote-generation');
@@ -701,17 +700,17 @@ export function remoteProfileBrief(engine,document,person){
 }
 export function acceptRemoteProfile(d,engine,input,{check,maxFailures,fields}){
     const person=String(input.person),entity=engine.byId.get(person),county=entity.county,rec=d.get('state','remote',county);
-    if(!rec)throw preconditionFailure('远方郡骨架记录缺失');
+    if(!rec)throw Error('远方郡骨架记录缺失');
     const status=rec.profiles?.[person],minute=d.get('state','minute');
-    if(status?.status==='full')throw preconditionFailure('完整档已入库，之后不再改变');
+    if(status?.status==='full')throw Error('完整档已入库，之后不再改变');
     if(input.outcome==='failed'){
         const failures=(status?.failures??0)+1;
         d.set(['state','remote',county,'profiles',person],{status:'failed',failures,lastReason:String(input.reason??'生成失败').slice(0,300),minute});
         return {person,status:'failed',failures,identityKept:true};
     }
-    if((status?.failures??0)>=maxFailures)throw preconditionFailure('该人物完整档生成已连续失败，保留名册身份');
+    if((status?.failures??0)>=maxFailures)throw Error('该人物完整档生成已连续失败，保留名册身份');
     const errors=check(entity,input.profile);
-    if(errors.length)throw preconditionFailure(`完整档未通过硬约束：${errors.join('；')}`);
+    if(errors.length)throw Error(`完整档未通过硬约束：${errors.join('；')}`);
     const profile=Object.fromEntries(Object.entries(input.profile).filter(([k])=>fields[k]));
     d.set(['state','remote',county,'profiles',person],{status:'full',failures:status?.failures??0,minute,profileHash:digest(profile).slice(0,24),profile,
         ...(input.generator?{generator:{model:String(input.generator.model??'').slice(0,60),calls:Number(input.generator.calls)||0}}:{})});

@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {nationAt,nationRows,liveNation} from './noble-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 // Executable jurisdictions are views of current places, rulers and offices.
@@ -130,20 +129,20 @@ export function miningJurisdiction(engine,state,location,offense='illegal_mining
    const society=place?.monsterSociety?(world.factions??[]).find(f=>f.kind==='聚居地议事'&&f.contactAnchor===at)?.id:null;
    if(!tribal&&!society)continue;
    const holder=society??tribal,rule=(society?autonomy?.factions?.[society]:autonomy?.tribal)?.offenses?.[offense];
-   if(!rule)throw preconditionFailure(`自治地 ${at} 的所属势力 ${holder} 缺少${offense}规矩`);
+   if(!rule)throw Error(`自治地 ${at} 的所属势力 ${holder} 缺少${offense}规矩`);
    return{kind:'faction',settlement:at,faction:holder,rule,executable:false};
   }
   return null;
  }
  if(code){
   const penalty=codePenalty(engine,code,offense),template=codeTemplate(engine,code);
-  if(!penalty)throw preconditionFailure(`法典 ${code.id} 缺少${offense}罪名`);
+  if(!penalty)throw Error(`法典 ${code.id} 缺少${offense}罪名`);
   const custom=localCustom();
   return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:template?.stances?.mining??null,executable:true,...(custom?{custom}:{})};
  }
  const custom=localCustom();if(custom)return custom;
  const county=regionOf(world,location)?.county,template=county&&legalTemplate(world,county);
- if(!template)throw preconditionFailure(`${location} 无法派生所属政体法典`);
- const penalty=template.penalties?.[offense];if(!penalty)throw preconditionFailure(`法典 ${template.id} 缺少${offense}罪名`);
+ if(!template)throw Error(`${location} 无法派生所属政体法典`);
+ const penalty=template.penalties?.[offense];if(!penalty)throw Error(`法典 ${template.id} 缺少${offense}罪名`);
  return{kind:'polity',law:template.id,polity:template.polity,template:template.id,county:county.id,penalty,stance:template.stances?.mining??null,executable:false};
 }

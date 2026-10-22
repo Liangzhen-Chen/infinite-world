@@ -37,7 +37,7 @@ export const phaseName = phase => PHASE_NAMES[phase] ?? String(phase);
 const LAYER_RANK = { intelligent: 0, rule: 1, statistical: 2, 智能: 0, 规则: 1, 统计: 2 };
 export function layerRank(layer) {
     const rank = LAYER_RANK[layer];
-    if (rank === undefined) throw preconditionFailure(`未知层级：${layer}`);
+    if (rank === undefined) throw Error(`未知层级：${layer}`);
     return rank;
 }
 
@@ -71,8 +71,8 @@ export function compareClock(seed, minute) {
 export class ScheduleHeap {
     constructor() { this.entries = []; }
     add(entry) {
-        if (!Number.isInteger(entry.minute)) throw preconditionFailure('日程项缺少整数 minute');
-        if (!['due', 'clock'].includes(entry.kind)) throw preconditionFailure(`日程项 kind 无效：${entry.kind}`);
+        if (!Number.isInteger(entry.minute)) throw Error('日程项缺少整数 minute');
+        if (!['due', 'clock'].includes(entry.kind)) throw Error(`日程项 kind 无效：${entry.kind}`);
         this.entries.push(entry);
     }
     // (start, end] 内有到期项或时钟规则的刻（升序、去重）。
@@ -103,7 +103,7 @@ export function contestRuleFor(kind) {
     return ({goods:'price',daily_volume:'price',office:'rank',detained:'rank',bounty:'lottery',lodges:'lottery',service:'lottery',residence:'lottery',repayment:'rank'})[kind]??'lottery';
 }
 export function submitContest(d,proposal){
-    if(!Array.isArray(d.contestPool))throw preconditionFailure('调度器未接线，不能提交争夺提案');
+    if(!Array.isArray(d.contestPool))throw Error('调度器未接线，不能提交争夺提案');
     d.contestPool.push({...proposal});
     return {status:'pending',id:proposal.id};
 }
@@ -129,7 +129,7 @@ export function resolveContest(proposals, { seed, minute }) {
     const results = [];
     for (const [target, group] of [...byTarget.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
         const declarations=new Set(group.map(p=>normalizeContest(p.contest??contestRuleFor(p.targetKind))));
-        if(declarations.size!==1)throw preconditionFailure(`争夺标的规则不一致：${target}`);
+        if(declarations.size!==1)throw Error(`争夺标的规则不一致：${target}`);
         const contest = [...declarations][0];
         let remaining=group[0].capacity??1;
         const winners=[];

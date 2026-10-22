@@ -25,7 +25,7 @@ export function awardExperience(d,engine,{kind,subject,source,base,repeat=false}
     d.set(['state','experienceLedger',source],record);
     if(repeat)d.set(['state','experienceRepeats',key],[...history,now]);
     let level=player.level,xp=player.xp+gain,levels=0;
-    if(!Number.isSafeInteger(xp))throw preconditionFailure('经验总值超过安全数值范围');
+    if(!Number.isSafeInteger(xp))throw Error('经验总值超过安全数值范围');
     while(level<maximum&&xp>=xpRequired(level+1)){xp-=xpRequired(level+1);level++;levels++;}
     if(level===maximum)xp=0;
     d.set(['state','player','xp'],xp);

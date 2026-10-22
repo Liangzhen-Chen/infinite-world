@@ -19,7 +19,7 @@ const active=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=
 const numeric=(v,min,max,name)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${name}无效`);return v;};
 const stateOf=(d,row)=>{
  const r=d.get('state','records',`physical_feature:${row.id}`);
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('光学对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('光学对象状态键冲突');
  return clone(r?.state??row.state??{});
 };
 const store=(d,row,state)=>d.set(['state','records',`physical_feature:${row.id}`],{category:'physical_feature',id:row.id,location:row.location,state});

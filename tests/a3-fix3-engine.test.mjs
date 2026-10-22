@@ -1,0 +1,99 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {loadWorld} from '../tools/load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import '../server-plugin/primitives-runtime.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {auditLedger} from '../server-plugin/ledger.mjs';
+import {ActionRejection} from '../server-plugin/action-rejection.mjs';
+
+const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2.json','utf8'));
+const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'a3-fix3-engine');
+const rowFor=id=>structuredClone(corpus.find(row=>row.id===`A3V2-${id}`));
+const receiptOf=value=>value.result?.receipt??value.receipt;
+const coinsOf=document=>document.state.player.coins;
+const held=(document,item)=>{const row=document.state.inventory[item];return typeof row==='number'?row:row?.quantity??0;};
+
+// ---- 1. a priced lot is bought as quoted; the purse must cover its total (06 §6.10.4) ----
+test('A3-fix3 trade: the named agreed lot is bought whole; 3 coins against a 4 coin lot is a structured refusal with zero writes',async()=>{
+ const row=rowFor(122),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);
+ assert.deepEqual(setupUnmet,[]);assert.equal(coinsOf(document),3);
+ const before=structuredClone(document),input={tool:'world_propose',eventId:'fix3-buy-short',args:row.proposal};
+ const preview=receiptOf(await engine.previewAction(document,input));
+ assert.equal(preview.status,'rejected');assert.equal(preview.code,'E-ACTION-PRECONDITION');assert.equal(preview.routed,'core:trade.buy');
+ assert.match(preview.reason,/余额不足/);assert.deepEqual(preview.applied,[]);assert.ok(preview.missing.length&&preview.repair.length);
+ assert.equal(preview.routing.slots.quantity,2,'the lot size comes from the agreed quote, not from prose or the catalog default');
+ const committed=await engine.reduce(document,input);
+ assert.equal(committed.result.ok,false);assert.equal(receiptOf(committed).status,'rejected');assert.deepEqual(committed.patches,[]);
+ // The direct call with the routed slots refuses identically and writes nothing.
+ const direct=await engine.reduce(document,{tool:'world_act',eventId:'fix3-buy-short-direct',args:{action:'core:trade.buy',slots:preview.routing.slots}});
+ assert.equal(receiptOf(direct).status,'rejected');assert.deepEqual(direct.patches,[]);
+ assert.deepEqual(document,before);assert.equal(coinsOf(document),3);assert.deepEqual(auditLedger(document.ledger),[]);
+});
+
+test('A3-fix3 trade: with enough coins the same lot is sold whole at the quoted total and the ledger stays balanced',async()=>{
+ const row=rowFor(122);row.setup.coins=4;
+ const {document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
+ const before=structuredClone(document),input={tool:'world_propose',eventId:'fix3-buy-enough',args:row.proposal};
+ assert.equal(receiptOf(await engine.previewAction(document,input)).status,'preview');assert.deepEqual(document,before);
+ const out=await engine.reduce(document,input),after=applyPatches(document,out.patches);
+ assert.equal(receiptOf(out).status,'committed');
+ assert.equal(coinsOf(before)-coinsOf(after),4);assert.equal(held(after,'item_bread')-held(before,'item_bread'),2);
+ assert.deepEqual(auditLedger(after.ledger),[]);
+});
+
+// ---- 2. a capability the actor lacks is refused before any clarification ----
+test('A3-fix3 capability: an unlearned instant displacement is refused with a basis, not clarified; knowing the means or a source lifts the refusal',async()=>{
+ const row=rowFor(130),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
+ const before=structuredClone(document);
+ const refused=text=>engine.previewAction(document,{tool:'world_propose',eventId:'fix3-cap',args:{intent:text,effects:[]}});
+ for(const text of [row.proposal.intent,'马上把我瞬移到王都'])
+  await assert.rejects(refused(text),error=>error instanceof ActionRejection&&error.code==='E-ACTION-CAPABILITY'&&error.missing.length>0&&error.repair.some(line=>line.includes('core:move')));
+ assert.deepEqual(document,before);
+ // Same class of request without the capability word keeps its ordinary clarification.
+ const ordinary=receiptOf(await refused('我想了解一下附近的情况'));
+ assert.notEqual(ordinary?.code,'E-ACTION-CAPABILITY');
+ // A known spell of the declared mechanism lifts the refusal (the request then needs its normal slots).
+ const knowing=structuredClone(document);knowing.state.spells={...knowing.state.spells,spell_s1_anchor_cross:true};
+ const lifted=await refused(row.proposal.intent).then(value=>value,error=>error);
+ assert.ok(lifted instanceof ActionRejection);
+ const result=await engine.previewAction(knowing,{tool:'world_propose',eventId:'fix3-cap-known',args:{intent:row.proposal.intent,effects:[]}}).then(value=>value,error=>error);
+ assert.ok(!(result instanceof ActionRejection&&result.code==='E-ACTION-CAPABILITY'),'a known displacement spell is not a missing capability');
+ // A structured request is judged by its own effects, never by the words of its intent.
+ const structured=await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-cap-structured',args:{intent:'传送一件小东西',effects:[{op:'emit',verb:'tell',target:'npc_hw_linsui',visibility:'witnessed',payload:{kind:'tell',content:'你好'}}]}}).then(value=>value,error=>error);
+ assert.ok(!(result instanceof ActionRejection&&result.code==='E-ACTION-CAPABILITY'));
+ assert.ok(!(structured instanceof ActionRejection&&structured.code==='E-ACTION-CAPABILITY'));
+});
+
+// ---- 3. combat opponent identity is the creature record, not an id prefix ----
+test('A3-fix3 combat: an unowned creature record of a catalogued monster is an opponent whatever its id; an owned one is not',async()=>{
+ const row=rowFor(169),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
+ const id=row.proposal.means.opponent;assert.ok(!/^(monster_|boss_)/.test(id));
+ const preview=receiptOf(await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-combat',args:row.proposal}));
+ assert.equal(preview.status,'preview');assert.equal(preview.routed,'core:combat');
+ const owned=structuredClone(document);owned.state.creatures[id].owner='player';
+ const refused=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
+ assert.equal(refused.status,'rejected');assert.match(refused.reason,/不是交锋对象/);
+});
+
+// ---- 5. internal invariants are faults, business preconditions are refusals ----
+test('A3-fix3 boundary: a damaged stored record is thrown unchanged; a player-reachable precondition is a structured refusal',async()=>{
+ const row=rowFor(122);row.setup.coins=4;
+ const {document}=applyIntentSetup(engine,initial,row.setup);
+ const day=Math.floor(document.state.minute/1440);
+ // Internal invariant: a trade-quote ledger row that is not a quote. The player did nothing wrong.
+ const damaged=structuredClone(document);
+ damaged.state.records[`trade-quote:${day}:npc_hw_linsui:player:item_water`]={category:'not_a_quote'};
+ const bad={tool:'world_act',eventId:'fix3-damaged',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_water',quantity:1}}};
+ for(const run of [()=>engine.previewAction(damaged,bad),()=>engine.reduce(damaged,bad)])
+  await assert.rejects(run(),error=>error instanceof Error&&!(error instanceof ActionRejection)&&/当日报价账无效/.test(error.message));
+ // Business precondition: same action, the player simply cannot pay.
+ const poor=structuredClone(document);poor.state.player.coins=0;
+ const pay={tool:'world_act',eventId:'fix3-poor',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}}};
+ const refusal=receiptOf(await engine.previewAction(poor,pay));
+ assert.equal(refusal.status,'rejected');assert.equal(refusal.code,'E-ACTION-PRECONDITION');assert.ok(refusal.missing.length&&refusal.repair.length);
+ assert.deepEqual((await engine.reduce(poor,pay)).patches,[]);
+});

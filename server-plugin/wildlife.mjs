@@ -25,16 +25,16 @@ const alive=(a,d,id)=>a&&isLiving(null,d,id)&&a.hp>0;
 // source event; an absent consumer must never masquerade as an awakening.
 export function assertWildlifeAwakeningEffect(engine,effect){
     const consumer=engine.wildlifeAwakening;
-    if(typeof consumer?.validate!=='function'||typeof consumer?.apply!=='function')throw preconditionFailure('野兽觉醒效果未实现：需要 T160 wildlifeAwakening 消费者');
-    if(typeof effect.target!=='string'||!effect.target)throw preconditionFailure('野兽觉醒需要具体个体编号');
+    if(typeof consumer?.validate!=='function'||typeof consumer?.apply!=='function')throw Error('野兽觉醒效果未实现：需要 T160 wildlifeAwakening 消费者');
+    if(typeof effect.target!=='string'||!effect.target)throw Error('野兽觉醒需要具体个体编号');
     consumer.validate(engine,effect);
 }
 export function applyWildlifeAwakeningEffect(d,engine,effect,context){
     assertWildlifeAwakeningEffect(engine,effect);
     const actor=d.get('state','creatures',effect.target);
-    if(!alive(actor,d,effect.target)||!actor.species||!actor.ecology)throw preconditionFailure('野兽觉醒目标不是存活的生态个体');
+    if(!alive(actor,d,effect.target)||!actor.species||!actor.ecology)throw Error('野兽觉醒目标不是存活的生态个体');
     const result=engine.wildlifeAwakening.apply(d,engine,effect,context);
-    if(!result||typeof result.applied!=='boolean')throw preconditionFailure('野兽觉醒消费者缺少 applied 回执');
+    if(!result||typeof result.applied!=='boolean')throw Error('野兽觉醒消费者缺少 applied 回执');
     return result;
 }
 const random=(engine,seed,label)=>seededRandom(createHash('sha256').update(`${seed}:${canonical(engine.rules.wildlife)}:${label}`).digest().readUInt32LE(0));
@@ -147,8 +147,8 @@ export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
     // Ranges founded during this advance (tribal-awakening.mjs) join the day's settlement at once.
     for(const habitat of [...engine.rules.wildlife.habitats,...(engine.runtimeHabitats??[])]){
-        const r=clone(d.get(...path(habitat.id)));if(!r)throw preconditionFailure('生态记录未迁移');
-        if(r.lastDay!==day-1)throw preconditionFailure(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
+        const r=clone(d.get(...path(habitat.id)));if(!r)throw Error('生态记录未迁移');
+        if(r.lastDay!==day-1)throw Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
         const species=speciesAt(engine,habitat),forest=forestView(engine,lookState(d),habitat.location);
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
@@ -186,7 +186,7 @@ export function resolveCreature(engine,d,name){
 }
 export function recordWildlifeDeath(d,engine,target,eventId){
     const actor=d.get('state','creatures',target);if(!actor?.ecology||actor.corpse)return null;
-    const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw preconditionFailure('生态个体缺物种定义');
+    const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw Error('生态个体缺物种定义');
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
     const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
         items:clone(bone.drops)};holdingSet(d,null,['state','creatures',target,'corpse'],corpse,'wildlife');

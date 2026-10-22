@@ -21,8 +21,8 @@ export function magicStatusStats(d,target,context={}){
     for(const effect of Object.values(d.get('state','effects')??{})){
         if(effect.kind!=='status'||effect.target!==target||effect.expires<=d.get('state','minute'))continue;
         if(effect.remainingUses===0)continue;
-        if(['dazzle','illusion'].includes(effect.status)&&effect.remainingUses!==1)throw preconditionFailure('瞬时干扰剩余次数损坏');
-        const rule=magicStatuses[effect.status];if(!rule||!Number.isSafeInteger(effect.power)||effect.power<0||effect.power>rule.maximum)throw preconditionFailure('法术状态记录无效');
+        if(['dazzle','illusion'].includes(effect.status)&&effect.remainingUses!==1)throw Error('瞬时干扰剩余次数损坏');
+        const rule=magicStatuses[effect.status];if(!rule||!Number.isSafeInteger(effect.power)||effect.power<0||effect.power>rule.maximum)throw Error('法术状态记录无效');
         if(effect.status==='dazzle'&&context.eyesClosed!==false)continue;
         if(effect.status==='camouflage'&&(!['lit','dim'].includes(context.illumination)||typeof context.raining!=='boolean'||typeof context.moving!=='boolean'))continue;
         if(effect.status==='nightvision'&&context.illumination!=='dim')continue;
@@ -44,15 +44,15 @@ export function magicIlluminates(d){
         &&(!effect.targetInstance||d.get('state','itemInstances',effect.targetInstance,'owner')==='player'&&d.get('state','itemInstances',effect.targetInstance,'status')==='持有'));
 }
 export function relieveMagicStatuses(d,target,statuses,power){
- if(!Array.isArray(statuses)||statuses.some(s=>!['fear','compulsion'].includes(s))||!Number.isSafeInteger(power)||power<1||power>3)throw preconditionFailure('精神解除参数无效');
+ if(!Array.isArray(statuses)||statuses.some(s=>!['fear','compulsion'].includes(s))||!Number.isSafeInteger(power)||power<1||power>3)throw Error('精神解除参数无效');
  let remaining=power;const changes=[];
  const rows=Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='status'&&e.target===target&&e.expires>d.get('state','minute')&&statuses.includes(e.status)).sort(([a],[b])=>a.localeCompare(b));
- for(const[id,e]of rows){if(!remaining)break;const rule=magicStatuses[e.status];if(!rule||!Number.isSafeInteger(e.power)||e.power<0||e.power>rule.maximum)throw preconditionFailure('解除目标状态记录损坏');const relieved=Math.min(remaining,e.power);remaining-=relieved;if(relieved===e.power)d.remove(['state','effects',id]);else d.set(['state','effects',id,'power'],e.power-relieved);changes.push({effect:id,relieved});}
+ for(const[id,e]of rows){if(!remaining)break;const rule=magicStatuses[e.status];if(!rule||!Number.isSafeInteger(e.power)||e.power<0||e.power>rule.maximum)throw Error('解除目标状态记录损坏');const relieved=Math.min(remaining,e.power);remaining-=relieved;if(relieved===e.power)d.remove(['state','effects',id]);else d.set(['state','effects',id,'power'],e.power-relieved);changes.push({effect:id,relieved});}
  return{target,relieved:power-remaining,changes};
 }
 export function applyMagicStatus(d,{target,status,power,duration,source,spell},id){
  const rule=magicStatuses[status];
- if(!rule||!Number.isSafeInteger(power)||power<1||power>rule.maximum||!Number.isSafeInteger(duration)||duration<1||duration>43200||['dazzle','illusion'].includes(status)&&duration!==1)throw preconditionFailure('状态原语参数无效');
+ if(!rule||!Number.isSafeInteger(power)||power<1||power>rule.maximum||!Number.isSafeInteger(duration)||duration<1||duration>43200||['dazzle','illusion'].includes(status)&&duration!==1)throw Error('状态原语参数无效');
  if(d.get('state','effects',id))throw preconditionFailure('状态事件重复');
  if(['fear','illusion','compulsion'].includes(status))power=Math.max(0,Math.round(power*(1-magicStatusStats(d,target).mindResistance)));
  if(!power)return{target,resisted:true};
@@ -65,7 +65,7 @@ export function consumeTransientMagic(d,target,context={}){
  for(const[id,e]of Object.entries(d.get('state','effects')??{})){
   if(e.kind!=='status'||e.target!==target||e.expires<=d.get('state','minute')||!['dazzle','illusion'].includes(e.status))continue;
   if(e.status==='dazzle'&&context.eyesClosed!==false)continue;
-  if(e.remainingUses!==1&&e.remainingUses!==0)throw preconditionFailure('瞬时干扰剩余次数损坏');
+  if(e.remainingUses!==1&&e.remainingUses!==0)throw Error('瞬时干扰剩余次数损坏');
   if(e.remainingUses===1){d.set(['state','effects',id,'remainingUses'],0);consumed.push(id);}
  }
  return consumed;

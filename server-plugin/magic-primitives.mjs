@@ -79,7 +79,7 @@ export function consumeMagicProtection(d,target,amount,damageType='physical'){
    }
   }
   const errors=validateEffectSpec({kind:'protection',power:e.power,damageTypes:e.damageTypes,stacking:e.stacking});
-  if(errors.length||!Number.isSafeInteger(e.expires)||!Number.isSafeInteger(e.remaining)||e.remaining<0||e.remaining>e.power)throw preconditionFailure('防护记录损坏，拒绝错误抵扣');
+  if(errors.length||!Number.isSafeInteger(e.expires)||!Number.isSafeInteger(e.remaining)||e.remaining<0||e.remaining>e.power)throw Error('防护记录损坏，拒绝错误抵扣');
   if(e.remaining>0&&e.damageTypes.includes(damageType))available.push({...e,id});
  }
  available.sort((a,b)=>b.remaining-a.remaining||a.expires-b.expires||a.id.localeCompare(b.id));

@@ -225,7 +225,7 @@ export function questBoardAction(d,engine,args,eventId){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw preconditionFailure('没有获知该委托进度的渠道');
   return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
  }
- if(q.snapshotVersion)throw preconditionFailure('历史任务快照缺少变更或重复结算所需的目标、期限与报酬来源');
+ if(q.snapshotVersion)throw Error('历史任务快照缺少变更或重复结算所需的目标、期限与报酬来源');
  if(args.operation==='cancel'){
   if(![q.publisher,q.taker].includes('player'))throw preconditionFailure('只有委托当事人能取消');
   if(!active(q))throw preconditionFailure('任务不在可取消状态');

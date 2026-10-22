@@ -34,7 +34,7 @@ const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const effects=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='mind_space'&&(!op||e.operation===op));
 export function mindSpaceState(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('心契空间对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('心契空间对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const storeState=(d,row,state)=>d.set(['state','records',key(row.id)],{category:'physical_feature',id:row.id,location:row.location,state});
@@ -85,11 +85,11 @@ function unit(d,engine,id){
 function contents(d,engine,row,s){
  if(row.kind!=='container'||!Array.isArray(s.contents))throw preconditionFailure('需要实际袋内单件清单');
  number(s.capacityKg,.01,5000,'袋内容量');
- if(new Set(s.contents).size!==s.contents.length)throw preconditionFailure('袋内单件重复');
+ if(new Set(s.contents).size!==s.contents.length)throw Error('袋内单件重复');
  let weight=0;
  const rows=s.contents.map(id=>{
   const u=unit(d,engine,id);
-  if(u.status!=='袋内'||u.container!==row.id)throw preconditionFailure('袋内归属与清单不符');
+  if(u.status!=='袋内'||u.container!==row.id)throw Error('袋内归属与清单不符');
   weight+=u.weight;return u;
  });
  if(weight>s.capacityKg)throw preconditionFailure('袋内物品超过实际容量');return rows;

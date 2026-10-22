@@ -38,7 +38,7 @@ function animal(d, engine, name, { owned = false, owner = 'player', location = d
     const species = definition?.monster ? engine.byId.get(definition.monster) : definition;
     const rule = definition?.tamingRule ?? species?.tamingRule;
     if (!actor || !rule || !engine.rules.petCare) throw preconditionFailure('没有已登记的动物实例或驯养规则');
-    if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw preconditionFailure('动物健康或等级记录无效');
+    if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw Error('动物健康或等级记录无效');
     if (actor.location !== location) throw preconditionFailure('动物不在场');
     if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw preconditionFailure('动物已经死亡，照料不能复活');
     if (actor.owner && actor.owner !== owner) throw preconditionFailure('动物已有其他所有者，不能擅自操作');

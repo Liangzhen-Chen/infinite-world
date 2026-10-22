@@ -62,7 +62,7 @@ export function prepareSummon(d, catalog, args, {completion=false}={}) {
     }
     const template=summonTemplates[catalog.effectSpec.summonType];
     const proficiency=d.get('state','skills',catalog.skill,'proficiency')??0;
-    if(!Number.isSafeInteger(proficiency)||proficiency<0||proficiency>2699)throw preconditionFailure('召唤熟练度记录无效');
+    if(!Number.isSafeInteger(proficiency)||proficiency<0||proficiency>2699)throw Error('召唤熟练度记录无效');
     const medium=template.waterOnly?waterSite(d,this,args.target,args.authorization):template.work?prepareSummonWork.call(this,d,catalog,args,{completion}):{};
     if (!template.work&&!template.waterOnly&&!['player', d.get('state', 'location')].includes(args.target ?? 'player')) throw preconditionFailure('只能在施术者当前位置召唤');
     const count = Object.values(d.get('state', 'effects')).filter(effect => effect.kind === 'summon' && effect.owner === 'player').length;
@@ -77,7 +77,7 @@ export function applySummon(d, prepared, eventId) {
     if(spec.kind==='summon_contract'){
       if(spec.operation!=='extend')return summonAction.call(this,d,{operation:spec.operation,summon:prepared.target},eventId);
       const effect=d.get('state','effects',prepared.target),record=d.get('state','records',effect.contract);
-      if(record?.category!=='summon_contract'||record.effect!==prepared.target)throw preconditionFailure('续约记录不一致');
+      if(record?.category!=='summon_contract'||record.effect!==prepared.target)throw Error('续约记录不一致');
       this.itemDelta(d,'player',spec.offering.item,-spec.offering.amount,{flow:'sink:consume',purpose:'offering',writer:'summons',eventId});
       const expires=effect.expires+spec.power;
       d.set(['state','effects',prepared.target,'expires'],expires);
@@ -102,7 +102,7 @@ export function applySummon(d, prepared, eventId) {
 
 function end(d, id, effect, status, minute) {
     const record = d.get('state', 'records', effect.contract);
-    if (record?.category !== 'summon_contract' || record.effect !== id || record.owner !== effect.owner) throw preconditionFailure('召唤契约记录不一致，停止结算');
+    if (record?.category !== 'summon_contract' || record.effect !== id || record.owner !== effect.owner) throw Error('召唤契约记录不一致，停止结算');
     if(record.upkeepObligation)endSummonUpkeep(d,d.engine,{id:record.upkeepObligation,summon:id,minute,reason:status});
     d.set(['state', 'records', effect.contract], { ...record, status, ended: minute });
     for(const[key,e]of Object.entries(d.get('state','effects')))if(e.summonSource===id)d.remove(['state','effects',key]);

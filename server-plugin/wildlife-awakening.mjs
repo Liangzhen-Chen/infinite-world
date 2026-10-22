@@ -98,8 +98,8 @@ export function validateWildlifeAwakening(world){
 // T109 世界/势力时钟的觉醒效果：只作用于已存在的个体，阶段代价由时钟事务负责回滚。
 export const wildlifeAwakeningConsumer=Object.freeze({
     validate(engine,effect){
-        if(!engine.rules.wildlifeAwakening)throw preconditionFailure('当前世界未启用开灵规则，不能推进觉醒效果');
-        if(effect.points!==undefined&&!(Number.isSafeInteger(effect.points)&&effect.points>=1&&effect.points<=100))throw preconditionFailure('觉醒效果点数无效');
+        if(!engine.rules.wildlifeAwakening)throw Error('当前世界未启用开灵规则，不能推进觉醒效果');
+        if(effect.points!==undefined&&!(Number.isSafeInteger(effect.points)&&effect.points>=1&&effect.points<=100))throw Error('觉醒效果点数无效');
     },
     apply(d,engine,effect,context){
         const id=effect.target,actor=d.get('state','creatures',id),minute=context.minute,day=Math.floor(minute/DAY);

@@ -34,7 +34,7 @@ function moveHouse(d,e,id,destination,eventId){
  holdingSet(d,null,['state','npcs',id,'residence'],{household:destination.id,settlement:destination.settlement,home:destination.homeLocation,since:s.minute,sourceEvent:eventId,schedule:remap(routine)},'family-politics');
  holdingSet(d,null,['state','npcs',id,'location'],destination.homeLocation,'family-politics');
  if(from.settlement!==destination.settlement)for(const [sid,delta]of [[from.settlement,-1],[destination.settlement,1]]){
-  const n=d.get('state','settlements',sid,'population');if(!Number.isSafeInteger(n)||n+delta<0)throw preconditionFailure('迁居人口账不可用');d.set(['state','settlements',sid,'population'],n+delta);
+  const n=d.get('state','settlements',sid,'population');if(!Number.isSafeInteger(n)||n+delta<0)throw Error('迁居人口账不可用');d.set(['state','settlements',sid,'population'],n+delta);
  }
  entityTransition(d,e,{id:`${eventId}:move:${id}`,verb:'migrate',actor:id,location:destination.homeLocation,tags:['family'],previousHousehold:from.id,household:destination.id,summary:'当事人迁出原户并登记进入新户'});
 }

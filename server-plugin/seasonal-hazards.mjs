@@ -44,7 +44,7 @@ const shiftKey=context=>context.clock??context.sourceEvent;
 
 // ---- Effect kinds -----------------------------------------------------------
 registerEffect('route_closure',{
- validate(engine,e){if(!Array.isArray(e.routes)||!e.routes.length||e.routes.some(id=>!engine.world.routes.some(r=>r.id===id))||!int(e.minutes,1,90*DAY))throw preconditionFailure('封路效果路线或时长无效');},
+ validate(engine,e){if(!Array.isArray(e.routes)||!e.routes.length||e.routes.some(id=>!engine.world.routes.some(r=>r.id===id))||!int(e.minutes,1,90*DAY))throw Error('封路效果路线或时长无效');},
  // The closure itself is read from the seeded stage history (hazardRouteClosed),
  // so route planning, NPC walks and replays agree; this keeps the public notice.
  apply(d,engine,e,context){
@@ -53,7 +53,7 @@ registerEffect('route_closure',{
  },
 });
 registerEffect('flood',{
- validate(engine,e){if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!locationKnown(engine,id))||!int(e.minutes,1,90*DAY))throw preconditionFailure('受淹效果地点或时长无效');},
+ validate(engine,e){if(!Array.isArray(e.locations)||!e.locations.length||e.locations.some(id=>!locationKnown(engine,id))||!int(e.minutes,1,90*DAY))throw Error('受淹效果地点或时长无效');},
  apply(d,engine,e,context){
   const soaked=[];
   for(const b of allFacilities(engine,d.get('state')))if(e.locations.some(id=>facilityWithin(engine,d.get('state'),b.id,id)))applyInteraction(d,engine,{agent:'flood',target:b.id,minute:context.minute,sourceEvent:context.sourceEvent});
@@ -64,7 +64,7 @@ registerEffect('flood',{
  },
 });
 registerEffect('crop_damage',{
- validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.percent,1,90)||!int(e.minutes,1,360*DAY)||e.cause!==undefined&&!CAUSES.includes(e.cause))throw preconditionFailure('减产效果地点、比例、时长或成因无效');},
+ validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.percent,1,90)||!int(e.minutes,1,360*DAY)||e.cause!==undefined&&!CAUSES.includes(e.cause))throw Error('减产效果地点、比例、时长或成因无效');},
  apply(d,engine,e,context){
   const ledger=d.get('state','settlements',e.settlement);if(!ledger)return {applied:false,reason:'受灾聚落没有钱粮账'};
   // U10: this season's irrigation (magic-economy) absorbs part of a drought.
@@ -88,8 +88,8 @@ registerEffect('crop_damage',{
 });
 registerEffect('price_shift',{
  validate(engine,e){
-  if(!locationKnown(engine,e.settlement)||!(Number.isFinite(e.factor)&&e.factor>=0.5&&e.factor<=3)||!int(e.minutes,1,360*DAY))throw preconditionFailure('物价波动地点、倍率或时长无效');
-  if(e.items!==undefined&&(!Array.isArray(e.items)||!e.items.length||e.items.some(id=>!engine.world.items.some(i=>i.id===id))))throw preconditionFailure('物价波动物品未登记');
+  if(!locationKnown(engine,e.settlement)||!(Number.isFinite(e.factor)&&e.factor>=0.5&&e.factor<=3)||!int(e.minutes,1,360*DAY))throw Error('物价波动地点、倍率或时长无效');
+  if(e.items!==undefined&&(!Array.isArray(e.items)||!e.items.length||e.items.some(id=>!engine.world.items.some(i=>i.id===id))))throw Error('物价波动物品未登记');
  },
  apply(d,engine,e,context){
   const key=`hazard-price:${e.settlement}`,old=d.get('state','records',key);
@@ -100,7 +100,7 @@ registerEffect('price_shift',{
  },
 });
 registerEffect('famine',{
- validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.minutes,1,360*DAY))throw preconditionFailure('饥荒效果地点或时长无效');},
+ validate(engine,e){if(!locationKnown(engine,e.settlement)||!int(e.minutes,1,360*DAY))throw Error('饥荒效果地点或时长无效');},
  apply(d,engine,e,context){
   if(!d.get('state','settlements',e.settlement))return {applied:false,reason:'受灾聚落没有钱粮账'};
   d.set(['state','records',`hazard-famine:${e.settlement}`],{category:'hazard_famine',settlement:e.settlement,since:context.minute,until:context.minute+e.minutes,clock:context.clock??null,sourceEvent:context.sourceEvent});
@@ -109,7 +109,7 @@ registerEffect('famine',{
 });
 const housesIn=(engine,settlement)=>(engine.world.households??[]).filter(h=>h.settlement===settlement).map(h=>h.id).sort();
 registerEffect('epidemic',{
- validate(engine,e){if(!diseaseOf(engine,e.disease)||!locationKnown(engine,e.settlement)||!int(e.cases,1,10))throw preconditionFailure('疫病效果病名、地点或病例数无效');},
+ validate(engine,e){if(!diseaseOf(engine,e.disease)||!locationKnown(engine,e.settlement)||!int(e.cases,1,10))throw Error('疫病效果病名、地点或病例数无效');},
  apply(d,engine,e,context){
   const year=yearOf(context.minute),key=epidemicKey(shiftKey(context),year),seed=d.document.randomSeed,day=context.minute/DAY;
   if(d.get('state','records',key))return {applied:false,reason:'本年疫病已经起过'};
@@ -124,7 +124,7 @@ registerEffect('epidemic',{
  },
 });
 registerEffect('epidemic_measure',{
- validate(engine,e){if(!MEASURES.includes(e.measure)||!table(engine)?.measures?.[e.measure]||!int(e.minutes,1,90*DAY))throw preconditionFailure('防疫办法或时长无效');},
+ validate(engine,e){if(!MEASURES.includes(e.measure)||!table(engine)?.measures?.[e.measure]||!int(e.minutes,1,90*DAY))throw Error('防疫办法或时长无效');},
  apply(d,engine,e,context){
   const key=epidemicKey(shiftKey(context),yearOf(context.minute)),ep=structuredClone(d.get('state','records',key)??null);
   if(ep?.category!=='epidemic'||ep.status!=='流行')return {applied:false,reason:'眼下没有正在流行的疫病'};
@@ -145,45 +145,45 @@ registerEffect('epidemic_measure',{
 
 // ---- Rules ------------------------------------------------------------------
 function assertCondition(engine,r,c,ids,nested=false){
- if(!CONDITIONS.includes(c?.kind)||nested&&c.kind==='all')throw preconditionFailure(`灾害时钟条件无效：${r.id}`);
- if(c.kind==='all'&&(!Array.isArray(c.conditions)||c.conditions.length<2))throw preconditionFailure(`灾害时钟组合条件无效：${r.id}`);
+ if(!CONDITIONS.includes(c?.kind)||nested&&c.kind==='all')throw Error(`灾害时钟条件无效：${r.id}`);
+ if(c.kind==='all'&&(!Array.isArray(c.conditions)||c.conditions.length<2))throw Error(`灾害时钟组合条件无效：${r.id}`);
  for(const x of c.conditions??[])assertCondition(engine,r,x,ids,true);
- if(c.kind==='weather'&&(!Array.isArray(c.kinds)||!c.kinds.length||c.kinds.some(k=>!WEATHER.includes(k))||c.location!==undefined&&!locationKnown(engine,c.location)))throw preconditionFailure(`灾害时钟天气条件无效：${r.id}`);
- if(c.kind==='granary_short'&&!int(c.days,1,3600))throw preconditionFailure(`灾害时钟存粮条件无效：${r.id}`);
- if(c.kind==='hazard_phase'&&(!ids.has(c.clock)||c.clock===r.id||!int(c.minimum,1,20)))throw preconditionFailure(`灾害时钟前置时钟无效：${r.id}`);
- if(['epidemic_cases','epidemic_clear'].includes(c.kind)&&(r.kind!=='epidemic'||c.kind==='epidemic_cases'&&!int(c.minimum,1,1000)))throw preconditionFailure(`疫情条件只用于疫病时钟：${r.id}`);
+ if(c.kind==='weather'&&(!Array.isArray(c.kinds)||!c.kinds.length||c.kinds.some(k=>!WEATHER.includes(k))||c.location!==undefined&&!locationKnown(engine,c.location)))throw Error(`灾害时钟天气条件无效：${r.id}`);
+ if(c.kind==='granary_short'&&!int(c.days,1,3600))throw Error(`灾害时钟存粮条件无效：${r.id}`);
+ if(c.kind==='hazard_phase'&&(!ids.has(c.clock)||c.clock===r.id||!int(c.minimum,1,20)))throw Error(`灾害时钟前置时钟无效：${r.id}`);
+ if(['epidemic_cases','epidemic_clear'].includes(c.kind)&&(r.kind!=='epidemic'||c.kind==='epidemic_cases'&&!int(c.minimum,1,1000)))throw Error(`疫情条件只用于疫病时钟：${r.id}`);
 }
 const checked=new WeakSet();
 export function assertHazardRules(engine){
  const t=table(engine);if(!t||checked.has(t))return;
- if(t.version!==1||!t.source||!Array.isArray(t.clocks)||!Array.isArray(t.diseases??[])||typeof (t.measures??{})!=='object')throw preconditionFailure('灾害时钟规则版本无效');
+ if(t.version!==1||!t.source||!Array.isArray(t.clocks)||!Array.isArray(t.diseases??[])||typeof (t.measures??{})!=='object')throw Error('灾害时钟规则版本无效');
  const diseases=new Set();
  for(const x of t.diseases??[]){
-  if(!x.id||diseases.has(x.id)||!x.name||!x.symptoms||!ROUTES.includes(x.route)||!span(x.incubationDays)||!span(x.courseDays)||!(Number.isFinite(x.householdRate)&&x.householdRate>=0&&x.householdRate<=10)||!share(x.routeRate)||!share(x.graveShare)||!share(x.fatality?.cared)||!share(x.fatality?.alone)||x.fatality.cared>x.fatality.alone)throw preconditionFailure(`疫病登记无效：${x.id}`);
+  if(!x.id||diseases.has(x.id)||!x.name||!x.symptoms||!ROUTES.includes(x.route)||!span(x.incubationDays)||!span(x.courseDays)||!(Number.isFinite(x.householdRate)&&x.householdRate>=0&&x.householdRate<=10)||!share(x.routeRate)||!share(x.graveShare)||!share(x.fatality?.cared)||!share(x.fatality?.alone)||x.fatality.cared>x.fatality.alone)throw Error(`疫病登记无效：${x.id}`);
   diseases.add(x.id);
  }
- for(const [k,m] of Object.entries(t.measures??{}))if(!MEASURES.includes(k)||Object.entries(m).some(([f,v])=>f==='routes'?!Array.isArray(v)||v.some(r=>!ROUTES.includes(r)):!(Number.isFinite(v)&&v>0&&v<=1)))throw preconditionFailure(`防疫办法无效：${k}`);
- const ids=new Set(t.clocks.map(r=>r.id));if(ids.size!==t.clocks.length)throw preconditionFailure('灾害时钟编号重复');
+ for(const [k,m] of Object.entries(t.measures??{}))if(!MEASURES.includes(k)||Object.entries(m).some(([f,v])=>f==='routes'?!Array.isArray(v)||v.some(r=>!ROUTES.includes(r)):!(Number.isFinite(v)&&v>0&&v<=1)))throw Error(`防疫办法无效：${k}`);
+ const ids=new Set(t.clocks.map(r=>r.id));if(ids.size!==t.clocks.length)throw Error('灾害时钟编号重复');
  for(const r of t.clocks){
-  if(!r.id||!KINDS.includes(r.kind)||!r.name||!locationKnown(engine,r.settlement)||!Array.isArray(r.seasons)||!r.seasons.length||r.seasons.some((s,i)=>!int(s,0,3)||i&&s!==r.seasons[i-1]+1)||!int(r.intervalDays,1,90)||!Array.isArray(r.stages)||!r.stages.length)throw preconditionFailure(`灾害时钟地点、季节或间隔无效：${r.id}`);
-  if(r.kind==='epidemic'&&(!diseases.has(r.disease)||!Array.isArray(r.spread?.routes)||r.spread.routes.some(id=>!engine.world.routes.some(e=>e.id===id))))throw preconditionFailure(`疫病时钟病名或传播路线无效：${r.id}`);
+  if(!r.id||!KINDS.includes(r.kind)||!r.name||!locationKnown(engine,r.settlement)||!Array.isArray(r.seasons)||!r.seasons.length||r.seasons.some((s,i)=>!int(s,0,3)||i&&s!==r.seasons[i-1]+1)||!int(r.intervalDays,1,90)||!Array.isArray(r.stages)||!r.stages.length)throw Error(`灾害时钟地点、季节或间隔无效：${r.id}`);
+  if(r.kind==='epidemic'&&(!diseases.has(r.disease)||!Array.isArray(r.spread?.routes)||r.spread.routes.some(id=>!engine.world.routes.some(e=>e.id===id))))throw Error(`疫病时钟病名或传播路线无效：${r.id}`);
   const stages=new Set();
   for(const s of r.stages){
    const c=s.condition;
-   if(!s.id||stages.has(s.id)||!s.name||!share(s.probability)||!CONDITIONS.includes(c?.kind)||!Array.isArray(s.effects)||!s.effects.length)throw preconditionFailure(`灾害时钟阶段无效：${r.id}/${s.id}`);
+   if(!s.id||stages.has(s.id)||!s.name||!share(s.probability)||!CONDITIONS.includes(c?.kind)||!Array.isArray(s.effects)||!s.effects.length)throw Error(`灾害时钟阶段无效：${r.id}/${s.id}`);
    stages.add(s.id);
    assertCondition(engine,r,c,ids);
    for(const e of s.effects){
     assertEffect(engine,e,'world');
-    if(e.kind==='route_closure'&&!isPureClock(r))throw preconditionFailure(`封路只能由纯天气与概率推进的时钟触发：${r.id}`);
-    if(e.kind==='epidemic'&&r.kind!=='epidemic')throw preconditionFailure(`疫病只能由疫病时钟引发：${r.id}`);
+    if(e.kind==='route_closure'&&!isPureClock(r))throw Error(`封路只能由纯天气与概率推进的时钟触发：${r.id}`);
+    if(e.kind==='epidemic'&&r.kind!=='epidemic')throw Error(`疫病只能由疫病时钟引发：${r.id}`);
    }
   }
   const choices=new Set();
   for(const a of r.interventions??[]){
    if(r.kind!=='epidemic'||!a.id||choices.has(a.id)||!a.name||!MEASURES.includes(a.measure)||!Array.isArray(a.phases)||!a.phases.length||a.phases.some(p=>!int(p,1,r.stages.length))||!locationKnown(engine,a.location)||!int(a.minutes,1,720)
     ||a.representative!==undefined&&!engine.world.npcs.some(n=>n.id===a.representative)||a.spell!==undefined&&!engine.world.spells?.some(s=>s.id===a.spell)
-    ||Object.entries(a.cost??{}).some(([k,v])=>!['coins','mp'].includes(k)||!int(v,0,100000))||a.difficulty!==undefined&&(!int(a.difficulty,1,40)||!engine.rules.attributes.includes(a.attribute))||!Array.isArray(a.effects)||!a.effects.length)throw preconditionFailure(`灾害干预办法无效：${r.id}/${a.id}`);
+    ||Object.entries(a.cost??{}).some(([k,v])=>!['coins','mp'].includes(k)||!int(v,0,100000))||a.difficulty!==undefined&&(!int(a.difficulty,1,40)||!engine.rules.attributes.includes(a.attribute))||!Array.isArray(a.effects)||!a.effects.length)throw Error(`灾害干预办法无效：${r.id}/${a.id}`);
    choices.add(a.id);for(const e of a.effects)assertEffect(engine,e,'world');
   }
  }
@@ -207,7 +207,7 @@ function conditionMet(d,engine,rule,c,at){
  case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:value>=c.minimum,value,evidence:hazardKey(c.clock)};}
  case 'epidemic_cases':{const ep=state.records?.[epidemicKey(rule.id,year)],value=ep?Object.keys(ep.households).length:0;return {met:value>=c.minimum,value,evidence:ep?.id??null};}
  case 'epidemic_clear':{const ep=state.records?.[epidemicKey(rule.id,year)];return {met:ep?.status==='平息',value:ep?.status??null,evidence:ep?.id??null};}
- default:throw preconditionFailure(`灾害时钟不支持条件：${c.kind}`);
+ default:throw Error(`灾害时钟不支持条件：${c.kind}`);
  }
 }
 // Stages passed this year. A pure clock is read from its seeded history so

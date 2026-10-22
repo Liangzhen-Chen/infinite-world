@@ -188,7 +188,7 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
     const key=`employment_pay:${row.id}:${at}`,previous=d.get(...rec(key));
     if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw preconditionFailure('同次工时结算事实不一致');return previous.result;}
     const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
-    if(!Number.isSafeInteger(total))throw preconditionFailure('累计工钱超出整数范围');
+    if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
     const earned=Math.ceil(total/480)-Math.ceil(units/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
     if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);

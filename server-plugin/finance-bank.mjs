@@ -41,7 +41,7 @@ export function financeBalance(d,e,id){
 }
 // S1a: books = 账本对方账户（money.bookSide），成对的另一边已记账时传 BOOKED。
 export function financeChange(d,e,id,delta,sourceEvent,books){
-    if(!Number.isSafeInteger(delta))throw preconditionFailure('资金变化无效');
+    if(!Number.isSafeInteger(delta))throw Error('资金变化无效');
     const balance=financeBalance(d,e,id)+delta;if(!Number.isSafeInteger(balance)||balance<0)throw preconditionFailure('当事人资金不足');
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
     bookSide(d,partyAccount(e,d.get('state'),id),delta,books);

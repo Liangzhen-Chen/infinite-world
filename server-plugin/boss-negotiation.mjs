@@ -41,20 +41,20 @@ export function readBossNegotiation(actor){
         if(Object.keys(n.inventory??{}).length)throw preconditionFailure('居民首领不能有第二份谈判库存');
         n={...n,inventory:Object.fromEntries(Object.entries(actor.inventory??{}).map(([id,v])=>[id,typeof v==='number'?{quantity:v}:v]).filter(([,v])=>v.quantity!==0))};
     }
-    if(!plain(n)||n.format!==1||!plain(n.inventory)||!Array.isArray(n.history))throw preconditionFailure('首领谈判记录格式损坏，拒绝覆盖');
+    if(!plain(n)||n.format!==1||!plain(n.inventory)||!Array.isArray(n.history))throw Error('首领谈判记录格式损坏，拒绝覆盖');
     for(const [id,held]of Object.entries(n.inventory)){
         if(!id||!plain(held)||!Number.isSafeInteger(held.quantity)||held.quantity<=0||held.instances!==undefined&&(!Array.isArray(held.instances)||
-            held.instances.length>held.quantity||new Set(held.instances).size!==held.instances.length||held.instances.some(id=>typeof id!=='string'||!id)))throw preconditionFailure('首领谈判库存损坏，拒绝覆盖');
+            held.instances.length>held.quantity||new Set(held.instances).size!==held.instances.length||held.instances.some(id=>typeof id!=='string'||!id)))throw Error('首领谈判库存损坏，拒绝覆盖');
     }
     const ids=new Set();
     for(const h of n.history){
         if(!plain(h)||typeof h.event!=='string'||!h.event||ids.has(h.event)||!Number.isSafeInteger(h.minute)||h.minute<0||
-            !validTerms(h.terms)||typeof h.accepted!=='boolean'||typeof h.reason!=='string'||!h.reason)throw preconditionFailure('首领谈判历史损坏，拒绝覆盖');
+            !validTerms(h.terms)||typeof h.accepted!=='boolean'||typeof h.reason!=='string'||!h.reason)throw Error('首领谈判历史损坏，拒绝覆盖');
         ids.add(h.event);
     }
     if(n.relation!==null){
         const r=n.relation,h=n.history.find(h=>h.event===r?.event);
-        if(!plain(r)||!pacts.has(r.pact)||typeof r.alliance!=='boolean'||!h?.accepted||r.pact!==h.terms.pact||r.alliance!==h.terms.alliance)throw preconditionFailure('首领关系记录损坏，拒绝覆盖');
+        if(!plain(r)||!pacts.has(r.pact)||typeof r.alliance!=='boolean'||!h?.accepted||r.pact!==h.terms.pact||r.alliance!==h.terms.alliance)throw Error('首领关系记录损坏，拒绝覆盖');
     }
     return n;
 }

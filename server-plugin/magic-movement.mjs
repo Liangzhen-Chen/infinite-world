@@ -52,7 +52,7 @@ function clearSpace(d,engine,location,from,to){
  if(engine.byId.get(location)?.access?.spaceBlocked===true)throw preconditionFailure('所在地存在空间封锁');
  for(const row of environmentFeatures(engine).filter(r=>r.location===location)){
   const s=stateOf(d,row);if(!s?.blocksSpace&&!s?.blocksMovement)continue;
-  if(!validPoint(row.position)||!Number.isFinite(s.blockRadiusMeters)||s.blockRadiusMeters<0)throw preconditionFailure('空间障碍范围未知');
+  if(!validPoint(row.position)||!Number.isFinite(s.blockRadiusMeters)||s.blockRadiusMeters<0)throw Error('空间障碍范围未知');
   const dx=to[0]-from[0],dy=to[1]-from[1],length=dx*dx+dy*dy;
   const t=length?Math.max(0,Math.min(1,((row.position[0]-from[0])*dx+(row.position[1]-from[1])*dy)/length)):0;
   if(distance(row.position,[from[0]+t*dx,from[1]+t*dy])<=s.blockRadiusMeters)throw preconditionFailure('墙体或空间封锁阻断位移');
@@ -61,11 +61,11 @@ function clearSpace(d,engine,location,from,to){
 function loadOf(d,engine,companions){
  // Body mass uses the existing travel rule; unknown item mass cannot count as zero.
  const mass=engine.rules.petCare?.riderWeightKg??70;
- if(!Number.isFinite(mass)||mass<=0)throw preconditionFailure('角色载荷规则未知');
+ if(!Number.isFinite(mass)||mass<=0)throw Error('角色载荷规则未知');
  let total=mass*(companions.length+1);
  for(const inventory of [d.get('state','inventory'),...companions.map(id=>d.get('state','npcs',id,'inventory'))])for(const[id,entry]of Object.entries(inventory??{})){
   const quantity=typeof entry==='number'?entry:entry.quantity,weight=engine.byId.get(id)?.weight;
-  if(!Number.isSafeInteger(quantity)||quantity<0||!Number.isFinite(weight)||weight<0)throw preconditionFailure('载荷物品重量或数量未知');
+  if(!Number.isSafeInteger(quantity)||quantity<0||!Number.isFinite(weight)||weight<0)throw Error('载荷物品重量或数量未知');
   total+=quantity*weight;
  }
  return total;

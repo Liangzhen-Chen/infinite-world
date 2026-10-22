@@ -7,7 +7,7 @@ const evalValue=(value,v)=>typeof value==='function'?value(v):value;
 function applies(c,v){
  const p=c.applicability;if(typeof p==='function')return Boolean(p(v));
  if(!p)return true;
- if(typeof p!=='object')throw preconditionFailure('自治候选需使用主观字段条件');
+ if(typeof p!=='object')throw Error('自治候选需使用主观字段条件');
  return subjectiveFact(v,p.fact)?.value===p.equals;
 }
 export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[]}={}){
@@ -21,8 +21,8 @@ export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[]}={}){
 }
 // `via` submits a candidate; it never executes a caller's scheduled command.
 export function scheduleNpcAutonomy(d,{npc,action,slots={},via,need='need:curiosity',utility=0,risk=0,horizon=1,steps,deadline},id){
- if(via!=='npc-autonomy')throw preconditionFailure('NPC 自主候选须经 via: npc-autonomy');
- if(!d.get('state','npcs',npc))throw preconditionFailure('自治人物不存在');
+ if(via!=='npc-autonomy')throw Error('NPC 自主候选须经 via: npc-autonomy');
+ if(!d.get('state','npcs',npc))throw Error('自治人物不存在');
  const candidate={id,npc,action,slots:structuredClone(slots),need,utility,risk,horizon,...(steps?{steps:structuredClone(steps)}:{}),...(deadline!==undefined?{deadline}:{})};
  d.set(['state','autonomyCandidates',id],candidate);return {candidate,status:'待决策'};
 }

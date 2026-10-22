@@ -142,7 +142,7 @@ function feature(engine,name,location,document){
 }
 const stateOf=(d,row)=>{
     const record=d.get('state','records',key(row.id));
-    if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw preconditionFailure('环境动态状态的登记键发生冲突，拒绝覆盖');
+    if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw Error('环境动态状态的登记键发生冲突，拒绝覆盖');
     return record?.state??row.state;
 };
 const store=(d,row,state)=>{if(state.waterMl!==undefined)reconcileContainerWater(d,row.id,state.waterMl);d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});};

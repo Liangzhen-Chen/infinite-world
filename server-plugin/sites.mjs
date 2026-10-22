@@ -38,7 +38,7 @@ function putSite(d,engine,place,row,{to=null,eventId=null}={}){
         const base=before??r.quantity,taken=to?.taken?.[r.id]??0,grown=after+taken-base;
         if(grown>0)moveStock(d,{from:`src:regrowth|${resource}|site`,to:acct,amount:grown,writer:'sites',eventId});
         if(taken)moveStock(d,{from:acct,to:to.account,amount:taken,writer:'sites',eventId});
-        if(grown<0)throw preconditionFailure('据点资源减少却没有去处');
+        if(grown<0)throw Error('据点资源减少却没有去处');
     }
     holdingSet(d,null,['state','records',siteKey(place.id)],row,'sites');
 }

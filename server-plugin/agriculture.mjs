@@ -29,7 +29,7 @@ const int=(value,min=1,max=100000)=>{if(!Number.isSafeInteger(value)||value<min|
 const awake=n=>n&&!['濒死','睡眠','昏迷'].includes(n.status)&&!['睡觉','睡眠'].includes(n.activity);
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
 function balanced(r,s){
-    if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw preconditionFailure('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
+    if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw Error('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
 }
 function storageDays(r,p){return r.granary.condition>=50?p.protectedStorageDays:p.normalStorageDays;}
 // ---- S1b 双写：粮仓与种粮的流水 ------------------------------------------------
@@ -124,7 +124,7 @@ function harvest(r,s,engine,p,day,units,eventId,storageCapacity=r.granary.capaci
         const total=Math.floor(gross*(10000-(row.pestDamageBps??0))/10000);
         if(farmPestProfile(engine,p.settlement)){
             const grossDelta=gross-row.potentialHarvestedFood,netDelta=total-row.harvestedFood;
-            if(grossDelta<netDelta||netDelta<0)throw preconditionFailure('作物收成账不守恒，拒绝倒扣已经收获的粮食');
+            if(grossDelta<netDelta||netDelta<0)throw Error('作物收成账不守恒，拒绝倒扣已经收获的粮食');
             potential+=grossDelta;pestLost+=grossDelta-netDelta;row.potentialHarvestedFood=gross;
         }
         for(const source of row.growthSources??[])growthSources.add(source);
@@ -147,7 +147,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     advancePrivateFarms(d,engine,id,day);
     const p=profile(engine,id),original=d.get(...path(id));if(!p||original?.mode!=='managed')return null;
     const r=clone(original),s=clone(source);balanced(r,s);
-    if(r.lastDay!==day-1)throw preconditionFailure('农事日结顺序不连续，拒绝重复或补算过往收成');
+    if(r.lastDay!==day-1)throw Error('农事日结顺序不连续，拒绝重复或补算过往收成');
     const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
     const hired=agriculturalEmployment(d.get('state'),id,day);
@@ -293,9 +293,9 @@ function counter(d,engine,p){
 
 function balancedFiscal(row){
  const fields=['openingTreasuryCopper','advanceCopper','salesGrossCopper','salesNetCopper','taxReceiptsCopper','purchasesCopper','exportedFood','importedFood'];
- if(row.category!=='village_fiscal'||!Array.isArray(row.entries)||fields.some(k=>!Number.isSafeInteger(row[k])||row[k]<0))throw preconditionFailure('税贸账字段不完整或非法，拒绝结算');
+ if(row.category!=='village_fiscal'||!Array.isArray(row.entries)||fields.some(k=>!Number.isSafeInteger(row[k])||row[k]<0))throw Error('税贸账字段不完整或非法，拒绝结算');
  const sum=k=>row.entries.reduce((n,e)=>n+(e[k]??0),0);
- if(row.salesGrossCopper!==row.salesNetCopper+row.taxReceiptsCopper||row.advanceCopper!==sum('advanceCopper')||row.salesNetCopper!==sum('netCopper')||row.taxReceiptsCopper!==sum('taxCopper')||row.purchasesCopper!==-row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||row.exportedFood!==-row.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||row.importedFood!==row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw preconditionFailure('税贸明细与总账不守恒，拒绝覆盖或补齐');
+ if(row.salesGrossCopper!==row.salesNetCopper+row.taxReceiptsCopper||row.advanceCopper!==sum('advanceCopper')||row.salesNetCopper!==sum('netCopper')||row.taxReceiptsCopper!==sum('taxCopper')||row.purchasesCopper!==-row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||row.exportedFood!==-row.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||row.importedFood!==row.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw Error('税贸明细与总账不守恒，拒绝覆盖或补齐');
 }
 function settleVillageTrade(d,engine,p,args,eventId){
  const contracts=engine.rules.agriculture.settlements.map(p=>p.tradeContract).filter(Boolean),contract=contracts.find(c=>c.id===args.contract);
@@ -307,7 +307,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
  const official=engine.resolve(args.authority??'','npc'),code=legalCodeAt(engine,p.settlement,d.get('state'));
  if(official!==p.manager||!code?.judges.includes(official))throw preconditionFailure('此人没有粮约收款及税章权限；普通协调者不能征税');
  const tradeKey=`village-trade:${contract.id}`,old=d.get('state','records',tradeKey);
- if(old&&old.category!=='village_trade')throw preconditionFailure('粮约账编号冲突，拒绝覆盖');
+ if(old&&old.category!=='village_trade')throw Error('粮约账编号冲突，拒绝覆盖');
  if(old?.status==='delivered'||args.phase==='pickup'&&old?.status==='in-transit')return{contract:contract.id,status:old.status,alreadySettled:true,actionScope:{kind:'instant'}};
  const r=clone(d.get(...path(p.settlement))),stock=clone(d.get('state','settlements',p.settlement));
  if(r?.mode!=='managed'||!stock)throw preconditionFailure('公共粮账尚未采用；旧档不能按新开局库存结算');
@@ -339,7 +339,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
   fiscal.entries.push({eventId,contract:contract.id,phase:'deliver',other:'player',food:contract.quantity,copper:-cost});
   const sourceFiscalKey=`village-fiscal:${contract.seller}`,sourceFiscal=clone(d.get('state','records',sourceFiscalKey));
   balancedFiscal(sourceFiscal??{});
-  if(sourceFiscal.advanceCopper<cost)throw preconditionFailure('源村预付款账不符，拒绝不守恒结算');
+  if(sourceFiscal.advanceCopper<cost)throw Error('源村预付款账不符，拒绝不守恒结算');
   sourceFiscal.advanceCopper-=cost;sourceFiscal.salesGrossCopper+=cost;sourceFiscal.salesNetCopper+=cost-tax;sourceFiscal.taxReceiptsCopper+=tax;
   sourceFiscal.entries.push({eventId,contract:contract.id,phase:'recognized',other:contract.buyer,food:0,copper:0,advanceCopper:-cost,netCopper:cost-tax,taxCopper:tax});
   balancedFiscal(sourceFiscal);d.set(['state','records',sourceFiscalKey],sourceFiscal);
@@ -358,7 +358,7 @@ export function agricultureAction(d,args,eventId){
         return{agriculture:agricultureView(this,d.document),actionScope:{kind:'instant',instantaneous:true,note:'只读观察，不推进时间。'}};
     }
     const r=clone(d.get(...path(id))),s=clone(d.get('state','settlements',id));
-    if(!r)throw preconditionFailure('农事记录尚未迁移');
+    if(!r)throw Error('农事记录尚未迁移');
     if(operation==='adopt'){
         counter(d,this,p);if(r.mode!=='legacy')throw preconditionFailure('已经采用农事账，不能重复初始化');
         r.mode='managed';r.lastDay=Math.floor(d.get('state','minute')/1440)-1;r.ledger.openingFood=s.food;r.batches=s.food?[{id:`legacy:${eventId}`,amount:s.food,harvestDay:Math.floor(d.get('state','minute')/1440),expiresDay:Math.floor(d.get('state','minute')/1440)+p.normalStorageDays,source:'迁移保留的旧库存',kind:'grain'}]:[];

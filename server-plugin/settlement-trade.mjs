@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {granary as granaryAccount,cargo as cargoAccount,moveStock,priceRead,bagStock,settlementStock} from './stock.mjs';
@@ -39,10 +38,10 @@ function assertRules(engine){
 }
 function assertOrder(o){
     if(o.status==='refused'){
-        if(o.quantity!==0||o.escrowCopper!==0||o.transport)throw preconditionFailure('周贸易拒发账不守恒');
+        if(o.quantity!==0||o.escrowCopper!==0||o.transport)throw Error('周贸易拒发账不守恒');
         return;
     }
-    const invalid=()=>{throw preconditionFailure('周贸易在途货物或资金账不守恒，拒绝结算或补齐');};
+    const invalid=()=>{throw Error('周贸易在途货物或资金账不守恒，拒绝结算或补齐');};
     if(!['in-transit','delivered','partial','spoiled','rejected'].includes(o.status)||!Array.isArray(o.batches)||!Array.isArray(o.entries)||!o.transport)invalid();
     if(['quantity','workers','unitPriceCopper'].some(k=>!integer(o[k],1))||['escrowCopper','paidCopper','refundCopper','taxCopper','spoiledFood','rejectedFood','deliveredFood'].some(k=>!integer(o[k])))invalid();
     if(o.batches.some(b=>!integer(b.amount,1)||!Number.isSafeInteger(b.expiresDay)||b.kind!=='grain'))invalid();
@@ -56,7 +55,7 @@ function managed(state,id){return state.settlements?.[id]&&state.records?.[`agri
 function warehouse(d,id){
     const s=clone(d.get('state','settlements',id)),r=clone(d.get('state','records',`agriculture:${id}`));
     if(!s||r?.mode!=='managed')return null;
-    if(!integer(s.food)||!integer(s.treasury)||!integer(s.population)||!Array.isArray(r.batches)||r.batches.some(b=>!integer(b.amount,1)||!Number.isSafeInteger(b.expiresDay))||r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw preconditionFailure('周贸易粮仓或现金账不守恒，拒绝补齐');
+    if(!integer(s.food)||!integer(s.treasury)||!integer(s.population)||!Array.isArray(r.batches)||r.batches.some(b=>!integer(b.amount,1)||!Number.isSafeInteger(b.expiresDay))||r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw Error('周贸易粮仓或现金账不守恒，拒绝补齐');
     return{s,r};
 }
 function putWarehouse(d,id,{s,r}){d.set(['state','settlements',id],s);d.set(['state','records',`agriculture:${id}`],r);}
@@ -65,7 +64,7 @@ function reserved(state,id){return orders(state).filter(o=>o.buyer===id&&o.statu
 function fiscal(d,id){
     const f=clone(d.get('state','records',`village-fiscal:${id}`)??{category:'village_fiscal',openingTreasuryCopper:d.get('state','settlements',id,'treasury'),advanceCopper:0,salesGrossCopper:0,salesNetCopper:0,taxReceiptsCopper:0,purchasesCopper:0,exportedFood:0,importedFood:0,entries:[]});
     const sum=k=>f.entries?.reduce((n,e)=>n+(e[k]??0),0);
-    if(f.category!=='village_fiscal'||!Array.isArray(f.entries)||['openingTreasuryCopper','advanceCopper','salesGrossCopper','salesNetCopper','taxReceiptsCopper','purchasesCopper','exportedFood','importedFood'].some(k=>!integer(f[k]))||f.salesGrossCopper!==f.salesNetCopper+f.taxReceiptsCopper||f.advanceCopper!==sum('advanceCopper')||f.salesNetCopper!==sum('netCopper')||f.taxReceiptsCopper!==sum('taxCopper')||f.purchasesCopper!==-f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||f.exportedFood!==-f.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||f.importedFood!==f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw preconditionFailure('周贸易税贸明细不守恒，拒绝覆盖');
+    if(f.category!=='village_fiscal'||!Array.isArray(f.entries)||['openingTreasuryCopper','advanceCopper','salesGrossCopper','salesNetCopper','taxReceiptsCopper','purchasesCopper','exportedFood','importedFood'].some(k=>!integer(f[k]))||f.salesGrossCopper!==f.salesNetCopper+f.taxReceiptsCopper||f.advanceCopper!==sum('advanceCopper')||f.salesNetCopper!==sum('netCopper')||f.taxReceiptsCopper!==sum('taxCopper')||f.purchasesCopper!==-f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||f.exportedFood!==-f.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||f.importedFood!==f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw Error('周贸易税贸明细不守恒，拒绝覆盖');
     return f;
 }
 function region(engine,location){
@@ -121,7 +120,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
     if(!r||item!==r.item||!sid||!managed(d.get('state'),sid))return hazard===1?base:base*hazard;
     assertRules(engine);
     const day=Math.floor(minute/DAY),key=`region:${day}:${sid}:${item}`,existing=d.get('state','quotes',key);
-    if(existing!==undefined){if(!integer(existing,1))throw preconditionFailure('区域报价账无效');return existing;}
+    if(existing!==undefined){if(!integer(existing,1))throw Error('区域报价账无效');return existing;}
     const w=warehouse(d,sid),lane=r.lanes.find(l=>l.buyer===sid),target=w.s.population*r.targetDays;
     const actual=priceRead(d,{point:'region.grain',account:granaryAccount(engine,sid),lots:{kind:'grain',after:day},legacy:()=>grain(w,day)}),demand=clamp(target/Math.max(1,actual),...engine.rules.economy.priceFactorLimits.region);
     const distanceKm=(lane?.routes??[]).reduce((n,id)=>n+engine.world.routes.find(e=>e.id===id).lengthKm,0);
@@ -172,11 +171,11 @@ function spoil(d,engine,o,minute){
 }
 function arrive(d,engine,o,minute){
     const a=warehouse(d,o.seller),b=warehouse(d,o.buyer);
-    if(!a||!b)throw preconditionFailure('周贸易到货两端真实账缺失；不能生成公仓');
+    if(!a||!b)throw Error('周贸易到货两端真实账缺失；不能生成公仓');
     spoil(d,engine,o,minute);
     const space=Math.max(0,granaryCapacity(engine,d.get('state'),o.buyer,b.r.granary.capacity)-b.s.food-b.r.field.seedBank),accepted=Math.min(cargo(o),space);
     const gross=accepted*o.unitPriceCopper,refund=o.escrowCopper-gross,tax=Math.floor(gross*o.taxBps/10000);
-    if(!integer(refund))throw preconditionFailure('周贸易预付资金不守恒');
+    if(!integer(refund))throw Error('周贸易预付资金不守恒');
     let remaining=accepted;
     for(const [i,batch]of o.batches.entries()){
         const amount=Math.min(remaining,batch.amount);if(amount)b.r.batches.push({...batch,amount,id:`${o.id}:${i}`,source:`周贸易${o.id}原批${batch.id}`});remaining-=amount;
@@ -201,7 +200,7 @@ function arrive(d,engine,o,minute){
 }
 function dispatch(d,engine,lane,minute){
     const r=engine.rules.settlementTrade,day=Math.floor(minute/DAY),id=`${lane.id}:${day}`,path=['state','records',`settlement-trade:${id}`];
-    if(d.get(...path)){if(d.get(...path).category!=='settlement_trade')throw preconditionFailure('周订单编号冲突，拒绝覆盖');return;}
+    if(d.get(...path)){if(d.get(...path).category!=='settlement_trade')throw Error('周订单编号冲突，拒绝覆盖');return;}
     const a=warehouse(d,lane.seller),b=warehouse(d,lane.buyer);
     const reject=reason=>d.set(path,{category:'settlement_trade',id,lane:lane.id,seller:lane.seller,buyer:lane.buyer,status:'refused',reason,quantity:0,batches:[],escrowCopper:0,dispatchAt:minute,entries:[{phase:'refused',minute,reason}],source:r.source});
     if(!a||!b)return reject('缺已采用的真实公仓');
@@ -258,7 +257,7 @@ export function advanceSettlementTrade(d,engine,minute){
     const r=engine.rules.settlementTrade,state=d.get('state');
     if(!r.lanes.some(l=>managed(state,l.seller)&&managed(state,l.buyer))&&!orders(state).some(o=>o.transport?.nextAt))return;
     assertRules(engine);
-    for(const [key,o]of Object.entries(state.records??{}))if(o.category==='settlement_trade'&&key!==`settlement-trade:${o.id}`)throw preconditionFailure('周贸易记录编号不守恒，拒绝重复结算');
+    for(const [key,o]of Object.entries(state.records??{}))if(o.category==='settlement_trade'&&key!==`settlement-trade:${o.id}`)throw Error('周贸易记录编号不守恒，拒绝重复结算');
     for(const old of orders(state)){
         assertOrder(old);
         if(!old.transport||old.transport.phase==='home')continue;
@@ -271,7 +270,7 @@ export function advanceSettlementTrade(d,engine,minute){
             }
             assertOrder(o);if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);continue;
         }
-        if(o.transport.nextAt<minute)throw preconditionFailure('周贸易时钟越过未处理的在途节点');
+        if(o.transport.nextAt<minute)throw Error('周贸易时钟越过未处理的在途节点');
         if(o.transport.nextAt===minute){
             const t=o.transport,s=t.segment;
             if(s.kind==='move'){
@@ -284,8 +283,8 @@ export function advanceSettlementTrade(d,engine,minute){
         if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);
     }
     const clock=d.get('state','records',CLOCK)??{category:'settlement_trade_clock',initializedAt:minute,nextDispatchAt:nextDispatch(engine,minute)};
-    if(clock.category!=='settlement_trade_clock'||!integer(clock.nextDispatchAt,1))throw preconditionFailure('周贸易时钟记录无效');
-    if(clock.nextDispatchAt<minute)throw preconditionFailure('周贸易时钟越过未处理的周订单');
+    if(clock.category!=='settlement_trade_clock'||!integer(clock.nextDispatchAt,1))throw Error('周贸易时钟记录无效');
+    if(clock.nextDispatchAt<minute)throw Error('周贸易时钟越过未处理的周订单');
     if(clock.nextDispatchAt===minute){
         for(const lane of r.lanes)dispatch(d,engine,lane,minute);
         d.set(['state','records',CLOCK],{...clock,nextDispatchAt:minute+r.cycleDays*DAY,lastDispatchAt:minute});

@@ -99,8 +99,8 @@ function settleNpcSentence(d,e,row,code,minute){
  if((n.coins??0)>=fine+compensation){
   moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
   d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
-  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw preconditionFailure('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
-  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw preconditionFailure('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
+  const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
+  if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
   if(compensation&&loss)recoverLoss(d,e,{id:loss.id,amount:compensation,payer:row.offender,kind:'deposit'},`${row.id}:sentence`);
   holdingSet(d,null,path(row.id),{...row,status:'已结案',finePaid:fine,fineDischarged:true,compensationPaid:true,closed:minute},'npc-crime');
  }else if(!row.fineDischarged){

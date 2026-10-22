@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {pruneRecords} from './record-cleanup.mjs';
 // Mark reactions are observations, never fulfillment of the original intent.
 import {presentWitnesses,publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber} from './world-events.mjs';
@@ -9,7 +8,7 @@ export function reactToMark(d,engine,mark,{eventId,suppressed=false}={}){
  if(!stored?.active||d.get('holdings','entities',mark.id,'goneAt')!==undefined)return {triggered:false,suppressed,reactions:[]};
  suppressed=stored.suppressed;
  const rules=engine.world.openReactions?.rules;
- if(!Array.isArray(rules))throw preconditionFailure('缺少存档中的留痕反应规则');
+ if(!Array.isArray(rules))throw Error('缺少存档中的留痕反应规则');
  const now=d.get('state','minute'),window=engine.world.openActionRules.mark.reactionWindow;
  const observers=presentWitnesses(d.get('state'),mark.location,[mark.author]).filter(id=>{
   if(mark.zone===null||mark.zone===undefined)return true;
@@ -18,7 +17,7 @@ export function reactToMark(d,engine,mark,{eventId,suppressed=false}={}){
  });
  const reactions=[];
  for(const tag of mark.tags.filter(t=>t.startsWith('mark:'))){
-  const rule=rules.find(r=>r.tag===tag);if(!rule)throw preconditionFailure(`留痕标签没有反应规则：${tag}`);
+  const rule=rules.find(r=>r.tag===tag);if(!rule)throw Error(`留痕标签没有反应规则：${tag}`);
   const key=`mark_reaction_batch:${mark.id}:${tag}`,batch=d.get('state','records',key);
   const prior=recordsWhere(d.get('state','records'),'category','mark_reaction_batch').filter(r=>r.mark!==mark.id&&r.author===mark.author&&r.location===mark.location&&r.tag===tag&&r.minute>now-window&&r.minute<=now);
   // One mark is one exposure, irrespective of the number of observers. Keep

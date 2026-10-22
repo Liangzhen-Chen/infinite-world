@@ -20,7 +20,7 @@ function carriedKg(d,engine,target='player'){
 }
 const state=(d,row)=>{
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('空气对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('空气对象状态键冲突');
  return clone(r?.state??row.state??{});
 };
 const store=(d,row,s)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state:s});
@@ -50,7 +50,7 @@ function roomState(d,row,minute){
  const s=state(d,row);s.air??={lastMinute:minute,oxygenMg:m.capacityMg,smokeMg:0,smokeInputMg:0,burnedFuelMg:0,ventedSmokeMg:0,oxygenUsedMg:0,oxygenAddedMg:0,spreadCount:0};
  const a=s.air;
  for(const field of ['oxygenMg','smokeMg','lastMinute','smokeInputMg','ventedSmokeMg','oxygenUsedMg','oxygenAddedMg'])integer(a[field],0,Number.MAX_SAFE_INTEGER,field);
- if(a.oxygenMg>m.capacityMg||a.oxygenMg!==m.capacityMg+a.oxygenAddedMg-a.oxygenUsedMg||a.smokeMg+a.ventedSmokeMg!==a.smokeInputMg)throw preconditionFailure('空气账不守恒');
+ if(a.oxygenMg>m.capacityMg||a.oxygenMg!==m.capacityMg+a.oxygenAddedMg-a.oxygenUsedMg||a.smokeMg+a.ventedSmokeMg!==a.smokeInputMg)throw Error('空气账不守恒');
  return s;
 }
 function linkedPath(d,engine,args,origin,range,readOnly=false,acoustic=false){

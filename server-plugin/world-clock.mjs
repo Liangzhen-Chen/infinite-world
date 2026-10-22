@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {weatherAt} from './weather.mjs';
 import {assertEffect,applyEffect,clockTransaction,assertEffectTable} from './effects.mjs';
@@ -26,22 +25,22 @@ function condition(d,engine,c,rule,at,clock){
   return {met:Number.isFinite(value)&&value>=c.minimum,value:value??null,evidence:`ecology:${c.habitat}`};
  }
  case 'weather':{const w=weatherAt(engine,d.document.randomSeed,rule.settlement,at);return {met:w?.kind===c.kindIs,value:w?.kind??null,evidence:'seeded-weather'};}
- default:throw preconditionFailure(`世界时钟不支持触发条件：${c.kind}`);
+ default:throw Error(`世界时钟不支持触发条件：${c.kind}`);
  }
 }
 export function assertWorldClockRules(engine){
  assertEffectTable(engine);
  const rules=engine.rules.worldClock;if(!rules)return;
- const ids=new Set();if(rules.version!==1||!Array.isArray(rules.clocks))throw preconditionFailure('世界时钟规则版本无效');
+ const ids=new Set();if(rules.version!==1||!Array.isArray(rules.clocks))throw Error('世界时钟规则版本无效');
  for(const r of rules.clocks){
   if(!r.id||ids.has(r.id)||!r.source||!engine.world.locations.some(l=>l.id===r.settlement)||
    !engine.world.cultures?.some(c=>c.id===r.culture)||!engine.world.factions?.some(f=>f.id===r.faction)||
    !Number.isSafeInteger(r.intervalDays)||r.intervalDays<1||!Number.isFinite(r.probability)||r.probability<0||r.probability>1||
-   r.cycle!=='year'||!r.stages?.length)throw preconditionFailure('世界时钟来源、周期或概率无效');
+   r.cycle!=='year'||!r.stages?.length)throw Error('世界时钟来源、周期或概率无效');
   ids.add(r.id);
   for(const s of r.stages){
-   if(!['managed_granary','delivered_trade','harvest','wildlife_population','weather'].includes(s.condition?.kind))throw preconditionFailure('世界时钟未知条件，拒绝推进');
-   if(['delivered_trade','harvest','wildlife_population'].includes(s.condition.kind)&&(!Number.isSafeInteger(s.condition.minimum)||s.condition.minimum<1))throw preconditionFailure('世界时钟条件阈值无效');
+   if(!['managed_granary','delivered_trade','harvest','wildlife_population','weather'].includes(s.condition?.kind))throw Error('世界时钟未知条件，拒绝推进');
+   if(['delivered_trade','harvest','wildlife_population'].includes(s.condition.kind)&&(!Number.isSafeInteger(s.condition.minimum)||s.condition.minimum<1))throw Error('世界时钟条件阈值无效');
    assertClockEffect(engine,s.effect);
   }
  }
@@ -67,7 +66,7 @@ export function nextWorldClockMinute(state,now){return Math.min(Infinity,...Obje
 export function advanceWorldClocks(d,engine,at){
  for(const r of engine.rules.worldClock?.clocks??[]){
   let row=d.get(...path(r.id));if(!row)continue;
-  if(row.nextAt<at)throw preconditionFailure('世界时钟越过未处理的日期');
+  if(row.nextAt<at)throw Error('世界时钟越过未处理的日期');
   if(row.nextAt!==at)continue;
   const year=Math.floor(at/DAY/360)+1;
   const harvested=d.get('state','records',`agriculture:${r.settlement}`,'ledger','harvested')??0;

@@ -161,7 +161,7 @@ export function civicAction(d,args,eventId){
     if(operation==='civic_residence'){
         const proof=residenceProof(d,this,settlement),row={category:'civic_residence',subject:'player',settlement,...proof};
         const id=key('residence',settlement),old=d.get(...recordPath(id));
-        if(old&&old.category!=='civic_residence')throw preconditionFailure('居住登记编号冲突');
+        if(old&&old.category!=='civic_residence')throw Error('居住登记编号冲突');
         holdingSet(d,null,recordPath(id),row,'civic');return {residence:row};
     }
     if(operation==='civic_sponsor'){
@@ -169,14 +169,14 @@ export function civicAction(d,args,eventId){
         if((base.age??0)<18||npcHousehold(this,d.get('state'),sponsor)?.settlement!==settlement)throw preconditionFailure('担保人须为当地成年登记住户');
         if(!belongs(this,d.get('state','location'),settlement))throw preconditionFailure('须在当地当面确认担保');
         const id=key('sponsor',settlement),old=d.get(...recordPath(id));
-        if(old&&old.category!=='civic_sponsor')throw preconditionFailure('担保编号冲突');
+        if(old&&old.category!=='civic_sponsor')throw Error('担保编号冲突');
         const row={category:'civic_sponsor',subject:'player',settlement,sponsor,minute:d.get('state','minute'),sourceEvent:eventId};
         holdingSet(d,null,recordPath(id),row,'civic');return {sponsor:row};
     }
     const kind=operation==='civic_apply_resident'?'resident':operation==='civic_apply_citizen'?'citizen':null;
     if(!kind)throw preconditionFailure('未知户籍操作');
     const id=key(kind,settlement),old=d.get(...recordPath(id));
-    if(old){if(old.category!==`civic_${kind}`||old.subject!=='player'||old.settlement!==settlement)throw preconditionFailure('申请编号冲突');return {application:old,duplicate:true};}
+    if(old){if(old.category!==`civic_${kind}`||old.subject!=='player'||old.settlement!==settlement)throw Error('申请编号冲突');return {application:old,duplicate:true};}
     const authority=manager(d,this,p,args.authority),proof=residenceProof(d,this,settlement),registered=d.get(...recordPath(key('residence',settlement)));
     if(registered?.category!=='civic_residence'||registered.since!==proof.since)throw preconditionFailure('须先登记当前真实居住起日');
     const gate=civicRules[kind];

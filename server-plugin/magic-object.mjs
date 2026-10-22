@@ -43,10 +43,10 @@ export function validateThermalModel(model){
  integer(model.passiveExchangeJPerMinute,0,1000000,'散热速度');integer(model.burnMgPerMinute,1,10000000,'燃烧速度');integer(model.fuelJPerMg,1,100,'燃料热值');
  integer(model.efficiencyPermille,1,900,'热效率');integer(model.ashPermille,0,1000,'燃料灰分');integer(model.ignitionMaximumMg,1,5000,'火绒点燃上限');
  if(typeof model.ignitable!=='boolean'||typeof model.dryable!=='boolean')throw preconditionFailure('目标缺少材料适用性');
- if(!Array.isArray(model.fuels)||model.fuels.some(f=>typeof f.item!=='string'||!Number.isSafeInteger(f.milligramsPerUnit)||f.milligramsPerUnit<1))throw preconditionFailure('燃料目录单位无效');
- if(model.wallOffsetsC!==undefined&&(!Array.isArray(model.wallOffsetsC)||model.wallOffsetsC.length<2||model.wallOffsetsC.length>16||model.wallOffsetsC.some(x=>!Number.isSafeInteger(x)||Math.abs(x)>1200)||model.wallOffsetsC.reduce((a,b)=>a+b,0)!==0))throw preconditionFailure('器壁温区数据无效');
+ if(!Array.isArray(model.fuels)||model.fuels.some(f=>typeof f.item!=='string'||!Number.isSafeInteger(f.milligramsPerUnit)||f.milligramsPerUnit<1))throw Error('燃料目录单位无效');
+ if(model.wallOffsetsC!==undefined&&(!Array.isArray(model.wallOffsetsC)||model.wallOffsetsC.length<2||model.wallOffsetsC.length>16||model.wallOffsetsC.some(x=>!Number.isSafeInteger(x)||Math.abs(x)>1200)||model.wallOffsetsC.reduce((a,b)=>a+b,0)!==0))throw Error('器壁温区数据无效');
  if(model.kiln){
-  if(!model.wallOffsetsC)throw preconditionFailure('窑炉缺少器壁温区');
+  if(!model.wallOffsetsC)throw Error('窑炉缺少器壁温区');
   integer(model.kiln.safeGradientC,0,1200,'窑炉安全温差');integer(model.kiln.safeRiseCPerMinute,0,1200,'窑炉安全升温速率');integer(model.kiln.crackPermillePerStress,1,1000,'窑炉裂损系数');
  }
  return model;
@@ -56,7 +56,7 @@ export function validateObjectWorld(world){
  for(const location of world.locations)for(const row of location.features??[])if(row.kind==='object'){
   features.set(row.id,{...row,location:location.id});
   try{validateThermalModel(row.thermalModel);initialThermalState(row.thermalInitial,row.thermalModel,0);
-   for(const f of row.thermalModel.fuels){const item=items.get(f.item);if(!item||Math.round(item.weight*1000000)!==f.milligramsPerUnit)throw preconditionFailure('燃料物品引用或目录重量不符');}
+   for(const f of row.thermalModel.fuels){const item=items.get(f.item);if(!item||Math.round(item.weight*1000000)!==f.milligramsPerUnit)throw Error('燃料物品引用或目录重量不符');}
   }catch(error){errors.push(`${row.id}: ${error.message}`);}
  }
  for(const location of world.locations)for(const station of location.workstations??[])if(station.thermalRequirement){
@@ -74,14 +74,14 @@ export function initialThermalState({temperatureC=20,fuelMg=0,moistureMg=0},mode
 export function validateThermalState(s,m){
  validateThermalModel(m);
  for(const k of ['lastMinute','energyJ','initialEnergyJ','fuelMg','initialFuelMg','fuelAddedMg','burnedFuelMg','ashMg','exhaustFuelMg','moistureMg','initialMoistureMg','evaporatedMg','chemicalInputJ','spellInputJ','ambientInputJ','dissipatedJ','evaporationJ','burnRemainder'])integer(s?.[k],0,Number.MAX_SAFE_INTEGER,`热状态${k}`);
- if(typeof s.burning!=='boolean'||s.burnRemainder>=1000||s.energyJ>m.heatCapacityJPerC*m.maximumC)throw preconditionFailure('热状态边界损坏');
- if(s.fuelMg+s.burnedFuelMg!==s.initialFuelMg+s.fuelAddedMg||s.ashMg+s.exhaustFuelMg!==s.burnedFuelMg)throw preconditionFailure('燃料质量不守恒');
- if(s.moistureMg+s.evaporatedMg!==s.initialMoistureMg+(s.moistureAddedMg??0))throw preconditionFailure('干燥水量不守恒');
+ if(typeof s.burning!=='boolean'||s.burnRemainder>=1000||s.energyJ>m.heatCapacityJPerC*m.maximumC)throw Error('热状态边界损坏');
+ if(s.fuelMg+s.burnedFuelMg!==s.initialFuelMg+s.fuelAddedMg||s.ashMg+s.exhaustFuelMg!==s.burnedFuelMg)throw Error('燃料质量不守恒');
+ if(s.moistureMg+s.evaporatedMg!==s.initialMoistureMg+(s.moistureAddedMg??0))throw Error('干燥水量不守恒');
  if(s.moistureAddedMg!==undefined)integer(s.moistureAddedMg,0,Number.MAX_SAFE_INTEGER,'外加水量');
- if(s.chemicalInputJ!==s.burnedFuelMg*m.fuelJPerMg||s.ashMg!==Math.floor(s.burnedFuelMg*m.ashPermille/1000)||s.evaporationJ!==s.evaporatedMg*3)throw preconditionFailure('材料与热量转换账不一致');
- if(s.energyJ!==s.initialEnergyJ+s.chemicalInputJ+s.spellInputJ+s.ambientInputJ-s.dissipatedJ-s.evaporationJ)throw preconditionFailure('物件热量不守恒');
+ if(s.chemicalInputJ!==s.burnedFuelMg*m.fuelJPerMg||s.ashMg!==Math.floor(s.burnedFuelMg*m.ashPermille/1000)||s.evaporationJ!==s.evaporatedMg*3)throw Error('材料与热量转换账不一致');
+ if(s.energyJ!==s.initialEnergyJ+s.chemicalInputJ+s.spellInputJ+s.ambientInputJ-s.dissipatedJ-s.evaporationJ)throw Error('物件热量不守恒');
  if(m.wallOffsetsC){
-  if(!Array.isArray(s.zoneOffsetsC)||s.zoneOffsetsC.length!==m.wallOffsetsC.length||s.zoneOffsetsC.some(x=>!Number.isSafeInteger(x)||Math.abs(x)>1200)||s.zoneOffsetsC.reduce((a,b)=>a+b,0)!==0)throw preconditionFailure('器壁温区状态损坏');
+  if(!Array.isArray(s.zoneOffsetsC)||s.zoneOffsetsC.length!==m.wallOffsetsC.length||s.zoneOffsetsC.some(x=>!Number.isSafeInteger(x)||Math.abs(x)>1200)||s.zoneOffsetsC.reduce((a,b)=>a+b,0)!==0)throw Error('器壁温区状态损坏');
   integer(s.crackStressUnits,0,Number.MAX_SAFE_INTEGER,'窑炉裂损累计');
  }
 }
@@ -135,8 +135,8 @@ export function advanceThermalState(source,model,until,{effects=[],target,burnLi
 }
 function locate(engine,name,location){const matches=environmentFeatures(engine).filter(f=>f.id===name||f.location===location&&[f.name,...f.aliases??[]].some(n=>normalize(n)===normalize(name??'')));if(matches.length!==1)reject('E-ACTION-THERMAL-TARGET','热对象未登记或名称不唯一',{missing:['需要唯一的已登记热对象'],repair:['观察当地物件，使用唯一的已登记热对象编号']});const row=matches[0];if(row.kind!=='object')throw preconditionFailure('只支持登记的非活体物件，不兼作水源或土壤');validateThermalModel(row.thermalModel);return row;}
 function read(d,row){
- const record=d.get('state','records',recordKey(row.id));if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw preconditionFailure('物件状态记录键冲突');
- const state=clone(record?.state??row.state);if(!state||typeof state!=='object')throw preconditionFailure('缺少物件初始状态');
+ const record=d.get('state','records',recordKey(row.id));if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw Error('物件状态记录键冲突');
+ const state=clone(record?.state??row.state);if(!state||typeof state!=='object')throw Error('缺少物件初始状态');
  if('waterMl' in state)throw preconditionFailure('液态水移动与热容量尚未联动，不能套用固体热过程');
  const thermal=state.thermal??initialThermalState(row.thermalInitial??{},row.thermalModel,d.get('state','minute'));
  state.thermal=advanceThermalState(thermal,row.thermalModel,d.get('state','minute'),{effects:Object.values(d.get('state','effects')??{}),target:row.id});return state;
@@ -249,7 +249,7 @@ export function advanceMagicObjects(d,engine,afterMinute){
  advanceHeatScenes(d,engine,afterMinute);
  for(const row of environmentFeatures(engine,undefined,f=>f.thermalModel&&d.get('state','records',recordKey(f.id),'state','thermal'))){
   const record=d.get('state','records',recordKey(row.id));if(!record?.state?.thermal)continue;
-  if(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location)throw preconditionFailure('物件状态记录键冲突');
+  if(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location)throw Error('物件状态记录键冲突');
   const state=clone(record.state);state.thermal=advanceThermalState(state.thermal,row.thermalModel,afterMinute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});store(d,row,state);
   // Outdoor rain douses and wets a fire that is still burning at settlement.
   if(state.thermal.burning&&precipitationAt(engine,d.get('randomSeed'),row.location,afterMinute)==='rain')applyInteraction(d,engine,{agent:'rain',target:row.id});
@@ -258,7 +258,7 @@ export function advanceMagicObjects(d,engine,afterMinute){
 export function addObjectFuel(d,engine,args,eventId){
  const row=locate(engine,args.target,d.get('state','location'));access(d,row,args,1);
  const fuel=row.thermalModel.fuels.find(f=>f.item===args.item);if(!fuel)throw preconditionFailure('此物品不是已登记的炉具燃料');
- const item=engine.byId.get(fuel.item);if(!item||!Number.isFinite(item.weight)||Math.round(item.weight*1000000)!==fuel.milligramsPerUnit)throw preconditionFailure('燃料目录单位与实际物品重量不符');
+ const item=engine.byId.get(fuel.item);if(!item||!Number.isFinite(item.weight)||Math.round(item.weight*1000000)!==fuel.milligramsPerUnit)throw Error('燃料目录单位与实际物品重量不符');
  const quantity=integer(args.quantity,1,100,'添料份数'),mass=quantity*fuel.milligramsPerUnit;
  integer(mass,1,100000000,'添料质量');if(engine.quantity(d,'player',fuel.item)<quantity)throw preconditionFailure('缺少实际燃料');
  const state=read(d,row),s=state.thermal;s.fuelMg+=mass;s.fuelAddedMg+=mass;validateThermalState(s,row.thermalModel);
@@ -296,7 +296,7 @@ export function prepareNpcFurnace(d,engine,station,minutes,npc,reserved=new Map(
  const missing=minutes*m.burnMgPerMinute+1-s.fuelMg;
  const fuel=m.fuels.map(f=>({...f,quantity:Math.ceil(missing/f.milligramsPerUnit)})).find(f=>f.quantity>=1&&f.quantity<=100&&engine.quantity(d,npc,f.item)-(reserved.get(f.item)??0)>=f.quantity);
  if(!fuel)throw preconditionFailure('人物缺少维持整个工序的实际燃料');
- const item=engine.byId.get(fuel.item);if(!item||Math.round(item.weight*1000000)!==fuel.milligramsPerUnit)throw preconditionFailure('燃料目录单位与实际物品重量不符');
+ const item=engine.byId.get(fuel.item);if(!item||Math.round(item.weight*1000000)!==fuel.milligramsPerUnit)throw Error('燃料目录单位与实际物品重量不符');
  const mass=integer(fuel.quantity*fuel.milligramsPerUnit,1,100000000,'添料质量');
  s.fuelMg+=mass;s.fuelAddedMg+=mass;validateThermalState(s,m);store(d,row,state);
  const plan=prepareThermalWorkstation(d,engine,station,minutes,options);
@@ -318,7 +318,7 @@ export function validateHeatCatalog(catalog){
 }
 function rawFeatureState(d,row,minute){
  const record=d.get('state','records',recordKey(row.id));
- if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw preconditionFailure('热场状态记录键冲突');
+ if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw Error('热场状态记录键冲突');
  const state=clone(record?.state??row.state??{});
  if(row.thermalModel)state.thermal??=initialThermalState(row.thermalInitial??{},row.thermalModel,minute);
  return state;
@@ -337,7 +337,7 @@ function roomOf(engine,name,location){
 function validateRoomState(state,row){
  const a=state.air,m=row.airModel;
  for(const k of ['lastMinute','oxygenMg','smokeMg','smokeInputMg','burnedFuelMg','ventedSmokeMg','oxygenUsedMg','oxygenAddedMg','spreadCount'])integer(a[k],0,Number.MAX_SAFE_INTEGER,`室内空气${k}`);
- if(a.oxygenMg>m.capacityMg||a.oxygenMg!==m.capacityMg+a.oxygenAddedMg-a.oxygenUsedMg||a.smokeMg+a.ventedSmokeMg!==a.smokeInputMg)throw preconditionFailure('室内空气账不守恒');
+ if(a.oxygenMg>m.capacityMg||a.oxygenMg!==m.capacityMg+a.oxygenAddedMg-a.oxygenUsedMg||a.smokeMg+a.ventedSmokeMg!==a.smokeInputMg)throw Error('室内空气账不守恒');
  return state;
 }
 function roomState(d,row,minute){
@@ -398,7 +398,7 @@ export function applyHeatMagic(d,prepared,id){
 function handState(actor,minute){
  const h=clone(actor.handThermal??{lastMinute:minute,energyJ:32000,initialEnergyJ:32000,spellInputJ:0,ambientInputJ:0,dissipatedJ:0,transferredJ:0});
  for(const k of ['lastMinute','energyJ','initialEnergyJ','spellInputJ','ambientInputJ','dissipatedJ','transferredJ'])integer(h[k],0,Number.MAX_SAFE_INTEGER,`手掌热账${k}`);
- if(h.energyJ>38000||h.energyJ!==h.initialEnergyJ+h.spellInputJ+h.ambientInputJ-h.dissipatedJ-h.transferredJ)throw preconditionFailure('手掌热量或接触安全边界损坏');
+ if(h.energyJ>38000||h.energyJ!==h.initialEnergyJ+h.spellInputJ+h.ambientInputJ-h.dissipatedJ-h.transferredJ)throw Error('手掌热量或接触安全边界损坏');
  return h;
 }
 function advanceHeatScenes(d,engine,after){

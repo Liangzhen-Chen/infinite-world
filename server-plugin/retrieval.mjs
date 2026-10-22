@@ -23,11 +23,11 @@ export class EntityResolver {
     constructor(entities,{sortNames=true}={}) {
         this.entities = new Map(); this.aliases = new Map();
         for (const entity of entities) {
-            if (this.entities.has(entity.id)) throw preconditionFailure(`重复实体编号${entity.id}`);
+            if (this.entities.has(entity.id)) throw Error(`重复实体编号${entity.id}`);
             this.entities.set(entity.id, entity);
             for (const alias of [entity.id, entity.name, ...entity.aliases ?? []]) {
                 const name = normalize(alias);
-                if (!name.trim()) throw preconditionFailure('空实体名称');
+                if (!name.trim()) throw Error('空实体名称');
                 const entries = this.aliases.get(name) ?? new Set(); entries.add(entity.id); this.aliases.set(name, entries);
             }
         }
@@ -39,7 +39,7 @@ export class EntityResolver {
         const additions = new EntityResolver(entities,{sortNames:false}), resolver = Object.create(this);
         resolver.entities = new Map(this.entities); resolver.aliases = new Map(this.aliases);
         for (const [id, entity] of additions.entities) {
-            if (resolver.entities.has(id)) throw preconditionFailure(`重复实体编号${id}`);
+            if (resolver.entities.has(id)) throw Error(`重复实体编号${id}`);
             resolver.entities.set(id, entity);
         }
         for (const [name, ids] of additions.aliases) {
@@ -100,7 +100,7 @@ export class MemoryIndex {
         this.totalLength -= old.length; this.documents.delete(id);
     }
     upsert(record) {
-        if (typeof record.id !== 'string' || !record.id) throw preconditionFailure('检索记录缺少编号');
+        if (typeof record.id !== 'string' || !record.id) throw Error('检索记录缺少编号');
         const prepared=prepareRetrievalRecord(record,{verified:record.verified===true});
         if(!prepared){this.remove(record.id);return;}
         record=prepared;

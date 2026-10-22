@@ -25,7 +25,7 @@ function span(facts){return {events:unique(facts.map(f=>f.sourceEvent)),sequence
 // remember.content, model summaries and free-form result.messages are not facts.
 export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,{sequence=0,anchor=null,result=null}={}){
  const before=beforeDocument.state,after=afterDocument.state,eventId=input.eventId;
- if(!eventId||!before||!after||after.minute<before.minute)throw preconditionFailure('编年史缺少有效事件或时间倒退');
+ if(!eventId||!before||!after||after.minute<before.minute)throw Error('编年史缺少有效事件或时间倒退');
  if(input.type&&input.type!=='npc_plan')return [];
  const name=id=>id==='player'?after.player.name??'旅人':engine.byId.get(id)?.name??id;
  const rows=[],seen=new Set();

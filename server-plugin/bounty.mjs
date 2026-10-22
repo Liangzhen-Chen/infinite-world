@@ -78,7 +78,7 @@ function remember(d,engine,npc,w,minute,content,{visibility='public',kind='law'}
     d.set(['state','npcs',npc,'memoryStream'],[...stream??[],{id,sourceEvent:`${w.id}:${minute}`,kind,minute,location:d.get('state','npcs',npc,'location'),
         participants:[w.subject,npc],sourceType:'亲历',visibility,salience:3,emotion:'留意',legalCase:w.case,legalStage:'wanted',content}]);
 }
-function treasury(d,law){const key=`legal_treasury:${law}`,row=d.get(...rec(key));if(row&&row.category!=='legal_treasury')throw preconditionFailure('法律资金登记键冲突');return {key,row:row??{category:'legal_treasury',law,coins:0}};}
+function treasury(d,law){const key=`legal_treasury:${law}`,row=d.get(...rec(key));if(row&&row.category!=='legal_treasury')throw Error('法律资金登记键冲突');return {key,row:row??{category:'legal_treasury',law,coins:0}};}
 function releaseReward(d,w){
     if(!w.bounty)return;const {key,row}=treasury(d,w.law);
     holdingSet(d,null,rec(key),{...row,reserved:Math.max(0,(row.reserved??0)-w.bounty)},'bounty');

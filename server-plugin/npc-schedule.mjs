@@ -109,7 +109,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
-    if(!slot)throw preconditionFailure(`${npcId}的作息没有覆盖当前钟点`);
+    if(!slot)throw Error(`${npcId}的作息没有覆盖当前钟点`);
     let end=slot.end;
     // Adjacent identical slots have no transition to observe. Course openings
     // and festival overrides below still impose their own real boundaries.

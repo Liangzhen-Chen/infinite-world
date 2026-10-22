@@ -128,7 +128,7 @@ function authority(d,engine,code,name,kind){
 }
 function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')reject('E-ACTION-CASE','案件未登记',{missing:['需要已登记的案件编号'],repair:['先依法报案登记案件，再以返回的案件编号办理']});const code=legalCodeById(engine,row.law,d.get('state'));if(!code)throw preconditionFailure('案件对应法典不可用，无执行权限');return{row,code};}
 function safeFund(d,id,category,extra={}){
-    const existing=d.get(...path(id));if(existing&&existing.category!==category)throw preconditionFailure('法律资金登记键冲突');
+    const existing=d.get(...path(id));if(existing&&existing.category!==category)throw Error('法律资金登记键冲突');
     return existing??{category,coins:0,...extra};
 }
 export function evidenceScore(d,row){

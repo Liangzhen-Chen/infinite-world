@@ -1,4 +1,3 @@
-import {preconditionFailure} from './precondition.mjs';
 // Domain vocabulary for the existing Chinese BM25 tokenizer. Entity identity
 // remains the resolver's job; occupational titles are never global name swaps.
 export const RETRIEVAL_SYNONYMS=Object.freeze([
@@ -23,7 +22,7 @@ export function stripRetrievalEnvelope(text){
   .replace(/(?:事件编号|eventId)\s*[:：=]\s*[a-zA-Z0-9_:-]+\s*[，,；;]?/gi,'').trim();
 }
 export function prepareRetrievalRecord(record,{verified=false}={}){
- if(!record||typeof record.text!=='string')throw preconditionFailure('检索记录需要文字正文');
+ if(!record||typeof record.text!=='string')throw Error('检索记录需要文字正文');
  if(!verified&&isSystemMemoryText(record.text))return null;
  const text=verified?stripRetrievalEnvelope(record.text):record.text;
  return text.trim()?{...record,text}:null;

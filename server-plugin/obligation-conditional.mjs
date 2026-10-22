@@ -19,7 +19,7 @@ export function openGoodsObligation(d,e,args,eventId){
  return obligationTransaction(d,()=>{
   const {kind='forward',debtor,creditor,item,quantity,prepayment=0,deadline,location=d.get('state','location')}=args;
   if(!supported.has(kind)||debtor===creditor||!e.byId.get(item)||!positive(quantity)||!Number.isSafeInteger(prepayment)||prepayment<0||!Number.isSafeInteger(deadline)||deadline<d.get('state','minute')||!e.byId.has(location))throw preconditionFailure('交付条款无效');
-  if(prepayment&&!ledgerActive(d))throw preconditionFailure('远期预付须在已开账的引擎事务中执行');
+  if(prepayment&&!ledgerActive(d))throw Error('远期预付须在已开账的引擎事务中执行');
   if(kind!=='forward'&&prepayment)throw preconditionFailure('只有远期买卖可在本入口预付');
   const id=args.id??`conditional:${eventId}`,terms={...args.terms,performance:{item,location},onDebtorGone:args.terms?.onDebtorGone??(kind==='forward'?'assume_by_heirs':undefined)};
   if(terms.onDebtorGone===undefined)delete terms.onDebtorGone;

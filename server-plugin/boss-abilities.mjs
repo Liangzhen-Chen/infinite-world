@@ -30,7 +30,7 @@ export function validateBossMechanics(boss){
 export function templateBossCounter(d,definition,actor,tactic,context={}){
  if(!definition?.mechanics)return null;const errors=validateBossMechanics(definition);if(errors.length)throw Error(errors.join('；'));
  const m=definition.mechanics,a=m.adaptation,seen=actor.battleMemory?.tactics?.[tactic]??0;
- if(!Number.isSafeInteger(seen)||seen<0)throw preconditionFailure('首领战术次数损坏');
+ if(!Number.isSafeInteger(seen)||seen<0)throw Error('首领战术次数损坏');
  const weakness=m.weaknesses.find(w=>w.tactic===tactic&&(w.requiresStatus!=='dazzle'||context.eyesClosed===false)&&Object.values(d.get('state','effects')??{}).some(e=>e.target===definition.id&&e.kind==='status'&&e.status===w.requiresStatus&&e.power>0&&e.remainingUses!==0&&e.expires>d.get('state','minute')));
  const steps=a.tactics.includes(tactic)&&!weakness?Math.max(0,seen-a.threshold+1):0;
  return{tactic,seen,adapted:steps>0,damageMultiplier:1-Math.min(a.maximum,steps*a.perStep),...(weakness?{weakness:weakness.requiresStatus}:{})};
@@ -40,11 +40,11 @@ export function applyBossCounterAbility(d,engine,target,{eventId,attackIndex,hit
  const path=actorPath(engine.world??{},target),actor=d.get(...path),definition=engine.byId.get(actor?.boss);
  if(!definition?.mechanics||!hit||actor.hp<=0)return null;
  const errors=validateBossMechanics(definition);if(errors.length)throw Error(errors.join('；'));
- if(!Number.isSafeInteger(attackIndex)||attackIndex<0||attackIndex>8||typeof eventId!=='string')throw preconditionFailure('首领反击事件无效');
+ if(!Number.isSafeInteger(attackIndex)||attackIndex<0||attackIndex>8||typeof eventId!=='string')throw Error('首领反击事件无效');
  if(actor.location!==d.get('state','location'))throw preconditionFailure('首领反击目标不在场');
  const key=`boss_counter:${eventId}:${attackIndex}`;if(d.get('state','records',key))throw preconditionFailure('首领反击事件重复');
- if(!Number.isSafeInteger(actor.abilityCounters??0)||(actor.abilityCounters??0)<0||!Number.isFinite(actor.maxHp)||actor.maxHp<=0)throw preconditionFailure('首领能力计数或生命上限损坏');
- const hp=remainingHp??actor.hp;if(!Number.isFinite(hp)||hp<0||hp>actor.maxHp)throw preconditionFailure('首领反击剩余生命无效');if(!hp)return null;
+ if(!Number.isSafeInteger(actor.abilityCounters??0)||(actor.abilityCounters??0)<0||!Number.isFinite(actor.maxHp)||actor.maxHp<=0)throw Error('首领能力计数或生命上限损坏');
+ const hp=remainingHp??actor.hp;if(!Number.isFinite(hp)||hp<0||hp>actor.maxHp)throw Error('首领反击剩余生命无效');if(!hp)return null;
  const count=(actor.abilityCounters??0)+1;
  const ability=definition.mechanics.abilities.find(a=>count%a.every===0&&hp/actor.maxHp*100<=a.belowHpPercent);
  d.set([...path,'abilityCounters'],count);

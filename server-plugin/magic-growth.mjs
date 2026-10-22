@@ -54,7 +54,7 @@ function permission(d,p,f,args,minute){
 }
 function readResource(d,f){
  const record=d.get('state','records',`physical_feature:${f.id}`);
- if(record&&(record.category!=='physical_feature'||record.id!==f.id||record.location!==f.location))throw preconditionFailure('生长资源登记键冲突');
+ if(record&&(record.category!=='physical_feature'||record.id!==f.id||record.location!==f.location))throw Error('生长资源登记键冲突');
  const s=clone(record?.state??f.state);
  integer(s?.waterMl,0,Number.MAX_SAFE_INTEGER,'实际水量');integer(s?.nutrientMg,0,Number.MAX_SAFE_INTEGER,'实际营养量');
  integer(s?.capacityMl,1,Number.MAX_SAFE_INTEGER,'水容量');if(s.waterMl>s.capacityMl)throw preconditionFailure('实际水量超过容量');
@@ -63,29 +63,29 @@ function readResource(d,f){
 function auditLease(l,engine){
  const config=rules(engine);
  integer(l.started,0,Number.MAX_SAFE_INTEGER,'生长开始');integer(l.until,l.started+1,l.started+10080,'生长期限');integer(l.power,1,250,'生长比例');
- if(l.maximumTicks!==Math.floor(engine.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000)||l.waterMlPerAreaDay!==config.waterMlPerAreaDay||l.nutrientMgPerAreaDay!==config.nutrientMgPerAreaDay||typeof l.source!=='string'||!l.source||!Array.isArray(l.cohorts)||new Set(l.cohorts).size!==l.cohorts.length||!Array.isArray(l.entries))throw preconditionFailure('生长资源规则或批次登记不一致');
+ if(l.maximumTicks!==Math.floor(engine.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000)||l.waterMlPerAreaDay!==config.waterMlPerAreaDay||l.nutrientMgPerAreaDay!==config.nutrientMgPerAreaDay||typeof l.source!=='string'||!l.source||!Array.isArray(l.cohorts)||new Set(l.cohorts).size!==l.cohorts.length||!Array.isArray(l.entries))throw Error('生长资源规则或批次登记不一致');
  let ticks=0,water=0,nutrient=0;const days=new Set();
  for(const e of l.entries){
   integer(e.day,0,Number.MAX_SAFE_INTEGER,'消费日期');integer(e.ticks,0,Number.MAX_SAFE_INTEGER,'消费额度');
-  if(days.has(e.day))throw preconditionFailure('生长重复日结');days.add(e.day);
+  if(days.has(e.day))throw Error('生长重复日结');days.add(e.day);
   const parts=e.parts??[];let t=0,w=0,n=0;
   for(const part of parts){
    integer(part.ticks,1,Number.MAX_SAFE_INTEGER,'批次额度');integer(part.areaUnits,1,100000,'批次面积');
-   if(!l.cohorts.includes(part.cohort)||part.waterMl!==Math.ceil(part.ticks*part.areaUnits*l.waterMlPerAreaDay/unit)||part.nutrientMg!==Math.ceil(part.ticks*part.areaUnits*l.nutrientMgPerAreaDay/unit))throw preconditionFailure('生长水和营养转换不守恒');
+   if(!l.cohorts.includes(part.cohort)||part.waterMl!==Math.ceil(part.ticks*part.areaUnits*l.waterMlPerAreaDay/unit)||part.nutrientMg!==Math.ceil(part.ticks*part.areaUnits*l.nutrientMgPerAreaDay/unit))throw Error('生长水和营养转换不守恒');
    t+=part.ticks;w+=part.waterMl;n+=part.nutrientMg;
   }
-  if(t!==e.ticks||w!==(e.waterMl??0)||n!==(e.nutrientMg??0))throw preconditionFailure('生长消费明细不守恒');
+  if(t!==e.ticks||w!==(e.waterMl??0)||n!==(e.nutrientMg??0))throw Error('生长消费明细不守恒');
   ticks+=t;water+=w;nutrient+=n;
  }
- if(l.usedTicks!==ticks||l.waterMl!==water||l.nutrientMg!==nutrient)throw preconditionFailure('生长消费总账不守恒');
+ if(l.usedTicks!==ticks||l.waterMl!==water||l.nutrientMg!==nutrient)throw Error('生长消费总账不守恒');
 }
 function auditResources(s,leases,resource){
  const own=leases.filter(l=>l.resource===resource),water=own.reduce((n,l)=>n+l.waterMl,0),nutrient=own.reduce((n,l)=>n+l.nutrientMg,0);
- if((s.growthConsumedWaterMl??0)!==water||(s.growthConsumedNutrientMg??0)!==nutrient)throw preconditionFailure('生长资源消费与农田账不守恒');
+ if((s.growthConsumedWaterMl??0)!==water||(s.growthConsumedNutrientMg??0)!==nutrient)throw Error('生长资源消费与农田账不守恒');
 }
 function auditCohort(c,leases){
  const ticks=leases.flatMap(l=>l.entries).flatMap(e=>e.parts??[]).filter(p=>p.cohort===c.id).reduce((n,p)=>n+p.ticks,0);
- if((c.growthBonusTicks??0)!==ticks)throw preconditionFailure('播种批次生长额度不守恒');
+ if((c.growthBonusTicks??0)!==ticks)throw Error('播种批次生长额度不守恒');
 }
 function cohorts(r,f){
  const rows=r.field.cohorts.filter(c=>!c.ready&&c.harvestedUnits===0&&(!f.growth.cohort||c.id===f.growth.cohort));

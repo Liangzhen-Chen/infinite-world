@@ -46,7 +46,7 @@ function feature(engine,id,location){
 }
 function stateOf(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw preconditionFailure('役灵仪式对象状态键冲突');
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('役灵仪式对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>holdingSet(d,null,['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state},'magic-ritual');
@@ -383,7 +383,7 @@ export function advanceRitualEffects(d,engine,after){
  for(const[id,a]of Object.entries(d.get('state','creatures')??{})){
   const s=a.spirit;if(!s?.interference||s.divine!==false||s.rank!==0||s.nature!=='malevolent'||!awake(d,id,a))continue;
   const i=s.interference,actor=d.get(...actorPath(i.target)),location=i.target==='player'?d.get('state','location'):actor?.location;
-  if(!Number.isSafeInteger(i.settled)||i.settled>after)throw preconditionFailure('邪秽干扰时间状态损坏');
+  if(!Number.isSafeInteger(i.settled)||i.settled>after)throw Error('邪秽干扰时间状态损坏');
   number(i.remaining,0,100,'邪秽剩余干扰');number(i.stressPerMinute,.01,1,'邪秽干扰速度');
   const minutes=after-i.settled;d.set([...actorPath(id),'spirit','interference','settled'],after);
   if(!awake(d,i.target,actor)||a.location!==location)continue;
