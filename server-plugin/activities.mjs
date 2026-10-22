@@ -82,10 +82,11 @@ export const activities={
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
         const attacker=args.actor&&args.actor!=='player'?this.resolve(args.actor,'npc'):'player',attackerPath=attacker==='player'?['state','player']:['state','npcs',attacker];
-        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??target),isBoss=Boolean(npc?.boss);
+        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??npc?.species??target),isBoss=Boolean(npc?.boss);
         const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
         if(attacker!=='player'&&(!duel||!isEffective(this,d,attacker)||d.get(...attackerPath,'location')!==d.get('state','location')))throw preconditionFailure('NPC 交锋须为本人已接受且见证人在场的约斗');
-        if(!isNpc&&!['monster_','boss_'].some(prefix=>target.startsWith(prefix)))throw preconditionFailure('这个实体不是交锋对象');
+        // A creature row is a fightable opponent when it is an unowned individual of a catalogued monster; its identity is the record, not an id prefix.
+        if(!isNpc&&!(npc&&!npc.owner&&(npc.boss||npc.species)&&this.byId.get(npc.boss??npc.species)))throw preconditionFailure('这个实体不是交锋对象');
         if(!npc||npc.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
         if(isPhysicallyDead(this,d,target))throw preconditionFailure('对手已经死亡');
         const encounter=encounterForExchange(d,this,attacker,target);

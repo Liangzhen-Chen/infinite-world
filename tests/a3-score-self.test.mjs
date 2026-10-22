@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {settleSpatial,executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
+import {rejectionReason,settleSpatial,executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
@@ -887,6 +887,30 @@ test('A3 rejection signature: request descriptions earn credit only for actual r
  t.mock.method(WorldEngine.prototype,'previewAction',async()=>{throw Error('implementation failure');});
  const broken=await scoreRows([rejected],options);
  assert.equal(broken.results[0].actual.refused,false);assert.equal(broken.results[0].scores.signature,false);
+});
+
+test('A3 rejection vocabulary: routed action refusals earn credit only for the request that action governs',()=>{
+ const registry={actions:[
+  {id:'core:cast',spatial:['range','lineOfSight'],signature:{variants:[['["status","person","light"]'],['["vital","person","heal"]']]}},
+  {id:'core:trade.buy',signature:{bareIntent:{mention:true}}}]};
+ const refusal=(code,routed)=>({reasonCode:code,routed});
+ // Empty expected request: any precondition of a routed registered action counts.
+ assert.deepEqual(rejectionReason([],refusal('E-ACTION-PRECONDITION','core:trade.buy'),[],{registry}),{ok:true,code:'E-ACTION-PRECONDITION'});
+ assert.equal(rejectionReason([],refusal('E-ACTION-SPATIAL-FACTS','core:cast'),[],{registry}).ok,true);
+ // Negative: a refusal that no routed registered action produced is not credited.
+ assert.equal(rejectionReason([],refusal('E-ACTION-PRECONDITION',null),[],{registry}).ok,false);
+ assert.equal(rejectionReason([],refusal('E-ACTION-PRECONDITION','core:not_in_catalog'),[],{registry}).ok,false);
+ // Negative: a spatial refusal needs the catalog to declare a spatial requirement for the routed action.
+ assert.equal(rejectionReason([],refusal('E-ACTION-SPATIAL-FACTS','core:trade.buy'),[],{registry}).ok,false);
+ // Negative: the routed action must govern the expected request effects; a vital request is not answered by a status-only action.
+ assert.equal(rejectionReason(['vital(person:self)'],refusal('E-ACTION-PRECONDITION','core:cast'),[],{registry}).ok,true);
+ assert.equal(rejectionReason(['transfer(resource:coin,self)'],refusal('E-ACTION-PRECONDITION','core:cast'),[],{registry}).ok,false);
+ assert.equal(rejectionReason(['transfer(resource:coin,self)'],refusal('E-ACTION-PRECONDITION','core:trade.buy'),[],{registry}).ok,false);
+ // A capability refusal is an empty-request refusal: it never answers a request that has effects.
+ assert.equal(rejectionReason([],{error:{code:'E-ACTION-CAPABILITY'}},[],{registry}).ok,true);
+ assert.equal(rejectionReason(['move(person:self)'],{error:{code:'E-ACTION-CAPABILITY'}},[],{registry}).ok,false);
+ // Unknown codes stay outside the vocabulary.
+ assert.equal(rejectionReason([],{reasonCode:'E-ACTION-SLOT',routed:'core:cast'},[],{registry}).ok,false);
 });
 
 test('A3 preview: clarification, rejection and fallback retain original diagnostics',async()=>{

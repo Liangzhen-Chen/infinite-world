@@ -1488,11 +1488,34 @@ export function boundedIssues(engine,run){
 // contains, and an indexed rejection points at a requested effect of that
 // domain. Codes outside the vocabulary (e.g. schema errors) earn no credit.
 const REJECTION_DOMAINS={TRANSFER:['transfer'],LEARN:['learn'],MOVE:['move'],OBLIGATION:[...OBLIGATION_OPS],FACT:['fact.set'],REPAIR:['fact.set'],
- TIME:['time'],DURATION:['time','status'],HOLDING:[...HOLDING_OPS],AUTHORITY:[...HOLDING_OPS,'transfer','fact.set','move','obligation.create'],
+ CAPABILITY:[],TIME:['time'],DURATION:['time','status'],HOLDING:[...HOLDING_OPS],AUTHORITY:[...HOLDING_OPS,'transfer','fact.set','move','obligation.create'],
  PERMIT:[...HOLDING_OPS,'transfer','move'],VITAL:['vital'],STATUS:['status'],SCHEDULE:['schedule'],MARK:['create'],CONSENT:'*',ENTITY:'*',EFFECTS:[]};
-export function rejectionReason(signature,actual,requested=[]){
+// Action-level business refusals (06 §6.10.4) carry no effect domain in their
+// code: the routed catalog action's own precondition failed. They earn credit
+// only when the refusal really comes from a routed registered action, and only
+// for the request that action governs: E-ACTION-SPATIAL-FACTS additionally
+// needs the action to declare a spatial requirement in the catalog, and an
+// expected request with effects needs the routed action's declared effect
+// footprint to overlap it. An empty expected request (nothing may be applied)
+// accepts any such refusal. E-ACTION-CAPABILITY (a capability the actor lacks,
+// refused before routing) is an empty-request refusal like EFFECTS.
+const ROUTED_REFUSAL_CODES=['E-ACTION-PRECONDITION','E-ACTION-SPATIAL-FACTS'];
+const actionOps=action=>{
+ const variants=action?.signature?.variants??(Array.isArray(action?.signature)?[action.signature]:[]);
+ return new Set(variants.flat().map(row=>{try{return typeof row==='string'?JSON.parse(row)[0]:row?.[0];}catch{return null;}}).filter(op=>typeof op==='string'));
+};
+function routedRefusal(code,ops,actual,registry){
+ const action=typeof actual.routed==='string'?registry?.actions?.find(a=>a.id===actual.routed):null;
+ if(!action)return {ok:false,code,reason:'the refusal does not come from a routed registered action'};
+ if(code==='E-ACTION-SPATIAL-FACTS'&&!(Array.isArray(action.spatial)&&action.spatial.length))return {ok:false,code,reason:'the routed action declares no spatial requirement'};
+ if(!ops.size)return {ok:true,code};
+ const declared=actionOps(action);
+ return [...ops].some(op=>declared.has(op))?{ok:true,code}:{ok:false,code,reason:`the routed action ${action.id} does not govern the requested ${[...ops].join('/')}`};
+}
+export function rejectionReason(signature,actual,requested=[],{registry}={}){
  const code=actual.error?.code??actual.reasonCode??actual.preview?.code??null;
  if(typeof code!=='string')return {ok:false,code,reason:'refusal carries no native reason code'};
+ if(ROUTED_REFUSAL_CODES.includes(code))return routedRefusal(code,new Set(signature.map(signatureOp).filter(Boolean)),actual,registry);
  const domain=code.replace(/^E-/,'').split('-').map(part=>REJECTION_DOMAINS[part]).find(Boolean);
  if(!domain)return {ok:false,code,reason:'reason code is outside the rejection vocabulary'};
  const ops=new Set(signature.map(signatureOp).filter(Boolean));
@@ -1619,7 +1642,7 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
   const zeroEffects=!actual.committed&&(run.receipt?.applied??[]).length===0&&run.effects.length===0;
   const contextOf=r=>({before:r.before,bindings:r.bindings,engine,bounds:bounded?effect=>boundedIssues(engine,{...r,effects:[effect]}).length===0:null});
   const boundIssues=bounded&&ready?boundedIssues(engine,run):[];
-  const rejection=expectsRejection&&ready&&actual.refused?rejectionReason(row.expected.signature,actual,run.requested):null;
+  const rejection=expectsRejection&&ready&&actual.refused?rejectionReason(row.expected.signature,actual,run.requested,{registry}):null;
   const matched=!expectsRejection&&!expectsClarification&&ready&&(!actual.error||actual.refused)?signatureCheck(row.expected.signature,run.effects,run.receipt??{},run.requested,world,run.document,contextOf(run)):null;
   const signature=ready&&run.branchesOK&&(expectsRejection
    ?actual.refused&&zeroEffects&&rejection.ok
