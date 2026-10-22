@@ -2013,7 +2013,7 @@
       "tools": [],
       "materials": [],
       "workstation": "smithing",
-      "minutes": 30,
+      "minutes": 60,
       "difficulty": 10,
       "toolWear": 0,
       "restore": 100,

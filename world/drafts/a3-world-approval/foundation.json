@@ -576,7 +576,7 @@
         "path": "tests/daily-b2-mechanisms.test.mjs（日常题D12翻土播种）；A3V2-200题面“完好锄头”；world/rules/tables/domain-rules.json#sowTool",
         "detail": "翻土播种的手工农具；段岩铁匠铺的铁匠配方recipe_hoe产出它。目录价12铜与材料成本（铁边料2+木炭3+木料4=9铜）、同铺长柄铁钳12铜相邻。"
       },
-      "boundary": "世界文本只有农事规则引用sowTool=item_hoe，没有对锄头本身的独立描述；价格沿材料成本与同铺工具估定，不是独立依据。仅目录定义，不赠送库存。"
+      "boundary": "估价依据：材料成本（铁边料2+木炭3+木料4=9铜，定价12铜，约1.33倍）。世界文本只有农事规则引用sowTool=item_hoe，没有对锄头本身的独立描述；价格沿材料成本与同铺工具估定，是估价不是独立依据。仅目录定义，不赠送库存。"
     },
     {
       "id": "item_sickle",
@@ -598,7 +598,7 @@
         "path": "tests/daily-b2-mechanisms.test.mjs（日常题D13收割）；A3V2-201题面“完好镰刀”；world/rules/tables/domain-rules.json#harvestTool",
         "detail": "收割成熟谷物的手工农具；recipe_sickle由段岩传授。目录价10铜与材料成本9铜、同铺工具相邻。"
       },
-      "boundary": "世界文本只有农事规则引用harvestTool=item_sickle，没有对镰刀本身的独立描述；价格沿材料成本估定。仅目录定义，不赠送库存。"
+      "boundary": "估价依据：材料成本（9铜，定价10铜）。世界文本只有农事规则引用harvestTool=item_sickle，没有对镰刀本身的独立描述；价格沿材料成本估定。仅目录定义，不赠送库存。"
     },
     {
       "id": "item_fishing_bait",
@@ -620,7 +620,7 @@
         "path": "world/meta/rules.json#extraction.fishing.bait；tests/daily-b2-exact2.test.mjs（日常题D15.2钓鱼耗饵）",
         "detail": "按份计的谷粒钓饵，每次抛竿消耗一份；recipe_fishing_bait由林穗传授，一份燕麦（3铜）揉成十份，每份1铜。"
       },
-      "boundary": "谷粒钓饵与A3V2-203的蚯蚓钓饵是两种目录物，互不替代；价格1铜沿燕麦成本折算。仅目录定义。"
+      "boundary": "估价依据：材料成本（一份燕麦3铜揉成十份，每份约0.3铜，最小价位1铜）。谷粒钓饵与A3V2-203的蚯蚓钓饵是两种目录物，互不替代；价格1铜是估价。仅目录定义。"
     },
     {
       "id": "item_external_medicine",
@@ -628,7 +628,7 @@
       "row": {
         "id": "item_external_medicine",
         "name": "外敷药",
-        "basePrice": 2,
+        "basePrice": 4,
         "weight": 0.03,
         "aliases": [],
         "quality": "木",
@@ -640,9 +640,9 @@
       },
       "source": {
         "path": "world/meta/rules.json#medicine.takeHome；tests/daily-b2-events2.test.mjs（日常题D32.2诊疗带回三日药）；A3V2-208题面",
-        "detail": "医者用一份药草碾配的外敷药，每份为一天用量；诊疗后患者带回三日份。"
+        "detail": "医者用一份药草（目录价3铜）碾配的外敷药，每份为一天用量；诊疗后患者带回三日份。"
       },
-      "boundary": "目录价2铜低于所用一份药草的目录价3铜（碾配成本高于售价），没有独立依据说明这一折价，列入交主会话清单；无配方登记，库存来自医者既有库存。仅目录定义。"
+      "boundary": "估价依据：材料成本（一份药草3铜），定价4铜，约1.33倍，与同铺铁锄12/9的加价相同，不低于材料成本；无独立文本依据，价格是估价。无配方登记（药由医者用药草碾配，库存来自医者既有库存，不另编配方）。仅目录定义。"
     },
     {
       "id": "item_lantern",
@@ -664,7 +664,7 @@
         "path": "tests/daily-b2-trade.test.mjs（日常题D35.2灯谜奖品）；A3V2-210题面“主办人库存花灯1”",
         "detail": "纸面竹骨的小花灯，可由主办者从实际库存发作灯谜奖品。"
       },
-      "boundary": "世界文本（festivals.json、地点）没有任何花灯或灯谜记载，题面是唯一来源；价格6铜只是沿同类轻手工物（小工具木柄6铜）估价，没有独立依据，列入交主会话清单。仅目录定义。"
+      "boundary": "估价依据：材料成本（纸面与竹骨的粗略估算，无配方登记，6铜与小工具木柄6铜相邻）。世界文本（festivals.json、地点）没有任何花灯或灯谜记载，题面是唯一来源；价格是估价，没有独立依据，列入交主会话清单。仅目录定义。"
     },
     {
       "id": "recipe_hoe",
@@ -779,6 +779,67 @@
       "boundary": "同recipe_hoe；与铁锄使用同一组材料与耗时，不是独立标定。"
     },
     {
+      "id": "recipe_w3_fish_broth",
+      "kind": "recipe",
+      "row": {
+        "id": "recipe_w3_fish_broth",
+        "name": "制作清煮鱼汤",
+        "aliases": [],
+        "scope": null,
+        "skill": "skill_life_3_core",
+        "minimumProficiency": 0,
+        "minutes": 60,
+        "difficulty": 10,
+        "materials": [
+          {
+            "item": "item_fish",
+            "amount": 1
+          },
+          {
+            "item": "item_water",
+            "amount": 2
+          },
+          {
+            "item": "item_salt",
+            "amount": 1
+          },
+          {
+            "item": "item_wood_shavings",
+            "amount": 1
+          }
+        ],
+        "tools": [
+          "item_cooking_pot",
+          "item_kitchen_knife",
+          "item_wood_spoon"
+        ],
+        "workstation": "cooking",
+        "output": {
+          "item": "item_fish_broth",
+          "quantity": 1
+        },
+        "byproducts": [],
+        "learningRequired": true,
+        "learnFee": 4,
+        "learnMinutes": 60,
+        "teachers": [
+          "npc_hw_linsui"
+        ],
+        "toolWear": 1,
+        "failure": {
+          "recoverFraction": 0,
+          "injury": 0
+        },
+        "prerequisites": [],
+        "process": "取剖净鲜鱼一条，用案上切刀沿脊骨剖开，剔去鳃与腹内残血，再横切成两指宽的块，鱼刺仍留在肉里，不必强求剔尽。厚底煮锅置灶上，倒入清水两份，投干木刨屑引火，烧至锅底冒细密气泡而未大滚时下鱼块。汤面浮起灰白沫子，用偏柄木匙沿锅边撇净，火候保持微沸，煮到鱼肉由透明转白、用刀尖轻拨即散。此时撒入粗盐，以刀背压碎结块再下，搅匀后尝一口，咸淡以能辨出鱼鲜为度。全程60分钟，起锅后趁热分盛，汤清不浑；分食时仍须挑骨，清汤不含未列的药草。锅与刀用后洗净擦干，免得内锈。"
+      },
+      "source": {
+        "path": "world/meta/recipes.json；docs/probes/daily/events.md D16.5；A3-astra-plan 第四节 D16.5",
+        "detail": "林穗传授，鱼1水2盐1木刨屑1，厚底煮锅、切刀与木匙，烹饪台煮清汤，全程半个时辰，即60分钟。"
+      },
+      "boundary": "D16.5要求做饭时间过去约半个时辰（一时辰两小时，半个时辰=60分钟），故该配方耗时登记为60分钟；process正文只把时长字样由30改为60，其余原意不变。只定点修正这一条配方，不翻倍其他配方耗时。"
+    },
+    {
       "id": "recipe_fishing_bait",
       "kind": "recipe",
       "row": {
@@ -880,7 +941,6 @@
       "field": "nutrition",
       "row": {
         "nutrition": {
-          "satiety": 15,
           "hydration": 25
         }
       },
@@ -982,7 +1042,7 @@
         "tools": [],
         "materials": [],
         "workstation": "smithing",
-        "minutes": 30,
+        "minutes": 60,
         "difficulty": 10,
         "toolWear": 0,
         "restore": 100,
@@ -993,9 +1053,9 @@
       },
       "source": {
         "path": "world/meta/rules.json#repairs；A3V2-205题面；tests/daily-b2-mechanisms.test.mjs（日常题D18.2铁匠修剑）",
-        "detail": "铁匠基础手艺在锻造台修整直刃单手剑，三十分钟修满，收服务费25铜，不耗材料。"
+        "detail": "铁匠基础手艺在锻造台修整直刃单手剑，六十分钟修满，收服务费25铜，不耗材料。"
       },
-      "boundary": "25铜取自A3V2-205题面中修理方“本人承诺”的价格，不是独立世界标定；方案耗时三十分钟，题面承诺六十分钟，以方案为底数、承诺另议。"
+      "boundary": "25铜取自A3V2-205题面中修理方“本人承诺”的价格，不是独立世界标定；方案耗时六十分钟，依据日常题D18.2“修理耗时按铁匠说的时间推进（如半个时辰）”，半个时辰按一时辰两小时折为60分钟。"
     },
     {
       "id": "shop_hw_forge_mining_pick",
