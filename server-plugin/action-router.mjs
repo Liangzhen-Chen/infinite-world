@@ -18,6 +18,7 @@ import {activeEncounters} from './combat-state.mjs';
 import {hostedRites} from './faith-state.mjs';
 import {knownWorldEventReference} from './world-events.mjs';
 import {intentText,requestKind} from './routing-programs.mjs';
+import {parseTimeSlot,resolveTimeSlot} from './action-time.mjs';
 
 const tokenizer=new MemoryIndex();
 const multiset=values=>{const out=new Map();for(const value of values)out.set(value,(out.get(value)??0)+1);return out;};
@@ -74,6 +75,21 @@ const fits=(action,participants,kindOf)=>Object.entries(action.participants??{})
  const entity=participants[role];if(types==='player')return entity==='player';
  const allowed=Array.isArray(types)?types:[types];return entity!==undefined&&allowed.includes(kindOf(entity));
 });
+// Catalog request vocabulary (signature.requestSubjects): exact subjects or
+// 'prefix_*' / '*_suffix' patterns classify an emitted request into the
+// declaring action's request kind. Nothing about subjects is written in code.
+const subjectPattern=(pattern,subject)=>typeof subject==='string'&&(pattern.startsWith('*')?subject.endsWith(pattern.slice(1)):pattern.endsWith('*')?subject.startsWith(pattern.slice(0,-1)):subject===pattern);
+const claimsSubject=(action,subject)=>(action.signature?.requestSubjects??[]).some(pattern=>subjectPattern(pattern,subject));
+const subjectIndexes=new WeakMap();
+function subjectIndex(registry){
+ let rows=subjectIndexes.get(registry);
+ if(!rows){rows=registry.actions.filter(a=>Array.isArray(a.signature?.requestSubjects)&&a.signature.requestKinds?.length);subjectIndexes.set(registry,rows);}
+ return rows;
+}
+export function requestSubjectKind(registry,subject){
+ const kinds=[...new Set(subjectIndex(registry).filter(a=>claimsSubject(a,subject)).map(a=>a.signature.requestKinds[0]))];
+ return kinds.length===1?kinds[0]:null;
+}
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
  const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
@@ -82,21 +98,23 @@ export function routeAction(proposal,registry,context){
  // The proposal gateway describes an entry point, not a concrete neighbour;
  // routing back into it would recurse and distort the BM25 candidate corpus.
  const requestKinds=proposal.effects?.filter(e=>e.op==='emit').map(e=>{
-  const classified=requestKind(e);if(classified!=='request')return classified;
-  const kind=e.payload?.kind;
-  if(kind!=='request')return kind;
-  const subject=e.payload?.subject;
   // A generic request is not necessarily a factual question: negotiating
   // credit, teaching or a service must retain its own request protocol.
-  return ({greeting:'greet',public_key:'public_key'})[subject]??(/^guide(?:_|$)/.test(subject??'')?'guide':/^deliver(?:_|$)/.test(subject??'')?'delivery':/(?:_quote|_terms|_availability|_conditions|_detail)$/.test(subject??'')||/[?？]/.test(proposal.intent??'')?'ask':'request');
+  const kind=requestKind(e,subject=>requestSubjectKind(registry,subject));
+  return kind==='request'&&/[?？]/.test(proposal.intent??'')?'ask':kind;
  }).filter(Boolean)??[];
- const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.canProject?.(a,proposal)||context.emptyRequest?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
+ // An action declaring signature.subjectOnly answers only its own request
+ // subjects; when one does, same-kind actions without that subject step aside.
+ const subjects=proposal.effects?.filter(e=>e.op==='emit'&&typeof e.payload?.subject==='string').map(e=>e.payload.subject)??[];
+ const specific=new Set(registry.actions.filter(a=>a.signature?.subjectOnly&&subjects.some(subject=>claimsSubject(a,subject))).flatMap(a=>a.signature.requestKinds??[]));
+ const answers=a=>a.signature?.subjectOnly?subjects.some(subject=>claimsSubject(a,subject)):!(a.signature?.requestKinds??[]).some(kind=>specific.has(kind));
+ const actions=registry.actions.filter(a=>a.call?.tool!=='world_propose'&&(!(a.readOnly||a.projection)||context.bareIntent?.(a,proposal))&&(!requestKinds.length||!a.signature?.requestKinds||requestKinds.some(kind=>a.signature.requestKinds.includes(kind)))&&answers(a)&&fits(a,participants,context.kindOf)&&context.visible(a,participants,proposal));
  const texts=textScores(actions.map(action=>({...action,synonyms:[...action.synonyms??[],...context.labelsFor?.(action,proposal)??[]]})),proposal.intent??''),signature=effectSignature(proposal.effects??[],context);
  const candidates=actions.map((action,index)=>{
   const slots=context.slotsFor(action,proposal)??{},required=new Set(context.requiredSlots?.(action,slots)??[]),missing=(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
   // A selected read projection has an exactly empty effect footprint. Generic
   // empty proposals still have zero Jaccard and cannot select a write action.
-  const signatureScore=context.canProject?.(action,proposal)||context.emptyRequest?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
+  const signatureScore=context.bareIntent?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
  const best=candidates[0],matched=best&&best.score>=.7;
@@ -228,11 +246,9 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(empty&&action.id==='core:trade.buy'){
     const quotes=(facilityRuntime().currentAgreedQuotes?.(state)??[]).filter(q=>q.to===actor&&q.direction==='sell_to_player'&&!q.service&&catalog(q.resource,'item'));
     const named=quotes.filter(q=>{const item=engine.byId.get(q.resource);return [item?.name,...item?.aliases??[]].filter(Boolean).some(n=>text.includes(n));});
-    if(named.length===1){const q=named[0];if(slot.name==='seller')value??=q.actor;if(slot.name==='item')value??=q.resource;if(slot.name==='quantity'){
-     const count=text.match(/(\d+|[一二两三四五六七八九十]+)(?:块|份|个|张|瓶)/);
-     const number=count&&(Number(count[1])||({'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10})[count[1]]);
-     if(number)value??=number;
-    }}
+    // Quantity is a structured slot (means.quantity or the catalog default);
+    // it is never parsed out of the intent's prose.
+    if(named.length===1){const q=named[0];if(slot.name==='seller')value??=q.actor;if(slot.name==='item')value??=q.resource;}
    }
    if(empty&&action.id==='core:practice'&&slot.name==='skill'){
     const named=engine.world.spells?.filter(s=>[s.name,...s.aliases??[]].filter(Boolean).some(n=>text.includes(n)))??[];
@@ -361,9 +377,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
      if(slot.name==='type'&&['coin',LEDGER_COIN].includes(e.terms?.resource)){value='付款';break;}
      if(slot.name==='coins'){value=e.terms?.amount;if(value!==undefined)break;}
      if(slot.name==='content'){value=proposal.intent;break;}
-     if(slot.name==='deadline'&&e.terms?.due==='明天日落前'){
-      const tomorrow=(Math.floor(state.minute/1440)+1)*1440,sunset=localWeather(engine,document,location,tomorrow)?.sunsetMinute;
-      if(Number.isSafeInteger(sunset)){value=tomorrow+sunset;break;}
+     // A due time resolves only through the archived time-slot table.
+     if(slot.name==='deadline'&&e.terms?.due!==undefined){
+      const due=resolveTimeSlot(engine,document,e.terms.due,{location});
+      if(due!==null){value=due;break;}
      }
     }
     if(slot.name==='content'&&e.op==='emit'){value=e.payload?.content??e.payload?.version??e.payload?.text??e.payload?.terms?.topic; if(value!==undefined)break;}
@@ -406,8 +423,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     value={dayOffset,hour:Math.floor(sunrise/60),minute:sunrise%60};
    }
     if(slot.name==='until'&&typeof value==='string'){
-     const clock=value.match(/^(?:(次日|明天|今日|今天))?(\d{1,2}):(\d{2})$/);
-     if(clock)value={dayOffset:['次日','明天'].includes(clock[1])?1:0,hour:Number(clock[2]),minute:Number(clock[3])};
+     const parsed=parseTimeSlot(engine,value),at=parsed?resolveTimeSlot(engine,document,value,{location}):null;
+     if(at!==null){const minuteOfDay=at%1440;value={dayOffset:parsed.dayOffset,hour:Math.floor(minuteOfDay/60),minute:minuteOfDay%60};}
     }
    if(slot.entity){
     if(action.call?.tool==='world_trade'&&action.call.operation==='remit'&&slot.name==='buyer'){
@@ -436,27 +453,9 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    return /^(sink|src):/.test(value)?accountKey(value,resource,'action'):resource===LEDGER_COIN?partyAccount(engine,state,value):accountKey(value,resource,'inventory');
   }catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','转移须指定有效的资源与账户');}
  };
+ // Action words live in the catalog (label/verb/synonyms). Only names of the
+ // world entities a proposal actually references are added here.
  const labelsFor=(action,proposal)=>{
-  if(action.id==='core:research')return ['研究','融合','检查缺什么'];
-  if(action.id==='core:read')return ['能花多少钱','钱袋','账目','余额'];
-  if(action.id==='core:catalog')return ['场外','角色面板','在哪里打开'];
-  if(action.id==='core:settlement.festival_plan')return ['灯会','筹办','节庆'];
-  if(action.id==='core:law.confess')return ['供述','陈述经过','自首'];
-  if(action.call?.tool==='world_law'&&action.call.operation==='pay')return ['缴款','缴清','罚款','罚金'];
-  const labels={
-   'core:eat.meal':['吃','吃掉','进食'],
-   'core:pet.feed':['喂','喂它','喂养','口粮'],
-   'core:trade.lodge':['租','床位','住宿'],
-   'core:trade.deposit':['存','存进去','存入'],
-   'core:trade.repay':['还清','还给'],
-   'core:trade.redeem':['赎','取回来','本息付清'],
-   'core:trade.remit':['寄','汇票','汇款'],
-    'core:time':['等待','散步','休息一天'],
-   'core:promise.cancel':['免掉','免除','不让他再还'],
-   'core:environment.douse_fire':['灭火','泼水'],
-   'core:settlement.faith_rite':['仪式','参与','供品']
-  };
-  if(labels[action.id])return labels[action.id];
   if(action.call?.tool==='world_move'){
    const target=proposal.effects?.find(e=>e.op==='move')?.to,row=destinations().get(target);return row?[row.name]:[];
   }
@@ -556,18 +555,30 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }
   return [];
  };
- // Explicit temporal/casting arguments identify a native command even when
- // no success effects were claimed. Its executor still owns all preconditions.
- const emptyRequest=(action,proposal)=>proposal.effects?.length===0&&(
-  action.id==='core:time'&&Number.isSafeInteger(proposal.means?.minutes)&&['wait','waiting','wait_without_quests'].includes(proposal.means.manner)||
-  action.call?.tool==='world_cast'&&catalog(proposal.means?.spell,'spell')&&proposal.target!==undefined||
-  action.id==='core:trade.buy'&&/购买|买下|买两|买一/.test(intentText(proposal))||
-  action.id==='core:practice'&&/练一轮|再练|练习/.test(intentText(proposal))||
-  action.id==='core:research'&&/研究|融合/.test(intentText(proposal))||
-  action.id==='core:combat'&&['defend','guard'].includes(proposal.means?.manner)||
-  action.id==='core:read'&&/能花多少钱|钱袋|账目|余额/.test(intentText(proposal))||
-  action.id==='core:catalog'&&/场外|面板.*打开/.test(intentText(proposal)));
- const canProject=(action,proposal)=>action.projection==='scene'&&proposal.effects?.length===0&&/(?:看看|观察|环顾|打量)(?:一下)?(?:四周|周围|现场)|^看一看[。！]?\s*$/.test(intentText(proposal));
+ // An effect-free proposal names a native command only as the catalog declares
+ // (signature.bareIntent): required structured means (typed by the action's
+ // own slots), declared manners, a target or none, or a mention of the
+ // action's own catalog words. Its executor still owns all preconditions.
+ const bareIntent=(action,proposal)=>{
+  const rule=action.signature?.bareIntent;
+  if(!rule||proposal.effects?.length!==0)return false;
+  const means=proposal.means??{},targeted=proposal.target!==undefined||Object.keys(proposal.participants??{}).some(role=>role!=='actor');
+  for(const key of rule.means??[]){
+   const value=means[key],slot=action.slots?.find(s=>s.name===key);
+   if(value===undefined)return false;
+   if(['minutes','quantity','coins'].includes(slot?.kind)&&!Number.isSafeInteger(value))return false;
+   if(['skill','spell','recipe','item'].includes(slot?.entity)&&!catalog(value,slot.entity))return false;
+  }
+  if(rule.manners&&!rule.manners.includes(means.manner))return false;
+  if(rule.target!==undefined&&rule.target!==targeted)return false;
+  // A declared target kind list admits no target or a target of those kinds.
+  if(rule.targetKinds&&proposal.target!==undefined&&!rule.targetKinds.includes(kindOf(proposal.target)))return false;
+  if(rule.mention){
+   const text=normalize(intentText(proposal));
+   if(![action.label,action.verb,...action.synonyms??[]].some(word=>typeof word==='string'&&word&&text.includes(normalize(word))))return false;
+  }
+  return true;
+ };
  const requiredSlots=(action,slots)=>{
   const call=action.call;
   if(call?.tool==='world_profession'&&call.operation==='certify'&&engine.byId.get(slots.profession)?.kind!=='hidden')return ['teacher'];
@@ -578,17 +589,14 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss')return ['summon'];
   return [];
  };
- return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,canProject,emptyRequest,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
+ return {actor,kindOf,resolve,resolveDestination,resolveParty,resolveSubject,transferAccount,labelsFor,nativeSignatures,bareIntent,requiredSlots,entities:[...pool.values()].map(({aliases,...r})=>r),slotsFor,visible:(action,participants,proposal)=>{
   const utterance=proposal?.effects?.find(e=>e.op==='emit');
-  if(action.id==='open:ask_request'&&!['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
-  if(action.id==='core:dialogue.ask'&&['roof_followup','personal_news'].includes(utterance?.payload?.subject))return false;
   if(action.id==='open:self_tell'&&!(utterance?.verb==='tell'&&utterance.payload?.source==='self'))return false;
   if(action.id==='open:leave_mark'){
    const mark=proposal?.effects?.find(e=>e.op==='create'&&e.kind==='mark'),forms=action.slots?.find(s=>s.name==='form')?.options;
    if(mark&&mark.facts?.form&&!forms?.includes(mark.facts.form))return false;
   }
   if(action.call?.tool==='world_time'&&['sleep','rest'].includes(proposal?.means?.manner)&&action.call.fixed?.activity!==({sleep:'睡眠',rest:'休息'}[proposal.means.manner]))return false;
-  if(action.id==='core:dialogue.guide'&&proposal?.effects?.some(e=>requestKind(e)==='guide'))return false;
   const learning=proposal?.effects?.find(e=>e.op==='learn');
   if(learning&&action.call?.tool==='world_learn'&&learning.learningSource==='practice')return false;
   if(learning&&action.call?.tool==='world_practice'&&learning.learningSource!=='practice')return false;
@@ -597,7 +605,9 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const target=participants.target,catalog=action.visibility?.catalog;
   if(!target&&action.call?.tool==='world_combat'&&['guard','defend'].includes(proposal?.means?.manner))return true; // Missing opponent is a slot question, not an invented fight.
   if(!target&&action.call?.tool==='world_combat'&&['retreat','shove'].includes(proposal?.means?.manner))return true;
-  if(!target&&action.id==='core:trade.buy'&&emptyRequest(action,proposal))return true;
+  // A bare command whose card is target-scoped may be named without a target;
+  // its executor binds the actual party (e.g. an agreed quote's seller).
+  if(!target&&action.visibility?.catalog?.startsWith('target:')&&bareIntent(action,proposal))return true;
   if(catalog?.startsWith('target:')&&!target)return false;
   if(catalog==='target:npc'&&kindOf(target)!=='person'||catalog==='target:item'&&kindOf(target)!=='item'||catalog==='target:place'&&!traveling&&kindOf(target)!=='place')return false;
   return (action.preconditions??[]).every(condition=>{

@@ -12,18 +12,17 @@ const tokenizer=new MemoryIndex();
 declareHoldingWriter('routing-programs');
 
 export const intentText=p=>p.intent?.split('【本次意图】').at(-1)??'';
-export function requestKind(effect){
+// A generic request's subject is classified by the action catalog
+// (signature.requestSubjects, via the caller's classify); unknown subjects stay
+// a plain request. No subject vocabulary is written here.
+export function requestKind(effect,classify=()=>null){
  if(effect?.op!=='emit')return null;
  const {kind,subject}=effect.payload??{};
  if(kind==='confession')return 'confession';
  if(effect.verb==='tell')return kind??'tell';
  if(effect.verb!=='request')return kind;
  if(kind!=='request')return kind;
- if(/^guide(?:_|$)/.test(subject??''))return 'guide';
- if(/^deliver(?:_|$)/.test(subject??''))return 'delivery';
- if(['surrender','make_way'].includes(subject))return 'make_way';
- if(['roof_followup','personal_news'].includes(subject))return 'ask';
- return ({greeting:'greet',public_key:'public_key'})[subject]??(/(?:_quote|_terms|_availability|_conditions|_detail)$/.test(subject??'')?'ask':'request');
+ return (typeof subject==='string'&&classify(subject))||'request';
 }
 
 export function executeRoutingProgram(d,engine,tool,args,eventId){

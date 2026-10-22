@@ -11,6 +11,7 @@ import {resolvePrimitiveTransfer} from './primitive-accounts.mjs';
 import {applyPatches,digest} from './storage.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {parseAccount,LEDGER_COIN} from './ledger.mjs';
+import {resolveTimeSlot} from './action-time.mjs';
 
 // Scheduling a question records the player's own future request. The authored
 // question program rechecks presence when due and grants no NPC commitment.
@@ -22,7 +23,8 @@ function scheduledQuestion(engine,document,proposal,context){
  if(args.actor!==undefined&&context.resolve(args.actor).value!==context.actor)reject('E-OPEN-SCHEDULE','不能替他人预约行动');
  if(args.source!==undefined)reject('E-OPEN-SCHEDULE','带赠礼的询问请在届时通过真实交谈动作办理');
  const content=args.content??args.topic;if(typeof content!=='string'||!content.trim())reject('E-OPEN-SCHEDULE','请说明届时要问的内容');
- const at=effect.at==='明天早晨'?(Math.floor(document.state.minute/1440)+1)*1440+engine.world.openActionRules.generic.morningMinute:effect.at;
+ // A relative time resolves only through the archived time-slot table.
+ const at=resolveTimeSlot(engine,document,effect.at,{location:context.actor==='player'?document.state.location:document.state.npcs?.[context.actor]?.location});
  if(!Number.isSafeInteger(at)||at<=document.state.minute)reject('E-SCHEDULE-TIME','请指定一个未来的明确时刻');
  return {...proposal,effects:[{op:'schedule',at,action:'open:question',args:{target,content}},{op:'emit',verb:'tell',actor:context.actor,target,visibility:'witnessed',payload:{kind:'question_scheduled',at,content}}]};
 }
@@ -33,13 +35,6 @@ function prepareOpenSequence(proposal,registry,context,engine){
  const effects=proposal.effects??[],actor=context.actor??'player',owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
  const resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null),coin=e=>['coin',LEDGER_COIN].includes(resource(e));
  const find=predicate=>registry.actions.find(predicate)?.id;
- if(effects.length===3){
-  const [payment,holding,question]=effects;
-  if(payment.op==='transfer'&&coin(payment)&&owner(payment.from)===actor&&holding.op==='holding.open'&&holding.holdingKind==='lodges'&&question.op==='emit'&&question.verb==='request'&&question.payload?.subject==='renewal_quote'&&question.target===owner(payment.to)){
-   const lodge=routeAction({...proposal,target:question.target,effects:[payment,holding]},registry,context);
-   if(lodge.routed)return {status:'sequence',routed:'open:proposal',preserveCompleted:true,signature:lodge.signature,candidates:lodge.candidates,effects:[],cost:null,steps:[{action:lodge.routed,slots:lodge.candidates[0].slots},{action:'core:time',slots:{},untilCheckout:true},{action:'open:question',slots:{target:question.target,content:'询问下一晚续住报价；尚未同意续租'}}]};
-  }
- }
  // Known environment spells run their native programs in order. The second
  // cast sees the first cast's staged water, pays its own MP/time, and a failed
  // prerequisite discards the whole staged sequence (06 §6.3 / §6.7).
@@ -75,11 +70,6 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
  let current=document,failedStep=null;const patches=[],receipts=[];
  for(const [index,step] of prepared.steps.entries()){
   const slots={...step.slots};
-  if(step.untilCheckout){
-   const contracts=Object.values(current.state.records??{}).filter(r=>r.category==='contract'&&r.room===current.state.location&&r.parties?.includes('player')&&r.status==='有效'&&r.expires>current.state.minute);
-   if(contracts.length!==1)reject('E-OPEN-CHECKOUT','须有唯一有效住宿合同才能等到退房再询价');
-   slots.minutes=contracts[0].expires-current.state.minute;
-  }
   if(step.debtReference){
    const ref=step.debtReference,rows=obligationRows(current.state).filter(row=>!obligationClosed(row)&&row.debtor===ref.debtor&&row.creditor===ref.creditor&&(row.amount??row.principal??row.terms?.principal??0)-(row.paid??0)>=ref.amount);
    const exact=rows.find(row=>row.id===ref.id||row.legacyRecord===ref.id),matches=exact?[exact]:/^[a-z][a-z0-9_:.-]*$/i.test(ref.id??'')?[]:rows;
@@ -90,9 +80,6 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   const reduced=await engine.reduce(current,call,{openProposal:{proposal:input.args,prepared}}),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
   // Reject the whole sequence, including earlier staged costs and effects.
   if(receipt.status==='rejected'){
-   // An unavailable question tomorrow cannot undo a night already paid for
-   // and lived through. Ordinary same-time compositions remain atomic.
-   if(prepared.preserveCompleted&&receipts.length){failedStep=index;receipts.push(receipt);break;}
    const routing={...prepared,...receipt.routing,status:'sequence',intent:input.args.intent,proposal:structuredClone(input.args),failedStep:index,steps:prepared.steps,fallback:{...receipt.routing?.fallback,intent:input.args.intent}};
    const rejected={...receipt,eventId:input.eventId,routing};
    return preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}};

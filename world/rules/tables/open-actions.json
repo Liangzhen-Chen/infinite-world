@@ -13,7 +13,13 @@
     "speechMinutes": 1,
     "improvisedMinutes": 15,
     "morningMinute": 480,
-    "transferMinutes": 1
+    "transferMinutes": 1,
+    "timeSlots": {
+      "note": "相对时间槽位：可选日词 + 锚点（钟点分钟或所在地实际日出日落），可带“前/之前/以前”作期限；也接受日词 + HH:MM。不认识的写法不猜，留作待补槽位。",
+      "days": {"今天": 0, "今日": 0, "当天": 0, "明天": 1, "明日": 1, "次日": 1, "后天": 2},
+      "anchors": {"日出": {"solar": "sunrise"}, "日落": {"solar": "sunset"}, "早晨": {"minute": 480}, "早上": {"minute": 480}, "中午": {"minute": 720}, "傍晚": {"solar": "sunset"}, "晚上": {"minute": 1200}},
+      "before": ["之前", "以前", "前"]
+    }
   },
   "degrees": {
     "大失败": {"key":"fumble","multiplier":0,"timeMultiplier":2,"exposed":true},
