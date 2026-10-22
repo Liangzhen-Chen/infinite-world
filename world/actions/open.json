@@ -19,6 +19,7 @@
     },
     {
       "id": "open:proposal",
+      "spatial": [{"need": "reach", "effects": ["vital", "status", "fact.set"]}, {"need": "range", "effects": ["move"]}],
       "label": "提出创意行动",
       "verb": "提案",
       "group": "创意",

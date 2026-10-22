@@ -60,7 +60,7 @@ export function applyIntentSetup(engine,initial,setup){
  let document=structuredClone(initial),s=document.state;
  const setupUnmet=[],notes=[],bindings={};
  if(setup===undefined)return {document,setupUnmet};
- const unmet=(item,reason)=>setupUnmet.push({item,reason}),afterDomain=[];
+ const unmet=(item,reason)=>setupUnmet.push({item,reason}),afterDomain=[],spatialPending=[];
  const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
  const actor=id=>id==='player'||id==='self'?s.player:Object.hasOwn(s.npcs??{},id)?s.npcs[id]:Object.hasOwn(s.creatures??{},id)?s.creatures[id]:null;
  if(!object(setup)){unmet('setup','expected an object');return {document,setupUnmet};}
@@ -328,7 +328,7 @@ export function applyIntentSetup(engine,initial,setup){
  }
  // Domain premises (tools/a3-setup/) run after built-in scene fields and before
  // presence and ledger audits.
- const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),native,get document(){return document;},set document(value){document=value;s=value.state;}};
+ const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
  runSetupLoaders(ctx,setup);
  loadHoldings(deferredHoldings);
  for(const check of afterDomain)check();
@@ -351,7 +351,7 @@ export function applyIntentSetup(engine,initial,setup){
   prepared=applyPatches(document,bookHoldingsUpgrade({...initial,holdings:document.holdings},document,engine.world));
   prepared.holdings??=openHoldings(engine,prepared);
  }catch(error){unmet('abilities.licenses',error.message);}
- return {document:prepared,setupUnmet,notes,bindings};
+ return {document:prepared,setupUnmet,notes,bindings,spatialPending};
 }
 
 // routing.signature describes requested effects. Only committed applied effects
@@ -1012,6 +1012,37 @@ function signatureCheck(expected,effects,receipt,requested,world,document,contex
 }
 
 const timePassingActions=new Set((await Promise.all((await fs.readdir(path.join(root,'world/actions'))).filter(f=>f.endsWith('.json')).map(async f=>JSON.parse((await fs.readFile(path.join(root,'world/actions',f),'utf8')).replace(/^﻿/,''))))).flatMap(file=>file.actions??[]).filter(action=>action.call?.tool==='world_time').map(action=>action.id));
+// Spatial needs are declared by the action catalog (world/actions `spatial`,
+// main-session ruling 10-22): an entry applies unconditionally, for listed
+// values of one slot, or when the run requests/commits one of the listed
+// primitives. An unknown slot value counts as applying.
+const catalogActions=(await Promise.all((await fs.readdir(path.join(root,'world/actions'))).filter(f=>f.endsWith('.json')).map(async f=>JSON.parse((await fs.readFile(path.join(root,'world/actions',f),'utf8')).replace(/^﻿/,''))))).flatMap(file=>file.actions??[]);
+const spatialCatalog=new Map(catalogActions.filter(action=>Array.isArray(action.spatial)).map(action=>[action.id,action.spatial]));
+const DISTANCE_NEEDS=new Set(['range','reach','lineOfSight']);
+export function spatialNeeds(actionIds,run){
+ const ops=new Set([...(run.requested??[]),...(run.effects??[])].map(effect=>effect?.op).filter(Boolean));
+ const slots=run.submitted?.args?.slots??{};
+ const needs=new Map();
+ for(const id of actionIds)for(const entry of spatialCatalog.get(id)??[]){
+  const need=typeof entry==='string'?entry:entry.need;
+  const applies=typeof entry==='string'||(!entry.slot||!Object.hasOwn(slots,entry.slot)||entry.values?.includes(slots[entry.slot]))&&(!entry.effects||entry.effects.some(op=>ops.has(op)));
+  if(applies)needs.set(need,[...(needs.get(need)??[]),id]);
+ }
+ return needs;
+}
+// Pending distance premises (no native measurement) become S4 setupUnmet for
+// an evaluated action that reads distance or sight; otherwise they stand as
+// co-location and perception only, with the number recorded as unbuilt S4.
+export function settleSpatial(pending,actionIds,run){
+ const unmet=[],notes=[];
+ if(!pending?.length)return {unmet,notes};
+ const needs=[...spatialNeeds(actionIds,run)].filter(([need])=>DISTANCE_NEEDS.has(need));
+ for(const row of pending){
+  if(needs.length)unmet.push({item:row.item,reason:`S4：${needs.map(([need,ids])=>`${unique(ids).join('/')} 读取 ${need}`).join('；')}，声明距离 ${row.distanceMeters} 米无原生测量（docs/A3-接点归属.md 接点3）`});
+  else notes.push(`${row.item}: 距离 ${row.distanceMeters} 米 S4 未建立、本题动作不读取；仅以原生同地与可感知为前提`);
+ }
+ return {unmet,notes};
+}
 function companionEffect(effect,receipt){
  const actor=receipt.actor??'player',target=effect.target??effect.entity??effect.actor;
  const exchange=receipt.routed==='core:combat'?receipt.legacy?.exchange:null;
@@ -1046,7 +1077,7 @@ function companionEffect(effect,receipt){
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
- let {document,setupUnmet,notes=[],bindings={}}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
+ let {document,setupUnmet,notes=[],bindings={},spatialPending=[]}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
  const before=document;
  const signatureContext=engine.byId?createRoutingContext(engine,document):null;
  const previews=[];
@@ -1153,7 +1184,7 @@ export async function executeIntent(engine,initial,row){
  const actual={route:committed?adopted:clarified?'clarify':refused?'reject':null,status:receipt?.status??null,signature:unique(measured.effects.map(e=>e.op)),signatureEffects:measured.effects,excludedCosts:measured.excluded,unmatchedCosts:measured.unmatchedCosts,refused,clarified,committed,fallback,traceOnly,entity:entityId??null,reactions:reactions.length,error,calls,builder:builderResult};
  // Read the refusal contract; a routed refusal never earns execution credit.
  Object.assign(actual,{routed:receipt?.routed??null,reasonCode:receipt?.code??null,reason:receipt?.reason??null,missing:receipt?.missing??[],repair:receipt?.repair??[],setupUnmet,notes,preview:previews[0]??null,previews});
- return {actual,receipt,document,before,preview,prepared,effects,submitted,setupUnmet,requested,notes,bindings};
+ return {actual,receipt,document,before,preview,prepared,effects,submitted,setupUnmet,requested,notes,bindings,spatialPending};
 }
 
 const dieFor=(seed,id,label)=>createHash('sha256').update(`${seed}:${id}:${label}`).digest().readUInt32LE(0)%20+1;
@@ -1526,7 +1557,7 @@ export function constructorCandidates(engine,document,row,limits=CONSTRUCTOR_LIM
 export async function constructWithoutModel(engine,initial,row,judge,limits=CONSTRUCTOR_LIMITS){
  const setup=applyIntentSetup(engine,initial,row.setup);
  if(setup.setupUnmet.length)return {ready:false,attempts:[],matched:null};
- const base=setup.document,{candidates,entities,errors}=constructorCandidates(engine,base,row,limits),attempts=[];
+ const base=setup.document,{candidates,entities,errors}=constructorCandidates(engine,base,row,limits),attempts=[],pending=setup.spatialPending??[];
  const bare={id:row.id,intent:row.intent,expected:row.expected};
  for(const {action,target,mentions} of candidates){
   const slots=action.slots??[];
@@ -1538,7 +1569,9 @@ export async function constructWithoutModel(engine,initial,row,judge,limits=CONS
    Object.assign(run,{before:base,bindings:setup.bindings,notes:setup.notes});
    // A trace alternative taken automatically after a failed preview is 兜底.
    const fallbackTaken=run.actual.calls.some(call=>call.action!==action.id);
-   const verdict=judge(run,{fallbackTaken});
+   // A chosen action that reads distance cannot rely on an unmeasured premise.
+   const spatialGap=settleSpatial(pending,unique([action.id,run.actual.route].filter(Boolean)),run).unmet.length>0;
+   const verdict=spatialGap?{ok:false,forbidden:false,stop:false}:judge(run,{fallbackTaken});
    attempts.push({action:action.id,target,slots:chosen,route:run.actual.route,committed:run.actual.committed,fallbackTaken,ok:verdict.ok,forbidden:verdict.forbidden??false});
    if(verdict.stop)return {ready:true,attempts,matched:attempts.at(-1),errors};
   }
@@ -1553,6 +1586,10 @@ export async function scoreRows(rows,{world,seed,document:initial}={}){
  const results=[];
  for(const row of rows){
   const run=await executeCheckedIntent(engine,initial,row),{actual}=run,expectedRoute=row.expected.route??row.expected.action;
+  // Evaluated actions: the expected route(s) and the route actually taken.
+  const evaluated=unique([...[].concat(expectedRoute),actual.route].filter(r=>typeof r==='string').flatMap(r=>[r,normalizeRoute(r)]));
+  const spatial=settleSpatial(run.spatialPending,evaluated,run);
+  run.setupUnmet=[...run.setupUnmet,...spatial.unmet];run.notes=[...(run.notes??[]),...spatial.notes];
   const ready=run.setupUnmet.length===0;
   const route=ready&&(Array.isArray(expectedRoute)?expectedRoute.some(r=>normalizeRoute(r)===normalizeRoute(actual.route)):normalizeRoute(expectedRoute)===normalizeRoute(actual.route));
   // Rejection signatures describe the REQUEST, not an adopted effect set.

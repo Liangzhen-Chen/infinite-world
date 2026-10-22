@@ -290,17 +290,37 @@ function verifiedSpatial(ctx,setup,field,row,item){
   }
   const carried=ctx.document.holdings?.locations?.[target];
   if(carried?.mode==='carried'&&carried.at===observer)actual={distanceMeters:0,lineOfSight:true};
-  // Review 10-22 P1: a declared distance is always measured. It is equivalent
-  // to the native geometry when both fall on the same side of every range
-  // boundary any registered adjudication reads (contact reach 1.5 m used by
-  // the primitive runtime, every catalog action rangeMeters, every spell
-  // rangeMeters), or equal to the declared ray. No spell kind is exempt and
-  // no distance is recorded as verified without this comparison.
+  // Review 10-22 P1 + main-session ruling 10-22 (docs/A3-接点归属.md, S4 row 3):
+  // a declared distance is compared with native geometry whenever the engine
+  // can measure it, on every range boundary any adjudication reads (contact
+  // reach 1.5 m of the primitive runtime, every catalog action rangeMeters,
+  // every spell rangeMeters) or exactly for a declared ray; a contradiction is
+  // unmet. When the engine cannot measure it, the premise holds only as
+  // native co-location and perception, and is handed to the scorer as
+  // pending: an evaluated action that declares a spatial need (world/actions
+  // `spatial`) turns it into an S4 setupUnmet. It is never noted as verified.
+  let measured=false;
   if(row.distanceMeters!==undefined){
-   if(!actual||!Number.isFinite(actual.distanceMeters)||actual.lineOfSight!==row.lineOfSight)return false;
-   if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return false;
-   const boundaries=new Set([1.5,...(ctx.engine.world.actionDefinitions?.actions??[]).map(a=>a.rangeMeters),...(ctx.engine.world.spells??[]).map(spell=>spell.rangeMeters)].filter(Number.isFinite));
-   for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return false;
+   if(actual&&Number.isFinite(actual.distanceMeters)){
+    if(actual.lineOfSight!==undefined&&actual.lineOfSight!==null&&actual.lineOfSight!==row.lineOfSight)return false;
+    if(row.rayMeters&&Math.abs(actual.distanceMeters-row.distanceMeters)>1e-9)return false;
+    const boundaries=new Set([1.5,...(ctx.engine.world.actionDefinitions?.actions??[]).map(a=>a.rangeMeters),...(ctx.engine.world.spells??[]).map(spell=>spell.rangeMeters)].filter(Number.isFinite));
+    for(const boundary of boundaries)if((row.distanceMeters<=boundary)!==(actual.distanceMeters<=boundary))return false;
+    measured=true;
+   }else{
+    if(row.rayMeters)return false;
+    const placeOf=id=>id==='player'?ctx.document.state.location:ctx.actor(id)?.location??feature?.location??null;
+    const here=placeOf(observer);
+    if(!here||placeOf(target)!==here||!visible)return false;
+    // A person target must be among the people the observer's native
+    // subjective view can perceive here.
+    if(ctx.actor(target)&&target!=='player'){
+     let people=[];
+     try{people=subjectiveView(ctx.engine,ctx.document,observer).observable.people;}catch{return false;}
+     if(!people.some(p=>p.id===target))return false;
+    }
+    ctx.spatial?.({item,observer,target,distanceMeters:row.distanceMeters,lineOfSight:row.lineOfSight});
+   }
   }
   const targetBody=ctx.actor(target),at=observer==='player'?ctx.document.state.location:ctx.actor(observer)?.location;
   if(row.audible!==undefined){
@@ -312,7 +332,7 @@ function verifiedSpatial(ctx,setup,field,row,item){
   if(ctx.document.state.location===at)listeners.push('player');
   if(row.audibleTo?.some(id=>!listeners.includes(ctx.ref(id))))return false;
   if(row.thirdPartyListeners&&JSON.stringify(listeners.filter(id=>![observer,target].includes(id)).sort())!==JSON.stringify(row.thirdPartyListeners.map(ctx.ref).sort()))return false;
-  if(visible){ctx.note(`${item}: verified native perception${row.distanceMeters!==undefined?' and distance at every catalog range boundary':''}; no contact evidence created`);return true;}
+  if(visible){ctx.note(`${item}: native perception established${measured?'; declared distance measured at every catalog range boundary':''}; no contact evidence created`);return true;}
  }
  return false;
 }

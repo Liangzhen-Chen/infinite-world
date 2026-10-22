@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
+import {settleSpatial,executeIntent,scoreRows,signatureMatches as matchSignature,signatureEffects,applyIntentSetup,validateCheckBranch,loadCorpus,v2CorpusPath,oldCorpusPath} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {magicStatusStats} from '../server-plugin/magic-status.mjs';
 import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-state.mjs';
@@ -46,13 +46,12 @@ charterWorld.locations.find(l=>l.id==='loc_bs').offices=[
  {id:'office_test_bs_registry',seat:'bld_bs_office',authority:{operations:['receive_appeal','receive_claim']}},
 ];
 const charterEngine=new WorldEngine(charterWorld),charterOptions={...options,world:charterWorld};
-// A declared distance is a premise only when native geometry measures it
-// (review 10-22 P1); person-to-person distances are a reported S4 gap. The
-// regressions below do not read distance, so they drop that premise.
+// 079 declares feature distances that contradict native geometry (reported
+// to the main session); its check-branch regression drops that premise.
 const withoutPositions=row=>{const {positions,...setup}=row.setup??{};return {...row,setup};};
 
 test('A3 signature r10: conditional legal consequences require their native submission and recipient decision',async()=>{
- const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8')).map(withoutPositions);
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
  for(const number of ['051','052','056','058']){
   const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(charterEngine,initial,row);
   const check=(effects=run.effects,receipt=run.receipt,document=run.document)=>signatureMatches(row.expected.signature,effects,receipt,run.requested,document);
@@ -358,7 +357,7 @@ test('A3 checks r9: native sequence exercises each child failure after successfu
 });
 
 test('A3 signature r9: clarification earns request-signature credit only with zero raw effects',async t=>{
- const row=withoutPositions((await loadCorpus()).rows.find(r=>r.id==='A3V2-086'));
+ const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-086');
  assert.ok(row.expected.signature.length);
  const result=(await scoreRows([row],options)).results[0];
  assert.equal(result.actual.clarified,true);assert.equal(result.scores.signature,true);
@@ -678,6 +677,35 @@ test('A3 setup: two independent scenes execute the two-phase protocol with balan
  // The builder replay must receive the same setup as the initial execution.
  const built=await scoreRows([{...rows[4],setup:setups[0]}],{...options,document:awake});
  assert.equal(built.results[0].scores.constructor,true,JSON.stringify(built.results[0]));
+});
+
+test('A3 setup: unmeasured distance premises bind only actions that read distance (main-session ruling 10-22)',()=>{
+ // docs/A3-接点归属.md S4 row 3: co-location and native perception are
+ // established; a numeric distance without native measurement is S4 and
+ // blocks only actions whose catalog entry declares a spatial need.
+ const scene={location:initial.state.location,present:['npc_hw_linsui'],positions:[{observer:'player',target:'npc_hw_linsui',distanceMeters:2,lineOfSight:true}]};
+ const loaded=applyIntentSetup(engine,initial,scene);
+ assert.deepEqual(loaded.setupUnmet,[]);
+ assert.equal(loaded.spatialPending.length,1);
+ assert.ok(loaded.notes.every(note=>!/verified/i.test(note)),JSON.stringify(loaded.notes));
+ const talk=settleSpatial(loaded.spatialPending,['core:dialogue.greet'],{});
+ assert.deepEqual(talk.unmet,[]);
+ assert.match(talk.notes[0],/S4 未建立、本题动作不读取/);assert.ok(!/verified/i.test(talk.notes[0]));
+ const cast=settleSpatial(loaded.spatialPending,['core:cast'],{});
+ assert.equal(cast.unmet.length,1);assert.match(cast.unmet[0].reason,/S4/);assert.deepEqual(cast.notes,[]);
+ // Conditional declarations: observation reads range and sight, teaching does not.
+ assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'acquire'}}}}).unmet.length,0);
+ assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'observe'}}}}).unmet.length,1);
+ // A free proposal reads reach only for bodily or physical effects.
+ assert.equal(settleSpatial(loaded.spatialPending,['open:proposal'],{requested:[{op:'emit'}]}).unmet.length,0);
+ assert.equal(settleSpatial(loaded.spatialPending,['open:proposal'],{requested:[{op:'vital'}]}).unmet.length,1);
+ // A declared sight that native perception contradicts is unmet for every action.
+ const blind=applyIntentSetup(engine,initial,{...scene,positions:[{...scene.positions[0],lineOfSight:false}]});
+ assert.ok(blind.setupUnmet.some(x=>x.item==='positions[0]'));
+ // A target in another place is unmet for every action.
+ const elsewhere=Object.entries(initial.state.npcs).find(([,n])=>n.location&&n.location!==initial.state.location&&!n.scheduleTravel)[0];
+ const away=applyIntentSetup(engine,initial,{location:initial.state.location,positions:[{observer:'player',target:elsewhere,distanceMeters:2,lineOfSight:true}]});
+ assert.ok(away.setupUnmet.some(x=>x.item==='positions[0]'));assert.equal(away.spatialPending.length,0);
 });
 
 test('A3 setup: unmet items are reported separately and earn no credit, even empty signatures',async()=>{
