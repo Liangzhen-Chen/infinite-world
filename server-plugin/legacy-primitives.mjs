@@ -6,6 +6,8 @@ import {readBodyState} from './primitives-body.mjs';
 import {fixedUnits,fixedNumber} from './rx.mjs';
 import {digest} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
+import {purse} from './money.mjs';
+import {bag} from './stock.mjs';
 
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const at=(object,path)=>path.reduce((v,k)=>v?.[k],object);
@@ -58,6 +60,47 @@ function rowChanges(before,patches,root,part){
   rows.set(id,row);if(!same(old,row))out.push({id,old,row,path:[root,part,id]});
  }
  return out;
+}
+// Ids of one partition whose value actually changed, read from the handler's
+// own patches instead of scanning the whole world. A patch on the partition or
+// an ancestor falls back to that partition's keys. Order follows the committed
+// partition, exactly like iterating Object.entries(after partition).
+function changedIds(before,after,patches,path){
+ const n=path.length,touched=new Set();let whole=false;
+ for(const p of patches){
+  const k=Math.min(p.path.length,n);let prefix=true;
+  for(let i=0;i<k;i++)if(p.path[i]!==path[i]){prefix=false;break;}
+  if(!prefix)continue;
+  if(p.path.length<=n){whole=true;break;}
+  touched.add(p.path[n]);
+ }
+ const old=at(before,path),now=at(after,path);
+ if(whole)for(const id of [...Object.keys(old??{}),...Object.keys(now??{})])touched.add(id);
+ const ids=[...touched].filter(id=>!same(old?.[id],now?.[id]));
+ if(ids.length<2)return ids;
+ const order=new Map(Object.keys(now??{}).map((id,i)=>[id,i]));
+ return ids.sort((a,b)=>(order.get(a)??Infinity)-(order.get(b)??Infinity));
+}
+// Exact projection of a person's own purse/bag account: the same sources the
+// coin/stock openers enumerate for these keys (body field, negotiation bag and
+// the person's protocol assets). Other accounts return undefined.
+function personAccountProjection(engine,state,key){
+ const {owner,resource,purpose}=parseAccount(key);
+ const row=owner==='player'?state.player:state.npcs?.[owner]??state.creatures?.[owner];
+ if(!row)return undefined;
+ const assets=state.records?.[`protocol_assets:${owner}`],estate=assets?.category==='protocol_assets'&&assets.owner===owner?assets:null;
+ if(purpose==='purse'){
+  if(key!==purse(null,owner))return undefined;
+  return [row.coins,estate?.coins].reduce((n,v)=>n+(typeof v==='number'?v:0),0);
+ }
+ if(purpose!=='inventory'||!resource)return undefined;
+ let total=0;
+ for(const inventory of [owner==='player'?state.inventory:row.inventory,state.creatures?.[owner]?.negotiation?.inventory,estate?.inventory])
+  for(const [item,value] of Object.entries(inventory??{})){
+   const n=typeof value==='number'?value:value?.quantity??0;
+   if(Number.isSafeInteger(n)&&n>0&&bag(engine,owner,item)===key)total+=n;
+  }
+ return total;
 }
 const actorPath=(s,id)=>id==='player'?['state','player']:s.npcs?.[id]?['state','npcs',id]:s.creatures?.[id]?['state','creatures',id]:null;
 const kindOf=(engine,document,id)=>id==='player'||document.state.npcs?.[id]?'person':document.state.creatures?.[id]?'creature':document.holdings?.entities?.[id]?.kind??engine.byId.get(id)?.kind??null;
@@ -113,10 +156,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  if(posted.length){
   // Opening adapters read the old state projections without changing them.
   // A journal alone is insufficient: the carried goods/purse must agree too.
-  const projected=openLedger(engine,after);
-  for(const key of new Set(posted.flatMap(e=>[e.from,e.to]))){
-   const owner=parseAccount(key).owner;if(isSource(owner)||isSink(owner))continue;
-   if((projected.accounts[key]??0)!==(after.ledger.accounts[key]??0))reject('E-LEGACY-RECONCILE','Legacy state projection and adopted resource transfer differ');
+  // People's purses and bags are projected per account; only another account
+  // kind (or a mismatch, to confirm it) needs the complete opening projection.
+  const keys=[...new Set(posted.flatMap(e=>[e.from,e.to]))].filter(key=>{const owner=parseAccount(key).owner;return !isSource(owner)&&!isSink(owner);});
+  const unresolved=keys.filter(key=>personAccountProjection(engine,a,key)!==(after.ledger.accounts[key]??0));
+  if(unresolved.length){
+   const projected=openLedger(engine,after);
+   for(const key of unresolved)if((projected.accounts[key]??0)!==(after.ledger.accounts[key]??0))reject('E-LEGACY-RECONCILE','Legacy state projection and adopted resource transfer differ');
   }
  }
  const elapsed=a.minute-b.minute;
@@ -183,8 +229,10 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(old?.kind==='summon'&&!a.effects?.[id]&&contract?.ended!==undefined)
    add(stateEffect('transition',{entity:id,to:'gone',reason:'contract_ended',basis:'contract_ended',signatureKind:'creature'},['state','effects',id],before,after));
  }
- for(const [id,row] of Object.entries(a.effects??{})){
-  if(same(b.effects?.[id],row)||!involved.has(row.target)&&!String(row.source??id).startsWith(eventId))continue;
+ const changed=path=>changedIds(before,after,d.patches,path);
+ for(const id of changed(['state','effects'])){
+  const row=a.effects?.[id];
+  if(!row||!involved.has(row.target)&&!String(row.source??id).startsWith(eventId))continue;
   // 06 §6.3: the native summon instance and its real upkeep contract map to
   // create + obligation, not an untargeted status on the caster.
   if(row.kind==='summon'){
@@ -205,11 +253,12 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(old?.kind==='status'&&old.target===result.target&&!a.effects?.[change.effect]&&change.relieved===old.power)
    add(stateEffect('status',{target:old.target,status:old.status,power:0,magnitude:-change.relieved,duration:0,removed:true},['state','effects',change.effect],before,after));
  }
- for(const [id,row] of Object.entries(a.inventory??{}))if(Number.isFinite(b.inventory?.[id]?.durability)&&row?.durability!==undefined&&row.durability!==b.inventory[id].durability)
-  add(stateEffect('fact.set',{entity:id,field:'durability',value:row.durability},['state','inventory',id,'durability'],before,after));
+ const carried=changed(['state','inventory']);
+ for(const id of carried){const row=a.inventory?.[id];if(Number.isFinite(b.inventory?.[id]?.durability)&&row?.durability!==undefined&&row.durability!==b.inventory[id].durability)
+  add(stateEffect('fact.set',{entity:id,field:'durability',value:row.durability},['state','inventory',id,'durability'],before,after));}
  // Drying writes the carried item's moisture, not the entity fact partition.
- for(const [id,row] of Object.entries(a.inventory??{}))if(row?.moisture!==undefined&&!same(b.inventory?.[id]?.moisture,row.moisture))
-  add(stateEffect('fact.set',{entity:id,field:'moisture',value:row.moisture},['state','inventory',id,'moisture'],before,after));
+ for(const id of carried){const row=a.inventory?.[id];if(row?.moisture!==undefined&&!same(b.inventory?.[id]?.moisture,row.moisture))
+  add(stateEffect('fact.set',{entity:id,field:'moisture',value:row.moisture},['state','inventory',id,'moisture'],before,after));}
  // A research project is created at inception; it does not grant knowledge.
  if(tool==='settlement'&&args.operation==='festival_plan'&&result.project&&a.projects?.[result.project]?.type==='节庆筹办'&&!b.projects?.[result.project]){
   const row=a.projects[result.project];
@@ -221,11 +270,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  }
 
  // A failed lesson is an applied learning attempt, never a fabricated grant.
- for(const [id,lesson] of Object.entries(a.learning??{}))if(!same(b.learning?.[id],lesson)&&id===eventId)
-  add(stateEffect('learn',{entity:'player',target:'player',subject:lesson.entity,learningSource:lesson.source?.id,mode:lesson.source?.type},['state','learning',id],before,after));
+ const lesson=a.learning?.[eventId];
+ if(lesson&&!same(b.learning?.[eventId],lesson))
+  add(stateEffect('learn',{entity:'player',target:'player',subject:lesson.entity,learningSource:lesson.source?.id,mode:lesson.source?.type},['state','learning',eventId],before,after));
  // Teaching, practice, and old education programs may write knowledge directly.
- for(const [partition,owner] of [['skills','player'],['recipes','player'],['spells','player']])for(const [subject,row] of Object.entries(a[partition]??{})){
-  if(same(b[partition]?.[subject],row)||receipt.applied.some(e=>e.op==='learn'&&e.subject===subject))continue;
+ for(const [partition,owner] of [['skills','player'],['recipes','player'],['spells','player']])for(const subject of changed(['state',partition])){
+  const row=a[partition]?.[subject];
+  if(row===undefined||receipt.applied.some(e=>e.op==='learn'&&e.subject===subject))continue;
   // Acquiring a formula also opens its zero-proficiency backing skill. This
   // is evidence of that same lesson, not a second lesson in a different subject.
   const lesson=receipt.applied.find(e=>e.op==='learn'&&e.result?.path?.[1]==='learning'&&e.result.after?.success===true&&engine.byId.get(e.subject)?.skill===subject);
@@ -236,8 +287,8 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   // A cast's source slot is its physical medium, not a teacher or a book.
   add(stateEffect('learn',{entity:owner,target:owner,subject,learningSource:tool==='cast'?'practice':row.source?.id??result.source?.id??args.source,mode:tool==='cast'?'practice':row.source?.type??'practice'},['state',partition,subject],before,after));
  }
- for(const [id,row] of Object.entries(a.npcs??{}))if(involved.has(id))for(const [subject,value] of Object.entries(row.skills??{})){
-  if(same(b.npcs?.[id]?.skills?.[subject],value))continue;
+ for(const id of involved)if(a.npcs?.[id])for(const subject of changed(['state','npcs',id,'skills'])){
+  if(a.npcs[id].skills?.[subject]===undefined)continue;
   add(stateEffect('learn',{entity:id,target:id,subject,learningSource:'player',mode:'teacher'},['state','npcs',id,'skills',subject],before,after));
  }
 
@@ -293,16 +344,26 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const verb=['ask','interpreter','persuade','request'].includes(dialogue.action)?'request':dialogue.action;
   add(stateEffect('emit',{target:dialogue.npc,verb,visibility:dialogue.action==='tell'&&args.key==='dialogue:self_tell'?'witnessed':'private',payload:{kind:dialogue.action,content:args.content??null},...(dialogue.actedAs?{actedAs:dialogue.actedAs}:{})},['state','dialogues',dialogue.npc],before,after));
  }
- for(const [id,memory] of Object.entries(after.memories??{})){
-  if(memory.sourceEvent!==eventId||same(before.memories?.[id],memory))continue;
+ for(const id of changed(['memories'])){
+  const memory=after.memories?.[id];
+  if(memory?.sourceEvent!==eventId)continue;
   // An actual reading/hearing has a source; it does not make the claim true.
   add(stateEffect('emit',{target:memory.subject??'player',verb:'tell',visibility:'private',payload:{kind:memory.channel??memory.sourceType,content:memory.content,source:memory.source}},['memories',id],before,after));
  }
  // Actual created entities and changed authored facts (cast, manufacture,
  // facilities, etc.) use the same primitive vocabulary as native programs.
- for(const [id,row] of Object.entries(a.created??{}))if(!b.created?.[id])add(stateEffect('create',{entity:id,kind:row.kind??after.holdings?.entities?.[id]?.kind,facts:row.facts??{}},['state','created',id],before,after));
- for(const [id,row] of Object.entries(after.holdings?.entities??{})){
-  const old=before.holdings?.entities?.[id];if(!old)continue;
+ // Only this event's own changes are applied effects: an entity this action
+ // involves or declares, or one stamped with this event. Autonomous births,
+ // spawns and fact drift during the elapsed span stay internal (like time).
+ const declared=new Set([result.entity,result.created,result.building,result.instance,...(Array.isArray(result.created)?result.created:[])].filter(id=>typeof id==='string'));
+ const own=(id,stamps)=>involved.has(id)||declared.has(id)||stamps.includes(eventId);
+ for(const id of changed(['state','created'])){
+  const row=a.created?.[id],entity=after.holdings?.entities?.[id];
+  if(!row||b.created?.[id]||!own(id,[entity?.event,entity?.updatedBy,row.sourceEvent]))continue;
+  add(stateEffect('create',{entity:id,kind:row.kind??entity?.kind,facts:row.facts??{}},['state','created',id],before,after));
+ }
+ for(const id of changed(['holdings','entities'])){
+  const row=after.holdings?.entities?.[id],old=before.holdings?.entities?.[id];if(!old||!row||!own(id,[row.updatedBy]))continue;
   for(const [field,value] of Object.entries(row.facts??{}))if(!same(old.facts?.[field],value))add(stateEffect('fact.set',{entity:id,field,value},['holdings','entities',id,'facts',field],before,after));
  }
  // A sensory spell returns its saved observation, not the hidden object state
@@ -310,7 +371,9 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  const observation=tool==='cast'&&result.observation&&result.evidence&&a.records?.[result.evidence];
  if(observation?.category==='care_observation'&&observation.source===eventId)
   add(stateEffect('emit',{target:result.target,verb:'tell',visibility:'private',payload:{observation:result.observation}},['state','records',result.evidence],before,after));
- for(const [id,row] of Object.entries(a.records??{}))if(row.category==='physical_feature'&&involved.has(row.id)&&!waterEndpoints.has(row.id)&&!observation){
+ if(!observation)for(const id of changed(['state','records'])){
+  const row=a.records?.[id];
+  if(row?.category!=='physical_feature'||!involved.has(row.id)||waterEndpoints.has(row.id))continue;
   for(const [field,value] of Object.entries(row.state??{}))if(!same(b.records?.[id]?.state?.[field],value))
    add(stateEffect('fact.set',{entity:row.id,field,value},['state','records',id,'state',field],before,after));
  }
