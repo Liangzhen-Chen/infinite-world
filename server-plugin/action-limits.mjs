@@ -82,13 +82,24 @@ export function limitOpenEffects(proposal,native){
 }
 
 // Read only finalized receipts, using their actual recorded completion minute.
-// A composition root persists openUsage on the same receipt as its effects;
-// there is no parallel quota counter to drift on rollback or replay.
-export function openUsage(document,signature,{actor='player'}={}){
- const now=document.state.minute,day=Math.floor(now/1440),key=JSON.stringify([...signature].sort()),producedByKey={};let repeats=0;
+// The composition root keeps a per-actor rolling usage record in the same
+// transaction as each committed receipt (so rollback and replay cannot drift);
+// reads touch that window, not every primitive receipt ever written.
+export const openUsageKey=actor=>`open_usage:${actor}`;
+export function openUsageEntries(document,actor='player'){
+ const rows=[];
  for(const record of recordsWhere(document.state.records,'category','primitive_receipt')){
   const receipt=record.receipt,usage=receipt?.openUsage;
-  if(receipt.status!=='committed'||receipt.actor!==actor||!usage||!Number.isSafeInteger(usage.minute)||usage.minute>now)continue;
+  if(receipt.status!=='committed'||receipt.actor!==actor||!usage||!Number.isSafeInteger(usage.minute))continue;
+  rows.push({eventId:receipt.eventId,...usage});
+ }
+ return rows;
+}
+export function openUsage(document,signature,{actor='player'}={}){
+ const now=document.state.minute,day=Math.floor(now/1440),key=JSON.stringify([...signature].sort()),producedByKey={};let repeats=0;
+ const rolling=document.state.records?.[openUsageKey(actor)];
+ for(const usage of rolling?.category==='open_usage'?rolling.entries:openUsageEntries(document,actor)){
+  if(!Number.isSafeInteger(usage.minute)||usage.minute>now)continue;
   if(usage.minute>now-1440&&JSON.stringify([...usage.signature].sort())===key)repeats++;
   if(Math.floor(usage.minute/1440)===day)for(const [field,value] of Object.entries(usage.produced??{}))producedByKey[field]=(producedByKey[field]??0)+finite(value,'recorded production');
  }

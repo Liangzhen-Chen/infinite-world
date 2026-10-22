@@ -7,6 +7,26 @@ import {legalCodeAt} from './law-codes.mjs';
 declareHoldingWriter('action-consent',{kinds:['permit']});
 const minorIntimacy=(context,from,to,scope,purpose)=>/romance|intima|恋爱|亲密/.test(`${scope} ${purpose??''}`)&&[from,to].some(id=>id!=='player'&&(actionEntity(context,id)?.minor||actionEntity(context,id)?.flags?.minor||actionAge(context,id)<18));
 
+// Consent events are an append-only fact list; a write replaces the array.
+// Index each array once by donor/recipient pair, donor and id so reads touch
+// only the relevant rows instead of scanning (and re-slicing) the whole list.
+const consentIndexes=new WeakMap();
+export function consentIndex(events){
+ if(!Array.isArray(events))return {pair:()=>[],from:()=>[],byId:()=>undefined};
+ let index=consentIndexes.get(events);
+ if(!index||index.length!==events.length){
+  const pairs=new Map(),froms=new Map(),ids=new Map();
+  events.forEach((row,i)=>{
+   if(!row||typeof row!=='object')return;
+   const pair=`${row.from}\u0000${row.to}`;
+   (pairs.get(pair)??pairs.set(pair,[]).get(pair)).push(i);
+   (froms.get(row.from)??froms.set(row.from,[]).get(row.from)).push(i);
+   if(typeof row.id==='string'&&!ids.has(row.id))ids.set(row.id,row);
+  });
+  index={length:events.length,pairs,froms,ids};consentIndexes.set(events,index);
+ }
+ return {pair:(from,to)=>(index.pairs.get(`${from}\u0000${to}`)??[]).map(i=>events[i]),from:from=>(index.froms.get(from)??[]).map(i=>events[i]),byId:id=>index.ids.get(id)};
+}
 const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute']);
 export function validConsentTerms(terms){
  if(!terms||typeof terms!=='object'||Array.isArray(terms)||Object.keys(terms).some(k=>!termKeys.has(k)))return false;
@@ -17,7 +37,7 @@ const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>
 // A legacy lending call has principal/days slots but no interest slot. Read an
 // actual borrower's offer, never a proposal's claim that the borrower agreed.
 export function agreedLoan(context,borrower,creditor,{principal,days,interest,until=context.document.state.minute}){
- const offers=(context.document.state.consentEvents??[]).filter(row=>row.type==='consent_given'&&row.from===borrower&&row.to===creditor&&row.scope==='loan'&&row.subject===creditor&&row.terms?.principal===principal&&row.terms?.days===days&&Number.isSafeInteger(row.terms.interest)&&row.terms.interest>=0&&(interest===undefined||row.terms.interest===interest));
+ const offers=consentIndex(context.document.state.consentEvents).pair(borrower,creditor).filter(row=>row.type==='consent_given'&&row.from===borrower&&row.to===creditor&&row.scope==='loan'&&row.subject===creditor&&row.terms?.principal===principal&&row.terms?.days===days&&Number.isSafeInteger(row.terms.interest)&&row.terms.interest>=0&&(interest===undefined||row.terms.interest===interest));
  const valid=offers.map(row=>{
   const terms={principal,days,interest:row.terms.interest};
   return {terms,permission:consent(context,borrower,creditor,'loan',{purpose:creditor,subject:creditor,terms,until,onRefusal:'abort'})};
@@ -49,14 +69,19 @@ export function consent(context,from,to,scope,{purpose=null,subject=null,terms=n
  terms??=nativeConsentTerms(context,from,to,scope,purpose);
  const now=context.document.state?.minute??0,level=capacity(context,from,scope).level;
  if(!Number.isSafeInteger(until)||until<now)return {allowed:false,kind:'none',source:null,check:'abort',tags:[],reason:'Consent must cover the current or a future minute'};
- const events=context.consentEvents??context.document.state?.consentEvents??[];
+ // Only this donor/recipient pair's rows can grant or revoke (a revocation
+ // names its consent's own donor and recipient), newest first.
+ const events=consentIndex(context.consentEvents??context.document.state?.consentEvents).pair(from,to);
  const result=(kind,source)=>({allowed:true,kind,source,check:null,tags:[]});
  const needsProxy=level==='none'||level==='limited'&&['mind','memory','property','transfer','mental_magic'].includes(scope);
  let purposeMismatch=false,conditionalMismatch=false;
+ const revokedIds=new Set();let scopeRevoked=false;
  for(let i=events.length-1;i>=0;i--){
-  const e=events[i],cast=e.scope==='cast'&&['mental_magic','support_magic','healing'].includes(scope)&&e.subject===from&&e.terms?.spell===purpose;
+  const e=events[i];
+  if(e.type==='consent_revoked'&&(e.at??0)<=now){if(e.consent!==undefined)revokedIds.add(e.consent);if(e.scope===undefined||e.scope===scope)scopeRevoked=true;continue;}
+  const cast=e.scope==='cast'&&['mental_magic','support_magic','healing'].includes(scope)&&e.subject===from&&e.terms?.spell===purpose;
   if(e.type!=='consent_given'||typeof e.id!=='string'||!Number.isSafeInteger(e.at)||e.from!==from||e.to!==to||!(cast||(Array.isArray(e.scope)?e.scope.includes(scope):e.scope===scope))||e.at>now||e.until!==undefined&&(!Number.isSafeInteger(e.until)||e.until<=until))continue;
-  if(events.slice(i+1).some(r=>r.type==='consent_revoked'&&r.from===from&&(r.consent===e.id||r.to===to&&(r.scope===undefined||r.scope===scope))&&(r.at??0)<=now))continue;
+  if(revokedIds.has(e.id)||scopeRevoked)continue;
   if(e.purpose!==undefined&&!Array.isArray(e.purpose))continue;
   if(e.purpose?.length&&!e.purpose.includes(purpose)){purposeMismatch=true;continue;}
   if(e.subject!==undefined&&e.subject!==(subject??(cast||scope==='cast'?from:purpose))){purposeMismatch=true;continue;}
@@ -92,7 +117,7 @@ export function applyConsentEvent(d,context,{actor,eventId,verb,to,payload={}}){
  const fail=message=>{throw new PrimitiveRejected('E-CONSENT',message);},document=d.document,live={...context,document},now=document.state.minute;
  if(!payload||typeof payload!=='object'||Array.isArray(payload)||Object.keys(payload).some(k=>!['from','scope','purpose','subject','terms','until','consent'].includes(k)))fail('Invalid consent event payload');
  if(typeof eventId!=='string'||!eventId)fail('Consent needs a native event id');
- const events=d.get('state','consentEvents')??[],old=payload.consent&&(events.find(e=>e.id===payload.consent&&e.type==='consent_given')??d.get('state','records',payload.consent));
+ const events=d.get('state','consentEvents')??[],index=consentIndex(events),given=payload.consent&&index.byId(payload.consent),old=payload.consent&&(given?.type==='consent_given'?given:d.get('state','records',payload.consent));
  const from=verb==='consent_revoked'?(old?.from??old?.subject):payload.from??actor;
  const recipient=verb==='consent_revoked'?(old?.to??old?.grantee):to,scope=verb==='consent_revoked'?(old?.category==='authorization'?old.action:old?.scope):payload.scope;
  if(!from||!recipient||payload.from&&payload.from!==from||to&&to!==recipient)fail('Consent must refer to its actual donor and recipient');
@@ -103,7 +128,7 @@ export function applyConsentEvent(d,context,{actor,eventId,verb,to,payload={}}){
   if(typeof scope!=='string'||!scope||scope.length>120||!Number.isSafeInteger(payload.until)||payload.until<=now)fail('Consent needs a scope and future expiry');
   if(payload.purpose!==undefined&&(!Array.isArray(payload.purpose)||!payload.purpose.length||payload.purpose.length>16||payload.purpose.some(p=>typeof p!=='string'||!p||p.length>120)))fail('Invalid consent purposes');
   if(payload.subject!==undefined&&(typeof payload.subject!=='string'||!payload.subject||payload.subject.length>200)||payload.terms!==undefined&&!validConsentTerms(payload.terms))fail('Invalid consent subject or conditional terms');
-  if(events.some(e=>e.id===eventId))fail('Consent event already exists');
+  if(index.byId(eventId))fail('Consent event already exists');
   if(minorIntimacy(live,from,recipient,scope,payload.purpose))fail('Minor NPC cannot consent to intimacy');
   const level=capacity(live,from,scope).level;
   if(actor===from&&(level==='none'||level==='limited'&&['mind','memory','property','transfer','mental_magic'].includes(scope)))fail('This donor requires a genuine proxy');
@@ -111,7 +136,7 @@ export function applyConsentEvent(d,context,{actor,eventId,verb,to,payload={}}){
   d.set(['state','consentEvents'],[...events,row]);
   return row;
  }
- if(verb!=='consent_revoked'||!old||old.revoked||(old.until??old.expires??Infinity)<=now||events.some(e=>e.type==='consent_revoked'&&e.consent===payload.consent&&e.at<=now))fail('No active consent to revoke');
+ if(verb!=='consent_revoked'||!old||old.revoked||(old.until??old.expires??Infinity)<=now||index.pair(old.from??old.subject,old.to??old.grantee).some(e=>e.type==='consent_revoked'&&e.consent===payload.consent&&e.at<=now))fail('No active consent to revoke');
  if(old.category&&old.category!=='authorization')fail('Record is not a consent authorization');
  const row={id:eventId,type:verb,from,to:recipient,consent:payload.consent,at:now};
  if(old.category==='authorization')holdingSet(d,context.engine,['state','records',payload.consent],{...old,revoked:true,revokedAt:now,revokedBy:actor},'action-consent',eventId);

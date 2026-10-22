@@ -90,6 +90,7 @@ export function requestSubjectKind(registry,subject){
  const kinds=[...new Set(subjectIndex(registry).filter(a=>claimsSubject(a,subject)).map(a=>a.signature.requestKinds[0]))];
  return kinds.length===1?kinds[0]:null;
 }
+const ROUTE_CANDIDATES=8;
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
  const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
@@ -118,7 +119,9 @@ export function routeAction(proposal,registry,context){
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
  const best=candidates[0],matched=best&&best.score>=.7;
- return {signature,candidates,routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null};
+ // Receipts carry only the nearest few registered actions (06 §6.10.4
+ // alternatives), not a score row for every action in the catalog.
+ return {signature,candidates:candidates.slice(0,ROUTE_CANDIDATES),routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null};
 }
 
 // Only currently accessible objects enter name resolution. Global engine.resolve
@@ -131,9 +134,21 @@ export function actorKnowledge(engine,document,actor='player'){
 }
 export function createRoutingContext(engine,document,{actor='player'}={}){
  const state=document.state,d=actionReader(document);
- const features=environmentFeatures(engine,document),featureById=new Map(features.map(row=>[row.id,row]));
- const currentLocation=id=>located(d,id,x=>x==='player'?state.location:state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??featureById.get(x)?.location??engine.byId.get(x)?.location??null);
+ // Environment features: only those that can be here are resolved live
+ // (authored here, or with a runtime placement record); any other feature id
+ // is resolved on demand. The world's feature list is not rebuilt per context.
+ const featureIds=new Set(),featureById=new Map();
+ const featureOf=id=>{
+  if(typeof id!=='string'||!featureIds.has(id))return null;
+  if(!featureById.has(id))featureById.set(id,environmentFeatures(engine,document,row=>row.id===id)[0]??null);
+  return featureById.get(id);
+ };
+ const placed=row=>state.records?.[`physical_feature:${row.id}`]!==undefined||document.holdings?.locations?.[row.id]!==undefined;
+ environmentFeatures(engine,document,row=>{featureIds.add(row.id);return false;});
+ const currentLocation=id=>located(d,id,x=>x==='player'?state.location:state.npcs?.[x]?.location??state.creatures?.[x]?.location??state.created?.[x]?.location??featureOf(x)?.location??engine.byId.get(x)?.location??null);
  const location=currentLocation(actor);
+ const features=environmentFeatures(engine,document,row=>row.location===location||placed(row));
+ for(const row of features)featureById.set(row.id,row);
  const pool=new Map(),add=(id,kind,row={})=>{
   if(id!==actor&&(row.hidden||row.private))return;
   kind??=pool.get(id)?.kind;
@@ -182,7 +197,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  const owner=id=>typeof id==='string'&&id.includes('|')?parseAccount(id).owner:id;
  const kindOf=id=>pool.get(owner(id))?.kind??null;
  const inaccessible=id=>{
-  const feature=features.find(row=>row.id===id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.effects?.[id]??banks.get(id)??feature??engine.byId.get(id);
+  const feature=featureOf(id),entity=document.holdings?.entities?.[id],row=state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.effects?.[id]??banks.get(id)??feature??engine.byId.get(id);
   if(!row&&!entity&&id!=='player')return 'unknown_entity';
   const at=currentLocation(id)??row?.location;
   if(entity?.goneAt!==undefined||at&&at!==location||row?.scheduleTravel||row?.cognitionTravel||!at&&/^npc_/.test(id))return 'not_present';
@@ -192,7 +207,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   let raw;try{raw=owner(value);}catch{throw new PrimitiveRejected('E-OPEN-ACCOUNT','账户引用格式无效');}
   const normalize=x=>String(x).trim().normalize('NFKC').toLowerCase(),q=normalize(raw);
   const id=['self','me','myself','i','我','自己','本人','自身','$actor'].includes(q)?actor:raw;
-  const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||banks.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||state.effects?.[id]||document.holdings?.entities?.[id]||features.some(row=>row.id===id);
+  const exact=pool.get(id),known=exact||id==='player'||engine.byId.has(id)||banks.has(id)||state.npcs?.[id]||state.creatures?.[id]||state.created?.[id]||state.effects?.[id]||document.holdings?.entities?.[id]||featureIds.has(id);
   const matchesKind=r=>!kind||kind==='entity'||r.kind===kind||['npc','agent'].includes(kind)&&r.kind==='person';
   // Exact ids (including inaccessible ones) never fall through to name matching.
   const ownedDescription=q.match(/^(?:本人|我|自己)(?:在场|携带)?的(?:唯一)?(.+)$/)?.[1];
@@ -209,7 +224,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   return knownDestinations;
  };
  const resolveDestination=value=>{
-  const local=resolve(value),eligible=row=>['place','zone','person','creature'].includes(row.kind)||features.some(feature=>feature.id===row.id)||document.holdings?.entities?.[row.id]?.kind==='node';
+  const local=resolve(value),eligible=row=>['place','zone','person','creature'].includes(row.kind)||featureIds.has(row.id)||document.holdings?.entities?.[row.id]?.kind==='node';
   const candidates=local.candidates.filter(eligible);
   if(local.value===value&&candidates.length===1)return local;
   const known=destinations(),exact=known.get(value);
@@ -266,7 +281,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(project){if(slot.name==='budget')value??=project.facts?.budget;if(slot.name==='settlement')value??=project.facts?.location;if(slot.name==='name')value??=project.facts?.name;}
    }
    if(action.call?.tool==='world_trade'||action.call?.tool==='world_law'&&action.call.operation==='steal'){
-    if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(proposal.means?.manner==='secret_sale'?proposal.means.tools?.[0]:undefined);
+    if(slot.name==='item')value??=(goods?catalog(resource(goods),'item'):undefined)??(effects.some(e=>e.op==='holding.transfer')?proposal.means?.tools?.[0]:undefined); // A held thing handed over is named by the proposal's own tool means.
     if(slot.name==='quantity'&&goods)value??=goods.qty;
     if(slot.name==='coins'&&money)value??=money.qty;
     if(slot.name==='seller'&&action.call?.operation==='lend')value??=effects.find(e=>e.op==='obligation.create'&&e.obligationKind==='loan')?.debtor;
@@ -300,7 +315,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_companion'&&action.call.operation==='summon_dismiss'&&slot.name==='summon'&&summons.has(target))value??=target;
    if(action.call?.tool==='world_companion'&&action.call.operation==='pet_feed'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
    if(action.call?.tool==='world_remember'&&action.call.fixed?.key==='dialogue:eat_meal'&&slot.name==='item')value??=transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume')&&resource(transfers.find(e=>owner(e.from)===actor&&owner(e.to)==='sink:consume'));
-   if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
+   if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'&&slot.name==='target')value??=effects.find(e=>e.op==='fact.set'&&action.signature?.factFields?.includes(e.field))?.entity;
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
     if(slot.name==='source')value??=proposal.means?.tools?.[0];
     if(slot.name==='millilitres'){
@@ -314,7 +329,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(slot.name==='millilitres'&&spell?.effectSpec?.operation==='irrigate'&&transfer)value??=transfer.qty*1000;
     if(slot.name==='target'){
      if(spell?.effectSpec?.operation==='irrigate'&&transfer){
-      const channels=environmentFeatures(engine,document).filter(f=>f.kind==='channel'&&f.location===location&&f.links?.source===transfer.from&&f.links?.destination===transfer.to);
+      const channels=features.filter(f=>f.kind==='channel'&&f.location===location&&f.links?.source===transfer.from&&f.links?.destination===transfer.to);
       if(channels.length===1)value??=channels[0].id;
      }
      value??=target??transfer?.to??(spell?.effectSpec?.kind==='summon'?actor:undefined);
@@ -509,7 +524,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.verb==='trade.buy'&&slots.item&&money&&goods&&owner(money.from)===actor&&owner(goods.to)===actor&&owner(money.to)===owner(goods.from))return [sign([transfer(LEDGER_COIN,actor,slots.seller),transfer(slots.item,slots.seller,actor)])];
    if(call.fixed?.seller==='player'&&slots.item&&money&&owner(money.to)===actor){
     if(goods&&owner(goods.from)===actor&&owner(goods.to)===owner(money.from))return [sign([transfer(slots.item,actor,slots.buyer),transfer(LEDGER_COIN,slots.buyer,actor)])];
-    if(proposal.means?.manner==='secret_sale')return [sign([{op:'holding.transfer',newHolder:slots.buyer},transfer(LEDGER_COIN,slots.buyer,actor)])];
+    if(proposal.effects?.some(e=>e.op==='holding.transfer'&&e.newHolder===slots.buyer))return [sign([{op:'holding.transfer',newHolder:slots.buyer},transfer(LEDGER_COIN,slots.buyer,actor)])];
    }
    if(call.operation==='withdraw')return [sign([transfer(LEDGER_COIN,proposal.target,actor),{op:'obligation.settle'}])];
    if(call.operation==='lend')return [sign([transfer(LEDGER_COIN,actor,slots.seller),{op:'obligation.create',obligationKind:'loan'}])];
@@ -539,8 +554,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    return [sign([...Object.entries(spec.offerings??{}).map(([item])=>transfer(item,actor,'sink:consume')),{op:'emit',target:proposal.target,verb:'settlement'}])];
   }
   if(call?.tool==='world_field'&&call.operation==='environment_douse_fire'){
-   const target=slots.target??proposal.effects?.find(e=>e.op==='fact.set'&&e.field==='fire_intensity')?.entity;
-   return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:target,field:'fire_intensity'}])];
+   // The catalog names the fact field(s) this program changes (signature.factFields).
+   const fact=proposal.effects?.find(e=>e.op==='fact.set'&&action.signature?.factFields?.includes(e.field));
+   if(!fact)return [];
+   return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:slots.target??fact.entity,field:fact.field}])];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
   if(call?.tool==='world_law'&&call.operation==='pay'){
@@ -550,7 +567,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   }
   if(call?.tool==='world_companion'&&call.operation==='summon_dismiss'&&summons.has(slots.summon))return [sign([{op:'obligation.cancel'},{op:'transition',entity:slots.summon}])];
   if(call?.tool==='world_cast'&&engine.byId.get(slots.spell)?.effectSpec?.operation==='irrigate'){
-   const channel=environmentFeatures(engine,document).find(f=>f.id===slots.target&&f.kind==='channel');
+   const channel=featureOf(slots.target)?.kind==='channel'?featureOf(slots.target):null;
    return channel?[sign([transfer('water',channel.links?.source,channel.links?.destination)])]:[];
   }
   return [];
@@ -575,7 +592,10 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(rule.targetKinds&&proposal.target!==undefined&&!rule.targetKinds.includes(kindOf(proposal.target)))return false;
   if(rule.mention){
    const text=normalize(intentText(proposal));
-   if(![action.label,action.verb,...action.synonyms??[]].some(word=>typeof word==='string'&&word&&text.includes(normalize(word))))return false;
+   // mention:true reads the action's own words; a phrase list names the only
+   // wordings that identify this command without effects.
+   const words=Array.isArray(rule.mention)?rule.mention:[action.label,action.verb,...action.synonyms??[]];
+   if(!words.some(word=>typeof word==='string'&&word&&text.includes(normalize(word))))return false;
   }
   return true;
  };

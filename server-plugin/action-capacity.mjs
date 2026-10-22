@@ -14,10 +14,19 @@ export function actionAge(context,id){
  const row=actionEntity(context,id);
  return id!=='player'&&context.engine?.byId?npcAgeAt(context.engine,context.document.state,id):row?.age;
 }
+// Effects grouped by target, once per effects partition object (a write
+// replaces the partition), so a capacity query reads only the actor's rows.
+const effectTargets=new WeakMap();
+function effectsOn(effects,actor){
+ if(!effects||typeof effects!=='object')return [];
+ let index=effectTargets.get(effects);
+ if(!index){index=new Map();for(const row of Object.values(effects)){if(!row||typeof row!=='object')continue;const list=index.get(row.target);if(list)list.push(row);else index.set(row.target,[row]);}effectTargets.set(effects,index);}
+ return index.get(actor)??[];
+}
 export function capacity(context,actor,family){
  const state=context.document.state??{},row=actor==='player'?state.player:state.npcs?.[actor]??state.creatures?.[actor];
  if(!row)return {level:'none',reason:'找不到当前具身行动者',sources:[]};
- const effects=Object.values(context.document.state?.effects??{}).filter(e=>e.target===actor&&(e.expires===undefined||e.expires>context.document.state.minute)&&e.remainingUses!==0);
+ const effects=effectsOn(state.effects,actor).filter(e=>(e.expires===undefined||e.expires>state.minute)&&e.remainingUses!==0);
  const flags=[row,...effects];
  const none=flags.some(r=>r.capacity==='none'||r.status==='capacity:none'||['死亡','昏迷','失能'].includes(r.status)||r.diedAt!==undefined)||context.document.holdings?.protocol?.entities?.[actor]?.gone;
  if(none)return {level:'none',reason:'当前失能，无法发起行动',sources:['current body/status']};

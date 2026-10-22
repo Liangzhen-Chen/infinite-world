@@ -11,7 +11,8 @@ import {saveDialogue} from './dialogue.mjs';
 const tokenizer=new MemoryIndex();
 declareHoldingWriter('routing-programs');
 
-export const intentText=p=>p.intent?.split('【本次意图】').at(-1)??'';
+// The proposal's intent is the player's own text; no scorer framing is parsed.
+export const intentText=p=>typeof p.intent==='string'?p.intent:'';
 // A generic request's subject is classified by the action catalog
 // (signature.requestSubjects, via the caller's classify); unknown subjects stay
 // a plain request. No subject vocabulary is written here.

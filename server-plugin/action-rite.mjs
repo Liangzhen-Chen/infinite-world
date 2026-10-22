@@ -215,7 +215,18 @@ export function executeRite(engine,document,input,{actor='player',preview=false}
  const project=prepared.project??(action.rite.stages.length>1?`project_${digest({eventId:input.eventId}).slice(0,32)}`:null);
  if(preview){
   const vow=prepared.interruption?[]:vowFor(action,slots,actor,project,input.eventId,prepared.stored),discipline=prepared.interruption?[]:disciplineEvidence(engine,document,action,actor);
-  return {receipt:{eventId:input.eventId,status:'preview',actor,routed:action.id,applied:[],cost:{time:prepared.interruption?0:prepared.minutes,resources:prepared.costs,...(vow.length?{vow}:{}),...(discipline.length?{discipline}:{})},rite:{stage:stage.id,project:prepared.project,...(prepared.interruption?{interruption:prepared.interruption}:{}),diagnosis:'依主祭当前所知判断，实际效力在仪式结束后揭晓'}}};
+  // The quote uses the commit's own derivation: stage minutes times the degree
+  // row's time multiplier and the rite family's material multiplier. With a
+  // check, every degree's quote is listed; the nominal one is the success row.
+  const quote=key=>{
+   if(prepared.interruption)return {time:0,resources:[]};
+   const row=Object.values(engine.world.openActionRules?.degrees??{}).find(r=>r.key===key);if(!row)reject('E-RITE-DATA','缺少统一的检定档位数据');
+   const family=familyDegree(engine,'rite',key);
+   return {time:prepared.minutes*row.timeMultiplier,resources:family.materials===undefined?prepared.costs:prepared.costs.map(effect=>({...effect,qty:Math.ceil(effect.qty*family.materials)})).filter(effect=>effect.qty>0)};
+  };
+  const checked=!prepared.interruption&&Boolean(stage.check??action.check);
+  const byDegree=checked?Object.fromEntries(Object.values(engine.world.openActionRules?.degrees??{}).map(row=>[row.key,quote(row.key)])):null;
+  return {receipt:{eventId:input.eventId,status:'preview',actor,routed:action.id,applied:[],cost:{...quote('success'),...(byDegree?{byDegree}:{}),...(vow.length?{vow}:{}),...(discipline.length?{discipline}:{})},rite:{stage:stage.id,project:prepared.project,...(prepared.interruption?{interruption:prepared.interruption}:{}),diagnosis:'依主祭当前所知判断，实际效力在仪式结束后揭晓'}}};
  }
  const signal={op:'emit',verb:'tell',visibility:'witnessed',payload:{kind:'rite_attempt',action:action.id,stage:stage.id}};
  let minutes=0,terminal='active',outcome='success',limits=clone(action.rite.limits??{}),resultProject=null,paid=null,culture=null,discipline=[];

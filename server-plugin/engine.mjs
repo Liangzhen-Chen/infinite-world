@@ -525,7 +525,8 @@ export class WorldEngine {
         const result=runtime.execute(session,books,input,{createDraft:doc=>new Draft(doc,session),preview:true,openProposal:options.openProposal});
         if(!result.legacy)return result;
         if(result.legacy.tool==='world_propose')return runtime.propose(this,books,{...input,tool:'world_propose',args:result.legacy.args},{preview:true});
-        const reduced=await this.reduce(clone(document),input,options);
+        // reduce() is copy-on-write and never mutates its input document.
+        const reduced=await this.reduce(document,input,options);
         if(reduced.result?.receipt?.status==='rejected')return {receipt:reduced.result.receipt,routing:reduced.result.receipt.routing};
         return {receipt:runtime.legacyPreview(this,document,input,result.legacy,reduced)};
     }
@@ -576,7 +577,9 @@ export class WorldEngine {
             assertLodgingHost(d,this,seller,place,args.consent);
             const economy=this.rules.economy,host=this.byId.get(seller).name;
             const days=number(args.days??1,1,7,'住宿天数');
-            const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item:'lodging_one_night',quantity:days});
+            // The service's agreed-quote resource is declared by its catalog action.
+            const quoteResource=primitiveActionRuntime()?.registry(this).actions.find(a=>a.call?.tool==='world_trade'&&a.call.fixed?.service===args.service)?.signature?.quoteResource;
+            const agreed=quoteResource?agreedTradeQuote(d.get('state'),{buyer,seller,item:quoteResource,quantity:days}):null;
             const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
             if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
             const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);

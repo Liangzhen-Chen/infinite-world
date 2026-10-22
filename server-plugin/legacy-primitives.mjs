@@ -226,8 +226,10 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // Its real contract closure supplies the cause, not a requested transition.
  if(tool==='summon'&&args.operation==='dismiss'&&result.dismissed){
   const id=result.summon,old=b.effects?.[id],contract=old&&a.records?.[old.contract];
-  if(old?.kind==='summon'&&!a.effects?.[id]&&contract?.ended!==undefined)
-   add(stateEffect('transition',{entity:id,to:'gone',reason:'contract_ended',basis:'contract_ended',signatureKind:'creature'},['state','effects',id],before,after));
+  // The gone reason is the catalog action's declared vocabulary.
+  const reason=action.signature?.goneReason;
+  if(reason&&old?.kind==='summon'&&!a.effects?.[id]&&contract?.ended!==undefined)
+   add(stateEffect('transition',{entity:id,to:'gone',reason,basis:reason,signatureKind:'creature'},['state','effects',id],before,after));
  }
  const changed=path=>changedIds(before,after,d.patches,path);
  for(const id of changed(['state','effects'])){
@@ -334,9 +336,11 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // ritual text. Its normal stock transfer has already reconciled above.
  if(tool==='settlement'&&args.operation==='faith_rite'&&result.rite){
   const key=`hosted_participation:${result.rite}:${result.subject}`,row=a.records?.[key],rite=a.records?.[`hosted_rite:${result.rite}`];
-  if(row?.sourceEvent===eventId&&!b.records?.[key]&&rite&&row.minute===a.minute&&row.minutes===elapsed){
-   add(stateEffect('emit',{actor:row.subject,target:rite.location,verb:'settlement',visibility:'witnessed',payload:{kind:'ritual_participation',rite:row.rite,role:'participant',host:row.host}},['state','records',key],before,after));
-   if(elapsed>0)add({op:'time',minutes:elapsed,mode:'rite_stage',result:{before:b.minute,after:a.minute}});
+  // Output kinds (emitted record kind, time mode) are declared by the catalog action.
+  const {emitKind,timeMode}=action.signature??{};
+  if(emitKind&&row?.sourceEvent===eventId&&!b.records?.[key]&&rite&&row.minute===a.minute&&row.minutes===elapsed){
+   add(stateEffect('emit',{actor:row.subject,target:rite.location,verb:'settlement',visibility:'witnessed',payload:{kind:emitKind,rite:row.rite,role:'participant',host:row.host}},['state','records',key],before,after));
+   if(elapsed>0&&timeMode)add({op:'time',minutes:elapsed,mode:timeMode,result:{before:b.minute,after:a.minute}});
   }
  }
  const dialogue=result.dialogue;

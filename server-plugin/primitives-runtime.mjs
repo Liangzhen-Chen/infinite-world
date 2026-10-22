@@ -18,7 +18,7 @@ import {aliveHoldings,holdingKind,ensureHoldings,isPhysicallyDead,isGone} from '
 import {actionReader} from './action-capacity.mjs';
 import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedInteger,fixedMultiply,fixedDivide,checkedFixed} from './rx.mjs';
 import {createRXLibrary} from './rx-library.mjs';
-import {consent,applyConsentEvent} from './action-consent.mjs';
+import {consent,applyConsentEvent,consentIndex} from './action-consent.mjs';
 import {executeRuntimeEffect} from './primitives-effects.mjs';
 import {publishTransitionEvent,privateWorldEvent,drainWorldReactions} from './world-events.mjs';
 import {accountKey} from './ledger.mjs';
@@ -35,7 +35,7 @@ import {reactToMark} from './mark-reactions.mjs';
 import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {beginSleep,finishSleep} from './body-needs.mjs';
-import {openUsageEntry} from './action-limits.mjs';
+import {openUsageEntry,openUsageEntries,openUsageKey} from './action-limits.mjs';
 import {resolvePrimitiveTransfer,primitiveStockProjection} from './primitive-accounts.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter} from './holdings.mjs';
@@ -50,6 +50,15 @@ let openContextFactory=null;
 export function registerOpenActionContext(factory){
  if(factory!==null&&typeof factory!=='function')throw TypeError('Expected native open-action context factory');
  const previous=openContextFactory;openContextFactory=factory;return previous;
+}
+// Rolling per-actor open-usage window (two days), written with its receipt.
+// A save without one is seeded once from its existing committed receipts.
+function recordOpenUsage(d,engine,actor,usage,eventId){
+ if(!usage||!Number.isSafeInteger(usage.minute))return;
+ const key=openUsageKey(actor),old=d.get('state','records',key),since=usage.minute-2880;
+ const prior=old?.category==='open_usage'?old.entries:openUsageEntries(d.document,actor);
+ const entries=[...prior.filter(row=>row.minute>since&&row.eventId!==eventId),{eventId,...structuredClone(usage)}];
+ holdingSet(d,engine,['state','records',key],{category:'open_usage',actor,entries},'primitives-runtime',eventId);
 }
 const proposalRouting=(proposal,prepared)=>({intent:proposal.intent,proposal:structuredClone(proposal),...structuredClone(prepared)});
 
@@ -225,7 +234,7 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
      const permission=consent({...context,document:d.document},effect.creditor,frame.actor,'mandate',{purpose:context.consentPurpose,onRefusal:'abort'});
      if(!permission.allowed)reject('E-CONSENT','A mandate requires its principal to authorize this commission');
       if(permission.kind==='proxy'){
-       const grant=d.get('state','consentEvents')?.find(e=>e.id===permission.source);
+       const grant=consentIndex(d.get('state','consentEvents')).byId(permission.source);
        if(!parent||grant?.by!==parent.debtor)reject('E-MANDATE-SCOPE','Proxy commission requires its actual parent mandate and delegating agent');
       }
      terms={...terms,principalConsent:{source:permission.source,at:s.minute,purpose:context.consentPurpose}};
@@ -268,12 +277,22 @@ export function actionEffects(action,slots,actor){
  return bind(action.outcomes);
 }
 
+// Authored RX sources are compiled once per source and slot schema. The
+// library's signatures are a fixed table; only its functions read the
+// current document, and those are bound at evaluation time.
+const compiledRX=new Map();
+function compileActionRX(source,schema,signatures){
+ const key=JSON.stringify([source,schema]);
+ let compiled=compiledRX.get(key);
+ if(!compiled){compiled=compileRX(source,{schema,functions:signatures});if(compiledRX.size>=4096)compiledRX.clear();compiledRX.set(key,compiled);}
+ return compiled;
+}
 function validatePreconditions(engine,current,action,slots,conditions=action.preconditions??[],actor='player'){
  const library=createRXLibrary(engine,current,{observer:actor,context:primitiveContext(engine,current)}),slotSchema=Object.fromEntries(action.slots.map(slot=>[slot.name,slot.schema??(['quantity','coins','minutes'].includes(slot.kind)?'number':slot.kind==='flag'?'boolean':'string')]));
  for(const condition of conditions){
   const source=typeof condition==='string'?condition:condition.value;
   if(typeof source!=='string')reject('E-PRIMITIVE-CONNECTOR','Precondition requires an RX expression');
-  const compiled=compileRX(source,{schema:{actor:'string',target:'string',slots:slotSchema},functions:library.signatures});
+  const compiled=compileActionRX(source,{actor:'string',target:'string',slots:slotSchema},library.signatures);
   if(evaluateRX(compiled,{actor,target:slots.target??actor,slots},{functions:library.functions})!==true)reject('E-PRECONDITION',condition.reason??'Action precondition is not satisfied');
  }
 }
@@ -281,7 +300,7 @@ function validatePreconditions(engine,current,action,slots,conditions=action.pre
 function rxValue(engine,document,action,slots,value,actor){
  if(typeof value!=='string')return value;
  const library=createRXLibrary(engine,document,{observer:actor,context:primitiveContext(engine,document)}),schema={actor:'string',target:'string',slots:Object.fromEntries(action.slots.map(s=>[s.name,s.schema??(['quantity','coins','minutes'].includes(s.kind)?'number':s.kind==='flag'?'boolean':'string')]))};
- return evaluateRX(compileRX(value,{schema,functions:library.signatures}),{actor,target:slots.target??actor,slots},{functions:library.functions});
+ return evaluateRX(compileActionRX(value,schema,library.signatures),{actor,target:slots.target??actor,slots},{functions:library.functions});
 }
 function validateSlots(engine,document,action,slots,actor){
  for(const slot of action.slots){
@@ -344,7 +363,9 @@ function actionDuration(engine,document,action,slots,actor){
  }
  if(!Number.isSafeInteger(duration)||duration<0||duration>43200)reject('E-ACTION-COST','Invalid native action duration');
  const effects=Array.isArray(action.outcomes)?action.outcomes:Object.values(action.outcomes??{}).flat();
- return {duration,activity:action.activity??row?.activity??(effects.some(e=>e.op==='move')||key.startsWith('move')?'travel':effects.some(e=>e.op==='time')||key.startsWith('time')||key==='sleep'?'rest':'light')};
+ // Activity class: the catalog action, then its cost-table row, then the
+ // program's own effects. Never inferred from the action id's spelling.
+ return {duration,activity:action.activity??row?.activity??(effects.some(e=>e.op==='move')?'travel':effects.some(e=>e.op==='time')?'rest':'light')};
 }
 
 function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{duration=0,purpose=action.id,limits={},quote={}}={}){
@@ -548,7 +569,8 @@ function nextRiteMinute(engine,d,now){
  for(const project of recordsWhere(d.get('state','records'),'category','rite_project')){
   if(project.status!=='active')continue;
   const action=findAction(primitiveRuntime.registry(engine),project.action),stage=action?.rite?.stages?.[project.stage];
-  for(const at of [project.deadline,typeof stage?.window==='object'?stage.window.to:null,...(d.get('state','consentEvents')??[]).filter(e=>e.type==='consent_given'&&Object.values(project.slots.roles??{}).flat().includes(e.from)).map(e=>e.until)])if(Number.isSafeInteger(at)&&at>now)next=Math.min(next,at);
+  const consents=consentIndex(d.get('state','consentEvents')),grants=[...new Set(Object.values(project.slots.roles??{}).flat())].flatMap(role=>consents.from(role)).filter(e=>e.type==='consent_given');
+  for(const at of [project.deadline,typeof stage?.window==='object'?stage.window.to:null,...grants.map(e=>e.until)])if(Number.isSafeInteger(at)&&at>now)next=Math.min(next,at);
  }
  return next;
 }
@@ -668,6 +690,7 @@ export const primitiveRuntime={
    applied.result.receipt.openUsage=openUsageEntry(prepared,applied.result.receipt,applyPatches(document,applied.patches).state.minute);
    const d=engine.primitiveDraft(applyPatches(document,applied.patches));
    const primitive=d.get('state','records',`primitive:${eventId}`);
+   if(primitive&&applied.result.receipt.status==='committed')recordOpenUsage(d,engine,'player',applied.result.receipt.openUsage,eventId);
    if(primitive)holdingSet(d,engine,['state','records',`primitive:${eventId}`],{...primitive,receipt:applied.result.receipt},'primitives-runtime',eventId);
   holdingSet(d,engine,['state','records',key],{category:'open_proposal',fingerprint,result:applied.result},'primitives-runtime',eventId);
   return {...applied,patches:[...applied.patches,...d.patches]};
@@ -717,12 +740,13 @@ export const primitiveRuntime={
     const mark=receipt.applied.find(e=>e.op==='create'&&e.kind==='mark');
     if(mark)receipt.fallback={originalIntentFulfilled:false,entity:mark.result.entity};
     receipt.openUsage=openUsageEntry(prepared,receipt,d.get('state','minute'));
+    recordOpenUsage(d,engine,actor,receipt.openUsage,eventId);
    }});
   const planned=planPrimitives(document,effects,frame);
   if(preview)return planned;
   const claims=primitiveClaims(engine,document,planned.receipt.applied);
   if(!claims.length)return commitPrimitives(document,effects,frame);
-  const d=engine.primitiveDraft(structuredClone(document));let events=[];
+  const d=engine.primitiveDraft(document);let events=[];
   const pending=queuePrimitiveProposal(d,effects,frame,{claims,preview:planned.receipt,onCommitted:result=>{events=result.events;}});
   if(pending.receipt.duplicate)return {patches:[],events:[],receipt:pending.receipt};
   if(pending.receipt.status==='pending')engine.advance(d,0,eventId);
@@ -834,7 +858,7 @@ export const primitiveRuntime={
   const planned=planPrimitives(document,effects,frame),claims=primitiveClaims(engine,document,planned.receipt.applied);
   if(preview)return planned;
   if(claims.length&&!preview){
-   const d=(createDraft??(doc=>engine.primitiveDraft(doc)))(structuredClone(document));let events=[];
+   const d=(createDraft??(doc=>engine.primitiveDraft(doc)))(document);let events=[];
    const pending=queuePrimitiveProposal(d,effects,frame,{claims,preview:planned.receipt,onCommitted:result=>{events=result.events;}});
    if(pending.receipt.duplicate)return {patches:[],events:[],receipt:pending.receipt};
    if(pending.receipt.status==='pending')engine.advance(d,0,input.eventId);

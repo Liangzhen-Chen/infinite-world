@@ -159,7 +159,12 @@ export function prepareOpenAction(engine,document,proposal,native){
   const permission=authority(primitiveContext(engine,document),native.routing.actor,effect.op,effect.subject,{shares:effect.shares,effect});
   if(!permission.allowed)reject('E-AUTHORITY',permission.reason);
  }
- if(proposal.effects.some(e=>e.op==='emit'&&e.payload?.kind==='ritual_participation'))reject('E-RITE-SOURCE','请指定真实登记的仪式或寺观；须核对当前主持、参与时窗与实际供品，不能用仪式留痕代替参与');
+ // An emitted record kind that a registered program produces (catalog
+ // signature.emitKind) cannot be claimed by a proposal; it must run that program.
+ for(const e of proposal.effects)if(e.op==='emit'&&e.payload?.kind){
+  const program=registry.actions.find(a=>a.signature?.emitKind===e.payload.kind);
+  if(program)reject('E-OPEN-PROGRAM-OUTPUT',`请通过登记动作「${program.label}」办理：须核对真实主持、参与时窗与实际供品等条件，不能用留痕代替`);
+ }
  // Deferred directions belong only to the registered combat program. The
  // unmatched path must still resolve every actual primitive destination.
  if(typeof native.routing.resolve==='function'){

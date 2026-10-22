@@ -69,7 +69,9 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
  const baseIdentity={actor:frame.actor,source:frame.source,effects:original},legacyFingerprint=canonical(baseIdentity),fingerprint=policy.identity===null?legacyFingerprint:canonical({...baseIdentity,identity:policy.identity}),key=`primitive:${frame.eventId}`;
  const old=document.state?.records?.[key];
  if(old){if(old.category!=='primitive_receipt'||old.fingerprint!==fingerprint&&old.fingerprint!==legacyFingerprint)reject('E-PRIMITIVE-DUPLICATE','事件编号已用于不同提案');return {patches:[],events:[],receipt:{...clone(old.receipt),duplicate:true}};}
- const d=policy.createDraft?policy.createDraft(clone(document)):draft(document),receipt=receiptBase(original,frame),children=[];
+ // Native drafts are copy-on-write over the caller's document (never mutated in
+ // place); the fallback draft clones for itself. No whole-document clone here.
+ const d=policy.createDraft?policy.createDraft(document):draft(document),receipt=receiptBase(original,frame),children=[];
  if(frame.source.kind==='catalog')receipt.routed=frame.source.id;
  if(pending)receipt.pending=pending;
  if(policy.engine&&d.scheduler)beginReactionTick(d);
