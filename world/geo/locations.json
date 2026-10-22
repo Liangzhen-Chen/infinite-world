@@ -31025,7 +31025,25 @@
     "description": "环绕旧仓城的公共防护城墙，属环城郡署治理。公共通行不包含拆改、取料或施工许可，具体施工仍须有权现任按事项批准。",
     "authoredFacts": {
       "ownershipBasis": "world/geo/regions.json#county_xichui_huancheng/overview、rule与world/geo/locations.json#loc_far_huancheng确认环城城墙；A3-内容2授权落实城门城墙公共设施及郡署治理归属。"
-    }
+    },
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ]
   },
   {
     "id": "bld_hc_stone_gate",
@@ -31049,6 +31067,24 @@
     "description": "环城公共城墙的现役石砌门体，属环城郡署治理。公共通行不包含拆改、取料或施工许可，具体施工仍须有权现任按事项批准。",
     "authoredFacts": {
       "ownershipBasis": "world/geo/regions.json#county_xichui_huancheng/overview、rule与world/geo/locations.json#loc_far_huancheng确认环城城墙；A3-内容2授权落实城门城墙公共设施及郡署治理归属。"
-    }
+    },
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ]
   }
 ]

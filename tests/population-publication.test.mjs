@@ -74,6 +74,9 @@ delete source.rules.warDiplomacy;
   sources.publishers=Object.fromEntries(Object.entries(sources.publishers??{}).filter(([place,npc])=>kept.has(place)&&kept.has(npc)));
   sources.funds=Object.fromEntries(Object.entries(sources.funds??{}).filter(([place,faction])=>kept.has(place)&&kept.has(faction)));
  }
+ // Offices appointed later (A3 examiners) leave with their removed holders/seats,
+ // like other rows bound to omitted villages.
+ for(const faction of source.factions??[])if(faction.offices)faction.offices=faction.offices.filter(office=>!bound(office));
  for(let changed=true;changed;){changed=false;for(const key of ['bosses','cultures','factionPeople']){const rows=source[key]??[],next=rows.filter(row=>!bound(row));if(next.length!==rows.length){for(const row of rows)if(!next.includes(row))removed.add(row.id);source[key]=next;changed=true;}}}
  // K6效果表：属主时钟已移出或效果对象（栖地、人物、地点）已移出的挂钩与季节条目一并移出。
  for(const h of formal.rules.wildlife.habitats)if(!source.rules.wildlife.habitats.some(row=>row.id===h.id))removed.add(h.id);
