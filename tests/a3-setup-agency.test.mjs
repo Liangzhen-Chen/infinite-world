@@ -12,6 +12,7 @@ import {personCareer} from '../server-plugin/entity-view.mjs';
 import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {mapView} from '../server-plugin/ui-map.mjs';
 import {summonAction} from '../server-plugin/summons.mjs';
+import {charteredWorld} from './helpers/charter-world.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -257,7 +258,12 @@ test('agency existing holdings wait for native item/instrument bindings and reso
  const owns=result.document.holdings.rows[result.bindings.a3v2_037_owns];assert.equal(owns.subject,'native_staff');
 });
 test('agency office authority resolves source event aliases after domain modules without broadening its scope',()=>{
- const setup=corpus('057'),office=setup.instances[0],result=applyIntentSetup(engine,initial,{minute:600,instances:[office],agencyTestPremises:{staff:'s',loan:'l',order:'a3v2_057_arrest_order'}});
+ // 05 §5.3 / review 10-22 P1: the office loads only as a narrowed instance of a charter office. The shipped world
+ // has no charter for the watch desk yet (see helper), so it is attached to a test-local clone; the shipped world
+ // keeps the premise unmet.
+ const setup=corpus('057'),office=setup.instances[0],premises={minute:600,instances:[office],agencyTestPremises:{staff:'s',loan:'l',order:'a3v2_057_arrest_order'}};
+ assert.ok(applyIntentSetup(engine,initial,premises).setupUnmet.some(e=>/no catalog office/.test(e.reason)));
+ const charter=new WorldEngine(charteredWorld(world)),result=applyIntentSetup(charter,charter.initialFromLegacy(seed,'a3-agency-charter'),premises);
  assert.deepEqual(result.setupUnmet,[]);
  const facts=result.document.holdings.entities[result.bindings[office.id]].facts;
  assert.deepEqual(facts.authority,{...office.authority,basis:'native_order'});

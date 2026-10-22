@@ -25,8 +25,15 @@ test('r10 C: waiver identifies the actual debtor and creditor without moving mon
  assert.equal(run.document.state.player.coins,run.before.state.player.coins);
  assert.equal(run.effects.some(e=>e.op==='transfer'),false);
  assert.deepEqual(auditLedger(run.document.ledger),[]);
- assert.equal(signatureMatches(input.expected.signature,run.effects,run.receipt,run.requested,world),true);
- assert.equal(signatureMatches(input.expected.signature,[{...effect,creditor:'npc_hw_linsui',to:'npc_hw_linsui'}],run.receipt,run.requested,world),false);
+ // Review 10-22 P0: the obligation token must bind to a native obligation. The corpus label ayan_debt_to_self is not
+ // a setup alias (corpus-owned, reported to the main session), so the unbound row signature is unverifiable; the label
+ // is bound here to the one native loan the waiver cancelled and every other part stays strict.
+ assert.equal(signatureMatches(input.expected.signature,run.effects,run.receipt,run.requested,world,run.document,{before:run.before}),false);
+ const context={before:run.before,bindings:{ayan_debt_to_self:effect.id}};
+ assert.equal(signatureMatches(input.expected.signature,run.effects,run.receipt,run.requested,world,run.document,context),true);
+ // The signature names the obligation, not its parties: a different obligation never satisfies it, and the actual
+ // debtor/creditor are asserted natively above and by the foreign-creditor refusal below.
+ assert.equal(signatureMatches(input.expected.signature,[{...effect,id:'another_obligation'}],run.receipt,run.requested,world,run.document,context),false);
  const foreign=row('040');foreign.setup.obligations[0].creditor='npc_hw_linsui';foreign.setup.history[0].creditor='npc_hw_linsui';
  const denied=await executeIntent(engine,initial,foreign);
  assert.equal(denied.actual.committed,false);
@@ -36,9 +43,16 @@ test('r10 C: waiver identifies the actual debtor and creditor without moving mon
 });
 
 test('r10 C: channel and owned bucket endpoints require conserved native water and current ownership',async()=>{
- const input=row('079'),scored=await scoreRows([input],{world,seed,document:initial}),result=scored.results[0];
- assert.equal(result.scores.signature,true,JSON.stringify(result.scores));
- assert.equal(result.scores.constructor,true);
+ // 079 declares feature distances that contradict native geometry (01 §1.2; corpus-owned, reported to the main
+ // session); this mechanism regression drops that premise, as the scorer self-test does.
+ const input=row('079');delete input.setup.positions;
+ const scored=await scoreRows([input],{world,seed,document:initial}),result=scored.results[0];
+ // thing:own_water_bucket names no entity in the world (corpus label, reported to the main session), so the full
+ // row signature is unverifiable; its channel-to-bucket transfer part is checked below against the native effect.
+ assert.equal(result.scores.route,true);assert.equal(result.scores.signature,false);
+ assert.deepEqual(result.signatureDiagnostics.map(d=>d.reason),['unverified qualifiers: thing:own_water_bucket']);
+ // 标杆 B07.4: constructor credit is the model-free form search, never a replay of the corpus proposal.
+ assert.equal(result.constructorSearch.method,'model-free form');assert.equal(result.scores.constructor,Boolean(result.constructorSearch.matched));
  const effect=result.actual.signatureEffects.find(e=>e.op==='transfer'&&e.resource==='water');
  assert.equal(effect.destinationOwner,'player');
  const signature=[input.expected.signature[0]],receipt={actor:'player'};
