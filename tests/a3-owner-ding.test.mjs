@@ -16,7 +16,9 @@ import {aliveHoldings,closeHolding} from '../server-plugin/holdings.mjs';
 import {transition,advanceProcedure} from '../server-plugin/transition.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 
-const engine=new WorldEngine(await loadWorld());
+import {charteredWorld} from './helpers/charter-world.mjs';
+// 05 §5.3: corpus offices must be charter offices; the shipped world has none yet (see helper).
+const engine=new WorldEngine(charteredWorld(await loadWorld()));
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-ding');
 const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
@@ -114,7 +116,9 @@ test('N/O: full corpus fine proposal routes to the real public collection and em
  const payment=row.actual.signatureEffects.find(e=>e.op==='transfer');
  assert.equal(payment.to,'loc_bs|coin_river|legal_treasury');assert.equal(payment.qty,10);
  assert.ok(row.actual.signatureEffects.some(e=>e.op==='obligation.settle'&&e.id==='a3v2_054_fine'&&e.amount===10));
- assert.equal(row.actual.builder.ok,true);assert.equal(row.actual.builder.route,'core:law.pay');
+ // 标杆 B07.4 / review 10-22 P1: constructor credit is the model-free form search (the corpus row
+ // carries no builder input), so the same payment route must be reachable from catalog forms alone.
+ assert.equal(row.constructorSearch.method,'model-free form');assert.equal(row.constructorSearch.matched.route,'core:law.pay');assert.equal(row.constructorSearch.matched.committed,true);assert.equal(row.constructorSearch.matched.fallbackTaken,false);
  // A3-E r9 / 01 §1.6, 06 §6.3: authorized_collector resolves through the
  // native payment account to loc_bs's legal treasury, never the officer's
  // private purse. The real payment/settlement assertions above stay intact.
