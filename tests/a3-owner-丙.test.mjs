@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {ActionRejection} from '../server-plugin/action-rejection.mjs';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
@@ -21,6 +23,13 @@ const home='bld_hw_qingdeng',npc='npc_hw_linsui';
 const setup=x=>applyIntentSetup(engine,initial,{location:home,...x});
 const generic=(id,facts={})=>({id,template:'thing',kind:'item',name:id,owner:'player',location:home,carriedBy:'player',...facts});
 const catalog=(item,id=item,facts={})=>({...generic(id),item,inventoryBinding:{item,quantity:1,mode:'same_stock'},condition:100,...facts});
+// a3p-domain moved these preconditions to typed, world-facing Chinese reasons.
+// Keep each original physical constraint and additionally require its stable
+// code and actionable missing/repair details; plain invariant errors stay below.
+const worldFailure=(code,reason)=>error=>{
+ assert.ok(error instanceof ActionRejection);assert.equal(error.code,code);assert.match(error.message,reason);
+ assert.ok(error.missing.length&&error.repair.length);return true;
+};
 function books(document){
  assert.deepEqual(auditLedger(document.ledger),[]);
  for(const [key,n] of legacyStock(engine,document.state).balances)assert.equal(document.ledger.accounts[key],n,key);
@@ -44,11 +53,11 @@ test('J: native damage, contamination and toxicity affect repair/consumption and
  assert.deepEqual(out.setupUnmet,[]);
  const d=engine.primitiveDraft(out.document),food=out.bindings.food;
  assert.equal(physicalItem(d,engine,food).contaminated,true);
- assert.throws(()=>engine.itemDelta(d,'player','item_ration',-1,{flow:'sink:consume',purpose:'meal',writer:'daily-actions',eventId:'unsafe'}),/contaminated/);
+ assert.throws(()=>engine.itemDelta(d,'player','item_ration',-1,{flow:'sink:consume',purpose:'meal',writer:'daily-actions',eventId:'unsafe'}),worldFailure('E-ACTION-FOOD',/污染/));
  assert.equal(engine.quantity(d,'player','item_ration'),1);
  assert.doesNotThrow(()=>validatePhysicalAction(d,engine,'repair',{item:'item_staff'}));
  writePhysicalItem(d,engine,out.bindings.staff,{damage:{kind:'cracked_body'}});
- assert.throws(()=>validatePhysicalAction(d,engine,'repair',{item:'item_staff'}),/cracked/);
+ assert.throws(()=>validatePhysicalAction(d,engine,'repair',{item:'item_staff'}),worldFailure('E-ACTION-REPAIR-WORK',/本体裂损/));
  assert.throws(()=>writePhysicalItem(d,engine,food,{toxic:'false'}),/Invalid/);
  assert.throws(()=>writePhysicalItem(d,engine,food,{coins:100}),/Unknown physical fact/);
  const saved=await roundtrip(t,d.document);
@@ -59,8 +68,8 @@ test('J: material, scale, appearance and attached laces constrain actual native 
  const out=setup({itemInstances:[generic('shoe',{condition:0,wearable:false,attachedLaces:true,materialTraits:['old_shoe']}),generic('flower',{materialTraits:['flower'],toxic:false,medicinalEffect:false})],objects:[{id:'branch',template:'thing',kind:'node',name:'branch',owner:'player',location:home,reachable:true},{id:'gate',template:'thing',kind:'building',name:'gate',location:home,material:'stone',scale:'whole_city_gate',condition:40}]});
  assert.deepEqual(out.setupUnmet,[]);
  const d=engine.primitiveDraft(out.document);
- assert.throws(()=>validatePhysicalAction(d,engine,'repair',{instance:out.bindings.gate}),/stone city gate/);
- assert.throws(()=>equipPhysicalItem(d,engine,'player',out.bindings.shoe),/cannot be worn/);
+ assert.throws(()=>validatePhysicalAction(d,engine,'repair',{instance:out.bindings.gate}),worldFailure('E-ACTION-REPAIR-WORK',/stone.*whole_city_gate/));
+ assert.throws(()=>equipPhysicalItem(d,engine,'player',out.bindings.shoe),worldFailure('E-ACTION-WEAR',/不具备.*穿戴结构/));
  const tied=await engine.reduce(out.document,{tool:'environment',eventId:'tie-shoe',args:{operation:'tie',target:out.bindings.shoe,destination:out.bindings.branch}});
  assert.equal(tied.result.attachedTo,out.bindings.branch);
  const saved=await roundtrip(t,applyPatches(out.document,tied.patches));
@@ -77,8 +86,8 @@ test('K: nodes retain armed/lock/fire facts, reject forged outcomes and unauthor
  assert.deepEqual(out.setupUnmet,[]);
  const inspected=await engine.reduce(out.document,{tool:'environment',eventId:'inspect-lock',args:{target:out.bindings.lock}});
  assert.equal(inspected.result.physical.locked,true);
- await assert.rejects(engine.reduce(out.document,{tool:'environment',eventId:'forged',args:{operation:'unlock',target:out.bindings.lock,success:true}}),/outcome/);
- await assert.rejects(engine.reduce(out.document,{tool:'environment',eventId:'no-tool',args:{operation:'disarm',target:out.bindings.trap}}),/tool/);
+ await assert.rejects(engine.reduce(out.document,{tool:'environment',eventId:'forged',args:{operation:'unlock',target:out.bindings.lock,success:true}}),worldFailure('E-ACTION-PROPOSAL',/结果.*实际能力.*检定/));
+ await assert.rejects(engine.reduce(out.document,{tool:'environment',eventId:'no-tool',args:{operation:'disarm',target:out.bindings.trap}}),worldFailure('E-ACTION-TOOL',/grip.*工具/));
  const saved=await roundtrip(t,out.document,{tool:'environment',eventId:'douse',args:{operation:'douse_fire',target:out.bindings.fire}});
  assert.equal(physicalItem(engine.primitiveDraft(saved),engine,out.bindings.fire).fireIntensity,0);
  assert.equal(engine.quantity(engine.primitiveDraft(saved),'player','item_water'),0);
@@ -86,7 +95,7 @@ test('K: nodes retain armed/lock/fire facts, reject forged outcomes and unauthor
  await assert.rejects(engine.reduce(other.document,{tool:'environment',eventId:'unauthorized',args:{operation:'douse_fire',target:other.bindings['other-fire']}}));
  assert.ok(setup({objects:[{...generic('bad-fire'),kind:'node',fireIntensity:-1}]}).setupUnmet.length);
  const larger=engine.primitiveDraft(out.document);writePhysicalItem(larger,engine,out.bindings.fire,{fireIntensity:2});
- await assert.rejects(engine.reduce(larger.document,{tool:'environment',eventId:'too-large',args:{operation:'douse_fire',target:out.bindings.fire}}),/larger fires/);
+ await assert.rejects(engine.reduce(larger.document,{tool:'environment',eventId:'too-large',args:{operation:'douse_fire',target:out.bindings.fire}}),worldFailure('E-ACTION-DOUSE',/较大.*火势/));
  assert.equal(engine.quantity(larger,'player','item_water'),1);
  const source=engine.primitiveDraft(out.document);
  source.set(['state','records','forged-ignition'],{category:'world_event',id:'forged-ignition',verb:'ignited',minute:source.get('state','minute'),payload:{subject:'another_object',fireIntensity:1}});
@@ -99,20 +108,23 @@ test('L: worn slots are separate from custody, exclusive, validated and roundtri
  const id=out.bindings.shirt,d=engine.primitiveDraft(out.document);
  assert.deepEqual(wornItems(d,engine,'player'),{body:id});
  assert.equal(locationOf(d,id).mode,'carried');
- assert.throws(()=>equipPhysicalItem(d,engine,npc,id),/carried/);
- assert.throws(()=>equipPhysicalItem(d,engine,'player',id,{slot:'imaginary'}),/slot/);
+ assert.throws(()=>equipPhysicalItem(d,engine,npc,id),worldFailure('E-ACTION-WEAR',/自己携带/));
+ assert.throws(()=>equipPhysicalItem(d,engine,'player',id,{slot:'imaginary'}),worldFailure('E-ACTION-WEAR',/穿戴部位/));
  const saved=await roundtrip(t,out.document,{tool:'environment',eventId:'unwear',args:{operation:'unwear',target:id}});
  assert.deepEqual(wornItems(engine.primitiveDraft(saved),engine,'player'),{});
  assert.equal(engine.quantity(engine.primitiveDraft(saved),'player','item_clothes'),1);
  const occupied=setup({itemInstances:[generic('one',{wornBy:'player',wearable:true}),generic('two',{wornBy:'player',wearable:true})]});
- assert.ok(occupied.setupUnmet.some(u=>/occupied/.test(u.reason)));
+ // Same mutually exclusive worn slot; setup now carries the domain reason.
+ assert.ok(occupied.setupUnmet.some(u=>/该部位已经穿戴/.test(u.reason)));
 });
 
 test('K: a native mechanism action uses the registered physical check and persists its actual outcome',async t=>{
  // 05 §5.4: knowing a trap's identity is distinct from knowing its procedure.
  const premises={inventory:{item_smith_tongs:1},objects:[{...generic('checked_trap',{armed:true,identified:true,mechanism:'tripwire_falling_log'}),kind:'node'}]};
  const unknown=setup(premises);
- await assert.rejects(()=>engine.reduce(unknown.document,{tool:'world_act',eventId:'unknown-disarm',args:{action:'core:site.disarm',slots:{target:unknown.bindings.checked_trap}}}),/Unknown tripwire disassembly procedure/);
+ // Registered native knowledge failures share the public refusal carrier;
+ // the exact missing procedure and armed-state assertion remain unchanged.
+ await assertActionRejected(engine.reduce(unknown.document,{tool:'world_act',eventId:'unknown-disarm',args:{action:'core:site.disarm',slots:{target:unknown.bindings.checked_trap}}}),/Unknown tripwire disassembly procedure/,'E-DISARM-KNOWLEDGE');
  assert.equal(physicalItem(engine.primitiveDraft(unknown.document),engine,unknown.bindings.checked_trap).armed,true);
  const out=setup({...premises,abilitiesByActor:{player:{practicalKnowledge:['simple_tripwire_disassembly']}}});
  assert.deepEqual(out.setupUnmet,[]);
@@ -133,7 +145,7 @@ test('M: unknown liquid aliases have one original account and no invented water 
  assert.equal(out.document.ledger.accounts[key],1);
  const inspected=await engine.reduce(out.document,{tool:'environment',eventId:'liquid-view',args:{target:id}});
  assert.deepEqual(inspected.result.contents,[{quantity:1,drinkable:true,identity:'unknown'}]);
- assert.throws(()=>consumeLiquid(engine.primitiveDraft(out.document),engine,id,'item_water',1),/No such/);
+ assert.throws(()=>consumeLiquid(engine.primitiveDraft(out.document),engine,id,'item_water',1),worldFailure('E-ACTION-LIQUID',/没有足量可饮用/));
  const saved=await roundtrip(t,out.document,{tool:'environment',eventId:'drink',args:{operation:'drink_contents',target:id,resource:'unknown_drink'}});
  assert.equal(saved.ledger.accounts[key],0);
  assert.equal(saved.state.inventory.item_water,undefined);
@@ -161,7 +173,7 @@ test('M: purse access and original account authority control actual cash transfe
  const saved=await roundtrip(t,out.document,{tool:'environment',eventId:'pay',args:{operation:'transfer_purse',target:id,to:npc,coins:3}});
  assert.equal(saved.state.player.coins,7);assert.equal(saved.state.npcs[npc].coins,before+3);
  const closed=engine.primitiveDraft(out.document);writePhysicalItem(closed,engine,id,{access:'sealed'});
- await assert.rejects(engine.reduce(closed.document,{tool:'environment',eventId:'closed',args:{operation:'transfer_purse',target:id,to:npc,coins:3}}),/not open/);
+ await assert.rejects(engine.reduce(closed.document,{tool:'environment',eventId:'closed',args:{operation:'transfer_purse',target:id,to:npc,coins:3}}),worldFailure('E-ACTION-ACCESS',/钱袋尚未敞开/));
  const borrowed=setup({present:[npc],itemInstances:[generic('borrowed_purse',{owner:'player',carriedBy:npc,access:'loose_open'})]});
  await assert.rejects(engine.reduce(borrowed.document,{tool:'environment',eventId:'borrowed',args:{operation:'transfer_purse',target:borrowed.bindings.borrowed_purse,to:'player',coins:1}}));
 });
@@ -181,7 +193,7 @@ test('M: one original water portion is exactly 250 ml, with no duplicate default
  assert.equal(flow.sourceRemainingMl,175);assert.equal(flow.destinationWaterMl,75);
  assert.equal(d.get('state','itemInstances',id,'status'),'散装液体');
  assert.equal(d.get('ledger','accounts',`${bucket}|item_water|placed`),0);
- await assert.rejects(engine.reduce(d.document,{tool:'environment',eventId:'double-water',args:{operation:'take_contents',target:bucket,instance:id}}),/not accessible/);
+ await assert.rejects(engine.reduce(d.document,{tool:'environment',eventId:'double-water',args:{operation:'take_contents',target:bucket,instance:id}}),worldFailure('E-ACTION-CONTAINER',/取不到该容器/));
  await roundtrip(t,d.document);
 });
 

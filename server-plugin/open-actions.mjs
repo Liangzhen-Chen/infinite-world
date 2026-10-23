@@ -12,6 +12,8 @@ import {applyPatches,digest} from './storage.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {parseAccount,LEDGER_COIN} from './ledger.mjs';
 import {resolveTimeSlot} from './action-time.mjs';
+import {refusalProjection} from './action-rejection.mjs';
+import {markFallback,actionBoundary} from './action-boundary.mjs';
 
 // Scheduling a question records the player's own future request. The authored
 // question program rechecks presence when due and grants no NPC commitment.
@@ -66,6 +68,12 @@ function prepareOpenSequence(proposal,registry,context,engine){
  return null;
 }
 
+function rejectOpenSequence(engine,document,input,prepared,receipt,index,preview){
+ const routing={...prepared,...receipt.routing,status:'sequence',intent:input.args.intent,proposal:structuredClone(input.args),failedStep:index,steps:prepared.steps};
+ const rejected={...receipt,eventId:input.eventId,routing};
+ return actionBoundary(engine,document,{...input,tool:'world_propose'},async()=>preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}},{preview});
+}
+
 export async function executeOpenSequence(engine,document,input,prepared,{preview=false}={}){
  let current=document,failedStep=null;const patches=[],receipts=[];
  for(const [index,step] of prepared.steps.entries()){
@@ -73,16 +81,17 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
   if(step.debtReference){
    const ref=step.debtReference,rows=obligationRows(current.state).filter(row=>!obligationClosed(row)&&row.debtor===ref.debtor&&row.creditor===ref.creditor&&(row.amount??row.principal??row.terms?.principal??0)-(row.paid??0)>=ref.amount);
    const exact=rows.find(row=>row.id===ref.id||row.legacyRecord===ref.id),matches=exact?[exact]:/^[a-z][a-z0-9_:.-]*$/i.test(ref.id??'')?[]:rows;
-   if(matches.length!==1)reject('E-OPEN-OBLIGATION',matches.length?'有多笔符合条件的债务，请指定实际债据编号':'没有符合收付款双方及金额的未结债务');
+   if(matches.length!==1){
+    const code='E-OPEN-OBLIGATION',reason=matches.length?'有多笔符合条件的债务，请指定实际债据编号':'没有符合收付款双方及金额的未结债务';
+    return rejectOpenSequence(engine,document,input,prepared,{eventId:input.eventId,actor:'player',source:{kind:'open',id:'open:proposal'},status:'rejected',code,...refusalProjection({code,reason}),applied:[],events:[],cost:{time:0,resources:[]}},index,preview);
+   }
    slots.debt=matches[0].legacyRecord??matches[0].id;
   }
   const call={tool:'world_act',eventId:`${input.eventId.slice(0,88)}:step:${index}:${digest({eventId:input.eventId,args:input.args}).slice(0,8)}`,args:{action:step.action,slots}};
   const reduced=await engine.reduce(current,call,{openProposal:{proposal:input.args,prepared}}),receipt=reduced.result.receipt??primitiveRuntime.legacyPreview(engine,current,call,primitiveRuntime.resolve(engine,call),reduced);
   // Reject the whole sequence, including earlier staged costs and effects.
   if(receipt.status==='rejected'){
-   const routing={...prepared,...receipt.routing,status:'sequence',intent:input.args.intent,proposal:structuredClone(input.args),failedStep:index,steps:prepared.steps,fallback:{...receipt.routing?.fallback,intent:input.args.intent}};
-   const rejected={...receipt,eventId:input.eventId,routing};
-   return preview?{receipt:rejected,routing}:{patches:[],result:{ok:false,action:'open:proposal',receipt:rejected}};
+   return rejectOpenSequence(engine,document,input,prepared,receipt,index,preview);
   }
   current=applyPatches(current,reduced.patches);patches.push(...reduced.patches);receipts.push({...receipt,status:'committed'});
   // A rolled failure is a performed attempt, not a failed precondition. Keep
@@ -109,6 +118,20 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
 }
 
 export function prepareOpenAction(engine,document,proposal,native){
+ const prepared=prepareOpenPlan(engine,document,proposal,native);
+ if(!['needs_entities','needs_slots','needs_alternative'].includes(prepared.status))return prepared;
+ const missing=prepared.missing??prepared.needsSlots?.missing??prepared.ambiguities?.map(row=>row.path)??prepared.blocked?.map(row=>row.reason);
+ const reason=prepared.reason??(prepared.status==='needs_entities'?'尚不能确定你指的是哪个对象，请从已知候选中选择':prepared.status==='needs_slots'?'还缺少完成这项行动所需的选择':'现有手段不能完成原方案的全部效果');
+ const alternatives=[];
+ for(const row of prepared.ambiguities??[])for(const candidate of row.candidates??[])alternatives.push({kind:'clarify',label:`${row.path}：${candidate.name??candidate.id}`,path:row.path,value:candidate.id,available:false,missing:['选择此对象后仍须重新预览全部条件']});
+ for(const candidate of prepared.candidates??[])if(prepared.status==='needs_slots')alternatives.push({action:candidate.id,label:'补全这个候选动作后重新预览',slots:candidate.slots??{},available:false,missing:candidate.missing?.length?candidate.missing:missing?.length?missing:['尚需补全本次行动选择']});
+ const fallback=markFallback(engine,document,proposal.intent,{actor:native?.routing?.actor??'player'});
+ if(fallback.available&&prepared.fallback?.reason)fallback.reason=`${prepared.fallback.reason}；${fallback.reason}`;
+ const details=refusalProjection({reason,missing,alternatives,fallback,repair:prepared.status==='needs_entities'?['从已知候选中明确对象；没有候选时，请提供自己知道的名称或先观察此处。不会替你猜选']:prepared.status==='needs_slots'?[`补全「${(missing??['行动目标']).join('、')}」后重新预览；原方案尚未执行`]:['换用自己实际具备的手段，或把目标分阶段安排后重新预览；没有来源的效果不会发生']});
+ return {...prepared,...details};
+}
+
+function prepareOpenPlan(engine,document,proposal,native){
  if(!proposal||typeof proposal.intent!=='string'||!proposal.intent.trim())reject('E-OPEN-INTENT','请说明你想做什么');
  for(const effect of proposal.effects??[]){
   if(effect.op==='fact.set')writableFactField(effect.field);
@@ -221,9 +244,12 @@ export function createOpenActionContext(engine,document,proposal,{actor='player'
 // Unmatched execution is deliberately not reported as applied: A3-A must attach
 // this prepared plan to an open-source frame at its transaction boundary.
 export async function executeRoutedOpenAction(engine,document,input,native,{preview=false}={}){
+ return actionBoundary(engine,document,{...input,tool:'world_propose'},()=>executeRoutedPlan(engine,document,input,native,{preview}),{preview});
+}
+async function executeRoutedPlan(engine,document,input,native,{preview=false}={}){
  const prepared=prepareOpenAction(engine,document,input.args,native);
  if(prepared.status==='sequence')return {...await executeOpenSequence(engine,document,input,prepared,{preview}),routing:prepared};
- if(prepared.status!=='routed')return {prepared,receipt:{eventId:input.eventId,applied:[],status:'not_submitted'}};
+ if(prepared.status!=='routed')return {prepared,receipt:{eventId:input.eventId,...refusalProjection(prepared),routing:prepared,applied:[],status:'not_submitted'}};
  if(prepared.routed==='open:leave_mark'){
   const result=executeLeaveMark(engine,document,{eventId:input.eventId,args:{slots:prepared.slots}},{preview,actor:native?.routing?.actor??'player'});
   return {...result,result:{action:prepared.routed,receipt:result.receipt},routing:prepared};

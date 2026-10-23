@@ -3,7 +3,7 @@ import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
 import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitnesses,SOCIAL_VERBS} from './world-events.mjs';
 import {submitContest} from './scheduler.mjs';
-import {isDomainRejection} from './action-rejection.mjs';
+import {isDomainRejection,refusalProjection} from './action-rejection.mjs';
 
 declareLedgerWriter('primitives',{sinks:['sink:consume']});
 // Static registration (load time only): every registered holding kind goes
@@ -192,7 +192,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    // A typed domain refusal keeps its own code and the failing index. Engine
    // faults (TypeError, plain Error, ...) propagate unchanged: they are not
    // world outcomes and must never be recorded as a terminal refusal.
-   if(isDomainRejection(error))throw Object.assign(new PrimitiveRejected(error.code,error.message,index),{cause:error});
+   if(isDomainRejection(error))throw Object.assign(new PrimitiveRejected(error.code,error.message,index,refusalProjection(error)),{cause:error});
    throw error;
   }
  }
@@ -238,8 +238,9 @@ export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,
  if(preview.duplicate)return {...commitPrimitives(d.document,proposal,frame),receipt:preview};
  if(!Array.isArray(claims)||!claims.length)reject('E-PRIMITIVE-CONTEST','Native resource claims required');
  const receipt={...preview,status:'pending',applied:[],narrate:{must:[],mustNot:[]},pending:frame.eventId};
- const fail=(reason,code)=>{
-  Object.assign(receipt,{status:'rejected',reason,...(code?{code}:{}),applied:[],check:null,trimmed:proposal.map((effect,index)=>({effect,index,reason})),narrate:{must:[],mustNot:proposal.map((effect,index)=>({op:effect.op,index}))}});
+ const fail=(reason,code,error)=>{
+  const details=refusalProjection(error??{reason,code,missing:[reason],repair:['本次争夺没有取得资源，先重新核对余量；可减少用量或分批安排，再预览原方案'],alternatives:[{kind:'edit',label:'减少用量或分阶段后重新预览',available:false,missing:['重新核对可用资源、行动能力与权限；本次争夺结果不保证下次成功']}]});
+  Object.assign(receipt,{status:'rejected',...details,...(code?{code}:{}),...(error?.index!==undefined?{index:error.index}:{}),applied:[],check:null,trimmed:proposal.map((effect,index)=>({effect,index,reason})),narrate:{must:[],mustNot:proposal.map((effect,index)=>({op:effect.op,index}))}});
   for(const key of ['cost','consent','decisions','outcome'])delete receipt[key];
   const policy=frames.get(frame),identity={actor:frame.actor,source:frame.source,effects:proposal,...(policy.identity===null?{}:{identity:policy.identity})};
   d.set(['state','records',`primitive:${frame.eventId}`],{category:'primitive_receipt',fingerprint:canonical(identity),receipt:clone(receipt)});
@@ -248,7 +249,7 @@ export function queuePrimitiveProposal(d,effects,frame,{claims,bid,rank,arrival,
   execute(){
    let committed;
    try{committed=execute(d.document,proposal,frame,true,{deferReactions:true,pending:frame.eventId});}
-   catch(error){if(!(error instanceof PrimitiveRejected))throw error;fail(error.message,error.code);return;}
+   catch(error){if(!isDomainRejection(error))throw error;fail(error.message,error.code,error);return;}
    for(const patch of committed.patches)if(patch.op==='set')d.set(patch.path,patch.value);else d.remove(patch.path);
    if(d.scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,d.get('state','scheduler','seq')??0);
    onCommitted?.(committed);

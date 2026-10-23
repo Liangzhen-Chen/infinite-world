@@ -41,8 +41,10 @@ test('P1 run-005 E15：实有钱款转移守恒，未经授权的跨人转款不
  const input={tool:'world_propose',args:gift,eventId:'p1-first-holder'},first=await f.engine.reduce(f.document,input);f.document=applyPatches(f.document,first.patches);
  assert.equal(f.document.state.player.coins,0);assert.equal(f.document.state.npcs[NPC].coins,before.state.npcs[NPC].coins+10);clean(f);
  const stable=structuredClone(f.document);
- // 06 §6.5：NPC→NPC 未匹配到获授权的行动；严格断言实际路由拒绝码和零写入。
- await assert.rejects(f.engine.reduce(f.document,{tool:'world_propose',eventId:'p1-fake-recovery',args:{intent:'未经允许从旧持有人取钱',effects:[{op:'transfer',from:NPC,to:OTHER,resource:'coin_river',qty:10}]}}),{code:'E-OPEN-NOT-ROUTED'});
+ // 06 §6.5: the unchanged action-limits ownership guard rejects this transfer
+ // with E-OPEN-TRANSFER before submission/routing (action-limits.mjs:43).
+ // Keep that precise authority failure and the full zero-effects contract.
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_propose',eventId:'p1-fake-recovery',args:{intent:'未经允许从旧持有人取钱',effects:[{op:'transfer',from:NPC,to:OTHER,resource:'coin_river',qty:10}]}}),/同意|授权/,'E-OPEN-TRANSFER');
  assert.deepEqual(f.document,stable);assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(f.document)),input)).patches,[]);
 });
 
@@ -51,8 +53,9 @@ test('P2 run-006 E19：清醒幼童不自动产生紧急同意，口头自称监
  const f=fixture({},[action],w=>{const child=w.npcs.find(n=>n.id===NPC);child.age=8;child.flags={minor:true};child.redLines=['healing'];});
  await contact(f,NPC);f.document.state.npcs[NPC].hp=1;f.document.state.npcs[NPC].maxHp=10;
  const before=structuredClone(f.document),input={tool:'world_act',eventId:'p2-care',args:{action:action.id,slots:{target:NPC}}};
- await assert.rejects(f.engine.reduce(f.document,input),{code:'E-CONSENT'});assert.deepEqual(f.document,before);
- await assert.rejects(f.engine.reduce(f.document,{...input,args:{...input.args,slots:{target:NPC,guardian:OTHER,emergency:true}}}),{code:'E-ACTION-SLOT'});
+ // Neither missing consent nor caller claims can grant guardian/emergency powers.
+ await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-CONSENT');assert.deepEqual(f.document,before);
+ await assertActionRejected(f.engine.reduce(f.document,{...input,args:{...input.args,slots:{target:NPC,guardian:OTHER,emergency:true}}}),undefined,'E-ACTION-SLOT');
  assert.deepEqual(f.document,before);clean(f);
 });
 
@@ -66,7 +69,9 @@ test('P3 run-006 E13/N3/E5：在押仍可说话，普通走路和自报替身释
  f.document=applyPatches(f.document,speech.patches);assert.ok(speech.result.receipt.applied.some(e=>e.op==='emit'));
  const stable=structuredClone(f.document),holding=Object.values(f.document.holdings.rows).find(h=>h.kind==='guest_of'&&h.holder==='player'&&h.until===undefined);
  assert.ok(holding);
- await assert.rejects(f.engine.reduce(f.document,{tool:'world_propose',eventId:'p3-substitute',args:{intent:'我自称替身已服刑，放我离开',effects:[{op:'holding.close',holding:holding.id,reason:'substitute_claim'}]}}));
+ // Public primitive refusals now share the zero-effects receipt; no substitute
+ // claim may release custody, and the unchanged-world assertion stays below.
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_propose',eventId:'p3-substitute',args:{intent:'我自称替身已服刑，放我离开',effects:[{op:'holding.close',holding:holding.id,reason:'substitute_claim'}]}}),undefined,null);
  assert.deepEqual(f.document,stable);assert.equal(f.document.state.location,INN);clean(f);
 });
 
@@ -130,7 +135,8 @@ test('P6 run-007 E18：有限显兆重复祭仪不能绕过实际冷却，供品
 test('P7 run-007 E16资源切片：多资源公开提案缺第二份货即全笔回滚，不先支付第一份钱',async()=>{
  const item='item_wood',action=program('probe:supply',[{op:'transfer',from:'player|coin_river|purse',to:`${NPC}|coin_river|purse`,qty:3},{op:'transfer',from:`player|${item}|inventory`,to:`${NPC}|${item}|inventory`,qty:2}]);
  const f=fixture({coins:3,inventory:{[item]:1}},[action]),before=structuredClone(f.document);
- await assert.rejects(f.engine.reduce(f.document,{tool:'world_act',eventId:'p7-short-supply',args:{action:action.id,slots:{}}}),{code:'E-TRANSFER-BALANCE'});
+ // Keep the exact insufficient-stock code and strengthen the zero-effects check.
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_act',eventId:'p7-short-supply',args:{action:action.id,slots:{}}}),undefined,'E-TRANSFER-BALANCE');
  assert.deepEqual(f.document,before);assert.equal(f.document.state.player.coins,3);clean(f);
 });
 
@@ -146,7 +152,8 @@ test('P9 补丁/RX与创建兼容：确认重查追加条件，旧创建入口�
  const action=appendActionPatches(program('probe:bounded',[{op:'transfer',from:'player|coin_river|purse',to:`${NPC}|coin_river|purse`,qty:1}]),[{id:'local:guard',field:'preconditions',op:'append',value:'month() == 1',reason:'本地仅首月办理'}]);
  const f=fixture({},[action]),input={tool:'world_act',eventId:'p9-guard',args:{action:action.id,slots:{}}},before=structuredClone(f.document);
  assert.equal((await f.engine.previewAction(f.document,input)).receipt.status,'preview');assert.deepEqual(f.document,before);
- const later=structuredClone(f.document);later.state.minute=30*1440;await assert.rejects(f.engine.reduce(later,input),{code:'E-PRECONDITION'});assert.equal(later.state.player.coins,before.state.player.coins);
+ // The appended RX condition still runs against current month at confirmation.
+ const later=structuredClone(f.document);later.state.minute=30*1440;await assertActionRejected(f.engine.reduce(later,input),undefined,'E-PRECONDITION');assert.equal(later.state.player.coins,before.state.player.coins);
  const {out,input:created}=await call(f,'core:create',{type:'npc',name:'试演赶车学徒',data:{age:16,occupation:'学徒',notes:'等待师傅修理车轮',coins:1000}},'p9-create');
  const npc=out.result.entity;assert.equal(f.document.state.npcs[npc].coins,0);assert.equal(f.document.state.created[npc].flags.romanceable,false);
  assert.equal(f.document.state.player.coins,before.state.player.coins);assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(f.document)),created)).patches,[]);

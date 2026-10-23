@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -158,11 +159,13 @@ test('A3 prims: rite vow uses obligation protocol once per project; discipline l
 });
 test('A3 prims: rite missing discipline and invalid vow refuse before money, material or time; failed final outcome rolls back vow',async()=>{
  const f=setup(),a=rite(f,{costs:{discipline:'discipline:quiet',vow:{creditor:NPC,terms:{promise:'还愿'}}}});a.check=null;f.engine.world.actionDefinitions={format:1,actions:[a]};
- const before=structuredClone(f.document);await assert.rejects(f.engine.reduce(f.document,act(a,'rite-no-discipline')),{code:'E-RITE-DISCIPLINE'});assert.deepEqual(f.document,before);
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ const before=structuredClone(f.document);await assertActionRejected(f.engine.reduce(f.document,act(a,'rite-no-discipline')),undefined,'E-RITE-DISCIPLINE');assert.deepEqual(f.document,before);
  f.document.state.player.tags=['discipline:quiet'];a.rite.costs.vow.debtor=NPC;
  await assert.rejects(f.engine.reduce(f.document,act(a,'rite-forged-vow')),{code:'E-RITE-DATA'});
  delete a.rite.costs.vow.debtor;a.outcomes=[{op:'transfer',from:accountKey('player',WOOD,'inventory'),to:accountKey(NPC,WOOD,'inventory'),qty:1000}];
- const snapshot=structuredClone(f.document);await assert.rejects(f.engine.reduce(f.document,act(a,'rite-final-fails')));assert.deepEqual(f.document,snapshot);assert.equal(Object.values(f.document.state.obligations).filter(o=>o.kind==='vow').length,0);
+ // The failed material transfer still rolls back both the outcome and vow.
+ const snapshot=structuredClone(f.document);await assertActionRejected(f.engine.reduce(f.document,act(a,'rite-final-fails')),undefined,'E-TRANSFER-BALANCE');assert.deepEqual(f.document,snapshot);assert.equal(Object.values(f.document.state.obligations).filter(o=>o.kind==='vow').length,0);
 });
 test('A3 prims: rite discipline reads the actual paid initiation proof obtained through world_act',async()=>{
  const f=setup(),entry=f.engine.rules.training.institutions.find(i=>i.ritual),teacher=entry.teacher;

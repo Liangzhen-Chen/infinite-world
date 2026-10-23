@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -115,11 +116,16 @@ test('A3 refusal: program errors and non-public legacy calls still throw',async(
  assert.equal(routed.status,'preview');assert.equal(routed.routed,'core:learn');
  const call={tool:'world_act',eventId:'program-error',args:{action:routed.routed,slots:routed.routing.slots}};
  const isolated=new WorldEngine(world);
- for(const error of [new TypeError('已经学会识字'),new RangeError('中文程序范围错误'),new Error('unexpected invariant failure'),new PrimitiveRejected('E-POLICY-TEST','原语策略拒绝')]){
+ // Plain program faults retain identity; typed policy failures now use the
+ // same public refusal contract as ActionRejection (the card's explicit scope).
+ for(const error of [new TypeError('已经学会识字'),new RangeError('中文程序范围错误'),new Error('unexpected invariant failure')]){
   isolated.learn=()=>{throw error;};
   await assert.rejects(isolated.previewAction(document,call),e=>e===error);
   await assert.rejects(isolated.reduce(document,call),e=>e===error);
  }
+ isolated.learn=()=>{throw new PrimitiveRejected('E-POLICY-TEST','原语策略拒绝');};
+ await assertActionRejected(isolated.previewAction(document,call),/原语策略拒绝/,'E-POLICY-TEST');
+ await assertActionRejected(isolated.reduce(document,call),/原语策略拒绝/,'E-POLICY-TEST');
  await assert.rejects(engine.reduce(document,{tool:'world_learn',eventId:'legacy-error',args:{entity:'skill_literacy',source:'npc_hw_luqing'}}),/已经学会识字/);
 });
 
@@ -173,10 +179,14 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
   assert.ok(receipt.repair.some(s=>s.includes(reason)));
   assert.ok(receipt.routing.alternatives.length);
   for(const alternative of receipt.routing.alternatives){
+   // The unified contract includes conditional edits as well as executable
+   // catalog choices. Every edit names its prerequisites; every executable
+   // choice must pass its actual preview, not merely equal a menu's defaults.
+   if(alternative.available===false){assert.ok(alternative.missing.length);continue;}
    const offer=offered.find(a=>a.id===alternative.action);
    assert.ok(offer&&!offer.blocked&&offer.permission?.allowed!==false);
-   assert.deepEqual(alternative.slots,offer.fill);
-   assert.ok(receipt.repair.some(s=>s.includes(alternative.action)));
+   assert.equal(receiptOf(await engine.previewAction(document,{tool:'world_act',eventId:`generic-next-${module}`,args:{action:alternative.action,slots:alternative.slots}})).status,'preview');
+   assert.ok(receipt.repair.some(s=>s.includes(alternative.label)));
   }
   assert.equal(receipt.routing.fallback.action,'open:leave_mark');
   assert.equal(receipt.routing.fallback.available,true);

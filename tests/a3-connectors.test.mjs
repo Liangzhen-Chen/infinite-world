@@ -34,7 +34,8 @@ test('A9: the production proposal declaration is discoverable and runs the same 
  const after=applyPatches(f.document,output.patches);assert.deepEqual(output.result.receipt.routing.proposal,slots);
  assert.equal(after.state.minute-before.state.minute,2);assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
  const configured=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'off'}),off=applyPatches(f.document,configured.patches);
- assert.equal(f.engine.actionPermission(off,input.args).allowed,false);await assert.rejects(f.engine.reduce(off,input),{code:'E-OPEN-DISABLED'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ assert.equal(f.engine.actionPermission(off,input.args).allowed,false);await assertActionRejected(f.engine.reduce(off,input),undefined,'E-OPEN-DISABLED');
 });
 
 async function activeRite(eventId,{role=false}={}){
@@ -84,7 +85,8 @@ test('A9: native system interruptions handle lost capacity/location and reject f
   if(reason==='dead')assert.ok(receipt.trimmed.some(e=>e.reason==='target_not_living'));
   // The consequence frame never grants the disabled actor a fresh initiative.
   if(reason==='dead')assert.throws(()=>commitPrimitives(before,[{op:'emit',verb:'tell',visibility:'witnessed'}],createRuntimePrimitiveFrame(f.engine,before,{eventId:`a9-no-initiative-${reason}`,source:{kind:'open',id:'test:initiative'}})),{code:'E-CAPACITY'});
-  if(reason==='sleep')await assert.rejects(f.engine.reduce(before,{tool:'world_act',eventId:'a9-sleep-no-rite',args:{action:'test:a9-rite',slots:{}}}),{code:'E-RITE-ACTOR'});
+  // A3 refusal: preserve the original business code and require a zero-effects receipt.
+  if(reason==='sleep')await assertActionRejected(f.engine.reduce(before,{tool:'world_act',eventId:'a9-sleep-no-rite',args:{action:'test:a9-rite',slots:{}}}),undefined,'E-RITE-ACTOR');
  }
 });
 
@@ -168,16 +170,19 @@ test('A8: native unmatched proposal commits bounded transfers, persists usage/ro
  assert.deepEqual(receipt.routing.proposal,input.args);assert.ok(receipt.openUsage);
  assert.deepEqual(after.state.records['primitive:a8-unmatched'].receipt,receipt);
  assert.deepEqual((await f.engine.reduce(JSON.parse(JSON.stringify(after)),input)).patches,[]);
- f.document.ledger.accounts[from]=0;await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'a8-no-funds'}),{code:'E-TRANSFER-BALANCE'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ f.document.ledger.accounts[from]=0;await assertActionRejected(f.engine.reduce(f.document,{...input,eventId:'a8-no-funds'}),undefined,'E-TRANSFER-BALANCE');
 });
 
 test('A8: openActions config is archived and enforced at execution while leave_mark stays available',async()=>{
  const f=fixture(),input={tool:'world_propose',eventId:'a8-disabled',args:{intent:'告知',effects:[{op:'emit',verb:'tell',payload:{text:'你好'}}]}};
  let change=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'off'});f.document=applyPatches(f.document,change.patches);
- await assert.rejects(f.engine.reduce(f.document,input),{code:'E-OPEN-DISABLED'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-OPEN-DISABLED');
  const mark=await f.engine.reduce(f.document,{tool:'world_act',eventId:'a8-off-mark',args:{action:'open:leave_mark',slots:{intent:'问好',form:'刻痕'}}});assert.equal(mark.result.receipt.status,'committed');
  change=await f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'limited'});f.document=applyPatches(f.document,change.patches);
- await assert.rejects(f.engine.reduce(f.document,{...input,args:{...input.args,effects:[{op:'transfer',from,to:accountKey(f.npc,'coin_river','purse'),qty:1}]}}),{code:'E-OPEN-MODE'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,{...input,args:{...input.args,effects:[{op:'transfer',from,to:accountKey(f.npc,'coin_river','purse'),qty:1}]}}),undefined,'E-OPEN-MODE');
  await assert.rejects(f.engine.reduce(f.document,{type:'config_set',key:'openActions',value:'invalid'}));
 });
 
@@ -214,7 +219,8 @@ test('A8: unmatched known magic pays its real MP/materials on every grade and ca
  assert.ok(after.state.player.hp-before.state.player.hp<=spell.effectSpec.power);assert.deepEqual(auditLedger(after.ledger),[]);
  assert.equal(receipt.requirements.mp,spell.mp);assert.equal(receipt.check.degree,preview.receipt.check.degree);
  assert.equal(receipt.openUsage.produced['vital:heal']??0,receipt.applied.filter(e=>e.op==='vital'&&e.delta>0).reduce((n,e)=>n+(e.result.healed??0),0));
- f.document.state.player.mp=0;await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'a8-no-mp'}),{code:'E-OPEN-MP'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ f.document.state.player.mp=0;await assertActionRejected(f.engine.reduce(f.document,{...input,eventId:'a8-no-mp'}),undefined,'E-OPEN-MP');
  assert.equal(f.document.ledger.accounts[key],before.ledger.accounts[key]);
 });
 
@@ -279,16 +285,19 @@ test('A3 connectors: native context is rebuilt at confirmation; unmatched and mi
  install(t);const f=fixture(),input=registered(f);
  await f.engine.previewAction(f.document,input);
  f.document.ledger.accounts[from]=0;const before=structuredClone(f.document);
- await assert.rejects(f.engine.reduce(f.document,input),{code:'E-TRANSFER-BALANCE'});assert.deepEqual(f.document,before);
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-TRANSFER-BALANCE');assert.deepEqual(f.document,before);
  f.document.state.npcs[f.npc].location=null;
  const hidden=await f.engine.previewAction(f.document,input);assert.equal(hidden.receipt.status,'not_submitted');assert.deepEqual(hidden.receipt.applied,[]);
- await assert.rejects(f.engine.reduce(f.document,input),{code:'E-OPEN-NOT-ROUTED'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-OPEN-NOT-ROUTED');
  f.document.state.npcs[f.npc].location=f.document.state.location;
  // Preserve the target-kind signature while a separate required slot is absent.
  f.engine.world.actionDefinitions.actions[0].slots.push({name:'purpose',kind:'text',schema:'string',required:true});
  const noSlot=input;
  const missing=await f.engine.previewAction(f.document,noSlot);assert.equal(missing.prepared.status,'needs_slots');
- await assert.rejects(f.engine.reduce(f.document,noSlot),{code:'E-OPEN-NOT-ROUTED'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,noSlot),undefined,'E-OPEN-NOT-ROUTED');
 });
 
 test('A3 connectors: legacy routed actions execute through their original handler with structured preview costs',async t=>{
@@ -312,10 +321,10 @@ test('A3 connectors: permission query uses normalized legacy families and primit
  for(const action of [legacy.id,primitive.id]){
   const result=f.engine.actionPermission(f.document,{action});assert.equal(result.allowed,false);assert.equal(result.checks[0].family,'move');assert.equal(result.checks[0].regime,'a3_detained');
   const execution=f.engine.reduce(f.document,{tool:'world_act',eventId:action,args:{action,slots:{}}});
-  // Legacy business Error follows 06 §6.10.4; the primitive policy exception
-  // retains its existing thrown contract and custody reason.
+  // Both native business types now share the public zero-effects contract;
+  // neither may bypass the same custody regime or lose its reason.
   if(action===legacy.id)await assertActionRejected(execution,/羁押|custody|detain|拘/);
-  else await assert.rejects(execution,/羁押|custody|detain|拘/);
+  else await assertActionRejected(execution,/羁押|custody|detain|拘/,'E-CAPACITY');
  }
  assert.deepEqual(f.document,before);
 });

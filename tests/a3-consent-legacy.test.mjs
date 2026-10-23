@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -112,7 +113,9 @@ test('A3 legacy consent: catalog revocation stops a real grant; caller cannot fi
  f.document=applyPatches(f.document,out.patches);
  assert.equal(f.document.state.records[result.authorization].revoked,true);
  const before=structuredClone(f.document);
- await assert.rejects(f.engine.reduce(f.document,{tool:'world_act',eventId:'caller-consent',args:{action:'spell.request_consent',slots:{promisor:NPC,location:'healing',content:'用途',consent:true}}}),/需要对方答应|槽位/);
+ // The supported core-omitted name must get the same refusal as its canonical
+ // id; a caller-supplied consent slot still grants no agreement or effects.
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_act',eventId:'caller-consent',args:{action:'spell.request_consent',slots:{promisor:NPC,location:'healing',content:'用途',consent:true}}}),/需要对方答应|槽位/);
  assert.deepEqual(f.document,before);
 });
 

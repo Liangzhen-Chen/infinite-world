@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -104,7 +105,8 @@ test('A3 mark: declarations cannot fake consumption, authors, locations or numer
  ];
  for(const mutate of mutations){
   const {engine,document}=fixture(),before=structuredClone(document),input=markInput(document);mutate(input);
-  await assert.rejects(engine.reduce(document,input),error=>error.code?.startsWith('E-'));
+  // Same E-* business failure, with the stronger public zero-effects receipt.
+  await assertActionRejected(engine.reduce(document,input),undefined,null);
   assert.deepEqual(document,before);checkBooks(engine,document);
  }
 });
@@ -119,7 +121,8 @@ test('A3 mark: confirmation rechecks capability, inventory and place restriction
   const {engine,document}=fixture(),input=markInput(document);
   assert.equal((await engine.previewAction(document,input)).receipt.status,'preview');
   change(document,engine);const before=structuredClone(document);
-  await assert.rejects(engine.reduce(document,input),error=>error.code?.startsWith('E-'));
+  // Confirmation must still recheck current capability, stock and place rules.
+  await assertActionRejected(engine.reduce(document,input),undefined,null);
   assert.deepEqual(document,before);
  }
 });

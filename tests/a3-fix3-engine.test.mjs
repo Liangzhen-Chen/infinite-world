@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -52,7 +53,8 @@ test('A3-fix3 displacement: a structured teleport move is refused (E-OPEN-MOVE) 
  const before=structuredClone(document);
  const propose=(to,means)=>engine.previewAction(document,{tool:'world_propose',eventId:'fix3-teleport',args:{intent:'马上把我送到远方',effects:[{op:'move',entity:'self',to,mode:'teleport'}],...(means?{means}:{})}});
  // A name that would need clarification and an exact id that is not perceivable both meet the same basis first.
- for(const to of ['王都','loc_capital'])await assert.rejects(propose(to),error=>error.code==='E-OPEN-MOVE'&&/传送来源/.test(error.message));
+ // Unsupported displacement retains its basis and code in the refusal receipt.
+ for(const to of ['王都','loc_capital'])await assertActionRejected(propose(to),/传送来源/,'E-OPEN-MOVE');
  assert.deepEqual(document,before);
  // With a spell named as the means the proposal is not refused by this check (the spell program judges it).
  const viaSpell=await propose('王都',{spell:'spell_s1_anchor_cross'}).then(value=>value,error=>error);

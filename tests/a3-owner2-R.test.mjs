@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -136,7 +137,8 @@ test('R3: a rejected checkout enquiry leaves the completed lodging and elapsed t
  assert.equal(waited.state.minute,contract.expires);assert.ok(wait.result.receipt.applied.some(e=>e.op==='holding.close'&&e.reason==='expired'));
  waited.state.npcs.npc_hw_linsui.location='loc_hw_gate';
  const settled=persistable(waited);
- await assert.rejects(engine.reduce(waited,{tool:'world_act',eventId:'owner2-R-checkout-absent',args:{action:'open:question',slots:{target:'npc_hw_linsui',content:'询问下一晚续住报价'}}}),{code:'E-PRECONDITION'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.reduce(waited,{tool:'world_act',eventId:'owner2-R-checkout-absent',args:{action:'open:question',slots:{target:'npc_hw_linsui',content:'询问下一晚续住报价'}}}),undefined,'E-PRECONDITION');
  assert.deepEqual(persistable(waited),settled);
  assert.equal(r.document.state.player.coins-waited.state.player.coins,6);assert.equal(waited.state.minute,2640);assert.deepEqual(auditLedger(waited.ledger),[]);
 });

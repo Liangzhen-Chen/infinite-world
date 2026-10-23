@@ -2,6 +2,7 @@
 // authority. Narrative setup notes grant none of those capabilities.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -29,18 +30,16 @@ test('A3 native: live share identifies its organization without making it a phys
  const resolved=resolveProposalEntities(row.proposal,context);
  assert.deepEqual(resolved.ambiguities,[]);assert.equal(resolved.proposal.effects[0].subject,'faction_saltboat');
  const input={tool:'world_propose',eventId:'r9-no-issuance',args:row.proposal};
- for(const method of ['previewAction','reduce'])await assert.rejects(engine[method](document,input),error=>{
-  assert.equal(error.code,'E-AUTHORITY');assert.match(error.message,/权能|权限|同意/);return true;
- });
+ // Issuance authority is unchanged; both public entries now return its refusal.
+ for(const method of ['previewAction','reduce'])await assertActionRejected(engine[method](document,input),/权能|权限|同意/,'E-AUTHORITY');
  assert.throws(()=>resolveProposalEntities({intent:'xyzzy',effects:[{op:'vital',target:'faction_saltboat',delta:-1}]},context),{code:'E-OPEN-ENTITY'});
  assert.deepEqual(document,before);
 });
 
 test('A3 native: custody refuses ordinary departure on its actual regime while permitting speech',async()=>{
  const {engine,document,row}=fixture('091'),before=structuredClone(document);
- for(const method of ['previewAction','reduce'])await assert.rejects(engine[method](document,{tool:'world_propose',eventId:'r9-custody-walk',args:row.proposal}),error=>{
-  assert.equal(error.code,'E-CAPACITY');assert.match(error.message,/羁押|拘禁/);return true;
- });
+ // The native custody regime remains enforced; no departure is applied.
+ for(const method of ['previewAction','reduce'])await assertActionRejected(engine[method](document,{tool:'world_propose',eventId:'r9-custody-walk',args:row.proposal}),/羁押|拘禁/,'E-CAPACITY');
  const target='npc_bs_032_1',speech={intent:'xyzzy',target,effects:[{op:'emit',actor:'self',target,verb:'tell',payload:{version:'我记得的天气',source:'self'},visibility:'present'}]};
  const out=await engine.reduce(document,{tool:'world_propose',eventId:'r9-custody-talk',args:speech});
  assert.ok(out.result.receipt.applied.some(e=>e.op==='emit'&&e.target===target));

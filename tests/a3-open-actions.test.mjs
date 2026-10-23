@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {withLedger,accountKey,auditLedger,parseAccount} from '../server-plugin/ledger.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {prepareOpenAction,executeRoutedOpenAction} from '../server-plugin/open-actions.mjs';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 function fixture(){
  const engine=new WorldEngine(structuredClone(world));
@@ -20,7 +21,8 @@ function fixture(){
  const action={id:'test:gift',label:'递交铜钱',narration:'test.gift',synonyms:[],signature:[JSON.stringify(['transfer','person','coin_river'])],participants:{actor:'player',target:['person']},visibility:{catalog:'target:npc'},slots:[{name:'to',kind:'text',schema:'string',required:true}],cost:{owner:'primitives',time:2},outcomes:[{op:'transfer',from,to:{slot:'to'},qty:5}]};
  // Native authored program fixture; uses the real primitive/ledger/scheduler,
  // not a stub handler. This is not evidence of public world_propose wiring.
- engine.world.actionDefinitions={format:1,actions:[action]};
+ // Refusal alternatives must be real registered actions, not just mark assets.
+ engine.world.actionDefinitions={format:1,actions:[action,world.actionDefinitions.actions.find(a=>a.id==='open:leave_mark')]};
  const args={intent:action.label,participants:{target:npc},effects:[{op:'transfer',from,to,qty:9999}]};
  const native={routing:{actor:'player',kindOf:id=>{
   if(typeof id==='string'&&id.includes('|'))id=parseAccount(id).owner;
@@ -44,7 +46,8 @@ test('A3 open: preview is read-only; confirmation rechecks native balance',async
  const preview=await executeRoutedOpenAction(f.engine,f.document,input,f.native,{preview:true});
  assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
  f.document.ledger.accounts[f.from]=0;
- await assert.rejects(executeRoutedOpenAction(f.engine,f.document,input,f.native),{code:'E-TRANSFER-BALANCE'});
+ // A3 refusal contract: keep the same balance code and require zero effects.
+ await assertActionRejected(executeRoutedOpenAction(f.engine,f.document,input,f.native),undefined,'E-TRANSFER-BALANCE');
 });
 test('A3 open: missing slots and unmatched plans never pretend effects were submitted',async()=>{
  const f=fixture(),input={args:f.args,eventId:'a3-b-needs-slot'},native={...f.native,routing:{...f.native.routing,slotsFor:()=>({})}};

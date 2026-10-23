@@ -104,7 +104,10 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
 export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
  if(result?.receipt?.status==='pending')return {lines:['行动仍在等待裁决，尚未完成。'],effects:[]};
  if(result?.receipt?.status==='preview')return {lines:['这只是预览，行动尚未执行。'],effects:[]};
- if(result?.receipt&&result.receipt.status!=='committed')return {lines:[refusalLine(action,result.receipt.reason??'行动尚未完成',locale)],effects:[]};
+ if(result?.receipt&&result.receipt.status!=='committed'){
+  const receipt=result.receipt,details=receipt.routing??receipt;
+  return {lines:[refusalLine(action,receipt.reason??details.reason??'行动尚未完成',locale),...(details.missing?.length?[`还需要：${details.missing.join('、')}`]:[]),...(details.repair??[])],effects:[]};
+ }
  if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
  const entry=templates.events[action?.narration];

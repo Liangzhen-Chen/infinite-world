@@ -46,7 +46,8 @@ test('A3 ordinary intent: eating a ration uses real nutrition and consumes only 
  assert.equal(f.engine.quantity(f.engine.primitiveDraft(result.after),'player','item_ration'),0);
  const satiety=readBodyNeed(f.engine,result.after,'player','satiety');assert.ok(satiety>55&&satiety<=60);
  const replay=await f.engine.reduce(JSON.parse(JSON.stringify(result.after)),result.input);assert.deepEqual(replay.patches,[]);
- await assert.rejects(f.engine.reduce(result.after,{...result.input,eventId:'ration-again'}));
+ // The consumed portion cannot be spent again; its public refusal has no effects.
+ await assertActionRejected(f.engine.reduce(result.after,{...result.input,eventId:'ration-again'}),undefined,null);
 });
 
 test('A3 ordinary intent: drinking needs the same real portion, bounds hydration and rolls back when water is gone',async()=>{
@@ -56,7 +57,8 @@ test('A3 ordinary intent: drinking needs the same real portion, bounds hydration
  assert.equal(result.out.result.receipt.applied.find(e=>e.op==='vital').delta,25);
  assert.equal(f.engine.quantity(f.engine.primitiveDraft(result.after),'player','item_water'),0);
  const hydration=readBodyNeed(f.engine,result.after,'player','hydration');assert.ok(hydration>70&&hydration<=75);
- const before=structuredClone(result.after);await assert.rejects(f.engine.reduce(result.after,{...result.input,eventId:'water-again'}),{code:'E-TRANSFER-BALANCE'});assert.deepEqual(result.after,before);
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ const before=structuredClone(result.after);await assertActionRejected(f.engine.reduce(result.after,{...result.input,eventId:'water-again'}),undefined,'E-TRANSFER-BALANCE');assert.deepEqual(result.after,before);
  const noFood=prepareOpenAction(f.engine,f.document,{intent:'凭空解渴',effects:args.effects.slice(1)});assert.equal(noFood.status,'needs_alternative');
 });
 

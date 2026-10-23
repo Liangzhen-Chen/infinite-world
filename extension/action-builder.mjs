@@ -30,6 +30,10 @@ export function slotLabel(slot){
 export function previewLines(result,{label='这样做',startMinute,names={}}={}){
  const receipt=result?.receipt??result?.result?.receipt;
  if(!receipt)return ['尚未取得预览，不能确认。'];
+ if(['rejected','not_submitted'].includes(receipt.status)){
+  const refusal=receipt.routing??receipt;
+  return [receipt.reason??refusal.reason??'原方案尚未执行',...(refusal.missing?.length?[`还需要：${refusal.missing.join('、')}`]:[]),...(refusal.repair??[])];
+ }
  const legacy=receipt.legacy,lines=[`这相当于：${label}`,`路由：${receipt.routed?`已登记动作（${label}）`:'尚未确定'}`];
  const elapsed=receipt.cost?.time??legacy?.elapsed??legacy?.minutes??(Number.isSafeInteger(startMinute)&&Number.isSafeInteger(legacy?.minute)?legacy.minute-startMinute:null);
  lines.push(`耗时：${Number.isFinite(elapsed)?`${elapsed}分钟`:'尚未提供'}`);
@@ -117,7 +121,11 @@ export class ActionBuilder{
   this.services={preview,act,newEventId};this.step=0;this.action=null;this.slots={};this.revision=0;this.busy=false;this.cancelled=false;this.quote=null;this.error=null;this.result=null;
  }
  choose(action){
-  if(action.blocked){this.error=action.blocked;return;}
+  if(action.blocked){
+   this.invalidate();this.action=null;this.slots={};this.step=0;
+   this.error=typeof action.blocked==='string'?action.blocked:action.blocked.reason;
+   this.feedback={reason:this.error,missing:[this.error],repair:['根据当前缺项调整条件，或重新选择动作后预览'],alternatives:[{kind:'edit',label:'重新选择动作',missing:[this.error],available:false}],fallback:null};return;
+  }
   this.action=structuredClone(action);this.slots={...action.fill};
   if(['open:leave_mark','open:proposal'].includes(action.id)){
    const intentSlot=action.slots.find(slot=>['intent','text'].includes(slot.name)&&slot.kind==='text');
@@ -147,18 +155,18 @@ export class ActionBuilder{
  async preview(){
   if(this.busy||this.cancelled)return null;
   if(!this.action)throw Error('先选想做的事');
-  this.error=null;this.result=null;this.quote=null;
+  this.error=null;this.result=null;this.quote=null;this.feedback=null;
   const missing=this.action.slots.filter(s=>s.required&&!s.consent&&this.slots[s.name]===undefined);
-  if(missing.length){this.error=`还需要选择：${missing.map(slotLabel).join('、')}`;return null;}
+  if(missing.length){this.error=`还需要选择：${missing.map(slotLabel).join('、')}`;this.feedback={reason:this.error,missing:missing.map(slotLabel),repair:['补全这些选择后重新预览；原方案尚未执行'],alternatives:[{kind:'edit',label:'补全所缺选择',missing:missing.map(s=>s.name),available:false}],fallback:null};return null;}
   const revision=this.revision,args={action:this.action.id,slots:structuredClone(this.slots)},eventId=this.eventId??=this.services.newEventId();
   this.busy=true;
   try{
    const result=await this.services.preview(args.action,args.slots,eventId);
    if(this.cancelled||revision!==this.revision)return null;
-   if(result?.ok===false)throw Error(result.error??'未能取得预览');
    const receipt=result?.receipt??result?.result?.receipt;
+   if(result?.ok===false&&!receipt)throw Error(result.error??'未能取得预览');
    if(receipt?.status!=='preview'){
-    this.feedback=structuredClone(result.prepared??receipt?.routing??result.routing??{});
+    this.feedback=structuredClone({...result.prepared,...result.routing,...receipt,...receipt?.routing});
     const details=(this.feedback.ambiguities??[]).map(row=>`${row.path}：${row.value}`).join('；');
     throw Error(receipt?.reason??this.feedback.reason??(details?`请明确目标：${details}`:'请补全选择，或采用下面的替代做法'));
    }
@@ -173,6 +181,10 @@ export class ActionBuilder{
    const result=await this.services.act(quote.args.action,structuredClone(quote.args.slots),{eventId:quote.eventId,expectedSequence:quote.sequence});
    this.result=result;
    if(result?.stale){this.error='此刻情形已变化，请重新预览后再确认。';this.eventId=null;}
+   else if((result?.receipt??result?.result?.receipt)?.status==='rejected'){
+    const receipt=result.receipt??result.result.receipt;
+    this.feedback=structuredClone({...receipt,...receipt.routing});this.error=receipt.reason;this.eventId=null;
+   }
    else if(result?.ok===false)this.error=result.error;
    return result;
   }catch(error){this.error=error.message;return null;}
@@ -260,10 +272,26 @@ export function renderActionBuilder(container,{builder,here,api,onChange,onClose
   if(builder.step<3)container.append(button('下一步',()=>{builder.step++;onChange();}));
   container.append(button('上一步',()=>{builder.step--;builder.quote=null;onChange();}));
  }
+ if(builder.feedback?.reason&&builder.feedback.reason!==builder.error)container.append(node('p',builder.feedback.reason));
  if(builder.feedback?.missing?.length)container.append(node('p',`还需要：${builder.feedback.missing.join('、')}`));
+ for(const repair of builder.feedback?.repair??[])container.append(node('p',repair));
+ const chooseNext=async alternative=>{
+  const result=await api('actions',{query:alternative.action,target:builder.target,limit:24});
+  const action=result.actions.find(a=>a.id===alternative.action);
+  if(action){builder.intent=builder.feedback?.fallback?.intent??builder.slots.intent??builder.intent;builder.choose(action);for(const [name,value]of Object.entries(alternative.slots??{}))if(action.slots?.some(s=>s.name===name))builder.setSlot(name,value);}
+ };
+ for(const alternative of builder.feedback?.alternatives??[]){
+  if(alternative.missing?.length)container.append(node('p',`${alternative.label}：仍需${alternative.missing.join('、')}`));
+  if(alternative.kind==='edit')container.append(button(alternative.label,()=>{const slot=builder.action?.slots?.find(s=>alternative.missing?.includes(s.name));builder.step=builder.action?(slot?builderStep(slot):3):0;onChange();}));
+  else if(alternative.kind==='clarify')container.append(button(alternative.label,()=>{
+   const path=alternative.path.split('.'),slots=structuredClone(builder.slots);let at=slots;
+   for(const key of path.slice(0,-1))at=at[key]??={};at[path.at(-1)]=alternative.value;
+   builder.slots=slots;builder.invalidate();builder.step=3;onChange();
+  }));
+  else if(alternative.action)container.append(button(alternative.label,()=>perform(()=>chooseNext(alternative))));
+ }
  if(builder.feedback?.fallback?.available)container.append(button(builder.feedback.fallback.label??'就这样做，留下痕迹',()=>perform(async()=>{
-  const result=await api('actions',{query:builder.feedback.fallback.action,target:builder.target,limit:1});
-  const mark=result.actions.find(a=>a.id===builder.feedback.fallback.action);if(mark){builder.intent=builder.slots.intent??builder.intent;builder.choose(mark);}
+  await chooseNext(builder.feedback.fallback);
  })));
  if(builder.error){const error=node('p',builder.error);error.setAttribute('role','alert');container.append(error);}
  container.append(button('取消',()=>{builder.cancel();onClose();}));

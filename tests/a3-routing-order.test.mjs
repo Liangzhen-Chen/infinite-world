@@ -39,7 +39,8 @@ test('A3 route order: unknown practice reports its source failure without teachi
  // practice first. Retain the original proposal-path source rejection.
  const plan=prepareOpenAction(engine,document,args);assert.equal(plan.routed,'core:practice');assert.equal(plan.slots.skill,'skill_monk_combat_01');
  assert.match(plan.reason,/按结构区分为/);
- await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-practice',args}),{code:'E-LEARN-SOURCE'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-practice',args}),undefined,'E-LEARN-SOURCE');
  assert.deepEqual(document,before);
 });
 
@@ -115,5 +116,6 @@ test('A3 route order: chained repayments select debt programs and reject absent 
  const {engine,document}=fixture(),other='npc_hw_wushuo';Object.assign(document.state.npcs[other],{location:place,scheduleTravel:null,cognitionTravel:null});
  const before=structuredClone(document),args={intent:'收回五十铜再还三十铜',target:other,effects:[{op:'transfer',resource:'coin',from:other,to:'self',qty:50},{op:'obligation.settle',id:'对方欠本人的唯一借款',amount:50,partial:false},{op:'transfer',resource:'coin',from:'self',to:shop,qty:30},{op:'obligation.settle',id:'本人欠店主的唯一借款',amount:30,partial:false}]};
  const plan=prepareOpenAction(engine,document,args);assert.equal(plan.status,'sequence');assert.deepEqual(plan.steps.map(s=>s.action),['core:trade.collect','core:trade.repay']);
- await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:'route-no-real-debt',args}),{code:'E-OPEN-OBLIGATION'});assert.deepEqual(document,before);
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-no-real-debt',args}),undefined,'E-OPEN-OBLIGATION');assert.deepEqual(document,before);
 });
