@@ -24,6 +24,7 @@ import {standing,standingWords} from './standing.mjs';
 import {mechanismRule,domainRules} from './domain-rules.mjs';
 import {knowsPracticalKnowledge} from './education-state.mjs';
 import {readBodyState} from './primitives-body.mjs';
+import {markFallback} from './action-boundary.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 const publicRow=row=>!row?.hidden&&!row?.private&&row?.visible!==false;
@@ -278,8 +279,9 @@ function targetView(ctx,id){
  if(physicalLocation(d,ctx.engine,id)!==ctx.s.location||contact?.lineOfSight!==true)return null;
  return {kind:ctx.s.creatures?.[id]?'creature':entity?.kind??'item',facts};
 }
-function entityCard(ctx,id,view,actions,openActions){
+function entityCard(ctx,id,view,actions,openActions,fallback){
  const {engine,document,s}=ctx,d={...actionReader(document),document},state=knownState(view.facts);
+ const projectRefusal=details=>refusalProjection({...details,reason:details.reason??details.message,fallback});
  if(view.kind==='npc'){
   state.present=true;
   state.awake=!/睡|昏|濒死|死亡/.test(`${view.facts.activity??''} ${view.facts.status??''}`);
@@ -302,15 +304,15 @@ function entityCard(ctx,id,view,actions,openActions){
   }
   const ability={effect,means,source,bounds,scope:'single_effect',requirements:{...source.requirements,...(source.rangeMeters!==undefined?{rangeMeters:source.rangeMeters}:{})},...(means.item?{tool:means.item}:{})};
   const permission=canAct({engine,document},'player',effect.op==='emit'?'talk':effect.op);
-  let refusal=!permission.allowed?refusalProjection({code:'E-CAPACITY',reason:permission.reason}):null;
-  if(!refusal&&['fact.set','move'].includes(effect.op)&&!authority({engine,document},'player',effect.op,id,{effect}).allowed)refusal=refusalProjection({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
+  let refusal=!permission.allowed?projectRefusal({code:'E-CAPACITY',reason:permission.reason}):null;
+  if(!refusal&&['fact.set','move'].includes(effect.op)&&!authority({engine,document},'player',effect.op,id,{effect}).allowed)refusal=projectRefusal({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
   const contact=id==='player'||document.holdings?.locations?.[id]?.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
-  if(!refusal&&source.rangeMeters!==undefined&&(!contact?.lineOfSight||contact.distanceMeters>source.rangeMeters))refusal=refusalProjection({code:'E-REACH',reason:'当前视线或距离不足，需先靠近'});
-  if(!refusal&&(source.requirements?.mp??0)>(s.player.mp??0))refusal=refusalProjection({reason:'当前灵力不足',missing:['足够的灵力']});
-  if(!refusal&&(source.requirements?.stamina??0)>readBodyState(engine,document,'player','stamina').value)refusal=refusalProjection({reason:'当前体力不足',missing:['足够的体力']});
-  if(!refusal&&source.requirements?.materials?.some(row=>engine.quantity(d,'player',row.item)<row.amount))refusal=refusalProjection({code:'E-MATERIAL',reason:'当前缺少来源所需的实际材料',missing:['足量的施法材料']});
-  if(!refusal&&Object.values(bounds??{}).some(value=>value===0))refusal=refusalProjection({reason:'当前来源可用上限为零'});
-  if(openActions==='off'||openActions==='limited'&&effect.op==='status')refusal=refusalProjection({reason:'当前行动配置需通过注册动作办理此效果'});
+  if(!refusal&&source.rangeMeters!==undefined&&(!contact?.lineOfSight||contact.distanceMeters>source.rangeMeters))refusal=projectRefusal({code:'E-REACH',reason:'当前视线或距离不足，需先靠近'});
+  if(!refusal&&(source.requirements?.mp??0)>(s.player.mp??0))refusal=projectRefusal({reason:'当前灵力不足',missing:['足够的灵力']});
+  if(!refusal&&(source.requirements?.stamina??0)>readBodyState(engine,document,'player','stamina').value)refusal=projectRefusal({reason:'当前体力不足',missing:['足够的体力']});
+  if(!refusal&&source.requirements?.materials?.some(row=>engine.quantity(d,'player',row.item)<row.amount))refusal=projectRefusal({code:'E-MATERIAL',reason:'当前缺少来源所需的实际材料',missing:['足量的施法材料']});
+  if(!refusal&&Object.values(bounds??{}).some(value=>value===0))refusal=projectRefusal({reason:'当前来源可用上限为零'});
+  if(openActions==='off'||openActions==='limited'&&effect.op==='status')refusal=projectRefusal({reason:'当前行动配置需通过注册动作办理此效果'});
   if(refusal)ability.blocked=refusal;
   primitives.push(ability);
  };
@@ -331,20 +333,20 @@ function entityCard(ctx,id,view,actions,openActions){
  const unique=[...new Map(primitives.map(row=>[JSON.stringify([row.effect,row.source.id]),row])).values()];
  const relatedActions=actions.filter(row=>row.id!=='open:proposal').map(row=>{
   const out={id:row.id,label:row.label,slots:row.slots,fill:row.fill};
-  if(row.permission?.allowed===false||row.blocked)out.blocked=refusalProjection({reason:row.permission?.reason??row.blocked});
+  if(row.permission?.allowed===false||row.blocked)out.blocked=projectRefusal({reason:row.permission?.reason??row.blocked});
   const mechanism=knownMechanism(ctx,view.facts);
   const use=mechanism&&row.id===mechanismAction(mechanism)?mechanism.requiresUse:row.id==='core:farm.private_sow'?domainRules(engine).privateField?.sowRequiresUse:row.id==='core:farm.private_harvest'?domainRules(engine).privateField?.harvestRequiresUse:null;
-  if(use)try{out.tool=useTool(d,engine,use);out.fill={...out.fill,tool:out.tool};}catch(error){if(!isDomainRejection(error))throw error;out.blocked=refusalProjection(error);}
+  if(use)try{out.tool=useTool(d,engine,use);out.fill={...out.fill,tool:out.tool};}catch(error){if(!isDomainRejection(error))throw error;out.blocked=projectRefusal(error);}
   if(mechanism&&row.id===mechanismAction(mechanism)){
-   if(view.facts[mechanism.state]!==true||mechanism.requiresIdentified&&view.facts.identified!==true)out.blocked=refusalProjection({reason:'机关已经解除，或尚未辨认其操作结构'});
-   if(mechanism.practicalKnowledge&&!knowsPracticalKnowledge(engine,s,'player',mechanism.practicalKnowledge))out.blocked=refusalProjection({reason:'尚未学会此机关的拆解工序',missing:['实际学会的机关拆解知识']});
-   if(!authority({engine,document},'player','fact.set',id).allowed&&!authority({engine,document},'player',mechanism.operation,id).allowed)out.blocked=refusalProjection({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
+   if(view.facts[mechanism.state]!==true||mechanism.requiresIdentified&&view.facts.identified!==true)out.blocked=projectRefusal({reason:'机关已经解除，或尚未辨认其操作结构'});
+   if(mechanism.practicalKnowledge&&!knowsPracticalKnowledge(engine,s,'player',mechanism.practicalKnowledge))out.blocked=projectRefusal({reason:'尚未学会此机关的拆解工序',missing:['实际学会的机关拆解知识']});
+   if(!authority({engine,document},'player','fact.set',id).allowed&&!authority({engine,document},'player',mechanism.operation,id).allowed)out.blocked=projectRefusal({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
    const held=document.holdings?.locations?.[id],contact=held?.mode==='carried'&&held.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
-   if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)out.blocked=refusalProjection({code:'E-REACH',reason:'尚不能看清并触及物品'});
+   if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)out.blocked=projectRefusal({code:'E-REACH',reason:'尚不能看清并触及物品'});
   }
   return out;
  });
- if(!unique.length)blocked.push(refusalProjection({reason:'当前没有可直接施加的开放原语来源',missing:['可作用于此对象的实际手段'],repair:['先查看相关注册动作，或取得相应工具、技能后重新查询']}));
+ if(!unique.length)blocked.push(projectRefusal({reason:'当前没有可直接施加的开放原语来源',missing:['可作用于此对象的实际手段'],repair:['先查看相关注册动作，或取得相应工具、技能后重新查询']}));
  return {state,primitives:unique,relatedActions,blocked};
 }
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
@@ -375,14 +377,26 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  const openActions=document.state.records?.action_config?.openActions??'full';
  if(query==='open:proposal'||query==='world_propose')actions=actions.filter(a=>a.id==='open:proposal');
  if(openActions==='off')actions=actions.filter(a=>a.inputTool!=='world_propose');
- if(openActions!=='off'&&registry.actions.some(a=>a.id==='open:leave_mark'||a.call?.tool==='world_propose')&&(!query||query==='open:proposal'||query==='world_propose')){
-  actions=actions.filter(action=>action.id!=='open:proposal');actions.unshift(openProposalOffer(ctx));
+ // Keep the creative path beside search results, including empty/blocked targets.
+ // Exact open-action lookups retain their single-action contract for the builder.
+ const exactOpen=['open:proposal','world_propose','open:leave_mark'].includes(query);
+ const mark=registry.actions.find(a=>a.id==='open:leave_mark');
+ const fallback=mark?markFallback(engine,document,'留下自己的心意'):null;
+ if(openActions!=='off'&&(mark||registry.actions.some(a=>a.call?.tool==='world_propose'))&&(!exactOpen||query!=='open:leave_mark')){
+  actions=actions.filter(action=>action.id!=='open:proposal');
+  actions.unshift(openProposalOffer(ctx));
+ }
+ if(mark&&(!exactOpen||query==='open:leave_mark')){
+  actions=actions.filter(action=>action.id!=='open:leave_mark');
+  const row={...offer(ctx,mark,id),available:fallback.available,missing:fallback.missing};
+  if(!fallback.available)row.blocked=fallback.reason??fallback.missing.join('、');
+  actions.splice(actions[0]?.id==='open:proposal'?1:0,0,row);
  }
  const quick=QUICK.map(label=>{const a=registry.actions.find(x=>x.ui?.quick===label);return a?{label,action:a.id,available:visible(a)||a.ui.quick==='交易'}:null;}).filter(Boolean);
  const sceneEngine=Object.create(engine);
  sceneEngine.world={...engine.world,locations:engine.world.locations.filter(publicRow),routes:engine.world.routes.filter(row=>publicRow(row)&&[row.from,row.to].every(key=>publicRow(engine.byId.get(key))))};
- return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
-  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:actions.slice(0,limit),quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
+ return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions,fallback),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
+  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:actions.slice(0,Math.max(limit,exactOpen?1:2)),quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
    exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};

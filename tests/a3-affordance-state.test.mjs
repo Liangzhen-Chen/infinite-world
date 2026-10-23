@@ -199,7 +199,10 @@ test('environment features and runtime entities resolve by visible name and alwa
  assert.ok(feature);f.document.state.location=feature.id;
  const row=feature.features.find(x=>!x.hidden&&!x.private);
  const initial=menu(f,row.id).target;assert.equal(initial.kind,'feature');
- f.document.state.records[`physical_feature:${row.id}`]={category:'physical_feature',id:row.id,state:{...row.state,integrity:37,toxinUg:900000}};
+ // The fallback now previews a real mark (including time advancement). Keep
+ // the existing physical-feature identity contract: id + location, as written
+ // by the native environment handlers. State/privacy assertions stay intact.
+ f.document.state.records[`physical_feature:${row.id}`]={category:'physical_feature',id:row.id,location:feature.id,state:{...row.state,integrity:37,toxinUg:900000}};
  const changed=menu(f,row.name).target;assert.equal(changed.id,row.id);assert.equal(changed.state.integrity,37);
  assert.equal(changed.state.toxinUg,undefined);assert.notDeepEqual(changed.state,initial.state);
 });

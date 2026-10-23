@@ -12,6 +12,16 @@
   },
   "turns": [
     {
+      "anchor": "whimsy_buy_container",
+      "input": "我先沿已知路线去白石镇找严辙，等到他实际在场并营业，用自己的钱从他的现货中买一只素面陶罐。只买容器，不取水、不卖水，不把未成交当成拿到。",
+      "expectedTools": ["world_move", "world_time", "world_trade"],
+      "assertions": [
+        {"kind": "calls", "tool": "world_trade", "args": {"quantity": 1}, "success": true, "min": 1},
+        {"kind": "quantity", "path": "state.inventory.item_clay_pot", "value": 1},
+        {"kind": "range", "path": "state.player.coins", "min": 0, "max": 179}
+      ]
+    },
+    {
       "input": "我去河湾渡口看看水边的池水，不先取水或做别的事。",
       "expectedTools": ["world_move"],
       "assertions": [
@@ -21,7 +31,7 @@
     },
     {
       "anchor": "whimsy_clean_water",
-      "input": "我想把渡口池水净化，装进自己的陶壶拿去卖。先按实际水质、容器和能力提出能做到的部分；做不到的部分请给世界内原因和可行替代。我不预设净化、取水或卖钱一定成功。",
+      "input": "我想把渡口池水净化，装进刚买到的素面陶罐拿去卖。先按实际水质、容器和能力提出能做到的部分；做不到的部分请给世界内原因和可行替代。我不预设净化、取水或卖钱一定成功。",
       "expectedTools": ["world_propose"],
       "assertions": [
         {"kind": "calls", "tool": "world_propose", "min": 1},
@@ -72,7 +82,7 @@
     },
     {
       "input": "我把这道记号留在墙面，内容是提醒行人留意湿滑；按普通刻痕留下痕迹即可，不要求路人一定看见。",
-      "expectedTools": ["world_act"],
+      "expectedTools": ["world_act", "world_propose"],
       "assertions": [
         {"kind": "records", "path": "state.records", "where": {"category": "mark", "author": "player", "location": "bld_hw_qingdeng", "active": true}, "min": 1},
         {"kind": "exists", "path": "state.created", "value": true}

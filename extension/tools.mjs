@@ -145,7 +145,8 @@ export function builderToolCall(action,slots={}){
 export function modelActionCatalog(result){
  const choices=slot=>result.actions.length===1?slot.options:slot.options?.slice(0,8);
  return {here:result.scene,...(result.target?{target:structuredClone(result.target)}:{}),...(result.configuration?{configuration:result.configuration}:{}),actions:result.actions.map(action=>({id:action.id,label:action.label,
-  ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:'intent, participants, effects, means, context'}}:{}),
+  ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:action.slots.map(slot=>slot.name).join(', ')}}:{}),
+  ...(action.available!==undefined?{available:action.available,missing:action.missing??[]}:{}),
   ...(action.hint?{hint:action.hint}:{}),...(action.blocked?{blocked:action.blocked}:{}),...(action.permission?{permission:action.permission}:{}),...(Object.keys(action.fill??{}).length?{fill:action.fill}:{}),
   slots:action.slots.map(slot=>({name:slot.name,kind:slot.kind,
    ...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),...(slot.builderStep?{builderStep:slot.builderStep}:{}),...(slot.default!==undefined?{default:slot.default}:{}),

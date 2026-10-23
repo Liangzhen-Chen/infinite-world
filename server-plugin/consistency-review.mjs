@@ -3,7 +3,7 @@ import {parseTurn,stripTurn,fullyTimedWait,actionNarrationContract} from '../ext
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
 import {digest} from './storage.mjs';
-import {reviewPlayerFacts} from './consistency-evidence.mjs';
+import {reviewPlayerFacts,reviewTurnSettlement} from './consistency-evidence.mjs';
 import {appliedEffects} from './applied-effects.mjs';
 import {inspectionClaimErrors,manufacturingClaimErrors,repairClaimErrors,waterTransferClaimErrors} from '../tools/narrative-claims.mjs';
 
@@ -60,8 +60,10 @@ function prepare(input){
  const registry=entities.filter(e=>[e.id,e.name,...e.aliases??[]].some(value=>typeof value==='string'&&value.length>=2&&mentioned.includes(normalize(value)))).map(e=>({id:e.id,name:e.name,aliases:e.aliases??[],kind:e.kind??e.id?.split('_')[0]}));
  // Applied effects (A1): per receipt when the service recorded them, else the turn's before→after effects.
  const applied=receipts.some(r=>Array.isArray(r.applied))?receipts.flatMap((r,i)=>(r.applied??[]).map(e=>({receipt:i,...e}))):input.before&&input.after?appliedEffects(input.before,input.after):[];
+ const settlement=reviewTurnSettlement(input,receipts,applied);
  const evidence=[{id:'player',kind:'intent',text:input.playerText},{id:'before',kind:'ledger',text:JSON.stringify(compactState(input.before,stockIds))},{id:'after',kind:'ledger',text:JSON.stringify(compactState(input.after,stockIds))},
   {id:'applied',kind:'ledger',text:JSON.stringify(applied)},
+  {id:'turn-settlement',kind:'ledger',text:JSON.stringify(settlement)},
   {id:'registry',kind:'registry',text:JSON.stringify(registry)},...receipts.map((r,i)=>({id:`receipt:${i}`,kind:'receipt',text:JSON.stringify(r)})),
   ...receipts.flatMap((r,i)=>{const contract=actionNarrationContract(r.result);return contract?[{id:`action-contract:${i}`,kind:'action-contract',text:JSON.stringify(contract)}]:[];}),
   ...Object.entries(input.knowledge??{}).map(([id,k])=>({id:`knowledge:${id}`,kind:'knowledge',text:JSON.stringify(k)})),
@@ -76,12 +78,54 @@ function prepare(input){
   if(typeof row.text!=='string')throw Error('旧事证据需要原文');
   evidence.push({id:`prior:${index}`,kind:row.kind??'history',text:row.text});
  }
- return {raw:input.draft,visible,receipts,applied,entities,labels,evidence,registry,playerText:input.playerText,outOfCharacter:isOutOfCharacter(input.playerText),fingerprint:digest(evidence)};
+ return {raw:input.draft,visible,receipts,applied,settlement,entities,labels,evidence,registry,playerText:input.playerText,outOfCharacter:isOutOfCharacter(input.playerText),fingerprint:digest(evidence)};
 }
 // The player's coin outflow the engine applied for one receipt; receipts from older callers fall back to the turn diff.
 function paidByReceipt(receipt,input){
  if(Array.isArray(receipt.applied))return -receipt.applied.filter(e=>e.op==='transfer'&&e.resource==='coin'&&e.holder==='player').reduce((n,e)=>n+e.delta,0);
  return stateOf(input.before).player?.coins-stateOf(input.after).player?.coins;
+}
+function unsettledClaims(input,context,add,cite){
+ if(context.outOfCharacter)return;
+ const {effects,decisions,marks,records}=context.settlement;
+ const names=entity=>[entity.name,...entity.aliases??[]].filter(Boolean);
+ const mentioned=(text,entity)=>names(entity).some(name=>text.includes(name));
+ const hypothetical=text=>future.test(text)||uncertain(text)||/准备|计划|想要|想把|(?:你|我|玩家).{0,3}想|试图|希望|不要|不能把|不代表|并未|没能|尚未|没有留下|未留下|不会留下/.test(text);
+ const narration=stripTurn(context.raw).replace(/<q\s+who="[^"]+"\s*>[\s\S]*?<\/q>/g,'');
+ const unsupported=(category,quote,reason)=>add(category,quote,reason,[cite('turn-settlement')]);
+ for(const clause of narration.split(/[。！？；\n]/).map(text=>text.trim()).filter(Boolean)){
+  if(hypothetical(clause))continue;
+  // A quote of an intention/old claim is not a newly applied physical effect.
+  const claim=clause.replace(/“[^”]*”|「[^」]*」|"[^"]*"/g,'');
+  if(/(?:留下(?:了)?|刻下(?:了)?|刻出(?:了)?|划出(?:了)?|多了|添了|出现了).{0,28}(?:痕|记号|标记|字迹|涂鸦|纸条)|(?:痕迹|记号|刻痕|纸条).{0,10}(?:留在了|刻在了|贴在了)/.test(claim)&&!marks.length&&!effects.some(e=>e.op==='create'&&e.kind==='mark'))unsupported('fact',clause,'正文声称本回合留下了物理痕迹，但当轮引擎没有对应的留痕结算');
+  const itemChange=/(?:你|玩家|旅人).{0,12}(?:获得了|得到了|买到了|收下了|拿到了|交出了|卖出了|消耗了|用掉了|丢掉了)/.test(claim);
+  if(itemChange)for(const entity of context.entities.filter(e=>e.kind==='item'||e.id?.startsWith('item_'))){
+   if(!mentioned(claim,entity))continue;
+   if(!effects.some(e=>e.op==='transfer'&&(e.item===entity.id||e.resource===entity.id||[e.from,e.to].some(account=>account?.split('|')[1]===entity.id))||e.op==='create'&&e.entity===entity.id))unsupported('fact',clause,'正文声称本回合钱物发生变化，但当轮引擎没有该物品的转移或创建结算');
+  }
+  if(/(?:你|玩家|旅人).{0,12}(?:抵达了?|到达了?|来到了?|走进了?|走出了?|离开了)/.test(claim)){
+   const places=context.entities.filter(e=>e.kind==='location'||/^(?:loc|bld)_/.test(e.id??'')).filter(e=>mentioned(claim,e));
+   if(!effects.some(e=>e.op==='move'&&(e.holder==='player'||e.entity==='player')&&(!places.length||places.some(place=>[e.from,e.to].includes(place.id)))))unsupported('location',clause,'正文声称玩家本回合跨地点移动，但当轮引擎没有对应的移动结算');
+  }
+  const money=/(?:你|玩家|旅人).{0,12}(?:得到了|收到了|赚了|收入了)([\d零一二两三四五六七八九十]+)(?:个|枚)?(?:铜钱|铜币|铜|文)/.exec(claim);
+  if(money&&!effects.some(e=>e.op==='transfer'&&(e.resource==='coin'&&e.holder==='player'&&e.delta===chineseNumber(money[1])||e.to?.startsWith('player|coin_river|')&&e.qty===chineseNumber(money[1]))))unsupported('fact',clause,'正文声称本回合收到钱，但当轮引擎没有对应的入账结算');
+  if(/(?:已(?:经)?|新|本次|这次).{0,10}(?:登记了|记入了|写入了|立下了|新增了).{0,16}(?:记录|账本|约定|契约|许可)|(?:记录|账本).{0,12}(?:新增了|已更新|被改为)/.test(claim)&&!records.length&&!effects.some(e=>/^(?:obligation\.|holding\.|emit$)/.test(e.op)))unsupported('fact',clause,'正文声称本回合登记或修改了记录，但当轮引擎没有对应的记录结算');
+ }
+ // Decisions are different from decorative gestures or ordinary dialogue.
+ // Match the actual speaker and outcome; another NPC's or an old decision is
+ // not authority to agree/refuse on this NPC's behalf.
+ const checkDecision=(clause,npc)=>{
+  if(hypothetical(clause))return;
+  if(/(?:没有|未曾|从未|不曾).{0,4}(?:同意|答应|承诺)|(?:同意|承诺)(?:书|记录|仍|还|有效|无效|到期|期限|范围)/.test(clause))return;
+  const outcome=/拒绝|不同意|不答应|不点头|不允许|不准|不肯|不愿意/.test(clause)?'refuse':/同意|答应|允许|准许|承诺(?:了|道|说|会|给|替|帮)/.test(clause)?'agree':null;
+  if(!outcome)return;
+  if(!decisions.some(row=>row.npc===npc&&row.outcome===outcome))unsupported('agency',clause,'叙述替 NPC 作出了同意、拒绝或承诺，但当轮引擎没有该人物对应的决策回执');
+ };
+ for(const [,id,text] of stripTurn(context.raw).matchAll(/<q\s+who="([^"]+)"\s*>([\s\S]*?)<\/q>/g))if(id!=='player')for(const clause of text.split(/[。！？；\n]/).filter(Boolean))checkDecision(clause,id);
+ for(const clause of narration.split(/[。！？；\n]/).filter(Boolean)){
+  if(/你(?:刚才)?说|玩家(?:刚才)?说|听说|据说|转述/.test(clause))continue;
+  for(const entity of context.entities.filter(e=>e.kind==='person'||e.id?.startsWith('npc_')))if(mentioned(clause,entity))checkDecision(clause,entity.id);
+ }
 }
 function fixedIssues(input,context){
  const issues=[],allowed=new Set(context.entities.map(e=>e.id)),names=new Set(context.entities.flatMap(e=>[e.name,...e.aliases??[]]).map(normalize));
@@ -92,6 +136,7 @@ function fixedIssues(input,context){
   issues.push({category,severity,quote,reason,evidence,source:'deterministic',...(entityName?{entityName,entityKind}:{}),...(subject?{subject,privateContent}:{})});
  };
  const clauses=context.visible.split(/[。！？；\n]/).map(s=>s.trim()).filter(Boolean);
+ unsettledClaims(input,context,add,cite);
  // Quoted player claims and questions do not assert that the debt history
  // changed. Repayment retains overdueAt in the authoritative debt record.
  const assertions=stripTurn(context.raw).replace(/<q\s+who="[^"]+"\s*>[\s\S]*?<\/q>/g,'').replace(/“[^”]*”|「[^」]*」|"[^"]*"/g,'').match(/[^。！？；\n]+[。！？；]?/g)??[];
@@ -269,6 +314,7 @@ export function consistencyReviewRequest(input,{maxTokens=1800}={}){
  工具 ok=false 不能写成成功，保留失败原因和实际地点、分钟；移动意图不是移动结果。检索留证 retrieval 仅 status=complete 且 sealed=true 才能证明本回合调用完整；零调用才证明未检索，unknown 或缺回执最多给 warning。scene 中的旧事不是 world_search 调用，空 results 只能证明查过，不能证明找到。`;
  request.messages[0].content+='\nknowledge.lies是该人物已登记的有意谎言（claims为说法，truth为实情）。其台词说出这些说法是人物在撒谎，不算叙述矛盾；旁白把谎言写成事实、或人物说出未登记的假话，仍按证据报问题。';
  request.messages[0].content+='\naction-contract 是引擎回执的叙述约束：仅 committed 的 applied 是已发生效果；must 应保留，mustNot、trimmed 不能写成成功。pending、preview、rejected、not_submitted 均不是完成，不能用提案中的 effects 或预览结果补写成功；后果只按真实结算回执，不凭模型添加处罚、赔付或承诺。';
+ request.messages[0].content+='\nturn-settlement 是服务端捕获的本回合结算清单：receiptCount=0 表示本回合没有引擎行动回执；effects、marks、records、decisions 只支持各自实际结算的对象和结果。叙述若声称本回合改变物品、痕迹、位置、钱物或记录，必须有对应已结算效果；替 NPC 作出同意、拒绝、许可或承诺，必须有该人物、该请求及该结果的本回合引擎决策。清单明确没有对应结果仍写成已发生，归 fact/location/agency 的 error，进入文字重写或拒绝流程；历史回执、提案、预览、玩家请求和另一件行动不能补证。已存在的痕迹、历史经历、报价、意图、疑问、普通姿态与感知不要求本回合重复结算。';
  request.messages[0].content+='\nclock.currentTime是服务端换算好的当前时刻，elapsedMinutes是实际差值，不另算历法。正文当前时刻一致且额外为0时，不因许可早已到期或等待起点不同报time；reason若承认时间无误，就不列该项。缺经历来源用warning，直接矛盾须引用相反记录才用error。每条reason最多200字；草稿quote最多120字，证据quote最多160字，只摘短的连续原文。JSON引文不得删除aliases/kind等中间字段再拼接，不自行补闭合标签。';
  for(const branch of request.tools[0].function.parameters.properties.issues.items.oneOf){
   branch.properties.quote={...shortString,maxLength:120};branch.properties.reason={...shortString,maxLength:200};

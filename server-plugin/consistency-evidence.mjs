@@ -6,6 +6,33 @@ import {lieKnowledge} from './lies.mjs';
 
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 const resultOf=event=>event.result?.result??event.result??{};
+// Only settled output belongs to this turn. Proposed effects, previews and old
+// dialogue/consent records cannot supply a missing action or NPC decision.
+export function reviewTurnSettlement(input,receipts,applied){
+ const before=input.before?.state??input.before??{},after=input.after?.state??input.after??{};
+ const effects=[],decisions=[],settled=[];
+ for(const [index,row] of receipts.entries()){
+  const result=row.result,native=result.receipt;
+  // Per-event applied is the service's actual before→after diff, including
+  // consequences of a failed contest. A rejected proposal's native.applied,
+  // in contrast, must never be treated as a completed player action.
+  effects.push(...(row.applied??[]).map(effect=>({receipt:index,...effect})));
+  if(row.applied?.length)settled.push(index);
+  if(native&&native.status!=='committed'||result.ok===false)continue;
+  if(!settled.includes(index))settled.push(index);
+  effects.push(...(native?.applied??[]).map(effect=>({receipt:index,...effect})));
+  const legacy=native?.legacy??result,dialogue=legacy.dialogue??result.dialogue;
+  if(dialogue?.npc&&dialogue.decision?.outcome)decisions.push({receipt:index,npc:dialogue.npc,action:dialogue.action,...dialogue.decision});
+  if(typeof legacy.decision==='string'&&(legacy.npc??legacy.from??row.args?.promisor))decisions.push({receipt:index,npc:legacy.npc??legacy.from??row.args.promisor,outcome:legacy.decision});
+  if(native?.consent?.allowed&&native.consent.from&&native.consent.source)decisions.push({receipt:index,npc:native.consent.from,outcome:'agree',source:native.consent.source});
+ }
+ // Legacy callers supplied a whole-turn diff rather than per-event applied.
+ if(settled.length&&!receipts.some(row=>Array.isArray(row.applied)))effects.push(...applied);
+ const records=settled.length?Object.entries(after.records??{}).filter(([id,row])=>JSON.stringify(row)!==JSON.stringify(before.records?.[id])).map(([id,row])=>({id,...pick(row,['category','kind','author','location','active',...(row.category==='mark'?['intent','form','zone']:[])])})):[];
+ const marks=records.filter(row=>row.category==='mark'&&row.active);
+ for(const row of settled.length?after.consentEvents??[]:[])if(!(before.consentEvents??[]).some(old=>old.id===row.id)&&row.type==='consent_given')decisions.push({npc:row.from,outcome:'agree',source:row.id});
+ return {receiptCount:receipts.length,settled,effects,decisions,marks,records};
+}
 // A completed long wait is a bounded absence, not the entire NPC biography.
 // The movement destination tracks the player's actual location at that wait.
 export function reviewRecallWindow(events,location,now){
