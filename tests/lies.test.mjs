@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -146,7 +147,7 @@ test('一致性审查区分人物有意说谎与叙述出错',async()=>{
     assert.ok(otherSpeaker.issues.some(i=>/否认现有货物/.test(i.reason)),'别人的谎不替这个人开脱');
     const input={...base,draft:draftText+'柜里确实一枚铁钉也没有了。',knowledge:{npc_a:{lies}}};
     assert.match(consistencyReviewRequest(input).messages[0].content,/knowledge\.lies/);
-    const response=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
+    const response=issues=>reviewResponse(input,issues);
     const issue=quote=>({category:'fact',severity:'error',quote,reason:'与库存不符',evidence:[{id:'player',quote:'还有铁钉吗'}]});
     const kept=validateConsistencyResponse(response([issue('铁钉没有了'),issue('柜里确实一枚铁钉也没有了')]),input);
     assert.deepEqual(kept.map(i=>i.quote),['柜里确实一枚铁钉也没有了'],'旁白写成事实仍报，台词里的谎不报');

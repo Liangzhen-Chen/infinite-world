@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,7 +12,7 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  const client={async generate(body,label){
   requests.push({body,label});
   if(label.startsWith('consistency-rewrite:')){await barrier;return{choices:[{finish_reason:'stop',message:{content:final}}]};}
-  return{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:'{"issues":[]}'}}]}}]};
+  return reviewResponse(body);
  }};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{});

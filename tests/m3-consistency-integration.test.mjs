@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 
 const draft='<q who="npc_unregistered">面包给你。</q><回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>';
 const corrected='<q who="npc_hw_linsui">面包给你。</q><回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>';
-const issuesResponse=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
+const issuesResponse=(issues,input)=>reviewResponse(input,issues);
 function clientFixture({badRewrite=false,failReview=false}={}){
  const calls=[];
  return {calls,async generate(body,label){
@@ -20,7 +21,7 @@ function clientFixture({badRewrite=false,failReview=false}={}){
   const payload=JSON.parse(body.messages[1].content);
   assert.ok(payload.evidence.some(row=>row.id==='receipt:0'&&row.text.includes('world_trade')));
   assert.ok(payload.evidence.some(row=>row.id==='scene'&&row.text.includes('林穗')));
-  return issuesResponse([]);
+  return issuesResponse([], body);
  }};
 }
 async function acted(server){
@@ -87,7 +88,7 @@ test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',asy
 
 test('警告保留为 issues，已完成审查与可提交分别报告且重读不触发改写',async t=>{
  const warning={category:'fact',severity:'warning',quote:'面包给你。',reason:'这句话的隐含背景仍需叙述复核',evidence:[{id:'player',quote:'我付钱买一个面包'}]};
- let calls=0;const client={async generate(body,label){calls++;assert.ok(label.startsWith('consistency:'));return issuesResponse([warning]);}};
+ let calls=0;const client={async generate(body,label){calls++;assert.ok(label.startsWith('consistency:'));return issuesResponse([warning], body);}};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),request={...row.reviewRequest,draft:corrected};
  const review=await server.api('review/reply',request);
@@ -120,8 +121,8 @@ test('T97 回放private失败移动：唯一改写保留失败，伪造成功的
     return {choices:[{finish_reason:'stop',message:{content:candidate}}]};
    }
    reviews++;
-   if(reviews===1)return issuesResponse([{category:'agency',severity:'error',quote:'脚还没跨出门槛就停住了',reason:'替玩家决定停住',evidence:[{id:'player',quote:original.input}]}]);
-   return issuesResponse([]);
+   if(reviews===1)return issuesResponse([{category:'agency',severity:'error',quote:'脚还没跨出门槛就停住了',reason:'替玩家决定停住',evidence:[{id:'player',quote:original.input}]}], body);
+   return issuesResponse([], body);
   }};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId;
@@ -163,7 +164,7 @@ test('N17 服务端实际十天结算只允许一次文字改写，不重做、�
     const content=badRewrite?recalledFailure:'<q who="npc_hw_ayan">这十天试了'+totals.attempts+'次，有'+totals.successes+'次成功，'+totals.failures+'次失败，工坊费合计'+totals.fee+'铜，用了'+totals.materials.item_wood+'份木料。失败也付了工坊费。</q><回合 额外="5分" 地点="bld_hw_mill" 在场="npc_hw_ayan"/>';
     return {choices:[{finish_reason:'stop',message:{content}}]};
    }
-   reviewCalls++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(row=>row.id==='scene'&&row.text.includes('旧磨坊')));return issuesResponse([]);
+   reviewCalls++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(row=>row.id==='scene'&&row.text.includes('旧磨坊')));return issuesResponse([], body);
   }};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId;
@@ -189,7 +190,7 @@ test('无关说话人泄漏私密委托自动删除，改写提示无全局私�
  let attempts=0;
  const client={async generate(body,label){
   if(label.startsWith('consistency-rewrite:')){attempts++;const payload=JSON.parse(body.messages.at(-1).content);for(const row of payload.evidence.filter(row=>['before','after'].includes(row.id)))assert.equal(JSON.parse(row.text).quests,undefined);assert.ok(!payload.evidence.some(row=>row.id.startsWith('knowledge:')));return {choices:[{finish_reason:'stop',message:{content:'<q who="npc_hw_wushuo">我没听说，不知道。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>'}}]};}
-  return issuesResponse([]);
+  return issuesResponse([], body);
  }};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;

@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import {relationView} from '../server-plugin/npc-state.mjs';
 // A3 causal2: compare the same trust changes through the single read model.
 import test from 'node:test';
@@ -10,7 +11,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 const entities=[{id:'npc_hw_linsui',name:'林穗'},{id:'bld_hw_qingdeng',name:'青灯酒馆'}];
 const state={minute:600,location:'bld_hw_qingdeng',player:{coins:174},records:{debt_room:{category:'debt',debtor:'player',creditor:'npc_hw_linsui',amount:6,paid:6,status:'已还清',deadline:590,overdueAt:590,paidAt:600}}};
 const input=(draft,extra={})=>({playerText:'（场外）核对还款和逾期记录。',draft,before:structuredClone(state),after:structuredClone(state),allowedEntities:entities,receipts:[],...extra});
-const response=()=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:'{"issues":[]}'}}]}}]});
+const response=input=>reviewResponse(input);
 
 test('赊账修复复测的原句：还清余额不能抹去已有逾期史，引用真实 debt 而不修改它',async()=>{
  // docs/测试报告/最新/赊账修复复测.json /result/turns/8/reply
@@ -60,10 +61,17 @@ async function begin(server,view,playerText,anchor){return server.api('review/be
 test('HTTP 未登记地点改写失败拒交，成功改为无专名描写；始终不登记人口或重做工具',async t=>{
  for(const fail of [false,true]){
   const tail='<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',original='他指向朱家老屋。'+tail,corrected='他指向一间老屋。'+tail;let rewrites=0;
-  const client={async generate(body,label){if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?original:corrected}}]};}return response();}};
-  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());const view=await server.api('create',{}),campaignId=view.reference.campaignId;
-  const begun=await begin(server,view,'我问附近的房屋。','house'),request={campaignId,token:begun.token,draft:original,expectedSequence:view.reference.sequence};
-  const result=await server.api('review/reply',request);assert.equal(result.canCommit,!fail);assert.equal(result.rewritten,!fail);assert.equal(result.text,fail?original:corrected);
+  const client={async generate(body,label){if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?original:corrected}}]};}return response(body);}};
+  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());let view=await server.api('create',{});const campaignId=view.reference.campaignId;
+  const begun=await begin(server,view,'我问附近的房屋。','house');
+  // 回合契约要求场内先有真实裁决；用一次真实等待进入原有命名审查，
+  // 以审查前状态为比较基准，继续断言改写不得改账或登记人口。
+  await server.api('execute',{campaignId,anchor:'house',eventId:'house-wait',tool:'world_time',args:{minutes:1},expectedSequence:view.reference.sequence});
+  view=await server.api('read',{campaignId});
+  const request={campaignId,token:begun.token,draft:original,expectedSequence:view.reference.sequence};
+  const result=await server.api('review/reply',request);assert.equal(result.canCommit,!fail);assert.equal(result.rewritten,!fail);assert.equal(result.original,original);
+  // 失败原文仍保留在诊断字段；正式正文按已生效的门禁必须退模板。
+  if(fail){assert.equal(result.text,result.safeText);assert.doesNotMatch(result.text,/朱家老屋/);}else assert.equal(result.text,corrected);
   assert.deepEqual((await server.api('read',{campaignId})).document,view.document);assert.deepEqual(await server.api('review/reply',request),result);assert.equal(rewrites,1);
  }
 });
@@ -73,8 +81,9 @@ test('HTTP 场外尾注仅一次纯文字改写；改写失败时拒交，账本
   const original='核对完毕。<回合 额外="10分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>',corrected='核对完毕。';let calls=0;
   const client={async generate(body,label){calls++;
    if(label.startsWith('consistency-rewrite:')){assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?original:corrected}}]};}
-   if(!fail&&JSON.parse(body.messages[1].content).rawDraft===corrected)return {choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:[{category:'meta',severity:'warning',quote:'核对完毕',reason:'仍需复核的软问题',evidence:[{id:'player',quote:'核对'}]}]})}}]}}]};
-   return response();
+   // 本例只检验场外软问题，模型桩也须返回完整逐句覆盖。
+   if(!fail&&JSON.parse(body.messages[1].content).rawDraft===corrected)return reviewResponse(body,[{category:'meta',severity:'warning',quote:'核对完毕',reason:'仍需复核的软问题',evidence:[{id:'player',quote:'核对'}]}]);
+   return response(body);
   }};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());const view=await server.api('create',{}),campaignId=view.reference.campaignId;
   const begun=await begin(server,view,'（场外）核对账本。','ooc'),request={campaignId,token:begun.token,draft:original,expectedSequence:view.reference.sequence};
@@ -94,7 +103,7 @@ test('HTTP 真实逾期和还款后核对：纯文字改写保留扣钱和信任
    if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);const payload=JSON.parse(body.messages.at(-1).content);
     assert.ok(JSON.parse(payload.evidence.find(row=>row.id==='after').text).debts.debt_rent.overdueAt);
     return {choices:[{finish_reason:'stop',message:{content:fail?'欠款已清零，无逾期记录。':'欠款已还清，此前逾期记录仍保留。'}}]};
-   }return response();
+   }return response(body);
   }};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   async function act(tool,args,id,anchor=id){const r=await server.api('execute',{campaignId,anchor,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return r;}
@@ -192,7 +201,10 @@ test('检索token拒绝跨回合/存档/回滚；绑定真实检索时sequence�
  await assert.rejects(server.api('search',{...superseded,query:'林穗'}),/当前回合/);
  await assert.rejects(server.api('review/reply',{...superseded,draft:'核对完毕。'}),/当前回合/);
  const ended=await captured(server,'ended');
- await server.api('execute',{campaignId:ended.campaignId,anchor:ended.anchor,eventId:'terminal',tool:'world_turn',args:{startMinute:540,extraMinutes:0,location:'bld_hw_qingdeng',present:[]},expectedSequence:ended.expectedSequence});
+ // 已生效的回合门禁不允许裸 world_turn；先取得同一回合审查凭据，
+ // 仍验证真实结束后检索被拒，而非绕过门禁制造结束状态。
+ const terminal=await server.api('review/reply',{...ended,draft:'核对完毕。'});
+ await server.api('execute',{campaignId:ended.campaignId,anchor:ended.anchor,eventId:'terminal',tool:'world_turn',args:terminal.tail.args,reviewId:terminal.reviewId,expectedSequence:terminal.sequence});
  await assert.rejects(server.api('search',{...ended,query:'林穗'}),/结束/);
  const noEvents=await captured(server,'no-events'),before=await server.api('export',noEvents);
  await server.api('reconcile',{campaignId:noEvents.campaignId,validAnchors:[],excludeAnchor:noEvents.anchor});
@@ -210,7 +222,7 @@ test('检索token拒绝跨回合/存档/回滚；绑定真实检索时sequence�
 test('检索断言只允许一次纯文字改写，成功/失败原文与warning保留且document/events不变',async t=>{
  for(const fail of [false,true]){
   let rewrites=0;
-  const client={async generate(body,label){if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?'我已查到相关记录。':'我尚未检索，无法确认。'}}]};}return response();}};
+  const client={async generate(body,label){if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:fail?'我已查到相关记录。':'我尚未检索，无法确认。'}}]};}return response(body);}};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());const row=await captured(server),before=await server.api('export',row),view=await server.api('read',row);
   const request={...row,draft:'我已查到相关记录。'},result=await server.api('review/reply',request);
   assert.equal(result.canCommit,!fail);assert.equal(result.rewritten,!fail);assert.equal(result.original,request.draft);assert.equal(result.attempts,1);
