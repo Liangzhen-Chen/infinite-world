@@ -6,13 +6,28 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {ensureHoldings, aliveHoldings} from '../server-plugin/holdings.mjs';
 import {reconcileHoldings, reconciled} from '../server-plugin/holding-sources.mjs';
-import {readFiles, contentEntries, checkEntry, previewWorld, verifyPublished} from '../world/design/a3-world-approval.mjs';
+import {readFiles, contentEntries, checkEntry, previewWorld, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
+import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
 
 // Gate for the Baishi grassroots judicial/security offices (report, fine collection, custody, case handling,
 // arrest, appeal, claim, town head) and for the catalogue entries (items, recipes, nutrition, rules rows) that
 // were written into the world files without L1/L2/L4 receipts. Every row carries receipts bound to its exact bytes; a
-// later hand edit of any of them fails here.
+// later hand edit of any of them fails here. A3W subsequently approved use tags
+// on existing items: verify that complete later receipt first, then restore only
+// the historical tags when checking the original exact-row receipt. Prices,
+// nutrition and every other historical field remain covered by the old gate.
+async function verifyPublished(candidateWorld,candidateFiles){
+  await verifyUseTagsPublished(candidateFiles.items);
+  const prior=structuredClone(candidateFiles);
+  for(const entry of contentEntries(prior).filter(e=>e.kind==='item'&&useTagSources[e.id])){
+    const receipt=JSON.parse(await fs.readFile(`world/drafts/a3-world-approval/${entry.id}.json`,'utf8'));
+    const row=prior.items.find(i=>i.id===entry.id);
+    if(Object.hasOwn(receipt.draft.row,'tags'))row.tags=receipt.draft.row.tags;
+    else delete row.tags;
+  }
+  return verifyOriginalPublished(candidateWorld,prior);
+}
 const world = await loadWorld(), files = await readFiles(), seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 const make = () => { const engine = new WorldEngine(structuredClone(world)); return {engine, document: engine.createCharacter(seed, {}, 'fix3-world')}; };
 const entry = id => contentEntries(files).find(e => e.id === id);
@@ -33,6 +48,10 @@ test('手改已审批的行会使回执失效：职位职权、目录价、营�
   const food = structuredClone(files);
   food.items.find(i => i.id === 'item_bread').nutrition.satiety = 60;
   await assert.rejects(() => verifyPublished(world, food), /发布骨架或引用事实已改变|正式文件/);
+  // The historical projection must never conceal an unapproved new tag.
+  const tags=structuredClone(files);
+  tags.items.find(i=>i.id==='item_hoe').tags.push('unapproved_use');
+  await assert.rejects(()=>verifyPublished(world,tags),/发布骨架或引用事实已改变|正式目录/);
   const room = structuredClone(files);
   room.locations.find(l => l.id === 'bld_bs_watch').rooms.pop();
   await assert.rejects(() => verifyPublished(world, room), /正式文件与已审批的行不同/);
