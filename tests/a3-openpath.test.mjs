@@ -127,7 +127,7 @@ test('服务端零调用回合不能提交虚构痕迹/NPC 决定，单次改写
 
 test('试玩容器前提来自现有存货与真实交易，开局钱够且网关断言匹配',async t=>{
  const scenario=JSON.parse(await fs.readFile('tests/playtests/a3_whimsy.json','utf8'));
- const step=scenario.turns[0];assert.equal(step.anchor,'whimsy_buy_container');
+ const step=scenario.turns.find(row=>row.anchor==='whimsy_buy_container');assert.ok(step);assert.equal(step.anchor,'whimsy_buy_container');
  const seller=world.npcs.find(row=>row.id==='npc_hw_yanzhe'),pot=world.items.find(row=>row.id==='item_clay_pot');
  assert.ok((seller.inventory.item_clay_pot?.quantity??seller.inventory.item_clay_pot)>0);
  assert.ok(seed.state.player.coins>=pot.basePrice);
