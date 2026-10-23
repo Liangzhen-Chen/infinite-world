@@ -16,6 +16,7 @@ import {groupHistory,planHistoryWindow}from'../extension/history-window.mjs';
 import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
 import {loadWorld}from'./load-world.mjs';
 import {summarizeConsistency,consistencyTurnFailed}from'../server-plugin/consistency-outcome.mjs';
+import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs';
 
 export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -73,45 +74,57 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence,captureSearch:true});
             const scene=await api('scene',{campaignId,query:step.input});
             report.sceneBefore=scene.scene;
+            const gate=()=>api('review/gate',{campaignId,token:reviewTurn.token,expectedSequence:view.reference.sequence});
+            const invoke=async(tool,args)=>{
+                if(!allowed.has(tool))throw new Error('模型调用未注册工具');
+                if(isOutOfCharacter(step.input)&&!readOnlyTools.has(tool))throw new Error('场外不能写入世界');
+                if(tool==='world_read')return readStateSection(view.document.state,args.section,args.npc);
+                if(tool==='world_search')return api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
+                if(tool==='world_catalog')return api('catalog',{...args,campaignId});
+                if(tool==='world_actions')return modelActionCatalog(await api('actions',{target:args.target,query:args.query,campaignId,limit:12}));
+                const eventId=`${anchor}-${report.calls.length}`,request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};
+                const output=await api('execute',request);await fresh();
+                if(step.repeatWrites){
+                    const duplicate=await api('execute',request),unchanged=await api('read',{campaignId});
+                    report.assertions.push({kind:'duplicate',pass:duplicate.duplicate===true&&JSON.stringify(unchanged.document)===JSON.stringify(view.document)});
+                }
+                return toolResultWithClock(output.result,{startMinute,minute:view.document.state.minute});
+            };
+            const rememberTools=(assistant,results)=>{
+                history.push(assistant,...results);
+                for(const [i,reply]of results.entries()){
+                    const call=assistant.tool_calls[i];let args={};try{args=JSON.parse(call.function.arguments);}catch{}
+                    report.calls.push({tool:call.function.name,args,result:JSON.parse(reply.content)});
+                    chat.push({is_system:true,mes:reply.content,extra:{tool_invocations:[{name:call.function.name}]}});
+                }
+            };
             let final=false;
+            let retryMessages=[];
             for(let recursion=0;recursion<settings.toolRecursionLimit;recursion++){
                 const current=recursion?await api('scene',{campaignId,query:step.input}):scene;
                 report.sceneBeforeReply=current.scene;
+                const factsPrompt=turnFactsPrompt(await gate());
                 const anchors=chat.filter(message=>message.is_user).map(message=>message.extra.fields_anchor);
                 const groups=await groupHistory(history,{format:'api',anchors,tokenCounts:await Promise.all(history.map(message=>countTokens(JSON.stringify(message))))});
-                const reservedTokens=1024+await countTokens(JSON.stringify(assembleMessages(bundle,[],current.scene)))+await countTokens(JSON.stringify(tools));
+                const reservedTokens=1024+await countTokens(JSON.stringify(assembleMessages(bundle,[],current.scene)))+await countTokens(JSON.stringify(tools))+await countTokens(factsPrompt);
                 const coverage=await api('history/coverage',{campaignId,expectedSequence:view.reference.sequence});
                 const planned=planHistoryWindow(groups,{...historyWindow,cursor:historyCursor,coverage,contextTokens:historyWindow.contextTokens??settings.maxContextTokens-settings.maxOutputTokens,reservedTokens});
                 if(!planned.canSend)throw new Error('历史上下文超限，或待裁剪回合缺少编年史及原文覆盖');
                 historyCursor=planned.cursor;report.historyWindow={reason:planned.reason,reset:planned.reset,beforeTokens:planned.beforeTokens,afterTokens:planned.afterTokens,batch:planned.batch,removedAnchors:planned.cursor.removed.map(row=>row.anchor)};
                 const messages=assembleMessages(bundle,planned.messages,current.scene);
+                messages.push({role:'system',content:factsPrompt});retryMessages=messages;
                 const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools,tool_choice:'auto'},`${scenario.id}-${attempt}-${index}-${recursion}`);
                 if(response.measurement)report.requests.push(response.measurement);
                 const message=response.choices?.[0]?.message;if(!message)throw new Error('模型没有返回消息');
                 report.finish=response.choices[0].finish_reason??null;
                 if(report.finish==='length')throw new Error(`输出达到${settings.maxOutputTokens} token上限，回复或调用未完成`);
                 const normalized={role:'assistant',content:message.content??null,...(message.tool_calls?.length?{tool_calls:message.tool_calls}:{})};
-                messages.push(normalized);history.push(normalized);
                 if(!message.tool_calls?.length){report.reply=message.content??'';final=Boolean(report.reply);break;}
+                normalized.content=null;history.push(normalized);
                 for(const call of message.tool_calls){
                     let args={},result;const tool=call.function?.name;
                     try{
-                        args=JSON.parse(call.function.arguments);if(!allowed.has(tool))throw new Error('模型调用未注册工具');
-                        if(isOutOfCharacter(step.input)&&!readOnlyTools.has(tool))throw new Error('场外不能写入世界');
-                        if(tool==='world_read')result=readStateSection(view.document.state,args.section,args.npc);
-                        else if(tool==='world_search')result=await api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
-                        else if(tool==='world_catalog')result=await api('catalog',{...args,campaignId});
-                        else if(tool==='world_actions')result=modelActionCatalog(await api('actions',{target:args.target,query:args.query,campaignId,limit:12}));
-                        else{
-                            const eventId=`${anchor}-${report.calls.length}`;
-                            const request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};
-                            const output=await api('execute',request);await fresh();
-                            result=toolResultWithClock(output.result,{startMinute,minute:view.document.state.minute});
-                            if(step.repeatWrites){
-                                const duplicate=await api('execute',request),unchanged=await api('read',{campaignId});
-                                report.assertions.push({kind:'duplicate',pass:duplicate.duplicate===true&&JSON.stringify(unchanged.document)===JSON.stringify(view.document)});
-                            }
-                        }
+                        args=JSON.parse(call.function.arguments);result=await invoke(tool,args);
                     }catch(error){result={ok:false,error:error.message};}
                     report.calls.push({tool,args,result});
                     const reply={role:'tool',tool_call_id:call.id,content:JSON.stringify(result)};messages.push(reply);history.push(reply);
@@ -120,14 +133,20 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             }
             if(!final)throw new Error(`${settings.toolRecursionLimit}轮调用内未返回完整正文`);
             report.originalReply=report.reply;
-            report.consistency=await api('review/reply',{campaignId,token:reviewTurn.token,draft:report.reply,query:step.input,expectedSequence:view.reference.sequence});
-            report.reply=report.consistency.canCommit?report.consistency.text:report.originalReply;
-            history.at(-1).content=report.reply;
+            const finished=await finishContractTurn({playerText:step.input,draft:report.reply,gate,tools,messages:retryMessages,
+                generate:async(body,label)=>{
+                    const request={...generationRequest(settings),...body,messages:processMessages(body.messages,bundle)};
+                    if(await countTokens(JSON.stringify({messages:request.messages,tools:request.tools}))>settings.maxContextTokens-settings.maxOutputTokens)throw Error('工具补跑上下文超限，保留本轮安全模板');
+                    return client.generate(request,`${scenario.id}-${attempt}-${index}-${label}`);
+                },
+                execute:invoke,onTools:rememberTools,onMeasurement:row=>report.requests.push(row),
+                review:draft=>api('review/reply',{campaignId,token:reviewTurn.token,draft,query:step.input,expectedSequence:view.reference.sequence})});
+            report.consistency=finished.review;report.toolRetry=finished.retry;report.reply=finished.text;
+            history.push({role:'assistant',content:report.reply});
             if(!report.consistency.canCommit){
-                const issues=report.consistency.issues.length?report.consistency.issues:report.consistency.originalIssues??[];
+                const issues=report.consistency.issues?.length?report.consistency.issues:report.consistency.originalIssues??[];
                 report.reviewFailure={reason:report.consistency.rewriteError??report.consistency.feedback,categories:issues.length?[...new Set(issues.map(issue=>issue.category))]:['review-unverified']};
-                // Keep the original conversation and successful action receipts;
-                // a rejected tail must never enter the game ledger.
+                // Publish the server template and retain real tool receipts.
                 chat.push({is_user:false,name:'无限原野·世界主持人',mes:report.reply});await sync();
                 report.visible=visibleReply(report.reply,scene.labels);
                 continue;
@@ -135,7 +154,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             const state=view.document.state,parsed=parseTurn(report.reply,{location:state.location,startMinute,minute:state.minute,
                 present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location).map(([id])=>id),outOfCharacter:isOutOfCharacter(step.input)});
             report.tail={valid:parsed.valid,warning:parsed.warning};
-            const output=await api('execute',{campaignId,tool:'world_turn',args:parsed.args,eventId:`turn_${anchor}`,anchor,expectedSequence:view.reference.sequence,reviewId:report.consistency.reviewId});
+            const output=await api('execute',{campaignId,tool:'world_turn',args:report.consistency.tail?.args??parsed.args,eventId:`turn_${anchor}`,anchor,expectedSequence:view.reference.sequence,reviewId:report.consistency.reviewId});
             report.turnResult=output.result;await fresh();
             chat.push({is_user:false,name:'无限原野·世界主持人',mes:report.reply});await sync();
             report.visible=visibleReply(report.reply,scene.labels);
