@@ -93,6 +93,7 @@ export function prepareMagic(d,catalog,args,context={}){
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
+    if(this.replaying&&this.nativePrimitiveVersion!==1)return applyMagicState.call(this,d,prepared,id);
     const spec=prepared.spec,target=prepared.target??prepared.id??'player';
     const primitive=['damage','heal'].includes(spec.kind)&&!prepared.elementObject&&!prepared.windObject&&!prepared.stoneObject?{op:'vital',target,delta:spec.kind==='damage'?-spec.power:spec.power,type:spec.damageType??'healing'}:
       {op:'status',target,status:spec.status??spec.kind,duration:prepared.catalog?.duration??0,magnitude:spec.power};

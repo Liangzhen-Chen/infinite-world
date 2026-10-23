@@ -1,6 +1,7 @@
 import {advanceHook} from './advance-hooks.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
+import {nativePrimitiveReplayVersion} from './native-primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {reject} from './action-rejection.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
@@ -264,7 +265,10 @@ export class WorldEngine {
     }
     formatCalendar(minute){return this.calendar(minute).text;}
     async reduce(document,input,options={}) {
-        return actionBoundary(this,document,input,()=>this.reduceAction(document,input,options));
+        options={...options,nativePrimitiveVersion:nativePrimitiveReplayVersion(options)};
+        const out=await actionBoundary(this,document,input,()=>this.reduceAction(document,input,options));
+        if(!this.compat&&options.nativePrimitiveVersion===1)out.result.nativePrimitiveVersion=1;
+        return out;
     }
     async reduceAction(document,input,options={}) {
         if(this.compat)return this.compat.reduce(document,input);
@@ -293,7 +297,7 @@ export class WorldEngine {
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const books=withBooks(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
-            session.replaying=Boolean(options.replay);session.replayResult=options.result;
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
             const detail=applyNpcPlan(d,session,input.plan,id);
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
@@ -353,7 +357,7 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))reject('E-ACTION-PRECONDITION','你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))reject('E-ACTION-PRECONDITION','你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
+        const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
             const target=session.resolve(args.target);
@@ -384,7 +388,7 @@ export class WorldEngine {
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
         if(document.state.location!==d.get('state','location')&&Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)){
             const arrival=this.scoped(d.document),now=d.get('state','minute');
-            arrival.replaying=session.replaying;arrival.replayResult=session.replayResult;
+            arrival.replaying=session.replaying;arrival.replayResult=session.replayResult;arrival.nativePrimitiveVersion=session.nativePrimitiveVersion;
             advanceNpcSchedules(d,arrival,now,now,{promote:true});
         }
         settleMagicAreas(d,session);

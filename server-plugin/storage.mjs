@@ -567,7 +567,7 @@ export class CampaignStorage {
         document ??= JSON.parse(await fs.readFile(path.join(this.directory(id), 'initial.json'), 'utf8'));
         for (const event of state.events) if (event.sequence > after && state.active.has(event.sequence)) {
             if (before !== Infinity && !this.reducer) throw new Error('缺少事件重放处理器，不能只重放旧的绝对数值补丁');
-            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result, patches: event.patches })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
         return document;
@@ -658,7 +658,7 @@ export class CampaignStorage {
         const branched = bundle.events.some(event => event.kind === 'reconcile');
         if (branched && !this.reducer) throw new Error('导入分支存档需要事件重放处理器');
         for (const event of bundle.events) if (active.has(event.sequence)) {
-            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result, patches: event.patches })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
         const legacyDocument = digest(document) === bundle.documentHash ? null : withLegacyUndefinedActivity(document);
