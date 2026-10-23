@@ -13,7 +13,15 @@ const initial=engine.initialFromLegacy(seed,'a3-r10');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 // 069 and 079 declare feature distances that contradict native geometry (3 m declared vs 0.5/1.5/1 m native, 01 §1.2;
 // corpus-owned, reported to the main session). These mechanism regressions drop only that premise.
-const row=id=>{const r=structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));if(['069','079'].includes(id))delete r.setup.positions;return r;};
+const row=id=>{const r=structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));if(['069','079'].includes(id))delete r.setup.positions;
+ if(id==='070'){
+  // The spell declares a legal permit even for self-casting. Obtain it through
+  // the public action, paying the registered authority before relieving fear.
+  r.setup.location='bld_bs_still_temple';r.setup.present=['npc_bs_076_3'];r.setup.coins=2;
+  r.setup.prelude=[{tool:'world_act',eventId:'r10-mind-permit',args:{action:'core:law.grant_magic_permit',slots:{authority:'npc_bs_076_3',location:r.setup.location,subject:'player',action:'mental_magic',minutes:60}}}];
+  r.proposal.means.permit='magic_permission:r10-mind-permit';
+ }
+ return r;};
 const diagnostic=run=>JSON.stringify({actual:run.actual,setupUnmet:run.setupUnmet});
 
 test('r10: clothing repair consumes thread and preserves the same unit and paid workstation',async()=>{
@@ -49,6 +57,8 @@ test('r10: self relief consumes MP and reduces only existing fear',async()=>{
  assert.deepEqual(run.setupUnmet,[]);
  assert.equal(run.actual.route,'core:cast',diagnostic(run));
  assert.equal(run.document.state.player.mp,0);
+ assert.equal(run.before.state.records['magic_permission:r10-mind-permit'].sourceType,'magic_permit');
+ assert.equal(run.before.state.player.coins,0,'the real permit fee was paid');
  assert.ok(run.receipt.applied.some(e=>e.op==='status'&&e.status==='fear'&&e.removed===true));
  assert.equal(Object.values(run.document.state.effects).some(r=>r.target==='player'&&r.status==='fear'&&r.power>0&&r.expires>run.document.state.minute),false);
 });
