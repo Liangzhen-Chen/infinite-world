@@ -12,9 +12,17 @@
   },
   "turns": [
     {
+      "anchor": "whimsy_go_baishi",
+      "input": "我沿已知路线去白石镇。只赶路，不买卖。",
+      "expectedTools": ["world_move"],
+      "assertions": [
+        {"kind": "equals", "path": "state.location", "value": "loc_bs"}
+      ]
+    },
+    {
       "anchor": "whimsy_buy_container",
-      "input": "我先沿已知路线去白石镇找严辙，等到他实际在场并营业，用自己的钱从他的现货中买一只素面陶罐。只买容器，不取水、不卖水，不把未成交当成拿到。",
-      "expectedTools": ["world_move", "world_time", "world_trade"],
+      "input": "我在白石镇找到严辙，等他在场营业时，用自己的钱从他的现货里买一只素面陶罐。只买容器，不取水、不卖水，不把未成交当成拿到。",
+      "expectedTools": ["world_trade"],
       "assertions": [
         {"kind": "calls", "tool": "world_trade", "args": {"quantity": 1}, "success": true, "min": 1},
         {"kind": "quantity", "path": "state.inventory.item_clay_pot", "value": 1},
@@ -50,7 +58,7 @@
     },
     {
       "anchor": "whimsy_impossible_request",
-      "input": "我再提出一个世界规则不允许的要求：不借助真实来源，就让池水立刻变成能治百病的灵药并卖出高价。请拒绝不成立的效果，说明具体原因、可行替代和能留下的痕迹；不要伪造成功。",
+      "input": "我捧起一捧池水，许个愿，要它不借助任何药材和手艺，立刻变成能治百病的灵药，然后拿去高价卖掉。",
       "expectedTools": ["world_propose"],
       "assertions": [
         {"kind": "calls", "tool": "world_propose", "min": 1},
