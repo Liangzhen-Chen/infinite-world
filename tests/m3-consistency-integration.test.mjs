@@ -56,7 +56,9 @@ test('HTTP：真实交易先保存，矛盾正文只改一次，复审后唯一�
 test('唯一改写仍有严重问题时明确阻止尾注，原文和已支付交易均保留',async t=>{
  const client=clientFixture({badRewrite:true}),server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),review=await server.api('review/reply',row.reviewRequest);
- assert.equal(review.canCommit,false);assert.equal(review.verified,false);assert.equal(review.status,'unverified');assert.equal(review.text,draft);assert.equal(review.attempts,1);assert.match(review.feedback,/尾注未提交/);
+ // Failed drafts are diagnostic originals; the public text is now the safe
+ // replay-derived template. The action and refusal guarantees are unchanged.
+ assert.equal(review.canCommit,false);assert.equal(review.verified,false);assert.equal(review.status,'unverified');assert.equal(review.original,draft);assert.equal(review.text,review.safeText);assert.notEqual(review.text,draft);assert.equal(review.attempts,1);assert.match(review.feedback,/尾注未提交/);
  await assert.rejects(server.api('execute',{campaignId:row.campaignId,anchor:row.anchor,eventId:'bad-tail',tool:'world_turn',args:review.tail.args,reviewId:review.reviewId,expectedSequence:review.sequence}),/不一致/);
  const after=await server.api('read',{campaignId:row.campaignId});assert.deepEqual(after.document,row.bought.document);
  await server.api('review/reply',row.reviewRequest);assert.equal(client.calls.length,3);
@@ -128,6 +130,10 @@ test('T97 回放private失败移动：唯一改写保留失败，伪造成功的
   await act('world_promise',{operation:'create',promisor:'npc_hw_linsui',promisee:'player',type:'会面',content:'欠款六铜只由二人当面核对',location:'bld_hw_qingdeng',deadline:view.document.state.minute+60},'meeting');
   const anchor='leave',begun=await server.api('review/begin',{campaignId,anchor,playerText:original.input,expectedSequence:view.reference.sequence});
   await assert.rejects(act('world_move',original.calls[0].args,anchor),/会面时段冲突/);
+  // A prerequisite failure alone now uses pending, with no model rewrite.
+  // Record a real greeting in this meeting to retain the semantic rewrite
+  // regression for failed movement on an adjudicated turn.
+  await act('world_remember',{subject:'npc_hw_linsui',key:'dialogue:greet',content:'你好'},anchor);
   const actual=structuredClone(view.document),tail='<回合 额外="0分" 地点="bld_hw_qingdeng" 在场=""/>';
   candidate=mode==='valid'?'会面时段与离开请求冲突，约定仍然有效。若要离开，可先取消约定。'+tail:mode==='false-body'?saved.replace(/<回合[^>]*\/>/,tail):saved;
   const request={campaignId,token:begun.token,draft:original.originalReply,expectedSequence:view.reference.sequence};
@@ -139,7 +145,7 @@ test('T97 回放private失败移动：唯一改写保留失败，伪造成功的
    await server.api('execute',{campaignId,anchor,eventId:'turn_leave',tool:'world_turn',args:reviewed.tail.args,reviewId:reviewed.reviewId,expectedSequence:reviewed.sequence});
    const after=await server.api('read',{campaignId});assert.equal(after.document.state.location,actual.state.location);assert.equal(after.document.state.minute,actual.state.minute);
   }else{
-   assert.equal(reviewed.verified,false);assert.equal(reviewed.text,original.originalReply);
+   assert.equal(reviewed.verified,false);assert.equal(reviewed.original,original.originalReply);assert.equal(reviewed.text,reviewed.safeText);assert.notEqual(reviewed.text,original.originalReply);
    if(mode==='false-body')assert.ok(reviewed.issues.some(issue=>issue.category==='location'&&issue.severity==='error'));
   }
  }
@@ -165,8 +171,11 @@ test('N17 服务端实际十天结算只允许一次文字改写，不重做、�
   await act('world_move',{destination:'旧磨坊'},'mill');await act('world_move',{destination:'白石镇'},'leave');
   await act('world_time',{minutes:14400},'ten-days');await act('world_move',{destination:'旧磨坊'},'return');
   await act('world_time',{until:{dayOffset:1,hour:8,minute:0}},'awake');
-  const before=structuredClone(view.document),anchor='recall';
+  const anchor='recall';
   const begun=await server.api('review/begin',{campaignId,anchor,playerText:'我问阿砚这十天忙了什么。只听已有经历，不替他制作。',expectedSequence:view.reference.sequence});
+  // Real dialogue keeps this historical-recall semantic regression on the
+  // adjudicated branch; zero-tool narration is covered by turn-gate.
+  await act('world_remember',{subject:'npc_hw_ayan',key:'dialogue:greet',content:'你好'},anchor);const before=structuredClone(view.document);
   const request={campaignId,token:begun.token,draft:recalledFailure,expectedSequence:view.reference.sequence};
   const reviewed=await server.api('review/reply',request);assert.equal(reviewed.attempts,1);assert.equal(rewriteCalls,1);assert.equal(reviewCalls,2);assert.equal(reviewed.canCommit,!badRewrite);
   assert.equal(reviewed.rewritten,!badRewrite);if(badRewrite)assert.equal(reviewed.status,'unverified');else assert.equal(reviewed.status,'verified');
@@ -186,7 +195,9 @@ test('无关说话人泄漏私密委托自动删除，改写提示无全局私�
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
  async function act(tool,args,id){const r=await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return r;}
  const published=await act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}},'publish');await act('world_quest',{operation:'accept',quest:published.result.quest},'accept');await act('world_move',{destination:'北林边'},'woods');
- const before=structuredClone(view.document),anchor='unknown';const begun=await server.api('review/begin',{campaignId,anchor,playerText:'我没告诉吴朔任务内容，只问他知不知道。',expectedSequence:view.reference.sequence});
+ const anchor='unknown';const begun=await server.api('review/begin',{campaignId,anchor,playerText:'我没告诉吴朔任务内容，只问他知不知道。',expectedSequence:view.reference.sequence});
+ // Preserve the private-knowledge rewrite test after an actual conversation.
+ await act('world_remember',{subject:'npc_hw_wushuo',key:'dialogue:greet',content:'你好'},anchor);const before=structuredClone(view.document);
  const result=await server.api('review/reply',{campaignId,token:begun.token,expectedSequence:view.reference.sequence,draft:'<q who="npc_hw_wushuo">林穗让你送十份燕麦。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>'});
  assert.equal(result.status,'verified');assert.equal(result.rewritten,true);assert.equal(attempts,1);assert.deepEqual((await server.api('read',{campaignId})).document,before);
 });

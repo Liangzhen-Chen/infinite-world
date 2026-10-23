@@ -156,7 +156,14 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         // Health is an internal combat primitive, not a model-controlled tool.
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');
-        if(tool==='world_turn'&&req.body.reviewId)await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
+        if(tool==='world_turn')await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
+        // begin/reconcile share the campaign queue with writes. Validate again
+        // inside a new tail's transaction so replacing the active token between
+        // the HTTP precheck and the write cannot publish an old turn.
+        const executeReducer=tool==='world_turn'?async(document,input)=>{
+            await assertConsistencyCommit(store,campaignId,{reviewId:req.body.reviewId,anchor,args,expectedSequence});
+            return store.reducer(document,input);
+        }:store.reducer;
         // A wait longer than one event may span (engine cap, see action-gateway) runs as several world_time events, one per segment,
         // the same events the player would have made by waiting in stages. A retry of the whole request finds segment 1 recorded.
         const segments=req.body.tool==='world_act'?timeSegments(tool,args,view.document.state.minute):null;
@@ -168,7 +175,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         let saved,interrupted=null;const saves=[];
         for(const [i,run] of runs.entries()){
             try{
-                saved=await store.transact(campaignId,{id:run.eventId,input:{tool,args:run.args,eventId:run.eventId},anchor,expectedSequence:i?saved.reference.sequence:expectedSequence},store.reducer);
+                saved=await store.transact(campaignId,{id:run.eventId,input:{tool,args:run.args,eventId:run.eventId},anchor,expectedSequence:i?saved.reference.sequence:expectedSequence},executeReducer);
                 saves.push(saved);
             }catch(error){
                 if(i){interrupted=error.message;break;}// earlier segments stand, exactly as if the player had stopped waiting there

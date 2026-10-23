@@ -32,8 +32,11 @@ test('审查共享往来来源；只为已重建且未被覆盖的等待时段�
  assert.match(winterSource,/schedule.seasonal.3.default/);
 });
 async function campaign(server,body={}){
- let view=await server.api('create',body);const campaignId=view.reference.campaignId;let index=0;
- return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},async review(playerText,draft,anchor='review-turn'){const begun=await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence});return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};
+ let view=await server.api('create',body);const campaignId=view.reference.campaignId;let index=0,turn;
+ return {campaignId,async read(){view=await server.api('read',{campaignId});return view;},
+  async begin(playerText,anchor='review-turn'){turn={playerText,anchor,...await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence})};},
+  async act(tool,args){const eventId=`setup-${++index}`;const result=await server.api('execute',{campaignId,anchor:turn?.anchor??eventId,eventId,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;},
+  async review(playerText,draft,anchor='review-turn'){const begun=turn?.playerText===playerText&&turn.anchor===anchor?turn:await server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence});turn=null;return server.api('review/reply',{campaignId,token:begun.token,draft,expectedSequence:view.reference.sequence});}};
 }
 
 test('HTTP 审稿区分玩家的真实委托与不在场吴朔的知情范围',async t=>{
@@ -43,6 +46,9 @@ test('HTTP 审稿区分玩家的真实委托与不在场吴朔的知情范围',a
  const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
  const published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}}),quest=published.result.quest;
  await run.act('world_quest',{operation:'accept',quest});
+ // Turn contract: retain semantic knowledge checks after a real action in
+ // this turn; a zero-adjudication draft now goes directly to pending.
+ await run.begin('吴朔，你知道林穗给过我什么委托吗？');
  await run.act('world_move',{destination:'loc_hw_northwood'});
  const view=await run.read();assert.equal(view.document.state.npcs.npc_hw_wushuo.location,'loc_hw_northwood');
  const review=await run.review('吴朔，你知道林穗给过我什么委托吗？','<q who="npc_hw_wushuo">我没听说，你得问她。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>');
@@ -99,8 +105,10 @@ test('T97 未承接委托的登记及托管可核账，原始聊天和历史工�
  assert.equal(ledger.quests[published.result.quest].reward,20);assert.equal(ledger.quests[published.result.quest].escrow,20);assert.equal(ledger.quests[published.result.quest].taker,null);
  assert.ok(payload.evidence.some(row=>row.kind==='historical-receipt'&&row.text.includes('world_quest')));
  assert.ok(payload.evidence.some(row=>row.kind==='chat'&&JSON.parse(row.text).text===answer));
- await run.review('我看看眼前。','眼前没有变化。<回合 额外="0分" 地点="loc_hw_square" 在场=""/>','in-world');
- assert.ok(!payload.evidence.some(row=>row.id.startsWith('prior:')));
+ const inWorld=await run.review('我看看眼前。','眼前没有变化。<回合 额外="0分" 地点="loc_hw_square" 在场=""/>','in-world');
+ // Zero adjudication projects public facts only; old receipts/chat cannot
+ // bypass the gate or become narrator knowledge.
+ assert.equal(inWorld.status,'pending');assert.ok(!inWorld.facts.some(row=>row.kind==='historical-receipt'||row.kind==='chat'));
  const before=await run.read();await server.api('reconcile',{campaignId:run.campaignId,validAnchors:[]});
  await run.read();await run.review('（场外）核对林穗的委托。','（场外）没有登记委托。','after-rollback');
  assert.ok(!payload.evidence.some(row=>row.kind==='historical-receipt'&&row.text.includes('world_quest')));
@@ -124,8 +132,13 @@ test('历史私宅许可进入 before/after 摘要，审稿无需本轮重签或
  let payload;const server=await createPlaytestServer({consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([]);}}});t.after(()=>server.close());
  const run=await campaign(server,{character:{name:'拜访者'}});await run.act('world_move',{destination:'loc_hw_fields'});await run.act('world_time',{minutes:30});
  const granted=await run.act('world_promise',{operation:'grant_access',promisor:'npc_hw_miaozhen',location:'bld_hw_home_15',minutes:60,content:'进屋查看旧筛架'}),authorization=granted.result.authorization;
- const before=await run.read();const review=await run.review('我刚才得到的拜访许可还有效吗？','<q who="npc_hw_miaozhen">刚才准你看筛架的许可还有效。</q><回合 额外="5分" 地点="loc_hw_fields" 在场="npc_hw_miaozhen"/>');
- assert.equal(review.verified,true);assert.equal(review.rewritten,false);assert.deepEqual(review.issues,[]);
+ const before=await run.read(),playerText='我刚才得到的拜访许可还有效吗？',draft='<q who="npc_hw_miaozhen">刚才准你看筛架的许可还有效。</q><回合 额外="5分" 地点="loc_hw_fields" 在场="npc_hw_miaozhen"/>';
+ const pending=await run.review(playerText,draft);assert.equal(pending.status,'pending');assert.equal(pending.rewritten,false);assert.deepEqual(pending.issues,[]);
+ assert.ok(pending.facts.some(row=>row.kind==='existing-authorization'&&row.id===`authorization:${authorization}`));
+ // Existing permission remains valid evidence without re-signing. Test the
+ // semantic layer directly as HTTP must now template this unadjudicated turn.
+ const engine=new WorldEngine(await loadWorld()),input={playerText,draft,before:before.document,after:before.document,allowedEntities:engine.entities,knowledge:reviewNpcKnowledge(engine,before.document)};
+ const review=await reviewConsistency(input,{client:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([]);}}});assert.equal(review.verified,true);assert.deepEqual(review.issues,[]);
  for(const id of ['before','after']){const state=JSON.parse(payload.evidence.find(e=>e.id===id).text);assert.equal(state.authorizations[authorization].grantor,'npc_hw_miaozhen');assert.equal(state.authorizations[authorization].revoked,false);assert.ok(state.authorizations[authorization].expires>state.minute);}
  assert.ok(!payload.evidence.some(e=>e.id.startsWith('receipt:')),'这是后续回合，不依赖重签许可');
  const knowledge=JSON.parse(payload.evidence.find(e=>e.id==='knowledge:npc_hw_miaozhen').text),contract=knowledge.contracts.find(c=>c.reference===authorization);
@@ -140,6 +153,8 @@ test('审稿专用人物知识不进入纯文字改写提示，已有严重问�
   reviewed++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(e=>e.id==='knowledge:npc_hw_wushuo'&&e.text.includes(secret)));return response([]);
  }};
  const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
+ // Keep the rewrite/privacy assertions on the adjudicated branch.
+ await run.begin('我问林穗能不能坐下。');await run.act('world_time',{minutes:1});
  const result=await run.review('我问林穗能不能坐下。','<q who="npc_unregistered">你先坐。</q><q who="npc_hw_wushuo">稍等。</q><回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>');
  assert.equal(result.verified,true,JSON.stringify(result));assert.equal(result.rewritten,true);assert.equal(reviewed,2);assert.equal(rewritten,1);
 });
@@ -653,16 +668,17 @@ test('HTTP 同一私密委托中，普通感知与否认不授予知识，确定
  const run=await campaign(server);
  const published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}});
  await run.act('world_quest',{operation:'accept',quest:published.result.quest});
- await run.act('world_move',{destination:'loc_hw_northwood'});const saved=await run.read();
  const query='吴朔，你亲眼看见我刚才在酒馆做了什么吗？我还没把事情告诉他。';
+ await run.begin(query);await run.act('world_move',{destination:'loc_hw_northwood'});const saved=await run.read();
  const good=await run.review(query,'<q who="npc_hw_wushuo">我没看见。我记的是自己两眼看到的东西，别人嘴里的话我一般不往外传。</q>门边的纸片露出一角，具体内容看不清。<回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>');
  assert.equal(good.verified,true);assert.equal(good.canCommit,true);assert.equal(good.rewritten,false);assert.deepEqual(good.issues,[]);
  assert.deepEqual((await run.read()).document,saved.document);
  // Actual private content remains blocked after the one permitted rewrite.
  leak=true;
+ await run.begin(query,'private-leak-turn');await run.act('world_time',{minutes:1});const savedBad=await run.read();
  const bad=await run.review(query,badDraft,'private-leak-turn');
  assert.equal(bad.verified,false);assert.equal(bad.canCommit,false);
  assert.ok(bad.issues.some(issue=>issue.category==='knowledge'&&issue.severity==='error'));
  assert.equal(bad.rewritten,false);assert.equal(bad.attempts,1);assert.equal(rewrites,1);
- assert.equal(calls,3);assert.deepEqual((await run.read()).document,saved.document);
+ assert.equal(calls,3);assert.deepEqual((await run.read()).document,savedBad.document);
 });
