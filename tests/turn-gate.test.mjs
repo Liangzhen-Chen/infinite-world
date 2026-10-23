@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,7 +13,7 @@ import {npcServiceFact} from '../server-plugin/npc-schedule.mjs';
 import {serviceLine} from '../server-plugin/action-text.mjs';
 import {digest} from '../server-plugin/storage.mjs';
 
-const response=()=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:'{"issues":[]}'}}]}}]});
+const response=input=>reviewResponse(input);
 async function fixture(t,options={}){
  const server=await createPlaytestServer({consistencyClient:null,...options});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
@@ -86,7 +87,7 @@ test('只有正式且有实际事件出处的回执结算，预览/拒绝/查询
 
 test('真实行动正常经过语义审查；缺模型或关闭审查保留已结算模板，不信任无关新增决定',async t=>{
  for(const mode of ['review','disabled','no-model']){
-  const f=await fixture(t,{consistencyClient:mode==='no-model'?null:{async generate(){return response();}}});
+  const f=await fixture(t,{consistencyClient:mode==='no-model'?null:{async generate(body){return response(body);}}});
   const begun=await f.begin('我付钱买一个面包','gate',{enabled:mode!=='disabled'});
   await f.act('world_trade',{seller:'林穗',item:'面包',quantity:1});const actual=structuredClone(f.view.document);
   const draft=mode==='review'?'你买到一个面包。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>':'无关的人从此承诺免费。';

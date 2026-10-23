@@ -1,3 +1,4 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -246,7 +247,7 @@ test('唯一改写失败后回落真实回执模板，不重执行、不追加�
  let rewrites=0;
  const client={async generate(body,label){
   if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:'<q who="player">我全都答应。</q>'}}]};}
-  return {choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:[]})}}]}}]};
+  return reviewResponse(body);
  }};
  const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId,anchor='fallback-bread';
@@ -307,14 +308,18 @@ test('复合字段复用已有工具 schema；属性分配经构造器真实扣�
  assert.equal((await f.builder.confirm()).ok,true);assert.equal(f.document.state.player.freeAttributePoints,0);assert.equal(f.document.state.player.attributes.体质,before.state.player.attributes.体质+2);
 });
 
-test('未启用独立模型审查不替换正常正文，场外问题不回落成游戏场景',async t=>{
+test('未启用独立模型审查使用场内模板，场外问题不回落成游戏场景',async t=>{
  for(const playerText of ['看一看周围。','（场外）这是什么规则？']){
   const server=await createPlaytestServer({world,consistencyClient:playerText.startsWith('（')?{async generate(){throw Error('离线');}}:null});t.after(()=>server.close());
   const created=await server.api('create',{}),campaignId=created.reference.campaignId,view=await server.api('read',{campaignId});
   const begun=await server.api('review/begin',{campaignId,anchor:'review-only',playerText,expectedSequence:view.reference.sequence});
   const draft=playerText.startsWith('（')?'这是一段场外说明。':`你看着周围。<回合 额外="0分" 地点="${view.document.state.location}" 在场=""/>`;
   const review=await server.api('review/reply',{campaignId,token:begun.token,draft,query:playerText,expectedSequence:view.reference.sequence});
-  assert.equal(review.fallback,undefined);assert.equal(review.text,draft);assert.deepEqual((await server.api('read',{campaignId})).document,view.document);
+  // 回合契约已规定无模型/零裁决只发布场内安全模板；场外说明仍保留
+  // 原来的不进入场景保证。两条路径都不改账、不追加游戏时间。
+  if(playerText.startsWith('（')){assert.equal(review.fallback,undefined);assert.equal(review.text,draft);}
+  else{assert.equal(review.status,'pending');assert.equal(review.canCommit,false);assert.equal(review.text,review.safeText);assert.equal(review.fallback.extraMinutes,0);assert.equal(review.original,draft);assert.notEqual(review.text,draft);}
+  assert.deepEqual((await server.api('read',{campaignId})).document,view.document);
  }
 });
 

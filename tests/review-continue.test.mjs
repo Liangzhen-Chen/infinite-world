@@ -1,3 +1,4 @@
+import {withReviewClaims} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -73,7 +74,7 @@ test('M3浸泡拒绝仍完成两人格整场，检查点和失败样本持久保
  let calls=0;
  const client={async generate(body,label){calls++;
   const message=label.startsWith('consistency:')?{tool_calls:[{id:'review',type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues:[{...issue,evidence:[{id:'player',quote:'只核对'}]}]})}}]}:{content:'已核对。'};
-  return {choices:[{finish_reason:message.tool_calls?'tool_calls':'stop',message}],measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10}}};
+  return {...(label.startsWith('consistency:')?withReviewClaims({choices:[{finish_reason:'tool_calls',message}]},body):{choices:[{finish_reason:'stop',message}]}),measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10}}};
  }};
  const config={directory,turns:2,budgetYuan:2,inputFor:()=> '（场外）只核对。',adapterOptions:{client,processMessages:m=>m,countTokens:()=>20,createBody:{name:'试玩者'}}};
  const report=await runSoak(config);

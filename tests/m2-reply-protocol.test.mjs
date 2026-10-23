@@ -1,3 +1,4 @@
+import {reviewResponse,withReviewClaims} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,8 +12,9 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 const root=new URL('../docs/测试报告/M2-recheck-003/',import.meta.url);
 const report=JSON.parse(await fs.readFile(new URL('真实试玩.json',root),'utf8'));
 const budget=JSON.parse(await fs.readFile(new URL('persistent-budget.json',root),'utf8'));
-const recorded=label=>Object.values(budget.requests).find(row=>row.label===label);
-const response=issues=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:JSON.stringify({issues})}}]}}]});
+// 归档原 issue 内容及坏 JSON 保持不变，仅在内存补本次契约要求的断言覆盖。
+const recorded=label=>{const saved=structuredClone(Object.values(budget.requests).find(row=>row.label===label));saved.response=withReviewClaims(saved.response,savedInput(saved));return saved;};
+const response=(issues,input)=>reviewResponse(input,issues);
 const reply=content=>({choices:[{finish_reason:'stop',message:{content}}]});
 const cases=['npc_delivery','npc_home_visit','npc_offscreen','npc_shove'].map(id=>({id,turn:report.results.find(row=>row.id===id).turns.at(-1)}));
 function savedInput(row){
@@ -61,10 +63,10 @@ test('原home_visit审稿自认11:35无误不能触发正文改写，请求给�
  }}});
  assert.equal(calls,1);assert.equal(result.verified,true);assert.equal(result.rewriteRequest,null);assert.deepEqual(result.issues,[]);
  const genuine={category:'time',severity:'error',quote:'现在十一点三十五分',reason:'账本实际是11:45',evidence:[{id:'clock',quote:'"minute":705'}]};
- const rejected=await reviewConsistency({...input,clock:{...input.clock,minute:705}},{client:{generate:async()=>response([genuine])}});
+ const rejected=await reviewConsistency({...input,clock:{...input.clock,minute:705}},{client:{generate:async body=>response([genuine], body)}});
  assert.equal(rejected.issues[0].severity,'error');assert.ok(rejected.rewriteRequest);
  const permissionIssue={...genuine,quote:'现在十一点三十五分，进入筛种院的许可已在十点五十五分到期。',reason:'当前时间本身无误，但许可仍有效，正文错误称到期。',evidence:[{id:'after',quote:'"minute":695'}]};
- const permission=await reviewConsistency(input,{client:{generate:async()=>response([permissionIssue])}});
+ const permission=await reviewConsistency(input,{client:{generate:async body=>response([permissionIssue], body)}});
  assert.equal(permission.issues[0].severity,'error');assert.ok(permission.rewriteRequest,'正确时刻不能掩盖同句其他时间矛盾');
 });
 
@@ -74,12 +76,12 @@ test('原删字段引文只修审查一次，保留warning与原响应；完整�
  const result=await reviewConsistency(input,{client:{async generate(body,label){
   calls++;if(calls===1)return saved.response;
   assert.match(label,/:format$/);assert.match(body.messages.at(-1).content,/不重新审稿/);
-  return response([{...originalIssue,evidence:[{id:'registry',quote:'"name":"行囊"'}]}]);
+  return response([{...originalIssue,evidence:[{id:'registry',quote:'"name":"行囊"'}]}], body);
  }}});
  assert.equal(calls,2);assert.equal(result.verified,true);assert.equal(result.issues[0].severity,'warning');assert.equal(result.rewriteRequest,null);
  assert.equal(result.model.correction.attempts,1);assert.equal(result.model.rawResponse,JSON.stringify(saved.response.choices));
  assert.ok(result.model.correction.rawResponse.includes('warning'));
- let completeCalls=0;await reviewConsistency(input,{client:{async generate(){completeCalls++;return response([{...originalIssue,evidence:[{id:'registry',quote:'"name":"行囊"'}]}]);}}});assert.equal(completeCalls,1);
+ let completeCalls=0;await reviewConsistency(input,{client:{async generate(body){completeCalls++;return response([{...originalIssue,evidence:[{id:'registry',quote:'"name":"行囊"'}]}], body);}}});assert.equal(completeCalls,1);
 });
 
 test('原坏JSON只修审查一次，保留具体经历warning；两次失效仍unverified',async()=>{
@@ -87,18 +89,18 @@ test('原坏JSON只修审查一次，保留具体经历warning；两次失效仍
  const malformed=saved.response.choices[0].message.tool_calls[0].function.arguments;
  const recovered=JSON.parse(malformed.replace('2"}]}, {"id": "after"','2"}, {"id": "after"')).issues;
  assert.equal(recovered.length,5);
- const fixed=response(recovered.map(issue=>({...issue,evidence:[{id:'retrieval',quote:'"calls":[]'}]})));
- const result=await reviewConsistency(input,{client:{async generate(){return ++calls===1?saved.response:fixed;}}});
+ const fixed=response(recovered.map(issue=>({...issue,evidence:[{id:'retrieval',quote:'"calls":[]'}]})), input);
+ const result=await reviewConsistency(input,{client:{async generate(body){return ++calls===1?saved.response:fixed;}}});
  assert.equal(calls,2);assert.equal(result.status,'issues');assert.equal(result.verified,true);assert.equal(result.issues.length,5);assert.equal(result.issues[1].quote,recovered[1].quote);assert.equal(result.model.correction.attempts,1);
- calls=0;const failed=await reviewConsistency(input,{client:{async generate(){calls++;return saved.response;}}});
+ calls=0;const failed=await reviewConsistency(input,{client:{async generate(body){calls++;return saved.response;}}});
  assert.equal(calls,2);assert.equal(failed.verified,false);assert.equal(failed.status,'unverified');assert.equal(failed.model.rawResponse,JSON.stringify(saved.response.choices));
- calls=0;const dropped=await reviewConsistency(input,{client:{async generate(){return ++calls===1?saved.response:response([]);}}});
+ calls=0;const dropped=await reviewConsistency(input,{client:{async generate(body){return ++calls===1?saved.response:response([], body);}}});
  assert.equal(calls,2);assert.equal(dropped.verified,false);assert.match(dropped.model.reason,/不得删除/);
 });
 
 test('格式修正不能通过删除原有负评变成通过',async()=>{
  const saved=recorded('consistency:5a40820384c49847ea99');let calls=0;
- const result=await reviewConsistency(savedInput(saved),{client:{async generate(){return ++calls===1?saved.response:response([]);}}});
+ const result=await reviewConsistency(savedInput(saved),{client:{async generate(body){return ++calls===1?saved.response:response([], body);}}});
  assert.equal(calls,2);assert.equal(result.verified,false);assert.match(result.model.reason,/不得删除/);
 });
 
@@ -113,7 +115,7 @@ test('未闭合q只在显示层补边界，登记人物显示姓名，原文仍�
 test('四种真实等待经HTTP共同提交路径只计时一次，重读不重新审稿',async t=>{
  for(const {id,turn} of cases){
   let reviewCalls=0;
-  const client={async generate(){reviewCalls++;return response([]);}},server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  const client={async generate(body){reviewCalls++;return response([], body);}},server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId,anchor=id;
   if(id==='npc_delivery'){
    await server.api('execute',{campaignId,anchor:'go',eventId:'go',tool:'world_move',args:{destination:'旧磨坊'},expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});
@@ -137,13 +139,16 @@ test('四种真实等待经HTTP共同提交路径只计时一次，重读不重�
 
 test('runner消费同一规范正文，坏审稿响应在服务端阻止提交',async t=>{
  let generated=0;const {turn}=cases.find(row=>row.id==='npc_shove');
- const narrator={async generate(){return ++generated===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'wait',function:{name:'world_time',arguments:'{"minutes":10}'}}]}}]}:reply(turn.originalReply);}};
- const server=await createPlaytestServer({consistencyClient:{generate:async()=>response([])}});t.after(()=>server.close());
+ const narrator={async generate(body){return ++generated===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'wait',function:{name:'world_time',arguments:'{"minutes":10}'}}]}}]}:reply(turn.originalReply);}};
+ const server=await createPlaytestServer({consistencyClient:{generate:async body=>response([], body)}});t.after(()=>server.close());
  const result=await runPlaytest({scenario:{id:'t146-wait',initial:{mode:'legacy'},turns:[{input:turn.input,assertions:[{kind:'elapsed',min:10,max:10}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
  assert.deepEqual(result.turns[0].errors,[]);assert.equal(result.turns[0].consistency.tail.args.extraMinutes,0);assert.equal(result.turns[0].originalReply,turn.originalReply);assert.match(result.turns[0].reply,/额外="0分"/);
  const invalidServer=await createPlaytestServer({consistencyClient:{generate:async()=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:'{bad'}}]}}]})}});t.after(()=>invalidServer.close());
  const created=await invalidServer.api('create',{}),campaignId=created.reference.campaignId,begun=await invalidServer.api('review/begin',{campaignId,anchor:'invalid',playerText:'我看看。',expectedSequence:created.reference.sequence});
- const checked=await invalidServer.api('review/reply',{campaignId,token:begun.token,draft:'看看。',expectedSequence:created.reference.sequence});
+ // 零裁决直接退 pending；真实等待后再检验坏审稿响应仍阻止提交。
+ await invalidServer.api('execute',{campaignId,anchor:'invalid',eventId:'invalid-wait',tool:'world_time',args:{minutes:1},expectedSequence:created.reference.sequence});
+ const invalidView=await invalidServer.api('read',{campaignId});
+ const checked=await invalidServer.api('review/reply',{campaignId,token:begun.token,draft:'看看。',expectedSequence:invalidView.reference.sequence});
  assert.equal(checked.status,'unverified');assert.equal(checked.canCommit,false);
  await assert.rejects(invalidServer.api('execute',{campaignId,anchor:'invalid',eventId:'tail',tool:'world_turn',args:checked.tail.args,reviewId:checked.reviewId,expectedSequence:checked.sequence}),/不一致/);
 });
