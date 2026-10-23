@@ -13,7 +13,17 @@ const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.createCharacter(seed,{},'a3-r9');
 const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
-const rowFor=id=>rows.find(r=>r.id===`A3V2-${id}`);
+const rowFor=id=>{
+ const row=structuredClone(rows.find(r=>r.id===`A3V2-${id}`));
+ if(id==='070'){
+  // Match the spell's declared legal boundary using a real paid permit action;
+  // the corpus itself remains unchanged and its route/signature stay asserted.
+  row.setup.location='bld_bs_still_temple';row.setup.present=['npc_bs_076_3'];row.setup.coins=2;
+  row.setup.prelude=[{tool:'world_act',eventId:'r9-mind-permit',args:{action:'core:law.grant_magic_permit',slots:{authority:'npc_bs_076_3',location:row.setup.location,subject:'player',action:'mental_magic',minutes:60}}}];
+  row.proposal.means.permit='magic_permission:r9-mind-permit';
+ }
+ return row;
+};
 // 05 §5.3: legal-desk offices must be charter offices; the shipped world has none yet (see helper).
 const legalEngine=new WorldEngine(charteredWorld(world)),legalInitial=legalEngine.createCharacter(seed,{},'a3-r9-legal');
 // 069 declares distances that contradict native geometry (01 §1.2; corpus-owned, reported to the main session);
@@ -56,7 +66,7 @@ test('R9: formula acquisition keeps backing skill initialization in the same les
 });
 
 test('R9: learning and spell corpus rows retain success/failure and constructor checks',async()=>{
- const result=await scoreRows(rows.filter(r=>['012','014','068','069','070','072'].some(id=>r.id===`A3V2-${id}`)).map(r=>r.id==='A3V2-069'?withoutPositions(r):r),{world,document:initial});
+ const result=await scoreRows(['012','014','068','069','070','072'].map(id=>id==='069'?withoutPositions(rowFor(id)):rowFor(id)),{world,document:initial});
  // Review 10-22 P0 / 标杆 B07.4: signature descriptors are verified structurally, and the constructor is the
  // model-free form search, not a replay of the corpus proposal. 068 (thing:present_water_bucket) and 072
  // (illusionary) carry labels that name no entity, effect field or catalog term: corpus-owned, reported to the

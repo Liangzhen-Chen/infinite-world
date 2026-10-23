@@ -15,13 +15,36 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {people, contentEntries, pending} from '../world/design/a3-owner2-w.mjs';
 import {checkFoundation, previewWorld, validateDraft, draftFor} from '../world/design/a3-owner2-w-content.mjs';
 import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
+import {verify as verifyPeopleLife, entriesFor as peopleLifeEntries} from '../world/design/a3-people-life-approval.mjs';
 
 const publishedWorld = await loadWorld();
 // A3W approved later use tags. Verify its exact current-row receipts before
 // projecting only those tags back to the owner2-W receipt's historical row.
 // Every other field and the original forged-draft assertions stay covered.
 await verifyUseTagsPublished(publishedWorld.items);
+// A later approved batch adds only roster tier and schedules. Authenticate its
+// complete receipts first, then check all historical facts against the old row.
+await verifyPeopleLife();
+const lifeEntries=await peopleLifeEntries(publishedWorld);
+const historicalPeople=new Map(await Promise.all(lifeEntries.map(async entry=>{
+ const receipt=JSON.parse(await fs.readFile(`world/drafts/a3-owner2-w/${entry.id}.json`,'utf8'));
+ assert.deepEqual(receipt.draft.row,people.find(n=>n.id===entry.id));
+ return [entry.id,receipt.draft.row];
+})));
+function projectPeopleLife(candidate){
+ for(const entry of lifeEntries){
+  const row=candidate.npcs.find(n=>n.id===entry.id);
+  assert.deepEqual(row,entry.row,'current person must match the verified later receipt');
+  const historical=historicalPeople.get(entry.id);
+  for(const field of ['tier','schedule']){
+   if(Object.hasOwn(historical,field))row[field]=structuredClone(historical[field]);
+   else delete row[field];
+  }
+  assert.deepEqual(row,historical,'all historical person facts remain covered');
+ }
+}
 const originalWorld = structuredClone(publishedWorld);
+projectPeopleLife(originalWorld);
 for(const entry of contentEntries(originalWorld).filter(e=>e.kind==='item'&&useTagSources[e.id])){
   const receipt=JSON.parse(await fs.readFile(`world/drafts/a3-owner2-w/${entry.id}.json`,'utf8'));
   const row=originalWorld.items.find(item=>item.id===entry.id);
@@ -44,6 +67,14 @@ test('W: historical tag projection cannot conceal unapproved tags or changed ite
     mutate(items.find(row=>row.id==='item_herb_hoe'));
     await assert.rejects(()=>verifyUseTagsPublished(items));
   }
+});
+
+test('W: historical person projection cannot conceal unapproved schedules, tiers or identity changes',()=>{
+ for(const mutate of [row=>{row.tier='unknown';},row=>{row.schedule.default[0].end++;},row=>{row.age++;}]){
+  const candidate=structuredClone(publishedWorld);
+  mutate(candidate.npcs.find(n=>n.id===lifeEntries[0].id));
+  assert.throws(()=>projectPeopleLife(candidate));
+ }
 });
 
 function familySetup() {
