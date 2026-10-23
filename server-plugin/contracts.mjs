@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -92,7 +93,7 @@ export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',c
     if(!policy)throw preconditionFailure('该商家尚未接受赊账');
     if(!Number.isSafeInteger(policy.limitCopper)||policy.limitCopper<1||!Number.isSafeInteger(policy.maximumMinutes)||policy.maximumMinutes<1
         ||!Number.isSafeInteger(policy.minimumTrust))throw preconditionFailure('商家赊账规则无效');
-    if(engine.actor(d,seller).trust<policy.minimumTrust)throw preconditionFailure('商家目前不信任你的还款承诺，要求现付');
+    if(relationView(engine,d.get('state'),seller,buyer).trust<policy.minimumTrust)throw preconditionFailure('商家目前不信任你的还款承诺，要求现付');
     const debts=debtRows(d).map(([,row])=>row).filter(row=>row.debtor===buyer&&row.creditor===seller&&row.status!=='已还清');
     if(debts.some(row=>row.status==='逾期'))throw preconditionFailure('旧欠款已逾期，先还清才能继续申请赊账');
     const outstanding=debts.reduce((sum,row)=>sum+row.amount-row.paid,0);

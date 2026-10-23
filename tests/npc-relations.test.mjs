@@ -30,11 +30,13 @@ test('NPC之间从正式初始关系增量记账，实际协助完成记录欠�
  assert.throws(()=>applyNpcRelation(d,engine,{from:'a',to:'b',eventType:'信守约定',sourceEvent:'help',trustDelta:50},'edited'),/幅度/);
  assert.equal(d.get('state','npcs','a','trust'),7,'NPC对玩家的旧字段不受NPC之间关系影响');
 });
-test('玩家失约只惩罚真实责任方；NPC按时等候仍获履约证据并同步旧信任字段',()=>{
+// A3 causal2 / product principle II.1: the old scalars remain initial values;
+// retain trust=2 and affection=3 in the ledger, and assert the old 7/4 stay intact.
+test('玩家失约只惩罚真实责任方；NPC按时等候仍获履约证据，旧字段仅作初值',()=>{
  const {engine,document}=setup();document.state.obligations.wait={id:'wait',type:'等候',promisor:'a',promisee:'player',status:'进行中',content:'屋前等候',deadline:120};
  const d=new Draft(document);d.set(['state','minute'],120);d.set(['state','obligations','wait'],{...document.state.obligations.wait,status:'违约',keptBy:['a'],breachedBy:['player'],resolvedAt:120,reason:'玩家未到'});
  recordNpcRelationEvidence(d,engine,document.state,'time',{}, {},'one-long-wait');
- assert.equal(relationView(engine,d.get('state'),'a','player').trust,2);assert.equal(d.get('state','npcs','a','trust'),2);assert.equal(d.get('state','npcs','a','affection'),3);
+ assert.equal(relationView(engine,d.get('state'),'a','player').trust,2);assert.equal(d.get('state','npcs','a','trust'),7);assert.equal(d.get('state','npcs','a','affection'),4);assert.equal(relationView(engine,d.get('state'),'a','player').affection,3);
  assert.equal(relationView(engine,d.get('state'),'player','a').trust,3);assert.equal(relationView(engine,d.get('state'),'player','a').affection,1);
  const other=new Draft({...document,state:{...document.state,minute:110}});other.set(['state','minute'],120);other.set(['state','obligations','wait'],d.get('state','obligations','wait'));recordNpcRelationEvidence(other,engine,document.state,'time',{}, {},'second-short-wait');
  assert.deepEqual(other.document,d.document,'约定证据采用真实约定编号和时间，不依赖外层等待事件编号');
@@ -53,28 +55,30 @@ test('畏惧依真实交锋损伤；盗窃关系仅实际识别目击者变化',
  const crime=new Draft(document);crime.set(['state','records','case'],{category:'legal_case',offender:'player',victim:'a',evidence:[{kind:'eyewitness',witness:'b',identified:true}]});
  recordNpcRelationEvidence(crime,engine,document.state,'crime',{}, {target:'a',case:'case',witnesses:['a','b']},'theft');assert.equal(relationView(engine,crime.get('state'),'a','player').trust,7);assert.equal(relationView(engine,crime.get('state'),'b','player').trust,2);
 });
-test('无full档旧世界不产生新关系账，保持历史职责',()=>{
+// A3 causal / product principles I.4 and II.4: all tiers reject unverified sources;
+// absence of a real transfer still produces no relation evidence.
+test('non-full characters also reject fabricated relation sources without writes',()=>{
  const {engine,document}=setup();for(const npc of engine.world.npcs)delete npc.tier;
- const d=new Draft(document);assert.equal(applyNpcRelation(d,engine,{npc:'a',eventType:'帮助',sourceEvent:'old'},'old'),null);assert.deepEqual(recordNpcRelationEvidence(d,engine,document.state,'trade',{}, {cost:5},'old'),[]);assert.deepEqual(d.document,document);
+ const d=new Draft(document);assert.throws(()=>applyNpcRelation(d,engine,{npc:'a',eventType:'帮助',sourceEvent:'old'},'old'),{code:'E-ACTION-PRECONDITION'});assert.deepEqual(recordNpcRelationEvidence(d,engine,document.state,'trade',{}, {cost:5},'old'),[]);assert.deepEqual(d.document,document);
 });
 test('实际事件交易幂等，重启与导出保留关系证据，撤销恢复钱与原关系',async t=>{
  const {engine,document}=setup(),root=await fs.mkdtemp(path.join(tmpRoot(),'npc-relations-'));t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep+'npc-relations-'));await fs.rm(root,{recursive:true,force:true});});
  const reducer=async(doc,input)=>{const d=new Draft(doc);d.set(['state','player','coins'],doc.state.player.coins-5);d.set(['state','npcs','a','coins'],doc.state.npcs.a.coins+5);recordNpcRelationEvidence(d,engine,doc.state,'trade',{seller:'a'},{buyer:'player',seller:'a',cost:5},input.eventId);return {patches:d.patches,result:{ok:true}};};
  const storage=new CampaignStorage(root,{reducer});await storage.create({id:'relations',worldVersion:document.worldVersion,document});
  const event={id:'paid',anchor:'paid',input:{eventId:'paid'}};await storage.transact('relations',event,reducer);await storage.transact('relations',event,reducer);
- const bought=(await storage.read('relations')).document;assert.equal(bought.state.player.coins,45);assert.equal(bought.state.npcs.a.trust,8);assert.equal(Object.keys(bought.state.relationEvidence).length,1);
+ const bought=(await storage.read('relations')).document;assert.equal(bought.state.player.coins,45);assert.equal(relationView(null,bought.state,'a','player').trust,8);assert.equal(Object.keys(bought.state.relationEvidence).length,1);
  const restarted=new CampaignStorage(root,{reducer});assert.deepEqual((await restarted.read('relations')).document,bought);assert.deepEqual((await restarted.import(await restarted.export('relations'),'copy')).document,bought);
  await restarted.reconcile('relations',[],null);assert.deepEqual((await restarted.read('relations')).document,document);
 });
 test('同一人物对每日现金交易只加一次信任，翌日真实付款才能再次计入',()=>{
  const {engine,document}=setup();let current=document;
  const buy=(id,minute)=>{const d=new Draft(current);d.set(['state','minute'],minute);d.set(['state','player','coins'],current.state.player.coins-1);d.set(['state','npcs','a','coins'],current.state.npcs.a.coins+1);recordNpcRelationEvidence(d,engine,current.state,'trade',{seller:'a'},{seller:'a',buyer:'player',cost:1},id);current=d.document;};
- for(let i=0;i<20;i++)buy(`small_${i}`,100+i);assert.equal(current.state.npcs.a.trust,8);assert.equal(Object.keys(current.state.relationEvidence).length,1);assert.equal(current.state.player.coins+current.state.npcs.a.coins,70);
- buy('next_day',1440);assert.equal(current.state.npcs.a.trust,9);assert.equal(Object.keys(current.state.relationEvidence).length,2);
+ for(let i=0;i<20;i++)buy(`small_${i}`,100+i);assert.equal(relationView(null,current.state,'a','player').trust,8);assert.equal(Object.keys(current.state.relationEvidence).length,1);assert.equal(current.state.player.coins+current.state.npcs.a.coins,70);
+ buy('next_day',1440);assert.equal(relationView(null,current.state,'a','player').trust,9);assert.equal(Object.keys(current.state.relationEvidence).length,2);
 });
 test('逾期后补款增加敬重但不抵消已经记下的失信',()=>{
  const {engine,document}=setup();document.state.records.late={category:'debt',debtor:'player',creditor:'a',amount:10,paid:0,status:'待偿还',deadline:110};
- const overdue=new Draft(document);overdue.set(['state','minute'],120);overdue.set(['state','records','late'],{...document.state.records.late,status:'逾期',overdueAt:110});recordNpcRelationEvidence(overdue,engine,document.state,'time',{}, {},'late');assert.equal(overdue.get('state','npcs','a','trust'),2);
+ const overdue=new Draft(document);overdue.set(['state','minute'],120);overdue.set(['state','records','late'],{...document.state.records.late,status:'逾期',overdueAt:110});recordNpcRelationEvidence(overdue,engine,document.state,'time',{}, {},'late');assert.equal(relationView(engine,overdue.get('state'),'a','player').trust,2);
  const paid=new Draft(overdue.document);paid.set(['state','records','late'],{...overdue.get('state','records','late'),status:'已还清',paid:10,paidAt:120});paid.set(['state','player','coins'],40);paid.set(['state','npcs','a','coins'],30);recordNpcRelationEvidence(paid,engine,overdue.document.state,'trade',{payment:'repay'},{debt:'late',cost:10},'repay');
- assert.equal(paid.get('state','npcs','a','trust'),2);assert.equal(relationView(engine,paid.get('state'),'a','player').respect,1);assert.equal(paid.get('state','relationEvidence','debt:late:paid').eventType,'逾期补款');
+ assert.equal(relationView(engine,paid.get('state'),'a','player').trust,2);assert.equal(relationView(engine,paid.get('state'),'a','player').respect,1);assert.equal(paid.get('state','relationEvidence','debt:late:paid').eventType,'逾期补款');
 });

@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: compare the same trust changes through the single read model.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {uiSession,qty} from './helpers/ui-script.mjs';
@@ -47,9 +49,9 @@ test('N5 托人送货按期到场真实交付，账本守恒，无模型',async 
  assert.equal(qty(after.state.inventory.item_bread)-qty(before.state.inventory.item_bread),1);conserved(before,after,'送货');
 });
 test('N1 实际履约改变关系、三日后提及具体帮助；N11 实际违约后要求预付',async t=>{
- const ui=await setup(t);await primed(ui);let doc=await ui.read();const trust=doc.state.npcs[NPC].trust;
+ const ui=await setup(t);await primed(ui);let doc=await ui.read();const trust=relationView(null,doc.state,NPC,'player').trust;
  const promise=await ui.choose('promise.create',{promisor:'player',promisee:NPC,type:'付款',content:'帮你修屋顶的材料款',coins:1,deadline:doc.state.minute+1},{search:true});assert.ok(promise.ok,promise.error);
- assert.ok((await ui.choose('time',{minutes:3*1440})).ok);doc=await ui.read();assert.ok(doc.state.npcs[NPC].trust>trust);
+ assert.ok((await ui.choose('time',{minutes:3*1440})).ok);doc=await ui.read();assert.ok(relationView(null,doc.state,NPC,'player').trust>trust);
  const greet=await talk(ui,'greet');assert.ok(greet.ok,greet.error);assert.match(greet.lines.join(''),/修屋顶/);
  const broken=await ui.choose('promise.create',{promisor:'player',promisee:NPC,type:'付款',content:'答应的报酬',coins:99999,deadline:doc.state.minute+1},{search:true});assert.ok(broken.ok,broken.error);
  assert.ok((await ui.choose('time',{minutes:2})).ok);

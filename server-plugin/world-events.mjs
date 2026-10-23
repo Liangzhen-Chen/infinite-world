@@ -213,7 +213,20 @@ export function publishTransitionEvent(d,engine,event){
     if(d.get('state','records',`world_event:${event.id}`))return false;
     // S2b：推进接线后，离屏产生的事件从当前调度器取全局单调序号（14 §14.2）。
     if(d.scheduler&&event.seq===undefined)event={...event,seq:d.scheduler.nextSeq()};
-    publishWorldEvents(d,engine,[event],{before:d.get('state'),args:{},detail:{},eventId:event.id,tool:event.tool??'advance'});
+    let before=d.get('state'),detail={};
+    // Vital primitives already carry the native, post-resistance HP result.
+    // Recover this child's exact HP transition, even when several wounds were
+    // settled before the event queue drains; never use requested damage.
+    const result=event.result,target=event.target;
+    if(event.primitive==='vital'&&event.verb==='harm'&&Number.isFinite(result?.damage)&&result.damage>=0&&Number.isFinite(result.targetHp)&&result.target===target){
+        const body=target==='player'?before.player:before.npcs?.[target];
+        if(body){
+            const old={...body,hp:result.targetHp+result.damage};
+            before=target==='player'?{...before,player:old}:{...before,npcs:{...before.npcs,[target]:old}};
+            detail={...result};event={...event,harm:result.damage};
+        }
+    }
+    publishWorldEvents(d,engine,[event],{before,args:{},detail,eventId:event.id,tool:event.tool??'advance'});
     return true;
 }
 

@@ -994,17 +994,7 @@ export class WorldEngine {
     }
     attributes(d,args,id){return allocateAttributes.call(this,d,args,id);}
     relation(d,args,id) {
-        const recorded=applyNpcRelation(d,this,args,id);if(recorded)return recorded;
-        const npc=this.resolve(args.npc,'npc'),base=this.byId.get(npc),row=d.get('state','npcs',npc);
-        if(args.notes!==undefined)reject('E-ACTION-PRECONDITION','基础人设只读，变化应追加发展记录');
-        const allowed=['信守约定','违约','帮助','欺骗','威胁','冲突','交谈'];if(!allowed.includes(args.eventType))reject('E-ACTION-PRECONDITION','关系变化需引用已知事件类型');
-        if(!args.sourceEvent)reject('E-ACTION-PRECONDITION','关系变化缺少来源事件');
-        if(args.romance&&base.flags.minor)reject('E-ACTION-PRECONDITION','未成年人物拒绝恋爱关系写入');
-        const defaultTrust={信守约定:3,违约:-5,帮助:3,欺骗:-5,威胁:-3,冲突:-3,交谈:0}[args.eventType];
-        const trust=number(args.trustDelta??defaultTrust,defaultTrust-2,defaultTrust+2,'信任变化');
-        d.set(['state','npcs',npc,'trust'],Math.max(-100,Math.min(100,row.trust+trust)));
-        d.set(['state','npcs',npc,'developments'],[...row.developments,{eventType:args.eventType,source:args.sourceEvent,minute:d.get('state','minute')}]);
-        return {npc,trustDelta:trust};
+        return applyNpcRelation(d,this,args,id);
     }
     promise(d,args,id) {
         if(['settle','close','file_claim','receive_collection','resume_estate'].includes(args.operation)){

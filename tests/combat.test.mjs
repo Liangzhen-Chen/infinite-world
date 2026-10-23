@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: assert the canonical relation view, retaining all numeric expectations.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -40,7 +42,7 @@ test('实际交锋：按 A3 combat.bout 每回合一分钟，坏武器和过级�
     for(let i=0;i<6;i++){const out=await engine.reduce(document,{tool:'world_combat',args:{target:'林穗',intent:'shove'},eventId:`shove_${i}`});document=applyPatches(document,out.patches);}
     // D31.4 / action-costs combat.bout replaces ten seconds with one minute.
     // Keep exact elapsed time, sub-minute remainder and every social consequence.
-    assert.equal(document.state.minute,startMinute+6);assert.equal(document.state.subMinuteSeconds,0);assert.equal(document.state.npcs.npc_hw_linsui.developments.filter(row=>row.type==='被推搡').length,6);assert.equal(document.state.npcs.npc_hw_linsui.trust,-30);
+    assert.equal(document.state.minute,startMinute+6);assert.equal(document.state.subMinuteSeconds,0);assert.equal(document.state.npcs.npc_hw_linsui.developments.filter(row=>row.type==='被推搡').length,6);assert.equal(relationView(null,document.state,'npc_hw_linsui','player').trust,-30);
     document.state.inventory.item_staff.durability=0;await assert.rejects(engine.reduce(document,{tool:'world_combat',args:{target:'林穗',weapon:'木杖'},eventId:'broken'}),/损坏/);
     document.state.inventory.item_staff.durability=100;document.state.inventory.item_staff.quality='神';await assert.rejects(engine.reduce(document,{tool:'world_combat',args:{target:'林穗',weapon:'木杖'},eventId:'high'}),/160级/);
 });

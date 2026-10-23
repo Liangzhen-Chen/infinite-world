@@ -1,21 +1,14 @@
 import {preconditionFailure} from './precondition.mjs';
-import {cloneData} from './storage.mjs';
+import {relationView} from './npc-state.mjs';
+export {relationView} from './npc-state.mjs';
 import {debtDue,currentGrace} from './obligation-state.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
 const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
 const path=id=>id==='player'?['state','player']:['state','npcs',id];
-const full=(engine,id)=>engine.byId.get(id)?.tier==='full';
-const enabled=(engine,a,b)=>full(engine,a)||full(engine,b);
 const dimensions=['trust','affection','respect','fear','romance','competition'];
-export function relationView(engine,state,from,to){
- const current=actor(state,from)?.relationships?.[to];
- const base=engine.byId.get(from)?.relationships?.find?.(row=>row.with===to);
- const initial=to==='player'?actor(state,from):base;
- return {trust:initial?.trust??0,affection:initial?.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[],...cloneData(current??{})}; // P2: same result as structuredClone
-}
 function applyEvidence(d,engine,evidence){
- if(!enabled(engine,evidence.from,evidence.to)||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
+ if(!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
  const row=relationView(engine,d.get('state'),evidence.from,evidence.to);
  if(row.evidenceKeys.includes(evidence.key))return {duplicate:true,from:evidence.from,to:evidence.to,evidence:evidence.key,delta:{}};
  const delta={};for(const dimension of dimensions){
@@ -24,8 +17,7 @@ function applyEvidence(d,engine,evidence){
  }
  if(evidence.favor&&!row.favors.some(f=>f.id===evidence.key))row.favors.push({id:evidence.key,debtor:evidence.from,creditor:evidence.to,what:evidence.favor,sourceEvent:evidence.sourceEvent,minute:evidence.minute,status:'未还'});
  row.evidenceKeys.push(evidence.key);d.set([...path(evidence.from),'relationships',evidence.to],row);
- // Existing credit and UI readers use these two fields for NPC -> player.
- if(evidence.from!=='player'&&evidence.to==='player')for(const key of ['trust','affection'])d.set([...path(evidence.from),key],row[key]);
+ // Legacy scalar fields are immutable initial values, never live projections.
  const developments=actor(d.get('state'),evidence.from)?.developments??[];
  d.set([...path(evidence.from),'developments'],[...developments,{eventType:evidence.eventType,source:evidence.sourceEvent,evidence:evidence.key,with:evidence.to,minute:evidence.minute,delta}]);
  return {from:evidence.from,to:evidence.to,evidence:evidence.key,delta};
@@ -33,7 +25,7 @@ function applyEvidence(d,engine,evidence){
 function register(d,engine,evidence){
  const old=d.get('state','relationEvidence',evidence.key);
  if(old)return applyEvidence(d,engine,old);
- if(!enabled(engine,evidence.from,evidence.to)||evidence.from===evidence.to)return null;
+ if(evidence.from===evidence.to||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
  d.set(['state','relationEvidence',evidence.key],evidence);return applyEvidence(d,engine,evidence);
 }
 
@@ -47,7 +39,6 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
  // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
  if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
  const {args={},detail={},eventId}=rest[0];
- if(!engine.world.npcs.some(n=>n.tier==='full'))return [];
  const after=d.get('state'),pending=[];
  const add=(key,sourceEvent,eventType,from,to,minute,delta,extra={})=>pending.push({key,sourceEvent,eventType,from,to,minute,delta,...extra});
  for(const [id,o]of Object.entries(after.obligations??{})){
@@ -79,6 +70,19 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
  }
  const kind=engine.rules?.npcLife?.kindness;
  for(const e of events){
+  if(e.verb==='status_applied'&&e.payload?.kind==='hostile_magic_status'&&e.actor==='player'){
+   const effect=before.effects?.[e.result?.effect];
+   if(effect?.kind==='status'&&effect.target===e.target&&effect.status===e.result.status)
+    add(`magic-status:${e.sourceEvent}:${e.target}`,e.id,'敌意法术',e.target,'player',e.minute,{trust:-10});
+  }
+  // Only a persisted observation by a physically present witness can change
+  // their regard for a mark's author. The producer owns exposure decay.
+  if(e.verb==='tell'&&e.payload?.kind==='mark_reaction'){
+   const mark=before.records?.[`mark:${e.payload.mark}`],stored=after.records?.[`world_event:${e.id}`];
+   if(stored?.actor===e.actor&&stored.target===e.target&&mark?.author===e.target&&mark.location===e.location&&
+      mark.tags.includes(e.tags[0])&&e.witnesses.includes(e.actor)&&before.npcs[e.actor]?.location===e.location)
+    add(`standing:${e.id}:${e.actor}:${e.target}`,e.id,e.payload.delta<0?'间接受害':'间接受惠',e.actor,e.target,e.minute,{trust:e.payload.delta});
+  }
   if(e.verb==='obligation_settled'&&e.result?.transferred>0&&e.result.remaining===0){
    const row=after.obligations?.[e.obligation],index=row?.events?.findLastIndex(x=>x.eventId===e.result.evidence)??-1,payer=row?.events?.[index]?.payer;
    if(row&&payer===row.debtor){
@@ -98,10 +102,10 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
   }
   // Any wound the player dealt, by blade or spell, is a conflict for the person hurt;
   // a spell keeps its former -10 trust weight, now in the ledger.
-  if(['harm','clash'].includes(e.verb)&&e.actor==='player'&&e.target&&e.id===eventId){
+  if(['harm','clash'].includes(e.verb)&&e.actor==='player'&&e.target&&e.id===eventId&&(!e.legacy||engine.byId.get(e.target)?.tier==='full')){
    const target=e.target,old=actor(before,target),now=actor(after,target);
-   const harm=(old?.hp??now?.maxHp)-now?.hp;
-   if(old&&now&&harm>=0&&now.hp===detail.targetHp)add(`conflict:${eventId}:${target}`,eventId,'冲突',target,'player',after.minute,{trust:e.tags.includes('magic')?-10:-5,affection:-3,fear:harm>0?Math.min(5,Math.max(1,Math.ceil(harm/5))):0});
+   const hp=e.primitive==='vital'?e.result?.targetHp:now?.hp,harm=(old?.hp??now?.maxHp)-hp;
+   if(old&&now&&harm>=0&&hp===detail.targetHp)add(`conflict:${eventId}:${target}`,eventId,'冲突',target,'player',after.minute,{trust:e.tags.includes('magic')?-10:-5,affection:-3,fear:harm>0?Math.min(5,Math.max(1,Math.ceil(harm/5))):0});
   }
   const incident=after.records?.[e.case];
   if(e.verb==='steal'&&e.target&&incident?.category==='legal_case'&&!before.records?.[e.case]&&incident.offender==='player'&&incident.victim===e.target)for(const who of e.witnesses){
@@ -116,7 +120,6 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
 
 export function applyNpcRelation(d,engine,args,eventId){
  const from=engine.resolve(args.from??args.subject??args.npc),to=engine.resolve(args.to??args.target??'player');
- if(!enabled(engine,from,to))return null;
  if(args.notes!==undefined)throw preconditionFailure('基础人设只读，变化应追加发展记录');
  if(!actor(d.get('state'),from)||!actor(d.get('state'),to)||from===to)throw preconditionFailure('关系双方必须是不同的真实人物');
  const romantic=args.romance||args.romanceDelta||args.eventType==='恋慕';

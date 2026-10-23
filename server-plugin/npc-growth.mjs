@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {knowsKnowledge} from './education-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
@@ -105,7 +106,7 @@ export function teachNpc(d,engine,args,eventId){
  const studentSpecies=npc.species??engine.byId.get(student)?.species??'human';
  let teachingCheck=null;
  if(teacherId==='player'&&teacherSpecies!==studentSpecies&&hiddenCheckBonus(engine,d.get('state'),'player','teaching').bonus){
-  if((npc.trust??0)<0)throw preconditionFailure('学生不愿接受这次授业');
+  if(relationView(engine,d.get('state'),student,teacherId).trust<0)throw preconditionFailure('学生不愿接受这次授业');
   teachingCheck=engine.check(d,{attribute:'智力',skill, difficulty:10,passiveDomain:'teaching'},eventId);
   if(!teachingCheck.success){d.set(['state','npcs',student,'growth','today'],{...mark,teach:mark.teach+1});return{student,entity,kind,minutes,gained:0,...teachingCheck};}
  }

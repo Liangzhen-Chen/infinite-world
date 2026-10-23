@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: compare the same trust changes through the single read model.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -96,7 +98,7 @@ test('HTTP 真实逾期和还款后核对：纯文字改写保留扣钱和信任
   }};
   const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   async function act(tool,args,id,anchor=id){const r=await server.api('execute',{campaignId,anchor,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return r;}
-  const trust=view.document.state.npcs.npc_hw_linsui.trust,coins=view.document.state.player.coins;
+  const trust=relationView(null,view.document.state,'npc_hw_linsui','player').trust,coins=view.document.state.player.coins;
   await act('world_trade',{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},'rent');
   await act('world_time',{minutes:60},'late');
   await act('world_trade',{seller:'林穗',payment:'repay',debt:'debt_rent'},'paid');
@@ -104,7 +106,7 @@ test('HTTP 真实逾期和还款后核对：纯文字改写保留扣钱和信任
   const saved=structuredClone(view.document),request={campaignId,token:begun.token,draft:'欠款已清零，无逾期记录。',expectedSequence:view.reference.sequence};
   const result=await server.api('review/reply',request);
   assert.equal(result.canCommit,!fail);assert.equal(result.rewritten,!fail);assert.equal(rewrites,1);
-  assert.equal(saved.state.player.coins,coins-6);assert.equal(saved.state.npcs.npc_hw_linsui.trust,trust-5);
+  assert.equal(saved.state.player.coins,coins-6);assert.equal(relationView(null,saved.state,'npc_hw_linsui','player').trust,trust-5);
   assert.equal(saved.state.records.debt_rent.status,'已还清');assert.ok(saved.state.records.debt_rent.overdueAt);
   assert.deepEqual((await server.api('read',{campaignId})).document,saved);await server.api('review/reply',request);assert.equal(rewrites,1);
  }

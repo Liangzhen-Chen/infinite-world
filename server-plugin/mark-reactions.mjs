@@ -28,9 +28,8 @@ export function reactToMark(d,engine,mark,{eventId,suppressed=false}={}){
    const id=`mark_reaction:${digest({mark:mark.id,tag,observer}).slice(0,32)}`;
    if(d.get('state','records',`world_event:${id}`))continue;
    publishTransitionEvent(d,engine,{id,parent:eventId,verb:'tell',actor:observer,target:mark.author,location:mark.location,minute:now,visibility:'witnessed',witnesses:[observer],tags:[tag],payload:{kind:'mark_reaction',mark:mark.id,text:rule.response,delta,suppressed}});
-   // The actual observer's tell is persisted now. delta is the bounded input
-   // for the standing consumer, not a claim that its projection has changed.
-   // C owns that consumer; this L1 producer must not import its L3 writer.
+   // The persisted tell feeds the relation subscriber; the stable observer id
+   // deduplicates both this observation and its standing consequence.
    reactions.push({observer,tag,event:id,delta,text:rule.response});triggered=true;
   }
   if(triggered&&!batch){

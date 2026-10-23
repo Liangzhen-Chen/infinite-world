@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: assert the canonical relation view, retaining all numeric expectations.
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
@@ -25,7 +27,7 @@ test('同一欠款不能再建自动付款义务，还清后跨过期限不重�
 });
 
 test('赊住宿生成实际欠款；余额不变、限额累计，过期只提醒一次并保留违约后果',async()=>{
-    const initial=fresh(),sum=money(initial),trust=initial.state.npcs.npc_hw_linsui.trust;
+    const initial=fresh(),sum=money(initial),trust=relationView(null,initial.state,'npc_hw_linsui','player').trust;
     const opened=await execute(initial,'world_trade',{seller:'林穗',service:'住宿',days:1,payment:'credit',creditMinutes:60},'credit');
     const c=opened.document;
     assert.equal(c.state.player.coins,initial.state.player.coins);assert.equal(money(c),sum);
@@ -35,14 +37,14 @@ test('赊住宿生成实际欠款；余额不变、限额累计，过期只提�
     await assert.rejects(execute(c,'world_trade',{seller:'林穗',item:'面包',quantity:1,payment:'credit'},'exceed'),/不得超过6铜/);
     assert.deepEqual(c,before);
     const late=await execute(c,'world_time',{minutes:50},'deadline');
-    assert.equal(late.document.state.records.debt_credit.status,'逾期');assert.equal(late.document.state.npcs.npc_hw_linsui.trust,trust-5);
+    assert.equal(late.document.state.records.debt_credit.status,'逾期');assert.equal(relationView(null,late.document.state,'npc_hw_linsui','player').trust,trust-5);
     assert.equal(money(late.document),sum);assert.ok(late.result.notices.some(row=>row.type==='debt'&&row.text.includes('逾期')));
     const again=await execute(late.document,'world_time',{minutes:10},'later');
-    assert.equal(again.document.state.npcs.npc_hw_linsui.trust,trust-5);assert.equal(again.result.notices.some(row=>row.type==='debt'),false);
+    assert.equal(relationView(null,again.document.state,'npc_hw_linsui','player').trust,trust-5);assert.equal(again.result.notices.some(row=>row.type==='debt'),false);
     const paid=await execute(again.document,'world_trade',{seller:'林穗',payment:'repay',debt:'debt_credit'},'repay');
     assert.equal(paid.document.state.player.coins,initial.state.player.coins-6);assert.equal(money(paid.document),sum);
     assert.equal(paid.document.state.records.debt_credit.status,'已还清');assert.equal(paid.document.state.records.contract_room_credit.paid,6);
-    assert.equal(paid.document.state.npcs.npc_hw_linsui.trust,trust-5);
+    assert.equal(relationView(null,paid.document.state,'npc_hw_linsui','player').trust,trust-5);
     await assert.rejects(execute(paid.document,'world_trade',{seller:'林穗',payment:'repay',debt:'debt_credit'},'twice'),/已经还清/);
 });
 

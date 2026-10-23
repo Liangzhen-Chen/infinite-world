@@ -1,9 +1,12 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: assert the canonical relation view, retaining all numeric expectations.
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
+import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 async function setup(){
     const world=await loadWorld(),light=world.spells[0];
@@ -21,11 +24,22 @@ async function setup(){
     return{world,engine,document,run};
 }
 async function successful(run,document,args){for(let i=0;i<100;i++){const result=await run(document,args,`magic_${i}`);if(result.result.success)return {...result,id:`magic_${i}`};}throw new Error('测试夹具未出现成功');}
+
+test('A3 causal2: non-full spell damage follows verified regard exactly once at the unchanged -10 weight',async()=>{
+ const f=await setup(),npc='npc_hw_linsui';delete f.engine.byId.get(npc).tier;
+ const old=f.document.state.npcs[npc].trust,mark=executeLeaveMark(f.engine,f.document,{eventId:'causal2-spell-mark',args:{intent:'留下侮辱',form:'刻痕',tags:['mark:insult']}});
+ f.document=applyPatches(f.document,mark.patches);assert.equal(relationView(f.engine,f.document.state,npc,'player').trust,old-2);
+ const cast=await successful(f.run,f.document,{spell:'spell_test_damage',target:npc});
+ assert.ok(cast.result.damage>0);assert.equal(relationView(f.engine,cast.document.state,npc,'player').trust,old-12);
+ assert.equal(cast.document.state.npcs[npc].trust,old);
+ assert.ok(cast.document.state.records[`world_event:${cast.id}`]);
+ assert.equal(relationView(f.engine,cast.document.state,npc,'player').evidenceKeys.filter(k=>k===`conflict:${cast.id}:${npc}`).length,1);
+});
 test('伤害法术实际扣生命，NPC永久死亡，远处或已死目标拒绝',async()=>{
     const{document,run}=await setup();document.state.npcs.npc_hw_linsui.hp=1;
     const cast=await successful(run,document,{spell:'spell_test_damage',target:'林穗'});
     assert.equal(cast.document.state.npcs.npc_hw_linsui.hp,0);assert.equal(cast.document.state.npcs.npc_hw_linsui.status,'死亡');
-    assert.equal(cast.result.damage,1);assert.equal(cast.document.state.player.mp,8);assert.equal(cast.document.state.npcs.npc_hw_linsui.trust,-10);
+    assert.equal(cast.result.damage,1);assert.equal(cast.document.state.player.mp,8);assert.equal(relationView(null,cast.document.state,'npc_hw_linsui','player').trust,-10);
     assert.equal(cast.document.state.npcs.npc_hw_linsui.developments.at(-1).source,cast.id);
     await assert.rejects(run(cast.document,{spell:'spell_test_heal',target:'林穗'},'revive'),/已经死亡/);
     await assert.rejects(run(document,{spell:'spell_test_damage',target:'段岩'},'far'),/不在场/);

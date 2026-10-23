@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: read the canonical relation; preserve original trust expectations.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -81,7 +83,7 @@ test('偷窃拒绝空库存、他处目标、死亡和非法金额与编号冲�
 
 test('没被看见不降低个人信任，目击仅记录在场清醒人物，未作证者不能被全局认定知情执法',async()=>{
     const{document,run}=await setup(),hidden=await theft(run,document,{seen:0});
-    assert.equal(hidden.document.state.npcs[victim].trust,document.state.npcs[victim].trust);
+    assert.equal(relationView(null,hidden.document.state,victim,'player').trust,relationView(null,document.state,victim,'player').trust);
     const sleep=structuredClone(document);sleep.state.npcs.npc_hw_hezhou.activity='熟睡';
     const out=await theft(run,sleep);assert.ok(!out.result.witnesses.includes('npc_hw_hezhou'));
     const c=structuredClone(out.document);c.state.npcs[guard].location=c.state.location;
@@ -225,7 +227,7 @@ test('服役中死亡不抹掉剩余判罚，复活后不被跨地点状态锁�
 test('真实推搡留下法律案件，掰腕检定不被当成伤害，原有关系变化不重复扣除',async()=>{
     const{document,run}=await setup(),shoved=await run(document,'world_combat',{target:victim,intent:'shove'},'shove');
     const row=shoved.document.state.records[shoved.result.case];assert.equal(row.category,'legal_case');
-    assert.ok(['assault','assault_attempt'].includes(row.offense));assert.equal(shoved.document.state.npcs[victim].trust,document.state.npcs[victim].trust-5);
+    assert.ok(['assault','assault_attempt'].includes(row.offense));assert.equal(relationView(null,shoved.document.state,victim,'player').trust,relationView(null,document.state,victim,'player').trust-5);
     const checked=await run(document,'world_check',{attribute:'力量',opponent:{npc:victim,attribute:'力量'}},'arm_wrestle');
     assert.equal(Object.values(checked.document.state.records).filter(r=>r.category==='legal_case').length,0);
 });

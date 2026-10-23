@@ -1,5 +1,6 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
+import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {languageId,isLanguage} from './domain-rules.mjs';
@@ -55,7 +56,7 @@ export function subjectiveView(engine,document,observer){
  for(const [key,m]of ranked)facts[key]={value:copy(m.value??m.content??null),source:m.sourceEvent??m.id??key,kind:m.kind??'knowledge',credence:m.credence??1};
  const relations={};
  for(const id of new Set(['player',...Object.keys(n.relationships??{}),...(b.relationships??[]).map(r=>r.with)])){
-  const r=n.relationships?.[id]??b.relationships?.find(r=>r.with===id)??(id==='player'?n:{});
+  const r=relationView(engine,s,observer,id);
   relations[id]=Object.fromEntries(dimensions.map(k=>[k,r[k]??0]));relations[id].favors=copy(r.favors??[]);
  }
  const signedParty=(o,side)=>o.inheritedEndpoints?.includes(side)?o.inheritanceFrom:o[side];

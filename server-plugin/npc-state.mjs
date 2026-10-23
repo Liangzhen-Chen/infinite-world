@@ -2,12 +2,21 @@ import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
-import {recordsWhere,digest,persistable} from './storage.mjs';
+import {recordsWhere,digest,persistable,cloneData} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
+// The one relation read model. Legacy scalars seed NPC -> player relations
+// until a ledger row exists; they are never a second live value.
+export function relationView(engine,state,from,to){
+ const person=from==='player'?state.player:state.npcs?.[from];
+ const current=person?.relationships?.[to];
+ const base=engine?.byId?.get(from)?.relationships?.find?.(row=>row.with===to);
+ const initial=to==='player'?person:base;
+ return {trust:initial?.trust??0,affection:initial?.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[],...cloneData(current??{})};
+}
 // Appointment services are reported under the category the world vocabulary gives them.
 const serviceNames=(engine,services)=>[...new Set(services.map(s=>vocabulary(engine,'services','categories',s)??s))];
 // An appointment changes where/when an existing service is offered. It never

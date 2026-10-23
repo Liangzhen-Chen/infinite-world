@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: read the canonical relation; preserve original trust expectations.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -49,10 +51,16 @@ test('施法实际多目标及友军波及，保存固定范围/来源/时限和
  const s=await setup();s.c.state.player.companions=[actorId];
  const out=await cast(s),record=out.document.state.effects[out.eventId];
  assert.equal(out.document.state.player.mp,98);assert.equal(out.document.state.player.hp,96);assert.equal(out.document.state.npcs[actorId].hp,96);
+ // A3 causal2: actual area wounds have the same -10 spell relation consequence
+ // as direct spells, one source per pulse; the legacy scalar remains initial.
+ assert.equal(relationView(s.engine,out.document.state,actorId,'player').trust,relationView(s.engine,s.c.state,actorId,'player').trust-10);
+ assert.equal(out.document.state.npcs[actorId].trust,s.c.state.npcs[actorId].trust);
+ assert.ok(out.document.state.records[`world_event:${out.eventId}:trigger:${record.created}:${actorId}`]);
  assert.deepEqual(out.result.outcomes.map(x=>x.target).sort(),[actorId,'player'].sort());
  assert.equal(record.source,out.eventId);assert.equal(record.owner,'player');assert.equal(record.location,s.c.state.location);assert.deepEqual(record.center,[0,0]);assert.equal(record.radiusMeters,2);
  assert.equal(record.expires,record.created+8);assert.equal(record.nextPulse,record.created+2);assert.equal(record.members[actorId].lastTrigger,record.created);
  const tick=await s.run(out.document,'world_time',{minutes:2},'tick');assert.equal(tick.document.state.player.hp,92);assert.equal(tick.document.state.npcs[actorId].hp,92);
+ assert.equal(relationView(s.engine,tick.document.state,actorId,'player').trust,relationView(s.engine,s.c.state,actorId,'player').trust-20);
 });
 test('没有可信坐标、被遮挡、出界、在路途或神性免疫的单位不被误命中',async()=>{
  const s=await setup(),c=s.c;
@@ -106,7 +114,7 @@ test('首领来源复用相同区域消费者，敌方伤害不记为玩家施�
  const s=await setup(),boss='boss_area_source';s.engine.byId.set(boss,{id:boss,name:'测试区域首领',level:1,template:2,tier:1});
  s.c.state.creatures[boss]={hp:100,maxHp:100,level:1,location:s.c.state.location,status:'正常'};position(s.c,boss,[0,0]);
  const d=draft(s.c);const out=s.engine.applyMagicArea(d,s.catalog,{target:boss},'boss-area',boss);
- assert.equal(out.outcomes.find(r=>r.target==='player').damage,4);assert.equal(d.document.state.effects['boss-area'].owner,boss);assert.equal(d.document.state.npcs[actorId].trust,s.c.state.npcs[actorId].trust);
+ assert.equal(out.outcomes.find(r=>r.target==='player').damage,4);assert.equal(d.document.state.effects['boss-area'].owner,boss);assert.equal(relationView(null,d.document.state,actorId,'player').trust,relationView(null,s.c.state,actorId,'player').trust);
  const victim='monster_area_victim';s.engine.byId.set(victim,{id:victim,name:'测试区域生命目标',level:1,template:2,drops:[]});
  s.c.state.creatures[victim]={hp:2,maxHp:100,level:1,location:s.c.state.location,status:'正常',ecology:'habitat_hw_wood',species:victim};position(s.c,victim,[0,0]);
  const kill=draft(s.c);s.engine.applyMagicArea(kill,s.catalog,{target:boss},'boss-kill',boss);assert.equal(kill.document.state.creatures[victim].status,'死亡');assert.equal(kill.document.state.creatures[victim].corpse.killedBy,boss);assert.equal(kill.document.state.player.xp,s.c.state.player.xp);

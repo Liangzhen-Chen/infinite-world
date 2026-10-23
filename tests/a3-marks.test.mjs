@@ -7,6 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {withLedger,accountKey,auditLedger} from '../server-plugin/ledger.mjs';
 import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
 import {reactToMark} from '../server-plugin/mark-reactions.mjs';
+import {standing} from '../server-plugin/standing.mjs';
 
 const json=async p=>JSON.parse(await fs.readFile(p,'utf8'));
 const world=await loadWorld(),seed=await json('tests/fixtures/legacy/seed.json');
@@ -32,7 +33,9 @@ test('A3 mark: every core tag has a real observable reaction, never its claimed 
   assert.equal(after.holdings.locations[id].at,document.state.location);
   assert.equal(out.receipt.fallback.originalIntentFulfilled,false);
   assert.ok(out.receipt.mark.reactions.length>0,tag);
-  for(const r of out.receipt.mark.reactions){const event=after.state.records[`world_event:${r.event}`];assert.equal(event.verb,'tell');assert.equal(event.payload.mark,id);assert.ok(event.payload.text);}
+  for(const r of out.receipt.mark.reactions){const event=after.state.records[`world_event:${r.event}`];assert.equal(event.verb,'tell');assert.equal(event.payload.mark,id);assert.ok(event.payload.text);
+   assert.equal(standing(engine,after.state,r.observer),standing(engine,before.state,r.observer)+r.delta);
+  }
   assert.deepEqual(after.ledger.accounts,document.ledger.accounts);assert.deepEqual(auditLedger(after.ledger),[]);
   assert.deepEqual(document,before);assert.equal(after.state.minute,document.state.minute+rules.mark.minutes);
   assert.ok(!Object.keys(after.ledger.accounts).some(k=>k.startsWith(id+'|')));
@@ -56,8 +59,7 @@ test('A3 mark: repetition decays, replacements stay observable with zero gain an
  const {engine,document}=setup();engine.world.openActionRules.mark.maximumPerAuthorPlace=2;
  let current=document;const receipts=[];
  for(let i=0;i<5;i++){const out=executeLeaveMark(engine,current,input(`mark-repeat-${i}`,['mark:insult']));current=applyPatches(current,out.patches);receipts.push(out.receipt.mark);}
- // delta is the policy budget on the persisted observer event; C still owns
- // its standing projection. These assertions do not claim a trust adjustment.
+ // The persisted budget is now also applied to actual observer standing.
  assert.equal(receipts[0].reactions[0].delta,-2);assert.equal(receipts[1].reactions[0].delta,-1);
  assert.ok(receipts[2].reactions.length);assert.ok(receipts.slice(2).every(r=>r.suppressed&&r.reactions.every(x=>x.delta===0)));
  assert.equal(Object.values(current.state.records).filter(r=>r.category==='mark'&&r.active).length,2);
@@ -75,6 +77,10 @@ test('A3 mark: no awake observer means untriggered; a later observation can reac
  const d=engine.primitiveDraft(after),result=reactToMark(d,engine,after.state.created[out.receipt.mark.entity],{eventId:'noticed-later'});
  assert.equal(result.triggered,true);assert.equal(result.reactions.length,1);
  assert.equal(result.reactions[0].observer,id);
+ assert.equal(standing(engine,d.get('state'),id),standing(engine,after.state,id)+result.reactions[0].delta);
+ const snapshot=structuredClone(d.get('state'));
+ assert.equal(reactToMark(d,engine,after.state.created[out.receipt.mark.entity],{eventId:'noticed-again'}).triggered,false);
+ assert.deepEqual(d.get('state'),snapshot);
 });
 
 test('A3 mark: seven-day decay expires, traits remain non-numeric and forbidden places stay protected',async()=>{

@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {recordStandingEvidence} from './npc-relations.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
@@ -124,7 +125,10 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
     for(const witness of witnesses){
         knowledge(d,witness,id,now);
         if(!relationshipApplied&&witness===victim){
-            if(engine.byId.get(witness)?.tier!=='full')d.set(['state','npcs',witness,'trust'],Math.max(-100,(d.get('state','npcs',witness,'trust')??0)-5));
+            if(engine.byId.get(witness)?.tier!=='full'){
+                if(engine.replaying&&engine.replayResult?.worldEventVersion!==1)d.set(['state','npcs',witness,'trust'],Math.max(-100,(d.get('state','npcs',witness,'trust')??0)-5));
+                else recordStandingEvidence(d,engine,{key:`crime:${eventId}:${witness}`,sourceEvent:eventId,eventType:'欺骗',from:witness,to:offender,minute:now,delta:{trust:-5}});
+            }
             d.set(['state','npcs',witness,'developments'],[...d.get('state','npcs',witness,'developments')??[],{type:'发现财物侵犯',source:eventId,minute:now}]);
         }
     }
