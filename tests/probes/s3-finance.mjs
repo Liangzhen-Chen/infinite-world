@@ -5,6 +5,9 @@ import {once} from './harness.mjs';
 
 export const annualLoanScenario=once(async()=>{
  const f=fixture({coins:30000});
+ // The host has 500 copper but the annual quote charges 507 in interest.
+ // Pay for actual stock first so the live NPC decision can accept the terms.
+ await f.act({seller:host,item:'item_bread',quantity:10},'annual-probe-buy-bread');
  const loan=await f.act({operation:'lend',seller:host,coins:1000,days:360,quantity:12,consent:true},'annual-probe');
  const row=f.doc.state.records[loan.debt];assert.equal(row.installments,12);assert.equal(row.deadline-row.createdAt,360*DAY);
  f.doc.state.npcs[host].coins=0;
