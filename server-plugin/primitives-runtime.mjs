@@ -600,11 +600,11 @@ export const primitiveRuntime={
   return {...result,...reactToMark(d,engine,d.get('state','created',result.entity),{eventId:meta.child,suppressed:result.suppressed})};
  },
  isNativeAction(engine,input){const action=findAction(this.registry(engine),input.args?.action);return action?.projection==='scene'||action?.readOnly&&['world_read','world_catalog'].includes(action.call?.tool)||action?.id==='open:leave_mark'||Boolean(action?.rite);},
- nativeAction(engine,document,input,{preview=false}={}){
+ nativeAction(engine,document,input,{preview=false,actor='player'}={}){
   const action=findAction(this.registry(engine),input.args?.action);
   const read=routingRead(engine,document,action,input,{preview});if(read)return read;
   if(action?.projection==='scene')return {patches:[],receipt:{eventId:input.eventId,actor:'player',routed:action.id,status:preview?'preview':'committed',applied:[],cost:{time:0},scene:engine.scene(document,'')}};
-  if(action?.id==='open:leave_mark')return executeLeaveMark(engine,document,input,{preview});
+  if(action?.id==='open:leave_mark')return executeLeaveMark(engine,document,input,{preview,actor});
   if(action?.rite)return executeRite(engine,document,input,{preview});
   return null;
  },
