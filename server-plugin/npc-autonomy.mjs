@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
@@ -245,7 +246,7 @@ function legacyPlanFingerprint(document){const actions=withLegacyUndefinedActivi
 export function npcPlanningContext(engine,document,{limit=12}={}){
  if(!Number.isInteger(limit)||limit<8||limit>20)throw preconditionFailure('智能层人数须在8到20之间');
  const ranked=Object.keys(document.state.npcs).filter(id=>personSimulation(engine,document.state,id).value&&!personConstraint(engine,document.state,id)).map(id=>document.state.created?.[id]??engine.byId.get(id)).sort((a,b)=>{
-  const score=n=>{const s=document.state.npcs[n.id];return Math.abs(s.trust??0)+Math.abs(s.affection??0)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
+  const score=n=>{const s=document.state.npcs[n.id],r=relationView(engine,document.state,n.id,'player');return Math.abs(r.trust)+Math.abs(r.affection)+(s.memoryStream??[]).filter(m=>m.participants?.includes('player')).length*5;};return score(b)-score(a)||a.id.localeCompare(b.id);
  }).slice(0,limit);
  const day=Math.floor(document.state.minute/DAY);
  return {minute:document.state.minute,day,stateFingerprint:npcPlanFingerprint(document),people:ranked.map(n=>{const mind=intelligenceOf(engine,document.state,n.id),view=subjectiveView(engine,document,n.id);return {id:n.id,name:view.self.name,location:view.self.location,coins:view.self.coins,inventory:view.self.inventory,values:view.self.traits.values,redLines:view.self.redLines,

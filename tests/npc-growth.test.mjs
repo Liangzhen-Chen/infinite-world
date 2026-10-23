@@ -8,6 +8,9 @@ import {npcPlanFingerprint,npcPlanningContext} from '../server-plugin/npc-autono
 import {scheduleAt,npcAvailability} from '../server-plugin/npc-schedule.mjs';
 import {npcSchedule} from '../server-plugin/npc-state.mjs';
 import {validateNpcGrowthRules} from '../server-plugin/npc-growth.mjs';
+import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
+import {relationView} from '../server-plugin/npc-state.mjs';
+import {hiddenCheckBonus} from '../server-plugin/hidden-passives.mjs';
 
 const source=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const npc='npc_hw_ayan',mill='bld_hw_mill',DAY=1440;
@@ -30,6 +33,19 @@ const skill=(s,id='skill_life_6_core')=>s.doc.state.npcs[npc].skills[id];
 const reload=s=>({...s,engine:new WorldEngine(structuredClone(s.world)),doc:JSON.parse(JSON.stringify(s.doc))});
 async function nextMorning(s){await wait(s,DAY-s.doc.state.minute%DAY+600);}
 const rejects=async(promise,pattern)=>assert.rejects(promise,pattern);
+
+test('A3 causal2: teaching willingness reads verified relations with legacy trust unchanged',async()=>{
+ const s=fixture(),role=s.world.professions.find(p=>p.passive?.domain==='teaching');assert.ok(role);
+ s.doc.state.professions.hidden=[role.id];s.doc.state.careers??={};s.doc.state.careers[role.id]={certification:{minute:0,source:'initial'}};
+ s.doc.state.npcs[npc].species=s.world.npcs.find(n=>n.species&&n.species!=='human').species;
+ assert.ok(hiddenCheckBonus(s.engine,s.doc.state,'player','teaching').bonus>0);
+ const input={tool:'world_learn',args:{entity:'skill_life_6_core',source:'player',student:npc},eventId:'causal2-teach'};
+ await assert.doesNotReject(s.engine.reduce(s.doc,input));
+ const old=s.doc.state.npcs[npc].trust,out=executeLeaveMark(s.engine,s.doc,{eventId:'causal2-teach-insult',args:{intent:'在磨坊留下侮辱',form:'刻痕',tags:['mark:insult']}});
+ s.doc=applyPatches(s.doc,out.patches);assert.ok(out.receipt.mark.reactions.some(r=>r.observer===npc));
+ assert.equal(s.doc.state.npcs[npc].trust,old);assert.ok(relationView(s.engine,s.doc.state,npc,'player').trust<0);
+ const before=structuredClone(s.doc);await assert.rejects(s.engine.reduce(s.doc,input),/学生不愿/);assert.deepEqual(s.doc,before);
+});
 
 test('世界规则登记的人物成长参数与营生均有效',()=>{assert.deepEqual(validateNpcGrowthRules(source),[]);assert.ok(source.rules.npcGrowth.vocations.length>=4);});
 

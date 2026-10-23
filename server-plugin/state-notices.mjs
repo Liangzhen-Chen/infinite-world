@@ -1,4 +1,5 @@
 // Only observable player state becomes UI feedback. Private records and hidden luck stay private.
+import {relationView} from './npc-state.mjs';
 export function stateNotices(before,after,resolveName=id=>id){
     const result=[],push=(type,text,card)=>result.push({type,text,...(card?{card}:{})});
     const name=id=>resolveName(id)??'未命名对象';
@@ -80,8 +81,9 @@ export function stateNotices(before,after,resolveName=id=>id){
             if(npc.location===after.location)push('presence',`${name(id)}来到这里`);
         }
         if(before.location===after.location&&old.location===before.location&&npc.location===after.location&&old.activity&&npc.activity&&old.activity!==npc.activity)push('activity',`${name(id)}此刻：${npc.activity}`);
-        if(npc.trust!==old.trust)push('relationship',`${name(id)}${npc.trust>old.trust?'对你更放心了':'对你更谨慎了'}`);
-        if(npc.affection!==old.affection)push('relationship',`${name(id)}${npc.affection>old.affection?'与你更亲近了':'与你疏远了些'}`);
+        const previous=relationView(null,before,id,'player'),current=relationView(null,after,id,'player');
+        if(current.trust!==previous.trust)push('relationship',`${name(id)}${current.trust>previous.trust?'对你更放心了':'对你更谨慎了'}`);
+        if(current.affection!==previous.affection)push('relationship',`${name(id)}${current.affection>previous.affection?'与你更亲近了':'与你疏远了些'}`);
         if(npc.location===after.location&&old.location===before.location){
             const a=old.relationships?.player??{},b=npc.relationships?.player??{};
             for(const [key,increased,decreased]of [['respect','对你更敬重了','对你的敬重减少了'],['fear','对你更畏惧了','对你的畏惧减轻了']])if((a[key]??0)!==(b[key]??0))push('relationship',`${name(id)}${(b[key]??0)>(a[key]??0)?increased:decreased}`);

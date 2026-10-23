@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {publishTransitionEvent,presentWitnesses} from './world-events.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {nativePrimitiveTransaction} from './native-primitives.mjs';
 // Effect families register their effectSpec.kind values in magic-effects.mjs;
@@ -127,8 +128,14 @@ function applyMagicState(d,prepared,id){
             if(applied.resisted)return applied;
         }else d.set(['state','effects',id],{kind:'light',spell:catalog.id,target,power:spec.power,expires,source:id,owner:'player',targetInstance:trackSingleItem(d,this,'player',target,id)});
         if(spec.kind==='status'&&!magicStatuses[spec.status].beneficial&&target.startsWith('npc_')){
-            d.set([...path,'trust'],Math.max(-100,(latest.trust??0)-10));
-            d.set([...path,'developments'],[...latest.developments??[],{type:'敌意法术',status:spec.status,source:id,minute:d.get('state','minute')}]);
+            if(this.replaying&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(latest.trust??0)-10));
+            else if((prepared.context?.source??'player')==='player')publishTransitionEvent(d,this,{
+                id:`${id}:hostility`,sourceEvent:id,verb:'status_applied',actor:'player',target,
+                location:latest.location,minute:d.get('state','minute'),visibility:'witnessed',
+                witnesses:presentWitnesses(d.get('state'),latest.location),tags:['magic','hostile'],
+                payload:{kind:'hostile_magic_status'},result:{effect:id,status:spec.status}
+            });
+            d.set([...path,'developments'],[...d.get(...path,'developments')??[],{type:'敌意法术',status:spec.status,source:id,minute:d.get('state','minute')}]);
         }
         return{target,effect:id,expires,status:spec.status,illuminated:spec.kind==='light'};
     }
@@ -158,9 +165,17 @@ function applyMagicState(d,prepared,id){
         else if(spec.kind==='heal'&&current.status==='濒死'){d.set([...path,'status'],'正常');d.set([...path,'dyingSince'],null);}
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             if(next<old)recordDisciplineBreach(d,this,'violence',id);
-            // Full NPCs judge a wound through the relation ledger (world event 'harm').
-            if(this.byId.get(target)?.tier!=='full'||this.replaying&&this.replayResult!==undefined&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
+            // Current NPCs judge a wound through the relation ledger (world event 'harm').
+            if(this.replaying&&this.replayResult!==undefined&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
+            // Area pulses have no enclosing cast-to-harm adapter. Ordinary
+            // casts and open primitives publish their existing canonical event.
+            if((!this.replaying||this.replayResult?.worldEventVersion===1)&&this.byId.get(catalog.id)?.effectSpec?.kind==='area')publishTransitionEvent(d,this,{
+                id,verb:'harm',actor:'player',target,location:current.location,minute:d.get('state','minute'),
+                visibility:'witnessed',witnesses:presentWitnesses(d.get('state'),current.location,[target]),
+                tags:['magic','hostile','violence'],primitive:'vital',spell:catalog.id,
+                result:{target,damage:old-next,targetHp:next}
+            });
         }
     }
     if(spec.kind==='damage')rememberBossTactic(d,this,target,tactic,id);

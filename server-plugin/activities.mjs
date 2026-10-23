@@ -166,7 +166,9 @@ export const activities={
         const exchangeSeconds=calibratedBout?bout.minutesPerBout*60:this.rules.combat.exchangeSeconds;
         const seconds=(d.get('state','subMinuteSeconds')??0)+exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        if(attacker==='player'&&isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
+        // Only pre-world-event archive replay retains its original scalar patch.
+        // Current attacks settle through the normalized conflict event for every tier.
+        if(this.replaying&&this.replayResult?.worldEventVersion!==1&&attacker==='player'&&isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
         const toolWear=[];
         if(weapon){const before=heldUnit(d,this,attacker,weapon).durability;wearItem(d,this,attacker,weapon,1);toolWear.push({item:weapon,before,after:heldUnit(d,this,attacker,weapon).durability});}
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
