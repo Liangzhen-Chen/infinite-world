@@ -4,7 +4,9 @@ import {canAct} from './action-capacity.mjs';
 import {MemoryIndex} from './retrieval.mjs';
 import {saveDialogue} from './dialogue.mjs';
 import {initializeFestivalProject} from './routing-programs.mjs';
-const tokenizer=new MemoryIndex();
+// Retrieval's world readers can load this adapter before MemoryIndex is initialized.
+// Tokenization is only needed for a live request, after the module graph has loaded.
+let requestTokenizer;
 import {preconditionFailure} from './precondition.mjs';
 import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
@@ -320,6 +322,7 @@ export function executeRoutingProgram(d,engine,tool,args,eventId){
   const candidate=subjectiveFact(view,args.content),known=candidate&&(candidate.kind==='prior'||sources.has(candidate.source))?candidate:null;
   text=known?`我知道：${typeof known.value==='string'?known.value:JSON.stringify(known.value)}`:'这件事我不知道。';
   if(!known){
+   const tokenizer=requestTokenizer??=new MemoryIndex();
    const terms=new Set(tokenizer.terms(args.content));
    const recalled=view.knowledge.memories.filter(m=>shared(m)&&typeof m.content==='string').map(m=>({m,score:tokenizer.terms(m.content).filter(t=>terms.has(t)).length})).filter(r=>r.score>0).sort((a,b)=>b.score-a.score||(b.m.minute??0)-(a.m.minute??0))[0]?.m;
    if(recalled)text=`我记得：${recalled.content}。至于眼下的情况，还需要看看。`;
