@@ -59,6 +59,14 @@ export function scanModule(file,src,categories=holdingRecordCategories()){
         let kind=null;
         if(lit)kind=watchedLiteral(lit);
         else{const h=/^(?:\[\s*\.\.\.)?([A-Za-z_$][\w$]*)\(/.exec(arg.trim());if(h&&helpers.has(h[1]))kind='records';}
+        // These exact guarded writes only link summon upkeep / an unused quest
+        // escrow. Neither category is a holding source; other records in the
+        // same modules (including real contracts) must still be intercepted.
+        if(kind==='records'&&m[1]==='set'){
+            const call=src.slice(open,close(src,open)+1),before=src.slice(Math.max(0,m.index-1600),m.index);
+            if(file==='obligation-runtime.mjs'&&/^\(\['state','records',effect\.contract,'upkeepObligation'\],id\)$/.test(call)&&before.includes("contract?.category!=='summon_contract'"))continue;
+            if(file==='quest-board.mjs'&&/^\(\['state','records',quest\],\{\.\.\.account,quest,publisher,openedFor:eventId\}\)$/.test(call)&&before.includes("account?.category!=='quest_escrow'"))continue;
+        }
         if(kind==='records'&&!holdsCategories)continue;// 只写与持有无关的记录类别的模块
         if(kind)findings.push(`${file}:${line} ${m[1]}(${arg.trim().slice(0,80)})`);
     }
@@ -97,4 +105,8 @@ test('拦截新增写入点：一个未包装的记录写入或家庭写入会�
     assert.deepEqual(scanModule('new-module.mjs',good),[]);
     // 与持有无关的记录（世界事件）不拦。
     assert.deepEqual(scanModule('m.mjs',`const rec=id=>['state','records',id];export const f=d=>d.set(rec('x'),{category:'world_event'});`),[]);
+    // A non-holding guard elsewhere in either module cannot exempt a contract
+    // or an identity write, even if it uses the same records collection.
+    for(const file of ['obligation-runtime.mjs','quest-board.mjs'])assert.equal(scanModule(file,
+        `if(contract?.category!=='summon_contract'||account?.category!=='quest_escrow')throw Error();\n${bad}`).length,2);
 });

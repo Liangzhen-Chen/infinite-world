@@ -120,7 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
- {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','body-needs.mjs']},
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','action-time.mjs','routing-programs.mjs','body-needs.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -219,8 +219,12 @@ if(!registryText.includes('registerAdvance(system)'))throw Error('推进注册�
 // Subscribers register themselves (registerWorldEventSubscriber); the runtime list
 // (after loading the engine) gives the order, a scan of each call gives the function.
 await imp('server-plugin/engine.mjs');
+// Open-action observation is loaded lazily by the primitive runtime in play.
+// Include its subscriber for the map without installing that runtime's executor.
+await imp('server-plugin/mark-reactions.mjs');
 const registeredSubscribers=WE.worldEventSubscribers();
-const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'(\w+)',order:([\d.]+),on:[^=]*=>\s*([A-Za-z_$][\w$]*)\(/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]}])));
+// Both delegating arrow callbacks and inline method callbacks are valid registrations.
+const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'([\w-]+)',order:([\d.]+),on(?:\s*:\s*[^=]*=>\s*([A-Za-z_$][\w$]*)\(|\s*\([^)]*\)\s*\{)/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]??'on'}])));
 const verbLiterals=uniq(CODE.flatMap(f=>[...src(f).matchAll(/\bverb\s*:\s*'(\w+)'/g)].map(m=>m[1])));
 // Tool → verbs derived in deriveWorldEvents (one `tool==='x'` branch each); other tools use their own name.
 const toolVerbs={};

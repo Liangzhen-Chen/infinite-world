@@ -12,6 +12,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {toolDefinitions,resolveToolCall,catalogTools} from '../extension/tools.mjs';
 import {loadActionRegistry,actionCall,findAction,actionOfCall,searchActions} from '../server-plugin/action-registry.mjs';
 import {translateCall} from '../server-plugin/action-gateway.mjs';
+import {ActionRejection} from '../server-plugin/action-rejection.mjs';
 import {worldActions,QUICK} from '../server-plugin/action-affordances.mjs';
 import {syncRegistry,render,REGISTRY} from '../tools/build-action-registry.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
@@ -67,6 +68,22 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    if(['open:leave_mark','open:question','open:waive_debt'].includes(a.id)){assert.equal(a.call,undefined);continue;}
    assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
   }
+  // a3qy adds a catalog-only operation that calls the existing internal
+  // environment handler directly. It must not widen the static tool surface.
+  if(a.id==='core:environment.unlock'){
+   assert.equal(a.source,'catalog');assert.deepEqual(a.call,{tool:'world_environment',operation:'unlock'});
+   assert.equal(tools.has(a.call.tool),false);assert.equal(typeof engine.environment,'function');
+   assert.deepEqual(a.slots,[{name:'target',kind:'entity',entity:'entity',required:true,fill:'target'},{name:'tool',kind:'entity',entity:'item'}]);
+   assert.ok(a.preconditions.length&&a.consent.from==='self');
+   const slots={target:'door',tool:'item_lockpick'},args={...slots,operation:'unlock'};
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_environment',args,action:a});
+   assert.deepEqual(resolveToolCall(a.call.tool,args),{tool:'world_environment',args});
+   assert.throws(()=>translateCall('world_act',{action:a.id,slots:{...slots,success:true}}),error=>{
+    assert.ok(error instanceof ActionRejection);assert.equal(error.code,'E-ACTION-PRECONDITION');
+    assert.equal(error.message,'尝试开锁没有这些槽位：success；可填：target、tool');return true;
+   });
+   continue;
+  }
   const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
   if(a.source==='catalog'){
    assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);
@@ -96,6 +113,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // and manufacture batches to their native programs. Check the complete slot
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
+   // a3qy: disarm declares an item tool slot; undeclared additions still fail below.
+   'core:site.disarm':[{name:'tool',kind:'entity',entity:'item'}],
    'core:trade.lend':[{name:'interest',kind:'quantity'}],
    // 指南11.3 L5：仅扩动态目录；保留未登记槽位一律拒绝的断言。
    'core:trade.sell_to':[{name:'allowPartial',kind:'flag',label:'允许部分收购'}],
@@ -140,7 +159,11 @@ test('world_act 翻译成旧调用：id 可省 core:，模板固定参数生效�
  assert.throws(()=>translateCall('world_act',{action:'core:look'}),/不写进账本/);
  // A3-A7 replaces the obsolete dialogue promise with actual consent sources.
  // 06 §6.10.4: require the current world-facing reason; forged consent still throws.
- assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),/^Error: 需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）$/,'任何动作都不接受调用方替对方答应');
+ // 06 §6.10.4: typed business rejection retains the complete consent reason.
+ assert.throws(()=>translateCall('world_act',{action:'trade.trade',slots:{seller:'林穗',service:'住宿',consent:true}}),error=>{
+  assert.ok(error instanceof ActionRejection);assert.equal(error.code,'E-ACTION-PRECONDITION');
+  assert.equal(error.message,'需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）');return true;
+ },'任何动作都不接受调用方替对方答应');
  assert.throws(()=>translateCall('world_act',{action:'core:read',slots:{section:'行囊'}}),/只读查询/);
  assert.equal(actionOfCall(registry,'world_trade',{operation:'trade',service:'住宿'}).id,'core:trade.lodge');
  assert.equal(actionOfCall(registry,'world_trade',{seller:'林穗',item:'x'}).id,'core:trade.trade','模型常用的无 operation 交易调用归到同名子操作');
