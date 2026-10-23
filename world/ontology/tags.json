@@ -19,6 +19,8 @@
   {"id":"escaped","family":"event","source":"design","label":"脱逃","broader":"attempt"},
   {"id":"offense:unlawful_release","family":"event","source":"design","label":"无依据释放","broader":"attempt"},
   {"id":"business","family":"event","source":"code"},
+  {"id":"certification","family":"event","source":"code","label":"职业认证申请","broader":"attempt"},
+  {"id":"festival","family":"event","source":"code","label":"节庆筹办","broader":"business"},
   {"id":"contest","family":"event","source":"code"},
   {"id":"lottery","family":"event","source":"code"},
   {"id":"proposal_rejected","family":"event","source":"code"},
