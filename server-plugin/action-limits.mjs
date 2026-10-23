@@ -7,7 +7,6 @@ import {authority} from './action-authority.mjs';
 import {heldUnit} from './items.mjs';
 import {recordsWhere} from './storage.mjs';
 import {itemTraits,traitsOf} from './traits.mjs';
-import {standing} from './standing.mjs';
 import {aliveHoldings} from './holdings.mjs';
 import {consent} from './action-consent.mjs';
 
@@ -39,7 +38,7 @@ function targetDifficulty(engine,document,effect,actor){
   }else missing('NPC灵智/意志');
   const relation=npc.relationships?.[actor],authored=base?.relationships?.find?.(row=>row.with===actor);
   if(relation?.trust!==undefined||actor==='player'&&npc.trust!==undefined||authored?.trust!==undefined||s.records?.[`standing:${id}:${actor}`]){
-   const value=standing(engine,s,id,actor);add('stance',value,STANCE_RESISTANCE.find(row=>value<=row.max).bonus,'立场≤-60/-30/-10/9/100分别加4/3/2/1/0');
+   const value=engine.readStanding(s,id,actor);add('stance',value,STANCE_RESISTANCE.find(row=>value<=row.max).bonus,'立场≤-60/-30/-10/9/100分别加4/3/2/1/0');
   }else missing('NPC立场');
   const offices=aliveHoldings(actionReader(document),{kind:'holds_office',holder:id}).map(h=>document.holdings.entities[h.subject]).filter(row=>row?.facts?.authority?.operations?.some(op=>['arrest','detain','enforce','guard'].includes(op)));
   const edges=engine.world.routes??[],checkpoints=engine.rules.smuggling?.checkpoints??[];

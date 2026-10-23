@@ -1,5 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
-import {relationView} from './npc-relations.mjs';
+import {relationView} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';

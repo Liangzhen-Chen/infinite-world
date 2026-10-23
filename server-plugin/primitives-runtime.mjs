@@ -578,6 +578,11 @@ registerAdvanceHook('riteLifecycle',()=>({nextMinute:nextRiteMinute,settle:settl
 
 export const primitiveRuntime={
  context:primitiveContext,
+ findAction(engine,id){return findAction({byId:{get:key=>engine.primitiveActionDefinition(key)}},id);},
+ async prepareOpenAction(engine,document,proposal){
+  const {prepareOpenAction}=await import('./open-actions.mjs');
+  return prepareOpenAction(engine,document,proposal);
+ },
  legacyAction(engine,tool,args,options={}){
   if(options.replay&&!options.result?.receipt)return null;
   // Unarchived raw legacy calls retain their historical event format. An

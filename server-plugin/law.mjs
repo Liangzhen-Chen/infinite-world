@@ -1,5 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
-import {recordStandingEvidence} from './npc-relations.mjs';
+import {recordStandingEvidence} from './npc-state.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
