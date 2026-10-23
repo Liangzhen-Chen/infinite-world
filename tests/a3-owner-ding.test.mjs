@@ -15,6 +15,7 @@ import {summonAction,advanceSummons} from '../server-plugin/summons.mjs';
 import {aliveHoldings,closeHolding} from '../server-plugin/holdings.mjs';
 import {transition,advanceProcedure} from '../server-plugin/transition.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 
 import {charteredWorld} from './helpers/charter-world.mjs';
 // 05 §5.3: corpus offices must be charter offices; the shipped world has none yet (see helper).
@@ -30,6 +31,20 @@ const ownedErrors=r=>r.setupUnmet.filter(e=>/^(accounts|obligations|documents|ca
 const clean=document=>assert.deepEqual(reconcile(engine,document),{mismatches:[],lots:[],drift:[],audit:[]});
 function write(document,fn){const d=engine.primitiveDraft(document),result=fn(d);const out=applyPatches(document,d.patches);assert.deepEqual(save(out),save(d.document));return {document:save(out),result,patches:d.patches};}
 async function writeAsync(document,fn){const d=engine.primitiveDraft(document),result=await fn(d);const out=applyPatches(document,d.patches);assert.deepEqual(save(out),save(d.document));return {document:save(out),result,patches:d.patches};}
+
+// 产品原则三.2、13 §13.5：用真实施法创建效果和维持义务，存档后测试原消费者。
+async function nativeSummon(){
+ const spell=engine.byId.get('spell_summon_04'),scene=applyIntentSetup(engine,initial,{minute:600,location:'bld_hw_school',present:[],coins:0,
+  inventory:Object.fromEntries(spell.materials.map(m=>[m.item,m.amount])),abilitiesByActor:{player:{spells:[spell.id],skills:{[spell.skill]:2699}}}});
+ assert.deepEqual(scene.setupUnmet,[]);
+ for(let n=0;n<20;n++){
+  const call={tool:'world_act',args:{action:'core:cast',slots:{spell:spell.id,target:'player'}},eventId:`owner-upkeep-${n}`};
+  const loaded=await runPrelude(engine,scene.document,[call]);assert.deepEqual(loaded.unmet,[]);
+  const summon=Object.keys(loaded.document.state.effects).find(id=>id===call.eventId);
+  if(summon){const effect=loaded.document.state.effects[summon];return {document:save(loaded.document),summon,upkeep:loaded.document.state.records[effect.contract].upkeepObligation};}
+ }
+ assert.fail('successful native summon required');
+}
 
 test.todo('N: counter opening persists independently from the personal purse; only its owner can spend〔前提待真实动作：创建独立柜台账户，不能把个人钱袋当成柜台；归 S5〕',()=>{
  const loaded=load('082');assert.deepEqual(ownedErrors(loaded),[]);
@@ -180,14 +195,15 @@ test.todo('O/P: historical delivery claim reads real damaged cargo and original 
  assert.throws(()=>write(document,d=>settleObligation(d,engine,{id:'a3v2_056_delivery',actor:'npc_bs_016_1',amount:1},'pay-cargo')),/service adapter/);
 });
 
-test.todo('O: upkeep survives save and its real dismissal consumer closes it without charging or resummoning〔前提待真实动作：创建与召唤效果链接的规范维持债权；归 A3 生产者卡〕',()=>{
- const loaded=load('073');assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document),summon=loaded.bindings.a3v2_073_water_cup,mp=document.state.player.mp;
+test('O: upkeep survives save and its real dismissal consumer closes it without charging or resummoning',async()=>{
+ const {document,summon,upkeep}=await nativeSummon(),mp=document.state.player.mp;
  const out=write(document,d=>summonAction.call(engine,d,{operation:'dismiss',summon},'dismiss-old'));
  assert.equal(out.result.dismissed,true);assert.equal(out.document.state.effects[summon],undefined);assert.equal(out.document.state.player.mp,mp);
- assert.equal(obligationView(out.document.state,'a3v2_073_upkeep').closed,true);clean(out.document);
- for(const change of [s=>s.obligations[0].terms.peacefulDismissal=false,s=>s.obligations[0].terms.overdue=true,s=>s.obligations[0].terms.thirdPartyRights=true]){
-  const bad=load('073',change);assert.deepEqual(ownedErrors(bad),[]);
-  assert.throws(()=>write(save(bad.document),d=>summonAction.call(engine,d,{operation:'dismiss',summon:bad.bindings.a3v2_073_water_cup},'bad-dismiss')),/terms/);
+ assert.equal(obligationView(out.document.state,upkeep).closed,true);clean(out.document);
+ // 原三种拒绝断言保留：破坏真实签约条款以验证消费者，不能靠快照制造一份债权。
+ for(const change of [terms=>terms.peacefulDismissal=false,terms=>terms.overdue=true,terms=>terms.thirdPartyRights=true]){
+  const bad=save(document);change(bad.state.obligations[upkeep].terms);
+  assert.throws(()=>write(bad,d=>summonAction.call(engine,d,{operation:'dismiss',summon},'bad-dismiss')),/terms/);
  }
 });
 
@@ -200,11 +216,11 @@ test.todo('O: snapshot provenance, parties and values are validated before nativ
  assert.deepEqual(document,before);
 });
 
-test.todo('O: natural summon expiry ends the same restored upkeep and never charges a new opening fee〔前提待真实动作：创建与召唤效果链接的规范维持债权；归 A3 生产者卡〕',()=>{
- const loaded=load('073'),document=save(loaded.document),summon=loaded.bindings.a3v2_073_water_cup,expires=document.state.effects[summon].expires;
+test('O: natural summon expiry ends the same restored upkeep and never charges a new opening fee',async()=>{
+ const {document,summon,upkeep}=await nativeSummon(),expires=document.state.effects[summon].expires;
  const out=write(document,d=>advanceSummons(d,expires));
- assert.equal(out.document.state.effects[summon],undefined);assert.equal(obligationView(out.document.state,'a3v2_073_upkeep').closed,true);
- assert.equal(out.document.state.obligations.a3v2_073_upkeep.endedAt,expires);assert.equal(out.document.state.player.coins,document.state.player.coins);clean(out.document);
+ assert.equal(out.document.state.effects[summon],undefined);assert.equal(obligationView(out.document.state,upkeep).closed,true);
+ assert.equal(out.document.state.obligations[upkeep].endedAt,expires);assert.equal(out.document.state.player.coins,document.state.player.coins);clean(out.document);
 });
 
 test.todo('P/Q: the same new receipt retains source and review status across save and submission, with no second paper or premature verdict〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{

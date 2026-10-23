@@ -8,13 +8,42 @@ import {executeIntent,signatureEffects} from '../tools/a3-score.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {transferItems} from '../server-plugin/items.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.createCharacter(seed,{},'a3-score-independent');
 const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
-const run=(id,{die}={})=>{
+const run=async(id,{die}={})=>{
  const document=structuredClone(initial);
+ // 产品原则三.2：取消与赎回的前提来自真实施法/典当，不再加载测试债权。
+ if(['073','037'].includes(id)){
+  const act=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
+  let before,input;
+  if(id==='073'){
+   const spell=engine.byId.get('spell_summon_04'),scene=applyIntentSetup(engine,document,{minute:600,location:'bld_hw_school',present:[],coins:0,
+    inventory:Object.fromEntries(spell.materials.map(m=>[m.item,m.amount])),abilitiesByActor:{player:{spells:[spell.id],skills:{[spell.skill]:2699}}}});
+   assert.deepEqual(scene.setupUnmet,[]);
+   for(let n=0;n<20;n++){
+    const call=act('core:cast',{spell:spell.id,target:'player'},`r8-summon-${n}`),loaded=await runPrelude(engine,scene.document,[call]);
+    assert.deepEqual(loaded.unmet,[]);
+    if(loaded.document.state.effects[call.eventId]){before=loaded.document;input=act('core:summon.dismiss',{summon:call.eventId},'r8-dismiss');break;}
+   }
+   assert.ok(before,'successful real summon required');
+  }else{
+   const scene=applyIntentSetup(engine,document,{minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
+    itemInstances:[{id:'r8-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
+    holdings:[{id:'r8-pawn-title',kind:'owns',holder:'player',subject:'r8-pawn-staff',terms:{share:1}}]});
+   assert.deepEqual(scene.setupUnmet,[]);
+   const loaded=await runPrelude(engine,scene.document,[act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'r8-pawn')]);
+   assert.deepEqual(loaded.unmet,[]);before=loaded.document;
+   input=act('core:trade.redeem',{seller:'npc_hw_shendu',contract:'debt_loan_r8-pawn'},'r8-redeem');
+  }
+  assert.equal((await engine.previewAction(before,input)).receipt.status,'preview');
+  const reduced=await engine.reduce(before,input),receipt=reduced.result.receipt;
+  return {before,document:applyPatches(before,reduced.patches),receipt,actual:{committed:receipt.status==='committed'},setupUnmet:[]};
+ }
  if(die)for(let n=0;;n++){
   const candidate=`a3-r8:${id}:${n}`;
   if(createHash('sha256').update(`${candidate}:a3-score-A3V2-${id}:d20`).digest().readUInt32LE(0)%20+1===die){document.randomSeed=candidate;break;}
@@ -70,7 +99,7 @@ test('R8: derived experience stays visible with its native award evidence, never
  }
 });
 
-test.todo('R8: native summon dismissal reports its actual contract termination and disappearance〔前提待真实动作：产生规范维持债权解离回执和真实 pledged holding 的赎回关闭回执；归 A3 生产者卡〕',async()=>{
+test('R8: native summon dismissal reports its actual contract termination and disappearance',async()=>{
  const r=await run('073'),cancel=r.receipt.applied.find(e=>e.op==='obligation.cancel'),gone=r.receipt.applied.find(e=>e.op==='transition');
  assert.equal(r.actual.committed,true);assert.equal(cancel.id,r.receipt.legacy.obligation);
  assert.equal(cancel.reason,'peaceful_dismissal');assert.equal(cancel.result.before.endedAt,undefined);
@@ -84,9 +113,9 @@ test.todo('R8: native summon dismissal reports its actual contract termination a
  assert.deepEqual(auditLedger(r.document.ledger),[]);
 });
 
-test.todo('R8: native redemption includes the closed pledge, while repair keeps its declared fee separate〔前提待真实动作：产生规范维持债权解离回执和真实 pledged holding 的赎回关闭回执；归 A3 生产者卡〕',async()=>{
+test('R8: native redemption includes the closed pledge, while repair keeps its declared fee separate',async()=>{
  const redemption=await run('037'),close=redemption.receipt.applied.find(e=>e.op==='holding.close'&&e.holdingKind==='pledged'&&e.result.before?.until===undefined);
- // Effects are stamped at the act's start; the snapshot redemption then takes its native 5 minutes (A3D-ding2).
+ // Effects are stamped at the act's start; real redemption takes its native 5 minutes.
  assert.ok(close);assert.equal(close.result.after.until,redemption.before.state.minute);assert.equal(redemption.document.state.minute,redemption.before.state.minute+redemption.receipt.cost.time);assert.equal(redemption.receipt.cost.time,5);
  assert.equal(close.holder,redemption.receipt.legacy.debt);
  assert.equal(redemption.document.holdings.rows[close.holding].until,close.result.after.until);

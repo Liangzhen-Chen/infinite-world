@@ -8,7 +8,7 @@ import { servantCarryWater,environmentFeatures } from './environment.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import{effectiveProficiency}from'./professions.mjs';
 import {obligationRow,obligationView} from './obligation-state.mjs';
-import {closeObligation,endSummonUpkeep} from './obligation-runtime.mjs';
+import {closeObligation,endSummonUpkeep,openSummonUpkeep} from './obligation-runtime.mjs';
 
 export const summonTemplates=Object.freeze({
  dust_servant:{tasks:['clean'],maximumPower:100,maximumDuration:30,upkeepMp:1,upkeepMinutes:5,work:true},
@@ -96,8 +96,12 @@ export function applySummon(d, prepared, eventId) {
         ...(template.tasks.includes('guard')?{guardReserve:reserve}:{}) });
     d.set(['state', 'records', key], { category: 'summon_contract', owner: 'player', effect: eventId,
         spell: catalog.id, started: now, expires: now + catalog.duration, status: '履行中', paidUpkeep: 0, terms });
+    // Old recorded casts keep their projection; new casts and their replays
+    // create the same single upkeep claim without repeating the spell cost.
+    const upkeep=!this.replaying||this.replayResult?.summonUpkeepVersion===1
+      ?openSummonUpkeep(d,this,{summon:eventId,eventId}):null;
     const work=template.work?applySummonWork.call(this,d,d.get('state','effects',eventId),eventId):{};
-    return { summon: eventId, contract: key, expires: now + catalog.duration, terms,...work };
+    return { summon: eventId, contract: key, expires: now + catalog.duration, terms,...work,...(upkeep?{obligation:upkeep.id,summonUpkeepVersion:1}:{}) };
 }
 
 function end(d, id, effect, status, minute) {

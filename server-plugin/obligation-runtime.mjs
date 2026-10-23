@@ -357,6 +357,21 @@ export function adoptLegacyObligation(d,e,id){
         const next=snapshotObligationTerms({...row,kind:row.kind??'compensation',legacyRecord:id});write(d,e,next);return next;});
 }
 
+// 13 §13.5: summons owe the catalog's mana upkeep, performed by the summon
+// clock rather than the monetary settlement adapter. No opening principal.
+export function openSummonUpkeep(d,e,{summon,eventId}){
+    const s=read(d,'state'),effect=s.effects?.[summon],contract=effect&&s.records?.[effect.contract];
+    if(effect?.kind!=='summon'||contract?.category!=='summon_contract'||contract.effect!==summon||contract.owner!==effect.owner||contract.upkeepObligation)throw Error('Summon upkeep requires its actual new contract');
+    const id=`upkeep:${effect.contract}`;
+    return receipt(d,e,id,eventId,'obligation_opened',{summon,actor:effect.owner},()=>{
+        if(obligationRow(read(d,'state'),id))throw Error('Summon upkeep already exists');
+        write(d,e,snapshotObligationTerms({id,kind:'upkeep',runtimeVersion:1,debtor:effect.owner,creditor:summon,contract:effect.contract,
+            amount:0,paid:0,createdAt:s.minute,status:'pending',sourceEvent:eventId,events:[],
+            terms:{...effect.terms,active:true,peacefulDismissal:true,overdue:false,thirdPartyRights:false}}));
+        d.set(['state','records',effect.contract,'upkeepObligation'],id);
+        return {id,transferred:0,remaining:0,evidence:eventId};
+    });
+}
 // The summon adapter, including natural expiry, ends only its linked future upkeep.
 export function endSummonUpkeep(d,e,{id,summon,minute,reason}){
     const row=requireRow(d,id),s=read(d,'state'),effect=s.effects?.[summon],contract=effect&&s.records?.[effect.contract];
