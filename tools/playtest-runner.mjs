@@ -5,7 +5,7 @@ import {once}from'node:events';
 import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {assembleMessages,isOutOfCharacter}from'../extension/prompt.mjs';
-import {toolDefinitions,readOnlyTools}from'../extension/tools.mjs';
+import {toolDefinitions,readOnlyTools,modelActionCatalog}from'../extension/tools.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
 import {parseTurn,toolResultWithClock}from'../extension/turn.mjs';
 import {visibleReply}from'../extension/message-view.mjs';
@@ -101,7 +101,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                         if(tool==='world_read')result=readStateSection(view.document.state,args.section,args.npc);
                         else if(tool==='world_search')result=await api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
                         else if(tool==='world_catalog')result=await api('catalog',{...args,campaignId});
-                        else if(tool==='world_actions')result=await api('actions',{target:args.target,query:args.query,campaignId,limit:12});
+                        else if(tool==='world_actions')result=modelActionCatalog(await api('actions',{target:args.target,query:args.query,campaignId,limit:12}));
                         else{
                             const eventId=`${anchor}-${report.calls.length}`;
                             const request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};

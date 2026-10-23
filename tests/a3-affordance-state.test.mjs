@@ -57,7 +57,12 @@ test('entity card: current door state, registered tool choice and model projecti
  assert.equal(card.id,f.door);assert.equal(card.state.locked,true);assert.equal(card.state.material,'wood');
  const unlock=card.relatedActions.find(row=>row.id==='core:environment.unlock');
  assert.ok(unlock);assert.equal(unlock.fill.target,f.door);assert.equal(unlock.tool,'item_iron_wire');
- assert.deepEqual(modelActionCatalog(menu(f)).target,card);
+ // A3CP bounds the model projection; the player card still carries every
+ // source/tool/permission above. The current identity and state must survive.
+ const projected=modelActionCatalog(menu(f)).target;
+ assert.equal(projected.id,card.id);assert.deepEqual(projected.state,card.state);
+ assert.ok(projected.primitives.some(row=>row.op==='fact.set'&&row.kind==='condition'));
+ assert.ok(projected.relatedActions.every(row=>Object.keys(row).sort().join(',')==='id,label,required'));
  assert.deepEqual(f.document,before);
  // The actual registered action owns the check; inspect reflects its receipt.
  const result=await act(f,unlock.id,{...unlock.fill,tool:'item_staff'},criticalId(f.document,'inspect-unlock'));
@@ -224,7 +229,11 @@ test('existing HTTP actions/propose/execute transport carries the entity card th
  const created=await server.api('create',{}),campaignId=created.reference.campaignId;
  const initial=await server.api('read',{campaignId}),query=await server.api('actions',{campaignId,target:'player'});
  const speech=query.target.primitives.find(row=>row.effect.op==='emit'&&row.effect.verb==='tell');assert.ok(speech);
- assert.deepEqual(modelActionCatalog(query).target,query.target);
+ // The compact model card keeps the same live state and the usable speech
+ // class; the full card remains the submission source for the native preview.
+ const projected=modelActionCatalog(query).target;
+ assert.equal(projected.id,query.target.id);assert.deepEqual(projected.state,query.target.state);
+ assert.ok(projected.primitives.some(row=>row.op==='emit'&&row.verb==='tell'&&row.available));
  const input=builderToolCall('open:proposal',{intent:'对自己说明先查再提',means:speech.means,effects:[{...speech.effect,payload:{text:'先查再提'}}]});
  const preview=await server.api('propose',{campaignId,...input,eventId:'inspect-http'});
  assert.equal(preview.receipt.status,'preview');
