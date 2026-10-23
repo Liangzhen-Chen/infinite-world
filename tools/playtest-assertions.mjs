@@ -1,5 +1,5 @@
 import {isDeepStrictEqual}from'node:util';
-import {resolveToolCall}from'../extension/tools.mjs';
+import {resolvePlaytestCall}from'./playtest-call.mjs';
 export const at=(object,path)=>String(path).split('.').reduce((value,key)=>value?.[key],object);
 const matches=(row,where)=>Object.entries(where??{}).every(([key,value])=>isDeepStrictEqual(at(row,key),value));
 export function evaluateAssertions(assertions,{before,after,calls,reply,scene,historyWindow}){
@@ -42,7 +42,7 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
                 pass=Number.isSafeInteger(from)&&Number.isSafeInteger(to)&&to>from&&records.length>=(rule.min??1)&&records.length<=(rule.max??Infinity);break;
             }
             case'calls':actual=calls.filter(call=>{
-                let routed;try{routed=resolveToolCall(call.tool,call.args);}catch{return false;}
+                let routed;try{routed=resolvePlaytestCall(call.tool,call.args);}catch{return false;}
                 const matched=call.tool===rule.tool?matches(call.args,rule.args):routed.tool===rule.tool&&matches(routed.args,rule.args);
                 return matched&&(!rule.success||call.result?.ok===true);
             }).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;

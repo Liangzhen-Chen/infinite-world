@@ -10,6 +10,42 @@ import path from'node:path';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import {openPlaytestBudget,openPlaytestTape}from'../tools/playtest-budget.mjs';
 
+test('调用断言按动作目录识别 world_act，保留原始入口、参数和执行成功要求',()=>{
+    const empty={state:{minute:0}};
+    const cases=[
+        ['core:craft.manufacture',{recipe:'recipe_wooden_pegs'},'world_craft',{operation:'manufacture',recipe:'recipe_wooden_pegs'}],
+        ['core:craft.repair',{item:'item_staff',repairPlan:'repair_staff_trim'},'world_craft',{operation:'repair',item:'item_staff'}],
+        ['core:learn',{entity:'skill_literacy',kind:'skill',source:'npc_hw_luqing'},'world_learn',{entity:'skill_literacy'}],
+        ['core:practice',{skill:'识字'},'world_practice',{skill:'识字'}],
+        ['core:quest.publish',{publisher:'npc_hw_linsui',personal:true,reward:20,objective:{type:'deliver',item:'item_oats',quantity:10}},'world_quest',{operation:'publish',reward:20,'objective.quantity':10}],
+        ['core:quest.accept',{quest:'quest_example'},'world_quest',{operation:'accept',quest:'quest_example'}],
+    ];
+    for(const [action,slots,tool,args]of cases){
+        const call={tool:'world_act',args:{action,slots},result:{ok:true}};
+        const rule={kind:'calls',tool,args,success:true,min:1,max:1};
+        const check=(rule,calls=[call])=>evaluateAssertions([rule],{before:empty,after:empty,calls,reply:''})[0];
+        assert.equal(check(rule).pass,true,action);
+        assert.equal(check({...rule,tool:'world_act',args:{action,slots}}).pass,true,'原始入口仍可断言');
+        assert.equal(check({...rule,args:{...args,entity:'wrong_entity'}}).pass,false,'译后参数仍严格核对');
+        assert.equal(check(rule,[{...call,result:{ok:false}}]).pass,false,'拒绝不能计为成功调用');
+        assert.equal(check(rule,[{...call,args:{action:'core:missing',slots}}]).pass,false,'未登记动作不能冒充调用');
+        assert.equal(check({...rule,min:0,max:0}).pass,false,'禁止调用的上限仍生效');
+    }
+    const read={kind:'calls',tool:'world_actions',args:{query:'修理'},success:true};
+    assert.equal(evaluateAssertions([read],{before:empty,after:empty,calls:[{tool:'world_actions',args:{query:'修理'},result:{ok:true}}],reply:''})[0].pass,true);
+});
+
+test('选工具指标与调用断言共用 world_act 翻译且继续识别错参数和失败',()=>{
+    const rule={kind:'calls',tool:'world_craft',args:{operation:'manufacture',recipe:'recipe_wooden_pegs'},success:true};
+    const scenario={id:'act-metrics',turns:[{input:'制作木楔',expectedTools:['world_craft'],assertions:[rule]}]};
+    const call={tool:'world_act',args:{action:'core:craft.manufacture',slots:{recipe:'recipe_wooden_pegs'}},result:{ok:true}};
+    const measure=call=>toolSelectionMetrics([{id:scenario.id,turns:[{index:0,input:scenario.turns[0].input,calls:[call]}]}],[scenario]);
+    assert.equal(measure(call).zeroSelectionErrors,true);
+    assert.equal(measure({...call,args:{...call.args,slots:{recipe:'recipe_wrong'}}}).parameterWrong,1);
+    assert.equal(measure({...call,result:{ok:false}}).rows[0].rejected,1);
+    assert.equal(measure({...call,args:{action:'core:missing',slots:{}}}).zeroSelectionErrors,false);
+});
+
 test('选工具实测逐行动列出类别、参数、目标及漏调用；空样本与全部漏调不能报零风险',()=>{
     const expected={kind:'calls',tool:'world_trade',args:{seller:'林穗',days:1},min:1};
     const scenario={id:'metrics',turns:[
