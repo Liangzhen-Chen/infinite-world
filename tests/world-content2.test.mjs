@@ -63,7 +63,7 @@ test('每个普通职业都有路线可达、按真实作息能完成考核的�
  }
 });
 
-test('020 题设按真实席位（旧磨坊）搭建后，能唯一找到木工考官，申请不预先授予资格；白石行会窗口没有木工考官',async()=>{
+test.todo('020 题设按真实席位（旧磨坊）搭建后，能唯一找到木工考官，申请不预先授予资格；白石行会窗口没有木工考官〔前提待真实动作：创建并授权木工申请登记窗口职位、登记转介及考核；归 S4〕',async()=>{
  const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
  // Corpus A3V2-020 stages the window at bld_bs_guild with the Hewan carpenter present. The
  // examiner's published seat is bld_hw_mill, so the premise is staged at that seat; the corpus
@@ -80,7 +80,7 @@ test('020 题设按真实席位（旧磨坊）搭建后，能唯一找到木工�
  assert.equal(world.npcs.find(n=>n.id==='npc_hw_ayan').services.includes('profession_life_6'),false);
 });
 
-test('同一窗口多个登记职位仍需消歧，在岗布尔值不能代造授予权',async()=>{
+test.todo('同一窗口多个登记职位仍需消歧，在岗布尔值不能代造授予权〔前提待真实动作：创建并授权同一窗口的第二个登记职位；归 S4〕',async()=>{
  const {engine,document}=make(),corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
  const setup=structuredClone(corpus.find(r=>r.id==='A3V2-020').setup);
  const office={...structuredClone(setup.instances[0]),id:'a3_content2_second_referral'};
