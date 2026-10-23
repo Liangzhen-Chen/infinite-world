@@ -110,6 +110,11 @@
    "file": "world/actions (open:ask_request)",
    "token": "最近怎么样",
    "reason": "问候询问的通用口语，指向询问动作，不含场景。"
+  },
+  {
+   "file": "server-plugin/action-limits.mjs",
+   "token": "NPC立场",
+   "reason": "难度回执里“该类抗性无数据”的分项说明标签（与 NPC灵智/意志、守卫警觉 同族），只出现在给玩家看的理由文字里，不参与路由、匹配或任何判断；与题面同词属巧合，不是按题面原句写的特判。"
   }
  ]
 }
