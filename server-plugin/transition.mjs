@@ -720,6 +720,7 @@ function accountProjection(d,e,key){
     if(a.resource==='coin_river'){
         if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
         if(estate)return ['state','records',`protocol_assets:${a.owner}`,a.purpose==='purse'?'coins':'funds',...(a.purpose==='purse'?[]:[a.purpose])];
+        if(a.purpose==='fund'&&Object.hasOwn(s.workshopFunds??{},a.owner))return ['state','workshopFunds',a.owner];
         if(a.purpose==='purse')return a.owner==='player'?['state','player','coins']:s.npcs?.[a.owner]?['state','npcs',a.owner,'coins']:s.creatures?.[a.owner]?['state','creatures',a.owner,'coins']:null;
         if(a.purpose==='vault'&&s.records?.[a.owner]?.category==='bank')return ['state','records',a.owner,'coins'];
         if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
