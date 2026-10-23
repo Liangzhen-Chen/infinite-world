@@ -89,9 +89,13 @@ async function requirePilot(entries){
 }
 export async function verifyPublished(items=undefined){
  items??=await readItems();
- const entries=await entriesFor(items),approved=await readApprovedContent(reviewRoot,entries,{revision,contextFor:ctxFor});
+ // This receipt predates the later capacity field. Verify its exact historical
+ // projection so the newer A3CAP receipt can be checked first and this gate
+ // still protects the original tags publication and its tamper evidence.
+ const historical=items.map(row=>{const copy=structuredClone(row);delete copy.capacityMl;return copy;});
+ const entries=await entriesFor(historical),approved=await readApprovedContent(reviewRoot,entries,{revision,contextFor:ctxFor});
  assert.equal(approved.length,entries.length,'L1/L2未全批通过');
- for(const draft of approved)assert.deepEqual(byId(items,draft.id),draft.row,`${draft.id} 正式目录与审批回执不符`);
+ for(const draft of approved){const current=structuredClone(byId(items,draft.id));delete current.capacityMl;assert.deepEqual(current,draft.row,`${draft.id} 正式目录与历史审批回执不符`);}
  return {published:approved.length};
 }
 // Preserve the mixed historical JSON layout: only the tags field in approved
