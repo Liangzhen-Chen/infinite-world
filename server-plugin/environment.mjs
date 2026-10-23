@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {reject} from './action-rejection.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet,setLocation,aliveHoldings,locationOf} from './holdings.mjs';
-import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater} from './items.mjs';
+import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater,useTool} from './items.mjs';
 import {authority} from './action-authority.mjs';
 import {consent} from './action-consent.mjs';
 import {moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
@@ -67,7 +67,7 @@ function interactPhysicalItem(d,engine,args,eventId){
  }
  if(!record)return null;
  const facts=physicalItem(d,engine,id),here=physicalLocation(d,engine,id)===d.get('state','location');
- if(!here)throw Error('Physical item is not present');
+ if(!here)reject('E-ACTION-PRESENCE','物品不在眼前',{missing:['同地点的物品'],repair:['先到物品所在地点']});
  if(operation==='inspect'){
   const purse=d.get('state','records',`purse:${id}`),contents=d.get('state','records',`contents:${id}`);
   return {id,name:facts.name,physical:structuredClone(record.facts),worn:Object.entries(wornItems(d,engine,'player')).find(([,v])=>v===id)?.[0]??null,
@@ -75,23 +75,23 @@ function interactPhysicalItem(d,engine,args,eventId){
    ...(contents?{contents:contents.entries.map(e=>({quantity:e.quantity,drinkable:e.drinkable,...(e.identityKnownToPlayer?{resource:e.resource}:{identity:'unknown'})}))}:{}),units:containerUnits(d,id).map(u=>({instance:u.id,item:u.item})),actionScope:{kind:'instant',instantaneous:true}};
  }
  if(!['wear','unwear','disarm','unlock','tie','drink_contents','take_contents','transfer_purse','douse_fire'].includes(operation))return null;
- if(args.actor!==undefined||args.success!==undefined||args.difficulty!==undefined)throw Error('Physical action cannot supply actor or outcome');
+ if(args.actor!==undefined||args.success!==undefined||args.difficulty!==undefined)reject('E-ACTION-PROPOSAL','行动结果须由实际能力与检定决定',{missing:['只描述操作的提案'],repair:['去掉预设结果，尝试操作']});
  let mutationAuthority=authority({engine,document:d.document},'player','fact.set',id);
  if(!mutationAuthority.allowed)mutationAuthority=authority({engine,document:d.document},'player',operation,id);
- if(!mutationAuthority.allowed)throw Error(mutationAuthority.reason??'Physical item authority required');
+ if(!mutationAuthority.allowed)reject('E-ACTION-AUTHORITY',mutationAuthority.reason??'物品需要操作权限',{missing:['该物品的操作权限'],repair:['取得所有者许可后再试']});
  if(operation==='wear'||operation==='unwear')return {id,slots:equipPhysicalItem(d,engine,'player',id,{slot:args.slot,remove:operation==='unwear',eventId})};
  const p=locationOf(d,id),contact=p?.mode==='carried'&&p.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
- if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)throw Error('Physical contact distance is not established');
+ if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)reject('E-ACTION-REACH','尚不能看清并触及物品',{missing:['视线及接触距离'],repair:['移到能看清物品的近处']});
  if(operation==='drink_contents')return {id,...consumeLiquid(d,engine,id,args.resource,args.quantity??1,{eventId})};
  if(operation==='take_contents')return {id,...takeContainerUnit(d,engine,id,args.instance,'player',eventId)};
  if(operation==='transfer_purse'){
   const from=purseAccount(d,engine,id),to=args.to;
-  if(facts.access!=='loose_open')throw Error('Purse is not open for access');
-  if(!authority({engine,document:d.document},'player','transfer',from).allowed)throw Error('The original cash account requires its own authority');
-  if(to!=='player'&&!d.get('state','npcs',to)||physicalLocation(d,engine,to)!==d.get('state','location'))throw Error('Cash recipient is not present');
+  if(facts.access!=='loose_open')reject('E-ACTION-ACCESS','钱袋尚未敞开',{missing:['可取用的钱袋开口'],repair:['先合法打开钱袋']});
+  if(!authority({engine,document:d.document},'player','transfer',from).allowed)reject('E-ACTION-AUTHORITY','无权取用这笔钱',{missing:['原钱款的转移权限'],repair:['取得钱款所有者授权']});
+  if(to!=='player'&&!d.get('state','npcs',to)||physicalLocation(d,engine,to)!==d.get('state','location'))reject('E-ACTION-PRESENCE','收款人不在场',{missing:['在场收款人'],repair:['与收款人会合后再交付']});
   integer(args.coins,1,100000,'现金数量');
   const destination=partyAccount(engine,d.document.state,to),owner=d.get('state','records',`purse:${id}`,'actor');
-  if(from===destination)throw Error('Cash transfer endpoints must differ');
+  if(from===destination)reject('E-ACTION-TRANSFER','钱款已经在该账户中',{missing:['不同的收款账户'],repair:['选择实际需要交付的另一位收款人']});
   moveCoins(d,{from,to:destination,amount:args.coins,writer:'environment',eventId});
   mirrorPartyCoins(d,engine,owner,-args.coins,eventId,'environment');
   mirrorPartyCoins(d,engine,to,args.coins,eventId,'environment');
@@ -99,21 +99,20 @@ function interactPhysicalItem(d,engine,args,eventId){
  }
  if(operation==='tie'){
   const branch=physicalItem(d,engine,args.destination);
-  if(!facts.attachedLaces||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))throw Error('Tying requires attached laces and a reachable physical support');
+  if(!facts.attachedLaces||branch.reachable!==true||physicalLocation(d,engine,args.destination)!==d.get('state','location'))reject('E-ACTION-TIE','缺少能系住的带子或触手可及的支撑物',{missing:['附着带子与可触及支撑物'],repair:['准备带子，并移到可用支撑物旁']});
   const allowed=authority({engine,document:d.document},'player','fact.set',args.destination);
-  if(!allowed.allowed)throw Error('Support authority required');
+  if(!allowed.allowed)reject('E-ACTION-AUTHORITY','尚无权使用该支撑物',{missing:['支撑物使用权限'],repair:['先取得所有者许可']});
   setLocation(d,{entity:id,at:args.destination,mode:'container',writer:'environment',engine,source:eventId});return {id,attachedTo:args.destination};
  }
  if(operation==='douse_fire'){
   const water=liquidItem(engine,'water');
-  if(facts.fireIntensity!==1||!water||engine.quantity(d,'player',water)<1)throw Error('This dousing action requires a microfire and one existing water unit; larger fires require the thermal model');
+  if(facts.fireIntensity!==1||!water||engine.quantity(d,'player',water)<1)reject('E-ACTION-DOUSE','这点水只能扑灭微小火苗，较大的火势需按热量处理',{missing:['微小火苗及一份实际水量'],repair:['补充水量；较大火势可请人协助或用控水手段灭火']});
   engine.itemDelta(d,'player',water,-1,{flow:'sink:consume',purpose:'douse',writer:'environment',eventId});
   writePhysicalItem(d,engine,id,{fireIntensity:0},{eventId});engine.advance(d,1,eventId);return {id,fireIntensity:0,minutes:1};
  }
  const mechanism=mechanismRule(engine,facts.mechanism),field=mechanism?.state;
- if(!mechanism||mechanism.operation!==operation||facts[field]!==true||mechanism.requiresIdentified&&facts.identified!==true)throw Error('No identified supported mechanism');
- const tool=mechanism.tool;
- if(engine.quantity(d,'player',tool)<1)throw Error('Mechanism requires its actual tool');
+ if(!mechanism||mechanism.operation!==operation||facts[field]!==true||mechanism.requiresIdentified&&facts.identified!==true)reject('E-ACTION-MECHANISM','尚未查明可操作的机关，或机关已经解除',{missing:['查明且尚未解除的对应机关'],repair:['先观察辨认机关结构，再选择相应操作']});
+ const tool=useTool(d,engine,mechanism.requiresUse);
  const rules=engine.world.openActionRules?.generic;
  if(!rules)throw Error('Missing native physical work rules');
  const check=engine.check(d,{attribute:'敏捷',difficulty:rules.physicalDifficulty,tools:[tool]},eventId);
@@ -131,14 +130,14 @@ export function physicalSiteAction(d,engine,tool,args,eventId){
  const matches=nodes.filter(r=>{
   const item=physicalItem(d,engine,r.id);return [r.id,item.name,...item.aliases??[]].includes(args.target);
  });
- if(matches.length>1)throw Error('Ambiguous physical mechanism target');
+ if(matches.length>1)reject('E-ACTION-TARGET','附近有多个同名机关',{missing:['明确的机关目标'],repair:['观察后指定具体机关']});
  if(!matches.length)return null;
  initialKnowledgeAction(d,engine,tool,{...args,target:matches[0].id});
  return interactPhysicalItem(d,engine,{...args,operation:'disarm',target:matches[0].id},eventId);
 }
 function feature(engine,name,location,document){
     const matches=environmentFeatures(engine,document).filter(row=>row.id===name||row.location===location&&[row.name,...row.aliases??[]].some(label=>normalize(label)===normalize(name??'')));
-    if(matches.length!==1)throw new Error(matches.length?'环境对象称呼有歧义':'环境对象未登记');return matches[0];
+    if(matches.length!==1)reject('E-ACTION-TARGET',matches.length?'环境对象称呼有歧义':'环境对象未登记',{missing:['已辨认的唯一环境对象'],repair:['先观察附近环境，指定具体对象']});return matches[0];
 }
 const stateOf=(d,row)=>{
     const record=d.get('state','records',key(row.id));

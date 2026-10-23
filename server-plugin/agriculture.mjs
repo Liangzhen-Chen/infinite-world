@@ -1,5 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
-import {heldUnit,wearItem} from './items.mjs';
+import {wearItem,useTool} from './items.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {BOOKED} from './stock.mjs';
 import {declareLedgerWriter,reviseLots} from './ledger.mjs';
@@ -444,12 +444,11 @@ function privateFarmAction(d,engine,p,args,eventId){
     const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu,calibrated=areaMu!==undefined;
     const labor=engine.world.primitiveTables?.yields?.rows?.find(r=>r.selector==='field:wheat'&&r.laborSow!==undefined);
     const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
-    const fieldRule=domainRules(engine).privateField,tool=calibrated?(args.operation==='private_sow'?fieldRule?.sowTool:fieldRule?.harvestTool):null;
+    const fieldRule=domainRules(engine).privateField;
+    const tool=useTool(d,engine,args.operation==='private_sow'?fieldRule?.sowRequiresUse:fieldRule?.harvestRequiresUse);
     if(calibrated){
         int(areaMu,1,10000);
         if(!labor||!Number.isSafeInteger(workday)||!fieldRule||!tool)throw preconditionFailure('私田劳动数值未登记');
-        const held=heldUnit(d,engine,'player',tool);
-        if(engine.quantity(d,'player',tool)<1||(held?.durability??0)<=0)throw preconditionFailure('需要实际完好的田间工具');
     }
     const laborMinutes=calibrated?Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday):engine.rules.agriculture.workMinutes;
     const started=d.get('state','minute');

@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {reject} from './action-rejection.mjs';
 import {createHash}from'node:crypto';
 import {bag,bookStock,moveStock,BOOKED,registerLegacyStock,placed} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -6,7 +7,7 @@ import {declareHoldingWriter,holdingSet,updateEntity,locationOf,setLocation,clea
 import {authority} from './action-authority.mjs';
 import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
-import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary,domainRules} from './domain-rules.mjs';
+import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 declareLedgerWriter('items',{sinks:['sink:consume']});
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw preconditionFailure('物品数量无效');return value;};
@@ -22,6 +23,25 @@ export function wearItem(d,engine,owner,item,amount){
     if(selected.instance)holdingSet(d,null,['state','itemInstances',selected.instance,'durability'],durability,'items');
     if(!selected.instance||engine.quantity(d,owner,item)===1)d.set([...engine.bagPath(owner),item,'durability'],durability);
     return durability;
+}
+// Stable choice: catalogue ID order, then heldUnit's first intact owned unit.
+// Explicit stored tags override the catalogue, including an empty tag list.
+// Untagged legacy items have unknown uses; names and IDs never supply abilities.
+export function useTool(d,engine,requiresUse){
+ if(typeof requiresUse!=='string'||!requiresUse)throw Error('Missing tool use requirement');
+ let unknown=false;
+ for(const item of Object.keys(d.get(...engine.bagPath('player'))??{}).sort()){
+  if(engine.quantity(d,'player',item)<1)continue;
+  const held=heldUnit(d,engine,'player',item),facts=physicalItem(d,engine,held?.instance??item);
+  if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,'player',item))continue;
+  const tags=held?.tags??facts.tags;
+  if(!Array.isArray(tags)){unknown=true;continue;}
+  if(tags.includes(requiresUse)&&(held?.durability??facts.durability??0)>0&&(held?.condition??facts.condition)!==0)return item;
+ }
+ reject('E-ACTION-TOOL',`需要完好且具备 ${requiresUse} 用途的工具${unknown?'；部分旧物品用途未知':''}`,{
+  missing:[`实际持有、耐久大于零且标有 ${requiresUse} 的工具`],
+  repair:[`取得具备 ${requiresUse} 用途的完好工具后再试`],
+ });
 }
 // S1b: books = 对方账户（stock.bookStock）；成对写入中已记过账的一边传 BOOKED。
 export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books}={}){
@@ -70,7 +90,7 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     const dispositions=disposition?chosen.flatMap(unit=>aliveHoldings(d,{kind:'owns',subject:unit}).map(row=>{
         if(!eventId)throw Error('Sale disposition requires its native event');
         const permission=authority({...authorityContext,engine,document:d.document},from,'holding.transfer',unit,{holding:row,kind:'owns',disposition:true});
-        if(!permission.allowed)throw Error(permission.reason);
+        if(!permission.allowed)reject('E-ACTION-AUTHORITY',permission.reason,{missing:['物品处置权限'],repair:['取得所有者有效授权后再交易']});
         return {holding:row.id,subject:unit,from:row.holder,to,tags:permission.tags??[],actedAs:permission.actedAs??null};
     })):[];
     const moved=changeItems(d,engine,from,item,-quantity,{preserve:true,selection:chosen,books:BOOKED});
@@ -199,7 +219,7 @@ export function assertEdibleItem(d,engine,actor,item,units=null){
  let facts;
  for(const unit of chosen){
   facts=physicalItem(d,engine,unit);
-  if(facts.contaminated===true||facts.toxic===true||facts.condition===0)throw Error('Food or drink is contaminated, toxic or spoiled');
+  if(facts.contaminated===true||facts.toxic===true||facts.condition===0)reject('E-ACTION-FOOD','食物或饮料受到污染、有毒或腐坏',{missing:['安全可食用的食物或饮料'],repair:['换用安全食物；可处理的污染请先净化并确认安全']});
  }
  return facts;
 }
@@ -216,12 +236,12 @@ export function wornItems(d,engine,actor){
  }));
 }
 export function equipPhysicalItem(d,engine,actor,id,{slot='body',remove=false,eventId=null}={}){
- if(!['body','head','feet','hands','waist','back'].includes(slot))throw Error('Invalid wear slot');
+ if(!['body','head','feet','hands','waist','back'].includes(slot))reject('E-ACTION-WEAR','没有这样的穿戴部位',{missing:['可穿戴部位'],repair:['选择身体、头、脚、手、腰或背部']});
  const p=locationOf(d,id),facts=physicalItem(d,engine,id),unit=d.get('state','itemInstances',id);
- if(p?.at!==actor||p.mode!=='carried'||unit&&(unit.owner!==actor||unit.status!=='持有'))throw Error('Only a carried item can be worn');
- if(!remove&&(facts.wearable===false||facts.wearable!==true&&!facts.tags?.some(t=>['clothing','armor','footwear'].includes(t))||facts.condition===0||facts.durability===0))throw Error('This item cannot be worn');
+ if(p?.at!==actor||p.mode!=='carried'||unit&&(unit.owner!==actor||unit.status!=='持有'))reject('E-ACTION-WEAR','只能穿戴自己携带的物品',{missing:['实际携带的物品'],repair:['先取得并携带该物品']});
+ if(!remove&&(facts.wearable===false||facts.wearable!==true&&!facts.tags?.some(t=>['clothing','armor','footwear'].includes(t))||facts.condition===0||facts.durability===0))reject('E-ACTION-WEAR','这件物品不具备可用的穿戴结构',{missing:['完好可穿戴的物品'],repair:['修好物品或换用衣物、护甲、鞋履']});
  const slots=wornItems(d,engine,actor);
- if(!remove&&slots[slot]&&slots[slot]!==id)throw Error('Wear slot is occupied');
+ if(!remove&&slots[slot]&&slots[slot]!==id)reject('E-ACTION-WEAR','该部位已经穿戴了其他物品',{missing:['空出的穿戴部位'],repair:['先卸下该部位原有物品']});
  clearWornItem(d,actor,id);
  const next={...d.get('state','records',`worn:${actor}`)?.slots};
  if(!remove)next[slot]=id;
@@ -259,9 +279,9 @@ export function writeLiquidContents(d,engine,container,entries){
  return rows;
 }
 export function consumeLiquid(d,engine,container,resource,quantity,{eventId=null}={}){
- if(!Number.isSafeInteger(quantity)||quantity<1)throw Error('Invalid liquid quantity');
+ if(!Number.isSafeInteger(quantity)||quantity<1)reject('E-ACTION-LIQUID','饮用量必须是实际可计量的正整数份',{missing:['有效的饮用份数'],repair:['按容器里实际存在的份数取用']});
  const key=`contents:${container}`,row=d.get('state','records',key),entry=row?.entries.find(e=>e.resource===resource);
- if(!entry||!entry.drinkable||entry.quantity<quantity)throw Error('No such drinkable quantity');
+ if(!entry||!entry.drinkable||entry.quantity<quantity)reject('E-ACTION-LIQUID','容器里没有足量可饮用的液体',{missing:['足量可饮用液体'],repair:['检查容器内容，补充可饮用液体或减少饮用量']});
  moveStock(d,{from:accountKey(container,resource,'contents'),to:accountKey('sink:consume',resource,'drink'),amount:quantity,writer:'items',eventId});
  holdingSet(d,engine,['state','records',key],{...row,entries:row.entries.map(e=>e===entry?{...e,quantity:e.quantity-quantity}:e)},'items');
  return {resource,quantity,nutrition:null};
@@ -271,12 +291,12 @@ export function containerUnits(d,container){
 }
 export function takeContainerUnit(d,engine,container,id,actor,eventId){
  const unit=containerUnits(d,container).find(u=>u.id===id);
- if(!unit||physicalLocation(d,engine,container)!==physicalLocation(d,engine,actor))throw Error('Original container unit is not accessible');
+ if(!unit||physicalLocation(d,engine,container)!==physicalLocation(d,engine,actor))reject('E-ACTION-CONTAINER','取不到该容器里的物品',{missing:['同地点可取出的实际物品'],repair:['靠近容器并确认物品仍在其中']});
  const {container:oldContainer,...next}=unit;
  const binding=d.get('state','records',`liquid_binding:${container}`),feature=d.get('state','records',`physical_feature:${container}`);
  if(binding?.units.includes(id)){
   const before=feature?.state,amount=binding.unitMl;
-  if(!before||before.waterMl<amount)throw Error('The bound water portion has already been used');
+  if(!before||before.waterMl<amount)reject('E-ACTION-WATER','这份容器水已被用掉',{missing:['尚未消耗的水'],repair:['补充实际水量后再取用']});
   const fraction=amount/before.waterMl,state={...before,waterMl:before.waterMl-amount};
   next.liquid={waterMl:amount,turbidity:before.turbidity,pathogenRisk:before.pathogenRisk,odor:before.odor};
   for(const field of ['saltMg','toxinUg']){next.liquid[field]=(before[field]??0)*fraction;state[field]=(before[field]??0)-next.liquid[field];}
@@ -352,9 +372,28 @@ export function registerPhysicalStock(d,engine,id,actor,quantity){
 }
 export function validatePhysicalAction(d,engine,tool,args){
  if(tool==='repair'){
-  let item=args.item;if(item)try{item=engine.resolve(item,'item');}catch{return;}
+  const item=args.item?engine.resolve(args.item,'item'):d.get('state','itemInstances',args.instance)?.item;
   const id=args.instance??d.get(...engine.bagPath('player'),item)?.instances?.[0]??item,facts=physicalItem(d,engine,id);
-  if(facts.damage?.kind!==undefined&&domainRules(engine).handRepair?.refusedDamageKinds?.includes(facts.damage.kind))throw Error('This repair does not restore a cracked vessel body');
-  if(handRepairRefused(engine,facts))throw Error('Hand-tool item repair cannot restore a stone city gate');
+  const plans=(engine.rules.repairs??[]).filter(row=>row.item===item),plan=args.repairPlan?plans.find(row=>row.id===args.repairPlan):plans.length===1?plans[0]:null;
+  if(handRepairRefused(engine,facts)){
+   const structural=facts.damage?.kind==='cracked_body';
+   reject('E-ACTION-REPAIR-WORK',`${facts.material??'材质未知'}物件${structural?'本体裂损':'规模为 '+facts.scale}，不能用随身物品的修整工序瞬间复原`,{
+    missing:[`${facts.material??'该材质'}的结构修复工具与补配材料`,`${structural?'裂损':'该规模'}工程的技能、工时及施工工序`],
+    repair:['请相应工匠现场勘查，准备支撑、补配材料及施工工具，再按工程工时修复；暂时避用或更换损坏部件'],
+   });
+  }
+  // Existing processes remain responsible for skill, actual tools/materials,
+  // wear and elapsed time. Without a process no amount of bare-hand work is invented.
+  if(!plan)reject('E-ACTION-REPAIR-PROCESS','尚无适用于该物件材质和损伤的修理工序',{
+   missing:[`${facts.material??'未知材质'}、${facts.damage?.kind??'当前损耗'}的工具、材料与工时工序`],
+   repair:['请工匠勘查材质与损伤并确定工序，或更换损坏部件'],
+  });
+  const definition=engine.byId.get(item);
+  // A process for the original catalogue item is not evidence that it also
+  // works after its material changes. Missing material facts stay unknown.
+  if(facts.material&&definition?.material!==facts.material&&!definition?.tags?.includes(facts.material))reject('E-ACTION-REPAIR-MATERIAL',`现有修理工序尚不能确认适用于 ${facts.material} 材质`,{
+   missing:[`${facts.material} 材质适用的修理工具、补配材料与工时依据`],
+   repair:['请相应材质的工匠勘查并确定工具与工序，或更换损坏部件'],
+  });
  }
 }
