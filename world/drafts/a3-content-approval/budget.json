@@ -1,12 +1,12 @@
 {
-  "spentYuan": 0.11189112000000001,
+  "spentYuan": 0.13146712,
   "reservedYuan": 0,
   "waveLimitYuan": 1,
   "note": "A3 收口修复补审：只补已写入世界文件的条目的 L1/L2/L4 回执；总上限 1 元。",
   "cards": {
     "A3FIX": {
       "limitYuan": 1,
-      "spentYuan": 0.11189112000000001,
+      "spentYuan": 0.13146712,
       "reservedYuan": 0,
       "maxRequests": 104
     }
@@ -1674,6 +1674,198 @@
         "cumulativeUpperYuan": 0.11189112000000001,
         "latencyMs": 1221.8615000000063,
         "timestamp": "2026-10-22T10:38:09.834Z"
+      }
+    },
+    "d87820a0-60cd-419c-8465-9fa8a04b4028": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_repair_apprentice-review0",
+      "requestHash": "dd1fa06b10a9eac6da9b9f2724ee38f07997d6ca7f4c34876e2d293e9a98f930",
+      "reservedYuan": 0.021694,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d87820a0-60cd-419c-8465-9fa8a04b4028.json",
+        "requestHash": "dd1fa06b10a9eac6da9b9f2724ee38f07997d6ca7f4c34876e2d293e9a98f930",
+        "responseHash": "f9a9bef3a2c860801b0b7b52c5b86fa3f506474a8702ef6925ceee6d506f964f"
+      },
+      "costUpperYuan": 0.003326,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_repair_apprentice-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1635,
+          "completion_tokens": 7,
+          "total_tokens": 1642,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1635
+        },
+        "costUpperYuan": 0.003326,
+        "cumulativeUpperYuan": 0.11521712,
+        "latencyMs": 1349.2156000000002,
+        "timestamp": "2026-10-23T09:35:12.012Z"
+      }
+    },
+    "0f2e0099-0fd0-45d5-9f46-0972491a40a7": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_herb_apprentice-review0",
+      "requestHash": "e579091114ad669f913b5a166b2842e4eea6b183cb061b7d9433747d2f57c2eb",
+      "reservedYuan": 0.02152,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0f2e0099-0fd0-45d5-9f46-0972491a40a7.json",
+        "requestHash": "e579091114ad669f913b5a166b2842e4eea6b183cb061b7d9433747d2f57c2eb",
+        "responseHash": "ceedf8cb9bb8927b88c5cb164e0f4de01b4e3b8885c208dd44eae45ae7de4141"
+      },
+      "costUpperYuan": 0.003356,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_herb_apprentice-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1650,
+          "completion_tokens": 7,
+          "total_tokens": 1657,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1650
+        },
+        "costUpperYuan": 0.003356,
+        "cumulativeUpperYuan": 0.11857312,
+        "latencyMs": 1195.6987000000001,
+        "timestamp": "2026-10-23T09:35:19.334Z"
+      }
+    },
+    "6a0435a5-c88b-4133-9e9b-caab1835d718": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_apprentice_father-review0",
+      "requestHash": "12647f1f01296bdb8011058363616badda7e11676585cd0acb237dd4701aaba1",
+      "reservedYuan": 0.021064,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/6a0435a5-c88b-4133-9e9b-caab1835d718.json",
+        "requestHash": "12647f1f01296bdb8011058363616badda7e11676585cd0acb237dd4701aaba1",
+        "responseHash": "1b217e9c6eadef4074d6de7df5b2c912875e090a4b027ddd8e4e2a2be18ffa59"
+      },
+      "costUpperYuan": 0.00312,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_apprentice_father-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1532,
+          "completion_tokens": 7,
+          "total_tokens": 1539,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1532
+        },
+        "costUpperYuan": 0.00312,
+        "cumulativeUpperYuan": 0.12169312,
+        "latencyMs": 660.9037999999996,
+        "timestamp": "2026-10-23T09:35:20.019Z"
+      }
+    },
+    "895c3598-c873-4d74-ae6a-e6d3c15c90a5": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_apprentice_uncle-review0",
+      "requestHash": "812e54bb556e7ea56787362c4a2ce4bca9f56b84b1734ffffb8f06587691802b",
+      "reservedYuan": 0.0213,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/895c3598-c873-4d74-ae6a-e6d3c15c90a5.json",
+        "requestHash": "812e54bb556e7ea56787362c4a2ce4bca9f56b84b1734ffffb8f06587691802b",
+        "responseHash": "76569a6cdbcb6823c08f8ebad493ee8c7c0cba0ccead57c56ac3d7a3181310d9"
+      },
+      "costUpperYuan": 0.003302,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_apprentice_uncle-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1623,
+          "completion_tokens": 7,
+          "total_tokens": 1630,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1623
+        },
+        "costUpperYuan": 0.003302,
+        "cumulativeUpperYuan": 0.12499512,
+        "latencyMs": 954.2659999999996,
+        "timestamp": "2026-10-23T09:35:20.991Z"
+      }
+    },
+    "4cd9de27-b29d-4de5-ba85-c00bce87b4f6": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_zhaosan-review0",
+      "requestHash": "b2ea95406cc60772b5497646f5c8c96e251a06550346ff9129f2f909e56b38c1",
+      "reservedYuan": 0.021074,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4cd9de27-b29d-4de5-ba85-c00bce87b4f6.json",
+        "requestHash": "b2ea95406cc60772b5497646f5c8c96e251a06550346ff9129f2f909e56b38c1",
+        "responseHash": "366b960675b76caace7c0cd3252f9dfdc1755dfa3f29c174142912f6b8216baf"
+      },
+      "costUpperYuan": 0.003262,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_zhaosan-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1603,
+          "completion_tokens": 7,
+          "total_tokens": 1610,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1603
+        },
+        "costUpperYuan": 0.003262,
+        "cumulativeUpperYuan": 0.12825712,
+        "latencyMs": 797.7127999999993,
+        "timestamp": "2026-10-23T09:35:21.805Z"
+      }
+    },
+    "5e891b7b-695c-4a6a-beb3-a2895b117df3": {
+      "card": "A3FIX",
+      "label": "content-a3-people-life-npc_a3_laozhou-review0",
+      "requestHash": "0794ec15c810cef0a34e09cb0339c7e1a14b2b5076a643dc7f4d8c84d58b0bcd",
+      "reservedYuan": 0.020988,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5e891b7b-695c-4a6a-beb3-a2895b117df3.json",
+        "requestHash": "0794ec15c810cef0a34e09cb0339c7e1a14b2b5076a643dc7f4d8c84d58b0bcd",
+        "responseHash": "4b28f9ec8ca5f0e300a39f40e8a082dac09d686b8262f815bf7febe550ed06a9"
+      },
+      "costUpperYuan": 0.00321,
+      "measurement": {
+        "label": "content-a3-people-life-npc_a3_laozhou-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1577,
+          "completion_tokens": 7,
+          "total_tokens": 1584,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1577
+        },
+        "costUpperYuan": 0.00321,
+        "cumulativeUpperYuan": 0.13146712,
+        "latencyMs": 859.5529000000006,
+        "timestamp": "2026-10-23T09:35:22.683Z"
       }
     }
   },
