@@ -297,6 +297,13 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const slots={},target=proposal.participants?.target??proposal.target??proposal.effects?.find(e=>e.target!==undefined||e.entity!==undefined)?.target??proposal.effects?.find(e=>e.entity!==undefined)?.entity;
   for(const slot of action.slots??[]){
    let value=proposal.participants?.[slot.name]??proposal.means?.[slot.name];
+   if(slot.name==='tool'){
+    // Any action that declares a tool slot takes the player's explicit tool choice.
+    value=Object.hasOwn(proposal.means??{},'tool')?proposal.means.tool:value??proposal.means?.tools?.[0];
+    // An unavailable explicit choice must reach useTool's refusal, never be
+    // dropped here and silently replaced by its automatic inventory choice.
+    if(value!==undefined){slots.tool=resolve(value,'item').value??value;continue;}
+   }
    const effects=proposal.effects??[],transfers=effects.filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
    const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));

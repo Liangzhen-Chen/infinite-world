@@ -112,7 +112,7 @@ function interactPhysicalItem(d,engine,args,eventId){
  }
  const mechanism=mechanismRule(engine,facts.mechanism),field=mechanism?.state;
  if(!mechanism||mechanism.operation!==operation||facts[field]!==true||mechanism.requiresIdentified&&facts.identified!==true)reject('E-ACTION-MECHANISM','尚未查明可操作的机关，或机关已经解除',{missing:['查明且尚未解除的对应机关'],repair:['先观察辨认机关结构，再选择相应操作']});
- const tool=useTool(d,engine,mechanism.requiresUse);
+ const tool=useTool(d,engine,mechanism.requiresUse,Object.hasOwn(args,'tool')?args.tool:args.means?.tools?.[0]);
  const rules=engine.world.openActionRules?.generic;
  if(!rules)throw Error('Missing native physical work rules');
  const check=engine.check(d,{attribute:'敏捷',difficulty:rules.physicalDifficulty,tools:[tool]},eventId);

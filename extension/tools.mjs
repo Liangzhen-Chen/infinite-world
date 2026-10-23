@@ -144,7 +144,7 @@ export function builderToolCall(action,slots={}){
 // This is dynamic catalogue data, outside the static tool/prompt budget.
 export function modelActionCatalog(result){
  const choices=slot=>result.actions.length===1?slot.options:slot.options?.slice(0,8);
- return {here:result.scene,...(result.configuration?{configuration:result.configuration}:{}),actions:result.actions.map(action=>({id:action.id,label:action.label,
+ return {here:result.scene,...(result.target?{target:structuredClone(result.target)}:{}),...(result.configuration?{configuration:result.configuration}:{}),actions:result.actions.map(action=>({id:action.id,label:action.label,
   ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:'intent, participants, effects, means, context'}}:{}),
   ...(action.hint?{hint:action.hint}:{}),...(action.blocked?{blocked:action.blocked}:{}),...(action.permission?{permission:action.permission}:{}),...(Object.keys(action.fill??{}).length?{fill:action.fill}:{}),
   slots:action.slots.map(slot=>({name:slot.name,kind:slot.kind,

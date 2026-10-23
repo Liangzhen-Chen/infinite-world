@@ -13,8 +13,26 @@ import {primitiveActionRuntime} from './primitives.mjs';
 import {actionSchema} from './primitive-schema.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {deriveOpenSourceLimits,limitOpenEffects} from './action-limits.mjs';
+import {routeAction} from './action-router.mjs';
+import {createOpenActionContext} from './open-actions.mjs';
+import {refusalProjection,isDomainRejection} from './action-rejection.mjs';
+import {heldUnit,physicalItem,physicalLocation,useTool} from './items.mjs';
+import {canAct,actionReader} from './action-capacity.mjs';
+import {authority} from './action-authority.mjs';
+import {standing,standingWords} from './standing.mjs';
+import {mechanismRule,domainRules} from './domain-rules.mjs';
+import {knowsPracticalKnowledge} from './education-state.mjs';
+import {readBodyState} from './primitives-body.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
+const publicRow=row=>!row?.hidden&&!row?.private&&row?.visible!==false;
+const mechanismAction=rule=>rule?.operation==='disarm'?'core:site.disarm':rule?.operation==='unlock'?'core:environment.unlock':null;
+const knownMechanism=(ctx,facts)=>{const rule=mechanismRule(ctx.engine,facts.mechanism);return rule?.requiresIdentified&&facts.identified!==true?null:rule;};
+// Only externally observable fields. Contents, toxin tests, mental state,
+// ownership proofs and other people's relationships never become card state.
+const STATE_FIELDS=['open','closed','locked','condition','durability','maxDurability','material','moisture','fireIntensity','integrity','turned','deployed','torn','blockagePercent','waterMl','capacityMl'];
+function knownState(facts){return Object.fromEntries(STATE_FIELDS.filter(key=>facts[key]!==undefined).map(key=>[key,structuredClone(facts[key])]));}
 export const QUICK=['交易','移动','等待','制作','账目','休息','观察'];
 const CHOICES={walk:'步行',horse:'骑马',cart:'乘车',boat:'乘船',cash:'现付',credit:'赊账',repay:'还账',attack:'攻击',defend:'防守',flee:'脱离',shove:'推搡'};
 const MARK_LABELS={'mark:insult':'侮辱','mark:satire':'讽刺','mark:defacement':'毁损标记','mark:graffiti':'涂鸦','mark:warning':'警告','mark:sacred_symbol':'神圣符号','mark:offering':'供奉','mark:memorial':'纪念','mark:petition':'请愿','mark:public_display':'公开展示','mark:art':'艺术','mark:custom':'自定含义','mark:invention':'发明设想','mark:boundary':'边界','mark:trap':'陷阱般的布置','mark:decoy':'诱饵般的布置','mark:shelter':'庇护记号','mark:omen':'征兆','mark:sword_carving':'剑刻',flammable:'易燃',wood:'木',paper:'纸',cloth:'布',fiber:'纤维',stone:'石',metal:'金属',wet:'湿润',frozen:'结冰'};
@@ -24,7 +42,7 @@ const MARK_LABELS={'mark:insult':'侮辱','mark:satire':'讽刺','mark:defacemen
 function openProposalOffer(ctx){
  const select=rows=>({type:'string',enum:rows.map(r=>r.value),enumLabels:rows.map(r=>r.label)});
  const people=[{value:'player',label:'自己'},...ctx.people.map(p=>({value:p.id,label:p.name})),...ctx.creatures];
- const entities=[...people,{value:ctx.s.location,label:ctx.name(ctx.s.location)},...featureOptions(ctx),...ctx.inventory.map(i=>({value:i.id,label:i.name}))];
+ const entities=[...new Map([...people,{value:ctx.s.location,label:ctx.name(ctx.s.location)},...featureOptions(ctx),...ctx.inventory.map(i=>({value:i.id,label:i.name})),...(ctx.inspected?[ctx.inspected]:[])].map(row=>[row.value,row])).values()];
  const items=ctx.inventory.map(i=>({value:i.id,label:i.name})),skills=ctx.skills.map(i=>({value:i.id,label:i.name}));
  const primitive=actionSchema.$defs.primitive;
  const fields={transfer:['resource','from','to','qty'],move:['to','mode'],emit:['verb','target','visibility','payload'],
@@ -62,7 +80,7 @@ function openProposalOffer(ctx){
   {name:'target',kind:'entity',entity:'entity',builderStep:1,options:entities},
   {name:'consent',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{from:select(entities),scope:{type:'string'},onRefusal:{type:'string',enum:['abort','contest']}}}},
   {name:'participants',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{target:select(entities)}}},
-  {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
+  {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),tools:{type:'array',maxItems:1,items:select(items)},skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
   {name:'effects',kind:'object',required:true,inputSchema:{type:'array',minItems:1,maxItems:63,items:{oneOf:variants}}},
   {name:'context',kind:'object',inputSchema:{type:'object',properties:{modifier:{type:'integer',minimum:-5,maximum:5},reason:{type:'string'}}}}
  ]};
@@ -81,8 +99,9 @@ function featureOptions(ctx){
 
 function context(engine,document){
  const s=document.state,place=engine.byId.get(s.location),templates=loadTemplates();
- const name=id=>s.npcs?.[id]?.name??s.created?.[id]?.name??engine.byId.get(id)?.name??id;
- const people=presentPeople(engine,s),present=new Set(people.map(p=>p.id));
+ const name=id=>s.npcs?.[id]?.name??s.created?.[id]?.name??document.holdings?.entities?.[id]?.facts?.name??engine.byId.get(id)?.name??id;
+ const d=actionReader(document),perceptible=id=>publicRow(engine.byId.get(id))&&publicRow(s.created?.[id])&&publicRow(s.npcs?.[id])&&publicRow(s.creatures?.[id])&&publicRow(physicalItem(d,engine,id));
+ const people=presentPeople(engine,s).filter(p=>perceptible(p.id)),present=new Set(people.map(p=>p.id));
  const stations=new Set((place?.workstations??[]).map(w=>w.kind));
  const recipes=(engine.world.recipes??[]).filter(r=>(!r.learningRequired||s.recipes?.[r.id])&&(!r.workstation||stations.has(r.workstation)));
  let bank=null;try{bank=derivedBankAt(engine,s,s.location);}catch{bank=null;}
@@ -92,15 +111,15 @@ function context(engine,document){
  const lodging=place?.lodging?.host&&(place.lodging.rooms??0)>0?place.lodging:null;
  // 路况：本季封路、天气封路或当下天气（与地图同一算法），步行计。
  const season=engine.calendar(s.minute).season;
- const exits=exitsFrom(engine,s,templates).map(e=>{const edge=engine.world.routes.find(r=>r.id===e.route);if(!edge?.lengthKm)return e;
+ const exits=exitsFrom(engine,s,templates).filter(e=>publicRow(engine.byId.get(e.id))&&publicRow(engine.world.routes.find(r=>r.id===e.route))).map(e=>{const edge=engine.world.routes.find(r=>r.id===e.route);if(!edge?.lengthKm)return e;
   let w={};try{w=weatherTravel(engine,document.randomSeed,edge,'walk',s.minute)??{};}catch{w={};}
   return {...e,condition:edge.closedSeasons?.includes(season)?'本季封路':w.closed?'天气封路':w.weather??null};});
  return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,
-  inventory:Object.entries(s.inventory??{}).filter(([,v])=>qty(v)>0).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
+  inventory:Object.entries(s.inventory??{}).filter(([id,v])=>qty(v)>0&&perceptible(id)).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
   skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)})),
-  creatures:Object.entries(s.creatures??{}).filter(([id,row])=>row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
+  creatures:Object.entries(s.creatures??{}).filter(([id,row])=>perceptible(id)&&row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
 }
-function stockOf(ctx,npc){return Object.entries(ctx.s.npcs?.[npc]?.inventory??{}).filter(([,v])=>qty(v)>0).map(([id,v])=>({id,name:ctx.name(id),quantity:qty(v)}));}
+function stockOf(ctx,npc){return Object.entries(ctx.s.npcs?.[npc]?.inventory??{}).filter(([id,v])=>qty(v)>0&&publicRow(v)&&publicRow(ctx.engine.byId.get(id))).map(([id,v])=>({id,name:ctx.name(id),quantity:qty(v)}));}
 // Named projection checks used by registry preconditions.
 function holds(ctx,condition,target){
  switch(condition){
@@ -162,8 +181,10 @@ function offer(ctx,action,target){
    if(slot.name==='effects')row.inputSchema.items=structuredClone(actionSchema.$defs.primitive);
   }
   if(slot.fill==='target'&&target)fill[slot.name]=target;
-  if(slot.fill==='host'&&ctx.lodging)fill[slot.name]=ctx.lodging.host;
-  if(slot.fill==='banker'&&ctx.bank?.keepers?.[0])fill[slot.name]=ctx.bank.keepers[0];
+  if(target&&slot.name==='target'&&(action.id.startsWith('core:environment.')||action.id==='core:site.disarm'))fill.target=target;
+  if(target&&slot.name==='location'&&action.id.startsWith('core:farm.private_'))fill.location=target;
+  if(slot.fill==='host'&&ctx.lodging&&ctx.present.has(ctx.lodging.host))fill[slot.name]=ctx.lodging.host;
+  if(slot.fill==='banker'&&ctx.bank?.keepers?.some(id=>ctx.present.has(id)))fill[slot.name]=ctx.bank.keepers.find(id=>ctx.present.has(id));
   let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
   if(choices===null&&(slot.kind==='zone'||slot.name==='zone'))choices=zoneOptions(ctx);
   if(action.id==='open:leave_mark'){
@@ -192,8 +213,9 @@ function offer(ctx,action,target){
   }
   // S0's shared world_field schema calls these targets "person"/"place";
   // the actual environment handlers take local feature ids for these fields.
-  if(action.id.startsWith('core:environment.')&&['target','destination'].includes(slot.name)){
+  if((action.id.startsWith('core:environment.')||action.id==='core:site.disarm')&&['target','destination'].includes(slot.name)){
    const local=featureOptions(ctx);
+   if(slot.name==='target'&&ctx.inspected)local.push(ctx.inspected);
    if(slot.name==='target'&&['core:environment.inspect','core:environment.inspect_marks','core:environment.inspect_heat','core:environment.warm_touch','core:environment.douse_fire'].includes(action.id))local.push(...ctx.inventory.map(item=>({value:item.id,label:item.name})));
    choices=[...new Map([...(choices??[]),...local].map(option=>[option.value,option])).values()];
   }
@@ -235,21 +257,120 @@ function restockNotes(engine,ctx,keeper){
  let next=today+1;while((next-shop.firstDay)%shop.cycleDays!==0||next<shop.firstDay)next++;
  return shop.restock.filter(r=>qty(stock[r.item])===0).map(r=>({item:r.item,name:ctx.name(r.item),nextMinute:next*1440,next:engine.calendar(next*1440).text.replace(/ \d\d:\d\d$/,'')}));
 }
-const kindOf=(ctx,engine,id)=>ctx.present.has(id)?'npc':ctx.inventory.some(r=>r.id===id)?'item':id===ctx.s.location||ctx.exits.some(e=>e.id===id)?'place':null;
+function targetView(ctx,id){
+ const d={...actionReader(ctx.document),document:ctx.document},facts={...physicalItem(d,ctx.engine,id),...ctx.document.holdings?.entities?.[id]?.facts};
+ if(!publicRow(facts)||!publicRow(ctx.s.created?.[id])||!publicRow(ctx.s.npcs?.[id])||!publicRow(ctx.s.creatures?.[id]))return null;
+ if(id==='player')return {kind:'self',facts:ctx.s.player};
+ if(ctx.present.has(id))return {kind:'npc',facts:ctx.s.npcs[id]};
+ if(ctx.inventory.some(r=>r.id===id))return {kind:'item',facts:{...facts,...heldUnit(d,ctx.engine,'player',id)}};
+ if(id===ctx.s.location||ctx.exits.some(e=>e.id===id))return {kind:'place',facts:{...facts,...ctx.s.buildings?.[id]}};
+ const feature=environmentFeatures(ctx.engine,ctx.document).find(row=>row.id===id);
+ if(feature&&featureOptions(ctx).some(row=>row.value===id))return {kind:'feature',facts:{...feature,...feature.state,...ctx.s.records?.[`physical_feature:${id}`]?.state}};
+ const entity=ctx.document.holdings?.entities?.[id],unit=ctx.s.itemInstances?.[id];
+ if(entity?.goneAt!==undefined)return null;
+ if(!entity&&!unit&&!ctx.s.creatures?.[id])return null;
+ const placement=ctx.document.holdings?.locations?.[id];
+ if(placement?.mode==='carried'&&placement.at==='player')return {kind:entity?.kind??'item',facts};
+ // The existing physical inspector exposes local objects without inventing
+ // contact coordinates. Interaction still needs the native reach proof.
+ if(ctx.s.records?.[`physical_item:${id}`]&&physicalLocation(d,ctx.engine,id)===ctx.s.location)return {kind:entity?.kind??'item',facts};
+ const contact=ctx.engine.primitiveTargetFacts(d,'player',id);
+ if(physicalLocation(d,ctx.engine,id)!==ctx.s.location||contact?.lineOfSight!==true)return null;
+ return {kind:ctx.s.creatures?.[id]?'creature':entity?.kind??'item',facts};
+}
+function entityCard(ctx,id,view,actions,openActions){
+ const {engine,document,s}=ctx,d={...actionReader(document),document},state=knownState(view.facts);
+ if(view.kind==='npc'){
+  state.present=true;
+  state.awake=!/睡|昏|濒死|死亡/.test(`${view.facts.activity??''} ${view.facts.status??''}`);
+  state.stance=standingWords(standing(engine,s,id,'player'));
+ }
+ const primitives=[],blocked=[];
+ const add=(effect,means={})=>{
+  const proposal={intent:'查看当前手段',means,effects:[effect]},source=deriveOpenSourceLimits(engine,document,proposal,effect);
+  if(!source)return;
+  if(means.item&&source.id!==means.item||means.skill&&source.id!==means.skill)return;
+  let bounds=source.bounds;
+  // Reward ceilings also depend on repetition, daily usage and a registered
+  // neighbour. Reuse the submission path rather than advertise the raw cap.
+  if(source.rewardFields?.length){
+   const maximum={...effect};
+   for(const [field,cap] of Object.entries(bounds))maximum[field]=Math.sign(effect[field]??1)*cap;
+   const probe={...proposal,effects:[maximum]},native=createOpenActionContext(engine,document,probe),routing=routeAction(probe,primitiveActionRuntime().registry(engine),native.routing);
+   const limited=limitOpenEffects(probe,native.limits(document,routing.nearest,routing.candidates));
+   bounds=Object.fromEntries(Object.keys(bounds).map(field=>[field,Math.abs(limited.effects[0]?.[field]??0)]));
+  }
+  const ability={effect,means,source,bounds,scope:'single_effect',requirements:{...source.requirements,...(source.rangeMeters!==undefined?{rangeMeters:source.rangeMeters}:{})},...(means.item?{tool:means.item}:{})};
+  const permission=canAct({engine,document},'player',effect.op==='emit'?'talk':effect.op);
+  let refusal=!permission.allowed?refusalProjection({code:'E-CAPACITY',reason:permission.reason}):null;
+  if(!refusal&&['fact.set','move'].includes(effect.op)&&!authority({engine,document},'player',effect.op,id,{effect}).allowed)refusal=refusalProjection({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
+  const contact=id==='player'||document.holdings?.locations?.[id]?.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
+  if(!refusal&&source.rangeMeters!==undefined&&(!contact?.lineOfSight||contact.distanceMeters>source.rangeMeters))refusal=refusalProjection({code:'E-REACH',reason:'当前视线或距离不足，需先靠近'});
+  if(!refusal&&(source.requirements?.mp??0)>(s.player.mp??0))refusal=refusalProjection({reason:'当前灵力不足',missing:['足够的灵力']});
+  if(!refusal&&(source.requirements?.stamina??0)>readBodyState(engine,document,'player','stamina').value)refusal=refusalProjection({reason:'当前体力不足',missing:['足够的体力']});
+  if(!refusal&&source.requirements?.materials?.some(row=>engine.quantity(d,'player',row.item)<row.amount))refusal=refusalProjection({code:'E-MATERIAL',reason:'当前缺少来源所需的实际材料',missing:['足量的施法材料']});
+  if(!refusal&&Object.values(bounds??{}).some(value=>value===0))refusal=refusalProjection({reason:'当前来源可用上限为零'});
+  if(openActions==='off'||openActions==='limited'&&effect.op==='status')refusal=refusalProjection({reason:'当前行动配置需通过注册动作办理此效果'});
+  if(refusal)ability.blocked=refusal;
+  primitives.push(ability);
+ };
+ const items=ctx.inventory.filter(row=>{const held=heldUnit(d,engine,'player',row.id),base=engine.byId.get(row.id);return (held?.tags??base?.tags??[]).some(tag=>['tool','weapon'].includes(tag));}).map(row=>({item:row.id}));
+ const sources=[{},...items];
+ if(['self','npc','creature'].includes(view.kind))for(const means of [...sources,...ctx.skills.map(row=>({skill:row.id}))])add({op:'vital',target:id,type:'physical',delta:-1},means);
+ if(['self','npc'].includes(view.kind))for(const verb of ['tell','request'])add({op:'emit',verb,target:id,visibility:'private',payload:{text:'说明自己的意思'}});
+ const entity=document.holdings?.entities?.[id];
+ if(entity?.kind==='item'&&document.holdings?.locations?.[id]?.mode==='carried'&&document.holdings.locations[id].at==='player')add({op:'move',entity:id,to:s.location,mode:'place'});
+ for(const [field,value] of Object.entries(state))if(Number.isSafeInteger(value)&&engine.world.primitiveFacts?.[entity?.kind]?.[field]?.type==='number')for(const means of sources)add({op:'fact.set',entity:id,field,delta:-1},means);
+ for(const spellId of Object.keys(s.spells??{})){
+  const spell=engine.byId.get(spellId),spec=spell?.effectSpec,means={spell:spellId};
+  if(!['self','npc','creature'].includes(view.kind))continue;
+  if(['damage','heal'].includes(spec?.kind))add({op:'vital',target:id,type:spec.kind==='heal'?'healing':spec.damageType??'physical',delta:spec.kind==='heal'?1:-1},means);
+  if(spec?.kind==='status')add({op:'status',target:id,status:spec.status,duration:1,magnitude:1},means);
+ }
+ // De-duplicate body fallbacks from irrelevant/broken items or skills.
+ const unique=[...new Map(primitives.map(row=>[JSON.stringify([row.effect,row.source.id]),row])).values()];
+ const relatedActions=actions.filter(row=>row.id!=='open:proposal').map(row=>{
+  const out={id:row.id,label:row.label,slots:row.slots,fill:row.fill};
+  if(row.permission?.allowed===false||row.blocked)out.blocked=refusalProjection({reason:row.permission?.reason??row.blocked});
+  const mechanism=knownMechanism(ctx,view.facts);
+  const use=mechanism&&row.id===mechanismAction(mechanism)?mechanism.requiresUse:row.id==='core:farm.private_sow'?domainRules(engine).privateField?.sowRequiresUse:row.id==='core:farm.private_harvest'?domainRules(engine).privateField?.harvestRequiresUse:null;
+  if(use)try{out.tool=useTool(d,engine,use);out.fill={...out.fill,tool:out.tool};}catch(error){if(!isDomainRejection(error))throw error;out.blocked=refusalProjection(error);}
+  if(mechanism&&row.id===mechanismAction(mechanism)){
+   if(view.facts[mechanism.state]!==true||mechanism.requiresIdentified&&view.facts.identified!==true)out.blocked=refusalProjection({reason:'机关已经解除，或尚未辨认其操作结构'});
+   if(mechanism.practicalKnowledge&&!knowsPracticalKnowledge(engine,s,'player',mechanism.practicalKnowledge))out.blocked=refusalProjection({reason:'尚未学会此机关的拆解工序',missing:['实际学会的机关拆解知识']});
+   if(!authority({engine,document},'player','fact.set',id).allowed&&!authority({engine,document},'player',mechanism.operation,id).allowed)out.blocked=refusalProjection({code:'E-AUTHORITY',reason:'尚无对该对象的操作权限'});
+   const held=document.holdings?.locations?.[id],contact=held?.mode==='carried'&&held.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
+   if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)out.blocked=refusalProjection({code:'E-REACH',reason:'尚不能看清并触及物品'});
+  }
+  return out;
+ });
+ if(!unique.length)blocked.push(refusalProjection({reason:'当前没有可直接施加的开放原语来源',missing:['可作用于此对象的实际手段'],repair:['先查看相关注册动作，或取得相应工具、技能后重新查询']}));
+ return {state,primitives:unique,relatedActions,blocked};
+}
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
 export function worldActions(engine,document,{target=null,query=null,limit=24,registry=null}={}){
  registry??=primitiveActionRuntime()?.registry?.(engine)??loadActionRegistry();
  const ctx={...context(engine,document),document};
  let id=null;
- if(target){try{id=engine.resolve(String(target));}catch{id=ctx.people.find(p=>p.name===target)?.id??ctx.inventory.find(r=>r.name===target)?.id??null;}}
- const kind=id?kindOf(ctx,engine,id):null;
+ if(target){try{id=engine.resolve(String(target));}catch{id=String(target);}}
+ let view=id?targetView(ctx,id):null;
+ if(!view&&target){
+  const candidates=[...ctx.people.map(row=>({value:row.id,label:row.name})),...ctx.inventory.map(row=>({value:row.id,label:row.name})),...featureOptions(ctx),...Object.values(document.holdings?.entities??{}).map(row=>({value:row.id,label:row.facts?.name}))].filter(row=>row.label===target&&targetView(ctx,row.value));
+  if(candidates.length===1){id=candidates[0].value;view=targetView(ctx,id);}
+ }
+ const kind=view?.kind;
  // A globally resolvable name is not evidence of current access. In particular
  // search must not use a remote person's private stock to populate selectors.
  if(!kind)id=null;
+ if(id)ctx.inspected={value:id,label:view.facts.name??ctx.name(id)};
  const visible=a=>(a.preconditions??[]).every(c=>holds(ctx,c,id));
  let actions;
  if(query)actions=searchActions(registry,query,{limit,include:['quick','here','target:npc','target:place','target:item','search','llm']}).map(a=>offer(ctx,a,id));
- else if(id)actions=registry.actions.filter(a=>a.visibility.catalog===`target:${kind}`&&visible(a)).map(a=>offer(ctx,a,id));
+ else if(id)actions=registry.actions.filter(a=>{
+  const mechanism=knownMechanism(ctx,view.facts);
+  if(a.id==='core:environment.unlock'&&a.id!==mechanismAction(mechanism))return false;
+  return (a.visibility.catalog===`target:${kind}`||['feature','item','building'].includes(kind)&&(a.id.startsWith('core:environment.')||a.id===mechanismAction(mechanism))||kind==='place'&&a.id.startsWith('core:farm.private_'))&&visible(a);
+ }).map(a=>offer(ctx,a,id));
  else actions=registry.actions.filter(a=>(a.visibility.catalog==='here'||a.visibility.catalog==='quick'||a.ui?.quick)&&visible(a)).map(a=>offer(ctx,a,null));
  const openActions=document.state.records?.action_config?.openActions??'full';
  if(query==='open:proposal'||query==='world_propose')actions=actions.filter(a=>a.id==='open:proposal');
@@ -258,8 +379,10 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
   actions=actions.filter(action=>action.id!=='open:proposal');actions.unshift(openProposalOffer(ctx));
  }
  const quick=QUICK.map(label=>{const a=registry.actions.find(x=>x.ui?.quick===label);return a?{label,action:a.id,available:visible(a)||a.ui.quick==='交易'}:null;}).filter(Boolean);
- return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:ctx.name(id),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
-  scene:sceneLines(engine,document),actions:actions.slice(0,limit),quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
+ const sceneEngine=Object.create(engine);
+ sceneEngine.world={...engine.world,locations:engine.world.locations.filter(publicRow),routes:engine.world.routes.filter(row=>publicRow(row)&&[row.from,row.to].every(key=>publicRow(engine.byId.get(key))))};
+ return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
+  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:actions.slice(0,limit),quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
    exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};
