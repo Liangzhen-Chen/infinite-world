@@ -143,7 +143,7 @@ function acceptNpc(d,engine,q,id,now,state=d.get('state')){
 
 export function questBoardAction(d,engine,args,eventId){
  const now=d.get('state','minute');
- if(!['publish','accept','complete','cancel','inspect'].includes(args.operation))throw preconditionFailure('未知任务操作；发布用publish，接受用accept，完成用complete');
+ if(!['publish','accept','complete','cancel','inspect','report'].includes(args.operation))throw preconditionFailure('未知任务操作；发布用publish，接受用accept，完成用complete');
  if(args.operation==='publish'){
   const publisher=args.publisher==='player'?'player':engine.resolve(args.publisher,'npc'),actor=engine.actor(d,publisher),grade=args.grade;
   if(!awake(engine,d.get('state'),publisher,actor))throw preconditionFailure('任务发布者无法清醒履约');
@@ -171,11 +171,31 @@ export function questBoardAction(d,engine,args,eventId){
  }
  if(args.operation==='inspect'&&!args.quest)return {notices:laborNotices(engine,d.get('state'))};
  const q=d.get('state','quests',args.quest);if(!q)throw preconditionFailure('不存在这个任务');
+ if(args.operation==='report'){
+  if(q.boardVersion!==1||q.status!=='进行中'||q.taker!=='player'||q.publisher==='player')throw preconditionFailure('只能向发布人汇报自己承接的进行中任务');
+  if(q.deadline<=now)throw preconditionFailure('任务已超期');
+  if(args.issuer!==undefined&&engine.resolve(args.issuer,'npc')!==q.publisher||args.recipient!==undefined&&engine.resolve(args.recipient,'npc')!==q.publisher)throw preconditionFailure('汇报对象必须是实际发布人');
+  if(args.sourceEvent!==undefined&&args.sourceEvent!==eventId)throw preconditionFailure('汇报来源只能是本次真实动作');
+  if(args.rewardSettled!==undefined)throw preconditionFailure('进度汇报不能声明报酬结算');
+  const state=d.get('state'),publisher=engine.actor(d,q.publisher),progress=args.progress,content=text(args.content);
+  if(place(state,q.publisher)!==state.location||!awake(engine,state,q.publisher,publisher)||publisher.scheduleTravel||publisher.cognitionTravel)throw preconditionFailure('发布人须清醒在场才能私下接收汇报');
+  if(typeof progress!=='number'||!Number.isFinite(progress)||progress<0||progress>=1)throw preconditionFailure('汇报进度须在0至1之间；完成任务须另行验证结算');
+  const report={id:`quest-report:${eventId}`,category:'quest_report',quest:q.id,reporter:'player',issuer:q.publisher,progress,content,private:true,parties:['player',q.publisher],sourceEvent:eventId,minute:now,location:state.location};
+  if(d.get('state','records',report.id))throw preconditionFailure('汇报来源已使用');
+  // A report is the taker's claim to the issuer, not verified work: it is kept as reportedProgress (产品原则二.4).
+  d.set(['state','quests',q.id],{...q,reportedProgress:progress,report:report.id});
+  holdingSet(d,engine,['state','records',report.id],report,'quest-board');
+  const stream=d.get('state','npcs',q.publisher,'memoryStream')??[];
+  // Share the quest memory identity with npc-memory's ordinary fallback so
+  // storage replay keeps the detailed private report instead of adding a copy.
+  d.set(['state','npcs',q.publisher,'memoryStream'],[...stream,{...report,id:`${eventId}:quest`,kind:'quest',participants:report.parties,sourceType:'亲历',salience:3}]);
+  return {quest:q.id,reportedProgress:progress,report:report.id,issuer:q.publisher,sourceEvent:eventId};
+ }
  // Court bounties: rewards sit in the code treasury; capture goes through world_law arrest.
  if(q.bounty)return bountyQuestAction(d,engine,q,args,eventId);
  if(args.operation==='inspect'){
   if(![q.publisher,q.taker].includes('player')&&q.location!==d.get('state','location'))throw preconditionFailure('没有获知该委托进度的渠道');
-  return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
+  return {quest:q.id,...([q.publisher,q.taker].includes('player')?{status:q.status,reason:q.reason??null,escrow:q.escrow,refund:q.refund??0,...(q.reportedProgress!==undefined?{reportedProgress:q.reportedProgress,report:q.report}:{})}:{status:'告示',content:q.content,grade:q.grade,reward:q.reward,...(q.sourceLabel?{source:q.sourceLabel}:{})})};
  }
  if(args.operation==='cancel'){
   if(![q.publisher,q.taker].includes('player'))throw preconditionFailure('只有委托当事人能取消');

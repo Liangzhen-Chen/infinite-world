@@ -58,37 +58,67 @@ test('T1: two/three/nine days require actual elapsed days, never the previous mi
 // T3's settled-quest consumer moved to a3-prelude.test.mjs. Publication,
 // acceptance, delivery and banking now establish its paid, zero-cash premise.
 
-test.todo('T3: half-complete private report is known by issuer and not an unrelated present NPC〔前提待真实动作：产生半完成私下任务报告和仅发行人知情的来源记忆；归 A3 生产者卡〕',async()=>{
- const loaded=load(setupOf(149));assert.deepEqual(loaded.setupUnmet,[]);
- const document=loaded.document;
- assert.equal(document.state.quests.a3v2_149_task.progress,.5);
+const privateQuest='quest_a3v2_149_task',ordinaryId='a3v2_210_festival';
+async function act(document,action,slots,eventId){
+ const call={tool:'world_act',args:{action,slots},eventId};
+ const preview=await engine.previewAction(document,call);
+ assert.equal(preview.receipt.status,'preview',JSON.stringify(preview.receipt));
+ return run(document,call.tool,call.args,eventId);
+}
+async function privateTask(){
+ const loaded=load({minute:600,location:'loc_hw',present:['npc_hw_linsui','npc_hw_wushuo'],inventory:{item_wood:1}});
+ assert.deepEqual(loaded.setupUnmet,[]);
+ const posted=await act(loaded.document,'core:quest.publish',{publisher:'npc_hw_linsui',personal:true,grade:'D',reward:20,content:'送两份木材',objective:{type:'deliver',item:'item_wood',quantity:2}},'a3v2_149_task');
+ return (await act(posted.document,'core:quest.accept',{quest:privateQuest},'accept-private')).document;
+}
+const reportSlots={quest:privateQuest,progress:.5,content:'已修一半'};
+function ordinaryPremise(){
+ // 产品原则三.2：只初始化当前场地权属与一件原始花灯；活动本身由公开动作建立。
+ return load({minute:1200,location:'bld_hw_council',present:['npc_hw_chenbai'],coins:38,inventory:{},
+  itemInstances:[{id:'a3v2_210_lantern',template:'thing',kind:'item',item:'item_lantern',owner:'npc_hw_chenbai',location:'bld_hw_council',carriedBy:'npc_hw_chenbai'}],
+  holdings:[{id:'ordinary-venue-title',kind:'owns',holder:'npc_hw_chenbai',subject:'bld_hw_council',terms:{share:1}}]});
+}
+const ordinarySlots={festival:ordinaryId,name:'中秋灯会',coins:20,request:{kind:'ordinary',host:'npc_hw_chenbai',endsAt:1260,riddles:[{id:'a3v2_210_riddle',question:'一口咬掉牛尾巴，打一字',answers:['告'],reward:{item:'item_lantern',quantity:1}}]}};
+async function ordinaryEvent(){
+ const loaded=ordinaryPremise();assert.deepEqual(loaded.setupUnmet,[]);
+ return (await act(loaded.document,'core:settlement.festival_plan',ordinarySlots,'create-lantern')).document;
+}
+
+test('T3: half-complete private report is known by issuer and not an unrelated present NPC',async()=>{
+ const accepted=await privateTask();
+ const document=(await act(accepted,'core:quest.report',reportSlots,'a3v2_149_event')).document;
+ assert.equal(document.state.quests[privateQuest].reportedProgress,.5);
  const issuer=subjectiveView(engine,document,'npc_hw_linsui'),other=subjectiveView(engine,document,'npc_hw_wushuo');
  assert.ok(issuer.knowledge.memories.some(m=>m.sourceEvent==='a3v2_149_event'&&m.content==='已修一半'));
  assert.equal(other.knowledge.memories.some(m=>m.sourceEvent==='a3v2_149_event'),false);
- await assert.rejects(run(document,'world_quest',{operation:'complete',quest:'a3v2_149_task'},'invent-completion'),/历史任务/);
- await assert.rejects(run(document,'world_quest',{operation:'cancel',quest:'a3v2_149_task'},'invent-refund'),/历史任务/);
+ // 原历史快照不可完成/退款；现为真实托管任务：汇报仍不能伪造完成，取消只能退回实际托管。
+ await assert.rejects(run(document,'world_quest',{operation:'complete',quest:privateQuest},'invent-completion'),/交付物品不足/);
+ assert.equal(document.state.quests[privateQuest].escrow,20);assert.equal(document.state.quests[privateQuest].rewardPaid,undefined);
+ const cancelled=await act(document,'core:quest.cancel',{quest:privateQuest},'real-refund');
+ assert.equal(cancelled.document.state.quests[privateQuest].refund,20);assert.equal(cancelled.document.state.quests[privateQuest].escrow,0);
+ balanced(accepted,cancelled.document);
 });
 
-test.todo('T3: mismatched issuer, forged source, false settlement and unrelated report recipient are rejected〔前提待真实动作：产生半完成私下任务报告和仅发行人知情的来源记忆；归 A3 生产者卡〕',()=>{
- for(const patch of [{issuer:'npc_hw_wushuo'},{sourceEvent:'not-a-source'},{rewardSettled:false},{progress:1}]){
-  const setup=setupOf(135);Object.assign(setup.objects[0],patch);
-  const loaded=load(setup);assert.ok(loaded.setupUnmet.some(r=>r.item.startsWith('objects')));
-  assert.equal(loaded.document.state.quests.a3v2_135_roof_task,undefined);
+test('T3: mismatched issuer, forged source, false settlement and unrelated report recipient are rejected',async()=>{
+ const document=await privateTask(),before=structuredClone(document);
+ // 用真实动作拒绝伪造请求，保留原先不创建伪任务、不泄露私下来源的断言意图。
+ for(const patch of [{issuer:'npc_hw_wushuo'},{sourceEvent:'not-a-source'},{rewardSettled:false},{progress:1},{recipient:'npc_hw_wushuo'}]){
+  const refused=await run(document,'world_act',{action:'core:quest.report',slots:{...reportSlots,...patch}},'reject-report');
+  assert.equal(refused.result.receipt.status,'rejected');assert.match(refused.result.receipt.reason,/发布人|来源|结算|进度|槽位/);
+  assert.deepEqual(refused.document,before);
+  assert.deepEqual(document,before);assert.equal(document.state.quests.another,undefined);
  }
- const setup=setupOf(149);setup.knowledge[0].holder='npc_hw_wushuo';
- assert.ok(load(setup).setupUnmet.some(r=>r.item.startsWith('knowledge')));
- const loaded=load(setupOf(149));
- assert.throws(()=>restoreQuestSnapshot(engine.primitiveDraft(loaded.document),engine,{...setupOf(149).objects[0],id:'another',sourceEvent:'a3v2_149_event'},{origin:'initial'}),/Invalid historical/);
+ const reported=(await act(document,'core:quest.report',reportSlots,'a3v2_149_event')).document;
+ await assert.rejects(run(reported,'world_quest',{operation:'report',...reportSlots,sourceEvent:'a3v2_149_event'},'forged-report'),/来源/);
 });
 
-test.todo('T2: ordinary lantern event consumes its exact real prize once and watches to declared ending〔前提待真实动作：公开创建普通灯谜活动并签入原始实物奖品；归 A3 生产者卡〕',async()=>{
- const loaded=load(setupOf(210));assert.deepEqual(loaded.setupUnmet,[]);
- let document=loaded.document;const before=structuredClone(document);
+test('T2: ordinary lantern event consumes its exact real prize once and watches to declared ending',async()=>{
+ let document=await ordinaryEvent();const before=structuredClone(document);
  const inspected=await run(document,'world_settlement',{operation:'festival_inspect'},'inspect-lantern');
- const event=inspected.result.events.find(r=>r.id==='a3v2_210_festival');
+ const event=inspected.result.events.find(r=>r.id===ordinaryId);
  assert.equal(event.riddles[0].question,'一口咬掉牛尾巴，打一字');assert.equal(event.riddles[0].answers,undefined);assert.equal(event.riddles[0].claimed,false);
  assert.match(festivalScene(engine,document),/一口咬掉牛尾巴/);
- const args={operation:'festival_answer',festival:'a3v2_210_festival',request:'a3v2_210_riddle',choice:'错'};
+ const args={operation:'festival_answer',festival:ordinaryId,request:'a3v2_210_riddle',choice:'错'};
  const wrong=await run(document,'world_settlement',args,'wrong-answer');assert.equal(wrong.result.correct,false);
  assert.equal(wrong.document.state.records['festival-prize:a3v2_210_festival:a3v2_210_riddle:player'],undefined);
  const correct=await run(wrong.document,'world_settlement',{...args,choice:'告'},'correct-answer');document=correct.document;
@@ -107,11 +137,15 @@ test.todo('T2: ordinary lantern event consumes its exact real prize once and wat
  assert.equal(waited.document.state.records[args.festival].status,'ended');
 });
 
-test.todo('T2: missing host ownership, illegal time window and already-claimed prize cannot be initialized〔前提待真实动作：公开创建普通灯谜活动并签入原始实物奖品；归 A3 生产者卡〕',()=>{
- for(const change of [s=>s.rites[0].host='npc_hw_wushuo',s=>s.rites[0].endsAt=1000,s=>s.rites[0].riddle.claimed=true,s=>s.rites[0].riddle.reward='invented',s=>s.rites[0].id='__proto__']){
-  const setup=setupOf(210);change(setup);const loaded=load(setup);
-  assert.ok(loaded.setupUnmet.some(r=>r.item.startsWith('rites')));
-  assert.equal(loaded.document.state.records.a3v2_210_festival,undefined);
+test('T2: missing host ownership, illegal time window and already-claimed prize cannot be initialized',async()=>{
+ const loaded=ordinaryPremise();assert.deepEqual(loaded.setupUnmet,[]);
+ const document=loaded.document,before=structuredClone(document);
+ // 删除快照接口后，逐项改为通过相同公开创建入口拒绝无权、坏时段、已领/虚构奖品及危险ID。
+ for(const mutate of [s=>s.request.host='npc_hw_wushuo',s=>s.request.endsAt=1000,s=>s.request.riddles[0].claimed=true,s=>s.request.riddles[0].reward.item='invented',s=>s.festival='__proto__']){
+  const slots=structuredClone(ordinarySlots);mutate(slots);
+  const refused=await run(document,'world_act',{action:'core:settlement.festival_plan',slots},'bad-event');
+  assert.equal(refused.result.receipt.status,'rejected');assert.deepEqual(refused.document,before);
+  assert.equal(document.state.records[ordinaryId],undefined);assert.deepEqual(document,before);
  }
 });
 
@@ -206,7 +240,7 @@ test.todo('T1–T4: real save/reopen/replay retains native clock, private task a
  await store.transact('a3t-roundtrip',{id:'claim',anchor:'claim',input:{tool:'world_settlement',args:{operation:'festival_answer',festival:'a3v2_210_festival',request:'a3v2_210_riddle',choice:'告'},eventId:'storage-claim'}},reducer);
  const before=await store.load('a3t-roundtrip'),again=await new CampaignStorage(root,{reducer}).load('a3t-roundtrip');
  assert.deepEqual(again.document,before.document);
- assert.equal(again.document.state.quests.a3v2_149_task.progress,.5);
+ assert.equal(again.document.state.quests.a3v2_149_task.reportedProgress,.5);
  assert.equal(engine.quantity(engine.primitiveDraft(again.document),'player','item_lantern'),1);
  assert.equal(localWeather(engine,again.document).daylight,false);
  const publishing=loadPublisher();assert.deepEqual(publishing.setupUnmet,[]);
