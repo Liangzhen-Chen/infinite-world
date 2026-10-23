@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t-a3ad",
+  "commit": "refs/heads/t-a3cy",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -1471,7 +1471,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 4468,
+   "lines": 4471,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -2841,7 +2841,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 157,
+   "lines": 244,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -3021,7 +3021,7 @@
     "extension/actions-view.mjs",
     "extension/action-builder.mjs"
    ],
-   "lines": 1286,
+   "lines": 1300,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -3121,7 +3121,7 @@
     "server-plugin/consistency-evidence.mjs",
     "server-plugin/consistency-outcome.mjs"
    ],
-   "lines": 762,
+   "lines": 835,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -7040,6 +7040,7 @@
    "kind": "call",
    "labels": [
     "action-authority.mjs",
+    "action-boundary.mjs",
     "action-capacity.mjs",
     "action-limits.mjs",
     "action-rejection.mjs",
@@ -16400,6 +16401,7 @@
       "server-plugin/agriculture-migration.mjs",
       "server-plugin/agriculture.mjs",
       "server-plugin/civic.mjs",
+      "server-plugin/consistency-review.mjs",
       "server-plugin/education-cohorts.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/education.mjs",
@@ -16492,6 +16494,7 @@
       "base_standing",
       "kernel_engine",
       "kernel_storage",
+      "nar_consistency",
       "sim_agriculture",
       "sim_character",
       "sim_clock",
@@ -18270,6 +18273,7 @@
    "system": "ui_actions",
    "imports": [
     "server-plugin/action-authority.mjs",
+    "server-plugin/action-boundary.mjs",
     "server-plugin/action-capacity.mjs",
     "server-plugin/action-limits.mjs",
     "server-plugin/action-registry.mjs",
@@ -18309,7 +18313,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 391
+   "lines": 405
   },
   "server-plugin/action-authority-sources.mjs": {
    "system": "base_primitives",
@@ -19624,7 +19628,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 97
+   "lines": 124
   },
   "server-plugin/consistency-outcome.mjs": {
    "system": "nar_consistency",
@@ -19657,7 +19661,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 364
+   "lines": 410
   },
   "server-plugin/consistency-service.mjs": {
    "system": "nar_consistency",
@@ -23191,7 +23195,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 335
+   "lines": 338
   },
   "server-plugin/npc-cognition.mjs": {
    "system": "sim_npc",
@@ -27111,7 +27115,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 157
+   "lines": 244
   },
   "extension/topbar.mjs": {
    "system": "ui_client",
