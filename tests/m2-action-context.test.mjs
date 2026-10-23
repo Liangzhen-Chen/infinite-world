@@ -14,7 +14,14 @@ import {subjectiveView}from'../server-plugin/subjective-view.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const original=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck/真实试玩.json',import.meta.url),'utf8'));
 const recheck=JSON.parse(await fs.readFile(new URL('../docs/测试报告/M2-recheck-003/真实试玩.json',import.meta.url),'utf8'));
-const scenario=async id=>JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
+const scenario=async id=>{
+    const script=JSON.parse(await fs.readFile(new URL(`./playtests/${id}.json`,import.meta.url),'utf8'));
+    // A3 causal: trust has one live value in the relation ledger. Keep the
+    // original trust bounds, adapting only the legacy assertion's read path.
+    for(const turn of script.turns)for(const rule of turn.assertions??[])
+        if(/^state\.npcs\.[^.]+\.trust$/.test(rule.path??''))rule.path=rule.path.replace(/\.trust$/,'.relationships.player.trust');
+    return script;
+};
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 async function replay(id){
     const script=await scenario(id),engine=new WorldEngine(world);
