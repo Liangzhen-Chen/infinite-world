@@ -193,7 +193,7 @@ export function educationAction(d,args,id){
   const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students,start,end,since,until,status:'开课',founder:'player',contract};
   holdingSet(d,null,path(course),row,'education');return {course,...row};
  }
- throw preconditionFailure('未知授业操作');
+ throw preconditionFailure('未知授业操作；合法 operation：school_inspect、book_give、school_fund、school_close、school_open、book_study；普通师授、单次读书或研究成果学习不填 operation；entity 填学习内容编号或登记名称，source 填导师、书本或研究项目编号；自己学习省略 student 或填 player');
 }
 
 // Existing certification remains the player's entrance. Resident candidates

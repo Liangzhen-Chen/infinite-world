@@ -62,7 +62,15 @@ test('entity card: current door state, registered tool choice and model projecti
  const projected=modelActionCatalog(menu(f)).target;
  assert.equal(projected.id,card.id);assert.deepEqual(projected.state,card.state);
  assert.ok(projected.primitives.some(row=>row.op==='fact.set'&&row.kind==='condition'));
- assert.ok(projected.relatedActions.every(row=>Object.keys(row).sort().join(',')==='id,label,required'));
+ // a3r1 retains kinds/choices on the first relevant rows. Keep identity and
+ // required-slot equality, and verify any retained slot descriptions against
+ // the full player-facing card rather than enforce the old lossy key set.
+ for(const row of projected.relatedActions){
+  const source=card.relatedActions.find(action=>action.id===row.id);
+  assert.ok(source);assert.equal(row.label,source.label);
+  assert.deepEqual(row.required,source.slots.filter(slot=>slot.required).map(slot=>slot.name));
+  if(row.slots)assert.deepEqual(row.slots.map(slot=>[slot.name,slot.kind]),source.slots.map(slot=>[slot.name,slot.kind]));
+ }
  assert.deepEqual(f.document,before);
  // The actual registered action owns the check; inspect reflects its receipt.
  const result=await act(f,unlock.id,{...unlock.fill,tool:'item_staff'},criticalId(f.document,'inspect-unlock'));

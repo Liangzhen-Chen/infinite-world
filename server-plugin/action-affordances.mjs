@@ -1,7 +1,7 @@
 // A1 可做之事（06 §6.9.1、08 §8.2【可做之事】，L3 投影）：由注册表与玩家此刻能感知的场景派生
 // “此处可做”、对象菜单（人/物/地点）与快捷栏，并把槽位的可选项（出路、对方存货、行囊、配方、欠账）填好。
 // 这里的前置只决定菜单里出不出现；做得成做不成仍由引擎结算，拒绝时引擎给世界内原因。
-import {loadActionRegistry,findAction,catalogRow,searchActions,CONSENT_PENDING} from './action-registry.mjs';
+import {loadActionRegistry,findAction,catalogRow,searchActions,CONSENT_PENDING,learningSlotDescription} from './action-registry.mjs';
 import {npcSchedule} from './npc-state.mjs';
 import {exitsFrom,presentPeople,sceneLines,distanceText,loadTemplates} from './action-text.mjs';
 import {derivedBankAt} from './finance-bank.mjs';
@@ -25,6 +25,7 @@ import {mechanismRule,domainRules} from './domain-rules.mjs';
 import {knowsPracticalKnowledge} from './education-state.mjs';
 import {readBodyState} from './primitives-body.mjs';
 import {markFallback} from './action-boundary.mjs';
+import {personTeaching} from './entity-view.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 const publicRow=row=>!row?.hidden&&!row?.private&&row?.visible!==false;
@@ -189,7 +190,14 @@ function offer(ctx,action,target){
   if(slot.fill==='host'&&ctx.lodging&&ctx.present.has(ctx.lodging.host))fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.some(id=>ctx.present.has(id)))fill[slot.name]=ctx.bank.keepers.find(id=>ctx.present.has(id));
   let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
+  if(action.call?.tool==='world_learn'){
+   row.description=learningSlotDescription(slot.name);
+   if(slot.name==='entity')choices=[...ctx.engine.world.skills??[],...ctx.engine.world.spells??[],...ctx.engine.world.recipes??[]].filter(subject=>publicRow(subject)&&ctx.people.some(person=>(!target||person.id===target)&&personTeaching(ctx.engine,ctx.s,person.id,subject.id))||publicRow(subject)&&ctx.inventory.some(item=>ctx.engine.byId.get(item.id)?.book?.teaches?.includes(subject.id))).map(subject=>({value:subject.id,label:subject.name}));
+   if(slot.name==='source')choices=[...ctx.people.map(person=>({value:person.id,label:person.name})),...ctx.inventory.filter(item=>ctx.engine.byId.get(item.id)?.book).map(item=>({value:item.id,label:item.name})),...Object.entries(ctx.s.projects??{}).filter(([,project])=>project.type==='研究'&&project.stage==='打磨').map(([value,project])=>({value,label:project.name??value}))];
+   if(slot.name==='student')choices=[{value:'player',label:'自己'},...ctx.people.map(person=>({value:person.id,label:person.name}))];
+  }
   if(choices===null&&(slot.kind==='zone'||slot.name==='zone'))choices=zoneOptions(ctx);
+  if(slot.kind==='zone'||slot.name==='zone')row.description='省略表示当前位置；若填，只用options中的分区编号';
   if(action.id==='open:leave_mark'){
    if(slot.name==='tags'){
     const tagging=ctx.engine.world.openTagging;

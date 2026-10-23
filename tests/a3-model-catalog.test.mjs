@@ -25,7 +25,14 @@ function bounded(raw){
  assert.equal(model.target.id,raw.target.id);assert.deepEqual(model.target.state,raw.target.state);
  assert.ok(model.target.blocked.length>0);
  assert.ok((JSON.stringify(model).match(/"fallback":/g)??[]).length<=1);
- assert.ok(model.target.relatedActions.every(row=>Object.keys(row).sort().join(',')==='id,label,required'));
+ // a3r1: the first relevant rows now retain executable slot kinds/choices;
+ // later summaries still carry their original id, label and required names.
+ for(const row of model.target.relatedActions){
+  assert.equal(typeof row.id,'string');assert.equal(typeof row.label,'string');assert.ok(Array.isArray(row.required));
+  const source=raw.target.relatedActions.find(action=>action.id===row.id);
+  assert.deepEqual(row.required,source.slots.filter(slot=>slot.required).map(slot=>slot.name));
+  if(row.slots)assert.deepEqual(row.slots.map(slot=>[slot.name,slot.kind]),source.slots.map(slot=>[slot.name,slot.kind]));
+ }
  return model;
 }
 
