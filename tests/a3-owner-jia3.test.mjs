@@ -16,6 +16,23 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const initial=engine.initialFromLegacy(seed,'jia3-test');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=n=>structuredClone(corpus.find(r=>r.id===`A3V2-${n}`));
+const offer=(actor,principal,interest,id)=>({id,verb:'consented',actor,to:'player',scope:'loan',subject:'player',terms:{principal,days:1,interest},at:599,expires:5000,revoked:false,source:{kind:'corpus_premise',row:'A3CR'}});
+const loanStep=(operation,seller,coins,eventId,extra={})=>({tool:'world_act',eventId,args:{action:`core:trade.${operation}`,slots:{seller,coins,days:1,...extra}}});
+const giveStep=coins=>({tool:'world_propose',eventId:'jia3-give-principal',args:{intent:'赠送林穗借来的铜钱',target:'npc_hw_linsui',effects:[{op:'transfer',resource:'coin',from:'self',to:'npc_hw_linsui',qty:coins}]}});
+function realLoanInput(id){
+ const input=row(id),receivable='finance:debt_lend_jia3-receivable',payable='finance:debt_loan_jia3-payable',principal=id==='078'?29:9;
+ // 产品原则三.2：借款、放款和资金去向均用真实动作；应还30/10包含现行1铜利息。
+ input.setup={...input.setup,coins:id==='078'?50:0,inventory:{item_iron:100},accounts:[],obligations:[],history:[offer('npc_hw_linsui',principal,1,'jia3-lender-offer')],prelude:[]};
+ if(id==='078'){
+  // scheduleAt 的现行预约覆盖至18时，届时两位当事人都回到客栈。
+  input.setup.minute=1080;
+  input.setup.history.push(offer('npc_hw_wushuo',50,0,'jia3-borrower-offer'),{id:'jia3-repay-offer',verb:'consented',actor:'npc_hw_wushuo',to:'player',scope:'repay',subject:receivable,terms:{amount:50},at:599,expires:5000,revoked:false,source:{kind:'corpus_premise',row:'A3CR'}});
+  input.setup.prelude.push(loanStep('lend','npc_hw_wushuo',50,'jia3-receivable',{interest:0}));
+  input.proposal.effects[1].id=receivable;input.proposal.effects[3].id=payable;
+ }else input.proposal.effects[0].terms.fulfills=payable;
+ input.setup.prelude.push(loanStep('borrow','npc_hw_linsui',principal,'jia3-payable',{item:'item_iron',quantity:10}),giveStep(principal));
+ return input;
+}
 const load=n=>applyIntentSetup(engine,initial,row(n).setup);
 const clean=document=>assert.deepEqual(reconcile(engine,document),{mismatches:[],lots:[],drift:[],audit:[]});
 const act=async(document,action,slots,eventId)=>{
@@ -117,33 +134,39 @@ test('jia3: lending reads the borrower original interest terms and refuses absen
  }
 });
 
-test.todo('jia3: debt collection settles the canonical old loan before using received funds, and cannot spend without payer consent〔前提待真实动作：建立实际贷款及借款、还款方的真实 loan/repay 同意；归 A3 生产者卡〕',async()=>{
- const r=await executeIntent(engine,initial,row('078'));
+test('jia3: debt collection settles the canonical old loan before using received funds, and cannot spend without payer consent',async()=>{
+ const r=await executeIntent(engine,initial,realLoanInput('078'));
+ assert.deepEqual(r.setupUnmet,[]);
  assert.equal(r.actual.route,'open:proposal');assert.equal(r.actual.committed,true);
  assert.equal(r.document.state.player.coins,20);
- assert.equal(obligationView(r.document.state,'a3v2_078_receivable').owed,0);
- assert.equal(obligationView(r.document.state,'a3v2_078_payable').owed,0);
- assert.deepEqual(r.receipt.applied.filter(e=>e.op==='transfer').map(e=>e.qty),[50,30]);clean(r.document);
- const missing=row('078');missing.setup.history=missing.setup.history.filter(e=>e.verb!=='consented');
+ assert.equal(obligationView(r.document.state,'finance:debt_lend_jia3-receivable').owed,0);
+ assert.equal(obligationView(r.document.state,'finance:debt_loan_jia3-payable').owed,0);
+ // 真实抵押借款在还清时另有退还10份铁料；原断言的两笔资金流仍须严格为50、30。
+ assert.deepEqual(r.receipt.applied.filter(e=>e.op==='transfer'&&['coin','coin_river'].includes(e.resource)).map(e=>e.qty),[50,30]);
+ assert.equal(r.document.state.inventory.item_iron.quantity,100);clean(r.document);
+ // 仅移除还款同意，保留建立真实贷款所必需的原始借款同意。
+ const missing=realLoanInput('078');missing.setup.history=missing.setup.history.filter(e=>e.scope!=='repay');
  const denied=await executeIntent(engine,initial,missing);
  assert.equal(denied.actual.committed,false);assert.equal(denied.document.state.player.coins,0);
- assert.equal(obligationView(denied.document.state,'a3v2_078_payable').owed,30);
+ assert.deepEqual(denied.setupUnmet,[]);
+ assert.equal(obligationView(denied.document.state,'finance:debt_loan_jia3-payable').owed,30);
 });
 
-test.todo('jia3: a repayment promise refers to the existing principal and later pays it only once at the agreed place〔前提待真实动作：建立实际贷款及借款、还款方的真实 loan/repay 同意；归 A3 生产者卡〕',async()=>{
- const r=await executeIntent(engine,initial,row('049'));
+test('jia3: a repayment promise refers to the existing principal and later pays it only once at the agreed place',async()=>{
+ const r=await executeIntent(engine,initial,realLoanInput('049'));
+ assert.deepEqual(r.setupUnmet,[]);
  assert.equal(r.actual.route,'core:dialogue.promise');assert.equal(r.actual.committed,true);
  const promise=r.document.state.obligations['obl_a3-score-A3V2-049'];
- assert.equal(promise.terms.fulfills,'a3v2_049_loan');assert.equal(promise.amount,0);
+ assert.equal(promise.terms.fulfills,'finance:debt_loan_jia3-payable');assert.equal(promise.amount,0);
  assert.equal(obligationRows(r.document.state).reduce((n,o)=>n+obligationView(r.document.state,o).owed,0),10);
- assert.equal(r.document.state.player.coins,0);assert.equal(obligationView(r.document.state,'a3v2_049_loan').owed,10);clean(r.document);
+ assert.equal(r.document.state.player.coins,0);assert.equal(obligationView(r.document.state,'finance:debt_loan_jia3-payable').owed,10);clean(r.document);
  // Establish funds as an opening snapshot, then use the real delivery consumer.
  const funded=applyIntentSetup(engine,r.document,{coins:10}).document;
  const d=engine.primitiveDraft(funded),before=d.get('state','npcs','npc_hw_linsui','coins');
  engine.deliver(d,promise.id,promise,'fulfill-linked');
  const done=applyPatches(funded,d.patches);
  assert.equal(done.state.player.coins,0);assert.equal(done.state.npcs.npc_hw_linsui.coins,before+10);
- assert.equal(obligationView(done.state,'a3v2_049_loan').owed,0);clean(done);
+ assert.equal(obligationView(done.state,'finance:debt_loan_jia3-payable').owed,0);clean(done);
  const twice=engine.primitiveDraft(done);engine.deliver(twice,promise.id,promise,'fulfill-linked-again');
  assert.equal(twice.get('state','npcs','npc_hw_linsui','coins'),before+10);
  const wrong=structuredClone(funded);wrong.state.location='loc_hw';

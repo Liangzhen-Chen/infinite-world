@@ -11,6 +11,7 @@ import {questBoardAction} from '../server-plugin/quest-board.mjs';
 import {weatherFoundation} from '../world/design/weather-foundation.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
 import {breakBossAgreement} from '../server-plugin/boss-negotiation.mjs';
 
 function setup(){const f=fixture();f.d.document.ledger=openLedger(f.e,f.d.document);return f;}
@@ -24,6 +25,11 @@ test('远期预付真实记账、短交留债、展期保留签署快照、分�
  const terms=structuredClone(d.get('state','obligations','grain-forward','terms'));
  performGoodsObligation(d,e,{id:'grain-forward',quantity:5},'harvest-part');
  assert.equal(dueObligation(d.get('state'),'grain-forward').owed,7);assert.equal(e.quantity(d,'player','item_oats'),5);
+ // 产品原则：债务人不能自行改期；债权人的原生同意只覆盖这笔债权和新期限。
+ const unchanged=structuredClone(d.document);
+ assert.throws(()=>extendGoodsObligation(d,e,{id:'grain-forward',actor:DRIVER,deadline:3000},'crop-delay'));
+ assert.deepEqual(d.document,unchanged);
+ applyConsentEvent(d,{engine:e,document:d.document},{actor:'player',eventId:'crop-delay-agreed',verb:'consent_given',to:DRIVER,payload:{scope:'amend',subject:'grain-forward',purpose:['grain-forward'],terms:{deadline:3000},until:601}});
  extendGoodsObligation(d,e,{id:'grain-forward',actor:DRIVER,deadline:3000},'crop-delay');
  assert.deepEqual(d.get('state','obligations','grain-forward','terms'),terms);
  const saved=JSON.parse(JSON.stringify(d.document));d.document=saved;
