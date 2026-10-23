@@ -84,7 +84,7 @@ import {openObligation,settleObligation,closeObligation,performObligation,receiv
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
 import {businessTrade,recordBusinessReceipt}from'./business.mjs';
-import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge,withdrawDepositIfSnapshot}from'./credit.mjs';
+import {CREDIT_OPERATIONS,creditTrade,isCreditDebt,repayCredit,lodgingOf,assertLodgingHost,grantLodgingAccess,releasePledge} from './credit.mjs';
 import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
@@ -552,7 +552,6 @@ export class WorldEngine {
         return changeItems(d,this,id,item,delta,{books});
     }
     async trade(d,args,id) {
-        if(args.operation==='withdraw'){const withdrawal=withdrawDepositIfSnapshot(d,this,args,id);if(withdrawal)return withdrawal;}
         if(args.operation==='transport')return transportAction(d,this,args,id);
         if(args.operation==='post')return postAction(d,this,args,id);
         if(['smuggle','deliver_smuggled'].includes(args.operation))return smuggleTrade.call(this,d,args,id);

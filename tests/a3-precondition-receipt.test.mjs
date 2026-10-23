@@ -90,7 +90,7 @@ for(const n of ids)test(`A3 refusal ${n}: routed preview and direct commit prese
  assert.deepEqual(auditLedger(document.ledger),[]);
 });
 
-for(const n of legalRequests)test(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
+for(const n of legalRequests)test.todo(`A3 native legal ${n}: original premises submit only a request in routed and direct calls〔前提待真实动作：形成指定案件阶段、在岗机构身份及证据原件；归 S4〕`,async()=>{
  // 05 §5.2.7: current native premises submit requests; the original r5 inputs
  // above still lack those premises and retain every atomic-refusal assertion.
  const row=nativeRowFor(n),{document,setupUnmet}=applyIntentSetup(legalEngine,legalInitial,row.setup);assert.deepEqual(setupUnmet,[]);

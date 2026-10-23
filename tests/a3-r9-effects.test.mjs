@@ -74,7 +74,7 @@ test('R9: learning and spell corpus rows retain success/failure and constructor 
  }
 });
 
-test('R9: legal requests never prepay, appoint, accept or adjudicate without the recipient decision',async()=>{
+test.todo('R9: legal requests never prepay, appoint, accept or adjudicate without the recipient decision〔前提待真实动作：形成指定案件阶段、在岗机构身份及证据原件；归 S4〕',async()=>{
  for(const id of ['051','052','055','056','058']){
   const r=await run(id,20,{engine:legalEngine,start:legalInitial});
   assert.equal(r.actual.route,rowFor(id).expected.route);assert.deepEqual(r.setupUnmet,[]);

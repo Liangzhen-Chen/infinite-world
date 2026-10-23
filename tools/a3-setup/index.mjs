@@ -11,6 +11,17 @@
 const modules=[];
 export function registerSetupLoader(module){modules.push(module);modules.sort((a,b)=>a.order-b.order);}
 export const setupLoaderFields=()=>modules.flatMap(m=>m.fields);
+// Premises that only a real game action can create (cases, claims, offices,
+// quests ...) are never written into state by the loader. The corpus declares
+// them as setup.prelude actions; a declaration of the old state form is unmet.
+export const PRELUDE_REASON='前提须由前置动作产生（setup.prelude）';
+export function preludeOnly(ctx,setup,field){
+ if(!Array.isArray(setup[field])){ctx.unmet(field,'expected an array');return;}
+ for(const row of setup[field]){
+  const at=Array.isArray(ctx.setup[field])?ctx.setup[field].findIndex(r=>r===row||row?.id!==undefined&&r?.id===row.id):-1;
+  ctx.unmet(at<0?field:`${field}[${at}]`,PRELUDE_REASON);
+ }
+}
 // Generic instance/holding initialization can defer a row owned by a domain.
 // The same selector is used by the domain stage, so it cannot drift from it.
 export const setupRowLoader=(field,row)=>modules.find(m=>m.rows?.[field]?.(row));

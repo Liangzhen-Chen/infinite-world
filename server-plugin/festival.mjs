@@ -17,25 +17,6 @@ import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 declareHoldingWriter('festival',{kinds:[]});
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
-const validId=id=>typeof id==='string'&&/^[a-z][a-z0-9_:-]+$/i.test(id)&&!['__proto__','constructor','prototype'].includes(id);
-// Ordinary local events use their declared time window, not a religious rite
-// or an invented annual calendar entry. Initial restoration does not pay prizes.
-export function restoreOrdinaryFestival(d,engine,row,{origin,sourceEvent}={}){
- const {id,name,location,startsAt,endsAt,host,riddle}=row,now=d.get('state','minute');
- if(origin!=='initial'||typeof sourceEvent!=='string'||!sourceEvent||Object.keys(row).some(k=>!['id','name','location','startsAt','endsAt','host','riddle'].includes(k))||
-  !validId(id)||d.get(...path(id))||typeof name!=='string'||!name.trim()||!engine.world.locations.some(l=>l.id===location)||
-  !d.get('state','npcs',host)||!safe(startsAt)||!safe(endsAt)||startsAt>now||startsAt>=endsAt||endsAt-startsAt>DAY||
-  Math.floor(startsAt/DAY)!==Math.floor((endsAt-1)/DAY)||!riddle||Object.keys(riddle).some(k=>!['id','question','answer','reward','claimed'].includes(k))||
-  !validId(riddle.id)||typeof riddle.question!=='string'||!riddle.question.trim()||typeof riddle.answer!=='string'||!riddle.answer.trim()||riddle.claimed!==false)throw Error('Invalid ordinary festival initial declaration');
- const unit=d.get('state','itemInstances',riddle.reward),item=unit?.item;
- // A prize is one real inventory unit, with its existing owner and location.
- const owned=aliveHoldings(d,{kind:'owns',holder:host,subject:riddle.reward});
- const actualItem=item??d.get('holdings','entities',riddle.reward,'facts','item');
- if(!owned.length||!engine.world.items.some(i=>i.id===actualItem)||engine.quantity(d,host,actualItem)<1)throw Error('Festival prize is not a real host-owned inventory unit');
- const event={category:'festival',ordinary:true,id,name,location,host,due:startsAt,endsAt,status:now<endsAt?'held':'ended',sourceEvent,
-  riddles:[{id:riddle.id,question:riddle.question,answers:[riddle.answer],reward:{item:actualItem,quantity:1,unit:riddle.reward}}]};
- holdingSet(d,engine,path(id),event,'festival');return event;
-}
 
 function ordinaryFestivalAction(d,engine,args,eventId,row){
  const now=d.get('state','minute');

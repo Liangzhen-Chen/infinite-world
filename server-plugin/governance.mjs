@@ -15,95 +15,20 @@ import {opinionAmong} from './public-opinion.mjs';
 import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
-import {institutionOriginal,institutionPhysicalReference} from './obligation-state.mjs';
+import {institutionOriginal} from './obligation-state.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
-import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity,updateEntity,setLocation} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity} from './holdings.mjs';
 import {changeHolding} from './transition.mjs';
 import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import fs from 'node:fs';
 import {registerWorldEventSubscriber} from './world-events.mjs';
 import {domainRules} from './domain-rules.mjs';
-import {requireRestoreOrigin} from './restore-origin.mjs';
 const successionRules=JSON.parse(fs.readFileSync(new URL('../world/lore/office-succession.json',import.meta.url),'utf8'));
 declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion','item'],locations:true});
 
 const DAY=1440;
-export function restoreInstitutionOffice(d,engine,row,{origin}={}){
-    requireRestoreOrigin(origin,'restoreInstitutionOffice');
-    if(!ensureHoldings(d,engine))throw Error('Office requires native holdings');
-    const s=d.get('state'),organization=row.organization,seat=row.seat??row.location,id=row.id?.startsWith('office_')?row.id:`office_${row.id}`;
-    const org=engine.byId.get(organization)??entityRow(d,organization);
-    const powers=Array.isArray(row.authority)?row.authority:row.authority?.operations;
-    if(typeof row.id!=='string'||!row.id||['__proto__','constructor','prototype'].includes(row.id)||entityRow(d,id)||
-        row.template!=='office'||typeof row.name!=='string'||!row.name.trim()||!org||
-        !engine.world.locations.some(l=>l.id===seat)||!Array.isArray(powers)||!powers.length||powers.some(p=>typeof p!=='string'||!p.trim()))throw Error('Office requires its existing organization, seat and explicit powers');
-    createEntity(d,{id,kind:'office',facts:{name:row.name,organization,seat,authority:structuredClone(row.authority),aliases:[row.id]},source:`institution_office:${row.id}`,writer:'governance'});
-    setLocation(d,{entity:id,at:seat,mode:'place',writer:'governance',engine});
-    return id;
-}
-export function restoreOfficeRemovalSnapshot(d,engine,{sourceEvent},{origin}={}){
-    requireRestoreOrigin(origin,'restoreOfficeRemovalSnapshot');
-    const s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload;
-    const prior=Object.values(s.records??{}).filter(r=>r.category==='governance_office'&&r.holder===p?.subject&&r.office===p?.office&&r.status==='在任'&&r.since<=event.minute&&(r.until??Infinity)>event.minute);
-    if(event?.category!=='world_event'||event.verb!=='removed_from_office'||event.minute>s.minute||prior.length!==1||prior[0].appointedBy!==event.actor)throw Error('Removal requires the actual prior appointment and its appointing institution');
-    const row=prior[0],subject=currentOfficeSubject(d,row.settlement,row.office),held=aliveHoldings(d,{kind:'holds_office',holder:row.holder,subject});
-    if(held.length!==1||held[0].since>event.minute||!row.sourceEvent)throw Error('Removal lacks its original office holding and appointment source');
-    // The incumbents close at the historical minute; the clock is restored even if that fails.
-    const now=s.minute;d.set(['state','minute'],event.minute);
-    try{closeOfficeIncumbents(d,engine,row.settlement,row.office,event.minute,event.id);}
-    finally{d.set(['state','minute'],now);}
-    return row.id;
-}
-// Historical institutional inputs are not grants or successful decisions.
-// Missing voters, charters and land rights remain missing after import.
-export function restoreInstitutionSnapshot(d,engine,{row,sourceEvent},{origin}={}){
-    requireRestoreOrigin(origin,'restoreInstitutionSnapshot');
-    const s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload;
-    if(!row||typeof row.id!=='string'||!row.id||['__proto__','constructor','prototype'].includes(row.id)||s.records?.[row.id]||
-        !engine.world.locations.some(l=>l.id===row.location)||typeof row.name!=='string'||!row.name.trim()||
-        event?.category!=='world_event'||event.minute>s.minute||p?.subject!==row.id)throw Error('Invalid institutional snapshot source');
-    let result;
-    if(row.kind==='application'){
-        if(event.verb!=='application_filed'||row.status!=='pending'||event.actor!==row.applicant||!s.npcs?.[row.applicant]||typeof row.plot!=='string'||!row.plot)throw Error('Application requires its actual applicant and pending filing');
-        result={category:'governance_application',id:row.id,name:row.name,settlement:row.location,applicant:row.applicant,plot:row.plot,status:'pending',sourceEvent,minute:event.minute};
-    }else if(row.kind==='proposal'){
-        if(event.verb!=='votes_recorded'||row.status!=='voting'||![p.yes,p.no].every(n=>Number.isSafeInteger(n)&&n>=0))throw Error('Proposal requires its recorded voting snapshot');
-        result={category:'governance_motion_snapshot',id:row.id,name:row.name,settlement:row.location,status:'voting',tally:{yes:p.yes,no:p.no},sourceEvent,minute:event.minute};
-    }else throw Error('Unsupported institutional snapshot');
-    holdingSet(d,engine,['state','records',row.id],result,'governance');
-    if(row.kind==='proposal'){
-        const id=`motion_${row.id}`;
-        createEntity(d,{id,kind:'motion',facts:{name:row.name,aliases:[row.id],body:row.location,phase:'voting',tally:result.tally},source:sourceEvent,writer:'governance'});
-        setLocation(d,{entity:id,at:row.location,mode:'place',writer:'governance',engine});return id;
-    }
-    return row.id;
-}
-export function restoreInstitutionDocument(d,engine,args,{origin}={}){
-    requireRestoreOrigin(origin,'restoreInstitutionDocument');
-    const {id,owner,sourceEvent,content,valid,public:published}=args,s=d.get('state'),event=s.records?.[sourceEvent],p=event?.payload,paper=institutionOriginal(engine,d.document,id);
-    if(typeof id!=='string'||!id||['__proto__','constructor','prototype'].includes(id)||typeof content!=='string'||!content.trim()||
-        [valid,published].some(v=>v!==undefined&&typeof v!=='boolean')||event?.category!=='world_event'||event.minute>s.minute||
-        (paper?paper.owner!==owner||paper.document:s.records?.[`institution_document:${id}`]))throw Error('Invalid institutional document original or source');
-    const subject=institutionPhysicalReference(d.document,p.subject);
-    let kind,describes;
-    // Which event verbs can originate which kind of institutional text is the
-    // domain table's; the relations each kind must satisfy stay below.
-    const sourceRule=domainRules(engine).governance?.documentSources?.[event.verb],source=sourceRule?.kind;
-    if(source==='notice'&&subject===id&&event.actor===owner&&published===true&&paper){kind='notice';describes=id;}
-    else if(source==='building_rule'&&s.records?.[p.subject]?.category==='governance_application'&&s.records[p.subject].settlement===owner){kind='building_rule';describes=p.subject;}
-    else if(source==='transport_claim'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===owner&&p.observer===owner&&Number.isSafeInteger(p.terms?.delayMinutes)&&p.terms.delayMinutes>=0&&typeof p.terms.cause==='string'&&p.terms.compensated===false){kind='transport_claim';describes=subject;}
-    else if(source==='expired_pawn_ticket'&&paper&&institutionOriginal(engine,d.document,subject)?.owner===p.to&&p.owner===owner&&p.terms?.cause===sourceRule.cause&&p.terms.oldTicketValid===false&&valid===false){kind='expired_pawn_ticket';describes=subject;}
-    else if(source==='debt_evidence'&&paper&&p.to===owner&&typeof p.claim==='string'&&typeof p.truth==='string'){kind='debt_evidence';}
-    else throw Error('Document source does not support this institutional text');
-    if(published&&kind!=='notice')throw Error('Only an explicitly posted notice is public');
-    const document={kind,owner,sourceEvent,content,links:[],...(describes?{describes}:{}),...(valid!==undefined?{valid}:{}),public:published===true};
-    if(s.itemInstances?.[id])holdingSet(d,engine,['state','itemInstances',id],{...s.itemInstances[id],document,records:[...new Set([...paper.records??[],sourceEvent])]},'governance');
-    else if(paper)updateEntity(d,{id,facts:{document,records:[...new Set([...paper.records??[],sourceEvent])]},writer:'governance'});
-    else holdingSet(d,engine,['state','records',`institution_document:${id}`],{category:'governance_document',id,settlement:owner,...document},'governance');
-    return id;
-}
 export function institutionInputsFor(engine,document,settlement,actor='player'){
     const d=holdingsView(document),s=document.state;
     const reviewer=aliveHoldings(d,{kind:'holds_office',holder:actor}).some(h=>{

@@ -4,11 +4,11 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
-import {civicAction,contributionTotal,restoreContributionSnapshot} from '../server-plugin/civic.mjs';
-import {governanceAction,restoreInstitutionOffice,restoreOfficeRemovalSnapshot,appointOfficeRecord,restoreInstitutionSnapshot,restoreInstitutionDocument,institutionDocumentView,institutionInputsFor} from '../server-plugin/governance.mjs';
+import {civicAction,contributionTotal} from '../server-plugin/civic.mjs';
+import {governanceAction,appointOfficeRecord,institutionDocumentView,institutionInputsFor} from '../server-plugin/governance.mjs';
 import {recordHistoricalEvent} from '../server-plugin/world-events.mjs';
 import {obligationView,institutionOriginal} from '../server-plugin/obligation-state.mjs';
-import {restoreObligationSnapshot,closeObligation} from '../server-plugin/obligation-runtime.mjs';
+import {closeObligation} from '../server-plugin/obligation-runtime.mjs';
 import {transportAction} from '../server-plugin/transport.mjs';
 import {openHolding,aliveHoldings,closeHolding} from '../server-plugin/holdings.mjs';
 import {authority} from '../server-plugin/action-authority.mjs';
@@ -25,7 +25,7 @@ const errors=(r,field)=>r.setupUnmet.filter(e=>e.item===field||e.item.startsWith
 const roundtrip=document=>JSON.parse(JSON.stringify(document));
 const noDrift=document=>assert.deepEqual(reconcile(engine,document),{mismatches:[],lots:[],drift:[],audit:[]});
 
-test('G1: accepted public work enters the local source ledger once and is read without crediting again',()=>{
+test.todo('G1: accepted public work enters the local source ledger once and is read without crediting again〔前提待真实动作：通过真实批准、施工、验收建立当地公共工程贡献来源；归 S4〕',()=>{
  const r=run(setup(176));assert.deepEqual(r.setupUnmet,[]);
  let d=engine.primitiveDraft(roundtrip(r.document));
  const view=civicAction.call(engine,d,{operation:'civic_contribution',settlement:'loc_hw'},'view');
@@ -42,20 +42,10 @@ test('G1: accepted public work enters the local source ledger once and is read w
  assert.throws(()=>restoreContributionSnapshot(d,engine,{sourceEvent:'missing'},{origin:'initial'}),/source/);
 });
 
-test('G4: overdue payment promise remains promise, retains dates, creates no loan or consent',()=>{
- const r=run(setup(144));assert.deepEqual(r.setupUnmet,[]);
- const document=roundtrip(r.document),view=obligationView(document.state,'a3v2_144_old_promise');
- assert.equal(view.row.kind,'promise');assert.equal(view.owed,10);assert.equal(view.amountDue,10);
- assert.equal(view.row.createdAt,600);assert.equal(view.row.deadline,2040);
- assert.equal(document.state.player.coins,0);
- assert.ok(!document.state.consentEvents?.some(e=>e.scope==='loan'));noDrift(document);
- const bad=setup(144);bad.obligations[0].amount=11;
- assert.ok(errors(run(bad),'obligations').length);
- bad.obligations[0].amount=10;bad.obligations[0].paid=11;
- assert.ok(errors(run(bad),'obligations').length);
-});
+// G4's overdue payment promise moved to a3-prelude.test.mjs: create the real
+// promise at minute 600 and wait past its deadline through the ordinary clock.
 
-test('G2: native office has explicit powers and holder; it cannot manufacture a different authority',()=>{
+test.todo('G2: native office has explicit powers and holder; it cannot manufacture a different authority〔前提待真实动作：创建指定章程机构席位及指定过去日期的任免记录；归 S4〕',()=>{
  const d=engine.primitiveDraft(initial),row={id:'g_native_chair',template:'office',name:'Recorded membership chair',organization:'loc_hw',location:'loc_hw',authority:['admit_members']};
  const office=restoreInstitutionOffice(d,engine,row,{origin:'initial'});
  const id=openHolding(d,{kind:'holds_office',holder:'npc_hw_yanzhe',subject:office,terms:{authority:['admit_members']},writer:'governance',source:'recorded-current-office',engine});
@@ -73,7 +63,7 @@ test('G2: native office has explicit powers and holder; it cannot manufacture a 
  assert.equal(aliveHoldings(engine.primitiveDraft(missing.document),{kind:'holds_office',holder:'player'}).length,0);
 });
 
-test('G3: pending application and ordinance retain source; inspection never approves or charges',()=>{
+test.todo('G3: pending application and ordinance retain source; inspection never approves or charges〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
  const r=run(setup(178));
  // Q owns the built-in instance delegation; S4 owns land and daily review.
  assert.deepEqual(errors(r,'history'),[]);assert.deepEqual(errors(r,'documents'),[]);
@@ -91,7 +81,7 @@ test('G3: pending application and ordinance retain source; inspection never appr
  noDrift(d.document);
 });
 
-test('G2: historical removal closes the real prior holding at its recorded time, preserves appointment, and rejects a forged issuer',()=>{
+test.todo('G2: historical removal closes the real prior holding at its recorded time, preserves appointment, and rejects a forged issuer〔前提待真实动作：创建指定章程机构席位及指定过去日期的任免记录；归 S4〕',()=>{
  const d=engine.primitiveDraft(run({minute:100}).document),id='governance_office:g-prior';
  appointOfficeRecord(d,engine,{category:'governance_office',id,holder:'player',settlement:'loc_hw',office:'office_g_prior',status:'在任',since:100,appointedBy:'npc_hw_yanzhe',sourceEvent:'recorded-appointment'},'recorded-appointment');
  d.set(['state','minute'],600);const before=roundtrip(d.document);
@@ -106,7 +96,7 @@ test('G2: historical removal closes the real prior holding at its recorded time,
  assert.equal(aliveHoldings(forged,{kind:'holds_office',holder:'player'}).length,1);
 });
 
-test('G3: aggregate votes are preserved without invented electors, chair, majority charter or completed decision',()=>{
+test.todo('G3: aggregate votes are preserved without invented electors, chair, majority charter or completed decision〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
  const r=run(setup(177)),row=roundtrip(r.document).state.records.a3v2_177_motion;
  assert.deepEqual(errors(r,'history'),[]);assert.deepEqual(row.tally,{yes:1,no:5});assert.equal(row.status,'voting');
  assert.equal(row.voters,undefined);assert.equal(row.authority,undefined);
@@ -114,7 +104,7 @@ test('G3: aggregate votes are preserved without invented electors, chair, majori
  const bad=setup(177);bad.history[0].yes=0.5;assert.ok(errors(run(bad),'history').length);
 });
 
-test('G3: public notice is visible only at its original; source history and rumors are not exposed',()=>{
+test.todo('G3: public notice is visible only at its original; source history and rumors are not exposed〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
  const r=run(setup(212));assert.deepEqual(errors(r,'documents'),[]);
  const document=roundtrip(r.document),notice=institutionDocumentView(engine,document,r.bindings.a3v2_212_notice);
  assert.equal(notice.kind,'notice');assert.equal(notice.public,true);assert.equal(notice.content,'四月初一起每户春税50铜');
@@ -127,7 +117,7 @@ test('G3: public notice is visible only at its original; source history and rumo
  const bad=setup(212);bad.documents[0].sourceEvent='a3v2_212_rumor';assert.ok(errors(run(bad),'documents').length);
 });
 
-test('G4: native transport inspection reads nine-day delay and actual damage without inventing a delivery claim or compensation',()=>{
+test.todo('G4: native transport inspection reads nine-day delay and actual damage without inventing a delivery claim or compensation〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
  const r=run(setup(214));assert.deepEqual(r.setupUnmet,[]);
  const document=roundtrip(r.document),id=r.bindings.a3v2_214_contract;
  const view=transportAction(engine.primitiveDraft(document),engine,{task:'inspect',contract:id},'inspect-cargo');
@@ -140,7 +130,7 @@ test('G4: native transport inspection reads nine-day delay and actual damage wit
  const bad=setup(214);bad.documents[0].public=true;assert.ok(errors(run(bad),'documents').length);noDrift(document);
 });
 
-test('G4: invalid pawn ticket stays invalid and grants neither ownership nor redemption',()=>{
+test.todo('G4: invalid pawn ticket stays invalid and grants neither ownership nor redemption〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
  const s=setup(217);
  // W owns the authored buyer. Exercise the same source protocol with an
  // existing authored actor, without changing the corpus or pretending 217 passes.
@@ -155,7 +145,7 @@ test('G4: invalid pawn ticket stays invalid and grants neither ownership nor red
  noDrift(document);
 });
 
-test('G4: rent imports as rent, creditor waiver is local, unauthorised waiver fails; storage export/import and replay preserve source',async t=>{
+test.todo('G4: rent imports as rent, creditor waiver is local, unauthorised waiver fails; storage export/import and replay preserve source〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',async t=>{
  const s=setup(220);
  // W provides the tenant identity; this protocol test uses a real world actor.
  s.instances=[];s.history[0].debtor='npc_hw_anhuai';s.obligations[0].debtor='npc_hw_anhuai';

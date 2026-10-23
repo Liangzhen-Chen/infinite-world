@@ -21,7 +21,17 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const initial=engine.initialFromLegacy(seed,'a3-owner-wu');
 const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const context={origin:'initial',eventId:'wu-initial'};
-const corpus=id=>rows.find(r=>r.id===`A3V2-${id}`).setup;
+const corpus=id=>{
+ const setup=structuredClone(rows.find(r=>r.id===`A3V2-${id}`).setup);
+ if(id==='099'){
+  // 三.2：语言隔阂用例只需商人有足额本金，普通开局已有 200 铜。
+  // 显式检查至少 100 铜，保留语言/同意边界；不用测试专用钱袋快照。
+  assert.ok(initial.state.npcs.npc_hw_yanzhe.coins>=100);
+  setup.accounts=setup.accounts.filter(a=>a.resource!=='coin_river');
+  setup.history=setup.history.filter(e=>e.id!=='a3v2_099_account_0');
+ }
+ return setup;
+};
 function draft(document=initial){return engine.primitiveDraft(structuredClone(document));}
 async function archive(t,document,write,verify){
  const directory=await fs.mkdtemp(path.join(tmpRoot(),'a3-wu-'));

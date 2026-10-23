@@ -25,6 +25,7 @@ import {facilityView} from '../server-plugin/facility-state.mjs';
 import {heldUnit} from '../server-plugin/items.mjs';
 import {runSetupLoaders,setupLoaderFields,setupRowLoader} from './a3-setup/index.mjs';
 import {localWeather} from '../server-plugin/weather.mjs';
+import {runPrelude} from './a3-setup/prelude.mjs';
 import './a3-setup/loaders.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -58,6 +59,7 @@ const routeName=(route,registry)=>canonicalActionId(registry,({拒绝:'reject',r
 // skills/literacy -> state.skills; spells/recipes -> their native partitions;
 // profession licenses -> state.professions + the native holding projection.
 export function applyIntentSetup(engine,initial,setup){
+ // setup.prelude (real actions) is async and is applied by establishSetup().
  let document=structuredClone(initial),s=document.state;
  const setupUnmet=[],notes=[],bindings={};
  if(setup===undefined)return {document,setupUnmet};
@@ -70,7 +72,7 @@ export function applyIntentSetup(engine,initial,setup){
   catch(error){unmet(item,error.message);return false;}
  };
  const ref=id=>bindings[id]??(id==='self'?'player':id);
- for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities','instances','holdings',...setupLoaderFields()].includes(key))unmet(key,'unsupported setup field');
+ for(const key of Object.keys(setup))if(!['location','present','inventory','coins','minute','status','facts','abilities','instances','holdings','prelude',...setupLoaderFields()].includes(key))unmet(key,'unsupported setup field');
  if(Object.hasOwn(setup,'minute')){
   if(Number.isSafeInteger(setup.minute)&&setup.minute>=0)s.minute=setup.minute;
   else unmet('minute','expected a nonnegative safe integer');
@@ -329,10 +331,7 @@ export function applyIntentSetup(engine,initial,setup){
  }
  // Domain premises (tools/a3-setup/) run after built-in scene fields and before
  // presence and ledger audits.
- // Offices load in the domain stage (institutions order 12); the incumbents' holds_office holdings load right after
- // them, so later domain loaders (examination referral, handlers) see the holder instead of an empty office.
- const loadOfficeHoldings=offices=>{const own=new Set(offices),mine=deferredHoldings.filter(([,row])=>row?.kind==='holds_office'&&own.has(row.subject));for(const entry of mine)deferredHoldings.splice(deferredHoldings.indexOf(entry),1);loadHoldings(mine);};
- const ctx={engine,setup,bindings,ref,actor,unmet,loadOfficeHoldings,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
+ const ctx={engine,setup,bindings,ref,actor,unmet,note:text=>notes.push(text),spatial:entry=>spatialPending.push(entry),native,get document(){return document;},set document(value){document=value;s=value.state;}};
  runSetupLoaders(ctx,setup);
  loadHoldings(deferredHoldings);
  for(const check of afterDomain)check();
@@ -1089,10 +1088,18 @@ function companionEffect(effect,receipt){
  return false;
 }
 
+// Built-in scene fields and domain loaders first, then the real-action prelude on that scene.
+async function establishSetup(engine,initial,setup){
+ const base=applyIntentSetup(engine,initial,setup);
+ if(!setup||setup.prelude===undefined||base.setupUnmet.length)return base;
+ const {document,unmet}=await runPrelude(engine,base.document,setup.prelude);
+ return {...base,document,setupUnmet:unmet};
+}
+
 // Start each intention from the same campaign: rows cannot spend each other's
 // money, move observers or exhaust a later row's daily bounds.
 export async function executeIntent(engine,initial,row){
- let {document,setupUnmet,notes=[],bindings={},spatialPending=[]}=applyIntentSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
+ let {document,setupUnmet,notes=[],bindings={},spatialPending=[]}=await establishSetup(engine,initial,row.setup),preview=null,receipt=null,adopted=null,error=null,refused=false,clarified=false,submitted=null;
  const before=document;
  const signatureContext=engine.byId?createRoutingContext(engine,document):null;
  const previews=[];
@@ -1589,7 +1596,7 @@ export function constructorCandidates(engine,document,row,limits=CONSTRUCTOR_LIM
  return {candidates,entities,errors};
 }
 export async function constructWithoutModel(engine,initial,row,judge,limits=CONSTRUCTOR_LIMITS){
- const setup=applyIntentSetup(engine,initial,row.setup);
+ const setup=await establishSetup(engine,initial,row.setup);
  if(setup.setupUnmet.length)return {ready:false,attempts:[],matched:null};
  const base=setup.document,{candidates,entities,errors}=constructorCandidates(engine,base,row,limits),attempts=[],pending=setup.spatialPending??[];
  const bare={id:row.id,intent:row.intent,expected:row.expected};

@@ -23,7 +23,7 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,hasSnapshotDeposit,withdrawSnapshotDeposit}from'./finance-bank.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim} from './finance-bank.mjs';
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 
@@ -342,7 +342,3 @@ export function advanceCredit(d,engine,minute,recordIds){
         if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+currentGrace(engine,d.get('state'),row,minute,{fallbackMinutes:c.loan.defaultGraceMinutes??0}).minutes<=minute)defaultDebt(d,engine,id,row);
 }
 
-// Existing credit dispatch owns bank operations, including stored deposit terms.
-export function withdrawDepositIfSnapshot(d,engine,args,eventId){
- return hasSnapshotDeposit(engine,d,args)?withdrawSnapshotDeposit(d,engine,args,eventId):null;
-}
