@@ -5,6 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
 import '../server-plugin/engine.mjs';
+// Same subscriber modules as tools/system-map.mjs loads (mark-reactions registers open-mark-observation).
+import '../server-plugin/mark-reactions.mjs';
 import {SOCIAL_VERBS,worldEventSubscribers} from '../server-plugin/world-events.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {effectKinds} from '../server-plugin/effects.mjs';
