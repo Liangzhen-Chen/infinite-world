@@ -20,7 +20,7 @@ import {translateCall,narrateExecution,timeSegments,CLIENT_READS} from './action
 import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
-import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
+import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,gateConsistencyTurn,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
 import {primitiveRuntime} from './primitives-runtime.mjs';
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
@@ -127,7 +127,8 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             return {reference:store.reference(state),revision:state.revision,anchors};
         });
     }));
-    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false,captureSearch:req.body.captureSearch===true})));
+    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,eventId:req.body.eventId,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false,captureSearch:req.body.captureSearch===true})));
+    router.post('/review/gate',handle(req=>gateConsistencyTurn(getStore(req),req.body.campaignId,{token:req.body.token,expectedSequence:req.body.expectedSequence})));
     router.post('/review/reply',handle(async req=>{
         const store=getStore(req),{campaignId,token,draft,expectedSequence}=req.body;
         const view=await store.read(campaignId),index=await getIndex(store,campaignId,view.document);

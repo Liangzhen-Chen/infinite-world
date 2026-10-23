@@ -48,22 +48,26 @@ const activePath=(store,id)=>path.join(store.directory(id),'consistency','active
 const retrievalOf=record=>record.retrieval??{protocol:0,status:'unknown',calls:[],warnings:['旧协议没有启用只读检索留证']};
 async function activeTurn(store,id){try{return await readJSON(activePath(store,id));}catch(error){if(error.code!=='ENOENT')throw error;return {token:null,epoch:0};}}
 async function activeToken(store,id){return (await activeTurn(store,id)).token;}
-const publicBegin=record=>({token:record.token,enabled:record.enabled,startMinute:record.before.state.minute,anchor:record.anchor,revision:record.revision,sequence:record.sequence,preview:record.preview,candidates:record.preview?.candidates??[]});
+const publicBegin=record=>({token:record.token,enabled:record.enabled,startMinute:record.before.state.minute,anchor:record.anchor,revision:record.revision,sequence:record.sequence,...(record.boundEventId?{eventId:record.boundEventId}:{}),preview:record.preview,candidates:record.preview?.candidates??[]});
+const belongsToTurn=(event,record)=>record.boundEventId
+ ?event.anchor==null&&(event.id===record.boundEventId||event.id.startsWith(`${record.boundEventId}#`))
+ :event.anchor===record.anchor;
 function validTurn(state,record,campaignId){
  if(record.campaignId&&record.campaignId!==campaignId||state.revision!==record.revision)throw Error('检索回合来源已经撤销或不属于当前存档');
- if(state.events.some(e=>state.active.has(e.sequence)&&e.sequence>record.sequence&&(e.anchor!==record.anchor||e.input?.tool==='world_turn')))throw Error('检索回合已经结束或混入另一回合');
+ if(state.events.some(e=>state.active.has(e.sequence)&&e.sequence>record.sequence&&(!belongsToTurn(e,record)||e.input?.tool==='world_turn')))throw Error('检索回合已经结束或混入另一回合');
 }
-export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,expectedSequence,enabled=true,captureSearch=false}={}){
- if(typeof anchor!=='string'||!anchor||anchor.length>200||typeof playerText!=='string'||playerText.length>20000)throw Error('审查缺少有效本轮输入与锚点');
+export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,expectedSequence,enabled=true,captureSearch=false,eventId}={}){
+ const ui=anchor===null&&typeof eventId==='string'&&eventId.length>0&&eventId.length<=200;
+ if((!ui&&(typeof anchor!=='string'||!anchor||anchor.length>200))||typeof playerText!=='string'||playerText.length>20000)throw Error('审查缺少有效本轮输入与锚点');
  return store.exclusive(campaignId,async()=>{
   const state=await store.load(campaignId);
   if(state.sequence!==expectedSequence)throw Error('开始审查时存档已变化，请重新对账');
   const active=await activeTurn(store,campaignId),epoch=active.epoch??0;
   if(active.token){
    const old=await readJSON(idPath(store,campaignId,active.token));
-   if(old.anchor===anchor&&old.playerText===playerText&&old.revision===state.revision){validTurn(state,old,campaignId);return publicBegin(old);}
+   if(old.anchor===anchor&&old.boundEventId===(ui?eventId:undefined)&&old.playerText===playerText&&old.revision===state.revision){validTurn(state,old,campaignId);return publicBegin(old);}
   }
-  const token=digest([campaignId,anchor,playerText,state.head,state.revision,epoch]);
+  const token=digest([campaignId,anchor,playerText,state.head,state.revision,epoch,...(ui?[eventId]:[])]);
   const file=idPath(store,campaignId,token);await fs.mkdir(path.dirname(file),{recursive:true});
   try{const old=await readJSON(file);if(await activeToken(store,campaignId)!==token)throw Error('审查回合已被另一回合替换');return publicBegin(old);}catch(error){if(error.code!=='ENOENT')throw error;}
   const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
@@ -72,6 +76,7 @@ export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,e
   // A completed form is a candidate, never permission to apply its effects.
   const preview={status:parsed.candidate?'candidate':parsed.status,candidates,missing:parsed.missing??[],unresolved:!candidates.length};
   const record={version:1,protocol:'turn-contract-v1',token,campaignId,anchor,playerText,sequence:state.sequence,revision:state.revision,enabled,before:state.document,preview,
+   ...(ui?{boundEventId:eventId}:{}),
    retrieval:{protocol:captureSearch===true?1:0,status:captureSearch===true?'open':'unknown',calls:[],warnings:captureSearch===true?[]:['旧协议没有启用只读检索留证']}};
   await atomicJSON(file,record);
   await atomicJSON(activePath(store,campaignId),{token,epoch});
@@ -177,13 +182,19 @@ export function publicConsistencyResult(record){
 // Captures are authoritative snapshots. Client-provided receipts, clocks and
 // entity lists are never accepted. Reviewing holds the same campaign queue as
 // writes, so no action can invalidate evidence midway through a rewrite.
-export async function reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat=[],sceneSequence,client=null}={}){
+// gateOnly uses the same replay and knowledge projection, without sealing a
+// retrieval or persisting a final review. Tools may still run under this token.
+export async function gateConsistencyTurn(store,campaignId,options={}){
+ return reviewConsistencyReply(store,campaignId,{...options,gateOnly:true,sceneSequence:options.expectedSequence});
+}
+export async function reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat=[],sceneSequence,client=null,gateOnly=false}={}){
  return store.exclusive(campaignId,async()=>{
   const state=await store.load(campaignId),file=idPath(store,campaignId,token),record=await readJSON(file);
   const current=await activeToken(store,campaignId);
   if((record.campaignId||current)&&current!==token)throw Error('审查编号已撤销或不属于当前回合');
   if(record.original&&record.original!==draft)throw Error('本回合改写已经开始，不能更换待审原文');
   if(record.result){
+   if(gateOnly)throw Error('本回合已经封口，不能重新执行工具阶段');
    if(record.result.original!==draft)throw Error('本回合已经审查，不能再次生成改写');
    if(record.result.sequence!==state.sequence&&!state.events.some(e=>state.active.has(e.sequence)&&e.id===`turn_${record.anchor}`))throw Error('审查后的账本已变化');
    if(record.revision!==state.revision)throw Error('审查来源已经撤销');
@@ -192,7 +203,7 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   if(state.sequence!==expectedSequence||state.sequence!==sceneSequence||state.revision!==record.revision)throw Error('审查前存档或历史分支已变化');
   if(state.document.releaseVersion!==1)throw Error('当前存档尚未启用新版');
   const events=state.events.filter(e=>state.active.has(e.sequence)&&e.sequence>record.sequence);
-  if(events.some(e=>e.anchor!==record.anchor||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
+  if(events.some(e=>!belongsToTurn(e,record)||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
   const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
   const registry=primitiveActionRuntime().registry(engine),templates=[];
   const definition=(tool,args)=>tool==='world_act'?findAction(registry,args?.action):actionOfCall(registry,tool,args??{});
@@ -219,12 +230,19 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   const retrieval=record.retrieval=retrievalOf(record);
   if(retrieval.calls.some(row=>row.status!=='completed')){retrieval.status='unknown';retrieval.warnings.push('检索回执未完整保存');}
   if(retrieval.protocol===1&&retrieval.status==='open')retrieval.status='complete';
-  retrieval.sealed=true;await atomicJSON(file,record);
+  if(!gateOnly){retrieval.sealed=true;await atomicJSON(file,record);}
   for(const call of retrieval.calls)if(call.status==='completed')receipts.push({tool:'world_search',key:call.key,sequence:call.sequence,args:{query:call.query,...(call.limit===undefined?{}:{limit:call.limit})},result:call.result});
   const s=state.document.state;
   const currentFacts=reviewCurrentFacts(engine,state.document,{revision:state.revision,sequence:state.sequence});
   const settlement=reviewTurnSettlement({before:record.before,after:state.document,registry,revision:state.revision},receipts);
   record.evidence={receipts,retrieval,currentFacts,settlement,preview:record.preview,afterHash:digest(state.document)};
+  if(gateOnly){
+   const pending=!isOutOfCharacter(record.playerText)&&settlement.status==='pending';
+   const lines=pending?pendingTurnLines(engine,state.document,{playerText:record.playerText,candidates:record.preview?.candidates,facts:currentFacts,lines:templates})
+    :[...templates,...sceneLines(engine,state.document),...currentFactLines(engine,state.document,currentFacts)];
+   record.result={status:pending?'pending':'ready',canCommit:false,safeText:lines.join('\n'),text:lines.join('\n'),sequence:state.sequence};
+   return publicConsistencyResult(record);
+  }
   // No semantic classifier: without adjudication only public state and the
   // pending intent may be published. Off disables only the paid review.
   if(!isOutOfCharacter(record.playerText)&&settlement.status==='pending'){
@@ -299,6 +317,6 @@ export async function assertConsistencyCommit(store,campaignId,{reviewId,anchor,
  const record=await readJSON(idPath(store,campaignId,reviewId));
  if(record.campaignId&&await activeToken(store,campaignId)!==reviewId)throw Error('审查编号已撤销或不属于当前回合');
  const state=await store.load(campaignId);
- if(record.revision!==state.revision||!record.result?.canCommit||record.result.status==='pending'||record.anchor!==anchor||record.result.sequence!==expectedSequence||digest(record.result.tail.args)!==digest(args))throw Error('尾注与已审查文字或账本版本不一致');
+ if(record.boundEventId||record.revision!==state.revision||!record.result?.canCommit||record.result.status==='pending'||record.anchor!==anchor||record.result.sequence!==expectedSequence||digest(record.result.tail.args)!==digest(args))throw Error('尾注与已审查文字或账本版本不一致');
  return true;
 }
