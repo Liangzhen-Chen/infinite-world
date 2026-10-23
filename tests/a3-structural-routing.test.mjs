@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {routeAction,createRoutingContext,resolveProposalEntities} from '../server-plugin/action-router.mjs';
-import {prepareOpenAction,executeRoutedOpenAction} from '../server-plugin/open-actions.mjs';
+import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
@@ -81,13 +81,16 @@ test('A3 structural: wording distinguishes greeting from asking within identical
  }
 });
 
-test('A3 structural: tied or absent wording leaves identical signatures for clarification',()=>{
+test('A3 structural: tied or absent wording leaves alternatives for the bounded open path',()=>{
  const a=action('test:greet','打招呼'),z=action('test:ask','询问'),registry={actions:[a,z]};
  for(const intent of ['打招呼或询问','xyzzy']){
   const result=routeAction({...proposal,intent},registry,context);
-  assert.equal(result.routed,null);assert.deepEqual(result.needsSlots,{action:null,missing:['action']});
+  // a3r-route3: preserve the tie and both alternatives without inventing a
+  // missing action slot that would block an otherwise complete proposal.
+  assert.equal(result.routed,null);assert.equal(result.needsSlots,null);
+  assert.ok(result.candidates.every(c=>/也可按/.test(c.reason)));
   assert.deepEqual(new Set(result.candidates.map(c=>c.id)),new Set([a.id,z.id]));
-  assert.match(result.reason,/请选择/);
+  assert.match(result.reason,/开放路径/);
   assert.equal(result.candidates[0].textScore,result.candidates[1].textScore);
   assert.deepEqual(result,routeAction({...proposal,intent},{actions:[z,a]},context));
  }
@@ -102,7 +105,8 @@ test('A3 structural: both matching wordings require a 0.2 lead to disambiguate',
   assert.equal(first.textScore,1);assert.ok(second.textScore>0);
   const lead=first.textScore-second.textScore;assert.ok(lead>0);
   if(sharedCount===1){assert.ok(lead>=.2);assert.equal(result.routed,a.id);assert.match(result.reason,/按文字区分为/);}
-  else {assert.ok(lead<.2);assert.equal(result.routed,null);assert.deepEqual(result.needsSlots,{action:null,missing:['action']});}
+  // a3r-route3: a weak lead retains open execution, rather than clarification.
+  else {assert.ok(lead<.2);assert.equal(result.routed,null);assert.equal(result.needsSlots,null);}
  }
 });
 
@@ -110,7 +114,9 @@ test('A3 structural: wording for a contradictory action cannot resolve exact alt
  const a=action('test:greet','打招呼'),z=action('test:ask','询问');
  const attack=action('test:attack','攻击',[{op:'vital',target:'npc_one',type:'blunt',delta:-1}]);
  const result=routeAction({...proposal,intent:'攻击'},{actions:[attack,a,z]},context);
- assert.equal(result.routed,null);assert.deepEqual(result.needsSlots,{action:null,missing:['action']});
+ // a3r-route3: contradictory wording still cannot select that program; the
+ // complete effects remain available to the bounded open path.
+ assert.equal(result.routed,null);assert.equal(result.needsSlots,null);
  assert.deepEqual(new Set(result.candidates.map(c=>c.id)),new Set([a.id,z.id]));
 });
 
@@ -147,25 +153,67 @@ test('A3 structural: native repayment and withdrawal distinguish opposite money 
   const result=routeAction({intent:'xyzzy',target,effects},{actions},native);
   const expected=actions.find(a=>incoming?a.call.operation==='withdraw':a.id==='core:trade.repay');
   assert.equal(result.nearest.id,expected.id);assert.equal(result.nearest.signatureScore,1);
-  assert.equal(result.candidates.find(c=>c.id!==expected.id).signatureScore,0);
+  // a3r-route3 may return only executable alternatives on the open path.
+  // Test the opposite program directly so the direction guard stays explicit.
+  const opposite=routeAction({intent:'xyzzy',target,effects},{actions:actions.filter(a=>a.id!==expected.id)},native);
+  assert.equal(opposite.nearest.signatureScore,0);assert.equal(opposite.routed,null);
  }
 });
 
-test('A3 structural: ambiguous registered programs return clarification with no state writes',async()=>{
+test('A3 structural: ambiguous tell executes openly with alternatives and native bounds',async()=>{
  const {engine,document}=fixture();
- const program=engine.world.actionDefinitions.actions.find(a=>a.id==='core:practice');
- engine.world.actionDefinitions={format:1,actions:[program,{...structuredClone(program),id:'test:other_practice',label:'另一种练习'}]};
- const args={intent:'练习',means:{skill:'skill_light'},effects:[{op:'learn',entity:'self',subject:'skill_light',learningSource:'practice',amount:5}]},before=structuredClone(document);
+ const emitted={op:'emit',target:'player',verb:'tell',visibility:'private',payload:{text:'先观察周围'}};
+ const program={...action('test:one','甲乙',[emitted]),cost:{time:5}};
+ engine.world.actionDefinitions={format:1,actions:[program,{...structuredClone(program),id:'test:two',label:'丙丁',cost:{time:9}}]};
+ const args={intent:'xyzzy',effects:[emitted]},before=structuredClone(document);
+ // a3r-route3 replaces action-choice clarification with actual open execution.
+ // Keep preview immutability and verify the registered cost floor, candidates,
+ // actual emitted event, ledger integrity and replay's no-duplicate guarantee.
  const plan=prepareOpenAction(engine,document,args);
- assert.equal(plan.status,'needs_slots');assert.equal(plan.routed,null);assert.deepEqual(plan.effects,[]);
- assert.deepEqual(plan.candidates.map(c=>c.id).sort(),['core:practice','test:other_practice']);
- const result=await executeRoutedOpenAction(engine,document,{eventId:'ambiguous-program',args});
- assert.equal(result.receipt.status,'not_submitted');assert.deepEqual(result.receipt.applied,[]);
- assert.equal(Object.hasOwn(result,'patches'),false);assert.deepEqual(document,before);
+ assert.equal(plan.status,'open');assert.equal(plan.routed,null);assert.equal(plan.needsSlots,null);
+ assert.deepEqual(plan.candidates.map(c=>c.id).sort(),['test:one','test:two']);
  const preview=await engine.previewAction(document,{tool:'world_propose',eventId:'ambiguous-through-engine',args});
- assert.equal(preview.receipt.status,'not_submitted');assert.deepEqual(preview.receipt.applied,[]);assert.equal(preview.prepared.status,'needs_slots');
- await assert.rejects(engine.reduce(document,{tool:'world_propose',eventId:'ambiguous-through-engine',args}),{code:'E-OPEN-NOT-ROUTED'});
- assert.deepEqual(document,before);
+ assert.equal(preview.receipt.status,'preview');assert.equal(preview.receipt.routing.status,'open');assert.ok(preview.receipt.cost.time>=9);
+ assert.ok(preview.receipt.routing.candidates.every(c=>/也可按/.test(c.reason)));assert.deepEqual(document,before);
+ const input={tool:'world_propose',eventId:'ambiguous-through-engine',args},result=await engine.reduce(document,input),after=applyPatches(document,result.patches);
+ assert.equal(result.result.receipt.status,'committed');assert.equal(result.result.receipt.applied.filter(e=>e.op==='emit').length,1);
+ assert.ok(Object.values(after.state.records).some(row=>row.category==='world_event'&&row.payload?.text===emitted.payload.text));
+ assert.deepEqual(auditLedger(after.ledger),[]);assert.deepEqual(document,before);
+ assert.deepEqual((await engine.reduce(after,input)).patches,[]);
+});
+
+test('A3 structural: required proposal information precedes stronger wording',()=>{
+ const ready={...action('test:ready','甲乙'),slots:[{name:'target',required:true}]};
+ const missing={...action('test:missing','xyzzy'),slots:[{name:'terms',required:true}]};
+ const result=routeAction({...proposal,intent:'xyzzy'},{actions:[missing,ready]},context);
+ assert.equal(result.routed,ready.id);assert.equal(result.candidates[0].id,ready.id);
+ // Name the protocol here: its absent terms are genuinely requested input,
+ // rather than an unnamed program's requirements imposed on a generic act.
+ const absent=routeAction({...proposal,intent:'xyzzy'},{actions:[missing,{...missing,id:'test:other'}]},context);
+ assert.equal(absent.routed,null);assert.deepEqual(absent.needsSlots,{action:null,missing:['terms']});
+});
+
+test('A3 structural: a generic act does not inherit an unnamed program missing slots',()=>{
+ const sourced={...action('test:sourced','甲乙'),slots:[{name:'source',required:true}]};
+ const registry={actions:[sourced]};
+ const generic=routeAction({...proposal,intent:'xyzzy'},registry,context);
+ assert.equal(generic.routed,null);assert.equal(generic.needsSlots,null);assert.equal(generic.candidates[0].missing[0],'source');
+ assert.match(generic.candidates[0].reason,/也可按/);
+ const named=routeAction({...proposal,intent:'甲乙'},registry,context);
+ assert.deepEqual(named.needsSlots,{action:sourced.id,missing:['source']});
+});
+
+test('A3 structural: practice uses an explicitly supplied duration, not an invented default',()=>{
+ const {engine,document}=fixture(),native=createRoutingContext(engine,document);
+ const args={intent:'xyzzy',means:{skill:'skill_light'},effects:[{op:'learn',entity:'player',subject:'skill_light',learningSource:'practice',amount:1.2}]};
+ const registry={actions:engine.world.actionDefinitions.actions};
+ for(const minutes of [undefined,60,120]){
+  const means={...args.means,...(minutes===undefined?{}:{minutes})};
+  const result=routeAction({...args,means},registry,native);
+  assert.equal(result.routed,minutes===undefined?'core:practice':'core:practice.session');
+  assert.match(result.reason,/按结构区分为/);
+  if(minutes!==undefined)assert.equal(result.nearest.slots.minutes,minutes);
+ }
 });
 
 test('A3 structural: hidden person stays unresolvable by id, name and alias',()=>{

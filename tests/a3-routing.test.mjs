@@ -17,11 +17,11 @@ test('A3 routing: signatures are multisets of op, target kind and field/resource
  assert.equal(signatureJaccard(a,b),.5);assert.equal(signatureJaccard([],[]),0);
  assert.equal(signatureJaccard(b,effectSignature([{...effect,verb:'tell'}],{kindOf})),0);
 });
-test('A3 routing: identical signatures require a choice, with stable candidate ordering',()=>{
+test('A3 routing: unresolved identical signatures preserve alternatives for open execution',()=>{
  const registry={actions:[action('test:z'),action('test:a')]},r=routeAction(proposal,registry,context);
- // a3r-route / 产品原则二.2: ID ordering remains display-only; an exact
- // structural tie must preserve both choices instead of executing either.
- assert.equal(r.routed,null);assert.deepEqual(r.needsSlots,{action:null,missing:['action']});assert.deepEqual(r.candidates.map(c=>c.id),['test:a','test:z']);assert.equal(r.nearest.signatureScore,1);assert.ok(r.nearest.textScore>0);
+ // a3r-route3: ID ordering stays display-only, but a tie must not block the
+ // bounded open path when the proposal itself has the necessary information.
+ assert.equal(r.routed,null);assert.equal(r.needsSlots,null);assert.deepEqual(r.candidates.map(c=>c.id),['test:a','test:z']);assert.ok(r.candidates.every(c=>/也可按/.test(c.reason)));assert.equal(r.nearest.signatureScore,1);assert.ok(r.nearest.textScore>0);
  assert.equal(r.nearest.score,.6*r.nearest.signatureScore+.4*r.nearest.textScore);
  assert.deepEqual(r,routeAction(proposal,{actions:registry.actions.toReversed()},context));
 });
