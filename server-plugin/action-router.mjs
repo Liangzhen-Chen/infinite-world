@@ -47,6 +47,20 @@ function actionSignature(action,context,slots){
 function actionSignatures(action,context,slots,proposal){
  return [...(action.signature?.variants??[actionSignature(action,context,slots)]),...(context.nativeSignatures?.(action,slots,proposal)??[])];
 }
+// Authored outcomes can distinguish two person-to-person transfers even when
+// their legacy op/kind/resource footprints are identical. Native signatures
+// already check domain endpoints before supplying their footprint.
+function transferDirections(effects,{actor='player',bindings={}}={}){
+ const bind=value=>value==='$actor'?actor:value?.slot?bindings[value.slot]:value;
+ const owner=value=>{
+  value=bind(value);
+  return typeof value==='string'?value.split('|')[0]:value;
+ };
+ return effects.filter(e=>e.op==='transfer').map(e=>{
+  const resource=e.resource??String(bind(e.from)??'').split('|')[1];
+  return JSON.stringify([resource==='coin'?LEDGER_COIN:resource,owner(e.from)===actor,owner(e.to)===actor]);
+ }).sort();
+}
 function textScores(actions,intent){
  const termsFor=text=>/^[\u3400-\u9fff]$/.test(text)?[normalize(text)]:tokenizer.terms(text);
  const query=new Set(tokenizer.terms(intent)),rows=actions.map(action=>{
@@ -91,6 +105,9 @@ export function requestSubjectKind(registry,subject){
  return kinds.length===1?kinds[0]:null;
 }
 const ROUTE_CANDIDATES=8;
+// BM25 phrase matches are normalized to [0,1]. A 0.2 lead (20 percentage
+// points), or being the only matching exact candidate, identifies the wording.
+const ROUTE_TEXT_MARGIN=.2;
 export function routeAction(proposal,registry,context){
  if(typeof context?.visible!=='function'||typeof context.kindOf!=='function'||typeof context.slotsFor!=='function')throw Error('Routing requires native visibility, kinds and slot extraction');
  const actor=context.actor??'player',inferred=proposal.effects?.map(e=>e.op==='move'&&e.entity===actor&&e.mode!=='disengage'?e.to:e.target??e.entity).find(id=>typeof id==='string'&&id!==actor),target=proposal.target??inferred;
@@ -115,13 +132,23 @@ export function routeAction(proposal,registry,context){
   const slots=context.slotsFor(action,proposal)??{},required=new Set(context.requiredSlots?.(action,slots)??[]),missing=(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name);
   // A selected read projection has an exactly empty effect footprint. Generic
   // empty proposals still have zero Jaccard and cannot select a write action.
-  const signatureScore=context.bareIntent?.(action,proposal)?1:Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value))),textScore=texts[index];
+  const outcomes=Array.isArray(action.outcomes)?action.outcomes:action.outcomes?.success??action.outcomes?.accepted;
+  const directions=outcomes?.some(e=>e.op==='transfer')?signatureJaccard(transferDirections(proposal.effects??[],context),transferDirections(outcomes,{...context,bindings:slots})):1;
+  const signatureScore=context.bareIntent?.(action,proposal)?1:Math.min(directions,Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value)))),textScore=texts[index];
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
- const best=candidates[0],matched=best&&best.score>=.7;
+ // Empty proposals keep the catalog's existing bareIntent/mention scoring;
+ // their synthetic score of 1 is not a Jaccard-complete effect signature.
+ const exact=signature.length?candidates.filter(candidate=>candidate.signatureScore===1):[];
+ // Structure limits the alternatives; wording may distinguish only those
+ // exact candidates. A tie or a weak lead remains the player's choice.
+ const textChoice=exact.length>1&&exact[0].textScore>0&&(exact[1].textScore===0||exact[0].textScore-exact[1].textScore>=ROUTE_TEXT_MARGIN);
+ if(exact.length>1&&!textChoice)return {signature,candidates:exact.slice(0,ROUTE_CANDIDATES),routed:null,needsSlots:{action:null,missing:['action']},nearest:exact[0],reason:'多个注册动作与提案结构一致，请选择要按哪个动作结算'};
+ const best=exact[0]??candidates[0],matched=best&&(exact.length>0||best.score>=.7);
+ if(exact.length){candidates.splice(candidates.indexOf(best),1);candidates.unshift(best);}
  // Receipts carry only the nearest few registered actions (06 §6.10.4
  // alternatives), not a score row for every action in the catalog.
- return {signature,candidates:candidates.slice(0,ROUTE_CANDIDATES),routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null};
+ return {signature,candidates:candidates.slice(0,ROUTE_CANDIDATES),routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null,...(matched&&!best.missing.length?{reason:`${textChoice?'按文字区分为':'按'}“${actions.find(a=>a.id===best.id).label??best.id}”动作结算`}:{})};
 }
 
 // Only currently accessible objects enter name resolution. Global engine.resolve
@@ -240,6 +267,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   const choices=[...new Map([...candidates,...matches.map(row=>({id:row.id,kind:'place',name:row.name}))].map(row=>[row.id,row])).values()].sort((a,b)=>a.id.localeCompare(b.id));
   return choices.length?{value:choices.length===1?choices[0].id:null,candidates:choices}:resolve(value,'place');
  };
+ const consumedLiquid=proposal=>(proposal.effects??[]).find(e=>{
+  if(e.op!=='transfer'||owner(e.from)!==actor||owner(e.to)!=='sink:consume')return false;
+  const resource=e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null),item=engine.byId.get(resource);
+  return item?.nutrition?.hydration>0&&item.weight>0;
+ });
  const slotsFor=(action,proposal)=>{
   const slots={},target=proposal.participants?.target??proposal.target??proposal.effects?.find(e=>e.target!==undefined||e.entity!==undefined)?.target??proposal.effects?.find(e=>e.entity!==undefined)?.entity;
   for(const slot of action.slots??[]){
@@ -319,8 +351,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    if(action.call?.tool==='world_field'&&action.call.operation==='environment_douse_fire'){
     if(slot.name==='source')value??=proposal.means?.tools?.[0];
     if(slot.name==='millilitres'){
-     const water=transfers.find(e=>resource(e)==='item_water'&&owner(e.from)===actor&&owner(e.to)==='sink:consume');
-     if(water)value??=water.qty*engine.byId.get('item_water')?.weight*1000;
+     const liquid=consumedLiquid(proposal);
+     if(liquid)value??=liquid.qty*engine.byId.get(resource(liquid)).weight*1000;
     }
    }
    if(action.call?.tool==='world_cast'){
@@ -507,7 +539,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   return result;
  };
  const nativeSignatures=(action,slots,proposal)=>{
-  const call=action.call,sign=effects=>effectSignature(effects,{kindOf,actor}),transfer=(resource,from,to)=>({op:'transfer',resource,from,to});
+  const call=action.call,sign=effects=>{
+   // Native programs also own transfer direction. A legacy three-part
+   // footprint alone cannot distinguish collecting money from paying it.
+   if(effects.some(e=>e.op==='transfer')&&signatureJaccard(transferDirections(effects,{actor}),transferDirections(proposal.effects??[],{actor}))!==1)return [];
+   return effectSignature(effects,{kindOf,actor});
+  },transfer=(resource,from,to)=>({op:'transfer',resource,from,to});
   if(call?.tool==='world_settlement'&&call.operation==='festival_plan'&&proposal.effects?.some(e=>e.op==='create'&&e.kind==='project'&&e.tags?.length===1&&e.tags[0]==='festival'))return [sign([{op:'create',kind:'project'}])];
   if(call?.tool==='world_law'&&call.operation==='confess'&&proposal.effects?.some(e=>e.op==='emit'&&e.payload?.kind==='confession'))return [sign([{op:'emit',target:slots.request?.target,verb:'tell'}])];
   const owner=value=>typeof value==='string'&&value.includes('|')?parseAccount(value).owner:value;
@@ -556,8 +593,9 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   if(call?.tool==='world_field'&&call.operation==='environment_douse_fire'){
    // The catalog names the fact field(s) this program changes (signature.factFields).
    const fact=proposal.effects?.find(e=>e.op==='fact.set'&&action.signature?.factFields?.includes(e.field));
-   if(!fact)return [];
-   return [sign([transfer('item_water',actor,'sink:consume'),{op:'fact.set',entity:slots.target??fact.entity,field:fact.field}])];
+   const liquid=consumedLiquid(proposal);
+   if(!fact||!liquid)return [];
+   return [sign([transfer(resource(liquid),actor,'sink:consume'),{op:'fact.set',entity:slots.target??fact.entity,field:fact.field}])];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
   if(call?.tool==='world_law'&&call.operation==='pay'){
