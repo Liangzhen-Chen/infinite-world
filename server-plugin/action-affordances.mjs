@@ -76,7 +76,7 @@ function openProposalOffer(ctx){
   const required=primitive.allOf.find(row=>row.if?.properties?.op?.const===op)?.then?.required??[];
   return {title:op,type:'object',properties,required:['op',...required]};
  });
- return {id:'open:proposal',label:'组合自己的做法',hint:'选择效果并预览；实际能力、同意、代价和法律后果由引擎裁决。',readOnly:false,inputTool:'world_propose',fill:{},slots:[
+ return {id:'open:proposal',label:'组合自己的做法',hint:'可只填 intent，由引擎判定；实际能力、同意、代价和法律后果由引擎裁决。',readOnly:false,inputTool:'world_propose',fill:{},slots:[
   {name:'intent',kind:'text',required:true},
   {name:'target',kind:'entity',entity:'entity',builderStep:1,options:entities},
   {name:'consent',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{from:select(entities),scope:{type:'string'},onRefusal:{type:'string',enum:['abort','contest']}}}},
@@ -84,7 +84,7 @@ function openProposalOffer(ctx){
   {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),tools:{type:'array',maxItems:1,items:select(items)},skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
   // Public submission limits/fields come from the production proposal schema.
   // oneOf supplies local builder controls, not a second structural contract.
-  {name:'effects',kind:'object',required:true,inputSchema:{...structuredClone(actionSchema.$defs.proposal.properties.effects),items:{...structuredClone(primitive),oneOf:variants}}},
+  {name:'effects',kind:'object',inputSchema:{...structuredClone(actionSchema.$defs.proposal.properties.effects),items:{...structuredClone(primitive),oneOf:variants}}},
   {name:'context',kind:'object',inputSchema:{type:'object',properties:{modifier:{type:'integer',minimum:-5,maximum:5},reason:{type:'string'}}}}
  ]};
 }
