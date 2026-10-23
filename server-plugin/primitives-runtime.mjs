@@ -26,7 +26,7 @@ import {digest,applyPatches,recordsWhere} from './storage.mjs';
 import {bodyFact,readBodyState,writeBodyNeed,beginBodyActivity} from './primitives-body.mjs';
 import {normativeAuthoritySources} from './action-authority-sources.mjs';
 import {moveLocally} from './primitives-movement.mjs';
-import {checkActor} from './primitives-checks.mjs';
+import {checkActor,checkDerivedActor} from './primitives-checks.mjs';
 import {learnNpc,studyBook} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
@@ -368,7 +368,7 @@ function actionDuration(engine,document,action,slots,actor){
  return {duration,activity:action.activity??row?.activity??(effects.some(e=>e.op==='move')?'travel':effects.some(e=>e.op==='time')?'rest':'light')};
 }
 
-function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{duration=0,purpose=action.id,limits={},quote={}}={}){
+function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{duration=0,purpose=action.id,limits={},quote={},derivedDifficulty}={}){
  effects=effects.map(effect=>resolvePrimitiveTransfer(engine,d.document,effect,{actor}));
  let permission=null,check=action.check,failed=false;
  const scopeRules=action.consent?.scope;
@@ -406,7 +406,7 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
   const args=actionEffects({outcomes:check},slots,actor);
   if(args.opponent)delete args.difficulty;
   if(args.difficulty!==undefined)args.difficulty=rxValue(engine,d.document,action,slots,args.difficulty,actor);
-  receipt.check=engine.primitiveCheck(d,args,`${eventId}:action-check`,actor);failed=!receipt.check.success;
+  receipt.check=derivedDifficulty?checkDerivedActor(d,engine,args,`${eventId}:action-check`,actor,derivedDifficulty):engine.primitiveCheck(d,args,`${eventId}:action-check`,actor);failed=!receipt.check.success;
  }
  if(permission)receipt.consent=permission;
  if(action.theft===true&&!check)reject('E-THEFT-CHECK','Theft requires an authored native check');
@@ -698,12 +698,12 @@ export const primitiveRuntime={
  executeOpen(engine,document,input,prepared,{preview=false}={}){
   const actor='player',eventId=input.eventId,proposal=input.args,effects=prepared.effects;
   let limits,quote,start,resources,resourceSources;
-  const tested=prepared.sources.some(s=>s.difficulty>0),difficulty=Object.values(engine.rules.check.difficulties).sort((a,b)=>Math.abs(a-prepared.difficulty)-Math.abs(b-prepared.difficulty))[0];
-  const action={id:'open:proposal',slots:[],outcomes:effects,check:tested?{attribute:prepared.sources.find(s=>s.skill)?engine.byId.get(prepared.sources.find(s=>s.skill).skill)?.attribute??'精神':'力量',...(prepared.sources.find(s=>s.skill)?{skill:prepared.sources.find(s=>s.skill).skill}:{}),difficulty,context:difficulty-prepared.difficulty,contextReason:prepared.context?.reason??'开放动作来源难度及无近邻修正'}:null};
+  const tested=prepared.sources.some(s=>s.difficulty>0);
+  const action={id:'open:proposal',slots:[],outcomes:effects,check:tested?{attribute:prepared.sources.find(s=>s.skill)?engine.byId.get(prepared.sources.find(s=>s.skill).skill)?.attribute??'精神':'力量',...(prepared.sources.find(s=>s.skill)?{skill:prepared.sources.find(s=>s.skill).skill}:{}),difficulty:Object.values(engine.rules.check.difficulties)[0]}:null};
   const degreeSlots={tool:prepared.sources.find(source=>engine.byId.get(source.id)?.tags?.includes('tool'))?.id};
   const frame=createRuntimePrimitiveFrame(engine,document,{actor,eventId,source:{kind:'open',id:'open:proposal'},identity:{proposal},limits:()=>limits,
    prepare:(d,{receipt})=>{
-    Object.assign(receipt,{routing:proposalRouting(proposal,prepared),signature:prepared.signature,candidates:prepared.candidates});
+    Object.assign(receipt,{routing:proposalRouting(proposal,prepared),signature:prepared.signature,candidates:prepared.candidates,difficulty:prepared.difficulty,difficultyBreakdown:structuredClone(prepared.difficultyBreakdown)});
     receipt.trimmed.push(...prepared.trimmed);
     limits=actionLimits(engine,d.document,action,{},actor);limits.costManaged=true;
     limits.improvised=prepared.sources.some(source=>source.improvised===true);
@@ -726,7 +726,7 @@ export const primitiveRuntime={
     if(mp)d.set(['state','player','mp'],d.get('state','player','mp')-mp);
     if(stamina)writeBodyNeed(d,engine,actor,'stamina',body.value-stamina,{activity:'light',remainder:body.remainder});
     receipt.requirements={mp,stamina};
-    const selected=adjudicateAction(d,engine,action,degreeSlots,actor,eventId,effects,receipt,{duration:quote.duration,limits,quote}).map(effect=>{
+    const selected=adjudicateAction(d,engine,action,degreeSlots,actor,eventId,effects,receipt,{duration:quote.duration,limits,quote,derivedDifficulty:prepared.difficultyBreakdown}).map(effect=>{
      if(effect.op!=='vital')return effect;
      const cap=limits.vital[effect.delta<0?'harm':'heal'],delta=Math.sign(effect.delta)*Math.min(Math.abs(effect.delta),cap);
      if(delta!==effect.delta)receipt.trimmed.push({effect,applied:delta,reason:'source_final_bound'});

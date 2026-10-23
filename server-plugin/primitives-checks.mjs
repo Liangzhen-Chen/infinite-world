@@ -7,6 +7,28 @@ import {reject} from './primitive-policy.mjs';
 
 const integer=(n,min,max)=>{if(!Number.isSafeInteger(n)||n<min||n>max)reject('E-CHECK-BOUND','Check input is outside its native bounds');return n;};
 const die=(d,id,label)=>checkDie(d.document,id,label);
+// Only the native open executor calls this with a server-derived breakdown.
+// Public check() and checkActor() still accept registered tiers only. Run all
+// their attribute/tool/helper/context protections, then grade the very same die
+// against the exact world threshold; never encode server resistance in context.
+export function checkDerivedActor(d,engine,args,eventId,actor,derived){
+ const context=derived.context??{modifier:0};
+ integer(context.modifier,-5,5);
+ if(context.modifier&&!String(context.reason??'').trim())reject('E-OPEN-CONTEXT','情境修正须说明理由');
+ if(args.opponent){
+  const result=engine.primitiveCheck(d,args,eventId,actor);
+  result.difficultyBreakdown={...structuredClone(derived),resistanceApplied:false,reason:'对抗沿用对手属性/技能与适应，不叠加固定目标抗性'};
+  d.set(['state','checks',eventId],result);return result;
+ }
+ const world=integer(derived.world,0,Number.MAX_SAFE_INTEGER),difficulty=world+context.modifier;
+ if(!Number.isSafeInteger(difficulty))reject('E-OPEN-BOUND','Invalid derived difficulty');
+ const registered=Object.values(engine.rules.check.difficulties)[0];
+ // Proposal context is a bounded threshold adjustment (positive = harder).
+ // The public check's separate actor bonus remains zero for this native check.
+ const result=engine.primitiveCheck(d,{...args,difficulty:registered,context:0},eventId,actor);
+ Object.assign(result,{difficulty,...checkDegree(result.die,result.total,difficulty),difficultyBreakdown:structuredClone(derived)});
+ d.set(['state','checks',eventId],result);return result;
+}
 export function checkActor(d,engine,args,eventId,actor='player',{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh}={}){
  if(actor==='player')return engine.check(d,args,eventId);
  const context={engine,document:d.document},state=d.get('state'),body=state.npcs?.[actor];
