@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {reject} from './action-rejection.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet,setLocation,aliveHoldings,locationOf} from './holdings.mjs';
-import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater,useTool} from './items.mjs';
+import {physicalItem,writePhysicalItem,equipPhysicalItem,wornItems,physicalLocation,consumeLiquid,purseAccount,containerUnits,takeContainerUnit,reconcileContainerWater,releaseContainerWater,useTool,heldUnit,trackTransferUnit,stockContainerWater} from './items.mjs';
 import {authority} from './action-authority.mjs';
 import {consent} from './action-consent.mjs';
 import {moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
@@ -29,6 +29,8 @@ const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min
 const key=id=>`physical_feature:${id}`;
 import {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
+import {transferWaterState} from './water-volume.mjs';
+import {applyBodyVital} from './primitives-body.mjs';
 export {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
 // Native restoration of a catalog object's current placement and state. The
 // source is retained as provenance; restoring it does not replay the event.
@@ -60,9 +62,19 @@ export function writeEnvironmentPremise(d,engine,id,{location,carriedBy,state,so
 }
 function interactPhysicalItem(d,engine,args,eventId){
  const id=args.target,record=d.get('state','records',`physical_item:${id}`),operation=args.operation??'inspect';
- if(!record&&operation==='take_contents'&&d.get('state','records',key(id))){
+ if(!record&&['take_contents','drink_contents','pour_water'].includes(operation)&&d.get('state','records',key(id))){
   const row=environmentFeatures(engine,d.document).find(f=>f.id===id);if(!row)throw Error('Unknown container');
   inReach(d,row,1.5);permission(d,engine,row,args);
+  if(operation==='drink_contents'){
+   return {id,...drinkContainer(d,engine,id,args,eventId)};
+  }
+  if(operation==='pour_water'){
+   const before=stateOf(d,row),amount=args.millilitres===undefined?before.waterMl:integer(args.millilitres,1,before.waterMl,'倒水量');
+   if(!amount)reject('E-ACTION-WATER','容器已经空了',{missing:['实际可倒出的水'],repair:['检查容器现有水量']});
+   const split=transferWaterState(before,{waterMl:0,capacityMl:amount},amount,{odor:true});store(d,row,split.source);
+   const minutes=engine.world.openActionRules.generic.transferMinutes;engine.advance(d,minutes,eventId);
+   return {id,pouredMl:amount,waterMl:split.source.waterMl,discarded:split.destination,minutes};
+  }
   return {id,...takeContainerUnit(d,engine,id,args.instance,'player',eventId)};
  }
  if(!record)return null;
@@ -82,7 +94,7 @@ function interactPhysicalItem(d,engine,args,eventId){
  if(operation==='wear'||operation==='unwear')return {id,slots:equipPhysicalItem(d,engine,'player',id,{slot:args.slot,remove:operation==='unwear',eventId})};
  const p=locationOf(d,id),contact=p?.mode==='carried'&&p.at==='player'?{lineOfSight:true,distanceMeters:0}:engine.primitiveTargetFacts(d,'player',id);
  if(!contact?.lineOfSight||!Number.isFinite(contact.distanceMeters)||contact.distanceMeters>1.5)reject('E-ACTION-REACH','尚不能看清并触及物品',{missing:['视线及接触距离'],repair:['移到能看清物品的近处']});
- if(operation==='drink_contents')return {id,...consumeLiquid(d,engine,id,args.resource,args.quantity??1,{eventId})};
+ if(operation==='drink_contents')return {id,...drinkContainer(d,engine,id,args,eventId)};
  if(operation==='take_contents')return {id,...takeContainerUnit(d,engine,id,args.instance,'player',eventId)};
  if(operation==='transfer_purse'){
   const from=purseAccount(d,engine,id),to=args.to;
@@ -144,7 +156,7 @@ const stateOf=(d,row)=>{
     if(record&&(record.category!=='physical_feature'||record.id!==row.id))throw Error('环境动态状态的登记键发生冲突，拒绝覆盖');
     return record?.state??row.state;
 };
-const store=(d,row,state)=>{if(state.waterMl!==undefined)reconcileContainerWater(d,row.id,state.waterMl);d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});};
+const store=(d,row,state)=>{if(state.waterMl!==undefined)reconcileContainerWater(d,row.id,state.waterMl);d.set(['state','records',key(row.id)],{...d.get('state','records',key(row.id)),id:row.id,category:'physical_feature',location:row.location,state});};
 const point=localPlayerPoint;
 // A successful melee exchange supplies contact evidence, never mere co-presence.
 export function recordLocalContact(d,engine,target,eventId){
@@ -218,11 +230,8 @@ export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
     const amount=integer(args.millilitres,1,maximumMl,'搬水量');
     if(src.waterMl<amount||dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)<amount)throw preconditionFailure('水源不足或目标容器容量不足');
     if(inspectOnly)return{source:source.id,destination:destination.id,amountMl:amount};
-    for(const field of['saltMg','toxinUg']){const moved=src[field]*amount/src.waterMl;src[field]-=moved;dst[field]+=moved;}
-    dst.turbidity=(dst.turbidity*dst.waterMl+src.turbidity*amount)/(dst.waterMl+amount);
-    dst.pathogenRisk=Math.max(dst.pathogenRisk,src.pathogenRisk);dst.odor=src.odor;
-    src.waterMl-=amount;dst.waterMl+=amount;store(d,source,src);store(d,destination,dst);
-    return{source:source.id,destination:destination.id,amountMl:amount,sourceRemainingMl:src.waterMl,destinationWaterMl:dst.waterMl,
+    const mixed=transferWaterState(src,dst,amount,{odor:true});store(d,source,mixed.source);store(d,destination,mixed.destination);
+    return{source:source.id,destination:destination.id,amountMl:amount,sourceRemainingMl:mixed.source.waterMl,destinationWaterMl:mixed.destination.waterMl,
         safety:'仅搬运原水，污染随水移动，未净化或消毒'};
 }
 export function validateEnvironmentCatalog(catalog){
@@ -288,11 +297,9 @@ export function applyEnvironmentMagic(d,prepared,eventId){
         result={loosenedGrams:loosened,removedGrams:0,note:'泥仍在沟中，实际搬运后才减少堵塞'};
     }else{
         const transfer=watering(d,this,row,operation,prepared.environment,prepared.catalog.rangeMeters,power),src=structuredClone(stateOf(d,transfer.source)),dst=structuredClone(stateOf(d,transfer.destination)),amount=transfer.amountMl;
-        const salt=src.saltMg*amount/src.waterMl,toxin=src.toxinUg*amount/src.waterMl;
-        dst.turbidity=(dst.turbidity*dst.waterMl+src.turbidity*amount)/(dst.waterMl+amount);
-        dst.pathogenRisk=Math.max(dst.pathogenRisk,src.pathogenRisk);dst.waterMl+=amount;dst.saltMg+=salt;dst.toxinUg+=toxin;
+        const mixed=transferWaterState(src,dst,amount);
+        Object.assign(src,mixed.source);Object.assign(dst,mixed.destination);
         if(transfer.destination.kind==='soil')dst.moisturePercent=Math.min(100,dst.baseMoisturePercent+100*dst.waterMl/dst.capacityMl);
-        src.waterMl-=amount;src.saltMg-=salt;src.toxinUg-=toxin;
         store(d,transfer.source,src);store(d,transfer.destination,dst);
         return{target:row.id,movedMl:amount,source:transfer.source.id,destination:transfer.destination.id,destinationOwner:transfer.destination.owner,
             sourceWaterMl:src.waterMl,destinationWaterMl:dst.waterMl,...(transfer.destination.kind==='soil'?{moisturePercent:dst.moisturePercent}:{}),
@@ -304,6 +311,7 @@ export function applyEnvironmentMagic(d,prepared,eventId){
 
 export function interactEnvironment(d,args,eventId){
     const location=d.get('state','location'),operation=args.operation??'inspect';
+    if(operation==='draw_water')return drawWater.call(this,d,args,eventId);
     const physical=interactPhysicalItem(d,this,args,eventId);if(physical)return physical;
     const building=args.target&&(d.get('state','created',args.target)??this.byId.get(args.target));
     if(isFacility(building)){
@@ -376,6 +384,39 @@ export function interactEnvironment(d,args,eventId){
         store(d,row,src);store(d,destination,dst);
     }
     return{operation,...outcome,removedGrams:outcome.success?amount:0,minutes,target:row.id,destination:destination.id};
+}
+
+function drinkContainer(d,engine,id,args,eventId){
+ const {consumed,...result}=consumeLiquid(d,engine,id,args.resource,args.quantity??1,{eventId,millilitres:args.millilitres});
+ if(!consumed)return result;
+ const gain=result.nutrition.hydration,nourishment=applyBodyVital(d,engine,'player','hydration',gain,{body:{hydration:gain}},{consumed});
+ const minutes=engine.world.openActionRules.generic.transferMinutes;engine.advance(d,minutes,eventId);
+ return {...result,nutrition:{hydration:nourishment.delta},minutes};
+}
+function drawWater(d,args,eventId){
+ const source=feature(this,args.source??args.target,d.get('state','location'),d.document);
+ if(!['water','container'].includes(source.kind))reject('E-ACTION-WATER','指定对象不是可取水的水源',{missing:['实际存在水量的水源'],repair:['观察附近水源后再取水']});
+ inReach(d,source,1.5);permission(d,this,source,args);assertLiquidWater(this,d,source);
+ if(!localSightClear(d,this,d.get('state','location'),point(d),source.position))reject('E-ACTION-REACH','水源被遮挡，尚不能看清并触及',{missing:['可见且可触及的水源'],repair:['先移动到能看清并触及水源的位置']});
+ const selected=args.container??args.item,requested=d.get('state','itemInstances',selected),item=requested?.item??selected;
+ const tool=useTool(d,this,'liquid_container',item),held=heldUnit(d,this,'player',tool);
+ const id=trackTransferUnit(d,this,'player',tool,eventId,requested?.id??held?.instance??null),facts=physicalItem(d,this,id);
+ if(!facts.tags?.includes('liquid_container')||facts.durability<=0)reject('E-ACTION-TOOL','所选单件不能盛水',{missing:['完好的液体容器'],repair:['选择实际持有且完好的液体容器']});
+ setLocation(d,{entity:id,at:'player',mode:'carried',writer:'environment',engine:this});
+ let record=d.get('state','records',key(id));
+ const capacity=record?.state?.capacityMl??facts.capacityMl;
+ if(!Number.isSafeInteger(capacity)||capacity<1)reject('E-ACTION-CONTAINER-CAPACITY','尚未确认容器容量，不能猜测可装水量',{missing:['容器的实际容量'],repair:['确认容器容量后再装水']});
+ if(source.id===id)reject('E-ACTION-WATER','水已经在该容器中',{missing:['不同的目标容器'],repair:['选择另一只实际持有的容器']});
+ const empty={capacityMl:capacity,waterMl:0,turbidity:0,pathogenRisk:0,saltMg:0,toxinUg:0,odor:'无明显气味'};
+ if(!record){record={id,category:'physical_feature',containerItem:tool,name:facts.name,owner:'player',kind:'container',access:'consent',position:point(d),location:d.get('state','location'),state:empty};d.set(['state','records',key(id)],record);}
+ const src=stateOf(d,source),dst=record.state;
+ const requestedMl=args.millilitres===undefined?dst.capacityMl:integer(args.millilitres,1,Number.MAX_SAFE_INTEGER,'取水量');
+ const amount=Math.floor(Math.min(requestedMl,src.waterMl,dst.capacityMl-dst.waterMl-(dst.reservedWaterMl??0)));
+ if(amount<=0)reject('E-ACTION-WATER','水源已空或容器已满',{missing:['实际可取的水量与容器余量'],repair:['换一个有水的水源，或先腾空容器']});
+ const mixed=transferWaterState(src,dst,amount,{odor:true});store(d,source,mixed.source);store(d,record,mixed.destination);
+ stockContainerWater(d,this,id,eventId);
+ const minutes=this.world.openActionRules.generic.transferMinutes;this.advance(d,minutes,eventId);
+ return {source:source.id,destination:id,container:tool,destinationOwner:'player',movedMl:amount,sourceWaterMl:mixed.source.waterMl,destinationWaterMl:mixed.destination.waterMl,minutes,note:'只搬运原水，污染随水移动，未净化或消毒'};
 }
 import {humidityAt}from'./weather.mjs';
 // Spell effect family (dispatched by magic.mjs through magic-effects.mjs).

@@ -84,6 +84,20 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    });
    continue;
   }
+  // a3r2-intent2: daily water operations follow the same catalog-only internal
+  // environment route as unlock; retaining this separate contract avoids
+  // expanding the static schema merely to satisfy the legacy-alias assertion.
+  const dailyWater={draw_water:{source:'feature_hw_pool',container:'item_clay_pot'},pour_water:{target:'vessel'},drink_contents:{target:'vessel'}};
+  if(a.call.tool==='world_environment'&&Object.hasOwn(dailyWater,a.call.operation)){
+   assert.equal(a.id,`core:environment.${a.call.operation}`);assert.equal(a.source,'catalog');
+   assert.equal(tools.has(a.call.tool),false);assert.equal(typeof engine.environment,'function');
+   assert.ok(a.slots.every(s=>s.name&&s.kind));assert.ok(a.preconditions.length&&a.consent.from==='self');
+   const slots=dailyWater[a.call.operation],args={...slots,operation:a.call.operation};
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_environment',args,action:a});
+   assert.deepEqual(resolveToolCall(a.call.tool,args),{tool:'world_environment',args});
+   assert.throws(()=>translateCall('world_act',{action:a.id,slots:{...slots,success:true}}),error=>error instanceof ActionRejection&&error.code==='E-ACTION-PRECONDITION');
+   continue;
+  }
   const schema=tools.get(a.call.tool);assert.ok(schema&&!catalogTools.has(a.call.tool),a.id);
   if(a.source==='catalog'){
    assert.ok(a.slots.every(s=>s.name&&s.kind),`${a.id} 独立声明槽位`);

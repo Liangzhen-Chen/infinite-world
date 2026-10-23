@@ -5,11 +5,27 @@ import {searchActions} from './action-registry.mjs';
 import {primitiveRuntime} from './primitives-runtime.mjs';
 
 const mentions=(text,value)=>typeof value==='string'&&value.length>1&&text.includes(value);
+function formSlots(action,text){
+ for(const form of action.signature?.intentForms??[]){
+  const names=[],parts=form.split(/(\{[a-zA-Z]+\})/).map(part=>{
+   if(/^\{[a-zA-Z]+\}$/.test(part)){names.push(part.slice(1,-1));return '(.+?)';}
+   return part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  });
+  const match=new RegExp(`^${parts.join('')}$`).exec(text.trim().replace(/[。！？!?]$/,''));
+  if(match)return Object.fromEntries(names.map((name,index)=>[name,match[index+1]]));
+ }
+ return null;
+}
+function namedOption(text,option){
+ const value=String(text).trim(),label=String(option.label??option.value).replace(/（.*?）|×\d+/g,'');
+ return value===option.value||label.includes(value)||value.length>=2&&/^[\u3400-\u9fff]+$/.test(value)&&[...value].every(ch=>label.includes(ch));
+}
 function completeCommand(action,text,entities){
  // Form search has no semantic judge (the scoring harness does). Do not
  // silently execute a matching fragment of a larger, unsupported request.
  const normalize=value=>String(value).normalize('NFKC').toLowerCase().replace(/[\s，。！？、：；,.!?:;]/g,'');
  const command=normalize(text);
+ if(formSlots(action,text))return true;
  return [action.label,action.verb,...action.synonyms??[]].filter(Boolean).some(word=>{
   const phrase=normalize(word);if(!command.includes(phrase))return false;
   if(action.slots?.some(s=>s.required&&['text','content'].includes(s.name)))return true;
@@ -31,11 +47,14 @@ export function constructIntent(engine,document,proposal,context){
   const menu=worldActions(engine,document,{query:definition.id,target,limit:1});
   const action=menu.actions.find(a=>a.id===definition.id);if(!action)continue;
   const inferred=context.slotsFor(definition,{...proposal,...(target?{target}:{}),effects:[]})??{};
+  const form=formSlots(definition,text);
   let combinations=[{...action.fill}],missing=[];
   for(const slot of action.slots??[]){
    let choices;
-   const supplied=proposal.means?.[slot.name]??inferred[slot.name];
+   const container=definition.call?.tool==='world_environment'&&definition.call.operation==='draw_water'&&slot.name==='container'?(proposal.means?.item??proposal.means?.tools?.[0]):undefined;
+   const supplied=proposal.means?.[slot.name]??container??inferred[slot.name];
    if(supplied!==undefined)choices=[supplied];
+   else if(form?.[slot.name])choices=(slot.options??[]).filter(o=>namedOption(form[slot.name],o)).map(o=>o.value);
    else if(['intent','text','content'].includes(slot.name))choices=[text];
    else if(slot.default!==undefined)choices=[slot.default];
    else {

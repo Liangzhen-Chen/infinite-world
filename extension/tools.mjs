@@ -185,10 +185,11 @@ export function modelActionCatalog(result){
  // input names remain discoverable even when detailed choices do not fit.
  for(const action of actions.filter(row=>open.has(row.id))){
   view.actions.push({id:action.id,label:brief(action.label,24),
+   ...(action.id==='open:proposal'?{hint:'可只填 intent，由引擎判定'}:{}),
    ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:action.slots.map(slot=>slot.name).join(', ')}}:{}),
    ...(action.available!==undefined?{available:action.available}:{}),
    ...(action.blocked?{blocked:refusalSentence(action.blocked),missing:brief(action.missing?.join('、')||refusalSentence(action.blocked))}:{}),
-   slots:(action.slots??[]).filter(slot=>slot.required).map(slot=>({...modelSlot(slot),
+   slots:(action.slots??[]).filter(slot=>slot.required||action.id==='open:proposal'&&slot.name==='effects').map(slot=>({...modelSlot(slot),
     ...(slot.name==='effects'&&slot.inputSchema?{inputSchema:modelInput(slot.inputSchema)}:{}),
     ...(slot.name==='form'&&slot.options?.length?{options:[slot.options[0].value]}:{})}))});
  }
@@ -233,7 +234,7 @@ export function modelActionCatalog(result){
   const projected=()=>view.actions.find(row=>row.id===action.id);
   if(Object.keys(action.fill??{}).length)offer(()=>{projected().fill=action.fill;},()=>{delete projected().fill;},projected);
   for(const slot of action.slots??[]){
-   if(!slot.required&&!(action.id==='open:leave_mark'&&slot.name==='zone'))offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
+   if(!slot.required&&!(action.id==='open:leave_mark'&&slot.name==='zone')&&!(action.id==='open:proposal'&&slot.name==='effects'))offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
    const selected=()=>projected()?.slots.find(row=>row.name===slot.name);
    if(slot.inputSchema&&!(open.has(action.id)&&slot.name==='effects')){
     const input=modelInput(slot.inputSchema);

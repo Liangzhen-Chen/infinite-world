@@ -148,6 +148,13 @@ function options(ctx,source,target){
   case 'exits':return ctx.exits.map(e=>({value:e.id,label:`${e.name}（${e.direction}${e.relation==='route'?distanceText(e.km,ctx.templates):''}${e.condition?`，${e.condition}`:''}）`}));
   case 'target.stock':return target?stockOf(ctx,target).map(r=>({value:r.id,label:`${r.name}（存${r.quantity}）`})):[];
   case 'inventory':return ctx.inventory.map(r=>({value:r.id,label:`${r.name}×${r.quantity}`}));
+  case 'water_sources':return environmentFeatures(ctx.engine,ctx.document).filter(r=>r.location===ctx.s.location&&!r.hidden&&!r.private&&['water','container'].includes(r.kind)&&((ctx.s.records?.[`physical_feature:${r.id}`]?.state??r.state)?.waterMl??0)>0).map(r=>({value:r.id,label:r.name}));
+  case 'liquid_containers':return ctx.inventory.flatMap(r=>{
+   const d=actionReader(ctx.document),held=ctx.s.inventory[r.id],ids=(held.instances??[]).filter(id=>ctx.s.itemInstances?.[id]?.owner==='player'&&ctx.s.itemInstances[id].status==='持有');
+   const rows=ids.map(id=>({value:id,label:ids.length>1?`${r.name}（${id}）`:r.name}));
+   if(r.quantity>ids.length)rows.push({value:r.id,label:r.name});
+   return rows.filter(row=>physicalItem(d,ctx.engine,row.value).tags?.includes('liquid_container'));
+  });
   case 'recipes':return ctx.recipes.map(r=>({value:r.id,label:r.name}));
   case 'skills':return ctx.skills.map(r=>({value:r.id,label:r.name}));
   case 'debts':return ctx.debts.filter(r=>r.reachable).map(r=>({value:r.id,label:`欠${ctx.name(r.creditor)} ${r.remaining}文`,fill:{seller:r.seller}}));

@@ -24,7 +24,14 @@ const featureOwners=(d,id)=>{
 // ownership. Never cache resolved rows: a PatchCursor can mutate its own copies
 // without changing the document identity between two process settlements.
 export const environmentFeatures=(engine,document,select)=>{
- const catalog=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+ const authored=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
+ const saved=document??engine.physicalDocument??engine.airDraft?.document;
+ const containers=[];
+ for(const unit of Object.values(saved?.state?.itemInstances??{})){
+  const r=saved.state.records?.[key(unit.id)];
+  if(r?.category==='physical_feature'&&r.containerItem&&unit.status!=='已消耗')containers.push({...r,owner:unit.owner??r.owner,kind:'container',access:'consent'});
+ }
+ const catalog=[...authored,...containers];
  const rows=select?catalog.filter(select):catalog;
  // Empty processes must not expose the draft root: doing so makes its next
  // write copy the root/state/records again even though no feature was read.
