@@ -257,7 +257,7 @@ test('agency existing holdings wait for native item/instrument bindings and reso
  assert.equal(pledge.holder,'native_loan');assert.equal(pledge.subject,'native_staff');assert.equal(pledge.terms.obligation,'native_loan');
  const owns=result.document.holdings.rows[result.bindings.a3v2_037_owns];assert.equal(owns.subject,'native_staff');
 });
-test('agency office authority resolves source event aliases after domain modules without broadening its scope',()=>{
+test.todo('agency office authority resolves source event aliases after domain modules without broadening its scope〔前提待真实动作：创建具有指定命令权限的章程席位及任职；归 S4〕',()=>{
  // 05 §5.3 / review 10-22 P1: the office loads only as a narrowed instance of a charter office. The shipped world
  // has no charter for the watch desk yet (see helper), so it is attached to a test-local clone; the shipped world
  // keeps the premise unmet.

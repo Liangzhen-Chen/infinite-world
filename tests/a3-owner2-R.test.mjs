@@ -95,7 +95,7 @@ for(const n of [134,137,138,140,146,171])test(`R2: speech subclass ${n} has a na
   if(n===140){assert.equal(speech.kind,'tell');assert.deepEqual(r.after.state.creatures,r.document.state.creatures);}
 });
 
-test('R2: confession preserves the legal entry and refuses to promote a witness into an official',async()=>{
+test.todo('R2: confession preserves the legal entry and refuses to promote a witness into an official〔前提待真实动作：形成指定待审案件及在岗机构身份；归 S4〕',async()=>{
  const {row,document}=fixture(180),prepared=prepareOpenAction(engine,document,row.proposal);
  assert.equal(prepared.routed,'core:law.confess');assert.equal(prepared.slots.request.kind,'confession');
  const preview=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-confess'});

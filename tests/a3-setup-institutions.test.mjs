@@ -78,18 +78,23 @@ test('history: illegal/future/duplicate/unknown-donor events are unmet and indep
  assert.equal(noActor.document.state.records[noActor.bindings.fire].payload.fireIntensity,1);
 });
 
-test('accounts: opening snapshots replace NPC cash/stock once without changing the player',()=>{
+test('accounts: stock opening stays plain inventory; coin premises require real actions without changing purses',()=>{
+ // 产品原则三.2：库存数量仍可声明，货币债权须由真实动作产生。
+ // 保留原有玩家不变、库存精确值及账本一致性检查；钱袋改查拒绝后仍为原余额。
  for(const id of ['002','039','044','078']){
   const setup=fixture(id),result=run(setup);
-  assert.deepEqual(errors(result,'accounts'),[],id);assert.equal(result.document.state.player.coins,setup.coins,id);
-  for(const account of setup.accounts){const body=result.document.state.npcs[account.owner];assert.equal(account.resource==='coin_river'?body.coins:body.inventory[account.resource].quantity,account.balance,id);}
+  const coins=setup.accounts.map((account,index)=>({account,index})).filter(({account})=>account.resource==='coin_river');
+  assert.deepEqual(errors(result,'accounts').map(e=>e.item),coins.map(({index})=>`accounts[${index}]`),id);
+  assert.ok(errors(result,'accounts').every(e=>e.reason.includes('setup.prelude')),id);
+  assert.equal(result.document.state.player.coins,setup.coins,id);
+  for(const account of setup.accounts){const body=result.document.state.npcs[account.owner];assert.equal(account.resource==='coin_river'?body.coins:body.inventory[account.resource].quantity,account.resource==='coin_river'?initial.state.npcs[account.owner].coins:account.balance,id);}
   clean(result);
  }
  const setup={minute:600,accounts:[{owner:'npc_hw_linsui',resource:'coin_river',purpose:'purse',balance:0,balanceMode:'ensure_existing',sourceEvent:'opening'}],history:[history('opening','opening_balance',{owner:'npc_hw_linsui',resource:'coin_river',balance:0})]};
- const result=run(setup);assert.deepEqual(result.setupUnmet,[]);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(result);
+ const result=run(setup);assert.deepEqual(errors(result,'accounts').map(e=>e.item),['accounts[0]']);assert.match(errors(result,'accounts')[0].reason,/setup\.prelude/);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(result);
 });
 
-test('accounts: native counter opening is separate from purse; invalid/container and mismatched sources stay unmet',()=>{
+test.todo('accounts: native counter opening is separate from purse; invalid/container and mismatched sources stay unmet〔前提待真实动作：独立柜台账户开户；归 S5〕',()=>{
  const setup=fixture('002');setup.accounts[0].balance=-1;assert.equal(errors(run(setup),'accounts').length,1);
  setup.accounts[0].balance=3;assert.match(errors(run(setup),'accounts')[0].reason,/does not match/);
  // N is implemented: 01 §1.6 requires a distinct native counter, not an unmet placeholder.
@@ -104,7 +109,7 @@ test('accounts: native counter opening is separate from purse; invalid/container
  const missing=fixture('002');missing.accounts[0].sourceEvent='missing';assert.match(errors(run(missing),'accounts')[0].reason,/unresolved sourceEvent/);
 });
 
-test('obligations: native old loans retain amount/time and share one compatibility claim',()=>{
+test.todo('obligations: native old loans retain amount/time and share one compatibility claim〔前提待真实动作：建立贷款及真实借还款同意链；归 A3 生产者卡〕',()=>{
  for(const id of ['035','040','049','078']){
   const setup=fixture(id),result=run(setup);
   assert.deepEqual(errors(result,'obligations'),[],id);
@@ -119,7 +124,7 @@ test('obligations: native old loans retain amount/time and share one compatibili
  }
 });
 
-test('obligations: native old deposits/pawns/fines/delivery/upkeep preserve claims without fresh funding',()=>{
+test.todo('obligations: native old deposits/pawns/fines/delivery/upkeep preserve claims without fresh funding〔前提待真实动作：建立具名存单、质押、罚款、货损及维持债权的真实组合前提；归 S5〕',()=>{
  for(const id of ['032','037','054','056','073']){
   const setup=fixture(id),result=run(setup);assert.deepEqual(errors(result,'obligations'),[],id);
   assert.equal(result.document.state.player.coins,setup.coins,id);
@@ -138,7 +143,7 @@ test('obligations: native old deposits/pawns/fines/delivery/upkeep preserve clai
  setup.obligations[0].paid=0;setup.obligations[0].sourceEvent='missing';assert.match(errors(run(setup),'obligations')[0].reason,/unresolved sourceEvent/);
 });
 
-test('documents: native evidence annotates the same original and preserves its source, never creates a second sheet',()=>{
+test.todo('documents: native evidence annotates the same original and preserves its source, never creates a second sheet〔前提待真实动作：创建带原始来源及实物指向的证据文书；归 S4〕',()=>{
  const result=run(fixture('051'));
  // P is implemented: 01 §1.2 / 05 §5.2.7 bind evidence to its physical original.
  assert.deepEqual(errors(result,'documents'),[]);
@@ -151,7 +156,7 @@ test('documents: native evidence annotates the same original and preserves its s
  const setup=fixture('051');setup.documents[0].reviewed='yes';assert.match(errors(run(setup),'documents')[0].reason,/Invalid existing paper, holder or document source/);
 });
 
-test('cases: native historical registration retains the existing phase and judgment, never convicts from an emit',()=>{
+test.todo('cases: native historical registration retains the existing phase and judgment, never convicts from an emit〔前提待真实动作：产生案件登记、判决及上诉期限；归 S4〕',()=>{
  // Q is implemented: 05 §5.2.7 restores registration and judgment sources, not fresh decisions.
  const result=run(fixture('052'));assert.deepEqual(errors(result,'cases'),[]);
  const row=result.document.state.records[result.bindings.a3v2_052_case];

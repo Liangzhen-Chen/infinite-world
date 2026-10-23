@@ -12,7 +12,7 @@ const initial=engine.createCharacter(seed,{},'a3-score-independent');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));
 
-test('r10 C: waiver identifies the actual debtor and creditor without moving money',async()=>{
+test.todo('r10 C: waiver identifies the actual debtor and creditor without moving money〔前提待真实动作：通过借款方真实动作表达精确贷款条款同意；归 A3 生产者卡〕',async()=>{
  const input=row('040'),run=await executeIntent(engine,initial,input);
  assert.deepEqual(run.setupUnmet,[]);
  assert.equal(run.actual.committed,true);
