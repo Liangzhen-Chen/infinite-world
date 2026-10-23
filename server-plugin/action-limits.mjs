@@ -6,7 +6,74 @@ import {actionReader} from './action-capacity.mjs';
 import {authority} from './action-authority.mjs';
 import {heldUnit} from './items.mjs';
 import {recordsWhere} from './storage.mjs';
-import {itemTraits} from './traits.mjs';
+import {itemTraits,traitsOf} from './traits.mjs';
+import {standing} from './standing.mjs';
+import {aliveHoldings} from './holdings.mjs';
+import {consent} from './action-consent.mjs';
+
+// Existing material vocabulary -> resistance points, not durability or value.
+// Unknown materials remain unknown; never infer hardness from a name.
+const MATERIAL_RESISTANCE=Object.freeze({paper:0,cloth:0,fiber:0,leather:1,earth:1,wood:2,bone:2,ceramic:3,stone:4,metal:5});
+// Same boundaries as standingWords: deeper hostility adds more resistance.
+const STANCE_RESISTANCE=Object.freeze([{max:-60,bonus:4},{max:-30,bonus:3},{max:-10,bonus:2},{max:9,bonus:1},{max:100,bonus:0}].map(Object.freeze));
+const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
+
+function validateOpenDifficultyInput(proposal){
+ // These are server facts, including when nested in means or an effect.
+ const forbidden=['resistance','hardness','upperLimit','limit','bounds','sourceCaps','maximum','difficulty','derivedDifficulty','difficultyBreakdown'];
+ for(const row of [proposal,proposal?.means,proposal?.context,...proposal?.effects??[]])if(row&&forbidden.some(key=>Object.hasOwn(row,key)))reject('E-OPEN-BOUND','抗性、上限和难度由服务器派生，提案不能自报');
+}
+
+function targetDifficulty(engine,document,effect,actor){
+ const s=document.state,id=effect.target??effect.entity??effect.subject,base=engine.byId.get(id),entity=document.holdings?.entities?.[id],npc=s.npcs?.[id];
+ const kind=id===actor?'self':npc?'person':s.creatures?.[id]?'creature':entity?.kind??(base?.tags?'item':'unknown');
+ const parts=[],missing=label=>parts.push({kind:label,bonus:null,reason:`${label}：该类抗性无数据`});
+ const add=(kind,value,bonus,reason)=>parts.push({kind,value,bonus,reason});
+ if(kind==='self')add('self',id,0,'作用于自身，无外部目标抗性');
+ else if(npc){
+  const attributes={...base?.attributes,...npc.attributes},scores=['智力','精神'].map(key=>attributes[key]).filter(Number.isSafeInteger);
+  const intelligence=npc.intelligence?.level??base?.intelligence?.level??(Number.isSafeInteger(base?.intelligence)?base.intelligence:undefined);
+  if(scores.length||Number.isSafeInteger(intelligence)){
+   const bonus=Math.max(0,...scores.map(score=>Math.floor((score-10)/2)),Number.isSafeInteger(intelligence)?intelligence:0);
+   add('mind',{attributes:Object.fromEntries(['智力','精神'].filter(k=>Number.isSafeInteger(attributes[k])).map(k=>[k,attributes[k]])),intelligence},bonus,'灵智/意志取现有属性修正与灵智等级中较高者');
+  }else missing('NPC灵智/意志');
+  const relation=npc.relationships?.[actor],authored=base?.relationships?.find?.(row=>row.with===actor);
+  if(relation?.trust!==undefined||actor==='player'&&npc.trust!==undefined||authored?.trust!==undefined||s.records?.[`standing:${id}:${actor}`]){
+   const value=standing(engine,s,id,actor);add('stance',value,STANCE_RESISTANCE.find(row=>value<=row.max).bonus,'立场≤-60/-30/-10/9/100分别加4/3/2/1/0');
+  }else missing('NPC立场');
+  const offices=aliveHoldings(actionReader(document),{kind:'holds_office',holder:id}).map(h=>document.holdings.entities[h.subject]).filter(row=>row?.facts?.authority?.operations?.some(op=>['arrest','detain','enforce','guard'].includes(op)));
+  const edges=engine.world.routes??[],checkpoints=engine.rules.smuggling?.checkpoints??[];
+  const posts=[...edges.filter(row=>row.guards?.includes(id)).map(row=>row.to),...checkpoints.filter(row=>row.guards?.includes(id)).map(row=>row.location)].filter(Boolean);
+  const guard=posts.length>0||(engine.rules.law?.polities??[]).some(row=>row.guards?.includes(id))||offices.length>0;
+  if(guard){
+   const alertness=npc.mental?.alertness;
+   if(Number.isSafeInteger(alertness))add('alertness',alertness,Math.max(0,Math.ceil(alertness/25)),'守卫当前警觉每25点加1');else missing('守卫警觉');
+   const duty=offices.map(row=>row.facts.onDuty).filter(value=>typeof value==='boolean');
+   // Checkpoint enforcement already uses location + awake/travel state. Read
+   // those same facts when no office has an explicit onDuty override.
+   if(!duty.length&&posts.length&&typeof npc.location==='string')duty.push(posts.includes(npc.location)&&!npc.scheduleTravel&&!npc.cognitionTravel&&!/睡|昏|濒死|死亡/.test(`${npc.activity??''} ${npc.status??''}`));
+   if(duty.length)add('onDuty',duty.some(Boolean),duty.some(Boolean)?2:0,'守卫职责当前在岗加2，离岗加0');else missing('守卫在岗');
+  }
+ }else if(['item','building','feature','facility'].includes(kind)){
+  const material=entity?.facts?.material??s.buildings?.[id]?.material??base?.material;
+  const tags=material?[{iron:'metal',copper:'metal',bronze:'metal',clay:'earth',hemp:'fiber'}[material]??material]:traitsOf(engine,document,id)?.tags??itemTraits(base).tags;
+  const known=tags.filter(tag=>Object.hasOwn(MATERIAL_RESISTANCE,tag));
+  if(known.length)add('material',known,Math.max(...known.map(tag=>MATERIAL_RESISTANCE[tag])),'材质硬度：纸/布/纤维0，皮/土1，木/骨2，陶3，石4，金属5');else missing('物件材质硬度');
+ }else missing(`${kind}目标`);
+ // Base belongs to the primitive family and target class, never player level.
+ const physical=engine.world.openActionRules.generic.physicalDifficulty;
+ const bases={vital:{self:physical,person:physical,creature:physical},status:{self:physical,person:physical,creature:physical},'fact.set':{item:physical,building:physical,feature:physical},create:{item:physical}};
+ const scope=effect.op==='status'?(['fear','illusion','compulsion'].includes(effect.status)?'mind':'support_magic'):effect.op==='vital'&&effect.delta>0?'healing':null;
+ const opposed=Boolean(npc&&id!==actor&&scope&&!consent({engine,document},id,actor,scope,{purpose:'open:proposal',until:s.minute+(effect.op==='status'?effect.duration:0)}).allowed);
+ return {target:id??null,targetKind:kind,base:bases[effect.op]?.[kind]??(['vital','status','fact.set'].includes(effect.op)?physical:0),parts:opposed?parts.map(p=>({...p,counted:false,reason:`${p.reason}；沿用对抗的对手属性/技能与适应，不再计入固定抗性`})):parts,...(opposed?{opposed:true,scope}:{})};
+}
+
+// Read-only source query for "inspect before proposing". This calls the same
+// resolver as execution; neither callers nor previews duplicate cap formulas.
+export function deriveOpenSourceLimits(engine,document,proposal,effect,{actor='player'}={}){
+ const source=deriveOpenLimits(engine,document,proposal,null,{actor}).sourceFor(effect);
+ return source?freeze(structuredClone(source)):null;
+}
 const finite=(value,label)=>{if(!Number.isSafeInteger(value)||value<0)reject('E-OPEN-BOUND',`Missing native ${label}`);return value;};
 export function openDuration(definition,slots={}){
  const rule=definition.durationSlot;
@@ -21,7 +88,7 @@ export function limitOpenEffects(proposal,native){
  if(proposal.time!==undefined||proposal.cost!==undefined||proposal.effects.some(e=>e.op==='time'))reject('E-OPEN-TIME','耗时由动作派生，不能由提案指定');
  const context=proposal.context??{};
  if(!Number.isSafeInteger(context.modifier??0)||Math.abs(context.modifier??0)>5||context.modifier&&!String(context.reason??'').trim())reject('E-OPEN-CONTEXT','情境修正须在 ±5 内并说明理由');
- const effects=[],sources=[],trimmed=[],blocked=[],used=new Map(),dailyUsed=new Map(),nearestUsed=new Map(),usage=native.usage??{repeats:0,produced:0};
+ const effects=[],sources=[],trimmed=[],blocked=[],details=[],used=new Map(),dailyUsed=new Map(),nearestUsed=new Map(),usage=native.usage??{repeats:0,produced:0};
  finite(usage.repeats,'repeat count');finite(usage.produced,'daily usage');
  let minutes=0,difficulty=0;
  for(const [index,original] of proposal.effects.entries()){
@@ -30,6 +97,9 @@ export function limitOpenEffects(proposal,native){
   }
   const source=sourceFor(original,index);
   if(!source){blocked.push({index,reason:'当前手段不能产生这种效果',alternative:'mark'});continue;}
+  // Missing sources already prevent submission. Keep the existing repair flow
+  // for a target that left the scene; validate claims at the actual consumer.
+  if(!sources.length)validateOpenDifficultyInput(proposal);
   if(typeof source.id!=='string'||!source.id)reject('E-OPEN-BOUND','Native source identity is required');
   if(finite(source.stage,'source stage')>8)reject('E-OPEN-BOUND','Source stage exceeds core bounds');
   // Item stage is a native property of the item, never the user's skill tier.
@@ -49,6 +119,9 @@ export function limitOpenEffects(proposal,native){
    const old=currentValue?.(effect);if(!Number.isSafeInteger(old))reject('E-OPEN-BOUND','Fact work requires the current native value');
    effect={...effect,delta:effect.value-old};delete effect.value;
   }
+  const zero=Object.entries(source.bounds??{}).find(([field,bound])=>effect[field]!==undefined&&bound===0);
+  if(zero){blocked.push({index,field:zero[0],reason:'来源上限为0，不能产生此效果'});continue;}
+  const amplitudes=[];
   for(const [field,bound] of Object.entries(source.bounds??{})){
    if(effect[field]===undefined)continue;
    if(!Number.isSafeInteger(effect[field]))reject('E-OPEN-BOUND',`Invalid numeric effect: ${field}`);
@@ -59,26 +132,33 @@ export function limitOpenEffects(proposal,native){
     maximum=Math.min(maximum,Math.floor(maximum*2**-usage.repeats));
     const nearest=native.nearestBounds?.[effect.op]?.[field];if(nearest!==undefined)maximum=Math.min(maximum,finite(nearest,'nearest reward'));
    }
+   if(maximum===0){blocked.push({index,field,reason:'当前可用上限为0，不能产生此效果'});break;}
    let available=Math.max(0,maximum-(used.get(key)??0));
    const nearestKey=JSON.stringify([effect.op,field]),nearestBound=reward?native.nearestBounds?.[effect.op]?.[field]:undefined;
    if(nearestBound!==undefined)available=Math.min(available,Math.max(0,finite(nearestBound,'nearest reward')-(nearestUsed.get(nearestKey)??0)));
    if(reward&&source.dailyCap!==undefined)available=Math.min(available,Math.max(0,finite(source.dailyCap,'daily cap')-(usage.producedByKey?.[dailyKey]??usage.produced)-(dailyUsed.get(dailyKey)??0)));
    const amount=Math.min(Math.abs(effect[field]),available);
+   const ratio=amount/maximum;
+   amplitudes.push({field,requested:Math.abs(effect[field]),applied:amount,limit:maximum,ratio,bonus:ratio<=.25?0:ratio<=.5?1:ratio<=.75?2:3,reason:'裁剪后幅度/来源上限：≤1/4加0，≤1/2加1，≤3/4加2，≤1加3'});
    used.set(key,(used.get(key)??0)+amount);effect[field]=Math.sign(effect[field])*amount;
    if(reward){dailyUsed.set(dailyKey,(dailyUsed.get(dailyKey)??0)+amount);nearestUsed.set(nearestKey,(nearestUsed.get(nearestKey)??0)+amount);}
    if(effect[field]!==before[field])trimmed.push({index,field,requested:before[field]??before.value,applied:effect[field],reason:'source_or_daily_bound'});
   }
+  if(blocked.some(row=>row.index===index))continue;
   if(Object.entries(source.bounds??{}).some(([field])=>effect[field]===0))continue;
   effects.push(effect);
   sources.push(structuredClone(source));
   minutes=Math.max(minutes,finite(source.time,'action time'));
-  difficulty=Math.max(difficulty,finite(source.difficulty??0,'difficulty'));
+  const target=native.targetDifficulty?.(effect)??{target:effect.target??effect.entity??null,targetKind:'unknown',base:finite(source.difficulty??0,'difficulty'),parts:[{kind:'unknown',bonus:null,reason:'目标抗性：该类抗性无数据'}]};
+  const resistance=target.opposed?0:target.parts.reduce((sum,row)=>sum+(row.bonus??0),0),amplitude=Math.max(0,...amplitudes.map(row=>row.bonus)),total=target.base+resistance+amplitude;
+  details.push({index,op:effect.op,...target,resistance,amplitudes,amplitude,total,reason:'基础(原语族×目标类)+目标抗性+幅度比；多效果取最大难度'});
+  difficulty=Math.max(difficulty,total);
  }
  const nearest=native.nearestCost;
  if(nearest!==undefined)minutes=Math.max(minutes,finite(nearest,'nearest cost'));
  else if(effects.length){minutes=Math.ceil(minutes*1.5);difficulty+=2;}
  if(minutes>43200)reject('E-OPEN-DURATION','这项工程需要分阶段完成');
- return {effects,sources,trimmed,blocked,cost:{time:minutes},difficulty:difficulty+(context.modifier??0),context:{modifier:context.modifier??0,reason:context.reason??null}};
+ return {effects,sources,trimmed,blocked,cost:{time:minutes},difficulty:difficulty+(context.modifier??0),difficultyBreakdown:{effects:details,nearest:{bonus:nearest===undefined&&effects.length?2:0,reason:nearest===undefined?'无可比近邻，通用难度+2':'保留近邻耗时下限'},world:difficulty,context:{modifier:context.modifier??0,reason:context.reason??null}},context:{modifier:context.modifier??0,reason:context.reason??null}};
 }
 
 // Read only finalized receipts, using their actual recorded completion minute.
@@ -221,5 +301,5 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   }
  }
  const signature=effectSignature(proposal.effects??[],routing??{});
- return {actor,sourceFor,improvised,currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
+ return {actor,sourceFor,improvised,targetDifficulty:effect=>targetDifficulty(engine,document,effect,actor),currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
 }

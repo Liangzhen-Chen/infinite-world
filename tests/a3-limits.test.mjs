@@ -13,12 +13,14 @@ const source={id:'native:item',stage:4,time:10,difficulty:10,bounds:{delta:12}};
 const native=(extra={})=>({actor:'player',sourceFor:()=>source,...extra});
 test('A3 limits: aggregate native source bound clips split effects and rejects out-of-range stage',()=>{
  const p=proposal([effect,effect]),before=structuredClone(p),r=limitOpenEffects(p,native());
- assert.deepEqual(r.effects,[{...effect,delta:12}]);assert.equal(r.trimmed.length,2);assert.equal(r.cost.time,15);assert.equal(r.difficulty,12);assert.deepEqual(p,before);
+ // §6.7: full source amplitude adds 3; the existing no-neighbour +2 stays.
+ assert.deepEqual(r.effects,[{...effect,delta:12}]);assert.equal(r.trimmed.length,2);assert.equal(r.cost.time,15);assert.equal(r.difficulty,15);assert.deepEqual(p,before);
  assert.throws(()=>limitOpenEffects(p,native({sourceFor:()=>({...source,stage:9})})),{code:'E-OPEN-BOUND'});
 });
 test('A3 limits: repeat, daily and nearest caps combine; cost uses max, reward min',()=>{
  const n=native({sourceFor:()=>({...source,rewardFields:['delta'],dailyCap:10}),usage:{repeats:1,produced:6},nearestBounds:{vital:{delta:3}},nearestCost:30});
- const r=limitOpenEffects(proposal([effect,effect]),n);assert.equal(r.effects[0].delta,3);assert.equal(r.effects.length,1);assert.equal(r.cost.time,30);assert.equal(r.difficulty,10);
+ // The nearest reward cap is 3: applied 3/3 is the full-amplitude +3 band.
+ const r=limitOpenEffects(proposal([effect,effect]),n);assert.equal(r.effects[0].delta,3);assert.equal(r.effects.length,1);assert.equal(r.cost.time,30);assert.equal(r.difficulty,13);
  assert.deepEqual(limitOpenEffects(proposal([effect]),{...n,usage:{repeats:1,produced:10}}).effects,[]);
 });
 test('A3 limits: changing native source cannot reset a shared daily production quota',()=>{
@@ -38,7 +40,8 @@ test('A3 limits: fact absolute values become bounded work against current facts'
 test('A3 limits: context requires reasons; proposal time cannot substitute native cost',()=>{
  for(const p of [{...proposal([effect]),time:1},proposal([{op:'time',minutes:1}])])assert.throws(()=>limitOpenEffects(p,native()),{code:'E-OPEN-TIME'});
  for(const context of [{modifier:6,reason:'because'},{modifier:1},{modifier:.5,reason:'because'}])assert.throws(()=>limitOpenEffects({...proposal([effect]),context},native()),{code:'E-OPEN-CONTEXT'});
- assert.equal(limitOpenEffects({...proposal([effect]),context:{modifier:-5,reason:'darkness'}},native()).difficulty,7);
+ // Same bounded -5 context, now applied after the full-amplitude +3.
+ assert.equal(limitOpenEffects({...proposal([effect]),context:{modifier:-5,reason:'darkness'}},native()).difficulty,10);
 });
 test('A3 limits: persistent duration slots permit only catalog bounds',()=>{
  const definition={cost:{time:10},durationSlot:{slot:'minutes',min:30,max:480}};
