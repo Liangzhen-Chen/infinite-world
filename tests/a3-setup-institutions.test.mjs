@@ -12,6 +12,7 @@ import {purseAccount} from '../server-plugin/items.mjs';
 import {serviceAppointments} from '../server-plugin/npc-state.mjs';
 import {currentAgreedQuotes} from '../server-plugin/shop.mjs';
 import {workstationDefinition} from '../server-plugin/workstation-services.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3e-institutions');
@@ -109,18 +110,34 @@ test.todo('accounts: native counter opening is separate from purse; invalid/cont
  const missing=fixture('002');missing.accounts[0].sourceEvent='missing';assert.match(errors(run(missing),'accounts')[0].reason,/unresolved sourceEvent/);
 });
 
-test.todo('obligations: native old loans retain amount/time and share one compatibility claim〔前提待真实动作：建立贷款及真实借还款同意链；归 A3 生产者卡〕',()=>{
+// Product principle III.2: retain amount/time/one-claim checks on genuinely funded loans,
+// then round-trip their native signatures instead of injecting historical debt snapshots.
+test('obligations: native old loans retain amount/time and share one compatibility claim',async()=>{
+ const step=(operation,seller,coins,eventId,extra={})=>({tool:'world_act',eventId,args:{action:`core:trade.${operation}`,slots:{seller,coins,days:1,...extra}}});
+ const grant=(actor,principal,interest,id)=>history(id,'consented',{actor,to:'player',scope:'loan',subject:'player',terms:{principal,days:1,interest},expires:5000,revoked:false});
  for(const id of ['035','040','049','078']){
-  const setup=fixture(id),result=run(setup);
-  assert.deepEqual(errors(result,'obligations'),[],id);
-  for(const row of setup.obligations){
-   const native=result.document.state.obligations[result.bindings[row.id]];
-   assert.equal(native.amount,row.amount);assert.equal(native.paid,0);assert.equal(native.createdAt,row.openedAt);assert.equal(native.deadline,row.dueAt);
-   assert.equal(result.document.state.records[row.id].obligation,native.id);
-   assert.equal(obligationRows(result.document.state).filter(o=>o.id===native.id).length,1);
-   assert.equal(obligationView(result.document.state,native.id).owed,row.amount);
+  const original=fixture(id),lending=['040','078'].includes(id),principal=id==='035'||id==='078'?29:9;
+  const setup={...original,minute:id==='078'?1080:600,inventory:{item_iron:100},coins:id==='035'?1:id==='040'?10:id==='078'?50:0,obligations:[],accounts:[],history:[],prelude:[]};
+  if(lending){const borrower=id==='040'?'npc_hw_ayan':'npc_hw_wushuo',amount=id==='040'?10:50;setup.history.push(grant(borrower,amount,0,'native-borrower-offer'));setup.prelude.push(step('lend',borrower,amount,`native-${id}-lend`,{interest:0}));}
+  if(id!=='040'){
+   setup.history.push(grant('npc_hw_linsui',principal,1,'native-lender-offer'));
+   setup.prelude.push(step('borrow','npc_hw_linsui',principal,`native-${id}-borrow`,{item:'item_iron',quantity:10}));
+   if(id!=='035')setup.prelude.push({tool:'world_propose',eventId:`native-${id}-gift`,args:{intent:'give borrowed principal',target:'npc_hw_linsui',effects:[{op:'transfer',resource:'coin',from:'self',to:'npc_hw_linsui',qty:principal}]}});
   }
-  assert.equal(result.document.state.player.coins,setup.coins);assert.equal(result.document.state.minute,setup.minute??600);clean(result);
+  const loaded=run(setup);assert.deepEqual(loaded.setupUnmet,[],id);
+  const result=await runPrelude(engine,loaded.document,setup.prelude);assert.deepEqual(result.unmet,[],id);
+  const document=JSON.parse(JSON.stringify(result.document)),claims=obligationRows(document.state).filter(o=>o.kind==='loan');
+  assert.equal(claims.length,original.obligations.length,id);
+  assert.deepEqual(claims.map(o=>o.amount).sort((a,b)=>a-b),original.obligations.map(o=>o.amount).sort((a,b)=>a-b),id);
+  for(const native of claims){
+   assert.equal(native.paid,0);assert.equal(native.createdAt,native.terms.signingMinute);assert.equal(native.deadline-native.createdAt,1440);
+   assert.equal(document.state.records[native.legacyRecord].obligation,native.id);
+   assert.equal(obligationRows(document.state).filter(o=>o.id===native.id).length,1);
+   assert.equal(obligationView(document.state,native.id).owed,native.amount);
+   assert.deepEqual(native,JSON.parse(JSON.stringify(result.document.state.obligations[native.id])));
+  }
+  assert.equal(document.state.player.coins,original.coins);assert.equal(document.state.minute,result.document.state.minute);
+  assert.ok(document.state.minute>=setup.minute);clean({document});
  }
 });
 

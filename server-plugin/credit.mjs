@@ -4,6 +4,7 @@ import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
 import {recordsWhere} from './storage.mjs';
 import {openObligation,adoptLegacyObligation} from './obligation-runtime.mjs';
+import {consent as nativeConsent} from './action-consent.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
 // by its fineness; any registered guest room or spare house can be rented; the
@@ -132,7 +133,7 @@ export function loanSuccessionTerms(d,engine){
     d.loanSuccessionVersion=1;
     return {onDebtorGone:'assume_by_heirs'};
 }
-export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs}){
+export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(engine,collateral.item,collateral.quantity):0;
     const {rate,interest}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
@@ -148,7 +149,7 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     // Old records without this clause retain the package's accelerate route.
     const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
     const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
-        ...(succession?{terms:succession}:{})};
+        ...(succession||consentSource?{terms:{...succession,...(consentSource?{consent:consentSource}:{})}}:{})};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
         amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms)};
     holdingSet(d,engine,rec(id),row,'credit');
@@ -234,11 +235,15 @@ export async function creditTrade(d,args,eventId,terms){
     if(op==='borrow'){
         const bankHere=bankAt(engine,d.get('state','location'),d.get('state')),lender=engine.resolve(args.seller);
         const days=args.days??7,collateral=args.item?{item:engine.resolve(args.item,'item'),quantity:int(args.quantity??1,1,100000,'抵押数量')}:null;
-        let bank=null,keeper=null;
+        let bank=null,keeper=null,agreement=null;
         if(bankHere?.keepers.includes(lender)){({b:bank,keeper}=openBank(d,engine,lender));}
-        else counterpart(d,engine,lender,{consent:args.consent,minutes:5});
+        else{
+            const quoted=loanTerms(d,engine,{lender,principal:args.coins,days,collateralValue:collateral?valueOf(engine,collateral.item,collateral.quantity):0});
+            agreement=nativeConsent({engine,document:d.document},lender,'player','loan',{purpose:'player',subject:'player',terms:{principal:args.coins,days,interest:quoted.interest},until:d.get('state','minute')+5,onRefusal:'abort'});
+            counterpart(d,engine,lender,{consent:agreement.allowed,minutes:5});
+        }
         const installments=args.quantity&&!args.item?int(args.quantity,1,days,'分期期数'):1;
-        const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId,installments});
+        const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId,installments,consentSource:agreement?.source});
         if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));holdingSet(d,engine,rec(loan.debt),{...row,installments:count,nextInstallment:1},'credit');}
         engine.advance(d,5,eventId);
         d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，月息${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);

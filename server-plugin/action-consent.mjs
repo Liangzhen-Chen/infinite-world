@@ -3,6 +3,8 @@ import {authority} from './action-authority.mjs';
 import {PrimitiveRejected} from './primitive-policy.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {legalCodeAt} from './law-codes.mjs';
+import {subjectiveView,conversationLanguage} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 
 declareHoldingWriter('action-consent',{kinds:['permit']});
 const minorIntimacy=(context,from,to,scope,purpose)=>/romance|intima|恋爱|亲密/.test(`${scope} ${purpose??''}`)&&[from,to].some(id=>id!=='player'&&(actionEntity(context,id)?.minor||actionEntity(context,id)?.flags?.minor||actionAge(context,id)<18));
@@ -27,23 +29,41 @@ export function consentIndex(events){
  }
  return {pair:(from,to)=>(index.pairs.get(`${from}\u0000${to}`)??[]).map(i=>events[i]),from:from=>(index.froms.get(from)??[]).map(i=>events[i]),byId:id=>index.ids.get(id)};
 }
-const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute']);
+const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute','item','quantity','prepayment','deadline','location','installments']);
 export function validConsentTerms(terms){
  if(!terms||typeof terms!=='object'||Array.isArray(terms)||Object.keys(terms).some(k=>!termKeys.has(k)))return false;
- return Object.entries(terms).every(([k,v])=>['purpose','spell','waterBatch','role'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0);
+ return Object.entries(terms).every(([k,v])=>['purpose','spell','waterBatch','role','item','location'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0);
 }
 const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>Array.isArray(v)?Array.isArray(actual?.[k])&&v.length===actual[k].length&&v.every((x,i)=>x===actual[k][i]):actual?.[k]===v);
 
 // A legacy lending call has principal/days slots but no interest slot. Read an
 // actual borrower's offer, never a proposal's claim that the borrower agreed.
-export function agreedLoan(context,borrower,creditor,{principal,days,interest,until=context.document.state.minute}){
- const offers=consentIndex(context.document.state.consentEvents).pair(borrower,creditor).filter(row=>row.type==='consent_given'&&row.from===borrower&&row.to===creditor&&row.scope==='loan'&&row.subject===creditor&&row.terms?.principal===principal&&row.terms?.days===days&&Number.isSafeInteger(row.terms.interest)&&row.terms.interest>=0&&(interest===undefined||row.terms.interest===interest));
+export function agreedLoan(context,borrower,creditor,{principal,days,interest,subject=creditor,until=context.document.state.minute}){
+ const offers=consentIndex(context.document.state.consentEvents).pair(borrower,creditor).filter(row=>row.type==='consent_given'&&row.from===borrower&&row.to===creditor&&row.scope==='loan'&&row.subject===subject&&row.terms?.principal===principal&&row.terms?.days===days&&Number.isSafeInteger(row.terms.interest)&&row.terms.interest>=0&&(interest===undefined||row.terms.interest===interest));
  const valid=offers.map(row=>{
   const terms={principal,days,interest:row.terms.interest};
-  return {terms,permission:consent(context,borrower,creditor,'loan',{purpose:creditor,subject:creditor,terms,until,onRefusal:'abort'})};
+  return {terms,permission:consent(context,borrower,creditor,'loan',{purpose:creditor,subject,terms,until,onRefusal:'abort'})};
  }).filter(row=>row.permission.allowed);
  const terms=[...new Set(valid.map(row=>JSON.stringify(row.terms)))];
  return terms.length===1?valid[0]:null;
+}
+
+// Native contract requests use current NPC facts, never a caller's answer.
+// Callers supply derived costs and exact terms after checking presence/capacity.
+export function requestContractConsent(d,engine,{from,to='player',scope,subject,purpose=subject,terms,cost,reward=0,eventId,until=d.get('state','minute')}){
+ const context={engine,document:d.document};
+ const permission=consent(context,from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
+ if(permission.allowed)return permission;
+ const view=subjectiveView(engine,d.document,from);
+ if(!conversationLanguage(view,engine,d))return permission;
+ // Rescheduling this contract is not a competing new obligation.
+ if(scope==='amend')view.self.obligations=view.self.obligations.filter(row=>row.id!==subject);
+ const decision=npcDecision(view,{kind:scope,from:to,cost,reward});
+ if(decision.outcome!=='agree')return {...permission,reason:decision.reason};
+ const id=`${eventId}:consent`,payload={scope,subject,purpose:[purpose],terms,until:until+1};
+ applyConsentEvent(d,context,{actor:from,eventId:id,verb:'consent_given',to,payload});
+ // The append-only native consent row is the agreement's saved provenance.
+ return consent({...context,document:d.document},from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
 }
 
 // The legacy learning handler has already derived the registered subject,

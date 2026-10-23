@@ -1,4 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
+import {requestContractConsent} from './action-consent.mjs';
+import {counterpart} from './credit.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {openGoodsObligation,performGoodsObligation,extendGoodsObligation} from './obligation-conditional.mjs';
@@ -344,8 +346,14 @@ export function transportAction(d,e,args,eventId){
   return historicalTransportDocument(d,e,{id:asset});
  }
  if(task==='forward'){
-  if(args.consent!==true)throw preconditionFailure('远期买卖须有在场卖方本次同意');
-  return openGoodsObligation(d,e,{kind:'forward',debtor:e.resolve(args.seller),creditor:'player',item:e.resolve(args.item,'item'),quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location:args.location?e.resolve(args.location):d.get('state','location')},eventId);
+  return obligationTransaction(d,()=>{
+  const debtor=e.resolve(args.seller),item=e.resolve(args.item,'item'),location=args.location?e.resolve(args.location):d.get('state','location');
+  const terms={item,quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location};
+  counterpart(d,e,debtor,{consent:true,minutes:0});
+  const agreement=requestContractConsent(d,e,{from:debtor,scope:'forward',purpose:'player',subject:item,terms,cost:{coins:(e.byId.get(item).basePrice??0)*args.quantity},reward:terms.prepayment,eventId});
+  counterpart(d,e,debtor,{consent:agreement.allowed,minutes:0});
+  return openGoodsObligation(d,e,{kind:'forward',debtor,creditor:'player',...terms,terms:{consent:agreement.source}},eventId);
+  });
  }
  if(task==='fulfill')return performGoodsObligation(d,e,{id:args.business??asset,actor:'player',quantity:args.quantity},eventId);
  if(task==='extend')return extendGoodsObligation(d,e,{id:args.business??asset,actor:'player',deadline:args.deadline},eventId);

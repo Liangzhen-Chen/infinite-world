@@ -19,6 +19,7 @@ import {identities} from './identity.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {transferItems} from './items.mjs';
 import {pledged} from './stock.mjs';
+import {consent as nativeConsent} from './action-consent.mjs';
 
 const W='obligation-runtime';
 declareHoldingWriter('obligation-runtime',{kinds:['pledged'],locations:true});declareLedgerWriter(W);
@@ -225,15 +226,33 @@ export function amendObligation(d,e,{id,actor,changes,...facts},eventId){
     const args={id,actor,changes,...facts};
     return receipt(d,e,id,eventId,'obligation_amended',args,()=>{
         const row=requireRow(d,id),s=read(d,'state');
-        assertObligationAuthority(e,s,{...facts,actor,debtor:row.debtor});
         if(obligationView(s,row).closed)throw Error('Closed obligation cannot be amended');
-        const allowed=new Set(['deadline','principal','rate','value','accrual','grace','expires']);
+        const allowed=new Set(['deadline','principal','rate','value','accrual','grace','expires','amount','interest','installments']);
         if(!changes||Object.keys(changes).some(k=>!allowed.has(k)))throw Error('Amendment cannot replace signing facts');
         if(changes.deadline!==undefined&&(!Number.isSafeInteger(changes.deadline)||changes.deadline<s.minute))throw Error('Invalid amended deadline');
         if(changes.expires!==undefined&&(!Number.isSafeInteger(changes.expires)||changes.expires<s.minute))throw Error('Invalid amended expiry');
-        const next={...row,amendments:[...row.amendments??[],{...structuredClone(changes),minute:s.minute,eventId,actor}]};
+        if(changes.amount!==undefined&&(!Number.isSafeInteger(changes.amount)||changes.amount<(row.paid??0)))throw Error('Invalid amended amount');
+        if(changes.interest!==undefined)integer(changes.interest,'amended interest');
+        if(changes.installments!==undefined&&(!Number.isSafeInteger(changes.installments)||changes.installments<1))throw Error('Invalid amended installments');
+        const concession=Object.keys(changes).length===1&&changes.deadline!==undefined&&Number.isSafeInteger(row.deadline)&&changes.deadline>=row.deadline;
+        let creditorActs=false;
+        if(concession){try{assertObligationAuthority(e,s,{...facts,actor,debtor:row.creditor});creditorActs=true;}catch{}}
+        let agreement=null;
+        if(!creditorActs){
+            assertObligationAuthority(e,s,{...facts,actor,debtor:row.debtor});
+            if(Object.keys(changes).some(k=>k!=='deadline'||changes.deadline!==row.deadline)){
+                const right=row.terms?.extension;
+                const authorized=concession&&right?.holder===row.debtor&&Number.isSafeInteger(right.until)&&changes.deadline<=right.until;
+                if(!authorized){
+                    agreement=nativeConsent({engine:e,document:d.document},obligationRepresentative(e,s,row.creditor)??row.creditor,actor,'amend',{purpose:row.id,subject:row.id,terms:changes,onRefusal:'abort'});
+                    if(!agreement.allowed)throw Error('Deadline amendment requires the creditor consent or a signed extension right');
+                }
+            }
+        }
+        const next={...row,amendments:[...row.amendments??[],{...structuredClone(changes),minute:s.minute,eventId,actor,...(agreement?{consent:agreement.source}:{})}]};
         // Effective procedural deadline is a projection. Original terms remain.
         if(changes.deadline!==undefined)next.deadline=changes.deadline;
+        for(const field of ['amount','interest','installments'])if(changes[field]!==undefined)next[field]=changes[field];
         write(d,e,next);return {id,transferred:0,remaining:obligationView(s,next).owed,evidence:eventId};
     });
 }

@@ -22,7 +22,7 @@ import {BANK_OPERATIONS} from './finance-operations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
-import {consent as nativeConsent,agreedLoan} from './action-consent.mjs';
+import {consent as nativeConsent,agreedLoan,requestContractConsent} from './action-consent.mjs';
 import {authority} from './action-authority.mjs';
 declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
@@ -75,25 +75,26 @@ export function derivedBankAt(e,state,location){
     if(!state||!c.derivedBanks)return null;
     const sid=placeSettlement(e,state,location).value,level=adminLevel(e,state,sid)?.level;
     if(!c.derivedBanks.levels.includes(level))return null;
-    const site=bankSite(e,state,sid);if(!site||site.location!==location)return null;
+    const site=bankSite(e,state,sid,location);if(!site)return null;
     return {id:`bank:${sid}`,name:`${e.byId.get(sid)?.name??sid}钱庄`,location,settlement:sid,keepers:[site.keeper],reserveCopper:0,
         reserveCoins:{},depositFeeCopper:c.derivedBanks.depositFeeCopper,exchangeFeeRate:c.derivedBanks.exchangeFeeRate,
         loanMonthlyInterest:e.rules.economy.loanMonthlyInterest[0],loanMaximumDays:c.loan.maximumDays,loanMaximumCopper:c.derivedBanks.loanMaximumCopper,collateralRatio:1,derived:true};
 }
-function bankSite(e,state,sid){
-    const gov=settlementGovernment(e,state,sid);if(gov.head.value)return {location:gov.seat.value,keeper:gov.head.value};
-    // Vacant governments do not turn document clerks into officials. Town
-    // merchants with current trading services can run an unfunded private desk.
+function bankSite(e,state,sid,location=null){
+    // Resolve the requested physical counter. A staffed office must not hide a
+    // merchant's existing counter elsewhere in the same settlement (or vice versa).
+    const gov=settlementGovernment(e,state,sid);
+    if(gov.head.value&&(location===null||gov.seat.value===location))return {location:gov.seat.value,keeper:gov.head.value};
     for(const id of Object.keys(state.npcs??{}).sort()){
         if(!/钱庄|商旅|商人|掌柜/.test(personOccupation(e,state,id).value??''))continue;
-        const shop=personBusiness(e,state,id);if(shop?.open.value&&shop.settlement.value===sid)return {location:shop.location.value,keeper:id};
+        const shop=personBusiness(e,state,id);if(shop?.open.value&&shop.settlement.value===sid&&(location===null||shop.location.value===location))return {location:shop.location.value,keeper:id};
     }
     return null;
 }
 export function derivedBankById(e,state,id){
     const fixed=cfg(e)?.banks?.find(b=>b.id===id);if(fixed)return fixed;
     if(!state||!id?.startsWith('bank:'))return null;
-    const sid=id.slice(5),site=bankSite(e,state,sid);
+    const sid=id.slice(5),site=bankSite(e,state,sid,state.location)??bankSite(e,state,sid);
     return site?derivedBankAt(e,state,site.location):null;
 }
 export function depositRate(e,state,b,minute=state.minute){
@@ -184,12 +185,17 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         const key=args.debt,row=d.get(...financePath(key));
         if(row?.kind!=='loan'||row.debtor!=='player'||row.status==='已还清'||row.defaulted)throw preconditionFailure('需要尚未违约的本人借据');
         const b=row.bank?bankById(e,row.bank,d.get('state')):null;
-        const seller=counterpart(d,e,args.seller,{consent:args.consent});
+        const seller=e.resolve(args.seller);
         if(b?!b.keepers.includes(seller)||location!==b.location:seller!==row.creditor)throw preconditionFailure('须由原债主同意展期');
         const days=financeInt(args.days,1,cfg(e).loan.maximumDays,'展期天数'),principal=Math.max(0,row.principal-row.paid),interest=Math.ceil(principal*row.monthlyInterest*days/30);
         const next={...row,deadline:Math.max(now,row.deadline)+days*DAY,interest:row.interest+interest,amount:row.amount+interest,contractualAmount:row.amount+interest,status:'待偿还',installments:1,installmentOverdueAt:null,
-            amendments:[...row.amendments??[],{days,interest,minute:now,consentEvent:id}]};
-        if(row.obligation)amendObligation(d,e,{id:row.obligation,actor:'player',changes:{deadline:next.deadline}},`${id}:extend`);
+            amendments:[...row.amendments??[],{days,interest,minute:now}]};
+        counterpart(d,e,seller,{consent:true});
+        const changes={deadline:next.deadline,amount:next.amount,interest:next.interest,installments:1};
+        const agreement=requestContractConsent(d,e,{from:seller,scope:'amend',subject:row.obligation??key,terms:changes,cost:{coins:interest},reward:interest,eventId:id,until:now+5});
+        counterpart(d,e,seller,{consent:agreement.allowed});
+        next.amendments.at(-1).consentEvent=agreement.source;
+        if(row.obligation)amendObligation(d,e,{id:row.obligation,actor:'player',changes},`${id}:extend`);
         holdingSet(d,e,financePath(key),next,'finance-bank');return {debt:key,deadline:next.deadline,amount:next.amount,interest};
     }
     if(op==='lend'){
@@ -197,10 +203,17 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         const borrower=args.business?e.resolve(args.business):e.resolve(args.seller);
         const representative=args.business?groupRepresentative(e,d.get('state'),borrower,args.seller):borrower;
         if(!representative)throw preconditionFailure('组织没有可签约的现任代表');
-        const agreement=borrower===representative?agreedLoan({engine:e,document:d.document},borrower,'player',{principal,days,interest:args.interest,until:now+5}):null;
+        let agreement=agreedLoan({engine:e,document:d.document},representative,'player',{principal,days,interest:args.interest,subject:borrower===representative?'player':borrower,until:now+5});
         if(args.interest!==undefined&&!agreement)counterpart(d,e,representative,{consent:false});
-        counterpart(d,e,representative,{consent:agreement?.permission.allowed||args.consent});
-        const quoted=borrowerTerms(d,e,borrower,principal,days),terms=agreement?{...quoted,interest:agreement.terms.interest,rate:agreement.terms.interest*30/(principal*days)}:quoted,key=`debt_lend_${id}`;
+        const quoted=borrowerTerms(d,e,borrower,principal,days);
+        if(!agreement&&borrower===representative){
+            counterpart(d,e,representative,{consent:true});
+            const terms={principal,days,interest:quoted.interest};
+            const permission=requestContractConsent(d,e,{from:borrower,scope:'loan',purpose:'player',subject:'player',terms,cost:{coins:terms.interest,minutes:5},reward:principal,eventId:id,until:now+5});
+            if(permission.allowed)agreement={terms,permission};
+        }
+        counterpart(d,e,representative,{consent:agreement?.permission.allowed});
+        const terms=agreement?{...quoted,interest:agreement.terms.interest,rate:agreement.terms.interest*30/(principal*days)}:quoted,key=`debt_lend_${id}`;
         const pledgeKey=args.item?`pledge:${key}`:null;
         if(pledgeKey)pledge(d,e,pledgeKey,e.resolve(args.item,'item'),financeInt(args.quantity??1,1,100000,'抵押数量'),borrower);
         financeTransfer(d,e,'player',borrower,principal,id);
@@ -218,7 +231,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     }
     if(op==='collect'){
         const key=args.debt,row=d.get(...financePath(key)),canonical=obligationRow(d.get('state'),key);
-        if(canonical?.kind==='loan'&&!['player_loan','rent'].includes(row?.kind)&&canonical.creditor==='player'&&!obligationView(d.get('state'),canonical).closed){
+        if(canonical?.kind==='loan'&&row?.kind!=='rent'&&canonical.creditor==='player'&&!obligationView(d.get('state'),canonical).closed){
             const view=obligationView(d.get('state'),canonical),amount=financeInt(args.coins??view.owed,1,view.owed,'追收金额');
             const agreement=nativeConsent({engine:e,document:d.document},canonical.debtor,'player','repay',{purpose:canonical.id,subject:canonical.id,terms:{amount},until:now,onRefusal:'abort'});
             // Settlement is instantaneous. Validate the real present signer,

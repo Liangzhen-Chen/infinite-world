@@ -11,9 +11,15 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const initial=engine.createCharacter(seed,{},'a3-score-independent');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const row=id=>structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));
+const consentOffer=(actor,principal,interest=0)=>({id:'a3cr-offer',verb:'consented',actor,to:'player',scope:'loan',subject:'player',terms:{principal,days:1,interest},at:599,expires:5000,revoked:false,source:{kind:'corpus_premise',row:'A3CR'}});
+const loanCall=(operation,seller,coins,eventId,extra={})=>({tool:'world_act',eventId,args:{action:`core:trade.${operation}`,slots:{seller,coins,days:1,...extra}}});
 
-test.todo('r10 C: waiver identifies the actual debtor and creditor without moving money〔前提待真实动作：通过借款方真实动作表达精确贷款条款同意；归 A3 生产者卡〕',async()=>{
- const input=row('040'),run=await executeIntent(engine,initial,input);
+test('r10 C: waiver identifies the actual debtor and creditor without moving money',async()=>{
+ // 产品原则三.2：原历史债务快照改为真实放贷，免债和无额外转账断言保持。
+ const input=row('040'),claim='finance:debt_lend_waiver-loan';
+ input.setup={...input.setup,coins:10,obligations:[],history:[consentOffer('npc_hw_ayan',10)],prelude:[loanCall('lend','npc_hw_ayan',10,'waiver-loan',{interest:0})]};
+ input.proposal.effects[0].id=claim;
+ const run=await executeIntent(engine,initial,input);
  assert.deepEqual(run.setupUnmet,[]);
  assert.equal(run.actual.committed,true);
  const effect=run.effects.find(e=>e.op==='obligation.cancel');
@@ -34,12 +40,15 @@ test.todo('r10 C: waiver identifies the actual debtor and creditor without movin
  // The signature names the obligation, not its parties: a different obligation never satisfies it, and the actual
  // debtor/creditor are asserted natively above and by the foreign-creditor refusal below.
  assert.equal(signatureMatches(input.expected.signature,[{...effect,id:'another_obligation'}],run.receipt,run.requested,world,run.document,context),false);
- const foreign=row('040');foreign.setup.obligations[0].creditor='npc_hw_linsui';foreign.setup.history[0].creditor='npc_hw_linsui';
+ // 外部债权用真实借入建立；玩家仍不能免除林穗持有的债权。
+ const foreign=row('040'),foreignClaim='finance:debt_loan_foreign-loan';
+ foreign.setup={minute:600,location:'bld_hw_qingdeng',present:['npc_hw_linsui'],coins:0,inventory:{item_iron:100},history:[consentOffer('npc_hw_linsui',9,1)],prelude:[loanCall('borrow','npc_hw_linsui',9,'foreign-loan',{item:'item_iron',quantity:10})]};
+ foreign.proposal.effects[0].id=foreignClaim;foreign.proposal.target='npc_hw_linsui';
  const denied=await executeIntent(engine,initial,foreign);
  assert.equal(denied.actual.committed,false);
  assert.deepEqual(denied.setupUnmet,[]);
- assert.equal(denied.document.state.obligations.a3v2_040_loan.paid,0);
- assert.equal(denied.document.state.obligations.a3v2_040_loan.endReason,undefined);
+ assert.equal(denied.document.state.obligations[foreignClaim].paid,0);
+ assert.equal(denied.document.state.obligations[foreignClaim].endReason,undefined);
 });
 
 test('r10 C: channel and owned bucket endpoints require conserved native water and current ownership',async()=>{
