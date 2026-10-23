@@ -46,12 +46,16 @@ function effectTransaction(d,engine,effects,context,source='world'){
 }
 // A refused effect cannot leave costs or partial identity changes in the draft.
 export function clockTransaction(d,apply){
- const tx={document:d.document,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
+ // Nested native programs must share this transaction's cursor, without
+ // advancing the parent's cursor until the whole clock stage commits.
+ const scheduler=d.scheduler?Object.assign(Object.create(Object.getPrototypeOf(d.scheduler)),d.scheduler):null;
+ const tx={document:d.document,scheduler,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
   set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
   remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(content){this.messages.push(content);}};
  const result=apply(tx);if(result?.applied===false)return result;
  // S2a: 回放经持有写入包装，事务里改到的会籍、职位等在正式草稿上双写。
  for(const p of tx.patches)if(p.op==='set')holdingSet(d,null,p.path,p.value,'effects');else holdingRemove(d,null,p.path,'effects');
+ if(scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,scheduler.seq);
  for(const message of tx.messages)d.say(message);
  return result;
 }
