@@ -1,5 +1,5 @@
 import {isDomainRejection,refusalProjection} from './action-rejection.mjs';
-import {executeLeaveMark} from './mark-actions.mjs';
+import {primitiveActionRuntime} from './primitives.mjs';
 import {findAction} from './action-registry.mjs';
 import {applyPatches} from './storage.mjs';
 
@@ -19,7 +19,10 @@ export function markFallback(engine,document,intent,{actor='player'}={}){
  let eventId='refusal:mark:preview';
  while(document.state.records?.[`primitive:${eventId}`])eventId+='x';
  try{
-  const result=executeLeaveMark(engine,document,{eventId,args:{slots}},{actor,preview:true});
+  // Use the installed native adapter. Importing mark-actions here installs its
+  // entire primitive runtime even for a legacy-only engine, changing successful
+  // calls, receipt formats and advance hooks before any refusal has occurred.
+  const result=primitiveActionRuntime().nativeAction(engine,document,{tool:'world_act',eventId,args:{action:'open:leave_mark',slots}},{actor,preview:true});
   if(result.receipt.status==='preview')Object.assign(fallback,{available:true,slots,reason:'只留下痕迹，不会实现原方案的效果'});
  }catch(error){
   if(!isBusinessRejection(error))throw error;

@@ -148,6 +148,21 @@ test('fallback checks actual capacity and local restrictions instead of merely f
  assert.deepEqual(document,before);
 });
 
+test('fallback checks the requested actor rather than borrowing player capacity',()=>{
+ const {engine,document,people}=fixture(),actor=people[0],intent='留下求助的痕迹';
+ document.state.player.status='昏迷';
+ let before=structuredClone(document);
+ assert.equal(markFallback(engine,document,intent).available,false);
+ const offered=markFallback(engine,document,intent,{actor});
+ assert.equal(offered.available,true);assert.equal(offered.slots.intent,intent);
+ assert.deepEqual(document,before);
+ document.state.player.status='正常';document.state.npcs[actor].status='昏迷';before=structuredClone(document);
+ const refused=markFallback(engine,document,intent,{actor});
+ assert.equal(refused.available,false);assert.ok(refused.missing.length);
+ assert.equal(markFallback(engine,document,intent).available,true);
+ assert.deepEqual(document,before);
+});
+
 test('sequence failure discards earlier staged effects and rechecks advice after rollback',async()=>{
  const {engine,document,people}=fixture(),from=accountKey('player','coin_river','purse'),to=accountKey(people[0],'coin_river','purse');
  install(engine,{id:'test:stage-transfer',label:'先交一文',slots:[],cost:{owner:'primitives',time:1},outcomes:[{op:'transfer',from,to,qty:1}]});
