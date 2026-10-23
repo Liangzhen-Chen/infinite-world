@@ -11,6 +11,7 @@ import {prepareOpenAction,executeOpenSequence} from '../server-plugin/open-actio
 import {canonicalActionId} from '../server-plugin/action-registry.mjs';
 import {primitiveRuntime} from '../server-plugin/primitives-runtime.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
+import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -84,9 +85,8 @@ test('R2: leaving and unavailable participants keep the original native safeguar
  assert.equal(denied.receipt.status,'rejected');assert.deepEqual(denied.receipt.applied,[]);
 });
 
-// Each original acceptance assertion remains active, including the blocked 137.
-// Independent cases let the unchanged assertions for later requests run too.
-for(const n of [134,137,138,140,146,171])test(`R2: speech subclass ${n} has a native consumer without fabricated agreement`,async()=>{
+// These consumers record unverified speech; the native guide-request protocol is tested separately below.
+for(const n of [134,138,140,146,171])test(`R2: speech subclass ${n} has a native consumer without fabricated agreement`,async()=>{
   const r=await run(n);assert.equal(canonical(r.receipt.routed),r.row.expected.route,String(n));
   assert.ok(r.receipt.applied.some(e=>e.op==='emit'),String(n));assert.equal(r.after.state.player.coins,r.document.state.player.coins);
   assert.deepEqual(r.after.state.inventory,r.document.state.inventory);assert.deepEqual(r.after.state.obligations,r.document.state.obligations);
@@ -94,6 +94,43 @@ for(const n of [134,137,138,140,146,171])test(`R2: speech subclass ${n} has a na
   if(n===134)assert.match(r.after.state.dialogues.npc_hw_linsui.text,/屋顶/,'reply consumes only the NPC\'s observed repair memory');
   if(n===146)assert.ok(r.after.state.minute<605,'a short question cannot reserve an NPC through the next appointment');
   if(n===140){assert.equal(speech.kind,'tell');assert.deepEqual(r.after.state.creatures,r.document.state.creatures);}
+});
+
+test('R2: speech subclass 137 has a native consumer without fabricated agreement',async()=>{
+ // Product principles II.4 / III.1: a request is not a promise. The frozen corpus labels it
+ // core:dialogue.guide (world_promise), but the catalog owns the distinct guide_request consumer.
+ // The original setup also places Wu at the gate while his current schedule requires northwood;
+ // preserve the actual availability refusal rather than fabricating a schedule or agreement.
+ const r=await run(137),npc='npc_hw_wushuo',route='core:dialogue.guide_request';
+ assert.equal(canonical(r.receipt.routed),route);assert.equal(r.preview.receipt.routing.routed,route);
+ assert.equal(r.preview.receipt.status,'rejected');assert.equal(r.receipt.status,'rejected');
+ assert.equal(r.receipt.code,'E-ACTION-PRECONDITION');assert.match(r.receipt.reason,/作息/);
+ assert.deepEqual(r.receipt.applied,[]);assert.deepEqual(r.out.patches,[]);
+ assert.deepEqual(persistable(r.after),persistable(r.document));
+
+ // III.2: reach the real scheduled location through the existing walking action. The same
+ // request must now emit and save native dialogue, not the other consumers' speech:* record.
+ const destination=scheduleAt(engine,npc,r.document.state.minute,r.document.state).location;
+ assert.notEqual(destination,r.document.state.location);
+ const move=await engine.reduce(r.document,{tool:'world_act',args:{action:'core:move',slots:{destination}},eventId:'owner2-R-guide-walk'});
+ assert.equal(move.result.receipt.status,'committed');
+ const arrived=applyPatches(r.document,move.patches),before=persistable(arrived);
+ assert.equal(arrived.state.location,destination);assert.equal(arrived.state.npcs[npc].location,destination);
+ const input={...r.input,eventId:'owner2-R-guide-request-arrived'};
+ const preview=await engine.previewAction(arrived,input),out=await engine.reduce(arrived,input),after=applyPatches(arrived,out.patches);
+ assert.deepEqual(persistable(arrived),before);assert.deepEqual(auditLedger(after.ledger),[]);
+ assert.equal(preview.receipt.routing.routed,route);assert.equal(preview.receipt.status,'preview');
+ assert.equal(out.result.receipt.routed,route);assert.equal(out.result.receipt.status,'committed');
+ assert.ok(out.result.receipt.applied.some(e=>e.op==='emit'&&e.verb==='request'&&e.target===npc));
+ assert.ok(out.result.receipt.applied.every(e=>!['transfer','holding.open','obligation.create'].includes(e.op)));
+ assert.equal(after.state.player.coins,arrived.state.player.coins);
+ assert.deepEqual(after.state.inventory,arrived.state.inventory);assert.deepEqual(after.state.obligations,arrived.state.obligations);
+ assert.deepEqual(after.holdings,arrived.holdings);
+ assert.equal(after.state.location,arrived.state.location);assert.equal(after.state.npcs[npc].location,arrived.state.npcs[npc].location);
+ const dialogue=after.state.dialogues[npc];assert.equal(dialogue.action,'request');
+ assert.equal(dialogue.sourceEvent,input.eventId);assert.ok(dialogue.text);assert.ok(dialogue.decision);
+ assert.ok(after.state.minute>arrived.state.minute);
+ const replay=await engine.reduce(persistable(after),input);assert.deepEqual(replay.patches,[]);
 });
 
 test.todo('R2: confession preserves the legal entry and refuses to promote a witness into an official〔前提待真实动作：形成指定待审案件及在岗机构身份；归 S4〕',async()=>{

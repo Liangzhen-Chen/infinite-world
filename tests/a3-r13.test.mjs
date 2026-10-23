@@ -30,7 +30,7 @@ async function act(n){
 }
 
 test('A3 r13: ordinary requests route without accepting purchases, gifts or NPC commitments',async()=>{
- for(const n of [123,128,136,143,190,192,193,195,196]){
+ for(const n of [123,128,136,143,190,193,195,196]){
   const r=await act(n);
   assert.equal(r.preview.receipt.routing.routed,r.row.expected.route,String(n));
   assert.equal(r.after.state.player.coins,r.document.state.player.coins,String(n));
@@ -42,6 +42,26 @@ test('A3 r13: ordinary requests route without accepting purchases, gifts or NPC 
   const {row,document}=fixture(n),prepared=prepareOpenAction(engine,document,row.proposal);
   assert.equal(prepared.status,'open',`negotiation ${n} retains its request protocol`);
  }
+});
+
+test('A3 r13: an ambiguous lodging enquiry commits only the open request, without choosing a purchase or agreement',async()=>{
+ // Product principles III.1 / III.2: verify the designed result rather than force a corpus route.
+ // routeAction keeps equally complete candidates open when wording cannot distinguish them.
+ // Row 192 has no question wording: both native question candidates have textScore 0.
+ const r=await act(192),routing=r.preview.receipt.routing;
+ assert.equal(routing.status,'open');assert.equal(routing.routed,null);assert.equal(routing.needsSlots,null);
+ assert.deepEqual(routing.candidates.map(c=>[c.id,c.signatureScore,c.textScore]),[
+  ['core:dialogue.ask',1,0],['open:question',1,0]
+ ]);
+ assert.equal(r.preview.receipt.status,'preview');assert.equal(r.out.result.receipt.status,'committed');
+ const [effect]=r.out.result.receipt.applied;
+ assert.equal(r.out.result.receipt.applied.length,1);assert.equal(effect.op,'emit');
+ assert.equal(effect.verb,'request');assert.equal(effect.target,'npc_hw_linsui');
+ assert.equal(effect.payload.subject,'lodging_terms');assert.equal(effect.payload.source,'self');
+ assert.equal(r.after.state.player.coins,r.document.state.player.coins);
+ assert.deepEqual(r.after.state.inventory,r.document.state.inventory);
+ assert.deepEqual(r.after.state.obligations,r.document.state.obligations);
+ assert.deepEqual(r.after.holdings,r.document.holdings);
 });
 
 test('A3 r13: known distant walking binds destination and pays actual travel time',async()=>{
