@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixture,clerk,host,inn,DAY} from './helpers/finance.mjs';
+import {fixture,clerk,host,inn,DAY,grantLoanConsent} from './helpers/finance.mjs';
 import {advanceContracts} from '../server-plugin/contracts.mjs';
 import {personConstraint} from '../server-plugin/entity-view.mjs';
 import {pawnDeadline} from '../server-plugin/obligation-state.mjs';
 
 test('R3-E15 / I29：真实借款入狱后分期照常到期；昏迷和远行也不冻结',async()=>{
     const f=fixture({at:inn});
-    const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3,consent:true},'s3-prison-loan');
+    // A3 借约须真实同意；入狱、昏迷、远行不冻结分期的 I29 断言不变。
+    f.doc=grantLoanConsent(f.e,f.doc,{lender:host,principal:50,days:30,eventId:'i29-loan-consent'});
+    const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3},'s3-prison-loan');
     const row=f.doc.state.records[loan.debt],at=row.createdAt+10*DAY;
     f.doc.state.records['s3:detention']={category:'legal_detention',subject:'player',status:'生效',minute:f.doc.state.minute,expires:at+90*DAY};
     assert.ok(personConstraint(f.e,f.doc.state,'player'));

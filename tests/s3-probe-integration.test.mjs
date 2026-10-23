@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixture,host,worker,clerk,DAY,cash} from './helpers/finance.mjs';
+import {fixture,host,worker,clerk,DAY,cash,grantLoanConsent} from './helpers/finance.mjs';
 import {settleFinancialClaim} from '../server-plugin/finance-bank.mjs';
 import {obligationView} from '../server-plugin/obligation-state.mjs';
 import {settleEmploymentPay} from '../server-plugin/labor-market.mjs';
@@ -44,7 +44,9 @@ test('R2-N1 义务子项：真实签署保存签约法域，钱款不能冒充�
  t.diagnostic('仅覆盖签署快照与禁止凭空交粮；预付、短交、展期、继承及司法闭环未完成。');
 });
 test('R3-E15 义务子项：拘留不冻结分期，真实同城第三人代付不取得债务主体权利',async t=>{
- const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3,consent:true},'detained-loan');
+ // A3 真实借贷同意补齐前提；代偿、债务主体与私密记忆断言不变。
+ const f=fixture();f.doc=grantLoanConsent(f.e,f.doc,{lender:host,principal:50,days:30,eventId:'detained-loan-consent'});
+ const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3},'detained-loan');
  const start=f.doc.state.minute;f.doc.state.records.detention={category:'legal_detention',subject:'player',status:'生效',minute:start,expires:start+90*DAY};
  f.doc.state.location='loc_bs';f.tick(start+10*DAY);assert.equal(obligationView(f.doc.state,loan.debt).overdueCount,1);
  const total=cash(f.doc),payer=f.doc.state.npcs[worker].coins,d=f.draft();
@@ -55,7 +57,9 @@ test('R3-E15 义务子项：拘留不冻结分期，真实同城第三人代付�
  t.diagnostic('覆盖到期与代偿；异地寄汇、租金代收、玉流当、90天折旧及同伴日程仍需整链验收。');
 });
 test('R10: 正常还款的规范回执及兼容投影只产生一次守信关系证据',async()=>{
- const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,consent:true},'trust-loan');
+ // A3 真实借贷同意替代布尔前提；一次守信证据与同屋旁人不可知断言保留。
+ const f=fixture();f.doc=grantLoanConsent(f.e,f.doc,{lender:host,principal:50,days:30,eventId:'trust-loan-consent'});
+ const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30},'trust-loan');
  const before=standing(f.e,f.doc.state,host,'player');
  await f.act({seller:host,payment:'repay',debt:loan.debt},'trust-repay');
  assert.equal(standing(f.e,f.doc.state,host,'player'),before+3);
@@ -68,14 +72,18 @@ test('R10: 正常还款的规范回执及兼容投影只产生一次守信关系
  assert.equal(f.doc.state.npcs[worker].memoryStream.some(m=>/偿还|欠款/.test(m.content)),false);
 });
 test('R10: 分期已经逾期，年终期限之前补清也不新增守信奖励',async()=>{
- const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3,consent:true},'late-trust-loan');
+ // A3 真实借贷同意补齐前提；逾期补清不获守信奖励的断言不变。
+ const f=fixture();f.doc=grantLoanConsent(f.e,f.doc,{lender:host,principal:50,days:30,eventId:'late-trust-loan-consent'});
+ const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,quantity:3},'late-trust-loan');
  f.tick(f.doc.state.minute+11*DAY);const before=standing(f.e,f.doc.state,host,'player');
  await f.act({seller:host,payment:'repay',debt:loan.debt},'late-trust-repay');
  assert.equal(standing(f.e,f.doc.state,host,'player'),before);
  assert.equal(obligationView(f.doc.state,loan.debt).owed,0);
 });
 test('R01: 当面可偿的未到期债权保留候选，远方不可点还款但账目仍保留余额',async()=>{
- const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:30,consent:true},'menu-loan');
+ // A3 真实借贷同意补齐前提；还款候选的在场限制与远方余额断言不变。
+ const f=fixture();f.doc=grantLoanConsent(f.e,f.doc,{lender:host,principal:50,days:30,eventId:'menu-loan-consent'});
+ const loan=await f.act({operation:'borrow',seller:host,coins:50,days:30},'menu-loan');
  const registry=loadActionRegistry(),source=registry.actions.find(a=>a.slots.some(s=>s.options==='debts'));assert.ok(source);
  const only={...registry,actions:[{...source,preconditions:['hasDebt'],visibility:{catalog:'here'}}]};
  const view=()=>worldActions(f.e,f.doc,{registry:only});
