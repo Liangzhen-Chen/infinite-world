@@ -111,7 +111,7 @@
         },
         {
           "kind": "delta",
-          "path": "state.npcs.npc_hw_linsui.trust",
+          "path": "state.npcs.npc_hw_linsui.relationships.player.trust",
           "value": -5
         }
       ]
