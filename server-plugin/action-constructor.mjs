@@ -44,7 +44,7 @@ export function constructIntent(engine,document,proposal,context){
  const candidates=[],seen=new Set();
  for(const definition of actions)for(const target of targets.length?targets:[null]){
   if(!context.visible(definition,{actor:context.actor,...(target?{target}:{})},{...proposal,effects:[]}))continue;
-  const menu=worldActions(engine,document,{query:definition.id,target,limit:1});
+  const menu=worldActions(engine,document,{query:definition.id,target,limit:1,candidatePreview:true});
   const action=menu.actions.find(a=>a.id===definition.id);if(!action)continue;
   const inferred=context.slotsFor(definition,{...proposal,...(target?{target}:{}),effects:[]})??{};
   const form=formSlots(definition,text);

@@ -367,7 +367,7 @@ function entityCard(ctx,id,view,actions,openActions,fallback){
  return {state,primitives:unique,relatedActions,blocked};
 }
 // world_actions / /actions：此处可做（无 target）、对某对象可做（target）、按关键词检索（query）。
-export function worldActions(engine,document,{target=null,query=null,limit=24,registry=null}={}){
+export function worldActions(engine,document,{target=null,query=null,limit=24,registry=null,candidatePreview=false}={}){
  registry??=primitiveActionRuntime()?.registry?.(engine)??loadActionRegistry();
  const ctx={...context(engine,document),document};
  let id=null;
@@ -393,7 +393,9 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  else actions=registry.actions.filter(a=>(a.visibility.catalog==='here'||a.visibility.catalog==='quick'||a.ui?.quick)&&visible(a)).map(a=>offer(ctx,a,null));
  const openActions=document.state.records?.action_config?.openActions??'full';
  if(query==='open:proposal'||query==='world_propose')actions=actions.filter(a=>a.id==='open:proposal');
- if(openActions==='off')actions=actions.filter(a=>a.inputTool!=='world_propose');
+ // Candidate discovery grants no execution permission, even for registered
+ // actions whose implementation uses the open primitive gateway.
+ if(openActions==='off'&&!candidatePreview)actions=actions.filter(a=>a.inputTool!=='world_propose');
  // Keep the creative path beside search results, including empty/blocked targets.
  // Exact open-action lookups retain their single-action contract for the builder.
  const exactOpen=['open:proposal','world_propose','open:leave_mark'].includes(query);

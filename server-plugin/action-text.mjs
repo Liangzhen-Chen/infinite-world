@@ -133,6 +133,31 @@ export function actionLines({engine,action,before,after,args,result,effects=appl
 export function refusalLine(action,reason,locale=BASE_LOCALE){
  return fill(loadTemplates(locale).effects.refused,{label:action?.label??'这样做',reason:String(reason??'').replace(/^Error:\s*/,'')})??String(reason);
 }
+export function serviceLine(engine,fact){
+ const {services,until}=fact.value;
+ return `当前交易/授课：${services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${until!==null&&until!==undefined?`，本时段至${engine.calendar(until).text}`:''}；司法受理按法典、在场清醒及办案回执判断。`;
+}
+const literal=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+export function currentFactLines(engine,document,facts=[]){
+ return facts.flatMap(f=>{
+  const who=literal(nameOf(engine,document.state,f.subject)),v=f.value;
+  if(f.kind==='availability')return [`${who}：${serviceLine(engine,f)}`];
+  if(f.kind==='existing-authorization')return [`已有登记许可：${who}授予${literal(nameOf(engine,document.state,f.object))}，${literal(v.content??v.subject??'范围未记明')}${v.expires!==undefined?`，有效至${engine.calendar(v.expires).text}`:''}。`];
+  if(f.kind!=='price')return [];
+  const item=literal(nameOf(engine,document.state,f.object));
+  const terms=Number.isFinite(v.totalCoins)&&Number.isFinite(v.quantity)?`${item}×${v.quantity}，合计${v.totalCoins}铜`:
+   Number.isFinite(v.listPrice)?`${item}每份${v.listPrice}铜`:
+   v.service==='remittance'&&Number.isFinite(v.fee)?`汇款${Number.isFinite(v.principal)?`本金${v.principal}铜，`:''}手续费${v.fee}铜`:null;
+  return terms?[`${who}的现行报价：${terms}。`]:[];
+ });
+}
+// Pending intent/candidates cannot inject a tail or speaking NPC into output.
+export function pendingTurnLines(engine,document,{playerText,candidates=[],facts=[],lines=[]}={}){
+ return [...lines,...sceneLines(engine,document),...currentFactLines(engine,document,facts),
+  '本回合尚无正式行动裁决；所请求的行动尚未发生，等待选择或补充。',`待处理意图：${literal(playerText)}`,
+  ...(candidates.length?['待选择候选：',...candidates.map(c=>`${literal(c.label)}（${literal(c.id)}）${c.missing?.length?`；待补：${c.missing.map(literal).join('、')}`:''}`)]:['暂未解析出匹配候选；原意仍待处理。']),
+  '可打开动作构造器选择动作并补齐条件；也可打开“留下痕迹”入口，自行选择材料和形式后确认。'];
+}
 // Visible exits from here: routes touching this location plus the containing place, nearest first.
 export function exitsFrom(engine,state,templates=loadTemplates()){
  const here=state.location,seen=new Set(),rows=[];

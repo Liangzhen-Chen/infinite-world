@@ -3,35 +3,104 @@ import {npcCognitionView} from './npc-cognition.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 import {normalize} from './retrieval.mjs';
 import {lieKnowledge} from './lies.mjs';
+import {digest} from './storage.mjs';
+import {actionOfCall,findAction} from './action-registry.mjs';
+import {npcServiceFact} from './npc-schedule.mjs';
+import {currentAgreedQuotes} from './shop.mjs';
 
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 const resultOf=event=>event.result?.result??event.result??{};
+const readOperations={world_weather:'inspect',world_environment:'inspect',world_pet:'inspect',world_summon:'inspect',world_farm:'inspect',world_wildlife:'observe',world_lair:'observe',world_site:'inspect'};
+export function consistencyReceiptKind(row,registry){
+ const result=row.result?.result??row.result??{},native=result.receipt;
+ const action=registry?(native?.routed?findAction(registry,native.routed):row.tool==='world_act'?findAction(registry,row.args?.action):actionOfCall(registry,row.tool,row.args??{})):null;
+ if(['world_read','world_search','world_catalog','world_actions'].includes(row.tool)||readOperations[row.tool]&&(row.args?.operation??readOperations[row.tool])===readOperations[row.tool]||action?.readOnly||action?.projection)return 'query';
+ if(native?.status==='preview'||row.preview===true||row.tool==='world_craft'&&row.args?.operation==='repair'&&row.args.quote===true)return 'preview';
+ if(['not_submitted','pending'].includes(native?.status))return 'unresolved';
+ if(native&&native.status!=='committed'||result.ok===false&&native?.status!=='committed')return 'precondition-failure';
+ if(registry&&(!action||!row.eventId||!Number.isSafeInteger(row.sequence)))return 'unresolved';
+ return 'adjudication';
+}
 // Only settled output belongs to this turn. Proposed effects, previews and old
 // dialogue/consent records cannot supply a missing action or NPC decision.
-export function reviewTurnSettlement(input,receipts,applied){
+export function reviewTurnSettlement(input,receipts=[],applied=[]){
  const before=input.before?.state??input.before??{},after=input.after?.state??input.after??{};
- const effects=[],decisions=[],settled=[];
+ const effects=[],decisions=[],settled=[],queries=[],previews=[],failures=[],unresolved=[],facts=[];
  for(const [index,row] of receipts.entries()){
-  const result=row.result,native=result.receipt;
+  const result=row.result?.result??row.result??{},native=result.receipt;
+  const source={type:row.tool==='world_search'?'query':'receipt',receipt:index,eventId:row.eventId??null,sequence:row.sequence??null,revision:input.revision??null,...(row.key?{key:row.key}:{})};
+  const request={tool:row.tool,args:structuredClone(row.args??{})};
+  const scope={request,result:pick(native?.legacy??result,['npc','from','to','target','item','quantity','cost','price','authorization','quest','destination'])};
+  let factIndex=0;
+  const fact=(kind,value,subject='player',object=null)=>({id:`receipt:${index}:${kind}:${factIndex++}`,kind,source,subject,object,scope,time:{start:row.startMinute??before.minute,end:row.minute??after.minute},knownBy:['player'],value});
+  // Read calls, previews and unmet prerequisites never authorize narration of
+  // a completed action. In particular a successful search is not settlement.
+  const kind=consistencyReceiptKind(row,input.registry);
+  if(kind==='query'){queries.push(index);facts.push(fact(kind,result));continue;}
+  if(kind==='preview'){previews.push(index);facts.push(fact(kind,result));continue;}
   // Per-event applied is the service's actual before→after diff, including
   // consequences of a failed contest. A rejected proposal's native.applied,
   // in contrast, must never be treated as a completed player action.
-  effects.push(...(row.applied??[]).map(effect=>({receipt:index,...effect})));
-  if(row.applied?.length)settled.push(index);
-  if(native&&native.status!=='committed'||result.ok===false)continue;
+  if(kind==='precondition-failure'){failures.push(index);facts.push(fact(kind,result));continue;}
+  // Unknown tool names and a claimed source in a caller's payload are not an
+  // event. The service supplies registry + event provenance after replay.
+  if(kind==='unresolved'){unresolved.push(index);continue;}
   if(!settled.includes(index))settled.push(index);
+  effects.push(...(row.applied??[]).map(effect=>({receipt:index,...effect})));
   effects.push(...(native?.applied??[]).map(effect=>({receipt:index,...effect})));
+  facts.push(fact('adjudication',result));
+  for(const effect of row.applied??native?.applied??[]){
+   const subject=effect.entity??effect.holder??'player',item=fact('effect',effect,subject,effect.item??effect.to??null);
+   // Whole-event diffs can include offscreen NPC purses. They remain reviewer
+   // evidence, not player knowledge merely because time passed.
+   if(subject!=='player'&&!(row.participants??[]).includes(subject))item.knownBy=[];
+   facts.push(item);
+  }
   const legacy=native?.legacy??result,dialogue=legacy.dialogue??result.dialogue;
-  if(dialogue?.npc&&dialogue.decision?.outcome)decisions.push({receipt:index,npc:dialogue.npc,action:dialogue.action,...dialogue.decision});
-  if(typeof legacy.decision==='string'&&(legacy.npc??legacy.from??row.args?.promisor))decisions.push({receipt:index,npc:legacy.npc??legacy.from??row.args.promisor,outcome:legacy.decision});
-  if(native?.consent?.allowed&&native.consent.from&&native.consent.source)decisions.push({receipt:index,npc:native.consent.from,outcome:'agree',source:native.consent.source});
+  const addDecision=(npc,value)=>{
+   if(!npc||npc==='player')return;
+   const decision={...value,receipt:index,npc,request,scope,source,time:{start:row.startMinute??before.minute,end:row.minute??after.minute},knownBy:['player',npc]};
+   decisions.push(decision);facts.push({...fact('decision',value,npc,scope.result.item??scope.result.target??null),request});
+  };
+  if(dialogue?.npc&&dialogue.decision?.outcome)addDecision(dialogue.npc,{action:dialogue.action,...dialogue.decision});
+  if(typeof legacy.decision==='string')addDecision(legacy.npc??legacy.from??legacy.target??row.args?.promisor,{outcome:legacy.decision});
+  for(const decision of native?.decisions??[])if(decision.outcome)addDecision(decision.from??decision.npc??decision.target,{...decision,decisionScope:decision.scope});
+  const permission=legacy.source?.type==='teacher'?legacy.source.consent:native?.consent;
+  // Using an existing grant proves authorization, not a fresh NPC answer.
+  if(permission?.kind==='decision'&&permission.source===row.eventId&&permission.decision?.outcome)addDecision(legacy.source?.id??permission.from,{...permission.decision,consentSource:permission.source});
  }
  // Legacy callers supplied a whole-turn diff rather than per-event applied.
  if(settled.length&&!receipts.some(row=>Array.isArray(row.applied)))effects.push(...applied);
- const records=settled.length?Object.entries(after.records??{}).filter(([id,row])=>JSON.stringify(row)!==JSON.stringify(before.records?.[id])).map(([id,row])=>({id,...pick(row,['category','kind','author','location','active',...(row.category==='mark'?['intent','form','zone']:[])])})):[];
+ const version={revision:input.revision??null,sequence:input.sequence??receipts.at(-1)?.sequence??null,stateHash:digest(after)};
+ const records=settled.length?Object.entries(after.records??{}).filter(([id,row])=>JSON.stringify(row)!==JSON.stringify(before.records?.[id])).map(([id,row])=>({id,...pick(row,['category','kind','author','location','active',...(row.category==='mark'?['intent','form','zone']:[])]),
+  source:{type:'state',field:['state','records',id],version},subject:row.author??row.grantor??null,object:row.subject??row.location??null,scope:{category:row.category},time:{at:after.minute},
+  knownBy:row.author==='player'||row.grantee==='player'||row.category==='mark'&&row.location===after.location&&!row.hidden&&!row.private?['player']:[]})):[];
  const marks=records.filter(row=>row.category==='mark'&&row.active);
- for(const row of settled.length?after.consentEvents??[]:[])if(!(before.consentEvents??[]).some(old=>old.id===row.id)&&row.type==='consent_given')decisions.push({npc:row.from,outcome:'agree',source:row.id});
- return {receiptCount:receipts.length,settled,effects,decisions,marks,records};
+ return {status:settled.length?'adjudicated':'pending',receiptCount:receipts.length,settled,queries,previews,failures,unresolved,effects,decisions,marks,records,facts};
+}
+// A decision is reusable only for exactly the adjudicated request and result
+// range. Neither another NPC nor a larger quantity inherits this permission.
+export function decisionSupports(decision,{npc,request,outcome,scope}={}){
+ return decision.npc===npc&&decision.outcome===outcome&&request!==undefined&&scope!==undefined&&digest(decision.request)===digest(request)&&digest(decision.scope)===digest(scope);
+}
+
+// Public state projection, separate from reviewer-only cognition. A version
+// binds derived facts to all their live inputs without a second fact ledger.
+export function reviewCurrentFacts(engine,document,{revision=null,sequence=null}={}){
+ const s=document.state,version={revision,sequence,worldHash:document.worldHash??null,stateHash:digest(s)},facts=[];
+ const add=(id,kind,field,subject,object,value,scope={},time={at:s.minute})=>facts.push({id,kind,source:{type:'state',field,version},subject,object,scope,time,knownBy:['player'],value:structuredClone(value)});
+ add('state:location','location',['state','location'],'player',s.location,s.location);
+ add('state:minute','clock',['state','minute'],'world',null,s.minute);
+ const present=new Set(Object.entries(s.npcs??{}).filter(([,n])=>n.location===s.location&&!n.scheduleTravel&&!n.cognitionTravel).map(([id])=>id));
+ for(const id of present){const fact=npcServiceFact(engine,s,id,version);if(fact)facts.push(fact);}
+ for(const row of currentAgreedQuotes(s))if(row.to==='player')add(`quote:${row.id}`,'price',['state','records',`agreed_quote:${row.id}`],row.actor,row.resource??row.service,row,{quantity:row.quantity,principal:row.principal,direction:row.direction},{at:s.minute,from:row.at,until:row.expires});
+ for(const [id,row] of Object.entries(s.records??{}))if(row.category==='trade_quote'&&row.day===Math.floor(s.minute/1440)&&(!row.dynamic||row.quotedAt===s.minute)&&[row.buyer,row.seller].includes('player')&&present.has(row.buyer==='player'?row.seller:row.buyer)){
+  const actor=row.buyer==='player'?row.seller:row.buyer;
+  add(`quote:${id}`,'price',['state','records',id],actor,row.item,pick(row,['listPrice','quotedAt','buyer','seller','item']),{buyer:row.buyer,seller:row.seller},{at:s.minute,until:(row.day+1)*1440});
+ }
+ const authorizations=reviewPlayerFacts(s).authorizations;
+ for(const [id,row] of Object.entries(authorizations))if(!row.revoked&&(row.expires===undefined||row.expires>s.minute))add(`authorization:${id}`,'existing-authorization',['state','records',id],row.grantor,row.grantee,row,{subject:row.subject,scope:row.scope},{at:s.minute,until:row.expires});
+ return facts;
 }
 // A completed long wait is a bounded absence, not the entire NPC biography.
 // The movement destination tracks the player's actual location at that wait.

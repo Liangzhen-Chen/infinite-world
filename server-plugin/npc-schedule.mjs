@@ -152,6 +152,17 @@ export function npcAvailability(engine,state,npcId){
     return {activity:slot.activity,services:slot.services,until:slot.until};
 }
 
+// Shared public service evidence. The window end is not a promise to reopen.
+export function npcServiceFact(engine,state,npcId,version=null){
+    const npc=state.npcs?.[npcId];
+    if(!npc||npc.location!==state.location||npc.scheduleTravel||npc.cognitionTravel)return null;
+    const available=npcAvailability(engine,state,npcId);
+    if(available.services===null)return null;
+    return {id:`availability:${npcId}`,kind:'availability',source:{type:'state',field:['state'],derivedBy:'npcAvailability',version},
+        subject:npcId,object:state.location,scope:{services:['trade','teach']},time:{at:state.minute,until:available.until??null},knownBy:['player',npcId],
+        value:{activity:available.activity,services:available.services,until:available.until??null}};
+}
+
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
     if(facilityView(engine,state,npc?.location)?.factor===0)throw preconditionFailure('服务场所已停用');
