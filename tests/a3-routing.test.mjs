@@ -17,9 +17,11 @@ test('A3 routing: signatures are multisets of op, target kind and field/resource
  assert.equal(signatureJaccard(a,b),.5);assert.equal(signatureJaccard([],[]),0);
  assert.equal(signatureJaccard(b,effectSignature([{...effect,verb:'tell'}],{kindOf})),0);
 });
-test('A3 routing: weighted scores route to an authored definition, stable tie by id',()=>{
+test('A3 routing: identical signatures require a choice, with stable candidate ordering',()=>{
  const registry={actions:[action('test:z'),action('test:a')]},r=routeAction(proposal,registry,context);
- assert.equal(r.routed,'test:a');assert.equal(r.nearest.signatureScore,1);assert.ok(r.nearest.textScore>0);
+ // a3r-route / 产品原则二.2: ID ordering remains display-only; an exact
+ // structural tie must preserve both choices instead of executing either.
+ assert.equal(r.routed,null);assert.deepEqual(r.needsSlots,{action:null,missing:['action']});assert.deepEqual(r.candidates.map(c=>c.id),['test:a','test:z']);assert.equal(r.nearest.signatureScore,1);assert.ok(r.nearest.textScore>0);
  assert.equal(r.nearest.score,.6*r.nearest.signatureScore+.4*r.nearest.textScore);
  assert.deepEqual(r,routeAction(proposal,{actions:registry.actions.toReversed()},context));
 });
@@ -33,10 +35,12 @@ test('A3 routing: matching action with missing required slots asks for completio
  const a={...action('test:ask'),slots:[...action('x').slots,{name:'terms',kind:'text',required:true}]};
  const r=routeAction(proposal,{actions:[a]},context);assert.equal(r.routed,null);assert.deepEqual(r.needsSlots,{action:a.id,missing:['terms']});
 });
-test('A3 routing: text alone or identical op with unrelated text cannot force a route',()=>{
+test('A3 routing: contradictory effects cannot route, unique full structure needs no text match',()=>{
  const r=routeAction({...proposal,effects:[{op:'move',to:'loc_a'}]},{actions:[action('test:ask')]},context);
  assert.equal(r.routed,null);assert.ok(r.nearest.score<.7);
- const noText=routeAction({...proposal,intent:'xyzzy'},{actions:[action('test:ask')]},context);assert.equal(noText.routed,null);assert.equal(noText.nearest.textScore,0);
+ // a3r-route: keep the text-only/contradictory-effect refusal above; the
+ // complete matching signature below now owns selection without vocabulary.
+ const noText=routeAction({...proposal,intent:'xyzzy'},{actions:[action('test:ask')]},context);assert.equal(noText.routed,'test:ask');assert.equal(noText.nearest.textScore,0);
 });
 test('A3 routing: a complete action phrase in a long intent keeps the authored threshold',()=>{
  const candidate=action('test:help');
@@ -44,7 +48,9 @@ test('A3 routing: a complete action phrase in a long intent keeps the authored t
  assert.equal(result.routed,candidate.id);assert.equal(result.nearest.signatureScore,1);
  assert.ok(result.nearest.score>=.7);
  const wrong=routeAction({...proposal,intent:'我背着木料走了一整天，现在打算坐在门边喝水'},{actions:[candidate]},context);
- assert.equal(wrong.routed,null);assert.ok(wrong.nearest.score<.7);
+ // a3r-route: only the description changes here, so the same complete
+ // structure still selects this action despite a low weighted text score.
+ assert.equal(wrong.routed,candidate.id);assert.ok(wrong.nearest.score<.7);
 });
 test('A3 routing: source resource is part of a transfer signature; native actor cannot be spoofed',()=>{
  const coins=effectSignature([{op:'transfer',from:'player|coin_river|purse',to:'npc_one'}],{kindOf});
