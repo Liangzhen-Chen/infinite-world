@@ -27,10 +27,13 @@ export function wearItem(d,engine,owner,item,amount){
 // Stable choice: catalogue ID order, then heldUnit's first intact owned unit.
 // Explicit stored tags override the catalogue, including an empty tag list.
 // Untagged legacy items have unknown uses; names and IDs never supply abilities.
-export function useTool(d,engine,requiresUse){
+export function useTool(d,engine,requiresUse,selected=undefined){
  if(typeof requiresUse!=='string'||!requiresUse)throw Error('Missing tool use requirement');
  let unknown=false;
- for(const item of Object.keys(d.get(...engine.bagPath('player'))??{}).sort()){
+ const specified=selected!==undefined;
+ const candidates=specified?[selected]:Object.keys(d.get(...engine.bagPath('player'))??{}).sort();
+ for(const item of candidates){
+  if(typeof item!=='string'||!item)continue;
   if(engine.quantity(d,'player',item)<1)continue;
   const held=heldUnit(d,engine,'player',item),facts=physicalItem(d,engine,held?.instance??item);
   if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,'player',item))continue;
@@ -38,7 +41,7 @@ export function useTool(d,engine,requiresUse){
   if(!Array.isArray(tags)){unknown=true;continue;}
   if(tags.includes(requiresUse)&&(held?.durability??facts.durability??0)>0&&(held?.condition??facts.condition)!==0)return item;
  }
- reject('E-ACTION-TOOL',`需要完好且具备 ${requiresUse} 用途的工具${unknown?'；部分旧物品用途未知':''}`,{
+ reject('E-ACTION-TOOL',`${specified?'指定工具未实际持有、用途不符或已经损坏；':''}需要完好且具备 ${requiresUse} 用途的工具${unknown?'；部分旧物品用途未知':''}`,{
   missing:[`实际持有、耐久大于零且标有 ${requiresUse} 的工具`],
   repair:[`取得具备 ${requiresUse} 用途的完好工具后再试`],
  });
