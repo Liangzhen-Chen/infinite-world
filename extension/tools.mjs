@@ -140,18 +140,104 @@ export function builderToolCall(action,slots={}){
  return action==='open:proposal'?{tool:'world_propose',args:structuredClone(slots)}:{tool:'world_act',args:{action,slots:structuredClone(slots)}};
 }
 
-// Broad searches stay compact; a single action exposes its complete choices.
-// This is dynamic catalogue data, outside the static tool/prompt budget.
+// Same conservative estimate as tools/build-card.mjs: ceil(UTF-8 bytes / 3).
+// One dynamic lookup gets 1200 estimated tokens so repeated tool calls do not
+// consume the turn's entire history window (A3 whimsy2 overflowed at 14266).
+// The player-facing /actions response and the static tool schema are untouched.
+export const MODEL_ACTION_CATALOG_TOKEN_LIMIT=1200;
+const catalogEncoder=new TextEncoder();
+export const estimateModelActionTokens=value=>Math.ceil(catalogEncoder.encode(typeof value==='string'?value:JSON.stringify(value)).length/3);
+const brief=(value,max=80)=>{const text=String(value??'');return text.length>max?text.slice(0,max-1)+'…':text;};
+const refusalSentence=row=>brief(typeof row==='string'?row:row?.reason??row?.missing?.join('、'));
+function modelSlot(slot){
+ return {name:slot.name,kind:slot.kind,...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),
+  ...(slot.default!==undefined&&typeof slot.default!=='object'?{default:slot.default}:{}),
+  ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{})};
+}
+function modelInput(schema){
+ const out={};
+ for(const key of ['type','required','minimum','maximum','minItems','maxItems'])if(schema[key]!==undefined)out[key]=schema[key];
+ if(schema.properties)out.properties=Object.fromEntries(Object.entries(schema.properties).map(([key,value])=>[key,modelInput(value)]));
+ if(schema.items)out.items=modelInput(schema.items);
+ // Effect variants need the executable op and its required arguments, not
+ // copies of every entity selector and every nested field description.
+ if(schema.items?.oneOf)out.operations=Object.fromEntries(schema.items.oneOf.map(row=>[row.properties.op.const,row.required.filter(name=>name!=='op')]));
+ return out;
+}
+function primitiveGroups(rows){
+ const groups=new Map();
+ for(const row of rows){
+  const {op,verb,type,kind,field,status}=row.effect,category=type??kind??field??status;
+  const key=JSON.stringify([op,verb,category]);
+  if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);
+ }
+ return [...groups.values()].map(sources=>{
+  const usable=sources.filter(row=>!row.blocked),best=usable.length?usable:sources,effect=sources[0].effect,bounds={};
+  for(const source of best)for(const [key,value]of Object.entries(source.bounds??{}))if(Number.isFinite(value))bounds[key]=Math.max(bounds[key]??0,Math.abs(value));
+  return {op:effect.op,...(effect.verb?{verb:effect.verb}:{}),...(effect.type??effect.kind??effect.field??effect.status?{kind:effect.type??effect.kind??effect.field??effect.status}:{}),
+   bounds,available:usable.length>0,...(!usable.length?{missing:refusalSentence(sources[0].blocked)}:{})};
+ });
+}
 export function modelActionCatalog(result){
- const choices=slot=>result.actions.length===1?slot.options:slot.options?.slice(0,8);
- return {here:result.scene,...(result.target?{target:structuredClone(result.target)}:{}),...(result.configuration?{configuration:result.configuration}:{}),actions:result.actions.map(action=>({id:action.id,label:action.label,
-  ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:action.slots.map(slot=>slot.name).join(', ')}}:{}),
-  ...(action.available!==undefined?{available:action.available,missing:action.missing??[]}:{}),
-  ...(action.hint?{hint:action.hint}:{}),...(action.blocked?{blocked:action.blocked}:{}),...(action.permission?{permission:action.permission}:{}),...(Object.keys(action.fill??{}).length?{fill:action.fill}:{}),
-  slots:action.slots.map(slot=>({name:slot.name,kind:slot.kind,
-   ...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),...(slot.builderStep?{builderStep:slot.builderStep}:{}),...(slot.default!==undefined?{default:slot.default}:{}),
-   ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{}),...(slot.inputSchema?{inputSchema:slot.inputSchema}:{}),
-   ...(slot.options?{options:choices(slot).map(option=>option.value),restrictedOptions:choices(slot).filter(option=>option.permission?.allowed===false).map(option=>({value:option.value,reason:option.permission.reason}))}:{})
-  }))
- }))};
+ const actions=result.actions??[],target=result.target,open=new Set(['open:proposal','open:leave_mark']);
+ const view={...(result.configuration?{configuration:result.configuration}:{}),actions:[]};
+ // The two discovery paths are mandatory when the engine offers them. Their
+ // input names remain discoverable even when detailed choices do not fit.
+ for(const action of actions.filter(row=>open.has(row.id))){
+  view.actions.push({id:action.id,label:brief(action.label,24),
+   ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:action.slots.map(slot=>slot.name).join(', ')}}:{}),
+   ...(action.available!==undefined?{available:action.available}:{}),
+   ...(action.blocked?{blocked:refusalSentence(action.blocked),missing:brief(action.missing?.join('、')||refusalSentence(action.blocked))}:{}),
+   slots:(action.slots??[]).filter(slot=>slot.required).map(slot=>({...modelSlot(slot),
+    ...(slot.name==='effects'&&slot.inputSchema?{inputSchema:modelInput(slot.inputSchema)}:{}),
+    ...(slot.name==='form'&&slot.options?.length?{options:[slot.options[0].value]}:{})}))});
+ }
+ if(target)view.target={id:target.id,kind:target.kind,name:brief(target.name,32),state:{},blocked:[],primitives:[],relatedActions:[]};
+ const primitives=primitiveGroups(target?.primitives??[]);
+ const refusals=[...target?.blocked??[],...(target?.primitives??[]).map(row=>row.blocked),...(target?.relatedActions??[]).map(row=>row.blocked)].filter(Boolean);
+ const reasons=[...new Set(refusals.map(refusalSentence).filter(Boolean))];
+ const fallback=refusals.find(row=>row.fallback)?.fallback;
+ if(fallback)view.fallback={action:fallback.action,available:fallback.available,reason:refusalSentence(fallback)||brief(fallback.missing?.join('、'))};
+ // Omitted counts collection entries (including collapsed source variants and
+ // choices), not invented capabilities. Fit each candidate with the notice in
+ // place, so the notice itself can never push the result over its budget.
+ let omitted=Math.max(0,(target?.primitives?.length??0)-primitives.length);
+ const candidates=[];
+ const offer=(append,undo,when=()=>true)=>candidates.push({append,undo,when});
+ const property=(object,key,value)=>offer(()=>{object[key]=value;},()=>{delete object[key];});
+ const entry=(array,row)=>offer(()=>array.push(row),()=>array.pop());
+ for(const reason of reasons)entry(view.target.blocked,{reason});
+ for(const [key,value]of Object.entries(target?.state??{}))property(view.target.state,key,typeof value==='string'?brief(value):value);
+ for(const row of primitives)entry(view.target.primitives,row);
+ for(const action of actions.filter(row=>!open.has(row.id))){
+  const row={id:action.id,label:brief(action.label,24),...(action.blocked||action.permission?.allowed===false?{blocked:refusalSentence(action.blocked??action.permission)}:{}),slots:(action.slots??[]).filter(slot=>slot.required).map(modelSlot)};
+  entry(view.actions,row);
+ }
+ for(const row of target?.relatedActions??[])if(!open.has(row.id))entry(view.target.relatedActions,{id:row.id,label:brief(row.label,24),required:(row.slots??[]).filter(slot=>slot.required).map(slot=>slot.name)});
+ // Details enrich only already retained actions; they never displace state,
+ // refusal reasons, primitive classes or the two open discovery paths.
+ for(const action of [...actions.filter(row=>!open.has(row.id)),...actions.filter(row=>open.has(row.id))]){
+  const projected=()=>view.actions.find(row=>row.id===action.id);
+  if(Object.keys(action.fill??{}).length)offer(()=>{projected().fill=action.fill;},()=>{delete projected().fill;},projected);
+  for(const slot of action.slots??[]){
+   if(!slot.required)offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
+   const selected=()=>projected()?.slots.find(row=>row.name===slot.name);
+   if(slot.inputSchema&&!(open.has(action.id)&&slot.name==='effects')){
+    const input=modelInput(slot.inputSchema);
+    offer(()=>{selected().inputSchema=input;},()=>{delete selected().inputSchema;},selected);
+   }
+   for(const choice of slot.options??[])if(!(open.has(action.id)&&slot.name==='form'&&choice===slot.options[0]))offer(()=>{(selected().options??=[]).push(choice.permission?.allowed===false?{value:choice.value,blocked:refusalSentence(choice.permission)}:choice.value);},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
+  }
+ }
+ view.here=[];
+ for(const text of result.scene??[])entry(view.here,brief(text,160));
+ omitted+=candidates.length;
+ const notice=()=>{view.omitted=omitted;view.notice=`已省略 ${omitted} 项，可用 query/target 细化`;};
+ notice();
+ for(const candidate of candidates){
+  if(!candidate.when())continue;
+  candidate.append();omitted--;notice();
+  if(estimateModelActionTokens(view)>MODEL_ACTION_CATALOG_TOKEN_LIMIT){candidate.undo();omitted++;notice();}
+ }
+ return view;
 }

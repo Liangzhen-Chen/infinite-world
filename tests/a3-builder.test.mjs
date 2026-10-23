@@ -40,7 +40,12 @@ test('开放提案是动态目录职责，四步输入不需原语 JSON；只使
  const effects=action.slots.find(s=>s.name==='effects').inputSchema;
  assert.equal(effects.maxItems,63);assert.equal(effects.items.oneOf.find(s=>s.properties.op.const==='emit').properties.target.enum.includes(remote),false);
  assert.equal(JSON.stringify(action).includes('"outcomes"'),false);
- const model=modelActionCatalog(menu).actions[0];assert.equal(model.submission.action,'open:proposal');assert.deepEqual(model.slots.find(s=>s.name==='effects').inputSchema,effects);
+ // A3CP: full selectors belong to the local builder, while model discovery
+ // keeps the structured array contract and every allowed op's required fields.
+ const model=modelActionCatalog(menu).actions[0];assert.equal(model.submission.action,'open:proposal');
+ const compactEffects=model.slots.find(s=>s.name==='effects').inputSchema;
+ assert.equal(compactEffects.type,effects.type);assert.equal(compactEffects.maxItems,effects.maxItems);
+ assert.deepEqual(compactEffects.operations,Object.fromEntries(effects.items.oneOf.map(row=>[row.properties.op.const,row.required.filter(name=>name!=='op')])));
  const before=structuredClone(document);document.state.records.action_config={category:'action_config',openActions:'off'};
  assert.equal(worldActions(engine.scoped(document),document,{query:'open:proposal'}).actions.length,0);
  assert.ok(worldActions(engine.scoped(document),document,{query:'open:leave_mark'}).actions.some(a=>a.id==='open:leave_mark'));
@@ -318,7 +323,12 @@ test('留痕构造消费 B 的真实目录与规则：分区、标签和材料�
  assert.deepEqual(model.slots.find(slot=>slot.name==='tags').options,tags.options.map(option=>option.value));assert.ok(model.slots.find(slot=>slot.name==='tags').options.includes('mark:art'));assert.equal('outcomes' in model,false);assert.equal('call' in model,false);
  const schema=builderSlotSchema(action,action.slots.find(s=>s.name==='materials'));
  assert.equal(schema.maxItems,engine.world.openActionRules.mark.maximumMaterials);assert.deepEqual(schema.items.required,['item','qty']);assert.equal(schema.items.properties.qty.minimum,1);
- assert.deepEqual(model.slots.find(slot=>slot.name==='materials').inputSchema,schema);
+ // A3CP removes repeated inventory enums from nested schemas; material shape,
+ // own-stock choices in the full builder, and the minimum quantity still hold.
+ const compactMaterials=model.slots.find(slot=>slot.name==='materials').inputSchema;
+ assert.equal(compactMaterials.type,schema.type);assert.equal(compactMaterials.maxItems,schema.maxItems);
+ assert.deepEqual(compactMaterials.items.required,schema.items.required);
+ assert.equal(compactMaterials.items.properties.qty.minimum,1);
  const item=schema.items.properties.item.enum.find(id=>(document.ledger.accounts[accountKey('player',id,'inventory')]??0)>0);assert.ok(item);
  assert.ok(schema.items.properties.item.enum.every(id=>Object.hasOwn(document.state.inventory,id)));assert.equal(schema.items.properties.item.enum.length,schema.items.properties.item.enumLabels.length);
  const builder=new ActionBuilder({newEventId:()=> 'builder-real-mark',

@@ -24,7 +24,12 @@ test('渡口无匹配动作时模型与构造器共用开放路径和已预览�
  assert.equal(proposal.submission.slots,'intent, target, consent, participants, means, effects, context');
  assert.ok(proposal.slots.find(row=>row.name==='effects').inputSchema);
  assert.equal(model.actions.find(row=>row.id==='open:leave_mark').available,true);
- const fallback=model.target.blocked[0].fallback;
+ // A3CP: the model gets one shared fallback, while the player card retains
+ // its complete executable preview choices. Availability must agree.
+ const fallback=raw.target.blocked[0].fallback;
+ assert.equal(model.fallback.available,fallback.available);
+ assert.equal(model.fallback.action,fallback.action);
+ assert.equal(model.target.blocked[0].reason,raw.target.blocked[0].reason);
  assert.equal(fallback.action,'open:leave_mark');assert.equal(fallback.available,true);
  const preview=await engine.previewAction(document,{tool:'world_act',eventId:'openpath-fallback',args:{action:fallback.action,slots:fallback.slots}});
  assert.equal(preview.receipt.status,'preview');
