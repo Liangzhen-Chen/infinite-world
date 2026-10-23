@@ -77,7 +77,7 @@ function openProposalOffer(ctx){
   const required=primitive.allOf.find(row=>row.if?.properties?.op?.const===op)?.then?.required??[];
   return {title:op,type:'object',properties,required:['op',...required]};
  });
- return {id:'open:proposal',label:'组合自己的做法',hint:'选择效果并预览；实际能力、同意、代价和法律后果由引擎裁决。',readOnly:false,inputTool:'world_propose',fill:{},slots:[
+ return {id:'open:proposal',label:'组合自己的做法',hint:'可只填 intent，由引擎判定；实际能力、同意、代价和法律后果由引擎裁决。',readOnly:false,inputTool:'world_propose',fill:{},slots:[
   {name:'intent',kind:'text',required:true},
   {name:'target',kind:'entity',entity:'entity',builderStep:1,options:entities},
   {name:'consent',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{from:select(entities),scope:{type:'string'},onRefusal:{type:'string',enum:['abort','contest']}}}},
@@ -85,7 +85,7 @@ function openProposalOffer(ctx){
   {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),tools:{type:'array',maxItems:1,items:select(items)},skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
   // Public submission limits/fields come from the production proposal schema.
   // oneOf supplies local builder controls, not a second structural contract.
-  {name:'effects',kind:'object',required:true,inputSchema:{...structuredClone(actionSchema.$defs.proposal.properties.effects),items:{...structuredClone(primitive),oneOf:variants}}},
+  {name:'effects',kind:'object',inputSchema:{...structuredClone(actionSchema.$defs.proposal.properties.effects),items:{...structuredClone(primitive),oneOf:variants}}},
   {name:'context',kind:'object',inputSchema:{type:'object',properties:{modifier:{type:'integer',minimum:-5,maximum:5},reason:{type:'string'}}}}
  ]};
 }
@@ -148,6 +148,13 @@ function options(ctx,source,target){
   case 'exits':return ctx.exits.map(e=>({value:e.id,label:`${e.name}（${e.direction}${e.relation==='route'?distanceText(e.km,ctx.templates):''}${e.condition?`，${e.condition}`:''}）`}));
   case 'target.stock':return target?stockOf(ctx,target).map(r=>({value:r.id,label:`${r.name}（存${r.quantity}）`})):[];
   case 'inventory':return ctx.inventory.map(r=>({value:r.id,label:`${r.name}×${r.quantity}`}));
+  case 'water_sources':return environmentFeatures(ctx.engine,ctx.document).filter(r=>r.location===ctx.s.location&&!r.hidden&&!r.private&&['water','container'].includes(r.kind)&&((ctx.s.records?.[`physical_feature:${r.id}`]?.state??r.state)?.waterMl??0)>0).map(r=>({value:r.id,label:r.name}));
+  case 'liquid_containers':return ctx.inventory.flatMap(r=>{
+   const d=actionReader(ctx.document),held=ctx.s.inventory[r.id],ids=(held.instances??[]).filter(id=>ctx.s.itemInstances?.[id]?.owner==='player'&&ctx.s.itemInstances[id].status==='持有');
+   const rows=ids.map(id=>({value:id,label:ids.length>1?`${r.name}（${id}）`:r.name}));
+   if(r.quantity>ids.length)rows.push({value:r.id,label:r.name});
+   return rows.filter(row=>physicalItem(d,ctx.engine,row.value).tags?.includes('liquid_container'));
+  });
   case 'recipes':return ctx.recipes.map(r=>({value:r.id,label:r.name}));
   case 'skills':return ctx.skills.map(r=>({value:r.id,label:r.name}));
   case 'debts':return ctx.debts.filter(r=>r.reachable).map(r=>({value:r.id,label:`欠${ctx.name(r.creditor)} ${r.remaining}文`,fill:{seller:r.seller}}));

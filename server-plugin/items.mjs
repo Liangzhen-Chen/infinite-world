@@ -8,8 +8,11 @@ import {authority} from './action-authority.mjs';
 import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
+import {transferWaterState} from './water-volume.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
-declareLedgerWriter('items',{sinks:['sink:consume']});
+// Harvested portions are minted only from an already conserved physical water
+// transfer. The feature volume and liquid_binding remain their authority.
+declareLedgerWriter('items',{sources:{'src:harvest':{item_water:Infinity}},sinks:['sink:consume']});
 const count=value=>{if(!Number.isSafeInteger(value)||value<0||value>100000)throw preconditionFailure('物品数量无效');return value;};
 export function heldUnit(d,engine,owner,item){
     const held=d.get(...engine.bagPath(owner),item),units=typeof held==='object'?held.instances??[]:[];
@@ -281,8 +284,28 @@ export function writeLiquidContents(d,engine,container,entries){
  holdingSet(d,engine,['state','records',`contents:${container}`],{category:'physical_contents',container,entries:rows},'items');
  return rows;
 }
-export function consumeLiquid(d,engine,container,resource,quantity,{eventId=null}={}){
+export function consumeLiquid(d,engine,container,resource,quantity,{eventId=null,millilitres}={}){
  if(!Number.isSafeInteger(quantity)||quantity<1)reject('E-ACTION-LIQUID','饮用量必须是实际可计量的正整数份',{missing:['有效的饮用份数'],repair:['按容器里实际存在的份数取用']});
+ const binding=d.get('state','records',`liquid_binding:${container}`);
+ if(binding&&(resource===undefined||resource==='water'||resource===binding.item)){
+  const feature=d.get('state','records',`physical_feature:${container}`),water=feature.state;
+  if(millilitres!==undefined||water.waterMl<binding.unitMl&&quantity===1){
+   const amount=millilitres??water.waterMl;
+   if(!Number.isSafeInteger(amount)||amount<1||amount>water.waterMl)reject('E-ACTION-LIQUID','没有足量可饮用的实际水量',{missing:['实际存在的正整数毫升数'],repair:['按容器现有水量减少饮用量，或先补水']});
+   if(water.toxinUg>0||water.pathogenRisk>0||water.turbidity>0)reject('E-ACTION-LIQUID','当前原水受到污染，不能当成可饮用清水',{missing:['可安全饮用的水'],repair:['取得真正可饮用的水；外观清澈不等于已经消毒']});
+   const split=transferWaterState(water,{waterMl:0,capacityMl:amount},amount,{odor:true});
+   holdingSet(d,engine,['state','records',`physical_feature:${container}`],{...feature,state:split.source},'items');
+   reconcileContainerWater(d,container,split.source.waterMl,eventId);
+   return {resource:binding.item,quantity:amount/binding.unitMl,nutrition:{hydration:(engine.byId.get(binding.item)?.nutrition?.hydration??0)*amount/binding.unitMl},consumed:[]};
+  }
+  const units=containerUnits(d,container).filter(u=>u.item===binding.item);
+  if(units.length<quantity)reject('E-ACTION-LIQUID','容器里没有足量可饮用的液体',{missing:['实际可饮用水量'],repair:['补充原水或减少饮用量']});
+  const selected=units.slice(0,quantity).map(u=>u.id);
+  for(const id of selected)takeContainerUnit(d,engine,container,id,'player',eventId);
+  changeItems(d,engine,'player',binding.item,-quantity,{selection:selected,books:{flow:'sink:consume',purpose:'drink',writer:'items',eventId}});
+  const gain=(engine.byId.get(binding.item)?.nutrition?.hydration??0)*quantity;
+  return {resource:binding.item,quantity,nutrition:{hydration:gain},consumed:selected};
+ }
  const key=`contents:${container}`,row=d.get('state','records',key),entry=row?.entries.find(e=>e.resource===resource);
  if(!entry||!entry.drinkable||entry.quantity<quantity)reject('E-ACTION-LIQUID','容器里没有足量可饮用的液体',{missing:['足量可饮用液体'],repair:['检查容器内容，补充可饮用液体或减少饮用量']});
  moveStock(d,{from:accountKey(container,resource,'contents'),to:accountKey('sink:consume',resource,'drink'),amount:quantity,writer:'items',eventId});
@@ -292,6 +315,26 @@ export function consumeLiquid(d,engine,container,resource,quantity,{eventId=null
 export function containerUnits(d,container){
  return Object.values(d.get('state','itemInstances')??{}).filter(u=>u.container===container&&u.status==='袋内');
 }
+export function stockContainerWater(d,engine,container,eventId){
+ const feature=d.get('state','records',`physical_feature:${container}`),water=liquidItem(engine,'water'),unitMl=liquidPortionMl(engine,'water');
+ if(!water||!unitMl)throw Error('Missing registered water portion');
+ const old=d.get('state','records',`liquid_binding:${container}`),current=containerUnits(d,container).filter(u=>u.item===water);
+ const quantity=Math.floor(feature.state.waterMl/unitMl)-current.length;
+ const ids=[];
+ for(let offset=0;offset<quantity;offset+=200){
+  const count=Math.min(200,quantity-offset),made=produceItems(d,engine,water,count,{eventId:`${eventId}:water:${offset}`,books:{flow:'src:harvest',purpose:'draw_water',writer:'items',eventId}});
+  changeItems(d,engine,'player',water,-count,{selection:made,preserve:true,books:BOOKED});
+  moveStock(d,{from:bag(engine,'player',water),to:placed(engine,container,water),amount:count,writer:'items',eventId});
+  for(const id of made){
+   const unit=d.get('state','itemInstances',id);
+   holdingSet(d,engine,['state','itemInstances',id],{...unit,container,status:'袋内'},'items');
+   setLocation(d,{entity:id,at:container,mode:'container',writer:'items',engine});
+  }
+  ids.push(...made);
+ }
+ holdingSet(d,engine,['state','records',`liquid_binding:${container}`],{category:'physical_liquid_binding',container,item:water,unitMl,units:[...new Set([...old?.units??[],...current.map(u=>u.id),...ids])]},'items');
+ return ids;
+}
 export function takeContainerUnit(d,engine,container,id,actor,eventId){
  const unit=containerUnits(d,container).find(u=>u.id===id);
  if(!unit||physicalLocation(d,engine,container)!==physicalLocation(d,engine,actor))reject('E-ACTION-CONTAINER','取不到该容器里的物品',{missing:['同地点可取出的实际物品'],repair:['靠近容器并确认物品仍在其中']});
@@ -300,10 +343,9 @@ export function takeContainerUnit(d,engine,container,id,actor,eventId){
  if(binding?.units.includes(id)){
   const before=feature?.state,amount=binding.unitMl;
   if(!before||before.waterMl<amount)reject('E-ACTION-WATER','这份容器水已被用掉',{missing:['尚未消耗的水'],repair:['补充实际水量后再取用']});
-  const fraction=amount/before.waterMl,state={...before,waterMl:before.waterMl-amount};
-  next.liquid={waterMl:amount,turbidity:before.turbidity,pathogenRisk:before.pathogenRisk,odor:before.odor};
-  for(const field of ['saltMg','toxinUg']){next.liquid[field]=(before[field]??0)*fraction;state[field]=(before[field]??0)-next.liquid[field];}
-  holdingSet(d,engine,['state','records',`physical_feature:${container}`],{...feature,state},'items');
+  const split=transferWaterState(before,{waterMl:0,capacityMl:amount},amount,{odor:true});
+  const {capacityMl,...liquid}=split.destination;next.liquid=liquid;
+  holdingSet(d,engine,['state','records',`physical_feature:${container}`],{...feature,state:split.source},'items');
  }
  changeItems(d,engine,actor,unit.item,1,{books:BOOKED});
  const path=[...engine.bagPath(actor),unit.item,'instances'];d.set(path,[...d.get(...path)??[],id]);

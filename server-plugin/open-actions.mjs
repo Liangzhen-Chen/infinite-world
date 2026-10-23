@@ -14,6 +14,7 @@ import {parseAccount,LEDGER_COIN} from './ledger.mjs';
 import {resolveTimeSlot} from './action-time.mjs';
 import {refusalProjection} from './action-rejection.mjs';
 import {markFallback,actionBoundary} from './action-boundary.mjs';
+import {constructIntent} from './action-constructor.mjs';
 
 // Scheduling a question records the player's own future request. The authored
 // question program rechecks presence when due and grants no NPC commitment.
@@ -118,7 +119,22 @@ export async function executeOpenSequence(engine,document,input,prepared,{previe
 }
 
 export function prepareOpenAction(engine,document,proposal,native){
- const prepared=prepareOpenPlan(engine,document,proposal,native);
+ let prepared;
+ if(proposal&&typeof proposal.intent==='string'&&proposal.intent.trim()&&!Object.hasOwn(proposal,'effects')){
+  if(proposal.consent&&Object.hasOwn(proposal.consent,'granted'))reject('E-OPEN-CONSENT','同意须读取真实事件，不能由提案代填');
+  const context=native?.routing??createRoutingContext(engine,document),entities=resolveProposalEntities({...proposal,effects:[]},context);
+  if(entities.ambiguities.length)prepared={status:'needs_entities',...entities,effects:[],cost:null,candidates:[],routed:null};
+  else {
+   const constructed=constructIntent(engine,document,entities.proposal,context);
+   if(constructed.candidate){
+    const expanded={...entities.proposal,effects:constructed.effects??[]};
+    if(document.state.records?.action_config?.openActions==='limited'&&expanded.effects.some(e=>!['fact.set','vital','move','emit','learn'].includes(e.op)&&!(e.op==='create'&&e.kind==='mark')||e.op==='emit'&&!['request','tell'].includes(e.verb)))reject('E-OPEN-MODE','受限模式下此效果须通过注册动作执行');
+    prepared=constructed.effects?prepareOpenPlan(engine,document,expanded,createOpenActionContext(engine,document,expanded)):
+     {status:'routed',routed:constructed.candidate.id,slots:constructed.candidate.slots,candidates:[constructed.candidate],signature:[],effects:[],cost:null};
+    prepared={...prepared,constructedProposal:expanded};
+   }else prepared={...constructed,routed:null,effects:[],cost:null};
+  }
+ }else prepared=prepareOpenPlan(engine,document,proposal,native);
  if(!['needs_entities','needs_slots','needs_alternative'].includes(prepared.status))return prepared;
  const missing=prepared.missing??prepared.needsSlots?.missing??prepared.ambiguities?.map(row=>row.path)??prepared.blocked?.map(row=>row.reason);
  const reason=prepared.reason??(prepared.status==='needs_entities'?'尚不能确定你指的是哪个对象，请从已知候选中选择':prepared.status==='needs_slots'?'还缺少完成这项行动所需的选择':'现有手段不能完成原方案的全部效果');

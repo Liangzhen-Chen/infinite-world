@@ -307,6 +307,12 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const effects=proposal.effects??[],transfers=effects.filter(e=>e.op==='transfer'),resource=e=>e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null);
    const goods=transfers.find(e=>resource(e)&&!['coin',LEDGER_COIN].includes(resource(e))&&!String(e.to).startsWith('sink:'));
    const money=transfers.find(e=>['coin',LEDGER_COIN].includes(resource(e)));
+   if(action.call?.tool==='world_environment'&&action.call.operation==='draw_water'){
+    const water=transfers.find(e=>e.resource==='water');
+    if(slot.name==='source')value??=water?.from;
+    if(slot.name==='container')value??=water?.to;
+    if(slot.name==='millilitres'&&water)value??=water.qty*1000;
+   }
    const obligation=effects.find(e=>e.op==='obligation.create'),settlement=effects.find(e=>e.op==='obligation.settle');
    if(action.call?.tool==='world_law'&&slot.name==='request'){
     const request=effects.find(e=>e.op==='emit'&&(['claim','request'].includes(e.verb)||e.payload?.kind==='confession'));
@@ -624,6 +630,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
    const liquid=consumedLiquid(proposal);
    if(!fact||!liquid)return [];
    return [sign([transfer(resource(liquid),actor,'sink:consume'),{op:'fact.set',entity:slots.target??fact.entity,field:fact.field}])];
+  }
+  if(call?.tool==='world_environment'&&call.operation==='draw_water'){
+   const source=featureOf(slots.source),container=state.itemInstances?.[slots.container],item=container?.item??slots.container;
+   if(source&&['water','container'].includes(source.kind)&&(bag?.[item]?.quantity??bag?.[item]??0)>0)return [sign([transfer('water',source.id,slots.container)])];
+   return [];
   }
   if(call?.tool==='world_law'&&call.operation==='steal'&&proposal.means?.manner==='steal')return [sign([transfer(slots.item??LEDGER_COIN,slots.target,actor)])];
   if(call?.tool==='world_law'&&call.operation==='pay'){

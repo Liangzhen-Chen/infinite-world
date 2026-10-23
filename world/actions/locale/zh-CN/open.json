@@ -1,6 +1,9 @@
 {
   "locale": "zh-CN",
   "events": {
+    "environment.drink_contents":{"success":"{actor}饮用了容器中实际可饮用的水。","refused":"未能饮水：{reason}"},
+    "environment.pour_water":{"success":"{actor}倒出了容器中的实际水量。","refused":"未能倒水：{reason}"},
+    "environment.draw_water":{"success":"{actor}把原水装入自己的容器，污染随水转移，尚未净化。","refused":"未能装水：{reason}"},
     "open.question":{"success":"{actor}当面提出了询问，对方尚未因此作出承诺。","refused":"未能询问：{reason}"},
     "open.waive_debt":{"success":"{actor}免除了本人有权处分的债权。","refused":"未能免除债权：{reason}"},
     "open.leave_mark": {

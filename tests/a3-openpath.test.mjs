@@ -12,7 +12,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-test('渡口无匹配动作时模型与构造器共用开放路径和已预览的留痕 fallback',async()=>{
+test('渡口组合意图的模型与构造器共用开放路径和已预览的留痕 fallback',async()=>{
  const engine=new WorldEngine(structuredClone(world)),document=engine.initialFromLegacy(seed,'openpath-dock');
  document.state.location='loc_hw_dock';
  const before=structuredClone(document),args={target:'loc_hw_dock',query:'取水 净化 陶罐 卖水'};
@@ -37,7 +37,9 @@ test('渡口无匹配动作时模型与构造器共用开放路径和已预览�
  assert.deepEqual(builder.map(row=>row.id),raw.actions.map(row=>row.id));
  assert.deepEqual(document,before,'查询与兜底预览不改账');
  // Even a caller requesting one search hit must still discover both paths.
- assert.deepEqual(worldActions(engine.scoped(document),document,{...args,limit:1}).actions.map(row=>row.id),['open:proposal','open:leave_mark']);
+ // a3r2-intent2 新增真实取水动作后，“取水”会有一条注册命中；
+ // 保留原断言意图：limit=1 仍不得挤掉两个共享开放入口。
+ assert.deepEqual(worldActions(engine.scoped(document),document,{...args,limit:1}).actions.map(row=>row.id),['core:environment.draw_water','open:proposal','open:leave_mark']);
 });
 
 test('对象受阻仍提供提案；留痕不可行时沿同一引擎预览返回真实缺项',()=>{

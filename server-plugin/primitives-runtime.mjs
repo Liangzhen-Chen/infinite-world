@@ -43,6 +43,7 @@ declareHoldingWriter('primitives-runtime',{kinds:['owns','contains']});
 import {adaptLegacyExecution,legacyReceiptKey,legacyIdentity} from './legacy-primitives.mjs';
 import {familyDegree,degreeFamily,degreeConsequences,finishDegreeConsequences} from './action-degrees.mjs';
 import {routingRead} from './routing-programs.mjs';
+import {schemaValidator} from './primitive-schema.mjs';
 
 // B supplies current-world visibility, slots and source bounds at the native
 // composition root. This function is never read from proposal JSON or saves.
@@ -646,8 +647,9 @@ export const primitiveRuntime={
   // service after runtime initialization so B can register its native context.
    const {prepareOpenAction,createOpenActionContext,executeOpenSequence}=await import('./open-actions.mjs');
    const native=(openContextFactory??createOpenActionContext)(engine,document,proposal),prepared=prepareOpenAction(engine,document,proposal,native),routing=proposalRouting(proposal,prepared);
+   const executionProposal=prepared.constructedProposal??proposal,executionInput={...input,args:executionProposal};
    if(prepared.status==='sequence'){
-    const applied=await executeOpenSequence(engine,document,input,prepared,{preview});
+    const applied=await executeOpenSequence(engine,document,executionInput,prepared,{preview});
     if(preview)return applied;
     if(applied.result.receipt.status==='rejected')return applied;
     const d=engine.primitiveDraft(applyPatches(document,applied.patches));
@@ -655,7 +657,7 @@ export const primitiveRuntime={
     return {...applied,patches:[...applied.patches,...d.patches]};
    }
    if(prepared.status==='open'&&prepared.effects.length){
-    const applied=engine.primitiveOpenAction(document,input,prepared,{preview});
+    const applied=engine.primitiveOpenAction(document,executionInput,prepared,{preview});
     if(preview)return applied;
     const d=engine.primitiveDraft(applyPatches(document,applied.patches));
     holdingSet(d,engine,['state','records',key],{category:'open_proposal',fingerprint,result:applied.result},'primitives-runtime',eventId);
@@ -672,7 +674,7 @@ export const primitiveRuntime={
    return preview?result:{patches:[],result:{action:prepared.routed,receipt:result.receipt}};
   }
   if(preview){
-   const result=await engine.previewAction(document,actionInput,{openProposal:{proposal,prepared}});
+   const result=await engine.previewAction(document,actionInput,{openProposal:{proposal:executionProposal,prepared}});
    if(result.receipt.status==='rejected'&&result.receipt.routing?.fallback){
     result.receipt.routing={...routing,...result.receipt.routing,intent:proposal.intent,proposal:structuredClone(proposal)};
     result.receipt.routing.fallback.intent=proposal.intent;
@@ -681,7 +683,7 @@ export const primitiveRuntime={
    Object.assign(result.receipt,{routing,signature:prepared.signature,candidates:prepared.candidates});
    return {...result,routing};
   }
-  const applied=await engine.reduce(document,actionInput,{...options,openProposal:{proposal,prepared}});
+  const applied=await engine.reduce(document,actionInput,{...options,openProposal:{proposal:executionProposal,prepared}});
   if(applied.result.ok===false&&applied.result.receipt?.status==='rejected'){
    applied.result.receipt.routing={...routing,...applied.result.receipt.routing,intent:proposal.intent,proposal:structuredClone(proposal)};
    applied.result.receipt.routing.fallback.intent=proposal.intent;
@@ -829,6 +831,13 @@ export const primitiveRuntime={
   const registry=sourceKind==='rule'?primitiveRuleRegistry(engine.world):this.registry(engine),action=findAction(registry,input.args?.action);
   if(registry.errors?.length)reject('E-ACTION-REGISTRY',registry.errors.join('; '));
   if(!action)reject('E-ACTION','Unknown registered action');
+  // The proposal schema owns this gateway's input. Archived catalogs from
+  // before intent-only proposals still list effects as required.
+  if(action.call?.tool==='world_propose'&&!Object.hasOwn(input.args?.slots??{},'effects')){
+   const proposal=input.args?.slots??{},valid=schemaValidator('proposal');
+   if(!valid(proposal))reject('E-ACTION-SLOT',`Invalid proposal: ${valid.errors[0].message}`);
+   return {action,tool:'world_propose',args:proposal,readOnly:false};
+  }
   if(!action.outcomes)return actionCall(registry,action.id,input.args?.slots??{});
   if(sourceKind!=='rule'&&!engine.actionRegistry&&!engine.world.actionDefinitions)reject('E-ACTION-ARCHIVE','Primitive definitions must be part of the archived world');
   const slots=input.args?.slots??{};

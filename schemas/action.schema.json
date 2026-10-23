@@ -2796,8 +2796,7 @@
     "proposal": {
       "type": "object",
       "required": [
-        "intent",
-        "effects"
+        "intent"
       ],
       "properties": {
         "intent": {

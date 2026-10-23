@@ -145,10 +145,16 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  // Environment water is measured in the native feature state, not an item
  // ledger account. Adopt its conserved before/after pair, never the request.
  const waterEndpoints=new Set();
- if(tool==='cast'&&result.movedMl>0&&result.source&&result.destination){
+ if((tool==='cast'||tool==='environment'&&args.operation==='draw_water')&&result.movedMl>0&&result.source&&result.destination){
   const sourcePath=['state','records',`physical_feature:${result.source}`,'state'],destinationPath=['state','records',`physical_feature:${result.destination}`,'state'];
   const initialFeature=id=>engine.world.locations.flatMap(place=>place.features??[]).find(f=>f.id===id)?.state;
-  const srcBefore=at(before,sourcePath)??initialFeature(result.source),srcAfter=at(after,sourcePath),dstBefore=at(before,destinationPath)??initialFeature(result.destination),dstAfter=at(after,destinationPath);
+  const srcBefore=at(before,sourcePath)??initialFeature(result.source),dstBefore=at(before,destinationPath)??initialFeature(result.destination)??(args.operation==='draw_water'?{...at(after,destinationPath),waterMl:0,saltMg:0,toxinUg:0}:null);
+  // The one-minute daily action can cross midnight. Read its conserved pair
+  // from the actual native writes; later basin updates are autonomous, rather
+  // than extra water moved by the player. Neither state comes from a proposal.
+  const transferred=(id,waterMl)=>d.patches.find(p=>p.op==='set'&&p.path.length===3&&p.path[0]==='state'&&p.path[1]==='records'&&p.path[2]===`physical_feature:${id}`&&p.value?.state?.waterMl===waterMl)?.value.state;
+  const drawn=tool==='environment'&&args.operation==='draw_water';
+  const srcAfter=drawn?transferred(result.source,srcBefore.waterMl-result.movedMl):at(after,sourcePath),dstAfter=drawn?transferred(result.destination,dstBefore.waterMl+result.movedMl):at(after,destinationPath);
   if(srcBefore?.waterMl-srcAfter?.waterMl!==result.movedMl||dstAfter?.waterMl-dstBefore?.waterMl!==result.movedMl)reject('E-LEGACY-RECONCILE','Native environment water transfer does not conserve volume');
   add({op:'transfer',resource:'water',from:result.source,to:result.destination,destinationOwner:result.destinationOwner,qty:result.movedMl/1000,unit:'litre',result:{source:{path:sourcePath,before:structuredClone(srcBefore),after:structuredClone(srcAfter)},destination:{path:destinationPath,before:structuredClone(dstBefore),after:structuredClone(dstAfter)}}});
   waterEndpoints.add(result.source);waterEndpoints.add(result.destination);

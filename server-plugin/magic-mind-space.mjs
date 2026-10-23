@@ -34,10 +34,11 @@ const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const effects=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='mind_space'&&(!op||e.operation===op));
 export function mindSpaceState(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('心契空间对象状态键冲突');
+ const carriedContainer=row.containerItem&&d.get('state','itemInstances',row.id,'item')===row.containerItem;
+ if(r&&(r.category!=='physical_feature'||r.id!==row.id||!carriedContainer&&r.location!==row.location))throw Error('心契空间对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
-const storeState=(d,row,state)=>d.set(['state','records',key(row.id)],{category:'physical_feature',id:row.id,location:row.location,state});
+const storeState=(d,row,state)=>d.set(['state','records',key(row.id)],{...d.get('state','records',key(row.id)),category:'physical_feature',id:row.id,location:row.location,state});
 function locate(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>(!location||r.location===location)&&(r.id===id||r.name===id));
  if(rows.length!==1)throw preconditionFailure('需要登记的真实环境对象');return rows[0];

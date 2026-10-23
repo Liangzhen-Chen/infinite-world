@@ -54,7 +54,7 @@ export const actionSchema={
    anyOf:[{required:['call'],properties:{call:{type:'object'}}},{required:['projection']},{required:['outcomes']}],additionalProperties:false,
    allOf:[{if:{required:['outcomes']},then:{properties:{check:{anyOf:[{type:'null'},object]},cost:{required:['owner'],properties:{owner:{const:'primitives'}}}}}}]
   },
-  proposal:{type:'object',required:['intent','effects'],properties:{intent:{type:'string',minLength:1,maxLength:4000},participants:object,effects:{type:'array',maxItems:64,items:{$ref:'#/$defs/primitive'}},means:object,context:object,target:{type:'string'},consent:{type:'object',properties:{from:{type:'string'},scope:{type:'string'},onRefusal:{enum:['abort','contest']}},additionalProperties:false}},additionalProperties:false},
+  proposal:{type:'object',required:['intent'],properties:{intent:{type:'string',minLength:1,maxLength:4000},participants:object,effects:{type:'array',maxItems:64,items:{$ref:'#/$defs/primitive'}},means:object,context:object,target:{type:'string'},consent:{type:'object',properties:{from:{type:'string'},scope:{type:'string'},onRefusal:{enum:['abort','contest']}},additionalProperties:false}},additionalProperties:false},
   // Every receipt the runtime actually returns or persists: native primitive,
   // legacy-adapted, catalog refusal, open sequence, rite, scene and read
   // projection. Only the fields all of them carry are required.
