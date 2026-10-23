@@ -119,7 +119,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   if(typeof value!=='string')continue;
   if(a.records?.[`physical_feature:${value}`]?.id===value){involved.add(value);continue;}
   // Runtime instruments/summons have canonical IDs outside the world catalog.
-  if(b.obligations?.[value]||b.effects?.[value]||b.itemInstances?.[value])involved.add(value);
+  if(b.obligations?.[value]||b.records?.[value]?.category==='debt'||b.effects?.[value]||b.itemInstances?.[value])involved.add(value);
   try{involved.add(engine.resolve(value));}catch{/* A free text subject is not an entity. */}
  }
  const transfers=legacyLedgerEffects(before,after,d.patches);
@@ -242,7 +242,7 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
     add(stateEffect('create',{entity:id,kind:'creature',template:row.summonType,owner:row.owner,location:row.location,expires:row.expires},['state','effects',id],before,after));
     const contract=a.records?.[row.contract];
     if(contract?.category==='summon_contract'&&contract.effect===id&&!b.records?.[row.contract])
-     add(stateEffect('obligation.create',{id:row.contract,obligationKind:'upkeep',debtor:row.owner,creditor:id,from:row.owner,to:id,terms:contract.terms,expires:contract.expires},['state','records',row.contract],before,after));
+     add(stateEffect('obligation.create',{id:row.contract,obligationKind:'upkeep',debtor:row.owner,creditor:id,from:row.owner,to:id,terms:contract.terms,expires:contract.expires,...(contract.upkeepObligation?{canonicalObligation:contract.upkeepObligation}:{})},['state','records',row.contract],before,after));
    }
    continue;
   }
@@ -310,6 +310,9 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
  }
  for(const {id,row,old,path} of rowChanges(before,d.patches,'state','obligations')){
   if(!row||!relevant(row))continue;
+  // Keep the existing summon-contract receipt shape and link its canonical
+  // claim; the compatibility projection is not a second opened obligation.
+  if(!old&&row.kind==='upkeep'&&receipt.applied.some(e=>e.op==='obligation.create'&&e.id===row.contract&&e.canonicalObligation===id))continue;
   const paid=old?(row.paid??0)-(old.paid??0):0;
   const ended=old&&row.endedAt!==undefined&&old.endedAt===undefined;
   const op=!old?'obligation.create':paid>0?'obligation.settle':ended||['cancelled','void'].includes(row.status)&&row.status!==old.status?'obligation.cancel':null;
