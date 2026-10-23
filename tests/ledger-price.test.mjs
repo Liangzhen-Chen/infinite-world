@@ -21,7 +21,7 @@ import {collectRouteTariffs} from '../server-plugin/finance-tax.mjs';
 import {advanceLaborMarket} from '../server-plugin/labor-market.mjs';
 import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {advanceNpcAutonomy,applyNpcPlan,npcPlanFingerprint,npcAutonomyBusy,nextNpcAutonomyMinute} from '../server-plugin/npc-autonomy.mjs';
-import {fixture as financeFixture} from './helpers/finance.mjs';
+import {fixture as financeFixture,grantLoanConsent} from './helpers/finance.mjs';
 import {damageFacility} from '../server-plugin/facilities.mjs';
 import {startPublicProject} from '../server-plugin/public-projects.mjs';
 import {ensureGroupAccount} from '../server-plugin/group-account.mjs';
@@ -163,7 +163,11 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
     await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准
     await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration');
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税照常收取');
-    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10},'loan');
+    // A3CR (3def293f), 产品原则二.4：借款须有出借人对实际报价条款
+    // 的真实同意，调用者 consent:true 不再能代答。复用原生同意夹具，
+    // 不注入借据、不改钱物；下方全部价格双读与账本守恒断言保持原样。
+    c.doc=grantLoanConsent(c.engine,c.doc,{lender:host,principal:40,days:10,eventId:'loan-consent'});
+    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,coins:40,days:10},'loan');
     await step(c,'world_trade',{operation:'work',seller:worker,consent:true,minutes:240},'work');
     await step(c,'world_move',{destination:post},'to-post');
     await step(c,'world_trade',{operation:'deposit',seller:clerk,coins:50},'deposit');

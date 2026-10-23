@@ -82,7 +82,9 @@ function openProposalOffer(ctx){
   {name:'consent',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{from:select(entities),scope:{type:'string'},onRefusal:{type:'string',enum:['abort','contest']}}}},
   {name:'participants',kind:'object',builderStep:1,inputSchema:{type:'object',properties:{target:select(entities)}}},
   {name:'means',kind:'object',builderStep:2,inputSchema:{type:'object',properties:{item:select(items),tools:{type:'array',maxItems:1,items:select(items)},skill:select(skills),spell:select(Object.keys(ctx.s.spells??{}).map(id=>({value:id,label:ctx.name(id)}))),manner:{type:'string',enum:['careful','quick','forceful','stealthy','clever','sleep','rest','guard','attack','retreat','shove']}}}},
-  {name:'effects',kind:'object',required:true,inputSchema:{type:'array',minItems:1,maxItems:63,items:{oneOf:variants}}},
+  // Public submission limits/fields come from the production proposal schema.
+  // oneOf supplies local builder controls, not a second structural contract.
+  {name:'effects',kind:'object',required:true,inputSchema:{...structuredClone(actionSchema.$defs.proposal.properties.effects),items:{...structuredClone(primitive),oneOf:variants}}},
   {name:'context',kind:'object',inputSchema:{type:'object',properties:{modifier:{type:'integer',minimum:-5,maximum:5},reason:{type:'string'}}}}
  ]};
 }
@@ -398,7 +400,7 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  const sceneEngine=Object.create(engine);
  sceneEngine.world={...engine.world,locations:engine.world.locations.filter(publicRow),routes:engine.world.routes.filter(row=>publicRow(row)&&[row.from,row.to].every(key=>publicRow(engine.byId.get(key))))};
  return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions,fallback),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
-  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:[...actions.slice(0,Math.max(0,Math.max(limit,exactOpen?1:2)-openRows.length)),...openRows],quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
+  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:[...actions.slice(0,limit),...openRows],quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
    exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};

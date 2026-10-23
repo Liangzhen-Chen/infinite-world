@@ -16,6 +16,7 @@ import {PHASE} from '../server-plugin/scheduler.mjs';
 import {modelActionCatalog} from '../extension/tools.mjs';
 import {registerWorldEventSubscriber} from '../server-plugin/world-events.mjs';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
+import {actionSchema,schemaValidator} from '../server-plugin/primitive-schema.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const from=accountKey('player','coin_river','purse');
@@ -25,9 +26,21 @@ test('A9: the production proposal declaration is discoverable and runs the same 
  const catalog=worldActions(f.engine,f.document,{query:action.label});
  assert.ok(JSON.stringify(catalog).includes(action.id));
  const gateway=modelActionCatalog(catalog).actions.find(a=>a.id===action.id),effectSchema=gateway.slots.find(s=>s.name==='effects').inputSchema;
- assert.equal(effectSchema.type,'array');assert.equal(effectSchema.maxItems,64);assert.ok(effectSchema.items.properties.op.enum.includes('transfer'));assert.equal(effectSchema.items.additionalProperties,false);
+ // A3CP keeps an op/required-fields summary instead of copying the full
+ // production schema. All structural facts must still match that validator.
+ const production=actionSchema.$defs.proposal.properties.effects,primitive=actionSchema.$defs.primitive;
+ assert.equal(effectSchema.type,production.type);assert.equal(effectSchema.maxItems,production.maxItems);
+ assert.deepEqual(Object.keys(effectSchema.operations).sort(),[...primitive.properties.op.enum].sort());
+ assert.ok(Object.hasOwn(effectSchema.operations,'transfer'));
+ assert.deepEqual([...effectSchema.items.fields].sort(),Object.keys(primitive.properties).sort());
+ assert.equal(effectSchema.items.additionalProperties,false);
  assert.equal(gateway.slots.find(s=>s.name==='means').inputSchema.type,'object');
  const slots={intent:'用一句独特问候表达平安祝愿',effects:[{op:'emit',verb:'tell',visibility:'witnessed',payload:{text:'祝你路上平安'}}]},input={tool:'world_act',eventId:'a9-real-proposal',args:{action:action.id,slots}};
+ const validate=schemaValidator('proposal');
+ assert.equal(validate(slots),true);
+ assert.equal(validate({...slots,effects:[{...slots.effects[0],inventedField:true}]}),false,'实际提交仍拒绝生产 schema 未声明的字段');
+ assert.equal(validate({...slots,effects:Array.from({length:production.maxItems},()=>slots.effects[0])}),true);
+ assert.equal(validate({...slots,effects:Array.from({length:production.maxItems+1},()=>slots.effects[0])}),false);
  const before=structuredClone(f.document),preview=await f.engine.previewAction(f.document,input);assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
  const output=await f.engine.reduce(f.document,input),direct=await f.engine.reduce(f.document,{tool:'world_propose',eventId:input.eventId,args:slots});
  assert.deepEqual(output,direct);assert.equal(output.result.receipt.status,'committed');

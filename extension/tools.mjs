@@ -158,7 +158,7 @@ function modelInput(schema){
  const out={};
  for(const key of ['type','required','minimum','maximum','minItems','maxItems'])if(schema[key]!==undefined)out[key]=schema[key];
  if(schema.properties)out.properties=Object.fromEntries(Object.entries(schema.properties).map(([key,value])=>[key,modelInput(value)]));
- if(schema.items)out.items=modelInput(schema.items);
+ if(schema.items)out.items=schema.items.oneOf?{type:schema.items.type,required:schema.items.required,fields:Object.keys(schema.items.properties??{}),additionalProperties:schema.items.additionalProperties}:modelInput(schema.items);
  // Effect variants need the executable op and its required arguments, not
  // copies of every entity selector and every nested field description.
  if(schema.items?.oneOf)out.operations=Object.fromEntries(schema.items.oneOf.map(row=>[row.properties.op.const,row.required.filter(name=>name!=='op')]));

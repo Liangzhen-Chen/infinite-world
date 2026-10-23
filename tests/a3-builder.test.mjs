@@ -38,7 +38,9 @@ test('开放提案是动态目录职责，四步输入不需原语 JSON；只使
  assert.deepEqual(means.skill.enum,Object.keys(document.state.skills));
  assert.ok(means.item.enum.every(id=>(document.state.inventory[id]?.quantity??document.state.inventory[id])>0));
  const effects=action.slots.find(s=>s.name==='effects').inputSchema;
- assert.equal(effects.maxItems,63);assert.equal(effects.items.oneOf.find(s=>s.properties.op.const==='emit').properties.target.enum.includes(remote),false);
+ // A3FX: the previous 63 was a stale UI limit; production proposal.effects
+ // accepts 64. Keep this bound aligned with the same submitted contract.
+ assert.equal(effects.maxItems,64);assert.equal(effects.items.oneOf.find(s=>s.properties.op.const==='emit').properties.target.enum.includes(remote),false);
  assert.equal(JSON.stringify(action).includes('"outcomes"'),false);
  // A3CP: full selectors belong to the local builder, while model discovery
  // keeps the structured array contract and every allowed op's required fields.
@@ -81,6 +83,18 @@ test('真实 HTTP 开放提案：四步预览不写、确认同编号结算、�
  builder.setSlot('intent','再对自己说今天的行程');await builder.preview();assert.ok(builder.quote);
  await server.api('execute',{campaignId,tool:'world_act',args:{action:'core:time',slots:{minutes:1}},eventId:'builder-open-external',expectedSequence:saved.reference.sequence,anchor:null});
  const changed=await server.api('read',{campaignId});assert.equal((await builder.confirm()).stale,true);assert.deepEqual((await server.api('read',{campaignId})).document,changed.document);
+});
+
+test('精确目录匹配的 limit=1 保留注册动作，开放路径附在后面不抢占建议名额',()=>{
+ const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'builder-match-limit');
+ const result=worldActions(engine.scoped(document),document,{query:'core:time',limit:1});
+ assert.deepEqual(result.actions.map(row=>row.id),['core:time','open:proposal','open:leave_mark']);
+ // This is the same identity/read-only/blocked check used by modelAct(match)
+ // before returning suggested, without requiring a browser or executing time.
+ const action=result.actions.find(row=>row.id==='core:time'&&!row.readOnly);
+ assert.ok(action);assert.equal(action.blocked,undefined);
+ const builder=new ActionBuilder({preview:()=>assert.fail('建议不得自动预览'),act:()=>assert.fail('建议不得执行')});
+ builder.choose(action);builder.setSlot('minutes',1);assert.equal(builder.action.id,'core:time');assert.equal(builder.quote,null);
 });
 
 test('模式归一化和设置持久化字段：关闭/目录匹配不暴露旧写工具，纯本地构造始终可用',()=>{
