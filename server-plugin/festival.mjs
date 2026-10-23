@@ -8,7 +8,8 @@ import {assertActionTime,beginActionActivity,finishActionActivity} from './actio
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
 import {recordFestivalRelations} from './npc-relations.mjs';
-import {changeItems,transferItems} from './items.mjs';
+import {changeItems,transferItems,trackTransferUnit} from './items.mjs';
+import {placeView} from './entity-view.mjs';
 import {applyEffects,hookedEffects} from './effects.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -17,6 +18,49 @@ import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 declareHoldingWriter('festival',{kinds:[]});
 
 const DAY=1440,path=id=>['state','records',id],safe=n=>Number.isSafeInteger(n)&&n>=0;
+
+function planOrdinaryFestival(d,engine,args,eventId){
+ const state=d.get('state'),now=state.minute,location=state.location;
+ // The existing flat catalogue form can create a single riddle; structured
+ // callers can submit several. Both sign in the same real prizes below.
+ const request=args.request?.kind==='ordinary'?args.request:{host:args.speaker,due:args.due,endsAt:(args.due??now)+args.minutes,
+  riddles:[{id:args.request,question:args.content,answers:[args.choice],reward:{item:args.item,quantity:args.quantity??1}}]};
+ const id=args.festival,host=request.host==='player'||request.host===undefined?'player':engine.resolve(request.host,'npc');
+ if(typeof id!=='string'||!/^[a-zA-Z0-9_:-]{1,160}$/.test(id)||['__proto__','constructor','prototype'].includes(id)||d.get(...path(id)))throw preconditionFailure('活动编号无效或已使用');
+ if(!available(engine,state,host,location,now))throw preconditionFailure('主办者须清醒在场');
+ const titles=aliveHoldings(d,{kind:'owns',subject:location}),owner=placeView(engine,state,location)?.owner.value;
+ if(titles.length?!titles.some(h=>h.holder===host):owner!==host)throw preconditionFailure('主办者不拥有活动场地');
+ const due=request.due??now,endsAt=request.endsAt,venue=engine.byId.get(location)??state.created?.[location],hours=venue?.openHours;
+ if(!safe(due)||due<now||due-now>360*DAY||!safe(endsAt)||endsAt<=due||endsAt-due>DAY||
+  state.buildings?.[location]?.condition===0||hours&&hours[0]!==hours[1]&&(Math.floor(due/DAY)!==Math.floor((endsAt-1)/DAY)||due%DAY<hours[0]||(endsAt-1)%DAY+1>hours[1]))throw preconditionFailure('活动时段非法或场地未开放');
+ if(args.authorization!==undefined||args.cost||args.supplier)throw preconditionFailure('普通活动只签入主办者自己的场地和实物奖品');
+ const fee=args.coins??0;
+ if(!safe(fee)||fee>1000000||fee>state.player.coins||host==='player'&&fee)throw preconditionFailure('活动筹办报酬无效或随身钱款不足');
+ const name=args.name??request.name;
+ if(typeof name!=='string'||!name.trim()||name.length>120||!Array.isArray(request.riddles)||!request.riddles.length||request.riddles.length>100)throw preconditionFailure('活动须有名称和实际灯谜');
+ const ids=new Set(),units=new Set(),riddles=[];
+ for(const puzzle of request.riddles){
+  if(!puzzle||typeof puzzle.id!=='string'||!/^[a-zA-Z0-9_:-]{1,120}$/.test(puzzle.id)||ids.has(puzzle.id)||typeof puzzle.question!=='string'||!puzzle.question.trim()||puzzle.question.length>1200||
+   !Array.isArray(puzzle.answers)||!puzzle.answers.length||puzzle.answers.length>20||puzzle.answers.some(a=>typeof a!=='string'||!a.trim()||a.length>120)||puzzle.claimed===true||puzzle.reward?.quantity!==undefined&&puzzle.reward.quantity!==1)throw preconditionFailure('灯谜、答案或未领奖的单件奖品无效');
+  ids.add(puzzle.id);
+  const item=engine.resolve(puzzle.reward?.item,'item'),unit=trackTransferUnit(d,engine,host,item,`${eventId}:${puzzle.id}`,puzzle.reward?.unit);
+  if(!aliveHoldings(d,{kind:'owns',holder:host,subject:unit}).length||units.has(unit)||Object.values(d.get('state','records')??{}).some(r=>r.category==='festival_prize'&&r.reward?.unit===unit||r.category==='festival'&&r.ordinary&&['planned','held'].includes(r.status)&&r.riddles.some(p=>p.reward.unit===unit)))throw preconditionFailure('奖品须归主办者所有且尚未签入其他活动或领奖');
+  units.add(unit);riddles.push({id:puzzle.id,question:puzzle.question.trim(),answers:puzzle.answers.map(a=>a.trim()),reward:{item,unit,quantity:1}});
+ }
+ let decision=null;
+ if(host!=='player'){
+  const coins=riddles.reduce((sum,p)=>sum+(engine.byId.get(p.reward.item)?.basePrice??0),0);
+  decision=npcDecision(subjectiveView(engine,d.document,host),{kind:'festival',from:'player',reward:fee,cost:{coins,minutes:endsAt-due}});
+  if(decision.outcome!=='agree')throw preconditionFailure(`主办者尚未同意：${decision.reason}`);
+ }
+ if(fee){
+  moveCoins(d,{from:purse(engine,'player'),to:purse(engine,host),amount:fee,writer:'festival',eventId});
+  d.set(['state','player','coins'],state.player.coins-fee);d.set(['state','npcs',host,'coins'],state.npcs[host].coins+fee);
+ }
+ const row={category:'festival',id,ordinary:true,name:name.trim(),host,location,due,endsAt,status:due===now?'held':'planned',riddles,participants:[host],paidCopper:fee,createdAt:now,sourceEvent:eventId,...(decision?{decision}:{})};
+ holdingSet(d,engine,path(id),row,'festival');
+ return {festival:id,event:{...row,riddles:riddles.map(({answers,...p})=>p)}};
+}
 
 function ordinaryFestivalAction(d,engine,args,eventId,row){
  const now=d.get('state','minute');
@@ -191,6 +235,7 @@ export function festivalScheduleAt(engine,state,npcId,minute,slot,constraints=nu
 }
 export function festivalAction(d,args,eventId){
  const now=d.get('state','minute');
+ if(args.operation==='festival_plan'&&(args.request?.kind==='ordinary'||args.item!==undefined))return planOrdinaryFestival(d,this,args,eventId);
  const ordinary=d.get(...path(args.festival));
  if(ordinary?.category==='festival'&&ordinary.ordinary===true&&['festival_answer','festival_watch'].includes(args.operation))return ordinaryFestivalAction(d,this,args,eventId,ordinary);
  if(args.operation==='festival_answer'){
@@ -283,11 +328,15 @@ export function nextFestivalMinute(state,engine,now){
  return Math.min(Infinity,...pending);
 }
 export function advanceFestivals(d,engine,at){
- for(const row of Object.values(d.get('state','records')??{}))if(row.category==='festival'&&row.ordinary&&row.status==='held'&&row.endsAt<=at)
-  holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
+ for(const row of Object.values(d.get('state','records')??{}))if(row.category==='festival'&&row.ordinary){
+  if((row.status==='planned'||row.status==='held')&&row.endsAt<=at)
+   holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
+  else if(row.status==='planned'&&row.due<=at)
+   holdingSet(d,engine,path(row.id),{...row,status:'held',resolvedAt:row.due},'festival');
+ }
  const year=engine.calendar(at).year;
  const calendar=festivalCalendar(engine);
- for(const old of Object.values(d.get('state','records')??{}))if(old.category==='festival'&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
+ for(const old of Object.values(d.get('state','records')??{}))if(old.category==='festival'&&!old.ordinary&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
   d.set(path(old.id),{...old,status:'unavailable',reason:'已预约节日不再有正式运行来源',resolvedAt:at,resultEvent:`festival-result:${old.id}`});
  }
  for(const f of calendar){

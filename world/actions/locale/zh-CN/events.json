@@ -38,6 +38,7 @@
   "noExit": "看不出有别的路。"
  },
  "events": {
+  "quest.report": "你向任务发布人私下汇报了当前进度。",
   "festival.watch": "你观看节庆直到散场。",
   "read.notice": "你读到告示原文：{content}",
   "talk.overhear": "你在{sourceLabel}听到：{content}",
