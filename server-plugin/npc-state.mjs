@@ -73,7 +73,7 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
    if(!role||(actor?.proficiencies?.[role.entry?.skill]??person?.proficiencies?.[role.entry?.skill]??0)<(role.entry?.minimumProficiency??100))continue;
    const slots=base?.seasonal?.[String(calendar.season)]?.[variant]??base?.[variant]??base?.default??[];
    for(const [start,end]of office.receptionHours??[])for(const slot of slots){
-    if(slot.location!==person?.workplace?.location)continue;
+    if(slot.location!==person?.workplace?.location||/睡|休息|歇息|吃饭|用餐|早饭|午饭|晚饭|家务/.test(slot.activity??''))continue;
     const from=Math.max(start,slot.start),to=Math.min(end,slot.end);
     if(from<to&&!appointments.some(r=>r.start<day+to&&day+from<r.end))appointments.push({start:day+from,end:day+to,location:office.seat,services:['teach']});
    }
