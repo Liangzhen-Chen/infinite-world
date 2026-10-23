@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "note": "领域模块读取的场景数据表：机关与所需工具、液体份量、徒手修理的拒绝范围、私田农具与单位换算、语言目录、地图中转点。代码只读本表；物品编号由世界校验（tools/load-world.mjs 调 server-plugin/domain-rules.mjs）逐项核对存在。",
+  "note": "领域用途要求、液体计量、私田单位换算与词汇；工具由实际持有物品的标签和耐久推导，中转由真实路线推导。",
   "physicalMechanisms": {
     "tripwire_falling_log": {
       "operation": "disarm",
       "state": "armed",
-      "tool": "item_smith_tongs",
       "requiresIdentified": true,
-      "practicalKnowledge": "simple_tripwire_disassembly"
+      "practicalKnowledge": "simple_tripwire_disassembly",
+      "requiresUse": "grip"
     },
     "mechanical_lock": {
       "operation": "unlock",
       "state": "locked",
-      "tool": "item_iron_wire",
-      "requiresIdentified": false
+      "requiresIdentified": false,
+      "requiresUse": "unlock"
     }
   },
   "liquids": {
@@ -22,22 +22,11 @@
       "mlPerKg": 1000
     }
   },
-  "handRepair": {
-    "refusedMaterials": [
-      "stone"
-    ],
-    "refusedScales": [
-      "whole_city_gate"
-    ],
-    "refusedDamageKinds": [
-      "cracked_body"
-    ]
-  },
   "privateField": {
-    "sowTool": "item_hoe",
-    "harvestTool": "item_sickle",
     "muPerHectare": 15,
-    "kgPerJin": 0.5
+    "kgPerJin": 0.5,
+    "sowRequiresUse": "soil_work",
+    "harvestRequiresUse": "harvest"
   },
   "languages": {
     "lang:common": {
@@ -53,12 +42,6 @@
         "coast"
       ]
     }
-  },
-  "map": {
-    "transitPlaces": [
-      "loc_bs",
-      "bld_bs_shrine"
-    ]
   },
   "governance": {
     "reviewOperation": "review_building_application",

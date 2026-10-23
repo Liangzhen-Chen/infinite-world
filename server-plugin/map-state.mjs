@@ -15,7 +15,15 @@ export function heldMapLocations(state){
 }
 
 export function mapKnowledge(engine,document){
-    const state=document.state,now=state.minute,transit=new Set(engine.world.domainRules?.map?.transitPlaces??[]),places=new Map(engine.world.locations.filter(row=>row.mapHierarchy||transit.has(row.id)).map(row=>[row.id,row]));
+    // A transit stop is a real junction with at least two distinct neighbours.
+    // Parallel routes to one neighbour do not create a junction. Knowledge is
+    // applied below, so topology alone never teaches the player a place.
+    const neighbours=new Map();
+    for(const edge of engine.world.routes??[])for(const [from,to] of [[edge.from,edge.to],[edge.to,edge.from]]){
+        if(from===to)continue;
+        if(!neighbours.has(from))neighbours.set(from,new Set());neighbours.get(from).add(to);
+    }
+    const state=document.state,now=state.minute,places=new Map(engine.world.locations.filter(row=>row.mapHierarchy||(neighbours.get(row.id)?.size??0)>=2).map(row=>[row.id,row]));
     const known=new Map(),edgeKnowledge=new Map();
     const add=(id,kind)=>{if(places.has(id)&&rank[kind]>(rank[known.get(id)]??0))known.set(id,kind);};
     for(const [id,row]of Object.entries(state.discoveries??{}))if(visible(row,now)){

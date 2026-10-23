@@ -29,11 +29,12 @@ test('a world without the table has none of these facts instead of defaults', ()
  assert.equal(isLanguage(bare,'lang:common'),true);
 });
 
-test('the world check rejects dangling item, location and vocabulary references', () => {
+test('the world check rejects invalid use requirements and vocabulary references', () => {
  assert.doesNotThrow(()=>validateDomainRules(world));
- assert.throws(()=>validateDomainRules(broken(t=>{t.physicalMechanisms.mechanical_lock.tool='item_nonexistent';})),/不存在的物品/);
- assert.throws(()=>validateDomainRules(broken(t=>{t.privateField.sowTool='item_nonexistent';})),/不存在的物品/);
- assert.throws(()=>validateDomainRules(broken(t=>{t.map.transitPlaces.push('loc_nowhere');})),/不存在的地点/);
+ // Design 2.1/2.2: validate use requirements, never a particular tool ID or transit list.
+ assert.throws(()=>validateDomainRules(broken(t=>{t.physicalMechanisms.mechanical_lock.requiresUse='';})),/requiresUse/);
+ assert.throws(()=>validateDomainRules(broken(t=>{t.privateField.sowRequiresUse=null;})),/sowRequiresUse/);
+ assert.equal(Object.hasOwn(world.domainRules,'map'),false);
  assert.throws(()=>validateDomainRules(broken(t=>{t.liquids.water.itemTag='no_such_tag';})),/恰好对应一件物品/);
  assert.throws(()=>validateDomainRules(broken(t=>{t.physicalMechanisms.mechanical_lock.operation='smash';})),/operation/);
  assert.throws(()=>validateDomainRules(broken(t=>{t.languages['lang:coast'].aliases.push('river');})),/别名重复/);

@@ -1,8 +1,6 @@
-// Scenario facts the domain modules used to hard-code (mechanisms and their
-// tools, the water portion, hand-repair limits, private-field tools and unit
-// conversions, the language catalogue, map transit places) live in
-// world/rules/tables/domain-rules.json. Code reads them through these
-// accessors; a world without the table simply has none of these facts.
+// Domain operation requirements, liquid/field unit conversions and vocabulary
+// live in world/rules/tables/domain-rules.json. Actual tools and map junctions
+// are derived by their consumers; the table does not name particular tools.
 // validateDomainRules() is the world check run by tools/load-world.mjs.
 const NONE=Object.freeze({});
 const derived=new WeakMap();
@@ -46,8 +44,8 @@ export function liquidPortionMl(engine,liquid='water'){
 
 // ---- hand-tool repair ------------------------------------------------------
 export function handRepairRefused(engine,facts){
- const rule=domainRules(engine).handRepair;
- return Boolean(rule&&(rule.refusedMaterials?.includes(facts.material)||rule.refusedScales?.includes(facts.scale)));
+ // Handheld surface work can use the existing repair process; structural work cannot.
+ return Boolean(facts.scale&&facts.scale!=='handheld'||facts.damage?.kind==='cracked_body');
 }
 
 // ---- languages ---------------------------------------------------------------
@@ -66,20 +64,18 @@ export const isLanguage=(engine,id)=>languageTable(engine).ids.has(languageId(en
 export function validateDomainRules(world){
  const table=world.domainRules;if(table===undefined)return;
  const fail=message=>{throw Error(`领域规则表无效：${message}`);};
- const items=new Map((world.items??[]).map(i=>[i.id,i]));
- const locations=new Set((world.locations??[]).map(l=>l.id));
  if(!table||typeof table!=='object'||Array.isArray(table)||table.version!==1)fail('缺少 version 1');
  const known=new Set(['version','note','physicalMechanisms','liquids','handRepair','privateField','languages','map','governance','vocabulary']);
  for(const key of Object.keys(table))if(!known.has(key))fail(`未知分区 ${key}`);
- const tool=(id,where)=>{if(!items.has(id))fail(`${where} 引用了不存在的物品 ${id}`);};
+ const use=(tag,where)=>{if(typeof tag!=='string'||!tag)fail(`${where} requires a nonempty use tag`);};
  for(const [id,row] of Object.entries(table.physicalMechanisms??{})){
   const where=`physicalMechanisms.${id}`;
   if(!['disarm','unlock'].includes(row.operation))fail(`${where}.operation 须为 disarm 或 unlock`);
   if(!['armed','locked'].includes(row.state))fail(`${where}.state 须为 armed 或 locked`);
   if(typeof row.requiresIdentified!=='boolean')fail(`${where}.requiresIdentified 须为布尔值`);
   if(row.practicalKnowledge!==undefined&&(typeof row.practicalKnowledge!=='string'||!row.practicalKnowledge))fail(`${where}.practicalKnowledge 无效`);
-  tool(row.tool,`${where}.tool`);
-  for(const key of Object.keys(row))if(!['operation','state','tool','requiresIdentified','practicalKnowledge'].includes(key))fail(`${where} 含未知字段 ${key}`);
+  use(row.requiresUse,`${where}.requiresUse`);
+  for(const key of Object.keys(row))if(!['operation','state','requiresUse','requiresIdentified','practicalKnowledge'].includes(key))fail(`${where} 含未知字段 ${key}`);
  }
  for(const [liquid,row] of Object.entries(table.liquids??{})){
   const tagged=(world.items??[]).filter(i=>i.tags?.includes(row.itemTag));
@@ -87,10 +83,9 @@ export function validateDomainRules(world){
   if(!Number.isFinite(row.mlPerKg)||row.mlPerKg<=0||!Number.isFinite(tagged[0].weight)||tagged[0].weight<=0)fail(`liquids.${liquid} 缺少体积换算`);
  }
  const list=value=>Array.isArray(value)&&value.every(x=>typeof x==='string'&&x);
- if(table.handRepair!==undefined&&(!list(table.handRepair.refusedMaterials??[])||!list(table.handRepair.refusedScales??[])))fail('handRepair 须为字符串列表');
  if(table.privateField!==undefined){
   const field=table.privateField;
-  tool(field.sowTool,'privateField.sowTool');tool(field.harvestTool,'privateField.harvestTool');
+  use(field.sowRequiresUse,'privateField.sowRequiresUse');use(field.harvestRequiresUse,'privateField.harvestRequiresUse');
   if(!(field.muPerHectare>0)||!(field.kgPerJin>0))fail('privateField 的单位换算须为正数');
  }
  if(table.languages!==undefined){
@@ -114,8 +109,5 @@ export function validateDomainRules(world){
   if(typeof rule.reviewOperation!=='string'||!rule.reviewOperation)fail('governance.reviewOperation 无效');
   for(const [verb,row] of Object.entries(rule.documentSources??{}))if(!kinds.includes(row.kind)||row.cause!==undefined&&typeof row.cause!=='string')fail(`governance.documentSources.${verb} 无效`);
  }
- if(table.map!==undefined){
-  if(!list(table.map.transitPlaces??[]))fail('map.transitPlaces 须为字符串列表');
-  for(const id of table.map.transitPlaces??[])if(!locations.has(id))fail(`map.transitPlaces 引用了不存在的地点 ${id}`);
- }
+
 }
