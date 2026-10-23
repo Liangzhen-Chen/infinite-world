@@ -95,7 +95,7 @@ export function actionCall(registry,id,slots={}){
  if('consent' in slots&&(!own||typeof slots.consent!=='boolean'))reject('E-ACTION-PRECONDITION',own?'同意只能填是或否':CONSENT_PENDING);
  const allowed=new Set(action.slots.map(s=>s.name)),extra=Object.keys(slots).filter(k=>!allowed.has(k)&&k!=='operation');
  // 06 §6.10.4: a slot the catalog form does not offer is a world-facing, typed refusal naming what can be filled.
- if(extra.length)reject('E-ACTION-PRECONDITION',`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}`);
+ if(extra.length)reject('E-ACTION-PRECONDITION',`${action.label}没有这些槽位：${extra.join('、')}；可填：${[...allowed].join('、')||'无'}${action.call.tool==='world_learn'?`；${action.slots.map(slot=>`${slot.name}：${learningSlotDescription(slot.name)}`).join('；')}；用 world_actions query=core:learn 查看当前候选编号与名称`:''}`);
  const missing=action.slots.filter(s=>s.required&&s.consent!==true&&slots[s.name]===undefined&&action.call.fixed?.[s.name]===undefined).map(s=>s.name);
  if(missing.length)reject('E-ACTION-PRECONDITION',`${action.label}还缺：${missing.join('、')}`);
  // A tool with a free-form operation (world_learn, world_research) takes it as a slot; a fixed sub-operation always wins.
@@ -123,15 +123,20 @@ export function catalogRow(action){
   slots:action.slots.map(s=>({name:s.name,kind:s.kind,...(s.entity?{entity:s.entity}:{}),...(s.required?{required:true}:{}),...(s.options&&Array.isArray(s.options)?{options:s.options}:{})})),
   ...(action.hint?{hint:action.hint}:{}),...(action.consent?{consent:action.consent.from}:{})};
 }
+// Describe the legacy learning parameters at both discovery and correction.
+export function learningSlotDescription(name){
+ return {entity:'学习内容的编号或登记名称（skill/spell/recipe）',source:'在场导师npc编号、持有书本item编号或研究项目编号',kind:'spell/skill/recipe',student:'受教者；自己学习可省略或填player',mode:'acquire初学/study温习/observe旁观'}[name]??name;
+}
 // Search by id, label, synonyms, verb and group (substring both ways; Chinese has no word boundaries).
 export function searchActions(registry,query,{limit=12,include=['quick','here','target:npc','target:place','target:item','search','llm']}={}){
  const q=String(query??'').trim().toLowerCase();if(!q)return [];
+ const terms=[...new Set([q,...q.split(/\s+/u)])];
  const scored=[];
  for(const a of registry.actions){
   if(!include.includes(a.visibility.catalog))continue;
   const fields=[a.id.toLowerCase(),a.label,a.verb,a.group,...a.synonyms,a.hint??''];
   let s=0;
-  for(const f of fields){if(!f)continue;const v=String(f).toLowerCase();if(v===q)s+=10;else if(v.includes(q))s+=4;else if(q.includes(v)&&v.length>=2)s+=3;}
+  for(const f of fields){if(!f)continue;const v=String(f).toLowerCase();for(const term of terms){if(v===term)s+=10;else if(v.includes(term))s+=4;else if(term.includes(v)&&v.length>=2)s+=3;}}
   if(s)scored.push([s+(a.visibility.catalog==='search'||a.visibility.catalog==='llm'?0:1),a]);
  }
  return scored.sort((x,y)=>y[0]-x[0]||x[1].id.localeCompare(y[1].id)).slice(0,limit).map(([,a])=>a);

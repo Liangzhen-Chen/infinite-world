@@ -36,6 +36,8 @@ export function teachingConsent(d,engine,{teacher,student='player',subject,minut
 }
 
 export function learn(d,args,id){
+ // Explicit self and an omitted student use the same player source/fee gates.
+ if(args.student==='player'&&!args.operation){args={...args};delete args.student;}
  return learnWithInitialKnowledge(d,this,args,id,()=>learnNative.call(this,d,args,id));
 }
 function learnNative(d,args,id){

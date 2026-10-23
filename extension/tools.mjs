@@ -16,7 +16,7 @@ define('world_revival','神殿/祭坛付费定复活点',{location:str},[]);
 define('world_check','属性技能对抗/工具协助',{attribute:str,skill:str,difficulty:int,context:int,contextReason:str,advantage:bool,disadvantage:bool,tools:{type:'array',items:str},helpers:{type:'array',items:str},opponent:object({npc:str,attribute:str,skill:str},['npc'])},[]);
 define('world_cast','已学法术；force强施入法；刻记填字',{spell:str,target:str,source:str,destination:str,path:{type:'array',items:str,minItems:2,maxItems:8},authorization:str,permit:str,force:bool,text:{...str,maxLength:80},authorizations:{type:'array',items:str,maxItems:8}},['spell','target']);
 define('world_environment','刻记/接近/搬泥/炉温添自有燃料/翻谷；连通空气传声、实高差下降、现有空气呼吸。',{operation:{enum:['inspect','inspect_heat','inspect_marks','load_fuel','approach','carry_silt','turn_grain','sound','fall','breathe']},target:str,subject:str,destination:str,path:{type:'array',items:str,minItems:2,maxItems:8},text:{...str,maxLength:80},grams:int,item:str,quantity:{...int,description:'添料1-100份真实物品；其他量按操作规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
-define('world_learn','师授/读书/研究；student受教，book_give/study',{operation:str,entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']},student:str},[]);
+define('world_learn','师授不填operation；读书/研究',{operation:str,entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']},student:str},[]);
 define('world_practice','练技能/有据突破',{skill:str,target:str,gain:int,breakthroughSource:str},['skill']);
 define('world_profession','认证/入门守戒/仪式资格/退职/升职',{profession:str,student:str,teacher:str,institution:str,rule:str,deity:str,minutes:int,operation:{type:'string',enum:['certify','abandon','promote','initiate','ritual_officiate','examine']},choice:str},['profession']);
 define('world_attributes','依玩家选自由点',{attributes:object({'力量':int,'敏捷':int,'体质':int,'智力':int,'精神':int,'魅力':int})},['attributes']);
@@ -150,7 +150,7 @@ export const estimateModelActionTokens=value=>Math.ceil(catalogEncoder.encode(ty
 const brief=(value,max=80)=>{const text=String(value??'');return text.length>max?text.slice(0,max-1)+'…':text;};
 const refusalSentence=row=>brief(typeof row==='string'?row:row?.reason??row?.missing?.join('、'));
 function modelSlot(slot){
- return {name:slot.name,kind:slot.kind,...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),
+ return {name:slot.name,kind:slot.kind,...(slot.description?{description:brief(slot.description)}:{}),...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),
   ...(slot.default!==undefined&&typeof slot.default!=='object'?{default:slot.default}:{}),
   ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{})};
 }
@@ -209,24 +209,37 @@ export function modelActionCatalog(result){
  for(const reason of reasons)entry(view.target.blocked,{reason});
  for(const [key,value]of Object.entries(target?.state??{}))property(view.target.state,key,typeof value==='string'?brief(value):value);
  for(const row of primitives)entry(view.target.primitives,row);
+ // Zone correction must survive even a broad NPC menu with many actions.
+ const mark=actions.find(row=>row.id==='open:leave_mark'),zone=mark?.slots.find(slot=>slot.name==='zone');
+ if(zone){const row={...modelSlot(zone),options:(zone.options??[]).slice(0,2).map(choice=>({value:choice.value,label:brief(choice.label,24)}))};const selected=()=>view.actions.find(action=>action.id===mark.id);offer(()=>selected().slots.push(row),()=>selected().slots.pop(),selected);}
+ // Preserve executable slot meanings for the first relevant registered actions
+ // before broad menu rows consume the budget. Choices keep both id and name.
+ for(const action of (target?.relatedActions??[]).filter(row=>!open.has(row.id)).slice(0,3)){
+  const row={id:action.id,label:brief(action.label,24),required:(action.slots??[]).filter(slot=>slot.required).map(slot=>slot.name),slots:(action.slots??[]).map(modelSlot)};
+  entry(view.target.relatedActions,row);
+  for(const slot of action.slots??[])for(const choice of (slot.options??[]).slice(0,2)){
+   const selected=()=>view.target.relatedActions.includes(row)&&row.slots.find(value=>value.name===slot.name);
+   offer(()=>{(selected().options??=[]).push({value:choice.value,label:brief(choice.label,24),...(choice.permission?.allowed===false?{blocked:refusalSentence(choice.permission)}:{})});},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
+  }
+ }
  for(const action of actions.filter(row=>!open.has(row.id))){
   const row={id:action.id,label:brief(action.label,24),...(action.blocked||action.permission?.allowed===false?{blocked:refusalSentence(action.blocked??action.permission)}:{}),slots:(action.slots??[]).filter(slot=>slot.required).map(modelSlot)};
   entry(view.actions,row);
  }
- for(const row of target?.relatedActions??[])if(!open.has(row.id))entry(view.target.relatedActions,{id:row.id,label:brief(row.label,24),required:(row.slots??[]).filter(slot=>slot.required).map(slot=>slot.name)});
+ for(const row of (target?.relatedActions??[]).filter(row=>!open.has(row.id)).slice(3))entry(view.target.relatedActions,{id:row.id,label:brief(row.label,24),required:(row.slots??[]).filter(slot=>slot.required).map(slot=>slot.name)});
  // Details enrich only already retained actions; they never displace state,
  // refusal reasons, primitive classes or the two open discovery paths.
  for(const action of [...actions.filter(row=>!open.has(row.id)),...actions.filter(row=>open.has(row.id))]){
   const projected=()=>view.actions.find(row=>row.id===action.id);
   if(Object.keys(action.fill??{}).length)offer(()=>{projected().fill=action.fill;},()=>{delete projected().fill;},projected);
   for(const slot of action.slots??[]){
-   if(!slot.required)offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
+   if(!slot.required&&!(action.id==='open:leave_mark'&&slot.name==='zone'))offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
    const selected=()=>projected()?.slots.find(row=>row.name===slot.name);
    if(slot.inputSchema&&!(open.has(action.id)&&slot.name==='effects')){
     const input=modelInput(slot.inputSchema);
     offer(()=>{selected().inputSchema=input;},()=>{delete selected().inputSchema;},selected);
    }
-   for(const choice of slot.options??[])if(!(open.has(action.id)&&slot.name==='form'&&choice===slot.options[0]))offer(()=>{(selected().options??=[]).push(choice.permission?.allowed===false?{value:choice.value,blocked:refusalSentence(choice.permission)}:choice.value);},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
+   for(const choice of slot.options??[])if(!(open.has(action.id)&&slot.name==='form'&&choice===slot.options[0]))offer(()=>{(selected().options??=[]).push(choice.permission?.allowed===false?{value:choice.value,blocked:refusalSentence(choice.permission)}:slot.kind==='text'&&choice.label?{value:choice.value,label:brief(choice.label,24)}:choice.value);},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
   }
  }
  view.here=[];
