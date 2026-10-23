@@ -65,8 +65,7 @@ import {promptScope}from'./prompt-scope.mjs';
 import {stateNotices}from'./state-notices.mjs';
 import {recordReturnVisit}from'./return-summary.mjs';
 import {assertNpcService,advanceNpcSchedules,scheduleAt,withScheduleCache,advanceWithNpcParticipants}from'./npc-schedule.mjs';
-import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest}from'./npc-autonomy.mjs';
-import {executeRoutingProgram} from './routing-programs.mjs';
+import {npcAutonomyBusy,assertNpcAutonomyAction,applyNpcPlan,applyDialogue,dialogueRequest,executeRoutingProgram}from'./npc-autonomy.mjs';
 import './npc-memory.mjs';// world-event subscriber (registers itself)
 import {hearNpcRumor}from'./npc-rumors.mjs';
 import {recordLie,exposeLieCall}from'./lies.mjs';
@@ -77,7 +76,7 @@ import {resolveToolCall}from'../extension/tools.mjs';
 import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION,SOCIAL_VERBS}from'./world-events.mjs';
 import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
-import {adjustStanding} from './standing.mjs';// world-event subscriber (registers itself)
+import {adjustStanding,standing} from './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {INTELLIGENCE_VERSION,intelligenceFresh,trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
@@ -434,6 +433,9 @@ export class WorldEngine {
     primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
     primitiveStudySkill(d,args,id){return primitiveActionRuntime().studyPlayer(d,this,args,id);}
+    // Domain queries are provided by the composition root to lower-layer callers.
+    readStanding(state,holder,target){return standing(this,state,holder,target);}
+    assertNpcService(d,npc,service,minutes){return assertNpcService(d,this,npc,service,minutes);}
     primitiveAssertTeachingService(d,teacher,minutes){return assertNpcService(d,this,teacher,'teach',minutes);}
     primitiveTeachingConsent(d,args){return activityTeachingConsent(d,this,args,()=>{const session=Object.create(this);session.nativeConsentRequest={from:args.teacher,to:args.student??'player',scope:'teach',purpose:args.subject,terms:{fee:args.fee??0,minutes:args.minutes}};return teachingConsent(d,session,args);});}
     primitiveOpenAction(document,input,prepared,{preview=false}={}){

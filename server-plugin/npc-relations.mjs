@@ -1,36 +1,10 @@
 import {preconditionFailure} from './precondition.mjs';
-import {relationView} from './npc-state.mjs';
-export {relationView} from './npc-state.mjs';
+import {relationView,relationDimensions as dimensions,applyRelationEvidence as applyEvidence,recordStandingEvidence as register} from './npc-state.mjs';
+export {relationView,recordStandingEvidence} from './npc-state.mjs';
 import {debtDue,currentGrace} from './obligation-state.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
-const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
-const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
-const path=id=>id==='player'?['state','player']:['state','npcs',id];
-const dimensions=['trust','affection','respect','fear','romance','competition'];
-function applyEvidence(d,engine,evidence){
- if(!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
- const row=relationView(engine,d.get('state'),evidence.from,evidence.to);
- if(row.evidenceKeys.includes(evidence.key))return {duplicate:true,from:evidence.from,to:evidence.to,evidence:evidence.key,delta:{}};
- const delta={};for(const dimension of dimensions){
-  const before=row[dimension],change=evidence.delta[dimension]??0;
-  row[dimension]=clamp(before+change,['fear','romance'].includes(dimension)?0:-100);if(row[dimension]!==before)delta[dimension]=row[dimension]-before;
- }
- if(evidence.favor&&!row.favors.some(f=>f.id===evidence.key))row.favors.push({id:evidence.key,debtor:evidence.from,creditor:evidence.to,what:evidence.favor,sourceEvent:evidence.sourceEvent,minute:evidence.minute,status:'未还'});
- row.evidenceKeys.push(evidence.key);d.set([...path(evidence.from),'relationships',evidence.to],row);
- // Legacy scalar fields are immutable initial values, never live projections.
- const developments=actor(d.get('state'),evidence.from)?.developments??[];
- d.set([...path(evidence.from),'developments'],[...developments,{eventType:evidence.eventType,source:evidence.sourceEvent,evidence:evidence.key,with:evidence.to,minute:evidence.minute,delta}]);
- return {from:evidence.from,to:evidence.to,evidence:evidence.key,delta};
-}
-function register(d,engine,evidence){
- const old=d.get('state','relationEvidence',evidence.key);
- if(old)return applyEvidence(d,engine,old);
- if(evidence.from===evidence.to||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
- d.set(['state','relationEvidence',evidence.key],evidence);return applyEvidence(d,engine,evidence);
-}
 
-// Standing transmission (standing.mjs) writes a person's share through the same ledger.
-export function recordStandingEvidence(d,engine,evidence){return register(d,engine,evidence);}
+const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
 
 // Only the reducer calls this after a successful action. No narrator-supplied
 // story or arbitrary source string creates a ledger entry here.

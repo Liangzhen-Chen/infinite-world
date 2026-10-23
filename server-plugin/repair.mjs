@@ -8,7 +8,6 @@ import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
 import {workstation}from'./manufacturing.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
-import {assertNpcService} from './npc-schedule.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityView} from './facility-state.mjs';
@@ -47,7 +46,7 @@ export function repair(d,args,eventId){
         const station=(facility?.workstations??this.byId.get(d.get('state','location'))?.workstations)?.find(s=>s.kind===plan.workstation&&(s.owner===maker||s.access==='public'));
         if(!station||facility?.factor===0)throw preconditionFailure('修理者没有此处可用的登记工坊');
         if(knowledgeProficiency(this,d.get('state'),maker,plan.skill)<plan.minimumProficiency)throw preconditionFailure('修理者没有所需技艺');
-        assertNpcService(d,this,maker,'trade',args.quote?0:plan.minutes);
+        this.assertNpcService(d,maker,'trade',args.quote?0:plan.minutes);
         const restored=Math.min(newMaximum,before.durability+restore);
         const quote={item,instance:instance??null,maker,fee:spec.fee,minutes:plan.minutes,before,after:{durability:restored,maxDurability:newMaximum}};
         if(args.quote)return{quote};

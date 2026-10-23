@@ -1,13 +1,13 @@
 import {isDomainRejection,refusalProjection} from './action-rejection.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
-import {findAction} from './action-registry.mjs';
 import {applyPatches} from './storage.mjs';
 
 export const isBusinessRejection=isDomainRejection;
 // A native preview can itself use reduce(). Its caller needs the actual
 // precondition result, without recursively repairing the probe's refusal.
 const probes=new WeakSet();
-const definition=(engine,id)=>findAction({byId:{get:key=>engine.primitiveActionDefinition(key)}},id);
+// Catalog lookup and open-plan preparation are supplied by the installed adapter.
+const definition=(engine,id)=>primitiveActionRuntime()?.findAction(engine,id)??null;
 
 export function markFallback(engine,document,intent,{actor='player'}={}){
  const fallback={action:'open:leave_mark',intent,available:false,label:'保留原意，留下带标签的痕迹',missing:[]};
@@ -90,8 +90,7 @@ export async function actionBoundary(engine,document,input,run,{preview=false}={
   // A commit of an unfinished open plan must explain its actual missing
   // choices, rather than replacing them with a transport-oriented instruction.
   if(error.code==='E-OPEN-NOT-ROUTED'){
-   const {prepareOpenAction}=await import('./open-actions.mjs');
-   prepared=prepareOpenAction(engine,document,input.tool==='world_propose'?input.args:input.args.slots);
+   prepared=await primitiveActionRuntime().prepareOpenAction(engine,document,input.tool==='world_propose'?input.args:input.args.slots);
    details=refusalProjection(prepared);
   }
   if(error.code==='E-OPEN-ENTITY')details=refusalProjection({reason:'指定对象当前不在你能确认和接触的范围内',missing:['可确认且可接触的对象'],repair:['选择眼前已知的对象，或先通过已知路线与对方会合，再预览原方案']});

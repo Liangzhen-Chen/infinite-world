@@ -181,3 +181,33 @@ export function householdMembers(engine,state,houseId){
  const house=householdDefinition(engine,state,houseId),left=leftOf(state,houseId);
  return house?[...new Set([...house.members.filter(m=>!left.includes(m)),...state.family?.households?.[houseId]?.members??[]])]:[];
 }
+
+// Shared relationship ledger mutation; event selection and deltas stay with callers.
+const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
+const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
+const path=id=>id==='player'?['state','player']:['state','npcs',id];
+export const relationDimensions=['trust','affection','respect','fear','romance','competition'];
+export function applyRelationEvidence(d,engine,evidence){
+ if(!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
+ const row=relationView(engine,d.get('state'),evidence.from,evidence.to);
+ if(row.evidenceKeys.includes(evidence.key))return {duplicate:true,from:evidence.from,to:evidence.to,evidence:evidence.key,delta:{}};
+ const delta={};for(const dimension of relationDimensions){
+  const before=row[dimension],change=evidence.delta[dimension]??0;
+  row[dimension]=clamp(before+change,['fear','romance'].includes(dimension)?0:-100);if(row[dimension]!==before)delta[dimension]=row[dimension]-before;
+ }
+ if(evidence.favor&&!row.favors.some(f=>f.id===evidence.key))row.favors.push({id:evidence.key,debtor:evidence.from,creditor:evidence.to,what:evidence.favor,sourceEvent:evidence.sourceEvent,minute:evidence.minute,status:'未还'});
+ row.evidenceKeys.push(evidence.key);d.set([...path(evidence.from),'relationships',evidence.to],row);
+ // Legacy scalar fields are immutable initial values, never live projections.
+ const developments=actor(d.get('state'),evidence.from)?.developments??[];
+ d.set([...path(evidence.from),'developments'],[...developments,{eventType:evidence.eventType,source:evidence.sourceEvent,evidence:evidence.key,with:evidence.to,minute:evidence.minute,delta}]);
+ return {from:evidence.from,to:evidence.to,evidence:evidence.key,delta};
+}
+function register(d,engine,evidence){
+ const old=d.get('state','relationEvidence',evidence.key);
+ if(old)return applyRelationEvidence(d,engine,old);
+ if(evidence.from===evidence.to||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
+ d.set(['state','relationEvidence',evidence.key],evidence);return applyRelationEvidence(d,engine,evidence);
+}
+
+// Standing transmission (standing.mjs) writes a person's share through the same ledger.
+export function recordStandingEvidence(d,engine,evidence){return register(d,engine,evidence);}
