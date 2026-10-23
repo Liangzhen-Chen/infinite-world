@@ -1,7 +1,7 @@
 // Native policy helpers; never accept writer/source/actedAs from proposal data.
 import {schemaValidator} from './primitive-schema.mjs';
 export const PRIMITIVE_IDS=Object.freeze(['transfer','holding.open','holding.close','holding.transfer','holding.rescale','obligation.create','obligation.settle','obligation.cancel','fact.set','vital','status','move','create','destroy','emit','schedule','transition','learn','time']);
-export class PrimitiveRejected extends Error {constructor(code,message,index=null){super(message);this.code=code;this.index=index;}}
+export class PrimitiveRejected extends Error {constructor(code,message,index=null,details={}){super(message);this.name='PrimitiveRejected';this.code=code;this.index=index;Object.assign(this,refusalProjection({code,reason:message,...details}));}}
 export const reject=(code,message)=>{throw new PrimitiveRejected(code,message);};
 export function validatePrimitive(effect){
  if(!effect||typeof effect!=='object'||!PRIMITIVE_IDS.includes(effect.op))reject('E-PRIMITIVE','未知效果原语');
@@ -36,4 +36,21 @@ export function appendActionPatches(definition,patches){
   const row={value:structuredClone(p.value),source:p.id,reason:p.reason};
   if(p.field==='preconditions')result.preconditions=append(result.preconditions??[],row);else{result.consent??={};let scope=result.consent.scope??[];if(!Array.isArray(scope))scope=[scope];result.consent.scope=append(scope,row);}
  }return result;
+}
+
+// Shared world-facing shape, also usable by query projections. This function
+// never discovers entities or infers permission from a proposed repair.
+export function refusalProjection(details={}){
+ const reason=details.reason??details.message??'当前条件不足，原方案尚未执行';
+ const missing=details.missing?.length?[...details.missing]:[reason];
+ const repair=details.repair?.length?[...details.repair]:[
+  /CONSENT|AUTHORITY/.test(details.code??'')?'先向有权决定的人提出请求；取得有效同意或授权后，再预览原方案':
+  /BALANCE|STOCK|MATERIAL/.test(details.code??'')?'减少本次用量或分批安排；补齐自己的钱物后，再预览原方案':
+  /REACH|RANGE|MOVE/.test(details.code??'')?'先选择自己已知且能够抵达的位置靠近；到达后再预览原方案':
+  /CAPACITY/.test(details.code??'')?'先恢复行动能力，或向在场且有能力的人提出协助请求；未获同意前不会代为执行':
+  `保留原意，补充或调整「${missing.join('、')}」后重新预览；当前没有完成原方案`
+ ];
+ const alternatives=[...(details.alternatives??[])];
+ if(!alternatives.length)alternatives.push({kind:'edit',label:'调整原方案后重新预览',available:false,missing:[...missing]});
+ return {reason,missing,repair,alternatives,fallback:details.fallback??null};
 }

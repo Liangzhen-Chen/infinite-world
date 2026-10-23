@@ -957,7 +957,9 @@ for(const row of rows)test(`A3 scorer self: ${row.id} — ${row.intent}`,async()
   const noInput=await scoreRows([{id:'text-only',intent:row.intent,expected:expected('open:proposal',[])}],options);
   assert.deepEqual(noInput.inputMissing,['text-only']);assert.equal(noInput.results[0].scores.signature,false);
  }else if(row.id==='self-refuse'){
-  assert.equal(run.actual.error.code,'E-OPEN-TRANSFER');assert.deepEqual(run.document,initial);
+  // Only the public refusal carrier changed: keep the exact forbidden-genesis
+  // code, unchanged world, single preview and zero-effect scoring assertions.
+  assert.equal(run.receipt.status,'rejected');assert.equal(run.receipt.code,'E-OPEN-TRANSFER');assert.equal(run.actual.reasonCode,'E-OPEN-TRANSFER');assert.deepEqual(run.document,initial);
   assert.equal(run.actual.calls.length,1);assert.equal(run.actual.committed,false);
   // Rejection earns no effect credit from the requested transfer.
   assert.equal(signatureMatches(['transfer'],run.effects),false);

@@ -48,8 +48,10 @@ test('A3 D20: 120 minutes of practice deterministically grows skill, charges bod
 
 test('A3 practice: out-of-bounds time and unknown skills have zero effects; daily cap and repeat decay remain active',async()=>{
  const f=book(fixture()),skill=Object.keys(f.document.state.skills)[0],before=structuredClone(f.document);
- for(const minutes of [0,29,481])await assert.rejects(act(f,'core:practice.session',{skill,minutes},`bad-${minutes}`));
- await assert.rejects(act(f,'core:practice.session',{skill:'skill_not_registered',minutes:120},'unknown-skill'));
+ // Invalid practice choices still have zero effects; public business failures
+ // now return refusals with an E-* code rather than throwing.
+ for(const minutes of [0,29,481])await assertActionRejected(act(f,'core:practice.session',{skill,minutes},`bad-${minutes}`),undefined,null);
+ await assertActionRejected(act(f,'core:practice.session',{skill:'skill_not_registered',minutes:120},'unknown-skill'),undefined,null);
  assert.deepEqual(f.document,before);
  const first=await act(f,'core:practice.session',{skill,minutes:120},'practice-first');f.document=first.after;
  const second=await act(f,'core:practice.session',{skill,minutes:120},'practice-second');

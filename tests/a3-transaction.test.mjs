@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import {emptyLedger,accountKey,withLedger,openLedger} from '../server-plugin/ledger.mjs';
 import {emptyHoldings,openHoldings,openHolding,closeHolding,declareHoldingWriter} from '../server-plugin/holdings.mjs';
 declareHoldingWriter('a3-transaction-test',{kinds:['guest_of']});
@@ -551,7 +552,8 @@ test('A3 adjudication: registered duration/body cost, preview and duplicate call
 
 test('A3 adjudication: bounded outcome slots reject amplification and checks select real failure outcomes',async()=>{
  const f=effectFixture(),input=program(f,{id:'test:check',slots:[{name:'gain',kind:'quantity',required:true,max:2}],check:{attribute:'精神',difficulty:30},outcomes:{success:[{op:'vital',target:'player',delta:{slot:'gain'}}],failure:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'failed'}}],fumble:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'fumbled'}}]},cost:{owner:'primitives',time:1}});
- input.args.slots={gain:3};await assert.rejects(f.engine.reduce(f.document,input),{code:'E-ACTION-SLOT'});
+ // A3 refusal contract: bounded slot violation keeps its code and zero effects.
+ input.args.slots={gain:3};await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-ACTION-SLOT');
  input.args.slots={gain:2};
  // Search an event id for a natural failed check, with every preview isolated.
  let preview;for(let i=0;i<40;i++){input.eventId=`failed-check-${i}`;preview=await f.engine.previewAction(f.document,input);if(!preview.receipt.check.success)break;}
@@ -581,14 +583,16 @@ test('A3 adjudication: resource costs and elapsed body costs commit atomically a
  assert.deepEqual((await f.engine.reduce(next,input)).patches,[]);
  await assert.rejects(f.engine.reduce(next,{...input,args:{...input.args,slots:{fee:3}}}),{code:'E-PRIMITIVE-DUPLICATE'});
  const before=structuredClone(f.document);f.document.state.player.coins=0;f.document.ledger.accounts[a]=0;
- await assert.rejects(f.engine.reduce(f.document,{...input,eventId:'no-cost-funds'}));assert.equal(f.document.state.minute,before.state.minute);assert.ok(!f.document.state.records['primitive:no-cost-funds']);
+ // Insufficient funds is a world refusal; preserve time/record rollback checks.
+ await assertActionRejected(f.engine.reduce(f.document,{...input,eventId:'no-cost-funds'}),undefined,'E-TRANSFER-BALANCE');assert.equal(f.document.state.minute,before.state.minute);assert.ok(!f.document.state.records['primitive:no-cost-funds']);
 });
 
 test('A3 adjudication: a committed receipt survives changed preconditions after preview',async()=>{
  const f=effectFixture(),input=program(f,{id:'test:one-time',outcomes:[{op:'emit',verb:'tell',visibility:'private',payload:{text:'once'}}],preconditions:['canAct(actor, "talk").allowed']});
  const next=applyPatches(f.document,(await f.engine.reduce(f.document,input)).patches);next.state.player.status='昏迷';
  assert.deepEqual((await f.engine.reduce(next,input)).patches,[]);
- await assert.rejects(f.engine.reduce(next,{...input,eventId:'different-id'}),{code:'E-PRECONDITION'});
+ // Replayed success stays above; a new attempt must refuse the changed condition.
+ await assertActionRejected(f.engine.reduce(next,{...input,eventId:'different-id'}),undefined,'E-PRECONDITION');
 });
 
 test('A3 adjudication: theft needs an actual successful catalog check and clips the entire proposal',async()=>{
@@ -618,7 +622,8 @@ test('A3 adjudication: NPC agreement is a purpose-scoped native event, never a c
  assert.ok(grant);assert.equal(grant.to,'player');assert.notDeepEqual(grant.purpose,[input.args.action]);assert.equal(next.state.effects[`${input.eventId}:0`].target,f.npc);
  assert.equal(next.state.records[`world_event:${grant.id}`].actor,f.npc);assert.equal(next.state.records[`world_event:${grant.id}`].parent,input.eventId);
  assert.equal(consent(primitiveContext(f.engine,next),f.npc,'player','support_magic',{purpose:'test:agreed-support'}).allowed,false,'one request does not authorize every later invocation');
- await assert.rejects(f.engine.reduce(f.document,{...input,args:{...input.args,slots:{target:f.npc,consent:true}}}),{code:'E-ACTION-SLOT'});
+ // Forged consent still fails with the same code, now in a zero-effects receipt.
+ await assertActionRejected(f.engine.reduce(f.document,{...input,args:{...input.args,slots:{target:f.npc,consent:true}}}),undefined,'E-ACTION-SLOT');
 });
 
 test('A3 adjudication: refused healing reuses its one native opposed check inside the vital effect',async()=>{
@@ -968,7 +973,8 @@ test('A3 consent: existing spell authorization keeps purpose/location/expiry lim
 test('A3 capacity: an unconscious actor cannot roll or pay a failed action with empty effects',async()=>{
  const f=effectFixture();f.document.state.player.status='昏迷';
  const input=program(f,{id:'test:incapacitated',check:{attribute:'精神',difficulty:10},outcomes:{success:[{op:'emit',verb:'tell',visibility:'private'}],failure:[],fumble:[]},cost:{owner:'primitives',time:1}}),before=structuredClone(f.document);
- await assert.rejects(()=>f.engine.reduce(f.document,input),{code:'E-CAPACITY'});assert.deepEqual(f.document,before);
+ // Incapacity remains a refusal and cannot consume time or roll a check.
+ await assertActionRejected(f.engine.reduce(f.document,input),undefined,'E-CAPACITY');assert.deepEqual(f.document,before);
 });
 
 test('A3 legacy: exact registered identity and appended guards survive dispatch and preview',async()=>{
@@ -976,8 +982,9 @@ test('A3 legacy: exact registered identity and appended guards survive dispatch 
  const strict={...loose,id:'test:guarded_wait',preconditions:[{value:'false',source:'test:restriction',reason:'restricted by the second package'}]};
  engine.actionRegistry={actions:[loose,strict],byId:new Map([[loose.id,loose],[strict.id,strict]]),errors:[]};
  const input={tool:'world_act',eventId:'legacy-guarded',args:{action:strict.id,slots:{minutes:1}}},before=structuredClone(document);
- await assert.rejects(()=>engine.reduce(document,input),{code:'E-PRECONDITION'});
- await assert.rejects(()=>engine.previewAction(document,input),{code:'E-PRECONDITION'});
+ // Both public entries project the exact same typed guard rejection.
+ await assertActionRejected(engine.reduce(document,input),undefined,'E-PRECONDITION');
+ await assertActionRejected(engine.previewAction(document,input),undefined,'E-PRECONDITION');
  assert.deepEqual(document,before);
  strict.preconditions[0].value='true';
  const accepted=await engine.reduce(document,input),next=applyPatches(document,accepted.patches);
@@ -1015,7 +1022,8 @@ test('A3 custody: native escape check closes custody; failure, wrong guard and f
  const outsider=Object.keys(document.state.npcs).find(id=>!code.officers.includes(id));document.state.npcs[outsider].location=code.court;
  engine.actionRegistry.byId.get(input.args.action).check.opponent.npc=outsider;
  const dishonest={...won,eventId:'wrong-jailer'};
- await assert.rejects(()=>engine.reduce(document,dishonest),{code:'E-CAPACITY'});
+ // A forged jailer does not grant release authority; public refusal has no effects.
+ await assertActionRejected(engine.reduce(document,dishonest),undefined,'E-CAPACITY');
 });
 
 test('A3 custody: direct self release refuses, current officer release updates the actual law projection and tags its missing basis',()=>{
@@ -1043,7 +1051,8 @@ test('A3 runtime: registered primitive action runs via reduce and preview never 
  assert.equal(first.result.receipt.status,'committed');assert.equal(next.state.player.coins,before.state.player.coins-2);
  assert.equal(first.result.receipt.routed,action.id);assert.equal(first.result.receipt.pending,input.eventId);assert.equal(next.state.records[`primitive:${input.eventId}`].receipt.pending,input.eventId);
  const duplicate=await engine.reduce(JSON.parse(JSON.stringify(next)),input);assert.deepEqual(duplicate.patches,[]);assert.equal(duplicate.result.receipt.duplicate,true);
- await assert.rejects(()=>engine.reduce(document,{...input,args:{...input.args,slots:{...input.args.slots,source:'rule'}}}),{code:'E-ACTION-SLOT'});
+ // Public caller still cannot supply a native source through a slot.
+ await assertActionRejected(engine.reduce(document,{...input,args:{...input.args,slots:{...input.args.slots,source:'rule'}}}),undefined,'E-ACTION-SLOT');
 });
 
 test('A3 runtime: loaded RX preconditions run at preview and again against current commit facts',async()=>{
@@ -1051,9 +1060,11 @@ test('A3 runtime: loaded RX preconditions run at preview and again against curre
  engine.actionRegistry={byId:new Map([[action.id,action]]),actions:[action]};
  const input={tool:'world_act',eventId:'bounded-action',args:{action:action.id,slots:{qty:2}}};
  assert.equal((await engine.previewAction(document,input)).receipt.status,'preview');
- await assert.rejects(()=>engine.reduce(document,{...input,args:{...input.args,slots:{qty:3}}}),{code:'E-PRECONDITION'});
+ // Quantity guard remains enforced, now as a typed public refusal receipt.
+ await assertActionRejected(engine.reduce(document,{...input,args:{...input.args,slots:{qty:3}}}),undefined,'E-PRECONDITION');
  const nextMonth={...document,state:{...document.state,minute:30*1440}};
- await assert.rejects(()=>engine.reduce(nextMonth,input),{code:'E-PRECONDITION'});
+ // The current month is still rechecked at commit and cannot be bypassed.
+ await assertActionRejected(engine.reduce(nextMonth,input),undefined,'E-PRECONDITION');
  assert.equal(document.state.player.coins,180);
 });
 
@@ -1118,7 +1129,12 @@ test('A3 public: HTTP preview, archived program execution, JSON import replay an
  const resolved=await request('/actions',{campaignId,resolve:args});assert.equal(resolved.body.tool,'world_act');
  const preview=await request('/propose',input);assert.equal(preview.status,200,preview.body.error);assert.equal(preview.body.receipt.status,'preview');
  assert.deepEqual((await request('/read',{campaignId})).body,before);
- const rejected=await request('/execute',{...input,tool:'world_act',args:{action:action.id,slots:{qty:3}}});assert.equal(rejected.status,400);assert.deepEqual((await request('/read',{campaignId})).body,before);
+ // A3 refusal contract: storage already archives returned receipts (including
+ // ActionRejection). Assert the exact unchanged world plus one refusal event;
+ // only a thrown transport/internal fault leaves the event chain untouched.
+ const rejected=await request('/execute',{...input,eventId:'http-refused',tool:'world_act',args:{action:action.id,slots:{qty:3}}});assert.equal(rejected.status,200);assert.equal(rejected.body.result.receipt.status,'rejected');assert.equal(rejected.body.result.receipt.code,'E-PRECONDITION');
+ const refusedView=(await request('/read',{campaignId})).body;assert.deepEqual(refusedView.document,before.document);assert.equal(refusedView.reference.sequence,before.reference.sequence+1);
+ const refusedEvent=(await request('/export',{campaignId})).body.events.at(-1);assert.deepEqual(refusedEvent.patches,[]);assert.equal(refusedEvent.result.receipt.status,'rejected');assert.deepEqual(refusedEvent.result.receipt.applied,[]);
  const committed=await request('/execute',{...input,tool:'world_act'});assert.equal(committed.status,200,committed.body.error);assert.equal(committed.body.result.receipt.status,'committed');
  const after=(await request('/read',{campaignId})).body;assert.equal(after.document.state.player.coins,before.document.state.player.coins-2);
  assert.equal(after.document.state.minute,before.document.state.minute+1);assert.equal(after.document.state.player.body.stamina.asOf,after.document.state.minute);

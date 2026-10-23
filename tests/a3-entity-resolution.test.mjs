@@ -1,3 +1,4 @@
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -90,10 +91,15 @@ test('A3 entities: public proposal preview resolves self and rejects unavailable
  // without a native food source offers an alternative after resolving self.
  assert.deepEqual(preview.receipt.routing.proposal,vital('self'));assert.deepEqual(document,before);
  document.state.npcs[people[0]].location='loc_not_here';const remote=structuredClone(document);
- for(const [target,reason] of [[people[0],'not_present'],['npc_a3_nonexistent','unknown_entity']]){
+ for(const target of [people[0],'npc_a3_nonexistent']){
   const input={tool:'world_propose',eventId:`a3-refused-${target}`,args:vital(target)};
-  await assert.rejects(engine.previewAction(document,input),{code:'E-OPEN-ENTITY',reason});
-  await assert.rejects(engine.reduce(document,input),{code:'E-OPEN-ENTITY',reason});
+  // Public refusals must not reveal whether an inaccessible guessed id exists.
+  // Preserve the exact entity code, original proposal and zero effects; direct
+  // resolver diagnostics above still distinguish not_present/unknown_entity.
+  for(const run of [()=>engine.previewAction(document,input),()=>engine.reduce(document,input)]){
+   const receipt=await assertActionRejected(run(),/不在.*确认和接触.*范围/,'E-OPEN-ENTITY');
+   assert.deepEqual(receipt.routing.proposal,input.args);assert.equal(receipt.entityReason,undefined);
+  }
   assert.deepEqual(document,remote);
  }
 });
@@ -125,7 +131,8 @@ test('A3 entities: resource and owner shorthand uses native accounts, malformed 
  assert.deepEqual(preview.receipt.routing.proposal,args);assert.deepEqual(document,before);
  const committed=await engine.reduce(document,input);
  assert.equal(committed.result.receipt.status,'committed');
- await assert.rejects(engine.previewAction(document,{...input,eventId:'a3-bad-account',args:{...args,effects:[{...args.effects[0],from:'self||purse'}]}}),{code:'E-OPEN-ACCOUNT'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.previewAction(document,{...input,eventId:'a3-bad-account',args:{...args,effects:[{...args.effects[0],from:'self||purse'}]}}),undefined,'E-OPEN-ACCOUNT');
  assert.deepEqual(document,before);
 });
 
@@ -146,8 +153,10 @@ test('A3 entities: a compound shorthand transfer cannot spend the same coin twic
  engine.world.actionDefinitions={format:1,actions:[]};
  document.state.player.coins=1;
  const before=structuredClone(document),input={tool:'world_propose',eventId:'a3-double-spend',args:{intent:'xyzzy',effects:[a,b].map(to=>({op:'transfer',resource:'coin',from:'self',to,qty:1}))}};
- await assert.rejects(engine.previewAction(document,input),{code:'E-TRANSFER-BALANCE'});
- await assert.rejects(engine.reduce(document,input),{code:'E-TRANSFER-BALANCE'});
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.previewAction(document,input),undefined,'E-TRANSFER-BALANCE');
+ // A3 refusal: preserve the original business code and require a zero-effects receipt.
+ await assertActionRejected(engine.reduce(document,input),undefined,'E-TRANSFER-BALANCE');
  assert.deepEqual(document,before);
 });
 

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -112,6 +113,7 @@ test('A3 r13: a custom satire mark keeps its materials and creates no actual deb
  assert.equal(r.after.state.player.coins,0);
  const replay=await engine.reduce(JSON.parse(JSON.stringify(r.after)),r.input);assert.deepEqual(replay.patches,[]);
  const before=structuredClone(r.after);
- await assert.rejects(engine.reduce(r.after,{...r.input,eventId:'r13-satire-material-already-used'}));
+ // Reusing the consumed paper still refuses and preserves the whole prior world.
+ await assertActionRejected(engine.reduce(r.after,{...r.input,eventId:'r13-satire-material-already-used'}),undefined,null);
  assert.deepEqual(r.after,before);
 });

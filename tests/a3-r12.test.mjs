@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {assertActionRejected} from './helpers/action-refusal.mjs';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -51,7 +52,8 @@ test('r12: placement cannot move another object, travel remotely, or fabricate a
   if(mode==='missing_support')proposal.effects[1].facts.support='missing_branch';
   const before=structuredClone(document),plan=mode==='remote'?prepareOpenAction(engine,document,proposal):null;
   if(plan)assert.equal(plan.status,'needs_alternative');
-  else await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:`r12-${mode}`,args:proposal}),error=>/^E-(AUTHORITY|MARK-LOCATION|OPEN-ENTITY)$/.test(error.code),mode);
+  // Same authority/location/entity constraint, delivered as a public refusal.
+  else {const receipt=await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:`r12-${mode}`,args:proposal}),undefined,null);assert.match(receipt.code,/^E-(AUTHORITY|MARK-LOCATION|OPEN-ENTITY)$/);}
   assert.deepEqual(document,before,mode);
  }
 });
@@ -63,11 +65,14 @@ test('r12: mutually exclusive final fact values ask for a choice without costs, 
  const {document,setupUnmet}=applyIntentSetup(engine,initial,setup);assert.deepEqual(setupUnmet,[]);
  const before=structuredClone(document),input={tool:'world_propose',eventId:'r12-paper',args:row.proposal};
  const plan=prepareOpenAction(engine,document,row.proposal);
- assert.equal(plan.status,'needs_slots');assert.equal(plan.routed,null);assert.equal(plan.fallback,undefined);
+ // A suggested fallback is not executed: contradictory writes still ask the
+ // player to choose, while the new contract describes a separate trace option.
+ assert.equal(plan.status,'needs_slots');assert.equal(plan.routed,null);assert.equal(plan.fallback.intent,row.proposal.intent);
  assert.deepEqual(plan.conflicts[0].values,[0,100]);assert.deepEqual(plan.effects,[]);
  const preview=await engine.previewAction(document,input);
  assert.equal(preview.receipt.status,'not_submitted');assert.deepEqual(preview.receipt.applied,[]);
- await assert.rejects(engine.reduce(document,input),{code:'E-OPEN-NOT-ROUTED'});
+ // Unchosen conflicts still cannot commit and must retain their refusal code.
+ await assertActionRejected(engine.reduce(document,input),undefined,'E-OPEN-NOT-ROUTED');
  assert.deepEqual(document,before);
  const repeated=structuredClone(row.proposal);repeated.effects[1].value=0;
  assert.notEqual(prepareOpenAction(engine,document,repeated).status,'needs_slots','identical writes are not contradictory');
