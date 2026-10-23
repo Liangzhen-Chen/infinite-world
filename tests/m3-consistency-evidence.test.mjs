@@ -79,6 +79,9 @@ test('T97 五条保存原文：库存矛盾归事实，空约定、普通否认�
     }}});
     assert.equal(result.verified,true);assert.ok(!result.issues.some(issue=>issue.category==='knowledge'));
     if(finding.quote.includes('面包没有现成'))assert.ok(result.issues.some(issue=>issue.category==='fact'&&issue.severity==='error'));
+    // 产品原则一.3：这份旧草稿在纯等待回合虚构了新刮痕；A3 收口
+    // 必须报无结算的物理变化。保留上方“没有知识泄漏”的原断言。
+    else if(turn.reply.includes('留下新的刮痕'))assert.ok(result.issues.some(issue=>issue.category==='fact'&&issue.severity==='error'&&issue.reason.includes('物理痕迹')));
     else assert.ok(!result.issues.some(issue=>issue.severity==='error'),JSON.stringify(result.issues));
    }
   }
