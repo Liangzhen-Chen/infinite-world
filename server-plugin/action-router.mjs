@@ -137,18 +137,39 @@ export function routeAction(proposal,registry,context){
   const signatureScore=context.bareIntent?.(action,proposal)?1:Math.min(directions,Math.max(0,...actionSignatures(action,context,slots,proposal).map(value=>signatureJaccard(signature,value)))),textScore=texts[index];
   return {id:action.id,score:.6*signatureScore+.4*textScore,signatureScore,textScore,slots,missing};
  }).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
+ const openAlternatives=rows=>({signature,candidates:rows.slice(0,ROUTE_CANDIDATES).map(candidate=>({...candidate,reason:`也可按“${actions.find(a=>a.id===candidate.id).label??candidate.id}”动作结算`})),routed:null,needsSlots:null,nearest:rows[0],reason:'按开放路径结算；以下注册动作也可作为备选'});
  // Empty proposals keep the catalog's existing bareIntent/mention scoring;
  // their synthetic score of 1 is not a Jaccard-complete effect signature.
- const exact=signature.length?candidates.filter(candidate=>candidate.signatureScore===1):[];
+ let exact=signature.length?candidates.filter(candidate=>candidate.signatureScore===1):[];
+ let structureChoice=false;
+ if(exact.length>1){
+  // A default is executable policy, not information supplied by the proposal.
+  // In particular, do not invent a timed session when only practice was asked.
+  const missing=new Map(exact.map(candidate=>{
+   const action=actions.find(a=>a.id===candidate.id),slots=context.slotsFor({...action,slots:(action.slots??[]).map(({default:ignored,...slot})=>slot)},proposal)??{};
+   const required=new Set(context.requiredSlots?.(action,slots)??[]);
+   return [candidate.id,(action.slots??[]).filter(s=>(s.required||required.has(s.name))&&slots[s.name]===undefined&&action.call?.fixed?.[s.name]===undefined).map(s=>s.name)];
+  }));
+  const ready=exact.filter(candidate=>!missing.get(candidate.id).length);
+  if(!ready.length)return exact[0].score<.7?openAlternatives(exact):{signature,candidates:exact.slice(0,ROUTE_CANDIDATES),routed:null,needsSlots:{action:null,missing:[...new Set([...missing.values()].flat())]},nearest:exact[0]};
+  const explicit=new Set([...Object.keys(proposal.means??{}),...Object.keys(proposal.participants??{})]);
+  const used=candidate=>(actions.find(a=>a.id===candidate.id).slots??[]).filter(slot=>explicit.has(slot.name)&&candidate.slots[slot.name]!==undefined).length;
+  const most=Math.max(...ready.map(used)),preferred=ready.filter(candidate=>used(candidate)===most);
+  structureChoice=preferred.length===1;exact=preferred;
+ }
  // Structure limits the alternatives; wording may distinguish only those
- // exact candidates. A tie or a weak lead remains the player's choice.
+ // exact candidates. A remaining tie can still execute as a bounded open act.
  const textChoice=exact.length>1&&exact[0].textScore>0&&(exact[1].textScore===0||exact[0].textScore-exact[1].textScore>=ROUTE_TEXT_MARGIN);
- if(exact.length>1&&!textChoice)return {signature,candidates:exact.slice(0,ROUTE_CANDIDATES),routed:null,needsSlots:{action:null,missing:['action']},nearest:exact[0],reason:'多个注册动作与提案结构一致，请选择要按哪个动作结算'};
+ if(exact.length>1&&!textChoice)return openAlternatives(exact);
  const best=exact[0]??candidates[0],matched=best&&(exact.length>0||best.score>=.7);
+ // A generic tell can share the sourced-report footprint without requesting
+ // that protocol. Missing report slots must not newly block the old open path.
+ // Explicitly named programs still ask for their required information.
+ if(exact.length===1&&best.missing.length&&best.score<.7)return openAlternatives(exact);
  if(exact.length){candidates.splice(candidates.indexOf(best),1);candidates.unshift(best);}
  // Receipts carry only the nearest few registered actions (06 §6.10.4
  // alternatives), not a score row for every action in the catalog.
- return {signature,candidates:candidates.slice(0,ROUTE_CANDIDATES),routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null,...(matched&&!best.missing.length?{reason:`${textChoice?'按文字区分为':'按'}“${actions.find(a=>a.id===best.id).label??best.id}”动作结算`}:{})};
+ return {signature,candidates:candidates.slice(0,ROUTE_CANDIDATES),routed:matched&&!best.missing.length?best.id:null,needsSlots:matched&&best.missing.length?{action:best.id,missing:best.missing}:null,nearest:best??null,...(matched&&!best.missing.length?{reason:`${textChoice?'按文字区分为':structureChoice?'按结构区分为':'按'}“${actions.find(a=>a.id===best.id).label??best.id}”动作结算`}:{})};
 }
 
 // Only currently accessible objects enter name resolution. Global engine.resolve

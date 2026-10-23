@@ -35,10 +35,10 @@ test('A3 route order: trade and manufacture select programs before account/sink 
 test('A3 route order: unknown practice reports its source failure without teaching a skill',async()=>{
  const {engine,document}=fixture();delete document.state.skills.skill_monk_combat_01;
  const before=structuredClone(document),args={intent:'练一遍吐纳',means:{skill:'skill_monk_combat_01'},effects:[{op:'learn',entity:'self',subject:'skill_monk_combat_01',learningSource:'practice',amount:2699}]};
- // a3r-route2: wording distinguishes practice from a timed session. Retain
- // the original proposal-path source rejection after automatic disambiguation.
+ // a3r-route3: without an explicit duration, structure selects ordinary
+ // practice first. Retain the original proposal-path source rejection.
  const plan=prepareOpenAction(engine,document,args);assert.equal(plan.routed,'core:practice');assert.equal(plan.slots.skill,'skill_monk_combat_01');
- assert.match(plan.reason,/按文字区分为/);
+ assert.match(plan.reason,/按结构区分为/);
  await assert.rejects(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-practice',args}),{code:'E-LEARN-SOURCE'});
  assert.deepEqual(document,before);
 });
@@ -65,13 +65,19 @@ test('A3 route order: sale direction wins over incidental buyer wording, price i
  assert.equal(ordinary.routed,'core:trade.sell_to');assert.equal(ordinary.slots.quantity,1);
 });
 
-test('A3 route order: request fields are extracted, missing teacher and unknown price remain questions',()=>{
+test('A3 route order: request fields retain the missing teacher and unknown price requirements',async()=>{
  const {engine,document}=fixture();
  const certify=prepareOpenAction(engine,document,{intent:'申请职业认证',target:place,effects:[{op:'emit',verb:'request',actor:'self',target:place,payload:{kind:'certification',terms:{profession:'profession_life_6'}},visibility:'present'}]});
- // a3r-route2: explicit certification wording distinguishes this request
- // from appeal. Keep the missing-teacher and requested-profession guarantees.
- assert.equal(certify.routed,null);assert.deepEqual(certify.needsSlots,{action:'core:profession.certify',missing:['teacher']});
- assert.equal(certify.nearest.slots.profession,'profession_life_6');
+ // a3r-route3: complete candidates precede wording, so incomplete certification
+ // cannot win here. Retain its requested profession and missing-teacher checks,
+ // and verify that explicitly selecting it still cannot bypass that requirement.
+ assert.notEqual(certify.routed,'core:profession.certify');
+ const certification=certify.candidates.find(c=>c.id==='core:profession.certify');assert.ok(certification);
+ assert.deepEqual(certification.missing,['teacher']);assert.equal(certification.slots.profession,'profession_life_6');
+ // The current native executor reports the absent teacher as an unresolved
+ // undefined entity. Match that actual refusal while retaining the named
+ // missing-teacher assertion above; do not invent a new production error.
+ await assertActionRejected(engine.previewAction(document,{tool:'world_act',eventId:'route-certify-no-teacher',args:{action:certification.id,slots:certification.slots}}),/未登记.*undefined/);
  const haggle={intent:'能便宜两铜吗',target:shop,effects:[{op:'emit',verb:'request',actor:'self',target:shop,payload:{kind:'haggle',terms:{discountCopper:2}},visibility:'present'}]};
  const unknown=prepareOpenAction(engine,document,haggle);assert.deepEqual(unknown.needsSlots,{action:'core:dialogue.haggle',missing:['content','source']});
  document.state.records.quote={category:'trade_quote',seller:shop,item:'item_bread',day:0,listPrice:5};

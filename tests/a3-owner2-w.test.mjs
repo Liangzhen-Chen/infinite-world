@@ -14,8 +14,21 @@ import {itemResource} from '../server-plugin/stock.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {people, contentEntries, pending} from '../world/design/a3-owner2-w.mjs';
 import {checkFoundation, previewWorld, validateDraft, draftFor} from '../world/design/a3-owner2-w-content.mjs';
+import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 
-const originalWorld = await loadWorld();
+const publishedWorld = await loadWorld();
+// A3W approved later use tags. Verify its exact current-row receipts before
+// projecting only those tags back to the owner2-W receipt's historical row.
+// Every other field and the original forged-draft assertions stay covered.
+await verifyUseTagsPublished(publishedWorld.items);
+const originalWorld = structuredClone(publishedWorld);
+for(const entry of contentEntries(originalWorld).filter(e=>e.kind==='item'&&useTagSources[e.id])){
+  const receipt=JSON.parse(await fs.readFile(`world/drafts/a3-owner2-w/${entry.id}.json`,'utf8'));
+  const row=originalWorld.items.find(item=>item.id===entry.id);
+  if(Object.hasOwn(receipt.draft.row,'tags'))row.tags=receipt.draft.row.tags;
+  else delete row.tags;
+  assert.deepEqual(row,receipt.draft.row);
+}
 const entries = contentEntries(originalWorld);
 // 未发布时明确测试候选世界；不会把候选写进正式目录或篡改评分语料。
 const world = previewWorld(originalWorld, entries), engine = new WorldEngine(world);
@@ -24,6 +37,14 @@ const corpus = JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.js
 const initial = () => engine.initialFromLegacy(seed, 'a3-owner2-w');
 const child = 'npc_a3_herb_apprentice', father = 'npc_a3_apprentice_father', uncle = 'npc_a3_apprentice_uncle';
 const context = document => ({engine, document});
+
+test('W: historical tag projection cannot conceal unapproved tags or changed item facts',async()=>{
+  for(const mutate of [row=>row.tags.push('unapproved_use'),row=>{row.weight++;}]){
+    const items=structuredClone(publishedWorld.items);
+    mutate(items.find(row=>row.id==='item_herb_hoe'));
+    await assert.rejects(()=>verifyUseTagsPublished(items));
+  }
+});
 
 function familySetup() {
   return {location: 'bld_hw_herbs', minute: 600,

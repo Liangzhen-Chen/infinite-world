@@ -183,10 +183,10 @@ export function prepareOpenAction(engine,document,proposal,native){
   if(effect.op==='learn')reject('E-OPEN-LEARN','学习须通过真实的授课、读书或练习动作校验来源与能力');
  }
  if(proposal.effects.some(e=>e.op==='create'&&e.kind==='item'&&e.facts?.quality==='crude')){
-  const bounds=native.limits(document,routing.nearest);
+   const bounds=native.limits(document,routing.nearest,routing.candidates);
   if(!proposal.effects.filter(e=>e.op==='create').every(e=>bounds.improvised?.(e)))reject('E-OPEN-CRAFT','即兴制作须有已掌握的相应手艺、完好工具和同事务投入的自有材料');
  }
- const bounds=native.limits(document,routing.nearest),limits=limitOpenEffects(proposal,bounds);
+ const bounds=native.limits(document,routing.nearest,routing.candidates),limits=limitOpenEffects(proposal,bounds);
  if(limits.blocked.some(row=>{
   const effect=proposal.effects[row.index];
   return effect?.op==='fact.set'&&effect.field==='condition'&&(effect.delta>0||effect.value>bounds.currentValue?.(effect));
@@ -197,12 +197,22 @@ export function prepareOpenAction(engine,document,proposal,native){
 
 export function createOpenActionContext(engine,document,proposal,{actor='player'}={}){
  const routing=createRoutingContext(engine,document,{actor});
- return {routing,limits:(current,nearest)=>{
+ return {routing,limits:(current,nearest,candidates=[])=>{
   const fresh=createRoutingContext(engine,current,{actor}),resolved=resolveProposalEntities(proposal,fresh,{accounts:true});
   if(resolved.ambiguities.length)reject('E-OPEN-ENTITY','对象已经离开或不再可见');
   const scheduled=scheduledQuestion(engine,current,resolved.proposal,fresh);
   const normalized={...scheduled,effects:scheduled.effects.map(effect=>resolvePrimitiveTransfer(engine,current,effect,{actor}))};
-  return deriveOpenLimits(engine,current,normalized,nearest,{actor,routing:fresh});
+  const bounds=deriveOpenLimits(engine,current,normalized,nearest,{actor,routing:fresh});
+  // An unresolved complete match may execute openly, but cannot obtain a
+  // cheaper time cost or a larger reward by selecting one alternative's cap.
+  for(const candidate of candidates.filter(c=>c.signatureScore===1&&c.id!==nearest?.id)){
+   const other=deriveOpenLimits(engine,current,normalized,candidate,{actor,routing:fresh});
+   if(other.nearestCost!==undefined)bounds.nearestCost=Math.max(bounds.nearestCost??0,other.nearestCost);
+   for(const [op,fields] of Object.entries(other.nearestBounds))for(const [field,value] of Object.entries(fields)){
+    bounds.nearestBounds[op]??={};bounds.nearestBounds[op][field]=Math.min(bounds.nearestBounds[op][field]??value,value);
+   }
+  }
+  return bounds;
  }};
 }
 
