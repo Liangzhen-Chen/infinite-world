@@ -23,7 +23,9 @@ function knowledge(){
             participants:['player','npc_hw_ayan'],location:'loc_hw',content:'北林废观测塔的传闻。'},
         private:{subject:'player',private:true,minute:0,content:'药草院',permittedRecipients:['npc_hw_ayan']},
         foreign:{subject:'npc_hw_ayan',minute:0,content:'旧渡口'},future:{subject:'player',minute:9999,content:'南田'},
-        far:{subject:'player',minute:0,content:'王都和雁渡'},
+        // A3 domain derives transit from topology: distance no longer hides a
+        // known junction. This negative fixture is a rumor player never received.
+        far:{subject:'player',sourceType:'听说',participants:['npc_hw_ayan'],minute:0,content:'王都和雁渡'},
         notReceived:{subject:'player',sourceType:'听说',participants:['npc_hw_ayan'],content:'北林边'}};
     d.state.npcs.npc_hw_ayan.memoryStream=[{minute:0,location:'loc_hw_apiary',sourceType:'亲历',participants:['npc_hw_ayan'],content:'南坡蜂场'}];
     return d;
@@ -63,6 +65,15 @@ test('M6-07 亲历、可靠转述、传闻迷雾只读投影；不泄漏其他�
     d.state.discoveries.site_beilin_tower={minute:0,source:'亲历'};assert.equal(mapView(engine,d).locations.find(row=>row.id==='site_beilin_tower').knowledge,'experienced');
     d.memories.allowed={subject:'player',private:true,permittedRecipients:['player'],content:'旧渡口',minute:0,source:'可靠转述'};
     assert.equal(mapView(engine,d).locations.find(row=>row.id==='loc_hw_dock').knowledge,'reliable');
+    // Receiving the same rumor reveals real transit junctions, but grants no
+    // unpublished map hierarchy. Private/future/other-person facts stay hidden.
+    d.memories.far.participants.push('player');
+    const received=mapView(engine,d);
+    for(const id of ['loc_capital','loc_yandu']){
+        assert.equal(received.transit.find(row=>row.id===id).knowledge,'rumor');
+        assert.ok(!received.locations.some(row=>row.id===id));
+    }
+    assert.doesNotMatch(JSON.stringify(received),/药草院|南田|南坡蜂场|北林边|private|memoryStream/);
 });
 
 test('M6-07 路线比较复用实际季节天气计算，未知风险保留，预览不改时间钱袋位置',()=>{
