@@ -382,21 +382,23 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  const exactOpen=['open:proposal','world_propose','open:leave_mark'].includes(query);
  const mark=registry.actions.find(a=>a.id==='open:leave_mark');
  const fallback=mark?markFallback(engine,document,'留下自己的心意'):null;
+ // Registered actions come first; the open paths follow them and are never cut by the limit.
+ const openRows=[];
  if(openActions!=='off'&&(mark||registry.actions.some(a=>a.call?.tool==='world_propose'))&&(!exactOpen||query!=='open:leave_mark')){
   actions=actions.filter(action=>action.id!=='open:proposal');
-  actions.unshift(openProposalOffer(ctx));
+  openRows.push(openProposalOffer(ctx));
  }
  if(mark&&(!exactOpen||query==='open:leave_mark')){
   actions=actions.filter(action=>action.id!=='open:leave_mark');
   const row={...offer(ctx,mark,id),available:fallback.available,missing:fallback.missing};
   if(!fallback.available)row.blocked=fallback.reason??fallback.missing.join('、');
-  actions.splice(actions[0]?.id==='open:proposal'?1:0,0,row);
+  openRows.push(row);
  }
  const quick=QUICK.map(label=>{const a=registry.actions.find(x=>x.ui?.quick===label);return a?{label,action:a.id,available:visible(a)||a.ui.quick==='交易'}:null;}).filter(Boolean);
  const sceneEngine=Object.create(engine);
  sceneEngine.world={...engine.world,locations:engine.world.locations.filter(publicRow),routes:engine.world.routes.filter(row=>publicRow(row)&&[row.from,row.to].every(key=>publicRow(engine.byId.get(key))))};
  return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions,fallback),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
-  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:actions.slice(0,Math.max(limit,exactOpen?1:2)),quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
+  scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:[...actions.slice(0,Math.max(0,Math.max(limit,exactOpen?1:2)-openRows.length)),...openRows],quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
    exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};
