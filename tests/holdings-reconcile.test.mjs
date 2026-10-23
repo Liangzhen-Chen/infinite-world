@@ -14,6 +14,7 @@ import {auditHoldings,ensureHoldings,aliveHoldings} from '../server-plugin/holdi
 import {marry,recordEntityDeath} from '../server-plugin/npc-life.mjs';
 import {withLawRules} from '../world/design/law-foundation.mjs';
 import {holdingsDiscrepancies} from './helpers/holdings-audit.mjs';
+import {grantLoanConsent} from './helpers/finance.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',post='bld_hw_post',host='npc_hw_linsui',clerk='npc_hw_shendu',worker='npc_hw_ayan';
@@ -72,7 +73,11 @@ test('多日推演对账：组织、议案、商号租铺与雇工、受雇、�
     await step(c,'world_settlement',{operation:'business_open',business:shop},'open');
     assert.ok(aliveHoldings(view(c.doc),{kind:'operates',holder:'player',subject:shop}).length,'开张即经营');
     await step(c,'world_trade',{operation:'hire',business:shop,seller:worker,consent:true,task:'stocktake',minutes:30,item:'item_bread',quantity:2},'hire');
-    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10},'loan');
+    // A3 真实同意替代旧布尔前提；持有逐步对账与离屏推进断言不变。
+    const beforeConsent=c.doc;
+    c.doc=grantLoanConsent(engine,c.doc,{lender:host,principal:40,days:10,eventId:'holdings-loan-consent'});
+    check(engine,beforeConsent,c.doc,'loan-consent');
+    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,coins:40,days:10},'loan');
     await step(c,'world_move',{destination:post},'to-post');
     for(let i=0;i<3;i++)await step(c,'world_time',{minutes:DAY},`day-${i}`);
     await step(c,'world_move',{destination:inn},'to-inn');

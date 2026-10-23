@@ -2,6 +2,7 @@
 // 对账失败即阻塞：每一步之后旧字段余额必须逐账户等于新账户余额，且没有漂移；
 // 守恒逐事件成立：全局货币总量的变化 = 源净流入 − 汇流出。
 import test from 'node:test';
+import {grantLoanConsent} from './helpers/finance.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
@@ -116,7 +117,9 @@ test('多日推演对账：交易、借贷利息、受雇工钱、钱庄、商�
     // 店主转卖外路进货：商税从卖方钱袋转入聚落公账。
     await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration',log);
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税经账本入公账');
-    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10},'loan',log);
+    // A3 真实同意只补借款前提；原资金流、逐账户对账与守恒断言全部保留。
+    c.doc=grantLoanConsent(c.engine,c.doc,{lender:host,principal:40,days:10,eventId:'ledger-loan-consent'});
+    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,coins:40,days:10},'loan',log);
     await step(c,'world_trade',{operation:'work',seller:worker,consent:true,minutes:240},'work',log);
     await step(c,'world_move',{destination:post},'to-post',log);
     await step(c,'world_trade',{operation:'deposit',seller:clerk,coins:50},'deposit',log);
