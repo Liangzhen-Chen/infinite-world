@@ -154,7 +154,8 @@ test('M6-05 三面板空态、到期标识和收发筛选；旧请求不覆盖�
     assert.match(overview.textContent,/补桥/);assert.match(overview.textContent,/修井议案/);assert.match(overview.textContent,/报告时公库 22铜/);
     const empty=affairs(engine,{state:{player:{},minute:0}});
     for(const [kind,text]of [['tasks','暂无已登记事项'],['obligations','暂无已登记事项'],['territory','尚无已登记的玩家领地']]){const e=dom();renderAffairsPanel(e,empty,kind);assert.match(e.textContent,new RegExp(text));assert.doesNotMatch(e.textContent,/undefined|NaN/);}
-    const panels=new Map();registerAffairsPanels({registerPanel:panel=>panels.set(panel.id,panel)});assert.equal(panels.size,3);
+    // S4 adds the cases panel; retain exact registration coverage for every panel.
+    const panels=new Map();registerAffairsPanels({registerPanel:panel=>panels.set(panel.id,panel)});assert.deepEqual([...panels.keys()],['tasks','obligations','territory','cases']);
     const requests=[],context={api:endpoint=>{assert.equal(endpoint,'ui/affairs');return new Promise(resolve=>requests.push(resolve));}};
     const old=panels.get('territory').render(container,context),newer=panels.get('territory').render(container,context);
     requests[1](empty);await newer;requests[0](data);await old;assert.match(container.textContent,/尚无已登记的玩家领地/);

@@ -43,7 +43,8 @@ test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅�
  const worldRoot=path.join(temp,'world');
  // 03 §3.2: the publication fixture must include the edition's A3 programs and
  // ontology. Preserve the complete loaded-world equality assertion.
- for(const dir of ['meta','geo','people','lore','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // S4 norm bindings are part of the current edition, even when only people change.
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/wt-depth/sourced/manifest.json'),before=await fs.readFile(baseline);

@@ -398,7 +398,12 @@ test('A3 effects: walking toward a person consumes distance rather than teleport
  // traverses its adjacency and then approaches; it cannot teleport on presence.
  assert.equal(next.state.minute,before.state.minute+2*Math.ceil(engine.rules.environment.placeLayout.edgeMetres/engine.rules.environment.walkingMetresPerMinute));
  assert.equal(next.state.npcs[npc].location,place.id);assert.equal(next.state.location,place.id);assert.deepEqual(auditLedger(next.ledger),[]);
- const unknown=structuredClone(before);delete unknown.state.records[`local_actor_position:${npc}`];
+ // S4 permits first approach from a visible zone. An unseen actor with no
+ // contact position still supplies no destination and must be rejected.
+ const visible=structuredClone(before);delete visible.state.records[`local_actor_position:${npc}`];
+ const approached=applyPatches(visible,commitPrimitives(visible,effects,frame).patches);
+ assert.deepEqual(engine.magicAreaTargetFacts(engine.primitiveDraft(approached),npc,place.id).point,approached.state.records.local_player_position.point);
+ const unknown=structuredClone(visible);unknown.state.npcs[npc].visible=false;
  assert.throws(()=>commitPrimitives(unknown,effects,frame),{code:'E-MOVE-POSITION'});
  const remote=structuredClone(before);remote.state.npcs[npc].location='loc_hw';
  assert.throws(()=>commitPrimitives(remote,effects,frame),{code:'E-MOVE-POSITION'});
