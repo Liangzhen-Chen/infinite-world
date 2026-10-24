@@ -1018,7 +1018,7 @@ export class WorldEngine {
         if(!band||catalog.mp<band[0]||catalog.mp>band[1])throw new Error('法术消耗不符合阶段规则');
         const prepared=prepareMagic.call(this,d,catalog,args);
         if(d.get('state','player','status')==='濒死'&&(!(catalog.effectSpec?.kind==='heal'||catalog.effectSpec?.kind==='care'&&['stabilize','hemostasis','clean_wound'].includes(catalog.effectSpec.operation))||prepared?.target!=='player'))reject('E-ACTION-PRECONDITION','濒死时只能尝试对自己施放救治法术');
-        if(d.get('state','player','mp')<catalog.mp)reject('E-ACTION-PRECONDITION','魔力不足');
+        if(d.get('state','player','mp')<catalog.mp)reject('E-ACTION-CAST-MP','魔力不足');
         for(const material of catalog.materials)if(this.quantity(d,'player',material.item)<material.amount)reject('E-ACTION-PRECONDITION',`缺少材料${this.byId.get(material.item).name}`);
         d.set(['state','player','mp'],d.get('state','player','mp')-catalog.mp);
         for(const material of catalog.materials)this.itemDelta(d,'player',material.item,-material.amount,{flow:'sink:consume',purpose:'spell',writer:'engine',eventId:id});

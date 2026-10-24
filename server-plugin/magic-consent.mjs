@@ -43,7 +43,7 @@ export function emergencyHealing(d,engine,target,catalog){
 export function assertSpellConsent(d,engine,catalog,args,target,action,until=d.get('state','minute')){
  if(hasSpellConsent(d,target,args.authorization,action,catalog,until,engine)||action==='healing'&&emergencyHealing(d,engine,target,catalog))return;
  if(args.force===true&&target!=='player')return;
- throw Error(action==='healing'?'需要本人同意：照护或病症观察须验证本人有效同意与授权；濒死急救除外':'施法需要本人同意：须本人自愿同意且授权仍有效');
+ throw preconditionFailure(action==='healing'?'需要本人同意：照护或病症观察须验证本人有效同意与授权；濒死急救除外':'施法需要本人同意：须本人自愿同意且授权仍有效',{code:'E-ACTION-CAST-CONSENT'});
 }
 export function spellConsentPermission(d,engine,args,eventId){
  if(!['grant_access','revoke_access'].includes(args.operation))return null;

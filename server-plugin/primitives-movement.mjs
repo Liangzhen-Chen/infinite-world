@@ -6,6 +6,7 @@ import {recordsWhere} from './storage.mjs';
 import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {placeLayout,zoneOf,destinationZone,localRoute,edgeOpen} from './place-layout.mjs';
 import {isDomainRejection} from './action-rejection.mjs';
+import {perceptionPosition,perceives} from './perception.mjs';
 
 export function moveLocally(d,engine,{entity,destination,mode},eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets,scheduleAt}){
  const partition=d.get('state','npcs',entity)?'npcs':'creatures',body=entity==='player'?d.get('state','player'):d.get('state',partition,entity),feature=environmentFeatures(engine,d.document).find(row=>row.id===destination);
@@ -19,7 +20,10 @@ export function moveLocally(d,engine,{entity,destination,mode},eventId,{environm
  const currentZone=zoneOf(engine,d.document,entity,layout);
  const priorPosition=d.get('state','records',entity==='player'?'local_player_position':`local_actor_position:${entity}`);
  const knownZoneMove=priorPosition?.location===location&&priorPosition.zone===currentZone?.id&&typeof priorPosition.source==='string';
- const origin=areaTargetFacts(d,engine,entity,location)??((zone||knownZoneMove)&&currentZone?.point?{point:currentZone.point}:null),target=zone?{point:zone.point??origin?.point}:feature?.location===location?{point:feature.position}:agent?areaTargetFacts(d,engine,destination,location):null;
+ // A visible actor has a real zone position before the first contact. Walking
+ // to it creates contact; requiring contact here made that first approach impossible.
+ const actorPosition=()=>areaTargetFacts(d,engine,destination,location)??(perceives(engine,d.document,entity,{actor:destination,location,volume:0},{layout}).visual?perceptionPosition(engine,d.document,destination,layout):null);
+ const origin=areaTargetFacts(d,engine,entity,location)??((zone||knownZoneMove)&&currentZone?.point?{point:currentZone.point}:null),target=zone?{point:zone.point??origin?.point}:feature?.location===location?{point:feature.position}:agent?actorPosition():null;
  if(!origin||!target||!Array.isArray(target.point)||target.point.length!==2||!target.point.every(Number.isFinite))reject('E-MOVE-POSITION','Local movement requires actual origin and destination positions in the same node');
  assertMindAwake(d,entity);assertWaterEarthMovement(d,entity);assertLightMovement(d,engine,entity);
  const endZone=zone??destinationZone(engine,d.document,destination,layout)??(agent?zoneOf(engine,d.document,destination,layout):null);
@@ -74,7 +78,7 @@ export function moveLocally(d,engine,{entity,destination,mode},eventId,{environm
  const place=entity==='player'?d.get('state','location'):d.get('state',partition,entity,'location');
  if(place!==location||isPhysicallyDead(engine,d,entity)||entity==='player'&&d.get('state','player','status')!=='正常')return {entity,target:destination,metres,minutes,mudMinutes,arrived:false};
  if(mount&&(isPhysicallyDead(engine,d,mount)||d.get('state','creatures',mount,'location')!==location||d.get('state','creatures',mount,'owner')!==entity))return {entity,target:destination,metres,minutes,mudMinutes,arrived:false};
- if(agent){const current=areaTargetFacts(d,engine,destination,location);if(!current||current.point.some((n,i)=>n!==target.point[i]))return {entity,target:destination,metres,minutes,mudMinutes,arrived:false};}
+ if(agent){const current=actorPosition();if(!current||!Array.isArray(current.point)||current.point.some((n,i)=>n!==target.point[i]))return {entity,target:destination,metres,minutes,mudMinutes,arrived:false};}
  if(feature){const current=environmentFeatures(engine,d.document,r=>r.id===destination)[0];if(!current||current.location!==location||current.position?.some((n,i)=>n!==target.point[i]))return {entity,target:destination,metres,minutes,mudMinutes,arrived:false};}
  if(zone){storeZone(zone.id);if(mount)storeZone(zone.id,mount);return {entity,target:destination,zone:zone.id,metres,minutes,mudMinutes,arrived:true,path:route.zones};}
  checkPath(route?finalOrigin:origin.point,target.point,true);

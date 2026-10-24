@@ -10,27 +10,43 @@ import {tmpRoot} from '../tools/tmp-root.mjs';
 import {initializeEncounter,activeEncounters} from '../server-plugin/combat.mjs';
 import {initializeConversation,activeConversation} from '../server-plugin/dialogue.mjs';
 import {initializeHostedRite} from '../server-plugin/faith.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-ji');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
-const row=id=>corpus.find(r=>r.id===`A3V2-${id}`);
+const row=id=>{
+ const r=structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));
+ // S4: the encounter still imports no turn/harm. Its close-range premise is
+ // established by real walking before the tested exchange, not a fake coordinate.
+ if(r.setup.combats){
+  delete r.setup.positions;
+  r.setup.prelude=[{tool:'world_act',eventId:`ji-approach-${id}`,args:{action:'core:move',slots:{destination:'npc_hw_wushuo',mode:'walk'}}}];
+ }
+ return r;
+};
+async function prepared(premise){
+ const base=applyIntentSetup(engine,initial,premise);
+ if(base.setupUnmet.length||!premise.prelude)return base;
+ const next=await runPrelude(engine,base.document,premise.prelude);
+ return {...base,document:next.document,setupUnmet:next.unmet};
+}
 const context={origin:'initial',eventId:'ji-initial'};
-function setup(id,change=()=>{}){
+async function setup(id,change=()=>{}){
  const premise=structuredClone(row(id).setup);change(premise);
- const out=applyIntentSetup(engine,initial,premise);assert.deepEqual(out.setupUnmet,[]);return out.document;
+ const out=await prepared(premise);assert.deepEqual(out.setupUnmet,[]);return out.document;
 }
 const act=(action,slots,eventId)=>({tool:'world_act',eventId,args:{action,slots}});
 const participate=eventId=>act('core:settlement.faith_rite',{org:'bld_hw_altar',choice:'a3v2_074_rite'},eventId);
 
-test('V: native initializer preserves unfinished hostility without spending a turn, harm, stock or time',()=>{
- const document=setup('059'),s=document.state,r=activeEncounters(engine,s)[0];
+test('V: native initializer preserves unfinished hostility without spending a turn, harm, stock or time',async()=>{
+ const document=await setup('059'),s=document.state,r=activeEncounters(engine,s)[0];
  assert.equal(r.id,'a3v2_059_combat');assert.equal(r.active,true);assert.equal(r.round,1);assert.equal(r.playerActedThisRound,false);
  const premise=structuredClone(row('059').setup);delete premise.combats;
- const beforeCombat=applyIntentSetup(engine,initial,premise).document;
+ const beforeCombat=(await prepared(premise)).document;
  assert.deepEqual(s.player,beforeCombat.state.player);assert.deepEqual(document.ledger,beforeCombat.ledger);assert.deepEqual(s.inventory,beforeCombat.state.inventory);
- assert.equal(s.minute,600);assert.equal(s.inventory.item_staff.durability,100);
+ assert.equal(s.minute,601);assert.equal(s.inventory.item_staff.durability,100);
  assert.equal(s.npcs.npc_hw_wushuo.hp,initial.state.npcs.npc_hw_wushuo.hp);
  for(const id of ['059','060','061','062']){
   const source=structuredClone(row(id).setup);delete source.history;
@@ -41,40 +57,40 @@ test('V: native initializer preserves unfinished hostility without spending a tu
 });
 
 test('V: real combat spends the current round, includes retaliation, opens the next round and rejects an already spent turn',async()=>{
- const document=setup('060');document.state.player.hp=1000;document.state.player.maxHp=1000;
+ const document=await setup('060');document.state.player.hp=1000;document.state.player.maxHp=1000;
  const before=structuredClone(document),input=act('core:combat',{target:'npc_hw_wushuo',weapon:'item_staff',intent:'defend'},'ji-defend');
  const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=after.state.records['combat_encounter:a3v2_060_combat'];
  assert.deepEqual(document,before);assert.equal(r.lastRound.actor,'player');assert.equal(r.lastRound.intent,'defend');assert.equal(r.lastRound.playerActed,true);
  assert.equal(r.round,2);assert.equal(r.playerActedThisRound,false);assert.equal(r.active,true);
  assert.equal(after.state.inventory.item_staff.durability,99);assert.ok(out.result.received>=0);assert.equal(after.state.player.hp,1000-out.result.received);
  const again=await engine.reduce(after,{...input,eventId:'ji-next-round'});assert.equal(applyPatches(after,again.patches).state.records['combat_encounter:a3v2_060_combat'].round,3);
- const spent=setup('060',s=>s.combats[0].playerActedThisRound=true),snapshot=structuredClone(spent);
+ const spent=await setup('060',s=>s.combats[0].playerActedThisRound=true),snapshot=structuredClone(spent);
  await assert.rejects(engine.reduce(spent,input),/already acted this round/);assert.deepEqual(spent,snapshot);
  const remote=structuredClone(document);remote.state.npcs.npc_hw_wushuo.location='loc_hw_gate';assert.deepEqual(activeEncounters(engine,remote.state),[]);
 });
 
-test('V: a lone bystander is not inferred to be an opponent from guard prose',()=>{
- const document=setup('060');delete document.state.records['combat_encounter:a3v2_060_combat'];delete document.state.records['world_event:a3v2_060_hostile'];
+test('V: a lone bystander is not inferred to be an opponent from guard prose',async()=>{
+ const document=await setup('060');delete document.state.records['combat_encounter:a3v2_060_combat'];delete document.state.records['world_event:a3v2_060_hostile'];
  const proposal={...row('060').proposal,intent:'用手里的木杖防守'};
  const plan=prepareOpenAction(engine,document,proposal);
  assert.equal(plan.status,'needs_slots');assert.ok(plan.needsSlots.missing.includes('target'));
 });
 
 test('W: finished topic remains a live conversation until goodbye; goodbye does not move either actor or mint agreement',async()=>{
- const document=setup('050'),before=structuredClone(document),r=activeConversation(document.state,'npc_hw_chenbai');
+ const document=await setup('050'),before=structuredClone(document),r=activeConversation(document.state,'npc_hw_chenbai');
  assert.equal(r.mainTopicFinished,true);assert.equal(r.active,true);assert.deepEqual(document.state.dialogues,initial.state.dialogues);
  const out=await engine.reduce(document,act('core:dialogue.leave',{subject:'npc_hw_chenbai'},'ji-leave')),after=applyPatches(document,out.patches);
  assert.equal(activeConversation(after.state,'npc_hw_chenbai'),null);
  assert.equal(after.state.records[`conversation:${r.id}`].active,false);assert.equal(after.state.records[`conversation:${r.id}`].mainTopicFinished,true);
  assert.equal(after.state.location,before.state.location);assert.equal(after.state.npcs.npc_hw_chenbai.location,before.state.npcs.npc_hw_chenbai.location);
  assert.deepEqual(after.state.consentEvents,before.state.consentEvents);assert.deepEqual(document,before);
- const unfinished=setup('050',s=>s.conversations[0].mainTopicFinished=false);
+ const unfinished=await setup('050',s=>s.conversations[0].mainTopicFinished=false);
  const leave=await engine.reduce(unfinished,act('core:dialogue.leave',{subject:'npc_hw_chenbai'},'ji-unfinished-leave'));
  assert.equal(applyPatches(unfinished,leave.patches).state.records['conversation:a3v2_050_conversation'].mainTopicFinished,false);
 });
 
-test('X: scheduled source binding grants one hosted role without an office, expenditure, participation or omen',()=>{
- const document=setup('074'),r=document.state.records['hosted_rite:a3v2_074_rite'];
+test('X: scheduled source binding grants one hosted role without an office, expenditure, participation or omen',async()=>{
+ const document=await setup('074'),r=document.state.records['hosted_rite:a3v2_074_rite'];
  assert.equal(r.sourceEvent,'world_event:a3v2_074_rite_scheduled');assert.equal(r.host,'npc_hw_chenbai');assert.equal(r.hostAuthorized,true);
  assert.equal(document.state.inventory.item_ration.quantity,1);assert.equal(document.state.minute,600);
  assert.deepEqual(document.state.effects,initial.state.effects);assert.equal(Object.values(document.state.records).filter(r=>r.category==='faith_ritual').length,0);
@@ -88,7 +104,7 @@ test('X: scheduled source binding grants one hosted role without an office, expe
 });
 
 test('X: actual hosted participation consumes only its declared supply and time, exposes a native receipt and cannot be repeated',async()=>{
- const document=setup('074'),before=structuredClone(document),out=await engine.reduce(document,participate('ji-participate')),after=applyPatches(document,out.patches);
+ const document=await setup('074'),before=structuredClone(document),out=await engine.reduce(document,participate('ji-participate')),after=applyPatches(document,out.patches);
  assert.deepEqual(document,before);assert.equal(engine.quantity(engine.primitiveDraft(after),'player','item_ration'),0);
  assert.equal(after.state.minute,600+engine.rules.faith.ordinaryRite.minutes);assert.equal(after.state.player.coins,before.state.player.coins);
  const record=after.state.records['hosted_participation:a3v2_074_rite:player'];assert.equal(record.host,'npc_hw_chenbai');assert.equal(record.response.applied,false);
@@ -109,7 +125,7 @@ test('X: revoked, wrong-role and expired permission, absent host, closed window 
   d=>{delete d.state.inventory.item_ration;}
  ];
  for(const mutate of variants){
-  const document=setup('074');mutate(document);const before=structuredClone(document);
+  const document=await setup('074');mutate(document);const before=structuredClone(document);
   let out,error;
   try{out=await engine.reduce(document,participate('ji-reject'));}catch(caught){error=caught;}
   // An unavailable participant is rejected by the outer action precondition;
@@ -119,9 +135,9 @@ test('X: revoked, wrong-role and expired permission, absent host, closed window 
  }
 });
 
-test('V/W/X: native initializers reject proposal origin; setup rejects undeclared success fields',()=>{
+test('V/W/X: native initializers reject proposal origin; setup rejects undeclared success fields',async()=>{
  for(const [id,field,initialize]of [['059','combats',initializeEncounter],['050','conversations',initializeConversation],['074','rites',initializeHostedRite]]){
-  const document=setup(id),d=engine.primitiveDraft(document),before=structuredClone(document);
+  const document=await setup(id),d=engine.primitiveDraft(document),before=structuredClone(document);
   assert.throws(()=>initialize(d,engine,row(id).setup[field][0],{origin:'proposal',eventId:'fake'}));assert.deepEqual(d.document,before);
   const s=structuredClone(row(id).setup);s[field][0].success=true;
   const out=applyIntentSetup(engine,initial,s);assert.ok(out.setupUnmet.some(r=>r.item===`${field}[0]`));
@@ -131,7 +147,7 @@ test('V/W/X: native initializers reject proposal origin; setup rejects undeclare
 test('V/W/X: native state and real consumers survive storage reload, export/import, rollback and replay',async t=>{
  for(const [id,input]of [['060',act('core:combat',{target:'npc_hw_wushuo',intent:'defend'},'ji-archive-combat')],['050',act('core:dialogue.leave',{subject:'npc_hw_chenbai'},'ji-archive-leave')],['074',participate('ji-archive-rite')]]){
   const directory=await fs.mkdtemp(path.join(tmpRoot(),'a3-ji-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
-  const document=setup(id);if(id==='060'){document.state.player.hp=1000;document.state.player.maxHp=1000;}
+  const document=await setup(id);if(id==='060'){document.state.player.hp=1000;document.state.player.maxHp=1000;}
   const reducer=(document,input)=>engine.reduce(document,input);
   const store=new CampaignStorage(directory,{reducer});await store.create({id:'ji',worldVersion:'test',document});
   const event={id:input.eventId,anchor:'ji-action',input};await store.transact('ji',event,reducer);
@@ -194,11 +210,11 @@ test('V: retreat success walks every edge of the known path; failure preserves p
    assert.equal(s.location,'loc_hw_gate');assert.equal(r.active,false);
    // The authored northwood -> gate route passes through loc_hw. Preserve both
    // native edges and their travel time; do not invent a direct adjacent edge.
-   const route=engine.route('loc_hw_northwood','loc_hw_gate','walk',600,base.randomSeed);
+   const route=engine.route('loc_hw_northwood','loc_hw_gate','walk',run.before.state.minute,base.randomSeed);
    assert.ok(r.lastRound.movement.minutes>0);assert.deepEqual(r.lastRound.movement.edges,route.edges);
    // D31.4: the native exchange now reads A3's one-minute bout; the full
    // retreat path must still account for every additional travel minute.
-   assert.equal((s.minute-600)*60+(s.subMinuteSeconds??0),r.lastRound.movement.minutes*60+60);
+   assert.equal((s.minute-run.before.state.minute)*60+(s.subMinuteSeconds??0),r.lastRound.movement.minutes*60+60);
    assert.equal(r.location,'loc_hw_northwood');
   }else{
    assert.equal(s.location,'loc_hw_northwood');assert.equal(r.active,true);assert.equal(r.lastRound.movement,undefined);
@@ -207,7 +223,7 @@ test('V: retreat success walks every edge of the known path; failure preserves p
    assert.equal(validateCheckBranch(engine,forged,row('061'),'failure').ok,false);
   }
  }
- const document=setup('061'),snapshot=structuredClone(document);
+ const document=await setup('061'),snapshot=structuredClone(document);
  await assert.rejects(engine.reduce(document,act('core:combat',{target:'npc_hw_wushuo',intent:'flee',destination:'loc_bs'},'ji-remote-retreat')),/known passable path/);
  await assert.rejects(engine.reduce(document,act('core:combat',{target:'npc_hw_wushuo',intent:'flee',destination:'invented moon'},'ji-unknown-retreat')),/Unknown/);
  assert.deepEqual(document,snapshot);

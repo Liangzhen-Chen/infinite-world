@@ -7,7 +7,6 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {applyIntentSetup,executeIntent} from '../tools/a3-score.mjs';
 import {limitedPermit,currentControllers} from '../server-plugin/action-authority.mjs';
 import {consent} from '../server-plugin/action-consent.mjs';
-import {recordLocalContact} from '../server-plugin/environment.mjs';
 import {obligationRows,obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 
@@ -15,7 +14,12 @@ const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.initialFromLegacy(seed,'jia3-test');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
-const row=n=>structuredClone(corpus.find(r=>r.id===`A3V2-${n}`));
+const row=n=>{
+ const r=structuredClone(corpus.find(r=>r.id===`A3V2-${n}`));
+ // S4 supplies a native six-metre sight measurement without contact.
+ if(n==='017')r.setup.positions[0].distanceMeters=6;
+ return r;
+};
 const offer=(actor,principal,interest,id)=>({id,verb:'consented',actor,to:'player',scope:'loan',subject:'player',terms:{principal,days:1,interest},at:599,expires:5000,revoked:false,source:{kind:'corpus_premise',row:'A3CR'}});
 const loanStep=(operation,seller,coins,eventId,extra={})=>({tool:'world_act',eventId,args:{action:`core:trade.${operation}`,slots:{seller,coins,days:1,...extra}}});
 const giveStep=coins=>({tool:'world_propose',eventId:'jia3-give-principal',args:{intent:'赠送林穗借来的铜钱',target:'npc_hw_linsui',effects:[{op:'transfer',resource:'coin',from:'self',to:'npc_hw_linsui',qty:coins}]}});
@@ -91,15 +95,24 @@ test('jia3: native known-skill lessons charge the teacher fee, retain fractions 
  assert.equal(broken.result.receipt.code,'E-ACTION-LEARN-SOURCE');assert.deepEqual(broken.document,document);
 });
 
-test('jia3: busy teacher observation reads the timed source, but co-presence never supplies missing range evidence',async()=>{
+test('jia3: busy teacher observation uses measured sight and the complete timed source, without teaching consent',async()=>{
  const original=await executeIntent(engine,initial,row('017'));
- assert.equal(original.actual.reasonCode,'E-ACTION-LEARN-OBSERVE');
- assert.match(original.actual.reason,/可见|三十米/);
- const loaded=load('017'),d=engine.primitiveDraft(loaded.document);
- // A separate test establishes real physical contact through its native
- // writer. The corpus itself receives no fabricated contact event.
- assert.equal(recordLocalContact(d,engine,'npc_hw_sulan','jia3-contact'),true);
- const document=applyPatches(loaded.document,d.patches),before=structuredClone(document);
+ // S4 supplies the six-metre visual measurement that the old engine lacked.
+ // Observation needs sight within 30 m, while paid teaching still needs consent.
+ assert.equal(original.actual.committed,true);assert.equal(original.receipt.legacy.observed,true);
+ const unseen=load('017').document;unseen.state.player.eyesClosed=true;
+ const blind=await act(unseen,'core:learn',{entity:'skill_life_4_core',source:'npc_hw_sulan',mode:'observe'},'jia3-unseen');
+ assert.equal(blind.result.receipt.code,'E-ACTION-LEARN-OBSERVE');
+ assert.match(blind.result.receipt.reason,/可见|三十米/);assert.deepEqual(blind.document,unseen);
+ // The published demonstration ends at 660. Start one minute earlier so the
+ // genuine approach still leaves the complete 600..660 observation window.
+ const premise=row('017').setup;premise.minute=599;
+ const loaded=applyIntentSetup(engine,initial,premise);assert.deepEqual(loaded.setupUnmet,[]);
+ // Walk to the visible teacher through the public action. Co-presence itself
+ // still grants neither contact nor teaching consent.
+ const walked=await engine.reduce(loaded.document,{tool:'world_act',eventId:'jia3-contact',args:{action:'core:move',slots:{destination:'npc_hw_sulan',mode:'walk'}}});
+ assert.equal(walked.result.arrived,true);assert.equal(walked.result.minutes,1);
+ const document=applyPatches(loaded.document,walked.patches),before=structuredClone(document);
  const result=await act(document,'core:learn',{entity:'skill_life_4_core',source:'npc_hw_sulan',mode:'observe'},'jia3-observe');
  assert.equal(result.result.receipt.status,'committed');
  assert.equal(result.result.receipt.legacy.observed,true);

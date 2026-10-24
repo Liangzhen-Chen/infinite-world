@@ -20,7 +20,8 @@ function fixture(){
 
 test('A3 references: local descriptions bind declared names only; missing and duplicate areas remain questions',()=>{
  const {engine,document}=fixture(),place=engine.byId.get(document.state.location);
- place.zones=[{id:'zone_wall',name:'墙根'},{id:'zone_secret',name:'暗室',private:true}];
+ // S4's authored layout supplies real areas; detached place.zones no longer creates them.
+ place.layout={entry:'zone_entry',zones:[{id:'zone_entry',name:'门口',point:[0,0]},{id:'zone_wall',name:'墙根',point:[1,0]},{id:'zone_secret',name:'暗室',private:true,point:[2,0]}],edges:[{from:'zone_entry',to:'zone_wall',metres:6}]};
  const before=structuredClone(document),context=createRoutingContext(engine,document);
  const proposal={intent:'将陶罐搬到旁边墙根',effects:[{op:'move',entity:'self',to:'旁边墙根',mode:'walk'}]};
  const resolved=resolveProposalEntities(proposal,context);
@@ -28,7 +29,7 @@ test('A3 references: local descriptions bind declared names only; missing and du
  assert.equal(context.resolveDestination('眼前相邻墙根').value,'zone_wall');
  assert.equal(context.resolve('暗室').value,null);assert.deepEqual(context.resolve('暗室').candidates,[]);
  assert.equal(context.resolveDestination('旁边没有登记的空位').value,null);
- place.zones.push({id:'zone_second_wall',name:'墙根'});
+ place.layout.zones.push({id:'zone_second_wall',name:'墙根',point:[3,0]});
  const ambiguous=resolveProposalEntities(proposal,createRoutingContext(engine,document));
  assert.equal(ambiguous.ambiguities.length,1);assert.equal(ambiguous.ambiguities[0].candidates.length,2);
  assert.deepEqual(document,before);
