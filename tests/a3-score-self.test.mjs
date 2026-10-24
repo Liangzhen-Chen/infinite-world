@@ -129,9 +129,11 @@ test.todo('A3 signature r10: conditional legal consequences require their native
  }
 });
 
-test.todo('A3 signature r10: 055 quote-only negotiation does not satisfy a signed defence contract and payment〔前提待真实动作：形成指定案件及真实辩护签约前提；归 S4〕',async()=>{
+test('A3 signature r10: 055 quote-only negotiation does not satisfy a signed defence contract and payment',async()=>{
  const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
- const row=corpus.find(r=>r.id==='A3V2-055'),run=await executeIntent(engine,initial,row);
+ // 05 §5.2.7: replace declared case/vocation history with actual filing, teaching and vocation actions; preserve every signature assertion.
+ const {nativeDefenceRow}=await import('./helpers/trial-actions.mjs');
+ const prepared=await nativeDefenceRow(corpus.find(r=>r.id==='A3V2-055')),row=prepared.row,run=await executeIntent(prepared.engine,prepared.document,row);
  assert.equal(row.proposal.effects[0].payload.terms.quoteOnly,true);
  assert.equal(run.receipt.legacy.submitted,true);
  assert.equal(run.receipt.legacy.accepted,null);

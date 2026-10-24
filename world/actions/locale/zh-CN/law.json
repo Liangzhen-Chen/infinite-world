@@ -4,6 +4,12 @@
  "events": {
   "law.accept": "受理报案，登记案件。",
   "law.reject": "说明原因，拒绝受理。",
-  "law.request_decision": "{authority}答复：{reason}"
+  "law.request_decision": "{authority}答复：{reason}",
+  "law.request_hearing": "{authority}审阅已提交的证据，作出裁判。",
+  "law.submit_evidence": "你向本案递交证据，等待审理。",
+  "law.verify_evidence": "{authority}核验所出示的原件。",
+  "law.request_review": "{authority}复审本案证据并作出裁判。",
+  "law.execute_fine": "本案执行结果已记录。",
+  "law.decide_case": "你以当前审理职位作出本案裁判。"
  }
 }

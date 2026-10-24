@@ -290,6 +290,10 @@ export class WorldEngine {
     async reduce(document,input,options={}) {
         options={...options,nativePrimitiveVersion:nativePrimitiveReplayVersion(options)};
         const out=await actionBoundary(this,document,input,()=>this.reduceAction(document,input,options));
+        if(!this.compat&&(!options.replay||options.result?.obligationSigningVersion===1)){
+            const signed=advanceHook('obligationSigningFacts')?.(document,applyPatches(document,out.patches));
+            if(signed&&Object.keys(signed).length)Object.assign(out.result,{obligationSigningVersion:1,signedObligations:signed});
+        }
         if(!this.compat&&(!options.replay||options.result?.organizationConsentVersion===1))out.result.organizationConsentVersion=1;
         if(!this.compat&&(!options.replay||options.result?.educationVersion===1))out.result.educationVersion=1;
         if(!this.compat&&options.nativePrimitiveVersion===1)out.result.nativePrimitiveVersion=1;
