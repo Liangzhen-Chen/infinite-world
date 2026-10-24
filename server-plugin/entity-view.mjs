@@ -101,7 +101,7 @@ export function personCareer(engine,state,requested){
     const services=id==='player'?[]:[...(vocation?(def?.teaches??vocation.services??[]):base?.services??[])],appointments=[];
     if(id!=='player'&&isEffective(engine,state,id))for(const faction of engine.world.factions??[]){
         if(!faction.offices?.length)continue;
-        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder===id&&actor?.location===office.seat&&office.authority?.operations?.includes('certify')){
+        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder===id&&officeOnDuty(engine,state,office,id)&&office.authority?.operations?.includes('certify')){
             if(!isEffective(engine,state,faction.id))continue;
             const role=engine.byId.get(office.authority.profession),skill=role?.entry?.skill;
             if(role&&(actor?.proficiencies?.[skill]??base?.proficiencies?.[skill]??0)>=(role.entry?.minimumProficiency??100)){services.push(role.id);appointments.push(office.id);}
@@ -154,6 +154,25 @@ export function personRegistrar(engine,state,id,seat,occupations){
     if(dismissed(state,id))return false;
     const career=personCareer(engine,state,id).value,base=baseOf(engine,state,id);
     return (career.vocation?.location??base?.workplace?.location)===seat&&occupations.includes(career.occupation);
+}
+// The published office is the authority. Campaign appointments replace only
+// the holder; an application cannot supply powers, hours or an issuer.
+export function institutionOffices(engine,state,organization=null){
+    return (engine.world.factions??[]).filter(f=>!organization||f.id===organization).flatMap(f=>organizationOffices(engine,state,f.id,f).map(o=>{
+        const change=state.records?.[`organization:${f.id}`]?.offices?.[o.id];
+        return {...o,holder:change&&(change.since??0)>(state.minute??0)?null:o.holder,
+            since:change?.since??0,sourceEvent:change?.sourceEvent??null};
+    }));
+}
+export function officeOnDuty(engine,state,office,actor=office?.holder){
+    const current=institutionOffices(engine,state,office?.organization??office?.org).find(o=>o.id===office?.id);
+    if(current){if(current.holder!==actor)return false;office=current;}
+    if(!actor||office?.holder!==actor||!living(engine,state,actor)||personConstraint(engine,state,actor))return false;
+    const person=actor==='player'?state.player:state.npcs?.[actor],location=actor==='player'?state.location:person?.location;
+    const minute=((state.minute??0)%1440+1440)%1440;
+    return Boolean(person&&location===office.seat&&!person.scheduleTravel&&!person.cognitionTravel&&
+        !['死亡','濒死','昏迷','患病'].includes(person.status)&&!/睡眠|睡觉|熟睡/.test(person.activity??'')&&
+        (!office.receptionHours?.length||office.receptionHours.some(([start,end])=>start<=minute&&minute<end)));
 }
 export function personRemuneration(engine,state,id){
     const salaries=obligationRows(state).filter(o=>o.kind==='salary'&&o.creditor===id);

@@ -12,6 +12,8 @@ import {closeObligation} from '../server-plugin/obligation-runtime.mjs';
 import {transportAction} from '../server-plugin/transport.mjs';
 import {openHolding,aliveHoldings,closeHolding} from '../server-plugin/holdings.mjs';
 import {authority} from '../server-plugin/action-authority.mjs';
+import {primitiveContext} from '../server-plugin/primitives-runtime.mjs';
+import {officeCall,appointedClaimClerk} from './helpers/office-actions.mjs';
 import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 
@@ -45,20 +47,23 @@ test.todo('G1: accepted public work enters the local source ledger once and is r
 // G4's overdue payment promise moved to a3-prelude.test.mjs: create the real
 // promise at minute 600 and wait past its deadline through the ordinary clock.
 
-test.todo('G2: native office has explicit powers and holder; it cannot manufacture a different authority〔前提待真实动作：创建指定章程机构席位及指定过去日期的任免记录；归 S4〕',()=>{
- const d=engine.primitiveDraft(initial),row={id:'g_native_chair',template:'office',name:'Recorded membership chair',organization:'loc_hw',location:'loc_hw',authority:['admit_members']};
- const office=restoreInstitutionOffice(d,engine,row,{origin:'initial'});
- const id=openHolding(d,{kind:'holds_office',holder:'npc_hw_yanzhe',subject:office,terms:{authority:['admit_members']},writer:'governance',source:'recorded-current-office',engine});
- const document=roundtrip(d.document);
- assert.equal(aliveHoldings(engine.primitiveDraft(document),{kind:'holds_office',holder:'npc_hw_yanzhe',subject:office})[0].id,id);
- assert.equal(authority({engine,document},'npc_hw_yanzhe','admit_members',office).allowed,true);
- assert.equal(authority({engine,document},'npc_hw_yanzhe','review_building_application',office).allowed,false);
- assert.equal(authority({engine,document},'player','transfer','loc_hw|coin_river|treasury').allowed,false);
- const removed=engine.primitiveDraft(document);closeHolding(removed,{id,writer:'governance',reason:'vacated',eventId:'remove-native-chair'});
- assert.equal(authority({engine,document:roundtrip(removed.document)},'npc_hw_yanzhe','admit_members',office).allowed,false);
- assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',organization:'nonexistent'},{origin:'initial'}),/organization/);
- assert.throws(()=>restoreInstitutionOffice(d,engine,{...row,id:'bad',authority:[]},{origin:'initial'}),/powers/);
- // No unnamed council, synthetic promotion date or previous incumbent is supplied.
+// S4: preserve the positive office power, unrelated-power denial and public-money
+// denial on a published receiving seat. Appointment comes from real actions.
+test('G2: native office has explicit powers and holder; it cannot manufacture a different authority',async()=>{
+ const adult=engine.initialFromLegacy({...seed,state:{...seed.state,player:{...seed.state.player,age:25}}},'g2-office');
+ // Replace the removed snapshot API's invalid-organization/power checks with
+ // the public action boundary: neither an unknown seat nor supplied powers
+ // can create a grant. Keep both rejection assertions.
+ await assert.rejects(officeCall(engine,adult,'apply',{name:'nonexistent'},'g2-unknown-office'),/任免链|rejected/);
+ await assert.rejects(officeCall(engine,adult,'apply',{name:'office_bs_claim_desk',powers:['review_building_application']},'g2-forged-powers'),/rejected|未知|槽/);
+ const {document,name,authority:issuer}=await appointedClaimClerk(engine,adult);
+ const holding=aliveHoldings(engine.primitiveDraft(document),{kind:'holds_office',holder:'player',subject:name})[0];assert.ok(holding);
+ assert.equal(authority(primitiveContext(engine,roundtrip(document)),'player','receive_claim',name).allowed,true);
+ assert.equal(authority(primitiveContext(engine,document),'player','review_building_application',name).allowed,false);
+ assert.equal(authority(primitiveContext(engine,document),'player','transfer','loc_hw|coin_river|treasury').allowed,false);
+ const removed=await officeCall(engine,document,'remove',{name,authority:issuer},'g2-remove');
+ assert.equal(authority(primitiveContext(engine,roundtrip(removed.document)),'player','receive_claim',name).allowed,false);
+ // Unsupported historical snapshots still cannot invent an office or date.
  const missing=run(setup(213));assert.ok(errors(missing,'history').length);
  assert.equal(aliveHoldings(engine.primitiveDraft(missing.document),{kind:'holds_office',holder:'player'}).length,0);
 });
@@ -81,19 +86,20 @@ test.todo('G3: pending application and ordinance retain source; inspection never
  noDrift(d.document);
 });
 
-test.todo('G2: historical removal closes the real prior holding at its recorded time, preserves appointment, and rejects a forged issuer〔前提待真实动作：创建指定章程机构席位及指定过去日期的任免记录；归 S4〕',()=>{
- const d=engine.primitiveDraft(run({minute:100}).document),id='governance_office:g-prior';
- appointOfficeRecord(d,engine,{category:'governance_office',id,holder:'player',settlement:'loc_hw',office:'office_g_prior',status:'在任',since:100,appointedBy:'npc_hw_yanzhe',sourceEvent:'recorded-appointment'},'recorded-appointment');
- d.set(['state','minute'],600);const before=roundtrip(d.document);
- const load=(draft,actor,eventId)=>recordHistoricalEvent(draft,engine,{id:eventId,verb:'removed_from_office',actor,minute:599,source:{kind:'corpus_premise',row:'G-removal-protocol'},payload:{subject:'player',office:'office_g_prior'}});
- const source=load(d,'npc_hw_yanzhe','recorded-removal');
- restoreOfficeRemovalSnapshot(d,engine,{sourceEvent:source},{origin:'initial'});
- assert.equal(d.document.state.minute,600);assert.equal(d.document.state.records[id].since,100);assert.equal(d.document.state.records[id].removedAt,599);
- assert.equal(d.document.state.records[id].sourceEvent,'recorded-appointment');
- assert.equal(aliveHoldings(engine.primitiveDraft(roundtrip(d.document)),{kind:'holds_office',holder:'player'}).length,0);
- const forged=engine.primitiveDraft(before),wrong=load(forged,'npc_hw_linsui','forged-removal');
- assert.throws(()=>restoreOfficeRemovalSnapshot(forged,engine,{sourceEvent:wrong},{origin:'initial'}),/appointing institution/);
- assert.equal(aliveHoldings(forged,{kind:'holds_office',holder:'player'}).length,1);
+// S4 design C: history is appointment -> wait -> removal, never a backdated snapshot.
+test('G2: historical removal closes the real prior holding at its recorded time, preserves appointment, and rejects a forged issuer',async()=>{
+ const adult=engine.initialFromLegacy({...seed,state:{...seed.state,player:{...seed.state.player,age:25}}},'g2-history');
+ const appointed=await appointedClaimClerk(engine,adult),{name,authority:issuer}=appointed;
+ const at=appointed.document.state.minute;
+ const waited=await engine.reduce(appointed.document,{tool:'world_time',args:{minutes:10},eventId:'g2-history-wait'});
+ const before=applyPatches(appointed.document,waited.patches);
+ await assert.rejects(officeCall(engine,before,'remove',{name,authority:'npc_hw_yanzhe'},'g2-forged'),/任免机关|rejected/);
+ assert.equal(aliveHoldings(engine.primitiveDraft(before),{kind:'holds_office',holder:'player',subject:name}).length,1);
+ const removed=await officeCall(engine,before,'remove',{name,authority:issuer},'g2-history-remove');
+ const row=removed.document.state.records['organization:faction_bs_government'].offices[name];
+ assert.equal(row.previous.since,at);assert.equal(row.removedAt,at+10);assert.equal(row.previous.sourceEvent,'claim-appoint');
+ assert.equal(removed.document.state.minute,at+10);
+ assert.equal(aliveHoldings(engine.primitiveDraft(roundtrip(removed.document)),{kind:'holds_office',holder:'player',subject:name}).length,0);
 });
 
 test.todo('G3: aggregate votes are preserved without invented electors, chair, majority charter or completed decision〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{

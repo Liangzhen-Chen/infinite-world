@@ -2,13 +2,12 @@ import {preconditionFailure} from './precondition.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
-import {settlementHead,personRegistrar,personAge,personConstraint} from './entity-view.mjs';
+import {settlementHead,personRegistrar,personAge,personConstraint,institutionOffices,officeOnDuty} from './entity-view.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {profession} from './professions.mjs';
 import {digest,persistable,recordsWhere} from './storage.mjs';
 import {npcServices} from './npc-state.mjs';
-import {aliveHoldings} from './holdings.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
 
 const seatKey=id=>`examination_seat:${id}`;
@@ -18,8 +17,8 @@ export function qualifiedExaminers(engine,state,profession,location){
 export function bookExaminationSeat(d,engine,row,{actor=row.registrar}={}){
  const state=d.get('state'),role=engine.byId.get(row.profession);
  if(actor!==row.registrar||!state.npcs?.[actor]||typeof row.id!=='string'||!row.id||d.get('state','records',seatKey(row.id))||!role||!qualifiedExaminers(engine,state,row.profession,row.location).includes(row.examiner)||!Number.isSafeInteger(row.minutes)||row.minutes<1||!Number.isSafeInteger(row.fee)||row.fee<0||typeof row.available!=='boolean'||row.passed!==false)throw Error('Invalid pending examination or unqualified examiner');
- const offices=aliveHoldings(d,{kind:'holds_office',holder:actor}).map(h=>d.get('holdings','entities',h.subject)?.facts??state.created?.[h.subject]??engine.byId.get(h.subject));
- if(actor!==row.examiner&&!offices.some(o=>o?.seat===row.location&&o.authority?.profession===row.profession&&o.authority.operations?.includes(vocabulary(engine,'examinations','referralOperation'))))throw Error('Registrar lacks examination referral authority');
+ const offices=institutionOffices(engine,state).filter(o=>officeOnDuty(engine,state,o,actor));
+ if(!offices.some(o=>o?.seat===row.location&&o.authority?.profession===row.profession&&o.authority.operations?.includes(actor===row.examiner?'certify':vocabulary(engine,'examinations','referralOperation'))))throw Error('Registrar lacks examination referral authority');
  if(row.minutes!==(role.entry?.minutes??120)||row.fee!==role.fee)throw Error('Examination seat must retain the native examination fee and duration');
  const value={...persistable(row),category:'examination_seat'};
  d.set(['state','records',seatKey(row.id)],value);

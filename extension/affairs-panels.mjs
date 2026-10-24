@@ -42,6 +42,10 @@ export function renderAffairsPanel(container,data,kind){
             if(row.reason)note(e,`原因：${row.reason}`);
         }
     }else if(kind==='territory'){
+        const offices=section('席位与任职申请');
+        if(!data.offices?.length&&!data.officeApplications?.length)note(offices,'当前没有本人的任职申请或此处的正式席位。');
+        for(const office of data.offices??[]){const e=card(offices,office.name);stats(e,[['现任',office.holder??'空缺'],['办公处',office.seat],['接待',office.onDuty?'在岗':'当前不在岗'],['职责',office.scope]]);for(const limit of office.limits??[])note(e,limit);if(office.applyAt)note(e,`可到${office.applyAt}申请任职；申请、审定和正式任命分别登记。`);}
+        for(const application of data.officeApplications??[]){const e=card(offices,application.name);stats(e,[['申请状态',application.status],['审定时点',application.deadlineText]]);if(application.reasons.length)note(e,application.reasons.join('；'));}
         const owned=data.settlements.filter(row=>row.scope==='owned'),assets=section('已登记领地与资产');
         if(!owned.length)note(assets,'尚无已登记的玩家领地。');
         if(!data.holdings.length)note(assets,'尚无归本人所有的建筑。');

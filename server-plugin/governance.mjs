@@ -5,7 +5,9 @@ import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
-import {personOffices,personRegistrar,settlementHead,personSimulation} from './entity-view.mjs';
+import {personOffices,personRegistrar,settlementHead,personSimulation,institutionOffices,officeOnDuty,personAge} from './entity-view.mjs';
+import {bookExaminationSeat,qualifiedExaminers} from './local-exams.mjs';
+import {organizationState} from './organization-state.mjs';
 import {digest} from './storage.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
@@ -184,6 +186,7 @@ function runRequest(d,engine,requestId,authorization,at,presence=d.get('state'))
 }
 
 function action(d,args,eventId){
+    if(args.operation?.startsWith('governance_office_')||args.operation==='governance_exam_refer')return institutionalAction(d,this,args,eventId);
     const society=this.world.locations.find(l=>l.id===this.resolve(args.settlement,'loc')&&l.monsterSociety);
     if(society){
         const out=societyGovernance(d,this,args,eventId,society.id);
@@ -297,8 +300,71 @@ export function governanceAction(d,args,eventId){
     const key=`governance_source:${eventId}`,old=d.get(...path(key)),fingerprint=digest(args);
     if(old){if(old.category!=='governance_receipt'||old.fingerprint!==fingerprint)throw preconditionFailure('治理sourceEvent已占用，不能改写事务');return {...structuredClone(old.result),duplicate:true};}
     const result=action.call(this,d,args,eventId);
-    if(args.operation!=='governance_inspect')holdingSet(d,null,path(key),{category:'governance_receipt',settlement:this.resolve(args.settlement,'loc'),fingerprint,result:structuredClone(result)},'governance');
+    if(args.operation!=='governance_inspect'&&args.operation!=='governance_office_inspect')holdingSet(d,null,path(key),{category:'governance_receipt',...(args.settlement?{settlement:this.resolve(args.settlement,'loc')}:{}),fingerprint,result:structuredClone(result)},'governance');
     return result;
+}
+
+function saveInstitutionAppointment(d,engine,key,row,office,holder,eventId){
+    for(const h of aliveHoldings(d,{kind:'holds_office',subject:office.id}))changeHolding(d,engine,{op:'close',id:h.id,reason:'vacated',eventId:`${eventId}:close`});
+    if(holder)changeHolding(d,engine,{op:'open',kind:'holds_office',holder,subject:office.id,source:`org:${office.organization}`,eventId:`${eventId}:open`});
+    holdingSet(d,engine,path(key),row,'governance',eventId);
+}
+function institutionalAction(d,engine,args,eventId){
+    ensureHoldings(d,engine);
+    const state=d.get('state'),now=state.minute,offices=institutionOffices(engine,state),office=offices.find(o=>o.id===args.name);
+    if(args.operation==='governance_office_inspect')return {offices:offices.filter(o=>o.seat===state.location||o.holder==='player').map(o=>({...o,onDuty:officeOnDuty(engine,state,o)})),applications:Object.values(state.records??{}).filter(r=>r.category==='institution_application'&&r.applicant==='player'),actionScope:{kind:'instant'}};
+    if(args.operation==='governance_exam_refer'){
+        const profession=engine.resolve(args.profession,'profession'),examiner=engine.resolve(args.teacher,'npc'),role=engine.byId.get(profession);
+        const desks=offices.filter(o=>o.seat===state.location&&o.authority?.profession===profession&&o.authority.operations?.some(p=>['certify','refer_examiner'].includes(p))&&officeOnDuty(engine,state,o));
+        const desk=desks.find(o=>o.authority.operations.includes('refer_examiner'))??desks.find(o=>o.holder===examiner);
+        if(!desk||!qualifiedExaminers(engine,state,profession,state.location).includes(examiner))throw preconditionFailure('没有在岗且有转介权限的登记席位或合格考官');
+        const row=bookExaminationSeat(d,engine,{id:`exam:${eventId}`,profession,examiner,registrar:desk.holder,location:state.location,minutes:role.entry?.minutes??120,fee:role.fee,available:true,passed:false});
+        return {examination:row.id,seat:row};
+    }
+    if(!office?.appointment)throw preconditionFailure('此席位没有已发布的任免链');
+    const policy=office.appointment;
+    const issuer=aliveHoldings(d,{kind:'holds_office',subject:policy.issuer})[0]?.holder;
+    const issuerOffice=offices.find(o=>o.id===policy.issuer)||{id:policy.issuer,holder:issuer,seat:policy.receiveAt,receptionHours:engine.rules.governance?.officeHours?[engine.rules.governance.officeHours]:[]};
+    if(args.operation==='governance_office_apply'){
+        if(state.location!==policy.receiveAt)throw preconditionFailure('须到任免机关的接待地点申请');
+        if(!issuer||!officeOnDuty(engine,state,issuerOffice,issuer))throw preconditionFailure('任免机关当前无人清醒在岗接待');
+        if(office.holder==='player')throw preconditionFailure('已经在任此席位');
+        if(Object.values(state.records??{}).some(r=>r.category==='institution_application'&&r.office===office.id&&r.applicant==='player'&&r.status==='待决定'))throw preconditionFailure('已有待决定申请');
+        const row={category:'institution_application',id:`institution_application:${eventId}`,office:office.id,organization:office.organization,applicant:'player',receivedBy:issuer,filedAt:now,due:now+policy.decisionAfterMinutes,status:'待决定',sourceEvent:eventId};
+        d.set(path(row.id),row);return {application:row.id,pending:row};
+    }
+    if(!issuer||args.authority!==issuer||!officeOnDuty(engine,state,issuerOffice,issuer)||state.location!==policy.receiveAt)throw preconditionFailure('须由现任任免机关在岗办理；收件人不能代行');
+    const key=`organization:${office.organization}`,old=state.records?.[key]??{category:'organization',id:office.organization,source:'faction',members:{}};
+    if(args.operation==='governance_office_decide'){
+        const application=state.records?.[args.request];
+        if(application?.category!=='institution_application'||application.office!==office.id||application.applicant!=='player'||application.status!=='待决定'||now<application.due)throw preconditionFailure('申请不存在、已决定或尚未到审定时间');
+        const reasons=[],req=policy.requires??{},profession=req.profession&&engine.byId.get(req.profession),skill=profession?.entry?.skill;
+        if(req.adult&&(personAge(engine,state,'player')?.value??0)<18)reasons.push('未成年');
+        if(skill&&(state.skills?.[skill]?.proficiency??0)<(profession.entry.minimumProficiency??100))reasons.push('实际技能未达到任职要求');
+        if(standing(engine,state,issuer,'player')<policy.minimumStanding)reasons.push('任免机关不信任申请人');
+        if(crimeJudged(state))reasons.push('有犯罪裁定');
+        const decision={...application,status:reasons.length?'未获任命':'已批准',decidedAt:now,decidedBy:issuer,reasons,decisionEvent:eventId};
+        d.set(path(application.id),decision);
+        return {decision};
+    }
+    if(args.operation==='governance_office_appoint'){
+        const application=state.records?.[args.request];
+        if(application?.category!=='institution_application'||application.office!==office.id||application.status!=='已批准'||application.decidedBy!==issuer)throw preconditionFailure('须由当前任免机关先作出批准决定');
+        const appointment={holder:application.applicant,since:now,sourceEvent:eventId,application:application.id,decisionEvent:application.decisionEvent,appointedBy:issuer,issuerOffice:policy.issuer};
+        saveInstitutionAppointment(d,engine,key,{...old,offices:{...old.offices,[office.id]:appointment}},office,appointment.holder,eventId);
+        d.set(path(application.id),{...application,status:'已任命',appointedAt:now,appointmentEvent:eventId});
+        return {appointment:{office:office.id,...appointment}};
+    }
+    if(args.operation==='governance_office_remove'){
+        const holder=office.holder;
+        if(!holder||policy.removal!=='holder_request_or_judgment'||holder!=='player'&&!crimeJudged(state,holder))throw preconditionFailure('免职须由持有人请求或已有犯罪裁定，不接受自报理由');
+        const prior=old.offices?.[office.id]??{holder,since:0,source:office.source};
+        saveInstitutionAppointment(d,engine,key,{...old,offices:{...old.offices,[office.id]:{holder:null,since:now,removedAt:now,removedBy:issuer,sourceEvent:eventId,previous:prior}}},office,null,eventId);
+        const application=prior.application&&state.records?.[prior.application];
+        if(application)d.set(path(application.id),{...application,status:'已免职',removedAt:now,removalEvent:eventId});
+        return {office:office.id,removed:holder,removedAt:now,appointedAt:prior.since};
+    }
+    throw preconditionFailure('未知席位操作');
 }
 
 // Existing autonomy boundaries visit minute 600 each day. Requests share the

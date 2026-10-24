@@ -1,5 +1,5 @@
 import {questPublishingRights} from './quest-board.mjs';
-import {placeView,personName} from './entity-view.mjs';
+import {placeView,personName,institutionOffices,officeOnDuty} from './entity-view.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 const closed=new Set(['已完成','取消','已取消','已还清','已终止','已到期','已否决','违约','失败','超期']);
 const finite=value=>Number.isFinite(value)?value:null;
@@ -59,7 +59,9 @@ export function affairs(engine,document){
             households:current?.population.householdCount.value??null,stock:{...pick(r,['food','treasury','wood','stone','iron']),seed:farm?.field?.seedBank??null},
             fiscal:fiscal(records[`village-fiscal:${id}`]),projects,pending,reports};
     });
-    return {minute:now,time:date(now),tasks,obligations,quota,holdings,settlements};
+    const offices=institutionOffices(engine,s).filter(o=>o.holder==='player'||o.seat===s.location).map(o=>({id:o.id,name:o.name,organization:o.organization,holder:o.holder?name(o.holder):null,own:o.holder==='player',seat:name(o.seat),onDuty:officeOnDuty(engine,s,o),powers:o.authority?.operations??[],scope:o.authority?.scope??o.name,limits:o.authority?.limits??[],applyAt:o.appointment?name(o.appointment.receiveAt):null}));
+    const officeApplications=Object.values(records).filter(r=>r.category==='institution_application'&&r.applicant==='player').map(r=>({id:r.id,name:institutionOffices(engine,s).find(o=>o.id===r.office)?.name??r.office,status:r.status,deadlineText:date(r.due),reasons:r.reasons??[]}));
+    return {minute:now,time:date(now),tasks,obligations,quota,holdings,settlements,offices,officeApplications};
 }
 
 export function registerUIRoutes({post,readCampaign}){

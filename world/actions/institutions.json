@@ -1,0 +1,372 @@
+{
+ "format": 1,
+ "namespace": "institutions",
+ "actions": [
+  {
+   "id": "institutions:office.inspect",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_office_inspect"
+   },
+   "label": "查席位",
+   "verb": "office.inspect",
+   "group": "议事",
+   "pack": null,
+   "readOnly": true,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.inspect",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "institutions:office.apply",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_office_apply"
+   },
+   "label": "申请席位",
+   "verb": "office.apply",
+   "group": "议事",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.apply",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "institutions:office.decide",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_office_decide"
+   },
+   "label": "审定任职申请",
+   "verb": "office.decide",
+   "group": "议事",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.decide",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "institutions:office.appoint",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_office_appoint"
+   },
+   "label": "办理任命",
+   "verb": "office.appoint",
+   "group": "议事",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.appoint",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "institutions:office.remove",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_office_remove"
+   },
+   "label": "办理免职",
+   "verb": "office.remove",
+   "group": "议事",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.remove",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "institutions:office.exam_refer",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_exam_refer"
+   },
+   "label": "申请考试转介",
+   "verb": "office.exam_refer",
+   "group": "议事",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority",
+     "teacher"
+    ]
+   },
+   "slots": [
+    {
+     "name": "name",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "profession",
+     "kind": "entity",
+     "entity": "profession"
+    },
+    {
+     "name": "teacher",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'talk').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "present"
+   },
+   "synonyms": [],
+   "narration": "office.exam_refer",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  }
+ ]
+}
