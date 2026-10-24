@@ -65,7 +65,22 @@ export class EntityResolver {
     }
     mentions(text, scope = null) {
         const source = normalize(text), found = new Set();
-        for (const alias of this.names) if (source.includes(alias)) {
+        // A scene repeatedly resolves short text against the whole world.
+        // Index aliases, not resolved answers: current scope and ambiguity
+        // must still be evaluated on every call. Extensions own their names.
+        if(!Object.hasOwn(this,'mentionNames')||this.mentionNames!==this.names){
+            this.mentionNames=this.names;this.mentionBuckets=new Map();
+            for(const [order,alias] of this.names.entries()){
+                const rows=this.mentionBuckets.get(alias[0])??[];
+                rows.push({alias,order});this.mentionBuckets.set(alias[0],rows);
+            }
+        }
+        const matches=[];
+        for(const first of new Set(source.split('')))for(const row of this.mentionBuckets.get(first)??[]){
+            if(row.alias.length<=source.length&&source.includes(row.alias))matches.push(row);
+        }
+        // Preserve the longest-name-first insertion order of the old scan.
+        for (const {alias} of matches.sort((a,b)=>a.order-b.order)) {
             try { found.add(this.resolve(alias, scope)); } catch {}
         }
         return found;
