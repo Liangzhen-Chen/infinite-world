@@ -359,7 +359,7 @@ export class WorldEngine {
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         if(resolved.tool==='world_practice'&&!resolved.args.breakthroughSource&&(!options.replay||options.result?.cost)&&this.world.actionDefinitions&&primitiveActionRuntime()?.registry(this).byId.has('core:practice.session')){
-            const result=await this.reduce(document,{tool:'world_act',eventId:input.eventId,args:{action:'core:practice.session',slots:{skill:this.resolve(resolved.args.skill,'skill'),minutes:resolved.args.minutes??120}}},options);
+            const result=await this.reduce(document,{tool:'world_act',eventId:input.eventId,args:{action:'core:practice.session',slots:{skill:this.scoped(document).resolve(resolved.args.skill,'skill'),minutes:resolved.args.minutes??120}}},options);
             const learned=result.result.receipt.applied.find(effect=>effect.op==='learn')?.result??{};
             return {...result,result:{...result.result,...learned,cost:result.result.receipt.cost}};
         }

@@ -139,10 +139,13 @@ test('强迫与改记忆持同意或许可仍属重罪，政体可覆盖处罚',
 
 test('实际强迫施法持双方同意和机构许可仍立重罪案，裁定读取本法典覆盖',async()=>{
  const s=fixture(),spell=s.spells[2].id,grant=await request(s,'mental_magic',{skill:spell,consent:true});
+ // S4 pins the actual statute when the crime occurs. Publish this override
+ // before the act; a later amendment must not rewrite the case's penalty.
+ s.world.rules.law.codes[0].penalties.compulsion={baseFine:123,valueMultiplier:0};
  s.doc.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',location:s.doc.state.location,grantor:guard,grantee:'player',expires:s.doc.state.minute+1000};
  const result=await cast(s,spell,{authorization:grant.authorization,permit:'permit'});
  assert.equal(s.doc.state.records[result.case].offense,'compulsion');
- s.world.rules.law.codes[0].penalties.compulsion={baseFine:123,valueMultiplier:0};
+ s.world.rules.law.codes[0].penalties.compulsion={baseFine:456,valueMultiplier:0};
  await run(s,'world_law',{operation:'confess',case:result.case,authority:guard});
  s.doc.state.location='bld_hw_council';s.doc.state.npcs[judge].location=s.doc.state.location;
  const hearing=await run(s,'world_law',{operation:'hear',case:result.case,authority:judge});assert.equal(hearing.judgment.fine,123);

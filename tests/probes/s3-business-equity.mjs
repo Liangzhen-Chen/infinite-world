@@ -63,9 +63,11 @@ export const businessMembershipScenario=once(async()=>{
  const shop=lease.business;let d;
  await f.act({operation:'business_open',business:shop},'shop-open',orgTool);
  await f.act({operation:'org_propose',org:id,action:'charter',cost:7,coins:3,consent:false},'charter',orgTool);
- await assert.rejects(f.act({operation:'org_join',org:id,member:shop},'no-consent',orgTool),/同意/);
  const before=f.doc.state.player.coins;
- await f.act({operation:'org_join',org:id,member:shop,consent:true},'business-join',orgTool);
+ // S4: this business belongs to the acting player; the action itself is their
+ // consent. A caller flag cannot supply a different person's decision.
+ await f.act({operation:'org_join',org:id,member:shop},'business-join',orgTool);
+ await assert.rejects(f.act({operation:'org_join',org:id,member:shop,consent:true},'already-joined',orgTool),/已是成员/);
  let view=organization(f.e,f.doc.state,id);assert.equal(f.doc.state.player.coins,before-7);
  assert.equal(view.members[shop].representative,'player');assert.ok(view.members[shop].feeAccount);
  const edges=Object.values(f.doc.holdings.rows);assert.ok(edges.some(r=>r.kind==='business_member_of'&&r.holder===shop&&r.until===undefined));
@@ -77,7 +79,8 @@ export const businessMembershipScenario=once(async()=>{
  assert.equal(organization(f.e,f.doc.state,id).members[shop].arrears,0);
  assert.ok(f.doc.state.records[`organization:${id}`].ledger.some(r=>r.party===shop&&r.amount===3));
  // An NPC leader must learn the public business event before judging it.
- await f.act({operation:'org_join',org:id,member:host,consent:true},'leader-join',orgTool);
+ // Sponsorship pays the admission cost; the present NPC still decides freely.
+ await f.act({operation:'org_join',org:id,member:host,feePayer:'player'},'leader-join',orgTool);
  await f.act({operation:'org_propose',org:id,action:'appoint',member:host,name:'会长'},'leader',orgTool);
  d=f.draft();d.set(['state','npcs',host,'location'],'loc_bs');
  financeTransfer(d,f.e,'player',worker,d.get('state','player','coins'),'cash-loss');d.done();

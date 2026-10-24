@@ -81,7 +81,8 @@ test('佛、巫、祭三路线实际入门认证后向导师学会本批法术�
 });
 
 test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、养息、凉藏、低灯、闭隙、凉帕各自真实生效',async()=>{
- const base=learnedByRoute.佛;assert.ok(base,'需先完成路线学习');const fresh=()=>structuredClone(base);
+ // A filtered regression still earns its own real route prerequisites.
+ const base=learnedByRoute.佛??await routeSession('佛');assert.ok(base,'需先完成路线学习');const fresh=()=>structuredClone(base);
  // Mental spells need the institution's real permit; consent of others stays required.
  let {doc,permit:p}=await permit(fresh(),JI,'bld_bs_still_temple');
  await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('still_mind'),target:'player'},eventId:'no-permit'}),/许可/);
@@ -105,7 +106,8 @@ test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、�
  const palm=await cast(hurt,{spell:id('mend_palm'),target:'player'});assert.equal(palm.doc.state.player.hp,hurt.state.player.hp+4);
  const field=await cast(hurt,{spell:id('rest_field'),target:'player'});const hp0=field.doc.state.player.hp;assert.equal(hp0,hurt.state.player.hp+2);
  assert.equal((await wait(field.doc,10)).state.player.hp,hp0+2);
- await assert.rejects(engine.reduce(hurt,{tool:'world_cast',args:{spell:id('mend_palm'),target:JI},eventId:'heal-no-consent'}),/同意|在场|事实/);
+ // S4 measures the still-unapproached teacher outside touch-spell range.
+ await assert.rejects(engine.reduce(hurt,{tool:'world_cast',args:{spell:id('mend_palm'),target:JI},eventId:'heal-no-consent'}),e=>e.code==='E-ACTION-CAST-RANGE'&&e.message==='目标超过法术实际射程');
  // Herb cabinet: upkeep per minute, cooler cabinet, half the spoilage.
  let c=await grant(fresh(),JI,fid('herb_cabinet'));const cool=await cast(c.doc,{spell:id('herb_cool'),target:fid('herb_cabinet'),authorization:c.authorization});
  const mp0=cool.doc.state.player.mp,cold=await wait(cool.doc,10),warm=await wait(c.doc,10);

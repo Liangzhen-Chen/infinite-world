@@ -9,6 +9,7 @@ import {CampaignStorage,applyPatches,digest} from '../server-plugin/storage.mjs'
 import {validateWildlifeAwakening} from '../server-plugin/wildlife-awakening.mjs';
 import {clockTransaction} from '../server-plugin/world-clock.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const source=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const wood='loc_hw_northwood',fox='monster_red_ear_fox',temple='bld_bs_still_temple',carve='skill_life_6_core',handle='recipe_tool_handle';
@@ -42,8 +43,10 @@ function grantPermit(engine,doc){
     return'ritual_permission:grant';
 }
 // 结缘的精怪：真实走 pact，玩家会木作与配方。
-async function partner(seed='spirit-test',edit){
-    const s=setup(seed,edit),{doc,id}=await track(s,s.doc,'t');awaken(doc,id);
+async function partner(seed='spirit-test',edit,premise){
+    const s=setup(seed,edit),initial=premise?applyIntentSetup(s.engine,s.doc,premise):{document:s.doc,setupUnmet:[]};
+    assert.deepEqual(initial.setupUnmet,[]);
+    const {doc,id}=await track(s,initial.document,'t');awaken(doc,id);
     const pact=await s.run(doc,'world_wildlife',{operation:'pact',target:id},'pact');
     const c=pact.doc;c.state.skills[carve]={proficiency:400,grade:'初级2等',breakthroughs:[],daily:{}};c.state.recipes[handle]={source:{type:'teacher'},learnedAt:0};
     return{s,doc:c,id};
@@ -59,7 +62,9 @@ test('正式参数含借形代价与按季结社；缺代价或周期错误被�
 });
 
 test('真实教学和制作：按日修习，学会配方后由精怪代工，材料与工坊费出自玩家',async()=>{
-    const {s,doc,id}=await partner(),before=body(doc.state.creatures[id]);
+    // Supply the same materials, purse and worn tool before any real action,
+    // through native setup, so later crafting cannot diverge from its ledger.
+    const {s,doc,id}=await partner('spirit-test',undefined,{coins:100,inventory:{item_wood:10,item_whittling_knife:1},itemInstances:[{id:'spirit-maker-knife',template:'thing',kind:'item',item:'item_whittling_knife',owner:'player',carriedBy:'player',location:wood,condition:50,inventoryBinding:{item:'item_whittling_knife',quantity:1,mode:'same_stock'}}]}),before=body(doc.state.creatures[id]);
     await assert.rejects(s.run(doc,'world_learn',{entity:handle,source:'player',student:id}),/还没修习过/);
     const lesson=await s.run(doc,'world_learn',{entity:carve,source:'player',student:id},'teach1');
     assert.equal(lesson.result.success,true);assert.equal(lesson.result.gained,40);assert.equal(lesson.doc.state.minute,doc.state.minute+120);
@@ -77,7 +82,6 @@ test('真实教学和制作：按日修习，学会配方后由精怪代工，�
     c=(await s.run(c,'world_wildlife',{operation:'follow',target:id},'follow')).doc;
     c=(await s.run(c,'world_move',{destination:'loc_hw'},'m1')).doc;c=(await s.run(c,'world_move',{destination:'bld_hw_mill'},'m2')).doc;
     assert.equal(c.state.creatures[id].location,'bld_hw_mill');
-    c.state.inventory.item_wood=10;c.state.inventory.item_whittling_knife={quantity:1,durability:50};c.state.player.coins=100;
     const unlearned=structuredClone(c);delete unlearned.state.creatures[id].cultivation.recipes[handle];
     await assert.rejects(s.run(unlearned,'world_craft',{operation:'manufacture',recipe:handle,maker:id}),/尚未学会/);
     const unbound=structuredClone(c);delete unbound.state.creatures[id].companion;
