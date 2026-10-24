@@ -5,9 +5,14 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent} from '../../tools/content-pipeline.mjs';
+import {previousLawEdition} from './s4-law-content-approval.mjs';
 
 const root='world/drafts/s4-law-bindings',revision='s403-bindings-1';
 const rules=JSON.parse(await fs.readFile('world/meta/rules.json','utf8'));
+// New procedures and the Baishi binding supersede this exact historical gate.
+// Verify the complete new edition before projecting the old receipt's facts.
+const prior=await previousLawEdition(rules.law.codes,JSON.parse(await fs.readFile('world/law/bindings.json','utf8')));
+rules.law.codes=prior.codes;
 const row=rules.law.codes.flatMap(code=>code.locations.map(place=>({place,slot:'place.lawCode',value:code.id,source:`world/meta/rules.json#law.codes/${code.id}`})));
 const entries=[{id:'s403_existing_law_bindings',row}];
 const draftFor=e=>({id:e.id,row:e.row});
@@ -15,6 +20,7 @@ const contextFor=()=>({published:rules.law.codes,boundary:'仅将现有法典 lo
 const validateDraft=(d,e)=>{try{assert.deepEqual(d,draftFor(e));assert.equal(new Set(d.row.map(r=>r.place)).size,d.row.length);return [];}catch(error){return [error.message];}};
 
 export async function run(args=process.argv.slice(2)){
+ if(args.includes('--publish')||args.includes('--review'))throw Error('旧绑定版已被 S4LAW 审批取代，请使用 s4-law-content-approval.mjs');
  if(args.includes('--review')){
   await fs.mkdir(root,{recursive:true});
   try{await fs.access(`${root}/budget.json`);}catch(error){if(error.code!=='ENOENT')throw error;await fs.writeFile(`${root}/budget.json`,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:1,cards:{S403:{limitYuan:1,spentYuan:0,reservedYuan:0,maxRequests:30}},requests:{}}));}
@@ -25,7 +31,7 @@ export async function run(args=process.argv.slice(2)){
   const approved=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});assert.equal(approved.length,1);
   assert.deepEqual(approved[0],draftFor(entries[0]));
   if(args.includes('--publish')){await fs.mkdir('world/law',{recursive:true});await fs.writeFile('world/law/bindings.json',JSON.stringify(approved[0].row,null,2)+'\n');}
-  if(args.includes('--verify'))assert.deepEqual(JSON.parse(await fs.readFile('world/law/bindings.json','utf8')),approved[0].row);
+  if(args.includes('--verify'))assert.deepEqual(prior.bindings,approved[0].row);
   console.log(JSON.stringify({bindings:approved[0].row.length,published:args.includes('--publish'),verified:args.includes('--verify')}));
  }
 }

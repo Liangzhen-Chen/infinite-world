@@ -1,4 +1,5 @@
 import {villageFacts} from './w1-villages.mjs';
+import {trialProcedureFor} from './s4-law-content-data.mjs';
 
 // Problems remain proposals. The T02 source charter separately registers public accounts and authority.
 // Resolution options remain proposals until the parties actually agree.
@@ -149,7 +150,7 @@ export function villageLedgerRules(world){
 export function villageLawCodes(world){
  // T43's settlement, provenance and appeal panel belong to the HW court.
  // Village appointments retain their reviewed local officers and procedure.
- const {settlement,source,appeal,magicAuthorities,...template}=world.rules.law.codes.find(c=>c.id==='law_hw_property');
+ const {settlement,source,appeal,procedure,magicAuthorities,...template}=world.rules.law.codes.find(c=>c.id==='law_hw_property');
  return Object.entries(raw).map(([v,r])=>({...template,id:`law_${v}_property`,name:`${villageFacts[v].name}公共粮约与财物规约`,locations:[villageFacts[v].id,...world.locations.filter(l=>l.parent===villageFacts[v].id).map(l=>l.id)],officers:[pid(v,r.coordinators[2])],judges:[pid(v,r.coordinators[0])],court:lid(v,'hall')}));
 }
 function villageEconomy(world,v,industries){
@@ -165,7 +166,9 @@ export function validateVillageLedger(details,world){
  const p=villageLedgerRules(world).find(p=>p.settlement===details.id),code=villageLawCodes(world).find(c=>c.id===g.appointment?.lawCode);
  const actual=world.rules.agriculture?.settlements.find(row=>row.settlement===details.id),actualCode=world.rules.law?.codes.find(row=>row.id===g.appointment?.lawCode);
  if(actual)check(JSON.stringify(actual)===JSON.stringify(p),'运行农事规则与审核开局账不符');
- if(actualCode)check(JSON.stringify(actualCode)===JSON.stringify(code),'运行法典与审核任命不符');
+ // S4LAW supersedes procedure/appeal only. Compare the complete exact newer
+ // candidate as well as the historical edition; no arbitrary fields are hidden.
+ if(actualCode)check(JSON.stringify(actualCode)===JSON.stringify(code)||JSON.stringify(actualCode)===JSON.stringify({...code,...trialProcedureFor(code)}),'运行法典与审核任命不符');
  check(e.status==='registered-opening'&&e.period?.startDay===0&&e.period?.endDay===360&&e.period?.status==='unsettled','经济账周期或状态无效');
  check(p&&e.publicStock?.food===p.initialFood&&e.publicStock?.seed===p.initialSeed&&e.publicStock?.treasuryCopper===p.opening?.treasury&&e.publicStock?.closing===null,'开局账与农事源不符或冒充期末结算');
  check(p&&e.production?.[0]?.quantity===p.areaUnits*world.rules.agriculture.crop.yieldPerHa/world.rules.agriculture.crop.areaUnitsPerHa&&e.production[0].unitKg===world.rules.agriculture.foodUnitKg,'年粮潜力数值或单位不符');
@@ -179,6 +182,12 @@ export function validateVillageLedger(details,world){
 
 export function withVillageLedgerRules(world){
  const next=structuredClone(world),profiles=villageLedgerRules(world),laws=villageLawCodes(world);
+ // Replaying the old village publication must not erase the exact S4LAW
+ // edition. Its original charter context above remains the historical edition.
+ for(let i=0;i<laws.length;i++){
+  const approved={...laws[i],...trialProcedureFor(laws[i])},actual=world.rules.law.codes.find(c=>c.id===laws[i].id);
+  if(JSON.stringify(actual)===JSON.stringify(approved))laws[i]=approved;
+ }
  const replace=(rows,incoming,key)=>[...rows.filter(row=>!incoming.some(p=>p[key]===row[key])),...incoming];
  next.rules.agriculture.settlements=replace(next.rules.agriculture.settlements,profiles,'settlement');
  next.rules.law.codes=replace(next.rules.law.codes,laws,'id');

@@ -2144,10 +2144,10 @@
         "source": "world/design/law-foundation.mjs; D024",
         "appeal": {
           "judges": [
-            "npc_hw_chenbai"
+            "npc_hc_yicen"
           ],
           "minutes": 60,
-          "source": "world/design/law-foundation.mjs; D024"
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         },
         "magicAuthorities": [
           {
@@ -2227,7 +2227,35 @@
             "maximumMinutes": 1440,
             "fee": 2
           }
-        ]
+        ],
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        }
       },
       {
         "id": "law_yp_property",
@@ -2309,6 +2337,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2391,6 +2454,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2473,6 +2571,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2555,6 +2688,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       }
     ],

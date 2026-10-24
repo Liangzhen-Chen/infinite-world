@@ -103,6 +103,9 @@ test.todo('N/O: estate repays an existing loan from its owned counter before dis
  assert.equal(obligationView(out.document.state,'estate-old-loan').owed,0);clean(out.document);
 });
 
+// S4LAW: 下列三个白石罚款 todo 仍缺真实前提。loc_bs 已按垄渠郡王国归属
+// 绑定 law_royal_xichui，但渠阳治所未落地、白石章程只授受理/代收而无裁判权。
+// 无法经真实动作产生此处的白石判决与罚款；不得借河湾判决或夹具造出镇公库债权。
 test.todo('N/O: fine settlement pays the public account through this fine’s on-duty office, with replay protection〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
  const loaded=load('054');assert.deepEqual(ownedErrors(loaded),[]);let document=save(loaded.document);
  const beforeNpc=document.state.npcs.npc_bs_032_1.coins,publicAccount=partyAccount(engine,document.state,'loc_bs'),beforeTreasury=document.ledger.accounts[publicAccount]??0;

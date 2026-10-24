@@ -133,6 +133,10 @@ test('证伪和无出处的证词不够判罪，听说不变成独立见证，�
 test('两个已配置辖区各用本地规则和钱库，跨村不接管旧案，缺法典不套默认刑罚',async()=>{
     const f=await setup(world=>{
         const code=structuredClone(world.rules.law.codes[0]);code.id='law_test_bs';code.name='仅测试辖区';code.locations=['loc_bs','bld_bs_shrine'];code.court='bld_bs_shrine';code.settlement='loc_bs';code.officers=[carrier];code.judges=[carrier];code.appeal.judges=[carrier];code.penalties.theft.baseFine=40;world.rules.law.codes.push(code);
+        // 05 §5.2.2 / S4LAW: this fixture explicitly replaces Baishi's statute,
+        // so its binding must name the same statute. Keep every penalty,
+        // treasury, jurisdiction and conservation assertion below unchanged.
+        world.rules.law.bindings.find(b=>b.place==='loc_bs').value=code.id;
     });
     const hw=await convicted(f);let origin=structuredClone(f.document);origin.state.location='loc_bs';origin.state.npcs[victim].location='loc_bs';origin.state.npcs[carrier].location='loc_bs';
     // Independent existing character court fixture, no new resident entity.
