@@ -90,7 +90,7 @@ function organizationConsent(d,engine,org,who,{scope,role,fee=0,feePayer,eventId
     const sponsored=scope==='org.join'&&feePayer==='player';
     const agreement=requestContractConsent(d,engine,{from:who,scope,subject:org.id,purpose:scope,
         terms:{fee:sponsored?0:fee,...(scope==='org.join'?{amount:sponsored?0:dues}:{}),...(role?{role}:{})},cost:{coins:sponsored?0:fee+dues},eventId});
-    if(!agreement.allowed&&scope==='org.join'&&!sponsored&&fee+dues>0)return {...agreement,reason:`${agreement.reason}；若是因为费用，可由你代付入会费和首期会费`};
+    if(!agreement.allowed&&scope==='org.join'&&!sponsored&&fee+dues>0)return {...agreement,reason:`${String(agreement.reason).replace(/。$/,"")}；若是因为费用，可由你代付入会费和首期会费`};
     return agreement;
 }
 function businessMembership(d,engine,org,who,consent,eventId,scope,feePayer){

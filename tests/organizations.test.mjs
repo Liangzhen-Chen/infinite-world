@@ -30,7 +30,7 @@ test('玩家代付入会费和首期会费仍须NPC本人同意；通过入账�
     const s=setup(),{document:c0,id}=await found(s);
     const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:20,coins:3},'funding-charter')).document;
     const before=structuredClone(c);
-    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A},'unfunded'),/feePayer.*player/);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A},'unfunded'),/可由你代付入会费/);
     await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A,consent:true,reward:1000,compensation:1000},'fake-funded'),/本人当面同意/);
     assert.deepEqual(c,before);
     for(const slots of [{consent:true},{reward:1000}]){
@@ -69,7 +69,7 @@ test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直�
     const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:7,coins:2,consent:false},'shop-fees')).document;
     // An existing NPC business is the supported member; its representative remains an agent.
     c.state.records.fee_test_business={id:'fee_test_business',category:'business',owner:B,location:c.state.location,status:'营业'};
-    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:'fee_test_business'},'shop-unfunded'),/feePayer/);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:'fee_test_business'},'shop-unfunded'),/可由你代付入会费/);
     const joined=await s.run(c,'world_act',{action:'core:settlement.org_join',slots:{org:id,member:'fee_test_business',feePayer:'player'}},'shop-funded');
     assert.equal(joined.result.joined,true);assert.equal(joined.document.state.player.coins,491);assert.equal(joined.document.state.npcs[B].coins,100);
     const view=organization(s.engine,joined.document.state,id);assert.equal(view.treasury,9);assert.equal(view.members.fee_test_business.representative,B);
