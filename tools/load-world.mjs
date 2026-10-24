@@ -1,4 +1,7 @@
 import fs from 'node:fs/promises';
+import {worldActions} from '../server-plugin/action-affordances.mjs';
+import {registerIntentMenu} from '../server-plugin/action-constructor.mjs';
+registerIntentMenu(worldActions);
 import {primitiveRuleRegistry} from '../server-plugin/primitive-rules.mjs';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';

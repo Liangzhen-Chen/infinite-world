@@ -30,9 +30,13 @@ test('拒绝后继续完整十回合，保留原文及付款，拒绝尾注不�
  const scenario={id:'continue',initial:{mode:'legacy'},turns:Array.from({length:10},(_,index)=>({input:index?'（场外）只核对。':'我付六铜住一晚。',assertions:[index?{kind:'elapsed',min:0,max:0}:{kind:'delta',path:'state.player.coins',value:-6}]}))};
  const result=await runPlaytest({scenario,api,client,bundle:await loadPromptBundle(),countTokens:()=>20,stopOnFailure:true});
  assert.equal(result.turns.length,10);assert.equal(generated,11);assert.equal(result.failedTurns,1);assert.equal(result.turns[0].errors.length,0);
- assert.equal(result.turns[0].reply,result.turns[0].originalReply);assert.match(result.turns[0].reply,/已核对/);
+ // 修订记录 2026-10-23 第3条：拒审原文保留供诊断，只发布来源模板。
+ assert.equal(result.turns[0].reply,result.turns[0].consistency.safeText);
+ assert.notEqual(result.turns[0].reply,result.turns[0].originalReply);assert.match(result.turns[0].originalReply,/已核对/);
+ assert.match(result.turns[0].reply,/6文/);
  assert.deepEqual(result.turns[0].reviewFailure,{reason:'测试拒绝理由',categories:['fact']});
- assert.equal(result.session.history.filter(row=>row.role==='assistant'&&row.content===result.turns[0].originalReply).length,1);
+ assert.equal(result.session.history.filter(row=>row.role==='assistant'&&row.content===result.turns[0].originalReply).length,0);
+ assert.equal(result.session.history.filter(row=>row.role==='assistant'&&row.content===result.turns[0].reply).length,1);
  assert.equal(result.finalDocument.state.player.coins,174);assert.equal(result.ledgerPass,true);
  const exported=await server.api('export',{campaignId:result.session.campaignId});
  assert.equal(exported.events.filter(e=>e.input?.tool==='world_trade').length,1);
