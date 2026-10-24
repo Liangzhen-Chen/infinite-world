@@ -105,7 +105,33 @@ function prepare(input){
   const subject=row.entity??row.holder??'player',knownBy=subject==='player'?['player']:(receipts[row.receipt]?.participants??[]).includes(subject)?['player',subject]:[];
   sources.push({sourceId:`settlement-effect:${index}`,kind:'effect',subject,object:row.item??row.resource??row.to??null,value:clone(row),time:{start:stateOf(input.before).minute,end:stateOf(input.after).minute},text:JSON.stringify(row),knownBy});
  }
+ // Whole-turn amounts are derived from the service's observed holder deltas,
+ // excluding the native transfer representation of those same movements.
+ const totals=new Map();
+ for(const source of sources.filter(row=>row.sourceId.startsWith('settlement-effect:')&&row.value?.op==='transfer'&&row.value.holder&&Number.isFinite(row.value.delta))){
+  const key=JSON.stringify([source.subject,source.object]);
+  if(!totals.has(key))totals.set(key,[]);totals.get(key).push(source);
+ }
+ for(const group of totals.values())if(group.length>1&&group.every(row=>row.knownBy.includes('player'))){
+  const first=group[0],value={op:'transfer',holder:first.subject,resource:first.object,delta:group.reduce((n,row)=>n+row.value.delta,0),parts:group.map(row=>row.value)};
+  const row={sourceId:`settlement-effect:total:${first.subject}:${first.object}`,kind:'effect',subject:first.subject,object:first.object,value,
+   source:{type:'turn',receipts:group.map(row=>row.value.receipt)},time:first.time,knownBy:first.knownBy.filter(id=>group.every(row=>row.knownBy.includes(id)))};
+  sources.push({...row,text:JSON.stringify(row)});
+ }
  for(const row of settlement.records)sources.push({...clone(row),sourceId:`settlement-record:${row.id}`,kind:'effect',text:JSON.stringify(row)});
+ // References to the receipt/aggregate remain valid citations. Resolve them
+ // only to typed children of that receipt/aggregate, never to another receipt
+ // or the caller's proposed effects. The quote itself remains checked verbatim.
+ for(const source of sources.filter(row=>row.evidenceId)){
+  const receipt=/^(?:receipt|action-contract):(\d+)$/.exec(source.sourceId);
+  source.children=sources.filter(row=>!row.evidenceId&&(
+   source.sourceId==='applied'&&row.sourceId.startsWith('settlement-effect:')||
+   source.sourceId==='turn-settlement'&&/^(?:settlement-|receipt:|decision:)/.test(row.sourceId)||
+   receipt&&row.source?.receipt===Number(receipt[1])||
+   receipt&&row.value?.receipt===Number(receipt[1])||
+   receipt&&row.decision?.receipt===Number(receipt[1])
+  )).map(row=>row.sourceId);
+ }
  if(input.preview)sources.push({sourceId:'turn-preview',kind:'preview',text:JSON.stringify(input.preview)});
  if(new Set(sources.map(row=>row.sourceId)).size!==sources.length)throw Error('回合证据 sourceId 重复');
  return {raw:input.draft,visible,segments:reviewSegments(input.draft),receipts,applied,settlement,entities,labels,evidence,sources,registry,playerText:input.playerText,outOfCharacter:isOutOfCharacter(input.playerText),fingerprint:digest(sources)};
@@ -319,14 +345,17 @@ export function consistencyReviewRequest(input,{maxTokens=4000}={}){
  for(const branch of request.tools[0].function.parameters.properties.issues.items.oneOf){
   branch.properties.quote={...shortString,maxLength:120};branch.properties.reason={...shortString,maxLength:200};
   branch.properties.evidence.items.properties.quote={...shortString,maxLength:160};
+  branch.properties.evidence.items.properties.id={enum:c.sources.map(row=>row.sourceId)};
  }
  request.messages[0].content+=`\n现在按 claims 逐句提取原子断言，不只挑错。segments 给定 rawDraft 的 UTF-16 起止位置（左闭右开）及真实说话者；每段至少一项，所有非标点非空白文字必须被 claim 的原文范围覆盖。并列、因果、过去经历和未来承诺分别列项，不能以一项观察包住额外事实。quote 必须等于 rawDraft.slice(start,end)，speaker 必须等于该段说话者。subject/predicate/object/quantity 分别为实际主体编号、谓词、对象编号或文字、断言数量（price 项填铜钱金额）；无数量用 null。time 填 mode（current/past/future/timeless）、绝对游戏分钟 at/until，未知用 null，禁止将未来或过去改标为当前。modality 区分 fact/intention/reported/question/figurative；听说不授予私密知识，NPC 的新承诺即使说成打算也要 decision 来源。kind 区分 price/fee-condition/institution/business/decision/change/movement/history/observation/other，普通姿态、感官和比喻用 observation，但不能把价格、规矩、历史因果、新变化藏在观察或修辞里。来源只选 sources 中 sourceId，references.quote 为该 source.text 或 evidenceId 对应 evidence.text 的连续原文。判定 supported/contradicted/unsourced，并给简短 reason；缺来源 references=[]，不得编 sourceId。\n价格、收费条件、制度、营业事实、NPC 新决定及本轮变化均需来源；无来源即阻断，由服务端决定级别，不能自行降 warning。候选、preview、玩家请求、历史聊天、性格、旧许可不是新决定或已发生效果。现行报价用 currentFacts 的 price 或真实只读报价/结算来源；不能用旧台词支持价格。当前 availability 的 until 只说明本时段截止，不能支持“今早封仓”的过去因果或“十二点保证开门”的未来承诺。新决定 time 填决定发生的当前时刻，未来履行期限属于 scope；decision 填与来源完全相同的 request/scope 及 outcome，主体必须是实际 NPC；其他项 decision=null。历史实事要核对原始回执或记忆；无来源的普通感官、姿态、比喻仍可保留。issues 仅保留知情、原文引文、命名、时间及回执等其他有效问题，不能代替 claims。`;
  const parameters=request.tools[0].function.parameters;
  parameters.required.push('claims');parameters.properties.claims={type:'array',maxItems:240,items:claimSchema()};
+ request.messages[0].content+='\n普通现场感官、同地姿态及已结算行动的呈现细节用 observation，supported 时也允许 references=[]，不要为凑来源编造引文或另列缺来源问题。它们不证明钱物、持久状态、私密内容、价格、制度或新决定。change/movement 仍必须核对真实效果；sources 的 children 是聚合证据内的可用类型化来源，优先直接引用该子项。';
+ request.messages[0].content+='\nchange 的计量对象 object 填实际资源/物品编号，收款人不是被计量的资源；数量变化不能省略 object。movement 仅用于跨地点移动，object 填真实目的地；同地跟随、靠近和姿态用 observation。叙述实际失败的尝试或“没有学会”的结果用 history/other，不要把未发生的成功效果列作 change。先完成一次不证明随后另一次也能完成；同一回合有多次尝试时逐张核对成功与失败回执，不能用前一次成功否认后一次的服务时间不足，也不能把失败原因扩成 NPC 新决定或新规矩。';
  // Context text stays in evidence once. The existing text-only rewrite
  // redacts that array; copying before/after here would re-expose its private
  // quests, debts and NPC inventories after the caller's redaction.
- request.messages[1].content=JSON.stringify({playerText:c.playerText,rawDraft:c.raw,visibleDraft:c.visible,segments:c.segments,evidence:c.evidence,sources:c.sources.map(row=>row.evidenceId?{sourceId:row.sourceId,kind:row.kind,evidenceId:row.evidenceId}:row)});
+ request.messages[1].content=JSON.stringify({playerText:c.playerText,rawDraft:c.raw,visibleDraft:c.visible,segments:c.segments,evidence:c.evidence,sources:c.sources.map(row=>row.evidenceId?{sourceId:row.sourceId,kind:row.kind,evidenceId:row.evidenceId,...(row.children?.length?{children:row.children}:{})}:row)});
  return request;
 }
 
@@ -339,7 +368,11 @@ function acknowledgedCorrectTime(issue,input){
 function keysExactly(value,keys){return value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));}
 const boundedText=value=>typeof value==='string'&&value.trim().length>0&&value.length<=600;
 const optionalNumber=value=>value===null||typeof value==='number'&&Number.isFinite(value);
-function sourceSupportsClaim(source,claim,context){
+function sourceSupportsClaim(source,claim,context,quote){
+ if(source.children?.length)return source.children.some(id=>{
+  const child=context.sources.find(row=>row.sourceId===id);
+  return sourceSupportsClaim(child,claim,context,quote);
+ });
  if(['intent','preview','chat','registry'].includes(source.kind)||source.sourceId==='turn-preview')return false;
  const speaker=['narrator','player'].includes(claim.speaker)?claim.speaker:context.entities.find(row=>[row.id,row.name,...row.aliases??[]].includes(claim.speaker))?.id??claim.speaker;
  const ownPublicQuote=source.kind==='price'&&source.subject===speaker;
@@ -350,9 +383,16 @@ function sourceSupportsClaim(source,claim,context){
   // the result. Their actual content is still judged semantically; typed state
   // and effects, by contrast, have an exact subject/object contract.
   if(source.kind!=='query'&&source.kind!=='adjudication'){
-   if(source.subject&&source.subject!==claim.subject)return false;
-   const object=source.kind==='effect'?(source.value?.item??source.value?.resource??source.object):source.object;
-   if(object!==null&&object!==undefined&&object!==claim.object)return false;
+   const effect=source.kind==='effect'?source.value:null;
+   const endpoints=effect?.op==='transfer'?[effect.from,effect.to].filter(v=>typeof v==='string').map(v=>v.split('|')[0]):[];
+   if(endpoints.length? !endpoints.includes(claim.subject):source.subject&&source.subject!==claim.subject)return false;
+   const object=source.kind==='effect'?(effect?.item??effect?.resource??source.object):source.object;
+   // null means the sentence did not specify an object, not a claim that the
+   // recorded effect had no object. Explicit objects must still match.
+   const objects=[object];
+   if(effect?.op==='transfer'&&endpoints.length)objects.push(...endpoints.filter(id=>id!==claim.subject));
+   if(effect?.op==='create')objects.push(effect.result?.entity,effect.facts?.form);
+   if(claim.object!==null&&!objects.includes(claim.object))return false;
   }
  }
  // Current derived state is not evidence of how it came about or what will
@@ -383,8 +423,11 @@ function sourceSupportsClaim(source,claim,context){
  if(claim.kind==='fee-condition'&&!['price','fee-condition','rule','query','adjudication'].includes(source.kind))return false;
  if(claim.kind==='change'){
   if(source.kind!=='effect')return false;
-  const amount=source.value?.delta??source.value?.qty??source.value?.quantity;
-  if(claim.quantity!==null&&typeof amount==='number'&&Math.abs(claim.quantity)!==Math.abs(amount))return false;
+  // A counted resource change must identify what was counted. An unrelated
+  // four-coin transfer cannot substantiate four newly made objects.
+  if(claim.quantity!==null&&claim.object===null)return false;
+  const amount=source.value?.delta??source.value?.qty??source.value?.quantity??(source.value?.op==='create'&&source.value?.result?.entity?1:undefined);
+  if(claim.quantity!==null&&(typeof amount!=='number'||Math.abs(claim.quantity)!==Math.abs(amount)))return false;
  }
  if(claim.kind==='movement'&&(source.kind!=='effect'||source.value?.op!=='move'))return false;
  return true;
@@ -402,10 +445,10 @@ function validateClaims(claims,context,input){
   if(claim.kind==='decision'&&claim.decision===null||claim.kind!=='decision'&&claim.decision!==null)throw Error('NPC 决策断言须指明请求与结果范围');
   if(!Array.isArray(claim.references)||claim.references.length>3)throw Error('断言来源引用字段不合法');
   for(const ref of claim.references)if(!keysExactly(ref,['sourceId','quote'])||!boundedText(ref.quote)||!sources.get(ref.sourceId)?.text.includes(ref.quote))throw Error('断言 sourceId 或引文不在提供的真实证据中');
-  if(claim.verdict!=='unsourced'&&!claim.references.length)throw Error('支持或矛盾的断言必须引用真实来源');
-  for(let index=claim.start;index<claim.end;index++)covered[index]=1;
   const free=claim.modality==='question'||claim.kind==='observation'||claim.modality==='figurative'&&!groundedKinds.has(claim.kind)||claim.modality==='intention'&&['other','history','change','movement'].includes(claim.kind);
-  const supported=claim.verdict==='supported'&&claim.references.some(ref=>sourceSupportsClaim(sources.get(ref.sourceId),claim,context));
+  if(claim.verdict!=='unsourced'&&!claim.references.length&&!(free&&claim.verdict==='supported'))throw Error('支持或矛盾的断言必须引用真实来源');
+  for(let index=claim.start;index<claim.end;index++)covered[index]=1;
+  const supported=claim.verdict==='supported'&&claim.references.some(ref=>sourceSupportsClaim(sources.get(ref.sourceId),claim,context,ref.quote));
   // A recorded lie can explain speech about an old fact. It does not grant a
   // new price, consent or physical effect merely by mentioning the same item.
   if(!groundedKinds.has(claim.kind)&&lyingQuote({category:'fact',quote:claim.quote},input,context))continue;
@@ -420,11 +463,45 @@ function validateClaims(claims,context,input){
  }
  return issues;
 }
+function responsePayload(response){
+ const choice=response.choices?.[0],calls=choice?.message?.tool_calls;
+ if(choice?.finish_reason==='stop'&&!calls?.length&&typeof choice.message.content==='string')return JSON.parse(choice.message.content);
+ if(!['stop','tool_calls'].includes(choice?.finish_reason)||!Array.isArray(calls)||calls.length!==1||calls[0].function?.name!=='report_consistency_issues')throw Error('审查响应未完整返回唯一问题清单');
+ return JSON.parse(calls[0].function.arguments);
+}
+function alignClaimSpans(response,context){
+ const payload=responsePayload(response);let adjusted=0;
+ for(const claim of payload?.claims??[]){
+  if(typeof claim.quote!=='string'||!claim.quote)continue;
+  const segment=context.segments.find(s=>s.id===claim.segmentId);
+  if(segment&&claim.start>=segment.start&&claim.end<=segment.end&&context.raw.slice(claim.start,claim.end)===claim.quote&&claim.speaker===segment.speaker)continue;
+  // An exact, unique quote and the same actual speaker determine its span.
+  // Never shorten a quote, infer missing prose or change its classification.
+  const start=context.raw.indexOf(claim.quote),end=start+claim.quote.length;
+  if(start<0||context.raw.indexOf(claim.quote,start+1)>=0)continue;
+  const actual=context.segments.find(s=>s.start<=start&&s.end>=end&&s.speaker===claim.speaker);
+  if(!actual)continue;
+  Object.assign(claim,{segmentId:actual.id,start,end});adjusted++;
+ }
+ if(!adjusted)return {response,adjusted};
+ const copy=clone(response),message=copy.choices[0].message;
+ if(message.tool_calls?.length)message.tool_calls[0].function.arguments=JSON.stringify(payload);else message.content=JSON.stringify(payload);
+ return {response:copy,adjusted};
+}
+// Use the existing DeepSeek JSON Output transport. Keep accepting archived
+// tool-call responses for offline replay; schema and all semantic checks apply
+// equally to both transports.
+function jsonReviewRequest(request){
+ const copy=clone(request),schema=copy.tools[0].function.parameters;
+ delete copy.tools;delete copy.tool_choice;
+ copy.response_format={type:'json_object'};
+ copy.messages[0].content+='\n只输出 JSON 对象（issues 与 claims），严格遵循以下 schema：'+JSON.stringify(schema);
+ return copy;
+}
 function validateReviewResponse(response,input){
  const context=prepare(input),choice=response.choices?.[0],calls=choice?.message?.tool_calls;
- if(!['stop','tool_calls'].includes(choice?.finish_reason)||!Array.isArray(calls)||calls.length!==1||calls[0].function?.name!=='report_consistency_issues')throw Error('审查响应未完整返回唯一问题清单');
- const parsed=JSON.parse(calls[0].function.arguments);if(!parsed||Object.keys(parsed).some(k=>!['issues','claims'].includes(k))||!Array.isArray(parsed.issues)||parsed.issues.length>8)throw Error('审查问题清单格式不合法');
- const sources=new Map(context.evidence.map(e=>[e.id,e.text]));
+ const parsed=responsePayload(response);if(!parsed||Object.keys(parsed).some(k=>!['issues','claims'].includes(k))||!Array.isArray(parsed.issues)||parsed.issues.length>8)throw Error('审查问题清单格式不合法');
+ const sources=new Map(context.sources.map(e=>[e.sourceId,e.text]));
  for(const issue of parsed.issues){
   if(!issue||Object.keys(issue).some(k=>!['category','severity','quote','reason','evidence','entityName','entityKind','subject','privateContent'].includes(k))||!categories.includes(issue.category)||!['error','warning'].includes(issue.severity)||typeof issue.quote!=='string'||!issue.quote||issue.quote.length>600||typeof issue.reason!=='string'||!issue.reason||issue.reason.length>600)throw Error('审查问题字段不合法');
   if(!context.raw.includes(issue.quote)&&!context.visible.includes(issue.quote))throw Error('审查引用不在待审草稿原文中');
@@ -452,9 +529,9 @@ export function reviewResponseCorrectionRequest(request,response,error){
   {role:'user',content:JSON.stringify({instruction:'只修正以下审查响应的JSON、字段或原文引文格式，不重新审稿。保留原问题和断言的顺序、类别、语气、判断、严重级别和理由，不新增或删除负评；引用改为证据中短的连续原文。仅可补齐遗漏原句的 claims 覆盖，不得把原断言改成普通观察或反转判定。不得改写正文。',validationError:String(error.message),invalidResponse:response.choices??[]})}]};
 }
 function assertCorrectionPreservesIssues(original,response,input){
- const fixedPayload=JSON.parse(response.choices[0].message.tool_calls[0].function.arguments);
+ const fixedPayload=responsePayload(response);
  let corrected=fixedPayload.issues;
- const raw=original.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments??'';
+ const raw=original.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments??original.choices?.[0]?.message?.content??'';
  let originalIssues,originalClaims;try{
   const originalPayload=JSON.parse(raw);originalIssues=originalPayload?.issues;originalClaims=originalPayload?.claims;
  }catch(error){
@@ -494,19 +571,19 @@ function assertCorrectionPreservesIssues(original,response,input){
 export async function reviewConsistency(input,{client=null,rewriteAttempt=0,maxTokens=4000}={}){
  if(!Number.isSafeInteger(rewriteAttempt)||rewriteAttempt<0||!Number.isSafeInteger(maxTokens)||maxTokens<100||maxTokens>4000)throw Error('一致性审查次数或输出上限无效');
  const context=prepare(input),issues=fixedIssues(input,context);let model={status:'not-requested'},measurement,claims=[];
- if(client){let response,correctionResponse,validationError;const request=consistencyReviewRequest(input,{maxTokens}),label=`consistency:${digest([context.fingerprint,input.draft]).slice(0,20)}`;
+ if(client){let response,correctionResponse,validationError,spanAdjustments=0;const request=jsonReviewRequest(consistencyReviewRequest(input,{maxTokens})),label=`consistency:${digest([context.fingerprint,input.draft]).slice(0,20)}`;
   const safe=value=>String(value).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]');
   try{
    response=await client.generate(request,label);measurement=response.measurement;
    let checked;
-   try{checked=validateReviewResponse(response,input);}catch(error){
+   try{const aligned=alignClaimSpans(response,context);spanAdjustments=aligned.adjusted;checked=validateReviewResponse(aligned.response,input);}catch(error){
     validationError=error;
     correctionResponse=await client.generate(reviewResponseCorrectionRequest(request,response,error),`${label}:format`);
     checked=validateReviewResponse(correctionResponse,input);assertCorrectionPreservesIssues(response,correctionResponse,input);
    }
    claims=checked.claims;
    for(const issue of checked.issues)if(!issues.some(old=>old.category===issue.category&&old.quote===issue.quote&&old.severity===issue.severity))issues.push(issue);
-   model={status:'reviewed'};
+   model={status:'reviewed',...(spanAdjustments?{spanAdjustments}:{})};
   }catch(error){model={status:'failed',reason:safe(error.message).slice(0,1200)};}
   if(validationError)model.correction={attempts:1,reason:safe(validationError.message),...(correctionResponse?{rawResponse:safe(JSON.stringify(correctionResponse.choices??[])),measurement:correctionResponse.measurement}:{})};
   if(response&&(validationError||model.status==='failed'))model.rawResponse=safe(JSON.stringify(response.choices??[]));

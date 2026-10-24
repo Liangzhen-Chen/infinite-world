@@ -1,8 +1,9 @@
 import {isOutOfCharacter} from './prompt.mjs';
+import {modelContextProjection} from './turn.mjs';
 
 export const noActionTool={type:'function',function:{name:'world_no_action',description:'本回合无行动（纯闲聊/纯观察）。只显示已有事实；不执行、不推进时间、不替 NPC 决定。',parameters:{type:'object',properties:{},additionalProperties:false}}};
 export function turnFactsPrompt(gate={}){
- return `【本回合来源投影】\n${JSON.stringify({status:gate.status,facts:gate.facts??[],settlement:gate.settlement,candidates:gate.candidates??[],preview:gate.preview})}\n候选尚未执行，不能当成事实；当前状态不是本轮新行动或新决定的回执。`;
+ return `【本回合来源投影】\n${JSON.stringify(modelContextProjection({status:gate.status,facts:gate.facts??[],settlement:gate.settlement,candidates:gate.candidates??[],preview:gate.preview}))}\n候选尚未执行，不能当成事实；当前状态不是本轮新行动或新决定的回执。`;
 }
 export function publishedTurnText(review,gate){
  if(review?.safeText!==undefined)return review.safeText;

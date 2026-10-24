@@ -41,6 +41,25 @@ export function toolResultWithClock(result,{startMinute,minute}={}){
     return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
 }
 
+// Model-only wire projection. Saved receipts stay intact. JSON Pointer refs
+// replace exact duplicates, so the evidence still has one complete copy of
+// every value (including consent provenance and failed checks).
+export function modelContextProjection(value){
+ const seen=new Map();
+ const visit=(row,path)=>{
+  if(!row||typeof row!=='object')return row;
+  const text=JSON.stringify(row),prior=seen.get(text);
+  if(text.length>=64){
+   if(prior&&JSON.stringify({$ref:prior}).length<text.length)return {$ref:prior};
+   seen.set(text,path);
+  }
+  return Array.isArray(row)?row.map((entry,index)=>visit(entry,`${path}/${index}`)):
+   Object.fromEntries(Object.entries(row).map(([key,entry])=>[key,visit(entry,`${path}/${key.replaceAll('~','~0').replaceAll('/','~1')}`)]));
+ };
+ return visit(value,'#');
+}
+export function modelToolResult(result){return result?.receipt?modelContextProjection(result):result;}
+
 export function actionCompletion(saved){
  const result=saved?.result??saved,receipt=result?.receipt;
  if(receipt?.status==='pending')return {ok:false,pending:true,error:'行动仍在等待裁决，尚未完成'};

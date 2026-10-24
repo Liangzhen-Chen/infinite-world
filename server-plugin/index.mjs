@@ -19,6 +19,7 @@ import {registerUIRoutes} from './ui-routes.mjs';
 import {translateCall,narrateExecution,timeSegments,CLIENT_READS} from './action-gateway.mjs';
 import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
+import {actionBoundary} from './action-boundary.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,gateConsistencyTurn,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
@@ -153,7 +154,18 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const store=getStore(req),view=await store.read(campaignId);
         const selected=await store.worldRegistry.get(view.document.worldHash);
         // A1: world_act is stored as the legacy call it aliases, so replay and review see the old tool.
-        const translated=translateCall(req.body.tool,req.body.args,primitiveRuntime.registry(selected)),{tool,args}=translated;
+        let translated;
+        try{translated=translateCall(req.body.tool,req.body.args,primitiveRuntime.registry(selected));}
+        catch(error){
+            if(req.body.tool!=='world_act'||req.body.args?.action!=='open:proposal')throw error;
+            // Slot/consent refusal happens before storage and must still use
+            // the same native rejection projection. No rejected event is saved.
+            const input={tool:req.body.tool,args:req.body.args,eventId};
+            const refused=await actionBoundary(selected.scoped(view.document),view.document,input,async()=>{throw error;});
+            await captureConsistencyFailure(store,campaignId,{anchor,expectedSequence,...input},error);
+            return {ok:true,result:{...refused.result,error:refused.result.receipt.reason},reference:view.reference};
+        }
+        const {tool,args}=translated;
         // Health is an internal combat primitive, not a model-controlled tool.
         if(['world_health','world_revive'].includes(tool))throw new Error('生命变化只能由交锋、治疗或死亡结算产生');
         if(view.document.schemaVersion!==2)throw new Error('存档尚未升级到新引擎');

@@ -8,7 +8,7 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 import {reviewResponse} from './helpers/consistency-response.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
-import {parseTurn,modelToolAllowed,actionCompletion,toolResultWithClock} from '../extension/turn.mjs';
+import {parseTurn,modelToolAllowed,actionCompletion,toolResultWithClock,modelToolResult} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 
 const fixtures=JSON.parse(await fs.readFile(new URL('./fixtures/turn-gate-real-replies.json',import.meta.url),'utf8')).cases;
@@ -187,7 +187,7 @@ test('实际 afterReply 接点：等待改写时隐藏且隔离原稿，通过�
  // Root of the pre-existing browser false/true failure: a later explicit
  // execute must not reopen the completed anchor merely to clear UI feedback.
  Object.assign(env,{queue:fn=>fn(),load:async()=>{},ensureReviewTurn:()=>{throw Error('旧锚点已经封口');},persist:async()=>{},refresh:async()=>{},
-  actionCompletion,toolResultWithClock,ambientAudio:{noteAction:()=>{}},recordFeed:()=>{},fail:error=>{throw error;}});
+  actionCompletion,toolResultWithClock,modelToolResult,ambientAudio:{noteAction:()=>{}},recordFeed:()=>{},fail:error=>{throw error;}});
  const executeSource=source.slice(source.indexOf('async function execute(tool,'),source.indexOf('// A1 界面动作'));
  const actualExecute=new Function('env',`with(env){${executeSource};return execute;}`)(env);
  const beforeLater=view.document.state.minute,later=await actualExecute('world_time',{minutes:1},'after-publication');
