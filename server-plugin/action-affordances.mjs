@@ -11,7 +11,8 @@ import {obligationRows,obligationView} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {actionSchema} from './primitive-schema.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures} from './environment.mjs';
+import {visibleEntity} from './perception.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {deriveOpenSourceLimits,limitOpenEffects} from './action-limits.mjs';
 import {routeAction} from './action-router.mjs';
@@ -97,8 +98,7 @@ function zoneOptions(ctx){
   .map(zone=>typeof zone==='string'?{value:zone,label:zone}:{value:zone.id,label:zone.name??zone.label??zone.id}).filter(zone=>typeof zone.value==='string');
 }
 function featureOptions(ctx){
- const d={get:(...path)=>path.reduce((value,key)=>value?.[key],ctx.document)},origin=localPlayerPoint(d);
- return environmentFeatures(ctx.engine,ctx.document).filter(row=>row.location===ctx.s.location&&!row.hidden&&!row.private&&row.visible!==false&&localSightClear(d,ctx.engine,ctx.s.location,origin,row.position))
+ return environmentFeatures(ctx.engine,ctx.document).filter(row=>row.location===ctx.s.location&&!row.hidden&&!row.private&&row.visible!==false&&visibleEntity(ctx.engine,ctx.document,row.id))
   .map(row=>({value:row.id,label:row.name}));
 }
 
@@ -106,7 +106,7 @@ function context(engine,document){
  const s=document.state,place=engine.byId.get(s.location),templates=loadTemplates();
  const name=id=>s.npcs?.[id]?.name??s.created?.[id]?.name??document.holdings?.entities?.[id]?.facts?.name??engine.byId.get(id)?.name??id;
  const d=actionReader(document),perceptible=id=>publicRow(engine.byId.get(id))&&publicRow(s.created?.[id])&&publicRow(s.npcs?.[id])&&publicRow(s.creatures?.[id])&&publicRow(physicalItem(d,engine,id));
- const people=presentPeople(engine,s).filter(p=>perceptible(p.id)),present=new Set(people.map(p=>p.id));
+ const people=presentPeople(engine,s,document).filter(p=>perceptible(p.id)),present=new Set(people.map(p=>p.id));
  const stations=new Set((place?.workstations??[]).map(w=>w.kind));
  const recipes=(engine.world.recipes??[]).filter(r=>(!r.learningRequired||s.recipes?.[r.id])&&(!r.workstation||stations.has(r.workstation)));
  let bank=null;try{bank=derivedBankAt(engine,s,s.location);}catch{bank=null;}
@@ -124,7 +124,7 @@ function context(engine,document){
  return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,layout,
   inventory:Object.entries(s.inventory??{}).filter(([id,v])=>qty(v)>0&&perceptible(id)).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
   skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)})),
-  creatures:Object.entries(s.creatures??{}).filter(([id,row])=>perceptible(id)&&row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
+  creatures:Object.entries(s.creatures??{}).filter(([id,row])=>perceptible(id)&&row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)&&visibleEntity(engine,document,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
 }
 function stockOf(ctx,npc){return Object.entries(ctx.s.npcs?.[npc]?.inventory??{}).filter(([id,v])=>qty(v)>0&&publicRow(v)&&publicRow(ctx.engine.byId.get(id))).map(([id,v])=>({id,name:ctx.name(id),quantity:qty(v)}));}
 // Named projection checks used by registry preconditions.
@@ -151,7 +151,7 @@ function options(ctx,source,target){
   case 'exits':return ctx.exits.map(e=>({value:e.id,label:`${e.name}（${e.direction}${e.relation==='route'?distanceText(e.km,ctx.templates):''}${e.condition?`，${e.condition}`:''}）`}));
   case 'target.stock':return target?stockOf(ctx,target).map(r=>({value:r.id,label:`${r.name}（存${r.quantity}）`})):[];
   case 'inventory':return ctx.inventory.map(r=>({value:r.id,label:`${r.name}×${r.quantity}`}));
-  case 'water_sources':return environmentFeatures(ctx.engine,ctx.document).filter(r=>r.location===ctx.s.location&&!r.hidden&&!r.private&&['water','container'].includes(r.kind)&&((ctx.s.records?.[`physical_feature:${r.id}`]?.state??r.state)?.waterMl??0)>0).map(r=>({value:r.id,label:r.name}));
+  case 'water_sources':return environmentFeatures(ctx.engine,ctx.document).filter(r=>r.location===ctx.s.location&&!r.hidden&&!r.private&&['water','container'].includes(r.kind)&&visibleEntity(ctx.engine,ctx.document,r.id)&&((ctx.s.records?.[`physical_feature:${r.id}`]?.state??r.state)?.waterMl??0)>0).map(r=>({value:r.id,label:r.name}));
   case 'liquid_containers':return ctx.inventory.flatMap(r=>{
    const d=actionReader(ctx.document),held=ctx.s.inventory[r.id],ids=(held.instances??[]).filter(id=>ctx.s.itemInstances?.[id]?.owner==='player'&&ctx.s.itemInstances[id].status==='持有');
    const rows=ids.map(id=>({value:id,label:ids.length>1?`${r.name}（${id}）`:r.name}));

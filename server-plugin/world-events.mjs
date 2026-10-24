@@ -1,4 +1,6 @@
 import {recordsWhere,recordEntriesWhere} from './storage.mjs';
+function perceptionRuntime(){return perceptionRuntime.handler;}
+export function installEventPerception(handler){perceptionRuntime.handler=handler;}
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('world-events',{kinds:[]});
 import {isPhysicallyDead} from './holdings.mjs';
@@ -35,7 +37,7 @@ export function recordHistoricalEvent(d,engine,event){
 // "I saw this" resolves only an exact version already known to the speaker.
 // This adapter grants neither knowledge nor access to private event records.
 export function knownWorldEventReference(state,observer,{reference,content}={}){
-    const known=new Set(recordsWhere(state.records,'category','knowledge').filter(r=>r.observer===observer&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
+    const known=new Set(recordsWhere(state.records,'category','knowledge').filter(r=>r.observer===observer&&r.complete!==false&&(r.minute??0)<=state.minute).map(r=>r.sourceEvent));
     const rows=recordEntriesWhere(state.records,'category','world_event').filter(([key,r])=>key===`world_event:${r.id}`&&r.minute<=state.minute&&(r.actor===observer||r.observer===observer||r.witnesses?.includes(observer)||known.has(r.id))).map(([,r])=>r);
     const matches=rows.filter(r=>reference===r.id||reference===`world_event:${r.id}`||reference==='self'&&typeof content==='string'&&content===(r.summary??r.payload?.name));
     return matches.length===1?matches[0].id:null;
@@ -105,7 +107,7 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='crime'&&detail.target){
         const stolen=detail.stolen,value=stolen?.coins??(stolen?.item?valueOf(engine,stolen.item):0);
         e={verb:'steal',actor:'player',target:detail.target,value,witnesses:[...new Set(detail.witnesses??[])].sort(),
-            tags:['crime','hostile','theft',detail.success?'success':'attempt',...(detail.witnesses?.length?['discovered']:[])],case:detail.case};
+            ...(detail.perception?{perception:detail.perception}:{}),tags:['crime','hostile','theft',detail.success?'success':'attempt',...(detail.witnesses?.length?['discovered']:[])],case:detail.case};
     }else if(tool==='trade'){
         const buyer=detail.buyer??resolve(engine,args.buyer??'player'),seller=detail.seller??resolve(engine,args.seller);
         e={verb:'trade',actor:buyer,target:seller,value:detail.cost??0,tags:['trade',args.payment==='repay'?'repay':detail.debt?'credit':'cash']};
@@ -177,6 +179,18 @@ export function drainWorldReactions(d){
     }finally{tick.active=null;tick.draining=false;}
 }
 export function publishWorldEvents(d,engine,events,context,subscribers){
+    if(!context.legacy&&(!engine.replaying||engine.replayResult?.perceptionVersion===1))events=events.map(event=>{
+        // This card resolves the player's local intelligent layer only. Remote
+        // producers keep their existing contract until S7 supplies that model.
+        if(event.location!==d.get('state','location')||privateWorldEvent(event))return event;
+        let perception=event.perception??perceptionRuntime()?.(engine,d.document,event,{exclude:[event.actor]});
+        if(!perception?.sourceZone)return event;
+        // Producers also use witnesses:[actor] for the actor's own observation
+        // (e.g. a response to a mark). Self knowledge is not an outside sight test.
+        if(event.witnesses?.includes(event.actor))perception={...perception,versions:{...perception.versions,[event.actor]:{self:true,visual:false,auditory:false,tactile:false,identified:true,complete:true,zone:perception.sourceZone,sourceZone:perception.sourceZone,distanceMeters:0}}};
+        const witnesses=Object.keys(perception.versions).filter(id=>perception.versions[id].identified&&(event.witnesses===undefined||event.witnesses.includes(id))).sort();
+        return {...event,perception,witnesses};
+    });
     if(d.reactionTick?.active){
         const {depth,cause}=d.reactionTick.active;
         events=events.map(e=>({...e,depth,cause,phase:PHASE.reaction}));
@@ -185,6 +199,10 @@ export function publishWorldEvents(d,engine,events,context,subscribers){
     if(!context.legacy)for(const e of events)if(SOCIAL_VERBS.has(e.verb)&&e.actor){
         const key=`world_event:${e.id}`;if(d.get('state','records',key))continue;
         const {legacy:_,...row}=e;holdingSet(d,engine,['state','records',key],{category:'world_event',...row},'world-events');
+        for(const [observer,version]of Object.entries(e.perception?.versions??{}))if(version.auditory&&!version.identified){
+            const id=`perception:${e.id}:${observer}`;
+            holdingSet(d,engine,['state','records',id],{category:'knowledge',id,kind:'sound',observer,sourceEvent:e.id,minute:e.perception.minute,location:e.location,zone:version.sourceZone,complete:false,content:'传来动静，听不清是谁',participants:[]},'world-events');
+        }
     }
     if(d.scheduler){
         const own=!d.reactionTick;

@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {visibleEntity,localSounds} from './perception.mjs';
 import {personOccupation,personName} from './entity-view.mjs';
 import {laborNotices} from './labor-market.mjs';
 import {personAge}from'./entity-view.mjs';
@@ -40,7 +41,7 @@ const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:
 export function sceneCard(engine,document,query='',index=null){
     const s=document.state,place=engine.byId.get(s.location),mentioned=engine.resolver.mentions(query,s.location);
     const name=id=>personName(engine,s,id).value??engine.byId.get(id)?.name??s.created?.[id]?.name??id;
-    const present=Object.entries(s.npcs).filter(([,npc])=>npc.location===s.location)
+    const present=Object.entries(s.npcs).filter(([id,npc])=>npc.location===s.location&&visibleEntity(engine,document,id))
         .sort(([a],[b])=>Number(mentioned.has(b))-Number(mentioned.has(a))||a.localeCompare(b));
     const compactPeople=Math.min(present.length,engine.rules.prompt.npcLimit)>4;
     const weather=localWeather(engine,document),path=[],seen=new Set();let location=place;
@@ -102,6 +103,7 @@ export function sceneCard(engine,document,query='',index=null){
         if(serviceFact)parts.push(`  ${serviceLine(engine,serviceFact)}`);
         if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
+    for(const sound of localSounds(engine,document))parts.push(`【听见】${sound.text}`);
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
     if(weather&&/天气|雨|雪|雾|日出|日落|天亮|天黑|湿度|启程|赶路/.test(query))parts.push(`【天气与昼长】${weather.name}，${weather.indoors?'室内':'户外'}；日出${weather.sunrise}，日落${weather.sunset}；湿度${weather.humidityPercent}%${weather.boatClosed?'；船路暂停通行':''}`);
     parts.push(`【已学法术】共${learned.length}：${learned.slice(0,8).map(row=>`${row.name}（${row.id}，魔力${row.mp}）`).join('；')||'无'}`);
@@ -115,12 +117,12 @@ export function sceneCard(engine,document,query='',index=null){
     if(contracts.length||debts.length)parts.push('【住宿与欠款】',...debts.slice(-6).map(row=>`${row.id}｜欠${name(row.creditor)} ${obligationView(s,row).owed}铜｜${row.status}｜${Number.isFinite(row.deadline)?`到期${engine.calendar(row.deadline).text}`:'未定期限'}`),...contracts.slice(-6).map(([,row])=>`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
-    const animals=petView(engine,document).presentAnimals;
+    const animals=petView(engine,document).presentAnimals.filter(row=>visibleEntity(engine,document,row.id));
     const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
     const tribes=tribalScene(engine,document);if(tribes)parts.push(tribes);
     const army=militaryScene(engine,document);if(army)parts.push(army);
     const war=warScene(engine,document);if(war)parts.push(war);
-    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&!isPhysicallyDead(null,s,id)&&intelligenceSign(s,id)).slice(0,3);
+    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&!isPhysicallyDead(null,s,id)&&visibleEntity(engine,document,id)&&intelligenceSign(s,id)).slice(0,3);
     if(spiritSigns.length)parts.push(`【精怪近况】${spiritSigns.map(([id,a])=>`${a.name??name(a.species)}（${id}）${intelligenceSign(s,id)}`).join('；')}`);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);

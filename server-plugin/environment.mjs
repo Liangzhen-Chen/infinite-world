@@ -13,7 +13,7 @@ import {facilityView,isFacility} from './facility-state.mjs';
 import {applyInteraction} from './interactions.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {inspectCare}from'./magic-care.mjs';
-import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake}from'./magic-mind-space.mjs';
+import {inspectMindSpace,inspectMindCarrier,assertMindSpacePath,unlockMindSpaceDoor,assertMindAwake,mindSleepUntil}from'./magic-mind-space.mjs';
 import {normalize}from'./retrieval.mjs';
 import {mechanismRule,liquidItem}from'./domain-rules.mjs';
 import {prunePhysicalContacts} from './record-cleanup.mjs';
@@ -22,13 +22,15 @@ import {addObjectFuel,inspectObjectProcess,touchWarmObject,douseObjectFire,asser
 import{inspectMagicMarks}from'./magic-marks.mjs';
 import {assertLiquidWater}from'./interactions.mjs';
 import {airEnvironmentAction}from'./magic-air.mjs';
-import {waterEarthSightClear,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
-import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,assertLightMovement}from'./magic-light.mjs';
+import {waterEarthSightClear,waterEarthSoundLoss,waterEarthFlow,waterEarthWalkMinutes,assertWaterEarthMovement,inspectWaterEarth}from'./magic-water-earth.mjs';
+import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,assertLightMovement,lightAt}from'./magic-light.mjs';
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
 import {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
 import {zoneContactPending} from './place-layout.mjs';
+import {visibleEntity,installPerceptionRuntime} from './perception.mjs';
+installPerceptionRuntime({localSightClear,lightAt,waterEarthSoundLoss,mindSleepUntil});
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
@@ -216,10 +218,12 @@ export function environmentCatalog(engine,document,{entity}={}){
     const d={get:(...path)=>path.reduce((v,k)=>v?.[k],document)},location=document.state.location;
     if(entity){
         const row=environmentFeatures(engine,document).find(r=>r.id===entity);
-        if(!row)throw preconditionFailure('环境对象未登记');inReach(d,row,Number.POSITIVE_INFINITY);return visible(row,stateOf(d,row));
+        if(!row||row.hidden||row.private||row.visible===false)throw preconditionFailure('环境对象当前不可见');
+        inReach(d,row,Number.POSITIVE_INFINITY);
+        return visibleEntity(engine,document,row.id)?visible(row,stateOf(d,row)):{id:row.id,visible:false};
     }
     const forest=forestView(engine,document.state,location),basin=basinForLocation(engine,location,waterBasins(engine,document.state)),water=basin&&basinState(engine,document.state,basin);
-    return{kind:'feature',entries:environmentFeatures(engine,document).filter(row=>row.location===location).map(row=>visible(row,stateOf(d,row))),
+    return{kind:'feature',entries:environmentFeatures(engine,document).filter(row=>row.location===location&&!row.hidden&&!row.private&&row.visible!==false&&visibleEntity(engine,document,row.id)).map(row=>visible(row,stateOf(d,row))),
         ...(forest?{forest}:{}),...(basin?{watershed:{id:basin.id,location:basin.location,waterMl:water.waterMl,capacityMl:water.capacityMl}}:{})};
 }
 export function servantCarryWater(d,args,maximumMl,inspectOnly=false){
@@ -333,6 +337,7 @@ export function interactEnvironment(d,args,eventId){
         if(args.target){const care=inspectCare(d,this,args);if(care)return{care,actionScope:{kind:'instant',instantaneous:true}};}
         const result=environmentCatalog(this,d.document,{entity:args.target});
         if(!args.target)return result;
+        if(result.visible===false)return{...result,light:{visible:false,observations:[]},actionScope:{kind:'instant',instantaneous:true}};
         const row=feature(this,args.target,location,d.document),check=Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.operation==='mud_seal'&&e.target===row.id&&e.expires>d.get('state','minute'));
         if(check){inReach(d,row,3);permission(d,this,row,args);}
         return{...result,waterEarth:inspectWaterEarth(d,this,row,{check}),light:inspectLight(d,this,row),mindSpace:inspectMindSpace(d,this,row),actionScope:{kind:'instant',instantaneous:true}};

@@ -8,6 +8,7 @@ import {npcAvailability} from './npc-schedule.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {localWeather} from './weather.mjs';
 import {layoutView,zoneOf,placeLayout} from './place-layout.mjs';
+import {visibleEntity,localSounds} from './perception.mjs';
 
 const LOCALES=fileURLToPath(new URL('../world/actions/locale/',import.meta.url));
 export const BASE_LOCALE='zh-CN';
@@ -170,8 +171,8 @@ export function exitsFrom(engine,state,templates=loadTemplates()){
  }
  return rows.sort((x,y)=>(x.km??0)-(y.km??0)||x.id.localeCompare(y.id));
 }
-export function presentPeople(engine,state){
- return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id))
+export function presentPeople(engine,state,document=engine.physicalDocument){
+ return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id)&&(!document||visibleEntity(engine,document,id)))
   .map(([id,n])=>{let activity=null;try{activity=npcAvailability(engine,state,id).activity||null;}catch{activity=null;}return {id,name:nameOf(engine,state,id),activity:activity??(typeof n.activity==='string'&&n.activity?n.activity:null)};}).sort((a,b)=>a.id.localeCompare(b.id));
 }
 // 方位组织的场景文字（无 LLM 时由模板直接生成）：此处、在场的人、各方向的出路。
@@ -181,8 +182,9 @@ export function sceneLines(engine,document,locale=BASE_LOCALE){
  const weather=engine.rules?.weather?localWeather(engine,document):null;
  if(weather)lines[0]+=`｜${weather.daylight?'白昼':'夜色已暗'}｜${weather.name}`;
  const topology=placeLayout(engine,document);
- const people=presentPeople(engine,s).map(p=>({...p,activity:[zoneOf(engine,document,p.id,topology)?.name,p.activity].filter(Boolean).join('，')}));
+ const people=presentPeople(engine,s,document).map(p=>({...p,activity:[zoneOf(engine,document,p.id,topology)?.name,p.activity].filter(Boolean).join('，')}));
  lines.push(people.length?sc.presentHeader+people.map(p=>p.activity?fill(sc.present,p):fill(sc.presentIdle,p)).join('；'):sc.nobody);
+ for(const sound of localSounds(engine,document))lines.push(`${topology.zones.find(z=>z.id===sound.zone)?.name??'附近'}：${sound.text}`);
  const exits=exitsFrom(engine,s,t);
  lines.push(exits.length?sc.exitsHeader+exits.slice(0,10).map(e=>e.relation==='out'?fill(sc.exitOut,e):e.relation==='in'||e.relation==='here'?fill(sc.exitIn,e):fill(sc.exit,{...e,distance:distanceText(e.km,t)})).join('；'):sc.noExit);
  const layout=layoutView(engine,document),zone=layout.zones.find(z=>z.current);
