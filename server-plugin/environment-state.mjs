@@ -27,10 +27,20 @@ const featureOwners=(d,id)=>{
  if(!cached.byId.has(id))cached.byId.set(id,aliveHoldings(d,{kind:'owns',subject:id}));
  return cached.byId.get(id);
 };
+// A perception pass is synchronous and read-only. Share its resolved features
+// across observers, then discard them before any draft write can occur.
+const readScopes=new WeakMap();
+export function withEnvironmentFeatures(engine,read){
+ if(readScopes.has(engine))return read();
+ readScopes.set(engine,new Map());
+ try{return read();}finally{readScopes.delete(engine);}
+}
 // Select by catalog fields / registered IDs before resolving live placement and
-// ownership. Never cache resolved rows: a PatchCursor can mutate its own copies
-// without changing the document identity between two process settlements.
+// ownership. Outside a read-only pass, never cache resolved rows: a PatchCursor
+// can mutate its copies without changing identity between process settlements.
 export const environmentFeatures=(engine,document,select)=>{
+ const cacheKey=document,scope=readScopes.get(engine),cached=scope?.get(cacheKey);
+ if(cached)return cached.catalog.flatMap((row,i)=>!select||select(row)?[cached.resolve(i)]:[]);
  const authored=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
  const saved=document??engine.physicalDocument;
  const readSaved=(...path)=>saved?path.reduce((v,k)=>v?.[k],saved):engine.airDraft?.get(...path);
@@ -53,11 +63,20 @@ export const environmentFeatures=(engine,document,select)=>{
   if(!document)return rows;
   d=documentView(document);
  }
- return rows.map(row=>{
+ const resolve=row=>{
   const state=d.get('state','records',key(row.id)),p=locationOf(d,row.id),carrier=p?.mode==='carried'?p.at:null;
   const location=p?physicalLocation(d,engine,row.id):state?.location??row.location;
   const owners=featureOwners(d,row.id),owner=owners.length===1?owners[0].holder:row.owner;
   const position=carrier==='player'?localPlayerPoint(d):state?.position??row.position;
   return {...row,location,owner,position};
- });
+ };
+ if(scope){
+  const resolved=new Map(),view={catalog,resolve:i=>{
+   if(!resolved.has(i))resolved.set(i,resolve(catalog[i]));
+   return resolved.get(i);
+  }};
+  scope.set(cacheKey,view);
+  return catalog.flatMap((row,i)=>!select||select(row)?[view.resolve(i)]:[]);
+ }
+ return rows.map(resolve);
 };
