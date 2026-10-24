@@ -12,6 +12,9 @@ import {knowledgeProficiency,knowsKnowledge} from '../server-plugin/education-st
 import {effectiveProficiency} from '../server-plugin/professions.mjs';
 import {aliveHoldings,auditHoldings} from '../server-plugin/holdings.mjs';
 import {capacity,canAct} from '../server-plugin/action-capacity.mjs';
+import {institutionOffices,officeOnDuty} from '../server-plugin/entity-view.mjs';
+import {officeCall,appointedClaimClerk} from './helpers/office-actions.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const signatureMatches=(expected,effects,receipt,requested,document)=>matchSignature(expected,effects,receipt,requested,world,document);
@@ -358,7 +361,17 @@ test('A3 checks r9: native sequence exercises each child failure after successfu
 });
 
 test('A3 signature r9: clarification earns request-signature credit only with zero raw effects',async t=>{
- const row=(await loadCorpus()).rows.find(r=>r.id==='A3V2-086');
+ const corpusRow=(await loadCorpus()).rows.find(r=>r.id==='A3V2-086');
+ // S4-02 now measures this scene: the corpus's 2 m contradicts its 6 m
+ // native zone route. Keep the corpus refusal, then test the independent
+ // clarification/cost invariant in a scene using that actual measurement.
+ const contradicted=(await scoreRows([corpusRow],options)).results[0];
+ assert.ok(contradicted.setupUnmet.some(e=>e.item==='positions[0]'));
+ assert.equal(contradicted.scores.signature,false);
+ const {positions,...scene}=corpusRow.setup,staged=applyIntentSetup(engine,initial,scene);
+ assert.deepEqual(staged.setupUnmet,[]);
+ const facts=engine.primitiveTargetFacts(engine.primitiveDraft(staged.document),'player','npc_hw_wushuo');
+ const row={...corpusRow,setup:{...scene,positions:positions.map(p=>({...p,distanceMeters:facts.distanceMeters}))}};
  assert.ok(row.expected.signature.length);
  const result=(await scoreRows([row],options)).results[0];
  assert.equal(result.actual.clarified,true);assert.equal(result.scores.signature,true);
@@ -680,33 +693,44 @@ test('A3 setup: two independent scenes execute the two-phase protocol with balan
  assert.equal(built.results[0].scores.constructor,true,JSON.stringify(built.results[0]));
 });
 
-test('A3 setup: unmeasured distance premises bind only actions that read distance (main-session ruling 10-22)',()=>{
+test('A3 setup: native distance contradictions reject; unmeasured premises bind only distance-reading actions',()=>{
  // docs/A3-接点归属.md S4 row 3: co-location and native perception are
  // established; a numeric distance without native measurement is S4 and
  // blocks only actions whose catalog entry declares a spatial need.
  const scene={location:initial.state.location,present:['npc_hw_linsui'],positions:[{observer:'player',target:'npc_hw_linsui',distanceMeters:2,lineOfSight:true}]};
- const loaded=applyIntentSetup(engine,initial,scene);
+ // S4-02 supplies a native zone distance here. Reject the old 2 m premise;
+ // do not turn it into an accepted or silently ignored corpus prerequisite.
+ const contradiction=applyIntentSetup(engine,initial,scene);
+ assert.ok(contradiction.setupUnmet.some(e=>e.item==='positions[0]'&&/原生几何矛盾/.test(e.reason)));
+ const staged=applyIntentSetup(engine,initial,{location:scene.location,present:scene.present});
+ const facts=engine.primitiveTargetFacts(engine.primitiveDraft(staged.document),'player','npc_hw_linsui');
+ const nativeScene={...scene,positions:scene.positions.map(p=>({...p,distanceMeters:facts.distanceMeters}))};
+ const loaded=applyIntentSetup(engine,initial,nativeScene);
  assert.deepEqual(loaded.setupUnmet,[]);
- assert.equal(loaded.spatialPending.length,1);
+ assert.equal(loaded.spatialPending.length,0);
+ assert.ok(loaded.notes.some(note=>/distance measured/.test(note)),JSON.stringify(loaded.notes));
  assert.ok(loaded.notes.every(note=>!/verified/i.test(note)),JSON.stringify(loaded.notes));
- const talk=settleSpatial(loaded.spatialPending,['core:dialogue.greet'],{});
+ // Pure scorer contract for a genuinely unmeasured input: preserve all
+ // original conditional-action and no-credit assertions below.
+ const pending=scene.positions.map((p,i)=>({...p,item:`positions[${i}]`}));
+ const talk=settleSpatial(pending,['core:dialogue.greet'],{});
  assert.deepEqual(talk.unmet,[]);
  assert.match(talk.notes[0],/S4 未建立、本题动作不读取/);assert.ok(!/verified/i.test(talk.notes[0]));
- const cast=settleSpatial(loaded.spatialPending,['core:cast'],{});
+ const cast=settleSpatial(pending,['core:cast'],{});
  assert.equal(cast.unmet.length,1);assert.match(cast.unmet[0].reason,/S4/);assert.deepEqual(cast.notes,[]);
  // Conditional declarations: observation reads range and sight, teaching does not.
- assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'acquire'}}}}).unmet.length,0);
- assert.equal(settleSpatial(loaded.spatialPending,['core:learn'],{submitted:{args:{slots:{mode:'observe'}}}}).unmet.length,1);
+ assert.equal(settleSpatial(pending,['core:learn'],{submitted:{args:{slots:{mode:'acquire'}}}}).unmet.length,0);
+ assert.equal(settleSpatial(pending,['core:learn'],{submitted:{args:{slots:{mode:'observe'}}}}).unmet.length,1);
  // A free proposal reads reach only for bodily or physical effects on another
  // entity, and range only for a local approach to an agent or feature.
- const proposal=requested=>settleSpatial(loaded.spatialPending,['open:proposal'],{requested,world,document:loaded.document}).unmet.length;
+ const proposal=requested=>settleSpatial(pending,['open:proposal'],{requested,world,document:loaded.document}).unmet.length;
  assert.equal(proposal([{op:'emit',target:'npc_hw_linsui'}]),0);
  assert.equal(proposal([{op:'vital',target:'player',type:'body:satiety'}]),0);
  assert.equal(proposal([{op:'vital',target:'npc_hw_linsui',type:'harm'}]),1);
  assert.equal(proposal([{op:'move',entity:'player',to:'loc_bs'}]),0);
  assert.equal(proposal([{op:'move',entity:'player',to:'npc_hw_linsui'}]),1);
  // A declared sight that native perception contradicts is unmet for every action.
- const blind=applyIntentSetup(engine,initial,{...scene,positions:[{...scene.positions[0],lineOfSight:false}]});
+ const blind=applyIntentSetup(engine,initial,{...nativeScene,positions:[{...nativeScene.positions[0],lineOfSight:false}]});
  assert.ok(blind.setupUnmet.some(x=>x.item==='positions[0]'));
  // A target in another place is unmet for every action.
  const elsewhere=Object.entries(initial.state.npcs).find(([,n])=>n.location&&n.location!==initial.state.location&&!n.scheduleTravel)[0];
@@ -771,14 +795,31 @@ test('A3 setup r7: existing pet uses its species body and native ownership books
  assert.equal(document.state.inventory.item_oats.quantity,1);
 });
 
-test.todo('A3 setup r7: office license aliases bind to native rows and fear stays a finite, non-incapacitating effect〔前提待真实动作：创建指定章程机构席位及任职；归 S4〕',()=>{
- const office=applyIntentSetup(charterEngine,initial,v2Row('057').setup),id=office.bindings.a3v2_057_arrest_office;
- assert.equal(office.document.holdings.entities[id].kind,'office');
- assert.equal(office.document.holdings.entities[id].facts.onDuty,true);
- assert.deepEqual(office.document.holdings.entities[id].facts.authority,v2Row('057').setup.instances[0].authority);
- assert.equal(office.document.holdings.rows[office.bindings.a3v2_057_holds_office].subject,id);
- assert.equal(office.document.state.npcs.npc_bs_032_1.location,'bld_bs_watch');
- assert.equal(office.document.state.player.onDuty,undefined);
+// S4: the native seat/holding replace the old caller-authored office alias.
+// onDuty is derived from current facts, not stored as a setup flag. Preserve
+// the original exact holding binding and finite fear/capacity assertions.
+test('A3 setup r7: office license aliases bind to native rows and fear stays a finite, non-incapacitating effect',async()=>{
+ const appointed=await appointedClaimClerk(engine,initial,{name:'office_bs_arrest_officer'});
+ let currentDocument=appointed.document;
+ for(const destination of ['loc_bs_guanqian','bld_bs_watch']){
+  const moved=await engine.reduce(currentDocument,{tool:'world_act',eventId:`self-office-walk:${destination}`,args:{action:'core:move',slots:{destination,mode:'walk'}}});
+  assert.equal(moved.result.receipt.status,'committed');currentDocument=applyPatches(currentDocument,moved.patches);
+ }
+ const inspected=await officeCall(engine,currentDocument,'inspect',{},'self-office-inspect');
+ const current=inspected.result.offices.find(o=>o.id==='office_bs_arrest_officer'),id=current.id;
+ const office=inspected.document.holdings.entities[id];
+ assert.equal(office.kind,'office');assert.equal(officeOnDuty(engine,inspected.document.state,current),true);
+ assert.equal(office.facts.onDuty,undefined);
+ assert.deepEqual(office.facts.authority,world.factions.flatMap(f=>f.offices??[]).find(o=>o.id===id).authority);
+ const alias=v2Row('057').setup.holdings[0].id;
+ const aliased=applyIntentSetup(engine,inspected.document,{holdings:[{...v2Row('057').setup.holdings[0],subject:id}],abilities:{licenses:[alias]}});
+ assert.deepEqual(aliased.setupUnmet,[]);
+ const holding=aliveHoldings(engine.primitiveDraft(inspected.document),{kind:'holds_office',holder:'player',subject:id});
+ assert.equal(holding.length,1);assert.equal(aliased.bindings[alias],holding[0].id);
+ assert.equal(aliased.document.holdings.rows[aliased.bindings[alias]].subject,id);
+ assert.deepEqual(aliased.document.holdings,inspected.document.holdings,'alias lookup does not issue another appointment');
+ assert.equal(aliased.document.state.location,'bld_bs_watch');
+ assert.equal(aliased.document.state.player.onDuty,undefined);
  const {document}=applyIntentSetup(engine,initial,v2Row('070').setup),effects=Object.values(document.state.effects).filter(e=>e.status==='fear');
  assert.equal(effects.length,1);assert.equal(effects[0].power,1);assert.equal(effects[0].expires,630);
  assert.equal(capacity({engine,document},'player','cast').level,'full');

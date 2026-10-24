@@ -8,7 +8,11 @@ import {runSetupLoaders,registerSetupLoader} from '../tools/a3-setup/index.mjs';
 import {ensureHoldings,openHoldings,aliveHoldings,holdingSet} from '../server-plugin/holdings.mjs';
 import {knowledgeProficiency,knowsPracticalKnowledge,demonstrationAt,teachingAvailable} from '../server-plugin/education-state.mjs';
 import {subjectiveView,personLanguages,canReadLanguage} from '../server-plugin/subjective-view.mjs';
-import {personCareer} from '../server-plugin/entity-view.mjs';
+import {personCareer,institutionOffices,officeOnDuty} from '../server-plugin/entity-view.mjs';
+import {officeCall,officeScene} from './helpers/office-actions.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {authority} from '../server-plugin/action-authority.mjs';
+import {primitiveContext} from '../server-plugin/primitives-runtime.mjs';
 import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {mapView} from '../server-plugin/ui-map.mjs';
 import {summonAction} from '../server-plugin/summons.mjs';
@@ -257,14 +261,30 @@ test('agency existing holdings wait for native item/instrument bindings and reso
  assert.equal(pledge.holder,'native_loan');assert.equal(pledge.subject,'native_staff');assert.equal(pledge.terms.obligation,'native_loan');
  const owns=result.document.holdings.rows[result.bindings.a3v2_037_owns];assert.equal(owns.subject,'native_staff');
 });
-test.todo('agency office authority resolves source event aliases after domain modules without broadening its scope〔前提待真实动作：创建具有指定命令权限的章程席位及任职；归 S4〕',()=>{
- // 05 §5.3 / review 10-22 P1: the office loads only as a narrowed instance of a charter office. The shipped world
- // has no charter for the watch desk yet (see helper), so it is attached to a test-local clone; the shipped world
- // keeps the premise unmet.
- const setup=corpus('057'),office=setup.instances[0],premises={minute:600,instances:[office],agencyTestPremises:{staff:'s',loan:'l',order:'a3v2_057_arrest_order'}};
- assert.ok(applyIntentSetup(engine,initial,premises).setupUnmet.some(e=>/no catalog office/.test(e.reason)));
- const charter=new WorldEngine(charteredWorld(world)),result=applyIntentSetup(charter,charter.initialFromLegacy(seed,'a3-agency-charter'),premises);
- assert.deepEqual(result.setupUnmet,[]);
- const facts=result.document.holdings.entities[result.bindings[office.id]].facts;
- assert.deepEqual(facts.authority,{...office.authority,basis:'native_order'});
+// S4: replace a snapshot whose basis alias manufactured authority with a real
+// appointment source. The published arrest seat keeps its exact operation;
+// an alias to an event cannot extend it to raw movement or arbitrary detention.
+test('agency office authority resolves its real appointment source without broadening scope',async()=>{
+ const name='office_bs_arrest_officer',issuer='npc_bs_townhead';
+ let document=officeScene(engine,initial);
+ let out=await officeCall(engine,document,'apply',{name},'agency-office-apply');document=out.document;
+ const request=out.result.application;
+ out=await engine.reduce(document,{tool:'world_time',args:{minutes:60},eventId:'agency-office-wait'});document=applyPatches(document,out.patches);
+ out=await officeCall(engine,document,'decide',{name,request,authority:issuer},'agency-office-decide');document=out.document;
+ out=await officeCall(engine,document,'appoint',{name,request,authority:issuer},'agency-office-appoint');document=out.document;
+ for(const destination of ['loc_bs_guanqian','bld_bs_watch']){
+  const moved=await engine.reduce(document,{tool:'world_act',eventId:`agency-walk:${destination}`,args:{action:'core:move',slots:{destination,mode:'walk'}}});
+  assert.equal(moved.result.receipt.status,'committed');document=applyPatches(document,moved.patches);
+ }
+ const current=institutionOffices(engine,document.state).find(o=>o.id===name);
+ assert.equal(officeOnDuty(engine,document.state,current),true);
+ assert.equal(authority(primitiveContext(engine,document),'player','execute_arrest',name).allowed,true);
+ assert.equal(current.sourceEvent,'agency-office-appoint');
+ assert.equal(document.state.records['governance_source:agency-office-appoint'].result.appointment.sourceEvent,current.sourceEvent);
+ const forged=applyIntentSetup(engine,document,{instances:[corpus('057').instances[0]]});
+ assert.ok(forged.setupUnmet.some(e=>e.item==='instances[0]'));
+ assert.deepEqual(institutionOffices(engine,forged.document.state).find(o=>o.id===name).authority,current.authority);
+ assert.deepEqual(current.authority.operations,['execute_arrest']);
+ assert.equal(authority(primitiveContext(engine,document),'player','holding.open','npc_hw_wushuo',{kind:'guest_of',variant:'detained'}).allowed,false);
+ assert.equal(authority(primitiveContext(engine,document),'player','collect_fine',name).allowed,false);
 });

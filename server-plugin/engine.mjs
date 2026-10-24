@@ -190,6 +190,27 @@ function compactNpcPatches(d,patchStart,npcsBefore){
         if(!canonicalEqual(npcsBefore?.[npc],value))d.patches.push({op:'set',path:['state','npcs',npc],value});
     }
 }
+// A roster person's campaign definition is the same authored person placed in
+// the simulation, not a second entity. Only its location can differ here;
+// conflicting identities and all unrelated ID collisions still reach the
+// resolver's ordinary duplicate check.
+function campaignCatalog(engine,document,created,extra=[]){
+    const overlaps=created.filter(p=>engine.byId.has(p.id)),materialized=new Map();
+    if(overlaps.length){
+        // Combining an authored row with its instance must not hide duplicate
+        // rows inside the campaign additions themselves.
+        new EntityResolver(created,{sortNames:false});
+        const people=new Set([...engine.world.npcs,...engine.world.residents??[],...engine.world.factionPeople??[]].map(p=>p.id));
+        for(const person of overlaps){
+            const {location:_location,...identity}=person,{location:_baseLocation,...authored}=engine.byId.get(person.id);
+            if(people.has(person.id)&&document.state.npcs?.[person.id]&&canonicalEqual(identity,authored))materialized.set(person.id,person);
+        }
+    }
+    if(!materialized.size){const additions=[...created,...extra];return {entities:[...engine.entities,...additions],resolver:engine.resolver.extend(additions)};}
+    const additions=[...created.filter(p=>!materialized.has(p.id)),...extra];
+    const entities=[...engine.entities.map(p=>materialized.get(p.id)??p),...additions];
+    return {entities,resolver:new EntityResolver(entities)};
+}
 export class WorldEngine {
     constructor(world) {
         this.obligationClaimEnforceable=claimEnforceable;
@@ -567,7 +588,8 @@ export class WorldEngine {
         const physical=physicalCatalog(this,document),session=Object.create(this);session.physicalDocument=document;
         session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         if(physical.length)session.world=Object.defineProperties({}, {...Object.getOwnPropertyDescriptors(this.world),items:{value:[...this.world.items,...physical],enumerable:true,writable:true,configurable:true}});
-        session.entities=[...this.entities,...created,...physical,player];session.resolver=this.resolver.extend([...created,...physical,player]);session.byId=session.resolver.entities;return session;
+        const catalog=campaignCatalog(this,document,created,[...physical,player]);
+        session.entities=catalog.entities;session.resolver=catalog.resolver;session.byId=session.resolver.entities;return session;
     }
     actor(d,id) { return d.get(...this.actorPath(id)); }
     npcObligationAt(state,npcId,minute){return npcObligationAt(state,npcId,minute);}
@@ -1149,9 +1171,9 @@ export class WorldEngine {
         this.promptResolvers??=new WeakMap();
         const branch=document.state.created??document.state;
         let hit=this.promptResolvers.get(branch);
-        if(!hit||hit.location!==document.state.location||hit.npcs!==document.state.npcs){hit={location:document.state.location,npcs:document.state.npcs,created,resolver:this.resolver.extend(created)};this.promptResolvers.set(branch,hit);}
+        if(!hit||hit.location!==document.state.location||hit.npcs!==document.state.npcs){hit={location:document.state.location,npcs:document.state.npcs,...campaignCatalog(this,document,created)};this.promptResolvers.set(branch,hit);}
         const player={id:'player',name:document.state.player.name,aliases:['玩家','玩家角色'],scope:document.state.location};
-        const session=Object.create(this);session.entities=[...this.entities,...hit.created,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
+        const session=Object.create(this);session.entities=[...hit.entities,player];session.resolver=hit.resolver.extend([player]);session.byId=session.resolver.entities;
         session.calendarId=document.state.records?.['calendar:active']?.calendar??this.calendarId;
         return session;
     }

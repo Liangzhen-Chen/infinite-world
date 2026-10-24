@@ -531,6 +531,8 @@
                       "items": {
                         "enum": [
                           "certify",
+                          "receive_application",
+                          "refer_examiner",
                           "administer_public_assets",
                           "receive_report",
                           "receive_appeal",
@@ -571,6 +573,23 @@
                     "minItems": 2,
                     "maxItems": 2
                   }
+                },
+                "appointment": {
+                  "type": "object",
+                  "properties": {
+                    "issuer": { "type": "string", "minLength": 1 },
+                    "receiveAt": { "type": "string", "minLength": 1 },
+                    "decisionAfterMinutes": { "type": "integer", "minimum": 1 },
+                    "minimumStanding": { "type": "integer", "minimum": -100, "maximum": 100 },
+                    "requires": {
+                      "type": "object",
+                      "properties": { "profession": { "type": "string", "minLength": 1 } },
+                      "additionalProperties": false
+                    },
+                    "removal": { "enum": ["holder_request_or_judgment"] }
+                  },
+                  "required": ["issuer", "receiveAt", "decisionAfterMinutes", "minimumStanding", "requires", "removal"],
+                  "additionalProperties": false
                 },
                 "source": {
                   "type": "string",

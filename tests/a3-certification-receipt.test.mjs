@@ -10,7 +10,7 @@ import {applyIntentSetup,signatureMatches} from '../tools/a3-score.mjs';
 import {knownWorldEventReference,presentWitnesses} from '../server-plugin/world-events.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
-import {charteredWorld} from './helpers/charter-world.mjs';
+import {officeCall} from './helpers/office-actions.mjs';
 
 const shipped=await loadWorld();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -20,16 +20,20 @@ const row=corpus.find(r=>r.id==='A3V2-020');
 // carpentry examiner's seat is his own workplace in Hewan (office_exam_life_6), so the
 // mechanism is exercised at the seat the world actually publishes. The corpus row is not
 // edited; the premise/seat mismatch is reported separately.
-// 05 §5.3 / review 10-22 P1: the corpus registrar office loads only as a narrowed instance of a charter office. The
-// shipped world charters no registrar desk at the examiner's seat yet (reported to the main session), so the
-// mechanism runs in a test-local chartered clone.
+// S4: independent registrar and examiner use their published seats and authority.
+// No office, appointment, onDuty or examination result comes from a setup snapshot.
 const seat=shipped.factions.flatMap(f=>f.offices??[]).find(o=>o.id==='office_exam_life_6').seat;
-const world=charteredWorld(shipped,{loc_bs:[{id:'office_test_exam_registry',seat,authority:{operations:['receive_application','refer_examiner'],profession:'profession_life_6'}}]}),engine=new WorldEngine(world);
+const world=shipped,engine=new WorldEngine(world);
 const stagedSetup=JSON.parse(JSON.stringify(row.setup).replaceAll('bld_bs_guild',seat));
-function fixture(){
+for(const field of ['instances','holdings','status','examinations','history'])delete stagedSetup[field];
+async function fixture(){
  const initial=engine.createCharacter(seed,{},'a3-score-independent');
  const setup=applyIntentSetup(engine,initial,stagedSetup);assert.deepEqual(setup.setupUnmet,[]);
- return setup.document;
+ const referred=await officeCall(engine,setup.document,'exam_refer',{profession:'profession_life_6',teacher:'npc_hw_yinge'},'certification-referral');
+ assert.equal(referred.result.seat.registrar,'npc_hw_yanzhe');
+ assert.equal(referred.result.seat.examiner,'npc_hw_yinge');
+ assert.equal(referred.result.seat.passed,false);
+ return referred.document;
 }
 const input=eventId=>({tool:'world_act',eventId,args:{action:'core:profession.certify',slots:{profession:'profession_life_6',teacher:'npc_hw_yinge'}}});
 function balanced(before,after){
@@ -45,8 +49,8 @@ async function branch(document,success){
  assert.fail(`native certification check never reached success=${success}`);
 }
 
-for(const success of [true,false])test.todo(`认证${success?'成功':'失败'}：机构申请、费用回执、原生见证及存档往返〔前提待真实动作：建立登记员的章程席位、任职及考试转介；归 S4〕`,async t=>{
- const before=fixture(),{call,out,after}=await branch(before,success),receipt=out.result.receipt;
+for(const success of [true,false])test(`认证${success?'成功':'失败'}：机构申请、费用回执、原生见证及存档往返`,async t=>{
+ const before=await fixture(),{call,out,after}=await branch(before,success),receipt=out.result.receipt;
  assert.equal(receipt.status,'committed');assert.equal(receipt.check.success,success);
  const request=after.state.records[`world_event:${out.result.request}`];
  assert.equal(request.category,'world_event');assert.equal(request.verb,'request');assert.equal(request.actor,'player');
@@ -114,8 +118,8 @@ test('认证前置拒绝仍原子化，不留下申请、收费或授证',async(
  assert.deepEqual(document,before);
 });
 
-test.todo('历史认证重放保留旧结果形状，不追加申请事件或费用元数据〔前提待真实动作：建立登记员的章程席位、任职及考试转介；归 S4〕',async()=>{
- const before=fixture(),{call,out}=await branch(before,true);
+test('历史认证重放保留旧结果形状，不追加申请事件或费用元数据',async()=>{
+ const before=await fixture(),{call,out}=await branch(before,true);
  const historical=structuredClone(out.result);
  for(const key of ['request','teacher','institution','cost'])delete historical[key];
  delete historical.receipt;

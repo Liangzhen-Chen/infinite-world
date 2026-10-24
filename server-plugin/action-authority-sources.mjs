@@ -5,6 +5,7 @@ import {effective} from './holding-kinds.mjs';
 import {organizationState} from './organization-state.mjs';
 import {actionReader,capacity} from './action-capacity.mjs';
 import {digest} from './storage.mjs';
+import {institutionOffices,officeOnDuty} from './entity-view.mjs';
 
 const live=(row,now)=>row&&!row.revoked&&row.endedAt===undefined&&(row.since??row.createdAt??0)<=now&&(row.until??row.expires??Infinity)>now;
 const matches=(scope,op,target)=>Array.isArray(scope)&&scope.some(p=>typeof p==='string'?p===op:p?.op===op&&(p.target===undefined||p.target===target));
@@ -14,6 +15,13 @@ export function normativeAuthoritySources(context,{actor,op,target,code,roles=[]
  const {engine,document}=context,state=document.state,d=actionReader(document),now=state.minute,sources=[];
  const held=aliveHoldings(d,{holder:actor}).filter(h=>effective(d,h.id,{alive:id=>capacity(context,id,op).level!=='none',impaired:id=>capacity(context,id,op).level==='none'}));
  const sourceOf=(kind,id,facts,extra={})=>({kind,id,source:id,version:digest(facts),allowed:true,...extra});
+ for(const office of institutionOffices(engine,state)){
+  if(office.holder!==actor||!officeOnDuty(engine,state,office,actor)||!held.some(h=>h.kind==='holds_office'&&h.subject===office.id))continue;
+  const powers=office.authority?.operations??[];
+  // An institutional operation concerns this seat or its own organization,
+  // never an arbitrary treasury, person or another organization's property.
+  if(powers.includes(op)&&[office.id,office.organization].includes(target))sources.push(sourceOf('charter',office.id,office,{organization:office.organization,office:office.id}));
+ }
  // A law delegation names a person, current role or current office and an
  // explicit op x target scope. Being a resident is not a delegation.
  for(const [index,row] of (Array.isArray(code?.delegation)?code.delegation:[]).entries()){
