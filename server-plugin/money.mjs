@@ -110,7 +110,7 @@ export function legacyMoney(engine,state){
         else if(RECORD_FUNDS.has(c))add(fund(key),row.coins);
         else if(c==='settlement_trade')add(escrow(key),row.escrowCopper);
         // 议案的入会费只在议事中托管；议决后记录保留原数额作凭据，钱已入公库或退回。
-        else if(c==='organization_proposal'){if(row.status==='议事中')add(escrow(key),row.escrow);}
+        else if(c==='organization_proposal'){if(row.status==='议事中')add(escrow(row.feePayer?`motion_${key}`:key),row.escrow);}
         else if(c!=='quest_receipt'&&typeof row.escrow==='number')add(escrow(key),row.escrow);
     }
     // 未开户的政体国库与钱庄库银取世界数据（与 military.polityRow、credit.bankRow 的缺省一致）。
