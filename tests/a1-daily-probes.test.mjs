@@ -54,7 +54,7 @@ test('D06 赶路去白石镇：耗时到达、地点更新、钱物不变，村�
 
 test('D08 天黑：铁匠铺打烊不能交易，次日开门后可以；钱物在打烊时不变',async t=>{
  const ui=await uiSession(t,{mutate:at(FORGE,21*60,s=>{s.player.coins=500;})}),before=await primed(ui);
- const night=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH});assert.equal(night.ok,false);assert.match(night.error,/不提供交易服务/);
+ const night=await ui.choose('trade.buy',{seller:SMITH,item:'item_iron_nail',quantity:2},{target:SMITH,search:true});assert.equal(night.ok,false);assert.match(night.error,/不提供交易服务/);
  assert.equal((await ui.read()).state.player.coins,before.state.player.coins);
  await ui.choose('time',{until:{dayOffset:1,hour:9}});
  const day=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH});assert.ok(day.ok,day.error);

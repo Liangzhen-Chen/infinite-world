@@ -7,6 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {localFestivalCalendar,festivalScene} from '../server-plugin/festival.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {minuteForCalendarDate} from '../server-plugin/weather.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 function setup({full=false,day=1,month=1}={}){
@@ -67,13 +68,17 @@ test('实际作息、睡眠和已占用义务不会被节俗瞬移或代参与',
  const busy=(await t.wait(q.doc,180)).doc;assert.equal(busy.state.records[q.id].status,'no-attendance');
 });
 test('月份与年界一次发生，30日离开分步一致且只有本地场景显示结果',async()=>{
- const s=setup({day:30,month:12});
- while(s.doc.state.minute<359*DAY+540)s.doc=(await s.wait(s.doc,Math.min(30*DAY,359*DAY+540-s.doc.state.minute),'prepare-year')).doc;
+ // New characters use the native calendar (short months included), not a
+ // fixed 360-day year. The last month has a real 29th, but no 30th.
+ const s=setup({day:29,month:12}),calendar=s.doc.state.records['calendar:active'].calendar;
+ const morning=minuteForCalendarDate(s.engine,{calendar,year:1,month:12,day:29,hour:9,minute:0});
+ while(s.doc.state.minute<morning)s.doc=(await s.wait(s.doc,Math.min(30*DAY,morning-s.doc.state.minute),'prepare-year')).doc;
  const p=await plan(s);p.doc.state.location='loc_hw_dock';// T108 publishes festivals at loc_hw; the remote view stays a place without any
  const large=await s.wait(p.doc,30*DAY,'large');let split=p.doc;
  for(let i=0;i<30;i++)split=(await s.wait(split,DAY,`small-${i}`)).doc;
  const selected=doc=>Object.values(doc.state.records).filter(r=>r.category==='festival');
  assert.deepEqual(selected(split),selected(large.doc));assert.equal(large.doc.state.records[p.id].status,'held');
+ assert.equal(s.engine.scoped(large.doc).calendar(large.doc.state.minute).year,2);
  assert.equal(cash(large.doc),cash(p.doc));assert.equal(festivalScene(s.engine,large.doc),'');
  assert.ok(!large.out.result.messages.some(m=>m.includes(s.f.name)));
  const remote=sceneCard(s.engine,large.doc,'节日');assert.ok(!remote.includes('已举行当地节俗活动'));

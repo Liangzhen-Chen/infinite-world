@@ -107,8 +107,12 @@ test('独立识字技能有突破要求，合格授课者能指导；不占正�
         if(out.result.success){result=applyPatches(document,out.patches);break;}
     }
     assert.ok(result);assert.ok(result.state.skills.skill_literacy.breakthroughs.includes(1));
-    const out=await engine.reduce(result,{tool:'world_practice',args:{skill:'识字',target:'田契课本',gain:10},eventId:'read_practice'});
-    result=applyPatches(result,out.patches);assert.equal(result.state.skills.skill_literacy.proficiency,309);
+    // Native practice derives its gain from actual time: 120 minutes at
+    // 1.2 points/hour at the starting tier, rather than caller-supplied gain:10.
+    const out=await engine.reduce(result,{tool:'world_practice',args:{skill:'识字',minutes:120},eventId:'read_practice'});
+    const beforePractice=result;
+    result=applyPatches(result,out.patches);assert.equal(result.state.skills.skill_literacy.proficiency,301);
+    assert.equal(result.state.minute-beforePractice.state.minute,120);
     assert.deepEqual(result.state.professions,document.state.professions);
 });
 test('专家级以上法术不由普通导师或普通书授予，稀有终极典籍遵守最低阅读时间',async()=>{

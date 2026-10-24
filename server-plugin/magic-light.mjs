@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {facilityRuntime,isFacility} from './facility-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
@@ -56,7 +57,20 @@ export function opticalSightClear(d,engine,location,from,to){
 function lighting(d,engine,location){
  const place=engine.byId.get(location),weather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
  const explicit=place?.lighting;
- const ambient=explicit?.ambientLux??(place?.combatTags?.includes('dark')?0:weather&&!weather.indoors?(weather.daylight?100:weather.kind==='clear'?.2:0):undefined);
+ // Ordinary indoor activity includes tending the room's lights. Explicit
+ // lighting and actual lamps override this derived fallback, including lamps
+ // that have been extinguished. Merely entering an empty room creates no lamp.
+ const indoor=weather?.indoors||isFacility(place);
+ const lamps=environmentFeatures(engine,d.document,r=>r.location===location).filter(r=>r.kind==='lamp'||stateOf(d,r).emissionLuxAt1m!==undefined);
+ const occupied=indoor&&explicit?.ambientLux===undefined&&!place?.combatTags?.includes('dark')&&!lamps.length&&Object.entries(d.get('state','npcs')??{}).some(([id,n])=>{
+  if(n.location!==location||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,id)||
+   ['睡眠','濒死','昏迷'].includes(n.status))return false;
+  const slot=facilityRuntime().scheduleAt?.(engine,id,d.get('state','minute'),d.get('state'));
+  const activity=slot?.location===location?slot.activity:n.activity;
+  return typeof activity==='string'&&Boolean(activity.trim())&&!/睡眠|熟睡|睡觉|熄灯/.test(activity);
+ });
+ const ordinary=occupied?engine.rules.environment?.occupiedIndoorAmbientLux:undefined;
+ const ambient=explicit?.ambientLux??(place?.combatTags?.includes('dark')?0:indoor?ordinary:weather?(weather.daylight?100:weather.kind==='clear'?.2:0):undefined);
  const fog=explicit?.fogDensity??(weather&&!weather.indoors&&weather.kind==='fog'?1:0);
  if(ambient!==undefined)numeric(ambient,0,100000,'环境光照');numeric(fog,0,10,'雾密度');
  return{ambient,fog};
