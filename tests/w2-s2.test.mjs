@@ -118,7 +118,11 @@ test('炼丹控火：点炉、催火、调匀温区后烘出蜜丸；不调匀�
 });
 
 test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整坛、泥缝各自改变真实场景',async()=>{
- const base=learnedByRoute.道;assert.ok(base);
+ // A filtered regression still earns its own real route prerequisites.
+ const base=learnedByRoute.道??await routeSession('道');assert.ok(base);
+ // The existing ignition comparison also uses the alchemy route's learned
+ // tinder spell; earn that prerequisite when selecting this case alone.
+ if(!learnedByRoute.丹)await routeSession('丹');
  const fresh=()=>{const d=structuredClone(base);d.state.inventory.item_charcoal={quantity:3};d.state.spells.spell_s1_tinder=structuredClone(learnedByRoute.丹.state.spells.spell_s1_tinder);d.state.skills.skill_s1_tinder=structuredClone(learnedByRoute.丹.state.skills.skill_s1_tinder);return d;};
  // Seal first, then light the incense burner beside the old paper rack.
  const light=async doc=>{const g=await grant(doc,DAO,fid('incense_burner'));return (await success(g.doc,'world_cast',{spell:'spell_s1_tinder',target:fid('incense_burner'),authorization:g.authorization})).doc;};
@@ -128,7 +132,10 @@ test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整�
  assert.equal(rec(doc,fid('paper_rack')).thermal.burning,false);assert.equal(rec(open,fid('paper_rack')).thermal.burning,true);
  assert.ok(doc.state.player.mp<sealed.doc.state.player.mp-1);
  // Fire line blocks the local path across it until it burns out.
- g=await grant(fresh(),DAO,fid('fire_strip'));const line=await cast(g.doc,{spell:'spell_s2_fire_line',target:fid('fire_strip'),authorization:g.authorization});assert.equal(line.result.blocksPath,true);
+ // S4 starts an arrival at the gate-road zone itself. Walk south of the
+ // strip before igniting it, so this negative control actually crosses fire.
+ const south=await run(fresh(),'world_move',{destination:'zone_reed_court'});assert.equal(south.result.arrived,true);
+ g=await grant(south.doc,DAO,fid('fire_strip'));const line=await cast(g.doc,{spell:'spell_s2_fire_line',target:fid('fire_strip'),authorization:g.authorization});assert.equal(line.result.blocksPath,true);
  await assert.rejects(engine.reduce(line.doc,{tool:'world_environment',args:{operation:'approach',target:fid('gate_road')},eventId:'cross-fire'}),/火线/);
  assert.equal(rec(await wait(line.doc,10),fid('fire_strip')).thermal.burning,false);
  // Quiet room: a call through it no longer reaches the speaker's own room.

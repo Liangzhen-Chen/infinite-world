@@ -31,17 +31,19 @@ const view=(f,id,value)=>f.doc.state.records[`standing:${id}:player`]={category:
 test('钓鱼按真实鱼种、时段和季节检定；渔获可售，种群扣减守恒，失败仍耗时磨刀',async()=>{
     const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water');f.doc.state.location=h.location;
 // D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
-    f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',20);const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
+    f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',20);f.put('item_charcoal');const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
     const before=f.doc.state.records[key].populations[fish].count,minute=f.doc.state.minute;
     const out=await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(20,'fish'));
     assert.equal(out.success,true);assert.equal(qty(f,'item_fish'),1);assert.equal(out.season,0);assert.equal(out.check.difficulty,10);
     const p=f.doc.state.records[key].populations[fish];assert.equal(p.count,before-1);assert.equal(p.initial+p.born+(p.immigrated??0)-(p.emigrated??0)-p.predated-p.starved-p.withdrawn,p.count);
     assert.equal(f.doc.state.skills.skill_life_2_core.proficiency,3);assert.equal(f.doc.state.minute,minute+30);
     assert.equal(f.doc.state.inventory.item_kitchen_knife.durability,99);
-    f.put('item_charcoal');f.doc.state.player.hp-=2;
+    f.doc.state.player.hp-=2;
     const meal=await f.act('world_field',{operation:'wildlife_eat'},'eat_catch');assert.equal(meal.eaten,1);assert.equal(qty(f,'item_fish'),0);assert.equal(qty(f,'item_charcoal'),0);
     await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(20,'fish_for_sale'));
-    f.place(A);f.doc.state.npcs[A].coins=100;
+    // Initial supplies precede the first ledger opening; fund the later buyer
+    // by a real transfer rather than overwriting an already booked purse.
+    f.place(A);await f.act('world_propose',{intent:'赠送买鱼用的铜钱',effects:[{op:'transfer',resource:'coin',from:'player',to:A,qty:100}]},'fish-buyer-funds');
     const total=coins(f);await f.act('world_trade',{seller:'player',buyer:A,item:'item_fish',quantity:1},'sell_fish');assert.equal(qty(f,'item_fish'),0);assert.equal(coins(f),total);
     const count=f.doc.state.records[key].populations[fish].count;
     const fail=await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(1,'fish_fail'));assert.equal(fail.success,false);assert.equal(f.doc.state.records[key].populations[fish].count,count);

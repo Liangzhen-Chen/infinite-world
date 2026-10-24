@@ -52,7 +52,9 @@ test('失败仍耗魔与时间，大失败反噬；同意和社会法典边界�
  const other=fresh('spell_mind_01'),registered=await create(other,'spell_mind_01'),mental=registered.result.entity;
  assert.deepEqual(registered.document.state.created[mental].targeting,engine.byId.get('spell_mind_01').targeting);
  registered.document.state.spells[mental]={};registered.document.state.npcs.npc_hw_luqing.location=other.state.location;
- await assert.rejects(run(registered.document,'world_cast',{spell:mental,target:'npc_hw_luqing'},'without-consent'),/同意|许可|目标实际/);
+ // S4 supplies the native six-metre distance: the copied close-range spell
+ // refuses on its range before consulting consent. Require that exact cause.
+ await assert.rejects(run(registered.document,'world_cast',{spell:mental,target:'npc_hw_luqing'},'without-consent'),e=>e.code==='E-ACTION-CAST-RANGE'&&e.message==='目标超过法术实际射程');
  assert.deepEqual(registered.document.state.created[mental].law,engine.byId.get('spell_mind_01').law);
 });
 

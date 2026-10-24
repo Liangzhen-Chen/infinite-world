@@ -115,7 +115,8 @@ test('道、佛、祭、巫四条路线实际入门、认证、学会本批法�
 });
 
 test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超度终态、记入牌位，种群扣减且不能用于复活',async()=>{
- const base=learnedByRoute.佛;assert.ok(base,'需先完成路线学习');
+ // Standalone regression selection still learns and certifies this real route.
+ const base=learnedByRoute.佛??await routeSession('佛');assert.ok(base,'需先完成路线学习');
  let doc=await field(structuredClone(base),MIST,1290);const p=permits.佛,pop0=eco(doc,'habitat_wt_mist_flat')[SOUL];
  const total0=pop0.count+present(doc,SOUL,MIST);
  // Non-souls, living people and the player are refused before any cost.
@@ -139,15 +140,16 @@ test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超�
  // A ferried soul has left the scene: it cannot be ferried again, exorcised or drawn back.
  saved=structuredClone(doc);await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('ferry'),target:found.target,permit:p},eventId:'ferry-again'}),/游魂|实际|需要/);assert.deepEqual(doc,saved);
  assert.equal(Object.values((await run(doc,'world_wildlife',{operation:'observe'})).result.animals).some(a=>a.id===found.target),false);
- // Seven-day rite on the flat: the weekly manifestation of its dead is held back.
- const flat=await field(structuredClone(base),MIST,1290),rite=await cast(flat,{spell:id('calm_flat'),permit:p});
+ // Long native study can fill the habitat. Reuse the real ferry's vacancy,
+ // rather than expecting a full fresh baseline to manifest beyond capacity.
+ const flat=structuredClone(doc),rite=await cast(flat,{spell:id('calm_flat'),permit:p});
  assert.deepEqual(rite.result.species.sort(),[SOUL,WISP].sort());assert.equal(rite.result.expires,rite.doc.state.minute+10080);
  await assert.rejects(engine.reduce(rite.doc,{tool:'world_cast',args:{spell:id('calm_flat'),permit:p},eventId:'calm-twice'}),/叠加/);
  const week=d=>{const day=Math.floor(d.state.minute/1440);let next=day;while(next%7!==6)next++;return (next+1)*1440+60-d.state.minute;};
  const plainDoc=structuredClone(rite.doc);for(const [k,e] of Object.entries(plainDoc.state.effects))if(e.kind==='ritual'&&e.operation==='consecrate')delete plainDoc.state.effects[k];
  const w=week(rite.doc),held=await wait(rite.doc,w),open=await wait(plainDoc,w);
  const sum=(d,k)=>[SOUL,WISP].reduce((n,s)=>n+(eco(d,'habitat_wt_mist_flat')[s][k]??0),0);
- assert.ok(sum(open,'arisen')>sum(plainDoc,'arisen'),'未作法时本季应有新聚成');assert.equal(sum(held,'arisen'),sum(rite.doc,'arisen'));assert.ok(sum(held,'suppressed')>0);
+ assert.ok(sum(open,'arisen')>sum(plainDoc,'arisen'),`未作法时本季应有新聚成 ${JSON.stringify({minute:plainDoc.state.minute,season:engine.calendar(plainDoc.state.minute).season,populations:[SOUL,WISP].map(id=>({id,count:eco(plainDoc,'habitat_wt_mist_flat')[id].count,present:present(plainDoc,id,MIST),manifest:world.monsters.find(m=>m.id===id).wildlife.manifest}))})}`);assert.equal(sum(held,'arisen'),sum(rite.doc,'arisen'));assert.ok(sum(held,'suppressed')>0);
 });
 
 test('佛门守戒与立愿：持戒护身吸收刀棍与暗影伤害，立愿生成止波师承誓约，契纹自查读出原签条款',async()=>{
@@ -207,7 +209,7 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
 });
 
 test('灯祠祭礼：净场与镇窑灯礼作用于废窑瓦灯魅，净坛、灯前立誓与门印守戒按教派资格生效',async()=>{
- const base=learnedByRoute.祭;assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
+ const base=learnedByRoute.祭??await routeSession('祭');assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
  const night=await field(fresh(),KILN,1200);const t=await track(night,LAMP);
  const job=await takeT155(t.doc,'t155_bs_lamp',t.target);
  // 06 §6.7 and §6.5: accepting a quest spends its registered time; local
