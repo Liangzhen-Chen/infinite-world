@@ -31,6 +31,7 @@ import {validateQuestSources}from'../server-plugin/quest-sources.mjs';
 import {validateTribalAwakening}from'../server-plugin/tribal-awakening.mjs';
 import {validateMilitary}from'../server-plugin/military.mjs';
 import {validateWarDiplomacy}from'../server-plugin/war-diplomacy.mjs';
+import {validateNormBindings}from'../server-plugin/norm-stack.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -91,6 +92,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...loreCheck.errors);warnings.push(...loreCheck.warnings);
     errors.push(...validateSocialWorld(world,{reference,blocked:[...blocklist.names,...blocklist.realPeople]}));
     errors.push(...validateRegions(world));
+    errors.push(...validateNormBindings(world));
     const jurisdictions=new Set(),lawIds=new Set();
     for(const code of world.rules.law?.codes??[]){
         if(lawIds.has(code.id))errors.push(`法典编号重复：${code.id}`);lawIds.add(code.id);
