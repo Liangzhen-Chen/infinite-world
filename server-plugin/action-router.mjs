@@ -7,6 +7,7 @@ import {partyAccount} from './money.mjs';
 import {PrimitiveRejected} from './primitive-policy.mjs';
 import {environmentFeatures} from './environment-state.mjs';
 import {localWeather} from './weather.mjs';
+import {placeLayout} from './place-layout.mjs';
 import {mapKnowledge} from './map-state.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {finePaymentContext} from './obligation-runtime.mjs';
@@ -224,7 +225,7 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  for(const feature of features)if(currentLocation(feature.id)===location&&!feature.hidden&&!feature.private)add(feature.id,feature.kind??'thing',feature);
  // Use existing public local areas; a relative description never creates a
  // new space, position or passage. Traversal still checks the physical path.
- for(const zone of place?.zones??place?.areas??[])if(zone&&typeof zone==='object'&&zone.visible!==false&&zone.accessible!==false)add(zone.id,'zone',{...zone,name:zone.name??zone.label});
+ for(const zone of placeLayout(engine,document,location).zones)if(zone&&typeof zone==='object'&&!zone.hidden&&!zone.private&&zone.visible!==false&&zone.accessible!==false)add(zone.id,'zone',{...zone,name:zone.name??zone.label});
  const summons=new Map(Object.entries(state.effects??{}).filter(([,row])=>row.kind==='summon'&&row.owner===actor&&row.expires>state.minute));
  for(const [id,row] of summons)if(row.location===location){
   const spell=engine.byId.get(row.spell);
