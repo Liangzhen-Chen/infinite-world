@@ -136,6 +136,12 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const row=a.records?.[result.request];
   if(row?.category==='legal_request'&&row.sourceEvent===eventId&&!b.records?.[result.request])
    add(stateEffect('emit',{target:row.target,verb:row.verb,visibility:row.request.visibility==='private'?'private':'witnessed',payload:row.payload},['state','records',result.request],before,after));
+  if(row?.category==='legal_request'&&row.decision?.sourceEvent===eventId){
+   add(stateEffect('emit',{actor:row.decision.authority,target:row.actor,verb:'claim',visibility:'private',payload:{request:result.request,accepted:row.accepted,...(row.decision.reason?{reason:row.decision.reason}:{}),...(row.decision.repair?{repair:row.decision.repair}:{})}},['state','records',result.request,'decision'],before,after));
+   const filed=a.records?.[result.case];
+   if(row.accepted&&filed?.category==='legal_case'&&b.records?.[result.case]?.category!=='legal_case')
+    add(stateEffect('create',{entity:result.case,kind:'case',facts:{offense:filed.offense,offender:filed.offender,sourceEvent:filed.sourceEvent}},['state','records',result.case],before,after));
+  }
  }
  if(tool==='profession'&&result.request){
   const key=`world_event:${result.request}`,row=a.records?.[key];

@@ -1,0 +1,148 @@
+{
+ "format": 1,
+ "namespace": "law",
+ "actions": [
+  {
+   "id": "law:accept",
+   "call": {
+    "tool": "world_law",
+    "operation": "accept"
+   },
+   "label": "亲自受理报案",
+   "verb": "law.accept",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.accept",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:reject",
+   "call": {
+    "tool": "world_law",
+    "operation": "reject"
+   },
+   "label": "亲自拒绝受理",
+   "verb": "law.reject",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "reason",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.reject",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:request_decision",
+   "call": {
+    "tool": "world_law",
+    "operation": "request_decision"
+   },
+   "label": "请求经办决定",
+   "verb": "law.request_decision",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.request_decision",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  }
+ ]
+}

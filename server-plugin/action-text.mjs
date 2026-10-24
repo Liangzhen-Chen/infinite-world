@@ -122,6 +122,7 @@ export function actionLines({engine,action,before,after,args,result,effects=appl
  const counterparties=new Set();
  for(const k of ['seller','buyer','target','npc','teacher','authority']){const raw=args?.[k];if(typeof raw!=='string')continue;try{counterparties.add(engine.resolve(raw));}catch{}}
  const rest=effectLines(engine,before,after,effects,templates,counterparties);
+ if(result?.filingDecision?.version===1)rest.push(...result.repair??[]);
  if(receipt?.fallback?.originalIntentFulfilled===false){
   // The mark exists; the player's original desired effect is not its result.
   rest.push('只留下了痕迹，原本设想的效果并未因此实现。');

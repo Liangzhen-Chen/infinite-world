@@ -89,11 +89,11 @@ test('原生报案收件读取正式在岗席位，伪造 onDuty 不能补足在
  // No personally known theft is fabricated: passing the recipient lookup
  // must reach the independent incident precondition, with no applied effects.
  const current=await engine.reduce(document,call('recipient-current'));
- assert.equal(current.result.receipt.status,'rejected');assert.match(current.result.receipt.reason,/personally known incident/);
+ assert.equal(current.result.receipt.status,'rejected');assert.match(current.result.receipt.reason,/本人确实知晓的事由/);
  assert.deepEqual(current.patches,[]);
  const asleep=structuredClone(document);asleep.state.npcs[clerk].activity='熟睡';asleep.holdings.entities[office].facts.onDuty=true;
  const rejected=await engine.reduce(asleep,call('recipient-asleep'));
- assert.equal(rejected.result.receipt.status,'rejected');assert.match(rejected.result.receipt.reason,/on-duty authorized recipient/);
+ assert.equal(rejected.result.receipt.status,'rejected');assert.match(rejected.result.receipt.reason,/当值.*职权/);
  assert.deepEqual(rejected.patches,[]);
  const priorClerk=officeScene(engine,initial(),{location:'bld_bs_watch',minute:540,present:[clerk]});
  let changed=(await appointedClaimClerk(engine,priorClerk,{name:office})).document;
@@ -104,6 +104,6 @@ test('原生报案收件读取正式在岗席位，伪造 onDuty 不能补足在
  assert.equal(changed.state.npcs[clerk].location,changed.state.location);
  changed.holdings.entities[office].facts.onDuty=true;
  const former=await engine.reduce(changed,call('recipient-former'));
- assert.equal(former.result.receipt.status,'rejected');assert.match(former.result.receipt.reason,/on-duty authorized recipient/);
+ assert.equal(former.result.receipt.status,'rejected');assert.match(former.result.receipt.reason,/当值.*职权/);
  assert.deepEqual(former.patches,[]);
 });
