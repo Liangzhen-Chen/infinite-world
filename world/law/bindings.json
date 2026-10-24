@@ -1072,5 +1072,11 @@
     "slot": "place.lawCode",
     "value": "law_sb_property",
     "source": "world/meta/rules.json#law.codes/law_sb_property"
+  },
+  {
+    "place": "loc_bs",
+    "slot": "place.lawCode",
+    "value": "law_royal_xichui",
+    "source": "world/geo/regions.json#county_xichui_longqu/ruler、places、prose.rule；world/meta/rules.json#law.templates/law_royal_xichui"
   }
 ]
