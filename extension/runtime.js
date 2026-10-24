@@ -10,7 +10,7 @@ import {initializeSettings,getSettings,updateSettings,subscribeSettings} from '.
 import {renderTopbar} from './topbar.mjs';
 import {ambientAudio,registerUI as registerAudioUI} from './ambient-audio.mjs';
 import {updateBackground,clearBackground} from './background-view.mjs';
-import {finishContractTurn,turnFactsPrompt,publishedTurnText} from './turn-contract.mjs';
+import {finishContractTurn,turnFactsPrompt,publishedTurnText,candidateSelectionRequest,selectedCandidateCall} from './turn-contract.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
 const getActionModes=()=>actionModes(getSettings());
@@ -112,12 +112,34 @@ window.fetch=async function(input,options){
         if(requestBody.stream)throw Error('本回合必须使用非流式生成，待审正文不能提前展示');
         if(reviewsPending)throw Error('本回合仍在核对，不能开始另一轮生成');
     }
+    const selecting=generatingReply&&session?.preview&&session.preview.status!=='out_of_character'&&!session.confirmed;
+    if(selecting){
+        const playerText=[...ctx().chat].reverse().find(row=>row.is_user)?.mes??'';
+        const selection=candidateSelectionRequest(session.preview,playerText);
+        Object.assign(requestBody,{tools:selection.tools,tool_choice:selection.tool_choice,thinking:selection.thinking,stream:false,include_reasoning:false});
+        options={...options,body:JSON.stringify(requestBody)};
+    }else if(generatingReply&&session?.confirmed){
+        Object.assign(requestBody,{tools:[],tool_choice:'none',thinking:{type:'disabled'},stream:false});
+        options={...options,body:JSON.stringify(requestBody)};
+    }
     const response=await originalFetch(input,options);
     if(!generatingReply||!response.ok)return response;
     if(session&&(session!==reviewTurn||session.chatId!==ctx().chatId))throw Error('生成期间回合来源已变化，已丢弃旧回复');
     const data=await response.json();
     for(const choice of data.choices??[]){
         const message=choice.message;if(!message)continue;
+        if(selecting){
+            const calls=message.tool_calls??[];
+            try{
+                if(choice.finish_reason==='length'||calls.length!==1||calls[0].function?.name!=='world_confirm')throw Error('必须返回唯一候选确认');
+                const playerText=[...ctx().chat].reverse().find(row=>row.is_user)?.mes??'';
+                const selected=selectedCandidateCall(session.preview,playerText,JSON.parse(calls[0].function.arguments));
+                session.confirmed=true;
+                message.tool_calls=selected?(selected.steps??[selected]).map((step,index)=>({...calls[0],id:`${calls[0].id}-${index}`,function:{name:step.name,arguments:JSON.stringify(step.args)}})):[];
+            }catch(error){session.confirmationError=error.message;message.tool_calls=[];}
+        }else if(session?.confirmed&&message.tool_calls?.length){
+            message.tool_calls=[];message.content='';
+        }
         if(session&&session===reviewTurn)session.toolReply=!!message.tool_calls?.length;
         if(!message.tool_calls?.length&&session&&session===reviewTurn)session.draft=message.content??'';
         // The host can save/render the response before MESSAGE_RECEIVED. Never

@@ -10,7 +10,7 @@ import {appliedEffects} from './applied-effects.mjs';
 import {actionLines,refusalLine,sceneLines,pendingTurnLines,currentFactLines} from './action-text.mjs';
 import {actionOfCall,findAction} from './action-registry.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
-import {constructIntent} from './action-constructor.mjs';
+import {turnCandidates} from './action-constructor.mjs';
 import {createRoutingContext} from './action-router.mjs';
 
 const safeError=error=>String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]').slice(0,1200);
@@ -71,10 +71,8 @@ export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,e
   const file=idPath(store,campaignId,token);await fs.mkdir(path.dirname(file),{recursive:true});
   try{const old=await readJSON(file);if(await activeToken(store,campaignId)!==token)throw Error('审查回合已被另一回合替换');return publicBegin(old);}catch(error){if(error.code!=='ENOENT')throw error;}
   const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
-  const parsed=isOutOfCharacter(playerText)?{status:'out_of_character',candidates:[],missing:[]}:constructIntent(engine,state.document,{intent:playerText},createRoutingContext(engine,state.document));
-  const candidates=parsed.candidate?[parsed.candidate]:parsed.candidates??[];
-  // A completed form is a candidate, never permission to apply its effects.
-  const preview={status:parsed.candidate?'candidate':parsed.status,candidates,missing:parsed.missing??[],unresolved:!candidates.length};
+  const preview=isOutOfCharacter(playerText)?{status:'out_of_character',candidates:[],missing:[]}:
+   turnCandidates(engine,state.document,playerText,createRoutingContext(engine,state.document));
   const record={version:1,protocol:'turn-contract-v1',token,campaignId,anchor,playerText,sequence:state.sequence,revision:state.revision,enabled,before:state.document,preview,
    ...(ui?{boundEventId:eventId}:{}),
    retrieval:{protocol:captureSearch===true?1:0,status:captureSearch===true?'open':'unknown',calls:[],warnings:captureSearch===true?[]:['旧协议没有启用只读检索留证']}};

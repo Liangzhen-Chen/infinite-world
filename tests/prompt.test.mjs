@@ -13,7 +13,8 @@ import {catalogDefinition}from'../server-plugin/catalog.mjs';
 test('新卡与预设来自同一提示源，静态在前、场景在尾，禁用旧世界书与模型回合工具',async()=>{
     const bundle=await loadPromptBundle(),messages=assembleMessages(bundle,[{role:'user',content:'住一晚'}],'现在九点');
     assert.equal(messages[0].content,bundle.constitution);assert.equal(messages.at(-1).content,'现在九点');
-    assert.equal(messages.filter(row=>row.name==='example_assistant').length,9);
+    // llm1-confirm adds two judgment examples to the nine narrative examples.
+    assert.equal(messages.filter(row=>row.name==='example_assistant').length,11);
     assert.equal(messages.filter(row=>row.role==='tool').length,1);
     assert.doesNotMatch(messages.map(row=>row.content).join('\n'),/undefined|world_commit|world_roll|再生者/);
     assert.equal(bundle.card.data.extensions.world,'');assert.equal(bundle.card.data.character_book,undefined);

@@ -1,6 +1,5 @@
 // The model-free form search uses the same catalog and offered slot values as
 // tools/a3-score.mjs. It never executes a candidate or guesses an NPC's consent.
-import {searchActions} from './action-registry.mjs';
 import {primitiveRuntime} from './primitives-runtime.mjs';
 
 // The composition root supplies the current-world menu projection. Native
@@ -9,6 +8,23 @@ let worldActions;
 export function registerIntentMenu(provider){worldActions=provider;}
 
 const mentions=(text,value)=>typeof value==='string'&&value.length>1&&text.includes(value);
+function numberValue(raw){
+ if(raw==='半')return .5;
+ if(/^\d+$/.test(raw))return Number(raw);
+ const digits='零一二三四五六七八九';let total=0,digit=0;
+ for(const char of raw.replaceAll('两','二')){if(digits.includes(char))digit=digits.indexOf(char);else {const unit={十:10,百:100,千:1000}[char];if(!unit)return NaN;total+=(digit||1)*unit;digit=0;}}
+ return total+digit;
+}
+function numericSlots(action,text){
+ const slots={},fragments=[];
+ for(const slot of action.slots??[]){
+  const unit=slot.name==='minutes'?'分钟|分|小时':slot.name==='quantity'?'个|份|件|只|块|枚|条|瓶|罐':null;
+  if(!unit)continue;
+  const matches=[...text.matchAll(new RegExp(`([0-9零一二两三四五六七八九十百千半]+)(${unit})`,'g'))];
+  if(matches.length===1){const value=numberValue(matches[0][1])*(matches[0][2]==='小时'?60:1);if(Number.isSafeInteger(value)&&value>0){slots[slot.name]=value;fragments.push(matches[0][0]);}}
+ }
+ return {slots,fragments};
+}
 function formSlots(action,text){
  for(const form of action.signature?.intentForms??[]){
   const names=[],parts=form.split(/(\{[a-zA-Z]+\})/).map(part=>{
@@ -28,14 +44,18 @@ function completeCommand(action,text,entities){
  // Form search has no semantic judge (the scoring harness does). Do not
  // silently execute a matching fragment of a larger, unsupported request.
  const normalize=value=>String(value).normalize('NFKC').toLowerCase().replace(/[\s，。！？、：；,.!?:;]/g,'');
- const command=normalize(text);
+ let command=normalize(text);
+ for(const fragment of numericSlots(action,text).fragments)command=command.replace(normalize(fragment),'');
  if(formSlots(action,text))return true;
- return [action.label,action.verb,...action.synonyms??[]].filter(Boolean).some(word=>{
+ const activities=action.call?.tool==='world_time'?action.slots?.find(slot=>slot.name==='activity')?.options??[]:[];
+ return [action.label,action.verb,...action.synonyms??[],...activities].filter(Boolean).some(word=>{
   const phrase=normalize(word);if(!command.includes(phrase))return false;
   if(action.slots?.some(s=>s.required&&['text','content'].includes(s.name)))return true;
   let rest=command.replace(phrase,'');
+  if(action.call?.tool==='world_time')rest=rest.replace(/原地|这里/g,'');
+  if(action.call?.tool==='world_move')rest=rest.replace(/^我?进|^我?到/,'');
   for(const entity of [...entities].sort((a,b)=>b.name.length-a.name.length))for(const name of [entity.name,entity.id])rest=rest.replaceAll(normalize(name),'');
-  return !rest.replace(/我想要|我想|我要|请|尝试|自己|本人|进行|一下|把|将|对|向|用|在|的/g,'');
+  return !rest.replace(/我想要|我想|我要|请|尝试|自己|本人|进行|一下|付钱|把|将|对|向|用|在|的|我/g,'');
  });
 }
 export function constructIntent(engine,document,proposal,context){
@@ -45,25 +65,29 @@ export function constructIntent(engine,document,proposal,context){
  const targets=explicit!==undefined?[context.resolve(explicit).value??explicit]:entities.filter(e=>mentions(text,e.name)||mentions(text,e.id)).map(e=>e.id);
  // Hints describe limitations, not commands: matching "观察" in a warning
  // must not turn an observation into carrying silt or loading a fire.
- const actions=searchActions({...registry,actions:registry.actions.map(a=>({...a,hint:''}))},text,{limit:24}).filter(a=>!a.readOnly&&!a.projection&&a.call?.tool!=='world_propose'&&a.id!=='open:leave_mark'&&completeCommand(a,text,entities));
+ const actions=registry.actions.filter(a=>!a.readOnly&&!a.projection&&a.call?.tool!=='world_propose'&&a.id!=='open:leave_mark'&&completeCommand(a,text,entities));
  const candidates=[],seen=new Set();
- for(const definition of actions)for(const target of targets.length?targets:[null]){
+ for(const definition of actions){
+ const merchant=definition.slots?.some(slot=>slot.name==='seller'&&slot.fill==='target');
+ const namedPeople=targets.filter(id=>entities.some(row=>row.id===id&&['person','npc'].includes(row.kind)));
+ const choices=merchant&&!explicit&&!namedPeople.length?worldActions(engine,document,{limit:0,candidatePreview:true}).objects.people.filter(row=>row.sells).map(row=>row.id):targets;
+ for(const target of choices.length?choices:[null]){
   if(!context.visible(definition,{actor:context.actor,...(target?{target}:{})},{...proposal,effects:[]}))continue;
   const menu=worldActions(engine,document,{query:definition.id,target,limit:1,candidatePreview:true});
   const action=menu.actions.find(a=>a.id===definition.id);if(!action)continue;
-  const inferred=context.slotsFor(definition,{...proposal,...(target?{target}:{}),effects:[]})??{};
+  const inferred={...context.slotsFor(definition,{...proposal,...(target?{target}:{}),effects:[]}),...numericSlots(definition,text).slots};
   const form=formSlots(definition,text);
   let combinations=[{...action.fill}],missing=[];
   for(const slot of action.slots??[]){
    let choices;
    const container=definition.call?.tool==='world_environment'&&definition.call.operation==='draw_water'&&slot.name==='container'?(proposal.means?.item??proposal.means?.tools?.[0]):undefined;
-   const supplied=proposal.means?.[slot.name]??container??inferred[slot.name];
+   const supplied=proposal.means?.[slot.name]??container??action.fill?.[slot.name]??inferred[slot.name];
    if(supplied!==undefined)choices=[supplied];
    else if(form?.[slot.name])choices=(slot.options??[]).filter(o=>namedOption(form[slot.name],o)).map(o=>o.value);
    else if(['intent','text','content'].includes(slot.name))choices=[text];
    else if(slot.default!==undefined)choices=[slot.default];
    else {
-    const offered=slot.options??[],named=offered.filter(o=>mentions(text,o.label)||mentions(text,o.value));
+    const offered=slot.options??[],named=offered.filter(o=>mentions(text,o.label?.replace(/（.*$/,''))||mentions(text,o.value));
     if(named.length)choices=named.map(o=>slot.multiple?[o.value]:o.value);
     else if(!slot.required)choices=[undefined];
     else if(offered.length)choices=offered.map(o=>slot.multiple?[o.value]:o.value);
@@ -81,10 +105,53 @@ export function constructIntent(engine,document,proposal,context){
    candidates.push({id:action.id,label:action.label,slots,missing:required});
   }
  }
+ }
  if(candidates.length===1&&!candidates[0].missing.length){
   const candidate=candidates[0],resolved=primitiveRuntime.resolve(engine,{args:{action:candidate.id,slots:candidate.slots}});
   return {candidate,effects:resolved.effects??null};
  }
  return {candidates,missing:[...new Set(candidates.flatMap(c=>c.missing))],status:candidates.length?'needs_slots':'needs_alternative',
   reason:candidates.length?'当前有多种做法或尚缺行动条件，请选择具体动作和对象':'当前可感知的对象和已掌握的手段中，没有能实现这个意图的动作；需要实际可用的材料、技能或规则来源'};
+}
+
+// This is a read-only shortlist, not an execution plan. Keep unmatched scene
+// shortcuts visible, but never let the selector substitute one for the intent.
+export function turnCandidates(engine,document,playerText,context){
+ const sceneMenu=worldActions(engine,document,{limit:5,candidatePreview:true});
+ const entities=[...context.entities??[]];
+ for(const person of sceneMenu.objects.people.filter(row=>row.sells)){
+  const menu=worldActions(engine,document,{query:'core:trade.buy',target:person.id,limit:1,candidatePreview:true});
+  for(const option of menu.actions.find(row=>row.id==='core:trade.buy')?.slots.find(slot=>slot.name==='item')?.options??[]){
+   if(!entities.some(row=>row.id===option.value))entities.push({id:option.value,name:option.label.replace(/（.*$/,''),kind:'item'});
+  }
+ }
+ context={...context,entities};
+ const parsed=constructIntent(engine,document,{intent:playerText},context);
+ let matched=parsed.candidate?[parsed.candidate]:parsed.candidates??[];
+ if(!matched.length){
+  const clauses=playerText.split(/[，,；;。]|然后/).map(row=>row.trim()).filter(Boolean);
+  if(clauses.length>1&&clauses.length<=5){
+   const steps=clauses.map(intent=>{const row=constructIntent(engine,document,{intent},context);return row.candidate??(row.candidates?.length===1?row.candidates[0]:null);});
+   if(steps.every(row=>row&&!row.missing.length))matched=[{id:'sequence',label:steps.map(row=>row.label).join('，'),slots:{},missing:[],steps:steps.map(row=>({action:row.id,slots:row.slots}))}];
+  }
+ }
+ const registry=primitiveRuntime.registry(engine);
+ const rows=matched.slice(0,5).map(row=>{
+  const definitions=(row.steps??[{action:row.id}]).map(step=>registry.byId.get(step.action));
+  const expressions=[...new Set(definitions.flatMap(action=>[action.label,...action.synonyms??[]]).filter(word=>playerText.includes(word)))];
+  const named=entities.filter(entity=>mentions(playerText,entity.name)).map(entity=>entity.name);
+  return {...row,match:{input:playerText,complete:true,basis:{expressions,entities:named,slots:'current scene options and explicit quantities; entire command consumed'}}};
+ });
+ if(rows.length<3){
+  const menu=sceneMenu;
+  for(const action of menu.actions){
+   if(rows.length>=3)break;
+   if(action.readOnly||action.id.startsWith('open:')||rows.some(row=>row.id===action.id))continue;
+   rows.push({id:action.id,label:action.label,slots:{...action.fill},missing:(action.slots??[]).filter(slot=>slot.required&&action.fill?.[slot.name]===undefined).map(slot=>slot.name),
+    match:{input:playerText,complete:false,basis:'scene shortcut only; does not cover the complete player request'}});
+  }
+ }
+ return {status:matched.length===1&&!matched[0].missing.length?'candidate':parsed.status,missing:parsed.missing??[],unresolved:!matched.length,
+  candidates:rows.map((row,index)=>({...row,ref:`c${index+1}`})),
+  choices:[{ref:'more',label:'查更多'},{ref:'clarify',label:'澄清'},{ref:'none',label:'都不是（开放提案）'},{ref:'no_action',label:'纯闲聊/观察，无行动'}]};
 }

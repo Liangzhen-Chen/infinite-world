@@ -21,26 +21,28 @@ for(const fixture of fixtures)for(const outcome of ['settled','no-action','no-ca
   // regression, not a fabricated historical world replay.
   const order=[],requests=[],history=[],diagnostics=[fixture.originalReply];let settled=false,sealed=0,executions=0;
   const safeText='尚未发生；请从候选选择或继续构造。';
-  const gate=async()=>{assert.equal(sealed,0);order.push('gate');return {status:settled?'ready':'pending',safeText,candidates:[{id:'supported-action'}],facts:[],settlement:{status:settled?'settled':'pending'}};};
+  // The stub now supplies the same engine-owned reference and original-input
+  // match evidence as review/begin; the saved-draft isolation checks remain.
+  const gate=async()=>{assert.equal(sealed,0);order.push('gate');return {status:settled?'ready':'pending',safeText,candidates:[{id:'supported-action',ref:'c1',slots:{},missing:[],match:{input:fixture.input,complete:true}}],facts:[],settlement:{status:settled?'settled':'pending'}};};
   const state={};
   const result=await finishContractTurn({playerText:fixture.input,draft:fixture.originalReply,gate,state,
    tools:[{type:'function',function:{name:'world_act',parameters:{type:'object',properties:{}}}}],messages:[{role:'user',content:fixture.input}],
    generate:async(body,label)=>{
     requests.push(body);order.push(label);assert.doesNotMatch(JSON.stringify(body),new RegExp(fixture.originalReply.slice(0,12)));
     if(label==='turn-retry-narration'){assert.equal(settled,true);return response({content:'正式回执后的叙述。'});}
-    assert.equal(body.tool_choice,'required');assert.deepEqual(body.thinking,{type:'disabled'});assert.equal(body.stream,false);
-    assert.ok(body.tools.some(tool=>tool.function.name===noActionTool.function.name));
-    if(outcome==='no-action')return response({tool_calls:[call('world_no_action')]});
+    assert.equal(body.tool_choice.function.name,'world_confirm');assert.deepEqual(body.thinking,{type:'disabled'});assert.equal(body.stream,false);
+    assert.equal(body.tools[0].function.strict,true);
+    if(outcome==='no-action')return response({tool_calls:[call('world_confirm',{ref:'no_action'})]});
     if(outcome==='no-call')return response({content:'仍试图直接叙述'});
-    return response({content:fixture.originalReply,tool_calls:[call('world_act',{action:'supported-action'})]});
+    return response({content:fixture.originalReply,tool_calls:[call('world_confirm',{ref:'c1'})]});
    },
    execute:async()=>{order.push('execute');executions++;settled=true;return {ok:true,receipt:{status:'committed',eventId:'actual-event'}};},
    onTools:(assistant,results)=>{assert.equal(assistant.content,null);history.push(assistant,...results);},
-   review:async draft=>{order.push('seal');sealed++;assert.equal(draft,outcome==='settled'?'正式回执后的叙述。':fixture.originalReply);return {status:settled?'verified':'pending',canCommit:settled,text:settled?draft:safeText,safeText:settled?undefined:safeText};}});
+   review:async draft=>{order.push('seal');sealed++;assert.equal(draft,outcome==='settled'?'正式回执后的叙述。':safeText);return {status:settled?'verified':'pending',canCommit:settled,text:settled?draft:safeText,safeText:settled?undefined:safeText};}});
   history.push({role:'assistant',content:result.text});
   assert.equal(result.text,outcome==='settled'?'正式回执后的叙述。':safeText);
   assert.equal(executions,outcome==='settled'?1:0);assert.equal(sealed,1);
-  assert.equal(requests.filter(body=>body.tool_choice==='required').length,1);assert.equal(state.retryStarted,true);
+  assert.equal(requests.filter(body=>body.tool_choice?.function?.name==='world_confirm').length,1);assert.equal(state.retryStarted,true);
   assert.equal(result.retry.calls,outcome==='settled'?2:1);assert.equal(order.at(-1),'seal');
   assert.ok(!JSON.stringify(history).includes(fixture.originalReply));assert.equal(diagnostics[0],fixture.originalReply);
  });
@@ -87,7 +89,9 @@ test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之
  const server=await createPlaytestServer({consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
  const requests=[],endpoints=[];const original='模型没有结算便宣称已等完。';
  const client={async generate(body){requests.push(body);
-  if(body.tool_choice==='required')return response({tool_calls:[call('world_time',{minutes:10})]});
+  // First confirmation intentionally returns no call; the single repair must
+  // confirm the engine's ten-minute candidate, not invent time parameters.
+  if(requests.length>1&&body.tool_choice?.function?.name==='world_confirm')return response({tool_calls:[call('world_confirm',{ref:'c1'})]});
   if(body.tool_choice==='none')return response({content:'你原地休息了十分钟。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场=""/>'});
   return response({content:original});
  }};
@@ -96,7 +100,8 @@ test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之
  assert.deepEqual(result.turns[0].errors,[]);assert.equal(result.turns[0].toolRetry.calls,2);assert.equal(requests.length,3);
  assert.equal(result.turns[0].originalReply,original);assert.ok(!JSON.stringify(result.session).includes(original));
  assert.ok(!JSON.stringify(endpoints.filter(row=>row.name==='sync-index')).includes(original));
- const written=endpoints.filter(row=>row.name==='execute');assert.deepEqual(written.map(row=>row.body.tool),['world_time','world_turn']);
+ const written=endpoints.filter(row=>row.name==='execute');assert.deepEqual(written.map(row=>row.body.tool),['world_act','world_turn']);
+ assert.deepEqual(written[0].body.args,{action:'core:time',slots:{minutes:10,activity:'休息'}});
  assert.equal(endpoints.filter(row=>row.name==='review/reply').length,1);
  assert.equal(result.session.history.filter(row=>row.role==='tool').length,1);assert.equal(result.turns[0].assertions.every(row=>row.pass),true);
 });
@@ -107,7 +112,7 @@ test('runner 三条真实零调用原稿均被 pending 模板替换，无行动�
  for(const fixture of fixtures)for(const noAction of [true,false]){
   const synced=[];let calls=0;
   const client={async generate(body){calls++;
-   return response(body.tool_choice==='required'?(noAction?{tool_calls:[call('world_no_action')]}:{content:fixture.originalReply}):{content:fixture.originalReply});
+   return response(calls>1&&body.tool_choice?.function?.name==='world_confirm'?(noAction?{tool_calls:[call('world_confirm',{ref:'no_action'})]}:{content:fixture.originalReply}):{content:fixture.originalReply});
   }};
   const result=await runPlaytest({scenario:{id:`${fixture.id}-${noAction}`,turns:[{input:fixture.input,assertions:[{kind:'elapsed',min:0,max:0}]}]},
    api:async(name,body)=>{if(name==='sync-index')synced.push(structuredClone(body));return server.api(name,body);},

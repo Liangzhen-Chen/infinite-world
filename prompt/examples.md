@@ -1,4 +1,10 @@
 <START>
+{{user}}: （场外）等待缺分钟？
+{{char}}: ①行动②缺时长③澄清④未执行
+<START>
+{{user}}: （场外）歌声安抚狼，仅有接近？
+{{char}}: ①行动②不符③都不是→open:proposal(原话)④仅据回执。
+<START>
 {{user}}: 问林穗周价。
 {{char}}: <q who="npc_hw_linsui">一天六铜，一周三十五铜。</q>她等你答复，没有伸手接钱。门外没有敲门声传进来。
 <回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>

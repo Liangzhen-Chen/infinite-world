@@ -24,10 +24,12 @@ test('拒绝后继续完整十回合，保留原文及付款，拒绝尾注不�
   return {...result,...clean,...(reviews++===0?{canCommit:false,status:'unverified',text:'不能替换原文',feedback:'测试拒绝理由',issues:[issue]}:{})};
  };
  const client={async generate(body,label){generated++;
-  return {choices:[label==='continue-1-0-0'?{finish_reason:'tool_calls',message:{tool_calls:[{id:'pay',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',service:'住宿',days:1})}}]}}:
+  // Same one-night purchase and six-copper assertion; the model now confirms
+  // the current host's engine form instead of supplying trade parameters.
+  return {choices:[label==='continue-1-0-0'?{finish_reason:'tool_calls',message:{tool_calls:[{id:'pay',type:'function',function:{name:'world_confirm',arguments:JSON.stringify({ref:'c1'})}}]}}:
    {finish_reason:'stop',message:{content:label.startsWith('continue-1-0-')?'已核对。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>':'已核对。'}}]};
  }};
- const scenario={id:'continue',initial:{mode:'legacy'},turns:Array.from({length:10},(_,index)=>({input:index?'（场外）只核对。':'我付六铜住一晚。',assertions:[index?{kind:'elapsed',min:0,max:0}:{kind:'delta',path:'state.player.coins',value:-6}]}))};
+ const scenario={id:'continue',initial:{mode:'legacy'},turns:Array.from({length:10},(_,index)=>({input:index?'（场外）只核对。':'我住一晚。',assertions:[index?{kind:'elapsed',min:0,max:0}:{kind:'delta',path:'state.player.coins',value:-6}]}))};
  const result=await runPlaytest({scenario,api,client,bundle:await loadPromptBundle(),countTokens:()=>20,stopOnFailure:true});
  assert.equal(result.turns.length,10);assert.equal(generated,11);assert.equal(result.failedTurns,1);assert.equal(result.turns[0].errors.length,0);
  // 修订记录 2026-10-23 第3条：拒审原文保留供诊断，只发布来源模板。

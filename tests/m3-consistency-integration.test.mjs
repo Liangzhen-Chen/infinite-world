@@ -77,9 +77,13 @@ test('缺少模型服务或关闭审查均不伪装通过，审查只采用服�
 test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',async t=>{
  const reviewClient=clientFixture(),server=await createPlaytestServer({consistencyClient:reviewClient});t.after(()=>server.close());
  let requests=0;
- const narrator={async generate({messages,tools}){
-  assert.ok(messages[0].content.includes('无限原野'));assert.ok(tools.length>10);requests++;
-  return requests===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'bread',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',item:'面包',quantity:1})}}]}}]}:{choices:[{finish_reason:'stop',message:{content:draft}}]};
+ // llm1-confirm: the same bread purchase now selects an engine-owned form;
+ // narration and the three semantic review calls retain their assertions.
+ const narrator={async generate({messages,tools,tool_choice}){
+  assert.ok(messages[0].content.includes('无限原野'));requests++;
+  if(requests===1){assert.equal(tools.length,1);assert.equal(tools[0].function.strict,true);assert.equal(tool_choice.function.name,'world_confirm');}
+  else {assert.deepEqual(tools,[]);assert.equal(tool_choice,'none');}
+  return requests===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'bread',type:'function',function:{name:'world_confirm',arguments:JSON.stringify({ref:'c1'})}}]}}]}:{choices:[{finish_reason:'stop',message:{content:draft}}]};
  }};
  const result=await runPlaytest({scenario:{id:'review-pipeline',initial:{mode:'legacy'},turns:[{input:'我付钱买一个面包',assertions:[{kind:'delta',path:'state.player.coins',value:-2}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
  assert.equal(result.pass,true,JSON.stringify(result.turns[0]));assert.equal(result.turns[0].originalReply,draft);assert.equal(result.turns[0].reply,corrected);

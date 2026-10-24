@@ -5,7 +5,7 @@ import {once}from'node:events';
 import express from 'express';
 import {init}from'../server-plugin/index.mjs';
 import {assembleMessages,isOutOfCharacter}from'../extension/prompt.mjs';
-import {toolDefinitions,readOnlyTools,modelActionCatalog}from'../extension/tools.mjs';
+import {toolDefinitions,readOnlyTools,modelActionCatalog,builderToolCall}from'../extension/tools.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
 import {parseTurn,toolResultWithClock,modelToolResult}from'../extension/turn.mjs';
 import {visibleReply}from'../extension/message-view.mjs';
@@ -16,7 +16,7 @@ import {groupHistory,planHistoryWindow}from'../extension/history-window.mjs';
 import {loadHistoryTokenizer}from'./m3-history-tokenizer.mjs';
 import {loadWorld}from'./load-world.mjs';
 import {summarizeConsistency,consistencyTurnFailed}from'../server-plugin/consistency-outcome.mjs';
-import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs';
+import {finishContractTurn,turnFactsPrompt,candidateSelectionRequest,selectedCandidateCall} from '../extension/turn-contract.mjs';
 
 export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -83,7 +83,8 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 if(tool==='world_search')return api('search',{...args,campaignId,token:reviewTurn.token,anchor,expectedSequence:view.reference.sequence});
                 if(tool==='world_catalog')return api('catalog',{...args,campaignId});
                 if(tool==='world_actions')return modelActionCatalog(await api('actions',{target:args.target,query:args.query,campaignId,limit:12}));
-                const eventId=`${anchor}-${report.calls.length}`,request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};
+                const routed=tool==='world_act'?builderToolCall(args.action,args.slots??{}):{tool,args};
+                const eventId=`${anchor}-${report.calls.length}`,request={campaignId,...routed,eventId,anchor,expectedSequence:view.reference.sequence};
                 const priorState=JSON.stringify(view.document);
                 const output=await api('execute',request);await fresh();
                 callChecks.push({tool,args,stateUnchanged:priorState===JSON.stringify(view.document)});
@@ -117,11 +118,25 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 historyCursor=planned.cursor;report.historyWindow={reason:planned.reason,reset:planned.reset,beforeTokens:planned.beforeTokens,afterTokens:planned.afterTokens,batch:planned.batch,removedAnchors:planned.cursor.removed.map(row=>row.anchor)};
                 const messages=assembleMessages(bundle,planned.messages,current.scene);
                 messages.push({role:'system',content:factsPrompt});retryMessages=messages;
-                const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools,tool_choice:'auto'},`${scenario.id}-${attempt}-${index}-${recursion}`);
+                const selecting=!recursion&&!isOutOfCharacter(step.input);
+                const selection=selecting?candidateSelectionRequest(reviewTurn.preview,step.input):{};
+                const response=await client.generate({...generationRequest(settings),messages:processMessages(messages,bundle),tools:selecting?selection.tools:[],tool_choice:selecting?selection.tool_choice:'none',...(selecting?{thinking:selection.thinking,reasoning_effort:undefined}:{})},`${scenario.id}-${attempt}-${index}-${recursion}`);
                 if(response.measurement)report.requests.push(response.measurement);
                 const message=response.choices?.[0]?.message;if(!message)throw new Error('模型没有返回消息');
                 report.finish=response.choices[0].finish_reason??null;
                 if(report.finish==='length')throw new Error(`输出达到${settings.maxOutputTokens} token上限，回复或调用未完成`);
+                if(selecting){
+                    const calls=message.tool_calls??[];
+                    try{
+                        if(calls.length!==1||calls[0].function?.name!=='world_confirm')throw Error('必须返回唯一候选确认函数');
+                        const selected=selectedCandidateCall(reviewTurn.preview,step.input,JSON.parse(calls[0].function.arguments));
+                        message.tool_calls=selected?(selected.steps??[selected]).map((step,index)=>({...calls[0],id:`${calls[0].id}-${index}`,function:{name:step.name,arguments:JSON.stringify(step.args)}})):[];
+                        message.content=null;
+                        if(!selected){report.reply=(await gate()).safeText;final=true;break;}
+                    }catch(error){
+                        report.confirmationError=error.message;report.reply=message.content??'';final=true;break;
+                    }
+                }else if(message.tool_calls?.length)throw Error('叙述阶段不能自填动作参数');
                 const normalized={role:'assistant',content:message.content??null,...(message.tool_calls?.length?{tool_calls:message.tool_calls}:{})};
                 if(!message.tool_calls?.length){report.reply=message.content??'';final=Boolean(report.reply);break;}
                 normalized.content=null;history.push(normalized);

@@ -1,6 +1,55 @@
 import {isOutOfCharacter} from './prompt.mjs';
 import {modelContextProjection} from './turn.mjs';
 
+export function candidateSelectionRequest(preview,playerText,messages=[]){
+ const refs=[...(preview.candidates??[]).map(row=>row.ref),'more','clarify','none','no_action'];
+ return {messages:[...messages,{role:'system',content:turnFactsPrompt({preview})+'\n①判断类型；②核对事实、缺槽及完整原意；③只选候选引用。近似、不确定选 none，保留创意手段与目的。缺槽选 clarify，查更多选 more；no_action 仅纯闲聊/观察。'},{role:'user',content:playerText}],
+  tools:[{type:'function',function:{name:'world_confirm',description:'确认完整原意匹配的引擎候选；都不是进入开放提案。',strict:true,
+   parameters:{type:'object',properties:{ref:{type:'string',enum:refs}},required:['ref'],additionalProperties:false}}}],
+  tool_choice:{type:'function',function:{name:'world_confirm'}},thinking:{type:'disabled'},stream:false};
+}
+
+// Only the engine's frozen shortlist supplies executable arguments. The model
+// may select a reference, never submit action ids, slot overrides or effects.
+export function selectedCandidateCall(preview,playerText,selection){
+ if(!selection||Object.keys(selection).length!==1||typeof selection.ref!=='string')throw Error('确认只接受候选引用，不能自填参数');
+ const {ref}=selection;
+ if(ref==='none')return {name:'world_act',args:{action:'open:proposal',slots:{intent:playerText}}};
+ if(ref==='more')return {name:'world_actions',args:{query:playerText}};
+ if(ref==='clarify')return null;
+ if(ref==='no_action'){
+  if((preview.candidates??[]).some(row=>row.match?.complete)||! /^(?:我)?(?:只)?(?:看看|观察|看一眼|闲聊|你好|谢谢|看天气|看行囊)/.test(playerText.trim()))throw Error('行动请求不能用无行动代替裁决');
+  return null;
+ }
+ const candidate=preview.candidates?.find(row=>row.ref===ref);
+ if(!candidate)throw Error('不存在的候选引用');
+ if(candidate.match?.input!==playerText||candidate.match?.complete!==true)throw Error('候选未覆盖完整原意，请选都不是进入开放提案');
+ if(candidate.missing?.length)throw Error(`候选缺槽：${candidate.missing.join('、')}，请澄清`);
+ if(candidate.steps)return {steps:structuredClone(candidate.steps).map(args=>({name:'world_act',args}))};
+ return {name:'world_act',args:{action:candidate.id,slots:structuredClone(candidate.slots)}};
+}
+
+export async function confirmTurnCandidates({preview,playerText,messages=[],generate,execute,onTools=()=>{},onMeasurement=()=>{},isCurrent=()=>true}){
+ const response=await generate(candidateSelectionRequest(preview,playerText,messages),'turn-confirm');
+ if(response.measurement)onMeasurement(response.measurement);
+ if(!isCurrent())throw Error('回合来源已变化，停止确认');
+ const choice=response.choices?.[0],calls=choice?.message?.tool_calls??[];
+ if(choice?.finish_reason==='length'||calls.length!==1||calls[0].function?.name!=='world_confirm')throw Error('确认必须完整返回唯一选择函数');
+ const selected=selectedCandidateCall(preview,playerText,JSON.parse(calls[0].function.arguments));
+ if(!selected)return {status:'pending',ref:JSON.parse(calls[0].function.arguments).ref};
+ const toolCalls=[],results=[];let result;
+ for(const [index,step] of (selected.steps??[selected]).entries()){
+  if(!isCurrent())throw Error('回合来源已变化，停止确认');
+  const call={...calls[0],id:`${calls[0].id}-${index}`,function:{name:step.name,arguments:JSON.stringify(step.args)}};
+  result=await execute(step.name,step.args,call);toolCalls.push(call);
+  results.push({role:'tool',tool_call_id:call.id,content:JSON.stringify(modelContextProjection(result))});
+  if(result?.ok===false||result?.receipt?.status==='rejected')break;
+ }
+ const assistant={role:'assistant',content:null,tool_calls:toolCalls};
+ await onTools(assistant,results);
+ return {status:'executed',assistant,results,result};
+}
+
 export const noActionTool={type:'function',function:{name:'world_no_action',description:'本回合无行动（纯闲聊/纯观察）。只显示已有事实；不执行、不推进时间、不替 NPC 决定。',parameters:{type:'object',properties:{},additionalProperties:false}}};
 export function turnFactsPrompt(gate={}){
  return `【本回合来源投影】\n${JSON.stringify(modelContextProjection({status:gate.status,facts:gate.facts??[],settlement:gate.settlement,candidates:gate.candidates??[],preview:gate.preview}))}\n候选尚未执行，不能当成事实；当前状态不是本轮新行动或新决定的回执。`;
@@ -23,37 +72,16 @@ export async function finishContractTurn({playerText,draft,gate,review,generate,
   try{
    await onRetryStart();
    assertCurrent();retry.calls++;
-   const response=await generate({messages:[...messages,{role:'system',content:turnFactsPrompt(evidence)+'\n仅补做一次工具阶段。依据玩家原文，优先选择与原意相符的行动候选，使用其动作编号和槽位提交实际工具；候选只是建议，提交后的引擎回执才是结果。没有匹配候选时，可用 world_actions 查询或用 world_act 的 open:proposal 提交原意，由引擎裁决可行部分、拒绝原因与替代。world_no_action 只用于纯闲聊/纯观察；玩家要求尝试行动时，即使效果看似不可能，也应提交引擎裁决，不能以无行动代替拒绝。不得擅自执行玩家未要求的候选。'}],tools:[...tools,noActionTool],tool_choice:'required',thinking:{type:'disabled'},stream:false},'turn-tool-retry');
-   if(response.measurement)onMeasurement(response.measurement);
-   assertCurrent();const choice=response.choices?.[0],message=choice?.message;
-   if(!message||choice.finish_reason==='length')throw Error('补跑工具阶段未完整返回');
-   const calls=message.tool_calls??[];
-   if(calls.length){
-    // Tool-stage prose is unreviewed too. Keep the actual calls, without it.
-    const assistant={role:'assistant',content:null,tool_calls:calls},results=[];
-    const noAction=calls.some(call=>call.function?.name===noActionTool.function.name);
-    for(const call of calls){
-     assertCurrent();let result;
-     try{
-      const name=call.function?.name,args=JSON.parse(call.function?.arguments??'{}');
-      if(name===noActionTool.function.name)result={ok:true,status:'no_action',settled:false};
-      else if(noAction)result={ok:false,error:'本回合选择无行动，未执行其他调用'};
-      else if(!tools.some(tool=>tool.function.name===name))result={ok:false,error:'补跑调用未注册工具'};
-      else result=await execute(name,args,call);
-     }catch(error){result={ok:false,error:error.message};}
-     results.push({role:'tool',tool_call_id:call.id,content:JSON.stringify(result)});
-    }
-    await onTools(assistant,results);assertCurrent();evidence=await gate();
-    if(evidence.status!=='pending'&&!noAction&&narrate){
-     // A fresh text-only narration follows the executed receipts, before seal.
-     retry.calls++;
-     const narration=await generate({messages:[...messages,assistant,...results,{role:'system',content:turnFactsPrompt(evidence)+'\n根据实际回执叙述本轮，保留回合尾注；不再调用工具。'}],tool_choice:'none',thinking:{type:'disabled'},stream:false},'turn-retry-narration');
-     if(narration.measurement)onMeasurement(narration.measurement);
-     assertCurrent();const final=narration.choices?.[0];
-     if(final?.finish_reason==='length'||final?.message?.tool_calls?.length||!final?.message?.content)throw Error('补跑后的叙述未完整返回');
-     text=final.message.content;
-    }else if(evidence.status!=='pending')text=evidence.safeText;
-   }
+   const confirmed=await confirmTurnCandidates({preview:evidence.preview??{candidates:evidence.candidates??[]},playerText,messages,generate,execute,onTools,onMeasurement,isCurrent});
+   assertCurrent();evidence=await gate();
+   if(confirmed.status==='executed'&&evidence.status!=='pending'&&narrate){
+    retry.calls++;
+    const narration=await generate({messages:[...messages,confirmed.assistant,...confirmed.results,{role:'system',content:turnFactsPrompt(evidence)}],tool_choice:'none',thinking:{type:'disabled'},stream:false},'turn-retry-narration');
+    if(narration.measurement)onMeasurement(narration.measurement);
+    assertCurrent();const final=narration.choices?.[0];
+    if(final?.finish_reason==='length'||final?.message?.tool_calls?.length||!final?.message?.content)throw Error('Incomplete narration');
+    text=final.message.content;
+   }else text=evidence.safeText;
   }catch(error){retry.error=error.message;assertCurrent();evidence=await gate();text=evidence.safeText;}
   finally{retry.latencyMs=Date.now()-started;}
  }

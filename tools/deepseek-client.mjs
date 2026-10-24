@@ -38,7 +38,8 @@ export class DeepSeekClient {
         const started = performance.now();
         let charged=false;
         try {
-            const response = await fetch('https://api.deepseek.com/chat/completions', {
+            const strict=request.tools?.some(tool=>tool.function?.strict===true);
+            const response = await fetch(`https://api.deepseek.com/${strict?'beta/':''}chat/completions`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: encoded,
                 signal: AbortSignal.timeout(180000),
             });

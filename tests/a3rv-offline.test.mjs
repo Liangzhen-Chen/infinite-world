@@ -10,6 +10,21 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 import {turnFactsPrompt} from '../extension/turn-contract.mjs';
 
 const fixtures=JSON.parse(await fs.readFile(new URL('./fixtures/a3rv/sidecar-replay.json',import.meta.url),'utf8'));
+// llm1-confirm intentionally omits engine metadata and redundant legacy
+// copies. Check every other original leaf (including costs and provenance),
+// rather than requiring the model wire to reproduce engine-only fields.
+function assertPublicFields(raw,projected,root=raw){
+ if(!raw||typeof raw!=='object'){assert.deepEqual(projected,raw);return;}
+ if(Array.isArray(raw)){assert.equal(projected.length,raw.length);raw.forEach((row,i)=>assertPublicFields(row,projected[i],root));return;}
+ for(const [key,value] of Object.entries(raw)){
+  const metadata=/version$/i.test(key)||['protocol','revision','sequence','parentSequence','head','worldHash','beforeHash','afterHash','replay','replayMetadata','patches','randomState','idempotencyKey','signature','signatureKind'].includes(key);
+  const enginePath=key==='path'&&Array.isArray(value)&&value[0]==='state'&&Object.hasOwn(raw,'before')&&Object.hasOwn(raw,'after');
+  if(metadata||enginePath){assert.equal(Object.hasOwn(projected,key),false,key);continue;}
+  if(key==='legacy'){
+   for(const [field,entry] of Object.entries(value))if(JSON.stringify(root[field])!==JSON.stringify(entry))assertPublicFields({[field]:entry},projected.legacy,root);
+  }else assertPublicFields(value,projected[key],root);
+ }
+}
 function expandProjection(projected){
  const dereference=value=>{
   if(!value||typeof value!=='object')return value;
@@ -134,10 +149,10 @@ test('真实 HTTP 的非法 consent 返回统一拒绝，整份存档及事件�
  assert.equal(own.result.receipt.status,'rejected');assert.doesNotMatch(own.result.receipt.reason,/需要对方答应/,'省略 consent 后按实际缺槽/能力拒绝，不能强要无主水体同意');
 });
 
-test('真实维修输出只用指针替换重复值，展开后逐字段等于原回执',async()=>{
+test('真实维修投影去引擎字段及重复值，公开回执逐字段保留',async()=>{
  const raw=JSON.parse(await fs.readFile(new URL('./fixtures/a3rv/repair-result.json',import.meta.url),'utf8'));
  const saved=structuredClone(raw),projected=modelToolResult(raw);
- assert.deepEqual(raw,saved);assert.deepEqual(expandProjection(projected),raw);
+ assert.deepEqual(raw,saved);assertPublicFields(raw,expandProjection(projected));
  assert.ok(JSON.stringify(projected).length<JSON.stringify(raw).length*.7,'真实维修回执的模型窗口占用须降低至少三成');
  assert.equal(projected.receipt.status,'committed');assert.equal(projected.turnClock.elapsedMinutes,20);
  assert.equal(projected.factSummary,raw.factSummary);
@@ -151,7 +166,7 @@ test('真实回合证据的来源投影去重后，全部公开事实和原始�
   decisions:settlement.decisions.filter(row=>row.knownBy.includes('player')),facts:settlement.facts.filter(row=>row.knownBy.includes('player')),
  },candidates:[],preview:input.preview};
  const prompt=turnFactsPrompt(gate),projected=JSON.parse(prompt.split('\n')[1]);
- assert.deepEqual(expandProjection(projected),gate);
+ assertPublicFields(gate,expandProjection(projected));
  assert.ok(JSON.stringify(projected).length<JSON.stringify(gate).length*.8);
  assert.match(prompt,/候选尚未执行，不能当成事实/);
 });

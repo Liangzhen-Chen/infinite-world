@@ -397,6 +397,10 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
   return (a.visibility.catalog===`target:${kind}`||['feature','item','building'].includes(kind)&&(a.id.startsWith('core:environment.')||a.id===mechanismAction(mechanism))||kind==='place'&&a.id.startsWith('core:farm.private_'))&&visible(a);
  }).map(a=>offer(ctx,a,id));
  else actions=registry.actions.filter(a=>(a.visibility.catalog==='here'||a.visibility.catalog==='quick'||a.ui?.quick)&&visible(a)).map(a=>offer(ctx,a,null));
+ // The constructor only needs offered slots and visible names. Avoid building
+ // the entity primitive inspector, open-proposal schema and scene prose for
+ // every candidate lookup. Execution permissions still come from offer().
+ if(candidatePreview)return {actions:actions.slice(0,limit),objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,sells:stockOf(ctx,p.id).length>0})),items:ctx.inventory}};
  const openActions=document.state.records?.action_config?.openActions??'full';
  if(query==='open:proposal'||query==='world_propose')actions=actions.filter(a=>a.id==='open:proposal');
  // Candidate discovery grants no execution permission, even for registered

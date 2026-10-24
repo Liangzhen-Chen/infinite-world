@@ -45,6 +45,18 @@ export function toolResultWithClock(result,{startMinute,minute}={}){
 // replace exact duplicates, so the evidence still has one complete copy of
 // every value (including consent provenance and failed checks).
 export function modelContextProjection(value){
+ const internal=key=>/version$/i.test(key)||['protocol','revision','sequence','parentSequence','head','worldHash','beforeHash','afterHash','replay','replayMetadata','patches','randomState','idempotencyKey','signature','signatureKind'].includes(key);
+ const clean=row=>{
+  if(!row||typeof row!=='object')return row;
+  if(Array.isArray(row))return row.map(clean);
+  const entries=Object.entries(row).filter(([key,entry])=>!internal(key)&&!(key==='path'&&Array.isArray(entry)&&entry[0]==='state'&&Object.hasOwn(row,'before')&&Object.hasOwn(row,'after')));
+  return Object.fromEntries(entries.map(([key,entry])=>{
+   // Legacy is a copy of the public result, not another effect. Keep only
+   // values with no identical top-level counterpart, including unique costs.
+   if(key==='legacy'&&entry&&typeof entry==='object')entry=Object.fromEntries(Object.entries(entry).filter(([field,data])=>JSON.stringify(value?.[field])!==JSON.stringify(data)));
+   return [key,clean(entry)];
+  }));
+ };
  const seen=new Map();
  const visit=(row,path)=>{
   if(!row||typeof row!=='object')return row;
@@ -56,9 +68,9 @@ export function modelContextProjection(value){
   return Array.isArray(row)?row.map((entry,index)=>visit(entry,`${path}/${index}`)):
    Object.fromEntries(Object.entries(row).map(([key,entry])=>[key,visit(entry,`${path}/${key.replaceAll('~','~0').replaceAll('/','~1')}`)]));
  };
- return visit(value,'#');
+ return visit(clean(value),'#');
 }
-export function modelToolResult(result){return result?.receipt?modelContextProjection(result):result;}
+export function modelToolResult(result){return modelContextProjection(result);}
 
 export function actionCompletion(saved){
  const result=saved?.result??saved,receipt=result?.receipt;

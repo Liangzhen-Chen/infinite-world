@@ -31,10 +31,12 @@ test('多动作回合在默认配额返回完整长正文和回合尾，不混�
     const reply=`${text}<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`;
     let requests=0;
     const client={async generate(body){
-        assert.equal(body.max_tokens,4096);assert.equal(body.thinking.type,'enabled');requests++;
+        assert.equal(body.max_tokens,4096);requests++;
+        // llm1-confirm replaces free parameter submission with one strict,
+        // non-thinking reference for the engine's two-step candidate.
+        assert.equal(body.thinking.type,requests===1?'disabled':'enabled');
         if(requests===1)return{choices:[{finish_reason:'tool_calls',message:{tool_calls:[
-            {id:'move',type:'function',function:{name:'world_move',arguments:JSON.stringify({destination:'青灯酒馆'})}},
-            {id:'wait',type:'function',function:{name:'world_time',arguments:JSON.stringify({minutes:30,activity:'等待'})}},
+            {id:'sequence',type:'function',function:{name:'world_confirm',arguments:JSON.stringify({ref:'c1'})}},
         ]}}]};
         const current=body.messages.slice(body.messages.findLastIndex(m=>m.role==='user'));
         assert.equal(current.filter(m=>m.role==='tool').length,2);

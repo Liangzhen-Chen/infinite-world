@@ -149,7 +149,9 @@ test('缺少无渠道主体与私密内容的旧知识警告不能验证，原�
 
 test('九组主持示例保留工具外的可见细节，未把过去行动和私密文字补写成事实',async()=>{
  const text=await fs.readFile(new URL('../prompt/examples.md',import.meta.url),'utf8'),examples=parseExamples(text);
- assert.equal(examples.filter(row=>row.role==='assistant').length,9);
+ // llm1-confirm adds two out-of-character judgment demonstrations; the nine
+ // narrative examples and their evidence assertions below are retained.
+ assert.equal(examples.filter(row=>row.role==='assistant').length,11);
  const assistant=examples.filter(row=>row.role==='assistant').map(row=>row.content).join('\n');
  assert.match(assistant,/没有敲门声传进来/);assert.match(assistant,/具体内容看不清/);
  assert.match(assistant,/你在酒馆的事，我没看见/);assert.match(assistant,/一般不往外传/);
