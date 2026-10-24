@@ -16,6 +16,7 @@ import {charteredWorld} from './helpers/charter-world.mjs';
 import {officeScene} from './helpers/office-actions.mjs';
 import {documentScene} from './helpers/document-actions.mjs';
 import {commitNpcCrime} from '../server-plugin/npc-crime.mjs';
+import {nativeDefenceRow,nativeLegalRequestRow} from './helpers/trial-actions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
@@ -124,11 +125,13 @@ async function filingPremises(n){
  }
  return {row,document,setupUnmet:[]};
 }
-for(const n of legalRequests)([51,53].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
+for(const n of legalRequests)([51,52,53,55,58].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
  // 05 §5.2.7: current native premises submit requests; the original r5 inputs
  // above still lack those premises and retain every atomic-refusal assertion.
- const prepared=[51,53].includes(n)?await filingPremises(n):{row:nativeRowFor(n),...applyIntentSetup(legalEngine,legalInitial,nativeRowFor(n).setup)};
- const runner=[51,53].includes(n)?engine:legalEngine;
+ // 05 5.2.7: 052 submits an actual sourced original after judgment; 058 addresses the actual filing officer.
+ // 05 §5.2.7: 055 now earns its pending case by filing and its advocate by three real lessons and a native vocation decision; all request-only assertions remain.
+ const prepared=[52,58].includes(n)?await nativeLegalRequestRow(nativeRowFor(n),n):n===55?await nativeDefenceRow(nativeRowFor(n)):[51,53].includes(n)?await filingPremises(n):{row:nativeRowFor(n),...applyIntentSetup(legalEngine,legalInitial,nativeRowFor(n).setup)};
+ const runner=prepared.engine??([51,53].includes(n)?engine:legalEngine);
  const {row,document,setupUnmet}=prepared;assert.deepEqual(setupUnmet,[]);
  const uncharted=applyIntentSetup(engine,initial,nativeRowFor(n).setup).setupUnmet;
  if(n!==55)assert.ok(uncharted.some(e=>/no catalog office|requires a loaded catalog office/.test(e.reason)),'an uncharted office premise must stay unmet in the shipped world');

@@ -17,6 +17,9 @@ import {transition,advanceProcedure} from '../server-plugin/transition.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 
+import {nativeTrial,trialCall,trialScene,trialPeople} from './helpers/trial-actions.mjs';
+import {documentScene} from './helpers/document-actions.mjs';
+import {appointedClaimClerk,officeCall} from './helpers/office-actions.mjs';
 import {charteredWorld} from './helpers/charter-world.mjs';
 // 05 §5.3: corpus offices must be charter offices; the shipped world has none yet (see helper).
 const engine=new WorldEngine(charteredWorld(await loadWorld()));
@@ -140,10 +143,16 @@ test.todo('N/O: full corpus fine proposal routes to the real public collection a
  assert.equal(row.scores.signature,true);assert.equal(row.scores.constructor,true);
 });
 
-test.todo('N/O: paying a restored fine retains the ordinary ten-minute action cost〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
- const document=save(load('054').document),out=write(document,d=>lawAction.call(engine,d,{operation:'pay',case:'a3v2_054_case',authority:'npc_bs_032_1',coins:10},'timed-fine'));
- assert.equal(out.document.state.minute,document.state.minute+10);assert.equal(out.result.fine,10);
- assert.equal(obligationView(out.document.state,'a3v2_054_fine').owed,0);clean(out.document);
+test('N/O: paying a restored fine retains the ordinary ten-minute action cost',async()=>{
+ // 05 5.2.7: a real filing and judgment replace the removed snapshot producer;
+ // the original ten-minute cost and complete canonical discharge are retained.
+ const f=await nativeTrial();await trialCall(f,'request_hearing',{case:f.case,authority:trialPeople.judge},'cost-judgment');
+ f.document=save(f.document);
+ const before=f.document.state.minute,fine=f.document.state.records[f.case].judgment.fine;
+ const paid=await trialCall(f,'core:law.pay',{case:f.case,authority:trialPeople.guard},'timed-fine');
+ assert.equal(f.document.state.minute,before+10);assert.equal(paid.detail.fine,fine);
+ assert.equal(obligationView(f.document.state,f.document.state.records[f.case].fineObligation).owed,0);
+ assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
 test.todo('O/P: restored deposit withdraws through the real bank action and updates one canonical claim and bank projection〔前提待真实动作：签发与规范存款债权绑定的具名纸本存单；归 S5〕',async()=>{
@@ -235,13 +244,20 @@ test.todo('P/Q: the same new receipt retains source and review status across sav
  assert.throws(()=>write(save(destroyed.document),d=>submitCaseDocument(d,engine,{case:'a3v2_052_case',document:destroyed.bindings.a3v2_052_new_receipt,actor:'player'},'destroyed-paper')),/original paper/);
 });
 
-test.todo('P: source links identify the same physical subject, and unrelated, missing or forged documents fail〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
- const good=load('051');assert.deepEqual(ownedErrors(good),[]);const paper=good.document.state.itemInstances[good.bindings.a3v2_051_evidence];
- assert.equal(paper.document.describes,good.bindings.a3v2_051_grain_sack);assert.equal(paper.document.sourceEvent,'world_event:a3v2_051_purchase_receipt');
- for(const change of [s=>s.documents[0].sourceEvent='a3v2_051_theft_missing',s=>s.documents[0].sourceEvent='a3v2_051_theft',s=>s.documents[0].owner='npc_hw_shendu',s=>s.documents[0].describes='missing-item',s=>s.documents[0].content.identifies='wrong-cargo',s=>s.documents[0].links=['missing-event']]){
-  const bad=load('051',change);assert.equal(ownedErrors(bad).length,1);
+test('P: source links identify the same physical subject, and unrelated, missing or forged documents fail',async()=>{
+ // S4-05: native issuance derives ownership, subject, content and links from
+ // the actual purchase. Caller-supplied provenance cannot replace these facts.
+ const f=await documentScene(engine,initial,{prefix:'owner-source'}),paper=f.document.state.itemInstances[f.id];
+ assert.equal(paper.document.describes,f.target);assert.equal(paper.document.sourceEvent,f.source);
+ const valid={source:'owner-source-goods',paper:'item_parchment',kind:'receipt'};
+ const invalid=[{source:'missing-purchase'},{source:'owner-source-issue:issued'},
+  {owner:'npc_hw_shendu'},{describes:'missing-item'},{content:{identifies:'wrong-cargo'}},{links:['missing-event']}];
+ for(let i=0;i<invalid.length;i++){
+  const before=save(f.beforeIssue),out=await engine.reduce(f.beforeIssue,{tool:'world_act',eventId:`invalid-original-${i}`,args:{action:'documents:issue',slots:{...valid,...invalid[i]}}});
+  assert.equal(out.result.receipt.status,'rejected');assert.deepEqual(out.patches,[]);assert.deepEqual(save(f.beforeIssue),before);
  }
- const document=save(good.document);assert.throws(()=>write(document,d=>restoreDocumentSnapshot(d,engine,{id:'missing',owner:'player',sourceEvent:'world_event:a3v2_051_purchase_receipt',describes:good.bindings.a3v2_051_grain_sack},{origin:'initial'})),/paper/);clean(document);
+ const missing=await engine.reduce(f.beforeIssue,{tool:'world_act',eventId:'missing-blank',args:{action:'documents:issue',slots:{...valid,paper:'item_quill_set'}}});
+ assert.equal(missing.result.receipt.status,'rejected');assert.deepEqual(missing.patches,[]);clean(f.document);
 });
 
 test.todo('Q: existing stages, judgment, appeal period and defendant persist without inventing charges or penalties〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
@@ -257,12 +273,19 @@ test.todo('Q: existing stages, judgment, appeal period and defendant persist wit
  assert.throws(()=>write(save(late.document),d=>lawAction.call(engine,d,{operation:'appeal',case:setup('052').cases[0].name,authority:'npc_bs_031_1'},'late-named-appeal')),/appeal period/);
 });
 
-test.todo('Q: case handler is derived from the present office holding, not a copied incumbent〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
- const loaded=load('058');assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document),id='a3v2_058_case',npc='npc_bs_032_1';
- assert.equal(currentCaseHandler(engine,document,id,npc),true);assert.deepEqual(caseProcedureView(engine,document,id).handler,[npc]);
- const office=document.state.records[id].handlerOffice,h=aliveHoldings(reader(document),{kind:'holds_office',holder:npc,subject:office})[0];
- const out=write(document,d=>closeHolding(d,{id:h.id,reason:'vacated',writer:h.writer,eventId:'leave-office'}));
- assert.equal(currentCaseHandler(engine,out.document,id,npc),false);assert.deepEqual(caseProcedureView(engine,out.document,id).handler,[]);
+test('Q: case handler is derived from the present office holding, not a copied incumbent',async()=>{
+ // S4-06/05 5.3: replacement and removal are actual appointment actions.
+ const f=await nativeTrial(),id=f.case,npc=trialPeople.handler;
+ trialScene(f,'bld_bs_watch',[npc]);
+ assert.equal(currentCaseHandler(f.engine,f.document,id,npc),true);assert.deepEqual(caseProcedureView(f.engine,f.document,id).handler,[npc]);
+ const office=f.document.state.records[id].handlerOffice;
+ f.document=(await appointedClaimClerk(f.engine,f.document,{name:office})).document;
+ trialScene(f,'bld_bs_watch',[npc]);
+ assert.equal(currentCaseHandler(f.engine,f.document,id,npc),false);assert.deepEqual(caseProcedureView(f.engine,f.document,id).handler,['player']);
+ trialScene(f,'bld_bs_office',['npc_bs_townhead']);
+ f.document=(await officeCall(f.engine,f.document,'remove',{name:office,authority:'npc_bs_townhead'},'handler-removal')).document;
+ trialScene(f,'bld_bs_watch',[npc]);
+ assert.equal(currentCaseHandler(f.engine,f.document,id,npc),false);assert.deepEqual(caseProcedureView(f.engine,f.document,id).handler,[]);
 });
 
 test.todo('Q: unrelated judgments, forged registration and nonexistent parties are rejected without opening a new case〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
@@ -342,16 +365,22 @@ test.todo('Q: an incapacitated incumbent cannot receive a new request or appear 
  }
 });
 
-test.todo('Q: legacy cases retain party identity through offender without a new parties projection〔前提待真实动作：形成指定案件阶段、在岗机构身份及原始证据文书；归 S4〕',()=>{
- const document=save(load('055').document),row=document.state.records.a3v2_055_case;
- delete row.parties;delete row.snapshotVersion;delete row.sourceEvent;
- // registerIncident's existing row shape identifies its party as offender/victim.
- assert.equal(row.offender,'player');
- const args=legalArgs('055','hire_advocate');args.request.terms.case=row.id;
- const out=write(document,d=>lawAction.call(engine,d,args,'legacy-party-request'));
- assert.equal(out.result.submitted,true);assert.equal(out.result.case,row.id);
- assert.deepEqual(lawView(engine,out.document).requests[0].sourceEvents,[]);
- assert.equal(out.document.state.player.coins,document.state.player.coins);assert.equal(out.document.state.records[row.id].representation,undefined);clean(out.document);
+test('Q: legacy cases retain party identity through offender without a new parties projection',async()=>{
+ // Replay the actual theft through the pre-S4-06 result format. The engine,
+ // rather than a direct state edit, produces the historical case shape.
+ const f=await nativeTrial({advocate:true});trialScene(f,'bld_hw_qingdeng',[trialPeople.guard,trialPeople.victim]);
+ const input={tool:'world_crime',eventId:'legacy-party-theft',args:{operation:'steal',target:trialPeople.victim,coins:1}};
+ const current=await f.engine.reduce(f.document,input),historical=structuredClone(current.result);
+ delete historical.legalFilingVersion;delete historical.legalProcedureVersion;
+ const replayed=await f.engine.reduce(f.document,input,{replay:true,result:historical});f.document=applyPatches(f.document,replayed.patches);
+ const id=historical.case,row=f.document.state.records[id];
+ assert.equal(row.category,'legal_case');assert.equal(row.offender,'player');assert.equal(row.parties,undefined);assert.equal(row.sourceEvent,undefined);
+ trialScene(f,'bld_bs_office',[trialPeople.reviewer]);const coins=f.document.state.player.coins;
+ const out=await trialCall(f,'core:law.hire_advocate',{case:id,authority:trialPeople.reviewer,request:{kind:'defense',target:trialPeople.reviewer,terms:{case:id,quoteOnly:true}}},'legacy-party-request');
+ assert.equal(out.detail.submitted,true);assert.equal(out.detail.case,id);
+ assert.deepEqual(lawView(f.engine,f.document).requests.find(r=>r.id===out.detail.request).sourceEvents,[]);
+ assert.equal(f.document.state.player.coins,coins);assert.equal(f.document.state.records[id].representation,undefined);
+ assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
 test.todo('N–Q: all owned setup premises are loaded; E appointments and S4 spatial premises remain separately owned〔前提待真实动作：由动作建立组合用例中的所有柜台、存单、维持债权、机构案件及纸本前提；归 S5〕',()=>{

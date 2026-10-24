@@ -14,6 +14,7 @@ import {currentAgreedQuotes} from '../server-plugin/shop.mjs';
 import {workstationDefinition} from '../server-plugin/workstation-services.mjs';
 import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 import {documentScene,documentCall} from './helpers/document-actions.mjs';
+import {nativeTrial,trialCall,trialPeople} from './helpers/trial-actions.mjs';
 import {documentAction} from '../server-plugin/documents.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -179,15 +180,20 @@ test('documents: native evidence annotates the same original and preserves its s
  assert.throws(()=>documentAction(engine.primitiveDraft(result.document),engine,{operation:'governance_document_annotate',document:id,text:'补记',reviewed:'yes'},'bad-reviewed'),/Invalid existing paper, holder or document source/);
 });
 
-test.todo('cases: native historical registration retains the existing phase and judgment, never convicts from an emit〔前提待真实动作：产生案件登记、判决及上诉期限；归 S4〕',()=>{
- // Q is implemented: 05 §5.2.7 restores registration and judgment sources, not fresh decisions.
- const result=run(fixture('052'));assert.deepEqual(errors(result,'cases'),[]);
- const row=result.document.state.records[result.bindings.a3v2_052_case];
- assert.equal(row.stage,'judged');assert.equal(row.sourceEvent,result.bindings.a3v2_052_case_registered);
- assert.equal(row.judgment.sourceEvent,result.bindings.a3v2_052_judgment);assert.equal(row.appealDeadline,2040);
- assert.equal(row.offense,undefined);assert.equal(row.judgment.fine,undefined);
- assert.equal(Object.values(result.document.state.records).filter(r=>r.category==='legal_case'&&r.sourceEvent===row.sourceEvent).length,1);clean(result);
- const setup=fixture('052');setup.cases[0].stage='erased';assert.match(errors(run(setup),'cases')[0].reason,/Invalid historical case/);
+test('cases: native historical registration retains the existing phase and judgment, never convicts from an emit',async()=>{
+ // 05 5.2.7: register by actual acceptance, then judge; no historical setup
+ // row may fabricate a second case, charge, penalty or procedural phase.
+ const f=await nativeTrial(),registered=structuredClone(f.document.state.records[f.case]);
+ assert.equal(registered.stage,'pending');assert.equal(registered.judgment,undefined);
+ const heard=await trialCall(f,'request_hearing',{case:f.case,authority:trialPeople.judge},'stage-judgment');
+ const row=f.document.state.records[f.case];assert.equal(row.stage,'judged');
+ assert.equal(row.sourceEvent,registered.sourceEvent);assert.equal(row.offense,registered.offense);
+ assert.equal(row.judgment.sourceEvent,'stage-judgment');assert.ok(row.appealDeadline>f.document.state.minute);
+ assert.equal(row.judgment.fine,registered.normSnapshot.penalty.baseFine+Math.ceil(registered.value*registered.normSnapshot.penalty.valueMultiplier));
+ assert.equal(Object.values(f.document.state.records).filter(r=>r.category==='legal_case'&&r.sourceEvent===row.sourceEvent).length,1);
+ const saved=JSON.parse(JSON.stringify(f.document)),unmet=applyIntentSetup(f.engine,saved,{cases:[{id:f.case,stage:'erased',sourceEvent:registered.sourceEvent}]});
+ assert.ok(unmet.setupUnmet.some(e=>e.item.startsWith('cases')));assert.deepEqual(unmet.document.state.records[f.case],saved.state.records[f.case]);
+ assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
 test('permits: native existing rental authority is retained; unresolved managers and expanded scopes are unmet',()=>{

@@ -6,6 +6,11 @@ declareLedgerWriter('legal-representation');
 import {personCareer,personConstraint} from './entity-view.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {assertNpcService,advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {requestContractConsent} from './action-consent.mjs';
+import {openObligation} from './obligation-runtime.mjs';
+import {obligationRow,obligationClosed} from './obligation-state.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {subjectiveView} from './subjective-view.mjs';
 const path=id=>['state','records',id];
 export function advocateService(engine,state,id){
  const career=personCareer(engine,state,id).value,r=engine.rules.law?.advocates?.occupations?.[career.occupation];
@@ -16,22 +21,37 @@ export function advocateService(engine,state,id){
   discount:Math.min(r.maximumDiscount,Math.floor(proficiency/100)*r.discountPerHundred),minutes:r.minutes,skill:r.skill};
 }
 export function hireAdvocate(d,engine,row,args,eventId){
- const id=engine.resolve(args.authority,'npc'),service=advocateService(engine,d.get('state'),id),state=d.get('state');
+ const id=engine.resolve(args.authority??args.request?.target,'npc'),service=advocateService(engine,d.get('state'),id),state=d.get('state');
  if(!service||[row.offender,row.victim,row.judgment?.judge,...row.witnesses??[]].includes(id))throw preconditionFailure('代理人须为无涉案且能接待的成年讼师或代书人');
  if(!['未报案','已报案','证据不足','已裁定'].includes(row.status))throw preconditionFailure('案件当前阶段不接受委托');
  if(row.representation)throw preconditionFailure('本案已委托代理，不重复收费');
  if(state.player.coins<service.fee)throw preconditionFailure('代理费用不足');
  assertNpcService(d,engine,id,'law',service.minutes);
+ const terms={case:row.id,fee:service.fee,minutes:service.minutes,subject:row.offender};
+ const native=!engine.replaying||engine.replayResult?.advocateContractVersion===1;
+ if(native&&(args.request?.terms?.quoteOnly===true||args.quoteOnly===true)){
+  const decision=npcDecision(subjectiveView(engine,d.document,id),{kind:'negotiate_defence',from:'player',cost:{minutes:0}});
+  if(decision.outcome!=='agree')throw preconditionFailure(decision.reason);
+  const key=`legal_request:${eventId}`,request=args.request??{kind:'defense',target:id,terms:{case:row.id,quoteOnly:true}},payload={...request,case:row.id,sourceEvents:row.sourceEvent?[row.sourceEvent]:[],evidence:[],receiver:id};
+  const old=d.get(...path(key));if(old&&(old.case!==row.id||old.receiver!==id))throw Error('Legal request event reused');
+  if(!old)d.set(path(key),{category:'legal_request',actor:'player',receiver:id,case:row.id,sourceEvent:eventId,minute:state.minute,location:state.location,request,payload});
+  return {request:key,case:row.id,submitted:true,accepted:null,quote:terms,decision,advocateContractVersion:1,worldEvent:{verb:'request',actor:'player',target:id,payload,tags:['legal_request'],visibility:'private'}};
+ }
+ const agreement=native?requestContractConsent(d,engine,{from:id,scope:'negotiate_defence',subject:row.id,purpose:row.id,terms:{fee:service.fee,minutes:service.minutes,role:'defence',purpose:row.id},cost:{minutes:service.minutes},reward:service.fee,eventId}):null;
+ if(native&&!agreement.allowed)throw preconditionFailure(agreement.reason??'讼师本人未同意该委托');
  advanceWithNpcParticipants(d,engine,service.minutes,eventId,[id]);
  const current=advocateService(engine,d.get('state'),id);
  if(!current||d.get('state','npcs',id,'location')!==d.get('state','location')||/睡/.test(d.get('state','npcs',id,'activity')??''))throw preconditionFailure('代理人办理期间无法履约');
  if(d.get('state','player','coins')<service.fee)throw preconditionFailure('办理期间余额不足');
  moveCoins(d,{from:purse(null,'player'),to:purse(null,id),amount:service.fee,writer:'legal-representation',eventId:eventId});d.set(['state','player','coins'],d.get('state','player','coins')-service.fee);d.set(['state','npcs',id,'coins'],(d.get('state','npcs',id,'coins')??0)+service.fee);
- const representation={npc:id,paid:service.fee,skill:service.skill,minute:d.get('state','minute'),sourceEvent:eventId,subject:row.offender};
- d.set(path(row.id),{...d.get(...path(row.id)),representation});return{case:row.id,representation,minutes:service.minutes,note:'代理费已实付；代理人可核查证词并提出量罚意见，不能制造证据或保证胜诉'};
+ const contract=native?openObligation(d,engine,{actor:id,debtor:id,creditor:'player',kind:'service',subject:row.id,amount:0,terms:{...terms,consentSource:agreement.source}},`${eventId}:service`):null;
+ const representation={npc:id,paid:service.fee,skill:service.skill,minute:d.get('state','minute'),sourceEvent:eventId,subject:row.offender,...(native?{contract:contract.id,consentSource:agreement.source}:{})};
+ d.set(path(row.id),{...d.get(...path(row.id)),representation});return{case:row.id,representation,minutes:service.minutes,...(native?{advocateContractVersion:1}:{}),note:'代理费已实付；代理人可核查证词并提出量罚意见，不能制造证据或保证胜诉'};
 }
 export function representationEffect(d,engine,row){
  const id=row.representation?.npc,service=id&&advocateService(engine,d.get('state'),id);
+ const contract=row.representation?.contract&&obligationRow(d.get('state'),row.representation.contract);
+ if(row.representation?.contract&&(!contract||contract.endedAt!==undefined||obligationClosed(contract)))return null;
  if(!service||d.get('state','npcs',id,'location')!==d.get('state','location')||/睡/.test(d.get('state','npcs',id,'activity')??''))return null;
  return{npc:id,proficiency:service.proficiency,discount:service.discount};
 }

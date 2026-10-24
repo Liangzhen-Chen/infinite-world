@@ -87,6 +87,34 @@ export function renderAffairsPanel(container,data,kind,context=null){
                 e.append(status);
             }
         }
+    }else if(kind==='cases'){
+        const list=section('我的案件');
+        if(!data.cases?.length)note(list,'暂无与你有关的正式案件。');
+        for(const row of data.cases??[]){
+            const e=card(list,`案件 · ${row.status}`);e.dataset.affairId=row.id;
+            stats(e,[['法院',row.court],['阶段',({pending:'待审',judged:'已裁判',appeal:'上诉中',execution:'执行',pursuit:'追缉',closed:'已结束'})[row.stage]??row.status],['证据评分',row.evidenceScore],['罚款',row.fine===null?'尚未裁判':`${row.fine}铜`],['已缴',`${row.finePaid}铜`]]);
+            if(row.appeal?.pending)note(e,row.appeal.staysExecution?'上诉已受理，执行暂停，等待复审。':'上诉已受理，仍可执行，等待复审。');
+            if(row.appeal?.outcome)note(e,`复审结果：${({upheld:'维持',amended:'改判',overturned:'撤销'})[row.appeal.outcome]??'已记录'}`);
+            if(row.appealDeadlineText)note(e,`上诉期限：${row.appealDeadlineText}`);
+            for(const proof of row.evidence)note(e,proof.kind==='document'?`文书原件：${proof.verified===null?'待核验':proof.verified?'已核验真实':'核验未通过'}`:`${proof.kind==='confession'?'供述':'证言'}${proof.witness?` · ${proof.witness}`:''}`);
+            if(context?.act){
+                const form=node('form'),authority=node('select'),paper=node('select'),status=node('p','','fields-note');
+                authority.setAttribute('aria-label','在场办理人');paper.setAttribute('aria-label','文书原件');
+                for(const [field,rows,label]of [[authority,data.legalPeople??[],'选择在场办理人'],[paper,data.legalPapers??[],'选择文书原件']]){
+                    const empty=node('option',label);empty.value='';field.append(empty);
+                    for(const row of rows){const option=node('option',row.name);option.value=row.id;field.append(option);}
+                }
+                form.append(authority,paper);
+                const add=(label,action,extra={})=>{const button=node('button',label);button.type='button';button.onclick=()=>execute(action,{case:row.id,...(authority.value?{authority:authority.value}:{}),...extra},status,button);form.append(button);};
+                if(row.stage==='pending')add('请求审理','law:request_hearing');
+                const submit=node('button','递交原件');submit.type='button';submit.onclick=()=>execute('law:submit_evidence',{case:row.id,document:paper.value},status,submit);form.append(submit);
+                const verify=node('button','请求核验');verify.type='button';verify.onclick=()=>execute('law:verify_evidence',{case:row.id,document:paper.value,authority:authority.value},status,verify);form.append(verify);
+                if(row.canRequestAppeal)add('提出上诉','core:law.appeal');
+                if(row.appeal?.pending)add('请求复审','law:request_review');
+                if(row.fine&&!row.fineDischarged)add('缴纳罚款','core:law.pay');
+                form.append(status);e.append(form);
+            }
+        }
     }else if(kind==='territory'){
         const offices=section('席位与任职申请');
         if(!data.offices?.length&&!data.officeApplications?.length)note(offices,'当前没有本人的任职申请或此处的正式席位。');
@@ -118,7 +146,7 @@ export function renderAffairsPanel(container,data,kind,context=null){
 }
 
 export function registerAffairsPanels({registerPanel}){
-    for(const [id,title]of [['tasks','任务'],['obligations','约定'],['territory','领地']])registerPanel({id,title,render:async(container,context)=>{
+    for(const [id,title]of [['tasks','任务'],['obligations','约定'],['territory','领地'],['cases','案件']])registerPanel({id,title,render:async(container,context)=>{
         const request={};pending.set(container,request);container.textContent='正在读取事务记录…';
         try{const data=await context.api('ui/affairs');if(container.isConnected&&pending.get(container)===request)renderAffairsPanel(container,data,id,context);}
         catch{if(container.isConnected&&pending.get(container)===request)container.textContent='事务记录读取失败，请关闭面板后重试。';}
