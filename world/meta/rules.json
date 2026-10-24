@@ -2027,7 +2027,18 @@
     "minimumCondensationHumidity": 5,
     "carrySiltMaximumGrams": 1000,
     "carrySiltMinutes": 20,
-    "walkingMetresPerMinute": 75
+    "walkingMetresPerMinute": 75,
+    "placeLayout": {
+      "edgeMetres": 6,
+      "entryName": "入口",
+      "featureSuffix": "附近",
+      "directions": [
+        "东侧",
+        "南侧",
+        "西侧",
+        "北侧"
+      ]
+    }
   },
   "petCare": {
     "tamingSkill": "skill_life_15_core",

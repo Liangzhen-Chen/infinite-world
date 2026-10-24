@@ -29,6 +29,8 @@ import {strainCare}from'./magic-care.mjs';
 import {assertMindAwake,assertMindSpacePath}from'./magic-mind-space.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
+import {placeLayout,zoneOf,zoneContactPending} from './place-layout.mjs';
+import {isDomainRejection} from './action-rejection.mjs';
 import {profession,effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';
 import {createCharacter}from'./character.mjs';
@@ -447,9 +449,14 @@ export class WorldEngine {
     primitiveRiteDaylight(document,location){return localWeather(this,document,location).daylight;}
     primitiveRiteInterruption(document,plan,options){return primitiveActionRuntime().interruptRite(this,document,plan,options);}
     primitiveApplyMark(d,effect,meta){return primitiveActionRuntime().applyMark(d,this,effect,meta);}
-    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime().moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets});}
+    primitiveMoveLocal(d,args,eventId){return primitiveActionRuntime()?.moveLocally(d,this,args,eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets,scheduleAt})??null;}
+    localPathObstruction(document,location,from,to){
+        const d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+        try{assertMindSpacePath(d,this,location,from,to);assertFirePath(d,this,from,to,location);return null;}
+        catch(error){if(!isDomainRejection(error))throw error;return error;}
+    }
     primitiveMoveNpc(d,{entity,destination,mode,mount},eventId){
-        const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity],npc=d.get(...path),start=d.get('state','minute');
+        const path=['state',d.get('state','npcs',entity)?'npcs':'creatures',entity];let npc=d.get(...path),start=d.get('state','minute'),localMinutes=0;
         if(!npc||!npc.location||npc.scheduleTravel||npc.cognitionTravel)throw Error('NPC is missing or already travelling');
         if(Object.values(d.get('state','records')??{}).some(r=>r.category==='transport'&&['booked','moving','delayed','intercepted'].includes(r.status)&&r.passengers?.includes(entity)))throw Error('NPC is aboard an active transport');
         if(mount!==undefined){
@@ -460,6 +467,12 @@ export class WorldEngine {
         assertMindAwake(d,entity);assertWaterEarthMovement(d,entity);assertLightMovement(d,this,entity);
         destination=this.resolve(destination);
         if(destination===npc.location)return {destination,minutes:0,cost:0,edges:[]};
+        const layout=placeLayout(this,d.document,npc.location),standing=zoneOf(this,d.document,entity,layout);
+        if(primitiveActionRuntime()&&standing?.id!==layout.entry){
+            const approach=this.primitiveMoveLocal(d,{entity,destination:layout.entry,mode},eventId);
+            if(approach?.arrived===false)return {...approach,destination,arrived:false};
+            localMinutes=approach?.minutes??0;start=d.get('state','minute');npc=d.get(...path);
+        }
         const route=this.route(npc.location,destination,mode,start,d.document.randomSeed);
         if(path[1]==='creatures'&&mode!=='walk')throw Error('Creature self-movement requires walking');
         if(path[1]==='npcs')try{preparePetTravel(d,this,mode,route.movingMinutes,entity);}catch(error){throw Object.assign(error,{code:'E-MOVE-MOUNT'});}
@@ -488,12 +501,14 @@ export class WorldEngine {
         this.npcScheduleReservations=new Set([...previous??[],entity]);
         try{this.advance(d,route.minutes,eventId);}finally{this.npcScheduleReservations=previous;}
         d.remove([...path,'scheduleTravel']);
-        if(isPhysicallyDead(this,d,entity))return {entity,destination:d.get(...path,'location'),...route,interrupted:true};
+        if(isPhysicallyDead(this,d,entity))return {entity,destination:d.get(...path,'location'),...route,minutes:localMinutes+route.minutes,movingMinutes:localMinutes+route.movingMinutes,interrupted:true};
         d.set([...path,'location'],destination);
         if(d.get('state','records',`local_actor_position:${entity}`))holdingRemove(d,null,['state','records',`local_actor_position:${entity}`],'engine');
-        return {entity,destination,...route};
+        return {entity,destination,...route,minutes:localMinutes+route.minutes,movingMinutes:localMinutes+route.movingMinutes};
     }
     primitiveTargetFacts(d,actor,target){
+        const carried=d.get('holdings','locations',target);
+        if(target!==actor&&zoneContactPending(d,actor)&&!(carried?.mode==='carried'&&carried.at===actor)&&!(actor==='player'&&this.quantity(d,actor,target)>0))return {distanceMeters:Infinity,lineOfSight:false};
         if(actor==='player')return this.magicTargetFacts(d,target);
         const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
         const origin=areaTargetFacts(d,this,actor,location);if(!origin)return null;
@@ -807,11 +822,18 @@ export class WorldEngine {
         for(const target of ['player',...d.get('state','player','companions')??[]])assertMindAwake(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertWaterEarthMovement(d,target);
         for(const target of ['player',...d.get('state','player','companions')??[]])assertLightMovement(d,this,target);
-        if(primitiveActionRuntime()&&(d.get('state','npcs',args.destination)||d.get('state','creatures',args.destination))){
-            return this.primitiveMoveLocal(d,{entity:'player',destination:args.destination,mode:args.mode??'walk'},id);
+        if(primitiveActionRuntime()){
+            const local=this.primitiveMoveLocal(d,{entity:'player',destination:args.destination,mode:args.mode??'walk'},id);
+            if(local)return local;
         }
         let destination=this.resolve(args.destination);const requestedDestination=destination,old=d.get('state','location');
         if(old===destination)return {destination,elapsed:0};
+        const layout=placeLayout(this,d.document,old),standing=zoneOf(this,d.document,'player',layout);let localMinutes=0;
+        if(primitiveActionRuntime()&&standing?.id!==layout.entry){
+            const approach=this.primitiveMoveLocal(d,{entity:'player',destination:layout.entry,mode:args.mode??'walk'},id);
+            if(approach?.arrived===false)return {...approach,destination,arrived:false};
+            localMinutes=approach?.minutes??0;
+        }
         let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
         const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
         const attempts=[];let encounterAttempt=null;
@@ -859,10 +881,10 @@ export class WorldEngine {
         // A vanished lead must not strand the player at an otherwise unrequested stop.
         if(encounterAttempt&&!encounter&&destination!==requestedDestination&&d.get('state','location')===destination&&d.get('state','player','status')==='正常'){
             const rest=this.move(d,{...args,destination:requestedDestination},id);
-            return{...rest,minutes:route.minutes+rest.minutes,movingMinutes:route.movingMinutes+rest.movingMinutes,cost:route.cost+rest.cost,
+            return{...rest,minutes:localMinutes+route.minutes+rest.minutes,movingMinutes:localMinutes+route.movingMinutes+rest.movingMinutes,cost:route.cost+rest.cost,
                 edges:[...route.edges,...rest.edges],experience:experience.experience+(rest.experience??0),...(route.airMinutes||rest.airMinutes?{airMinutes:(route.airMinutes??0)+(rest.airMinutes??0)}:{})};
         }
-        return {destination,...route,...experience,companions:d.get('state','player','companions'),...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,requestedDestination,interrupted:Boolean(encounterAttempt)&&destination!==requestedDestination,encounter}: {})};
+        return {destination,...route,minutes:localMinutes+route.minutes,movingMinutes:localMinutes+route.movingMinutes,...experience,companions:d.get('state','player','companions'),...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,requestedDestination,interrupted:Boolean(encounterAttempt)&&destination!==requestedDestination,encounter}: {})};
     }
     turn(d,args,id) {
         if(args.outOfCharacter)return {outOfCharacter:true};

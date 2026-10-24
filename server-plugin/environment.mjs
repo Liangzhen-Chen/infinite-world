@@ -28,6 +28,7 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
 import {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
+import {zoneContactPending} from './place-layout.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
@@ -186,8 +187,9 @@ export function localSightClear(d,engine,location,from,to,{waterCurtain=true,opt
     return true;
 }
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-function inReach(d,row,range){
+function inReach(d,row,range,{spell=false}={}){
     if(row.location!==d.get('state','location'))throw preconditionFailure('环境对象不在当前位置');
+    if(!spell&&Number.isFinite(range)&&zoneContactPending(d))throw preconditionFailure('尚未走近对象；到同一分区不等于可以接触');
     if(distance(point(d),row.position)>range)throw preconditionFailure('环境对象超过实际施法距离');
 }
 function permission(d,engine,row,args,{spell=null,until=d.get('state','minute')}={}){
@@ -265,7 +267,7 @@ function watering(d,engine,row,operation,args,range,power){
 export function prepareEnvironmentMagic(d,catalog,args){
     if(!this.rules.environment)throw preconditionFailure('此世界尚无环境规则');
     const row=feature(this,args.target,d.get('state','location'),d.document),spec=catalog.effectSpec;
-    inReach(d,row,catalog.rangeMeters);if(spec.operation!=='sense_water')permission(d,this,row,args,{spell:catalog.id,until:d.get('state','minute')+(catalog.minutes??0)});
+    inReach(d,row,catalog.rangeMeters,{spell:true});if(spec.operation!=='sense_water')permission(d,this,row,args,{spell:catalog.id,until:d.get('state','minute')+(catalog.minutes??0)});
     const current=stateOf(d,row),operation=spec.operation;
     if(['condense','clean_water','sense_water'].includes(operation)&&!['container','water'].includes(row.kind))throw preconditionFailure('法术需要实际水源或容器');
     if(operation==='condense'){
@@ -354,6 +356,7 @@ export function interactEnvironment(d,args,eventId){
     if(operation==='approach'){
         assertMindAwake(d);
         unlockMindSpaceDoor(d,this,args);
+        if(this.primitiveMoveLocal){const moved=this.primitiveMoveLocal(d,{entity:'player',destination:row.id,mode:'walk'},eventId);if(moved)return moved;}
         assertMindSpacePath(d,this,location,point(d),row.position);
         assertWaterEarthMovement(d);
         assertLightMovement(d,this);

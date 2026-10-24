@@ -134,7 +134,9 @@ test('A3 NPC riding: local horseback approach uses actual distance and gives rid
  const d=engine.primitiveDraft(document);assert.equal(recordLocalContact(d,engine,npc,'rider-local-start'),true);const start=applyPatches(document,d.patches),effects=[{op:'move',to:feature.id,mode:'horse'}];
  const frame=createRuntimePrimitiveFrame(engine,start,{actor:npc,eventId:'local-horse',source:{kind:'catalog',id:'test:ride'}}),preview=planPrimitives(start,effects,frame),result=commitPrimitives(start,effects,frame),next=applyPatches(start,result.patches);
  assert.deepEqual(preview.receipt.applied,result.receipt.applied);assert.deepEqual(next.state.records[`local_actor_position:${npc}`].point,feature.position);assert.deepEqual(next.state.records[`local_actor_position:${id}`].point,feature.position);
- assert.equal(next.state.minute,start.state.minute+Math.ceil(Math.hypot(...feature.position)/(engine.rules.environment.walkingMetresPerMinute*engine.rules.travel.horseMultiplier)));assert.ok(next.state.creatures[id].care.fatigue>0);
+ // S4 A / 01 §1.5: ordinary distance is entry→feature zone plus the final
+ // approach, each one generated edge; fine points remain spell/contact evidence.
+ assert.equal(next.state.minute,start.state.minute+2*Math.ceil(engine.rules.environment.placeLayout.edgeMetres/(engine.rules.environment.walkingMetresPerMinute*engine.rules.travel.horseMultiplier)));assert.ok(next.state.creatures[id].care.fatigue>0);
  assert.deepEqual(engine.magicAreaTargetFacts(engine.primitiveDraft(next),id,place.id).point,feature.position);assert.deepEqual(auditLedger(next.ledger),[]);
 });
 
@@ -328,7 +330,9 @@ test('A3 effects: movement consumes its actual route once and rejects teleportat
 test('A3 effects: move can approach a registered local feature using real distance and rejects a remote feature',()=>{
  const f=effectFixture(),place=f.engine.world.locations.find(l=>l.features?.some(row=>row.position?.some(n=>n!==0)));
  const feature=place.features.find(row=>row.position?.some(n=>n!==0));f.document.state.location=place.id;
- const before=structuredClone(f.document),metres=Math.hypot(...feature.position),minutes=Math.ceil(metres/f.engine.rules.environment.walkingMetresPerMinute);
+ // S4 A / 01 §1.5: this published feature has one generated adjacency from
+ // entry and one final approach; assert full topology distance and both costs.
+ const before=structuredClone(f.document),edgeMetres=f.engine.rules.environment.placeLayout.edgeMetres,metres=2*edgeMetres,minutes=2*Math.ceil(edgeMetres/f.engine.rules.environment.walkingMetresPerMinute);
  const result=commitPrimitives(f.document,[{op:'move',to:feature.id}],f.frame('local-approach')),next=applyPatches(f.document,result.patches);
  assert.equal(next.state.location,place.id);assert.deepEqual(next.state.records.local_player_position.point,feature.position);
  assert.equal(next.state.minute,before.state.minute+minutes);assert.equal(result.receipt.applied[0].result.metres,metres);
@@ -361,10 +365,12 @@ test('A3 effects: NPC local approach walks actual distance, retains shared posit
  const d=engine.primitiveDraft(f.document);assert.equal(recordLocalContact(d,engine,npc,'local-npc-start'),true);f.document=applyPatches(f.document,d.patches);
  const effects=[{op:'move',to:feature.id}],frame=createRuntimePrimitiveFrame(engine,f.document,{actor:npc,eventId:'npc-local-feature',source:{kind:'catalog',id:'test:native'}}),before=structuredClone(f.document);
  const preview=planPrimitives(f.document,effects,frame);assert.deepEqual(f.document,before);
- const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches),metres=Math.hypot(...feature.position);
+ const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
  assert.deepEqual(preview.receipt.applied[0].result,result.receipt.applied[0].result);
  assert.deepEqual(next.state.records[`local_actor_position:${npc}`].point,feature.position);
- assert.equal(next.state.minute,before.state.minute+Math.ceil(metres/engine.rules.environment.walkingMetresPerMinute));
+ // S4 A: NPCs pay the same adjacency + final approach as players; the
+ // unknown-origin, exact contact, replay, coins and ledger assertions stay intact.
+ assert.equal(next.state.minute,before.state.minute+2*Math.ceil(engine.rules.environment.placeLayout.edgeMetres/engine.rules.environment.walkingMetresPerMinute));
  assert.equal(next.state.location,place.id);assert.equal(next.state.npcs[npc].location,place.id);assert.equal(next.state.npcs[npc].coins,before.state.npcs[npc].coins);
  assert.deepEqual(engine.magicAreaTargetFacts(engine.primitiveDraft(next),npc,place.id).point,feature.position);
  assert.deepEqual(auditLedger(next.ledger),[]);assert.equal(engine.npcScheduleReservations,undefined);
@@ -388,7 +394,9 @@ test('A3 effects: walking toward a person consumes distance rather than teleport
  planPrimitives(f.document,effects,frame);assert.deepEqual(f.document,before);
  const result=commitPrimitives(f.document,effects,frame),next=applyPatches(f.document,result.patches);
  assert.deepEqual(next.state.records.local_player_position.point,feature.position);
- assert.equal(next.state.minute,before.state.minute+Math.ceil(Math.hypot(...feature.position)/engine.rules.environment.walkingMetresPerMinute));
+ // S4 A: the person walked to the feature's zone, so following that person
+ // traverses its adjacency and then approaches; it cannot teleport on presence.
+ assert.equal(next.state.minute,before.state.minute+2*Math.ceil(engine.rules.environment.placeLayout.edgeMetres/engine.rules.environment.walkingMetresPerMinute));
  assert.equal(next.state.npcs[npc].location,place.id);assert.equal(next.state.location,place.id);assert.deepEqual(auditLedger(next.ledger),[]);
  const unknown=structuredClone(before);delete unknown.state.records[`local_actor_position:${npc}`];
  assert.throws(()=>commitPrimitives(unknown,effects,frame),{code:'E-MOVE-POSITION'});

@@ -26,6 +26,7 @@ import {knowsPracticalKnowledge} from './education-state.mjs';
 import {readBodyState} from './primitives-body.mjs';
 import {markFallback} from './action-boundary.mjs';
 import {personTeaching} from './entity-view.mjs';
+import {layoutView} from './place-layout.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 const publicRow=row=>!row?.hidden&&!row?.private&&row?.visible!==false;
@@ -118,7 +119,9 @@ function context(engine,document){
  const exits=exitsFrom(engine,s,templates).filter(e=>publicRow(engine.byId.get(e.id))&&publicRow(engine.world.routes.find(r=>r.id===e.route))).map(e=>{const edge=engine.world.routes.find(r=>r.id===e.route);if(!edge?.lengthKm)return e;
   let w={};try{w=weatherTravel(engine,document.randomSeed,edge,'walk',s.minute)??{};}catch{w={};}
   return {...e,condition:edge.closedSeasons?.includes(season)?'本季封路':w.closed?'天气封路':w.weather??null};});
- return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,
+ const layout=layoutView(engine,document);
+ exits.push(...layout.zones.filter(z=>!z.current).map(z=>({...z,relation:'zone',modes:['walk'],condition:z.reachable?null:'没有可通行的邻接路径'})));
+ return {engine,s,place,name,people,present,recipes,debts,bank,lodging,exits,templates,layout,
   inventory:Object.entries(s.inventory??{}).filter(([id,v])=>qty(v)>0&&perceptible(id)).map(([id,v])=>({id,name:name(id),quantity:qty(v)})),
   skills:Object.keys(s.skills??{}).map(id=>({id,name:name(id)})),
   creatures:Object.entries(s.creatures??{}).filter(([id,row])=>perceptible(id)&&row.location===s.location&&!row.scheduleTravel&&!row.cognitionTravel&&!isPhysicallyDead(null,s,id)).map(([id,row])=>({value:id,label:row.name??name(id)}))};
@@ -416,10 +419,11 @@ export function worldActions(engine,document,{target=null,query=null,limit=24,re
  const quick=QUICK.map(label=>{const a=registry.actions.find(x=>x.ui?.quick===label);return a?{label,action:a.id,available:visible(a)||a.ui.quick==='交易'}:null;}).filter(Boolean);
  const sceneEngine=Object.create(engine);
  sceneEngine.world={...engine.world,locations:engine.world.locations.filter(publicRow),routes:engine.world.routes.filter(row=>publicRow(row)&&[row.from,row.to].every(key=>publicRow(engine.byId.get(key))))};
- return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location)},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions,fallback),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
+ return {location:{id:ctx.s.location,name:ctx.name(ctx.s.location),zone:ctx.layout.current},...(id?{target:{id,kind,name:view.facts.name??ctx.name(id),...entityCard(ctx,id,view,actions,openActions,fallback),...(kind==='npc'?{soldOut:restockNotes(engine,ctx,id)}:{})}}:{}),
   scene:sceneLines(sceneEngine,{...document,state:{...ctx.s,npcs:Object.fromEntries(Object.entries(ctx.s.npcs??{}).filter(([key])=>ctx.present.has(key)))}}),actions:[...actions.slice(0,limit),...openRows],quick,configuration:{openActions,writable:false},texts:{refused:ctx.templates.effects.refused},
   objects:{people:ctx.people.map(p=>({id:p.id,name:p.name,activity:p.activity,sells:stockOf(ctx,p.id).length>0})),
-   exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):'',modes:e.modes,...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
+   zones:ctx.layout.zones,
+   exits:ctx.exits.map(e=>{const move=registry.byId?.get('core:move'),permission=e.relation==='zone'&&!e.reachable?{allowed:false,reason:e.condition}:move?actionPermission(ctx,move,{destination:e.id,mode:'walk'}):null;return {id:e.id,name:e.name,direction:e.direction,distance:e.relation==='route'?distanceText(e.km,ctx.templates):e.relation==='zone'&&e.metres!==null?`${e.metres}米`:'',modes:e.modes,...(e.relation==='zone'?{zone:true}:{}),...(e.condition?{condition:e.condition}:{}),...(permission?{permission}:{})};}),
    items:ctx.inventory}};
 }
 export {findAction};
