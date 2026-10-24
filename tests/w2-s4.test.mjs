@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS4Publication,mergeS4Publication,publishS4,withoutS4,designPublication,files as publishedFiles} from '../tools/publish-w2-s4.mjs';
 import {spells,books,items,placements,mentors,routes,routeOf,ritualScopes,TABLET} from '../world/design/w2-s4.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -84,7 +85,13 @@ async function routeSession(route){
  const entry=world.rules.training.institutions.find(e=>e.teacher===teacher&&e.profession===role.id);
  doc=(await run(doc,'world_profession',{operation:'initiate',profession:role.id,teacher,institution:place,rule:entry.rule})).doc;
  const core=role.entry.skill;doc=(await success(doc,'world_learn',{entity:core,source:teacher,kind:'skill'})).doc;
- while(doc.state.skills[core].proficiency<150){doc=(await run(doc,'world_practice',{skill:core,gain:100,target:'基础动作'})).doc;if(doc.state.skills[core].proficiency<150)doc=await attend(doc,teacher,place,510);}
+ // Acquisition and certification are exercised publicly. Prior accumulated
+ // proficiency is a premise; one native session must really cross 150.
+ const staged=applyIntentSetup(engine,doc,{abilities:{skills:{[core]:149}}});
+ assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
+ const practiceMinute=doc.state.minute,practiced=await run(doc,'world_practice',{skill:core});doc=practiced.doc;
+ assert.ok(practiced.result.gain>0);assert.ok(doc.state.skills[core].proficiency>=150);
+ assert.equal(doc.state.minute,practiceMinute+120);
  doc=await attend(doc,teacher,place,510);doc=(await success(doc,'world_profession',{profession:role.id,teacher,operation:'certify'},'certified')).doc;
  assert.equal(doc.state.professions.combat,role.id);
  for(const s of spells.filter(s=>routeOf[s.id]===route)){
