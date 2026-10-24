@@ -20,8 +20,6 @@ import {wildlifeQuestEvidence,claimWildlifeQuest,existingWildlifeEvidence} from 
 import {laborNotices} from './labor-market.mjs';
 import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings} from './holdings.mjs';
 import {isEffective} from './holdings.mjs';
-import {calendarDateAt} from './weather.mjs';
-import {obligationCalendar} from './obligation-calendar.mjs';
 declareHoldingWriter('quest-board',{kinds:[],entities:['office'],locations:true});
 
 const DAY=1440,active=q=>['公开','进行中'].includes(q.status);
@@ -37,13 +35,6 @@ const sameLocality=(engine,a,b)=>a===b||Boolean(engine.byId.get(a)&&engine.byId.
 // a self-declared office adds none. A notable's quota covers cultural quests only.
 export function questPublishingRights(engine,state,publisher='player',{cultural=false,document=engine.physicalDocument}={}){
  const base=personQuestRights(engine,state,publisher,{cultural});
- const activeCalendar=document?.state.records?.['calendar:active']?.calendar;
- if(activeCalendar&&obligationCalendar(activeCalendar).leap?.obligationsSkip){
-  // A calendar whose leap month skips obligation anchors: the inserted month
-  // shares the preceding month's allowance rather than minting another.
-  const date=calendarDateAt(engine,state.minute,activeCalendar),month=`${activeCalendar.split(':')[0]}:${date.year}:${date.month}`;
-  base.month=month;base.usedD=state.questQuota?.[`${month}_${publisher}`]??0;
- }
  // Native holdings are passed through the same current-state view as other
  // offices. The optional document is attached by engine.scoped().
  const offices=document?aliveHoldings(holdingsView(document),{kind:'holds_office',holder:publisher}).filter(h=>h.since<=state.minute):[];

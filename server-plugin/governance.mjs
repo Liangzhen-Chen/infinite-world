@@ -5,7 +5,7 @@ import {domainAuthority} from './noble-state.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {qualificationForApplication} from './local-exams.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
-import {personOffices,personRegistrar,settlementHead,personSimulation,institutionOffices,officeOnDuty,personAge} from './entity-view.mjs';
+import {personOffices,personRegistrar,settlementHead,personSimulation,institutionOffices,officeOnDuty,personAge,questQuotaMonth} from './entity-view.mjs';
 import {bookExaminationSeat,qualifiedExaminers} from './local-exams.mjs';
 import {organizationState} from './organization-state.mjs';
 import {digest} from './storage.mjs';
@@ -583,7 +583,7 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     if(!Number.isSafeInteger(copper)||copper<0)throw preconditionFailure('公款数额无效');
     const state=d.get('state'),offices=playerOffices(state,{settlement,power},engine);
     if(!offices.length)throw preconditionFailure('没有在任官职授予此项公款权限');
-    const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=monthOf(state.minute),used=publicSpent(state,settlement,month);
+    const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=questQuotaMonth(engine,state),used=publicSpent(state,settlement,month);
     if(used+copper>cap)throw preconditionFailure(`本月公款额度不足（已用${used}/${cap}铜）`);
     const treasury=d.get('state','settlements',settlement,'treasury'),reserve=authorityOf(engine).treasury.reserveCopper;
     const held=coinRead(d,{point:'public.treasury',account:treasuryAccount(settlement),legacy:()=>treasury});

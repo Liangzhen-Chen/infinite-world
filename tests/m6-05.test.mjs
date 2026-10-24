@@ -63,7 +63,11 @@ function commitments(document){
 }
 
 test('M6-05 仅玩家收发任务及义务；期限含零、历史状态与合同债务，额度不补造',()=>{
-    const document=commitments(initial()),before=structuredClone(document),view=affairs(engine,document);
+    const document=commitments(initial());
+    // This fixture models incomplete old records; native creation now records
+    // its calendar and known zero quota (covered by s4-office-quests).
+    delete document.state.records['calendar:active'];
+    const before=structuredClone(document),view=affairs(engine,document);
     assert.deepEqual(document,before);
     assert.deepEqual(view.tasks.map(row=>row.id),['zero','done','late','undated']);
     assert.equal(view.tasks[0].overdue,true);assert.equal(view.tasks[1].overdue,false);

@@ -2,27 +2,67 @@ const pending=new WeakMap(),filters=new WeakMap();
 const value=row=>row??'未登记';
 const direction={outgoing:'我发出的',incoming:'我收到的'};
 
-export function renderAffairsPanel(container,data,kind){
+export function renderAffairsPanel(container,data,kind,context=null){
     const doc=container.ownerDocument,fragment=doc.createDocumentFragment();
     const node=(tag,text,className)=>{const e=doc.createElement(tag);if(text!==undefined)e.textContent=String(text);if(className)e.className=className;return e;};
     const section=(title,parent=fragment)=>{const e=node('section',undefined,'fields-affairs-section');e.append(node('h3',title));parent.append(e);return e;};
     const stats=(parent,rows)=>{const dl=node('dl',undefined,'fields-affairs-stats');for(const [label,text]of rows){const cell=node('div');cell.append(node('dt',label),node('dd',value(text)));dl.append(cell);}parent.append(dl);};
     const card=(parent,title)=>{const e=node('article',undefined,'fields-affairs-card');e.append(node('h4',title));parent.append(e);return e;};
     const note=(parent,text)=>parent.append(node('p',text,'fields-note'));
+    const execute=async(action,slots,status,button)=>{
+        button.disabled=true;status.textContent='正在办理…';
+        try{
+            const out=await context.act(action,slots);
+            if(out?.ok===false||out?.result?.receipt?.status==='rejected')throw Error(out.error??out.result?.receipt?.reason??'办理未完成');
+            const updated=await context.api('ui/affairs');
+            if(container.isConnected)renderAffairsPanel(container,updated,kind,context);
+        }catch(error){status.textContent=error.message;button.disabled=false;}
+    };
     note(fragment,`记录时点：${data.time??'未登记'}`);
     if(kind==='tasks'||kind==='obligations'){
         if(kind==='tasks'){
-            const quota=section(`第${data.quota.month}月发布额度`);
+            const quota=section(`${data.quota.time??`第${data.quota.month}月`}发布额度`);
             stats(quota,[['额度',data.quota.limitD===null?'未登记':`${data.quota.limitD}个D级单位`],['已用',data.quota.usedD===null?'未登记':`${data.quota.usedD}个D级单位`],['剩余',data.quota.remainingD===null?'未登记':`${data.quota.remainingD}个D级单位`]]);
             if(data.quota.limitD===null)note(quota,'尚无玩家发布额度记录。');
             if(data.quota.personal)note(quota,'私人身份可自费发布D级委托；上方额度用于官职任务。');
             note(quota,`任务等级折算：${Object.entries(data.quota.units).map(([grade,units])=>`${grade}级 ${units}个D级单位`).join('，')}`);
+            if(context?.act){
+                const posting=section('发布委托'),form=node('form',undefined,'fields-affairs-form'),fields={};
+                const input=(label,key,type,initial)=>{
+                    const wrap=node('label',label),field=node('input');field.type=type;field.name=key;field.setAttribute('aria-label',label);field.value=initial;
+                    fields[key]=field;wrap.append(field);form.append(wrap);return field;
+                };
+                const select=(label,key,options)=>{
+                    const wrap=node('label',label),field=node('select');field.setAttribute('aria-label',label);
+                    for(const [value,text]of options){const option=node('option',text);option.value=value;field.append(option);}field.value=options[0][0];fields[key]=field;wrap.append(field);form.append(wrap);return field;
+                };
+                input('委托内容','content','text','').required=true;
+                select('发单身份','personal',[['true','私人自费'],['false','任职额度']]);
+                select('任务等级','grade',Object.keys(data.quota.units).map(g=>[g,`${g}级`]));fields.grade.value='D';
+                const reward=input('报酬（铜）','reward','number',20);reward.min=20;reward.max=1000000;reward.required=true;
+                select('完成条件','objective',[['visit','抵达地点'],['deliver','交付物品']]);
+                input('目的地','location','text',data.location?.name??'').required=true;
+                const item=input('交付物品','item','text',''),quantity=input('交付数量','quantity','number',1);quantity.min=1;
+                const toggle=()=>{item.disabled=quantity.disabled=fields.objective.value!=='deliver';item.required=!item.disabled;};fields.objective.onchange=toggle;toggle();
+                const hours=input('期限（小时）','hours','number',24);hours.min=1;hours.max=720;hours.required=true;
+                input('公款来源聚落（自费留空）','settlement','text','');
+                const submit=node('button','发布并托管报酬'),status=node('p','','fields-note');submit.type='submit';form.append(submit,status);
+                form.onsubmit=event=>{
+                    event.preventDefault();
+                    const objective={type:fields.objective.value,location:fields.location.value};
+                    if(objective.type==='deliver')Object.assign(objective,{item:item.value,quantity:Number(quantity.value)});
+                    const slots={publisher:'player',personal:fields.personal.value==='true',grade:fields.grade.value,reward:Number(reward.value),content:fields.content.value,objective,deadline:data.minute+Number(hours.value)*60};
+                    if(!slots.personal&&fields.settlement.value.trim())slots.settlement=fields.settlement.value.trim();
+                    return execute('core:quest.publish',slots,status,submit);
+                };
+                posting.append(form);
+            }
         }
         const current=filters.get(container)??{direction:'all',status:'active'},controls=node('div',undefined,'fields-affairs-filters');
         const control=(label,key,options)=>{
             const wrap=node('label',label),select=node('select');select.setAttribute('aria-label',label);
             for(const [id,text]of options){const option=node('option',text);option.value=id;select.append(option);}select.value=current[key];
-            select.onchange=()=>{filters.set(container,{...current,[key]:select.value});renderAffairsPanel(container,data,kind);};wrap.append(select);controls.append(wrap);
+            select.onchange=()=>{filters.set(container,{...current,[key]:select.value});renderAffairsPanel(container,data,kind,context);};wrap.append(select);controls.append(wrap);
         };
         control('收发方向','direction',[['all','全部'],['incoming','我收到的'],['outgoing','我发出的']]);
         control('履约状态','status',[['active','未结束'],['all','全部'],['closed','已结束']]);fragment.append(controls);
@@ -34,12 +74,18 @@ export function renderAffairsPanel(container,data,kind){
             e.append(node('p',`${row.kind} · ${direction[row.direction]} · ${row.counterparty} · ${row.status}`));
             const due=node('p',row.deadlineText?`期限：${row.deadlineText}${row.overdue?' · 已到期':''}`:'期限未登记',row.overdue?'fields-affairs-due':'fields-note');e.append(due);
             if(row.grade!==undefined)stats(e,[['等级',row.grade],['报酬',row.reward===null?'未登记':`${row.reward}铜`]]);
+            if(row.escrow!==undefined)stats(e,[['托管',row.escrow],['已付报酬',row.rewardPaid],['已退款',row.refund]].map(([label,amount])=>[label,amount===null?'未登记':`${amount}铜`]));
             if(row.outstanding!==undefined)stats(e,[['未偿金额',row.outstanding===null?'未登记':`${row.outstanding}铜`]]);
             if(row.item)note(e,`交付：${row.item} × ${value(row.quantity)}`);
             if(row.coins!==undefined&&row.coins!==null)note(e,`约定付款：${row.coins}铜`);
             if(row.kindName)note(e,`合同类型：${{lease:'铺面租约',hire:'雇工',procurement:'采购',sale:'销售'}[row.kindName]??'其他合同'}`);
             if(row.quantity!==undefined&&row.kind==='合同')stats(e,[['约定数量',row.quantity],['已履行',row.fulfilled],['费用',row.cost===null?'未登记':`${row.cost}铜`],['实付',row.paid===null?'未登记':`${row.paid}铜`]]);
             if(row.reason)note(e,`原因：${row.reason}`);
+            if(kind==='tasks'&&row.active&&context?.act){
+                const status=node('p','','fields-note'),cancel=node('button','取消委托');cancel.type='button';cancel.onclick=()=>execute('core:quest.cancel',{quest:row.id},status,cancel);e.append(cancel);
+                if(row.direction==='incoming'&&row.status==='进行中'){const complete=node('button','交付并结算');complete.type='button';complete.onclick=()=>execute('core:quest.complete',{quest:row.id},status,complete);e.append(complete);}
+                e.append(status);
+            }
         }
     }else if(kind==='territory'){
         const offices=section('席位与任职申请');
@@ -74,7 +120,7 @@ export function renderAffairsPanel(container,data,kind){
 export function registerAffairsPanels({registerPanel}){
     for(const [id,title]of [['tasks','任务'],['obligations','约定'],['territory','领地']])registerPanel({id,title,render:async(container,context)=>{
         const request={};pending.set(container,request);container.textContent='正在读取事务记录…';
-        try{const data=await context.api('ui/affairs');if(container.isConnected&&pending.get(container)===request)renderAffairsPanel(container,data,id);}
+        try{const data=await context.api('ui/affairs');if(container.isConnected&&pending.get(container)===request)renderAffairsPanel(container,data,id,context);}
         catch{if(container.isConnected&&pending.get(container)===request)container.textContent='事务记录读取失败，请关闭面板后重试。';}
     }});
 }
