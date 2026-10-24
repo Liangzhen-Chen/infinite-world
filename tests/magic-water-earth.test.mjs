@@ -188,7 +188,13 @@ test('石弹消耗真实小石，正常活体伤害和实体命中都有持久�
  const result=await cast(s,'damage_earth','player',{source:'feature_stones'});assert.equal(result.damage,40);assert.equal(state(s,'feature_stones').stoneCount,9);const landing=s.doc.state.records[result.projectile];assert.equal(landing.massGrams,100);assert.equal(landing.owner,'player');assert.deepEqual(landing.point,[0,0]);
  const physical=await cast(s,'damage_earth','feature_light',{source:'feature_stones'});assert.equal(physical.integrity,60);assert.equal(state(s,'feature_stones').stoneCount,8);
  const saved=await sameAfterExpiry(s,3);assert.deepEqual(saved.doc.state.records[result.projectile],landing);assert.equal(state(saved,'feature_stones').stoneCount+Object.values(saved.doc.state.records).filter(r=>r.category==='physical_projectile').length,10);
- const f=fixture(),npc=Object.keys(f.doc.state.npcs)[0];await refuse(f,'damage_earth',npc,/事实/,{source:'feature_stones'});contact(f,npc);const aimed=await cast(f,'damage_earth',npc,{source:'feature_stones'});assert.equal(f.doc.state.records[aimed.projectile].target,npc);
+ // S4 supplies zone visibility, but a projectile still needs an actual landing point.
+ const f=fixture(),npc=Object.keys(f.doc.state.npcs).find(id=>f.doc.state.npcs[id].location===f.location);assert.ok(npc);
+ await refuse(f,'damage_earth',npc,/实际目标位置/,{source:'feature_stones'});
+ // Obtain contact through real melee rather than teleporting an NPC in the fixture.
+ for(let i=0;i<20&&!f.doc.state.records[`local_actor_position:${npc}`];i++)await run(f,'world_combat',{target:npc,intent:'defend'},`stone-contact-${i}`);
+ assert.ok(f.doc.state.records[`local_actor_position:${npc}`]);
+ const aimed=await cast(f,'damage_earth',npc,{source:'feature_stones'});assert.equal(f.doc.state.records[aimed.projectile].target,npc);
 });
 test('私有对象撤销授权、远处或遮挡对象拒绝，水资源预留防止容器超装',async()=>{
  const s=fixture();row(s,'feature_soil').owner='npc_owner';await refuse(s,'till','feature_soil',/授权/);s.doc.state.records.permit={category:'authorization',subject:'feature_soil',action:'environment_use',grantor:'npc_owner',expires:s.doc.state.minute+100,revoked:true};await refuse(s,'till','feature_soil',/授权/,{authorization:'permit'});

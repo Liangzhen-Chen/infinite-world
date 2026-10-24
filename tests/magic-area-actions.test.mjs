@@ -13,8 +13,8 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const actors=['npc_hw_linsui','npc_hw_hezhou'];
 const damage={kind:'damage',power:4,damageType:'fire',armorFactor:0};
 const area=effect=>({kind:'area',power:effect.power,radiusMeters:2,intervalMinutes:2,trigger:effect.kind==='protection'?'presence':'pulse',effect});
-async function fixture(t,{effect=damage,bossArea=false,blocked=false}={}){
- const world=await loadWorld(),spell={...world.spells[0],id:'spell_area_actions_fixture',name:'动作区域夹具',skill:'skill_area_actions_fixture',effectSpec:area(effect),mp:2,minutes:1,duration:8,rangeMeters:5,targeting:{lineOfSight:true},materials:[]};
+async function fixture(t,{effect=damage,bossArea=false,blocked=false,duration=8}={}){
+ const world=await loadWorld(),spell={...world.spells[0],id:'spell_area_actions_fixture',name:'动作区域夹具',skill:'skill_area_actions_fixture',effectSpec:area(effect),mp:2,minutes:1,duration,rangeMeters:5,targeting:{lineOfSight:true},materials:[]};
  world.spells.push(spell);world.skills.push({id:spell.skill,name:'动作区域夹具',attribute:'精神',profession:null});
  const place=world.locations.find(l=>l.id==='bld_hw_qingdeng'),feature=(id,point,state={})=>({id,name:id,kind:'silt_heap',owner:place.id,access:'public',position:point,state});
  place.features.push(feature('feature_area_origin',[0,0]),feature('feature_area_exit',[3,0]));
@@ -48,7 +48,8 @@ async function fixture(t,{effect=damage,bossArea=false,blocked=false}={}){
  return{world,engine,c,spell,request,campaignId,read,execute,approach,contact,cast};
 }
 test('真实HTTP普通动作生成双NPC位置，多目标与友军受伤，离界和重入沿同一消费者',async t=>{
- const s=await fixture(t);await s.approach('feature_area_origin');for(const id of actors)await s.contact(id);
+ // S4 zone edges and final approach consume time; retain the area across both trips.
+ const s=await fixture(t,{duration:30});await s.approach('feature_area_origin');for(const id of actors)await s.contact(id);
  const before=await s.read(),cast=await s.cast();
  for(const id of actors){const row=cast.doc.state.records[`local_actor_position:${id}`],proof=cast.doc.state.records[row.source];assert.equal(proof.category,'physical_contact');assert.equal(proof.subject,id);assert.equal(proof.location,cast.doc.state.location);assert.ok(proof.event.startsWith('contact-'));assert.deepEqual(row.point,[0,0]);assert.equal(cast.doc.state.npcs[id].hp,before.state.npcs[id].hp-4);}
  assert.equal(cast.doc.state.player.hp,before.state.player.hp-4);assert.equal(cast.out.result.outcomes.length,3);
@@ -78,7 +79,8 @@ test('巢穴实际个体经交锋取得坐标，首领区域能力走正式链�
  const hp=doc.state.creatures[minion].hp;assert.ok(hp>0);await s.execute('world_time',{minutes:2},'boss-pulse');doc=await s.read();assert.equal(doc.state.creatures[minion].hp,Math.max(0,hp-4));
 });
 test('正常巢穴生成的两个怪物逐个接触后参与玩家区域，怪物出界和重入更新成员',async t=>{
- const s=await fixture(t);await s.execute('world_move',{destination:'loc_hw_northwood'},'wood');
+ // Keep the same entry/exit assertions while allowing the real S4 walking time.
+ const s=await fixture(t,{duration:30});await s.execute('world_move',{destination:'loc_hw_northwood'},'wood');
  const entered=await s.execute('world_lair',{operation:'approach',lair:'lair_mud_tusk'},'lair'),targets=entered.result.minions.map(m=>m.id);assert.equal(targets.length,2);
  await s.approach('feature_area_wood_origin');for(const id of targets)await s.contact(id);
  const before=await s.read(),cast=await s.cast();for(const id of targets)assert.equal(cast.doc.state.creatures[id].hp,before.state.creatures[id].hp-4);
