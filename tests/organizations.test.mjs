@@ -46,26 +46,35 @@ test('创立行会：玩家任会长，章程与公库可查；存入记账并�
 
 test('入会：章程要求审批时入会费暂存，会长当面批准后入账；否决退还；免审批直接入会',async()=>{
     const s=setup(),{document:c0,id}=await found(s);
-    const fee=await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:20},'fee');
+    // 设计B：NPC先真实接受零费邀请和任命；原20铜托管/退款断言
+    // 由玩家亲自申请承担，避免用调用参数替NPC答应付钱。
+    const invitation=await s.org(c0,{operation:'org_join',org:id,member:A},'invite');
+    let c=(await s.org(invitation.document,{operation:'org_vote',org:id,proposal:invitation.result.proposal,opinion:'approve'},'admit')).document;
+    c=(await s.org(c,{operation:'org_propose',org:id,action:'appoint',member:A,name:'会长'},'handover')).document;
+    assert.equal(organization(s.engine,c.state,id).leader,A);
+    const fee=await s.org(c,{operation:'org_propose',org:id,speaker:A,action:'charter',choice:'vote',cost:20},'fee');
     assert.equal(fee.result.status,'通过','会长定：会长提出即决');
     assert.equal(organization(s.engine,fee.document.state,id).charter.fee,20);
-    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:A},'nope'),/当面同意/);
-    const apply=await s.org(fee.document,{operation:'org_join',org:id,member:A,consent:true},'apply');
-    assert.equal(apply.result.status,'议事中');assert.equal(apply.document.state.npcs[A].coins,80,'入会费暂存');
-    assert.equal(organization(s.engine,apply.document.state,id).members[A],undefined);
-    const ok=await s.org(apply.document,{operation:'org_vote',org:id,proposal:apply.result.proposal,opinion:'approve'},'ok');
+    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:B},'nope'),/当面同意/);
+    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:B,consent:true},'forged'),/当面同意/);
+    c=(await s.org(fee.document,{operation:'org_leave',org:id},'leave-first')).document;
+    const apply=await s.org(c,{operation:'org_join',org:id},'apply');
+    assert.equal(apply.result.status,'议事中');assert.equal(apply.document.state.player.coins,480,'入会费暂存');
+    assert.equal(organization(s.engine,apply.document.state,id).members.player,undefined);
+    const ok=await s.org(apply.document,{operation:'org_vote',org:id,proposal:apply.result.proposal,speaker:A,opinion:'approve'},'ok');
     assert.equal(ok.result.status,'通过');
-    const v=organization(s.engine,ok.document.state,id);assert.equal(v.members[A].position,'成员');assert.equal(v.treasury,20);
-    assert.deepEqual(organizationsOf(ok.document.state,A),[id]);
-    const applyB=await s.org(ok.document,{operation:'org_join',org:id,member:B,consent:true},'applyB');
-    const no=await s.org(applyB.document,{operation:'org_vote',org:id,proposal:applyB.result.proposal,opinion:'reject'},'no');
-    assert.equal(no.result.status,'否决');assert.equal(no.document.state.npcs[B].coins,100,'否决退还入会费');
-    const open=await s.org(no.document,{operation:'org_propose',org:id,action:'charter',consent:false},'open');
-    const join=await s.org(open.document,{operation:'org_join',org:id,member:B,consent:true},'joinB');
+    const v=organization(s.engine,ok.document.state,id);assert.equal(v.members.player.position,'成员');assert.equal(v.treasury,20);
+    assert.deepEqual(organizationsOf(ok.document.state,'player'),[id]);
+    c=(await s.org(ok.document,{operation:'org_leave',org:id},'leave-second')).document;
+    const applyB=await s.org(c,{operation:'org_join',org:id},'applyB');
+    const no=await s.org(applyB.document,{operation:'org_vote',org:id,proposal:applyB.result.proposal,speaker:A,opinion:'reject'},'no');
+    assert.equal(no.result.status,'否决');assert.equal(no.document.state.player.coins,480,'否决退还入会费');
+    const open=await s.org(no.document,{operation:'org_propose',org:id,speaker:A,action:'charter',consent:false},'open');
+    const join=await s.org(open.document,{operation:'org_join',org:id},'joinB');
     assert.equal(join.result.joined,true);assert.equal(organization(s.engine,join.document.state,id).treasury,40);
-    const leave=await s.org(join.document,{operation:'org_leave',org:id,member:B,consent:true},'leaveB');
-    assert.equal(organization(s.engine,leave.document.state,id).members[B],undefined);
-    await assert.rejects(s.org(leave.document,{operation:'org_leave',org:id},'quit'),/先改任/);
+    await assert.rejects(s.org(join.document,{operation:'org_leave',org:id,member:A},'quit'),/先改任/);
+    const leave=await s.org(join.document,{operation:'org_leave',org:id},'leaveB');
+    assert.equal(organization(s.engine,leave.document.state,id).members.player,undefined);
 });
 
 async function withMembers(s){

@@ -11,6 +11,7 @@ import {questQuotaMonth} from '../server-plugin/entity-view.mjs';
 import {calendarDateAt,minuteForCalendarDate,localWeather} from '../server-plugin/weather.mjs';
 import {affairs} from '../server-plugin/ui-affairs.mjs';
 import {appointedClaimClerk} from './helpers/office-actions.mjs';
+import {organization} from '../server-plugin/organizations.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
@@ -143,13 +144,17 @@ test('真实改任撤回新增发单额度，原托管合同与已用额度保�
  // Keep this actual-action prerequisite visible when the organization consent
  // route cannot establish it. No raw-tool bypass or injected membership.
  for(const org of orgs){
-  const joined=await run(document,'core:settlement.org_join',{org,member:'npc_hw_linsui',consent:true},`join:${org}`);document=joined.document;
+  // The request obtains and records the NPC's actual decision; the caller
+  // supplies no consent answer (design B). Admission still needs charter vote.
+  const joined=await run(document,'core:settlement.org_join',{org,member:'npc_hw_linsui'},`join:${org}`);document=joined.document;
+  assert.ok(document.state.consentEvents.some(e=>e.from==='npc_hw_linsui'&&e.subject===org&&e.scope==='org.join'));
   document=(await run(document,'core:settlement.org_vote',{org,proposal:joined.result.proposal,opinion:'approve'},`admission:${org}`)).document;
  }
  const posted=(await run(document,'core:quest.publish',{...publication,publisher:'player',objective:{type:'visit',location:'loc_hw_gate'}},'guild-post')).document;
  const oldPeriod=rights(posted).month;let removed=posted;
  for(const org of orgs)removed=(await run(removed,'core:settlement.org_propose',{org,action:'appoint',member:'npc_hw_linsui',name:'会长'},`replace:${org}`)).document;
  assert.equal(rights(removed).limitD,0);
+ for(const org of orgs)assert.ok(removed.state.consentEvents.some(e=>e.from==='npc_hw_linsui'&&e.subject===org&&e.scope==='org.appoint'&&e.terms.role==='会长'));
  assert.deepEqual(removed.state.quests['quest_guild-post'],posted.state.quests['quest_guild-post']);
  assert.equal(removed.state.questQuota[`${oldPeriod}_player`],10);
  const refused=await engine.reduce(removed,{tool:'world_act',eventId:'after-leaving',args:{action:'core:quest.publish',slots:{...publication,publisher:'player'}}});
@@ -178,4 +183,66 @@ test('真实发单经存盘、重开和事件复演保持托管与额度一次�
  const ended=await new CampaignStorage(root,{reducer}).load('quota-save');assert.deepEqual(ended.document,cancelled.document);
  assert.equal(ended.document.state.quests['quest_saved-post'].refund,40);assert.equal(ended.document.state.quests['quest_saved-post'].escrow,0);
  assert.equal(rights(ended.document,publication.publisher).usedD,10);clean(posted.document,ended.document);
+});
+
+test('章程任免与本人接受分别成立；自任、替NPC答应和代领任命均无效，重演保留同意来源',async()=>{
+ const start=scene({location:'bld_hw_qingdeng',present:['npc_hw_linsui']}),steps=[];let document=start;
+ const act=async(action,slots,eventId)=>{
+  const input={tool:'world_act',args:{action,slots},eventId},out=await engine.reduce(document,input);
+  assert.notEqual(out.result.receipt?.status,'rejected',JSON.stringify(out.result));
+  steps.push({input,result:out.result});document=applyPatches(document,out.patches);return out.result;
+ };
+ const reject=async(action,slots,eventId,reason)=>{
+  const before=structuredClone(document),out=await engine.reduce(document,{tool:'world_act',args:{action,slots},eventId});
+  assert.equal(out.result.receipt.status,'rejected');assert.match(out.result.receipt.reason,reason);
+  assert.deepEqual(out.patches,[]);assert.deepEqual(document,before);
+ };
+ const founded=await act('core:create',{type:'org',name:'河谷同行会',data:{occupation:'行会',notes:'依章程议任，本人接受'}},'accept-found'),org=founded.organization;
+ await reject('core:settlement.org_join',{org,member:'npc_hw_linsui',consent:true},'forged-consent',/不能代填同意/);
+ const invitation=await act('core:settlement.org_join',{org,member:'npc_hw_linsui'},'accept-invite');
+ await act('core:settlement.org_vote',{org,proposal:invitation.proposal,opinion:'approve'},'accept-admit');
+ const handed=await act('core:settlement.org_propose',{org,action:'appoint',member:'npc_hw_linsui',name:'会长'},'accept-handover');
+ assert.equal(handed.outcome,'已执行');assert.equal(rights(document).limitD,0);
+ const acceptance=document.state.records[handed.proposal].acceptance;
+ assert.equal(acceptance.member,'npc_hw_linsui');assert.ok(document.state.consentEvents.some(e=>e.id===acceptance.source&&e.subject===org&&e.terms.role==='会长'));
+ await reject('core:settlement.org_propose',{org,action:'appoint',member:'player',name:'长老',speaker:'npc_hw_linsui'},'unwilling-issuer',/任免机关尚未同意/);
+ // Two real supported appointments build the issuer's actual regard to the
+ // charter's trust threshold; no standing/history is injected for acceptance.
+ const second=await act('core:create',{type:'org',name:'河谷营造同业会',data:{occupation:'行会',notes:'依章程议任，本人接受'}},'support-found');
+ const joined=await act('core:settlement.org_join',{org:second.organization,member:'npc_hw_linsui'},'support-join');
+ await act('core:settlement.org_vote',{org:second.organization,proposal:joined.proposal,opinion:'approve'},'support-admit');
+ await act('core:settlement.org_propose',{org:second.organization,action:'appoint',member:'npc_hw_linsui',name:'会长'},'support-appoint');
+ const self=await act('core:settlement.org_propose',{org,action:'appoint',member:'player',name:'会长'},'self-proposal');
+ assert.equal(self.status,'议事中');assert.equal(rights(document).limitD,0);
+ await reject('core:settlement.org_vote',{org,proposal:self.proposal,opinion:'approve'},'self-vote',/无表决权/);
+ const declined=await act('core:settlement.org_propose',{org,action:'appoint',member:'player',name:'长老',speaker:'npc_hw_linsui'},'offer-player');
+ await act('core:settlement.org_vote',{org,proposal:declined.proposal,opinion:'reject'},'player-decline');
+ assert.equal(document.state.records[declined.proposal].outcome,'本人拒绝');assert.equal(rights(document).limitD,0);
+ const appointment=await act('core:settlement.org_propose',{org,action:'appoint',member:'player',name:'长老',speaker:'npc_hw_linsui'},'approve-player');
+ assert.equal(appointment.status,'通过');assert.equal(appointment.outcome,'待本人接受');assert.equal(rights(document).limitD,0);
+ assert.equal(organization(engine,document.state,org).members.player.position,'成员');
+ await reject('core:settlement.org_vote',{org,proposal:appointment.proposal,speaker:'npc_hw_linsui',opinion:'approve'},'proxy-accept',/不能代填/);
+ const changed=await run(document,'core:settlement.org_propose',{org,action:'charter',choice:'vote',speaker:'npc_hw_linsui'},'changed-charter');
+ const stale=await engine.reduce(changed.document,{tool:'world_act',eventId:'stale-accept',args:{action:'core:settlement.org_vote',slots:{org,proposal:appointment.proposal,opinion:'approve'}}});
+ assert.equal(stale.result.receipt.status,'rejected');assert.match(stale.result.receipt.reason,/现行章程/);assert.deepEqual(stale.patches,[]);
+ await act('core:settlement.org_vote',{org,proposal:appointment.proposal,opinion:'approve'},'player-accept');
+ assert.equal(organization(engine,document.state,org).members.player.position,'长老');assert.equal(rights(document).limitD,3);
+ assert.equal(document.state.records[appointment.proposal].acceptance.source,'player-accept');
+ let replay=start;
+ for(const {input,result}of steps){
+  assert.equal(result.organizationConsentVersion,1);
+  const out=await engine.reduce(replay,input,{replay:true,result});replay=applyPatches(replay,out.patches);
+ }
+ assert.deepEqual(replay,document);clean(start,document);
+});
+
+test('旧入会事件复演保留原结果，不补造新的同意事件或改写历史',async()=>{
+ const start=scene({location:'bld_hw_qingdeng',present:['npc_hw_linsui']});
+ const founded=await run(start,'core:create',{type:'org',name:'旧事件核验会',data:{occupation:'行会',notes:'保留签订时的事件规则'}},'legacy-org');
+ const out=await engine.reduce(founded.document,{tool:'world_settlement',args:{operation:'org_join',org:founded.result.organization,member:'npc_hw_linsui',consent:true},eventId:'legacy-join'},{replay:true,result:{}});
+ const replay=applyPatches(founded.document,out.patches);
+ assert.equal(out.result.organizationConsentVersion,undefined);
+ assert.equal(replay.state.consentEvents,undefined);
+ assert.equal(replay.state.records[out.result.proposal].status,'议事中');
+ assert.equal(organization(engine,replay.state,founded.result.organization).members.npc_hw_linsui,undefined);
 });
