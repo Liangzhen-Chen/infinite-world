@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent} from '../../tools/content-pipeline.mjs';
 
@@ -24,21 +26,36 @@ for(const org of ['faction_bs_government','faction_lampbridge']){
 }
 const draftFor=e=>({id:e.id,row:e.row}),contextFor=e=>({organization:factions.find(f=>f.id===e.id),boundary:e.boundary});
 const validateDraft=(d,e)=>{try{assert.deepEqual(d,draftFor(e));return [];}catch{return ['候选必须等于已冻结章程'];}};
+// Verify the superseding charter before replaying an older exact-row gate.
+export async function previousOfficeEdition(world, files = null){
+ const approved=await readApprovedContent(root,entries,{revision,contextFor});
+ assert.equal(approved.length,entries.length);
+ const prior=structuredClone(world),priorFiles=files&&structuredClone(files);
+ for(const draft of approved){
+  assert.deepEqual(world.factions.find(f=>f.id===draft.id)?.offices,draft.row,`${draft.id} 正式文件与已审批的行不同`);
+  if(files)assert.deepEqual(files.factions.find(f=>f.id===draft.id)?.offices,draft.row,`${draft.id} 正式文件与已审批的行不同`);
+  const offices=draft.row.filter(o=>o.id!=='office_lampbridge_exam_registry').map(({appointment,...office})=>office);
+  prior.factions.find(f=>f.id===draft.id).offices=structuredClone(offices);
+  if(priorFiles)priorFiles.factions.find(f=>f.id===draft.id).offices=structuredClone(offices);
+ }
+ return {world:prior,files:priorFiles};
+}
 const args=process.argv.slice(2);
-if(args.includes('--review')){
+const main=process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href;
+if(main&&args.includes('--review')){
  await fs.mkdir(root,{recursive:true});
  if(!foundation)await fs.writeFile(`${root}/foundation.json`,JSON.stringify({revision,organizations:factions.filter(f=>entries.some(e=>e.id===f.id))},null,1)+'\n');
  try{await fs.access(`${root}/budget.json`);}catch{await fs.writeFile(`${root}/budget.json`,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:1,cards:{S404:{limitYuan:1,spentYuan:0,reservedYuan:0,maxRequests:30}},requests:{}}));}
  const {summary}=await runContentPipeline({entries,root,budgetRoot:root,revision,contextFor,validateDraft,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:()=>{throw Error('固定候选');},buildReviewRequest:defaultReviewRequest,client:new DeepSeekClient({budgetYuan:1,logFile:`${root}/usage.jsonl`}),cardId:'S404',allocation:{cardId:'S404',incrementLimitYuan:1,maxRequests:30,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:2});
  console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards.S404}));
 }
-if(args.includes('--publish')){
+if(main&&args.includes('--publish')){
  const approved=await readApprovedContent(root,entries,{revision,contextFor});assert.equal(approved.length,entries.length);
  let text=await fs.readFile(file,'utf8');
  for(const row of approved){const old=published.find(f=>f.id===row.id);text=text.replace(JSON.stringify(old),JSON.stringify({...old,offices:row.row}));}
  await fs.writeFile(file,text);console.log(JSON.stringify({published:approved.length}));
 }
-if(args.includes('--verify')){
+if(main&&args.includes('--verify')){
  const approved=await readApprovedContent(root,entries,{revision,contextFor});assert.equal(approved.length,entries.length);
  for(const row of approved)assert.deepEqual(published.find(f=>f.id===row.id).offices,row.row);
  console.log(JSON.stringify({verified:approved.length}));

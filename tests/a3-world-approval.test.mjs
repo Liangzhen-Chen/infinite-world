@@ -9,6 +9,7 @@ import {reconcileHoldings, reconciled} from '../server-plugin/holding-sources.mj
 import {readFiles, contentEntries, checkEntry, previewWorld, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
 import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
+import {previousOfficeEdition} from '../world/design/s4-offices-approval.mjs';
 
 // Gate for the Baishi grassroots judicial/security offices (report, fine collection, custody, case handling,
 // arrest, appeal, claim, town head) and for the catalogue entries (items, recipes, nutrition, rules rows) that
@@ -29,6 +30,8 @@ async function verifyPublished(candidateWorld,candidateFiles){
   return verifyOriginalPublished(candidateWorld,prior);
 }
 const world = await loadWorld(), files = await readFiles(), seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
+// The old preview owns the pre-S4 office edition; current charters are verified first.
+const priorWorld=(await previousOfficeEdition(world)).world;
 const make = () => { const engine = new WorldEngine(structuredClone(world)); return {engine, document: engine.createCharacter(seed, {}, 'fix3-world')}; };
 const entry = id => contentEntries(files).find(e => e.id === id);
 
@@ -42,6 +45,10 @@ test('手改已审批的行会使回执失效：职位职权、目录价、营�
   const office = structuredClone(files);
   office.factions.find(f => f.id === 'faction_bs_government').offices.find(o => o.id === 'office_bs_fine_collector').authority.operations = ['collect_fine', 'handle_case'];
   await assert.rejects(() => verifyPublished(world, office), /正式文件与已审批的行不同/);
+  // The historical projection must never hide an unapproved S4 appointment rule.
+  const charter = structuredClone(files);
+  charter.factions.find(f => f.id === 'faction_bs_government').offices.find(o => o.id === 'office_bs_fine_collector').appointment.minimumStanding = -100;
+  await assert.rejects(() => verifyPublished(world, charter), /正式文件与已审批的行不同/);
   const price = structuredClone(files);
   price.items.find(i => i.id === 'item_hoe').basePrice = 30;
   await assert.rejects(() => verifyPublished(world, price), /发布骨架或引用事实已改变|正式文件/);
@@ -61,7 +68,7 @@ test('手改已审批的行会使回执失效：职位职权、目录价、营�
 });
 
 test('L1：持有人的作息必须覆盖接待时段，席位与持有人同一聚落，营养值须落在 body 表范围', () => {
-  const candidate = previewWorld(world);
+  const candidate = previewWorld(priorWorld);
   assert.deepEqual(checkEntry(candidate, entry('office_bs_report_desk')).errors, []);
   const away = structuredClone(entry('office_bs_report_desk'));
   away.row.receptionHours = [[480, 1200]];
@@ -116,7 +123,7 @@ test('新职位在持有协议里是真实的 holds_office，持有人对账一�
 });
 
 test('候选叠加世界在发布前后一致：正式世界已含候选，叠加不改变任何行', () => {
-  const candidate = previewWorld(world);
+  const candidate = previewWorld(priorWorld);
   assert.deepEqual(candidate.factions.map(f => f.id), world.factions.map(f => f.id));
   assert.deepEqual(candidate.npcs.length, world.npcs.length);
 });

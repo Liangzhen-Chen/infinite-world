@@ -11,6 +11,7 @@ import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, defaultReviewRequest, readApprovedContent, hashContent} from '../../tools/content-pipeline.mjs';
 import * as G from './a3-world-governance.mjs';
 import * as C from './a3-world-catalog.mjs';
+import {previousOfficeEdition} from './s4-offices-approval.mjs';
 
 export const revision = G.revision, draftRoot = G.draftRoot;
 const read = async file => JSON.parse(await fs.readFile(file, 'utf8'));
@@ -313,6 +314,7 @@ function currentRow(files, entry) {
 }
 export async function verifyPublished(world, files = null) {
   files ??= await readFiles();
+  ({world,files}=await previousOfficeEdition(world,files));
   const entries = contentEntries(files), candidate = previewWorld(world);
   const approved = await readApprovedContent(draftRoot, entries, {revision, contextFor: entry => contextFor(candidate, entry)});
   assert.equal(approved.length, entries.length, '仍有未审条目');

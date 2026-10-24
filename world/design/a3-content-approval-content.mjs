@@ -7,6 +7,7 @@ import {validateWorld} from '../../tools/validate-world.mjs';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, defaultReviewRequest, readApprovedContent, hashContent} from '../../tools/content-pipeline.mjs';
 import {revision, draftRoot, corrections, patches, isNewPerson, sourceOf, boundaryOf} from './a3-content-approval.mjs';
+import {previousOfficeEdition} from './s4-offices-approval.mjs';
 
 const read = async file => JSON.parse(await fs.readFile(file, 'utf8'));
 const FILES = {baseline: 'world/people/baseline.json', locations: 'world/geo/locations.json', routes: 'world/geo/routes.json', factions: 'world/lore/factions.json'};
@@ -201,6 +202,7 @@ function currentRow(files, entry) {
 // 经审批的行必须与正式文件逐字相同；这是“手改已发布数据”会被抓到的闸门。
 export async function verifyPublished(world, files = null) {
   files ??= await readFiles();
+  ({world,files}=await previousOfficeEdition(world,files));
   const entries = contentEntries(files);
   const approved = await readApprovedContent(draftRoot, entries, {revision, contextFor: entry => contextFor(world, entry)});
   assert.equal(approved.length, entries.length, '仍有未审条目');

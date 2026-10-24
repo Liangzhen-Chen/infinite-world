@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {questPublishingRights} from '../server-plugin/quest-board.mjs';
+import {financeTransfer} from '../server-plugin/finance-bank.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const village='loc_bs_yupo',authority=world.rules.governance.authority,charter=authority.superiors.auth_bs_office_charter;
@@ -15,7 +16,7 @@ const xunjue=authority.titles.find(t=>t.name==='勋爵');
 function setup(){
  const w=structuredClone(world);for(const n of w.npcs)delete n.schedule;
  const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'titles-test');
- doc.state.location=charter.seat;doc.state.minute=540;doc.state.player.coins=1000;
+ doc.state.location=charter.seat;doc.state.minute=540;doc.state.player.coins=2000;
  Object.assign(doc.state.npcs[clerk],{location:charter.seat,activity:'公署递件'});
  const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return {document:applyPatches(c,out.patches),result:out.result};};
  const petition=(c,name,extra={},event='petition')=>run(c,'world_settlement',{operation:'title_petition',settlement:village,name,...extra},event);
@@ -58,8 +59,10 @@ test('勋爵须治理凭据且封地是现任村长之村；按封地实收税�
  assert.equal(questPublishingRights(s.engine,c.state).limitD,10);
  // The fief takes in 1200 in housing fees during the month (tax receipts add to the same base).
  c=structuredClone(c);
- c.state.records['housing_fee:x']={category:'housing_fee',settlement:village,payer:'npc_yp_shile',copper:1200,kind:'宅基费',minute:c.state.minute};
- c.state.settlements[village].treasury+=1200;
+ const fee=s.engine.primitiveDraft(c);
+ financeTransfer(fee,s.engine,'player',village,1200,'housing-fee:x');
+ fee.set(['state','records','housing_fee:x'],{category:'housing_fee',settlement:village,payer:'player',copper:1200,kind:'宅基费',minute:c.state.minute,sourceEvent:'housing-fee:x'});
+ c=applyPatches(c,fee.patches);
  const coins=c.state.player.coins,treasury=c.state.settlements[village].treasury;
  c=await s.wait(c,30,'month');
  const paid=Object.values(c.state.records).find(r=>r.category==='title_income'&&r.income>0);

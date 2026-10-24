@@ -30,6 +30,12 @@ export async function copyWorldFixture(parent,edition){
 // loadWorld materializes D1 fields; keep their separate source when a test
 // writes a projected locations catalog back beside geo/biomes.json.
 export async function writeFixtureLocations(root,locations){
+ // Historical installation fixtures remove places as well as their later law bindings.
+ const old=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
+ const removed=new Set(old.filter(p=>!locations.some(l=>l.id===p.id)).map(p=>p.id));
+ const bindingsFile=path.join(root,'law/bindings.json');
+ const bindings=await fs.readFile(bindingsFile,'utf8').then(JSON.parse).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+ if(bindings)await fs.writeFile(bindingsFile,JSON.stringify(bindings.filter(b=>!removed.has(b.place))));
  const file=path.join(root,'geo/biomes.json'),biomes=JSON.parse(await fs.readFile(file,'utf8'));
  const ids=new Set(locations.map(l=>l.id));
  biomes.locations=Object.fromEntries(Object.entries(biomes.locations).filter(([id])=>ids.has(id)));

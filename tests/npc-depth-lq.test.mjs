@@ -67,7 +67,7 @@ test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人�
  const worldRoot=path.join(temp,'world');
  // A3 executable definitions and ontology assets are part of the loaded edition
  // (03 §3.2, registration epochs); keep the complete-world equality assertion unchanged.
- for(const dir of ['meta','geo','people','lore','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.mkdir(path.join(temp,'tools'));
  for(const file of ['content-pipeline.mjs','content-budget.mjs'])await fs.copyFile(path.resolve('tools',file),path.join(temp,'tools',file));
  await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});

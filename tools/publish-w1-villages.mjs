@@ -16,9 +16,11 @@ const merge=(old,rows)=>{const map=new Map(old.map(x=>[x.id,x]));for(const row o
 export function villagesOriginalWorld(world,foundation=w1VillagesFoundation()){
  const own=new Set([...foundation.npcs,...foundation.residents,...foundation.locations,...foundation.routes,...foundation.households,...foundation.settlements].map(x=>x.id));
  const next={...world,...Object.fromEntries(['npcs','residents','locations','routes','households','settlementProfiles'].map(k=>[k,(world[k]??[]).filter(x=>!own.has(x.id))]))};
+ // A removed village cannot retain the later territorial bindings to its places.
+ if(world.rules.law?.bindings)next.rules={...world.rules,law:{...world.rules.law,bindings:world.rules.law.bindings.filter(b=>!own.has(b.place))}};
  // U10 life-magic regulation is a settlement's own policy and leaves with it.
  const regulation=world.rules?.magicEconomy?.regulation;
- if(regulation?.some(g=>own.has(g.settlement)))next.rules={...world.rules,magicEconomy:{...world.rules.magicEconomy,regulation:regulation.filter(g=>!own.has(g.settlement))}};
+ if(regulation?.some(g=>own.has(g.settlement)))next.rules={...next.rules,magicEconomy:{...world.rules.magicEconomy,regulation:regulation.filter(g=>!own.has(g.settlement))}};
  return next;
 }
 export function mergeVillages(world,candidate,{npcAmendments=[],profileAmendments=[],depthReceipt=undefined}={}){

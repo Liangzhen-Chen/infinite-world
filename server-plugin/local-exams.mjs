@@ -18,7 +18,11 @@ export function bookExaminationSeat(d,engine,row,{actor=row.registrar}={}){
  const state=d.get('state'),role=engine.byId.get(row.profession);
  if(actor!==row.registrar||!state.npcs?.[actor]||typeof row.id!=='string'||!row.id||d.get('state','records',seatKey(row.id))||!role||!qualifiedExaminers(engine,state,row.profession,row.location).includes(row.examiner)||!Number.isSafeInteger(row.minutes)||row.minutes<1||!Number.isSafeInteger(row.fee)||row.fee<0||typeof row.available!=='boolean'||row.passed!==false)throw Error('Invalid pending examination or unqualified examiner');
  const offices=institutionOffices(engine,state).filter(o=>officeOnDuty(engine,state,o,actor));
- if(!offices.some(o=>o?.seat===row.location&&o.authority?.profession===row.profession&&o.authority.operations?.includes(actor===row.examiner?'certify':vocabulary(engine,'examinations','referralOperation'))))throw Error('Registrar lacks examination referral authority');
+ // Qualified independent masters already own their native examination service.
+ // An authored institutional examiner must still hold the current office.
+ const institutional=(engine.world.factions??[]).flatMap(f=>f.offices??[]).some(o=>o.holder===actor&&o.authority?.profession===row.profession);
+ const independent=actor===row.examiner&&!institutional;
+ if(!independent&&!offices.some(o=>o?.seat===row.location&&o.authority?.profession===row.profession&&o.authority.operations?.includes(actor===row.examiner?'certify':vocabulary(engine,'examinations','referralOperation'))))throw Error('Registrar lacks examination referral authority');
  if(row.minutes!==(role.entry?.minutes??120)||row.fee!==role.fee)throw Error('Examination seat must retain the native examination fee and duration');
  const value={...persistable(row),category:'examination_seat'};
  d.set(['state','records',seatKey(row.id)],value);
