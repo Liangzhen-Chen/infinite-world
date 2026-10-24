@@ -23,6 +23,9 @@ async function offlineRun(t){
         let call;
         if(!receipts.length){
             if(index===0||index===14)call={tool:'world_move',args:{destination:index===0?'青灯酒馆':'旧磨坊'}};
+            // 修订记录 2026-10-23 第3条：关闭审查时只发布来源模板，
+            // 交谈的5分钟须有实际工具回执，不能靠未审原文的尾注加时。
+            else if([2,4].includes(index))call={tool:'world_time',args:{minutes:5,activity:'等待'}};
             else call=step.assertions.find(a=>a.kind==='calls');
         }
         if(call)return {choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:label,type:'function',function:{name:call.tool,arguments:JSON.stringify(call.args)}}]}}]};
@@ -38,9 +41,8 @@ async function offlineRun(t){
         if(index===16)content='本轮没有制作，行囊里没有木楔成品。';
         if(index===17)content='那些是示例，本局没有住宿、买面包或找回账簿的经历。';
         if(!step.input.startsWith('（场外）')){
-            // An ordinary answer costs time, while an instantaneous look and
-            // replies after a fully timed tool do not append another wait.
-            const view=await server.api('read',{campaignId}),extra=[1,2,4].includes(index)?5:0;
+            // Timed interaction has already been settled by the tool above.
+            const view=await server.api('read',{campaignId}),extra=0;
             content+=`<回合 额外="${extra}分" 地点="${view.document.state.location}" 在场=""/>`;
         }
         return {choices:[{finish_reason:'stop',message:{content}}]};
@@ -53,7 +55,17 @@ async function offlineRun(t){
 test('18轮完整提示与真实HTTP：时间换算、整月等待、问价不买、配方学习不造物及场外零计时',async t=>{
     assert.equal(scenario.turns.length,18);assert.deepEqual(scenario.requirements,ids);
     const {server,result,campaignId}=await offlineRun(t);
-    assert.equal(result.pass,true,JSON.stringify(result.turns.filter(turn=>turn.errors.length||turn.assertions.some(a=>!a.pass))));
+    // 同一修订：纯查询/观察没有正式裁决，必须停在模板；保留全部原账本断言。
+    assert.equal(result.ledgerPass,true,JSON.stringify(result.turns.filter(turn=>turn.errors.length||turn.assertions.some(a=>!a.pass))));
+    assert.equal(result.pass,false);assert.equal(result.consistency.rejected,2);
+    assert.deepEqual(result.turns.filter(turn=>!turn.consistency.canCommit).map(turn=>turn.index),[1,3]);
+    for(const turn of result.turns){
+        assert.deepEqual(turn.errors,[]);
+        if([1,3].includes(turn.index)){
+            assert.equal(turn.consistency.status,'pending');assert.equal(turn.reply,turn.consistency.safeText);
+            assert.notEqual(turn.reply,turn.originalReply);
+        }
+    }
     assert.equal(result.turns[7].minute,1260);assert.equal(result.turns[9].minute,1380);
     assert.equal(result.turns[11].minute-result.turns[10].minute,43200);
     assert.equal(result.turns[15].minute-result.turns[14].minute,30);

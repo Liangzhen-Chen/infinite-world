@@ -120,7 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
- {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','action-time.mjs','routing-programs.mjs','body-needs.mjs']},
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-constructor.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','action-time.mjs','routing-programs.mjs','body-needs.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -156,7 +156,7 @@ const SYSTEMS=[
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
- {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','environment-state.mjs','perception.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
+ {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','water-volume.mjs','environment-state.mjs','perception.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},
  // magic-economy.mjs (U10): settlement-scale prices, losses and reactions to life magic.
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','finance-bank.mjs','finance-assets.mjs','finance-tax.mjs','finance-operations.mjs','labor-market.mjs','employment-state.mjs','settlement-trade.mjs','manufacturing.mjs','workstation-services.mjs','repair.mjs','magic-economy.mjs','extraction.mjs','smuggling.mjs']},
@@ -174,7 +174,7 @@ const SYSTEMS=[
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
    'ext:personal-panels.mjs','ext:topbar.mjs','ext:history-window.mjs','ext:ambient-audio.mjs','ext:state-read.mjs']},
  {id:'ui_actions',layer:'ui',name:'动作目录与界面可操作（A1）',modules:['action-registry.mjs','action-gateway.mjs','action-affordances.mjs','action-text.mjs','applied-effects.mjs','ext:ui-actions.mjs','ext:actions-view.mjs','ext:action-builder.mjs']},
- {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
+ {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs','ext:turn-contract.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},
  {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs','consistency-outcome.mjs']},

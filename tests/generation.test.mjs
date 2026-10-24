@@ -3,6 +3,7 @@ import assert from'node:assert/strict';
 import {generationSettings,generationRequest,generationPreset}from'../extension/generation.mjs';
 import {createPlaytestServer,runPlaytest}from'../tools/playtest-runner.mjs';
 import {loadPromptBundle,presetFor}from'../tools/build-card.mjs';
+import {reviewResponse} from './helpers/consistency-response.mjs';
 
 test('预设与试玩默认4096且兼容1800，截断按实际配额失败且不重试',async t=>{
     const server=await createPlaytestServer();t.after(()=>server.close());
@@ -22,8 +23,11 @@ test('预设与试玩默认4096且兼容1800，截断按实际配额失败且不
 });
 
 test('多动作回合在默认配额返回完整长正文和回合尾，不混入思考',async t=>{
-    const server=await createPlaytestServer();t.after(()=>server.close());
-    const bundle=await loadPromptBundle(),text='我在这里等着。'.repeat(700);
+    // 修订记录 2026-10-23 第3条：原文须经逐句审查才可发布。
+    // 用离线审查夹具验证完整长正文，仍逐字断言正文、尾注与思考隔离。
+    const server=await createPlaytestServer({consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
+    // 同样700次、超过4000字；每10次一句，覆盖逐句审查240句上限内的长正文。
+    const bundle=await loadPromptBundle(),text=('我在这里等着'.repeat(10)+'。').repeat(70);
     const reply=`${text}<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`;
     let requests=0;
     const client={async generate(body){
