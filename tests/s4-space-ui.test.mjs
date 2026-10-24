@@ -39,7 +39,8 @@ test('S4 无模型空间菜单：真实等待裁剪人物，分区按钮移动�
   await page.locator('#fields-toolbar [data-panel="actions"]').click();
   const dialog=page.locator('#fields-dialog');await dialog.locator('.fields-actions-scene').waitFor();
   assert.match(await dialog.locator('.fields-actions-scene').innerText(),/林穗/);
-  const minute=await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute),wait=(1200-minute%1440+1440)%1440;
+  const minute=await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute),wait=(1290-minute%1440+1440)%1440;
+  // 林穗 21:00 前在前厅接待（营业中的屋子夜里有灯可见）；等到她锁门睡下后菜单才裁掉她。
   await dialog.locator('.fields-actions-quick').getByRole('button',{name:'等待',exact:true}).click();
   const form=dialog.locator('form.fields-actions-form');await form.waitFor();
   await form.locator('#fields-slot-minutes').fill(String(wait));await form.locator('button[type="submit"]').click();
