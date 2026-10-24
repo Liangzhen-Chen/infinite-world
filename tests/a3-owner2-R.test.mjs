@@ -12,6 +12,8 @@ import {canonicalActionId} from '../server-plugin/action-registry.mjs';
 import {primitiveRuntime} from '../server-plugin/primitives-runtime.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
+import {officeScene} from './helpers/office-actions.mjs';
+import {zoneOf} from '../server-plugin/place-layout.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -19,8 +21,20 @@ const initial=engine.createCharacter(seed,{},'owner2-R');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const canonical=id=>canonicalActionId(primitiveRuntime.registry(engine),id);
 function fixture(n){
- const row=corpus.find(r=>r.id===`A3V2-${n}`),setup=applyIntentSetup(engine,initial,row.setup);
- assert.deepEqual(setup.setupUnmet,[],`${n} premises`);return {row,document:setup.document};
+ const row=corpus.find(r=>r.id===`A3V2-${n}`),scene=structuredClone(row.setup),positions=scene.positions??[];
+ // S4-02 makes authored geometry authoritative. 134/140/146/171 need
+ // conversational proximity: establish it by actually walking the NPC.
+ // 174 tests an incomplete proposal, so its old invented 30m measurement
+ // supplies no premise; the routing and zero-write assertions stay intact.
+ delete scene.positions;
+ const setup=applyIntentSetup(engine,initial,scene);assert.deepEqual(setup.setupUnmet,[],`${n} premises`);
+ let document=setup.document;
+ for(const p of positions.filter(p=>p.distanceMeters<=3)){
+  const d=engine.primitiveDraft(document),destination=zoneOf(engine,document,p.observer)?.id;
+  assert.ok(destination);const moved=engine.primitiveMoveNpc(d,{entity:p.target,destination,mode:'walk'},`R-native-proximity-${n}`);
+  assert.equal(moved.arrived,true);document=applyPatches(document,d.patches);
+ }
+ return {row,document};
 }
 async function run(n,adjust){
  const {row,document}=fixture(n),before=persistable(document);
@@ -133,12 +147,30 @@ test('R2: speech subclass 137 has a native consumer without fabricated agreement
  const replay=await engine.reduce(persistable(after),input);assert.deepEqual(replay.patches,[]);
 });
 
-test.todo('R2: confession preserves the legal entry and refuses to promote a witness into an official〔前提待真实动作：形成指定待审案件及在岗机构身份；归 S4〕',async()=>{
- const {row,document}=fixture(180),prepared=prepareOpenAction(engine,document,row.proposal);
+test('R2: confession preserves the legal entry and refuses to promote a witness into an official',async()=>{
+ const row=corpus.find(r=>r.id==='A3V2-180');
+ const scene=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui','npc_hw_gucen','npc_hw_yanzhe']});assert.deepEqual(scene.setupUnmet,[]);
+ let document=scene.document,crime;
+ for(let i=0;i<30;i++){
+  const out=await engine.reduce(document,{tool:'world_act',eventId:`R2-actual-theft-${i}`,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_bread'}}});
+  if(out.result.success){document=applyPatches(document,out.patches);crime=out.result.case;break;}
+ }
+ assert.ok(crime);
+ document=applyIntentSetup(engine,document,{present:['npc_hw_gucen']}).document;
+ let out=await engine.reduce(document,{tool:'world_act',eventId:'R2-actual-report',args:{action:'core:law.confess',slots:{case:crime,authority:'npc_hw_gucen'}}});
+ assert.equal(out.result.receipt.status,'committed');document=applyPatches(document,out.patches);
+ document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:['npc_bs_035_1','npc_hw_yanzhe']});
+ // S406b: the official decides the real filing request; the witness remains
+ // a witness and cannot be promoted into a receiver by caller arguments.
+ out=await engine.reduce(document,{tool:'world_act',eventId:'R2-actual-accept',args:{action:'law:request_decision',slots:{request:out.result.request,authority:'npc_bs_035_1'}}});
+ assert.equal(out.result.receipt.status,'committed');document=applyPatches(document,out.patches);
+ assert.equal(out.result.decision.source.kind,'npc_decision');assert.equal(out.result.accepted,true);
+ assert.equal(document.state.records[crime].stage,'pending');assert.equal(document.state.records[crime].judgment,undefined);
+ const prepared=prepareOpenAction(engine,document,row.proposal);
  assert.equal(prepared.routed,'core:law.confess');assert.equal(prepared.slots.request.kind,'confession');
  const preview=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-confess'});
  assert.equal(preview.receipt.routed,'core:law.confess');assert.equal(preview.receipt.status,'rejected');
- assert.match(preview.receipt.reason,/authorized recipient/);assert.deepEqual(preview.receipt.applied,[]);
+ assert.match(preview.receipt.reason,/没有办理这件事的职权/);assert.deepEqual(preview.receipt.applied,[]);
 });
 
 test('R2: a followup cannot disclose a private NPC memory through exact keys or fuzzy recollection',async()=>{

@@ -27,6 +27,10 @@ import {legacyCanAct,canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
 import {worldEvent} from './world-events.mjs';
 import {eventPerception} from './perception.mjs';
+import {FILING_VERSION,freshFiling,filingOfficer,filingKnowledge} from './legal-reactions.mjs';
+import {LEDGER_COIN} from './ledger.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {subjectiveView} from './subjective-view.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}不在允许范围`);return value;};
@@ -89,18 +93,18 @@ function incidentNorms(d,engine,{offender='player',location,minute,offense,code}
 }
 function currentCode(d,engine){const code=codeFor(engine,d.get('state','location'),d.get('state'));if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});return code;}
 function unique(d,id){if(d.get(...path(id)))throw preconditionFailure('法律登记编号已占用，拒绝覆盖');}
-function present(d,engine,name,allowSleeping=false){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor,d,id):awake(actor,d,id))||actor.location!==d.get('state','location'))throw preconditionFailure('当事人不在场或不能清醒行动');return id;}
+function present(d,engine,name,allowSleeping=false,failureCode='E-ACTION-PRECONDITION'){const id=engine.resolve(name,'npc'),actor=d.get('state','npcs',id);if(!(allowSleeping?alive(actor,d,id):awake(actor,d,id))||actor.location!==d.get('state','location'))throw preconditionFailure('当事人不在场或不能清醒行动',{code:failureCode});return id;}
 function authority(d,engine,code,name,kind){
     const eligible=lawAuthorities(engine,d.get('state'),code,kind);
     if(!name){
         const candidates=eligible.filter(id=>awake(d.get('state','npcs',id),d,id)&&d.get('state','npcs',id).location===d.get('state','location'));
-        throw preconditionFailure(`需要 authority 指定在场${kind==='judge'?'审判者':'执法者'}；候选：${candidates.map(id=>`${engine.byId.get(id)?.name}（${id}）`).join('、')||'无'}`);
+        throw preconditionFailure(`请指明在场${kind==='judge'?'审判者':'执法者'}；候选：${candidates.map(id=>engine.byId.get(id)?.name??'尚未记名的执法者').join('、')||'无'}`);
     }
     const id=present(d,engine,name);
     if(dismissed(d.get('state'),id))throw preconditionFailure('此人已因受贿事发被撤职，不再有执法或审判资格');
     if(!eligible.includes(id))throw preconditionFailure('此人没有该法典的执法或审判资格');return id;
 }
-function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')reject('E-ACTION-CASE','案件未登记',{missing:['需要已登记的案件编号'],repair:['先依法报案登记案件，再以返回的案件编号办理']});const current=legalCodeAt(engine,row.location,d.get('state')),code=current?.id===row.law?current:legalCodeById(engine,row.law,d.get('state'));if(!code)throw preconditionFailure('案件对应法典不可用，无执行权限');return{row,code};}
+function caseRow(d,engine,id){const row=d.get(...path(id));if(row?.category!=='legal_case')reject('E-ACTION-CASE','案件未登记：嫌疑尚未受理，不能当作已提交的证据',{missing:['需要已登记的案件编号'],repair:['先依法报案登记案件，再以返回的案件编号办理']});const current=legalCodeAt(engine,row.location,d.get('state')),code=current?.id===row.law?current:legalCodeById(engine,row.law,d.get('state'));if(!code)throw preconditionFailure('案件对应法典不可用，无执行权限');return{row,code};}
 function safeFund(d,id,category,extra={}){
     const existing=d.get(...path(id));if(existing&&existing.category!==category)throw Error('法律资金登记键冲突');
     return existing??{category,coins:0,...extra};
@@ -113,7 +117,10 @@ export function evidenceScore(d,row){
         if(evidence.kind==='eyewitness'){
             if(witnesses.has(evidence.witness)||!evidence.testified||!evidence.identified)continue;
             if(row.witnesses&&!row.witnesses.includes(evidence.witness))continue;
-            if(!d.get('state','npcs',evidence.witness,'legalKnowledge')?.some(known=>known.case===row.id&&known.source==='亲见或在场受理'&&known.minute<=evidence.minute))continue;
+            if(row.filingVersion===FILING_VERSION){
+                const event=worldEvent(d.get('state'),evidence.source);
+                if(!event?.witnesses?.includes(evidence.witness)&&event?.observer!==evidence.witness)continue;
+            }else if(!d.get('state','npcs',evidence.witness,'legalKnowledge')?.some(known=>known.case===row.id&&known.source==='亲见或在场受理'&&known.minute<=evidence.minute))continue;
             witnesses.add(evidence.witness);score++;
         }else if(evidence.kind==='confession'&&evidence.subject===row.offender&&!confessed){score+=2;confessed=true;}
         else if(evidence.kind==='possession'&&evidence.unit===row.stolen?.unit&&!possessed&&d.get('state','itemInstances',evidence.unit,'legalClaims')?.some(claim=>claim.case===row.id)){score++;possessed=true;}
@@ -137,16 +144,18 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
         if(snapshot.sourceZone)witnesses=witnesses.filter(id=>snapshot.versions[id]?.identified);
     }
     const now=minute,evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
-    const officer=witnesses.find(witness=>code.officers.includes(witness));
+    const suspicion=freshFiling(engine)&&['theft','theft_attempt'].includes(offense);
+    if(suspicion&&!offensePenalty(engine,code,offense))return null;
+    const officer=suspicion?null:witnesses.find(witness=>code.officers.includes(witness));
     const legacyReplay=engine.replaying&&engine.replayResult?.legalProcedureVersion!==1;
-    const row={category:'legal_case',id,law:code.id,...incidentNorms(d,engine,{offender,location,minute:now,offense,code}),
+    const row={category:suspicion?'legal_suspicion':'legal_case',...(suspicion?{private:true,visibility:'private',filingVersion:FILING_VERSION}:{}),id,law:code.id,...incidentNorms(d,engine,{offender,location,minute:now,offense,code}),
         ...(!legacyReplay?{procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses]}:{}),offender,victim,offense,value,stolen,
         location,minute:now,status:officer?'已报案':'未报案',reported:Boolean(officer),evidence,
         ...(officer?{receiver:officer,reportedAt:now}:{})};
     if(officer)row.evidence=row.evidence.map(entry=>({...entry,testified:entry.witness===officer}));
     holdingSet(d,null,path(id),row,'law');
     for(const witness of witnesses){
-        knowledge(d,witness,id,now);
+        if(!suspicion)knowledge(d,witness,id,now);
         if(!relationshipApplied&&witness===victim){
             if(engine.byId.get(witness)?.tier!=='full'){
                 if(engine.replaying&&engine.replayResult?.worldEventVersion!==1)d.set(['state','npcs',witness,'trust'],Math.max(-100,(d.get('state','npcs',witness,'trust')??0)-5));
@@ -158,11 +167,145 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
     return id;
 }
 // A request has a recipient and verifiable premises, but does not decide a case.
+function submitFiling(d,engine,args,eventId){
+ const recorded=engine.replaying?engine.replayResult?.filingSubmission:null;
+ if(recorded?.filingVersion===FILING_VERSION){
+  if(recorded.sourceEvent!==eventId)throw Error('Filing submission replay source mismatch');
+  unique(d,recorded.id);holdingSet(d,engine,path(recorded.id),structuredClone(recorded),'law');
+  return filingSubmissionResult(recorded);
+ }
+ const s=d.get('state'),confess=args.operation==='confess',reporter=confess?'player':args.reporter??'player';
+ if(args.request!==undefined&&(!args.request||typeof args.request!=='object'||Array.isArray(args.request)||args.request.kind!==(confess?'confession':'theft')))rejectLegalRequest('递交的事由与当前报案或供述不符');
+ const requestFields=['kind','target','incident','accused','stolen','evidence','source','content','visibility','offense','subject'];
+ if(Object.keys(args.request??{}).some(k=>!requestFields.includes(k)))rejectLegalRequest('报案不能附带未经知情来源核对的事实字段');
+ if(reporter!=='player')present(d,engine,reporter);
+ const permission=vocabulary(engine,'law','receiveOperations',confess?'confess':'report');
+ const candidates=institutionOffices(engine,s).filter(o=>o.seat===s.location&&o.authority?.operations?.includes(permission)&&officeOnDuty(engine,s,o,o.holder));
+ const target=args.request?.target;
+ const receiver=args.authority??(s.npcs[target]?target:null)??(candidates.length===1?candidates[0].holder:null);
+ if(!receiver){const code=codeFor(engine,s.location,s),ids=[...new Set([...candidates.map(o=>o.holder),...(code?lawAuthorities(engine,s,code):[])])].filter(id=>s.npcs[id]?.location===s.location&&awake(s.npcs[id],d,id));rejectLegalRequest('请指明在场执法者；候选：'+(ids.map(id=>engine.byId.get(id)?.name??'尚未记名的执法者').join('、')||'无'));}
+ // Existing law-code police can receive a statement; only a formal case
+ // handling office can make the separate filing decision below.
+ const codeHere=codeFor(engine,s.location,s);
+ if((!args.request||confess)&&codeHere&&lawAuthorities(engine,s,codeHere).includes(receiver))authority(d,engine,codeHere,receiver,'officer');
+ else filingOfficer(engine,d,receiver,permission);
+ const old=args.case?s.records[args.case]:null;
+ let reference=args.incident??args.request?.incident??old?.sourceEvent;
+ if(reference&&!worldEvent(s,reference)){
+  const match=Object.values(s.records).filter(r=>r.category==='world_event'&&(r.summary===reference||r.payload?.name===reference));
+  if(match.length===1)reference=match[0].id;
+ }
+ if(!reference){const known=Object.values(s.records).filter(r=>r.category==='world_event'&&['theft','steal'].includes(r.verb)&&(confess?r.actor===reporter:r.witnesses?.includes(reporter)||r.observer===reporter));if(known.length===1)reference=known[0].id;}
+ const known=filingKnowledge(engine,d,reporter,reference),v=known.version;
+ if(!['steal','theft'].includes(v.verb))rejectLegalRequest('报案者所知事件不是失窃事实');
+ if(confess&&v.actor!=='player')rejectLegalRequest('不能认领他人的行为为自己的供述');
+ const accused=args.accused??args.request?.accused??v.actor,offense=args.offense??args.request?.offense??(v.tags?.includes('attempt')?'theft_attempt':'theft');
+ if(!['theft','theft_attempt'].includes(offense))rejectLegalRequest('所提交事件不支持这一罪名');
+ if(!accused)rejectLegalRequest('需要说明所指控的身份；现有消息没有指认行为人');
+ const knownItem=v.stolen?.item??v.payload?.item??v.payload?.resource??v.item??(v.value>0?LEDGER_COIN:null);
+ if(args.request?.stolen!==undefined&&args.request.stolen!==knownItem)rejectLegalRequest('不能提交报案者所知版本中没有的失窃物品');
+ // Separate defendants' allegations even when they cite one occurrence.
+ // This uses only the submitted identity and the speaker's event version.
+ const caseId=`legal_case:${known.sourceEvent}${accused!==v.actor?`:accused:${accused}`:''}`;
+ if(Object.values(s.records).some(r=>r.category==='legal_request'&&r.case===caseId&&r.actor===reporter&&r.accepted!==false&&r.request.kind===(confess?'confession':'theft')))rejectLegalRequest(confess?'已自认，不重复增加证据':'重复作证不能增加证据');
+ const code=v.location?codeFor(engine,v.location,s):null;
+ const evidence=confess?[{kind:'confession',subject:'player',minute:s.minute,source:known.sourceEvent}]:[{kind:known.direct?'eyewitness':'statement',witness:reporter,identified:true,testified:true,minute:s.minute,source:known.sourceEvent}];
+ const documents=args.request?.evidence??args.evidence??[];
+ if(!Array.isArray(documents))rejectLegalRequest('证据须为本人持有的原件编号清单');
+ for(const id of documents){const paper=s.itemInstances[id],bag=reporter==='player'?s.inventory:s.npcs[reporter]?.inventory,held=bag?.[paper?.item]?.instances?.includes(id);if(!paper?.document||paper.owner!==reporter||paper.carriedBy&&paper.carriedBy!==reporter||!held&&paper.location!==s.location||paper.document.valid===false||paper.durability<=0||paper.destroyedAt!==undefined||isGone(engine,d,id)||!worldEvent(s,paper.document.sourceEvent))rejectLegalRequest('报案须持有有效证据原件');evidence.push({kind:'document',document:id,source:paper.document.sourceEvent,submittedBy:reporter,minute:s.minute});}
+ const request={kind:confess?'confession':'theft',...structuredClone(args.request??{}),accused,offense};
+ const payload={...request,sourceEvents:[known.sourceEvent],evidence:documents,receiver};
+ const row={category:'legal_request',id:`legal_request:${eventId}`,filingVersion:FILING_VERSION,actor:reporter,receiver,verb:'claim',target:target??(confess?receiver:s.location),case:caseId,request,payload,
+  minute:s.minute,location:s.location,sourceEvent:eventId,incident:known.sourceEvent,knownVersion:v,submittedEvidence:evidence,
+  allegation:{offender:accused,victim:v.payload?.owner??v.owner??v.target??null,offense,value:v.value??null,stolen:v.stolen??null,location:v.location??null,minute:v.minute},law:code?.id??null,accepted:null};
+ unique(d,row.id);holdingSet(d,engine,path(row.id),row,'law');
+ return filingSubmissionResult(row);
+}
+function filingSubmissionResult(row){return {request:row.id,case:row.case,submitted:true,reported:true,accepted:null,convicted:false,filingSubmission:structuredClone(row),worldEvent:{verb:'claim',actor:row.actor,target:row.receiver,payload:row.payload,tags:['legal_request'],visibility:'private',participants:[row.actor,row.receiver]}};}
+function recordedFilingDecision(d,result,request,{fee=0,law=null,witnesses=[]}={}){
+ return {...result,filingDecision:{version:FILING_VERSION,request:structuredClone(d.get(...path(request.id))),
+  case:result.accepted?structuredClone(d.get(...path(result.case))):null,fee,law,witnesses,minute:d.get('state','minute'),result:structuredClone(result)}};
+}
+
+function decideFiling(d,engine,args,eventId){
+ const s=d.get('state'),id=typeof args.request==='string'?args.request:args.filing,request=s.records[id];
+ if(request?.category!=='legal_request'||request.filingVersion!==FILING_VERSION)throw preconditionFailure('需要已递交的报案编号');
+ if(request.accepted!==null)throw preconditionFailure('该报案已经决定，不重复受理');
+ const recorded=engine.replaying?engine.replayResult?.filingDecision:null;
+ if(recorded?.version===FILING_VERSION){
+  if(recorded.request.id!==id||recorded.request.decision?.sourceEvent!==eventId)throw Error('Filing decision replay source mismatch');
+  if(recorded.fee){const account=request.actor==='player'?['state','player','coins']:['state','npcs',request.actor,'coins'],key=`legal_treasury:${recorded.law}`,fund=safeFund(d,key,'legal_treasury',{law:recorded.law});
+   books(d,purse(engine,request.actor),fundAccount(key),recorded.fee,eventId);d.set(account,d.get(...account)-recorded.fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+recorded.fee},'law');}
+  if(recorded.case){const prior=d.get(...path(recorded.case.id));if(prior?.category==='legal_suspicion')holdingSet(d,engine,path(`legal_suspicion:${request.incident}`),{...prior,id:`legal_suspicion:${request.incident}`},'law');holdingSet(d,engine,path(recorded.case.id),structuredClone(recorded.case),'law');}
+  for(const witness of recorded.witnesses)if(witness!=='player')knowledge(d,witness,recorded.case.id,recorded.minute);
+  holdingSet(d,engine,path(id),structuredClone(recorded.request),'law');return {...structuredClone(recorded.result),filingDecision:structuredClone(recorded)};
+ }
+ const office=filingOfficer(engine,d,args.authority,vocabulary(engine,'law','caseHandlerOperation'),request.case);
+ const player=args.authority==='player';
+ if(!player&&(args.operation!=='request_decision'||['accept','reject','reason','decision'].some(k=>args[k]!==undefined)))
+  throw preconditionFailure('你不能替经办人决定受理或拒绝，也不能替他填写理由',{repair:['把报案交给经办人，请他本人决定是否受理']});
+ if(player&&args.operation==='request_decision')throw preconditionFailure('你本人正在经办席位当值，请自行选择受理或说明拒绝理由');
+ const refusal=(reason,repair,source,{outcome='refuse',accepted=false,due}={})=>{
+  const decision={sourceEvent:eventId,authority:args.authority,office:office.id,minute:s.minute,reason,repair,source,outcome,...(due!==undefined?{due}:{})};
+  holdingSet(d,engine,path(id),{...request,accepted,decision},'law');
+  return recordedFilingDecision(d,{request:id,accepted,reason,repair,decision,worldEvent:{verb:'claim',actor:args.authority,target:request.actor,payload:{request:id,accepted,reason,repair},tags:['legal_decision'],visibility:'private'}},request);
+ };
+ if(player&&args.operation==='reject'){
+  if(typeof args.reason!=='string'||!args.reason.trim())throw preconditionFailure('拒绝受理须说明世界内原因');
+  return refusal(args.reason,['可补充所缺材料，再向当值经办人递件'],{kind:'player',actor:'player',choice:'reject'});
+ }
+ const ruleSource={kind:'filing_rules',actor:args.authority,request:id};
+ const failRule=(reason,repair)=>{
+  if(player)throw preconditionFailure(reason,{repair});
+  return refusal(reason,repair,ruleSource);
+ };
+ const submitted=worldEvent(s,request.sourceEvent);
+ if(!submitted||submitted.actor!==request.actor||!submitted.payload?.sourceEvents?.includes(request.incident)||!request.knownVersion||!request.submittedEvidence?.some(e=>e.source===request.incident))
+  return failRule('报案缺少可核对的递件与知情出处，暂不能受理',['请报案人带本人知晓的事由和原件重新递件']);
+ if(!request.allegation.location)return failRule('报案尚未说明事发地点，不能选择适用法典',['请报案人补充其确实知晓的事发地点后再递件']);
+ const code=codeFor(engine,request.allegation.location,s);
+ if(!code)return failRule('事发地尚无登记可执行的法典，本席不能据此立案',['请向有管辖依据的官署递件，或先由官署核对法典']);
+ // Explicit office case limits are checked by filingOfficer. Territorial
+ // coverage comes from the selected code; never infer it from a title's text.
+ if(!code.locations?.includes(request.allegation.location))return failRule('这件事不在本次所选法典的登记辖区内',['请携事发地点与凭据，向该地有管辖依据的官署递件']);
+ // These checks read submitted allegations and statutes, never suspicion truth.
+ if(!offensePenalty(engine,code,request.allegation.offense))return failRule('本法典未登记所指控罪名，不能据此立案',['请核对当地法典，按已经登记的事由重新递件']);
+ const fee=code.procedure?.costs?.filingFee??code.procedureCosts?.filingFee??0;
+ if(!Number.isSafeInteger(fee)||fee<0||fee>1e9)return failRule('法典的讼费条目尚不完整，暂不能收费立案',['请官署核对讼费条目后再递件']);
+ const prior=s.records[request.case],existing=prior?.category==='legal_case';
+ const account=request.actor==='player'?['state','player','coins']:['state','npcs',request.actor,'coins'];
+ if(!existing&&d.get(...account)<fee)return failRule('报案人的钱不足支付讼费，未立案',['请报案人备足法典规定的讼费后重新递件']);
+ let source={kind:'player',actor:'player',choice:'accept'},reason='我决定受理这件报案';
+ if(!player){
+  const view=subjectiveView(engine,d.document,args.authority);
+  // Only the official's own remembered, actually paid bribes may contribute;
+  // a claimed offer in the caller's arguments supplies no reward or consent.
+  const paid=Object.entries(s.records).filter(([key,r])=>r.category==='legal_bribe'&&r.recipient===args.authority&&r.briber===request.actor&&r.case===request.case&&r.minute<=s.minute&&view.knowledge.memories.some(m=>m.sourceEvent&&`legal_bribe:${m.sourceEvent}`===key));
+  const offer={kind:'legal_filing',from:request.actor,cost:{minutes:0},tags:['law',request.allegation.offense],...(paid.length?{prepaid:true,reward:paid.reduce((sum,[,r])=>sum+r.coins,0)}:{})};
+  const decision=npcDecision(view,offer);
+  source={kind:'npc_decision',actor:args.authority,request:id,from:request.actor,paidSources:paid.map(([key])=>key),decision:structuredClone(decision)};
+  reason=decision.reason;
+  if(decision.outcome!=='agree')return refusal(reason,['可补充真实凭据、请人作保，或待经办人有空后再请求'],source,{outcome:decision.outcome,...(decision.outcome==='defer'?{accepted:null,due:decision.due}:{})});
+ }
+ if(prior&&!['legal_suspicion','legal_case'].includes(prior.category))throw preconditionFailure('案件编号已占用');
+ if(!existing&&fee){const key=`legal_treasury:${code.id}`,fund=safeFund(d,key,'legal_treasury',{law:code.id});books(d,purse(engine,request.actor),fundAccount(key),fee,eventId);d.set(account,d.get(...account)-fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+fee},'law');}
+ const a=request.allegation,witnesses=request.submittedEvidence.filter(e=>e.kind==='eyewitness').map(e=>e.witness);
+ const row=existing?{...prior,evidence:[...prior.evidence,...request.submittedEvidence],witnesses:[...new Set([...prior.witnesses??[],...witnesses])]}:
+  {category:'legal_case',id:request.case,procedureVersion:1,filingVersion:FILING_VERSION,law:code.id,...a,...incidentNorms(d,engine,{...a,code}),
+   settlement:code.settlement??null,faction:code.faction??null,sourceEvent:request.incident,reported:true,status:'已报案',stage:'pending',court:code.court,parties:[a.offender,a.victim].filter(Boolean),evidence:request.submittedEvidence,witnesses,receiver:args.authority,handlerOffice:office.id,reportedAt:s.minute,filingFee:fee};
+ if(prior?.category==='legal_suspicion')holdingSet(d,engine,path(`legal_suspicion:${request.incident}`),{...prior,id:`legal_suspicion:${request.incident}`},'law');
+ holdingSet(d,engine,path(request.case),{...row,acceptedAt:s.minute,acceptanceEvent:eventId,requestSources:[...row.requestSources??[],id]},'law');
+ for(const witness of witnesses)if(witness!=='player')knowledge(d,witness,request.case,s.minute);
+ const decision={sourceEvent:eventId,authority:args.authority,office:office.id,minute:s.minute,reason,repair:[],source,outcome:'agree'};
+ holdingSet(d,engine,path(id),{...request,accepted:true,decision},'law');
+ return recordedFilingDecision(d,{request:id,case:request.case,target:request.actor,accepted:true,convicted:false,fee:existing?0:fee,reason,repair:[],decision,worldEvent:{verb:'claim',actor:args.authority,target:request.actor,payload:{request:id,case:request.case,accepted:true,reason},tags:['legal_decision'],visibility:'private'}},request,{fee:existing?0:fee,law:code.id,witnesses});
+}
+
 const rejectLegalRequest=reason=>reject('E-ACTION-LEGAL-REQUEST',reason,{missing:[reason],repair:[`先满足当前条件：${reason}；再向有权且在场的人提出原请求`]});
 function receiveLegalRequest(d,engine,args,eventId){
     const request=args.request,operation=args.operation,s=d.get('state'),caseId=request?.terms?.case??args.case,row=s.records?.[caseId];
     const kinds={report:'theft',confess:'confession',appeal:'appeal',hire_advocate:'defense',bribe:'bribe'};
-    if(!Object.hasOwn(kinds,operation)||!request||typeof request!=='object'||Array.isArray(request)||request.kind!==kinds[operation])rejectLegalRequest('Invalid legal request kind');
+    if(!Object.hasOwn(kinds,operation)||!request||typeof request!=='object'||Array.isArray(request)||request.kind!==kinds[operation])rejectLegalRequest('递交的事由与当前办理事项不符');
     const key=`legal_request:${eventId}`,old=s.records?.[key];
     if(old){if(JSON.stringify(old.request)!==JSON.stringify(request))throw Error('Legal request event reused');return {request:key,case:old.case,submitted:true};}
     const papers=Object.entries(s.itemInstances??{}).filter(([id,p])=>p.owner==='player'&&(!p.carriedBy||p.carriedBy==='player')&&
@@ -178,7 +321,7 @@ function receiveLegalRequest(d,engine,args,eventId){
                 (!office.authority.case||office.authority.case===caseId)&&officeOnDuty(engine,s,office,h.holder)&&canReceive(h.holder)&&
                 (!args.authority||args.authority===h.holder)&&(!target||target===s.location||target===h.holder);
         });
-        if(candidates.length!==1)rejectLegalRequest('Legal request requires one present on-duty authorized recipient');
+        if(candidates.length!==1)rejectLegalRequest('此处没有唯一在岗且有权收件的人，请等经办人到岗后再递件');
         receiver=candidates[0].holder;
     };
     if(operation==='report'||operation==='confess'){
@@ -187,35 +330,35 @@ function receiveLegalRequest(d,engine,args,eventId){
             (operation==='confess'?r.actor==='player':r.payload?.owner==='player'&&(r.witnesses?.includes('player')||r.observer==='player'))&&
             (!request.incident||request.incident===r.id||request.incident===r.payload?.name||request.incident===r.summary)&&
             (!request.accused||request.accused===r.actor));
-        if(known.length!==1)rejectLegalRequest('Legal request requires one identified personally known incident');
+        if(known.length!==1)rejectLegalRequest('报案者没有可以核对的本人知情事由，请先取得本人确实知晓的经过');
         const [source,event]=known[0];sourceEvents.push(source);
         if(operation==='report'){
             const originals=papers.filter(([,p])=>p.document.describes&&identifies(d,event.payload?.subject,p.document.describes));
-            if(!originals.length)rejectLegalRequest('Theft report requires the original identifying evidence');
+            if(!originals.length)rejectLegalRequest('报案须带有能指认失物的凭据原件，请先取得原件');
             evidence.push(...originals.map(([id])=>id));
         }
         target=operation==='confess'?receiver:s.location;
     }else{
-        if(!caseProcedureView(engine,d.document,caseId)?.party)rejectLegalRequest('Legal request requires the caller’s existing case');
+        if(!caseProcedureView(engine,d.document,caseId)?.party)rejectLegalRequest('须由本案当事人携已经登记的案件来办理');
         if(row.sourceEvent)sourceEvents.push(row.sourceEvent);
         if(operation==='appeal'){
-            if(!caseProcedureView(engine,d.document,caseId).canRequestAppeal)rejectLegalRequest('Appeal requires an eligible party, existing judgment and open appeal period');
+            if(!caseProcedureView(engine,d.document,caseId).canRequestAppeal)rejectLegalRequest('须由有资格的当事人在上诉期内，携已经作出的判决提出上诉');
             receive(vocabulary(engine,'law','receiveOperations','appeal'));
             const originals=papers.filter(([,p])=>p.document.case===caseId&&p.document.reviewed===false);
-            if(!originals.length)rejectLegalRequest('Appeal requires the original new case document');
+            if(!originals.length)rejectLegalRequest('上诉须带本案新证据的原件，请先取得原件');
             for(const [id]of originals){if(!row.evidence.some(e=>e.document===id))submitCaseDocument(d,engine,{case:caseId,document:id},eventId);evidence.push(id);}
             target=s.location;
         }else if(operation==='hire_advocate'){
             receiver=present(d,engine,args.authority??target);target=receiver;
-            if(!canReceive(receiver))rejectLegalRequest('Recipient cannot currently receive the request');
+            if(!canReceive(receiver))rejectLegalRequest('收件人眼下不能办理，请等其清醒在场后再递件');
             const vocation=s.npcs[receiver]?.vocation;
-            if(vocation?.id!=='vocation_advocate'||vocation.conflictOfInterest||[...row.parties??[],row.offender,row.victim,...row.witnesses??[],row.judgment?.judge].includes(receiver)||!consent({engine,document:d.document},receiver,'player',vocabulary(engine,'law','defenceConsentScope'),{subject:caseId,purpose:caseId}).allowed)rejectLegalRequest('Defence negotiation requires a qualified disinterested willing advocate');
-            if(request.terms?.quoteOnly!==true)rejectLegalRequest('Defence fee and service scope must be negotiated before signing');
+            if(vocation?.id!=='vocation_advocate'||vocation.conflictOfInterest||[...row.parties??[],row.offender,row.victim,...row.witnesses??[],row.judgment?.judge].includes(receiver)||!consent({engine,document:d.document},receiver,'player',vocabulary(engine,'law','defenceConsentScope'),{subject:caseId,purpose:caseId}).allowed)rejectLegalRequest('须先找到有资格、无利害冲突且本人愿意洽谈的讼师');
+            if(request.terms?.quoteOnly!==true)rejectLegalRequest('须先谈妥辩护费用和服务范围，再签订约定');
         }else{
             receiver=present(d,engine,args.authority??target);target=receiver;
-            if(!canReceive(receiver))rejectLegalRequest('Recipient cannot currently receive the request');
-            const amount=integer(request.terms?.amount,1,1e6,'Bribe offer');
-            if(!currentCaseHandler(engine,d.document,caseId,receiver)||s.player.coins<amount)rejectLegalRequest('Bribe offer requires this case’s current handler and the offered cash');
+            if(!canReceive(receiver))rejectLegalRequest('收件人眼下不能办理，请等其清醒在场后再递件');
+            const amount=integer(request.terms?.amount,1,1e6,'所提钱数');
+            if(!currentCaseHandler(engine,d.document,caseId,receiver)||s.player.coins<amount)rejectLegalRequest('须向本案当前经办人当面提议，并确实持有这笔钱');
         }
     }
     const payload={...structuredClone(request),...(row?.category==='legal_case'?{case:caseId}:{}),sourceEvents,evidence,receiver};
@@ -319,7 +462,7 @@ export function settleCreditCase(d,engine,id,eventId,{badDebt=0}={}){
 
 export function crimeAction(d,args,eventId){
     if(args.operation!=='steal')throw preconditionFailure('该犯罪方式尚未接入，不能将对话当实际获利');
-    const code=currentCode(d,this),victim=present(d,this,args.target,true),actor=d.get('state','npcs',victim);
+    const code=freshFiling(this)?codeFor(this,d.get('state','location'),d.get('state')):currentCode(d,this),victim=present(d,this,args.target,true,freshFiling(this)?'E-ACTION-CRIME':'E-ACTION-PRECONDITION'),actor=d.get('state','npcs',victim);
     const key=`legal_case:${eventId}`;unique(d,key);
     if((args.item===undefined)===(args.coins===undefined))throw preconditionFailure('偷窃必须指定一件物品或一笔钱，不能同时指定');
     let item=null,amount=0,value=0;
@@ -361,9 +504,9 @@ export function crimeAction(d,args,eventId){
             books(d,purse(this,victim),purse(this,'player'),amount,eventId);d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
         }
     }
-    const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId,perception});
+    const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId,perception,optional:freshFiling(this)});
     if(success)recordDisciplineBreach(d,this,'theft',eventId);
-    return{target:victim,case:incident,...result,checkSuccess:result.success,success,stolen,witnesses,...(perception?{perception}:{}),
+    return{target:victim,case:incident,...(freshFiling(this)?{suspicion:incident,legalFilingVersion:FILING_VERSION}:{}),...result,checkSuccess:result.success,success,stolen,witnesses,...(perception?{perception}:{}),
         actionScope:{kind:'theft',reported:d.get(...path(incident),'reported'),
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
@@ -596,6 +739,8 @@ export function lawAction(d,args,eventId){
     const operation=args.operation??'inspect';
     if(operation==='inspect')return lawView(this,d.document);
     if(args.actor!==undefined&&args.actor!=='player')throw Error('Law action caller must be the player');
+    if(freshFiling(this)&&['accept','reject','request_decision'].includes(operation))return decideFiling(d,this,args,eventId);
+    if(freshFiling(this)&&['report','confess'].includes(operation)&&(!args.case||d.get(...path(args.case))?.category==='legal_suspicion'||d.get(...path(args.case))?.filingVersion===FILING_VERSION))return submitFiling(d,this,args,eventId);
     if(args.request!==undefined)return receiveLegalRequest(d,this,args,eventId);
     if(operation==='submit_document')return submitCaseDocument(d,this,args,eventId);
     if(operation==='grant_magic_permit'){
@@ -855,7 +1000,7 @@ export function lawAction(d,args,eventId){
 }
 
 export function lawView(engine,document){
-    const requests=Object.entries(document.state.records??{}).filter(([,r])=>r.category==='legal_request'&&r.actor==='player').map(([id,r])=>({id,kind:r.request.kind,case:r.case,receiver:r.receiver,evidence:r.payload.evidence,sourceEvents:r.payload.sourceEvents,minute:r.minute,accepted:null}));
+    const requests=Object.entries(document.state.records??{}).filter(([,r])=>r.category==='legal_request'&&r.actor==='player').map(([id,r])=>({id,kind:r.request.kind,case:r.case,receiver:r.receiver,evidence:r.payload.evidence,sourceEvents:r.payload.sourceEvents,minute:r.minute,accepted:r.accepted??null,...(r.decision?{decision:r.decision}:{})}));
     const code=codeFor(engine,document.state.location,document.state);
     const d={document,get:(...parts)=>parts.reduce((v,k)=>v?.[k],document)};
     const cases=Object.entries(document.state.records??{}).filter(([,row])=>row?.category==='legal_case');

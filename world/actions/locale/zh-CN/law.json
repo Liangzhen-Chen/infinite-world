@@ -1,0 +1,9 @@
+{
+ "format": 1,
+ "locale": "zh-CN",
+ "events": {
+  "law.accept": "受理报案，登记案件。",
+  "law.reject": "说明原因，拒绝受理。",
+  "law.request_decision": "{authority}答复：{reason}"
+ }
+}

@@ -107,7 +107,7 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
     }else if(tool==='crime'&&detail.target){
         const stolen=detail.stolen,value=stolen?.coins??(stolen?.item?valueOf(engine,stolen.item):0);
         e={verb:'steal',actor:'player',target:detail.target,value,witnesses:[...new Set(detail.witnesses??[])].sort(),
-            ...(detail.perception?{perception:detail.perception}:{}),tags:['crime','hostile','theft',detail.success?'success':'attempt',...(detail.witnesses?.length?['discovered']:[])],case:detail.case};
+            ...(detail.perception?{perception:detail.perception}:{}),...(detail.legalFilingVersion===1?{stolen:detail.stolen}:{}),tags:['crime','hostile','theft',detail.success?'success':'attempt',...(detail.witnesses?.length?['discovered']:[])],case:detail.case};
     }else if(tool==='trade'){
         const buyer=detail.buyer??resolve(engine,args.buyer??'player'),seller=detail.seller??resolve(engine,args.seller);
         e={verb:'trade',actor:buyer,target:seller,value:detail.cost??0,tags:['trade',args.payment==='repay'?'repay':detail.debt?'credit':'cash']};
@@ -188,9 +188,10 @@ export function publishWorldEvents(d,engine,events,context,subscribers){
         // Producers also use witnesses:[actor] for the actor's own observation
         // (e.g. a response to a mark). Self knowledge is not an outside sight test.
         if(event.witnesses?.includes(event.actor))perception={...perception,versions:{...perception.versions,[event.actor]:{self:true,visual:false,auditory:false,tactile:false,identified:true,complete:true,zone:perception.sourceZone,sourceZone:perception.sourceZone,distanceMeters:0}}};
-        const witnesses=Object.keys(perception.versions).filter(id=>perception.versions[id].identified&&(event.witnesses===undefined||event.witnesses.includes(id))).sort();
+        const witnesses=Object.keys(perception.versions).filter(id=>perception.versions[id].identified&&(event.witnesses===undefined||event.witnesses.includes(id)||event.tags?.includes('npc_crime')&&id==='player')).sort();
         return {...event,perception,witnesses};
     });
+    if(!engine.replaying||engine.replayResult?.legalFilingVersion===1)events=events.map(e=>e.verb==='steal'?{...e,filingVersion:1,visibility:'private',participants:[e.actor,...e.witnesses??[]]}:e);
     if(d.reactionTick?.active){
         const {depth,cause}=d.reactionTick.active;
         events=events.map(e=>({...e,depth,cause,phase:PHASE.reaction}));

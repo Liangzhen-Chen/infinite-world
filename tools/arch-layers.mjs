@@ -13,7 +13,7 @@ const L1=['domain-rules'/* 场景数据表访问器 */,'book-gates'/* 书籍阅�
  'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'stock'/* S1b 物品、粮与库存适配器：旧字段 → 账户 */,'holding-kinds'/* S2a 持有种类注册表 */,'holding-sources'/* S2a 持有适配器：旧字段 → 持有 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression','action-registry'/* A1 动作注册表（数据） */];
 const PACKS={
  economy:['business','shop','settlement-trade','finance-bank','finance-assets','finance-tax','credit','contracts','labor-market','transport','transport-route','post','smuggling','extraction','manufacturing','repair','works','magic-economy'],
- law:['law','bounty','npc-crime','legal-representation','duels'],
+ law:['legal-reactions','law','bounty','npc-crime','legal-representation','duels'],
  governance:['governance','civic','promotion','promotion-view','elections','titles','high-nobility','nation-founding','public-projects','office-salary','notables','settlement-profile'],
  family:['npc-life','family-inheritance','family-law','family-politics','family-diplomacy'],
  organizations:['organizations','faction-clock','faith','festival','world-clock'/* * 时钟阶段，与势力时钟同组 */],
