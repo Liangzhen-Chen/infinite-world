@@ -13,6 +13,7 @@ import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {obligationCalendar,obligationDate} from './obligation-calendar.mjs';
 
 const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
@@ -193,6 +194,12 @@ export function lawAuthorities(engine,state,code,kind='officer'){
     const candidates=new Set([...code.judges??[],...code.officers??[],...officeRows(state).map(([,r])=>r.holder)]);
     return [...candidates].filter(id=>personLawRoles(engine,state,id,code).some(p=>p==='judge'||kind!=='judge'&&p==='officer'));
 }
+export function questQuotaMonth(engine,state){
+    const calendar=state.records?.['calendar:active']?.calendar??engine.calendarId;
+    if(!calendar||calendar==='legacy:30-day')return Math.floor((state.minute??0)/(1440*30));
+    const date=obligationDate(state.minute??0,calendar),skipped=date.leap&&obligationCalendar(calendar).leap?.obligationsSkip;
+    return `${calendar.split(':')[0]}:${date.year}:${skipped?date.month.replace('leap:',''):date.month}`;
+}
 export function personQuestRights(engine,state,id,{cultural=false}={}){
     id=actorId(engine.world,id);
     const sources=personOffices(engine,state,id,{power:'quest_publish'}).map(e=>fact(e.value.monthlyQuotaD,e.source,e.override));
@@ -211,7 +218,8 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
     const actor=at(state,actorPath(engine.world,id).slice(1)),base=baseOf(engine,state,id),own=actor?.monthlyQuotaD??base?.monthlyQuotaD;
     const override=own!==undefined?fact(own,actor?.monthlyQuotaD!==undefined?`state.${actorPath(engine.world,id).slice(1).join('.')}.monthlyQuotaD`:`catalog.${id}.monthlyQuotaD`,true):null;
     const limitD=living(engine,state,id)?override?.value??Math.max(0,...sources.map(s=>s.value)):0;
-    return {month:Math.floor((state.minute??0)/(1440*30)),limitD,usedD:state.questQuota?.[`${Math.floor((state.minute??0)/(1440*30))}_${id}`]??0,personal:true,
+    const month=questQuotaMonth(engine,state);
+    return {month,limitD,usedD:state.questQuota?.[`${month}_${id}`]??0,personal:true,
         kinds:[...(limitD>0&&(override||sources.some(s=>s.value>0&&!s.source.includes('notable')))?['official']:[]),'personal',...(cultural&&sources.some(s=>s.source.includes('notable'))?['cultural']:[])],rule:'各身份取最大值；名士仅文化类；monthlyQuotaD 显式覆盖全部身份额度',sources,override};
 }
 // A changed job gets a fresh baseline; promises are overlaid by npc-schedule.

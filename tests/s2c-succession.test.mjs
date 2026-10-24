@@ -92,6 +92,9 @@ test('公开支持/反对改变当前权威关系一次',()=>{
  // In the vacant elders council both elders must approve the charter.
  const pending=Object.values(s.d.get('state','records')).find(r=>r.category==='organization_proposal'&&r.status==='议事中');
  s.org({operation:'org_vote',proposal:pending.id,speaker:C,opinion:'approve'});
+ // 任免意见现在由NPC当前看法裁定；本单元夹具明确W的支持倾向，
+ // 不能再靠调用里的approve把“信任不足”改成赞成。原传播与去重断言不变。
+ adjustStanding(s.d,s.e,W,B,10,{sourceEvent:'current-support',reason:'本单元的当前支持倾向'});
  const b0=standing(s.e,s.d.get('state'),B,'player'),c0=standing(s.e,s.d.get('state'),B,C);
  const p=s.org({operation:'org_propose',action:'appoint',member:B,name:'主祭'});
  s.org({operation:'org_vote',proposal:p.proposal,speaker:C,opinion:'reject'});
