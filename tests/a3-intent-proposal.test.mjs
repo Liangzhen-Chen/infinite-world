@@ -121,6 +121,10 @@ test('真实买罐、步行到渡口后，只写装水意图应构造水量转�
  assert.ok((document.state.inventory.item_clay_pot?.quantity??0)>0);
  document=await act(engine,document,'world_move',{destination:'河湾村',mode:'walk'},'intent-return');
  document=await act(engine,document,'world_move',{destination:'旧渡口',mode:'walk'},'intent-dock');
+ // The return journey arrives at night. S4 requires actual daylight perception
+ // and an approach; wait through the real clock before handling water.
+ document=await act(engine,document,'world_time',{minutes:(600-document.state.minute%1440+1440)%1440},'intent-daylight');
+ document=await act(engine,document,'world_act',{action:'core:environment.approach',slots:{target:'feature_hw_pool'}},'intent-pool-approach');
  const before=structuredClone(document),preview=await engine.previewAction(document,input({intent:'把渡口池水装进陶罐'}));
  assert.equal(preview.receipt.status,'preview');
  assert.ok(preview.receipt.applied.some(e=>e.op==='transfer'||e.result?.kind==='water_transfer'));

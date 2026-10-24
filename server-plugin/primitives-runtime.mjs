@@ -1,7 +1,7 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
-import {canAct,legacyCanAct,legacyActionFamily} from './action-capacity.mjs';
+import {canAct,legacyCanAct,legacyActionFamily,movementCapacityTarget} from './action-capacity.mjs';
 import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame,recordResourceCosts} from './primitives.mjs';
 import {reject} from './primitive-policy.mjs';
 import {isDomainRejection} from './action-rejection.mjs';
@@ -788,7 +788,7 @@ export const primitiveRuntime={
    if(actor!=='player')reject('E-PRIMITIVE-ACTOR','Legacy actions use the player actor');
    const call=engine.primitiveNormalizeCall(resolved.tool,resolved.args),tool=call.tool.replace(/^world_/,'');
    const permission=legacyCanAct(engine,document,tool,call.args);
-   checks=[{family:legacyActionFamily(tool,call.args),...canAct(primitiveContext(engine,document),actor,legacyActionFamily(tool,call.args),{to:tool==='move'?engine.resolve(call.args.destination):undefined}),...(permission??{})}];
+   checks=[{family:legacyActionFamily(tool,call.args),...canAct(primitiveContext(engine,document),actor,legacyActionFamily(tool,call.args),{to:tool==='move'?movementCapacityTarget(engine,document,call.args.destination):undefined}),...(permission??{})}];
    if(!permission){const old=engine.primitiveLegacyRestriction(document,tool,call.args);if(old)checks[0]={...checks[0],allowed:false,reason:old};}
   }
   const denied=checks.find(check=>!check.allowed);

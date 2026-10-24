@@ -14,6 +14,8 @@ const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json'
 // 069 and 079 declare feature distances that contradict native geometry (3 m declared vs 0.5/1.5/1 m native, 01 §1.2;
 // corpus-owned, reported to the main session). These mechanism regressions drop only that premise.
 const row=id=>{const r=structuredClone(corpus.find(r=>r.id===`A3V2-${id}`));if(['069','079'].includes(id))delete r.setup.positions;
+ // S4 now measures visible co-presence; this ambiguity case needs no contact.
+ if(id==='086')r.setup.positions[0].distanceMeters=6;
  if(id==='070'){
   // The spell declares a legal permit even for self-casting. Obtain it through
   // the public action, paying the registered authority before relieving fear.

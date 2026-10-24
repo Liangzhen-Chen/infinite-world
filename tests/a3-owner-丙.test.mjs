@@ -220,9 +220,10 @@ test('Y: moved catalog endpoints resolve and environment consumers read their ef
 });
 
 test('spatial: native co-presence suffices for sight/hearing, while contradictions and rays remain S4',()=>{
- const position={observer:'player',target:npc,distanceMeters:2,lineOfSight:true,audible:true};
+ const position={observer:'player',target:npc,distanceMeters:6,lineOfSight:true,audible:true};
  const out=setup({present:[npc],positions:[position]});assert.deepEqual(out.setupUnmet,[]);
- assert.equal(engine.magicTargetFacts(engine.primitiveDraft(out.document),npc),null);
+ // S4 measures visible co-presence, without supplying touch coordinates.
+ assert.deepEqual(engine.magicTargetFacts(engine.primitiveDraft(out.document),npc),{distanceMeters:6,lineOfSight:true});
  assert.ok(setup({present:[npc],positions:[{...position,audible:false}]}).setupUnmet.length);
  assert.ok(setup({present:[npc],positions:[{...position,distanceMeters:8,rayMeters:[[0,0],[8,0]]}]}).setupUnmet.length);
  assert.ok(setup({present:[npc],actorStates:{[npc]:{location:'loc_hw_dock'}},positions:[position]}).setupUnmet.some(u=>u.item==='positions[0]'));
@@ -236,6 +237,8 @@ test('spatial: native co-presence suffices for sight/hearing, while contradictio
 
 test('J/M: an explicit original generic item is consumed once by the real mark proposal and roundtrips',async t=>{
  const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8')),row=rows.find(r=>r.id==='A3V2-117');
+ // The manager is visible at native S4 spacing; the branch's reach stays required.
+ row.setup.positions[0].distanceMeters=6;
  const run=await executeIntent(engine,initial,row);
  assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true);
  const shoe=Object.values(run.document.state.itemInstances).find(u=>u.physicalOnly&&u.item.includes('old_shoe'));

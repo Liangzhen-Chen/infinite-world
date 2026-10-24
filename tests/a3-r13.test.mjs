@@ -15,7 +15,10 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 const initial=engine.createCharacter(seed,{},'r13-regression');
 const rows=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 function fixture(n){
- const row=rows.find(r=>r.id===`A3V2-${n}`),setup=applyIntentSetup(engine,initial,row.setup);
+ const row=structuredClone(rows.find(r=>r.id===`A3V2-${n}`));
+ // Ordinary speech needs visibility/hearing, not touch: retain the native S4 spacing.
+ for(const position of row.setup.positions??[])if(row.setup.present?.includes(position.target))position.distanceMeters=6;
+ const setup=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setup.setupUnmet,[]);
  return {row,document:setup.document};
 }

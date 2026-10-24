@@ -280,11 +280,19 @@ test('A7 实际权限消费：受限出路携带原生拒绝原因，等待保�
  const before=structuredClone(f.document);
  // A7 is now merged: exercise the production normalization and capacity path.
  const menu=worldActions(engine,f.document,{query:'core:move'}),move=menu.actions.find(a=>a.id==='core:move');
- assert.ok(menu.objects.exits.length);assert.ok(menu.objects.exits.every(e=>e.permission.allowed===false&&/羁押/.test(e.permission.reason)));
- assert.ok(move.slots.find(s=>s.name==='destination').options.every(o=>o.permission.allowed===false));
+ // S4 permits local walking inside custody while every external exit stays refused.
+ const exits=menu.objects.exits.filter(e=>!e.zone),zones=menu.objects.exits.filter(e=>e.zone);
+ assert.ok(exits.length);assert.ok(exits.every(e=>e.permission.allowed===false&&/羁押/.test(e.permission.reason)));
+ assert.ok(zones.length);assert.ok(zones.every(e=>e.permission.allowed===true));
+ assert.ok(move.slots.find(s=>s.name==='destination').options.filter(o=>exits.some(e=>e.id===o.value)).every(o=>o.permission.allowed===false));
  assert.equal(worldActions(engine,f.document,{query:'core:time'}).actions.find(a=>a.id==='core:time').permission.allowed,true);
- await assertActionRejected(f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:move',slots:{destination:menu.objects.exits[0].id}},eventId:'detained-builder'}),/羁押|拘禁|离开/);
+ await assertActionRejected(f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:move',slots:{destination:exits[0].id}},eventId:'detained-builder'}),/羁押|拘禁|离开/);
  assert.deepEqual(f.document,before);
+ const walked=await f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:move',slots:{destination:zones[0].id,mode:'walk'}},eventId:'detained-local-walk'});
+ assert.equal(walked.result.arrived,true);
+ const within=applyPatches(f.document,walked.patches);
+ assert.equal(within.state.location,location);assert.equal(within.state.records.local_player_position.zone,zones[0].id);
+ assert.deepEqual(within.holdings.rows.test_detained,before.holdings.rows.test_detained);
  const native=previewLines({receipt:{status:'preview',cost:{time:7,coins:3,resources:null},check:{dc:14},witnesses:['npc_visible'],permission:{allowed:false,reason:'仍在羁押'}}});
  assert.ok(native.includes('费用：3文'));assert.ok(native.includes('耗时：7分钟'));assert.ok(native.includes('难度：14'));assert.ok(native.includes('已知见证：1人'));assert.ok(native.includes('行为限制：仍在羁押'));
 });

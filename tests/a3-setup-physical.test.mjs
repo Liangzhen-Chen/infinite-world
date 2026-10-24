@@ -206,7 +206,7 @@ const spatialExamples={
  zones:{id:'zone_a',name:'门内',location:home},
  paths:{id:'path_a',fromZone:'zone_a',toZone:'zone_b',distanceMeters:1,passable:false,blockedBy:'lock_a'},
  placements:{entity:'player',zone:'zone_a'},
- positions:{observer:'player',target:npc,distanceMeters:2,lineOfSight:true,audibleTo:['player',npc]},
+ positions:{observer:'player',target:npc,distanceMeters:6,lineOfSight:true,audibleTo:['player',npc]},
  obstacles:{id:'wall_a',kind:'stone_wall',segmentMeters:[[2,1],[6,1]]},
  hazards:{id:'rocks_a',zone:'zone_b',kind:'falling_rocks',active:true},
 };
@@ -226,7 +226,8 @@ for(const [field,row] of Object.entries(spatialExamples))test(`physical: ${field
 test('physical: spatial declarations cannot forge contact, expand listeners or bypass custody',()=>{
  const out=setup({positions:[spatialExamples.positions],paths:[spatialExamples.paths]});
  const d=engine.primitiveDraft(out.document);
- assert.equal(engine.magicTargetFacts(d,npc),null);
+ // S4 supplies ranged zone perception, without creating contact evidence.
+ assert.deepEqual(engine.magicTargetFacts(d,npc),{distanceMeters:6,lineOfSight:true});
  assert.equal(Object.values(out.document.state.records).some(r=>r.category==='physical_contact'),false);
  const invalid=setup({positions:[{...spatialExamples.positions,rayMeters:[[0,0],[8,0]]}]});
  assert.match(invalid.setupUnmet[0].reason,/invalid/);

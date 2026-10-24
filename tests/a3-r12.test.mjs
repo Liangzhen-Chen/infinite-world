@@ -13,7 +13,11 @@ const engine=new WorldEngine(await loadWorld());
 const initial=engine.initialFromLegacy(JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),'a3-r12');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 function memorial(){
- const row=corpus.find(r=>r.id==='A3V2-117'),setup=applyIntentSetup(engine,initial,row.setup);
+ const row=structuredClone(corpus.find(r=>r.id==='A3V2-117'));
+ // S4 measures the visible manager at the native six-metre approach distance;
+ // hanging the shoe still requires the independently reachable original branch.
+ row.setup.positions[0].distanceMeters=6;
+ const setup=applyIntentSetup(engine,initial,row.setup);
  assert.deepEqual(setup.setupUnmet,[]);
  // The r7 premise supplies the same pre-existing shoe and reachable branch.
  // 01 §1.2/§1.6 and this card replace consuming a shoe with placing that object.

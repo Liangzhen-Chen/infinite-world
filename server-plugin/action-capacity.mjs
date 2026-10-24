@@ -1,6 +1,7 @@
 import {aliveHoldings} from './holdings.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
+import {placeLayout,destinationZone,zoneOf} from './place-layout.mjs';
 
 // One reader per document: the holdings index is cached per reader and
 // invalidated by holdings.seq, so a fresh reader per call rebuilt it every time.
@@ -45,10 +46,18 @@ export function custodyLocation(context,holding){
 export function legacyActionFamily(tool,args={}){
  return tool==='law'?({inspect:'observe',appeal:'appeal',hear:'appeal',hire_advocate:'obligation.create',confess:'talk',bribe:'transfer'})[args.operation??'inspect']??tool:({time:'wait',turn:'talk',dialogue:'talk',practice:'learn',trade:'transfer',promise:'obligation.create',health:'service'})[tool]??tool;
 }
+// Custody bounds a place. Its own zones and local approach targets remain
+// inside that place; generated zone IDs are not global catalog identities.
+export function movementCapacityTarget(engine,document,destination){
+ const layout=placeLayout(engine,document);
+ if(layout.zones.some(z=>z.id===destination))return layout.location;
+ const id=engine?.resolve(destination)??destination;
+ return destinationZone(engine,document,id,layout)||zoneOf(engine,document,id,layout)?layout.location:id;
+}
 export function legacyCanAct(engine,document,tool,args){
  if(!aliveHoldings(actionReader(document),{kind:'guest_of',holder:'player'}).some(h=>h.variant==='detained'))return null;
  const family=legacyActionFamily(tool,args);
- return canAct({engine,document},'player',family,{to:tool==='move'?(engine?.resolve(args.destination)??args.destination):undefined});
+ return canAct({engine,document},'player',family,{to:tool==='move'?movementCapacityTarget(engine,document,args.destination):undefined});
 }
 export function canAct(context,actor,family,{to,closing=null}={}){
  const result=capacity(context,actor,family),tags=result.level==='limited'?['capacity:limited']:[];
