@@ -14,6 +14,7 @@ import {baishiSkeleton} from '../world/design/w1-baishi-skeleton.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
 import {readFiles,contentEntries,previewWorld,contextFor,draftFor} from '../world/design/a3-world-approval.mjs';
 import {readApprovedContent} from '../tools/content-pipeline.mjs';
+import {previousOfficeEdition} from '../world/design/s4-offices-approval.mjs';
 
 const world=await loadWorld(),bundle=authorMarket(world),ids=new Set(bundle.people.map(p=>p.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -153,7 +154,8 @@ test('正式世界发布校验没有涉及本批人物ID的错误',()=>{
 
 // 13ac0697: verify the incremental approval in addition to the unchanged T92 gate.
 test('A3 head, incumbents and authority retain independent L1/L2/L4 receipts',async()=>{
- const files=await readFiles(),candidate=previewWorld(world);
+ // Replay the A3 receipt against its edition, after verifying the later S4 charter.
+ const {world:prior,files}=await previousOfficeEdition(world,await readFiles()),candidate=previewWorld(prior);
  const entries=contentEntries(files).filter(e=>['person','person-field','faction','office','head-patch','room-patch'].includes(e.kind));
  const rows=await readApprovedContent(G.draftRoot,entries,{revision:G.revision,contextFor:e=>contextFor(candidate,e)});
  assert.deepEqual(rows,entries.map(draftFor));
