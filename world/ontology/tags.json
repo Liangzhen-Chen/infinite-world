@@ -9,6 +9,7 @@
   {"id":"document","family":"event","source":"code"},
   {"id":"institution","family":"event","source":"code"},
   {"id":"legal_decision","family":"event","source":"code"},
+  {"id":"judgment","family":"event","source":"code"},
   {"id":"admit","family":"event","source":"code"},
   {"id":"guide","family":"event","source":"code"},
   {"id":"legal_request","family":"event","source":"code"},

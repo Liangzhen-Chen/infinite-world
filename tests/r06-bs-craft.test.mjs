@@ -36,7 +36,7 @@ test('正式世界校验对本批ID零错误，顶层服务均为目录ID，交�
  p.services.pop();p.skills.push('trade');assert.ok(validateWorld(invalid).errors.some(e=>e.includes('/skills')&&e.includes('pattern')));
 });
 
-test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与seed不充数',()=>{
+test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与seed不充数',async()=>{
  const residentsFor=id=>new Set(world.settlementProfiles.find(s=>s.id===id).residentIds);
  const town=residentsFor('loc_bs'),local=new Set(['loc_hw','loc_bs','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'].flatMap(id=>[...residentsFor(id)]));
  for(const id of ids){assert.ok(town.has(id));assert.ok(world.npcs.some(n=>n.id===id&&n.tier==='full'));}
@@ -45,7 +45,9 @@ test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与
  assert.ok(full.filter(n=>local.has(n.id)).length>=250);assert.ok(roster.filter(n=>local.has(n.id)).length>=500);
  assert.ok(![...local].some(id=>id.includes('seed')));
  for(const p of bundle.people){assert.ok(p.household.includes(p.relationships.at(-1).with));assert.equal(new Set(p.relationships.map(r=>r.with)).size,p.relationships.length);}
- const additions=contentAdditions(world);for(const p of additions.locations){assert.deepEqual(world.locations.find(l=>l.id===p.id),p);assert.ok(new WorldEngine(world).route('loc_bs',p.id,'walk',510,'craft-route').minutes>0);}
+ // T93's teaching facts remain exact; S4 adds the reviewed spatial layout.
+ const authoredLocations=JSON.parse(await fs.readFile(new URL('../world/geo/locations.json',import.meta.url),'utf8'));
+ const additions=contentAdditions(world);for(const p of additions.locations){const layout=authoredLocations.find(l=>l.id===p.id).layout;assert.deepEqual(world.locations.find(l=>l.id===p.id),{...p,...(layout?{layout}:{})});assert.ok(new WorldEngine(world).route('loc_bs',p.id,'walk',510,'craft-route').minutes>0);}
  assert.equal(world.locations.find(l=>l.id==='bld_bs_temple').name,'东街灯祠');
 });
 

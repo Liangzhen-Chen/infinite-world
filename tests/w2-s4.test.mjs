@@ -313,7 +313,8 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS4Publication(conflict,publication),/冲突/);
  if(process.env.W2S4_DESIGN)return;
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s4-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // Publication must retain the current edition's S4 norm bindings.
+ for(const folder of ['meta','people','geo','lore','law','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s4'),path.join(root,'drafts/w2-s4'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations','meta/rules.json':'rules'};
  for(const f of publishedFiles)await fs.writeFile(path.join(root,f),JSON.stringify(before[key[f]]));
