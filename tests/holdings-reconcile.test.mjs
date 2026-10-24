@@ -63,7 +63,7 @@ test('多日推演对账：组织、议案、商号租铺与雇工、受雇、�
     const org=(await step(c,'world_create',{type:'org',name:'青灯互助会',data:{notes:'互相照应',occupation:'行会'}},'found')).organization;
     assert.ok(c.doc.holdings,'第一次写持有时开出分区');
     await step(c,'world_settlement',{operation:'org_propose',org,action:'charter',cost:5},'fee');
-    const apply=await step(c,'world_settlement',{operation:'org_join',org,member:worker,consent:true},'apply');
+    const apply=await step(c,'world_settlement',{operation:'org_join',org,member:worker,feePayer:'player'},'apply');
     await step(c,'world_settlement',{operation:'org_vote',org,proposal:apply.proposal,opinion:'approve'},'approve');
     assert.ok(aliveHoldings(view(c.doc),{kind:'member_of',holder:worker,subject:org}).length,'表决通过后入会');
     assert.ok(c.doc.holdings.entities[`motion_${apply.proposal}`],'议案是实体');
@@ -91,17 +91,25 @@ test('多日推演对账：组织、议案、商号租铺与雇工、受雇、�
 });
 
 test('犯罪立案到羁押：案件实体、受限 guest_of{detained} 开立，羁押期满关闭',{timeout:600000},async()=>{
-    const victim='npc_hw_linsui',guard='npc_hw_gucen';
+    const victim='npc_hw_linsui',guard='npc_hw_gucen',handler='npc_bs_035_1',watch='bld_bs_watch';
     const w=withLawRules(structuredClone(world));for(const npc of w.npcs)if([victim,guard,'npc_hw_chenbai','npc_hw_hezhou'].includes(npc.id)){delete npc.schedule;delete npc.tier;}
-    const engine=new WorldEngine(w),doc=engine.initialFromLegacy(seed,'holdings-law');
+    const official=w.npcs.find(n=>n.id===handler);
+    official.schedule={default:[{start:0,end:1440,location:watch,activity:'在岗'}]};
+    const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'holdings-law');
     doc.state.location=inn;doc.state.npcs[victim].inventory.item_bread=4;
     const c={engine,doc};
     let incident=null;
     for(let i=0;i<500&&!incident;i++){const before=c.doc,r=await step(c,'world_crime',{operation:'steal',target:victim,item:'item_bread'},`theft_${i}`);if(r.checkSuccess)incident=r;else c.doc=before;}
-    assert.ok(incident?.case,'立案');
-    assert.ok(c.doc.holdings?.entities[`case_${incident.case}`],'案件是实体');
+    assert.ok(incident?.case,'盗窃事件留下嫌疑记录');
+    assert.equal(c.doc.state.records[incident.case].category,'legal_suspicion');
+    assert.ok(!c.doc.holdings?.entities[`case_${incident.case}`],'未受理的嫌疑不是案件实体');
     c.doc.state.npcs[guard].location=c.doc.state.location;
-    await step(c,'world_law',{operation:'confess',case:incident.case,authority:guard},'confess');
+    const report=await step(c,'world_law',{operation:'confess',case:incident.case,authority:guard},'confess');
+    await step(c,'world_move',{destination:watch},'to-handler');
+    const accepted=await step(c,'world_law',{operation:'request_decision',request:report.request,authority:handler},'accept-case');
+    assert.equal(accepted.accepted,true);
+    assert.ok(c.doc.holdings.entities[`case_${incident.case}`],'受理后才有案件实体');
+    await step(c,'world_move',{destination:inn},'back-to-guard');
     c.doc.state.npcs[guard].location=c.doc.state.location;
     await step(c,'world_law',{operation:'arrest',case:incident.case,authority:guard},'arrest');
     const held=aliveHoldings(view(c.doc),{kind:'guest_of',holder:'player'}).filter(r=>r.variant==='detained');

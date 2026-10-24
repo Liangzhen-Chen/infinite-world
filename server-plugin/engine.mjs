@@ -291,6 +291,7 @@ export class WorldEngine {
         options={...options,nativePrimitiveVersion:nativePrimitiveReplayVersion(options)};
         const out=await actionBoundary(this,document,input,()=>this.reduceAction(document,input,options));
         if(!this.compat&&(!options.replay||options.result?.organizationConsentVersion===1))out.result.organizationConsentVersion=1;
+        if(!this.compat&&(!options.replay||options.result?.educationVersion===1))out.result.educationVersion=1;
         if(!this.compat&&options.nativePrimitiveVersion===1)out.result.nativePrimitiveVersion=1;
         return out;
     }
@@ -338,7 +339,7 @@ export class WorldEngine {
             if(runtime.isNativeAction(this,input)){
                 if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
                 const books=withBooks(this,document),session=this.scoped(document);
-                session.replaying=Boolean(options.replay);session.replayResult=options.result;
+                session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
                 const native=runtime.nativeAction(session,books.document,input);
                 const next=applyPatches(books.document,native.patches);
                 return {patches:finishLedger(native.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
@@ -347,7 +348,7 @@ export class WorldEngine {
             if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
-            session.replaying=Boolean(options.replay);session.replayResult=options.result;
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
             const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session),openProposal:options.openProposal});
             const next=applyPatches(books.document,applied.patches);
             return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};

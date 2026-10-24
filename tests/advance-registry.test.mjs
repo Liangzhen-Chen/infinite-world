@@ -40,6 +40,9 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // A3 content refresh: 10 §10.5 permits per-stage regeneration. PLAN records the
 // new examiners, actual travel and resulting occupancy wear; historical service
 // versions still use their own complete state + patches + messages fixture.
+// S4 refresh: the initial calendar and institution offices change the full
+// state and holding-transition event IDs. Both service-version fixtures are
+// regenerated; deterministic traces and complete hashes remain mandatory.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const HISTORICAL=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-pre-s3-services.json',import.meta.url),'utf8'));
 const SCENARIOS={

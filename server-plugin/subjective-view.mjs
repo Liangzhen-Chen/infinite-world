@@ -16,7 +16,7 @@ export function initializePersonLanguages(d,e,person,values,{origin,eventId}={})
  for(const [field,ids] of entries)holdingSet(d,e,[...path,field],ids.map(id=>languageId(e,id)),'person-languages',eventId);
 }
 export function personLanguages(e,s,id,{written=false}={}){
- const n=id==='player'?s.player:s.npcs?.[id],b=s.created?.[id]??e.byId.get(id)??{};
+ const n=id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id],b=s.created?.[id]??e.byId.get(id)??{};
  const raw=n?.[written?'writtenLanguages':'spokenLanguages']??(written?b.writtenLanguages:undefined)??n?.languages??b.languages??e.rules.languages?.default??['lang:common'];
  return (Array.isArray(raw)?raw:Object.keys(raw??{}).filter(k=>raw[k]>0)).map(id=>languageId(e,id));
 }
@@ -28,7 +28,7 @@ const ownedHoldings=Symbol('subjective own holdings');
 
 const copy=x=>structuredClone(x);
 const active=o=>['待履行','进行中','在任','有效'].includes(o.status);
-const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id];
+const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
 const location=(s,id)=>id==='player'?s.location:actor(s,id)?.location;
 const base=(e,s,id)=>s.created?.[id]??s.family?.people?.[id]??e.byId.get(id)??{};
 const dimensions=['trust','affection','respect','fear','romance','competition'];
