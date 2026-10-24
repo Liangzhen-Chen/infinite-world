@@ -82,7 +82,7 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
    if(old&&now&&harm>=0&&hp===detail.targetHp)add(`conflict:${eventId}:${target}`,eventId,'冲突',target,'player',after.minute,{trust:e.tags.includes('magic')?-10:-5,affection:-3,fear:harm>0?Math.min(5,Math.max(1,Math.ceil(harm/5))):0});
   }
   const incident=after.records?.[e.case];
-  if(e.verb==='steal'&&e.target&&incident?.category==='legal_case'&&!before.records?.[e.case]&&incident.offender==='player'&&incident.victim===e.target)for(const who of e.witnesses){
+  if(e.verb==='steal'&&e.target&&['legal_suspicion','legal_case'].includes(incident?.category)&&!before.records?.[e.case]&&incident.offender==='player'&&incident.victim===e.target)for(const who of e.witnesses){
    if(before.npcs[who]?.location===before.location&&incident.evidence?.some(x=>x.kind==='eyewitness'&&x.witness===who&&x.identified))add(`crime:${eventId}:${who}`,eventId,'欺骗',who,'player',after.minute,{trust:-5,affection:-2,fear:1});
   }
   if(e.verb==='learn'&&detail.success&&e.target&&before.npcs[e.target]?.location===before.location){

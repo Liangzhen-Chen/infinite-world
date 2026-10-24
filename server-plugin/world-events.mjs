@@ -260,7 +260,10 @@ export function publicTransition(engine,state,e){
         ![e.subject,e.actor,e.target,...e.participants??[]].some(id=>id&&minor(engine,state,id,e.minute));
 }
 export function eventRumorId(engine,state,e){
-    if(!e||e.legacy||privateWorldEvent(e)||!e.witnesses?.length)return null;
+    // Filing keeps the incident record private; actual witnesses can still tell
+    // their own observations. This grants no access to the private case itself.
+    const incident=state.records?.[e?.case],witnessedTheft=e?.verb==='steal'&&incident?.category==='legal_suspicion'&&incident.sourceEvent===e.id&&e.visibility==='private'&&!e.private&&!e.tags?.some(t=>['private','secret'].includes(t));
+    if(!e||e.legacy||privateWorldEvent(e)&&!witnessedTheft||!e.witnesses?.length)return null;
     if(e.tags?.includes('facility'))return `rumor_event:${e.id}`;
     if(publicTransition(engine,state,e))return `rumor_event:${e.id}`;
     if(!['harm','steal','help','gift'].includes(e.verb)&&!e.tags?.includes('npc_crime')||Math.abs(eventWeight(e))<RUMOR_WEIGHT||[e.actor,e.target].some(id=>minor(engine,state,id,e.minute)))return null;

@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {acceptReported,submitKnownWitnesses} from './helpers/filing-actions.mjs';
 import {civicRules} from '../world/design/m5-civic-rules.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json'));
@@ -190,14 +191,18 @@ test('户籍工具沿既有聚落路由，正文不能填费用、日期、贡�
 });
 
 test('实际犯罪登记阻止入籍，law判罚履行结案仍保留犯罪裁定，不能免除无犯罪条件',async()=>{
-    const {doc,run}=setup();let c=await ready(run,doc);
+    const {engine,doc,run}=setup();let c=await ready(run,doc);
     const officer='npc_hw_gucen';c.state.npcs[officer].location=c.state.location;c.state.npcs[officer].activity='执勤';
     const incident=await run(c,{operation:'steal',target:sponsor,coins:1},'actual-incident','world_crime');c=incident.document;
+    assert.equal(c.state.records[incident.result.case].category,'legal_suspicion');
+    const submitted=await run(c,{operation:'confess',case:incident.result.case,authority:officer},'confess','world_law');
+    c=(await acceptReported(engine,submitted.document,submitted.result,'civic-file')).document;
     assert.equal(c.state.records[incident.result.case].category,'legal_case');
     await assert.rejects(run(c,args('civic_apply_resident'),'pending-actual'),/犯罪案件/);
-    c=(await run(c,{operation:'confess',case:incident.result.case,authority:officer},'confess','world_law')).document;
+    c=await submitKnownWitnesses(engine,c,incident.result.case,'civic-witness');
     c=(await run(c,{operation:'hear',case:incident.result.case,authority:head},'hearing','world_law')).document;
     c=(await run(c,{operation:'pay',case:incident.result.case,authority:officer},'pay','world_law')).document;
+    if(c.state.records[incident.result.case].judgment.compensation>0)c=(await run(c,{operation:'compensate',case:incident.result.case,authority:officer},'compensate','world_law')).document;
     assert.equal(c.state.records[incident.result.case].status,'已结案');
     const before=structuredClone(c);await assert.rejects(run(c,args('civic_apply_resident'),'after-law'),/犯罪裁定记录/);assert.deepEqual(c,before);
 });

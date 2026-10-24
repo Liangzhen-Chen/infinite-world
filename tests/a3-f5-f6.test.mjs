@@ -11,6 +11,7 @@ import {ActionBuilder} from '../extension/action-builder.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {environmentCatalog} from '../server-plugin/environment.mjs';
+import {acceptReported,submitKnownWitnesses} from './helpers/filing-actions.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 
@@ -95,7 +96,7 @@ test('F6 偷窃有无见证：真实案件、立场、私有记忆和可讲传�
   const out=await f.engine.reduce(before,input),after=applyPatches(before,out.patches);
   assert.equal(out.result.receipt.status,'committed');assert.equal(out.result.receipt.routed,'core:crime.steal');
   const viaBuilder=await built(f.engine,before,'open:proposal',intent,'f6-theft');assert.deepEqual(viaBuilder.document,after);
-  const incident=Object.values(after.state.records).find(r=>r.category==='legal_case'&&r.sourceEvent==='f6-theft');assert.ok(incident);
+  const incident=Object.values(after.state.records).find(r=>r.category==='legal_suspicion'&&r.sourceEvent==='f6-theft');assert.ok(incident);
   assert.equal(after.state.minute-before.state.minute,5);
   const stolen=after.state.player.coins-before.state.player.coins;
   assert.ok(stolen===0||stolen===10);assert.equal(before.state.npcs[NPC].coins-after.state.npcs[NPC].coins,stolen);
@@ -110,11 +111,18 @@ test('F6 偷窃有无见证：真实案件、立场、私有记忆和可讲传�
    assert.ok(memories.some(m=>m.sourceEvent==='f6-theft'));
    assert.ok(standing(f.engine,after.state,observer,'player')<standing(f.engine,before.state,observer,'player'));
    const rumor=npcRumors(f.engine,observer,after).find(r=>r.id==='rumor_event:f6-theft');assert.ok(rumor);
+   assert.equal(after.state.records['world_event:f6-theft'].visibility,'private');
+   for(const id of Object.keys(after.state.npcs).filter(id=>!incident.witnesses.includes(id))){
+    assert.ok(!npcRumors(f.engine,id,after).some(r=>r.id===rumor.id),'未见证者不能凭私密嫌疑获得传闻');
+   }
    const heardRumor=await act(f.engine,after,'core:remember',{subject:'player',key:rumor.id,rumor:rumor.id,source:observer,content:rumor.claim},'f6-hear-rumor');
    assert.equal(heardRumor.result.rumor,rumor.id);assert.equal(heardRumor.result.reliability,'未核实');
    assert.equal(heardRumor.document.state.player.coins,after.state.player.coins);clean(f.engine,heardRumor.document);
    const confessed=await act(f.engine,heardRumor.document,'core:law.confess',{case:incident.id,authority:'npc_hw_gucen'},'f6-confess');
-   const moved=await act(f.engine,confessed.document,'core:move',{destination:'bld_hw_council'},'f6-court');
+   const filed=await acceptReported(f.engine,confessed.document,confessed.result,'f6-file');
+   assert.equal(filed.document.state.records[incident.id].category,'legal_case');
+   const moved=await act(f.engine,filed.document,'core:move',{destination:'bld_hw_council'},'f6-court');
+   moved.document=await submitKnownWitnesses(f.engine,moved.document,incident.id,'f6-witness');
    const heard=await act(f.engine,moved.document,'core:law.hear',{case:incident.id,authority:'npc_hw_chenbai'},'f6-hear');
    assert.equal(heard.result.convicted,true);assert.ok(heard.document.state.records[incident.id].judgment);
    const paid=await act(f.engine,heard.document,'core:law.pay',{case:incident.id,authority:'npc_hw_chenbai'},'f6-pay');

@@ -7,6 +7,8 @@ import '../server-plugin/primitives-runtime.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {normStack,normClause,normCode,normSnapshot,casePenalty,placeCulture,validateNormBindings} from '../server-plugin/norm-stack.mjs';
 import {legalCodes,legalCodeAt,applicableLawAt,miningJurisdiction} from '../server-plugin/law-codes.mjs';
+import {acceptReported,submitKnownWitnesses} from './helpers/filing-actions.mjs';
+import {officeScene} from './helpers/office-actions.mjs';
 import {adjudicateLegalCase} from '../server-plugin/law.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -105,13 +107,20 @@ test('当前实体位置决定属地栈，成员来源不混入民事/程序默�
  assert.equal(normClause([{layer:'membership',source:'charter',code:{civil:{rent:99}}}],'civil.rent').value,undefined);
 });
 
-test('R10A 适用规范不凭空产生法院，真实移动后无执行权仍拒绝',async()=>{
+test('R10A 适用规范不凭空产生法院，真实移动后犯罪不自动立案或执行',async()=>{
  const engine=new WorldEngine(world),initial=engine.initialFromLegacy(seed,'s403-no-court');
  const moved=await act(engine,initial,'core:move',{destination:'bld_bs_guild',mode:'walk'},'s403-move');
+ moved.document=officeScene(engine,moved.document,{location:moved.document.state.location,minute:moved.document.state.minute,present:['npc_hw_linsui']});
  const before=structuredClone(moved.document);
  assert.ok(applicableLawAt(engine,before.state.location,before.state));
  assert.equal(legalCodeAt(engine,before.state.location,before.state),null);
- await assert.rejects(engine.reduce(before,{tool:'world_crime',args:{operation:'steal',target:'npc_hw_linsui',coins:1},eventId:'s403-no-authority'}),/执行/);
+ // D/E: physical theft can occur without an executable court; it must not
+ // fabricate a case or levy a penalty from the merely applicable norm stack.
+ const out=await engine.reduce(before,{tool:'world_crime',args:{operation:'steal',target:'npc_hw_linsui',coins:1},eventId:'s403-no-authority'});
+ assert.equal(out.result.case,null);
+ const after=applyPatches(before,out.patches);
+ assert.equal(Object.values(after.state.records).filter(r=>r.category==='legal_case').length,Object.values(before.state.records).filter(r=>r.category==='legal_case').length);
+ assert.equal(Object.values(after.state.records).filter(r=>r.category==='legal_treasury').length,Object.values(before.state.records).filter(r=>r.category==='legal_treasury').length);
  assert.deepEqual(moved.document,before);
 });
 
@@ -137,8 +146,12 @@ test('target:I9/I24 真实动作与等待形成旧事，当前改法不得加重
  const currentEngine=new WorldEngine(changed);
  let next=await act(currentEngine,incident.document,'core:move',{destination:'loc_hw_gate',mode:'walk'},'s403-to-officer');
  next=await act(currentEngine,next.document,'core:law.confess',{case:id,authority:'npc_hw_gucen'},'s403-confess');
+ next.document=(await acceptReported(currentEngine,next.document,next.result,'s403-file')).document;
+ assert.equal(next.document.state.records[id].category,'legal_case');
+ assert.deepEqual(next.document.state.records[id].normSnapshot,saved,'受理保留行为时实体法，不能按立案时法律加重');
  assert.equal(next.document.state.records[id].evidence.some(e=>e.kind==='confession'),true);
  next=await act(currentEngine,next.document,'core:move',{destination:'bld_hw_council',mode:'walk'},'s403-to-court');
+ next.document=await submitKnownWitnesses(currentEngine,next.document,id,'s403-witness');
  const start=next.document.state.minute;
  const hearing=await act(currentEngine,next.document,'core:law.hear',{case:id,authority:'npc_hw_chenbai'},'s403-judgment');
  assert.equal(hearing.result.convicted,true);assert.equal(hearing.result.fineCalculation.base,saved.penalty.baseFine);

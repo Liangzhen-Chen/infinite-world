@@ -11,7 +11,7 @@ import {standing} from './standing.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {presentWitnesses,publishTransitionEvent} from './world-events.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
-import {registerIncident,evidenceScore,adjudicateLegalCase,caseLoss} from './law.mjs';
+import {registerIncident,evidenceScore,trialEvidenceScore,adjudicateLegalCase,caseLoss} from './law.mjs';
 import {recoverLoss} from './obligation-claims.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {issueWanted,wantedOfCase,WANTED_REASONS} from './bounty.mjs';
@@ -124,7 +124,8 @@ export function advanceNpcJustice(d,e,after){
   if(!row.reported)continue;
   if(['已报案','已到案','证据不足'].includes(row.status)&&!row.judgment&&row.nextHearing<=after){
    const judge=localOfficer(d,e,code,'judge');if(!judge||[row.offender,row.victim].includes(judge))continue;
-   if(evidenceScore(d,row)<code.evidenceRequired){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
+   const evaluation=code.procedure?.evidence?.convictionThreshold?.[row.offense]!==undefined?trialEvidenceScore(row,code):{score:evidenceScore(d,row),threshold:code.evidenceRequired};
+   if(evaluation.score<evaluation.threshold){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
    for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){

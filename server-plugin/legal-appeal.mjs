@@ -211,7 +211,10 @@ export function trialAction(d,e,row,code,args,eventId,{penalty,submitDocument,ad
   advance(d,e,10,eventId,[judge].filter(x=>x!=='player'));
   if((row.offender==='player'?d.get('state','location'):d.get('state','npcs',row.offender,'location'))!==site) return complete(d,e,{...row,stage:'pursuit'},{case:row.id,executed:false,stage:'pursuit'},eventId,{minutes:10,authority:judge});
   const transfer=transferFine(d,e,row,fine,eventId,judge);
-  return complete(d,e,{...row,finePaid:(row.finePaid??0)+fine,fineDischarged:true,stage:'execution',executionEvent:eventId},
+  const compensation=row.judgment.compensation??0;
+  const settlement=Number.isSafeInteger(compensation)&&compensation>=0
+   ?compensation>0&&!row.compensationPaid?{status:'待赔偿'}:{status:'已结案',compensationPaid:true,closed:d.get('state','minute')}:{};
+  return complete(d,e,{...row,...settlement,finePaid:(row.finePaid??0)+fine,fineDischarged:true,stage:'execution',executionEvent:eventId},
    {case:row.id,fine,executed:true,transfer},eventId,{minutes:10,authority:judge,transfer:{...transfer,signedAmount:fine}});
  }
  const review=['review','request_review'].includes(op)||op==='decide_case'&&row.appeal?.pending,judge=officer(d,e,code,args,{review});

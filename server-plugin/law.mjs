@@ -32,6 +32,7 @@ import {LEDGER_COIN} from './ledger.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {trialAction,trialTestimony,trialEvidenceScore} from './legal-appeal.mjs';
+export {trialEvidenceScore};
 import {documentAccessible} from './documents.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
@@ -292,9 +293,14 @@ function decideFiling(d,engine,args,eventId){
  if(prior&&!['legal_suspicion','legal_case'].includes(prior.category))throw preconditionFailure('案件编号已占用');
  if(!existing&&fee){const key=`legal_treasury:${code.id}`,fund=safeFund(d,key,'legal_treasury',{law:code.id});books(d,purse(engine,request.actor),fundAccount(key),fee,eventId);d.set(account,d.get(...account)-fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+fee},'law');}
  const a=request.allegation,witnesses=request.submittedEvidence.filter(e=>e.kind==='eyewitness').map(e=>e.witness);
+  // The incident already pinned its substantive law when the behavior occurred.
+  // Filing supplies proof and current procedure, not a new date for punishment.
+  const norms=prior?.sourceEvent===request.incident&&prior.offender===a.offender&&prior.offense===a.offense&&prior.location===a.location&&prior.minute===a.minute&&prior.normSnapshot
+   ?{normSnapshot:structuredClone(prior.normSnapshot)}:incidentNorms(d,engine,{...a,code});
  const row=existing?{...prior,evidence:[...prior.evidence,...request.submittedEvidence],witnesses:[...new Set([...prior.witnesses??[],...witnesses])]}:
-  {category:'legal_case',id:request.case,procedureVersion:1,filingVersion:FILING_VERSION,law:code.id,...a,...incidentNorms(d,engine,{...a,code}),
-   settlement:code.settlement??null,faction:code.faction??null,sourceEvent:request.incident,reported:true,status:'已报案',stage:'pending',court:code.court,parties:[a.offender,a.victim].filter(Boolean),evidence:request.submittedEvidence,witnesses,receiver:args.authority,handlerOffice:office.id,reportedAt:s.minute,filingFee:fee};
+   {category:'legal_case',id:request.case,procedureVersion:1,filingVersion:FILING_VERSION,law:code.id,...a,...norms,
+   settlement:code.settlement??null,faction:code.faction??null,sourceEvent:request.incident,reported:true,status:'已报案',stage:'pending',court:code.court,parties:[a.offender,a.victim].filter(Boolean),evidence:request.submittedEvidence,witnesses,receiver:args.authority,handlerOffice:office.id,reportedAt:s.minute,filingFee:fee,
+   ...(prior?.npcCrime?{npcCrime:{...prior.npcCrime,statementsReceived:true},nextHearing:s.minute+code.hearingMinutes}:{})};
  if(prior?.category==='legal_suspicion')holdingSet(d,engine,path(`legal_suspicion:${request.incident}`),{...prior,id:`legal_suspicion:${request.incident}`},'law');
  holdingSet(d,engine,path(request.case),{...row,acceptedAt:s.minute,acceptanceEvent:eventId,requestSources:[...row.requestSources??[],id]},'law');
  for(const witness of witnesses)if(witness!=='player')knowledge(d,witness,request.case,s.minute);
