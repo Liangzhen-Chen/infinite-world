@@ -300,6 +300,7 @@ export class WorldEngine {
             const books=withBooks(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
             session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
             const detail=applyNpcPlan(d,session,input.plan,id);
+            if(!session.replaying||session.replayResult?.perceptionVersion===1)detail.perceptionVersion=1;
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
             return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
@@ -313,17 +314,20 @@ export class WorldEngine {
             if(!runtime)throw Error('Action runtime is not installed');
             if(runtime.isNativeAction(this,input)){
                 if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
-                const books=withBooks(this,document),native=runtime.nativeAction(this.scoped(document),books.document,input);
+                const books=withBooks(this,document),session=this.scoped(document);
+                session.replaying=Boolean(options.replay);session.replayResult=options.result;
+                const native=runtime.nativeAction(session,books.document,input);
                 const next=applyPatches(books.document,native.patches);
-                return {patches:finishLedger(native.patches,books.opening),result:{ok:true,action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
+                return {patches:finishLedger(native.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
             }
             const translated=runtime.resolve(this,input);
             if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session),openProposal:options.openProposal});
             const next=applyPatches(books.document,applied.patches);
-            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
+            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         if(resolved.tool==='world_practice'&&!resolved.args.breakthroughSource&&(!options.replay||options.result?.cost)&&this.world.actionDefinitions&&primitiveActionRuntime()?.registry(this).byId.has('core:practice.session')){
@@ -374,6 +378,7 @@ export class WorldEngine {
         session.bookedWorkstation=bookedWorkstation;
         const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
+        if(!session.replaying||session.replayResult?.perceptionVersion===1)detail.perceptionVersion=1;
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
@@ -508,7 +513,10 @@ export class WorldEngine {
     }
     primitiveTargetFacts(d,actor,target){
         const carried=d.get('holdings','locations',target);
-        if(target!==actor&&zoneContactPending(d,actor)&&!(carried?.mode==='carried'&&carried.at===actor)&&!(actor==='player'&&this.quantity(d,actor,target)>0))return {distanceMeters:Infinity,lineOfSight:false};
+        if(target!==actor&&zoneContactPending(d,actor)&&!(carried?.mode==='carried'&&carried.at===actor)&&!(actor==='player'&&this.quantity(d,actor,target)>0)){
+            const ranged=(!this.replaying||this.replayResult?.perceptionVersion===1)&&actor==='player'&&(d.get('state','npcs',target)||d.get('state','creatures',target))&&this.magicTargetFacts(d,target);
+            return ranged?{...ranged,distanceMeters:Math.max(placeLayout(this,d.document).approachMetres,ranged.distanceMeters)}:{distanceMeters:Infinity,lineOfSight:false};
+        }
         if(actor==='player')return this.magicTargetFacts(d,target);
         const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
         const origin=areaTargetFacts(d,this,actor,location);if(!origin)return null;

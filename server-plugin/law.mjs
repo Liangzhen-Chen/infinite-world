@@ -25,6 +25,7 @@ import {settlementPresent} from './obligation-presence.mjs';
 import {legacyCanAct,canAct} from './action-capacity.mjs';
 import {consent} from './action-consent.mjs';
 import {worldEvent} from './world-events.mjs';
+import {eventPerception} from './perception.mjs';
 declareHoldingWriter('law',{kinds:['guest_of','wanted','companion','permit','owns'],entities:['case'],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}不在允许范围`);return value;};
@@ -110,9 +111,13 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null}){
+export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null,perception=null}){
     const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});
     const id=`legal_case:${eventId}`;unique(d,id);
+    if(location===d.get('state','location')&&minute===d.get('state','minute')&&(!engine.replaying||engine.replayResult?.perceptionVersion===1)){
+        const snapshot=perception??eventPerception(engine,d.document,{actor:offender,target:victim,location,volume:0});
+        if(snapshot.sourceZone)witnesses=witnesses.filter(id=>snapshot.versions[id]?.identified);
+    }
     const now=minute,evidence=witnesses.map(witness=>({kind:'eyewitness',witness,identified:true,testified:false,minute:now}));
     const officer=witnesses.find(witness=>code.officers.includes(witness));
     const legacyReplay=engine.replaying&&engine.replayResult?.legalProcedureVersion!==1;
@@ -308,12 +313,21 @@ export function crimeAction(d,args,eventId){
         value=this.byId.get(item).basePrice;
     }else{if(args.instance)throw preconditionFailure('钱币不能指定物品单件编号');amount=integer(args.coins,1,this.rules.law.maximumTheftCoins,'偷取铜币');if(actor.coins<amount)throw preconditionFailure('目标没有这么多钱');value=amount;}
     const result=this.check(d,{attribute:'敏捷',difficulty:15},eventId),witnesses=[];
-    for(const[npc,observer]of Object.entries(d.get('state','npcs'))){
-        if(!awake(observer,d,npc)||observer.location!==d.get('state','location')||['睡眠','熟睡'].includes(observer.activity))continue;
-        const observed=this.check(d,{attribute:'敏捷',opponent:{npc,attribute:'精神'}},`${eventId}_observation_${npc}`);
-        if(!observed.success)witnesses.push(npc);
-    }
+    const fresh=!this.replaying||this.replayResult?.perceptionVersion===1;
+    let perception=null;
+    const observe=()=>{
+        perception=fresh?eventPerception(this,d.document,{verb:'steal',actor:'player',target:victim,location:d.get('state','location')},{exclude:['player']}):null;
+        for(const[npc,observer]of Object.entries(d.get('state','npcs'))){
+            if(!awake(observer,d,npc)||observer.location!==d.get('state','location')||['睡眠','熟睡'].includes(observer.activity))continue;
+            if(fresh&&!perception.versions[npc])continue;
+            const observed=this.check(d,{attribute:'敏捷',opponent:{npc,attribute:'精神'}},`${eventId}_observation_${npc}`);
+            if(!observed.success){if(!fresh||perception.versions[npc].identified)witnesses.push(npc);}
+            else if(fresh)delete perception.versions[npc];
+        }
+    };
+    if(!fresh)observe();
     this.advance(d,this.rules.law.actionMinutes,eventId);
+    if(fresh)observe();
     const latest=d.get('state','npcs',victim);let stolen=null,success=result.success;
     if(!awake(d.get('state','player'),d,'player')||!alive(latest,d,victim)||latest.location!==d.get('state','location')||item&&this.quantity(d,victim,item)<1||!item&&latest.coins<amount)success=false;
     if(success){
@@ -327,9 +341,9 @@ export function crimeAction(d,args,eventId){
             books(d,purse(this,victim),purse(this,'player'),amount,eventId);d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
         }
     }
-    const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId});
+    const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId,perception});
     if(success)recordDisciplineBreach(d,this,'theft',eventId);
-    return{target:victim,case:incident,...result,checkSuccess:result.success,success,stolen,witnesses,
+    return{target:victim,case:incident,...result,checkSuccess:result.success,success,stolen,witnesses,...(perception?{perception}:{}),
         actionScope:{kind:'theft',reported:d.get(...path(incident),'reported'),
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
