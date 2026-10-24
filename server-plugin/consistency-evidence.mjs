@@ -71,6 +71,23 @@ export function reviewTurnSettlement(input,receipts=[],applied=[]){
  }
  // Legacy callers supplied a whole-turn diff rather than per-event applied.
  if(settled.length&&!receipts.some(row=>Array.isArray(row.applied)))effects.push(...applied);
+ // A witnessed NPC arrival is already an engine consequence, not a
+ // new narrator decision. Bind its presence notice to the actual location
+ // diff; a notice alone cannot supply movement of another actor.
+ for(const [npc,actor] of Object.entries(after.npcs??{})){
+  const previous=before.npcs?.[npc];
+  if(!previous||previous.location===actor.location||actor.scheduleTravel||actor.cognitionTravel||actor.location!==after.location)continue;
+  for(const [index,row] of receipts.entries()){
+   if(!settled.includes(index))continue;
+   const notice=(row.result?.notices??[]).find(notice=>notice.type==='presence'&&actor.name&&notice.text?.includes(actor.name));
+   if(!notice)continue;
+   facts.push({id:`receipt:${index}:presence:${npc}`,kind:'effect',subject:npc,object:actor.location,
+    source:{type:'receipt',receipt:index,eventId:row.eventId??null,sequence:row.sequence??null},
+    time:{start:row.startMinute??before.minute,end:row.minute??after.minute},knownBy:['player',npc],
+    value:{op:'move',holder:npc,...(previous.location===before.location?{from:previous.location}:{}),to:actor.location,notice}});
+   break;
+  }
+ }
  const version={revision:input.revision??null,sequence:input.sequence??receipts.at(-1)?.sequence??null,stateHash:digest(after)};
  const records=settled.length?Object.entries(after.records??{}).filter(([id,row])=>JSON.stringify(row)!==JSON.stringify(before.records?.[id])).map(([id,row])=>({id,...pick(row,['category','kind','author','location','active',...(row.category==='mark'?['intent','form','zone']:[])]),
   source:{type:'state',field:['state','records',id],version},subject:row.author??row.grantor??null,object:row.subject??row.location??null,scope:{category:row.category},time:{at:after.minute},

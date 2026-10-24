@@ -1,5 +1,5 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, lookupToolResult, actionCompletion, modelToolAllowed, actionModes } from './turn.mjs';
+import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions, modelActionCatalog, builderToolCall } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
@@ -235,7 +235,7 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
             ambientAudio.noteAction(result.result,view.document.state.player,tool);
             await persist();await refresh();
             const completion=result.result?.receipt?actionCompletion(result):{};
-            return toolResultWithClock({...result.result,...completion},{startMinute,minute:view.document.state.minute});
+            return modelToolResult(toolResultWithClock({...result.result,...completion},{startMinute,minute:view.document.state.minute}));
         }catch(error){
             const uncertain=committed||(sent&&!error.rejected);
             const text=committed?`行动已保存，显示更新失败：${error.message}`:uncertain?`执行结果尚未确认，请重新对账：${error.message}`:`操作未完成：${error.message}`;

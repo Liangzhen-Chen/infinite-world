@@ -7,7 +7,7 @@ import {init}from'../server-plugin/index.mjs';
 import {assembleMessages,isOutOfCharacter}from'../extension/prompt.mjs';
 import {toolDefinitions,readOnlyTools,modelActionCatalog}from'../extension/tools.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
-import {parseTurn,toolResultWithClock}from'../extension/turn.mjs';
+import {parseTurn,toolResultWithClock,modelToolResult}from'../extension/turn.mjs';
 import {visibleReply}from'../extension/message-view.mjs';
 import {evaluateAssertions}from'./playtest-assertions.mjs';
 import {generationSettings,generationRequest}from'../extension/generation.mjs';
@@ -43,7 +43,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
     let view=session?await api('read',{campaignId:session.campaignId}):await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
     const opening=bundle.card.data.first_mes;
-    const campaignId=view.reference.campaignId,chat=structuredClone(session?.chat??[{is_user:false,name:bundle.card.data.name,mes:opening}]),history=structuredClone(session?.history??[{role:'assistant',content:opening}]),reports=[],frames=[];
+    const campaignId=view.reference.campaignId,chat=structuredClone(session?.chat??[{is_user:false,name:bundle.card.data.name,mes:opening}]),history=structuredClone(session?.history??[{role:'assistant',content:opening}]),reports=[],frames=[],turnCalls={};
     const sync=()=>api('sync-index',{campaignId,start:0,messages:chat,total:chat.length});
     const fresh=async()=>{view=await api('read',{campaignId});return view.document;};
     const checkpoint=()=>({chat:structuredClone(chat),history:structuredClone(history),document:structuredClone(view.document),historyCursor:structuredClone(historyCursor)});
@@ -70,6 +70,7 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             frames.push(checkpoint());
             const before=structuredClone(view.document),startMinute=before.state.minute,anchor=step.anchor??`${scenario.id}-${attempt}-${index}`;
             assertionBefore=before;
+            const callChecks=[];
             chat.push({is_user:true,mes:step.input,extra:{fields_anchor:anchor}});history.push({role:'user',content:step.input});await sync();
             const reviewTurn=await api('review/begin',{campaignId,anchor,playerText:step.input,expectedSequence:view.reference.sequence,captureSearch:true});
             const scene=await api('scene',{campaignId,query:step.input});
@@ -83,7 +84,9 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 if(tool==='world_catalog')return api('catalog',{...args,campaignId});
                 if(tool==='world_actions')return modelActionCatalog(await api('actions',{target:args.target,query:args.query,campaignId,limit:12}));
                 const eventId=`${anchor}-${report.calls.length}`,request={campaignId,tool,args,eventId,anchor,expectedSequence:view.reference.sequence};
+                const priorState=JSON.stringify(view.document);
                 const output=await api('execute',request);await fresh();
+                callChecks.push({tool,args,stateUnchanged:priorState===JSON.stringify(view.document)});
                 if(step.repeatWrites){
                     const duplicate=await api('execute',request),unchanged=await api('read',{campaignId});
                     report.assertions.push({kind:'duplicate',pass:duplicate.duplicate===true&&JSON.stringify(unchanged.document)===JSON.stringify(view.document)});
@@ -94,7 +97,8 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                 history.push(assistant,...results);
                 for(const [i,reply]of results.entries()){
                     const call=assistant.tool_calls[i];let args={};try{args=JSON.parse(call.function.arguments);}catch{}
-                    report.calls.push({tool:call.function.name,args,result:JSON.parse(reply.content)});
+                    const check=callChecks.findLast(row=>row.tool===call.function.name&&JSON.stringify(row.args)===JSON.stringify(args));
+                    report.calls.push({tool:call.function.name,args,result:JSON.parse(reply.content),...(check?{stateUnchanged:check.stateUnchanged}:{})});
                     chat.push({is_system:true,mes:reply.content,extra:{tool_invocations:[{name:call.function.name}]}});
                 }
             };
@@ -126,8 +130,9 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
                     try{
                         args=JSON.parse(call.function.arguments);result=await invoke(tool,args);
                     }catch(error){result={ok:false,error:error.message};}
-                    report.calls.push({tool,args,result});
-                    const reply={role:'tool',tool_call_id:call.id,content:JSON.stringify(result)};messages.push(reply);history.push(reply);
+                    const check=callChecks.findLast(row=>row.tool===tool&&JSON.stringify(row.args)===JSON.stringify(args));
+                    report.calls.push({tool,args,result,...(check?{stateUnchanged:check.stateUnchanged}:{})});
+                    const reply={role:'tool',tool_call_id:call.id,content:JSON.stringify(modelToolResult(result))};messages.push(reply);history.push(reply);
                     chat.push({is_system:true,mes:reply.content,extra:{tool_invocations:[{name:tool}]}});
                 }
             }
@@ -168,7 +173,8 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
             // declared assertion and the actual saved state in the report.
             if(assertionBefore){
                 await fresh();
-                report.assertions.push(...evaluateAssertions(step.assertions??[],{before:assertionBefore,after:view.document,calls:report.calls,reply:report.visible??'',scene:report.sceneBefore,historyWindow:report.historyWindow}));
+                turnCalls[step.anchor??`${scenario.id}-${attempt}-${index}`]=report.calls;
+                report.assertions.push(...evaluateAssertions(step.assertions??[],{before:assertionBefore,after:view.document,calls:report.calls,reply:report.visible??'',scene:report.sceneBefore,historyWindow:report.historyWindow,turnCalls}));
                 report.player=view.document.state.player;report.minute=view.document.state.minute;report.location=view.document.state.location;
             }
         }

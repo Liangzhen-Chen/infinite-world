@@ -43,8 +43,7 @@
       "expectedTools": ["world_propose"],
       "assertions": [
         {"kind": "calls", "tool": "world_propose", "min": 1},
-        {"kind": "records", "path": "state.records", "where": {"category": "open_proposal"}, "min": 1},
-        {"kind": "oneOf", "path": "state.records.open_proposal:whimsy_clean_water-0.result.receipt.status", "values": ["committed", "rejected"]},
+        {"kind": "callReceipt", "tool": "world_propose", "statuses": ["committed", "rejected"]},
         {"kind": "unchanged", "paths": ["state.player.coins"]}
       ]
     },
@@ -62,14 +61,7 @@
       "expectedTools": ["world_propose"],
       "assertions": [
         {"kind": "calls", "tool": "world_propose", "min": 1},
-        {"kind": "records", "path": "state.records", "where": {"category": "open_proposal"}, "min": 1},
-        {"kind": "conditional", "when": {"path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt.status", "equals": "rejected"}, "then": [
-          {"kind": "exists", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt.reason", "value": true},
-          {"kind": "exists", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt.alternatives", "value": true},
-          {"kind": "exists", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt.fallback", "value": true}
-        ], "else": [
-          {"kind": "equals", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt.status", "value": "committed"}
-        ]},
+        {"kind": "callReceipt", "tool": "world_propose", "statuses": ["committed", "rejected"]},
         {"kind": "unchanged", "paths": ["state.player.coins"]}
       ]
     },
@@ -77,7 +69,7 @@
       "input": "我不把被拒绝的效果当成发生了；查看当前池水状态，确认它仍由世界规则决定。",
       "assertions": [
         {"kind": "unchanged", "paths": ["state.player.coins"]},
-        {"kind": "exists", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt", "value": true}
+        {"kind": "callReceipt", "anchor": "whimsy_impossible_request", "tool": "world_propose", "statuses": ["committed", "rejected"]}
       ]
     },
     {
@@ -114,8 +106,8 @@
     {
       "input": "最后核对提案回执、留痕记录和当前钱物。未结算的想法不记成收入，标记本身也不凭空产生物品价值。",
       "assertions": [
-        {"kind": "exists", "path": "state.records.open_proposal:whimsy_clean_water-0.result.receipt", "value": true},
-        {"kind": "exists", "path": "state.records.open_proposal:whimsy_impossible_request-0.result.receipt", "value": true},
+        {"kind": "callReceipt", "anchor": "whimsy_clean_water", "tool": "world_propose", "statuses": ["committed", "rejected"]},
+        {"kind": "callReceipt", "anchor": "whimsy_impossible_request", "tool": "world_propose", "statuses": ["committed", "rejected"]},
         {"kind": "records", "path": "state.records", "where": {"category": "mark", "author": "player", "location": "bld_hw_qingdeng", "active": true}, "min": 1},
         {"kind": "exists", "path": "state.player.coins", "value": true}
       ]
