@@ -8,6 +8,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {modelActionCatalog,estimateModelActionTokens,MODEL_ACTION_CATALOG_TOKEN_LIMIT} from '../extension/tools.mjs';
 import {createPlaytestServer,runPlaytest} from '../tools/playtest-runner.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
+import {modelToolResult} from '../extension/turn.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 function fixture(location,target,query){
@@ -90,16 +91,22 @@ test('更多来源和选择不会撑破固定上限，也不会修改来源卡�
 
 test('试玩器真实 actions 返回与前端共用有界模型投影，不把完整玩家卡写进工具历史',async t=>{
  const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ // strict 确认协议下不能再让叙述模型自由连续调用 move/actions。
+ // 用真实引擎先建立相同的在场前提；本例的投影与历史断言全部保留。
+ const created=await server.api('create',{character:{name:'试玩者'}}),campaignId=created.reference.campaignId;
+ await server.api('execute',{campaignId,tool:'world_move',args:{destination:'loc_bs'},eventId:'catalog-preparation',expectedSequence:created.reference.sequence});
  let turn=0,seen;
  const client={async generate(body){
-  if(turn++===0)return {choices:[{message:{tool_calls:[{id:'move-to-town',type:'function',function:{name:'world_move',arguments:JSON.stringify({destination:'loc_bs'})}}]}}]};
-  if(turn===2)return {choices:[{message:{tool_calls:[{id:'look-at-seller',type:'function',function:{name:'world_actions',arguments:JSON.stringify({target:'npc_hw_yanzhe'})}}]}}]};
+  // 查更多也只选引用，目标由引擎依据原话与真实在场者填入。
+  if(turn++===0)return {choices:[{message:{tool_calls:[{id:'look-at-seller',type:'function',function:{name:'world_confirm',arguments:JSON.stringify({ref:'more'})}}]}}]};
   seen=JSON.parse(body.messages.findLast(row=>row.role==='tool').content);
   assert.ok(estimateModelActionTokens(seen)<=MODEL_ACTION_CATALOG_TOKEN_LIMIT);
   assert.equal(seen.target.id,'npc_hw_yanzhe');assert.ok(seen.actions.some(row=>row.id==='open:proposal'));
   return {choices:[{message:{content:'你查看了眼前的做法。<回合 额外="0分" 地点="loc_bs" 在场="npc_hw_yanzhe"/>'}}]};
  }};
- const result=await runPlaytest({scenario:{id:'a3cp-runner',turns:[{input:'前往白石镇查看严辙，不购买。',assertions:[]}]},api:server.api,client,bundle:await loadPromptBundle(),countTokens:estimateModelActionTokens,historyWindow:{contextTokens:32000}});
+ const result=await runPlaytest({scenario:{id:'a3cp-runner',turns:[{input:'查看严辙，不购买。',assertions:[]}]},session:{campaignId},api:server.api,client,bundle:await loadPromptBundle(),countTokens:estimateModelActionTokens,historyWindow:{contextTokens:32000}});
  assert.ok(seen);assert.deepEqual(result.turns[0].errors,[]);
- assert.deepEqual(result.turns[0].calls.find(row=>row.tool==='world_actions').result,seen);
+ // 原录制保留完整回执，模型按 llm1-confirm 去噪并折叠重复 JSON。
+ // 精确比较正式投影后的值，仍断言模型历史确实收到同一份有界目录。
+ assert.deepEqual(modelToolResult(result.turns[0].calls.find(row=>row.tool==='world_actions').result),seen);
 });

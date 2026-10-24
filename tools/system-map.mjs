@@ -516,6 +516,7 @@ const structureNotes=[
 ];
 // S0 架构度量工具（AR 迁移）：每项一条命令，基线登记在 docs/架构设计/度量基线.md。
 const METRIC_TOOLS=[
+ {tool:'tools/candidate-replay.mjs',script:null,measures:'Recorded initial/setup and settled calls replay; candidate tool/parameter coverage and complete-intent hit rate',reads:['tests/playtests','server-plugin/action-constructor.mjs'],baseline:null},
  {tool:'tools/ontology.mjs',script:'metrics:ontology',measures:'词汇表 schema 校验与 I18 词汇封闭（代码用到未登记的动词/标签/罪名）',reads:['world/ontology','schemas/ontology.schema.json'],baseline:null},
  {tool:'tools/import-graph.mjs',script:'metrics:imports',measures:'I19 import 图：按 tools/arch-layers.mjs 标层，统计向上依赖与包间 import',reads:['server-plugin','extension','tools/arch-layers.mjs'],baseline:'tests/metrics/import-graph.baseline.json'},
  {tool:'tools/derived-scan.mjs',script:'metrics:derived',measures:'I10 派生黑名单：存档写入点与作者数据中应派生却存储的字段',reads:['world/ontology/derived-fields.json','server-plugin','world'],baseline:'tests/metrics/derived-scan.baseline.json'},

@@ -26,6 +26,9 @@ test('普通购买：只读生成3–5候选、参数来自场景与原话，str
  assert.ok(f.preview.choices.some(row=>row.ref==='none'));
  assert.deepEqual((await f.server.api('read',{campaignId:f.campaignId})).document,before);
  const request=candidateSelectionRequest(f.preview,input),fn=request.tools[0].function;
+ assert.ok(f.preview.candidates.every(row=>row.match.input===input));
+ assert.ok(!request.messages[0].content.includes('"input"'),'引擎原话校验值不重复发送给模型，匹配依据仍保留');
+ assert.ok(request.messages[0].content.includes('"basis"'));
  assert.equal(fn.strict,true);assert.deepEqual(fn.parameters.required,['ref']);assert.equal(fn.parameters.additionalProperties,false);
  assert.deepEqual(request.tool_choice,{type:'function',function:{name:'world_confirm'}});assert.equal(request.thinking.type,'disabled');
  const result=await confirmTurnCandidates({preview:f.preview,playerText:input,generate:async()=>response(candidate.ref),execute:f.execute});

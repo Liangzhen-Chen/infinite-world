@@ -47,6 +47,7 @@ put(['primitives-runtime','primitives-effects','primitives-body','primitives-mov
 
 // {layer, pack} for a repository-relative file, or null when unassigned.
 export function layerOf(file){
+ if(file==='tools/candidate-replay.mjs')return{layer:'L4',pack:null};
  if(TABLE.has(file))return TABLE.get(file);
  if(file.startsWith('extension/'))return{layer:'L4',pack:null};
  const m=/^packs\/([^/]+)\//.exec(file);if(m)return{layer:'L2',pack:m[1]};

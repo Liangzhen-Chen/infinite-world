@@ -28,6 +28,7 @@ import {readBodyState} from './primitives-body.mjs';
 import {markFallback} from './action-boundary.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {layoutView} from './place-layout.mjs';
+import {speciesInHabitat} from './wildlife-range.mjs';
 
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
 const publicRow=row=>!row?.hidden&&!row?.private&&row?.visible!==false;
@@ -203,6 +204,10 @@ function offer(ctx,action,target){
   if(slot.fill==='host'&&ctx.lodging&&[ctx.engine.byId.get(ctx.lodging.host),ctx.s.npcs?.[ctx.lodging.host],ctx.s.created?.[ctx.lodging.host]].every(publicRow))fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.some(id=>ctx.present.has(id)))fill[slot.name]=ctx.bank.keepers.find(id=>ctx.present.has(id));
   let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
+  if(slot.name==='species'&&action.id.startsWith('core:wildlife.')){
+   const habitat=ctx.engine.rules.wildlife?.habitats?.find(row=>row.location===ctx.s.location);
+   choices=habitat?speciesInHabitat(ctx.engine.rules,ctx.engine.world.monsters,habitat.id).filter(publicRow).map(row=>({value:row.id,label:row.name})):[];
+  }
   if(action.call?.tool==='world_learn'){
    row.description=learningSlotDescription(slot.name);
    if(slot.name==='entity')choices=[...ctx.engine.world.skills??[],...ctx.engine.world.spells??[],...ctx.engine.world.recipes??[]].filter(subject=>publicRow(subject)&&ctx.people.some(person=>(!target||person.id===target)&&personTeaching(ctx.engine,ctx.s,person.id,subject.id))||publicRow(subject)&&ctx.inventory.some(item=>ctx.engine.byId.get(item.id)?.book?.teaches?.includes(subject.id))).map(subject=>({value:subject.id,label:subject.name}));

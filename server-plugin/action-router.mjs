@@ -707,10 +707,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
   // its executor binds the actual party (e.g. an agreed quote's seller).
   if(!target&&action.visibility?.catalog?.startsWith('target:')&&bareIntent(action,proposal))return true;
   if(catalog?.startsWith('target:')&&!target)return false;
-  if(catalog==='target:npc'&&kindOf(target)!=='person'||catalog==='target:item'&&kindOf(target)!=='item'||catalog==='target:place'&&!traveling&&kindOf(target)!=='place')return false;
+  const creatureOpponent=action.call?.tool==='world_combat'&&kindOf(target)==='creature';
+  if(catalog==='target:npc'&&kindOf(target)!=='person'&&!creatureOpponent||catalog==='target:item'&&kindOf(target)!=='item'||catalog==='target:place'&&!traveling&&kindOf(target)!=='place')return false;
   return (action.preconditions??[]).every(condition=>{
    if(typeof condition!=='string')return true;
-   if(condition==='present(target)')return kindOf(target)==='person';
+   if(condition==='present(target)')return kindOf(target)==='person'||creatureOpponent;
    if(condition==='hasItems')return Object.values(bag??{}).some(v=>(typeof v==='number'?v:v.quantity??0)>0);
    if(condition==='hasSkill')return proposal?.effects?.some(e=>e.op==='learn')||Object.keys(knowledge.skills??{}).length>0;
    return true; // Execution owns the complete precondition/authority check.

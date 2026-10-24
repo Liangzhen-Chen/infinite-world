@@ -15,7 +15,10 @@ export function selectedCandidateCall(preview,playerText,selection){
  if(!selection||Object.keys(selection).length!==1||typeof selection.ref!=='string')throw Error('确认只接受候选引用，不能自填参数');
  const {ref}=selection;
  if(ref==='none')return {name:'world_act',args:{action:'open:proposal',slots:{intent:playerText}}};
- if(ref==='more')return {name:'world_actions',args:{query:playerText}};
+ if(ref==='more'){
+  const target=preview.choices?.find(row=>row.ref==='more')?.target;
+  return {name:'world_actions',args:{query:playerText,...(target?{target}:{})}};
+ }
  if(ref==='clarify')return null;
  if(ref==='no_action'){
   if((preview.candidates??[]).some(row=>row.match?.complete)||! /^(?:我)?(?:只)?(?:看看|观察|看一眼|闲聊|你好|谢谢|看天气|看行囊)/.test(playerText.trim()))throw Error('行动请求不能用无行动代替裁决');
@@ -51,8 +54,18 @@ export async function confirmTurnCandidates({preview,playerText,messages=[],gene
 }
 
 export const noActionTool={type:'function',function:{name:'world_no_action',description:'本回合无行动（纯闲聊/纯观察）。只显示已有事实；不执行、不推进时间、不替 NPC 决定。',parameters:{type:'object',properties:{},additionalProperties:false}}};
+function promptCandidate(row){
+ if(!row.match)return row;
+ // Full input stays on the engine preview for confirmation. The model already
+ // receives the user text; it only needs the matching evidence and parameters.
+ const {input,...match}=row.match;
+ if(!match.complete&&match.basis?.unresolved)match.basis={...match.basis,unresolved:'未匹配完整原意，选都不是或澄清'};
+ else if(!match.complete&&typeof match.basis==='string')match.basis='场景捷径，未匹配完整原意';
+ return {...row,match};
+}
 export function turnFactsPrompt(gate={}){
- return `【本回合来源投影】\n${JSON.stringify(modelContextProjection({status:gate.status,facts:gate.facts??[],settlement:gate.settlement,candidates:gate.candidates??[],preview:gate.preview}))}\n候选尚未执行，不能当成事实；当前状态不是本轮新行动或新决定的回执。`;
+ const preview=gate.preview?{...gate.preview,candidates:(gate.preview.candidates??[]).map(promptCandidate)}:gate.preview;
+ return `【本回合来源投影】\n${JSON.stringify(modelContextProjection({status:gate.status,facts:gate.facts??[],settlement:gate.settlement,candidates:(gate.candidates??[]).map(promptCandidate),preview}))}\n候选尚未执行，不能当成事实；当前状态不是本轮新行动或新决定的回执。`;
 }
 export function publishedTurnText(review,gate){
  if(review?.safeText!==undefined)return review.safeText;
