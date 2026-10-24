@@ -34,7 +34,7 @@ async function createCampaign(server){
 async function scenario(s){
     const org=(await s.execute('world_create',{type:'org',name:'灯桥互助会',data:{notes:'账目公开',occupation:'行会'}},'found')).organization;
     await s.execute('world_settlement',{operation:'org_propose',org,action:'charter',cost:5},'fee');
-    const apply=await s.execute('world_settlement',{operation:'org_join',org,member:WORKER,consent:true},'apply');
+    const apply=await s.execute('world_settlement',{operation:'org_join',org,member:WORKER,feePayer:'player'},'apply');
     await s.execute('world_settlement',{operation:'org_vote',org,proposal:apply.proposal,opinion:'approve'},'approve');
     const shop=(await s.execute('world_trade',{operation:'lease',seller:LANDLORD,consent:true,days:3,deposit:3},'lease')).business;
     const order=await s.execute('world_trade',{operation:'procure',business:shop,seller:LANDLORD,consent:true,item:'item_bread',quantity:2},'procure');

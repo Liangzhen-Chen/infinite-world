@@ -342,7 +342,7 @@ function institutionalAction(d,engine,args,eventId){
         if(office.holder==='player')throw preconditionFailure('已经在任此席位');
         if(Object.values(state.records??{}).some(r=>r.category==='institution_application'&&r.office===office.id&&r.applicant==='player'&&r.status==='待决定'))throw preconditionFailure('已有待决定申请');
         const row={category:'institution_application',id:`institution_application:${eventId}`,office:office.id,organization:office.organization,applicant:'player',receivedBy:issuer,filedAt:now,due:now+policy.decisionAfterMinutes,status:'待决定',sourceEvent:eventId};
-        d.set(path(row.id),row);return {application:row.id,pending:row};
+        holdingSet(d,engine,path(row.id),row,'governance');return {application:row.id,pending:row};
     }
     if(!issuer||args.authority!==issuer||!officeOnDuty(engine,state,issuerOffice,issuer)||state.location!==policy.receiveAt)throw preconditionFailure('须由现任任免机关在岗办理；收件人不能代行');
     const key=`organization:${office.organization}`,old=state.records?.[key]??{category:'organization',id:office.organization,source:'faction',members:{}};
@@ -355,7 +355,7 @@ function institutionalAction(d,engine,args,eventId){
         if(standing(engine,state,issuer,'player')<policy.minimumStanding)reasons.push('任免机关不信任申请人');
         if(crimeJudged(state))reasons.push('有犯罪裁定');
         const decision={...application,status:reasons.length?'未获任命':'已批准',decidedAt:now,decidedBy:issuer,reasons,decisionEvent:eventId};
-        d.set(path(application.id),decision);
+        holdingSet(d,engine,path(application.id),decision,'governance');
         return {decision};
     }
     if(args.operation==='governance_office_appoint'){
@@ -363,7 +363,7 @@ function institutionalAction(d,engine,args,eventId){
         if(application?.category!=='institution_application'||application.office!==office.id||application.status!=='已批准'||application.decidedBy!==issuer)throw preconditionFailure('须由当前任免机关先作出批准决定');
         const appointment={holder:application.applicant,since:now,sourceEvent:eventId,application:application.id,decisionEvent:application.decisionEvent,appointedBy:issuer,issuerOffice:policy.issuer};
         saveInstitutionAppointment(d,engine,key,{...old,offices:{...old.offices,[office.id]:appointment}},office,appointment.holder,eventId);
-        d.set(path(application.id),{...application,status:'已任命',appointedAt:now,appointmentEvent:eventId});
+        holdingSet(d,engine,path(application.id),{...application,status:'已任命',appointedAt:now,appointmentEvent:eventId},'governance');
         return {appointment:{office:office.id,...appointment}};
     }
     if(args.operation==='governance_office_remove'){
@@ -372,7 +372,7 @@ function institutionalAction(d,engine,args,eventId){
         const prior=old.offices?.[office.id]??{holder,since:0,source:office.source};
         saveInstitutionAppointment(d,engine,key,{...old,offices:{...old.offices,[office.id]:{holder:null,since:now,removedAt:now,removedBy:issuer,sourceEvent:eventId,previous:prior}}},office,null,eventId);
         const application=prior.application&&state.records?.[prior.application];
-        if(application)d.set(path(application.id),{...application,status:'已免职',removedAt:now,removalEvent:eventId});
+        if(application)holdingSet(d,engine,path(application.id),{...application,status:'已免职',removedAt:now,removalEvent:eventId},'governance');
         return {office:office.id,removed:holder,removedAt:now,appointedAt:prior.since};
     }
     throw preconditionFailure('未知席位操作');

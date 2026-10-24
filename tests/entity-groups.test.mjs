@@ -111,7 +111,12 @@ test('代表读现任职位：首领别名、换任、空缺、死亡与退出�
 
 test('精怪与首领身体共用入退会、任职、收款、缴费与立场路径',()=>{
     const {engine,d,s}=setup();guild(s);s.creatures[S]={id:S,name:'精怪',location:s.location,status:'正常',coins:100,activity:'闲谈'};
-    assert.equal(act(engine,d,{operation:'org_join',org:'org_test',member:S,consent:true},'join').joined,true);
+    s.creatures[S].trust=-100;
+    assert.throws(()=>act(engine,d,{operation:'org_join',org:'org_test',member:S,consent:true},'forged-join'),/本人当面同意/);
+    assert.ok(!s.consentEvents?.some(row=>row.from===S));
+    s.creatures[S].trust=0;
+    assert.equal(act(engine,d,{operation:'org_join',org:'org_test',member:S},'join').joined,true);
+    assert.ok(s.consentEvents.some(row=>row.from===S&&row.scope==='org.join'&&row.subject==='org_test'));
     assert.equal(act(engine,d,{operation:'org_propose',org:'org_test',action:'withdraw',member:S,coins:12},'pay').outcome,'已执行');
     assert.equal(s.creatures[S].coins,112);assert.ok(!s.npcs[S]);
     act(engine,d,{operation:'org_propose',org:'org_test',action:'appoint',member:S,name:'会长'},'appoint');

@@ -11,7 +11,7 @@ const appointmentKey=id=>`service_appointment:${id}`;
 // The one relation read model. Legacy scalars seed NPC -> player relations
 // until a ledger row exists; they are never a second live value.
 export function relationView(engine,state,from,to){
- const person=from==='player'?state.player:state.npcs?.[from];
+ const person=from==='player'?state.player:state.npcs?.[from]??state.creatures?.[from];
  const current=person?.relationships?.[to];
  const base=engine?.byId?.get(from)?.relationships?.find?.(row=>row.with===to);
  const initial=to==='player'?person:base;
