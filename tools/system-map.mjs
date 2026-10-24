@@ -165,7 +165,7 @@ const SYSTEMS=[
  {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟、节令与灾害',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs','seasonal-hazards.mjs','hazard-calendar.mjs']},
  {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','law-codes.mjs','legal-representation.mjs','npc-crime.mjs','bounty.mjs']},
- {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
+ {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs','documents.mjs']},
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
  {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','prompt-scope.mjs','state-notices.mjs','return-summary.mjs']},

@@ -13,6 +13,8 @@ import {serviceAppointments} from '../server-plugin/npc-state.mjs';
 import {currentAgreedQuotes} from '../server-plugin/shop.mjs';
 import {workstationDefinition} from '../server-plugin/workstation-services.mjs';
 import {runPrelude} from '../tools/a3-setup/prelude.mjs';
+import {documentScene,documentCall} from './helpers/document-actions.mjs';
+import {documentAction} from '../server-plugin/documents.mjs';
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3e-institutions');
@@ -160,17 +162,21 @@ test.todo('obligations: native old deposits/pawns/fines/delivery/upkeep preserve
  setup.obligations[0].paid=0;setup.obligations[0].sourceEvent='missing';assert.match(errors(run(setup),'obligations')[0].reason,/unresolved sourceEvent/);
 });
 
-test.todo('documents: native evidence annotates the same original and preserves its source, never creates a second sheet〔前提待真实动作：创建带原始来源及实物指向的证据文书；归 S4〕',()=>{
- const result=run(fixture('051'));
+test('documents: native evidence annotates the same original and preserves its source, never creates a second sheet',async()=>{
+ // 05 §5.4: buy actual paper and goods, then write and annotate that sheet.
+ const original=await documentScene(engine,initial,{prefix:'evidence',paperQuantity:1});
+ const annotated=await documentCall(engine,original.document,'annotate',{document:original.id,text:'补记原物特征',reviewed:true},'evidence-annotation');
+ const result={...annotated,bindings:{a3v2_051_evidence:original.id,a3v2_051_purchase_receipt:original.source,a3v2_051_grain_sack:original.target}};
  // P is implemented: 01 §1.2 / 05 §5.2.7 bind evidence to its physical original.
- assert.deepEqual(errors(result,'documents'),[]);
+ // 原“documents 前提无错误”改验真实动作 committed；其余同件/来源/实物/数量断言保留。
+ assert.equal(result.result.receipt.status,'committed');
  const id=result.bindings.a3v2_051_evidence,paper=result.document.state.itemInstances[id];
  assert.equal(paper.document.sourceEvent,result.bindings.a3v2_051_purchase_receipt);
  assert.equal(paper.document.describes,result.bindings.a3v2_051_grain_sack);
  assert.equal(result.document.state.inventory.item_parchment.quantity,1);
  assert.equal(Object.values(result.document.state.itemInstances).filter(p=>p.document?.sourceEvent===paper.document.sourceEvent).length,1);clean(result);
  // Native P validates the same malformed reviewed flag at the existing-paper boundary.
- const setup=fixture('051');setup.documents[0].reviewed='yes';assert.match(errors(run(setup),'documents')[0].reason,/Invalid existing paper, holder or document source/);
+ assert.throws(()=>documentAction(engine.primitiveDraft(result.document),engine,{operation:'governance_document_annotate',document:id,text:'补记',reviewed:'yes'},'bad-reviewed'),/Invalid existing paper, holder or document source/);
 });
 
 test.todo('cases: native historical registration retains the existing phase and judgment, never convicts from an emit〔前提待真实动作：产生案件登记、判决及上诉期限；归 S4〕',()=>{

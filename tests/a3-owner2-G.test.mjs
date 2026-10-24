@@ -16,6 +16,8 @@ import {primitiveContext} from '../server-plugin/primitives-runtime.mjs';
 import {officeCall,appointedClaimClerk} from './helpers/office-actions.mjs';
 import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {documentScene,documentCall} from './helpers/document-actions.mjs';
+import {documentAction} from '../server-plugin/documents.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -110,17 +112,26 @@ test.todo('G3: aggregate votes are preserved without invented electors, chair, m
  const bad=setup(177);bad.history[0].yes=0.5;assert.ok(errors(run(bad),'history').length);
 });
 
-test.todo('G3: public notice is visible only at its original; source history and rumors are not exposed〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{
- const r=run(setup(212));assert.deepEqual(errors(r,'documents'),[]);
+test('G3: public notice is visible only at its original; source history and rumors are not exposed',async()=>{
+ // 05 §5.4: a notice is written on purchased paper and physically posted.
+ const original=await documentScene(engine,initial,{prefix:'notice',kind:'notice',content:'四月初一起每户春税50铜'});
+ const moved=await engine.reduce(original.document,{tool:'world_act',eventId:'notice-move',args:{action:'core:move',slots:{destination:'loc_hw'}}});
+ assert.notEqual(moved.result.receipt.status,'rejected',JSON.stringify(moved.result));
+ const posted=await documentCall(engine,applyPatches(original.document,moved.patches),'post',{document:original.id},'notice-post');
+ const r={...posted,bindings:{a3v2_212_notice:original.id}};
+ // 原“documents 前提无错误”改验真实张贴动作 committed；地域、识字及不泄漏断言保留。
+ assert.equal(r.result.receipt.status,'committed');
  const document=roundtrip(r.document),notice=institutionDocumentView(engine,document,r.bindings.a3v2_212_notice);
  assert.equal(notice.kind,'notice');assert.equal(notice.public,true);assert.equal(notice.content,'四月初一起每户春税50铜');
  assert.equal(notice.knowsThief,undefined);assert.equal(notice.truth,undefined);
  const inspected=governanceAction.call(engine,engine.primitiveDraft(document),{operation:'governance_inspect',settlement:'loc_hw'},'read-notice');
  assert.equal(inspected.documents.find(row=>row.id===r.bindings.a3v2_212_notice).content,notice.content);
- const unread=roundtrip(document);unread.state.skills.skill_literacy.proficiency=0;
+ const unread=applyIntentSetup(engine,document,{abilitiesByActor:{player:{skills:{skill_literacy:0}}}}).document;
  assert.equal(institutionDocumentView(engine,unread,r.bindings.a3v2_212_notice),null);
- document.state.location='loc_bs';assert.equal(institutionDocumentView(engine,document,r.bindings.a3v2_212_notice),null);
- const bad=setup(212);bad.documents[0].sourceEvent='a3v2_212_rumor';assert.ok(errors(run(bad),'documents').length);
+ const away=await engine.reduce(document,{tool:'world_act',eventId:'notice-leave',args:{action:'core:move',slots:{destination:'loc_bs'}}});
+ assert.equal(away.result.receipt.status,'committed');
+ assert.equal(institutionDocumentView(engine,applyPatches(document,away.patches),r.bindings.a3v2_212_notice),null);
+ assert.throws(()=>documentAction(engine.primitiveDraft(r.document),engine,{operation:'governance_document_issue',source:'a3v2_212_rumor',paper:'item_parchment',kind:'notice',text:'传闻'},'rumor-not-source'),/真实交易或机构办理/);
 });
 
 test.todo('G4: native transport inspection reads nine-day delay and actual damage without inventing a delivery claim or compensation〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',()=>{

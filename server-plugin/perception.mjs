@@ -23,6 +23,11 @@ export function perceptionPosition(engine,document,id,layout=placeLayout(engine,
   const current=row?.location===layout.location&&(id==='player'||row.activity===(actor.activity??null)&&s.minute<(row.until??row.expires??Infinity));
   return {zone,point:current&&validPoint(row.point)?row.point:zone.point,actor};
  }
+ const unit=s.itemInstances?.[id],posted=unit?.document?.posted;
+ if(posted&&unit.status==='落地'&&posted.location===layout.location){
+  const zone=layout.zones.find(z=>z.id===posted.zone);
+  if(zone)return {zone,point:validPoint(posted.point)?posted.point:zone.point,feature:unit};
+ }
  const feature=environmentFeatures(engine,document,r=>r.id===id)[0];
  if(!feature||feature.location!==layout.location)return null;
  const zone=destinationZone(engine,document,id,layout);return zone?{zone,point:feature.position,feature}:null;

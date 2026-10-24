@@ -88,7 +88,10 @@ export function validateItemTransfer(d,engine,from,to,item,quantity,selection=nu
     if(selection&&selection.length>quantity)throw preconditionFailure('单件数超过转移数量');
     return units;
 }
-export function transferItems(d,engine,from,to,item,quantity,selection=null,{disposition=false,eventId=null,authorityContext=null}={}){
+export function transferItems(d,engine,from,to,item,quantity,selection=null,{disposition=false,documentSource=false,eventId=null,authorityContext=null}={}){
+    // Give a single purchased object an identity before it changes hands.
+    // Its receipt can then describe that original, rather than a catalogue row.
+    if(documentSource&&quantity===1&&!selection?.length)trackTransferUnit(d,engine,from,item,eventId);
     const units=validateItemTransfer(d,engine,from,to,item,quantity,selection);
     const chosen=selection?[...selection,...units.filter(unit=>!selection.includes(unit)).slice(0,Math.max(0,quantity-selection.length))]:units.slice(0,quantity);
     // Possession and title are distinct. Only a native sale opts into disposal;
@@ -124,6 +127,10 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
         }
     }
     if(disposition)moved.dispositions=dispositions;
+    if(documentSource){
+        moved.itemSaleVersion=1;
+        holdingSet(d,engine,['state','records',`item_sale:${eventId}`],{category:'item_sale',sourceEvent:eventId,buyer:to,seller:from,item,quantity,instances:[...moved.instances]},'items');
+    }
     return moved;
 }
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
@@ -157,11 +164,11 @@ export function trackSingleItem(d,engine,owner,item,eventId){
 }
 
 // Register exactly one existing unit in a stack. This creates identity, never stock.
-export function trackTransferUnit(d,engine,owner,item,eventId,requested=null){
+export function trackTransferUnit(d,engine,owner,item,eventId,requested=null,{untracked=false}={}){
     const quantity=engine.quantity(d,owner,item),held=d.get(...engine.bagPath(owner),item),units=held?.instances??[];
     if(quantity<1)throw preconditionFailure('没有可登记转移的库存');
     if(requested&&!units.includes(requested))throw preconditionFailure('所指定单件不属于目标库存');
-    const selected=requested??units[0];
+    const selected=requested??(untracked?null:units[0]);
     if(selected){
         const record=d.get('state','itemInstances',selected);
         if(!record||record.owner!==owner||record.item!==item||record.status!=='持有')throw preconditionFailure('单件归属与库存不符');

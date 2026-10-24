@@ -18,6 +18,7 @@ import {npcHousehold,householdMembers,npcAgeAt} from './npc-life.mjs';
 import {standing} from './standing.mjs';
 import {contributionTotal} from './civic.mjs';
 import {institutionOriginal} from './obligation-state.mjs';
+import {documentAction,documentView} from './documents.mjs';
 import {grantHousingSteward,revokeHousingSteward,fileHousingApplication} from './public-projects.mjs';
 import {rankedOffice} from './promotion.mjs';
 import {declareHoldingWriter,holdingSet,holdingsView,aliveHoldings,entityRow,ensureHoldings,holdingsActive,createEntity} from './holdings.mjs';
@@ -25,7 +26,7 @@ import {changeHolding} from './transition.mjs';
 import {syncHoldingRecord,officeEntity} from './holding-sources.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import fs from 'node:fs';
-import {registerWorldEventSubscriber} from './world-events.mjs';
+import {registerWorldEventSubscriber,publishTransitionEvent} from './world-events.mjs';
 import {domainRules} from './domain-rules.mjs';
 const successionRules=JSON.parse(fs.readFileSync(new URL('../world/lore/office-succession.json',import.meta.url),'utf8'));
 declareHoldingWriter('governance',{kinds:['holds_office','appointed','permit'],entities:['office','motion','item'],locations:true});
@@ -45,6 +46,7 @@ export function institutionInputsFor(engine,document,settlement,actor='player'){
 // A text document is evidence of its text/source, never a monetary claim or
 // an executable ordinance. Public visibility does not reveal private history.
 export function institutionDocumentView(engine,document,id,actor='player'){
+    if(document.state.itemInstances?.[id]?.document?.issuedEvent)return documentView(engine,document,id,actor);
     const s=document.state,paper=institutionOriginal(engine,document,id),row=paper?.document??s.records?.[`institution_document:${id}`];
     const location=actor==='player'?s.location:s.npcs?.[actor]?.location;
     if(!row?.kind||!s.records?.[row.sourceEvent]||row.owner!==actor&&!(row.public===true&&paper?.location===location)||paper&&(paper.location!==location||row.public!==true&&paper.owner!==actor||paper.durability<=0||paper.destroyedAt!==undefined))return null;
@@ -297,10 +299,19 @@ function action(d,args,eventId){
     }
 }
 export function governanceAction(d,args,eventId){
+    if(args.operation?.startsWith('governance_document_'))return documentAction(d,this,args,eventId);
     const key=`governance_source:${eventId}`,old=d.get(...path(key)),fingerprint=digest(args);
     if(old){if(old.category!=='governance_receipt'||old.fingerprint!==fingerprint)throw preconditionFailure('治理sourceEvent已占用，不能改写事务');return {...structuredClone(old.result),duplicate:true};}
     const result=action.call(this,d,args,eventId);
-    if(args.operation!=='governance_inspect'&&args.operation!=='governance_office_inspect')holdingSet(d,null,path(key),{category:'governance_receipt',...(args.settlement?{settlement:this.resolve(args.settlement,'loc')}:{}),fingerprint,result:structuredClone(result)},'governance');
+    if(args.operation!=='governance_inspect'&&args.operation!=='governance_office_inspect'){
+        // The办理 receipt is the producer; reading/printing it never performs
+        // the business again. Older replays retain their original event set.
+        if(!this.replaying||this.replayResult?.institutionEventVersion===1){
+            result.institutionEventVersion=1;
+            publishTransitionEvent(d,this,{id:eventId,verb:'request',actor:'player',target:null,minute:d.get('state','minute'),location:d.get('state','location'),source:{receipt:key},tags:['institution'],summary:'办理机构事务'});
+        }
+        holdingSet(d,null,path(key),{category:'governance_receipt',...(args.settlement?{settlement:this.resolve(args.settlement,'loc')}:{}),fingerprint,result:structuredClone(result)},'governance');
+    }
     return result;
 }
 
