@@ -1,8 +1,12 @@
 // The model-free form search uses the same catalog and offered slot values as
 // tools/a3-score.mjs. It never executes a candidate or guesses an NPC's consent.
-import {worldActions} from './action-affordances.mjs';
 import {searchActions} from './action-registry.mjs';
 import {primitiveRuntime} from './primitives-runtime.mjs';
+
+// The composition root supplies the current-world menu projection. Native
+// intent matching must not import the presentation layer (or its open router).
+let worldActions;
+export function registerIntentMenu(provider){worldActions=provider;}
 
 const mentions=(text,value)=>typeof value==='string'&&value.length>1&&text.includes(value);
 function formSlots(action,text){
@@ -35,6 +39,7 @@ function completeCommand(action,text,entities){
  });
 }
 export function constructIntent(engine,document,proposal,context){
+ if(!worldActions)throw Error('Intent menu provider is not installed');
  const registry=primitiveRuntime.registry(engine),text=proposal.intent;
  const entities=context.entities??[],explicit=proposal.target??proposal.participants?.target;
  const targets=explicit!==undefined?[context.resolve(explicit).value??explicit]:entities.filter(e=>mentions(text,e.name)||mentions(text,e.id)).map(e=>e.id);

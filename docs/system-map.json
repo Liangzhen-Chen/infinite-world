@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t-a3cy",
+  "commit": "refs/heads/t-a3rg",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 48,
-  "modules": 293,
+  "modules": 296,
   "advance": 62,
   "tools": 27,
   "verbs": 62,
   "subscribers": 13,
   "interactionRules": 25,
   "effectKinds": 23,
-  "links": 673
+  "links": 675
  },
  "layers": [
   {
@@ -153,6 +153,7 @@
     "server-plugin/action-capacity.mjs",
     "server-plugin/action-degrees.mjs",
     "server-plugin/action-router.mjs",
+    "server-plugin/action-constructor.mjs",
     "server-plugin/action-limits.mjs",
     "server-plugin/open-actions.mjs",
     "server-plugin/action-rite.mjs",
@@ -163,7 +164,7 @@
     "server-plugin/routing-programs.mjs",
     "server-plugin/body-needs.mjs"
    ],
-   "lines": 5642,
+   "lines": 5775,
    "stateWrites": [
     "checks",
     "consentEvents",
@@ -604,7 +605,7 @@
     "sim_society",
     "sim_transport"
    ],
-   "files": 126
+   "files": 127
   },
   {
    "id": "data_assets",
@@ -646,7 +647,7 @@
    "effects": [],
    "tools": [],
    "readBy": [],
-   "files": 49
+   "files": 50
   },
   {
    "id": "data_ontology",
@@ -1471,7 +1472,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 4471,
+   "lines": 4482,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1635,7 +1636,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1734,
+   "lines": 1736,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -1999,6 +2000,7 @@
    "dir": null,
    "modules": [
     "server-plugin/environment.mjs",
+    "server-plugin/water-volume.mjs",
     "server-plugin/environment-state.mjs",
     "server-plugin/map-state.mjs",
     "server-plugin/weather.mjs",
@@ -2007,7 +2009,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 2029,
+   "lines": 2094,
    "stateWrites": [
     "records",
     "remote",
@@ -2114,7 +2116,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3963,
+   "lines": 3964,
    "stateWrites": [
     "discoveries",
     "effects",
@@ -2220,7 +2222,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 3965,
+   "lines": 4008,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -2841,7 +2843,7 @@
    "modules": [
     "extension/tools.mjs"
    ],
-   "lines": 244,
+   "lines": 258,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -2866,7 +2868,7 @@
     "server-plugin/state-notices.mjs",
     "server-plugin/return-summary.mjs"
    ],
-   "lines": 464,
+   "lines": 467,
    "stateWrites": [
     "visits"
    ],
@@ -2923,7 +2925,7 @@
     "server-plugin/ui-overview.mjs",
     "server-plugin/ui-personal.mjs"
    ],
-   "lines": 687,
+   "lines": 707,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -3021,7 +3023,7 @@
     "extension/actions-view.mjs",
     "extension/action-builder.mjs"
    ],
-   "lines": 1300,
+   "lines": 1351,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -3042,7 +3044,9 @@
    "world": [
     "locations",
     "recipes",
-    "routes"
+    "routes",
+    "skills",
+    "spells"
    ],
    "advance": [],
    "subscribes": [],
@@ -3062,9 +3066,10 @@
     "extension/index.js",
     "extension/runtime.js",
     "extension/core.js",
-    "extension/turn.mjs"
+    "extension/turn.mjs",
+    "extension/turn-contract.mjs"
    ],
-   "lines": 1072,
+   "lines": 1293,
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
@@ -3121,7 +3126,7 @@
     "server-plugin/consistency-evidence.mjs",
     "server-plugin/consistency-outcome.mjs"
    ],
-   "lines": 835,
+   "lines": 1169,
    "stateWrites": [],
    "stateReads": [
     "location",
@@ -3134,7 +3139,9 @@
    ],
    "recordWrites": [],
    "recordReads": [
-    "knowledge"
+    "agreed_quote",
+    "knowledge",
+    "settlement-effect"
    ],
    "rules": [],
    "world": [],
@@ -4651,6 +4658,8 @@
    "to": "base_primitives",
    "kind": "call",
    "labels": [
+    "action-constructor.mjs",
+    "action-router.mjs",
     "primitives.mjs"
    ]
   },
@@ -4680,12 +4689,21 @@
   },
   {
    "from": "nar_consistency",
+   "to": "sim_economy",
+   "kind": "call",
+   "labels": [
+    "shop.mjs"
+   ]
+  },
+  {
+   "from": "nar_consistency",
    "to": "sim_npc",
    "kind": "call",
    "labels": [
     "lies.mjs",
     "npc-cognition.mjs",
-    "npc-memory.mjs"
+    "npc-memory.mjs",
+    "npc-schedule.mjs"
    ]
   },
   {
@@ -5532,7 +5550,8 @@
    "to": "sim_environment",
    "kind": "call",
    "labels": [
-    "regions.mjs"
+    "regions.mjs",
+    "water-volume.mjs"
    ]
   },
   {
@@ -5645,6 +5664,7 @@
     "action-costs.mjs",
     "action-rejection.mjs",
     "precondition.mjs",
+    "primitives-body.mjs",
     "primitives-learning.mjs",
     "record-cleanup.mjs"
    ]
@@ -7057,6 +7077,7 @@
    "to": "base_standing",
    "kind": "call",
    "labels": [
+    "entity-view.mjs",
     "standing.mjs"
    ]
   },
@@ -7296,6 +7317,14 @@
    ]
   },
   {
+   "from": "ui_scene",
+   "to": "ui_actions",
+   "kind": "call",
+   "labels": [
+    "action-text.mjs"
+   ]
+  },
+  {
    "from": "ui_server",
    "to": "base_holdings",
    "kind": "call",
@@ -7308,6 +7337,7 @@
    "to": "base_primitives",
    "kind": "call",
    "labels": [
+    "action-boundary.mjs",
     "primitives-runtime.mjs"
    ]
   },
@@ -12000,7 +12030,7 @@
   },
   {
    "name": "world_learn",
-   "description": "师授/读书/研究；student受教，book_give/study",
+   "description": "师授不填operation；读书/研究",
    "readOnly": false,
    "operations": null,
    "routes": [
@@ -13230,7 +13260,7 @@
   },
   {
    "dir": "world/design",
-   "files": 126,
+   "files": 127,
    "keys": [],
    "readers": [
     "server-plugin/civic.mjs",
@@ -13349,7 +13379,7 @@
   },
   {
    "dir": "world/drafts",
-   "files": 49,
+   "files": 50,
    "keys": [],
    "readers": [],
    "tools": [
@@ -16402,6 +16432,7 @@
       "server-plugin/agriculture.mjs",
       "server-plugin/civic.mjs",
       "server-plugin/consistency-review.mjs",
+      "server-plugin/consistency-service.mjs",
       "server-plugin/education-cohorts.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/education.mjs",
@@ -16482,7 +16513,8 @@
       "extension/core.js",
       "extension/index.js",
       "extension/ledger-view.mjs",
-      "extension/tools.mjs"
+      "extension/tools.mjs",
+      "extension/turn-contract.mjs"
      ],
      "systems": [
       "base_advance",
@@ -16534,7 +16566,6 @@
       "server-plugin/npc-schedule.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/promotion.mjs",
-      "server-plugin/scene-card.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/subjective-view.mjs",
       "server-plugin/workstation-services.mjs",
@@ -16551,8 +16582,7 @@
       "sim_magic",
       "sim_npc",
       "sim_society",
-      "ui_actions",
-      "ui_scene"
+      "ui_actions"
      ]
     },
     {
@@ -16901,6 +16931,7 @@
      "means": "持书学习、著作",
      "pattern": "\\.book\\b",
      "modules": [
+      "server-plugin/action-affordances.mjs",
       "server-plugin/action-degrees.mjs",
       "server-plugin/book-gates.mjs",
       "server-plugin/career-metrics.mjs",
@@ -16915,7 +16946,8 @@
      "systems": [
       "base_primitives",
       "sim_character",
-      "sim_works"
+      "sim_works",
+      "ui_actions"
      ]
     },
     {
@@ -16950,6 +16982,7 @@
       "server-plugin/consistency-review.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/engine.mjs",
+      "server-plugin/environment.mjs",
       "server-plugin/extraction.mjs",
       "server-plugin/finance-assets.mjs",
       "server-plugin/governance.mjs",
@@ -17238,6 +17271,7 @@
      "modules": [
       "server-plugin/activities.mjs",
       "server-plugin/book-gates.mjs",
+      "server-plugin/consistency-evidence.mjs",
       "server-plugin/education.mjs",
       "server-plugin/learning.mjs",
       "server-plugin/primitives-effects.mjs",
@@ -17247,6 +17281,7 @@
      "systems": [
       "base_primitives",
       "kernel_engine",
+      "nar_consistency",
       "sim_character",
       "sim_works"
      ]
@@ -17269,6 +17304,7 @@
    "autoSystems": [
     "base_primitives",
     "kernel_engine",
+    "nar_consistency",
     "sim_character",
     "sim_works"
    ],
@@ -18282,6 +18318,7 @@
     "server-plugin/action-text.mjs",
     "server-plugin/domain-rules.mjs",
     "server-plugin/education-state.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/items.mjs",
@@ -18310,10 +18347,12 @@
    "world": [
     "locations",
     "recipes",
-    "routes"
+    "routes",
+    "skills",
+    "spells"
    ],
    "worldDirs": [],
-   "lines": 405
+   "lines": 426
   },
   "server-plugin/action-authority-sources.mjs": {
    "system": "base_primitives",
@@ -18447,6 +18486,21 @@
    "worldDirs": [],
    "lines": 166
   },
+  "server-plugin/action-constructor.mjs": {
+   "system": "base_primitives",
+   "imports": [
+    "server-plugin/action-registry.mjs",
+    "server-plugin/primitives-runtime.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 91
+  },
   "server-plugin/action-costs.mjs": {
    "system": "base_primitives",
    "imports": [
@@ -18560,7 +18614,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 139
+   "lines": 144
   },
   "server-plugin/action-rejection.mjs": {
    "system": "base_primitives",
@@ -18682,7 +18736,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 769
+   "lines": 780
   },
   "server-plugin/action-text.mjs": {
    "system": "ui_actions",
@@ -18713,7 +18767,7 @@
    "worldDirs": [
     "actions"
    ],
-   "lines": 161
+   "lines": 186
   },
   "server-plugin/action-time.mjs": {
    "system": "base_primitives",
@@ -19607,11 +19661,15 @@
    "system": "nar_consistency",
    "imports": [
     "extension/prompt.mjs",
+    "server-plugin/action-registry.mjs",
     "server-plugin/lies.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-memory.mjs",
+    "server-plugin/npc-schedule.mjs",
     "server-plugin/obligation-state.mjs",
-    "server-plugin/retrieval.mjs"
+    "server-plugin/retrieval.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/storage.mjs"
    ],
    "stateWrites": [],
    "stateReads": [
@@ -19624,11 +19682,13 @@
     "records"
    ],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "agreed_quote"
+   ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 124
+   "lines": 210
   },
   "server-plugin/consistency-outcome.mjs": {
    "system": "nar_consistency",
@@ -19657,18 +19717,22 @@
    "stateWrites": [],
    "stateReads": [],
    "recordWrites": [],
-   "recordReads": [],
+   "recordReads": [
+    "settlement-effect"
+   ],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 410
+   "lines": 596
   },
   "server-plugin/consistency-service.mjs": {
    "system": "nar_consistency",
    "imports": [
     "extension/prompt.mjs",
     "extension/turn.mjs",
+    "server-plugin/action-constructor.mjs",
     "server-plugin/action-registry.mjs",
+    "server-plugin/action-router.mjs",
     "server-plugin/action-text.mjs",
     "server-plugin/applied-effects.mjs",
     "server-plugin/consistency-evidence.mjs",
@@ -19679,7 +19743,8 @@
    ],
    "stateWrites": [],
    "stateReads": [
-    "minute"
+    "minute",
+    "npcs"
    ],
    "recordWrites": [],
    "recordReads": [
@@ -19690,7 +19755,7 @@
    "worldDirs": [
     "meta"
    ],
-   "lines": 261
+   "lines": 323
   },
   "server-plugin/contract-state.mjs": {
    "system": "base_holdings",
@@ -20411,7 +20476,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 49
+   "lines": 57
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -20438,10 +20503,12 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/money.mjs",
     "server-plugin/precondition.mjs",
+    "server-plugin/primitives-body.mjs",
     "server-plugin/primitives-learning.mjs",
     "server-plugin/record-cleanup.mjs",
     "server-plugin/retrieval.mjs",
     "server-plugin/water-cycle.mjs",
+    "server-plugin/water-volume.mjs",
     "server-plugin/weather.mjs",
     "world/design/water-foundation.mjs"
    ],
@@ -20474,7 +20541,7 @@
    "worldDirs": [
     "design"
    ],
-   "lines": 383
+   "lines": 424
   },
   "server-plugin/extraction.mjs": {
    "system": "sim_economy",
@@ -21439,6 +21506,7 @@
    "imports": [
     "extension/history-window.mjs",
     "server-plugin/action-affordances.mjs",
+    "server-plugin/action-boundary.mjs",
     "server-plugin/action-gateway.mjs",
     "server-plugin/action-registry.mjs",
     "server-plugin/archived-reducer.mjs",
@@ -21470,7 +21538,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 313
+   "lines": 333
   },
   "server-plugin/interactions.mjs": {
    "system": "base_interactions",
@@ -21512,7 +21580,8 @@
     "server-plugin/ledger.mjs",
     "server-plugin/money.mjs",
     "server-plugin/precondition.mjs",
-    "server-plugin/stock.mjs"
+    "server-plugin/stock.mjs",
+    "server-plugin/water-volume.mjs"
    ],
    "stateWrites": [
     "records"
@@ -21542,7 +21611,7 @@
     "items"
    ],
    "worldDirs": [],
-   "lines": 403
+   "lines": 445
   },
   "server-plugin/labor-market.mjs": {
    "system": "sim_economy",
@@ -21750,7 +21819,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 174
+   "lines": 176
   },
   "server-plugin/ledger.mjs": {
    "system": "base_ledger",
@@ -21804,7 +21873,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 436
+   "lines": 442
   },
   "server-plugin/legal-representation.mjs": {
    "system": "sim_law",
@@ -22350,7 +22419,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 397
+   "lines": 398
   },
   "server-plugin/magic-movement.mjs": {
    "system": "sim_magic",
@@ -23615,7 +23684,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 351
+   "lines": 362
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -23880,6 +23949,7 @@
     "server-plugin/action-authority.mjs",
     "server-plugin/action-boundary.mjs",
     "server-plugin/action-capacity.mjs",
+    "server-plugin/action-constructor.mjs",
     "server-plugin/action-limits.mjs",
     "server-plugin/action-rejection.mjs",
     "server-plugin/action-rite.mjs",
@@ -23897,14 +23967,15 @@
    "stateReads": [
     "location",
     "minute",
-    "npcs"
+    "npcs",
+    "records"
    ],
    "recordWrites": [],
    "recordReads": [],
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 266
+   "lines": 282
   },
   "server-plugin/organization-state.mjs": {
    "system": "sim_society",
@@ -24391,6 +24462,7 @@
     "server-plugin/primitive-accounts.mjs",
     "server-plugin/primitive-policy.mjs",
     "server-plugin/primitive-rules.mjs",
+    "server-plugin/primitive-schema.mjs",
     "server-plugin/primitives-body.mjs",
     "server-plugin/primitives-checks.mjs",
     "server-plugin/primitives-effects.mjs",
@@ -24441,7 +24513,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 915
+   "lines": 924
   },
   "server-plugin/primitives.mjs": {
    "system": "base_primitives",
@@ -24950,7 +25022,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 112
+   "lines": 113
   },
   "server-plugin/reputation-catalog.mjs": {
    "system": "sim_society",
@@ -25210,6 +25282,7 @@
   "server-plugin/scene-card.mjs": {
    "system": "ui_scene",
    "imports": [
+    "server-plugin/action-text.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/chronicle.mjs",
     "server-plugin/entity-view.mjs",
@@ -25257,7 +25330,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 157
+   "lines": 160
   },
   "server-plugin/scheduler.mjs": {
    "system": "kernel_engine",
@@ -26301,6 +26374,18 @@
    "worldDirs": [],
    "lines": 160
   },
+  "server-plugin/water-volume.mjs": {
+   "system": "sim_environment",
+   "imports": [],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 16
+  },
   "server-plugin/weather.mjs": {
    "system": "sim_environment",
    "imports": [
@@ -27080,6 +27165,7 @@
     "extension/state-read.mjs",
     "extension/tools.mjs",
     "extension/topbar.mjs",
+    "extension/turn-contract.mjs",
     "extension/turn.mjs",
     "extension/ui-settings.mjs",
     "extension/ui-shell.mjs"
@@ -27091,7 +27177,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 485
+   "lines": 624
   },
   "extension/state-read.mjs": {
    "system": "ui_client",
@@ -27115,7 +27201,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 244
+   "lines": 258
   },
   "extension/topbar.mjs": {
    "system": "ui_client",
@@ -27129,6 +27215,21 @@
    "worldDirs": [],
    "lines": 28
   },
+  "extension/turn-contract.mjs": {
+   "system": "ui_host",
+   "imports": [
+    "extension/prompt.mjs",
+    "extension/turn.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [],
+   "recordWrites": [],
+   "recordReads": [],
+   "rules": [],
+   "world": [],
+   "worldDirs": [],
+   "lines": 63
+  },
   "extension/turn.mjs": {
    "system": "ui_host",
    "imports": [],
@@ -27139,7 +27240,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 83
+   "lines": 102
   },
   "extension/ui-actions.mjs": {
    "system": "ui_actions",
