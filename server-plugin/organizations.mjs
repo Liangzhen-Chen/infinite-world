@@ -83,21 +83,24 @@ const memberPurse=(d,engine,who)=>purse(engine,memberOwner(d.get('state'),who));
 const membershipKind=(state,who)=>state.records?.[who]?.category==='business'?'business_member_of':'member_of';
 const membershipTerms=(state,row,who,rank)=>({rank,...(state.records?.[who]?.category==='business'?{representative:row.members[who].representative,feeAccount:row.members[who].feeAccount}:{})});
 const currentConsent=(engine)=>!engine.replaying||engine.replayResult?.organizationConsentVersion===1;
-function organizationConsent(d,engine,org,who,{scope,role,fee=0,eventId}){
+function organizationConsent(d,engine,org,who,{scope,role,fee=0,feePayer,eventId}){
     if(who==='player')return {allowed:true,source:eventId};
     present(d,engine,who);
     const dues=scope==='org.join'?org.charter.dues??0:0;
-    return requestContractConsent(d,engine,{from:who,scope,subject:org.id,purpose:scope,
-        terms:{fee,...(scope==='org.join'?{amount:dues}:{}),...(role?{role}:{})},cost:{coins:fee+dues},eventId});
+    const sponsored=scope==='org.join'&&feePayer==='player';
+    const agreement=requestContractConsent(d,engine,{from:who,scope,subject:org.id,purpose:scope,
+        terms:{fee:sponsored?0:fee,...(scope==='org.join'?{amount:sponsored?0:dues}:{}),...(role?{role}:{})},cost:{coins:sponsored?0:fee+dues},eventId});
+    if(!agreement.allowed&&scope==='org.join'&&!sponsored&&fee+dues>0)return {...agreement,reason:`${agreement.reason}；若是因为费用，可由你代付入会费和首期会费`};
+    return agreement;
 }
-function businessMembership(d,engine,org,who,consent,eventId,scope){
+function businessMembership(d,engine,org,who,consent,eventId,scope,feePayer){
     const shop=d.get('state','records',who);if(shop?.category!=='business')return null;
     if(!['行会','商会'].includes(org.kind))throw preconditionFailure('商号须加入商会或行会');
     if(!['筹备','营业'].includes(shop.status)||!isEffective(engine,d,shop.owner))throw preconditionFailure('需要有效商号与现任代表');
     if(!within(engine,d.get('state','location'),org.seat))throw preconditionFailure('请到商会驻地办理');
     if(shop.owner!=='player')present(d,engine,shop.owner);
     if(currentConsent(engine)){
-        const agreement=organizationConsent(d,engine,org,shop.owner,{scope,fee:scope==='org.join'?org.charter.fee??0:0,eventId});
+        const agreement=organizationConsent(d,engine,org,shop.owner,{scope,fee:scope==='org.join'?org.charter.fee??0:0,feePayer,eventId});
         if(!agreement.allowed)throw preconditionFailure(`商号代表未接受会籍与会费：${agreement.reason}`);
     }else if(consent!==true)throw preconditionFailure('商号代表须当面同意会籍与会费');
     return {representative:shop.owner,feeAccount:purse(engine,shop.owner)};
@@ -117,6 +120,21 @@ function move(d,engine,row,{kind,amount,party,minute,sourceEvent,reason,balance}
 }
 function pay(d,engine,who,amount){
     const p=coinPath(engine,who,d.get('state')),have=d.get(...p)??0;if(have<amount)return false;d.set(p,have-amount);return true;
+}
+// New sponsored deposits belong to the already registered motion entity.
+// Old events keep their original account key on replay.
+const admissionEscrow=p=>escrowAccount(p.feePayer?`motion_${p.id}`:p.id);
+function refundAdmission(d,engine,p,eventId){
+    if(!p.escrow)return;
+    const payer=p.feePayer??p.motion.member;
+    moveCoins(d,{from:admissionEscrow(p),to:memberPurse(d,engine,payer),amount:p.escrow,writer:'organizations',eventId});
+    const path=coinPath(engine,payer,d.get('state'));d.set(path,(d.get(...path)??0)+p.escrow);
+}
+function bookAdmission(d,engine,row,{member,fee,dues=0,payer=member,account,minute,eventId}){
+    for(const [kind,amount]of [['入会费',fee],['首期会费',dues]])if(amount){
+        const balance=['faction','temple'].includes(row.source)?groupView(engine,d.get('state'),row.id).treasury.value:row.treasury;
+        move(d,engine,row,{kind,amount,party:member,minute,sourceEvent:eventId,balance:balance+amount,...(payer!==member?{reason:`${payer}代付`}:{})},{account,writer:'organizations',eventId});
+    }
 }
 function deciders(state,org){
     const all=Object.keys(org.members).filter(m=>state.records?.[m]?.category!=='business').sort();
@@ -147,7 +165,7 @@ function execute(d,engine,org,p,minute,sourceEvent){
     let outcome='已执行';
     if(m.action==='admit'){
         row.members[m.member]={position:MEMBER,joinedAt:minute,arrears:0,...m.membership};delete row.removed?.[m.member];
-        if(p.escrow){move(d,engine,row,{kind:'入会费',amount:p.escrow,party:m.member,minute,sourceEvent,balance:treasury()+p.escrow},{account:escrowAccount(p.id),writer:'organizations',eventId:sourceEvent});}
+        if(p.escrow)bookAdmission(d,engine,row,{member:m.member,fee:p.escrow-(p.firstDues??0),dues:p.firstDues??0,payer:p.feePayer??m.member,account:admissionEscrow(p),minute,eventId:sourceEvent});
     }else if(m.action==='expel'){
         if(org.members[m.member]){delete row.members[m.member];row.removed={...row.removed,[m.member]:{minute,sourceEvent}};}
     }else if(m.action==='appoint'){
@@ -204,7 +222,7 @@ function settle(d,engine,proposalId,minute,sourceEvent){
         if(currentConsent(engine)&&p.motion.action==='appoint')p.appointmentHolder=org.leader;
         outcome=execute(d,engine,org,p,minute,sourceEvent);
     }
-    else if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:memberPurse(d,engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:sourceEvent});d.set(coinPath(engine,p.motion.member,d.get('state')),(d.get(...coinPath(engine,p.motion.member,d.get('state')))??0)+p.escrow);outcome='入会费已退还';}
+    else if(p.escrow){refundAdmission(d,engine,p,sourceEvent);outcome='入会费已退还';}
     const closed={...p,status,outcome,closedAt:minute,closeEvent:sourceEvent};holdingSet(d,null,['state','records',proposalId],closed,'organizations');
     worldEvent(d,engine,org,`${proposalId}:close`,minute,{target:closed.motion.member??null,participants:[...closed.deciders,closed.motion.member].filter(Boolean),
         tags:['organization','org:decide',`motion:${closed.motion.action}`,status==='通过'?'passed':'rejected'],
@@ -235,12 +253,12 @@ function motionOf(engine,d,org,args){
     }
     return {action,member};
 }
-function propose(d,engine,org,motion,proposer,eventId,{escrow=0,content=null,response=null}={}){
+function propose(d,engine,org,motion,proposer,eventId,{escrow=0,feePayer,firstDues=0,content=null,response=null}={}){
     const id=`organization_proposal:${eventId}`;if(d.get('state','records',id))throw preconditionFailure('议案编号已占用');
     const {mode,people}=deciders(d.get('state'),org),minute=d.get('state','minute');
     const votes=people.includes(proposer)&&motion.action!=='admit'?[{voter:proposer,opinion:'approve',minute,sourceEvent:eventId,...(response?{basis:response.basis,decision:response.decision}:{})}]:[];
-    if(escrow)moveCoins(d,{from:memberPurse(d,engine,motion.member),to:escrowAccount(id),amount:escrow,writer:'organizations',eventId});
-    holdingSet(d,null,['state','records',id],{category:'organization_proposal',id,org:org.id,motion,proposer,mode,deciders:people,votes,escrow,content,status:'议事中',minute,sourceEvent:eventId},'organizations');
+    if(escrow)moveCoins(d,{from:memberPurse(d,engine,feePayer??motion.member),to:admissionEscrow({id,feePayer}),amount:escrow,writer:'organizations',eventId});
+    holdingSet(d,null,['state','records',id],{category:'organization_proposal',id,org:org.id,motion,proposer,mode,deciders:people,votes,escrow,...(feePayer?{feePayer,firstDues}:{}),content,status:'议事中',minute,sourceEvent:eventId},'organizations');
     return settle(d,engine,id,minute,eventId);
 }
 
@@ -358,7 +376,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             holdingSet(d,null,['state','records',id],{...p,votes},'organizations');
             const closed=settle(d,engine,id,at,`${id}:${day}`);
             if(closed.status==='议事中'&&at-p.minute>=PROPOSAL_LAPSE){
-                if(p.escrow){moveCoins(d,{from:escrowAccount(p.id),to:memberPurse(d,engine,p.motion.member),amount:p.escrow,writer:'organizations',eventId:id});}if(p.escrow)d.set(coinPath(engine,p.motion.member,d.get('state')),(d.get(...coinPath(engine,p.motion.member,d.get('state')))??0)+p.escrow);
+                refundAdmission(d,engine,p,id);
                 holdingSet(d,null,['state','records',id],{...closed,status:'搁置',closedAt:at,outcome:p.escrow?'逾期未决，入会费已退还':'逾期未决'},'organizations');
             }
         }
@@ -430,11 +448,15 @@ function organizationActionImpl(d,args,eventId){
             return {...previous.result,duplicate:true};
         }
         if(['household','family'].includes(org.source))throw preconditionFailure('家户家族成员随亲属迁居变化，不能申请加入');
-        const membership=businessMembership(d,engine,org,args.member,args.consent,eventId,'org.join');
+        if(currentConsent(engine)&&args.feePayer!==undefined&&args.feePayer!=='player')throw preconditionFailure("feePayer 只支持 'player'，缺省由入会者本人付款");
+        const feePayer=currentConsent(engine)&&args.feePayer==='player'?'player':undefined;
+        const firstDues=feePayer?org.charter.dues??0:0;
+        if(feePayer&&(d.get('state','player','coins')??0)<(org.charter.fee??0)+firstDues)throw preconditionFailure('代付入会费和首期会费的钱不足');
+        const membership=businessMembership(d,engine,org,args.member,args.consent,eventId,'org.join',feePayer);
         const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&!membership){
             if(currentConsent(engine)){
-                const agreement=organizationConsent(d,engine,org,who,{scope:'org.join',fee:org.charter.fee??0,eventId});
+                const agreement=organizationConsent(d,engine,org,who,{scope:'org.join',fee:org.charter.fee??0,feePayer,eventId});
                 if(!agreement.allowed)throw preconditionFailure(`入会须本人当面同意：${agreement.reason}`);
             }else if(args.consent!==true)throw preconditionFailure('入会须本人当面同意');
         }
@@ -464,8 +486,9 @@ function organizationActionImpl(d,args,eventId){
             if(!current||current.leader!==leader||current.charter.mode!=='leader'||!awake(person,engine,d,leader)||person.location!==d.get('state','location'))throw preconditionFailure('入会交谈中断，须按当前组织与会长重新申请');
             let result={organization:org.id,member:who,joined:false,status:decision.outcome==='refuse'?'否决':'待答复',decision};
             if(decision.outcome==='agree'){
-                const fee=current.charter.fee??0;if(fee&&!pay(d,engine,who,fee))throw preconditionFailure('入会费不足');
-                const p=propose(d,engine,current,{action:'admit',member:who,membership},who,eventId,{escrow:fee});
+                const fee=current.charter.fee??0,dues=feePayer?current.charter.dues??0:0;
+                if(fee+dues&&!pay(d,engine,feePayer??who,fee+dues))throw preconditionFailure('入会费不足');
+                const p=propose(d,engine,current,{action:'admit',member:who,membership},who,eventId,{escrow:fee+dues,feePayer,firstDues:dues});
                 holdingSet(d,null,['state','records',p.id],{...p,votes:[...p.votes,{voter:leader,opinion:'approve',basis:decision.reason,decision,minute:d.get('state','minute'),sourceEvent:eventId}]},'organizations');
                 const closed=settle(d,engine,p.id,d.get('state','minute'),eventId);
                 if(closed.status==='通过')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
@@ -478,15 +501,15 @@ function organizationActionImpl(d,args,eventId){
             return result;
         }
         const fee=org.charter.fee??0;
-        if(fee&&!pay(d,engine,who,fee))throw preconditionFailure('入会费不足');
+        if(fee+firstDues&&!pay(d,engine,feePayer??who,fee+firstDues))throw preconditionFailure('入会费不足');
         if(!org.charter.approval){
             const row=rowOf(d,engine,org);row.members[who]={position:MEMBER,joinedAt:minute,arrears:0,...membership};delete row.removed?.[who];
-            if(fee){move(d,engine,row,{kind:'入会费',amount:fee,party:who,minute,sourceEvent:eventId,balance:org.treasury+fee},{account:memberPurse(d,engine,who),writer:'organizations',eventId});}
+            bookAdmission(d,engine,row,{member:who,fee,dues:firstDues,payer:feePayer??who,account:memberPurse(d,engine,feePayer??who),minute,eventId});
             saveMembership(d,row,engine,eventId);if(who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
             worldEvent(d,engine,org,`${eventId}:join`,minute,{target:who,value:fee,witnesses:presentWitnesses(d.get('state'),state.location),participants:[who,org.leader].filter(Boolean),tags:['organization','org:join'],summary:`${personName(engine,d.get('state'),who).value??who}加入${org.name}`});
             return {organization:org.id,member:who,joined:true};
         }
-        const p=propose(d,engine,org,{action:'admit',member:who,membership},membership?.representative??who,eventId,{escrow:fee});
+        const p=propose(d,engine,org,{action:'admit',member:who,membership},membership?.representative??who,eventId,{escrow:fee+firstDues,feePayer,firstDues});
         if(p.status==='通过'&&who==='player')adjustStanding(d,engine,org.id,'player',5,{sourceEvent:eventId,reason:'入会'});
         return {organization:org.id,member:who,proposal:p.id,status:p.status,joined:p.status==='通过',note:'入会须按章程议决；入会费暂存，否决或逾期退还。',organizationEvent:event(org,'apply',{member:who,value:fee})};
     }

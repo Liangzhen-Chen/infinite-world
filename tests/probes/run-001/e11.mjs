@@ -21,7 +21,8 @@ export const scenario=once(async()=>{
  const org=(args,id,required)=>run('world_settlement',args,id,required);
  const f=await run('world_create',{type:'org',name:'清虚观',data:{notes:'双方同意并有独立见证的约斗决定继任',occupation:'教会'}},'e11found'),id=f.organization;
  await org({operation:'org_propose',org:id,action:'charter',consent:false,coins:1},'e11open');
- for(const m of [A,B,C])await org({operation:'org_join',org:id,member:m,consent:true},`e11join${m}`);
+ // S4: the player funds admission; each NPC still makes and records their own decision.
+ for(const m of [A,B,C])await org({operation:'org_join',org:id,member:m,feePayer:'player'},`e11join${m}`);
  for(const m of [B,C])await org({operation:'org_propose',org:id,action:'appoint',member:m,name:'长老'},`e11elder${m}`);
  await org({operation:'org_deposit',org:id,coins:200,content:'香火'},'e11dep');
  await org({operation:'org_propose',org:id,action:'appoint',member:A,name:'主祭'},'e11lead');

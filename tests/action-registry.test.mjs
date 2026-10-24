@@ -128,6 +128,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // and manufacture batches to their native programs. Check the complete slot
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
+   // S4: sponsorship belongs to org_join's catalog form; keep the static prompt budget.
+   'core:settlement.org_join':[{name:'feePayer',kind:'choice',options:['player']}],
    // a3qy: disarm declares an item tool slot; undeclared additions still fail below.
    'core:site.disarm':[{name:'tool',kind:'entity',entity:'item'}],
    'core:trade.lend':[{name:'interest',kind:'quantity'}],

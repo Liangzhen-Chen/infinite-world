@@ -8,6 +8,7 @@ import {standing,transmitStanding,collectivesOf,TRANSMISSION}from'../server-plug
 import {organization,organizationsOf,advanceOrganizations,DUES_PERIOD,EXPEL_ARREARS}from'../server-plugin/organizations.mjs';
 import {advanceRegistry}from'../server-plugin/advance-registry.mjs';
 import {toolDefinitions,resolveToolCall}from'../extension/tools.mjs';
+import {escrow as escrowAccount}from'../server-plugin/money.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_linsui',B='npc_hw_ayan';
@@ -24,6 +25,60 @@ async function found(s,kind='行会'){
     const out=await s.run(s.doc,'world_create',{type:'org',name:'青灯互助会',data:{notes:'互相照应，账目公开',occupation:kind}},'found');
     return {document:out.document,id:out.result.organization,result:out.result};
 }
+
+test('玩家代付入会费和首期会费仍须NPC本人同意；通过入账、否决及逾期退款均归真实付款人',async()=>{
+    const s=setup(),{document:c0,id}=await found(s);
+    const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:20,coins:3},'funding-charter')).document;
+    const before=structuredClone(c);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A},'unfunded'),/feePayer.*player/);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A,consent:true,reward:1000,compensation:1000},'fake-funded'),/本人当面同意/);
+    assert.deepEqual(c,before);
+    for(const slots of [{consent:true},{reward:1000}]){
+        const denied=await s.run(c,'world_act',{action:'core:settlement.org_join',slots:{org:id,member:A,feePayer:'player',...slots}},`fake-${Object.keys(slots)[0]}`);
+        assert.equal(denied.result.receipt.status,'rejected');assert.deepEqual(denied.document,c);
+    }
+    const input={tool:'world_act',args:{action:'core:settlement.org_join',slots:{org:id,member:A,feePayer:'player'}},eventId:'funded-join'};
+    const out=await s.engine.reduce(c,input),invited=applyPatches(c,out.patches),proposal=out.result.proposal;
+    assert.notEqual(out.result.receipt?.status,'rejected',out.result.receipt?.reason);
+    assert.equal(out.result.status,'议事中');assert.equal(invited.state.player.coins,477);assert.equal(invited.state.npcs[A].coins,100);
+    const escrow=escrowAccount(`motion_${proposal}`);
+    assert.equal(invited.ledger.accounts[escrow],23);
+    assert.equal(invited.state.records[proposal].feePayer,'player');assert.equal(invited.state.records[proposal].firstDues,3);
+    const consent=invited.state.consentEvents.find(row=>row.id==='funded-join:consent');
+    assert.equal(consent.from,A);assert.equal(consent.subject,id);assert.equal(consent.scope,'org.join');assert.deepEqual(consent.terms,{fee:0,amount:0});
+    const replay=await s.engine.reduce(c,input,{replay:true,result:out.result});assert.deepEqual(applyPatches(c,replay.patches),invited);
+    for(const opinion of ['approve','reject']){
+        const closed=await s.org(invited,{operation:'org_vote',org:id,proposal,opinion},`funded-${opinion}`),view=organization(s.engine,closed.document.state,id);
+        assert.equal(closed.document.ledger.accounts[escrow]??0,0);
+        assert.equal(closed.document.state.npcs[A].coins,100);
+        assert.equal(closed.document.state.player.coins,opinion==='approve'?477:500);
+        assert.equal(view.treasury,opinion==='approve'?23:0);
+        assert.equal(Boolean(view.members[A]),opinion==='approve');
+        if(opinion==='approve')assert.deepEqual(view.ledger.map(row=>[row.kind,row.amount]),[['入会费',20],['首期会费',3]]);
+    }
+    // Real waiting reaches the existing proposal lapse; no synthetic close or refund.
+    const lapseAt=Math.ceil((invited.state.minute+7*1440)/1440)*1440;
+    const lapsed=await s.run(invited,'world_time',{minutes:lapseAt-invited.state.minute},'funded-lapse');
+    assert.equal(lapsed.document.state.records[proposal].status,'搁置');
+    assert.equal(lapsed.document.state.player.coins,500);assert.equal(lapsed.document.state.npcs[A].coins,100);
+    assert.equal(lapsed.document.ledger.accounts[escrow]??0,0);
+});
+
+test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直接入组织；旧复演保留本人付款',async()=>{
+    const s=setup(),{document:c0,id}=await found(s);
+    const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:7,coins:2,consent:false},'shop-fees')).document;
+    // An existing NPC business is the supported member; its representative remains an agent.
+    c.state.records.fee_test_business={id:'fee_test_business',category:'business',owner:B,location:c.state.location,status:'营业'};
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:'fee_test_business'},'shop-unfunded'),/feePayer/);
+    const joined=await s.run(c,'world_act',{action:'core:settlement.org_join',slots:{org:id,member:'fee_test_business',feePayer:'player'}},'shop-funded');
+    assert.equal(joined.result.joined,true);assert.equal(joined.document.state.player.coins,491);assert.equal(joined.document.state.npcs[B].coins,100);
+    const view=organization(s.engine,joined.document.state,id);assert.equal(view.treasury,9);assert.equal(view.members.fee_test_business.representative,B);
+    assert.ok(joined.document.state.consentEvents.some(row=>row.from===B&&row.scope==='org.join'&&row.subject===id));
+    const legacy=await s.engine.reduce(c,{tool:'world_settlement',args:{operation:'org_join',org:id,member:A,consent:true,feePayer:'player'},eventId:'old-funded'},{replay:true,result:{}});
+    const old=applyPatches(c,legacy.patches);
+    assert.equal(legacy.result.organizationConsentVersion,undefined);assert.equal(old.state.player.coins,500);assert.equal(old.state.npcs[A].coins,93);
+    assert.equal(organization(s.engine,old.state,id).treasury,7);assert.equal(old.state.consentEvents,undefined);
+});
 
 test('创立行会：玩家任会长，章程与公库可查；存入记账并提升组织立场；组织行为成为世界事件',async()=>{
     const s=setup(),{document:c0,id,result}=await found(s);
