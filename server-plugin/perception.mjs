@@ -1,7 +1,7 @@
 // Local perception uses the published zone graph. Fine points only adapt the
 // existing optical/water spell geometry; they never replace ordinary distance.
 import {placeLayout,zoneOf,destinationZone} from './place-layout.mjs';
-import {environmentFeatures} from './environment-state.mjs';
+import {environmentFeatures,withEnvironmentFeatures} from './environment-state.mjs';
 import {weatherAt} from './weather.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {installEventPerception} from './world-events.mjs';
@@ -55,16 +55,16 @@ function pathCost(engine,document,layout,from,to,channel){
  }
  return Infinity;
 }
-export function perceives(engine,document,observer,event,{layout=placeLayout(engine,document,event.location??document.state.location)}={}){
+export function perceives(engine,document,observer,event,{layout=placeLayout(engine,document,event.location??document.state.location),shared=null}={}){
  const raw=body(document,observer),who=raw&&{...engine.byId.get(observer),...raw},origin=perceptionPosition(engine,document,observer,layout);
  const empty={visual:false,auditory:false,tactile:false,identified:false,complete:false};
  if(!who||!origin||isPhysicallyDead(engine,document,observer)||['濒死','昏迷'].includes(who.status)||/(睡眠|熟睡|睡觉)/.test(who.activity??'')||runtime().mindSleepUntil?.(reader(document),observer,document.state.minute)>document.state.minute)return empty;
- const source=event.actor??event.subject??event.target,at=perceptionPosition(engine,document,source,layout);
+ const source=event.actor??event.subject??event.target,at=shared?shared.at??=perceptionPosition(engine,document,source,layout):perceptionPosition(engine,document,source,layout);
  if(!at||event.location&&event.location!==layout.location)return empty;
  const d=reader(document),from=origin.point,to=at.point,geometry=validPoint(from)&&validPoint(to);
  const metres=pathCost(engine,document,layout,origin.zone.id,at.zone.id,'vision');
  const weather=engine.rules?.weather?weatherAt(engine,document.randomSeed,layout.location,document.state.minute,null,document.state.records?.['calendar:active']?.calendar??engine.calendarId):null;
- const light=geometry?runtime().lightAt?.(d,engine,layout.location,to):null;
+ const light=geometry?(shared?(Object.hasOwn(shared,'light')?shared.light:shared.light=runtime().lightAt?.(d,engine,layout.location,to)):runtime().lightAt?.(d,engine,layout.location,to)):null;
  // Unspecified interior lighting retains ordinary daytime visibility. Explicit
  // darkness and active optical effects always win over that fallback.
  const illumination=light?.illumination??(weather?.daylight===false?'dark':'lit');
@@ -86,11 +86,15 @@ export function perceives(engine,document,observer,event,{layout=placeLayout(eng
  return {visual,auditory,tactile,identified:visual||tactile,complete:visual||tactile,zone:origin.zone.id,sourceZone:at.zone.id,distanceMeters:Number.isFinite(metres)?metres:null};
 }
 export function eventPerception(engine,document,event,{exclude=[]}={}){
+ return withEnvironmentFeatures(engine,()=>readEventPerception(engine,document,event,exclude));
+}
+function readEventPerception(engine,document,event,exclude){
  const layout=placeLayout(engine,document,event.location??document.state.location),versions={};
+ const shared={};
  const candidates=[...(document.state.location===layout.location?['player']:[]),...Object.entries(document.state.npcs??{}).filter(([,n])=>n.location===layout.location).map(([id])=>id),...Object.entries(document.state.creatures??{}).filter(([,n])=>n.location===layout.location).map(([id])=>id)];
  for(const id of candidates.sort()){
   if(exclude.includes(id))continue;
-  const version=perceives(engine,document,id,event,{layout});
+  const version=perceives(engine,document,id,event,{layout,shared});
   if(version.visual||version.auditory||version.tactile)versions[id]=version;
  }
  return {version:1,minute:document.state.minute,location:layout.location,sourceZone:perceptionPosition(engine,document,event.actor??event.subject??event.target,layout)?.zone.id??null,versions};

@@ -54,15 +54,16 @@ export function opticalSightClear(d,engine,location,from,to){
  }
  return true;
 }
-function lighting(d,engine,location){
+function lighting(d,engine,location,{ambientLight=true}={}){
  const place=engine.byId.get(location),weather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
  const explicit=place?.lighting;
  // Ordinary indoor activity includes tending the room's lights. Explicit
  // lighting and actual lamps override this derived fallback, including lamps
  // that have been extinguished. Merely entering an empty room creates no lamp.
  const indoor=weather?.indoors||isFacility(place);
- const lamps=environmentFeatures(engine,d.document,r=>r.location===location).filter(r=>r.kind==='lamp'||stateOf(d,r).emissionLuxAt1m!==undefined);
- const occupied=indoor&&explicit?.ambientLux===undefined&&!place?.combatTags?.includes('dark')&&!lamps.length&&Object.entries(d.get('state','npcs')??{}).some(([id,n])=>{
+ const ordinaryNeeded=ambientLight&&indoor&&explicit?.ambientLux===undefined&&!place?.combatTags?.includes('dark');
+ const lamps=ordinaryNeeded?environmentFeatures(engine,d.document,r=>r.location===location).filter(r=>r.kind==='lamp'||stateOf(d,r).emissionLuxAt1m!==undefined):[];
+ const occupied=ordinaryNeeded&&!lamps.length&&Object.entries(d.get('state','npcs')??{}).some(([id,n])=>{
   if(n.location!==location||n.scheduleTravel||n.cognitionTravel||isPhysicallyDead(engine,d,id)||
    ['睡眠','濒死','昏迷'].includes(n.status))return false;
   const slot=facilityRuntime().scheduleAt?.(engine,id,d.get('state','minute'),d.get('state'));
@@ -131,7 +132,7 @@ export function lightAt(d,engine,location,point){
  return{lux,illumination:lux>=1?'lit':lux>0?'dim':ambient===undefined&&!sources(d,engine,location).length?undefined:'dark',fogDensity:fog};
 }
 export function opticalVisibility(d,engine,location,from,to){
- const fog=lighting(d,engine,location).fog;
+ const fog=lighting(d,engine,location,{ambientLight:false}).fog;
  if(!fog)return true;
  // A fog lamp improves a thin local patch; dense fog keeps a finite upper bound.
  const lamp=active(d,'fog_light').some(([,e])=>e.location===location&&distance(e.point,from)<=3);
