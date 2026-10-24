@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,authoredRules} from '../tools/load-world.mjs';
 import {mergeHewan,publishHewan} from '../tools/publish-w1-hewan.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {validatePopulation} from '../tools/population-validation.mjs';
@@ -86,6 +86,9 @@ delete source.rules.warDiplomacy;
  if(table){table.hooks=(table.hooks??[]).filter(h=>clocks.has(h.owner)&&!bound(h));if(table.seasons)table.seasons=table.seasons.filter(row=>!bound(row));}
 }
 const addedIds=new Set(candidate.npcs.map(n=>n.id)),original={...source,npcs:preserved,residents:[],households:[],settlementProfiles:[],locations:source.locations.filter(n=>!candidate.locations.some(l=>l.id===n.id)),routes:source.routes.filter(n=>!candidate.routes.some(r=>r.id===n.id))};
+// This edition omits the town and its later territorial bindings as well.
+source.rules.law.bindings=source.rules.law.bindings.filter(b=>source.locations.some(l=>l.id===b.place)||(source.regions??[]).some(r=>r.id===b.place));
+original.rules={...source.rules,law:{...source.rules.law,bindings:source.rules.law.bindings.filter(b=>original.locations.some(l=>l.id===b.place)||(source.regions??[]).some(r=>r.id===b.place))}};
 const world=mergeHewan(original,candidate),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 
 test('正式源engine校验零错，历史夹具依赖闭合且正式release深度已达标',()=>{
@@ -105,7 +108,7 @@ test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复�
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});
  // original.locations already contains loadWorld's D1 biome fields. Store them once.
  await fs.writeFile(path.join(root,'geo/biomes.json'),JSON.stringify({locations:{}}));
- for(const [file,value]of Object.entries({'meta/rules.json':original.rules,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
+ for(const [file,value]of Object.entries({'meta/rules.json':authoredRules(original.rules),'law/bindings.json':original.rules.law.bindings,'people/baseline.json':original.npcs,'people/residents.json':[],'people/households.json':[],'geo/settlements.json':[],'geo/locations.json':original.locations,'geo/routes.json':original.routes}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  const saved=await fs.readFile(path.join(root,'people/baseline.json'),'utf8');
  for(const publish of [false,true]){await assert.rejects(publishHewan({root,publish}),/完整人物深度/);assert.equal(await fs.readFile(path.join(root,'people/baseline.json'),'utf8'),saved);assert.equal((await loadWorld(root)).npcs.length,18);}
  // Reconstruct the once-installed historical catalog; the current release gate

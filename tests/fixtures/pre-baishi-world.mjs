@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {authoredRules} from '../../tools/load-world.mjs';
 import {writeFixtureLocations} from './w1-depth-editions.mjs';
 import {buildBatch,withoutSites} from '../../tools/w5-sites.mjs';
 import * as sites1 from '../../world/design/w5-sites-1.mjs';
@@ -15,7 +16,8 @@ export async function writePreBaishiWorld(dir,world){
  for(const design of [sites3,sites2,sites1])world=withoutSites(world,buildBatch(design.sites,world),design.priorNoMechanics);
  // Only the town skeleton (districts and bld_bs_* buildings) is removed; later wild/monster areas scoped to the town stay.
  const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||l.id==='bld_bs_shrine'||!/^(bld_bs_|loc_bs_)/.test(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
- const rules=structuredClone(world.rules);
+ // The on-disk rules source must not duplicate loadWorld's law-file attachments.
+ const rules=authoredRules(structuredClone(world.rules));
  // D1/U12 and T155 came after these frozen pre-town profiles.
  for(const key of ['hazardClock','questSources','military','warDiplomacy'])delete rules[key];
  for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}
