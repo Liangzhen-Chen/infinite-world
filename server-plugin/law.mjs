@@ -4,7 +4,7 @@ import {vocabulary} from './domain-rules.mjs';
 import {assertVocationAction} from './employment-state.mjs';
 import {reject} from './action-rejection.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
-import {lawAuthorities,personName} from './entity-view.mjs';
+import {lawAuthorities,personName,institutionOffices,officeOnDuty} from './entity-view.mjs';
 import {legalCodeAt,legalCodeById,courtHierarchy,legalCooperation,codePenalty} from './law-codes.mjs';
 import {hireAdvocate,representationEffect,advocateService} from './legal-representation.mjs';
 import {adjudicateFamilyDispute,recoverFamilyCompensation} from './family-law.mjs';
@@ -41,10 +41,13 @@ function holdingSet(d,engine,p,value,writer){
 const holdingReader=document=>({document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)});
 const identifies=(d,reference,id)=>typeof reference==='string'&&typeof id==='string'&&(reference===id||d.get('holdings','entities',id,'facts','aliases')?.includes(reference)||d.get('state','itemInstances',id,'source')?.endsWith(`:${reference}`));
 export function currentCaseHandler(engine,document,caseId,actor){
-    const row=document.state.records?.[caseId],office=row?.handlerOffice&&document.holdings?.entities?.[row.handlerOffice],n=actor==='player'?document.state.player:document.state.npcs?.[actor];
-    return Boolean(office&&office.goneAt===undefined&&office.facts.authority?.case===caseId&&office.facts.authority.operations?.includes(vocabulary(engine,'law','caseHandlerOperation'))&&
-        aliveHoldings(holdingReader(document),{kind:'holds_office',holder:actor,subject:row.handlerOffice}).length&&office.facts.onDuty===true&&n&&isEffective(engine,document,actor)&&
-        awake(n,holdingReader(document),actor)&&canAct({engine,document},actor,'talk').allowed&&(actor==='player'?document.state.location:n.location)===office.facts.seat);
+    const row=document.state.records?.[caseId],entity=row?.handlerOffice&&document.holdings?.entities?.[row.handlerOffice];
+    const office=institutionOffices(engine,document.state).find(o=>o.id===row?.handlerOffice);
+    return Boolean(row?.category==='legal_case'&&entity&&entity.goneAt===undefined&&office&&
+        (!entity.facts.authority?.case||entity.facts.authority.case===caseId)&&
+        (!office.authority?.case||office.authority.case===caseId)&&office.authority?.operations?.includes(vocabulary(engine,'law','caseHandlerOperation'))&&
+        aliveHoldings(holdingReader(document),{kind:'holds_office',holder:actor,subject:office.id}).length&&
+        officeOnDuty(engine,document.state,office,actor)&&canAct({engine,document},actor,'talk').allowed);
 }
 export function caseProcedureView(engine,document,id,actor='player'){
     const row=document.state.records?.[id];if(row?.category!=='legal_case')return null;
@@ -152,10 +155,12 @@ function receiveLegalRequest(d,engine,args,eventId){
     const sourceEvents=[],evidence=[];let receiver,target=request.target,verb=['report','confess'].includes(operation)?'claim':'request';
     const canReceive=id=>awake(s.npcs?.[id],d,id)&&canAct({engine,document:d.document},id,'talk').allowed;
     const receive=(permission)=>{
+        const offices=new Map(institutionOffices(engine,s).map(o=>[o.id,o]));
         const candidates=aliveHoldings(d,{kind:'holds_office'}).filter(h=>{
-            const office=d.get('holdings','entities',h.subject),f=office?.facts,n=s.npcs?.[h.holder];
-            return office?.goneAt===undefined&&f?.seat===s.location&&f.onDuty===true&&f.authority?.operations?.includes(permission)&&
-                (!f.authority.case||f.authority.case===caseId)&&n?.location===s.location&&canReceive(h.holder)&&isEffective(engine,d,h.holder)&&
+            const entity=d.get('holdings','entities',h.subject),office=offices.get(h.subject);
+            return entity&&entity.goneAt===undefined&&office?.seat===s.location&&office.authority?.operations?.includes(permission)&&
+                (!entity.facts.authority?.case||entity.facts.authority.case===caseId)&&
+                (!office.authority.case||office.authority.case===caseId)&&officeOnDuty(engine,s,office,h.holder)&&canReceive(h.holder)&&
                 (!args.authority||args.authority===h.holder)&&(!target||target===s.location||target===h.holder);
         });
         if(candidates.length!==1)rejectLegalRequest('Legal request requires one present on-duty authorized recipient');

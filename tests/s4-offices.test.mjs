@@ -54,3 +54,56 @@ test('未登记任免链的首领席位不可自任，收件员没有裁判权�
  await assert.rejects(officeCall(engine,document,'apply',{name:'office_bs_town_head'},'self-head'),/任免链|rejected/);
  assert.equal(authority(primitiveContext(engine,document),'npc_bs_034_1','judge','office_bs_appeal_desk').allowed,false);
 });
+
+test('名册会长实例化后可经真实动作办理任命，行动与提示解析只保留同一人物',async()=>{
+ const leader='npc_w5_lampbridge_leader',name='office_exam_life_6';
+ const before=initial(),authored=structuredClone(engine.byId.get(leader));
+ assert.equal(before.state.npcs[leader],undefined);
+ let document=officeScene(engine,before,{location:'bld_bs_guild',present:[leader],abilities:{skills:{skill_life_6_core:100}}});
+ for(const scoped of [engine.scoped(document),engine.promptScoped(document)]){
+  assert.equal(scoped.entities.filter(p=>p.id===leader).length,1);
+  assert.equal(scoped.byId.get(leader).location,'bld_bs_guild');
+  assert.equal(scoped.resolve(authored.name,'npc'),leader);
+ }
+ let out=await officeCall(engine,document,'apply',{name},'roster-apply');document=out.document;
+ const request=out.result.application;
+ out=await engine.reduce(document,{tool:'world_time',args:{minutes:60},eventId:'roster-wait'});document=applyPatches(document,out.patches);
+ out=await officeCall(engine,document,'decide',{name,request,authority:leader},'roster-decide');document=out.document;
+ assert.equal(out.result.decision.status,'已批准');
+ out=await officeCall(engine,document,'appoint',{name,request,authority:leader},'roster-appoint');document=out.document;
+ assert.equal(institutionOffices(engine,document.state).find(o=>o.id===name).holder,'player');
+ assert.deepEqual(engine.byId.get(leader),authored);assert.equal(before.state.created?.[leader],undefined);
+ const forged=structuredClone(document);forged.state.created[leader].name='伪造会长';
+ assert.throws(()=>engine.scoped(forged),/重复实体编号/);
+ assert.throws(()=>engine.promptScoped(forged),/重复实体编号/);
+ const collision=structuredClone(document);collision.state.created.loc_bs=structuredClone(engine.byId.get('loc_bs'));
+ assert.throws(()=>engine.scoped(collision),/重复实体编号/);
+ const duplicate=structuredClone(document);duplicate.state.created.duplicate=structuredClone(duplicate.state.created[leader]);
+ assert.throws(()=>engine.scoped(duplicate),/重复实体编号/);
+});
+
+test('原生报案收件读取正式在岗席位，伪造 onDuty 不能补足在场或任职',async()=>{
+ const clerk='npc_bs_031_2',office='office_bs_report_desk';
+ const document=officeScene(engine,initial(),{location:'bld_bs_watch',minute:600,present:[clerk]});
+ const call=eventId=>({tool:'world_act',eventId,args:{action:'core:law.report',slots:{authority:clerk,request:{kind:'theft'}}}});
+ // No personally known theft is fabricated: passing the recipient lookup
+ // must reach the independent incident precondition, with no applied effects.
+ const current=await engine.reduce(document,call('recipient-current'));
+ assert.equal(current.result.receipt.status,'rejected');assert.match(current.result.receipt.reason,/personally known incident/);
+ assert.deepEqual(current.patches,[]);
+ const asleep=structuredClone(document);asleep.state.npcs[clerk].activity='熟睡';asleep.holdings.entities[office].facts.onDuty=true;
+ const rejected=await engine.reduce(asleep,call('recipient-asleep'));
+ assert.equal(rejected.result.receipt.status,'rejected');assert.match(rejected.result.receipt.reason,/on-duty authorized recipient/);
+ assert.deepEqual(rejected.patches,[]);
+ const priorClerk=officeScene(engine,initial(),{location:'bld_bs_watch',minute:540,present:[clerk]});
+ let changed=(await appointedClaimClerk(engine,priorClerk,{name:office})).document;
+ for(const destination of ['loc_bs_guanqian','bld_bs_watch']){
+  const moved=await engine.reduce(changed,{tool:'world_act',eventId:`recipient-walk:${destination}`,args:{action:'core:move',slots:{destination,mode:'walk'}}});
+  assert.equal(moved.result.receipt.status,'committed');changed=applyPatches(changed,moved.patches);
+ }
+ assert.equal(changed.state.npcs[clerk].location,changed.state.location);
+ changed.holdings.entities[office].facts.onDuty=true;
+ const former=await engine.reduce(changed,call('recipient-former'));
+ assert.equal(former.result.receipt.status,'rejected');assert.match(former.result.receipt.reason,/on-duty authorized recipient/);
+ assert.deepEqual(former.patches,[]);
+});
