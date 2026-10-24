@@ -50,7 +50,7 @@ export function reviewTurnSettlement(input,receipts=[],applied=[]){
   effects.push(...(native?.applied??[]).map(effect=>({receipt:index,...effect})));
   facts.push(fact('adjudication',result));
   for(const effect of row.applied??native?.applied??[]){
-   const subject=effect.entity??effect.holder??'player',item=fact('effect',effect,subject,effect.item??effect.to??null);
+   const subject=effect.entity??effect.holder??'player',item=fact('effect',effect,subject,effect.item??effect.resource??effect.need??effect.to??null);
    // Whole-event diffs can include offscreen NPC purses. They remain reviewer
    // evidence, not player knowledge merely because time passed.
    if(subject!=='player'&&!(row.participants??[]).includes(subject))item.knownBy=[];

@@ -23,7 +23,7 @@ export async function finishContractTurn({playerText,draft,gate,review,generate,
   try{
    await onRetryStart();
    assertCurrent();retry.calls++;
-   const response=await generate({messages:[...messages,{role:'system',content:turnFactsPrompt(evidence)+'\n仅补做一次工具阶段；依据玩家原意选择实际工具，纯闲聊/纯观察请选择 world_no_action。不要自动执行预览候选。'}],tools:[...tools,noActionTool],tool_choice:'required',thinking:{type:'disabled'},stream:false},'turn-tool-retry');
+   const response=await generate({messages:[...messages,{role:'system',content:turnFactsPrompt(evidence)+'\n仅补做一次工具阶段。依据玩家原文，优先选择与原意相符的行动候选，使用其动作编号和槽位提交实际工具；候选只是建议，提交后的引擎回执才是结果。没有匹配候选时，可用 world_actions 查询或用 world_act 的 open:proposal 提交原意，由引擎裁决可行部分、拒绝原因与替代。world_no_action 只用于纯闲聊/纯观察；玩家要求尝试行动时，即使效果看似不可能，也应提交引擎裁决，不能以无行动代替拒绝。不得擅自执行玩家未要求的候选。'}],tools:[...tools,noActionTool],tool_choice:'required',thinking:{type:'disabled'},stream:false},'turn-tool-retry');
    if(response.measurement)onMeasurement(response.measurement);
    assertCurrent();const choice=response.choices?.[0],message=choice?.message;
    if(!message||choice.finish_reason==='length')throw Error('补跑工具阶段未完整返回');

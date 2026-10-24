@@ -103,7 +103,7 @@ function prepare(input){
  for(const [index,row] of settlement.decisions.entries())sources.push({sourceId:`decision:${index}`,kind:'decision',subject:row.npc,object:row.scope?.result?.item??row.scope?.result?.target??null,time:row.time,knownBy:row.knownBy,source:row.source,decision:clone(row),text:JSON.stringify(row)});
  for(const [index,row] of settlement.effects.entries()){
   const subject=row.entity??row.holder??'player',knownBy=subject==='player'?['player']:(receipts[row.receipt]?.participants??[]).includes(subject)?['player',subject]:[];
-  sources.push({sourceId:`settlement-effect:${index}`,kind:'effect',subject,object:row.item??row.resource??row.to??null,value:clone(row),time:{start:stateOf(input.before).minute,end:stateOf(input.after).minute},text:JSON.stringify(row),knownBy});
+  sources.push({sourceId:`settlement-effect:${index}`,kind:'effect',subject,object:row.item??row.resource??row.need??row.to??null,value:clone(row),time:{start:stateOf(input.before).minute,end:stateOf(input.after).minute},text:JSON.stringify(row),knownBy});
  }
  // Whole-turn amounts are derived from the service's observed holder deltas,
  // excluding the native transfer representation of those same movements.
@@ -351,7 +351,7 @@ export function consistencyReviewRequest(input,{maxTokens=4000}={}){
  const parameters=request.tools[0].function.parameters;
  parameters.required.push('claims');parameters.properties.claims={type:'array',maxItems:240,items:claimSchema()};
  request.messages[0].content+='\n普通现场感官、同地姿态及已结算行动的呈现细节用 observation，supported 时也允许 references=[]，不要为凑来源编造引文或另列缺来源问题。它们不证明钱物、持久状态、私密内容、价格、制度或新决定。change/movement 仍必须核对真实效果；sources 的 children 是聚合证据内的可用类型化来源，优先直接引用该子项。';
- request.messages[0].content+='\nchange 的计量对象 object 填实际资源/物品编号，收款人不是被计量的资源；数量变化不能省略 object。movement 仅用于跨地点移动，object 填真实目的地；同地跟随、靠近和姿态用 observation。叙述实际失败的尝试或“没有学会”的结果用 history/other，不要把未发生的成功效果列作 change。先完成一次不证明随后另一次也能完成；同一回合有多次尝试时逐张核对成功与失败回执，不能用前一次成功否认后一次的服务时间不足，也不能把失败原因扩成 NPC 新决定或新规矩。';
+ request.messages[0].content+='\nchange 的 subject 填实际持有者/受作用者编号，计量对象 object 填来源中的资源/物品编号（如 coin、hp），金额文字、收款人或施害者不是被计量的资源；数量变化不能省略 object。支付、受伤、恢复的感官呈现用 observation，部位、姿态、疼痛感不自动新增持久伤势，仍不能增造伤病状态。已经经过的时长引用真实 time 效果作 history 时间陈述，不把时长当作库存资源。movement 仅用于跨地点移动，object 填真实目的地；普通同地挪步、跟随、靠近和姿态用 observation。NPC 新决定须引用 sources 的实际 decision，逐字段复制 outcome/request/scope；已有义务可以陈述登记事实，不能补写未经裁决的新答复。叙述实际失败的尝试或“没有学会”的结果用 history/other，不要把未发生的成功效果列作 change。先完成一次不证明随后另一次也能完成；同一回合有多次尝试时逐张核对成功与失败回执，不能用前一次成功否认后一次的服务时间不足，也不能把失败原因扩成 NPC 新决定或新规矩。';
  // Context text stays in evidence once. The existing text-only rewrite
  // redacts that array; copying before/after here would re-expose its private
  // quests, debts and NPC inventories after the caller's redaction.

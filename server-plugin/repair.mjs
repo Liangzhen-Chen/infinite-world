@@ -63,8 +63,9 @@ export function repair(d,args,eventId){
         const result={operation:'repair',success:true,item,instance:target,maker,quote,before,after:quote.after,spent:{feePaid:spec.fee,minutes:plan.minutes,materials:[],toolWear:[]}};
         d.set(['state','records',`repaired_${eventId}`],{category:'repair',...result,minute:d.get('state','minute')});return result;
     }
-    if(!d.get('state','skills',plan.skill))throw preconditionFailure('尚未掌握维修所需技能');
-    if(effectiveProficiency(d,this,plan.skill)<plan.minimumProficiency)throw preconditionFailure('技能不足以使用这项维修工序');
+    const skillName=this.byId.get(plan.skill)?.name??plan.skill;
+    if(!d.get('state','skills',plan.skill))throw preconditionFailure(`尚未掌握维修所需技能：${skillName}（${plan.skill}）；工序 ${plan.id} 要求熟练度至少${plan.minimumProficiency}。请先通过学习掌握该技能；协助者不能替代本人掌握技能的前提`);
+    if(effectiveProficiency(d,this,plan.skill)<plan.minimumProficiency)throw preconditionFailure(`技能不足以使用这项维修工序：${skillName}（${plan.skill}）当前有效熟练度${effectiveProficiency(d,this,plan.skill)}，工序 ${plan.id} 要求至少${plan.minimumProficiency}；请先练习提升熟练度`);
     const attribute=plan.attribute??this.byId.get(plan.skill)?.attribute??'智力',station=workstation(d,this,plan,args);
     toolBonuses(d,this,plan.tools,attribute,plan.skill);
     if(plan.tools.includes(item))throw preconditionFailure('维修对象不能同时作为这项工序的工具');

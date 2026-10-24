@@ -149,7 +149,7 @@ export function questBoardAction(d,engine,args,eventId){
   if(!awake(engine,d.get('state'),publisher,actor))throw preconditionFailure('任务发布者无法清醒履约');
   if(!(grade in engine.rules.quests.quotaUnits))throw preconditionFailure('任务等级无效');
   const rights=questPublishingRights(engine,d.get('state'),publisher,{cultural:args.cultural===true,document:d.document}),personal=args.personal===true||publisher==='player'&&args.personal!==false;
-  if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw preconditionFailure('身份或本月任务发布额度不足');
+  if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw preconditionFailure(`身份或本月任务发布额度不足（本月已用${rights.usedD}，额度${rights.limitD}，本单需${engine.rules.quests.quotaUnits[grade]}）${grade==='D'?'；若以本人钱款发布私人D级委托，请显式传 personal:true，仍须通过在场、同意、报酬托管和目标校验':''}`);
   if(personal&&grade!=='D')throw preconditionFailure('未登记官职的私人任务只能发布D级，身份额度不足');
   const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
   if(!publicFund&&actor.coins<reward)throw preconditionFailure('发布者无法托管报酬');
