@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {assertLiquidWater}from'./interactions.mjs';
@@ -21,7 +21,7 @@ const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)thro
 // simulation hands each freshly built row to the draft (adopt).
 export function waterEarthState(d,row){
  const r=typeof d.peek==='function'?d.peek('state','records',key(row.id)):d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('水土对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('水土对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});

@@ -3,7 +3,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
 import {recordRitualCare}from'./magic-ritual.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {ambientHeatC}from'./magic-object.mjs';
 import {resolveCreature}from'./wildlife.mjs';
@@ -30,7 +30,7 @@ const strongest=(d,target,op,minute)=>active(d,target,op,minute).reduce((n,e)=>M
 const peekRecord=(d,id)=>typeof d.peek==='function'?d.peek('state','records',id):d.get('state','records',id);
 function stateOf(d,row){
  const r=peekRecord(d,key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('照护对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('照护对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state});

@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
 import {assertMagicTargeting} from './magic-targeting.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
@@ -20,7 +20,7 @@ function carriedKg(d,engine,target='player'){
 }
 const state=(d,row)=>{
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('空气对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('空气对象状态键冲突');
  return clone(r?.state??row.state??{});
 };
 const store=(d,row,s)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state:s});

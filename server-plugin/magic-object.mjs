@@ -4,7 +4,7 @@ import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 添进炉具的燃料物品折成炉内燃料质量（热工状态），在账本上即消耗。
 declareLedgerWriter('magic-object',{sinks:['sink:consume']});
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
 import {localWeather} from './weather.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {normalize} from './retrieval.mjs';
@@ -135,7 +135,7 @@ export function advanceThermalState(source,model,until,{effects=[],target,burnLi
 }
 function locate(engine,name,location){const matches=environmentFeatures(engine).filter(f=>f.id===name||f.location===location&&[f.name,...f.aliases??[]].some(n=>normalize(n)===normalize(name??'')));if(matches.length!==1)reject('E-ACTION-THERMAL-TARGET','热对象未登记或名称不唯一',{missing:['需要唯一的已登记热对象'],repair:['观察当地物件，使用唯一的已登记热对象编号']});const row=matches[0];if(row.kind!=='object')throw preconditionFailure('只支持登记的非活体物件，不兼作水源或土壤');validateThermalModel(row.thermalModel);return row;}
 function read(d,row){
- const record=d.get('state','records',recordKey(row.id));if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw Error('物件状态记录键冲突');
+ const record=d.get('state','records',recordKey(row.id));if(record&&!featureRecordMatches(d,record,row))throw Error('物件状态记录键冲突');
  const state=clone(record?.state??row.state);if(!state||typeof state!=='object')throw Error('缺少物件初始状态');
  if('waterMl' in state)throw preconditionFailure('液态水移动与热容量尚未联动，不能套用固体热过程');
  const thermal=state.thermal??initialThermalState(row.thermalInitial??{},row.thermalModel,d.get('state','minute'));
@@ -249,7 +249,7 @@ export function advanceMagicObjects(d,engine,afterMinute){
  advanceHeatScenes(d,engine,afterMinute);
  for(const row of environmentFeatures(engine,undefined,f=>f.thermalModel&&d.get('state','records',recordKey(f.id),'state','thermal'))){
   const record=d.get('state','records',recordKey(row.id));if(!record?.state?.thermal)continue;
-  if(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location)throw Error('物件状态记录键冲突');
+  if(!featureRecordMatches(d,record,row))throw Error('物件状态记录键冲突');
   const state=clone(record.state);state.thermal=advanceThermalState(state.thermal,row.thermalModel,afterMinute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});store(d,row,state);
   // Outdoor rain douses and wets a fire that is still burning at settlement.
   if(state.thermal.burning&&precipitationAt(engine,d.get('randomSeed'),row.location,afterMinute)==='rain')applyInteraction(d,engine,{agent:'rain',target:row.id});
@@ -318,7 +318,7 @@ export function validateHeatCatalog(catalog){
 }
 function rawFeatureState(d,row,minute){
  const record=d.get('state','records',recordKey(row.id));
- if(record&&(record.category!=='physical_feature'||record.id!==row.id||record.location!==row.location))throw Error('热场状态记录键冲突');
+ if(record&&!featureRecordMatches(d,record,row))throw Error('热场状态记录键冲突');
  const state=clone(record?.state??row.state??{});
  if(row.thermalModel)state.thermal??=initialThermalState(row.thermalInitial??{},row.thermalModel,minute);
  return state;

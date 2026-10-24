@@ -29,7 +29,8 @@ import {strainCare}from'./magic-care.mjs';
 import {assertMindAwake,assertMindSpacePath}from'./magic-mind-space.mjs';
 import {assertLightMovement}from'./magic-light.mjs';
 import{targetFacts,statusContext}from'./magic-context.mjs';
-import {placeLayout,zoneOf,zoneContactPending} from './place-layout.mjs';
+// 区内布局由 L1 place-layout 经钩子注册（environment.mjs 引入），核心不直接向上依赖。
+const placeLayout=(...a)=>advanceHook('placeLayout')(...a),zoneOf=(...a)=>advanceHook('zoneOf')(...a),zoneContactPending=(...a)=>advanceHook('zoneContactPending')(...a);
 import {isDomainRejection} from './action-rejection.mjs';
 import {profession,effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {xpRequired,allocateAttributes,milestone}from'./progression.mjs';

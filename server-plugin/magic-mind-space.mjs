@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {cloneData} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {trackSingleItem,changeItems,heldUnit}from'./items.mjs';
@@ -34,8 +34,7 @@ const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const effects=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='mind_space'&&(!op||e.operation===op));
 export function mindSpaceState(d,row){
  const r=d.get('state','records',key(row.id));
- const carriedContainer=row.containerItem&&d.get('state','itemInstances',row.id,'item')===row.containerItem;
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||!carriedContainer&&r.location!==row.location))throw Error('心契空间对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('心契空间对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const storeState=(d,row,state)=>d.set(['state','records',key(row.id)],{...d.get('state','records',key(row.id)),category:'physical_feature',id:row.id,location:row.location,state});

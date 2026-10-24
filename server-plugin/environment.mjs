@@ -34,7 +34,7 @@ installPerceptionRuntime({localSightClear,lightAt,waterEarthSoundLoss,mindSleepU
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
-export {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
+export {environmentFeatures,localPlayerPoint,featureRecordMatches} from './environment-state.mjs';
 // Native restoration of a catalog object's current placement and state. The
 // source is retained as provenance; restoring it does not replay the event.
 export function writeEnvironmentPremise(d,engine,id,{location,carriedBy,state,source}={}){

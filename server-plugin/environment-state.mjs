@@ -2,6 +2,13 @@
 import {aliveHoldings,locationOf} from './holdings.mjs';
 import {physicalLocation} from './items.mjs';
 const key=id=>`physical_feature:${id}`;
+// A feature record belongs to its row by id; a carried container's record keeps the place it was
+// filled, so only fixed features must also match location (their place comes from holdings).
+export function featureRecordMatches(d,record,row){
+ if(record.category!=='physical_feature'||record.id!==row.id)return false;
+ const carriedContainer=row.containerItem&&d.get('state','itemInstances',row.id,'item')===row.containerItem;
+ return carriedContainer||record.location===row.location;
+}
 function point(d){const row=d.get('state','records','local_player_position');return row?.location===d.get('state','location')?row.point:[0,0];}
 export function localPlayerPoint(d){return [...point(d)];}
 // One read view per document so the holdings index (cached per view and

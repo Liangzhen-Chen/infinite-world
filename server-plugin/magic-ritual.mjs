@@ -5,7 +5,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {placed as placedStock,moveStock} from './stock.mjs';
 declareLedgerWriter('magic-ritual');
 import {recordCreatureResolution}from'./quest-wildlife.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {assertSpellConsent,hasSpellConsent,spellConsentGrant,spellConsentActions}from'./magic-consent.mjs';
@@ -46,7 +46,7 @@ function feature(engine,id,location){
 }
 function stateOf(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('役灵仪式对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('役灵仪式对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>holdingSet(d,null,['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state},'magic-ritual');

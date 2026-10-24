@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/s4a",
+  "commit": "refs/heads/t-s4in",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -25,7 +25,7 @@
   "subscribers": 13,
   "interactionRules": 25,
   "effectKinds": 23,
-  "links": 679
+  "links": 680
  },
  "layers": [
   {
@@ -736,7 +736,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1848,
+   "lines": 1849,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -2005,6 +2005,7 @@
     "server-plugin/water-volume.mjs",
     "server-plugin/environment-state.mjs",
     "server-plugin/perception.mjs",
+    "server-plugin/place-layout.mjs",
     "server-plugin/map-state.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/location-access.mjs",
@@ -2012,7 +2013,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 2215,
+   "lines": 2303,
    "stateWrites": [
     "records",
     "remote",
@@ -2121,7 +2122,7 @@
     "server-plugin/magic-water-earth.mjs",
     "server-plugin/magic.mjs"
    ],
-   "lines": 3966,
+   "lines": 3965,
    "stateWrites": [
     "discoveries",
     "effects",
@@ -2401,6 +2402,7 @@
     "server-plugin/office-salary.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/organizations.mjs",
+    "server-plugin/norm-stack.mjs",
     "server-plugin/civic.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/public-projects.mjs",
@@ -2419,7 +2421,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 5617,
+   "lines": 5785,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2499,6 +2501,7 @@
    ],
    "world": [
     "bosses",
+    "cultures",
     "factionPeople",
     "factions",
     "households",
@@ -4125,6 +4128,7 @@
    "labels": [
     "environment-state.mjs",
     "map-state.mjs",
+    "place-layout.mjs",
     "weather.mjs"
    ]
   },
@@ -5633,6 +5637,14 @@
   },
   {
    "from": "sim_environment",
+   "to": "base_advance",
+   "kind": "call",
+   "labels": [
+    "advance-hooks.mjs"
+   ]
+  },
+  {
+   "from": "sim_environment",
    "to": "base_events",
    "kind": "call",
    "labels": [
@@ -6019,6 +6031,7 @@
     "facility-state.mjs",
     "family-law.mjs",
     "noble-state.mjs",
+    "norm-stack.mjs",
     "organizations.mjs",
     "promotion-view.mjs",
     "reputation.mjs"
@@ -7130,6 +7143,7 @@
    "labels": [
     "environment.mjs",
     "perception.mjs",
+    "place-layout.mjs",
     "weather.mjs"
    ]
   },
@@ -11911,7 +11925,6 @@
       "server-plugin/magic-water-earth.mjs",
       "server-plugin/npc-obligations.mjs",
       "server-plugin/pets.mjs",
-      "server-plugin/place-layout.mjs",
       "server-plugin/primitives.mjs",
       "server-plugin/progression.mjs",
       "server-plugin/smuggling.mjs",
@@ -18270,10 +18283,7 @@
     ]
    }
   ],
-  "unassignedModules": [
-   "server-plugin/norm-stack.mjs",
-   "server-plugin/place-layout.mjs"
-  ]
+  "unassignedModules": []
  },
  "metricTools": [
   {
@@ -20360,7 +20370,6 @@
     "server-plugin/npc-state.mjs",
     "server-plugin/obligation-protocol.mjs",
     "server-plugin/pets.mjs",
-    "server-plugin/place-layout.mjs",
     "server-plugin/population.mjs",
     "server-plugin/post.mjs",
     "server-plugin/primitives.mjs",
@@ -20465,7 +20474,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 1189
+   "lines": 1190
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -20554,6 +20563,7 @@
    ],
    "stateWrites": [],
    "stateReads": [
+    "itemInstances",
     "location",
     "records"
    ],
@@ -20564,7 +20574,7 @@
     "locations"
    ],
    "worldDirs": [],
-   "lines": 57
+   "lines": 64
   },
   "server-plugin/environment.mjs": {
    "system": "sim_environment",
@@ -22516,7 +22526,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 398
+   "lines": 397
   },
   "server-plugin/magic-movement.mjs": {
    "system": "sim_magic",
@@ -23256,7 +23266,7 @@
    "lines": 97
   },
   "server-plugin/norm-stack.mjs": {
-   "system": null,
+   "system": "sim_society",
    "imports": [
     "server-plugin/noble-state.mjs",
     "server-plugin/organization-state.mjs",
@@ -24259,8 +24269,9 @@
    "lines": 364
   },
   "server-plugin/place-layout.mjs": {
-   "system": null,
+   "system": "sim_environment",
    "imports": [
+    "server-plugin/advance-hooks.mjs",
     "server-plugin/environment-state.mjs"
    ],
    "stateWrites": [],
@@ -24279,7 +24290,7 @@
    ],
    "world": [],
    "worldDirs": [],
-   "lines": 79
+   "lines": 81
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",

@@ -1,7 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
 
 const unit=1440000,clone=x=>structuredClone(x);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效或缺失`);return n;};
@@ -54,7 +54,7 @@ function permission(d,p,f,args,minute){
 }
 function readResource(d,f){
  const record=d.get('state','records',`physical_feature:${f.id}`);
- if(record&&(record.category!=='physical_feature'||record.id!==f.id||record.location!==f.location))throw Error('生长资源登记键冲突');
+ if(record&&!featureRecordMatches(d,record,f))throw Error('生长资源登记键冲突');
  const s=clone(record?.state??f.state);
  integer(s?.waterMl,0,Number.MAX_SAFE_INTEGER,'实际水量');integer(s?.nutrientMg,0,Number.MAX_SAFE_INTEGER,'实际营养量');
  integer(s?.capacityMl,1,Number.MAX_SAFE_INTEGER,'水容量');if(s.waterMl>s.capacityMl)throw preconditionFailure('实际水量超过容量');

@@ -1,3 +1,4 @@
+import {registerAdvanceHook} from './advance-hooks.mjs';
 // Zone topology is authoritative for ordinary local walking. Optional points
 // adapt the already published spell handlers; they never determine edge length.
 import {environmentFeatures} from './environment-state.mjs';
@@ -76,3 +77,4 @@ export function zoneContactPending(d,actor='player'){
  const row=d.get('state','records',actor==='player'?'local_player_position':`local_actor_position:${actor}`);
  return row?.location===location&&row.zoneOnly===true;
 }
+registerAdvanceHook('placeLayout',placeLayout);registerAdvanceHook('zoneOf',zoneOf);registerAdvanceHook('zoneContactPending',zoneContactPending);
