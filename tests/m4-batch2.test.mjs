@@ -95,7 +95,7 @@ test('真实自愿精神施法分别验证行政许可与目标同意，未解�
  document.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',grantor:'npc_hw_gucen',location:document.state.location,expires:document.state.minute+60};
  const c=await cast(document,'spell_mind_01',{permit:'permit'},'calm');assert.equal(c.document.state.effects.fear.power,1);assert.equal(c.document.state.player.mp,document.state.player.mp-1);
  document.state.npcs.npc_hw_linsui.location=document.state.location;
- await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit',distanceMeters:0,lineOfSight:true},'fake'),/距离|视线/);
+ await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit',distanceMeters:0,lineOfSight:true},'fake'),/目标超过法术实际射程/);
  engine.magicTargetFacts=()=>({distanceMeters:1,lineOfSight:true});await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit'},'no-consent'),/本人/);
  document.state.records.consent={category:'authorization',action:'mental_magic',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',expires:document.state.minute+60};
  await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',authorization:'consent'},'no-permit'),/许可/);

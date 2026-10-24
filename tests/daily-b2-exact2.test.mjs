@@ -17,7 +17,7 @@ test('D08 天黑了：酉时末杂货铺（辰时至酉时营业）已关门不�
  const walk=await ui.choose('move',{destination:FORGE},{target:FORGE});assert.ok(walk.ok,walk.error);
  const dusk=await ui.read(),sun=await ui.choose('weather.inspect',{});
  assert.equal(sun.result.weather.daylight,false,'①此刻已过日落（天色已暗）');
- const closed=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH,search:true});
+ const closed=await ui.choose('trade.buy',{seller:SMITH,item:'item_iron_nail',quantity:2},{target:SMITH,search:true});
  assert.equal(closed.ok,false);assert.match(closed.error,/不提供交易服务/,'②杂货铺已关门，无法交易');assert.match(closed.error,/07:00/,'说明何时再开');
  assert.equal((await ui.read()).state.player.coins,100,'⑤玩家铜钱不变');assert.deepEqual((await ui.read()).state.inventory,before.state.inventory,'⑤背包不变');
  const outdoors=Object.entries(dusk.state.npcs).filter(([id,n])=>n.location==='loc_hw'&&id!==SMITH);assert.equal(outdoors.length,0,'③街上没有村民在逛');

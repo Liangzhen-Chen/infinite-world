@@ -197,7 +197,10 @@ function offer(ctx,action,target){
   if(slot.fill==='target'&&target)fill[slot.name]=target;
   if(target&&slot.name==='target'&&(action.id.startsWith('core:environment.')||action.id==='core:site.disarm'))fill.target=target;
   if(target&&slot.name==='location'&&action.id.startsWith('core:farm.private_'))fill.location=target;
-  if(slot.fill==='host'&&ctx.lodging&&ctx.present.has(ctx.lodging.host))fill[slot.name]=ctx.lodging.host;
+  // The registered host is public service information, not a claim that the
+  // player can currently see them. Trying to book still checks real presence
+  // and the host's service window in the native executor.
+  if(slot.fill==='host'&&ctx.lodging&&[ctx.engine.byId.get(ctx.lodging.host),ctx.s.npcs?.[ctx.lodging.host],ctx.s.created?.[ctx.lodging.host]].every(publicRow))fill[slot.name]=ctx.lodging.host;
   if(slot.fill==='banker'&&ctx.bank?.keepers?.some(id=>ctx.present.has(id)))fill[slot.name]=ctx.bank.keepers.find(id=>ctx.present.has(id));
   let choices=typeof slot.options==='string'?options(ctx,slot.options,target):Array.isArray(slot.options)?slot.options.map(v=>({value:v,label:slot.optionLabels?.[v]??CHOICES[v]??v})):null;
   if(action.call?.tool==='world_learn'){

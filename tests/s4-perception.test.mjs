@@ -15,6 +15,8 @@ import {nextNpcService} from '../server-plugin/npc-schedule.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 import {standing} from '../server-plugin/standing.mjs';
+import {lightAt} from '../server-plugin/magic-light.mjs';
+import {weatherAt} from '../server-plugin/weather.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const NPC='npc_bs_077_1',INN='bld_hw_qingdeng';
@@ -37,6 +39,13 @@ const next=nextNpcService(journey.engine,NPC,journey.document.state.minute,'teac
 assert.ok(next);await act(journey,'core:time',{minutes:next.minute-journey.document.state.minute+10});
 assert.equal(journey.document.state.npcs[NPC].location,'bld_bs_reed_dao');
 const fixture=()=>({engine:new WorldEngine(world),document:structuredClone(journey.document)});
+// These three cases require actual darkness, independent of the ordinary
+// occupied-room lighting rule. Explicitly unlit premises retain that premise.
+const darkInn=seedName=>{
+ const dark=structuredClone(world),place=dark.locations.find(l=>l.id===INN);
+ place.features.push({id:'feature_s402_unlit_lamp',name:'熄灭的室灯',kind:'lamp',owner:'npc_hw_linsui',access:'consent',position:[0,0],state:{emissionLuxAt1m:10,lit:false}});
+ const engine=new WorldEngine(dark);return {engine,document:engine.initialFromLegacy(seed,seedName)};
+};
 const event=f=>({verb:'harm',actor:NPC,location:f.document.state.location});
 
 test('I30 真实分区移动提供视距；看见不产生接触或区域法术坐标',async()=>{
@@ -63,11 +72,11 @@ test('I30 同刻的感知查询是只读且确定的，角色离开地点后不�
 });
 
 test('I30 night 真实等待入夜后只听见声音；知识与菜单均不泄漏声音来源身份',async()=>{
- const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-night');
+ const f=darkInn('s402-night');
  assert.equal(f.document.state.location,INN);
  const id='npc_hw_linsui',day=perceives(f.engine,f.document,id,{verb:'harm',actor:'player',location:INN});
  assert.equal(day.visual,true);
- // Published reception ends at 1260; 1200 is dark while the host is awake.
+ // Published reception ends at 1260; the explicitly unlit room stays dark.
  const wait=(1200-f.document.state.minute%1440+1440)%1440;
  await act(f,'core:time',{minutes:wait});
  const p=perceives(f.engine,f.document,id,{verb:'harm',actor:'player',location:INN});
@@ -100,7 +109,7 @@ test('I30 按真实作息等待睡眠者，睡眠与异地观察者不产生见�
 });
 
 test('I30 touch 夜间真实走到玩家身边建立接触；证据到期后不再凭同区认出行为者',async()=>{
- const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-touch');
+ const f=darkInn('s402-touch');
  await act(f,'core:time',{minutes:(1200-f.document.state.minute%1440+1440)%1440});
  const id='npc_hw_linsui',layout=placeLayout(f.engine,f.document);
  moveNpc(f,id,layout.entry);moveNpc(f,id,'player');
@@ -114,7 +123,7 @@ test('I30 touch 夜间真实走到玩家身边建立接触；证据到期后不�
 });
 
 test('I30 heard-theft 真实夜间偷窃只留下声音版本，不能升级成身份、证词或传闻',async()=>{
- const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-heard');
+ const f=darkInn('s402-heard');
  await act(f,'core:time',{minutes:(1200-f.document.state.minute%1440+1440)%1440});
  const {result,before}=await act(f,'core:crime.steal',{target:'npc_hw_linsui',coins:10},'s402-heard-theft');
  const e=f.document.state.records['world_event:s402-heard-theft'],incident=f.document.state.records[result.case];
@@ -173,4 +182,48 @@ test('I30 地点菜单和场景文字采用同一感知来源，读取不改变�
  const lines=sceneLines(f.engine,f.document);assert.ok(lines.some(s=>s.includes('所在分区')));
  assert.equal(placeLayout(f.engine,f.document).location,f.document.state.location);
  assert.deepEqual(f.document,before);
+});
+
+test('I30 occupied-inn 夜间营业照明由实际在岗派生；不会照明术也能看见店主并交易',async()=>{
+ // A building remains indoors even if an older climate list omitted it.
+ const w=structuredClone(world);for(const r of w.rules.weather.regions)r.indoor=r.indoor.filter(id=>id!==INN);
+ const f={engine:new WorldEngine(w)};f.document=f.engine.createCharacter(seed,{},'s402-occupied-inn');
+ assert.deepEqual(f.document.state.spells,{});
+ await act(f,'core:move',{destination:INN,mode:'walk'});
+ await act(f,'core:time',{minutes:(1200-f.document.state.minute%1440+1440)%1440});
+ const before=structuredClone(f.document),id='npc_hw_linsui';
+ assert.equal(visibleEntity(f.engine,f.document,id),true);
+ const menu=worldActions(f.engine.scoped(f.document),f.document,{target:id});
+ assert.ok(menu.actions.some(a=>a.id==='core:trade.buy'));
+ assert.ok(menu.actions.find(a=>a.id==='core:trade.buy').slots.find(s=>s.name==='item').options.some(o=>o.value==='item_bread'),'室内有实际照明，公开商品也可辨认');
+ const {result}=await act(f,'core:trade.buy',{seller:id,item:'item_bread',quantity:1});
+ assert.equal(before.state.player.coins-f.document.state.player.coins,result.cost);
+ assert.equal(f.document.state.npcs[id].coins-before.state.npcs[id].coins,result.cost);
+ assert.equal(f.document.state.inventory.item_bread.quantity,(before.state.inventory.item_bread?.quantity??0)+1);
+ assert.deepEqual(f.document.state.spells,{});
+ assert.deepEqual(auditLedger(f.document.ledger),[]);
+ await act(f,'open:question',{target:id,content:'请问店里还营业吗？'});
+});
+
+test('I30 unoccupied-and-outdoors 空屋没有派生灯光；真实走到无月光野外仍不能看清远处人物',async()=>{
+ const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-outdoors');
+ const location='loc_hw_dock',id='npc_hw_linsui';
+ await act(f,'core:move',{destination:location,mode:'walk'});
+ let night=Math.floor(f.document.state.minute/1440)*1440+1200;
+ while(night<=f.document.state.minute||weatherAt(f.engine,f.document.randomSeed,location,night).kind==='clear')night+=1440;
+ await act(f,'core:time',{minutes:night-f.document.state.minute});
+ const engine=f.engine.scoped(f.document),d=engine.primitiveDraft(f.document);
+ engine.primitiveMoveNpc(d,{entity:id,destination:location,mode:'walk'},'s402-walk-outside');
+ f.document=applyPatches(f.document,d.patches);
+ const layout=placeLayout(f.engine,f.document),away=layout.zones.find(z=>z.id!==layout.entry);
+ assert.ok(away);moveNpc(f,id,away.id);
+ const p=perceives(f.engine,f.document,'player',{actor:id,location,volume:20});
+ assert.ok(p.distanceMeters>0);assert.equal(p.visual,false);assert.equal(p.identified,false);
+ assert.equal(weatherAt(f.engine,f.document.randomSeed,location,f.document.state.minute).daylight,false);
+ const empty=world.locations.find(l=>l.id.startsWith('bld_')&&weatherAt(f.engine,f.document.randomSeed,l.id,f.document.state.minute)?.indoors&&!l.lighting&&!(l.features??[]).some(r=>r.kind==='lamp'||r.state?.emissionLuxAt1m!==undefined)&&
+  !Object.values(f.document.state.npcs).some(n=>n.location===l.id));
+ assert.ok(empty,'世界中须有实际无人建筑');
+ const read={document:f.document,get:(...path)=>path.reduce((v,k)=>v?.[k],f.document)};
+ assert.equal(lightAt(read,f.engine,empty.id,[0,0]).lux,0);
+ assert.deepEqual(auditLedger(f.document.ledger),[]);
 });

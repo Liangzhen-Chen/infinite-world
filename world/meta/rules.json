@@ -2024,6 +2024,7 @@
     }
   ],
   "environment": {
+    "occupiedIndoorAmbientLux": 10,
     "minimumCondensationHumidity": 5,
     "carrySiltMaximumGrams": 1000,
     "carrySiltMinutes": 20,

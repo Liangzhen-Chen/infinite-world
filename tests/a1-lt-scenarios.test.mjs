@@ -139,7 +139,9 @@ test('T3 要去王都：不瞬移，沿路线走若干天；尾注直接改地�
 test('T4 夜里去铁匠铺：能走到门口，但店主睡下不营业，说明何时开门，钱不动',async t=>{
  const ui=await uiSession(t,{mutate:at('loc_hw',23*60)});
  assert.ok((await ui.choose('move',{destination:FORGE},{target:FORGE})).ok);
- const before=await ui.read(),r=await ui.choose('trade.buy',{item:'item_kitchen_knife',quantity:1},{target:SMITH});
+ // A known closed shop can be addressed without seeing its sleeping keeper;
+ // this is a request, not an assertion of visible stock or an available sale.
+ const before=await ui.read(),r=await ui.choose('trade.buy',{seller:SMITH,item:'item_kitchen_knife',quantity:1},{target:SMITH,search:true});
  assert.equal(r.ok,false);assert.match(r.error,/此刻不提供交易服务/);assert.match(r.error,/08:00/);
  assert.equal((await ui.read()).state.player.coins,before.state.player.coins);
 });
