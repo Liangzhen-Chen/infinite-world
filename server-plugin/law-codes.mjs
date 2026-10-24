@@ -5,6 +5,7 @@ import {regionOf} from './regions.mjs';
 import {standing} from './standing.mjs';
 import {personOffices,personCareer,settlementHead} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
+import {normStack,normCode} from './norm-stack.mjs';
 
 export const legalTemplate=(world,county)=>world.rules.law?.templates?.find(t=>t.polity===(county.ruler.polity.startsWith('王国')?'王国':county.ruler.polity)&&(!t.province||t.province===county.province));
 export const legalStaffing=level=>level==='村'?1:level==='镇'?2:3;
@@ -55,7 +56,7 @@ function nationLegalCodes(world,state,codes){
 }
 // Local norms keep precedence. Where they have no court, only an actual
 // administrative ancestor/seat may supply jurisdiction (never a nearby village).
-export function legalCodeAt(engine,location,state={}){
+function executableCodeAt(engine,location,state={}){
  const codes=legalCodes(engine.world,state),local=codes.find(c=>c.locations.includes(location));
  if(local)return local;
  const nation=nationAt(engine,state,location);
@@ -65,6 +66,19 @@ export function legalCodeAt(engine,location,state={}){
  const seats=[region.county.seat?.location,state.remote?.[region.county.id]?.skeleton?.seat,region.province?.seat?.location];
  return seats.filter(Boolean).map(seat=>codes.find(c=>c.locations.includes(seat)))
   .find(c=>c&&codeTemplate(engine,c)?.id===template?.id&&c.court&&c.judges.length&&c.officers.length)??null;
+}
+// Applicable law is available even when no current court can execute it.
+export function applicableLawAt(engine,location,state={},actor=null,minute=state.minute??0){
+ return normCode(normStack(engine,state,actor,location,minute,{codes:legalCodes(engine.world,state)}));
+}
+export function legalCodeAt(engine,location,state={}){
+ const executor=executableCodeAt(engine,location,state);if(!executor)return null;
+ const norms=normStack(engine,state,null,location,state.minute??0,{codes:legalCodes(engine.world,state)}),law=normCode(norms);
+ if(!law)return executor;
+ const result={...executor};
+ for(const field of ['penalties','civil','authorization','stances','evidenceRequired','reportMinutes','searchMinutes','hearingMinutes','communityMinutesPerCopper','prisonMinutesPerCopper','maximumSentenceMinutes','appeal','procedure','procedureCosts'])if(Object.hasOwn(law,field))result[field]=law[field];
+ if(engine.rules.law?.normStackVersion===1)result.normSources=norms.map(({layer,place,source,version})=>({layer,place,source,version}));
+ return result;
 }
 export function legalCodeById(engine,id,state={}){return legalCodes(engine.world,state).find(c=>c.id===id)??engine.rules.law?.codes?.find(c=>c.id===id)??null;}
 export function courtHierarchy(engine,state,code){
@@ -110,7 +124,7 @@ export function codeTemplate(engine,code){
  return county?legalTemplate(engine.world,county)??null:null;
 }
 // A code's sentence for an offense: the code itself, then its polity's L1 code.
-export function codePenalty(engine,code,offense){return code?.penalties?.[offense]??codeTemplate(engine,code)?.penalties?.[offense]??null;}
+export function codePenalty(engine,code,offense){const value=code?.penalties?.[offense];return value!==undefined&&value!=='inherit'?value:codeTemplate(engine,code)?.penalties?.[offense]??null;}
 // R10A: who judges unlicensed mining here, derived from where the place is now.
 // A registered code (or its settlement's) files a case under the local polity's
 // sentence; autonomous settlements answer to their own council's custom; polity
@@ -138,11 +152,11 @@ export function miningJurisdiction(engine,state,location,offense='illegal_mining
   const penalty=codePenalty(engine,code,offense),template=codeTemplate(engine,code);
   if(!penalty)throw Error(`法典 ${code.id} 缺少${offense}罪名`);
   const custom=localCustom();
-  return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:template?.stances?.mining??null,executable:true,...(custom?{custom}:{})};
+  return{kind:'code',code,law:code.id,polity:code.polity??(template?.polity??null),template:template?.id??null,penalty,stance:code.stances?.mining??template?.stances?.mining??null,executable:Boolean(code.court&&code.judges?.length&&code.officers?.length),...(custom?{custom}:{})};
  }
  const custom=localCustom();if(custom)return custom;
  const county=regionOf(world,location)?.county,template=county&&legalTemplate(world,county);
  if(!template)throw Error(`${location} 无法派生所属政体法典`);
- const penalty=template.penalties?.[offense];if(!penalty)throw Error(`法典 ${template.id} 缺少${offense}罪名`);
+ const applicable=applicableLawAt(engine,location,state),penalty=applicable?.penalties?.[offense];if(!penalty)throw Error(`法典 ${template.id} 缺少${offense}罪名`);
  return{kind:'polity',law:template.id,polity:template.polity,template:template.id,county:county.id,penalty,stance:template.stances?.mining??null,executable:false};
 }

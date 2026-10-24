@@ -6,6 +6,7 @@ import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {validateDomainRules} from '../server-plugin/domain-rules.mjs';
+import {validateNormBindings} from '../server-plugin/norm-stack.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -40,6 +41,17 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const faith=await optional('lore/faith.json');if(!Array.isArray(faith))rules.faith=faith;
     const sovereignty=await optional('lore/sovereignty.json');if(!Array.isArray(sovereignty))rules.governance.sovereignty=sovereignty;
     const familyLaw=await optional('lore/family-law.json');if(!Array.isArray(familyLaw))rules.law.family=familyLaw;
+    // Bindings are archived with the campaign's rules. Historical editions with
+    // no binding file keep their original shape.
+    const lawBindings=await optional('law/bindings.json');
+    if(!Array.isArray(lawBindings))throw Error('E-NORM-BINDING: law/bindings.json must be an array');
+    if(lawBindings.length){
+        if(rules.law.bindings&&JSON.stringify(rules.law.bindings)!==JSON.stringify(lawBindings))throw Error('E-NORM-BINDING: rules and law/bindings.json disagree');
+        rules.law.bindings=lawBindings;
+        // The archived edition, rather than a current loader default, owns the
+        // semantics. Old campaign worlds have no bindings/version marker.
+        rules.law.normStackVersion=1;
+    }
     // D1: biome tags and areas live in geo/biomes.json (kept apart from the
     // locations file); they are merged into their locations here for K8.
     const biomes=await optional('geo/biomes.json');
@@ -56,6 +68,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
+    const normErrors=validateNormBindings(world);if(normErrors.length)throw Error(normErrors.join('; '));
     if(autonomyCandidates.length)world.autonomy={candidates:autonomyCandidates};
     // Dialogue templates are pinned with the campaign world, including wording
     // persisted in a conversation. A later content update cannot alter replay.
@@ -110,6 +123,7 @@ export function authoredRules(rules){
     if(out.wildlife?.habitats?.some(h=>h.derived))out.wildlife={...out.wildlife,habitats:out.wildlife.habitats.filter(h=>!h.derived)};
     if(out.governance?.sovereignty!==undefined){out.governance={...out.governance};delete out.governance.sovereignty;}
     if(out.law?.family!==undefined){out.law={...out.law};delete out.law.family;}
+    if(out.law?.bindings!==undefined){out.law={...out.law};delete out.law.bindings;delete out.law.normStackVersion;}
     if(out.factionClock){
         const clocks=out.factionClock.clocks.filter(c=>!String(c.id).startsWith('faith:'));
         if(clocks.length===out.factionClock.clocks.length){/* no derived rows */}
