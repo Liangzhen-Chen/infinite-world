@@ -142,7 +142,7 @@ const SYSTEMS=[
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
  {id:'base_events',layer:'base',name:'世界事件',card:'K3/V6',modules:['world-events.mjs','entity-transitions.mjs']},
- {id:'base_standing',layer:'base',name:'统一立场',card:'K4/K5',modules:['standing.mjs','entity-view.mjs']},
+ {id:'base_standing',layer:'base',name:'统一立场与派生修正',card:'K4/K5/S5-01',modules:['standing.mjs','entity-view.mjs','derived.mjs']},
  {id:'base_npc_decision',layer:'base',name:'主观视图与 NPC 决策',card:'A2',modules:['subjective-view.mjs','npc-decision.mjs','autonomy-candidates.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs','advance-hooks.mjs']},

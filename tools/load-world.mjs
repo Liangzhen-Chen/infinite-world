@@ -10,6 +10,7 @@ import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {validateDomainRules} from '../server-plugin/domain-rules.mjs';
 import {validateNormBindings} from '../server-plugin/norm-stack.mjs';
+import {loadDerivedRegistry} from '../server-plugin/derived.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -98,6 +99,9 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);
+    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json');
+    world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:derivations.modifiers??[],conduction:slots.conduction??{}};
+    loadDerivedRegistry(world);
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));

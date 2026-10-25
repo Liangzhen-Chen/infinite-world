@@ -1,0 +1,36 @@
+{
+  "slots": [
+    {"id":"economy:value","stages":["add","mul","clamp"],"bounds":[0.1,20],"kindBounds":{"item":[0.1,20],"labor":[0.3,5],"land":[0.2,5],"creature":[0.2,5]},"relative":true},
+    {"id":"economy:wage","alias":"economy:value","kind":"labor"},
+    {"id":"economy:artifactValue","alias":"economy:value","kind":"item"},
+    {"id":"economy:livestockValue","alias":"economy:value","kind":"creature"},
+    {"id":"economy:landValue","alias":"economy:value","kind":"land"},
+    {"id":"economy:price","stages":["add","mul","clamp"],"bounds":[0.2,5],"relative":true},
+    {"id":"economy:yield","stages":["add","mul","max","min","clamp"],"bounds":[0,3],"relative":true},
+    {"id":"facilities:fireRisk","stages":["add","mul","clamp"],"bounds":[0,0.5],"relative":false},
+    {"id":"facilities:extraction","stages":["mul","min","clamp"],"bounds":[0,1],"relative":true},
+    {"id":"weather:precipitation","stages":["add","mul","min","clamp"],"bounds":[0,3],"relative":true},
+    {"id":"weather:temperature","stages":["add","min","max","clamp"],"bounds":[-40,50],"stageBounds":{"add":[-15,15]},"relative":false},
+    {"id":"body:drain","bounds":[0.25,4],"relative":true},
+    {"id":"body:recover","bounds":[0.25,4],"relative":true},
+    {"id":"population:birthRate","stages":["mul","min","clamp"],"bounds":[0,3],"relative":true},
+    {"id":"population:marriageRate","stages":["mul","min","clamp"],"bounds":[0,3],"relative":true},
+    {"id":"life:aging","stages":["mul","min","clamp"],"bounds":[0,2],"relative":true},
+    {"id":"service:capacity","stages":["add","mul","clamp"],"bounds":[0,50],"relative":false},
+    {"id":"transport:speed","bounds":[0.25,2],"relative":true},
+    {"id":"transport:capacity","bounds":[0.25,2],"relative":true},
+    {"id":"transport:risk","stages":["add","mul","min","clamp"],"bounds":[0,1],"relative":false},
+    {"id":"combat:deterrence","stages":["add","mul","max","clamp"],"bounds":[0,1],"relative":false},
+    {"id":"social:distortion","bounds":[0,3],"relative":true},
+    {"id":"social:recall","bounds":[0,1],"relative":false},
+    {"id":"social:credence","bounds":[0,1],"relative":false},
+    {"id":"tax:inspection","bounds":[0,1],"relative":false},
+    {"id":"effective","closed":true,"reason":"当前职能由生存、失能与受限制度决定，不能受外力修正"},
+    {"id":"random","closed":true,"reason":"掷骰结果由世界种子决定，不能受外力修正"}
+  ],
+  "conduction": {
+    "household_member":0.5,"kin":0.5,"member_of":0.5,"business_member_of":0.5,
+    "allied_with":0.25,"citizen_of":0.3,"resident_of":0.3,"holds_office":0.5,
+    "devotee_of":0.5,"employed_by":0.5,"operates":0.5,"mentor_of":0.5
+  }
+}
