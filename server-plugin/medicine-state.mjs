@@ -6,7 +6,7 @@ import {contractTerms} from './contract-state.mjs';
 import {recordsWhere} from './storage.mjs';
 // Consultations, stock use and appointments are facts; staff and capacity are views.
 export const MEDICAL_SKILL='skill_life_19_core';
-export const medicineFresh=e=>!e.replaying||e.replayResult?.medicineVersion===1;
+
 export const medicineRows=s=>recordsWhere(s.records,'category','medicine_visit');
 export const medicineReservation=(s,id,start,minutes=1)=>medicineRows(s).find(r=>r.status==='预约'&&[r.patient,r.doctor,...r.assistants??[]].includes(id)&&start<r.end&&start+Math.max(1,minutes)>r.depart);
 export function medicalSkill(e,s,id){

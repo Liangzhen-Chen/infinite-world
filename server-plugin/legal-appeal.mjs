@@ -137,7 +137,7 @@ function complete(d,e,row,result,eventId,extra={}){
  const record={id:`legal_trial:${eventId}`,category:'legal_trial',trialVersion:TRIAL_VERSION,case:row.id,
   row:structuredClone(row),result:persistable(result),...extra};
  holdingSet(d,e,path(record.id),record,'legal-appeal');
- return {...result,trialVersion:TRIAL_VERSION,trialRecord:record};
+ return {...result,trialRecord:record};
 }
 function verify(d,e,row,id,judge,eventId){
  const paper=institutionOriginal(e,d.document,id),doc=paper?.document;
@@ -157,7 +157,7 @@ export function trialAction(d,e,row,code,args,eventId,{penalty,submitDocument,ad
  const supported=['hear','request_hearing','appeal','request_review','review','decide_case','pay','execute_fine','submit_evidence','verify_evidence','hire_advocate'];
  if(!supported.includes(op))return null;
  const recorded=e.replaying?e.replayResult?.trialRecord:null,prior=s.records[`legal_trial:${eventId}`];
- if(prior){if(prior.case!==row.id)fail('法律事件编号已被其他案件使用');return {...prior.result,trialVersion:1,trialRecord:prior};}
+ if(prior){if(prior.case!==row.id)fail('法律事件编号已被其他案件使用');return {...prior.result,trialRecord:prior};}
  if(recorded?.trialVersion===1){
   if(recorded.case!==row.id)fail('复演案件不符');
   if(recorded.minutes)advance(d,e,recorded.minutes,eventId,[recorded.authority].filter(x=>x!=='player'));

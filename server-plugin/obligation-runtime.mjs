@@ -58,7 +58,7 @@ function receipt(d,e,id,eventId,verb,args,fn){
     });
 }
 function write(d,e,row){
-    d.obligationRuntimeVersion=1;
+
     d.set(['state','obligations',row.id],row);
     if(row.legacyRecord){
         const old=read(d,'state','records',row.legacyRecord)??{};
@@ -221,7 +221,7 @@ export function openObligation(d,e,args,eventId,{authorize=null}={}){
         const spec=obligationKind(args);
         const row=snapshotObligationTerms(clean({...args,id,actor,runtimeVersion:1,kind:spec.id,amount:args.amount??0,createdAt:minute,paid:0,status:'pending',
             signingPlace:place,terms:{...args.terms},events:[]}));
-        const signed=e.replaying&&e.replayResult?.obligationSigningVersion===1?e.replayResult.signedObligations?.[id]:null;
+        const signed=e.replaying?e.replayResult?.signedObligations?.[id]:null;
         const code=signed?null:legalCodeAt(e,place,s);
         row.terms={...row.terms,actor,...(signed?structuredClone(signed):{actedAs:structuredClone(args.actedAs??null),inName:args.inName??actor,
             signingPlace:row.signingPlace,signingMinute:minute,signingLaw:code?.id??null,signingLawVersion:code?digest(code):null})};
@@ -354,8 +354,7 @@ export function settleObligation(d,e,args,eventId,{authorize=null}={}){
         if(row.terms?.legalFineVersion===1)advanceHook('legalFineSettled')?.(d,e,next,eventId);
         if(instrument&&!remaining)holdingSet(d,e,['state','itemInstances',instrument.id],{...instrument.item,status:'redeemed',redeemedAt:s.minute,settledBy:eventId},W);
         if(!remaining&&row.legacyRecord&&(row.pledgeRecord||row.defaulted?.case))e.protocolDebtSettled?.(d,{...next,unpaid:0},eventId);
-        if(e.replaying&&e.replayResult?.obligationSettlementVersion!==1)return {id,transferred,remaining,evidence:eventId,accounts:{from,to}};
-        d.obligationSettlementVersion=1;
+
         const payment={payer,actor:args.judicial?.authority??actor,debtor:row.debtor,creditor,
             location:funding?.seat??(escrow?(escrow.location??settlementLocation(e,s,creditor)):settlementLocation(e,s,actor)),accounts:{from,to},
             ...(args.actedAs?{actedAs:structuredClone(args.actedAs)}:{}),...(collection?{collector:collection.collector}:{})};

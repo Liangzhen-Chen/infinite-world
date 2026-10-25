@@ -44,7 +44,7 @@ async function burn(f,doc,prefix,options){
 
 test('每次结算生成规范化事件：法术伤人记为harm并进统一事件记录',async()=>{
  const f=fixture(),out=await burn(f,f.document,'fire');
- assert.equal(out.result.worldEventVersion,1);
+
  const row=worldEvents(out.document.state,e=>e.verb==='harm').at(-1);
  assert.deepEqual({verb:row.verb,actor:row.actor,target:row.target,harm:row.harm,location:row.location,minute:row.minute},
   {verb:'harm',actor:'player',target:person,harm:out.result.damage,location:market,minute:out.document.state.minute});
@@ -63,14 +63,6 @@ test('法术伤及聚居地成员与刀兵同样进入社会链路：立场、�
   const relation=state.npcs[person].relationships.player;assert.equal(relation.affection<=-3,true);assert.ok(relation.fear>=1);
   assert.ok(state.npcs[person].memoryStream.some(m=>m.kind==='conflict'&&m.content.includes('事件火束')));
  }
-});
-
-test('旧账重放不把旧施法补成社会伤害，也不写事件记录',async()=>{
- const f=fixture(),live=await burn(f,f.document,'fire');
- const eventId=Object.keys(live.document.state.records).find(k=>k.startsWith('world_event:')).slice('world_event:'.length);
- const old=await f.run(f.document,'world_cast',{spell:f.spell.id,target:person},eventId,{replay:true,result:{}});
- assert.equal(old.document.state.records[`world_event:${eventId}`],undefined);
- assert.equal(stanceOf(old.document.state,f.engine,seat,'player'),stanceOf(f.document.state,f.engine,seat,'player'));
 });
 
 test('被目击的偷窃与赠礼按动词订阅：聚居地立场下降或缓和，首领记住来者',()=>{

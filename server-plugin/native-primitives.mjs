@@ -5,12 +5,6 @@ import {applyPatches,digest} from './storage.mjs';
 
 class Refused extends Error{constructor(result){super(result.reason??'Native effect refused');this.code='E-NATIVE-REFUSED';this.result=result;}}
 const savedData=value=>value===undefined?null:JSON.parse(JSON.stringify(value));
-// Before events carried a version, a3a still persisted native receipts. The
-// verified event patches distinguish those events from master without changing
-// their results or trusting the current campaign's (possibly newer) records.
-export function nativePrimitiveReplayVersion({replay=false,result,patches}={}){
- return !replay||result?.nativePrimitiveVersion===1||patches?.some(p=>p.op==='set'&&p.path.length===3&&p.path[0]==='state'&&p.path[1]==='records'&&p.path[2].startsWith('primitive:native:')&&p.value?.category==='primitive_receipt')?1:0;
-}
 export function nativePrimitiveTransaction(d,{family,sourceEvent,actor='player',program,primitives,apply,describe=null,engine=d.engine}){
  // Identity is the source event, the program and the minute, plus how many
  // transactions of exactly that identity already have receipts; unrelated

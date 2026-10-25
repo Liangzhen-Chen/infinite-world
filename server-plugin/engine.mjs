@@ -1,12 +1,10 @@
 import {advanceHook} from './advance-hooks.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
-import {nativePrimitiveReplayVersion} from './native-primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {reject} from './action-rejection.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
-import {NPC_CRIME_VERSION} from './npc-crime.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
 import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
@@ -53,11 +51,8 @@ import {tradeQuote,recordDeal,agreedTradeQuote,consumeAgreedQuote,executeAgreedR
 import {assertLodgingCapacity,assertRestBed,selectLodgingBed} from './facility-state.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
-import {QUEST_SOURCES_VERSION,openSettlementLedgers}from'./quest-sources.mjs';
-import {villageWildlifeFresh}from'./quest-wildlife.mjs';
-import {TRIBAL_AWAKENING_VERSION}from'./tribal-awakening.mjs';
-import {MILITARY_VERSION}from'./military.mjs';
-import {WAR_VERSION}from'./war-diplomacy.mjs';
+import {openSettlementLedgers}from'./quest-sources.mjs';
+
 import {warClosedRoutes}from'./hazard-calendar.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
 import {wildlifePriceFactor,wildlifeEncounterAt,settleWildlifeEncounter,wildlifeEncounterView}from'./wildlife.mjs';
@@ -76,12 +71,12 @@ import {createNpcObligation,assertNpcObligationAction,npcObligationAt,advanceNpc
 import {applyNpcRelation}from'./npc-relations.mjs';
 import {assertSocietyTrade,societyNewsConsumer,societyIssueConsumer}from'./monster-society.mjs';
 import {resolveToolCall}from'../extension/tools.mjs';
-import {deriveWorldEvents,publishWorldEvents,WORLD_EVENT_VERSION,SOCIAL_VERBS}from'./world-events.mjs';
+import {deriveWorldEvents,publishWorldEvents,SOCIAL_VERBS}from'./world-events.mjs';
 import './wildlife-society.mjs';// world-event subscriber (registers itself)
 import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import {adjustStanding,standing} from './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
-import {INTELLIGENCE_VERSION,intelligenceFresh,trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
+import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
@@ -92,11 +87,11 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
-import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationLayersFresh,populationPlan}from'./population.mjs';
+import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
 import {beginHouseholdReads}from'./npc-state.mjs';
-import {advanceLayersFresh}from'./advance-layers.mjs';
+
 import {smuggleTrade,inspectSmuggling}from'./smuggling.mjs';
 import {withLedger,finishLedger,transfer,accountKey,declareLedgerWriter,LEDGER_COIN}from'./ledger.mjs';
 import {declareHoldingWriter,holdingSet,bookHoldingsUpgrade,holdingRemove,resyncHoldings,runLifecycleProtocol} from './holdings.mjs';
@@ -288,15 +283,11 @@ export class WorldEngine {
     }
     formatCalendar(minute){return this.calendar(minute).text;}
     async reduce(document,input,options={}) {
-        options={...options,nativePrimitiveVersion:nativePrimitiveReplayVersion(options)};
         const out=await actionBoundary(this,document,input,()=>this.reduceAction(document,input,options));
-        if(!this.compat&&(!options.replay||options.result?.obligationSigningVersion===1)){
+        if(!this.compat){
             const signed=advanceHook('obligationSigningFacts')?.(document,applyPatches(document,out.patches));
-            if(signed&&Object.keys(signed).length)Object.assign(out.result,{obligationSigningVersion:1,signedObligations:signed});
+            if(signed&&Object.keys(signed).length)Object.assign(out.result,{signedObligations:signed});
         }
-        if(!this.compat&&(!options.replay||options.result?.organizationConsentVersion===1))out.result.organizationConsentVersion=1;
-        if(!this.compat&&(!options.replay||options.result?.educationVersion===1))out.result.educationVersion=1;
-        if(!this.compat&&options.nativePrimitiveVersion===1)out.result.nativePrimitiveVersion=1;
         return out;
     }
     async reduceAction(document,input,options={}) {
@@ -326,11 +317,10 @@ export class WorldEngine {
         if(input.type==='npc_plan'){
             if(document.releaseVersion!==1)throw new Error('人物计划需要完成战役初始化');
             const books=withBooks(this,document),d=new Draft(books.document,this),session=this.scoped(document),id=text(input.eventId,120);
-            session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const detail=applyNpcPlan(d,session,input.plan,id);
-            if(!session.replaying||session.replayResult?.perceptionVersion===1)detail.perceptionVersion=1;
             d.set(['state','npcPlanning'],{day:Math.floor(document.state.minute/1440),minute:document.state.minute,location:document.state.location,sourceEvent:id});
-            return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
+            return{patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),notices:stateNotices(document.state,d.get('state'),key=>session.byId.get(key)?.name)}};
         }
         if(input.tool==='world_propose'){
             const books=withBooks(this,document),applied=await primitiveActionRuntime().propose(this,books.document,input,{options});
@@ -343,19 +333,19 @@ export class WorldEngine {
             if(runtime.isNativeAction(this,input)){
                 if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
                 const books=withBooks(this,document),session=this.scoped(document);
-                session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
+                session.replaying=Boolean(options.replay);session.replayResult=options.result;
                 const native=runtime.nativeAction(session,books.document,input);
                 const next=applyPatches(books.document,native.patches);
-                return {patches:finishLedger(native.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
+                return {patches:finishLedger(native.patches,books.opening),result:{ok:true,action:input.args.action,receipt:native.receipt,events:native.events,minute:next.state.minute,messages:[],notices:[]}};
             }
             const translated=runtime.resolve(this,input);
             if(!translated.effects)return this.reduce(document,{...input,tool:translated.tool,args:translated.args},{...options,legacyAction:{id:translated.action.id,slots:input.args?.slots??{}}});
             if(document.releaseVersion!==1)throw Error('Primitive actions require an initialized campaign');
             const books=withBooks(this,document),session=this.scoped(document);
-            session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;
+            session.replaying=Boolean(options.replay);session.replayResult=options.result;
             const applied=runtime.execute(session,books.document,input,{createDraft:doc=>new Draft(doc,session),openProposal:options.openProposal});
             const next=applyPatches(books.document,applied.patches);
-            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,...(!session.replaying||session.replayResult?.perceptionVersion===1?{perceptionVersion:1}:{}),receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
+            return {patches:finishLedger(applied.patches,books.opening),result:{ok:true,receipt:applied.receipt,events:applied.events,minute:next.state.minute,messages:[],notices:[]}};
         }
         const resolved=resolveToolCall(input.tool,input.args??{});
         if(resolved.tool==='world_practice'&&!resolved.args.breakthroughSource&&(!options.replay||options.result?.cost)&&this.world.actionDefinitions&&primitiveActionRuntime()?.registry(this).byId.has('core:practice.session')){
@@ -390,7 +380,7 @@ export class WorldEngine {
         if (!['trade','time','move','turn','health','revive','revival','check','practice','cast','learn','profession','attributes','relation','promise','remember',...Object.keys(activities)].includes(tool)) throw new Error('未知工具职责');
         if(isPhysicallyDead(this,d,'player')&&!['time','turn','revive'].includes(tool))reject('E-ACTION-PRECONDITION','你已经死亡，需要在登记点醒来后行动');
         if(d.get('state','player','status')==='濒死'&&!['time','turn','health','cast'].includes(tool))reject('E-ACTION-PRECONDITION','你处于濒死状态，只能等待救治或尝试自救');
-        const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.nativePrimitiveVersion=options.nativePrimitiveVersion;session.npcObligationAction={tool,args};
+        const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
             const target=session.resolve(args.target);
@@ -406,7 +396,6 @@ export class WorldEngine {
         session.bookedWorkstation=bookedWorkstation;
         const callArgs=bookedWorkstation&&Number.isSafeInteger(args.batches)&&args.batches>=1&&args.batches<=100000?{...args,batches:Math.min(args.batches,bookedWorkstation.maxBatches)}:args;
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
-        if(!session.replaying||session.replayResult?.perceptionVersion===1)detail.perceptionVersion=1;
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
@@ -420,16 +409,16 @@ export class WorldEngine {
         // S2a: 新生成的远方郡只出现在叠加世界里：用叠加世界的引擎把持有存储重同步（居民的居住、家户、官职等）。
         if(remote)resyncHoldings(d,remoteEngine(this,d.document,world=>new WorldEngine(world)));
         const population=document.state.location!==d.get('state','location')&&(!options.replay||options.result?.population)?unfoldPopulationAt(d,session,d.get('state','location')):null;
-        if(document.state.location!==d.get('state','location')&&Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)){
+        if(document.state.location!==d.get('state','location')&&Object.keys(d.get('state','remote')??{}).length){
             const arrival=this.scoped(d.document),now=d.get('state','minute');
-            arrival.replaying=session.replaying;arrival.replayResult=session.replayResult;arrival.nativePrimitiveVersion=session.nativePrimitiveVersion;
+            arrival.replaying=session.replaying;arrival.replayResult=session.replayResult;
             advanceNpcSchedules(d,arrival,now,now,{promote:true});
         }
         settleMagicAreas(d,session);
         advancePets(d,session,d.get('state','minute'));
         advanceSummons(d,d.get('state','minute'));
         advanceLaw(d,d.get('state','minute'),session);
-        const worldEvent={tool,args,detail,eventId:id,before:document.state,legacy:Boolean(options.replay)&&options.result!==undefined&&options.result?.worldEventVersion!==WORLD_EVENT_VERSION,noop:!d.patches.length};
+        const worldEvent={tool,args,detail,eventId:id,before:document.state,noop:!d.patches.length};
         // A read-only instant look (inspect, view) changes nothing and is no world event.
         const readOnly=detail?.actionScope?.kind==='instant'&&!d.patches.length;
         if(!readOnly)publishWorldEvents(d,session,deriveWorldEvents(session,document.state,d.get('state'),worldEvent),worldEvent);
@@ -445,16 +434,7 @@ export class WorldEngine {
         if(d.scheduler&&(document.state.scheduler||d.scheduler.seq!==d.schedulerBaseline.seq||d.scheduler.lastSettled!==d.schedulerBaseline.lastSettled)){
             d.set(['state','scheduler','seq'],d.scheduler.seq);d.set(['state','scheduler','lastSettled'],d.scheduler.lastSettled);
         }
-        const result={ok:true,...detail,...(d.obligationRuntimeVersion?{obligationRuntimeVersion:1}:{}),...(remote?{remote}:{}),...(population?{population}:{}),legalProcedureVersion:1,...(!session.replaying||session.replayResult?.legalFilingVersion===1?{legalFilingVersion:1}:{}),...(!session.replaying||session.replayResult?.educationVersion===1?{educationVersion:1}:{}),...(!session.replaying||session.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION?{npcCrimeVersion:NPC_CRIME_VERSION}:{}),worldEventVersion:WORLD_EVENT_VERSION,...(intelligenceFresh(session)?{npcIntelligenceVersion:INTELLIGENCE_VERSION}:{}),...(factionClockRules(session).length?{factionClockVersion:1}:{}),...(session.rules.questSources?{questSourcesVersion:QUEST_SOURCES_VERSION}:{}),...(session.rules.tribalAwakening?{tribalAwakeningVersion:TRIBAL_AWAKENING_VERSION}:{}),...(session.rules.military?{militaryVersion:MILITARY_VERSION}:{}),...(session.rules.warDiplomacy?{warVersion:WAR_VERSION}:{}),minute:d.get('state','minute'),messages:d.messages,
-            ...(d.loanSuccessionVersion?{loanSuccessionVersion:1}:{}),...(d.obligationSettlementVersion?{obligationSettlementVersion:1}:{}),
-            ...(session.rules.questSources?.wildlife?.length&&villageWildlifeFresh(session)?{villageWildlifeVersion:1}:{}),
-            ...(!session.replaying||session.replayResult?.sovereigntyVersion===1?{sovereigntyVersion:1}:{}),
-            ...(!session.replaying||session.replayResult?.laborMarketVersion===1?{laborMarketVersion:1}:{}),
-            ...(!session.replaying||session.replayResult?.medicineVersion===1?{medicineVersion:1}:{}),
-            ...(d.prescriptionVersion?{prescriptionVersion:1}:{}),
-            ...(!session.replaying||session.replayResult?.serviceClaimsVersion===1?{serviceClaimsVersion:1}:{}),
-            ...(Object.keys(d.get('state','remote')??{}).length&&advanceLayersFresh(session)?{advanceLayerVersion:1}:{}),
-            ...(Object.keys(d.get('state','remote')??{}).length&&populationLayersFresh(session)?{populationLayerVersion:1}:{}),
+        const result={ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)};
         if(legacyContext)primitiveActionRuntime().completeLegacy(session,books.document,d,{...legacyContext,result,persist:Boolean(options.legacyAction)});
         return {patches:finishLedger(d.patches,books.opening),result};
@@ -465,7 +445,7 @@ export class WorldEngine {
         // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
         try{enforceLegalRestriction(new Draft(document,this),tool,args,this);return null;}catch(error){return error.message;}
     }
-    primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh});}
+    primitiveCheck(d,args,eventId,actor='player'){return primitiveActionRuntime().checkActor(d,this,args,eventId,actor,{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick});}
     primitiveLearnNpc(d,effect,meta){return primitiveActionRuntime().learnNpc(d,this,effect,meta,{advanceWithNpcParticipants});}
     primitiveStudySkill(d,args,id){return primitiveActionRuntime().studyPlayer(d,this,args,id);}
     // Domain queries are provided by the composition root to lower-layer callers.
@@ -542,7 +522,7 @@ export class WorldEngine {
     primitiveTargetFacts(d,actor,target){
         const carried=d.get('holdings','locations',target);
         if(target!==actor&&zoneContactPending(d,actor)&&!(carried?.mode==='carried'&&carried.at===actor)&&!(actor==='player'&&this.quantity(d,actor,target)>0)){
-            const ranged=(!this.replaying||this.replayResult?.perceptionVersion===1)&&actor==='player'&&(d.get('state','npcs',target)||d.get('state','creatures',target))&&this.magicTargetFacts(d,target);
+            const ranged=actor==='player'&&(d.get('state','npcs',target)||d.get('state','creatures',target))&&this.magicTargetFacts(d,target);
             return ranged?{...ranged,distanceMeters:Math.max(placeLayout(this,d.document).approachMetres,ranged.distanceMeters)}:{distanceMeters:Infinity,lineOfSight:false};
         }
         if(actor==='player')return this.magicTargetFacts(d,target);
@@ -673,7 +653,7 @@ export class WorldEngine {
         let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
         payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
-        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:!this.replaying||Array.isArray(this.replayResult?.dispositions),documentSource:!this.replaying||this.replayResult?.itemSaleVersion===1,eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
+        moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:true,documentSource:true,eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
         receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
@@ -689,7 +669,7 @@ export class WorldEngine {
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
         this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,...(moved.itemSaleVersion?{itemSaleVersion:moved.itemSaleVersion}:{}),...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
+        return {buyer,seller,item,quantity,cost,...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         if(this.bookedWorkstation?.minutes===minutes)facilityRuntime().consumeWorkstationPrepayment(d,this.bookedWorkstation.receipt,id);
@@ -783,7 +763,7 @@ export class WorldEngine {
                 d.set(['state','player','mp'],Math.min(p.maxMp,p.mp+Math.floor(minutes/30)));
             }
         }
-        return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,encounters:wildlifeEncounterView(d.document)}:{})};
+        return {elapsed:minutes,date:this.calendar(d.get('state','minute')).text,encounters:wildlifeEncounterView(d.document)};
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
         // A facility completed by a public project stands inside its site: reach the site, then step in.
@@ -921,7 +901,7 @@ export class WorldEngine {
             return{...rest,minutes:localMinutes+route.minutes+rest.minutes,movingMinutes:localMinutes+route.movingMinutes+rest.movingMinutes,cost:route.cost+rest.cost,
                 edges:[...route.edges,...rest.edges],experience:experience.experience+(rest.experience??0),...(route.airMinutes||rest.airMinutes?{airMinutes:(route.airMinutes??0)+(rest.airMinutes??0)}:{})};
         }
-        return {destination,...route,minutes:localMinutes+route.minutes,movingMinutes:localMinutes+route.movingMinutes,...experience,companions:d.get('state','player','companions'),...(!this.replaying||this.replayResult?.wildlifeEncounterVersion===1?{wildlifeEncounterVersion:1,requestedDestination,interrupted:Boolean(encounterAttempt)&&destination!==requestedDestination,encounter}: {})};
+        return {destination,...route,minutes:localMinutes+route.minutes,movingMinutes:localMinutes+route.movingMinutes,...experience,companions:d.get('state','player','companions'),requestedDestination,interrupted:Boolean(encounterAttempt)&&destination!==requestedDestination,encounter};
     }
     turn(d,args,id) {
         if(args.outOfCharacter)return {outOfCharacter:true};
@@ -1116,7 +1096,7 @@ export class WorldEngine {
             obligation.skill=args.skill?this.resolve(args.skill,'skill'):null;
             if(obligation.skill&&npcProficiency(d,this,promisor,obligation.skill)<(this.rules.check.helperMinimumProficiency??100))reject('E-ACTION-PRECONDITION','协助者技能不足');
         }
-        if(type==='付款'&&(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)){
+        if(type==='付款'){
             // A performance promise is a zero-principal obligation linked to
             // the existing claim; it must never count the same debt twice.
             openObligation(d,this,{...obligation,kind:'promise',debtor:promisor,creditor:promisee,actor:promisor,amount:obligation.terms?.fulfills?0:obligation.coins},id);
@@ -1142,8 +1122,7 @@ export class WorldEngine {
         }
         if(o.type==='送货'){
             if(this.quantity(d,o.promisor,o.item)<o.quantity)reject('E-ACTION-PRECONDITION','承诺者缺少货物');
-            if(!this.replaying||this.replayResult?.obligationRuntimeVersion===1)performObligation(d,this,{id:key,actor:o.promisor},o.deliveryVersion===1?`delivery:${key}:${o.deadline}`:`${id}:deliver:${key}`);
-            else transferItems(d,this,o.promisor,o.promisee,o.item,o.quantity);
+            performObligation(d,this,{id:key,actor:o.promisor},o.deliveryVersion===1?`delivery:${key}:${o.deadline}`:`${id}:deliver:${key}`);
         }
         if(o.type==='付款'){
             if(o.runtimeVersion===1&&o.terms?.fulfills){

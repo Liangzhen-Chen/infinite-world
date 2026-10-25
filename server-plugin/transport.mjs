@@ -170,15 +170,15 @@ function bookTransportInner(d,e,args,eventId){
   if(!quest)throw preconditionFailure('护送委托无法登记');row.escortQuest=quest.id;row.escortEscrow=0;
   // The quoted mobilization fee is prepaid. Time wages are earned throughout
   // actual custody, including weather waits, rather than the route estimate.
-  if(ledgerActive(d)&&(!e.replaying||e.replayResult?.transportObligationVersion===1)){
+  if(ledgerActive(d)){
    const daily=args.escortDailyWage??escortFee;int(daily,0,'护送日薪');
-   row.transportObligationVersion=1;row.escortTerms={base:escortFee,daily,starts:now};
+   row.escortTerms={base:escortFee,daily,starts:now};
    row.escortWage=`${id}:escort-wage`;
    registerEarnedClaim(d,e,{id:row.escortWage,kind:'wage',debtor:owner,creditor:escort,amount:escortFee,createdAt:now,deadline:Number.MAX_SAFE_INTEGER,source:id,
     terms:{accrual:{per:'day',value:daily},onDebtorGone:'accelerate',onCreditorGone:'estate'}});
    holdingSet(d,e,path(quest.id),{category:'contract',id:quest.id,kind:'wage',parties:[owner,escort],debt:`${id}:escort-wage`,escrow:quest.escrow,status:'履行中',createdAt:now},'transport');
   }
-  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(row.transportObligationVersion===1?{escrow:0}:{} )});
+  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(Boolean(row.escortWage)?{escrow:0}:{} )});
  }
  for(const actor of actors)if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:id,from,to,depart:departAt,arrive:q.estimatedArrivalAt});
  if(departAt===now){const t=row.transport;t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,now);t.segmentStartedAt=now;t.nextAt=now+t.segment.minutes;row.status=t.segment.kind==='wait'?'delayed':'moving';
@@ -212,8 +212,8 @@ export function advanceTransport(d,e,minute){
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
    if(!handover)row.status='arrived';
-   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(row.transportObligationVersion===1?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
-    if(row.transportObligationVersion===1)settleEscort(d,e,row,q,minute);
+   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(Boolean(row.escortWage)?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
+    if(Boolean(row.escortWage))settleEscort(d,e,row,q,minute);
     else{financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});}
     holdingSet(d,null,path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:row.escortPaid??q.escrow,refund:0,source:'npc_needs'},'transport');
    }}

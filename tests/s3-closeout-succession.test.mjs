@@ -80,15 +80,12 @@ test('N10: escrow receipts use the local recipient even when old escrow records 
  assert.equal(paid.payment.location,post);assert.equal(paid.accounts.from,'escrow|coin_river|escrow');
  assert.equal(d.get('state','npcs',host,'coins'),coins);assert.equal(d.get('state','records','escrow','escrow'),0);balanced(f,d);
 });
-test('N07/N10: unversioned historical replay retains accelerate and old receipts; versioned replay restores the new clauses',()=>{
- for(const fresh of [false,true]){
-  const f=fixture();f.e.replaying=true;f.e.replayResult=fresh?{loanSuccessionVersion:1,obligationSettlementVersion:1}:{};
+test('N07/N10: replay retains inheritance clauses and actual payment receipts',()=>{
+  const f=fixture();f.e.replaying=true;f.e.replayResult={};
   f.doc.ledger=openLedger(f.e,f.doc);const d=f.draft();
   const loan=openLoan(d,f.e,{lender:clerk,debtor:host,principal:20,days:30,collateral:{item:'item_bread',quantity:10},eventId:'replayed'});
   const id=`finance:${loan.debt}`,row=d.get('state','obligations',id);
-  assert.equal(obligationGoneRoute(row,'debtor'),fresh?'assume_by_heirs':'accelerate');
+  assert.equal(obligationGoneRoute(row,'debtor'),'assume_by_heirs');
   const paid=settleObligation(d,f.e,{id,amount:1},'repay');
-  assert.equal(Boolean(paid.payment),fresh);assert.equal(d.loanSuccessionVersion,fresh?1:undefined);
-  assert.equal(d.obligationSettlementVersion,fresh?1:undefined);balanced(f,d);
- }
+  assert.equal(Boolean(paid.payment),true);balanced(f,d);
 });

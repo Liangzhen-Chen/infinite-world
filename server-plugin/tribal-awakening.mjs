@@ -41,8 +41,6 @@ export const tribalKey=id=>`tribal_awakening:${id}`;
 export const tribalOrgId=(dyn,stance)=>`tribe_${dyn}_${stance}`;
 const clockKey=org=>`tribal_clock:${org}`;
 const rules=engine=>engine.rules?.tribalAwakening??null;
-// 旧事件重放不补出族群推进：只有新结算或重放结果已带本版本号时才推进。
-export function tribalFresh(engine){return !engine.replaying||engine.replayResult?.tribalAwakeningVersion===TRIBAL_AWAKENING_VERSION;}
 const alive=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&a.hp>0;
 const npcAlive=(state,id,n)=>n&&!isPhysicallyDead(null,state,id);
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
@@ -387,7 +385,7 @@ function tick(d,engine,t,dyn,at){
  holdingSet(d,null,['state','records',k],rec,'tribal-awakening');
 }
 export function advanceTribalAwakening(d,engine,{before,after}){
- const t=rules(engine);if(!t||!tribalFresh(engine))return;
+ const t=rules(engine);if(!t)return;
  assertTribalAwakening(engine);
  const span=t.quarterDays*DAY;
  for(let at=(Math.floor(before/span)+1)*span;at<=after;at+=span)for(const dyn of t.dynamics)tick(d,engine,t,dyn,at);
@@ -395,7 +393,7 @@ export function advanceTribalAwakening(d,engine,{before,after}){
 
 // ---- U17：诉求与冲突出委托 -------------------------------------------------------------
 function scanTribal(d,engine,at){
- const t=rules(engine);if(!t||!tribalFresh(engine))return [];
+ const t=rules(engine);if(!t)return [];
  const posted=[];
  for(const dyn of t.dynamics){
   const rec=d.get('state','records',tribalKey(dyn.id));if(rec?.status!=='分化')continue;

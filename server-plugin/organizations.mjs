@@ -82,7 +82,7 @@ const coinPath=(engine,who,state)=>[...actorPath(engine.world,memberOwner(state,
 const memberPurse=(d,engine,who)=>purse(engine,memberOwner(d.get('state'),who));
 const membershipKind=(state,who)=>state.records?.[who]?.category==='business'?'business_member_of':'member_of';
 const membershipTerms=(state,row,who,rank)=>({rank,...(state.records?.[who]?.category==='business'?{representative:row.members[who].representative,feeAccount:row.members[who].feeAccount}:{})});
-const currentConsent=(engine)=>!engine.replaying||engine.replayResult?.organizationConsentVersion===1;
+
 function organizationConsent(d,engine,org,who,{scope,role,fee=0,feePayer,eventId}){
     if(who==='player')return {allowed:true,source:eventId};
     present(d,engine,who);
@@ -99,10 +99,10 @@ function businessMembership(d,engine,org,who,consent,eventId,scope,feePayer){
     if(!['筹备','营业'].includes(shop.status)||!isEffective(engine,d,shop.owner))throw preconditionFailure('需要有效商号与现任代表');
     if(!within(engine,d.get('state','location'),org.seat))throw preconditionFailure('请到商会驻地办理');
     if(shop.owner!=='player')present(d,engine,shop.owner);
-    if(currentConsent(engine)){
+    {
         const agreement=organizationConsent(d,engine,org,shop.owner,{scope,fee:scope==='org.join'?org.charter.fee??0:0,feePayer,eventId});
         if(!agreement.allowed)throw preconditionFailure(`商号代表未接受会籍与会费：${agreement.reason}`);
-    }else if(consent!==true)throw preconditionFailure('商号代表须当面同意会籍与会费');
+    }
     return {representative:shop.owner,feeAccount:purse(engine,shop.owner)};
 }
 const actor=(d,engine,who)=>d.get(...actorPath(engine.world,who));
@@ -171,7 +171,7 @@ function execute(d,engine,org,p,minute,sourceEvent){
     }else if(m.action==='appoint'){
         if(!org.members[m.member])outcome='执行失败：此人已不是成员';
         else{
-            if(currentConsent(engine)){
+            {
                 // Charter approval and the appointee's acceptance are separate.
                 // A player's own proposal/vote accepts their own appointment;
                 // another caller's speaker/consent slots cannot do so for them.
@@ -219,7 +219,7 @@ function settle(d,engine,proposalId,minute,sourceEvent){
     if(!status)return p;
     let outcome=null;
     if(status==='通过'){
-        if(currentConsent(engine)&&p.motion.action==='appoint')p.appointmentHolder=org.leader;
+        if(p.motion.action==='appoint')p.appointmentHolder=org.leader;
         outcome=execute(d,engine,org,p,minute,sourceEvent);
     }
     else if(p.escrow){refundAdmission(d,engine,p,sourceEvent);outcome='入会费已退还';}
@@ -323,7 +323,7 @@ export function settleOrganizationDuel(d,engine,duel,winner,eventId){
     const departed=leaves?Object.keys(org.members).filter(m=>m!==winner&&m!=='player'&&
         (m===loser||standing(engine,d.get('state'),m,loser)-standing(engine,d.get('state'),m,winner)>=SPLIT_MARGIN)).sort():[];
     let acceptance;
-    if(currentConsent(engine)){
+    {
         const recorded=d.get('state','records',duel.id);
         if(recorded?.category!=='duel'||recorded.status!=='已结束'||recorded.org!==org.id||recorded.winner!==winner||![recorded.challenger,recorded.target].includes(winner))throw preconditionFailure('继任须有本人参加并已结算的章程约斗');
         organizationDuelContext(d,engine,org.id,recorded.challenger,recorded.target);
@@ -434,10 +434,6 @@ export function inspectOrganization(engine,document,org){
 }
 
 export function organizationAction(d,args,eventId){
-    const result=organizationActionImpl.call(this,d,args,eventId);
-    return currentConsent(this)?{...result,organizationConsentVersion:1}:result;
-}
-function organizationActionImpl(d,args,eventId){
     const engine=this,org=findOrg(engine,d,args.org),state=d.get('state'),minute=state.minute,player=org.members.player;
     switch(args.operation){
     case 'org_inspect':return inspectOrganization(engine,d.document,org);
@@ -448,17 +444,17 @@ function organizationActionImpl(d,args,eventId){
             return {...previous.result,duplicate:true};
         }
         if(['household','family'].includes(org.source))throw preconditionFailure('家户家族成员随亲属迁居变化，不能申请加入');
-        if(currentConsent(engine)&&args.feePayer!==undefined&&args.feePayer!=='player')throw preconditionFailure("feePayer 只支持 'player'，缺省由入会者本人付款");
-        const feePayer=currentConsent(engine)&&args.feePayer==='player'?'player':undefined;
+        if(args.feePayer!==undefined&&args.feePayer!=='player')throw preconditionFailure("feePayer 只支持 'player'，缺省由入会者本人付款");
+        const feePayer=args.feePayer==='player'?'player':undefined;
         const firstDues=feePayer?org.charter.dues??0:0;
         if(feePayer&&(d.get('state','player','coins')??0)<(org.charter.fee??0)+firstDues)throw preconditionFailure('代付入会费和首期会费的钱不足');
         const membership=businessMembership(d,engine,org,args.member,args.consent,eventId,'org.join',feePayer);
         const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&!membership){
-            if(currentConsent(engine)){
+            {
                 const agreement=organizationConsent(d,engine,org,who,{scope:'org.join',fee:org.charter.fee??0,feePayer,eventId});
                 if(!agreement.allowed)throw preconditionFailure(`入会须本人当面同意：${agreement.reason}`);
-            }else if(args.consent!==true)throw preconditionFailure('入会须本人当面同意');
+            }
         }
         if(org.members[who])throw preconditionFailure('已是成员');
         if(org.source==='faction'){
@@ -518,10 +514,10 @@ function organizationActionImpl(d,args,eventId){
         const membership=businessMembership(d,engine,org,args.member,args.consent,eventId,'org.leave');
         const who=membership?args.member:args.member&&args.member!=='player'?present(d,engine,args.member):'player';
         if(who!=='player'&&!membership){
-            if(currentConsent(engine)){
+            {
                 const agreement=organizationConsent(d,engine,org,who,{scope:'org.leave',eventId});
                 if(!agreement.allowed)throw preconditionFailure(`退会须本人当面同意：${agreement.reason}`);
-            }else if(args.consent!==true)throw preconditionFailure('退会须本人当面同意');
+            }
         }
         if(!org.members[who])throw preconditionFailure('不是成员');
         if(who===org.leader&&Object.keys(org.members).length>1)throw preconditionFailure('首脑须先改任他人再退会');
@@ -542,7 +538,7 @@ function organizationActionImpl(d,args,eventId){
         const proposer=args.speaker&&args.speaker!=='player'?present(d,engine,args.speaker):'player';
         if(!org.members[proposer])throw preconditionFailure('只有成员能提出议案');
         const motion=motionOf(engine,d,org,args);let response=null;
-        if(currentConsent(engine)&&motion.action==='appoint'&&proposer!=='player'){
+        if(motion.action==='appoint'&&proposer!=='player'){
             response=appointmentOpinion(d,engine,org,proposer,{motion,proposer:'player'});
             if(response.opinion!=='approve')throw preconditionFailure(`任免机关尚未同意：${response.basis}`);
         }
@@ -554,7 +550,7 @@ function organizationActionImpl(d,args,eventId){
     case 'org_vote':{
         const id=args.proposal,p=d.get('state','records',id);
         if(p?.category!=='organization_proposal'||p.org!==org.id)throw preconditionFailure('没有这个议案');
-        if(currentConsent(engine)&&p.status==='通过'&&p.motion.action==='appoint'&&p.outcome==='待本人接受'){
+        if(p.status==='通过'&&p.motion.action==='appoint'&&p.outcome==='待本人接受'){
             if(args.speaker&&args.speaker!=='player'||!['approve','reject'].includes(args.opinion)||args.opinion==='reject'&&p.motion.member!=='player')throw preconditionFailure('须本人接受，不能代填他人的接受意见');
             if(args.opinion==='reject'){
                 holdingSet(d,null,['state','records',id],{...p,outcome:'本人拒绝',refusal:{member:'player',source:eventId,minute}},'organizations');
@@ -572,7 +568,7 @@ function organizationActionImpl(d,args,eventId){
         if(!deciders(state,org).people.includes(voter)||!org.members[voter])throw preconditionFailure('此人在本议案无表决权');
         if(!['approve','reject','abstain'].includes(args.opinion))throw preconditionFailure('意见须为approve、reject或abstain');
         if(p.votes.some(v=>v.voter===voter))throw preconditionFailure('已表态，不能改写');
-        const response=currentConsent(engine)&&p.motion.action==='appoint'&&voter!=='player'?appointmentOpinion(d,engine,org,voter,p):null;
+        const response=p.motion.action==='appoint'&&voter!=='player'?appointmentOpinion(d,engine,org,voter,p):null;
         if(response&&response.opinion!==args.opinion)throw preconditionFailure(`不能代填任免机关的意见：${response.basis}`);
         holdingSet(d,null,['state','records',id],{...p,votes:[...p.votes,{voter,opinion:args.opinion,minute,sourceEvent:eventId,...(response?{basis:response.basis,decision:response.decision}:{}),...(args.content?{content:text(args.content)}:{})}]},'organizations');
         const closed=settle(d,engine,id,minute,eventId);

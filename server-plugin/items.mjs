@@ -128,7 +128,7 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     }
     if(disposition)moved.dispositions=dispositions;
     if(documentSource){
-        moved.itemSaleVersion=1;
+
         holdingSet(d,engine,['state','records',`item_sale:${eventId}`],{category:'item_sale',sourceEvent:eventId,buyer:to,seller:from,item,quantity,instances:[...moved.instances]},'items');
     }
     return moved;

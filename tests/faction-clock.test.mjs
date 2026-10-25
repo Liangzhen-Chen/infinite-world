@@ -192,7 +192,7 @@ test('存档重复事务与回放不重复阶段扣耗或干预代价',async t=>
  assert.deepEqual((await storage.reconcile('clock',[],null)).document,document);
 });
 
-test('目录内运行阶段经正式schema接受，共用势力资产；旧事务回放不补新阶段',async()=>{
+test('目录内运行阶段经正式schema接受，共用势力资产',async()=>{
  const s=setup();s.world.rules.factionClock.clocks=[];s.f.clock={...s.f.clock,...s.rule};delete s.f.clock.faction;
  const {default:Ajv}=await import('ajv');const schema=JSON.parse(await fs.readFile('schemas/world.schema.json','utf8'));
  const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -200,6 +200,4 @@ test('目录内运行阶段经正式schema接受，共用势力资产；旧事�
  const second={...s.rule,id:'another',stages:[stage('second',relation(2),{coins:1})],interventions:[]};s.world.rules.factionClock.clocks=[second];
  const after=await s.wait(s.doc,DAY);assert.equal(assets(after).coins,36);assert.equal(assets(after).items.item_oats,8);
  assert.equal(Object.values(after.state.records).filter(r=>r.category==='faction_assets').length,1);
- const old=await s.engine.reduce(s.doc,{tool:'world_time',args:{minutes:DAY},eventId:'old'},{replay:true,result:{}});
- assert.deepEqual(accounts(applyPatches(s.doc,old.patches)),{});
 });

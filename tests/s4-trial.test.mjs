@@ -124,7 +124,7 @@ test('讼师报价不收费；NPC 本人同意真实签约，修正槽改变权�
  const rep=hired.detail.representation;assert.ok(rep.contract);assert.ok(rep.consentSource);
  assert.equal(f.document.state.obligations[rep.contract].kind,'service');assert.equal(f.document.state.obligations[rep.contract].debtor,p.reviewer);
  assert.equal(f.document.state.player.coins,balance-rep.paid);
- assert.equal(hired.result.obligationSigningVersion,1);
+
  // Simulate a later legal-data binding at the signing venue. The original
  // service was signed where no code was registered; no Baishi code is authored.
  const oldLocations=[...f.code.locations];f.code.locations.push('bld_bs_office');

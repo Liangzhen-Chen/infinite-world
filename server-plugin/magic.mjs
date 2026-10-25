@@ -94,7 +94,7 @@ export function prepareMagic(d,catalog,args,context={}){
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
-    if(this.replaying&&this.nativePrimitiveVersion!==1)return applyMagicState.call(this,d,prepared,id);
+
     const spec=prepared.spec,target=prepared.target??prepared.id??'player';
     const primitive=['damage','heal'].includes(spec.kind)&&!prepared.elementObject&&!prepared.windObject&&!prepared.stoneObject?{op:'vital',target,delta:spec.kind==='damage'?-spec.power:spec.power,type:spec.damageType??'healing'}:
       {op:'status',target,status:spec.status??spec.kind,duration:prepared.catalog?.duration??0,magnitude:spec.power};
@@ -128,8 +128,7 @@ function applyMagicState(d,prepared,id){
             if(applied.resisted)return applied;
         }else d.set(['state','effects',id],{kind:'light',spell:catalog.id,target,power:spec.power,expires,source:id,owner:'player',targetInstance:trackSingleItem(d,this,'player',target,id)});
         if(spec.kind==='status'&&!magicStatuses[spec.status].beneficial&&target.startsWith('npc_')){
-            if(this.replaying&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(latest.trust??0)-10));
-            else if((prepared.context?.source??'player')==='player')publishTransitionEvent(d,this,{
+            if((prepared.context?.source??'player')==='player')publishTransitionEvent(d,this,{
                 id:`${id}:hostility`,sourceEvent:id,verb:'status_applied',actor:'player',target,
                 location:latest.location,minute:d.get('state','minute'),visibility:'witnessed',
                 witnesses:presentWitnesses(d.get('state'),latest.location),tags:['magic','hostile'],
@@ -166,11 +165,11 @@ function applyMagicState(d,prepared,id){
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             if(next<old)recordDisciplineBreach(d,this,'violence',id);
             // Current NPCs judge a wound through the relation ledger (world event 'harm').
-            if(this.replaying&&this.replayResult!==undefined&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
+
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
             // Area pulses have no enclosing cast-to-harm adapter. Ordinary
             // casts and open primitives publish their existing canonical event.
-            if((!this.replaying||this.replayResult?.worldEventVersion===1)&&this.byId.get(catalog.id)?.effectSpec?.kind==='area')publishTransitionEvent(d,this,{
+            if(this.byId.get(catalog.id)?.effectSpec?.kind==='area')publishTransitionEvent(d,this,{
                 id,verb:'harm',actor:'player',target,location:current.location,minute:d.get('state','minute'),
                 visibility:'witnessed',witnesses:presentWitnesses(d.get('state'),current.location,[target]),
                 tags:['magic','hostile','violence'],primitive:'vital',spell:catalog.id,

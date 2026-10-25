@@ -141,23 +141,19 @@ test('I30 heard-theft 真实夜间偷窃只留下声音版本，不能升级成�
  assert.equal(knownWorldEventReference(f.document.state,'player',{reference:e.id}),e.id,'行为者自知保留');
 });
 
-test('I30 native 原生事件的感知版本参与重放；旧回放不补写新证据',async()=>{
+test('I30 native 原生事件的感知事实参与重放',async()=>{
  const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-native');
  const {before,input,result}=await act(f,'open:question',{target:'npc_hw_linsui',content:'今天店里忙吗？'},'s402-question');
  const events=Object.values(f.document.state.records).filter(r=>r.category==='world_event'&&r.id.startsWith('s402-question'));
  assert.ok(events.length>0);assert.ok(events.every(e=>e.perception));
  const replay=await new WorldEngine(world).reduce(before,input,{replay:true,result});
  assert.deepEqual(applyPatches(before,replay.patches),f.document);
- const oldResult={...result};delete oldResult.perceptionVersion;
- const oldReplay=await new WorldEngine(world).reduce(before,input,{replay:true,result:oldResult});
- const old=applyPatches(before,oldReplay.patches);
- assert.ok(Object.values(old.state.records).filter(r=>r.category==='world_event'&&r.id.startsWith('s402-question')).every(e=>!e.perception));
 });
 
 test('I30 真偷窃的见证和感官版本一致；保存与重放不重算证据',async()=>{
  const f={engine:new WorldEngine(world)};f.document=f.engine.initialFromLegacy(seed,'s402-theft');
  const {before,input,result}=await act(f,'core:crime.steal',{target:'npc_hw_linsui',coins:10},'s402-theft');
- assert.equal(result.perceptionVersion,1);
+
  const e=f.document.state.records['world_event:s402-theft'];assert.ok(e?.perception);
  assert.equal(e.perception.minute,e.minute);
  assert.deepEqual(e.witnesses,result.witnesses);

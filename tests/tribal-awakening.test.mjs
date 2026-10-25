@@ -215,17 +215,12 @@ test('无人干预时三条动态按季自行推进，结果由种子决定；�
  assert.ok(Object.values(a.d.document.state.records).some(r=>r.category==='organization'&&r.tribal));
 });
 
-test('真实推进：世界时钟跨过季度边界时结算，结果带版本号；旧事件重放不补推进',async()=>{
+test('真实推进：世界时钟跨过季度边界时结算，场景呈现族群变化',async()=>{
  const {engine,doc}=setup('tribal-real');let c=doc;
  let result;
  for(const n of [30,30,30,1]){const out=await engine.reduce(c,{tool:'world_time',args:{minutes:n*DAY},eventId:`w${n}${c.state.minute}`});c=applyPatches(c,out.patches);result=out.result;}
- assert.ok(c.state.minute>=Q);assert.equal(result.tribalAwakeningVersion,1);
+ assert.ok(c.state.minute>=Q);
  for(const dyn of engine.rules.tribalAwakening.dynamics)assert.equal(c.state.records[tribalKey(dyn.id)].lastTick,Q);
- // 重放旧结果（无版本号）时不推进。
- const d=draft(structuredClone(doc));
- const replay=Object.create(engine);replay.replaying=true;replay.replayResult={};
- advanceTribalAwakening(d,replay,{before:Q-1,after:Q});
- assert.equal(d.get('state','records',tribalKey(badger)),undefined);
  // 场景卡：到了已分化族群的地方才提到它们。
  const s=setup('tribal-scene'),sp=splitAt(s.engine,s.doc,badger,Q);
  const view=structuredClone(sp.d.document);view.state.location='loc_hw_northwood';

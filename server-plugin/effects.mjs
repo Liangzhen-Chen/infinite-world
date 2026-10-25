@@ -35,7 +35,7 @@ export function assertEffect(engine,effect,source='world'){
 }
 export function applyEffect(d,engine,effect,context,source='world'){
  assertEffect(engine,effect,source);
- if(engine.replaying&&engine.nativePrimitiveVersion!==1)return effectConsumer(engine,effect.kind,source).apply(d,engine,effect,context);
+
  const out=effectTransaction(d,engine,[effect],context,source);
  return out.applied?out.results[0]:out.result;
 }
@@ -61,11 +61,7 @@ export function clockTransaction(d,apply){
 }
 // Runs a list of effects as one transaction: any refusal rolls all of them back.
 export function applyEffects(d,engine,effects,context,source){
- if(engine.replaying&&engine.nativePrimitiveVersion!==1)return clockTransaction(d,tx=>{
-  const results=[];
-  for(const effect of effects){const result=applyEffect(tx,engine,effect,context,source);if(!result||typeof result.applied!=='boolean')throw Error(`效果缺少 applied 回执：${effect.kind}`);if(!result.applied)return result;results.push(result);}
-  return {applied:true,effects:results};
- });
+
  if(!effects.length)return {applied:true,effects:[]};
  const out=effectTransaction(d,engine,effects,context,source);
  return out.applied?{applied:true,effects:out.results}:out.result;

@@ -230,19 +230,8 @@ test('章程任免与本人接受分别成立；自任、替NPC答应和代领�
  assert.equal(document.state.records[appointment.proposal].acceptance.source,'player-accept');
  let replay=start;
  for(const {input,result}of steps){
-  assert.equal(result.organizationConsentVersion,1);
+
   const out=await engine.reduce(replay,input,{replay:true,result});replay=applyPatches(replay,out.patches);
  }
  assert.deepEqual(replay,document);clean(start,document);
-});
-
-test('旧入会事件复演保留原结果，不补造新的同意事件或改写历史',async()=>{
- const start=scene({location:'bld_hw_qingdeng',present:['npc_hw_linsui']});
- const founded=await run(start,'core:create',{type:'org',name:'旧事件核验会',data:{occupation:'行会',notes:'保留签订时的事件规则'}},'legacy-org');
- const out=await engine.reduce(founded.document,{tool:'world_settlement',args:{operation:'org_join',org:founded.result.organization,member:'npc_hw_linsui',consent:true},eventId:'legacy-join'},{replay:true,result:{}});
- const replay=applyPatches(founded.document,out.patches);
- assert.equal(out.result.organizationConsentVersion,undefined);
- assert.equal(replay.state.consentEvents,undefined);
- assert.equal(replay.state.records[out.result.proposal].status,'议事中');
- assert.equal(organization(engine,replay.state,founded.result.organization).members.npc_hw_linsui,undefined);
 });

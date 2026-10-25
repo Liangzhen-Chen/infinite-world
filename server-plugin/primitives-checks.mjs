@@ -29,7 +29,7 @@ export function checkDerivedActor(d,engine,args,eventId,actor,derived){
  Object.assign(result,{difficulty,...checkDegree(result.die,result.total,difficulty),difficultyBreakdown:structuredClone(derived)});
  d.set(['state','checks',eventId],result);return result;
 }
-export function checkActor(d,engine,args,eventId,actor='player',{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick,intelligenceFresh}={}){
+export function checkActor(d,engine,args,eventId,actor='player',{effectiveProficiency,hiddenCheckBonus,passiveDomain,trickKey,adaptationBonus,noteTrick}={}){
  if(actor==='player')return engine.check(d,args,eventId);
  const context={engine,document:d.document},state=d.get('state'),body=state.npcs?.[actor];
  if(!body||capacity(context,actor,'check').level==='none'||isPhysicallyDead(engine,d,actor)||body.status==='濒死'||body.scheduleTravel||body.cognitionTravel)reject('E-CHECK-ACTOR','The actor cannot currently make this check');
@@ -56,7 +56,7 @@ export function checkActor(d,engine,args,eventId,actor='player',{effectiveProfic
   if(npc===actor)reject('E-CHECK-OPPONENT','The actor cannot oppose itself');
   const a=attr(args.opponent.attribute??attribute),s=args.opponent.skill?engine.resolve(args.opponent.skill,'skill'):null;
   trick=trickKey(attribute,skill);
-  const wary=npc!=='player'&&intelligenceFresh(engine)?adaptationBonus(engine,state,npc,trick):0;
+  const wary=npc!=='player'?adaptationBonus(engine,state,npc,trick):0;
   const roll=die(d,eventId,'opponent:d20'),modifier=modifierFor(npc,a,s)+wary;
   opponent={npc,attribute:a,skill:s,die:roll,modifier,total:roll+modifier,...(wary?{wary}:{})};difficulty=opponent.total;
  }else{

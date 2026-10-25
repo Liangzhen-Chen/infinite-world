@@ -16,7 +16,7 @@ export function targetFacts(d,engine,target){
  const point=p?.location===row.location?p.point:[0,0];
  if(!Array.isArray(point)||point.length!==2||point.some(x=>!Number.isFinite(x))||!Array.isArray(row.position)||row.position.some(x=>!Number.isFinite(x)))return null;
  const distanceMeters=Math.hypot(point[0]-row.position[0],point[1]-row.position[1]);
- return{distanceMeters,lineOfSight:distanceMeters===0?true:engine.replaying&&engine.replayResult?.perceptionVersion!==1?null:visibleEntity(engine,d.document,target)};
+ return{distanceMeters,lineOfSight:distanceMeters===0?true:visibleEntity(engine,d.document,target)};
 }
 export function statusContext(d,engine,target){
  const actor=target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);

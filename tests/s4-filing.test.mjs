@@ -224,8 +224,8 @@ test('玩家须经过真实任命并在岗，才可自行受理或给出拒绝�
  assert.equal(out.result.receipt.status,'rejected');assert.deepEqual(out.patches,[]);
 });
 
-test('报案与受理存档往返及复演保持来源；旧偷窃复演保持旧案件结果',async t=>{
- const f=scene(),theftInitial=f.document,stolen=await steal(f);
+test('报案与受理存档往返及复演保持来源',async t=>{
+ const f=scene(),stolen=await steal(f);
  f.document=officeScene(f.engine,f.document,{location:'bld_bs_watch',minute:f.document.state.minute,present:[clerk,handler]});
  const initial=f.document,report=await act(f,'core:law.report',{authority:clerk,request:{kind:'theft',incident:stolen.input.eventId}},'saved-report');
  const accepted=await act(f,'law:request_decision',{request:report.detail.request,authority:handler},'saved-accept');
@@ -237,7 +237,7 @@ test('报案与受理存档往返及复演保持来源；旧偷窃复演保持�
  assert.deepEqual((await store.import(await store.export('filing'),'filing_copy')).document,reopened.document);
  for(const out of [stolen,report,accepted])assert.deepEqual((await f.engine.reduce(reopened.document,out.input)).patches,[]);
  let replay=initial;
- for(const out of [report,accepted]){assert.equal(out.result.legalFilingVersion,1);const next=await f.engine.reduce(replay,out.input,{replay:true,result:out.result});replay=applyPatches(replay,next.patches);}
+ for(const out of [report,accepted]){const next=await f.engine.reduce(replay,out.input,{replay:true,result:out.result});replay=applyPatches(replay,next.patches);}
  assert.deepEqual(persistable(replay),persistable(f.document));
  const changed=structuredClone(world);
  for(const code of [...changed.rules.law.codes??[],...changed.rules.law.templates??[]])code.procedure={...code.procedure,costs:{filingFee:999}};
@@ -248,7 +248,4 @@ test('报案与受理存档往返及复演保持来源；旧偷窃复演保持�
  // events and their money must retain the previously recorded outcomes.
  for(const id of [report.detail.request,accepted.detail.case,`world_event:${report.input.eventId}`,`world_event:${accepted.input.eventId}`])assert.deepEqual(persistable(oldDecisions.state.records[id]),persistable(f.document.state.records[id]));
  assert.equal(oldDecisions.state.player.coins,f.document.state.player.coins);assert.deepEqual(oldDecisions.ledger,f.document.ledger);
- const legacyResult={...stolen.result};delete legacyResult.legalFilingVersion;
- const legacy=await f.engine.reduce(theftInitial,stolen.input,{replay:true,result:legacyResult}),old=applyPatches(theftInitial,legacy.patches);
- assert.equal(old.state.records[stolen.detail.case].category,'legal_case');assert.equal(legacy.result.legalFilingVersion,undefined);
 });

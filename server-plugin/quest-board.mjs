@@ -69,7 +69,7 @@ function closeQuest(d,engine,q,status,reason,minute){
  // A publicly funded reward goes back to the village treasury, not to the official.
  // U17: commissions escrowed from a faction treasury or a settlement account go back there.
  let rewardClaim;
- if(paid&&amount&&ledgerActive(d)&&(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1)){
+ if(paid&&amount&&ledgerActive(d)){
   rewardClaim=`${q.id}:reward`;
   const debtor=q.fundedBy?.faction??q.fundedBy?.treasury??q.fundedBy?.settlement??q.publisher;
   registerEarnedClaim(d,engine,{id:rewardClaim,kind:'bounty',debtor,creditor:q.taker,amount,createdAt:minute,deadline:minute,source:q.id,terms:{onDebtorGone:'accelerate',onCreditorGone:'estate'}});
@@ -237,7 +237,7 @@ export function advanceQuestBoard(d,engine,before,after,{beforeState}={}){
  for(const q of Object.values(d.get('state','quests')??{})){
   if(q.boardVersion!==1||!active(q))continue;
   if(q.transport){
-   if(d.get('state','records',q.transport,'transportObligationVersion')===1)continue;
+   if(d.get('state','records',q.transport,'escortWage'))continue;
    if(q.deadline<=after)results.push(close(d,engine,q,'已过期','护送运单逾期，退回未支付报酬',after));continue;
   }
   if(q.status==='进行中'&&q.taker!=='player'){

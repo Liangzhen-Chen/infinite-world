@@ -51,7 +51,7 @@ export function observeLegalReputation(d,engine,npc,memory,location=memory.locat
 }
 
 export function recordLegalNotification(d,engine,row,stage,eventId,observers,{fresh=false,location=d.get('state','location')}={}) {
-    if(engine.replaying&&engine.replayResult?.legalProcedureVersion!==1)return null;
+
     const minute=d.get('state','minute'),sourceEvent=`${eventId}:law:${stage}`;
     const old=d.get(...path(row.id));
     const event=(!fresh&&old.reputationEvents?.[stage])||{sourceEvent,stage,minute,location,

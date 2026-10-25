@@ -87,7 +87,7 @@ function writeItem(d,owner,id,outcome){
 // receive the combat multiplier, which the caller applies to its own damage.
 export function applyInteraction(d,engine,{agent,target,owner='player',traits=null,moistureMg,minutes,minute,sourceEvent}){
  const program={agent,target,owner,traits,moistureMg,minutes,minute,sourceEvent};
- if(engine.replaying&&engine.nativePrimitiveVersion!==1)return applyInteractionState(d,engine,program);
+
  const out=nativePrimitiveTransaction(d,{engine,family:'k2:interaction',sourceEvent,actor:owner,program,
   primitives:[{op:'status',target,status:agentOf(agent),duration:minutes??0,magnitude:0}],
   apply:tx=>applyInteractionState(tx,engine,program),

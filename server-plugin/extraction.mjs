@@ -41,7 +41,7 @@ export function fish(d,args,id){
     // The product is the existing cleaned fish. Its knife and water cost remain real.
     const tool=this.rules.extraction.fishing.tool;usable(d,this,tool);
     if(this.quantity(d,'player','item_water')<1)throw preconditionFailure('剖洗渔获需要一份水');
-    const bait=!this.replaying||this.replayResult?.fishingBaitVersion===1?this.rules.extraction.fishing.bait:null;
+    const bait=this.rules.extraction.fishing.bait;
     if(bait&&this.quantity(d,'player',bait.item)<bait.quantity)throw preconditionFailure('钓饵不足');
     const minutes=this.rules.extraction.fishing.minutes,season=this.calendar(d.get('state','minute')).season;
     const difficulty=this.rules.extraction.fishing.difficultyBySeason[season];
@@ -61,7 +61,7 @@ export function fish(d,args,id){
         holdingSet(d,null,path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:'item_fish',quantity:1,minute:now,sourceEvent:id},'extraction');
     }
     const training=able(d)?practice(d,this,'skill_life_2_core',`钓鱼:${habitat.id}`):null;
-    return {success,check,species:success?selected.id:null,obtained:success?[{item:'item_fish',quantity:1}]:[],training,season,...(bait?{fishingBaitVersion:1}:{}),
+    return {success,check,species:success?selected.id:null,obtained:success?[{item:'item_fish',quantity:1}]:[],training,season,
         reason:success?null:frozen?'水面封冻':!eligible.length?'此时无可捕鱼群':'钓鱼未成',actionScope:{kind:'fishing',clockManaged:true,minutes}};
 }
 

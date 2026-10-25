@@ -8,7 +8,7 @@ import {partyPay} from './military.mjs';
 import {personRegistrar,personOffices} from './entity-view.mjs';
 import {actorPath,npcAgeAt} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
-import {titleMilitaryService,militaryFresh} from './military.mjs';
+import {titleMilitaryService} from './military.mjs';
 import {declareHoldingWriter,aliveHoldings,createEntity,entityRow,ensureHoldings} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 import {changeHolding,changeLegacyHoldings} from './transition.mjs';
@@ -150,7 +150,7 @@ function service(d,engine,args,eventId){
     office(d,engine);
     const t=playerTitle(d.get('state'));if(!t||!t.levy.men)throw preconditionFailure('没有需要应役的爵位');
     const days=args.days??0;if(!Number.isSafeInteger(days)||days<0||days>60)throw preconditionFailure('应役日数须在0到60之间');
-    if(engine.rules.military&&militaryFresh(engine))return titleMilitaryService(d,engine,days,eventId);
+    if(engine.rules.military)return titleMilitaryService(d,engine,days,eventId);
     const men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));
     if(days)engine.advance(d,days*DAY,eventId);
     const now=playerTitle(d.get('state'));if(!now)throw preconditionFailure('爵位已除');

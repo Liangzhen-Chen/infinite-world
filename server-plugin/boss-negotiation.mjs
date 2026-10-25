@@ -128,7 +128,7 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     n.history.push(h);
     if(h.accepted){
         n.relation={pact:t.pact,alliance:t.alliance,event:eventId};delete n.brokenBy;
-        if(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1){
+        {
             const id=`boss-pact:${eventId}`;
             openObligation(d,engine,{id,kind:'pact',debtor:'player',creditor:target,actor:'player',amount:0,subject:target,exclusive:{family:'boss-pact',scope:'debtor_subject',policy:'supersede'},terms:{pact:t.pact,alliance:t.alliance,territory:[...territory]}},eventId);
             n.obligation=id;

@@ -106,12 +106,14 @@ test('材料交付沿原实物路径；过期退款返原公账；低于留底�
  for(const [id,money] of Object.entries(before))assert.equal(s.doc.state.settlements[id].treasury,money+unpaid.filter(q=>q.location===id).reduce((n,q)=>n+q.escrow,0));
  const poor=setup();for(const a of Object.values(poor.doc.state.settlements))a.treasury=0;creatures(poor);assert.deepEqual(scan(writer(poor.doc),poor.engine,540),[]);
 });
-test('world_upgrade保留已改钱物与个体终态，新规则进入既有战役；旧事件重放不补任务和回执',()=>{
+test('world_upgrade保留已改钱物与个体终态，新规则进入既有战役并确定性重放任务',()=>{
  const old=structuredClone(formal);delete old.rules.questSources.wildlife;
  const engine=new WorldEngine(old),doc=engine.createCharacter(seed,{},'upgrade');doc.state.player.coins=137;doc.state.inventory.item_herb={quantity:7};
  doc.state.creatures??={};doc.state.creatures.monster_saved={species:'monster_mist_flat_soul',status:'已超度',hp:0,location:null};
  const next=applyBatch(old),c=compatibleWorld(old,next),p=planWorldUpgrade(doc,old,c.world,{worldHash:'t155-upgrade',eventId:'upgrade'}),updated=applyPatches(doc,p.patches);
  assert.equal(updated.state.player.coins,137);assert.deepEqual(updated.state.inventory.item_herb,{quantity:7});assert.deepEqual(updated.state.creatures.monster_saved,doc.state.creatures.monster_saved);
  const upgraded=new WorldEngine(c.world);assert.equal(upgraded.rules.questSources.wildlife.length,8);scan(writer(updated),upgraded,updated.state.minute);assert.ok(Object.values(updated.state.quests).some(q=>q.source?.generator==='village_wildlife'));
- upgraded.replaying=true;upgraded.replayResult={questSourcesVersion:1};const before=structuredClone(updated);assert.deepEqual(scan(writer(updated),upgraded,updated.state.minute+DAY),[]);assert.deepEqual(updated,before);
+ const replayed=structuredClone(updated),replay=new WorldEngine(c.world);replay.replaying=true;replay.replayResult={};
+ const live=scan(writer(updated),upgraded,updated.state.minute+DAY);
+ assert.deepEqual(scan(writer(replayed),replay,replayed.state.minute+DAY),live);assert.deepEqual(replayed,updated);
 });

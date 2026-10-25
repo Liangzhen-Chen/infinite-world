@@ -164,13 +164,11 @@ export const activities={
             if(attackerHp<=received)recordEntityDeath(d,this,attacker,d.get('state','minute'),'战斗身亡');
         }}
         const bout=this.world.primitiveTables?.['action-costs']?.rows?.find(r=>r.selector==='combat.bout');
-        const calibratedBout=bout&&(!this.replaying||this.replayResult?.dailyCostsVersion===1);
+        const calibratedBout=bout;
         const exchangeSeconds=calibratedBout?bout.minutesPerBout*60:this.rules.combat.exchangeSeconds;
         const seconds=(d.get('state','subMinuteSeconds')??0)+exchangeSeconds;
         this.advance(d,Math.floor(seconds/60),id);d.set(['state','subMinuteSeconds'],seconds%60);
-        // Only pre-world-event archive replay retains its original scalar patch.
-        // Current attacks settle through the normalized conflict event for every tier.
-        if(this.replaying&&this.replayResult?.worldEventVersion!==1&&attacker==='player'&&isNpc&&!duel&&base.tier!=='full')holdingSet(d,null,['state','npcs',target,'trust'],Math.max(-100,npc.trust-5),'activities');
+
         const toolWear=[];
         if(weapon){const before=heldUnit(d,this,attacker,weapon).durability;wearItem(d,this,attacker,weapon,1);toolWear.push({item:weapon,before,after:heldUnit(d,this,attacker,weapon).durability});}
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
@@ -197,7 +195,7 @@ export const activities={
         }
         const exchange={actor:attacker,target,intent,weapon,origin:location.id,damage,received,actorStatus:d.get(...attackerPath,'status'),vitals:{[attacker]:{before:attackerHp,after:Math.max(0,attackerHp-received)},[target]:{before:hp,after:remaining}},escaped,...(intent==='defend'?{defense:{status:'combat_defense',incomingMultiplier:0.5,outgoingMultiplier:0.65,consumed:true}}:{}),...(movement?{movement}: {})};
         const encounterResult=settleEncounterExchange(d,this,encounter,{actor:attacker,target,intent,escaped,eventId:id,ended:!!duelResult||!remaining||attackerHp<=received,exchange});
-        d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,encounter:encounterResult,exchange,spent:{toolWear},...(movement?{movement}:{}),vitals:{[attacker]:{before:attackerHp,after:d.get(...attackerPath,'hp')??attackerHp},[target]:{before:hp,after:d.get('state',partition,target,'hp')}},...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:exchangeSeconds},...(calibratedBout?{dailyCostsVersion:1}:{}),...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
+        d.say(`交锋结束，对方受伤${damage}，${attacker==='player'?'你':attacker}受伤${received}`);return {...(attacker!=='player'?{actor:attacker,actorHp:d.get(...attackerPath,'hp')??attackerHp}:{}),target,damage,received,encounter:encounterResult,exchange,spent:{toolWear},...(movement?{movement}:{}),vitals:{[attacker]:{before:attackerHp,after:d.get(...attackerPath,'hp')??attackerHp},[target]:{before:hp,after:d.get('state',partition,target,'hp')}},...(duel?{duel:duel.id,duelRule:duel.rule,duelResult}:{}),...(war?{war}:{}),...(bossAbilities.length?{abilities:bossAbilities}:{}),...(protection.absorbed||absorbed?{absorption:{target:protection.absorbed,player:absorbed}}:{}),targetHp:d.get('state',partition,target,'hp'),actionScope:{kind:'combat_exchange',clockManaged:true,seconds:exchangeSeconds},...experience,...(corpse?{corpse}:{}),...(lair?{lair}:{}),...(counter.adapted?{adaptation:{tactic,guarded:true,note:'对手对已见过的进攻加强防备'}}:{}),...(counter.nature?{affinity:{...counter.nature,note:counter.nature.effect==='weak'?'此种对这类进攻格外怕':'此种对这类进攻抗性高，伤害减半'}}:{}),morale:remaining<maxHp*0.25?'撤退':'交战',...(weather?{weather:{name:weather.name,daylight:weather.daylight,hitModifier:weather.hitModifier,nightModifier:night}}:{}),...(incident?{case:incident}:{})};
     },
     craft(d,args,id){
         if(args.operation==='repair')return repair.call(this,d,args,id);

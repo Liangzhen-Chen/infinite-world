@@ -67,15 +67,9 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     const debt=row.debt&&d.get(...contractPath(row.debt));let used=0;
     if(debt&&debt.status!=='已还清'){
         used=Math.min(row.escrow,debt.amount-debt.paid);
-        if(used){const paid=debt.paid+used;
-            if(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1){
-                adoptLegacyObligation(d,engine,row.debt);
-                settleObligation(d,engine,{id:row.debt,payer:debt.debtor,amount:used,escrowContract:row.id},`${source??row.id}:escrow`);
-            }else{
-            moveCoins(d,{from:escrowAccount(row.id),to:purse(engine,debt.creditor),amount:used,writer:'contracts'});
-            d.set([...engine.actorPath(debt.creditor),'coins'],engine.actor(d,debt.creditor).coins+used);
-            holdingSet(d,null,contractPath(row.debt),{...debt,paid,status:paid===debt.amount?'已还清':debt.status,...(paid===debt.amount?{paidAt:d.get('state','minute')}:{})},'contracts');
-            }
+        if(used){
+            adoptLegacyObligation(d,engine,row.debt);
+            settleObligation(d,engine,{id:row.debt,payer:debt.debtor,amount:used,escrowContract:row.id},`${source??row.id}:escrow`);
         }
     }
     row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
@@ -115,7 +109,7 @@ export function chargeTrade(d,engine,args,eventId){
     const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:cost,paid:0,createdAt:d.get('state','minute'),
         deadline:d.get('state','minute')+minutes,status:'待偿还',source:eventId};
     holdingSet(d,null,['state','records',id],debt,'contracts');
-    if(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1)adoptLegacyObligation(d,engine,id);
+    adoptLegacyObligation(d,engine,id);
     return{debt:id,amount:cost,deadline:debt.deadline,payment:'credit'};
 }
 export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
@@ -124,12 +118,11 @@ export function repayDebt(d,engine,{buyer,seller,debt:id},eventId){
     if(row.status==='已还清')throw preconditionFailure('这笔欠款已经还清，不重复付款');
     assertSettlementPresent(engine,d.get('state'),buyer,seller);
     const amount=row.amount-row.paid;
-    const runtime=!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1;
-    if(runtime){adoptLegacyObligation(d,engine,id);settleObligation(d,engine,{id,payer:buyer,amount},eventId);}
-    else chargeTrade(d,engine,{buyer,seller,cost:amount},eventId);
+
+    adoptLegacyObligation(d,engine,id);settleObligation(d,engine,{id,payer:buyer,amount},eventId);
     // Settling a credit sale taxes the same goods a cash sale would (finance-tax.mjs taxableSale).
     if(row.sale){const tax=taxableSale(engine,d.get('state'),seller,row.sale.item)?assessTradeTax(d,engine,{seller,cost:amount,location:row.sale.location,sourceEvent:eventId}):{amount:0};recordFinanceSale(d,engine,{...row.sale,settledBasis:row.sale.basis,tax:tax.amount,eventId});}
-    holdingSet(d,null,['state','records',id],{...d.get('state','records',id),...(!runtime?{paid:row.amount,status:'已还清'}:{}),paidAt:d.get('state','minute')},'contracts');
+    holdingSet(d,null,['state','records',id],{...d.get('state','records',id),paidAt:d.get('state','minute')},'contracts');
     for(const[key,contract]of Object.entries(d.get('state','records')??{}))if(contract.category==='contract'&&contract.debt===id)holdingSet(d,null,['state','records',key],{...contract,paid:row.amount},'contracts');
     engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}铜`);
     return{debt:id,cost:amount,status:'已还清'};

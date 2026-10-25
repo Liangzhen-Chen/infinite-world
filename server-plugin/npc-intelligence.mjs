@@ -36,9 +36,6 @@ const PROGRESS_SIGN='近来常问东问西，对新鲜事格外上心';
 export const levelProfile=level=>INTELLIGENCE_LEVELS[Math.max(0,Math.min(5,level|0))];
 const clampLevel=v=>Number.isSafeInteger(v)?Math.max(0,Math.min(5,v)):null;
 
-// 旧事件重放时不新增灵智账：只有不重放或重放结果已带本版本号时才生效。
-export function intelligenceFresh(engine){return !engine?.replaying||engine.replayResult?.npcIntelligenceVersion===INTELLIGENCE_VERSION;}
-
 function creatureLevel(engine,seed,id,actor,minute){
  const species=clampLevel(engine.byId.get(actor?.species)?.intelligence)??0;
  if(Number.isSafeInteger(actor?.mind?.intelligence?.level))return actor.mind.intelligence.level;
@@ -67,7 +64,7 @@ function rowPath(d,id){
 }
 // 写入成长值并在跨过门槛时升级，迹象以世界内说法记入发展记录。返回实际增量。
 export function growIntelligence(d,engine,id,points,source,eventId){
- if(!intelligenceFresh(engine)||!(points>0))return 0;
+ if(!(points>0))return 0;
  const path=rowPath(d,id);if(!path)return 0;
  const state=d.get('state'),now=intelligenceOf(engine,state,id,{seed:d.document.randomSeed});
  if(!now||now.level>=NATURAL_CAP||now.level<1)return 0;
@@ -99,7 +96,7 @@ export function intelligenceSign(state,id){
 const majorEvent=e=>e.verb==='harm'&&e.tags?.includes('hostile')||e.verb==='steal'&&e.witnesses?.length||e.verb==='gift'&&(e.value??0)>=70;
 export function recordIntelligenceEvents(d,engine,events,context){
  // 没有改动任何状态的调用（如重复撤销已撤销的许可）不算共同经历或同行。
- if(context?.legacy||context?.noop||!intelligenceFresh(engine))return;
+ if(context?.legacy||context?.noop)return;
  for(const e of events){
   if(e.legacy)continue;
   const touched=new Map(),add=(id,points,source)=>{if(id&&id!=='player'&&(touched.get(id)?.points??0)<points)touched.set(id,{points,source});};
@@ -117,7 +114,7 @@ export function adaptationBonus(engine,state,npc,key){
  return row&&profile&&row.count>=profile.adaptAfter?profile.adaptBonus:0;
 }
 export function noteTrick(d,engine,npc,key,eventId){
- if(!intelligenceFresh(engine)||!d.get('state','npcs',npc))return;
+ if(!d.get('state','npcs',npc))return;
  const row=d.get('state','npcs',npc,'adaptation',key)??{count:0};
  d.set(['state','npcs',npc,'adaptation',key],{count:row.count+1,last:d.get('state','minute'),sourceEvent:eventId});
 }
@@ -164,7 +161,7 @@ const bucketOf=days=>days<=30?'short':days<=180?'mid':'long';
 export function npcNeedGoals(state,id){return Object.values(state.npcs?.[id]?.goals??{}).flat().filter(g=>g?.source==='need');}
 // 每个午夜一次：新缺口生成目标（每人每日至多一条），缺口消失的目标记为完成。
 export function advanceNpcNeeds(d,engine,minute){
- if(!intelligenceFresh(engine))return;
+
  const state=d.get('state'),day=Math.floor(minute/DAY),records=Object.values(state.records??{});
  const events=records.filter(r=>r.category==='world_event'&&!r.legacy&&r.minute<=minute&&minute-r.minute<=30*DAY&&(r.verb==='harm'||r.verb==='steal'));
  const debts=obligationRows(state).filter(r=>obligationView(state,r,minute).owed>0);

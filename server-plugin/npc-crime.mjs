@@ -21,8 +21,6 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 declareHoldingWriter('npc-crime',{kinds:['guest_of','wanted'],entities:['case']});
 const DAY=1440,path=id=>['state','records',id];
-export const NPC_CRIME_VERSION=1;
-const fresh=e=>!e.replaying||e.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION;
 const alive=(e,s,id,n)=>n&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(n.status);
 const awake=(e,s,id,n)=>alive(e,s,id,n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡|睡觉/.test(n.activity??'');
 const cases=state=>Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&r.npcCrime);
@@ -141,14 +139,14 @@ export function advanceNpcJustice(d,e,after){
  }
 }
 export function nextNpcCrimeMinute(e,d,now){
- if(!e.rules.law?.npcCrime||!fresh(e))return Infinity;
+ if(!e.rules.law?.npcCrime)return Infinity;
  const state=d.get('state');
  let next=Object.keys(state.npcs??{}).some(id=>state.npcs[id].location!==state.location&&!state.records?.[`legal_case:npc_crime:${id}:${Math.floor(now/DAY)}`]&&npcCrimePlan(e,state,id))?(Math.floor(now/600)+1)*600:Infinity;
  for(const row of cases(d.get('state')))for(const at of [!row.reported?row.npcCrime.reportAt:null,!row.judgment?row.nextHearing:null])if(at>now)next=Math.min(next,at);
  return next;
 }
 export function advanceNpcCrime(d,e,{before,after}){
- if(!e.rules.law?.npcCrime||!fresh(e))return;
+ if(!e.rules.law?.npcCrime)return;
  for(let at=(Math.floor(before/600)+1)*600;at<=after;at+=600){
   const state=d.get('state');
   for(const id of Object.keys(state.npcs??{}).sort()){

@@ -24,7 +24,7 @@ function service(d,who,kind,source,at,location,evidence){
  holdingSet(d,null,rec(`world_event:${id}`),{category:'world_event',id,verb:'help',actor:who,target:'loc_capital',minute:at,location,witnesses:[],tags:['royal_service',kind],sourceEvent:source,evidence,claim:`王室服务已核记：${kind}`},'high-nobility');
 }
 export function advanceRoyalService(d,e,{before,after}){
- const r=nobleRules(e);if(!r||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
+ const r=nobleRules(e);if(!r)return;
  for(const q of Object.values(d.get('state','quests')??{}))if(q.status==='已完成'&&q.source?.generator==='effect_table'&&q.source?.cause==='royal_commission'&&q.fundedBy?.treasury===r.royal.questBoard&&q.location===r.royal.questBoard&&q.taker&&q.rewardPaid===r.royal.questReward&&d.get('state','records',`${q.id}:outcome`)?.royal)service(d,q.taker,'委托',q.id,q.resolvedAt,q.location,{quest:q.id,receipt:`${q.id}:outcome`});
  for(const w of rows(d.get('state')).filter(w=>w.category==='war'&&w.winner&&w.endedAt)){
   const royal=e.world.regions?.some(c=>c.id===w.winner&&c.ruler?.polity?.startsWith('王国'));if(!royal)continue;
@@ -70,7 +70,7 @@ export function reviewUpperOffice(d,e,row,at){
  else holdingSet(d,null,rec(row.id),{...row,nextReview:at+30*DAY,reviews:[...row.reviews??[],at]},'high-nobility');
 }
 export function advanceUpperAppointments(d,e,{after}){
- if(!nobleRules(e)||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
+ if(!nobleRules(e))return;
  for(const row of rows(d.get('state')).filter(r=>r.category==='upper_application'&&r.status==='待审定'&&r.due<=after)){
   const reasons=appointmentReasons(e,d.get('state'),row);if(!reasons.length)appoint(d,e,row.holder,row.settlement,row.due,row.id,row.source);
   holdingSet(d,null,rec(row.id),{...row,status:reasons.length?'未获任命':'已任命',reasons,decidedAt:row.due},'high-nobility');

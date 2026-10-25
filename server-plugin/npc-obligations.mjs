@@ -30,7 +30,6 @@ const reservedActors=o=>o.deliveryVersion===1?[o.promisor]:parties(o);
 const released=(o,id)=>o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0;
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs[id]?.location;
 function signReservation(d,engine,row,eventId){
- if(engine.replaying&&engine.replayResult?.obligation?.runtimeVersion!==1&&engine.replayResult?.obligationRuntimeVersion!==1){d.set(['state','obligations',row.id],row);return row;}
  openObligation(d,engine,{...row,kind:row.deliveryVersion===1?'delivery':'promise',debtor:row.promisor,creditor:row.promisee,actor:row.promisor,amount:0},eventId);
  d.set(['state','obligations',row.id,'status'],row.status);
  return d.get('state','obligations',row.id);
@@ -70,7 +69,6 @@ export function createNpcObligation(d,engine,args,eventId){
   d.set(['state','obligations',old.id],obligation);return {obligation};
  }
  if(args.type==='送货'&&engine.resolve(args.promisor)!=='player'&&full(engine,engine.resolve(args.promisor))){
-  if(engine.replaying&&engine.replayResult?.obligation?.deliveryVersion!==1)return null;
   return createNpcDelivery(d,engine,args,eventId);
  }
  if(!['等候','会面'].includes(args.type))return null;

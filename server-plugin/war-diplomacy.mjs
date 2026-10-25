@@ -19,11 +19,10 @@ import {declareHoldingWriter,holdingRemove} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 declareHoldingWriter('war-diplomacy',{kinds:['governs','controls','allied_with']});
 const DAY=1440,copy=x=>structuredClone(x),path=id=>['state','records',id];
-export const WAR_VERSION=1;
 const rules=e=>e.rules.warDiplomacy;
 export const wars=s=>Object.values(s.records??{}).filter(r=>r.category==='war');
 const active=w=>['交战','停战'].includes(w.status);
-const fresh=e=>!e.replaying||e.replayResult?.warVersion===WAR_VERSION;
+
 const name=(e,s,id)=>partyName(e,s,id);
 const sideOf=(w,a)=>a.warSide??a.party;
 const pair=(a,b)=>[a,b].sort().join(':');
@@ -122,7 +121,7 @@ export function campaignRound(d,e,w,at){
  return row;
 }
 export function advanceWarDiplomacy(d,e,{before,after}){
- const r=rules(e);if(!r||!fresh(e))return;
+ const r=rules(e);if(!r)return;
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
   const at=day*DAY;
   for(const s of r.sources??[])if(day>=s.startDay&&!d.get(...path(`war:${s.id}`))){
