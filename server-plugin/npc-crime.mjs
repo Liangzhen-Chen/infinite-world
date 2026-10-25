@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
 import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
@@ -10,7 +11,7 @@ import {standing} from './standing.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {presentWitnesses,publishTransitionEvent} from './world-events.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
-import {registerIncident,evidenceScore,adjudicateLegalCase,caseLoss} from './law.mjs';
+import {registerIncident,evidenceScore,trialEvidenceScore,adjudicateLegalCase,caseLoss} from './law.mjs';
 import {recoverLoss} from './obligation-claims.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 import {issueWanted,wantedOfCase,WANTED_REASONS} from './bounty.mjs';
@@ -20,8 +21,6 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 declareHoldingWriter('npc-crime',{kinds:['guest_of','wanted'],entities:['case']});
 const DAY=1440,path=id=>['state','records',id];
-export const NPC_CRIME_VERSION=1;
-const fresh=e=>!e.replaying||e.replayResult?.npcCrimeVersion===NPC_CRIME_VERSION;
 const alive=(e,s,id,n)=>n&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(n.status);
 const awake=(e,s,id,n)=>alive(e,s,id,n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡|睡觉/.test(n.activity??'');
 const cases=state=>Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&r.npcCrime);
@@ -69,7 +68,7 @@ export function commitNpcCrime(d,e,plan,minute){
   const cargo=cargoAt(e,state,actor);if(!cargo||cargo.item!==plan.item)return null;
   // Contraband really changes hands at the checkpoint; no sale proceeds are invented.
   value=e.byId.get(plan.item).basePrice;transferItems(d,e,actor,victim,plan.item,1);stolen=null;
- }else throw Error('未登记的NPC犯罪来源');
+ }else throw preconditionFailure('未登记的NPC犯罪来源');
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
  if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
@@ -123,7 +122,8 @@ export function advanceNpcJustice(d,e,after){
   if(!row.reported)continue;
   if(['已报案','已到案','证据不足'].includes(row.status)&&!row.judgment&&row.nextHearing<=after){
    const judge=localOfficer(d,e,code,'judge');if(!judge||[row.offender,row.victim].includes(judge))continue;
-   if(evidenceScore(d,row)<code.evidenceRequired){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
+   const evaluation=code.procedure?.evidence?.convictionThreshold?.[row.offense]!==undefined?trialEvidenceScore(row,code):{score:evidenceScore(d,row),threshold:code.evidenceRequired};
+   if(evaluation.score<evaluation.threshold){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
    for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){
@@ -139,14 +139,14 @@ export function advanceNpcJustice(d,e,after){
  }
 }
 export function nextNpcCrimeMinute(e,d,now){
- if(!e.rules.law?.npcCrime||!fresh(e))return Infinity;
+ if(!e.rules.law?.npcCrime)return Infinity;
  const state=d.get('state');
  let next=Object.keys(state.npcs??{}).some(id=>state.npcs[id].location!==state.location&&!state.records?.[`legal_case:npc_crime:${id}:${Math.floor(now/DAY)}`]&&npcCrimePlan(e,state,id))?(Math.floor(now/600)+1)*600:Infinity;
  for(const row of cases(d.get('state')))for(const at of [!row.reported?row.npcCrime.reportAt:null,!row.judgment?row.nextHearing:null])if(at>now)next=Math.min(next,at);
  return next;
 }
 export function advanceNpcCrime(d,e,{before,after}){
- if(!e.rules.law?.npcCrime||!fresh(e))return;
+ if(!e.rules.law?.npcCrime)return;
  for(let at=(Math.floor(before/600)+1)*600;at<=after;at+=600){
   const state=d.get('state');
   for(const id of Object.keys(state.npcs??{}).sort()){

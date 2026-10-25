@@ -40,7 +40,10 @@ test('L4或候选正文被改不能绕过发布审核',async()=>{
  }finally{assert.ok(path.resolve(temp).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(temp,{recursive:true,force:true});}
 });
 test('完整档必填和嵌套类型生效，未标full的旧档兼容',()=>{
- const old={...world,npcs:world.npcs.map(n=>(()=>{const old=baseline.find(row=>row.id===n.id);return old?{...old,settlement:n.settlement,householdId:n.householdId,household:n.household,home:n.home}:n;})())};assert.equal(validateWorld(old).ok,true);
+ // 03 §3.2: old M2 biographies predate the later A3 examiner appointments.
+ // Do not attach a later office to a holder whose old skill facts are replayed.
+ const factions=world.factions.map(f=>({...f,...(f.offices?{offices:f.offices.filter(o=>!baseline.some(n=>n.id===o.holder))}:{})}));
+ const old={...world,factions,npcs:world.npcs.map(n=>(()=>{const old=baseline.find(row=>row.id===n.id);return old?{...old,settlement:n.settlement,householdId:n.householdId,household:n.household,home:n.home}:n;})())};const validation=validateWorld(old);assert.equal(validation.ok,true,validation.errors.join('\n'));
  for(const change of [n=>delete n.voice,n=>n.voice.samples=['不足三句'],n=>n.goals.short[0].progress=-1,n=>n.birth.month=15,n=>delete n.intelligence]){const w=structuredClone(published.world);change(w.npcs[0]);const result=validateWorld(w);assert.equal(result.ok,false);assert.ok(result.errors.some(x=>x.startsWith('schema')));}
 });
 test('通用引用校验拒绝错类别、重复关系、未知知情者和越界教学',()=>{

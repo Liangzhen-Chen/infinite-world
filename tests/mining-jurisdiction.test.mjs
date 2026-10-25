@@ -54,7 +54,17 @@ test('本地所有可开采的有主地点都派生出法域：五村读本村�
   const j=miningJurisdiction(engine,{},id);seen[j.kind]++;
   if(j.kind==='code'){assert.match(j.law,/^law_(hw|yp|wt|lq|sb)_property$/,id);assert.equal(j.template,HOME_POLITY,id);assert.deepEqual(j.penalty,world.rules.law.templates.find(t=>t.id===HOME_POLITY).penalties.illegal_mining);}
   else if(j.kind==='faction'){assert.match(j.faction,/^faction_ms_/,id);assert.ok(j.rule.standing<0);}
-  else{assert.equal(j.law,HOME_POLITY,id);assert.equal(j.executable,false);assert.match(id,/^(loc_bs|bld_bs_|site_w5_)/,id);}
+  else{
+   assert.equal(j.law,HOME_POLITY,id);assert.equal(j.executable,false);
+   // 05 §5.2 / 10 §10.1 law-codes: territorial law derives from the actual
+   // county. A public-asset administrator does not create a staffed court.
+   if(['bld_hc_citywall','bld_hc_stone_gate'].includes(id)){
+    assert.equal(j.county,'county_xichui_huancheng');assert.equal(j.polity,'王国');
+    assert.equal(world.locations.find(l=>l.id===id).owner,'faction_huancheng_government');
+    assert.deepEqual(j.penalty,world.rules.law.templates.find(t=>t.id===HOME_POLITY).penalties.illegal_mining);
+    assert.equal(legalCodeAt(engine,id),null);
+   }else assert.match(id,/^(loc_bs|bld_bs_|site_w5_)/,id);
+  }
  }
  assert.ok(seen.code&&seen.faction&&seen.polity,JSON.stringify(seen));
  assert.equal(world.rules.law.activityPenalties.illegal_mining,undefined,'盗采不再有全局默认刑罚');

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
 import {standing} from '../server-plugin/standing.mjs';
-import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,SEED,DAY} from './helpers/daily-b2.mjs';
+import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,SEED,DAY,replayed} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',HOUR=60;
 
@@ -46,7 +46,13 @@ test('D04 住店一晚 ①②③：单间 40 文/晚，120→80，客栈钱柜 +
  assert.deepEqual(after.state.inventory,before.state.inventory,'随身物品不凭空消失');
  conserved(before,after,'D04',new WorldEngine(world));
 });
-test.todo('D04 ④体力恢复至接近满值（单间按完整睡眠计）——引擎睡眠只恢复生命（每 30 分钟 +1），没有体力：缺 body.stamina（S1 vital；A3 睡眠动作读 body.json sleepRecoverPerHour 12 × 小时 × lodging 系数）');
+test('D04.4 public paid lodging sleeps a full 540 minutes and recovers capped stamina, charging the room once',async t=>{
+ const world=variant(w=>{w.locations.find(l=>l.id===INN).lodging.nightlyCopper=40;}),start=monthDayMinute(9,20,20,0);
+ const ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;s.player.body={stamina:{value:30,asOf:start,activity:'rest'},satiety:{value:100,asOf:start,activity:'rest'}};})});
+ const before=await primed(ui),room=await ui.choose('trade.lodge',{days:1});assert.ok(room.ok,room.error);assert.equal(room.result.cost,40);
+ const bed=await ui.read(),sleep=await ui.choose('time.sleep',{until:{dayOffset:1,hour:5,minute:11}});assert.ok(sleep.ok,sleep.error);const after=await ui.read();
+ assert.equal(after.state.minute-bed.state.minute,540);assert.equal(sleep.result.cost.sleep.minutes,540);assert.equal(sleep.result.cost.sleep.coveredMinutes,540);assert.equal(after.state.player.body.stamina.value,100);assert.equal(after.state.player.coins,80);assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,40);assert.deepEqual(after.state.inventory,before.state.inventory);conserved(before,after,'D04.4',new WorldEngine(world));
+});
 test.todo('D04 ⑤该单间当晚被占用，其他住客不能再订同一间——引擎客房只有“间数”(rooms: 3)，无住客占位，NPC 不入住：缺 lodges 持有与 capacity 派生（S2 持有）');
 
 test('D06 赶路：20 里、10 里/时辰，卯时出发约 4 小时后到巳时；位置变柳溪村，钱物不变，青石村照常运转',async t=>{
@@ -74,5 +80,30 @@ test('D19 拜师学技能 ①②⑤：学费 100（150→50）给师傅 +100，�
  assert.ok(standing(baseEngine,after.state,AYAN,'player')>=standing(baseEngine,before.state,AYAN,'player'),'⑤师傅好感不降');
  conserved(before,after,'D19',new WorldEngine(world));
 });
-test.todo('D19 ③时间推进 3 天——引擎一次学习只占 learnMinutes（本例 30 分钟，且导师须在一个营业窗口内连续在场），没有“教 3 天”的课程：缺课程/疗程服务义务的日程（S3 service 条款日程；教学课时 A3）');
+test('D19.3 public three-day service course charges tuition once and credits only real daily lessons',async t=>{
+ const TEACHER='npc_hw_ayan',PLACE='bld_hw_mill',ENTITY='recipe_wooden_pegs';
+ const world=variant(w=>{const r=w.recipes.find(r=>r.id===ENTITY);r.learnFee=100;r.learnMinutes=270;r.learnDays=3;w.npcs.find(n=>n.id===TEACHER).schedule={default:[{start:0,end:420,location:PLACE,activity:'sleep',services:[]},{start:420,end:1080,location:PLACE,activity:'teach',services:['teach','trade']},{start:1080,end:1440,location:PLACE,activity:'sleep',services:[]}]};});
+ const ui=await uiSession(t,{world,mutate:scene(PLACE,monthDayMinute(3,20,9,0),s=>{s.player.coins=150;s.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};Object.assign(s.npcs[TEACHER],{location:PLACE,activity:'teach',trust:100});})});
+ const before=await primed(ui),slots={entity:ENTITY,source:TEACHER,kind:'recipe'},receipts=[];
+ for(let day=0;day<3;day++){
+  if(day){const wait=await ui.choose('time',{until:{dayOffset:1,hour:9,minute:1}});assert.ok(wait.ok,wait.error);}
+  let event;for(let k=0;k<400;k++)if(dieOf(SEED,`d19-course-${day}-${k}`)>=16&&dieOf(SEED,`d19-course-${day}-${k}`)<20){event=`d19-course-${day}-${k}`;break;}
+  const pre=await ui.read(),r=await ui.choose('learn',slots,{search:true,eventId:event});assert.ok(r.ok,r.error);receipts.push(r.result);const now=await ui.read();assert.equal(now.state.minute-pre.state.minute,90);assert.equal(r.result.cost,day===0?100:0);
+  const course=now.state.records[r.result.course],service=now.state.obligations[r.result.service];assert.equal(service.kind,'service');assert.equal(service.debtor,TEACHER);assert.equal(service.creditor,'player');assert.equal(course.lessons.length,day+1);assert.equal(course.minutes,(day+1)*90);
+  assert.equal(Boolean(now.state.recipes[ENTITY]),day===2);assert.equal(r.result.complete,day===2);
+  const retry=await ui.choose('learn',slots,{search:true,eventId:event});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),now);
+  const bad=await ui.choose('learn',slots,{search:true});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),now);
+ }
+ const after=await ui.read();assert.equal(after.state.player.coins,50);assert.equal(after.state.npcs[TEACHER].coins-before.state.npcs[TEACHER].coins,100);assert.ok(after.state.minute-before.state.minute>=2*DAY);assert.ok(after.state.minute-before.state.minute<3*DAY);assert.equal(after.state.obligations[receipts[0].service].endReason,'fulfilled');conserved(before,after,'D19 course',new WorldEngine(world));
+ const failed=await uiSession(t,{world,mutate:scene(PLACE,monthDayMinute(3,20,9,0),s=>{s.player.coins=250;s.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};Object.assign(s.npcs[TEACHER],{location:PLACE,activity:'teach',trust:100});})});
+ await primed(failed);let failedCourse;
+ for(let day=0;day<3;day++){
+  if(day)assert.ok((await failed.choose('time',{until:{dayOffset:1,hour:9,minute:1}})).ok);
+  let event;for(let k=0;k<400;k++)if(dieOf(SEED,`d19-failed-${day}-${k}`)===(day===2?1:20)){event=`d19-failed-${day}-${k}`;break;}
+  failedCourse=await failed.choose('learn',slots,{search:true,eventId:event});assert.ok(failedCourse.ok,failedCourse.error);
+ }
+ const ended=await failed.read();assert.equal(ended.state.player.coins,150);assert.equal(failedCourse.result.success,false);assert.equal(ended.state.recipes[ENTITY],undefined);assert.equal(ended.state.obligations[failedCourse.result.service].endReason,'fulfilled');
+ const restart=await failed.choose('learn',slots,{search:true,eventId:lessonEvent(20,'d19-restart')});assert.ok(restart.ok,restart.error);const renewed=await failed.read();assert.equal(restart.result.cost,100);assert.equal(renewed.state.player.coins,50);assert.notEqual(restart.result.service,failedCourse.result.service);assert.equal(renewed.state.records[restart.result.course].lessons.length,1);assert.equal(renewed.state.recipes[ENTITY],undefined);await replayed(failed,renewed);
+});
+function lessonEvent(roll,prefix){for(let k=0;k<400;k++)if(dieOf(SEED,`${prefix}-${k}`)===roll)return `${prefix}-${k}`;throw Error('no deterministic lesson event');}
 test.todo('D19 ④技能列表新增“设陷阱（入门）”——引擎教的是配方/技能条目（本例入册的是配方）；设陷阱技能与入门阶的获得阈值没有数据，“学满 3 天恰好到入门”无法判定：缺 learning.json 的 taught 课时与入门阈值的消费（S1 learn 原语读表；缺省 perHour.taught 3.4 已在表）');

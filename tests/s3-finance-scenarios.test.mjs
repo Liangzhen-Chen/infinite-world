@@ -5,10 +5,20 @@ import {netAssets,terminateAssetLease} from '../server-plugin/finance-assets.mjs
 import {assessTradeTax} from '../server-plugin/finance-tax.mjs';
 import {adoptLegacyObligation,dueObligation} from '../server-plugin/obligation-runtime.mjs';
 import {settleFinancialClaim,pawnForActor} from '../server-plugin/finance-bank.mjs';
+import {loanTerms} from '../server-plugin/credit.mjs';
+import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
+
+function lenderConsent(f,principal,days,eventId){
+    // 产品原则二.4：保留代偿/违约消费者断言，真实贷款先由债权人同意精确报价。
+    const d=f.draft(),quote=loanTerms(d,f.e,{lender:host,principal,days,collateralValue:0});
+    applyConsentEvent(d,{engine:f.e,document:d.document},{actor:host,eventId,verb:'consent_given',to:'player',payload:{scope:'loan',subject:'player',purpose:['player'],terms:{principal,days,interest:quote.interest},until:d.get('state','minute')+10}});d.done();
+}
 
 test('E12-2: 一年十二期仅在真实期点尝试；远方不扣款，失败后不逐日写游标',async()=>{
-    const f=fixture(),loan=await f.act({operation:'lend',seller:host,coins:100,days:360,quantity:12,consent:true},'annual');
+    // 不代填借款人同意；真实放贷动作自行取得 NPC 对当前报价的决策。
+    const f=fixture(),loan=await f.act({operation:'lend',seller:host,coins:100,days:360,quantity:12},'annual');
     const row=f.doc.state.records[loan.debt],total=cash(f.doc);
+    assert.ok(f.doc.state.consentEvents.some(e=>e.id===row.signedTerms.consent&&e.from===host&&e.scope==='loan'));
     assert.equal(row.installments,12);assert.equal(row.deadline-row.createdAt,360*DAY);
     f.doc.state.location='loc_bs';f.tick(row.createdAt+30*DAY);
     const first=structuredClone(f.doc.state.records[loan.debt]);assert.equal(first.paid,0);assert.equal(first.nextPayment,row.createdAt+60*DAY);
@@ -68,7 +78,8 @@ test('E05-6: 兑票实扣到达网点现金，出票柜余额保留，另记一�
 });
 
 test('R3-E15: 入狱债务由真实到场第三人代偿，仍是原债；远方付款原子拒绝',async()=>{
-    const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:10,quantity:2,consent:true},'prison');
+    const f=fixture();lenderConsent(f,50,10,'prison-lender');
+    const loan=await f.act({operation:'borrow',seller:host,coins:50,days:10,quantity:2},'prison');
     f.doc.state.records.detention={category:'legal_detention',subject:'player',status:'生效',minute:600,expires:600+30*DAY};
     f.doc.state.location='loc_bs';const total=cash(f.doc),before=f.doc.state.npcs[worker].coins;
     let d=f.draft();const args={claim:loan.debt,payer:worker,amount:10};
@@ -90,7 +101,8 @@ test('E18-2: NPC实际典当扣本人抵押并领取本人本金，冒充其他�
 });
 
 test('已诉借款实际清偿只结案一次，回执不再追加第二种结案事实',async()=>{
-    const f=fixture(),loan=await f.act({operation:'borrow',seller:host,coins:50,days:2,quantity:2,consent:true},'case-loan');
+    const f=fixture();lenderConsent(f,50,2,'case-lender');
+    const loan=await f.act({operation:'borrow',seller:host,coins:50,days:2,quantity:2},'case-loan');
     f.tick(600+3*DAY);const key=f.doc.state.records[loan.debt].defaulted.case;
     assert.equal(f.doc.state.records[key].status,'已报案');
     await f.act({seller:host,payment:'repay',debt:loan.debt},'case-repayment');

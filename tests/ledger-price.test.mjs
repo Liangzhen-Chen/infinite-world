@@ -21,7 +21,7 @@ import {collectRouteTariffs} from '../server-plugin/finance-tax.mjs';
 import {advanceLaborMarket} from '../server-plugin/labor-market.mjs';
 import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {advanceNpcAutonomy,applyNpcPlan,npcPlanFingerprint,npcAutonomyBusy,nextNpcAutonomyMinute} from '../server-plugin/npc-autonomy.mjs';
-import {fixture as financeFixture} from './helpers/finance.mjs';
+import {fixture as financeFixture,grantLoanConsent} from './helpers/finance.mjs';
 import {damageFacility} from '../server-plugin/facilities.mjs';
 import {startPublicProject} from '../server-plugin/public-projects.mjs';
 import {ensureGroupAccount} from '../server-plugin/group-account.mjs';
@@ -42,6 +42,11 @@ const SRC=new URL('../server-plugin/',import.meta.url);
 const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).map(f=>[f,readFileSync(new URL(f,SRC),'utf8')]));
 // 含价格、报价、估值字样的模块的归类。read = 价格输入已读账户；其余是“不读存量或货币量”的原因。
 const SURVEY={
+    // A3 daily22: these are valuations of declared gifts/prizes, not price
+    // formulas driven by stock. Keep the exhaustive module/reader checks below.
+    'dialogue.mjs':'赠礼事件标值取目录基价，物品仍经真实转移核验，不以估值读取库存或现款',
+    'festival.mjs':'NPC授权成本取登记物资和奖品数量乘目录基价；数量来自节庆条款，不读库存或现款计算价格',
+    'primitives-runtime.mjs':'NPC同意的成本和报酬估值取拟转移数量乘目录基价；支付能力另由真实转移事务核验，不以库存或现款定价',
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
     'settlement-trade.mjs':'read','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
@@ -158,7 +163,11 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
     await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准
     await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration');
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税照常收取');
-    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10},'loan');
+    // A3CR (3def293f), 产品原则二.4：借款须有出借人对实际报价条款
+    // 的真实同意，调用者 consent:true 不再能代答。复用原生同意夹具，
+    // 不注入借据、不改钱物；下方全部价格双读与账本守恒断言保持原样。
+    c.doc=grantLoanConsent(c.engine,c.doc,{lender:host,principal:40,days:10,eventId:'loan-consent'});
+    const loan=await step(c,'world_trade',{operation:'borrow',seller:host,coins:40,days:10},'loan');
     await step(c,'world_trade',{operation:'work',seller:worker,consent:true,minutes:240},'work');
     await step(c,'world_move',{destination:post},'to-post');
     await step(c,'world_trade',{operation:'deposit',seller:clerk,coins:50},'deposit');
@@ -175,7 +184,8 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
 test('价格双读对照：制作、采集（钓鱼）之后的报价；农业季逐日推进（播种、生长、收获、腐坏、吃粮）与离屏推进',{timeout:3600000},async()=>{
     const c=campaignStock(),w=c.engine.world;
     const put=(item,quantity,durability=100)=>c.doc.state.inventory[item]={quantity,quality:w.items.find(i=>i.id===item).quality,durability,weight:w.items.find(i=>i.id===item).weight};
-    put('item_wood',6);put('item_whittling_knife',1,80);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+    put('item_wood',6);put('item_whittling_knife',1,80);put('item_fishing_bait',10);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
     c.doc.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};c.doc.state.recipes.recipe_wooden_pegs={source:{type:'teacher',id:'npc_hw_ayan'}};
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
     assertSurface(c,'交易之后');

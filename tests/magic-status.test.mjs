@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: read the canonical relation; preserve original trust expectations.
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
@@ -56,7 +58,7 @@ test('防护他人需要同意，恐惧施术留敌意记录并影响命中',asy
     const protectedNpc=await cast(run,document,{spell:'spell_test_stone_skin',target:'林穗',authorization:'support'});
     assert.equal(protectedNpc.result.status,'stone_skin');
     const feared=await cast(run,document,{spell:'spell_test_fear',target:'林穗'});
-    assert.equal(feared.document.state.npcs.npc_hw_linsui.trust,-10);
+    assert.equal(relationView(null,feared.document.state,'npc_hw_linsui','player').trust,-10);
     assert.equal(feared.document.state.npcs.npc_hw_linsui.developments.at(-1).type,'敌意法术');
     let normalDamage=0,fearedDamage=0;
     for(let i=0;i<512;i++){

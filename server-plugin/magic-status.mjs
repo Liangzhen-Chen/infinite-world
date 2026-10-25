@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // Status identifiers and their numerical consequences are authored rules.
 import {carePain}from'./magic-care.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
@@ -52,7 +53,7 @@ export function relieveMagicStatuses(d,target,statuses,power){
 export function applyMagicStatus(d,{target,status,power,duration,source,spell},id){
  const rule=magicStatuses[status];
  if(!rule||!Number.isSafeInteger(power)||power<1||power>rule.maximum||!Number.isSafeInteger(duration)||duration<1||duration>43200||['dazzle','illusion'].includes(status)&&duration!==1)throw Error('状态原语参数无效');
- if(d.get('state','effects',id))throw Error('状态事件重复');
+ if(d.get('state','effects',id))throw preconditionFailure('状态事件重复');
  if(['fear','illusion','compulsion'].includes(status))power=Math.max(0,Math.round(power*(1-magicStatusStats(d,target).mindResistance)));
  if(!power)return{target,resisted:true};
  const expires=d.get('state','minute')+duration;

@@ -153,7 +153,7 @@ function levelDistribution({document,world}){
  const state=stateOf(document),levels=world.npcs.map(n=>levelOf(state,n)).filter(Number.isFinite);
  need(levels.length,'人物没有等级数据');
  const atLeast=Object.fromEntries(LEVEL_STEPS.map(step=>{const n=levels.filter(l=>l>=step).length;return [`>=${step}`,{count:n,share:round(n/levels.length)}];}));
- return {population:levels.length,median:median(levels),max:Math.max(...levels),atLeast,basis:'已建档人物（含老幼）的等级；目标口径是 3.5 万居民，已建档人物只是其子集'};
+ return {population:world.npcs.length,measuredPopulation:levels.length,unknownLevels:world.npcs.length-levels.length,median:median(levels),max:Math.max(...levels),atLeast,basis:'已建档人物（含老幼）；等级分布与占比仅统计等级已知者，未给等级的名册人物计入 population 与 unknownLevels，不当作零级；目标口径是 3.5 万居民，已建档人物只是其子集'};
 }
 function speciesStock({document,world}){
  const records=Object.entries(stateOf(document).records??{}).filter(([key,r])=>key.startsWith('ecology:')&&r?.populations);

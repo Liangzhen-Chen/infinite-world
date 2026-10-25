@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "locale": "zh-CN",
+ "events": {
+  "document.list": "查看文书原件。",
+  "document.issue": "制作事务原件。",
+  "document.read": "阅读原件。",
+  "document.show": "出示原件。",
+  "document.give": "交付原件。",
+  "document.post": "张贴原件。",
+  "document.annotate": "批注原件。"
+ }
+}

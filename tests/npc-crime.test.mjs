@@ -7,14 +7,17 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {PatchCursor,applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {npcCrimePlan,commitNpcCrime,advanceNpcJustice,advanceNpcCrime} from '../server-plugin/npc-crime.mjs';
-import {evidenceScore,advanceLaw,adjudicateLegalCase} from '../server-plugin/law.mjs';
+import {trialEvidenceScore,advanceLaw,adjudicateLegalCase} from '../server-plugin/law.mjs';
 import {worldEvents} from '../server-plugin/world-events.mjs';
 import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 import {returnChanges} from '../server-plugin/return-summary.mjs';
+import {acceptReported} from './helpers/filing-actions.mjs';
+import {officeScene} from './helpers/office-actions.mjs';
 import {personConstraint} from '../server-plugin/entity-view.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const actor='npc_hw_hezhou',victim='npc_hw_linsui',witness='npc_hw_wushuo',guard='npc_hw_gucen',judge='npc_hw_chenbai',court='bld_hw_council',scene='bld_hw_qingdeng';
+const bystanders=world.npcs.filter(n=>n.id.startsWith('npc_hw_')&&![actor,victim,witness,guard,judge].includes(n.id)).slice(0,5).map(n=>n.id);
 const money=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((s,n)=>s+(n.coins??0),0)+Object.values(doc.state.workshopFunds??{}).reduce((s,n)=>s+n,0)+Object.values(doc.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((s,r)=>s+(r.coins??0),0);
 function cursor(doc){const c=new PatchCursor(doc);return{get document(){return c.expose(c.root);},get:(...p)=>c.expose(p.reduce((v,k)=>v?.[k],c.root)),set:(p,v)=>c.apply({op:'set',path:p,value:v}),remove:p=>c.apply({op:'delete',path:p}),say:()=>{}};}
 function setup(){
@@ -24,12 +27,27 @@ function setup(){
  const engine=new WorldEngine(w),document=engine.createCharacter(seed,{},'npc-crime-L1');
  document.state.minute=600;document.state.location='loc_bs';document.state.player.coins=1000;
  for(const n of Object.values(document.state.npcs)){n.location='loc_capital';n.activity='休息';n.status='正常';}
- for(const id of [actor,victim,witness])Object.assign(document.state.npcs[id],{location:scene,activity:'交谈',coins:id===actor?0:100});
+ for(const id of [actor,victim,witness,...bystanders])Object.assign(document.state.npcs[id],{location:scene,activity:'交谈',coins:id===actor?0:100});
  for(const id of [guard,judge])Object.assign(document.state.npcs[id],{location:court,activity:'当值'});
  document.state.npcs[actor].intelligence={level:3,growth:0};document.state.npcs[actor].goals={short:[{source:'need',need:'money',status:'进行中',deadlineDay:30,steps:[]}]};
  document.state.npcs[lawyer.id].occupation='讼师';document.state.npcs[lawyer.id].location=court;
  return{engine,document,lawyer:lawyer.id};
 }
+async function fileNpc(engine,document,key){
+ const original=document.state.location,source=document.state.records[key].sourceEvent;
+ const witnesses=document.state.records[`world_event:${source}`].witnesses.filter(id=>id!==actor&&id!=='player');
+ assert.equal(document.state.records[key].category,'legal_suspicion');
+ for(const reporter of witnesses){
+  document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:[reporter,'npc_bs_031_2']});
+  const submitted=await engine.reduce(document,{tool:'world_law',eventId:`${key}:report:${reporter}`,args:{operation:'report',case:key,reporter,authority:'npc_bs_031_2'}});
+  document=applyPatches(document,submitted.patches);
+  document=(await acceptReported(engine,document,submitted.result,`${key}:accept:${reporter}`)).document;
+ }
+ document=officeScene(engine,document,{location:court,minute:document.state.minute,present:[guard,judge]});
+ document=officeScene(engine,document,{location:original,minute:document.state.minute,present:[]});
+ assert.equal(document.state.records[key].category,'legal_case');return document;
+}
+
 test('需求、立场、灵智与处境选择四类犯罪，守法、幼者及在押者不被强制犯罪',()=>{
  const {engine,document}=setup(),s=document.state;
  assert.equal(npcCrimePlan(engine,s,actor).offense,'fraud');s.npcs[actor].intelligence.level=1;assert.equal(npcCrimePlan(engine,s,actor).offense,'theft');
@@ -38,23 +56,35 @@ test('需求、立场、灵智与处境选择四类犯罪，守法、幼者及�
  engine.byId.get(actor).personality={principle:'正直守法'};assert.equal(npcCrimePlan(engine,s,actor),null);
  engine.byId.get(actor).age=12;assert.equal(npcCrimePlan(engine,s,actor),null);
 });
-test('离屏偷盗真实转账，独立目击沿路报案，同一证据门槛审判与赔偿，不重复扣款',()=>{
- const {engine,document}=setup(),total=money(document),d=cursor(document),key=commitNpcCrime(d,engine,{actor,victim,offense:'theft',need:'money',intelligence:1},600);
+test('离屏偷盗真实转账，独立目击沿路报案，同一证据门槛审判与赔偿，不重复扣款',async()=>{
+ const {engine,document}=setup(),total=money(document);let d=cursor(document);const key=commitNpcCrime(d,engine,{actor,victim,offense:'theft',need:'money',intelligence:1},600);
  assert.equal(money(d.document),total);assert.equal(d.get('state','npcs',actor,'coins'),20);assert.equal(d.get('state','npcs',victim,'coins'),80);assert.equal(d.get('state','records',key,'reported'),false);
  const deadline=d.get('state','records',key,'npcCrime','reportAt');assert.ok(deadline>600);
  advanceNpcJustice(d,engine,deadline-1);assert.equal(d.get('state','records',key,'reported'),false);
- d.set(['state','minute'],deadline);advanceNpcJustice(d,engine,deadline);assert.equal(evidenceScore(d,d.get('state','records',key)),2);
+ assert.equal(d.get('state','records',key,'category'),'legal_suspicion');
+ d=cursor(await fileNpc(engine,d.document,key));
+ d.set(['state','minute'],deadline);advanceNpcJustice(d,engine,deadline);
+ const evaluation=trialEvidenceScore(d.get('state','records',key),engine.rules.law.codes.find(c=>c.id===d.get('state','records',key,'law')));
+ assert.ok(evaluation.score>=evaluation.threshold);
  d.set(['state','npcs',actor,'location'],court);d.set(['state','npcs',actor,'coins'],100);const funded=money(d.document);
  const hearing=d.get('state','records',key,'nextHearing');d.set(['state','minute'],hearing);advanceNpcJustice(d,engine,hearing);
  assert.equal(d.get('state','records',key,'status'),'已结案');assert.equal(d.get('state','records',`legal_deposit:${key}`,'coins'),20);assert.equal(money(d.document),funded);
  d.set(['state','npcs',victim,'location'],court);advanceNpcJustice(d,engine,hearing+1);assert.equal(d.get('state','records',`legal_deposit:${key}`,'claimed'),true);
  const after=structuredClone(d.document);advanceNpcJustice(d,engine,hearing+2);assert.deepEqual(d.document,after);assert.equal(commitNpcCrime(d,engine,{actor,victim,offense:'theft'},600),null);
 });
-test('一名见证不足定罪，无见证不泄漏传闻，未成年不进入离屏犯罪',()=>{
- const {engine,document}=setup();document.state.npcs[witness].location='loc_capital';const d=cursor(document),key=commitNpcCrime(d,engine,{actor,victim,offense:'theft'},600);
+test('一名见证不足定罪，无见证不泄漏传闻，未成年不进入离屏犯罪',async()=>{
+ const {engine,document}=setup();for(const id of [witness,...bystanders])document.state.npcs[id].location='loc_capital';let d=cursor(document);const key=commitNpcCrime(d,engine,{actor,victim,offense:'theft'},600);
+ d=cursor(await fileNpc(engine,d.document,key));
  const report=d.get('state','records',key,'npcCrime','reportAt');d.set(['state','minute'],report);advanceNpcJustice(d,engine,report);d.set(['state','minute'],report+60);advanceNpcJustice(d,engine,report+60);
  assert.equal(d.get('state','records',key,'status'),'证据不足');assert.equal(d.get('state','records',key,'judgment'),undefined);
- const f=setup();f.document.state.npcs[victim].activity='熟睡';f.document.state.npcs[witness].location='loc_capital';const hidden=cursor(f.document),k=commitNpcCrime(hidden,f.engine,{actor,victim,offense:'theft'},600);
+ const two=setup();for(const id of bystanders)two.document.state.npcs[id].location='loc_capital';
+ let pair=cursor(two.document);const pairId=commitNpcCrime(pair,two.engine,{actor,victim,offense:'theft'},600);
+ pair=cursor(await fileNpc(two.engine,pair.document,pairId));
+ const pairRow=pair.get('state','records',pairId),pairCode=two.engine.rules.law.codes.find(c=>c.id===pairRow.law),score=trialEvidenceScore(pairRow,pairCode);
+ assert.equal(pairRow.evidence.filter(e=>e.kind==='eyewitness').length,2);assert.equal(score.threshold,3);assert.ok(score.score>0&&score.score<score.threshold);
+ const later=pairRow.npcCrime.reportAt+5000;pair.set(['state','minute'],later);advanceNpcJustice(pair,two.engine,later);
+ assert.equal(pair.get('state','records',pairId,'status'),'证据不足');assert.equal(pair.get('state','records',pairId,'wanted'),undefined);assert.equal(pair.get('state','records',pairId,'judgment'),undefined);
+ const f=setup();f.document.state.npcs[victim].activity='熟睡';for(const id of [witness,...bystanders])f.document.state.npcs[id].location='loc_capital';const hidden=cursor(f.document),k=commitNpcCrime(hidden,f.engine,{actor,victim,offense:'theft'},600);
  assert.deepEqual(hidden.get('state','records',k,'witnesses'),[]);assert.equal(hidden.get('state','records',k,'npcCrime','reportAt'),null);
  assert.deepEqual(returnChanges(f.engine,hidden.get('state'),'loc_hw',{from:0,to:700}),[]);
 });
@@ -70,8 +100,9 @@ test('斗殴与私运有实际伤害或货物转移，NPC事件记正确行为�
   assert.ok(d.get('state','npcs',witness,'memoryStream').some(m=>m.eventRumor&&m.content.includes(engine.byId.get(actor).name)&&!m.content.includes(document.state.player.name)));
  }
 });
-test('NPC证据充分但未到案会通缉，缺钱劳役约束本人，玩家离开不终止NPC刑期',()=>{
- const {engine,document}=setup(),d=cursor(document),key=commitNpcCrime(d,engine,{actor,victim,offense:'theft'},600),at=d.get('state','records',key,'npcCrime','reportAt');
+test('NPC证据充分但未到案会通缉，缺钱劳役约束本人，玩家离开不终止NPC刑期',async()=>{
+ const {engine,document}=setup();let d=cursor(document);const key=commitNpcCrime(d,engine,{actor,victim,offense:'theft'},600),at=d.get('state','records',key,'npcCrime','reportAt');
+ d=cursor(await fileNpc(engine,d.document,key));
  d.set(['state','minute'],at);advanceNpcJustice(d,engine,at);d.set(['state','minute'],at+5000);advanceNpcJustice(d,engine,at+5000);
  assert.ok(d.get('state','records',key,'wanted'));assert.equal(d.get('state','records',key,'judgment'),undefined);
  d.set(['state','npcs',actor,'location'],court);d.set(['state','npcs',actor,'coins'],0);d.set(['state','minute'],at+5001);advanceNpcJustice(d,engine,at+5001);assert.equal(d.get('state','records',key,'status'),'服役中');
@@ -92,12 +123,11 @@ test('讼师费用实付、技能减罚且不减赔偿，缺证不获定罪，�
  doc.state.npcs[lawyer].occupation='小贩';assert.equal(advocateService(engine,doc.state,lawyer),null);
  const noEvidence=structuredClone(doc);noEvidence.state.records['legal_case:client'].evidence=[];const no=await engine.reduce(noEvidence,{tool:'world_law',args:{operation:'hear',case:'legal_case:client',authority:judge},eventId:'no-proof'});assert.equal(no.result.convicted,false);
 });
-test('推进注册表触发离屏来源，当前现场不结算，旧回执不补造犯罪；重启存档保留同一案件',async t=>{
- const {engine,document}=setup();document.state.minute=599;
+test('推进注册表触发离屏来源，当前现场不结算；重启存档保留同一案件',async t=>{
+ const {engine,document}=setup();document.state.minute=599;document.state.npcs[actor].intelligence.level=1;
  const result=await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'}),after=applyPatches(document,result.patches);
- const crimes=Object.values(after.state.records).filter(r=>r.category==='legal_case'&&r.npcCrime);assert.ok(crimes.some(r=>r.offender===actor));assert.equal(result.result.npcCrimeVersion,1);
+ const crimes=Object.values(after.state.records).filter(r=>r.category==='legal_suspicion'&&r.npcCrime);assert.ok(crimes.some(r=>r.offender===actor));
  assert.deepEqual((await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:result.result})).patches,result.patches);
- const old={...result.result};delete old.npcCrimeVersion;const replay=await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:old});assert.ok(!Object.values(applyPatches(document,replay.patches).state.records).some(r=>r.npcCrime));
  const dir=await fs.mkdtemp(path.join(tmpRoot(),'l1-npc-crime-'));t.after(()=>{const target=path.resolve(dir);if(!target.startsWith(path.resolve(tmpRoot())+path.sep+'l1-npc-crime-'))throw Error('临时目录边界错误');return fs.rm(target,{recursive:true,force:true});});
  const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(dir,{reducer});await store.create({id:'npc-crime',worldVersion:engine.world.version,document});
  await store.transact('npc-crime',{id:'crime-tick',anchor:'crime-tick',input:{tool:'world_time',args:{minutes:2},eventId:'crime-tick'}},reducer);

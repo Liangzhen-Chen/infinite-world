@@ -45,7 +45,7 @@ let resolver=()=>null,capacityOf=()=>null;
 export function registerEntityResolver(fn){resolver=fn;}
 export function registerCapacityResolver(fn){capacityOf=fn;}
 // 存储里的实体（职位、遗产、案件、议案、残骸）先于 L1 解析：它们的模板由实体种类决定。
-export const ENTITY_KINDS=Object.freeze({office:'office',estate:'interim',liquidation:'interim',case:'interim',project:'interim',motion:'interim',wreck:'thing'});
+export const ENTITY_KINDS=Object.freeze({office:'office',estate:'interim',liquidation:'interim',case:'interim',project:'interim',motion:'interim',wreck:'thing',person:'agent',creature:'agent',item:'thing',building:'thing',mark:'thing'});
 export function templatesOf(d,id,engine=null){
     const e=read(d,'holdings','entities',id);
     if(e)return [ENTITY_KINDS[e.kind]];
@@ -134,6 +134,15 @@ export function aliveHoldings(d,{kind,holder,subject,source}={}){
         .sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));
 }
 export const holdingRow=(d,id)=>rowOf(d,id);
+// A read-only view of a plain document. It is cached per document object, so
+// repeated aliveHoldings queries on one document share an index that is rebuilt
+// only when holdings.seq moves, instead of scanning every row each time.
+const views=new WeakMap();
+export function holdingsView(document){
+    let view=views.get(document);
+    if(!view){view={get:(...path)=>path.reduce((value,key)=>value?.[key],document)};views.set(document,view);}
+    return view;
+}
 // 某个来源单元在存储里的存活持有、存活实体与位置事实（双写按单元比对时用，不扫全表）。
 export function holdingsOfSource(d,source){
     if(!holdingsActive(d))return {holdings:[],entities:[],locations:[]};

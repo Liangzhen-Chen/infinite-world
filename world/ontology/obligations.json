@@ -159,6 +159,7 @@
   },
   {
    "id": "judgment",
+   "aliases": ["fine"],
    "label": "判决执行",
    "schedule": "single",
    "handover": {
@@ -266,6 +267,13 @@
    "schedule": "condition",
    "onDebtorGone": "pursue",
    "onCreditorGone": "heirs"
+  },
+  {
+   "id": "mandate",
+   "label": "委托代办",
+   "schedule": "continuous",
+   "onDebtorGone": "void",
+   "onCreditorGone": "void"
   },
   {
    "id": "vow",

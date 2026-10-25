@@ -1,7 +1,7 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, lookupToolResult } from './turn.mjs';
+import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
-import { toolDefinitions } from './tools.mjs';
+import { toolDefinitions, modelActionCatalog, builderToolCall } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
 import { renderLedger } from './ledger-view.mjs';
 import { isOutOfCharacter, injectToolExamples } from './prompt.mjs';
@@ -10,16 +10,46 @@ import {initializeSettings,getSettings,updateSettings,subscribeSettings} from '.
 import {renderTopbar} from './topbar.mjs';
 import {ambientAudio,registerUI as registerAudioUI} from './ambient-audio.mjs';
 import {updateBackground,clearBackground} from './background-view.mjs';
+import {finishContractTurn,turnFactsPrompt,publishedTurnText} from './turn-contract.mjs';
 const KEY='infinite_fields';
 const ctx=()=>getContext();
+const getActionModes=()=>actionModes(getSettings());
 const active=()=>ctx().characters[ctx().characterId]?.name==='无限原野·世界主持人';
 let view=null,loadedChat=null,blocked=null,chain=Promise.resolve(),mode='normal',turnStart=null;
 let indexedChat=null,indexedMessages=[];
 let labels={},feedback=[],ledgerTime='';
 let reviewTurn=null;
+let controlledRequest=null,savedStreaming;
+const WAITING='叙述正在核对；已完成的行动保留，请查看事件流。';
+const reviewCurtain=document.createElement('style');reviewCurtain.textContent='.fields-review-active .mes:not(.fields-review-visible) .mes_text{visibility:hidden!important}';document.head.append(reviewCurtain);
+function hideUnreviewed(){
+    for(const element of document.querySelectorAll('.mes'))element.classList.add('fields-review-visible');
+    document.body.classList.add('fields-review-active');
+    const settings=ctx().chatCompletionSettings;
+    if(settings&&savedStreaming===undefined){savedStreaming=settings.stream_openai;settings.stream_openai=false;}
+}
+function restoreStreaming(){
+    if(savedStreaming!==undefined&&ctx().chatCompletionSettings)ctx().chatCompletionSettings.stream_openai=savedStreaming;
+    savedStreaming=undefined;
+}
+async function controlledGenerate(body,label){
+    if(typeof ctx().generateRawData!=='function')throw Error('宿主没有提供受控生成接口');
+    if(controlledRequest)throw Error('已有受控工具请求正在进行');
+    const settings=ctx().chatCompletionSettings;
+    if(typeof ctx().getTokenCountAsync==='function'&&Number.isFinite(settings?.openai_max_context)){
+        const tokens=await ctx().getTokenCountAsync(JSON.stringify({messages:body.messages,tools:body.tools}));
+        if(tokens>settings.openai_max_context-(settings.openai_max_tokens??0))throw Error('工具补跑上下文超限，保留本轮安全模板');
+    }
+    controlledRequest=body;const started=Date.now();
+    try{
+        const response=await ctx().generateRawData({prompt:body.messages,api:'openai'});
+        return {...response,measurement:{label,usage:response.usage??null,latencyMs:Date.now()-started}};
+    }finally{controlledRequest=null;}
+}
 const reviewing=new WeakMap(),reviewEdits=new WeakMap();
 let historyModule=null;
 let startTransition=false;
+let actionSuggestion=null;
 registerAudioUI({registerSettingsSection});
 ambientAudio.onStatus=()=>updateAudioControls(getSettings());
 ambientAudio.applySettings(getSettings());
@@ -52,8 +82,13 @@ function fail(error){
     document.querySelector('#fields-status')?.replaceChildren(document.createTextNode(`存档对账失败，生成已停止：${blocked}`));
 }
 function render(){
-    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
+    setPanelContext({view,labels,feedback,ledgerTime,getChatContext:ctx,act,preview:previewUIAction,actionSuggestion,clearActionSuggestion:()=>{actionSuggestion=null;},api:(endpoint,body={})=>api(endpoint,{...body,campaignId:view?.reference.campaignId})});
     const pending=renderMessages(ctx(),labels,feedback);
+    for(const [index,message]of ctx().chat.entries())if(message.extra?.fields_narration_pending&&message.extra.fields_pending_safe_text){
+        const element=document.querySelector(`.mes[mesid="${index}"]`),text=element?.querySelector('.mes_text');
+        if(text){text.hidden=false;text.textContent=message.extra.fields_pending_safe_text;element.classList.add('fields-review-visible');}
+    }
+    for(const [index,message]of ctx().chat.entries())if(message.extra?.fields_consistency?.status==='pending')renderCandidates(message,message.extra.fields_consistency,index);
     const box=document.querySelector('#fields-pending');if(!box)return;
     box.replaceChildren();box.hidden=!pending.length;
     for(const notice of pending){const line=document.createElement('p');line.textContent=notice.text;box.append(line);}
@@ -68,13 +103,36 @@ const originalFetch=window.fetch.bind(window);
 window.fetch=async function(input,options){
     const url=new URL(typeof input==='string'?input:input.url,location.origin);
     if(active()&&blocked&&url.pathname==='/api/backends/chat-completions/generate')throw new Error(`已阻止生成：${blocked}`);
-    return originalFetch(input,options);
+    if(active()&&view&&getActionModes().intent==='off'&&getActionModes().narration==='off'&&url.pathname==='/api/backends/chat-completions/generate')throw new Error('已关闭输入理解和叙述，请使用可做之事面板');
+    const isCompletion=url.pathname==='/api/backends/chat-completions/generate';
+    const requestBody=isCompletion&&options?.body?JSON.parse(options.body):null;
+    const generatingReply=active()&&view&&mode!=='quiet'&&requestBody?.type!=='quiet'&&isCompletion;
+    const session=reviewTurn;
+    if(generatingReply&&options?.body){
+        if(requestBody.stream)throw Error('本回合必须使用非流式生成，待审正文不能提前展示');
+        if(reviewsPending)throw Error('本回合仍在核对，不能开始另一轮生成');
+    }
+    const response=await originalFetch(input,options);
+    if(!generatingReply||!response.ok)return response;
+    if(session&&(session!==reviewTurn||session.chatId!==ctx().chatId))throw Error('生成期间回合来源已变化，已丢弃旧回复');
+    const data=await response.json();
+    for(const choice of data.choices??[]){
+        const message=choice.message;if(!message)continue;
+        if(session&&session===reviewTurn)session.toolReply=!!message.tool_calls?.length;
+        if(!message.tool_calls?.length&&session&&session===reviewTurn)session.draft=message.content??'';
+        // The host can save/render the response before MESSAGE_RECEIVED. Never
+        // hand it unreviewed prose, including intermediary tool-call prose.
+        message.content=message.tool_calls?.length?null:WAITING;
+        delete message.reasoning_content;
+    }
+    return new Response(JSON.stringify(data),{status:response.status,headers:{'Content-Type':'application/json'}});
 };
 async function load(){
     if(!active()){ambientAudio.stop();view=null;loadedChat=null;return;}
     if(view&&loadedChat===ctx().chatId)return;
     ambientAudio.stop();
     reviewTurn=null;
+    actionSuggestion=null;
     document.querySelector('#fields-dialog')?.remove();
     const chatId=ctx().chatId,reference=ctx().chatMetadata[KEY];
     if(reference?.format!==2){view=null;loadedChat=chatId;labels={};feedback=[];blocked=null;turnStart=null;return;}
@@ -92,7 +150,7 @@ async function syncHistory(){
     indexedMessages=[...chat];
 }
 async function refresh(){
-    if(!active()){ambientAudio.stop();clearBackground();document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active');ctx().setExtensionPrompt(KEY,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
+    if(!active()){ambientAudio.stop();clearBackground();restoreStreaming();document.querySelector('#fields-dialog')?.remove();document.body.classList.remove('fields-play-active','fields-review-active');ctx().setExtensionPrompt(KEY,'',1,0);ctx().setExtensionPrompt(`${KEY}_turn`,'',1,0);document.querySelector('#fields-toolbar')?.remove();return;}
     await load();
     document.body.classList.toggle('fields-play-active',!!view);
     if(!view){
@@ -129,6 +187,7 @@ async function refresh(){
     await loadUIModules(api);
     await updateBackground(view,overview,`${ctx().chatId}:${view.reference.campaignId}`);
     ctx().setExtensionPrompt(KEY,scene.scene,1,0,false,0);
+    ctx().setExtensionPrompt(`${KEY}_turn`,reviewTurn?.gate?turnFactsPrompt(reviewTurn.gate):'',1,0,false,0);
     let bar=document.querySelector('#fields-toolbar');
     if(!bar?.querySelector('#fields-pending')){
         bar?.remove();
@@ -160,16 +219,23 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
         let sent=false,committed=false;
         try{
             await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
-            if(tool!=='world_turn')await ensureReviewTurn();
+            // An explicit action after publication is no longer part of that
+            // sealed chat turn. Keep it independent, like an interface action.
+            const detached=tool!=='world_turn'&&reviewTurn?.completed===true;
+            if(tool!=='world_turn'&&!detached)await ensureReviewTurn();
             const startMinute=turnStart??view.document.state.minute;
             const currentUser=[...ctx().chat].reverse().find(message=>message.is_user)?.mes??'';
             if(isOutOfCharacter(currentUser)&&tool!=='world_turn')throw new Error('场外提问不推进时间或写入世界状态');
+            if(tool!=='world_turn'&&(getActionModes().intent!=='propose'||!modelToolAllowed(tool,getSettings())))throw new Error('当前模式只允许目录建议或本地动作确认');
             document.querySelector('#fields-error')?.setAttribute('hidden','');
             sent=true;
-            const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
+            const result=await api('execute',{campaignId:view.reference.campaignId,tool,args,eventId,anchor:detached?null:anchor(),expectedSequence:view.reference.sequence,...(reviewId?{reviewId}:{})});committed=true;
             view=await api('read',{campaignId:view.reference.campaignId});
+            if(!actionCompletion(result).pending&&result.narration?.lines?.length)recordFeed(result.narration.lines);
             ambientAudio.noteAction(result.result,view.document.state.player,tool);
-            await persist();await refresh();return toolResultWithClock(result.result,{startMinute,minute:view.document.state.minute});
+            await persist();await refresh();
+            const completion=result.result?.receipt?actionCompletion(result):{};
+            return modelToolResult(toolResultWithClock({...result.result,...completion},{startMinute,minute:view.document.state.minute}));
         }catch(error){
             const uncertain=committed||(sent&&!error.rejected);
             const text=committed?`行动已保存，显示更新失败：${error.message}`:uncertain?`执行结果尚未确认，请重新对账：${error.message}`:`操作未完成：${error.message}`;
@@ -183,32 +249,90 @@ let generating=false,reviewsPending=0;
 const FEED='fields_event_feed',FEED_LIMIT=40;
 function recordFeed(lines,kind='action'){
     const metadata=ctx().chatMetadata,rows=Array.isArray(metadata[FEED])?metadata[FEED]:[];
-    metadata[FEED]=[...rows,{minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)}].slice(-FEED_LIMIT);
+    const entry={minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)};
+    metadata[FEED]=[...rows,entry].slice(-FEED_LIMIT);return entry;
 }
-async function act(action,slots={}){
+async function previewUIAction(action,slots={},eventId=`ui_${crypto.randomUUID()}`){
+    if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手'};
+    return queue(async()=>{
+        await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
+        const campaignId=view.reference.campaignId,current=await api('read',{campaignId});
+        const result=await api('propose',{campaignId,...builderToolCall(action,slots),eventId});
+        return {...result,startMinute:current.document.state.minute};
+    });
+}
+async function act(action,slots={},confirmation={}){
     if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手',lines:[]};
     return queue(async()=>{
         try{
             await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
-            const campaignId=view.reference.campaignId,resolved=await api('actions',{resolve:{action,slots}});
+            const campaignId=view.reference.campaignId;
+            if(confirmation.expectedSequence!==undefined){
+                const current=await api('read',{campaignId});
+                if(current.reference.sequence!==confirmation.expectedSequence)return {ok:false,stale:true,error:'此刻情形已变化，请重新预览后再确认',lines:[]};
+                view=current;
+            }
+            const call=builderToolCall(action,slots);
+            const resolved=call.tool==='world_propose'?{tool:call.tool}:await api('actions',{campaignId,resolve:{action,slots}});
             if(resolved.projection){const here=await api('actions',{campaignId});recordFeed(here.scene,'look');await ctx().saveChat();return {ok:true,lines:here.scene};}
             if(resolved.clientRead)return {ok:true,read:readStateSection(view.document.state,resolved.args.section,resolved.args.npc),lines:[]};
-            const result=await api('execute',{campaignId,tool:'world_act',args:{action,slots},eventId:`ui_${crypto.randomUUID()}`,anchor:null,expectedSequence:view.reference.sequence});
+            const eventId=confirmation.eventId??`ui_${crypto.randomUUID()}`;
+            const uiReview=getActionModes().narration==='async'?await api('review/begin',{campaignId,anchor:null,eventId,playerText:`界面行动：${action} ${JSON.stringify(slots)}`,expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false,captureSearch:true}):null;
+            const result=await api('execute',{campaignId,...call,eventId,anchor:null,expectedSequence:view.reference.sequence});
             view=await api('read',{campaignId});
-            const lines=result.narration?.lines??[];recordFeed(lines);
+            const completion=actionCompletion(result);
+            const lines=completion.pending?['行动仍在等待裁决，尚未完成。']:result.narration?.lines??[];
+            const entry=!completion.pending?recordFeed(lines):null;
             ambientAudio.noteAction(result.result,view.document.state.player,resolved.tool);
-            await persist();await refresh();return {ok:true,lines,result:result.result};
+            await persist();await refresh();
+            if(uiReview&&entry){
+                entry.eventId=eventId;entry.sequence=view.reference.sequence;
+                void narrateUIAction({session:uiReview,campaignId,eventId,sequence:view.reference.sequence,chatId:ctx().chatId,entry});
+            }
+            return {...completion,lines,result:result.result};
         }catch(error){return {ok:false,error:error.message,lines:[]};}
     });
 }
+async function narrateUIAction({session,campaignId,eventId,sequence,chatId,entry}){
+    reviewsPending++;
+    const current=()=>ctx().chatId===chatId&&view?.reference.campaignId===campaignId&&view.reference.sequence===sequence&&ctx().chatMetadata[FEED]?.includes(entry);
+    try{
+        const gate=await api('review/gate',{campaignId,token:session.token,expectedSequence:sequence});
+        if(!current()||gate.status==='pending')return;
+        const response=await controlledGenerate({messages:[{role:'system',content:turnFactsPrompt(gate)+`\n仅叙述界面行动 ${eventId} 的真实回执，不执行工具，不追加时间。`}],tool_choice:'none',stream:false,thinking:{type:'disabled'}},'ui-action-narration');
+        if(!current())return;
+        const choice=response.choices?.[0];if(choice?.finish_reason==='length'||choice?.message?.tool_calls?.length||!choice?.message?.content)return;
+        const review=await api('review/reply',{campaignId,token:session.token,expectedSequence:sequence,draft:choice.message.content});
+        if(!current())return;
+        entry.lines=publishedTurnText(review,gate).replace(/<回合[^>]*>/g,'').split('\n').filter(Boolean).slice(0,12);
+        entry.narration={eventId,sequence,status:review.status,measurement:response.measurement};
+        await ctx().saveChat();render();
+    }catch{/* The already published engine receipt remains authoritative. */}
+    finally{reviewsPending=Math.max(0,reviewsPending-1);}
+}
 async function modelActions(args){
     const result=await api('actions',{campaignId:view.reference.campaignId,target:args.target,query:args.query,limit:12});
-    // Compact for the model: ids, slots and filled choices; no internals, at most 8 choices per slot.
-    return JSON.stringify({here:result.scene,actions:result.actions.map(a=>({id:a.id,label:a.label,...(a.hint?{hint:a.hint}:{}),...(Object.keys(a.fill??{}).length?{fill:a.fill}:{}),
-        slots:a.slots.map(s=>({name:s.name,kind:s.kind,...(s.required?{required:true}:{}),...(s.options?{options:s.options.slice(0,8).map(o=>o.value)}:{})}))}))});
+    if(getActionModes().intent!=='propose')result.actions=result.actions.filter(a=>a.id!=='open:proposal');
+    return JSON.stringify(modelActionCatalog(result));
 }
 async function modelAct(args){
-    const resolved=await api('actions',{resolve:{action:args.action,slots:args.slots??{}}});
+    const intent=getActionModes().intent;
+    if(intent==='off')return {ok:false,error:'自由输入理解已关闭，请使用可做之事面板'};
+    if(intent==='match'){
+        if(args.action==='open:proposal')return {ok:false,error:'目录匹配模式只推荐已登记动作'};
+        const result=await api('actions',{campaignId:view.reference.campaignId,query:args.action,target:args.slots?.target??args.slots?.seller??args.slots?.buyer,limit:1});
+        const action=result.actions.find(a=>a.id===args.action&&!a.readOnly);
+        if(!action)return {ok:false,error:'请从当前动作目录选择'};
+        if(action.blocked)return {ok:false,error:action.blocked};
+        actionSuggestion={action,slots:structuredClone(args.slots??{})};render();
+        return {ok:true,status:'suggested',instruction:'只是动作建议，尚未执行；请玩家在可做之事面板预览并确认。'};
+    }
+    if(args.action==='open:proposal'){
+        const offered=await api('actions',{campaignId:view.reference.campaignId,query:'open:proposal',limit:1});
+        if(!offered.actions.some(a=>a.id==='open:proposal'))return {ok:false,error:'此战役已关闭开放提案，请使用注册动作'};
+        const call=builderToolCall(args.action,args.slots??{});return execute(call.tool,call.args);
+    }
+    const resolved=await api('actions',{campaignId:view.reference.campaignId,resolve:{action:args.action,slots:args.slots??{}}});
     if(resolved.projection)return JSON.stringify({ok:true,here:(await api('actions',{campaignId:view.reference.campaignId})).scene});
     if(resolved.clientRead){
         if(resolved.tool==='world_read')return JSON.stringify(readStateSection(view.document.state,resolved.args.section,resolved.args.npc));
@@ -220,9 +344,10 @@ async function modelAct(args){
 for(const definition of toolDefinitions()){
  const {name,description,parameters}=definition.function;
  ctx().registerFunctionTool({name,displayName:name,description,parameters,formatMessage:()=>'',
-  shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked,
+  shouldRegister:()=>active()&&!!view&&mode!=='quiet'&&!blocked&&modelToolAllowed(name,getSettings()),
   action:async args=>{
    await load();if(!view)throw new Error('请先在副本上启用新版');
+   if(!modelToolAllowed(name,getSettings()))return {ok:false,error:'当前输入理解模式不允许执行这个工具'};
    if(name==='world_read')return JSON.stringify(readStateSection(view.document.state,args.section,args.npc));
    if(name==='world_search')return lookupToolResult(()=>api('search',{...args,campaignId:view.reference.campaignId,token:reviewTurn?.token,anchor:anchor(),expectedSequence:view.reference.sequence}));
    if(name==='world_catalog')return lookupToolResult(()=>api('catalog',{campaignId:view.reference.campaignId,...args}));
@@ -248,6 +373,8 @@ async function ensureReviewTurn(){
         turnStart=view.document.state.minute;
         reviewTurn={...await api('review/begin',{campaignId:view.reference.campaignId,anchor:currentAnchor,playerText:user?.mes??'',expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false,captureSearch:true}),anchor:currentAnchor,chatId:ctx().chatId};
     }
+    reviewTurn.gate=await api('review/gate',{campaignId:view.reference.campaignId,token:reviewTurn.token,expectedSequence:view.reference.sequence});
+    ctx().setExtensionPrompt(`${KEY}_turn`,turnFactsPrompt(reviewTurn.gate),1,0,false,0);
 }
 async function historyInterceptor(coreChat,contextSize,abort,type){
     if(!active()||type==='quiet')return;
@@ -273,6 +400,7 @@ async function historyInterceptor(coreChat,contextSize,abort,type){
 globalThis.infiniteFieldsHistoryInterceptor=historyInterceptor;
 async function reconcile(type,_options,dryRun){
     if(!active()||dryRun)return;mode=type;if(type!=='quiet')generating=true;
+    if(type!=='quiet')hideUnreviewed();
     return queue(async()=>{
         try{
             await load();if(!view)throw new Error('请先在副本上启用新版');if(blocked)throw new Error(blocked);
@@ -305,41 +433,120 @@ async function onEdited(index){
     await onDeleted();if(view)await api('edit-index',{campaignId:view.reference.campaignId,index,message});
 }
 async function afterReply(index){
-    if(!active()||!view||mode==='quiet'||blocked)return;const message=ctx().chat[index];
-    if(!message||message.is_user||message.is_system||message.extra?.tool_invocations||turnStart===null)return;
-    if(message.extra?.fields_turn)return;
+    if(!active()||!view||mode==='quiet'||blocked)return;
+    const message=ctx().chat[index];
+    if(!message||message.is_user||message.is_system||message.extra?.tool_invocations||turnStart===null||message.extra?.fields_turn)return;
+    // saveReply emits MESSAGE_RECEIVED before the host executes tool calls.
+    // That empty intermediary must not start a second tool phase or seal review.
+    if(reviewTurn?.toolReply){reviewTurn.toolReply=false;return;}
     if(reviewing.has(message))return reviewing.get(message);
-    reviewsPending++;
+    const session=reviewTurn,chatId=ctx().chatId,campaignId=view.reference.campaignId;
+    const user=[...ctx().chat].reverse().find(row=>row.is_user),editVersion=reviewEdits.get(message)??0;
+    const draft=session?.draft??message.mes;if(session)delete session.draft;
+    if(session&&message.extra?.fields_tool_retry?.token===session.token&&message.extra.fields_tool_retry.attempted)session.retryStarted=true;
+    message.extra??={};message.mes=WAITING;
+    if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=WAITING;
+    message.extra.fields_narration_pending='sync';
+    const element=document.querySelector(`.mes[mesid="${index}"]`);element?.classList.remove('fields-review-visible');
+    const current=()=>ctx().chatId===chatId&&session===reviewTurn&&ctx().chat[index]===message&&message.mes===WAITING&&!message.extra?.fields_invalidated&&(reviewEdits.get(message)??0)===editVersion&&session?.anchor===anchor();
+    const publish=text=>{
+        message.mes=text;
+        if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=text;
+        delete message.extra.fields_narration_pending;
+        element?.classList.add('fields-review-visible');ctx().updateMessageBlock?.(index,message);
+    };
+    reviewsPending++;render();
     const pending=(async()=>{
-        const user=[...ctx().chat].reverse().find(message=>message.is_user),session=reviewTurn,chatId=ctx().chatId;
-        let reviewedText=message.mes;const editVersion=reviewEdits.get(message)??0;
-        const replyUnchanged=()=>ctx().chat[index]===message&&message.mes===reviewedText&&!message.extra?.fields_invalidated&&(reviewEdits.get(message)??0)===editVersion;
-        const prose=document.querySelector(`.mes[mesid="${index}"] .mes_text`);if(prose)prose.hidden=true;
-        message.extra??={};
         try{
-            if(!session||session.chatId!==chatId||session.anchor!==anchor())throw new Error('本轮审查快照缺失，尾注未提交');
-            const review=await api('review/reply',{campaignId:view.reference.campaignId,token:session.token,draft:message.mes,query:user?.mes??'',expectedSequence:view.reference.sequence});
-            if(!replyUnchanged())return;
-            if(chatId!==ctx().chatId||session!==reviewTurn)throw new Error('审查期间聊天已切换，尾注未提交');
-            message.extra.fields_consistency=review;
-            message.mes=review.text;reviewedText=message.mes;
-            if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=message.mes;
-            ctx().updateMessageBlock?.(index,message);
-            if(!review.canCommit){actionError(review.feedback);await ctx().saveChat();render();return;}
-            const state=view.document.state;
-            const parsed=parseTurn(message.mes,{location:state.location,startMinute:turnStart,minute:state.minute,
-                present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location&&!npc.scheduleTravel&&!npc.cognitionTravel).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
-            const result=await execute('world_turn',parsed.args,`turn_${session.anchor}`,review.reviewId);
-            if(result.ok===false){actionError(result.error);return;}
-            session.completed=true;
-            message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
+            if(!session||session.chatId!==chatId||session.anchor!==anchor())throw Error('本轮审查快照缺失，尾注未提交');
+            const gate=async()=>{
+                const data=await api('review/gate',{campaignId,token:session.token,expectedSequence:view.reference.sequence});
+                if(current()){
+                    session.gate=data;
+                    if(getActionModes().narration==='async'){message.extra.fields_pending_safe_text=data.safeText;render();}
+                }return data;
+            };
+            const tools=toolDefinitions().filter(row=>modelToolAllowed(row.function.name,getSettings()));
+            const finished=await finishContractTurn({playerText:user?.mes??'',draft,gate,state:session,isCurrent:current,tools,
+                messages:[{role:'user',content:user?.mes??''}],
+                onMeasurement:row=>(session.measurements??=[]).push(row),
+                onRetryStart:async()=>{message.extra.fields_tool_retry={token:session.token,attempted:true};await ctx().saveChat();},
+                generate:getActionModes().intent==='off'?null:controlledGenerate,narrate:getActionModes().narration!=='off',
+                execute:async(name,args)=>{
+                    if(name==='world_read')return readStateSection(view.document.state,args.section,args.npc);
+                    if(name==='world_search')return api('search',{...args,campaignId,token:session.token,anchor:session.anchor,expectedSequence:view.reference.sequence});
+                    if(name==='world_catalog')return api('catalog',{...args,campaignId});
+                    if(name==='world_actions')return modelActions(args);
+                    if(name==='world_act')return modelAct(args);
+                    return execute(name,args);
+                },
+                onTools:async(assistant,results)=>{
+                    if(!current())throw Error('回合来源已变化');
+                    const invocations=assistant.tool_calls.map((call,i)=>({id:call.id,name:call.function.name,displayName:call.function.name,
+                        parameters:call.function.arguments,result:results[i].content,error:JSON.parse(results[i].content)?.ok===false}));
+                    if(ctx().ToolManager?.saveFunctionToolInvocations)await ctx().ToolManager.saveFunctionToolInvocations(invocations);
+                    else ctx().chat.push({is_system:true,mes:'',extra:{tool_invocations:invocations}});
+                    await ctx().saveChat();
+                },
+                review:text=>api('review/reply',{campaignId,token:session.token,draft:text,query:user?.mes??'',expectedSequence:view.reference.sequence})});
+            if(!current())return;
+            const review=finished.review;
+            // Do not copy diagnostic originals back into persistent chat extras.
+            message.extra.fields_consistency={...Object.fromEntries(['reviewId','status','verified','canCommit','text','safeText','rewritten','attempts','sequence','feedback','candidates'].filter(key=>review[key]!==undefined).map(key=>[key,review[key]])),
+                text:finished.text,issues:(review.issues??[]).map(({category,severity})=>({category,severity})),...(review.protocol?{protocol:{changed:review.protocol.changed}}:{})};
+            message.extra.fields_tool_retry={token:session.token,...finished.retry,attempted:session.retryStarted===true,measurements:session.measurements??[]};
+            if(getActionModes().narration==='off')message.extra.fields_no_narration=true;
+            if(review.canCommit&&!review.fallback&&getActionModes().intent==='propose'&&getActionModes().narration==='sync'){
+                const state=view.document.state;
+                const parsed=parseTurn(finished.text,{location:state.location,startMinute:turnStart,minute:state.minute,
+                    present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location&&!npc.scheduleTravel&&!npc.cognitionTravel).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
+                const result=await execute('world_turn',review.tail?.args??parsed.args,`turn_${session.anchor}`,review.reviewId);
+                if(!current())return;
+                if(result.ok===false)throw Error(result.error);
+                message.extra.fields_turn={valid:parsed.valid,warning:parsed.warning??null};
+            }else message.extra.fields_turn={valid:!!review.canCommit,pending:review.status==='pending',fallback:!!review.fallback,extraMinutes:0};
+            session.completed=true;publish(finished.text);
             if(review.feedback)actionError(review.feedback);
-            await ctx().saveChat();render();
-        }catch(error){if(!replyUnchanged())return;message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,original:message.mes,feedback:error.message};if(chatId===ctx().chatId){actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();render();}}
-        finally{if(prose)prose.hidden=false;}
-    })().finally(()=>{reviewsPending=Math.max(0,reviewsPending-1);});reviewing.set(message,pending);return pending;
+            await ctx().saveChat();indexedMessages=indexedMessages.slice(0,index);await syncHistory();render();renderCandidates(message,review,index);
+        }catch(error){
+            if(!current())return;
+            const text=publishedTurnText(null,session?.gate);publish(text);
+            message.extra.fields_consistency={status:'unverified',verified:false,canCommit:false,text,feedback:error.message};
+            if(session)session.completed=true;
+            actionError(`回复未验证：${error.message}。已完成的行动保留。`);await ctx().saveChat();indexedMessages=indexedMessages.slice(0,index);await syncHistory();render();
+        }finally{
+            delete message.extra.fields_narration_pending;
+            delete message.extra.fields_pending_safe_text;
+            if(chatId===ctx().chatId)render();
+        }
+    })().finally(()=>{reviewsPending=Math.max(0,reviewsPending-1);});
+    reviewing.set(message,pending);return pending;
 }
+function renderCandidates(message,review,index){
+    const element=document.querySelector(`.mes[mesid="${index}"]`);if(!element)return;
+    element.querySelector('.fields-turn-candidates')?.remove();
+    if(review.status!=='pending')return;
+    const box=document.createElement('div');box.className='fields-turn-candidates';
+    for(const candidate of review.candidates??[]){
+        const action=candidate.action??candidate.id;if(!action)continue;
+        const button=document.createElement('button');button.textContent=candidate.label??'预览候选行动';
+        button.onclick=async()=>{
+            const catalog=await api('actions',{campaignId:view.reference.campaignId,query:action,limit:12});
+            const selected=catalog.actions.find(row=>row.id===action);if(!selected)return;
+            actionSuggestion={action:selected,slots:candidate.slots??{}};render();
+            document.querySelector('[data-panel="actions"]')?.click();
+        };box.append(button);
+    }
+    const builder=document.createElement('button');builder.textContent='打开可做之事，继续构造';builder.onclick=()=>document.querySelector('[data-panel="actions"]')?.click();box.append(builder);
+    (element.querySelector('.mes_block')??element).append(box);
+}
+
 const context=ctx();
+context.eventSource.on(context.eventTypes.CHAT_COMPLETION_SETTINGS_READY,data=>{
+    if(!active()||!view)return;
+    if(controlledRequest&&data.type==='quiet'){Object.assign(data,controlledRequest);data.tools=controlledRequest.tools??[];data.stream=false;data.include_reasoning=false;data.n=1;}
+    else if(mode!=='quiet'){data.n=1;}
+});
 context.eventSource.on(context.eventTypes.CHAT_COMPLETION_PROMPT_READY,({chat})=>{
     if(active()&&view&&!blocked)injectToolExamples(chat,ctx().characters[ctx().characterId]);
 });
@@ -353,8 +560,8 @@ context.eventSource.on(context.eventTypes.MESSAGE_DELETED,onDeleted);
 context.eventSource.on(context.eventTypes.MESSAGE_EDITED,onEdited);
 context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED,afterReply);
 for(const event of [context.eventTypes.CHARACTER_MESSAGE_RENDERED,context.eventTypes.MESSAGE_UPDATED])if(event)context.eventSource.on(event,()=>{if(active()&&view)render();});
-context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';generating=false;});
-if(context.eventTypes.GENERATION_STOPPED)context.eventSource.on(context.eventTypes.GENERATION_STOPPED,()=>{generating=false;});
+context.eventSource.on(context.eventTypes.GENERATION_ENDED,()=>{mode='normal';generating=false;restoreStreaming();});
+if(context.eventTypes.GENERATION_STOPPED)context.eventSource.on(context.eventTypes.GENERATION_STOPPED,()=>{generating=false;restoreStreaming();});
 async function startSnapshot(){
     await load();if(!view)return null;
     view=await api('read',{campaignId:view.reference.campaignId});await persist();
@@ -412,5 +619,5 @@ window.addEventListener('message',event=>{
     // Do not put that transition inside the queue those callbacks normally use.
     if(action==='enter')handleStart();else queue(handleStart);
 });
-window.infiniteFieldsV2={load,refresh,execute,act,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
+window.infiniteFieldsV2={load,refresh,execute,act,preview:previewUIAction,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
 if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);

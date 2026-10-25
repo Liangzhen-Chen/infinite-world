@@ -8,6 +8,12 @@ import{validateBossMechanics,templateBossCounter,applyBossCounterAbility}from'..
 import{bossFoundation}from'../world/design/boss-foundation.mjs';import{planRuleStateMigration}from'../server-plugin/rule-state-migration.mjs';import{validateWorld}from'../tools/validate-world.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),source=await loadWorld();
 function draft(document){return{document,get(...p){return p.reduce((v,k)=>v?.[k],document);},set(p,v){let o=document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(v);},remove(p){let o=document;for(const k of p.slice(0,-1))o=o[k];delete o[p.at(-1)];},say(){}};}
+function assertTransientConsumed(out,id){
+ const changes=out.patches.filter(p=>p.path[0]==='state'&&p.path[1]==='effects'&&p.path[2]===id);
+ assert.equal(changes.filter(p=>p.op==='set'&&p.path[3]==='remainingUses'&&p.value===0).length,1);
+ assert.equal(changes.at(-1).op,'delete');
+ assert.equal(out.document.state.effects[id],undefined);
+}
 function setup({bosses=false}={}){
  const world=withPetRules(structuredClone(source));for(const spell of batch2SpellCandidates()){if(!world.spells.some(s=>s.id===spell.id))world.spells.push(spell);if(!world.skills.some(s=>s.id===spell.skill))world.skills.push({id:spell.skill,name:spell.name,attribute:'精神',profession:null});}
  // T157怪物聚居地的首领由聚居地登记引用，换成本批候选首领时须保留它们，否则聚居地校验断开。
@@ -15,7 +21,7 @@ function setup({bosses=false}={}){
  const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'m4-batch2');if(bosses)document=applyPatches(document,planRuleStateMigration(document,world.rules));document.state.player.mp=1000;document.state.player.maxMp=1000;document.state.location='loc_hw_dock';
  for(const s of world.spells){document.state.spells[s.id]={source:{type:'fixture'}};document.state.skills[s.skill]={proficiency:299,daily:{},breakthroughs:[]};}
  for(const item of['item_resin','item_charcoal','item_parchment']){const def=world.items.find(i=>i.id===item);document.state.inventory[item]={quantity:item==='item_parchment'?1:10,quality:def.quality,durability:def.durability,weight:def.weight};}
- const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
+ const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result,patches:out.patches};};
  const cast=async(c,spell,args={},prefix='cast')=>{let last;for(let i=0;i<50;i++){const eventId=`${prefix}_${i}`,out=await run(c,'world_cast',{spell,target:'player',...args},eventId);if(out.result.success)return{...out,eventId};last=out.result;}throw Error(`夹具无成功骰点:${spell}:${JSON.stringify(last)}`);};
  return{world,engine,document,run,cast};
 }
@@ -36,7 +42,12 @@ test('完整候选世界通过严格schema，所有16条具备真实引擎施法
   casted.document.state.npcs.npc_hw_linsui.location=casted.document.state.location;casted.document.state.npcs.npc_hw_linsui.hp=5000;casted.document.state.npcs.npc_hw_linsui.maxHp=5000;
   casted.document.state.player.hp=5000;casted.document.state.player.maxHp=5000;
   const exchanged=await run(casted.document,'world_combat',{target:'npc_hw_linsui'},`exchange_${id}`);assert.equal(typeof exchanged.result.damage,'number');
-  if(['spell_light_05','spell_mind_08'].includes(id))assert.equal(exchanged.document.state.effects[casted.eventId]?.remainingUses,0);
+  // A bout lasts one minute: observe consumption before the expiry deletion.
+  if(['spell_light_05','spell_mind_08'].includes(id)){
+   assert.equal(casted.document.state.effects[casted.eventId].remainingUses,1);
+   assertTransientConsumed(exchanged,casted.eventId);
+   assert.deepEqual(consumeTransientMagic(draft(exchanged.document),'player',engine.magicStatusContext(draft(exchanged.document),'player')),[]);
+  }
  }
  document.state.player.attributes.精神=30;
  const summoned=await cast(document,'spell_summon_13',{},'elemental');const guarded=await run(summoned.document,'world_companion',{operation:'summon_guard',summon:summoned.eventId},'elemental_guard');assert.equal(guarded.result.absorption,7);
@@ -61,8 +72,13 @@ test('四个首领均经真实接近与交锋触发能力，逐击防护和生�
   applyProtectionPrimitive(draft(current),{target:'player',spec:{kind:'protection',power:5000,damageTypes:['physical'],stacking:'strongest'},spell:'fixture',duration:10},'ward');
   current.state.effects.dazzle={kind:'status',target:definition.id,status:'dazzle',power:2,remainingUses:1,expires:current.state.minute+1};
   let triggered;for(let i=0;i<40;i++){const c=await run(current,'world_combat',{target:definition.id},`boss_exchange_${definition.id}_${i}`);if(c.result.abilities?.length){triggered=c;break;}}
-  assert.ok(triggered,definition.id);assert.equal(triggered.result.received,0);assert.equal(triggered.document.state.player.hp,5000);assert.equal(triggered.document.state.effects.dazzle.remainingUses,0);
-  assert.ok(Object.values(triggered.document.state.effects).some(e=>e.status==='fear'&&e.target==='player'));
+  assert.ok(triggered,definition.id);assert.equal(triggered.result.received,0);assert.equal(triggered.document.state.player.hp,5000);
+  // Expiry removes the exhausted record after the first counterattack consumes it.
+  assertTransientConsumed(triggered,'dazzle');
+  // The counter's one-minute fear is also applied before this bout expires it.
+  const fear=triggered.patches.find(p=>p.op==='set'&&p.path[1]==='effects'&&p.value?.status==='fear'&&p.value.target==='player');
+  assert.ok(fear);assert.ok(triggered.result.abilities.some(a=>a.effect===fear.path[2]&&a.status==='fear'));
+  assert.equal(fear.value.expires,triggered.document.state.minute);assert.equal(triggered.document.state.effects[fear.path[2]],undefined);
  }
 });
 test('条件状态改变真实战斗修正，闭眼不吃眩光且一次出手后用尽，不知事实不给伪装奖励',()=>{
@@ -79,9 +95,10 @@ test('真实自愿精神施法分别验证行政许可与目标同意，未解�
  document.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',grantor:'npc_hw_gucen',location:document.state.location,expires:document.state.minute+60};
  const c=await cast(document,'spell_mind_01',{permit:'permit'},'calm');assert.equal(c.document.state.effects.fear.power,1);assert.equal(c.document.state.player.mp,document.state.player.mp-1);
  document.state.npcs.npc_hw_linsui.location=document.state.location;
- await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit',distanceMeters:0,lineOfSight:true},'fake'),/距离|视线/);
+ await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit',distanceMeters:0,lineOfSight:true},'fake'),/目标超过法术实际射程/);
  engine.magicTargetFacts=()=>({distanceMeters:1,lineOfSight:true});await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit'},'no-consent'),/本人/);
  document.state.records.consent={category:'authorization',action:'mental_magic',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',expires:document.state.minute+60};
+ await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',authorization:'consent'},'no-permit'),/许可/);
  // This case isolates consent; movement during casting is covered by magic-primitives.
  delete engine.byId.get('npc_hw_linsui').schedule;
  document.state.npcs.npc_hw_linsui.activity='待客';document.state.effects.nfear={kind:'status',target:'npc_hw_linsui',status:'fear',power:2,expires:document.state.minute+100};

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS3Publication,mergeS3Publication,publishS3,withoutS3,files as publishedFiles} from '../tools/publish-w2-s3.mjs';
 import {withoutS4} from '../tools/publish-w2-s4.mjs';
 import {spells,books,items,placements,mentors,routes,routeOf} from '../world/design/w2-s3.mjs';
@@ -54,7 +55,13 @@ async function routeSession(route){
  const entry=world.rules.training.institutions.find(e=>e.teacher===teacher&&e.profession===role.id);
  if(entry)doc=(await run(doc,'world_profession',{operation:'initiate',profession:role.id,teacher,institution:place,rule:entry.rule})).doc;
  const core=role.entry.skill;doc=(await success(doc,'world_learn',{entity:core,source:teacher,kind:'skill'})).doc;
- while(doc.state.skills[core].proficiency<150){doc=(await run(doc,'world_practice',{skill:core,gain:100,target:'基础动作'})).doc;if(doc.state.skills[core].proficiency<150)doc=await attend(doc,teacher,place,510);}
+ // Acquisition and certification are exercised publicly. Prior accumulated
+ // proficiency is a premise; one native session must really cross 150.
+ const staged=applyIntentSetup(engine,doc,{abilities:{skills:{[core]:149}}});
+ assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
+ const practiceMinute=doc.state.minute,practiced=await run(doc,'world_practice',{skill:core});doc=practiced.doc;
+ assert.ok(practiced.result.gain>0);assert.ok(doc.state.skills[core].proficiency>=150);
+ assert.equal(doc.state.minute,practiceMinute+120);
  doc=await attend(doc,teacher,place,510);doc=(await success(doc,'world_profession',{profession:role.id,teacher,operation:'certify'},'certified')).doc;
  assert.equal(doc.state.professions.combat,role.id);
  for(const s of spells.filter(s=>routeOf[s.id]===route)){
@@ -81,7 +88,8 @@ test('佛、巫、祭三路线实际入门认证后向导师学会本批法术�
 });
 
 test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、养息、凉藏、低灯、闭隙、凉帕各自真实生效',async()=>{
- const base=learnedByRoute.佛;assert.ok(base,'需先完成路线学习');const fresh=()=>structuredClone(base);
+ // A filtered regression still earns its own real route prerequisites.
+ const base=learnedByRoute.佛??await routeSession('佛');assert.ok(base,'需先完成路线学习');const fresh=()=>structuredClone(base);
  // Mental spells need the institution's real permit; consent of others stays required.
  let {doc,permit:p}=await permit(fresh(),JI,'bld_bs_still_temple');
  await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('still_mind'),target:'player'},eventId:'no-permit'}),/许可/);
@@ -105,7 +113,8 @@ test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、�
  const palm=await cast(hurt,{spell:id('mend_palm'),target:'player'});assert.equal(palm.doc.state.player.hp,hurt.state.player.hp+4);
  const field=await cast(hurt,{spell:id('rest_field'),target:'player'});const hp0=field.doc.state.player.hp;assert.equal(hp0,hurt.state.player.hp+2);
  assert.equal((await wait(field.doc,10)).state.player.hp,hp0+2);
- await assert.rejects(engine.reduce(hurt,{tool:'world_cast',args:{spell:id('mend_palm'),target:JI},eventId:'heal-no-consent'}),/同意|在场|事实/);
+ // S4 measures the still-unapproached teacher outside touch-spell range.
+ await assert.rejects(engine.reduce(hurt,{tool:'world_cast',args:{spell:id('mend_palm'),target:JI},eventId:'heal-no-consent'}),e=>e.code==='E-ACTION-CAST-RANGE'&&e.message==='目标超过法术实际射程');
  // Herb cabinet: upkeep per minute, cooler cabinet, half the spoilage.
  let c=await grant(fresh(),JI,fid('herb_cabinet'));const cool=await cast(c.doc,{spell:id('herb_cool'),target:fid('herb_cabinet'),authorization:c.authorization});
  const mp0=cool.doc.state.player.mp,cold=await wait(cool.doc,10),warm=await wait(c.doc,10);
@@ -132,6 +141,16 @@ test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、�
  const eased=await cast(doc,{spell:id('startle_ease'),target:'player',permit:p});assert.equal(eased.result.relieved,3);
  assert.equal(eased.doc.state.effects.fixture_fear,undefined);assert.equal(eased.doc.state.effects.fixture_push.power,1);
  await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('startle_ease'),target:'player'},eventId:'ease-no-permit'}),/许可/);
+ // Additional counterexample on another mind: 06 §6.10.4 makes the registered
+ // action return an atomic refusal, including on an explicit force attempt.
+ await import('../server-plugin/primitives-runtime.mjs');
+ const other=structuredClone(doc);other.state.npcs[SHU].location=other.state.location;
+ assert.equal(recordLocalContact(writer(other),engine,SHU,'s3-relief-contact'),true);
+ const unchanged=structuredClone(other),denied=await engine.reduce(other,{tool:'world_act',args:{action:'core:cast',slots:{spell:id('startle_ease'),target:SHU,force:true}},eventId:'ease-other-no-permit'});
+ assert.equal(denied.result.ok,false);assert.equal(denied.result.receipt.status,'rejected');
+ assert.match(denied.result.receipt.reason,/许可/);assert.deepEqual(denied.result.receipt.applied,[]);
+ assert.deepEqual(denied.result.receipt.cost,{time:0,resources:[]});assert.deepEqual(denied.patches,[]);
+ assert.ok(denied.result.receipt.missing.length);assert.ok(denied.result.receipt.repair.length);assert.deepEqual(other,unchanged);
  const scared=structuredClone(doc);delete scared.state.effects.fixture_push;const plain=magicStatusStats(reader(scared),'player').hit;
  const calm=await cast(scared,{spell:id('calm_guard'),target:'player'});assert.equal(plain,-.04);assert.equal(magicStatusStats(reader(calm.doc),'player').hit,0);assert.ok(calm.doc.state.effects.fixture_fear);
  const ward=await cast(fresh(),{spell:id('shade_ward'),target:'player'});assert.equal(magicStatusStats(reader(ward.doc),'player').shadowResistance,.3);

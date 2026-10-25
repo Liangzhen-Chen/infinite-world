@@ -120,6 +120,7 @@ const WORLD_USE=Object.fromEntries(CODE.map(f=>[f,scanWorldUse(f)]));
 // ---------------------------------------------------------------- systems & layers
 // 模块→系统归属（人工归类；脚本会校验 server-plugin 与 extension 的每个模块都有归属）。
 const SYSTEMS=[
+ {id:'base_primitives',layer:'base',name:'原语、权限与开放动作（A3）',modules:['precondition.mjs','record-cleanup.mjs','book-gates.mjs','primitives.mjs','native-primitives.mjs','primitive-policy.mjs','primitive-schema.mjs','primitive-accounts.mjs','primitive-rules.mjs','primitives-runtime.mjs','legacy-primitives.mjs','primitives-effects.mjs','primitives-body.mjs','primitives-movement.mjs','primitives-checks.mjs','primitives-learning.mjs','rx.mjs','rx-library.mjs','action-rejection.mjs','action-boundary.mjs','action-authority.mjs','action-authority-sources.mjs','action-consent.mjs','action-capacity.mjs','action-degrees.mjs','action-router.mjs','action-constructor.mjs','action-limits.mjs','open-actions.mjs','action-rite.mjs','mark-actions.mjs','mark-reactions.mjs','action-costs.mjs','action-time.mjs','routing-programs.mjs','body-needs.mjs']},
  {id:'sim_transport',layer:'sim',name:'承运与驿传',modules:['transport.mjs','transport-route.mjs','post.mjs']},
  {id:'sim_faith',layer:'sim',name:'寺观与信仰',modules:['faith-catalog.mjs','faith-state.mjs','faith.mjs']},
  // 数据层（world/ 目录与 prompt/）
@@ -132,7 +133,7 @@ const SYSTEMS=[
  {id:'data_drafts',layer:'data',name:'内容草稿',dir:'world/drafts',modules:[]},
  {id:'data_ontology',layer:'data',name:'词汇表（L1，S0）',dir:'world/ontology',modules:[]},
  {id:'data_actions',layer:'data',name:'动作注册表与事件模板（A1）',dir:'world/actions',modules:[]},
- {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:[]},
+ {id:'data_rules',layer:'data',name:'数值参数表与目标表（S1，rules/tables/balance）',dir:'world/rules',modules:['domain-rules.mjs']},
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','campaign-reducer.mjs','archived-reducer.mjs','scheduler.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
@@ -148,23 +149,23 @@ const SYSTEMS=[
  {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs']},
  {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['obligation-protocol.mjs','holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-conditional.mjs','obligation-claims.mjs','service-queue.mjs']},
  // 模拟系统层
- {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
+ {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','daily-actions.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
    'npc-obligations.mjs','npc-growth.mjs','npc-intelligence.mjs','lies.mjs','npc-planning-service.mjs','population.mjs','population-service.mjs','settlement-profile.mjs']},
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','hidden-passives.mjs','spell-research.mjs','training.mjs','learning.mjs','education.mjs','education-state.mjs','education-cohorts.mjs','local-exams.mjs','checks.mjs','revival.mjs']},
- {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','duels.mjs']},
+ {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','combat-state.mjs','duels.mjs']},
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
  {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
- {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
+ {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','water-volume.mjs','environment-state.mjs','perception.mjs','place-layout.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},
  // magic-economy.mjs (U10): settlement-scale prices, losses and reactions to life magic.
  {id:'sim_economy',layer:'sim',name:'经济',modules:['items.mjs','shop.mjs','business.mjs','contracts.mjs','credit.mjs','finance-bank.mjs','finance-assets.mjs','finance-tax.mjs','finance-operations.mjs','labor-market.mjs','employment-state.mjs','settlement-trade.mjs','manufacturing.mjs','workstation-services.mjs','repair.mjs','magic-economy.mjs','extraction.mjs','smuggling.mjs']},
  {id:'sim_agriculture',layer:'sim',name:'农业',modules:['agriculture.mjs']},
- {id:'sim_society',layer:'sim',name:'社会',modules:['family-state.mjs','family-politics.mjs','family-inheritance.mjs','family-law.mjs','family-diplomacy.mjs','monster-society.mjs','reputation.mjs','reputation-registry.mjs','reputation-catalog.mjs','organization-state.mjs','group-account.mjs','office-salary.mjs','public-opinion.mjs','organizations.mjs','civic.mjs','governance.mjs','public-projects.mjs','facilities.mjs','facility-state.mjs','titles.mjs','noble-state.mjs','high-nobility.mjs','nation-founding.mjs','notables.mjs','promotion.mjs','promotion-view.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
+ {id:'sim_society',layer:'sim',name:'社会',modules:['family-state.mjs','family-politics.mjs','family-inheritance.mjs','family-law.mjs','family-diplomacy.mjs','monster-society.mjs','reputation.mjs','reputation-registry.mjs','reputation-catalog.mjs','organization-state.mjs','group-account.mjs','office-salary.mjs','public-opinion.mjs','organizations.mjs','norm-stack.mjs','civic.mjs','governance.mjs','public-projects.mjs','facilities.mjs','facility-state.mjs','titles.mjs','noble-state.mjs','high-nobility.mjs','nation-founding.mjs','notables.mjs','promotion.mjs','promotion-view.mjs','quest-board.mjs','quest-sources.mjs','quest-wildlife.mjs','tribal-awakening.mjs','elections.mjs']},
  {id:'sim_military',layer:'sim',name:'军队、战争与外交',modules:['military.mjs','war-diplomacy.mjs']},
  {id:'sim_clock',layer:'sim',name:'时钟、节令与灾害',modules:['world-clock.mjs','faction-clock.mjs','festival.mjs','seasonal-hazards.mjs','hazard-calendar.mjs']},
- {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['law.mjs','law-codes.mjs','legal-representation.mjs','npc-crime.mjs','bounty.mjs']},
- {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs']},
+ {id:'sim_law',layer:'sim',name:'法律与通缉',modules:['legal-reactions.mjs','legal-appeal.mjs','law.mjs','law-codes.mjs','legal-representation.mjs','npc-crime.mjs','bounty.mjs']},
+ {id:'sim_works',layer:'sim',name:'著作',modules:['works.mjs','documents.mjs']},
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
  {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','prompt-scope.mjs','state-notices.mjs','return-summary.mjs']},
@@ -172,8 +173,8 @@ const SYSTEMS=[
  {id:'ui_client',layer:'ui',name:'浏览器界面',modules:['ext:ui-shell.mjs','ext:ui-affairs.mjs','ext:ui-art.mjs','ext:ui-history.mjs','ext:ui-map.mjs','ext:ui-messages.mjs','ext:ui-personal.mjs','ext:ui-settings.mjs',
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
    'ext:personal-panels.mjs','ext:topbar.mjs','ext:history-window.mjs','ext:ambient-audio.mjs','ext:state-read.mjs']},
- {id:'ui_actions',layer:'ui',name:'动作目录与界面可操作（A1）',modules:['action-registry.mjs','action-gateway.mjs','action-affordances.mjs','action-text.mjs','applied-effects.mjs','ext:ui-actions.mjs','ext:actions-view.mjs']},
- {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs']},
+ {id:'ui_actions',layer:'ui',name:'动作目录与界面可操作（A1）',modules:['action-registry.mjs','action-gateway.mjs','action-affordances.mjs','action-text.mjs','applied-effects.mjs','ext:ui-actions.mjs','ext:actions-view.mjs','ext:action-builder.mjs']},
+ {id:'ui_host',layer:'ui',name:'酒馆接入',modules:['ext:index.js','ext:runtime.js','ext:core.js','ext:turn.mjs','ext:turn-contract.mjs']},
  // 叙述层
  {id:'nar_prompt',layer:'narr',name:'提示词',dir:'prompt/',modules:['ext:prompt.mjs','ext:generation.mjs']},
  {id:'nar_consistency',layer:'narr',name:'一致性审查',modules:['consistency-review.mjs','consistency-service.mjs','consistency-evidence.mjs','consistency-outcome.mjs']},
@@ -218,8 +219,12 @@ if(!registryText.includes('registerAdvance(system)'))throw Error('推进注册�
 // Subscribers register themselves (registerWorldEventSubscriber); the runtime list
 // (after loading the engine) gives the order, a scan of each call gives the function.
 await imp('server-plugin/engine.mjs');
+// Open-action observation is loaded lazily by the primitive runtime in play.
+// Include its subscriber for the map without installing that runtime's executor.
+await imp('server-plugin/mark-reactions.mjs');
 const registeredSubscribers=WE.worldEventSubscribers();
-const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'(\w+)',order:([\d.]+),on:[^=]*=>\s*([A-Za-z_$][\w$]*)\(/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]}])));
+// Both delegating arrow callbacks and inline method callbacks are valid registrations.
+const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'([\w-]+)',order:([\d.]+),on(?:\s*:\s*[^=]*=>\s*([A-Za-z_$][\w$]*)\(|\s*\([^)]*\)\s*\{)/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]??'on'}])));
 const verbLiterals=uniq(CODE.flatMap(f=>[...src(f).matchAll(/\bverb\s*:\s*'(\w+)'/g)].map(m=>m[1])));
 // Tool → verbs derived in deriveWorldEvents (one `tool==='x'` branch each); other tools use their own name.
 const toolVerbs={};

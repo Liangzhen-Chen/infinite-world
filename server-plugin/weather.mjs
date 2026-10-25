@@ -2,11 +2,43 @@ import { createHash } from 'node:crypto';
 import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
 import { hazardRouteClosed } from './hazard-calendar.mjs';
+import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
+
+// Old campaigns retain their published 30-day display calendar. Explicit
+// campaign dates name a native calendar; no season/daylight override is stored.
+export function calendarDateAt(engine,minute,calendar='legacy:30-day'){
+    validMinute(minute);
+    const day=Math.floor(minute/DAY),date=calendar==='legacy:30-day'?{year:Math.floor(day/360)+1,month:String(Math.floor(day/30)%12+1),day:day%30+1,offset:minute%DAY,leap:false}:obligationDate(minute,calendar),month=Number(String(date.month).replace('leap:',''));
+    const hour=Math.floor(date.offset/60),clockMinute=date.offset%60;
+    return {year:date.year,month,day:date.day,hour,minute:clockMinute,leap:date.leap,calendar,
+        season:Math.floor((month-1)/3),...(engine.rules.calendar.tens?.[Math.floor((date.day-1)/10)]?{ten:engine.rules.calendar.tens[Math.floor((date.day-1)/10)]}:{}),
+        market:engine.rules.calendar.marketDays?.includes(date.day)??false,
+        text:`${engine.rules.calendar.epoch}${date.year===1?'元':date.year}年 ${date.leap?'闰':''}${engine.rules.calendar.months[month-1]} ${date.day}日 ${String(hour).padStart(2,'0')}:${String(clockMinute).padStart(2,'0')}`};
+}
+export function minuteForCalendarDate(engine,date){
+    if(!date||Object.keys(date).some(k=>!['calendar','year','month','day','hour','minute','leap'].includes(k))||
+        !['core:calendar_default','legacy:30-day'].includes(date.calendar)||
+        !Number.isSafeInteger(date.year)||date.year<1||date.year>10000||!Number.isSafeInteger(date.month)||date.month<1||date.month>12||
+        !Number.isSafeInteger(date.day)||date.day<1||date.day>30||!Number.isSafeInteger(date.hour)||date.hour<0||date.hour>23||
+        !Number.isSafeInteger(date.minute)||date.minute<0||date.minute>59||date.leap!==undefined&&typeof date.leap!=='boolean')throw Error('Invalid native calendar date');
+    const c=obligationCalendar(date.calendar),rank=r=>[r.year,r.month+(r.leap ? 0.5 : 0),r.day];
+    const target=rank(date),compare=r=>{const a=rank(r);for(let i=0;i<3;i++)if(a[i]!==target[i])return a[i]-target[i];return 0;};
+    let lo=0,hi=date.year*400;
+    while(lo<hi){const mid=Math.floor((lo+hi)/2);if(compare(calendarDateAt(engine,c.epochMinute+mid*DAY,date.calendar))<0)lo=mid+1;else hi=mid;}
+    const minute=c.epochMinute+lo*DAY+date.hour*60+date.minute;
+    if(compare(calendarDateAt(engine,minute,date.calendar))!==0)throw Error('Date does not exist on the native calendar');
+    return minute;
+}
+export function historicalMinute(document,{at,daysAgo}={}){
+    const now=document.state.minute;
+    if(!Number.isSafeInteger(daysAgo)||daysAgo<0||!Number.isSafeInteger(at)||at<0||at>now||Math.floor(now/DAY)-Math.floor(at/DAY)!==daysAgo)throw Error('Historical daysAgo requires a consistent nonnegative absolute date');
+    return at;
+}
 
 const cache = new Map();
 const kinds = ['clear','cloudy','rain','storm','snow','fog'];
 const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
-const validMinute = minute => { if (!Number.isSafeInteger(minute) || minute < 0) throw new Error('天气分钟必须是非负整数'); };
+const validMinute = minute => { if (!Number.isSafeInteger(minute) || minute < 0) throw Error('天气分钟必须是非负整数'); };
 function dailySequence(rules, seed, region, year) {
     // New local regions must not reshuffle the weather history of existing regions.
     const sequenceRules={...rules,regions:rules.regions.filter(row=>row.sequenceScope!=='local')};
@@ -49,11 +81,11 @@ function cachedSequence(memo, rules, seed, region, year) {
     if (!byYear.has(year)) byYear.set(year, dailySequence(rules,seed,region,year));
     return byYear.get(year);
 }
-export function weatherAt(engine, seed, location, minute, sequenceCache = null) {
+export function weatherAt(engine, seed, location, minute, sequenceCache = null, calendar=engine.calendarId??'legacy:30-day') {
     validMinute(minute);
     const rules = engine.rules.weather, region = rules?.regions.find(row => row.locations.includes(location));
     if (!region) return null;
-    const day = Math.floor(minute/1440), year = Math.floor(day/360), dayOfYear = day%360;
+    const day = Math.floor(minute/1440),date=calendarDateAt(engine,minute,calendar),year=date.year-1,dayOfYear=(date.month-1)*30+date.day-1;
     const memo = sequenceCache ? nested(sequenceCache, WEATHER_SEQUENCES) : engine.weatherSequences ?? null;
     const row = cachedSequence(memo,rules,seed,region,year)[dayOfYear], light = daylightAt(region.latitude,dayOfYear);
     const indoors = region.indoor.includes(location), effect = rules.states[row.kind];
@@ -65,7 +97,7 @@ export function weatherAt(engine, seed, location, minute, sequenceCache = null) 
         moodModifier: indoors ? 0 : effect.mood, cropMultiplier: effect.crop };
 }
 export function localWeather(engine, document, location=document.state.location, minute=document.state.minute) {
-    return weatherAt(engine,document.randomSeed,location,minute);
+    return weatherAt(engine,document.randomSeed,location,minute,null,document.state.records?.['calendar:active']?.calendar??engine.calendarId??'legacy:30-day');
 }
 // Precipitation as an interaction agent: 'rain' (rain/storm) or 'snow', only
 // outdoors in a registered climate region; null otherwise.
@@ -123,7 +155,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         const chunk=Math.min(remainingBudget,toMidnight,Math.max(1,Math.ceil(distance/rate)));
         distance=Math.max(0,distance-chunk*rate);moving+=chunk;elapsed+=chunk;
     }
-    throw new Error('天气路线超过规划步数限制');
+    throw Error('天气路线超过规划步数限制');
 }
 export function cropProduction(engine, seed, settlement, minute, nominal) {
     const row = weatherAt(engine,seed,settlement,minute);

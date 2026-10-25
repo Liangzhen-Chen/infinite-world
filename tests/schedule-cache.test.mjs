@@ -7,6 +7,7 @@ import {sameScheduleInputs} from '../server-plugin/education-state.mjs';
 import {registerAdvance} from '../server-plugin/advance-registry.mjs';
 import {PHASE} from '../server-plugin/scheduler.mjs';
 import {setup} from './farm-pests-fixture.mjs';
+import {scaleFixture} from '../tools/scale-bench.mjs';
 
 function fixture(){
  const routine=location=>({default:[{start:0,end:1440,location,activity:'work',services:[]}]});
@@ -90,4 +91,16 @@ test('heap-selected actors preserve the complete trace of settling every actor',
  const unregister=registerAdvance({id:'r40_full_schedule_reference',order:99,phase:PHASE.clock,packId:'core',ruleId:'000099:r40_full_schedule_reference',
   advance:(e,d)=>{d.scheduleEducation=null;}});
  try{assert.deepEqual(await f.engine.reduce(f.c,input),selected);}finally{unregister();}
+});
+
+test('regional heap candidates retain the complete trace near and far from a generated county',async()=>{
+ const f=await scaleFixture({counties:2,compact:false}),county=Object.keys(f.document.state.remote)[0];
+ for(const location of [f.document.state.location,f.document.state.remote[county].skeleton.seat]){
+  const document=structuredClone(f.document);document.state.location=location;
+  const input={tool:'world_time',args:{minutes:1440},eventId:`regional-reference:${location}`};
+  const selected=await f.engine.reduce(document,input);
+  const unregister=registerAdvance({id:'unify1b_full_schedule_reference',order:99,phase:PHASE.clock,packId:'core',ruleId:'000099:unify1b_full_schedule_reference',
+   advance:(e,d)=>{d.scheduleEducation=null;}});
+  try{assert.deepEqual(await f.engine.reduce(document,input),selected,location);}finally{unregister();}
+ }
 });

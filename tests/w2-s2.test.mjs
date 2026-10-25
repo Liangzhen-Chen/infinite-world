@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS2Publication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
 import {withoutS3} from '../tools/publish-w2-s3.mjs';
 import {withoutS4} from '../tools/publish-w2-s4.mjs';
@@ -48,7 +49,13 @@ async function routeSession(route){
  const entry=world.rules.training.institutions.find(e=>e.teacher===teacher&&e.profession===role.id);
  if(entry)doc=(await run(doc,'world_profession',{operation:'initiate',profession:role.id,teacher,institution:place,rule:entry.rule})).doc;
  const core=role.entry.skill;doc=(await success(doc,'world_learn',{entity:core,source:teacher,kind:'skill'})).doc;
- while(doc.state.skills[core].proficiency<150){doc=(await run(doc,'world_practice',{skill:core,gain:100,target:'基础动作'})).doc;if(doc.state.skills[core].proficiency<150)doc=await attend(doc,teacher,place,510);}
+ // Acquisition and certification are exercised publicly. Prior accumulated
+ // proficiency is a premise; one native session must really cross 150.
+ const staged=applyIntentSetup(engine,doc,{abilities:{skills:{[core]:149}}});
+ assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
+ const practiceMinute=doc.state.minute,practiced=await run(doc,'world_practice',{skill:core});doc=practiced.doc;
+ assert.ok(practiced.result.gain>0);assert.ok(doc.state.skills[core].proficiency>=150);
+ assert.equal(doc.state.minute,practiceMinute+120);
  doc=await attend(doc,teacher,place,510);doc=(await success(doc,'world_profession',{profession:role.id,teacher,operation:'certify'},'certified')).doc;
  assert.ok([doc.state.professions.combat,...doc.state.professions.life].includes(role.id));
  for(const s of spells.filter(s=>routeOf[s.id]===route)){
@@ -118,7 +125,11 @@ test('炼丹控火：点炉、催火、调匀温区后烘出蜜丸；不调匀�
 });
 
 test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整坛、泥缝各自改变真实场景',async()=>{
- const base=learnedByRoute.道;assert.ok(base);
+ // A filtered regression still earns its own real route prerequisites.
+ const base=learnedByRoute.道??await routeSession('道');assert.ok(base);
+ // The existing ignition comparison also uses the alchemy route's learned
+ // tinder spell; earn that prerequisite when selecting this case alone.
+ if(!learnedByRoute.丹)await routeSession('丹');
  const fresh=()=>{const d=structuredClone(base);d.state.inventory.item_charcoal={quantity:3};d.state.spells.spell_s1_tinder=structuredClone(learnedByRoute.丹.state.spells.spell_s1_tinder);d.state.skills.skill_s1_tinder=structuredClone(learnedByRoute.丹.state.skills.skill_s1_tinder);return d;};
  // Seal first, then light the incense burner beside the old paper rack.
  const light=async doc=>{const g=await grant(doc,DAO,fid('incense_burner'));return (await success(g.doc,'world_cast',{spell:'spell_s1_tinder',target:fid('incense_burner'),authorization:g.authorization})).doc;};
@@ -128,7 +139,10 @@ test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整�
  assert.equal(rec(doc,fid('paper_rack')).thermal.burning,false);assert.equal(rec(open,fid('paper_rack')).thermal.burning,true);
  assert.ok(doc.state.player.mp<sealed.doc.state.player.mp-1);
  // Fire line blocks the local path across it until it burns out.
- g=await grant(fresh(),DAO,fid('fire_strip'));const line=await cast(g.doc,{spell:'spell_s2_fire_line',target:fid('fire_strip'),authorization:g.authorization});assert.equal(line.result.blocksPath,true);
+ // S4 starts an arrival at the gate-road zone itself. Walk south of the
+ // strip before igniting it, so this negative control actually crosses fire.
+ const south=await run(fresh(),'world_move',{destination:'zone_reed_court'});assert.equal(south.result.arrived,true);
+ g=await grant(south.doc,DAO,fid('fire_strip'));const line=await cast(g.doc,{spell:'spell_s2_fire_line',target:fid('fire_strip'),authorization:g.authorization});assert.equal(line.result.blocksPath,true);
  await assert.rejects(engine.reduce(line.doc,{tool:'world_environment',args:{operation:'approach',target:fid('gate_road')},eventId:'cross-fire'}),/火线/);
  assert.equal(rec(await wait(line.doc,10),fid('fire_strip')).thermal.burning,false);
  // Quiet room: a call through it no longer reaches the speaker's own room.

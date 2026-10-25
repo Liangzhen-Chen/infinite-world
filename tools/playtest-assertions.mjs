@@ -1,8 +1,9 @@
 import {isDeepStrictEqual}from'node:util';
-import {resolveToolCall}from'../extension/tools.mjs';
+import {resolvePlaytestCall}from'./playtest-call.mjs';
+import {builderToolCall}from'../extension/tools.mjs';
 export const at=(object,path)=>String(path).split('.').reduce((value,key)=>value?.[key],object);
 const matches=(row,where)=>Object.entries(where??{}).every(([key,value])=>isDeepStrictEqual(at(row,key),value));
-export function evaluateAssertions(assertions,{before,after,calls,reply,scene,historyWindow}){
+export function evaluateAssertions(assertions,{before,after,calls,reply,scene,historyWindow,turnCalls={}}){
     return assertions.map(rule=>{
         let actual,pass=false;
         const value=at(after,rule.path),old=at(before,rule.path);
@@ -11,7 +12,7 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
                 const observed=at(before,rule.when.path);
                 const condition=Object.hasOwn(rule.when,'equals')?isDeepStrictEqual(observed,rule.when.equals):observed!==undefined;
                 const branch=condition?rule.then:rule.else;
-                actual=evaluateAssertions(branch,{before,after,calls,reply,scene,historyWindow});pass=actual.length>0&&actual.every(row=>row.pass);break;
+                actual=evaluateAssertions(branch,{before,after,calls,reply,scene,historyWindow,turnCalls});pass=actual.length>0&&actual.every(row=>row.pass);break;
             }
             case'equals':actual=value;pass=isDeepStrictEqual(value,rule.value);break;
             case'oneOf':actual=value;pass=Array.isArray(rule.values)&&rule.values.some(candidate=>isDeepStrictEqual(value,candidate));break;
@@ -42,10 +43,32 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
                 pass=Number.isSafeInteger(from)&&Number.isSafeInteger(to)&&to>from&&records.length>=(rule.min??1)&&records.length<=(rule.max??Infinity);break;
             }
             case'calls':actual=calls.filter(call=>{
-                let routed;try{routed=resolveToolCall(call.tool,call.args);}catch{return false;}
+                let routed;try{routed=resolvePlaytestCall(call.tool,call.args);}catch{
+                    const receipt=call.result?.receipt;
+                    if(call.tool!=='world_act'||receipt?.status!=='rejected'||receipt.routed!==call.args?.action)return false;
+                    routed=builderToolCall(call.args.action,call.args.slots);
+                }
                 const matched=call.tool===rule.tool?matches(call.args,rule.args):routed.tool===rule.tool&&matches(routed.args,rule.args);
                 return matched&&(!rule.success||call.result?.ok===true);
             }).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
+            case'callReceipt':{
+                const candidates=rule.anchor?turnCalls[rule.anchor]??[]:calls;
+                const selected=candidates.filter(call=>{
+                    if(call.tool===rule.tool)return matches(call.args,rule.args);
+                    // A rejected submission is still a call. Do not require
+                    // its invalid slots to pass execution-time translation.
+                    const submitted=call.tool==='world_act'?builderToolCall(call.args?.action,call.args?.slots):call;
+                    if(submitted.tool===rule.tool)return matches(submitted.args,rule.args);
+                    let routed;try{routed=resolvePlaytestCall(call.tool,call.args);}catch{return false;}
+                    return routed.tool===rule.tool&&matches(routed.args,rule.args);
+                });
+                actual=selected.map(call=>({receipt:call.result?.receipt,stateUnchanged:call.stateUnchanged}));
+                pass=actual.length>=(rule.min??1)&&actual.every(({receipt,stateUnchanged})=>
+                    receipt&&(rule.statuses??['committed','rejected']).includes(receipt.status)&&
+                    (receipt.status!=='rejected'||typeof receipt.reason==='string'&&receipt.reason.trim().length>0&&
+                        Array.isArray(receipt.alternatives)&&receipt.fallback&&typeof receipt.fallback==='object'&&
+                        Array.isArray(receipt.applied)&&receipt.applied.length===0&&stateUnchanged===true));break;
+            }
             case'conservation':actual=rule.paths.reduce((sum,path)=>sum+(at(after,path)??0)-(at(before,path)??0),0);pass=actual===0;break;
             case'replyContains':actual=rule.text;pass=reply.includes(rule.text)===(rule.value??true);break;
             case'replyMatches':actual=reply;pass=new RegExp(rule.pattern,'u').test(reply)===(rule.value??true);break;

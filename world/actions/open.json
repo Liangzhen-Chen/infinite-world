@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "namespace": "open",
+  "actions": [
+    {
+      "id":"open:question","label":"当面发出询问","verb":"询问","group":"交谈","source":"catalog","narration":"open.question",
+      "synonyms":["届时询问"],"visibility":{"catalog":"search","witness":"present"},"participants":{"actor":"player"},"preconditions":["present(target) && canAct(target, 'talk').allowed"],
+      "slots":[{"name":"target","kind":"entity","entity":"person","required":true},{"name":"content","kind":"text","required":true}],
+      "cost":{"owner":"primitives","time":0},"check":null,
+      "outcomes":[{"op":"emit","actor":"$actor","target":{"slot":"target"},"verb":"request","visibility":"witnessed","payload":{"kind":"ask","text":{"slot":"content"}}}],"signature":{"requestKinds":["ask"]},
+      "hint":"只发出真实请求，对方仍自主决定；届时不在场或失能则不能发出。"
+    },
+    {
+      "id":"open:waive_debt","label":"免除本人的债权","verb":"免债","group":"账目","source":"catalog","narration":"open.waive_debt",
+      "synonyms":["免掉","免除"],"visibility":{"catalog":"here","witness":"present"},"participants":{"actor":"player"},"preconditions":[],
+      "slots":[{"name":"obligation","kind":"text","required":true}],"cost":{"owner":"primitives","time":1},"check":null,
+      "outcomes":[{"op":"obligation.cancel","id":{"slot":"obligation"},"reason":"creditor_waiver"}],
+      "hint":"须为本人拥有且可免除的真实债权；债务人与余额由义务记录核对。"
+    },
+    {
+      "id": "open:proposal",
+      "spatial": [{"need": "reach", "effects": ["vital", "status", "fact.set"], "targets": ["other"]}, {"need": "range", "effects": ["move"], "targets": ["agent", "feature"]}],
+      "label": "提出创意行动",
+      "verb": "提案",
+      "group": "创意",
+      "source": "catalog",
+      "narration": "open.proposal",
+      "synonyms": ["尝试新办法", "组合行动"],
+      "visibility": {"catalog": "llm", "witness": "present"},
+      "participants": {"actor": "player"},
+      "preconditions": [],
+      "slots": [
+        {"name":"intent","kind":"text","schema":"string","required":true},
+        {"name":"effects","kind":"object","schema":"array","required":true},
+        {"name":"means","kind":"object","schema":"object"},
+        {"name":"context","kind":"object","schema":"object"},
+        {"name":"participants","kind":"object","schema":"object"}
+      ],
+      "call": {"tool":"world_propose"},
+      "cost": {"owner":"handler"},
+      "check": "engine",
+      "hint": "先预览再确认。效果、资源和耗时由当前真实来源裁定；缺少来源或条件时补全方案，提案本身不保证成功。"
+    },
+    {
+      "id": "open:leave_mark",
+      "label": "留下痕迹",
+      "verb": "留痕",
+      "group": "创意",
+      "source": "catalog",
+      "narration": "open.leave_mark",
+      "synonyms": ["留字", "摆放记号", "留下歌谣"],
+      "visibility": {"catalog": "here", "witness": "present"},
+      "participants": {"actor": "player"},
+      "preconditions": [],
+      "slots": [
+        {"name":"intent","kind":"text","schema":"string","required":true},
+        {"name":"form","kind":"enum","options":["刻痕","摆放物","涂画","歌谣","口号","仪式残迹","布置"],"required":true},
+        {"name":"zone","kind":"text","schema":"string"},
+        {"name":"tags","kind":"tags","schema":"array"},
+        {"name":"materials","kind":"materials","schema":"array"}
+      ],
+      "cost": {"owner":"primitives","time":5},
+      "check": null,
+      "outcomes": [{"op":"create","kind":"mark","facts":{"intent":{"slot":"intent"},"form":{"slot":"form"}}}],
+      "hint": "只留下无价值的痕迹，不代表原本设想的效果已经实现。材料从行囊真实消耗。"
+    },
+    {"id":"open:ask_request","canonical":"core:dialogue.ask","label":"询问近况","verb":"ask_request","group":"交谈","source":"template","readOnly":false,"call":{"tool":"world_remember","fixed":{"key":"dialogue:ask_request"}},"participants":{"actor":"player"},"slots":[{"name":"subject","kind":"entity","entity":"person","required":true,"fill":"target"},{"name":"content","kind":"text","required":true}],"preconditions":["present(target)"],"visibility":{"catalog":"target:npc","witness":"private"},"cost":{"time":0},"check":null,"narration":"dialogue","synonyms":["有没有","最近怎么样"],"signature":{"variants":[["[\"emit\",\"person\",\"request\"]"]],"requestKinds":["ask"],"requestSubjects":["*_followup","*_news"],"subjectOnly":true},"consent":{"from":"self"}},
+    {"id":"open:delivery_request","canonical":"core:dialogue.delivery","label":"询问送货意愿","verb":"delivery_request","group":"交谈","source":"template","readOnly":false,"call":{"tool":"world_remember","fixed":{"key":"dialogue:delivery_request"}},"participants":{"actor":"player"},"slots":[{"name":"subject","kind":"entity","entity":"person","required":true,"fill":"target"},{"name":"content","kind":"text","required":true}],"preconditions":["present(target)"],"visibility":{"catalog":"target:npc","witness":"private"},"cost":{"time":0},"check":null,"narration":"dialogue","synonyms":["先问","托","送信"],"signature":{"variants":[["[\"emit\",\"person\",\"request\"]"]],"requestKinds":["delivery"],"requestSubjects":["deliver","deliver_*"]},"consent":{"from":"self"}},
+    {"id":"open:persuade_request","canonical":"core:dialogue.persuade","label":"劝说停战","verb":"persuade_request","group":"交谈","source":"template","readOnly":false,"call":{"tool":"world_remember","fixed":{"key":"dialogue:persuade_request"}},"participants":{"actor":"player"},"slots":[{"name":"subject","kind":"entity","entity":"person","required":true,"fill":"target"},{"name":"content","kind":"text","required":true}],"preconditions":["present(target)"],"visibility":{"catalog":"target:npc","witness":"private"},"cost":{"time":0},"check":"engine","narration":"dialogue","synonyms":["放下","退路","劝降"],"signature":{"variants":[["[\"emit\",\"person\",\"request\"]"]],"requestKinds":["make_way"],"requestSubjects":["surrender","make_way"]},"consent":{"from":"self"}},
+    {"id":"open:self_tell","canonical":"core:dialogue.tell","label":"公开说法","verb":"self_tell","group":"交谈","source":"template","readOnly":false,"call":{"tool":"world_remember","fixed":{"key":"dialogue:self_tell"}},"participants":{"actor":"player"},"slots":[{"name":"subject","kind":"entity","entity":"person","required":true,"fill":"target"},{"name":"content","kind":"text","required":true}],"preconditions":["present(target)"],"visibility":{"catalog":"target:npc","witness":"present"},"cost":{"time":0},"check":null,"narration":"dialogue","synonyms":["吹牛","当众","说自己"],"signature":{"variants":[["[\"emit\",\"person\",\"tell\"]"]],"requestKinds":["tell"]},"consent":{"from":"self"}}
+  ]
+}

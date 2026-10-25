@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {reject} from './action-rejection.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
@@ -33,7 +35,9 @@ export function withScheduleCache(engine,d,task){
     }
 }
 registerAdvanceHook('withScheduleCache',withScheduleCache);
-const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
+// Perception writes evidence rows; actual learning still changes NPC skills or
+// recipes, and bookings, employment, custody and transitions remain inputs.
+const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
 const ignoredNpcScheduleFields=new Set(['memoryStream','developments','growth','cognition','coins','trust','affection']);
 export function sameNpcScheduleInputs(a,b){
     if(a===b)return true;if(!a||!b)return false;
@@ -107,7 +111,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const seasonal=schedule.seasonal?.[String(calendar.season)];
     const slots=seasonal?.[variant]??schedule[variant]??seasonal?.default??schedule.default;
     const offset=minute%1440,slot=slots?.find(row=>row.start<=offset&&offset<row.end);
-    if(!slot)throw new Error(`${npcId}的作息没有覆盖当前钟点`);
+    if(!slot)throw Error(`${npcId}的作息没有覆盖当前钟点`);
     let end=slot.end;
     // Adjacent identical slots have no transition to observe. Course openings
     // and festival overrides below still impose their own real boundaries.
@@ -150,11 +154,22 @@ export function npcAvailability(engine,state,npcId){
     return {activity:slot.activity,services:slot.services,until:slot.until};
 }
 
+// Shared public service evidence. The window end is not a promise to reopen.
+export function npcServiceFact(engine,state,npcId,version=null){
+    const npc=state.npcs?.[npcId];
+    if(!npc||npc.location!==state.location||npc.scheduleTravel||npc.cognitionTravel)return null;
+    const available=npcAvailability(engine,state,npcId);
+    if(available.services===null)return null;
+    return {id:`availability:${npcId}`,kind:'availability',source:{type:'state',field:['state'],derivedBy:'npcAvailability',version},
+        subject:npcId,object:state.location,scope:{services:['trade','teach']},time:{at:state.minute,until:available.until??null},knownBy:['player',npcId],
+        value:{activity:available.activity,services:available.services,until:available.until??null}};
+}
+
 export function assertNpcService(d,engine,npcId,service,minutes){
     const state=d.get('state'),npc=state.npcs[npcId];
-    if(facilityView(engine,state,npc?.location)?.factor===0)throw Error('服务场所已停用');
-    if(!npc||npc.location!==state.location)throw new Error('服务者不在场');
-    if(personConstraint(engine,state,npcId))throw new Error('服务者正在依法拘留，不能提供服务');
+    if(facilityView(engine,state,npc?.location)?.factor===0)throw preconditionFailure('服务场所已停用');
+    if(!npc||npc.location!==state.location)throw preconditionFailure('服务者不在场');
+    if(personConstraint(engine,state,npcId))throw preconditionFailure('服务者正在依法拘留，不能提供服务');
     engine.assertNpcObligationAction?.(d,['player',npcId],{minutes,location:state.location,kind:service});
     engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
     if(!engine.byId.get(npcId)?.schedule&&!scheduleAt(engine,npcId,state.minute,state))return; // Archived worlds retain their original service semantics.
@@ -162,12 +177,12 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     if(available.services!==null&&!available.services.includes(service)){
         const next=nextNpcService(engine,npcId,state.minute,service,state);
         const plan=next?`；按作息计划在${engine.calendar(next.minute).text}于${engine.byId.get(next.location)?.name??next.location}接待，届时仍需确认在场且清醒`:'';
-        throw new Error(`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`);
+        reject('E-ACTION-SERVICE',`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`,{missing:[`对方需要在场、清醒且正在提供${service==='teach'?'授课':'交易'}服务`],repair:['按原因中列出的作息时间和地点寻找对方，再确认其在场且清醒']});
     }
     // Validate the whole action before any money, time or inventory changes.
     for(let cursor=state.minute;cursor<state.minute+minutes;){
         const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)break;
-        if(slot.location!==npc.location||!slot.services.includes(service))throw new Error('剩余服务时间不足，无法在休息或离开前完成');
+        if(slot.location!==npc.location||!slot.services.includes(service))throw preconditionFailure('剩余服务时间不足，无法在休息或离开前完成');
         cursor=slot.until;
     }
 }
@@ -188,8 +203,11 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     let candidates;
-    if(!promote&&!batch&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
+    if(!promote&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
         const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
+        // Distant fixed-location actors have no individual heap entries;
+        // include them when their regional clock is due.
+        for(const [id,group] of batch?.persons??[])if(group.due)due.add(id);
         for(const c of [...prepared.courses,...courses??[]])for(const id of [c.teacher,...c.students])if(id)due.add(id);
         let replaced=false;
         for(let i=prepared.patchStart;i<d.patches.length;i++){

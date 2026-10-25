@@ -92,7 +92,7 @@ test('延后送货提前取消不扣费，已承诺后路费不足或道路变�
  const denied=await run(created.doc,'world_time',{minutes:40},'private-route');assert.equal(denied.doc.state.obligations.obl_delivery.status,'违约');assert.equal(denied.doc.state.npcs[sender].location,document.state.location);assert.equal(denied.doc.state.npcs[sender].coins,document.state.npcs[sender].coins);
 });
 
-test('在途存档重启、重复事件、导出导入和撤销保留一次扣费与一次交物，旧记录回放不增行程',async t=>{
+test('在途存档重启、重复事件、导出导入和撤销保留一次扣费与一次交物',async t=>{
  const {engine,document,promise,run}=await setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-courier-'));
  t.after(async()=>{assert.ok(path.resolve(directory).startsWith(path.resolve(tmpRoot())+path.sep+'fields-courier-'));await fs.rm(directory,{recursive:true,force:true});});
  const reducer=(doc,input,options)=>engine.reduce(doc,input,options);let store=new CampaignStorage(directory,{reducer});await store.create({id:'courier',worldVersion:document.worldVersion,document});
@@ -104,6 +104,4 @@ test('在途存档重启、重复事件、导出导入和撤销保留一次扣�
  assert.deepEqual((await store.import(await store.export('courier'),'copy')).document,done);
  await store.reconcile('courier',['delivery','start','arrive']);assert.deepEqual((await store.read('courier')).document,beforeDue);
  await store.reconcile('courier',[]);assert.deepEqual((await store.read('courier')).document,document);
- const old={obligation:{id:'obl_old',type:'送货',promisor:sender,promisee:'player',content:promise.content,status:'待履行',deadline:promise.deadline,item,quantity:2}};
- const replayed=await run(document,'world_promise',promise,'old',{replay:true,result:old});assert.deepEqual(replayed.result.obligation,old.obligation);
 });

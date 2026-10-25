@@ -5,6 +5,8 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {standing} from '../server-plugin/standing.mjs';
+import {loanTerms} from '../server-plugin/credit.mjs';
+import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const inn='bld_hw_qingdeng',post='bld_hw_post',home='bld_hw_riverhome',court='bld_hw_council';
@@ -26,11 +28,22 @@ function fixture({at=inn,coins=300}={}){
 const cash=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,r)=>n+r.coins,0)+Object.values(c.state.records).filter(r=>r.category==='bank').reduce((n,r)=>n+r.coins,0)
     +Object.values(c.state.records).filter(r=>r.category==='contract').reduce((n,r)=>n+(r.escrow??0),0)
     +Object.values(c.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(c.state.quests).reduce((n,q)=>n+(q.escrow??0),0);
+function lenderConsent(f,principal,days,eventId,quantity=0){
+    // 产品原则二.4：本人通过原生事件同意实际报价，不以请求布尔值代答。
+    const d=f.engine.primitiveDraft(f.doc),interest=loanTerms(d,f.engine,{lender:host,principal,days,collateralValue:quantity*(f.engine.byId.get('item_bread').basePrice??0)}).interest;
+    applyConsentEvent(d,{engine:f.engine,document:d.document},{actor:host,eventId,verb:'consent_given',to:'player',payload:{scope:'loan',subject:'player',purpose:['player'],terms:{principal,days,interest},until:d.get('state','minute')+10}});
+    f.doc=applyPatches(f.doc,d.patches);
+}
 
 test('向熟人借贷按立场定月息、到期本息与抵押，还清后取回抵押且钱数守恒',async()=>{
     const f=fixture(),total=cash(f.doc);
     await assert.rejects(f.act('world_trade',{operation:'borrow',seller:host,coins:40,days:10},'no'),/明确同意/);
-    const loan=await f.act('world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10,item:'item_bread',quantity:2},'loan');
+    // 原“填 true 才成功”改为“填 true 无权代答且零写入”，保留同意门槛。
+    const unchanged=structuredClone(f.doc);
+    await assert.rejects(f.act('world_trade',{operation:'borrow',seller:host,consent:true,coins:40,days:10,item:'item_bread',quantity:2},'forged'),/明确同意/);
+    assert.deepEqual(f.doc,unchanged);
+    lenderConsent(f,40,10,'lender-loan',2);
+    const loan=await f.act('world_trade',{operation:'borrow',seller:host,coins:40,days:10,item:'item_bread',quantity:2},'loan');
     const [low,high]=world.rules.economy.loanMonthlyInterest;
     assert.ok(loan.monthlyInterest>=low&&loan.monthlyInterest<=high);
     assert.equal(loan.interest,Math.ceil(40*loan.monthlyInterest*10/30));assert.equal(loan.amount,40+loan.interest);
@@ -38,7 +51,7 @@ test('向熟人借贷按立场定月息、到期本息与抵押，还清后取�
     assert.equal(debt.kind,'loan');assert.equal(debt.deadline,600+10*DAY);assert.equal(f.doc.state.player.coins,340);
     assert.equal(f.doc.state.inventory.item_bread.quantity,2);assert.equal(f.doc.state.records[loan.pledge].status,'质押中');
     assert.equal(cash(f.doc),total);
-    await assert.rejects(f.act('world_trade',{operation:'borrow',seller:host,consent:true,coins:1000,days:10},'big'),/至多能借出/);
+    await assert.rejects(f.act('world_trade',{operation:'borrow',seller:host,coins:1000,days:10},'big'),/至多能借出/);
     const paid=await f.act('world_trade',{seller:host,payment:'repay',debt:loan.debt},'repay');
     assert.equal(paid.repaid,loan.amount);assert.equal(f.doc.state.records[loan.debt].status,'已还清');
     assert.equal(f.doc.state.inventory.item_bread.quantity,4);assert.equal(f.doc.state.records[loan.pledge].status,'已退还');
@@ -47,7 +60,8 @@ test('向熟人借贷按立场定月息、到期本息与抵押，还清后取�
 
 test('借款到期过宽限不还：抵押归债主、按签约地法典立案、生成违约世界事件并降低集体立场，审理后缴付即结清欠款',async()=>{
     const f=fixture(),regardBefore=standing(f.engine,f.doc.state,'loc_hw','player');
-    const loan=await f.act('world_trade',{operation:'borrow',seller:host,consent:true,coins:60,days:2,item:'item_bread',quantity:1},'loan');
+    lenderConsent(f,60,2,'lender-default',1);
+    const loan=await f.act('world_trade',{operation:'borrow',seller:host,coins:60,days:2,item:'item_bread',quantity:1},'loan');
     await f.act('world_time',{minutes:2*DAY},'wait1');
     assert.equal(f.doc.state.records[loan.debt].status,'逾期');assert.equal(f.doc.state.records[loan.debt].defaulted,undefined);
     await f.act('world_time',{minutes:DAY},'wait2');

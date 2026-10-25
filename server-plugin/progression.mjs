@@ -1,7 +1,8 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {derivedStats}from'./combat.mjs';
 export const xpRequired=newLevel=>newLevel<10?newLevel*100:Math.ceil(newLevel**4/10);
-const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error(`${label}不在允许范围`);return value;};
+const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}不在允许范围`);return value;};
 
 export function refreshPlayerLimits(d,engine){
     const player=d.get('state','player'),stats=derivedStats({level:player.level,attributes:player.attributes},engine.rules);
@@ -24,7 +25,7 @@ export function awardExperience(d,engine,{kind,subject,source,base,repeat=false}
     d.set(['state','experienceLedger',source],record);
     if(repeat)d.set(['state','experienceRepeats',key],[...history,now]);
     let level=player.level,xp=player.xp+gain,levels=0;
-    if(!Number.isSafeInteger(xp))throw new Error('经验总值超过安全数值范围');
+    if(!Number.isSafeInteger(xp))throw Error('经验总值超过安全数值范围');
     while(level<maximum&&xp>=xpRequired(level+1)){xp-=xpRequired(level+1);level++;levels++;}
     if(level===maximum)xp=0;
     d.set(['state','player','xp'],xp);
@@ -40,13 +41,13 @@ export function awardExperience(d,engine,{kind,subject,source,base,repeat=false}
 
 export function milestone(d,engine,kind,subject,eventId){
     const range=engine.rules.levels.experience.milestones[kind];
-    if(!range)throw new Error('里程碑类别未登记');
+    if(!range)throw preconditionFailure('里程碑类别未登记');
     return awardExperience(d,engine,{kind,subject,source:`${kind}:${subject}`,base:range[0]},eventId);
 }
 
 export function monsterReward(d,engine,target,eventId){
     const actor=d.get('state','creatures',target),definition=engine.byId.get(target);
-    if(!actor||!isPhysicallyDead(engine,d,target))throw new Error('没有可验证的怪物战果');
+    if(!actor||!isPhysicallyDead(engine,d,target))throw preconditionFailure('没有可验证的怪物战果');
     if(actor.owner)return{experience:0,reason:'驯养动物不计野外战果'};
     const species=definition.monster??target,template=definition.template??engine.byId.get(species)?.template??2;
     const level=actor.level??definition.level??definition.levelRange?.[0]??1,player=d.get('state','player');
@@ -58,13 +59,13 @@ export function monsterReward(d,engine,target,eventId){
 
 export function allocateAttributes(d,args){
     const distribution=args.attributes;
-    if(!distribution||typeof distribution!=='object'||Array.isArray(distribution))throw new Error('属性分配必须是公开属性到点数的对象');
+    if(!distribution||typeof distribution!=='object'||Array.isArray(distribution))throw preconditionFailure('属性分配必须是公开属性到点数的对象');
     const entries=Object.entries(distribution),player=d.get('state','player');let total=0;
     for(const[key,value]of entries){
-        if(!this.rules.attributes.includes(key))throw new Error('只能分配六项公开属性，不能修改幸运或其他字段');
+        if(!this.rules.attributes.includes(key))throw preconditionFailure('只能分配六项公开属性，不能修改幸运或其他字段');
         total+=integer(value,0,this.rules.levels.maximum*this.rules.levels.freeAttributePoints,'分配点数');
     }
-    if(!total||total>(player.freeAttributePoints??0))throw new Error('自由属性点不足或没有实际分配');
+    if(!total||total>(player.freeAttributePoints??0))throw preconditionFailure('自由属性点不足或没有实际分配');
     const attributes={...player.attributes};for(const[key,value]of entries)attributes[key]+=value;
     d.set(['state','player','attributes'],attributes);d.set(['state','player','freeAttributePoints'],player.freeAttributePoints-total);
     refreshPlayerLimits(d,this);d.say(`分配${total}个自由属性点`);

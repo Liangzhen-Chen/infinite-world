@@ -65,10 +65,14 @@ test('完成多日研究的技能可从对应项目学习、练习及用于实�
     assert.equal(learned.document.state.skills[id].proficiency,0);
     assert.deepEqual(learned.document.state.skills[id].source,{type:'research',id:'research_study'});
     assert.equal(learned.document.state.player.coins,created.document.state.player.coins);
-    const practiced=await run(learned.document,'world_practice',{skill:'顺纹切削',gain:30,target:'顺纹试切'},'practice');
-    assert.equal(practiced.document.state.skills[id].proficiency,30);
+    // Native practice is timed at the published 1.2 points/hour, not a caller
+    // assigned gain. Keep the integer, fractional carry and real cost exact.
+    const practiced=await run(learned.document,'world_practice',{skill:'顺纹切削',minutes:120,target:'顺纹试切'},'practice');
+    assert.equal(practiced.document.state.skills[id].proficiency,2);
+    assert.equal(practiced.document.state.skills[id].practiceCarry,.4);
+    assert.equal(practiced.document.state.minute,learned.document.state.minute+120);
     const checked=await run(practiced.document,'world_check',{attribute:'智力',skill:'顺纹切削',difficulty:15},'use');
-    assert.equal(checked.result.modifier,Math.floor((practiced.document.state.player.attributes.智力-10)/2)+Math.floor(30/world.rules.check.skillDivisor));
+    assert.equal(checked.result.modifier,Math.floor((practiced.document.state.player.attributes.智力-10)/2)+Math.floor(2/world.rules.check.skillDivisor));
     await assert.rejects(run(learned.document,'world_learn',args,'repeat'),/已经学会/);
     await assert.rejects(register(created.document,'skill','第二项成果'),/已经登记成果/);
 });

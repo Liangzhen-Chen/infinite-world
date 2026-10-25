@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {standing} from './standing.mjs';
 import {transferItems}from'./items.mjs';
 import {readBossCognition}from'./boss-cognition.mjs';
@@ -37,23 +38,23 @@ function validTerms(t){return plain(t)&&pacts.has(t.pact)&&typeof t.alliance==='
 export function readBossNegotiation(actor){
     let n=actor.negotiation===undefined?empty():actor.negotiation;
     if(actor.id?.startsWith('npc_')){
-        if(Object.keys(n.inventory??{}).length)throw Error('居民首领不能有第二份谈判库存');
+        if(Object.keys(n.inventory??{}).length)throw preconditionFailure('居民首领不能有第二份谈判库存');
         n={...n,inventory:Object.fromEntries(Object.entries(actor.inventory??{}).map(([id,v])=>[id,typeof v==='number'?{quantity:v}:v]).filter(([,v])=>v.quantity!==0))};
     }
-    if(!plain(n)||n.format!==1||!plain(n.inventory)||!Array.isArray(n.history))throw new Error('首领谈判记录格式损坏，拒绝覆盖');
+    if(!plain(n)||n.format!==1||!plain(n.inventory)||!Array.isArray(n.history))throw Error('首领谈判记录格式损坏，拒绝覆盖');
     for(const [id,held]of Object.entries(n.inventory)){
         if(!id||!plain(held)||!Number.isSafeInteger(held.quantity)||held.quantity<=0||held.instances!==undefined&&(!Array.isArray(held.instances)||
-            held.instances.length>held.quantity||new Set(held.instances).size!==held.instances.length||held.instances.some(id=>typeof id!=='string'||!id)))throw new Error('首领谈判库存损坏，拒绝覆盖');
+            held.instances.length>held.quantity||new Set(held.instances).size!==held.instances.length||held.instances.some(id=>typeof id!=='string'||!id)))throw Error('首领谈判库存损坏，拒绝覆盖');
     }
     const ids=new Set();
     for(const h of n.history){
         if(!plain(h)||typeof h.event!=='string'||!h.event||ids.has(h.event)||!Number.isSafeInteger(h.minute)||h.minute<0||
-            !validTerms(h.terms)||typeof h.accepted!=='boolean'||typeof h.reason!=='string'||!h.reason)throw new Error('首领谈判历史损坏，拒绝覆盖');
+            !validTerms(h.terms)||typeof h.accepted!=='boolean'||typeof h.reason!=='string'||!h.reason)throw Error('首领谈判历史损坏，拒绝覆盖');
         ids.add(h.event);
     }
     if(n.relation!==null){
         const r=n.relation,h=n.history.find(h=>h.event===r?.event);
-        if(!plain(r)||!pacts.has(r.pact)||typeof r.alliance!=='boolean'||!h?.accepted||r.pact!==h.terms.pact||r.alliance!==h.terms.alliance)throw new Error('首领关系记录损坏，拒绝覆盖');
+        if(!plain(r)||!pacts.has(r.pact)||typeof r.alliance!=='boolean'||!h?.accepted||r.pact!==h.terms.pact||r.alliance!==h.terms.alliance)throw Error('首领关系记录损坏，拒绝覆盖');
     }
     return n;
 }
@@ -67,17 +68,17 @@ export function breakBossAgreement(d,target,eventId,engine){
     n.relation=null;n.brokenBy=eventId;if(actor.id?.startsWith('npc_'))n.inventory={};d.set([...engine.actorPath(target),'negotiation'],n);
 }
 function termsFor(engine,args){
-    if(!pacts.has(args.pact))throw new Error('谈判须承诺respect_territory守界或nonaggression互不攻击');
-    if(args.alliance!==undefined&&typeof args.alliance!=='boolean')throw new Error('结盟须为布尔值');
+    if(!pacts.has(args.pact))throw preconditionFailure('谈判须承诺respect_territory守界或nonaggression互不攻击');
+    if(args.alliance!==undefined&&typeof args.alliance!=='boolean')throw preconditionFailure('结盟须为布尔值');
     const rows=value=>{
         if(value===undefined)return[];
-        if(!validRows(value))throw new Error('谈判物资须为不重复的item/quantity正整数列表，至多20项');
+        if(!validRows(value))throw preconditionFailure('谈判物资须为不重复的item/quantity正整数列表，至多20项');
         const result=value.map(r=>({item:engine.resolve(r.item,'item'),quantity:r.quantity})).sort((a,b)=>a.item.localeCompare(b.item));
-        if(new Set(result.map(r=>r.item)).size!==result.length)throw new Error('谈判物资名称指向重复物品');
+        if(new Set(result.map(r=>r.item)).size!==result.length)throw preconditionFailure('谈判物资名称指向重复物品');
         return result;
     };
     const t={pact:args.pact,alliance:args.alliance??false,offer:rows(args.offer),request:rows(args.request)};
-    if(t.offer.some(r=>t.request.some(s=>s.item===r.item)))throw new Error('同一物品不能同时作为交付与索取');
+    if(t.offer.some(r=>t.request.some(s=>s.item===r.item)))throw preconditionFailure('同一物品不能同时作为交付与索取');
     return t;
 }
 function publicResult(n,h,boss){
@@ -90,22 +91,22 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     // Only the registered leader speaks for a settlement; another resident boss
     // negotiates for itself alone.
     if((args.term!==undefined||args.contract!==undefined)&&boss.actor&&!engine.world.locations.some(l=>l.monsterSociety?.leader===boss.id))
-        throw Error('只有聚居地首领能代表聚居地立约；这名居民只能为自己议定和平与交换');
+        throw preconditionFailure('只有聚居地首领能代表聚居地立约；这名居民只能为自己议定和平与交换');
     if(args.term!==undefined||args.contract!==undefined)return societyAgreement(d,engine,boss,args,eventId,()=>negotiateBoss(d,engine,boss,residence,{...args,term:undefined},eventId));
     const target=boss.actor??residence.occupant?.actor,actor=engine.actor(d,target);
     if(!boss.actor&&(residence.occupant?.kind!=='boss'||residence.occupant.definition!==boss.id)||!actor||actor.boss!==boss.id||
-        actor.owner||actor.hp<=0||actor.status!=='正常'||actor.location!==boss.residence.location||actor.location!==d.get('state','location'))throw new Error('谈判需要已接触、在巢穴清醒在场的自由首领');
-    if(boss.actor&&(actor.scheduleTravel||actor.cognitionTravel||/睡眠|睡觉|熟睡/.test(actor.activity??'')))throw Error('谈判需要清醒在场的居民首领');
-    if(!(boss.intelligence>0))throw new Error('非智能首领不能接受谈判条款');
-    if(d.get('state','player','status')!=='正常')throw new Error('你当前不能清醒谈判');
+        actor.owner||actor.hp<=0||actor.status!=='正常'||actor.location!==boss.residence.location||actor.location!==d.get('state','location'))throw preconditionFailure('谈判需要已接触、在巢穴清醒在场的自由首领');
+    if(boss.actor&&(actor.scheduleTravel||actor.cognitionTravel||/睡眠|睡觉|熟睡/.test(actor.activity??'')))throw preconditionFailure('谈判需要清醒在场的居民首领');
+    if(!(boss.intelligence>0))throw preconditionFailure('非智能首领不能接受谈判条款');
+    if(d.get('state','player','status')!=='正常')throw preconditionFailure('你当前不能清醒谈判');
     const errors=validateBossNegotiation(boss,new Set(engine.world.items.map(i=>i.id)));
     if(errors.length)throw new Error(errors.join('；'));
     const t=termsFor(engine,args),n=structuredClone(readBossNegotiation(actor)),prior=n.history.find(h=>h.event===eventId);
     if(prior){
-        if(JSON.stringify(prior.terms)!==JSON.stringify(t))throw new Error('首领谈判事件编号冲突');
+        if(JSON.stringify(prior.terms)!==JSON.stringify(t))throw preconditionFailure('首领谈判事件编号冲突');
         return publicResult(n,prior,boss);
     }
-    if(typeof eventId!=='string'||!eventId)throw new Error('首领谈判缺少事件编号');
+    if(typeof eventId!=='string'||!eventId)throw preconditionFailure('首领谈判缺少事件编号');
     const c=readBossCognition(actor),goal=boss.cognition?.goal??'defend_territory';
     const threats=c.encounters.filter(e=>e.kind==='clash'&&!['flee','defend'].includes(e.tactic));
     const territory=boss.cognition?.territory??[boss.residence.location];
@@ -113,7 +114,7 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     if(goal==='defend_territory'&&t.pact!=='respect_territory')reason='目标是守住领地，条件必须承诺尊重领地边界';
     else if(goal==='defend_territory'&&threats.some(e=>territory.includes(e.location)))reason='记得你在领地内发起交锋，拒绝交换物资或结盟';
     else if(goal==='avoid_conflict'&&t.alliance&&(threats.length||standing(engine,d.get('state'),target)<0))reason='目标是避免冲突，曾发起进攻的来者只能议定互不攻击';
-    else if(!['defend_territory','avoid_conflict'].includes(goal))throw new Error('首领认知目标无效');
+    else if(!['defend_territory','avoid_conflict'].includes(goal))throw preconditionFailure('首领认知目标无效');
     const accepts=new Set(boss.negotiation?.accepts??[]);
     const bag=Object.create(engine);
     bag.bagPath=id=>id==='player'?engine.bagPath(id):boss.actor?engine.bagPath(target):[...engine.actorPath(target),'negotiation','inventory'];
@@ -127,7 +128,7 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     n.history.push(h);
     if(h.accepted){
         n.relation={pact:t.pact,alliance:t.alliance,event:eventId};delete n.brokenBy;
-        if(!engine.replaying||engine.replayResult?.obligationRuntimeVersion===1){
+        {
             const id=`boss-pact:${eventId}`;
             openObligation(d,engine,{id,kind:'pact',debtor:'player',creditor:target,actor:'player',amount:0,subject:target,exclusive:{family:'boss-pact',scope:'debtor_subject',policy:'supersede'},terms:{pact:t.pact,alliance:t.alliance,territory:[...territory]}},eventId);
             n.obligation=id;

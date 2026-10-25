@@ -4,8 +4,8 @@
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
-import {recordsWhere,recordEntriesWhere,recordsMemo} from './storage.mjs';
-import {organizationState,memberOrganizations} from './organization-state.mjs';
+import {recordsWhere,recordEntriesWhere,recordsMemo,cloneData} from './storage.mjs';
+import {organizationState,memberOrganizations,organizationOffices} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
 import {faithOf} from './faith-state.mjs';
@@ -13,8 +13,9 @@ import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {obligationCalendar,obligationDate} from './obligation-calendar.mjs';
 
-const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
+const fact=(value,source,override=false)=>({value:cloneData(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
 const records=state=>Object.entries(state.records??{});
 const recordFacts=(state,predicate)=>records(state).filter(([,r])=>predicate(r)).map(([key,r])=>fact(r,`state.records.${key}`,true));
@@ -98,12 +99,20 @@ export function questBoards(engine,state){
 export function personCareer(engine,state,requested){
     const id=actorId(engine.world,requested),base=baseOf(engine,state,id),actor=at(state,actorPath(engine.world,id).slice(1));
     const vocation=actor?.vocation,def=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id);
-    const services=id==='player'?[]:vocation?(def?.teaches??vocation.services??[]):base?.services??[];
+    const services=id==='player'?[]:[...(vocation?(def?.teaches??vocation.services??[]):base?.services??[])],appointments=[];
+    if(id!=='player'&&isEffective(engine,state,id))for(const faction of engine.world.factions??[]){
+        if(!faction.offices?.length)continue;
+        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder===id&&officeOnDuty(engine,state,office,id)&&office.authority?.operations?.includes('certify')){
+            if(!isEffective(engine,state,faction.id))continue;
+            const role=engine.byId.get(office.authority.profession),skill=role?.entry?.skill;
+            if(role&&(actor?.proficiencies?.[skill]??base?.proficiencies?.[skill]??0)>=(role.entry?.minimumProficiency??100)){services.push(role.id);appointments.push(office.id);}
+        }
+    }
     const roles=id==='player'?[state.professions?.combat,...state.professions?.life??[],...state.professions?.hidden??[]].filter(Boolean):[...new Set([...Object.keys(actor?.certifications??{}),...services.filter(s=>s.startsWith('profession_')),...(!vocation?[base?.combatProfession,...base?.lifeProfessions??[]].filter(Boolean):[])])];
     if(id!=='player')for(const role of actor?.hiddenProfessions??base?.hiddenProfessions??[])if(!roles.includes(role))roles.push(role);
     const apprenticeships=id==='player'?Object.entries(state.careers??{}).filter(([,r])=>r.initiation?.status==='守戒中').map(([r])=>r):[];
     return fact({occupation:vocation?(def?.name??vocation.name):actor?.occupation??base?.occupation??'',roles,apprenticeships,services:[...services],vocation:def??vocation??null},
-        id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`,Boolean(vocation||id==='player'));
+        (id==='player'?'state.professions + state.careers':vocation?`state.npcs.${id}.vocation + rules.npcGrowth.vocations`:`catalog.${id}.services`)+(appointments.length?` + current organization offices (${appointments.join(',')}) + proficiency`:''),Boolean(vocation||id==='player'));
 }
 export function personCertified(engine,state,id,skill){
     const c=personCareer(engine,state,id).value,s=engine.byId.get(skill),roles=s?.learningProfessions??(s?.profession?[s.profession]:[]);
@@ -114,6 +123,9 @@ export function personTeaching(engine,state,id,entity,{stage=null}={}){
     if(entity.startsWith('recipe_')&&currentWorkstationRecipes(engine,state,id).some(r=>r.id===entity))return true;
     const c=personCareer(engine,state,id).value,base=baseOf(engine,state,id),catalog=engine.byId.get(entity);
     if(c.services.includes(entity))return true;
+    // Certification/skill instruction does not grant every recipe of that skill.
+    // Recipes need their own authored service or a currently usable workstation.
+    if(entity.startsWith('recipe_'))return false;
     const skill=catalog?.skill?engine.byId.get(catalog.skill):catalog,role=skill?.profession;
     return Boolean(role&&c.roles.includes(role)&&(engine.byId.get(role)?.skillTree??[]).includes(skill.id)&&(stage===null||stage<=(base?.teachingStages?.[role]??0)));
 }
@@ -144,6 +156,25 @@ export function personRegistrar(engine,state,id,seat,occupations){
     const career=personCareer(engine,state,id).value,base=baseOf(engine,state,id);
     return (career.vocation?.location??base?.workplace?.location)===seat&&occupations.includes(career.occupation);
 }
+// The published office is the authority. Campaign appointments replace only
+// the holder; an application cannot supply powers, hours or an issuer.
+export function institutionOffices(engine,state,organization=null){
+    return (engine.world.factions??[]).filter(f=>!organization||f.id===organization).flatMap(f=>organizationOffices(engine,state,f.id,f).map(o=>{
+        const change=state.records?.[`organization:${f.id}`]?.offices?.[o.id];
+        return {...o,holder:change&&(change.since??0)>(state.minute??0)?null:o.holder,
+            since:change?.since??0,sourceEvent:change?.sourceEvent??null};
+    }));
+}
+export function officeOnDuty(engine,state,office,actor=office?.holder){
+    const current=institutionOffices(engine,state,office?.organization??office?.org).find(o=>o.id===office?.id);
+    if(current){if(current.holder!==actor)return false;office=current;}
+    if(!actor||office?.holder!==actor||!living(engine,state,actor)||personConstraint(engine,state,actor))return false;
+    const person=actor==='player'?state.player:state.npcs?.[actor],location=actor==='player'?state.location:person?.location;
+    const minute=((state.minute??0)%1440+1440)%1440;
+    return Boolean(person&&location===office.seat&&!person.scheduleTravel&&!person.cognitionTravel&&
+        !['死亡','濒死','昏迷','患病'].includes(person.status)&&!/睡眠|睡觉|熟睡/.test(person.activity??'')&&
+        (!office.receptionHours?.length||office.receptionHours.some(([start,end])=>start<=minute&&minute<end)));
+}
 export function personRemuneration(engine,state,id){
     const salaries=obligationRows(state).filter(o=>o.kind==='salary'&&o.creditor===id);
     const projected=new Set(salaries.map(o=>o.legacyRecord).filter(Boolean));
@@ -163,6 +194,12 @@ export function lawAuthorities(engine,state,code,kind='officer'){
     const candidates=new Set([...code.judges??[],...code.officers??[],...officeRows(state).map(([,r])=>r.holder)]);
     return [...candidates].filter(id=>personLawRoles(engine,state,id,code).some(p=>p==='judge'||kind!=='judge'&&p==='officer'));
 }
+export function questQuotaMonth(engine,state){
+    const calendar=state.records?.['calendar:active']?.calendar??engine.calendarId;
+    if(!calendar||calendar==='legacy:30-day')return Math.floor((state.minute??0)/(1440*30));
+    const date=obligationDate(state.minute??0,calendar),skipped=date.leap&&obligationCalendar(calendar).leap?.obligationsSkip;
+    return `${calendar.split(':')[0]}:${date.year}:${skipped?date.month.replace('leap:',''):date.month}`;
+}
 export function personQuestRights(engine,state,id,{cultural=false}={}){
     id=actorId(engine.world,id);
     const sources=personOffices(engine,state,id,{power:'quest_publish'}).map(e=>fact(e.value.monthlyQuotaD,e.source,e.override));
@@ -181,7 +218,8 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
     const actor=at(state,actorPath(engine.world,id).slice(1)),base=baseOf(engine,state,id),own=actor?.monthlyQuotaD??base?.monthlyQuotaD;
     const override=own!==undefined?fact(own,actor?.monthlyQuotaD!==undefined?`state.${actorPath(engine.world,id).slice(1).join('.')}.monthlyQuotaD`:`catalog.${id}.monthlyQuotaD`,true):null;
     const limitD=living(engine,state,id)?override?.value??Math.max(0,...sources.map(s=>s.value)):0;
-    return {month:Math.floor((state.minute??0)/(1440*30)),limitD,usedD:state.questQuota?.[`${Math.floor((state.minute??0)/(1440*30))}_${id}`]??0,personal:true,
+    const month=questQuotaMonth(engine,state);
+    return {month,limitD,usedD:state.questQuota?.[`${month}_${id}`]??0,personal:true,
         kinds:[...(limitD>0&&(override||sources.some(s=>s.value>0&&!s.source.includes('notable')))?['official']:[]),'personal',...(cultural&&sources.some(s=>s.source.includes('notable'))?['cultural']:[])],rule:'各身份取最大值；名士仅文化类；monthlyQuotaD 显式覆盖全部身份额度',sources,override};
 }
 // A changed job gets a fresh baseline; promises are overlaid by npc-schedule.
@@ -276,7 +314,7 @@ export function personSimulation(engine,state,id){
 // never retained on engine/state, so later legal writes are read immediately.
 export function personConstraints(engine,state){
     // Only categories this projection reads invalidate its derived constraints.
-    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
 }
 function buildPersonConstraints(engine,state){
     const out=new Map();
@@ -296,6 +334,15 @@ function buildPersonConstraints(engine,state){
         if(!['legal_detention','legal_custody'].includes(r.category)||r.status&&r.status!=='生效')continue;
         const subject=r.subject??state.records?.[r.case]?.offender??(r.category==='legal_custody'?'player':null),id=actorId(engine.world,subject);
         const entries=out.get(id)??[];entries.push({key,r});out.set(id,entries);
+    }
+    // Reuse the schedule's existing records memo for current office holders.
+    // Transfers/vacancies invalidate it through the organization record writer.
+    out.examinerReceptions=new Map();
+    for(const faction of engine.world.factions??[]){
+        if(!faction.offices?.some(o=>o.receptionHours?.length))continue;
+        for(const office of organizationOffices(engine,state,faction.id,faction))if(office.holder&&office.receptionHours?.length){
+            const rows=out.examinerReceptions.get(office.holder)??[];rows.push(office);out.examinerReceptions.set(office.holder,rows);
+        }
     }
     return out;
 }

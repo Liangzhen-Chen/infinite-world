@@ -8,6 +8,7 @@ import {standing,transmitStanding,collectivesOf,TRANSMISSION}from'../server-plug
 import {organization,organizationsOf,advanceOrganizations,DUES_PERIOD,EXPEL_ARREARS}from'../server-plugin/organizations.mjs';
 import {advanceRegistry}from'../server-plugin/advance-registry.mjs';
 import {toolDefinitions,resolveToolCall}from'../extension/tools.mjs';
+import {escrow as escrowAccount}from'../server-plugin/money.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_linsui',B='npc_hw_ayan';
@@ -24,6 +25,56 @@ async function found(s,kind='行会'){
     const out=await s.run(s.doc,'world_create',{type:'org',name:'青灯互助会',data:{notes:'互相照应，账目公开',occupation:kind}},'found');
     return {document:out.document,id:out.result.organization,result:out.result};
 }
+
+test('玩家代付入会费和首期会费仍须NPC本人同意；通过入账、否决及逾期退款均归真实付款人',async()=>{
+    const s=setup(),{document:c0,id}=await found(s);
+    const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:20,coins:3},'funding-charter')).document;
+    const before=structuredClone(c);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A},'unfunded'),/可由你代付入会费/);
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:A,consent:true,reward:1000,compensation:1000},'fake-funded'),/本人当面同意/);
+    assert.deepEqual(c,before);
+    for(const slots of [{consent:true},{reward:1000}]){
+        const denied=await s.run(c,'world_act',{action:'core:settlement.org_join',slots:{org:id,member:A,feePayer:'player',...slots}},`fake-${Object.keys(slots)[0]}`);
+        assert.equal(denied.result.receipt.status,'rejected');assert.deepEqual(denied.document,c);
+    }
+    const input={tool:'world_act',args:{action:'core:settlement.org_join',slots:{org:id,member:A,feePayer:'player'}},eventId:'funded-join'};
+    const out=await s.engine.reduce(c,input),invited=applyPatches(c,out.patches),proposal=out.result.proposal;
+    assert.notEqual(out.result.receipt?.status,'rejected',out.result.receipt?.reason);
+    assert.equal(out.result.status,'议事中');assert.equal(invited.state.player.coins,477);assert.equal(invited.state.npcs[A].coins,100);
+    const escrow=escrowAccount(`motion_${proposal}`);
+    assert.equal(invited.ledger.accounts[escrow],23);
+    assert.equal(invited.state.records[proposal].feePayer,'player');assert.equal(invited.state.records[proposal].firstDues,3);
+    const consent=invited.state.consentEvents.find(row=>row.id==='funded-join:consent');
+    assert.equal(consent.from,A);assert.equal(consent.subject,id);assert.equal(consent.scope,'org.join');assert.deepEqual(consent.terms,{fee:0,amount:0});
+    const replay=await s.engine.reduce(c,input,{replay:true,result:out.result});assert.deepEqual(applyPatches(c,replay.patches),invited);
+    for(const opinion of ['approve','reject']){
+        const closed=await s.org(invited,{operation:'org_vote',org:id,proposal,opinion},`funded-${opinion}`),view=organization(s.engine,closed.document.state,id);
+        assert.equal(closed.document.ledger.accounts[escrow]??0,0);
+        assert.equal(closed.document.state.npcs[A].coins,100);
+        assert.equal(closed.document.state.player.coins,opinion==='approve'?477:500);
+        assert.equal(view.treasury,opinion==='approve'?23:0);
+        assert.equal(Boolean(view.members[A]),opinion==='approve');
+        if(opinion==='approve')assert.deepEqual(view.ledger.map(row=>[row.kind,row.amount]),[['入会费',20],['首期会费',3]]);
+    }
+    // Real waiting reaches the existing proposal lapse; no synthetic close or refund.
+    const lapseAt=Math.ceil((invited.state.minute+7*1440)/1440)*1440;
+    const lapsed=await s.run(invited,'world_time',{minutes:lapseAt-invited.state.minute},'funded-lapse');
+    assert.equal(lapsed.document.state.records[proposal].status,'搁置');
+    assert.equal(lapsed.document.state.player.coins,500);assert.equal(lapsed.document.state.npcs[A].coins,100);
+    assert.equal(lapsed.document.ledger.accounts[escrow]??0,0);
+});
+
+test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直接入组织',async()=>{
+    const s=setup(),{document:c0,id}=await found(s);
+    const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:7,coins:2,consent:false},'shop-fees')).document;
+    // An existing NPC business is the supported member; its representative remains an agent.
+    c.state.records.fee_test_business={id:'fee_test_business',category:'business',owner:B,location:c.state.location,status:'营业'};
+    await assert.rejects(s.org(c,{operation:'org_join',org:id,member:'fee_test_business'},'shop-unfunded'),/可由你代付入会费/);
+    const joined=await s.run(c,'world_act',{action:'core:settlement.org_join',slots:{org:id,member:'fee_test_business',feePayer:'player'}},'shop-funded');
+    assert.equal(joined.result.joined,true);assert.equal(joined.document.state.player.coins,491);assert.equal(joined.document.state.npcs[B].coins,100);
+    const view=organization(s.engine,joined.document.state,id);assert.equal(view.treasury,9);assert.equal(view.members.fee_test_business.representative,B);
+    assert.ok(joined.document.state.consentEvents.some(row=>row.from===B&&row.scope==='org.join'&&row.subject===id));
+});
 
 test('创立行会：玩家任会长，章程与公库可查；存入记账并提升组织立场；组织行为成为世界事件',async()=>{
     const s=setup(),{document:c0,id,result}=await found(s);
@@ -46,26 +97,35 @@ test('创立行会：玩家任会长，章程与公库可查；存入记账并�
 
 test('入会：章程要求审批时入会费暂存，会长当面批准后入账；否决退还；免审批直接入会',async()=>{
     const s=setup(),{document:c0,id}=await found(s);
-    const fee=await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:20},'fee');
+    // 设计B：NPC先真实接受零费邀请和任命；原20铜托管/退款断言
+    // 由玩家亲自申请承担，避免用调用参数替NPC答应付钱。
+    const invitation=await s.org(c0,{operation:'org_join',org:id,member:A},'invite');
+    let c=(await s.org(invitation.document,{operation:'org_vote',org:id,proposal:invitation.result.proposal,opinion:'approve'},'admit')).document;
+    c=(await s.org(c,{operation:'org_propose',org:id,action:'appoint',member:A,name:'会长'},'handover')).document;
+    assert.equal(organization(s.engine,c.state,id).leader,A);
+    const fee=await s.org(c,{operation:'org_propose',org:id,speaker:A,action:'charter',choice:'vote',cost:20},'fee');
     assert.equal(fee.result.status,'通过','会长定：会长提出即决');
     assert.equal(organization(s.engine,fee.document.state,id).charter.fee,20);
-    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:A},'nope'),/当面同意/);
-    const apply=await s.org(fee.document,{operation:'org_join',org:id,member:A,consent:true},'apply');
-    assert.equal(apply.result.status,'议事中');assert.equal(apply.document.state.npcs[A].coins,80,'入会费暂存');
-    assert.equal(organization(s.engine,apply.document.state,id).members[A],undefined);
-    const ok=await s.org(apply.document,{operation:'org_vote',org:id,proposal:apply.result.proposal,opinion:'approve'},'ok');
+    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:B},'nope'),/当面同意/);
+    await assert.rejects(s.org(fee.document,{operation:'org_join',org:id,member:B,consent:true},'forged'),/当面同意/);
+    c=(await s.org(fee.document,{operation:'org_leave',org:id},'leave-first')).document;
+    const apply=await s.org(c,{operation:'org_join',org:id},'apply');
+    assert.equal(apply.result.status,'议事中');assert.equal(apply.document.state.player.coins,480,'入会费暂存');
+    assert.equal(organization(s.engine,apply.document.state,id).members.player,undefined);
+    const ok=await s.org(apply.document,{operation:'org_vote',org:id,proposal:apply.result.proposal,speaker:A,opinion:'approve'},'ok');
     assert.equal(ok.result.status,'通过');
-    const v=organization(s.engine,ok.document.state,id);assert.equal(v.members[A].position,'成员');assert.equal(v.treasury,20);
-    assert.deepEqual(organizationsOf(ok.document.state,A),[id]);
-    const applyB=await s.org(ok.document,{operation:'org_join',org:id,member:B,consent:true},'applyB');
-    const no=await s.org(applyB.document,{operation:'org_vote',org:id,proposal:applyB.result.proposal,opinion:'reject'},'no');
-    assert.equal(no.result.status,'否决');assert.equal(no.document.state.npcs[B].coins,100,'否决退还入会费');
-    const open=await s.org(no.document,{operation:'org_propose',org:id,action:'charter',consent:false},'open');
-    const join=await s.org(open.document,{operation:'org_join',org:id,member:B,consent:true},'joinB');
+    const v=organization(s.engine,ok.document.state,id);assert.equal(v.members.player.position,'成员');assert.equal(v.treasury,20);
+    assert.deepEqual(organizationsOf(ok.document.state,'player'),[id]);
+    c=(await s.org(ok.document,{operation:'org_leave',org:id},'leave-second')).document;
+    const applyB=await s.org(c,{operation:'org_join',org:id},'applyB');
+    const no=await s.org(applyB.document,{operation:'org_vote',org:id,proposal:applyB.result.proposal,speaker:A,opinion:'reject'},'no');
+    assert.equal(no.result.status,'否决');assert.equal(no.document.state.player.coins,480,'否决退还入会费');
+    const open=await s.org(no.document,{operation:'org_propose',org:id,speaker:A,action:'charter',consent:false},'open');
+    const join=await s.org(open.document,{operation:'org_join',org:id},'joinB');
     assert.equal(join.result.joined,true);assert.equal(organization(s.engine,join.document.state,id).treasury,40);
-    const leave=await s.org(join.document,{operation:'org_leave',org:id,member:B,consent:true},'leaveB');
-    assert.equal(organization(s.engine,leave.document.state,id).members[B],undefined);
-    await assert.rejects(s.org(leave.document,{operation:'org_leave',org:id},'quit'),/先改任/);
+    await assert.rejects(s.org(join.document,{operation:'org_leave',org:id,member:A},'quit'),/先改任/);
+    const leave=await s.org(join.document,{operation:'org_leave',org:id},'leaveB');
+    assert.equal(organization(s.engine,leave.document.state,id).members.player,undefined);
 });
 
 async function withMembers(s){

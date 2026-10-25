@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {atomicJSON,digest,applyPatches} from '../server-plugin/storage.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {relationView} from '../server-plugin/npc-state.mjs';
 import {runPlaytest,createPlaytestServer} from './playtest-runner.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {loadPromptBundle} from './build-card.mjs';
@@ -124,8 +125,10 @@ export async function deriveSoakEvidence(exported,anchor,turn){
     add(`promise-${obligationId}`,'structured',`${label}玩家与${person}关于“${obligation.content}”的约定，当时状态是什么？`,obligation.status);
    }
    for(const [npc,npcState] of Object.entries(after.state.npcs??{})){
-    const before=document.state.npcs?.[npc];if(!before||!Number.isFinite(before.trust)||!Number.isFinite(npcState.trust)||before.trust===npcState.trust)continue;
-    add(`trust-${npc}`,'structured',`${label}这次事件后，${name(npc)}对玩家的信任增加还是减少？`,npcState.trust>before.trust?'增加':'减少');
+    if(!document.state.npcs?.[npc])continue;
+    const before=relationView(engine,document.state,npc,'player').trust,current=relationView(engine,after.state,npc,'player').trust;
+    if(before===current)continue;
+    add(`trust-${npc}`,'structured',`${label}这次事件后，${name(npc)}对玩家的信任增加还是减少？`,current>before?'增加':'减少');
    }
    if(after.state.location!==document.state.location)add('arrival','detail',`${label}抵达哪个地点？`,engine.byId.get(after.state.location)?.name??after.state.location);
    if(after.state.player.coins!==document.state.player.coins)add('coins','structured',`${label}这次行动使钱袋${after.state.player.coins>document.state.player.coins?'增加':'减少'}了多少铜？`,Math.abs(document.state.player.coins-after.state.player.coins));

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {settlementHead,personRegistrar} from './entity-view.mjs';
 import {authorityOf,playerOffices,residentAdults} from './governance.mjs';
@@ -77,26 +78,26 @@ function capacity(engine,state,settlement,step){
 }
 function registrar(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
-    if(!charter||state.location!==charter.seat)throw Error('升格申请须在白石镇公署前厅递件转呈');
+    if(!charter||state.location!==charter.seat)throw preconditionFailure('升格申请须在白石镇公署前厅递件转呈');
     const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location).map(n=>n.id).sort();
-    if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
+    if(!staff.length)throw preconditionFailure('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0];
 }
 const pending=(state,settlement)=>Object.values(state.records??{}).some(r=>r.category==='promotion_petition'&&r.status==='待审定'&&r.settlement===settlement);
 function file(d,engine,settlement,applicant,clerk,eventId,at){
     const rules=promotionRules(engine),state=d.get('state'),c=promotionConditions(engine,state,settlement),id=`promotion_petition:${settlement}:${eventId}`;
-    if(d.get(...rec(id)))throw Error('事务编号已占用');
+    if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     const row={category:'promotion_petition',id,settlement,from:c.level,to:c.to,applicant,registrar:clerk,institution:rules.approver.name,filedAt:at,due:at+rules.approver.decisionDays*DAY,
         status:'待审定',attached:c.checks,source:rules.source,sourceEvent:eventId};
     d.set(rec(id),row);return row;
 }
 function petition(d,engine,args,eventId){
-    const rules=promotionRules(engine);if(!rules)throw Error('升格章程未登记');
+    const rules=promotionRules(engine);if(!rules)throw preconditionFailure('升格章程未登记');
     const settlement=engine.resolve(args.settlement,'loc'),state=d.get('state');
-    if(!playerOffices(state,{settlement,power:'housing'},engine).length)throw Error('只有在任村长或原头人能为本村申请升格');
+    if(!playerOffices(state,{settlement,power:'housing'},engine).length)throw preconditionFailure('只有在任村长或原头人能为本村申请升格');
     const clerk=registrar(d,engine);
-    if(pending(state,settlement))throw Error('本村已有待审定的升格申请');
-    const c=promotionConditions(engine,state,settlement);if(!c.ok)throw Error(`升格条件未齐：${c.reasons.join('；')}`);
+    if(pending(state,settlement))throw preconditionFailure('本村已有待审定的升格申请');
+    const c=promotionConditions(engine,state,settlement);if(!c.ok)throw preconditionFailure(`升格条件未齐：${c.reasons.join('；')}`);
     const row=file(d,engine,settlement,'player',clerk,eventId,state.minute);
     return {petition:row.id,pending:row,note:`已转呈${rules.approver.name}，${rules.approver.decisionDays}日后按当时情形审定。`};
 }
@@ -135,7 +136,7 @@ export function promotionAction(d,args,eventId){
         return {settlement,level:adminLevel(this,state,settlement),conditions:promotionConditions(this,state,settlement),marketFactor:marketFactor(this,state,settlement),
             petitions:Object.values(state.records??{}).filter(r=>r.category==='promotion_petition'&&r.settlement===settlement),actionScope:{kind:'instant'}};
     }
-    throw Error('未知升格事务');
+    throw preconditionFailure('未知升格事务');
 }
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='promotion_petition'&&r.status==='待审定');
 export function nextPromotionMinute(state,now){return Math.min(Infinity,...scheduled(state).map(r=>r.due).filter(m=>m>now));}

@@ -9,7 +9,9 @@ import {translateCall} from '../server-plugin/action-gateway.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
 import {variant,setPrice,scene,monthDayMinute,primed,held,legacy,baseWorld} from './helpers/daily-b2.mjs';
 
-const PENDING='需要对方答应（对话功能完成后开放）';
+// 06 §6.10.4 / A3：同意现在来自真实事件、有效约定或当前决策。
+// 保留原先的拒绝反例与状态不变要求，不再期待“以后开放”的旧文案。
+const PENDING='需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）';
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan';
 
 // ---- 1. 同意：本人同意通，替 NPC 填的同意不通 ----
@@ -55,7 +57,7 @@ test('本人同意只能填是或否；别人的事（NPC 为受作用方）无�
  assert.deepEqual((await ui.read()).state,before.state,'被拒的调用不改任何状态');
 });
 
-test('NPC 为受作用方、同意要等 A2：受雇、借钱拒绝并给世界内原因、状态不变（当班店主出租、钱庄放贷走旧判定，见 a1-daily-probes D04、D29）',async t=>{
+test('NPC 为受作用方：未取得有效同意时受雇、借钱拒绝并给世界内原因、状态不变（当班店主出租、钱庄放贷走旧判定，见 a1-daily-probes D04、D29）',async t=>{
  const ui=await uiSession(t,{mutate:scene(INN,monthDayMinute(9,19,10,0),s=>{s.player.coins=300;})}),before=await primed(ui);
  for(const [action,slots] of [['trade.work',{seller:LINSUI,minutes:240}],['trade.borrow',{seller:LINSUI,coins:50,days:10}]]){
   const r=await ui.choose(action,slots,{search:true});assert.equal(r.ok,false,action);assert.equal(r.error,PENDING,`${action} 拒绝并说明原因`);

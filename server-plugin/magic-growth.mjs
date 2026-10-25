@@ -1,9 +1,10 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
 
 const unit=1440000,clone=x=>structuredClone(x);
-const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw Error(`${label}无效或缺失`);return n;};
+const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效或缺失`);return n;};
 export function validateGrowthCatalog(c){
  const s=c.effectSpec,errors=[];
  if(s?.kind!=='growth'||s.unit!=='permille'||Object.keys(s).some(k=>!['kind','power','unit'].includes(k)))errors.push('生长只支持有限比例加速，不治疗病理');
@@ -15,10 +16,10 @@ export function validateGrowthCatalog(c){
 export function validateGrowthRules(r){
  if(!r)return[];
  try{
-  if(r.version!==1||typeof r.source!=='string'||!r.source)throw Error('生长规则须有版本和来源');
+  if(r.version!==1||typeof r.source!=='string'||!r.source)throw preconditionFailure('生长规则须有版本和来源');
   integer(r.maximumBonusPermille,1,200,'批次累计加速上限');integer(r.cooldownMinutes,10080,43200,'田块冷却');
   integer(r.waterMlPerAreaDay,1,1000000,'每面积日水耗');integer(r.nutrientMgPerAreaDay,1,1000000,'每面积日营养耗');
-  if(!Array.isArray(r.stageLimits)||r.stageLimits.length!==9)throw Error('生长须列出九阶段边界');
+  if(!Array.isArray(r.stageLimits)||r.stageLimits.length!==9)throw preconditionFailure('生长须列出九阶段边界');
   for(const s of r.stageLimits){integer(s.power,1,250,'阶段比例');integer(s.duration,1,10080,'阶段持续');}
   return[];
  }catch(e){return[e.message];}
@@ -29,9 +30,9 @@ function binding(engine,target){
  const matches=p?features.filter(f=>f.growth?.field===p.fieldId&&f.growth?.settlement===p.settlement):features.filter(f=>f.id===target);
  const f=p?.growthFeature?matches.find(f=>f.id===p.growthFeature):matches.length===1?matches[0]:null;
  const profile=p??engine.rules.agriculture?.settlements.find(p=>p.settlement===f?.growth?.settlement&&p.fieldId===f?.growth?.field);
- if(!profile||!f||!['soil','plant'].includes(f.kind)||f.growth?.field!==profile.fieldId||f.growth?.settlement!==profile.settlement||f.location!==profile.fieldLocation)throw Error('田块或植物缺少已登记的农事批次和资源绑定');
+ if(!profile||!f||!['soil','plant'].includes(f.kind)||f.growth?.field!==profile.fieldId||f.growth?.settlement!==profile.settlement||f.location!==profile.fieldLocation)throw preconditionFailure('田块或植物缺少已登记的农事批次和资源绑定');
  const owner=profile.fieldOwner??profile.settlement;
- if(f.owner!==owner||owner!=='player'&&owner!==profile.settlement&&owner!==profile.manager)throw Error('生长资源与田主登记不符');
+ if(f.owner!==owner||owner!=='player'&&owner!==profile.settlement&&owner!==profile.manager)throw preconditionFailure('生长资源与田主登记不符');
  return{p:profile,f,key:`agriculture:${profile.settlement}`};
 }
 export function validateGrowthWorld(world){
@@ -46,17 +47,17 @@ export function validateGrowthWorld(world){
 function permission(d,p,f,args,minute){
  if(f.owner==='player')return null;
  const a=d.get('state','records',args.authorization);
- if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute)throw Error('田块生长需要田主有效同意；公用访问不授权施法');
+ if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute)throw preconditionFailure('田块生长需要田主有效同意；公用访问不授权施法');
  const owner=d.get('state','npcs',a.grantor);
- if(!owner||isPhysicallyDead(null,d,a.grantor)||owner.status==='濒死')throw Error('田主无法继续履约');
+ if(!owner||isPhysicallyDead(null,d,a.grantor)||owner.status==='濒死')throw preconditionFailure('田主无法继续履约');
  return a;
 }
 function readResource(d,f){
  const record=d.get('state','records',`physical_feature:${f.id}`);
- if(record&&(record.category!=='physical_feature'||record.id!==f.id||record.location!==f.location))throw Error('生长资源登记键冲突');
+ if(record&&!featureRecordMatches(d,record,f))throw Error('生长资源登记键冲突');
  const s=clone(record?.state??f.state);
  integer(s?.waterMl,0,Number.MAX_SAFE_INTEGER,'实际水量');integer(s?.nutrientMg,0,Number.MAX_SAFE_INTEGER,'实际营养量');
- integer(s?.capacityMl,1,Number.MAX_SAFE_INTEGER,'水容量');if(s.waterMl>s.capacityMl)throw Error('实际水量超过容量');
+ integer(s?.capacityMl,1,Number.MAX_SAFE_INTEGER,'水容量');if(s.waterMl>s.capacityMl)throw preconditionFailure('实际水量超过容量');
  return s;
 }
 function auditLease(l,engine){
@@ -88,30 +89,30 @@ function auditCohort(c,leases){
 }
 function cohorts(r,f){
  const rows=r.field.cohorts.filter(c=>!c.ready&&c.harvestedUnits===0&&(!f.growth.cohort||c.id===f.growth.cohort));
- if(!rows.length||rows.some(c=>!Number.isSafeInteger(c.seedSpent)||c.seedSpent<1||!Array.isArray(c.seedSources)||c.seedSources.reduce((n,b)=>n+b.amount,0)!==c.seedSpent))throw Error('没有已投入真实种粮且可追溯的生长批次');
+ if(!rows.length||rows.some(c=>!Number.isSafeInteger(c.seedSpent)||c.seedSpent<1||!Array.isArray(c.seedSources)||c.seedSources.reduce((n,b)=>n+b.amount,0)!==c.seedSpent))throw preconditionFailure('没有已投入真实种粮且可追溯的生长批次');
  return rows;
 }
 export function prepareGrowthMagic(d,catalog,args){
  const errors=validateGrowthCatalog(catalog);if(errors.length)throw Error(errors.join('；'));
  const config=rules(this),limit=config.stageLimits[catalog.stage];
- if(!limit||catalog.effectSpec.power>limit.power||catalog.duration>limit.duration)throw Error('超过本阶段生长界限');
+ if(!limit||catalog.effectSpec.power>limit.power||catalog.duration>limit.duration)throw preconditionFailure('超过本阶段生长界限');
  const {p,f,key}=binding(this,args.target),r=d.get('state','records',key),now=d.get('state','minute');
- if(r?.mode!=='managed'||r.field.id!==p.fieldId)throw Error('旧账或缺失农事状态不能补发生长');
- if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||Math.hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw Error('生长目标不在实际距离或视线内');
+ if(r?.mode!=='managed'||r.field.id!==p.fieldId)throw preconditionFailure('旧账或缺失农事状态不能补发生长');
+ if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||Math.hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw preconditionFailure('生长目标不在实际距离或视线内');
  permission(d,p,f,args,now);const rows=cohorts(r,f),s=readResource(d,f);
- if(s.waterMl<1||s.nutrientMg<1)throw Error('缺少实际水或营养资源');
+ if(s.waterMl<1||s.nutrientMg<1)throw preconditionFailure('缺少实际水或营养资源');
  const leases=r.field.growthLeases??[];
  for(const l of leases)auditLease(l,this);
  auditResources(s,leases,f.id);for(const c of rows)auditCohort(c,leases);
- if(leases.some(l=>l.until>now||l.started+config.cooldownMinutes>now))throw Error('同田生长不可叠加，尚在持续或冷却额度内');
+ if(leases.some(l=>l.until>now||l.started+config.cooldownMinutes>now))throw preconditionFailure('同田生长不可叠加，尚在持续或冷却额度内');
  const maximum=Math.floor(this.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000);
- if(rows.every(c=>(c.growthBonusTicks??0)>=maximum))throw Error('本批次累计生长额度已用尽');
+ if(rows.every(c=>(c.growthBonusTicks??0)>=maximum))throw preconditionFailure('本批次累计生长额度已用尽');
  return{target:args.target,spec:catalog.effectSpec,catalog,growthArgs:{...args},key,resource:f.id};
 }
 export function applyGrowthMagic(d,prepared,eventId){
  let valid;try{valid=prepareGrowthMagic.call(this,d,prepared.catalog,prepared.growthArgs);}catch(e){return{target:prepared.target,effectFailed:e.message};}
  const {p,f}=binding(this,valid.target),r=clone(d.get('state','records',valid.key)),started=d.get('state','minute'),config=rules(this);
- r.field.growthLeases??=[];if(r.field.growthLeases.some(l=>l.source===eventId))throw Error('生长来源编号冲突');
+ r.field.growthLeases??=[];if(r.field.growthLeases.some(l=>l.source===eventId))throw preconditionFailure('生长来源编号冲突');
  const lease={source:eventId,spell:valid.catalog.id,resource:f.id,started,until:started+valid.catalog.duration,power:valid.spec.power,
   authorization:valid.growthArgs.authorization??null,cohorts:cohorts(r,f).map(c=>c.id),maximumTicks:Math.floor(this.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000),
   waterMlPerAreaDay:config.waterMlPerAreaDay,nutrientMgPerAreaDay:config.nutrientMgPerAreaDay,usedTicks:0,waterMl:0,nutrientMg:0,entries:[]};

@@ -1,12 +1,5 @@
 {
-  "changed": [
-    "people/baseline.json",
-    "people/residents.json",
-    "people/households.json",
-    "geo/locations.json",
-    "geo/routes.json",
-    "geo/settlements.json"
-  ],
+  "changed": [],
   "registered": 306,
   "seed": 694,
   "households": 90,

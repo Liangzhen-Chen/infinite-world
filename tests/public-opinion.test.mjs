@@ -10,6 +10,8 @@ import {applyPatches,CampaignStorage}from'../server-plugin/storage.mjs';
 import {shareNpcMemory}from'../server-plugin/npc-cognition.mjs';
 import {localOpinion,npcOpinions,opinionAmong}from'../server-plugin/public-opinion.mjs';
 import {npcContext}from'../server-plugin/npc-memory.mjs';
+import {acceptReported,submitKnownWitnesses} from './helpers/filing-actions.mjs';
+import {officeScene} from './helpers/office-actions.mjs';
 import {adjustStanding}from'../server-plugin/standing.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -25,6 +27,8 @@ function lawSetup(){
     world.rules.reputation.factions.find(row=>row.id===friend).members=[judge];
     world.rules.reputation.factions.find(row=>row.id===enemy).members=[carrier];
     world.rules.law.codes[0].faction=friend;
+    // Keep the published appellate authority; the M5 adapter predates recusal.
+    world.rules.law.codes[0].appeal=structuredClone(baseWorld.rules.law.codes[0].appeal);
     const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'public-opinion');
     document.state.location='bld_hw_qingdeng';document.state.npcs[victim].inventory.item_bread=4;document.state.npcs[guard].location=document.state.location;
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
@@ -34,9 +38,11 @@ function lawSetup(){
 async function judged(f){
     let out=await f.run(f.document,'world_crime',{operation:'steal',target:victim,coins:1},'theft'),c=out.document;const id=out.result.case;
     c.state.npcs[guard].location=c.state.location;
-    c=(await f.law(c,{operation:'confess',case:id,authority:guard},'confess')).document;
+    const submitted=await f.law(c,{operation:'confess',case:id,authority:guard},'confess');
+    c=(await acceptReported(f.engine,submitted.document,submitted.result,'opinion-file')).document;
     c=(await f.run(c,'world_move',{destination:'bld_hw_council'},'court')).document;
     c.state.npcs[judge].location='bld_hw_council';c.state.npcs[carrier].location='loc_bs';
+    c=await submitKnownWitnesses(f.engine,c,id,'opinion-witness');
     c=(await f.law(c,{operation:'hear',case:id,authority:judge},'hear')).document;
     c.state.npcs[victim].location=c.state.location;
     c=(await f.law(c,{operation:'publish',case:id,authority:judge},'notice')).document;
@@ -82,7 +88,11 @@ test('撤判消息实际抵达后看法才改变；重放与存档恢复得到�
     assert.equal(stanceOf(c,f.engine,carrier,topic),'support');
     // Overturn in 河湾; locally the view changes at once, 白石镇 keeps the old view.
     c.state.records[id].evidence.forEach(e=>{e.disproven=true;});c.state.npcs[judge].location=c.state.location;
-    c=(await f.law(c,{operation:'appeal',case:id,authority:judge},'overturn')).document;
+    const reviewer=f.engine.rules.law.codes[0].appeal.judges[0];
+    c=officeScene(f.engine,c,{location:c.state.location,minute:c.state.minute,present:[reviewer]});
+    const accepted=await f.law(c,{operation:'appeal',case:id,authority:reviewer},'overturn-application');
+    assert.equal(accepted.result.accepted,true);assert.deepEqual(accepted.document.state.records[id].judgment,c.state.records[id].judgment);
+    c=(await f.law(accepted.document,{operation:'request_review',case:id,authority:reviewer},'overturn')).document;
     assert.equal(stanceOf(c,f.engine,judge,topic),'neutral');assert.equal(stanceOf(c,f.engine,carrier,topic),'support');
     c.state.npcs[victim].location=c.state.location;c=(await f.law(c,{operation:'publish',case:id,authority:judge},'correction')).document;
     const correction=c.state.npcs[victim].memoryStream.find(m=>m.legalStage==='overturned');

@@ -1,3 +1,5 @@
+import {preconditionFailure} from './precondition.mjs';
+import {reject} from './action-rejection.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {digest}from'./storage.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
@@ -12,8 +14,8 @@ export function validateTargeting(catalog){
  return errors;
 }
 export function assertTargetFacts(catalog,facts){
- if(!facts||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters<0||facts.lineOfSight!==true)throw Error('缺少目标实际距离与无遮挡视线事实');
- if(facts.distanceMeters>catalog.rangeMeters)throw Error('目标超过法术实际射程');
+ if(!facts||!Number.isFinite(facts.distanceMeters)||facts.distanceMeters<0||facts.lineOfSight!==true)reject('E-ACTION-SPATIAL-FACTS','缺少目标实际距离与无遮挡视线事实',{missing:['需要目标实际距离及无遮挡视线的空间事实'],repair:['先观察并接近目标，确认实际距离和无遮挡视线后重试']});
+ if(facts.distanceMeters>catalog.rangeMeters)throw preconditionFailure('目标超过法术实际射程',{code:'E-ACTION-CAST-RANGE'});
 }
 export function assertMagicTargeting(d,engine,catalog,args,target){
  const t=catalog.targeting;if(!t)return;
@@ -25,12 +27,13 @@ export function assertMagicTargeting(d,engine,catalog,args,target){
  if(t.consent&&target!=='player'){
   assertSpellConsent(d,engine,catalog,args,target,t.consent);
  }
+ // Self consent does not replace a spell's explicit legal permit requirement.
  if(t.permit){
   const r=d.get('state','records',args.permit),location=d.get('state','location');
   const code=legalCodeAt(engine,location,d.get('state'));
   const delegated=code?.magicAuthorities?.some(a=>a.npc===r?.grantor&&a.locations.includes(location)&&a.actions.includes(t.permit));
   const receipt=r?.sourceEvent&&d.get('state','records',`magic_permission_source:${r.sourceEvent}`);
   const issued=r?.sourceType==='magic_permit'&&receipt&&digest(r)===digest(receipt.permission)&&r.law===code?.id&&r.createdAt<=now;
-  if(!code||r?.category!=='authorization'||r.action!==t.permit||r.subject!=='player'||r.location!==location||(![...code.officers,...code.judges].includes(r.grantor)&&!(delegated&&issued))||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now||(r?.sourceType==='magic_permit'||String(args.permit).startsWith('magic_permission:'))&&!issued)throw Error('精神施法需要当地实际颁发且仍有效的许可');
+  if(!code||r?.category!=='authorization'||r.action!==t.permit||r.subject!=='player'||r.location!==location||(![...code.officers,...code.judges].includes(r.grantor)&&!(delegated&&issued))||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now||(r?.sourceType==='magic_permit'||String(args.permit).startsWith('magic_permission:'))&&!issued)throw preconditionFailure('精神施法需要当地实际颁发且仍有效的许可');
  }
 }

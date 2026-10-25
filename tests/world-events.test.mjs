@@ -44,7 +44,7 @@ async function burn(f,doc,prefix,options){
 
 test('每次结算生成规范化事件：法术伤人记为harm并进统一事件记录',async()=>{
  const f=fixture(),out=await burn(f,f.document,'fire');
- assert.equal(out.result.worldEventVersion,1);
+
  const row=worldEvents(out.document.state,e=>e.verb==='harm').at(-1);
  assert.deepEqual({verb:row.verb,actor:row.actor,target:row.target,harm:row.harm,location:row.location,minute:row.minute},
   {verb:'harm',actor:'player',target:person,harm:out.result.damage,location:market,minute:out.document.state.minute});
@@ -63,14 +63,6 @@ test('法术伤及聚居地成员与刀兵同样进入社会链路：立场、�
   const relation=state.npcs[person].relationships.player;assert.equal(relation.affection<=-3,true);assert.ok(relation.fear>=1);
   assert.ok(state.npcs[person].memoryStream.some(m=>m.kind==='conflict'&&m.content.includes('事件火束')));
  }
-});
-
-test('旧账重放不把旧施法补成社会伤害，也不写事件记录',async()=>{
- const f=fixture(),live=await burn(f,f.document,'fire');
- const eventId=Object.keys(live.document.state.records).find(k=>k.startsWith('world_event:')).slice('world_event:'.length);
- const old=await f.run(f.document,'world_cast',{spell:f.spell.id,target:person},eventId,{replay:true,result:{}});
- assert.equal(old.document.state.records[`world_event:${eventId}`],undefined);
- assert.equal(stanceOf(old.document.state,f.engine,seat,'player'),stanceOf(f.document.state,f.engine,seat,'player'));
 });
 
 test('被目击的偷窃与赠礼按动词订阅：聚居地立场下降或缓和，首领记住来者',()=>{
@@ -147,7 +139,9 @@ test('负例：无人目击、私密或秘密记忆、未成年当事人都不�
 test('K10：订阅者由各模块自行登记，按原结算顺序执行，可登记新订阅者',async()=>{
  const {worldEventSubscribers,registerWorldEventSubscriber,publishWorldEvents}=await import('../server-plugin/world-events.mjs');
  // S2c protocol subscribers settle before social reactions; organization succession and governance vacancy follow their source order.
- assert.deepEqual(worldEventSubscribers().map(s=>s.id),['transition_hooks','monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','organization_succession','standing','faith_experience','npc_intelligence','governance_vacancy']);
+ // S4 perception also registers the mark observation consumer. Keep exact
+ // membership/order, including every pre-existing subscriber.
+ assert.deepEqual(worldEventSubscribers().map(s=>s.id),['transition_hooks','monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','organization_succession','standing','faith_experience','open-mark-observation','npc_intelligence','governance_vacancy']);
  assert.throws(()=>registerWorldEventSubscriber({id:'standing',order:1,on(){}}),/重复登记/);
  assert.throws(()=>registerWorldEventSubscriber({id:'k10_bad',order:1}),/须有/);
  const seen=[],first=registerWorldEventSubscriber({id:'k10_first',order:-1,on:(d,e,events)=>seen.push(['first',events.length])});

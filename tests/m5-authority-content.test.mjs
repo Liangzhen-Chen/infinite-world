@@ -27,7 +27,8 @@ test('上级由T92既有官署人物登记，不另造同职官员；地块都�
  const charter=authority.superiors.auth_bs_office_charter;
  const staff=world.npcs.filter(n=>n.workplace?.location===charter.seat&&REGISTRAR_OCCUPATIONS.includes(n.occupation));
  assert.ok(staff.length>=2);assert.ok(staff.every(n=>n.tier==='full'));
- assert.equal(world.npcs.some(n=>/镇长|城主|封册/.test(n.occupation??'')),false);
+ // M5 did not add these offices; 13ac0697 separately approved the A3 town head.
+ assert.deepEqual(world.npcs.filter(n=>/镇长|城主|封册/.test(n.occupation??'')).map(n=>n.id),['npc_bs_townhead']);
  assert.deepEqual(charter.jurisdiction,VILLAGES);
  const byId=new Map(world.locations.map(l=>[l.id,l]));
  assert.deepEqual(Object.values(authority.plots).map(p=>p.settlement).sort(),[...VILLAGES].sort());

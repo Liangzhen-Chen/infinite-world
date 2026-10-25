@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,recordIndexActive} from './storage.mjs';
+import {recordsWhere,recordsMemo,recordIndexActive,canonicalEqual} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -11,15 +11,86 @@ import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {practicalKnowledgeRegistry} from './domain-rules.mjs';
+declareHoldingWriter('education-initial');
+declareHoldingWriter('education');
+const personPath=id=>id==='player'?['state','player']:['state','npcs',id];
+function initialAuthority(d,id,context){
+ if(context?.origin!=='initial'||!context.eventId||!d.get(...personPath(id)))throw Error('Initial person authority required');
+}
+export function initializePracticalKnowledge(d,e,id,knowledge,context){
+ initialAuthority(d,id,context);
+ if(!Array.isArray(knowledge)||new Set(knowledge).size!==knowledge.length||knowledge.some(k=>!Object.hasOwn(practicalKnowledgeRegistry(e),k)))throw Error('Unregistered practical knowledge');
+ holdingSet(d,e,[...personPath(id),'practicalKnowledge'],[...knowledge],'education-initial',context.eventId);
+}
+export function knowsPracticalKnowledge(e,s,id,knowledge){
+ return Object.hasOwn(practicalKnowledgeRegistry(e),knowledge)&&Boolean((id==='player'?s.player:s.npcs?.[id])?.practicalKnowledge?.includes(knowledge));
+}
+// A person visibly practising or teaching a subject without a timed
+// demonstration record: the native practising field is the evidence.
+export function practisingOpenly(e,s,id,subject){
+ const n=id==='player'?s.player:s.npcs?.[id];
+ return Boolean(n)&&(n.practicing??n.teaching)===subject&&n.demonstrating!==false&&!recordsWhere(s.records,'category','education_demonstration').some(r=>r.actor===id);
+}
+export function demonstrationAt(e,s,id,subject,until=s.minute){
+ const n=id==='player'?s.player:s.npcs?.[id],location=id==='player'?s.location:n?.location;
+ if(n?.demonstrating===false)return null;
+ return recordsWhere(s.records,'category','education_demonstration').find(r=>r.actor===id&&(!subject||r.subject===subject)&&r.fromMinute<=s.minute&&r.toMinute>=until&&s.minute<r.toMinute&&r.workstation===location&&facilityView(e,s,r.workstation)?.factor!==0)??null;
+}
+export function initializeDemonstration(d,e,row,context){
+ initialAuthority(d,row.actor,context);
+ const s=d.get('state'),n=s.npcs?.[row.actor],subject=e.byId.get(row.subject),station=e.byId.get(row.workstation)??s.created?.[row.workstation];
+ if(Object.keys(row).some(k=>!['id','actor','subject','workstation','fromMinute','toMinute','teaching'].includes(k))||!row.id||typeof row.id!=='string'||s.records?.[row.id]||!n||isPhysicallyDead(e,s,row.actor)||['濒死','昏迷'].includes(n.status)||n.scheduleTravel||n.cognitionTravel||!subject||!station||n.location!==row.workstation||!e.world.locations.some(p=>p.id===row.workstation)||!Number.isSafeInteger(row.fromMinute)||row.fromMinute<0||!Number.isSafeInteger(row.toMinute)||row.toMinute<=row.fromMinute||row.fromMinute>s.minute||row.toMinute<=s.minute||row.teaching!==false||!knowsKnowledge(e,s,row.actor,row.subject))throw Error('Invalid demonstration subject, workstation or active window');
+ const facility=facilityView(e,s,row.workstation),stations=facility?.workstations??station.workstations??[];
+ if(facility?.factor===0||!stations.some(st=>e.world.recipes.some(r=>r.skill===(subject.skill??subject.id)&&r.workstation===st.kind))||recordsWhere(s.records,'category','education_demonstration').some(r=>r.actor===row.actor&&r.fromMinute<row.toMinute&&r.toMinute>row.fromMinute))throw Error('Demonstration requires a working subject workstation and an unoccupied window');
+ holdingSet(d,e,['state','records',row.id],{...row,category:'education_demonstration',sourceEvent:context.eventId,activityBefore:n.activity??'',practicingBefore:n.practicing??null},'education-initial',context.eventId);
+ // Legacy observation reads these fields; the timed record remains authoritative.
+ holdingSet(d,e,[...personPath(row.actor),'practicing'],row.subject,'education-initial',context.eventId);
+ holdingSet(d,e,[...personPath(row.actor),'activeDemonstration'],row.id,'education-initial',context.eventId);
+ holdingSet(d,e,[...personPath(row.actor),'activity'],`演示：${subject.name}`,'education-initial',context.eventId);
+}
+export function initializeTeachingActivity(d,e,id,values,context){
+ initialAuthority(d,id,context);
+ if(!Object.keys(values).length||Object.entries(values).some(([k,v])=>!['teachingBusy','demonstrating'].includes(k)||typeof v!=='boolean')||values.demonstrating===true&&!demonstrationAt(e,d.get('state'),id))throw Error('Invalid teaching activity');
+ for(const [k,v]of Object.entries(values))holdingSet(d,e,[...personPath(id),k],v,'education-initial',context.eventId);
+ if(values.demonstrating===false)for(const field of ['practicing','teaching'])holdingSet(d,e,[...personPath(id),field],null,'education-initial',context.eventId);
+}
+export function teachingAvailable(e,s,id,until=s.minute){
+ const n=id==='player'?s.player:s.npcs?.[id];
+ return !n?.teachingBusy&&!demonstrationAt(e,s,id,undefined,Math.min(until,s.minute));
+}
+// Runtime settlement is the education module's own write, not an initial-campaign one.
+export function settleDemonstrations(d,e){
+ const s=d.get('state');
+ for(const r of recordsWhere(s.records,'category','education_demonstration'))if(r.toMinute<=s.minute&&s.npcs?.[r.actor]?.activeDemonstration===r.id){
+  const path=personPath(r.actor),activity=`演示：${e.byId.get(r.subject)?.name}`;
+  if(d.get(...path,'activity')===activity)holdingSet(d,e,[...path,'activity'],r.activityBefore,'education');
+  holdingSet(d,e,[...path,'practicing'],r.practicingBefore,'education');
+  holdingSet(d,e,[...path,'activeDemonstration'],null,'education');
+  holdingSet(d,e,[...personPath(r.actor),'teachingBusy'],false,'education');
+ }
+}
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
-const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary'];
+const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge'];
+// Attendance and settlement progress do not change the agreed routine or
+// course. Keep comparing all other fields, including legacy terms, clauses,
+// amendments, status, deadlines and termination/substitution facts.
+const workshopProgressFields=new Set(['attendance','attendanceThrough','shifts','workedMinutes','aggregateMinutes','paid','produced','nextWork']);
+function sameScheduleRecord(a,b){
+ if(a===b)return true;
+ if(a?.category!=='contract'||b?.category!=='contract'||a.kind!=='workshop'||b.kind!=='workshop')return false;
+ const keys=Object.keys(a).filter(k=>!workshopProgressFields.has(k));
+ return keys.length===Object.keys(b).filter(k=>!workshopProgressFields.has(k)).length&&keys.every(k=>Object.hasOwn(b,k)&&canonicalEqual(a[k],b[k]));
+}
 const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['promise','delivery',undefined].flatMap(kind=>recordsWhere(s.obligations,'kind',kind)).filter(r=>r.reservationVersion===1));
-// Physical state, study/pay progress and event receipts are not inputs to
+// Physical state, study/pay progress, perception evidence and event receipts are not inputs to
 // course/routine derivation. Completed learning changes the actor's skills or
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
+ if(a&&a===b)return true;
  if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition'].includes(k)&&a[k]!==b[k]))return false;
  if(a.obligations!==b.obligations){
   const x=reservationInputs(a),y=reservationInputs(b);
@@ -31,7 +102,7 @@ export function sameScheduleInputs(a,b){
  if(a.records===b.records)return true;
  const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnoredCategories.includes(r.category)),scheduleIgnoredCategories);
  const x=rows(a),y=rows(b);
- return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
+ return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }
 registerAdvanceHook('sameScheduleInputs',sameScheduleInputs);
 // Catalog identity follows immutable world/created partitions, never the clock,
@@ -40,6 +111,7 @@ const emptyCreated=Object.freeze({});
 const advanceCourses=new WeakMap();
 const courseUnchangedNpcFields=new Set(['activity','coins','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
 function sameCourseInputs(e,a,b){
+ if(a&&a===b)return true;
  if(!sameScheduleInputs({...a,npcs:b.npcs},b))return false;
  const ids=Object.keys(a.npcs??{});if(ids.length!==Object.keys(b.npcs??{}).length)return false;
  for(const id of ids){
@@ -76,7 +148,7 @@ function educationCatalog(e,s){
    sites:[...e.world.locations,...entities.filter(x=>x.id?.startsWith('bld_'))].filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school')};
  })();worldCache.created.set(created,catalog);return catalog;
 }
-export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
+
 export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
 export const knowledgeProficiency=(e,s,id,skill)=>{
  const b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[skill]:s.npcs?.[id]?.skills?.[skill]??b?.proficiencies?.[skill]??b?.skills?.[skill];
@@ -115,7 +187,7 @@ export function educationCourses(e,s){
  return hit;
 }
 function deriveEducationCourses(e,s){
- if(!educationFresh(e))return [];
+
  const rows=educationRows(s),out=[...rows];
  // Derive classes from the teacher's current work, not just the authored
  // schedule. Hired teachers and changed livelihoods use the same entrance.
@@ -225,3 +297,5 @@ export function educationStatistics(e,s,location){
  }
  return {residents:count,literate,literacyRate:count?literate/count:0,distribution};
 }
+
+registerAdvanceHook('settleDemonstrations',settleDemonstrations);

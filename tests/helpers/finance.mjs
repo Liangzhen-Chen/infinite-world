@@ -2,9 +2,17 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../../tools/load-world.mjs';
 import {WorldEngine} from '../../server-plugin/engine.mjs';
 import {applyPatches,PatchCursor} from '../../server-plugin/storage.mjs';
-import {advanceCredit} from '../../server-plugin/credit.mjs';
+import {advanceCredit,loanTerms} from '../../server-plugin/credit.mjs';
+import {applyConsentEvent} from '../../server-plugin/action-consent.mjs';
 export const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('../fixtures/legacy/seed.json',import.meta.url),'utf8'));
 export const clerk='npc_hw_shendu',host='npc_hw_linsui',worker='npc_hw_ayan',post='bld_hw_post',inn='bld_hw_qingdeng',DAY=1440;
+// 产品原则二.4：借款前由出借人同意实际报价；调用者不能以 consent:true 代答。
+// 只使用现有原生写入者，不注入债权或改动任何钱物/账本前提。
+export function grantLoanConsent(engine,document,{lender,principal,days,eventId}){
+    const d=engine.primitiveDraft(document),{interest}=loanTerms(d,engine,{lender,principal,days,collateralValue:0});
+    applyConsentEvent(d,{engine,document:d.document},{actor:lender,eventId,verb:'consent_given',to:'player',payload:{scope:'loan',subject:'player',purpose:['player'],terms:{principal,days,interest},until:document.state.minute+10}});
+    return applyPatches(document,d.patches);
+}
 export function fixture({at=post,coins=3000}={}){
     const w=structuredClone(world),e=new WorldEngine(w);let doc=e.initialFromLegacy(seed,'finance');
     doc.state.minute=600;doc.state.location=at;doc.state.player.coins=coins;

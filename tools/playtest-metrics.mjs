@@ -1,5 +1,5 @@
 import {isDeepStrictEqual}from'node:util';
-import {resolveToolCall}from'../extension/tools.mjs';
+import {resolvePlaytestCall}from'./playtest-call.mjs';
 import {consistencyThreshold}from'../server-plugin/consistency-outcome.mjs';
 
 const at=(object,path)=>String(path).split('.').reduce((value,key)=>value?.[key],object);
@@ -53,7 +53,7 @@ export function toolSelectionMetrics(results,scenarios){
             const expected=[...new Set([...(step.expectedTools??[]),...expectations.map(rule=>rule.tool)])];
             if(!expected.length){if(complete)excluded.push({...context,reason:'no-required-call',conditions});continue;}
             const selected=(turn.calls??[]).map(call=>{
-                try{return{...call,...resolveToolCall(call.tool,call.args),rawTool:call.tool,rawArgs:call.args};}
+                try{return{...call,...resolvePlaytestCall(call.tool,call.args),rawTool:call.tool,rawArgs:call.args};}
                 catch{return{...call,rawTool:call.tool,invalidArguments:true};}
             });
             const categoryMatches=selected.filter(call=>expected.includes(call.tool)||expected.includes(call.rawTool));

@@ -1,0 +1,102 @@
+{
+  "id": "recipe_w3_fish_broth",
+  "fingerprint": "ea48136b4e9a1972900d80ab14cc91853dc6d602c231325d93e09e39bb267a77",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "recipe_w3_fish_broth",
+    "row": {
+      "id": "recipe_w3_fish_broth",
+      "name": "制作清煮鱼汤",
+      "aliases": [],
+      "scope": null,
+      "skill": "skill_life_3_core",
+      "minimumProficiency": 0,
+      "minutes": 60,
+      "difficulty": 10,
+      "materials": [
+        {
+          "item": "item_fish",
+          "amount": 1
+        },
+        {
+          "item": "item_water",
+          "amount": 2
+        },
+        {
+          "item": "item_salt",
+          "amount": 1
+        },
+        {
+          "item": "item_wood_shavings",
+          "amount": 1
+        }
+      ],
+      "tools": [
+        "item_cooking_pot",
+        "item_kitchen_knife",
+        "item_wood_spoon"
+      ],
+      "workstation": "cooking",
+      "output": {
+        "item": "item_fish_broth",
+        "quantity": 1
+      },
+      "byproducts": [],
+      "learningRequired": true,
+      "learnFee": 4,
+      "learnMinutes": 60,
+      "teachers": [
+        "npc_hw_linsui"
+      ],
+      "toolWear": 1,
+      "failure": {
+        "recoverFraction": 0,
+        "injury": 0
+      },
+      "prerequisites": [],
+      "process": "取剖净鲜鱼一条，用案上切刀沿脊骨剖开，剔去鳃与腹内残血，再横切成两指宽的块，鱼刺仍留在肉里，不必强求剔尽。厚底煮锅置灶上，倒入清水两份，投干木刨屑引火，烧至锅底冒细密气泡而未大滚时下鱼块。汤面浮起灰白沫子，用偏柄木匙沿锅边撇净，火候保持微沸，煮到鱼肉由透明转白、用刀尖轻拨即散。此时撒入粗盐，以刀背压碎结块再下，搅匀后尝一口，咸淡以能辨出鱼鲜为度。全程60分钟，起锅后趁热分盛，汤清不浑；分食时仍须挑骨，清汤不含未列的药草。锅与刀用后洗净擦干，免得内锈。"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "cbd2786ba58f6f142f97ac8f1143344edf2309ddcfb053b2d676c36532c6d281",
+    "draftHash": "7810c8f6627681f1be445e74c2d941e7be2fd90f2a666b651f0d407d912838ab"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "e5a452f9-9c28-4109-bb9f-7b44a56ccb9f",
+      "file": "budget-responses/e5a452f9-9c28-4109-bb9f-7b44a56ccb9f.json",
+      "requestHash": "dec4beadc78e2d3fb461d26345d87e73d268aebe16ffbd850788943d07f97ba3",
+      "responseHash": "1430c5c4fc54c309aac78ac45f4269421e0ffe1e191598768e330fb19c0e495d"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-recipe_w3_fish_broth-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2231,
+        "completion_tokens": 7,
+        "total_tokens": 2238,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 2103
+      },
+      "costUpperYuan": 0.00426712,
+      "cumulativeUpperYuan": 0.13681880000000002,
+      "latencyMs": 926.2345000000005,
+      "timestamp": "2026-10-22T22:40:59.145Z"
+    }
+  ]
+}

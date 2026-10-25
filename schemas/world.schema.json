@@ -492,6 +492,120 @@
           },
           "descriptionVisibility": {
             "const": "gm_private"
+          },
+          "leaderTitle": {
+            "type": "string",
+            "minLength": 1
+          },
+          "offices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^office_[a-zA-Z0-9_-]+$"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "holder": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "seat": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "authority": {
+                  "type": "object",
+                  "properties": {
+                    "profession": {
+                      "type": "string"
+                    },
+                    "operations": {
+                      "type": "array",
+                      "items": {
+                        "enum": [
+                          "certify",
+                          "receive_application",
+                          "refer_examiner",
+                          "administer_public_assets",
+                          "receive_report",
+                          "receive_appeal",
+                          "receive_claim",
+                          "collect_fine",
+                          "keep_custody",
+                          "execute_arrest",
+                          "handle_case",
+                          "public_project",
+                          "quest_publish",
+                          "housing",
+                          "tax",
+                          "steward"
+                        ]
+                      },
+                      "uniqueItems": true
+                    },
+                    "scope": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "limits": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 },
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "operations"
+                  ],
+                  "additionalProperties": false
+                },
+                "receptionHours": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": { "type": "integer", "minimum": 0, "maximum": 1440 },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                },
+                "appointment": {
+                  "type": "object",
+                  "properties": {
+                    "issuer": { "type": "string", "minLength": 1 },
+                    "receiveAt": { "type": "string", "minLength": 1 },
+                    "decisionAfterMinutes": { "type": "integer", "minimum": 1 },
+                    "minimumStanding": { "type": "integer", "minimum": -100, "maximum": 100 },
+                    "requires": {
+                      "type": "object",
+                      "properties": { "profession": { "type": "string", "minLength": 1 } },
+                      "additionalProperties": false
+                    },
+                    "removal": { "enum": ["holder_request_or_judgment"] }
+                  },
+                  "required": ["issuer", "receiveAt", "decisionAfterMinutes", "minimumStanding", "requires", "removal"],
+                  "additionalProperties": false
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "holder",
+                "seat",
+                "authority",
+                "source"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -8947,15 +9061,15 @@
                   "minItems": 1
                 },
                 "head": {
-                  "type": "null"
+                  "type": ["string", "null"],
+                  "minLength": 1
                 },
                 "enforcers": {
                   "type": "array",
                   "items": {
                     "type": "string",
                     "minLength": 1
-                  },
-                  "maxItems": 0
+                  }
                 },
                 "authority": {
                   "type": "string",

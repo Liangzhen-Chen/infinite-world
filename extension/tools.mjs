@@ -16,7 +16,7 @@ define('world_revival','神殿/祭坛付费定复活点',{location:str},[]);
 define('world_check','属性技能对抗/工具协助',{attribute:str,skill:str,difficulty:int,context:int,contextReason:str,advantage:bool,disadvantage:bool,tools:{type:'array',items:str},helpers:{type:'array',items:str},opponent:object({npc:str,attribute:str,skill:str},['npc'])},[]);
 define('world_cast','已学法术；force强施入法；刻记填字',{spell:str,target:str,source:str,destination:str,path:{type:'array',items:str,minItems:2,maxItems:8},authorization:str,permit:str,force:bool,text:{...str,maxLength:80},authorizations:{type:'array',items:str,maxItems:8}},['spell','target']);
 define('world_environment','刻记/接近/搬泥/炉温添自有燃料/翻谷；连通空气传声、实高差下降、现有空气呼吸。',{operation:{enum:['inspect','inspect_heat','inspect_marks','load_fuel','approach','carry_silt','turn_grain','sound','fall','breathe']},target:str,subject:str,destination:str,path:{type:'array',items:str,minItems:2,maxItems:8},text:{...str,maxLength:80},grams:int,item:str,quantity:{...int,description:'添料1-100份真实物品；其他量按操作规则'},authorization:str,authorizations:{type:'array',items:str,maxItems:8}},[]);
-define('world_learn','师授/读书/研究；student受教，book_give/study',{operation:str,entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']},student:str},[]);
+define('world_learn','师授不填operation；读书/研究',{operation:str,entity:str,source:str,kind:{type:'string',enum:['spell','skill','recipe']},student:str},[]);
 define('world_practice','练技能/有据突破',{skill:str,target:str,gain:int,breakthroughSource:str},['skill']);
 define('world_profession','认证/入门守戒/仪式资格/退职/升职',{profession:str,student:str,teacher:str,institution:str,rule:str,deity:str,minutes:int,operation:{type:'string',enum:['certify','abandon','promote','initiate','ritual_officiate','examine']},choice:str},['profession']);
 define('world_attributes','依玩家选自由点',{attributes:object({'力量':int,'敏捷':int,'体质':int,'智力':int,'精神':int,'魅力':int})},['attributes']);
@@ -108,6 +108,10 @@ export function toolDefinitions(){return structuredClone(publicDefinitions);}
 // Pure routing is shared by the engine and report assertions. Stored old calls
 // remain valid; grouped calls execute exactly the same domain operations.
 export function resolveToolCall(tool,args={}){
+    // Catalog-only alias: retain the static tool schema and its prompt budget.
+    if(tool==='world_field'&&args.operation==='environment_douse_fire')return {tool:'world_environment',args:{...args,operation:'douse_fire'}};
+    if(tool==='world_field'&&['farm_private_sow','farm_private_harvest'].includes(args.operation))return {tool:'world_farm',args:{...args,operation:args.operation.slice(5)}};
+    if(tool==='world_field'&&args.operation==='environment_take_contents')return {tool:'world_environment',args:{...args,operation:'take_contents'}};
     if(tool==='world_law'&&args.operation==='steal')return{tool:'world_crime',args};
     const mapping=routes.get(tool);if(!mapping)return{tool,args};
     const route=mapping.get(args.operation);
@@ -129,3 +133,125 @@ export const catalogTools=new Set(['world_actions','world_act']);
 // Per-tool schemas before grouping (world_farm, world_pet …): the action registry
 // reads a grouped operation's own parameters from here instead of the group union.
 export function memberDefinitions(){return structuredClone(definitions);}
+
+// The proposal duty is discovered through world_actions and submitted through
+// the existing execution transport. It adds no static function definition.
+export function builderToolCall(action,slots={}){
+ return action==='open:proposal'?{tool:'world_propose',args:structuredClone(slots)}:{tool:'world_act',args:{action,slots:structuredClone(slots)}};
+}
+
+// Same conservative estimate as tools/build-card.mjs: ceil(UTF-8 bytes / 3).
+// One dynamic lookup gets 1200 estimated tokens so repeated tool calls do not
+// consume the turn's entire history window (A3 whimsy2 overflowed at 14266).
+// The player-facing /actions response and the static tool schema are untouched.
+export const MODEL_ACTION_CATALOG_TOKEN_LIMIT=1200;
+const catalogEncoder=new TextEncoder();
+export const estimateModelActionTokens=value=>Math.ceil(catalogEncoder.encode(typeof value==='string'?value:JSON.stringify(value)).length/3);
+const brief=(value,max=80)=>{const text=String(value??'');return text.length>max?text.slice(0,max-1)+'…':text;};
+const refusalSentence=row=>brief(typeof row==='string'?row:row?.reason??row?.missing?.join('、'));
+function modelSlot(slot){
+ return {name:slot.name,kind:slot.kind,...(slot.description?{description:brief(slot.description)}:{}),...(slot.required?{required:true}:{}),...(slot.multiple?{multiple:true}:{}),
+  ...(slot.default!==undefined&&typeof slot.default!=='object'?{default:slot.default}:{}),
+  ...(Number.isFinite(slot.min)?{min:slot.min}:{}),...(Number.isFinite(slot.max)?{max:slot.max}:{})};
+}
+function modelInput(schema){
+ const out={};
+ for(const key of ['type','required','minimum','maximum','minItems','maxItems'])if(schema[key]!==undefined)out[key]=schema[key];
+ if(schema.properties)out.properties=Object.fromEntries(Object.entries(schema.properties).map(([key,value])=>[key,modelInput(value)]));
+ if(schema.items)out.items=schema.items.oneOf?{type:schema.items.type,required:schema.items.required,fields:Object.keys(schema.items.properties??{}),additionalProperties:schema.items.additionalProperties}:modelInput(schema.items);
+ // Effect variants need the executable op and its required arguments, not
+ // copies of every entity selector and every nested field description.
+ if(schema.items?.oneOf)out.operations=Object.fromEntries(schema.items.oneOf.map(row=>[row.properties.op.const,row.required.filter(name=>name!=='op')]));
+ return out;
+}
+function primitiveGroups(rows){
+ const groups=new Map();
+ for(const row of rows){
+  const {op,verb,type,kind,field,status}=row.effect,category=type??kind??field??status;
+  const key=JSON.stringify([op,verb,category]);
+  if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);
+ }
+ return [...groups.values()].map(sources=>{
+  const usable=sources.filter(row=>!row.blocked),best=usable.length?usable:sources,effect=sources[0].effect,bounds={};
+  for(const source of best)for(const [key,value]of Object.entries(source.bounds??{}))if(Number.isFinite(value))bounds[key]=Math.max(bounds[key]??0,Math.abs(value));
+  return {op:effect.op,...(effect.verb?{verb:effect.verb}:{}),...(effect.type??effect.kind??effect.field??effect.status?{kind:effect.type??effect.kind??effect.field??effect.status}:{}),
+   bounds,available:usable.length>0,...(!usable.length?{missing:refusalSentence(sources[0].blocked)}:{})};
+ });
+}
+export function modelActionCatalog(result){
+ const actions=result.actions??[],target=result.target,open=new Set(['open:proposal','open:leave_mark']);
+ const view={...(result.configuration?{configuration:result.configuration}:{}),actions:[]};
+ // The two discovery paths are mandatory when the engine offers them. Their
+ // input names remain discoverable even when detailed choices do not fit.
+ for(const action of actions.filter(row=>open.has(row.id))){
+  view.actions.push({id:action.id,label:brief(action.label,24),
+   ...(action.id==='open:proposal'?{hint:'可只填 intent，由引擎判定'}:{}),
+   ...(action.inputTool==='world_propose'?{submission:{action:action.id,slots:action.slots.map(slot=>slot.name).join(', ')}}:{}),
+   ...(action.available!==undefined?{available:action.available}:{}),
+   ...(action.blocked?{blocked:refusalSentence(action.blocked),missing:brief(action.missing?.join('、')||refusalSentence(action.blocked))}:{}),
+   slots:(action.slots??[]).filter(slot=>slot.required||action.id==='open:proposal'&&slot.name==='effects').map(slot=>({...modelSlot(slot),
+    ...(slot.name==='effects'&&slot.inputSchema?{inputSchema:modelInput(slot.inputSchema)}:{}),
+    ...(slot.name==='form'&&slot.options?.length?{options:[slot.options[0].value]}:{})}))});
+ }
+ if(target)view.target={id:target.id,kind:target.kind,name:brief(target.name,32),state:{},blocked:[],primitives:[],relatedActions:[]};
+ const primitives=primitiveGroups(target?.primitives??[]);
+ const refusals=[...target?.blocked??[],...(target?.primitives??[]).map(row=>row.blocked),...(target?.relatedActions??[]).map(row=>row.blocked)].filter(Boolean);
+ const reasons=[...new Set(refusals.map(refusalSentence).filter(Boolean))];
+ const fallback=refusals.find(row=>row.fallback)?.fallback;
+ if(fallback)view.fallback={action:fallback.action,available:fallback.available,reason:refusalSentence(fallback)||brief(fallback.missing?.join('、'))};
+ // Omitted counts collection entries (including collapsed source variants and
+ // choices), not invented capabilities. Fit each candidate with the notice in
+ // place, so the notice itself can never push the result over its budget.
+ let omitted=Math.max(0,(target?.primitives?.length??0)-primitives.length);
+ const candidates=[];
+ const offer=(append,undo,when=()=>true)=>candidates.push({append,undo,when});
+ const property=(object,key,value)=>offer(()=>{object[key]=value;},()=>{delete object[key];});
+ const entry=(array,row)=>offer(()=>array.push(row),()=>array.pop());
+ for(const reason of reasons)entry(view.target.blocked,{reason});
+ for(const [key,value]of Object.entries(target?.state??{}))property(view.target.state,key,typeof value==='string'?brief(value):value);
+ for(const row of primitives)entry(view.target.primitives,row);
+ // Zone correction must survive even a broad NPC menu with many actions.
+ const mark=actions.find(row=>row.id==='open:leave_mark'),zone=mark?.slots.find(slot=>slot.name==='zone');
+ if(zone){const row={...modelSlot(zone),options:(zone.options??[]).slice(0,2).map(choice=>({value:choice.value,label:brief(choice.label,24)}))};const selected=()=>view.actions.find(action=>action.id===mark.id);offer(()=>selected().slots.push(row),()=>selected().slots.pop(),selected);}
+ // Preserve executable slot meanings for the first relevant registered actions
+ // before broad menu rows consume the budget. Choices keep both id and name.
+ for(const action of (target?.relatedActions??[]).filter(row=>!open.has(row.id)).slice(0,3)){
+  const row={id:action.id,label:brief(action.label,24),required:(action.slots??[]).filter(slot=>slot.required).map(slot=>slot.name),slots:(action.slots??[]).map(modelSlot)};
+  entry(view.target.relatedActions,row);
+  for(const slot of action.slots??[])for(const choice of (slot.options??[]).slice(0,2)){
+   const selected=()=>view.target.relatedActions.includes(row)&&row.slots.find(value=>value.name===slot.name);
+   offer(()=>{(selected().options??=[]).push({value:choice.value,label:brief(choice.label,24),...(choice.permission?.allowed===false?{blocked:refusalSentence(choice.permission)}:{})});},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
+  }
+ }
+ for(const action of actions.filter(row=>!open.has(row.id))){
+  const row={id:action.id,label:brief(action.label,24),...(action.blocked||action.permission?.allowed===false?{blocked:refusalSentence(action.blocked??action.permission)}:{}),slots:(action.slots??[]).filter(slot=>slot.required).map(modelSlot)};
+  entry(view.actions,row);
+ }
+ for(const row of (target?.relatedActions??[]).filter(row=>!open.has(row.id)).slice(3))entry(view.target.relatedActions,{id:row.id,label:brief(row.label,24),required:(row.slots??[]).filter(slot=>slot.required).map(slot=>slot.name)});
+ // Details enrich only already retained actions; they never displace state,
+ // refusal reasons, primitive classes or the two open discovery paths.
+ for(const action of [...actions.filter(row=>!open.has(row.id)),...actions.filter(row=>open.has(row.id))]){
+  const projected=()=>view.actions.find(row=>row.id===action.id);
+  if(Object.keys(action.fill??{}).length)offer(()=>{projected().fill=action.fill;},()=>{delete projected().fill;},projected);
+  for(const slot of action.slots??[]){
+   if(!slot.required&&!(action.id==='open:leave_mark'&&slot.name==='zone')&&!(action.id==='open:proposal'&&slot.name==='effects'))offer(()=>projected().slots.push(modelSlot(slot)),()=>projected().slots.pop(),projected);
+   const selected=()=>projected()?.slots.find(row=>row.name===slot.name);
+   if(slot.inputSchema&&!(open.has(action.id)&&slot.name==='effects')){
+    const input=modelInput(slot.inputSchema);
+    offer(()=>{selected().inputSchema=input;},()=>{delete selected().inputSchema;},selected);
+   }
+   for(const choice of slot.options??[])if(!(open.has(action.id)&&slot.name==='form'&&choice===slot.options[0]))offer(()=>{(selected().options??=[]).push(choice.permission?.allowed===false?{value:choice.value,blocked:refusalSentence(choice.permission)}:slot.kind==='text'&&choice.label?{value:choice.value,label:brief(choice.label,24)}:choice.value);},()=>{selected().options.pop();if(!selected().options.length)delete selected().options;},selected);
+  }
+ }
+ view.here=[];
+ for(const text of result.scene??[])entry(view.here,brief(text,160));
+ omitted+=candidates.length;
+ const notice=()=>{view.omitted=omitted;view.notice=`已省略 ${omitted} 项，可用 query/target 细化`;};
+ notice();
+ for(const candidate of candidates){
+  if(!candidate.when())continue;
+  candidate.append();omitted--;notice();
+  if(estimateModelActionTokens(view)>MODEL_ACTION_CATALOG_TOKEN_LIMIT){candidate.undo();omitted++;notice();}
+ }
+ return view;
+}

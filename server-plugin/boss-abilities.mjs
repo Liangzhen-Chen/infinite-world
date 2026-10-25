@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {validateEffectSpec,resolveVitalityPrimitive}from'./magic-primitives.mjs';
 import {magicStatuses,magicStatusStats,applyMagicStatus}from'./magic-status.mjs';
 import {validateAreaCatalog}from'./magic-area.mjs';
@@ -40,8 +41,8 @@ export function applyBossCounterAbility(d,engine,target,{eventId,attackIndex,hit
  if(!definition?.mechanics||!hit||actor.hp<=0)return null;
  const errors=validateBossMechanics(definition);if(errors.length)throw Error(errors.join('；'));
  if(!Number.isSafeInteger(attackIndex)||attackIndex<0||attackIndex>8||typeof eventId!=='string')throw Error('首领反击事件无效');
- if(actor.location!==d.get('state','location'))throw Error('首领反击目标不在场');
- const key=`boss_counter:${eventId}:${attackIndex}`;if(d.get('state','records',key))throw Error('首领反击事件重复');
+ if(actor.location!==d.get('state','location'))throw preconditionFailure('首领反击目标不在场');
+ const key=`boss_counter:${eventId}:${attackIndex}`;if(d.get('state','records',key))throw preconditionFailure('首领反击事件重复');
  if(!Number.isSafeInteger(actor.abilityCounters??0)||(actor.abilityCounters??0)<0||!Number.isFinite(actor.maxHp)||actor.maxHp<=0)throw Error('首领能力计数或生命上限损坏');
  const hp=remainingHp??actor.hp;if(!Number.isFinite(hp)||hp<0||hp>actor.maxHp)throw Error('首领反击剩余生命无效');if(!hp)return null;
  const count=(actor.abilityCounters??0)+1;

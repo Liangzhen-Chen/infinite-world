@@ -1,3 +1,7 @@
+import {preconditionFailure} from './precondition.mjs';
+import {requestContractConsent} from './action-consent.mjs';
+import {counterpart} from './credit.mjs';
+import {vocabulary} from './domain-rules.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {openGoodsObligation,performGoodsObligation,extendGoodsObligation} from './obligation-conditional.mjs';
 import {transition} from './transition.mjs';
@@ -7,7 +11,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {ledgerActive} from './ledger.mjs';
 import {registerEarnedClaim,registerLoss,recoverLoss,lossView,settleClaim} from './obligation-claims.mjs';
 import {dueObligation} from './obligation-runtime.mjs';
-import {obligationRows} from './obligation-state.mjs';
+import {obligationRow,obligationRows,institutionOriginal,institutionPhysicalReference} from './obligation-state.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {store,freight,bookStock} from './stock.mjs';
 // S1b: 托运期间货物记在 transport:<id>|<物品>|freight，交付时转给收货人（组织公库或行囊）。
@@ -27,7 +31,7 @@ declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),path=id=>['state','records',id];
 const SPECS=Object.freeze({cart:{mode:'cart',kg:600,m3:3,seats:4,wood:20,metal:2,rate:0.012},boat:{mode:'boat',kg:2400,m3:12,seats:12,wood:60,metal:4,rate:0.008},pack:{mode:'walk',kg:80,m3:0.5,seats:0,wood:0,metal:0,rate:0.02}});
-const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw Error(`${label}无效`);return n;};
+const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw preconditionFailure(`${label}无效`);return n;};
 const all=s=>Object.values(s.records??{});
 const unfinished=s=>(s.records?.['transport:active']?.ids??[]).map(id=>s.records[id]).filter(Boolean);
 const live=s=>unfinished(s).filter(r=>['booked','moving','delayed'].includes(r.status));
@@ -52,17 +56,17 @@ export function transportAssetView(e,s,id){
   tags:['item','transport',a.kind,a.kind==='pack'?'flesh':'wood',...(factor===0?['broken']:[])]};
 }
 export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},eventId){
- const spec=SPECS[kind];if(!spec)throw Error('承运资产类型无效');
+ const spec=SPECS[kind];if(!spec)throw preconditionFailure('承运资产类型无效');
  const s=d.get('state'),key=assetKey(id??eventId),location=actorLocation(s,owner)??actorLocation(s,operator(e,s,owner));
- if(!location||d.get(...path(key)))throw Error('资产地点或编号无效');
+ if(!location||d.get(...path(key)))throw preconditionFailure('资产地点或编号无效');
  if(kind==='pack'){
   const c=s.creatures?.[animal];
-  if(!c||c.owner!==owner||c.location!==location||c.hp<=0||s.player.mount===animal||all(s).some(a=>a.category==='transport_asset'&&a.animal===animal))throw Error('需要本人同地、未骑乘且未登记的驮畜');
+  if(!c||c.owner!==owner||c.location!==location||c.hp<=0||s.player.mount===animal||all(s).some(a=>a.category==='transport_asset'&&a.animal===animal))throw preconditionFailure('需要本人同地、未骑乘且未登记的驮畜');
   const species=e.byId.get(c.species),care=species?.tamingRule;
-  if(!care?.carryKg||c.mind?.awakened)throw Error('该动物没有驮运能力');
+  if(!care?.carryKg||c.mind?.awakened)throw preconditionFailure('该动物没有驮运能力');
  }else{
   const stock=groupAccountView(e,s,owner)?.items;
-  if((stock?.item_wood??e.quantity(d,owner,'item_wood'))<spec.wood||(stock?.item_iron??e.quantity(d,owner,'item_iron'))<spec.metal)throw Error('制造车船的木料或铁料不足');
+  if((stock?.item_wood??e.quantity(d,owner,'item_wood'))<spec.wood||(stock?.item_iron??e.quantity(d,owner,'item_iron'))<spec.metal)throw preconditionFailure('制造车船的木料或铁料不足');
   const build={flow:'sink:consume',purpose:'build',writer:'transport',eventId};
   moveGoods(d,e,owner,'item_wood',spec.wood,{take:true,books:build});moveGoods(d,e,owner,'item_iron',spec.metal,{take:true,books:build});
  }
@@ -79,12 +83,12 @@ export function transportServices(e,s,location){
 }
 function dimensions(e,cargo,passengers){
  let kg=passengers.length*75,m3=passengers.length*0.1;
- for(const c of cargo){int(c.quantity,1,'托运数量');const def=e.byId.get(c.item);if(!def||!(def.weight>=0))throw Error('托运物品未登记重量');kg+=c.quantity*def.weight;m3+=c.quantity*(def.volumeM3??def.weight/250);}
+ for(const c of cargo){int(c.quantity,1,'托运数量');const def=e.byId.get(c.item);if(!def||!(def.weight>=0))throw preconditionFailure('托运物品未登记重量');kg+=c.quantity*def.weight;m3+=c.quantity*(def.volumeM3??def.weight/250);}
  return {kg,m3};
 }
 export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],departAt=d.get('state','minute')}){
- const s=d.get('state'),a=transportAssetView(e,s,asset);if(!a||!a.factor||a.busy||a.location!==from)throw Error('没有同地可用运力');
- const load=dimensions(e,cargo,passengers);if(load.kg>a.capacityKg||load.m3>a.capacityM3||passengers.length>a.seats)throw Error('货舱重量、体积或座位容量不足');
+ const s=d.get('state'),a=transportAssetView(e,s,asset);if(!a||!a.factor||a.busy||a.location!==from)throw preconditionFailure('没有同地可用运力');
+ const load=dimensions(e,cargo,passengers);if(load.kg>a.capacityKg||load.m3>a.capacityM3||passengers.length>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
  const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.document.randomSeed);}finally{e.airDraft=prior;}
  const edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id)),distanceKm=edges.reduce((n,r)=>n+r.lengthKm,0);
  const risk=edges.reduce((n,r)=>n+(Number(r.risk)||0),0)/Math.max(1,edges.length);
@@ -95,7 +99,7 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],departA
 }
 export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},eventId){
  const a=transportAssetView(e,d.get('state'),asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
- if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw Error('资产不能出租');
+ if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw preconditionFailure('资产不能出租');
  financeBalance(d,e,a.owner);financeTransfer(d,e,tenant,a.owner,coins,eventId);assessTradeTax(d,e,{seller:a.owner,cost:coins,location:a.location,sourceEvent:eventId});
  const row={category:'transport_lease',asset:a.id,tenant,owner:a.owner,starts:now,ends:now+minutes,coins};holdingSet(d,null,path(`transport_lease:${eventId}`),row,'transport');return row;
 }
@@ -104,7 +108,7 @@ export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},ev
 function moveGoods(d,e,owner,item,quantity,{take=false,instances=[],trip,books=null}={}){
  const group=groupView(e,d.get('state'),owner);books??={account:freight(e,trip,item),writer:'transport',eventId:trip};
  // Group storage and treasury use the same authoritative account as F1.
- if(group){const account=ensureGroupAccount(d,e,owner),amount=(account.items[item]??0)+(take?-quantity:quantity);if(amount<0)throw Error('组织公库实物不足');
+ if(group){const account=ensureGroupAccount(d,e,owner),amount=(account.items[item]??0)+(take?-quantity:quantity);if(amount<0)throw preconditionFailure('组织公库实物不足');
   bookStock(d,e,store(e,owner,item),take?-quantity:quantity,books);
   d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:amount}});return {instances:[]};}
  const moved=changeItems(d,e,owner,item,take?-quantity:quantity,{preserve:take,selection:take?null:undefined,books});
@@ -124,18 +128,18 @@ function bookTransportInner(d,e,args,eventId){
  const external=args.externalOrder&&s.records?.[args.externalOrder];
  const externalValid=external?.category==='settlement_trade'&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
  const a=transportAssetView(e,s,asset),service=transportServices(e,s,from).find(x=>x.asset===a?.id);
- if(!service)throw Error('承运人当前不能提供班次');
+ if(!service)throw preconditionFailure('承运人当前不能提供班次');
  const departAt=args.departAt??service.nextDeparture;int(departAt,now,'发车时间');
- if(departAt%service.intervalMinutes!==0)throw Error('不在承运班次时间');
- if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw Error('发货人须在装货地点');
+ if(departAt%service.intervalMinutes!==0)throw preconditionFailure('不在承运班次时间');
+ if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw preconditionFailure('发货人须在装货地点');
  const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,departAt}),id=`transport:${eventId}`;
- if(!q.route.edges.length)throw Error('发货与目的地须为不同地点');
- if(d.get(...path(id)))throw Error('运单编号已存在');
- const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.ends>now);if(lease&&lease.ends<q.estimatedArrivalAt)throw Error('租约不能覆盖承运全程');
- const actors=[service.driver,...passengers,...escort?[escort]:[]];if(new Set(actors).size!==actors.length)throw Error('乘客或护送人员重复');
+ if(!q.route.edges.length)throw preconditionFailure('发货与目的地须为不同地点');
+ if(d.get(...path(id)))throw preconditionFailure('运单编号已存在');
+ const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.ends>now);if(lease&&lease.ends<q.estimatedArrivalAt)throw preconditionFailure('租约不能覆盖承运全程');
+ const actors=[service.driver,...passengers,...escort?[escort]:[]];if(new Set(actors).size!==actors.length)throw preconditionFailure('乘客或护送人员重复');
  for(const actor of actors){
-  if(actor==='player'){if(s.location!==from)throw Error('乘客不在发车地点');}
-  else if(!available(e,s,actor)||actorLocation(s,actor)!==from||s.player.companions?.includes(actor))throw Error('承运人员或乘客不可行动或不在场');
+  if(actor==='player'){if(s.location!==from)throw preconditionFailure('乘客不在发车地点');}
+  else if(!available(e,s,actor)||actorLocation(s,actor)!==from||s.player.companions?.includes(actor))throw preconditionFailure('承运人员或乘客不可行动或不在场');
  }
  for(const actor of actors)assertWaterEarthMovement(d,actor);
  e.assertNpcAutonomyAction(s,actors,{start:now,minutes:q.estimatedArrivalAt-now});
@@ -143,11 +147,11 @@ function bookTransportInner(d,e,args,eventId){
  if(!forwarding&&!externalValid)assertNpcObligationAction(d,e,[owner],{start:now,minutes:0,location:from,kind:'trade'});
  let checkpoint=from;for(const edgeId of q.route.edges){const edge=e.world.routes.find(r=>r.id===edgeId);checkpoint=edge.from===checkpoint?edge.to:edge.from;if(passengers.includes('player'))assertLocationAccess(d,e,checkpoint,{authorization:args.authorization,arrivalMinute:q.estimatedArrivalAt,companions:passengers.filter(p=>p!=='player')});}
  const totals=new Map();for(const c of cargo)totals.set(c.item,(totals.get(c.item)??0)+c.quantity);
- if(!externalValid)for(const [item,n]of totals)if((groupAccountView(e,s,owner)?.items?.[item]??e.quantity(d,owner,item))<n)throw Error('发货人实际货物不足');
+ if(!externalValid)for(const [item,n]of totals)if((groupAccountView(e,s,owner)?.items?.[item]??e.quantity(d,owner,item))<n)throw preconditionFailure('发货人实际货物不足');
  financeBalance(d,e,service.carrier);financeBalance(d,e,recipient);
  const escortFee=escort?Math.max(e.rules.quests.rewardCopperRanges.D[0],Math.min(e.rules.quests.rewardCopperRanges.D[1],Math.ceil(q.distanceKm*(1+q.risk)))):0;
- if(financeBalance(d,e,owner)<q.total+escortFee)throw Error('托运运费或护送资金不足');
- for(const p of q.passages)if(p.toll&&(!p.treasury||!groupAccountView(e,s,p.treasury)&&!e.world.settlementProfiles?.some(r=>r.id===p.treasury)))throw Error('收费路段没有已登记的收款公账');
+ if(financeBalance(d,e,owner)<q.total+escortFee)throw preconditionFailure('托运运费或护送资金不足');
+ for(const p of q.passages)if(p.toll&&(!p.treasury||!groupAccountView(e,s,p.treasury)&&!e.world.settlementProfiles?.some(r=>r.id===p.treasury)))throw preconditionFailure('收费路段没有已登记的收款公账');
  const row={category:'transport',id,asset:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
   freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
   transport:{edges:q.route.edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null},history:[{minute:now,location:from,kind:'booked'}]};
@@ -163,18 +167,18 @@ function bookTransportInner(d,e,args,eventId){
  if(escortFee){
   // The existing board's verifiable record objective provides the escort contract.
   const quest=postGeneratedQuest(d,e,{key:`transport:${eventId}`,generator:'npc_needs',label:'承运护送',grade:'D',reward:escortFee,days:Math.max(1,Math.ceil((q.estimatedArrivalAt-now)/DAY)+1),content:`护送运单${id}抵达${to}`,objective:{type:'record',record:id,field:'status',equals:['delivered']},board:from,publisher:owner,funding:{npc:owner},minute:now,cause:id});
-  if(!quest)throw Error('护送委托无法登记');row.escortQuest=quest.id;row.escortEscrow=0;
+  if(!quest)throw preconditionFailure('护送委托无法登记');row.escortQuest=quest.id;row.escortEscrow=0;
   // The quoted mobilization fee is prepaid. Time wages are earned throughout
   // actual custody, including weather waits, rather than the route estimate.
-  if(ledgerActive(d)&&(!e.replaying||e.replayResult?.transportObligationVersion===1)){
+  if(ledgerActive(d)){
    const daily=args.escortDailyWage??escortFee;int(daily,0,'护送日薪');
-   row.transportObligationVersion=1;row.escortTerms={base:escortFee,daily,starts:now};
+   row.escortTerms={base:escortFee,daily,starts:now};
    row.escortWage=`${id}:escort-wage`;
    registerEarnedClaim(d,e,{id:row.escortWage,kind:'wage',debtor:owner,creditor:escort,amount:escortFee,createdAt:now,deadline:Number.MAX_SAFE_INTEGER,source:id,
     terms:{accrual:{per:'day',value:daily},onDebtorGone:'accelerate',onCreditorGone:'estate'}});
    holdingSet(d,e,path(quest.id),{category:'contract',id:quest.id,kind:'wage',parties:[owner,escort],debt:`${id}:escort-wage`,escrow:quest.escrow,status:'履行中',createdAt:now},'transport');
   }
-  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(row.transportObligationVersion===1?{escrow:0}:{} )});
+  d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(Boolean(row.escortWage)?{escrow:0}:{} )});
  }
  for(const actor of actors)if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:id,from,to,depart:departAt,arrive:q.estimatedArrivalAt});
  if(departAt===now){const t=row.transport;t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,now);t.segmentStartedAt=now;t.nextAt=now+t.segment.minutes;row.status=t.segment.kind==='wait'?'delayed':'moving';
@@ -208,8 +212,8 @@ export function advanceTransport(d,e,minute){
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
    if(!handover)row.status='arrived';
-   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(row.transportObligationVersion===1?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
-    if(row.transportObligationVersion===1)settleEscort(d,e,row,q,minute);
+   if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(Boolean(row.escortWage)?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
+    if(Boolean(row.escortWage))settleEscort(d,e,row,q,minute);
     else{financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});}
     holdingSet(d,null,path(`${q.id}:已完成`),{category:'quest_receipt',quest:q.id,parties:[q.publisher,q.taker],minute,location:t.location,status:'已完成',escrow:0,rewardPaid:row.escortPaid??q.escrow,refund:0,source:'npc_needs'},'transport');
    }}
@@ -249,17 +253,17 @@ function settleEscort(d,e,row,q,minute){
  });
 }
 export function transportIncident(d,e,{shipment,actor='player',recover=false,consent=false},eventId){
- const old=d.get(...path(shipment));if(old?.category!=='transport'||!['moving','delayed','intercepted'].includes(old.status))throw Error('运单不在可追查的途中');
+ const old=d.get(...path(shipment));if(old?.category!=='transport'||!['moving','delayed','intercepted'].includes(old.status))throw preconditionFailure('运单不在可追查的途中');
  const row=clone(old),s=d.get('state'),position=transportPosition(e,s,row);
- if(!row.passengers.includes(actor)&&actor!==row.driver&&(position.location===null||actorLocation(s,actor)!==position.location))throw Error('须到运单实际所在路段端点');
- if(recover){if(row.status!=='intercepted'||![row.owner,row.carrier].includes(actor)||row.custodian!==actor&&!(consent&&actorLocation(s,row.custodian)===actorLocation(s,actor)))throw Error('须先从实际扣货者取回货物');row.status='delayed';row.transport.nextAt=s.minute+1;row.custodian=null;row.transport.segment=null;}
- else{if(row.escort&&!['死亡','昏迷','濒死'].includes(s.npcs?.[row.escort]?.status)&&!personConstraint(e,s,row.escort))throw Error('护送者仍在守卫，须先处理护送者');row.status='intercepted';row.custodian=actor;row.transport.nextAt=null;}
+ if(!row.passengers.includes(actor)&&actor!==row.driver&&(position.location===null||actorLocation(s,actor)!==position.location))throw preconditionFailure('须到运单实际所在路段端点');
+ if(recover){if(row.status!=='intercepted'||![row.owner,row.carrier].includes(actor)||row.custodian!==actor&&!(consent&&actorLocation(s,row.custodian)===actorLocation(s,actor)))throw preconditionFailure('须先从实际扣货者取回货物');row.status='delayed';row.transport.nextAt=s.minute+1;row.custodian=null;row.transport.segment=null;}
+ else{if(row.escort&&!['死亡','昏迷','濒死'].includes(s.npcs?.[row.escort]?.status)&&!personConstraint(e,s,row.escort))throw preconditionFailure('护送者仍在守卫，须先处理护送者');row.status='intercepted';row.custodian=actor;row.transport.nextAt=null;}
  row.history.push({minute:s.minute,location:row.transport.location,kind:recover?'recovered':'intercepted',actor});holdingSet(d,null,path(row.id),row,'transport');
  publishTransitionEvent(d,e,{id:`${eventId}:transport`,verb:recover?'trade':'theft',actor,target:row.owner,location:row.transport.location,minute:s.minute,tags:['transport'],witnesses:[]});return row;
 }
 export function transportTrace(e,s,id,viewer='player'){
- const r=s.records?.[id];if(r?.category!=='transport')throw Error('运单不存在');
- if(![r.owner,r.recipient,r.carrier,r.driver,r.custodian,...r.passengers].includes(viewer))throw Error('没有查询该运单的身份');
+ const r=s.records?.[id];if(r?.category!=='transport')throw preconditionFailure('运单不存在');
+ if(![r.owner,r.recipient,r.carrier,r.driver,r.custodian,...r.passengers].includes(viewer))throw preconditionFailure('没有查询该运单的身份');
  return {id:r.id,status:r.status,position:transportPosition(e,s,r),estimatedArrivalAt:r.estimatedArrivalAt,arrivedAt:r.arrivedAt??null,reason:r.reason,history:clone(r.history)};
 }
 export function transportPosition(e,s,row){
@@ -269,21 +273,21 @@ export function transportPosition(e,s,row){
  return {location:moving&&elapsed>0?null:t.location,route:edge?.id??null,from:t.location,to:segment?.destination??null,remainingKm:remaining};
 }
 export function collectTransport(d,e,id,actor='player'){
- const old=d.get(...path(id));if(old?.category!=='transport'||old.status!=='arrived'||old.recipient!==actor||actorLocation(d.get('state'),actor)!==old.to)throw Error('收货人须亲到到货地点提取实际货物');
+ const old=d.get(...path(id));if(old?.category!=='transport'||old.status!=='arrived'||old.recipient!==actor||actorLocation(d.get('state'),actor)!==old.to)throw preconditionFailure('收货人须亲到到货地点提取实际货物');
  const row=clone(old);for(const c of row.cargo)moveGoods(d,e,actor,c.item,c.quantity,{instances:c.instances,trip:id});row.deliveredCargo=clone(row.cargo);row.cargo=[];row.status='delivered';row.collectedAt=d.get('state','minute');holdingSet(d,null,path(id),row,'transport');return row;
 }
 // A loss consumes the actual freight first. Its compensation and any legal
 // recovery share C's loss id, so restitution cannot pay the same loss twice.
-export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',cause='cargo_damage'},eventId){
+export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',cause=vocabulary(e,'law','cargoClaimKind')},eventId){
  return obligationTransaction(d,()=>{
   const key=`transport_loss:${shipment}:${eventId}`,prior=lossView(d.get('state'),key);
-  if(prior){const facts=d.get(...path(`${key}:facts`));if(facts?.item!==item||facts?.quantity!==quantity||facts?.actor!==actor||facts?.cause!==cause)throw Error('货损事件编号冲突');return prior;}
+  if(prior){const facts=d.get(...path(`${key}:facts`));if(facts?.item!==item||facts?.quantity!==quantity||facts?.actor!==actor||facts?.cause!==cause)throw preconditionFailure('货损事件编号冲突');return prior;}
   const old=d.get(...path(shipment)),s=d.get('state');
-  if(old?.category!=='transport'||!['booked','moving','delayed','intercepted','arrived'].includes(old.status))throw Error('没有仍在承运或托存的货物');
+  if(old?.category!=='transport'||!['booked','moving','delayed','intercepted','arrived'].includes(old.status))throw preconditionFailure('没有仍在承运或托存的货物');
   const position=transportPosition(e,s,old),onboard=[old.driver,...old.passengers,...old.escort?[old.escort]:[]].includes(actor);
-  if(![old.carrier,old.driver].includes(actor)||!onboard&&(position.location===null||actorLocation(s,actor)!==position.location))throw Error('货损须由现场承运人确认；货主单方索赔须经法律裁定');
+  if(![old.carrier,old.driver].includes(actor)||!onboard&&(position.location===null||actorLocation(s,actor)!==position.location))throw preconditionFailure('货损须由现场承运人确认；货主单方索赔须经法律裁定');
   int(quantity,1,'损失数量');const row=clone(old),cargo=row.cargo.find(c=>c.item===item);
-  if(!cargo||cargo.quantity<quantity)throw Error('货损超过实际承运数量');
+  if(!cargo||cargo.quantity<quantity)throw preconditionFailure('货损超过实际承运数量');
   const value=quantity*(e.byId.get(item)?.basePrice??0);int(value,0,'货损价值');
   bookStock(d,e,freight(e,shipment,item),-quantity,{flow:'sink:destroy',purpose:'cargo_loss',writer:'transport',eventId});
   const units=(cargo.instances??[]).splice(0,quantity);
@@ -298,7 +302,7 @@ export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',
 }
 export function compensateTransportLoss(d,e,{loss,amount,payer,actor=payer},eventId){
  return obligationTransaction(d,()=>{
-  const row=lossView(d.get('state'),loss);if(!row)throw Error('没有已登记的承运货损');
+  const row=lossView(d.get('state'),loss);if(!row)throw preconditionFailure('没有已登记的承运货损');
   let result;
   const recovery=recoverLoss(d,e,{id:loss,amount,payer},eventId,n=>{result=settleClaim(d,e,{id:`${loss}:claim`,payer,actor,amount:n},eventId);});
   return result??settleClaim(d,e,{id:`${loss}:claim`,payer,actor,amount:recovery.amount},eventId);
@@ -327,11 +331,29 @@ export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}}
    }
   }});
 }
+export function historicalTransportDocument(d,e,{id,actor='player'}){
+ const s=d.get('state'),paper=institutionOriginal(e,d.document,id),doc=paper?.document,event=s.records?.[doc?.sourceEvent],cargo=institutionOriginal(e,d.document,doc?.describes),p=event?.payload;
+ const identifies=institutionPhysicalReference(d.document,p?.subject)===doc?.describes;
+ const location=actor==='player'?s.location:s.npcs?.[actor]?.location;
+ if(doc?.kind!=='transport_claim'||doc.owner!==actor||paper.owner!==actor||paper.location!==location||paper.durability<=0||paper.destroyedAt!==undefined||event?.verb!=='observed'||p.observer!==actor||cargo?.owner!==actor||cargo.location!==location||!identifies)throw Error('Transport inspection requires the customer original and actual cargo');
+ return {document:id,source:doc.sourceEvent,carrier:event.actor,customer:actor,subject:doc.describes,delayMinutes:p.terms.delayMinutes,cause:p.terms.cause,compensated:p.terms.compensated,
+  condition:cargo.maxDurability?100*cargo.durability/cargo.maxDurability:cargo.condition??null,compensation:null};
+}
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='inspect'&&institutionOriginal(e,d.document,asset)?.document?.kind==='transport_claim'){
+  if(args.actor!==undefined&&args.actor!=='player')throw Error('Transport inspection requires its player customer');
+  return historicalTransportDocument(d,e,{id:asset});
+ }
  if(task==='forward'){
-  if(args.consent!==true)throw Error('远期买卖须有在场卖方本次同意');
-  return openGoodsObligation(d,e,{kind:'forward',debtor:e.resolve(args.seller),creditor:'player',item:e.resolve(args.item,'item'),quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location:args.location?e.resolve(args.location):d.get('state','location')},eventId);
+  return obligationTransaction(d,()=>{
+  const debtor=e.resolve(args.seller),item=e.resolve(args.item,'item'),location=args.location?e.resolve(args.location):d.get('state','location');
+  const terms={item,quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location};
+  counterpart(d,e,debtor,{consent:true,minutes:0});
+  const agreement=requestContractConsent(d,e,{from:debtor,scope:'forward',purpose:'player',subject:item,terms,cost:{coins:(e.byId.get(item).basePrice??0)*args.quantity},reward:terms.prepayment,eventId});
+  counterpart(d,e,debtor,{consent:agreement.allowed,minutes:0});
+  return openGoodsObligation(d,e,{kind:'forward',debtor,creditor:'player',...terms,terms:{consent:agreement.source}},eventId);
+  });
  }
  if(task==='fulfill')return performGoodsObligation(d,e,{id:args.business??asset,actor:'player',quantity:args.quantity},eventId);
  if(task==='extend')return extendGoodsObligation(d,e,{id:args.business??asset,actor:'player',deadline:args.deadline},eventId);
@@ -342,11 +364,11 @@ export function transportAction(d,e,args,eventId){
  if(task==='register')return createTransportAsset(d,e,{kind:args.mode??'cart',animal:args.item},eventId);
  if(task==='trace')return transportTrace(e,d.get('state'),args.business??asset);
  if(task==='collect')return collectTransport(d,e,args.business??asset);
- if(task==='lease'){const a=transportAssetView(e,d.get('state'),asset),counterparty=e.resolve(args.seller);if(args.consent!==true||!available(e,d.get('state'),counterparty)||actorLocation(d.get('state'),counterparty)!==d.get('state','location')||a?.owner!=='player'&&a?.owner!==counterparty)throw Error('出租须有在场当事人本次同意');return leaseTransportAsset(d,e,{asset,tenant:a.owner==='player'?counterparty:'player',minutes:args.minutes,coins:args.coins},eventId);}
+ if(task==='lease'){const a=transportAssetView(e,d.get('state'),asset),counterparty=e.resolve(args.seller);if(args.consent!==true||!available(e,d.get('state'),counterparty)||actorLocation(d.get('state'),counterparty)!==d.get('state','location')||a?.owner!=='player'&&a?.owner!==counterparty)throw preconditionFailure('出租须有在场当事人本次同意');return leaseTransportAsset(d,e,{asset,tenant:a.owner==='player'?counterparty:'player',minutes:args.minutes,coins:args.coins},eventId);}
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
  if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.destroyedAt!==undefined||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw Error('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw Error('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw Error('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.destroyedAt!==undefined||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw preconditionFailure('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw preconditionFailure('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw preconditionFailure('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

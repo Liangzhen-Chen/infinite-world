@@ -10,6 +10,11 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {npcContext} from '../server-plugin/npc-memory.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {baishiSkeleton} from '../world/design/w1-baishi-skeleton.mjs';
+import * as G from '../world/design/a3-world-governance.mjs';
+import {readFiles,contentEntries,previewWorld,contextFor,draftFor} from '../world/design/a3-world-approval.mjs';
+import {readApprovedContent} from '../tools/content-pipeline.mjs';
+import {previousOfficeEdition} from '../world/design/s4-offices-approval.mjs';
 
 const world=await loadWorld(),bundle=authorMarket(world),ids=new Set(bundle.people.map(p=>p.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -20,7 +25,12 @@ test('本批33个ID正式提升且名册去重，官前与南市原登记身份�
  assert.equal(ids.size,33);assert.ok(bundle.sources.some(p=>p.home.location==='bld_bs_home_046'));
  for(const source of bundle.sources){
   const rows=world.npcs.filter(p=>p.id===source.id);assert.equal(rows.length,1);assert.equal(rows[0].tier,'full');
-  assert.equal(world.residents.some(p=>p.id===source.id),false);assert.deepEqual(rows[0],bundle.people.find(p=>p.id===source.id));
+  assert.equal(world.residents.some(p=>p.id===source.id),false);
+  // A3 separately approved the faction field of this existing T92 person.
+  // Keep the entire prior profile exact; incremental receipts are checked below.
+  const expected=structuredClone(bundle.people.find(p=>p.id===source.id));
+  for(const patch of G.personFields.filter(p=>p.subject===source.id))expected[patch.field]=patch.value;
+  assert.deepEqual(rows[0],expected);
   for(const key of Object.keys(source))if(!['tier','home'].includes(key))assert.deepEqual(rows[0][key],source[key],`${source.id}.${key}`);
   assert.equal(rows[0].home.location,source.home.location);assert.equal(rows[0].home.access,source.home.access);
   const home=world.locations.find(l=>l.id===source.home.location),house=world.households.find(h=>h.id===source.householdId);
@@ -104,7 +114,10 @@ test('提升升级不覆盖旧档状态，重放不补充已用完的私人库�
 test('既有协调人升档，官署分工可查且与户籍、治安和公库规则相符',()=>{
  const governance=world.settlementProfiles.find(p=>p.id==='loc_bs').details.governance;
  assert.ok(governance.coordinators.every(id=>ids.has(id)));
- assert.equal(governance.head,null);assert.deepEqual(governance.enforcers,[]);
+ // T92 coordinators remain non-executive; A3 head/enforcer rights have separate receipts.
+ const frozenGovernance=baishiSkeleton(world).profile.details.governance;
+ assert.equal(frozenGovernance.head,null);assert.deepEqual(frozenGovernance.enforcers,[]);
+ assert.deepEqual(governance,{...frozenGovernance,head:G.settlementHead.head,enforcers:G.settlementHead.enforcers,authority:G.settlementHead.authority});
  const dutyIds=new Set(responsibilities.map(r=>r[0]));assert.equal(dutyIds.size,17);
  for(const [id,role,location,duty] of responsibilities){
   const person=world.npcs.find(p=>p.id===id);
@@ -113,7 +126,7 @@ test('既有协调人升档，官署分工可查且与户籍、治安和公库�
   const context=reviewContext(bundle.entries.find(e=>e.id===id),bundle,world);
   assert.equal(context.authoredResponsibility.role,role);
   assert.equal(context.authoredResponsibility.duty,duty);
-  assert.deepEqual(context.governance,governance);
+  assert.deepEqual(context.governance,frozenGovernance);
   assert.deepEqual(person.services,[]);
   assert.ok(person.serviceCatalog.every(s=>s.kind==='trade'));
   assert.deepEqual(person.wealth.debts,[]);assert.deepEqual(person.wealth.property,[]);
@@ -137,4 +150,23 @@ test('既有协调人升档，官署分工可查且与户籍、治安和公库�
 test('正式世界发布校验没有涉及本批人物ID的错误',()=>{
  const result=validateWorld(world,{stage:'release'});
  assert.deepEqual(result.errors.filter(error=>[...ids].some(id=>error.includes(id))),[]);
+});
+
+// 13ac0697: verify the incremental approval in addition to the unchanged T92 gate.
+test('A3 head, incumbents and authority retain independent L1/L2/L4 receipts',async()=>{
+ // Replay the A3 receipt against its edition, after verifying the later S4 charter.
+ const {world:prior,files}=await previousOfficeEdition(world,await readFiles()),candidate=previewWorld(prior);
+ const entries=contentEntries(files).filter(e=>['person','person-field','faction','office','head-patch','room-patch'].includes(e.kind));
+ const rows=await readApprovedContent(G.draftRoot,entries,{revision:G.revision,contextFor:e=>contextFor(candidate,e)});
+ assert.deepEqual(rows,entries.map(draftFor));
+ for(const e of entries){
+  const current=e.kind==='person'?files.baseline.find(p=>p.id===e.id):
+   e.kind==='person-field'?{[e.field]:files.baseline.find(p=>p.id===e.subject)[e.field]}:
+   e.kind==='faction'?(({offices,...row})=>row)(files.factions.find(f=>f.id===e.id)):
+   e.kind==='office'?files.factions.find(f=>f.id===e.faction).offices.find(o=>o.id===e.id):
+   e.kind==='room-patch'?{rooms:files.locations.find(l=>l.id===e.subject).rooms}:
+   (({head,enforcers,authority})=>({head,enforcers,authority}))(world.settlementProfiles.find(p=>p.id===e.subject).details.governance);
+  assert.deepEqual(current,e.row,e.id);
+ }
+ assert.deepEqual(world.npcs.filter(p=>p.id==='npc_bs_townhead').map(p=>p.id),['npc_bs_townhead']);
 });

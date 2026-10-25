@@ -20,6 +20,7 @@ import {applyInteraction} from './interactions.mjs';
 import {environmentFeatures} from './environment.mjs';
 import {readObjectState,storeObjectState} from './magic-object.mjs';
 import {applyPatches} from './storage.mjs';
+import {nativePrimitiveTransaction} from './native-primitives.mjs';
 import {traitsOf} from './traits.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 // 事务回放是别的模块写入的转运：可落到任何持有种类。
@@ -34,29 +35,47 @@ export function assertEffect(engine,effect,source='world'){
 }
 export function applyEffect(d,engine,effect,context,source='world'){
  assertEffect(engine,effect,source);
- return effectConsumer(engine,effect.kind,source).apply(d,engine,effect,context);
+
+ const out=effectTransaction(d,engine,[effect],context,source);
+ return out.applied?out.results[0]:out.result;
+}
+function effectTransaction(d,engine,effects,context,source='world'){
+ return nativePrimitiveTransaction(d,{engine,family:`k6:${source}`,sourceEvent:context.sourceEvent,actor:context.faction??'player',program:{effects,context},
+  primitives:effects.map(effect=>({op:'emit',verb:'effect_applied',visibility:'private',payload:effect})),
+  apply(tx,index){const effect=effects[index];assertEffect(engine,effect,source);const result=effectConsumer(engine,effect.kind,source).apply(tx,engine,effect,context);if(!result||typeof result.applied!=='boolean')throw Error(`效果缺少 applied 回执：${effect.kind}`);return result;}});
 }
 // A refused effect cannot leave costs or partial identity changes in the draft.
 export function clockTransaction(d,apply){
- const tx={document:d.document,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
+ // Nested native programs must share this transaction's cursor, without
+ // advancing the parent's cursor until the whole clock stage commits.
+ const scheduler=d.scheduler?Object.assign(Object.create(Object.getPrototypeOf(d.scheduler)),d.scheduler):null;
+ const tx={document:d.document,scheduler,patches:[],messages:[],get(...p){return p.reduce((v,k)=>v?.[k],this.document);},
   set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},
   remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},say(content){this.messages.push(content);}};
  const result=apply(tx);if(result?.applied===false)return result;
  // S2a: 回放经持有写入包装，事务里改到的会籍、职位等在正式草稿上双写。
  for(const p of tx.patches)if(p.op==='set')holdingSet(d,null,p.path,p.value,'effects');else holdingRemove(d,null,p.path,'effects');
+ if(scheduler)d.scheduler.seq=Math.max(d.scheduler.seq,scheduler.seq);
  for(const message of tx.messages)d.say(message);
  return result;
 }
 // Runs a list of effects as one transaction: any refusal rolls all of them back.
 export function applyEffects(d,engine,effects,context,source){
- return clockTransaction(d,tx=>{
-  const results=[];
-  for(const effect of effects){const r=applyEffect(tx,engine,effect,context,source);if(!r||typeof r.applied!=='boolean')throw Error(`效果缺少 applied 回执：${effect.kind}`);if(!r.applied)return r;results.push(r);}
-  return {applied:true,effects:results};
- });
+
+ if(!effects.length)return {applied:true,effects:[]};
+ const out=effectTransaction(d,engine,effects,context,source);
+ return out.applied?{applied:true,effects:out.results}:out.result;
 }
 
 // ---- Built-in kinds -------------------------------------------------------
+// K2 programs authored by world/faction/festival data retain their physical
+// parameters. They use the same interpreter as ordinary and magical contact.
+registerEffect('interaction',{
+ validate(engine,effect){
+  if(!['fire','cold','water','rain','flood','ink'].includes(effect.agent)||!environmentFeatures(engine).some(f=>f.id===effect.target)||effect.minutes!==undefined&&!int(effect.minutes,1,360*DAY)||effect.moistureMg!==undefined&&!int(effect.moistureMg,0,1000000000))throw Error('物理交互的施力、目标或参数无效');
+ },
+ apply(d,engine,effect,context){return {applied:true,...applyInteraction(d,engine,{agent:effect.agent,target:effect.target,minutes:effect.minutes,moistureMg:effect.moistureMg,minute:context.minute,sourceEvent:context.sourceEvent})};},
+});
 // Price quote (formerly world-clock regional_quote).
 registerEffect('regional_quote',{
  validate(engine,effect){if(effect.item!==engine.rules.settlementTrade?.item)throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');},

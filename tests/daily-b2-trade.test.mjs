@@ -50,9 +50,34 @@ test('D05 酒馆吃饭 ①④：阳春面 8 + 卤肉 15，按零售价各付各�
  assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,23,'④酒肆钱柜 +23');
  conserved(before,after,'D05',new WorldEngine(world));
 });
-test.todo('D05 ②饥饿度明显下降、不再饥饿——引擎没有玩家饥饿/饱食（只有生命）：缺身体需求量 body.satiety 与阈值状态 hungry（S1 vital 原语 + A3 进食动作 cost.body；参数 body.json person/satiety）');
-test.todo('D05 ③当场吃完、背包无新增食物——引擎买到的熟食直接进背包，没有“当场进食 → sink:consume”：缺进食动作（A3；守恒对 S1）');
-test.todo('D05 ⑤时间过去 20–30 分钟——引擎两笔交易各 5 分钟共 10 分钟；缺点菜 + 进食的动作耗时（A3：action-costs 增 eat/meal 行，cost.time 读表）');
+async function dine(t){
+ // A3: use an actually cooked meat dish rather than the original raw-mutton
+ // purchase fixture. Preserve its 8+15 retail bill and all old trade checks.
+ const world=variant(w=>{setPrice(w,'item_oat_flatbread',8);setPrice(w,'item_mutton_turnip_stew',15);});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{
+  s.player.coins=60;s.player.body={satiety:{value:30,asOf:monthDayMinute(12,3,12,0),activity:'rest'}};
+  s.npcs[LINSUI].inventory.item_mutton_turnip_stew=stack(2);
+ })});
+ const before=await primed(ui),menu=await ui.server.api('actions',{campaignId:ui.campaignId,query:'eat.order',target:LINSUI});
+ assert.ok(menu.actions.some(a=>a.id==='core:eat.order'),'新目录动作可经真实搜索找到（对象菜单限24行）');
+ const r=await ui.choose('eat.order',{subject:LINSUI,item:'item_oat_flatbread',side:'item_mutton_turnip_stew'},{target:LINSUI,search:true});
+ assert.ok(r.ok,r.error);const after=await ui.read();
+ assert.equal(before.state.player.coins-after.state.player.coins,23);conserved(before,after,'D05用餐',new WorldEngine(world));
+ return {before,after,r};
+}
+test('D05 ②用餐的真实 nutrition 增加饱食并解除 hungry 阈值',async t=>{
+ const {after}=await dine(t);assert.ok(after.state.player.body.satiety.value>30);assert.ok(after.state.player.body.satiety.value<=100);
+});
+test('D05 ③当场吃完，原存粮保留、没有新增食物，食物进入 sink:consume',async t=>{
+ const {before,after}=await dine(t);
+ for(const id of ['item_oat_flatbread','item_mutton_turnip_stew']){
+  assert.equal(held(after.state.inventory,id),held(before.state.inventory,id));
+  assert.equal(after.ledger.flows[`sink:consume|${id}|meal`]-(before.ledger.flows[`sink:consume|${id}|meal`]??0),1);
+ }
+});
+test('D05 ⑤整次点餐与用餐25分钟，不叠加成35分钟',async t=>{
+ const {before,after,r}=await dine(t);assert.equal(after.state.minute-before.state.minute,25);assert.equal(r.result.cost.time,25);
+});
 
 test('D35 参加节庆 ①④：摊位月饼 6 文/个买 2 个：铜钱 50→38，买到 2 个月饼，村民好感不降',async t=>{
  // 月饼→燕麦薄饼（item_oat_flatbread）6 文；秋季八月十五（中秋）晒谷场摊位 → 青灯酒馆掌柜代摊；玩家 50 文。
@@ -65,12 +90,29 @@ test('D35 参加节庆 ①④：摊位月饼 6 文/个买 2 个：铜钱 50→38
  const engine=new WorldEngine(world);assert.ok(standing(engine,after.state,LINSUI,'player')>=standing(engine,before.state,LINSUI,'player'),'④在场村民对玩家的好感没有下降（题面“可小幅上升”，不变也符合）');
  conserved(before,after,'D35',engine);
 });
-test.todo('D35 ②猜灯谜答对奖 1 盏花灯——引擎没有“答对即奖”的动作 outcomes（谜面判定属对话 A2，奖品转移属动作 outcomes A3）');
+test('D35.2 true riddle answer transfers one host-stock lantern, preserves two bought mooncakes and cannot award twice',async t=>{
+ const HOST=LINSUI,FESTIVAL='festival_daily_lantern';
+ const world=variant(w=>{setPrice(w,'item_oat_flatbread',6);w.festivals=[{id:FESTIVAL,name:'Lantern riddles',calendar:{month:8,day:15},venue:{location:INN,precision:'existing_location'},custom:'Riddles at the inn',resourceNeeds:[],runtime:{status:'active',host:HOST,kind:'market',startMinute:19*60,durationMinutes:120,minimumParticipants:1,riddles:[{id:'moon',question:'A round mirror in the sky',answers:['moon'],reward:{item:'item_lantern',quantity:1}}]}}];const host=w.npcs.find(n=>n.id===HOST);host.schedule={default:[{start:0,end:1440,location:INN,activity:'market',services:['trade']}]};});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(8,15,18,0),s=>{s.player.coins=50;s.npcs[HOST].trust=100;s.npcs[HOST].inventory.item_lantern=stack(1);})});
+ const before=await primed(ui),buy=await ui.choose('trade.trade',{seller:HOST,item:'item_oat_flatbread',quantity:2,unitPrice:6},{target:HOST,search:true});assert.ok(buy.ok,buy.error);
+ const plan=await ui.choose('settlement.festival_plan',{festival:FESTIVAL,cost:0},{search:true});assert.ok(plan.ok,plan.error);const id=plan.result.festival;
+ const permission=await ui.choose('settlement.festival_authorize',{festival:id,speaker:HOST},{search:true});assert.ok(permission.ok,permission.error);assert.equal(permission.result.agreement.decision.outcome,'agree');
+ const join=await ui.choose('settlement.festival_join',{festival:id,speaker:'player'},{search:true});assert.ok(join.ok,join.error);const wait=await ui.choose('time',{until:{dayOffset:0,hour:19}});assert.ok(wait.ok,wait.error);
+ const heldEvent=await ui.read();assert.equal(heldEvent.state.records[id].status,'held');
+ const wrong=await ui.choose('settlement.festival_answer',{festival:id,request:'moon',choice:'sun'},{search:true});assert.ok(wrong.ok,wrong.error);assert.equal(wrong.result.correct,false);assert.equal(held((await ui.read()).state.npcs[HOST].inventory,'item_lantern'),1);
+ const pre=await ui.read();
+ const inspected=await new WorldEngine(world).reduce(pre,{tool:'world_settlement',args:{operation:'festival_inspect'},eventId:'d35-inspect'}),visible=inspected.result.calendar.find(f=>f.publishedId===FESTIVAL).runtime.riddles[0];
+ assert.equal(visible.question,'A round mirror in the sky');assert.equal(visible.answers,undefined,'public festival inspection must not disclose the host answer');
+ const slots={festival:id,request:'moon',choice:'moon'},win=await ui.choose('settlement.festival_answer',slots,{search:true,eventId:'d35-prize'});assert.ok(win.ok,win.error);const after=await ui.read();
+ assert.equal(win.result.correct,true);assert.equal(held(after.state.inventory,'item_lantern')-held(pre.state.inventory,'item_lantern'),1);assert.equal(held(after.state.npcs[HOST].inventory,'item_lantern'),0);assert.equal(held(after.state.inventory,'item_oat_flatbread'),2);assert.equal(after.state.player.coins,38);assert.equal(after.state.minute,pre.state.minute);conserved(before,after,'D35 riddle',new WorldEngine(world));
+ const retry=await ui.choose('settlement.festival_answer',slots,{search:true,eventId:'d35-prize'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);
+ const again=await ui.choose('settlement.festival_answer',slots,{search:true});assert.equal(again.ok,false);assert.deepEqual(await ui.read(),after);
+});
 test.todo('D35 ③节庆只在八月十五当晚出现，次日恢复平常——引擎有按历法日期运行的节庆（festival-runtime.test.mjs），但没有中秋灯会与摊位的节庆数据（C1 内容接入；摊位随节庆开闭属 S4 营业时间 schedule 表）');
 test.todo('D35 ④好感可小幅上升——引擎无参节庆的立场事件（S6 立场事件权重表 event-weights 增 attend_festival 行后读表）');
-test.todo('D35 ⑤时间推进到灯会散场（亥时）——引擎节庆有 endsAt，但“看完灯会回家”没有对应动作（A3 动作耗时/持续动作 durationSlot）');
+test.todo('D35 lantern-festival end-to-end content remains: festival_watch now consumes a real held event endsAt (A3 integration covered), while the specific eighth-month fifteenth lantern event and award data are still absent');
 
-test('D16 做饭 ①②③④：清煮鱼汤按配方扣鱼 1、水 2、盐 1、柴 1，成品入背包，盐包没用完；耗时 = 配方登记的 30 分钟',async t=>{
+async function cookFish(t){
  // 鲫鱼汤→清煮鱼汤配方（鱼 1 水 2 盐 1 柴 1）；柴→干木刨屑；秋季九月初三酉时；玩家有鱼 2、盐 3、柴 3、水 2。
  const world=variant(),engine=new WorldEngine(world),recipe=world.recipes.find(r=>r.id==='recipe_w3_fish_broth');
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(9,3,17,30),s=>{
@@ -79,7 +121,10 @@ test('D16 做饭 ①②③④：清煮鱼汤按配方扣鱼 1、水 2、盐 1、
   s.skills.skill_life_3_core={proficiency:300,daily:{},breakthroughs:[]};s.recipes={...s.recipes,recipe_w3_fish_broth:{source:{type:'teacher',id:LINSUI}}};
  })});
  const before=await primed(ui),r=await ui.choose('craft.manufacture',{recipe:'recipe_w3_fish_broth'},{eventId:safeEventId('d16')});assert.ok(r.ok,r.error);
- const after=await ui.read(),inv=(s,id)=>held(s.state.inventory,id);
+ const after=await ui.read();return {world,engine,recipe,ui,before,r,after};
+}
+test('D16 做饭 ①②③④：清煮鱼汤按配方扣鱼1、水2、盐1、柴1，成品入背包，盐包没用完；耗时等于配方',async t=>{
+ const {recipe,before,r,after}=await cookFish(t),inv=(s,id)=>held(s.state.inventory,id);
  assert.equal(r.result.success,true,'检定通过（高熟练度）');
  assert.equal(inv(before,'item_fish')-inv(after,'item_fish'),1,'①鲫鱼按菜谱用量减少（2→1）');
  assert.equal(inv(before,'item_wood_shavings')-inv(after,'item_wood_shavings'),1,'②柴减少 1 份');
@@ -89,5 +134,13 @@ test('D16 做饭 ①②③④：清煮鱼汤按配方扣鱼 1、水 2、盐 1、
  assert.equal(after.state.minute-before.state.minute,recipe.minutes,'耗时 = 配方登记的制作分钟');
  assert.equal(after.state.player.coins,before.state.player.coins-3,'灶台是酒馆的，付 3 文灶台费');
 });
-test.todo('D16 ⑤时间过去约半个时辰——引擎鱼汤配方登记 30 分钟，题面“半个时辰”按 D06 约定（一时辰 = 2 小时）为 60 分钟，不符；配方 laborMinutes 是世界配方数据，不在 balance 表（A3 配方耗时读 action-costs craft.recipe 行时对齐）');
-test.todo('D16 ④二者择一：当场食用后饥饿下降——缺身体需求量与进食动作（S1 body + A3 进食）；现状只有“成品入背包”这一支');
+test('D16 ⑤半个时辰为60分钟，真实配方与执行回执一致',async t=>{
+ // events.md D16.5: 时间过去约半个时辰 = 60 分钟（一时辰 2 小时，A3-astra-plan 第四节 D16.5）；配方 minutes 是依据，其余断言都从配方派生。
+ const {recipe,before,r,after}=await cookFish(t);assert.equal(recipe.minutes,60);
+ assert.equal(after.state.minute-before.state.minute,recipe.minutes);assert.equal(r.result.spent.minutes,recipe.minutes);
+});
+test('D16 ④成品可实际食用，鱼汤消耗而饱食增加',async t=>{
+ const {ui,after}=await cookFish(t),r=await ui.choose('eat.meal',{item:'item_fish_broth'});assert.ok(r.ok,r.error);
+ const eaten=await ui.read();assert.equal(held(after.state.inventory,'item_fish_broth')-held(eaten.state.inventory,'item_fish_broth'),1);
+ assert.ok(eaten.state.player.body.satiety.value>after.state.player.body.satiety.value);
+});

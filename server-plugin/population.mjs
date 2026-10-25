@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {initialNpcState,householdDefinition} from './npc-state.mjs';
@@ -238,13 +239,12 @@ function settlementForDistrict(world,location){
 
 export function populationRecord(state,settlementId){return state.population?.[settlementId]??null;}
 
-export const populationLayersFresh=engine=>!engine.replaying||engine.replayResult?.populationLayerVersion===1;
 // Only untouched roster identities may be discarded. Anything referenced by
 // a memory, contract, household change or individual simulation remains real.
 // District aggregates and the captured template/basis replay the same names,
 // ages, kinship and minor flags when the county comes back into range.
 export function settlePopulationLayers(d,engine){
-    const state=d.get('state');if(!Object.keys(state.remote??{}).length||!populationLayersFresh(engine))return;
+    const state=d.get('state');if(!Object.keys(state.remote??{}).length)return;
     const plan=advanceLayerPlan(engine,state),far=[],near=[];
     for(const [sid,record] of Object.entries(state.population??{})){
         const county=plan.countyOf(sid);if(!state.remote[county])continue;
@@ -411,7 +411,7 @@ export function acceptPopulationProfile(d,engine,input){
     const person=String(input.person??''),entity=d.get('state','created',person);
     if(!entity&&engine.byId?.get(person)?.generated==='remote')
         return acceptRemoteProfile(d,engine,input,{check:(e,p)=>checkGeneratedProfile(e,p),maxFailures:MAX_PROFILE_FAILURES,fields:PROFILE_FIELDS});
-    if(!entity||entity.generated!=='population')throw Error('只有按需登记的名册人物才能建立按需完整档');
+    if(!entity||entity.generated!=='population')throw preconditionFailure('只有按需登记的名册人物才能建立按需完整档');
     const record=d.get('state','population',entity.settlement);if(!record)throw Error('按需人口记录缺失');
     const status=record.profiles?.[person];
     if(status?.status==='full'||entity.profileStatus==='full')throw Error('完整档已入库，之后不再改变');

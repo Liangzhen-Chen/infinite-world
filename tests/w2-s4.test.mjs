@@ -4,10 +4,12 @@ import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS4Publication,mergeS4Publication,publishS4,withoutS4,designPublication,files as publishedFiles} from '../tools/publish-w2-s4.mjs';
 import {spells,books,items,placements,mentors,routes,routeOf,ritualScopes,TABLET} from '../world/design/w2-s4.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
 import {wildlifeEncounterAt} from '../server-plugin/wildlife.mjs';
@@ -46,6 +48,13 @@ async function cast(doc,args){const prior=doc,r=await success(doc,'world_cast',a
  for(const m of s.materials)assert.equal(r.doc.state.inventory[m.item]?.quantity??0,(prior.state.inventory[m.item]?.quantity??0)-m.amount);
  return r;}
 async function track(doc,species){const r=await success(doc,'world_wildlife',{operation:'track',species});assert.equal(r.result.found.species,world.monsters.find(m=>m.id===species).name);return{doc:r.doc,target:r.result.found.id};}
+async function approachContact(doc,target){
+ await import('../server-plugin/primitives-runtime.mjs');
+ const close=await run(doc,'world_move',{destination:target});assert.equal(close.result.arrived,true);
+ const position=close.doc.state.records[`local_actor_position:${target}`];
+ assert.equal(position.minute,close.doc.state.minute);assert.equal(position.expires,position.minute+10);
+ return close.doc;
+}
 async function takeT155(doc,cause,target){
  // Public templates run through their registered U17 generator after tracking.
  const q=world.rules.questSources.wildlife.find(r=>r.id===cause),saved=world.rules.questSources.wildlife;
@@ -76,7 +85,13 @@ async function routeSession(route){
  const entry=world.rules.training.institutions.find(e=>e.teacher===teacher&&e.profession===role.id);
  doc=(await run(doc,'world_profession',{operation:'initiate',profession:role.id,teacher,institution:place,rule:entry.rule})).doc;
  const core=role.entry.skill;doc=(await success(doc,'world_learn',{entity:core,source:teacher,kind:'skill'})).doc;
- while(doc.state.skills[core].proficiency<150){doc=(await run(doc,'world_practice',{skill:core,gain:100,target:'基础动作'})).doc;if(doc.state.skills[core].proficiency<150)doc=await attend(doc,teacher,place,510);}
+ // Acquisition and certification are exercised publicly. Prior accumulated
+ // proficiency is a premise; one native session must really cross 150.
+ const staged=applyIntentSetup(engine,doc,{abilities:{skills:{[core]:149}}});
+ assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
+ const practiceMinute=doc.state.minute,practiced=await run(doc,'world_practice',{skill:core});doc=practiced.doc;
+ assert.ok(practiced.result.gain>0);assert.ok(doc.state.skills[core].proficiency>=150);
+ assert.equal(doc.state.minute,practiceMinute+120);
  doc=await attend(doc,teacher,place,510);doc=(await success(doc,'world_profession',{profession:role.id,teacher,operation:'certify'},'certified')).doc;
  assert.equal(doc.state.professions.combat,role.id);
  for(const s of spells.filter(s=>routeOf[s.id]===route)){
@@ -107,7 +122,8 @@ test('道、佛、祭、巫四条路线实际入门、认证、学会本批法�
 });
 
 test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超度终态、记入牌位，种群扣减且不能用于复活',async()=>{
- const base=learnedByRoute.佛;assert.ok(base,'需先完成路线学习');
+ // Standalone regression selection still learns and certifies this real route.
+ const base=learnedByRoute.佛??await routeSession('佛');assert.ok(base,'需先完成路线学习');
  let doc=await field(structuredClone(base),MIST,1290);const p=permits.佛,pop0=eco(doc,'habitat_wt_mist_flat')[SOUL];
  const total0=pop0.count+present(doc,SOUL,MIST);
  // Non-souls, living people and the player are refused before any cost.
@@ -117,7 +133,10 @@ test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超�
  await assert.rejects(engine.reduce(wisp.doc,{tool:'world_cast',args:{spell:id('ferry'),target:JI,permit:p},eventId:'ferry-npc'}),/游魂|复活|在场/);
  const found=await track(doc,SOUL);doc=found.doc;
  assert.equal(eco(doc,'habitat_wt_mist_flat')[SOUL].count+present(doc,SOUL,MIST),total0);
- const job=await takeT155(doc,'t155_wt_soul',found.target);doc=job.doc;
+ const job=await takeT155(doc,'t155_wt_soul',found.target);
+ // 06 §6.7/§6.5: the seven-minute acceptance plus this five-minute rite
+ // exceeds the original contact proof; approach the still visible soul first.
+ doc=await approachContact(job.doc,found.target);
  const f=await cast(doc,{spell:id('ferry'),target:found.target,permit:p});doc=f.doc;
  doc=await settleT155(doc,job.quest);
  assert.equal(f.result.ferried,true);assert.equal(f.result.revived,false);assert.equal(f.result.destination,TABLET);
@@ -128,15 +147,16 @@ test('度亡：止波寺资格对雾滩低阶游魂施放，游魂进入已超�
  // A ferried soul has left the scene: it cannot be ferried again, exorcised or drawn back.
  saved=structuredClone(doc);await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('ferry'),target:found.target,permit:p},eventId:'ferry-again'}),/游魂|实际|需要/);assert.deepEqual(doc,saved);
  assert.equal(Object.values((await run(doc,'world_wildlife',{operation:'observe'})).result.animals).some(a=>a.id===found.target),false);
- // Seven-day rite on the flat: the weekly manifestation of its dead is held back.
- const flat=await field(structuredClone(base),MIST,1290),rite=await cast(flat,{spell:id('calm_flat'),permit:p});
+ // Long native study can fill the habitat. Reuse the real ferry's vacancy,
+ // rather than expecting a full fresh baseline to manifest beyond capacity.
+ const flat=structuredClone(doc),rite=await cast(flat,{spell:id('calm_flat'),permit:p});
  assert.deepEqual(rite.result.species.sort(),[SOUL,WISP].sort());assert.equal(rite.result.expires,rite.doc.state.minute+10080);
  await assert.rejects(engine.reduce(rite.doc,{tool:'world_cast',args:{spell:id('calm_flat'),permit:p},eventId:'calm-twice'}),/叠加/);
  const week=d=>{const day=Math.floor(d.state.minute/1440);let next=day;while(next%7!==6)next++;return (next+1)*1440+60-d.state.minute;};
  const plainDoc=structuredClone(rite.doc);for(const [k,e] of Object.entries(plainDoc.state.effects))if(e.kind==='ritual'&&e.operation==='consecrate')delete plainDoc.state.effects[k];
  const w=week(rite.doc),held=await wait(rite.doc,w),open=await wait(plainDoc,w);
  const sum=(d,k)=>[SOUL,WISP].reduce((n,s)=>n+(eco(d,'habitat_wt_mist_flat')[s][k]??0),0);
- assert.ok(sum(open,'arisen')>sum(plainDoc,'arisen'),'未作法时本季应有新聚成');assert.equal(sum(held,'arisen'),sum(rite.doc,'arisen'));assert.ok(sum(held,'suppressed')>0);
+ assert.ok(sum(open,'arisen')>sum(plainDoc,'arisen'),`未作法时本季应有新聚成 ${JSON.stringify({minute:plainDoc.state.minute,season:engine.calendar(plainDoc.state.minute).season,populations:[SOUL,WISP].map(id=>({id,count:eco(plainDoc,'habitat_wt_mist_flat')[id].count,present:present(plainDoc,id,MIST),manifest:world.monsters.find(m=>m.id===id).wildlife.manifest}))})}`);assert.equal(sum(held,'arisen'),sum(rite.doc,'arisen'));assert.ok(sum(held,'suppressed')>0);
 });
 
 test('佛门守戒与立愿：持戒护身吸收刀棍与暗影伤害，立愿生成止波师承誓约，契纹自查读出原签条款',async()=>{
@@ -150,6 +170,9 @@ test('佛门守戒与立愿：持戒护身吸收刀棍与暗影伤害，立愿�
  const contract=vow.doc.state.records[vow.result.contract];assert.equal(contract.kind,'oath');assert.equal(contract.church,'止波师承');assert.deepEqual(contract.parties,['player']);
  // The general primer is bought and read at the Hewan bookshop like any other volume.
  let doc=vow.doc;doc.state.location='bld_hw_school';skipTo(engine,doc,Math.ceil(doc.state.minute/1440)*1440+540);doc.state.skills.skill_literacy={proficiency:100,daily:{},breakthroughs:[]};doc.state.player.coins+=200;doc.state.inventory.item_charcoal={quantity:3,durability:100};
+ // 01 §1.6 / 15: accounts are authoritative. Synchronize this test-only
+ // resource fixture before the real trade; keep A3's reconciliation intact.
+ resyncBooks(engine,doc);
  const primer=books.find(b=>b.book.teaches.includes(id('contract_read')));doc=(await run(doc,'world_trade',{seller:LU,item:primer.id,quantity:1})).doc;
  doc=(await success(doc,'world_learn',{kind:'spell',entity:id('contract_read'),source:primer.id})).doc;
  const read=await cast(doc,{spell:id('contract_read'),target:vow.result.contract});assert.deepEqual(read.result.changes,[]);assert.equal(read.result.legalJudgement,false);
@@ -193,9 +216,21 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
 });
 
 test('灯祠祭礼：净场与镇窑灯礼作用于废窑瓦灯魅，净坛、灯前立誓与门印守戒按教派资格生效',async()=>{
- const base=learnedByRoute.祭;assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
+ const base=learnedByRoute.祭??await routeSession('祭');assert.ok(base);const fresh=()=>structuredClone(base),p=permits.祭;
  const night=await field(fresh(),KILN,1200);const t=await track(night,LAMP);
- const job=await takeT155(t.doc,'t155_bs_lamp',t.target);const purify=await cast(job.doc,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);await settleT155(purify.doc,job.quest);
+ const job=await takeT155(t.doc,'t155_bs_lamp',t.target);
+ // 06 §6.7 and §6.5: accepting a quest spends its registered time; local
+ // contact must still be valid when the rite completes. Seven minutes of
+ // acceptance plus three of casting reaches the original evidence's expiry.
+ const saved=structuredClone(job.doc);
+ // Search independent real dice events as elsewhere in this file: a failed
+ // check never reaches completion validation and cannot prove stale contact.
+ await assert.rejects(success(job.doc,'world_cast',{spell:id('purify'),permit:p}),/邪秽/);
+ assert.deepEqual(job.doc,saved);
+ // Reconfirm by actually approaching the still visible body, without extending
+ // the old proof or granting coordinates to an unobserved creature.
+ const close=await approachContact(job.doc,t.target);
+ const purify=await cast(close,{spell:id('purify'),permit:p});assert.deepEqual(purify.result.expelled,[t.target]);await settleT155(purify.doc,job.quest);
  const settle=await cast(night,{spell:id('kiln_settle'),permit:p});assert.deepEqual(settle.result.species,[LAMP]);
  await assert.rejects(engine.reduce(await field(fresh(),MIST,1290),{tool:'world_cast',args:{spell:id('kiln_settle'),permit:p},eventId:'kiln-mist'}),/这类/);
  let doc=await attend(fresh(),MIAO,home.祭,600);
@@ -278,7 +313,8 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS4Publication(conflict,publication),/冲突/);
  if(process.env.W2S4_DESIGN)return;
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s4-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // Publication must retain the current edition's S4 norm bindings.
+ for(const folder of ['meta','people','geo','lore','law','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s4'),path.join(root,'drafts/w2-s4'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations','meta/rules.json':'rules'};
  for(const f of publishedFiles)await fs.writeFile(path.join(root,f),JSON.stringify(before[key[f]]));

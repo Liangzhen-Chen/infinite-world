@@ -1,0 +1,63 @@
+{
+  "id": "item_hoe",
+  "fingerprint": "c74853ac3b0bb2d5178aed9b43b2340c53e49b60f5a3c81c766b9850a24c7218",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_hoe",
+    "row": {
+      "id": "item_hoe",
+      "name": "铁锄",
+      "basePrice": 12,
+      "weight": 1.5,
+      "aliases": [],
+      "quality": "木",
+      "durability": 100,
+      "scope": null,
+      "origin": "loc_hw",
+      "use": "翻土播种的手工农具。",
+      "description": "翻土播种的手工农具。"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "cc02f89f0d734624fbbbd5885c386fa02d5353a4393921e714b9e01da22cd042",
+    "draftHash": "f4b7ef828ef02638ebd70903365edd8f85d60586871aefe96d47b80be6780212"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "bb71a2d8-dab0-4b46-981d-3d9e0ad4fb40",
+      "file": "budget-responses/bb71a2d8-dab0-4b46-981d-3d9e0ad4fb40.json",
+      "requestHash": "92cbf8cc72471dca0236edcce413953afd598d815f11b9e7895ff90f9e7650c3",
+      "responseHash": "7c02b72410c5bb0849b8ded9742a7b2219cc2f26915c9fa383cc9aec7fe07f29"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-a3-world-approval-item_hoe-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1313,
+        "completion_tokens": 7,
+        "total_tokens": 1320,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 1057
+      },
+      "costUpperYuan": 0.00218024,
+      "cumulativeUpperYuan": 0.12449783999999998,
+      "latencyMs": 1354.4735,
+      "timestamp": "2026-10-22T22:40:54.761Z"
+    }
+  ]
+}

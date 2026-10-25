@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {nationAt,currentDomains,containsDomain} from './noble-state.mjs';
 import {placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
@@ -40,15 +41,15 @@ export function tradeTax(e,state,location,kind='commercial'){
 export function assessTradeTax(d,e,{seller,cost,location,sourceEvent,kind='commercial'}){
     const key=`trade_tax:${sourceEvent}:${kind}`,previous=d.get('state','records',key);
     if(previous){
-        if(previous.payer!==seller||previous.gross!==cost||previous.location!==location)throw Error('同一商税事件不能更换交易');
+        if(previous.payer!==seller||previous.gross!==cost||previous.location!==location)throw preconditionFailure('同一商税事件不能更换交易');
         const {settlement,bps,amount,regime,level}=previous;return {settlement,bps,amount,regime,level,kind};
     }
     const tax=tradeTax(e,d.get('state'),location,kind),amount=Math.floor(cost*tax.bps/10000);
     if(!amount||seller===tax.settlement)return {...tax,amount:0};
     const actor=e.actorPath(seller),group=groupAccountView(e,d.get('state'),seller),balance=coinRead(d,{point:'tax.payer',account:group?treasury(seller):purse(e,seller),legacy:()=>group?.coins??d.get(...actor,'coins')??0});
-    if(balance<amount)throw Error('卖方现款不足以缴纳本笔商税');
+    if(balance<amount)throw preconditionFailure('卖方现款不足以缴纳本笔商税');
     if(!groupAccountView(e,d.get('state'),tax.settlement)){
-        if(!e.world.settlementProfiles?.some(p=>p.id===tax.settlement))throw Error('聚落未登记公账，不能收取商税');
+        if(!e.world.settlementProfiles?.some(p=>p.id===tax.settlement))throw preconditionFailure('聚落未登记公账，不能收取商税');
         d.set(['state','settlements',tax.settlement],{treasury:0,treasuryLedger:[],granary:false,population:0});
     }
     moveCoins(d,{from:group?treasury(seller):purse(e,seller),to:treasury(tax.settlement),amount,writer:'finance-tax',eventId:sourceEvent});

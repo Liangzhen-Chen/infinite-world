@@ -1,8 +1,44 @@
+import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
-import {recordsWhere} from './storage.mjs';
+import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
+import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
+
+const appointmentKey=id=>`service_appointment:${id}`;
+// The one relation read model. Legacy scalars seed NPC -> player relations
+// until a ledger row exists; they are never a second live value.
+export function relationView(engine,state,from,to){
+ const person=from==='player'?state.player:state.npcs?.[from]??state.creatures?.[from];
+ const current=person?.relationships?.[to];
+ const base=engine?.byId?.get(from)?.relationships?.find?.(row=>row.with===to);
+ const initial=to==='player'?person:base;
+ return {trust:initial?.trust??0,affection:initial?.affection??0,respect:0,fear:0,romance:0,competition:0,favors:[],evidenceKeys:[],...cloneData(current??{})};
+}
+// Appointment services are reported under the category the world vocabulary gives them.
+const serviceNames=(engine,services)=>[...new Set(services.map(s=>vocabulary(engine,'services','categories',s)??s))];
+// An appointment changes where/when an existing service is offered. It never
+// grants a career, skill, consent to a transaction, or a bilateral obligation.
+export function bookServiceAppointment(d,engine,row,{actor=row.actor}={}){
+ const state=d.get('state'),source=worldEvent(state,row.sourceEvent);
+ const place=engine.world.locations.some(l=>l.id===row.location)||row.location?.startsWith('bld_')&&state.created?.[row.location];
+ if(actor!==row.actor||!state.npcs?.[actor]||!row.id||d.get('state','records',appointmentKey(row.id))||!place||!Number.isSafeInteger(row.start)||!Number.isSafeInteger(row.end)||row.start<0||row.end<=row.start||!Array.isArray(row.services)||!row.services.length||row.services.some(s=>typeof s!=='string'||!s)||source?.verb!=='appointment_agreed'||source.actor!==actor||!row.services.includes(source.payload?.service)||source.minute>row.start)throw Error('Invalid service appointment or actor/source');
+ if(row.fee!==undefined&&(!Number.isSafeInteger(row.fee)||row.fee<0)||row.minutes!==undefined&&(!Number.isSafeInteger(row.minutes)||row.minutes<1||row.minutes>row.end-row.start))throw Error('Invalid appointment terms');
+ const other=serviceAppointments(state,actor).find(r=>r.start<row.end&&row.start<r.end&&r.location!==row.location);
+ if(other)throw Error('Conflicting service appointment locations');
+ const value={...persistable(row),category:'service_appointment'};
+ d.set(['state','records',appointmentKey(row.id)],value);
+ d.set(['state','records',`${appointmentKey(row.id)}:source`],{category:'service_appointment_receipt',digest:digest(value)});
+ return value;
+}
+export function serviceAppointments(state,actor){
+ return recordsWhere(state?.records,'category','service_appointment').filter(r=>{
+  const source=worldEvent(state,r.sourceEvent);
+  return r.actor===actor&&state.records[`${appointmentKey(r.id)}:source`]?.digest===digest(r)&&source?.verb==='appointment_agreed'&&source.actor===actor&&r.services.includes(source.payload?.service);
+ });
+}
 export function initialNpcState(npc,{newCharacter=false}={}){
     return{id:npc.id,name:npc.name,location:npc.location,coins:npc.coins??0,
         ...(npc.species?{species:npc.species}:{}),...(npc.society?{society:npc.society}:{}),
@@ -24,6 +60,50 @@ export function bossCognitionField(actor){return actor?.id?.startsWith('npc_')?'
 // A roster person or campaign-born child brought into the simulation by
 // npc-life keeps a home routine in campaign state instead of a catalog one.
 export function npcSchedule(engine,state,id,minute=state?.minute,constraints=null){
+ const base=baseNpcSchedule(engine,state,id,minute,constraints);
+ if(!state||personConstraint(engine,state,id,minute,constraints)||state.npcs?.[id]?.caring||state.npcs?.[id]?.levy)return base;
+ const day=Math.floor(minute/1440)*1440,appointments=serviceAppointments(state,id).filter(r=>r.start<day+1440&&day<r.end);
+ // Reception belongs to the current office, not the frozen biography. Keep
+ // sleep, meals and rest days, and let an explicit personal booking take priority.
+ const receptions=(constraints??personConstraints(engine,state)).examinerReceptions.get(id)??[];
+ if(!appointments.length&&!receptions.length)return base;
+ const calendar=engine.calendar(minute),variant=calendar.market?'market':base?.restDays?.includes(calendar.day)?'rest':'default';
+ if(receptions.length&&variant!=='rest'&&isEffective(engine,state,id))for(const office of receptions){
+   if(!isEffective(engine,state,office.organization)||!office.authority?.operations?.includes('certify'))continue;
+   const role=engine.byId.get(office.authority.profession),actor=state.npcs?.[id],person=engine.byId.get(id);
+   if(!role||(actor?.proficiencies?.[role.entry?.skill]??person?.proficiencies?.[role.entry?.skill]??0)<(role.entry?.minimumProficiency??100))continue;
+   const slots=base?.seasonal?.[String(calendar.season)]?.[variant]??base?.[variant]??base?.default??[];
+   for(const [start,end]of office.receptionHours??[])for(const slot of slots){
+    if(slot.location!==person?.workplace?.location||/睡|休息|歇息|吃饭|用餐|早饭|午饭|晚饭|家务/.test(slot.activity??''))continue;
+    const from=Math.max(start,slot.start),to=Math.min(end,slot.end);
+    if(from<to&&!appointments.some(r=>r.start<day+to&&day+from<r.end))appointments.push({start:day+from,end:day+to,location:office.seat,services:['teach']});
+   }
+ }
+ if(!appointments.length)return base;
+ // Reception overlays used to rebuild every seasonal variant at every slot
+ // read. Re-evaluate the live offices/appointments above, then share only the
+ // pure overlay while its base, day and effective windows still match.
+ const cache=engine.scheduleReadCache,location=state.npcs[id]?.location;
+ const overlays=cache&&base?(cache.routines??=new WeakMap()):null;
+ const prior=overlays?.get(base);
+ if(prior&&prior.day===day&&prior.location===location&&canonicalEqual(prior.appointments,appointments))return prior.schedule;
+ const overlay=slots=>{
+  let result=slots??[{start:0,end:1440,location:state.npcs[id]?.location,activity:'日常起居',services:[]}];
+  for(const row of appointments){const start=Math.max(0,row.start-day),end=Math.min(1440,row.end-day);
+   result=result.flatMap(slot=>slot.end<=start||slot.start>=end?[slot]:[
+    ...(slot.start<start?[{...slot,end:start}]:[]),
+    {...slot,start:Math.max(slot.start,start),end:Math.min(slot.end,end),location:row.location,activity:'预约接待',services:[...new Set([...(slot.location===row.location?slot.services??[]:[]),...serviceNames(engine,row.services)])]},
+    ...(slot.end>end?[{...slot,start:end}]:[])]);
+  }
+  return result;
+ };
+ const schedule={...base,default:overlay(base?.default)};
+ for(const key of ['market','rest'])if(base?.[key])schedule[key]=overlay(base[key]);
+ if(base?.seasonal)schedule.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,value])=>[key,Object.fromEntries(Object.entries(value).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
+ overlays?.set(base,{day,location,appointments,schedule});
+ return schedule;
+}
+function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const hold=state&&personConstraint(engine,state,id,minute,constraints)?.value;
     if(hold)return {default:[{start:0,end:1440,location:hold.location,activity:'依法拘留',services:[]}]};
     const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;
@@ -110,3 +190,33 @@ export function householdMembers(engine,state,houseId){
  const house=householdDefinition(engine,state,houseId),left=leftOf(state,houseId);
  return house?[...new Set([...house.members.filter(m=>!left.includes(m)),...state.family?.households?.[houseId]?.members??[]])]:[];
 }
+
+// Shared relationship ledger mutation; event selection and deltas stay with callers.
+const clamp=(n,min=-100,max=100)=>Math.max(min,Math.min(max,n));
+const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
+const path=id=>id==='player'?['state','player']:['state','npcs',id];
+export const relationDimensions=['trust','affection','respect','fear','romance','competition'];
+export function applyRelationEvidence(d,engine,evidence){
+ if(!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
+ const row=relationView(engine,d.get('state'),evidence.from,evidence.to);
+ if(row.evidenceKeys.includes(evidence.key))return {duplicate:true,from:evidence.from,to:evidence.to,evidence:evidence.key,delta:{}};
+ const delta={};for(const dimension of relationDimensions){
+  const before=row[dimension],change=evidence.delta[dimension]??0;
+  row[dimension]=clamp(before+change,['fear','romance'].includes(dimension)?0:-100);if(row[dimension]!==before)delta[dimension]=row[dimension]-before;
+ }
+ if(evidence.favor&&!row.favors.some(f=>f.id===evidence.key))row.favors.push({id:evidence.key,debtor:evidence.from,creditor:evidence.to,what:evidence.favor,sourceEvent:evidence.sourceEvent,minute:evidence.minute,status:'未还'});
+ row.evidenceKeys.push(evidence.key);d.set([...path(evidence.from),'relationships',evidence.to],row);
+ // Legacy scalar fields are immutable initial values, never live projections.
+ const developments=actor(d.get('state'),evidence.from)?.developments??[];
+ d.set([...path(evidence.from),'developments'],[...developments,{eventType:evidence.eventType,source:evidence.sourceEvent,evidence:evidence.key,with:evidence.to,minute:evidence.minute,delta}]);
+ return {from:evidence.from,to:evidence.to,evidence:evidence.key,delta};
+}
+function register(d,engine,evidence){
+ const old=d.get('state','relationEvidence',evidence.key);
+ if(old)return applyRelationEvidence(d,engine,old);
+ if(evidence.from===evidence.to||!actor(d.get('state'),evidence.from)||!actor(d.get('state'),evidence.to))return null;
+ d.set(['state','relationEvidence',evidence.key],evidence);return applyRelationEvidence(d,engine,evidence);
+}
+
+// Standing transmission (standing.mjs) writes a person's share through the same ledger.
+export function recordStandingEvidence(d,engine,evidence){return register(d,engine,evidence);}

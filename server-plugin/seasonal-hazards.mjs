@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('seasonal-hazards',{sinks:['sink:export']});
@@ -351,25 +352,25 @@ export function hazardClockAction(d,args,eventId){
  const rule=hazardClocks(this).find(r=>r.id===args.clock),minute=d.get('state','minute'),phase=phaseOf(d,this,rule,minute),here=d.get('state','location');
  const ep=rule.kind==='epidemic'?d.get('state','records',epidemicKey(rule.id,yearOf(minute))):null;
  if(args.operation==='faction_inspect'){
-  if(!within(this,here,rule.settlement))throw Error('须在受灾聚落内打听灾情');
+  if(!within(this,here,rule.settlement))throw preconditionFailure('须在受灾聚落内打听灾情');
   const disease=ep?diseaseOf(this,ep.disease):null;
   return {clock:rule.id,kind:rule.kind,name:rule.name,phase,stage:rule.stages[phase-1]?.name??null,
    ...(ep?{epidemic:{disease:disease.name,route:disease.route,symptoms:disease.symptoms,status:ep.status,households:Object.keys(ep.households).length,sick:Object.values(ep.households).filter(h=>h.status==='发病').length,settlements:ep.settlements}}:{}),
    choices:(rule.interventions??[]).filter(a=>a.phases.includes(phase)).map(a=>({id:a.id,name:a.name,location:a.location,cost:a.cost??{},minutes:a.minutes}))};
  }
- if(args.operation!=='faction_intervene')throw Error('灾害时钟只能查看或干预');
+ if(args.operation!=='faction_intervene')throw preconditionFailure('灾害时钟只能查看或干预');
  const action=rule.interventions?.find(a=>a.id===args.choice);
- if(!action)throw Error('这场灾害没有该干预办法');
- if(!action.phases.includes(phase))throw Error('当前灾情阶段不能用这个办法');
- if(here!==action.location)throw Error('干预需要到登记地点');
+ if(!action)throw preconditionFailure('这场灾害没有该干预办法');
+ if(!action.phases.includes(phase))throw preconditionFailure('当前灾情阶段不能用这个办法');
+ if(here!==action.location)throw preconditionFailure('干预需要到登记地点');
  if(action.representative){
   const actor=d.get('state','npcs',action.representative);
-  if(!actor||actor.location!==action.location||actor.scheduleTravel||actor.cognitionTravel||(actor.status??'正常')!=='正常'||/睡眠|睡觉|熟睡/.test(actor.activity??''))throw Error('主事的人不在场或不能理事');
+  if(!actor||actor.location!==action.location||actor.scheduleTravel||actor.cognitionTravel||(actor.status??'正常')!=='正常'||/睡眠|睡觉|熟睡/.test(actor.activity??''))throw preconditionFailure('主事的人不在场或不能理事');
   this.assertNpcObligationAction(d,[action.representative],{minutes:action.minutes});
  }
- if(action.spell&&!d.get('state','spells',action.spell))throw Error(`尚未学会${this.byId.get(action.spell)?.name??action.spell}`);
+ if(action.spell&&!d.get('state','spells',action.spell))throw preconditionFailure(`尚未学会${this.byId.get(action.spell)?.name??action.spell}`);
  const cost=action.cost??{},p=d.get('state','player');
- if((p.coins??0)<(cost.coins??0)||(p.mp??0)<(cost.mp??0))throw Error('干预所需钱或魔力不足');
+ if((p.coins??0)<(cost.coins??0)||(p.mp??0)<(cost.mp??0))throw preconditionFailure('干预所需钱或魔力不足');
  if(cost.coins){moveCoins(d,{from:purse(this,'player'),to:sink('export','hazard_intervention'),amount:cost.coins,writer:'seasonal-hazards',eventId:eventId});d.set(['state','player','coins'],p.coins-cost.coins);}
  if(cost.mp)d.set(['state','player','mp'],p.mp-cost.mp);
  const check=action.difficulty===undefined?{success:true}:this.check(d,{attribute:action.attribute,difficulty:action.difficulty},eventId);

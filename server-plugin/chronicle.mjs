@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {applyPatches,digest} from './storage.mjs';
@@ -116,7 +117,7 @@ function summaries(facts,{now,viewer='player',chapterDays=28,sceneBreakAfter=[]}
  return {version:1,viewer,now,facts:selected,scenes,days,weeks,chapters};
 }
 export function buildChronicle(facts,{now,viewer='player',chapterDays=28,sceneBreakAfter=[]}={}){
- if(!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(chapterDays)||chapterDays<7||chapterDays%7)throw Error('编年史时间或篇章跨度无效；篇章按完整周合成');
+ if(!Number.isSafeInteger(now)||now<0||!Number.isSafeInteger(chapterDays)||chapterDays<7||chapterDays%7)throw preconditionFailure('编年史时间或篇章跨度无效；篇章按完整周合成');
  return summaries(facts,{now,viewer,chapterDays,sceneBreakAfter});
 }
 
@@ -134,7 +135,7 @@ export async function getChronicle(store,id,{engineFor,engine,viewer='player',ch
    const before=projection.document,output=store.reducer?await store.reducer(before,event.input,{replay:true,result:event.result}):event;
    projection.document=applyPatches(before,output.patches);
    const selected=engineFor?await engineFor(projection.document):engine??await store.worldRegistry?.get(projection.document.worldHash);
-   if(!selected)throw Error('编年史需要战役对应的世界实体目录');
+   if(!selected)throw preconditionFailure('编年史需要战役对应的世界实体目录');
    const scoped=selected.scoped?.(projection.document)??selected;
    projection.facts.push(...collectChronicleFacts(scoped,before,projection.document,{...event.input,eventId:event.input.eventId??event.id},{sequence:event.sequence,anchor:event.anchor,result:output.result}));
   }

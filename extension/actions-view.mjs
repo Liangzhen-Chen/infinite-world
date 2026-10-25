@@ -1,4 +1,5 @@
 // A1 可做之事（06 §6.9.1、08 §8.5）：只读 /actions 的投影；动作经 data.act → world_act 确定性结算，结果按事件流模板显示。
+import {ActionBuilder,renderActionBuilder} from './action-builder.mjs';
 const views=new WeakMap();
 const FEED='fields_event_feed';
 
@@ -7,12 +8,13 @@ function sleepUntil(minute){const hour=Math.floor(minute%1440/60);return {dayOff
 
 export async function renderActionsPanel(container,data){
     const doc=container.ownerDocument,state=views.get(container)??{target:null,quick:null,form:null,last:null,token:0};views.set(container,state);
+    state.data=data;
     const token=++state.token;container.classList.add('fields-actions');
     if(!data.view){container.textContent='请先在副本上启用新版。';return;}
     const here=await data.api('actions',state.target?{target:state.target}:{});
     if(token!==state.token||!container.isConnected)return;
     const node=(tag,text,className)=>{const e=doc.createElement(tag);if(text!==undefined)e.textContent=String(text);if(className)e.className=className;return e;};
-    const rerender=()=>renderActionsPanel(container,data);
+    const rerender=()=>renderActionsPanel(container,state.data);
     const section=(title,parent)=>{const e=node('section',undefined,'fields-actions-section');if(title)e.append(node('h3',title));parent.append(e);return e;};
     const button=(label,onclick,{pressed,className='fields-actions-button',disabled}={})=>{const b=node('button',label,className);b.type='button';if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));if(disabled)b.disabled=true;b.onclick=onclick;return b;};
     const fragment=doc.createDocumentFragment();
@@ -24,7 +26,33 @@ export async function renderActionsPanel(container,data){
         if(q.label==='观察'){state.quick=null;run({id:q.action,label:'观察四周'},{});return;}rerender();},{pressed:state.quick===q.label}));
     fragment.append(bar);
     const rows=here.actions,byQuick=label=>rows.find(a=>a.quick===label);
-    const openForm=action=>{if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}state.form=action;rerender();};
+    const other=button('其他…',()=>{
+        if(state.builder?.busy)return;
+        state.builder?.cancel();
+        state.form=null;state.quick=null;
+        state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;rerender();
+    },{disabled:state.builder?.busy});
+    fragment.append(other);
+    const openForm=action=>{
+        if(action.blocked){state.last={ok:false,label:action.label,error:action.blocked};state.form=null;rerender();return;}
+        if(['open:leave_mark','open:proposal'].includes(action.id)){
+            state.builder?.cancel();state.form=null;
+            state.builder=new ActionBuilder({preview:data.preview,act:data.act});state.builder.target=here.target?.id;state.builder.minute=data.view.document.state.minute;
+            state.builder.choose(action);rerender();return;
+        }
+        state.form=action;
+        rerender();
+    };
+    if(data.actionSuggestion){
+        const suggestion=data.actionSuggestion;
+        fragment.append(button(`主持人建议：${suggestion.action.label}（尚未执行）`,()=>{
+            state.builder?.cancel();state.form=null;
+            state.builder=new ActionBuilder({preview:data.preview,act:data.act});
+            state.builder.choose(suggestion.action);
+            for(const slot of suggestion.action.slots)if(slot.name!=='consent'&&Object.hasOwn(suggestion.slots,slot.name))state.builder.setSlot(slot.name,suggestion.slots[slot.name]);
+            data.clearActionSuggestion?.();state.data={...state.data,actionSuggestion:null};rerender();
+        }));
+    }
     // 需要对方答应的动作照样列出，但按钮不可用并注明原因（A2 接入人物决策后开放）。
     const actionButton=a=>{const b=button(a.blocked?`${a.label}（${a.blocked}）`:a.label,()=>openForm(a),{disabled:Boolean(a.blocked)});return b;};
     async function run(action,slots){
@@ -43,7 +71,7 @@ export async function renderActionsPanel(container,data){
         }else if(state.quick==='移动'){
             if(!here.objects.exits.length)box.append(node('p','看不出有别的路。','fields-note'));
             const move=byQuick('移动');
-            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}})));
+            for(const e of here.objects.exits)box.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}${e.permission?.allowed===false?`（${e.permission.reason}）`:''}`,()=>openForm({...move,fill:{...move.fill,destination:e.id}}),{disabled:e.permission?.allowed===false}));
         }else if(state.quick==='账目'){
             const s=data.view.document.state;
             box.append(node('p',`钱袋：${s.player.coins}文`));
@@ -77,31 +105,44 @@ export async function renderActionsPanel(container,data){
         if(!here.objects.people.length)people.append(node('p','此处没有旁人。','fields-note'));
         for(const p of here.objects.people)people.append(button(p.activity?`${p.name}（${p.activity}）`:p.name,()=>{state.target=p.id;state.form=null;rerender();}));
         const exits=section('出路',fragment);
-        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}})));
+        for(const e of here.objects.exits)exits.append(button(`${e.direction}${e.distance}：${e.name}${e.condition?`（${e.condition}）`:''}${e.permission?.allowed===false?`（${e.permission.reason}）`:''}`,()=>openForm({...rows.find(r=>r.id==='core:move'),fill:{destination:e.id}}),{disabled:e.permission?.allowed===false}));
         const items=section('行囊',fragment);
         if(!here.objects.items.length)items.append(node('p','行囊是空的。','fields-note'));
         for(const i of here.objects.items)items.append(button(`${i.name}×${i.quantity}`,()=>{state.target=i.id;state.form=null;rerender();}));
     }
     // 表单
-    if(state.form){
+    if(state.builder){
+        const box=node('section');fragment.append(box);
+        renderActionBuilder(box,{builder:state.builder,here,api:data.api,onChange:rerender,
+            onClose:()=>{state.builder=null;rerender();},onResult:(result,action)=>{
+                state.last={label:action.label,...result};
+                if(result.ok)state.builder=null;
+            }});
+    }
+    if(state.form&&!state.builder){
         const action=state.form,form=node('form',undefined,'fields-actions-form');form.setAttribute('aria-label',action.label);
         form.append(node('h3',action.label));if(action.hint)form.append(node('p',action.hint,'fields-note'));
         const inputs=[];
         for(const slot of action.slots){
             if(slot.name==='consent')continue;// 同意由对方决定，不是玩家能填的槽位
             const filled=action.fill?.[slot.name];
-            if(slot.kind==='object'&&slot.default!=='dawn')continue;
-            if(slot.kind==='object'){inputs.push({slot,read:()=>sleepUntil(data.view.document.state.minute)});continue;}
+            if(slot.kind==='object'&&!slot.multiple&&slot.default!=='dawn')continue;
+            if(slot.kind==='object'&&!slot.multiple){inputs.push({slot,read:()=>sleepUntil(data.view.document.state.minute)});continue;}
             const label=node('label',slotLabel(slot)),id=`fields-slot-${slot.name}`;label.htmlFor=id;
             let input;
-            if(slot.options){input=node('select');input.id=id;if(!slot.required)input.append(new Option('（不填）',''));for(const o of slot.options)input.append(new Option(o.label,o.value));input.value=filled??slot.default??(slot.required?slot.options[0]?.value:'')??'';}
+            if(slot.options){
+                input=node('select');input.id=id;input.multiple=Boolean(slot.multiple);
+                if(!slot.required&&!slot.multiple)input.append(new Option('（不填）',''));
+                for(const o of slot.options){const option=new Option(o.permission?.allowed===false?`${o.label}（${o.permission.reason}）`:o.label,o.value);option.disabled=o.permission?.allowed===false;input.append(option);}
+                if(!slot.multiple)input.value=filled??slot.default??(slot.required?slot.options.find(o=>o.permission?.allowed!==false)?.value:'')??'';
+            }
             else if(slot.kind==='flag'){input=node('input');input.type='checkbox';input.id=id;input.checked=Boolean(filled);}
-            else if(['quantity','coins','minutes'].includes(slot.kind)){input=node('input');input.type='number';input.min='1';input.inputMode='numeric';input.id=id;input.value=filled??slot.default??'';}
+            else if(['quantity','coins','minutes'].includes(slot.kind)){input=node('input');input.type='number';input.min=String(slot.min??1);if(slot.max!==undefined)input.max=String(slot.max);input.inputMode='numeric';input.id=id;input.value=filled??slot.default??'';}
             else{input=node('input');input.type='text';input.id=id;input.value=filled??'';}
             if(filled!==undefined&&!slot.options&&slot.kind==='entity'){inputs.push({slot,read:()=>filled});continue;}
             form.append(label,input);
             if(slot.presets){const presets=node('div',undefined,'fields-actions-presets');for(const p of slot.presets)presets.append(button(String(p),()=>{input.value=p;},{className:'fields-actions-preset'}));form.append(presets);}
-            inputs.push({slot,read:()=>slot.kind==='flag'?(input.checked||undefined):['quantity','coins','minutes'].includes(slot.kind)?(input.value===''?undefined:Number(input.value)):(input.value===''?undefined:input.value)});
+            inputs.push({slot,read:()=>slot.multiple?([...input.selectedOptions].length?[...input.selectedOptions].map(o=>o.value):undefined):slot.kind==='flag'?(input.checked||undefined):['quantity','coins','minutes'].includes(slot.kind)?(input.value===''?undefined:Number(input.value)):(input.value===''?undefined:input.value)});
         }
         const submit=node('button','确定','fields-actions-submit');submit.type='submit';
         const cancel=button('算了',()=>{state.form=null;rerender();},{className:'fields-actions-back'});

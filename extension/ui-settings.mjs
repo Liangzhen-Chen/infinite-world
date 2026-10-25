@@ -1,4 +1,5 @@
 import {registerPanel,settingsSections} from './ui-shell.mjs';
+import {actionModes} from './turn.mjs';
 const KEY='infinite-fields-reading';
 const defaults={theme:'dark',fontSize:18,highContrast:false,reducedMotion:false,volume:60,muted:false};
 let settings={...defaults};
@@ -7,7 +8,9 @@ let stopFormSync=null;
 export function normalizeSettings(value={}){
     return {theme:value.theme==='light'?'light':'dark',fontSize:[16,18,20,22,24].includes(value.fontSize)?value.fontSize:18,
         highContrast:value.highContrast===true,reducedMotion:value.reducedMotion===true,
-        volume:Number.isFinite(value.volume)?Math.max(0,Math.min(100,value.volume)):60,muted:value.muted===true};
+        volume:Number.isFinite(value.volume)?Math.max(0,Math.min(100,value.volume)):60,muted:value.muted===true,
+        // Old reading-settings consumers retain their shape until a mode is set.
+        ...Object.fromEntries(Object.entries(actionModes(value)).filter(([key])=>Object.hasOwn(value,key)))};
 }
 export function getSettings(){return {...settings};}
 export function subscribeSettings(listener){listeners.add(listener);return ()=>listeners.delete(listener);}
@@ -28,15 +31,18 @@ export function initializeSettings(){
     applySettings();registerPanel({id:'settings',title:'阅读设置',render:renderSettings});
 }
 function localStorageValue(){try{return localStorage.getItem(KEY);}catch{return null;}}
-export function renderSettings(container){
+export function renderSettings(container,data={}){
     stopFormSync?.();
     const doc=container.ownerDocument;container.replaceChildren();
     const form=doc.createElement('div');form.className='fields-settings';
     function control(text,node){const label=doc.createElement('label');label.append(doc.createTextNode(text),node);form.append(label);}
-    for(const [key,title,options]of [['theme','主题',[['dark','夜灯与旧木'],['light','羊皮纸']]],['fontSize','正文字号',[[16,'16 px'],[18,'18 px'],[20,'20 px'],[22,'22 px'],[24,'24 px']]]]){
+    const selects=new Map();
+    for(const [key,title,options]of [['theme','主题',[['dark','夜灯与旧木'],['light','羊皮纸']]],['fontSize','正文字号',[[16,'16 px'],[18,'18 px'],[20,'20 px'],[22,'22 px'],[24,'24 px']]],
+        ['intent','理解自由输入',[['off','关闭（使用本地动作）'],['match','只推荐目录动作，手动确认'],['propose','允许提出开放动作']]],
+        ['narration','主持人叙述',[['off','只显示实际回执'],['async','结算后补叙'],['sync','验证后显示']]]]){
         const select=doc.createElement('select');select.setAttribute('aria-label',title);
         for(const [value,text]of options){const option=doc.createElement('option');option.value=value;option.textContent=text;select.append(option);}
-        select.value=settings[key];select.onchange=()=>updateSettings({[key]:key==='fontSize'?Number(select.value):select.value});control(title,select);
+        select.value=settings[key]??actionModes(settings)[key];select.onchange=()=>updateSettings({[key]:key==='fontSize'?Number(select.value):select.value});control(title,select);selects.set(key,select);
     }
     const sharedBoxes=new Map();
     for(const [key,title]of [['highContrast','高对比度'],['reducedMotion','减少动画'],['muted','静音']]){
@@ -44,11 +50,13 @@ export function renderSettings(container){
     }
     const volume=doc.createElement('input');volume.type='range';volume.min=0;volume.max=100;volume.value=settings.volume;volume.setAttribute('aria-label','音量');volume.oninput=()=>updateSettings({volume:Number(volume.value)});control('音量',volume);
     const sample=doc.createElement('p');sample.className='fields-reading-sample';sample.textContent='雨停之后，檐角仍在滴水。你收好行囊，沿着石路走向村口。';form.append(sample);
+    if(data.view){const level=doc.createElement('p');level.textContent=`战役开放动作：${{off:'关闭（仍可留下痕迹）',limited:'受限原语',full:'全部原语，仍校验权限'}[data.view.document.state.records?.action_config?.openActions??'full']}。此设置由存档决定；当前服务未提供配置写入口。`;form.append(level);}
     for(const section of settingsSections()){const node=doc.createElement('section'),title=doc.createElement('h3');title.textContent=section.title;node.append(title);section.render(node,{getSettings,updateSettings});form.append(node);}
     container.append(form);
     stopFormSync=subscribeSettings(value=>{
         if(!container.isConnected){stopFormSync?.();stopFormSync=null;return;}
         volume.value=value.volume;
+        for(const [key,select]of selects)select.value=value[key]??actionModes(value)[key];
         for(const [key,input]of sharedBoxes)input.checked=value[key];
     });
 }

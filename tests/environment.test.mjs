@@ -118,8 +118,10 @@ test('法术失败仍耗魔时间与练习但不修改水，许可施法中到�
     assert.equal(failed.document.state.records['physical_feature:feature_hw_cup'],undefined);
     const far=structuredClone(document);far.state.records.local_player_position={category:'local_position',location:'loc_hw_dock',point:[10,0]};
     await assert.rejects(cast(run,far,spell('condense'),'公用水盏'),/距离/);
-    const approached=await run(far,'world_environment',{operation:'approach',target:'公用水盏'},'walk_to_cup');
-    assert.equal(approached.document.state.minute,far.state.minute+1);assert.equal((await cast(run,approached.document,spell('condense'),'公用水盏')).result.condensedMl,35);
+    // S4 separates walking along a zone edge from approaching the object.
+    const arrived=await run(far,'world_move',{destination:'zone:loc_hw_dock:feature_hw_cup'},'walk_to_cup_zone');
+    const approached=await run(arrived.document,'world_environment',{operation:'approach',target:'公用水盏'},'walk_to_cup');
+    assert.equal(approached.document.state.minute,arrived.document.state.minute+1);assert.equal((await cast(run,approached.document,spell('condense'),'公用水盏')).result.condensedMl,35);
     const near=structuredClone(document);near.state.location='bld_hw_qingdeng';
     near.state.records.expiring={category:'authorization',subject:'feature_hw_kitchen_bucket',action:'environment_use',grantor:'npc_hw_linsui',expires:near.state.minute+20};
     const valid=await cast(run,near,spell('clean_water'),'后厨水桶',true,{authorization:'expiring'});

@@ -1,3 +1,5 @@
+import {relationView} from '../server-plugin/npc-state.mjs';
+// A3 causal2: read the canonical relation; preserve original trust expectations.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,6 +13,8 @@ import {CampaignStorage,applyPatches}from'../server-plugin/storage.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
 import {lawView}from'../server-plugin/law.mjs';
+import {officeScene}from'./helpers/office-actions.mjs';
+import {applyIntentSetup}from'../tools/a3-score.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai';
@@ -20,9 +24,11 @@ async function setup(){
     // These procedure fixtures explicitly place the participants at interviews
     // and hearings. Their routine travel is tested separately below.
     for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou'].includes(npc.id)){delete npc.schedule;delete npc.tier;}
-    const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'law-test');
+    const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'law-test');
+    document=officeScene(engine,document,{location:'bld_bs_watch',minute:600,present:['npc_bs_035_1']});
     document.state.location='bld_hw_qingdeng';document.state.npcs[victim].inventory.item_bread=4;
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
+    run.engine=engine;
     return{world,engine,document,run};
 }
 async function theft(run,c,{success=true,seen=null,args={item:'item_bread'}}={}){
@@ -35,7 +41,17 @@ async function theft(run,c,{success=true,seen=null,args={item:'item_bread'}}={})
 async function confessed(run,c,caseId){
     // Isolated procedural fixture: officer has physically come to the player's scene.
     c=structuredClone(c);c.state.npcs[guard].location=c.state.location;
-    return(await run(c,'world_law',{operation:'confess',case:caseId,authority:guard},'confess')).document;
+    return filed(run,await run(c,'world_law',{operation:'confess',case:caseId,authority:guard},'confess'));
+}
+// 05 §5.2.7: the procedural fixture visits the actual case desk for the
+// independent decision, then restores its interview scene. S406b requests the
+// NPC's own decision; it no longer supplies an acceptance. No case is seeded.
+async function filed(run,out){
+    const c=out.document,engine=run.engine,location=c.state.location;
+    const desk=officeScene(engine,c,{location:'bld_bs_watch',minute:c.state.minute,present:['npc_bs_035_1']});
+    const accepted=await run(desk,'world_act',{action:'law:request_decision',slots:{request:out.result.request,authority:'npc_bs_035_1'}},`${out.result.request}:accept`);
+    assert.equal(accepted.result.decision.source.kind,'npc_decision');assert.equal(accepted.result.accepted,true);
+    return applyIntentSetup(engine,accepted.document,{location}).document;
 }
 async function judged(run,c,caseId){
     c=await confessed(run,c,caseId);
@@ -46,11 +62,11 @@ async function judged(run,c,caseId){
 test('认罪缺执法者返回可纠正候选；自认标志不与已报案混淆',async()=>{
     const{document,run,engine}=await setup();document.state.npcs[guard].location=document.state.location;
     const incident=await theft(run,document),before=structuredClone(incident.document);
-    assert.equal(lawView(engine,before).cases[0].confessed,false);
-    await assert.rejects(run(before,'world_law',{operation:'confess',case:incident.result.case},'bad_confession'),/authority.*顾岑/);
+    assert.equal(lawView(engine,before).cases.length,0); // suspicion is not a public case
+    await assert.rejects(run(before,'world_law',{operation:'confess',case:incident.result.case},'bad_confession'),/在场执法者.*顾岑/);
     assert.deepEqual(incident.document,before);
     const accepted=await run(before,'world_law',{operation:'confess',case:incident.result.case,authority:guard},'good_confession');
-    assert.equal(lawView(engine,accepted.document).cases[0].confessed,true);
+    const c=await filed(run,accepted);assert.equal(lawView(engine,c).cases[0].confessed,true);
 });
 
 test('偷窃实际转一件库存并保留唯一身份，失败不转财物，钱币偷取守恒且不会无依据定罪',async()=>{
@@ -81,25 +97,25 @@ test('偷窃拒绝空库存、他处目标、死亡和非法金额与编号冲�
 
 test('没被看见不降低个人信任，目击仅记录在场清醒人物，未作证者不能被全局认定知情执法',async()=>{
     const{document,run}=await setup(),hidden=await theft(run,document,{seen:0});
-    assert.equal(hidden.document.state.npcs[victim].trust,document.state.npcs[victim].trust);
+    assert.equal(relationView(null,hidden.document.state,victim,'player').trust,relationView(null,document.state,victim,'player').trust);
     const sleep=structuredClone(document);sleep.state.npcs.npc_hw_hezhou.activity='熟睡';
     const out=await theft(run,sleep);assert.ok(!out.result.witnesses.includes('npc_hw_hezhou'));
     const c=structuredClone(out.document);c.state.npcs[guard].location=c.state.location;
     await assert.rejects(run(c,'world_law',{operation:'report',case:out.result.case,authority:guard,reporter:guard},'forged_report'),/没有亲见/);
     const records=readStateSection(out.document.state,'记录'),npcs=readStateSection(out.document.state,'人物');
-    assert.equal(records[out.result.case].evidence,undefined);assert.equal(npcs[victim].legalKnowledge,undefined);
+    assert.equal(records[out.result.case],undefined);assert.equal(npcs[victim].legalKnowledge,undefined);
 });
 
 test('目击必须实际报案，单个证词不足；两人独立作证可裁判，重复作证不加权',async()=>{
     const{document,run}=await setup(),incident=await theft(run,document,{seen:2});let c=incident.document;
     c.state.npcs[guard].location=c.state.location;
-    c=(await run(c,'world_law',{operation:'report',case:incident.result.case,authority:guard,reporter:victim},'report_1')).document;
+    c=await filed(run,await run(c,'world_law',{operation:'report',case:incident.result.case,authority:guard,reporter:victim},'report_1'));
     await assert.rejects(run(c,'world_law',{operation:'report',case:incident.result.case,authority:guard,reporter:victim},'report_twice'),/重复/);
     c=(await run(c,'world_move',{destination:'bld_hw_council'},'court_1')).document;
     const first=await run(c,'world_law',{operation:'hear',case:incident.result.case,authority:judge},'insufficient');
     assert.equal(first.result.convicted,false);assert.equal(first.document.state.records[incident.result.case].status,'证据不足');
     c=(await run(first.document,'world_move',{destination:'bld_hw_qingdeng'},'back')).document;
-    c=(await run(c,'world_law',{operation:'report',case:incident.result.case,authority:guard,reporter:'npc_hw_hezhou'},'report_2')).document;
+    c=await filed(run,await run(c,'world_law',{operation:'report',case:incident.result.case,authority:guard,reporter:'npc_hw_hezhou'},'report_2'));
     c=(await run(c,'world_move',{destination:'bld_hw_council'},'court_2')).document;
     const second=await run(c,'world_law',{operation:'hear',case:incident.result.case,authority:judge},'adequate');
     assert.equal(second.result.convicted,true);assert.equal(second.result.judgment.evidenceScore,2);
@@ -161,7 +177,15 @@ test('劳役/监禁必须经过真实时长，禁止期间自由行动；赔偿�
         const{document,run}=await setup(),incident=await theft(run,document);let c=await judged(run,incident.document,incident.result.case);
         const sentenced=await run(c,'world_law',{operation,case:incident.result.case,authority:judge},`sentence_${operation}`);c=sentenced.document;
         assert.equal(c.state.records[incident.result.case].status,'服役中');
-        await assert.rejects(run(c,'world_trade',{seller:victim,item:'item_bread',quantity:1},'buy_in_prison'),/服役/);
+        // 06 §6.5（第192行）/ A.15.24：按 regime.allows 过滤；在押仍可与在场者交易随身财产。
+        await assert.rejects(run(c,'world_trade',{seller:victim,item:'item_bread',quantity:1},'remote_buy_in_prison'),/不在场/);
+        await assert.rejects(run(c,'world_move',{destination:'loc_hw'},'leave_in_prison'),/羁押/);
+        const visiting=structuredClone(c);visiting.state.npcs[victim].location=c.state.location;
+        const bought=await run(visiting,'world_trade',{seller:victim,item:'item_bread',quantity:1},'buy_in_prison');
+        assert.equal(bought.document.state.inventory.item_bread.quantity,(visiting.state.inventory.item_bread?.quantity??0)+1);
+        assert.equal(bought.document.state.npcs[victim].inventory.item_bread.quantity,visiting.state.npcs[victim].inventory.item_bread.quantity-1);
+        assert.equal(bought.document.state.records[incident.result.case].status,'服役中');
+        assert.equal(money(bought.document),money(visiting));
         c=(await run(c,'world_time',{minutes:sentenced.result.sentenceMinutes-1},'almost_done')).document;
         assert.equal(c.state.records[incident.result.case].status,'服役中');
         c=(await run(c,'world_time',{minutes:1},'finished')).document;
@@ -189,7 +213,8 @@ test('法律目录只读、坏角色/辖区/法院及重复法典拒绝，异地
         const bad=structuredClone(world);mutate(bad);assert.equal(validateWorld(bad).ok,false);
     }
     const c=structuredClone(document);c.state.location='loc_capital';c.state.npcs[victim].location='loc_capital';
-    await assert.rejects(run(c,'world_crime',{operation:'steal',target:victim,coins:10},'wrong_jurisdiction'),/法典/);
+    const theft=await run(c,'world_crime',{operation:'steal',target:victim,coins:10},'wrong_jurisdiction');
+    assert.equal(theft.result.case,null);assert.equal(Object.values(theft.document.state.records).filter(r=>r.category==='legal_case').length,0); // missing law cannot fabricate a charge
 });
 
 test('熟睡人物不能目击或受理，但已有真实财物仍可被尝试偷取',async()=>{
@@ -217,7 +242,7 @@ test('服役中死亡不抹掉剩余判罚，复活后不被跨地点状态锁�
 test('真实推搡留下法律案件，掰腕检定不被当成伤害，原有关系变化不重复扣除',async()=>{
     const{document,run}=await setup(),shoved=await run(document,'world_combat',{target:victim,intent:'shove'},'shove');
     const row=shoved.document.state.records[shoved.result.case];assert.equal(row.category,'legal_case');
-    assert.ok(['assault','assault_attempt'].includes(row.offense));assert.equal(shoved.document.state.npcs[victim].trust,document.state.npcs[victim].trust-5);
+    assert.ok(['assault','assault_attempt'].includes(row.offense));assert.equal(relationView(null,shoved.document.state,victim,'player').trust,relationView(null,document.state,victim,'player').trust-5);
     const checked=await run(document,'world_check',{attribute:'力量',opponent:{npc:victim,attribute:'力量'}},'arm_wrestle');
     assert.equal(Object.values(checked.document.state.records).filter(r=>r.category==='legal_case').length,0);
 });

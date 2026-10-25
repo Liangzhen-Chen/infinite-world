@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EntityResolver, MemoryIndex, validateMemory } from '../server-plugin/retrieval.mjs';
+import { EntityResolver, MemoryIndex, validateMemory, normalize } from '../server-plugin/retrieval.mjs';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
@@ -9,6 +9,15 @@ import express from 'express';
 import {loadWorld} from '../tools/load-world.mjs';
 import {init} from '../server-plugin/index.mjs';
 const entities = [{ id: 'npc_hw_linsui', name: '林穗', aliases: ['林穗姐', '老板娘', '林老板', '穗姐'], scope: 'loc_hw' }];
+test('别名首字符索引与完整扫描的顺序、歧义及当前作用域一致，扩展不污染父解析器',()=>{
+ const resolver=new EntityResolver([{id:'npc_a',name:'林',aliases:['木匠','林伯'],scope:'loc_a'},{id:'npc_b',name:'林伯',aliases:['木匠'],scope:'loc_b'},{id:'npc_c',name:'明月',aliases:['🌙'],scope:'loc_a'}]);
+ const scan=(view,text,scope)=>{const found=new Set();for(const alias of view.names)if(normalize(text).includes(alias))try{found.add(view.resolve(alias,scope));}catch{}return [...found];};
+ const check=view=>{for(const text of ['林伯找木匠和明月🌙','🌙','木匠','找不到','林'])for(const scope of [null,'loc_a','loc_b','loc_c'])assert.deepEqual([...view.mentions(text,scope)],scan(view,text,scope));};
+ check(resolver);
+ const child=resolver.extend([{id:'npc_d',name:'林伯',scope:'loc_c'}]);check(child);check(resolver);
+ // Only alias buckets are cached. Live entity scope must still affect resolve.
+ resolver.entities.get('npc_a').scope='loc_b';check(resolver);
+});
 const make = () => {
     const index = new MemoryIndex({ entities });
     index.upsert({ id: 'fact_kitchen', source: '长期事实', text: '第三天玩家帮林穗找回遗失的账簿，她允许玩家借用酒馆厨房',

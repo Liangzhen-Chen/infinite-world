@@ -58,9 +58,10 @@ test('租房需求来自当前住房，租约进入住户与作息视图；离�
     const total=cash(f.doc),r=await f.act({operation:'rent_out',seller:worker,location:mill,days:90,consent:true},'rent');
     assert.equal(personHousehold(f.e,f.doc.state,worker).value.homeLocation,mill);assert.ok(homeResidents(f.e,f.doc.state,mill).value.includes(worker));
     await assert.rejects(f.act({operation:'rent_out',seller:host,location:mill,consent:true},'occupied'),/需求|出租/);
-    const money=f.doc.state.npcs[worker].coins;f.doc.state.npcs[worker].coins=0;f.doc.state.player.coins+=money;
+    // Use the native transfer so the insolvency premise and conserved ledger agree.
+    const money=f.doc.state.npcs[worker].coins,empty=f.draft();financeTransfer(empty,f.e,worker,'player',money,'rent-empty');empty.done();
     f.tick(600+31*DAY);const debt=Object.entries(f.doc.state.records).find(([,x])=>x.kind==='rent');assert.ok(debt);assert.ok(debt[1].defaulted.case);assert.equal(debt[1].paid,0);
-    f.doc.state.npcs[worker].coins=debt[1].amount;f.doc.state.player.coins-=debt[1].amount;
+    const fund=f.draft();financeTransfer(fund,f.e,'player',worker,debt[1].amount,'rent-fund');fund.done();
     await f.act({operation:'collect',seller:worker,debt:debt[0],consent:true},'collect');assert.equal(f.doc.state.records[debt[0]].status,'已还清');assert.equal(cash(f.doc),total);
     f.tick(600+90*DAY);assert.equal(f.doc.state.records[r.contract].status,'已到期');assert.equal(personHousehold(f.e,f.doc.state,worker).value.homeLocation,oldHome);
 });

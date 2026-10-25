@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {authoredRules} from '../../tools/load-world.mjs';
 import {writeFixtureLocations} from './w1-depth-editions.mjs';
 import {buildBatch,withoutSites} from '../../tools/w5-sites.mjs';
 import * as sites1 from '../../world/design/w5-sites-1.mjs';
@@ -8,13 +9,15 @@ import * as sites3 from '../../world/design/w5-sites-3.mjs';
 // Older publishers replay onto a catalog from before Baishi town was integrated.
 // Strip the town's places, roster, households, later promoted npc_bs_* full profiles,
 // their primer books and law-code places so that frozen pre-Baishi people stay consistent.
-export const preBaishiNpc=n=>!n.id.startsWith('npc_bs_');
+// npc_a3_zhaosan（猎户，住白石镇南市）和 npc_bs_townhead 都是白石镇整合之后的人物。
+export const preBaishiNpc=n=>!n.id.startsWith('npc_bs_')&&!n.id.startsWith('npc_a3_exam_')&&n.id!=='npc_a3_zhaosan';
 export async function writePreBaishiWorld(dir,world){
  // T113–T115 sites depend on the town's later people and spell materials.
  for(const design of [sites3,sites2,sites1])world=withoutSites(world,buildBatch(design.sites,world),design.priorNoMechanics);
  // Only the town skeleton (districts and bld_bs_* buildings) is removed; later wild/monster areas scoped to the town stay.
  const oldLocations=world.locations.filter(l=>l.scope!=='loc_bs'||l.id==='bld_bs_shrine'||!/^(bld_bs_|loc_bs_)/.test(l.id)),placeIds=new Set(oldLocations.map(l=>l.id));
- const rules=structuredClone(world.rules);
+ // The on-disk rules source must not duplicate loadWorld's law-file attachments.
+ const rules=authoredRules(structuredClone(world.rules));
  // D1/U12 and T155 came after these frozen pre-town profiles.
  for(const key of ['hazardClock','questSources','military','warDiplomacy'])delete rules[key];
  for(const region of rules.weather.regions){region.locations=region.locations.filter(id=>placeIds.has(id));region.indoor=region.indoor.filter(id=>placeIds.has(id));}
@@ -32,7 +35,11 @@ export async function writePreBaishiWorld(dir,world){
  const festivalCandidate=JSON.parse(await fs.readFile('world/drafts/w5/festivals-candidate.json','utf8'));
  const festivals=(world.festivals??[]).map(f=>f.id==='festival_borrowbench'?festivalCandidate.festivals.find(old=>old.id===f.id):f);
  await fs.writeFile(path.join(dir,'lore/festivals.json'),JSON.stringify(festivals));
- const files={'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':catalog.items,'meta/spells.json':catalog.spells,'meta/recipes.json':catalog.recipes};
+ // A3 offices and newly authored examiners did not exist before the town.
+ // Existing people keep their pre-town facts, without seats in removed buildings.
+ // 白石镇镇务署（镇长与值房受理职位）随白石镇整合才有，旧世界没有（fix3-world）。
+ const factions=world.factions.filter(f=>f.id!=='faction_bs_government').map(f=>({...f,...(f.offices?{offices:f.offices.filter(o=>placeIds.has(o.seat)&&(!o.holder||preBaishiNpc({id:o.holder})))}:{})}));
+ const files={'lore/factions.json':factions,'geo/routes.json':world.routes.filter(r=>placeIds.has(r.from)&&placeIds.has(r.to)),'geo/settlements.json':world.settlementProfiles.filter(p=>p.id!=='loc_bs'),'people/residents.json':world.residents.filter(n=>n.settlement!=='loc_bs'),'people/households.json':world.households.filter(h=>h.settlement!=='loc_bs'),'meta/rules.json':rules,'meta/items.json':catalog.items,'meta/spells.json':catalog.spells,'meta/recipes.json':catalog.recipes};
  for(const [file,value] of Object.entries(files))await fs.writeFile(path.join(dir,file),JSON.stringify(value));
 }
 // Remove catalog rows (items/spells/recipes) that reference removed ids, to a fixpoint.

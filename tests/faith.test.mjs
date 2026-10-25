@@ -102,6 +102,12 @@ test('日结新发疾病实际触发个人信仰动摇，诊断保持私密且�
  const once=structuredClone(s.doc);advanceFaith(d,s.engine,{beforeState,id:'disease-day'});assert.deepEqual(s.doc,once);
 });
 
+// A proposal's consent:true cannot stand in for an NPC (faith.mjs ritual): each
+// participant's own scoped grant is recorded as the engine would record it.
+const grantRite=(s,ids,rite='bank_sign')=>{
+ s.doc.state.consentEvents??=[];
+ for(const id of ids)s.doc.state.consentEvents.push({id:`rite-consent-${id}`,type:'consent_given',from:id,to:'player',scope:'rite',purpose:[T],subject:T,terms:{purpose:rite},at:0});
+};
 test('有限显兆要求地点、时节、供品、持续虔信及真实集体；冷却到期及效果到期由原时钟处理',async()=>{
  const s=fixture();s.doc.state.minute=3*1440+540;
  for(const id of ['player',A,B]){
@@ -109,13 +115,15 @@ test('有限显兆要求地点、时节、供品、持续虔信及真实集体�
  }
  const coin=s.doc.state.player.coins,resin=s.engine.quantity(draft(s),'player','item_resin');
  const before=structuredClone(s.doc);await assert.rejects(s.faith('rite',{choice:'bank_sign',workers:[A,B]}),/参与者同意/);assert.deepEqual(s.doc,before);
- const result=await s.faith('rite',{choice:'bank_sign',workers:[A,B],consent:true});assert.equal(result.response.applied,true);
+ await assert.rejects(s.faith('rite',{choice:'bank_sign',workers:[A,B],consent:true}),/参与者同意/);assert.deepEqual(s.doc,before);
+ grantRite(s,[A,B]);
+ const result=await s.faith('rite',{choice:'bank_sign',workers:[A,B]});assert.equal(result.response.applied,true);
  const omen=Object.values(s.doc.state.effects).find(r=>r.kind==='faith_omen');assert.equal(omen.location,SEAT);assert.equal(omen.expires-s.doc.state.minute,30);
  assert.equal(s.doc.state.player.coins,coin-2);assert.equal(s.engine.quantity(draft(s),'player','item_resin'),resin-1);
  assert.doesNotMatch(JSON.stringify(omen),/private|secret|truth|memory/);assert.match(omen.form,/不指认/);
- const again=await s.faith('rite',{choice:'bank_sign',workers:[A,B],consent:true});assert.equal(again.response.applied,false);
+ const again=await s.faith('rite',{choice:'bank_sign',workers:[A,B]});assert.equal(again.response.applied,false);
  assert.ok(!Object.values(s.doc.state.effects).some(r=>r.kind==='faith_omen'));
- s.doc.state.minute=11*1440+540;assert.equal((await s.faith('rite',{choice:'bank_sign',workers:[A,B],consent:true})).response.applied,true);
+ s.doc.state.minute=11*1440+540;assert.equal((await s.faith('rite',{choice:'bank_sign',workers:[A,B]})).response.applied,true);
 });
 
 test('缺条件只是普通祭仪；虚构参与者、异地、欠供品和私密窥探不能换取神迹',async()=>{
@@ -123,10 +131,11 @@ test('缺条件只是普通祭仪；虚构参与者、异地、欠供品和私�
   const s=fixture();s.doc.state.minute=3*1440+540;
   for(const id of ['player',A,B]){const n=id==='player'?s.doc.state.player:s.doc.state.npcs[id];n.faith={deity:'deity_bank',temple:T,observedSince:missing==='devotion'?s.doc.state.minute:0,lastBreach:missing==='breach'?1:-1};}
   if(missing==='season')s.doc.state.minute=95*1440+540;
-  const r=await s.faith('rite',{choice:'bank_sign',workers:missing==='collective'?[A]:[A,B],consent:true});assert.equal(r.response.applied,false,missing);
+  grantRite(s,[A,B]);
+  const r=await s.faith('rite',{choice:'bank_sign',workers:missing==='collective'?[A]:[A,B]});assert.equal(r.response.applied,false,missing);
  }
  const s=fixture(),before=structuredClone(s.doc);
- await assert.rejects(s.faith('rite',{choice:'bank_sign',workers:['npc_missing'],consent:true}));assert.deepEqual(s.doc,before);
+ await assert.rejects(s.faith('rite',{choice:'bank_sign',workers:['npc_missing']}));assert.deepEqual(s.doc,before);
  s.doc.state.inventory.item_resin.quantity=0;const noResin=structuredClone(s.doc);
  await assert.rejects(s.faith('rite',{choice:'bank_sign'}),/供品不足/);assert.deepEqual(s.doc,noResin);
  s.doc.state.location='loc_hw';await assert.rejects(s.faith('rite',{choice:'bank_sign'}),/所在地/);

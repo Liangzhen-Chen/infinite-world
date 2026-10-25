@@ -1,6 +1,8 @@
+import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import {chromium} from 'playwright-core';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 
@@ -11,7 +13,7 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  const client={async generate(body,label){
   requests.push({body,label});
   if(label.startsWith('consistency-rewrite:')){await barrier;return{choices:[{finish_reason:'stop',message:{content:final}}]};}
-  return{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'report_consistency_issues',arguments:'{"issues":[]}'}}]}}]};
+  return reviewResponse(body);
  }};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{});
@@ -117,7 +119,10 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
   await Promise.all([window.fixtureHandlers.get('MESSAGE_RECEIVED')(9),window.fixtureHandlers.get('MESSAGE_RECEIVED')(9)]);
  });
  const waited=await page.evaluate(()=>window.fixtureContext.chat[9]);
- assert.equal(waited.extra.fields_consistency.protocol.changed,true);assert.match(waited.extra.fields_consistency.original,/额外="5分"/);assert.match(waited.mes,/额外="0分"/);
+ // Rejected drafts live in the server diagnostic sidecar, never in chat
+ // extras (which are also sent to sync-index). Keep the original-tail check.
+ const waitDiagnostic=JSON.parse(await fs.readFile(path.join(server.directory,'infinite-fields',created.reference.campaignId,'consistency',`${waited.extra.fields_consistency.reviewId}.json`),'utf8'));
+ assert.equal(waited.extra.fields_consistency.protocol.changed,true);assert.equal(waited.extra.fields_consistency.original,undefined);assert.match(waitDiagnostic.result.original,/额外="5分"/);assert.match(waited.mes,/额外="0分"/);
  assert.equal(await page.evaluate(()=>window.infiniteFieldsV2.view.document.state.minute)-startMinute,10);
  assert.equal(endpoints.filter(row=>row.body.tool==='world_turn').length-turnsBeforeWait,1);
  assert.match(await page.locator('.mes[mesid="9"] .mes_text').innerText(),/林穗/);assert.doesNotMatch(await page.locator('.mes[mesid="9"] .mes_text').innerText(),/npc_|who=|<q/);

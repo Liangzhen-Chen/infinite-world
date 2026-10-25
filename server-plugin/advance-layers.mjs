@@ -3,9 +3,15 @@
 const DAY=1440;
 import {obligationClosed} from './obligation-protocol.mjs';
 export const ADVANCE_LAYERS=Object.freeze({intelligent:1,rule:DAY,statistics:7*DAY});
-export const advanceLayersFresh=engine=>!engine.replaying||engine.replayResult?.advanceLayerVersion===1;
+
 export const regionProgressKey=county=>`advance_region:${county}`;
+const layerPlans=Symbol('advance layer plans');
 export function advanceLayerPlan(engine,state){
+    // Advance graphs already have one immutable world topology as their lifetime.
+    // A player location change selects a separate county/distance projection.
+    let memo=engine.advanceGraphs?.get(layerPlans);
+    if(!memo&&engine.advanceGraphs)engine.advanceGraphs.set(layerPlans,memo=new Map());
+    if(memo?.has(state.location))return memo.get(state.location);
     const counties=engine.world.regions?.filter(r=>r.category==='county')??[];
     const byCounty=new Map(counties.map(c=>[c.id,c])),places=new Map(engine.world.locations.map(p=>[p.id,p]));
     const countyOf=location=>{
@@ -27,13 +33,13 @@ export function advanceLayerPlan(engine,state){
         const hops=distance.get(c.id)??Infinity;
         layers.set(c.id,hops<=1?'intelligent':hops===2||player&&c.province===byCounty.get(player)?.province?'rule':'statistics');
     }
-    return {player,countyOf,layers};
+    const plan={player,countyOf,layers};memo?.set(state.location,plan);return plan;
 }
 // Only unprofiled, stationary skeleton actors can be deferred losslessly.
 // Obligations, full profiles, illness, custody, work and changed livelihoods
 // continue to use individual settlement at their existing event boundaries.
 export function remoteScheduleBatch(engine,state,before,after,{promote=false}={}){
-    if(!advanceLayersFresh(engine))return {groups:new Map(),persons:new Map()};
+
     const plan=engine.advanceLayerContext??advanceLayerPlan(engine,state),groups=new Map(),persons=new Map();
     for(const [county,remote] of Object.entries(state.remote??{})){
         const layer=plan.layers.get(county)??'statistics',through=state.records?.[regionProgressKey(county)]?.scheduleThrough??remote.minute;

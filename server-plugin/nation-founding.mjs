@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {nobleRules,nationRows,liveNation,rulerNation,nationAt,currentDomains,domainSettlements,domainPopulation,containsDomain,titlesOf,highTitle,nobleLords} from './noble-state.mjs';
 import {armies,armyKey,armyStrength,ensureArmies,partyCoins,partyPay,partyCredit,partyAccount} from './military.mjs';
 import {treasury,BOOKED} from './money.mjs';
@@ -47,9 +48,9 @@ function publish(d,e,n,verb,src,at,summary){
 }
 export function recognizeIndependence(d,e,a,b,src){
  const s=d.get('state'),who=liveNation(s,a)?.ruler??a,party=rulerNation(s,who)?.id??who;
- if(!(a==='player'||s.records?.[`organization:${a}`]?.leader==='player')||!external(e,s,b,who))throw Error('须由本人或本国请求外部势力承认');
- if(!titlesOf(s,who).some(highTitle)&&!rulerNation(s,who))throw Error('尚无可承认的独立领地');
- if(standing(e,s,b,party)<nobleRules(e).founding.standing||activeWar(s,party,b))throw Error('对方立场不足或仍在交战');
+ if(!(a==='player'||s.records?.[`organization:${a}`]?.leader==='player')||!external(e,s,b,who))throw preconditionFailure('须由本人或本国请求外部势力承认');
+ if(!titlesOf(s,who).some(highTitle)&&!rulerNation(s,who))throw preconditionFailure('尚无可承认的独立领地');
+ if(standing(e,s,b,party)<nobleRules(e).founding.standing||activeWar(s,party,b))throw preconditionFailure('对方立场不足或仍在交战');
  const key=`recognition:${who}:${b}`,row={category:'diplomacy',status:'承认独立',parties:[party,b],subject:who,recognizer:b,minute:s.minute,sourceEvent:src};holdingSet(d,e,rec(key),row,'nation-founding');
  return {recognition:row};
 }
@@ -69,15 +70,15 @@ function react(d,e,n,at,src){
  return {...n,status:'谈判中',reaction:'谈判',terms:{tribute:e.rules.warDiplomacy.tributeCopperMonth}};
 }
 export function foundNation(d,e,{who='player',name,capital,coins},src,at=d.get('state','minute')){
- if(rulerNation(d.get('state'),who))throw Error('已经建立国家');
+ if(rulerNation(d.get('state'),who))throw preconditionFailure('已经建立国家');
  ensureArmies(d,e,at);const s=d.get('state'),ready=nationReadiness(e,s,who);if(!ready.ready)throw Error(ready.reasons.join('；'));
- if(typeof name!=='string'||!name.trim()||name.length>80)throw Error('国名为空或过长');
- if(!e.world.locations.some(l=>l.id===capital)||!ready.domains.some(id=>containsDomain(e,s,id,capital)))throw Error('首府须在本人领地现存地点');
- const baseLaw=legalCodeAt(e,capital,s);if(!baseLaw)throw Error('首府没有可沿用的现行法典');
- const amount=coins??nobleRules(e).founding.treasury;if(!Number.isSafeInteger(amount)||amount<nobleRules(e).founding.treasury||amount>ready.treasury)throw Error('须将足额真实财产转入国库');
- const id=`nation_${src}`.replace(/[^a-zA-Z0-9_]/g,'_');if(s.records?.[`nation:${id}`])throw Error('国家编号已占用');
- const originalSuzerain=suzerain(e,s,ready.domains[0]);if(!originalSuzerain)throw Error('原宗主来源缺失');
- if(partyPay(d,e,who,amount,{sourceEvent:src,reason:'独立国库',partial:false,books:{account:treasury(id),writer:'nation-founding',eventId:src}})!==amount)throw Error('国库款项不足');
+ if(typeof name!=='string'||!name.trim()||name.length>80)throw preconditionFailure('国名为空或过长');
+ if(!e.world.locations.some(l=>l.id===capital)||!ready.domains.some(id=>containsDomain(e,s,id,capital)))throw preconditionFailure('首府须在本人领地现存地点');
+ const baseLaw=legalCodeAt(e,capital,s);if(!baseLaw)throw preconditionFailure('首府没有可沿用的现行法典');
+ const amount=coins??nobleRules(e).founding.treasury;if(!Number.isSafeInteger(amount)||amount<nobleRules(e).founding.treasury||amount>ready.treasury)throw preconditionFailure('须将足额真实财产转入国库');
+ const id=`nation_${src}`.replace(/[^a-zA-Z0-9_]/g,'_');if(s.records?.[`nation:${id}`])throw preconditionFailure('国家编号已占用');
+ const originalSuzerain=suzerain(e,s,ready.domains[0]);if(!originalSuzerain)throw preconditionFailure('原宗主来源缺失');
+ if(partyPay(d,e,who,amount,{sourceEvent:src,reason:'独立国库',partial:false,books:{account:treasury(id),writer:'nation-founding',eventId:src}})!==amount)throw preconditionFailure('国库款项不足');
  holdingSet(d,e,rec(`organization:${id}`),{category:'organization',id,source:'created',kind:'王国',name:name.trim(),seat:capital,leader:who,founder:who,foundedAt:at,members:{[who]:{position:'国王',joinedAt:at,arrears:0}},removed:{},charter:{mode:'leader',approval:true,fee:0,dues:0,rules:['独立国库与本国法典']},treasury:0,ledger:[]},'nation-founding');syncHoldings(d,e,'org',id,{writer:'nation-founding',eventId:src});
  let n={category:'nation',id,name:name.trim(),ruler:who,capital,domains:ready.domains,suzerain:originalSuzerain,status:'独立待定',foundedAt:at,lawSource:baseLaw.id,amendments:{},taxes:{},nextReview:at+nobleRules(e).founding.reviewDays*DAY,breaches:0,sourceEvent:src};
  holdingSet(d,e,rec(`nation:${id}`),n,'nation-founding');changeGroupCoins(d,e,id,amount,{kind:'建国入库',sourceEvent:src,minute:at},BOOKED);
@@ -111,14 +112,14 @@ export function changeTerritoryControl(d,e,domain,ruler,{at=d.get('state','minut
 export function defectFromNation(d,e,{nation,member},src){
  const s=d.get('state'),n=liveNation(s,nation),key=`nation_defection:${nation}:${member}`;
  if(s.records?.[key])return {...s.records[key],duplicate:true};
- if(!n||member===n.ruler||!isEffective(e,d,member))throw Error('叛离者或原国家不成立');
- const org=s.records?.[`organization:${nation}`];if(!org?.members?.[member])throw Error('叛离者不在原国家名册');
+ if(!n||member===n.ruler||!isEffective(e,d,member))throw preconditionFailure('叛离者或原国家不成立');
+ const org=s.records?.[`organization:${nation}`];if(!org?.members?.[member])throw preconditionFailure('叛离者不在原国家名册');
  ensureHoldings(d,e);
  const units=armies(s).filter(a=>a.party===nation&&s.records?.[`organization:${a.id}`]?.leader===member&&armyStrength(a)>0);
  const titles=titlesOf(s,member).filter(highTitle),domains=[...new Set([...titles.flatMap(t=>t.domains??[t.fief]),...rows(s).filter(o=>o.category==='governance_office'&&o.status==='在任'&&o.holder===member).map(o=>o.settlement)])].filter(domain=>n.domains.some(id=>containsDomain(e,s,id,domain))&&units.some(a=>containsDomain(e,s,domain,a.location)));
  const kin=npcHousehold(e,s,member),related=new Set([...Object.keys(org.members),...units.flatMap(a=>Object.keys(s.records?.[`organization:${a.id}`]?.members??{})),...(kin?householdMembers(e,s,kin.id):[]),
   ...rows(s).filter(r=>r.category==='contract'&&contractState(r,s.minute).active&&[member,nation,n.ruler].includes(r.owner)).map(r=>r.worker)].filter(Boolean));
- const margin=nobleRules(e).defection?.followMargin;if(!Number.isFinite(margin))throw Error('未登记部下分流规则');
+ const margin=nobleRules(e).defection?.followMargin;if(!Number.isFinite(margin))throw preconditionFailure('未登记部下分流规则');
  const decisions=[...related].filter(id=>id!==member&&id!==n.ruler&&isEffective(e,d,id)).sort().map(id=>({id,rebel:standing(e,s,id,member),original:standing(e,s,id,nation)}));
  const followers=decisions.filter(v=>v.rebel-v.original>=margin).map(v=>v.id);
  for(const id of [member,...followers]){
@@ -179,28 +180,28 @@ export function nationAction(d,args,src){
  if(args.choice==='found')return {nation:foundNation(d,e,{name:args.name,capital:args.settlement??s.location,coins:args.coins},src)};
  if(args.choice==='defect'){
   const member=args.member==='player'?'player':e.resolve(args.member,'npc');
-  if(args.consent!==true||member!=='player'&&(!s.player.companions?.includes(member)||s.npcs?.[member]?.location!==s.location||standing(e,s,member,'player')<nobleRules(e).founding.standing))throw Error('须叛离者本人或清醒在场且自愿的同伴作出实际叛离');
+  if(args.consent!==true||member!=='player'&&(!s.player.companions?.includes(member)||s.npcs?.[member]?.location!==s.location||standing(e,s,member,'player')<nobleRules(e).founding.standing))throw preconditionFailure('须叛离者本人或清醒在场且自愿的同伴作出实际叛离');
   return {defection:defectFromNation(d,e,{nation:args.org,member},src)};
  }
- if(!n)throw Error('尚未建立国家');
+ if(!n)throw preconditionFailure('尚未建立国家');
  if(args.choice==='negotiate'){
-  if(n.status!=='谈判中')throw Error('没有未决宗主谈判');
+  if(n.status!=='谈判中')throw preconditionFailure('没有未决宗主谈判');
   if(args.consent===true){const key=`tribute:${pair(n.id,n.suzerain)}`;holdingSet(d,e,rec(key),{category:'tribute',payer:n.id,payee:n.suzerain,amount:n.terms.tribute,arrears:0,nextAt:s.minute+30*DAY,war:n.id,sourceEvent:src},'nation-founding');const next={...n,status:'独立',reaction:'贡赋议和'};holdingSet(d,e,rec(`nation:${n.id}`),next,'nation-founding');return {nation:next};}
   const war=launchIndependenceWar(d,e,n,s.minute,src),next={...n,status:'独立待定',reaction:war?'宣战':'待集结',war:war?.id??null};holdingSet(d,e,rec(`nation:${n.id}`),next,'nation-founding');return {nation:next};
  }
  if(args.choice==='tax'){
-  if(!['commercial','customs'].includes(args.action)||!Number.isSafeInteger(args.taxBps)||args.taxBps<0||args.taxBps>nobleRules(e).maxTaxBps)throw Error('税制须指定commercial或customs及允许税率');
+  if(!['commercial','customs'].includes(args.action)||!Number.isSafeInteger(args.taxBps)||args.taxBps<0||args.taxBps>nobleRules(e).maxTaxBps)throw preconditionFailure('税制须指定commercial或customs及允许税率');
   const next={...n,taxes:{...n.taxes,[args.action]:args.taxBps}};holdingSet(d,e,rec(`nation:${n.id}`),next,'nation-founding');return {nation:next};
  }
  if(args.choice==='law'){
- const code=legalCodeAt(e,n.capital,s),penalty=code.penalties[args.name];if(!penalty)throw Error('只能修改现行法典已登记罪名');
-  if(!Number.isSafeInteger(args.coins)||args.coins<0||args.coins>100000||!Number.isSafeInteger(args.minutes)||args.minutes<0||args.minutes>360*DAY)throw Error('刑罚数值无效');
+ const code=legalCodeAt(e,n.capital,s),penalty=code.penalties[args.name];if(!penalty)throw preconditionFailure('只能修改现行法典已登记罪名');
+  if(!Number.isSafeInteger(args.coins)||args.coins<0||args.coins>100000||!Number.isSafeInteger(args.minutes)||args.minutes<0||args.minutes>360*DAY)throw preconditionFailure('刑罚数值无效');
   const next={...n,amendments:{...n.amendments,[args.name]:{...penalty,baseFine:args.coins,detentionMinutes:args.minutes}}};holdingSet(d,e,rec(`nation:${n.id}`),next,'nation-founding');publish(d,e,next,'organize',`${src}:law`,s.minute,`${n.name}修订本国法典`);return {law:next.amendments};
  }
- throw Error('未知国家事务');
+ throw preconditionFailure('未知国家事务');
 }
 export function advanceNations(d,e,{before,after}){
- const r=nobleRules(e);if(!r||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
+ const r=nobleRules(e);if(!r)return;
  for(const n of nationRows(d.get('state')).filter(n=>liveNation(d.get('state'),n.id))){
   if(n.reaction==='待集结'){const war=launchIndependenceWar(d,e,n,after,`${n.id}:muster`);if(war)holdingSet(d,e,rec(`nation:${n.id}`),{...n,reaction:'宣战',war:war.id},'nation-founding');}
   for(let at=n.nextReview;at<=after&&liveNation(d.get('state'),n.id);at+=r.founding.reviewDays*DAY){

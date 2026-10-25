@@ -6,6 +6,26 @@ import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {groupAccountView} from '../server-plugin/group-account.mjs';
 import {generateCounty,remoteWorld} from '../server-plugin/remote-generation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
+import {loanTerms} from '../server-plugin/credit.mjs';
+import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
+import {amendObligation} from '../server-plugin/obligation-runtime.mjs';
+
+function grant(f,from,scope,subject,terms,eventId){
+    const d=f.draft();
+    applyConsentEvent(d,{engine:f.e,document:d.document},{actor:from,eventId,verb:'consent_given',to:'player',payload:{scope,subject,purpose:['player',subject],terms,until:d.get('state','minute')+10}});d.done();
+}
+function lenderOffer(f,principal,days,eventId){
+    // 产品原则二.4：借入须由出借人签入实际利息报价，true 不是同意来源。
+    const d=f.draft(),quote=loanTerms(d,f.e,{lender:host,principal,days,collateralValue:0});d.done();
+    grant(f,host,'loan','player',{principal,days,interest:quote.interest},eventId);
+}
+function borrowerOffer(f,borrower,representative,principal,days,eventId){
+    // 组织的同意由现任代表发出，subject 绑定组织，不能复用其私人借款同意。
+    const d=f.draft(),quote=borrowerTerms(d,f.e,borrower,principal,days);d.done();
+    grant(f,representative,'loan',borrower===representative?'player':borrower,{principal,days,interest:quote.interest},eventId);
+    return quote.interest;
+}
 
 test('存款按期结息，当前季节灾害改变报价；准备金不足或倒闭不凭空支付，重放不重复',async()=>{
     const f=fixture(),b=f.e.rules.economy.credit.banks[0];
@@ -20,40 +40,58 @@ test('存款按期结息，当前季节灾害改变报价；准备金不足或�
 });
 test('分期部分还款保留抵押；展期须同意；提前清偿只付已发生利息，金额拒绝原子性',async()=>{
     const f=fixture({at:inn}),before=cash(f.doc);
-    const loan=await f.act({operation:'borrow',seller:host,consent:true,coins:100,days:10,quantity:2},'borrow');
+    lenderOffer(f,100,10,'partial-lender');
+    const loan=await f.act({operation:'borrow',seller:host,coins:100,days:10,quantity:2},'borrow');
     const p=await f.act({seller:host,payment:'repay',debt:loan.debt,coins:20},'partial');assert.notEqual(p.status,'已还清');
     const saved=structuredClone(f.doc);await assert.rejects(f.act({seller:host,payment:'repay',debt:loan.debt,coins:1e6},'over'),/还款金额/);assert.deepEqual(f.doc,saved);
-    await assert.rejects(f.act({operation:'extend',seller:host,debt:loan.debt,days:5},'no'),/同意/);
-    const ext=await f.act({operation:'extend',seller:host,debt:loan.debt,days:5,consent:true},'ext');assert.ok(ext.deadline>loan.deadline);
+    // 展期请求可取得 NPC 新决策；原“缺 true 拒绝”改验债务人无真实同意的单方改期，仍须零写入。
+    const denied=f.draft(),unchanged=structuredClone(denied.document);
+    assert.throws(()=>amendObligation(denied,f.e,{id:denied.get('state','records',loan.debt,'obligation'),actor:'player',changes:{deadline:loan.deadline+5*DAY},consent:true},'no'),/consent/);
+    assert.deepEqual(denied.document,unchanged);denied.done();
+    const debt=f.doc.state.records[loan.debt],extraInterest=Math.ceil((debt.principal-debt.paid)*debt.monthlyInterest*5/30);
+    grant(f,host,'amend',debt.obligation,{deadline:debt.deadline+5*DAY,amount:debt.amount+extraInterest,interest:debt.interest+extraInterest,installments:1},'extension-agreed');
+    const ext=await f.act({operation:'extend',seller:host,debt:loan.debt,days:5},'ext');assert.ok(ext.deadline>loan.deadline);
     await f.act({operation:'prepay',seller:host,debt:loan.debt,consent:true},'early');assert.equal(f.doc.state.records[loan.debt].status,'已还清');assert.ok(f.doc.state.records[loan.debt].prepayment.waived>0);assert.equal(cash(f.doc),before);
-    const second=await f.act({operation:'borrow',seller:host,consent:true,coins:40,days:4,quantity:2},'second');f.tick(f.doc.state.records[second.debt].createdAt+3*DAY);
+    lenderOffer(f,40,4,'second-lender');
+    const second=await f.act({operation:'borrow',seller:host,coins:40,days:4,quantity:2},'second');f.tick(f.doc.state.records[second.debt].createdAt+3*DAY);
     assert.ok(f.doc.state.records[second.debt].defaulted,'第一期不付会违约，不等到总借期结束');
 });
 test('玩家向NPC放贷实际转本金，信用立场灵智收支派生利率，按期偿还及法律抵押追讨守恒',async()=>{
     const f=fixture(),total=cash(f.doc);const d=f.draft(),a=borrowerTerms(d,f.e,host,100,10);d.done();
     f.doc.state.npcs[host].intelligence={level:5};f.doc.state.records.salary={category:'office_salary',holder:host,payments:[{minute:600,copper:1500}]};
     const d2=f.draft(),b=borrowerTerms(d2,f.e,host,100,10);d2.done();assert.ok(b.rate<a.rate);
-    await assert.rejects(f.act({operation:'lend',seller:host,coins:100,days:10},'refuse'),/同意/);
-    const loan=await f.act({operation:'lend',seller:host,coins:100,days:10,consent:true,quantity:2},'lend');f.tick(600+10*DAY);
+    // 明确请求零息却没有借款人的该项同意时，自填 true 仍拒绝；默认报价可由 NPC 真实决策接受。
+    const unchanged=structuredClone(f.doc);
+    await assert.rejects(f.act({operation:'lend',seller:host,coins:100,days:10,interest:0,consent:true},'refuse'),/同意/);assert.deepEqual(f.doc,unchanged);
+    const interest=borrowerOffer(f,host,host,100,10,'borrower-accepts');
+    const loan=await f.act({operation:'lend',seller:host,coins:100,days:10,interest,quantity:2},'lend');f.tick(600+10*DAY);
     assert.equal(f.doc.state.records[loan.debt].status,'已还清');assert.equal(cash(f.doc),total);
-    const bad=await f.act({operation:'lend',seller:worker,coins:100,days:1,consent:true,item:'item_bread',quantity:1},'bad');
+    const badInterest=borrowerOffer(f,worker,worker,100,1,'bad-borrower');
+    const bad=await f.act({operation:'lend',seller:worker,coins:100,days:1,interest:badInterest,item:'item_bread',quantity:1},'bad');
     const current=f.doc.state.npcs[worker].coins;f.doc.state.npcs[worker].coins=0;f.doc.state.player.coins+=current;
+    // S1b/S1c: this fixture transfer changes both purses outside the engine;
+    // synchronize books before testing real default/collection postings.
+    resyncBooks(f.e,f.doc);
     f.tick(f.doc.state.records[bad.debt].deadline+DAY);const row=f.doc.state.records[bad.debt];assert.ok(row.defaulted.case);assert.ok(row.paid>0);assert.equal(f.doc.state.records[row.defaulted.case].offender,worker);assert.equal(f.doc.state.records[row.defaulted.case].victim,'player');assert.equal(cash(f.doc),total);
     // 15 §15.1.1：价值有位置；追偿前债务人与法官、执法者须同在法院，才能从其随身资金执行。
     f.doc.state.location='bld_hw_council';for(const n of ['npc_hw_chenbai','npc_hw_gucen',worker]){f.doc.state.npcs[n].location='bld_hw_council';delete f.w.npcs.find(x=>x.id===n).schedule;}
     await f.act({operation:'hear',case:row.defaulted.case,authority:'npc_hw_chenbai'},'hear','world_law');
     await assert.rejects(f.act({operation:'pay',case:row.defaulted.case,authority:'npc_hw_gucen'},'empty','world_law'),/没有可执行资金/);
     f.doc.state.npcs[worker].coins=200;f.doc.state.player.coins-=200;
+    // The recovery must debit these actual 200 coins, not the stale pre-fixture
+    // account. Keep the closed-case and total-cash assertions unchanged.
+    resyncBooks(f.e,f.doc);
     const recovered=await f.act({operation:'pay',case:row.defaulted.case,authority:'npc_hw_gucen'},'recover','world_law');assert.ok(recovered.closed);assert.equal(cash(f.doc),total);
 });
 test('组织放贷读V4公库与现任代表，不能以代表私款偿还组织债',async()=>{
     const f=fixture(),group=f.w.factions.find(g=>g.leader?.startsWith('npc_'));assert.ok(group);
     const base=f.e.byId.get(group.leader);delete base.schedule;f.doc.state.npcs[group.leader]={coins:300,status:'正常',location:post,activity:'营业',memoryStream:[]};
     const id=group.id,rep=group.leader,balance=groupAccountView(f.e,f.doc.state,id).coins;
-    const loan=await f.act({operation:'lend',business:id,seller:rep,coins:40,days:1,consent:true},'org');
+    const interest=borrowerOffer(f,id,rep,40,1,'org-representative');
+    const loan=await f.act({operation:'lend',business:id,seller:rep,coins:40,days:1,interest},'org');
     assert.equal(groupAccountView(f.e,f.doc.state,id).coins,balance+40);const total=cash(f.doc),personal=f.doc.state.npcs[rep].coins;
     f.tick(f.doc.state.records[loan.debt].deadline);assert.equal(f.doc.state.npcs[rep].coins,personal);assert.equal(cash(f.doc),total);
-    await assert.rejects(f.act({operation:'lend',business:id,seller:worker,coins:10,consent:true},'wrong'),/代表/);
+    await assert.rejects(f.act({operation:'lend',business:id,seller:worker,coins:10},'wrong'),/代表/);
 });
 test('典当赎回与流当实物拍卖，买方实际付款、超额退回；拒绝重复赎当拍卖',async()=>{
     const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');const total=cash(f.doc);
@@ -69,10 +107,12 @@ test('典当赎回与流当实物拍卖，买方实际付款、超额退回；�
 test('组织抵押来自统一公库实物，偿还退回组织，违约处置给债权人，不挪代表私产',async()=>{
     const f=fixture(),group=f.w.factions[0],rep=group.leader;group.resources.items={item_wood:10};
     delete f.e.byId.get(rep).schedule;f.doc.state.npcs[rep]={coins:50,status:'正常',location:post,activity:'营业',memoryStream:[]};
-    const loan=await f.act({operation:'lend',business:group.id,seller:rep,coins:20,days:1,item:'item_wood',quantity:2,consent:true},'pledge-org');
+    const interest=borrowerOffer(f,group.id,rep,20,1,'pledge-representative');
+    const loan=await f.act({operation:'lend',business:group.id,seller:rep,coins:20,days:1,item:'item_wood',quantity:2,interest},'pledge-org');
     assert.equal(groupAccountView(f.e,f.doc.state,group.id).items.item_wood,8);const total=cash(f.doc);
     f.tick(f.doc.state.records[loan.debt].deadline);assert.equal(groupAccountView(f.e,f.doc.state,group.id).items.item_wood,10);assert.equal(cash(f.doc),total);
-    const poor=await f.act({operation:'lend',business:group.id,seller:rep,coins:20,days:1,item:'item_wood',quantity:2,consent:true},'bad-org');
+    const poorInterest=borrowerOffer(f,group.id,rep,20,1,'poor-representative');
+    const poor=await f.act({operation:'lend',business:group.id,seller:rep,coins:20,days:1,item:'item_wood',quantity:2,interest:poorInterest},'bad-org');
     const balance=groupAccountView(f.e,f.doc.state,group.id).coins;f.doc.state.records[`faction-assets:${group.id}`].coins=0;f.doc.state.player.coins+=balance;
     const before=f.doc.state.inventory.item_wood.quantity;f.tick(f.doc.state.records[poor.debt].deadline+DAY);
     assert.equal(f.doc.state.inventory.item_wood.quantity,before+2);assert.equal(groupAccountView(f.e,f.doc.state,group.id).items.item_wood,8);assert.equal(cash(f.doc),total);

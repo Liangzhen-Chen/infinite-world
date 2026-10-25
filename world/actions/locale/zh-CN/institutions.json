@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "locale": "zh-CN",
+ "events": {
+  "office.apply": "你向任免机关递交了任职申请。",
+  "office.decide": "任免机关按章程审定了申请。",
+  "office.appoint": "任免机关登记了正式任命。",
+  "office.remove": "任免机关登记了免职。",
+  "office.exam_refer": "在岗考官登记了考试席位。"
+ }
+}

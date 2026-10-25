@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition} from './transport.mjs';
 import {memoryFor,permitted,appendHeard} from './npc-cognition.mjs';
@@ -12,14 +13,14 @@ const locationOf=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 // Possession grants custody; it never grants knowledge of its contents.
 export function sendPost(d,e,{from,to,memoryId,legs,sealed=true,receipt=true},eventId){
  const s=d.get('state'),sender=from==='player'?{...s.player,location:s.location}:s.npcs[from],recipient=to==='player'?{...s.player,location:s.location}:s.npcs[to];
- if(!sender?.location||!recipient?.location||from===to)throw Error('寄收双方须有可确认的地址');
- if(from==='player'&&(typeof memoryId!=='string'||!memoryId.trim()||memoryId.length>1000))throw Error('书信正文须为1至1000字');
- const memory=from==='player'?{id:`letter:${eventId}`,sourceEvent:eventId,kind:'letter',minute:s.minute,content:memoryId,sourceType:'亲历',participants:['player'],private:true,permittedRecipients:[to]}:memoryFor(e,s,from,memoryId,s.minute);if(!permitted(memory,to))throw Error('这条私密记忆未许可收件人');
- if(!Array.isArray(legs)||!legs.length||legs.at(-1).to!==recipient.location)throw Error('驿传接力须有通往收件地址的真实各段');
+ if(!sender?.location||!recipient?.location||from===to)throw preconditionFailure('寄收双方须有可确认的地址');
+ if(from==='player'&&(typeof memoryId!=='string'||!memoryId.trim()||memoryId.length>1000))throw preconditionFailure('书信正文须为1至1000字');
+ const memory=from==='player'?{id:`letter:${eventId}`,sourceEvent:eventId,kind:'letter',minute:s.minute,content:memoryId,sourceType:'亲历',participants:['player'],private:true,permittedRecipients:[to]}:memoryFor(e,s,from,memoryId,s.minute);if(!permitted(memory,to))throw preconditionFailure('这条私密记忆未许可收件人');
+ if(!Array.isArray(legs)||!legs.length||legs.at(-1).to!==recipient.location)throw preconditionFailure('驿传接力须有通往收件地址的真实各段');
  let location=sender.location,at=s.minute,postage=0;
  for(const leg of legs){const quote=quoteTransport(d,e,{asset:leg.asset,from:location,to:leg.to,departAt:Math.ceil(at/60)*60});location=leg.to;at=quote.estimatedArrivalAt;postage+=quote.total;}
- if(financeBalance(d,e,from)<postage*(receipt?2:1))throw Error('邮资不足以覆盖接力与回执');
- const id=`post:${eventId}`;if(d.get(...path(id)))throw Error('信件编号已存在');
+ if(financeBalance(d,e,from)<postage*(receipt?2:1))throw preconditionFailure('邮资不足以覆盖接力与回执');
+ const id=`post:${eventId}`;if(d.get(...path(id)))throw preconditionFailure('信件编号已存在');
  const row={category:'post',id,from,to,memoryId,payload:clone(memory),sealed,sealBroken:false,receiptRequested:receipt,origin:sender.location,destination:recipient.location,legs:clone(legs),legIndex:0,chain:[],createdAt:s.minute,status:'in-transit'};
  const trip=bookTransport(d,e,{owner:from,recipient:from,asset:legs[0].asset,to:legs[0].to,post:id},`${eventId}:leg:0`);
  row.shipment=trip.id;row.chain.push({shipment:trip.id,carrier:trip.carrier,from:sender.location,to:trip.to,receivedAt:s.minute});d.set(path(id),row);index(d,id);return {id,shipment:trip.id,estimatedArrivalAt:at};
@@ -65,11 +66,11 @@ export function advancePost(d,e,minute){
  }
 }
 export function openPost(d,e,{letter,actor='player',lose=false},eventId){
- const old=d.get(...path(letter));if(old?.category!=='post'||old.status==='lost')throw Error('没有可开封的实信');
+ const old=d.get(...path(letter));if(old?.category!=='post'||old.status==='lost')throw preconditionFailure('没有可开封的实信');
  const row=clone(old),trip=d.get(...path(row.shipment)),s=d.get('state'),location=actor==='player'?s.location:s.npcs?.[actor]?.location;
  const onboard=actor===trip?.driver||trip?.passengers.includes(actor),position=trip&&transportPosition(e,s,trip);
- if(row.deliveredAt){if(actor!==row.to||location!==row.destination)throw Error('原信已交收件人，返程只携带回执');}
- else if((!onboard&&(position?.location===null||location!==position?.location))||![row.from,row.to,trip.driver,trip.custodian].includes(actor))throw Error('没有在现场实际持有这封信');
+ if(row.deliveredAt){if(actor!==row.to||location!==row.destination)throw preconditionFailure('原信已交收件人，返程只携带回执');}
+ else if((!onboard&&(position?.location===null||location!==position?.location))||![row.from,row.to,trip.driver,trip.custodian].includes(actor))throw preconditionFailure('没有在现场实际持有这封信');
  if(lose){row.status='lost';row.lostAt=s.minute;row.lastLocation=location;index(d,row.id,false);}
  else{
   row.sealBroken||=row.sealed;row.openedBy=[...new Set([...(row.openedBy??[]),actor])];
@@ -82,12 +83,12 @@ export function openPost(d,e,{letter,actor='player',lose=false},eventId){
 export function postAction(d,e,args,eventId){
  if(args.task==='open'||args.task==='lose')return openPost(d,e,{letter:args.business??args.contract,lose:args.task==='lose'},eventId);
  if(args.task==='trace'){
-  const row=d.get(...path(args.business??args.contract));if(row?.category!=='post')throw Error('信件不存在');
-  if(![row.from,row.to].includes('player'))throw Error('没有寄收身份');
+  const row=d.get(...path(args.business??args.contract));if(row?.category!=='post')throw preconditionFailure('信件不存在');
+  if(![row.from,row.to].includes('player'))throw preconditionFailure('没有寄收身份');
   return {id:row.id,status:row.status,sealBroken:row.sealBroken,chain:clone(row.chain),deliveredAt:row.deliveredAt??null,receiptAt:row.receiptAt??null,transport:transportTrace(e,d.get('state'),row.shipment,row.from)};
  }
  const to=e.resolve(args.buyer),from=e.resolve(args.business??'player');
- if(from!=='player'&&(args.consent!==true||locationOf(d.get('state'),from)!==d.get('state','location')))throw Error('代寄NPC书信须本人在场明确同意');
+ if(from!=='player'&&(args.consent!==true||locationOf(d.get('state'),from)!==d.get('state','location')))throw preconditionFailure('代寄NPC书信须本人在场明确同意');
  const assets=[args.contract,...args.instances??[]],legs=assets.map((asset,i)=>({asset,to:i===assets.length-1?e.resolve(args.location??locationOf(d.get('state'),to)):d.get('state','records',assets[i+1],'location')}));
  return sendPost(d,e,{from,to,memoryId:args.item,legs},eventId);
 }

@@ -49,7 +49,8 @@ const offlineDesign={...frozenDesign,patchRows:frozenEntries.map(e=>({...e,patch
 test('砾泉正式30人等于已审批完整档，全体152个full深度及规则措辞零缺口，原17traits保留',()=>{
  // 白石镇后续批次把99名名册人升为npc_bs_*完整档，正式目录现为251 full；此处只核对村落与河湾原152人未变（T157怪物聚居地另有npc_ms_*），白石镇名册加升档仍为305。
  assert.equal(approvedEntries.length,30);assert.equal(liveWorld.npcs.filter(villageFull).length,152);
- assert.equal(liveWorld.residents.filter(villageResident).length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length+liveWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')).length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
+ // 13ac0697: retain the frozen 305-person batch; verify the separately approved A3 town head in r06-bs-market.
+ assert.equal(liveWorld.residents.filter(villageResident).length,294);assert.equal(liveWorld.residents.filter(n=>n.settlement==='loc_bs').length+liveWorld.npcs.filter(n=>n.id.startsWith('npc_bs_')&&n.id!=='npc_bs_townhead').length,305);assert.deepEqual(liveWorld.npcs.map(n=>n.id),world.npcs.map(n=>n.id));
  for(const entry of approvedEntries){
   const current=liveWorld.npcs.find(n=>n.id===entry.id);
   assert.deepEqual(current,entry.facts);verifyUnchanged(entry.before,current,entry);
@@ -64,7 +65,9 @@ test('砾泉正式30人等于已审批完整档，全体152个full深度及规�
 test('砾泉冻结原档首次预演零写入，正式发布闭合6事件30人且仅更新砾泉',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'t86-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
- for(const dir of ['meta','geo','people','lore','design','rules','templates'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // A3 executable definitions and ontology assets are part of the loaded edition
+ // (03 §3.2, registration epochs); keep the complete-world equality assertion unchanged.
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.mkdir(path.join(temp,'tools'));
  for(const file of ['content-pipeline.mjs','content-budget.mjs'])await fs.copyFile(path.resolve('tools',file),path.join(temp,'tools',file));
  await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});
@@ -612,7 +615,7 @@ test('真实背景hard使五人来源不闭合，未发的邻居修订保持提�
 test('T08实际continuation父proof加四叶提议经官方prepare，full和compact只携当前after且保留原证据',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'lq-neighbor-parent-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
- for(const folder of ['meta','people','geo','lore','rules','templates'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
+ for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  await fs.cp(legacyRoot,path.join(worldRoot,'drafts/w1/lq-depth'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/baishi-skeleton'),path.join(worldRoot,'drafts/w1/baishi-skeleton'),{recursive:true});
  await fs.mkdir(path.join(worldRoot,'design'),{recursive:true});
  await fs.copyFile(path.resolve('world/design/w1-reopen-authorization.json'),path.join(worldRoot,'design/w1-reopen-authorization.json'));

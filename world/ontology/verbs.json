@@ -8,6 +8,8 @@
   {"id":"contest_win","label":"争夺胜出","family":"code"},
   {"id":"contest_lose","label":"争夺落选","family":"code"},
   {"id":"proposal_rejected","label":"提案被拒","family":"code"},
+  {"id":"consent_given","label":"给予同意","family":"primitive"},
+  {"id":"consent_revoked","label":"撤销同意","family":"primitive"},
   {"id":"reaction_cut","label":"反应链截断","family":"code"},
   {
    "id": "harm",
@@ -506,8 +508,13 @@
   },
   {
    "id": "obligation_settled",
-   "label": "义务清偿",
+   "label": "履行清算",
    "family": "primitive"
+  },
+  {
+   "id": "effect_applied",
+   "label": "世界效果落地",
+   "family": "code"
   }
  ]
 }

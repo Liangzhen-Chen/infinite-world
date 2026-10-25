@@ -1,0 +1,303 @@
+{
+ "format": 1,
+ "namespace": "documents",
+ "actions": [
+  {
+   "id": "documents:list",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_list"
+   },
+   "label": "查看文书原件",
+   "verb": "document.list",
+   "group": "文书",
+   "pack": null,
+   "readOnly": true,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.list",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:issue",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_issue"
+   },
+   "label": "制作事务原件",
+   "verb": "document.issue",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "source",
+     "kind": "text"
+    },
+    {
+     "name": "paper",
+     "kind": "text"
+    },
+    {
+     "name": "kind",
+     "kind": "choice",
+     "options": [
+      "receipt",
+      "notice"
+     ]
+    },
+    {
+     "name": "text",
+     "kind": "text"
+    },
+    {
+     "name": "language",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.issue",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:read",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_read"
+   },
+   "label": "阅读原件",
+   "verb": "document.read",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "document",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.read",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:show",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_show"
+   },
+   "label": "出示原件",
+   "verb": "document.show",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "document",
+     "kind": "text"
+    },
+    {
+     "name": "target",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.show",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:give",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_give"
+   },
+   "label": "交付原件",
+   "verb": "document.give",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "document",
+     "kind": "text"
+    },
+    {
+     "name": "target",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.give",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:post",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_post"
+   },
+   "label": "张贴原件",
+   "verb": "document.post",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "document",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.post",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "documents:annotate",
+   "call": {
+    "tool": "world_settlement",
+    "operation": "governance_document_annotate"
+   },
+   "label": "批注原件",
+   "verb": "document.annotate",
+   "group": "文书",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "document",
+     "kind": "text"
+    },
+    {
+     "name": "text",
+     "kind": "text"
+    },
+    {
+     "name": "reviewed",
+     "kind": "flag"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "document.annotate",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  }
+ ]
+}

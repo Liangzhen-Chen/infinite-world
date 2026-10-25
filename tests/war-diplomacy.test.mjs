@@ -36,12 +36,12 @@ test('战争数据、注册表和现有工具入口可用，坏来源被拒',()=
  for(const op of ['war_inspect','war_join','diplomacy'])assert.ok(t.find(t=>t.function.name==='world_settlement').function.parameters.properties.operation.enum.includes(op));
 });
 
-test('T142 非人郡边境来源经 standing 宣战，按周结算并可重放；旧事件不补新战争',()=>{
+test('T142 非人郡边境来源经 standing 宣战，按周结算并可重放',()=>{
  const run=()=>{const {e,d}=setup();advanceWarDiplomacy(d,e,{before:27*DAY,after:43*DAY});return {e,d,w:getWar(d,'zheya_border')};};
  const {e,d,w}=run();assert.deepEqual(run().w,w);assert.equal(w.source,'T142 非人郡边境');assert.equal(w.rounds,2);
  assert.ok(standing(e,d.get('state'),w.aggressor,w.defender)<=-50);assert.equal(getArmy(d,'army_heilu_band').war,w.id);
  assert.ok(w.history[0].right.terrain>1);assert.ok(Object.values(w.history[0].losses).some(n=>n>0));
- const old=setup();old.e.replaying=true;old.e.replayResult={};advanceWarDiplomacy(old.d,old.e,{before:0,after:50*DAY});assert.equal(wars(old.d.get('state')).length,0);
+ const replay=setup();replay.e.replaying=true;replay.e.replayResult={};advanceWarDiplomacy(replay.d,replay.e,{before:27*DAY,after:43*DAY});assert.deepEqual(replay.d.get('state'),d.get('state'));
  const calm=setup(),s=calm.e.rules.warDiplomacy.sources[0];
  for(const [holder,target] of [[s.aggressor,s.defender],[s.defender,s.aggressor]])adjustStanding(calm.d,calm.e,holder,target,30,{sourceEvent:'prior-peace',reason:'边境交涉'});
  advanceWarDiplomacy(calm.d,calm.e,{before:27*DAY,after:29*DAY});assert.equal(wars(calm.d.get('state')).length,0,'既有交涉改善立场可以阻止来源宣战');

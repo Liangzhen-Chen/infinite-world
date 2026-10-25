@@ -115,7 +115,10 @@ test('自愿精神观察只返回干扰存在，不泄露思想；缺同意、�
  await denied(s,'sense_mind',npc,/同意/,{permit:'mental_permit'});
  await denied(s,'sense_mind',npc,/许可/,{authorization:'mental_consent'});
  const r=await cast(s,'sense_mind',npc,mentalArgs);assert.equal(r.interference,true);assert.equal(r.interferenceCount,1);assert.ok(!JSON.stringify(r).includes('secret_thought'));
- delete s.doc.state.records[`local_actor_position:${npc}`];await denied(s,'sense_mind',npc,/距离|视线/,mentalArgs);
+ // Let real time expire contact. S4 still sees the zone, beyond this spell's range.
+ await wait(s,s.doc.state.records[`local_actor_position:${npc}`].expires-s.doc.state.minute);
+ assert.equal(s.doc.state.records[`local_actor_position:${npc}`],undefined);
+ await denied(s,'sense_mind',npc,/实际射程/,mentalArgs);
 });
 test('施法结束前授权到期会拒绝，完成时撤销同意整笔回滚',()=>{
  const s=fixture(),c=catalog(s,'sense_mind');s.doc.state.records.mental_consent.expires=s.doc.state.minute+c.minutes;

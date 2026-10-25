@@ -5,6 +5,10 @@ import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
+// Production installs the action composition root. Declare that prerequisite
+// here as well, so another test importing A3 cannot change this file's result
+// shape. The action receipt retains the native repair record ID in legacy.
+import '../server-plugin/primitives-runtime.mjs';
 import {CampaignStorage,applyPatches}from'../server-plugin/storage.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {catalogDefinition}from'../server-plugin/catalog.mjs';
@@ -46,7 +50,7 @@ test('维修误把物品名当单件编号时给出纠正方法，拒绝无副�
 });
 
 test('维修先检查实际损坏、持有、技能、工具、费用与工作台，伪造工序和折断对象不花钱耗时',async()=>{
-    const{world,engine,document,run}=await setup();
+    const{world,engine,document,run}=await setup(),plans=structuredClone(engine.rules.repairs);
     for(const alter of[
         c=>delete c.state.inventory.item_staff,c=>c.state.inventory.item_staff.durability=0,
         c=>c.state.inventory.item_staff.durability=100,c=>c.state.inventory.item_staff.durability=99,
@@ -63,7 +67,9 @@ test('维修先检查实际损坏、持有、技能、工具、费用与工作�
     await assert.rejects(run(document,'world_craft',{operation:'repair',item:'削木小刀'},'knife'),/没有可用维修/);
     world.locations.find(row=>row.id==='bld_hw_mill').workstations[0].access='consent';
     const privateEngine=new WorldEngine(world);await assert.rejects(privateEngine.reduce(document,{tool:'world_craft',args:{operation:'repair',item:'旧木杖'},eventId:'private'}),/使用许可/);
-    assert.equal(engine.rules.repairs.length,2);
+    // 06 §6.7: registered clothing repair extends the catalog. Invalid requests
+    // must still leave every real plan unchanged, including the new seam plan.
+    assert.deepEqual(engine.rules.repairs,plans);
 });
 
 test('修整既有单件实际收费计时磨损工具，有限恢复且未知制作者不被改成玩家',async()=>{
@@ -76,7 +82,7 @@ test('修整既有单件实际收费计时磨损工具，有限恢复且未知�
     const unit=c.state.itemInstances[out.result.instance];assert.equal(unit.maxDurability,99);assert.equal(unit.maker,null);assert.equal(unit.makerName,null);
     assert.equal(out.result.provenance.maker,null);assert.match(out.result.factSummary,/原制作者未知/);
     assert.deepEqual(out.result.before,{durability:50,maxDurability:100});assert.deepEqual(out.result.after,{durability:70,maxDurability:99});
-    assert.equal(c.state.records[out.result.receipt].mechanic,'player');assert.equal(c.state.player.xp,document.state.player.xp);
+    assert.equal(c.state.records[out.result.receipt.legacy.receipt].mechanic,'player');assert.equal(c.state.player.xp,document.state.player.xp);
     assert.equal(Object.keys(c.state.crafted??{}).length,0);assert.equal(c.state.inventory.item_wood,document.state.inventory.item_wood);
     assert.deepEqual((await run(document,'world_craft',{operation:'repair',item:'旧木杖',restore:100000,maxLoss:0,maker:'player'},out.id)),outWithoutId(out));
 });
@@ -87,7 +93,7 @@ test('维修失败仍扣租费时间与工具磨损，物品状态和耐久上�
     assert.equal(c.state.player.coins,178);assert.equal(c.state.minute,document.state.minute+20);
     assert.equal(c.state.inventory.item_staff.durability,50);assert.equal(c.state.itemInstances[out.result.instance].maxDurability,100);
     assert.equal(c.state.inventory.item_whittling_knife.durability,79);assert.equal(out.result.restored,0);
-    assert.deepEqual(out.result.before,out.result.after);assert.equal(c.state.records[out.result.receipt].success,false);
+    assert.deepEqual(out.result.before,out.result.after);assert.equal(c.state.records[out.result.receipt.legacy.receipt].success,false);
     assert.equal(c.state.player.xp,document.state.player.xp);assert.equal(Object.keys(c.state.crafted??{}).length,0);
 });
 

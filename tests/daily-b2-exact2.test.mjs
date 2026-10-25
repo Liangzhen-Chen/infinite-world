@@ -2,8 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,baseWorld,SEED,DAY} from './helpers/daily-b2.mjs';
+import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,baseWorld,SEED,DAY,replayed} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan',HOUR=60;
 
@@ -16,7 +17,7 @@ test('D08 天黑了：酉时末杂货铺（辰时至酉时营业）已关门不�
  const walk=await ui.choose('move',{destination:FORGE},{target:FORGE});assert.ok(walk.ok,walk.error);
  const dusk=await ui.read(),sun=await ui.choose('weather.inspect',{});
  assert.equal(sun.result.weather.daylight,false,'①此刻已过日落（天色已暗）');
- const closed=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH,search:true});
+ const closed=await ui.choose('trade.buy',{seller:SMITH,item:'item_iron_nail',quantity:2},{target:SMITH,search:true});
  assert.equal(closed.ok,false);assert.match(closed.error,/不提供交易服务/,'②杂货铺已关门，无法交易');assert.match(closed.error,/07:00/,'说明何时再开');
  assert.equal((await ui.read()).state.player.coins,100,'⑤玩家铜钱不变');assert.deepEqual((await ui.read()).state.inventory,before.state.inventory,'⑤背包不变');
  const outdoors=Object.entries(dusk.state.npcs).filter(([id,n])=>n.location==='loc_hw'&&id!==SMITH);assert.equal(outdoors.length,0,'③街上没有村民在逛');
@@ -33,7 +34,8 @@ test('D15 钓鱼 ①③④⑤：一个时辰钓到 3 条鲫鱼 → 背包 +3 条
  const hit=id=>{const roll=dieOf(SEED,id);return roll!==1&&(roll===20||roll>=difficulty);};
  let prefix=null;for(let k=0;k<400&&!prefix;k++){const hits=[0,1,2,3].filter(c=>hit(`d15-${k}-${c}`)).length;if(hits===3)prefix=`d15-${k}`;}
  assert.ok(prefix,'找到四竿恰中三条的事件编号');
- const ui=await uiSession(t,{mutate:scene(DOCK,start,s=>{s.inventory.item_kitchen_knife=tool('铁');s.inventory.item_water=stack(6,{weight:0.5});})});
+ // D15.2 adds real bait to the original four-cast fixture; every old numerical assertion is retained.
+ const ui=await uiSession(t,{mutate:scene(DOCK,start,s=>{s.inventory.item_kitchen_knife=tool('铁');s.inventory.item_water=stack(6,{weight:0.5});s.inventory.item_fishing_bait=stack(10);})});
  const before=await primed(ui),count=s=>s.state.records[`ecology:${HABITAT}`].populations[SPECIES].count,others=s=>Object.fromEntries(Object.entries(s.state.records[`ecology:${HABITAT}`].populations).filter(([id])=>id!==SPECIES).map(([id,p])=>[id,p.count]));
  let catches=0;for(let c=0;c<4;c++){const r=await ui.choose('wildlife.fish',{species:SPECIES},{eventId:`${prefix}-${c}`});assert.ok(r.ok,r.error);if(r.result.success)catches++;}
  const after=await ui.read();
@@ -42,7 +44,20 @@ test('D15 钓鱼 ①③④⑤：一个时辰钓到 3 条鲫鱼 → 背包 +3 条
  assert.equal(after.state.minute-before.state.minute,2*HOUR,'③约 2 小时（四竿 × 30 分钟）');
  assert.equal(before.state.inventory.item_kitchen_knife.durability-after.state.inventory.item_kitchen_knife.durability,4,'每竿用刀一次，耐久 −1');
 });
-test.todo('D15 ②鱼饵按实际使用减少（蚯蚓饵 10 条）——引擎钓鱼不耗饵（只耗一份水、磨损一次刀；世界里没有饵这件物品）：缺钓鱼动作的 cost.resources（A3 动作构造）与饵的物品数据');
+test('D15.2 public fishing really consumes ten bait; an eleventh cast cannot fish without bait and rolls back',async t=>{
+ const ui=await uiSession(t,{mutate:scene(INN,monthDayMinute(7,2,9,0),s=>{s.player.coins=100;s.inventory.item_kitchen_knife=tool();s.inventory.item_water=stack(20);s.inventory.item_oats=stack(1);delete s.inventory.item_fishing_bait;})});
+ const opening=await primed(ui);let lesson,craft;
+ for(let k=0;k<400;k++){if(dieOf(SEED,`bait-lesson-${k}`)>=16&&!lesson)lesson=`bait-lesson-${k}`;if(dieOf(SEED,`bait-craft-${k}`)===20&&!craft)craft=`bait-craft-${k}`;}
+ const learned=await ui.choose('learn',{entity:'recipe_fishing_bait',source:LINSUI,kind:'recipe'},{search:true,eventId:lesson});assert.ok(learned.ok,learned.error);assert.equal(learned.result.success,true);
+ const made=await ui.choose('craft.manufacture',{recipe:'recipe_fishing_bait'},{search:true,eventId:craft});assert.ok(made.ok,made.error);assert.equal(made.result.success,true);
+ const supplied=await ui.read();assert.equal(held(supplied.state.inventory,'item_fishing_bait'),10);assert.equal(held(supplied.state.inventory,'item_oats'),0);assert.equal(supplied.ledger.flows['src:craft|item_fishing_bait|craft'],10);assert.equal(supplied.ledger.flows['sink:consume|item_oats|craft'],1);conserved(opening,supplied,'D15 bait preparation');
+ const walk=await ui.choose('move',{destination:'loc_hw_dock'});assert.ok(walk.ok,walk.error);
+ const before=await ui.read();for(let i=0;i<10;i++){const r=await ui.choose('wildlife.fish',{},{eventId:`d15-bait-${i}`});assert.ok(r.ok,r.error);}
+ const after=await ui.read();assert.equal(held(before.state.inventory,'item_fishing_bait'),10);assert.equal(held(after.state.inventory,'item_fishing_bait'),0);assert.equal(after.ledger.flows['sink:consume|item_fishing_bait|fishing_bait'],10);assert.equal(after.state.minute-before.state.minute,300);conserved(before,after,'D15 bait');
+ const bad=await ui.choose('wildlife.fish',{});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),after);
+ await replayed(ui,after);
+ const retry=await ui.choose('wildlife.fish',{},{eventId:'d15-bait-9'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);
+});
 
 test('D17 制作木凳：木料 3→1、铁钉 8→4，背包 +1 个木凳（普通或粗糙），耗时 2 小时，木工熟练度小幅增加，工具耐久 −1',async t=>{
  // 木凳配方（木料 2、铁钉 4）→世界副本里加一条配方，做 1 个斜脚矮凳，工序 120 分钟（1 个时辰）；木匠铺→旧磨坊作台；春季四月十二午时。
@@ -86,7 +101,12 @@ test('D27 存钱 + D28 取钱（含利息）：存 1000（1200→200，账户 10
  conserved(pre,after,'D28',new WorldEngine(world));
 });
 test.todo('D27 ③玩家获得存单/凭据一份；D28 ⑤存单收回/作废、无单不能取——引擎存款只记在钱庄账户上（accounts.player），没有存单物品，取款不要求出示：缺“票据 = 义务 + 代表物品”（S3）');
-test.todo('D27 ⑤时间过去约一刻钟——引擎开户存入 5 分钟；缺动作耗时读表（A3：action-costs bank.deposit = 15 分钟，缺省值已补入表）');
+test('D27.5 public deposit consumes 15 minutes and rejected overdraft rolls back',async t=>{
+ const ui=await uiSession(t,{mutate:scene('bld_hw_post',monthDayMinute(3,1,9,30),s=>{s.player.coins=1200;})});
+ const before=await primed(ui),r=await ui.choose('trade.deposit',{coins:1000});assert.ok(r.ok,r.error);const after=await ui.read();
+ assert.equal(after.state.minute-before.state.minute,15);assert.equal(after.state.player.coins,200);conserved(before,after,'D27 time');await replayed(ui,after);
+ const bad=await ui.choose('trade.deposit',{coins:1000});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),after);
+});
 
 test('D33 休息睡觉 ①④⑤：亥时睡到次日卯时 8 小时，夜里村子照常运转，钱物不变',async t=>{
  // 冬季十一月二十亥时（22:00），睡自家床→青灯酒馆客房；玩家 100 文。
@@ -97,7 +117,12 @@ test('D33 休息睡觉 ①④⑤：亥时睡到次日卯时 8 小时，夜里村
  assert.ok(Object.keys(after.state.npcs).some(id=>after.state.npcs[id].location!==before.state.npcs[id].location||after.state.npcs[id].activity!==before.state.npcs[id].activity),'④夜里其他人的日程照常推进');
  assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory,'⑤钱物不变');
 });
-test.todo('D33 ②体力恢复至接近满值、③饥饿度上升——引擎睡眠只恢复生命/魔力，没有体力与饱食：缺 body 闭式（S1 vital；A3 睡眠动作读 body.json：体力 20 + 12 × 8 × 1.0 → 100，饱食 −1/小时 × 8）');
+test('D33.2 public eight-hour paid sleep restores stamina 20 to 100 and consumes eight satiety, with no second room charge',async t=>{
+ const start=monthDayMinute(11,20,20,0),ui=await uiSession(t,{mutate:scene(INN,start,s=>{s.player.coins=100;s.player.body={stamina:{value:20,asOf:start,activity:'rest'},satiety:{value:100,asOf:start,activity:'rest'}};})});
+ await primed(ui);const room=await ui.choose('trade.lodge',{days:1});assert.ok(room.ok,room.error);assert.ok((await ui.choose('time',{until:{dayOffset:0,hour:22}})).ok);const before=await ui.read(),satiety=readBodyNeed(baseEngine,before,'player','satiety');
+ const r=await ui.choose('time.sleep',{until:{dayOffset:1,hour:6,minute:0}});assert.ok(r.ok,r.error);const after=await ui.read();
+ assert.equal(after.state.minute-before.state.minute,480);assert.equal(r.result.cost.sleep.coveredMinutes,480);assert.equal(readBodyNeed(baseEngine,after,'player','stamina'),100);assert.ok(Math.abs(readBodyNeed(baseEngine,after,'player','satiety')-(satiety-8))<.0002);assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory);conserved(before,after,'D33.2');
+});
 
 test('D34 养宠物与喂食：骨头 2→1，饱食度 30→60（饥饿 70→40），忠诚度不降，几分钟，阿黄仍在身边；放着不喂会重新饿',async t=>{
  // 阿黄→登记驯养伙伴；骨头→干粮（可喂食，缓饥 30）；春季四月十五；饱食度 30 = 饥饿 70。

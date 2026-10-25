@@ -697,6 +697,10 @@
           "type": "boolean",
           "description": "开立时由内核写缔结快照 {place, lawVersion, time, form, inName?}"
         },
+        "transferable": {
+          "type": "boolean",
+          "description": "Whether an authorized holding.transfer may assign this kind"
+        },
         "functional": {
           "type": "boolean",
           "description": "职能读 effective(holding)（附录 A §A.15.25）"
@@ -1089,6 +1093,19 @@
         "located"
       ],
       "properties": {
+        "narrative": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "fields"],
+            "properties": {
+              "id": {"type": "string"},
+              "kind": {"enum": ["person", "creature", "item", "building"]},
+              "fields": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": false
+          }
+        },
         "id": {
           "$ref": "#/$defs/id"
         },
@@ -1191,6 +1208,10 @@
         "params"
       ],
       "properties": {
+        "writable": {
+          "type":"object",
+          "additionalProperties":{"type":"object","additionalProperties":{"type":"object","required":["type","min","max"],"properties":{"type":{"const":"number"},"min":{"type":"integer"},"max":{"type":"integer"}},"additionalProperties":false}}
+        },
         "id": {
           "type": "string",
           "pattern": "^[a-z]+(\\.[a-z]+)?$"

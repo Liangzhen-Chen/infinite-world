@@ -1,13 +1,14 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {placed as placedStock,moveStock} from './stock.mjs';
 declareLedgerWriter('magic-ritual');
 import {recordCreatureResolution}from'./quest-wildlife.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear,recordLocalContact}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
-import {assertSpellConsent,hasSpellConsent,spellConsentActions}from'./magic-consent.mjs';
+import {assertSpellConsent,hasSpellConsent,spellConsentGrant,spellConsentActions}from'./magic-consent.mjs';
 import {personMental}from'./entity-view.mjs';
 import {resolveCreature}from'./wildlife.mjs';
 import {applyProtectionPrimitive}from'./magic-primitives.mjs';
@@ -32,7 +33,7 @@ const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
 const actorPath=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error(`${label}未登记或超出范围`);return v;};
+const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}未登记或超出范围`);return v;};
 const awake=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&!['濒死','昏迷'].includes(a.status)&&!a.scheduleTravel&&!a.cognitionTravel;
 function divine(engine,a){
  if(a.spirit)return a.spirit.divine!==false;
@@ -41,11 +42,11 @@ function divine(engine,a){
 }
 function feature(engine,id,location){
  const rows=environmentFeatures(engine).filter(r=>r.location===location&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('须选择同地登记的真实对象');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('须选择同地登记的真实对象');return rows[0];
 }
 function stateOf(d,row){
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('役灵仪式对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('役灵仪式对象状态键冲突');
  return clone(r?.state??row.state??{});
 }
 const store=(d,row,state)=>holdingSet(d,null,['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state},'magic-ritual');
@@ -54,42 +55,43 @@ function authorization(d,args,action,subject,grantor,until){
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.action===action&&r.subject===subject&&r.grantor===grantor&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>until;
  });
- if(!id)throw Error('缺少本人或所有者仍有效的自愿授权');return id;
+ if(!id)throw preconditionFailure('缺少本人或所有者仍有效的自愿授权');return id;
 }
 function access(d,engine,row,c,args,until){
  const origin=localPlayerPoint(d);
- if(!point(row.position)||distance(origin,row.position)>c.rangeMeters||!localSightClear(d,engine,row.location,origin,row.position))throw Error('对象超出实际射程或视线');
+ if(!point(row.position)||distance(origin,row.position)>c.rangeMeters||!localSightClear(d,engine,row.location,origin,row.position))throw preconditionFailure('对象超出实际射程或视线');
  if(row.owner!=='player')return authorization(d,args,'environment_use',row.id,row.owner,until);
 }
 function life(d,engine,c,args,id,until,action='support_magic'){
  id=resolveCreature(engine,d,id);const a=d.get(...actorPath(id));
- if(!awake(d,id,a)||id!=='player'&&a.location!==d.get('state','location'))throw Error('仪式参与者须在场清醒且存活');
+ if(!awake(d,id,a)||id!=='player'&&a.location!==d.get('state','location'))throw preconditionFailure('仪式参与者须在场清醒且存活');
  assertMagicTargeting(d,engine,{...c,targeting:{lineOfSight:true}},args,id);
  let permission=null;
  if(spellConsentActions.includes(action)){
-  permission=[args.authorization,...args.authorizations??[]].find(key=>hasSpellConsent(d,id,key,action,c,until));
+  permission=[args.authorization,...args.authorizations??[]].filter(Boolean).find(key=>hasSpellConsent(d,id,key,action,c,until,engine));
+  if(!permission)permission=spellConsentGrant(d,id,undefined,action,c,until,engine)?.id;
   assertSpellConsent(d,engine,c,{...args,authorization:permission},id,action,until);
  }else permission=id==='player'?null:authorization(d,args,action,id,id,until);
- if(id!=='player'&&d.get('state','creatures',id)&&divine(engine,a))throw Error('仪式不能越过神性或未知灵体规则');
+ if(id!=='player'&&d.get('state','creatures',id)&&divine(engine,a))throw preconditionFailure('仪式不能越过神性或未知灵体规则');
  return{id,actor:a,path:actorPath(id),permission};
 }
 function faithOf(d,id,deity){
  const f=d.get(...actorPath(id),'faith');
  const matches=deity.category==='tradition'?f?.institution===deity.id:f?.deity===deity.id;
- if(!f||!matches||f.church!==deity.church.name||f.taboo!==deity.taboo)throw Error('须核对真实信众、教派与戒律');return f;
+ if(!f||!matches||f.church!==deity.church.name||f.taboo!==deity.taboo)throw preconditionFailure('须核对真实信众、教派与戒律');return f;
 }
 function qualification(d,engine,args,until){
  const candidate=d.get('state','records',args.permit);
  if(candidate?.sourceType==='training'||String(args.permit).startsWith('ritual_permission:')){
   const {entry,tradition}=assertTrainingRitual(d,engine,args.permit,until);
-  if(!entry.ritualOperations.includes(args.ritualOperation))throw Error('师承没有登记这一仪式的主持范围');
+  if(!entry.ritualOperations.includes(args.ritualOperation))throw preconditionFailure('师承没有登记这一仪式的主持范围');
   return tradition;
  }
  const r=d.get('state','records',args.permit),deity=engine.byId.get(r?.deity);
- if(r?.category!=='authorization'||r.action!=='ritual_officiate'||r.subject!=='player'||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=until||deity?.category!=='deity'||r.church!==deity.church?.name||r.profession!==deity.church.profession)throw Error('缺少与正式神祇教派相符的仪式资格');
+ if(r?.category!=='authorization'||r.action!=='ritual_officiate'||r.subject!=='player'||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=until||deity?.category!=='deity'||r.church!==deity.church?.name||r.profession!==deity.church.profession)throw preconditionFailure('缺少与正式神祇教派相符的仪式资格');
  const roles=[d.get('state','professions','combat'),...d.get('state','professions','life')??[]];
  const grantor=engine.byId.get(r.grantor),issuerRoles=[grantor?.combatProfession,...grantor?.lifeProfessions??[]];
- if(!roles.some(id=>engine.byId.get(id)?.name===deity.church.profession)||!d.get('state','npcs',r.grantor)||!issuerRoles.some(id=>engine.byId.get(id)?.name===deity.church.profession))throw Error('主持者或授予者没有教派规定的实际职业');
+ if(!roles.some(id=>engine.byId.get(id)?.name===deity.church.profession)||!d.get('state','npcs',r.grantor)||!issuerRoles.some(id=>engine.byId.get(id)?.name===deity.church.profession))throw preconditionFailure('主持者或授予者没有教派规定的实际职业');
  return deity;
 }
 export function validateRitualCatalog(c){
@@ -103,7 +105,7 @@ export function validateRitualCatalog(c){
 }
 function ownSummon(d,id,until){
  const e=d.get('state','effects',id),r=d.get('state','records',e?.contract);
- if(e?.kind!=='summon'||e.owner!=='player'||e.location!==d.get('state','location')||e.expires<=until||r?.category!=='summon_contract'||r.effect!==id||r.owner!=='player'||r.status!=='履行中')throw Error('需要在场且覆盖工序时限的自有役灵');
+ if(e?.kind!=='summon'||e.owner!=='player'||e.location!==d.get('state','location')||e.expires<=until||r?.category!=='summon_contract'||r.effect!==id||r.owner!=='player'||r.status!=='履行中')throw preconditionFailure('需要在场且覆盖工序时限的自有役灵');
  return clone(e);
 }
 // Jobs store real feature/instance IDs, never an invented payload.
@@ -115,26 +117,26 @@ export function prepareSummonWork(d,c,args,{completion=false,task,power}={}){
  power??=c.effectSpec.power;
  if(task==='clean'){
   number(s.dustGrams,0,100000,'普通浮尘');number(s.collectedDustGrams,0,100000,'收集灰尘');number(s.heavyWasteGrams,0,100000000,'厚重垃圾');
-  if(s.dustGrams<=0)throw Error('没有可清扫的普通浮尘');
+  if(s.dustGrams<=0)throw preconditionFailure('没有可清扫的普通浮尘');
  }else if(task==='carry_rubble'){
   const dest=feature(this,args.destination,location),t=stateOf(d,dest);access(d,this,dest,c,args,until);
-  if(dest.id===source.id||distance(source.position,dest.position)>c.rangeMeters)throw Error('搬运需要短程不同目的地');
+  if(dest.id===source.id||distance(source.position,dest.position)>c.rangeMeters)throw preconditionFailure('搬运需要短程不同目的地');
   number(s.rubbleGrams,1,100000000,'碎石存量');number(t.rubbleGrams,0,100000000,'目的地碎石');number(t.capacityGrams,1,100000000,'承载容量');
-  if(t.capacityGrams-t.rubbleGrams<Math.min(power,s.rubbleGrams))throw Error('目的地容量不足');job.destination=dest.id;
+  if(t.capacityGrams-t.rubbleGrams<Math.min(power,s.rubbleGrams))throw preconditionFailure('目的地容量不足');job.destination=dest.id;
  }else if(task==='carry_paper'){
   const dest=feature(this,args.destination,location),t=stateOf(d,dest),u=d.get('state','itemInstances',args.source),item=this.byId.get(u?.item);
   access(d,this,dest,c,args,until);
-  if(dest.id===source.id||!Array.isArray(s.contents)||!Array.isArray(t.contents)||!s.contents.includes(args.source)||t.contents.includes(args.source)||u?.owner!=='player'||u.status!=='袋内'||u.container!==source.id||!item?.tags?.includes('paper'))throw Error('须用source指定真实自有纸签单件及其容器');
+  if(dest.id===source.id||!Array.isArray(s.contents)||!Array.isArray(t.contents)||!s.contents.includes(args.source)||t.contents.includes(args.source)||u?.owner!=='player'||u.status!=='袋内'||u.container!==source.id||!item?.tags?.includes('paper'))throw preconditionFailure('须用source指定真实自有纸签单件及其容器');
   number(item.weight*1000,.001,power,'纸签载重');number(t.capacityKg,.001,5000,'目的容器容量');
-  let weight=item.weight;for(const id of t.contents){const unit=d.get('state','itemInstances',id);if(!unit||unit.container!==dest.id||unit.status!=='袋内')throw Error('目的清单归属不符');weight+=number(this.byId.get(unit.item)?.weight,0,5000,'现有单件重量');}
-  if(weight>t.capacityKg)throw Error('纸签目的容器容量不足');
-  if(!Array.isArray(args.path)||args.path[0]!==source.id||args.path.at(-1)!==dest.id||args.path.length<2||args.path.length>8||new Set(args.path).size!==args.path.length)throw Error('纸签须有已知短路线');
+  let weight=item.weight;for(const id of t.contents){const unit=d.get('state','itemInstances',id);if(!unit||unit.container!==dest.id||unit.status!=='袋内')throw preconditionFailure('目的清单归属不符');weight+=number(this.byId.get(unit.item)?.weight,0,5000,'现有单件重量');}
+  if(weight>t.capacityKg)throw preconditionFailure('纸签目的容器容量不足');
+  if(!Array.isArray(args.path)||args.path[0]!==source.id||args.path.at(-1)!==dest.id||args.path.length<2||args.path.length>8||new Set(args.path).size!==args.path.length)throw preconditionFailure('纸签须有已知短路线');
   let meters=0;for(let i=1;i<args.path.length;i++){
    const a=feature(this,args.path[i-1],location),b=feature(this,args.path[i],location);access(d,this,a,c,args,until);access(d,this,b,c,args,until);
-   meters+=distance(a.position,b.position);if(!localSightClear(d,this,location,a.position,b.position))throw Error('纸签路线被遮挡');
+   meters+=distance(a.position,b.position);if(!localSightClear(d,this,location,a.position,b.position))throw preconditionFailure('纸签路线被遮挡');
   }
-  if(meters>c.rangeMeters)throw Error('纸签路线超过有限距离');job.destination=dest.id;
- }else throw Error('役灵未登记此任务');
+  if(meters>c.rangeMeters)throw preconditionFailure('纸签路线超过有限距离');job.destination=dest.id;
+ }else throw preconditionFailure('役灵未登记此任务');
  return{assignment:job};
 }
 export function applySummonWork(d,e,eventId,power=e.power){
@@ -165,65 +167,65 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  if(op==='lure'){
   p.id=resolveCreature(this,d,args.target);const a=d.get('state','creatures',p.id),base=this.byId.get(a?.species);
   const f=areaTargetFacts(d,this,p.id,location,p.origin);
- if(!awake(d,p.id,a)||a.owner||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw Error('只能引导实际近处、无主且趋光的温顺动物');
+ if(!awake(d,p.id,a)||a.owner||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw preconditionFailure('只能引导实际近处、无主且趋光的温顺动物');
   p.actor=a;return p;
  }
  if(['reassign','coordinate'].includes(op)){
-  p.ids=[args.target,args.source];if(new Set(p.ids).size!==2)throw Error('需要两只不同自有役灵');
+  p.ids=[args.target,args.source];if(new Set(p.ids).size!==2)throw preconditionFailure('需要两只不同自有役灵');
   p.summons=p.ids.map(id=>ownSummon(d,id,until));
-  if(p.summons.some(e=>!e.assignment))throw Error('须有实际已登记工序');
+  if(p.summons.some(e=>!e.assignment))throw preconditionFailure('须有实际已登记工序');
   p.jobs=[];
   for(let i=0;i<2;i++){
    const e=p.summons[i],job=p.summons[op==='reassign'?1-i:i].assignment;
-   if(!e.terms.tasks.includes(job.task))throw Error('改派不能改写根本契约能力');
+   if(!e.terms.tasks.includes(job.task))throw preconditionFailure('改派不能改写根本契约能力');
    const prepared=prepareSummonWork.call(this,d,{...c,rangeMeters:e.rangeMeters??10},{...job,...args,target:job.target,source:job.source,destination:job.destination,path:job.path},{completion,task:job.task,power:e.power});
    p.jobs.push(prepared.assignment);
   }return p;
  }
  if(op==='invite'){
   p.id=args.target;p.actor=d.get('state','creatures',p.id);const spirit=p.actor?.spirit;
-  if(!awake(d,p.id,p.actor)||!spirit||spirit.divine!==false||spirit.rank!==0||spirit.realm!=='other'||!spirit.invitation||typeof spirit.invitation.terms!=='string'||typeof spirit.invitation.willing!=='boolean')throw Error('没有已知、可回应的跨界来访者');
-  if(typeof args.text!=='string'||args.text.length>80||!args.text.trim())throw Error('邀约需要明确有限条款');
+  if(!awake(d,p.id,p.actor)||!spirit||spirit.divine!==false||spirit.rank!==0||spirit.realm!=='other'||!spirit.invitation||typeof spirit.invitation.terms!=='string'||typeof spirit.invitation.willing!=='boolean')throw preconditionFailure('没有已知、可回应的跨界来访者');
+  if(typeof args.text!=='string'||args.text.length>80||!args.text.trim())throw preconditionFailure('邀约需要明确有限条款');
   p.accepted=spirit.invitation.willing&&args.text===spirit.invitation.terms;
   number(spirit.invitation.visitMinutes,1,60,'邀约停留时限');
-  if(!Number.isSafeInteger(spirit.invitation.visitMinutes))throw Error('邀约停留时限须为整分钟');
+  if(!Number.isSafeInteger(spirit.invitation.visitMinutes))throw preconditionFailure('邀约停留时限须为整分钟');
   if(p.accepted)p.permission=authorization(d,args,'realm_visit',p.id,p.id,until+spirit.invitation.visitMinutes);return p;
  }
  p.deity=qualification(d,this,{...args,ritualOperation:op},until);
  if(['spirit_census','consecrate'].includes(op)){
   p.habitat=this.rules.wildlife?.habitats.find(h=>h.location===location);
-  if(!p.habitat)throw Error('这里没有登记的野外栖地，无从问灵或安地');
+  if(!p.habitat)throw preconditionFailure('这里没有登记的野外栖地，无从问灵或安地');
   p.species=speciesInHabitat(this.rules,this.world.monsters,p.habitat.id).filter(s=>s.nature?.spirit&&s.nature.reproduction==='manifest'&&s.wildlife?.manifest&&(op==='spirit_census'||s.nature.group===p.spec.group));
-  if(!p.species.length)throw Error('此地没有登记的这类自行聚成的低阶灵体');
-  if(op==='consecrate'&&Object.values(d.get('state','effects')??{}).some(e=>e.kind==='ritual'&&e.operation==='consecrate'&&e.habitat===p.habitat.id&&e.group===p.spec.group&&e.expires>d.get('state','minute')))throw Error('此地同类安地法事仍在期限内，不能叠加');
+  if(!p.species.length)throw preconditionFailure('此地没有登记的这类自行聚成的低阶灵体');
+  if(op==='consecrate'&&Object.values(d.get('state','effects')??{}).some(e=>e.kind==='ritual'&&e.operation==='consecrate'&&e.habitat===p.habitat.id&&e.group===p.spec.group&&e.expires>d.get('state','minute')))throw preconditionFailure('此地同类安地法事仍在期限内，不能叠加');
   return p;
  }
  if(op==='ferry'){
   p.id=resolveCreature(this,d,args.target);p.actor=d.get('state','creatures',p.id);
   const base=this.byId.get(p.actor?.species),s=p.actor?.spirit;
-  if(!p.actor||!awake(d,p.id,p.actor)||p.actor.location!==location||p.actor.owner||!p.actor.ecology||base?.nature?.kind!=='游魂'||!s||s.divine!==false||s.rank!==0||s.realm!=='local')throw Error('度亡只适用于在场、无主的低阶游魂个体；不能用于活人、亡者遗体或复活');
+  if(!p.actor||!awake(d,p.id,p.actor)||p.actor.location!==location||p.actor.owner||!p.actor.ecology||base?.nature?.kind!=='游魂'||!s||s.divine!==false||s.rank!==0||s.realm!=='local')throw preconditionFailure('度亡只适用于在场、无主的低阶游魂个体；不能用于活人、亡者遗体或复活');
   assertMagicTargeting(d,this,{...c,targeting:{lineOfSight:true}},args,p.id);
   p.tablet=environmentFeatures(this).find(r=>r.id===p.spec.destination);
-  if(!p.tablet)throw Error('度亡去向未登记');return p;
+  if(!p.tablet)throw preconditionFailure('度亡去向未登记');return p;
  }
  if(['clean_altar','revival_mark'].includes(op)){
   p.row=feature(this,args.target,location);p.state=stateOf(d,p.row);access(d,this,p.row,c,args,until);
-  if(p.row.kind!=='altar'||p.state.deity!==p.deity.id||p.state.church!==p.deity.church.name||!(p.state.integrity>0))throw Error('祭坛必须完整且属于本教派');
-  if(op==='clean_altar'){number(p.state.contamination,1,100,'普通坛面污染');if(p.state.pollutionKind!=='ordinary')throw Error('净坛仅处理受托普通污染');}
+  if(p.row.kind!=='altar'||p.state.deity!==p.deity.id||p.state.church!==p.deity.church.name||!(p.state.integrity>0))throw preconditionFailure('祭坛必须完整且属于本教派');
+  if(op==='clean_altar'){number(p.state.contamination,1,100,'普通坛面污染');if(p.state.pollutionKind!=='ordinary')throw preconditionFailure('净坛仅处理受托普通污染');}
   else p.revival=prepareRevivalMark.call(this,d,p.row.revivalLocation);return p;
  }
  if(op==='faith_contract'){
   const row=d.get('state','records',args.target);
-  if(row?.category!=='contract'||row.deity!==p.deity.id||row.church!==p.deity.church.name)throw Error('只能查验本教派真实仪式契约');
+  if(row?.category!=='contract'||row.deity!==p.deity.id||row.church!==p.deity.church.name)throw preconditionFailure('只能查验本教派真实仪式契约');
   authorization(d,args,'ritual_contract',args.target,row.custodian,until);p.contract=magicContractTrace(d,args.target);return p;
  }
- if(op==='purify_area'){p.spirits=nearbySpirits(d,this,c).filter(([,a])=>a.spirit.divine===false&&a.spirit.rank===0&&a.spirit.nature==='malevolent');if(!p.spirits.length)throw Error('有限区域没有可确认的低阶邪秽');return p;}
+ if(op==='purify_area'){p.spirits=nearbySpirits(d,this,c).filter(([,a])=>a.spirit.divine===false&&a.spirit.rank===0&&a.spirit.nature==='malevolent');if(!p.spirits.length)throw preconditionFailure('有限区域没有可确认的低阶邪秽');return p;}
  if(op==='exorcise'){
   p.id=resolveCreature(this,d,args.target);p.actor=d.get(...actorPath(p.id));
-  if(!awake(d,p.id,p.actor)||p.id==='player'||divine(this,p.actor))throw Error('驱离需要实际在场且非神性目标');
+  if(!awake(d,p.id,p.actor)||p.id==='player'||divine(this,p.actor))throw preconditionFailure('驱离需要实际在场且非神性目标');
   assertMagicTargeting(d,this,{...c,targeting:{lineOfSight:true}},args,p.id);
   const spirit=p.actor.spirit;
-  if(spirit&&(spirit.divine!==false||spirit.rank!==0))throw Error('不能驱离神性、未知或高阶灵体');return p;
+  if(spirit&&(spirit.divine!==false||spirit.rank!==0))throw preconditionFailure('不能驱离神性、未知或高阶灵体');return p;
  }
  const action=['ritual_heal','restore'].includes(op)?'healing':op==='spirit_sense'?'mental_magic':op==='witness_oath'?'ritual_oath':'support_magic';
  Object.assign(p,life(d,this,c,args,args.target??'player',until,action));
@@ -233,27 +235,27 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  }
  if(['ritual_heal','restore'].includes(op)){
   faithOf(d,p.id,p.deity);const m=clone(p.actor.medical),w=m?.wounds?.find(w=>w.id===args.source);
-  if(!w||w.closed||w.simple!==true||w.foreignBody||w.toxinUg>0||w.bleedingMlPerMinute>0)throw Error('仪式治疗须指定已止血且无异物毒素的简单浅伤');
+  if(!w||w.closed||w.simple!==true||w.foreignBody||w.toxinUg>0||w.bleedingMlPerMinute>0)throw preconditionFailure('仪式治疗须指定已止血且无异物毒素的简单浅伤');
   number(w.depthMm,.01,5,'浅伤深度');number(w.areaCm2,.01,20,'浅伤面积');number(m.bloodMl,1,10000,'血量');number(m.pain,0,10,'伤痛');number(p.actor.hp,1,p.actor.maxHp,'伤者生命');
   if(op==='restore'){
    const visits=m.care?.filter(r=>r.wound===w.id&&r.by==='player'&&r.completed===true&&Number.isSafeInteger(r.minute)&&r.minute<=d.get('state','minute'))??[];
    const days=new Set(visits.map(r=>Math.floor(r.minute/1440)));
-   if(days.size<3||Math.max(...visits.map(r=>r.minute))-Math.min(...visits.map(r=>r.minute))<10080)throw Error('恢复需要跨七天至少三天的真实长期照护');
+   if(days.size<3||Math.max(...visits.map(r=>r.minute))-Math.min(...visits.map(r=>r.minute))<10080)throw preconditionFailure('恢复需要跨七天至少三天的真实长期照护');
   }p.medical=m;p.wound=w.id;return p;
  }
  if(op==='witness_oath'){
-  if(typeof args.text!=='string'||!args.text.trim()||args.text.length>80)throw Error('见证需要本人明确的有限誓言');return p;
+  if(typeof args.text!=='string'||!args.text.trim()||args.text.length>80)throw preconditionFailure('见证需要本人明确的有限誓言');return p;
  }
  if(op==='discipline'){
   const f=faithOf(d,p.id,p.deity),now=d.get('state','minute');
-  if(!Number.isSafeInteger(f.observedSince)||f.observedSince>now-1440||!Number.isSafeInteger(f.lastBreach)||f.lastBreach>=f.observedSince)throw Error('守戒防护需要至少一天持续守戒');p.faith=clone(f);return p;
+  if(!Number.isSafeInteger(f.observedSince)||f.observedSince>now-1440||!Number.isSafeInteger(f.lastBreach)||f.lastBreach>=f.observedSince)throw preconditionFailure('守戒防护需要至少一天持续守戒');p.faith=clone(f);return p;
  }
  if(op==='faith_shield'){
-  p.members=[...new Set(['player',p.id,args.source].filter(Boolean))];if(p.members.length<2||p.members.length>3)throw Error('共同护罩须二到三名实际自愿信众');
+  p.members=[...new Set(['player',p.id,args.source].filter(Boolean))];if(p.members.length<2||p.members.length>3)throw preconditionFailure('共同护罩须二到三名实际自愿信众');
   p.participants=p.members.map(id=>{
    const member=life(d,this,c,args,id,until);faithOf(d,id,p.deity);number(member.actor.mental?.fatigue,0,79,'参与者疲劳');return member;
   }).filter((member,index,rows)=>rows.findIndex(r=>r.id===member.id)===index);
-  if(p.participants.length<2)throw Error('共同护罩须不同的实际自愿信众');return p;
+  if(p.participants.length<2)throw preconditionFailure('共同护罩须不同的实际自愿信众');return p;
  }
  return p;
 }
@@ -268,7 +270,7 @@ export function recordRitualCare(d,prepared,result,eventId){
 }
 export function applyRitual(d,initial,eventId){
  const p=prepareRitual.call(this,d,initial.catalog,initial.args,{completion:true});
- if(p.location!==initial.location||distance(p.origin,initial.origin)!==0)throw Error('施法期间位置改变，效果已回滚');
+ if(p.location!==initial.location||distance(p.origin,initial.origin)!==0)throw preconditionFailure('施法期间位置改变，效果已回滚');
  const result={operation:p.op,target:p.id??p.row?.id};
  if(p.op==='lure'){
   d.set([...actorPath(p.id),'position'],[...p.origin]);recordLocalContact(d,this,p.id,eventId);return{...result,guided:true,position:p.origin};
@@ -343,9 +345,9 @@ export function applyRitual(d,initial,eventId){
 export function ritualProtectionValid(d,e,now=d.get('state','minute')){
  const b=e.ritualBinding;if(!b)return true;
  return b.members.every(m=>{
-  const a=d.get(...actorPath(m.id)),f=a?.faith,r=m.authorization&&d.get('state','records',m.authorization);
+  const a=d.get(...actorPath(m.id)),f=a?.faith;
   if(!awake(d,m.id,a)||!f||(b.institution?f.institution!==b.institution:f.deity!==b.deity)||f.church!==b.church||f.taboo!==b.taboo||f.lastBreach!==m.lastBreach||m.id!=='player'&&a.location!==b.location||m.id==='player'&&d.get('state','location')!==b.location)return false;
-  if(m.id!=='player'&&(r?.category!=='authorization'||r.action!=='support_magic'||r.subject!==m.id||r.grantor!==m.id||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=now))return false;
+  if(m.id!=='player'&&!hasSpellConsent(d,m.id,m.authorization,'support_magic',{id:e.spell,location:b.location},now))return false;
   return b.operation==='discipline'?f.observedSince===m.observedSince&&f.lastBreach<f.observedSince:f&&Number.isFinite(a.mental?.fatigue)&&a.mental.fatigue<90;
  });
 }
@@ -369,7 +371,7 @@ export function advanceRitualEffects(d,engine,after){
    if(!ritualProtectionValid(d,e,b.settled)){d.remove(['state','effects',id]);continue;}
    let until=Math.min(after,e.expires);
    for(const m of b.members){
-    if(m.authorization)until=Math.min(until,d.get('state','records',m.authorization,'expires'));
+    if(m.authorization)until=Math.min(until,spellConsentGrant(d,m.id,m.authorization,'support_magic',{id:e.spell,location:b.location},b.settled,engine)?.expires??b.settled);
     if(b.operation==='faith_shield')until=Math.min(until,b.settled+90-d.get(...actorPath(m.id),'mental','fatigue'));
    }
    const minutes=Math.max(0,until-b.settled);
@@ -388,9 +390,9 @@ export function advanceRitualEffects(d,engine,after){
   const mental=personMental(engine,d.get('state'),i.target).value;
   let amount=Math.min(i.remaining,minutes*i.stressPerMinute),remaining=amount;
   const wards=Object.entries(d.get('state','effects')??{}).filter(([,w])=>w.kind==='ritual'&&w.operation==='ward'&&w.target===i.target&&w.started<=i.settled&&w.expires>i.settled&&w.remaining>0&&w.location===location).filter(([,w])=>{
-   return hasSpellConsent(d,i.target,w.authorization,'support_magic',{id:w.spell,location:w.location},i.settled);
+   return hasSpellConsent(d,i.target,w.authorization,'support_magic',{id:w.spell,location:w.location},i.settled,engine);
   }).sort((a,b)=>b[1].remaining-a[1].remaining||a[0].localeCompare(b[0]));
-  const ward=wards[0];if(ward){const w=ward[1],r=d.get('state','records',w.authorization),until=Math.min(after,w.expires,i.target==='player'?Infinity:r.expires),absorbed=Math.min(w.remaining,amount,Math.max(0,until-i.settled)*i.stressPerMinute);remaining-=absorbed;d.set(['state','effects',ward[0],'remaining'],w.remaining-absorbed);}
+  const ward=wards[0];if(ward){const w=ward[1],grant=spellConsentGrant(d,i.target,w.authorization,'support_magic',{id:w.spell,location:w.location},i.settled,engine),until=Math.min(after,w.expires,grant?.expires??i.settled),absorbed=Math.min(w.remaining,amount,Math.max(0,until-i.settled)*i.stressPerMinute);remaining-=absorbed;d.set(['state','effects',ward[0],'remaining'],w.remaining-absorbed);}
   d.set([...actorPath(i.target),'mental'],{...mental,stress:Math.min(100,number(mental.stress,0,100,'受术者压力')+remaining)});
   d.set([...actorPath(id),'spirit','interference','remaining'],i.remaining-amount);
  }

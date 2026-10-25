@@ -1,5 +1,7 @@
+import {preconditionFailure} from './precondition.mjs';
 import {registerObligationProtocol} from './obligation-protocol.mjs';
-// Shared L1 obligation arithmetic. Queries do not mutate a document or inspect
+import {aliveHoldings,entityRow} from './holdings.mjs';
+// Shared L1 obligation arithmetic. Arithmetic queries do not mutate or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
 import {accrualFraction,addAccrual,fraction} from './obligation-calendar.mjs';
 // Installed by the engine composition root. Pure consumer queries must not
@@ -8,6 +10,20 @@ let civilGrace=null;
 export const registerObligationCivilGrace=resolve=>{civilGrace=resolve;};
 
 export const DAY=1440;
+// Original instruments can be native generic items or catalog units. Both
+// readers use current title/location; a paper never becomes a second claim.
+export function institutionPhysicalReference(document,reference){
+    if(document.state.itemInstances?.[reference])return reference;
+    const matches=Object.entries(document.holdings?.entities??{}).filter(([,row])=>row.kind==='item'&&row.facts?.aliases?.includes(reference));
+    return matches.length===1?matches[0][0]:reference;
+}
+export function institutionOriginal(engine,document,id){
+    const d={get:(...p)=>p.reduce((v,k)=>v?.[k],document)},entity=entityRow(d,id),unit=document.state.itemInstances?.[id];
+    if(!unit&&entity?.kind!=='item')return null;
+    const titles=aliveHoldings(d,{kind:'owns',subject:id}),owner=titles.length===1?titles[0].holder:titles.length?null:unit?.owner;
+    const placed=document.holdings?.locations?.[id],location=placed?.mode==='carried'?(placed.at==='player'?document.state.location:document.state.npcs?.[placed.at]?.location):placed?.at??unit?.location;
+    return {...entity?.facts,...unit,owner,location,...(entity?.goneAt!==undefined?{destroyedAt:entity.goneAt}:{})};
+}
 const ended=new Set(['settled','void','cancelled','bad_debt','closed','completed','terminated','expired','已还清','已取消','坏账','已完成','已终止','已到期','取消']);
 export const obligationClosed=row=>ended.has(row.status);
 
@@ -75,7 +91,7 @@ export function obligationView(state,id,minute=state.minute??0,options={}){
 export function grace(row,minute,{civil=null,fallbackMinutes=0}={}){
     const clause=row.clauses?.grace??row.terms?.grace??civil;
     const minutes=typeof clause==='number'?clause:clause?.minutes??(clause?.days===undefined?fallbackMinutes:clause.days*DAY);
-    if(!Number.isSafeInteger(minutes)||minutes<0)throw Error('义务宽限必须是非负整数分钟');
+    if(!Number.isSafeInteger(minutes)||minutes<0)throw preconditionFailure('义务宽限必须是非负整数分钟');
     return {minutes,basis:row.clauses?.grace!==undefined||row.terms?.grace!==undefined?'contract':civil!==null?'civil':'kind',at:minute};
 }
 export function currentGrace(engine,state,row,minute,{fallbackMinutes=0}={}){
@@ -86,7 +102,7 @@ export function currentGrace(engine,state,row,minute,{fallbackMinutes=0}={}){
 
 export function installmentState(row,minute){
     const count=row.installments??1,start=row.createdAt??row.terms?.starts??0,end=row.deadline;
-    if(!Number.isSafeInteger(count)||count<1||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||end<start||count>1&&end===start)throw Error('分期义务的期数或期限无效');
+    if(!Number.isSafeInteger(count)||count<1||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||end<start||count>1&&end===start)throw preconditionFailure('分期义务的期数或期限无效');
     const paid=row.paid??0,total=row.amount??0;
     // Invert ceil(total * n / count) without rounding individual installments.
     const completed=total>0?Math.min(count,Math.floor(paid*count/total)):count;
@@ -108,9 +124,9 @@ export function pawnDeadline(row,engine,minute,state=engine.document?.state??{})
 export function accruedInterest(row,minute,{round='trunc'}={}){
     const from=row.accruedTo??row.createdAt,until=Math.min(minute,row.deadline??minute,row.endedAt??minute);
     const principal=row.principal??row.terms?.principal??0,rate=row.monthlyInterest??row.terms?.monthlyInterest??0;
-    if(!Number.isSafeInteger(from)||!Number.isFinite(until)||!Number.isFinite(principal)||!Number.isFinite(rate)||principal<0||rate<0)throw Error('义务累计条款无效');
+    if(!Number.isSafeInteger(from)||!Number.isFinite(until)||!Number.isFinite(principal)||!Number.isFinite(rate)||principal<0||rate<0)throw preconditionFailure('义务累计条款无效');
     const amount=principal*rate*Math.max(0,until-from)/(30*DAY);
-    if(!['ceil','trunc'].includes(round))throw Error('累计取整方式无效');
+    if(!['ceil','trunc'].includes(round))throw preconditionFailure('累计取整方式无效');
     return Math[round](amount);
 }
 

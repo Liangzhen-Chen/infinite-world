@@ -1,4 +1,7 @@
+import {preconditionFailure} from './precondition.mjs';
+import {publishTransitionEvent,presentWitnesses} from './world-events.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {nativePrimitiveTransaction} from './native-primitives.mjs';
 // Effect families register their effectSpec.kind values in magic-effects.mjs;
 // importing them here loads them before the first cast.
 import './magic-ritual.mjs';
@@ -60,19 +63,19 @@ export function prepareMagic(d,catalog,args,context={}){
     if(spec.kind==='damage'&&args.target?.startsWith('feature_'))return prepareElementObject.call(this,d,catalog,args);
     const target=['repair','dry','light'].includes(spec.kind)?this.resolve(args.target??'player'):resolveCreature(this,d,args.target??'player');
     if(['repair','dry','light'].includes(spec.kind)){
-        if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw new Error('施法需要实际持有的目标物品');
+        if(!target.startsWith('item_')||this.quantity(d,'player',target)<1)throw preconditionFailure('施法需要实际持有的目标物品');
         const held=heldUnit(d,this,'player',target),definition=this.byId.get(target);
-        if(held.quantity!==1)throw new Error('需要分出单件目标，不能对整叠物品施法');
+        if(held.quantity!==1)throw preconditionFailure('需要分出单件目标，不能对整叠物品施法');
         const traits=itemTraits(definition,held);
-        if(spec.kind==='repair'&&!hasTrait(traits,'metal'))throw new Error('目标不是可修缮的金属器具');
-        if(spec.kind==='dry'&&!hasTrait(traits,'clothing'))throw new Error('目标不是一件衣物');
+        if(spec.kind==='repair'&&!hasTrait(traits,'metal'))throw preconditionFailure('目标不是可修缮的金属器具');
+        if(spec.kind==='dry'&&!hasTrait(traits,'clothing'))throw preconditionFailure('目标不是一件衣物');
         return{target,path:['state','inventory',target],held,definition,spec,catalog};
     }
     const partition=target.startsWith('npc_')?'npcs':target.startsWith('monster_')||target.startsWith('boss_')?'creatures':null;
-    if(target!=='player'&&!partition)throw new Error('法术需要实际生命目标');
+    if(target!=='player'&&!partition)throw preconditionFailure('法术需要实际生命目标');
     const actor=target==='player'?d.get('state','player'):d.get('state',partition,target),definition=this.byId.get(target);
-    if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw new Error('法术目标不在场');
-    if(isPhysicallyDead(this,d,target))throw new Error('目标已经死亡，此法术不能使死者复生');
+    if(!actor||target!=='player'&&actor.location!==(context.location??d.get('state','location')))throw preconditionFailure('法术目标不在场');
+    if(isPhysicallyDead(this,d,target))throw preconditionFailure('目标已经死亡，此法术不能使死者复生');
     const targetingEngine=Object.create(this);
     if(context.targetFacts)targetingEngine.magicTargetFacts=()=>context.targetFacts;
     assertMagicTargeting(d,targetingEngine,catalog,args,target);
@@ -80,7 +83,7 @@ export function prepareMagic(d,catalog,args,context={}){
     const derived=target==='player'?{maxHp:actor.maxHp,defense:0}:partition==='npcs'
         ?derivedStats({level:actor.level??definition.level??1,attributes:definition.attributes,profession:Boolean(definition.combatProfession)},this.rules)
         :monsterStats({level:actor.level??definition.level??definition.levelRange?.[0]??1,template:definition.template??this.byId.get(definition.monster)?.template??2,bossTier:definition.tier??0},this.rules);
-    if(derived.divine&&!d.get('state','divinePermissions',target))throw new Error('此法术无法越过神性屏障');
+    if(derived.divine&&!d.get('state','divinePermissions',target))throw preconditionFailure('此法术无法越过神性屏障');
     if(spec.kind==='heal')assertSpellConsent(d,this,catalog,args,target,'healing');
     if((spec.kind==='protection'||spec.kind==='status'&&magicStatuses[spec.status].beneficial)&&target!=='player'){
         assertSpellConsent(d,this,catalog,args,target,'support_magic');
@@ -91,6 +94,15 @@ export function prepareMagic(d,catalog,args,context={}){
 }
 export function applyMagic(d,prepared,id){
     if(!prepared)return{};
+
+    const spec=prepared.spec,target=prepared.target??prepared.id??'player';
+    const primitive=['damage','heal'].includes(spec.kind)&&!prepared.elementObject&&!prepared.windObject&&!prepared.stoneObject?{op:'vital',target,delta:spec.kind==='damage'?-spec.power:spec.power,type:spec.damageType??'healing'}:
+      {op:'status',target,status:spec.status??spec.kind,duration:prepared.catalog?.duration??0,magnitude:spec.power};
+    const out=nativePrimitiveTransaction(d,{engine:this,family:'m4:magic',sourceEvent:id,actor:prepared.context?.source??'player',program:{spec,target,spell:prepared.catalog?.id},primitives:[primitive],
+      apply:tx=>applyMagicState.call(this,tx,prepared,id),describe:(effect,result)=>effect.op==='vital'?{delta:spec.kind==='heal'?result.healed??0:-(result.damage??0)}:{}});
+    return out.results[0];
+}
+function applyMagicState(d,prepared,id){
     let{spec,target,path,catalog}=prepared;
     const effect=magicEffect(spec.kind);
     if(effect?.apply)return effect.apply.call(this,d,prepared,id);
@@ -116,8 +128,13 @@ export function applyMagic(d,prepared,id){
             if(applied.resisted)return applied;
         }else d.set(['state','effects',id],{kind:'light',spell:catalog.id,target,power:spec.power,expires,source:id,owner:'player',targetInstance:trackSingleItem(d,this,'player',target,id)});
         if(spec.kind==='status'&&!magicStatuses[spec.status].beneficial&&target.startsWith('npc_')){
-            d.set([...path,'trust'],Math.max(-100,(latest.trust??0)-10));
-            d.set([...path,'developments'],[...latest.developments??[],{type:'敌意法术',status:spec.status,source:id,minute:d.get('state','minute')}]);
+            if((prepared.context?.source??'player')==='player')publishTransitionEvent(d,this,{
+                id:`${id}:hostility`,sourceEvent:id,verb:'status_applied',actor:'player',target,
+                location:latest.location,minute:d.get('state','minute'),visibility:'witnessed',
+                witnesses:presentWitnesses(d.get('state'),latest.location),tags:['magic','hostile'],
+                payload:{kind:'hostile_magic_status'},result:{effect:id,status:spec.status}
+            });
+            d.set([...path,'developments'],[...d.get(...path,'developments')??[],{type:'敌意法术',status:spec.status,source:id,minute:d.get('state','minute')}]);
         }
         return{target,effect:id,expires,status:spec.status,illuminated:spec.kind==='light'};
     }
@@ -147,9 +164,17 @@ export function applyMagic(d,prepared,id){
         else if(spec.kind==='heal'&&current.status==='濒死'){d.set([...path,'status'],'正常');d.set([...path,'dyingSince'],null);}
         if(spec.kind==='damage'&&target.startsWith('npc_')&&(prepared.context?.source??'player')==='player'){
             if(next<old)recordDisciplineBreach(d,this,'violence',id);
-            // Full NPCs judge a wound through the relation ledger (world event 'harm').
-            if(this.byId.get(target)?.tier!=='full'||this.replaying&&this.replayResult!==undefined&&this.replayResult?.worldEventVersion!==1)d.set([...path,'trust'],Math.max(-100,(current.trust??0)-10));
+            // Current NPCs judge a wound through the relation ledger (world event 'harm').
+
             d.set([...path,'developments'],[...current.developments??[],{type:'法术伤害',source:id,minute:d.get('state','minute'),damage:old-next}]);
+            // Area pulses have no enclosing cast-to-harm adapter. Ordinary
+            // casts and open primitives publish their existing canonical event.
+            if(this.byId.get(catalog.id)?.effectSpec?.kind==='area')publishTransitionEvent(d,this,{
+                id,verb:'harm',actor:'player',target,location:current.location,minute:d.get('state','minute'),
+                visibility:'witnessed',witnesses:presentWitnesses(d.get('state'),current.location,[target]),
+                tags:['magic','hostile','violence'],primitive:'vital',spell:catalog.id,
+                result:{target,damage:old-next,targetHp:next}
+            });
         }
     }
     if(spec.kind==='damage')rememberBossTactic(d,this,target,tactic,id);

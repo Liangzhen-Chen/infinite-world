@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {purse,treasury,sink,bookSide,BOOKED} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -17,7 +18,7 @@ const uint=n=>Number.isSafeInteger(n)&&n>=0;
 // B4/B5 may publish runtime stages on the faction's clock or in rules.
 // Existing trigger/stageEffects prose is deliberately not an executable plan.
 export function factionClockRules(engine){
- if(engine.replaying&&engine.replayResult?.factionClockVersion!==1)return [];
+
  const configured=engine.rules.factionClock;
  if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
  // Authored clocks first (configured rules, then each faction's own plan), so a
@@ -44,7 +45,7 @@ export function materializeFaithClocks(engine){
 function faction(engine,id){
  const t=String(id).startsWith('temple:')?templeById(engine,id):null;
  const f=engine.world.factions?.find(f=>f.id===id)??(t?{id:t.id,name:t.name,leader:t.teacher,contactAnchor:t.seat,resources:{treasuryCopper:0,items:{}}}:null);
- if(!f)throw Error(`未登记势力：${id}`);return f;
+ if(!f)throw preconditionFailure(`未登记势力：${id}`);return f;
 }
 function assertCost(engine,cost={}){
  if(!cost||typeof cost!=='object'||Array.isArray(cost)||Object.keys(cost).some(k=>!['coins','items'].includes(k))||
@@ -115,7 +116,7 @@ function changeAssets(d,engine,id,cost,sign,event,books,itemBooks){
  bookSide(d,treasury(id),sign*(cost.coins??0),books);
  for(const [item,n]of Object.entries(cost.items??{}))bookStock(d,engine,store(engine,id,item),sign*n,itemBooks);
  for(const [item,n]of Object.entries(cost.items??{}))items[item]=(items[item]??0)+sign*n;
- const coins=row.coins+sign*(cost.coins??0);if(!uint(coins)||Object.values(items).some(n=>!uint(n)))throw Error('势力资源不足或溢出');
+ const coins=row.coins+sign*(cost.coins??0);if(!uint(coins)||Object.values(items).some(n=>!uint(n)))throw preconditionFailure('势力资源不足或溢出');
  holdingSet(d,null,accountPath(id),{...row,coins,items,ledger:[...row.ledger,{...event,coins:sign*(cost.coins??0),items:Object.fromEntries(Object.entries(cost.items??{}).map(([id,n])=>[id,sign*n]))}]},'faction-clock');
 }
 // Used by effect consumers that carry their own outcome price.
@@ -211,10 +212,10 @@ export function advanceFactionClocks(d,engine,at){
  }
 }
 function requireContact(d,engine,contact,faction){
- if(!contact||d.get('state','location')!==contact.location)throw Error('势力操作需要到登记地点');
+ if(!contact||d.get('state','location')!==contact.location)throw preconditionFailure('势力操作需要到登记地点');
  if(contact.representative){
   const id=groupRepresentative(engine,d.get('state'),faction,contact.representative),view=id&&personView(engine,d.get('state'),id),actor=view&&d.get(...view.actorPath.value);
-  if(!actor||actor.location!==contact.location||actor.scheduleTravel||actor.cognitionTravel||actor.status!=='正常'||/睡眠|睡觉|熟睡/.test(actor.activity??''))throw Error('势力代表未清醒在场');
+  if(!actor||actor.location!==contact.location||actor.scheduleTravel||actor.cognitionTravel||actor.status!=='正常'||/睡眠|睡觉|熟睡/.test(actor.activity??''))throw preconditionFailure('势力代表未清醒在场');
   engine.assertNpcObligationAction(d,[id],{minutes:contact.minutes??0});
  }
 }
@@ -223,11 +224,11 @@ export function factionClockAction(d,args,eventId){
  // Naming the faction is enough when it publishes a single clock.
  const owner=args.faction?this.resolve(args.faction,'faction'):null,rules=factionClockRules(this).filter(r=>(args.clock===undefined||r.id===args.clock)&&(!owner||r.faction===owner));
  const rule=args.clock!==undefined||owner&&rules.length===1?rules[0]:undefined;
- if(!rule)throw Error('没有已发布的可执行势力时钟');
+ if(!rule)throw preconditionFailure('没有已发布的可执行势力时钟');
  const before=d.get('state','minute');initializeFactionClocks(d,this,before,before+rule.intervalDays*DAY);
  const row=d.get(...clockPath(rule.id));
  if(!row){
-  if(args.operation!=='faction_inspect')throw Error('教派尚无实际争夺，时钟未启动');
+  if(args.operation!=='faction_inspect')throw preconditionFailure('教派尚无实际争夺，时钟未启动');
   requireContact(d,this,rule.contact,rule.faction);return {faction:rule.faction,clock:rule.id,phase:0,dormant:true,choices:[]};
  }
  const stage=rule.stages[row.phase];
@@ -240,14 +241,14 @@ export function factionClockAction(d,args,eventId){
   requireContact(d,this,rule.contact,rule.faction);
   const coins=args.coins??0,item=args.item?this.resolve(args.item,'item'):null,quantity=args.quantity??0;
   const cost={coins,items:item?{[item]:quantity}:{}};assertCost(this,cost);
-  if(!coins&&!quantity||quantity&&!item)throw Error('供资必须有实际钱物');
-  if(item&&d.get('state','inventory',item,'instances')?.length)throw Error('势力区域物资账不接收具单件身份的物品');
+  if(!coins&&!quantity||quantity&&!item)throw preconditionFailure('供资必须有实际钱物');
+  if(item&&d.get('state','inventory',item,'instances')?.length)throw preconditionFailure('势力区域物资账不接收具单件身份的物品');
   payPlayer(d,this,cost,BOOKED,STOCK_BOOKED);changeAssets(d,this,rule.faction,cost,1,{sourceEvent:eventId,minute:before,kind:'player_contribution'},{account:purse(this,'player'),writer:'faction-clock',eventId},{party:'player',writer:'faction-clock',eventId});
   this.advance(d,5,eventId);return {faction:rule.faction,clock:rule.id,cost};
  }
- if(args.operation!=='faction_intervene')throw Error('未知势力操作');
+ if(args.operation!=='faction_intervene')throw preconditionFailure('未知势力操作');
  const action=rule.interventions?.find(a=>a.id===args.choice&&a.stage===stage?.id);
- if(!action)throw Error('当前阶段没有该干预办法');
+ if(!action)throw preconditionFailure('当前阶段没有该干预办法');
  requireContact(d,this,action,rule.faction);payPlayer(d,this,action.cost??{},{account:sink('export','faction_intervention'),writer:'faction-clock',eventId},{flow:'sink:export',purpose:'faction_intervention',writer:'faction-clock',eventId});
  const check=action.difficulty===undefined?{success:true}:this.check(d,{attribute:action.attribute,difficulty:action.difficulty},eventId);
  const entry={choice:action.id,stage:stage.id,sourceEvent:eventId,minute:before,cost:action.cost??{},success:check.success};
@@ -260,7 +261,7 @@ export function factionClockAction(d,args,eventId){
  return {faction:rule.faction,clock:rule.id,...entry,phase:d.get(...clockPath(rule.id),'phase'),...check};
 }
 function payPlayer(d,engine,cost,books,itemBooks){
- if(d.get('state','player','coins')<(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>engine.quantity(d,'player',id)<n))throw Error('玩家干预或供资资源不足');
+ if(d.get('state','player','coins')<(cost.coins??0)||Object.entries(cost.items??{}).some(([id,n])=>engine.quantity(d,'player',id)<n))throw preconditionFailure('玩家干预或供资资源不足');
  bookSide(d,purse(engine,'player'),-(cost.coins??0),books);
  d.set(['state','player','coins'],d.get('state','player','coins')-(cost.coins??0));
  for(const [item,n]of Object.entries(cost.items??{}))if(n)engine.itemDelta(d,'player',item,-n,itemBooks);

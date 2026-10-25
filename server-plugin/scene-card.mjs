@@ -1,4 +1,5 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {visibleEntity,localSounds} from './perception.mjs';
 import {personOccupation,personName} from './entity-view.mjs';
 import {laborNotices} from './labor-market.mjs';
 import {personAge}from'./entity-view.mjs';
@@ -8,6 +9,8 @@ import {summonView} from './summons.mjs';
 import {localWeather} from './weather.mjs';
 import {agricultureView} from './agriculture.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
+import {npcServiceFact} from './npc-schedule.mjs';
+import {serviceLine} from './action-text.mjs';
 import {npcContext}from'./npc-memory.mjs';
 import {relationView}from'./npc-relations.mjs';
 import {chronicleContext}from'./chronicle.mjs';
@@ -38,12 +41,12 @@ const list=value=>Array.isArray(value)?value.map(row=>typeof row==='string'?row:
 export function sceneCard(engine,document,query='',index=null){
     const s=document.state,place=engine.byId.get(s.location),mentioned=engine.resolver.mentions(query,s.location);
     const name=id=>personName(engine,s,id).value??engine.byId.get(id)?.name??s.created?.[id]?.name??id;
-    const present=Object.entries(s.npcs).filter(([,npc])=>npc.location===s.location)
+    const present=Object.entries(s.npcs).filter(([id,npc])=>npc.location===s.location&&visibleEntity(engine,document,id))
         .sort(([a],[b])=>Number(mentioned.has(b))-Number(mentioned.has(a))||a.localeCompare(b));
     const compactPeople=Math.min(present.length,engine.rules.prompt.npcLimit)>4;
     const weather=localWeather(engine,document),path=[],seen=new Set();let location=place;
     while(location&&!seen.has(location.id)){seen.add(location.id);path.unshift(location.name);location=engine.byId.get(location.parent);}
-    const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.name}｜${weather.temperatureC}℃`:''}`,
+    const p=s.player,parts=[`【时间】${engine.calendar(s.minute).text}${weather?`｜${weather.daylight?'白昼':'夜色已暗'}｜${weather.name}｜${weather.temperatureC}℃`:''}`,
         `【地点】${path.join(' › ')||s.location}（${s.location}）`,
         `【你】${name('player')}｜${p.level}级｜生命${p.hp}/${p.maxHp} 魔力${p.mp}/${p.maxMp}｜铜${p.coins}｜同行：${(p.companions??[]).map(name).join('、')||'无'}`,
         `【在场】共${present.length}人`];
@@ -96,9 +99,11 @@ export function sceneCard(engine,document,query='',index=null){
         if(context?.reflections?.length)parts.push(`  个人判断，可被推翻：${text(context.reflections[0].content,100)}`);
         if(context&&compactPeople)parts.push(`  本人已知：${text(list(context.known),100)}`);
         else if(context)parts.push(`  可见外貌：${text(list(context.appearance),100)}｜说话习惯：${text(list(context.voice.habits),80)}\n  台词范例，非既往经历：${text(context.voice.samples?.[0],80)}\n  本人已知：${text(list(context.known),180)}\n  本人旧事，不代表玩家参与：${text(list(context.seeds),180)}\n  在意：${text(list(context.values),70)}｜弱点：${text(list(context.flaws),70)}\n  行事：${text(Object.values(context.behavior).join('；'),160)}`);
-        if(available.services!==null)parts.push(`  当前交易/授课：${available.services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${available.until?`，本时段至${engine.calendar(available.until).text}`:''}；司法受理按法典、在场清醒及办案回执判断。`);
+        const serviceFact=npcServiceFact(engine,s,id);
+        if(serviceFact)parts.push(`  ${serviceLine(engine,serviceFact)}`);
         if(base.creditPolicy)parts.push(`  赊账条件：未还合计最多${base.creditPolicy.limitCopper}铜，最长${base.creditPolicy.maximumMinutes}分钟，信任至少${base.creditPolicy.minimumTrust}，逾期需先还清。`);
     }
+    for(const sound of localSounds(engine,document))parts.push(`【听见】${sound.text}`);
     const learned=Object.keys(s.spells??{}).map(id=>engine.byId.get(id)).filter(Boolean);
     if(weather&&/天气|雨|雪|雾|日出|日落|天亮|天黑|湿度|启程|赶路/.test(query))parts.push(`【天气与昼长】${weather.name}，${weather.indoors?'室内':'户外'}；日出${weather.sunrise}，日落${weather.sunset}；湿度${weather.humidityPercent}%${weather.boatClosed?'；船路暂停通行':''}`);
     parts.push(`【已学法术】共${learned.length}：${learned.slice(0,8).map(row=>`${row.name}（${row.id}，魔力${row.mp}）`).join('；')||'无'}`);
@@ -112,12 +117,12 @@ export function sceneCard(engine,document,query='',index=null){
     if(contracts.length||debts.length)parts.push('【住宿与欠款】',...debts.slice(-6).map(row=>`${row.id}｜欠${name(row.creditor)} ${obligationView(s,row).owed}铜｜${row.status}｜${Number.isFinite(row.deadline)?`到期${engine.calendar(row.deadline).text}`:'未定期限'}`),...contracts.slice(-6).map(([,row])=>`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);
-    const animals=petView(engine,document).presentAnimals;
+    const animals=petView(engine,document).presentAnimals.filter(row=>visibleEntity(engine,document,row.id));
     const spirits=spiritScene(engine,document);if(spirits)parts.push(spirits);
     const tribes=tribalScene(engine,document);if(tribes)parts.push(tribes);
     const army=militaryScene(engine,document);if(army)parts.push(army);
     const war=warScene(engine,document);if(war)parts.push(war);
-    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&!isPhysicallyDead(null,s,id)&&intelligenceSign(s,id)).slice(0,3);
+    const spiritSigns=Object.entries(s.creatures??{}).filter(([id,a])=>a.location===s.location&&!isPhysicallyDead(null,s,id)&&visibleEntity(engine,document,id)&&intelligenceSign(s,id)).slice(0,3);
     if(spiritSigns.length)parts.push(`【精怪近况】${spiritSigns.map(([id,a])=>`${a.name??name(a.species)}（${id}）${intelligenceSign(s,id)}`).join('；')}`);
     if(animals.length)parts.push(`【在场动物】${animals.slice(0,3).map(row=>`${row.name??row.id}（${row.id}）`).join('；')}`);
     const encounters=wildlifeEncounterView(document);

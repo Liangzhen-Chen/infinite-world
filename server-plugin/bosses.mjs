@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {monsterStats,tacticDefense} from './combat.mjs';
@@ -60,7 +61,7 @@ export function bossCounter(d,engine,target,tactic){
     const element=n?{damageMultiplier:n.damageMultiplier,interaction:n.interaction,...(n.nature?{nature:n.nature}:{})}:null;
     if(!r||!actor?.boss||!living(d,target))return{tactic,seen:0,damageMultiplier:actor?.boss?1:element?.damageMultiplier??1,adapted:false,...(element&&!actor.boss?{...element}:{})};
     const seen=actor.battleMemory?.tactics?.[tactic]??0;
-    if(!Number.isSafeInteger(seen)||seen<0)throw new Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
+    if(!Number.isSafeInteger(seen)||seen<0)throw Error('首领战术记忆数据损坏，拒绝伪造防备或覆盖原记录');
     const counter=templateBossCounter(d,engine.byId.get(actor.boss),actor,tactic,engine.magicStatusContext?.(d,target))??{tactic,seen,...tacticDefense(seen,engine.rules),
         ...(tactic==='flee'&&seen>=r.learningThreshold?{escapeDifficulty:r.escapeDifficulty}:{})};
     return element?{...counter,...element,damageMultiplier:counter.damageMultiplier*element.damageMultiplier}:counter;
@@ -69,7 +70,7 @@ export function rememberBossTactic(d,engine,target,tactic,eventId){
     const actor=engine.actor(d,target);if(!engine.rules.bossEcology||!actor?.boss)return;
     rememberBossEncounter(d,engine,target,{kind:'clash',tactic,eventId});
     const memory=clone(actor.battleMemory??{tactics:{},lastEvent:null});if(memory.lastEvent===eventId)return;
-    if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw new Error('首领战术记忆格式不支持，拒绝覆盖原记录');
+    if(!memory.tactics||typeof memory.tactics!=='object'||Array.isArray(memory.tactics))throw Error('首领战术记忆格式不支持，拒绝覆盖原记录');
     memory.tactics[tactic]=(memory.tactics[tactic]??0)+1;memory.lastEvent=eventId;memory.lastMinute=d.get('state','minute');
     d.set([...engine.actorPath(target),'battleMemory'],memory);
     const publicAttitude=bossPublicAttitude(d,engine,target);
@@ -97,14 +98,14 @@ function drawSpecies(d,engine,species,lair,eventId){
     const s=engine.byId.get(species),habitat=engine.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habitat),path=['state','records',`ecology:${habitat.id}`];
     const record=clone(d.get(...path)),p=record.populations[species];if(!p?.count)return null;
     const id=`monster_instance_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${species}`).digest('hex').slice(0,16)}`;
-    if(d.get('state','creatures',id)||d.get('state','created',id))throw new Error('巢穴迁入个体编号重复');
+    if(d.get('state','creatures',id)||d.get('state','created',id))throw Error('巢穴迁入个体编号重复');
     p.count--;p.withdrawn++;d.set(path,record);
     return instantiate(d,engine,{id,species,location:habitat.location,lair,eventId});
 }
 export function advanceBosses(d,engine,day){
     if(!engine.rules.bossEcology)return;
     for(const boss of engine.world.bosses.filter(b=>b.residence)){
-        const r=clone(d.get(...key(boss)));if(r.lastDay!==day-1)throw new Error('巢穴日结不连续');
+        const r=clone(d.get(...key(boss)));if(r.lastDay!==day-1)throw Error('巢穴日结不连续');
         if(boss.actor){
             const actor=engine.actor(d,boss.actor),present=living(d,boss.actor)&&actor.location===boss.residence.location;
             r.occupant=present?{kind:'boss',definition:boss.id,actor:boss.actor}:null;
@@ -131,7 +132,7 @@ export function advanceBosses(d,engine,day){
     }
 }
 export function lairAction(d,args,eventId){
-    if(!this.rules.bossEcology)throw new Error('当前世界没有启用首领巢穴');
+    if(!this.rules.bossEcology)throw preconditionFailure('当前世界没有启用首领巢穴');
     const here=this.world.bosses.filter(b=>b.residence?.location===d.get('state','location'));
     const boss=args.lair?here.find(b=>[b.residence.id,b.residence.name].includes(args.lair)):here.length===1?here[0]:null;
     if(!boss)throw new Error(!args.lair&&here.length?'需要明确所在地巢穴名称或编号':'这里没有可接触的巢穴');
@@ -143,7 +144,7 @@ export function lairAction(d,args,eventId){
             note:actor?'仅观察已接触个体':'尚未接触活体，入口观察不能知道未见占据者或其战斗记忆',actionScope:{kind:'instant',instantaneous:true}};
     }
     if(operation==='negotiate')return negotiateBoss(d,this,boss,r,args,eventId);
-    if(operation!=='approach')throw new Error('巢穴操作需为observe、approach或negotiate');
+    if(operation!=='approach')throw preconditionFailure('巢穴操作需为observe、approach或negotiate');
     this.advance(d,this.rules.bossEcology.approachMinutes,eventId);
     if(d.get('state','location')!==boss.residence.location||d.get('state','player','status')!=='正常')return{contact:null,note:'进入前失去行动能力或离开此地'};
     const latest=clone(d.get(...key(boss)));
@@ -157,7 +158,7 @@ export function lairAction(d,args,eventId){
         if(!living(d,latest.occupant.actor)||actor.owner||actor.location!==boss.residence.location)return{contact:null,note:'原占据者已不在此处活动，不能隔空接触或重造同一首领'};
         rememberBossEncounter(d,this,latest.occupant.actor,{kind:'approach',eventId});
         return{contact:{id:latest.occupant.actor,name:actor.name,status:actor.status,hp:actor.hp,...publicContact(d,this,latest.occupant.actor)},alreadyPresent:true};}
-    if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw new Error('巢穴占据者记录无效');
+    if(latest.occupant.kind!=='boss'||latest.occupant.definition!==boss.id)throw Error('巢穴占据者记录无效');
     const contact=instantiate(d,this,{id:boss.id,species:boss.monster,boss:boss.id,location:boss.residence.location,lair:boss.residence.id,eventId});
     latest.occupant.actor=boss.id;holdingSet(d,null,key(boss),latest,'bosses');
     rememberBossEncounter(d,this,boss.id,{kind:'approach',eventId});

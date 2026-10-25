@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {registerWorldEventSubscriber}from'./world-events.mjs';
 import {bossCognitionField}from'./npc-state.mjs';
 import {readBossNegotiation,breakBossAgreement}from'./boss-negotiation.mjs';
@@ -25,13 +26,13 @@ function template(boss){
 export function emptyBossCognition(){return{format:1,encounters:[]};}
 export function readBossCognition(actor){
     const c=actor[bossCognitionField(actor)]===undefined?emptyBossCognition():actor[bossCognitionField(actor)],ids=new Set();
-    if(!plain(c)||c.format!==1||!Array.isArray(c.encounters))throw new Error('首领接触记忆格式不支持，拒绝覆盖');
+    if(!plain(c)||c.format!==1||!Array.isArray(c.encounters))throw Error('首领接触记忆格式不支持，拒绝覆盖');
     for(const e of c.encounters){
         if(!plain(e)||typeof e.event!=='string'||!e.event||ids.has(e.event)||e.actor!=='player'||
             !Number.isSafeInteger(e.minute)||e.minute<0||typeof e.location!=='string'||!e.location||
             !['approach','clash'].includes(e.kind)||
             (e.kind==='clash'&&(typeof e.tactic!=='string'||!e.tactic))||
-            (e.kind==='approach'&&e.tactic!==undefined))throw new Error('首领接触记忆数据损坏，拒绝覆盖');
+            (e.kind==='approach'&&e.tactic!==undefined))throw Error('首领接触记忆数据损坏，拒绝覆盖');
         ids.add(e.event);
     }
     return c;
@@ -41,12 +42,12 @@ export function rememberBossEncounter(d,engine,target,{kind,tactic,eventId}){
     if(!intelligent(boss))return;
     template(boss);
     if(!actor||actor.location!==d.get('state','location')||
-        kind==='approach'&&(!living(engine,d,target,actor)||actor.owner))throw new Error('首领接触需要实际在场的自由个体');
+        kind==='approach'&&(!living(engine,d,target,actor)||actor.owner))throw preconditionFailure('首领接触需要实际在场的自由个体');
     if(!['approach','clash'].includes(kind)||typeof eventId!=='string'||!eventId||
-        kind==='clash'&&(typeof tactic!=='string'||!tactic))throw new Error('首领接触事件无效');
+        kind==='clash'&&(typeof tactic!=='string'||!tactic))throw Error('首领接触事件无效');
     const c=structuredClone(readBossCognition(actor)),prior=c.encounters.find(e=>e.event===eventId);
     if(prior){
-        if(prior.kind!==kind||prior.tactic!==tactic)throw new Error('首领接触事件编号冲突');
+        if(prior.kind!==kind||prior.tactic!==tactic)throw preconditionFailure('首领接触事件编号冲突');
         return;
     }
     c.encounters.push({event:eventId,actor:'player',kind,minute:d.get('state','minute'),location:actor.location,...(kind==='clash'?{tactic}:{})});

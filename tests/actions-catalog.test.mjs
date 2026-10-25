@@ -34,6 +34,8 @@ test('每个动作经 resolveToolCall 落到登记的内部工具与操作，mod
 test('每个动作都定位到处理器（文件:行存在）',()=>{
  for(const a of actions){
   assert.ok(a.handler,`${a.id} 无处理器`);
+  // 06 §6.9.1: an affordance is a read-only projection, not a dispatcher.
+  assert.notEqual(a.handler.dispatch?.split(':')[0],'server-plugin/action-affordances.mjs',`${a.id} 错把构造表单当作处理器`);
   const lines=fs.readFileSync(a.handler.file,'utf8').split('\n');
   assert.ok(a.handler.line>=1&&a.handler.line<=lines.length,a.id);
   assert.ok(a.participants[0]==='player');

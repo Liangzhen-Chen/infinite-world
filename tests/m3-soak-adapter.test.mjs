@@ -1,3 +1,4 @@
+import {withReviewClaims} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -17,7 +18,7 @@ function fake({warning=false,waitMinutes,tailMinutes=0}={}){return {async genera
  else if(label.startsWith('npc'))throw Error('测试禁止模型规划');
  else if(label.endsWith('-0')){finish_reason='tool_calls';message={content:null,tool_calls:[{id:'action',type:'function',function:{name:waitMinutes===undefined?'world_trade':'world_time',arguments:JSON.stringify(waitMinutes===undefined?{seller:'林穗',item:'面包',quantity:1}:{minutes:waitMinutes})}}]};}
  else message={content:`${waitMinutes===undefined?'你买到了一个面包。':'你等了一会儿。'}${tailMinutes?'你问林穗最近好吗。':''}<回合 额外="${tailMinutes}分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`};
- return {choices:[{finish_reason,message}],measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10},label}};
+ return {...(label.startsWith('consistency:')?withReviewClaims({choices:[{finish_reason,message}]},body):{choices:[{finish_reason,message}]}),measurement:{costUpperYuan:.001,usage:{prompt_cache_hit_tokens:90,prompt_cache_miss_tokens:10},label}};
  }};}
 const options=client=>({client,processMessages:m=>m,countTokens:()=>20,createBody:{name:'试玩者'}});
 test('同一真实 HTTP 会话跨进程恢复，交易响应丢失后同编号重入不重复扣款',async t=>{

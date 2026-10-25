@@ -1,0 +1,443 @@
+{
+ "format": 1,
+ "namespace": "law",
+ "actions": [
+  {
+   "id": "law:accept",
+   "call": {
+    "tool": "world_law",
+    "operation": "accept"
+   },
+   "label": "亲自受理报案",
+   "verb": "law.accept",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.accept",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:reject",
+   "call": {
+    "tool": "world_law",
+    "operation": "reject"
+   },
+   "label": "亲自拒绝受理",
+   "verb": "law.reject",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "reason",
+     "kind": "text"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.reject",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:request_decision",
+   "call": {
+    "tool": "world_law",
+    "operation": "request_decision"
+   },
+   "label": "请求经办决定",
+   "verb": "law.request_decision",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "request",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.request_decision",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:request_hearing",
+   "call": {
+    "tool": "world_law",
+    "operation": "request_hearing"
+   },
+   "label": "请求审理",
+   "verb": "law.request_hearing",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.request_hearing",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:submit_evidence",
+   "call": {
+    "tool": "world_law",
+    "operation": "submit_evidence"
+   },
+   "label": "递交证据",
+   "verb": "law.submit_evidence",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "document",
+     "kind": "text",
+     "optional": true
+    },
+    {
+     "name": "witness",
+     "kind": "entity",
+     "entity": "person",
+     "optional": true
+    },
+    {
+     "name": "source",
+     "kind": "text",
+     "optional": true
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.submit_evidence",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:verify_evidence",
+   "call": {
+    "tool": "world_law",
+    "operation": "verify_evidence"
+   },
+   "label": "请求核验原件",
+   "verb": "law.verify_evidence",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "document",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.verify_evidence",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:request_review",
+   "call": {
+    "tool": "world_law",
+    "operation": "request_review"
+   },
+   "label": "请求复审裁判",
+   "verb": "law.request_review",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.request_review",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:execute_fine",
+   "call": {
+    "tool": "world_law",
+    "operation": "execute_fine"
+   },
+   "label": "请求执行罚款",
+   "verb": "law.execute_fine",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.execute_fine",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "law:decide_case",
+   "call": {
+    "tool": "world_law",
+    "operation": "decide_case"
+   },
+   "label": "亲自裁判",
+   "verb": "law.decide_case",
+   "group": "法律",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "authority"
+    ]
+   },
+   "slots": [
+    {
+     "name": "case",
+     "kind": "text"
+    },
+    {
+     "name": "authority",
+     "kind": "entity",
+     "entity": "person"
+    },
+    {
+     "name": "convicted",
+     "kind": "flag"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'environment').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [],
+   "narration": "law.decide_case",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  }
+ ]
+}

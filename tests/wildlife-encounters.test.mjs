@@ -126,7 +126,7 @@ test('已有在场个体沿用身份，不增种群扣除；满场景至多给�
     const capped=await full.run(full.c,'world_move',{destination:wood},'cap');assert.equal(capped.result.encounter.kind,'trace');assert.deepEqual(capped.document.state.creatures,full.c.state.creatures);
 });
 
-test('存档重启、重复事件、重放、导入导出与回滚保留遭遇和种群；旧回执不补遭遇',async t=>{
+test('存档重启、重复事件、重放、导入导出与回滚保留遭遇和种群',async t=>{
     const{engine,c}=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'wildlife-encounters-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
     const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(directory,{reducer,snapshotEvery:100});
     await store.create({id:'encounters',worldVersion:engine.world.version,document:c});
@@ -136,6 +136,5 @@ test('存档重启、重复事件、重放、导入导出与回滚保留遭遇�
     const restarted=new CampaignStorage(directory,{reducer});assert.deepEqual((await restarted.read('encounters')).document,saved);
     assert.deepEqual((await restarted.import(await store.export('encounters'),'copy')).document,saved);
     const replayed=await engine.reduce(c,request.input,{replay:true,result:first.result});assert.deepEqual(applyPatches(c,replayed.patches),saved);conservation(saved);
-    const old=await engine.reduce(c,request.input,{replay:true,result:{destination:field}});assert.equal(old.result.encounter,undefined);assert.equal(applyPatches(c,old.patches).state.location,field);
     assert.deepEqual((await store.reconcile('encounters',[],null)).document,c);
 });

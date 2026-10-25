@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -39,7 +40,6 @@ import {factionClockRules,spendFactionAssets,creditFactionAssets} from './factio
 import {adjustStanding} from './standing.mjs';
 import {authorityOf} from './governance.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
-import {villageWildlifeFresh} from './quest-wildlife.mjs';
 
 const DAY=1440,GRADES=['D','C','B','A','S'],OBJECTIVES=['deliver','visit','record'],FUNDING=['faction','treasury'];
 const OUTCOMES=['pause','resume','redirect','support'],active=q=>['公开','进行中'].includes(q.status);
@@ -47,9 +47,7 @@ const int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const rules=engine=>engine.rules.questSources??null;
 const digest=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0,16);
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
-export const QUEST_SOURCES_VERSION=1;
 // 旧事件重放不补出任务：只有新结算或重放结果已带本版本号时才生成。
-export function questSourcesFresh(engine){return !engine.replaying||engine.replayResult?.questSourcesVersion===QUEST_SOURCES_VERSION;}
 
 // ---- 等级折算：1S=10A=100B=1000C=10000D --------------------------------------
 export const gradeUnitsD=(engine,grade)=>engine.rules.quests.quotaUnits[grade];
@@ -170,9 +168,9 @@ export function refundQuestFunding(d,engine,q,amount,minute){
  * board,publisher,funding:{npc|faction|treasury},minute,outcome?,cause?}。出不起或已有同源任务时返回 null。
  */
 export function postGeneratedQuest(d,engine,offer){
- if(!generators.has(offer.generator))throw Error(`未登记的任务生成器：${offer.generator}`);
+ if(!generators.has(offer.generator))throw preconditionFailure(`未登记的任务生成器：${offer.generator}`);
  const state=d.get('state'),minute=offer.minute;
- if(!GRADES.includes(offer.grade)||!inRange(engine,offer.grade,offer.reward))throw Error('生成任务的等级或报酬不在规格区间');
+ if(!GRADES.includes(offer.grade)||!inRange(engine,offer.grade,offer.reward))throw preconditionFailure('生成任务的等级或报酬不在规格区间');
  if(generated(state).some(q=>q.source.key===offer.key))return null;
  if(!locationKnown(engine,offer.board)||!state.npcs?.[offer.publisher]&&offer.publisher!=='player')return null;
  const quest=`quest_src_${digest([offer.key])}`;if(state.quests?.[quest])return null;
@@ -200,7 +198,7 @@ export function settleQuestOutcome(d,engine,q,minute){
  if(q.source?.generator==='effect_table'&&q.source.cause==='royal_commission'&&q.fundedBy?.treasury===engine.rules.governance?.sovereignty?.royal.questBoard&&q.objective.type==='deliver'){
   const prior=d.get('state','records',`${q.id}:outcome`);if(prior)return prior;
   const n=q.objective.quantity,board=q.fundedBy.treasury;
-  if(engine.quantity(d,q.publisher,q.objective.item)<n)throw Error('王都委托未收到实际物资');
+  if(engine.quantity(d,q.publisher,q.objective.item)<n)throw preconditionFailure('王都委托未收到实际物资');
   engine.itemDelta(d,q.publisher,q.objective.item,-n,BOOKED_STOCK);deliverStock(d,engine,q.publisher,q.objective.item,settlementStock(engine,board,'wood'),n,`${q.id}:outcome`);
   d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
   const result={category:'quest_outcome',quest:q.id,royal:true,settlement:board,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
@@ -333,7 +331,7 @@ registerQuestGenerator({id:'effect_table',order:300});
 
 // Local offers share U17 posting, escrow and expiration. Never spawn a target.
 function scanVillageWildlife(d,engine,at){
- if(!villageWildlifeFresh(engine))return [];
+
  const t=rules(engine),posted=[];
  for(const row of t?.wildlife??[]){
   const o=row.objective,targets=o.type==='creature'?Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.species===o.species&&a.location===o.location&&a.hp>0&&a.status==='正常'&&!a.owner).map(([id])=>id).sort():[o.target??'once'];
@@ -369,7 +367,7 @@ export function openSettlementLedgers(engine,document){
 
 // 推进注册表：每个午夜（含跨日一段推进中的每个午夜）跑一次各生成器。
 export function advanceQuestSources(d,engine,{before,after}){
- if(!rules(engine)||!questSourcesFresh(engine))return [];
+ if(!rules(engine))return [];
  assertQuestSources(engine);
  const posted=[];
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){

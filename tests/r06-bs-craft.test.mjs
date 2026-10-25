@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {authorCraft,approved,integrate,reviewContext,root,responsibilities,correctServiceReferences} from '../world/design/w1-baishi-craft-depth.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 import {validateNpcDepth,validateNpcProfiles} from '../tools/npc-profile-validation.mjs';
@@ -35,7 +36,7 @@ test('正式世界校验对本批ID零错误，顶层服务均为目录ID，交�
  p.services.pop();p.skills.push('trade');assert.ok(validateWorld(invalid).errors.some(e=>e.includes('/skills')&&e.includes('pattern')));
 });
 
-test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与seed不充数',()=>{
+test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与seed不充数',async()=>{
  const residentsFor=id=>new Set(world.settlementProfiles.find(s=>s.id===id).residentIds);
  const town=residentsFor('loc_bs'),local=new Set(['loc_hw','loc_bs','loc_bs_yupo','loc_bs_weiting','loc_bs_liquan','loc_bs_sangban'].flatMap(id=>[...residentsFor(id)]));
  for(const id of ids){assert.ok(town.has(id));assert.ok(world.npcs.some(n=>n.id===id&&n.tier==='full'));}
@@ -44,17 +45,22 @@ test('按本批ID与聚落常住登记核对100/206及LOD0的250/500，访客与
  assert.ok(full.filter(n=>local.has(n.id)).length>=250);assert.ok(roster.filter(n=>local.has(n.id)).length>=500);
  assert.ok(![...local].some(id=>id.includes('seed')));
  for(const p of bundle.people){assert.ok(p.household.includes(p.relationships.at(-1).with));assert.equal(new Set(p.relationships.map(r=>r.with)).size,p.relationships.length);}
- const additions=contentAdditions(world);for(const p of additions.locations){assert.deepEqual(world.locations.find(l=>l.id===p.id),p);assert.ok(new WorldEngine(world).route('loc_bs',p.id,'walk',510,'craft-route').minutes>0);}
+ // T93's teaching facts remain exact; S4 adds the reviewed spatial layout.
+ const authoredLocations=JSON.parse(await fs.readFile(new URL('../world/geo/locations.json',import.meta.url),'utf8'));
+ const additions=contentAdditions(world);for(const p of additions.locations){const layout=authoredLocations.find(l=>l.id===p.id).layout;assert.deepEqual(world.locations.find(l=>l.id===p.id),{...p,...(layout?{layout}:{})});assert.ok(new WorldEngine(world).route('loc_bs',p.id,'walk',510,'craft-route').minutes>0);}
  assert.equal(world.locations.find(l=>l.id==='bld_bs_temple').name,'东街灯祠');
 });
 
-// All new route skills and certification records below come from public calls.
-// Only the starting character's level, attributes and travel purse are fixtures.
+// Admission, first acquisition, threshold-crossing practice and certification
+// remain public calls. Earlier accumulated practice and book literacy are
+// declared premises, not repeated months of unrelated character advancement.
 function publicCall(tool,args){const call=modelToolCall(tool,args),schema=toolDefinitions().find(d=>d.function.name===call.tool).function.parameters;for(const key of schema.required??[])assert.notEqual(call.args[key],undefined);for(const [key,value]of Object.entries(call.args)){assert.ok(schema.properties[key],key);if(schema.properties[key].enum)assert.ok(schema.properties[key].enum.includes(value),key);}return call;}
-async function schoolSession(t,sourceWorld=world){
+async function schoolSession(t,sourceWorld=world,setup={}){
  const engine=new WorldEngine(sourceWorld);let doc=engine.createCharacter(legacy,{},`t93-${t.route}`),serial=0;
  doc.state.minute=510;doc.state.location='loc_bs';doc.state.player.level=10;doc.state.player.coins=1000;
  for(const a of Object.keys(doc.state.player.attributes))doc.state.player.attributes[a]=18;
+ // Open the setup's books only after the starting purse/attributes are set.
+ const staged=applyIntentSetup(engine,doc,setup);assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
  const call=async(tool,args,successKey)=>{
   if(!successKey){const out=await engine.reduce(doc,{...publicCall(tool,args),eventId:`school-${++serial}`});doc=applyPatches(doc,out.patches);return out.result;}
   // Select a reproducible successful dice event, without overriding the dice or
@@ -67,9 +73,23 @@ async function schoolSession(t,sourceWorld=world){
  return{engine,call,morning,get doc(){return doc;},set doc(value){doc=value;}};
 }
 
+async function practiceCrossing(s,t,target=150){
+ // First acquisition is tested by world_learn above. Historical accumulation
+ // up to target-1 is the premise for this real practice/certification boundary;
+ // applyIntentSetup preserves that lesson's source and fee history.
+ const staged=applyIntentSetup(s.engine,s.doc,{abilities:{skills:{[t.core]:target-1}}});
+ assert.deepEqual(staged.setupUnmet,[]);s.doc=staged.document;
+ const minute=s.doc.state.minute,proficiency=s.doc.state.skills[t.core].proficiency;
+ const practiced=await s.call('world_practice',{skill:t.core});
+ assert.ok(practiced.gain>0);assert.ok(s.doc.state.skills[t.core].proficiency>proficiency);
+ assert.ok(s.doc.state.skills[t.core].proficiency>=target);
+ assert.equal(s.doc.state.minute,minute+120);
+}
+
 test('四路线实际抵达、拜师、练习与认证；学费进导师账，书籍实际购买并可学',async()=>{
  for(const t of teachingDesign.filter(t=>['道','佛','法','武'].includes(t.route))){
-  const s=await schoolSession(t);assert.equal(s.doc.state.npcs[t.id].location,t.location);
+  // Reading the purchased route book is tested; acquiring literacy is not.
+  const s=await schoolSession(t,world,{abilities:{literacy:100}});assert.equal(s.doc.state.npcs[t.id].location,t.location);
   const purse=s.doc.state.player.coins+s.doc.state.npcs[t.id].coins;
   const admitted=await s.call('world_profession',{operation:'initiate',profession:t.role,teacher:t.id,institution:t.location,rule:world.rules.training.institutions.find(e=>e.teacher===t.id).rule});
   assert.equal(admitted.initiated,true);assert.equal(s.doc.state.careers[t.role].initiation.status,'守戒中');assert.equal(s.doc.state.player.coins+s.doc.state.npcs[t.id].coins,purse);
@@ -77,17 +97,15 @@ test('四路线实际抵达、拜师、练习与认证；学费进导师账，�
   await assert.rejects(s.call('world_profession',{profession:t.role,teacher:t.id}),/基础技能/);
   await s.call('world_learn',{entity:t.core,source:t.id,kind:'skill'},'success');
   assert.equal(s.doc.state.skills[t.core].source.id,t.id);assert.equal(s.doc.state.player.coins,feeBefore-12);
-  while(s.doc.state.skills[t.core].proficiency<150){await s.call('world_practice',{skill:t.core,gain:100,target:'基础动作'});if(s.doc.state.skills[t.core].proficiency<150)await s.morning();}
+  await practiceCrossing(s,t);
   await s.morning();await s.call('world_profession',{profession:t.role,teacher:t.id,operation:'certify'},'certified');
   assert.equal(s.doc.state.professions.combat,t.role);assert.equal(s.doc.state.careers[t.role].certification.teacher,t.id);
   assert.equal(s.doc.state.player.coins+s.doc.state.npcs[t.id].coins,coins);
   await assert.rejects(s.call('world_profession',{profession:t.role,teacher:t.id}),/已经认证/);
   await s.morning();const stock=s.doc.state.npcs[t.id].inventory[t.book],book=await s.call('world_trade',{seller:t.id,item:t.book,quantity:1});
   assert.ok(book.cost>0);assert.equal(s.doc.state.npcs[t.id].inventory[t.book].quantity??s.doc.state.npcs[t.id].inventory[t.book],stock-1);assert.equal(s.doc.state.inventory[t.book].quantity,1);
-  // Literacy also comes from lessons and practice at the same public school.
-  await s.call('world_move',{destination:'bld_bs_school'});await s.morning();
-  const teacher='npc_bs_077_2';await s.call('world_learn',{entity:'skill_literacy',source:teacher,kind:'skill'},'success');
-  while(s.doc.state.skills.skill_literacy.proficiency<100){await s.call('world_practice',{skill:'skill_literacy',gain:100,target:'读初课页码'});if(s.doc.state.skills.skill_literacy.proficiency<100)await s.morning();}
+  // Literacy 100 was declared at character creation; actual book study below
+  // must still use the purchased copy and report that book as its source.
   if(t.spell){await s.call('world_learn',{entity:t.spell,source:t.book,kind:'spell'},'success');assert.equal(s.doc.state.spells[t.spell].source.type,'book');}
   const check=await s.call('world_check',{attribute:world.skills.find(r=>r.id===t.core).attribute,skill:t.core,difficulty:10});assert.ok(check.modifier>=5);
   if(t.route==='法'){const mp=s.doc.state.player.mp;await s.call('world_cast',{spell:'spell_light',target:'item_staff'},'success');assert.equal(s.doc.state.player.mp,mp-1);assert.ok(Object.values(s.doc.state.effects).some(e=>e.kind==='light'));}
@@ -103,7 +121,7 @@ test('新操作提示不超硬上限，四机构有正式法域及限用途颁�
 async function foundation(s,t,target=150){
  await s.call('world_profession',{operation:'initiate',profession:t.role,teacher:t.id,institution:t.location});
  await s.call('world_learn',{entity:t.core,source:t.id,kind:'skill'},'success');
- while(s.doc.state.skills[t.core].proficiency<target){await s.call('world_practice',{skill:t.core,gain:100,target:'每日基础动作'});if(s.doc.state.skills[t.core].proficiency<target)await s.morning();}
+ await practiceCrossing(s,t,target);
  await s.morning();await s.call('world_profession',{profession:t.role,teacher:t.id},'certified');
 }
 
@@ -114,14 +132,13 @@ test('佛门正常入门与认证产生仪式资格，学书主持护体；实�
  fixture.spells.push(spell);fixture.skills.push({id:spell.skill,name:'戒行护体习术',attribute:'精神',profession:t.role,stage:spell.stage,prerequisites:[]});
  const book={id:'item_test_c3_ritual_book',name:'仪轨测试抄本',quality:'木',weight:.1,durability:100,basePrice:20,book:{grade:'高级',author:t.id,edition:'测试版',origin:t.location,teaches:[spell.id],readingMinutes:480}};
  fixture.items.push(book);fixture.npcs.find(p=>p.id===t.id).inventory[book.id]=1;fixture.npcs.find(p=>p.id===t.id).inventory.item_resin=2;
- const s=await schoolSession(t,fixture),grant=()=>s.call('world_profession',{operation:'ritual_officiate',profession:t.role,teacher:t.id,institution:t.location,minutes:1440});
+ // Literacy is a premise for reading the ritual book, not this precepts test.
+ const s=await schoolSession(t,fixture,{abilities:{literacy:100}}),grant=()=>s.call('world_profession',{operation:'ritual_officiate',profession:t.role,teacher:t.id,institution:t.location,minutes:1440});
  // Character fixture has enough MP for the unchanged stage-two ritual cost.
  s.doc.state.player.mp=32;s.doc.state.player.maxMp=32;
  await assert.rejects(grant(),/实际职业/);await foundation(s,t);
  const before=structuredClone(s.doc);await assert.rejects(s.call('world_profession',{operation:'ritual_officiate',profession:t.role,teacher:t.id,institution:t.location,deity:'deity_lamp'}),/神祇/);assert.deepEqual(s.doc,before);
  await s.call('world_trade',{seller:t.id,item:book.id,quantity:1});
- await s.call('world_move',{destination:'bld_bs_school'});await s.morning();await s.call('world_learn',{entity:'skill_literacy',source:'npc_bs_077_2'},'success');
- while(s.doc.state.skills.skill_literacy.proficiency<100){await s.call('world_practice',{skill:'skill_literacy',gain:100,target:'读仪轨页码'});if(s.doc.state.skills.skill_literacy.proficiency<100)await s.morning();}
  await s.call('world_learn',{entity:spell.id,source:book.id},'success');
  await s.call('world_move',{destination:t.location});await s.morning();
  const permission=await grant();assert.equal(s.doc.state.player.faith.deity,null);assert.equal(permission.permission.church,'止波师承');
@@ -143,7 +160,7 @@ test('佛门正常入门与认证产生仪式资格，学书主持护体；实�
 
 test('机构施法许可真实发放、使用并到期回收；无权、越域、伪造和重复入门均原子拒绝',async()=>{
  const t=teachingDesign.find(t=>t.route==='佛'),s=await schoolSession(t);await foundation(s,t,299);
- await s.morning();await s.call('world_practice',{skill:t.core,breakthroughSource:t.id},'breakthrough');await s.call('world_practice',{skill:t.core,gain:1,target:'突破后的第一息'});
+ await s.morning();await s.call('world_practice',{skill:t.core,breakthroughSource:t.id},'breakthrough');await s.call('world_practice',{skill:t.core,target:'突破后的第一息'});
  await s.morning();await s.call('world_time',{until:{dayOffset:0,hour:13,minute:10}});await s.call('world_learn',{entity:'spell_mind_05',source:t.id},'success');
  await s.morning();const request={operation:'grant_magic_permit',authority:t.id,location:t.location,subject:'player',action:'mental_magic',minutes:15};
  const original=structuredClone(s.doc);await assert.rejects(s.call('world_profession',{operation:'initiate',profession:t.role,teacher:t.id,institution:t.location}),/重复/);assert.deepEqual(s.doc,original);

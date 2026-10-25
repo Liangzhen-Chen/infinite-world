@@ -28,6 +28,7 @@ export function validateHoldingKinds(entries,{templates}={}){
             else for(const t of e[side])if(!templates.has(t)&&!(side==='subjectKinds'&&PSEUDO_TEMPLATES.includes(t)))err(e,side,`未知实体模板 ${t}`);
         }
         if(typeof e.exclusive!=='boolean')err(e,'exclusive','须声明 exclusive');
+        if(e.transferable!==undefined&&typeof e.transferable!=='boolean')err(e,'transferable','Must be a boolean');
         for(const k of ['gone','vacated','defected']){
             if(!e.handover||!(k in e.handover))err(e,`handover.${k}`,'缺必填交接项');
             else if(e.handover[k]!==null&&!HOLDER_TEMPLATES.includes(e.handover[k]))err(e,`handover.${k}`,`未知钩子模板 ${e.handover[k]}`);

@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {actionSchema} from '../server-plugin/primitive-schema.mjs';
 const str={type:'string',minLength:1},num={type:'number',minimum:0},int={type:'integer',minimum:0};
 const id=prefix=>({type:'string',pattern:`^${prefix}_[a-zA-Z0-9_-]+$`});
 const list=items=>({type:'array',items});
@@ -121,4 +122,6 @@ const socialResidence=structuredClone(schemas.boss.properties.residence),wildRes
 socialResidence.properties.replacementSpecies.maxItems=0;socialResidence.properties.minionCount.const=0;
 wildResidence.required.push('habitat','replacementSpecies','vacancyDays','minionCount');wildResidence.properties.replacementSpecies.minItems=1;
 schemas.boss.allOf=[{if:{properties:{actor:{}},required:['actor']},then:{properties:{residence:socialResidence}},else:{properties:{residence:wildResidence}}}];
-await fs.mkdir('schemas',{recursive:true});await fs.writeFile('schemas/world.schema.json',JSON.stringify(world,null,2)+'\n');
+await fs.mkdir('schemas',{recursive:true});
+if(!process.argv.includes('--actions-only'))await fs.writeFile('schemas/world.schema.json',JSON.stringify(world,null,2)+'\n');
+await fs.writeFile('schemas/action.schema.json',JSON.stringify(actionSchema,null,2)+'\n');

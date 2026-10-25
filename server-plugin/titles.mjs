@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('titles',{sinks:['sink:export']});
@@ -7,7 +8,7 @@ import {partyPay} from './military.mjs';
 import {personRegistrar,personOffices} from './entity-view.mjs';
 import {actorPath,npcAgeAt} from './npc-state.mjs';
 import {authorityOf,playerOffices} from './governance.mjs';
-import {titleMilitaryService,militaryFresh} from './military.mjs';
+import {titleMilitaryService} from './military.mjs';
 import {declareHoldingWriter,aliveHoldings,createEntity,entityRow,ensureHoldings} from './holdings.mjs';
 import {holdingSet} from './holding-sources.mjs';
 import {changeHolding,changeLegacyHoldings} from './transition.mjs';
@@ -33,9 +34,9 @@ export function titleQuotaD(engine,state){
 }
 function office(d,engine){
     const charter=authorityOf(engine)?.superiors?.auth_bs_office_charter,state=d.get('state');
-    if(!charter||state.location!==charter.seat)throw Error('封爵申请须在白石镇公署前厅递件转呈');
+    if(!charter||state.location!==charter.seat)throw preconditionFailure('封爵申请须在白石镇公署前厅递件转呈');
     const staff=engine.world.npcs.filter(n=>personRegistrar(engine,state,n.id,charter.seat,charter.registrars.occupations)&&awake(state.npcs[n.id])&&state.npcs[n.id].location===state.location);
-    if(!staff.length)throw Error('前厅没有在岗的递件或抄录人，不能登记');
+    if(!staff.length)throw preconditionFailure('前厅没有在岗的递件或抄录人，不能登记');
     return staff[0].id;
 }
 const heads=(engine,state,settlement)=>playerOffices(state,{settlement,power:'housing'},engine);
@@ -65,17 +66,17 @@ function qualifies(engine,state,def,fief){
 }
 function petition(d,engine,args,eventId){
     const def=titleDef(engine,args.name);
-    if(!def)throw Error('册上没有这个爵位');
-    if(!def.grantable&&!fiefCandidates(engine,d.get('state'),def.name).some(c=>c.eligible))throw Error(`封册署眼下不受理${def.name}的请封`);
+    if(!def)throw preconditionFailure('册上没有这个爵位');
+    if(!def.grantable&&!fiefCandidates(engine,d.get('state'),def.name).some(c=>c.eligible))throw preconditionFailure(`封册署眼下不受理${def.name}的请封`);
     const clerk=office(d,engine),state=d.get('state'),current=playerTitle(state);
     const order=authorityOf(engine).titles.map(t=>t.name);
-    if(current&&order.indexOf(current.title)>=order.indexOf(def.name))throw Error('已有同级或更高爵位');
-    if(Object.values(state.records??{}).some(r=>r.category==='title_petition'&&r.status==='待审定'))throw Error('已有待审定的请封');
+    if(current&&order.indexOf(current.title)>=order.indexOf(def.name))throw preconditionFailure('已有同级或更高爵位');
+    if(Object.values(state.records??{}).some(r=>r.category==='title_petition'&&r.status==='待审定'))throw preconditionFailure('已有待审定的请封');
     const fief=def.fief==='一村'?engine.resolve(args.settlement,'loc'):['男爵','子爵','伯爵','侯爵','公爵'].includes(def.name)?args.settlement:null;
     const {reasons,bases}=qualifies(engine,state,def,fief);
     if(!Object.keys(bases).length)throw Error(reasons.join('；'));
     const id=`title_petition:${eventId}`;
-    if(d.get(...rec(id)))throw Error('事务编号已占用');
+    if(d.get(...rec(id)))throw preconditionFailure('事务编号已占用');
     const registry=authorityOf(engine).superiors.auth_capital_title_registry;
     const row={category:'title_petition',id,title:def.name,fief,...(fiefCandidates(engine,state,def.name).find(c=>c.id===fief)?{domains:fiefCandidates(engine,state,def.name).find(c=>c.id===fief).domains}:{}),bases,registrar:clerk,filedAt:state.minute,due:state.minute+registry.decisionDays*DAY,status:'待审定',sourceEvent:eventId};
     holdingSet(d,null,rec(id),row,'titles');
@@ -147,12 +148,12 @@ function yearEnd(d,engine,t,at){
 // men); a zero-day visit is the yearly report.
 function service(d,engine,args,eventId){
     office(d,engine);
-    const t=playerTitle(d.get('state'));if(!t||!t.levy.men)throw Error('没有需要应役的爵位');
-    const days=args.days??0;if(!Number.isSafeInteger(days)||days<0||days>60)throw Error('应役日数须在0到60之间');
-    if(engine.rules.military&&militaryFresh(engine))return titleMilitaryService(d,engine,days,eventId);
+    const t=playerTitle(d.get('state'));if(!t||!t.levy.men)throw preconditionFailure('没有需要应役的爵位');
+    const days=args.days??0;if(!Number.isSafeInteger(days)||days<0||days>60)throw preconditionFailure('应役日数须在0到60之间');
+    if(engine.rules.military)return titleMilitaryService(d,engine,days,eventId);
     const men=t.levy.personal?1:Math.min(t.levy.men,1+(d.get('state','player','companions')?.length??0));
     if(days)engine.advance(d,days*DAY,eventId);
-    const now=playerTitle(d.get('state'));if(!now)throw Error('爵位已除');
+    const now=playerTitle(d.get('state'));if(!now)throw preconditionFailure('爵位已除');
     holdingSet(d,engine,rec(KEY),{...now,levy:{...now.levy,served:now.levy.served+men*days,attended:true}},'titles');
     return {title:now.title,served:now.levy.served+men*days,required:now.levy.men*now.levy.days,men};
 }
@@ -162,7 +163,7 @@ export function titleAction(d,args,eventId){
     if(args.operation==='title_petition')return petition(d,this,args,eventId);
     if(args.operation==='title_service')return service(d,this,args,eventId);
     if(args.operation==='title_inspect'){const state=d.get('state');return {title:playerTitle(state),quotaD:titleQuotaD(this,state),candidates:Object.fromEntries(['男爵','子爵','伯爵','侯爵','公爵'].map(name=>[name,fiefCandidates(this,state,name)])),royalServices:royalServices(state,'player'),petitions:Object.values(state.records??{}).filter(r=>r.category==='title_petition'),actionScope:{kind:'instant'}};}
-    throw Error('未知爵位事务');
+    throw preconditionFailure('未知爵位事务');
 }
 // Authored remote lords receive the same canonical title/fief edges as a
 // campaign grant, before any title decision operates on them.
@@ -185,17 +186,17 @@ function writeGrantedTitle(d,e,row,eventId){
 export function grantTitle(d,e,args,eventId){
     ensureNobleTitles(d,e);
     const s=d.get('state'),nation=rulerNation(s,'player'),holder=e.resolve(args.member,'npc'),def=titleDef(e,args.name),domain=args.settlement;
-    if(!nation||!isEffective(e,d,'player'))throw Error('只有现任君主可以授爵');
-    if(!def||!highTitle({title:def.name,status:'受封'})||!nation.domains.some(id=>containsDomain(e,s,id,domain))||!currentDomains(e,s,'player').some(id=>containsDomain(e,s,id,domain)))throw Error('爵位或封地不在君主可授范围');
-    if(!isEffective(e,d,holder)||(npcAgeAt(e,s,holder)??0)<18)throw Error('受封者须为现存成年人物');
+    if(!nation||!isEffective(e,d,'player'))throw preconditionFailure('只有现任君主可以授爵');
+    if(!def||!highTitle({title:def.name,status:'受封'})||!nation.domains.some(id=>containsDomain(e,s,id,domain))||!currentDomains(e,s,'player').some(id=>containsDomain(e,s,id,domain)))throw preconditionFailure('爵位或封地不在君主可授范围');
+    if(!isEffective(e,d,holder)||(npcAgeAt(e,s,holder)??0)<18)throw preconditionFailure('受封者须为现存成年人物');
     const level=localLevel(e,s,domain);
-    if(def.name==='男爵'&&!['镇','城'].includes(level)||def.name==='子爵'&&level!=='城'||def.name==='伯爵'&&level!=='郡'||['侯爵','公爵'].includes(def.name)&&level!=='省')throw Error('爵位与封地级别不符');
-    if(def.name==='侯爵'&&(e.world.regions?.find(r=>r.id===domain)?.counties?.length??0)<2)throw Error('侯爵须至少两郡');
-    if(args.consent!==true||d.get('state','npcs',holder,'location')!==s.location||!awake(s.npcs?.[holder]))throw Error('受封者须清醒在场并同意');
+    if(def.name==='男爵'&&!['镇','城'].includes(level)||def.name==='子爵'&&level!=='城'||def.name==='伯爵'&&level!=='郡'||['侯爵','公爵'].includes(def.name)&&level!=='省')throw preconditionFailure('爵位与封地级别不符');
+    if(def.name==='侯爵'&&(e.world.regions?.find(r=>r.id===domain)?.counties?.length??0)<2)throw preconditionFailure('侯爵须至少两郡');
+    if(args.consent!==true||d.get('state','npcs',holder,'location')!==s.location||!awake(s.npcs?.[holder]))throw preconditionFailure('受封者须清醒在场并同意');
     const prior=s.records?.[`title:${holder}`];
     if(prior&&prior.sourceEvent===eventId)return {title:prior,duplicate:true};
-    if(prior&&prior.status!=='已除爵')throw Error('已有爵位，须先依法处理原爵');
-    if(nobleLords(e,s).some(t=>t.holder!==nation.ruler&&t.holder!==holder&&(t.domains??[t.fief]).some(id=>containsDomain(e,s,id,domain)||containsDomain(e,s,domain,id))))throw Error('封地已有受封者');
+    if(prior&&prior.status!=='已除爵')throw preconditionFailure('已有爵位，须先依法处理原爵');
+    if(nobleLords(e,s).some(t=>t.holder!==nation.ruler&&t.holder!==holder&&(t.domains??[t.fief]).some(id=>containsDomain(e,s,id,domain)||containsDomain(e,s,domain,id))))throw preconditionFailure('封地已有受封者');
     const row={category:'title',id:`title:${holder}`,holder,title:def.name,rank:def.ranks[0],fief:domain,domains:[domain],status:'受封',grantor:nation.id,grantedAt:s.minute,source:`nation:${nation.id}`,sourceEvent:eventId,
         nextIncome:s.minute+MONTH,incomeMark:domainReceipts(e,s,[domain]),levy:{...def.levy,due:s.minute+YEAR,served:0,attended:false},breaches:0};
     return {title:writeGrantedTitle(d,e,row,eventId)};
@@ -203,9 +204,9 @@ export function grantTitle(d,e,args,eventId){
 export function stripTitle(d,e,args,eventId){
     ensureNobleTitles(d,e);
     const s=d.get('state'),holder=args.member==='player'?'player':e.resolve(args.member,'npc'),row=s.records?.[`title:${holder}`],nation=rulerNation(s,'player');
-    if(!row||!nation||row.grantor!==nation.id||!isEffective(e,d,'player'))throw Error('没有剥夺该爵位的任免权限');
+    if(!row||!nation||row.grantor!==nation.id||!isEffective(e,d,'player'))throw preconditionFailure('没有剥夺该爵位的任免权限');
     if(row.status==='已除爵')return {title:row,duplicate:true};
-    if(typeof args.reason!=='string'||!args.reason.trim())throw Error('除爵须登记裁决理由');
+    if(typeof args.reason!=='string'||!args.reason.trim())throw preconditionFailure('除爵须登记裁决理由');
     const next={...row,status:'已除爵',strippedAt:s.minute,strippedBy:nation.id,reason:args.reason,decisionEvent:eventId};
     changeLegacyHoldings(d,e,{holder,source:`title:${row.id}`,reason:'vacated',eventId},()=>holdingSet(d,e,rec(row.id),next,'titles'));
     return {title:next};

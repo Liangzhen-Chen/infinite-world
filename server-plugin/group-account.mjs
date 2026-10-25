@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // Faction assets are the single money account. Organization rows retain their
 // original ledger as historical evidence, never as a second spendable balance.
 import {templeById} from './faith-catalog.mjs';
@@ -35,7 +36,7 @@ export function groupAccountView(engine,state,id){
         ...(!prior?.organizationReconciliation&&row?{organizationReconciliation:{delta:row.treasury??0,applied:delta,overlap,unverified,ledger:row.ledger??[]}}:{})};
 }
 export function ensureGroupAccount(d,engine,id){
-    const row=groupAccountView(engine,d.get('state'),id);if(!row)throw Error(`未登记势力：${id}`);
+    const row=groupAccountView(engine,d.get('state'),id);if(!row)throw preconditionFailure(`未登记势力：${id}`);
     if(d.get(...groupAccountPath(id))?.organizationReconciliation)return row;
     row.organizationReconciliation??={delta:0,applied:0,overlap:0,unverified:0,ledger:[]};
     holdingSet(d,null,groupAccountPath(id),row,'group-account');return row;

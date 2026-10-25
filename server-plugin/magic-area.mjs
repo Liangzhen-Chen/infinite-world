@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 // Areas use trusted world/state coordinates. Presence alone never implies range.
@@ -51,25 +52,25 @@ function targetArgs(d,engine,area,target){
 export function prepareAreaMagic(d,catalog,args,context={}){
  const errors=validateAreaCatalog(catalog);if(errors.length)throw Error(errors.join('；'));
  const source=context.source??'player',location=context.location??locationOf(d,source),origin=facts(d,this,source,location);
- if(!origin||origin.lineOfSight!==true)throw Error('区域来源缺少实际位置与视线事实');
- if(source!=='player'&&catalog.effectSpec.effect.kind!=='damage')throw Error('非玩家区域目前只支持伤害消费者');
+ if(!origin||origin.lineOfSight!==true)throw preconditionFailure('区域来源缺少实际位置与视线事实');
+ if(source!=='player'&&catalog.effectSpec.effect.kind!=='damage')throw preconditionFailure('非玩家区域目前只支持伤害消费者');
  let center;
  const target=args.target??source;
  if(target===source||target==='player'&&source==='player')center=origin.point;
  else{
   const feature=environmentFeatures(this).find(row=>row.location===location&&(row.id===target||row.name===target));
-  if(!feature||!pointValid(feature.position))throw Error('区域中心须为来源当前位置或已登记环境对象');
+  if(!feature||!pointValid(feature.position))throw preconditionFailure('区域中心须为来源当前位置或已登记环境对象');
   center=feature.position;
   // Existing physical resolver knows clear sight only at contact.
-  if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw Error('缺少区域中心无遮挡视线事实');
+  if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw preconditionFailure('缺少区域中心无遮挡视线事实');
  }
- if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw Error('区域中心超过实际施法射程');
+ if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw preconditionFailure('区域中心超过实际施法射程');
  const authorizations=[...new Set([args.authorization,...args.authorizations??[]].filter(Boolean))];
- if(authorizations.length>8||authorizations.some(k=>typeof k!=='string'))throw Error('区域授权编号无效');
+ if(authorizations.length>8||authorizations.some(k=>typeof k!=='string'))throw preconditionFailure('区域授权编号无效');
  return{spec:catalog.effectSpec,catalog,target,location,center:[...center],owner:source,authorizations,permit:args.permit,completionArgs:{...args},context};
 }
 export function applyAreaMagic(d,prepared,id){
- if(d.get('state','effects',id))throw Error('区域效果编号重复');
+ if(d.get('state','effects',id))throw preconditionFailure('区域效果编号重复');
  try{prepared=prepareAreaMagic.call(this,d,prepared.catalog,prepared.completionArgs,prepared.context);}
  catch(error){return{target:prepared.target,effectFailed:`施法完成前条件失效：${error.message}`};}
  const now=d.get('state','minute'),s=prepared.spec;

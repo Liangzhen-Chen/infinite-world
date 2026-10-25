@@ -110,7 +110,6 @@ export function fileClosedObligation(d,e,{estate,obligation,eventId}){
     });
 }
 function emit(d,engine,event){
-    SOCIAL_VERBS.add(event.verb);
     const row={minute:now(d),actor:event.entity??event.holder??'core:protocol',visibility:'private',witnesses:[],participants:[],tags:['entity-transition','protocol'],...event};
     const phaseNames={notice:'公告遗产程序',filing:'受理债权申报',settlement:'清偿遗产债务',distribution:'分配遗产',closed:'完成遗产程序'};
     row.summary??=`${engine.byId?.get(row.entity??row.holder)?.name??row.entity??row.holder??'当事人'}：${phaseNames[row.phase]??({transition:'依法办理交接',succession:'职位出现空缺',holding_transferred:'持有关系已交接',holding_closed:'持有关系已结束',restored:'恢复法律身份'}[row.verb]??'登记权利义务变更')}`;
@@ -399,6 +398,10 @@ export function changeHolding(d,engine,{op='close',id,...input}){
             if(before.kind!=='governs')for(const h of aliveHoldings(d,{subject:before.subject}))hooks(d,engine,h,`subject.transferred(${before.kind})`,ctx,'subject');
         }else throw Error(`Unknown holding operation ${op}`);
         const row=op==='close'?before:holdingRow(d,result);
+        if(before?.kind==='holds_office'){
+            const office=entityRow(d,before.subject);
+            if(engine.world.factions?.some(f=>f.id===office?.facts?.org&&f.offices?.some(o=>o.id===before.subject)))projectHolding(d,engine,before,op==='close'?null:row,ctx);
+        }
         invariant(d,null,engine);emit(d,engine,{id:eventId,verb:`holding_${op==='open'?'opened':op==='close'?'closed':'transferred'}`,entity:row.holder,holder:row.holder,subject:row.subject,kind:row.kind,variant:row.variant,reason});
         return result;
     });
@@ -717,6 +720,7 @@ function accountProjection(d,e,key){
     if(a.resource==='coin_river'){
         if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
         if(estate)return ['state','records',`protocol_assets:${a.owner}`,a.purpose==='purse'?'coins':'funds',...(a.purpose==='purse'?[]:[a.purpose])];
+        if(a.purpose==='fund'&&Object.hasOwn(s.workshopFunds??{},a.owner))return ['state','workshopFunds',a.owner];
         if(a.purpose==='purse')return a.owner==='player'?['state','player','coins']:s.npcs?.[a.owner]?['state','npcs',a.owner,'coins']:s.creatures?.[a.owner]?['state','creatures',a.owner,'coins']:null;
         if(a.purpose==='vault'&&s.records?.[a.owner]?.category==='bank')return ['state','records',a.owner,'coins'];
         if(a.purpose==='treasury'&&s.settlements?.[a.owner])return ['state','settlements',a.owner,'treasury'];
@@ -775,6 +779,11 @@ function projectProperty(d,subject,owners,e=d.engine){
 function projectHolding(d,e,before,after,ctx){
     if(before.kind==='holds_office'){
         const office=entityRow(d,before.subject);
+        const org=office?.facts?.org;
+        if(org&&e.world.factions?.some(f=>f.id===org&&f.offices?.some(o=>o.id===before.subject))){
+            const key=`organization:${org}`,row=read(d,'state','records',key)??{category:'organization',id:org};
+            projectFields(d,e,['state','records',key],{...row,offices:{...row.offices,[before.subject]:{holder:after?.holder??null}}});
+        }
         for(const [id,row]of Object.entries(read(d,'state','records')??{})){
             if(row.holder!==before.holder)continue;
             if(!(row.category==='title'&&before.source===`title:${id}`||row.category==='governance_office'&&row.office===office?.facts?.office&&row.settlement===office?.facts?.settlement))continue;
@@ -1087,7 +1096,7 @@ function legacyClaimAccounts(d,e,entity,resource){
     if(resource!=='coin_river')throw Error('Recorded debt requires a declared monetary settlement adapter');
     const accounts=[[purse(e,entity),read(d,'ledger','accounts',purse(e,entity))??0]];
     for(const [id,b]of Object.entries(read(d,'state','records')??{}).sort(([a],[b])=>a.localeCompare(b)))if(b.category==='bank'&&b.accounts?.[entity]>0)accounts.push([vault(id),Math.min(b.accounts[entity],b.coins??0)]);
-    return accounts;
+    return [...accounts,...(e.protocolAdditionalClaimAccounts?.(d,entity)??[])];
 }
 function payLegacyClaim(d,e,entity,from,creditor,amount,eventId){
     const bank=read(d,'state','records',creditor),base=(e.rules.economy?.credit?.banks??[]).find(b=>b.id===creditor);

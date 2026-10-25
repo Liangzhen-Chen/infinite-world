@@ -86,6 +86,9 @@ test('技能阶分布、名额计数（读 learning.json 的 seats.*）、等级
  assert.deepEqual(clean.violations,[]);
  const l=metric(doc,world,'level.distribution').value;
  assert.equal(l.population,6);assert.equal(l.atLeast['>=10'].count,6);assert.equal(l.atLeast['>=180'].count,4);assert.equal(l.atLeast['>=60'].share,0.666667);
+ const roster=metric(doc,{npcs:[...world.npcs,{id:'roster',tier:'roster'}]},'level.distribution').value;
+ assert.equal(roster.population,7);assert.equal(roster.measuredPopulation,6);assert.equal(roster.unknownLevels,1);
+ assert.deepEqual(roster.atLeast,l.atLeast,'Unknown roster levels must not become level zero or dilute the measured distribution');
 });
 
 test('物种存量：各栖地存量之和与 N ÷ K；灭绝列表',()=>{

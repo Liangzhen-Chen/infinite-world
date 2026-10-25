@@ -358,7 +358,7 @@ export class PatchCursor {
     // chain: the own copies along the last written path. While none of them
     // has escaped since and each still hangs where it did, they are still
     // writable, so consecutive writes below them skip the mark lookups.
-    reset(document) { this.onPatch?.({op:'reset',path:[]});this.root = document; this.marks = new WeakMap(); this.chain = null; }
+    reset(document) { this.onPatch?.({op:'reset',path:[]});this.root = document; this.marks = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
     // Only this cursor's own copies are ever written in place, so only they need marking.
     expose(value) {
         if (value && typeof value === 'object' && this.marks.get(value) === 1) {
@@ -424,6 +424,7 @@ export class PatchCursor {
         if (patch.op === 'delete') delete target[key];
         else target[key] = value;
         this.chain = { nodes, keys: path.slice(0, last) };
+        this.revision++;
         if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields);
         return this.root;
     }
@@ -567,7 +568,7 @@ export class CampaignStorage {
         document ??= JSON.parse(await fs.readFile(path.join(this.directory(id), 'initial.json'), 'utf8'));
         for (const event of state.events) if (event.sequence > after && state.active.has(event.sequence)) {
             if (before !== Infinity && !this.reducer) throw new Error('缺少事件重放处理器，不能只重放旧的绝对数值补丁');
-            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result, patches: event.patches })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
         return document;
@@ -658,7 +659,7 @@ export class CampaignStorage {
         const branched = bundle.events.some(event => event.kind === 'reconcile');
         if (branched && !this.reducer) throw new Error('导入分支存档需要事件重放处理器');
         for (const event of bundle.events) if (active.has(event.sequence)) {
-            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result })).patches) : event.patches;
+            const patches = this.reducer ? persistable((await this.reducer(document, event.input, { replay: true, result: event.result, patches: event.patches })).patches) : event.patches;
             document = applyPatches(document, patches);
         }
         const legacyDocument = digest(document) === bundle.documentHash ? null : withLegacyUndefinedActivity(document);

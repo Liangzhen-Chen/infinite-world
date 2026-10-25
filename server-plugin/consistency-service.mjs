@@ -5,8 +5,13 @@ import {reviewConsistency,consistencyReviewRequest} from './consistency-review.m
 import {DeepSeekClient} from '../tools/deepseek-client.mjs';
 import {parseTurn,normalizeReplyProtocol} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
-import {reviewNpcKnowledge,reviewHistoricalEvidence} from './consistency-evidence.mjs';
+import {reviewNpcKnowledge,reviewHistoricalEvidence,reviewTurnSettlement,reviewCurrentFacts,consistencyReceiptKind} from './consistency-evidence.mjs';
 import {appliedEffects} from './applied-effects.mjs';
+import {actionLines,refusalLine,sceneLines,pendingTurnLines,currentFactLines} from './action-text.mjs';
+import {actionOfCall,findAction} from './action-registry.mjs';
+import {primitiveActionRuntime} from './primitives.mjs';
+import {constructIntent} from './action-constructor.mjs';
+import {createRoutingContext} from './action-router.mjs';
 
 const safeError=error=>String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]').slice(0,1200);
 const readJSON=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -43,23 +48,39 @@ const activePath=(store,id)=>path.join(store.directory(id),'consistency','active
 const retrievalOf=record=>record.retrieval??{protocol:0,status:'unknown',calls:[],warnings:['旧协议没有启用只读检索留证']};
 async function activeTurn(store,id){try{return await readJSON(activePath(store,id));}catch(error){if(error.code!=='ENOENT')throw error;return {token:null,epoch:0};}}
 async function activeToken(store,id){return (await activeTurn(store,id)).token;}
+const publicBegin=record=>({token:record.token,enabled:record.enabled,startMinute:record.before.state.minute,anchor:record.anchor,revision:record.revision,sequence:record.sequence,...(record.boundEventId?{eventId:record.boundEventId}:{}),preview:record.preview,candidates:record.preview?.candidates??[]});
+const belongsToTurn=(event,record)=>record.boundEventId
+ ?event.anchor==null&&(event.id===record.boundEventId||event.id.startsWith(`${record.boundEventId}#`))
+ :event.anchor===record.anchor;
 function validTurn(state,record,campaignId){
  if(record.campaignId&&record.campaignId!==campaignId||state.revision!==record.revision)throw Error('检索回合来源已经撤销或不属于当前存档');
- if(state.events.some(e=>state.active.has(e.sequence)&&e.sequence>record.sequence&&(e.anchor!==record.anchor||e.input?.tool==='world_turn')))throw Error('检索回合已经结束或混入另一回合');
+ if(state.events.some(e=>state.active.has(e.sequence)&&e.sequence>record.sequence&&(!belongsToTurn(e,record)||e.input?.tool==='world_turn')))throw Error('检索回合已经结束或混入另一回合');
 }
-export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,expectedSequence,enabled=true,captureSearch=false}={}){
- if(typeof anchor!=='string'||!anchor||anchor.length>200||typeof playerText!=='string'||playerText.length>20000)throw Error('审查缺少有效本轮输入与锚点');
+export async function beginConsistencyTurn(store,campaignId,{anchor,playerText,expectedSequence,enabled=true,captureSearch=false,eventId}={}){
+ const ui=anchor===null&&typeof eventId==='string'&&eventId.length>0&&eventId.length<=200;
+ if((!ui&&(typeof anchor!=='string'||!anchor||anchor.length>200))||typeof playerText!=='string'||playerText.length>20000)throw Error('审查缺少有效本轮输入与锚点');
  return store.exclusive(campaignId,async()=>{
   const state=await store.load(campaignId);
   if(state.sequence!==expectedSequence)throw Error('开始审查时存档已变化，请重新对账');
-  const epoch=(await activeTurn(store,campaignId)).epoch??0;
-  const token=digest([campaignId,anchor,playerText,state.head,state.revision,epoch]);
+  const active=await activeTurn(store,campaignId),epoch=active.epoch??0;
+  if(active.token){
+   const old=await readJSON(idPath(store,campaignId,active.token));
+   if(old.anchor===anchor&&old.boundEventId===(ui?eventId:undefined)&&old.playerText===playerText&&old.revision===state.revision){validTurn(state,old,campaignId);return publicBegin(old);}
+  }
+  const token=digest([campaignId,anchor,playerText,state.head,state.revision,epoch,...(ui?[eventId]:[])]);
   const file=idPath(store,campaignId,token);await fs.mkdir(path.dirname(file),{recursive:true});
-  try{const old=await readJSON(file);if(await activeToken(store,campaignId)!==token)throw Error('审查回合已被另一回合替换');return {token,enabled:old.enabled,startMinute:old.before.state.minute};}catch(error){if(error.code!=='ENOENT')throw error;}
-  await atomicJSON(file,{version:1,token,campaignId,anchor,playerText,sequence:state.sequence,revision:state.revision,enabled,before:state.document,
-   retrieval:{protocol:captureSearch===true?1:0,status:captureSearch===true?'open':'unknown',calls:[],warnings:captureSearch===true?[]:['旧协议没有启用只读检索留证']}});
+  try{const old=await readJSON(file);if(await activeToken(store,campaignId)!==token)throw Error('审查回合已被另一回合替换');return publicBegin(old);}catch(error){if(error.code!=='ENOENT')throw error;}
+  const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
+  const parsed=isOutOfCharacter(playerText)?{status:'out_of_character',candidates:[],missing:[]}:constructIntent(engine,state.document,{intent:playerText},createRoutingContext(engine,state.document));
+  const candidates=parsed.candidate?[parsed.candidate]:parsed.candidates??[];
+  // A completed form is a candidate, never permission to apply its effects.
+  const preview={status:parsed.candidate?'candidate':parsed.status,candidates,missing:parsed.missing??[],unresolved:!candidates.length};
+  const record={version:1,protocol:'turn-contract-v1',token,campaignId,anchor,playerText,sequence:state.sequence,revision:state.revision,enabled,before:state.document,preview,
+   ...(ui?{boundEventId:eventId}:{}),
+   retrieval:{protocol:captureSearch===true?1:0,status:captureSearch===true?'open':'unknown',calls:[],warnings:captureSearch===true?[]:['旧协议没有启用只读检索留证']}};
+  await atomicJSON(file,record);
   await atomicJSON(activePath(store,campaignId),{token,epoch});
-  return {token,enabled,startMinute:state.document.state.minute};
+  return publicBegin(record);
  });
 }
 
@@ -119,7 +140,7 @@ export async function captureConsistencyFailure(store,campaignId,{anchor,expecte
   if(record.anchor!==anchor||record.result||record.revision!==state.revision||state.sequence!==expectedSequence)return;
   validTurn(state,record,campaignId);
   const key=digest([eventId,tool,args,state.sequence]);record.failedActions??=[];
-  if(!record.failedActions.some(row=>row.key===key))record.failedActions.push({key,sequence:state.sequence,tool,args,result:{ok:false,error:safeError(error)}});
+  if(!record.failedActions.some(row=>row.key===key))record.failedActions.push({key,eventId,sequence:state.sequence,tool,args,result:{ok:false,error:safeError(error)}});
   await atomicJSON(file,record);
  });
 }
@@ -148,21 +169,32 @@ async function rewriteMessages(input,review){
 // remains visible even for warnings. canCommit separately gates unresolved errors.
 export function publicConsistencyResult(record){
  const r=record.result;
+ const settlement=record.evidence?.settlement;
+ const publicSettlement=settlement?{...Object.fromEntries(['status','receiptCount','settled','queries','previews','failures','unresolved'].map(key=>[key,settlement[key]])),
+  decisions:settlement.decisions.filter(row=>row.knownBy.includes('player')),facts:settlement.facts.filter(row=>row.knownBy.includes('player'))}:undefined;
  return {reviewId:record.token,status:r.status,text:r.text,original:r.original,rewritten:r.rewritten,verified:r.review?.verified===true&&['verified','issues'].includes(r.status)&&!r.rewriteError,
   canCommit:r.canCommit,feedback:r.feedback,issues:r.review?.issues??[],originalIssues:r.firstReview?.issues??[],rewriteError:r.rewriteError,
-  attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval};
+  attempts:r.attempts,protocol:r.protocol,tail:r.tail,sequence:r.sequence,retrieval:record.evidence?.retrieval,
+  candidates:record.preview?.candidates??[],preview:record.preview,facts:record.evidence?.currentFacts??[],settlement:publicSettlement,
+  ...(r.safeText!==undefined?{safeText:r.safeText}:{}),...(r.fallback?{fallback:r.fallback}:{})};
 }
 
 // Captures are authoritative snapshots. Client-provided receipts, clocks and
 // entity lists are never accepted. Reviewing holds the same campaign queue as
 // writes, so no action can invalidate evidence midway through a rewrite.
-export async function reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat=[],sceneSequence,client=null}={}){
+// gateOnly uses the same replay and knowledge projection, without sealing a
+// retrieval or persisting a final review. Tools may still run under this token.
+export async function gateConsistencyTurn(store,campaignId,options={}){
+ return reviewConsistencyReply(store,campaignId,{...options,gateOnly:true,sceneSequence:options.expectedSequence});
+}
+export async function reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat=[],sceneSequence,client=null,gateOnly=false}={}){
  return store.exclusive(campaignId,async()=>{
   const state=await store.load(campaignId),file=idPath(store,campaignId,token),record=await readJSON(file);
   const current=await activeToken(store,campaignId);
   if((record.campaignId||current)&&current!==token)throw Error('审查编号已撤销或不属于当前回合');
   if(record.original&&record.original!==draft)throw Error('本回合改写已经开始，不能更换待审原文');
   if(record.result){
+   if(gateOnly)throw Error('本回合已经封口，不能重新执行工具阶段');
    if(record.result.original!==draft)throw Error('本回合已经审查，不能再次生成改写');
    if(record.result.sequence!==state.sequence&&!state.events.some(e=>state.active.has(e.sequence)&&e.id===`turn_${record.anchor}`))throw Error('审查后的账本已变化');
    if(record.revision!==state.revision)throw Error('审查来源已经撤销');
@@ -171,29 +203,62 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   if(state.sequence!==expectedSequence||state.sequence!==sceneSequence||state.revision!==record.revision)throw Error('审查前存档或历史分支已变化');
   if(state.document.releaseVersion!==1)throw Error('当前存档尚未启用新版');
   const events=state.events.filter(e=>state.active.has(e.sequence)&&e.sequence>record.sequence);
-  if(events.some(e=>e.anchor!==record.anchor||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
+  if(events.some(e=>!belongsToTurn(e,record)||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
+  const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
+  const registry=primitiveActionRuntime().registry(engine),templates=[];
+  const definition=(tool,args)=>tool==='world_act'?findAction(registry,args?.action):actionOfCall(registry,tool,args??{});
+  const failedTemplate=row=>templates.push(refusalLine(definition(row.tool,row.args),row.result.error));
   let projection=structuredClone(record.before);const receipts=[],failures=[...record.failedActions??[]];
   for(const event of events){
-   while(failures.length&&failures[0].sequence<event.sequence){const row=failures.shift();receipts.push({tool:row.tool,args:row.args,result:row.result});}
+   while(failures.length&&failures[0].sequence<event.sequence){const row=failures.shift();receipts.push({eventId:row.eventId,sequence:row.sequence,tool:row.tool,args:row.args,result:row.result});failedTemplate(row);}
    const output=await store.reducer(projection,event.input,{replay:true,result:event.result}),previous=projection;
    projection=applyPatches(projection,output.patches);
    // A1: each receipt carries the effects the engine actually applied (08 §8.4); review reads these, not a whole-turn diff.
-   if(event.input?.tool)receipts.push({tool:event.input.tool,args:event.input.args,result:output.result,applied:appliedEffects(previous,projection,{result:output.result})});
+   if(event.input?.tool){
+    const {tool,args={}}=event.input,applied=appliedEffects(previous,projection,{result:output.result});
+    const participants=['player'];
+    for(const key of ['npc','seller','buyer','target','teacher','source','promisor','promisee','grantor','grantee','subject'])if(typeof args[key]==='string'){
+     try{const id=engine.resolve(args[key]);if(projection.state.npcs?.[id])participants.push(id);}catch{}
+    }
+    const row={eventId:event.id,sequence:event.sequence,startMinute:previous.state.minute,minute:projection.state.minute,participants,tool,args,result:output.result,applied};
+    receipts.push(row);
+    if(consistencyReceiptKind(row,registry)!=='query')templates.push(...actionLines({engine,action:definition(tool,args),before:previous,after:projection,args:tool==='world_act'?args.slots??{}:args,result:output.result,effects:applied}).lines);
+   }
   }
-  for(const row of failures)receipts.push({tool:row.tool,args:row.args,result:row.result});
+  for(const row of failures){receipts.push({eventId:row.eventId,sequence:row.sequence,tool:row.tool,args:row.args,result:row.result});failedTemplate(row);}
   if(digest(projection)!==digest(state.document))throw Error('本轮证据无法重建当前账本');
   const retrieval=record.retrieval=retrievalOf(record);
   if(retrieval.calls.some(row=>row.status!=='completed')){retrieval.status='unknown';retrieval.warnings.push('检索回执未完整保存');}
   if(retrieval.protocol===1&&retrieval.status==='open')retrieval.status='complete';
-  retrieval.sealed=true;await atomicJSON(file,record);
-  for(const call of retrieval.calls)if(call.status==='completed')receipts.push({tool:'world_search',args:{query:call.query,...(call.limit===undefined?{}:{limit:call.limit})},result:call.result});
-  const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document),s=state.document.state;
+  if(!gateOnly){retrieval.sealed=true;await atomicJSON(file,record);}
+  for(const call of retrieval.calls)if(call.status==='completed')receipts.push({tool:'world_search',key:call.key,sequence:call.sequence,args:{query:call.query,...(call.limit===undefined?{}:{limit:call.limit})},result:call.result});
+  const s=state.document.state;
+  const currentFacts=reviewCurrentFacts(engine,state.document,{revision:state.revision,sequence:state.sequence});
+  const settlement=reviewTurnSettlement({before:record.before,after:state.document,registry,revision:state.revision},receipts);
+  record.evidence={receipts,retrieval,currentFacts,settlement,preview:record.preview,afterHash:digest(state.document)};
+  if(gateOnly){
+   const pending=!isOutOfCharacter(record.playerText)&&settlement.status==='pending';
+   const lines=pending?pendingTurnLines(engine,state.document,{playerText:record.playerText,candidates:record.preview?.candidates,facts:currentFacts,lines:templates})
+    :[...templates,...sceneLines(engine,state.document),...currentFactLines(engine,state.document,currentFacts)];
+   record.result={status:pending?'pending':'ready',canCommit:false,safeText:lines.join('\n'),text:lines.join('\n'),sequence:state.sequence};
+   return publicConsistencyResult(record);
+  }
+  // No semantic classifier: without adjudication only public state and the
+  // pending intent may be published. Off disables only the paid review.
+  if(!isOutOfCharacter(record.playerText)&&settlement.status==='pending'){
+   const lines=pendingTurnLines(engine,state.document,{playerText:record.playerText,candidates:record.preview?.candidates,facts:currentFacts,lines:templates});
+   const safeText=lines.join('\n');
+   record.result={original:draft,text:safeText,safeText,status:'pending',canCommit:false,rewritten:false,attempts:0,
+    feedback:'尚无正式行动裁决；请从候选或构造器继续。',tail:{valid:false,args:{startMinute:record.before.state.minute,extraMinutes:0,location:s.location,present:[]}},sequence:state.sequence,
+    fallback:{lines,text:safeText,extraMinutes:0}};
+   await atomicJSON(file,record);return publicConsistencyResult(record);
+  }
   blocklistPromise??=readJSON(new URL('../world/meta/blocklist.json',import.meta.url));
   const blocklist=await blocklistPromise;
   const present=Object.entries(s.npcs??{}).filter(([,n])=>n.location===s.location&&!n.scheduleTravel&&!n.cognitionTravel).map(([id])=>id);
   const knowledge=reviewNpcKnowledge(engine,state.document,{before:record.before,receipts,events:state.events.filter(event=>state.active.has(event.sequence)),draft,query:record.playerText});
   const priorEvidence=reviewHistoricalEvidence(engine,state.events.filter(event=>state.active.has(event.sequence)&&event.sequence<=record.sequence),chat,{query:record.playerText,draft});
-  const input={playerText:record.playerText,draft,before:record.before,after:state.document,receipts,retrieval,scene,knowledge,priorEvidence,
+  const input={playerText:record.playerText,draft,before:record.before,after:state.document,receipts,retrieval,scene,knowledge,priorEvidence,currentFacts,settlement,preview:record.preview,
    allowedEntities:engine.entities,blocklist:[...blocklist.names??[],...blocklist.realPeople??[]],
    clock:{location:s.location,startMinute:record.before.state.minute,minute:s.minute,present}};
   const protocol=normalizeReplyProtocol(draft,{...input,outOfCharacter:isOutOfCharacter(input.playerText)});
@@ -229,15 +294,29 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   const canCommit=!serious&&!rewriteError&&(!record.enabled||review?.model.status!=='failed');
   const feedback=!canCommit?'回复存在未修正的事实问题，尾注未提交；已完成的行动仍保留。':status==='unverified'?'回复未完成一致性验证；已完成的行动以账本为准。':status==='disabled'?'本回合一致性审查已关闭。':null;
   const tail=parseTurn(text,{...input.clock,outOfCharacter:isOutOfCharacter(input.playerText)});
-  record.evidence={receipts,retrieval,scene,knowledge,priorEvidence,clock:input.clock,afterHash:digest(state.document)};
+  record.evidence={...record.evidence,scene,knowledge,priorEvidence,clock:input.clock};
   record.result={original:draft,text,protocol,rewritten,review,firstReview:first,attempts,status,canCommit,feedback,rewriteError,tail,sequence:state.sequence};
+  // A failed text-only rewrite never executes again or authorizes its tail.
+  // The client can show these replay-derived templates and start the next turn.
+  if(!isOutOfCharacter(record.playerText)&&(!record.enabled||!canCommit||review?.verified!==true)){
+   const lines=[...templates,...sceneLines(engine,state.document),...currentFactLines(engine,state.document,currentFacts)];
+   record.result.fallback={lines,text:lines.join('\n'),extraMinutes:0};
+   record.result.text=record.result.safeText=lines.join('\n');
+   record.result.tail={valid:true,args:{startMinute:record.before.state.minute,extraMinutes:0,location:s.location,present:[]},visible:record.result.text};
+  }
   await atomicJSON(file,record);return publicConsistencyResult(record);
  });
 }
 
 export async function assertConsistencyCommit(store,campaignId,{reviewId,anchor,args,expectedSequence}){
+ if(!reviewId){
+  const token=await activeToken(store,campaignId);
+  if(token){const active=await readJSON(idPath(store,campaignId,token));if(active.anchor===anchor||active.protocol==='turn-contract-v1'&&anchor!=null)throw Error('本回合 world_turn 必须提供有效 reviewId');}
+  return true; // Legacy callers without a bound narration keep their contract.
+ }
  const record=await readJSON(idPath(store,campaignId,reviewId));
  if(record.campaignId&&await activeToken(store,campaignId)!==reviewId)throw Error('审查编号已撤销或不属于当前回合');
- if(!record.result?.canCommit||record.anchor!==anchor||record.result.sequence!==expectedSequence||digest(record.result.tail.args)!==digest(args))throw Error('尾注与已审查文字或账本版本不一致');
+ const state=await store.load(campaignId);
+ if(record.boundEventId||record.revision!==state.revision||!record.result?.canCommit||record.result.status==='pending'||record.anchor!==anchor||record.result.sequence!==expectedSequence||digest(record.result.tail.args)!==digest(args))throw Error('尾注与已审查文字或账本版本不一致');
  return true;
 }

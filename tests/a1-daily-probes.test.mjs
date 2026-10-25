@@ -7,6 +7,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
 import {uiSession,qty} from './helpers/ui-script.mjs';
+import {readBodyNeed,bodyRule} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan',MILL='bld_hw_mill',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan',POST='bld_hw_post',CLERK='npc_hw_shendu';
@@ -53,23 +54,26 @@ test('D06 赶路去白石镇：耗时到达、地点更新、钱物不变，村�
 
 test('D08 天黑：铁匠铺打烊不能交易，次日开门后可以；钱物在打烊时不变',async t=>{
  const ui=await uiSession(t,{mutate:at(FORGE,21*60,s=>{s.player.coins=500;})}),before=await primed(ui);
- const night=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH});assert.equal(night.ok,false);assert.match(night.error,/不提供交易服务/);
+ const night=await ui.choose('trade.buy',{seller:SMITH,item:'item_iron_nail',quantity:2},{target:SMITH,search:true});assert.equal(night.ok,false);assert.match(night.error,/不提供交易服务/);
  assert.equal((await ui.read()).state.player.coins,before.state.player.coins);
  await ui.choose('time',{until:{dayOffset:1,hour:9}});
  const day=await ui.choose('trade.buy',{item:'item_iron_nail',quantity:2},{target:SMITH});assert.ok(day.ok,day.error);
 });
 
-test('D10 打工日结：受雇须对方答应——界面列出但不可执行，world_act 拒绝且钱物时间不变（A2 接入人物决策后开放）',async t=>{
+test('D10 打工日结：缺有效同意时界面列出但不可执行，world_act 拒绝且钱物时间不变',async t=>{
  const ui=await uiSession(t,{mutate:at(MILL,8*60)}),before=await primed(ui);
  const row=(await ui.menu(AYAN)).actions.find(a=>a.id==='core:trade.work');
- assert.equal(row.blocked,'需要对方答应（对话功能完成后开放）');assert.ok(!row.slots.some(s=>s.name==='consent'),'没有替对方答应的槽位');
- const r=await ui.choose('trade.work',{minutes:240},{target:AYAN});assert.equal(r.ok,false);assert.equal(r.error,'需要对方答应（对话功能完成后开放）');
- const forged=await ui.choose('trade.work',{minutes:240,consent:true},{target:AYAN});assert.equal(forged.ok,false);assert.equal(forged.error,'需要对方答应（对话功能完成后开放）');
+ // A3 统一同意已经接入；只对齐新拒绝原因，仍逐项验证缺同意和伪 consent 均拒绝、状态不变。
+ const required='需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）';
+ assert.equal(row.blocked,required);assert.ok(!row.slots.some(s=>s.name==='consent'),'没有替对方答应的槽位');
+ const r=await ui.choose('trade.work',{minutes:240},{target:AYAN});assert.equal(r.ok,false);assert.equal(r.error,required);
+ const forged=await ui.choose('trade.work',{minutes:240,consent:true},{target:AYAN});assert.equal(forged.ok,false);assert.equal(forged.error,required);
  assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会执行');
 });
 
 test('D15 钓鱼：渔获来自河滩真实鱼群，种群扣减与背包增加相等，花去时间',async t=>{
- const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,s=>{s.inventory.item_kitchen_knife=tool('item_kitchen_knife','铁');s.inventory.item_water={quantity:4,quality:'木',durability:100,weight:0.5};})}),before=await primed(ui);
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+ const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,s=>{s.inventory.item_fishing_bait={quantity:10};s.inventory.item_kitchen_knife=tool('item_kitchen_knife','铁');s.inventory.item_water={quantity:4,quality:'木',durability:100,weight:0.5};})}),before=await primed(ui);
  const key='ecology:habitat_hw_water',fish=Object.keys(before.state.records[key].populations).find(k=>/perch|fish|carp|鱼/.test(k))??Object.keys(before.state.records[key].populations)[0];
  const r=await ui.choose('wildlife.fish',{species:fish});assert.ok(r.ok,r.error);const after=await ui.read();
  const caught=qty(after.state.inventory.item_fish)-qty(before.state.inventory.item_fish),drop=before.state.records[key].populations[fish].count-after.state.records[key].populations[fish].count;
@@ -109,7 +113,19 @@ test('D20 练习技能：熟练度小幅增加，不凭空得物',async t=>{
  const gain=after.state.skills.skill_life_6_core.proficiency-20;assert.ok(gain>0&&gain<100,`小幅增加：${gain}`);
  assert.deepEqual(after.state.inventory,before.state.inventory);assert.equal(after.state.player.coins,before.state.player.coins);
 });
-
+// A3 §6.6: practice with a duration slot (practice.session) is deterministic
+// growth. Same small-gain, inventory and money guarantees; elapsed time and
+// body cost are derived from the request and the body table, not pinned.
+test('D20 练习一个时辰：熟练度小幅增加，时间和体力落地，不凭空得物',async t=>{
+ const ui=await uiSession(t,{mutate:at('loc_hw',9*60,s=>{s.skills.skill_life_6_core={proficiency:20,daily:{},breakthroughs:[]};})}),before=await primed(ui);
+ const r=await ui.choose('practice.session',{skill:'skill_life_6_core',minutes:120});assert.ok(r.ok,r.error);const after=await ui.read();
+ const gain=after.state.skills.skill_life_6_core.proficiency-20;assert.ok(gain>0&&gain<100,`小幅增加：${gain}`);
+ assert.deepEqual(after.state.inventory,before.state.inventory);assert.equal(after.state.player.coins,before.state.player.coins);
+ assert.equal(after.state.minute-before.state.minute,120);
+ // practice.session is light work: stamina falls by the body table's light hourly rate for the elapsed minutes.
+ const stamina=bodyRule(engine,'stamina').drainPerHour.light*120/60;
+ assert.ok(Math.abs(readBodyNeed(engine,before,'player','stamina')-stamina-readBodyNeed(engine,after,'player','stamina'))<1e-9);
+});
 test('D27 存钱 / D28 三个月后取钱：存入进钱庄账户，利息出自钱庄，取回本息守恒',async t=>{
  const ui=await uiSession(t,{mutate:at(POST,10*60,s=>{s.player.coins=1200;})}),before=await primed(ui);
  const menu=await ui.menu();assert.ok(menu.actions.some(a=>a.id==='core:trade.deposit'),'驿站钱庄柜面可存钱');
@@ -123,10 +139,11 @@ test('D27 存钱 / D28 三个月后取钱：存入进钱庄账户，利息出自
  assert.equal(after.state.player.coins-pre.state.player.coins,balance);conserved(pre,after,'D28');
 });
 
-test('D29 借小额钱款 / D30 按时还钱：向邻居借须对方答应（未开放）；钱庄柜面按抵押放贷照旧判定，到期前还清无逾期',async t=>{
+test('D29 借小额钱款 / D30 按时还钱：向邻居借须有效同意；钱庄柜面按抵押放贷照旧判定，到期前还清无逾期',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.inventory.item_bread={quantity:4,quality:'木',durability:100,weight:0.2};})}),before=await primed(ui);
  const asked=await ui.choose('trade.borrow',{seller:LINSUI,coins:40,days:10,item:'item_bread',quantity:2},{search:true});
- assert.equal(asked.ok,false);assert.equal(asked.error,'需要对方答应（对话功能完成后开放）');assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会借出');
+ // 同 D10：A3 同意接点替代“未开放”措辞，拒绝及钱物/时间不变的保证完整保留。
+ assert.equal(asked.ok,false);assert.equal(asked.error,'需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）');assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会借出');
  const bank=await uiSession(t,{mutate:at(POST,10*60,s=>{s.player.coins=300;s.inventory.item_coin_coast={quantity:2,quality:'铜',durability:100,weight:0.005};})}),b0=await primed(bank);
  const row=(await bank.menu()).actions.find(a=>a.id==='core:trade.borrow');assert.ok(row&&!row.blocked,'钱庄借款由柜面规则判定，不等人物决策');
  const loan=await bank.choose('trade.borrow',{coins:100,days:30,item:'item_coin_coast',quantity:2});assert.ok(loan.ok,loan.error);const mid=await bank.read();

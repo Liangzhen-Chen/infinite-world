@@ -18,12 +18,23 @@ function factionBase(engine,id){
     const listed=reputationFactions(engine).find(r=>r.id===id);
     const f=engine.world.factions?.find(f=>f.id===id)??(listed?{id,name:id}:null);if(!f)return null;
     const members={},add=(m,position)=>{if(m&&!members[m])members[m]={position,joinedAt:null,arrears:0};};
-    add(f.leader,'首领');for(const m of f.coreMembers??[])add(m,ELDER);
+    add(f.leader,f.leaderTitle??'首领');for(const m of f.coreMembers??[])add(m,ELDER);
+    // A specialist appointment grants only its own authority. It does not make
+    // an examiner a council elder able to represent all organisation assets.
+    for(const office of f.offices??[])add(office.holder,MEMBER);
     for(const m of listed?.members??[])add(m,MEMBER);
     for(const n of (engine.world.npcs??[]))if(n.faction===id)add(n.id,MEMBER);
     const mode=['地方议会','居民筹备组织'].includes(f.kind)?'vote':['教会','学派','学院'].includes(f.kind)?'elders':'leader';
-    return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:'首领',members,treasury:f.resources?.treasuryCopper??0,
+    return {id,name:f.name,source:'faction',kind:f.kind,seat:f.contactAnchor,leader:f.leader,leaderTitle:f.leaderTitle??'首领',members,treasury:f.resources?.treasuryCopper??0,
         charter:{mode,approval:true,fee:0,dues:0,rules:[f.method,f.demands].filter(Boolean)}};
+}
+// Appointments belong to the organisation. An explicit vacancy never restores
+// the catalogue holder; changing the holder changes the service at read time.
+export function organizationOffices(engine,state,id,faction=engine.world.factions?.find(f=>f.id===id)){
+    const row=state.records?.[key(id)];
+    if(!faction)return [];
+    return (faction.offices??[]).map(office=>({...office,organization:id,
+        holder:Object.hasOwn(row?.offices??{},office.id)?row.offices[office.id]?.holder??null:office.holder}));
 }
 function householdBase(engine,state,id){
     const h=engine.world.households?.find(h=>h.id===id);if(!h)return null;
@@ -34,10 +45,10 @@ function householdBase(engine,state,id){
     return {id,name:`${engine.byId.get(h.homeLocation)?.name??id}一户`,source:'household',kind:'家户',seat:h.homeLocation,leader:head,leaderTitle:'家长',members,treasury:0,
         charter:{mode:'elders',approval:true,fee:0,dues:0,rules:['家事由成年家人商定']}};
 }
-function societyBase(engine,id){
+function societyBase(engine,state,id){
     const place=engine.world.locations?.find(l=>l.id===id&&l.monsterSociety);if(!place)return null;
     const leader=actorId(engine.world,place.monsterSociety.leader),members={};
-    for(const n of [...engine.world.npcs??[],...engine.world.residents??[]])if(n.society===id)members[n.id]={position:n.id===leader?'首领':MEMBER,joinedAt:null,arrears:0};
+    for(const n of [...engine.world.npcs??[],...engine.world.residents??[]])if(n.society===id&&(!state.npcs?.[n.id]?.residence?.settlement||state.npcs[n.id].residence.settlement===id))members[n.id]={position:n.id===leader?'首领':MEMBER,joinedAt:null,arrears:0};
     return {id,name:place.name,source:'society',kind:'聚居地',seat:place.monsterSociety.meetingPlace??place.id,leader,leaderTitle:'首领',members,treasury:0,
         charter:{mode:'elders',approval:true,fee:0,dues:0,rules:[]}};
 }
@@ -51,7 +62,7 @@ export function organizationState(engine,state,id){
     const medical=clinic?{...clinic,source:'medicine',leaderTitle:'医师',treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;
     // Schools are the last catalogue fallback but one: scan education sites only when nothing earlier matched.
     const education=()=>{const school=educationSites(engine,state).find(o=>o.id===id);return school?{...school,source:'education',leaderTitle:'先生',members:school.leader?{[school.leader]:{position:'先生',joinedAt:null,arrears:0}}:{},treasury:0,charter:{mode:'leader',fee:0,dues:0,rules:[]}}:null;};
-    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,id)??temple??education()??medical;
+    const base=row?.source==='created'?null:(String(id).startsWith('family:')?familyGroup(engine,state,id.slice(7)):null)??factionBase(engine,id)??householdBase(engine,state,id)??societyBase(engine,state,id)??temple??education()??medical;
     if(!base&&row?.source!=='created')return null;
     const b=base??{id,name:row.name,source:'created',kind:row.kind,seat:row.seat,leader:null,leaderTitle:LEADER[row.kind]??'会长',members:{},treasury:0,charter:{}};
     const members={};
@@ -81,7 +92,7 @@ export function storedOrganization(engine,state,id){
     const row=state.records?.[key(id)];
     const t=String(id).startsWith('temple:')||engine.world.factions?.some(f=>f.id===id&&f.kind==='教会')?templeById(engine,id):null;
     const temple=t?.teacher?{leader:t.teacher,members:{[t.teacher]:{position:'主祭'}}}:null;
-    const base=row?.source==='created'?null:factionBase(engine,id)??societyBase(engine,id)??temple;
+    const base=row?.source==='created'?null:factionBase(engine,id)??societyBase(engine,state,id)??temple;
     if(!base&&!row)return null;
     const members={};
     for(const [m,entry]of Object.entries(base?.members??{}))members[actorId(engine.world,m)]=entry.position??MEMBER;

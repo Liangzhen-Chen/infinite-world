@@ -1875,6 +1875,12 @@
               "maximum": 2
             },
             {
+              "item": "item_mining_pick",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2
+            },
+            {
               "item": "item_steel_arming_sword",
               "source": "local",
               "amount": 1,
@@ -1974,13 +1980,66 @@
       "toolWear": 1,
       "restore": 20,
       "maxLoss": 1
+    },
+    {
+      "id": "repair_clothes_seam",
+      "name": "衣物补缝",
+      "item": "item_clothes",
+      "skill": "skill_life_4_core",
+      "attribute": "敏捷",
+      "minimumProficiency": 100,
+      "tools": [
+        "item_sewing_needle"
+      ],
+      "materials": [
+        {
+          "item": "item_hemp_thread",
+          "amount": 1
+        }
+      ],
+      "workstation": "weaving",
+      "minutes": 20,
+      "difficulty": 10,
+      "toolWear": 1,
+      "restore": 20,
+      "maxLoss": 0
+    },
+    {
+      "id": "repair_sword_service",
+      "name": "铁剑修整服务",
+      "item": "item_steel_arming_sword",
+      "skill": "skill_life_5_core",
+      "minimumProficiency": 100,
+      "tools": [],
+      "materials": [],
+      "workstation": "smithing",
+      "minutes": 60,
+      "difficulty": 10,
+      "toolWear": 0,
+      "restore": 100,
+      "maxLoss": 0,
+      "service": {
+        "fee": 25
+      }
     }
   ],
   "environment": {
+    "occupiedIndoorAmbientLux": 10,
     "minimumCondensationHumidity": 5,
     "carrySiltMaximumGrams": 1000,
     "carrySiltMinutes": 20,
-    "walkingMetresPerMinute": 75
+    "walkingMetresPerMinute": 75,
+    "placeLayout": {
+      "edgeMetres": 6,
+      "entryName": "入口",
+      "featureSuffix": "附近",
+      "directions": [
+        "东侧",
+        "南侧",
+        "西侧",
+        "北侧"
+      ]
+    }
   },
   "petCare": {
     "tamingSkill": "skill_life_15_core",
@@ -2085,10 +2144,10 @@
         "source": "world/design/law-foundation.mjs; D024",
         "appeal": {
           "judges": [
-            "npc_hw_chenbai"
+            "npc_hc_yicen"
           ],
           "minutes": 60,
-          "source": "world/design/law-foundation.mjs; D024"
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         },
         "magicAuthorities": [
           {
@@ -2168,7 +2227,35 @@
             "maximumMinutes": 1440,
             "fee": 2
           }
-        ]
+        ],
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        }
       },
       {
         "id": "law_yp_property",
@@ -2250,6 +2337,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2332,6 +2454,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2414,6 +2571,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       },
       {
@@ -2496,6 +2688,41 @@
             "baseFine": 100,
             "valueMultiplier": 0
           }
+        },
+        "procedure": {
+          "evidence": {
+            "weights": {
+              "eyewitness": 1,
+              "statement": 0.5,
+              "confession": 2,
+              "document": 3,
+              "mark": 1
+            },
+            "stanceDiscount": 0.5,
+            "convictionThreshold": {
+              "theft": 3,
+              "theft_attempt": 2,
+              "assault": 3,
+              "assault_attempt": 2,
+              "homicide": 5
+            }
+          },
+          "appealWindowMinutes": 4320,
+          "appealStaysExecution": {
+            "criminal": true,
+            "civil": false
+          },
+          "refundOnReversal": true,
+          "costs": {
+            "filingFee": 0
+          }
+        },
+        "appeal": {
+          "judges": [
+            "npc_hc_yicen"
+          ],
+          "minutes": 60,
+          "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
         }
       }
     ],
@@ -5881,7 +6108,8 @@
         "id": "faction_lampbridge",
         "members": [
           "npc_w5_lampbridge_leader",
-          "npc_w5_lampbridge_steward"
+          "npc_w5_lampbridge_steward",
+          "npc_a3_exam_life_20"
         ],
         "relations": [
           {
@@ -5896,7 +6124,8 @@
         "id": "faction_reedpact",
         "members": [
           "npc_w5_reedpact_leader",
-          "npc_w5_reedpact_steward"
+          "npc_w5_reedpact_steward",
+          "npc_a3_exam_summoner"
         ],
         "relations": [
           {
@@ -5941,7 +6170,8 @@
         "id": "faction_silvermirror",
         "members": [
           "npc_w5_silvermirror_leader",
-          "npc_w5_silvermirror_steward"
+          "npc_w5_silvermirror_steward",
+          "npc_a3_exam_spellblade"
         ],
         "relations": [
           {
@@ -6026,7 +6256,9 @@
         "id": "faction_civicartisans",
         "members": [
           "npc_w5_civicartisans_leader",
-          "npc_w5_civicartisans_steward"
+          "npc_w5_civicartisans_steward",
+          "npc_a3_exam_life_16",
+          "npc_a3_exam_life_18"
         ],
         "relations": [
           {
@@ -6056,7 +6288,10 @@
         "id": "faction_fieldguild",
         "members": [
           "npc_w5_fieldguild_leader",
-          "npc_w5_fieldguild_steward"
+          "npc_w5_fieldguild_steward",
+          "npc_a3_exam_assassin",
+          "npc_a3_exam_archer",
+          "npc_a3_exam_life_10"
         ],
         "relations": [
           {
@@ -6076,7 +6311,9 @@
         "id": "faction_lanternmerc",
         "members": [
           "npc_w5_lanternmerc_leader",
-          "npc_w5_lanternmerc_steward"
+          "npc_w5_lanternmerc_steward",
+          "npc_a3_exam_warrior",
+          "npc_a3_exam_knight"
         ],
         "relations": [
           {
@@ -6111,7 +6348,8 @@
         "id": "faction_hoofguild",
         "members": [
           "npc_w5_hoofguild_leader",
-          "npc_w5_hoofguild_steward"
+          "npc_w5_hoofguild_steward",
+          "npc_a3_exam_life_15"
         ],
         "relations": [
           {
@@ -6466,7 +6704,8 @@
         "id": "faction_furroworder",
         "members": [
           "npc_w5_furroworder_leader",
-          "npc_w5_furroworder_steward"
+          "npc_w5_furroworder_steward",
+          "npc_a3_exam_life_21"
         ],
         "relations": [
           {
@@ -6481,7 +6720,8 @@
         "id": "faction_returnorder",
         "members": [
           "npc_w5_returnorder_leader",
-          "npc_w5_returnorder_steward"
+          "npc_w5_returnorder_steward",
+          "npc_a3_exam_life_13"
         ],
         "relations": [
           {
@@ -10798,7 +11038,7 @@
   },
   "questSources": {
     "version": 1,
-    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post",
+    "source": "U17 任务自动来源（指南3.10）：人物需求、世界事件订阅；势力委托走效果表 quest_post；A3-内容1：回汐认岸议与灰棚明签会的公库来源见 world/lore/factions.json 对应 resources 与 method，聚落首长随现任组织首领派生。",
     "limits": {
       "perNpcByLevel": {
         "0": 0,
@@ -10991,7 +11231,10 @@
       "loc_ms_tanjie": "faction_ms_tanjie",
       "loc_ms_taideng": "faction_ms_taideng",
       "loc_ms_yugen": "faction_ms_yugen",
-      "loc_ms_lielu": "faction_ms_lielu"
+      "loc_ms_lielu": "faction_ms_lielu",
+      "loc_ms_huixi": "faction_ms_huixi",
+      "loc_ms_huipeng": "faction_ms_huipeng",
+      "loc_far_huancheng": "faction_huancheng_government"
     },
     "ledgers": [
       {
@@ -12187,7 +12430,11 @@
         15,
         10,
         20
-      ]
+      ],
+      "bait": {
+        "item": "item_fishing_bait",
+        "quantity": 1
+      }
     },
     "mining": {
       "tool": "item_mining_pick",
@@ -12676,5 +12923,12 @@
         "text": "灰棚签课采用行会考核，以读交易明签、核共同账目检验识字与记事。报考须成年，识字熟练度至少100，实际考核120分钟，难度15。须由现任地方头人或在岗登记人当面主持，通过后记名。此凭据可随任职申请递交；既有公民、贡献、举荐、住户意见与上级审定条件继续生效，缺少已登记任命机构的地方只保留资格，不自行授官。行会及门派的职业资格另由现任合格导师依职业目录完成实际入职任务；入门守戒与仪式资格仍沿原规章办理。"
       }
     ]
+  },
+  "medicine": {
+    "takeHome": {
+      "item": "item_external_medicine",
+      "quantity": 3,
+      "days": 3
+    }
   }
 }

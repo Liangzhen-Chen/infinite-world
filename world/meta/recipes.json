@@ -858,7 +858,7 @@
     "scope": null,
     "skill": "skill_life_3_core",
     "minimumProficiency": 0,
-    "minutes": 30,
+    "minutes": 60,
     "difficulty": 10,
     "materials": [
       {
@@ -901,7 +901,7 @@
       "injury": 0
     },
     "prerequisites": [],
-    "process": "取剖净鲜鱼一条，用案上切刀沿脊骨剖开，剔去鳃与腹内残血，再横切成两指宽的块，鱼刺仍留在肉里，不必强求剔尽。厚底煮锅置灶上，倒入清水两份，投干木刨屑引火，烧至锅底冒细密气泡而未大滚时下鱼块。汤面浮起灰白沫子，用偏柄木匙沿锅边撇净，火候保持微沸，煮到鱼肉由透明转白、用刀尖轻拨即散。此时撒入粗盐，以刀背压碎结块再下，搅匀后尝一口，咸淡以能辨出鱼鲜为度。全程30分钟，起锅后趁热分盛，汤清不浑；分食时仍须挑骨，清汤不含未列的药草。锅与刀用后洗净擦干，免得内锈。"
+    "process": "取剖净鲜鱼一条，用案上切刀沿脊骨剖开，剔去鳃与腹内残血，再横切成两指宽的块，鱼刺仍留在肉里，不必强求剔尽。厚底煮锅置灶上，倒入清水两份，投干木刨屑引火，烧至锅底冒细密气泡而未大滚时下鱼块。汤面浮起灰白沫子，用偏柄木匙沿锅边撇净，火候保持微沸，煮到鱼肉由透明转白、用刀尖轻拨即散。此时撒入粗盐，以刀背压碎结块再下，搅匀后尝一口，咸淡以能辨出鱼鲜为度。全程60分钟，起锅后趁热分盛，汤清不浑；分食时仍须挑骨，清汤不含未列的药草。锅与刀用后洗净擦干，免得内锈。"
   },
   {
     "id": "recipe_w3_warm_vinegar_drink",
@@ -9808,5 +9808,8 @@
       "injury": 2
     },
     "prerequisites": []
-  }
+  },
+  {"id": "recipe_hoe", "name": "制作铁锄", "aliases": [], "scope": null, "skill": "skill_life_5_core", "minimumProficiency": 0, "minutes": 60, "difficulty": 10, "materials": [{"item": "item_iron_scrap", "amount": 1}, {"item": "item_charcoal", "amount": 1}, {"item": "item_wood", "amount": 1}], "tools": ["item_smith_hammer", "item_smith_tongs"], "workstation": "smithing", "output": {"item": "item_hoe", "quantity": 1}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 60, "teachers": ["npc_hw_duanyan"], "toolWear": 1, "failure": {"recoverFraction": 0.25, "injury": 2}, "prerequisites": [], "process": "将铁边料加热锻成农具刃口，修整木柄并牢固安装，冷却后试用检查。每批一件，耗时六十分钟。"},
+  {"id": "recipe_sickle", "name": "制作铁镰", "aliases": [], "scope": null, "skill": "skill_life_5_core", "minimumProficiency": 0, "minutes": 60, "difficulty": 10, "materials": [{"item": "item_iron_scrap", "amount": 1}, {"item": "item_charcoal", "amount": 1}, {"item": "item_wood", "amount": 1}], "tools": ["item_smith_hammer", "item_smith_tongs"], "workstation": "smithing", "output": {"item": "item_sickle", "quantity": 1}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 60, "teachers": ["npc_hw_duanyan"], "toolWear": 1, "failure": {"recoverFraction": 0.25, "injury": 2}, "prerequisites": [], "process": "将铁边料加热锻成农具刃口，修整木柄并牢固安装，冷却后试用检查。每批一件，耗时六十分钟。"},
+  {"id": "recipe_fishing_bait", "name": "揉制谷粒钓饵", "aliases": [], "scope": null, "skill": "skill_life_3_core", "minimumProficiency": 0, "minutes": 10, "difficulty": 10, "materials": [{"item": "item_oats", "amount": 1}], "tools": ["item_kitchen_knife"], "output": {"item": "item_fishing_bait", "quantity": 10}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 30, "teachers": ["npc_hw_linsui"], "toolWear": 1, "failure": {"recoverFraction": 0, "injury": 0}, "prerequisites": [], "process": "将一份燕麦粗粒用刀背碾碎揉成十份小饵团，每份供一次抛竿使用；十分钟制成一批。", "workstation": "cooking"}
 ]

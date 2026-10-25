@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personCareer} from './entity-view.mjs';
 
@@ -119,12 +120,12 @@ export function petTrustGain(e,s,target,amount){
  return amount*(1+hiddenPassives(e,s).filter(r=>r.active).reduce((n,r)=>n+(r.trustMultiplier??0),0));
 }
 export function compensateHidden(d,e,role,payment,id){
- if(role!=='profession_hidden_03'||!d.get('state','professions','hidden')?.includes(role))throw Error('该隐藏职业没有违约补偿规则');
+ if(role!=='profession_hidden_03'||!d.get('state','professions','hidden')?.includes(role))throw preconditionFailure('该隐藏职业没有违约补偿规则');
  const s=d.get('state'),p=s.obligations?.[payment];
- if(p?.type!=='付款'||p.status!=='已完成'||p.promisor!=='player'||!(p.coins>0))throw Error('补偿须引用本人实际履行的付款承诺');
+ if(p?.type!=='付款'||p.status!=='已完成'||p.promisor!=='player'||!(p.coins>0))throw preconditionFailure('补偿须引用本人实际履行的付款承诺');
  const matches=Object.entries(s.obligations??{}).filter(([,o])=>o.status==='违约'&&(o.breachedBy??[o.promisor]).includes('player')&&o.promisee===p.promisee&&p.coins>=Math.max(1,o.coins??0)&&(p.resolvedAt??-1)>=(o.resolvedAt??o.deadline??0));
- if(!matches.length)throw Error('付款与违约对象、金额或时间不符');
- if(Object.values(s.careers?.[role]?.restitutions??{}).includes(payment))throw Error('这笔补偿已经使用');
- const [key]=matches.find(([k])=>!s.careers?.[role]?.restitutions?.[k])??[];if(!key)throw Error('违约已经补偿');
+ if(!matches.length)throw preconditionFailure('付款与违约对象、金额或时间不符');
+ if(Object.values(s.careers?.[role]?.restitutions??{}).includes(payment))throw preconditionFailure('这笔补偿已经使用');
+ const [key]=matches.find(([k])=>!s.careers?.[role]?.restitutions?.[k])??[];if(!key)throw preconditionFailure('违约已经补偿');
  d.set(['state','careers',role,'restitutions',key],payment);return {profession:role,compensated:key,payment,sourceEvent:id};
 }

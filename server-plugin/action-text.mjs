@@ -6,6 +6,9 @@ import {fileURLToPath} from 'node:url';
 import {appliedEffects} from './applied-effects.mjs';
 import {npcAvailability} from './npc-schedule.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {localWeather} from './weather.mjs';
+import {layoutView,zoneOf,placeLayout} from './place-layout.mjs';
+import {visibleEntity,localSounds} from './perception.mjs';
 
 const LOCALES=fileURLToPath(new URL('../world/actions/locale/',import.meta.url));
 export const BASE_LOCALE='zh-CN';
@@ -14,7 +17,14 @@ const merge=(base,over)=>{const out={...base};for(const [k,v]of Object.entries(o
 // A locale directory overrides only the keys it writes; everything else comes from the base locale.
 export function loadTemplates(locale=BASE_LOCALE){
  if(cache.has(locale))return cache.get(locale);
- const read=name=>{try{return JSON.parse(fs.readFileSync(`${LOCALES}${name}/events.json`,'utf8'));}catch(error){if(error.code==='ENOENT')return null;throw error;}};
+ const read=name=>{
+  const directory=`${LOCALES}${name}/`;let files;
+  try{files=fs.readdirSync(directory).filter(file=>file.endsWith('.json')).sort();}catch(error){if(error.code==='ENOENT')return null;throw error;}
+  if(name===BASE_LOCALE&&!files.includes('events.json'))return null;
+  // Core events first, then the action packs' locale fragments (e.g. open.json).
+  files.sort((a,b)=>(a==='events.json'?-1:b==='events.json'?1:a.localeCompare(b)));
+  return files.reduce((templates,file)=>merge(templates,JSON.parse(fs.readFileSync(directory+file,'utf8'))),{});
+ };
  const base=read(BASE_LOCALE);if(!base)throw Error('缺少基础事件模板');
  const templates=locale===BASE_LOCALE?base:merge(base,read(locale)??{});
  cache.set(locale,templates);return templates;
@@ -63,6 +73,11 @@ function variables(engine,action,before,after,args,result,templates){
  if(!vars.mode&&args?.destination)vars.mode=MODES.walk;
  const resolved=k=>{const raw=args?.[k];if(typeof raw!=='string')return;try{const id=engine.resolve(raw);vars[k]=nameOf(engine,s,id);}catch{}};
  for(const k of ['seller','buyer','target','item','destination','skill','recipe'])resolved(k);
+ const zone=placeLayout(engine,after).zones.find(z=>z.id===args?.destination);
+ if(zone)vars.destination=zone.name;
+ // A seller can explicitly permit a smaller cash purchase; describe the
+ // settled quantity rather than the original requested quantity.
+ if(result?.partial===true)vars.quantity=result.quantity;
  const elapsed=(s.minute??0)-(before.state.minute??0);
  vars.duration=durationText(Math.max(0,elapsed),templates);vars.clock=clockText(s.minute??0);vars.place=nameOf(engine,s,s.location);
  vars.actor=nameOf(engine,s,result?.actor??'player');
@@ -91,17 +106,62 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
 }
 // Event-stream text for one settled action: one verb line, then one line per applied effect.
 export function actionLines({engine,action,before,after,args,result,effects=appliedEffects(before,after,{result}),locale=BASE_LOCALE}){
+ if(result?.receipt?.status==='pending')return {lines:['行动仍在等待裁决，尚未完成。'],effects:[]};
+ if(result?.receipt?.status==='preview')return {lines:['这只是预览，行动尚未执行。'],effects:[]};
+ if(result?.receipt&&result.receipt.status!=='committed'){
+  const receipt=result.receipt,details=receipt.routing??receipt;
+  return {lines:[refusalLine(action,receipt.reason??details.reason??'行动尚未完成',locale),...(details.missing?.length?[`还需要：${details.missing.join('、')}`]:[]),...(details.repair??[])],effects:[]};
+ }
  if(result?.dialogue)return {lines:[result.dialogue.text],effects};
  const templates=loadTemplates(locale),vars=variables(engine,action,before,after,args,result,templates);
- const chain=[templates.events[action?.narration],templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
- const head=chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
+ const entry=templates.events[action?.narration];
+ const chain=[typeof entry==='object'?entry?.success:entry,templates.events[action?.verb],templates.groups[action?.group],templates.groups.default];
+ const receipt=result?.receipt;
+ const head=receipt?.check?.success===false?`你尝试${action?.label??'这样做'}，未能达到预期。`:
+  receipt?.narrate?.mustNot?.length?`你尝试${action?.label??'这样做'}，部分效果未能发生。`:chain.map(t=>fill(t,vars)).find(Boolean)??action?.label??'';
  const counterparties=new Set();
  for(const k of ['seller','buyer','target','npc','teacher','authority']){const raw=args?.[k];if(typeof raw!=='string')continue;try{counterparties.add(engine.resolve(raw));}catch{}}
  const rest=effectLines(engine,before,after,effects,templates,counterparties);
+ if(result?.filingDecision?.version===1)rest.push(...result.repair??[]);
+ if(receipt?.fallback?.originalIntentFulfilled===false){
+  // The mark exists; the player's original desired effect is not its result.
+  rest.push('只留下了痕迹，原本设想的效果并未因此实现。');
+  for(const reaction of receipt.mark?.reactions??[]){
+   const event=after.state.records?.[`world_event:${reaction.event}`];
+   if(event?.verb!=='tell'||event.actor!==reaction.observer||event.payload?.kind!=='mark_reaction'||event.payload.mark!==receipt.mark.entity)continue;
+   if(event.target!=='player'&&event.actor!=='player'&&!event.witnesses?.includes('player'))continue;
+   rest.push(fill(entry?.reaction,{observer:nameOf(engine,after.state,event.actor),text:event.payload.text})??`${nameOf(engine,after.state,event.actor)}：${event.payload.text}`);
+  }
+ }
  return {lines:[head,...(rest.length?rest:[templates.effects.nothing])],effects};
 }
 export function refusalLine(action,reason,locale=BASE_LOCALE){
  return fill(loadTemplates(locale).effects.refused,{label:action?.label??'这样做',reason:String(reason??'').replace(/^Error:\s*/,'')})??String(reason);
+}
+export function serviceLine(engine,fact){
+ const {services,until}=fact.value;
+ return `当前交易/授课：${services.map(service=>service==='teach'?'授课':'交易').join('、')||'暂停'}${until!==null&&until!==undefined?`，本时段至${engine.calendar(until).text}`:''}；司法受理按法典、在场清醒及办案回执判断。`;
+}
+const literal=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+export function currentFactLines(engine,document,facts=[]){
+ return facts.flatMap(f=>{
+  const who=literal(nameOf(engine,document.state,f.subject)),v=f.value;
+  if(f.kind==='availability')return [`${who}：${serviceLine(engine,f)}`];
+  if(f.kind==='existing-authorization')return [`已有登记许可：${who}授予${literal(nameOf(engine,document.state,f.object))}，${literal(v.content??v.subject??'范围未记明')}${v.expires!==undefined?`，有效至${engine.calendar(v.expires).text}`:''}。`];
+  if(f.kind!=='price')return [];
+  const item=literal(nameOf(engine,document.state,f.object));
+  const terms=Number.isFinite(v.totalCoins)&&Number.isFinite(v.quantity)?`${item}×${v.quantity}，合计${v.totalCoins}铜`:
+   Number.isFinite(v.listPrice)?`${item}每份${v.listPrice}铜`:
+   v.service==='remittance'&&Number.isFinite(v.fee)?`汇款${Number.isFinite(v.principal)?`本金${v.principal}铜，`:''}手续费${v.fee}铜`:null;
+  return terms?[`${who}的现行报价：${terms}。`]:[];
+ });
+}
+// Pending intent/candidates cannot inject a tail or speaking NPC into output.
+export function pendingTurnLines(engine,document,{playerText,candidates=[],facts=[],lines=[]}={}){
+ return [...lines,...sceneLines(engine,document),...currentFactLines(engine,document,facts),
+  '本回合尚无正式行动裁决；所请求的行动尚未发生，等待选择或补充。',`待处理意图：${literal(playerText)}`,
+  ...(candidates.length?['待选择候选：',...candidates.map(c=>`${literal(c.label)}（${literal(c.id)}）${c.missing?.length?`；待补：${c.missing.map(literal).join('、')}`:''}`)]:['暂未解析出匹配候选；原意仍待处理。']),
+  '可打开动作构造器选择动作并补齐条件；也可打开“留下痕迹”入口，自行选择材料和形式后确认。'];
 }
 // Visible exits from here: routes touching this location plus the containing place, nearest first.
 export function exitsFrom(engine,state,templates=loadTemplates()){
@@ -112,17 +172,23 @@ export function exitsFrom(engine,state,templates=loadTemplates()){
  }
  return rows.sort((x,y)=>(x.km??0)-(y.km??0)||x.id.localeCompare(y.id));
 }
-export function presentPeople(engine,state){
- return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id))
+export function presentPeople(engine,state,document=engine.physicalDocument){
+ return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===state.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(null,state,id)&&(!document||visibleEntity(engine,document,id)))
   .map(([id,n])=>{let activity=null;try{activity=npcAvailability(engine,state,id).activity||null;}catch{activity=null;}return {id,name:nameOf(engine,state,id),activity:activity??(typeof n.activity==='string'&&n.activity?n.activity:null)};}).sort((a,b)=>a.id.localeCompare(b.id));
 }
 // 方位组织的场景文字（无 LLM 时由模板直接生成）：此处、在场的人、各方向的出路。
 export function sceneLines(engine,document,locale=BASE_LOCALE){
  const t=loadTemplates(locale),sc=t.scene,s=document.state,place=placeOf(engine,s.location),parent=placeOf(engine,place?.parent);
  const lines=[fill(sc.header,{place:nameOf(engine,s,s.location),within:parent?fill(sc.within,{parent:parent.name}):''})??`【此处】${nameOf(engine,s,s.location)}`];
- const people=presentPeople(engine,s);
+ const weather=engine.rules?.weather?localWeather(engine,document):null;
+ if(weather)lines[0]+=`｜${weather.daylight?'白昼':'夜色已暗'}｜${weather.name}`;
+ const topology=placeLayout(engine,document);
+ const people=presentPeople(engine,s,document).map(p=>({...p,activity:[zoneOf(engine,document,p.id,topology)?.name,p.activity].filter(Boolean).join('，')}));
  lines.push(people.length?sc.presentHeader+people.map(p=>p.activity?fill(sc.present,p):fill(sc.presentIdle,p)).join('；'):sc.nobody);
+ for(const sound of localSounds(engine,document))lines.push(`${topology.zones.find(z=>z.id===sound.zone)?.name??'附近'}：${sound.text}`);
  const exits=exitsFrom(engine,s,t);
  lines.push(exits.length?sc.exitsHeader+exits.slice(0,10).map(e=>e.relation==='out'?fill(sc.exitOut,e):e.relation==='in'||e.relation==='here'?fill(sc.exitIn,e):fill(sc.exit,{...e,distance:distanceText(e.km,t)})).join('；'):sc.noExit);
+ const layout=layoutView(engine,document),zone=layout.zones.find(z=>z.current);
+ if(zone)lines.push(`【所在分区】${zone.name}；`+layout.zones.filter(z=>!z.current).map(z=>`${z.direction}：${z.name}${z.reachable?`（沿邻接${z.metres}米）`:'（通道受阻）'}`).join('；'));
  return lines;
 }

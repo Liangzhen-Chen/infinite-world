@@ -110,7 +110,15 @@
       "host": "npc_hw_linsui",
       "kind": "客房",
       "rooms": 3
-    }
+    },
+    "publicConversations": [
+      {
+        "id": "conversation_hw_trade",
+        "speaker": "npc_hw_linsui",
+        "rumor": "rumor_w5_1_02",
+        "label": "酒馆闲谈"
+      }
+    ]
   },
   {
     "id": "bld_hw_mill",
@@ -153,7 +161,8 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "owner": "loc_hw"
   },
   {
     "id": "bld_hw_council",
@@ -344,7 +353,33 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ]
+    ],
+    "site": {
+      "owner": null,
+      "occupants": [],
+      "entryMechanisms": [],
+      "mechanisms": [],
+      "clues": [],
+      "resources": [
+        {
+          "id": "nw_herb",
+          "name": "林缘药草",
+          "item": "item_herb",
+          "quantity": 20,
+          "minutes": 120,
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "truths": []
+    }
   },
   {
     "id": "bld_hw_herbs",
@@ -698,6 +733,13 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "notices": [
+      {
+        "id": "notice_hw_gate",
+        "text": "听来的消息尚待核实，请留意告示与讲述者的来源。",
+        "author": "npc_hw_chenbai"
+      }
     ]
   },
   {
@@ -763,6 +805,9 @@
   {
     "id": "bld_hw_school",
     "name": "小学堂",
+    "site": {
+      "manager": "npc_hw_luqing"
+    },
     "coordinates": [
       0.4,
       0.1
@@ -14021,6 +14066,12 @@
         "name": "公开接洽前厅",
         "purpose": "值更板、失物登记桌",
         "access": "营业时接洽；内室和财物另须许可"
+      },
+      {
+        "id": "room_bs_watch_lockup",
+        "name": "拘禁室",
+        "purpose": "短期羁押候审或候押",
+        "access": "仅看守与经办人员进出；探视另须许可"
       }
     ],
     "inventory": {},
@@ -19022,7 +19073,124 @@
           }
         }
       }
-    ]
+    ],
+    "layout": {
+      "entry": "zone_reed_entry",
+      "defaultZone": "zone_reed_court",
+      "zones": [
+        {
+          "id": "zone_reed_entry",
+          "name": "观门土路",
+          "features": [
+            "feature_s2_gate_road"
+          ],
+          "point": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "zone_reed_court",
+          "name": "观内院地",
+          "features": [
+            "feature_s2_water_jar",
+            "feature_s4_gate"
+          ],
+          "point": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "zone_reed_side",
+          "name": "观门侧廊",
+          "features": [
+            "feature_s2_side_passage"
+          ],
+          "point": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "zone_reed_scripture",
+          "name": "经阁门外",
+          "features": [
+            "feature_s4_scripture_door"
+          ],
+          "point": [
+            -1,
+            0
+          ]
+        },
+        {
+          "id": "zone_reed_library",
+          "name": "经阁",
+          "point": [
+            -2,
+            0
+          ]
+        },
+        {
+          "id": "zone_reed_rift_south",
+          "name": "旧阵残隙南侧",
+          "features": [
+            "feature_s4_old_rift"
+          ],
+          "point": [
+            -1,
+            -3
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "from": "zone_reed_entry",
+          "to": "zone_reed_court",
+          "direction": "南侧",
+          "metres": 6,
+          "barrier": "feature_s4_gate"
+        },
+        {
+          "from": "zone_reed_entry",
+          "to": "zone_reed_side",
+          "direction": "东侧",
+          "metres": 6
+        },
+        {
+          "from": "zone_reed_side",
+          "to": "zone_reed_court",
+          "direction": "西侧",
+          "metres": 6
+        },
+        {
+          "from": "zone_reed_court",
+          "to": "zone_reed_scripture",
+          "direction": "西侧",
+          "metres": 6
+        },
+        {
+          "from": "zone_reed_scripture",
+          "to": "zone_reed_library",
+          "direction": "西侧",
+          "metres": 6,
+          "barrier": "feature_s4_scripture_door"
+        },
+        {
+          "from": "zone_reed_court",
+          "to": "zone_reed_rift_south",
+          "direction": "南侧",
+          "metres": 6,
+          "barrier": "feature_s4_old_rift"
+        },
+        {
+          "from": "zone_reed_scripture",
+          "to": "zone_reed_rift_south",
+          "direction": "南侧",
+          "metres": 12
+        }
+      ]
+    }
   },
   {
     "id": "bld_bs_still_temple",
@@ -23521,7 +23689,7 @@
       0,
       1440
     ],
-    "owner": "npc_ms_hx_yiheng",
+    "owner": "faction_ms_huixi",
     "purpose": "存放处",
     "rooms": [],
     "inventory": {},
@@ -23533,11 +23701,12 @@
         "卷席压在空架上"
       ],
       "entryRule": "存粮有主，须看管者许可",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huixi.resources 列有旧芦棚与接岸储备；漪衡为看管者，公账与本人库存分开。"
     },
     "description": "回汐存芦棚靠着认岸芦门，芦席包住换来的干粮。漪衡看管棚里的储备，棚壁留着空棚去留的芦记。接岸派与静滩派都在这里核过粮份，尚未议定以前，空席仍卷着。绕棚可走公共岸路，进棚取粮要先问漪衡。",
     "site": {
-      "owner": "npc_ms_hx_yiheng",
+      "owner": "faction_ms_huixi",
       "manager": "npc_ms_hx_yiheng",
       "occupants": [
         "npc_ms_hx_yiheng"
@@ -23728,7 +23897,7 @@
       0,
       1440
     ],
-    "owner": null,
+    "owner": "faction_ms_huipeng",
     "purpose": "公共设施",
     "rooms": [],
     "inventory": {},
@@ -23740,7 +23909,8 @@
         "折签把空盘抬给人看"
       ],
       "entryRule": "公共设施，公秤不代替当事人同意",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公秤；公共通行与各族轮值的争议仍按原文处理。"
     },
     "description": "灰棚公秤台搭在集路中央，空秤先亮给双方看，货放下以后才递绳签。折签白天守着旧签，怕不会读签的外族误认货主；散钩则想让各族轮值。秤台是公共地方，这些习惯不另收一份称量钱，也不能替任何人承诺货的成色。",
     "access": {
@@ -23968,7 +24138,7 @@
       0,
       1440
     ],
-    "owner": "npc_ms_gs_shenge",
+    "owner": "faction_ms_huipeng",
     "purpose": "存放处",
     "rooms": [],
     "inventory": {},
@@ -23980,11 +24150,12 @@
         "柜脚垫着平石"
       ],
       "entryRule": "公货有看管者，取货须许可",
-      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务"
+      "noMechanics": "只登记通行与作息；不新增工作站、产量或收费服务",
+      "ownershipBasis": "A3-内容1：world/lore/factions.json#faction_ms_huipeng.resources 列有公货柜；绳额为看管者，分物仍须议定。"
     },
     "description": "灰棚公货柜设在迎车口内侧，绳额保管议签棚留下的修绳与木柄储备。柜门的绳结完整，断下来的旧签收在旁边。守签派与共秤派尚未议定轮值以前，柜里的货不提前分给任何一棚。柜外是公共集路，打开柜门要先问绳额。",
     "site": {
-      "owner": "npc_ms_gs_shenge",
+      "owner": "faction_ms_huipeng",
       "manager": "npc_ms_gs_shenge",
       "occupants": [
         "npc_ms_gs_shenge"
@@ -30936,6 +31107,107 @@
       420,
       1350
     ],
-    "mapHierarchy": [{"id":"known-continent","name":"已知大陆片区"},{"id":"known-region","name":"已知地区片区"},{"id":"known-county","name":"已知郡级片区"},{"id":"loc_hw","name":"河湾村"}]
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "known-region",
+        "name": "已知地区片区"
+      },
+      {
+        "id": "known-county",
+        "name": "已知郡级片区"
+      },
+      {
+        "id": "loc_hw",
+        "name": "河湾村"
+      }
+    ]
+  },
+  {
+    "id": "bld_hc_citywall",
+    "name": "环城城墙",
+    "aliases": [],
+    "parent": "loc_far_huancheng",
+    "scope": "loc_far_huancheng",
+    "coordinates": [
+      250,
+      12
+    ],
+    "terrain": "丘陵与平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "faction_huancheng_government",
+    "purpose": "环绕旧仓城的公共防护城墙",
+    "rooms": [],
+    "inventory": {},
+    "description": "环绕旧仓城的公共防护城墙，属环城郡署治理。公共通行不包含拆改、取料或施工许可，具体施工仍须有权现任按事项批准。",
+    "authoredFacts": {
+      "ownershipBasis": "world/geo/regions.json#county_xichui_huancheng/overview、rule与world/geo/locations.json#loc_far_huancheng确认环城城墙；A3-内容2授权落实城门城墙公共设施及郡署治理归属。"
+    },
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ]
+  },
+  {
+    "id": "bld_hc_stone_gate",
+    "name": "环城现役石城门",
+    "aliases": [],
+    "parent": "loc_far_huancheng",
+    "scope": "loc_far_huancheng",
+    "coordinates": [
+      250,
+      12
+    ],
+    "terrain": "丘陵与平地",
+    "openHours": [
+      0,
+      1440
+    ],
+    "owner": "faction_huancheng_government",
+    "purpose": "环城公共城墙的现役石砌门体",
+    "rooms": [],
+    "inventory": {},
+    "description": "环城公共城墙的现役石砌门体，属环城郡署治理。公共通行不包含拆改、取料或施工许可，具体施工仍须有权现任按事项批准。",
+    "authoredFacts": {
+      "ownershipBasis": "world/geo/regions.json#county_xichui_huancheng/overview、rule与world/geo/locations.json#loc_far_huancheng确认环城城墙；A3-内容2授权落实城门城墙公共设施及郡署治理归属。"
+    },
+    "mapHierarchy": [
+      {
+        "id": "known-continent",
+        "name": "已知大陆片区"
+      },
+      {
+        "id": "prov_xichui",
+        "name": "西陲河谷"
+      },
+      {
+        "id": "county_xichui_huancheng",
+        "name": "环城郡"
+      },
+      {
+        "id": "loc_far_huancheng",
+        "name": "环城"
+      }
+    ]
   }
 ]

@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('family-law');
@@ -20,12 +21,12 @@ function familyLoss(d,e,row){
 }
 export function fileFamilyDispute(d,e,{claimant,estate,guardianship,reason,eventId}){
  const s=d.get('state'),death=Object.values(s.family?.deaths??{}).find(r=>r.id===estate),guard=s.records?.[guardianship];
- if(!death&&guard?.category!=='guardianship')throw Error('须指定实际死亡分产或监护登记');
+ if(!death&&guard?.category!=='guardianship')throw preconditionFailure('须指定实际死亡分产或监护登记');
  const own=death?.estate.allocations?.some(r=>r.heir===claimant)||guard?.ward===claimant;
- if(!own)throw Error('申请人须为实际继承当事人');
+ if(!own)throw preconditionFailure('申请人须为实际继承当事人');
  const g=guard??death?.estate.guardianships?.map(id=>s.records[id]).find(r=>r.ward===claimant);
- const code=legalCodeAt(e,death?.settlement??s.location,s)??legalCodeAt(e,s.location,s);if(!code)throw Error('当地没有可受理的法典');
- if(s.location!==code.court)throw Error('须到本地法庭提出分产或监护争议');
+ const code=legalCodeAt(e,death?.settlement??s.location,s)??legalCodeAt(e,s.location,s);if(!code)throw preconditionFailure('当地没有可受理的法典');
+ if(s.location!==code.court)throw preconditionFailure('须到本地法庭提出分产或监护争议');
  const prior=Object.values(s.records??{}).find(r=>r.category==='legal_case'&&r.familyCivil?.claimant===claimant&&r.familyCivil?.estate===(death?.id??g.estate)&&r.status!=='已结案');if(prior)return prior.id;
  const id=`legal_case:family:${eventId}`,row={category:'legal_case',id,procedureVersion:1,law:code.id,settlement:code.settlement??death?.settlement,
   offender:g?.guardian??death?.estate.heir,victim:claimant,offense:g?'guardianship_account':'inheritance_partition',value:0,stolen:null,
@@ -58,7 +59,7 @@ export function adjudicateFamilyDispute(d,e,row,code,judge,eventId){
 }
 export function recoverFamilyCompensation(d,e,row,eventId){
  row=d.get(...rec(row.id))??row;
- if(!row.judgment)throw Error('须先由有权法庭审理');
+ if(!row.judgment)throw preconditionFailure('须先由有权法庭审理');
  const s=d.get('state'),loss=familyLoss(d,e,row),remaining=Math.min(loss.remaining,Math.max(0,row.judgment.compensation-(row.recovered??0)));
  const offenderPath=actorPath(e.world,row.offender),victimPath=actorPath(e.world,row.victim),available=d.get(...offenderPath,'coins')??0,amount=Math.min(remaining,available);
  if(amount)recoverLoss(d,e,{id:loss.id,amount,payer:row.offender},eventId,()=>{moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],available-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);});
@@ -70,13 +71,13 @@ export function recoverFamilyCompensation(d,e,row,eventId){
 export function manageWard(d,e,{ward,guardian,coins,kind,purpose,recipient,eventId}){
  const s=d.get('state'),guard=activeGuardianship(e,s,ward);
  const previous=guard?.ledger.find(r=>r.sourceEvent===eventId);if(previous)return {guardianship:guard.id,entry:previous};
- if(!guard||guard.guardian!==guardian||!familyAdult(e,s,guardian))throw Error('没有有效的本人监护代管权限');
- if(!Number.isSafeInteger(coins)||coins<=0)throw Error('代管金额须为正整数');
- if(!purpose?.trim())throw Error('代管开支须记明用途');
+ if(!guard||guard.guardian!==guardian||!familyAdult(e,s,guardian))throw preconditionFailure('没有有效的本人监护代管权限');
+ if(!Number.isSafeInteger(coins)||coins<=0)throw preconditionFailure('代管金额须为正整数');
+ if(!purpose?.trim())throw preconditionFailure('代管开支须记明用途');
  const source=actorPath(e.world,ward),target=actorPath(e.world,kind==='支出'?recipient:guardian),have=d.get(...source,'coins')??0;
- if(have<coins)throw Error('继承人财产不足');
- if(!['保管','支出','侵吞'].includes(kind))throw Error('choice 须为保管、支出或侵吞；保管不改变所有权');
- if(kind==='支出'&&(!recipient||recipient===guardian||recipient===ward||!d.get(...target)||d.get(...target,'location')!==s.location))throw Error('受监护人开支须支付给在场实际收款者，不能转作监护人私财');
+ if(have<coins)throw preconditionFailure('继承人财产不足');
+ if(!['保管','支出','侵吞'].includes(kind))throw preconditionFailure('choice 须为保管、支出或侵吞；保管不改变所有权');
+ if(kind==='支出'&&(!recipient||recipient===guardian||recipient===ward||!d.get(...target)||d.get(...target,'location')!==s.location))throw preconditionFailure('受监护人开支须支付给在场实际收款者，不能转作监护人私财');
  if(kind!=='保管'){moveCoins(d,{from:purse(e,ward),to:purse(e,kind==='支出'?recipient:guardian),amount:coins,writer:'family-law',eventId:eventId});d.set([...source,'coins'],have-coins);d.set([...target,'coins'],(d.get(...target,'coins')??0)+coins);}
  const entry={kind,coins,purpose,...(recipient?{recipient}:{}),minute:s.minute,sourceEvent:eventId};holdingSet(d,null,rec(guard.id),{...guard,ledger:[...guard.ledger,entry]},'family-law');
  entityTransition(d,e,{id:`${eventId}:guard`,verb:kind==='侵吞'?'steal':'transfer',actor:guardian,target:ward,location:s.location,visibility:'members',tags:['family','guardianship'],summary:`监护代管记账：${purpose}`});

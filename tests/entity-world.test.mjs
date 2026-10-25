@@ -93,7 +93,8 @@ test('聚落公开人口、家户与主官权限跟随当前迁居与任免；�
 
 test('K6冻结记录在钓鱼实际结算中阻止捕获，解冻后鱼群扣减且产出一份鱼',async()=>{
  const {engine,d,act}=fixture(),h=engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water');
- d.set(['state','location'],h.location);d.set(['state','inventory','item_water'],{quantity:10});d.set(['state','inventory','item_kitchen_knife'],{quantity:1,durability:100});
+// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
+ d.set(['state','inventory','item_fishing_bait'],{quantity:10});d.set(['state','location'],h.location);d.set(['state','inventory','item_water'],{quantity:10});d.set(['state','inventory','item_kitchen_knife'],{quantity:1,durability:100});
  const feature=engine.byId.get(h.location).features.find(f=>f.kind==='water');assert.ok(feature);
  applyEffects(d,engine,[{kind:'environment',locations:[h.location],state:'frozen',minutes:300}],{minute:600,sourceEvent:'freeze'},'world');
  assert.equal(physicalFeature(engine,d.get('state'),feature.id).state.value.frozenUntil,900);

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import Ajv from 'ajv';
 import {loadWorld} from '../tools/load-world.mjs';
 import {baishiSkeleton} from '../world/design/w1-baishi-skeleton.mjs';
+import {settlementHead} from '../world/design/a3-world-governance.mjs';
 import {prepare,validateSkeleton,integrate,approved,root} from '../tools/w1-baishi.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
@@ -19,7 +20,11 @@ test('正式目录只核对白石本批，306登记加694seed与90加210户核�
  assert.deepEqual(new Set(registered.map(p=>p.id)),new Set(b.profile.residentIds));
  assert.equal(registered.filter(p=>ids.has(p.id)).length,b.residents.length);
  assert.equal(world.households.filter(h=>h.settlement==='loc_bs').length,90);
- const p=world.settlementProfiles.find(p=>p.id==='loc_bs');assert.deepEqual(p,b.profile);
+ // T90 skeleton facts remain frozen; only the separately approved A3 authority
+ // patch changes governance. Compare every other field without weakening it.
+ const p=world.settlementProfiles.find(p=>p.id==='loc_bs');
+ assert.deepEqual({...p,details:{...p.details,governance:b.profile.details.governance}},b.profile);
+ assert.deepEqual(p.details.governance,{...b.profile.details.governance,head:settlementHead.head,enforcers:settlementHead.enforcers,authority:settlementHead.authority});
  assert.equal(p.population,p.registeredPopulation+p.pendingPopulation);assert.equal(p.householdCount,p.registeredHouseholdCount+p.pendingHouseholdCount);
  assert.equal(p.pendingPopulation,146*3+64*4);assert.equal(p.pendingHouseholdCount,146+64);
  const pending=Object.values(p.pendingAgeStructure).reduce((n,x)=>n+x,0);assert.equal(pending,p.pendingPopulation);

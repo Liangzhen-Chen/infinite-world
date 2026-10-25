@@ -1,7 +1,8 @@
+import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
-import {environmentFeatures,localPlayerPoint,localSightClear} from './environment.mjs';
+import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
 import {assertMagicTargeting} from './magic-targeting.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
@@ -10,8 +11,8 @@ import {waterEarthSoundLoss,assertWaterEarthMovement,cutWaterMedium}from'./magic
 // All quantities below are stored in the save, including transferred pollution.
 export const airMechanisms=Object.freeze({airflow:[2000,5],smoke:[2000,5],clean_air:[1000,0],sense_air:[1,0],carry_voice:[80,0],quiet:[80,5],dry_grain:[1000,10],slow_fall:[80,2],lift:[2000,2],sail:[30,5],air_bubble:[600,1],deflect:[60,2],area_wind:[100,5]});
 const key=id=>`physical_feature:${id}`,clone=x=>structuredClone(x);
-const finite=(x,min,max,label)=>{if(!Number.isFinite(x)||x<min||x>max)throw Error(`${label}无效`);return x;};
-const integer=(x,min,max,label)=>{if(!Number.isSafeInteger(x)||x<min||x>max)throw Error(`${label}无效`);return x;};
+const finite=(x,min,max,label)=>{if(!Number.isFinite(x)||x<min||x>max)throw preconditionFailure(`${label}无效`);return x;};
+const integer=(x,min,max,label)=>{if(!Number.isSafeInteger(x)||x<min||x>max)throw preconditionFailure(`${label}无效`);return x;};
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function carriedKg(d,engine,target='player'){
  const inventory=target==='player'?d.get('state','inventory'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target,'inventory')??{};
@@ -19,20 +20,20 @@ function carriedKg(d,engine,target='player'){
 }
 const state=(d,row)=>{
  const r=d.get('state','records',key(row.id));
- if(r&&(r.category!=='physical_feature'||r.id!==row.id||r.location!==row.location))throw Error('空气对象状态键冲突');
+ if(r&&!featureRecordMatches(d,r,row))throw Error('空气对象状态键冲突');
  return clone(r?.state??row.state??{});
 };
 const store=(d,row,s)=>d.set(['state','records',key(row.id)],{id:row.id,category:'physical_feature',location:row.location,state:s});
 function locate(engine,d,id){
  const rows=environmentFeatures(engine).filter(r=>r.location===d.get('state','location')&&(r.id===id||r.name===id));
- if(rows.length!==1)throw Error('缺少同地登记的真实空气对象');return rows[0];
+ if(rows.length!==1)throw preconditionFailure('缺少同地登记的真实空气对象');return rows[0];
 }
 function access(d,engine,row,args,range,readOnly=false,acoustic=false){
- if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position,{waterCurtain:!acoustic}))throw Error('空气对象超过实际距离或被遮挡');
+ if(dist(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position,{waterCurtain:!acoustic}))throw preconditionFailure('空气对象超过实际距离或被遮挡');
  if(readOnly||row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  const allowed=ids.some(id=>{const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));});
- if(!allowed)throw Error('空气对象需要有效所有者授权');
+ if(!allowed)throw preconditionFailure('空气对象需要有效所有者授权');
 }
 export function validateAirCatalog(c){
  const s=c.effectSpec,m=airMechanisms[s?.operation];
@@ -44,7 +45,7 @@ export function validateAirCatalog(c){
  return errors;
 }
 function roomState(d,row,minute){
- const m=row.airModel;if(row.kind!=='room'||!m)throw Error('需要登记的真实空气容量');
+ const m=row.airModel;if(row.kind!=='room'||!m)throw preconditionFailure('需要登记的真实空气容量');
  integer(m.capacityMg,1,100000000,'氧气容量');integer(m.ventilationMgPerMinute,0,m.capacityMg,'通风量');
  const s=state(d,row);s.air??={lastMinute:minute,oxygenMg:m.capacityMg,smokeMg:0,smokeInputMg:0,burnedFuelMg:0,ventedSmokeMg:0,oxygenUsedMg:0,oxygenAddedMg:0,spreadCount:0};
  const a=s.air;
@@ -54,29 +55,29 @@ function roomState(d,row,minute){
 }
 function linkedPath(d,engine,args,origin,range,readOnly=false,acoustic=false){
  const ids=args.path??[origin.id,args.destination];
- if(!Array.isArray(ids)||ids.length<2||ids.length>8||ids.some(id=>typeof id!=='string'||!id)||ids[0]!==origin.id||new Set(ids).size!==ids.length)throw Error('需要明确的连通出口路径');
+ if(!Array.isArray(ids)||ids.length<2||ids.length>8||ids.some(id=>typeof id!=='string'||!id)||ids[0]!==origin.id||new Set(ids).size!==ids.length)throw preconditionFailure('需要明确的连通出口路径');
  const rows=ids.map(id=>locate(engine,d,id));
  for(let i=0;i<rows.length;i++){
   const row=rows[i];access(d,engine,row,args,range,readOnly,acoustic);roomState(d,row,d.get('state','minute'));
-  if(i&&(!rows[i-1].links?.exits?.includes(row.id)||state(d,rows[i-1]).closedExits?.includes(row.id)))throw Error('石墙或关闭出口阻断气流与回声');
+  if(i&&(!rows[i-1].links?.exits?.includes(row.id)||state(d,rows[i-1]).closedExits?.includes(row.id)))throw preconditionFailure('石墙或关闭出口阻断气流与回声');
  }
  return rows;
 }
 function living(d,engine,c,args){
  const target=args.target??'player',path=target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
  const actor=d.get(...path);
- if(!actor||isPhysicallyDead(engine,d,target)||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw Error('风族活体目标不在场或已死亡');
+ if(!actor||isPhysicallyDead(engine,d,target)||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw preconditionFailure('风族活体目标不在场或已死亡');
  assertMagicTargeting(d,engine,c,args,target);return{target,path,actor};
 }
 export function prepareAirMagic(d,c,args){
  const op=c.effectSpec.operation,now=d.get('state','minute');
  if(['slow_fall','deflect','air_bubble'].includes(op)){
   const actor=living(d,this,c,args);
-  if(op==='slow_fall'&&carriedKg(d,this,actor.target)>20)throw Error('缓降不能承托重型货物');
+  if(op==='slow_fall'&&carriedKg(d,this,actor.target)>20)throw preconditionFailure('缓降不能承托重型货物');
   let room;
   if(op==='air_bubble'){
    room=locate(this,d,args.source);access(d,this,room,args,c.rangeMeters);const s=roomState(d,room,now);
-   if(s.air.oxygenMg<c.effectSpec.power||s.air.smokeMg||(s.air.dustMg??0)>0||room.airModel.breathable===false)throw Error('气泡需要现有洁净可呼吸空气，不能凭空造氧');
+   if(s.air.oxygenMg<c.effectSpec.power||s.air.smokeMg||(s.air.dustMg??0)>0||room.airModel.breathable===false)throw preconditionFailure('气泡需要现有洁净可呼吸空气，不能凭空造氧');
   }
   return{...actor,room,catalog:c,spec:c.effectSpec,args:{...args}};
  }
@@ -84,36 +85,36 @@ export function prepareAirMagic(d,c,args){
  access(d,this,row,args,c.rangeMeters,readOnly);
  let rows;
  if(['airflow','smoke','sense_air','carry_voice'].includes(op))rows=linkedPath(d,this,args,row,c.rangeMeters,readOnly||op==='carry_voice',['sense_air','carry_voice'].includes(op));
- if(['airflow','smoke'].includes(op)&&rows.at(-1).id===row.id)throw Error('封闭空间不能凭空净化');
+ if(['airflow','smoke'].includes(op)&&rows.at(-1).id===row.id)throw preconditionFailure('封闭空间不能凭空净化');
  if(op==='sense_air'){
-  const wind=row.airModel.windVector; if(!Array.isArray(wind)||wind.length!==2||!wind.every(Number.isFinite))throw Error('缺少真实风向数据');
-  if(!Number.isFinite(rows.at(-1).airModel.echoDelayMs))throw Error('缺少实际回声数据');
+  const wind=row.airModel.windVector; if(!Array.isArray(wind)||wind.length!==2||!wind.every(Number.isFinite))throw preconditionFailure('缺少真实风向数据');
+  if(!Number.isFinite(rows.at(-1).airModel.echoDelayMs))throw preconditionFailure('缺少实际回声数据');
  }
- if(op==='carry_voice'&&(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>c.effectSpec.power))throw Error('传话需要限定长度的实际文字');
+ if(op==='carry_voice'&&(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>c.effectSpec.power))throw preconditionFailure('传话需要限定长度的实际文字');
  if(op==='quiet')roomState(d,row,now);
- if(op==='clean_air'&&(!Number.isSafeInteger(s.looseDustMg)||s.looseDustMg<=0||!row.links?.air))throw Error('物品表面没有可吹走的松散尘土或真实接收空气');
+ if(op==='clean_air'&&(!Number.isSafeInteger(s.looseDustMg)||s.looseDustMg<=0||!row.links?.air))throw preconditionFailure('物品表面没有可吹走的松散尘土或真实接收空气');
  if(['clean_air','dry_grain'].includes(op)){const air=locate(this,d,row.links?.air);access(d,this,air,args,c.rangeMeters);roomState(d,air,now);}
  if(op==='dry_grain'){
-  if(row.kind!=='grain'||!s.turned||!s.exposed||s.moistureMg<=0)throw Error('谷物需要实际翻动并摊开，密封或未翻谷不能排湿');
-  const air=locate(this,d,row.links.air);if(!air.links?.exits?.length||s.sealed||(roomState(d,air,now).air.waterVaporMg??0)>=air.airModel.vaporCapacityMg)throw Error('封闭或饱和空气不能继续排湿');
+  if(row.kind!=='grain'||!s.turned||!s.exposed||s.moistureMg<=0)throw preconditionFailure('谷物需要实际翻动并摊开，密封或未翻谷不能排湿');
+  const air=locate(this,d,row.links.air);if(!air.links?.exits?.length||s.sealed||(roomState(d,air,now).air.waterVaporMg??0)>=air.airModel.vaporCapacityMg)throw preconditionFailure('封闭或饱和空气不能继续排湿');
   integer(air.airModel.vaporCapacityMg,1,100000000,'空气水汽容量');
  }
  if(op==='lift'){
   assertWaterEarthMovement(d,row.id);
-  integer(s.massMg,1,2000000,'轻物质量');if(s.fixed||s.massMg>c.effectSpec.power*1000)throw Error('风柱不能托起固定物或超重物');
-  if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='air'&&e.operation==='lift'&&e.target===row.id&&e.expires>now))throw Error('轻物已有风柱承托，不能叠加载荷');
+  integer(s.massMg,1,2000000,'轻物质量');if(s.fixed||s.massMg>c.effectSpec.power*1000)throw preconditionFailure('风柱不能托起固定物或超重物');
+  if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='air'&&e.operation==='lift'&&e.target===row.id&&e.expires>now))throw preconditionFailure('轻物已有风柱承托，不能叠加载荷');
   for(const r of environmentFeatures(this).filter(r=>r.location===row.location&&r.id!==row.id&&dist(r.position,row.position)<=2)){
    const loose=state(d,r);if(loose.loose&&!loose.fixed&&Number.isSafeInteger(loose.massMg)&&loose.massMg<=c.effectSpec.power*1000)access(d,this,r,args,c.rangeMeters);
   }
  }
  if(op==='sail'){
-  if(row.kind!=='sail'||!s.deployed||s.torn||row.owner!=='player'||!row.links?.route)throw Error('需要自有船只上实际张开的完整船帆');
+  if(row.kind!=='sail'||!s.deployed||s.torn||row.owner!=='player'||!row.links?.route)throw preconditionFailure('需要自有船只上实际张开的完整船帆');
   const route=this.world.routes.find(r=>r.id===row.links.route);
-  if(!route?.modes.includes('boat')||![route.from,route.to].includes(row.location))throw Error('船帆未连接可航行路线');
+  if(!route?.modes.includes('boat')||![route.from,route.to].includes(row.location))throw preconditionFailure('船帆未连接可航行路线');
   const air=locate(this,d,row.links.air);const v=air.airModel?.windVector,b=route.bearing;
-  if(!Array.isArray(v)||!Array.isArray(b)||v.length!==2||b.length!==2||![...v,...b].every(Number.isFinite)||Math.hypot(...v)===0||Math.hypot(...b)===0)throw Error('缺少船帆真实风向和航向');
+  if(!Array.isArray(v)||!Array.isArray(b)||v.length!==2||b.length!==2||![...v,...b].every(Number.isFinite)||Math.hypot(...v)===0||Math.hypot(...b)===0)throw preconditionFailure('缺少船帆真实风向和航向');
  }
- if(op==='area_wind'&&(row.kind!=='road'||!row.links?.route||!this.world.routes.some(r=>r.id===row.links.route)||!Number.isFinite(s.resistanceMinutes)))throw Error('道路风阻需要真实道路与通行时长');
+ if(op==='area_wind'&&(row.kind!=='road'||!row.links?.route||!this.world.routes.some(r=>r.id===row.links.route)||!Number.isFinite(s.resistanceMinutes)))throw preconditionFailure('道路风阻需要真实道路与通行时长');
  return{target:row.id,row,rows,catalog:c,spec:c.effectSpec,args:{...args}};
 }
 function transfer(d,from,to,field,amount){
@@ -218,14 +219,14 @@ export function advanceAirMinute(d,engine,rooms,minute){
  }
  for(const x of rooms)x.state=roomState(d,x.row,minute+1);
 }
-const locateAt=(engine,id,location)=>{const row=environmentFeatures(engine).find(r=>r.id===id&&r.location===location);if(!row)throw Error('空气路径对象已不存在');return row;};
+const locateAt=(engine,id,location)=>{const row=environmentFeatures(engine).find(r=>r.id===id&&r.location===location);if(!row)throw preconditionFailure('空气路径对象已不存在');return row;};
 function settleLift(d,engine,e){
  if(e.operation!=='lift'||e.settled)return;
  const row=locateAt(engine,e.target,e.location),s=state(d,row);s.heightMeters=e.returnHeight;store(d,row,s);e.settled=true;
 }
 export function advanceAirEffects(d,engine,before,after){
  // Heat rooms own the per-minute clock. Air-only scenes use the same loop.
- if(!environmentFeatures(engine).some(r=>r.kind==='room'&&r.airModel))for(let minute=before;minute<after;minute++)advanceAirMinute(d,engine,[],minute);
+ if(!environmentFeatures(engine,null,r=>r.kind==='room'&&r.airModel).length)for(let minute=before;minute<after;minute++)advanceAirMinute(d,engine,[],minute);
  for(const [id,e]of Object.entries(d.get('state','effects')??{}))if(e.kind==='air'&&e.expires<=after){settleLift(d,engine,e);d.set(['state','effects',id],e);}
 }
 export function windArmorMultiplier(material){return ['iron','steel','stone','metal','铁','钢','石'].includes(material)?.25:1;}
@@ -261,17 +262,17 @@ export function adjustAirTravel(d,engine,route,mode,{minute=d.get('state','minut
 export function airEnvironmentAction(d,args,id){
  const op=args.operation,row=locate(this,d,args.target),s=state(d,row);access(d,this,row,args,op==='sound'?40:1);
  if(op==='turn_grain'){
-  if(row.kind!=='grain'||s.sealed)throw Error('需要可翻动的实际散装谷物');s.turned=true;s.exposed=true;store(d,row,s);this.advance(d,1,id);return{target:row.id,turned:true,minutes:1};
+  if(row.kind!=='grain'||s.sealed)throw preconditionFailure('需要可翻动的实际散装谷物');s.turned=true;s.exposed=true;store(d,row,s);this.advance(d,1,id);return{target:row.id,turned:true,minutes:1};
  }
  if(op==='sound'){
-  const rows=linkedPath(d,this,args,row,40,true,true);if(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>80)throw Error('声音需要实际文字');
+  const rows=linkedPath(d,this,args,row,40,true,true);if(typeof args.text!=='string'||!args.text.trim()||Array.from(args.text).length>80)throw preconditionFailure('声音需要实际文字');
   return{...sendSound(d,this,rows,args.text,80,id),actionScope:{kind:'instant',instantaneous:true}};
  }
  if(op==='fall'){
-  finite(s.fallHeightMeters,.1,100,'实际坠落高度');if(row.kind!=='ledge')throw Error('坠落需要实际高差');
+  finite(s.fallHeightMeters,.1,100,'实际坠落高度');if(row.kind!=='ledge')throw preconditionFailure('坠落需要实际高差');
   const target=args.subject??'player',actor=living(d,this,{rangeMeters:0,targeting:{lineOfSight:true,consent:'support_magic'}},{...args,target});
   const position=d.get('state','records',target==='player'?'local_player_position':`local_actor_position:${target}`);
-  if(position?.location!==row.location||position.elevationMeters!==s.fallHeightMeters||dist(position.point,row.position)>0)throw Error('角色没有实际处于该坠落高度，需先走近高处');
+  if(position?.location!==row.location||position.elevationMeters!==s.fallHeightMeters||dist(position.point,row.position)>0)throw preconditionFailure('角色没有实际处于该坠落高度，需先走近高处');
   const now=d.get('state','minute'),e=Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='air'&&e.operation==='slow_fall'&&e.target===target&&e.expires>now&&e.started<=now).sort((a,b)=>b.power-a.power)[0];
   const percentage=e&&carriedKg(d,this,target)<=20?100-e.power:100,factor=percentage/100,damage=Math.floor(s.fallHeightMeters*5*percentage/100);
   if(target==='player'){
@@ -289,12 +290,12 @@ export function airEnvironmentAction(d,args,id){
   const demand=d.get('state','player','breathingExertion')?1200:600,available=bubble?.oxygenMg??0,damage=available>=demand?0:5;
   if(damage)this.health(d,{delta:-damage},id);this.advance(d,1,id);return{oxygenUsedMg:Math.min(demand,available),damage};
  }
- throw Error('风族环境操作未实现');
+ throw preconditionFailure('风族环境操作未实现');
 }
 export function prepareWindObject(d,c,args){
  const row=locate(this,d,args.target);access(d,this,row,args,c.rangeMeters);const s=state(d,row);
  if(Object.values(d.get('state','effects')??{}).some(e=>e.kind==='water_earth'&&e.medium===row.id&&e.expires>d.get('state','minute')))return{target:row.id,row,spec:c.effectSpec,catalog:c,args:{...args},windObject:true,waterMedium:true};
- if(!['cloth','leather','wood','iron','steel','stone','metal'].includes(s.material)||!Number.isSafeInteger(s.integrity)||s.integrity<=0)throw Error('风刃需要有真实材质和完整度的软物或甲材');
+ if(!['cloth','leather','wood','iron','steel','stone','metal'].includes(s.material)||!Number.isSafeInteger(s.integrity)||s.integrity<=0)throw preconditionFailure('风刃需要有真实材质和完整度的软物或甲材');
  return{target:row.id,row,spec:c.effectSpec,catalog:c,args:{...args},windObject:true};
 }
 export function applyWindObject(d,p){

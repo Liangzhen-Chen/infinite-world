@@ -18,14 +18,12 @@ async function setup(){
 const setLevel=(d,id,level,growth=0)=>d.set(['state','npcs',id,'intelligence'],{level,growth});
 const plan=(d,actions)=>({kind:'npc-plan',version:1,minute:d.get('state','minute'),stateFingerprint:npcPlanFingerprint(d.document),proposals:[{npc:actor,actions}]});
 
-test('灵智决定计划步数：守常只做一步，谋划可排三步；旧事件重放仍按两步',async()=>{
+test('灵智决定计划步数：守常只做一步，谋划可排三步',async()=>{
  const {engine,d}=await setup(),pegs={kind:'craft',recipe:'recipe_wooden_pegs'};
  setLevel(d,actor,1);let out=applyNpcPlan(d,engine,plan(d,[pegs,pegs]),'p1');
  assert.match(out.results[1].reason,/灵智/);assert.doesNotMatch(out.results[0].reason??'',/灵智/);
  const s=await setup();setLevel(s.d,actor,3);out=applyNpcPlan(s.d,s.engine,plan(s.d,[pegs,pegs,pegs]),'p3');
  assert.equal(out.results.length,3);assert.ok(out.results.every(r=>!/灵智/.test(r.reason??'')));
- const r=await setup();setLevel(r.d,actor,3);const replay=Object.assign(Object.create(r.engine),{replaying:true,replayResult:{}});
- assert.throws(()=>applyNpcPlan(r.d,replay,plan(r.d,[pegs,pegs,pegs]),'old'),/单人行动超限/);
 });
 
 test('灵智决定打破惯例与看多远：觉悟者能在非生产时段做工，智能层只给视野内目标',async()=>{
@@ -72,8 +70,6 @@ test('教导、共同经历与重大事件使人成长，跨门槛后场景卡�
  assert.ok(d.get('state','npcs',actor,'developments').some(r=>r.type==='灵智'&&r.source==='t1'));
  const card=engine.scene(d.document,'阿砚');
  assert.match(card,new RegExp(`近来变化：${intelligenceSign(d.get('state'),actor)}`));assert.doesNotMatch(card,/灵智|守常|谋划/);
- const replay=Object.assign(Object.create(engine),{replaying:true,replayResult:{}});d.set(['state','minute'],600+DAY);
- assert.equal(growIntelligence(d,replay,actor,6,'教导','old'),0,'旧事件重放不补成长');
 });
 
 test('真实教学经引擎记成长；玩家同一手法屡次得手后对手起防备',async()=>{
@@ -83,7 +79,7 @@ test('真实教学经引擎记成长；玩家同一手法屡次得手后对手�
  Object.assign(doc.state.npcs[actor],{location:mill,activity:'做木工',status:'正常',skills:{skill_life_6_core:120}});
  doc.state.professions.life=['profession_life_6'];doc.state.skills.skill_life_6_core={proficiency:900,grade:'中级1等',breakthroughs:[],daily:{}};
  const out=await engine.reduce(doc,{tool:'world_learn',args:{entity:'skill_life_6_core',source:'player',student:actor},eventId:'teach1'});
- assert.equal(out.result.npcIntelligenceVersion,1);doc=applyPatches(doc,out.patches);
+ doc=applyPatches(doc,out.patches);
  assert.ok(doc.state.npcs[actor].intelligence.growth>=6);assert.ok(doc.state.npcs[actor].intelligence.sources.some(s=>s.source==='教导'&&s.event==='teach1'));
 
  const d=draft(doc),key=trickKey('魅力',null);setLevel(d,other,1);setLevel(d,actor,2);

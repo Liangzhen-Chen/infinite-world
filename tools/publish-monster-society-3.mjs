@@ -31,6 +31,9 @@ export function withoutMonsterSociety3(world,batch=buildBatch()){
  // Later rows that name this batch's rows (T105 social bosses on its sites, faction clocks' hooks)
  // did not exist before it either. T142's far lore is a separate later batch: see withoutT142.
  const gone=new Set(ids),names=row=>[...JSON.stringify(row).matchAll(/"([a-z]+_[a-z0-9_]+)"/g)].some(m=>m[1]!==row.id&&gone.has(m[1]));
+ // A3-内容1：历史视图中组织与聚落均已移除，其公库来源也随批次移除（同 T157/T159）。
+ const sources=next.rules?.questSources;
+ if(sources?.funds)sources.funds=Object.fromEntries(Object.entries(sources.funds).filter(([place,faction])=>!gone.has(place)&&!gone.has(faction)));
  next.bosses=(next.bosses??[]).filter(r=>!names(r));
  // K6 effect-table hooks on a dropped faction's clock, or naming dropped rows, go with them.
  const table=next.rules?.effectTable,lostClocks=new Set((world.factions??[]).filter(f=>f.clock&&gone.has(f.id)).map(f=>f.clock.id));

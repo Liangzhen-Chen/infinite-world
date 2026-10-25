@@ -1,8 +1,8 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Completion evidence for a named individual; callers write after state changes.
-export const villageWildlifeFresh=engine=>!engine.replaying||engine.replayResult?.villageWildlifeVersion===1;
+
 export function recordCreatureResolution(d,engine,{target,outcome,eventId,location}){
- if(!engine.rules.questSources?.wildlife?.length||!villageWildlifeFresh(engine))return null;
+ if(!engine.rules.questSources?.wildlife?.length)return null;
  const id=`creature_resolution:${eventId}:${target}`;
  if(!d.get('state','records',id))d.set(['state','records',id],{category:'creature_resolution',subject:target,outcome,actor:'player',location,minute:d.get('state','minute'),sourceEvent:eventId});
  return id;

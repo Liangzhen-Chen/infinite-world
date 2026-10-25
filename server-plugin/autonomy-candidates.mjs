@@ -1,3 +1,4 @@
+import {preconditionFailure} from './precondition.mjs';
 // L1 extension point. Pack predicates and scores receive the four-domain view.
 import {npcDecision} from './npc-decision.mjs';
 import {subjectiveFact} from './subjective-view.mjs';
@@ -28,7 +29,7 @@ export function scheduleNpcAutonomy(d,{npc,action,slots={},via,need='need:curios
 export function candidateAction(engine,c){
  if(c.legacy)return structuredClone(c.legacy);
  const a=findAction(engine.actionRegistry??loadActionRegistry(),c.action);
- if(!a?.autonomy)throw Error('这个注册动作尚无 NPC 执行适配');
+ if(!a?.autonomy)throw preconditionFailure('这个注册动作尚无 NPC 执行适配');
  const slots={...c.slots,...a.call?.fixed??{}};
  return Object.fromEntries(Object.entries(a.autonomy).map(([k,v])=>[k,typeof v==='string'&&v.startsWith('$')?slots[v.slice(1)]:v]));
 }

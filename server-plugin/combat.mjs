@@ -1,4 +1,64 @@
+import {pruneRecords} from './record-cleanup.mjs';
+import {vocabulary} from './domain-rules.mjs';
 import {createHash}from'node:crypto';
+import {declareHoldingWriter,holdingSet,isPhysicallyDead} from './holdings.mjs';
+import {recordsWhere} from './storage.mjs';
+import {worldEvent} from './world-events.mjs';
+import {combatActor,combatLocation,activeEncounters} from './combat-state.mjs';
+export {activeEncounters} from './combat-state.mjs';
+declareHoldingWriter('combat-state');
+export function initializeEncounter(d,e,row,context){
+ const s=d.get('state');
+ if(context?.origin!=='initial'||!context.eventId||typeof row.id!=='string'||!row.id||s.records?.[`combat_encounter:${row.id}`]||row.active!==true||typeof row.playerActedThisRound!=='boolean'||!Array.isArray(row.participants)||row.participants.length<2||new Set(row.participants).size!==row.participants.length||!row.participants.includes('player')||row.participants.some(id=>!combatActor(s,id)||isPhysicallyDead(e,s,id)||combatLocation(s,id)!==s.location)||activeEncounters(e,s).some(r=>r.participants.some(id=>row.participants.includes(id))))throw Error('Invalid initial encounter or participants');
+ // Importing an encounter never attacks or creates hostility.
+ const sources=row.participants.filter(id=>id!=='player').map(id=>recordsWhere(s.records,'category','world_event').find(r=>r.verb==='hostile_encounter'&&r.minute<=s.minute&&((r.actor===id&&(r.target??r.payload?.target)==='player')||(r.actor==='player'&&(r.target??r.payload?.target)===id))));
+ if(sources.some(r=>!r||!worldEvent(s,r.id)))throw Error('Encounter requires a native hostile event for every opponent');
+ holdingSet(d,e,['state','records',`combat_encounter:${row.id}`],{...row,category:'combat_encounter',round:1,location:s.location,sourceEvent:context.eventId,hostileEvents:sources.map(r=>r.id)},'combat-state');
+}
+export function encounterForExchange(d,e,actor,target){
+ const rows=activeEncounters(e,d.get('state'),actor).filter(r=>r.participants.includes(target));
+ if(rows.length>1)throw Error('Ambiguous active encounter');
+ const row=rows[0];
+ if(actor==='player'&&row?.playerActedThisRound)throw Error('Player already acted this round');
+ return row??null;
+}
+export function settleEncounterExchange(d,e,encounter,{actor,target,intent,escaped,eventId,ended=false,exchange={}}){
+ const s=d.get('state'),id=encounter?.id??`exchange:${eventId}`,participants=encounter?.participants??[actor,target];
+ const active=!ended&&!escaped&&participants.every(id=>!isPhysicallyDead(e,s,id)&&combatLocation(s,id)===s.location);
+ // A legacy exchange includes the opponent's response. Preserve the spent
+ // round and open the next one, rather than locking out every later exchange.
+ const round=encounter?.round??1;
+ const row={...encounter,id,category:'combat_encounter',participants,location:encounter?.location??exchange.origin??s.location,active,round:active?round+1:round,playerActedThisRound:!active&&actor==='player',lastRound:{round,actor,intent,playerActed:actor==='player',sourceEvent:eventId,...exchange},sourceEvent:encounter?.sourceEvent??eventId};
+  holdingSet(d,e,['state','records',`combat_encounter:${id}`],row,'combat-state');
+ // Finished encounters are history: keep only the latest few.
+ pruneRecords(d,'combat_encounter',{exempt:r=>r.active,max:32});
+ return {id,active,round:row.round,playerActedThisRound:row.playerActedThisRound};
+}
+// A descriptive retreat names a known path, never an arbitrary map node.
+// Every edge (including a multi-edge known path) is traversed by normal travel.
+export function combatEscapeDestination(d,e,requested){
+ const s=d.get('state'),visible=row=>row&&(row.minute??row.updated??0)<=s.minute&&(!row.private||(row.permittedRecipients??row.knownBy??[]).includes('player'))&&(!row.permittedRecipients||row.permittedRecipients.includes('player'));
+ const known=new Set(Object.keys(s.discoveries??{}).filter(id=>visible(s.discoveries[id])));
+ const paths=new Set();
+ for(const memory of Object.values(d.document.memories??{}))if(memory.source==='known_path'&&visible(memory))paths.add(memory.subject);
+ const adjacent=[...new Set(e.world.routes.filter(r=>r.from===s.location||r.to===s.location).map(r=>r.from===s.location?r.to:r.from))];
+ let exact;try{exact=e.resolve(requested);}catch{}
+ // move.to is a place or a bearing (06 §6.3). A place the catalogue names is
+ // that place; a bearing term from the world vocabulary leaves the choice to
+ // the known paths; anything else is not a destination.
+ if(!exact){
+  const named=[...e.resolver.mentions(String(requested??''))].filter(id=>e.world.locations.some(l=>l.id===id));
+  const bearing=vocabulary(e,'relativeBearings','terms')?.some(t=>String(requested??'').toLowerCase().includes(t.toLowerCase()));
+  if(named.length>1||!named.length&&!bearing)throw Error('Unknown escape destination');
+  if(named.length)exact=named[0];
+ }
+ const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
+ const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
+  try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
+ });
+ if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
+ return candidates[0];
+}
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export const combatRandom=(document,eventId)=>seededRandom(createHash('sha256').update(`${document.randomSeed}:${eventId}:combat`).digest().readUInt32LE(0));
 export function derivedStats({level,attributes,profession=false,equipment={}},rules){

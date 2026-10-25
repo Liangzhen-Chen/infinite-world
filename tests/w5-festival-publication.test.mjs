@@ -13,11 +13,14 @@ import {catalogDefinition} from '../server-plugin/catalog.mjs';
 import {planWorldUpgrade,compatibleWorld} from '../server-plugin/world-upgrade.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {overlays,activeIds} from '../world/design/w5-festival-publication.mjs';
+import {minuteForCalendarDate} from '../server-plugin/weather.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const candidate=JSON.parse(await fs.readFile('world/drafts/w5/festivals-candidate.json','utf8'));
 const BATCH=overlays.map(o=>o.id);
 const mine=()=>world.festivals.filter(f=>BATCH.includes(f.id));
+// New campaigns use their archived native calendar, including short months.
+const festivalMinute=(engine,doc,f,offset=f.runtime.startMinute)=>minuteForCalendarDate(engine,{calendar:doc.state.records['calendar:active']?.calendar??'legacy:30-day',year:1,month:f.calendar.month,day:f.calendar.day,hour:Math.floor(offset/60),minute:offset%60});
 
 test('T108：本批24个节日都有正式举办地点与运行参数，正文沿用已审核候选',()=>{
  assert.deepEqual(mine().map(f=>f.id).sort(),[...BATCH].sort());
@@ -54,7 +57,7 @@ function setup(id){
 }
 const have=(doc,item)=>{const v=doc.state.inventory[item];return typeof v==='number'?v:v?.quantity??0;};
 async function hold(s,{join=true}={}){
- const due=((s.f.calendar.month-1)*30+s.f.calendar.day-1)*DAY+s.f.runtime.startMinute;
+ const due=festivalMinute(s.engine,s.doc,s.f);
  let doc=s.doc;doc.state.minute=due-120;
  doc=await s.run(doc,{operation:'festival_plan',festival:s.f.id,cost:0},'plan');const id=`festival:${s.f.id}:1`;
  for(const who of [s.host,'player'])doc=await s.run(doc,{operation:'festival_authorize',festival:id,speaker:who,consent:true},`auth-${who}`);
@@ -97,7 +100,7 @@ test('T108：借用与交换的材料须到场出示但不被用掉；等候主�
  const e2=new WorldEngine(w),d0=e2.createCharacter(seed,{},'t108-borrow');d0.state.location=f.venue.location;
  Object.assign(d0.state.npcs[host],{location:f.venue.location,status:'正常',activity:'歇工'});d0.state.inventory.item_three_leg_stool={quantity:1};
  const run=async(document,args,eventId,tool='world_settlement')=>applyPatches(document,(await e2.reduce(document,{tool,args,eventId})).patches);
- let d=d0;d.state.minute=((f.calendar.month-1)*30+f.calendar.day-1)*DAY+f.runtime.startMinute-120;
+ let d=d0;d.state.minute=festivalMinute(e2,d0,f)-120;
  d=await run(d,{operation:'festival_plan',festival:f.id},'plan');const id=`festival:${f.id}:1`;
  for(const who of [host,'player'])d=await run(d,{operation:'festival_authorize',festival:id,speaker:who,consent:true},`a-${who}`);
  d=await run(d,{operation:'festival_join',festival:id,speaker:'player',consent:true},'j');d.state.npcs[host].location=f.venue.location;
@@ -125,7 +128,7 @@ test('W5：季澄按现职在借凳节工作时段到归途殿，平日、改业
 test('W5：保持真实作息，从家出发到场主持借凳节，授权、归还与重放均保留',async()=>{
  const engine=new WorldEngine(world),f=world.festivals.find(f=>f.id==='festival_borrowbench'),host=f.runtime.host;
  let doc=engine.createCharacter(seed,{},'w5-natural-host');doc.state.location=f.venue.location;
- doc.state.minute=((f.calendar.month-1)*30+f.calendar.day-1)*DAY+420;doc.state.inventory.item_three_leg_stool={quantity:1};
+ doc.state.minute=festivalMinute(engine,doc,f,420);doc.state.inventory.item_three_leg_stool={quantity:1};
  const run=async(args,eventId,tool='world_settlement')=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out;};
  await run({minutes:120},'arrive','world_time');assert.equal(doc.state.npcs[host].location,f.venue.location);
  await run({operation:'festival_plan',festival:f.id,cost:0},'plan');const id=`festival:${f.id}:1`;

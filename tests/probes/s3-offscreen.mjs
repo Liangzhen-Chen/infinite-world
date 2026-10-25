@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {setup,DAY,draft,once} from './harness.mjs';
+import {setup,DAY,draft,once,world} from './harness.mjs';
 import {advancePets} from '../../server-plugin/pets.mjs';
 import {recordEntityDeath} from '../../server-plugin/npc-life.mjs';
 
@@ -16,9 +16,28 @@ export function custodyFixture(){
 }
 export const privateFarmScenario=once(async()=>{
  const S=setup(),p=S.engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),crop=S.engine.rules.agriculture.crop;
- let doc=S.doc;doc.state.location=p.fieldLocation;
+ // Retain the participants' published shop/workshop duty for real shopping
+ // and derived recipe teaching; leave unrelated NPCs as in the original fixture.
+ for(const id of ['npc_hw_ayan','npc_hw_duanyan'])
+  S.engine.byId.get(id).schedule=structuredClone(world.npcs.find(n=>n.id===id).schedule);
+ let doc=S.doc;
  doc.state.buildings[p.fieldLocation]={...doc.state.buildings[p.fieldLocation],owner:'player',condition:100};
  doc.state.inventory.item_oats={quantity:100};
+ // Published stock includes a soil_work pick, but no ready-made sickle.
+ // Buy from the actual owners, then learn and forge the harvest tool: every
+ // attempt applies its real fees, time, material consumption and tool wear.
+ doc=(await S.run(doc,'world_move',{destination:'bld_hw_mill'},'private-tools-mill')).document;
+ doc=(await S.run(doc,'world_trade',{seller:'npc_hw_ayan',item:'item_wood',quantity:6},'private-tools-wood')).document;
+ doc=(await S.run(doc,'world_move',{destination:'bld_hw_forge'},'private-tools-forge')).document;
+ for(const [item,quantity]of [['item_mining_pick',1],['item_smith_hammer',1],['item_smith_tongs',1],['item_iron_scrap',6],['item_charcoal',6]])
+  doc=(await S.run(doc,'world_trade',{seller:'npc_hw_duanyan',item,quantity},`private-tools-buy:${item}`)).document;
+ for(let attempt=0;!doc.state.recipes.recipe_sickle&&attempt<6;attempt++)
+  doc=(await S.run(doc,'world_learn',{entity:'recipe_sickle',source:'npc_hw_duanyan'},`private-tools-learn:${attempt}`)).document;
+ assert.ok(doc.state.recipes.recipe_sickle,'真实学习取得铁镰配方');
+ for(let attempt=0;!doc.state.inventory.item_sickle&&attempt<6;attempt++)
+  doc=(await S.run(doc,'world_craft',{recipe:'recipe_sickle'},`private-tools-craft:${attempt}`)).document;
+ assert.ok(doc.state.inventory.item_sickle,'真实材料与工时制成收割工具');
+ doc=(await S.run(doc,'world_move',{destination:p.fieldLocation},'private-tools-field')).document;
  if(doc.state.minute<crop.sowDays[0]*DAY)doc=await S.wait(doc,crop.sowDays[0]-doc.state.minute/DAY,'spring-private');
  const before=doc.state.inventory.item_oats.quantity;
  doc=(await S.run(doc,'world_farm',{operation:'private_sow',quantity:10},'private-sow')).document;

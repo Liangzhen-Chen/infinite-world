@@ -1,4 +1,14 @@
 // Domain lookup failures can be corrected; transport and storage failures propagate.
+export function actionModes(value={}){
+ return {intent:['off','match','propose'].includes(value.intent)?value.intent:'propose',
+  narration:['off','async','sync'].includes(value.narration)?value.narration:'sync'};
+}
+export function modelToolAllowed(name,settings={}){
+ const {intent}=actionModes(settings);
+ const reads=['world_read','world_search','world_catalog','world_actions'];
+ return intent==='propose'||reads.includes(name)||intent==='match'&&name==='world_act';
+}
+
 export async function lookupToolResult(action){
     try{return await action();}
     catch(error){
@@ -26,8 +36,48 @@ export function parseTurn(reply,{location,startMinute,minute=startMinute,present
     return{valid:warnings.length===0,warning:warnings.join('；')||null,args:{startMinute,extraMinutes,location,present:actual},visible};
 }
 export function toolResultWithClock(result,{startMinute,minute}={}){
+    if(result?.receipt)result={...result,narrationContract:actionNarrationContract(result)};
     if(!Number.isSafeInteger(startMinute)||!Number.isSafeInteger(minute)||minute<startMinute)return result;
     return{...result,turnClock:{startMinute,minute,elapsedMinutes:minute-startMinute}};
+}
+
+// Model-only wire projection. Saved receipts stay intact. JSON Pointer refs
+// replace exact duplicates, so the evidence still has one complete copy of
+// every value (including consent provenance and failed checks).
+export function modelContextProjection(value){
+ const seen=new Map();
+ const visit=(row,path)=>{
+  if(!row||typeof row!=='object')return row;
+  const text=JSON.stringify(row),prior=seen.get(text);
+  if(text.length>=64){
+   if(prior&&JSON.stringify({$ref:prior}).length<text.length)return {$ref:prior};
+   seen.set(text,path);
+  }
+  return Array.isArray(row)?row.map((entry,index)=>visit(entry,`${path}/${index}`)):
+   Object.fromEntries(Object.entries(row).map(([key,entry])=>[key,visit(entry,`${path}/${key.replaceAll('~','~0').replaceAll('/','~1')}`)]));
+ };
+ return visit(value,'#');
+}
+export function modelToolResult(result){return result?.receipt?modelContextProjection(result):result;}
+
+export function actionCompletion(saved){
+ const result=saved?.result??saved,receipt=result?.receipt;
+ if(receipt?.status==='pending')return {ok:false,pending:true,error:'行动仍在等待裁决，尚未完成'};
+ if(receipt&&receipt.status!=='committed')return {ok:false,error:receipt.reason??(receipt.status==='preview'?'预览尚未执行':'行动未完成')};
+ return {ok:result?.ok!==false};
+}
+
+// This is a projection of a native receipt, never a proposal or executable plan.
+// In particular, pending/preview effects must not become accomplished facts.
+export function actionNarrationContract(result){
+ const receipt=result?.receipt??result?.result?.receipt;
+ if(!receipt)return null;
+ const settled=receipt.status==='committed',applied=settled?receipt.applied??[]:[];
+ return structuredClone({eventId:receipt.eventId,status:receipt.status,routed:receipt.routed??null,
+  applied,must:settled?receipt.narrate?.must??[]:[],mustNot:receipt.narrate?.mustNot??[],
+  check:receipt.check??null,trimmed:receipt.trimmed??[],consequences:settled?receipt.consequences??[]:[],
+  alternatives:receipt.alternatives??[],fallback:receipt.fallback??null,reason:receipt.reason??null,
+  instruction:settled?'只叙述实际 applied；must 必须保留，mustNot 不得写成发生。检定失败与裁剪不能补写成功。':'尚未完成：不得把提案、预览或等待裁决写成成功，不得补写物品、资金、移动或承诺。'});
 }
 
 // Speech generated after a wait does not itself authorize more elapsed time.
