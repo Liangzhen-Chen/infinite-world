@@ -2,7 +2,7 @@ import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
-import {recordsWhere,digest,persistable,cloneData} from './storage.mjs';
+import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
@@ -65,8 +65,9 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
  const day=Math.floor(minute/1440)*1440,appointments=serviceAppointments(state,id).filter(r=>r.start<day+1440&&day<r.end);
  // Reception belongs to the current office, not the frozen biography. Keep
  // sleep, meals and rest days, and let an explicit personal booking take priority.
- const calendar=engine.calendar(minute),variant=calendar.market?'market':base?.restDays?.includes(calendar.day)?'rest':'default';
  const receptions=(constraints??personConstraints(engine,state)).examinerReceptions.get(id)??[];
+ if(!appointments.length&&!receptions.length)return base;
+ const calendar=engine.calendar(minute),variant=calendar.market?'market':base?.restDays?.includes(calendar.day)?'rest':'default';
  if(receptions.length&&variant!=='rest'&&isEffective(engine,state,id))for(const office of receptions){
    if(!isEffective(engine,state,office.organization)||!office.authority?.operations?.includes('certify'))continue;
    const role=engine.byId.get(office.authority.profession),actor=state.npcs?.[id],person=engine.byId.get(id);
@@ -79,6 +80,13 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
    }
  }
  if(!appointments.length)return base;
+ // Reception overlays used to rebuild every seasonal variant at every slot
+ // read. Re-evaluate the live offices/appointments above, then share only the
+ // pure overlay while its base, day and effective windows still match.
+ const cache=engine.scheduleReadCache,location=state.npcs[id]?.location;
+ const overlays=cache&&base?(cache.routines??=new WeakMap()):null;
+ const prior=overlays?.get(base);
+ if(prior&&prior.day===day&&prior.location===location&&canonicalEqual(prior.appointments,appointments))return prior.schedule;
  const overlay=slots=>{
   let result=slots??[{start:0,end:1440,location:state.npcs[id]?.location,activity:'日常起居',services:[]}];
   for(const row of appointments){const start=Math.max(0,row.start-day),end=Math.min(1440,row.end-day);
@@ -92,6 +100,7 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
  const schedule={...base,default:overlay(base?.default)};
  for(const key of ['market','rest'])if(base?.[key])schedule[key]=overlay(base[key]);
  if(base?.seasonal)schedule.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,value])=>[key,Object.fromEntries(Object.entries(value).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
+ overlays?.set(base,{day,location,appointments,schedule});
  return schedule;
 }
 function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){

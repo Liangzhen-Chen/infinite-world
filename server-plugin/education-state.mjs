@@ -74,9 +74,9 @@ export function settleDemonstrations(d,e){
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
-const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary'];
+const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge'];
 const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['promise','delivery',undefined].flatMap(kind=>recordsWhere(s.obligations,'kind',kind)).filter(r=>r.reservationVersion===1));
-// Physical state, study/pay progress and event receipts are not inputs to
+// Physical state, study/pay progress, perception evidence and event receipts are not inputs to
 // course/routine derivation. Completed learning changes the actor's skills or
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){

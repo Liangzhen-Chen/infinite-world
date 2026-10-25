@@ -35,7 +35,9 @@ export function withScheduleCache(engine,d,task){
     }
 }
 registerAdvanceHook('withScheduleCache',withScheduleCache);
-const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
+// Perception writes evidence rows; actual learning still changes NPC skills or
+// recipes, and bookings, employment, custody and transitions remain inputs.
+const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
 const ignoredNpcScheduleFields=new Set(['memoryStream','developments','growth','cognition','coins','trust','affection']);
 export function sameNpcScheduleInputs(a,b){
     if(a===b)return true;if(!a||!b)return false;

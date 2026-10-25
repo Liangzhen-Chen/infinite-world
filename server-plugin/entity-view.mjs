@@ -314,7 +314,7 @@ export function personSimulation(engine,state,id){
 // never retained on engine/state, so later legal writes are read immediately.
 export function personConstraints(engine,state){
     // Only categories this projection reads invalidate its derived constraints.
-    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary']);
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
 }
 function buildPersonConstraints(engine,state){
     const out=new Map();
