@@ -51,7 +51,7 @@ import {registerResearchSpell}from'./spell-research.mjs';
 import {hiddenCombat}from'./hidden-passives.mjs';
 import {educationAction} from './education.mjs';
 import {medicineAction} from './medicine.mjs';
-import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
+import {fish,eatFish,releaseFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -63,7 +63,7 @@ export const activities={
     settleOrganizationDuel(d,duel,winner,eventId){return settleOrganizationDuel(d,this,duel,winner,eventId);},
     site(d,args,id){return args.operation==='woodcut'?woodcut.call(this,d,args,id):args.operation==='mine'?mine.call(this,d,args,id):siteAction.call(this,d,args,id);},
     lair(d,args,id){return lairAction.call(this,d,args,id);},
-    wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
+    wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='release'?releaseFish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
     farm(d,args,id){
         const old=donationReceipt(d,this,args,id);if(old)return old;
         const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};

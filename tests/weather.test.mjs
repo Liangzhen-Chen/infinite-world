@@ -83,13 +83,16 @@ test('季节与天气改变真实粮食入库，长等待与分日结算守恒',
     const run=async(doc,tool,args,eventId)=>({document:applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId},{replay:true})).patches)});
     const long=(await run(c,'world_time',{minutes:20*1440},'long')).document;let split=c;
     // The daily legacy food rule multiplies cropProduction by hazard, magic and RW-04 basin-water factors.
-    let expected=c.state.settlements.loc_hw.food;
+    let expected=c.state.settlements.loc_hw.food,accrued=0,issued=0;
     for(let day=0;day<20;day++){
         split=(await run(split,'world_time',{minutes:1440},`day_${day}`)).document;
-        const production=Math.floor(cropProduction(engine,c.randomSeed,'loc_hw',day*1440,c.state.settlements.loc_hw.foodPerDay)
+        // D05 §5.5 / S5-05 W1: sum physical production, then floor its cumulative
+        // amount. Keep the full coefficient chain and the conservation assertion.
+        accrued+=cropProduction(engine,c.randomSeed,'loc_hw',day*1440,c.state.settlements.loc_hw.foodPerDay)
             *hazardYieldFactor(split.state,'loc_hw',day*1440+720)
             *magicYieldFactor(split.state,'loc_hw',day*1440+720)
-            *farmWaterFactor(engine,split.state,'loc_hw',day));
+            *farmWaterFactor(engine,split.state,'loc_hw',day);
+        const production=Math.floor(accrued)-issued;issued+=production;
         expected+=production-c.state.settlements.loc_hw.population;
     }
     assert.deepEqual(long.state.settlements,split.state.settlements);

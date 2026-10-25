@@ -124,7 +124,8 @@ async function farm(t,replacement){
  const sowTool=replacement?'item_staff':'item_hoe',harvestTool=replacement?'item_kitchen_knife':'item_sickle';
  const ui=await uiSession(t,{world,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8),s=>{
   s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};
-  s.inventory.item_oats=stack(20);s.inventory[sowTool]=tool();s.inventory[harvestTool]=tool();
+  // D05 5.5 / S505C approved binding: wheat uses item_wheat_seed, yielding item_wheat_grain.
+ s.inventory.item_wheat_seed=stack(20);s.inventory[sowTool]=tool();s.inventory[harvestTool]=tool();
  })});
  const before=await primed(ui),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'domain-sow'});
  assert.ok(sow.ok,sow.error);const sown=await ui.read();
@@ -135,8 +136,9 @@ async function farm(t,replacement){
  assert.ok(harvest.ok,harvest.error);const after=await ui.read();
  assert.equal(ripe.state.inventory[harvestTool].durability-after.state.inventory[harvestTool].durability,1);
  assert.equal(harvest.result.laborMinutes,960);conserved(ripe,after,'harvest',new WorldEngine(world));
- return {seed:held(before.state.inventory,'item_oats')-held(sown.state.inventory,'item_oats'),yield:harvest.result.harvested,sowTime:sown.state.minute-before.state.minute,harvestTime:after.state.minute-ripe.state.minute,
-  seedFlow:sown.ledger.flows['sink:consume|item_oats|private_sow'],harvestFlow:after.ledger.flows['src:regrowth|item_oats|private_harvest']};
+ return {seed:held(before.state.inventory,'item_wheat_seed')-held(sown.state.inventory,'item_wheat_seed'),yield:harvest.result.harvested,sowTime:sown.state.minute-before.state.minute,harvestTime:after.state.minute-ripe.state.minute,
+  // D05 §5.5: equivalent tools must transfer the same existing field stock.
+  seedFlow:sown.ledger.flows['sink:consume|item_wheat_seed|private_sow'],harvestFlow:ripe.ledger.accounts['loc_hw_fields|item_wheat_grain|crop']-after.ledger.accounts['loc_hw_fields|item_wheat_grain|crop']};
 }
 test('substitute farming tools preserve real seed/grain ledgers, work time, harvest yield and tool wear',async t=>{
  const original=await farm(t,false),substitute=await farm(t,true);assert.deepEqual(substitute,original);

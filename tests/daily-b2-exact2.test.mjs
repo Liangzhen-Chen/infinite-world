@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readBodyNeed} from '../server-plugin/primitives-body.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
 import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,baseWorld,SEED,DAY,replayed} from './helpers/daily-b2.mjs';
@@ -34,18 +35,26 @@ test('D15 钓鱼 ①③④⑤：一个时辰钓到 3 条鲫鱼 → 背包 +3 条
  const hit=id=>{const roll=dieOf(SEED,id);return roll!==1&&(roll===20||roll>=difficulty);};
  let prefix=null;for(let k=0;k<400&&!prefix;k++){const hits=[0,1,2,3].filter(c=>hit(`d15-${k}-${c}`)).length;if(hits===3)prefix=`d15-${k}`;}
  assert.ok(prefix,'找到四竿恰中三条的事件编号');
- // D15.2 adds real bait to the original four-cast fixture; every old numerical assertion is retained.
- const ui=await uiSession(t,{mutate:scene(DOCK,start,s=>{s.inventory.item_kitchen_knife=tool('铁');s.inventory.item_water=stack(6,{weight:0.5});s.inventory.item_fishing_bait=stack(10);})});
+ // D05 §5.5 / 已审 S505 绑定：竹竿替代剖洗刀，蚯蚓替代谷粒饵，捕获物是活鱼；四竿三中仍是3条、120分钟和4次磨损。
+ const ui=await uiSession(t,{mutate:scene(DOCK,start,(s,doc)=>{
+  const loaded=applyIntentSetup(baseEngine,doc,{inventory:{item_bamboo_fishing_rod:1,item_earthworm_bait:10}});
+  assert.deepEqual(loaded.setupUnmet,[]);Object.assign(doc,loaded.document);
+ })});
  const before=await primed(ui),count=s=>s.state.records[`ecology:${HABITAT}`].populations[SPECIES].count,others=s=>Object.fromEntries(Object.entries(s.state.records[`ecology:${HABITAT}`].populations).filter(([id])=>id!==SPECIES).map(([id,p])=>[id,p.count]));
  let catches=0;for(let c=0;c<4;c++){const r=await ui.choose('wildlife.fish',{species:SPECIES},{eventId:`${prefix}-${c}`});assert.ok(r.ok,r.error);if(r.result.success)catches++;}
  const after=await ui.read();
- assert.equal(catches,3);assert.equal(held(after.state.inventory,'item_fish')-held(before.state.inventory,'item_fish'),3,'①背包 +3 条（不是 1 或 5）');
+ assert.equal(catches,3);assert.equal(held(after.state.inventory,'item_live_fish')-held(before.state.inventory,'item_live_fish'),3,'①背包 +3 条（不是 1 或 5）');
  assert.equal(count(before)-count(after),3,'④溪中鲫鱼存量 −3');assert.deepEqual(others(after),others(before),'⑤只钓到淡水小溪里的这个鱼种');
  assert.equal(after.state.minute-before.state.minute,2*HOUR,'③约 2 小时（四竿 × 30 分钟）');
- assert.equal(before.state.inventory.item_kitchen_knife.durability-after.state.inventory.item_kitchen_knife.durability,4,'每竿用刀一次，耐久 −1');
+ assert.equal(before.state.inventory.item_bamboo_fishing_rod.durability-after.state.inventory.item_bamboo_fishing_rod.durability,4,'每竿用竹竿一次，耐久 −1');
 });
 test('D15.2 public fishing really consumes ten bait; an eleventh cast cannot fish without bait and rolls back',async t=>{
- const ui=await uiSession(t,{mutate:scene(INN,monthDayMinute(7,2,9,0),s=>{s.player.coins=100;s.inventory.item_kitchen_knife=tool();s.inventory.item_water=stack(20);s.inventory.item_oats=stack(1);delete s.inventory.item_fishing_bait;})});
+ // S505：谷粒饵配方仍按真实材料制作10份，但正式捕鱼只消耗蚯蚓；装备与10条蚯蚓是非考查前提。
+ const ui=await uiSession(t,{mutate:scene(INN,monthDayMinute(7,2,9,0),(s,doc)=>{
+  s.player.coins=100;s.inventory.item_kitchen_knife=tool();s.inventory.item_water=stack(20);s.inventory.item_oats=stack(1);delete s.inventory.item_fishing_bait;
+  const loaded=applyIntentSetup(baseEngine,doc,{inventory:{item_bamboo_fishing_rod:1,item_earthworm_bait:10}});
+  assert.deepEqual(loaded.setupUnmet,[]);Object.assign(doc,loaded.document);
+ })});
  const opening=await primed(ui);let lesson,craft;
  for(let k=0;k<400;k++){if(dieOf(SEED,`bait-lesson-${k}`)>=16&&!lesson)lesson=`bait-lesson-${k}`;if(dieOf(SEED,`bait-craft-${k}`)===20&&!craft)craft=`bait-craft-${k}`;}
  const learned=await ui.choose('learn',{entity:'recipe_fishing_bait',source:LINSUI,kind:'recipe'},{search:true,eventId:lesson});assert.ok(learned.ok,learned.error);assert.equal(learned.result.success,true);
@@ -53,7 +62,8 @@ test('D15.2 public fishing really consumes ten bait; an eleventh cast cannot fis
  const supplied=await ui.read();assert.equal(held(supplied.state.inventory,'item_fishing_bait'),10);assert.equal(held(supplied.state.inventory,'item_oats'),0);assert.equal(supplied.ledger.flows['src:craft|item_fishing_bait|craft'],10);assert.equal(supplied.ledger.flows['sink:consume|item_oats|craft'],1);conserved(opening,supplied,'D15 bait preparation');
  const walk=await ui.choose('move',{destination:'loc_hw_dock'});assert.ok(walk.ok,walk.error);
  const before=await ui.read();for(let i=0;i<10;i++){const r=await ui.choose('wildlife.fish',{},{eventId:`d15-bait-${i}`});assert.ok(r.ok,r.error);}
- const after=await ui.read();assert.equal(held(before.state.inventory,'item_fishing_bait'),10);assert.equal(held(after.state.inventory,'item_fishing_bait'),0);assert.equal(after.ledger.flows['sink:consume|item_fishing_bait|fishing_bait'],10);assert.equal(after.state.minute-before.state.minute,300);conserved(before,after,'D15 bait');
+ // 10竿 × 1蚯蚓=10，10×30分钟=300；谷粒饵10份不被冒充为钓饵消耗。
+ const after=await ui.read();assert.equal(held(before.state.inventory,'item_earthworm_bait'),10);assert.equal(held(after.state.inventory,'item_earthworm_bait'),0);assert.equal(held(after.state.inventory,'item_fishing_bait'),10);assert.equal(after.ledger.flows['sink:consume|item_earthworm_bait|fishing_bait'],10);assert.equal(after.state.minute-before.state.minute,300);conserved(before,after,'D15 bait');
  const bad=await ui.choose('wildlife.fish',{});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),after);
  await replayed(ui,after);
  const retry=await ui.choose('wildlife.fish',{},{eventId:'d15-bait-9'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);

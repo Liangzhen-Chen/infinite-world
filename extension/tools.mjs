@@ -7,7 +7,7 @@ define('world_move','沿路移动/同行路费',{destination:str,mode:{type:'str
 define('world_time','时长/钟点等待二选一',{minutes:{...int,description:'完整分，不抵已耗时'},until:object({dayOffset:{...int,description:'今天0、明天1'},hour:{...int,minimum:0,maximum:23},minute:{...int,minimum:0,maximum:59}},['dayOffset','hour']),activity:{type:'string',enum:['等待','工作','睡眠','休息']}},[]);
 define('world_weather','查当地天气、温度及日出日落。',{operation:{enum:['inspect']},location:str},[]);
 define('world_farm','农田粮仓；按粮约提送、税贸结算。',{operation:{enum:['inspect','buy','donate','reserve_seed','repair','sow','harvest','guard','adopt','settle_trade']},settlement:str,quantity:int,contract:str,phase:{enum:['pickup','deliver']},authority:str},[]);
-define('world_wildlife','观察、追踪动物，真实尸体取材；喂灵物、凭仪式资格点化或与已立意者结缘。',{operation:{enum:['observe','track','gather','nurture','enlighten','pact','talk','follow','stay','settle','leave','borrow_form']},species:str,target:str,item:str,permit:str},[]);
+define('world_wildlife','观察追踪、放归活鱼、尸体取材；喂灵物、凭仪式资格点化或与立意者结缘。',{operation:{enum:['observe','track','gather','release','nurture','enlighten','pact','talk','follow','stay','settle','leave','borrow_form']},species:str,target:str,item:str,permit:str},[]);
 define('world_crime','尝试偷在场者一件物品/铜币。',{operation:{enum:['steal']},target:str,item:str,coins:int,instance:str},['operation','target']);
 define('world_law','办案/有权机构发放限时施法许可',{operation:{enum:['inspect','report','confess','search','arrest','hear','appeal','publish','notify','pay','labor','prison','compensate','claim','grant_magic_permit','bribe','hire_advocate']},case:str,coins:int,authority:str,location:str,subject:str,action:{enum:['mental_magic']},minutes:int,reporter:str,claimant:str,from:str,to:str,memory:{...str,description:'from持有的本案记忆ID'},channel:{enum:['conversation','carry']}},[]);
 define('world_pet','动物照料/驯练/跟随/骑乘。',{operation:{enum:['inspect','feed','contact','tame','groom','treat','train','rest','follow','stay','release','mount','dismount']},target:str,item:str,skill:str,minutes:int,authorization:str},[]);
@@ -94,9 +94,9 @@ const fieldTools=['world_weather','world_farm','world_wildlife','world_environme
 const companionTools=['world_pet','world_summon'];
 const field=group('world_field','粮仓farm_buy燕麦；农事/环境/采集及天气动物巢穴',fieldTools);
 field.function.parameters.properties.operation.description='先move；许可promise';
-field.function.parameters.properties.settlement={...str,description:'粮仓名/ID；柜台管理员本人清醒在场'};
+field.function.parameters.properties.settlement={...str,description:'粮仓名/ID；管理员清醒在场'};
 field.function.parameters.properties.item={...str,description:'farm_buy仅燕麦；mine矿石'};
-field.function.parameters.properties.quantity={...int,description:'买粮0.5公斤/份；采集份数'};
+field.function.parameters.properties.quantity={...int,description:'粮0.5kg/份；采集份数'};
 const companion=group('world_companion','照料驯骑；召唤契约/搬水/限额守卫',companionTools);
 const law=structuredClone(definitions.find(row=>row.function.name==='world_law'));
 law.function.description='法典声望/在场偷窃；在场authority办案/公示携信';

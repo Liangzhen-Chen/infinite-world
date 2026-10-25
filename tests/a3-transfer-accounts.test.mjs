@@ -99,7 +99,9 @@ test('A3 accounts: faction stock donations use shared assets and retain a single
 });
 test('A3 accounts: managed granary and remote recipient reject atomically with specific reasons',()=>{
  const {engine,document,npc,frame}=fixture(),sid=Object.keys(document.state.settlements)[0];
- document.state.records[`agriculture:${sid}`]={category:'agriculture',mode:'managed',batches:[]};
+ // D05 5.5: a field producer includes its real crop inventory/cohorts. Use
+ // the native new-character granary, retaining the batch-protocol rejection.
+ assert.equal(document.state.records[`agriculture:${sid}`].mode,'managed');
  document.holdings.locations[sid]={at:document.state.location,mode:'place',since:document.state.minute};
  document.state.inventory.item_oats={quantity:5};document.ledger=openLedger(engine,document);
  // Keep a real existing destination account so the batch protocol is the reason.

@@ -15,10 +15,11 @@ test.todo('D10 打工日结 ⑤李员外的地里“已锄”进度增加——�
 test.todo('D11 月结工钱 ①–⑤——引擎只有按工时日结的受雇（labor-market），没有月薪雇佣：缺 wage 义务 per: anchor（每月初一）与 accruedTo 闭式（附录 A §A.15 期间与折算：八月满勤 → 600，钱柜 2000→1400，同一个月不领两次）、雇佣关系 settle 后继续有效（S3 义务统一）');
 
 // ---- D12 春播、D13 秋收、D14 采草药（农事与采集，S1 / S5）----
-async function privateField(t,tools=true){
+// D05 5.5 / S505C approved binding: wheat uses item_wheat_seed, yielding item_wheat_grain.
+ async function privateField(t,tools=true){
  const world=variant(w=>{delete w.rules.weather;w.rules.agriculture.crop.growthDays=2;w.rules.agriculture.crop.sowDays=[0,359];w.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').farmWorkers=0;});
  const ui=await uiSession(t,{world,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{
-  s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};s.inventory.item_oats=stack(20);if(tools){s.inventory.item_hoe=tool();s.inventory.item_sickle=tool();}
+  s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};s.inventory.item_wheat_seed=stack(20);if(tools){s.inventory.item_hoe=tool();s.inventory.item_sickle=tool();}
  })});return {ui,world};
 }
 test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wear a real hoe; missing/broken tools roll back',async t=>{
@@ -26,8 +27,8 @@ test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wea
  const omitted=await ui.choose('farm.private_sow',{quantity:2},{search:true});assert.equal(omitted.ok,false);assert.deepEqual(await ui.read(),before);
  const sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d12-sow'});assert.ok(sow.ok,sow.error);const after=await ui.read(),farm=after.state.records['private-farm:loc_hw_fields'];
  assert.equal(farm.areaMu,2);assert.equal(farm.status,'growing');assert.equal(sow.result.laborMinutes,480);assert.equal(after.state.minute-before.state.minute,480);
- assert.equal(held(before.state.inventory,'item_oats')-held(after.state.inventory,'item_oats'),4);assert.equal(farm.seed,4);
- assert.equal(before.state.inventory.item_hoe.durability-after.state.inventory.item_hoe.durability,1);assert.equal(after.ledger.flows['sink:consume|item_oats|private_sow']-(before.ledger?.flows['sink:consume|item_oats|private_sow']??0),4);conserved(before,after,'D12',new WorldEngine(world));
+ assert.equal(held(before.state.inventory,'item_wheat_seed')-held(after.state.inventory,'item_wheat_seed'),4);assert.equal(farm.seed,4);
+ assert.equal(before.state.inventory.item_hoe.durability-after.state.inventory.item_hoe.durability,1);assert.equal(after.ledger.flows['sink:consume|item_wheat_seed|private_sow']-(before.ledger?.flows['sink:consume|item_wheat_seed|private_sow']??0),4);conserved(before,after,'D12',new WorldEngine(world));
  const retry=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d12-sow'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);
  const duplicate=await ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(duplicate.ok,false);assert.deepEqual(await ui.read(),after);
  {
@@ -35,7 +36,7 @@ test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wea
   const b=await primed(f.ui),bad=await f.ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await f.ui.read(),b);
  }
  const badWorld=variant(w=>{delete w.rules.weather;w.rules.agriculture.crop.sowDays=[0,359];});
- const broken=await uiSession(t,{world:badWorld,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{s.buildings.loc_hw_fields={owner:'player',condition:100};s.inventory.item_oats=stack(20);s.inventory.item_hoe={...tool(),durability:0};})});
+ const broken=await uiSession(t,{world:badWorld,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{s.buildings.loc_hw_fields={owner:'player',condition:100};s.inventory.item_wheat_seed=stack(20);s.inventory.item_hoe={...tool(),durability:0};})});
  const b=await primed(broken),bad=await broken.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await broken.read(),b);
 });
 test('D13.3/.4 public harvest: 960 labor minutes over one to two days, sickle wear, real stock source and no second harvest',async t=>{
@@ -44,11 +45,14 @@ test('D13.3/.4 public harvest: 960 labor minutes over one to two days, sickle we
  const forged=await ui.choose('farm.private_harvest',{areaMu:1},{search:true});assert.equal(forged.ok,false);assert.deepEqual(await ui.read(),before);
  const r=await ui.choose('farm.private_harvest',{},{search:true,eventId:'d13-harvest'});assert.ok(r.ok,r.error);const after=await ui.read(),elapsed=after.state.minute-before.state.minute;
  assert.equal(r.result.laborMinutes,960);assert.ok(elapsed>=1440&&elapsed<=2880,`elapsed ${elapsed}`);assert.equal(elapsed,r.result.elapsed);
- assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'harvested');assert.ok(r.result.harvested>0);assert.equal(held(after.state.inventory,'item_oats')-held(before.state.inventory,'item_oats'),r.result.harvested);
+ assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'harvested');assert.ok(r.result.harvested>0);assert.equal(held(after.state.inventory,'item_wheat_grain')-held(before.state.inventory,'item_wheat_grain'),r.result.harvested);
  // yields.json declares jin/mu/season, not kg. Retain the exact original
  // two-mu band (200–600 jin), converting the native food portions explicitly.
- const jin=r.result.harvested*world.rules.agriculture.foodUnitKg/.5;assert.ok(jin>=200&&jin<=600);
- assert.equal(after.ledger.flows['src:regrowth|item_oats|private_harvest']-(before.ledger.flows['src:regrowth|item_oats|private_harvest']??0),r.result.harvested);
+ const jin=r.result.harvested*world.items.find(i=>i.id==='item_wheat_grain').weight/.5;assert.ok(jin>=200&&jin<=600);
+ // D05 §5.5: harvest transfers the mature field stock; it cannot mint grain.
+ const field='loc_hw_fields|item_wheat_grain|crop';
+ assert.equal(before.ledger.accounts[field]-after.ledger.accounts[field],r.result.harvested);
+ assert.equal(after.ledger.flows['src:regrowth|item_wheat_grain|private_crop'],before.ledger.flows['src:regrowth|item_wheat_grain|private_crop']);
  assert.equal(before.state.inventory.item_sickle.durability-after.state.inventory.item_sickle.durability,1);conserved(before,after,'D13',new WorldEngine(world));
  const bad=await ui.choose('farm.private_harvest',{},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),after);
  const again=await ui.choose('farm.private_harvest',{},{search:true,eventId:'d13-harvest'});assert.ok(again.ok,again.error);assert.deepEqual(await ui.read(),after);

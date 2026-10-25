@@ -1,3 +1,4 @@
+import {moveFishPopulation} from './stock.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {migrationPath} from './wildlife-range.mjs';
 import {forestHabitatCapacity} from './forest-water.mjs';
@@ -31,6 +32,7 @@ export function advanceSeasonalMigration(d,engine,day){
         if(t.arriveDay>now){remaining.push(t);continue;}
         const r=structuredClone(d.get(...ecology(t.to))),p=r.populations[t.species];
         if(!p)throw new Error('迁入地尚未迁移物种记录');
+        moveFishPopulation(d,engine,t.species,`migration:${t.id}`,habitats.get(t.to).location,t.count,t.id);
         p.count+=t.count;p.immigrated+=t.count;d.set(ecology(t.to),r);m.arrived+=t.count;
         for(const id of t.actors){const actor=d.get('state','creatures',id);
             // A dead traveller stays dead; no revived replacement enters the pool.
@@ -51,6 +53,7 @@ export function advanceSeasonalMigration(d,engine,day){
         const room=Math.max(0,forestHabitatCapacity(engine,d.get('state'),destination,definition)-target.count-present-reservedMigrationCapacity(d,route.to,route.species));
         const amount=Math.min(room,Math.floor((p.count+actors.length)*route.fraction));if(!amount)continue;
         const unseen=Math.min(p.count,amount),travellers=actors.slice(0,amount-unseen).map(([id])=>id),id=`${route.id}:${now}`;
+        moveFishPopulation(d,engine,route.species,home.location,`migration:${id}`,unseen,id);
         p.count-=unseen;p.emigrated+=unseen;d.set(ecology(route.from),source);
         for(const id of travellers){holdingSet(d,null,['state','creatures',id,'location'],null,'seasonal-migration');holdingSet(d,null,['state','creatures',id,'migration'],`${route.id}:${now}`,'seasonal-migration');}
         m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,actors:travellers});

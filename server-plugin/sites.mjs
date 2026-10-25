@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {assertLocationAccess} from './location-access.mjs';
@@ -12,7 +12,9 @@ import {traitsOf} from './traits.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
 import {forestView,harvestForest,forestSites}from'./forest-water.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,accrueStock,logisticStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {derived} from './derived.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('sites',{kinds:['permit']});
 // S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
@@ -193,26 +195,35 @@ function assertOccupants(d,engine,place,authorization){
 }
 
 // Time-driven changes settle from the stored anchors; nothing refreshes on revisit.
-function settle(place,row,minute){
+function settle(place,row,minute,engine,document){
     if(!place.site.changes?.length)return row;
     row.changes??={};
     for(const c of place.site.changes){
         const period=c.everyDays*DAY,mark=row.changes[c.id];
         if(mark===undefined){row.changes[c.id]=minute;continue;}
-        const n=Math.floor((minute-mark)/period);if(n<1)continue;
-        row.changes[c.id]=mark+n*period;
-        if(c.kind==='regrow'){const left=row.remaining[c.resource]??0;row.remaining[c.resource]=Math.max(left,Math.min(c.max,left+n*c.quantity));}
-        else{const m=row.mechanisms[c.mechanism];
+        if(c.kind==='regrow'){
+            if(minute<=mark)continue;
+            row.remaining[c.resource]=logisticStock(row,c.id,{reserve:row.remaining[c.resource]??0,capacity:c.max,
+                rate:derived(engine,document,'economy:yield',place.id,{base:c.quantity/(c.max*c.everyDays)}),from:mark,to:minute});
+            row.changes[c.id]=minute;
+        }else{const n=Math.floor((minute-mark)/period);if(n<1)continue;row.changes[c.id]=mark+n*period;const m=row.mechanisms[c.mechanism];
             if(m?.status==='已解除'&&minute-m.minute>=period)row.mechanisms[c.mechanism]={status:'未解除',rearmed:true,minute:m.minute+period,sourceEvent:m.sourceEvent};
         }
     }
     return row;
 }
-function ledger(d,place){
+function ledger(d,place,engine){
     const old=d.get('state','records',siteKey(place.id)),row=clone(old??{category:'site',site:place.id,remaining:{},mechanisms:{}});
     for(const resource of place.site.resources??[])if(!Object.hasOwn(row.remaining,resource.id))row.remaining[resource.id]=resource.quantity;
-    return settle(place,row,d.get('state','minute'));
+    return settle(place,row,d.get('state','minute'),engine,d.document);
 }
+registerAdvanceHook('advanceSiteStocks',(d,engine,minute)=>{
+ for(const old of recordsWhere(d.get('state','records'),'category','site')){
+  const place=engine.byId.get(old.site);if(!place?.site?.changes?.length)continue;
+  const row=settle(place,clone(old),minute,engine,d.document);
+  if(JSON.stringify(row)!==JSON.stringify(old))putSite(d,engine,place,row);
+ }
+});
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw preconditionFailure('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
@@ -228,7 +239,7 @@ export function assertSiteHarvest(d,engine,place,args){
  // 06 §6.3 existence-and-presence: an action needs the actor at the target's node, which woodcut
  // already requires. A separate site-menu visit is not part of that rule; property, occupants and
  // every entrance mechanism still gate harvesting here and after elapsed time.
- unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+ unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
 }
 function watchers(d,engine,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
@@ -241,13 +252,13 @@ function infiltrate(d,engine,place,eventId){
     if(!plan)throw preconditionFailure('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
-    unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+    unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
     engine.advance(d,plan.minutes,eventId);
     if(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常')return{entered:false,note:'潜入途中失去行动能力或离开此地'};
     const watcher=watchers(d,engine,place)[0],{difficulty,...rest}=plan.check;
     const check=engine.check(d,watcher?{...rest,opponent:{npc:watcher,attribute:'精神'}}:plan.check,eventId);
     if(check.success){
-        putSite(d,engine,place,ledger(d,place),{eventId});
+        putSite(d,engine,place,ledger(d,place,engine),{eventId});
         holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         infiltrationSucceeded(d,engine,place,eventId);
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
@@ -269,7 +280,7 @@ function infiltrate(d,engine,place,eventId){
 
 export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
-    const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute):stored,entered=document.state.records?.site_presence?.site===place.id;
+    const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute,engine,document):stored,entered=document.state.records?.site_presence?.site===place.id;
     const view={site:place.id,name:place.name,owner:ownerOf(place),entered,occupants:(place.site.occupants??[]).filter(id=>{
         const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(engine,document,id,actor);
     }),mechanisms:(place.site.mechanisms??[]).filter(m=>entered||(place.site.entryMechanisms??[]).includes(m.id)).map(m=>({id:m.id,name:m.name,description:m.description??'',status:row?.mechanisms[m.id]?.status??'未解除'}))};
@@ -303,9 +314,14 @@ export function siteAction(d,args,eventId){
         if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw preconditionFailure('据点物权要求所有者的有效许可');
         assertOccupants(d,this,place,authorizations);
     };
-    const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();};
+    const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();
+        // The clock may have regenerated this opened site during the work.
+        // Keep the effort just accumulated by this action, refresh physical stock.
+        const fresh=ledger(d,place,this);row.remaining=fresh.remaining;
+        if(fresh.changes)row.changes=fresh.changes;if(fresh.growthAnchors)row.growthAnchors=fresh.growthAnchors;
+    };
     assertAccess();
-    const row=ledger(d,place);
+    const row=ledger(d,place,this);
     if(operation==='enter'){
         unblocked(row,s.entryMechanisms??[]);
         putSite(d,this,place,row,{eventId});
@@ -363,11 +379,11 @@ export function siteAction(d,args,eventId){
             const yields=(this.world.primitiveTables?.yields??this.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
             const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
             if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
-            quantity=Math.min(row.remaining[target.id],Math.floor(yields*minutes/day));
-            if(quantity<1)throw preconditionFailure('资源存量或本次工时不足以采得一株');
+            if(row.remaining[target.id]<1)throw preconditionFailure('资源存量不足');
+            quantity=Math.min(row.remaining[target.id],accrueStock(row,`gather:${target.id}`,derived(this,d.document,'economy:yield',place.id,{holder:'player',base:yields}),minutes,day));
             assertActionTime(d,this,minutes);
         }
-        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw preconditionFailure('采集数量须为正整数');
+        if(!Number.isSafeInteger(quantity)||quantity<(timed?0:1)||quantity>100000)throw preconditionFailure('采集数量须为正整数；计时劳动可累计不足一份的产量');
         if(row.remaining[target.id]<quantity)throw preconditionFailure('有限资源不足，不会因重访刷新');
         const span=timed?beginActionActivity(d,this,rule.activity):null;
         advance(minutes);

@@ -80,5 +80,6 @@
     "use": "用于采挖药草的手工药锄。",
     "description": "用于采挖药草的手工药锄。",
     "tags": ["herb_hoe","soil_work","tool"]
-  }
+  },
+  {"id":"item_live_fish","name":"活鱼","aliases":[],"quality":"木","weight":0.3,"durability":100,"basePrice":3,"scope":null,"origin":"loc_hw_dock","tags":["fish","live"],"unit":"条","shelfLifeDays":1,"use":"捕鱼所得的真实活鱼个体；个体记录保留物种和捕获栖地。存活且回到同物种栖地时可放归，也可消耗实际鱼、水和炭煮食。","description":"从实际鱼群捕获的一条活鱼。捕获后鱼群少一条，行囊多一个带来源的鱼个体；不能凭目录或重复放归增加鱼群。","inspection":"查看个体记录中的物种、捕获栖地与活体事实；已消耗或已放归的编号不能再次使用。","storage":"与实际个体一起记录持有人和状态；一日内处理，不把剖净鲜鱼当作可放归的活鱼。"}
 ]

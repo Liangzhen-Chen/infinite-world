@@ -59,6 +59,10 @@ test('手改已审批的行会使回执失效：职位职权、目录价、营�
   const tags=structuredClone(files);
   tags.items.find(i=>i.id==='item_hoe').tags.push('unapproved_use');
   await assert.rejects(()=>verifyPublished(world,tags),/发布骨架或引用事实已改变|正式目录/);
+  // S5-05 后续审批替换鱼饵：先验证新回执，历史投影仍不得遮住未审的鱼饵改动。
+  const bait=structuredClone(files);
+  bait.rules.extraction.fishing.bait.quantity=2;
+  await assert.rejects(()=>verifyPublished(world,bait),/正式文件与已审批的行不同/);
   const room = structuredClone(files);
   room.locations.find(l => l.id === 'bld_bs_watch').rooms.pop();
   await assert.rejects(() => verifyPublished(world, room), /正式文件与已审批的行不同/);

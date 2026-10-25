@@ -43,6 +43,10 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // state and holding-transition event IDs. Both service-version fixtures are
 // regenerated; deterministic traces and complete hashes remain mandatory.
 // S5-02: restock uses derived market bills and writes factual market-trade records; refresh full snapshots without dropping any state/patch/message comparison.
+// S505 / D05 5.5: crop stock facts, exact production accruals and continuous
+// resource growth anchors deliberately change state/patch hashes. Regenerate
+// with the existing UPDATE_ADVANCE_GOLDEN workflow, then verify normally;
+// retain both deterministic traces and every complete-state hash assertion.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},

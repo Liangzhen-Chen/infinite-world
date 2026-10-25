@@ -13,6 +13,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {transfer,declareLedgerWriter,emptyLedger,auditLedger,ledgerWriters,reviseLots,lotAccount,parseAccount,isSource} from '../server-plugin/ledger.mjs';
 import {bag,granary,seedBank,itemResource,legacyStock,LOT_PURPOSES,bookStock} from '../server-plugin/stock.mjs';
 import {reconcile,eventDiscrepancies,conservation} from './helpers/ledger-audit.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440;
@@ -21,12 +22,14 @@ function draft(document){return {document,patches:[],get(...p){return p.reduce((
     remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);this.patches.push({op:'delete',path});}};}
 declareLedgerWriter('stock-test',{sources:{'src:regrowth':{'*':100},'src:import':{item_salt:5}},sinks:['sink:consume','sink:decay']});
 
-test('资源键按物品模板，铸币物品记为铸币资源；批次只在仓储类用途启用',()=>{
+test('资源键按物品模板，铸币物品记为铸币资源；批次只在仓储与田间作物用途启用',()=>{
     const engine=new WorldEngine(world);
     assert.equal(itemResource(engine,'item_bread'),'item_bread');
     assert.equal(itemResource(engine,'item_coin_civic'),'coin_civic');assert.equal(itemResource(engine,'item_coin_coast'),'coin_coast');
     assert.equal(bag(engine,'player','item_coin_civic'),'player|coin_civic|inventory');
-    assert.deepEqual([...LOT_PURPOSES].sort(),['cargo','granary','seed']);
+    // D05 §5.5 / S5-05：田间作物也是带入库期、品质的批次；保持用途白名单精确相等。
+    assert.deepEqual([...LOT_PURPOSES].sort(),['cargo','crop','granary','seed']);
+    assert.equal(lotAccount('loc_hw_fields|item_oats|crop'),true);
     assert.equal(lotAccount(granary(engine,'loc_hw')),true);assert.equal(lotAccount(seedBank(engine,'loc_hw')),true);assert.equal(lotAccount(bag(engine,'player','item_oats')),false);
 });
 
@@ -124,27 +127,40 @@ async function step(c,tool,args,eventId,log,{allowFailure=false}={}){
 test('逐日推进对账：交易、制作、钓鱼、交粮、农业一季（播种、生长、收获、腐坏、吃粮）与离屏推进，旧库存逐账户等于新账户',{timeout:1800000},async()=>{
     const c=campaign(),log=new Map();
     assert.equal(c.doc.ledger,undefined,'新开局的第一次归约才开账');
+    // 正式白石镇只有公共钱账（granary=false），日产粮0；其余5个聚落均为托管农事，不能要求虚构的旧日产粮源。
+    assert.equal(c.doc.state.settlements.loc_bs.granary,false);assert.equal(c.doc.state.settlements.loc_bs.foodPerDay,0);
+    // D05 §5.5 / S505 正式绑定：声明非考查的竹竿与蚯蚓前提；开户流仍纳入本次完整源汇检查。
+    const equipped=applyIntentSetup(c.engine,c.doc,{inventory:{item_bamboo_fishing_rod:1,item_earthworm_bait:10}});
+    assert.deepEqual(equipped.setupUnmet,[]);c.doc=equipped.document;
+    for(const [key,n]of Object.entries(c.doc.ledger.flows??{}))log.set(key,n);
     await step(c,'world_trade',{seller:c.host,item:'item_bread',quantity:2},'buy',log);
     const opened=legacyStock(c.engine,c.doc.state).balances;assert.ok(opened.size>300,'开账覆盖全部旧库存');
     assert.ok(Object.keys(c.doc.ledger.lots).some(k=>k.endsWith('|granary')),'粮仓按批次开户');
     await step(c,'world_trade',{seller:'player',buyer:c.host,item:'item_oats',quantity:2},'sell',log,{allowFailure:true});
     // 制作：木楔配方（投入木料，产出木楔与刨花），在磨坊工作台。
-    c.doc={...c.doc,state:{...c.doc.state,location:'bld_hw_mill'}};
+    await step(c,'world_move',{destination:'bld_hw_mill'},'walk-craft',log);
     for(let i=0;i<3;i++)await step(c,'world_craft',{recipe:'recipe_wooden_pegs'},`craft-${i}`,log);
     const crafts=c.doc.ledger.crafts??[];assert.ok(crafts.filter(x=>x.writer==='manufacturing').length>=3,'每次制作留下制造凭据');
     checkCrafts(c);
     // 钓鱼：在河湾码头。
-    c.doc={...c.doc,state:{...c.doc.state,location:'loc_hw_dock',minute:Math.floor(c.doc.state.minute/DAY)*DAY+600}};
-    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`,log,{allowFailure:true});
+    // D05 身体慢事实的 asOf 不能倒流：制作已耗真实工时，等待下一次10:00，而非把 minute 回拨至当日600。
+    const fishingAt=Math.floor(c.doc.state.minute/DAY)*DAY+600;
+    await step(c,'world_time',{minutes:(fishingAt>c.doc.state.minute?fishingAt:fishingAt+DAY)-c.doc.state.minute},'wait-fishing',log);
+    await step(c,'world_move',{destination:'loc_hw_dock'},'walk-fishing',log);
+    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`,log);
+    // 4竿×1蚯蚓=4；10−4=6，未命中也必须扣除实际饵料。
+    assert.equal(c.doc.state.inventory.item_earthworm_bait.quantity,6);
     // 农业一季：逐日推进到收获之后（播种窗口、积温生长、收获入仓、种粮预留、腐坏、每日吃粮与柴火）。
     for(let day=0;day<215;day++)await step(c,'world_time',{minutes:DAY},`day-${day}`,log);
     // 离屏长推进：周贸易在途粮、军粮、商店补货、人物自治制作与交易。
     await step(c,'world_time',{minutes:24*DAY},'offscreen',log);
     checkCrafts(c);
     const used=new Set([...log.keys()].map(k=>{const {owner,purpose}=parseAccount(k);return `${owner}|${purpose}`;}));
-    for(const flow of ['src:genesis|opening','src:regrowth|harvest','src:regrowth|fresh','sink:consume|meal','sink:consume|craft','src:craft|craft','sink:consume|sow'])
+    // D05 §5.5 / S505：公共田成熟时经 crop 入资源账户，采收仅转移；本场景没有旧日产粮的消费者。
+    // 用同样严格的源用途必现断言核对 crop，不能让不相干的旧 harvest 名称替代真实成熟入账。
+    for(const flow of ['src:genesis|opening','src:regrowth|crop','src:regrowth|fresh','sink:consume|meal','sink:consume|craft','src:craft|craft','sink:consume|sow'])
         assert.ok(used.has(flow),`推演中出现 ${flow}`);
-    assert.ok([...log.keys()].some(k=>k.startsWith('src:regrowth|item_oats|harvest')),'收获的粮经 src:regrowth 入仓');
+    assert.ok([...log.keys()].some(k=>k.startsWith('src:regrowth|item_oats|crop')),'成熟的粮经 src:regrowth 先入田间账户');
     const farm=c.doc.state.records['agriculture:loc_hw'];assert.ok(farm.ledger.harvested>0,'一季内实际收获');
     if(process.env.LEDGER_DEBUG)console.log(JSON.stringify({flows:Object.fromEntries([...log].filter(([k])=>isSource(parseAccount(k).owner)||k.startsWith('sink:'))),accounts:Object.keys(c.doc.ledger.accounts).length,lots:Object.keys(c.doc.ledger.lots).length,transfers:c.doc.ledger.transfers}));
     assert.deepEqual(auditLedger(c.doc.ledger),[]);
