@@ -63,6 +63,9 @@ const SURVEY={
     'agriculture.mjs':'粮仓售粮 buy 属农业实现（R27 在改 agriculture），未动',
     'engine.mjs':'成交闸门 engine.quantity 与余额检查在 L0 引擎，L0 不能引用 L1 账户（会新增向上违例）；报价由 settlement-trade 与 shop 提供',
     'effects.mjs':'时钟效果转调 regionalTradePrice','stock.mjs':'价格输入读取接口本身（PRICE_POINTS）',
+    // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
+    // not another inventory-priced consumer. Market callers read the books.
+    'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
 };
 const PRICE_WORDS=/basePrice|priceFactor|PriceFactor|regionalTradePrice|armySupplyQuote|tradeQuote|bribePrice/;
 test('价格输入点登记：每个读取点有调用处，每处调用都已登记；含价格字样的模块都已归类',()=>{
