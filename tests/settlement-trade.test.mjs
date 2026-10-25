@@ -5,7 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
-import {regionalTradePrice,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
+import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
 
@@ -155,15 +155,24 @@ test('收货仓容被其他真实粮占满则拒收并退款，粮损只记在�
     const cash=snapshotCash(c);c=(await wait(engine,c,o.estimatedArrivalAt)).doc;
     const ended=c.state.records[key(lane)];assert.equal(ended.status,'rejected');assert.equal(ended.deliveredFood,0);assert.equal(ended.rejectedFood,40);assert.equal(ended.refundCopper,40*ended.unitPriceCopper);assert.equal(ended.taxCopper,0);assert.equal(snapshotCash(c),cash);conservation(c);
 });
-test('公共报价同日不漂，需求、距离与季节进入次日报价；未知或旧仓不生成库存',()=>{
+test('公共报价只读且随真实供给重派生，距离与季节进入环境基准；未知仓不生成库存',()=>{
     const {engine,doc}=setup(),lane=lanes[0],d=draft(doc),minute=DEPART;
-    const first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute),quote=d.get('state','records',`quote:region:7:${lane.buyer}:item_oats`);
-    assert.equal(quote.distanceKm,world.routes.filter(e=>lane.routes.includes(e.id)).reduce((n,e)=>n+e.lengthKm,0));assert.ok(quote.transportFactor>1);assert.equal(quote.seasonFactor,.9);
-    setGrain(d.document,lane.buyer,100);assert.equal(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1),first);
+    const before=structuredClone(d.document),first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute);
+    assert.deepEqual(d.document,before,'15.2/15.4: quotes are projections, not saved truth');
+    // Independent environmental calculation from authored road distances,
+    // actual travel time and spring .9. No market price computes this oracle.
+    const distance=world.routes.filter(e=>lane.routes.includes(e.id)).reduce((n,e)=>n+e.lengthKm,0);
+    const route=engine.route(world.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter,world.rules.agriculture.settlements.find(p=>p.settlement===lane.buyer).counter,lane.mode,minute,doc.randomSeed);
+    const risk=Math.max(1,route.movingMinutes/(distance/engine.rules.travel.walkKmh*60));
+    const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],(1+distance*.01)*risk));
+    assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport*.9);
+    // Changed stock is a non-examined premise; synchronize the existing books.
+    setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
-    const outside=draft(structuredClone(doc));assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),4);assert.deepEqual(outside.document,doc);
+    // Riverbay timber: baseline4 * scarcity floor .5 * other factors1 =2.
+    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc);assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),2);assert.deepEqual(outside.document,unchanged);
 });
-test('玩家world_trade消费区域公共价并扣真实既有商人库存；两次成交同日锁价、次日重报',async()=>{
+test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';
     // Isolated encounter fixture: the existing merchant visits this public hall.
     // Inventory and both wallets are the unchanged source assets; no NPC is added.
@@ -171,14 +180,18 @@ test('玩家world_trade消费区域公共价并扣真实既有商人库存；两
     const cash=snapshotCash(doc),initial=engine.quantity(draft(doc),seller,'item_oats'),wallet=doc.state.player.coins;
     const run=async(c,id)=>{const out=await engine.reduce(c,{tool:'world_trade',args:{seller,item:'item_oats',quantity:1},eventId:id});return{doc:applyPatches(c,out.patches),out};};
     const first=await run(doc,'local-buy');let c=first.doc;
-    const day=Math.floor(doc.state.minute/DAY),price=c.state.quotes[`region:${day}:${sid}:item_oats`];
-    assert.ok(price>engine.byId.get('item_oats').basePrice);assert.equal(first.out.result.cost,price);
+    const day=Math.floor(doc.state.minute/DAY),price=2;
+    // Oats3 * plentiful-supply floor .5 * incoming distance24.142km
+    // factor1.241421... * terrain1.2 * spring.9 =2.01110... ->2.
+    // Neutral regard/grade/spread/depth and corrections are all1.
+    assert.equal(first.out.result.cost,price);assert.equal(first.out.result.pricing.depth,1);
     assert.equal(c.state.player.coins,wallet-price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-1);assert.equal(snapshotCash(c),cash);
     setGrain(c,sid,500);resyncBooks(engine,c);const second=await run(c,'same-day-buy');c=second.doc;
-    assert.equal(second.out.result.cost,price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-2);
+    // 15.2/15.4 intentionally replace same-day lock-in with current supply.
+    assert.ok(second.out.result.cost>price);assert.ok(second.out.result.pricing.depth>1);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-2);
     c=(await wait(engine,c,(day+1)*DAY+540)).doc;
     const third=await run(c,'next-day-buy');c=third.doc;
-    assert.ok(third.out.result.cost>price);assert.equal(snapshotCash(c),cash);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-3);conservation(c);
+    assert.ok(third.out.result.cost>price);assert.equal(third.out.result.pricing.depth,1);assert.equal(Object.keys(c.state.quotes).length,0);assert.equal(snapshotCash(c),cash);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-3);conservation(c);
 });
 test('真实世界人物作息保留时world_time仍发运到货；只在本地柜台显示实际发货收货',async()=>{
     const {engine,doc}=setup({realNpcs:true});doc.state.location='bld_yp_hall';

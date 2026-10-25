@@ -29,8 +29,9 @@ export const privateFarmScenario=once(async()=>{
  doc=(await S.run(doc,'world_move',{destination:'bld_hw_mill'},'private-tools-mill')).document;
  doc=(await S.run(doc,'world_trade',{seller:'npc_hw_ayan',item:'item_wood',quantity:6},'private-tools-wood')).document;
  doc=(await S.run(doc,'world_move',{destination:'bld_hw_forge'},'private-tools-forge')).document;
- for(const [item,quantity]of [['item_mining_pick',1],['item_smith_hammer',1],['item_smith_tongs',1],['item_iron_scrap',6],['item_charcoal',6]])
-  doc=(await S.run(doc,'world_trade',{seller:'npc_hw_duanyan',item,quantity},`private-tools-buy:${item}`)).document;
+ // S5-02: buy the same physical inputs in native retail lots (<=5), respecting each lot's market depth.
+ for(const [item,total]of [['item_mining_pick',1],['item_smith_hammer',1],['item_smith_tongs',1],['item_iron_scrap',6],['item_charcoal',6]])
+  for(let left=total;left>0;left-=Math.min(5,left))doc=(await S.run(doc,'world_trade',{seller:'npc_hw_duanyan',item,quantity:Math.min(5,left)},`private-tools-buy:${item}:${left}`)).document;
  for(let attempt=0;!doc.state.recipes.recipe_sickle&&attempt<6;attempt++)
   doc=(await S.run(doc,'world_learn',{entity:'recipe_sickle',source:'npc_hw_duanyan'},`private-tools-learn:${attempt}`)).document;
  assert.ok(doc.state.recipes.recipe_sickle,'真实学习取得铁镰配方');

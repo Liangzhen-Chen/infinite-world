@@ -42,7 +42,8 @@ test('候选矿镐从段岩真实有限库存购买，双方铜币与镐数量�
  const buy=async eventId=>{const step=await engine.reduce(c,{tool:'world_trade',args:{seller:'段岩',item:'普通矿镐',quantity:1},eventId});c=applyPatches(c,step.patches);return step.result;};
  await buy('pick-one');assert.equal(c.state.inventory.item_mining_pick.quantity,1);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick.quantity,1);
  await buy('pick-two');assert.equal(c.state.inventory.item_mining_pick.quantity,2);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,undefined);
- assert.equal(c.state.player.coins,initialPlayer-56);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+56);
+ // S5-02: first trunc(28*1)=28; same local S2, net1 => opening3; second trunc(28*(1+.2/3)*.99895)=29. Total57.
+ assert.equal(c.state.player.coins,initialPlayer-57);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+57);
  const before=structuredClone(c);await assert.rejects(buy('pick-three'),/库存不足/);assert.deepEqual(c,before);
 });
 

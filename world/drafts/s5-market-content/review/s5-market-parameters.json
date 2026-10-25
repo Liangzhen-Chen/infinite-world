@@ -1,0 +1,94 @@
+{
+  "id": "s5-market-parameters",
+  "fingerprint": "e9f1e4b7aefbf2d6b84be79c9228007de78a4f86ff0f8fc40a67d4e1a6934b45",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "s5-market-parameters",
+    "row": {
+      "source": "15 §15.2、§15.4：首批市场参数，待标定",
+      "retailShare": 0.05,
+      "retailFloor": 5,
+      "maxShare": 0.3,
+      "dailyShare": 1,
+      "depthImpact": 0.2,
+      "spread": {
+        "sell": 1,
+        "buy": 0.6
+      },
+      "qualityStep": 1.25,
+      "personalReserveDays": 1,
+      "water": {
+        "saltMgPerLitre": 1000,
+        "toxinUgPerLitre": 1,
+        "impairedFactor": 0.5,
+        "unsafeFactor": 0.1
+      },
+      "goodsTags": {
+        "grain": "grain",
+        "salt": "salt",
+        "iron": "iron",
+        "ore": "ore",
+        "wood": "timber",
+        "timber": "timber",
+        "herb": "herb",
+        "cloth": "cloth",
+        "meat": "meat",
+        "fish": "fish",
+        "water": "water",
+        "food": "food"
+      },
+      "basket": [
+        {
+          "tag": "grain",
+          "weight": 0.7
+        },
+        {
+          "tag": "food",
+          "weight": 0.3
+        }
+      ]
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "00784bcf8e00f46a940314e5c0d37ffee5ec3109faf67795f2991385a0b3ae8b",
+    "draftHash": "00784bcf8e00f46a940314e5c0d37ffee5ec3109faf67795f2991385a0b3ae8b"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "215ff820-9193-4055-ac45-b034940fece5",
+      "file": "budget-responses/215ff820-9193-4055-ac45-b034940fece5.json",
+      "requestHash": "9dda4e51fbca2e9485ab2fe930683e843d347a975025546d5a51bc599125cf43",
+      "responseHash": "3dff860770f86fa5b736840c1f5dbb18fba0763e842b83d8e1c2d67ff19eb2fc"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-s5-market-parameters-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 716,
+        "completion_tokens": 7,
+        "total_tokens": 723,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 716
+      },
+      "costUpperYuan": 0.001488,
+      "cumulativeUpperYuan": 0.001488,
+      "latencyMs": 1030.5024999999998,
+      "timestamp": "2026-10-25T11:28:18.231Z"
+    }
+  ]
+}

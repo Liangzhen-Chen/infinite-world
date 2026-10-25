@@ -42,6 +42,7 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // S4 refresh: the initial calendar and institution offices change the full
 // state and holding-transition event IDs. Both service-version fixtures are
 // regenerated; deterministic traces and complete hashes remain mandatory.
+// S5-02: restock uses derived market bills and writes factual market-trade records; refresh full snapshots without dropping any state/patch/message comparison.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},

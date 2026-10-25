@@ -19,7 +19,8 @@ function fixture(){
  Object.assign(boss,{id:bossId,name:'测试非人首领',aliases:[],actor:person,lair:market,minions:[],cognition:{goal:'avoid_conflict',territory:[market]},negotiation:{stock:[{item:'item_ration',quantity:100}],accepts:['item_ration']},
   residence:{id:'lair_ms_market',name:'测试社会首领驻地',location:market}});
  world.bosses.push(boss);
- Object.assign(npc,{species:boss.monster,society:'loc_hw',settlement:'loc_hw',location:market,coins:37,inventory:{item_ration:2}});
+ // S5-02: household120 satiety retains four existing stew portions, leaving both examined rations for trade.
+ Object.assign(npc,{species:boss.monster,society:'loc_hw',settlement:'loc_hw',location:market,coins:37,inventory:{item_ration:2,item_mutton_turnip_stew:4}});
  const slots=[{start:0,end:720,location:market,activity:'摊位接待',services:['trade']},{start:720,end:1440,location:home,activity:'睡眠',services:[]}];
  npc.schedule={default:slots,market:slots,rest:slots,restDays:[],seasonal:{}};
  for(const [id,access]of [[market,{mode:'public'}],[council,{mode:'council',requiresConsent:true,authority:person}]]){
@@ -64,6 +65,8 @@ test('进入公共住区后看到按作息接待的成员，同一库存用于�
  assert.equal(talk.result.source,person);
  const coins=d.state.npcs[person].coins,playerCoins=d.state.player.coins;
  const trade=await f.run(d,'world_trade',{seller:bossId,item:'item_ration',quantity:1},'buy');d=trade.document;
+ // S5-02：干粮基准3×供需下限0.5×首笔深度/品质/立场/加成1=1.5，整单截断1铜。
+ assert.equal(trade.result.cost,1);
  assert.equal(d.state.npcs[person].inventory.item_ration.quantity,1);assert.ok(d.state.npcs[person].coins>coins);assert.ok(d.state.player.coins<playerCoins);
  const agreement=await negotiate(f,d,{offer:[{item:'item_ration',quantity:1}]});d=agreement.document;
  assert.equal(agreement.result.accepted,true);assert.equal(f.engine.quantity({get:(...p)=>p.reduce((v,k)=>v?.[k],d)},person,'item_ration'),2);

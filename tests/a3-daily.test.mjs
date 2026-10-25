@@ -23,12 +23,13 @@ function fixture(){
  for(const f of world.factions)delete f.clock;
  const seller=world.npcs.find(n=>n.id===SELLER);
  seller.schedule={default:[{start:0,end:1440,location:INN,activity:'营业',services:['trade']}]};
+ // S5-02: reserve ceil(2*60/35)=4 stew; fifth portion remains saleable. Meal = trunc(8*.5)+trunc(15*.5*depth)=4+7=11.
  world.items.find(r=>r.id===BREAD).basePrice=8;world.items.find(r=>r.id===STEW).basePrice=15;
  const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'a3-daily');
  document.state.location=INN;document.state.player.coins=60;
  document.state.player.body={satiety:{value:30,asOf:document.state.minute,activity:'rest'}};
  Object.assign(document.state.npcs[SELLER],{location:INN,status:'正常',activity:'营业',goals:{}});
- document.state.npcs[SELLER].inventory[BREAD]=stack(4);document.state.npcs[SELLER].inventory[STEW]=stack(4);
+ document.state.npcs[SELLER].inventory[BREAD]=stack(4);document.state.npcs[SELLER].inventory[STEW]=stack(5);
  return {world,engine,document};
 }
 function book(f){f.document=withLedger(f.engine,f.document).document;f.document.holdings=openHoldings(f.engine,f.document);return f;}
@@ -38,16 +39,16 @@ async function act(f,action,slots,eventId){
 }
 const qty=(f,d,owner,item)=>f.engine.quantity(f.engine.primitiveDraft(d),owner,item);
 
-test('A3 D05: ordering real cooked dishes costs 23 coins and 25 minutes, eats purchased food and preserves old supplies',async()=>{
+test('A3 D05: ordering real cooked dishes costs 11 coins and 25 minutes, eats purchased food and preserves old supplies',async()=>{
  const f=fixture();f.document.state.inventory[BREAD]=stack(1);book(f);
  const registration=f.engine.primitiveDraft(f.document),unit=trackSingleItem(registration,f.engine,'player',BREAD,'old-bread');
  f.document=applyPatches(f.document,registration.patches);const before=structuredClone(f.document);
  const slots={subject:SELLER,item:BREAD,side:STEW},input='a3-order-meal';
  const {out,after}=await act(f,'core:eat.order',slots,input);
- assert.equal(out.result.paid,23);assert.equal(after.state.player.coins,37);
+ assert.equal(out.result.paid,11);assert.equal(after.state.player.coins,49);
  const event=after.state.records[`world_event:${input}`];
- assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,23);
- assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,23);
+ assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,11);
+ assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,11);
  assert.equal(after.state.minute-before.state.minute,25);assert.equal(out.result.cost.time,25);
  for(const item of [BREAD,STEW]){
   assert.equal(qty(f,after,'player',item),qty(f,before,'player',item));
@@ -65,7 +66,7 @@ test('A3 D05: ordering real cooked dishes costs 23 coins and 25 minutes, eats pu
 test('A3 D05: a second unavailable dish or insufficient cash rolls back the entire order; raw meat is not a cooked meal',async()=>{
  for(const fault of ['stock','coins','raw']){
   const f=fixture();if(fault==='stock')delete f.document.state.npcs[SELLER].inventory[STEW];
-  if(fault==='coins')f.document.state.player.coins=20;
+  if(fault==='coins')f.document.state.player.coins=10;
   book(f);const before=structuredClone(f.document);
   await assertActionRejected(act(f,'core:eat.order',{subject:SELLER,item:BREAD,side:fault==='raw'?'item_mutton':STEW},`order-${fault}`));
   assert.deepEqual(f.document,before);
@@ -117,12 +118,13 @@ test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact 
 test('A3 D22: buying a drink really gives it to the speaker; 15 minutes includes purchase, with versioned rumor and conserved money',async()=>{
  const f=fixture(),speaker='npc_hw_hezhou',rumor={id:'rumor_a3_ox',claim:'东头丢了一头牛。',source:speaker,carriers:[speaker],fact:'不能告诉玩家的作者真相'};
  f.world.rumors.push(rumor);f.world.items.find(r=>r.id==='item_milk').basePrice=5;
- f.document.state.npcs[SELLER].inventory.item_milk=stack(2);
+ // S5-02: hydration reserve ceil(2*72/25)=6 milk; seventh is saleable, trunc(5*.5)=2.
+ f.document.state.npcs[SELLER].inventory.item_milk=stack(7);
  Object.assign(f.document.state.npcs[speaker],{location:INN,status:'正常',activity:'交谈',goals:{}});
  book(f);const before=structuredClone(f.document),slots={subject:speaker,seller:SELLER,item:'item_milk',rumor:rumor.id};
  const {out,after}=await act(f,'core:dialogue.treat_rumor',slots,'a3-treat');
- assert.equal(before.state.player.coins-after.state.player.coins,5);
- assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,5);
+ assert.equal(before.state.player.coins-after.state.player.coins,2);
+ assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,2);
  assert.equal(qty(f,after,'player','item_milk'),qty(f,before,'player','item_milk'));
  assert.equal(qty(f,after,speaker,'item_milk')-qty(f,before,speaker,'item_milk'),1);
  assert.equal(qty(f,before,SELLER,'item_milk')-qty(f,after,SELLER,'item_milk'),1);
@@ -356,7 +358,8 @@ test('A3 D35: watching a real held festival advances to its actual endsAt and ca
  const watched=await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch');
  assert.equal(watched.after.state.minute,event.endsAt);assert.equal(watched.out.result.cost.time,event.endsAt-before.state.minute);
  assert.equal(watched.after.state.minute%1440,21*60);assert.equal(watched.out.result.cost.time,120);
- assert.equal(qty(f,watched.after,'player',BREAD),2);assert.equal(watched.after.state.player.coins,38);
+ // S5-02: festival base6 * scarcity.5 * neutral factors * 2 = 6; purse50-6=44.
+ assert.equal(qty(f,watched.after,'player',BREAD),2);assert.equal(watched.after.state.player.coins,44);
  assert.deepEqual(watched.after.state.inventory,before.state.inventory);assert.equal(watched.after.state.player.coins,before.state.player.coins);
  assert.equal(watched.after.state.records[f.id].paidCopper,event.paidCopper);assert.deepEqual(auditLedger(watched.after.ledger),[]);
  f.document=JSON.parse(JSON.stringify(watched.after));assert.deepEqual((await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch')).out.patches,[]);

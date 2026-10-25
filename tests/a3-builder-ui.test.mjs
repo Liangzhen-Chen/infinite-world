@@ -52,11 +52,12 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
    await builder.getByRole('button',{name:'预览代价与结果',exact:true}).click();
   };
   const read=()=>server.api('read',{campaignId}),before=await read();
-  await fill();await builder.locator('.fields-builder-preview').waitFor();assert.match(await builder.innerText(),/费用：2文/);
+  // S5-02：面包基准2×供需下限0.5×首笔深度/品质/立场1，整单1文。
+  await fill();await builder.locator('.fields-builder-preview').waitFor();assert.match(await builder.innerText(),/费用：1文/);
   assert.deepEqual((await read()).document,before.document,'预览不改变真实后端');
   await builder.getByRole('button',{name:'取消',exact:true}).click();assert.deepEqual((await read()).document,before.document);
   await fill();await builder.getByRole('button',{name:'确认执行',exact:true}).click();
-  await page.waitForFunction(coins=>window.infiniteFieldsV2.view.document.state.player.coins===coins-2,before.document.state.player.coins);
+  await page.waitForFunction(coins=>window.infiniteFieldsV2.view.document.state.player.coins===coins-1,before.document.state.player.coins);
   const bought=await read();assert.equal(bought.document.state.inventory.item_bread.quantity??bought.document.state.inventory.item_bread,1);
   const executedAt=requests.findIndex(r=>r.endpoint==='execute'),execute=requests[executedAt],preview=requests.slice(0,executedAt).filter(r=>r.endpoint==='propose').at(-1);assert.equal(execute.body.eventId,preview.body.eventId);assert.equal(execute.body.anchor,null);
   await fill();await builder.locator('.fields-builder-preview').waitFor();

@@ -50,10 +50,11 @@ const rumorWorld=(extra=[])=>variant(w=>{
 });
 const hear=(ui,rumor,speaker)=>ui.choose('remember',{subject:'player',key:rumor.id,rumor:rumor.id,source:speaker,content:rumor.claim},{search:true});
 
+// S5-02: two household members retain ceil(2*72/25)=6 milk; seventh sells for trunc(5*.5)=2.
 async function treatForNews(t){
  // 小六→伙计贺舟（npc_hw_hezhou，青灯酒馆）；酒一碗 5 文→牛乳一份改价 5 文；夏季六月十二酉时；玩家 50 文。
  const world=rumorWorld(),rumor=world.rumors.find(r=>r.id==='rumor_d22_ox'),thief=world.rumors.find(r=>r.id==='rumor_d22_thief');
- const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(6,12,18,0),s=>{s.player.coins=50;Object.assign(s.npcs[HEZHOU],{location:INN,activity:'前厅接待',status:'正常'});})});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(6,12,18,0),s=>{s.player.coins=50;s.npcs[LINSUI].inventory.item_milk=stack(7);Object.assign(s.npcs[HEZHOU],{location:INN,activity:'前厅接待',status:'正常'});})});
  const before=await primed(ui);
  const menu=await ui.server.api('actions',{campaignId:ui.campaignId,query:'dialogue.treat_rumor',target:HEZHOU});
  assert.ok(menu.actions.some(a=>a.id==='core:dialogue.treat_rumor'),'目录搜索可找到请客动作');
@@ -62,7 +63,7 @@ async function treatForNews(t){
 }
 test('D22 打听消息 ①②③④：请小六喝酒5文，讲出丢牛版本、不透露偷牛者，真实交付饮品',async t=>{
  const {world,rumor,thief,ui,before,told,after}=await treatForNews(t),mid=after;
- assert.equal(before.state.player.coins-mid.state.player.coins,5,'①铜钱 −5');assert.equal(mid.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,5,'①酒肆 +5');
+ assert.equal(before.state.player.coins-mid.state.player.coins,2,'①铜钱 −5');assert.equal(mid.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,2,'①酒肆 +5');
  assert.ok(told.result.content.includes(rumor.claim),'②小六讲出东头丢了牛');
  assert.ok(!told.result.content.includes('脚夫')&&!told.result.content.includes(rumor.fact),'③不说出偷牛者');
  const memory=after.memories[`player::${rumor.id}::${HEZHOU}`];

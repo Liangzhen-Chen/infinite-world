@@ -95,7 +95,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     let primitiveFacts={};
     try{primitiveFacts=JSON.parse(await fs.readFile(path.join(root,'ontology/primitives.json'),'utf8')).entries.find(e=>e.id==='fact.set')?.writable??{};}catch(error){if(error.code!=='ENOENT')throw error;}
     const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs','yields'].map(name=>[name,world.balance[name]]))};
-    for(const [key,file] of Object.entries({openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json',domainRules:'rules/tables/domain-rules.json'})){
+    for(const [key,file] of Object.entries({marketRules:'rules/tables/market.json',openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json',domainRules:'rules/tables/domain-rules.json'})){
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);

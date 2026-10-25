@@ -131,8 +131,9 @@ test('无模型四步构造：当前对象/物品/做法，重复预览及取消
  assert.equal(f.builder.slots.seller,'npc_hw_linsui');assert.equal(f.builder.slots.quantity,1);
  await f.builder.preview();await f.builder.preview();
  assert.deepEqual(f.document,before);assert.deepEqual(f.calls,['preview','preview']);
+ // S5-02 sections15.2/15.4: base 2 * scarcity .5 * depth/grade/standing 1 = 1; two units truncate(2*1)=2.
  const lines=previewLines(f.builder.quote.result,{label:'买东西',startMinute:before.state.minute});
- assert.ok(lines.includes('费用：2文'));assert.ok(lines.includes('耗时：5分钟'));
+ assert.ok(lines.includes('费用：1文'));assert.ok(lines.includes('耗时：5分钟'));
  f.builder.cancel();assert.equal(await f.builder.confirm(),null);assert.deepEqual(f.document,before);
 });
 
@@ -140,7 +141,7 @@ test('显式确认才实际扣款得货，执行使用预览事件编号；确�
  const f=fixture(),coins=f.document.state.player.coins,minute=f.document.state.minute;
  f.builder.setSlot('quantity',2);const quote=await f.builder.preview();assert.equal(quote.eventId,'builder-buy');
  const result=await f.builder.confirm();assert.equal(result.ok,true);
- assert.equal(f.document.state.player.coins,coins-4);assert.equal(f.document.state.inventory.item_bread.quantity??f.document.state.inventory.item_bread,2);
+ assert.equal(f.document.state.player.coins,coins-2);assert.equal(f.document.state.inventory.item_bread.quantity??f.document.state.inventory.item_bread,2);
  assert.equal(f.document.state.minute,minute+5);assert.equal(await f.builder.confirm(),null);assert.deepEqual(f.calls,['preview','confirm']);
 });
 
@@ -198,7 +199,7 @@ test('真实 HTTP 两阶段：预览不写存档，确认写一次，重放幂�
  builder.choose(action);builder.setSlot('item','item_bread');await builder.preview();assert.ok(builder.quote);
  assert.deepEqual((await read()).document,before.document);assert.equal((await read()).reference.sequence,before.reference.sequence);
  const quote=builder.quote;assert.equal((await builder.confirm()).ok,true);const after=await read();
- assert.equal(after.document.state.player.coins,before.document.state.player.coins-2);assert.equal(after.reference.sequence,before.reference.sequence+1);
+ assert.equal(after.document.state.player.coins,before.document.state.player.coins-1);assert.equal(after.reference.sequence,before.reference.sequence+1);
  const retry=await server.api('execute',{campaignId,tool:'world_act',args:quote.args,eventId:quote.eventId,anchor:null});assert.equal(retry.duplicate,true);assert.deepEqual((await read()).document,after.document);
  await assert.rejects(server.api('execute',{campaignId,tool:'world_act',args:quote.args,eventId:'a3-builder-stale',expectedSequence:before.reference.sequence,anchor:null}));
  assert.deepEqual((await read()).document,after.document);
@@ -256,7 +257,8 @@ test('唯一改写失败后回落真实回执模板，不重执行、不追加�
  const before=await server.api('read',{campaignId}),request={campaignId,token:begun.token,draft:'<q who="player">我全都答应。</q>',query:'买一个面包',expectedSequence:before.reference.sequence};
  const review=await server.api('review/reply',request);
  assert.equal(review.canCommit,false);assert.equal(review.attempts,1);assert.equal(rewrites,1);assert.equal(review.fallback.extraMinutes,0);
- assert.match(review.fallback.text,/面包/);assert.match(review.fallback.text,/2文/);assert.ok(!review.fallback.text.includes('我全都答应'));
+ // S5-02：基准2×供需下限0.5，首笔整单1文；回落必须保留真实付款金额。
+ assert.match(review.fallback.text,/面包/);assert.match(review.fallback.text,/1文/);assert.ok(!review.fallback.text.includes('我全都答应'));
  assert.deepEqual((await server.api('read',{campaignId})).document,before.document);
  assert.equal((await server.api('read',{campaignId})).reference.sequence,before.reference.sequence);
  assert.deepEqual(await server.api('review/reply',request),review);assert.equal(rewrites,1);

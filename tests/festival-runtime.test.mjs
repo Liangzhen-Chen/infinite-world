@@ -1,3 +1,4 @@
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -117,8 +118,10 @@ test('活动窗口改变真实服务及生产窗口，到期恢复原作息，�
 
 test('集市交易继续走真实库存及价格，仪式期间拒绝交易并保持账本',async()=>{
  for(const kind of ['market','ritual']){
-  const s=setup({kind,scheduled:true}),p=await plan(s),held=(await s.wait(p.doc,180)).doc;
-  held.state.npcs[s.person].inventory.item_wood={quantity:3};const args={seller:s.person,item:'item_wood',quantity:1};
+  const s=setup({kind,scheduled:true}),p=await plan(s);let held=(await s.wait(p.doc,180)).doc;
+  // S5-01：声明非考查库存并同步资源账户，保留原来的三份木材与交易守恒。
+  const staged=applyIntentSetup(s.engine,held,{facts:[{path:['state','npcs',s.person,'inventory'],value:{...held.state.npcs[s.person].inventory,item_wood:{quantity:3}}}]});
+  assert.deepEqual(staged.setupUnmet,[]);held=staged.document;const args={seller:s.person,item:'item_wood',quantity:1};
   if(kind==='ritual'){await assert.rejects(s.run(held,args,'trade','world_trade'),/不提供/);assert.equal(count(held,s.person),3);}
   else{const out=(await s.run(held,args,'trade','world_trade')).doc;assert.equal(count(out,s.person),2);assert.equal(count(out,'player'),6);assert.equal(cash(out),cash(held));}
  }

@@ -224,7 +224,8 @@ export async function preparePlaytestSession({scenario,api,world,directory}={}){
         }else{
             await act('world_trade',{seller:'林穗',service:'住宿',days:1});
             await act('world_trade',{seller:'林穗',item:'面包',quantity:1});
-            await act('world_remember',{subject:'玩家',key:'旧版住宿',content:'我在青灯酒馆向林穗付六铜住宿，又花两铜买了一个面包',source:'亲历'});
+            // S5-02：住宿后的立场折价使面包整单截断为0；亲历记忆不再捏造旧固定两铜。
+            await act('world_remember',{subject:'玩家',key:'旧版住宿',content:'我在青灯酒馆向林穗付六铜住宿，又按当时报价买了一个面包',source:'亲历'});
         }
         if(scenario.id==='world_upgrade')view=await api('import',{bundle:await sourceApi('export',{campaignId})});
         view=await api('read',{campaignId:view.reference.campaignId});

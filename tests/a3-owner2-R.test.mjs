@@ -27,6 +27,11 @@ function fixture(n){
  // 174 tests an incomplete proposal, so its old invented 30m measurement
  // supplies no premise; the routing and zero-write assertions stay intact.
  delete scene.positions;
+ // S5-02：题面“至少2份”设为8份：家庭口粮4、已承诺2，仍有2份可售。
+ if(n===122){
+  scene.accounts=scene.accounts.map(r=>({...r,balance:8}));
+  scene.history=scene.history.map(r=>r.verb==='opening_balance'?{...r,balance:8}:r);
+ }
  const setup=applyIntentSetup(engine,initial,scene);assert.deepEqual(setup.setupUnmet,[],`${n} premises`);
  let document=setup.document;
  for(const p of positions.filter(p=>p.distanceMeters<=3)){
@@ -49,8 +54,9 @@ test('R1: cash failure, missing spell and fusion prerequisites retain registered
  // 06 §6.10.3 / review 10-22 P0: a quantity is a structured proposal field (means.quantity), never parsed from
  // the intent's prose. The frozen 122 proposal names "两块面包" only in prose, so it buys the registered default of
  // one and is affordable (negative control below); the structured two-loaf order is the cash failure.
+ // S5-02: unmatched one-unit retail quote = trunc(base2 * scarcity.5)=1; signed two-unit total4 stays frozen.
  const prose=await run(122);assert.equal(prose.receipt.routed,'core:trade.buy');assert.equal(prose.receipt.status,'committed');
- assert.equal(prose.document.state.player.coins-prose.after.state.player.coins,2,'prose does not become a larger order');
+ assert.equal(prose.document.state.player.coins-prose.after.state.player.coins,1,'prose does not become a larger order');
  for(const [n,route,reason,adjust] of [[122,'core:trade.buy',/余额不足/,p=>{p.means={...p.means,quantity:2};}],[162,'core:cast',/尚未学会/],[166,'core:research',/没有掌握/]]){
   const r=await run(n,adjust);assert.equal(r.preview.receipt.status,'rejected');assert.equal(r.preview.receipt.routing.routed,route);
   assert.equal(r.receipt.routed,route);assert.match(r.receipt.reason,reason);assert.deepEqual(r.out.patches,[]);assert.deepEqual(r.receipt.applied,[]);
