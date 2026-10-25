@@ -8,6 +8,8 @@ import {readBossNegotiation} from './boss-negotiation.mjs';
 import {personView} from './entity-view.mjs';
 import {actorId} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {derived} from './derived.mjs';
+import {standingTransmission} from './derived-consumers.mjs';
 declareHoldingWriter('standing',{kinds:[]});
 
 // One read model for "how does X regard Y", normalized to -100..100. It wraps
@@ -71,10 +73,21 @@ function baseStanding(engine,state,holder,target,kind){
     return 0;
 }
 export function standingLedger(state,holder,target){return state.records?.[rec(holder,target)]??null;}
+function component(engine,state,id,holder,target,base,kind,source){
+    const document=engine.physicalDocument?{...engine.physicalDocument,state}:{state};
+    return derived(engine,document,id,holder,{base,holder,target,kind,
+        observer:holder==='player'||state.npcs?.[holder]?holder:null,
+        baseline:[{id:source,source,value:base}]});
+}
 export function standing(engine,state,holder,target='player'){
     holder=actorId(engine.world,holder);target=actorId(engine.world,target);
     const kind=standingKind(engine,state,holder);
-    return clamp(baseStanding(engine,state,holder,target,kind)+(standingLedger(state,holder,target)?.value??0));
+    const base=component(engine,state,['settlement','faction','polity'].includes(kind)?'social:reputation':'social:relation',holder,target,
+        baseStanding(engine,state,holder,target,kind),'trust',`rule:standing:${kind}`);
+    const impression=component(engine,state,'social:impression',holder,target,standingLedger(state,holder,target)?.value??0,'trust',rec(holder,target));
+    // Components stay unclamped until their sum, so reputation above 100 can
+    // still cancel a negative impression exactly as before this migration.
+    return clamp(component(engine,state,'social:standing',holder,target,base+impression,'trust','rule:standing'));
 }
 // 只读：holder 对 target 的 standing 是否纯属缺省姿态（聚居地没有立场记录也没有世界写明的立场，且无立场账本条目）。
 // 有任何显式来源（立场记录、世界写明、standing 账本）即为 false；不改 standing() 的数值。
@@ -106,8 +119,8 @@ export function adjustStanding(d,engine,holder,target,delta,{sourceEvent,reason,
 // Transmission: what is done to a member reaches the collectives it belongs to,
 // and through a faction its allies. Monster settlements react through their
 // own stance steps (monster-society), so they are not repeated here.
-export const TRANSMISSION=Object.freeze({household:0.5,settlement:0.3,faction:0.5,ally:0.25,spiritSociety:0.5,organization:0.5,allyMinimum:30});
-export function eventWeight(e){
+export const TRANSMISSION=standingTransmission;
+function baseEventWeight(e){
     if(e.tags?.includes('npc_crime')&&e.witnesses?.length)return -10;
     if(e.verb==='harm'&&e.tags.includes('hostile'))return -(10+Math.min(20,e.harm??0));
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
@@ -118,37 +131,41 @@ export function eventWeight(e){
     if(e.verb==='pact')return e.tags?.includes('alliance')?10:5;
     return 0;
 }
+export function eventWeight(e,engine,state){
+    return component(engine,state,'social:eventWeight',e.target??e.actor,e.actor,baseEventWeight(e),e.verb,`rule:eventWeight:${e.verb}`);
+}
 export function collectivesOf(engine,state,member){
     const view=personView(engine,state,member);if(!view)return [];
+    const transmission=engine.world.derived?.consumers?.standing?.transmission??TRANSMISSION;
     member=view.id.value;
     const rows=[],house=view.household.value;
     for(const id of house?.members??[])if(id!==member&&state.npcs?.[id]&&state.npcs[id].status!=='\u6b7b\u4ea1')
-        rows.push({holder:id,ratio:TRANSMISSION.household,via:`household:${house.id}`});
+        rows.push({holder:id,ratio:transmission.household,via:`household:${house.id}`});
     const settlements=reputationSettlements(engine),factions=reputationFactions(engine,state);
     let place=view.settlement.value;
     // A visitor remains affiliated to their residence; location is only a legacy fallback.
     if(!place){place=view.residence.value?.home??view.location.value;const seen=new Set();
         while(place&&!seen.has(place)&&!settlements.includes(place)){seen.add(place);place=engine.byId.get(place)?.parent;}}
-    if(place&&settlements.includes(place))rows.push({holder:place,ratio:TRANSMISSION.settlement,via:`settlement:${place}`});
+    if(place&&settlements.includes(place))rows.push({holder:place,ratio:transmission.settlement,via:`settlement:${place}`});
     for(const f of factions)if(f.members.includes(member)){
-        rows.push({holder:f.id,ratio:TRANSMISSION.faction,via:`faction:${f.id}`});
-        for(const other of factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=TRANSMISSION.allyMinimum)
-            rows.push({holder:other.id,ratio:TRANSMISSION.faction*TRANSMISSION.ally,via:`ally:${f.id}`});
+        rows.push({holder:f.id,ratio:transmission.faction,via:`faction:${f.id}`});
+        for(const other of factions)if(other.id!==f.id&&standing(engine,state,other.id,f.id)>=transmission.allyMinimum)
+            rows.push({holder:other.id,ratio:transmission.faction*transmission.ally,via:`ally:${f.id}`});
     }
     for(const entry of view.organizations){const org=entry.value;
         if(org.source!=='household'&&org.source!=='faction'&&org.source!=='society'&&!rows.some(r=>r.holder===org.id))
-            rows.push({holder:org.id,ratio:TRANSMISSION.organization,via:`organization:${org.id}`});
+            rows.push({holder:org.id,ratio:transmission.organization,via:`organization:${org.id}`});
     }
     const temple=view.faith.value?.temple;
-    if(temple&&!rows.some(r=>r.holder===temple))rows.push({holder:temple,ratio:TRANSMISSION.organization,via:`faith:${temple}`});
-    if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:TRANSMISSION.spiritSociety,via:`spirit_society:${member}`});
-    return rows;
+    if(temple&&!rows.some(r=>r.holder===temple))rows.push({holder:temple,ratio:transmission.organization,via:`faith:${temple}`});
+    if(state.creatures?.[member]?.society?.id)rows.push({holder:state.creatures[member].society.id,ratio:transmission.spiritSociety,via:`spirit_society:${member}`});
+    return rows.map(row=>({...row,ratio:component(engine,state,'social:conduction',row.holder,member,row.ratio,row.via.split(':')[0],row.via)}));
 }
 // World-event subscriber.
 export function transmitStanding(d,engine,events){
     for(const e of events){
         if(e.legacy||e.actor!=='player'||!e.target||e.target==='player')continue;
-        const weight=eventWeight(e);if(!weight)continue;
+        const weight=eventWeight(e,engine,d.get('state'));if(!weight)continue;
         for(const c of collectivesOf(engine,d.get('state'),e.target))
             adjustStanding(d,engine,c.holder,'player',weight*c.ratio,{sourceEvent:e.id,reason:`${e.verb}:${e.target}`,via:c.via,minute:e.minute});
     }

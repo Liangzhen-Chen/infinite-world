@@ -1,0 +1,21 @@
+{
+  "standing": {
+    "transmission": {"household":0.5,"settlement":0.3,"faction":0.5,"ally":0.25,"spiritSociety":0.5,"organization":0.5,"allyMinimum":30}
+  },
+  "decision": {
+    "moneyWeight":{"slot":"decision:moneyWeight","base":1},
+    "timeDivisor":{"slot":"decision:timeDivisor","base":30},
+    "riskWeight":{"slot":"decision:riskWeight","base":10},
+    "riskAversion":{"slot":"decision:riskAversion","base":1},
+    "familyWeight":{"slot":"decision:familyWeight","base":1},
+    "reputationWeight":{"slot":"decision:reputationWeight","base":1},
+    "rewardWeight":{"slot":"decision:rewardWeight","base":1},
+    "trustDivisor":{"slot":"decision:trustDivisor","base":10},
+    "favorWeight":{"slot":"decision:favorWeight","base":3},
+    "needWeight":{"slot":"decision:needWeight","base":1}
+  },
+  "autonomy": {
+    "utilityWeight":{"slot":"autonomy:utilityWeight","base":1},
+    "riskWeight":{"slot":"autonomy:riskWeight","base":1}
+  }
+}

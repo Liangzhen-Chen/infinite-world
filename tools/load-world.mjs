@@ -99,8 +99,10 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);
-    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json');
-    world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:derivations.modifiers??[],conduction:slots.conduction??{}};
+    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json'),consumers=await optional('ontology/slots/consumers.json');
+    // An optional source contributes only when present. Empty injected fields
+    // would otherwise change publication fingerprints of unrelated worlds.
+    if([slots,derivations,consumers].some(source=>!Array.isArray(source)))world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:derivations.modifiers??[],conduction:slots.conduction??{},...(Array.isArray(consumers)?{}:{consumers})};
     loadDerivedRegistry(world);
     try{
         await fs.access(path.join(root,'actions'));

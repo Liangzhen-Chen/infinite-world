@@ -1,8 +1,13 @@
 // L1 derived slots (D05 §5.9 / A.16). Registries belong to a world, not a process.
 import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
 import {holdingKind,aliveHoldings,holdingsView} from './holdings.mjs';
-import {subjectiveView,subjectiveFact} from './subjective-view.mjs';
 import {wageQuote} from './obligation-state.mjs';
+
+// The projection composition root supplies this reader. The numeric registry
+// must not import subjective-view -> entity-view -> standing back into itself.
+let viewResolver;
+export function registerDerivedViewResolver(resolve){viewResolver=resolve;}
+const subjectiveFact=(view,key)=>view.knowledge.facts[key]??(Object.hasOwn(view.prior,key)?{value:view.prior[key],source:key}:null);
 
 const STAGES=['add','mul','max','min','clamp'];
 const DEFAULT={stages:['mul','clamp'],bounds:[0.5,2],relative:true};
@@ -42,6 +47,9 @@ export function loadDerivedRegistry(world){
  };
  const resolve=id=>definition(id).slot,kindOf=id=>definition(id).kind;
  for(const id of slots.keys())resolve(id);
+ for(const group of ['decision','autonomy'])for(const [key,row] of Object.entries(data.consumers?.[group]??{})){
+  if(!slots.has(row.slot)||!Number.isFinite(row.base)||key.endsWith('Divisor')&&row.base<=0)reject('E-DERIVED-BOUNDS',`消费者 ${group}.${key} 缺少有效基线或已登记的槽`);
+ }
  for(const raw of [...data.modifiers??[],...world.rules?.modifiers??[]]){
   const row={pack:'core',...raw},key=`${row.pack}:${row.id}`;
   if(!row.id||!row.target||ids.has(key))reject('E-DERIVED-MODIFIER','修正项名称为空或重复');ids.add(key);
@@ -69,9 +77,9 @@ function declaration(kind,field){
 
 // Beliefs carry their own version of a holding. Never use a remembered id as
 // authority to dereference hidden current terms (or to test current existence).
-export function knownDerivedHoldings(engine,document,observer=null){
+export function knownDerivedHoldings(engine,document,observer=null,projected=null){
  const truth=aliveHoldings(holdingsView(document));if(observer===null)return truth;
- const view=subjectiveView(engine,document,observer),rows=new Map();
+ const view=projected??viewResolver(engine,document,observer),rows=new Map();
  for(const row of truth)if(declaration(row.kind,'visibility')==='public')rows.set(row.id,row);
  for(const row of view.self.holdings)rows.set(row.id,row);
  for(const fact of Object.values(view.knowledge.facts)){
@@ -81,8 +89,9 @@ export function knownDerivedHoldings(engine,document,observer=null){
  return [...rows.values()].sort((a,b)=>compare(a.id,b.id));
 }
 
-function contextFor(engine,document,subject,{observer=null,holder=subject,target=subject,kind='',...input}={}){
- const view=observer===null?null:subjectiveView(engine,document,observer),holdings=knownDerivedHoldings(engine,document,observer),sources=new Set();
+function contextFor(engine,document,subject,{observer=null,view:projected=null,holder=subject,target=subject,kind='',...input}={}){
+ const view=projected??(observer===null?null:viewResolver(engine,document,observer)),sources=new Set();
+ let holdings;
  const fact=(id,key)=>{
   const source=`fact:${id}:${key}`;let value;
   if(view){
@@ -97,7 +106,7 @@ function contextFor(engine,document,subject,{observer=null,holder=subject,target
   }
   sources.add(source);return value??null;
  };
- return {view,holdings,sources,input,bindings:{subject,holder,target,kind},functions:{fact,has:(id,tag)=>{
+ return {view,get holdings(){return holdings??=knownDerivedHoldings(engine,document,observer,view);},sources,input,bindings:{subject,holder,target,kind},functions:{fact,has:(id,tag)=>{
   const tags=fact(id,'tags');return Array.isArray(tags)&&tags.includes(tag);
  }},fact};
 }
@@ -145,18 +154,20 @@ export function derivedConduction(engine,document,subject,values,{observer=null}
 // registered formula. The two valuation aliases reuse today's native inputs.
 export function explainDerived(engine,document,id,subject,options={}){
  const registry=registryOf(engine),slot=registry.resolve(id),kind=registry.kindOf(id)??options.kind??'';
- const ctx=contextFor(engine,document,subject,{...options,kind});
- let base=options.base,baseline=[];
+ let context;
+ const getContext=()=>context??=contextFor(engine,document,subject,{...options,kind});
+ let base=options.base,baseline=options.baseline??[];
  if(base===undefined&&slot.baselines){baseline=selectDerivedBaseline(engine,document,slot.baselines,subject,{...options,kind});base=fixedNumber(baseline.reduce((sum,r)=>checkedFixed(sum+fixedUnits(r.value)),0n));}
  if(base===undefined&&slot.id==='economy:value'){
   if(kind==='labor')base=wageQuote(options).daily;
-  else base=optionalRead(()=>ctx.fact(subject,'basePrice'));
+  else base=optionalRead(()=>getContext().fact(subject,'basePrice'));
  }
  if(!Number.isFinite(base))reject('E-DERIVED-BASE','尚无足够知情或事实计算这个数值');
- let value=fixedUnits(base);const contributions=[];
+ const contributions=[];
  for(const row of registry.modifiers){
   if(registry.resolve(row.target).id!==slot.id)continue;
   const rowKind=registry.kindOf(row.target);if(rowKind&&rowKind!==kind)continue;
+  const ctx=getContext();
   ctx.sources.clear();
   const applied=optionalRead(()=>{
    // Explicit fact sources are gates as well as explanation metadata.
@@ -177,6 +188,14 @@ export function explainDerived(engine,document,id,subject,options={}){
   const old=groups.get(row.exclusiveGroup);if(!old||row.priority>old.priority||row.priority===old.priority&&row.value>old.value)groups.set(row.exclusiveGroup,row);
  }
  const active=contributions.filter(r=>!r.exclusiveGroup||groups.get(r.exclusiveGroup)===r);
+ // No installed correction must leave a native producer's IEEE value intact:
+ // decision costs include minutes/30, and rounding them to RX precision alone
+ // would change conditional prices and comparisons before any rule was added.
+ if(!active.length&&(!slot.paceable||options.pace===undefined||options.pace===1)){
+  const result=nativeResult(slot,base,kind);
+  return {id,slot:slot.id,kind,base,value:result.value,baseline,contributions:[],clamp:result.clamp};
+ }
+ let value=fixedUnits(base);
  for(const stage of STAGES.slice(0,-1))for(const row of active.filter(r=>r.stage===stage)){
   const before=value,n=fixedUnits(row.value);
   value=stage==='add'?checkedFixed(value+n):stage==='mul'?fixedMultiply(value,n):stage==='max'?(value>n?value:n):(value<n?value:n);
@@ -189,4 +208,13 @@ export function explainDerived(engine,document,id,subject,options={}){
  if(slot.stages.includes('clamp'))value=value<limits[0]?limits[0]:value>limits[1]?limits[1]:value;
  return {id,slot:slot.id,kind,base,value:fixedNumber(value),baseline,contributions:STAGES.flatMap(stage=>active.filter(r=>r.stage===stage)),clamp:{before:fixedNumber(unclamped),bounds:limits.map(fixedNumber),after:fixedNumber(value)}};
 }
-export const derived=(engine,document,id,subject,options={})=>explainDerived(engine,document,id,subject,options).value;
+function nativeResult(slot,base,kind){
+ const bounds=(slot.kindBounds?.[kind]??slot.bounds).map(n=>slot.relative?base*n:n).sort((a,b)=>a-b);
+ const value=slot.stages.includes('clamp')?Math.max(bounds[0],Math.min(bounds[1],base)):base;
+ return {value,clamp:{before:base,bounds,after:value}};
+}
+export function derived(engine,document,id,subject,options={}){
+ const registry=registryOf(engine),slot=registry.resolve(id),kind=registry.kindOf(id)??options.kind??'';
+ if(Number.isFinite(options.base)&&!registry.modifiers.length&&(!slot.paceable||options.pace===undefined||options.pace===1))return nativeResult(slot,options.base,kind).value;
+ return explainDerived(engine,document,id,subject,options).value;
+}

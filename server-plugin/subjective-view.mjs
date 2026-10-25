@@ -4,6 +4,8 @@ import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {languageId,isLanguage} from './domain-rules.mjs';
+import {registerDerivedViewResolver} from './derived.mjs';
+import {projectConsumerDerived} from './derived-consumers.mjs';
 declareHoldingWriter('person-languages');
 // The language catalogue (ids and short aliases) is world/rules/tables/domain-rules.json.
 // Initialization is a trusted campaign operation, never a proposal effect.
@@ -95,8 +97,9 @@ export function subjectiveView(engine,document,observer){
  const observable={location:here,people,season:engine.calendar?.(now)?.season??null,weather:copy(s.weather?.[here]??null),quotes:copy(s.marketReports?.[here]??null),
   services:people.flatMap(p=>p.services.map(service=>({provider:p.id,name:p.name,service})))};
  const prior=copy(b.priors??{});
- return {observer,minute:now,self,observable,knowledge:{memories,beliefs,facts},prior};
+ return projectConsumerDerived(engine,document,{observer,minute:now,self,observable,knowledge:{memories,beliefs,facts},prior});
 }
+registerDerivedViewResolver(subjectiveView);
 export function subjectiveFact(view,key){return view.knowledge.facts[key]??(Object.hasOwn(view.prior,key)?{value:view.prior[key],kind:'prior',credence:0.5}:null);}
 export const knownActiveObligations=view=>view.self.obligations.filter(active);
 

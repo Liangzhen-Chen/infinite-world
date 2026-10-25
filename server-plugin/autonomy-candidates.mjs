@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 // L1 extension point. Pack predicates and scores receive the four-domain view.
 import {npcDecision} from './npc-decision.mjs';
+import {consumerCoefficients} from './derived-consumers.mjs';
 import {subjectiveFact} from './subjective-view.mjs';
 import {loadActionRegistry,findAction} from './action-registry.mjs';
 const evalValue=(value,v)=>typeof value==='function'?value(v):value;
@@ -11,12 +12,13 @@ function applies(c,v){
  return subjectiveFact(v,p.fact)?.value===p.equals;
 }
 export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[]}={}){
+ const coefficients=consumerCoefficients(view,'autonomy'),decisionCoefficients=consumerCoefficients(view,'decision');
  const candidates=[...(engine.world.autonomy?.candidates??[]),...(engine.rules.npcAutonomy?.candidates??[]),...scheduled,...fallback];
  const needs=Object.values(view.self.goals??{}).flat().filter(g=>(g.progress??0)<100).sort((a,b)=>(b.urgency??0)-(a.urgency??0));
  const need=needs[0]?.need;
  return candidates.filter(c=>(!c.npc||c.npc===view.observer)&&(!need||!c.need||c.need===need)&&applies(c,view)).map(c=>{
   const decision=npcDecision(view,{kind:c.kind??c.action,from:view.observer,cost:c.cost,needSatisfaction:c.needSatisfaction??100,urgency:c.urgency??needs[0]?.urgency??0,tags:c.tags});
-  return {...c,decision,score:Number(evalValue(c.utility??0,view))-Number(evalValue(c.risk??0,view))*(view.self.traits.riskAversion??1)};
+  return {...c,decision,score:Number(evalValue(c.utility??0,view))*coefficients.utilityWeight-Number(evalValue(c.risk??0,view))*(view.self.traits.riskAversion??1)*decisionCoefficients.riskAversion*coefficients.riskWeight};
  }).filter(c=>c.decision.outcome==='agree').sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
 }
 // `via` submits a candidate; it never executes a caller's scheduled command.

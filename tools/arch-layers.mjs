@@ -41,7 +41,7 @@ put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.en
 put(['water-volume','documents'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['perception','norm-stack','place-layout','derived'],'L1');
+put(['perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 

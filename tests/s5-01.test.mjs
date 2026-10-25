@@ -8,6 +8,12 @@ import {derived,explainDerived,loadDerivedRegistry,selectDerivedBaseline,derived
 import {wageQuote} from '../server-plugin/obligation-state.mjs';
 import {registerHoldingKinds} from '../server-plugin/holding-kinds.mjs';
 import {holdingKind,registerHoldingKind} from '../server-plugin/holdings.mjs';
+import {standing,collectivesOf,eventWeight} from '../server-plugin/standing.mjs';
+import {subjectiveView} from '../server-plugin/subjective-view.mjs';
+import {npcDecision} from '../server-plugin/npc-decision.mjs';
+import {autonomyCandidates} from '../server-plugin/autonomy-candidates.mjs';
+import {digest,applyPatches} from '../server-plugin/storage.mjs';
+import {worldEvents} from '../server-plugin/world-events.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initialEngine=new WorldEngine(world),initial=initialEngine.createCharacter(seed,{},'s501-derived');
@@ -24,6 +30,98 @@ const mods=[
  {pack:'c',id:'max',target:slot.id,stage:'max',value:40},
  {pack:'a',id:'min',target:slot.id,stage:'min',value:35}
 ];
+
+test('consumer defaults preserve native decision arithmetic including non-fixed-point fractions',()=>{
+ const {engine,document}=scene(),view=subjectiveView(engine,document,'npc_hw_ayan');
+ const request={kind:'greet',cost:{coins:0.17,minutes:1,risk:0.13},reward:0.19,needSatisfaction:0.23};
+ const basis=npcDecision(view,request).trace.find(r=>r.stage==='cost_benefit').basis;
+ const relation=view.self.relations.player??{trust:0,favors:[]};
+ assert.equal(basis.cost,0.17+1/30+0.13*(view.self.traits.riskAversion??1)*10);
+ assert.equal(basis.benefit,0.19+(relation.trust??0)/10+(relation.favors?.filter(f=>f.status!=='已还').length??0)*3+0.23);
+});
+
+test('native decision and standing consumers read registered corrections once',()=>{
+ const native=scene(),corrected=scene({modifiers:[
+  {id:'time',target:'decision:timeDivisor',stage:'mul',value:2},
+  {id:'risk',target:'decision:riskWeight',stage:'mul',value:2},
+  {id:'trust',target:'social:standing',stage:'add',value:7,when:"kind == 'trust'"}
+ ]});
+ const read=f=>subjectiveView(f.engine,f.document,'npc_hw_ayan');
+ const before=read(native),after=read(corrected),request={kind:'greet',cost:{minutes:60}};
+ const cost=v=>npcDecision(v,request).trace.find(r=>r.stage==='cost_benefit').basis.cost;
+ assert.equal(cost(before),2);assert.equal(cost(after),1);
+ const risk=v=>npcDecision(v,{kind:'greet',cost:{risk:1}}).trace.find(r=>r.stage==='cost_benefit').basis.cost;
+ assert.equal(risk(after),risk(before)*2);
+ assert.equal(after.self.relations.player.trust,before.self.relations.player.trust+7);
+ assert.equal(standing(corrected.engine,corrected.document.state,'npc_hw_ayan'),standing(native.engine,native.document.state,'npc_hw_ayan')+7);
+ assert.deepEqual(structuredClone(after).derived,after.derived);
+});
+
+test('standing clamps only after reputation and impression have cancelled',()=>{
+ const f=scene(),holder='loc_hw',key=`reputation:${digest(['player','settlement',holder]).slice(0,24)}`;
+ const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records'],value:{...f.document.state.records,[key]:{reputation:30},[`standing:${holder}:player`]:{value:-60}}}]});
+ assert.deepEqual(setup.setupUnmet,[]);
+ assert.equal(standing(f.engine,setup.document.state,holder),90);
+ const corrected=scene({modifiers:[{id:'reputation',target:'social:reputation',stage:'mul',value:0.5},{id:'impression',target:'social:impression',stage:'add',value:10}]});
+ assert.equal(standing(corrected.engine,setup.document.state,holder),25);
+});
+
+test('existing household and settlement transmission ratios use the conduction slot',()=>{
+ const f=scene({modifiers:[{id:'conduction',target:'social:conduction',stage:'mul',value:1.5}]});
+ const rows=collectivesOf(f.engine,f.document.state,'npc_hw_linsui');
+ assert.equal(rows.find(r=>r.via.startsWith('household:')).ratio,0.75);
+ assert.equal(rows.find(r=>r.via==='settlement:loc_hw').ratio,0.45);
+ // A loaded world's coefficient table, rather than the process's core import,
+ // supplies the baseline before corrections (author data, not campaign setup).
+ f.engine.world.derived.consumers={...world.derived.consumers,standing:{transmission:{...world.derived.consumers.standing.transmission,settlement:0.4}}};
+ assert.equal(collectivesOf(f.engine,f.document.state,'npc_hw_linsui').find(r=>r.via==='settlement:loc_hw').ratio,0.6);
+});
+
+test('a real dialogue gift reaches event weight and collective standing through the slot',async()=>{
+ const f=scene({modifiers:[{id:'gift-weight',target:'social:eventWeight',stage:'mul',value:2}]});
+ const setup=applyIntentSetup(f.engine,f.document,{location:'bld_hw_qingdeng',present:['npc_hw_linsui'],minute:600,inventory:{item_ration:1}});
+ assert.deepEqual(setup.setupUnmet,[]);
+ const out=await f.engine.reduce(setup.document,{tool:'world_act',args:{action:'core:dialogue.ask',slots:{subject:'npc_hw_linsui',content:'weather',source:'item_ration'}},eventId:'derived-gift'});
+ const document=applyPatches(setup.document,out.patches),event=worldEvents(document.state,e=>e.verb==='gift'&&e.target==='npc_hw_linsui').at(-1);
+ assert.ok(event);assert.ok(event.value>0);
+ const baseline=Math.min(15,3+Math.floor(event.value/10));
+ assert.equal(eventWeight(event,f.engine.scoped(document),document.state),baseline*2);
+ assert.equal(standing(f.engine,document.state,'loc_hw'),Math.round(baseline*2*0.3));
+});
+
+test('private correction sources stay absent from projected coefficients and decision traces',()=>{
+ const f=scene({modifiers:[{id:'private-risk',target:'decision:riskWeight',stage:'mul',value:1.5,source:'fact:npc_hw_linsui:trust'}]});
+ const read=value=>{
+  const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs','npc_hw_linsui','trust'],value}]});
+  assert.deepEqual(setup.setupUnmet,[]);
+  const view=subjectiveView(f.engine,setup.document,'npc_hw_ayan');
+  assert.equal(JSON.stringify(view.derived).includes('private-risk'),false);
+  return npcDecision(view,{kind:'greet',cost:{risk:0.1}}).trace;
+ };
+ assert.deepEqual(read(40),read(80));
+});
+
+test('autonomy scoring reads utility and risk slots through the native subjective projection',()=>{
+ const f=scene({modifiers:[{id:'utility',target:'autonomy:utilityWeight',stage:'mul',value:1.5},{id:'risk',target:'autonomy:riskWeight',stage:'mul',value:0.5}]});
+ // Availability and goals are unrelated premises, declared natively.
+ const npc='npc_hw_ayan',setup=applyIntentSetup(f.engine,f.document,{facts:[
+  {path:['state','npcs',npc],value:{...f.document.state.npcs[npc],goals:{},activity:'idle'}}
+ ]});
+ assert.deepEqual(setup.setupUnmet,[]);
+ const view=subjectiveView(f.engine,setup.document,npc);
+ const candidate={id:'derived-craft',action:'core:craft.manufacture',utility:10,risk:2,urgency:100};
+ const result=autonomyCandidates(f.engine,view,{fallback:[candidate]}).find(r=>r.id===candidate.id);
+ assert.ok(result);assert.equal(result.score,15-(view.self.traits.riskAversion??1));
+});
+
+test('new consumer slots and divisor baselines reject invalid bounds at world loading',()=>{
+ for(const target of [...['moneyWeight','timeDivisor','riskWeight','riskAversion','familyWeight','reputationWeight','rewardWeight','trustDivisor','favorWeight','needWeight'].map(key=>`decision:${key}`),'autonomy:utilityWeight','autonomy:riskWeight','social:eventWeight','social:conduction']){
+  assert.throws(()=>scene({modifiers:[{id:'outside',target,stage:'mul',value:3}]}),e=>e.code==='E-DERIVED-BOUNDS');
+ }
+ for(const target of ['social:relation','social:reputation','social:impression','social:standing'])assert.throws(()=>scene({modifiers:[{id:'outside',target,stage:'add',value:101}]}),e=>e.code==='E-DERIVED-BOUNDS');
+ const invalid={...world,derived:{...world.derived,consumers:{...world.derived.consumers,decision:{timeDivisor:{slot:'decision:timeDivisor',base:0}}}}};
+ assert.throws(()=>loadDerivedRegistry(invalid),e=>e.code==='E-DERIVED-BOUNDS');
+});
 test('native world loader supplies slots and aliases; all modifier permutations give identical values and explanations',()=>{
  assert.ok(world.derived.slots.some(r=>r.id==='economy:wage'));
  function permutations(rows){return rows.length?rows.flatMap((r,i)=>permutations(rows.filter((_,j)=>i!==j)).map(t=>[r,...t])):[[]];}
