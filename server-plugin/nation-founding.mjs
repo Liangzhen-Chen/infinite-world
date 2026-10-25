@@ -201,7 +201,7 @@ export function nationAction(d,args,src){
  throw preconditionFailure('未知国家事务');
 }
 export function advanceNations(d,e,{before,after}){
- const r=nobleRules(e);if(!r||e.replaying&&!e.replayResult?.sovereigntyVersion)return;
+ const r=nobleRules(e);if(!r)return;
  for(const n of nationRows(d.get('state')).filter(n=>liveNation(d.get('state'),n.id))){
   if(n.reaction==='待集结'){const war=launchIndependenceWar(d,e,n,after,`${n.id}:muster`);if(war)holdingSet(d,e,rec(`nation:${n.id}`),{...n,reaction:'宣战',war:war.id},'nation-founding');}
   for(let at=n.nextReview;at<=after&&liveNation(d.get('state'),n.id);at+=r.founding.reviewDays*DAY){

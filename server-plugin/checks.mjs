@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {createHash}from'node:crypto';
 import {effectiveProficiency}from'./professions.mjs';
 import {heldUnit}from'./items.mjs';
-import {trickKey,adaptationBonus,noteTrick,intelligenceFresh}from'./npc-intelligence.mjs';
+import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {hiddenCheckBonus,passiveDomain,observationTime}from'./hidden-passives.mjs';
 import {isPhysicallyDead}from'./holdings.mjs';
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}不在允许范围`);return value;};
@@ -72,7 +72,7 @@ export function check(d,args,eventId){
         if(Object.keys(args.opponent).some(key=>!['npc','attribute','skill'].includes(key)))throw preconditionFailure('不能指定对手的修正或骰点');
         const otherSkill=args.opponent.skill?this.resolve(args.opponent.skill,'skill'):null;
         // 灵智：玩家同一手法屡次得手后，对手起防备（只看玩家所用属性与技能）。
-        trick=trickKey(attribute,skill);const wary=intelligenceFresh(this)?adaptationBonus(this,d.get('state'),npc,trick):0;
+        trick=trickKey(attribute,skill);const wary=adaptationBonus(this,d.get('state'),npc,trick);
         const roll=die(d.document,eventId,'opponent:d20'),modifier=modifierForNpc(d,this,npc,otherAttribute,otherSkill,domain)+wary;
         opponent={npc,attribute:otherAttribute,skill:otherSkill,die:roll,modifier,total:roll+modifier,...(wary?{wary}:{})};difficulty=opponent.total;
     }else{

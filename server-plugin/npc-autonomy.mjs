@@ -29,7 +29,7 @@ import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
 import {kilnWorkResult} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
-import {intelligenceOf,intelligenceFresh,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
+import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {subjectiveView,subjectiveFact,conversationLanguage} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -266,9 +266,9 @@ export function applyNpcPlan(d,engine,input,eventId){
  if(!Array.isArray(input.proposals)||input.proposals.length>20)throw preconditionFailure('计划人数超限');
  const ids=new Set(),results=[];
  // 计划长度由灵智决定：超出本人谋算的后续步骤逐条拒绝；旧事件重放仍按每人两步。
- const fresh=intelligenceFresh(engine),most=fresh?INTELLIGENCE_LEVELS[5].maxActions:2;
+ const most=INTELLIGENCE_LEVELS[5].maxActions;
  for(const proposal of input.proposals){if(ids.has(proposal.npc)||!full(engine,proposal.npc)||!Array.isArray(proposal.actions)||proposal.actions.length>most)throw preconditionFailure('计划人物重复或单人行动超限');ids.add(proposal.npc);}
- for(const proposal of input.proposals){const reach=fresh?intelligenceOf(engine,d.get('state'),proposal.npc).maxActions:2;for(const [index,action]of proposal.actions.entries()){
+ for(const proposal of input.proposals){const reach=intelligenceOf(engine,d.get('state'),proposal.npc).maxActions;for(const [index,action]of proposal.actions.entries()){
   const id=`npc_plan_${digest([input.stateFingerprint,proposal.npc,index,action]).slice(0,24)}`;
   try{
    if(index>=reach)throw preconditionFailure('计划步数超出本人灵智所及');

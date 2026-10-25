@@ -96,12 +96,10 @@ export function applySummon(d, prepared, eventId) {
         ...(template.tasks.includes('guard')?{guardReserve:reserve}:{}) });
     d.set(['state', 'records', key], { category: 'summon_contract', owner: 'player', effect: eventId,
         spell: catalog.id, started: now, expires: now + catalog.duration, status: '履行中', paidUpkeep: 0, terms });
-    // Old recorded casts keep their projection; new casts and their replays
-    // create the same single upkeep claim without repeating the spell cost.
-    const upkeep=!this.replaying||this.replayResult?.summonUpkeepVersion===1
-      ?openSummonUpkeep(d,this,{summon:eventId,eventId}):null;
+    // Casts and their replays create the same upkeep claim.
+    const upkeep=openSummonUpkeep(d,this,{summon:eventId,eventId});
     const work=template.work?applySummonWork.call(this,d,d.get('state','effects',eventId),eventId):{};
-    return { summon: eventId, contract: key, expires: now + catalog.duration, terms,...work,...(upkeep?{obligation:upkeep.id,summonUpkeepVersion:1}:{}) };
+    return { summon: eventId, contract: key, expires: now + catalog.duration, terms,...work,...(upkeep?{obligation:upkeep.id}:{}) };
 }
 
 function end(d, id, effect, status, minute) {

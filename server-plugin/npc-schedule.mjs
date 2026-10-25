@@ -203,8 +203,11 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     let candidates;
-    if(!promote&&!batch&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
+    if(!promote&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
         const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
+        // Distant fixed-location actors have no individual heap entries;
+        // include them when their regional clock is due.
+        for(const [id,group] of batch?.persons??[])if(group.due)due.add(id);
         for(const c of [...prepared.courses,...courses??[]])for(const id of [c.teacher,...c.students])if(id)due.add(id);
         let replaced=false;
         for(let i=prepared.patchStart;i<d.patches.length;i++){

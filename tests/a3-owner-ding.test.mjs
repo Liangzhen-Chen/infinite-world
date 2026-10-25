@@ -368,24 +368,6 @@ test.todo('Q: an incapacitated incumbent cannot receive a new request or appear 
  }
 });
 
-test('Q: legacy cases retain party identity through offender without a new parties projection',async()=>{
- // Replay the actual theft through the pre-S4-06 result format. The engine,
- // rather than a direct state edit, produces the historical case shape.
- const f=await nativeTrial({advocate:true});trialScene(f,'bld_hw_qingdeng',[trialPeople.guard,trialPeople.victim]);
- const input={tool:'world_crime',eventId:'legacy-party-theft',args:{operation:'steal',target:trialPeople.victim,coins:1}};
- const current=await f.engine.reduce(f.document,input),historical=structuredClone(current.result);
- delete historical.legalFilingVersion;delete historical.legalProcedureVersion;
- const replayed=await f.engine.reduce(f.document,input,{replay:true,result:historical});f.document=applyPatches(f.document,replayed.patches);
- const id=historical.case,row=f.document.state.records[id];
- assert.equal(row.category,'legal_case');assert.equal(row.offender,'player');assert.equal(row.parties,undefined);assert.equal(row.sourceEvent,undefined);
- trialScene(f,'bld_bs_office',[trialPeople.reviewer]);const coins=f.document.state.player.coins;
- const out=await trialCall(f,'core:law.hire_advocate',{case:id,authority:trialPeople.reviewer,request:{kind:'defense',target:trialPeople.reviewer,terms:{case:id,quoteOnly:true}}},'legacy-party-request');
- assert.equal(out.detail.submitted,true);assert.equal(out.detail.case,id);
- assert.deepEqual(lawView(f.engine,f.document).requests.find(r=>r.id===out.detail.request).sourceEvents,[]);
- assert.equal(f.document.state.player.coins,coins);assert.equal(f.document.state.records[id].representation,undefined);
- assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
-});
-
 test.todo('N–Q: all owned setup premises are loaded; E appointments and S4 spatial premises remain separately owned〔前提待真实动作：由动作建立组合用例中的所有柜台、存单、维持债权、机构案件及纸本前提；归 S5〕',()=>{
  for(const id of ['032','037','051','052','054','055','056','057','058','073','082','107']){
   const loaded=load(id);assert.deepEqual(ownedErrors(loaded),[],id);clean(save(loaded.document));

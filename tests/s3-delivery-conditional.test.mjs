@@ -67,15 +67,13 @@ test('实签报恩、还愿和生灵契约按实物履行，不把历史感恩�
   assert.equal(dueObligation(d.get('state'),kind).owed,0);assert.equal(e.quantity(d,'player','item_oats'),2);
  }
 });
-test('NPC预约使用规范签署身份，按真实出席履行并保留旧回放形状',()=>{
+test('NPC预约使用规范签署身份，按真实出席履行',()=>{
  const {d,e}=setup();e.byId.get(DRIVER).tier='full';
  const args={type:'会面',promisor:DRIVER,promisee:'player',content:'当面确认运单',start:600,deadline:630,location:'loc_hw'};
  const signed=createNpcObligation(d,e,args,'meeting').obligation;
  assert.equal(signed.runtimeVersion,1);assert.equal(signed.kind,'promise');assert.equal(signed.debtor,DRIVER);
  d.set(['state','minute'],630);advanceNpcObligations(d,e,600,630,'attendance');
  assert.equal(d.get('state','obligations',signed.id,'status'),'已完成');
- const old=setup();old.e.byId.get(DRIVER).tier='full';old.e.replaying=true;old.e.replayResult={obligation:{reservationVersion:1}};
- assert.equal(createNpcObligation(old.d,old.e,args,'legacy').obligation.runtimeVersion,undefined);
 });
 test('预约互斥先拒绝且不扣款；收约方可取消自己的预约',()=>{
  const {d,e}=setup();e.byId.get(DRIVER).tier='full';

@@ -75,9 +75,7 @@ test('delivery performance moves the actual stock and cannot pay twice or comple
  const before=f.e.quantity(d,worker,'item_bread');const result=performObligation(d,f.e,{id:'goods',actor:host},'deliver');assert.equal(result.delivered,2);assert.equal(f.e.quantity(d,worker,'item_bread'),before+2);
  assert.deepEqual(performObligation(d,f.e,{id:'goods',actor:host},'deliver'),result);assert.throws(()=>performObligation(d,f.e,{id:'goods',actor:host},'again'),/closed/);balanced(f,d);
 });
-test('historical wage receipts keep their old rounding and new receipts retain fractions across segments',()=>{
+test('wage receipts retain fractions across segments',()=>{
  const make=()=>{const f=fixture();f.doc.ledger=openLedger(f.e,f.doc);const row={id:'job',category:'contract',kind:'workshop',owner:host,worker,wage:7,createdAt:0,starts:0,deadline:DAY,status:'有效'};f.doc.state.records.job=row;return {f,row,d:f.draft()};};
- const old=make();old.f.e.replaying=true;old.f.e.replayResult={laborMarketVersion:1};
- const a=settleEmploymentPay(old.d,old.f.e,old.row,600,1),b=settleEmploymentPay(old.d,old.f.e,old.row,601,239);assert.equal(a.earned+b.earned,5);assert.equal(old.d.get('state','records','employment_pay:job:600'),undefined);
  const fresh=make();const c=settleEmploymentPay(fresh.d,fresh.f.e,fresh.row,600,1),e=settleEmploymentPay(fresh.d,fresh.f.e,fresh.row,601,239);assert.equal(c.earned+e.earned,4);balanced(fresh.f,fresh.d);
 });

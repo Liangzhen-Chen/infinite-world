@@ -40,7 +40,6 @@ import {factionClockRules,spendFactionAssets,creditFactionAssets} from './factio
 import {adjustStanding} from './standing.mjs';
 import {authorityOf} from './governance.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
-import {villageWildlifeFresh} from './quest-wildlife.mjs';
 
 const DAY=1440,GRADES=['D','C','B','A','S'],OBJECTIVES=['deliver','visit','record'],FUNDING=['faction','treasury'];
 const OUTCOMES=['pause','resume','redirect','support'],active=q=>['公开','进行中'].includes(q.status);
@@ -48,9 +47,7 @@ const int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const rules=engine=>engine.rules.questSources??null;
 const digest=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0,16);
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
-export const QUEST_SOURCES_VERSION=1;
 // 旧事件重放不补出任务：只有新结算或重放结果已带本版本号时才生成。
-export function questSourcesFresh(engine){return !engine.replaying||engine.replayResult?.questSourcesVersion===QUEST_SOURCES_VERSION;}
 
 // ---- 等级折算：1S=10A=100B=1000C=10000D --------------------------------------
 export const gradeUnitsD=(engine,grade)=>engine.rules.quests.quotaUnits[grade];
@@ -334,7 +331,7 @@ registerQuestGenerator({id:'effect_table',order:300});
 
 // Local offers share U17 posting, escrow and expiration. Never spawn a target.
 function scanVillageWildlife(d,engine,at){
- if(!villageWildlifeFresh(engine))return [];
+
  const t=rules(engine),posted=[];
  for(const row of t?.wildlife??[]){
   const o=row.objective,targets=o.type==='creature'?Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.species===o.species&&a.location===o.location&&a.hp>0&&a.status==='正常'&&!a.owner).map(([id])=>id).sort():[o.target??'once'];
@@ -370,7 +367,7 @@ export function openSettlementLedgers(engine,document){
 
 // 推进注册表：每个午夜（含跨日一段推进中的每个午夜）跑一次各生成器。
 export function advanceQuestSources(d,engine,{before,after}){
- if(!rules(engine)||!questSourcesFresh(engine))return [];
+ if(!rules(engine))return [];
  assertQuestSources(engine);
  const posted=[];
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){

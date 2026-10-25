@@ -64,7 +64,7 @@ test('玩家代付入会费和首期会费仍须NPC本人同意；通过入账�
     assert.equal(lapsed.document.ledger.accounts[escrow]??0,0);
 });
 
-test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直接入组织；旧复演保留本人付款',async()=>{
+test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直接入组织',async()=>{
     const s=setup(),{document:c0,id}=await found(s);
     const c=(await s.org(c0,{operation:'org_propose',org:id,action:'charter',cost:7,coins:2,consent:false},'shop-fees')).document;
     // An existing NPC business is the supported member; its representative remains an agent.
@@ -74,10 +74,6 @@ test('商号入会由现任代表本人同意，玩家代付从玩家钱袋直�
     assert.equal(joined.result.joined,true);assert.equal(joined.document.state.player.coins,491);assert.equal(joined.document.state.npcs[B].coins,100);
     const view=organization(s.engine,joined.document.state,id);assert.equal(view.treasury,9);assert.equal(view.members.fee_test_business.representative,B);
     assert.ok(joined.document.state.consentEvents.some(row=>row.from===B&&row.scope==='org.join'&&row.subject===id));
-    const legacy=await s.engine.reduce(c,{tool:'world_settlement',args:{operation:'org_join',org:id,member:A,consent:true,feePayer:'player'},eventId:'old-funded'},{replay:true,result:{}});
-    const old=applyPatches(c,legacy.patches);
-    assert.equal(legacy.result.organizationConsentVersion,undefined);assert.equal(old.state.player.coins,500);assert.equal(old.state.npcs[A].coins,93);
-    assert.equal(organization(s.engine,old.state,id).treasury,7);assert.equal(old.state.consentEvents,undefined);
 });
 
 test('创立行会：玩家任会长，章程与公库可查；存入记账并提升组织立场；组织行为成为世界事件',async()=>{

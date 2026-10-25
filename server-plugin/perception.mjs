@@ -105,7 +105,7 @@ export function visibleEntity(engine,document,target,observer='player'){
 // A visible zone supplies a ranged/observational measurement, never contact or
 // the exact point required by a radius spell. Walking up supplies that proof.
 export function perceptionTargetFacts(engine,document,observer,target){
- if(engine.replaying&&engine.replayResult?.perceptionVersion!==1)return null;
+
  const p=perceives(engine,document,observer,{actor:target,location:document.state.location,volume:0});
  if(p.distanceMeters===undefined)return null;
  if(p.distanceMeters===null)return {distanceMeters:Infinity,lineOfSight:false};

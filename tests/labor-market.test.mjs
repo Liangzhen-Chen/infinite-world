@@ -188,10 +188,9 @@ test('远方统计层按聚合工时履约；不插入逐人结算边界，结�
     a=near.doc.state.records[a.id];b=remote.doc.state.records[b.id];assert.equal(b.workedMinutes,a.workedMinutes);assert.equal(b.paid,a.paid);assert.equal(b.produced,a.produced);assert.ok(b.shifts.some(s=>s.aggregate));assert.equal(b.aggregateMinutes,b.workedMinutes);
 });
 
-test('world_time推进真实撮合与履约，旧事件重放不补签新合同',async()=>{
+test('world_time推进真实撮合与履约',async()=>{
     const f=setup();await f.act({minutes:DAY-f.doc.state.minute},'day','world_time');const row=contracts(f).find(r=>r.worker===worker);assert.ok(row);
     await f.act({minutes:row.nextWork-f.doc.state.minute},'work','world_time');assert.ok(f.doc.state.records[row.id].paid>0);
-    const replay=setup();replay.e.replaying=true;replay.e.replayResult={};advance(replay,DAY);assert.equal(contracts(replay).length,0);
 });
 
 test('一个长推进内同岗位再次招人保留旧合同、签约事实与工资记录',()=>{

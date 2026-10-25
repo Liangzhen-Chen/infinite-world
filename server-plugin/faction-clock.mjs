@@ -18,7 +18,7 @@ const uint=n=>Number.isSafeInteger(n)&&n>=0;
 // B4/B5 may publish runtime stages on the faction's clock or in rules.
 // Existing trigger/stageEffects prose is deliberately not an executable plan.
 export function factionClockRules(engine){
- if(engine.replaying&&engine.replayResult?.factionClockVersion!==1)return [];
+
  const configured=engine.rules.factionClock;
  if(configured&&(configured.version!==1||!Array.isArray(configured.clocks)))throw Error('势力时钟规则版本无效');
  // Authored clocks first (configured rules, then each faction's own plan), so a

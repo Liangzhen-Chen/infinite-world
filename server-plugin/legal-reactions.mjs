@@ -5,7 +5,7 @@ import {knownWorldEventReference,worldEvent} from './world-events.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 
 export const FILING_VERSION=1;
-export const freshFiling=engine=>!engine.replaying||engine.replayResult?.legalFilingVersion===FILING_VERSION;
+
 const filingFailure=reason=>reject('E-ACTION-LEGAL-REQUEST',reason,{missing:[reason],repair:['取得本人所知的事件及在场有权收件人，再递交原请求']});
 
 // Offices supply powers and hours; a caller cannot supply either in a claim.
@@ -35,4 +35,3 @@ export function filingKnowledge(engine,d,actor,reference){
  if(!version||typeof version!=='object')throw preconditionFailure('报案者没有可提交的事件版本');
  return {sourceEvent:id,version,direct};
 }
-

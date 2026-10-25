@@ -47,17 +47,20 @@ test('按所在地派生层级；统计层接近后无损补算，重启与分�
     const eager=structuredClone(fixture.document);eager.state.location=distant.id;
     const ed=fixtureDraft(eager),ee=fixture.engine.scoped(eager);ee.replaying=true;ee.replayResult={};
     for(let at=start;at<end;){const next=Math.min(end,at+120);advanceNpcSchedules(ed,ee,at,next);at=next;}
+    eager.state.minute=end;eager.state.location=eager.state.remote[county].skeleton.seat;
+    advanceNpcSchedules(ed,ee,end,end,{promote:true});
     assert.deepEqual(ids.map(id=>doc.state.npcs[id]),ids.map(id=>eager.state.npcs[id]));
     const again=digest(doc);advanceNpcSchedules(d,e,end,end,{promote:true});assert.equal(digest(doc),again);
 });
-test('特殊状态和完整档保留个体结算；旧回执不启用新层级',()=>{
+test('特殊状态和完整档保留个体结算；现行层级重放一致',()=>{
     const doc=structuredClone(fixture.document),e=fixture.engine.scoped(doc),batch=remoteScheduleBatch(e,doc.state,doc.state.minute,doc.state.minute+1);
     const id=[...batch.persons.keys()][0];assert.ok(id);
     doc.state.npcs[id].caring={location:doc.state.npcs[id].location};
     assert.equal(remoteScheduleBatch(e,doc.state,0,1).persons.has(id),false);
     delete doc.state.npcs[id].caring;doc.state.npcs[id].life={kind:'illness'};
     assert.equal(remoteScheduleBatch(e,doc.state,0,1).persons.has(id),false);
-    e.replaying=true;e.replayResult={};assert.equal(remoteScheduleBatch(e,doc.state,0,1).persons.size,0);
+    const current=remoteScheduleBatch(e,doc.state,0,1);
+    e.replaying=true;e.replayResult={};assert.deepEqual(remoteScheduleBatch(e,doc.state,0,1),current);
 });
 test('补货只读人口数与完整视图一致，零人口和无账本分支不失真；远方升格读取不授予四村任命权',()=>{
     const doc=structuredClone(fixture.document),e=fixture.engine.scoped(doc),sid=doc.state.remote[Object.keys(doc.state.remote)[0]].skeleton.settlements[0].id;
@@ -91,8 +94,8 @@ test('统计层只留住区聚合；接近后种子重放逐字节恢复身份�
     settlePopulationLayers(d,e);settlePopulationLayers(r,fixture.engine.scoped(restored));assert.deepEqual(doc,restored);
     for(const [id,bytes] of original)assert.equal(JSON.stringify(doc.state.created[id]),bytes,id);
     assert.deepEqual(doc.state.population[sid],fixture.document.state.population[sid]);
-    const old=JSON.parse(before),legacy=fixture.engine.scoped(old);legacy.replaying=true;legacy.replayResult={advanceLayerVersion:1};
-    settlePopulationLayers(fixtureDraft(old),legacy);assert.equal(JSON.stringify(old),before,'旧回执不引入压缩');
+    const replayed=JSON.parse(before),replay=fixture.engine.scoped(replayed);replay.replaying=true;replay.replayResult={};
+    settlePopulationLayers(fixtureDraft(replayed),replay);assert.equal(JSON.stringify(replayed),checkpoint,'现行层级压缩重放一致');
 });
 test('核心默认世界提示逐字节相同；读取缓存后当前改名和年龄仍即时派生',async()=>{
     const {engine,document}=await scaleFixture({counties:0}),before=JSON.stringify(document);

@@ -148,7 +148,7 @@ function educationCatalog(e,s){
    sites:[...e.world.locations,...entities.filter(x=>x.id?.startsWith('bld_'))].filter(p=>/学堂|学馆|私塾|书院|义学/.test(`${p.name??''} ${p.purpose??''}`)||p.facilityType==='school')};
  })();worldCache.created.set(created,catalog);return catalog;
 }
-export const educationFresh=e=>!e.replaying||e.replayResult?.educationVersion===1;
+
 export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
 export const knowledgeProficiency=(e,s,id,skill)=>{
  const b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[skill]:s.npcs?.[id]?.skills?.[skill]??b?.proficiencies?.[skill]??b?.skills?.[skill];
@@ -187,7 +187,7 @@ export function educationCourses(e,s){
  return hit;
 }
 function deriveEducationCourses(e,s){
- if(!educationFresh(e))return [];
+
  const rows=educationRows(s),out=[...rows];
  // Derive classes from the teacher's current work, not just the authored
  // schedule. Hired teachers and changed livelihoods use the same entrance.

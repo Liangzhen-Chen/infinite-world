@@ -239,13 +239,12 @@ function settlementForDistrict(world,location){
 
 export function populationRecord(state,settlementId){return state.population?.[settlementId]??null;}
 
-export const populationLayersFresh=engine=>!engine.replaying||engine.replayResult?.populationLayerVersion===1;
 // Only untouched roster identities may be discarded. Anything referenced by
 // a memory, contract, household change or individual simulation remains real.
 // District aggregates and the captured template/basis replay the same names,
 // ages, kinship and minor flags when the county comes back into range.
 export function settlePopulationLayers(d,engine){
-    const state=d.get('state');if(!Object.keys(state.remote??{}).length||!populationLayersFresh(engine))return;
+    const state=d.get('state');if(!Object.keys(state.remote??{}).length)return;
     const plan=advanceLayerPlan(engine,state),far=[],near=[];
     for(const [sid,record] of Object.entries(state.population??{})){
         const county=plan.countyOf(sid);if(!state.remote[county])continue;

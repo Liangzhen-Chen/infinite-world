@@ -3,7 +3,7 @@
 const DAY=1440;
 import {obligationClosed} from './obligation-protocol.mjs';
 export const ADVANCE_LAYERS=Object.freeze({intelligent:1,rule:DAY,statistics:7*DAY});
-export const advanceLayersFresh=engine=>!engine.replaying||engine.replayResult?.advanceLayerVersion===1;
+
 export const regionProgressKey=county=>`advance_region:${county}`;
 const layerPlans=Symbol('advance layer plans');
 export function advanceLayerPlan(engine,state){
@@ -39,7 +39,7 @@ export function advanceLayerPlan(engine,state){
 // Obligations, full profiles, illness, custody, work and changed livelihoods
 // continue to use individual settlement at their existing event boundaries.
 export function remoteScheduleBatch(engine,state,before,after,{promote=false}={}){
-    if(!advanceLayersFresh(engine))return {groups:new Map(),persons:new Map()};
+
     const plan=engine.advanceLayerContext??advanceLayerPlan(engine,state),groups=new Map(),persons=new Map();
     for(const [county,remote] of Object.entries(state.remote??{})){
         const layer=plan.layers.get(county)??'statistics',through=state.records?.[regionProgressKey(county)]?.scheduleThrough??remote.minute;

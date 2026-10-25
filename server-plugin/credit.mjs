@@ -129,8 +129,6 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue})
 // Creates the debt; the principal goes to the player or into a contract's escrow.
 // S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
 export function loanSuccessionTerms(d,engine){
-    if(engine.replaying&&engine.replayResult?.loanSuccessionVersion!==1)return null;
-    d.loanSuccessionVersion=1;
     return {onDebtorGone:'assume_by_heirs'};
 }
 export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource}){
@@ -279,9 +277,9 @@ export async function creditTrade(d,args,eventId,terms){
             }
         }
         const depositMinutes=engine.world.primitiveTables?.['action-costs']?.rows?.find(r=>r.selector==='bank.deposit')?.timeMin;
-        const calibratedDeposit=op==='deposit'&&depositMinutes&&(!engine.replaying||engine.replayResult?.dailyCostsVersion===1);
+        const calibratedDeposit=op==='deposit'&&depositMinutes;
         holdingSet(d,engine,rec(b.id),row,'credit');engine.advance(d,calibratedDeposit?depositMinutes:5,eventId);
-        return {bank:b.id,keeper,balance:row.accounts.player??0,...detail,...(calibratedDeposit?{dailyCostsVersion:1}: {})};
+        return {bank:b.id,keeper,balance:row.accounts.player??0,...detail};
     }
     if(op==='work'){
         const minutes=int(args.minutes??240,30,480,'工时'),employer=counterpart(d,engine,args.seller,{consent:args.consent,minutes});
@@ -346,4 +344,3 @@ export function advanceCredit(d,engine,minute,recordIds){
     for(const [id,row]of rows())
         if(isCreditDebt(row)&&row.kind!=='pawn'&&row.status==='逾期'&&!row.defaulted&&(row.installmentOverdueAt??row.deadline)+currentGrace(engine,d.get('state'),row,minute,{fallbackMinutes:c.loan.defaultGraceMinutes??0}).minutes<=minute)defaultDebt(d,engine,id,row);
 }
-

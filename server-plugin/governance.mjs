@@ -305,9 +305,9 @@ export function governanceAction(d,args,eventId){
     const result=action.call(this,d,args,eventId);
     if(args.operation!=='governance_inspect'&&args.operation!=='governance_office_inspect'){
         // The办理 receipt is the producer; reading/printing it never performs
-        // the business again. Older replays retain their original event set.
-        if(!this.replaying||this.replayResult?.institutionEventVersion===1){
-            result.institutionEventVersion=1;
+        // the business again.
+        {
+
             publishTransitionEvent(d,this,{id:eventId,verb:'request',actor:'player',target:null,minute:d.get('state','minute'),location:d.get('state','location'),source:{receipt:key},tags:['institution'],summary:'办理机构事务'});
         }
         holdingSet(d,null,path(key),{category:'governance_receipt',...(args.settlement?{settlement:this.resolve(args.settlement,'loc')}:{}),fingerprint,result:structuredClone(result)},'governance');

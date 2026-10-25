@@ -123,12 +123,11 @@ test('讼师费用实付、技能减罚且不减赔偿，缺证不获定罪，�
  doc.state.npcs[lawyer].occupation='小贩';assert.equal(advocateService(engine,doc.state,lawyer),null);
  const noEvidence=structuredClone(doc);noEvidence.state.records['legal_case:client'].evidence=[];const no=await engine.reduce(noEvidence,{tool:'world_law',args:{operation:'hear',case:'legal_case:client',authority:judge},eventId:'no-proof'});assert.equal(no.result.convicted,false);
 });
-test('推进注册表触发离屏来源，当前现场不结算，旧回执不补造犯罪；重启存档保留同一案件',async t=>{
+test('推进注册表触发离屏来源，当前现场不结算；重启存档保留同一案件',async t=>{
  const {engine,document}=setup();document.state.minute=599;document.state.npcs[actor].intelligence.level=1;
  const result=await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'}),after=applyPatches(document,result.patches);
- const crimes=Object.values(after.state.records).filter(r=>r.category==='legal_suspicion'&&r.npcCrime);assert.ok(crimes.some(r=>r.offender===actor));assert.equal(result.result.npcCrimeVersion,1);
+ const crimes=Object.values(after.state.records).filter(r=>r.category==='legal_suspicion'&&r.npcCrime);assert.ok(crimes.some(r=>r.offender===actor));
  assert.deepEqual((await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:result.result})).patches,result.patches);
- const old={...result.result};delete old.npcCrimeVersion;const replay=await engine.reduce(document,{tool:'world_time',args:{minutes:2},eventId:'crime-tick'},{replay:true,result:old});assert.ok(!Object.values(applyPatches(document,replay.patches).state.records).some(r=>r.npcCrime));
  const dir=await fs.mkdtemp(path.join(tmpRoot(),'l1-npc-crime-'));t.after(()=>{const target=path.resolve(dir);if(!target.startsWith(path.resolve(tmpRoot())+path.sep+'l1-npc-crime-'))throw Error('临时目录边界错误');return fs.rm(target,{recursive:true,force:true});});
  const reducer=(doc,input,options)=>engine.reduce(doc,input,options),store=new CampaignStorage(dir,{reducer});await store.create({id:'npc-crime',worldVersion:engine.world.version,document});
  await store.transact('npc-crime',{id:'crime-tick',anchor:'crime-tick',input:{tool:'world_time',args:{minutes:2},eventId:'crime-tick'}},reducer);

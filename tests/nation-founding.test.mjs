@@ -81,7 +81,7 @@ test('NPC领主按野心、处境和外部同盟离屏宣布独立，使用同�
  const at=120*DAY;d.set(['state','minute'],at);advanceNations(d,e,{before:119*DAY,after:at});const n=rulerNation(d.get('state'),who);assert.ok(n);assert.equal(n.ruler,who);assert.equal(d.get('state','npcs',who,'coins'),30000);assert.equal(groupAccountView(e,d.get('state'),n.id).coins,20000);
 });
 test('公开工具入口可以查询及宣布独立，旧事件重放不引入新建国推进',async()=>{
- const {e,d}=ready(),out=await e.reduce(d.document,{tool:'world_settlement',args:{operation:'nation_inspect'},eventId:'inspect'});assert.ok(out.result.readiness.ready);assert.equal(out.result.sovereigntyVersion,1);
+ const {e,d}=ready(),out=await e.reduce(d.document,{tool:'world_settlement',args:{operation:'nation_inspect'},eventId:'inspect'});assert.ok(out.result.readiness.ready);
  const result=await e.reduce(d.document,{tool:'world_settlement',args:{operation:'nation',choice:'found',name:'垄渠公国',settlement:village,coins:25000},eventId:'public_found'});const doc=applyPatches(d.document,result.patches);assert.ok(rulerNation(doc.state,'player'));
  e.replaying=true;e.replayResult={};const before=digest(d.get('state'));advanceNations(d,e,{before:100*DAY,after:150*DAY});assert.equal(digest(d.get('state')),before);
 });

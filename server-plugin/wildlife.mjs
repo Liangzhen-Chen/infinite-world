@@ -50,9 +50,9 @@ const wildPresent=(d,species,location)=>Object.entries(d.get('state','creatures'
 export function wildlifeStirFactor(state,habitatId,minute){const r=state.records?.[`wildlife:stir:${habitatId}`];return r?.category==='wildlife_stir'&&r.since<=minute&&r.until>minute?r.factor:1;}
 const encounterPath=h=>['state','records',`wildlife:encounter:${h}`];
 const WINDOW=360;
-const encounterEnabled=engine=>!engine.replaying||engine.replayResult?.wildlifeEncounterVersion===1;
+
 export function nextWildlifeEncounterMinute(d,engine,now){
-    if(!encounterEnabled(engine)||engine.npcObligationAction?.tool!=='time')return Infinity;
+    if(engine.npcObligationAction?.tool!=='time')return Infinity;
     const habitat=engine.rules.wildlife?.habitats.find(h=>h.location===d.get('state','location'));
     if(!habitat)return Infinity;
     let window=Math.floor(now/WINDOW);
@@ -61,7 +61,7 @@ export function nextWildlifeEncounterMinute(d,engine,now){
     return minute;
 }
 export function wildlifeEncounterAt(d,engine,location,minute){
-    if(!encounterEnabled(engine)||d.get('state','player','status')!=='正常')return null;
+    if(d.get('state','player','status')!=='正常')return null;
     const habitat=engine.rules.wildlife?.habitats.find(h=>h.location===location);
     if(!habitat)return null;
     const window=Math.floor(minute/WINDOW),old=d.get(...encounterPath(habitat.id));

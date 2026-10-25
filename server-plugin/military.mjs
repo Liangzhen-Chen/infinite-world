@@ -35,13 +35,10 @@ declareHoldingWriter('military',{kinds:['member_of','holds_office','fief','emplo
 declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000,item_oats:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
 
 const DAY=1440,clone=v=>structuredClone(v);
-export const MILITARY_VERSION=1;
 export const ARMY_SUPPLY=Object.freeze(['granary','purchase','forage']);
 const rules=engine=>engine.rules?.military??null;
 export const armyKey=id=>`army:${id}`;
 const rec=id=>['state','records',id];
-// 旧事件重放不补出军务：只有新结算或重放结果已带本版本号时才推进。
-export function militaryFresh(engine){return !engine.replaying||engine.replayResult?.militaryVersion===MILITARY_VERSION;}
 const int=(v,min,max=1e9)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
 const text=v=>typeof v==='string'&&v.trim()&&v.length<=200;
 function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
@@ -291,7 +288,7 @@ function supplyWeek(d,engine,a,at,src,blocked){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at);
    const price=quote.price;
    const quantity=a.party===a.base?want:Math.min(want,Math.floor(partyCoins(engine,state,a.party,d)/price));
-   got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity,{to:{account:armyRations(engine,a.id)},eventId:src}); 
+   got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity,{to:{account:armyRations(engine,a.id)},eventId:src});
    if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:{account:partyAccount(engine,d.get('state'),a.base),writer:'military',eventId:src}});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:BOOKED});}
   }else if(a.supply==='purchase'){
    const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party,d)/price);
@@ -353,7 +350,7 @@ export function armyPayday(d,engine,a,at,src){
 
 // ---- 推进 ---------------------------------------------------------------------------
 export function advanceMilitary(d,engine,{before,after}){
- const m=rules(engine);if(!m||!militaryFresh(engine))return;
+ const m=rules(engine);if(!m)return;
  assertMilitary(engine);
  for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
   const at=day*DAY,week=day%m.weekDays===0,month=day%m.monthDays===0;if(!week&&!month)continue;

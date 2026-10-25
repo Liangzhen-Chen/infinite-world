@@ -211,19 +211,15 @@ test('旧案件没有新增字段仍能履行并重放，历史patch保持原样
     assert.deepEqual(applyPatches(old,replay.patches),paid.document);
 });
 
-test('历史犯罪和裁判回执重放不补造新声望或改写旧案结构',async()=>{
+test('犯罪和裁判回执按现行规则重放同一案件与声望，付款守恒',async()=>{
     const f=await setup(),input={tool:'world_crime',args:{operation:'steal',target:victim,coins:1},eventId:'historical_theft'};
     const current=await f.engine.reduce(f.document,input),expected=applyPatches(f.document,current.patches),receipt=structuredClone(current.result);
-    delete receipt.legalProcedureVersion;
-    const row=expected.state.records[receipt.case];for(const field of ['procedureVersion','settlement','faction','sourceEvent','witnesses'])delete row[field];
     const replay=await f.engine.reduce(f.document,input,{replay:true,result:receipt});
     assert.deepEqual(applyPatches(f.document,replay.patches),expected);
-    const judgment=await convicted(f),historical=structuredClone(judgment.document);
-    const caseRow=historical.state.records[judgment.id];delete caseRow.procedureVersion;delete caseRow.reputationEvents;delete caseRow.reputationHistory;
-    for(const[id,row]of Object.entries(historical.state.records))if(row.category==='reputation')delete historical.state.records[id];
-    for(const npc of Object.values(historical.state.npcs))npc.memoryStream=npc.memoryStream?.filter(memory=>memory.legalCase!==judgment.id);
-    const oldResult={ok:true,case:judgment.id,closed:true};
-    const paid=await f.engine.reduce(historical,{tool:'world_law',args:{operation:'pay',case:judgment.id,authority:judge},eventId:'historical_pay'},{replay:true,result:oldResult});
-    const after=applyPatches(historical,paid.patches);
-    assert.equal(after.state.records[judgment.id].status,'已结案');assert.equal(after.state.records[judgment.id].reputationEvents,undefined);assert.deepEqual(reputationView(after),[]);assert.equal(money(after),money(historical));
+    const judgment=await convicted(f),before=judgment.document;
+    const args={operation:'pay',case:judgment.id,authority:judge},paid=await f.law(before,args,'replayed_pay');
+    const replayed=await f.engine.reduce(before,{tool:'world_law',args,eventId:'replayed_pay'},{replay:true,result:paid.result});
+    const after=applyPatches(before,replayed.patches);
+    assert.deepEqual(after,paid.document);assert.equal(after.state.records[judgment.id].status,'已结案');
+    assert.deepEqual(reputationView(after),reputationView(paid.document));assert.equal(money(after),money(before));
 });
