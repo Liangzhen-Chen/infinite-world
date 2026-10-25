@@ -1,7 +1,9 @@
 // L1 derived slots (D05 §5.9 / A.16). Registries belong to a world, not a process.
 import {compileRX,evaluateRX,fixedUnits,fixedNumber,fixedMultiply,checkedFixed} from './rx.mjs';
-import {holdingKind,aliveHoldings,holdingsView} from './holdings.mjs';
+import {holdingKind,aliveHoldings,holdingsView,ENTITY_KINDS} from './holdings.mjs';
 import {wageQuote} from './obligation-state.mjs';
+import {writableFactField} from './primitive-policy.mjs';
+import derivedFields from '../world/ontology/derived-fields.json' with {type:'json'};
 
 // The projection composition root supplies this reader. The numeric registry
 // must not import subjective-view -> entity-view -> standing back into itself.
@@ -13,6 +15,7 @@ const STAGES=['add','mul','max','min','clamp'];
 const DEFAULT={stages:['mul','clamp'],bounds:[0.5,2],relative:true};
 const cache=new WeakMap();
 const unknown=Symbol('unknown fact');
+const FACT_KINDS=new Set([...Object.keys(ENTITY_KINDS),'org','settlement','place','population','instrument']);
 export class DerivedRejected extends Error {
  constructor(code,reason){super(reason);this.code=code;this.reason=reason;}
 }
@@ -32,12 +35,24 @@ const expression=value=>{
 
 // Pure compilation is also used by the loader, before a campaign can start.
 export function loadDerivedRegistry(world){
- const data=world.derived??{},slots=new Map(),modifiers=[],ids=new Set();
+ const data=world.derived??{},slots=new Map(),modifiers=[],ids=new Set(),facts=new Map();
+ for(const row of data.facts??[]){
+  const pack=row.pack??row.field?.split(':')[0],key=`${row.kind}:${row.field}`;
+  if(!FACT_KINDS.has(row.kind)||!pack||!row.field?.startsWith(`${pack}:`)||!row.field.slice(pack.length+1)||facts.has(key)||!['number','boolean','string'].includes(row.type)||!Array.isArray(row.writableBy)||row.writableBy.some(id=>!id.startsWith(`${pack}:`))||!['dormant','fallback','drop'].includes(row.uninstall))reject('E-DERIVED-FACT','扩展事实须声明种类、包命名空间、类型、写入者与卸载处置');
+  const leaf=row.field.slice(pack.length+1);writableFactField(leaf);
+  if(derivedFields.entries.some(r=>r.id===leaf))reject('E-DERIVED-FACT','派生字段不能声明为可写扩展事实');
+  if(row.type==='number'&&(!range(row.range)||!row.range.every(Number.isSafeInteger)))reject('E-DERIVED-BOUNDS','数值扩展事实须声明整数范围');
+  if(row.type==='string'&&(!range(row.range)||row.range[0]<0))reject('E-DERIVED-BOUNDS','文字扩展事实须声明长度范围');
+  validateFactValue(row,row.default);facts.set(key,{...row,pack});
+  const authored=({person:world.npcs,creature:world.monsters,org:world.factions,building:world.locations,item:world.items,settlement:world.settlementProfiles})[row.kind]??[];
+  for(const entity of authored)if(Object.hasOwn(entity,row.field))validateFactValue(row,entity[row.field]);
+ }
  for(const row of data.slots??[]){
   if(!row.id||slots.has(row.id))reject('E-DERIVED-SLOT','派生槽名称为空或重复');
   const slot={...DEFAULT,...row};
   if(!range(slot.bounds)||!Array.isArray(slot.stages)||slot.stages.some(s=>!STAGES.includes(s))||new Set(slot.stages).size!==slot.stages.length)reject('E-DERIVED-BOUNDS',`派生槽 ${row.id} 的阶段或边界无效`);
   for(const b of [...Object.values(slot.stageBounds??{}),...Object.values(slot.kindBounds??{})])if(!range(b))reject('E-DERIVED-BOUNDS',`派生槽 ${row.id} 的修正边界无效`);
+  if(slot.maxModifiers!==undefined&&(!Number.isSafeInteger(slot.maxModifiers)||slot.maxModifiers<0)||Object.entries(slot.totalBounds??{}).some(([stage,b])=>!['add','mul'].includes(stage)||!range(b)))reject('E-DERIVED-BOUNDS',`派生槽 ${row.id} 的修正预算无效`);
   slots.set(row.id,slot);
  }
  const definition=id=>{
@@ -66,9 +81,43 @@ export function loadDerivedRegistry(world){
   if(value&&!value.fields.length&&!value.functions.length&&!inside(evaluateRX(value),row.bounds))reject('E-DERIVED-BOUNDS',`修正项 ${row.id} 的常量表达式超出声明幅度`);
   modifiers.push({...row,whenRX:when,valueRX:value});
  }
- const registry={slots,modifiers:modifiers.sort(order),resolve,kindOf};cache.set(world,registry);return registry;
+ modifiers.sort(order);
+ for(const slot of slots.values())if(!slot.alias){
+  const rows=modifiers.filter(row=>resolve(row.target).id===slot.id);
+  if(rows.length>(slot.maxModifiers??Infinity))reject('E-DERIVED-BUDGET',`派生槽 ${slot.id} 的修正项数量超出预算`);
+  for(const [stage,allowed] of Object.entries(slot.totalBounds??{})){
+   let interval=stage==='add'?[0,0]:[1,1];
+   for(const row of rows.filter(row=>row.stage===stage)){
+    const b=typeof row.value==='number'?[row.value,row.value]:row.bounds;
+    const values=stage==='add'?[interval[0]+b[0],interval[1]+b[1]]:interval.flatMap(a=>b.map(n=>a*n));
+    interval=[Math.min(...values),Math.max(...values)];
+   }
+   if(!interval.every(n=>inside(n,allowed)))reject('E-DERIVED-BUDGET',`派生槽 ${slot.id} 的修正总幅度超出预算`);
+  }
+ }
+ const registry={slots,facts,modifiers,resolve,kindOf};cache.set(world,registry);return registry;
 }
 const registryOf=engine=>cache.get(engine.world)??loadDerivedRegistry(engine.world);
+function validateFactValue(row,value){
+ if(typeof value!==row.type||row.type==='number'&&(!Number.isSafeInteger(value)||!inside(value,row.range))||row.type==='string'&&!inside(value.length,row.range))reject('E-DERIVED-BOUNDS',`扩展事实 ${row.field} 的值不符合声明`);
+ return value;
+}
+function factEntity(engine,document,id){
+ const entity=document.holdings?.entities?.[id],instance=document.state.itemInstances?.[id],actor=id==='player'?document.state.player:document.state.npcs?.[id]??document.state.creatures?.[id],base=document.state.created?.[id]??engine.byId.get(instance?.item??id);
+ const kind=entity?.kind??(id==='player'||document.state.npcs?.[id]?'person':document.state.creatures?.[id]?'creature':instance?'item':base?.id?.startsWith('bld_')?'building':base?.id?.startsWith('loc_')?'settlement':base?.id?.startsWith('faction_')?'org':engine.world.items?.includes(base)?'item':null);
+ return {entity,instance,actor,base,kind};
+}
+export function derivedFactValues(engine,document,id){
+ if(!registryOf(engine).facts.size)return {};
+ const target=factEntity(engine,document,id),values={};
+ for(const row of registryOf(engine).facts.values())if(row.kind===target.kind)values[row.field]=validateFactValue(row,target.entity?.facts?.[row.field]??target.instance?.[row.field]??target.actor?.[row.field]??target.base?.[row.field]??row.default);
+ return values;
+}
+export function assertDerivedFactWriter(engine,kind,field,source,value){
+ const row=registryOf(engine).facts.get(`${kind}:${field}`);
+ if(row&&!source.id.startsWith('core:')&&!row.writableBy.includes(source.id))reject('E-DERIVED-FACT-WRITER','该扩展事实只允许声明的本包规则或动作写入');
+ if(row&&value!==undefined)validateFactValue(row,value);
+}
 function declaration(kind,field){
  const seen=new Set();let row=holdingKind(kind);
  while(row&&!seen.has(row.id)){seen.add(row.id);if(field==='conduction'&&row.derives&&Object.hasOwn(row.derives,field))return row.derives[field];if(field!=='conduction'&&Object.hasOwn(row,field))return row[field];row=holdingKind(row.parent);}
@@ -97,12 +146,14 @@ function contextFor(engine,document,subject,{observer=null,view:projected=null,h
   if(view){
    const known=subjectiveFact(view,source);value=known?.value;
    if(known)sources.add(known.source);
+   else if(id===observer&&Object.hasOwn(view.self.facts??{},key))value=view.self.facts[key];
    else if(id===observer&&Object.hasOwn(view.self.body,key))value=view.self.body[key];
    else throw unknown;
   }else{
    const entity=document.holdings?.entities?.[id],instance=document.state.itemInstances?.[id],actor=id==='player'?document.state.player:document.state.npcs?.[id]??document.state.creatures?.[id];
    const base=document.state.created?.[id]??engine.byId.get(instance?.item??id);
    value=entity?.facts?.[key]??instance?.[key]??actor?.[key]??base?.[key]??null;
+   if(key.includes(':'))value=derivedFactValues(engine,document,id)[key]??null;
   }
   sources.add(source);return value??null;
  };
@@ -174,7 +225,8 @@ export function explainDerived(engine,document,id,subject,options={}){
    for(const source of [...row.facts??[],...(typeof row.source==='string'&&row.source.startsWith('fact:')?[row.source]:[])]){
     if(source&&typeof source==='object'){ctx.fact(source.subject,source.key);continue;}
     const prefix='fact:';if(typeof source!=='string'||!source.startsWith(prefix))reject('E-DERIVED-SOURCE','修正来源须为事实键');
-    const at=source.lastIndexOf(':');ctx.fact(source.slice(prefix.length,at),source.slice(at+1));
+    const field=[...registry.facts.values()].map(r=>r.field).sort((a,b)=>b.length-a.length||compare(a,b)).find(field=>source.endsWith(`:${field}`));
+    const at=field?source.length-field.length-1:source.lastIndexOf(':');ctx.fact(source.slice(prefix.length,at),source.slice(at+1));
    }
    if(row.when===false||row.whenRX&&!evalExpr(row.whenRX,ctx))return null;
    return row.valueRX?evalExpr(row.valueRX,ctx):row.value;

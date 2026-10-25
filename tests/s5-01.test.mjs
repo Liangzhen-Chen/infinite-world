@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import {tmpRoot} from '../tools/tmp-root.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
-import {derived,explainDerived,loadDerivedRegistry,selectDerivedBaseline,derivedConduction,knownDerivedHoldings} from '../server-plugin/derived.mjs';
+import {derived,explainDerived,loadDerivedRegistry,selectDerivedBaseline,derivedConduction,knownDerivedHoldings,assertDerivedFactWriter} from '../server-plugin/derived.mjs';
 import {wageQuote} from '../server-plugin/obligation-state.mjs';
 import {registerHoldingKinds} from '../server-plugin/holding-kinds.mjs';
 import {holdingKind,registerHoldingKind} from '../server-plugin/holdings.mjs';
@@ -14,12 +16,14 @@ import {npcDecision} from '../server-plugin/npc-decision.mjs';
 import {autonomyCandidates} from '../server-plugin/autonomy-candidates.mjs';
 import {digest,applyPatches} from '../server-plugin/storage.mjs';
 import {worldEvents} from '../server-plugin/world-events.mjs';
+import {createRuntimePrimitiveFrame} from '../server-plugin/primitives-runtime.mjs';
+import {commitPrimitives} from '../server-plugin/primitives.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initialEngine=new WorldEngine(world),initial=initialEngine.createCharacter(seed,{},'s501-derived');
-function scene({slots=[],modifiers=[],rulesModifiers=[]}={}){
+function scene({slots=[],modifiers=[],rulesModifiers=[],facts=[]}={}){
  // These are author rule declarations, not fabricated campaign prerequisites.
- const w={...world,rules:{...world.rules,modifiers:rulesModifiers},derived:{...world.derived,slots:[...world.derived.slots,...slots],modifiers}};
+ const w={...world,rules:{...world.rules,modifiers:rulesModifiers},derived:{...world.derived,slots:[...world.derived.slots,...slots],modifiers,facts}};
  loadDerivedRegistry(w);const engine=new WorldEngine(w);
  return {engine,document:structuredClone(initial)};
 }
@@ -30,6 +34,65 @@ const mods=[
  {pack:'c',id:'max',target:slot.id,stage:'max',value:40},
  {pack:'a',id:'min',target:slot.id,stage:'min',value:35}
 ];
+
+const extension={kind:'person',field:'alchemy:rank',type:'number',range:[0,10],default:2,writableBy:['alchemy:practice'],uninstall:'dormant'};
+test('declared namespaced facts read defaults and native state, and gate namespaced provenance',()=>{
+ const f=scene({facts:[extension],modifiers:[{id:'rank',pack:'alchemy',target:'decision:riskWeight',stage:'mul',value:"1 + fact(subject, 'alchemy:rank') / 10",bounds:[1,2],source:'fact:npc_hw_linsui:alchemy:rank',when:"subject == 'npc_hw_linsui'"}]});
+ const view=subjectiveView(f.engine,f.document,'npc_hw_linsui');
+ assert.equal(view.self.facts['alchemy:rank'],2);assert.equal(view.derived.decision.riskWeight,12);
+ const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs','npc_hw_linsui'],value:{...f.document.state.npcs.npc_hw_linsui,'alchemy:rank':5}}]});
+ assert.deepEqual(setup.setupUnmet,[]);
+ assert.equal(subjectiveView(f.engine,setup.document,'npc_hw_linsui').derived.decision.riskWeight,15);
+ const read=document=>explainDerived(f.engine,document,'decision:riskWeight','npc_hw_linsui',{base:10,observer:'player'});
+ assert.equal(read(setup.document).value,10);assert.deepEqual(read(setup.document).contributions,[]);
+ const records={...setup.document.state.records,rank_known:{category:'knowledge',observer:'player',key:'fact:npc_hw_linsui:alchemy:rank',value:3,sourceEvent:'tell:rank'}};
+ const known=applyIntentSetup(f.engine,setup.document,{facts:[{path:['state','records'],value:records}]});assert.deepEqual(known.setupUnmet,[]);
+ assert.equal(read(known.document).value,13);assert.deepEqual(read(known.document).contributions[0].facts,['fact:npc_hw_linsui:alchemy:rank','tell:rank']);
+ assert.doesNotThrow(()=>assertDerivedFactWriter(f.engine,'person',extension.field,{id:'alchemy:practice'}));
+ assert.doesNotThrow(()=>assertDerivedFactWriter(f.engine,'person',extension.field,{id:'core:work'}));
+ assert.throws(()=>assertDerivedFactWriter(f.engine,'person',extension.field,{id:'other:practice'}),e=>e.code==='E-DERIVED-FACT-WRITER');
+});
+
+test('extension declarations reject missing namespace, invalid defaults, derived fields and foreign writers',()=>{
+ for(const row of [{...extension,kind:'__proto__'},{...extension,field:'rank'},{...extension,default:11},{...extension,field:'alchemy:salary'},{...extension,writableBy:['other:practice']}])assert.throws(()=>scene({facts:[row]}));
+ assert.throws(()=>scene({facts:[extension,extension]}),e=>e.code==='E-DERIVED-FACT');
+});
+
+test('native loader reads extension fact and modifier files; package order is irrelevant',async t=>{
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'s501c-loader-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ for(const name of ['meta','people','geo','lore'])await fs.cp(new URL(`../world/${name}`,import.meta.url),path.join(root,name),{recursive:true});
+ await fs.mkdir(path.join(root,'ontology'),{recursive:true});await fs.mkdir(path.join(root,'rules'),{recursive:true});
+ await fs.writeFile(path.join(root,'ontology','facts.json'),JSON.stringify({entries:[extension,{...extension,kind:'item'}]}));
+ const rows=[{id:'same',pack:'a',target:'decision:riskWeight',stage:'mul',value:1.25},{id:'same',pack:'b',target:'decision:riskWeight',stage:'mul',value:1.5},{id:'read-item',pack:'alchemy',target:'new:fact-reader',stage:'mul',value:"1 + fact(subject, 'alchemy:rank') / 10",bounds:[1,2]}];
+ const results=[];
+ for(const entries of [rows,[...rows].reverse()]){
+  await fs.writeFile(path.join(root,'rules','modifiers.json'),JSON.stringify({entries}));
+  const loaded=await loadWorld(root),engine=new WorldEngine(loaded),document=engine.createCharacter(seed,{},'s501c-loaded');
+  results.push(explainDerived(engine,document,'decision:riskWeight','player',{base:10}));
+  assert.equal(loaded.primitiveFacts.person['alchemy:rank'].max,10);
+  assert.equal(subjectiveView(engine,document,'player').self.facts['alchemy:rank'],2);
+  // Declare an original catalog object placed here and legally owned by the
+  // actor; the native entity path is the subject of fact.set (not bag stock).
+  const item=loaded.items.find(row=>Number.isFinite(row.durability)&&row.durability>0),setup=applyIntentSetup(engine,document,{itemInstances:[{id:'artifact',kind:'item',template:'thing',item:item.id,location:document.state.location,owner:'player'}]});
+  assert.deepEqual(setup.setupUnmet,[]);
+  const id=setup.bindings.artifact,effects=[{op:'fact.set',entity:id,field:'alchemy:rank',value:5}];
+  const frame=(source,limit=5)=>createRuntimePrimitiveFrame(engine,setup.document,{source:{kind:'rule',id:source},eventId:`write-${source}`,limits:{fact:{'alchemy:rank':limit}}});
+  assert.throws(()=>commitPrimitives(setup.document,effects,frame('other:practice')),e=>e.code==='E-DERIVED-FACT-WRITER');
+  const delta=commitPrimitives(setup.document,[{op:'fact.set',entity:id,field:'alchemy:rank',delta:1}],frame('alchemy:practice',1));
+  assert.equal(applyPatches(setup.document,delta.patches).holdings.entities[id].facts['alchemy:rank'],3);
+  const out=commitPrimitives(setup.document,effects,frame('alchemy:practice')),written=applyPatches(setup.document,out.patches);
+  assert.equal(written.holdings.entities[id].facts['alchemy:rank'],5);
+  assert.equal(derived(engine,written,'new:fact-reader',id,{base:10}),15);
+ }
+ assert.deepEqual(results[0],results[1]);assert.equal(results[0].value,18.75);
+});
+
+test('declared slot budgets reject excess count and aggregate amplitude at loading',()=>{
+ const declarations=[{id:'budget:flow',maxModifiers:1},{id:'budget:flow',totalBounds:{mul:[0.5,2]}}];
+ const rows=[{id:'first',target:'budget:flow',stage:'mul',value:1.5},{id:'second',target:'budget:flow',stage:'mul',value:1.5}];
+ for(const declared of declarations)assert.throws(()=>scene({slots:[declared],modifiers:rows}),e=>e.code==='E-DERIVED-BUDGET');
+ assert.throws(()=>scene({slots:[{id:'budget:flow',totalBounds:{add:[-5,5]},stages:['add','clamp']}],modifiers:[{id:'expression',target:'budget:flow',stage:'add',value:"fact(subject, 'hp')",bounds:[0,10]}]}),e=>e.code==='E-DERIVED-BUDGET');
+});
 
 test('consumer defaults preserve native decision arithmetic including non-fixed-point fractions',()=>{
  const {engine,document}=scene(),view=subjectiveView(engine,document,'npc_hw_ayan');
@@ -182,6 +245,21 @@ test('baseline selectors read matching culture/holding facts and carry provenanc
  const g=scene({slots:[{...slot,baselines:[{id:'health',fact:'hp'}]}]});
  assert.equal(derived(g.engine,g.document,slot.id,'player'),Math.min(100,g.document.state.player.hp));
 });
+
+test('baseline selectors match native occupation, species and declared organization holdings',()=>{
+ const f=scene(),holder='npc_hw_linsui',base=f.engine.byId.get(holder),target=f.engine.world.npcs.find(n=>n.species);
+ assert.ok(target,'the authored world contains a species-labelled person');
+ const row={id:'occupation-species',holder:{occupation:base.occupation,traits:base.traits[0]},target:{species:target.species},value:6};
+ assert.equal(selectDerivedBaseline(f.engine,f.document,[row],holder,{target:target.id})[0].value,6);
+ // Native physical setup opens holdings lazily. Declare an original owned
+ // catalog object as a non-examined premise, then use an existing affiliation.
+ const item=f.engine.world.items.find(row=>Number.isFinite(row.durability)&&row.durability>0),setup=applyIntentSetup(f.engine,f.document,{itemInstances:[{id:'baseline-object',kind:'item',template:'thing',item:item.id,location:f.document.state.location,owner:'player'}]});
+ assert.deepEqual(setup.setupUnmet,[]);const document=setup.document;
+ const affiliation=Object.values(document.holdings.rows).find(h=>['household_member','member_of'].includes(h.kind)&&h.until===undefined);
+ assert.ok(affiliation);
+ const rows=[{id:'organization',holder:{holding:affiliation.kind,organization:affiliation.subject},value:7}];
+ assert.equal(selectDerivedBaseline(f.engine,document,rows,affiliation.holder,{observer:'player'})[0].value,7);
+});
 test('constant corrections sourced from private facts are gated, and known snapshots do not dereference changed truth',()=>{
  const f=scene({modifiers:[{id:'fact-source',target:'new:projection',stage:'mul',value:1.5,source:'fact:npc_hw_linsui:trust'}]});
  const read=document=>explainDerived(f.engine,document,'new:projection','player',{base:10,observer:'player'});
@@ -199,7 +277,7 @@ test('holding conduction reads kind declarations and inherited declarations, wit
  registerHoldingKinds([{...original,id:'sample:connected_title',derives:{conduction:0.5}}]);
  registerHoldingKind({...original,parent:'sample:connected_title',visibility:'parties',derives:{}});
  try{
-  const f=scene();
+  const f=scene(),beforeHoldings=f.document;
   // Use a building nobody owns at the campaign start; an extra share on an
   // owned building is (correctly) rejected by the share-sum invariant.
   const owned=new Set(Object.values(f.document.holdings?.rows??{}).filter(r=>r.kind==='owns'&&r.until===undefined).map(r=>r.subject));
@@ -211,6 +289,12 @@ test('holding conduction reads kind declarations and inherited declarations, wit
   const hidden=derivedConduction(f.engine,f.document,'npc_hw_linsui',{[subject]:20},{observer:'player'});
   assert.deepEqual(hidden,[]);
   assert.equal(knownDerivedHoldings(f.engine,f.document,'player').some(h=>h.kind==='owns'&&h.subject===subject),false);
+  // D05 §5.6: a believed private title conducts even when truth differs.
+  const snapshot=Object.values(f.document.holdings.rows).find(h=>h.kind==='owns'&&h.holder==='npc_hw_linsui'&&h.subject===subject);
+  const remember=document=>applyIntentSetup(f.engine,document,{facts:[{path:['state','records'],value:{...document.state.records,title_known:{category:'knowledge',observer:'player',key:'holding:title',value:{holding:snapshot},sourceEvent:'tell:title'}}}]});
+  const present=remember(f.document),absent=remember(beforeHoldings);assert.deepEqual(present.setupUnmet,[]);assert.deepEqual(absent.setupUnmet,[]);
+  const read=document=>derivedConduction(f.engine,document,'npc_hw_linsui',{[subject]:20},{observer:'player'});
+  assert.deepEqual(read(present.document),read(absent.document));assert.equal(read(absent.document)[0].value,10);
  }finally{registerHoldingKinds();}
 });
 test('wage and artifact valuation are selector aliases of value and preserve native unmodified values',()=>{

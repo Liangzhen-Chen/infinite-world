@@ -156,7 +156,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     const row=d.get('holdings','entities',effect.entity);if(!row)reject('E-FACT-ENTITY','实体不存在');
     requireAuthority('fact.set',effect.entity);
     if(Object.hasOwn(effect,'value')===Object.hasOwn(effect,'delta'))reject('E-FACT-VALUE','事实写入须指定 value 或 delta 之一');
-    const value=Object.hasOwn(effect,'delta')?(row.facts?.[effect.field]??0)+effect.delta:effect.value;
+    const value=Object.hasOwn(effect,'delta')?(row.facts?.[effect.field]??policy.factPolicy?.[row.kind]?.[effect.field]?.default??0)+effect.delta:effect.value;
     writableFact(policy.factPolicy,row.kind,effect.field,value);
     policy.validateFact?.(d,effect,{row,value});
     result=updateEntity(d,{id:effect.entity,facts:{[effect.field]:value},writer:'primitives',eventId:frame.eventId});

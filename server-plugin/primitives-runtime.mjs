@@ -30,6 +30,7 @@ import {checkActor,checkDerivedActor} from './primitives-checks.mjs';
 import {learnNpc,studyBook} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
+import {assertDerivedFactWriter} from './derived.mjs';
 import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects,markMaterialCosts} from './mark-actions.mjs';
 import {reactToMark} from './mark-reactions.mjs';
 import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
@@ -192,9 +193,10 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
  const factUsage=new Map();
  return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,consequence,
   validateFact:(d,effect,{row,value})=>{
+   assertDerivedFactWriter(engine,row.kind,effect.field,source,value);
    if(typeof value!=='number')return;
    const bound=(typeof limits==='function'?limits(d.document):limits).fact?.[effect.field];
-   const change=Math.abs(value-(row.facts?.[effect.field]??0)),used=(factUsage.get(effect.field)??0)+change;
+   const change=Math.abs(value-(row.facts?.[effect.field]??factPolicy?.[row.kind]?.[effect.field]?.default??0)),used=(factUsage.get(effect.field)??0)+change;
    if(!Number.isSafeInteger(bound)||bound<0||!Number.isSafeInteger(used)||used>bound)reject('E-FACT-BOUND','Fact work exceeds its native source bound');
    factUsage.set(effect.field,used);
   },

@@ -99,11 +99,12 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);
-    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json'),consumers=await optional('ontology/slots/consumers.json');
+    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json'),consumers=await optional('ontology/slots/consumers.json'),facts=await optional('ontology/facts.json'),modifiers=await optional('rules/modifiers.json');
     // An optional source contributes only when present. Empty injected fields
     // would otherwise change publication fingerprints of unrelated worlds.
-    if([slots,derivations,consumers].some(source=>!Array.isArray(source)))world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:derivations.modifiers??[],conduction:slots.conduction??{},...(Array.isArray(consumers)?{}:{consumers})};
+    if([slots,derivations,consumers].some(source=>!Array.isArray(source))||facts.length||facts.entries?.length||modifiers.length||modifiers.entries?.length)world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:[...derivations.modifiers??[],...(Array.isArray(modifiers)?modifiers:modifiers.entries??[])],conduction:slots.conduction??{},facts:Array.isArray(facts)?facts:facts.entries??[],...(Array.isArray(consumers)?{}:{consumers})};
     loadDerivedRegistry(world);
+    for(const row of world.derived?.facts??[])primitiveFacts[row.kind]={...primitiveFacts[row.kind],[row.field]:{type:row.type,min:row.range?.[0],max:row.range?.[1],default:row.default,maxLength:row.type==='string'?row.range[1]:undefined}};
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));

@@ -4,7 +4,7 @@ import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {languageId,isLanguage} from './domain-rules.mjs';
-import {registerDerivedViewResolver} from './derived.mjs';
+import {registerDerivedViewResolver,derivedFactValues} from './derived.mjs';
 import {projectConsumerDerived} from './derived-consumers.mjs';
 declareHoldingWriter('person-languages');
 // The language catalogue (ids and short aliases) is world/rules/tables/domain-rules.json.
@@ -96,6 +96,7 @@ export function subjectiveView(engine,document,observer){
   body:{hp:n.hp??null,mp:n.mp??null,status:n.status??null},accounts,relations,goals:copy(n.goals??b.goals??{}),plan:copy(n.plan??null),busyUntil,clauses,obligations,holdings,events:ownEvents};
  const observable={location:here,people,season:engine.calendar?.(now)?.season??null,weather:copy(s.weather?.[here]??null),quotes:copy(s.marketReports?.[here]??null),
   services:people.flatMap(p=>p.services.map(service=>({provider:p.id,name:p.name,service})))};
+ const ownFacts=derivedFactValues(engine,document,observer);if(Object.keys(ownFacts).length)self.facts=ownFacts;
  const prior=copy(b.priors??{});
  return projectConsumerDerived(engine,document,{observer,minute:now,self,observable,knowledge:{memories,beliefs,facts},prior});
 }
