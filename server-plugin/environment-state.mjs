@@ -30,17 +30,34 @@ const featureOwners=(d,id)=>{
 // A perception pass is synchronous and read-only. Share its resolved features
 // across observers, then discard them before any draft write can occur.
 const readScopes=new WeakMap();
+// A cursor may mutate its own copies without changing root identity. Its
+// in-memory revision bounds this view to exactly one document version.
+const advanceViews=new WeakMap();
+function resolvedFeatures(view,select){
+ const rows=[];
+ for(let i=0;i<view.catalog.length;i++)if(!select||select(view.catalog[i]))rows.push(view.resolve(i));
+ return rows;
+}
 export function withEnvironmentFeatures(engine,read){
  if(readScopes.has(engine))return read();
  readScopes.set(engine,new Map());
  try{return read();}finally{readScopes.delete(engine);}
 }
 // Select by catalog fields / registered IDs before resolving live placement and
-// ownership. Outside a read-only pass, never cache resolved rows: a PatchCursor
-// can mutate its copies without changing identity between process settlements.
+// ownership. A live advance uses cursor revisions; explicit document callers
+// continue to share only inside a synchronous read-only scope.
 export const environmentFeatures=(engine,document,select)=>{
- const cacheKey=document,scope=readScopes.get(engine),cached=scope?.get(cacheKey);
- if(cached)return cached.catalog.flatMap((row,i)=>!select||select(row)?[cached.resolve(i)]:[]);
+ const cursor=document===undefined&&engine.advanceFeatures?engine.airDraft?.cursor:null;
+ let scope=readScopes.get(engine);
+ if(!scope&&Number.isSafeInteger(cursor?.revision)){
+  let live=advanceViews.get(cursor);
+  if(!live||live.revision!==cursor.revision||live.engine!==engine||live.authored!==engine.advanceFeatures){
+   live={revision:cursor.revision,engine,authored:engine.advanceFeatures,scope:new Map()};advanceViews.set(cursor,live);
+  }
+  scope=live.scope;
+ }
+ const cacheKey=document,cached=scope?.get(cacheKey);
+ if(cached&&cached.cursor===cursor&&cached.revision===cursor?.revision&&cached.authored===engine.advanceFeatures)return resolvedFeatures(cached,select);
  const authored=engine.advanceFeatures??engine.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
  const saved=document??engine.physicalDocument;
  const readSaved=(...path)=>saved?path.reduce((v,k)=>v?.[k],saved):engine.airDraft?.get(...path);
@@ -75,8 +92,8 @@ export const environmentFeatures=(engine,document,select)=>{
    if(!resolved.has(i))resolved.set(i,resolve(catalog[i]));
    return resolved.get(i);
   }};
-  scope.set(cacheKey,view);
-  return catalog.flatMap((row,i)=>!select||select(row)?[view.resolve(i)]:[]);
+  scope.set(cacheKey,{...view,cursor,revision:cursor?.revision,authored:engine.advanceFeatures});
+  return resolvedFeatures(view,select);
  }
  return rows.map(resolve);
 };

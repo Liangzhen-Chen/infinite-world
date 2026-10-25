@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,recordIndexActive} from './storage.mjs';
+import {recordsWhere,recordsMemo,recordIndexActive,canonicalEqual} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -75,11 +75,22 @@ const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
 const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge'];
+// Attendance and settlement progress do not change the agreed routine or
+// course. Keep comparing all other fields, including legacy terms, clauses,
+// amendments, status, deadlines and termination/substitution facts.
+const workshopProgressFields=new Set(['attendance','attendanceThrough','shifts','workedMinutes','aggregateMinutes','paid','produced','nextWork']);
+function sameScheduleRecord(a,b){
+ if(a===b)return true;
+ if(a?.category!=='contract'||b?.category!=='contract'||a.kind!=='workshop'||b.kind!=='workshop')return false;
+ const keys=Object.keys(a).filter(k=>!workshopProgressFields.has(k));
+ return keys.length===Object.keys(b).filter(k=>!workshopProgressFields.has(k)).length&&keys.every(k=>Object.hasOwn(b,k)&&canonicalEqual(a[k],b[k]));
+}
 const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['promise','delivery',undefined].flatMap(kind=>recordsWhere(s.obligations,'kind',kind)).filter(r=>r.reservationVersion===1));
 // Physical state, study/pay progress, perception evidence and event receipts are not inputs to
 // course/routine derivation. Completed learning changes the actor's skills or
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
+ if(a&&a===b)return true;
  if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition'].includes(k)&&a[k]!==b[k]))return false;
  if(a.obligations!==b.obligations){
   const x=reservationInputs(a),y=reservationInputs(b);
@@ -91,7 +102,7 @@ export function sameScheduleInputs(a,b){
  if(a.records===b.records)return true;
  const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnoredCategories.includes(r.category)),scheduleIgnoredCategories);
  const x=rows(a),y=rows(b);
- return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&row===y[i][1]);
+ return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }
 registerAdvanceHook('sameScheduleInputs',sameScheduleInputs);
 // Catalog identity follows immutable world/created partitions, never the clock,
@@ -100,6 +111,7 @@ const emptyCreated=Object.freeze({});
 const advanceCourses=new WeakMap();
 const courseUnchangedNpcFields=new Set(['activity','coins','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
 function sameCourseInputs(e,a,b){
+ if(a&&a===b)return true;
  if(!sameScheduleInputs({...a,npcs:b.npcs},b))return false;
  const ids=Object.keys(a.npcs??{});if(ids.length!==Object.keys(b.npcs??{}).length)return false;
  for(const id of ids){

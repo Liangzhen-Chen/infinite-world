@@ -105,6 +105,13 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
 export function settleNpcReflection(d,engine,npcId,now){
  const npc=d.get('state','npcs',npcId),old=npc.cognition??{},stream=npc.memoryStream??[];
  if(!stream.length&&old.blurred&&old.reflections)return;
+ // Non-player memories only depend on their blur deadlines and memory guards.
+ // Player evidence (including debts) keeps the complete live obligation read.
+ const scope=engine.scheduleReadCache,prior=scope?.reflections?.get(npcId);
+ const effects=typeof d.peek==='function'?d.peek('state','effects'):d.get('state','effects');
+ const guarded=Object.values(effects??{}).some(e=>e.kind==='mind_space'&&e.operation==='memory_guard'&&e.target===npcId);
+ if(!guarded&&prior?.old===old&&prior.stream===stream&&now>=prior.minute&&now<prior.until)return;
+ const cacheable=scope&&!guarded&&!stream.some(row=>row.participants?.includes('player'));
  const next=clone(old);next.blurred??={};next.reflections??=[];
  for(const memory of stream){
   const ttl=({1:7,2:30,3:90})[memory.salience];if(!ttl||now<memoryBlurMinute(d,npcId,memory,ttl,now)||next.blurred[memory.id])continue;
@@ -120,6 +127,12 @@ export function settleNpcReflection(d,engine,npcId,now){
   if(!next.reflections.some(row=>row.id===reflection.id))next.reflections.push(reflection);
  }
  if(JSON.stringify(old)!==JSON.stringify(next))d.set(['state','npcs',npcId,'cognition'],next);
+ if(cacheable){
+  const current=typeof d.peek==='function'?d.peek('state','npcs',npcId):d.get('state','npcs',npcId);
+  let until=Infinity;
+  for(const memory of stream){const ttl=({1:7,2:30,3:90})[memory.salience];if(ttl&&!next.blurred[memory.id])until=Math.min(until,memory.minute+ttl*DAY);}
+  (scope.reflections??=new Map()).set(npcId,{old:current.cognition,stream:current.memoryStream,minute:now,until});
+ }
 }
 
 export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}={}){
@@ -156,7 +169,10 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
    }
   }
  }
- for(const id of Object.keys(d.get('state','npcs')))if(personSimulation(engine,d.get('state'),id).value)settleNpcReflection(d,engine,id,after);
+ // This selector returns a scalar projection and retains no state reference.
+ // Reading it must not expose the whole tree before the next NPC's write.
+ const peekState=()=>typeof d.peek==='function'?d.peek('state'):d.get('state');
+ for(const id of Object.keys(peekState().npcs))if(personSimulation(engine,peekState(),id).value)settleNpcReflection(d,engine,id,after);
  return {delivered,shared};
 }
 export function npcCognitionView(engine,document,id){

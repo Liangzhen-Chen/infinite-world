@@ -4,7 +4,7 @@
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
-import {recordsWhere,recordEntriesWhere,recordsMemo} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,recordsMemo,cloneData} from './storage.mjs';
 import {organizationState,memberOrganizations,organizationOffices} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
@@ -15,7 +15,7 @@ import {obligationRows,obligationView} from './obligation-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {obligationCalendar,obligationDate} from './obligation-calendar.mjs';
 
-const fact=(value,source,override=false)=>({value:structuredClone(value??null),source,override});
+const fact=(value,source,override=false)=>({value:cloneData(value??null),source,override});
 const at=(state,path)=>path.reduce((o,k)=>o?.[k],state);
 const records=state=>Object.entries(state.records??{});
 const recordFacts=(state,predicate)=>records(state).filter(([,r])=>predicate(r)).map(([key,r])=>fact(r,`state.records.${key}`,true));
