@@ -61,8 +61,15 @@ test('林种由K8地形性状派生；耗尽后缺柴、涨价和事件，休伐
  assert.ok(regionalTradePrice(d,engine,'item_wood','loc_hw')>price);
  assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('fuel_shortage')&&r.tags.includes('entity-transition')&&r.summary.includes('缺柴')));
  advanceForestWater(d,engine,day+400);
- const r=d.get('state','records',`forest:${id}`);assert.ok(r.reserve>site.capacity*0.25);assert.equal(r.initial+r.grown-r.harvested,r.reserve);
- assert.ok(r.updatedAt>d.get('state','minute'));assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('forest_recovered')));
+ // D05 5.5: zero stock cannot reproduce. Keep shortage/price/event coverage
+ // above, and test recovery separately from surviving 20% stocks below.
+ const empty=d.get('state','records',`forest:${id}`);assert.equal(empty.reserve,0);assert.equal(empty.initial+empty.grown-empty.harvested,0);
+ const recovering=setup();for(const s of forestSites(recovering.engine))harvestForest(recovering.d,recovering.engine,s.location,Math.floor(s.capacity*0.8));
+ // Published broadleaf r=.0008/day: ordinary N=6000,K=54000 plus 6000
+ // old wood crosses 15000 after about 600 days, rather than a linear 400.
+ advanceForestWater(recovering.d,recovering.engine,day+600);
+ const r=recovering.d.get('state','records',`forest:${id}`);assert.ok(r.reserve>site.capacity*0.25);assert.equal(r.initial+r.grown-r.harvested,r.reserve);
+ assert.ok(r.updatedAt>recovering.d.get('state','minute'));assert.ok(Object.values(recovering.d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('forest_recovered')));
 });
 
 test('过伐收窄真实栖地容量，野物沿既有路移往有余量的兼容栖地，数量守恒',()=>{
@@ -162,7 +169,9 @@ test('P3远方林木按周聚合，实际采伐前补齐该地生长；水体预
  const day=Math.floor(start/DAY);advanceForestWater(d,engine,day);
  assert.equal(d.get('state','records',`forest:${location}`).updatedAt,start);
  const time=start+3*DAY;d.set(['state','minute'],time);
- const expected=site.capacity-10000+Math.floor(site.capacity*site.growthPerDay*3);
+ // D05 5.5 / S505C: 6000 old wood remains full; ordinary K=54000,N=44000.
+ // floor(54000/(1+(54000/44000-1)*exp(-.0008*3)))+6000=50019.
+ const expected=50019;
  assert.equal(forestView(engine,d.get('state'),location).reserve,expected);
  assert.equal(harvestForest(d,engine,location,5),5);assert.equal(d.get('state','records',`forest:${location}`).reserve,expected-5);
  const x=river({rain:0.8,use:100}),b=waterBasins(x.engine).find(b=>b.id==='feature_rw_down'),w=structuredClone(b.feature.state);

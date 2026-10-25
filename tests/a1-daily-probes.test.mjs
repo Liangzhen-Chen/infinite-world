@@ -8,6 +8,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
 import {uiSession,qty} from './helpers/ui-script.mjs';
 import {readBodyNeed,bodyRule} from '../server-plugin/primitives-body.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan',MILL='bld_hw_mill',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan',POST='bld_hw_post',CLERK='npc_hw_shendu';
@@ -72,12 +73,19 @@ test('D10 打工日结：缺有效同意时界面列出但不可执行，world_a
 });
 
 test('D15 钓鱼：渔获来自河滩真实鱼群，种群扣减与背包增加相等，花去时间',async t=>{
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
- const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,s=>{s.inventory.item_fishing_bait={quantity:10};s.inventory.item_kitchen_knife=tool('item_kitchen_knife','铁');s.inventory.item_water={quantity:4,quality:'木',durability:100,weight:0.5};})}),before=await primed(ui);
+ // D05 §5.5 / S505 已审规则：钓具、蚯蚓与活鱼按正式目录计量；非考查的装备由声明前提加载。
+ const ui=await uiSession(t,{mutate:at('loc_hw_dock',6*60,(s,doc)=>{
+  doc.randomSeed='a1-fish';
+  const loaded=applyIntentSetup(engine,doc,{inventory:{item_bamboo_fishing_rod:1,item_earthworm_bait:10}});
+  assert.deepEqual(loaded.setupUnmet,[]);Object.assign(doc,loaded.document);
+ })}),before=await primed(ui);
  const key='ecology:habitat_hw_water',fish=Object.keys(before.state.records[key].populations).find(k=>/perch|fish|carp|鱼/.test(k))??Object.keys(before.state.records[key].populations)[0];
- const r=await ui.choose('wildlife.fish',{species:fish});assert.ok(r.ok,r.error);const after=await ui.read();
- const caught=qty(after.state.inventory.item_fish)-qty(before.state.inventory.item_fish),drop=before.state.records[key].populations[fish].count-after.state.records[key].populations[fish].count;
- assert.equal(caught,drop,'钓上几条，水里少几条');assert.ok(after.state.minute>before.state.minute);
+ const r=await ui.choose('wildlife.fish',{species:fish},{eventId:'catch-11'});assert.ok(r.ok,r.error);const after=await ui.read();
+ const caught=qty(after.state.inventory.item_live_fish)-qty(before.state.inventory.item_live_fish),drop=before.state.records[key].populations[fish].count-after.state.records[key].populations[fish].count;
+ // 一次成功抛竿 × 正式 yield=1 = 1条；耗1饵、30分钟，账户扣1，真实活鱼个体加1。
+ assert.equal(caught,1);assert.equal(drop,1);assert.equal(caught,drop,'钓上几条，水里少几条');
+ assert.equal(before.state.inventory.item_earthworm_bait.quantity-after.state.inventory.item_earthworm_bait.quantity,1);
+ assert.equal(after.state.minute-before.state.minute,30);
 });
 
 test('D17 制作：按配方在磨坊作台做木楔，材料扣减、成品入包、作台费给作台主',async t=>{

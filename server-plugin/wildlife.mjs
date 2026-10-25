@@ -1,3 +1,6 @@
+import {moveFishPopulation,logisticStock} from './stock.mjs';
+import {creatureTraits} from './traits.mjs';
+import {derived} from './derived.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
@@ -84,6 +87,7 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const hash=createHash('sha256').update(`${d.document.randomSeed}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
     if(d.get('state','created',id)||d.get('state','creatures',id))throw preconditionFailure('个体编号已存在，拒绝重复接触');
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
+    moveFishPopulation(d,engine,s.id,habitat.location,id,1,eventId);
     p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
     holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location},'wildlife');
     holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
@@ -150,6 +154,19 @@ export function advanceWildlife(d,engine,day){
         const r=clone(d.get(...path(habitat.id)));if(!r)throw Error('生态记录未迁移');
         if(r.lastDay!==day-1)throw Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
         const species=speciesAt(engine,habitat),forest=forestView(engine,lookState(d),habitat.location);
+        const season=engine.calendar(day*1440).season;
+        for(const s of species.filter(s=>creatureTraits(s).tags.includes('fish'))){
+            const p=r.populations[s.id],spec=rangeSpec(habitat,s);if(spec.manifest)continue;
+            const present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+            const capacity=Math.max(0,forestHabitatCapacity(engine,lookState(d),habitat,s,forest)-reservedMigrationCapacity(d,habitat.id,s.id));
+            const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
+            // Normalize the published weekly quantity by capacity and seven days.
+            // Keep existing food/pair constraints; births use the continuous
+            // anchor, not weekly randomized rounding of a fixed quantity.
+            const rate=total>=2&&fed&&capacity>0?derived(engine,d.document,'economy:yield',habitat.location,{base:spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season]/(spec.capacity*7)}):0;
+            const born=logisticStock(r,`fish:${s.id}`,{reserve:total,capacity,rate,from:day*1440,to:(day+1)*1440})-total;
+            p.count+=born;p.born+=born;
+        }
         if(day%7===6){
             const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
             for(const s of species){
@@ -158,6 +175,7 @@ export function advanceWildlife(d,engine,day){
                 if(spec.manifest){const arisen=manifestArisals(spec===s.wildlife?s:{...s,wildlife:spec},total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
                 const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
                 if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));p.count-=lost;p.starved+=lost;continue;}
+                if(creatureTraits(s).tags.includes('fish'))continue;
                 const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season];
                 const born=total>=2?Math.min(Math.max(0,spec.capacity-total-reservedMigrationCapacity(d,habitat.id,s.id)),Math.floor(expected)+(rng()<expected%1?1:0)):0;
                 p.count+=born;p.born+=born;

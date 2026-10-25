@@ -3,10 +3,12 @@ import {wearItem,useTool} from './items.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {BOOKED} from './stock.mjs';
 import {declareLedgerWriter,reviseLots} from './ledger.mjs';
-import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,armyRations,transit as transitAccount,moveStock,bookStock} from './stock.mjs';
+import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,crop as cropAccount,registerLegacyStock,accrueStock,armyRations,transit as transitAccount,moveStock,bookStock} from './stock.mjs';
+import {derived} from './derived.mjs';
+import {recordEntriesWhere} from './storage.mjs';
 // S1b: 农事是粮仓与种粮的唯一写入者：收成与农副产来自 src:regrowth（田地按积温生长，05 §5.5），
 // 吃掉的进 sink:consume，过期与月损进 sink:decay，仓满挤出与掠夺无主的进 sink:destroy；
-// 播种的种粮进 sink:consume（作物此后在田里再生，收获时再从 src:regrowth 流入）。
+// 播种的种粮进 sink:consume；成熟时再生到田地账户，收获只转移已有作物。
 declareLedgerWriter('agriculture',{sources:{'src:regrowth':{'*':1000000}},sinks:['sink:consume','sink:decay','sink:destroy']});
 import {granaryCapacity,installFacilityRuntime}from'./facility-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
@@ -28,6 +30,15 @@ const clone=value=>structuredClone(value);
 const int=(value,min=1,max=100000)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`数量须在${min}到${max}之间`);return value;};
 const awake=n=>n&&!['濒死','睡眠','昏迷'].includes(n.status)&&!['睡觉','睡眠'].includes(n.activity);
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
+const fieldAccount=(engine,id,item=engine.rules.agriculture.grainItem)=>cropAccount(engine,id,item);
+const cropLot=(id,day,expiresDay)=>({id,day,expiresDay,kind:'crop'});
+const remainingCrop=c=>c.grownFood-Math.floor(c.harvestedUnits*c.grownFood/c.areaUnits);
+registerLegacyStock('agriculture-fields',(engine,state,add)=>{
+    for(const row of Object.values(state.records??{})){
+        if(row.category==='private_farm'&&row.status==='ready')add(fieldAccount(engine,row.location,row.crop),row.yield,[{...cropLot(`private:${row.seedEvent}`,row.readyDay,row.expiresDay),qty:row.yield}]);
+        if(row.category==='agriculture')for(const c of row.field.cohorts)if(c.ready){const qty=remainingCrop(c);add(fieldAccount(engine,profile(engine,row.settlement).fieldLocation),qty,[{...cropLot(`public:${c.id}`,c.readyDay,c.expiresDay),qty}]);}
+    }
+});
 function balanced(r,s){
     if(r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw Error('粮仓批次与聚落库存或种粮不一致，拒绝凭空补齐');
 }
@@ -42,7 +53,7 @@ export const REGROWTH=purpose=>({flow:'src:regrowth',purpose});
 const flowAccount=(engine,spec,resource)=>spec.unbooked?null:spec.account??`${spec.flow}|${resource}|${spec.purpose}`;
 function commit(d,engine,sid,r,eventId=null){
     const entries=journals.get(r)??[];journals.delete(r);
-    const g=granaryAccount(engine,sid),seed=seedAccount(engine,sid),resource=g.split('|')[1],at=w=>w==='seed'?seed:g;
+    const g=granaryAccount(engine,sid),seed=seedAccount(engine,sid),resource=g.split('|')[1],at=w=>w==='seed'?seed:w==='granary'?g:w;
     for(const e of entries){
         if(e.in){
             const from=flowAccount(engine,e.from,resource);
@@ -118,10 +129,14 @@ function sow(r,engine,p,day,units){
 }
 function harvest(r,s,engine,p,day,units,eventId,storageCapacity=r.granary.capacity){
     const c=engine.rules.agriculture.crop,seedTarget=Math.ceil(r.field.areaUnits*c.seedPerHa/c.areaUnitsPerHa);let grain=0,worked=0,pestLost=0,potential=0;const growthSources=new Set();
+    const via=transitAccount(engine,`harvest:${p.fieldId}`,engine.rules.agriculture.grainItem);
     for(const row of r.field.cohorts.filter(row=>row.ready)){
         const amount=Math.min(units-worked,row.areaUnits-row.harvestedUnits);if(amount<=0)continue;
-        const next=row.harvestedUnits+amount,gross=Math.floor(next*c.yieldPerHa/c.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays));
+        const next=row.harvestedUnits+amount,gross=Math.floor(next*row.grownFood/row.areaUnits);
         const total=Math.floor(gross*(10000-(row.pestDamageBps??0))/10000);
+        const grossDelta=gross-Math.floor(row.harvestedUnits*row.grownFood/row.areaUnits),netDelta=total-row.harvestedFood,account=fieldAccount(engine,p.fieldLocation);
+        note(r,{out:account,parts:[{id:`public:${row.id}`,amount:netDelta}],to:{account:via}});
+        if(grossDelta>netDelta)note(r,{out:account,parts:[{id:`public:${row.id}`,amount:grossDelta-netDelta}],to:DECAY});
         if(farmPestProfile(engine,p.settlement)){
             const grossDelta=gross-row.potentialHarvestedFood,netDelta=total-row.harvestedFood;
             if(grossDelta<netDelta||netDelta<0)throw Error('作物收成账不守恒，拒绝倒扣已经收获的粮食');
@@ -133,14 +148,14 @@ function harvest(r,s,engine,p,day,units,eventId,storageCapacity=r.granary.capaci
     r.field.cohorts=r.field.cohorts.filter(row=>row.harvestedUnits<row.areaUnits);
     const reserved=Math.min(grain,Math.max(0,seedTarget-r.field.seedBank));r.field.seedBank+=reserved;
     if(reserved){const b={amount:reserved,harvestDay:day,expiresDay:day+storageDays(r,p)};r.field.seedBatches.push({...b,...(growthSources.size?{growthSources:[...growthSources]}:{})});
-        note(r,{in:'seed',qty:reserved,from:REGROWTH('harvest'),lot:{id:seedLotId(b),day,expiresDay:b.expiresDay,kind:'seed'}});}
+        note(r,{in:'seed',qty:reserved,from:{account:via},lot:{id:seedLotId(b),day,expiresDay:b.expiresDay,kind:'seed'}});}
     // Seed and edible grain share the actual warehouse. Seed gets priority;
     // any displaced edible stock is recorded as overflow, never extra capacity.
     const displaced=Math.max(0,s.food+r.field.seedBank-storageCapacity);
     if(displaced)r.ledger.overflow+=takeFood(r,s,displaced,null,{flow:'sink:destroy',purpose:'overflow'});
     r.ledger.harvested+=grain;r.tools.condition=Math.max(0,r.tools.condition-worked*p.toolWearPerArea);
     if(farmPestProfile(engine,p.settlement)){r.ledger.pestLost+=pestLost;r.ledger.potentialHarvested+=potential;}
-    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获',growthSources:[...growthSources],capacity:storageCapacity,from:REGROWTH('harvest')});
+    const stored=addBatch(r,s,p,grain-reserved,{id:`harvest:${eventId}`,day,source:'本田实际收获',growthSources:[...growthSources],capacity:storageCapacity,from:{account:via}});
     return{units:worked,grain,reserved,stored,...(farmPestProfile(engine,p.settlement)?{pestLost,potential}:{})};
 }
 export function advanceAgriculture(d,engine,id,source,day){
@@ -155,7 +170,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     // Meals are prepared first: levy or hired-out shifts take workers from fields, fresh gathering and wood, never rounding the granary's cooks down.
     const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,availableWorkers);
     const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
-    const fresh=Math.floor(p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers);
+    const fresh=accrueStock(r,'fresh',derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers}));
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);
         const maintenanceWorkers=availableWorkers-processing-freshWorkers-fieldWorkers;
@@ -173,7 +188,19 @@ export function advanceAgriculture(d,engine,id,source,day){
         if((weather?.temperatureC??10)>=engine.rules.agriculture.crop.minimumTemperatureC){row.grownDays++;row.qualityDays++;row.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),id,day);}
         }
     consumeGrowthDay(d,engine,r,p,day,weather);
-    for(const row of r.field.cohorts)if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){row.ready=true;row.readyDay=day;}
+    for(const row of r.field.cohorts){
+        if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){
+            row.ready=true;row.readyDay=day;row.expiresDay=day+p.normalStorageDays;
+            row.grownFood=Math.floor(derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:row.areaUnits*engine.rules.agriculture.crop.yieldPerHa/engine.rules.agriculture.crop.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays)}));
+            note(r,{in:fieldAccount(engine,p.fieldLocation),qty:row.grownFood,from:REGROWTH('crop'),lot:cropLot(`public:${row.id}`,day,row.expiresDay)});
+        }
+        if(row.ready&&day>=row.expiresDay){
+            note(r,{out:fieldAccount(engine,p.fieldLocation),parts:[{id:`public:${row.id}`,amount:remainingCrop(row)}],to:DECAY});
+            r.ledger.fieldRotted=(r.ledger.fieldRotted??0)+remainingCrop(row);
+            row.rotted=true;
+        }
+    }
+    r.field.cohorts=r.field.cohorts.filter(row=>!row.rotted);
     const result=weather?.kind!=='storm'&&weather?.kind!=='snow'?harvest(r,s,engine,p,day,capacity,`day_${day}`,granaryCapacity(engine,d.get('state'),id,r.granary.capacity)):{units:0,grain:0,reserved:0,stored:0};
     r.ledger.freshProduced+=fresh;addBatch(r,s,p,fresh,{id:`fresh:${day}`,day,source:'每日农副产',kind:'fresh',capacity:granaryCapacity(engine,d.get('state'),id,r.granary.capacity),from:REGROWTH('fresh')});
     const mouths=Math.max(0,s.population-(d.get('state','records',`levy:${id}`)?.count??0));
@@ -438,25 +465,25 @@ function privateFarmAction(d,engine,p,args,eventId){
     const location=args.location??p.fieldLocation,asset=d.get('state','buildings',location),id=`private-farm:${location}`;
     if(location!==p.fieldLocation||d.get('state','location')!==location||asset?.owner!=='player'||asset.condition<=0)throw preconditionFailure('须在本人合法持有且完好的登记田地操作');
     if(Object.values(d.get('state','records')??{}).some(r=>r.kind==='asset_lease'&&r.subject===location&&r.tenant!=='player'&&r.status==='有效'&&r.deadline>d.get('state','minute')))throw preconditionFailure('田地已有他人的有效租赁使用权，不能重复占用');
-    const old=d.get('state','records',id),day=Math.floor(d.get('state','minute')/1440),crop=engine.rules.agriculture.crop,item=engine.rules.agriculture.grainItem;
+    const old=d.get('state','records',id),day=Math.floor(d.get('state','minute')/1440),crop=engine.rules.agriculture.crop;
+    const crops=domainRules(engine).privateField.crops,seedItem=args.operation==='private_sow'?(args.item?engine.resolve(args.item,'item'):crops[0].seed):old?.seedItem;
+    const binding=crops.find(c=>c.seed===seedItem),item=old?.crop??binding?.product;
     if(args.operation==='private_inspect')return{farm:old??null};
     if(!['private_sow','private_harvest'].includes(args.operation))throw preconditionFailure('未知私田操作');
-    const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu,calibrated=areaMu!==undefined;
+    if(args.operation==='private_harvest'&&old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
+    const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu;
+    int(areaMu,1,10000);
     const labor=engine.world.primitiveTables?.yields?.rows?.find(r=>r.selector==='field:wheat'&&r.laborSow!==undefined);
     const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
     const fieldRule=domainRules(engine).privateField;
     const tool=useTool(d,engine,args.operation==='private_sow'?fieldRule?.sowRequiresUse:fieldRule?.harvestRequiresUse,Object.hasOwn(args,'tool')?args.tool:args.means?.tools?.[0]);
-    if(calibrated){
-        int(areaMu,1,10000);
-        if(!labor||!Number.isSafeInteger(workday)||!fieldRule||!tool)throw preconditionFailure('私田劳动数值未登记');
-    }
-    const laborMinutes=calibrated?Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday):engine.rules.agriculture.workMinutes;
+    if(!labor||!Number.isSafeInteger(workday)||!fieldRule||!tool)throw preconditionFailure('私田劳动数值未登记');
+    const laborMinutes=Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday);
     const started=d.get('state','minute');
     const work=()=>{
         const weather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
         if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行田间工作');
-        if(!calibrated)engine.advance(d,laborMinutes,eventId);
-        else for(let remaining=laborMinutes;remaining>0;){
+        for(let remaining=laborMinutes;remaining>0;){
             const minutes=Math.min(remaining,workday);
             engine.advance(d,minutes,`${eventId}:work:${remaining}`);remaining-=minutes;
             if(remaining>0)engine.advance(d,1440-workday,`${eventId}:overnight:${remaining}`);
@@ -467,17 +494,18 @@ function privateFarmAction(d,engine,p,args,eventId){
         return d.get('state','player','status')==='正常'&&d.get('state','location')===location&&current?.owner==='player'&&current.condition>0&&!['storm','snow'].includes(endWeather?.kind);
     };
     if(args.operation==='private_sow'){
+        if(!binding)throw preconditionFailure('This seed has no registered crop');
         if(d.get(...path(p.settlement),'mode')!=='managed')throw preconditionFailure('须先采用登记农事账，不能给旧日产账额外增加私田产量');
         if(old&&!['harvested','rotted'].includes(old.status))throw preconditionFailure('本田已有未收作物');
         if(day%360<crop.sowDays[0]||day%360>crop.sowDays[1])throw preconditionFailure('不在本作物播种窗口');
         const available=(field,atDay=day)=>Math.max(0,field.areaUnits-Math.max(field.cohorts.reduce((n,c)=>n+c.areaUnits-c.harvestedUnits,0),field.sownYear===Math.floor(atDay/360)?field.sownUnits:0));
         const field=d.get(...path(p.settlement),'field'),capacityUnits=old?.capacityUnits??old?.areaUnits??available(field);
         if(capacityUnits<1)throw preconditionFailure('登记田地没有可划出的空闲面积');
-        const areaUnits=calibrated?areaMu*crop.areaUnitsPerHa/fieldRule.muPerHectare:int(args.quantity,1,capacityUnits);
+        const areaUnits=areaMu*crop.areaUnitsPerHa/fieldRule.muPerHectare;
         if(areaUnits>capacityUnits)throw preconditionFailure('登记田地没有足够面积');
         // Both private-field table quantities are jin; kgPerJin comes from the domain table.
-        const seed=calibrated?Math.ceil(areaMu*engine.world.primitiveTables.yields.rows.find(r=>r.key==='field:wheat/seed').seedPerUnit.qty*fieldRule.kgPerJin/engine.rules.agriculture.foodUnitKg):Math.ceil(areaUnits*crop.seedPerHa/crop.areaUnitsPerHa);
-        if(engine.quantity(d,'player',item)<seed)throw preconditionFailure('没有实际种粮');
+        const seed=binding.yieldSelector==='field:wheat'?Math.ceil(areaMu*engine.world.primitiveTables.yields.rows.find(r=>r.key==='field:wheat/seed').seedPerUnit.qty*fieldRule.kgPerJin/engine.byId.get(seedItem).weight):Math.ceil(areaMu*crop.seedPerHa/fieldRule.muPerHectare);
+        if(engine.quantity(d,'player',seedItem)<seed)throw preconditionFailure('没有实际种粮');
         if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
         const completedDay=Math.floor(d.get('state','minute')/1440);
         if(completedDay%360<crop.sowDays[0]||completedDay%360>crop.sowDays[1])return{success:false,note:'工作完成时已错过播种窗口，种粮未投入'};
@@ -488,22 +516,22 @@ function privateFarmAction(d,engine,p,args,eventId){
             // workers cannot plant those units a second time next season.
             publicFarm.field.areaUnits-=areaUnits;d.set(path(p.settlement),publicFarm);
         }
-        engine.itemDelta(d,'player',item,-seed,{flow:'sink:consume',purpose:'private_sow',writer:'agriculture',eventId});
-        const farm={category:'private_farm',id,location,settlement:p.settlement,owner:'player',areaUnits,...(calibrated?{areaMu}:{}),capacityUnits:old?.capacityUnits??old?.areaUnits??areaUnits,seed,seedEvent:eventId,sownDay:completedDay,lastDay:completedDay-1,grownDays:0,qualitySum:0,qualityDays:0,status:'growing'};
-        d.set(['state','records',id],farm);return{farm,...(calibrated?{laborMinutes,elapsed:d.get('state','minute')-started}:{})};
+        engine.itemDelta(d,'player',seedItem,-seed,{flow:'sink:consume',purpose:'private_sow',writer:'agriculture',eventId});
+        const farm={category:'private_farm',id,location,settlement:p.settlement,owner:'player',crop:binding.product,seedItem,areaUnits,areaMu,capacityUnits:old?.capacityUnits??old?.areaUnits??areaUnits,seed,seedEvent:eventId,sownDay:completedDay,lastDay:completedDay-1,grownDays:0,qualitySum:0,qualityDays:0,status:'growing'};
+        d.set(['state','records',id],farm);return{farm,laborMinutes,elapsed:d.get('state','minute')-started};
     }
     if(args.operation!=='private_harvest')throw preconditionFailure('未知私田操作');
     if(old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
     if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
     const latest=d.get('state','records',id);
     if(latest.status!=='ready')return{success:false,note:'收割完成前作物已腐烂，未取得粮物'};
-    engine.itemDelta(d,'player',item,latest.yield,{flow:'src:regrowth',purpose:'private_harvest',writer:'agriculture',eventId});
+    engine.itemDelta(d,'player',item,latest.yield,{account:fieldAccount(engine,location,latest.crop),pick:[`private:${latest.seedEvent}`],writer:'agriculture',eventId});
     d.set(['state','records',id],{...latest,status:'harvested',harvestedAt:d.get('state','minute'),harvestEvent:eventId});
-    return{harvested:latest.yield,item,location,...(calibrated?{laborMinutes,elapsed:d.get('state','minute')-started}:{})};
+    return{harvested:latest.yield,item,location,laborMinutes,elapsed:d.get('state','minute')-started};
 }
 function advancePrivateFarms(d,engine,settlement,day){
     const p=profile(engine,settlement),crop=engine.rules.agriculture.crop,item=engine.rules.agriculture.grainItem;
-    for(const [id,old]of Object.entries(d.get('state','records')??{})){
+    for(const [id,old]of recordEntriesWhere(d.get('state','records'),'category','private_farm')){
         if(old.category!=='private_farm'||old.settlement!==settlement||!['growing','ready'].includes(old.status)||old.lastDay>=day)continue;
         const farm=clone(old);
         for(let at=old.lastDay+1;at<=day;at++){
@@ -513,17 +541,25 @@ function advancePrivateFarms(d,engine,settlement,day){
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;
                     const perMu=engine.world.primitiveTables?.yields?.rows?.find(r=>r.key==='field:wheat')?.perUnit.qty;
-                    const portions=farm.areaMu!==undefined?farm.areaMu*perMu*domainRules(engine).privateField.kgPerJin/engine.rules.agriculture.foodUnitKg:farm.areaUnits*crop.yieldPerHa/crop.areaUnitsPerHa;
-                    farm.yield=Math.floor(portions*farm.qualitySum/Math.max(1,farm.qualityDays));
+                    const binding=domainRules(engine).privateField.crops.find(c=>c.seed===farm.seedItem);
+                    if(!binding)throw Error('Crop seed binding is missing');
+                    const portions=binding.yieldSelector==='field:wheat'?farm.areaMu*perMu*domainRules(engine).privateField.kgPerJin/engine.byId.get(farm.crop).weight:farm.areaMu*crop.yieldPerHa/domainRules(engine).privateField.muPerHectare;
+                    farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:portions*farm.qualitySum/Math.max(1,farm.qualityDays)}));
+                    const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1];
+                    moveStock(d,{from:`src:regrowth|${resource}|private_crop`,to:account,amount:farm.yield,writer:'agriculture',eventId:`${farm.seedEvent}:ripe:${at}`,lot:cropLot(`private:${farm.seedEvent}`,at,farm.expiresDay)});
                 }
             }
             if(farm.status==='ready'&&at>=farm.expiresDay){
-                const resource=bag(engine,'player',item).split('|')[1],via=transitAccount(engine,farm.id,item),eventId=`${farm.seedEvent}:rot:${at}`;
-                moveStock(d,{from:`src:regrowth|${resource}|private_crop`,to:via,amount:farm.yield,writer:'agriculture',eventId});
-                moveStock(d,{from:via,to:`sink:decay|${resource}|unharvested`,amount:farm.yield,writer:'agriculture',eventId});
+                const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1],eventId=`${farm.seedEvent}:rot:${at}`;
+                moveStock(d,{from:account,to:`sink:decay|${resource}|unharvested`,amount:farm.yield,pick:[`private:${farm.seedEvent}`],writer:'agriculture',eventId});
                 farm.status='rotted';farm.rottedDay=at;break;
             }
         }
         farm.lastDay=day;d.set(['state','records',id],farm);
     }
+}
+
+// Unmanaged settlement food shares the same derived, cumulative stock boundary.
+export function accrueFoodProduction(engine,d,row,subject,base){
+ return accrueStock(row,'food',derived(engine,d.document,'economy:yield',subject,{base}));
 }

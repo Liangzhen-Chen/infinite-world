@@ -26,7 +26,19 @@
     "muPerHectare": 15,
     "kgPerJin": 0.5,
     "sowRequiresUse": "soil_work",
-    "harvestRequiresUse": "harvest"
+    "harvestRequiresUse": "harvest",
+    "crops": [
+      {
+        "seed": "item_wheat_seed",
+        "product": "item_wheat_grain",
+        "yieldSelector": "field:wheat"
+      },
+      {
+        "seed": "item_oats",
+        "product": "item_oats",
+        "yieldSelector": "agriculture.crop"
+      }
+    ]
   },
   "languages": {
     "lang:common": {

@@ -1,4 +1,5 @@
 import {registerObligationProtocol} from './obligation-protocol.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 // L1 transfer protocol. The caller's scheduler determines the order of calls.
 import fs from 'node:fs';
 import {GONE_BASES,ensureHoldings,aliveHoldings,holdingRow,holdingKind,templatesOf,createEntity,entityRow,endEntity,updateEntity,
@@ -150,6 +151,9 @@ function accountOwnerLive(d,e,id){
     if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
     if(row?.category==='legal_deposit')return id===`legal_deposit:${row.case}`&&read(d,'state','records',row.case)?.category==='legal_case';
     if(['forest','mineral'].includes(row?.category))return live(d,e,row.location);
+    // A travelling population is a real temporary stock account, not a new
+    // creature or organization. Only an actual registered transit may hold it.
+    if(id.startsWith('migration:'))return (read(d,'state','records','wildlife:migration')?.transit??[]).some(t=>id===`migration:${t.id}`);
     if(row?.category==='settlement_trade')return live(d,e,row.seller)&&live(d,e,row.buyer);
     if(row?.category==='army')return !byEntity(d,row.id)?.gone&&live(d,e,row.location);
     return !!read(d,'state','quests',id)||!!read(d,'state','projects',id);
@@ -525,6 +529,7 @@ export function transition(d,engine,input){
         if(previous?.gone&&previous.generation===generation&&!actualDeath)return previous;
         const cycle=previous?.generation===generation?(previous.cycle??0)+1:0;
         const eventId=input.eventId??`transition:${entity}:${generation}:${cycle}:${basis}:${now(d)}`;
+        advanceHook('settleFishDeath')?.(d,engine,{entity,basis,eventId});
         const held=sorted(aliveHoldings(d,{holder:entity})),subject=aliveHoldings(d,{subject:entity});
         const a=body(d,entity)??engine.byId?.get(entity)??{},types=templatesOf(d,entity,engine)??[];
         if(!types.length)throw Error(`Missing entity: ${entity}`);

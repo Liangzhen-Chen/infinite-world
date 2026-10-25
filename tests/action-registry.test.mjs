@@ -69,6 +69,17 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    if(['open:leave_mark','open:question','open:waive_debt'].includes(a.id)){assert.equal(a.call,undefined);continue;}
    assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
   }
+  // D05 §5.5 / S5-05：新审批的放归动作不属于旧 S0 清单；仍逐项核对唯一入口、必填目标和实际分派。
+  if(a.id==='core:wildlife.release'){
+   assert.equal(a.source,'s505-resources');
+   assert.deepEqual(a.call,{tool:'world_field',operation:'wildlife_release'});
+   assert.deepEqual(a.slots,[{name:'target',kind:'text',required:true}]);
+   assert.deepEqual(a.preconditions,['outdoors(here)']);
+   assert.deepEqual(a.visibility,{catalog:'here',witness:'present'});
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots:{target:'live-fish'}}),{tool:'world_field',args:{target:'live-fish',operation:'wildlife_release'},action:a});
+   assert.deepEqual(resolveToolCall(a.call.tool,{operation:'wildlife_release',target:'live-fish'}),{tool:'world_wildlife',args:{operation:'release',target:'live-fish'}});
+   continue;
+  }
   // a3qy adds a catalog-only operation that calls the existing internal
   // environment handler directly. It must not widen the static tool surface.
   if(a.id==='core:environment.unlock'){

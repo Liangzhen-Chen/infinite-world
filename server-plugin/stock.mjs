@@ -1,3 +1,4 @@
+import {creatureTraits} from './traits.mjs';
 // S1b 物品、粮与库存适配器（L1）：把旧状态里存放可计量物品的字段映射为账本账户，
 // 并给旧写入点一个同时写新账本的入口（绞杀式双写：旧字段照写，读取暂不改）。
 // 资源键 = 物品模板 id（world/meta/items.json，按 world 现有命名空间；core 省略）；登记为铸币的物品
@@ -16,14 +17,15 @@
 //   工程备料                          <工程>|<物品>|works       state.projects.<id>.wood/stone（施工中且已备料）
 //   矿脉储量                          mineral:<地点>:<物品>|<物品>|reserve  records.mineral:*.reserve（首次开采时按世界数据开户）
 //   林木存量                          forest:<地点>|item_wood|reserve  records.forest:*.reserve（首次采伐时按世界数据开户）
+//   鱼群/个体/在途鱼                  <地点、个体、迁徙>|item_live_fish|reserve  同一实物的持有人转移
 //   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
-// 批次（lots）只在仓储类用途（granary、seed、cargo）上启用：粮食需要保质期，其余物品暂按数量计。
+// 批次（lots）用于粮仓、种粮、货运与田间作物（granary、seed、cargo、crop）；其余物品暂按数量计。
 import {isResourceKey,accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
-export const LOT_PURPOSES=Object.freeze(new Set(['granary','seed','cargo']));
+export const LOT_PURPOSES=Object.freeze(new Set(['granary','seed','cargo','crop']));
 registerLotPolicy(({purpose})=>LOT_PURPOSES.has(purpose));
 export const GRAIN='item_oats';// rules.agriculture.grainItem 与 rules.economy.shops.stockItems.food 的缺省
 
@@ -51,11 +53,44 @@ export const pledged=(engine,key,item)=>accountKey(key,res(engine,item),'pledge'
 export const vaultGoods=(engine,bank,item)=>accountKey(bank,res(engine,item),'vault');
 export const works=(engine,project,item)=>accountKey(project,res(engine,item),'works');
 export const reserve=(engine,node,item)=>accountKey(node,res(engine,item),'reserve');
+export const crop=(engine,node,item)=>accountKey(node,res(engine,item),'crop');
 // 没有登记地点的单件（旧记录缺 location）记在 unplaced 名下，旧账与新账同口径。
 export const placed=(engine,holder,item)=>accountKey(String(holder||'unplaced').replace(/[|\s]/g,'_'),res(engine,item),'placed');
 export const transit=(engine,key,item)=>accountKey(key,res(engine,item),'transit');
 export const stockSource=(engine,kind,item,purpose)=>accountKey(`src:${kind}`,res(engine,item),purpose);
 export const stockSink=(engine,kind,item,purpose)=>accountKey(`sink:${kind}`,res(engine,item),purpose);
+
+// D05 5.5: retain the continuous anchor, rounding only the visible stock.
+// A harvest changes the integer stock; subtract that exact change from the
+// continuous quantity before starting the next segment. Zero cannot regrow.
+export function logisticStock(row,channel,{reserve,capacity,rate,from,to}){
+    if(![reserve,capacity,rate,from,to].every(Number.isFinite)||reserve<0||capacity<0||rate<0||to<from)throw Error('无效的再生参数');
+    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:a.capacity/(1+(a.capacity/a.reserve-1)*Math.exp(-a.rate*(t-a.minute)/1440));
+    let a=row.growthAnchors?.[channel]??{minute:from,reserve,capacity,rate};
+    const current=at(a,from),visible=Math.floor(current);
+    if(visible!==reserve||a.capacity!==capacity||a.rate!==rate){
+        a={minute:from,reserve:reserve===0?0:Math.max(0,current+reserve-visible),capacity,rate};
+    }
+    row.growthAnchors??={};row.growthAnchors[channel]=a;
+    return Math.max(reserve,Math.floor(at(a,to)));
+}
+// Accumulate decimal production rationally; quantize only the total increment.
+export function accrueStock(row,channel,quantity,periods=1,divisor=1){
+    if(!Number.isFinite(quantity)||quantity<0||!Number.isSafeInteger(periods)||periods<0||!Number.isSafeInteger(divisor)||divisor<1)throw Error('资源累计量或期间无效');
+    const [mantissa,exponent='0']=String(quantity).toLowerCase().split('e'),[whole,fraction='']=mantissa.split('.');
+    let units=BigInt(whole+fraction),places=fraction.length-Number(exponent);
+    if(places<0){units*=10n**BigInt(-places);places=0;}
+    // Keep workday conversion rational: fifteen 32-minute shifts at 20/480
+    // must yield 20, not floor(15 * rounded(4/3)) = 19.
+    const old=row.accruals?.[channel]??{numerator:'0',denominator:'1'};
+    const before=BigInt(old.numerator),beforeDen=BigInt(old.denominator),inputDen=10n**BigInt(places)*BigInt(divisor);
+    let after=before*inputDen+units*BigInt(periods)*beforeDen,denominator=beforeDen*inputDen;
+    const produced=Number(after/denominator-before/beforeDen);
+    if(!Number.isSafeInteger(produced))throw Error('资源累计产量溢出');
+    let left=after,right=denominator;while(right){const rest=left%right;left=right;right=rest;}
+    after/=left;denominator/=left;
+    row.accruals??={};row.accruals[channel]={numerator:String(after),denominator:String(denominator)};return produced;
+}
 
 // 唯一的双写入口：旧写入点在改旧字段的同一处调用它。lot/pick 见 ledger.transfer。
 export function moveStock(d,{from,to,amount,writer,eventId=null,lot=null,pick=null}){
@@ -244,3 +279,12 @@ export function priceRead(src,{point,scope='stock',account,legacy,lots=null}){
 }
 // 行囊里某物品的数量（缺省草稿不开账时回旧字段）。
 export const bagStock=(src,engine,{point,id,item,legacy})=>priceRead(src,{point,account:bag(engine,id,item),legacy});
+
+// A population, a travelling group and an encountered fish hold the same resource.
+export function fishPopulationAccount(engine,holder,species){
+ return creatureTraits(engine.byId.get(species)).tags.includes('fish')?reserve(engine,holder,'item_live_fish'):null;
+}
+export function moveFishPopulation(d,engine,species,from,to,amount,eventId=null){
+ const source=fishPopulationAccount(engine,from,species);if(!source||!amount)return 0;
+ return moveStock(d,{from:source,to:fishPopulationAccount(engine,to,species),amount,writer:'extraction',eventId});
+}

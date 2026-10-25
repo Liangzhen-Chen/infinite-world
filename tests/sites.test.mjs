@@ -233,7 +233,9 @@ test('元素解法、随时间再生与机关复位按实际状态与流逝时�
         s.mechanisms.push({id:'pool',name:'门前积水',description:'门槛前积了一坑深水。',check:{attribute:'力量',difficulty:30},minutes:5,failureDamage:2,element:{feature:'feature_test_archive_pool',tags:['frozen']}});
         s.entryMechanisms=['door','pool'];s.resources[0].mechanisms=[];
         s.history=[{era:'百年前',text:'沿河人修起水站。'},{era:'如今',text:'水站空置。'}];
-        s.changes=[{id:'bundle_regrow',kind:'regrow',resource:'bundle',quantity:1,everyDays:10,max:2},{id:'pool_refill',kind:'rearm',mechanism:'pool',everyDays:3}];
+        // D05 §5.5 / RW-06：改用可观测的3份容量，保留1份才能再生；取空后不凭空重建。
+        s.resources[0].quantity=3;
+        s.changes=[{id:'bundle_regrow',kind:'regrow',resource:'bundle',quantity:1,everyDays:10,max:3},{id:'pool_refill',kind:'rearm',mechanism:'pool',everyDays:3}];
     });
     let c=await arrive(f);
     const view=await action(f.engine,c,'inspect');assert.equal(view.result.history,undefined);
@@ -250,15 +252,29 @@ test('元素解法、随时间再生与机关复位按实际状态与流逝时�
     c=frozen.document;c=await open(f,c);
     const inside=await action(f.engine,c,'inspect');assert.deepEqual(inside.result.history,['百年前：沿河人修起水站。','如今：水站空置。']);
     c=(await action(f.engine,c,'investigate',{target:'carving'},'carving')).document;
-    c=(await action(f.engine,c,'gather',{target:'bundle',quantity:2},'take')).document;
+    const beforeTake=structuredClone(c);
+    c=(await action(f.engine,c,'gather',{target:'bundle',quantity:3},'take')).document;
     await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
     // Nine days later nothing has regrown; the gate refilled after three days and must be cleared again to re-enter.
     c.state.minute+=9*1440;
     await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
     c.state.minute+=1440+1;
-    let out=await action(f.engine,c,'gather',{target:'bundle'},'regrown');assert.equal(out.result.remaining,0);c=out.document;
+    await assert.rejects(action(f.engine,c,'gather',{target:'bundle'},'regrown'),/有限资源不足/);
     c.state.minute+=30*1440;
-    assert.equal((await action(f.engine,c,'inspect')).result.resources.find(r=>r.id==='bundle').remaining,2,'再生不超过上限');
+    assert.equal((await action(f.engine,c,'inspect')).result.resources.find(r=>r.id==='bundle').remaining,0,'N₀=0，闭式再生始终为0');
+    // 部分采集：3−2=1；r=1/(3×10)=1/30每天，60天后 floor(3/(1+2×exp(-2)))=2。
+    // 这条分支仍验证实际再生与上限；上面的耗尽分支保留重复采集拒绝和零刷新检查。
+    let partial=(await action(f.engine,beforeTake,'gather',{target:'bundle',quantity:2},'partial')).document;
+    assert.equal(partial.state.records[`site:${siteId}`].remaining.bundle,1);
+    partial.state.minute+=60*1440;
+    const regrown=await action(f.engine,partial,'inspect');
+    assert.equal(regrown.result.resources.find(r=>r.id==='bundle').remaining,2);
+    // 保留原上限保证：累计360天，floor(3/(1+2×exp(-12)))=2（从下侧趋近3，不会超量）。
+    const longTerm=structuredClone(regrown.document);longTerm.state.minute+=300*1440;
+    const capped=await action(f.engine,longTerm,'inspect');
+    assert.equal(capped.result.resources.find(r=>r.id==='bundle').remaining,2,'长期再生仍不超过3份容量');
+    const collected=await action(f.engine,regrown.document,'gather',{target:'bundle'},'regrown-partial');
+    assert.equal(collected.result.remaining,1,'再生后取1份：2−1=1');
     c=(await run(f.engine,c,'world_move',{destination:'loc_hw'},'leave')).document;
     c=(await run(f.engine,c,'world_move',{destination:siteId},'back')).document;
     await assert.rejects(action(f.engine,c,'enter',{},'reenter'),/机关/);

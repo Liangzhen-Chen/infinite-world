@@ -159,7 +159,7 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
 }
 export function cropProduction(engine, seed, settlement, minute, nominal) {
     const row = weatherAt(engine,seed,settlement,minute);
-    return row ? Math.max(0,Math.floor(nominal*engine.rules.weather.cropSeasonFactors[row.season]*row.cropMultiplier)) : nominal;
+    return row ? Math.max(0,nominal*engine.rules.weather.cropSeasonFactors[row.season]*row.cropMultiplier) : nominal;
 }
 export function validateWeatherRules(world) {
     const errors = [], r = world.rules.weather; if (!r) return errors;

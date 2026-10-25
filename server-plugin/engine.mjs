@@ -151,16 +151,19 @@ class Draft {
     adopt(path, value) {
         if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
         value=this.numberEvent(path,value);
-        const patch = { op: 'set', path, value };
+        const patch = { op: 'set', path, value },stockWrite=advanceHook('prepareStockWrite')?.(this,this.engine,path);
         this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
+        stockWrite?.();
     }
     write(patch) {
         const path = patch.path, records = this.adopted.size && Array.isArray(path) && path[0] === 'state' && (path.length < 2 || path[1] === 'records');
         // Writing inside an adopted row first gives the draft its own copy.
         if (records && path.length > 3 && this.adopted.has(path[2])) this.materialize(path[2]);
+        const stockWrite=path[0]==='state'&&path[1]==='records'?advanceHook('prepareStockWrite')?.(this,this.engine,path):null;
         this.cursor.apply(patch); this.patches.push(patch);
         // A write at or above an adopted row replaces it.
         if (records && path.length <= 3) { if (path.length === 3) this.adopted.delete(path[2]); else this.adopted.clear(); }
+        stockWrite?.();
     }
     release(path) {
         if (!this.adopted.size) return;

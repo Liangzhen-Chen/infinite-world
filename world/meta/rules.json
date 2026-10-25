@@ -6,9 +6,15 @@
       "defaultAreaKm2": 1,
       "stockPerKm2": 50000,
       "species": {
-        "broadleaf": {"growthPerDay": 0.0008},
-        "conifer": {"growthPerDay": 0.0006},
-        "wetwood": {"growthPerDay": 0.001}
+        "broadleaf": {
+          "growthPerDay": 0.0008
+        },
+        "conifer": {
+          "growthPerDay": 0.0006
+        },
+        "wetwood": {
+          "growthPerDay": 0.001
+        }
       },
       "minimumHabitatShare": 0.2,
       "shortageCover": 0.25,
@@ -20,13 +26,31 @@
       "maximumCut": 20,
       "minutes": 15,
       "difficulty": 10,
-      "wear": 1
+      "wear": 1,
+      "opening": [
+        {
+          "location": "loc_hw_northwood",
+          "ancient": 6000
+        }
+      ]
     },
     "water": {
-      "terrainElevationMeters": {"highland": 300, "hill": 100, "lowland": 10, "plain": 50},
+      "terrainElevationMeters": {
+        "highland": 300,
+        "hill": 100,
+        "lowland": 10,
+        "plain": 50
+      },
       "capacityMl": 500000000,
       "initialShare": 0.8,
-      "rainShare": {"clear": 0, "cloudy": 0, "rain": 0.12, "storm": 0.3, "snow": 0.02, "fog": 0.002},
+      "rainShare": {
+        "clear": 0,
+        "cloudy": 0,
+        "rain": 0.12,
+        "storm": 0.3,
+        "snow": 0.02,
+        "fog": 0.002
+      },
       "evaporationShare": 0.001,
       "dailyFlowShare": 0.08,
       "drinkingMlPerPerson": 2000,
@@ -12423,7 +12447,7 @@
   },
   "extraction": {
     "fishing": {
-      "tool": "item_kitchen_knife",
+      "tool": "item_bamboo_fishing_rod",
       "minutes": 30,
       "difficultyBySeason": [
         10,
@@ -12432,9 +12456,10 @@
         20
       ],
       "bait": {
-        "item": "item_fishing_bait",
+        "item": "item_earthworm_bait",
         "quantity": 1
-      }
+      },
+      "product": "item_live_fish"
     },
     "mining": {
       "tool": "item_mining_pick",
