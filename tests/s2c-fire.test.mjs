@@ -31,17 +31,21 @@ test('E06-1 真实风向、间距、石材与雨水对照',()=>{
  advanceFacilityFire(d,engine,{after:720});assert.equal(facilityView(engine,d.get('state'),forge).burning,false);
 });
 
-test('E06-2 仓损逐批进 sink，保护种粮、别仓与承诺报价；补货恢复报价',()=>{
+test('E06-2 仓损逐批进 sink，保护种粮与别仓，未签约报价立即重派生',()=>{
  const {engine,d,warehouse}=fixture(),before=d.get('state','settlements','loc_hw','food'),seed=structuredClone(d.get('state','records','agriculture:loc_hw','field'));
  const price=regionalTradePrice(d,engine,'item_oats','loc_hw',600);
+ // S5-02：粮基准3×春季0.9×5220/(8000-5220+8+4)，其余因子1。
+ assert.equal(price,5.0479942693409745);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});
  assert.equal(d.get('state','settlements','loc_hw','food'),before-4500);
  assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
  assert.deepEqual(d.get('state','records','agriculture:loc_hw','field'),seed);
  assert.equal(d.get('state','records','agriculture:loc_hw','batches').find(b=>b.id==='safe_grain').amount,2000);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
- assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),price,'已承诺报价不改');
- assert.ok(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600)>price);
+ // 未签约的读价不是承诺；失火后公粮3500全属保留，供给仅12，供需封顶3。
+ // 新价3×0.9×3=8.1，同日立即反映，次日没有成交压力仍为8.1。
+ assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),8.100000000000001);
+ assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600),8.100000000000001);
  assert.deepEqual(reconcile(engine,d.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 

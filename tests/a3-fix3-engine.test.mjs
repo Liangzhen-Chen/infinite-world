@@ -77,12 +77,13 @@ test('A3-fix3 boundary: a damaged stored record is thrown unchanged; a player-re
  const row=rowFor(122);row.setup.coins=4;
  const {document}=applyIntentSetup(engine,initial,row.setup);
  const day=Math.floor(document.state.minute/1440);
- // Internal invariant: a trade-quote ledger row that is not a quote. The player did nothing wrong.
+ // S5-02: prices are projections; corruption protection now guards the
+ // consumed actual-deal rows, not an obsolete stored-quote format.
  const damaged=structuredClone(document);
- damaged.state.records[`trade-quote:${day}:npc_hw_linsui:player:item_water`]={category:'not_a_quote'};
+ damaged.state.records[`market-trade:damaged`]={category:'not_a_trade'};
  const bad={tool:'world_act',eventId:'fix3-damaged',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_water',quantity:1}}};
  for(const run of [()=>engine.previewAction(damaged,bad),()=>engine.reduce(damaged,bad)])
-  await assert.rejects(run(),error=>error instanceof Error&&!(error instanceof ActionRejection)&&/当日报价账无效/.test(error.message));
+  await assert.rejects(run(),error=>error instanceof Error&&!(error instanceof ActionRejection)&&/市场成交账无效/.test(error.message));
  // Business precondition: same action, the player simply cannot pay.
  const poor=structuredClone(document);poor.state.player.coins=0;
  const pay={tool:'world_act',eventId:'fix3-poor',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}}};

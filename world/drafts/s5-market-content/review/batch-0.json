@@ -1,0 +1,28 @@
+{
+  "index": 0,
+  "fingerprint": "4ef12d433b7295b5ab46c8d9599af124c9323442e6680de4e019d9753fab0583",
+  "count": 1,
+  "passed": 1,
+  "ids": [
+    "s5-market-parameters"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "s5-market-parameters"
+  ],
+  "l4": {
+    "approved": true,
+    "notes": [
+      {
+        "id": "s5-market-parameters",
+        "note": "2026-10-25 S502C 逐项阅读：零售阈值 max(5,供给×5%)、大宗30%、日深度与次日复位符合15.2/15.4的投影边界；方向价差0.6、品质1.25、水质阈值、篮子0.7/0.3均明确待标定；口粮天数1由身体速率/营养/户籍成员派生份数，不存报价。L2 DeepSeek 返回无矛盾，实测费用上界0.001488元，无新增人物、设定或权限。"
+      }
+    ]
+  },
+  "costUpperYuan": 0.001488,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

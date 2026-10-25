@@ -7,6 +7,7 @@ import {digest} from './storage.mjs';
 import {actionOfCall,findAction} from './action-registry.mjs';
 import {npcServiceFact} from './npc-schedule.mjs';
 import {currentAgreedQuotes} from './shop.mjs';
+import {facilityRuntime} from './facility-state.mjs';
 
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
 const resultOf=event=>event.result?.result??event.result??{};
@@ -111,9 +112,11 @@ export function reviewCurrentFacts(engine,document,{revision=null,sequence=null}
  const present=new Set(Object.entries(s.npcs??{}).filter(([,n])=>n.location===s.location&&!n.scheduleTravel&&!n.cognitionTravel).map(([id])=>id));
  for(const id of present){const fact=npcServiceFact(engine,s,id,version);if(fact)facts.push(fact);}
  for(const row of currentAgreedQuotes(s))if(row.to==='player')add(`quote:${row.id}`,'price',['state','records',`agreed_quote:${row.id}`],row.actor,row.resource??row.service,row,{quantity:row.quantity,principal:row.principal,direction:row.direction},{at:s.minute,from:row.at,until:row.expires});
- for(const [id,row] of Object.entries(s.records??{}))if(row.category==='trade_quote'&&row.day===Math.floor(s.minute/1440)&&(!row.dynamic||row.quotedAt===s.minute)&&[row.buyer,row.seller].includes('player')&&present.has(row.buyer==='player'?row.seller:row.buyer)){
-  const actor=row.buyer==='player'?row.seller:row.buyer;
-  add(`quote:${id}`,'price',['state','records',id],actor,row.item,pick(row,['listPrice','quotedAt','buyer','seller','item']),{buyer:row.buyer,seller:row.seller},{at:s.minute,until:(row.day+1)*1440});
+ const priced=new Set();
+ for(const row of Object.values(s.records??{}))if(row.category==='market_trade'&&row.day===Math.floor(s.minute/1440)&&[row.buyer,row.seller].includes('player')&&present.has(row.buyer==='player'?row.seller:row.buyer)){
+  const actor=row.buyer==='player'?row.seller:row.buyer,key=`${row.buyer}:${row.seller}:${row.item}`;if(priced.has(key))continue;priced.add(key);
+  const quote=facilityRuntime().currentTradeQuote(engine,document,{buyer:row.buyer,seller:row.seller,item:row.item});
+  add(`quote:market:${key}`,'price',['state'],actor,row.item,{listPrice:quote.listPrice,quotedAt:s.minute,buyer:row.buyer,seller:row.seller,item:row.item},{buyer:row.buyer,seller:row.seller},{at:s.minute,until:s.minute+1});
  }
  const authorizations=reviewPlayerFacts(s).authorizations;
  for(const [id,row] of Object.entries(authorizations))if(!row.revoked&&(row.expires===undefined||row.expires>s.minute))add(`authorization:${id}`,'existing-authorization',['state','records',id],row.grantor,row.grantee,row,{subject:row.subject,scope:row.scope},{at:s.minute,until:row.expires});

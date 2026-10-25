@@ -1,3 +1,4 @@
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -205,7 +206,8 @@ test('T41 浏览器：现有账本显示实际居民与分村贡献，重绘不�
     await run('world_settlement',{...args,operation:'civic_residence'},'residence');
     await run('world_settlement',{...args,operation:'civic_sponsor'},'sponsor');
     await run('world_settlement',{...args,operation:'civic_apply_resident'},'resident');
-    doc.state.inventory.item_oats={quantity:10};
+    // S5-01: declare the unrelated donation stock in the actual resource account, preserving its ten-unit contribution.
+    const staged=applyIntentSetup(engine,doc,{inventory:{item_oats:10}});assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
     const donation=await run('world_farm',{operation:'donate',settlement:'loc_hw',quantity:10},'grain');
     const other={category:'civic_contribution',subject:'npc_hw_luqing',settlement:'loc_bs_yupo',kind:'teaching',points:99};
     doc.state.records['civic_source:private-teacher']=other;

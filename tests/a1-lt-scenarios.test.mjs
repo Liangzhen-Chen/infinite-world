@@ -47,13 +47,20 @@ test('L2 余额不足：引擎拒绝，钱物与账本序号都不变，界面�
  assert.equal(after.reference.sequence,view.reference.sequence);assert.deepEqual(after.document.state.inventory,before.state.inventory);assert.equal(after.document.state.player.coins,1);
 });
 
-test('L3 同一天再买同一件东西，报价一致（当日报价入账）',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,10*60)});
+test('L3 同一天再买同一件东西，成交深度真实上升且总额一次取整',async t=>{
+ // S5-02: preserve the original three purchases beyond four household
+ // retained portions; only the non-examined opening shelf is declared.
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].inventory.item_bread={quantity:8};})});
  const a=await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});
  await ui.choose('time',{minutes:120});
  const b=await ui.choose('trade.buy',{item:'item_bread',quantity:2},{target:LINSUI});
- assert.ok(a.ok&&b.ok);assert.equal(b.result.cost,2*a.result.cost,'单价不变');
- const d=await ui.read(),quote=d.state.records[`trade-quote:0:${LINSUI}:player:item_bread`];assert.equal(quote.listPrice,a.result.cost);
+ // S5-02 / 15 §15.2 replaces the daily lock with current market depth.
+ assert.ok(a.ok&&b.ok);assert.ok(b.result.pricing.depth>a.result.pricing.depth);
+ // Opening saleable food exceeds28, demand14 → floor .5. All remaining factors
+ // are 1 on the first purchase: published bread 2 × .5 = 1 copper.
+ assert.equal(a.result.cost,1);
+ assert.equal(b.result.cost,Math.trunc(2*b.result.pricing.unitPrice));
+ const d=await ui.read(),deals=Object.values(d.state.records).filter(r=>r.category==='market_trade'&&r.seller===LINSUI&&r.item==='item_bread');assert.equal(deals.length,2);assert.equal(deals.at(-1).totalCoins,b.result.cost);
 });
 
 // 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
@@ -78,11 +85,17 @@ test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动'
 });
 // 指南11.3 L5：卖方明确允许部分成交；原整笔拒绝断言保留。
 test('L5 对方钱不够时部分收购：只转付得起的原货，不足一件则回滚',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=5;s.inventory.item_bread={quantity:20};})});
+ // 15 §15.2 truncates the bill once: 5 coins buys 8 at .6, charges 4
+ // and legitimately leaves purchasing capacity. Six buys 10 for exactly 6,
+ // retaining this scenario's original exhausted-purse refusal premise.
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=6;s.inventory.item_bread={quantity:20};})});
  const before=await ui.read(),menu=await ui.menu(LINSUI);
  assert.ok(menu.actions.find(a=>a.id==='core:trade.sell_to').slots.some(s=>s.name==='allowPartial'));
  const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
  assert.ok(r.ok,r.error);assert.equal(r.result.partial,true);assert.equal(r.result.requestedQuantity,20);
+ // Bread 2 × abundant-food floor .5 × shop buy spread .6 × 10 = 6;
+ // other factors 1. Total truncation occurs after multiplying quantity.
+ assert.equal(r.result.cost,6);
  assert.ok(r.lines[0].includes(`${r.result.quantity}份`),'界面只报实际成交数量');
  assert.ok(r.result.quantity>0&&r.result.quantity<20);const after=await ui.read();
  assert.equal(qty(after.state.inventory.item_bread),20-r.result.quantity);

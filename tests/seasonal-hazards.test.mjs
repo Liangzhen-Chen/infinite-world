@@ -122,7 +122,8 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  assert.equal(hazardPriceFactor(engine,c.state,'item_oats','loc_hw'),1.6);
  assert.ok(hazardPriceFactor(engine,c.state,'item_oats','bld_hw_qingdeng')>=1.6);
  assert.equal(hazardPriceFactor(engine,c.state,'item_staff','loc_hw'),1);
- const d=draft(c);assert.ok(regionalTradePrice(d,engine,'item_ration','loc_hw')>=3*1.6);
+ // S5-02 §15.2：基准3×灾荒1.6×供需下限0.5；首笔深度、品质、立场和修正均为1。
+ const d=draft(c);assert.equal(regionalTradePrice(d,engine,'item_ration','loc_hw'),2.4000000000000004);
  // Not short of food: the condition holds the clock at phase 0.
  const fed=setup('hazard-famine',w=>{spring(w);w.rules.hazardClock.clocks.find(r=>r.kind==='famine').stages[0].condition.days=1;});
  assert.equal(rec(await fed.wait(fed.doc,3*DAY),'hazard-clock:famine:loc_hw'),undefined);
@@ -142,8 +143,11 @@ test('物价波动：接周贸易区域报价与商店报价的季节系数，�
  assert.equal(hazardPriceFactor(engine,peak.state,'item_oats','loc_bs_yupo'),1.3);
  const d=draft(peak),price=regionalTradePrice(d,engine,'item_oats','loc_bs_yupo');
  const quote=d.get('state','records',`quote:region:${Math.floor(peak.state.minute/DAY)}:loc_bs_yupo:item_oats`);
- assert.equal(quote.hazardFactor,1.3);assert.equal(quote.seasonFactor,engine.rules.settlementTrade.seasonFactors[0]*1.3);assert.ok(price>=1);
- assert.equal(regionalTradePrice(d,engine,'item_ration','loc_bs'),3*1.3);
+ // S5-02：报价不存档；灾害/季节仍为派生组成，不能再读取已删除的报价真相。
+ assert.equal(quote,undefined);assert.equal(hazardPriceFactor(engine,peak.state,'item_oats','loc_bs_yupo'),1.3);
+ assert.equal(engine.rules.settlementTrade.seasonFactors[engine.calendar(peak.state.minute).season],engine.rules.settlementTrade.seasonFactors[0]);assert.ok(price>=1);
+ // 基准3×灾害1.3×供需0.5×其余1，不对展示单价取整。
+ assert.equal(regionalTradePrice(d,engine,'item_ration','loc_bs'),1.9500000000000002);
  // A shop's day quote starts from the same figure.
  const calm=setup('hazard-price');
  const plainDraft=draft(await calm.wait(calm.doc,3*DAY));
@@ -151,7 +155,8 @@ test('物价波动：接周贸易区域报价与商店报价的季节系数，�
  const eased=await wait(peak,4*DAY);
  assert.deepEqual(rec(eased,'hazard-clock:price:loc_bs').history.map(h=>h.stage),['peak','ease']);
  assert.equal(hazardPriceFactor(engine,eased.state,'item_ration','loc_bs'),1);
- assert.equal(regionalTradePrice(draft(eased),engine,'item_ration','loc_bs'),3);
+ // 灾害回落为1，基准3×供需0.5=1.5。
+ assert.equal(regionalTradePrice(draft(eased),engine,'item_ration','loc_bs'),1.5);
 });
 
 test('疫病：有病名与途径，户间、沿路线传播；医师、隔离、净水、祭祀按规则减传播',async()=>{

@@ -1,4 +1,5 @@
 import {withReviewClaims} from './helpers/consistency-response.mjs';
+import {loadWorld} from '../tools/load-world.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -42,12 +43,17 @@ test('两人格 300 轮计划完整，25/50 轮不能冒充已完成回忆测验
  assert.equal(turns,300);assert.equal(probes,12);assert.equal(nextSoakTask(run),null);
 });
 test('可执行 driver 保存两人格各三轮，重启继续原存档且完整统计角色费用',async t=>{
- const directory=await temporary(t),config={directory,turns:3,budgetYuan:2,adapterOptions:options(fake()),inputFor:()=> '我向林穗买一个面包。'};
+ // S5-02: 8 opening loaves = 4 household + 3 native purchases + 1 spare. No stock-failure retries in this cost-accounting fixture.
+ const world=await loadWorld();world.npcs.find(n=>n.id==='npc_hw_linsui').inventory.item_bread=8;
+ const directory=await temporary(t),config={directory,turns:3,budgetYuan:2,adapterOptions:{...options(fake()),world},inputFor:()=> '我向林穗买一个面包。'};
  const first=await runSoak({...config,maxTasks:2});assert.equal(first.status,'task-limit');
  const final=await runSoak(config);assert.equal(final.complete,true);assert.deepEqual(final.personas.map(p=>p.turns),[3,3]);assert.equal(final.pass,false);
  assert.equal(final.roles.narrator.calls,12);assert.equal(final.roles.review.calls,6);assert.equal(final.allCallsAccounted,true);
  const run=JSON.parse(await fs.readFile(path.join(directory,'run.json'),'utf8'));assert.equal(new Set(Object.values(run.personas).map(p=>p.checkpoint.campaignId)).size,2);
  assert.equal(run.personas.merchant.checkpoint.chat.filter(m=>m.is_user).length,3);
+ // Each native bill trunc(2*.5*depth)=1; three purchases leave 180-3=177.
+ const inspector=await createSoakAdapter({directory,budgetYuan:2,...config.adapterOptions});t.after(()=>inspector.close());
+ for(const p of Object.values(run.personas))assert.equal((await inspector.server.api('read',{campaignId:p.checkpoint.campaignId})).document.state.player.coins,177);
 });
 
 test('真实 CLI 能启动执行器并在零任务预算处退出，不发生顶层 await 环形导入',async t=>{

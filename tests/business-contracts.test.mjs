@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const landlord='npc_hw_linsui',worker='npc_hw_ayan',customer='npc_hw_luowei',place='bld_hw_qingdeng';
@@ -130,9 +131,14 @@ test('合法出租与明确同意、实际清醒在场、整段雇工空档和�
 });
 
 test('NPC 顾客只花已有钱且一天消费有限；卖空、赊购和重复交货无副作用',async()=>{
-    const f=fixture({inventory:{item_bread:{quantity:30}}}),lease=await f.lease(),shop=lease.business;await f.manage('open',shop);
+    const f=fixture({inventory:{item_bread:{quantity:30}}});
+    // S5-02: bread baseline2 * scarcity floor.5 =1 per portion. Native
+    // daily spending is one quarter of actual opening cash:40/4=10.
+    // The original ten-portion purchase exhausts it; the repeat must refuse.
+    const prepared=applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','npcs',customer,'coins'],value:40}]});assert.deepEqual(prepared.setupUnmet,[]);f.doc=prepared.document;
+    const lease=await f.lease(),shop=lease.business;await f.manage('open',shop);
     const sell={operation:'sell',business:shop,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:10};
-    await f.act('world_trade',sell,'first-sale');const before=structuredClone(f.doc);
+    const first=await f.act('world_trade',sell,'first-sale');assert.equal(first.cost,10);const before=structuredClone(f.doc);
     await assert.rejects(f.act('world_trade',sell,'excess-sale'),/当日店铺消费上限/);assert.deepEqual(f.doc,before);
     await assert.rejects(f.act('world_trade',{...sell,quantity:1,payment:'credit'},'credit-sale'),/现有现金/);
     await assert.rejects(f.act('world_trade',{...sell,quantity:100},'sold-out'),/现有库存不足/);
@@ -144,7 +150,9 @@ test('NPC 顾客只花已有钱且一天消费有限；卖空、赊购和重复�
 });
 
 test('已托管雇工在履约前失去库存不能完成；营业期其他工具花费和实物都进入同一来源账',async()=>{
-    const f=fixture({inventory:{item_bread:{quantity:1}}}),lease=await f.lease(),shop=lease.business;
+    // S5-02: two native perishable stews *35 cover the player's60/day
+    // satiety, leaving the examined bread available for the real sale.
+    const f=fixture({inventory:{item_bread:{quantity:1},item_mutton_turnip_stew:{quantity:2}}}),lease=await f.lease(),shop=lease.business;
     const hire=await f.act('world_trade',{operation:'hire',business:shop,seller:worker,consent:true,task:'stocktake',item:'item_bread',quantity:1},'hire-pending');
     await f.act('world_trade',{buyer:customer,seller:'player',item:'item_bread',quantity:1},'ordinary-sale');
     await assert.rejects(f.act('world_trade',{operation:'fulfill',business:shop,contract:hire.contract,seller:worker},'missing-goods'),/尚未到货或已不足/);

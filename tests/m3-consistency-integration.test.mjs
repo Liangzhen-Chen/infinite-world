@@ -81,7 +81,8 @@ test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',asy
   assert.ok(messages[0].content.includes('无限原野'));assert.ok(tools.length>10);requests++;
   return requests===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'bread',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',item:'面包',quantity:1})}}]}}]}:{choices:[{finish_reason:'stop',message:{content:draft}}]};
  }};
- const result=await runPlaytest({scenario:{id:'review-pipeline',initial:{mode:'legacy'},turns:[{input:'我付钱买一个面包',assertions:[{kind:'delta',path:'state.player.coins',value:-2}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
+ // S5-02: first bread bill trunc(base2 * scarcity.5)=1 copper.
+ const result=await runPlaytest({scenario:{id:'review-pipeline',initial:{mode:'legacy'},turns:[{input:'我付钱买一个面包',assertions:[{kind:'delta',path:'state.player.coins',value:-1}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
  assert.equal(result.pass,true,JSON.stringify(result.turns[0]));assert.equal(result.turns[0].originalReply,draft);assert.equal(result.turns[0].reply,corrected);
  assert.equal(result.turns[0].consistency.status,'verified');assert.equal(result.turns[0].calls.length,1);assert.ok(result.turns[0].turnResult);assert.equal(requests,2);assert.equal(reviewClient.calls.length,3);
 });

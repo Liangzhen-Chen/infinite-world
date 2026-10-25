@@ -28,19 +28,35 @@ test('正式机制引用既存四村和文化势力；未知效果和缺消费�
 });
 test('真实周贸易到货后推进阶段并消费区域报价，不把常量阶段当演变',async()=>{
  const {engine,doc,wait}=setup(),before=structuredClone(doc);
+ // S5-02 §15.2/15.4：粮基准3×运输/春季环境项×D/S；未成交，深度/品质/立场/修正均1。
+ // 公仓实际粮扣人口×90天口粮；四村没有其他在售粮，D为口粮需求。
+ // 两次观察的 [环境后的基准, D, S=公仓粮-D] 分别为：
+ // 榆坡 [3.443174013650245,7200,17696-7200]、[3.3518376618407357,7200,17297-7200]；
+ // 苇亭 [3.471578672022414,9000,21654-9000]、[3.5941049780937933,9000,21319-9000]；
+ // 梨泉 [3.7863854422265217,8640,21578-8640]、[3.6359916279324778,8640,21151-8640]；
+ // 桑坂 [3.4636753236814712,9900,24520-9900]、[3.551323048345333,9900,24075-9900]。
+ // 环境基准=3×春季0.9×(1+线路公里数×0.01)×实际运输风险；单价不取整。
+ // 独立金额字面量；历史观察不充当当前报价缓存。
+ const anchors={
+  loc_bs_yupo:[2.3619333935100766,2.390138770451946],
+  loc_bs_weiting:[2.4691171209263256,2.6257768327659825],
+  loc_bs_liquan:[2.5285492518810595,2.5109877440121977],
+  loc_bs_sangban:[2.345443618635196,2.4802891131300737],
+ };
  let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
  assert.deepEqual(doc,before);
  for(const clock of clocks(c)){
   assert.equal(clock.phase,2);assert.equal(clock.history.length,2);
   assert.ok(clock.history[1].trigger.evidence.some(id=>c.state.records[id]?.deliveredFood>0));
-  for(const event of clock.history){
+  for(const [index,event] of clock.history.entries()){
    const sid=engine.rules.worldClock.clocks.find(r=>r.id===clock.id).settlement;
-   assert.equal(event.effect.price,c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`]);
+   assert.equal(event.effect.price,anchors[sid][index]);
+   assert.equal(c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`],undefined);
   }
  }
  assert.equal(worldClockScene(engine,c),'');
  const counter=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo').counter;
- const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/每份\d+铜/);
+ const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.390138770451946\u94dc/);
  assert.ok(Object.values(c.state.records).some(r=>r.category==='settlement_trade'&&r.status==='delivered'));
  assert.equal(c.state.player.coins,doc.state.player.coins);assert.deepEqual(c.state.created,doc.state.created);
  const beforeNpcs=Object.keys(doc.state.npcs);assert.deepEqual(Object.keys(c.state.npcs),beforeNpcs);

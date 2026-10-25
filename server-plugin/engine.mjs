@@ -4,7 +4,7 @@ import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {reject} from './action-rejection.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
-import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
+import {facilityView,facilityRouteStates,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
 import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
@@ -44,10 +44,10 @@ import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStol
 import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
-import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {advanceSettlementTrade,regionalTradeBase}from'./settlement-trade.mjs';
 import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';
-import {tradeQuote,recordDeal,agreedTradeQuote,consumeAgreedQuote,executeAgreedRemittance}from'./shop.mjs';
+import {tradeQuote,recordDeal,assertMarketDepth,marketExplanation,agreedTradeQuote,consumeAgreedQuote,executeAgreedRemittance}from'./shop.mjs';
 import {assertLodgingCapacity,assertRestBed,selectLodgingBed} from './facility-state.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
@@ -106,6 +106,13 @@ declareHoldingWriter('engine',{kinds:['*'],entities:['*'],locations:true});
 for(const verb of PRIMITIVE_EVENT_VERBS)SOCIAL_VERBS.add(verb);
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
+// Native read projection shared by dialogue, routing and evidence. No draft
+// writer is exposed, and the normal quote uses the same environmental inputs.
+installFacilityRuntime({currentTradeQuote(engine,document,args){
+ if(!engine.byId.has('player'))engine=engine.scoped(document);
+ const d={document,get:(...path)=>path.reduce((value,key)=>value?.[key],document)},location=args.location??document.state.location;
+ return tradeQuote(d,engine,{buyer:'player',quantity:1,...args,location,base:()=>regionalTradeBase(d,engine,args.item,location)*wildlifePriceFactor(engine,document,args.item,location)});
+}});
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) reject('E-ACTION-PRECONDITION',`${label}必须在${min}到${max}之间`);
     return value;
@@ -632,22 +639,27 @@ export class WorldEngine {
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');
         let quantity=number(args.quantity,1,100000,'数量');const requestedQuantity=quantity,catalog=this.byId.get(item);
-        const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
-        const existing=d.get('state','quotes',quoteKey);
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
-        const quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        let quote=tradeQuote(d,this,{buyer,seller,item,quantity,instances:args.instances??null,location:playerLocation,base:()=>regionalTradeBase(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation)});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
         if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)reject('E-ACTION-PRECONDITION','单价不符既定报价');
-        const price=quote.agreed?quote.listPrice:(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
+        const price=quote.agreed?quote.listPrice:args.unitPrice===undefined?quote.listPrice:number(args.unitPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         // Explicit seller consent to a smaller cash sale. Keep the normal
         // all-or-nothing path, agreed terms and selected unique units intact.
         if(args.allowPartial===true&&seller==='player'&&buyer!=='player'&&(args.payment??'cash')==='cash'&&!quote.agreed&&!args.instances){
             quantity=Math.min(quantity,Math.floor(this.actor(d,buyer).coins/price));
             if(quantity<1)reject('E-ACTION-PRECONDITION','买方余额不足，连一件也收不起');
         }
-        const cost=quote.agreed?quote.totalCoins:quantity*price;
+        if(quantity!==quote.quantity&&!quote.agreed)quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>regionalTradeBase(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation)});
+        const bargainFactor=quote.agreed||args.unitPrice===undefined?1:price/quote.listPrice;
+        // An explicit retail unit price is already an integer coin amount.
+        // Keep its exact product; a floating ratio can turn 254*3 into
+        // 761.9999999999999 just before the required total truncation.
+        const exactTotal=quote.retail&&args.unitPrice!==undefined&&!quote.agreed?price*quantity:quote.exactTotal*bargainFactor;
+        const cost=quote.agreed?quote.totalCoins:Math.trunc(exactTotal);
         if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');
+        if(!quote.agreed)assertMarketDepth(d,this,quote);
         validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected,receivingCases=[];
@@ -659,7 +671,7 @@ export class WorldEngine {
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        if(!quote.agreed)d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
+        recordDeal(d,quote,cost,quantity,id);
         };
         if(d.scheduler){
             submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
@@ -669,7 +681,7 @@ export class WorldEngine {
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
         this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
+        return {buyer,seller,item,quantity,cost,...(!quote.agreed?{pricing:marketExplanation(quote,{bargainFactor,totalCoins:cost,unitPrice:args.unitPrice??quote.listPrice,exactTotal})}:{}),...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
     }
     advance(d,minutes,id) {
         if(this.bookedWorkstation?.minutes===minutes)facilityRuntime().consumeWorkstationPrepayment(d,this.bookedWorkstation.receipt,id);

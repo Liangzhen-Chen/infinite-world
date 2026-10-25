@@ -51,7 +51,10 @@ async function built(engine,document,action,slots,eventId){
 
 test('F5 净水后出售同一份原水：提案和构造器同 seed 事实等价，钱水与污染守恒',async()=>{
  const f=fixture(),r=row('068'),setup=r.setup;
- setup.inventory={item_water:4};setup.coins=0;
+ // S5-02: retain the player's hydration independently of the examined four
+ // water portions. Body3/h *24h =72; three native milk portions *25 =75.
+ // Perishable milk is retained first, so the cleaned original can be sold.
+ setup.inventory={item_water:4,item_milk:3};setup.coins=0;
  setup.objects[0]={...setup.objects[0],owner:'player',waterLiters:1,turbidity:40,contents:[{inventoryBinding:{item:'item_water',quantity:4,mode:'same_stock'}}]};
  setup.holdings=[{id:'f5_bucket_title',kind:'owns',holder:'player',subject:BUCKET,terms:{share:1}}];
  const loaded=applyIntentSetup(f.engine,f.document,setup);assert.deepEqual(loaded.setupUnmet,[]);

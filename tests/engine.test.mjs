@@ -12,6 +12,7 @@ import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
 import {planFarmPestsMigration} from '../server-plugin/farm-pests-migration.mjs';
 import { createCampaign } from './fixtures/legacy/core.js';
 import { parseTurn } from '../extension/turn.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 const seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const engine=new WorldEngine(await loadWorld());
 const fresh=()=>{const c=engine.initialFromLegacy(createCampaign(seed),'deterministic-test'),migrated=applyPatches(c,planAgricultureMigration(c,engine.rules)),wild=applyPatches(migrated,planWildlifeMigration(migrated,engine.rules,engine.world.monsters));return applyPatches(wild,planFarmPestsMigration(wild,engine.rules));};
@@ -141,10 +142,16 @@ test('E15 施法增长熟练度，持续效果到期移除，不生成永久世�
     const later=await run(cast.document,'world_time',{minutes:120},'later');assert.deepEqual(later.document.state.effects,{});
 });
 test('E17 交易物品别名同一编号，双方钱与库存守恒，余额不足原子拒绝',async()=>{
-    const c=fresh();c.state.npcs.npc_hw_linsui.inventory.item_bread={quantity:3};
+    // S5-02: original saleable stock3 plus household reserve4 (two members
+    // *2.5/h *24 /30). Stock is an unrelated premise, not a passed action.
+    const prepared=applyIntentSetup(engine,fresh(),{facts:[{path:['state','npcs','npc_hw_linsui','inventory','item_bread'],value:{quantity:7}}]});assert.deepEqual(prepared.setupUnmet,[]);const c=prepared.document;
     const result=await run(c,'world_trade',{seller:'老板娘',item:'热面包',quantity:2});
-    assert.equal(result.document.state.inventory.item_bread.quantity,2);assert.equal(result.document.state.npcs.npc_hw_linsui.inventory.item_bread.quantity,1);
-    assert.equal(result.document.state.player.coins,176);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,454);
+    assert.equal(result.document.state.inventory.item_bread.quantity,2);assert.equal(result.document.state.npcs.npc_hw_linsui.inventory.item_bread.quantity,5);
+    // 15 §15.2: food demand 14 / ample opening stock clamps to .5;
+    // baseline 2 × .5 × depth/grade/spread/regard/correction 1 × 2 = 2.
+    assert.equal(result.result.cost,2);
+    assert.equal(result.result.cost,Math.trunc(2*result.result.pricing.unitPrice));
+    assert.equal(result.document.state.player.coins,c.state.player.coins-result.result.cost);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,c.state.npcs.npc_hw_linsui.coins+result.result.cost);
     assert.ok(result.document.state.inventory.item_bread.quality);assert.equal(result.document.state.inventory.item_bread.weight,0.15);
     c.state.player.coins=0;const before=JSON.stringify(c);await assert.rejects(run(c,'world_trade',{seller:'林穗',item:'面包',quantity:2}),/余额不足/);assert.equal(JSON.stringify(c),before);
 });
@@ -157,14 +164,16 @@ test('租房服务：报价来自引擎、实际扣款转入店主、期限保�
 });
 test('交易性质：任意可负担数量与铜币守恒',async()=>{
     await fc.assert(fc.asyncProperty(fc.integer({min:1,max:12}),async quantity=>{
-        const c=fresh();c.state.npcs.npc_hw_linsui.inventory.item_bread={quantity:12};
+        // Preserve the full generated range1..12; keep four household meals
+        // behind it rather than narrowing the property to the saleable two.
+        const prepared=applyIntentSetup(engine,fresh(),{facts:[{path:['state','npcs','npc_hw_linsui','inventory','item_bread'],value:{quantity:16}}]});assert.deepEqual(prepared.setupUnmet,[]);const c=prepared.document;
         const publicMoney=state=>Object.values(state.settlements).reduce((n,s)=>n+(s.treasury??0),0);
         const initial=c.state.player.coins+c.state.npcs.npc_hw_linsui.coins+publicMoney(c.state);
         const next=(await run(c,'world_trade',{seller:'林穗',item:'面包',quantity})).document;
         assert.equal(next.state.player.coins+next.state.npcs.npc_hw_linsui.coins+publicMoney(next.state),initial);
         const taxes=Object.values(next.state.records).filter(r=>r.category==='trade_tax').reduce((n,r)=>n+r.amount,0);
         assert.equal(publicMoney(next.state)-publicMoney(c.state),taxes);
-        assert.equal(next.state.inventory.item_bread.quantity+(next.state.npcs.npc_hw_linsui.inventory.item_bread?.quantity??0),12);
+        assert.equal(next.state.inventory.item_bread.quantity+(next.state.npcs.npc_hw_linsui.inventory.item_bread?.quantity??0),16);
     }),{numRuns:30,seed:20261010});
 });
 test('E18 任意职业与无认证条件拒绝，技能突破要求在场且有资格的导师',async()=>{

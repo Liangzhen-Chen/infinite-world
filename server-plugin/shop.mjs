@@ -10,11 +10,13 @@ import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
-import {regionalTradePrice,regionalMaterialSupply} from './settlement-trade.mjs';
+import {regionalTradeBase} from './settlement-trade.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
+import {marketQuote,recordMarketDeal,goodsClass} from './market.mjs';
+export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
 
 const agreedKey=id=>`agreed_quote:${id}`;
 function quoteSource(state,row){
@@ -239,13 +241,17 @@ function restockRow(d,engine,shop,row,minute){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
-    const material=regionalMaterialSupply(d,engine,row.item,shop.settlement);
-    const base=material?Math.ceil(regionalTradePrice(d,engine,row.item,shop.settlement,minute)):engine.byId.get(row.item).basePrice,entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
-    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>Math.min(n,Math.floor(coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins})/base));
+    const from=row.source==='route'?row.from:shop.settlement;
+    const quote=quantity=>marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business:{keeper:from,markup:1},base:regionalTradeBase(d,engine,row.item,shop.settlement,minute)});
+    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
+    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>{
+        const cash=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins});
+        let low=0,high=Math.floor(n);while(low<high){const mid=Math.ceil((low+high)/2);if(quote(mid).totalCoins<=cash)low=mid;else high=mid-1;}return low;
+    };
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
     if(row.source==='local'){entry.added=want;}
     else{
-        const from=row.source==='route'?row.from:shop.settlement,s=structuredClone(d.get('state','settlements',from));
+        const s=structuredClone(d.get('state','settlements',from));
         if(!s||!integer(s.treasury))return{...entry,reason:'来源聚落不在战役账中'};
         if(row.source==='route'){
             try{engine.route(from,shop.settlement,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return{...entry,reason:'封路或天气不通，货未到'};}
@@ -253,9 +259,10 @@ function restockRow(d,engine,shop,row,minute){
         const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
         if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
-        const cost=quantity*base;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
+        const purchase=quote(quantity),cost=purchase.totalCoins;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
         d.set([...keeperPath,'coins'],keeper.coins-cost);
         entry.added=quantity;entry.paidCopper=cost;entry.from=from;
+        recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
     }
     engine.itemDelta(d,shop.keeper,row.item,entry.added,books);
     return entry;
@@ -278,34 +285,31 @@ export function advanceShops(d,engine,before,after){
         for(const shop of stores)if(day>=shop.firstDay&&(day-shop.firstDay)%shop.cycleDays===0)restockShop(d,engine,shop,day*DAY);
 }
 
-// Material quotes read current supply even within a day; the existing daily
-// quotes remain for other markets until S5 replaces their pricing projections.
-export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base}){
+// All ordinary quotes read current supply; only signed terms stay frozen.
+export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base,instances=null}){
     const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});
-    if(agreed)return {...agreed,agreed:true,buyer,seller,item,listPrice:agreed.totalCoins/agreed.quantity};
-    const minute=d.get('state','minute'),day=Math.floor(minute/DAY),key=`trade-quote:${day}:${seller}:${buyer}:${item}`,old=d.get('state','records',key);
-    if(old){if(old.category!=='trade_quote'||!integer(old.listPrice,1))throw Error('当日报价账无效');if(!regionalMaterialSupply(d,engine,item,location))return old;}
+    if(agreed){
+        const state=d.get('state'),npc=buyer==='player'?seller:buyer;
+        return {...agreed,agreed:true,buyer,seller,item,listPrice:agreed.totalCoins/agreed.quantity,
+            day:Math.floor(state.minute/DAY),place:placeSettlement(engine,state,location).value??location,goods:goodsClass(engine,item),side:buyer==='player'?'sell':'buy',business:shopOfKeeper(engine,npc,state)?.keeper??null};
+    }
     const rules=shopRules(engine),limits=engine.rules.economy.priceFactorLimits,price=base();
-    const npc=buyer==='player'?seller:seller==='player'?buyer:null,shop=buyer==='player'?shopOfKeeper(engine,seller,d.get('state')):null;
+    const state=d.get('state'),sellerShop=shopOfKeeper(engine,seller,state),buyerShop=shopOfKeeper(engine,buyer,state);
+    const npc=buyer==='player'?seller:seller==='player'?buyer:sellerShop?seller:buyerShop?buyer:null;
+    const shop=buyer==='player'?sellerShop:seller==='player'?buyerShop:sellerShop??buyerShop;
     let relation=1,keeperRegard=null,settlementRegard=null;
     const place=shop?.settlement??placeSettlement(engine,d.get('state'),location).value;
     if(npc&&rules){
-        const state=d.get('state');keeperRegard=standing(engine,state,npc,'player');
-        settlementRegard=place&&isReputationSettlement(engine,place)?standing(engine,state,place,'player'):0;
+        const customer=npc===seller?buyer:seller;keeperRegard=standing(engine,state,npc,customer);
+        settlementRegard=place&&isReputationSettlement(engine,place)?standing(engine,state,place,customer):0;
         const regard=rules.relation.keeper*keeperRegard+rules.relation.settlement*settlementRegard;
         relation=clamp(1+(npc===seller?-1:1)*rules.relation.span*regard/100,limits.relation);
     }
-    const markup=shop?clamp(shop.markup,limits.shop):1,listPrice=Math.max(1,Math.round(price*markup*relation*medicinePriceFactor(engine,d.get('state'),item,location,d)));
-    const row={category:'trade_quote',day,buyer,seller,item,shop:shop?.id??null,settlement:place,basePrice:engine.byId.get(item).basePrice,regionalPrice:price,
-        ...(regionalMaterialSupply(d,engine,item,location)?{dynamic:true}:{}),
-        ...(old?.deals?{deals:old.deals}:{}),
-        shopFactor:markup,relationFactor:relation,keeperRegard,settlementRegard,listPrice,quotedAt:minute};
-    d.set(['state','records',key],row);
-    return row;
+    return {...marketQuote(d,engine,{buyer,seller,item,quantity,location,business:shop,instances,relation,
+        base:price*medicinePriceFactor(engine,d.get('state'),item,location,d)}),shop:shop?.id??null,settlement:place,keeperRegard,settlementRegard};
 }
 export function recordDeal(d,quote,price,quantity,eventId){
-    if(quote.agreed){consumeAgreedQuote(d,quote,eventId);return;}
-    const key=`trade-quote:${quote.day}:${quote.seller}:${quote.buyer}:${quote.item}`,row=d.get('state','records',key);
-    d.set(['state','records',key],{...row,dealPrice:price,bargainFactor:price/row.listPrice,deals:[...row.deals??[],{eventId,quantity,unitPrice:price,minute:d.get('state','minute')}]});
+    if(quote.agreed)consumeAgreedQuote(d,quote,eventId);
+    recordMarketDeal(d,quote,price,quantity,eventId);
 }
 import {medicinePriceFactor} from './medicine-state.mjs';

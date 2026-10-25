@@ -10,6 +10,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {regionalTradePrice,armySupplyQuote} from '../server-plugin/settlement-trade.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {PRICE_POINTS,probePriceReads,setPriceReadMode,priceRead} from '../server-plugin/stock.mjs';
 import {createPriceProbe} from './helpers/price-probe.mjs';
@@ -42,13 +43,20 @@ const SRC=new URL('../server-plugin/',import.meta.url);
 const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).map(f=>[f,readFileSync(new URL(f,SRC),'utf8')]));
 // 含价格、报价、估值字样的模块的归类。read = 价格输入已读账户；其余是“不读存量或货币量”的原因。
 const SURVEY={
+    // S5-02: unified projection reads actual holder and settlement accounts.
+    'market.mjs':'read',
+    // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
+    // not another inventory-priced consumer. Market callers read the books.
+    'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
     // A3 daily22: these are valuations of declared gifts/prizes, not price
     // formulas driven by stock. Keep the exhaustive module/reader checks below.
     'dialogue.mjs':'赠礼事件标值取目录基价，物品仍经真实转移核验，不以估值读取库存或现款',
     'festival.mjs':'NPC授权成本取登记物资和奖品数量乘目录基价；数量来自节庆条款，不读库存或现款计算价格',
     'primitives-runtime.mjs':'NPC同意的成本和报酬估值取拟转移数量乘目录基价；支付能力另由真实转移事务核验，不以库存或现款定价',
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
-    'settlement-trade.mjs':'read','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
+    // S5-02: obsolete regionalMaterialSupply has no callers and is removed;
+    // the regional wrapper delegates inventory pricing to registered market.
+    'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
     'credit.mjs':'公式 = 基价 × 抵押数量，数量来自借据与参数，不读库存',
     'transition.mjs':'遗产估值 = 基价 × 已转移账户或持有数量；清偿与分配数量来自账本，不使用估值决定可支付库存',
@@ -159,8 +167,15 @@ function assertSurface(c,label){
 
 test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推进（周贸易、俸禄、军队、补货、自治），读账户与读旧字段结算完全相同',{timeout:1800000},async()=>{
     const c=campaignMoney();
+    // S5-02: four portions feed Lin Sui's two-person household (120/30),
+    // and three must still be available for the original buy/resale chain.
+    // This opening shelf is not under examination; both read modes share it.
+    const prepared=applyIntentSetup(c.engine,c.doc,{facts:[{path:['state','npcs',host,'inventory','item_bread'],value:8}]});assert.deepEqual(prepared.setupUnmet,[]);c.doc=prepared.document;
     assertSurface(c,'开局（尚未开账，读旧字段）');
-    await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
+    // S5-02 / 15 §15.2: retain one day's food before reselling. Buying three
+    // through the native action leaves the two reserved portions plus one sale;
+    // the ledger-vs-mirror equality and all following conservation checks stay.
+    await step(c,'world_trade',{seller:host,item:'item_bread',quantity:3},'buy');
     assert.ok(c.doc.ledger,'第一次归约开账');
     assertSurface(c,'交易之后');
     await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准

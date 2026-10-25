@@ -26,11 +26,14 @@ function fixture(){
 const shelf=(d,id,item)=>{const v=d.get('state','npcs',id,'inventory',item);return typeof v==='number'?v:v?.quantity??0;};
 const rolled=(doc,label)=>{for(let n=0;;n++){const id=`${label}_${n}`;if(createHash('sha256').update(`${doc.randomSeed}:${id}:d20`).digest().readUInt32LE(0)%20+1===20)return id;}};
 
-test('迁店后补货产地、付款和新报价读取当前工作地；旧报价与成交事实保持原样',()=>{
+test('迁店后补货产地、付款和新报价读取当前工作地；历史事实不变、报价重派生',()=>{
  const {engine,d}=fixture(),state=d.get('state');
  state.settlements.loc_bs={population:1000,treasury:900,food:100,iron:100};
  state.npcs[host].coins=100;state.npcs[host].inventory.item_bread=0;
  const quote=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:inn,base:()=>2});
+ // S5-02 /15.2: abundant food clamps to .5; baseline2 *other factors1
+ // *one portion =1. Quote objects are observations, never saved daily truth.
+ assert.equal(quote.totalCoins,1);const oldQuote=structuredClone(quote);
  d.set(['state','npcs',host,'residence'],{settlement:'loc_bs',home:'loc_bs',since:600,workChanged:false,schedule:{default:[{start:0,end:1440,location:'loc_bs',activity:'营业',services:['trade']}]}});
  const shop=currentShops(engine,d.get('state')).find(s=>s.keeper===host);
  assert.equal(shop.settlement,'loc_bs');assert.equal(shop.location,'loc_bs');
@@ -41,7 +44,13 @@ test('迁店后补货产地、付款和新报价读取当前工作地；旧报�
  assert.equal(ledger.settlement,'loc_bs');assert.equal(row.from,'loc_hw');assert.ok(row.added>0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
  assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.paidCopper);
- assert.deepEqual(tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999}),quote);
+ const history=structuredClone(d.get('state','records'));
+ const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
+ // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/
+ // spread/depth/corrections1 *one =499.5, truncate once to499.
+ assert.equal(moved.totalCoins,499);assert.equal(moved.settlement,'loc_bs');
+ assert.notDeepEqual(moved,quote);assert.deepEqual(quote,oldQuote);
+ assert.deepEqual(d.get('state','records'),history,'requoting cannot rewrite restock or transaction history');
  d.set(['state','minute'],DAY+600);
  assert.equal(tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>2}).settlement,'loc_bs');
 });

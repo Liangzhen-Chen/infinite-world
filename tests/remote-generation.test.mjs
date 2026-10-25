@@ -116,7 +116,9 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     r=await engine.reduce(doc,{tool:'world_trade',args:{seller:shop.keeper,item,quantity:1},eventId:'s-buy'});doc=applyPatches(doc,r.patches);
     assert.equal(r.result.seller,shop.keeper);
     assert.equal(doc.state.records['world_event:s-buy'].location,shop.location);
-    assert.equal(doc.state.records[`trade-quote:${Math.floor(doc.state.minute/1440)}:${shop.keeper}:player:${item}`].shop,store.id);
+    // S5-02 / 15 §15.2: derived shop attribution is in the native receipt;
+    // the current quote is not a stored record.
+    assert.equal(r.result.pricing.shop,store.id);
     r=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440*2},eventId:'s-days'});doc=applyPatches(doc,r.patches);
     const ledger=doc.state.records[`shop:${store.id}`];
     assert.ok(ledger.entries.some(e=>e.source==='route'&&e.from&&e.added>0),JSON.stringify(ledger.entries));

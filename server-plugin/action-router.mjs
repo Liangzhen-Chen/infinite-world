@@ -476,10 +476,11 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
     if(e.op==='emit'&&e.payload?.terms?.[slot.name]!==undefined){value=e.payload.terms[slot.name];break;}
     if(e.op==='emit'&&e.payload?.kind==='haggle'&&['source','content'].includes(slot.name)){
      const agreed=(facilityRuntime().currentAgreedQuotes?.(state)??[]).filter(r=>!r.service&&r.actor===target&&r.direction==='sell_to_player').map(r=>({item:r.resource,listPrice:r.totalCoins/r.quantity}));
-     const quotes=agreed.length?agreed:Object.values(state.records??{}).filter(r=>r.category==='trade_quote'&&r.seller===target&&r.day===Math.floor(state.minute/1440));
+     const items=[...new Set(Object.values(state.records??{}).filter(r=>r.category==='market_trade'&&r.seller===target&&r.day===Math.floor(state.minute/1440)).map(r=>r.item))];
+     const quotes=agreed.length?agreed:items.map(item=>facilityRuntime().currentTradeQuote(engine,document,{seller:target,item}));
      if(quotes.length===1){
       if(slot.name==='source')value=quotes[0].item;
-      else if(Number.isSafeInteger(e.payload.terms?.discountCopper))value=String(quotes[0].listPrice-e.payload.terms.discountCopper);
+      else if(Number.isSafeInteger(e.payload.terms?.discountCopper))value=String(Math.round(quotes[0].listPrice)-e.payload.terms.discountCopper);
      }
      if(value!==undefined)break;
     }

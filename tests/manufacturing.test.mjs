@@ -9,6 +9,7 @@ import {CampaignStorage,applyPatches}from'../server-plugin/storage.mjs';
 import {planRuleStateMigration}from'../server-plugin/rule-state-migration.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {magicIlluminates}from'../server-plugin/magic-status.mjs';
+import {applyIntentSetup}from'../tools/a3-score.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 async function setup(){
     const world=await loadWorld(),engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'manufacturing-test');
@@ -91,7 +92,7 @@ test('制造单件可存储重启、导入和删消息回滚，规则分区1升2
     assert.deepEqual((await store.reconcile('craft',[])).document,migrated);
 });
 test('照明绑定实际单件，卖掉后买回同种别件不恢复光，既有物品不伪造制作者',async()=>{
-    const{world,document,run}=await setup();document.state.location='bld_hw_qingdeng';
+    const{world,engine,document,run}=await setup();document.state.location='bld_hw_qingdeng';
     // This item-identity fixture supplies a second seller with an agreed offer.
     const seller=world.npcs.find(row=>row.id==='npc_hw_hezhou');
     seller.schedule={default:[{start:0,end:1440,location:'bld_hw_qingdeng',activity:'出售夹具中的木杖',services:['trade']}]};
@@ -100,7 +101,9 @@ test('照明绑定实际单件，卖掉后买回同种别件不恢复光，既�
     const illuminated=c=>magicIlluminates({get:(...path)=>path.reduce((value,key)=>value?.[key],c)});
     assert.equal(illuminated(c),true);
     c=(await run(c,'world_trade',{seller:'player',buyer:'林穗',item:'旧木杖',quantity:1},'sell-staff')).document;assert.equal(illuminated(c),false);
-    c.state.npcs.npc_hw_hezhou.inventory.item_staff={quantity:1,quality:'木',durability:100,weight:1};
+    // The replacement original is an unrelated stock premise. Declare it
+    // through native setup so the actual bag and its open stock account agree.
+    const prepared=applyIntentSetup(engine,c,{facts:[{path:['state','npcs','npc_hw_hezhou','inventory'],value:{...c.state.npcs.npc_hw_hezhou.inventory,item_staff:{quantity:1,quality:'木',durability:100,weight:1}}}]});assert.deepEqual(prepared.setupUnmet,[]);c=prepared.document;
     c=(await run(c,'world_trade',{seller:'贺舟',item:'旧木杖',quantity:1},'other-staff')).document;assert.equal(illuminated(c),false);
     c=(await run(c,'world_trade',{seller:'林穗',item:'旧木杖',quantity:1,instances:[instance]},'original-staff')).document;assert.equal(illuminated(c),true);
 });

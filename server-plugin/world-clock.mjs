@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {weatherAt} from './weather.mjs';
+import {facilityRuntime} from './facility-state.mjs';
 import {assertEffect,applyEffect,clockTransaction,assertEffectTable} from './effects.mjs';
 export {clockTransaction};
 
@@ -58,9 +59,9 @@ export function initializeWorldClocks(d,engine,minute,end=minute){
 export function worldClockScene(engine,document){
  const profile=engine.rules.agriculture?.settlements.find(p=>p.counter===document.state.location);
  if(!profile)return '';
- const day=Math.floor(document.state.minute/DAY),item=engine.rules.settlementTrade?.item;
- const quote=document.state.records?.[`quote:region:${day}:${profile.settlement}:${item}`];
- return quote?.category==='regional_quote'?`本日登记粮价：${engine.byId.get(item)?.name??item}每份${quote.price}铜；按现有余粮和路线核价。`:'';
+ const item=engine.rules.settlementTrade?.item;if(!item)return '';
+ const quote=facilityRuntime().currentTradeQuote(engine,document,{item,location:profile.settlement});
+ return `本日登记粮价：${engine.byId.get(item)?.name??item}每份${quote.listPrice}铜；按现有余粮和路线核价。`;
 }
 export function nextWorldClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='world_clock'&&r.nextAt>now).map(r=>r.nextAt));}
 export function advanceWorldClocks(d,engine,at){

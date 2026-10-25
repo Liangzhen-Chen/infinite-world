@@ -22,9 +22,10 @@ const tool=(id,quality='木')=>({quantity:1,quality,durability:100,weight:0.2});
 async function primed(ui){await ui.choose('time',{minutes:1});return ui.read();}
 
 test('D01 买馒头（面包）：钱从玩家到店主，货从店主到玩家，数量照实，约5分钟',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,10*60)}),before=await primed(ui);
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].inventory.item_bread={quantity:8};})}),before=await primed(ui);
+ // S5-02: household 2*60/30=4 retained; opening 8 leaves 4 saleable, three cost trunc(2*.5*3)=3.
  const r=await ui.choose('trade.buy',{item:'item_bread',quantity:3},{target:LINSUI});assert.ok(r.ok,r.error);const after=await ui.read();
- assert.equal(before.state.player.coins-after.state.player.coins,r.result.cost);assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,r.result.cost);
+ assert.equal(r.result.cost,3);assert.equal(before.state.player.coins-after.state.player.coins,r.result.cost);assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,r.result.cost);
  assert.equal(qty(after.state.inventory.item_bread)-qty(before.state.inventory.item_bread),3);assert.equal(qty(before.state.npcs[LINSUI].inventory.item_bread)-qty(after.state.npcs[LINSUI].inventory.item_bread),3);
  assert.equal(after.state.minute-before.state.minute,5);conserved(before,after,'D01');
 });
@@ -173,7 +174,8 @@ test('D34 喂宠物：食物从行囊扣一份，宠物饥饿下降',async t=>{
 
 test('D39 存档读档后继续：导出再导入，状态逐字相同，继续买卖结果一致',async t=>{
  // 开局场景（09:00 酒馆）：导出再导入。10:00 人物自治开工当刻的同一操作见下一题（R25）。
- const ui=await uiSession(t);
+ // S5-02: retain four household loaves plus the three bought across the save boundary.
+ const ui=await uiSession(t,{mutate:at(INN,9*60,s=>{s.npcs[LINSUI].inventory.item_bread={quantity:8};})});
  await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});
  const bundle=await ui.server.api('export',{campaignId:ui.campaignId}),copy=await ui.server.api('import',{bundle});
  assert.deepEqual(copy.document,(await ui.server.api('read',{campaignId:ui.campaignId})).document);

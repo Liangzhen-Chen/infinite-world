@@ -164,7 +164,8 @@ test('法院实际保管原物与罚款，受害人未到场不瞬间获赔，�
 
 test('赃物转手保留署名和去向，法院不能从无辜买家口袋复制原物，改以真实钱赔偿',async()=>{
     const{document,run}=await setup(),incident=await theft(run,document),unit=incident.result.stolen.unit;
-    let c=incident.document;c=(await run(c,'world_trade',{buyer:'npc_hw_hezhou',seller:'player',item:'item_bread',quantity:1,instances:[unit]},'sell_stolen')).document;
+    // S5-02: unrelated personal food covers ceil(60/35)=2 portions; the stolen unit remains saleable.
+    let c=applyIntentSetup(run.engine,incident.document,{inventory:{item_mutton_turnip_stew:2}}).document;c=(await run(c,'world_trade',{buyer:'npc_hw_hezhou',seller:'player',item:'item_bread',quantity:1,instances:[unit]},'sell_stolen')).document;
     assert.equal(c.state.itemInstances[unit].owner,'npc_hw_hezhou');assert.equal(c.state.itemInstances[unit].maker,null);
     c=await judged(run,c,incident.result.case);
     const paid=await run(c,'world_law',{operation:'pay',case:incident.result.case,authority:judge},'money_restitution');
@@ -180,7 +181,9 @@ test('劳役/监禁必须经过真实时长，禁止期间自由行动；赔偿�
         // 06 §6.5（第192行）/ A.15.24：按 regime.allows 过滤；在押仍可与在场者交易随身财产。
         await assert.rejects(run(c,'world_trade',{seller:victim,item:'item_bread',quantity:1},'remote_buy_in_prison'),/不在场/);
         await assert.rejects(run(c,'world_move',{destination:'loc_hw'},'leave_in_prison'),/羁押/);
-        const visiting=structuredClone(c);visiting.state.npcs[victim].location=c.state.location;
+        // S5-02: two household members retain ceil(120/35)=4 stew, keeping the original three loaves saleable.
+        const staged=applyIntentSetup(run.engine,c,{facts:[{path:['state','npcs',victim,'inventory'],value:{...c.state.npcs[victim].inventory,item_mutton_turnip_stew:{quantity:4}}}]});assert.deepEqual(staged.setupUnmet,[]);
+        const visiting=staged.document;visiting.state.npcs[victim].location=c.state.location;
         const bought=await run(visiting,'world_trade',{seller:victim,item:'item_bread',quantity:1},'buy_in_prison');
         assert.equal(bought.document.state.inventory.item_bread.quantity,(visiting.state.inventory.item_bread?.quantity??0)+1);
         assert.equal(bought.document.state.npcs[victim].inventory.item_bread.quantity,visiting.state.npcs[victim].inventory.item_bread.quantity-1);

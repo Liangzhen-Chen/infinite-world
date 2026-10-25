@@ -9,6 +9,8 @@ import {financePath as rec,financeInt as int,financeBalance,financeChange,financ
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
+import {marketQuote} from './market.mjs';
+import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
@@ -52,8 +54,16 @@ const allState=s=>Object.values(s.records??{});
 export function netAssets(d,e,id){
     const actor=d.get(...e.actorPath(id)),account=groupAccountView(e,d.get('state'),id);
     const goods=account?.items??actor?.inventory??{};
-    // S1c: 现款与库存读账户（势力库存在 store，个人行囊在 bag），公式不变。
-    const stock=Object.entries(goods).reduce((n,[item,v])=>n+priceRead(d,{point:'assets.goods',account:account?.items?store(e,id,item):bag(e,id,item),legacy:()=>typeof v==='number'?v:v.quantity??0})*(e.byId.get(item)?.basePrice??0),0);
+    // Holdings still come from their real accounts. Current stock value comes
+    // from the common market value, before shop spread/regard/day pressure;
+    // historical acquisition lots below remain historical costs.
+    const location=actor?.location??base(e,d.get('state'),id)?.location??d.get('state','location');
+    const stock=Object.entries(goods).reduce((n,[item,v])=>{
+        const quantity=priceRead(d,{point:'assets.goods',account:account?.items?store(e,id,item):bag(e,id,item),legacy:()=>typeof v==='number'?v:v.quantity??0});
+        if(!quantity||!e.byId.get(item)?.basePrice)return n;
+        const projection=marketQuote(d,e,{item,location,seller:id,quantity,base:regionalTradeBase(d,e,item,location)});
+        return n+quantity*projection.explanation.value.value;
+    },0);
     if(!account&&!actor&&d.get(...rec(`organization:${id}`))?.category!=='organization')throw preconditionFailure('资金当事人不存在');
     const cash=coinRead(d,{point:'assets.cash',account:partyAccount(e,d.get('state'),id),legacy:()=>financeBalance(d,e,id)});
     const state=d.get('state'),debt=obligationRows(state).filter(r=>r.debtor===id).reduce((n,r)=>n+obligationView(state,r).owed,0);

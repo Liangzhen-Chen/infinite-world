@@ -7,6 +7,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -67,7 +68,7 @@ test('A3 route order: sale direction wins over incidental buyer wording, price i
 });
 
 test('A3 route order: request fields retain the missing teacher and unknown price requirements',async()=>{
- const {engine,document}=fixture();
+ const {engine,document:initial}=fixture();let document=initial;
  const certify=prepareOpenAction(engine,document,{intent:'申请职业认证',target:place,effects:[{op:'emit',verb:'request',actor:'self',target:place,payload:{kind:'certification',terms:{profession:'profession_life_6'}},visibility:'present'}]});
  // a3r-route3: complete candidates precede wording, so incomplete certification
  // cannot win here. Retain its requested profession and missing-teacher checks,
@@ -81,8 +82,13 @@ test('A3 route order: request fields retain the missing teacher and unknown pric
  await assertActionRejected(engine.previewAction(document,{tool:'world_act',eventId:'route-certify-no-teacher',args:{action:certification.id,slots:certification.slots}}),/未登记.*undefined/);
  const haggle={intent:'能便宜两铜吗',target:shop,effects:[{op:'emit',verb:'request',actor:'self',target:shop,payload:{kind:'haggle',terms:{discountCopper:2}},visibility:'present'}]};
  const unknown=prepareOpenAction(engine,document,haggle);assert.deepEqual(unknown.needsSlots,{action:'core:dialogue.haggle',missing:['content','source']});
- document.state.records.quote={category:'trade_quote',seller:shop,item:'item_bread',day:0,listPrice:5};
- const quoted=prepareOpenAction(engine,document,haggle);assert.equal(quoted.routed,'core:dialogue.haggle');assert.equal(quoted.slots.content,'3');assert.equal(quoted.slots.source,'item_bread');
+ // S5-02: establish the observed item with a native purchase. Only the item
+ // remains in history; its current quote is derived at routing time.
+ const purchase=await engine.reduce(document,{tool:'world_trade',args:{seller:shop,item:'item_bread',quantity:1},eventId:'route-observed-price'});document=applyPatches(document,purchase.patches);
+ // Opening 2 baseline × abundant-food .5 × all remaining factors 1 = 1.
+ assert.equal(purchase.result.cost,1);
+ const current=facilityRuntime().currentTradeQuote(engine,document,{seller:shop,item:'item_bread'});
+ const quoted=prepareOpenAction(engine,document,haggle);assert.equal(quoted.routed,'core:dialogue.haggle');assert.equal(quoted.slots.content,String(Math.round(current.listPrice)-2));assert.equal(quoted.slots.source,'item_bread');
 });
 
 test('A3 route order: scene observation is a read with no patches, costs or proposed effects',async()=>{
@@ -96,7 +102,13 @@ test('A3 route order: buy then eat uses fresh inventory, native nutrition, conse
  const plan=prepareOpenAction(engine,document,input.args);assert.equal(plan.status,'sequence');assert.deepEqual(plan.steps.map(s=>s.action),['core:trade.buy','core:eat.meal']);
  const preview=await engine.previewAction(document,input);assert.equal(preview.receipt.status,'preview');assert.equal(preview.receipt.steps.length,2);assert.deepEqual(document,before);
  const result=await engine.reduce(document,input),next=applyPatches(document,result.patches);
- assert.equal(next.state.inventory.item_bread.quantity,1);assert.equal(next.state.player.coins,before.state.player.coins-4);
+ // S5-02: the proposal's coin effect is not price authority; native retail
+ // derives the real bill while the buy/eat sequence keeps its original stock.
+ const expected=facilityRuntime().currentTradeQuote(engine,before,{seller:shop,item:'item_bread',quantity:2});
+ // No household food here; market food remains above twice demand 14.
+ // 2 baseline × .5 scarcity × all other factors 1 × 2 units = 2.
+ assert.equal(result.result.receipt.steps[0].legacy.cost,2);
+ assert.equal(next.state.inventory.item_bread.quantity,1);assert.equal(next.state.player.coins,before.state.player.coins-expected.totalCoins);
  assert.equal(result.result.receipt.steps[1].legacy.eaten,1);assert.ok(result.result.receipt.steps[1].legacy.nutrition.satiety<99);
  assert.deepEqual(auditLedger(next.ledger),[]);assert.deepEqual(reconcile(engine,next),{mismatches:[],lots:[],drift:[],audit:[]});
  const duplicate=await engine.reduce(JSON.parse(JSON.stringify(next)),input);assert.deepEqual(duplicate.patches,[]);assert.equal(duplicate.result.receipt.duplicate,true);assert.deepEqual(document,before);

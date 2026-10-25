@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {pruneRecords} from './record-cleanup.mjs';
 import {reject} from './action-rejection.mjs';
+import {facilityRuntime} from './facility-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 // Deterministic conversation adapter. Existing promises/items/coins remain the
 // authoritative executors; speech alone cannot grant a permission or a reward.
@@ -110,7 +111,6 @@ export function applyDialogue(d,engine,args,eventId){
  }else if(action==='public_key')decision=npcDecision(view,{kind:'public_key',service:'granary'});
  else if(action==='accept'){
   if(previous?.action==='haggle'&&previous.pendingTrade&&previous.decision.outcome==='agree'){
-   const q=previous.pendingTrade;d.remove(['state','quotes',`${Math.floor(view.minute/1440)}_${npc}_player_${q.item}`]);
    return engine.trade(d,previous.pendingTrade,eventId).then(trade=>({...trade,...save(d,npc,eventId,action,decision,`${view.self.name}：依谈好的价格成交。`),socialEvent:{verb:'trade',actor:'player',target:npc,value:trade.cost,tags:['trade','dialogue','cash']}}));
   }
   if(!previous?.pending||previous.decision.outcome!=='conditional')throw preconditionFailure('没有待接受的条件');
@@ -150,7 +150,7 @@ export function applyDialogue(d,engine,args,eventId){
   decision=npcDecision(view,{kind:'haggle',reward:offered});
   if(rounds>max){decision={...decision,outcome:'refuse',reason:'已经谈过几轮，不再还价。'};}
   const item=args.source?engine.resolve(args.source,'item'):null;
-  const observed=Object.values(d.get('state','records')??{}).find(r=>r.category==='trade_quote'&&r.day===Math.floor(view.minute/1440)&&r.seller===npc&&r.item===item)?.listPrice;
+  const observed=item?facilityRuntime().currentTradeQuote(engine,d.document,{seller:npc,item}).listPrice:null;
   if(observed&&offered<Math.ceil(observed*(1-(rule.concession[Math.min(rounds-1,rule.concession.length-1)]??0))))decision={...decision,outcome:'refuse',reason:'这个出价太低，还要再商量。'};
   return save(d,npc,eventId,action,decision,line(engine,view,action,decision,`你的出价是${offered}文；成交仍须确认具体交易。`),{rounds,offer:offered,...(item?{pendingTrade:{seller:npc,item,quantity:1,unitPrice:offered}}:{})});
  }else if(action==='interpreter')detail=view.observable.people.filter(p=>p.id!==npc).map(p=>p.name).join('、')||'这里没有可找的通译。';

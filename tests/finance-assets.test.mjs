@@ -9,6 +9,7 @@ import {npcSchedule} from '../server-plugin/npc-state.mjs';
 import {groupAccountView,ensureGroupAccount} from '../server-plugin/group-account.mjs';
 import {applyEffect} from '../server-plugin/effects.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 const mill='bld_hw_mill',recipe='recipe_wooden_pegs';
 function workshopFixture(){
     const f=fixture({at:mill});f.doc.state.buildings[mill]={owner:'player',condition:100};
@@ -18,15 +19,28 @@ const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{
     const f=fixture(),total=cash(f.doc);
+    // 15 §15.2: the old 3-copper offer exceeds today's 1-copper market
+    // range. Profit is still tested strictly positive, with real acquisition
+    // cost: opening stock is an unrelated premise; buy twelve originals at
+    // one copper through the native trade before reselling ten at two.
+    const setup=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{}}]});
+    assert.deepEqual(setup.setupUnmet,[]);f.doc=setup.document;
+    const acquired=await f.act({buyer:host,seller:'player',item:'item_bread',quantity:16,unitPrice:1},'stock-acquired');
+    // Food scarcity floor .5 × baseline2 × buy spread .6; offered1 is
+    // within ceil(.6*.9)..ceil(.6*1.1). Flat clamped curve: 16*1=16; four household portions remain after the 10 cash + 2 credit sale.
+    assert.equal(acquired.cost,16);
     await assert.rejects(f.act({operation:'invest',seller:host,quantity:20},'no'),/同意/);
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');assert.equal(profit(f),0);assert.equal(cash(f.doc),total);
     await assert.rejects(f.act({operation:'dividend',seller:host,contract:own.contract},'soon'),/未到/);
-    const sale=await f.act({seller:host,item:'item_bread',quantity:10,unitPrice:Math.ceil(f.e.byId.get('item_bread').basePrice*1.3)},'sale');
-    const net=sale.cost-f.e.byId.get('item_bread').basePrice*10-(sale.tax?.amount??0);assert.equal(profit(f),net);assert.ok(net>0);
+    const sale=await f.act({seller:host,item:'item_bread',quantity:10,unitPrice:2},'sale');
+    // Scarcity remains clamped .5 along the lot. Bargained unit2 × 10=20;
+    // historical basis is the actual sixteen-at-one acquisition above.
+    assert.equal(sale.cost,20);
+    const net=sale.cost-10-(sale.tax?.amount??0);assert.equal(profit(f),net);assert.ok(net>0);
     f.e.byId.get(host).creditPolicy={limitCopper:1000,maximumMinutes:30*DAY,minimumTrust:-100};
     const credit=await f.act({seller:host,item:'item_bread',quantity:2,payment:'credit',creditMinutes:7*DAY},'credit-sale');assert.equal(profit(f),net);
     await f.act({seller:host,payment:'repay',debt:credit.debt},'settle-credit');
-    const tax=f.doc.state.records['trade_tax:settle-credit:commercial']?.amount??0,totalNet=net+credit.cost-f.e.byId.get('item_bread').basePrice*2-tax;assert.equal(profit(f),totalNet);
+    const tax=f.doc.state.records['trade_tax:settle-credit:commercial']?.amount??0,totalNet=net+credit.cost-2-tax;assert.equal(profit(f),totalNet);
     const before=f.doc.state.player.coins;f.tick(f.doc.state.records[own.contract].nextDividend);
     const paid=f.doc.state.records[own.contract].distributed;assert.equal(paid,Math.floor(totalNet*.2));assert.equal(f.doc.state.player.coins,before+paid);assert.equal(cash(f.doc),total);
     const snapshot=structuredClone(f.doc.state.records[own.contract]);f.tick(f.doc.state.minute);assert.deepEqual(f.doc.state.records[own.contract],snapshot);

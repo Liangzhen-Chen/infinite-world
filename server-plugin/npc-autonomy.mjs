@@ -16,14 +16,14 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
-import {facilityView} from './facility-state.mjs';
+import {facilityView,facilityRuntime} from './facility-state.mjs';
 import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
 import {derivedStats} from './combat.mjs';
-import {wildlifePriceFactor} from './wildlife.mjs';
+import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
@@ -51,7 +51,13 @@ function draft(document,at){const d={document,patches:[],get(...p){if(at!==undef
 const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?holdingSet(target,null,p.path,p.value,'npc-autonomy'):holdingRemove(target,null,p.path,'npc-autonomy');};
 const proficiency=npcProficiency;
 function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
-function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
+function tradeQuote(d,engine,buyer,action,location){
+ // The installed native quote adapter owns environment and shop policy; NPC
+ // execution supplies its actual task minute without crossing gameplay packs.
+ const document={...d.document,state:{...d.get('state'),minute:d.get('state','minute')}};
+ const quote=facilityRuntime().currentTradeQuote(engine,document,{buyer,seller:action.seller,item:action.item,quantity:action.quantity,location});
+ return {...quote,price:quote.listPrice,cost:quote.totalCoins};
+}
 export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
@@ -151,8 +157,10 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   goal.progress=100;goal.status='已完成';goal.completedAt=at;goal.evidence=actionId;goal.steps=goal.steps.map(s=>({...s,status:'已完成',evidence:actionId}));
   d.set(['state','npcs',id,'goals'],goals);d.set(['state','npcs',id,'autonomy','inventoryAudit'],{minute:at,inventory,sourceEvent:actionId});summary=`盘点了本人现有库存，完成“${goal.content}”。`;
  }else if(action.kind==='trade'){
-  const {key,price,cost}=tradeQuote(d,engine,id,action,checked.location);transferItems(d,engine,action.seller,id,action.item,action.quantity);d.set(['state','quotes',key],price);
+  const quote=tradeQuote(d,engine,id,action,checked.location),{cost}=quote;
+  assertMarketDepth(d,engine,quote,{agreed:quote.agreed});transferItems(d,engine,action.seller,id,action.item,action.quantity);
   moveCoins(d,{from:purse(null,id),to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
+  recordMarketDeal(d,quote,cost,action.quantity,actionId);
   summary=`向${engine.byId.get(action.seller).name}支付${cost}铜，购得${engine.byId.get(action.item).name}${action.quantity}份。`;
  }else{
   const r=engine.byId.get(action.recipe),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.document.randomSeed,actionId,'npc-craft']).slice(0,8),16)%20+1;

@@ -70,12 +70,18 @@ test('N13 急事结束谈话并登记待办；未成年人和同意不能由玩�
 test('还价按轮数与让步表，确认后实际成交；只改成交价格，钱物仍守恒',async t=>{
  const ui=await setup(t,s=>{s.player.coins=5000;},w=>{w.items.find(i=>i.id==='item_bread').basePrice=100;});await primed(ui);
  const first=await ui.choose('trade.buy',{seller:NPC,item:'item_bread',quantity:1},{target:NPC});assert.ok(first.ok,first.error);
- const start=await ui.read(),quote=Object.values(start.state.records).find(r=>r.category==='trade_quote'&&r.seller===NPC&&r.item==='item_bread'),offered=Math.ceil(quote.listPrice*.95);
- assert.ok((await talk(ui,'haggle',{content:String(quote.listPrice),source:'item_bread'})).ok);
+ // Food demand 14 / opening stock 133 clamps to .5; setup trust 20
+ // gives relation 1-.15*.7*.2=.979. Baseline 100 × .5 × .979
+ // × depth/grade/spread/corrections 1 = 48.95 → 48 copper.
+ assert.equal(first.result.cost,48);
+ // S5-02 / 15 §15.2: a real purchase receipt is the observed price; the
+ // conversation recomputes its own current projection instead of reading cache.
+ const quote=first.result.pricing,offered=Math.ceil(quote.unitPrice*.95);
+ const opening=await talk(ui,'haggle',{content:String(Math.ceil(quote.unitPrice)),source:'item_bread'});assert.ok(opening.ok,opening.error);
  const bargain=await talk(ui,'haggle',{content:String(offered),source:'item_bread'});assert.ok(bargain.ok,bargain.error);assert.equal(bargain.result.dialogue.decision.outcome,'agree');
  const before=await ui.read(),accept=await talk(ui,'accept');assert.ok(accept.ok,accept.error);assert.equal(accept.result.cost,offered);
- const after=await ui.read(),later=Object.values(after.state.records).find(r=>r.category==='trade_quote'&&r.seller===NPC&&r.item==='item_bread');
- assert.equal(later.listPrice,quote.listPrice);assert.equal(later.deals.at(-1).unitPrice,offered);conserved(before,after,'还价成交');
+ const after=await ui.read(),later=Object.values(after.state.records).filter(r=>r.category==='market_trade'&&r.seller===NPC&&r.item==='item_bread').at(-1);
+ assert.equal(accept.result.pricing.baseline,100);assert.equal(later.totalCoins,offered);assert.equal(later.quantity,1);conserved(before,after,'还价成交');
 });
 test('告知引用已知来源；欺骗经对抗并写现有谎言账，不能把虚构说法冒充告知',async t=>{
  const ui=await setup(t,s=>{s.player.memoryStream=[{id:'bridge',sourceEvent:'bridge-built',kind:'help',content:'桥已经修好',sourceType:'亲历',minute:500,participants:['player']}];});await primed(ui);

@@ -113,7 +113,9 @@ test('现行交易报价来自真实报价记录；伪造来源和历史台词�
  const f=await fixture(t),begun=await f.begin('我买一份面包');
  await f.act('world_trade',{seller:'林穗',item:'面包',quantity:1});await f.review(begun,'交易已经完成。');
  const followup=await f.begin('现在面包的报价是多少？','followup'),reply=await f.review(followup,'她说从此只收一铜。');
- assert.equal(reply.status,'pending');const price=reply.facts.find(f=>f.kind==='price');assert.ok(price);assert.equal(price.value.listPrice,2);assert.match(reply.safeText,/现行报价.*每份2铜/);assert.doesNotMatch(reply.safeText,/从此只收一铜/);
+ // S5-02：基准2×供需下限0.5×深度(1+0.2/126)×成交后立场0.99895；品质/修正1。
+ // 开局食品可售量126；首笔后125加净买入1重建当日深度分母126。
+ assert.equal(reply.status,'pending');const price=reply.facts.find(f=>f.kind==='price');assert.ok(price);assert.equal(price.value.listPrice,1.000535634920635);assert.match(reply.safeText,/现行报价.*每份1\.000535634920635铜/);assert.doesNotMatch(reply.safeText,/从此只收一铜/);
  const doc=structuredClone(f.view.document),q={id:'fake',category:'agreed_quote',actor:'npc_hw_linsui',to:'player',resource:'item_bread',quantity:2,totalCoins:1,direction:'sell_to_player',at:doc.state.minute,expires:doc.state.minute+60,sourceEvent:'world_event:invented'};
  doc.state.records['agreed_quote:fake']=q;doc.state.records['agreed_quote:fake:source']={category:'agreed_quote_receipt',digest:digest(q)};
  const engine=new WorldEngine(await loadWorld()).scoped(doc);assert.ok(!reviewCurrentFacts(engine,doc).some(f=>f.id==='quote:fake'));

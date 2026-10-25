@@ -56,7 +56,9 @@ test('A3 legacy receipt: buy preview/commit/reload use actual two-sided postings
  const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=out.result.receipt;
  assert.deepEqual(preview.receipt.applied,r.applied);assert.equal(r.status,'committed');
  const money=r.applied.find(e=>e.resource==='coin_river'),goods=r.applied.find(e=>e.resource===BREAD);
- assert.equal(money.from,accountKey('player','coin_river','purse'));assert.equal(money.to,accountKey(SELLER,'coin_river','purse'));assert.equal(money.qty,16);
+ // S5-02 /15.2: authored baseline8 * plentiful supply floor.5 *two
+ // originals *grade/spread/regard/depth/corrections1 =8, truncate once.
+ assert.equal(money.from,accountKey('player','coin_river','purse'));assert.equal(money.to,accountKey(SELLER,'coin_river','purse'));assert.equal(money.qty,8);
  assert.equal(goods.from,accountKey(SELLER,BREAD,'inventory'));assert.equal(goods.to,accountKey('player',BREAD,'inventory'));assert.equal(goods.qty,2);
  r.applied.forEach((e,index)=>{assert.equal(e.index,index);assert.deepEqual(e.source,{kind:'catalog',id:'core:trade.buy'});assert.equal(e.role,'outcome');});
  postings(document,after,r);books(engine,after);
@@ -186,5 +188,6 @@ test('A3 legacy sequence: explicit teacher fee keeps parent request and cost pro
  assert.equal(cost.role,'requested_consumption');assert.equal(cost.requestIndex,0);assert.equal(cost.stepIndex,0);assert.equal(cost.stepCostIndex,0);
  for(const [key,value] of Object.entries(cost))assert.deepEqual(e[key],value);
  assert.deepEqual(e.source,{kind:'catalog',id:'core:learn'});assert.equal(e.appliedEvent,r.steps[0].eventId);
- const after=applyPatches(document,out.patches);assert.equal(after.state.player.coins,80);postings(document,after,r);books(engine,after);
+ // Native teacher fee12 stays fixed; market bread8*.5=4. 100-12-4=84.
+ const after=applyPatches(document,out.patches);assert.equal(after.state.player.coins,84);postings(document,after,r);books(engine,after);
 });
