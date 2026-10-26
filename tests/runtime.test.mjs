@@ -14,10 +14,12 @@ import {applyPatches}from'../server-plugin/storage.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
-    const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory});app.use('/api/plugins/infinite-fields',router);
+    // Exercise the runtime against one reproducible world without an ambient
+    // DEEPSEEK_API_KEY enabling unrelated NPC planner calls after execution.
+    const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory,newCampaignSeed:()=> 'runtime-browser',npcPlanningEnabled:false});app.use('/api/plugins/infinite-fields',router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
     const origin=`http://127.0.0.1:${server.address().port}`;
-    const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:'{}'});
     const created=await response.json();
     const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
     const page=await browser.newPage(),pageErrors=[],consoleErrors=[];let failReconcile=false,generationRequests=0,preReleaseFixture=false;
@@ -33,7 +35,9 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
-        const actual=await fetch(origin+url.pathname,{method:request.method(),headers:{'Content-Type':'application/json'},body:request.postData()});
+        // As in playtest-runner: synchronous advances can delay idle-socket
+        // expiry, so the proxy must not reuse a connection being closed.
+        const actual=await fetch(origin+url.pathname,{method:request.method(),headers:{'Content-Type':'application/json','Connection':'close'},body:request.postData()});
         const json=await actual.json();
         if(preReleaseFixture&&url.pathname.endsWith('/read'))delete json.document.releaseVersion;
         await route.fulfill({status:actual.status,json});
