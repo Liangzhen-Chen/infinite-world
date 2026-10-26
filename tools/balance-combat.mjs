@@ -1,3 +1,5 @@
+import {artifactPath} from './tmp-root.mjs';
+// P3: test commands retain their reports under the selected run root.
 import fs from 'node:fs/promises';
 import {derivedStats,monsterStats,simulateFight,seededRandom}from'../server-plugin/combat.mjs';
 import {loadWorld}from'./load-world.mjs';
@@ -25,6 +27,7 @@ export function balanceReport(rules,{trials=10000,seed=20261010}={}){
 }
 if(process.argv[1]&&process.argv[1].endsWith('balance-combat.mjs')){
     const report=balanceReport((await loadWorld()).rules);
-    await fs.writeFile('docs/测试报告/阶段2战斗平衡.json',JSON.stringify(report,null,2));
+    await fs.mkdir(artifactPath('测试报告'),{recursive:true});
+    await fs.writeFile(artifactPath('测试报告','阶段2战斗平衡.json'),JSON.stringify(report,null,2));
     console.log(JSON.stringify(report));if(!report.pass)process.exitCode=1;
 }

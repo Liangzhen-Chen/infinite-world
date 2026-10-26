@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import {createHash} from 'node:crypto';
@@ -143,7 +143,8 @@ test('M6-08 浏览器：背景联系表、真实出行切景、头像知情过�
     await page.locator('[data-speaker-id="npc_hw_linsui"] img').waitFor();
     assert.equal(await page.locator(`[data-speaker-id="${unknownId}"] img`).count(),0);
     assert.equal(await page.locator('.fields-game-logo').count(),1);
-    const report='docs/测试报告/最新/M6-08';await fs.mkdir(report,{recursive:true});
+    // P3 / design section 9 and P3: relocate screenshot output only; retain every screenshot call and UI/layout assertion.
+    const report=artifactPath('测试报告','最新','M6-08');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light'])for(const [size,viewport]of [['desktop',{width:1440,height:900}],['mobile',{width:390,height:844}]]){
         await page.setViewportSize(viewport);await page.evaluate(async theme=>{(await import('/ui-settings.mjs')).updateSettings({theme});},theme);
         await page.screenshot({path:`${report}/${theme}-${size}-scene-avatar.png`});

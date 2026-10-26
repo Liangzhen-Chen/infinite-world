@@ -1,3 +1,5 @@
+import {artifactPath} from './tmp-root.mjs';
+// P3: test commands retain their reports under the selected run root.
 import fs from'node:fs/promises';
 import {loadPromptBundle}from'./build-card.mjs';
 import {generationSettings}from'../extension/generation.mjs';
@@ -30,7 +32,7 @@ function summarize(){return{date:new Date().toISOString(),complete:results.lengt
             medianTurnMs:quantile(completedTurns.map(row=>row.latencyMs),.5),p95TurnMs:quantile(completedTurns.map(row=>row.latencyMs),.95),
             gameCostUpperYuan:requests.reduce((n,row)=>n+row.costUpperYuan,0),
             reviewSamples:sessions.filter(row=>row.review).map(row=>({id:row.id,...row.review}))};}),results};}
-async function save(){writes=writes.then(()=>atomicJSON('docs/测试报告/最新/设置对照.json',summarize()));await writes;}
+async function save(){writes=writes.then(()=>atomicJSON(artifactPath('测试报告','最新','设置对照.json'),summarize()));await writes;}
 try{
     await save();
     await Promise.all(Array.from({length:8},async()=>{
@@ -48,6 +50,6 @@ try{
         }
     }));
     await save();
-    await atomicJSON('docs/测试报告/最新/设置对照失败.json',{date:new Date().toISOString(),failures:results.flatMap(row=>row.error?[{configuration:row.configuration,id:row.id,error:row.error}]:row.turns.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({configuration:row.configuration,id:row.id,...turn})))});
+    await atomicJSON(artifactPath('测试报告','最新','设置对照失败.json'),{date:new Date().toISOString(),failures:results.flatMap(row=>row.error?[{configuration:row.configuration,id:row.id,error:row.error}]:row.turns.filter(turn=>turn.errors.length||turn.assertions.some(rule=>!rule.pass)).map(turn=>({configuration:row.configuration,id:row.id,...turn})))});
     console.log(JSON.stringify({...summarize(),results:undefined,configurations:summarize().configurations.map(row=>({...row,toolSelection:{opportunities:row.toolSelection.opportunities,missed:row.toolSelection.missed,wrong:row.toolSelection.wrong},reviewSamples:row.reviewSamples.map(review=>({id:review.id,complete:review.complete,scores:review.scores}))}))}));
 }finally{await server.close();}

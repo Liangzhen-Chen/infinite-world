@@ -2,7 +2,7 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once}from'node:events';
 import express from 'express';
@@ -131,7 +131,8 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 待偿还/);
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
-    const reportDirectory='docs/测试报告/最新';
+    // P3 / design section 9 and P3: relocate evidence only; retain all screenshot, ledger, layout and gameplay assertions.
+    const reportDirectory=artifactPath('测试报告','最新');
     await fs.mkdir(reportDirectory,{recursive:true});
     const consoleStart=consoleErrors.length;
     await page.setViewportSize({width:1440,height:900});

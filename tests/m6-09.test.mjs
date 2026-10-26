@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -156,7 +156,8 @@ test('M6-09 隔离浏览器：点击前无声，实际合成输出，手机共�
     await page.waitForTimeout(1600);
     const output=await page.evaluate(()=>{const values=new Float32Array(window.analyser.fftSize);window.analyser.getFloatTimeDomainData(values);return {energy:values.reduce((sum,value)=>sum+value*value,0)/values.length,sampleRate:window.audio.context.sampleRate,tracks:[...window.audio.voices.keys()]};});assert.ok(output.energy>0.000001);
     await page.getByLabel('音量',{exact:true}).evaluate(input=>{input.value='23';input.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.evaluate(()=>window.audio.settings.volume),23);
-    const report='docs/测试报告/最新/M6-09';await fs.mkdir(report,{recursive:true});
+    // P3 / design section 9 and P3: relocate screenshot output only; retain every screenshot call and UI/layout assertion.
+    const report=artifactPath('测试报告','最新','M6-09');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light']){
         await page.evaluate(async theme=>(await import('/ui-settings.mjs')).updateSettings({theme}),theme);
         await page.screenshot({path:`${report}/${theme}-mobile-volume.png`});
