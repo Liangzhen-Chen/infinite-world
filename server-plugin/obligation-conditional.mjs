@@ -8,6 +8,7 @@ import {settlementLocation,settlementPresent} from './obligation-presence.mjs';
 import {transferItems} from './items.mjs';
 import {canonical} from './storage.mjs';
 import {ledgerActive} from './ledger.mjs';
+import {marketQuote} from './market.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 
@@ -23,6 +24,7 @@ export function openGoodsObligation(d,e,args,eventId){
   if(kind!=='forward'&&prepayment)throw preconditionFailure('只有远期买卖可在本入口预付');
   const id=args.id??`conditional:${eventId}`,terms={...args.terms,performance:{item,location},onDebtorGone:args.terms?.onDebtorGone??(kind==='forward'?'assume_by_heirs':undefined)};
   if(terms.onDebtorGone===undefined)delete terms.onDebtorGone;
+  if(kind==='forward')terms.forward={consideration:Math.max(1,Math.ceil(marketQuote(d,e,{item,location,seller:debtor,buyer:creditor}).listPrice*quantity))};
   const result=openObligation(d,e,{...args,id,kind,debtor,creditor,resource:item,amount:quantity,deadline,terms},eventId);
   if(prepayment){
    const payment=`${id}:prepayment`;
