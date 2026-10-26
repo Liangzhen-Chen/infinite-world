@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 
 $list = @()
 foreach ($item in $Files) { $list += ($item -split '[,;\r\n]+') | Where-Object { $_.Trim() } | ForEach-Object { $_.Trim() } }
-if ($FilesFile) { $list += Get-Content -LiteralPath $FilesFile | Where-Object { $_.Trim() } | ForEach-Object { $_.Trim() } }
+if ($FilesFile) { $list += Get-Content -LiteralPath $FilesFile -Encoding UTF8 | Where-Object { $_.Trim() } | ForEach-Object { $_.Trim() } }
 $list = @($list | Select-Object -Unique)
 if ($list.Count -eq 0) { [Console]::Error.WriteLine('submit: no test files given (-Files / -FilesFile)'); exit 2 }
 
