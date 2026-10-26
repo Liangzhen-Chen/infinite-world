@@ -12,7 +12,10 @@ export function byteLineStarts(text) {
   for (let i = 0; i < lines.length - 1; i++) starts.push(starts.at(-1) + Buffer.byteLength(lines[i]) + 1);
   return starts;
 }
-export const isTest = file => /^(?:tests\/|tools\/.*\/(?:test|tests)\/).*\.test\.mjs$/.test(file)
+// The gate suite mirrors `npm test` (tests/*.test.mjs) plus tests/invariants, as the full sweeps do.
+// tests/baseline (the 23 expected failures, checked exactly by `npm run test:baseline`) and
+// tests/probes (`npm run test:probes`) have their own commands and are not card-gate tests.
+export const isTest = file => /^(?:tests\/(?:invariants\/)?[^/]+|tools\/.*\/(?:test|tests)\/.*)\.test\.mjs$/.test(file)
   && !file.split('/').some(part => ['fixtures', 'fixture'].includes(part));
 export const unique = values => [...new Set(values)].sort();
 export const isMain = url => process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(url);
