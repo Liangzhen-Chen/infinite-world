@@ -59,6 +59,17 @@ test('skip and todo are INCOMPLETE unless authorised', () => {
   assert.equal(verdict(todo), 'INCOMPLETE');
 });
 
+test('a failing todo body is deferred, not an assertion failure, and is listed for the baseline comparison', () => {
+  // Node runs todo bodies; their failures do not fail the file (cand-s503: 19 todo bodies, exit 0).
+  const events = [hello, start('real'), pass('real'), start('later', 0, 2), { ...fail('later', 0, 2), todo: true },
+    start('off', 0, 3), pass('off', 0, 3, { skip: true }), summary({ tests: 3, passed: 1, todo: 1, skipped: 1 })];
+  const analysis = analyzeEvents(events);
+  assert.deepEqual(analysis.failures, []);
+  assert.deepEqual(analysis.deferred.map(d => [d.id, d.kind]), [['later', 'todo'], ['off', 'skip']]);
+  assert.equal(classify(analysis, proc()).status, 'INCOMPLETE');
+  assert.equal(classify(analysis, proc(), { allowSkip: true }).status, 'PASS');
+});
+
 test('failures carry full suite/case path; failed parent suites are not extra failures', () => {
   const analysis = analyzeEvents([hello, start('S', 0, 1), start('inner', 1, 2), start('bad', 2, 3),
     fail('bad', 2, 3), fail('inner', 1, 2, { code: 'ERR_TEST_FAILURE', failureType: 'subtestsFailed' }, 'suite'),

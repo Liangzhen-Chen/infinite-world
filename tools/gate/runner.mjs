@@ -33,8 +33,8 @@ export function parseEventLines(text) {
 
 // Pure reduction of the reporter's event stream.
 export function analyzeEvents(events) {
-  const state = { hello: false, summary: null, started: 0, finished: 0, leaf: { pass: 0, fail: 0, skip: 0, todo: 0 }, fileLevel: 0,
-    failures: [], lastEvent: null, unfinished: [] };
+  const state = { hello: false, summary: null, started: 0, finished: 0, leaf: { pass: 0, fail: 0, skip: 0, todo: 0, deferredFail: 0 }, fileLevel: 0,
+    failures: [], deferred: [], lastEvent: null, unfinished: [] };
   const stack = [], open = new Map(), seen = new Map();
   const keyOf = e => `${e.n}:${e.line}:${e.col}:${e.name}`;
   for (const e of events) {
@@ -54,8 +54,13 @@ export function analyzeEvents(events) {
       const duplicate = seen.get(pathKey) > 1 ? ` #${seen.get(pathKey)}` : '';
       if (e.fileLevel) state.fileLevel++;
       const suite = e.kind === 'suite' || e.fileLevel === true;
+      // skip/todo cases are listed (verdict compares them with the baseline's list);
+      // a failing todo body is Node's "expected to fail", never an assertion failure.
+      if ((e.skip || e.todo) && !suite) state.deferred.push({ id: pathKey + duplicate, path: pathParts, kind: e.skip ? 'skip' : 'todo' });
       if (e.t === 'pass') {
         if (!suite) { state.leaf.pass++; if (e.skip) state.leaf.skip++; if (e.todo) state.leaf.todo++; }
+      } else if ((e.skip || e.todo) && !suite) {
+        state.leaf.deferredFail++; if (e.skip) state.leaf.skip++; else state.leaf.todo++;
       } else if (e.err?.failureType !== 'subtestsFailed') {
         // A parent that only reports "N subtests failed" is not a new assertion failure.
         if (!suite) state.leaf.fail++;
@@ -92,9 +97,9 @@ export function classify(analysis, proc, options = {}) {
   if ((options.badLines ?? 0) > 0) return out('INCOMPLETE', `${options.badLines} unparsable event line(s)`);
   if (!counts || ['tests', 'failed', 'passed', 'cancelled', 'skipped', 'todo'].some(key => !Number.isInteger(counts[key])))
     return out('INCOMPLETE', 'summary has no usable counts');
-  if (counts.tests !== analysis.leaf.pass + analysis.leaf.fail + analysis.fileLevel
-    || counts.passed > analysis.leaf.pass + analysis.fileLevel)
-    return out('INCOMPLETE', `summary counts contradict case events (summary ${counts.tests}, events ${analysis.leaf.pass + analysis.leaf.fail + analysis.fileLevel})`);
+  const leaves = analysis.leaf.pass + analysis.leaf.fail + (analysis.leaf.deferredFail ?? 0) + analysis.fileLevel;
+  if (counts.tests !== leaves || counts.passed > analysis.leaf.pass + analysis.fileLevel)
+    return out('INCOMPLETE', `summary counts contradict case events (summary ${counts.tests}, events ${leaves})`);
   if (counts?.cancelled > 0) return out('INCOMPLETE', `${counts.cancelled} cancelled`);
   if (analysis.unfinished.length) return out('INCOMPLETE', `${analysis.unfinished.length} started case(s) never finished`);
   if (!allowZeroTests && analysis.leaf.pass + analysis.leaf.fail === 0) return out('INCOMPLETE', 'zero test cases');
@@ -336,7 +341,7 @@ export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Dat
     timedOut: proc.timedOut, pid, startedAt: new Date(startedAt).toISOString(), endedAt: new Date(endedAt).toISOString(),
     durationMs: endedAt - startedAt, deadlineMs: deadline, peakMemBytes: peak, killed: killInfo, descendantsCleaned,
     streamComplete: !!analysis.summary && !analysis.unfinished.length, badEventLines: badLines,
-    counts: analysis.summary?.counts ?? null, failures: analysis.failures, lastEvent: analysis.lastEvent,
+    counts: analysis.summary?.counts ?? null, failures: analysis.failures, deferred: analysis.deferred, lastEvent: analysis.lastEvent,
     specTail: tail.snapshot() };
   if (proc.spawnError) result.spawnError = proc.spawnError;
   if (resultFile) writeJsonAtomic(resultFile, result);
