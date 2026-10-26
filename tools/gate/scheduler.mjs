@@ -370,21 +370,31 @@ export class Scheduler {
     for (;;) {
       const all = this.candidates();
       const otherQueued = all.some(c => c.job.kind !== 'collect');
-      let pick = null;
-      for (const c of all) {
+      let pick = null, reserve = 0, head = null;                                       // head = first candidate blocked by memory
+      for (const [i, c] of all.entries()) {
         c.file.waitReason = null;
         if (c.job.kind === 'collect' && otherQueued) { c.file.waitReason = 'collect-yield'; continue; }
         const slots = this.slotsOf(c.job, c.file), cardUsed = c.job.cardId ? this.cardSlots(c.job.cardId) : 0;
-        if (this.slotsInUse() + slots > this.policy.hardCap) { c.file.waitReason = 'slots'; break; }   // strict order: nothing jumps the head
+        if (this.slotsInUse() + slots > this.policy.hardCap) {                                  // strict order: nothing jumps the head
+          for (const rest of all.slice(i)) rest.file.waitReason = rest.job.kind === 'collect' && otherQueued ? 'collect-yield' : 'slots';
+          break;
+        }
         if (cardUsed > 0 && cardUsed + slots > this.policy.perCard) { c.file.waitReason = 'card-cap'; continue; }
-        pick = { ...c, slots }; break;
+        const need = this.reservationOf(c.job, c.file);
+        if (head && need >= head.need) { c.file.waitReason = 'memory'; continue; }      // backfill only with strictly smaller reservations
+        const avail = await this.availMem();                                           // fresh read right before starting
+        this.lastAvail = avail;
+        if (this.paused || this.stopping) return;
+        if (avail - this.outstanding() - need >= this.policy.minFreeAfterBytes) { pick = { ...c, slots }; reserve = need; break; }
+        c.file.waitReason = 'memory';
+        if (head) continue;
+        const key = `${c.job.runId}/${c.file.id}`, t = this.now();
+        if (this.memHead?.key !== key) this.memHead = { key, since: t };
+        if (t - this.memHead.since >= (this.policy.backfillMaxWaitMs ?? 600000)) return;   // window over: strict order so big files are not starved
+        head = { need };
       }
+      if (!head) this.memHead = null;
       if (!pick) return;
-      const reserve = this.reservationOf(pick.job, pick.file);
-      const avail = await this.availMem();                                             // fresh read right before starting
-      this.lastAvail = avail;
-      if (this.paused || this.stopping) return;
-      if (avail - this.outstanding() - reserve < this.policy.minFreeAfterBytes) { pick.file.waitReason = 'memory'; return; }
       this.launch(pick.job, pick.file, reserve, pick.slots);
     }
   }
@@ -548,8 +558,8 @@ export class Scheduler {
       const t = this.now();
       this.scanControl(); this.scanRequests();
       await this.sampleMemory(t);
-      this.checkWaits(t);
       await this.admit();
+      this.checkWaits(t);
       this.publish(this.now());
     } finally { this.ticking = false; }
   }

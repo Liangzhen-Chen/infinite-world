@@ -112,6 +112,9 @@ export function judge({ candidate, baselineRuns = [], knownFailures = [], expect
         fingerprint: failure.fingerprint ?? null, location: failure.location ?? null };
       if (!identifiable(failure)) return { ...item, status: 'UNRESOLVED', category: '基础设施',
         reason: '候选失败缺少完整用例 id、路径或指纹' };
+      // One complete PASS on the baseline already shows the failure is new; the second run is not needed.
+      if (baselineRuns.length < 2 && bases[0]?.status === 'PASS' && usable(bases[0])) return { ...item, status: 'REGRESSION', category: '测试',
+        reason: '基线首次运行通过，候选失败为新增（无需第二次基线）' };
       if (!independent || bases.length !== 2 || bases.some(b => !usable(b) && !isDeferredOnly(b)))
         return { ...item, status: 'UNRESOLVED', category: '基础设施',
           reason: '未取得两次独立且完整的基线文件结果（缺文件、超时、崩溃或不完整）' };

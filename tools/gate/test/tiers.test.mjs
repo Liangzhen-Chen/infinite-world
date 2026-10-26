@@ -3,20 +3,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadStaticSlow, loadThresholdMs, medianPassMs, splitTiers, slowFiles, DEFAULT_THRESHOLD_MS } from '../tiers.mjs';
+import { loadAlwaysFast, loadStaticSlow, loadThresholdMs, medianPassMs, splitTiers, slowFiles, DEFAULT_THRESHOLD_MS } from '../tiers.mjs';
 import { nextMarker } from '../slow-sweep.mjs';
 
 const runs = (...ms) => ms.map(durationMs => ({ durationMs, status: 'PASS' }));
 const history = { runs: {
   'tests/fast.test.mjs': runs(900, 1200), 'tests/slow.test.mjs': runs(90000, 120000, 100000),
-  'tests/edge.test.mjs': runs(60000), 'tests/outlier.test.mjs': runs(1000, 2000, 300000),
-  'tests/failonly.test.mjs': [{ durationMs: 999999, status: 'FAIL' }] } };
+  'tests/edge.test.mjs': runs(60000), 'tests/outlier.test.mjs': runs(1000, 2000, 300000) } };
 const tests = Object.keys(history.runs).concat('tests/new.test.mjs');
 
 test('median PASS duration ignores non-PASS samples', () => {
   assert.equal(medianPassMs(history, 'tests/slow.test.mjs'), 100000);
   assert.equal(medianPassMs(history, 'tests/outlier.test.mjs'), 2000);
-  assert.equal(medianPassMs(history, 'tests/failonly.test.mjs'), null);
+  assert.equal(medianPassMs({ runs: { f: [{ durationMs: 9, status: 'FAIL' }] } }, 'f'), null);
 });
 
 test('threshold splits fast from slow; at-threshold is slow, an outlier does not move the median', () => {
@@ -25,9 +24,24 @@ test('threshold splits fast from slow; at-threshold is slow, an outlier does not
   assert.ok(fast.includes('tests/fast.test.mjs') && fast.includes('tests/outlier.test.mjs'));
 });
 
-test('files without usable history stay in the fast tier', () => {
-  const { fast } = splitTiers({ tests, history, thresholdMs: 60000 });
-  assert.ok(fast.includes('tests/new.test.mjs') && fast.includes('tests/failonly.test.mjs'));
+test('only files with no history at all stay fast; TIMEOUT or a long FAIL is slow, quick FAIL/INCOMPLETE is not', () => {
+  const h = { runs: { ...history.runs, 'tests/failonly.test.mjs': [{ durationMs: 900, status: 'FAIL' }], 'tests/longfail.test.mjs': [{ durationMs: 999999, status: 'FAIL' }], 'tests/cancelled.test.mjs': [{ durationMs: 999999, status: 'INCOMPLETE' }], 'tests/timeout.test.mjs': [{ durationMs: 900000, status: 'TIMEOUT' }] } };
+  const { fast, slow } = splitTiers({ tests: Object.keys(h.runs).concat('tests/new.test.mjs'), history: h, thresholdMs: 60000 });
+  assert.ok(fast.includes('tests/new.test.mjs'));
+  assert.ok(slow.includes('tests/timeout.test.mjs') && slow.includes('tests/longfail.test.mjs'));
+  assert.ok(fast.includes('tests/failonly.test.mjs'), 'a quick FAIL is a failing file, not a slow one');
+  assert.ok(fast.includes('tests/cancelled.test.mjs'), 'INCOMPLETE samples are no slowness evidence');
+  assert.ok(slowFiles(h, 60000).includes('tests/timeout.test.mjs'));
+});
+
+test('alwaysFast regexes keep matching files in the fast tier like required; shipped policy covers s5 tests', () => {
+  const h = { runs: { 'tests/s5-12.test.mjs': runs(200000), 'tests/s6-1.test.mjs': runs(200000), 'tests/s5-x.test.mjs': runs(200000) } };
+  const alwaysFast = loadAlwaysFast(new URL('../policy/tiers.json', import.meta.url));
+  const { fast, slow } = splitTiers({ tests: Object.keys(h.runs), alwaysFast, history: h, thresholdMs: 60000 });
+  assert.deepEqual(fast, ['tests/s5-12.test.mjs']);
+  assert.deepEqual(slow, ['tests/s6-1.test.mjs', 'tests/s5-x.test.mjs']);
+  assert.deepEqual(splitTiers({ tests: ['tests/a.test.mjs'], alwaysFast: ['('], history: { runs: { 'tests/a.test.mjs': runs(200000) } } }).slow, ['tests/a.test.mjs']);
+  assert.equal(loadAlwaysFast('/nonexistent/x.json').length, 1);
 });
 
 test('card-required slow files (changed tests, CORE) run in the fast tier', () => {

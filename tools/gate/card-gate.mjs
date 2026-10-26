@@ -6,10 +6,12 @@
 // Writes F:/dnd/logs/sessions/<name>.gate.md, .gate.json and .gate.tsv.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from './verdict.mjs';
-import { loadStaticSlow, loadThresholdMs, splitTiers } from './tiers.mjs';
+import { loadAlwaysFast, loadStaticSlow, loadThresholdMs, splitTiers } from './tiers.mjs';
+import { mergeBaseline, splitCached, writeCached } from './baseline-cache.mjs';
 const [wt, base = 'master', name = 'card'] = process.argv.slice(2);
 const T = path.dirname(fileURLToPath(import.meta.url));
 const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.env.GATE_ROOT || 'F:/dnd/logs/gate';
@@ -25,8 +27,8 @@ const selectorName = `覆盖率选测 (${selection.mode})`;
 const required = new Set(selection.requiredFiles);
 const thresholdMs = loadThresholdMs(path.join(T, 'policy/tiers.json'));
 const readHistory = () => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'history.json'), 'utf8')); } catch { return {}; } };
-// Fast tier: median PASS < threshold, no history, or required. The slow tier is left to slow-sweep.mjs.
-const { fast, slow: skipped } = splitTiers({ tests: affected, required: [...required], history: readHistory(), thresholdMs, staticSlow: loadStaticSlow(path.join(T, 'slow-tests.tsv')) });
+// Fast tier: median PASS < threshold, no history at all, required, or alwaysFast (current stage acceptance tests). The slow tier is left to slow-sweep.mjs.
+const { fast, slow: skipped } = splitTiers({ tests: affected, required: [...required], alwaysFast: loadAlwaysFast(path.join(T, 'policy/tiers.json')), history: readHistory(), thresholdMs, staticSlow: loadStaticSlow(path.join(T, 'slow-tests.tsv')) });
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const heartbeatAge = () => { try { return Date.now() - fs.statSync(path.join(ROOT, 'scheduler.heartbeat')).mtimeMs; } catch { return Infinity; } };
@@ -78,25 +80,48 @@ async function runJob(kind, files, extra = []) {
   return result;
 }
 
+// Immutable snapshot of the worktree (tracked + untracked, non-ignored) as a commit built through a throw-away index,
+// so edits made while the gate runs cannot change what is tested. Fixed author/date: same tree => same SHA => idempotent job. Failure makes the gate INCOMPLETE.
+function makeSnapshot() {
+  const index = path.join(os.tmpdir(), `gate-snap-idx-${process.pid}-${Date.now()}`);
+  const git = (...args) => execFileSync('git', ['-C', wt, ...args], { encoding: 'utf8', env: { ...process.env, GIT_INDEX_FILE: index, GIT_AUTHOR_NAME: 'gate', GIT_AUTHOR_EMAIL: 'gate@localhost', GIT_COMMITTER_NAME: 'gate', GIT_COMMITTER_EMAIL: 'gate@localhost', GIT_AUTHOR_DATE: '2000-01-01T00:00:00Z', GIT_COMMITTER_DATE: '2000-01-01T00:00:00Z' }, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  try {
+    git('read-tree', 'HEAD'); git('add', '-A');
+    return git('commit-tree', git('write-tree'), '-p', 'HEAD', '-m', `gate snapshot ${name}`);
+  } catch (error) {
+    throw Error(`snapshot failed: ${String(error.message).slice(0, 160)}`);   // never gate the editable live worktree instead
+  } finally { fs.rmSync(index, { force: true }); }
+}
+
 const started = Date.now();
 // Resolve once: a moving branch name must not compare two different baselines.
 let baseSHA = null, candidate;
 try {
   baseSHA = execFileSync('git', ['rev-parse', '--verify', `${base}^{commit}`], { cwd: wt, encoding: 'utf8' }).trim();
-  candidate = await runJob('card', fast);
+  const snapshot = makeSnapshot();
+  candidate = await runJob('card', fast, ['-Snapshot', snapshot]);
 } catch (error) {
-  candidate = { status: 'INCOMPLETE', reason: `base resolution failed: ${error.message}`,
+  candidate = { status: 'INCOMPLETE', reason: /^snapshot failed/.test(error.message) ? error.message : `base resolution failed: ${error.message}`,
     files: fast.map(file => ({ file, status: 'INCOMPLETE', reason: error.message, failures: [] })) };
 }
 const bad = candidate.files.filter(f => f.status === 'FAIL').map(f => f.file);
 const deferredFiles = candidate.files.filter(isDeferredOnly).map(f => f.file);
 const baselineRuns = [];
 const firstBaselineFiles = [...new Set([...bad, ...deferredFiles])];
-if (firstBaselineFiles.length) {
-  baselineRuns.push(await runJob('baseline', firstBaselineFiles, ['-Base', baseSHA]));
-  // -Rerun bypasses submit/scheduler deduplication. Both runs cover ALL failing
-  // candidate files, even when the first baseline passed or was incomplete.
-  if (bad.length) baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA, '-Rerun']));
+// An INCOMPLETE candidate (cancelled, timeout, snapshot failed) is not judged on baselines, so none is started.
+const candidateIncomplete = candidate.status === 'INCOMPLETE' && candidate.files.some(f => !['PASS', 'FAIL'].includes(f.status) && !isDeferredOnly(f));
+if (firstBaselineFiles.length && !candidateIncomplete) {
+  // Cards on the same base share first-run results; the -Rerun below is never cached, so the two runs stay independent.
+  const { hits, misses } = splitCached(ROOT, baseSHA, firstBaselineFiles);
+  const fresh = misses.length ? await runJob('baseline', misses, ['-Base', baseSHA]) : null;
+  for (const f of fresh?.files || []) writeCached(ROOT, baseSHA, f);
+  if (hits.length) console.log(`baseline cache hit ${hits.length}/${firstBaselineFiles.length} @${baseSHA.slice(0, 8)}`);
+  baselineRuns.push(hits.length ? mergeBaseline(baseSHA, firstBaselineFiles, hits, fresh) : fresh);
+  // -Rerun bypasses submit/scheduler deduplication. The second run covers every failing
+  // candidate file whose first baseline did not PASS (FAIL, incomplete or missing).
+  // A file that PASSed the first baseline can never be BASELINE_REPRODUCED, so only the others get the independent second run.
+  const rerun = bad.filter(file => baselineRuns[0].files.find(f => f.file === file)?.status !== 'PASS');
+  if (rerun.length) baselineRuns.push(await runJob('baseline', rerun, ['-Base', baseSHA, '-Rerun']));
 }
 let knownFailures = [];
 try {

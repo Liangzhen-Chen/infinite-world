@@ -501,3 +501,53 @@ test('longest expected file starts first within a job (LPT); unmeasured files so
   for (let i = 0; i < 4; i++) { await e.tick(); order.push(e.running()[0].file); e.running()[0].finish(); }
   assert.deepEqual(order, ['t1.test.mjs', 't2.test.mjs', 't0.test.mjs', 't3.test.mjs']);
 });
+
+test('shipped policy: perCard 4 under hardCap 6, one card cannot take every slot', async () => {
+  const p = loadPolicy();
+  assert.equal(p.perCard, 4); assert.equal(p.hardCap, 6); assert.equal(p.backfillMaxWaitMs, 600000);
+  const e = make({ policy: { hardCap: 6, perCard: 4 } });
+  e.submit('a', { cardId: 'A', files: names(6) }); e.submit('b', { cardId: 'B', files: ['b0.test.mjs'] });
+  await e.tick();
+  assert.equal(e.running().filter(r => r.runId === 'a').length, 4);
+  assert.equal(e.running().filter(r => r.runId === 'b').length, 1);
+});
+
+test('memory backfill: a smaller file starts behind a memory-blocked head within the window, not after it', async () => {
+  const e = make({ mem: 4.5 * GB, policy: { hardCap: 4, perCard: 4, backfillMaxWaitMs: 600000 } });   // browser 3GB blocked, normal 2GB fits
+  e.submit('big', { cardId: 'A', files: ['x.browser.test.mjs'] });
+  e.submit('small', { cardId: 'B', files: ['s.test.mjs'] });
+  await e.tick();
+  assert.deepEqual(e.running().map(r => r.runId), ['small']);
+  assert.equal(e.sched.jobs.get('big').files[0].waitReason, 'memory');
+  e.runs[0].finish(); await e.tick();
+  e.submit('small2', { cardId: 'C', files: ['s2.test.mjs'] });
+  await e.tick(300000);                                // still inside the window
+  assert.deepEqual(e.running().map(r => r.runId), ['small2']);
+  e.runs.at(-1).finish(); await e.tick();
+  e.submit('small3', { cardId: 'D', files: ['s3.test.mjs'] });
+  await e.tick(301000);                                // head blocked >= 10 min: strict order
+  assert.equal(e.running().length, 0);
+  assert.equal(e.sched.jobs.get('small3').files[0].state, 'QUEUED');
+  e.mem.v = 64 * GB; await e.tick();                   // big goes first
+  assert.equal(e.running()[0].runId, 'big');
+});
+
+test('backfill never lets an equal reservation pass the head, and slot order is unchanged', async () => {
+  const e = make({ mem: 4.5 * GB, policy: { hardCap: 4, perCard: 4 } });
+  e.submit('big', { cardId: 'A', files: ['x.browser.test.mjs'] });
+  e.submit('big2', { cardId: 'B', files: ['y.browser.test.mjs'] });
+  await e.tick();
+  assert.equal(e.running().length, 0);
+  const f = make({ policy: { hardCap: 1, perCard: 1 } });
+  f.submit('h', { cardId: 'A', files: names(1) }); f.submit('i', { cardId: 'B', files: names(1) });
+  await f.tick();
+  assert.deepEqual(f.running().map(r => r.runId), ['h']);
+  assert.equal(f.sched.jobs.get('i').files[0].waitReason, 'slots');
+});
+
+test('full hardCap: every waiting candidate gets waitReason slots, and alerts name it instead of unknown', async () => {
+  const e = make({ policy: { hardCap: 1, perCard: 1 } });
+  e.submit('a', { cardId: 'A', files: names(1) }); e.submit('b', { cardId: 'B', files: names(2) });
+  await e.tick();
+  assert.deepEqual(e.sched.jobs.get('b').files.map(f => f.waitReason), ['slots', 'slots']);
+});

@@ -5,7 +5,8 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from '../verdict.mjs';
-import { loadStaticSlow, loadThresholdMs, splitTiers } from '../tiers.mjs';
+import { loadAlwaysFast, loadStaticSlow, loadThresholdMs, splitTiers } from '../tiers.mjs';
+import { mergeBaseline } from '../baseline-cache.mjs';
 
 const now = '2026-10-26T12:00:00.000Z';
 const failure = (name = 'A', fingerprint = 'assertion-1', suite = 'suite') => ({
@@ -227,12 +228,12 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
   const url = new URL('../card-gate.mjs', import.meta.url);
   const source = fs.readFileSync(url, 'utf8').replace(/^import .*;\r?\n/gm, '')
     .replaceAll('import.meta.url', JSON.stringify(url.href));
-  const writes = new Map(), submissions = [], baseArgs = [], submittedFiles = [];
+  const cacheWrites = [], writes = new Map(), submissions = [], baseArgs = [], submittedFiles = [];
   const fakeProcess = { argv: ['node', 'card-gate', '/fixture', 'moving-base', 'fixture'],
-    env: { GATE_SESSIONS: '/sessions', GATE_ROOT: '/gate' }, execPath: 'node', exitCode: undefined };
+    pid: 1, env: { GATE_SESSIONS: '/sessions', GATE_ROOT: '/gate' }, execPath: 'node', exitCode: undefined };
   const jobs = [candidate, ...bases];
   const fakeFs = {
-    existsSync: () => false, mkdirSync: () => {},
+    existsSync: () => false, mkdirSync: () => {}, rmSync: () => {},
     writeFileSync: (file, text) => writes.set(file, text),
     readFileSync: file => {
       if (file.endsWith('history.json')) return JSON.stringify(options.history || {});
@@ -260,6 +261,7 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     }
     if (command === 'git') {
       if (options.baseError) throw Error('invalid baseline revision');
+      if (options.snapshotError && args.includes('commit-tree')) throw Error('index locked');
       return 'fixed-base-sha\n';
     }
     assert.equal(command, 'powershell.exe');
@@ -269,9 +271,11 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     return `run-${submissions.length - 1}\n`;
   };
   await vm.runInNewContext(`(async () => { ${source}\n })()`, { fs: fakeFs, path, fileURLToPath,
-    judge, isDeferredOnly, loadStaticSlow, loadThresholdMs, splitTiers, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
+    judge, isDeferredOnly, loadAlwaysFast, loadStaticSlow, loadThresholdMs, splitTiers, mergeBaseline, execFileSync, os: { tmpdir: () => '/tmp' },
+    splitCached: (root, sha, files) => ({ hits: (options.cacheHits || []).filter(h => files.includes(h.file)), misses: files.filter(f => !(options.cacheHits || []).some(h => h.file === f)) }),
+    writeCached: (root, sha, f) => cacheWrites.push(f), process: fakeProcess, console: { log() {} }, setTimeout });
   return { gate: JSON.parse(writes.get(path.join('/sessions', 'fixture.gate.json'))),
-    md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, submissions, baseArgs, submittedFiles };
+    md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, cacheWrites, submissions, baseArgs, submittedFiles };
 }
 
 test('aggregation hydrates runner evidence and submits only one baseline for deferred-only files', async () => {
@@ -338,10 +342,10 @@ test('real aggregation writes JSON/Markdown and sets matching exit codes for eve
   }
 });
 
-test('aggregation reruns every failing candidate file even when baseline first passed or went missing', async () => {
+test('aggregation skips the second baseline for a file that PASSed the first one, but reruns missing ones', async () => {
   for (const baseline of [job([file('PASS')]), job([])]) {
     const result = await aggregate(job(), [baseline, job()]);
-    assert.equal(result.submissions.length, 3);
+    assert.equal(result.submissions.length, baseline.files.length ? 2 : 3);
     assert.notEqual(result.gate.status, 'PASS');
     assert.equal(result.gate.files[0].cases[0].status, baseline.files.length ? 'REGRESSION' : 'UNRESOLVED');
   }
@@ -369,4 +373,37 @@ test('card gate runs only the fast tier and reports deferred slow files', async 
   assert.deepEqual(result.submittedFiles[0], ['tests/a.test.mjs', 'tests/c.test.mjs']);
   assert.ok(result.md.includes('1 slow files deferred to slow sweep'));
   assert.ok(result.md.includes('仅覆盖快档'));
+});
+
+test('baseline cache supplies at most one of the two runs: cached first run, fresh -Rerun', async () => {
+  const cached = { ...file(), runId: 'old-base-run' };
+  const result = await aggregate(job([file()]), [job(), job()], [], { cacheHits: [cached] });
+  assert.equal(result.submissions.length, 2, 'candidate + the fresh rerun only');
+  assert.equal(result.submissions[1].includes('-Rerun'), true);
+  assert.deepEqual(result.baseArgs, ['fixed-base-sha']);
+  assert.equal(result.gate.files[0].cases[0].baselineStatus, 'BASELINE_REPRODUCED');
+  assert.deepEqual(result.gate.baselineRunIds.length, 2);
+  assert.notEqual(result.gate.baselineRunIds[0], result.gate.baselineRunIds[1]);
+});
+
+test('baseline cache: deferred-only files hit the cache (no first baseline job); misses run and are written back', async () => {
+  const hit = await aggregate(job([deferredFile()]), [], [], { persisted: true, cacheHits: [{ ...file('PASS'), ...deferredFile([deferred()], { status: 'PASS' }), runId: 'old' }] });
+  assert.equal(hit.submissions.length, 1);
+  assert.equal(hit.cacheWrites.length, 0);
+  const miss = await aggregate(job([deferredFile()]), [job([deferredFile()])], [], { persisted: true });
+  assert.equal(miss.submissions.length, 2);
+  assert.equal(miss.cacheWrites.length, 1);
+});
+
+test('snapshot creation failure makes the gate INCOMPLETE and nothing is submitted', async () => {
+  const result = await aggregate(job([file('PASS')]), [], [], { snapshotError: true });
+  assert.equal(result.gate.status, 'INCOMPLETE');
+  assert.equal(result.submissions.length, 0);
+  assert.match(result.md, /snapshot failed/);
+});
+
+test('an INCOMPLETE candidate (timeout) starts no baseline at all', async () => {
+  const result = await aggregate(job([file('FAIL'), file('TIMEOUT', [], { file: 'tests/b.test.mjs' })]), [job(), job()], [], { affected: 'tests/a.test.mjs tests/b.test.mjs'.split(' ').join(String.fromCharCode(10)) });
+  assert.equal(result.submissions.length, 1);
+  assert.equal(result.gate.status, 'INCOMPLETE');
 });

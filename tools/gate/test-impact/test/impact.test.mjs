@@ -43,6 +43,14 @@ test('function body change selects only its executor', () => {
   assert.equal(result.decisions[0].mode, 'functions');
   assert.deepEqual(result.decisions[0].functions.map(fn => fn.name), ['alpha']);
 });
+test('same-named tests of a changed module are required and selected (plus aliases)', () => {
+  const allTests = [a, b, 'tests/math.test.mjs', 'tests/math-extra.test.mjs', 'tests/other.test.mjs', 'tests/save-roundtrip.test.mjs', 'tests/sub/math.test.mjs'];
+  const result = choose([change(3)], makeMap(), { allTests });
+  assert.ok(['tests/math.test.mjs', 'tests/math-extra.test.mjs'].every(f => result.tests.includes(f) && result.requiredFiles.includes(f)));
+  assert.ok(!result.requiredFiles.includes('tests/other.test.mjs') && !result.requiredFiles.includes('tests/sub/math.test.mjs'));
+  const storage = choose([change(3, { file: 'storage.mjs' })], makeMap(), { allTests });
+  assert.ok(storage.requiredFiles.includes('tests/save-roundtrip.test.mjs'));
+});
 test('top-level change falls back to all loaders with a reason', () => {
   const result = choose([change(1)]);
   assert.deepEqual(result.tests, [a, b]);

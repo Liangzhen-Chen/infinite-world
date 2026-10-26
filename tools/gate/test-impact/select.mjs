@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { affectedTests, byteLineStarts, discoverTests, git, hash, isMain, isTest, normalizeEol, readMap, recordInvalidReason, slash, staticGraph, unique, worktreeContext } from './common.mjs';
 
+// Extra test-name stems that belong to a module besides its own name.
+const NAME_ALIASES = { storage: ['save-roundtrip'] };
+
 export function parseHunks(diff) {
   return [...diff.matchAll(/^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@/gm)]
     .map(match => ({ startLine: Number(match[1]), lineCount: match[2] === undefined ? 1 : Number(match[2]) }));
@@ -88,7 +91,7 @@ export function selectChanges(map, changes, { fallback = () => [], allTests = Ob
   }
   both(mandatory, 'mandatory');
   both(['tests/engine.test.mjs', 'tests/storage.test.mjs', 'tests/plugin.test.mjs'], 'core');
-  const decisions = [];
+  const decisions = [], namedRequired = [];
   for (const change of changes) {
     const source = sources[change.file];
     const staticTests = fallback(change.file);
@@ -126,12 +129,18 @@ export function selectChanges(map, changes, { fallback = () => [], allTests = Ob
       }
     }
     both(tests, `${reason || 'function-executor'}:${change.file}`);
+    if (!isTest(change.file) && change.kind !== 'deleted') {        // same-named tests of a changed module are always required
+      const stem = path.basename(change.file).replace(/\.[^.]+$/, ''), stems = [stem, ...(NAME_ALIASES[stem] || [])];
+      const named = allTests.filter(file => file.startsWith('tests/') && file.endsWith('.test.mjs') && !file.slice(6).includes('/')
+        && stems.some(s => file.slice(6).startsWith(s)));
+      if (named.length) { both(named, `same-name:${change.file}`); namedRequired.push(...named); }
+    }
     decisions.push({ file: change.file, mode: reason ? 'fallback' : 'functions', reason: reason || null,
       functions: [...functions].map(({ start, end, name }) => ({ start, end, name })), tests: tests.filter(file => allTests.includes(file)) });
   }
   const pack = set => ({ tests: unique([...set.keys()]), reasons: Object.fromEntries([...set].sort(([a], [b]) => a.localeCompare(b)).map(([file, reasons]) => [file, unique([...reasons])])) });
   const conservativeSet = pack(conservative), coverageSet = pack(coverage);
-  const requiredFiles = unique([...mandatory, ...changes.filter(change => isTest(change.file) && change.kind !== 'deleted').map(change => change.file),
+  const requiredFiles = unique([...mandatory, ...namedRequired, ...changes.filter(change => isTest(change.file) && change.kind !== 'deleted').map(change => change.file),
     ...['tests/engine.test.mjs', 'tests/storage.test.mjs', 'tests/plugin.test.mjs'].filter(file => allTests.includes(file))]);
   return { mode, generation: map?.generation ?? null, tests: (mode === 'prune' ? coverageSet : conservativeSet).tests,
     conservative: conservativeSet, coverage: coverageSet, requiredFiles,

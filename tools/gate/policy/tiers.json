@@ -1,3 +1,4 @@
 {
-  "slowThresholdMs": 60000
+  "slowThresholdMs": 60000,
+  "alwaysFast": ["^tests/s5-\\d+\\.test\\.mjs$"]
 }
