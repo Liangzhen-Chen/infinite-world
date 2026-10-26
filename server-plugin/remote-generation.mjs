@@ -1,6 +1,6 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
-import {declareLedgerWriter} from './ledger.mjs';
-import {genesisBag,genesisSettlement} from './stock.mjs';
+import {declareLedgerWriter,parseAccount,accountKey} from './ledger.mjs';
+import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
 declareLedgerWriter('remote-generation',{sources:{'src:genesis':{coin_river:1000000,'*':10000000}}});
 import {createHash} from 'node:crypto';
@@ -10,9 +10,19 @@ import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhysicallyDead} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
+import {pinnedBy} from './holding-kinds.mjs';
+import {addPopulation,populationHealth} from './population-health.mjs';
 declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
+
+// Private aggregate stock is distinct from the settlement's public treasury.
+// Money already enumerates money_account rows; items use the same owner here.
+const aggregateStock=(engine,settlement,item)=>accountKey(settlement,itemResource(engine,item),'aggregate');
+registerLegacyStock('remote-generation',(engine,state,add)=>{
+    for(const row of Object.values(state.records??{}))if(row.category==='money_account'&&row.remoteStock)
+        for(const [item,n] of Object.entries(row.inventory))add(aggregateStock(engine,row.owner,item),n);
+});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -560,6 +570,50 @@ export function generateCounty(world,countyId,campaignSeed){
 }
 
 // ---------------------------------------------------------------- campaign state
+function openRemoteStock(d,engine,county,skeleton){
+    for(const sid of skeleton.settlements.map(s=>s.id)){
+        const people=skeleton.people.filter(p=>p.settlement===sid&&active(p,skeleton));
+        const owner=sid,account=accountKey(sid,'coin_river','aggregate'),inventory={};
+        let coins=0;
+        for(const p of people){coins+=p.coins??0;for(const [item,n] of Object.entries(p.inventory??{}))inventory[item]=(inventory[item]??0)+n;}
+        const row={category:'money_account',remoteStock:true,owner,purpose:'aggregate',account,coins,inventory};
+        moveCoins(d,{from:source('genesis','remote'),to:account,amount:coins,writer:'remote-generation',eventId:`remote:${county}`});
+        for(const [item,n] of Object.entries(inventory))moveStock(d,{from:stockSource(engine,'genesis',item,'remote'),to:aggregateStock(engine,sid,item),amount:n,writer:'remote-generation',eventId:`remote:${county}`});
+        d.set(['state','records',`remote-stock:${sid}`],row);
+    }
+}
+
+// A contact materializes one body from its native pool. On leaving, return
+// only untouched, unpinned wildlife; owned, injured and awakened lives stay real.
+export function settleRemoteWildlife(d,engine,location){
+    const state=d.get('state'),references=(value,id)=>{
+        if(value===id)return true;
+        return value&&typeof value==='object'&&Object.entries(value).some(([key,v])=>key===id||references(v,id));
+    };
+    for(const [id,a] of Object.entries(state.creatures??{})){
+        if(!a.materialized||a.location===location||a.owner||a.mind||a.cultivation||a.hp!==a.maxHp||a.hp<=0||isPhysicallyDead(engine,d,id)||pinnedBy(d,id).length)continue;
+        if(a.coins||Object.keys(a.inventory??{}).length||Object.values(state.itemInstances??{}).some(u=>u.owner===id))continue;
+        if(Object.entries(d.get('ledger','accounts')??{}).some(([key,n])=>{
+            const account=parseAccount(key);return n>0&&account.owner===id&&!(account.resource==='item_live_fish'&&account.purpose==='reserve'&&n===1);
+        }))continue;
+        if([state.obligations,state.effects,state.quests,state.scheduler,d.document.memories].some(v=>references(v,id)))continue;
+        const habitat=engine.rules.wildlife?.habitats.find(h=>h.id===a.ecology&&h.location===a.location);
+        if(!habitat)continue;
+        const path=['state','records',`ecology:${habitat.id}`,'populations',a.species],population=d.get(...path);
+        if(!population)continue;
+        const compartment=a.populationHealth??'S';
+        if(!['S','I','R'].includes(compartment))throw Error('种群 S/I/R 个体状态无效');
+        const returned=structuredClone(population);populationHealth(returned);
+        addPopulation(returned,{S:compartment==='S'?1:0,I:compartment==='I'?1:0,R:compartment==='R'?1:0});
+        returned.immigrated=(returned.immigrated??0)+1;
+        const eventId=`remote:merge:${id}:${state.minute}`;
+        moveFishPopulation(d,engine,a.species,id,habitat.location,1,eventId);
+        runLifecycleProtocol(d,engine,{entity:id,kind:'gone',basis:'aggregated',origin:'aggregated',eventId,location:a.location});
+        holdingRemove(d,engine,['state','creatures',id],'remote-generation',eventId);
+        holdingSet(d,engine,path,returned,'remote-generation',eventId);
+    }
+}
+
 export function unfoldRemoteAt(d,engine,location){
     const base=engine.remoteBase?.world??engine.world,county=remoteCountyOf(engine.world,location);
     // Existing U11 saves already contain the founding skeleton. First entry
@@ -587,11 +641,18 @@ export function unfoldRemoteAt(d,engine,location){
     for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
+    openRemoteStock(d,engine,county,skeleton);
     for(const p of skeleton.people)if(active(p,skeleton)){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
-        moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
-        genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
-        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation},'remote-generation');
+        const key=`remote-stock:${p.settlement}`,row=structuredClone(d.get('state','records',key));
+        moveCoins(d,{from:row.account,to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
+        row.coins-=p.coins??0;
+        for(const [item,n] of Object.entries(p.inventory??{})){
+            moveStock(d,{from:aggregateStock(engine,row.owner,item),to:bag(engine,p.id,item),amount:n,writer:'remote-generation',eventId:`remote:${county}`});
+            row.inventory[item]-=n;
+        }
+        d.set(['state','records',key],row);
+        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation,materialized:{county,settlement:p.settlement}},'remote-generation');
     }
     syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),

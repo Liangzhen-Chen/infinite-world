@@ -93,7 +93,7 @@ function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     moveFishPopulation(d,engine,s.id,habitat.location,id,1,eventId);
     const health=takePopulation(p,1);p.withdrawn++;holdingSet(d,engine,path(habitat.id),latest,'wildlife',eventId);
     holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location},'wildlife');
-    holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...(health.I?{populationHealth:'I'}:health.R?{populationHealth:'R'}:{}),...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
+    holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,materialized:true,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...(health.I?{populationHealth:'I'}:health.R?{populationHealth:'R'}:{}),...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
     return{id,name,species:s.name,level,hp:stats.maxHp};
 }
 export function settleWildlifeEncounter(d,engine,attempt,eventId){
