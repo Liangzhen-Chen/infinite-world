@@ -47,6 +47,10 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // resource growth anchors deliberately change state/patch hashes. Regenerate
 // with the existing UPDATE_ADVANCE_GOLDEN workflow, then verify normally;
 // retain both deterministic traces and every complete-state hash assertion.
+// S5-07 / 05 §5.5: daily NPC ageing anchors/attribute decay, the once-per-day
+// health clock and per-settlement rainShare water facts are now persisted.
+// Refresh through UPDATE_ADVANCE_GOLDEN;
+// keep the complete state/patch/message hashes and duplicate deterministic traces.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},

@@ -16,6 +16,9 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {digest} from './storage.mjs';
 import {transition} from './transition.mjs';
 import {clockRoll} from './world-clock.mjs';
+import {derived} from './derived.mjs';
+import populationBalance from '../world/rules/tables/balance/population.json' with {type:'json'};
+import attributeBalance from '../world/rules/tables/balance/attributes.json' with {type:'json'};
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
 import {npcSchedule} from './npc-state.mjs';
 import {validateNpcSchedules,scheduleAt} from './npc-schedule.mjs';
@@ -269,6 +272,59 @@ const incapacitated=(state,id)=>isPhysicallyDead(null,state,id)||incapable.inclu
 const healthRules=engine=>rules(engine)?.health;
 const perDay=perYear=>1-(1-Math.min(1,perYear))**(1/360);
 function ageBand(h,age){let band=null;for(const row of h.bands)if(age>=row.fromAge)band=row;return band;}
+const humanLifespan=engine=>(engine.world.balance?.population??populationBalance).params.find(r=>r.id==='lifespan.human').value;
+const agingRates=engine=>(engine.world.balance?.attributes??attributeBalance).params.find(r=>r.id==='attr.aging').value;
+function lifecycle(engine,state,id){
+ const actor=state.npcs?.[id]??state.creatures?.[id],base=state.created?.[id]??engine.byId.get(id);
+ return actor?.lifecycle??base?.lifecycle??engine.byId.get(actor?.species??base?.species)?.lifecycle??rules(engine).lifecycle??{};
+}
+function lifeAge(engine,state,id,minute){
+ const actor=state.npcs?.[id]??state.creatures?.[id],base=state.family?.people?.[id]??state.created?.[id]??engine.byId.get(id);
+ if(Number.isSafeInteger(actor?.bornAt??base?.bornAt))return Math.max(0,(minute-(actor?.bornAt??base.bornAt))/YEAR);
+ if(base?.birth){const b=base.birth;return Math.max(0,((1-b.year)*360-(b.month-1)*30-(b.day-1)+minute/DAY)/360);}
+ return Number.isFinite(base?.age)?base.age+minute/YEAR:null;
+}
+// The existing age-band curve is expressed in human-equivalent years. Above
+// its last band, continuing its survival hazard tends to 1 without a death age.
+function annualLifeRisk(h,age){
+ const band=ageBand(h,age);if(!band)return 0;
+ const last=h.bands.at(-1),exposure=last.fromAge>0?Math.max(1,age/last.fromAge):1;
+ return 1-(1-band.suddenDeathPerYear)**exposure;
+}
+function ageDay(d,engine,id,minute,path){
+ // These reads produce only numbers and copied attributes before writing;
+ // they must not expose the whole NPC dictionary on every daily clock tick.
+ const document=d.peek?d.peek():d.document,state=document.state,actor=path.reduce((v,k)=>v?.[k],document),spec=lifecycle(engine,state,id);
+ if(Object.hasOwn(spec,'lifespan')&&spec.lifespan===null){
+  const result={minute,lifespan:null,riskAge:actor.aging?.riskAge??0,catchUpRemaining:0,annualRisk:0};
+  d.set([...path,'aging'],result);return result;
+ }
+ const human=humanLifespan(engine),rates=agingRates(engine),base=spec.lifespan??human;
+ if(!Number.isFinite(base)||base<=0)throw Error('物种寿命须为正数或不老的 null');
+ const lifespan=derived(engine,document,'life:lifespan',id,{base}),age=lifeAge(engine,state,id,minute);
+ if(age===null)return null;
+ const previous=actor.aging,elapsed=previous?(minute-previous.minute)/YEAR:1/360;
+ if(elapsed<0)throw Error('衰老时钟不能倒退');
+ if(previous&&elapsed===0)return previous;
+ const rate=derived(engine,document,'life:aging',id,{base:1}),target=age*human/lifespan;
+ let remaining=previous?.catchUpRemaining??0;
+ if(previous&&(previous.lifespan===null||lifespan<previous.lifespan)){
+  if(!Number.isFinite(spec.agingCatchUp)||spec.agingCatchUp<=0)throw Error('寿命骤降须由物种声明 agingCatchUp 年数');
+  remaining=spec.agingCatchUp;
+ }
+ const naturalElapsed=elapsed*human/lifespan,ordinary=naturalElapsed*rate,from=previous?.riskAge??Math.max(0,target-naturalElapsed);
+ let riskAge=from+ordinary;
+ if(previous&&previous.lifespan!==null&&lifespan>previous.lifespan)riskAge=Math.min(target,riskAge);
+ if(remaining>0){const used=Math.min(remaining,elapsed*rate);riskAge+=Math.max(0,target-riskAge)*used/remaining;remaining-=used;}
+ const attributes={...actor.attributes},baseline=state.created?.[id]??engine.byId.get(id);
+ for(const [names,start,loss] of [[['力量','敏捷','体质'],rates.bodyFromYear,rates.bodyPerYear],[['智力','精神'],rates.mindFromYear,rates.mindPerYear]]){
+  const years=Math.max(0,riskAge-start)-Math.max(0,from-start);
+  if(years>0)for(const name of names)attributes[name]=Math.max(1,(attributes[name]??baseline?.attributes?.[name]??10)-years*loss);
+ }
+ if(Object.keys(attributes).length)d.set([...path,'attributes'],attributes);
+ const result={minute,lifespan,riskAge,catchUpRemaining:remaining,annualRisk:annualLifeRisk(healthRules(engine),riskAge)};
+ d.set([...path,'aging'],result);return result;
+}
 // People away with the player are on screen; off-screen life events wait.
 const settled=(state,id)=>{const n=state.npcs[id];return Boolean(n?.location)&&!n.scheduleTravel&&!n.cognitionTravel&&!state.player?.companions?.includes(id);};
 // Someone travelling with the player still ages and may fall ill at night,
@@ -429,6 +485,10 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
 }
 
 function healthDay(d,engine,minute){
+ // A repeated interval must not age someone retroactively after their arrival.
+ // The daily health decision uses presence at the original midnight, once.
+ const clock=['state','records','npc_life:health'];
+ if((d.get(...clock)?.minute??-1)>=minute)return;
  const h=healthRules(engine);if(!h)return;
  const seed=d.document.randomSeed,day=minute/DAY,ended=new Set();
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
@@ -443,13 +503,20 @@ function healthDay(d,engine,minute){
   if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)recordEntityDeath(d,engine,illness.patient,minute,'病故',illness);
  }
  for(const id of Object.keys(d.get('state','npcs')).sort()){
-  const state=d.get('state'),npc=state.npcs[id];
+  const state=d.peek?d.peek('state'):d.get('state'),npc=state.npcs[id];
   const along=withPlayer(state,id);
   if(!lifeActor(engine,state,id)||incapacitated(state,id)||!(settled(state,id)||along)||ended.has(id))continue;
+  const aging=ageDay(d,engine,id,minute,['state','npcs',id]);
   const age=npcAgeAt(engine,state,id,minute),band=age===null?null:ageBand(h,age);if(!band)continue;
-  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
+  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(aging?.annualRisk??0)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
   if(clockRoll(seed,`illness:${id}`,day)<Math.min(1,band.illnessPerYear/360))fallIll(d,engine,id,minute,band);
  }
+ for(const [id,actor] of Object.entries(d.get('state','creatures')??{})){
+  if(isPhysicallyDead(engine,d,id)||!(actor.hp>0)||!Object.hasOwn(lifecycle(engine,d.get('state'),id),'lifespan'))continue;
+  const aging=ageDay(d,engine,id,minute,['state','creatures',id]);
+  if(aging&&clockRoll(seed,`natural-death:${id}`,day)<perDay(aging.annualRisk??0))recordEntityDeath(d,engine,id,minute,'寿终');
+ }
+ holdingSet(d,engine,clock,{category:'npc_life_clock',minute},'npc-life');
 }
 
 // ---- Moving house -----------------------------------------------------------
@@ -793,6 +860,10 @@ export function advanceNpcLife(d,engine,before,after){
 
 export function validateNpcLifeRules(world){
  const r=world.rules.npcLife,errors=[];if(!r)return errors;
+ for(const row of [r,...world.npcs??[],...world.monsters??[]])if(row.lifecycle!==undefined){
+  const l=row.lifecycle;
+  if(!l||typeof l!=='object'||Array.isArray(l)||Object.hasOwn(l,'lifespan')&&l.lifespan!==null&&(!Number.isFinite(l.lifespan)||l.lifespan<=0)||l.agingCatchUp!==undefined&&(!Number.isFinite(l.agingCatchUp)||l.agingCatchUp<=0))errors.push('lifecycle 须声明正数寿命或 null，agingCatchUp 须为正年数');
+ }
  const chance=v=>Number.isFinite(v)&&v>0&&v<=1,whole=v=>Number.isSafeInteger(v)&&v>0,level=v=>Number.isSafeInteger(v)&&v>=-100&&v<=100;
  if(!whole(r.adultAge)||r.adultAge<18)errors.push('npcLife.adultAge须为不小于18的整数');
  if(!Array.isArray(r.kinTypes)||!r.kinTypes.includes('配偶'))errors.push('npcLife.kinTypes须列出亲属关系类型');

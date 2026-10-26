@@ -15028,7 +15028,14 @@
           "pollutionKind": "ordinary"
         }
       }
-    ]
+    ],
+    "lifecycle": {
+      "awaken": {
+        "minimumYears": 100,
+        "annualRisk": 0.01,
+        "species": "monster_tile_lamp_wraith"
+      }
+    }
   },
   {
     "id": "bld_bs_home_001",

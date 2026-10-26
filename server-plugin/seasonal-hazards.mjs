@@ -71,13 +71,17 @@ registerEffect('crop_damage',{
   const relief=e.cause==='drought'?droughtRelief(engine,d.get('state'),e.settlement,context.minute):0;
   if(relief)e={...e,percent:Math.round(e.percent*(1000-relief)/1000),irrigationReliefPermille:relief};
   const farm=d.get('state','records',`agriculture:${e.settlement}`),keep=(100-e.percent)/100;
+  let privateFields=0;
+  for(const [id,field] of Object.entries(d.get('state','records')??{}))if(field.category==='private_farm'&&field.settlement===e.settlement&&field.status==='growing'){
+   d.set(['state','records',id],{...field,qualitySum:field.qualitySum*keep});privateFields++;
+  }
   // Managed fields: the standing crop not yet cut loses quality, so its
   // harvest is lower; grain already harvested is never taken back.
   if(farm?.mode==='managed'){
    const r=structuredClone(farm);let cohorts=0;
    for(const row of r.field.cohorts)if(!row.harvestedUnits){row.qualitySum*=keep;cohorts++;}
    d.set(['state','records',`agriculture:${e.settlement}`],r);
-   return {applied:true,...e,managed:true,cohorts};
+   return {applied:true,...e,managed:true,cohorts,privateFields};
   }
   const key=`hazard-yield:${e.settlement}`,old=d.get('state','records',key);
   const shifts=Object.fromEntries(Object.entries(old?.shifts??{}).filter(([,s])=>s.until>context.minute));
