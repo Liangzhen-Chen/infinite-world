@@ -5,6 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from '../verdict.mjs';
+import { loadThresholdMs, splitTiers } from '../tiers.mjs';
 
 const now = '2026-10-26T12:00:00.000Z';
 const failure = (name = 'A', fingerprint = 'assertion-1', suite = 'suite') => ({
@@ -234,7 +235,7 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     existsSync: () => false, mkdirSync: () => {},
     writeFileSync: (file, text) => writes.set(file, text),
     readFileSync: file => {
-      if (file.endsWith('slow-tests.tsv')) return '';
+      if (file.endsWith('history.json')) return JSON.stringify(options.history || {});
       if (file.endsWith('known-failures.json')) return JSON.stringify(policy);
       const index = Number(file.match(/run-(\d+)/)?.[1]);
       const detailIndex = file.match(/results[\\/]file-(\d+)\.json$/)?.[1];
@@ -268,7 +269,7 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     return `run-${submissions.length - 1}\n`;
   };
   await vm.runInNewContext(`(async () => { ${source}\n })()`, { fs: fakeFs, path, fileURLToPath,
-    judge, isDeferredOnly, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
+    judge, isDeferredOnly, loadThresholdMs, splitTiers, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
   return { gate: JSON.parse(writes.get(path.join('/sessions', 'fixture.gate.json'))),
     md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, submissions, baseArgs, submittedFiles };
 }
@@ -360,4 +361,12 @@ test('aggregation still writes INCOMPLETE JSON for invalid policy or base revisi
 
 test('policy starts empty; its schema is documented beside the pure interface', () => {
   assert.deepEqual(JSON.parse(fs.readFileSync(new URL('../policy/known-failures.json', import.meta.url), 'utf8')), []);
+});
+
+test('card gate runs only the fast tier and reports deferred slow files', async () => {
+  const history = { runs: { 'tests/b.test.mjs': [{ durationMs: 120000, status: 'PASS' }], 'tests/a.test.mjs': [{ durationMs: 500, status: 'PASS' }] } };
+  const result = await aggregate(job(), [], [], { affected: 'tests/a.test.mjs\ntests/b.test.mjs\ntests/c.test.mjs\n', history });
+  assert.deepEqual(result.submittedFiles[0], ['tests/a.test.mjs', 'tests/c.test.mjs']);
+  assert.ok(result.md.includes('1 slow files deferred to slow sweep'));
+  assert.ok(result.md.includes('仅覆盖快档'));
 });

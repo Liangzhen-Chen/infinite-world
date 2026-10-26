@@ -9,12 +9,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from './verdict.mjs';
+import { loadThresholdMs, splitTiers } from './tiers.mjs';
 const [wt, base = 'master', name = 'card'] = process.argv.slice(2);
 const T = path.dirname(fileURLToPath(import.meta.url));
 const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.env.GATE_ROOT || 'F:/dnd/logs/gate';
 const HEARTBEAT_STALE_MS = 120000, POLL_MS = Number(process.env.GATE_POLL_MS) || 2000;
 if (!wt) throw Error('usage: card-gate.mjs <worktree> <base> <name> [jobs]');
-const slow = new Set(fs.readFileSync(path.join(T, 'slow-tests.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t')[0]));
 // Shadow runs the conservative set; both sets are persisted without changing judgement.
 const MAP = path.join(T, 'tia-map.json');
 const selector = [path.join(T, 'test-impact/select.mjs'), wt, base, '--map', MAP, '--json'];
@@ -23,7 +23,10 @@ const affected = selection.tests;
 const selectorName = `覆盖率选测 (${selection.mode})`;
 // §14: changed tests and CORE remain blocking regardless of historical duration.
 const required = new Set(selection.requiredFiles);
-const fast = affected.filter(f => !slow.has(f) || required.has(f)), skipped = affected.filter(f => slow.has(f) && !required.has(f));
+const thresholdMs = loadThresholdMs(path.join(T, 'policy/tiers.json'));
+const readHistory = () => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'history.json'), 'utf8')); } catch { return {}; } };
+// Fast tier: median PASS < threshold, no history, or required. The slow tier is left to slow-sweep.mjs.
+const { fast, slow: skipped } = splitTiers({ tests: affected, required: [...required], history: readHistory(), thresholdMs });
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const heartbeatAge = () => { try { return Date.now() - fs.statSync(path.join(ROOT, 'scheduler.heartbeat')).mtimeMs; } catch { return Infinity; } };
@@ -133,14 +136,14 @@ const conservativeCount = selection.conservative?.tests?.length ?? affected.leng
 const coverageCount = selection.coverage?.tests?.length ?? affected.length;
 const omitted = selection.shadow?.omittedFiles?.length ?? 0;
 const md = [`# 卡片门禁 ${name}`, `worktree ${wt} vs ${baseSHA}；${selectorName}；耗时 ${minutes} 分钟`,
-  `总判定：**${gate.status}**；退出码：${gate.exitCode}`,
+  `总判定：**${gate.status}**；退出码：${gate.exitCode}${skipped.length ? '；本结果仅覆盖快档，慢档由慢档扫描兜底' : ''}`,
   `通过 ${gate.files.length - nonPass.length}/${gate.files.length}（快档 ${fast.length}）`,
   ...gate.issues.map(issue => `- [${issue.category}] ${issue.status}：${clip(issue.reason)}${candidate.reason ? `；${clip(candidate.reason)}` : ''}`),
   ...groups.flatMap(([status, list]) => [`## ${status}（${list.length}）`, ...list.map(bad1)]),
   `已登记既有失败（KNOWN，已判 PASS）：${gate.files.reduce((n, file) => n + file.cases.filter(c => c.status === 'KNOWN').length, 0)} 个用例`,
   `既有待办：既有 ${deferredTotals.existing}，新增 ${deferredTotals.added}，已移除 ${deferredTotals.resolved}，未核实 ${deferredTotals.unverified}`,
   `影子选测：保守集合 ${conservativeCount}，裁剪集合 ${coverageCount}，裁剪会漏掉 ${omitted} 个文件`,
-  `慢档未跑（${skipped.length}）：${skipped.join('、') || '无'}`].join('\n');
+  `${skipped.length} slow files deferred to slow sweep`].join('\n');
 fs.writeFileSync(path.join(L, `${name}.gate.md`), md + '\n');
 console.log(md);
 process.exitCode = gate.exitCode;
