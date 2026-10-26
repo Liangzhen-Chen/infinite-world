@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -300,8 +300,9 @@ test.after(async () => {
                 })),
             })),
         };
-        await fs.mkdir(new URL('../docs/测试报告/最新/', import.meta.url), {recursive: true});
-        await fs.writeFile(new URL('../docs/测试报告/最新/T23-trade-live.json', import.meta.url), JSON.stringify(output, null, 2) + '\n');
+        // P3 / design section 9 and P3: relocate T23 evidence only; retain report projections and all live trade assertions.
+        await fs.mkdir(artifactPath('测试报告','最新'), {recursive: true});
+        await fs.writeFile(artifactPath('测试报告','最新','T23-trade-live.json'), JSON.stringify(output, null, 2) + '\n');
     }
 });
 

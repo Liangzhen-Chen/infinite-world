@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -134,7 +134,8 @@ test('M6-03 浏览器：四面板双主题桌面与手机截图，空值及回�
     await page.evaluate(reference=>{window.fixtureContext={characters:[{name:'无限原野·世界主持人'}],characterId:0,chatId:'m6-03',chatMetadata:{infinite_fields:reference},chat:[],getRequestHeaders:()=>({'Content-Type':'application/json'}),saveChat:async()=>{},setExtensionPrompt:()=>{},registerFunctionTool:()=>{},stopGeneration:()=>{},eventTypes:{},eventSource:{on:()=>{}}};},created.body.reference);
     await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();await document.fonts.ready;});
     assert.equal(await page.evaluate(()=>document.characterSet),'UTF-8');
-    const report='docs/测试报告/最新/M6-03';await fs.mkdir(report,{recursive:true});
+    // P3 / design section 9 and P3: relocate screenshot output only; retain every screenshot call and UI/layout assertion.
+    const report=artifactPath('测试报告','最新','M6-03');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light']){
         await page.evaluate(async theme=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({theme});},theme);
         for(const [size,viewport]of [['desktop',{width:1440,height:900}],['mobile',{width:390,height:844}]]){

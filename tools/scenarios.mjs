@@ -1,3 +1,5 @@
+import {artifactPath} from './tmp-root.mjs';
+// P3: test commands retain their reports under the selected run root.
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {DeepSeekClient}from'./deepseek-client.mjs';
@@ -129,5 +131,5 @@ for(const scenario of selected.flatMap(scenario=>Array.from({length:repetitions}
     console.log(`${scenario.id} 第${scenario.attempt}次: ${error?'失败 '+error:'通过'}`);
 }
 const report={date:'2026-10-10',scope:`当前引擎${selected.length}个快速场景，各跑${repetitions}次；${only?'定向复核，不代表全部快速场景；':''}不代表完整11.3/11.4验收`,availableScenarios:scenarios.length,selectedScenarios:selected.map(row=>row.id),pass:results.every(r=>r.pass),costUpperYuan:client.spent,results};
-await fs.mkdir('docs/测试报告/最新',{recursive:true});
-await fs.writeFile('docs/测试报告/最新/快速场景.json',JSON.stringify(report,null,2));if(!report.pass)process.exitCode=1;
+await fs.mkdir(artifactPath('测试报告','最新'),{recursive:true});
+await fs.writeFile(artifactPath('测试报告','最新','快速场景.json'),JSON.stringify(report,null,2));if(!report.pass)process.exitCode=1;
