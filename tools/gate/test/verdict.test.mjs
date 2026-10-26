@@ -252,7 +252,11 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     },
   };
   const execFileSync = (command, args) => {
-    if (command === 'node') return options.affected || 'tests/a.test.mjs\n';
+    // P5: the selector now answers in JSON (shadow mode: the conservative set is what runs).
+    if (command === 'node') {
+      const tests = (options.affected || 'tests/a.test.mjs\n').split('\n').filter(Boolean);
+      return JSON.stringify({ mode: 'shadow', tests, requiredFiles: [] });
+    }
     if (command === 'git') {
       if (options.baseError) throw Error('invalid baseline revision');
       return 'fixed-base-sha\n';

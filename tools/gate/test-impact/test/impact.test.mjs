@@ -23,14 +23,19 @@ function coverage(executed) {
   ] }] };
 }
 function record(executed, commit = 'map-commit') {
-  return { commit, durationMs: 12, exitCode: 0, sources: parseCoverage(root, [coverage(executed)]) };
+  // §5.3: fixtures must supply qualified per-record evidence, not map.generatedAt.
+  return { commit, collectedAt: new Date().toISOString(), nodeVersion: process.version, lockHash: 'fixture-lock', dependencies: {},
+    durationMs: 12, exitCode: 0, sources: parseCoverage(root, [coverage(executed)]) };
 }
 function makeMap() { return mergeMap(undefined, { [a]: record(['alpha', 'outer']), [b]: record(['beta', 'inner']) }, 'map-commit'); }
 function change(line, extra = {}) {
   return { file: 'math.mjs', kind: 'modified', oldText: text, stale: false,
-    hunks: [{ startLine: line, lineCount: 1 }], ...extra };
+    patch: "-  return 'old';\n+  return 'new';", hunks: [{ startLine: line, lineCount: 1 }], ...extra };
 }
-const choose = (changes, map = makeMap(), options) => selectChanges(map, changes, options);
+// Existing executor assertions exercise the candidate prune set. Production's
+// default shadow set and both reason maps are covered in lifecycle.test.mjs.
+const choose = (changes, map = makeMap(), options) => selectChanges(map, changes,
+  { mode: 'prune', context: { lockHash: 'fixture-lock' }, ...options });
 
 test('function body change selects only its executor', () => {
   const result = choose([change(3)]);
@@ -51,10 +56,12 @@ test('new file uses reverse imports, or all tests when no consumer is known', ()
   assert.deepEqual(choose([added]).tests, [a, b]);
   assert.equal(choose([added]).decisions[0].reason, 'added-file:all-tests');
 });
-test('unexecuted function selects no tests despite positive top-level coverage', () => {
+test('unexecuted function retains loaders despite positive top-level coverage', () => {
   const result = choose([change(9)]);
-  assert.deepEqual(result.tests, []);
-  assert.equal(result.decisions[0].mode, 'functions');
+  // §5.3 explicitly replaces empty execution evidence with loader/static fallback.
+  assert.deepEqual(result.tests, [a, b]);
+  assert.equal(result.decisions[0].mode, 'fallback');
+  assert.equal(result.decisions[0].reason, 'unexecuted-function');
   assert.equal(result.decisions[0].functions[0].name, 'unused');
 });
 test('source changed since map commit falls back even for a function edit', () => {
@@ -86,7 +93,7 @@ test('Git LF hunks align with a CRLF V8 snapshot under core.autocrlf', () => {
     range.endOffset = convert(range.endOffset);
   }
   const sources = parseCoverage(root, [document], () => crlf);
-  const map = mergeMap(undefined, { [a]: { commit: 'map-commit', durationMs: 1, exitCode: 0, sources } }, 'map-commit');
+  const map = mergeMap(undefined, { [a]: { ...record([]), durationMs: 1, sources } }, 'map-commit');
   const result = choose([change(3)], map);
   assert.equal(result.decisions[0].mode, 'functions');
   assert.deepEqual(result.tests, [a]);
@@ -142,8 +149,9 @@ test('offset/hash mismatch and invalid intervals fall back', () => {
   assert.equal(choose([change(3)], map).decisions[0].reason, 'invalid-function-offsets');
 });
 test('world data, deleted modules, and test files use documented fallback paths', () => {
-  assert.deepEqual(choose([change(1, { file: 'world/item.json' })], makeMap(), { fallback: () => [b] }).tests, [b]);
-  assert.equal(choose([change(1, { file: 'world/item.json' })]).decisions[0].reason, 'world-data:all-tests');
+  // §5.3: world data always requires full selection, even with known readers.
+  assert.deepEqual(choose([change(1, { file: 'world/item.json' })], makeMap(), { fallback: () => [b] }).tests, [a, b]);
+  assert.equal(choose([change(1, { file: 'world/item.json' })]).decisions[0].reason, 'world-data');
   assert.deepEqual(choose([change(1, { kind: 'deleted' })]).tests, [a, b]);
   const added = 'tests/new.test.mjs';
   assert.deepEqual(choose([change(1, { file: added, kind: 'added' })]).tests, [added]);
@@ -152,7 +160,8 @@ test('world data, deleted modules, and test files use documented fallback paths'
 test('failed collection tests always remain selected', () => {
   const map = makeMap();
   map.tests[a].exitCode = 1;
-  assert.deepEqual(choose([change(9)], map).tests, [a]);
+  // Keep the failed record even when the edited function is executed only by b.
+  assert.deepEqual(choose([change(13)], map).tests, [a, b]);
 });
 test('partial initial maps cannot omit tests that have never been collected', () => {
   const unknown = 'tests/uncollected.test.mjs';

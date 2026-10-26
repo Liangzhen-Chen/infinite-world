@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { collectOne, main, mergeMap } from '../collect.mjs';
 import { selectChanges } from '../select.mjs';
 import { runFile } from '../../runner.mjs';
+import { readMap as readGeneration } from '../common.mjs';
 
 const base = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'collect-host-'));
 const repo = path.join(base, 'repo');
@@ -18,6 +19,10 @@ const git = (...args) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' })
 const body = n => `import test from 'node:test';\nimport { used } from '../lib.mjs';\ntest('t${n}', () => { used(${n}); });\n`;
 
 before(() => {
+  // §5.3 dirty-tree invalidation is tested separately. This external hang
+  // control must leave the source snapshot clean so this fixture tests resume.
+  fs.mkdirSync(repo, { recursive: true });
+  fs.writeFileSync(path.join(repo, '.gitignore'), 'unhang\n');
   fs.mkdirSync(path.join(repo, 'tests'), { recursive: true });
   fs.writeFileSync(path.join(repo, 'lib.mjs'), 'export function used(n) { return n + 1; }\nexport function unused() { return 0; }\n');
   for (const n of [1, 3, 5]) fs.writeFileSync(path.join(repo, files[n - 1]), body(n));
@@ -43,7 +48,8 @@ async function collect(extra = []) {
     return { called, exitCode: process.exitCode };
   } finally { process.exitCode = saved; }
 }
-const readMap = () => JSON.parse(fs.readFileSync(map, 'utf8'));
+// P5 publishes a generation pointer, rather than mutating the aggregate in place.
+const readMap = () => readGeneration(map);
 const shardCount = () => fs.readdirSync(`${map}.shards`).filter(name => name.endsWith('.json')).length;
 
 test('five files: hung #2 and crashed #4 are recorded unavailable, the other three keep full coverage', async () => {
@@ -97,12 +103,12 @@ test('a FAIL record always carries a non-zero exitCode and select.mjs always sel
   const failMap = path.join(base, 'fail-map.json');
   const saved = process.exitCode;
   try { await main(['--root', repo, '--map', failMap, 'tests/t6.test.mjs', '--timeout-ms', '10000']); } finally { process.exitCode = saved; }
-  const record = JSON.parse(fs.readFileSync(failMap, 'utf8')).tests['tests/t6.test.mjs'];
+  const record = readGeneration(failMap).tests['tests/t6.test.mjs'];
   assert.equal(record.status, 'FAIL');
   assert.notEqual(record.exitCode, 0);
   assert.equal(record.partialCoverage, true);
   assert.ok(record.sources['lib.mjs'], 'coverage kept');
-  const map = JSON.parse(fs.readFileSync(failMap, 'utf8'));
+  const map = readGeneration(failMap);
   assert.deepEqual(selectChanges(map, []).tests, ['tests/t6.test.mjs'], 'selected even with no change');
 
   // A FAIL terminal whose process exit code was 0 must still be recorded non-zero.

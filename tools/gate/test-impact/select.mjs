@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { affectedTests, byteLineStarts, git, hash, isMain, isTest, normalizeEol, slash, unique, walk } from './common.mjs';
+import { affectedTests, byteLineStarts, discoverTests, git, hash, isMain, isTest, normalizeEol, readMap, recordInvalidReason, slash, staticGraph, unique, worktreeContext } from './common.mjs';
 
 export function parseHunks(diff) {
   return [...diff.matchAll(/^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@/gm)]
@@ -35,47 +35,107 @@ function coveringFunctions(functions, range) {
   return [...selected];
 }
 
-// Pure selection core. Git and filesystem discovery are separate so fixtures do
-// not need subprocesses. fallback(file) is the legacy reverse-import closure.
-export function selectChanges(map, changes, { fallback = () => [], allTests = Object.keys(map.tests) } = {}) {
-  if (map.version !== 1) throw new Error('Unsupported coverage map version');
-  const selected = new Set(Object.entries(map.tests).filter(([, record]) => record.exitCode !== 0).map(([file]) => file));
-  // A partial initial collection has no evidence about the remaining tests.
-  // Likewise a test committed after collection may be outside the current diff.
-  const uncollected = changes.length ? allTests.filter(file => !Object.hasOwn(map.tests, file)) : [];
-  uncollected.forEach(file => selected.add(file));
+function globalReason(change) {
+  const file = change.file;
+  if (file.startsWith('extension/')) return 'extension-contract';
+  if (file.startsWith('world/')) return 'world-data';
+  if (/(^|\/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|\.nvmrc|\.node-version|\.tool-versions)$/.test(file)) return 'runtime-contract';
+  if (/(?:^|[/_.-])(?:storage|ledger|engine|scheduler|dispatch|permission|permissions|private|privacy|scope|auth|schema|schemas|enum|enums|constants|contracts|registry|register|loader|load)(?:[/_.-]|$)/i.test(file)) return 'shared-contract';
+  if (!/\.(?:mjs|js)$/.test(file)) return 'unsupported-data-or-format';
+  if (/^[+-](?![+-]).*\b(?:export|import|register\w*|schema|enum)\b/m.test(change.patch || '')) return 'export-import-or-contract';
+  if (/\b(?:import\s*\(|require\s*\(|createRequire\s*\(|readFile(?:Sync)?\s*\(|readdir(?:Sync)?\s*\(|register\w*\s*\(|Object\.freeze\s*\()/i.test(change.oldText || '')) return 'dynamic-loader-or-registry';
+  return null;
+}
+
+// Only edits proven to stay inside existing low-risk bodies may exclude tests.
+// Without an AST dependency, structural/call/closure edits deliberately stay full.
+function editRisk(change, source) {
+  if (change.patch === undefined) return 'unknown-edit-shape';
+  const lines = change.patch.split(/\r?\n/).filter(line => /^[+-](?![+-])/.test(line)).map(line => line.slice(1));
+  if (!lines.length) return 'unknown-edit-shape';
+  if (lines.some(line => /[(){}[\]`/\\]|=>|\b(?:export|import|class|function|await|yield|eval|schema|enum|register\w*)\b/.test(line))) return 'structural-or-call-change';
+  const shape = line => line.replace(/'[^']*'|"[^"]*"/g, 'STRING').replace(/\b\d+(?:\.\d+)?\b/g, 'NUMBER').replace(/\s+/g, ' ').trim();
+  const removed = change.patch.split(/\r?\n/).filter(line => /^-(?!-)/.test(line)).map(line => shape(line.slice(1)));
+  const added = change.patch.split(/\r?\n/).filter(line => /^\+(?!\+)/.test(line)).map(line => shape(line.slice(1)));
+  if (JSON.stringify(removed) !== JSON.stringify(added)) return 'unproven-body-change';
+  // The V8 range includes the declaration. Editing its line or closing line is
+  // not a body-only change, even if a coverage range encloses those bytes.
+  for (const hunk of change.hunks) {
+    const range = lineBytes(change.oldText, hunk, source);
+    const functions = coveringFunctions(source.functions, range);
+    if (functions?.some(fn => range.start <= fn.start || range.end >= fn.end)) return 'function-boundary';
+  }
+  return null;
+}
+
+// Unified pure entry: both sets carry per-file reasons; `tests` is the set the
+// caller must run under policy.mode. No filesystem or Git is needed by fixtures.
+export function selectChanges(map, changes, { fallback = () => [], allTests = Object.keys(map?.tests || {}),
+  mode = 'shadow', context = {}, mandatory = [], dependenciesUnknown = false } = {}) {
+  if (!['shadow', 'prune'].includes(mode)) throw new Error(`Invalid selection mode: ${mode}`);
+  allTests = unique([...allTests, ...mandatory, ...changes.filter(change => isTest(change.file) && change.kind !== 'deleted').map(change => change.file)]);
+  const records = map?.tests || {}, sources = map?.sources || {};
+  const conservative = new Map(), coverage = new Map();
+  const add = (set, files, reason) => files.filter(file => allTests.includes(file)).forEach(file => {
+    if (!set.has(file)) set.set(file, new Set());
+    set.get(file).add(reason);
+  });
+  const both = (files, reason) => { add(coverage, files, reason); add(conservative, files, reason); };
+  const uncollected = allTests.filter(file => !Object.hasOwn(records, file));
+  for (const test of allTests) {
+    const reason = ![1, 2].includes(map?.version) ? 'map-unavailable-or-unsupported' : recordInvalidReason(records[test], context);
+    if (reason) both([test], reason);
+  }
+  both(mandatory, 'mandatory');
+  both(['tests/engine.test.mjs', 'tests/storage.test.mjs', 'tests/plugin.test.mjs'], 'core');
   const decisions = [];
   for (const change of changes) {
-    const source = map.sources[change.file];
-    let reason;
-    if (change.kind === 'added' || change.kind === 'deleted') reason = `${change.kind}-file`;
-    else if (isTest(change.file)) reason = 'test-file';
-    else if (change.file.startsWith('world/')) reason = 'world-data';
+    const source = sources[change.file];
+    const staticTests = fallback(change.file);
+    const oldConsumers = Object.entries(records).filter(([, record]) => Object.hasOwn(record?.dependencies || {}, change.file)).map(([file]) => file);
+    const consumers = unique([...(source?.loadedBy || []), ...staticTests, ...oldConsumers]);
+    add(conservative, consumers, `static-or-loader:${change.file}`);
+    let reason = globalReason(change), full = !!reason;
+    if (isTest(change.file)) { reason = 'test-file'; full = false; }
+    else if (change.file.startsWith('tests/')) { reason = 'test-helper-or-fixture'; full = dependenciesUnknown || !consumers.length; }
+    else if (reason) { /* shared contracts must not be pruned */ }
+    else if (change.kind === 'added' || change.kind === 'deleted') reason = `${change.kind}-file`;
     else if (!source) reason = 'no-coverage';
     else if (source.stale) reason = 'mixed-source-snapshots';
     else if (change.stale) reason = 'source-changed-since-map';
     else if (source.hash !== hash(change.oldText) && source.normalizedHash !== hash(normalizeEol(change.oldText))) reason = 'source-offset-mismatch';
-    else if (!change.hunks.length) reason = 'no-aligned-hunks';
-    else if (source.functions.some(fn => fn.start < 0 || fn.end > source.bytes || fn.start >= fn.end)) reason = 'invalid-function-offsets';
+    else if (!change.hunks?.length) reason = 'no-aligned-hunks';
+    else if (!Array.isArray(source.functions) || source.functions.some(fn => !Number.isFinite(fn.start) || !Number.isFinite(fn.end)
+      || fn.start < 0 || fn.end > source.bytes || fn.start >= fn.end)) reason = 'invalid-function-offsets';
     const functions = new Set();
     if (!reason) for (const hunk of change.hunks) {
       const covered = coveringFunctions(source.functions, lineBytes(change.oldText, hunk, source));
-      if (covered === null) { reason = 'top-level'; break; }
+      if (covered === null) { reason = 'top-level'; full = true; break; }
       covered.forEach(fn => functions.add(fn));
     }
+    if (!reason) { reason = editRisk(change, source); full = !!reason; }
     let tests;
     if (reason) {
-      const loaded = source?.loadedBy || [];
-      // Data is read at runtime and is intentionally outside V8's source map.
-      const legacy = !loaded.length || change.file.startsWith('world/') || isTest(change.file) ? fallback(change.file) : [];
-      tests = unique([...loaded, ...legacy, ...(isTest(change.file) && change.kind !== 'deleted' ? [change.file] : [])]);
-      if (!tests.length && !isTest(change.file)) { tests = unique(allTests); reason += ':all-tests'; }
-    } else tests = unique([...functions].flatMap(fn => fn.tests));
-    tests.forEach(test => selected.add(test));
+      tests = full ? allTests : unique([...consumers, ...(isTest(change.file) && change.kind !== 'deleted' ? [change.file] : [])]);
+      if (!tests.length && !isTest(change.file)) { tests = allTests; reason += ':all-tests'; }
+    } else {
+      tests = unique([...functions].flatMap(fn => fn.tests));
+      if (!tests.length || [...functions].some(fn => !fn.tests.length)) {
+        reason = 'unexecuted-function';
+        tests = consumers.length ? consumers : allTests;
+      }
+    }
+    both(tests, `${reason || 'function-executor'}:${change.file}`);
     decisions.push({ file: change.file, mode: reason ? 'fallback' : 'functions', reason: reason || null,
-      functions: reason ? [] : [...functions].map(({ start, end, name }) => ({ start, end, name })), tests });
+      functions: [...functions].map(({ start, end, name }) => ({ start, end, name })), tests: tests.filter(file => allTests.includes(file)) });
   }
-  return { tests: unique([...selected]), uncollected: unique(uncollected), decisions };
+  const pack = set => ({ tests: unique([...set.keys()]), reasons: Object.fromEntries([...set].sort(([a], [b]) => a.localeCompare(b)).map(([file, reasons]) => [file, unique([...reasons])])) });
+  const conservativeSet = pack(conservative), coverageSet = pack(coverage);
+  const requiredFiles = unique([...mandatory, ...changes.filter(change => isTest(change.file) && change.kind !== 'deleted').map(change => change.file),
+    ...['tests/engine.test.mjs', 'tests/storage.test.mjs', 'tests/plugin.test.mjs'].filter(file => allTests.includes(file))]);
+  return { mode, generation: map?.generation ?? null, tests: (mode === 'prune' ? coverageSet : conservativeSet).tests,
+    conservative: conservativeSet, coverage: coverageSet, requiredFiles,
+    shadow: { omittedFiles: conservativeSet.tests.filter(file => !coverage.has(file)) }, uncollected, decisions };
 }
 
 export function discoverChanges(root, base, map, runGit = args => git(root, args)) {
@@ -94,42 +154,60 @@ export function discoverChanges(root, base, map, runGit = args => git(root, args
     const exists = fs.existsSync(path.join(root, file));
     const kind = oldText === undefined ? 'added' : exists ? 'modified' : 'deleted';
     let stale = false;
-    for (const commit of map.sources[file]?.commits || [map.commit]) {
+    for (const commit of map?.sources?.[file]?.commits || [map?.commit]) {
       try {
         runGit(['merge-base', '--is-ancestor', commit, 'HEAD']);
         stale ||= Boolean(runGit(['log', '--format=%H', `${commit}..HEAD`, '--', file]).trim());
       } catch { stale = true; }
     }
     const diff = kind === 'modified' ? runGit(['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--unified=0', mergeBase, '--', file]) : '';
-    return { file: slash(file), kind, oldText: oldText ?? '', stale, hunks: parseHunks(diff) };
+    return { file: slash(file), kind, oldText: oldText ?? '', stale, patch: diff, hunks: parseHunks(diff) };
   });
 }
 
-export function main(args = process.argv.slice(2)) {
+export function main(args = process.argv.slice(2), injected = {}) {
   const [worktree, base, ...rest] = args;
   if (!worktree || !base) throw new Error('Usage: select.mjs <worktree> <base> [--map file] [--json]');
-  let mapFile, json = false;
+  let mapFile, json = false, policyFile;
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--map' && rest[i + 1]) mapFile = rest[++i];
+    else if (rest[i] === '--policy' && rest[i + 1]) policyFile = rest[++i];
     else if (rest[i] === '--json') json = true;
     else throw new Error(`Unknown or incomplete option: ${rest[i]}`);
   }
   const root = path.resolve(worktree);
+  const runGit = injected.git ?? (args => git(root, args));
   mapFile = path.resolve(mapFile || path.join(root, 'test-impact-map.json'));
-  const map = JSON.parse(fs.readFileSync(mapFile, 'utf8'));
+  let map;
+  try { map = readMap(mapFile); } catch { map = { version: 0, tests: {}, sources: {} }; }
+  if (![1, 2].includes(map?.version) || !map.tests || !map.sources)
+    map = { version: 0, tests: {}, sources: {} };
+  // Missing or malformed policy cannot enable pruning.
+  let mode = 'shadow';
+  try {
+    const policy = JSON.parse(fs.readFileSync(policyFile || new URL('../policy/selection.json', import.meta.url), 'utf8'));
+    if (policy.mode === 'prune') mode = 'prune';
+  } catch { /* default shadow */ }
   // The generated map is tool metadata, not a source/test change.
-  const changes = discoverChanges(root, base, map).filter(change => path.resolve(root, change.file) !== mapFile);
-  const result = selectChanges(map, changes, {
-    fallback: file => affectedTests(root, [file]), allTests: unique([...Object.keys(map.tests), ...walk(root, 'tests').filter(isTest)]),
+  const changes = discoverChanges(root, base, map, runGit).filter(change => {
+    const absolute = path.resolve(root, change.file);
+    return absolute !== mapFile && !absolute.startsWith(`${mapFile}.shards${path.sep}`)
+      && !absolute.startsWith(`${mapFile}.generations${path.sep}`) && absolute !== `${mapFile}.events.jsonl`;
   });
-  result.tests = result.tests.filter(file => fs.existsSync(path.join(root, file)));
-  if (json) console.log(JSON.stringify(result, null, 2));
+  const graph = staticGraph(root);
+  const result = selectChanges(map, changes, {
+    fallback: file => affectedTests(root, [file], graph), allTests: discoverTests(root),
+    context: worktreeContext(root, mapFile, runGit), mode, dependenciesUnknown: graph.unknown.size > 0,
+  });
+  const log = injected.log ?? console.log;
+  if (json) log(JSON.stringify(result, null, 2));
   else {
-    if (result.tests.length) console.log(result.tests.join('\n'));
+    if (result.tests.length) log(result.tests.join('\n'));
     if (result.uncollected.length) console.error(`[fallback] uncollected-tests: ${result.uncollected.length} tests`);
     for (const decision of result.decisions) if (decision.mode === 'fallback')
       console.error(`[fallback] ${decision.file}: ${decision.reason} (${decision.tests.length} tests)`);
   }
+  return result;
 }
 
 if (isMain(import.meta.url)) {

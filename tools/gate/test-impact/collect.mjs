@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { runFile } from '../runner.mjs';
-import { byteLineStarts, git, hash, isMain, normalizeEol, slash, unique, walk } from './common.mjs';
+import { atomicWrite, byteLineStarts, dependencySnapshot, discoverTests, git, hash, isMain, normalizeEol, publishMap, readMap, recordInvalidReason, slash, staticGraph, unique, worktreeContext } from './common.mjs';
 
 // V8 offsets count UTF-16 code units, not UTF-8 bytes. Convert at the boundary.
 export function parseCoverage(root, documents, readSource = file => fs.readFileSync(file, 'utf8')) {
@@ -43,12 +43,13 @@ export function parseCoverage(root, documents, readSource = file => fs.readFileS
 
 // Retain per-test snapshots so partial refreshes remove old edges and cannot
 // accidentally bless old offsets when a source changes between collections.
-export function mergeMap(previous, updates, commit) {
-  if (previous && previous.version !== 1) throw new Error('Unsupported coverage map version');
+export function mergeMap(previous, updates, commit, { allTests } = {}) {
+  if (previous && ![1, 2].includes(previous.version)) throw new Error('Unsupported coverage map version');
   const snapshots = { ...previous?.snapshots }, tests = { ...previous?.tests }, sources = {};
   const indexes = new Map();
   const key = (kind, fn) => `${kind}:${fn.start}:${fn.end}:${fn.name}`;
   for (const [test, record] of Object.entries(updates)) {
+    if (record === null) { delete tests[test]; continue; }
     const compact = {};
     for (const [file, snapshot] of Object.entries(record.sources)) {
       // Function shapes are shared by content hash, rather than duplicated once
@@ -66,6 +67,7 @@ export function mergeMap(previous, updates, commit) {
     }
     tests[test] = { ...record, sources: compact };
   }
+  if (allTests) for (const test of Object.keys(tests)) if (!allTests.includes(test)) delete tests[test];
   const usedHashes = new Set();
   for (const [test, record] of Object.entries(tests)) for (const [file, reference] of Object.entries(record.sources)) {
     const snapshot = { ...snapshots[reference.hash], hash: reference.hash };
@@ -92,7 +94,7 @@ export function mergeMap(previous, updates, commit) {
     source.commits = unique(source.commits);
     for (const kind of ['topLevel', 'functions']) source[kind].sort((a, b) => a.start - b.start || b.end - a.end);
   }
-  return { version: 1, commit, generatedAt: new Date().toISOString(), tests, sources,
+  return { version: 2, commit, generatedAt: new Date().toISOString(), tests, sources,
     snapshots: Object.fromEntries(Object.entries(snapshots).filter(([id]) => usedHashes.has(id))) };
 }
 
@@ -116,7 +118,7 @@ export async function collectOne(root, test, commit, { run = runTest, tempRoot =
     const documents = fs.readdirSync(directory).filter(file => file.endsWith('.json'))
       .map(file => JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8')));
     if (!documents.length) throw new Error(`No V8 coverage produced: ${test}`);
-    return { commit, durationMs: Math.round(performance.now() - started), exitCode: nonPass ? (terminal.exitCode || -1) : terminal.exitCode,
+    return { commit, collectedAt: new Date().toISOString(), durationMs: Math.round(performance.now() - started), exitCode: nonPass ? (terminal.exitCode || -1) : terminal.exitCode,
       ...(terminal.status ? { status: terminal.status } : {}), ...(nonPass ? { partialCoverage: true } : {}), sources: parseCoverage(root, documents) };
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 }
@@ -129,12 +131,6 @@ function runTest(root, test, directory, options = {}) {
     allowSkip: true, allowZeroTests: true });
 }
 
-const atomicWrite = (file, text) => {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temp, text); fs.renameSync(temp, file);
-};
-
 const shardPath = (dir, file) => path.join(dir, `${hash(file).slice(0, 16)}.json`);
 function readShard(dir, file) {
   try { const shard = JSON.parse(fs.readFileSync(shardPath(dir, file), 'utf8')); return shard.file === file ? shard : undefined; } catch { return undefined; }
@@ -143,7 +139,7 @@ function readShard(dir, file) {
 // A failed/hung/crashed collection is stored as an explicit "unavailable" record with a
 // non-zero exitCode: select.mjs always selects such tests, so partial data never excludes anything.
 function unavailableRecord(commit, durationMs, terminal, message) {
-  return { commit, durationMs, exitCode: terminal?.exitCode || -1, unavailable: true, status: terminal?.status ?? 'ERROR',
+  return { commit, collectedAt: new Date().toISOString(), durationMs, exitCode: terminal?.exitCode || -1, unavailable: true, status: terminal?.status ?? 'ERROR',
     reason: terminal?.reason ?? message, sources: {} };
 }
 
@@ -172,14 +168,20 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   eventsFile = path.resolve(eventsFile || `${mapFile}.events.jsonl`);
   const shardDir = `${mapFile}.shards`;
   const listed = listFile ? fs.readFileSync(listFile, 'utf8').replace(/^﻿/, '').split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')) : [];
-  const files = unique((listFile || positional.length ? [...listed, ...positional] : walk(root, 'tests').filter(file => /\.test\.mjs$/.test(file)))
+  const files = unique((listFile || positional.length ? [...listed, ...positional] : discoverTests(root))
     .map(file => slash(path.relative(root, path.resolve(root, file)))));
   if (!files.length) throw new Error('No test files supplied');
   for (const file of files) if (file.startsWith('../') || path.isAbsolute(file) || !fs.existsSync(path.join(root, file)))
     throw new Error(`Test outside root or missing: ${file}`);
-  const commit = git(root, ['rev-parse', 'HEAD']).trim();
-  let previous = fs.existsSync(mapFile) ? JSON.parse(fs.readFileSync(mapFile, 'utf8')) : undefined;
+  const runGit = injected.git ?? (args => git(root, args));
+  const identity = worktreeContext(root, mapFile, runGit), commit = identity.head;
+  const graph = staticGraph(root);
+  let previous;
+  try { previous = readMap(mapFile); } catch { /* restart from shards */ }
+  if (previous && ![1, 2].includes(previous.version)) previous = undefined;
   let updates = {}, next = 0, done = 0;
+  const allTests = discoverTests(root);
+  for (const test of Object.keys(previous?.tests || {})) if (!allTests.includes(test)) updates[test] = null;
   const failed = new Set();
   // Resume: per-file shards are the durable truth. Re-run only files with no shard, or whose
   // shard is unavailable (timeout/crash/incomplete/no coverage). Shards of this commit that
@@ -188,10 +190,13 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   for (const file of files) {
     const shard = readShard(shardDir, file);
     const record = previous?.tests?.[file];
-    if (shard?.commit === commit) {
-      if (!record || record.commit !== commit || !!record.unavailable !== !!shard.record.unavailable) updates[file] = shard.record;
+    // A PASS on the same clean snapshot may be resumed even if its dynamic
+    // dependencies prevent selection from using it to exclude any future test.
+    if (shard?.commit === commit && !recordInvalidReason(shard.record, identity, { forResume: true })) {
+      if (!record || record.commit !== commit || record.collectedAt !== shard.record.collectedAt
+        || recordInvalidReason(record, identity, { forResume: true })) updates[file] = shard.record;
       if (shard.collected) continue;
-    } else if (!shard && record?.commit === commit && !record.unavailable) continue; // legacy map without shards
+    } else if (!shard && record?.commit === commit && !recordInvalidReason(record, identity, { forResume: true })) continue;
     todo.push(file);
   }
   fs.mkdirSync(path.dirname(eventsFile), { recursive: true });
@@ -203,9 +208,13 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   // Save the aggregated map every ten files, so an interrupted run keeps what it collected.
   const save = () => {
     if (!Object.keys(updates).length) return;
-    if (git(root, ['rev-parse', 'HEAD']).trim() !== commit) throw new Error('HEAD changed during collection; map not written');
-    previous = mergeMap(previous, updates, commit); updates = {};
-    atomicWrite(mapFile, `${JSON.stringify(previous, null, 2)}\n`);
+    const current = worktreeContext(root, mapFile, runGit);
+    if (current.head !== commit) throw new Error('HEAD changed during collection; map not written');
+    if (current.lockHash !== identity.lockHash || current.dirty) {
+      for (const record of Object.values(updates)) if (record) record.dirty = true;
+    }
+    previous = publishMap(mapFile, mergeMap(previous, updates, commit, { allTests }));
+    updates = {};
   };
   console.error(`collect ${todo.length}/${files.length} files at ${commit.slice(0, 8)}`);
   sink({ type: 'collect-start', runId, ts: new Date().toISOString(), todo: todo.length, total: files.length });
@@ -213,6 +222,7 @@ export async function main(args = process.argv.slice(2), injected = {}) {
     while (next < todo.length) {
       const file = todo[next++];
       const started = performance.now();
+      const dependencies = dependencySnapshot(root, file, graph);
       let record, collected = false, note;
       // One failing file is reported and persisted as unavailable, never silently stops its worker.
       try {
@@ -224,6 +234,9 @@ export async function main(args = process.argv.slice(2), injected = {}) {
         record = unavailableRecord(commit, Math.round(performance.now() - started), error.terminal, error.message);
         note = `UNAVAILABLE ${record.status}: ${record.reason}`;
       }
+      const finished = worktreeContext(root, mapFile, runGit);
+      record = { ...record, ...dependencies, nodeVersion: identity.nodeVersion, lockHash: identity.lockHash,
+        dirty: identity.dirty || finished.dirty || finished.head !== commit || finished.lockHash !== identity.lockHash };
       atomicWrite(shardPath(shardDir, file), `${JSON.stringify({ file, commit, collected, status: record.status ?? 'PASS', finishedAt: new Date().toISOString(), record })}\n`);
       updates[file] = record;
       console.error(`${file}: ${note}`);

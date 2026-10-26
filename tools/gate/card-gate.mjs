@@ -15,12 +15,15 @@ const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.en
 const HEARTBEAT_STALE_MS = 120000, POLL_MS = Number(process.env.GATE_POLL_MS) || 2000;
 if (!wt) throw Error('usage: card-gate.mjs <worktree> <base> <name> [jobs]');
 const slow = new Set(fs.readFileSync(path.join(T, 'slow-tests.tsv'), 'utf8').split('\n').filter(Boolean).map(l => l.split('\t')[0]));
-// Coverage-based selection when the nightly map exists; import-graph selection otherwise.
-const MAP = path.join(T, 'tia-map.json'), useMap = fs.existsSync(MAP);
-const selector = useMap ? [path.join(T, 'test-impact/select.mjs'), wt, base, '--map', MAP] : [path.join(T, 'affected-tests.mjs'), base];
-const affected = execFileSync(process.execPath, selector, { cwd: wt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean);
-const selectorName = useMap ? '覆盖率选测' : 'import 关系选测';
-const fast = affected.filter(f => !slow.has(f)), skipped = affected.filter(f => slow.has(f));
+// Shadow runs the conservative set; both sets are persisted without changing judgement.
+const MAP = path.join(T, 'tia-map.json');
+const selector = [path.join(T, 'test-impact/select.mjs'), wt, base, '--map', MAP, '--json'];
+const selection = JSON.parse(execFileSync(process.execPath, selector, { cwd: wt, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'inherit'] }));
+const affected = selection.tests;
+const selectorName = `覆盖率选测 (${selection.mode})`;
+// §14: changed tests and CORE remain blocking regardless of historical duration.
+const required = new Set(selection.requiredFiles);
+const fast = affected.filter(f => !slow.has(f) || required.has(f)), skipped = affected.filter(f => slow.has(f) && !required.has(f));
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const heartbeatAge = () => { try { return Date.now() - fs.statSync(path.join(ROOT, 'scheduler.heartbeat')).mtimeMs; } catch { return Infinity; } };
@@ -105,7 +108,7 @@ const verdict = judge({ candidate, baselineRuns, knownFailures, now: new Date().
 const minutes = Math.round((Date.now() - started) / 60000);
 const gate = { ...verdict, worktree: wt, base: baseSHA, name,
   candidateRunId: candidate.runId ?? null, baselineRunIds: baselineRuns.map(r => r.runId ?? null),
-  selectedFiles: fast, skippedFiles: skipped, minutes };
+  selectedFiles: fast, skippedFiles: skipped, minutes, selection };
 fs.mkdirSync(L, { recursive: true });
 fs.writeFileSync(path.join(L, `${name}.gate.json`), JSON.stringify(gate, null, 2) + '\n');
 // Retain legacy TSV columns for existing consumers, appending the final verdict.
