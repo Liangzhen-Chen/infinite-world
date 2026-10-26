@@ -3,7 +3,7 @@ import {registerObligationProtocol} from './obligation-protocol.mjs';
 import {aliveHoldings,entityRow} from './holdings.mjs';
 // Shared L1 obligation arithmetic. Arithmetic queries do not mutate or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
-import {accrualFraction,addAccrual,fraction} from './obligation-calendar.mjs';
+import {accrualFraction,addAccrual,fraction,interestAmount} from './obligation-calendar.mjs';
 // Installed by the engine composition root. Pure consumer queries must not
 // import the legal/action graph back through entity-view.
 let civilGrace=null;
@@ -125,9 +125,9 @@ export function accruedInterest(row,minute,{round='trunc'}={}){
     const from=row.accruedTo??row.createdAt,until=Math.min(minute,row.deadline??minute,row.endedAt??minute);
     const principal=row.principal??row.terms?.principal??0,rate=row.monthlyInterest??row.terms?.monthlyInterest??0;
     if(!Number.isSafeInteger(from)||!Number.isFinite(until)||!Number.isFinite(principal)||!Number.isFinite(rate)||principal<0||rate<0)throw preconditionFailure('义务累计条款无效');
-    const amount=principal*rate*Math.max(0,until-from)/(30*DAY);
     if(!['ceil','trunc'].includes(round))throw preconditionFailure('累计取整方式无效');
-    return Math[round](amount);
+    const basis=row.terms?.rateTerms??{};
+    return interestAmount({principal,rate,from,to:Math.max(from,until),per:basis.per,calendar:basis.calendar},{round});
 }
 
 // The same due query drives contracts, defaults and scheduler wakeups.

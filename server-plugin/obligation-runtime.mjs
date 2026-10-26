@@ -60,6 +60,14 @@ function receipt(d,e,id,eventId,verb,args,fn){
 function write(d,e,row){
 
     d.set(['state','obligations',row.id],row);
+    if(row.kind==='deposit'){
+        const bank=read(d,'state','records',row.debtor);
+        if(bank?.category==='bank'){
+            const balance=obligationRows(read(d,'state')).filter(o=>o.kind==='deposit'&&o.debtor===row.debtor&&o.creditor===row.creditor)
+                .reduce((n,o)=>n+obligationView(read(d,'state'),o).owed,0);
+            holdingSet(d,e,['state','records',row.debtor],{...bank,accounts:{...bank.accounts,[row.creditor]:balance}},W);
+        }
+    }
     if(row.legacyRecord){
         const old=read(d,'state','records',row.legacyRecord)??{};
         if(old.category&&old.category!=='debt')return read(d,'state','obligations',row.id);
@@ -124,6 +132,7 @@ export function obligationInstrument(e,s,row,payer){
         (typeof required!=='string'||id===required)&&
         [row.id,row.legacyRecord].filter(Boolean).includes(item.represents));
     for(const [id,item]of items){
+        if(row.kind==='deposit'&&(!item.document||item.document.valid!==true||item.document.issuer!==row.debtor||item.document.namedHolder!==row.creditor||item.document.describes!==row.id||item.document.sourceEvent!==`world_event:${row.terms.sourceEvent}`||item.durability<=0))continue;
         if(item.status!==undefined&&!['valid','持有','有效'].includes(item.status)||(item.expires??Infinity)<=s.minute)continue;
         const owner=item.owner;
         if(!owner||!row.terms?.bearer&&owner!==row.creditor)continue;

@@ -16,6 +16,7 @@ import {digest,recordsWhere,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
 import {marketQuote,recordMarketDeal,goodsClass} from './market.mjs';
+import {currencyRow,currencyTradePrice} from './currency.mjs';
 export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
 
 const agreedKey=id=>`agreed_quote:${id}`;
@@ -305,8 +306,16 @@ export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base,in
         const regard=rules.relation.keeper*keeperRegard+rules.relation.settlement*settlementRegard;
         relation=clamp(1+(npc===seller?-1:1)*rules.relation.span*regard/100,limits.relation);
     }
-    return {...marketQuote(d,engine,{buyer,seller,item,quantity,location,business:shop,instances,relation,
-        base:price*medicinePriceFactor(engine,d.get('state'),item,location,d)}),shop:shop?.id??null,settlement:place,keeperRegard,settlementRegard};
+    const quote=marketQuote(d,engine,{buyer,seller,item,quantity,location,business:shop,instances,relation,
+        base:price*medicinePriceFactor(engine,d.get('state'),item,location,d)}),money=currencyRow(engine,item);
+    if(money){
+        const spread=shop?(shop.keeper===seller?clamp(shop.markup,limits.shop):engine.world.marketRules.spread.buy):1;
+        const converted=currencyTradePrice(d,engine,{currency:money.resource,quantity:quote.quantity,location,spread,relation});
+        Object.assign(quote,converted,{retail:true});
+        quote.explanation={...quote.explanation,baseline:converted.pricing.rate,environment:1,base:converted.pricing.rate,scarcity:1,quality:1,depth:1,spread,relation,curve:quote.quantity,
+            value:{base:converted.pricing.rate,value:converted.pricing.rate,contributions:[]},price:{base:converted.listPrice,value:converted.listPrice,contributions:[]},currency:converted.pricing};
+    }
+    return {...quote,shop:shop?.id??null,settlement:place,keeperRegard,settlementRegard};
 }
 export function recordDeal(d,quote,price,quantity,eventId){
     if(quote.agreed)consumeAgreedQuote(d,quote,eventId);
