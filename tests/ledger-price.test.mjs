@@ -200,17 +200,25 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
 });
 
 test('价格双读对照：制作、采集（钓鱼）之后的报价；农业季逐日推进（播种、生长、收获、腐坏、吃粮）与离屏推进',{timeout:3600000},async()=>{
-    const c=campaignStock(),w=c.engine.world;
-    const put=(item,quantity,durability=100)=>c.doc.state.inventory[item]={quantity,quality:w.items.find(i=>i.id===item).quality,durability,weight:w.items.find(i=>i.id===item).weight};
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
-    put('item_wood',6);put('item_whittling_knife',1,80);put('item_fishing_bait',10);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
-    c.doc.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};c.doc.state.recipes.recipe_wooden_pegs={source:{type:'teacher',id:'npc_hw_ayan'}};
+    const c=campaignStock();
+    // D05 §5.5 / S5-05：正式钓具、蚯蚓及非考查的制作条件经 setup 声明，不直接改库存/技能事实。
+    const prepared=applyIntentSetup(c.engine,c.doc,{
+        inventory:{item_wood:6,item_whittling_knife:1,item_bamboo_fishing_rod:1,item_earthworm_bait:10,item_kitchen_knife:1,item_water:10,item_oats:5},
+        abilities:{skills:{skill_life_6_core:120},recipes:['recipe_wooden_pegs']},
+        facts:[{path:['state','inventory','item_whittling_knife','durability'],value:80}],
+    });
+    assert.deepEqual(prepared.setupUnmet,[]);c.doc=prepared.document;
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
     assertSurface(c,'交易之后');
-    c.doc={...c.doc,state:{...c.doc.state,location:'bld_hw_mill'}};
+    // D05 身体慢事实保留真实工时：移动、等待都走生产归约，不能瞬移或倒拨身体事实的 asOf。
+    await step(c,'world_move',{destination:'bld_hw_mill'},'walk-craft');
     for(let i=0;i<3;i++)await step(c,'world_craft',{recipe:'recipe_wooden_pegs'},`craft-${i}`);
-    c.doc={...c.doc,state:{...c.doc.state,location:'loc_hw_dock',minute:Math.floor(c.doc.state.minute/DAY)*DAY+600}};
-    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`,{allowFailure:true});
+    const fishingAt=Math.floor(c.doc.state.minute/DAY)*DAY+600;
+    await step(c,'world_time',{minutes:(fishingAt>c.doc.state.minute?fishingAt:fishingAt+DAY)-c.doc.state.minute},'wait-fishing');
+    await step(c,'world_move',{destination:'loc_hw_dock'},'walk-fishing');
+    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`);
+    // 4竿各耗1份正式蚯蚓，10−4=6；不吞掉钓具/饵料等前提错误，保证采集对照确实执行。
+    assert.equal(c.doc.state.inventory.item_earthworm_bait.quantity,6);
     const afterGather=assertSurface(c,'采集之后');
     // 农业季：逐日推进；每 10 天并在收获窗口附近把同一天用两种模式各归约一遍，并核对整张价格面。
     const harvested=()=>c.doc.state.records['agriculture:loc_hw']?.ledger?.harvested??0;
