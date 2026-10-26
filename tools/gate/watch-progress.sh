@@ -1,15 +1,14 @@
-# usage: sh F:/dnd-tools/watch-progress.sh <minutes> <logfile>...
-# Run in the background next to every long job of the main session (gates, sweeps,
-# collections): exits with STALL, and so notifies the main session, as soon as any
-# watched log has not changed for <minutes>. Stop it when the job itself finishes.
-# 10-26: a coverage collection sat on one test for four hours unnoticed.
-min=$1; shift
-while :; do
-  now=$(date +%s)
-  for f in "$@"; do
-    [ -f "$f" ] || continue
-    age=$(( (now - $(stat -c %Y "$f")) / 60 ))
-    if [ $age -ge $min ]; then echo "STALL $f: no output for $age min ($(tail -n 1 "$f" | cut -c1-160))"; exit 3; fi
-  done
-  sleep 120
+# RETIRED (gate v2, P2). Per-log polling is replaced by the single scheduler plus the wait adapter.
+# This shell only prints the pointer and forwards to the new mechanism; it no longer watches arbitrary logs.
+# usage (unchanged): sh watch-progress.sh <minutes> <logfile>...   -> now: cards named after the log files
+here=$(cd "$(dirname "$0")" && pwd -W 2>/dev/null || pwd)
+echo "watch-progress.sh is retired: use  powershell -File $here/notify.ps1 -Root F:/dnd/logs/gate -Sessions F:/dnd/logs/sessions -Cards <card,...>  (status: status.ps1)" >&2
+min=${1:-15}; shift
+cards=""
+for f in "$@"; do
+  b=$(basename "$f"); b=${b%.gate.log}; b=${b%.log}; b=${b%.txt}
+  cards="${cards:+$cards,}$b"
 done
+args="-Root F:/dnd/logs/gate -Sessions F:/dnd/logs/sessions -CardStallSec $((min * 60))"
+[ -n "$cards" ] && args="$args -Cards $cards"
+exec powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$here/notify.ps1" $args
