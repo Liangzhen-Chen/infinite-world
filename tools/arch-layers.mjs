@@ -17,7 +17,7 @@ const PACKS={
  governance:['governance','civic','promotion','promotion-view','elections','titles','high-nobility','nation-founding','public-projects','office-salary','notables','settlement-profile'],
  family:['npc-life','family-inheritance','family-law','family-politics','family-diplomacy'],
  organizations:['organizations','faction-clock','faith','festival','world-clock'/* * 时钟阶段，与势力时钟同组 */],
- ecology:['seasonal-hazards','agriculture','wildlife','wildlife-habitats','wildlife-range','wildlife-migration','wildlife-awakening','wildlife-society','seasonal-migration','farm-pests',
+ ecology:['husbandry','ecology-dynamics','seasonal-hazards','agriculture','wildlife','wildlife-habitats','wildlife-range','wildlife-migration','wildlife-awakening','wildlife-society','seasonal-migration','farm-pests',
   'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
@@ -38,7 +38,7 @@ const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
 put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 // Conserved liquid arithmetic and read-only intent matching are shared logic.
-put(['water-volume','documents'],'L1');
+put(['water-volume','documents','population-health'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
 put(['market','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');

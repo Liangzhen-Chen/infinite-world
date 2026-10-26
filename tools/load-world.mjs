@@ -11,6 +11,7 @@ import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {validateDomainRules} from '../server-plugin/domain-rules.mjs';
 import {validateNormBindings} from '../server-plugin/norm-stack.mjs';
 import {loadDerivedRegistry} from '../server-plugin/derived.mjs';
+import {installEcologyDefinitions} from '../server-plugin/ecology-dynamics.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -94,7 +95,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     try{narrativeTemplates=JSON.parse(await fs.readFile(path.join(root,'ontology/entity-templates.json'),'utf8')).entries.flatMap(e=>e.narrative??[]);}catch(error){if(error.code!=='ENOENT')throw error;}
     let primitiveFacts={};
     try{primitiveFacts=JSON.parse(await fs.readFile(path.join(root,'ontology/primitives.json'),'utf8')).entries.find(e=>e.id==='fact.set')?.writable??{};}catch(error){if(error.code!=='ENOENT')throw error;}
-    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs','yields','ecology'].map(name=>[name,world.balance[name]]))};
+    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs','yields','ecology','health'].map(name=>[name,world.balance[name]]))};
     for(const [key,file] of Object.entries({marketRules:'rules/tables/market.json',openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json',domainRules:'rules/tables/domain-rules.json'})){
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
@@ -119,6 +120,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         primitiveRuleRegistry(world);
     }catch(error){if(error.code!=='ENOENT')throw error;}
     for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions)||Boolean(world.primitiveRules),writable:true,configurable:true});
+    const ecology=await optional('ecology/species.json');if(!Array.isArray(ecology))installEcologyDefinitions(world,ecology);
     return world;
 }
 

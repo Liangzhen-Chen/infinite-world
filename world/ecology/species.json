@@ -1,0 +1,135 @@
+{
+  "species": [
+    {
+      "id": "monster_bent_horn_goat",
+      "ecology": {
+        "disease": "disease:cold",
+        "niche": {
+          "grass": 1
+        }
+      },
+      "interactions": [
+        {
+          "with": "monster_oat_pheasant",
+          "kind": "mutualism",
+          "k": 0.1
+        }
+      ],
+      "husbandry": {
+        "feed": {
+          "item": "item_oats",
+          "perHead": 0.25
+        },
+        "birthPerHeadDay": 0.0006944444444444445,
+        "yields": {
+          "alive": [
+            {
+              "item": "item_goat_milk",
+              "perHeadDay": 0.25,
+              "collectMinutes": 5
+            },
+            {
+              "item": "item_raw_goat_hair",
+              "perHeadDay": 0.002777777777777778,
+              "collectMinutes": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "monster_oat_pheasant",
+      "ecology": {
+        "disease": "disease:cold",
+        "niche": {
+          "grass": 0.5,
+          "insects": 0.5
+        }
+      },
+      "interactions": [
+        {
+          "with": "monster_bent_horn_goat",
+          "kind": "mutualism",
+          "k": 0.1
+        }
+      ],
+      "husbandry": {
+        "feed": {
+          "item": "item_oats",
+          "perHead": 0.05
+        },
+        "birthPerHeadDay": 0.002777777777777778,
+        "yields": {
+          "alive": [
+            {
+              "item": "item_pheasant_egg",
+              "perHeadDay": 0.25,
+              "collectMinutes": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "monster_leaf_hare",
+      "ecology": {
+        "niche": {
+          "grass": 1
+        }
+      },
+      "interactions": [
+        {
+          "with": "monster_brown_deer",
+          "kind": "competition",
+          "k": 0.1
+        }
+      ]
+    },
+    {
+      "id": "monster_brown_deer",
+      "ecology": {
+        "niche": {
+          "grass": 1
+        }
+      },
+      "interactions": [
+        {
+          "with": "monster_leaf_hare",
+          "kind": "competition",
+          "k": 0.1
+        }
+      ]
+    },
+    {
+      "id": "monster_grey_ridge_wolf",
+      "interactions": [
+        {
+          "with": "monster_leaf_hare",
+          "kind": "predation",
+          "k": 0.25,
+          "handling": 2
+        }
+      ]
+    }
+  ],
+  "herds": [
+    {
+      "id": "population_hw_home21_goats",
+      "name": "谢堇家的山羊群",
+      "owner": "npc_hw_xiejin",
+      "location": "bld_hw_home_21",
+      "species": "monster_bent_horn_goat",
+      "count": 4,
+      "capacity": 12
+    },
+    {
+      "id": "population_hw_home21_pheasants",
+      "name": "谢堇家的雉群",
+      "owner": "npc_hw_xiejin",
+      "location": "bld_hw_home_21",
+      "species": "monster_oat_pheasant",
+      "count": 4,
+      "capacity": 12
+    }
+  ]
+}

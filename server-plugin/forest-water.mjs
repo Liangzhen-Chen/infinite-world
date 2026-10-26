@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {takePopulation,addPopulation} from './population-health.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
 import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
@@ -161,11 +162,11 @@ export function displaceForestWildlife(d,engine,day){
     const target=clone(d.get('state','records',`ecology:${to.id}`)),q=target?.populations[s.id];if(!q)continue;
     const actors=present(d,s.id,to.location),transit=reservedMigrationCapacity(d,to.id,s.id);
     const amount=Math.min(excess,p.count,Math.max(0,forestHabitatCapacity(engine,d.get('state'),to,s,forests.get(to.location)??null)-q.count-actors-transit));
-    if(!amount)continue;moveFishPopulation(d,engine,s.id,h.location,to.location,amount,`forest-move:${day}`);p.count-=amount;p.emigrated=(p.emigrated??0)+amount;q.count+=amount;q.immigrated=(q.immigrated??0)+amount;excess-=amount;moved+=amount;
+    if(!amount)continue;moveFishPopulation(d,engine,s.id,h.location,to.location,amount,`forest-move:${day}`);addPopulation(q,takePopulation(p,amount));p.emigrated=(p.emigrated??0)+amount;q.immigrated=(q.immigrated??0)+amount;excess-=amount;moved+=amount;
     d.set(['state','records',`ecology:${to.id}`],target);if(!excess)break;
    }
    const starved=day%7===6?Math.min(excess,p.count):0;
-   if(starved){p.count-=starved;p.starved+=starved;}
+   if(starved){takePopulation(p,starved);p.starved+=starved;}
    if(moved||starved){d.set(['state','records',`ecology:${h.id}`],source);event(d,engine,h.location,day,`wildlife_migration:${s.id}`,{species:s.id,moved,starved});}
   }
  }

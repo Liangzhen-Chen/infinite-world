@@ -21,7 +21,8 @@ test('隔离预演不写入，只追加T19的14条法术且重复零写入；正
  const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-w2-reuse-'));
  t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(root,{recursive:true,force:true});});
  // A3 archives actions and ontology in loadWorld; preserve them in this publication roundtrip, including its full-world equality assertion.
- for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // S5-06: copy the approved ecology source too; no roundtrip assertion is relaxed.
+ for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const [file,value]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w2-reuse'),path.join(root,'drafts/w2-reuse'),{recursive:true});

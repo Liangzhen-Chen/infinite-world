@@ -1,4 +1,5 @@
 import {moveFishPopulation} from './stock.mjs';
+import {populationHealth,takePopulation,addPopulation} from './population-health.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {migrationPath} from './wildlife-range.mjs';
 import {forestHabitatCapacity} from './forest-water.mjs';
@@ -20,6 +21,7 @@ export function advanceSeasonalMigration(d,engine,day){
     let pending=0;const ids=new Set(),actorIds=new Set();
     for(const t of m.transit){
         if(ids.has(t.id)||!Number.isSafeInteger(t.count)||t.count<0||!Array.isArray(t.actors)||!Number.isSafeInteger(t.arriveDay)||t.arriveDay<=t.departDay)throw new Error('迁徙行程损坏');
+        populationHealth({count:t.count,health:t.health});
         ids.add(t.id);pending+=t.count+t.actors.length;
         if(!rules.routes.some(r=>r.id===t.route&&r.species===t.species&&r.from===t.from&&r.to===t.to))throw new Error('迁徙行程与世界归档不符');
         for(const id of t.actors){const actor=d.get('state','creatures',id);
@@ -33,7 +35,7 @@ export function advanceSeasonalMigration(d,engine,day){
         const r=structuredClone(d.get(...ecology(t.to))),p=r.populations[t.species];
         if(!p)throw new Error('迁入地尚未迁移物种记录');
         moveFishPopulation(d,engine,t.species,`migration:${t.id}`,habitats.get(t.to).location,t.count,t.id);
-        p.count+=t.count;p.immigrated+=t.count;d.set(ecology(t.to),r);m.arrived+=t.count;
+        addPopulation(p,t.health??{S:t.count,I:0,R:0});p.immigrated+=t.count;d.set(ecology(t.to),r);m.arrived+=t.count;
         for(const id of t.actors){const actor=d.get('state','creatures',id);
             // A dead traveller stays dead; no revived replacement enters the pool.
             if(!alive(d,id,actor)){m.lost++;continue;}
@@ -54,9 +56,9 @@ export function advanceSeasonalMigration(d,engine,day){
         const amount=Math.min(room,Math.floor((p.count+actors.length)*route.fraction));if(!amount)continue;
         const unseen=Math.min(p.count,amount),travellers=actors.slice(0,amount-unseen).map(([id])=>id),id=`${route.id}:${now}`;
         moveFishPopulation(d,engine,route.species,home.location,`migration:${id}`,unseen,id);
-        p.count-=unseen;p.emigrated+=unseen;d.set(ecology(route.from),source);
+        const health=takePopulation(p,unseen);p.emigrated+=unseen;d.set(ecology(route.from),source);
         for(const id of travellers){holdingSet(d,null,['state','creatures',id,'location'],null,'seasonal-migration');holdingSet(d,null,['state','creatures',id,'migration'],`${route.id}:${now}`,'seasonal-migration');}
-        m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,actors:travellers});
+        m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,...(health.I||health.R?{health}:{}),actors:travellers});
         m.departed+=amount;d.set(migrationPath(),m);
     }
     m.lastDay=day;d.set(migrationPath(),m);

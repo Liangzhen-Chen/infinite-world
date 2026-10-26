@@ -146,7 +146,7 @@ const SYSTEMS=[
  {id:'base_npc_decision',layer:'base',name:'主观视图与 NPC 决策',card:'A2/S5-01',modules:['subjective-view.mjs','npc-decision.mjs','autonomy-candidates.mjs','derived-consumers.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs','advance-hooks.mjs']},
- {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs']},
+ {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs','population-health.mjs']},
  {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['obligation-protocol.mjs','holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-conditional.mjs','obligation-claims.mjs','service-queue.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','daily-actions.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
@@ -154,7 +154,7 @@ const SYSTEMS=[
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','hidden-passives.mjs','spell-research.mjs','training.mjs','learning.mjs','education.mjs','education-state.mjs','education-cohorts.mjs','local-exams.mjs','checks.mjs','revival.mjs']},
  {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','combat-state.mjs','duels.mjs']},
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
- {id:'sim_wildlife',layer:'sim',name:'生态',modules:['wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
+ {id:'sim_wildlife',layer:'sim',name:'生态',modules:['husbandry.mjs','ecology-dynamics.mjs','wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
  {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','water-volume.mjs','environment-state.mjs','perception.mjs','place-layout.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},

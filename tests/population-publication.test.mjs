@@ -103,6 +103,9 @@ test('河湾历史候选逐条核对审核，完整深度不足拒绝且重复�
  const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-population-publish-'));
  t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(target,{recursive:true,force:true});});
  await fs.cp(path.resolve('world'),root,{recursive:true,filter:file=>!file.split(path.sep).includes('drafts')});
+ // S5-06 herds postdate W1 and reference its not-yet-published residents.
+ // This historical edition omits that whole later catalog, like later clocks above.
+ await fs.rm(path.join(root,'ecology'),{recursive:true,force:true});
  // The fixture writes loaded locations with biome fields already merged in.
  await fs.rm(path.join(root,'geo/biomes.json'),{force:true});
  await fs.mkdir(path.join(root,'drafts/w1'),{recursive:true});await fs.cp(path.resolve('world/drafts/w1/hewan'),path.join(root,'drafts/w1/hewan'),{recursive:true});

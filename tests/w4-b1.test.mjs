@@ -131,7 +131,8 @@ test('隔离正式发布与重发零写；候选、审核及L4篡改均在写入
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-b1-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // 03 §3.2: preserve the same A3 executable definitions and vocabulary in the
  // isolated edition; the full-world equality and all tamper rejections remain.
- for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // S5-06: the isolated edition includes its approved ecology source, retaining exact equality.
+ for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w4-b1'),path.join(root,'drafts/w4-b1'),{recursive:true});
  const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses));const bytes=await fs.readFile(file,'utf8');
  const preview=await publishB1({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);assert.equal(await fs.readFile(file,'utf8'),bytes);

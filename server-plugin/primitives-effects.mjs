@@ -140,6 +140,9 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
  }
  if(effect.op==='destroy'||effect.op==='transition'){
   const entity=effect.entity,types=templatesOf(d,entity,engine)??[];
+  // A herd is a stock of living bodies, not one destructible manufactured
+  // object. Its losses must settle the same population and resource accounts.
+  if(d.get('holdings','entities',entity,'kind')==='population')reject('E-POPULATION-ADAPTER','Population losses require their stock adapter');
   if(effect.op==='transition'&&['declared','declaration_revoked','insolvency'].includes(effect.cause)){
    const expected=effect.cause==='declaration_revoked'?'restored':'gone';
    if(effect.kind!==expected)reject('E-TRANSITION-KIND',`Judicial ${effect.cause} requires kind ${expected}`);

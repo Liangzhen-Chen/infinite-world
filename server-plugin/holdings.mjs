@@ -45,7 +45,7 @@ let resolver=()=>null,capacityOf=()=>null;
 export function registerEntityResolver(fn){resolver=fn;}
 export function registerCapacityResolver(fn){capacityOf=fn;}
 // 存储里的实体（职位、遗产、案件、议案、残骸）先于 L1 解析：它们的模板由实体种类决定。
-export const ENTITY_KINDS=Object.freeze({office:'office',estate:'interim',liquidation:'interim',case:'interim',project:'interim',motion:'interim',wreck:'thing',person:'agent',creature:'agent',item:'thing',building:'thing',mark:'thing'});
+export const ENTITY_KINDS=Object.freeze({office:'office',estate:'interim',liquidation:'interim',case:'interim',project:'interim',motion:'interim',wreck:'thing',person:'agent',creature:'agent',population:'thing',item:'thing',building:'thing',mark:'thing'});
 export function templatesOf(d,id,engine=null){
     const e=read(d,'holdings','entities',id);
     if(e)return [ENTITY_KINDS[e.kind]];

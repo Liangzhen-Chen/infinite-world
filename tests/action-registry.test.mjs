@@ -124,6 +124,10 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
     // catalogue without widening the static field-tool operation enum.
     'core:farm.private_sow':{tool:'world_farm',args:{operation:'private_sow'}},
     'core:farm.private_harvest':{tool:'world_farm',args:{operation:'private_harvest'}},
+    // D05 §5.5: catalog livestock actions reuse native farm handlers without
+    // increasing the static tool schema or weakening the exact routing check.
+    'core:husbandry.inspect':{tool:'world_farm',args:{operation:'husbandry_inspect'}},
+    'core:husbandry.collect':{tool:'world_farm',args:{operation:'husbandry_collect'}},
     // 指南11.3 F5：取出施法后的原水须走目录入口，仍核对精确分派。
     'core:environment.take_contents':{tool:'world_environment',args:{operation:'take_contents'}}
    };

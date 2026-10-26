@@ -46,6 +46,16 @@ export function defineHoldingSource(name,spec){
 }
 export const holdingSources=()=>[...sources.keys()].sort();
 
+defineHoldingSource('husbandry',{
+ recordCategories:['husbandry'],unitOfRecord:(_state,key)=>key,
+ units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r.category==='husbandry').map(([id])=>id),
+ extract(_engine,state,key){
+  const r=state.records?.[key];if(r?.category!=='husbandry')return null;
+  return {entities:[{id:r.id,kind:'population',facts:{species:r.species}}],
+   holdings:r.owner?[{kind:'owns',holder:r.owner,subject:r.id,terms:{share:1}}]:[],locations:[{entity:r.id,at:r.location,mode:'place'}]};
+ }
+});
+
 
 defineHoldingSource('transition',{
     recordCategories:['transition','transition_procedure'],unitOfRecord:(state,key)=>state.records?.[key]?.entity,

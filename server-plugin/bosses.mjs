@@ -1,4 +1,5 @@
 import {moveFishPopulation} from './stock.mjs';
+import {takePopulation} from './population-health.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
@@ -101,8 +102,11 @@ function drawSpecies(d,engine,species,lair,eventId){
     const id=`monster_instance_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${species}`).digest('hex').slice(0,16)}`;
     if(d.get('state','creatures',id)||d.get('state','created',id))throw Error('巢穴迁入个体编号重复');
     moveFishPopulation(d,engine,species,habitat.location,id,1,eventId);
-    p.count--;p.withdrawn++;d.set(path,record);
-    return instantiate(d,engine,{id,species,location:habitat.location,lair,eventId});
+    const health=takePopulation(p,1);p.withdrawn++;d.set(path,record);
+    const actor=instantiate(d,engine,{id,species,location:habitat.location,lair,eventId});
+    const compartment=health.I?'I':health.R?'R':null;
+    if(compartment)holdingSet(d,engine,['state','creatures',id,'populationHealth'],compartment,'bosses');
+    return actor;
 }
 export function advanceBosses(d,engine,day){
     if(!engine.rules.bossEcology)return;
