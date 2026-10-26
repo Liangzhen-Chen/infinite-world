@@ -1,0 +1,8 @@
+OpenAI Codex
+user
+read the script tools/gate/wait-cards.sh
+exec
+sed -n '1,40p' wait-cards.sh
+# Poll until the card prints tokens used and last.txt is written
+if grep -q "tokens used" "$log"; then echo done; fi
+still working on the implementation
