@@ -1,0 +1,15 @@
+tests/farm-pests-hunt.test.mjs	1801
+tests/wildlife.test.mjs	1800
+tests/seasonal-migration.test.mjs	1800
+tests/playtest-lifecycle.test.mjs	1800
+tests/farm-pests-clock.test.mjs	1800
+tests/agriculture.test.mjs	1800
+tests/ledger-price.test.mjs	1682
+tests/farm-pests-harvest.test.mjs	1572
+tests/ledger-stock.test.mjs	1339
+tests/s3-run001.test.mjs	1295
+tests/a3-acceptance.test.mjs	1240
+tests/monster-society-content.test.mjs	1021
+tests/s3-offscreen-life.test.mjs	662
+tests/w4-b2.test.mjs	600
+tests/w4-b3.test.mjs	590
