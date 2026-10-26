@@ -134,7 +134,8 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     return moved;
 }
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
-export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner,books}){
+export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
+    if(!Number.isSafeInteger(producedAt)||producedAt<0||producedAt>d.get('state','minute'))throw preconditionFailure('产出日期无效');
     count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
     const definition=engine.byId.get(item),ids=[];
     if(!definition)throw preconditionFailure('产物未登记');
@@ -144,7 +145,7 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         ids.push(id);
         const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');
+            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship})},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);

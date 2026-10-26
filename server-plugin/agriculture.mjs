@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {husbandryAction} from './husbandry.mjs';
 import {wearItem,useTool} from './items.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {BOOKED} from './stock.mjs';
@@ -376,6 +377,7 @@ function settleVillageTrade(d,engine,p,args,eventId){
  return{contract:contract.id,status:args.phase==='pickup'?'in-transit':'delivered',quantity:contract.quantity,paidCopper:args.phase==='pickup'?0:cost,prepaidCopper:args.phase==='pickup'?cost:0,taxCopper:args.phase==='pickup'?0:tax,note:'提粮记预付款和在途；本人携货沿路线到收货村验收入仓后确认货款和税，不另扣私人铜钱。',actionScope:{kind:'instant'}};
 }
 export function agricultureAction(d,args,eventId){
+    if(['husbandry_collect','husbandry_inspect'].includes(args.operation))return husbandryAction.call(this,d,args,eventId);
     const operation=args.operation??'inspect',id=args.settlement?this.resolve(args.settlement,'loc'):this.rules.agriculture?.settlements.find(p=>[p.settlement,p.counter,p.fieldLocation].includes(d.get('state','location')))?.settlement,p=profile(this,id);
     if(!p)throw preconditionFailure('这里尚未登记农田及粮仓规则');
     if(operation.startsWith('private_'))return privateFarmAction(d,this,p,args,eventId);

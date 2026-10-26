@@ -29,6 +29,11 @@ export function createCharacter(legacy,options={},seed){
         'calendar:active':{category:'calendar',calendar:'core:calendar_default',since:540,source:'character_creation'}
     };
     state.discoveries={[birthplace]:{minute:state.minute,source:'出生地'}};
+    // Authored livestock exists at campaign opening. Ledger/holdings opening
+    // reads these same records; a first daily tick must not create new herds.
+    for(const herd of this.world.ecology?.herds??[])state.records[`husbandry:${herd.id}`]={
+        ...structuredClone(herd),category:'husbandry',initial:herd.count,born:0,withdrawn:0,diseaseDeaths:0,produce:{},batches:[],lastDay:-1
+    };
     for(const npc of this.world.npcs)if(!state.npcs[npc.id])state.npcs[npc.id]=initialNpcState(npc,{newCharacter:true});
     for(const npc of Object.values(state.npcs)){npc.trust=0;npc.affection=0;npc.developments=[];npc.relationships={};}
     document.memories={};document.manualPins={};

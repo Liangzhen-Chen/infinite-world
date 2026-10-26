@@ -407,7 +407,12 @@ test('ancient wood harvest debits its subset and the same resource account',asyn
 });
 
 test('native mineral, herb and ordinary forest regeneration use the same closed anchors for 30 daily steps',async()=>{
- const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'s505-regeneration');
+ const w=structuredClone(world);
+ // D05 §5.5 / S5-06: live controls now compress K. This S5-05 case examines
+ // the published K60 closed growth anchor, not territory suppression. Declare
+ // that premise via the production slot; retain every 33-fish/3-birth assertion.
+ w.derived.modifiers.push({id:'regeneration-capacity-premise',pack:'core',target:'ecology:territoryCapacity',stage:'max',value:1,when:"subject == 'loc_hw_dock'"});
+ const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s505-regeneration');
  const herb='site:site_root_hollow',mineral='mineral:loc_wild_lq_adit:item_iron_ore',forest='forest:loc_hw_northwood';
  const water=world.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water'),ecology=`ecology:${water.id}`,perch='monster_black_fin_perch';
  const opening=setup(engine,initial,{location:'loc_capital',facts:[

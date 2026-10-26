@@ -12,11 +12,15 @@ export {revision};
 export const entries=bosses.map(b=>({...b,category:'boss'}));
 export const draftRoot=path.resolve('world/drafts/w4-b1');
 const budgetRoot=path.resolve('world/drafts/m4-object'),world=await loadWorld();
+// Approval binds the species source reviewed by B1, not S5-06's independent
+// ecology overlay. Source-field edits still invalidate the original fingerprint;
+// ecology/species.json has its own six-entry L2/L4 publication receipt.
+const authoredSpecies=JSON.parse(await fs.readFile(new URL('../world/meta/monsters.json',import.meta.url),'utf8'));
 export const reviewDraftFor=bossDraft;
 export function contextFor(e){
  const itemIds=[...new Set([...e.drops.map(d=>d.item),...(e.negotiation?.stock??[]).map(d=>d.item),...(e.negotiation?.accepts??[])])];
  // K1后物种补了机制性状标签tags；审核时的物种事实不含此字段，指纹只按审核时已有的字段核对，其余字段一改仍拒绝。
- const species=world.monsters.find(m=>m.id===e.monster),{tags:_traitTags,...reviewedSpecies}=species??{};
+ const species=authoredSpecies.find(m=>m.id===e.monster),{tags:_traitTags,...reviewedSpecies}=species??{};
  return {species:species&&reviewedSpecies,location:{id:e.lair,name:world.locations.find(l=>l.id===e.lair)?.name},
   // A3 nutrition is independent food-system data, absent from the original
   // review request. As with later species tags above, keep the reviewed item

@@ -9,6 +9,7 @@ import {adjustStanding} from './standing.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve as reserveAccount,moveStock,registerLegacyStock,booksOpen,accrueStock,bag,BOOKED,logisticStock} from './stock.mjs';
 import {derived} from './derived.mjs';
+import {takePopulation,addPopulation} from './population-health.mjs';
 import {recordsWhere} from './storage.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhysicallyDead} from './holdings.mjs';
@@ -66,7 +67,7 @@ registerAdvanceHook('prepareStockWrite',(d,engine,path)=>{
         const populations=d.peek('state','records',`ecology:${h.id}`)?.populations??{};
         return {location:h.location,initial:fishIds(engine).reduce((n,id)=>n+(populations[id]?.initial??0),0),
             born:fishIds(engine).reduce((n,id)=>n+(populations[id]?.born??0),0),
-            dead:fishIds(engine).reduce((n,id)=>n+(populations[id]?.starved??0)+(populations[id]?.predated??0),0)};
+            dead:fishIds(engine).reduce((n,id)=>n+(populations[id]?.starved??0)+(populations[id]?.predated??0)+(populations[id]?.diseaseDeaths??0),0)};
     });
     const before=totals();
     return()=>{
@@ -121,10 +122,12 @@ export function fish(d,args,id){
         const key=`fishing-effort:${habitat.id}:player`,effort=structuredClone(d.get(...path(key))??{category:'fishing_effort',habitat:habitat.id,actor:'player'});
         quantity=Math.min(p.count,accrueStock(effort,'fish',derived(this,d.document,'economy:yield',location,{holder:'player',base:1})));
         holdingSet(d,this,path(key),effort,'extraction',id);
+        const population=structuredClone(p),health=takePopulation(population,quantity);population.withdrawn+=quantity;
         if(quantity){instances.push(...produceItems(d,this,product,quantity,{eventId:id,books:{account:fishAccount(this,location),writer:'extraction',eventId:id}}));
-            for(const unit of instances)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),living:true,species:selected.id,caughtAt:habitat.id},'extraction',id);}
+            const compartments=['S','I','R'].flatMap(key=>Array(health[key]).fill(key));
+            for(const [index,unit] of instances.entries())holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),living:true,species:selected.id,caughtAt:habitat.id,...(compartments[index]!=='S'?{populationHealth:compartments[index]}:{})},'extraction',id);}
         // withdrawn is the existing ecological sink, also used for actual individuals.
-        holdingSet(d,null,[...path(`ecology:${habitat.id}`),'populations',selected.id],{...p,count:p.count-quantity,withdrawn:p.withdrawn+quantity},'extraction');
+        holdingSet(d,null,[...path(`ecology:${habitat.id}`),'populations',selected.id],population,'extraction');
         if(quantity)holdingSet(d,null,path(`fishing:${id}`),{category:'fishing',habitat:habitat.id,species:selected.id,item:product,quantity,minute:now,sourceEvent:id},'extraction');
         success=quantity>0;
     }
@@ -264,6 +267,8 @@ export function releaseFish(d,args,eventId){
   if(!actor||actor.owner||actor.mind?.awakened||actor.location!==location||actor.hp<=0||actor.status==='死亡')throw preconditionFailure('A real unowned living fish here is required');
   from=fishAccount(this,id);
  }
+ const compartment=(unit??actor).populationHealth??'S';
+ if(!['S','I','R'].includes(compartment))throw preconditionFailure('种群 S/I/R 个体状态无效');
  const limit=advanceHook('wildlifeCapacity')(this,d.get('state'),habitat,this.byId.get(species));
  const individuals=Object.entries(d.get('state','creatures')??{}).filter(([key,a])=>key!==id&&a.species===species&&a.location===location&&!a.owner&&a.hp>0).length;
  if(population.count+individuals>=limit)throw preconditionFailure('The fish habitat is full');
@@ -271,7 +276,9 @@ export function releaseFish(d,args,eventId){
  if(unit){this.itemDelta(d,'player',unit.item,-1,BOOKED);holdingSet(d,null,['state','itemInstances',id],{...d.get('state','itemInstances',id),status:'已放归',living:false,releasedAt:d.get('state','minute'),releasedInto:habitat.id},'extraction',eventId);}
  runLifecycleProtocol(d,this,{entity:id,kind:'gone',basis:'aggregated',origin:'aggregated',eventId:`${eventId}:aggregate`,location});
  if(!unit)holdingRemove(d,this,['state','creatures',id],'extraction',eventId);
- holdingSet(d,null,['state','records',`ecology:${habitat.id}`,'populations',species],{...population,count:population.count+1,immigrated:(population.immigrated??0)+1},'extraction',eventId);
+ const returned=structuredClone(population);
+ addPopulation(returned,{S:compartment==='S'?1:0,I:compartment==='I'?1:0,R:compartment==='R'?1:0});returned.immigrated=(returned.immigrated??0)+1;
+ holdingSet(d,null,['state','records',`ecology:${habitat.id}`,'populations',species],returned,'extraction',eventId);
  holdingSet(d,null,['state','records',`fish-return:${id}`],{category:'fish_return',target:id,species,habitat:habitat.id,sourceEvent:eventId},'extraction',eventId);
  return {released:true,target:id,species,quantity:1,actionScope:{kind:'release',instantaneous:true}};
 }

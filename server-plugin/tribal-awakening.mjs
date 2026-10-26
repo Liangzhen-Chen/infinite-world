@@ -16,6 +16,7 @@ import {createHash} from 'node:crypto';
 import {awakeningEligible,awakeningTotal,sapient} from './wildlife-awakening.mjs';
 import {applyEffects,assertEffect} from './effects.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
+import {takePopulation} from './population-health.mjs';
 import {adjustStanding,standing} from './standing.mjs';
 import {worldEvents,publishTransitionEvent} from './world-events.mjs';
 import {groupView} from './entity-view.mjs';
@@ -301,7 +302,13 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   for(const id of inhabitants)holdingSet(d,null,['state','creatures',id,'location'],skeleton.id,'tribal-awakening');
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
-  if(ecology){const moved=Math.min(ecology.count,joining);holdingSet(d,null,['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved},'tribal-awakening');}
+  if(ecology){
+   const moved=Math.min(ecology.count,joining),population=structuredClone(ecology),health=takePopulation(population,moved);population.withdrawn+=moved;
+   holdingSet(d,null,['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],population,'tribal-awakening');
+   // Census accounts represent unseen members; materialized residents retain
+   // their own health, exactly as before the change of residence.
+   if(health.I||health.R)d.set(['state','settlements',skeleton.id,'populationHealth'],{species:dyn.species,...health});
+  }
   // Always derive from the authored base, including a second autonomy in this
   // same advance; using the previous overlay would append its households twice.
   if(resourceAware)engine.tribalBaseWorld??=engine.remoteBase?.world??engine.world;
