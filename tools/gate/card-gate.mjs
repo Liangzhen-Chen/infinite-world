@@ -83,7 +83,7 @@ async function runJob(kind, files, extra = []) {
 // Immutable snapshot of the worktree (tracked + untracked, non-ignored) as a commit built through a throw-away index,
 // so edits made while the gate runs cannot change what is tested. Fixed author/date: same tree => same SHA => idempotent job. Failure makes the gate INCOMPLETE.
 function makeSnapshot() {
-  const index = path.join(os.tmpdir(), `gate-snap-idx-${process.pid}-${Date.now()}`);
+  const index = path.join(process.env.GATE_TMP || 'F:/dnd-tmp', `gate-snap-idx-${process.pid}-${Date.now()}`);
   const git = (...args) => execFileSync('git', ['-C', wt, ...args], { encoding: 'utf8', env: { ...process.env, GIT_INDEX_FILE: index, GIT_AUTHOR_NAME: 'gate', GIT_AUTHOR_EMAIL: 'gate@localhost', GIT_COMMITTER_NAME: 'gate', GIT_COMMITTER_EMAIL: 'gate@localhost', GIT_AUTHOR_DATE: '2000-01-01T00:00:00Z', GIT_COMMITTER_DATE: '2000-01-01T00:00:00Z' }, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   try {
     git('read-tree', 'HEAD'); git('add', '-A');
