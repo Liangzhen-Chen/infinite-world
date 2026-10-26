@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { main } from '../collect.mjs';
+import { collectOne, main, mergeMap } from '../collect.mjs';
+import { selectChanges } from '../select.mjs';
 import { runFile } from '../../runner.mjs';
 
 const base = fs.mkdtempSync(path.join(process.env.TEMP || os.tmpdir(), 'collect-host-'));
@@ -24,6 +25,11 @@ before(() => {
   fs.writeFileSync(path.join(repo, files[1]), `import fs from 'node:fs';\nimport test from 'node:test';\nimport { used } from '../lib.mjs';\n`
     + `test('t2', async () => { used(2); if (!fs.existsSync(new URL('../unhang', import.meta.url))) { setInterval(() => {}, 1000); await new Promise(() => {}); } });\n`);
   fs.writeFileSync(path.join(repo, files[3]), `process.exit(3);\n`);
+  fs.writeFileSync(path.join(repo, 'tests/t6.test.mjs'), `import test from 'node:test';
+import assert from 'node:assert/strict';
+import { used } from '../lib.mjs';
+test('t6', () => { used(6); assert.equal(1, 2); });
+`);
   git('init', '-q'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't'); git('add', '-A'); git('commit', '-q', '-m', 'fixtures');
 });
 after(() => fs.rmSync(base, { recursive: true, force: true }));
@@ -84,4 +90,26 @@ test('after an interruption, shards refill the map and only the missing file is 
   const tests = readMap().tests;
   for (const file of [files[0], files[1], files[2], files[4]]) assert.equal(tests[file].exitCode, 0, `${file} restored`);
   assert.equal(tests[files[3]].unavailable, true);
+});
+
+test('a FAIL record always carries a non-zero exitCode and select.mjs always selects it', async () => {
+  // Real failing test: coverage is kept but flagged partial.
+  const failMap = path.join(base, 'fail-map.json');
+  const saved = process.exitCode;
+  try { await main(['--root', repo, '--map', failMap, 'tests/t6.test.mjs', '--timeout-ms', '10000']); } finally { process.exitCode = saved; }
+  const record = JSON.parse(fs.readFileSync(failMap, 'utf8')).tests['tests/t6.test.mjs'];
+  assert.equal(record.status, 'FAIL');
+  assert.notEqual(record.exitCode, 0);
+  assert.equal(record.partialCoverage, true);
+  assert.ok(record.sources['lib.mjs'], 'coverage kept');
+  const map = JSON.parse(fs.readFileSync(failMap, 'utf8'));
+  assert.deepEqual(selectChanges(map, []).tests, ['tests/t6.test.mjs'], 'selected even with no change');
+
+  // A FAIL terminal whose process exit code was 0 must still be recorded non-zero.
+  const injected = await collectOne(repo, files[0], 'c0', { tempRoot: base, run: async (_root, _test, dir) => {
+    fs.writeFileSync(path.join(dir, 'c.json'), '{"result":[]}');
+    return { status: 'FAIL', exitCode: 0 };
+  } });
+  assert.notEqual(injected.exitCode, 0);
+  assert.equal(selectChanges(mergeMap(undefined, { [files[0]]: injected }, 'c0'), []).tests.includes(files[0]), true);
 });

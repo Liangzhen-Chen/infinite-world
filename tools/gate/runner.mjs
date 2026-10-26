@@ -12,12 +12,14 @@ const REPORTER = new URL('./reporter.mjs', import.meta.url).href;
 
 const sha = text => crypto.createHash('sha1').update(text).digest('hex').slice(0, 16);
 
-// Fingerprint = error codes + assertion location + actual/expected digests. The
-// message text is deliberately excluded (line drift / wording must not matter).
-export function failureFingerprint(err) {
-  if (!err) return sha('no-error');
-  return sha(JSON.stringify([err.code, err.causeCode, err.name, err.operator, err.loc,
-    err.actual === undefined ? null : sha(err.actual), err.expected === undefined ? null : sha(err.expected)]));
+// Fingerprint = case path + error codes + assertion file + line-free assertion anchor (source-text
+// hash + ordinal) + full stable actual/expected digests (computed by the reporter). Line/column
+// numbers and message text are deliberately excluded and the truncated display strings are never
+// used. Only if the reporter could not read the source does the numeric location act as fallback.
+export function failureFingerprint(err, casePath = []) {
+  if (!err) return sha(JSON.stringify([casePath, 'no-error']));
+  return sha(JSON.stringify([casePath, err.code, err.causeCode, err.name, err.operator, err.locFile ?? null,
+    err.anchor ?? err.loc ?? null, err.actualFp ?? null, err.expectedFp ?? null]));
 }
 
 export function parseEventLines(text) {
@@ -31,7 +33,7 @@ export function parseEventLines(text) {
 
 // Pure reduction of the reporter's event stream.
 export function analyzeEvents(events) {
-  const state = { hello: false, summary: null, started: 0, finished: 0, leaf: { pass: 0, fail: 0, skip: 0, todo: 0 },
+  const state = { hello: false, summary: null, started: 0, finished: 0, leaf: { pass: 0, fail: 0, skip: 0, todo: 0 }, fileLevel: 0,
     failures: [], lastEvent: null, unfinished: [] };
   const stack = [], open = new Map(), seen = new Map();
   const keyOf = e => `${e.n}:${e.line}:${e.col}:${e.name}`;
@@ -50,6 +52,7 @@ export function analyzeEvents(events) {
       const pathParts = [...stack.slice(0, e.n), e.name];
       const pathKey = pathParts.join(' > ');
       const duplicate = seen.get(pathKey) > 1 ? ` #${seen.get(pathKey)}` : '';
+      if (e.fileLevel) state.fileLevel++;
       const suite = e.kind === 'suite' || e.fileLevel === true;
       if (e.t === 'pass') {
         if (!suite) { state.leaf.pass++; if (e.skip) state.leaf.skip++; if (e.todo) state.leaf.todo++; }
@@ -57,7 +60,7 @@ export function analyzeEvents(events) {
         // A parent that only reports "N subtests failed" is not a new assertion failure.
         if (!suite) state.leaf.fail++;
         state.failures.push({ path: pathParts, id: pathKey + duplicate, kind: e.kind, line: e.line, code: e.err?.code ?? null,
-          failureType: e.err?.failureType ?? null, location: e.err?.loc ?? null, fingerprint: failureFingerprint(e.err),
+          failureType: e.err?.failureType ?? null, location: e.err?.loc ?? null, fingerprint: failureFingerprint(e.err, pathParts),
           detail: e.err?.detail ?? null });
       }
     }
@@ -85,6 +88,13 @@ export function classify(analysis, proc, options = {}) {
   if (!analysis.hello) return out('INCOMPLETE', 'reporter produced no events');
   if (!analysis.summary) return out('INCOMPLETE', 'event stream has no summary');
   if (analysis.failures.length || counts?.failed > 0) return out('FAIL', 'failing cases with exit 0');
+  // A damaged or self-contradicting stream can never be PASS.
+  if ((options.badLines ?? 0) > 0) return out('INCOMPLETE', `${options.badLines} unparsable event line(s)`);
+  if (!counts || ['tests', 'failed', 'passed', 'cancelled', 'skipped', 'todo'].some(key => !Number.isInteger(counts[key])))
+    return out('INCOMPLETE', 'summary has no usable counts');
+  if (counts.tests !== analysis.leaf.pass + analysis.leaf.fail + analysis.fileLevel
+    || counts.passed > analysis.leaf.pass + analysis.fileLevel)
+    return out('INCOMPLETE', `summary counts contradict case events (summary ${counts.tests}, events ${analysis.leaf.pass + analysis.leaf.fail + analysis.fileLevel})`);
   if (counts?.cancelled > 0) return out('INCOMPLETE', `${counts.cancelled} cancelled`);
   if (analysis.unfinished.length) return out('INCOMPLETE', `${analysis.unfinished.length} started case(s) never finished`);
   if (!allowZeroTests && analysis.leaf.pass + analysis.leaf.fail === 0) return out('INCOMPLETE', 'zero test cases');
@@ -140,6 +150,27 @@ export async function killTree(pid, force) {
   try { process.kill(force ? -pid : pid, force ? 'SIGKILL' : 'SIGTERM'); return true; } catch { try { process.kill(pid, force ? 'SIGKILL' : 'SIGTERM'); return true; } catch { return false; } }
 }
 
+// Orphans of a root that has already exited: processes whose parent PID is the root, created within
+// [notBefore, notAfter], plus their descendants. Windows only (POSIX has process groups instead).
+export async function listDescendants(rootPid, { notBefore, notAfter }) {
+  if (process.platform !== 'win32') return [];
+  const { stdout } = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+    "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,@{n='S';e={if ($_.CreationDate) {$_.CreationDate.ToUniversalTime().ToString('o')}}} | ConvertTo-Json -Compress"]);
+  let rows = [];
+  try { rows = [].concat(JSON.parse(stdout)); } catch { return []; }
+  const all = rows.filter(row => row?.S).map(row => ({ pid: row.ProcessId, parent: row.ParentProcessId, startTime: row.S, at: Date.parse(row.S) }));
+  const found = [], known = new Set([rootPid]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const row of all) {
+      if (known.has(row.pid) || !known.has(row.parent) || row.at < notBefore) continue;
+      if (row.parent === rootPid && row.at > notAfter) continue; // reused-PID lookalike, created after the root died
+      known.add(row.pid); found.push(row); grew = true;
+    }
+  }
+  return found.map(({ pid, parent, startTime }) => ({ pid, parent, startTime }));
+}
+
 class Tail {
   constructor(maxLines = 60, maxLine = 400) { this.lines = []; this.partial = ''; this.maxLines = maxLines; this.maxLine = maxLine; this.bytes = 0; }
   push(chunk) {
@@ -156,11 +187,11 @@ class Tail {
  * Run one test file in its own Node process. `deadline` is the hard timeout in ms
  * counted from process start. Returns a terminal result (never rejects).
  * Injectable for tests: spawn, killTree, processStartTime, sampleMemory,
- * heartbeatMs, graceMs, killWaitMs, resultFile, eventsFile, allowSkip, allowZeroTests, nodeArgs.
+ * descendantsOf, closeWaitMs, descendantScan (auto|always), heartbeatMs, graceMs, killWaitMs, resultFile, eventsFile, allowSkip, allowZeroTests, nodeArgs.
  */
 export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Date.now()}`, ownerSession = null, env = {}, onEvent = () => {},
-  heartbeatMs = 15000, graceMs = 10000, killWaitMs = 5000, resultFile, eventsFile, allowSkip = false, allowZeroTests = false, nodeArgs = [],
-  spawn = nodeSpawn, kill = killTree, startTimeOf = processStartTime, memoryOf = sampleMemory } = {}) {
+  heartbeatMs = 15000, graceMs = 10000, killWaitMs = 5000, closeWaitMs = 500, descendantScan = 'auto', resultFile, eventsFile, allowSkip = false, allowZeroTests = false, nodeArgs = [],
+  spawn = nodeSpawn, kill = killTree, descendantsOf = listDescendants, startTimeOf = processStartTime, memoryOf = sampleMemory } = {}) {
   const ownDir = eventsFile ? null : fs.mkdtempSync(path.join(os.tmpdir(), 'gate-run-'));
   const events = eventsFile || path.join(ownDir, 'events.jsonl');
   fs.mkdirSync(path.dirname(events), { recursive: true });
@@ -168,7 +199,7 @@ export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Dat
   const emit = event => { try { onEvent({ runId, file, ownerSession, ts: new Date().toISOString(), ...event }); } catch { /* sink errors never kill a run */ } };
   const startedAt = Date.now();
   const proc = { exitCode: null, signal: null, timedOut: false, spawnError: null };
-  const killInfo = { requested: false, forced: false, refused: false, failed: false };
+  const killInfo = { requested: false, forced: false, refused: false, failed: false, possiblyAlive: false };
   const tail = new Tail();
   let startTimeP = Promise.resolve(), child, pid = null, startTime = null, peak = null, offset = 0, carry = '', parsed = [], badLines = 0;
 
@@ -188,6 +219,26 @@ export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Dat
     } catch { /* file not there yet */ }
   };
 
+  let closeResolve = () => {}, closed = false;
+  const closedP = new Promise(resolve => { closeResolve = resolve; });
+  const descendantsCleaned = [];
+
+  // After the root exits, a descendant may still hold the pipes (and memory). Enumerate the
+  // orphans of THIS root (parent PID + creation window), verify identity, kill each tree by exact PID.
+  const cleanDescendants = async exitAt => {
+    let found = [];
+    try { found = await descendantsOf(pid, { notBefore: startedAt - 2000, notAfter: exitAt + 1000 }) || []; } catch { /* nothing to clean */ }
+    for (const item of found.filter(entry => entry.parent === pid)) {
+      let seenStart = null;
+      try { seenStart = await startTimeOf(item.pid); } catch { /* unverifiable */ }
+      const same = seenStart && item.startTime && Math.abs(Date.parse(seenStart) - Date.parse(item.startTime)) < 1000;
+      const entry = { pid: item.pid, killed: false, refused: !same };
+      if (same) { try { entry.killed = await kill(item.pid, true); } catch { /* reported as not killed */ } }
+      descendantsCleaned.push(entry);
+    }
+    if (descendantsCleaned.length) emit({ type: 'descendants-cleaned', pids: descendantsCleaned });
+  };
+
   const exited = new Promise(resolve => {
     try {
       child = spawn(process.execPath, [...nodeArgs, '--test', '--test-isolation=none',
@@ -199,25 +250,38 @@ export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Dat
     child.stdout?.on('data', chunk => tail.push(chunk));
     child.stderr?.on('data', chunk => tail.push(chunk));
     child.once('error', error => { proc.spawnError = error.message; resolve(); });
-    child.once('exit', (code, signal) => { proc.exitCode = code; proc.signal = signal; setTimeout(resolve, 1500).unref?.(); child.once('close', resolve); });
+    child.once('close', () => { closed = true; closeResolve(); });
+    child.once('exit', async (code, signal) => {
+      proc.exitCode = code; proc.signal = signal;
+      const exitAt = Date.now();
+      await Promise.race([closedP, new Promise(r => setTimeout(r, closeWaitMs))]);
+      // Pipes still open (or scan forced) means something outlived the root.
+      if (pid != null && (!closed || descendantScan === 'always')) await cleanDescendants(exitAt);
+      child.stdout?.destroy(); child.stderr?.destroy();
+      resolve();
+    });
   });
   let exitedFlag = false;
   exited.then(() => { exitedFlag = true; });
 
   if (pid != null) {
-    // Registered identity: PID + creation time, checked again before any forced kill.
+    // Registered identity: PID + creation time, verified before every kill (polite or forced).
     emit({ type: 'start', pid, cwd, deadlineMs: deadline, deadlineAt: new Date(startedAt + deadline).toISOString() });
     startTimeP = Promise.resolve(startTimeOf(pid)).then(value => { startTime = value; }, () => {});
   }
 
-  const stillOurs = async () => {
-    if (!pid || exitedFlag || child.exitCode !== null || child.signalCode !== null) return false;
+  const verifyIdentity = async () => {
+    if (!pid || child.exitCode !== null || child.signalCode !== null) return 'gone';
     await startTimeP;
-    if (startTime) {
-      const now = await startTimeOf(pid);
-      if (now && now !== startTime) { killInfo.refused = true; return false; }
-    }
-    return true;
+    if (!startTime) return 'unverifiable';
+    let now = null;
+    try { now = await startTimeOf(pid); } catch { /* treated as unverifiable below */ }
+    if (child.exitCode !== null || child.signalCode !== null) return 'gone';
+    return now === startTime ? 'ok' : (now ? 'mismatch' : 'unverifiable');
+  };
+  const refuse = reason => {
+    killInfo.refused = true; killInfo.refusedReason = reason;
+    emit({ type: 'kill-refused', pid, reason, elapsedMs: Date.now() - startedAt });
   };
 
   const sample = async () => {
@@ -231,34 +295,46 @@ export async function runFile({ cwd, file, deadline = 600000, runId = `run-${Dat
       deadlineAt: new Date(startedAt + deadline).toISOString(), memBytes: peak, outputBytes: tail.bytes });
   }, heartbeatMs);
 
+  let exitedForce = () => {};
+  const forced = new Promise(resolve => { exitedForce = resolve; });
+  const giveUp = () => { killInfo.possiblyAlive = true; exitedForce(); };
   const deadlineTimer = pid != null ? setTimeout(async () => {
     if (exitedFlag) return;
-    proc.timedOut = true; killInfo.requested = true;
+    proc.timedOut = true;
+    const first = await verifyIdentity();
+    if (first === 'gone') return;
+    if (first !== 'ok') {
+      // Cannot prove this PID is still our child: kill nothing, report, and stop waiting.
+      refuse(first);
+      await Promise.race([exited, new Promise(resolve => setTimeout(resolve, graceMs))]);
+      if (!exitedFlag) giveUp();
+      return;
+    }
+    killInfo.requested = true;
     emit({ type: 'kill-request', pid, elapsedMs: Date.now() - startedAt });
     try { await kill(pid, false); } catch { /* best effort */ }
     await Promise.race([exited, new Promise(resolve => setTimeout(resolve, graceMs))]);
     if (exitedFlag) return;
-    if (await stillOurs()) {
+    const second = await verifyIdentity();
+    if (second === 'ok') {
       killInfo.forced = true;
       emit({ type: 'kill-force', pid, elapsedMs: Date.now() - startedAt });
       try { killInfo.failed = !(await kill(pid, true)); } catch { killInfo.failed = true; }
-    }
+    } else if (second !== 'gone') refuse(second);
     await Promise.race([exited, new Promise(resolve => setTimeout(resolve, killWaitMs))]);
-    if (!exitedFlag) { killInfo.failed = true; exitedForce(); }
+    if (!exitedFlag) { killInfo.failed = true; giveUp(); }
   }, deadline) : null;
-  let exitedForce = () => {};
-  const forced = new Promise(resolve => { exitedForce = resolve; });
 
   await Promise.race([exited, forced]);
   clearTimeout(first); clearInterval(beat); clearTimeout(deadlineTimer);
   readEvents();
   if (carry.trim()) { const { events: last } = parseEventLines(carry); parsed.push(...last); carry = ''; }
   const analysis = analyzeEvents(parsed);
-  const verdict = classify(analysis, proc, { allowSkip, allowZeroTests });
+  const verdict = classify(analysis, proc, { allowSkip, allowZeroTests, badLines });
   const endedAt = Date.now();
   const result = { runId, ownerSession, file, status: verdict.status, reason: verdict.reason, exitCode: proc.exitCode, signal: proc.signal,
     timedOut: proc.timedOut, pid, startedAt: new Date(startedAt).toISOString(), endedAt: new Date(endedAt).toISOString(),
-    durationMs: endedAt - startedAt, deadlineMs: deadline, peakMemBytes: peak, killed: killInfo,
+    durationMs: endedAt - startedAt, deadlineMs: deadline, peakMemBytes: peak, killed: killInfo, descendantsCleaned,
     streamComplete: !!analysis.summary && !analysis.unfinished.length, badEventLines: badLines,
     counts: analysis.summary?.counts ?? null, failures: analysis.failures, lastEvent: analysis.lastEvent,
     specTail: tail.snapshot() };

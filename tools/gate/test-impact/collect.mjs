@@ -110,11 +110,14 @@ export async function collectOne(root, test, commit, { run = runTest, tempRoot =
     const terminal = outcome !== null && typeof outcome === 'object' ? outcome : { exitCode: outcome };
     if (terminal.status && !['PASS', 'FAIL'].includes(terminal.status))
       throw new CollectionUnavailable(terminal, `${terminal.status}: ${terminal.reason ?? 'no reason'}`);
+    // Any non-PASS terminal (FAIL included) is stored with a non-zero exitCode so select.mjs always
+    // picks it; a failing test may have stopped early, so its coverage can never exclude anything.
+    const nonPass = !!terminal.status && terminal.status !== 'PASS';
     const documents = fs.readdirSync(directory).filter(file => file.endsWith('.json'))
       .map(file => JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8')));
     if (!documents.length) throw new Error(`No V8 coverage produced: ${test}`);
-    return { commit, durationMs: Math.round(performance.now() - started), exitCode: terminal.exitCode,
-      ...(terminal.status ? { status: terminal.status } : {}), sources: parseCoverage(root, documents) };
+    return { commit, durationMs: Math.round(performance.now() - started), exitCode: nonPass ? (terminal.exitCode || -1) : terminal.exitCode,
+      ...(terminal.status ? { status: terminal.status } : {}), ...(nonPass ? { partialCoverage: true } : {}), sources: parseCoverage(root, documents) };
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 }
 

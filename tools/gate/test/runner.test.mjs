@@ -8,13 +8,15 @@ import path from 'node:path';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { analyzeEvents, classify, failureFingerprint, parseEventLines, runFile } from '../runner.mjs';
+import { assertionAnchor, stableSerialize } from '../reporter.mjs';
 
 const hello = { t: 'hello', v: 1 };
 const counts = (o = {}) => ({ tests: 1, failed: 0, passed: 1, cancelled: 0, skipped: 0, todo: 0, ...o });
 const summary = c => ({ t: 'summary', success: true, counts: counts(c) });
 const start = (name, n = 0, line = 1) => ({ t: 'start', n, name, line, col: 1 });
 const pass = (name, n = 0, line = 1, extra = {}) => ({ t: 'pass', n, name, line, col: 1, kind: 'test', ...extra });
-const fail = (name, n = 0, line = 1, err = { code: 'ERR_TEST_FAILURE', causeCode: 'ERR_ASSERTION', loc: 'a.test.mjs:3:5', actual: '1', expected: '2' }, kind = 'test') =>
+const ERR = { code: 'ERR_TEST_FAILURE', causeCode: 'ERR_ASSERTION', operator: 'strictEqual', loc: 'a.test.mjs:3:5', locFile: 'a.test.mjs', anchor: 'abc123#0', actual: '1', expected: '2', actualFp: 'fa', expectedFp: 'fe' };
+const fail = (name, n = 0, line = 1, err = ERR, kind = 'test') =>
   ({ t: 'fail', n, name, line, col: 1, kind, err });
 const okEvents = [hello, start('a'), pass('a'), summary()];
 const proc = (o = {}) => ({ exitCode: 0, signal: null, timedOut: false, spawnError: null, ...o });
@@ -64,7 +66,7 @@ test('failures carry full suite/case path; failed parent suites are not extra fa
   assert.equal(analysis.failures.length, 1);
   assert.deepEqual(analysis.failures[0].path, ['S', 'inner', 'bad']);
   assert.equal(analysis.failures[0].location, 'a.test.mjs:3:5');
-  assert.equal(analysis.failures[0].fingerprint, failureFingerprint({ code: 'ERR_TEST_FAILURE', causeCode: 'ERR_ASSERTION', loc: 'a.test.mjs:3:5', actual: '1', expected: '2' }));
+  assert.equal(analysis.failures[0].fingerprint, failureFingerprint(ERR, ['S', 'inner', 'bad']));
 });
 
 test('duplicate case names get a sequence number', () => {
@@ -72,13 +74,57 @@ test('duplicate case names get a sequence number', () => {
   assert.deepEqual(analysis.failures.map(f => f.id), ['S > same', 'S > same #2']);
 });
 
-test('fingerprint depends on code, location and actual/expected, not on message wording', () => {
-  const base = { code: 'ERR_TEST_FAILURE', causeCode: 'ERR_ASSERTION', operator: 'strictEqual', loc: 'a.test.mjs:3:5', actual: '1', expected: '2' };
-  assert.equal(failureFingerprint(base), failureFingerprint({ ...base, detail: 'different message text' }));
-  assert.notEqual(failureFingerprint(base), failureFingerprint({ ...base, actual: '9' }));
-  assert.notEqual(failureFingerprint(base), failureFingerprint({ ...base, expected: '9' }));
-  assert.notEqual(failureFingerprint(base), failureFingerprint({ ...base, loc: 'a.test.mjs:4:5' }));
-  assert.notEqual(failureFingerprint(base), failureFingerprint({ ...base, causeCode: 'ERR_OTHER' }));
+test('fingerprint: code, case path, anchor and full actual/expected digests matter; line numbers, message and display text do not', () => {
+  const path1 = ['S', 'case'];
+  const base = failureFingerprint(ERR, path1);
+  assert.equal(base, failureFingerprint({ ...ERR, loc: 'a.test.mjs:40:9', detail: 'other wording', actual: 'shown differently' }, path1), 'line drift / display text ignored');
+  assert.notEqual(base, failureFingerprint({ ...ERR, actualFp: 'other' }, path1));
+  assert.notEqual(base, failureFingerprint({ ...ERR, expectedFp: 'other' }, path1));
+  assert.notEqual(base, failureFingerprint({ ...ERR, anchor: 'zzz#0' }, path1), 'different assertion in the same case');
+  assert.notEqual(base, failureFingerprint({ ...ERR, anchor: 'abc123#1' }, path1), 'same text, later occurrence');
+  assert.notEqual(base, failureFingerprint({ ...ERR, locFile: 'b.test.mjs' }, path1));
+  assert.notEqual(base, failureFingerprint({ ...ERR, causeCode: 'ERR_OTHER' }, path1));
+  assert.notEqual(base, failureFingerprint(ERR, ['S', 'another case']));
+});
+
+test('stableSerialize tells deep, differently-shaped values apart and ignores key order', () => {
+  const deep = leaf => ({ a: { b: { c: { d: { e: { f: leaf } } } } } });
+  assert.notEqual(stableSerialize(deep(1)), stableSerialize(deep(2)));
+  assert.equal(stableSerialize({ x: 1, y: [1, 2] }), stableSerialize({ y: [1, 2], x: 1 }));
+  assert.notEqual(stableSerialize({ x: undefined }), stableSerialize({}));
+  assert.notEqual(stableSerialize(undefined), stableSerialize(null));
+  assert.notEqual(stableSerialize(10n), stableSerialize(10));
+  assert.notEqual(stableSerialize(new Map([[1, 'a']])), stableSerialize(new Map([[1, 'b']])));
+  assert.equal(stableSerialize(new Set([1, 2])), stableSerialize(new Set([2, 1])));
+  assert.notEqual(stableSerialize(new Set([1])), stableSerialize([1]));
+  assert.notEqual(stableSerialize(Number.NaN), stableSerialize(null));
+  const cyclic = { name: 'c' }; cyclic.self = cyclic;
+  assert.equal(typeof stableSerialize(cyclic), 'string');
+  const long = 'x'.repeat(5000);
+  assert.notEqual(stableSerialize({ v: long + 'a' }), stableSerialize({ v: long + 'b' }), 'no truncation');
+});
+
+test('assertion anchor survives moving the assertion, but separates different and repeated assertions', () => {
+  const body = ['import a from "x";', 'test("same", () => {', '  assert.equal(compute(1), 2);', '});', 'test("same", () => {', '  assert.equal(compute(2), 3);', '  assert.equal(compute(1), 2);', '});'];
+  const anchorAt = (lines, line) => assertionAnchor({ file: 'f', line }, () => lines.join('\n'));
+  const shifted = ['// new header comment', '', ...body];
+  assert.equal(anchorAt(body, 3), anchorAt(shifted, 5), 'two lines lower, same anchor');
+  assert.notEqual(anchorAt(body, 3), anchorAt(body, 6), 'different assertion text');
+  assert.notEqual(anchorAt(body, 3), anchorAt(body, 7), 'identical text, later occurrence');
+  assert.equal(anchorAt(body, 99), null);
+});
+
+test('a damaged or contradictory event stream is INCOMPLETE, never PASS', () => {
+  const analysis = analyzeEvents(okEvents);
+  assert.equal(classify(analysis, proc(), { badLines: 1 }).status, 'INCOMPLETE');
+  assert.equal(classify(analysis, proc(), { badLines: 0 }).status, 'PASS');
+  const noCounts = analyzeEvents([hello, start('a'), pass('a'), { t: 'summary', success: true }]);
+  assert.equal(classify(noCounts, proc()).status, 'INCOMPLETE');
+  const partialCounts = analyzeEvents([hello, start('a'), pass('a'), { t: 'summary', success: true, counts: { tests: 1 } }]);
+  assert.equal(classify(partialCounts, proc()).status, 'INCOMPLETE');
+  assert.equal(verdict([hello, start('a'), pass('a'), summary({ tests: 5, passed: 5 })]), 'INCOMPLETE', 'summary claims more cases than were reported');
+  assert.equal(verdict([hello, start('a'), pass('a'), summary({ tests: 1, passed: 3 })]), 'INCOMPLETE', 'summary claims more passes than cases');
+  assert.equal(verdict([hello, start('a'), pass('a'), start('b'), pass('b'), summary({ tests: 1, passed: 1 })]), 'INCOMPLETE', 'fewer cases in summary than events');
 });
 
 test('parseEventLines keeps good JSONL lines and counts garbage', () => {
@@ -161,15 +207,73 @@ test('runFile: a process that obeys the polite request is not force-killed', asy
   assert.deepEqual(kills, [false]);
 });
 
-test('runFile: force kill is refused when the PID creation time no longer matches', async () => {
-  const kills = [];
+async function timeoutRun({ startTimes, ...extra }) {
+  const kills = [], seen = [];
   const { spawn } = fakeSpawn(({ events }) => write(events, [hello, start('a')]));
-  let calls = 0;
-  const result = await runFile({ cwd: '.', file: 'a.test.mjs', deadline: 40, graceMs: 40, killWaitMs: 40, spawn,
-    startTimeOf: async () => `T${calls++}`, memoryOf: async () => null, kill: async (pid, force) => { kills.push(force); return true; } });
-  assert.deepEqual(kills, [false], 'only the polite request, never a forced kill of a reused PID');
-  assert.equal(result.killed.refused, true);
+  let n = 0;
+  const result = await runFile({ cwd: '.', file: 'a.test.mjs', deadline: 40, graceMs: 40, killWaitMs: 40, spawn, memoryOf: async () => null,
+    startTimeOf: async () => startTimes(n++), kill: async (pid, force) => { kills.push([pid, force]); return true; }, onEvent: e => seen.push(e.type), ...extra });
+  return { kills, seen, result };
+}
+
+test('runFile: a PID whose creation time changed gets no kill at all, polite or forced', async () => {
+  const { kills, seen, result } = await timeoutRun({ startTimes: n => `T${n}` });
+  assert.deepEqual(kills, []);
   assert.equal(result.status, 'TIMEOUT');
+  assert.equal(result.killed.refused, true);
+  assert.equal(result.killed.refusedReason, 'mismatch');
+  assert.equal(result.killed.possiblyAlive, true, 'result tells the caller the process may still be running');
+  assert.ok(seen.includes('kill-refused'));
+});
+
+test('runFile: an unverifiable identity (no creation time) is never killed', async () => {
+  const { kills, seen, result } = await timeoutRun({ startTimes: () => null });
+  assert.deepEqual(kills, []);
+  assert.equal(result.killed.refusedReason, 'unverifiable');
+  assert.equal(result.killed.possiblyAlive, true);
+  assert.equal(result.killed.requested, false);
+  assert.ok(seen.includes('kill-refused'));
+});
+
+test('runFile: identity is re-checked before the forced kill; a changed PID gets only the polite request', async () => {
+  const { kills, result } = await timeoutRun({ startTimes: n => (n < 2 ? 'T0' : 'T9') });
+  assert.deepEqual(kills, [[424242, false]]);
+  assert.equal(result.killed.refused, true);
+  assert.equal(result.killed.forced, false);
+  assert.equal(result.killed.possiblyAlive, true);
+});
+
+test('runFile: descendants left behind by an exited root are killed by exact PID after identity check, and pipes are destroyed', async () => {
+  const kills = [];
+  let child;
+  const { spawn } = fakeSpawn(({ child: c, events }) => { child = c; write(events, okEvents); c.emit('exit', 0, null); /* no 'close': a grandchild holds the pipes */ });
+  const result = await runFile({ cwd: '.', file: 'a.test.mjs', closeWaitMs: 30, spawn, memoryOf: async () => null,
+    startTimeOf: async pid => (pid === 777 ? '2026-01-01T00:00:00.500Z' : 'T0'),
+    descendantsOf: async root => [{ pid: 777, parent: root, startTime: '2026-01-01T00:00:00.500Z' }, { pid: 778, parent: 777, startTime: '2026-01-01T00:00:01.000Z' }],
+    kill: async (pid, force) => { kills.push([pid, force]); return true; } });
+  assert.equal(result.status, 'PASS');
+  assert.deepEqual(kills, [[777, true]], 'only the orphan root is killed (with its tree); never anything unverified');
+  assert.deepEqual(result.descendantsCleaned, [{ pid: 777, killed: true, refused: false }]);
+  assert.equal(child.stdout.destroyed, true);
+  assert.equal(child.stderr.destroyed, true);
+});
+
+test('runFile: a descendant whose creation time does not match is refused, not killed', async () => {
+  const kills = [];
+  const { spawn } = fakeSpawn(({ child, events }) => { write(events, okEvents); child.emit('exit', 0, null); });
+  const result = await runFile({ cwd: '.', file: 'a.test.mjs', closeWaitMs: 30, spawn, memoryOf: async () => null,
+    startTimeOf: async pid => (pid === 777 ? '2030-01-01T00:00:00.000Z' : 'T0'),
+    descendantsOf: async root => [{ pid: 777, parent: root, startTime: '2026-01-01T00:00:00.000Z' }],
+    kill: async (pid, force) => { kills.push([pid, force]); return true; } });
+  assert.deepEqual(kills, []);
+  assert.deepEqual(result.descendantsCleaned, [{ pid: 777, killed: false, refused: true }]);
+});
+
+test('runFile: a bad line in the event file prevents PASS', async () => {
+  const { spawn } = fakeSpawn(({ child, events }) => { write(events, okEvents); fs.appendFileSync(events, '{broken json}\n'); child.finish(0); });
+  const result = await runFile({ cwd: '.', file: 'a.test.mjs', spawn, ...quick });
+  assert.equal(result.status, 'INCOMPLETE');
+  assert.equal(result.badEventLines, 1);
 });
 
 test('runFile: heartbeats carry file, elapsed time, last case event, deadline and peak memory', async () => {

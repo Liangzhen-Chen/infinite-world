@@ -157,3 +157,47 @@ test('watchdog: live heartbeats and a stop file exit 0 without alerts', async ()
   assert.equal((await runWatchdog(['-HeartbeatFile', path.join(scratch, 'missing'), '-AlertsFile', alerts, '-RunId', 'live', '-StopFile', stop])).code, 0);
   assert.equal(fs.existsSync(alerts), false);
 });
+
+// ---- descendants, identity, fingerprints (review round 1) -----------------------------------
+
+test('a root that exits 0 but leaves a grandchild on its pipes: bounded return, grandchild killed, bystander untouched', async () => {
+  const pidFile = path.join(scratch, 'leak.pid');
+  const survivor = spawn(process.execPath, [path.join(fixtures, 'survivor.mjs')], { stdio: 'ignore' });
+  let grandchild;
+  try {
+    const started = Date.now();
+    const result = await go('leak-grandchild', { env: { GATE_FX_PIDFILE: pidFile }, deadline: 20000 });
+    assert.ok(Date.now() - started < 15000, 'returned long before the deadline');
+    assert.equal(result.status, 'PASS');
+    grandchild = Number(fs.readFileSync(pidFile, 'utf8'));
+    assert.ok(result.descendantsCleaned.some(item => item.pid === grandchild && item.killed === true), JSON.stringify(result.descendantsCleaned));
+    await new Promise(resolve => setTimeout(resolve, 500));
+    assert.equal(alive(grandchild), false, 'orphan grandchild gone');
+    assert.equal(alive(survivor.pid), true, 'unrelated node process untouched');
+  } finally { survivor.kill(); if (grandchild && alive(grandchild)) process.kill(grandchild); }
+});
+
+const writeCase = (name, text) => { const dir = path.join(scratch, 'fp'); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, name), text); return dir; };
+const failing = async (name, text) => {
+  const dir = writeCase(name, text);
+  const result = await runFile({ cwd: dir, file: name, deadline: 20000 });
+  assert.equal(result.status, 'FAIL', JSON.stringify(result.specTail.slice(-8)));
+  return result.failures;
+};
+const deepCase = leaf => `import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('deep', () => {\n  assert.deepEqual({ a: { b: { c: { d: { e: { f: ${leaf} } } } } } }, { a: { b: { c: { d: { e: { f: 0 } } } } } });\n});\n`;
+
+test('fingerprints: deep objects differing below the display depth differ; moving the assertion does not change them', async () => {
+  const [one] = await failing('deep1.test.mjs', deepCase(1));
+  const [two] = await failing('deep2.test.mjs', deepCase(2));
+  assert.notEqual(one.fingerprint, two.fingerprint, 'f:1 vs f:2 are invisible to a depth-2 display but must differ');
+  const shifted = await failing('deep1.test.mjs', `// a new comment line\n\n${deepCase(1)}`);
+  assert.equal(shifted[0].fingerprint, one.fingerprint, 'same assertion moved down keeps its fingerprint');
+  assert.notEqual(shifted[0].location, one.location, 'human-readable location still shows the new line');
+});
+
+test('fingerprints: same-named cases with different assertions differ', async () => {
+  const failures = await failing('same-name.test.mjs', `import test from 'node:test';\nimport assert from 'node:assert/strict';\n`
+    + `test('same', () => { assert.equal(1, 2); });\ntest('same', () => { assert.equal(3, 4); });\n`);
+  assert.equal(failures.length, 2);
+  assert.notEqual(failures[0].fingerprint, failures[1].fingerprint);
+});
