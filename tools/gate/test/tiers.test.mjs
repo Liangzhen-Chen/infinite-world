@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadThresholdMs, medianPassMs, splitTiers, slowFiles, DEFAULT_THRESHOLD_MS } from '../tiers.mjs';
+import { loadStaticSlow, loadThresholdMs, medianPassMs, splitTiers, slowFiles, DEFAULT_THRESHOLD_MS } from '../tiers.mjs';
 import { nextMarker } from '../slow-sweep.mjs';
 
 const runs = (...ms) => ms.map(durationMs => ({ durationMs, status: 'PASS' }));
@@ -59,6 +59,17 @@ test('shipped policy/tiers.json parses to 60s', () => {
 test('slowFiles lists the sweep universe and honours the exists filter', () => {
   assert.deepEqual(slowFiles(history, 60000), ['tests/edge.test.mjs', 'tests/slow.test.mjs']);
   assert.deepEqual(slowFiles(history, 60000, f => f !== 'tests/edge.test.mjs'), ['tests/slow.test.mjs']);
+});
+
+test('static slow list is unioned with the history-derived tier in both gate and sweep', () => {
+  const staticSlow = ['tests/fast.test.mjs', 'tests/listed-no-history.test.mjs'];
+  const { fast, slow } = splitTiers({ tests: tests.concat('tests/listed-no-history.test.mjs'), history, thresholdMs: 60000, staticSlow });
+  assert.ok(slow.includes('tests/fast.test.mjs') && slow.includes('tests/listed-no-history.test.mjs') && slow.includes('tests/slow.test.mjs'));
+  assert.ok(!fast.includes('tests/fast.test.mjs'));
+  assert.deepEqual(splitTiers({ tests, required: ['tests/fast.test.mjs'], history, staticSlow }).fast.includes('tests/fast.test.mjs'), true);
+  assert.deepEqual(slowFiles(history, 60000, () => true, staticSlow), ['tests/edge.test.mjs', 'tests/fast.test.mjs', 'tests/listed-no-history.test.mjs', 'tests/slow.test.mjs']);
+  assert.ok(loadStaticSlow(new URL('../slow-tests.tsv', import.meta.url)).length >= 15);
+  assert.deepEqual(loadStaticSlow('/nonexistent/x.tsv'), []);
 });
 
 test('sweep marker: lastGood moves only on PASS', () => {

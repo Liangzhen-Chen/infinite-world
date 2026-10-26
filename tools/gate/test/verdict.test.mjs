@@ -5,7 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from '../verdict.mjs';
-import { loadThresholdMs, splitTiers } from '../tiers.mjs';
+import { loadStaticSlow, loadThresholdMs, splitTiers } from '../tiers.mjs';
 
 const now = '2026-10-26T12:00:00.000Z';
 const failure = (name = 'A', fingerprint = 'assertion-1', suite = 'suite') => ({
@@ -269,7 +269,7 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
     return `run-${submissions.length - 1}\n`;
   };
   await vm.runInNewContext(`(async () => { ${source}\n })()`, { fs: fakeFs, path, fileURLToPath,
-    judge, isDeferredOnly, loadThresholdMs, splitTiers, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
+    judge, isDeferredOnly, loadStaticSlow, loadThresholdMs, splitTiers, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
   return { gate: JSON.parse(writes.get(path.join('/sessions', 'fixture.gate.json'))),
     md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, submissions, baseArgs, submittedFiles };
 }

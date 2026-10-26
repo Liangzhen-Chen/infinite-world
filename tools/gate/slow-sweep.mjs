@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadThresholdMs, slowFiles } from './tiers.mjs';
+import { loadStaticSlow, loadThresholdMs, slowFiles } from './tiers.mjs';
 
 const T = path.dirname(fileURLToPath(import.meta.url));
 const readJson = file => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; } };
@@ -24,7 +24,7 @@ export async function sweep({ worktree, since, root = process.env.GATE_ROOT || '
   const git = (...args) => execFileSync('git', args, { cwd: worktree, encoding: 'utf8' }).trim();
   const sha = git('rev-parse', '--verify', 'HEAD^{commit}');
   const history = readJson(path.join(root, 'history.json')) || {};
-  const files = slowFiles(history, loadThresholdMs(path.join(T, 'policy/tiers.json')), f => fs.existsSync(path.join(worktree, f)));
+  const files = slowFiles(history, loadThresholdMs(path.join(T, 'policy/tiers.json')), f => fs.existsSync(path.join(worktree, f)), loadStaticSlow(path.join(T, 'slow-tests.tsv')));
   if (!files.length) throw Error('no slow-tier files found (history empty or all below threshold)');
   fs.mkdirSync(sessions, { recursive: true });
   const listFile = path.join(sessions, 'slow-sweep.files.txt');

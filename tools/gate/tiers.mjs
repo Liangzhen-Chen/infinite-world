@@ -18,16 +18,22 @@ export function medianPassMs(history, file) {
   return samples.length % 2 ? samples[mid] : (samples[mid - 1] + samples[mid]) / 2;
 }
 
-export const isSlow = (history, file, thresholdMs = DEFAULT_THRESHOLD_MS) => (medianPassMs(history, file) ?? -1) >= thresholdMs;
+// Static list (slow-tests.tsv, first column = file) that is always slow; unioned with the history-derived tier.
+export function loadStaticSlow(file) {
+  try { return fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean).map(l => l.split('\t')[0]); } catch { return []; }
+}
+
+export const isSlow = (history, file, thresholdMs = DEFAULT_THRESHOLD_MS, staticSlow = []) =>
+  staticSlow.includes(file) || (medianPassMs(history, file) ?? -1) >= thresholdMs;
 
 // required: files that always run (changed tests, CORE) whatever their history says.
-export function splitTiers({ tests, required = [], history, thresholdMs = DEFAULT_THRESHOLD_MS }) {
+export function splitTiers({ tests, required = [], history, thresholdMs = DEFAULT_THRESHOLD_MS, staticSlow = [] }) {
   const must = new Set(required), fast = [], slow = [];
-  for (const file of tests) (must.has(file) || !isSlow(history, file, thresholdMs) ? fast : slow).push(file);
+  for (const file of tests) (must.has(file) || !isSlow(history, file, thresholdMs, staticSlow) ? fast : slow).push(file);
   return { fast, slow };
 }
 
 // Every history file at/over the threshold (the slow sweep's universe), filtered by `exists`.
-export function slowFiles(history, thresholdMs = DEFAULT_THRESHOLD_MS, exists = () => true) {
-  return Object.keys(history?.runs || {}).filter(f => isSlow(history, f, thresholdMs) && exists(f)).sort();
+export function slowFiles(history, thresholdMs = DEFAULT_THRESHOLD_MS, exists = () => true, staticSlow = []) {
+  return [...new Set([...Object.keys(history?.runs || {}), ...staticSlow])].filter(f => isSlow(history, f, thresholdMs, staticSlow) && exists(f)).sort();
 }

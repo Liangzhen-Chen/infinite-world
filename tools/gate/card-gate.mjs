@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { judge, isDeferredOnly } from './verdict.mjs';
-import { loadThresholdMs, splitTiers } from './tiers.mjs';
+import { loadStaticSlow, loadThresholdMs, splitTiers } from './tiers.mjs';
 const [wt, base = 'master', name = 'card'] = process.argv.slice(2);
 const T = path.dirname(fileURLToPath(import.meta.url));
 const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.env.GATE_ROOT || 'F:/dnd/logs/gate';
@@ -26,7 +26,7 @@ const required = new Set(selection.requiredFiles);
 const thresholdMs = loadThresholdMs(path.join(T, 'policy/tiers.json'));
 const readHistory = () => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'history.json'), 'utf8')); } catch { return {}; } };
 // Fast tier: median PASS < threshold, no history, or required. The slow tier is left to slow-sweep.mjs.
-const { fast, slow: skipped } = splitTiers({ tests: affected, required: [...required], history: readHistory(), thresholdMs });
+const { fast, slow: skipped } = splitTiers({ tests: affected, required: [...required], history: readHistory(), thresholdMs, staticSlow: loadStaticSlow(path.join(T, 'slow-tests.tsv')) });
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const heartbeatAge = () => { try { return Date.now() - fs.statSync(path.join(ROOT, 'scheduler.heartbeat')).mtimeMs; } catch { return Infinity; } };
