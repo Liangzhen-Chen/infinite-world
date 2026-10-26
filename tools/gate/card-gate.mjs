@@ -2,13 +2,13 @@
 // Card hand-in gate. Selects the affected fast-tier tests, then only SUBMITS requests to the
 // single machine-wide scheduler (submit.ps1) and waits for each run's result.json; it never
 // starts a test pool itself. A failing file is re-run on <base> as a separate "baseline" job
-// (own git worktree at the base SHA, made by the scheduler) and compared per failing case.
-// Writes F:/dnd/logs/sessions/<name>.gate.md and .gate.tsv (unchanged output files).
-// Judgement aggregation below is deliberately the old per-case comparison; P1 replaces it.
+// (own git worktree at the fixed base SHA, made by the scheduler) twice independently.
+// Writes F:/dnd/logs/sessions/<name>.gate.md, .gate.json and .gate.tsv.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { judge } from './verdict.mjs';
 const [wt, base = 'master', name = 'card'] = process.argv.slice(2);
 const T = path.dirname(fileURLToPath(import.meta.url));
 const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.env.GATE_ROOT || 'F:/dnd/logs/gate';
@@ -46,42 +46,70 @@ async function waitFor(runId) {
     await sleep(POLL_MS);
   }
 }
-// One entry per file in the shape the old per-case comparison expects.
-const toRows = (result, prefix = '') => result.files.map(f => {
-  const cases = [...new Set((f.failures || []).filter(x => x.kind !== 'suite').map(x => x.path[x.path.length - 1]))];
-  const fail = f.status === 'PASS' ? 0 : (f.counts?.failed || cases.length || 1);
-  const seconds = Math.round((f.durationMs || 0) / 1000);
-  // One progress line per file: watch-progress.sh treats a silent log as stalled.
-  console.log(`${new Date().toISOString().slice(11, 19)} ${prefix}${f.file} ${f.status} fail=${fail} ${seconds}s`);
-  return { file: f.file, status: f.status, pass: f.counts?.passed ?? null, fail, cases, seconds };
-});
+// Keep the runner's full identities and fingerprints intact through aggregation.
 async function runJob(kind, files, extra = []) {
-  if (!files.length) return [];
-  const result = await waitFor(submit(kind, files, extra));
-  if (!result.files) throw Error(`run ${result.runId} ended without file results: ${result.status} ${result.reason || ''}`);
-  return toRows(result, kind === 'baseline' ? 'base ' : '');
+  if (!files.length) return { status: 'PASS', files: [] };
+  let result;
+  try {
+    result = await waitFor(submit(kind, files, extra));
+  } catch (error) {
+    result = { status: 'INCOMPLETE', reason: error.message, files: [] };
+  }
+  const returned = Array.isArray(result.files) ? result.files : [];
+  // Missing selected files must not disappear from the gate's denominator.
+  result = { ...result, files: files.map(file => returned.find(f => f.file === file)
+    || { file, status: 'INCOMPLETE', reason: result.reason || 'job returned no result for selected file', failures: [] }) };
+  for (const f of result.files) {
+    console.log(`${new Date().toISOString().slice(11, 19)} ${kind === 'baseline' ? 'base ' : ''}${f.file} ${f.status} fail=${f.counts?.failed ?? f.failures?.length ?? 0} ${Math.round((f.durationMs || 0) / 1000)}s`);
+  }
+  return result;
 }
 
 const started = Date.now();
-const results = await runJob('card', fast);
-const bad = results.filter(r => r.fail !== 0);
-let baseline = [];
-if (bad.length) {
-  const baseArgs = ['-Base', base];
-  baseline = await runJob('baseline', bad.map(r => r.file), baseArgs);
-  // A base failure is confirmed only if it fails again (flaky base runs misled the gate once).
-  const again = await runJob('baseline', baseline.filter(b => b.fail !== 0).map(b => b.file), [...baseArgs, '-Rerun']);
-  baseline = baseline.map(b => { const a = again.find(x => x.file === b.file); return a ? { ...b, fail: a.fail, cases: b.cases.filter(c => a.cases.includes(c)) } : b; });
+// Resolve once: a moving branch name must not compare two different baselines.
+let baseSHA = null, candidate;
+try {
+  baseSHA = execFileSync('git', ['rev-parse', '--verify', `${base}^{commit}`], { cwd: wt, encoding: 'utf8' }).trim();
+  candidate = await runJob('card', fast);
+} catch (error) {
+  candidate = { status: 'INCOMPLETE', reason: `base resolution failed: ${error.message}`,
+    files: fast.map(file => ({ file, status: 'INCOMPLETE', reason: error.message, failures: [] })) };
 }
-const baseOf = f => baseline.find(b => b.file === f);
-// New regression: any failing case in the branch that the base does not also fail (case level, not file level).
-const newCases = r => { const b = baseOf(r.file); if (!b || b.fail === 0) return r.cases.length ? r.cases : ['(file)']; return r.cases.filter(c => !b.cases.includes(c)); };
-const newFail = bad.filter(r => newCases(r).length);
-const sameFail = bad.filter(r => !newFail.includes(r));
+const bad = candidate.files.filter(f => f.status === 'FAIL').map(f => f.file);
+const baselineRuns = [];
+if (bad.length) {
+  baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA]));
+  // -Rerun bypasses submit/scheduler deduplication. Both runs cover ALL failing
+  // candidate files, even when the first baseline passed or was incomplete.
+  baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA, '-Rerun']));
+}
+let knownFailures = [];
+try {
+  knownFailures = JSON.parse(fs.readFileSync(path.join(T, 'policy/known-failures.json'), 'utf8'));
+  if (!Array.isArray(knownFailures)) throw Error('known-failures policy must be an array');
+} catch (error) {
+  knownFailures = [];
+  candidate.status = 'INCOMPLETE';
+  candidate.reason = `known-failures policy unreadable: ${error.message}`;
+}
+const verdict = judge({ candidate, baselineRuns, knownFailures, now: new Date().toISOString() });
 const minutes = Math.round((Date.now() - started) / 60000);
-fs.writeFileSync(`${L}/${name}.gate.tsv`, results.map(r => [r.file, r.pass, r.fail, r.seconds, baseOf(r.file)?.fail ?? ''].join('\t')).join('\n') + '\n');
-const md = [`# 交卡门禁 ${name}`, `worktree ${wt} vs ${base}（${selectorName}）；受影响 ${affected.length}（快档 ${fast.length}，慢档跳过 ${skipped.length}）；用时 ${minutes} 分钟`,
-  `- 通过 ${results.length - bad.length}/${results.length}`, `- **新回归 ${newFail.length}**：${newFail.map(r => `${r.file} ${r.pass}/${r.fail}〔${newCases(r).join(' | ').slice(0, 160)}〕`).join('；') || '无'}`,
-  `- 基线同败 ${sameFail.length}：${sameFail.map(r => r.file).join('；') || '无'}`, `- 慢档未跑：${skipped.join('；') || '无'}`].join('\n');
-fs.writeFileSync(`${L}/${name}.gate.md`, md + '\n');
+const gate = { ...verdict, worktree: wt, base: baseSHA, name,
+  candidateRunId: candidate.runId ?? null, baselineRunIds: baselineRuns.map(r => r.runId ?? null),
+  selectedFiles: fast, skippedFiles: skipped, minutes };
+fs.mkdirSync(L, { recursive: true });
+fs.writeFileSync(path.join(L, `${name}.gate.json`), JSON.stringify(gate, null, 2) + '\n');
+// Retain legacy TSV columns for existing consumers, appending the final verdict.
+fs.writeFileSync(path.join(L, `${name}.gate.tsv`), candidate.files.map((f, i) => [f.file,
+  f.counts?.passed ?? '', f.counts?.failed ?? (f.status === 'PASS' ? 0 : f.failures?.length || 1),
+  Math.round((f.durationMs || 0) / 1000), baselineRuns[0]?.files.find(b => b.file === f.file)?.counts?.failed ?? '',
+  verdict.files[i].status].join('\t')).join('\n') + '\n');
+const md = [`# 卡片门禁 ${name}`, `worktree ${wt} vs ${baseSHA}；${selectorName}；受影响 ${affected.length}，快档 ${fast.length}，慢档未跑 ${skipped.length}；耗时 ${minutes} 分钟`,
+  `总判定：**${gate.status}**；退出码：${gate.exitCode}`,
+  ...gate.issues.map(issue => `- [${issue.category}] ${issue.status}：${issue.reason}${candidate.reason ? `；${candidate.reason}` : ''}`),
+  ...gate.files.flatMap(file => [`- [${file.category}] ${file.file}：${file.status}；${file.reason}`,
+    ...file.cases.map(c => `  - ${c.id || JSON.stringify(c.path)}；指纹 ${c.fingerprint || '缺失'}：${c.status}${c.baselineStatus ? ` (${c.baselineStatus})` : ''}；${c.reason}${c.location ? `；${c.location}` : ''}`)]),
+  `- 慢档未跑：${skipped.join('、') || '无'}`].join('\n');
+fs.writeFileSync(path.join(L, `${name}.gate.md`), md + '\n');
 console.log(md);
+process.exitCode = gate.exitCode;
