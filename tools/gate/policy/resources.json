@@ -1,6 +1,6 @@
 {
-  "hardCap": 4,
-  "perCard": 2,
+  "hardCap": 6,
+  "perCard": 6,
   "reserveBytes": { "normal": 2147483648, "browser": 3221225472, "coverage": 3221225472 },
   "adaptive": { "minSamples": 5, "window": 20, "factor": 1.3, "floorBytes": 1073741824 },
   "minFreeAfterBytes": 2147483648,

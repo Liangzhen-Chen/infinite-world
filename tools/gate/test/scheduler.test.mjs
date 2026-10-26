@@ -79,7 +79,7 @@ test('hard slot cap holds and a freed slot is taken by the next queued file', as
 });
 
 test('per-card cap is 2 but other cards can use the remaining slots', async () => {
-  const e = make();
+  const e = make({ policy: { hardCap: 4, perCard: 2 } });
   e.submit('big', { cardId: 'A', files: names(5) });
   await e.tick();
   assert.equal(e.running().length, 2);
@@ -114,7 +114,7 @@ test('priority core > gate > card > scan > collect, FIFO inside one level', asyn
 });
 
 test('collect starts new files only when nothing else is queued, and does not preempt running files', async () => {
-  const e = make();
+  const e = make({ policy: { hardCap: 4, perCard: 2 } });
   e.submit('big', { cardId: 'A', files: names(3) });         // 2 run, 1 queued (card cap)
   e.submit('col', { kind: 'collect', map: 'm.json', cardId: 'col', snapshot: 's1', files: ['c1.test.mjs', 'c2.test.mjs'] });
   await e.tick();
@@ -367,7 +367,7 @@ test('cancel drops queued files, lets the running one finish, and frees everythi
 });
 
 test('overview and heartbeat: fields, rewritten without state changes, queue.json is written by the scheduler', async () => {
-  const e = make({ mem: 10 * GB });
+  const e = make({ mem: 10 * GB, policy: { hardCap: 4, perCard: 2 } });
   e.submit('j', { cardId: 'S503', ownerSession: 'sess-1', files: names(3) });
   await e.tick();
   const overview = JSON.parse(fs.readFileSync(path.join(e.root, 'overview.json'), 'utf8'));
@@ -490,4 +490,14 @@ test('collect jobs: a file with a usable shard is not run again; failing aggrega
   e.submit('nomap', { kind: 'collect', cardId: 'n', snapshot: 's3', files: ['q.test.mjs'] });
   await e.tick();
   assert.match(e.result('nomap').reason, /collect needs map/);
+});
+
+test('longest expected file starts first within a job (LPT); unmeasured files sort after measured ones', async () => {
+  const e = make({ mem: 20 * GB, policy: { hardCap: 1, perCard: 1 } });
+  const runs = (ms, n = 3) => Array.from({ length: n }, () => ({ status: 'PASS', durationMs: ms }));
+  e.sched.history.runs = { 't0.test.mjs': runs(1000), 't1.test.mjs': runs(90000), 't2.test.mjs': runs(30000) };
+  e.submit('j', { cardId: 'A', files: names(4) });
+  const order = [];
+  for (let i = 0; i < 4; i++) { await e.tick(); order.push(e.running()[0].file); e.running()[0].finish(); }
+  assert.deepEqual(order, ['t1.test.mjs', 't2.test.mjs', 't0.test.mjs', 't3.test.mjs']);
 });

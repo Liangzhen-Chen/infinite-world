@@ -353,7 +353,16 @@ export class Scheduler {
   candidates() {
     const out = [];
     for (const job of this.jobs.values()) if (!job.terminal) for (const f of job.files) if (f.state === 'QUEUED') out.push({ job, file: f });
-    return out.sort((a, b) => a.job.prio - b.job.prio || a.job.seq - b.job.seq || a.file.id.localeCompare(b.file.id));
+    // Longest expected file first within a job (LPT), so slow files do not form an idle tail.
+    const expected = new Map(out.map(({ file }) => [file, this.expectedMs(file)]));
+    return out.sort((a, b) => a.job.prio - b.job.prio || a.job.seq - b.job.seq
+      || expected.get(b.file) - expected.get(a.file) || a.file.id.localeCompare(b.file.id));
+  }
+
+  // Median PASS duration from history; unknown files sort as 0 (after measured ones).
+  expectedMs(file) {
+    const samples = (this.history.runs?.[file.file] || []).filter(r => r.status === 'PASS' && r.durationMs > 0).map(r => r.durationMs).sort((a, b) => a - b);
+    return samples.length ? samples[samples.length >> 1] : 0;
   }
 
   async admit() {
