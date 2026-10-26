@@ -15,3 +15,14 @@ export function activeDuel(d,engine,target,challenger='player'){
         &&[r.challenger,r.target].every(id=>awake(id==='player'?d.get('state','player'):d.get('state','npcs',id),engine,d,id)&&(id==='player'||d.get('state','npcs',id,'location')===location))
         &&awake(d.get('state','npcs',r.witness),engine,d,r.witness)&&d.get('state','npcs',r.witness,'location')===location);
 }
+// Species bodies are shared by encounters, native instancing and object spirits.
+export function monsterStats({level,template=2,bossTier=0},rules){
+    const row=rules.combat.monster,beast=template<=1,scale=beast?row.beast:row.standard;
+    const ordinary={level,maxHp:scale.hpBase+level*scale.hpPerLevel,attack:scale.attackBase+level*scale.attackPerLevel,
+        defense:scale.defensePerLevel*level,hit:row.hit,evasion:0,critical:row.critical,attacks:1,divine:template>=10};
+    if(bossTier){ordinary.maxHp*=rules.bossEcology?.hpMultiplier??row.bossHpMultiplier;ordinary.attack*=row.bossAttackMultiplier;
+        ordinary.attacks=row.bossAttacks;ordinary.defense*=row.bossDefenseMultiplier;ordinary.bossTier=bossTier;}
+    ordinary.maxHp=Math.max(1,Math.round(ordinary.maxHp));
+    if(template===0){ordinary.attack=0;ordinary.attacks=0;}
+    return ordinary;
+}

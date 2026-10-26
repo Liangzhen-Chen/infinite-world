@@ -2,13 +2,15 @@ import {preconditionFailure} from './precondition.mjs';
 import {bodyLiving} from './lifecycle-state.mjs';
 import {openObligation} from './obligation-runtime.mjs';
 import {createHash} from 'node:crypto';
+import {derived} from './derived.mjs';
+import {monsterStats} from './combat-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('wildlife-awakening',{sinks:['sink:consume']});
 import {assertTrainingRitual} from './training.mjs';
 import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,createEntity,setLocation,locationOf,isGone,ensureHoldings} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
-declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck'],locations:true});
+declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck','creature'],locations:true});
 
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
 // 年岁按需计算，不为每只野兽每日写账；灵地、随人经历、灵物、点化和时钟各自记来源。
@@ -73,7 +75,56 @@ export function advanceWildlifeAwakening(d,engine,day){
         if(changed)holdingSet(d,null,['state','creatures',id,'mind'],mind,'wildlife-awakening');
         settle(d,engine,id,'natural',minute,`wildlife-awakening:${id}:${day}`);
     }
+    advanceObjectAwakening(d,engine,day);
     advanceSpiritSocieties(d,engine,day);
+}
+function objectPlace(d,engine,id,row){
+ const seen=new Set();let at=locationOf(d,id)?.at??row.location??row.owner;
+ while(at&&!seen.has(at)){
+  seen.add(at);if(at==='player')return d.get('state','location');
+  const actor=d.get('state','npcs',at)??d.get('state','creatures',at);if(actor)return actor.location;
+  if(engine.world.locations.some(l=>l.id===at)||d.get('state','buildings',at))return at;
+  at=locationOf(d,at)?.at??d.get('state','itemInstances',at)?.owner;
+ }
+ return null;
+}
+function advanceObjectAwakening(d,engine,day){
+ const rows=[...Object.entries(d.get('state','itemInstances')??{}).map(([id,row])=>({id,row,kind:'item',base:engine.byId.get(row.item),madeAt:row.minute??row.madeAt})),
+  ...Object.entries(d.get('state','buildings')??{}).map(([id,row])=>({id,row,kind:'building',base:d.get('state','created',id)??engine.byId.get(id),madeAt:row.builtAt}))];
+ for(const {id,row,base,kind,madeAt:created} of rows){
+  const spec=(row.lifecycle??base?.lifecycle)?.awaken;if(!spec)continue;
+  if(!Number.isFinite(spec.minimumYears)||spec.minimumYears<0||!Number.isFinite(spec.annualRisk)||spec.annualRisk<0||spec.annualRisk>1||!engine.world.monsters.some(m=>m.id===spec.species))throw Error('器物成精规则须声明年岁、年风险与既有生灵模板');
+  const madeAt=created??base?.madeAt??(Number.isFinite(base?.foundedYear)?(base.foundedYear-1)*360*DAY:null);
+  // An old-looking object with an unknown creation date has no invented past.
+  if(!Number.isFinite(madeAt)||madeAt>(day+1)*DAY||isGone(engine,d,id)||kind==='building'&&row.condition<=0||kind==='item'&&!['持有','袋内','放置'].includes(row.status))continue;
+  const key=`object-awakening:${id}`,old=d.get('state','records',key);
+  if(old?.creature||old?.lastDay>=day)continue;
+  const place=kind==='building'?id:objectPlace(d,engine,id,row);if(!place)continue;
+  let clock=old??{category:'object_awakening',anchor:id,kind,since:madeAt,lastDay:day-1,filled:0,causes:[]};
+  for(let at=clock.lastDay+1;at<=day;at++){
+   const minute=(at+1)*DAY,years=(minute-madeAt)/(360*DAY);
+   const events=Object.values(d.get('state','records')??{}).filter(r=>r.category==='world_event'&&r.minute>minute-360*DAY&&r.minute<=minute&&(r.actor===id||r.target===id||r.subject===id));
+   const land=engine.rules.wildlifeAwakening.spiritLands.find(l=>l.location===place);
+   const exposure=Math.max(0,years-spec.minimumYears)*(1+events.length/360)*(1+(land?.pointsPerDay??0));
+   const annual=derived(engine,d.document,'life:awakeningRisk',id,{base:1-(1-spec.annualRisk)**exposure});
+   const risk=1-(1-annual)**(1/360),causes=[{kind:'age',madeAt,years},{kind:'rule',rule:'lifecycle.awaken'},
+    ...events.map(r=>({kind:'event',event:r.id})),...(land?[{kind:'spirit_land',location:land.location}]:[])];
+   clock={...clock,lastDay:at,filled:clock.filled+risk,causes};
+   const roll=createHash('sha256').update(JSON.stringify([d.document.randomSeed,`object-awakening:${id}`,at])).digest().readUInt32LE(0)/2**32;
+   if(roll>=risk)continue;
+   const creature=`creature_${createHash('sha256').update(`spirit:object:${id}`).digest('hex').slice(0,24)}`;
+   const species=engine.byId.get(spec.species),level=species.levelRange?.[0]??1,stats=monsterStats({level,template:species.template},engine.rules);
+   const name=`${base?.name??id}之灵`;
+   if(!ensureHoldings(d,engine))throw Error('器物成精须先建立实体持有账');
+   createEntity(d,{id:creature,kind:'creature',facts:{species:species.id,anchor:id},origin:'spirit:object',writer:'wildlife-awakening',source:key,eventId:key});
+   holdingSet(d,engine,['state','created',creature],{id:creature,name,aliases:[],monster:species.id,template:species.template,scope:place,location:place,origin:'spirit:object',anchor:id},'wildlife-awakening');
+   holdingSet(d,engine,['state','creatures',creature],{id:creature,name,species:species.id,level,hp:stats.maxHp,maxHp:stats.maxHp,location:place,bornAt:minute,
+    origin:'spirit:object',anchor:id,causes,mind:{awakened:{stage:'立意',kind:'object',minute,sourceEvent:key}}},'wildlife-awakening');
+   setLocation(d,{entity:creature,at:place,mode:'place',writer:'wildlife-awakening',source:key,engine});
+   clock={...clock,creature,awakenedAt:minute};break;
+  }
+  d.set(['state','records',key],clock);
+ }
 }
 function addSource(d,id,day,kind,points,row){
     const actor=d.get('state','creatures',id),mind=clone(actor.mind??blankMind(day));

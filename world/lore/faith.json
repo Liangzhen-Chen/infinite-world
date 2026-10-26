@@ -102,6 +102,55 @@
       "cooldownDays": 7,
       "responseMinutes": 30,
       "sign": "供盘上的门印记号发出微光，三十分钟后消散；它不证明合同有效或陈述属实。"
+    },
+    {
+      "id": "bank_rain",
+      "name": "分畦祈雨",
+      "deity": "deity_bank",
+      "season": 0,
+      "coins": 2,
+      "minutes": 30,
+      "offerings": {
+        "item_resin": 1
+      },
+      "collective": 3,
+      "devotionDays": 2,
+      "cooldownDays": 7,
+      "responseMinutes": 30,
+      "sign": "供盘上的芦岸记号微明三十分钟，只标记本次合仪；雨泽落区另记，不证明契约、地权或私密陈述。",
+      "rainfall": {
+        "minutes": 1440,
+        "seasons": [
+          0,
+          1
+        ],
+        "baseQuota": 1,
+        "coinsPerQuota": 6,
+        "gratitudeCoins": 12,
+        "reserveCoins": 10,
+        "footprints": [
+          [
+            {
+              "location": "loc_bs_yupo",
+              "share": 1
+            },
+            {
+              "location": "loc_bs_sangban",
+              "share": 0.5
+            }
+          ],
+          [
+            {
+              "location": "loc_bs_yupo",
+              "share": 0.5
+            },
+            {
+              "location": "loc_bs_sangban",
+              "share": 1
+            }
+          ]
+        ]
+      }
     }
   ],
   "practices": [
@@ -152,6 +201,10 @@
     {
       "id": "rw07_pilgrimage",
       "text": "朝圣以寺观所在地为目的地，按现有路线付路费并花费行程时间。居民赴约仍受日程与其他义务限制，临时朝圣不迁户籍，结束后恢复自己的作息。"
+    },
+    {
+      "id": "s507_rain",
+      "text": "白石芦篆道舍的分畦祈雨在春夏合仪，三名同信者须实际在场、持续虔信两日并各自同意；三十分钟耗一份树脂并捐两铜，同神冷却七日。雨泽持续一昼夜，榆坡全村与桑坂半村、或榆坡半村与桑坂全村二择一；同一季次不因更换请求编号而重选。只有实际受雨的田地获得供水收益。受益的成年信众到观后，可自本人钱袋供献十二铜乘受益份额向下取整，且至少保留十铜，不遥扣钱。每季基本一次，加上上季实际香火收入每六铜增加一次，经派生槽修正；仪式费用、普通香火与雨泽供献均须真实入库。没有雨额时只行普通祭仪，不以供盘发光冒充降雨，不自动免租。"
     }
   ]
 }

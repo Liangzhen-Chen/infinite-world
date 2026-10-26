@@ -116,7 +116,11 @@ test('迁居出发与抵达各发一次，重跑不重扣路费或人口',t=>{
     engine.byId.get(C).schedule={default:[{start:0,end:1440,location:from.homeLocation,activity:'家务',services:[]}]};
     s.family??={};s.family.migrations={move:{id:'move',person:C,host,reason:'谋生',status:'待出发',departAt:601,postponed:0,from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:to.id,settlement:to.settlement,home:to.homeLocation}}};
     s.minute=601;const e=once(f,'migrate',()=>advanceNpcLife(d,engine,600,601));assert.equal(e.stage,'depart');
-    const at=s.family.migrations.move.arriveAt;s.minute=at;const arrive=once(f,'migrate',()=>advanceNpcLife(d,engine,at-1,at));assert.equal(arrive.stage,'arrive');
+    // S5-07 / 05 §5.5: arrival must process the actual interval since departure,
+    // including midnight ageing; jumping to at-1 omitted that production work.
+    // This route crosses the first midnight (1 * 1440), once, before arrival.
+    const at=s.family.migrations.move.arriveAt;s.minute=at;const arrive=once(f,'migrate',()=>advanceNpcLife(d,engine,601,at));assert.equal(arrive.stage,'arrive');
+    assert.equal(s.npcs.npc_yp_zhaofeng.aging.minute,1440);
     const snapshot=structuredClone(s);advanceNpcLife(d,engine,600,at);assert.deepEqual(s,snapshot);
 });
 

@@ -7931,6 +7931,9 @@
         "affection": 2,
         "cap": 60
       }
+    },
+    "lifecycle": {
+      "agingCatchUp": 1
     }
   },
   "effectTable": {
