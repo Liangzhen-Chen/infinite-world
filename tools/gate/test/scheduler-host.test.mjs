@@ -79,7 +79,7 @@ test('four cards + a collect + a baseline submitted at once: caps hold, collect 
   // a throw-away repo for the baseline job
   const repo = path.join(env.dir, 'repo');
   fs.mkdirSync(repo, { recursive: true });
-  for (const f of ['a', 'b']) fs.copyFileSync(path.join(fixtures, `${f}.fx.mjs`), path.join(repo, `${f}.fx.mjs`));
+  for (const f of ['a', 'b', 'c']) fs.copyFileSync(path.join(fixtures, `${f}.fx.mjs`), path.join(repo, `${f}.fx.mjs`));
   const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
   git('init', '-q'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't'); git('add', '-A'); git('commit', '-q', '-m', 'base');
   const sha = git('rev-parse', 'HEAD').trim();
@@ -87,7 +87,7 @@ test('four cards + a collect + a baseline submitted at once: caps hold, collect 
   const ids = await Promise.all([
     card(env, 'c1', ['a.fx.mjs', 'b.fx.mjs', 'c.fx.mjs']), card(env, 'c2', ['a.fx.mjs', 'b.fx.mjs', 'c.fx.mjs']),
     card(env, 'c3', ['b.fx.mjs', 'c.fx.mjs', 'd.fx.mjs']), card(env, 'c4', ['a.fx.mjs', 'd.fx.mjs', 'c.fx.mjs']),
-    env.submit(['-Kind', 'collect', '-Card', 'col', '-Worktree', fixtures, '-Files', 'a.fx.mjs,b.fx.mjs,c.fx.mjs', '-Env', 'FX_CARD=col;FX_SLEEP=1200']),
+    env.submit(['-Kind', 'collect', '-Card', 'col', '-Worktree', repo, '-Map', path.join(env.dir, 'cov-map.json'), '-Files', 'a.fx.mjs,b.fx.mjs,c.fx.mjs', '-Env', 'FX_CARD=col;FX_SLEEP=1200']),
     env.submit(['-Kind', 'baseline', '-Card', 'bs', '-Worktree', repo, '-Base', sha, '-Files', 'a.fx.mjs,b.fx.mjs', '-Env', 'FX_CARD=bs;FX_SLEEP=1200']),
   ]);
   const [c1, , , , col, bs] = ids;

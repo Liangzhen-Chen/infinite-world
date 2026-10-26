@@ -280,13 +280,14 @@ test('aggregation hydrates runner evidence and submits only one baseline for def
   assert.equal(result.submissions.length, 2);
   assert.deepEqual(result.baseArgs, ['fixed-base-sha']);
   assert.deepEqual(result.submittedFiles, [['tests/a.test.mjs'], ['tests/a.test.mjs']]);
-  assert.ok(result.md.includes(deferred().id));
-  assert.ok(result.md.includes('existing'));
+  // Deferred items are summarised as numbers only; ids are in gate.json.
+  assert.ok(result.md.includes('既有待办：既有 1，新增 0，已移除 0，未核实 0'));
+  assert.equal(result.md.includes(deferred().id), false);
   const added = await aggregate(job([deferredFile([deferred('new')])]), [job([deferredFile()])], [], { persisted: true });
   assert.equal(added.gate.status, 'BLOCKED');
   assert.equal(added.exitCode, 1);
-  assert.ok(added.md.includes('added'));
-  assert.ok(added.md.includes(deferred('new').id));
+  assert.ok(added.md.includes('既有待办：既有 0，新增 1，已移除 1，未核实 0'));
+  assert.ok(added.md.includes('## BLOCKED（1）') && added.md.includes('tests/a.test.mjs'));
   const missing = await aggregate(job([deferredFile()]), [], [], { persisted: true, missingDetail: true });
   assert.equal(missing.gate.status, 'INCOMPLETE');
   assert.equal(missing.submissions.length, 1);
@@ -320,13 +321,17 @@ test('real aggregation writes JSON/Markdown and sets matching exit codes for eve
     assert.equal(result.exitCode, status === 'PASS' ? 0 : 1);
     assert.equal(result.exitCode, result.gate.exitCode);
     assert.match(result.md, new RegExp(`\\*\\*${status}\\*\\*`));
-    assert.ok(result.md.includes('tests/a.test.mjs'));
+    // Compact report: PASS files are only counted, every non-PASS file is named.
+    const listed = result.md.includes('tests/a.test.mjs');
+    assert.equal(listed, result.gate.files.some(f => f.status !== 'PASS'));
+    assert.match(result.md, new RegExp(`通过 ${result.gate.files.filter(f => f.status === 'PASS').length}/${result.gate.files.length}`));
     if (candidate.files[0]?.status === 'FAIL') {
       assert.equal(result.submissions.length, 3);
       assert.deepEqual(result.baseArgs, ['fixed-base-sha', 'fixed-base-sha']);
       assert.equal(result.submissions[1].includes('-Rerun'), false);
       assert.equal(result.submissions[2].includes('-Rerun'), true);
-      assert.ok(result.md.includes(candidate.files[0].failures[0].id));
+      if (result.gate.files[0].status === 'PASS') assert.ok(result.md.includes('已登记既有失败（KNOWN，已判 PASS）：1 个用例'));
+      else assert.ok(result.md.includes(result.gate.files[0].cases[0].id));
       assert.ok(result.gate.files[0].cases[0].reason.length > 0);
     } else assert.equal(result.submissions.length, 1);
   }

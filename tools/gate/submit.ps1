@@ -13,6 +13,7 @@ param(
   [ValidateSet('', 'core', 'gate', 'card', 'scan', 'collect')][string]$Priority = '',
   [string]$TreeHash = '',
   [string]$Owner = '',
+  [string]$Map = '',                                    # collect only: coverage map file; shards go to <Map>.shards
   [int]$DeadlineMs = 0,
   [string[]]$Env = @(),
   [string]$Root = 'F:/dnd/logs/gate',
@@ -56,7 +57,7 @@ $envMap = [ordered]@{}
 foreach ($pair in ($Env | ForEach-Object { $_ -split ';' })) { $i = $pair.IndexOf('='); if ($i -gt 0) { $envMap[$pair.Substring(0, $i)] = $pair.Substring($i + 1) } }  # K=V items, ';'-separated or repeated
 $request = [ordered]@{
   runId = $runId; kind = $Kind; cardId = $Card; worktree = $Worktree; base = $Base; snapshot = $Snapshot; treeHash = $TreeHash
-  files = $list; priority = $Priority; ownerSession = $Owner; rerun = [bool]$Rerun; env = $envMap
+  map = $Map; files = $list; priority = $Priority; ownerSession = $Owner; rerun = [bool]$Rerun; env = $envMap
   createdAt = (Get-Date).ToUniversalTime().ToString('o')
 }
 if ($DeadlineMs -gt 0) { $request['deadlineMs'] = $DeadlineMs }

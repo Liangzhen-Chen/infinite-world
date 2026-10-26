@@ -23,8 +23,18 @@ function make({ policy = {}, mem = 64 * GB, root } = {}) {
     env.runs.push(run);
     options.onEvent({ type: 'start', pid: 5000 + env.runs.length, deadlineAt: 'x' });
   });
+  // Fake collect library: records calls, runs the injected runner, never touches git or V8.
+  env.collect = { opened: [], shards: [], aggregated: [], skip: new Set(), aggregateError: null, snapshotAtAggregate: null };
+  env.collectLib = {
+    openCollection: (cwd, map) => { env.collect.opened.push({ cwd, map }); return { cwd }; },
+    planResume: (ctx, files) => ({ todo: files.filter(f => !env.collect.skip.has(f)), updates: {} }),
+    collectShard: async (ctx, file, o) => { env.collect.shards.push(file); const terminal = await o.runFileImpl({ cwd: ctx.cwd, file, env: { NODE_V8_COVERAGE: 'cov' }, allowSkip: true, allowZeroTests: true });
+      return { ok: terminal.status === 'PASS', collected: true, note: 'n', terminal }; },
+    main: async (args, injected) => { env.collect.aggregated.push({ args, injected }); env.collect.snapshotAtAggregate = fs.existsSync(path.join(root, 'jobs', injected.runId, 'result.json'));
+      if (env.collect.aggregateError) throw new Error(env.collect.aggregateError); },
+  };
   env.policy = { ...loadPolicy(), ...policy };
-  const build = () => new Scheduler({ root, tmpRoot: env.tmpRoot, policy: env.policy, now: () => env.clock.t, availMem: async () => env.mem.v, runFile,
+  const build = () => new Scheduler({ root, tmpRoot: env.tmpRoot, policy: env.policy, now: () => env.clock.t, availMem: async () => env.mem.v, runFile, collectLib: async () => env.collectLib,
     prepareWorkspace: async job => ({ cwd: job.request.worktree || 'snap', created: false }), releaseWorkspace: async () => {} });
   env.sched = build(); env.sched.load();
   env.restart = () => { env.sched = build(); env.sched.load(); return env.sched; };
@@ -85,7 +95,7 @@ test('priority core > gate > card > scan > collect, FIFO inside one level', asyn
   e.submit('first', { cardId: 'F', files: ['f.test.mjs'] });
   await e.tick();
   assert.equal(e.running().length, 1);
-  e.submit('col', { kind: 'collect', cardId: 'col', snapshot: 'abc', files: ['c.test.mjs'], priority: undefined });
+  e.submit('col', { kind: 'collect', map: 'm.json', cardId: 'col', snapshot: 'abc', files: ['c.test.mjs'], priority: undefined });
   e.submit('scan', { kind: 'full', cardId: 'scan', snapshot: 'abc', files: ['s.test.mjs'] });
   e.submit('cardLevel', { cardId: 'V', files: ['v.test.mjs'], priority: 'card' });
   e.submit('gate1', { cardId: 'G1', files: ['g1.test.mjs'] });
@@ -106,7 +116,7 @@ test('priority core > gate > card > scan > collect, FIFO inside one level', asyn
 test('collect starts new files only when nothing else is queued, and does not preempt running files', async () => {
   const e = make();
   e.submit('big', { cardId: 'A', files: names(3) });         // 2 run, 1 queued (card cap)
-  e.submit('col', { kind: 'collect', cardId: 'col', snapshot: 's1', files: ['c1.test.mjs', 'c2.test.mjs'] });
+  e.submit('col', { kind: 'collect', map: 'm.json', cardId: 'col', snapshot: 's1', files: ['c1.test.mjs', 'c2.test.mjs'] });
   await e.tick();
   assert.deepEqual(e.running().map(r => r.runId), ['big', 'big']);
   assert.equal(e.sched.jobs.get('col').files[0].waitReason, 'collect-yield');
@@ -267,25 +277,78 @@ test('a PASS records its peak so later reservations adapt', async () => {
   assert.equal(e.sched.reservationOf({ kind: 'card' }, { file: 'same.test.mjs' }), GB);
 });
 
-test('waiting 5 min alerts once, 30 min marks RESOURCE_BLOCKED (no auto concurrency raise); overview shows it', async () => {
+test('normal queueing behind fully busy slots never alerts, however long it takes', async () => {
   const e = make({ policy: { hardCap: 1, perCard: 1 } });
   e.submit('hold', { cardId: 'A', files: ['h.test.mjs'] });
   await e.tick();
   e.submit('wait', { cardId: 'B', files: ['w.test.mjs'] });
   await e.tick(1000);
+  for (let i = 0; i < 8; i++) await e.tick(5 * 60000);   // 40 min, the only slot is busy throughout
+  assert.equal(e.alerts().length, 0);
+  assert.equal(e.sched.overview().jobs.find(j => j.runId === 'wait').status, 'WAIT_RESOURCE');
+  assert.equal(e.sched.jobs.get('wait').files[0].blocked, false);
+  e.runs[0].finish(); await e.tick();
+  assert.equal(e.running()[0].runId, 'wait');
+});
+
+test('free slot but start refused (memory): 5 min alerts once, 30 min marks RESOURCE_BLOCKED, no auto concurrency raise', async () => {
+  const e = make({ policy: { hardCap: 4, perCard: 2 }, mem: 3 * GB });   // 3GB - 2GB reserve < 2GB floor: nothing can start
+  e.submit('wait', { cardId: 'B', files: ['w.test.mjs'] });
+  await e.tick();
+  await e.tick(1000);
+  assert.equal(e.alerts().length, 0);
   await e.tick(5 * 60000);
   await e.tick(1000);
   assert.equal(e.alerts().filter(a => a.type === 'WAIT_5MIN' && a.runId === 'wait').length, 1);
   assert.equal(e.sched.overview().jobs.find(j => j.runId === 'wait').status, 'WAIT_RESOURCE');
   await e.tick(26 * 60000);
-  const row = e.sched.overview().jobs.find(j => j.runId === 'wait');
-  assert.equal(row.status, 'RESOURCE_BLOCKED');
-  assert.equal(e.alerts().some(a => a.type === 'RESOURCE_BLOCKED'), true);
-  assert.equal(e.sched.policy.hardCap, 1);
-  assert.equal(e.running().length, 1);
-  assert.equal(e.sched.overview().oldestAlert.type, 'WAIT_5MIN');
-  e.runs[0].finish(); await e.tick();                   // blocked files still run once there is room
+  assert.equal(e.sched.overview().jobs.find(j => j.runId === 'wait').status, 'RESOURCE_BLOCKED');
+  assert.equal(e.alerts().filter(a => a.type === 'RESOURCE_BLOCKED').length, 1);
+  assert.equal(e.alerts().filter(a => a.type === 'WAIT_5MIN').length, 1);
+  assert.equal(e.sched.policy.hardCap, 4);
+  assert.equal(e.running().length, 0);
+  e.mem.v = 64 * GB; await e.tick();                    // blocked files still run once there is room
   assert.equal(e.running()[0].runId, 'wait');
+});
+
+test('per-card cap with idle slots counts as blocked-with-free-slots; busy slots do not', async () => {
+  const e = make({ policy: { hardCap: 4, perCard: 1 } });
+  e.submit('big', { cardId: 'A', files: names(2) });
+  await e.tick();
+  assert.equal(e.running().length, 1);                  // 3 slots idle, second file held by the card cap
+  await e.tick(1000); await e.tick(5 * 60000); await e.tick(1000);
+  assert.equal(e.alerts().filter(a => a.type === 'WAIT_5MIN').length, 1);
+});
+
+test('idle time accrues only while a slot is free; a busy period in between does not count', async () => {
+  const e = make({ policy: { hardCap: 1, perCard: 1 }, mem: 3 * GB });
+  e.submit('w', { cardId: 'B', files: ['w.test.mjs'] });
+  await e.tick(); await e.tick(4 * 60000);             // 4 min idle-blocked by memory
+  e.sched.slotsInUse = () => 1;                         // machine becomes fully busy for a long stretch
+  await e.tick(60 * 60000);
+  assert.equal(e.alerts().length, 0);
+  assert.equal(e.sched.jobs.get('w').files[0].idleMs, 4 * 60000);
+  delete e.sched.slotsInUse;
+  await e.tick(2 * 60000);                             // 6 min idle in total
+  assert.equal(e.alerts().filter(a => a.type === 'WAIT_5MIN').length, 1);
+});
+
+test('every file gets its own FIELDS_TEST_ARTIFACTS under the run directory; PASS removes it, failure keeps it', async () => {
+  const e = make({ policy: { hardCap: 4, perCard: 4 } });
+  e.submit('ok', { cardId: 'A', files: ['a/x.test.mjs', 'b/x.test.mjs'] });
+  e.submit('bad', { cardId: 'B', files: ['y.test.mjs'] });
+  await e.tick();
+  const dirs = e.runs.map(r => r.options.env.FIELDS_TEST_ARTIFACTS);
+  assert.equal(new Set(dirs).size, 3);
+  for (const r of e.runs) assert.equal(r.options.env.FIELDS_TEST_ARTIFACTS, path.join(e.tmpRoot, 'run', r.runId, 'artifacts', e.sched.jobs.get(r.runId).files.find(f => f.file === r.file).id));
+  for (const d of dirs) { fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'evidence.txt'), 'x'); }
+  for (const r of e.runs) r.finish(r.runId === 'bad' ? 'FAIL' : 'PASS', r.runId === 'bad' ? { failures: [{ id: 'c' }] } : {});
+  await e.tick();
+  assert.equal(fs.existsSync(path.join(e.tmpRoot, 'run', 'ok')), false);
+  assert.equal(fs.existsSync(path.join(e.tmpRoot, 'run', 'bad', 'artifacts')), true);
+  const request = e.runs.length; e.submit('envwin', { cardId: 'C', files: ['z.test.mjs'], env: { FIELDS_TEST_ARTIFACTS: 'custom' } });
+  await e.tick();
+  assert.equal(e.runs[request].options.env.FIELDS_TEST_ARTIFACTS, 'custom');
 });
 
 test('cancel drops queued files, lets the running one finish, and frees everything', async () => {
@@ -391,4 +454,40 @@ test('deadline: timed-out / crashed samples are censored and never enter the p95
   assert.deepEqual(Object.keys(stored[0]).sort(), ['durationMs', 'endedAt', 'file', 'status', 'timedOut']);
   assert.equal(stored.at(-1).status, 'TIMEOUT');
   assert.equal(e.sched.deadlineOf(job, { file: 'rec.test.mjs' }), 10 * 60000, 'the TIMEOUT sample is ignored; 3 x p95 of ~1s is below the floor');
+});
+
+test('collect jobs: one coverage run per file through the scheduler, then ONE aggregation before the result is published', async () => {
+  const e = make({ policy: { hardCap: 2, perCard: 2 } });
+  e.submit('c', { kind: 'collect', map: 'M/map.json', cardId: 'cc', snapshot: 's1', worktree: 'wt', files: ['x.test.mjs', 'y.test.mjs'] });
+  await e.tick();
+  assert.equal(e.running().length, 2);
+  assert.deepEqual(e.runs.map(r => r.options.env.NODE_V8_COVERAGE), ['cov', 'cov']);
+  assert.equal(e.runs[0].options.allowSkip, true);
+  assert.equal(e.collect.aggregated.length, 0);
+  e.runs[0].finish(); await e.tick();
+  assert.equal(e.collect.aggregated.length, 0, 'not before the last file');
+  e.runs[1].finish(); await e.tick(); await flush();
+  assert.equal(e.collect.aggregated.length, 1);
+  assert.equal(e.collect.snapshotAtAggregate, false, 'result.json is written only after the map was folded');
+  assert.deepEqual(e.collect.aggregated[0].args, ['--root', 'wt', '--map', path.resolve('M/map.json'), 'x.test.mjs', 'y.test.mjs']);
+  assert.equal(e.collect.aggregated[0].injected.aggregateOnly, true);
+  assert.equal(e.result('c').status, 'PASS');
+  assert.deepEqual(e.collect.opened.length, 1, 'one collection context per job');
+});
+
+test('collect jobs: a file with a usable shard is not run again; failing aggregation makes the job INCOMPLETE; map is mandatory', async () => {
+  const e = make();
+  e.collect.skip.add('done.test.mjs');
+  e.submit('c', { kind: 'collect', map: 'm.json', cardId: 'cc', snapshot: 's1', files: ['done.test.mjs'] });
+  await e.tick(); await e.tick(); await flush();
+  assert.equal(e.runs.length, 0, 'resumed from shard, no test process');
+  assert.equal(e.result('c').status, 'PASS');
+  e.collect.aggregateError = 'HEAD changed';
+  e.submit('d', { kind: 'collect', map: 'm.json', cardId: 'dd', snapshot: 's2', files: ['z.test.mjs'] });
+  await e.tick(); e.runs[0].finish(); await e.tick(); await flush();
+  assert.equal(e.result('d').status, 'INCOMPLETE');
+  assert.match(e.result('d').reason, /HEAD changed/);
+  e.submit('nomap', { kind: 'collect', cardId: 'n', snapshot: 's3', files: ['q.test.mjs'] });
+  await e.tick();
+  assert.match(e.result('nomap').reason, /collect needs map/);
 });

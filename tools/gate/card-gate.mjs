@@ -116,14 +116,31 @@ fs.writeFileSync(path.join(L, `${name}.gate.tsv`), candidate.files.map((f, i) =>
   f.counts?.passed ?? '', f.counts?.failed ?? (f.status === 'PASS' ? 0 : f.failures?.length || 1),
   Math.round((f.durationMs || 0) / 1000), baselineRuns[0]?.files.find(b => b.file === f.file)?.counts?.failed ?? '',
   verdict.files[i].status].join('\t')).join('\n') + '\n');
-const md = [`# 卡片门禁 ${name}`, `worktree ${wt} vs ${baseSHA}；${selectorName}；受影响 ${affected.length}，快档 ${fast.length}，慢档未跑 ${skipped.length}；耗时 ${minutes} 分钟`,
+// Compact report: verdict, pass ratio, only non-PASS files (grouped), deferred counts, shadow summary, skipped slow tier.
+const clip = (text, n = 120) => { const one = String(text ?? '').replace(/\s+/g, ' ').trim(); return one.length > n ? `${one.slice(0, n - 1)}…` : one; };
+const caseLabel = c => clip(c.id || JSON.stringify(c.path), 80);
+const nonPass = gate.files.filter(file => file.status !== 'PASS');
+const groupOf = status => (['FAIL', 'BLOCKED', 'INCOMPLETE'].includes(status) ? status : 'INCOMPLETE');
+const groups = ['FAIL', 'BLOCKED', 'INCOMPLETE'].map(status => [status, nonPass.filter(file => groupOf(file.status) === status)]).filter(([, list]) => list.length);
+const bad1 = file => {
+  const worst = file.cases.find(c => c.status !== 'KNOWN') || file.cases[0];
+  const detail = worst ? `${caseLabel(worst)}：${clip(worst.reason, 80)}${file.cases.length > 1 ? `（共 ${file.cases.length} 个用例）` : ''}` : clip(file.reason);
+  return `- ${file.file}（${file.category}）：${detail}`;
+};
+const deferredTotals = { existing: 0, added: 0, resolved: 0, unverified: 0 };
+for (const file of gate.files) for (const key of Object.keys(deferredTotals)) deferredTotals[key] += file.deferred?.[key]?.length || 0;
+const conservativeCount = selection.conservative?.tests?.length ?? affected.length;
+const coverageCount = selection.coverage?.tests?.length ?? affected.length;
+const omitted = selection.shadow?.omittedFiles?.length ?? 0;
+const md = [`# 卡片门禁 ${name}`, `worktree ${wt} vs ${baseSHA}；${selectorName}；耗时 ${minutes} 分钟`,
   `总判定：**${gate.status}**；退出码：${gate.exitCode}`,
-  ...gate.issues.map(issue => `- [${issue.category}] ${issue.status}：${issue.reason}${candidate.reason ? `；${candidate.reason}` : ''}`),
-  ...gate.files.flatMap(file => [`- [${file.category}] ${file.file}：${file.status}；${file.reason}`,
-    ...file.cases.map(c => `  - ${c.id || JSON.stringify(c.path)}；指纹 ${c.fingerprint || '缺失'}：${c.status}${c.baselineStatus ? ` (${c.baselineStatus})` : ''}；${c.reason}${c.location ? `；${c.location}` : ''}`),
-    ...Object.entries(file.deferred || {}).filter(([key]) => ['existing', 'added', 'resolved', 'unverified'].includes(key))
-      .flatMap(([key, items]) => items.map(d => `  - deferred ${key}：${d.id} (${d.kind})；${file.deferred.reason}`))]),
-  `- 慢档未跑：${skipped.join('、') || '无'}`].join('\n');
+  `通过 ${gate.files.length - nonPass.length}/${gate.files.length}（快档 ${fast.length}）`,
+  ...gate.issues.map(issue => `- [${issue.category}] ${issue.status}：${clip(issue.reason)}${candidate.reason ? `；${clip(candidate.reason)}` : ''}`),
+  ...groups.flatMap(([status, list]) => [`## ${status}（${list.length}）`, ...list.map(bad1)]),
+  `已登记既有失败（KNOWN，已判 PASS）：${gate.files.reduce((n, file) => n + file.cases.filter(c => c.status === 'KNOWN').length, 0)} 个用例`,
+  `既有待办：既有 ${deferredTotals.existing}，新增 ${deferredTotals.added}，已移除 ${deferredTotals.resolved}，未核实 ${deferredTotals.unverified}`,
+  `影子选测：保守集合 ${conservativeCount}，裁剪集合 ${coverageCount}，裁剪会漏掉 ${omitted} 个文件`,
+  `慢档未跑（${skipped.length}）：${skipped.join('、') || '无'}`].join('\n');
 fs.writeFileSync(path.join(L, `${name}.gate.md`), md + '\n');
 console.log(md);
 process.exitCode = gate.exitCode;

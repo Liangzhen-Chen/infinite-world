@@ -13,6 +13,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { runFile as realRunFile, writeJsonAtomic, processStartTime } from './runner.mjs';
+import { readMap } from './test-impact/common.mjs';
 
 export const PRIORITY = Object.freeze({ core: 0, gate: 1, card: 2, scan: 3, collect: 4 });
 const DEFAULT_PRIORITY = { card: 'gate', baseline: 'gate', full: 'scan', collect: 'collect' };
@@ -104,14 +105,14 @@ export async function defaultRelease(job, workspace, { tmpRoot }) {
 // ---- the scheduler ------------------------------------------------------------------------
 export class Scheduler {
   constructor({ root, tmpRoot, policy = loadPolicy(), now = Date.now, availMem = async () => os.freemem(), runFile = realRunFile,
-    prepareWorkspace = defaultPrepare, releaseWorkspace = defaultRelease, runnerOptions = {}, log = () => {}, slowTestsFile = path.join(HERE, 'slow-tests.tsv'), slowTests = null } = {}) {
-    Object.assign(this, { slowTestsFile, slowSet: slowTests, root, tmpRoot, policy, now, availMem, runFile, prepareWorkspace, releaseWorkspace, runnerOptions, log });
+    prepareWorkspace = defaultPrepare, releaseWorkspace = defaultRelease, runnerOptions = {}, log = () => {}, slowTestsFile = path.join(HERE, 'slow-tests.tsv'), slowTests = null, collectLib = () => import('./test-impact/collect.mjs') } = {}) {
+    Object.assign(this, { collectLib, slowTestsFile, slowSet: slowTests, root, tmpRoot, policy, now, availMem, runFile, prepareWorkspace, releaseWorkspace, runnerOptions, log });
     this.jobsDir = path.join(root, 'jobs');
     this.jobs = new Map(); this.byKey = new Map(); this.running = new Map(); this.orphans = new Map(); this.pending = new Set();
     this.seq = 0; this.dirty = true; this.overviewDirty = true; this.ticking = false; this.stopping = false; this.stopped = false;
     this.lastAvail = null; this.lastSampleAt = null; this.lowCount = 0; this.paused = false; this.okSince = null; this.pauseCount = 0;
     this.alertKeys = new Set(); this.activeAlerts = new Map(); this.lastHeartbeat = -Infinity; this.lastOverview = -Infinity;
-    this.history = {};
+    this.history = {}; this.collectCtxs = new Map(); this.aggregating = new Set();
   }
 
   // -- persistence --
@@ -205,6 +206,7 @@ export class Scheduler {
     files = [...new Set(files)];
     if (!files.length) return reject('no files');
     if (raw.kind === 'baseline' && !raw.base) return reject('baseline needs base');
+    if (raw.kind === 'collect' && !raw.map) return reject('collect needs map (coverage map file)');
     if (!raw.worktree && !raw.snapshot && !(raw.kind === 'baseline' && raw.base)) return reject('needs worktree or snapshot');
     const priority = raw.priority && PRIORITY[raw.priority] !== undefined ? raw.priority : DEFAULT_PRIORITY[raw.kind];
     const cardId = raw.cardId ?? raw.card ?? null;
@@ -325,18 +327,24 @@ export class Scheduler {
     } else this.okSince = null;
   }
 
-  // Waiting is measured from the later of "file queued" and "this job last got a file admitted",
-  // so a long job that keeps making progress is not reported as blocked.
+  // Only waiting that is NOT explained by a fully busy machine counts: a queued file accrues idle-wait
+  // time while at least one execution slot is free (or the whole machine is empty) yet it is not
+  // being started (memory, pause, per-card cap...). A normal queue behind busy slots never alerts.
+  // Time accrues per check interval; a job making progress (a file admitted) restarts the count.
   checkWaits(t) {
+    const dt = this.lastWaitCheck == null ? 0 : Math.max(0, t - this.lastWaitCheck);
+    this.lastWaitCheck = t;
+    const slotFree = this.slotsInUse() < this.policy.hardCap;
     for (const job of this.jobs.values()) {
       if (job.terminal) continue;
       for (const f of job.files) {
         if (f.state !== 'QUEUED') continue;
-        const waited = t - Math.max(f.queuedAt, job.lastAdmitAt || 0);
-        if (waited >= this.policy.waitAlertMs) this.alert('WAIT_5MIN', job.runId, `${job.cardId || job.kind} waited ${Math.round(waited / 60000)} min for resources`);
-        if (waited >= this.policy.blockedMs && !f.blocked) {
+        if (slotFree && f.waitReason !== 'collect-yield') f.idleMs = (f.idleMs || 0) + dt;
+        const idle = f.idleMs || 0;
+        if (idle >= this.policy.waitAlertMs) this.alert('WAIT_5MIN', job.runId, `${job.cardId || job.kind} waited ${Math.round(idle / 60000)} min with free execution slots but could not start (${f.waitReason || 'unknown'})`);
+        if (idle >= this.policy.blockedMs && !f.blocked) {
           f.blocked = true; this.dirty = this.overviewDirty = true;
-          this.alert('RESOURCE_BLOCKED', job.runId, `${job.cardId || job.kind} blocked >${Math.round(this.policy.blockedMs / 60000)} min; concurrency is not raised automatically`);
+          this.alert('RESOURCE_BLOCKED', job.runId, `${job.cardId || job.kind} blocked >${Math.round(this.policy.blockedMs / 60000)} min with free slots; concurrency is not raised automatically`);
         }
       }
     }
@@ -372,10 +380,14 @@ export class Scheduler {
     }
   }
 
+  // Per-file test evidence lives beside the run's other temp files: removed with the run on PASS, kept on failure.
+  artifactsDir(job, file) { return path.join(this.tmpRoot, 'run', safe(job.runId), 'artifacts', file.id); }
+
   launch(job, file, reserve, slots) {
     const t = this.now(), key = `${job.runId}/${file.id}`;
     file.state = 'RUNNING'; file.startedAt = t; file.reservation = reserve; file.slots = slots; file.blocked = false; file.waitReason = null;
     job.lastAdmitAt = t; job.startedAt ??= t; job.status = 'RUNNING';
+    for (const other of job.files) if (other.state === 'QUEUED') other.idleMs = 0;
     this.clearAlert(job.runId, 'WAIT_5MIN'); this.clearAlert(job.runId, 'RESOURCE_BLOCKED');
     this.running.set(key, { key, runId: job.runId, cardId: job.cardId, file: file.file, slots, reserve, startedAt: t, memBytes: 0 });
     this.event(job, 'admitted', { file: file.file, reserveBytes: reserve, slots, queuedMs: t - file.queuedAt });
@@ -385,9 +397,10 @@ export class Scheduler {
       const resultFile = path.join(this.jobsDir, job.runId, 'results', `${file.id}.json`);
       try {
         job.workspace ??= await (job.wsPromise ??= this.prepareWorkspace(job, { tmpRoot: this.tmpRoot, policy: this.policy }));
-        result = await this.runFile({ cwd: job.workspace.cwd, file: file.file, deadline: this.deadlineOf(job, file), runId: job.runId, ownerSession: job.owner,
-          env: { ...(job.request.env || {}), TEMP: this.tmpRoot, TMP: this.tmpRoot }, onEvent: e => this.onRunnerEvent(job, file, key, e), resultFile,
-          eventsFile: path.join(this.tmpRoot, 'run', safe(job.runId), `${file.id}.events.jsonl`), ...this.runnerOptions });
+        const options = { cwd: job.workspace.cwd, file: file.file, deadline: this.deadlineOf(job, file), runId: job.runId, ownerSession: job.owner,
+          env: { FIELDS_TEST_ARTIFACTS: this.artifactsDir(job, file), ...(job.request.env || {}), TEMP: this.tmpRoot, TMP: this.tmpRoot }, onEvent: e => this.onRunnerEvent(job, file, key, e), resultFile,
+          eventsFile: path.join(this.tmpRoot, 'run', safe(job.runId), `${file.id}.events.jsonl`), ...this.runnerOptions };
+        result = job.kind === 'collect' ? await this.collectOne(job, file, options) : await this.runFile(options);
       } catch (error) {
         result = { status: 'CRASH', reason: `runner-error: ${String(error.message).slice(0, 200)}`, failures: [] };
         try { writeJsonAtomic(resultFile, { runId: job.runId, file: file.file, ...result }); } catch { /* ignore */ }
@@ -395,6 +408,29 @@ export class Scheduler {
       this.settle(job, file, result);
       this.maybeFinish(job);
     })());
+  }
+
+  // A collect task = run ONE test under V8 coverage through the scheduler's own runner (so slots, memory,
+  // deadline and events apply) and persist its shard next to the map. The aggregated map is folded from
+  // the shards once, when the whole job is done (aggregateCollect). A file with a usable shard is skipped.
+  async collectOne(job, file, options) {
+    const lib = await this.collectLib(), mapFile = path.resolve(job.request.map);
+    let ctx = this.collectCtxs.get(job.runId);
+    if (!ctx) { ctx = lib.openCollection(path.resolve(options.cwd), mapFile); this.collectCtxs.set(job.runId, ctx); }
+    let previous = null; try { previous = readMap(mapFile); } catch { /* no map yet: shards decide */ }
+    if (!lib.planResume(ctx, [file.file], previous).todo.length) return { status: 'PASS', reason: 'resumed from existing shard', failures: [], counts: null };
+    fs.mkdirSync(this.tmpRoot, { recursive: true });
+    const { ok, note, terminal, collected } = await lib.collectShard(ctx, file.file, { tempRoot: this.tmpRoot,
+      runFileImpl: o => this.runFile({ ...options, env: { ...options.env, ...o.env }, allowSkip: o.allowSkip, allowZeroTests: o.allowZeroTests }) });
+    if (terminal && collected) return terminal;                                 // PASS or FAIL with coverage kept
+    return { ...(terminal || {}), status: terminal?.status && terminal.status !== 'PASS' ? terminal.status : 'INCOMPLETE', reason: `coverage unavailable: ${note}`, failures: terminal?.failures || [] };
+  }
+  async aggregateCollect(job) {
+    const cwd = job.workspace?.cwd ?? job.request.worktree;
+    if (!cwd) return;
+    const { main } = await this.collectLib(), saved = process.exitCode;
+    try { await main(['--root', cwd, '--map', path.resolve(job.request.map), ...job.files.map(f => f.file)], { aggregateOnly: true, runId: job.runId }); }
+    finally { process.exitCode = saved; }
   }
 
   onRunnerEvent(job, file, key, e) {
@@ -428,17 +464,25 @@ export class Scheduler {
     this.dirty = this.overviewDirty = true;
   }
 
-  maybeFinish(job) { if (!job.terminal && job.files.every(f => f.state === 'DONE')) this.finishJob(job); }
+  maybeFinish(job) {
+    if (job.terminal || !job.files.every(f => f.state === 'DONE')) return;
+    if (job.kind !== 'collect' || !job.request.map) return this.finishJob(job);
+    if (this.aggregating.has(job.runId)) return;      // the result is published only after the map is
+    this.aggregating.add(job.runId);
+    this.track(this.aggregateCollect(job).catch(error => { job.aggError = String(error.message).slice(0, 200); this.event(job, 'aggregate_error', { message: job.aggError }); })
+      .then(() => { this.aggregating.delete(job.runId); this.finishJob(job); }));
+  }
   finishJob(job) {
     const sts = job.files.map(f => f.status);
     job.status = sts.every(s => s === 'PASS') ? 'PASS' : sts.every(s => s === 'PASS' || s === 'FAIL') ? 'FAIL' : 'INCOMPLETE';
+    if (job.aggError) job.status = 'INCOMPLETE';
     job.terminal = true; job.endedAt = this.now();
     const counts = {}; for (const s of sts) counts[s] = (counts[s] || 0) + 1;
     const files = job.files.map(f => ({ file: f.file, id: f.id, status: f.status, reason: f.reason, ...f.summary,
       startedAt: f.startedAt ? new Date(f.startedAt).toISOString() : null, waitedMs: f.startedAt ? f.startedAt - f.queuedAt : null }));
     const result = { runId: job.runId, kind: job.kind, cardId: job.cardId, ownerSession: job.owner, status: job.status, base: job.request.base ?? null, treeHash: job.request.treeHash ?? null,
       createdAt: new Date(job.createdAt).toISOString(), startedAt: job.startedAt ? new Date(job.startedAt).toISOString() : null, endedAt: new Date(job.endedAt).toISOString(),
-      queuedMs: (job.startedAt ?? job.endedAt) - job.createdAt, runMs: job.startedAt ? job.endedAt - job.startedAt : 0, counts, files };
+      queuedMs: (job.startedAt ?? job.endedAt) - job.createdAt, runMs: job.startedAt ? job.endedAt - job.startedAt : 0, counts, files, ...(job.aggError ? { reason: `map aggregation failed: ${job.aggError}` } : {}) };
     const bad = files.filter(f => f.status !== 'PASS');
     const md = [`# ${job.kind} ${job.cardId || ''} ${job.runId}`, `status: ${job.status}  (${files.length - bad.length}/${files.length} pass)`,
       `queued ${Math.round(result.queuedMs / 1000)}s, ran ${Math.round(result.runMs / 1000)}s`,

@@ -143,6 +143,58 @@ function unavailableRecord(commit, durationMs, terminal, message) {
     reason: terminal?.reason ?? message, sources: {} };
 }
 
+// Shared by main() and the scheduler's collect jobs (one file per scheduler task).
+export function openCollection(root, mapFile, runGit = args => git(root, args)) {
+  const identity = worktreeContext(root, mapFile, runGit);
+  return { root, mapFile, runGit, identity, commit: identity.head, graph: staticGraph(root), shardDir: `${mapFile}.shards` };
+}
+
+// Resume: per-file shards are the durable truth. A file needs (re)collection when it has no shard, or its
+// shard is unavailable (timeout/crash/incomplete/no coverage). Shards of this commit that never reached the
+// aggregated map are folded back in via `updates` without re-running.
+export function planResume(ctx, files, previous) {
+  const { shardDir, commit, identity } = ctx, todo = [], updates = {};
+  for (const file of files) {
+    const shard = readShard(shardDir, file);
+    const record = previous?.tests?.[file];
+    // A PASS on the same clean snapshot may be resumed even if its dynamic
+    // dependencies prevent selection from using it to exclude any future test.
+    if (shard?.commit === commit && !recordInvalidReason(shard.record, identity, { forResume: true })) {
+      if (!record || record.commit !== commit || record.collectedAt !== shard.record.collectedAt
+        || recordInvalidReason(record, identity, { forResume: true })) updates[file] = shard.record;
+      if (shard.collected) continue;
+    } else if (!shard && record?.commit === commit && !recordInvalidReason(record, identity, { forResume: true })) continue;
+    todo.push(file);
+  }
+  return { todo, updates };
+}
+
+// Run one test under V8 coverage and persist its shard. Never throws for a bad collection: it is stored as an
+// explicit "unavailable" record. Returns the record plus the runner terminal (for the caller's own accounting).
+export async function collectShard(ctx, file, options = {}) {
+  const { root, shardDir, commit, identity, runGit, mapFile } = ctx;
+  const started = performance.now();
+  const dependencies = dependencySnapshot(root, file, ctx.graph);
+  let record, collected = false, note, terminal = null, ok = true;
+  const capture = options.runFileImpl ?? runFile;
+  try {
+    record = await collectOne(root, file, commit, { ...options, runFileImpl: async o => (terminal = await capture(o)) });
+    collected = true; note = `${record.durationMs}ms, exit=${record.exitCode}`;
+    if (record.exitCode !== 0) ok = false;
+  } catch (error) {
+    ok = false;
+    terminal = error.terminal ?? terminal;
+    record = unavailableRecord(commit, Math.round(performance.now() - started), error.terminal, error.message);
+    note = `UNAVAILABLE ${record.status}: ${record.reason}`;
+  }
+  const finished = worktreeContext(root, mapFile, runGit);
+  record = { ...record, ...dependencies, nodeVersion: identity.nodeVersion, lockHash: identity.lockHash,
+    dirty: identity.dirty || finished.dirty || finished.head !== commit || finished.lockHash !== identity.lockHash };
+  atomicWrite(shardPath(shardDir, file), `${JSON.stringify({ file, commit, collected, status: record.status ?? 'PASS', finishedAt: new Date().toISOString(), record })}
+`);
+  return { record, collected, ok, note, terminal };
+}
+
 export async function main(args = process.argv.slice(2), injected = {}) {
   let root = process.cwd(), mapFile, listFile, jobs = 1, eventsFile, timeoutMs, graceMs;
   const positional = [];
@@ -166,7 +218,6 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   root = path.resolve(root);
   mapFile = path.resolve(mapFile || path.join(root, 'test-impact-map.json'));
   eventsFile = path.resolve(eventsFile || `${mapFile}.events.jsonl`);
-  const shardDir = `${mapFile}.shards`;
   const listed = listFile ? fs.readFileSync(listFile, 'utf8').replace(/^﻿/, '').split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')) : [];
   const files = unique((listFile || positional.length ? [...listed, ...positional] : discoverTests(root))
     .map(file => slash(path.relative(root, path.resolve(root, file)))));
@@ -174,31 +225,24 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   for (const file of files) if (file.startsWith('../') || path.isAbsolute(file) || !fs.existsSync(path.join(root, file)))
     throw new Error(`Test outside root or missing: ${file}`);
   const runGit = injected.git ?? (args => git(root, args));
-  const identity = worktreeContext(root, mapFile, runGit), commit = identity.head;
-  const graph = staticGraph(root);
+  const ctx = openCollection(root, mapFile, runGit), { commit, identity } = ctx;
   let previous;
   try { previous = readMap(mapFile); } catch { /* restart from shards */ }
   if (previous && ![1, 2].includes(previous.version)) previous = undefined;
-  let updates = {}, next = 0, done = 0;
+  let next = 0, done = 0;
   const allTests = discoverTests(root);
+  const updatesFromPlan = planResume(ctx, files, previous);
+  let updates = {};
   for (const test of Object.keys(previous?.tests || {})) if (!allTests.includes(test)) updates[test] = null;
-  const failed = new Set();
-  // Resume: per-file shards are the durable truth. Re-run only files with no shard, or whose
-  // shard is unavailable (timeout/crash/incomplete/no coverage). Shards of this commit that
-  // never reached the aggregated map are folded back in without re-running.
-  const todo = [];
-  for (const file of files) {
-    const shard = readShard(shardDir, file);
-    const record = previous?.tests?.[file];
-    // A PASS on the same clean snapshot may be resumed even if its dynamic
-    // dependencies prevent selection from using it to exclude any future test.
-    if (shard?.commit === commit && !recordInvalidReason(shard.record, identity, { forResume: true })) {
-      if (!record || record.commit !== commit || record.collectedAt !== shard.record.collectedAt
-        || recordInvalidReason(record, identity, { forResume: true })) updates[file] = shard.record;
-      if (shard.collected) continue;
-    } else if (!shard && record?.commit === commit && !recordInvalidReason(record, identity, { forResume: true })) continue;
-    todo.push(file);
+  Object.assign(updates, updatesFromPlan.updates);
+  // aggregateOnly: fold existing shards into the map without running anything (scheduler collect jobs).
+  const todo = injected.aggregateOnly ? [] : updatesFromPlan.todo;
+  // ...but an unavailable shard of this commit is still recorded (non-zero exit: always selected), as a run would.
+  if (injected.aggregateOnly) for (const file of updatesFromPlan.todo) {
+    const shard = readShard(ctx.shardDir, file);
+    if (shard?.commit === commit) updates[file] = shard.record;
   }
+  const failed = new Set();
   fs.mkdirSync(path.dirname(eventsFile), { recursive: true });
   const sink = event => fs.appendFileSync(eventsFile, `${JSON.stringify(event)}\n`);
   const runId = injected.runId ?? `collect-${Date.now()}`;
@@ -221,23 +265,9 @@ export async function main(args = process.argv.slice(2), injected = {}) {
   await Promise.all(Array.from({ length: Math.min(jobs, todo.length) }, async () => {
     while (next < todo.length) {
       const file = todo[next++];
-      const started = performance.now();
-      const dependencies = dependencySnapshot(root, file, graph);
-      let record, collected = false, note;
       // One failing file is reported and persisted as unavailable, never silently stops its worker.
-      try {
-        record = await collectOne(root, file, commit, options);
-        collected = true; note = `${record.durationMs}ms, exit=${record.exitCode}`;
-        if (record.exitCode !== 0) failed.add(file);
-      } catch (error) {
-        failed.add(file);
-        record = unavailableRecord(commit, Math.round(performance.now() - started), error.terminal, error.message);
-        note = `UNAVAILABLE ${record.status}: ${record.reason}`;
-      }
-      const finished = worktreeContext(root, mapFile, runGit);
-      record = { ...record, ...dependencies, nodeVersion: identity.nodeVersion, lockHash: identity.lockHash,
-        dirty: identity.dirty || finished.dirty || finished.head !== commit || finished.lockHash !== identity.lockHash };
-      atomicWrite(shardPath(shardDir, file), `${JSON.stringify({ file, commit, collected, status: record.status ?? 'PASS', finishedAt: new Date().toISOString(), record })}\n`);
+      const { record, collected, ok, note } = await collectShard(ctx, file, options);
+      if (!ok) failed.add(file);
       updates[file] = record;
       console.error(`${file}: ${note}`);
       sink({ type: 'file-done', runId, ts: new Date().toISOString(), file, collected, status: record.status ?? null });
