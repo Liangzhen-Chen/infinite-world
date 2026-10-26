@@ -38,7 +38,7 @@ export function advancePost(d,e,minute){
    else row.status='receipt-waiting';d.set(path(row.id),row);continue;
   }
   if(row.legIndex<row.legs.length-1){
-   const next=row.legs[row.legIndex+1],services=transportServices(e,d.get('state'),trip.to),service=services.find(s=>s.asset===next.asset);
+   const next=row.legs[row.legIndex+1],services=transportServices(e,d.document,trip.to),service=services.find(s=>s.asset===next.asset);
    if(!service){row.status='waiting';row.reason='接力承运人或资产尚未到站';d.set(path(row.id),row);continue;}
    try{
     const nextTrip=bookTransport(d,e,{owner:row.from,recipient:row.from,asset:next.asset,from:trip.to,to:next.to,post:row.id},`${row.id}:leg:${row.legIndex+1}`);

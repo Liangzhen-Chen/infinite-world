@@ -266,7 +266,7 @@ const getter=d=>typeof d.peek==='function'?(...p)=>d.peek(...p):(...p)=>d.get(..
 const bookView=src=>src?(typeof src.get==='function'?src:{get:(...p)=>p.reduce((v,k)=>v?.[k],src)}):null;
 function ledgerValue(read,account,lots){
     if(!lots)return read('ledger','accounts',account)??0;
-    return (read('ledger','lots',account)??[]).filter(l=>(lots.kind==null||l.kind===lots.kind)&&(lots.after==null||l.expiresDay>lots.after)).reduce((n,l)=>n+l.qty,0);
+    return (read('ledger','lots',account)??[]).filter(l=>(lots.id==null||l.id===lots.id)&&(lots.kind==null||l.kind===lots.kind)&&(lots.after==null||l.expiresDay>lots.after)).reduce((n,l)=>n+l.qty,0);
 }
 // legacy: 取旧字段的函数；account: 账户键；lots: {kind?, after?} 时读批次（kind 相等且 expiresDay > after）。
 export function priceRead(src,{point,scope='stock',account,legacy,lots=null}){

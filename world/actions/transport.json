@@ -1,0 +1,246 @@
+{
+ "format": 1,
+ "namespace": "transport",
+ "actions": [
+  {
+   "id": "transport:forward.sign",
+   "call": {
+    "tool": "world_trade",
+    "operation": "transport",
+    "fixed": {
+     "task": "forward"
+    }
+   },
+   "label": "签订远期交付",
+   "verb": "forward.sign",
+   "group": "托运",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "seller"
+    ]
+   },
+   "slots": [
+    {
+     "name": "seller",
+     "kind": "entity",
+     "entity": "person",
+     "required": true
+    },
+    {
+     "name": "item",
+     "kind": "entity",
+     "entity": "item",
+     "required": true
+    },
+    {
+     "name": "quantity",
+     "kind": "quantity",
+     "required": true
+    },
+    {
+     "name": "coins",
+     "kind": "coins",
+     "required": true
+    },
+    {
+     "name": "deadline",
+     "kind": "quantity",
+     "required": true
+    },
+    {
+     "name": "location",
+     "kind": "entity",
+     "entity": "place"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'contract').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [
+    "远期交付"
+   ],
+   "narration": "forward.sign",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "transport:forward.cancel",
+   "call": {
+    "tool": "world_trade",
+    "operation": "transport",
+    "fixed": {
+     "task": "forward_cancel"
+    }
+   },
+   "label": "商议取消远期",
+   "verb": "forward.cancel",
+   "group": "托运",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "contract",
+     "kind": "text",
+     "required": true
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'contract').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [
+    "合意取消"
+   ],
+   "narration": "forward.cancel",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "transport:forward.offer",
+   "call": {
+    "tool": "world_trade",
+    "operation": "transport",
+    "fixed": {
+     "task": "forward"
+    }
+   },
+   "label": "出售远期产出",
+   "verb": "forward.offer",
+   "group": "托运",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player",
+    "others": [
+     "buyer"
+    ]
+   },
+   "slots": [
+    {
+     "name": "buyer",
+     "kind": "entity",
+     "entity": "person",
+     "required": true
+    },
+    {
+     "name": "item",
+     "kind": "entity",
+     "entity": "item",
+     "required": true
+    },
+    {
+     "name": "quantity",
+     "kind": "quantity",
+     "required": true
+    },
+    {
+     "name": "coins",
+     "kind": "coins"
+    },
+    {
+     "name": "deadline",
+     "kind": "quantity",
+     "required": true
+    },
+    {
+     "name": "location",
+     "kind": "entity",
+     "entity": "place"
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'contract').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [
+    "出售远期"
+   ],
+   "narration": "forward.offer",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  },
+  {
+   "id": "transport:forward.fulfill",
+   "call": {
+    "tool": "world_trade",
+    "operation": "transport",
+    "fixed": {
+     "task": "fulfill"
+    }
+   },
+   "label": "履行远期交付",
+   "verb": "forward.fulfill",
+   "group": "托运",
+   "pack": null,
+   "readOnly": false,
+   "participants": {
+    "actor": "player"
+   },
+   "slots": [
+    {
+     "name": "contract",
+     "kind": "text",
+     "required": true
+    },
+    {
+     "name": "quantity",
+     "kind": "quantity",
+     "required": true
+    }
+   ],
+   "preconditions": [
+    "canAct(actor, 'contract').allowed"
+   ],
+   "cost": {
+    "time": "engine"
+   },
+   "check": null,
+   "visibility": {
+    "catalog": "search",
+    "witness": "private"
+   },
+   "synonyms": [
+    "履行远期"
+   ],
+   "narration": "forward.fulfill",
+   "source": "catalog",
+   "consent": {
+    "from": "self"
+   }
+  }
+ ]
+}

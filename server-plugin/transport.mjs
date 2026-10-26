@@ -3,7 +3,7 @@ import {requestContractConsent} from './action-consent.mjs';
 import {counterpart} from './credit.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
-import {openGoodsObligation,performGoodsObligation,extendGoodsObligation} from './obligation-conditional.mjs';
+import {openGoodsObligation,performGoodsObligation,extendGoodsObligation,cancelGoodsObligation} from './obligation-conditional.mjs';
 import {transition} from './transition.mjs';
 import {financeBalance,financeTransfer,financeChange} from './finance-bank.mjs';
 import {escrow as escrowAccount} from './money.mjs';
@@ -26,7 +26,9 @@ import {postGeneratedQuest} from './quest-sources.mjs';
 import {groupAccountView,groupAccountPath,ensureGroupAccount} from './group-account.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHoldings,setLocation} from './holdings.mjs';
+import {derived} from './derived.mjs';
+import {marketQuote} from './market.mjs';
 declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),path=id=>['state','records',id];
@@ -41,7 +43,28 @@ const actorLocation=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const assets=(e,s)=>[...new Map([...openingTransportAssets.filter(a=>e.byId.has(a.owner)&&e.byId.has(a.location)),...all(s).filter(a=>a.category==='transport_asset')].map(a=>[a.id,a])).values()];
 function available(e,s,id){const n=s.npcs?.[id];return n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel&&!e.npcAutonomyBusy(s,id,s.minute)&&!personConstraint(e,s,id)&&(personAge(e,s,id).value??0)>=18;}
 function operator(e,s,owner){return s.npcs?.[owner]?owner:groupRepresentative(e,s,owner);}
-export function transportAssetView(e,s,id){
+function draftAnimals(e,document,asset){
+ const s=document.state,view=holdingsView(document),reserved=new Set(live(s).filter(r=>r.asset!==asset.id).flatMap(r=>r.draftSources??[]));
+ const owned=new Set(['owns','tamed_by'].flatMap(kind=>aliveHoldings(view,{kind,holder:asset.owner}).map(r=>r.subject)));
+ const sources=[];
+ for(const id of owned){
+  if(reserved.has(id)||asset.animal&&id!==asset.animal)continue;
+  const c=s.creatures?.[id];
+  if(c){
+   if(c.location!==asset.location||c.hp<c.maxHp/2||['死亡','昏迷','患病'].includes(c.status)||c.mind?.awakened||c.care?.sickness||c.care?.fatigue>=e.rules.petCare.maximumRideFatigue||c.care?.hunger>=e.rules.petCare.hungryThreshold||s.player.mount===id)continue;
+   const capacity=e.byId.get(c.species)?.tamingRule?.carryKg??0;if(capacity>0)sources.push({id,kg:capacity});
+  }else{
+   const population=all(s).find(r=>r.category==='husbandry'&&r.id===id);
+   if(population?.location!==asset.location)continue;
+   const perHead=e.byId.get(population.species)?.tamingRule?.carryKg??0;
+   const healthy=population.health?population.health.S+population.health.R:population.count;
+   if(perHead>0&&healthy>0)sources.push({id,kg:Math.min(population.count,healthy)*perHead});
+  }
+ }
+ return sources;
+}
+export function transportAssetView(e,document,id){
+ const s=document.state;
  const a=s.records?.[assetKey(id)]??openingTransportAssets.find(a=>a.id===assetKey(id)&&e.byId.has(a.owner)&&e.byId.has(a.location));if(a?.category!=='transport_asset')return null;
  const spec=SPECS[a.kind];let factor=a.destroyedAt!==undefined||a.durability<25?0:a.durability<60?0.5:1,location=a.location;
  if(a.kind==='pack'){
@@ -50,12 +73,20 @@ export function transportAssetView(e,s,id){
   location=c?.location??location;
   if(rule?.carryKg)factor*=Math.min(1,rule.carryKg/spec.kg);
  }
+ const draft=a.kind==='cart'?draftAnimals(e,document,a):[],draftKg=draft.reduce((sum,r)=>sum+r.kg,0);
+ const capacityFactor=derived(e,document,'transport:capacity',a.id,{holder:a.owner,base:1});
+ const kg=(a.kind==='cart'?Math.min(spec.kg,draftKg):spec.kg)*factor*capacityFactor;
+ const ratio=kg/spec.kg;
  const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.starts<=s.minute&&r.ends>s.minute);
  const busy=unfinished(s).find(r=>r.asset===a.id);
- return {...a,location,holder:lease?.tenant??a.owner,capacityKg:spec.kg*factor,capacityM3:spec.m3*factor,seats:Math.floor(spec.seats*factor),mode:spec.mode,factor,busy:busy?.id??null,
+ return {...a,location,holder:lease?.tenant??a.owner,capacityKg:kg,capacityM3:spec.m3*ratio,seats:Math.floor(spec.seats*ratio),draftSources:draft.map(r=>r.id),mode:spec.mode,factor,busy:busy?.id??null,
   tags:['item','transport',a.kind,a.kind==='pack'?'flesh':'wood',...(factor===0?['broken']:[])]};
 }
 export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},eventId){
+ return obligationTransaction(d,()=>createTransportAssetInner(d,e,{owner,kind,animal,id},eventId));
+}
+function createTransportAssetInner(d,e,{owner,kind,animal,id},eventId){
+ ensureHoldings(d,e);
  const spec=SPECS[kind];if(!spec)throw preconditionFailure('承运资产类型无效');
  const s=d.get('state'),key=assetKey(id??eventId),location=actorLocation(s,owner)??actorLocation(s,operator(e,s,owner));
  if(!location||d.get(...path(key)))throw preconditionFailure('资产地点或编号无效');
@@ -71,10 +102,11 @@ export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},
   moveGoods(d,e,owner,'item_wood',spec.wood,{take:true,books:build});moveGoods(d,e,owner,'item_iron',spec.metal,{take:true,books:build});
  }
  const asset={category:'transport_asset',id:key,kind,owner,location,durability:100,maxDurability:100,animal:animal??null,createdAt:s.minute,sourceEvent:eventId};
- holdingSet(d,null,path(key),asset,'transport');return transportAssetView(e,d.get('state'),key);
+ holdingSet(d,null,path(key),asset,'transport');return transportAssetView(e,d.document,key);
 }
-export function transportServices(e,s,location){
- return assets(e,s).map(a=>transportAssetView(e,s,a.id)).filter(a=>a.factor&&!a.busy&&a.location===location).flatMap(a=>{
+export function transportServices(e,document,location){
+ const s=document.state;
+ return assets(e,s).map(a=>transportAssetView(e,document,a.id)).filter(a=>a.factor&&a.capacityKg>0&&!a.busy&&a.location===location).flatMap(a=>{
   const driver=operator(e,s,a.holder),group=groupView(e,s,a.holder);
   if(!available(e,s,driver)||actorLocation(s,driver)!==location||!(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??'')))return [];
   const now=s.minute,depart=Math.ceil(now/60)*60;
@@ -86,19 +118,29 @@ function dimensions(e,cargo,passengers){
  for(const c of cargo){int(c.quantity,1,'托运数量');const def=e.byId.get(c.item);if(!def||!(def.weight>=0))throw preconditionFailure('托运物品未登记重量');kg+=c.quantity*def.weight;m3+=c.quantity*(def.volumeM3??def.weight/250);}
  return {kg,m3};
 }
-export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],departAt=d.get('state','minute')}){
- const s=d.get('state'),a=transportAssetView(e,s,asset);if(!a||!a.factor||a.busy||a.location!==from)throw preconditionFailure('没有同地可用运力');
+export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='player',escort=null,departAt=d.get('state','minute')}){
+ const s=d.get('state'),a=transportAssetView(e,d.document,asset);if(!a||!a.factor||!a.capacityKg||a.busy||a.location!==from)throw preconditionFailure('没有同地可用运力');
  const load=dimensions(e,cargo,passengers);if(load.kg>a.capacityKg||load.m3>a.capacityM3||passengers.length>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
  const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.document.randomSeed);}finally{e.airDraft=prior;}
  const edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id)),distanceKm=edges.reduce((n,r)=>n+r.lengthKm,0);
- const risk=edges.reduce((n,r)=>n+(Number(r.risk)||0),0)/Math.max(1,edges.length);
- const freight=Math.max(1,Math.ceil(distanceKm*Math.max(load.kg,load.m3*250,1)*SPECS[a.kind].rate*(1+risk)));
- let at=from;const passages=edges.map(r=>{const destination=r.from===at?r.to:r.from;at=destination;const tax=tradeTax(e,s,destination,'tariff');return {edge:r.id,destination,treasury:tax.settlement,toll:r.toll,tariff:(r.toll||r.guards?.length)?Math.floor(cargo.reduce((v,c)=>v+c.quantity*(e.byId.get(c.item).basePrice??0),0)*tax.bps/10000):0};});
+ const billableKg=Math.max(load.kg,load.m3*250,1),capacityFactor=Math.max(1,SPECS[a.kind].kg/a.capacityKg);
+ let at=from;const passages=edges.map(r=>{
+  const destination=r.from===at?r.to:r.from;at=destination;
+  const guards=new Set((r.guards??[]).filter(id=>available(e,s,id)&&[r.from,r.to].includes(actorLocation(s,id))));
+  if(escort&&available(e,s,escort)&&actorLocation(s,escort)===from)guards.add(escort);
+  const deterrence=derived(e,d.document,'combat:deterrence',a.id,{target:r.id,base:guards.size/(guards.size+1)});
+  const risk=derived(e,d.document,'transport:risk',a.id,{target:r.id,base:Math.max(0,Number(r.risk)||0)*(1-deterrence)});
+  const tax=tradeTax(e,s,destination,'tariff');
+  const cargoValue=Math.trunc(cargo.reduce((v,c)=>v+c.quantity*marketQuote(d,e,{item:c.item,location:destination,seller:owner,instances:c.instances}).explanation.value.value,0));
+  return {edge:r.id,destination,treasury:tax.settlement,toll:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:r.lengthKm*billableKg*SPECS[a.kind].rate*capacityFactor*(1+risk)};
+ });
+ const risk=distanceKm?passages.reduce((sum,p,i)=>sum+p.risk*edges[i].lengthKm,0)/distanceKm:0;
+ const freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
- return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt:departAt+route.minutes,route,passages,load,distanceKm,risk,freight,tariff,toll:route.cost,total:freight+tariff+route.cost};
+ return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt:departAt+route.minutes,route,passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll:route.cost,total:freight+tariff+route.cost};
 }
 export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},eventId){
- const a=transportAssetView(e,d.get('state'),asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
+ const a=transportAssetView(e,d.document,asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
  if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw preconditionFailure('资产不能出租');
  financeBalance(d,e,a.owner);financeTransfer(d,e,tenant,a.owner,coins,eventId);assessTradeTax(d,e,{seller:a.owner,cost:coins,location:a.location,sourceEvent:eventId});
  const row={category:'transport_lease',asset:a.id,tenant,owner:a.owner,starts:now,ends:now+minutes,coins};holdingSet(d,null,path(`transport_lease:${eventId}`),row,'transport');return row;
@@ -127,12 +169,12 @@ function bookTransportInner(d,e,args,eventId){
  const forwarding=postal?.category==='post'&&postal.from===owner&&previous?.status==='delivered'&&previous.to===from;
  const external=args.externalOrder&&s.records?.[args.externalOrder];
  const externalValid=external?.category==='settlement_trade'&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
- const a=transportAssetView(e,s,asset),service=transportServices(e,s,from).find(x=>x.asset===a?.id);
+ const a=transportAssetView(e,d.document,asset),service=transportServices(e,d.document,from).find(x=>x.asset===a?.id);
  if(!service)throw preconditionFailure('承运人当前不能提供班次');
  const departAt=args.departAt??service.nextDeparture;int(departAt,now,'发车时间');
  if(departAt%service.intervalMinutes!==0)throw preconditionFailure('不在承运班次时间');
  if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw preconditionFailure('发货人须在装货地点');
- const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,departAt}),id=`transport:${eventId}`;
+ const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,owner,escort,departAt}),id=`transport:${eventId}`;
  if(!q.route.edges.length)throw preconditionFailure('发货与目的地须为不同地点');
  if(d.get(...path(id)))throw preconditionFailure('运单编号已存在');
  const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.ends>now);if(lease&&lease.ends<q.estimatedArrivalAt)throw preconditionFailure('租约不能覆盖承运全程');
@@ -152,17 +194,17 @@ function bookTransportInner(d,e,args,eventId){
  const escortFee=escort?Math.max(e.rules.quests.rewardCopperRanges.D[0],Math.min(e.rules.quests.rewardCopperRanges.D[1],Math.ceil(q.distanceKm*(1+q.risk)))):0;
  if(financeBalance(d,e,owner)<q.total+escortFee)throw preconditionFailure('托运运费或护送资金不足');
  for(const p of q.passages)if(p.toll&&(!p.treasury||!groupAccountView(e,s,p.treasury)&&!e.world.settlementProfiles?.some(r=>r.id===p.treasury)))throw preconditionFailure('收费路段没有已登记的收款公账');
- const row={category:'transport',id,asset:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
-  freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
+ const row={category:'transport',id,asset:a.id,cargoLocation:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
+  freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],load:q.load,draftSources:a.draftSources,passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
   transport:{edges:q.route.edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null},history:[{minute:now,location:from,kind:'booked'}]};
- if(!d.get(...path(a.id)))holdingSet(d,null,path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','mode','factor','busy','tags'].includes(k))),'transport');
+ if(!d.get(...path(a.id)))holdingSet(d,null,path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','draftSources','mode','factor','busy','tags'].includes(k))),'transport');
  if(!externalValid)for(const c of cargo){const moved=moveGoods(d,e,owner,c.item,c.quantity,{take:true,trip:id});const units=moved.instances??[];row.cargo.push({...c,instances:units});for(const unit of units)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:id,status:'托运'},'transport');}
  financeTransfer(d,e,owner,service.carrier,q.freight+q.toll,eventId);assessTradeTax(d,e,{seller:service.carrier,cost:q.freight,location:from,sourceEvent:eventId});
  // Route tolls and tariffs are actual payments to the current destination treasury.
  for(const p of q.passages){
   if(p.toll&&!groupAccountView(e,d.get('state'),p.treasury))d.set(['state','settlements',p.treasury],{treasury:0,treasuryLedger:[],granary:false,population:0});
   if(p.toll)financeTransfer(d,e,service.carrier,p.treasury,p.toll,`${eventId}:toll:${p.edge}`);
-  if(p.tariff)assessTradeTax(d,e,{seller:owner,cost:cargo.reduce((n,c)=>n+c.quantity*(e.byId.get(c.item).basePrice??0),0),location:p.destination,sourceEvent:`${eventId}:${p.edge}`,kind:'tariff'});
+  if(p.tariff)assessTradeTax(d,e,{seller:owner,cost:p.cargoValue,location:p.destination,sourceEvent:`${eventId}:${p.edge}`,kind:'tariff'});
  }
  if(escortFee){
   // The existing board's verifiable record objective provides the escort contract.
@@ -186,9 +228,14 @@ function bookTransportInner(d,e,args,eventId){
  }
  holdingSet(d,null,path(id),row,'transport');index(d,id);return clone(row);
 }
-function setPosition(d,row,location){
+function setPosition(d,e,row,location){
  holdingSet(d,null,[...path(row.asset),'location'],location,'transport');
- const animal=d.get(...path(row.asset),'animal');if(animal)holdingSet(d,null,['state','creatures',animal,'location'],location,'transport');
+ const animal=d.get(...path(row.asset),'animal');if(animal){holdingSet(d,null,['state','creatures',animal,'location'],location,'transport');setLocation(d,{entity:animal,at:location,mode:'place',writer:'transport',engine:e});}
+ for(const id of row.draftSources??[]){
+  if(d.get('state','creatures',id))holdingSet(d,null,['state','creatures',id,'location'],location,'transport');
+  else {const key=Object.keys(d.get('state','records')).find(k=>d.get('state','records',k,'category')==='husbandry'&&d.get('state','records',k,'id')===id);if(key)holdingSet(d,null,['state','records',key,'location'],location,'transport');}
+  setLocation(d,{entity:id,at:location,mode:'place',writer:'transport',engine:e});
+ }
  for(const actor of [row.driver,...row.passengers,...row.escort?[row.escort]:[]]){
   if(actor==='player')d.set(['state','location'],location);
   else {d.set(['state','npcs',actor,'location'],location);d.set(['state','npcs',actor,'activity'],row.status==='delivered'?'抵达':'承运途中');if(row.status==='delivered')d.remove(['state','npcs',actor,'cognitionTravel']);}
@@ -199,8 +246,8 @@ export function advanceTransport(d,e,minute){
  for(const old of live(d.get('state'))){const row=clone(old),t=row.transport;
   if(t.nextAt>minute)continue;
   if(t.nextAt<minute)throw Error('承运时钟越过未处理节点');
-  const asset=transportAssetView(e,d.get('state'),row.asset);
-  if(!asset?.factor||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
+  const asset=transportAssetView(e,d.document,row.asset);
+  if(!asset?.factor||!asset.capacityKg||row.load.kg>asset.capacityKg||row.load.m3>asset.capacityM3||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
    row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';holdingSet(d,null,path(row.id),row,'transport');continue;
   }
   if(t.segment){const waypoint=stepTransport(e,t,t.segment);
@@ -210,8 +257,8 @@ export function advanceTransport(d,e,minute){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
    const handover=!row.cargo.length||actorLocation(d.get('state'),row.recipient)===t.location;
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
-   row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,row,t.location);
-   if(!handover)row.status='arrived';
+   row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,e,row,t.location);
+   if(!handover){row.status='arrived';row.cargoLocation=t.location;}
    if(row.escortQuest){const q=d.get('state','quests',row.escortQuest);if(q&&(Boolean(row.escortWage)?d.get(...path(q.id),'escrow')>0:q.escrow&&q.status==='进行中')){
     if(Boolean(row.escortWage))settleEscort(d,e,row,q,minute);
     else{financeChange(d,e,row.escort,q.escrow,`${row.id}:escort`,{account:escrowAccount(q.id),writer:'transport',eventId:`${row.id}:escort`});d.set(['state','quests',q.id],{...q,status:'已完成',escrow:0,rewardPaid:q.escrow,resolvedAt:minute});}
@@ -224,7 +271,7 @@ export function advanceTransport(d,e,minute){
    row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
    if(t.segment.kind==='wait')row.history.push({minute,location:t.location,kind:'blocked',edge:t.edges[t.edgeIndex]});
    // Between endpoints the route id and remaining distance, not a false town address, locate the shipment.
-   setPosition(d,row,t.location);
+   setPosition(d,e,row,t.location);
   }
   holdingSet(d,null,path(row.id),row,'transport');
  }
@@ -310,11 +357,11 @@ export function compensateTransportLoss(d,e,{loss,amount,payer,actor=payer},even
 }
 export function transportScene(e,document){
  const s=document.state,row=unfinished(s).find(r=>r.passengers.includes('player'));if(!row)return null;
- const position=transportPosition(e,s,row),asset=transportAssetView(e,s,row.asset),name=id=>e.byId.get(id)?.name??id;
+ const position=transportPosition(e,s,row),asset=transportAssetView(e,document,row.asset),name=id=>e.byId.get(id)?.name??id;
  return `【时间】${e.calendar(s.minute).text}\n【乘车船】${asset.kind}｜${row.status}｜${name(row.from)}至${name(row.to)}\n【实际位置】${position.location?name(position.location):`${position.route}路段上，距下一节点${position.remainingKm.toFixed(2)}公里`}\n【承运人】${name(row.driver)}｜预计抵达${e.calendar(row.estimatedArrivalAt).text}${row.reason?`｜${row.reason}`:''}\n【你】生命${s.player.hp}/${s.player.maxHp}｜铜${s.player.coins}｜运单${row.id}`;
 }
 export function destroyTransportAsset(d,e,{asset,cause='destruction',salvage={}},eventId){
- const a=transportAssetView(e,d.get('state'),asset);if(!a)throw Error('Transport asset not found');
+ const a=transportAssetView(e,d.document,asset);if(!a)throw Error('Transport asset not found');
  return transition(d,e,{entity:a.id,basis:'destruction',origin:'destruction',eventId,causes:[cause],location:a.location,salvage,
   legacy:()=>{
    holdingSet(d,e,path(a.id),{...d.get(...path(a.id)),category:'transport_asset',id:a.id,kind:a.kind,owner:a.owner,location:a.location,durability:0,destroyedAt:d.get('state','minute')},'transport');
@@ -341,34 +388,37 @@ export function historicalTransportDocument(d,e,{id,actor='player'}){
 }
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='forward_cancel')return cancelGoodsObligation(d,e,{id:args.business??asset,actor:'player'},eventId);
  if(task==='inspect'&&institutionOriginal(e,d.document,asset)?.document?.kind==='transport_claim'){
   if(args.actor!==undefined&&args.actor!=='player')throw Error('Transport inspection requires its player customer');
   return historicalTransportDocument(d,e,{id:asset});
  }
  if(task==='forward'){
   return obligationTransaction(d,()=>{
-  const debtor=e.resolve(args.seller),item=e.resolve(args.item,'item'),location=args.location?e.resolve(args.location):d.get('state','location');
-  const terms={item,quantity:args.quantity,prepayment:args.coins??0,deadline:args.deadline,location};
-  counterpart(d,e,debtor,{consent:true,minutes:0});
-  const agreement=requestContractConsent(d,e,{from:debtor,scope:'forward',purpose:'player',subject:item,terms,cost:{coins:(e.byId.get(item).basePrice??0)*args.quantity},reward:terms.prepayment,eventId});
-  counterpart(d,e,debtor,{consent:agreement.allowed,minutes:0});
-  return openGoodsObligation(d,e,{kind:'forward',debtor,creditor:'player',...terms,terms:{consent:agreement.source}},eventId);
+  const selling=args.buyer!==undefined,debtor=selling?'player':e.resolve(args.seller),creditor=selling?e.resolve(args.buyer):'player',party=selling?creditor:debtor;
+  const item=e.resolve(args.item,'item'),location=args.location?e.resolve(args.location):d.get('state','location');
+  const value=marketQuote(d,e,{item,location,seller:debtor,buyer:creditor}).listPrice*args.quantity;
+  const terms={item,quantity:args.quantity,prepayment:args.coins??(selling?Math.ceil(value):0),deadline:args.deadline,location};
+  counterpart(d,e,party,{consent:true,minutes:0});
+  const agreement=requestContractConsent(d,e,{from:party,scope:'forward',purpose:'player',subject:item,terms,cost:selling?{coins:terms.prepayment}:{value},reward:selling?value:terms.prepayment,eventId});
+  counterpart(d,e,party,{consent:agreement.allowed,minutes:0});
+  return openGoodsObligation(d,e,{kind:'forward',debtor,creditor,...terms,terms:{consent:agreement.source}},eventId);
   });
  }
  if(task==='fulfill')return performGoodsObligation(d,e,{id:args.business??asset,actor:'player',quantity:args.quantity},eventId);
  if(task==='extend')return extendGoodsObligation(d,e,{id:args.business??asset,actor:'player',deadline:args.deadline},eventId);
  if(task==='destroy'){
-  const a=transportAssetView(e,d.get('state'),asset);if(!a||a.owner!=='player'||a.location!==d.get('state','location'))throw Error('Only the present owner can destroy this asset');
+  const a=transportAssetView(e,d.document,asset);if(!a||a.owner!=='player'||a.location!==d.get('state','location'))throw Error('Only the present owner can destroy this asset');
   return destroyTransportAsset(d,e,{asset:a.id},eventId);
  }
  if(task==='register')return createTransportAsset(d,e,{kind:args.mode??'cart',animal:args.item},eventId);
  if(task==='trace')return transportTrace(e,d.get('state'),args.business??asset);
  if(task==='collect')return collectTransport(d,e,args.business??asset);
- if(task==='lease'){const a=transportAssetView(e,d.get('state'),asset),counterparty=e.resolve(args.seller);if(args.consent!==true||!available(e,d.get('state'),counterparty)||actorLocation(d.get('state'),counterparty)!==d.get('state','location')||a?.owner!=='player'&&a?.owner!==counterparty)throw preconditionFailure('出租须有在场当事人本次同意');return leaseTransportAsset(d,e,{asset,tenant:a.owner==='player'?counterparty:'player',minutes:args.minutes,coins:args.coins},eventId);}
+ if(task==='lease'){const a=transportAssetView(e,d.document,asset),counterparty=e.resolve(args.seller);if(args.consent!==true||!available(e,d.get('state'),counterparty)||actorLocation(d.get('state'),counterparty)!==d.get('state','location')||a?.owner!=='player'&&a?.owner!==counterparty)throw preconditionFailure('出租须有在场当事人本次同意');return leaseTransportAsset(d,e,{asset,tenant:a.owner==='player'?counterparty:'player',minutes:args.minutes,coins:args.coins},eventId);}
  if(task==='intercept'||task==='recover')return transportIncident(d,e,{shipment:args.business??asset,recover:task==='recover',consent:args.consent},eventId);
  const cargo=args.item?[{item:e.resolve(args.item),quantity:args.quantity??1}]:[],passengers=[];
- if(task==='inspect'||!asset)return {services:transportServices(e,d.get('state'),d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
- if(task==='repair'){const a=transportAssetView(e,d.get('state'),asset);if(!a||a.destroyedAt!==undefined||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw preconditionFailure('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw preconditionFailure('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw preconditionFailure('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.get('state'),a.id);}
+ if(task==='inspect'||!asset)return {services:transportServices(e,d.document,d.get('state','location')),usage:'transport: contract资产, location目的地, item/quantity货物, service=passage乘客; post: buyer收件人,item记忆ID'};
+ if(task==='repair'){const a=transportAssetView(e,d.document,asset);if(!a||a.destroyedAt!==undefined||a.owner!=='player'||a.busy||a.location!==d.get('state','location'))throw preconditionFailure('资产不在本人可修缮范围');const n=Math.ceil((100-a.durability)/10);if(!n)throw preconditionFailure('资产无需修缮');if(e.quantity(d,'player','item_wood')<n)throw preconditionFailure('修缮木料不足');changeItems(d,e,'player','item_wood',-n,{books:{flow:'sink:consume',purpose:'repair',writer:'transport',eventId}});holdingSet(d,null,[...path(a.id),'durability'],100,'transport');return transportAssetView(e,d.document,a.id);}
  const options={asset,to:e.resolve(args.location),cargo,passengers:args.service==='passage'?['player']:passengers,escort:args.escort?e.resolve(args.escort):null,authorization:args.authorization};
  if(task==='book')return bookTransport(d,e,options,eventId);
  return quoteTransport(d,e,{...options,from:d.get('state','location')});

@@ -11,12 +11,14 @@ export function npcDecision(view,request={}){
  const red=view.self.redLines.find(r=>tags.some(t=>typeof t==='string'&&(typeof r==='string'?r.includes(t):r.action===t||r.tags?.includes(t))));
  add('red_lines',{matched:red??null,values:view.self.traits.values??[],minor:view.self.minor});
  add('relations',{...relation,breaches:view.knowledge.memories.filter(m=>m.kind==='breach'||m.eventType==='违约'||['obligation','debt'].includes(m.kind)&&/违约|逾期/.test(m.content??'')).filter(m=>(m.participants??[]).includes(request.from??'player')).map(m=>m.content)});
- const money=Math.max(0,request.cost?.coins??0),time=Math.max(0,request.cost?.minutes??0),risk=Math.max(0,request.cost?.risk??0);
+ const money=Math.max(0,request.cost?.coins??0),value=Math.max(0,request.cost?.value??0),time=Math.max(0,request.cost?.minutes??0),risk=Math.max(0,request.cost?.risk??0);
  const belief=request.proposition?subjectiveFact(view,request.proposition):null;
  const coefficients=consumerCoefficients(view,'decision');
  const riskAversion=(view.self.traits.riskAversion??1)*coefficients.riskAversion;
  const values=view.self.traits.values??[],weight=name=>values.includes(name)?values.length-values.indexOf(name):1;
- const cost=money*coefficients.moneyWeight+time/coefficients.timeDivisor+risk*riskAversion*coefficients.riskWeight+Math.max(0,request.cost?.family??0)*weight('家人')*coefficients.familyWeight+Math.max(0,request.cost?.reputation??0)*weight('体面')*coefficients.reputationWeight;
+ // Goods have opportunity value, but delivering owned goods does not require
+ // spending that value from a purse. Only actual coins hit the cash gate below.
+ const cost=(money+value)*coefficients.moneyWeight+time/coefficients.timeDivisor+risk*riskAversion*coefficients.riskWeight+Math.max(0,request.cost?.family??0)*weight('家人')*coefficients.familyWeight+Math.max(0,request.cost?.reputation??0)*weight('体面')*coefficients.reputationWeight;
  const benefit=Math.max(0,request.reward??0)*coefficients.rewardWeight+(relation.trust??0)/coefficients.trustDivisor+(relation.favors?.filter(f=>f.status!=='已还').length??0)*coefficients.favorWeight+(request.needSatisfaction??0)*coefficients.needWeight;
  add('cost_benefit',{cost,benefit,belief,coins:view.self.coins,riskAversion});
  const urgent=goals(view).find(g=>(g.urgency??0)>(request.urgency??0));

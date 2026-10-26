@@ -12,6 +12,8 @@ import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 import {transportSegment} from './transport-route.mjs';
 import {transportServices,quoteTransport,bookTransport} from './transport.mjs';
+import {declareHoldingWriter,ensureHoldings,setLocation} from './holdings.mjs';
+declareHoldingWriter('settlement-trade',{kinds:[],locations:true});
 
 const DAY=1440, CLOCK='settlement-trade:clock';
 const clone=value=>structuredClone(value);
@@ -189,11 +191,15 @@ function dispatch(d,engine,lane,minute){
     if(d.get('state','location')===profile(engine,lane.seller).counter)d.say?.(`周贸易${id}发货：${engine.byId.get(r.item).name}${quantity}份，运往${engine.byId.get(lane.buyer).name}，预付款${cost}铜入在途账`);
     putWarehouse(d,lane.seller,a);putWarehouse(d,lane.buyer,b);
     d.set(['state','records',`village-fiscal:${lane.seller}`],sf);d.set(['state','records',`village-fiscal:${lane.buyer}`],bf);
+    // The purchase money stays in the buyer's counter escrow while the cargo
+    // travels. The escrow account's entity has an actual native location.
+    o.escrowCustodian=lane.buyer;o.escrowLocation=profile(engine,lane.buyer).counter;
     schedule(d,engine,o,minute);assertOrder(o);d.set(path,o);
+    ensureHoldings(d,engine);setLocation(d,{entity:`settlement-trade:${id}`,at:o.escrowLocation,mode:'place',writer:'settlement-trade',engine});
     const origin=profile(engine,lane.seller).counter,destination=profile(engine,lane.buyer).counter;
     // Gradual adoption: a real available carrier replaces only the outbound
     // movement; food batches, spoilage and purchase escrow remain this ledger.
-    for(const service of transportServices(engine,d.get('state'),origin)){
+    for(const service of transportServices(engine,d.document,origin)){
         let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:origin,to:destination,cargo:[{item:r.item,quantity}]});}catch{continue;}
         if(d.get('state','settlements',lane.seller,'treasury')<quote.total)continue;
         const trip=bookTransport(d,engine,{owner:lane.seller,recipient:lane.buyer,from:origin,to:destination,asset:service.asset,cargo:[{item:r.item,quantity}],externalOrder:`settlement-trade:${id}`},`grain:${id}`);

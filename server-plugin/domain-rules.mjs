@@ -11,6 +11,15 @@ const memo=(table,key,build)=>{
  return slot.get(key);
 };
 export const domainRules=engine=>engine?.world?.domainRules??NONE;
+// The same physical yield feeds private harvests and forward capacity. Only
+// observed growing quality enters it; a crop with no growth evidence adds zero.
+export function privateCropYieldBase(engine,farm){
+ const rule=domainRules(engine).privateField,binding=rule.crops.find(c=>c.seed===farm.seedItem);
+ if(!binding)throw Error('Crop seed binding is missing');
+ const perMu=engine.world.primitiveTables?.yields?.rows?.find(r=>r.key==='field:wheat')?.perUnit.qty;
+ const portions=binding.yieldSelector==='field:wheat'?farm.areaMu*perMu*rule.kgPerJin/engine.byId.get(farm.crop).weight:farm.areaMu*engine.rules.agriculture.crop.yieldPerHa/rule.muPerHectare;
+ return portions*farm.qualitySum/Math.max(1,farm.qualityDays);
+}
 // A named identifier of the world vocabulary (operation names, damage kinds, payment purposes...).
 export const vocabulary=(engine,...path)=>path.reduce((v,k)=>v?.[k],domainRules(engine).vocabulary);
 

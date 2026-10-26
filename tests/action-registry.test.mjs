@@ -25,7 +25,9 @@ const fresh=()=>engine.initialFromLegacy(seed,'a1-registry');
 test('注册表：数据声明、带命名空间、与 S0 动作清单一一对应且为最新同步',()=>{
  // S4 adds the institutional lifecycle catalogue. Keep the exact namespace
  // and S0-set assertions, including rejection of any undeclared namespace.
- assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core','documents','institutions','law','open']);
+ // D15 ?15.6 / 06 ?6.4: forward sign/cancel add one declared transport namespace;
+ // retain exhaustive namespace and unchanged S0-set checks.
+ assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core','documents','institutions','law','open','transport']);
  const s0=registry.actions.filter(a=>a.source==='s0');
  assert.deepEqual(s0.map(a=>a.id).sort(),catalog.map(a=>a.id).sort());
  assert.ok(registry.actions.length>catalog.length,'注册表在 S0 别名之外还有模板动作');

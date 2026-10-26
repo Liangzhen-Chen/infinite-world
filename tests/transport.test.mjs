@@ -7,19 +7,21 @@ import {applyInteraction} from '../server-plugin/interactions.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 
 import {fixture,asset,finish,DRIVER,SECOND,RECIPIENT} from './helpers/transport.mjs';
-const cash=d=>d.get('state','player','coins')+Object.values(d.get('state','npcs')).reduce((n,p)=>n+(p.coins??0),0)+Object.values(d.get('state','settlements')).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(d.get('state','quests')).reduce((n,q)=>n+(q.escrow??0),0);
+// D05 §5.1 / S3: native setup opens the ledger. Include contract escrow as well
+// as purses/treasuries, so moving an escort deposit cannot masquerade as a loss.
+const cash=d=>d.get('ledger')?Object.entries(d.get('ledger','accounts')).filter(([key])=>key.split('|')[1]==='coin_river').reduce((sum,[,amount])=>sum+amount,0):d.get('state','player','coins')+Object.values(d.get('state','npcs')).reduce((n,p)=>n+(p.coins??0),0)+Object.values(d.get('state','settlements')).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(d.get('state','quests')).reduce((n,q)=>n+(q.escrow??0),0);
 
 test('车船制造消费实物，容量和班次随当前损耗、职业及租约派生，读取无写入',()=>{
  const {e,d,w}=fixture(),id=asset(d,e),before=structuredClone(d.document);
  assert.equal(d.get('state','npcs',DRIVER,'inventory','item_wood','quantity'),100);
- assert.equal(transportAssetView(e,d.get('state'),id).capacityKg,600);assert.equal(transportServices(e,d.get('state'),'loc_hw').length,1);assert.deepEqual(d.document,before);
- d.set(['state','records',id,'durability'],40);assert.equal(transportAssetView(e,d.get('state'),id).capacityKg,300);
- d.set(['state','records',id,'durability'],10);assert.equal(transportServices(e,d.get('state'),'loc_hw').length,0);
- d.set(['state','records',id,'durability'],100);w.npcs.find(n=>n.id===DRIVER).occupation='农人';assert.equal(transportServices(e,d.get('state'),'loc_hw').length,0);
+ assert.equal(transportAssetView(e,d.document,id).capacityKg,600);assert.equal(transportServices(e,d.document,'loc_hw').length,1);assert.deepEqual(d.document,before);
+ d.set(['state','records',id,'durability'],40);assert.equal(transportAssetView(e,d.document,id).capacityKg,300);
+ d.set(['state','records',id,'durability'],10);assert.equal(transportServices(e,d.document,'loc_hw').length,0);
+ d.set(['state','records',id,'durability'],100);w.npcs.find(n=>n.id===DRIVER).occupation='农人';assert.equal(transportServices(e,d.document,'loc_hw').length,0);
  assert.ok(traitsOf(e,d.document,id).tags.includes('wood'));
  applyInteraction(d,e,{agent:'fire',target:id});assert.equal(d.get('state','records',id,'durability'),75);
- const total=cash(d);leaseTransportAsset(d,e,{asset:id,tenant:SECOND,minutes:1000,coins:20},'lease');assert.equal(cash(d),total);assert.equal(transportAssetView(e,d.get('state'),id).holder,SECOND);
- d.set(['state','minute'],1600);assert.equal(transportAssetView(e,d.get('state'),id).holder,DRIVER);
+ const total=cash(d);leaseTransportAsset(d,e,{asset:id,tenant:SECOND,minutes:1000,coins:20},'lease');assert.equal(cash(d),total);assert.equal(transportAssetView(e,d.document,id).holder,SECOND);
+ d.set(['state','minute'],1600);assert.equal(transportAssetView(e,d.document,id).holder,DRIVER);
 });
 test('运费读取重量体积、路程风险；超载和缺货失败前不扣款，单件实物守恒交付',()=>{
  const {e,d,w}=fixture(),id=asset(d,e);d.set(['state','inventory','item_oats'],{quantity:30});
@@ -69,9 +71,9 @@ test('桥路损毁与战事封锁消费现有状态；体积约束独立于重�
 test('驮队绑定真实动物，容量读物种，疲劳、失主和已骑乘会撤销运力',()=>{
  const {e,d}=fixture(),animal='animal:pack';d.set(['state','creatures',animal],{species:'monster_slate_horn_bull',owner:DRIVER,location:'loc_hw',hp:30,maxHp:30,status:'正常',care:{version:1,fatigue:0,hunger:0,loyalty:80}});
  const a=createTransportAsset(d,e,{owner:DRIVER,kind:'pack',animal},'pack');assert.equal(a.capacityKg,30);
- d.set(['state','creatures',animal,'care'],{version:1,fatigue:90,hunger:0});assert.equal(transportAssetView(e,d.get('state'),a.id).capacityKg,0);
- d.set(['state','creatures',animal,'care'],{version:1,fatigue:0,hunger:0});d.set(['state','player','mount'],animal);assert.equal(transportAssetView(e,d.get('state'),a.id).capacityKg,0);d.remove(['state','player','mount']);
- d.set(['state','creatures',animal,'owner'],SECOND);assert.equal(transportAssetView(e,d.get('state'),a.id).capacityKg,0);
+ d.set(['state','creatures',animal,'care'],{version:1,fatigue:90,hunger:0});assert.equal(transportAssetView(e,d.document,a.id).capacityKg,0);
+ d.set(['state','creatures',animal,'care'],{version:1,fatigue:0,hunger:0});d.set(['state','player','mount'],animal);assert.equal(transportAssetView(e,d.document,a.id).capacityKg,0);d.remove(['state','player','mount']);
+ d.set(['state','creatures',animal,'owner'],SECOND);assert.equal(transportAssetView(e,d.document,a.id).capacityKg,0);
 });
 test('运费商税、关税和过路费进入实际公账，报价与支付一致',()=>{
  const {e,d,w}=fixture(),id=asset(d,e);w.routes[0].toll=7;d.set(['state','inventory','item_wood'],{quantity:20});const q=quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_bs',cargo:[{item:'item_wood',quantity:20}]}),before=cash(d),player=d.get('state','player','coins');

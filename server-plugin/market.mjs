@@ -1,5 +1,6 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
-import {bagStock,priceRead,settlementStock,granary,pledged} from './stock.mjs';
+import {bagStock,priceRead,settlementStock,granary,pledged,crop as cropAccount} from './stock.mjs';
+import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personHousehold} from './entity-view.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
@@ -93,14 +94,23 @@ export function forwardReliability(d,engine,debtor){
 export function forwardSupply(d,engine,item,location){
  const state=stateOf(d),document=d.document??{state},place=settlementOf(engine,state,location),allocations=new Map(),rows=[];
  const forwards=obligationRows(state).filter(r=>r.kind==='forward'&&engine.byId.has(r.resource)&&!obligationClosed(r)&&r.endedAt===undefined&&r.deadline>state.minute)
-  .sort((a,b)=>a.createdAt-b.createdAt||a.id.localeCompare(b.id));
+  .sort((a,b)=>a.deadline-b.deadline||a.createdAt-b.createdAt||a.id.localeCompare(b.id));
  for(const row of forwards){
   const resource=row.resource,remaining=Math.max(0,row.amount-(row.paid??0)),key=`${row.debtor}:${resource}`;
   // All destinations share one stock budget, including promises outside this market.
   const promised=forwards.filter(r=>r.debtor===row.debtor&&r.resource===resource).reduce((sum,r)=>sum+Math.max(0,r.amount-(r.paid??0)),0);
   const otherCommitments=Math.max(0,commitments(state,row.debtor,resource)-promised);
   const retained=engine.byId.get(resource)?.nutrition?personalReserves(d,engine,row.debtor).get(resource)??0:0;
-  const capacity=Math.max(0,bagStock(d,engine,{point:'region.material',id:row.debtor,item:resource,legacy:()=>quantity(inventoryOf(state,row.debtor)[resource])})-retained-otherCommitments-(allocations.get(key)??0));
+  const production=Object.values(state.records??{}).filter(f=>f.category==='private_farm'&&f.owner===row.debtor&&f.crop===resource&&['growing','ready'].includes(f.status)).reduce((sum,farm)=>{
+   const title=state.buildings?.[farm.location];
+   if(title?.owner!==row.debtor||title.condition<=0||Object.values(state.records??{}).some(r=>r.kind==='asset_lease'&&r.subject===farm.location&&r.tenant!==row.debtor&&r.status==='有效'&&r.deadline>state.minute))return sum;
+   if(farm.status==='ready')return (farm.expiresDay*DAY>row.deadline)?sum+priceRead(d,{point:'region.material',account:cropAccount(engine,farm.location,resource),lots:{id:`private:${farm.seedEvent}`,after:Math.floor(row.deadline/DAY)},legacy:()=>farm.yield}):sum;
+   const remainingDays=Math.max(0,engine.rules.agriculture.crop.growthDays-farm.grownDays);
+   const maturesAt=state.minute+remainingDays*DAY,storageDays=engine.rules.agriculture.settlements.find(p=>p.settlement===farm.settlement)?.normalStorageDays??0;
+   if(maturesAt>row.deadline||row.deadline>=maturesAt+storageDays*DAY)return sum;
+   return sum+Math.floor(explainDerived(engine,document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)}).value);
+  },0);
+  const capacity=Math.max(0,bagStock(d,engine,{point:'region.material',id:row.debtor,item:resource,legacy:()=>quantity(inventoryOf(state,row.debtor)[resource])})+production-retained-otherCommitments-(allocations.get(key)??0));
   const backed=Math.min(remaining,capacity);allocations.set(key,(allocations.get(key)??0)+backed);
   if(resource!==item||settlementOf(engine,state,row.terms?.performance?.location)!==place)continue;
   const consideration=row.terms?.forward?.consideration;
@@ -130,7 +140,7 @@ export function forwardSupply(d,engine,item,location){
   const unitValue=consideration/row.amount;
   const secured=unitValue>0?Math.min(backed,securedValue/unitValue):0;
   const expected=paidRatio>=threshold&&state.minute>=history.blockedUntil?Math.min(backed,Math.max(backed*history.reliability,secured))*paidRatio:0;
-  rows.push({id:row.id,debtor:row.debtor,item,remaining,capacity:backed,paidRatio,secured,reliability:history.reliability,expected});
+  rows.push({id:row.id,debtor:row.debtor,item,remaining,production,capacity:backed,paidRatio,secured,reliability:history.reliability,expected});
  }
  return {expected:rows.reduce((sum,row)=>sum+row.expected,0),rows};
 }

@@ -53,7 +53,7 @@
     {"id":"economy:forwardPaidThreshold","stages":["add","mul","clamp"],"bounds":[0,1],"stageBounds":{"add":[-1,1],"mul":[0,2]},"relative":false},
     {"id":"transport:speed","bounds":[0.25,2],"relative":true},
     {"id":"transport:capacity","bounds":[0.25,2],"relative":true},
-    {"id":"transport:risk","stages":["add","mul","min","clamp"],"bounds":[0,1],"relative":false},
+    {"id":"transport:risk","stages":["add","mul","min","clamp"],"bounds":[0,2],"relative":false},
     {"id":"combat:deterrence","stages":["add","mul","max","clamp"],"bounds":[0,1],"relative":false},
     {"id":"social:distortion","bounds":[0,3],"relative":true},
     {"id":"social:recall","bounds":[0,1],"relative":false},
