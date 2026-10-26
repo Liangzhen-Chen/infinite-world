@@ -92,16 +92,28 @@ test('钱庄存取收手续费，按成色与汇费兑换他国铸币，柜面�
     await assert.rejects(f.act('world_trade',{operation:'withdraw',seller:clerk,coins:60},'over'),/支取铜钱/);
     await f.act('world_trade',{operation:'withdraw',seller:clerk,coins:20},'wd');assert.equal(f.doc.state.player.coins,370);
     const sold=await f.act('world_trade',{operation:'exchange',seller:clerk,item:'item_coin_civic',quantity:10},'sell');
-    assert.equal(sold.received,Math.floor(10*10*0.9*(1-bank.exchangeFeeRate)));assert.equal(f.doc.state.inventory.item_coin_civic,undefined);
-    const bought=await f.act('world_trade',{operation:'exchange',seller:clerk,buyer:'player',item:'item_coin_coast',quantity:2},'buy');
-    assert.equal(bought.paid,Math.ceil(2*100*0.85*(1+bank.exchangeFeeRate)));assert.equal(f.doc.state.inventory.item_coin_coast.quantity,2);
+    // 15 §15.3: both copper coins weigh5g; .9 fineness => rate .9,
+    // independent of the old stamped face10. floor(10*.9*.97)=8.
+    assert.equal(sold.received,8);assert.equal(f.doc.state.inventory.item_coin_civic,undefined);
+    const bought=await f.act('world_trade',{operation:'exchange',seller:clerk,buyer:'player',item:'item_coin_coast',quantity:3},'buy');
+    // Copper14/.2kg * .005kg * scarcity.5=.175; silver38/.05kg
+    // * .005kg * fineness.85 * scarcity1=3.23. Three coins at that
+    // current value cover the 50-copper pledge; ceil(3*3.23/.175*1.03)=58.
+    assert.equal(bought.paid,58);assert.equal(f.doc.state.inventory.item_coin_coast.quantity,3);
     assert.equal(f.doc.state.records[bank.id].goods.item_coin_civic,bank.reserveCoins.item_coin_civic+10);
     assert.equal(cash(f.doc),total);
-    const loan=await f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:2},'bankloan');
-    assert.equal(loan.monthlyInterest,bank.loanMonthlyInterest);assert.equal(f.doc.state.records[loan.debt].creditor,bank.id);
+    // 15 §15.3: two current silver coins value floor(2*3.23/.175)=36,
+    // below the required50; the old nominal face must not secure this loan.
+    const beforePledge=structuredClone(f.doc);
+    await assert.rejects(f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:2},'undervalued-coin-pledge'),/抵押/);
+    assert.deepEqual(f.doc,beforePledge);
+    const loan=await f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:3},'bankloan');
+    // 15 §15.5: cash1500+50-20-8+58=1580; deposits29 reserve5.8
+    // protects6 copper, loanable1574; .015*(1+100/1574).
+    assert.equal(loan.monthlyInterest,0.015952986022871662);assert.equal(f.doc.state.records[loan.debt].creditor,bank.id);
     await assert.rejects(f.act('world_trade',{operation:'borrow',seller:clerk,coins:300,days:30},'nopledge'),/抵押/);
     await f.act('world_trade',{seller:clerk,payment:'repay',debt:loan.debt},'bankrepay');
-    assert.equal(f.doc.state.inventory.item_coin_coast.quantity,2);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.inventory.item_coin_coast.quantity,3);assert.equal(cash(f.doc),total);
 });
 
 test('登记客房或空屋的旅店民房都能租，房钱沿用原锚点，原酒馆合同不变',async()=>{

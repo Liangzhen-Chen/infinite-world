@@ -82,9 +82,11 @@ test('D17 制作木凳：木料 3→1、铁钉 8→4，背包 +1 个木凳（普
 });
 
 test('D27 存钱 + D28 取钱（含利息）：存 1000（1200→200，账户 1000，库银 +1000），整三个月单利 15，取出本息 1015，账户归零，库银 −1015',async t=>{
- // 月息 0.5%（钱庄的利率；世界副本把存款利率上下界都设 0.5%，开户手续费设 0，季节系数 1）；恒通钱庄→驿站汇兑柜；春季三月初一巳时；玩家 1200 文。三个月 = 三个 30 天。
+ // D15 section 15.5: lending 1.25% * spread 0.4 = deposit 0.5%; fee 0; three 30-day periods.
  const POST='bld_hw_post',CLERK='npc_hw_shendu';
- const world=variant(w=>{const c=w.rules.economy.credit;c.banks[0].depositFeeCopper=0;c.depositInterest={...c.depositInterest,monthlyRate:0.005,minimum:0.005,maximum:0.005,seasonal:[1,1,1,1]};
+ // D15 §15.5: .0125 lending rate * .4 deposit spread = .005;
+ // 1000 * .005 * 3 = 15. Preserve every original amount assertion.
+ const world=variant(w=>{const c=w.rules.economy.credit;c.banks[0].depositFeeCopper=0;c.banks[0].rateTerms={base:0.0125,minRate:0.0125,maxRate:0.0125};c.banks[0].depositSpread=0.4;
   // 三个月里掌柜不能无故病倒（随机疾病关掉），柜台才一直有人。
   w.rules.npcLife.health={...w.rules.npcLife.health,bands:[{fromAge:0,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0}]};});
  const ui=await uiSession(t,{world,mutate:scene(POST,monthDayMinute(3,1,9,30),s=>{s.player.coins=1200;})});

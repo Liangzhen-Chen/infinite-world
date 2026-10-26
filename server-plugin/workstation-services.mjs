@@ -2,7 +2,8 @@ import {facilityView,installFacilityRuntime} from './facility-state.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {vocabulary} from './domain-rules.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
-import {digest,recordsWhere,persistable} from './storage.mjs';
+import {digest,recordsWhere,recordsMemo,persistable} from './storage.mjs';
+const generatedRecipeRows=Symbol('generated workstation recipes');
 
 export function workstationDefinition(engine,state,id){
  for(const place of [...engine.world.locations,...Object.values(state.created??{})]){
@@ -80,7 +81,12 @@ export function workstationRecipes(engine,state,id,slot,{present=false}={}){
     if(facility?.factor===0)return [];
     const stations=facility?.workstations??location?.workstations??[];
     if(!stations.length)return [];
-    return [...engine.world.recipes??[],...Object.values(state.created??{}).filter(r=>r.id?.startsWith('recipe_'))].filter(r=>
+    // One advance can ask every worker at thousands of schedule boundaries.
+    // Cache only the generated recipe candidates, not access or proficiency.
+    // PatchCursor invalidates created memos on every generated-entity write;
+    // ordinary queries outside an advance always rebuild the candidate list.
+    const generated=recordsMemo(state.created,generatedRecipeRows,()=>Object.values(state.created??{}).filter(r=>r.id?.startsWith('recipe_')));
+    return [...engine.world.recipes??[],...generated].filter(r=>
         r.workstation&&(!r.location||r.location===slot.location)&&stations.some(s=>s.kind===r.workstation)&&
         knowledgeProficiency(engine,state,id,r.skill)>=(r.minimumProficiency??0));
 }

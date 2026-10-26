@@ -145,12 +145,15 @@ test('D29 借小额钱款 / D30 按时还钱：向邻居借须有效同意；钱
  const asked=await ui.choose('trade.borrow',{seller:LINSUI,coins:40,days:10,item:'item_bread',quantity:2},{search:true});
  // 同 D10：A3 同意接点替代“未开放”措辞，拒绝及钱物/时间不变的保证完整保留。
  assert.equal(asked.ok,false);assert.equal(asked.error,'需要对方答应（须有同意事件、有效服务约定或对方当前决策，不能代填同意）');assert.deepEqual((await ui.read()).state,before.state,'未经对方同意不会借出');
- const bank=await uiSession(t,{mutate:at(POST,10*60,s=>{s.player.coins=300;s.inventory.item_coin_coast={quantity:2,quality:'铜',durability:100,weight:0.005};})}),b0=await primed(bank);
+ // D15 15.3: metal value, not stamped face. Copper14/.2*.005*.5=.175;
+ // silver38/.05*.005*.85=3.23; floor(4*3.23/.175)=73 >=100*.7=70.
+ const bank=await uiSession(t,{mutate:at(POST,10*60,s=>{s.player.coins=300;s.inventory.item_coin_coast={quantity:4,quality:'铜',durability:100,weight:0.005};})}),b0=await primed(bank);
  const row=(await bank.menu()).actions.find(a=>a.id==='core:trade.borrow');assert.ok(row&&!row.blocked,'钱庄借款由柜面规则判定，不等人物决策');
- const loan=await bank.choose('trade.borrow',{coins:100,days:30,item:'item_coin_coast',quantity:2});assert.ok(loan.ok,loan.error);const mid=await bank.read();
+ const loan=await bank.choose('trade.borrow',{coins:100,days:30,item:'item_coin_coast',quantity:4});assert.ok(loan.ok,loan.error);const mid=await bank.read();
  assert.equal(mid.state.player.coins-b0.state.player.coins,100);const debt=mid.state.records[loan.result.debt];assert.equal(debt.debtor,'player');assert.ok(debt.deadline>mid.state.minute);conserved(b0,mid,'D29');
  await bank.choose('time',{minutes:2*DAY});
  const pre=await bank.read(),repay=await bank.choose('trade.repay',{debt:loan.result.debt,seller:CLERK});assert.ok(repay.ok,repay.error);const after=await bank.read();
+ assert.equal(mid.state.records[`pledge:${loan.result.debt}`].value,73);
  const done=after.state.records[loan.result.debt];assert.equal(done.status,'已还清');assert.equal(done.overdueAt,undefined,'按时还清没有逾期');
  assert.ok(pre.state.player.coins>after.state.player.coins);conserved(pre,after,'D30');
 });

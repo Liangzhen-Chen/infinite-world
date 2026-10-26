@@ -2,13 +2,15 @@ import {preconditionFailure} from './precondition.mjs';
 import {declareHoldingWriter,holdingSet,setLocation,locationOf} from './holdings.mjs';
 import {trackTransferUnit,changeItems,transferItems} from './items.mjs';
 import {bag,placed,moveStock,BOOKED} from './stock.mjs';
-import {institutionOriginal} from './obligation-state.mjs';
+import {institutionOriginal,obligationRows,obligationView} from './obligation-state.mjs';
+import {obligationRepresentative} from './obligation-runtime.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {canReadLanguage} from './subjective-view.mjs';
 import {visibleEntity} from './perception.mjs';
 import {placeLayout,zoneOf} from './place-layout.mjs';
 import {publishTransitionEvent,worldEvent} from './world-events.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {purse,vault} from './money.mjs';
 
 declareHoldingWriter('documents',{entities:['item'],locations:true});
 declareLedgerWriter('documents');
@@ -49,6 +51,20 @@ function source(d,engine,reference){
  const event=worldEvent(d.get('state'),reference);
  if(!event||event.source?.kind==='corpus_premise')throw preconditionFailure('须先完成真实交易或机构办理');
  const sale=d.get('state','records',`item_sale:${event.id}`),institution=d.get('state','records',`governance_source:${event.id}`);
+ const deposit=obligationRows(d.get('state')).find(o=>o.kind==='deposit'&&o.terms?.sourceEvent===event.id);
+ if(deposit){
+  const bank=engine.rules.economy.credit.banks.find(b=>b.id===deposit.debtor)??d.get('state','records',deposit.debtor);
+  const certifier=obligationRepresentative(engine,d.get('state'),deposit.debtor);
+  const opening=worldEvent(d.get('state'),`obligation:${deposit.id}:${event.id}:deposit`);
+  const funding=d.get('state','records',`bank_deposit:${event.id}`);
+  if(!opening||opening.verb!=='obligation_opened'||opening.result?.id!==deposit.id||opening.result.remaining!==deposit.terms.principal||deposit.amount!==deposit.terms.principal+(deposit.interest??0)||opening.minute!==deposit.createdAt||
+     funding?.category!=='bank_deposit'||funding.claim!==deposit.id||funding.bank!==deposit.debtor||funding.depositor!==deposit.creditor||funding.principal!==deposit.terms.principal||funding.fee!==deposit.terms.fee||funding.gross!==funding.principal+funding.fee||funding.minute!==deposit.createdAt||funding.sourceEvent!==event.id||funding.from!==purse(engine,deposit.creditor)||funding.to!==vault(deposit.debtor)||
+     deposit.creditor!=='player'||deposit.terms.bank!==deposit.debtor||bank?.location!==d.get('state','location')||!certifier||!obligationView(d.get('state'),deposit).owed)
+   throw preconditionFailure('存单须由在场钱庄核验真实存款来源、具名债权与金额');
+  const minutes=engine.world.openActionRules.generic.transferMinutes;
+  engine.assertNpcObligationAction(d,['player',certifier],{minutes});engine.assertNpcAutonomyAction(d.get('state'),['player',certifier],{minutes});
+  return {event,deposit,bank,certifier,describes:deposit.id};
+ }
  if(sale?.category==='item_sale'&&event.verb==='trade'&&sale.buyer==='player'&&sale.quantity>0)return {event,sale,describes:sale.instances.length===1?sale.instances[0]:`item_sale:${event.id}`};
  if(institution?.category==='governance_receipt'&&event.actor==='player'&&institution.result?.ok!==false)return {event,institution,describes:`governance_source:${event.id}`};
  throw preconditionFailure('该来源不是玩家已完成的交易或机构办理');
@@ -77,15 +93,20 @@ export function documentAction(d,engine,args,eventId){
   const proof=source(d,engine,args.source),kind=args.kind??'receipt';
   if(!['receipt','notice'].includes(kind))throw preconditionFailure('本流程签发收据或告示');
   if(Object.values(s.itemInstances??{}).some(p=>p.document?.sourceEvent===`world_event:${proof.event.id}`&&p.document.kind===kind))throw preconditionFailure('这次事务已签发原件，请取用原件');
-  const content=args.text===undefined?(proof.sale?`${engine.byId.get(proof.sale.item)?.name}×${proof.sale.quantity}，成交${proof.event.value}铜。`:'机构办理凭据'):text(args.text);
+  const content=args.text===undefined?(proof.deposit?`具名存单：${proof.bank.name}收存${s.player.name??'本人'}${proof.deposit.terms.principal}铜，凭此原件支取；已支取部分以柜账核销。`:proof.sale?`${engine.byId.get(proof.sale.item)?.name}×${proof.sale.quantity}，成交${proof.event.value}铜。`:'机构办理凭据'):text(args.text);
   if(!canReadDocument(engine,s,'player',{document:{language:args.language??'lang:common'}}))throw preconditionFailure('你尚不能书写这种文字');
   const item=engine.resolve(args.paper,'item'),id=blank(d,engine,item,eventId),paper=d.get(...path(id));
   // Writing consumes one blank sheet by converting that SAME physical unit.
   // The written sheet remains in the bag; it is never an extra stock output.
   const ruleVersion=engine.replaying?engine.replayResult?.ruleVersion??engine.world.version:engine.world.version;
   const doc={kind,sourceEvent:`world_event:${proof.event.id}`,issuedEvent:`world_event:${eventId}:issued`,ruleVersion,describes:proof.describes,language:args.language??'lang:common',content,records:[{event:`world_event:${proof.event.id}`,version:content}],public:false,annotations:[],reviewed:false};
-  write(d,id,{...paper,document:doc},eventId);setLocation(d,{entity:id,at:'player',mode:'carried',writer:'documents',engine});
-  publishTransitionEvent(d,engine,{id:`${eventId}:issued`,verb:'author',actor:'player',target:id,visibility:'private',witnesses:[],minute:s.minute,location:s.location,tags:['document'],source:{event:doc.sourceEvent},ruleVersion:doc.ruleVersion});
+  if(proof.deposit){
+   if(kind!=='receipt'||proof.deposit.terms.requiresInstrument)throw preconditionFailure('同一笔存款只能签发一份具名存单');
+   doc.valid=true;doc.namedHolder=proof.deposit.creditor;doc.issuer=proof.deposit.debtor;doc.certifier=proof.certifier;
+   d.set(['state','obligations',proof.deposit.id],{...proof.deposit,terms:{...proof.deposit.terms,requiresInstrument:id}});
+  }
+  write(d,id,{...paper,...(proof.deposit?{represents:proof.deposit.id}:{}),document:doc},eventId);setLocation(d,{entity:id,at:'player',mode:'carried',writer:'documents',engine});
+  publishTransitionEvent(d,engine,{id:`${eventId}:issued`,verb:'author',actor:'player',target:id,visibility:'private',witnesses:[],...(proof.deposit?{participants:['player',proof.certifier,proof.deposit.debtor]}:{}),minute:s.minute,location:s.location,tags:['document'],source:{event:doc.sourceEvent},ruleVersion:doc.ruleVersion});
   engine.advance(d,engine.world.openActionRules.generic.transferMinutes,eventId);
   return {document:id,sourceEvent:doc.sourceEvent,describes:doc.describes,ruleVersion,paperUsed:1,minutes:engine.world.openActionRules.generic.transferMinutes};
  }

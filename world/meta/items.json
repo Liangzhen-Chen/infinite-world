@@ -80,5 +80,6 @@
     "use": "用于采挖药草的手工药锄。",
     "description": "用于采挖药草的手工药锄。",
     "tags": ["herb_hoe","soil_work","tool"]
-  }
+  },
+{"id":"item_banknote_hw","name":"河湾兑付券","basePrice":12,"weight":0.001,"aliases":["河湾券"],"quality":"木","durability":100,"scope":null,"origin":"bld_hw_post","shelfLifeDays":null,"tags":["coin","paper"],"use":"向小驿站汇兑柜请求按券面条款兑付；实际汇价由准备金、信用与流通量派生。","description":"小驿站汇兑柜发行的纸质兑付券。一券承诺兑付一百文西陲铜钱；承诺不等于市价，柜台现金不足时不能凭空兑付。","inspection":"核对发行者和兑付条款。此券是可转移的信用货币，不是某位储户具名存单的副本。","storage":"保持干燥；破损或伪造的纸张不能增加发行量或准备金。"}
 ]

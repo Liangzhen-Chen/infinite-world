@@ -24,6 +24,8 @@
     {"id":"economy:livestockValue","alias":"economy:value","kind":"creature"},
     {"id":"economy:landValue","alias":"economy:value","kind":"land"},
     {"id":"economy:price","stages":["add","mul","clamp"],"bounds":[0.2,5],"relative":true},
+    {"id":"lending:interestRate","stages":["mul","clamp"],"bounds":[0.5,2],"relative":true},
+    {"id":"economy:coinCredit","stages":["mul","clamp"],"bounds":[0.5,2],"relative":true},
     {"id":"economy:yield","stages":["add","mul","max","min","clamp"],"bounds":[0,3],"relative":true},
     {"id":"facilities:fireRisk","stages":["add","mul","clamp"],"bounds":[0,0.5],"relative":false},
     {"id":"facilities:extraction","stages":["mul","min","clamp"],"bounds":[0,1],"relative":true},

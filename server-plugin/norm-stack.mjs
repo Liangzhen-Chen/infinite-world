@@ -141,7 +141,7 @@ export function normCode(stack){
  };
  // Authority and coverage remain facts of the selected court. They must not be
  // inherited from a sovereign template that has no local executor.
- for(const key of ['penalties','civil','authorization','stances']){const value={};merge(value,key);if(Object.keys(value).length)result[key]=value;}
+ for(const key of ['penalties','civil','authorization','stances','recognition']){const value={};merge(value,key);if(Object.keys(value).length)result[key]=value;}
  for(const key of ['evidenceRequired','reportMinutes','searchMinutes','hearingMinutes','communityMinutesPerCopper','prisonMinutesPerCopper','maximumSentenceMinutes','appeal','procedure','procedureCosts']){
   const choice=normClause(stack,key);if(choice.value!==undefined)result[key]=choice.value;
  }
