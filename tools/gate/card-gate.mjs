@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { judge } from './verdict.mjs';
+import { judge, isDeferredOnly } from './verdict.mjs';
 const [wt, base = 'master', name = 'card'] = process.argv.slice(2);
 const T = path.dirname(fileURLToPath(import.meta.url));
 const L = process.env.GATE_SESSIONS || 'F:/dnd/logs/sessions', ROOT = process.env.GATE_ROOT || 'F:/dnd/logs/gate';
@@ -55,7 +55,14 @@ async function runJob(kind, files, extra = []) {
   } catch (error) {
     result = { status: 'INCOMPLETE', reason: error.message, files: [] };
   }
-  const returned = Array.isArray(result.files) ? result.files : [];
+  // Scheduler summaries omit deferred/event evidence. Read the persisted runner
+  // result belonging to this exact job/file without changing the scheduler.
+  const returned = (Array.isArray(result.files) ? result.files : []).map(f => {
+    const detail = f.id && result.runId
+      ? readJson(path.join(ROOT, 'jobs', result.runId, 'results', `${f.id}.json`)) : null;
+    return detail?.file === f.file && detail.runId === result.runId && detail.status === f.status
+      ? { ...f, ...detail, id: f.id } : f;
+  });
   // Missing selected files must not disappear from the gate's denominator.
   result = { ...result, files: files.map(file => returned.find(f => f.file === file)
     || { file, status: 'INCOMPLETE', reason: result.reason || 'job returned no result for selected file', failures: [] }) };
@@ -76,12 +83,14 @@ try {
     files: fast.map(file => ({ file, status: 'INCOMPLETE', reason: error.message, failures: [] })) };
 }
 const bad = candidate.files.filter(f => f.status === 'FAIL').map(f => f.file);
+const deferredFiles = candidate.files.filter(isDeferredOnly).map(f => f.file);
 const baselineRuns = [];
-if (bad.length) {
-  baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA]));
+const firstBaselineFiles = [...new Set([...bad, ...deferredFiles])];
+if (firstBaselineFiles.length) {
+  baselineRuns.push(await runJob('baseline', firstBaselineFiles, ['-Base', baseSHA]));
   // -Rerun bypasses submit/scheduler deduplication. Both runs cover ALL failing
   // candidate files, even when the first baseline passed or was incomplete.
-  baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA, '-Rerun']));
+  if (bad.length) baselineRuns.push(await runJob('baseline', bad, ['-Base', baseSHA, '-Rerun']));
 }
 let knownFailures = [];
 try {
@@ -108,7 +117,9 @@ const md = [`# 卡片门禁 ${name}`, `worktree ${wt} vs ${baseSHA}；${selector
   `总判定：**${gate.status}**；退出码：${gate.exitCode}`,
   ...gate.issues.map(issue => `- [${issue.category}] ${issue.status}：${issue.reason}${candidate.reason ? `；${candidate.reason}` : ''}`),
   ...gate.files.flatMap(file => [`- [${file.category}] ${file.file}：${file.status}；${file.reason}`,
-    ...file.cases.map(c => `  - ${c.id || JSON.stringify(c.path)}；指纹 ${c.fingerprint || '缺失'}：${c.status}${c.baselineStatus ? ` (${c.baselineStatus})` : ''}；${c.reason}${c.location ? `；${c.location}` : ''}`)]),
+    ...file.cases.map(c => `  - ${c.id || JSON.stringify(c.path)}；指纹 ${c.fingerprint || '缺失'}：${c.status}${c.baselineStatus ? ` (${c.baselineStatus})` : ''}；${c.reason}${c.location ? `；${c.location}` : ''}`),
+    ...Object.entries(file.deferred || {}).filter(([key]) => ['existing', 'added', 'resolved', 'unverified'].includes(key))
+      .flatMap(([key, items]) => items.map(d => `  - deferred ${key}：${d.id} (${d.kind})；${file.deferred.reason}`))]),
   `- 慢档未跑：${skipped.join('、') || '无'}`].join('\n');
 fs.writeFileSync(path.join(L, `${name}.gate.md`), md + '\n');
 console.log(md);

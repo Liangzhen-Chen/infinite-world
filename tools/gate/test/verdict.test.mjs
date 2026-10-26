@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
-import { judge } from '../verdict.mjs';
+import { judge, isDeferredOnly } from '../verdict.mjs';
 
 const now = '2026-10-26T12:00:00.000Z';
 const failure = (name = 'A', fingerprint = 'assertion-1', suite = 'suite') => ({
@@ -20,6 +20,93 @@ const known = (extra = {}) => ({ file: 'tests/a.test.mjs', ...failure(), owner: 
 const input = (extra = {}) => ({ candidate: job(), baselineRuns: [job([file()], 'base1'), job([file()], 'base2')],
   knownFailures: [], now, ...extra });
 const first = result => result.files[0].cases[0];
+const deferred = (name = 'later', kind = 'todo') => ({ id: `suite > ${name}`, path: ['suite', name], kind });
+const deferredFile = (items = [deferred()], extra = {}) => file('INCOMPLETE', [], {
+  reason: 'unauthorised skip/todo', exitCode: 0, streamComplete: true, badEventLines: 0,
+  deferred: items, counts: { tests: items.length + 1, passed: 1, failed: 0, cancelled: 0,
+    skipped: items.filter(d => d.kind === 'skip').length, todo: items.filter(d => d.kind === 'todo').length }, ...extra });
+
+test('candidate deferred subset passes with one complete baseline, reporting counts', () => {
+  const result = judge(input({ candidate: job([deferredFile()]),
+    baselineRuns: [job([deferredFile([deferred(), deferred('other')])])] }));
+  assert.equal(result.status, 'PASS');
+  assert.equal(result.files[0].category, '既有待办');
+  assert.deepEqual(result.files[0].deferred.existing, [deferred()]);
+  assert.deepEqual(result.files[0].deferred.resolved, [deferred('other')]);
+  assert.match(result.files[0].reason, /1.*0.*1/);
+});
+
+test('new todo, executable test changed to skip, and todo changed to skip are blocked by identity and kind', () => {
+  for (const [current, previous] of [
+    [[deferred(), deferred('new')], [deferred()]],
+    [[deferred('was-executable', 'skip')], []],
+    [[deferred('later', 'skip')], [deferred()]],
+    [[{ ...deferred(), path: ['different-suite', 'later'] }], [deferred()]],
+  ]) {
+    const baseline = previous.length ? deferredFile(previous) : deferredFile([], { status: 'PASS', reason: 'ok' });
+    const result = judge(input({ candidate: job([deferredFile(current)]), baselineRuns: [job([baseline])] }));
+    assert.equal(result.status, 'BLOCKED');
+    assert.equal(result.files[0].deferred.added.length, 1);
+    assert.equal(result.files[0].deferred.added[0].id, current.at(-1).id);
+  }
+});
+
+test('missing or incomplete baseline cannot authorise deferred, even with a later good run', () => {
+  for (const base of [job([]), job([deferredFile(undefined, { status: 'TIMEOUT' })]),
+    job([deferredFile(undefined, { streamComplete: false })]),
+    job([deferredFile(undefined, { badEventLines: 1 })]),
+    job([deferredFile(undefined, { reason: 'zero test cases' })]),
+    job([deferredFile(undefined, { status: 'PASS', exitCode: undefined })])]) {
+    const result = judge(input({ candidate: job([deferredFile()]), baselineRuns: [base, job([deferredFile()])] }));
+    assert.equal(result.status, 'BLOCKED');
+    assert.deepEqual(result.files[0].deferred.unverified, [deferred()]);
+  }
+});
+
+test('last todo becoming a real test passes and is reported when baseline is supplied', () => {
+  const candidate = deferredFile([], { status: 'PASS', reason: 'ok' });
+  const result = judge(input({ candidate: job([candidate]), baselineRuns: [job([deferredFile()])] }));
+  assert.equal(result.status, 'PASS');
+  assert.deepEqual(result.files[0].deferred.resolved, [deferred()]);
+  assert.deepEqual(result.files[0].deferred.added, []);
+});
+
+test('deferred cannot excuse incomplete streams, failed exits, invalid counts or unrelated job errors', () => {
+  for (const change of [{ streamComplete: false }, { streamComplete: undefined }, { badEventLines: 1 },
+    { timedOut: true }, { signal: 'SIGSEGV' }, { exitCode: 1 }, { reason: 'zero test cases' },
+    { counts: { tests: 2, passed: 1, failed: 0, cancelled: 0, skipped: 0, todo: 2 } }]) {
+    const result = judge(input({ candidate: job([deferredFile(undefined, change)]), baselineRuns: [job([deferredFile()])] }));
+    assert.equal(result.status, 'INCOMPLETE');
+  }
+  const result = judge(input({ candidate: { ...job([deferredFile()]), reason: 'policy unreadable' },
+    baselineRuns: [job([deferredFile()])] }));
+  assert.equal(result.status, 'INCOMPLETE');
+});
+
+test('real failures retain two-run rules while deferred is compared separately', () => {
+  const mixed = items => deferredFile(items, { status: 'FAIL', exitCode: 1, failures: [failure()],
+    counts: { tests: items.length + 2, passed: 1, failed: 1, cancelled: 0, skipped: 0, todo: items.length } });
+  const baselineRuns = [job([mixed([deferred()])], 'base1'), job([mixed([deferred()])], 'base2')];
+  const args = input({ candidate: job([mixed([deferred()])]), baselineRuns });
+  const blockedOldFailure = judge(args);
+  assert.equal(blockedOldFailure.status, 'BLOCKED');
+  assert.equal(first(blockedOldFailure).baselineStatus, 'BASELINE_REPRODUCED');
+  assert.equal(blockedOldFailure.files[0].deferred.status, 'PASS');
+  assert.equal(judge({ ...args, knownFailures: [known()] }).status, 'PASS');
+  const added = judge({ ...args, candidate: job([mixed([deferred(), deferred('new')])]), knownFailures: [known()] });
+  assert.equal(added.status, 'BLOCKED');
+  assert.equal(first(added).status, 'KNOWN');
+  assert.equal(added.files[0].deferred.added[0].id, deferred('new').id);
+  assert.equal(judge({ ...args, baselineRuns: baselineRuns.slice(0, 1), knownFailures: [known()] }).status, 'INCOMPLETE');
+  const regression = judge({ ...args, baselineRuns: [job([deferredFile()], 'base1'), job([deferredFile()], 'base2')] });
+  assert.equal(regression.status, 'FAIL');
+  assert.equal(first(regression).status, 'REGRESSION');
+  assert.equal(regression.files[0].deferred.status, 'PASS');
+  const regressionAndAdded = judge({ ...args, candidate: job([mixed([deferred(), deferred('new')])]),
+    baselineRuns: [job([deferredFile()], 'base1'), job([deferredFile()], 'base2')] });
+  assert.equal(regressionAndAdded.status, 'FAIL');
+  assert.equal(regressionAndAdded.files[0].deferred.status, 'BLOCKED');
+});
 
 test('candidate PASS needs no baseline and input remains unchanged', () => {
   const args = input({ candidate: job([file('PASS')]), baselineRuns: [] });
@@ -139,7 +226,7 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
   const url = new URL('../card-gate.mjs', import.meta.url);
   const source = fs.readFileSync(url, 'utf8').replace(/^import .*;\r?\n/gm, '')
     .replaceAll('import.meta.url', JSON.stringify(url.href));
-  const writes = new Map(), submissions = [], baseArgs = [];
+  const writes = new Map(), submissions = [], baseArgs = [], submittedFiles = [];
   const fakeProcess = { argv: ['node', 'card-gate', '/fixture', 'moving-base', 'fixture'],
     env: { GATE_SESSIONS: '/sessions', GATE_ROOT: '/gate' }, execPath: 'node', exitCode: undefined };
   const jobs = [candidate, ...bases];
@@ -150,26 +237,70 @@ async function aggregate(candidate, bases = [], policy = [], options = {}) {
       if (file.endsWith('slow-tests.tsv')) return '';
       if (file.endsWith('known-failures.json')) return JSON.stringify(policy);
       const index = Number(file.match(/run-(\d+)/)?.[1]);
-      if (Number.isInteger(index)) return JSON.stringify({ ...jobs[index], runId: `run-${index}` });
+      const detailIndex = file.match(/results[\\/]file-(\d+)\.json$/)?.[1];
+      if (detailIndex !== undefined) {
+        if (options.missingDetail) throw Error('runner result missing');
+        return JSON.stringify({ ...jobs[index].files[Number(detailIndex)], runId: `run-${index}` });
+      }
+      if (Number.isInteger(index)) {
+        const result = { ...jobs[index], runId: `run-${index}` };
+        if (options.persisted) result.files = result.files.map((f, i) => ({ file: f.file, id: `file-${i}`,
+          status: f.status, reason: f.reason, counts: f.counts, failures: f.failures, exitCode: f.exitCode }));
+        return JSON.stringify(result);
+      }
       throw Error(`unexpected read ${file}`);
     },
   };
   const execFileSync = (command, args) => {
-    if (command === 'node') return 'tests/a.test.mjs\n';
+    if (command === 'node') return options.affected || 'tests/a.test.mjs\n';
     if (command === 'git') {
       if (options.baseError) throw Error('invalid baseline revision');
       return 'fixed-base-sha\n';
     }
     assert.equal(command, 'powershell.exe');
     submissions.push(args);
+    submittedFiles.push(writes.get(args[args.indexOf('-FilesFile') + 1]).trim().split('\n'));
     if (args.includes('-Base')) baseArgs.push(args[args.indexOf('-Base') + 1]);
     return `run-${submissions.length - 1}\n`;
   };
   await vm.runInNewContext(`(async () => { ${source}\n })()`, { fs: fakeFs, path, fileURLToPath,
-    judge, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
+    judge, isDeferredOnly, execFileSync, process: fakeProcess, console: { log() {} }, setTimeout });
   return { gate: JSON.parse(writes.get(path.join('/sessions', 'fixture.gate.json'))),
-    md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, submissions, baseArgs };
+    md: writes.get(path.join('/sessions', 'fixture.gate.md')), exitCode: fakeProcess.exitCode, submissions, baseArgs, submittedFiles };
 }
+
+test('aggregation hydrates runner evidence and submits only one baseline for deferred-only files', async () => {
+  const result = await aggregate(job([deferredFile()]), [job([deferredFile()])], [], { persisted: true });
+  assert.equal(result.gate.status, 'PASS');
+  assert.equal(result.exitCode, 0);
+  assert.equal(result.submissions.length, 2);
+  assert.deepEqual(result.baseArgs, ['fixed-base-sha']);
+  assert.deepEqual(result.submittedFiles, [['tests/a.test.mjs'], ['tests/a.test.mjs']]);
+  assert.ok(result.md.includes(deferred().id));
+  assert.ok(result.md.includes('existing'));
+  const added = await aggregate(job([deferredFile([deferred('new')])]), [job([deferredFile()])], [], { persisted: true });
+  assert.equal(added.gate.status, 'BLOCKED');
+  assert.equal(added.exitCode, 1);
+  assert.ok(added.md.includes('added'));
+  assert.ok(added.md.includes(deferred('new').id));
+  const missing = await aggregate(job([deferredFile()]), [], [], { persisted: true, missingDetail: true });
+  assert.equal(missing.gate.status, 'INCOMPLETE');
+  assert.equal(missing.submissions.length, 1);
+});
+
+test('aggregation merges first baseline lists and reruns only real failures', async () => {
+  const waiting = deferredFile(undefined, { file: 'tests/b.test.mjs' });
+  const result = await aggregate(job([file(), waiting]), [job([file(), waiting]), job()], [],
+    { persisted: true, affected: 'tests/a.test.mjs\ntests/b.test.mjs\n' });
+  assert.equal(result.submissions.length, 3);
+  assert.deepEqual(result.submittedFiles, [['tests/a.test.mjs', 'tests/b.test.mjs'],
+    ['tests/a.test.mjs', 'tests/b.test.mjs'], ['tests/a.test.mjs']]);
+  assert.deepEqual(result.baseArgs, ['fixed-base-sha', 'fixed-base-sha']);
+  assert.equal(result.submissions[2].includes('-Rerun'), true);
+  assert.equal(result.gate.files[0].cases[0].baselineStatus, 'BASELINE_REPRODUCED');
+  assert.equal(result.gate.files[1].status, 'PASS');
+  assert.equal(result.gate.status, 'BLOCKED');
+});
 
 test('real aggregation writes JSON/Markdown and sets matching exit codes for every verdict', async () => {
   for (const [candidate, bases, policy, status] of [
