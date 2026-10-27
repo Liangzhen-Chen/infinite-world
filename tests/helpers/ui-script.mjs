@@ -4,8 +4,8 @@ import {createPlaytestServer} from '../../tools/playtest-runner.mjs';
 import {digest} from '../../server-plugin/storage.mjs';
 
 // Optional mutate(state, world) prepares the scene (time, place, purse) on a copy of a freshly created campaign.
-export async function uiSession(t,{mutate=null,world}={}){
- const server=await createPlaytestServer({consistencyEnabled:false,...(world?{world}:{})});t.after(()=>server.close());
+export async function uiSession(t,{mutate=null,world,seed}={}){
+ const server=await createPlaytestServer({seed,consistencyEnabled:false,...(world?{world}:{})});t.after(()=>server.close());
  let {reference}=await server.api('create',{});
  if(mutate){
   const bundle=await server.api('export',{campaignId:reference.campaignId}),initial=structuredClone(bundle.initial);

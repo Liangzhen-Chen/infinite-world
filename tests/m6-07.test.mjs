@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -244,7 +244,8 @@ test('M6-07 浏览器：四级地图三类迷雾、鼠标双指缩放、保存�
     const d=knowledge(),ref=created.body.reference,view={reference:ref,...mapView(engine,d)};
     await page.route('**/api/plugins/infinite-fields/ui/map',route=>route.fulfill({json:view}));
     await page.route('**/api/plugins/infinite-fields/ui/routes',route=>route.fulfill({json:{reference:ref,...routeView(engine,d,route.request().postDataJSON().destination)}}));
-    const report='docs/测试报告/最新/M6-07';await fs.mkdir(report,{recursive:true});
+    // P3 / design section 9 and P3: relocate screenshot output only; retain every screenshot call and UI/layout assertion.
+    const report=artifactPath('测试报告','最新','M6-07');await fs.mkdir(report,{recursive:true});
     const assertLabels=async expected=>{
         const result=await page.locator('.fields-map-viewport').evaluate(svg=>{
             const rect=svg.getBoundingClientRect();

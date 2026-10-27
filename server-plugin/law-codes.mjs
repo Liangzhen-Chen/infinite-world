@@ -76,7 +76,7 @@ export function legalCodeAt(engine,location,state={}){
  const norms=normStack(engine,state,null,location,state.minute??0,{codes:legalCodes(engine.world,state)}),law=normCode(norms);
  if(!law)return executor;
  const result={...executor};
- for(const field of ['penalties','civil','authorization','stances','evidenceRequired','reportMinutes','searchMinutes','hearingMinutes','communityMinutesPerCopper','prisonMinutesPerCopper','maximumSentenceMinutes','appeal','procedure','procedureCosts'])if(Object.hasOwn(law,field))result[field]=law[field];
+ for(const field of ['penalties','civil','authorization','stances','recognition','evidenceRequired','reportMinutes','searchMinutes','hearingMinutes','communityMinutesPerCopper','prisonMinutesPerCopper','maximumSentenceMinutes','appeal','procedure','procedureCosts'])if(Object.hasOwn(law,field))result[field]=law[field];
  if(engine.rules.law?.normStackVersion===1)result.normSources=norms.map(({layer,place,source,version})=>({layer,place,source,version}));
  return result;
 }

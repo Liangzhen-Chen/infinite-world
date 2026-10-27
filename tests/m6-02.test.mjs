@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
@@ -110,7 +110,8 @@ test('M6-02 浏览器：名牌、登记、事件邮件、错误及手机输入�
     await page.getByRole('button',{name:'观察',exact:true}).click();assert.equal(await page.getByLabel('行动输入').inputValue(),'我仔细观察周围。');
     await page.getByRole('button',{name:'说',exact:true}).click();assert.match(await page.getByLabel('行动输入').inputValue(),/^我说：“/);assert.equal(await page.evaluate(()=>window.sent),0);
     await page.locator('.fields-document-card').last().getByRole('button',{name:'收藏到邮件'}).click();
-    const report='docs/测试报告/最新/M6-02';await fs.mkdir(report,{recursive:true});
+    // P3 / design section 9 and P3: relocate screenshot output only; retain every screenshot call and UI/layout assertion.
+    const report=artifactPath('测试报告','最新','M6-02');await fs.mkdir(report,{recursive:true});
     for(const theme of ['dark','light']){
         await page.evaluate(async theme=>(await import('/ui-settings.mjs')).updateSettings({theme}),theme);
         await page.setViewportSize({width:1440,height:900});await page.screenshot({path:`${report}/${theme}-desktop-messages.png`});

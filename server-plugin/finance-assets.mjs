@@ -10,6 +10,7 @@ import {groupRepresentative,personHousehold,personOccupation,personBusiness,pers
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
 import {marketQuote} from './market.mjs';
+import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './currency.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade} from './labor-market.mjs';
 import {standing} from './standing.mjs';
@@ -60,7 +61,13 @@ export function netAssets(d,e,id){
     const location=actor?.location??base(e,d.get('state'),id)?.location??d.get('state','location');
     const stock=Object.entries(goods).reduce((n,[item,v])=>{
         const quantity=priceRead(d,{point:'assets.goods',account:account?.items?store(e,id,item):bag(e,id,item),legacy:()=>typeof v==='number'?v:v.quantity??0});
-        if(!quantity||!e.byId.get(item)?.basePrice)return n;
+        if(!quantity||!e.byId.has(item))return n;
+        const currency=currencyRow(e,item);
+        if(currency){
+            if(!currencyAccepted(e,d.get('state'),location,currency.resource)||currencyValue(d,e,{currency:item,location}).value===0)return n;
+            return n+currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins;
+        }
+        if(!e.byId.get(item).basePrice)return n;
         const projection=marketQuote(d,e,{item,location,seller:id,quantity,base:regionalTradeBase(d,e,item,location)});
         return n+quantity*projection.explanation.value.value;
     },0);

@@ -10,7 +10,10 @@ import {placeSettlement,settlementGovernment,groupRepresentative,personConstrain
 import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {standing} from './standing.mjs';
-import {hazardPriceFactor} from './hazard-calendar.mjs';
+import {explainDerived} from './derived.mjs';
+import {decimalFraction,interestFraction,interestAmount,addAccrual,fraction,obligationCalendar} from './obligation-calendar.mjs';
+import creditBalance from '../world/rules/tables/balance/credit.json' with {type:'json'};
+import {currencyReserve} from './currency.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {changeItems} from './items.mjs';
@@ -78,7 +81,7 @@ export function derivedBankAt(e,state,location){
     const site=bankSite(e,state,sid,location);if(!site)return null;
     return {id:`bank:${sid}`,name:`${e.byId.get(sid)?.name??sid}钱庄`,location,settlement:sid,keepers:[site.keeper],reserveCopper:0,
         reserveCoins:{},depositFeeCopper:c.derivedBanks.depositFeeCopper,exchangeFeeRate:c.derivedBanks.exchangeFeeRate,
-        loanMonthlyInterest:e.rules.economy.loanMonthlyInterest[0],loanMaximumDays:c.loan.maximumDays,loanMaximumCopper:c.derivedBanks.loanMaximumCopper,collateralRatio:1,derived:true};
+        loanMaximumDays:c.loan.maximumDays,loanMaximumCopper:c.derivedBanks.loanMaximumCopper,collateralRatio:1,derived:true};
 }
 function bankSite(e,state,sid,location=null){
     // Resolve the requested physical counter. A staffed office must not hide a
@@ -97,13 +100,51 @@ export function derivedBankById(e,state,id){
     const sid=id.slice(5),site=bankSite(e,state,sid,state.location)??bankSite(e,state,sid);
     return site?derivedBankAt(e,state,site.location):null;
 }
-export function depositRate(e,state,b,minute=state.minute){
-    const r=cfg(e).depositInterest;if(!r)return 0;
-    const item=e.rules.settlementTrade?.item??'item_oats',sid=placeSettlement(e,state,b.location).value;
-    const quoted=state.quotes?.[`region:${Math.floor(minute/DAY)}:${sid}:${item}`],base=e.byId.get(item)?.basePrice??1;
-    const factor=quoted===undefined?hazardPriceFactor(e,state,item,b.location,minute):quoted/base;
-    const seasonal=r.seasonal[Math.floor(minute/(90*DAY))%4]??1;
-    return clamp((b.depositMonthlyInterestOverride??r.monthlyRate*(1+(b.exchangeFeeRate??0)))*factor*seasonal,r.minimum,r.maximum);
+const creditParameter=(e,id)=>(e.world.balance?.credit??creditBalance).params.find(row=>row.id===id).value;
+// D15 §15.5: balances are facts; reserves, loanable cash and rates are views.
+export function bankCredit(e,state,b,minute=state.minute){
+    const row=state.records?.[b.id],cash=row?.coins??b.reserveCopper??0;
+    const liabilities=obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===b.id)
+        .reduce((sum,o)=>sum+obligationView(state,o,minute).owed,0);
+    const reserveRatio=b.reserveRatio??creditParameter(e,'reserve.ratio');
+    if(!Number.isFinite(reserveRatio)||reserveRatio<0||reserveRatio>1)throw preconditionFailure('准备金率须在零与一之间');
+    // Integer cash minus an exact decimal reserve: .14*100 must protect
+    // fourteen copper, not 14.000000000000002 and one extra spendable coin.
+    const ratio=decimalFraction(reserveRatio),reserved=ratio.numerator*BigInt(liabilities);
+    const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===b.id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);
+    const reserve=Number(reserved)/Number(ratio.denominator)+issueReserve;
+    const loanable=Math.max(0,cash-Number((reserved+ratio.denominator-1n)/ratio.denominator)-issueReserve);
+    const demand=obligationRows(state).filter(o=>o.kind==='loan'&&o.creditor===b.id&&o.createdAt>minute-MONTH&&o.createdAt<=minute)
+        .reduce((sum,o)=>sum+(o.principal??o.terms?.principal??o.amount),0);
+    return {cash,liabilities,reserveRatio,reserve,loanable,demand};
+}
+export function interestRate(e,state,b,{borrower='player',principal=0,minute=state.minute,document={state}}={}){
+    const credit=bankCredit(e,state,b,minute),terms=b.rateTerms??{},[low,high]=e.rules.economy.loanMonthlyInterest;
+    const per=terms.per??'anchor',calendar=terms.calendar??'core:calendar_default';
+    if(!['day','anchor'].includes(per))throw preconditionFailure('存贷利率须按日或月锚点计息');
+    const basis=per==='day'?(obligationCalendar(calendar).rateBasis?.month??30):1;
+    const minimum=terms.minRate??low/basis,maximum=terms.maxRate??high/basis;
+    const base=terms.base??creditParameter(e,'rate.base')/basis;
+    const pressure=1+(credit.demand+principal)/Math.max(1,credit.loanable);
+    // A lender knows its own signed defaults, not another bank's private book.
+    const history=obligationRows(state).filter(o=>o.kind==='loan'&&o.debtor===borrower&&o.creditor===b.id);
+    const defaults=history.filter(o=>o.defaulted||o.status==='bad_debt').length;
+    const regard=borrower===null?0:standing(e,state,b.keepers?.[0],borrower);
+    const defaultRisk=clamp(1+defaults+Math.max(0,-regard)/100,1,creditParameter(e,'rate.mult.default').max);
+    const correction=explainDerived(e,document,'lending:interestRate',b.id,{base:base*pressure*defaultRisk,holder:borrower});
+    return {...credit,base,pressure,defaultRisk,correction,rate:clamp(correction.value,minimum,maximum),per,calendar};
+}
+export function regionalCredit(e,state,location){
+    const place=placeSettlement(e,state,location).value;
+    const banks=new Map((cfg(e)?.banks??[]).map(b=>[b.id,b]));
+    for(const row of Object.values(state.records??{}))if(row.category==='bank'&&!banks.has(row.id)){const b=derivedBankById(e,state,row.id);if(b)banks.set(b.id,b);}
+    return [...banks.values()].filter(b=>placeSettlement(e,state,b.location).value===place&&!blocked(e,state,b,state.minute))
+        .reduce((sum,b)=>sum+bankCredit(e,state,b).loanable,0);
+}
+export function depositRate(e,state,b,minute=state.minute,document={state}){
+    const spread=b.depositSpread??creditParameter(e,'deposit.spread');
+    if(!Number.isFinite(spread)||spread<0||spread>=1)throw preconditionFailure('存息利差须大于等于零且小于一');
+    return interestRate(e,state,b,{borrower:null,minute,document}).rate*spread;
 }
 function blocked(e,state,b,minute){
     if(!b||state.records?.[b.id]?.status==='倒闭')return true;
@@ -187,7 +228,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         const b=row.bank?bankById(e,row.bank,d.get('state')):null;
         const seller=e.resolve(args.seller);
         if(b?!b.keepers.includes(seller)||location!==b.location:seller!==row.creditor)throw preconditionFailure('须由原债主同意展期');
-        const days=financeInt(args.days,1,cfg(e).loan.maximumDays,'展期天数'),principal=Math.max(0,row.principal-row.paid),interest=Math.ceil(principal*row.monthlyInterest*days/30);
+        const days=financeInt(args.days,1,cfg(e).loan.maximumDays,'展期天数'),principal=Math.max(0,row.principal-row.paid),basis=row.terms?.rateTerms??{},interest=interestAmount({principal,rate:row.monthlyInterest,from:now,to:now+days*DAY,per:basis.per,calendar:basis.calendar});
         const next={...row,deadline:Math.max(now,row.deadline)+days*DAY,interest:row.interest+interest,amount:row.amount+interest,contractualAmount:row.amount+interest,status:'待偿还',installments:1,installmentOverdueAt:null,
             amendments:[...row.amendments??[],{days,interest,minute:now}]};
         counterpart(d,e,seller,{consent:true});
@@ -246,8 +287,11 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         loanPayment(d,e,key,row,amount,now,id);return {debt:key,repaid:amount};
     }
     const {b,row,keeper}=openBank(d,e,args.seller);
-    if(op==='bank_inspect')return {bank:b.id,balance:row.accounts.player??0,depositMonthlyInterest:depositRate(e,d.get('state'),b),reserve:row.coins,
-        operations:[...BANK_OPERATIONS],note:'borrow的quantity为分期期数；repay用coins部分还款；remit的location为兑付柜；凭contract兑票或赎回。'};
+    if(op==='bank_inspect')return {bank:b.id,balance:row.accounts.player??0,depositInterest:{rate:depositRate(e,d.get('state'),b,now,d.document),per:b.rateTerms?.per??'anchor',calendar:b.rateTerms?.calendar??'core:calendar_default'},reserve:row.coins,
+        credit:interestRate(e,d.get('state'),b,{document:d.document}),
+        deposits:obligationRows(d.get('state')).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player').map(o=>({claim:o.id,principal:o.terms.principal,paid:o.paid,balance:obligationView(d.get('state'),o).owed,original:o.terms.requiresInstrument??null,sourceEvent:o.terms.sourceEvent,rateTerms:o.terms.rateTerms})),
+        regionalLoanable:regionalCredit(e,d.get('state'),b.location),
+        operations:[...BANK_OPERATIONS],note:'borrow的quantity为分期期数；repay用coins部分还款；withdraw可用debt指定存款债权，已签发存单须持有具名原件；remit的location为兑付柜；凭contract兑票或赎回。'};
     if(blocked(e,d.get('state'),b,now))throw preconditionFailure('钱庄倒闭或战乱导致兑付受阻');
     if(op==='pawn'){
         const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=(e.byId.get(item).basePrice??0)*quantity;
@@ -330,16 +374,26 @@ export function advanceBankFinance(d,e,minute,recordIds){
             const row=structuredClone(original),period=c.depositInterest.periodDays*DAY;
             for(let at=(row.interestAt??minute)+period;at<=minute;at+=period){
                 const state=d.get('state'),clearing=obligationRows(state).filter(r=>r.debtor===id&&r.kind==='bill'&&!r.billPayable).reduce((n,r)=>n+obligationView(state,r,at).owed,0);
-                const liabilities=Object.values(row.accounts).reduce((n,v)=>n+v,0)+Object.values(state.records).filter(r=>r.category==='bank_bill'&&r.bank===id&&r.status==='未兑付').reduce((n,r)=>n+r.amount,0)+clearing;
+                let liabilities=Object.values(row.accounts).reduce((n,v)=>n+v,0)+Object.values(state.records).filter(r=>r.category==='bank_bill'&&r.bank===id&&r.status==='未兑付').reduce((n,r)=>n+r.amount,0)+clearing;
                 // Interest is settled only at the agreed interest event. Its
                 // cursor moves here, never during a daily accumulation pass.
-                const rate=depositRate(e,d.get('state'),b,at),from=row.accruedTo??row.interestAt??at-period;
-                const raw=(row.accounts.player??0)*rate*Math.max(0,at-from)/MONTH+(row.interestFraction??0);
-                const due=Math.trunc(raw);
-                row.interestFraction=raw-due;
-                const owed=due+(row.interestArrears??0),paid=blocked(e,d.get('state'),b,at)?0:Math.min(owed,Math.max(0,row.coins-liabilities));
-                row.interestArrears=owed-paid;
-                row.accounts.player=(row.accounts.player??0)+paid;row.interestAt=at;row.accruedTo=at;
+                const quote=interestRate(e,state,b,{borrower:null,minute:at,document:d.document}),rate=depositRate(e,state,b,at,d.document);
+                let due=0,paid=0,arrears=0;
+                const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);
+                for(const claim of obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===id&&o.createdAt<=at&&obligationView(state,o,at).owed>0)){
+                    const basis=claim.terms.rateTerms??{per:'anchor',calendar:'core:calendar_default'},month=obligationCalendar(basis.calendar).rateBasis?.month??30;
+                    const signedRate=quote.per===basis.per?rate:rate*(basis.per==='day'?1/month:month);
+                    const from=claim.accruedTo??claim.createdAt,previous=claim.interestRemainder;
+                    const exact=addAccrual(interestFraction({principal:obligationView(state,claim,at).owed,rate:signedRate,from,to:at,per:basis.per,calendar:basis.calendar}),previous?fraction(BigInt(previous.numerator),BigInt(previous.denominator)):fraction(0n));
+                    const earned=Number(exact.numerator/exact.denominator),remainder=fraction(exact.numerator%exact.denominator,exact.denominator);
+                    const owed=earned+(claim.interestArrears??0),capitalized=blocked(e,state,b,at)?0:Math.min(owed,Math.max(0,row.coins-liabilities-issueReserve));
+                    // The original claim and original paper remain the only debt.
+                    d.set(['state','obligations',claim.id],{...claim,amount:claim.amount+capitalized,interest:(claim.interest??0)+capitalized,accruedTo:at,
+                        interestRemainder:{numerator:String(remainder.numerator),denominator:String(remainder.denominator)},interestArrears:owed-capitalized});
+                    row.accounts[claim.creditor]=(row.accounts[claim.creditor]??0)+capitalized;
+                    due+=earned;paid+=capitalized;arrears+=owed-capitalized;liabilities+=capitalized;
+                }
+                row.interestArrears=arrears;row.interestAt=at;row.accruedTo=at;
                 row.interestLedger=[...row.interestLedger??[],{minute:at,due,paid,rate}];
             }
             holdingSet(d,e,financePath(id),row,'finance-bank');

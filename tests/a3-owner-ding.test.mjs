@@ -18,6 +18,7 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 
 import {nativeTrial,trialCall,trialScene,trialPeople} from './helpers/trial-actions.mjs';
+import {nativeDeposit,creditCall} from './helpers/credit-actions.mjs';
 import {documentScene} from './helpers/document-actions.mjs';
 import {appointedClaimClerk,officeCall} from './helpers/office-actions.mjs';
 import {charteredWorld} from './helpers/charter-world.mjs';
@@ -158,29 +159,35 @@ test('N/O: paying a restored fine retains the ordinary ten-minute action cost',a
  assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
-test.todo('O/P: restored deposit withdraws through the real bank action and updates one canonical claim and bank projection〔前提待真实动作：签发与规范存款债权绑定的具名纸本存单；归 S5〕',async()=>{
- const loaded=load('032');assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document),bank='bank_hw_post';
- assert.equal(document.state.records[bank].accounts.player,100);assert.equal(obligationView(document.state,'a3v2_032_deposit').owed,100);
- const out=await writeAsync(document,d=>engine.trade(d,{operation:'withdraw',seller:'npc_hw_shendu',coins:50},'withdraw-old'));
- assert.equal(out.document.state.minute,document.state.minute+5);
- assert.equal(out.result.withdrawn,50);assert.equal(out.document.state.player.coins,50);assert.equal(out.document.state.records[bank].coins,0);
- assert.equal(out.document.state.records[bank].accounts.player,50);assert.equal(obligationView(out.document.state,'a3v2_032_deposit').owed,50);
- assert.equal(obligationRows(out.document.state).filter(o=>o.id==='a3v2_032_deposit').length,1);clean(out.document);
+// 15 §15.5 / 05 §5.2.7: real deposits replace the removed snapshot producer.
+// Keep the withdrawal, timing, single-claim and failed-write guarantees.
+test('O/P: real named deposit withdraws through the bank and updates one canonical claim',async()=>{
+ const f=await nativeDeposit(engine,initial,{prefix:'owner-withdraw',vaultCash:50}),before=f.document.state.minute;
+ assert.equal(f.document.state.records.bank_hw_post.accounts.player,100);assert.equal(obligationView(f.document.state,f.claim).owed,100);
+ const paid=await creditCall(f,{operation:'withdraw',coins:50},'owner-withdraw-pay');
+ assert.equal(f.document.state.minute,before+5);assert.equal(paid.withdrawn,50);assert.equal(f.document.state.player.coins,50);
+ assert.equal(f.document.state.records.bank_hw_post.coins,0);assert.equal(f.document.state.records.bank_hw_post.accounts.player,50);
+ assert.equal(obligationView(f.document.state,f.claim).owed,50);assert.equal(obligationRows(f.document.state).filter(o=>o.kind==='deposit').length,1);clean(f.document);
 });
 
-test.todo('O/P: deposit cannot withdraw using a forged receipt, wrong named holder or overdraw〔前提待真实动作：签发与规范存款债权绑定的具名纸本存单；归 S5〕',async()=>{
- for(const change of [s=>s.documents[0].valid=false,s=>s.documents[0].namedHolder='npc_hw_shendu',s=>s.itemInstances[0].condition=0]){
-  const loaded=load('032',change),document=save(loaded.document);
-  await assert.rejects(writeAsync(document,d=>engine.trade(d,{operation:'withdraw',seller:'npc_hw_shendu',coins:50},'bad-receipt')),/receipt/);
-  assert.equal(document.state.player.coins,0);assert.equal(obligationView(document.state,'a3v2_032_deposit').owed,100);
+test('O/P: deposit rejects forged receipt, wrong named holder, damage and overdraw',async()=>{
+ for(const mutate of [p=>p.document.valid=false,p=>p.document.namedHolder='npc_hw_shendu',p=>p.durability=0]){
+  const f=await nativeDeposit(engine,initial,{prefix:'owner-invalid'}),paper=save(f.document.state.itemInstances[f.paper]);mutate(paper);
+  const premise=applyIntentSetup(engine,f.document,{facts:[{path:['state','itemInstances',f.paper],value:paper}]});assert.deepEqual(premise.setupUnmet,[]);f.document=premise.document;
+  const before=save(f.document);await assert.rejects(creditCall(f,{operation:'withdraw',coins:50},'owner-invalid-pay'));
+  assert.deepEqual(f.document,before);assert.equal(f.document.state.player.coins,0);assert.equal(obligationView(f.document.state,f.claim).owed,100);clean(f.document);
  }
- const loaded=load('032');await assert.rejects(writeAsync(save(loaded.document),d=>engine.trade(d,{operation:'withdraw',seller:'npc_hw_shendu',coins:101},'overdraw')));
+ const f=await nativeDeposit(engine,initial,{prefix:'owner-overdraw'}),before=save(f.document);
+ await assert.rejects(creditCall(f,{operation:'withdraw',coins:101},'owner-overdraw-pay'));assert.deepEqual(f.document,before);
 });
 
-test.todo('O: partial paid deposit snapshot restores debt, not cash or a second deposit〔前提待真实动作：签发与规范存款债权绑定的具名纸本存单；归 S5〕',()=>{
- const loaded=load('032',s=>s.obligations[0].paid=25);assert.deepEqual(ownedErrors(loaded),[]);
- const document=save(loaded.document);assert.equal(document.state.player.coins,0);assert.equal(document.state.records.bank_hw_post.coins,50);
- assert.equal(document.state.records.bank_hw_post.accounts.player,75);assert.equal(obligationView(document.state,'a3v2_032_deposit').owed,75);clean(document);
+test('O: partial paid deposit saves debt, not cash or a second deposit',async()=>{
+ const f=await nativeDeposit(engine,initial,{prefix:'owner-partial',vaultCash:50});
+ await creditCall(f,{operation:'withdraw',coins:25},'owner-partial-pay');f.document=save(f.document);
+ // 100-25=75 owed; vault50-25=25; the payment exists once in purse.
+ assert.equal(f.document.state.player.coins,25);assert.equal(f.document.state.records.bank_hw_post.coins,25);
+ assert.equal(f.document.state.records.bank_hw_post.accounts.player,75);assert.equal(obligationView(f.document.state,f.claim).owed,75);
+ assert.equal(obligationRows(f.document.state).filter(o=>o.kind==='deposit').length,1);clean(f.document);
 });
 
 // O: exact-original pawn redemption moved to a3-prelude.test.mjs. Its premise
@@ -219,13 +226,19 @@ test('O: upkeep survives save and its real dismissal consumer closes it without 
  }
 });
 
-test.todo('O: snapshot provenance, parties and values are validated before native writes〔前提待真实动作：建立与真实存款绑定的具名存单并校验债权来源；归 S5〕',()=>{
- for(const change of [s=>s.obligations[0].creditor='npc_hw_shendu',s=>s.obligations[0].amount=101,s=>s.obligations[0].openedAt=601,s=>s.obligations[0].sourceEvent=s.history[0].id]){
-  const loaded=load('032',change);assert.ok(ownedErrors(loaded).some(e=>e.item==='obligations[0]'));assert.equal(loaded.document.state.player.coins,0);
+// 15 §15.5: validate real deposit provenance before issuing its named original,
+// retaining the old source, parties, value and zero-write assertions.
+test('O: deposit source, parties and values are validated before paper issuance',async()=>{
+ for(const change of [o=>o.creditor='npc_hw_shendu',o=>o.amount=101,o=>o.terms.principal=101,o=>o.createdAt++,o=>o.terms.sourceEvent='missing',o=>o.terms.bank='missing']){
+  const setup=applyIntentSetup(engine,initial,{minute:600,location:'bld_hw_post',coins:101,inventory:{item_parchment:1},abilitiesByActor:{player:{skills:{skill_literacy:500}}}});assert.deepEqual(setup.setupUnmet,[]);
+  const f={engine,document:setup.document},deposited=await creditCall(f,{operation:'deposit',coins:101},'owner-source');
+  const claim=save(f.document.state.obligations[deposited.claim]);change(claim);
+  const premise=applyIntentSetup(engine,f.document,{facts:[{path:['state','obligations',deposited.claim],value:claim}]});assert.deepEqual(premise.setupUnmet,[]);f.document=premise.document;
+  const before=save(f.document);
+  const out=await engine.reduce(f.document,{tool:'world_act',args:{action:'documents:issue',slots:{source:'owner-source',paper:'item_parchment'}},eventId:'owner-false-source'});
+  assert.equal(out.result.receipt.status,'rejected');assert.deepEqual(applyPatches(f.document,out.patches),before);
+  assert.equal(f.document.state.player.coins,0);assert.equal(f.document.state.inventory.item_parchment.quantity,1);
  }
- const document=save(load('032').document),before=save(document);
- assert.throws(()=>write(document,d=>restoreObligationSnapshot(d,engine,{id:'forged',kind:'loan',debtor:'player',creditor:'npc_hw_shendu',amount:10,paid:0,openedAt:540,dueAt:600,sourceEvent:'missing',terms:{}},{origin:'initial'})),/source/);
- assert.deepEqual(document,before);
 });
 
 test('O: natural summon expiry ends the same restored upkeep and never charges a new opening fee',async()=>{

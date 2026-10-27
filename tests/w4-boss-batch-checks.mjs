@@ -152,7 +152,8 @@ export async function defineBatchTests(batch,{balanceFile,tiers}){
  test(`${batch} 隔离发布重发零写；候选与L4篡改在写入前拒绝`,async t=>{
   const root=await fs.mkdtemp(path.join(tmpRoot(),`dnd-${batch}-publish-`));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   // A3 loadWorld includes action definitions and ontology assets; copy the complete edition before checking exact publication equality.
-  for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+  // S5-06 species/herd definitions are part of the edition being republished.
+  for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
   await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve(`world/drafts/${batch}`),path.join(root,`drafts/${batch}`),{recursive:true});
   const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses)+'\n');
   const preview=await B.publish({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);

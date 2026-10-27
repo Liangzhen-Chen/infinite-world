@@ -1,5 +1,5 @@
 // K9 系统地图：从代码实际导出系统数据，写 docs/system-map.json 与自包含的 docs/system-map.html。
-// 用法：node tools/system-map.mjs
+// Usage: node tools/system-map.mjs updates docs (land.sh); FIELDS_TEST_ARTIFACTS overrides the root.
 //
 // 数据来源（两类）：
 //  A. 运行时导出（import 模块读取真实注册表）：
@@ -21,6 +21,7 @@
 //  静态扫描是近似：经由 engine.byId、helper 间接读写、动态拼接路径的访问不会被统计。
 import fs from 'node:fs';
 import path from 'node:path';
+import {artifactsRoot} from './tmp-root.mjs';
 import {pathToFileURL} from 'node:url';
 
 const ROOT=path.resolve(import.meta.dirname,'..');
@@ -146,7 +147,7 @@ const SYSTEMS=[
  {id:'base_npc_decision',layer:'base',name:'主观视图与 NPC 决策',card:'A2/S5-01',modules:['subjective-view.mjs','npc-decision.mjs','autonomy-candidates.mjs','derived-consumers.mjs']},
  {id:'base_effects',layer:'base',name:'效果表',card:'K6',modules:['effects.mjs','effect-registry.mjs']},
  {id:'base_advance',layer:'base',name:'推进注册表',card:'K7/P3',modules:['advance-registry.mjs','advance-layers.mjs','advance-hooks.mjs']},
- {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs','population-health.mjs']},
+ {id:'base_ledger',layer:'base',name:'账本',card:'S1a/S1b',modules:['ledger.mjs','money.mjs','stock.mjs','population-health.mjs','currency.mjs']},
  {id:'base_holdings',layer:'base',name:'持有与实体化',card:'S2a/S2b/S2c/S3',modules:['obligation-protocol.mjs','holdings.mjs','holding-kinds.mjs','holding-sources.mjs','transition.mjs','identity.mjs','obligation-kinds.mjs','contract-state.mjs','lifecycle-state.mjs','obligation-state.mjs','obligation-calendar.mjs','obligation-presence.mjs','obligation-runtime.mjs','obligation-conditional.mjs','obligation-claims.mjs','service-queue.mjs']},
  // 模拟系统层
  {id:'sim_npc',layer:'sim',name:'人物',modules:['dialogue.mjs','daily-actions.mjs','npc-state.mjs','npc-schedule.mjs','npc-cognition.mjs','npc-autonomy.mjs','npc-life.mjs','medicine.mjs','medicine-state.mjs','npc-memory.mjs','npc-relations.mjs','npc-rumors.mjs',
@@ -553,9 +554,14 @@ const data={
  contentTypes,findings,metricTools:METRIC_TOOLS,modules,
 };
 const json=JSON.stringify(data,null,1)+'\n';
-fs.writeFileSync(abs('docs/system-map.json'),json);
-fs.writeFileSync(abs('docs/system-map.html'),renderHTML(data));
-export const summary=`system-map: ${LAYERS.length} 层，${SYSTEMS.length} 个系统，${advance.length} 推进项，${tools.length} 工具，${VERBS.length} 动词，${links.length} 条连线 → docs/system-map.json, docs/system-map.html`;
+// P3: the standalone CLI is land.sh's explicit documentation-update command.
+// Tests pass their run root, including to the child CLI; imports default to isolation.
+const isCLI=process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename);
+const outputRoot=isCLI&&!process.env.FIELDS_TEST_ARTIFACTS?abs('docs'):artifactsRoot();
+fs.mkdirSync(outputRoot,{recursive:true});
+fs.writeFileSync(path.join(outputRoot,'system-map.json'),json);
+fs.writeFileSync(path.join(outputRoot,'system-map.html'),renderHTML(data));
+export const summary=`system-map: ${LAYERS.length} 层，${SYSTEMS.length} 个系统，${advance.length} 推进项，${tools.length} 工具，${VERBS.length} 动词，${links.length} 条连线 → ${path.join(outputRoot,'system-map.json')}, ${path.join(outputRoot,'system-map.html')}`;
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename))console.log(summary);
 export {data};
 

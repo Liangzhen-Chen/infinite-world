@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {tmpRoot} from '../tools/tmp-root.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
@@ -414,7 +415,9 @@ test('eggs require actual fed birds and keep the same reserve when collected',as
 });
 
 test('S/I/R subaccounts and fractional accruals survive storage restart/export/import',async t=>{
- const f=setup(),directory=await fs.mkdtemp(path.join(process.env.TEMP,'s506-store-'));
+ // Use the project's per-process test root (R29), including in sandboxes where
+ // the required system TEMP is outside the writable workspace. Assertions stay intact.
+ const f=setup(),directory=await fs.mkdtemp(path.join(tmpRoot(),'s506-store-'));
  t.after(()=>fs.rm(directory,{recursive:true,force:true}));
  const reducer=(document,input)=>f.engine.reduce(document,input),store=new CampaignStorage(directory,{reducer});
  await store.create({id:'ecology',worldVersion:world.version,document:f.document});

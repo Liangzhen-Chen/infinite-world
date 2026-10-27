@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {personRegistrar} from './entity-view.mjs';
@@ -158,7 +159,7 @@ export function notableAction(d,args,eventId){
 }
 const dueOf=r=>r.category==='notable_petition'?r.due:r.nextReview;
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='notable_petition'&&r.status==='待审定'||r.category==='notable'&&r.status==='在册');
-export function nextNotableMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueOf).filter(m=>m>now));}
+export function nextNotableMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','notable_petition'),...recordsWhere(state.records,'category','notable')].filter(r=>r.category==='notable_petition'&&r.status==='待审定'||r.category==='notable'&&r.status==='在册').map(dueOf).filter(m=>m>now));}
 export function advanceNotables(d,engine,{after}){
     for(let guard=0;guard<1000;guard++){
         const r=scheduled(d.get('state')).filter(r=>dueOf(r)<=after).sort((a,b)=>dueOf(a)-dueOf(b)||a.id.localeCompare(b.id))[0];

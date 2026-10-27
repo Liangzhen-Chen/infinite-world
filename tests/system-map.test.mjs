@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
+import {artifactsRoot} from '../tools/tmp-root.mjs';
+// P3 / design section 9 and P3: only relocate generated evidence; all JSON/HTML assertions below stay intact.
+const outputRoot=artifactsRoot();
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
@@ -13,22 +17,26 @@ import {effectKinds} from '../server-plugin/effects.mjs';
 import {interactionRules} from '../world/design/interaction-rules.mjs';
 
 async function run(){
- try{return execFileSync(process.execPath,['tools/system-map.mjs'],{encoding:'utf8'});}
+ try{return execFileSync(process.execPath,['tools/system-map.mjs'],{encoding:'utf8',env:{...process.env,FIELDS_TEST_ARTIFACTS:outputRoot}});}
  catch(error){
   if(error.code!=='EPERM')throw error;
   // Sandboxed runners may forbid child processes; execute the same CLI entry in process.
-  const argv=process.argv,log=console.log;let out='';
+  const argv=process.argv,log=console.log,previousRoot=process.env.FIELDS_TEST_ARTIFACTS;let out='';
   try{
+   process.env.FIELDS_TEST_ARTIFACTS=outputRoot;
    process.argv=[process.execPath,fileURLToPath(new URL('../tools/system-map.mjs',import.meta.url))];
    console.log=(...args)=>{out+=args.join(' ')+'\n';};
    await import('../tools/system-map.mjs');
-  }finally{process.argv=argv;console.log=log;}
+  }finally{
+   process.argv=argv;console.log=log;
+   if(previousRoot===undefined)delete process.env.FIELDS_TEST_ARTIFACTS;else process.env.FIELDS_TEST_ARTIFACTS=previousRoot;
+  }
   return out;
  }
 }
 const out=await run();
-const data=JSON.parse(fs.readFileSync('docs/system-map.json','utf8'));
-const html=fs.readFileSync('docs/system-map.html','utf8');
+const data=JSON.parse(fs.readFileSync(path.join(outputRoot,'system-map.json'),'utf8'));
+const html=fs.readFileSync(path.join(outputRoot,'system-map.html'),'utf8');
 
 test('脚本可运行并生成两个文件',()=>{
  assert.match(out,/system-map:/);
