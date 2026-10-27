@@ -1,6 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition} from './transport.mjs';
+import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition,settleWreckedShipment} from './transport.mjs';
 import {memoryFor,permitted,appendHeard} from './npc-cognition.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {financeBalance} from './finance-bank.mjs';
@@ -30,6 +30,14 @@ export function advancePost(d,e,minute){
  for(const old of all(d.get('state'))){
   if(['delivered','lost','returned'].includes(old.status))continue;
   const row=clone(old),trip=d.get(...path(row.shipment));
+  if(trip?.status==='wrecked'){
+   // The carrier's asset was destroyed: settle the shipment (freight refund, notice to the sender), then end the letter.
+   // A lost receipt leg leaves the original letter delivered; any earlier leg means the letter never arrived.
+   settleWreckedShipment(d,e,trip.id,minute);
+   if(['receipt-in-transit','receipt-waiting'].includes(row.status)){row.status='delivered';row.receiptLost=true;row.reason='回执随车船损毁';}
+   else{row.status='lost';row.lostAt=minute;row.lastLocation=trip.transport.location;row.reason='承运车船在途中损毁';}
+   index(d,row.id,false);d.set(path(row.id),row);continue;
+  }
   if(trip?.status==='intercepted'){row.status='intercepted';row.custodian=trip.custodian;d.set(path(row.id),row);continue;}
   if(trip?.status!=='delivered')continue;
   const last=row.chain.at(-1);last.arrivedAt??=trip.arrivedAt;

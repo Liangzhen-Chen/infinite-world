@@ -12,7 +12,8 @@ import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 import {transportSegment} from './transport-route.mjs';
-import {transportServices,quoteTransport,bookTransport} from './transport.mjs';
+import {transportServices,quoteTransport,bookTransport,settleWreckedShipment} from './transport.mjs';
+import {registerLoss,registerEarnedClaim} from './obligation-claims.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('settlement-trade',{kinds:[],locations:true});
 
@@ -46,11 +47,11 @@ function assertOrder(o){
         return;
     }
     const invalid=()=>{throw Error('周贸易在途货物或资金账不守恒，拒绝结算或补齐');};
-    if(!['in-transit','delivered','partial','spoiled','rejected'].includes(o.status)||!Array.isArray(o.batches)||!Array.isArray(o.entries)||!o.transport)invalid();
-    if(['quantity','workers','unitPriceCopper'].some(k=>!integer(o[k],1))||['escrowCopper','paidCopper','refundCopper','taxCopper','spoiledFood','rejectedFood','deliveredFood'].some(k=>!integer(o[k])))invalid();
+    if(!['in-transit','delivered','partial','spoiled','rejected','lost'].includes(o.status)||!Array.isArray(o.batches)||!Array.isArray(o.entries)||!o.transport)invalid();
+    if(['quantity','workers','unitPriceCopper'].some(k=>!integer(o[k],1))||['escrowCopper','paidCopper','refundCopper','taxCopper','spoiledFood','rejectedFood','deliveredFood'].some(k=>!integer(o[k]))||!integer(o.lostFood??0))invalid();
     if(o.batches.some(b=>!integer(b.amount,1)||!Number.isSafeInteger(b.expiresDay)||b.kind!=='grain'))invalid();
     const sent=o.entries.find(e=>e.phase==='dispatch'),cost=o.quantity*o.unitPriceCopper;
-    if(o.quantity!==cargo(o)+o.spoiledFood+o.rejectedFood+o.deliveredFood||cost!==o.escrowCopper+o.paidCopper+o.refundCopper||o.taxCopper!==Math.floor(o.paidCopper*o.taxBps/10000))invalid();
+    if(o.quantity!==cargo(o)+o.spoiledFood+o.rejectedFood+o.deliveredFood+(o.lostFood??0)||cost!==o.escrowCopper+o.paidCopper+o.refundCopper||o.taxCopper!==Math.floor(o.paidCopper*o.taxBps/10000))invalid();
     if(sent?.quantity!==o.quantity||sent?.workers!==o.workers||sent?.escrowCopper!==cost||sent?.seller!==o.seller||sent?.buyer!==o.buyer||sent?.item!==o.item||sent?.unitPriceCopper!==o.unitPriceCopper||sent?.taxBps!==o.taxBps||sent?.minute!==o.dispatchAt)invalid();
     if(o.status==='in-transit'?o.escrowCopper!==cost:o.escrowCopper!==0||cargo(o)!==0)invalid();
     if(!['outbound','returning','home'].includes(o.transport.phase)||o.transport.phase!=='home'&&!integer(o.transport.nextAt,1))invalid();
@@ -97,7 +98,8 @@ function spareWorkers(state,engine,sid){
     const p=profile(engine,sid),s=state.settlements[sid],r=engine.rules.settlementTrade;
     const available=Math.max(0,Math.floor(s.population*p.workerFraction)-(state.records?.[`levy:${sid}`]?.count??0));// U12 levy
     const spare=Math.max(0,available-p.processingWorkers-p.freshWorkers-p.farmWorkers-2);
-    const busy=orders(state).filter(o=>o.seller===sid&&o.transport&&o.transport.phase!=='home').reduce((n,o)=>n+o.workers,0);
+    // An order carried by a hired carrier sends no village workers anywhere.
+    const busy=orders(state).filter(o=>o.seller===sid&&o.transport&&o.transport.phase!=='home'&&!o.carriage).reduce((n,o)=>n+o.workers,0);
     return Math.max(0,Math.min(r.workersMaximum,spare)-busy);
 }
 function entry(o,phase,minute,detail={}){o.entries.push({phase,minute,...detail});}
@@ -158,6 +160,34 @@ function arrive(d,engine,o,minute){
     o.batches=[];putWarehouse(d,o.seller,a);putWarehouse(d,o.buyer,b);
     d.set(['state','records',`village-fiscal:${o.seller}`],sf);d.set(['state','records',`village-fiscal:${o.buyer}`],bf);
 }
+const playerAt=(d,engine,o)=>[profile(engine,o.seller).counter,profile(engine,o.buyer).counter].includes(d.get('state','location'));
+// The hired carrier's vehicle was destroyed: the cargo is gone, the buyer's escrow returns to its
+// treasury, the carrier owes the seller the signed price of the lost grain (and refunds the freight).
+function lose(d,engine,o,trip,minute){
+    settleWreckedShipment(d,engine,trip.id,minute);
+    spoil(d,engine,o,minute);
+    const a=warehouse(d,o.seller),b=warehouse(d,o.buyer);
+    if(!a||!b)throw Error('周贸易损失两端真实账缺失；不能结算');
+    const from=cargoAccount(engine,`settlement-trade:${o.id}`,o.item),lost=cargo(o),refund=o.escrowCopper;
+    for(const batch of o.batches)moveStock(d,{from,to:`sink:destroy|${from.split('|')[1]}|cargo_loss`,amount:batch.amount,writer:'settlement-trade',eventId:o.id,pick:[String(batch.id)]});
+    moveCoins(d,{from:escrowAccount(`settlement-trade:${o.id}`),to:treasuryAccount(o.buyer),amount:refund,writer:'settlement-trade',eventId:o.id});
+    b.s.treasury+=refund;
+    const bf=fiscal(d,o.buyer),sf=fiscal(d,o.seller);
+    bf.entries.push({eventId:o.id,contract:o.id,phase:'lost',other:o.seller,minute,food:0,copper:0,refundCopper:refund});
+    sf.entries.push({eventId:o.id,contract:o.id,phase:'lost',other:o.buyer,minute,food:0,copper:0,lostFood:lost});
+    o.lostFood=lost;o.refundCopper+=refund;o.escrowCopper=0;o.batches=[];o.status='lost';
+    const owed=lost*o.unitPriceCopper;
+    if(owed&&trip.carrier!==o.seller){
+        registerLoss(d,engine,{id:`settlement-trade:${o.id}:loss`,victim:o.seller,amount:owed,source:o.id});
+        registerEarnedClaim(d,engine,{id:`settlement-trade:${o.id}:loss:claim`,kind:'compensation',debtor:trip.carrier,creditor:o.seller,amount:owed,createdAt:minute,deadline:minute,source:`settlement-trade:${o.id}:loss`});
+        o.lossClaim=`settlement-trade:${o.id}:loss:claim`;
+    }
+    Object.assign(o.transport,{phase:'home',nextAt:null,segment:null});o.homeAt=minute;
+    entry(o,'lost',minute,{lostFood:lost,refundCopper:refund,owedCopper:owed,carrier:trip.carrier,shipment:trip.id});entry(o,'home',minute);
+    putWarehouse(d,o.seller,a);putWarehouse(d,o.buyer,b);
+    d.set(['state','records',`village-fiscal:${o.seller}`],sf);d.set(['state','records',`village-fiscal:${o.buyer}`],bf);
+    if(playerAt(d,engine,o))d.say?.(`周贸易${o.id}承运车船损毁，${lost}份粮全损，预付款${refund}铜退回买方公账，承运人欠${owed}铜货款待赔`);
+}
 function dispatch(d,engine,lane,minute){
     const r=engine.rules.settlementTrade,day=Math.floor(minute/DAY),id=`${lane.id}:${day}`,path=['state','records',`settlement-trade:${id}`];
     if(d.get(...path)){if(d.get(...path).category!=='settlement_trade')throw Error('周订单编号冲突，拒绝覆盖');return;}
@@ -203,7 +233,13 @@ function dispatch(d,engine,lane,minute){
         let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:origin,to:destination,cargo:[{item:r.item,quantity}]});}catch{continue;}
         if(d.get('state','settlements',lane.seller,'treasury')<quote.total)continue;
         const trip=bookTransport(d,engine,{owner:lane.seller,recipient:lane.buyer,from:origin,to:destination,asset:service.asset,cargo:[{item:r.item,quantity}],externalOrder:`settlement-trade:${id}`},`grain:${id}`);
-        o.carriage=trip.id;o.estimatedArrivalAt=trip.estimatedArrivalAt;d.set(path,o);break;
+        o.carriage=trip.id;o.estimatedArrivalAt=trip.estimatedArrivalAt;
+        // The seller's treasury really paid the carrier; the village ledger shows it as an expense.
+        const carriageCost=trip.freight+trip.toll+trip.tariff,fs=fiscal(d,lane.seller);
+        fs.entries.push({eventId:id,contract:id,phase:'freight',other:trip.carrier,minute,food:0,copper:-carriageCost,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
+        d.set(['state','records',`village-fiscal:${lane.seller}`],fs);
+        o.carriageCostCopper=carriageCost;entry(o,'carriage',minute,{carrier:trip.carrier,shipment:trip.id,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
+        d.set(path,o);break;
     }
 }
 function nextDispatch(engine,minute){
@@ -231,7 +267,13 @@ export function advanceSettlementTrade(d,engine,minute){
             const trip=d.get('state','records',o.carriage);
             if(trip?.status==='delivered'){
                 o.transport.location=profile(engine,o.buyer).counter;o.transport.edgeIndex=o.transport.edges.length;
-                schedule(d,engine,o,minute);
+                arrive(d,engine,o,minute);
+                // Hired carriage: nobody from the village walked out, so nobody walks back.
+                Object.assign(o.transport,{phase:'home',nextAt:null,segment:null});o.homeAt=minute;entry(o,'home',minute);
+            }else if(trip?.status==='wrecked')lose(d,engine,o,trip,minute);
+            else if(trip?.status==='intercepted'&&o.interceptedAt===undefined){
+                o.interceptedAt=minute;entry(o,'intercepted',minute,{custodian:trip.custodian});
+                if(playerAt(d,engine,o))d.say?.(`周贸易${o.id}的货在途中被${trip.custodian}扣下，预付款仍留在买方柜台托管`);
             }
             assertOrder(o);if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);continue;
         }
