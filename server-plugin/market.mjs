@@ -275,8 +275,9 @@ export function assertMarketDepth(d,engine,quote,{agreed=false}={}){
  const available=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'}).available;
  if(quote.quantity>available)reject('E-ACTION-PRECONDITION','对方库存不足：扣除自用和已承诺存量后不够出售');
 }
-export function recordMarketDeal(d,quote,totalCoins,quantity,eventId){
- d.set(['state','records',`market-trade:${eventId}`],{category:'market_trade',eventId,day:quote.day,place:quote.place,goods:quote.goods,item:quote.item,seller:quote.seller,buyer:quote.buyer,business:quote.business,side:quote.side,quantity,totalCoins,minute:d.get('state','minute')});
+// settled (S5-F): the resource and amount a deal was actually settled in, when not the reference coin.
+export function recordMarketDeal(d,quote,totalCoins,quantity,eventId,settled=null){
+ d.set(['state','records',`market-trade:${eventId}`],{category:'market_trade',eventId,day:quote.day,place:quote.place,goods:quote.goods,item:quote.item,seller:quote.seller,buyer:quote.buyer,business:quote.business,side:quote.side,quantity,totalCoins,minute:d.get('state','minute'),...(settled?{settled}:{})});
 }
 export function marketExplanation(quote,{bargainFactor=1,totalCoins=quote.totalCoins,unitPrice=quote.listPrice*bargainFactor,exactTotal=quote.exactTotal*bargainFactor}={}){
  const e=quote.explanation,exact=exactTotal;

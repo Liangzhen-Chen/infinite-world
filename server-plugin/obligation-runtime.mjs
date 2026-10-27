@@ -18,6 +18,8 @@ import {groupView,lawAuthorities,personConstraint} from './entity-view.mjs';
 import {identities} from './identity.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {transferItems} from './items.mjs';
+import {currencyRow} from './currency.mjs';
+import {repaymentPlan,payInKind} from './tender.mjs';
 import {pledged} from './stock.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
@@ -307,13 +309,32 @@ export function performObligation(d,e,{id,actor},eventId){
         return {id,transferred:0,delivered:row.quantity,item:row.item,remaining:0,evidence:eventId};
     });
 }
+// S5-F: a claim whose terms froze a resource and quantity (15 §15.3) is cleared by that quantity. A debtor who pays in
+// another resource hands over ceil(quantity x value(claim) / value(payment)) at today's rate; the claim never changes.
+function settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource}){
+    const id=row.id,view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount'),creditor=row.creditor;
+    if(args.judicial||args.fundingContract||args.escrowContract||args.automatic||row.terms?.accrual||row.terms?.requiresInstrument)throw Error('Resource claims are settled by direct payment only');
+    assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment',authorize);
+    if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
+    if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');
+    if(payer!==row.debtor)throw Error('Only the debtor settles a resource claim');
+    if(!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
+    if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,row,s.minute))throw Error('Claim is not enforceable under current procedure');
+    const plan=repaymentPlan(d,e,{resource:claimResource,quantity:amount,payWith:args.payWith,location:settlementLocation(e,s,payer)});
+    const paidWith=payInKind(d,e,{payer,payee:creditor,plan,eventId,writer:W}),remaining=view.owed-amount;
+    write(d,e,{...row,paid:(row.paid??0)+amount,...(row.remaining!==undefined?{remaining}:{}),status:remaining?'pending':'settled',...(remaining?{}:{settledAt:s.minute}),
+        events:[...row.events??[],{eventId,minute:s.minute,payer,actor,transferred:amount,paidWith}]});
+    return {id,transferred:amount,remaining,evidence:eventId,payment:{payer,actor,debtor:row.debtor,creditor,location:settlementLocation(e,s,actor),paidWith}};
+}
 export function settleObligation(d,e,args,eventId,{authorize=null}={}){
     if(!ledgerActive(d))throw Error('Settlement requires an opened ledger transaction');
     const resolved=requireRow(d,args.id),id=resolved.id;
     args={...args,id};
     return receipt(d,e,id,eventId,'obligation_settled',args,()=>{
         const row=requireRow(d,id),s=read(d,'state'),payer=args.payer??row.debtor,actor=args.actor??payer;
-        if(row.resource&&resourceKey(row.resource)!=='coin_river')throw Error('Non-monetary claim requires its performance adapter');
+        const claimResource=row.resource?resourceKey(row.resource):'coin_river';
+        if(claimResource!=='coin_river'&&!currencyRow(e,claimResource))throw Error('Non-monetary claim requires its performance adapter');
+        if(claimResource!=='coin_river'||args.payWith&&args.payWith!=='coin_river')return settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource});
         const view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount');
         if([args.judicial,args.fundingContract,args.escrowContract,args.automatic].filter(Boolean).length>1)throw Error('Conflicting payment authority');
         const funding=settlementFunding(e,s,row,args,amount),escrow=args.escrowContract&&s.records?.[args.escrowContract];

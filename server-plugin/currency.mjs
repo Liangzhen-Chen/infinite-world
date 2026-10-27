@@ -14,6 +14,7 @@ import {purse,vault,moveCoins} from './money.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {decimalFraction,fraction} from './obligation-calendar.mjs';
 import {bankLiabilities} from './finance-liabilities.mjs';
+import {turnoverByResource} from './tender.mjs';
 
 declareHoldingWriter('currency',{kinds:[]});declareLedgerWriter('currency');
 const DAY=1440,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -97,7 +98,7 @@ export function currencyValue(d,e,{currency,location=d.get('state','location'),b
  let peg=base;
  if(c.money.backedBy)peg=mul(decode(currencyValue(d,e,{currency:c.money.backedBy.coin,location,bank,viewer},seen).exact),F(c.money.backedBy.ratio));
  const exact=mul(peg,mul(reserve.exactConfidence?decode(reserve.exactConfidence):F(1),mul(F(credit.value),abundance)));
- return {resource:c.resource,branch:c.money.metal==='none'?'credit':'metal',value:number(exact),exact:encode(exact),explanation:{intrinsic:number(base),peg:number(peg),credit,turnoverCopper,volume:number(volume),active,abundance:number(abundance),reserve}};
+ return {resource:c.resource,branch:c.money.metal==='none'?'credit':'metal',value:number(exact),exact:encode(exact),explanation:{intrinsic:number(base),peg:number(peg),credit,turnoverCopper,turnoverByResource:turnoverByResource(s,{place:p,since:s.minute-window}),volume:number(volume),active,abundance:number(abundance),reserve}};
 }
 export function exchangeRate(d,e,{from,to='coin_river',...frame}){
  const a=currencyValue(d,e,{currency:from,...frame}),b=currencyValue(d,e,{currency:to,...frame});
