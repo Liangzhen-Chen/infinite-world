@@ -4,11 +4,11 @@
  "namespace": "core",
  "note": "从 extension/tools.mjs 枚举与 resolveToolCall 导出；pack 为一方包名（子操作分派所在模块的目标包，见 tools/arch-layers.mjs；仍在内核/接口层分派的为 null）；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。",
  "counts": {
-  "actions": 246,
+  "actions": 245,
   "tools": 25,
-  "withOperation": 230,
-  "handlerResolved": 246,
-  "dispatchResolved": 224
+  "withOperation": 229,
+  "handlerResolved": 245,
+  "dispatchResolved": 223
  },
  "actions": [
   {
@@ -14492,69 +14492,6 @@
     "line": 66,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/sites.mjs:297"
-   }
-  },
-  {
-   "id": "core:wildlife.release",
-   "tool": "world_field",
-   "operation": "wildlife_release",
-   "internalTool": "world_wildlife",
-   "internalOperation": "release",
-   "readOnly": false,
-   "participants": [
-    "player",
-    "target",
-    "authority",
-    "subject"
-   ],
-   "params": [
-    "location",
-    "settlement",
-    "quantity",
-    "contract",
-    "phase",
-    "authority",
-    "species",
-    "target",
-    "item",
-    "permit",
-    "subject",
-    "destination",
-    "path",
-    "text",
-    "grams",
-    "authorization",
-    "authorizations",
-    "lair",
-    "term",
-    "days",
-    "pact",
-    "alliance",
-    "offer",
-    "request"
-   ],
-   "required": [],
-   "variants": {
-    "term": [
-     "trade",
-     "tribute",
-     "passage"
-    ],
-    "pact": [
-     "respect_territory",
-     "nonaggression"
-    ],
-    "phase": [
-     "pickup",
-     "deliver"
-    ]
-   },
-   "pack": null,
-   "handler": {
-    "file": "server-plugin/activities.mjs",
-    "line": 66,
-    "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/activities.mjs:66"
    }
   },
   {

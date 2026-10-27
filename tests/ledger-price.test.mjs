@@ -45,6 +45,9 @@ const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).
 const SURVEY={
     // S5-02: unified projection reads actual holder and settlement accounts.
     'market.mjs':'read',
+    // S5-03 / 15 §15.3: currency supply is read directly from ledger.accounts;
+    // metal goods use the registered market projection, never legacy inventory.
+    'currency.mjs':'货币存量直接读取 ledger.accounts；金属商品报价转调已登记的 marketQuote，不另读旧库存定价',
     // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
     // not another inventory-priced consumer. Market callers read the books.
     'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
