@@ -1641,7 +1641,7 @@
           "item": null,
           "faceCopper": 1,
           "fineness": 1,
-          "note": "本地记账铜钱，即角色钱袋里的铜"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
         },
         {
           "id": "coinage_civic",
@@ -1650,7 +1650,7 @@
           "item": "item_coin_civic",
           "faceCopper": 10,
           "fineness": 0.9,
-          "note": "面值十铜，含铜不足，钱庄按九成收兑"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
         },
         {
           "id": "coinage_coast",
@@ -1659,7 +1659,16 @@
           "item": "item_coin_coast",
           "faceCopper": 100,
           "fineness": 0.85,
-          "note": "面值一银，掺锡，钱庄按八成五收兑"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
+        },
+        {
+          "id": "coinage_hw_note",
+          "name": "河湾兑付券",
+          "polity": "bank_hw_post",
+          "item": "item_banknote_hw",
+          "fineness": 1,
+          "faceCopper": 100,
+          "note": "按兑付条款与实际准备金、流通量派生币值；不同于具名存单。"
         }
       ],
       "banks": [
@@ -1677,23 +1686,13 @@
           },
           "exchangeFeeRate": 0.03,
           "depositFeeCopper": 1,
-          "loanMonthlyInterest": 0.03,
           "loanMaximumCopper": 300,
           "loanMaximumDays": 60,
           "collateralRatio": 0.5
         }
       ],
       "depositInterest": {
-        "periodDays": 30,
-        "monthlyRate": 0.01,
-        "minimum": 0.001,
-        "maximum": 0.03,
-        "seasonal": [
-          1,
-          1.1,
-          0.9,
-          1.2
-        ]
+        "periodDays": 30
       },
       "derivedBanks": {
         "levels": [
@@ -2279,6 +2278,17 @@
           "costs": {
             "filingFee": 0
           }
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast",
+              "coin_hw_note"
+            ]
+          }
         }
       },
       {
@@ -2396,6 +2406,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2513,6 +2533,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2630,6 +2660,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2747,6 +2787,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       }
     ],
@@ -3002,6 +3052,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3103,6 +3163,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3204,6 +3274,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3305,6 +3385,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3406,6 +3496,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3507,6 +3607,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3608,6 +3718,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3708,6 +3828,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "部营听断，继而部盟会火复议，继而大帐众部终议"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3808,6 +3938,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "林地邻席听诉，继而共同议会复议，继而异席合议终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3908,6 +4048,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "湾内船户听断，继而诸湾会复议，继而异湾合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4008,6 +4158,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "扎根处听诉，继而联邑根席复议，继而异坡长根会终议"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4108,6 +4268,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "养育群听诉，继而猎林共席复议，继而异群合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4208,6 +4378,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "本帐听诉，继而邻帐轮议，继而诸帐会终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4308,6 +4488,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "街区审席，继而城邦复席，继而异业公议终席"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4408,6 +4598,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "井旁听诉，继而缺杯水议席复议，继而异井合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       }
     ],

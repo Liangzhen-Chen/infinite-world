@@ -27,13 +27,18 @@ function borrowerOffer(f,borrower,representative,principal,days,eventId){
     return quote.interest;
 }
 
-test('存款按期结息，当前季节灾害改变报价；准备金不足或倒闭不凭空支付，重放不重复',async()=>{
+test('存款按期结息，银根派生存息；准备金不足或倒闭不凭空支付，重放不重复',async()=>{
     const f=fixture(),b=f.e.rules.economy.credit.banks[0];
     await f.act({operation:'deposit',seller:clerk,coins:1001},'dep');const total=cash(f.doc),base=depositRate(f.e,f.doc.state,b),at=f.doc.state.records[b.id].interestAt;
-    f.tick(at+30*DAY);const row=f.doc.state.records[b.id];assert.ok(row.accounts.player>1000);assert.equal(cash(f.doc),total);
+    // D15 §15.5: deposit spread is linked to lending, not crop prices/seasons.
+    // With no recent borrowing .015*.4=.006; 1000*.006=6 copper interest.
+    assert.equal(base,0.006);
+    f.tick(at+30*DAY);const row=f.doc.state.records[b.id];assert.equal(row.accounts.player,1006);assert.equal(cash(f.doc),total);
     const settled=structuredClone(row);f.tick(at+30*DAY);assert.deepEqual(f.doc.state.records[b.id],settled);
-    assert.notEqual(depositRate(f.e,f.doc.state,b,100*DAY),base);
-    f.doc.state.records['hazard-price:loc_hw']={category:'hazard_price',shifts:{test:{since:0,until:1e9,factor:2}}};
+    // Replace the unsupported weather/season dependency with a real loan:
+    // recent demand rises while available vault cash falls (same assertion intent).
+    await f.act({operation:'borrow',seller:clerk,coins:100,days:30,item:'item_wood',quantity:100},'interest-pressure');
+    assert.notEqual(depositRate(f.e,f.doc.state,b),base);
     assert.ok(depositRate(f.e,f.doc.state,b)>base);
     f.doc.state.records[b.id].coins=row.accounts.player;f.tick(at+60*DAY);assert.equal(f.doc.state.records[b.id].interestLedger.at(-1).paid,0);
     f.doc.state.records[b.id].status='倒闭';await assert.rejects(f.act({operation:'withdraw',seller:clerk,coins:1},'closed'),/倒闭/);

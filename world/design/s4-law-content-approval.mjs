@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent} from '../../tools/content-pipeline.mjs';
 import {trialProcedureFor} from './s4-law-content-data.mjs';
+import {previousCreditTender} from './s5-credit-content-approval.mjs';
 
 const root='world/drafts/s4-law-content',revision='s4law-content-1';
 const rulesFile='world/meta/rules.json',bindingsFile='world/law/bindings.json';
@@ -13,10 +14,10 @@ const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const current=await read(rulesFile),bindings=await read(bindingsFile);
 let foundation;
 try{foundation=await read(`${root}/foundation.json`);}catch(error){if(error.code!=='ENOENT')throw error;}
-const original=foundation??{codes:current.law.codes,bindings};
+const original=foundation??{codes:await previousCreditTender(current.law.codes),bindings};
 const regions=await read('world/geo/regions.json'),factions=await read('world/lore/factions.json');
 const sourceFacts={county:regions.filter(r=>r.id==='county_xichui_longqu').map(({id,province,ruler,places,seat,prose})=>({id,province,ruler,places,seat,rule:prose.rule})),
- appellateTemplate:current.law.templates.find(t=>t.id==='law_royal_xichui'),
+ appellateTemplate:(await previousCreditTender(current.law.templates)).find(t=>t.id==='law_royal_xichui'),
  reviewer:factions.filter(f=>f.id==='faction_huancheng_government').map(({id,leader,leaderTitle,method,offices})=>({id,leader,leaderTitle,method,offices})),
  localCharter:factions.filter(f=>f.id==='faction_bs_government').map(({id,method,demands,offices})=>({id,method,demands,offices}))};
 const basis={
@@ -40,6 +41,7 @@ const contextFor=e=>({before:e.before??null,basis:e.basis,sourceFacts});
 const validateDraft=(d,e)=>{try{assert.deepEqual(d,draftFor(e));if(e.before)assert.deepEqual(Object.keys(d.row.procedure.evidence.convictionThreshold).sort(),Object.keys(e.before.penalties).sort());return [];}catch(error){return [error.message];}};
 async function approved(){const rows=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});assert.equal(rows.length,entries.length,'司法程序尚有未审批内容');return rows;}
 export async function verifyPublished(codes=current.law.codes,rows=bindings){
+ codes=await previousCreditTender(codes);
  const drafts=await approved();
  for(const d of drafts){
   if(d.id==='s4law_baishi_binding'){assert.deepEqual(rows, [...original.bindings,d.row],'正式绑定与审批内容不同');continue;}

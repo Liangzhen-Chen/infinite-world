@@ -328,24 +328,13 @@ export function adaptLegacyExecution(engine,before,d,{action,tool,args,eventId,r
   const paid=old?(row.paid??0)-(old.paid??0):0;
   const ended=old&&row.endedAt!==undefined&&old.endedAt===undefined;
   const op=!old?'obligation.create':paid>0?'obligation.settle':ended||['cancelled','void'].includes(row.status)&&row.status!==old.status?'obligation.cancel':null;
-  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,from:row.debtor,to:row.creditor,subject:row.subject,terms:row.terms,amount:op==='obligation.settle'?paid:row.amount,deadline:row.deadline,...(op==='obligation.cancel'?{reason:row.endReason??row.status}:{}),actedAs:row.actedAs??row.terms?.actedAs??null,result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
+  if(op)add({op,id,obligationKind:row.kind??row.obligationKind,debtor:row.debtor,creditor:row.creditor,from:row.debtor,to:row.creditor,...(row.subject!==undefined?{subject:row.subject}:{}),terms:row.terms,amount:op==='obligation.settle'?paid:row.amount,...(row.deadline!==undefined?{deadline:row.deadline}:{}),...(op==='obligation.cancel'?{reason:row.endReason??row.status}:{}),actedAs:row.actedAs??row.terms?.actedAs??null,result:{path,before:structuredClone(old??null),after:structuredClone(row)}});
   else {
    // A handler may finish the newly opened row's status/projection in another
    // patch. Keep that final row in the last actual lifecycle operation.
    const effect=receipt.applied.findLast(e=>e.op.startsWith('obligation.')&&e.id===id);
    if(effect)effect.result.after=structuredClone(row);
   }
- }
- // Legacy deposit balances already are the bank's payable claim. Describe
- // that actual liability in the receipt without creating a duplicate debt or
- // a second money transfer. Interest and withdrawal keep their native writer.
- if(tool==='trade'&&['deposit','withdraw'].includes(args.operation)&&result.bank){
-  const bank=result.bank,path=['state','records',bank,'accounts','player'];
-  const previous=at(before,path)??0,balance=at(after,path)??0,delta=balance-previous;
-  if(delta)add(stateEffect(delta>0?'obligation.create':'obligation.settle',{
-   id:`deposit:${bank}:player`,obligationKind:'deposit',debtor:bank,creditor:'player',from:bank,to:'player',
-   amount:Math.abs(delta),terms:{resource:'coin_river',principal:Math.abs(delta)},balance
-  },path,before,after));
  }
  // Adopt the committed hosted participation record, never the requested
  // ritual text. Its normal stock transfer has already reconciled above.

@@ -6,6 +6,22 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let runDir = null;
+let artifactsDir = null;
+
+/** P3: retained run evidence; explicit FIELDS_TEST_ARTIFACTS=docs updates documentation. */
+export function artifactsRoot() {
+    if (process.env.FIELDS_TEST_ARTIFACTS) return path.resolve(repoRoot, process.env.FIELDS_TEST_ARTIFACTS);
+    if (!artifactsDir) {
+        const base = path.resolve('F:/dnd-tmp');
+        fs.mkdirSync(base, { recursive: true });
+        artifactsDir = fs.mkdtempSync(path.join(base, `artifacts-p${process.pid}-`));
+    }
+    return artifactsDir;
+}
+
+export function artifactPath(...parts) {
+    return path.join(artifactsRoot(), ...parts);
+}
 
 export function tempBase() {
     return path.resolve(process.env.FIELDS_TMP || path.join(repoRoot, '.tmp'));

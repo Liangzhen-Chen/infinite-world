@@ -3,7 +3,8 @@ import {reject} from './action-rejection.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
 import {recordsWhere} from './storage.mjs';
-import {openObligation,adoptLegacyObligation} from './obligation-runtime.mjs';
+import {openObligation,adoptLegacyObligation,settleObligation} from './obligation-runtime.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
 // a registered counting house keeps deposits and changes coin of other polities
@@ -24,9 +25,11 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim} from './finance-bank.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,interestRate} from './finance-bank.mjs';
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
+import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
+import {interestAmount} from './obligation-calendar.mjs';
 
 export {CREDIT_OPERATIONS} from './finance-operations.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -39,7 +42,7 @@ const awake=n=>projectionLiving(n)&&!['濒死','昏迷','患病'].includes(n.sta
 export const creditRules=engine=>engine.rules.economy?.credit??null;
 function rules(engine){const c=creditRules(engine);if(!c)throw preconditionFailure('此世界尚未登记借贷与钱庄规则');return c;}
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
-const valueOf=(engine,item,quantity)=>(engine.byId.get(item)?.basePrice??0)*quantity;
+const valueOf=(d,engine,item,quantity)=>currencyRow(engine,item)?currencyTradePrice(d,engine,{currency:item,quantity,location:d.get('state','location')}).totalCoins:(engine.byId.get(item)?.basePrice??0)*quantity;
 
 // A present, awake adult who agreed now and has a waking window at this place.
 export function counterpart(d,engine,name,{consent,minutes=5}){
@@ -70,20 +73,20 @@ export function openBank(d,engine,keeperName){
     return {b,row:bankRow(d,b),keeper};
 }
 const coinage=(engine,item)=>(rules(engine).coinages??[]).find(c=>c.item===item)??null;
-const coinRate=c=>c.faceCopper*c.fineness;
 
 // ---- pledges ---------------------------------------------------------------
 export function pledge(d,engine,key,item,quantity,owner='player'){
+    const signedValue=valueOf(d,engine,item,quantity);
     if(groupAccountView(engine,d.get('state'),owner)){
         const account=ensureGroupAccount(d,engine,owner);if((account.items[item]??0)<quantity)throw preconditionFailure('组织公库没有足够抵押实物');
         moveStock(d,{from:store(engine,owner,item),to:pledged(engine,key,item),amount:quantity,writer:'credit',eventId:key});
         d.set(groupAccountPath(owner),{...account,items:{...account.items,[item]:account.items[item]-quantity},ledger:[...account.ledger,{kind:'pledge',sourceEvent:key,items:{[item]:-quantity},minute:d.get('state','minute')}]});
-        const row={category:'pledge',owner,item,quantity,instances:[],value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};holdingSet(d,engine,rec(key),row,'credit');return row;
+        const row={category:'pledge',owner,item,quantity,instances:[],value:signedValue,status:'质押中',createdAt:d.get('state','minute')};holdingSet(d,engine,rec(key),row,'credit');return row;
     }
     if(engine.quantity(d,owner,item)<quantity)throw preconditionFailure('抵押物不在当事人的行囊中');
     const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true,books:{account:pledged(engine,key,item),writer:'credit',eventId:key}});
     for(const unit of moved.instances)holdingSet(d,engine,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:key,status:'质押'},'credit');
-    const row={category:'pledge',owner,item,quantity,instances:moved.instances,value:valueOf(engine,item,quantity),status:'质押中',createdAt:d.get('state','minute')};
+    const row={category:'pledge',owner,item,quantity,instances:moved.instances,value:signedValue,status:'质押中',createdAt:d.get('state','minute')};
     holdingSet(d,engine,rec(key),row,'credit');return row;
 }
 export function releasePledge(d,engine,key,to,bank=null){
@@ -110,9 +113,10 @@ export function releasePledge(d,engine,key,to,bank=null){
 // rules.economy.loanMonthlyInterest, cheapest for the most trusted borrower.
 export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue}){
     const c=rules(engine),[low,high]=engine.rules.economy.loanMonthlyInterest;
-    let rate,maximumDays,limit;
+    let rate,maximumDays,limit,per='anchor',calendar='core:calendar_default';
     if(bank){
-        rate=bank.loanMonthlyInterest;maximumDays=bank.loanMaximumDays;limit=Math.min(bank.loanMaximumCopper,bankRow(d,bank).coins);
+        const credit=interestRate(engine,d.get('state'),bank,{principal,document:d.document});
+        rate=credit.rate;per=credit.per;calendar=credit.calendar;maximumDays=bank.loanMaximumDays;limit=Math.min(bank.loanMaximumCopper,credit.loanable);
         if(collateralValue<Math.ceil(principal*bank.collateralRatio))throw preconditionFailure(`${bank.name}放款须有值${Math.ceil(principal*bank.collateralRatio)}铜以上的抵押`);
     }else{
         const regard=standing(engine,d.get('state'),lender,'player');
@@ -121,10 +125,10 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue})
         rate=Math.round((high-(high-low)*Math.max(0,Math.min(100,regard))/100)*10000)/10000;
         maximumDays=c.loan.maximumDays;limit=Math.floor(engine.actor(d,lender).coins*c.loan.lenderCashShare);
     }
-    if(rate<low||rate>high)throw preconditionFailure('利率超出世界登记的月息范围');
+    if(!bank&&(rate<low||rate>high))throw preconditionFailure('利率超出世界登记的月息范围');
     int(days,1,maximumDays,'借期天数');
     if(principal>limit)throw preconditionFailure(`对方此刻至多能借出${Math.max(0,limit)}铜`);
-    return {rate,interest:Math.ceil(principal*rate*days/30)};
+    const now=d.get('state','minute');return {rate,per,calendar,interest:interestAmount({principal,rate,per,calendar,from:now,to:now+days*1440})};
 }
 // Creates the debt; the principal goes to the player or into a contract's escrow.
 // S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
@@ -133,8 +137,8 @@ export function loanSuccessionTerms(d,engine){
 }
 export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource}){
     principal=int(principal,1,1e7,'借款本金');
-    const collateralValue=collateral?valueOf(engine,collateral.item,collateral.quantity):0;
-    const {rate,interest}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
+    const collateralValue=collateral?valueOf(d,engine,collateral.item,collateral.quantity):0;
+    const {rate,interest,per,calendar}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('借据编号已存在');
     const now=d.get('state','minute'),pledgeKey=collateral?`pledge:${id}`:null;
     if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity,debtor);
@@ -147,12 +151,12 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     // Old records without this clause retain the package's accelerate route.
     const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
     const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
-        ...(succession||consentSource?{terms:{...succession,...(consentSource?{consent:consentSource}:{})}}:{})};
+        terms:{...succession,rateTerms:{per,calendar},...(consentSource?{consent:consentSource}:{})}};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
         amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms)};
     holdingSet(d,engine,rec(id),row,'credit');
     openObligation(d,engine,{...row,id:`finance:${id}`,legacyRecord:id,actor,...(actedAs?{actedAs}:{})},`${eventId}:claim`);
-    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{})};
+    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,per,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{})};
 }
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
 // Repayment through the ordinary trade repay call; the creditor or the bank's keeper must be present.
@@ -236,7 +240,7 @@ export async function creditTrade(d,args,eventId,terms){
         let bank=null,keeper=null,agreement=null;
         if(bankHere?.keepers.includes(lender)){({b:bank,keeper}=openBank(d,engine,lender));}
         else{
-            const quoted=loanTerms(d,engine,{lender,principal:args.coins,days,collateralValue:collateral?valueOf(engine,collateral.item,collateral.quantity):0});
+            const quoted=loanTerms(d,engine,{lender,principal:args.coins,days,collateralValue:collateral?valueOf(d,engine,collateral.item,collateral.quantity):0});
             agreement=nativeConsent({engine,document:d.document},lender,'player','loan',{purpose:'player',subject:'player',terms:{principal:args.coins,days,interest:quoted.interest},until:d.get('state','minute')+5,onRefusal:'abort'});
             counterpart(d,engine,lender,{consent:agreement.allowed,minutes:5});
         }
@@ -244,7 +248,7 @@ export async function creditTrade(d,args,eventId,terms){
         const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId,installments,consentSource:agreement?.source});
         if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));holdingSet(d,engine,rec(loan.debt),{...row,installments:count,nextInstallment:1},'credit');}
         engine.advance(d,5,eventId);
-        d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，月息${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);
+        d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，${loan.per==='day'?'日息':'月息'}${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);
         return {lender:bank?.id??lender,...loan};
     }
     if(['deposit','withdraw','exchange'].includes(op)){
@@ -254,28 +258,40 @@ export async function creditTrade(d,args,eventId,terms){
             const amount=int(args.coins,b.depositFeeCopper+1,1e7,'存入铜钱');if(coins<amount)throw preconditionFailure('现钱不足');
             row.coins+=amount;row.accounts.player=(row.accounts.player??0)+amount-b.depositFeeCopper;
             row.interestAt??=d.get('state','minute');
-            moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount,writer:'credit',eventId});d.set(['state','player','coins'],coins-amount);detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper};
+            moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount,writer:'credit',eventId});d.set(['state','player','coins'],coins-amount);
+            // Materialized branches carry the current teller and physical seat,
+            // so the shared signer protocol resolves the same operating bank.
+            row.keepers=[...b.keepers];holdingSet(d,engine,rec(b.id),row,'credit');
+            const claim=`deposit:${b.id}:${eventId}`;
+            const rateTerms=interestRate(engine,d.get('state'),b,{borrower:null,document:d.document});
+            holdingSet(d,engine,rec(`bank_deposit:${eventId}`),{category:'bank_deposit',claim,bank:b.id,depositor:'player',keeper,
+                gross:amount,principal:amount-b.depositFeeCopper,fee:b.depositFeeCopper,minute:d.get('state','minute'),
+                from:purse(engine,'player'),to:vault(b.id),sourceEvent:eventId},'credit');
+            openObligation(d,engine,{id:claim,kind:'deposit',debtor:b.id,creditor:'player',actor:keeper,amount:amount-b.depositFeeCopper,
+                terms:{sourceEvent:eventId,bank:b.id,principal:amount-b.depositFeeCopper,fee:b.depositFeeCopper,rateTerms:{per:rateTerms.per,calendar:rateTerms.calendar}}},`${eventId}:deposit`);
+            detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper,claim};
         }else if(op==='withdraw'){
             const balance=row.accounts.player??0;
             if(!Number.isSafeInteger(args.coins)||args.coins<1||args.coins>balance)reject('E-ACTION-WITHDRAWAL',`支取铜钱必须在1到${balance}之间`,{missing:['支取数额须大于零且不超过当前存款'],repair:['核对当前存款，存入钱款或调低支取数额后重试']});
             const amount=args.coins;if(row.coins<amount)throw preconditionFailure(`${b.name}现银不足，暂不能兑付`);
-            moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount,writer:'credit',eventId});row.coins-=amount;row.accounts.player-=amount;d.set(['state','player','coins'],coins+amount);detail={withdrawn:amount};
+            const claims=obligationRows(d.get('state')).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'&&obligationView(d.get('state'),o).owed>0&&(!args.debt||o.id===args.debt));
+            if(claims.reduce((n,o)=>n+obligationView(d.get('state'),o).owed,0)<amount)throw preconditionFailure('支取须对应本人足额的真实存款债权');
+            let left=amount;
+            for(const claim of claims){
+                if(!left)break;
+                const paid=Math.min(left,obligationView(d.get('state'),claim).owed);
+                settleObligation(d,engine,{id:claim.id,payer:b.id,actor:keeper,amount:paid},`${eventId}:${claim.id}`);left-=paid;
+            }
+            // Protocol settlement already moved the cash and updated its one account projection.
+            Object.assign(row,d.get(...rec(b.id)));detail={withdrawn:amount};
         }else{
             const item=engine.resolve(args.item,'item'),c=coinage(engine,item),quantity=int(args.quantity,1,100000,'兑换枚数');
             if(!c)throw preconditionFailure('这不是登记的铸币');
-            const buy=args.buyer!==undefined&&engine.resolve(args.buyer)==='player',gross=quantity*coinRate(c);
-            if(buy){
-                const cost=Math.ceil(gross*(1+b.exchangeFeeRate));
-                if((row.goods[item]??0)<quantity)throw preconditionFailure(`${b.name}库存${c.name}不足`);if(coins<cost)throw preconditionFailure('现钱不足');
-                moveCoins(d,{from:purse(engine,'player'),to:vault(b.id),amount:cost,writer:'credit',eventId});row.goods[item]-=quantity;row.coins+=cost;d.set(['state','player','coins'],coins-cost);changeItems(d,engine,'player',item,quantity,{books:{account:vaultGoods(engine,b.id,item),writer:'credit',eventId}});
-                detail={item,quantity,paid:cost,fineness:c.fineness,polity:c.polity};
-            }else{
-                const paid=Math.floor(gross*(1-b.exchangeFeeRate));
-                if(engine.quantity(d,'player',item)<quantity)throw preconditionFailure(`你没有这么多${c.name}`);if(row.coins<paid)throw preconditionFailure(`${b.name}现钱不足`);
-                changeItems(d,engine,'player',item,-quantity,{books:{account:vaultGoods(engine,b.id,item),writer:'credit',eventId}});row.goods[item]=(row.goods[item]??0)+quantity;row.coins-=paid;
-                moveCoins(d,{from:vault(b.id),to:purse(engine,'player'),amount:paid,writer:'credit',eventId});d.set(['state','player','coins'],coins+paid);detail={item,quantity,received:paid,fineness:c.fineness,polity:c.polity};
-            }
+            const buy=args.buyer!==undefined&&engine.resolve(args.buyer)==='player';
+            const credit=interestRate(engine,d.get('state'),b,{document:d.document});
+            detail=currencyExchange(d,engine,{bank:b,row,item,quantity,buy,mode:args.mode,eventId,loanable:credit.loanable});
         }
+
         const depositMinutes=engine.world.primitiveTables?.['action-costs']?.rows?.find(r=>r.selector==='bank.deposit')?.timeMin;
         const calibratedDeposit=op==='deposit'&&depositMinutes;
         holdingSet(d,engine,rec(b.id),row,'credit');engine.advance(d,calibratedDeposit?depositMinutes:5,eventId);
