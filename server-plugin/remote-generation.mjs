@@ -12,7 +12,7 @@ import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhysicallyDead} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
-import {pinnedBy} from './holding-kinds.mjs';
+import {pinnedBy,pinnedEntities} from './holding-kinds.mjs';
 import {addPopulation,populationHealth} from './population-health.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {obligationClosed} from './obligation-protocol.mjs';
@@ -586,7 +586,6 @@ function openRemoteStock(d,engine,county,skeleton){
 }
 
 const inventoryQuantity=value=>typeof value==='number'?value:value.quantity;
-const refersTo=(value,id)=>value===id||Boolean(value&&typeof value==='object'&&Object.entries(value).some(([key,v])=>key===id||refersTo(v,id)));
 function transferRemoteCoins(d,from,to,amount){
     if(ledgerActive(d)&&(d.get('ledger','accounts',from)??0)<amount)throw Error('远方聚合钱款不足，拒绝重复借出');
     moveCoins(d,{from,to,amount,writer:'remote-generation',eventId:`remote:accounts:${d.get('state','minute')}`});
@@ -602,10 +601,15 @@ function transferRemoteItem(d,from,to,amount){
 export function restoreRemoteAccounts(d,engine,county=null){
     // A skeleton is geography/identity, not evidence of a loan. Only actors
     // with an outstanding share require restoration (including before books open).
-    const settlements=new Set(Object.values(d.get('state','npcs')??{}).filter(n=>n.materialized?.folded&&(!county||n.materialized.county===county)).map(n=>n.materialized.settlement));
+    // Index: only the generated counties' aggregate accounts that still list
+    // members (the outstanding shares) are visited; no NPC is scanned.
+    const look=(...path)=>typeof d.peek==='function'?d.peek(...path):d.get(...path);
+    const settlements=[];
+    for(const [c,rec] of Object.entries(look('state','remote')??{}))
+        if(!county||c===county)for(const s of rec.skeleton?.settlements??[])
+            if(Object.keys(look('state','records',`remote-stock:${s.id}`)?.members??{}).length)settlements.push(s.id);
     for(const settlement of settlements){
         const key=`remote-stock:${settlement}`,stored=d.get('state','records',key);
-        if(!stored)throw Error('远方人物借出份额与身份不符');
         const row=structuredClone(stored);let changed=false;
         for(const [id,share] of Object.entries(row.members)){
             const n=d.get('state','npcs',id),mark=n?.materialized;
@@ -626,21 +630,33 @@ export function restoreRemoteAccounts(d,engine,county=null){
 }
 registerAdvanceHook('restoreRemoteAccounts',restoreRemoteAccounts);
 
+
+// Entities that must stay individual: in-flight tasks, owned item instances,
+// and anything an open obligation, an effect or a memory refers to (as value or key).
+function remoteBusyIds(d,state){
+    const ids=new Set(),collect=v=>{if(typeof v==='string')ids.add(v);else if(v&&typeof v==='object')for(const [k,x] of Object.entries(v)){ids.add(k);collect(x);}};
+    for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'){ids.add(t.npc);if(t.action?.seller)ids.add(t.action.seller);}
+    for(const u of Object.values(state.itemInstances??{}))if(u.owner)ids.add(u.owner);
+    for(const o of Object.values(state.obligations??{}))if(!obligationClosed(o))collect(o);
+    collect(state.effects);collect(d.document.memories);
+    return ids;
+}
+
 export function settleRemoteAccounts(d,engine){
     const location=d.get('state','location'),county=remoteCountyOf(engine.world,location);
     if(county)restoreRemoteAccounts(d,engine,county);
-    const state=d.get('state'),rows=new Map();
+    const state=d.get('state'),rows=new Map();let busy=null,pins=null;
     for(const [id,n] of Object.entries(state.npcs??{})){
         // Full profiles and household life can admit an already-rostered
         // resident with a zero opening bag. Subsequent earnings are pooled by
         // the same ownership conversion as the skeleton's original keepers.
         const entity=state.created?.[id]??engine.byId.get(id),residentCounty=!n.materialized&&['remote','population'].includes(entity?.generated)&&state.records?.[`remote-stock:${entity.settlement}`]?.remoteStock?remoteCountyOf(engine.world,entity.settlement):null;
         const mark=n.materialized??(residentCounty?{county:residentCounty,settlement:entity.settlement}:null);
-        if(!mark||mark.folded||mark.county===county||n.status&&n.status!=='正常'||pinnedBy(d,id).length)continue;
+        if(!mark||mark.folded||mark.county===county||n.status&&n.status!=='正常'||(pins??=pinnedEntities(d)).has(id))continue;
         if(n.scheduleTravel||n.cognitionTravel||n.residence||state.player.companions?.includes(id))continue;
-        if(Object.values(state.npcAutonomy?.tasks??{}).some(t=>t.status==='进行中'&&[t.npc,t.action?.seller].includes(id)))continue;
-        if(Object.values(state.itemInstances??{}).some(u=>u.owner===id))continue;
-        if(Object.values(state.obligations??{}).some(o=>!obligationClosed(o)&&refersTo(o,id))||refersTo(state.effects,id)||refersTo(d.document.memories,id))continue;
+        // One pass per call builds the reference sets; the per-NPC test is a lookup.
+        busy??=remoteBusyIds(d,state);
+        if(busy.has(id))continue;
         const key=`remote-stock:${mark.settlement}`;
         let row=rows.get(key);if(!row){row=structuredClone(d.get('state','records',key));rows.set(key,row);}
         if(!row||row.members[id])throw Error('远方人物重复并回或缺少聚合账户');

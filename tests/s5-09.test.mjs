@@ -230,6 +230,25 @@ test('three native county round trips merge actual ownership shares without a se
  }
 });
 
+test('a keeper that a memory refers to stays individual on departure; unreferenced keepers still fold, exact shares unchanged',async()=>{
+ const f=await remoteArrival(),other='npc_rg_hanlu_tongji_02';
+ const told=await act(f.engine,f.document,'world_remember',{subject:keeper,key:'s509:关照',content:'店主记得玩家来过'},'s509-memory');
+ const away=await act(f.engine,told.document,'world_move',{destination:'loc_bs'},'s509-memory-away');
+ assert.deepEqual(conservation(f.engine.scoped(away.document),told.document,away.document),[]);
+ const doc=away.document,row=doc.state.records[stockKey];
+ // Same departure as the round-trip anchor: keeper 372 minus 54 route receipts is 318, kept as its own purse.
+ assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);
+ assert.equal(doc.state.npcs[keeper].coins,318);assert.equal(row.members[keeper],undefined);
+ assert.equal(doc.state.npcs[other].materialized.folded,true);assert.equal(doc.state.npcs[other].coins,0);
+ assert.equal(row.members[other].coins,268);
+ assert.equal(doc.ledger.accounts[`${keeper}|coin_river|purse`],318);
+ assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
+ books(f.engine.scoped(doc),doc);
+ const back=await act(f.engine,doc,'world_move',{destination:'loc_far_tongji'},'s509-memory-back');
+ assert.equal(back.document.state.npcs[keeper].coins,318);assert.equal(back.document.state.npcs[other].coins,268);
+ assert.deepEqual(back.document.state.records[stockKey].members,{});books(f.engine.scoped(back.document),back.document);
+});
+
 test('three statistics downgrades restore the same roster, purse and stock on promotion',async()=>{
  const f=await remoteArrival(),county='county_hanlu_tongji',sid='loc_far_tongji',district=f.document.state.remote[county].skeleton.settlements[0].districts[0];
  let doc=(await act(f.engine,f.document,'world_move',{destination:district},'expand-district')).document;
