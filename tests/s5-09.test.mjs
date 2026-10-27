@@ -249,6 +249,45 @@ test('a keeper that a memory refers to stays individual on departure; unreferenc
  assert.deepEqual(back.document.state.records[stockKey].members,{});books(f.engine.scoped(back.document),back.document);
 });
 
+// Each guard below keeps one keeper as an individual while the other keepers still fold.
+async function stays(label,prepare){
+ const f=await remoteArrival(),other='npc_rg_hanlu_tongji_02';
+ const ready=await prepare(f);
+ const away=await act(f.engine,ready,'world_move',{destination:'loc_bs'},`s509-${label}-away`);
+ assert.deepEqual(conservation(f.engine.scoped(away.document),ready,away.document),[]);
+ const doc=away.document,row=doc.state.records[stockKey];
+ assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);assert.equal(row.members[keeper],undefined);
+ assert.equal(doc.ledger.accounts[`${keeper}|coin_river|purse`],doc.state.npcs[keeper].coins);
+ assert.equal(doc.state.npcs[other].materialized.folded,true);assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
+ books(f.engine.scoped(doc),doc);
+ const kept={coins:doc.state.npcs[keeper].coins,inventory:doc.state.npcs[keeper].inventory};
+ const back=await act(f.engine,doc,'world_move',{destination:'loc_far_tongji'},`s509-${label}-back`);
+ assert.equal(back.document.state.npcs[keeper].materialized.folded,undefined);
+ assert.equal(back.document.state.npcs[keeper].coins,kept.coins);assert.deepEqual(back.document.state.npcs[keeper].inventory,kept.inventory);
+ assert.deepEqual(back.document.state.records[stockKey].members,{});books(f.engine.scoped(back.document),back.document);
+}
+test('a keeper pinned by an alive holding stays individual',async()=>{
+ await stays('pinned',async f=>{
+  const out=applyIntentSetup(f.engine,f.document,{holdings:[{id:'s509-detained',kind:'guest_of',terms:{mode:'detained'},holder:keeper,subject:'npc_rg_hanlu_tongji_03'}]});
+  assert.deepEqual(out.setupUnmet,[]);
+  return out.document;
+ });
+});
+test('a keeper with an in-flight autonomy task stays individual',async()=>{
+ await stays('task',async f=>{
+  const document=structuredClone(f.document),m=document.state.minute;
+  document.state.npcAutonomy={...(document.state.npcAutonomy??{}),tasks:{...(document.state.npcAutonomy?.tasks??{}),s509task:{id:'s509task',npc:keeper,status:'进行中',action:{},start:m,finish:m+60000}}};
+  return document;
+ });
+});
+test('a companion invited by a real guide promise stays individual',async()=>{
+ await stays('companion',async f=>{
+  const here=await act(f.engine,f.document,'world_move',{destination:f.document.state.npcs[keeper].location},'s509-to-keeper');
+  const out=await act(f.engine,here.document,'world_promise',{promisor:keeper,type:'带路',destination:here.document.state.remote.county_hanlu_tongji.skeleton.settlements[0].districts[0],content:'带去街区'},'s509-guide');
+  assert.ok(out.document.state.player.companions.includes(keeper));return out.document;
+ });
+});
+
 test('three statistics downgrades restore the same roster, purse and stock on promotion',async()=>{
  const f=await remoteArrival(),county='county_hanlu_tongji',sid='loc_far_tongji',district=f.document.state.remote[county].skeleton.settlements[0].districts[0];
  let doc=(await act(f.engine,f.document,'world_move',{destination:district},'expand-district')).document;
