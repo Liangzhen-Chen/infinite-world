@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -213,7 +214,7 @@ export function stripTitle(d,e,args,eventId){
 }
 function dueOf(r){return r.category==='title_petition'?r.due:Math.min(r.nextIncome,r.levy.due);}
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status));
-export function nextTitleMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueOf).filter(m=>m>now));}
+export function nextTitleMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','title_petition'),...recordsWhere(state.records,'category','title')].filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status)).map(dueOf).filter(m=>m>now));}
 export function advanceTitles(d,engine,{after}){
     ensureNobleTitles(d,engine);
     for(let guard=0;guard<1000;guard++){

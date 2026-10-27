@@ -18,7 +18,7 @@ import {legalCodes,legalCodeAt,legalCodeById,legalCooperation,codePenalty} from 
 // confiscated bribe) and posted on the court's quest board, where NPC hunters
 // (rules.law.wanted.hunters) or the player take it.
 import {createHash} from 'node:crypto';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {standing} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
@@ -62,9 +62,9 @@ export function integrityOf(engine,npc){
     for(const p of lawRules(engine).polities??[])if(p.integrity?.[npc]!==undefined)return p.integrity[npc];
     return lawRules(engine).bribery?.defaultIntegrity??60;
 }
-export const activeWanted=state=>Object.values(state.records??{}).filter(r=>r?.category==='legal_wanted'&&r.status===ACTIVE).sort((a,b)=>a.id.localeCompare(b.id));
+export const activeWanted=state=>recordsWhere(state.records,'category','legal_wanted').filter(r=>r?.category==='legal_wanted'&&r.status===ACTIVE).sort((a,b)=>a.id.localeCompare(b.id));
 export function wantedOfCase(state,caseId){const id=state.records?.[caseId]?.wanted,w=id&&state.records[id];return w?.category==='legal_wanted'&&w.status===ACTIVE?w:null;}
-export const activeHold=state=>Object.values(state.records??{}).find(r=>r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')??null;
+export const activeHold=state=>recordsWhere(state.records,'category','legal_custody').find(r=>r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')??null;
 // Whether the notice has reached this place, and whether this person knows of it.
 export function wantedReachedAt(engine,w,location,minute,state={}){const code=codeAt(engine,location,state),issuer=codeById(engine,w.law,state);return Boolean(code&&issuer&&legalCooperation(engine,state,issuer,code).extradition&&w.scope.includes(code.id)&&w.reach[code.id]!==undefined&&w.reach[code.id]<=minute);}
 function knows(engine,state,w,npc,minute){

@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {nobleRules,highTitle,titlesOf,currentDomains,containsDomain,domainSettlements,appointmentSource,territoryController,rulerNation} from './noble-state.mjs';
@@ -26,14 +27,14 @@ function service(d,who,kind,source,at,location,evidence){
 export function advanceRoyalService(d,e,{before,after}){
  const r=nobleRules(e);if(!r)return;
  for(const q of Object.values(d.get('state','quests')??{}))if(q.status==='已完成'&&q.source?.generator==='effect_table'&&q.source?.cause==='royal_commission'&&q.fundedBy?.treasury===r.royal.questBoard&&q.location===r.royal.questBoard&&q.taker&&q.rewardPaid===r.royal.questReward&&d.get('state','records',`${q.id}:outcome`)?.royal)service(d,q.taker,'委托',q.id,q.resolvedAt,q.location,{quest:q.id,receipt:`${q.id}:outcome`});
- for(const w of rows(d.get('state')).filter(w=>w.category==='war'&&w.winner&&w.endedAt)){
+ for(const w of recordsWhere(d.get('state','records'),'category','war').filter(w=>w.category==='war'&&w.winner&&w.endedAt)){
   const royal=e.world.regions?.some(c=>c.id===w.winner&&c.ruler?.polity?.startsWith('王国'));if(!royal)continue;
   for(const a of armies(d.get('state')).filter(a=>w.armyIds.includes(a.id)&&a.party===w.winner)){
    const enlisted=d.get('state','records','military_service:player');if(enlisted?.army===a.id&&enlisted.since<=w.since)service(d,'player','战功',w.id,w.endedAt,w.front,{war:`war:${w.id}`,service:'military_service:player'});
    for(const p of a.levy.people??[])if(p.id)service(d,p.id,'战功',w.id,w.endedAt,w.front,{war:`war:${w.id}`,army:armyKey(a.id)});
   }
  }
- for(const o of rows(d.get('state')).filter(o=>o.category==='governance_office'&&o.status==='在任'&&o.reviews?.length&&after-o.since>=r.governDays*DAY)){
+ for(const o of recordsWhere(d.get('state','records'),'category','governance_office').filter(o=>o.category==='governance_office'&&o.status==='在任'&&o.reviews?.length&&after-o.since>=r.governDays*DAY)){
   const county=e.world.regions?.find(c=>c.id===o.settlement)??e.world.regions?.find(c=>c.category==='county'&&containsDomain(e,d.get('state'),c.id,o.settlement));
   if(county?.ruler?.polity?.startsWith('王国'))service(d,o.holder,'考评',`${o.id}:${o.reviews.at(-1)}`,o.reviews.at(-1),o.settlement,{office:o.id,reviewAt:o.reviews.at(-1)});
  }

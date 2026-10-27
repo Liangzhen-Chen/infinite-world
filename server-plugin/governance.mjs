@@ -8,7 +8,7 @@ import {knowledgeProficiency} from './education-state.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation,institutionOffices,officeOnDuty,personAge,questQuotaMonth} from './entity-view.mjs';
 import {bookExaminationSeat,qualifiedExaminers} from './local-exams.mjs';
 import {organizationState} from './organization-state.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
@@ -520,7 +520,7 @@ export function appointOfficeRecord(d,engine,row,eventId){
 }
 export function consumeOfficeVacancies(d,engine,after=d.get('state','minute')){
     ensureHoldings(d,engine);
-    const events=Object.values(d.get('state','records')??{}).filter(r=>r.category==='world_event'&&r.verb==='succession'&&r.kind==='holds_office'&&r.minute<=after).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
+    const events=recordsWhere(d.get('state','records'),'kind','holds_office').filter(r=>r.category==='world_event'&&r.verb==='succession'&&r.kind==='holds_office'&&r.minute<=after).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
     for(const event of events){
         const key=`governance_vacancy:${event.id}`;if(d.get(...path(key)))continue;
         const facts=entityRow(d,event.subject)?.facts;if(!facts?.settlement||!facts.office)continue;
@@ -531,7 +531,7 @@ export function consumeOfficeVacancies(d,engine,after=d.get('state','minute')){
         holdingSet(d,engine,path(key),{category:'governance_vacancy',id:key,subject:event.subject,settlement,office,previousHolder:event.previousHolder,cause:event.id,
             status:filled?'已有继任':election?.settlements.includes(settlement)&&source?'补选中':'待原任免机构决定',due,source:successionRules.source,sourceEvent:event.id},'governance');
     }
-    for(const vacancy of Object.values(d.get('state','records')??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due<=after)){
+    for(const vacancy of recordsWhere(d.get('state','records'),'category','governance_vacancy').filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due<=after)){
         if(aliveHoldings(d,{kind:'holds_office',subject:vacancy.subject}).length){holdingSet(d,engine,path(vacancy.id),{...vacancy,status:'已有继任'},'governance');continue;}
         const state=d.get('state'),{g}=profile(engine,vacancy.settlement),electorate=eligible(engine,vacancy.settlement,state);
         const candidates=(g.coordinators??[]).filter(id=>id!==vacancy.previousHolder&&electorate.includes(id)&&isEffective(engine,d,id)&&!['濒死','昏迷','患病'].includes(state.npcs?.[id]?.status)&&
@@ -568,7 +568,7 @@ function review(d,engine,row,at){
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
-export function nextOfficeMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueAt).filter(m=>m>now),...Object.values(state.records??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
+export function nextOfficeMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','governance_application'),...recordsWhere(state.records,'category','governance_office')].filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任').map(dueAt).filter(m=>m>now),...recordsWhere(state.records,'category','governance_vacancy').filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
 export function advanceOffices(d,engine,{after}){
     consumeOfficeVacancies(d,engine,after);
     for(;;){
