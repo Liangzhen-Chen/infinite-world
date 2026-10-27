@@ -8,12 +8,12 @@ import {personOffices,personConstraint,personHousehold,placeSettlement,personAge
 import {currentEmployment,employmentActive,recordEmploymentAttendance} from './employment-state.mjs';
 import {workerSkill,employmentStock,employmentProductionPlan,settleEmploymentProduction} from './finance-assets.mjs';
 import {financeBalance,financeTransfer,financeChange,financeEvent,financeInt} from './finance-bank.mjs';
-import {escrow as escrowAccount,coinRead,partyAccount} from './money.mjs';
+import {escrow as escrowAccount,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter,booksOpen} from './money.mjs';
 import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('labor-market');
 import {groupAccountView} from './group-account.mjs';
-import {currentShops} from './shop.mjs';
+import {currentShops,shopOfKeeper,fundCounter} from './shop.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {npcNeedGoals} from './npc-intelligence.mjs';
@@ -32,6 +32,9 @@ import {currentWorkstationRecipes} from './workstation-services.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
+// A better paid employer must beat the signed wage by this margin before a worker moves; by the same margin a signed wage
+// that has fallen behind the local derived wage is clearly low and the worker may quit on it.
+const WAGE_HURDLE=1.2;
 function writeJob(d,e,row){
     const write=()=>holdingSet(d,e,rec(row.id),row,'labor-market');
     if(row.endedAt!==undefined)return changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,reason:row.status==='已到期'?'expired':'vacated',eventId:`${row.id}:end:${row.endedAt}`},write);
@@ -67,7 +70,8 @@ export function laborOffers(e,s,minute=s.minute){
         if(taken.has(id))return;
         const d={...r,id,wage:r.wage??wage(e,s,r.owner,r.owner),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
         if(d.deadline<=Math.floor(minute/DAY)*DAY+1020)return;
-        const account=groupAccountView(e,s,r.owner),balance=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0;
+        // A business that keeps a counter pays its hands from it, after the keeper (at signing) puts in what the counter lacks from his purse: counter and purse together back a vacancy.
+        const account=groupAccountView(e,s,r.owner),counter=dedicatedCoinAccount(s,r.owner,'counter'),own=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0,balance=counter?counter.coins+own:own;
         if(balance<d.wage)return;
         out.push(d);
     };
@@ -141,7 +145,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     const old=currentEmployment(s,id,minute);
     if(old&&!changing)return null;
     if(old&&old.owner===offer.owner)return null;
-    if(old&&offer.wage<=old.wage*1.2&&old.status!=='罢工')return null;
+    if(old&&offer.wage<=old.wage*WAGE_HURDLE&&old.status!=='罢工')return null;
     if(offer.medicalSkill&&medicalSkill(e,s,id)<offer.medicalSkill)return null;
     if(offer.task==='矿脉开采'&&!e.quantity({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},id,e.rules.extraction.mining.tool))return null;
     const skill=offer.recipe?workerSkill(e,s,id,e.byId.get(offer.recipe)):0,r=offer.recipe&&e.byId.get(offer.recipe);
@@ -161,10 +165,34 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
 // G0 §1: a hire (or a move to a better paid employer) is the worker's own decision, made through npcDecision on the
 // worker's own subjective view; nothing a caller or the employer writes can stand in for it. The view is taken at the
 // person's waking hours of that day (10:00, not asleep at the midnight settlement), the request being the real wage for the real commute.
+function workerView(d,e,worker,at){
+    const day=Math.floor(at/DAY)*DAY,s=d.get('state'),n=s.npcs[worker];
+    return subjectiveView(e,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[worker]:{...n,activity:'日常起居',status:n.status??'正常'}}}},worker);
+}
 function hireDecision(d,e,app,offer,at,old){
-    const day=Math.floor(at/DAY)*DAY,s=d.get('state'),n=s.npcs[app.worker];
-    const view=subjectiveView(e,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[app.worker]:{...n,activity:'日常起居',status:n.status??'正常'}}}},app.worker);
-    return npcDecision(view,{kind:'employment',from:offer.owner,cost:{minutes:app.travel*2},reward:offer.wage-(old?.wage??0),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+    return npcDecision(workerView(d,e,app.worker,at),{kind:'employment',from:offer.owner,cost:{minutes:app.travel*2},reward:offer.wage-(old?.wage??0),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+}
+// 05 §5.1: a worker whose signed wage has fallen clearly behind the local derived wage (market drift, never the caller)
+// decides for himself whether to quit; the decision and the wages are recorded on the contract.
+function lowWageQuit(d,e,row,at){
+    const s=d.get('state');
+    if(!employmentActive(row,s)||row.education||row.domainSteward||row.status==='罢工'||at>=row.deadline)return false;
+    const local=wage(e,s,row.worker,row.worker);
+    if(!(row.wage*WAGE_HURDLE<local))return false;
+    const decision=npcDecision(workerView(d,e,row.worker,at),{kind:'employment',from:row.owner,cost:{minutes:0},reward:local-row.wage,needSatisfaction:0,tags:['quit_job']});
+    if(decision.outcome!=='agree')return false;
+    writeJob(d,e,{...row,status:'已辞工',endedAt:at,reason:'工钱明显低于当地工价，主动辞工',quit:{by:row.worker,via:'npc-decision',outcome:decision.outcome,wage:row.wage,local,minute:at}});
+    financeEvent(d,e,{id:`${row.id}:quit-low-wage`,actor:row.worker,target:row.owner,minute:at,location:row.location,tags:['employment','wage_low_quit']});
+    return true;
+}
+// A shop keeper backs the wages of a new hand from his counter first (his own decision, from his own purse); a keeper who
+// cannot or will not leaves the hand unhired. Owners that keep no shop pay from their own funds as before.
+function backWages(d,e,offer,at){
+    const s=d.get('state'),shop=s.npcs?.[offer.owner]?shopOfKeeper(e,offer.owner,s):null;
+    if(!shop||!booksOpen(d))return true;
+    const target=offer.wage*Math.min(7,shop.cycleDays);
+    if(counterCash(d,offer.owner)<target)fundCounter(d,e,{shop,minute:at,target,eventId:`labor:${offer.id}:${at}:wages`});
+    return counterCash(d,offer.owner)>=offer.wage;
 }
 function sign(d,e,offer,app,at,source,decision=null){
     const old=currentEmployment(d.get('state'),app.worker,at);
@@ -202,8 +230,12 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
     if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw preconditionFailure('同次工时结算事实不一致');return previous.result;}
     const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
     if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
-    const earned=Math.ceil(total/480)-Math.ceil(units/480),available=financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
-    if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
+    // A business that keeps a counter pays from it and from nothing else: what the counter cannot cover is wage debt,
+    // however much the owner carries personally. Owners without a counter pay from their own funds as before.
+    const counter=dedicatedCoinAccount(d.get('state'),row.owner,'counter');
+    const earned=Math.ceil(total/480)-Math.ceil(units/480),available=counter?counterCash(d,row.owner):financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
+    if(cash&&counter)payFromCounter(d,e,{owner:row.owner,to:row.worker,amount:cash,writer:'labor-market',eventId});
+    else if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
     if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});writeJob(d,e,{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
     const paid=cash+guaranteed;
@@ -214,11 +246,18 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
     holdingSet(d,e,rec(key),{id:key,category:'employment_pay',contract:row.id,minutes,wage:row.wage,result},'labor-market');
     return result;
 }
+// A working day with no minute really spent at the job is the worker's absence: a breach on the contract, not a silent skip.
+// Exported so every employment path records it the same way.
+export function withAbsenceBreach(row,{at,start}){
+    const day=Math.floor(start/DAY);
+    if(row.breaches?.some(b=>b.kind==='缺勤'&&b.day===day))return row;
+    return {...row,breaches:[...(row.breaches??[]),{kind:'缺勤',by:row.worker,day,minute:at,reason:'当日没有实际到岗分钟',source:row.source}].slice(-60)};
+}
 function settleShift(d,e,row,at){
     const start=at-540,s=d.get('state');
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(start).day)){writeJob(d,e,{...row,nextWork:at+DAY});return null;}
     let production=null,minutes=row.attendance?.[String(Math.floor(start/DAY))]??0,quantity=0;
-    if(!minutes){writeJob(d,e,{...row,nextWork:at+DAY,reason:'没有实际到岗工时'});return null;}
+    if(!minutes){writeJob(d,e,{...withAbsenceBreach(row,{at,start}),nextWork:at+DAY,reason:'没有实际到岗工时'});return null;}
     let needed=row.targetQuantity-row.produced;
     if(row.demandSource?.startsWith('shop:')){
         const shelf=currentShops(e,s).find(shop=>shop.keeper===row.owner)?.restock.find(stock=>stock.item===row.item);
@@ -327,6 +366,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         row=d.get(...rec(initial.id));if(!employmentActive(row))refundGuarantee(d,e,row);
     }
     if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
+    for(const initial of contracts)lowWageQuit(d,e,contractTerms(d.get(...rec(initial.id)),after),after);
     const offers=laborOffers(e,d.get('state'),after),pools=new Map();
     if(!offers.length)return;
     for(const worker of Object.keys(d.get('state','npcs'))){
@@ -341,7 +381,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         for(const app of apps){
             const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;
             const decision=hireDecision(d,e,app,offer,after,old);
-            if(decision.outcome!=='agree')continue;
+            if(decision.outcome!=='agree'||!backWages(d,e,offer,after))continue;
             sign(d,e,offer,app,after,`labor:${offer.id}:${after}`,decision);break;
         }
     }

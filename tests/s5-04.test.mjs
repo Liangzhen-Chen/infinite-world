@@ -386,6 +386,9 @@ test('draft animals: labor minutes are derived from the herd the owner holds, an
  assert.equal(draftMinutes(engine,fewer,owner),(herd.count-1)*240);
  const sold=structuredClone(day.state);sold.records[key].owner=landlord;
  assert.equal(draftMinutes(engine,sold,owner),0);
- // 没有声明 labor 的物种（现有世界数据）不提供工时。
- assert.equal(draftMinutes(new WorldEngine(world),day.state,owner),0);
+ // S5-04 W2b：弯角野山羊的役力已按审批管线写入世界数据（因子0.25、每日6小时）；本断言原为“现有世界数据没有任何役畜 => 0”，
+ // 设计依据：05 §5.1 laborHours 只来自物种数据声明。仍未声明 labor 的物种（雉禽）单独仍不提供工时；山羊群按声明提供每头 0.25×6×60=90 分钟。
+ const noGoats=structuredClone(day.state);for(const key of Object.keys(noGoats.records))if(noGoats.records[key].category==='husbandry'&&noGoats.records[key].species==='monster_bent_horn_goat')delete noGoats.records[key];
+ assert.equal(draftMinutes(new WorldEngine(world),noGoats,owner),0);
+ assert.equal(draftMinutes(new WorldEngine(world),day.state,owner),herd.count*90);
 });

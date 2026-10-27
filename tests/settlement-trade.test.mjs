@@ -26,8 +26,9 @@ async function wait(engine,doc,end,eventId='wait'){
 function draft(doc){return {document:doc,get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,value){this.document=applyPatches(this.document,[{op:'set',path:p,value}]);}};}
 function snapshotCash(doc){
     // NPC and village quest deposits remain part of these accounts while held in escrow.
+    // S5-04 W2b: a shop keeper's operating counter (money_account) is still his money; the cash he sets aside there for wages and stock stays in the total (15 §15.1.1). The incense real visitors gave sits in the temple's account (faction_assets ledger rows 香火捐献) and is counted as money still in the world (S5-04 香火).
     const questEscrow=Object.values(doc.state.quests??{}).filter(q=>!q.fundedBy?.faction).reduce((n,q)=>n+(q.escrow??0),0);
-    return doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0)+questEscrow;
+    return doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+r.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='faction_assets').flatMap(r=>r.ledger??[]).filter(l=>l.kind==='香火捐献').reduce((n,l)=>n+l.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0)+questEscrow;
 }
 function conservation(doc){
     for(const p of world.rules.agriculture.settlements.filter(p=>p.opening)){
