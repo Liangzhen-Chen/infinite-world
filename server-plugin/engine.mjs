@@ -78,7 +78,7 @@ import {adjustStanding,standing} from './standing.mjs';// world-event subscriber
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
-import {REFERENCE,paymentPlan,payInKind,contractTerms}from'./tender.mjs';
+import {REFERENCE,paymentPlan,payInKind,contractTerms,resourceName}from'./tender.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
@@ -682,7 +682,7 @@ export class WorldEngine {
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        recordDeal(d,quote,cost,quantity,id,plan?payment.paidWith:terms);
+        recordDeal(d,quote,cost,quantity,id,plan?{resource:plan.resource,amount:plan.amount}:terms);
         };
         if(d.scheduler){
             submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
@@ -691,7 +691,7 @@ export class WorldEngine {
             this.advance(d,0,id);
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
-        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
+        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${plan?`${plan.amount}${payment.paidWith.name??'铜'}`:terms?`${terms.amount}${resourceName(this,terms.resource)}`:`${cost}铜`}`);
         return {buyer,seller,item,quantity,cost,...(!quote.agreed?{pricing:marketExplanation(quote,{bargainFactor,totalCoins:cost,unitPrice:args.unitPrice??quote.listPrice,exactTotal})}:{}),...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...(plan||terms?{tender:quote.tender}:{}),...payment};
     }
     advance(d,minutes,id) {

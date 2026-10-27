@@ -15,7 +15,6 @@ import {partyAccount,moveCoins,mirrorPartyCoins} from './money.mjs';
 export const REFERENCE='coin_river';
 const F=decimalFraction,ONE=fraction(1n,1n);
 const decode=a=>fraction(BigInt(a.numerator),BigInt(a.denominator)),encode=a=>({numerator:String(a.numerator),denominator:String(a.denominator)});
-const number=a=>Number(a.numerator)/Number(a.denominator);
 // copper (integer) ÷ value (fraction) rounded to an integer unit count.
 const divide=(copper,value,up)=>{
  const n=BigInt(copper)*value.denominator,den=value.numerator;
@@ -38,15 +37,16 @@ export function resourceValue(d,e,{resource,location=d.get('state','location')})
 export const resourceItem=(e,resource)=>currencyRow(e,resource)?.item??resource;
 
 // Display quote of a reference-copper total in the place's legal-tender unit.
-export function tenderQuote(d,e,{location,copper,side='buy',listPrice=null}){
+// Only integers and exact fractions leave this function (they may reach receipts); floats stay out.
+export function tenderQuote(d,e,{location,copper,side='buy'}){
  const s=d.get('state'),unit=tenderUnit(e,s,location);
- if(unit===REFERENCE)return {unit,amount:copper,rate:1,...(listPrice===null?{}:{unitPrice:listPrice})};
+ if(unit===REFERENCE)return {unit,amount:copper,exactRate:encode(ONE)};
  try{
   const value=resourceValue(d,e,{resource:unit,location});
-  return {unit,amount:divide(copper,value,side==='buy'),rate:number(value),exactRate:encode(value),...(listPrice===null?{}:{unitPrice:listPrice/number(value)})};
+  return {unit,amount:divide(copper,value,side==='buy'),exactRate:encode(value)};
  }catch(error){
   if(error?.code!=='E-ACTION-PRECONDITION')throw error;
-  return {unit,amount:null,rate:null,unavailable:error.message};
+  return {unit,amount:null,unavailable:error.message};
  }
 }
 // What the payer must hand over, in the resource actually used, for a reference-copper bill.
@@ -54,7 +54,7 @@ export function paymentPlan(d,e,{resource,copper,location=d.get('state','locatio
  if(resource!==REFERENCE&&currencyRow(e,resource)&&!currencyAccepted(e,d.get('state'),location,resource))throw preconditionFailure('此地不接受这种钱付款');
  if(resource!==REFERENCE&&!currencyRow(e,resource)&&!e.byId.get(resource))throw preconditionFailure('不是可付款的资源');
  const value=resourceValue(d,e,{resource,location});
- return {resource,item:resourceItem(e,resource),amount:divide(copper,value,true),rate:number(value),exactRate:encode(value),copper};
+ return {resource,item:resourceItem(e,resource),amount:divide(copper,value,true),exactRate:encode(value),copper};
 }
 // Hand over `plan.amount` of the planned resource: reference coins move between purses/treasuries,
 // every other resource is its physical item (a coin item, a bag of wool...). Nothing is made up.
@@ -67,7 +67,7 @@ export function payInKind(d,e,{payer,payee,plan,eventId,writer='contracts'}){
   if(e.quantity(d,payer,plan.item)<plan.amount)throw preconditionFailure(`${e.byId.get(plan.item)?.name??plan.resource}不足：需要${plan.amount}`);
   transferItems(d,e,payer,payee,plan.item,plan.amount,null,{eventId});
  }
- return {resource:plan.resource,amount:plan.amount};
+ return {resource:plan.resource,amount:plan.amount,...(plan.resource===REFERENCE?{}:{name:resourceName(e,plan.resource)})};
 }
 // Contract terms freeze at signing: the claim is `amount` of `resource`, never re-expressed afterwards.
 export function contractTerms(d,e,{location,copper}){
@@ -78,18 +78,18 @@ export function contractTerms(d,e,{location,copper}){
 // ceil(owed x value(claim) / value(pay)) whole units; the claim is cleared by exactly the owed
 // quantity, and the sub-unit rounding stays with the creditor (coins are indivisible, no change is made).
 export function repaymentPlan(d,e,{resource,quantity,payWith,location=d.get('state','location')}){
- if(!payWith||payWith===resource)return {resource:resource,item:resourceItem(e,resource),amount:quantity,rate:null};
+ if(!payWith||payWith===resource)return {resource:resource,item:resourceItem(e,resource),amount:quantity};
  const claim=resourceValue(d,e,{resource,location}),pay=resourceValue(d,e,{resource:payWith,location});
  if(currencyRow(e,payWith)&&payWith!==REFERENCE&&!currencyAccepted(e,d.get('state'),location,payWith))throw preconditionFailure('此地不接受这种钱还款');
  const copper=fraction(claim.numerator*BigInt(quantity),claim.denominator),n=copper.numerator*pay.denominator,den=copper.denominator*pay.numerator;
  if(den<=0n)throw preconditionFailure('还款币种当前没有可成交比价');
- return {resource:payWith,item:resourceItem(e,payWith),amount:Number((n+den-1n)/den),rate:number(pay),claimRate:number(claim)};
+ return {resource:payWith,item:resourceItem(e,payWith),amount:Number((n+den-1n)/den)};
 }
 // Reference-copper value of a claim at today's rate (derived only; used for credit limits and comparison).
 export function claimCopper(d,e,row,location=d.get('state','location')){
  if(!row.resource||row.resource===REFERENCE)return (row.amount??0)-(row.paid??0);
  const left=(row.amount??0)-(row.paid??0),v=resourceValue(d,e,{resource:row.resource,location});
- return Math.ceil(number(fraction(v.numerator*BigInt(left),v.denominator)));
+ const n=v.numerator*BigInt(left);return Number((n+v.denominator-1n)/v.denominator);
 }
 
 // ---- 成交统计分币种 ----------------------------------------------------------------
@@ -103,11 +103,14 @@ export function turnoverByResource(state,{place,since=-Infinity,until=Infinity})
  }
  return out;
 }
-// Comparison only: every resource's turnover valued in reference copper at the rate of `location` now.
+// Comparison only: every resource's turnover valued in reference copper at the rate of `location` now,
+// as an exact fraction {numerator,denominator}.
 export function turnoverReference(d,e,{place,location=d.get('state','location'),since,until}){
  const by=turnoverByResource(d.get('state'),{place,since,until});
- return Object.entries(by).reduce((sum,[resource,amount])=>{
-  const v=resourceValue(d,e,{resource,location});return sum+number(fraction(v.numerator*BigInt(amount),v.denominator));
- },0);
+ const sum=Object.entries(by).reduce((acc,[resource,amount])=>{
+  const v=resourceValue(d,e,{resource,location}),part=fraction(v.numerator*BigInt(amount),v.denominator);
+  return fraction(acc.numerator*part.denominator+part.numerator*acc.denominator,acc.denominator*part.denominator);
+ },fraction(0n,1n));
+ return encode(sum);
 }
 export const resourceName=(e,resource)=>e.byId.get(resourceItem(e,resource))?.name??resource;

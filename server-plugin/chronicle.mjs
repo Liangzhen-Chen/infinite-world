@@ -1,3 +1,4 @@
+import {claimUnit} from './claim-unit.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -79,7 +80,7 @@ export function collectChronicleFacts(engine,beforeDocument,afterDocument,input,
   if(!participants.includes('player')&&!participants.some(p=>after.npcs?.[p]))continue;
   let text;if(collection==='obligations')text=`${name(row.promisor)}与${name(row.promisee)}的${row.type}约定：${row.status}`;
   else if(collection==='quests')text=`${name('player')}的委托“${row.name??row.title??id}”：${row.status}`;
-  else if(row.category==='debt')text=`${name(row.debtor)}欠${name(row.creditor)}${obligationView(after,row.obligation??id)?.owed??row.amount-(row.paid??0)}铜：${row.status}`;
+  else if(row.category==='debt')text=`${name(row.debtor)}欠${name(row.creditor)}${obligationView(after,row.obligation??id)?.owed??row.amount-(row.paid??0)}${claimUnit(row)}：${row.status}`;
   else if(row.category==='contract')text=`${participants.map(name).join('、')}的契约“${row.name??'契约'}”：${row.status}`;
   else continue;
   add(`${collection}:${id}`,text,{kind:collection,participants,visibleTo:participants,location:row.location??null,salience:4,reference:`${collection}:${id}`,status:row.status});

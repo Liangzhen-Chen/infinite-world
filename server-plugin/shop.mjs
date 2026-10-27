@@ -377,7 +377,7 @@ export function advanceShops(d,engine,before,after){
 export function tradeQuote(d,engine,args){
     const quote=baseTradeQuote(d,engine,args);
     if(currencyRow(engine,args.item))return quote;
-    return {...quote,tender:tenderQuote(d,engine,{location:args.location,copper:quote.totalCoins,side:args.buyer==='player'?'buy':'sell',listPrice:quote.listPrice})};
+    return {...quote,tender:tenderQuote(d,engine,{location:args.location,copper:quote.totalCoins,side:args.buyer==='player'?'buy':'sell'})};
 }
 function baseTradeQuote(d,engine,{buyer,seller,item,quantity,location,base,instances=null}){
     const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});

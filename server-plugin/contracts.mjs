@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {REFERENCE,claimCopper,resourceName} from './tender.mjs';
+import {claimUnit} from './claim-unit.mjs';
 import {relationView} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins,dedicatedCoinAccount} from './money.mjs';
@@ -123,11 +124,11 @@ export function chargeTrade(d,engine,args,eventId){
     }
     const id=`debt_${eventId}`;if(d.get('state','records',id))throw preconditionFailure('欠款编号已存在');
     // A claim in the place's tender unit is that resource and quantity, frozen here; `referenceCopper` is only the bill at signing.
-    const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:terms?.amount??cost,...(terms?{resource:terms.resource,referenceCopper:cost}:{}),paid:0,createdAt:d.get('state','minute'),
+    const debt={category:'debt',name:description,debtor:buyer,creditor:seller,amount:terms?.amount??cost,...(terms?{resource:terms.resource,resourceName:resourceName(engine,terms.resource),referenceCopper:cost}:{}),paid:0,createdAt:d.get('state','minute'),
         deadline:d.get('state','minute')+minutes,status:'待偿还',source:eventId};
     holdingSet(d,null,['state','records',id],debt,'contracts');
     adoptLegacyObligation(d,engine,id);
-    return{debt:id,amount:debt.amount,...(terms?{resource:terms.resource}:{}),deadline:debt.deadline,payment:'credit'};
+    return{debt:id,amount:debt.amount,...(terms?{resource:terms.resource,resourceName:resourceName(engine,terms.resource)}:{}),deadline:debt.deadline,payment:'credit'};
 }
 export function repayDebt(d,engine,{buyer,seller,debt:id,payCurrency},eventId){
     const row=d.get('state','records',id);
@@ -141,8 +142,8 @@ export function repayDebt(d,engine,{buyer,seller,debt:id,payCurrency},eventId){
     if(row.sale){const tax=taxableSale(engine,d.get('state'),seller,row.sale.item)?assessTradeTax(d,engine,{seller,cost:row.resource&&row.resource!==REFERENCE?row.sale.cost:amount,location:row.sale.location,sourceEvent:eventId}):{amount:0};recordFinanceSale(d,engine,{...row.sale,settledBasis:row.sale.basis,tax:tax.amount,eventId});}
     holdingSet(d,null,['state','records',id],{...d.get('state','records',id),paidAt:d.get('state','minute')},'contracts');
     for(const[key,contract]of Object.entries(d.get('state','records')??{}))if(contract.category==='contract'&&contract.debt===id)holdingSet(d,null,['state','records',key],{...contract,paid:row.amount},'contracts');
-    engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}${row.resource&&row.resource!==REFERENCE?resourceName(engine,row.resource):'铜'}`);
-    return{debt:id,cost:amount,status:'已还清'};
+    engine.advance(d,5,eventId);d.say(`偿还${engine.byId.get(seller)?.name}欠款${amount}${claimUnit(row)}`);
+    return{debt:id,cost:amount,status:'已还清',...(row.resource&&row.resource!==REFERENCE?{resource:row.resource,resourceName:claimUnit(row)}:{})};
 }
 export function advanceContracts(d,engine,minute,recordIds){
     if(!recordIds)advanceRituals(d,engine,minute);
@@ -173,7 +174,7 @@ export function advanceContracts(d,engine,minute,recordIds){
             const due=debtDue(row,minute,{allowance});
             holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:due.deadline,graceBasis:due.grace},'contracts');
             if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
-            d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}铜已到期，尚未偿还`);
+            d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}${claimUnit(row)}已到期，尚未偿还`);
         }
     }
 }
