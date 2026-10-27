@@ -10,6 +10,7 @@ import {assertTrainingRitual} from './training.mjs';
 import {spiritOperations,spiritAction,advanceSpiritSocieties,validateSpiritRules,activeForm} from './wildlife-society.mjs';
 import {declareHoldingWriter,holdingSet,createEntity,setLocation,locationOf,isGone,ensureHoldings} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
+import {pow} from './det-math.mjs';
 declareHoldingWriter('wildlife-awakening',{kinds:['tamed_by'],entities:['wreck','creature'],locations:true});
 
 // 灵智（听息、立意）与九阶战力分开：只写 actor.mind，不改等级、体力或模板。
@@ -106,8 +107,8 @@ function advanceObjectAwakening(d,engine,day){
    const events=Object.values(d.get('state','records')??{}).filter(r=>r.category==='world_event'&&r.minute>minute-360*DAY&&r.minute<=minute&&(r.actor===id||r.target===id||r.subject===id));
    const land=engine.rules.wildlifeAwakening.spiritLands.find(l=>l.location===place);
    const exposure=Math.max(0,years-spec.minimumYears)*(1+events.length/360)*(1+(land?.pointsPerDay??0));
-   const annual=derived(engine,d.document,'life:awakeningRisk',id,{base:1-(1-spec.annualRisk)**exposure});
-   const risk=1-(1-annual)**(1/360),causes=[{kind:'age',madeAt,years},{kind:'rule',rule:'lifecycle.awaken'},
+   const annual=derived(engine,d.document,'life:awakeningRisk',id,{base:1-pow(1-spec.annualRisk,exposure)});
+   const risk=1-pow(1-annual,1/360),causes=[{kind:'age',madeAt,years},{kind:'rule',rule:'lifecycle.awaken'},
     ...events.map(r=>({kind:'event',event:r.id})),...(land?[{kind:'spirit_land',location:land.location}]:[])];
    clock={...clock,lastDay:at,filled:clock.filled+risk,causes};
    const roll=createHash('sha256').update(JSON.stringify([d.document.randomSeed,`object-awakening:${id}`,at])).digest().readUInt32LE(0)/2**32;

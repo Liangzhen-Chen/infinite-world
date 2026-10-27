@@ -16,6 +16,7 @@ import {monsterStats}from'./combat.mjs';
 import {assertSpellConsent,hasSpellConsent,spellConsentGrant}from'./magic-consent.mjs';
 import {personMental}from'./entity-view.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {hypot} from './det-math.mjs';
 declareHoldingWriter('magic-mind-space',{kinds:[],locations:true});
 
 // Bounds describe consumers for unpublished authoring candidates.
@@ -27,7 +28,7 @@ export const mindSpaceMechanisms=Object.freeze({
 });
 const mental=new Set(['sense_mind','sleep','memory_guard','rest_bless','comfort']);
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const path=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
 const number=(n,min,max,label)=>{if(!Number.isFinite(n)||n<min||n>max)throw preconditionFailure(`${label}未登记或超出范围`);return n;};
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);

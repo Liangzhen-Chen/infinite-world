@@ -45,11 +45,12 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
  // 桑坂 [3.4636753236814712,9900,24522-9900]、[3.551323048345333,9900,24081-9900]（期初25000，人口110）。
  // 环境基准=3×春季0.9×(1+线路公里数×0.01)×实际运输风险；单价不取整。
  // 独立金额字面量；历史观察不充当当前报价缓存。
+ // W5: persisted quote anchors are integer micro-copper numerators over 1_000_000 (old float -> round(float*1e6); max change 5e-7 copper).
  const anchors={
-  loc_bs_yupo:[2.361258491121227,2.3894288282429006],
-  loc_bs_weiting:[2.4685318834006265,2.624285640341079],
-  loc_bs_liquan:[2.5285492518810595,2.5105864033674266],
-  loc_bs_sangban:[2.345122808401489,2.4792396995006554],
+  loc_bs_yupo:[2361258,2389429],
+  loc_bs_weiting:[2468532,2624286],
+  loc_bs_liquan:[2528549,2510586],
+  loc_bs_sangban:[2345123,2479240],
  };
  let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
  assert.deepEqual(doc,before);
@@ -58,7 +59,7 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
   assert.ok(clock.history[1].trigger.evidence.some(id=>c.state.records[id]?.deliveredFood>0));
   for(const [index,event] of clock.history.entries()){
    const sid=engine.rules.worldClock.clocks.find(r=>r.id===clock.id).settlement;
-   assert.equal(event.effect.price,anchors[sid][index]);
+   assert.deepEqual(event.effect.price,{numerator:anchors[sid][index],denominator:1000000});assert.ok(Number.isInteger(event.draw));
    assert.equal(c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`],undefined);
   }
  }

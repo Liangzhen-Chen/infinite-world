@@ -34,6 +34,7 @@ installPerceptionRuntime({localSightClear,lightAt,waterEarthSoundLoss,mindSleepU
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
+import {hypot} from './det-math.mjs';
 export {environmentFeatures,localPlayerPoint,featureRecordMatches} from './environment-state.mjs';
 // Native restoration of a catalog object's current placement and state. The
 // source is retained as provenance; restoring it does not replay the event.
@@ -184,11 +185,11 @@ export function localSightClear(d,engine,location,from,to,{waterCurtain=true,opt
         if(!Number.isFinite(radius)||radius<0)return false;
         const dx=to[0]-from[0],dy=to[1]-from[1],length=dx*dx+dy*dy;
         const t=length?Math.max(0,Math.min(1,((row.position[0]-from[0])*dx+(row.position[1]-from[1])*dy)/length)):0;
-        if(Math.hypot(row.position[0]-from[0]-t*dx,row.position[1]-from[1]-t*dy)<=radius)return false;
+        if(hypot(row.position[0]-from[0]-t*dx,row.position[1]-from[1]-t*dy)<=radius)return false;
     }
     return true;
 }
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 function inReach(d,row,range,{spell=false}={}){
     if(row.location!==d.get('state','location'))throw preconditionFailure('环境对象不在当前位置');
     if(!spell&&Number.isFinite(range)&&zoneContactPending(d))throw preconditionFailure('尚未走近对象；到同一分区不等于可以接触');

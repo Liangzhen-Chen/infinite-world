@@ -29,6 +29,7 @@ import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
+import {cos,sin} from './det-math.mjs';
 declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office','tamed_by','allied_with','controls'],entities:['office','wreck'],locations:true});
 
 const DAY=1440,clone=v=>structuredClone(v);
@@ -270,7 +271,7 @@ export function tribalSettlementSkeleton(seed,dyn,{population,leader,council,min
  const h=createHash('sha256').update(`${seed}:tribal:${dyn.id}:v${TRIBAL_AWAKENING_VERSION}`).digest();
  const name=dyn.settlementNames[h.readUInt32BE(0)%dyn.settlementNames.length],id=`loc_ta_${dyn.id}`;
  const districts=Math.max(1,Math.min(4,Math.ceil(population/40))),angle=h.readUInt32BE(4)/2**32*Math.PI*2,r=0.3+h.readUInt32BE(8)/2**32*0.6;
- const coordinates=home?.coordinates?[Math.round((home.coordinates[0]+Math.cos(angle)*r)*100)/100,Math.round((home.coordinates[1]+Math.sin(angle)*r)*100)/100]:null;
+ const coordinates=home?.coordinates?[Math.round((home.coordinates[0]+cos(angle)*r)*100)/100,Math.round((home.coordinates[1]+sin(angle)*r)*100)/100]:null;
  const work=['觅食','守洞','掘土','传话','照看幼崽','记事'];
  return {version:TRIBAL_AWAKENING_VERSION,id,name,generated:'tribal',dynamic:dyn.id,species:dyn.species,parent:home?.parent??null,near:dyn.home,coordinates,
   population,council,leader,foundedAt:minute,

@@ -16,6 +16,7 @@ import {pinnedBy,pinnedEntities} from './holding-kinds.mjs';
 import {addPopulation,populationHealth} from './population-health.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {obligationClosed} from './obligation-protocol.mjs';
+import {hypot,cos,sin} from './det-math.mjs';
 declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
 
 // Private aggregate stock is distinct from the settlement's public treasury.
@@ -56,7 +57,7 @@ function apportion(total,weights){
     return out;
 }
 const round2=n=>Math.round(n*100)/100;
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 
 // ---------------------------------------------------------------- outline access
 const regionIndex=new WeakMap();
@@ -372,7 +373,7 @@ export function generateCounty(world,countyId,campaignSeed){
         const stems=[...NAME_ROOTS,...chars].flatMap(a=>PLACE_PARTS.map(b=>a+b)).filter(stem=>own(stem)&&!usedStems.has(stem));
         const name=fresh(n=>kind==='human'?(()=>{const stem=pick(rng,stems);usedStems.add(stem);return `${stem}${pick(rng,role==='town'?TOWN_SUFFIX:VILLAGE_SUFFIX)}`;})()
             :kind==='orc'?`${pick(rng,clans[`culture_far_orc:${SPECIES.orc}`])}营地`:kind==='lignum'?`${seatShort}${pick(rng,SLOPES)}`:`${pick(rng,clans['culture_beast:'])}穴`);
-        plans.push({role,id:`loc_rg_${short}_s${i+1}`,name,coordinates:[round2(seat.coordinates[0]+Math.cos(angle)*r),round2(seat.coordinates[1]+Math.sin(angle)*r)]});
+        plans.push({role,id:`loc_rg_${short}_s${i+1}`,name,coordinates:[round2(seat.coordinates[0]+cos(angle)*r),round2(seat.coordinates[1]+sin(angle)*r)]});
     });
     const trades=industryTrades(county),fixed=[];let personIndex=0;
     const nameFor=(cult,species,clan)=>{const spec=names[`${cult}:${species??''}`]??names[`${cult}:`];return fresh(i=>composeName(rng,spec,clan,i),96);};
@@ -424,7 +425,7 @@ export function generateCounty(world,countyId,campaignSeed){
             }
         }
         const districtIds=districts.map((dist,j)=>{const id=`loc_rg_${short}_${isSeat?'s0':plan.id.split('_').at(-1)}_d${j+1}`;
-            place({id,name:dist.name,parent:sid,scope:sid,owner:sid,coordinates:[round2(plan.coordinates[0]+0.2*Math.cos(j)),round2(plan.coordinates[1]+0.2*Math.sin(j))],purpose:'住区',
+            place({id,name:dist.name,parent:sid,scope:sid,owner:sid,coordinates:[round2(plan.coordinates[0]+0.2*cos(j)),round2(plan.coordinates[1]+0.2*sin(j))],purpose:'住区',
                 description:`${dist.name}是${plan.name}的住区，${dist.work.join('、')}多住在这里。街巷可以通行，入户须先招呼。`},{settlement:sid,name:plan.name});
             route(sid,id,0.3);dist.id=id;return id;});
         // Buildings: office/council, shops, shrine or workshop.

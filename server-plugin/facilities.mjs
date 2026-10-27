@@ -11,6 +11,7 @@ import {isGone} from './lifecycle-state.mjs';
 
 import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {hypot} from './det-math.mjs';
 declareHoldingWriter('facilities',{kinds:['owns']});
 const DAY=1440,HOUR=60;
 function event(d,engine,id,verb,building,summary,{minute=d.get('state','minute'),actor,sourceEvent=id,...facts}={}){
@@ -64,7 +65,7 @@ function distance(a,b){
  if(a.neighbours?.includes(b.id))return a.neighbourDistances?.[b.id]??5;
  if(a.parent!==b.parent)return Infinity;
  const p=a.position??a.coordinates,q=b.position??b.coordinates;
- return p&&q?Math.hypot((p.x??p[0])-(q.x??q[0]),(p.y??p[1])-(q.y??q[1]))*(a.position&&b.position?1:1000):Infinity;
+ return p&&q?hypot((p.x??p[0])-(q.x??q[0]),(p.y??p[1])-(q.y??q[1]))*(a.position&&b.position?1:1000):Infinity;
 }
 export function advanceFacilityFire(d,engine,{after}){
  // Settle all fires in time order, including newly ignited neighbours. A long
@@ -77,7 +78,7 @@ export function advanceFacilityFire(d,engine,{after}){
    if(rain){applyFacilityInteraction(d,engine,id,resolveInteraction('rain',traitsOf(engine,d.get('state'),id)),{minute:at});continue;}
    if(!row.fireSpread&&(row.fireDepth??0)<2){
     const air=facilityDefinition(engine,d.get('state'),base.parent)?.features?.find(f=>f.airModel?.windVector),vector=base.windVector??air?.airModel?.windVector;
-    const wind=base.windKmh??w?.windKmh??(vector?Math.hypot(...vector)*3.6:0),reach=8+Math.min(12,wind/2);
+    const wind=base.windKmh??w?.windKmh??(vector?hypot(...vector)*3.6:0),reach=8+Math.min(12,wind/2);
     const neighbours=allFacilities(engine,d.get('state')).filter(b=>b.id!==id&&!facilityView(engine,d.get('state'),b.id).burning&&downwindReach(base,b,vector,reach)&&resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id)).add.includes('burning')).sort((a,b)=>distance(base,a)-distance(base,b)||a.id.localeCompare(b.id)).slice(0,2);
     for(const b of neighbours){const outcome=resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id));applyFacilityInteraction(d,engine,b.id,outcome,{minute:at,sourceEvent:`fire:${id}:${at}`,depth:(row.fireDepth??0)+1,fireOrigin:row.fireOrigin});}
    }
@@ -91,9 +92,9 @@ function downwindReach(a,b,vector,reach){
  const metres=distance(a,b);if(metres>reach)return false;
  const p=a.position??a.coordinates,q=b.position??b.coordinates;
  // No direction is invented for authored adjacency without coordinates.
- if(!vector||!p||!q||!Math.hypot(...vector))return metres<=reach;
+ if(!vector||!p||!q||!hypot(...vector))return metres<=reach;
  const dx=(q.x??q[0])-(p.x??p[0]),dy=(q.y??q[1])-(p.y??p[1]);
- const along=(dx*vector[0]+dy*vector[1])/(Math.hypot(dx,dy)*Math.hypot(...vector)||1);
+ const along=(dx*vector[0]+dy*vector[1])/(hypot(dx,dy)*hypot(...vector)||1);
  return metres<=Math.max(2,8+(reach-8)*along);
 }
 export function nextFacilityMinute(state,now){

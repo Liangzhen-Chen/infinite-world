@@ -52,6 +52,7 @@ import {assertLodgingCapacity,assertRestBed,selectLodgingBed} from './facility-s
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
 import {openSettlementLedgers}from'./quest-sources.mjs';
+import {hypot} from './det-math.mjs';
 
 import {warClosedRoutes}from'./hazard-calendar.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
@@ -540,7 +541,7 @@ export class WorldEngine {
         const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
         const origin=areaTargetFacts(d,this,actor,location);if(!origin)return null;
         const other=areaTargetFacts(d,this,target,location,origin.point);if(!other)return null;
-        return {distanceMeters:Math.hypot(origin.point[0]-other.point[0],origin.point[1]-other.point[1]),lineOfSight:origin.lineOfSight&&other.lineOfSight};
+        return {distanceMeters:hypot(origin.point[0]-other.point[0],origin.point[1]-other.point[1]),lineOfSight:origin.lineOfSight&&other.lineOfSight};
     }
     primitiveMagicEffect(d,{target,spec,duration=0,source,actor},eventId){
         // Target preparation supplies existing body, divine barrier and derived

@@ -6,6 +6,7 @@ import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClea
 import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {assertLiquidWater}from'./interactions.mjs';
+import {hypot} from './det-math.mjs';
 
 // Fixed consumer bounds. Candidates do not publish new formal world content.
 export const waterEarthMechanisms=Object.freeze({
@@ -14,7 +15,7 @@ export const waterEarthMechanisms=Object.freeze({
  level_ground:[4,0],ore:[1,0],structural_sense:[1,0],mud_trap:[4,5],support:[500,2],fracture:[5,0],
 });
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
-const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const dist=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}无效`);return v;};
 const integer=(v,min,max,label)=>{if(!Number.isSafeInteger(v)||v<min||v>max)throw preconditionFailure(`${label}无效`);return v;};
 // P2: rows are read here only to be copied (peek), and the per-minute

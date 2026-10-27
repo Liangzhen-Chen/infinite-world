@@ -12,6 +12,7 @@ import {createRoutingContext} from '../../server-plugin/action-router.mjs';
 import {subjectiveView} from '../../server-plugin/subjective-view.mjs';
 import {presentWitnesses} from '../../server-plugin/world-events.mjs';
 import {mirrorPartyCoins,partyAccount,legacyMoney} from '../../server-plugin/money.mjs';
+import {hypot} from '../../server-plugin/det-math.mjs';
 
 const writer='a3-physical-setup';
 declareHoldingWriter(writer,{entities:['item','building'],kinds:['owns'],locations:true});
@@ -286,7 +287,7 @@ function verifiedSpatial(ctx,setup,field,row,item){
   const feature=environmentFeatures(ctx.engine,ctx.document).find(f=>f.id===target);
   if(observer==='player'&&feature?.location===ctx.document.state.location&&Array.isArray(feature.position)){
    const from=localPlayerPoint(d),to=feature.position;
-   actual={distanceMeters:Math.hypot(from[0]-to[0],from[1]-to[1]),lineOfSight:localSightClear(d,ctx.engine,feature.location,from,to)};
+   actual={distanceMeters:hypot(from[0]-to[0],from[1]-to[1]),lineOfSight:localSightClear(d,ctx.engine,feature.location,from,to)};
   }
   const carried=ctx.document.holdings?.locations?.[target];
   if(carried?.mode==='carried'&&carried.at===observer)actual={distanceMeters:0,lineOfSight:true};
@@ -361,7 +362,7 @@ function spatial(ctx,setup,fields){
    valid=id(row.entity)&&id(row.zone)&&(row.blocksPassage===undefined||typeof row.blocksPassage==='boolean');
    接点='实体的局部分区占位及阻路消费者';
   }else if(field==='positions'){
-   valid=id(row.observer)&&id(row.target)&&finite(row.distanceMeters)&&typeof row.lineOfSight==='boolean'&&(row.rayMeters===undefined||Array.isArray(row.rayMeters)&&row.rayMeters.length===2&&row.rayMeters.every(point)&&Math.abs(Math.hypot(row.rayMeters[1][0]-row.rayMeters[0][0],row.rayMeters[1][1]-row.rayMeters[0][1])-row.distanceMeters)<1e-9)&&
+   valid=id(row.observer)&&id(row.target)&&finite(row.distanceMeters)&&typeof row.lineOfSight==='boolean'&&(row.rayMeters===undefined||Array.isArray(row.rayMeters)&&row.rayMeters.length===2&&row.rayMeters.every(point)&&Math.abs(hypot(row.rayMeters[1][0]-row.rayMeters[0][0],row.rayMeters[1][1]-row.rayMeters[0][1])-row.distanceMeters)<1e-9)&&
     (row.audible===undefined||typeof row.audible==='boolean')&&['audibleTo','thirdPartyListeners'].every(k=>row[k]===undefined||Array.isArray(row[k])&&row[k].every(id));
    // areaTargetFacts requires physical_contact evidence from a real melee or
    // arrival, with a ten-minute expiry. Never forge that occurred event here.

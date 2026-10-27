@@ -10,6 +10,7 @@ import {resolveCreature}from'./wildlife.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
+import {hypot} from './det-math.mjs';
 
 // Authoring bounds only. The formal catalog is not changed by these consumers.
 export const careMechanisms=Object.freeze({
@@ -21,7 +22,7 @@ export const careMechanisms=Object.freeze({
 const medicalOps=new Set(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon']);
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}无效或未登记`);return v;};
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const actorPath=target=>target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
 const active=(d,target,op,minute=d.get('state','minute'))=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='care'&&e.target===target&&e.operation===op&&e.started<=minute&&e.expires>minute);
 const strongest=(d,target,op,minute)=>active(d,target,op,minute).reduce((n,e)=>Math.max(n,e.power),0);

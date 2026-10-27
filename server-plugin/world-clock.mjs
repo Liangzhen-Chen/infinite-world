@@ -8,7 +8,11 @@ export {clockTransaction};
 const DAY=1440,path=id=>['state','records',`world-clock:${id}`];
 // Rolls are keyed by campaign, clock and absolute tick. Tool IDs and the number
 // of calls never change the random stream or weather's own seeded sequence.
-export function clockRoll(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0)/2**32;}
+// W5: the persisted draw is the integer uint32 itself; clockRoll is the same draw as an exact binary fraction (n/2^32),
+// used only transiently. Probabilities compare as draw < ceil(p*2^32), which is exactly draw/2^32 < p.
+export function clockDraw(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0);}
+export function clockRoll(seed,id,day){return clockDraw(seed,id,day)/2**32;}
+const drawLimit=probability=>Math.ceil(probability*2**32);
 // K6: stage effects are validated and applied by the unified effect table.
 export function assertClockEffect(engine,effect){return assertEffect(engine,effect,'world');}
 export function applyClockEffect(d,engine,effect,context){return applyEffect(d,engine,effect,context,'world');}
@@ -75,13 +79,13 @@ export function advanceWorldClocks(d,engine,at){
   row={...row,phase:row.year===year?row.phase:0,harvestBaseline:row.year===year?row.harvestBaseline??harvested:harvested,year,nextAt:at+r.intervalDays*DAY,lastAt:at};
   const stage=r.stages[row.phase];
   if(stage){
-   const trigger=condition(d,engine,stage.condition,r,at,row),roll=clockRoll(d.document.randomSeed,r.id,at/DAY);
-   if(trigger.met&&roll<r.probability){
+   const trigger=condition(d,engine,stage.condition,r,at,row),draw=clockDraw(d.document.randomSeed,r.id,at/DAY);
+   if(trigger.met&&draw<drawLimit(r.probability)){
     const sourceEvent=`world-clock:${r.id}:${at}`;
     const effect=clockTransaction(d,tx=>applyClockEffect(tx,engine,stage.effect,{settlement:r.settlement,faction:r.faction,minute:at,sourceEvent}));
-    if(effect.applied)row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,roll,sourceEvent,effect:{...stage.effect,...effect}}]};
+    if(effect.applied)row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,draw,sourceEvent,effect:{...stage.effect,...effect}}]};
    }
-   row.lastTrigger=trigger;row.lastRoll=roll;
+   row.lastTrigger=trigger;row.lastDraw=draw;
   }
   d.set(path(r.id),row);
  }

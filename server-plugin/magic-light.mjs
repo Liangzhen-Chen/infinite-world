@@ -8,6 +8,7 @@ import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {weatherAt}from'./weather.mjs';
 import {modelToolCall}from'../extension/tools.mjs';
+import {hypot,sqrt,exp} from './det-math.mjs';
 
 // Fixed bounds for authoring candidates; this module publishes no world content.
 export const lightMechanisms=Object.freeze({
@@ -15,7 +16,7 @@ export const lightMechanisms=Object.freeze({
  light_screen:[1,10],waymark:[1,90],trace:[1440,0],fog_light:[2,30],reveal:[1,0],
  dim:[90,30],privacy:[1,30],bind_shadow:[1,2],decoy:[3,1],dark_area:[90,10],
 });
-const clone=x=>structuredClone(x),distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const clone=x=>structuredClone(x),distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const active=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='optics'&&(!op||e.operation===op)&&e.started<=d.get('state','minute')&&e.expires>d.get('state','minute'));
 const numeric=(v,min,max,name)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${name}无效`);return v;};
 const stateOf=(d,row)=>{
@@ -115,7 +116,7 @@ export function lightAt(d,engine,location,point){
  for(const s of sources(d,engine,location)){
   const redirected=redirect.filter(([,e])=>e.medium===s.id).reduce((p,[,e])=>Math.max(p,e.power),0)/100;
   const metres=distance(s.point,point);
-  if(clearRay(d,engine,location,s.point,point)&&opticalSightClear(d,engine,location,s.point,point))lux+=s.lux*dimFactor(d,s.id)*(1-redirected)/(1+metres*metres)*Math.exp(-fog*metres/10);
+  if(clearRay(d,engine,location,s.point,point)&&opticalSightClear(d,engine,location,s.point,point))lux+=s.lux*dimFactor(d,s.id)*(1-redirected)/(1+metres*metres)*exp(-fog*metres/10);
  }
  for(const [,e]of redirect){
   let s;try{s=source(d,engine,e.medium,location);}catch{continue;}
@@ -124,8 +125,8 @@ export function lightAt(d,engine,location,point){
   if(e.operation==='reflect'&&ts.reflectivityPercent<=0)continue;
   if(e.operation==='reflect'&&distance(point,e.observerPoint)>1)continue;
   const metres=distance(e.point,point);
-  if(e.operation==='focus_light'&&metres>Math.sqrt(e.beamAreaM2/Math.PI))continue;
-  if(clearRay(d,engine,location,e.point,point)&&opticalSightClear(d,engine,location,e.point,point))lux+=s.lux*dimFactor(d,s.id)*e.power/100/(e.beamAreaM2??1)/(1+distance(s.point,e.point)**2)/(1+metres*metres)*Math.exp(-fog*(metres+distance(s.point,e.point))/10);
+  if(e.operation==='focus_light'&&metres>sqrt(e.beamAreaM2/Math.PI))continue;
+  if(clearRay(d,engine,location,e.point,point)&&opticalSightClear(d,engine,location,e.point,point))lux+=s.lux*dimFactor(d,s.id)*e.power/100/(e.beamAreaM2??1)/(1+distance(s.point,e.point)**2)/(1+metres*metres)*exp(-fog*(metres+distance(s.point,e.point))/10);
  }
  const dark=active(d,'dark_area').filter(([,e])=>e.location===location&&distance(e.point,point)<=e.radius).reduce((p,[,e])=>Math.max(p,e.power),0);
  lux*=1-dark/100;

@@ -3,6 +3,7 @@ import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
 import { hazardRouteClosed } from './hazard-calendar.mjs';
 import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
+import {sin,acos,tan} from './det-math.mjs';
 
 // Old campaigns retain their published 30-day display calendar. Explicit
 // campaign dates name a native calendar; no season/daylight override is stored.
@@ -64,8 +65,8 @@ function dailySequence(rules, seed, region, year) {
     return rows;
 }
 export function daylightAt(latitude, dayOfYear) {
-    const radians = Math.PI / 180, declination = 23.44 * radians * Math.sin(2*Math.PI*(dayOfYear-0)/360);
-    const angle = Math.acos(clamp(-Math.tan(latitude*radians)*Math.tan(declination),-1,1));
+    const radians = Math.PI / 180, declination = 23.44 * radians * sin(2*Math.PI*(dayOfYear-0)/360);
+    const angle = acos(clamp(-tan(latitude*radians)*tan(declination),-1,1));
     const durationMinutes = Math.round(angle*1440/Math.PI);
     return { sunriseMinute: Math.round(720-durationMinutes/2), sunsetMinute: Math.round(720+durationMinutes/2), durationMinutes };
 }

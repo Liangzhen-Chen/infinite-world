@@ -13,6 +13,7 @@ import {isPhysicallyDead}from'./holdings.mjs';
 // Each apply(d,engine,effect,context) returns {applied:boolean,...}. A refused
 // effect is rolled back by clockTransaction together with its stage costs.
 import {regionalTradePrice} from './settlement-trade.mjs';
+import {toRational} from './det-math.mjs';
 import {assertWildlifeAwakeningEffect,applyWildlifeAwakeningEffect} from './wildlife.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {adjustStanding,standingKind} from './standing.mjs';
@@ -79,7 +80,7 @@ registerEffect('interaction',{
 // Price quote (formerly world-clock regional_quote).
 registerEffect('regional_quote',{
  validate(engine,effect){if(effect.item!==engine.rules.settlementTrade?.item)throw Error('世界时钟未知效果或缺少贸易消费者，拒绝推进');},
- apply:(d,engine,effect,context)=>({applied:true,...effect,price:regionalTradePrice(d,engine,effect.item,context.settlement,context.minute)}),
+ apply:(d,engine,effect,context)=>({applied:true,...effect,price:toRational(regionalTradePrice(d,engine,effect.item,context.settlement,context.minute))}),
 });
 // Spirit awakening (formerly world-clock awakening/awaken), consumed by T160.
 for(const kind of ['awakening','awaken'])registerEffect(kind,{
