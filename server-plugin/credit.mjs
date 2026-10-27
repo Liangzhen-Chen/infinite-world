@@ -3,7 +3,7 @@ import {reject} from './action-rejection.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
 import {recordsWhere} from './storage.mjs';
-import {openObligation,adoptLegacyObligation,settleObligation} from './obligation-runtime.mjs';
+import {openObligation,adoptLegacyObligation,settleObligation,obligationInstrument} from './obligation-runtime.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 // Contracts and credit (U2). Loans carry interest, a term and an optional pledge;
@@ -25,7 +25,7 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,interestRate} from './finance-bank.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,interestRate,settleDepositInterest} from './finance-bank.mjs';
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
@@ -111,15 +111,15 @@ export function releasePledge(d,engine,key,to,bank=null){
 // ---- loans -----------------------------------------------------------------
 // Interest follows the lender's regard: the existing monthly band
 // rules.economy.loanMonthlyInterest, cheapest for the most trusted borrower.
-export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue}){
+export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue,borrower='player'}){
     const c=rules(engine),[low,high]=engine.rules.economy.loanMonthlyInterest;
     let rate,maximumDays,limit,per='anchor',calendar='core:calendar_default';
     if(bank){
-        const credit=interestRate(engine,d.get('state'),bank,{principal,document:d.document});
+        const credit=interestRate(engine,d.get('state'),bank,{borrower,principal,document:d.document});
         rate=credit.rate;per=credit.per;calendar=credit.calendar;maximumDays=bank.loanMaximumDays;limit=Math.min(bank.loanMaximumCopper,credit.loanable);
         if(collateralValue<Math.ceil(principal*bank.collateralRatio))throw preconditionFailure(`${bank.name}放款须有值${Math.ceil(principal*bank.collateralRatio)}铜以上的抵押`);
     }else{
-        const regard=standing(engine,d.get('state'),lender,'player');
+        const regard=standing(engine,d.get('state'),lender,borrower);
         if(regard<c.loan.refuseBelow)throw preconditionFailure(`${nameOf(engine,lender)}不信任你，不肯借钱`);
         if(regard<c.loan.collateralBelow&&collateralValue<principal)throw preconditionFailure(`${nameOf(engine,lender)}与你交情不足，须有足值抵押才肯借`);
         rate=Math.round((high-(high-low)*Math.max(0,Math.min(100,regard))/100)*10000)/10000;
@@ -138,7 +138,7 @@ export function loanSuccessionTerms(d,engine){
 export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(d,engine,collateral.item,collateral.quantity):0;
-    const {rate,interest,per,calendar}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue});
+    const {rate,interest,per,calendar}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue,borrower:debtor});
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('借据编号已存在');
     const now=d.get('state','minute'),pledgeKey=collateral?`pledge:${id}`:null;
     if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity,debtor);
@@ -273,17 +273,32 @@ export async function creditTrade(d,args,eventId,terms){
         }else if(op==='withdraw'){
             const balance=row.accounts.player??0;
             if(!Number.isSafeInteger(args.coins)||args.coins<1||args.coins>balance)reject('E-ACTION-WITHDRAWAL',`支取铜钱必须在1到${balance}之间`,{missing:['支取数额须大于零且不超过当前存款'],repair:['核对当前存款，存入钱款或调低支取数额后重试']});
-            const amount=args.coins;if(row.coins<amount)throw preconditionFailure(`${b.name}现银不足，暂不能兑付`);
-            const claims=obligationRows(d.get('state')).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'&&obligationView(d.get('state'),o).owed>0&&(!args.debt||o.id===args.debt));
-            if(claims.reduce((n,o)=>n+obligationView(d.get('state'),o).owed,0)<amount)throw preconditionFailure('支取须对应本人足额的真实存款债权');
+            let amount=args.coins;if(row.coins<amount)throw preconditionFailure(`${b.name}现银不足，暂不能兑付`);
+            const state=d.get('state');
+            if(args.debt){
+                const named=obligationRows(state).find(o=>o.id===args.debt&&o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player');
+                const original=named?.terms?.requiresInstrument,paper=typeof original==='string'?state.itemInstances?.[original]:null;
+                if(paper?.document?.lost)throw preconditionFailure('该存单已挂失作废，不能凭原件兑付；请凭补发的新存单支取');
+            }
+            const claims=obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'&&obligationView(state,o).owed>0&&
+                (args.debt?o.id===args.debt:!o.terms?.requiresInstrument||obligationInstrument(engine,state,o,b.id)));
+            const before=claims.reduce((n,o)=>n+obligationView(state,o).owed,0);
+            if(before<amount)throw preconditionFailure('支取须对应本人足额的真实存款债权');
+            // F049: a withdrawal is a settlement event for the claims it draws on.
+            // Interest earned over the balance held so far joins the claim first;
+            // drawing the whole displayed balance therefore settles it with that interest.
+            const gained=settleDepositInterest(d,engine,b,claims.map(o=>o.id));
+            Object.assign(row,d.get(...rec(b.id)));
+            const extra=claims.reduce((n,o)=>n+obligationView(d.get('state'),o.id).owed,0)-before;
+            if(extra>0&&amount===before)amount=Math.min(before+extra,row.coins);
             let left=amount;
             for(const claim of claims){
                 if(!left)break;
-                const paid=Math.min(left,obligationView(d.get('state'),claim).owed);
+                const paid=Math.min(left,obligationView(d.get('state'),claim.id).owed);
                 settleObligation(d,engine,{id:claim.id,payer:b.id,actor:keeper,amount:paid},`${eventId}:${claim.id}`);left-=paid;
             }
             // Protocol settlement already moved the cash and updated its one account projection.
-            Object.assign(row,d.get(...rec(b.id)));detail={withdrawn:amount};
+            Object.assign(row,d.get(...rec(b.id)));detail={withdrawn:amount,...(gained?{interestCapitalized:gained}:{})};
         }else{
             const item=engine.resolve(args.item,'item'),c=coinage(engine,item),quantity=int(args.quantity,1,100000,'兑换枚数');
             if(!c)throw preconditionFailure('这不是登记的铸币');

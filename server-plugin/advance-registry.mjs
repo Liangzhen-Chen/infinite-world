@@ -68,7 +68,7 @@ import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layer
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {advanceWanted}from'./bounty.mjs';
-import {auditLedger}from'./ledger.mjs';
+import {auditLedger,stampDriftReport}from'./ledger.mjs';
 import {holdingRemove,declareHoldingWriter} from './holdings.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 export {registerAdvanceHook} from './advance-hooks.mjs';
@@ -312,6 +312,7 @@ function runAdvanceSystems(engine,d,ctx){
             for(const system of systems.filter(s=>s.phase===PHASE.assertion))system.advance(engine,d,ctx);
             const ledger=d.get('ledger'),errors=recordsMemo(ledger,ledgerAudit,()=>auditLedger(ledger));
             if(errors.length)throw new Error(`刻末账本断言失败：${errors.join('; ')}`);
+            stampDriftReport(d);// 漂移只上报不拒绝（S6 入口再拒绝）
         }
     }finally{delete d.reactionTick;engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }

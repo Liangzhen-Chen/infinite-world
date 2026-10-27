@@ -88,7 +88,7 @@ export function openHoldings(engine,document){
         remove(path){let t=root;for(const k of path.slice(0,-1))t=t?.[k];if(t)delete t[path.at(-1)];}};
     const {holdings=[],entities=[],locations=[]}=opener(engine,document.state);
     // 作者数据里违反注册形状的一条不阻断开账：记漂移（对账报出），其余照开。
-    const attempt=(info,fn)=>{try{fn();}catch(e){if(!(e instanceof HoldingRejected))throw e;root.holdings.drift=[...root.holdings.drift??[],{...info,code:e.code,reason:e.message}].slice(-50);}};
+    const attempt=(info,fn)=>{try{fn();}catch(e){if(!(e instanceof HoldingRejected))throw e;root.holdings.drift=[...root.holdings.drift??[],{...info,code:e.code,reason:e.message}].slice(-50);root.holdings.driftTally=(root.holdings.driftTally??0)+1;}};
     for(const e of entities)attempt({source:e.source,entity:e.id},()=>createEntity(d,{id:e.id,kind:e.kind,facts:e.facts??{},source:e.source??null,writer:'genesis',origin:e.origin??'authored'}));
     for(const h of holdings)attempt({source:h.source,kind:h.kind,variant:h.variant??null,holder:h.holder,subject:h.subject},()=>openHolding(d,{...h,writer:'genesis',engine}));
     for(const l of locations)attempt({source:l.source,entity:l.entity},()=>setLocation(d,{entity:l.entity,at:l.at,mode:l.mode,source:l.source??null,writer:'genesis',engine}));
@@ -345,6 +345,7 @@ export function bookHoldingsUpgrade(before,after,world){
 export function recordHoldingDrift(d,entry){
     if(!holdingsActive(d))return;
     d.set(['holdings','drift'],[...(read(d,'holdings','drift')??[]),{...entry,minute:minuteOf(d)}].slice(-50));
+    d.set(['holdings','driftTally'],(read(d,'holdings','driftTally')??0)+1);
 }
 export const holdingsDrift=d=>read(d,'holdings','drift')??[];
 

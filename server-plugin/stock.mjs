@@ -21,7 +21,7 @@ import {creatureTraits} from './traits.mjs';
 //   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
 // 批次（lots）用于粮仓、种粮、货运与田间作物（granary、seed、cargo、crop）；其余物品暂按数量计。
-import {isResourceKey,accountKey,parseAccount,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
+import {isResourceKey,accountKey,parseAccount,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking,tallyDrift} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -116,7 +116,7 @@ export function bookStock(d,engine,account,delta,books){
     if(books===BOOKED||!delta)return 0;
     const other=books?.writer?counterAccount(engine,account,books):null;
     if(!other){
-        if(ledgerActive(d))d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));
+        if(ledgerActive(d)){d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));tallyDrift(d,'unbooked');}
         return 0;
     }
     const common={writer:books.writer,eventId:books.eventId??null,lot:books.lot??null,pick:books.pick??null};

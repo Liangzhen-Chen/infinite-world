@@ -7,12 +7,13 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
-import {bankCredit,interestRate,depositRate,regionalCredit,advanceBankFinance} from '../server-plugin/finance-bank.mjs';
+import {bankCredit,interestRate,depositRate,regionalCredit,advanceBankFinance,pawnForActor,derivedBankAt} from '../server-plugin/finance-bank.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {nativeDeposit,creditCall} from './helpers/credit-actions.mjs';
 import {obligationRows,obligationView,accruedInterest} from '../server-plugin/obligation-state.mjs';
-import {currencyValue,exchangeRate,currencyPurchasingPower,issuedCurrency} from '../server-plugin/currency.mjs';
+import {currencyValue,exchangeRate,currencyPurchasingPower,issuedCurrency,currencyReserve} from '../server-plugin/currency.mjs';
 import {netAssets} from '../server-plugin/finance-assets.mjs';
+import {openLoan} from '../server-plugin/credit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const keeper='npc_hw_shendu',post='bld_hw_post',bankId='bank_hw_post';
@@ -56,13 +57,14 @@ test('metal content exchange and backed credit use the native counter with indep
  const noFee=fixture(noFeeWorld),exact=await exchange(noFee,{item:'item_coin_civic',quantity:10,buyer:'player'},'currency-exact-nine');
  assert.equal(exact.paid,9);assert.equal(noFee.document.state.player.coins,2991);clean(noFee);
  // The registered S5-01 coin-credit slot is a real price input. An author
- // factor.5 on this paper gives100*.5=50 per note; ceil(2*50*1.03)=103.
+ // factor.5 gives market value50, but D15 §15.3 backedBy promises100:
+ // new issuance costs ceil(2*100*1.03)=206 regardless of market credit.
  const discountedWorld=structuredClone(world);discountedWorld.derived.modifiers.push({id:'note-credit-half',pack:'credit',target:'economy:coinCredit',stage:'mul',value:0.5,when:"subject == 'item_banknote_hw'"});
  const discounted=fixture(discountedWorld),lower=await exchange(discounted,{item:'item_banknote_hw',quantity:2,buyer:'player',mode:'issue'},'currency-credit-factor');
- assert.equal(lower.paid,103);assert.equal(lower.pricing.from.explanation.credit.value,0.5);clean(discounted);
+ assert.equal(lower.paid,206);assert.equal(lower.pricing.from.explanation.credit.value,0.5);assert.equal(lower.pricing.from.value/lower.pricing.from.explanation.peg,0.5);clean(discounted);
 });
 
-test('real goods turnover and native issuance explain dilution; reserves bound further issuance atomically',async t=>{
+test('real goods turnover and native issuance explain dilution; unaffordable issuance is atomic',async t=>{
  const f=fixture(),host='npc_hw_linsui';
  // Shelf stock, host cash and travel are outside the examined currency rule.
  const setup=applyIntentSetup(f.engine,f.document,{location:'bld_hw_qingdeng',facts:[
@@ -79,13 +81,18 @@ test('real goods turnover and native issuance explain dilution; reserves bound f
  // abundance.1/10=.01 => 100*.01=1 river per note (confidence1).
  assert.equal(q.from.explanation.turnoverCopper,10);assert.equal(q.from.explanation.active,10);assert.equal(q.from.explanation.abundance,0.01);
  assert.ok(Math.abs(q.rate-1)<1e-12);
- const second=await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'dilution-second');assert.equal(second.paid,11);
+ // D15 §15.3: dilution changes third-party value, never the issuer's face price.
+ const second=await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'dilution-second');assert.equal(second.paid,1030);
  d=f.engine.primitiveDraft(f.document);q=exchangeRate(d,f.engine,{from:'coin_hw_note'});
  // Same actual turnover, twenty notes: abundance.005 => rate.5.
  assert.equal(q.from.explanation.active,20);assert.equal(q.from.explanation.abundance,0.005);assert.ok(Math.abs(q.rate-0.5)<1e-12);
  const afterPower=currencyPurchasingPower(d,f.engine,{currency:'coin_hw_note'});
  assert.ok(Math.abs(afterPower.realValue/power.realValue-0.5)<1e-12);
- assert.equal(f.document.state.records[bankId].coins,2541);assert.equal(bankCredit(f.engine,f.document.state,f.bank).reserve,400);
+ // Vault1500 + two face-price issues1030 each =3560; reserve20*100*.2=400.
+ assert.equal(f.document.state.records[bankId].coins,3560);assert.equal(bankCredit(f.engine,f.document.state,f.bank).reserve,400);
+ // Face issuance itself funds the new reserve. Unlike the former discounted
+ // sale, this oversized order now fails cash first (1000*100*1.03=103000).
+ // Preserve the rejected transaction and complete zero-write assertion.
  const before=structuredClone(f.document);
  const rejected=await f.engine.reduce(f.document,{tool:'world_act',args:{action:'core:trade.exchange',slots:{seller:keeper,item:'item_banknote_hw',quantity:1000,buyer:'player',mode:'issue'}},eventId:'dilution-over-reserve'});
  assert.equal(rejected.result.receipt.status,'rejected');assert.deepEqual(applyPatches(f.document,rejected.patches),before);
@@ -102,6 +109,94 @@ test('real goods turnover and native issuance explain dilution; reserves bound f
  const refused=structuredClone(f.document);
  await assert.rejects(f.act({seller:'player',buyer:'npc_hw_yanzhe',item:'item_banknote_hw',quantity:4},'unrecognized-credit-tender'),/不接受/);
  assert.deepEqual(f.document,refused);assert.equal(f.document.state.inventory.item_banknote_hw.quantity,20);clean(f);
+ // Mechanism anchor after dilution: two issues cost2060, face redemption
+ // returns floor(20*100*.97)=1940. The full round trip loses120, never gains.
+ const back=applyIntentSetup(f.engine,f.document,{minute:600,location:post});assert.deepEqual(back.setupUnmet,[]);f.replace(back.document);
+ const redeemed=await exchange(f,{item:'item_banknote_hw',quantity:20,mode:'redeem'},'dilution-round-trip');
+ assert.equal(redeemed.received,1940);assert.equal(first.paid+second.paid-redeemed.received,120);
+ assert.equal(f.document.state.player.coins,2870);assert.equal(issuedCurrency(f.engine,f.document.state,'coin_hw_note').redeemed,20);clean(f);
+});
+
+test('face issuance and redemption remain possible at zero market confidence and never earn cash',async()=>{
+ for(const fee of [0,0.03]){
+  const w=structuredClone(world);w.rules.economy.credit.banks[0].exchangeFeeRate=fee;
+  const f=fixture(w);
+  await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'zero-market-opening');
+  await f.act({operation:'deposit',coins:1001},'zero-market-deposit');
+  // A depleted vault has cash1000 and owes deposits1000: note confidence0.
+  const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:1000}]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
+  const before=f.document.state.player.coins;
+  const issued=await exchange(f,{item:'item_banknote_hw',quantity:1,buyer:'player',mode:'issue'},'zero-market-issue');
+  // Face100, one unit: no fee pays/returns100; 3% pays103/returns97.
+  assert.equal(issued.paid,fee?103:100);assert.equal(issued.pricing.from.value,0);
+  const redeemed=await exchange(f,{item:'item_banknote_hw',quantity:1,mode:'redeem'},'zero-market-redeem');
+  assert.equal(redeemed.received,fee?97:100);assert.equal(f.document.state.player.coins,before-(fee?6:0));
+  assert.equal(f.document.state.records[bankId].coins,1000+(fee?6:0));clean(f);
+ }
+});
+
+test('uncashed bills and subsequent clearing protect the same reserve exactly once',async()=>{
+ const f=fixture(),destination=derivedBankAt(f.engine,f.document.state,'loc_bs');assert.ok(destination);
+ const remit=await f.act({operation:'remit',coins:100,location:destination.location,buyer:'npc_hw_ayan'},'reserve-bill');
+ // Source1500+100+fee2=1602; one bill100 (including its named payable),
+ // reserve100*.2=20, loanable1582. Never count the beneficiary claim twice.
+ let credit=bankCredit(f.engine,f.document.state,f.bank);
+ assert.equal(credit.cash,1602);assert.equal(credit.liabilities,100);assert.equal(credit.reserve,20);assert.equal(credit.loanable,1582);
+ const scene=applyIntentSetup(f.engine,f.document,{minute:600,location:destination.location,present:[destination.keepers[0],'npc_hw_ayan']});assert.deepEqual(scene.setupUnmet,[]);f.replace(scene.document);
+ await f.act({operation:'deposit',seller:destination.keepers[0],coins:201},'reserve-bill-fund');
+ await f.act({operation:'cash_bill',seller:destination.keepers[0],contract:remit.contract},'reserve-bill-cash');
+ credit=bankCredit(f.engine,f.document.state,f.bank);
+ // Cashed bill0 + unpaid interbank clearing100 = unchanged liability100.
+ assert.equal(credit.liabilities,100);assert.equal(credit.reserve,20);assert.equal(credit.loanable,1582);clean(f);
+});
+
+test('NPC pawn rate follows the owner default history rather than the player history',async()=>{
+ const f=fixture(),owner='npc_hw_linsui';
+ const setup=applyIntentSetup(f.engine,f.document,{present:[owner],facts:[{path:['state','npcs',owner,'inventory'],value:{item_bread:{quantity:30}}}]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
+ let draft=f.engine.primitiveDraft(f.document);
+ const old=openLoan(draft,f.engine,{lender:keeper,keeper,bank:f.bank,principal:10,days:1,collateral:{item:'item_bread',quantity:10},debtor:owner,eventId:'old-owner-loan'});
+ f.replace(applyPatches(f.document,draft.patches));
+ // A signed historical default is outside the examined pricing mechanism.
+ // Use the setup writer on the actual loan and its canonical projection.
+ const legacy=f.document.state.records[old.debt],claim=f.document.state.obligations[legacy.obligation];
+ const history=applyIntentSetup(f.engine,f.document,{facts:[
+  {path:['state','records',old.debt],value:{...legacy,defaulted:{minute:0}}},
+  {path:['state','obligations',claim.id],value:{...claim,defaulted:{minute:0}}}
+ ]});assert.deepEqual(history.setupUnmet,[]);f.replace(history.document);
+ const before=structuredClone(f.document);
+ draft=f.engine.primitiveDraft(before);
+ const npc=pawnForActor(draft,f.engine,{actor:owner,owner,keeper,bank:bankId,item:'item_bread',quantity:10,coins:10,days:1,consent:true},'owner-rate-pawn');
+ // Cash1490, recent principal10, prospective10: .015*(1+20/1490).
+ // One owner default multiplies by2; the player has no default.
+ assert.equal(npc.monthlyInterest,0.015*(1+20/1490)*2);
+ const player=await f.act({operation:'pawn',item:'item_wood',quantity:10,coins:10,days:1},'player-rate-pawn');
+ assert.equal(player.monthlyInterest,0.015*(1+20/1490));assert.equal(npc.monthlyInterest,player.monthlyInterest*2);
+ clean(f);f.replace(applyPatches(before,draft.patches));clean(f);
+});
+
+test('note backing excludes deposit liabilities but face redemption uses actual cash',async()=>{
+ const f=fixture();await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'backing-issue');
+ await f.act({operation:'deposit',coins:1001},'backing-deposit');
+ const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:1100}]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
+ // Vault1100 less deposits1000 leaves100 for notes1000: ratio.1,
+ // confidence .1/.2=.5. Depositors' cash is not pledged a second time.
+ const reserve=currencyReserve(f.engine,f.document.state,'coin_hw_note');
+ assert.equal(reserve.reserve,100);assert.equal(reserve.ratio,0.1);assert.equal(reserve.confidence,0.5);
+ const depleted=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:1000}]});assert.deepEqual(depleted.setupUnmet,[]);f.replace(depleted.document);
+ assert.equal(currencyReserve(f.engine,f.document.state,'coin_hw_note').confidence,0);
+ assert.equal((await exchange(f,{item:'item_banknote_hw',quantity:1,mode:'redeem'},'backing-redeem')).received,97);clean(f);
+});
+
+test('automatic withdrawal bypasses unavailable originals but explicit claims still require them',async()=>{
+ const engine=new WorldEngine(world),f=await nativeDeposit(engine,engine.createCharacter(seed,{},'available-deposit'));
+ const paper=structuredClone(f.document.state.itemInstances[f.paper]);paper.durability=0;
+ const setup=applyIntentSetup(engine,f.document,{coins:101,facts:[{path:['state','itemInstances',f.paper],value:paper}]});assert.deepEqual(setup.setupUnmet,[]);f.document=setup.document;
+ const second=await creditCall(f,{operation:'deposit',coins:101},'available-second');
+ const before=structuredClone(f.document);
+ await assert.rejects(creditCall(f,{operation:'withdraw',coins:1,debt:f.claim},'explicit-broken'));assert.deepEqual(f.document,before);
+ await assert.rejects(creditCall(f,{operation:'withdraw',coins:101},'not-enough-available'));assert.deepEqual(f.document,before);
+ assert.equal((await creditCall(f,{operation:'withdraw',coins:100},'available-withdraw')).withdrawn,100);
+ assert.equal(obligationView(f.document.state,f.claim).owed,100);assert.equal(obligationView(f.document.state,second.claim).owed,0);clean(f);
 });
 
 test('issued note reserves protect lending but redeem until actual cash is exhausted, then replenish',async()=>{

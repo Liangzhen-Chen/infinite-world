@@ -185,6 +185,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
             const gap=amount-have,drift=accountKey('src:drift',a.resource,a.owner.replace(/[|\s]/g,'_'));
             d.set(['ledger','flows',drift],(read(d,'ledger','flows',drift)??0)+gap);
             d.set(['ledger','drift'],[...(read(d,'ledger','drift')??[]),{account:from,gap,writer,eventId,minute:read(d,'state','minute')??null}].slice(-50));
+            tallyDrift(d,'gap');
         }
         d.set(['ledger','accounts',from],Math.max(0,have-amount));
         if(lotAccount(from)){
@@ -241,6 +242,25 @@ export function ledgerTotals(ledger){
     for(const [key,n] of Object.entries(ledger?.accounts??{}))add(parseAccount(key).resource,'accounts',n);
     for(const [key,n] of Object.entries(ledger?.flows??{})){const {owner,resource}=parseAccount(key);add(resource,isSource(owner)?'sources':'sinks',n);}
     return out;
+}
+// 漂移上报（账本双写退出第一期，只统计不拒绝）：drift 清单只留最近 50 条，这里另记不封顶的累计次数。
+// 类别：gap（余额不足由 src:drift 补足）、unbooked（旧写入漏传对方账户）、holding（持有写入被注册形状拒绝）。
+// 刻末由 stampDriftReport 写入 ledger.driftReport 供查询；S6 入口再据此拒绝。
+export function tallyDrift(d,kind){
+    if(!ledgerActive(d))return;
+    d.set(['ledger','driftTally',kind],(read(d,'ledger','driftTally',kind)??0)+1);
+}
+export function driftCounts(document){
+    const t=document?.ledger?.driftTally??{};
+    return {gap:t.gap??0,unbooked:t.unbooked??0,holding:document?.holdings?.driftTally??0};
+}
+export function stampDriftReport(d){
+    if(!ledgerActive(d))return;
+    const c=driftCounts({ledger:{driftTally:read(d,'ledger','driftTally')},holdings:{driftTally:read(d,'holdings','driftTally')}});
+    if(c.gap+c.unbooked+c.holding===0)return;
+    const prev=read(d,'ledger','driftReport');
+    if(prev&&prev.gap===c.gap&&prev.unbooked===c.unbooked&&prev.holding===c.holding)return;
+    d.set(['ledger','driftReport'],{...c,minute:read(d,'state','minute')??null});
 }
 export function auditLedger(ledger){
     const errors=[];

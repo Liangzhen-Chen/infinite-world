@@ -4,11 +4,11 @@
  "namespace": "core",
  "note": "从 extension/tools.mjs 枚举与 resolveToolCall 导出；pack 为一方包名（子操作分派所在模块的目标包，见 tools/arch-layers.mjs；仍在内核/接口层分派的为 null）；id = core:<内部工具>.<内部操作>（核心命名空间可省略）。participants 为可指代参与者的参数（player 恒为发起者）；params 为该公开工具的参数（分组工具为组内并集）；handler.dispatch 为子操作分派的首个字面量位置（近似）。前置、同意、可见性、叙述模板由 A1 起逐包补齐。",
  "counts": {
-  "actions": 245,
+  "actions": 246,
   "tools": 25,
-  "withOperation": 229,
-  "handlerResolved": 245,
-  "dispatchResolved": 223
+  "withOperation": 230,
+  "handlerResolved": 246,
+  "dispatchResolved": 224
  },
  "actions": [
   {
@@ -970,7 +970,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:300"
+    "dispatch": "server-plugin/credit.mjs:315"
    }
   },
   {
@@ -1044,7 +1044,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:320"
+    "dispatch": "server-plugin/credit.mjs:335"
    }
   },
   {
@@ -1266,7 +1266,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:290"
+    "dispatch": "server-plugin/finance-bank.mjs:345"
    }
   },
   {
@@ -1414,7 +1414,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:216"
+    "dispatch": "server-plugin/finance-bank.mjs:271"
    }
   },
   {
@@ -1488,7 +1488,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:242"
+    "dispatch": "server-plugin/finance-bank.mjs:297"
    }
   },
   {
@@ -1636,7 +1636,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:296"
+    "dispatch": "server-plugin/finance-bank.mjs:351"
    }
   },
   {
@@ -1710,7 +1710,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/currency.mjs:118"
+    "dispatch": "server-plugin/currency.mjs:121"
    }
   },
   {
@@ -1784,7 +1784,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:307"
+    "dispatch": "server-plugin/finance-bank.mjs:362"
    }
   },
   {
@@ -1932,7 +1932,81 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:337"
+    "dispatch": "server-plugin/finance-bank.mjs:394"
+   }
+  },
+  {
+   "id": "core:trade.report_lost",
+   "tool": "world_trade",
+   "operation": "report_lost",
+   "internalTool": "world_trade",
+   "internalOperation": "report_lost",
+   "readOnly": false,
+   "participants": [
+    "player",
+    "seller",
+    "buyer",
+    "escort"
+   ],
+   "params": [
+    "business",
+    "contract",
+    "location",
+    "consent",
+    "deposit",
+    "coins",
+    "deadline",
+    "minutes",
+    "task",
+    "buyer",
+    "seller",
+    "item",
+    "quantity",
+    "unitPrice",
+    "service",
+    "days",
+    "payment",
+    "creditMinutes",
+    "debt",
+    "instances",
+    "mode",
+    "escort",
+    "authorization"
+   ],
+   "required": [
+    "seller"
+   ],
+   "variants": {
+    "task": [
+     "stocktake",
+     "destroy",
+     "register",
+     "book",
+     "trace",
+     "lease",
+     "repair",
+     "intercept",
+     "recover",
+     "open",
+     "lose",
+     "collect"
+    ],
+    "payment": [
+     "cash",
+     "credit",
+     "repay"
+    ],
+    "service": [
+     "住宿",
+     "passage"
+    ]
+   },
+   "pack": "economy",
+   "handler": {
+    "file": "server-plugin/engine.mjs",
+    "line": 602,
+    "symbol": "WorldEngine.trade",
+    "dispatch": "server-plugin/finance-bank.mjs:377"
    }
   },
   {
@@ -2376,7 +2450,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/advance-registry.mjs:187"
+    "dispatch": "server-plugin/advance-registry.mjs:189"
    }
   },
   {
@@ -3223,7 +3297,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:45"
+    "dispatch": "server-plugin/professions.mjs:47"
    }
   },
   {
@@ -3257,7 +3331,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:46"
+    "dispatch": "server-plugin/professions.mjs:48"
    }
   },
   {
@@ -3291,7 +3365,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:65"
+    "dispatch": "server-plugin/professions.mjs:67"
    }
   },
   {
@@ -3325,7 +3399,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:43"
+    "dispatch": "server-plugin/professions.mjs:45"
    }
   },
   {
@@ -3359,7 +3433,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:44"
+    "dispatch": "server-plugin/professions.mjs:46"
    }
   },
   {
@@ -3393,7 +3467,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:39"
+    "dispatch": "server-plugin/professions.mjs:41"
    }
   },
   {
@@ -13543,7 +13617,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 352,
+    "line": 377,
     "symbol": "runtime world_search"
    }
   },
@@ -13583,7 +13657,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 353,
+    "line": 378,
     "symbol": "runtime world_catalog"
    }
   },
@@ -13608,7 +13682,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 351,
+    "line": 376,
     "symbol": "runtime world_read"
    }
   },
