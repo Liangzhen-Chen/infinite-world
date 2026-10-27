@@ -14,7 +14,7 @@
 //                                 <记录键>|coin_river|escrow      records.<id>.escrow / state.quests.<id>.escrow / state.projects.<id>.public.escrow /
 //                                                                 records.organization_proposal.escrow / records.settlement_trade.escrowCopper
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）带用途，用途即流量类别（wage、tax、trade、interest、bounty、fee……）。
-import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,registerTransferProjection,LEDGER_COIN} from './ledger.mjs';
+import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,registerTransferProjection,tallyDrift,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
@@ -142,7 +142,7 @@ export const BOOKED=Object.freeze({booked:true});
 export function bookSide(d,account,delta,books){
     if(books===BOOKED||!delta)return 0;
     if(!books?.account||!books?.writer){
-        if(ledgerActive(d))d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));
+        if(ledgerActive(d)){d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));tallyDrift(d,'unbooked');}
         return 0;
     }
     return delta>0?moveCoins(d,{from:books.account,to:account,amount:delta,writer:books.writer,eventId:books.eventId??null})
