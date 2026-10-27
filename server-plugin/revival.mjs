@@ -59,7 +59,7 @@ export function revivePlayer(d,args,id){
                 notice=`${was}，在最近的复活点${name(selected.location)}醒来，登记点改为此处`;
                 d.set(['state','player','revivalAnchor'],selected.location);
             }else if(selected=nearest(points.filter(standing))){
-                notice=`${was}，也没有任何已登记的复活点；在最近仍存的${name(selected.location)}醒来，此处尚未登记`;
+                notice=`${was}，其余已登记的复活点也都不可用；在最近仍存的${name(selected.location)}醒来，此处尚未登记`;
             }else{
                 selected=nearest(points);
                 notice=`${was}，复活点的建筑都已损毁；在最近的${name(selected.location)}废墟中醒来`;
