@@ -970,7 +970,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:314"
+    "dispatch": "server-plugin/credit.mjs:315"
    }
   },
   {
@@ -1044,7 +1044,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:334"
+    "dispatch": "server-plugin/credit.mjs:335"
    }
   },
   {
@@ -1266,7 +1266,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:341"
+    "dispatch": "server-plugin/finance-bank.mjs:345"
    }
   },
   {
@@ -1414,7 +1414,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:267"
+    "dispatch": "server-plugin/finance-bank.mjs:271"
    }
   },
   {
@@ -1488,7 +1488,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:293"
+    "dispatch": "server-plugin/finance-bank.mjs:297"
    }
   },
   {
@@ -1636,7 +1636,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:347"
+    "dispatch": "server-plugin/finance-bank.mjs:351"
    }
   },
   {
@@ -1784,7 +1784,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:358"
+    "dispatch": "server-plugin/finance-bank.mjs:362"
    }
   },
   {
@@ -1932,7 +1932,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:390"
+    "dispatch": "server-plugin/finance-bank.mjs:394"
    }
   },
   {
@@ -2006,7 +2006,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:373"
+    "dispatch": "server-plugin/finance-bank.mjs:377"
    }
   },
   {
