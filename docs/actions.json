@@ -2746,7 +2746,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:347"
+    "dispatch": "server-plugin/labor-market.mjs:348"
    }
   },
   {
@@ -2820,7 +2820,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:350"
+    "dispatch": "server-plugin/labor-market.mjs:351"
    }
   },
   {
@@ -2894,7 +2894,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:356"
+    "dispatch": "server-plugin/labor-market.mjs:357"
    }
   },
   {
@@ -2968,7 +2968,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:373"
+    "dispatch": "server-plugin/labor-market.mjs:374"
    }
   },
   {
@@ -6238,7 +6238,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/titles.mjs:163"
+    "dispatch": "server-plugin/titles.mjs:164"
    }
   },
   {
@@ -6342,7 +6342,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/titles.mjs:164"
+    "dispatch": "server-plugin/titles.mjs:165"
    }
   },
   {
@@ -6446,7 +6446,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/titles.mjs:165"
+    "dispatch": "server-plugin/titles.mjs:166"
    }
   },
   {
@@ -6550,7 +6550,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/notables.mjs:150"
+    "dispatch": "server-plugin/notables.mjs:151"
    }
   },
   {
@@ -6654,7 +6654,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/notables.mjs:151"
+    "dispatch": "server-plugin/notables.mjs:152"
    }
   },
   {
@@ -6758,7 +6758,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/notables.mjs:152"
+    "dispatch": "server-plugin/notables.mjs:153"
    }
   },
   {
@@ -6862,7 +6862,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/promotion.mjs:133"
+    "dispatch": "server-plugin/promotion.mjs:134"
    }
   },
   {
@@ -6966,7 +6966,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/promotion.mjs:134"
+    "dispatch": "server-plugin/promotion.mjs:135"
    }
   },
   {
@@ -8526,7 +8526,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faction-clock.mjs:235"
+    "dispatch": "server-plugin/faction-clock.mjs:236"
    }
   },
   {
@@ -8630,7 +8630,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faction-clock.mjs:240"
+    "dispatch": "server-plugin/faction-clock.mjs:241"
    }
   },
   {
@@ -8837,7 +8837,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:439"
+    "dispatch": "server-plugin/organizations.mjs:440"
    }
   },
   {
@@ -8941,7 +8941,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:440"
+    "dispatch": "server-plugin/organizations.mjs:441"
    }
   },
   {
@@ -9045,7 +9045,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:512"
+    "dispatch": "server-plugin/organizations.mjs:513"
    }
   },
   {
@@ -9149,7 +9149,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:531"
+    "dispatch": "server-plugin/organizations.mjs:532"
    }
   },
   {
@@ -9253,7 +9253,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:537"
+    "dispatch": "server-plugin/organizations.mjs:538"
    }
   },
   {
@@ -9357,7 +9357,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/organizations.mjs:550"
+    "dispatch": "server-plugin/organizations.mjs:551"
    }
   },
   {
@@ -11125,7 +11125,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/high-nobility.mjs:90"
+    "dispatch": "server-plugin/high-nobility.mjs:91"
    }
   },
   {
@@ -11229,7 +11229,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/high-nobility.mjs:94"
+    "dispatch": "server-plugin/high-nobility.mjs:95"
    }
   },
   {
@@ -11333,7 +11333,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/high-nobility.mjs:98"
+    "dispatch": "server-plugin/high-nobility.mjs:99"
    }
   },
   {
@@ -11437,7 +11437,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/high-nobility.mjs:108"
+    "dispatch": "server-plugin/high-nobility.mjs:109"
    }
   },
   {
@@ -11541,7 +11541,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/titles.mjs:161"
+    "dispatch": "server-plugin/titles.mjs:162"
    }
   },
   {
@@ -11645,7 +11645,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/titles.mjs:162"
+    "dispatch": "server-plugin/titles.mjs:163"
    }
   },
   {
