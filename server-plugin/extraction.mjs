@@ -13,7 +13,8 @@ import {takePopulation,addPopulation} from './population-health.mjs';
 import {recordsWhere} from './storage.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhysicallyDead} from './holdings.mjs';
-declareHoldingWriter('extraction',{kinds:['permit','owns']});
+// Caught living fish are item instances whose bag/placement is a location fact.
+declareHoldingWriter('extraction',{kinds:['permit','owns'],locations:true});
 // Fish are withdrawn from the same local population reserve and transferred to
 // the bag; population writers mirror natural changes, not a second fishing source.
 // 剖洗用水、煮食耗材进 sink:consume；
