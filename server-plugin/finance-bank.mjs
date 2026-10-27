@@ -62,13 +62,13 @@ export function financeTransfer(d,e,from,to,n,id,writer='finance-bank'){
 }
 // C/D call this with an actual payer; the shared runtime enforces arrival,
 // authority, replay receipts and the inheritance cap in one transaction.
-export function settleFinancialClaim(d,e,{claim,payer,actor,amount,actedAs},eventId){
+export function settleFinancialClaim(d,e,{claim,payer,actor,amount,actedAs,payWith},eventId){
     return obligationTransaction(d,()=>{
         const view=dueObligation(d.get('state'),claim);
         if(!view)throw preconditionFailure('金融债权不存在');
         adoptLegacyObligation(d,e,claim);
         return settleObligation(d,e,{id:claim,payer:payer??view.row.debtor,actor:actor??payer??view.row.debtor,
-            amount:amount??view.owed,...(actedAs?{actedAs}:{})},eventId);
+            amount:amount??view.owed,...(actedAs?{actedAs}:{}),...(payWith?{payWith}:{})},eventId);
     });
 }
 export function financeEvent(d,e,{id,actor,target,location,minute,value=0,verb='trade',tags=[]}){

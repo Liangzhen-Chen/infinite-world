@@ -78,7 +78,7 @@ import {adjustStanding,standing} from './standing.mjs';// world-event subscriber
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
-import {REFERENCE,paymentPlan,payInKind,contractTerms,resourceName}from'./tender.mjs';
+import {REFERENCE,paymentPlan,payInKind,contractTerms,contractFreeze,repaymentPlan,resourceName}from'./tender.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
@@ -615,7 +615,7 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) reject('E-ACTION-PRECONDITION','交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
-        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins},id):repayDebt(d,this,{buyer,seller,debt:args.debt,payCurrency:args.payCurrency},id);
+        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins,payCurrency:args.payCurrency},id):repayDebt(d,this,{buyer,seller,debt:args.debt,payCurrency:args.payCurrency},id);
         // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
         const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
         if(args.service==='住宿'&&!place)reject('E-ACTION-PRECONDITION','这个人没有登记住宿服务');
@@ -629,16 +629,22 @@ export class WorldEngine {
             const quoteResource=primitiveActionRuntime()?.registry(this).actions.find(a=>a.call?.tool==='world_trade'&&a.call.fixed?.service===args.service)?.signature?.quoteResource;
             const agreed=quoteResource?agreedTradeQuote(d.get('state'),{buyer,seller,item:quoteResource,quantity:days}):null;
             const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
-            if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
-            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
+            // S5-F2: where the legal tender is not coin_river the room fee freezes as that resource in whole units (same contractTerms path as a credit sale); another currency converts at payment time.
+            const freeze=contractFreeze(d,this,{location:playerLocation,coppers:{cost}}),fee=freeze?{resource:freeze.resource,amount:freeze.amounts.cost}:null;
+            if(fee&&(args.payment??'cash')==='cash'){const pay=repaymentPlan(d,this,{resource:fee.resource,quantity:fee.amount,payWith:args.payCurrency});if((pay.resource===REFERENCE?this.actor(d,buyer).coins:this.quantity(d,buyer,pay.item))<pay.amount)reject('E-ACTION-PRECONDITION',`房钱不足：需要${pay.amount}${pay.resource===REFERENCE?'铜':resourceName(this,pay.resource)}（房钱按${freeze.resourceName}计，可用 payCurrency 改用别的币）`);}
+            else if(!fee&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
+            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`,...(fee?{terms:fee,payCurrency:args.payCurrency}:{})},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             assertLodgingCapacity(this,d.document,place.id,starts,starts+days*1440);
             const bed=selectLodgingBed(this,d.document,place.id,starts,starts+days*1440);
             const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
             holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,...(bed?{bed}:{}),
-                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`},'engine');
+                starts,expires:starts+days*1440,paid:payment.debt?0:(fee?fee.amount:cost),...(fee?{resource:fee.resource,resourceName:freeze.resourceName,cost:fee.amount,referenceCopper:cost}:{}),...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',
+                content:payment.debt?`${host}同意赊账${fee?fee.amount+freeze.resourceName:cost+'铜'}，允许旅人住${days}天。`:`${host}收到${fee?fee.amount+freeze.resourceName:cost+'铜'}，允许旅人住${days}天。`},'engine');
             consumeAgreedQuote(d,agreed,id);
-            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
+            // The notice names what actually changed hands (paid in another currency: that currency), not a copper figure the bill was never in.
+            const shown=payment.paidWith?`${payment.paidWith.amount}${payment.paidWith.name??'铜'}`:fee?`${fee.amount}${freeze.resourceName}`:`${cost}铜`;
+            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${shown}`);return {contract,cost:fee?fee.amount:cost,days,...(fee?{resource:fee.resource,resourceName:freeze.resourceName,referenceCopper:cost}:{}),...payment};
         }
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');

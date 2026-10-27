@@ -20,6 +20,7 @@ import {npcAgeAt} from './npc-state.mjs';
 import {transferItems} from './items.mjs';
 import {currencyRow} from './currency.mjs';
 import {repaymentPlan,payInKind} from './tender.mjs';
+import {releaseGoods} from './goods-escrow.mjs';
 import {pledged} from './stock.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
@@ -313,7 +314,18 @@ export function performObligation(d,e,{id,actor},eventId){
 // another resource hands over ceil(quantity x value(claim) / value(payment)) at today's rate; the claim never changes.
 function settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource}){
     const id=row.id,view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount'),creditor=row.creditor;
-    if(args.judicial||args.fundingContract||args.escrowContract||args.automatic||row.terms?.accrual||row.terms?.requiresInstrument)throw Error('Resource claims are settled by direct payment only');
+    if(args.judicial||args.fundingContract||args.automatic||row.terms?.accrual||row.terms?.requiresInstrument)throw Error('Resource claims are settled by direct payment only');
+    if(args.escrowContract){
+        // S5-F2: a deposit held in the same resource pays a rent debt in that resource, exact units, no conversion and no presence needed (as the coin escrow route).
+        const c=s.records?.[args.escrowContract];
+        if(c?.category!=='contract'||![id,row.legacyRecord].includes(c.debt)||c.resource!==claimResource||(c.parties?.[0]??c.owner)!==payer||payer!==row.debtor||!amount||amount>(c.escrow??0)||amount>view.owed)throw Error('Escrow is not pledged to this debt');
+        releaseGoods(d,e,{contract:args.escrowContract,to:creditor,resource:claimResource,amount,writer:W,eventId});
+        holdingSet(d,e,['state','records',args.escrowContract],{...c,escrow:c.escrow-amount},W);
+        const remaining=view.owed-amount;
+        write(d,e,{...row,paid:(row.paid??0)+amount,...(row.remaining!==undefined?{remaining}:{}),status:remaining?'pending':'settled',...(remaining?{}:{settledAt:s.minute}),
+            events:[...row.events??[],{eventId,minute:s.minute,payer,actor,transferred:amount,paidWith:{resource:claimResource,amount,escrow:args.escrowContract}}]});
+        return {id,transferred:amount,remaining,evidence:eventId,payment:{payer,actor,debtor:row.debtor,creditor,location:c.location??settlementLocation(e,s,creditor),paidWith:{resource:claimResource,amount}}};
+    }
     assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment',authorize);
     if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
     if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');
@@ -333,7 +345,7 @@ export function settleObligation(d,e,args,eventId,{authorize=null}={}){
     return receipt(d,e,id,eventId,'obligation_settled',args,()=>{
         const row=requireRow(d,id),s=read(d,'state'),payer=args.payer??row.debtor,actor=args.actor??payer;
         const claimResource=row.resource?resourceKey(row.resource):'coin_river';
-        if(claimResource!=='coin_river'&&!currencyRow(e,claimResource))throw Error('Non-monetary claim requires its performance adapter');
+        if(claimResource!=='coin_river'&&!currencyRow(e,claimResource)&&!e.byId.get(claimResource))throw Error('Non-monetary claim requires its performance adapter');
         if(claimResource!=='coin_river'||args.payWith&&args.payWith!=='coin_river')return settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource});
         const view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount');
         if([args.judicial,args.fundingContract,args.escrowContract,args.automatic].filter(Boolean).length>1)throw Error('Conflicting payment authority');

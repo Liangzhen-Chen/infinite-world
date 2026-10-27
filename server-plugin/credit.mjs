@@ -29,6 +29,9 @@ import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinan
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
+import {claimCopper} from './tender.mjs';
+import {claimUnit} from './claim-unit.mjs';
+import {holdGoods} from './goods-escrow.mjs';
 import {interestAmount} from './obligation-calendar.mjs';
 import {valuation} from './valuation.mjs';
 
@@ -142,32 +145,42 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue,b
 export function loanSuccessionTerms(d,engine){
     return {onDebtorGone:'assume_by_heirs'};
 }
-export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource}){
+// S5-F2: `frozen` = {resource,resourceName,referenceCopper,escrowContract} makes the principal that many units of a tender-unit
+// resource, handed over by the lender in kind into the contract's goods escrow; rate/limit are judged on the reference bill and interest
+// is whole units of the same resource.
+export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource,frozen=null}){
     principal=int(principal,1,1e7,'借款本金');
     const collateralValue=collateral?valueOf(d,engine,collateral.item,collateral.quantity):0;
-    const {rate,interest,per,calendar}=loanTerms(d,engine,{lender,bank,principal,days,collateralValue,borrower:debtor});
+    const quoted=loanTerms(d,engine,{lender,bank,principal:frozen?frozen.referenceCopper:principal,days,collateralValue,borrower:debtor});
+    const {rate,per,calendar}=quoted,interest=frozen?interestAmount({principal,rate,per,calendar,from:d.get('state','minute'),to:d.get('state','minute')+days*1440}):quoted.interest;
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('借据编号已存在');
     const now=d.get('state','minute'),pledgeKey=collateral?`pledge:${id}`:null;
     if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity,debtor);
     if(!toPlayer&&!escrowTo)throw preconditionFailure('借款本金须有去处');
+    if(frozen){
+        if(bank||toPlayer)throw preconditionFailure('按法定单位冻结的借款只用于合同托管，且由出借人本人付出');
+        holdGoods(d,engine,{contract:frozen.escrowContract,payer:lender,resource:frozen.resource,amount:principal,writer:'credit',eventId});
+    }else{
     moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?partyAccount(engine,d.get('state'),debtor):escrowTo,amount:principal,writer:'credit',eventId});
     if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');}
     else d.set([...engine.actorPath(lender),'coins'],engine.actor(d,lender).coins-principal);
-    if(toPlayer)mirrorPartyCoins(d,engine,debtor,principal,eventId,'credit');
+    }
+    if(toPlayer&&!frozen)mirrorPartyCoins(d,engine,debtor,principal,eventId,'credit');
     // New loans explicitly continue their signed schedule through the estate.
     // Old records without this clause retain the package's accelerate route.
     const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
     const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
         terms:{...succession,rateTerms:{per,calendar},...(consentSource?{consent:consentSource}:{})}};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
-        amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms)};
+        amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms),
+        ...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName,referenceCopper:frozen.referenceCopper}:{})};
     holdingSet(d,engine,rec(id),row,'credit');
     openObligation(d,engine,{...row,id:`finance:${id}`,legacyRecord:id,actor,...(actedAs?{actedAs}:{})},`${eventId}:claim`);
-    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,per,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{})};
+    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,per,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{}),...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName}:{})};
 }
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
 // Repayment through the ordinary trade repay call; the creditor or the bank's keeper must be present.
-export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
+export function repayCredit(d,engine,{seller,debt:id,coins:partial,payCurrency},eventId){
     const row=d.get(...rec(id));
     if(!isCreditDebt(row)||row.debtor!=='player')throw preconditionFailure('需要 debt 指定本人的真实借据');
     if(row.status==='已还清')throw preconditionFailure('这笔欠款已经还清，不重复付款');
@@ -175,18 +188,20 @@ export function repayCredit(d,engine,{seller,debt:id,coins:partial},eventId){
     if(bank?!(bank.keepers.includes(seller)&&d.get('state','location')===bank.location):row.creditor!==seller)throw Error(bank?`须到${bank.name}向登记柜员还款`:'还款对象不是债主');
     counterpart(d,engine,seller,{consent:true});
     const amount=partial===undefined?row.amount-row.paid:int(partial,1,row.amount-row.paid,'还款金额'),coins=d.get('state','player','coins');
-    if(coins<amount)throw preconditionFailure(`还款${amount}铜，现钱不足`);
+    if(!row.resource&&coins<amount)throw preconditionFailure(`还款${amount}铜，现钱不足`);
     const priorPledge=row.pledgeRecord&&d.get(...rec(row.pledgeRecord));
-    settleFinancialClaim(d,engine,{claim:id,payer:'player',amount},eventId);
+    settleFinancialClaim(d,engine,{claim:id,payer:'player',amount,...(payCurrency?{payWith:payCurrency}:{})},eventId);
     const now=d.get('state','minute');
     const paid=row.paid+amount,status=paid===row.amount?'已还清':row.status;
     holdingSet(d,engine,rec(id),{...d.get(...rec(id)),kind:row.kind,paid,status,...(status==='已还清'?{paidAt:now}:{})},'credit');
     const returned=status==='已还清'&&row.pledgeRecord?(releasePledge(d,engine,row.pledgeRecord,'player')??(priorPledge?.status==='质押中'?d.get(...rec(row.pledgeRecord)):null)):null;
     if(status==='已还清'&&row.defaulted?.case&&!d.get(...rec(row.defaulted.case),'compensationPaid'))settleCreditCase(d,engine,row.defaulted.case,eventId);
-    if(status!=='已还清'&&row.defaulted?.case){const claim=d.get(...rec(row.defaulted.case));if(claim)holdingSet(d,engine,rec(row.defaulted.case),{...claim,value:row.amount-paid,...(claim.judgment?{judgment:{...claim.judgment,compensation:row.amount-paid}}:{})},'credit');}
-    engine.advance(d,5,eventId);d.say(`偿还${bank?.name??nameOf(engine,row.creditor)}欠款${amount}铜，${status}${returned?`，取回抵押${nameOf(engine,returned.item)}×${returned.quantity}`:''}`);
+    if(status!=='已还清'&&row.defaulted?.case){const claim=d.get(...rec(row.defaulted.case));if(claim)holdingSet(d,engine,rec(row.defaulted.case),{...claim,value:copperLeft(d,engine,row,row.amount-paid),...(claim.judgment?{judgment:{...claim.judgment,compensation:copperLeft(d,engine,row,row.amount-paid)}}:{})},'credit');}
+    engine.advance(d,5,eventId);d.say(`偿还${bank?.name??nameOf(engine,row.creditor)}欠款${amount}${claimUnit(row)}，${status}${returned?`，取回抵押${nameOf(engine,returned.item)}×${returned.quantity}`:''}`);
     return {debt:id,repaid:amount,status,...(returned?{pledgeReturned:returned.item}:{})};
 }
+// A claim frozen in a tender-unit resource is judged in court at today's reference-copper value (derived, never stored back).
+const copperLeft=(d,engine,row,units)=>row.resource&&row.resource!=='coin_river'?claimCopper(d,engine,{resource:row.resource,amount:units,paid:0}):units;
 function defaultDebt(d,engine,id,row){
     const allowance=currentGrace(engine,d.get('state'),row,d.get('state','minute'),{fallbackMinutes:rules(engine).loan.defaultGraceMinutes??0});
     const minute=(row.installmentOverdueAt??row.deadline)+allowance.minutes,bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
@@ -194,7 +209,7 @@ function defaultDebt(d,engine,id,row){
     const forfeited=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,row.creditor,bank):null;
     if(forfeited){const covered=Math.min(forfeited.value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
     const remaining=next.amount-next.paid;
-    const legalCase=remaining>0?registerCreditDefault(d,engine,{debt:id,row:next,value:remaining,minute}):null;
+    const legalCase=remaining>0?registerCreditDefault(d,engine,{debt:id,row:next,value:copperLeft(d,engine,next,remaining),minute}):null;
     next.defaulted={minute,remaining,grace:allowance,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
     holdingSet(d,engine,rec(id),next,'credit');
     d.say(`欠${bank?.name??nameOf(engine,row.creditor)}的${row.kind==='loan'?'借款':'合伙款'}过宽限仍未还，按契约违约${forfeited?`，抵押${nameOf(engine,forfeited.item)}已归债主`:''}${legalCase?`，已在当地立案（${legalCase}）`:''}`);
