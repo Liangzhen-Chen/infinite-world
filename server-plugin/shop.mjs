@@ -22,6 +22,7 @@ import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
 import {marketQuote,recordMarketDeal,goodsClass,registerShopShelves} from './market.mjs';
 import {currencyRow,currencyTradePrice} from './currency.mjs';
+import {tenderQuote} from './tender.mjs';
 export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
 
 const agreedKey=id=>`agreed_quote:${id}`;
@@ -372,7 +373,13 @@ export function advanceShops(d,engine,before,after){
 }
 
 // All ordinary quotes read current supply; only signed terms stay frozen.
-export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base,instances=null}){
+// S5-F: the quote also names the bill in the place's legal-tender unit (derived, never stored).
+export function tradeQuote(d,engine,args){
+    const quote=baseTradeQuote(d,engine,args);
+    if(currencyRow(engine,args.item))return quote;
+    return {...quote,tender:tenderQuote(d,engine,{location:args.location,copper:quote.totalCoins,side:args.buyer==='player'?'buy':'sell'})};
+}
+function baseTradeQuote(d,engine,{buyer,seller,item,quantity,location,base,instances=null}){
     const agreed=agreedTradeQuote(d.get('state'),{buyer,seller,item,quantity});
     if(agreed){
         const state=d.get('state'),npc=buyer==='player'?seller:buyer;
@@ -402,8 +409,8 @@ export function tradeQuote(d,engine,{buyer,seller,item,quantity,location,base,in
     }
     return {...quote,shop:shop?.id??null,settlement:place,keeperRegard,settlementRegard};
 }
-export function recordDeal(d,quote,price,quantity,eventId){
+export function recordDeal(d,quote,price,quantity,eventId,settled=null){
     if(quote.agreed)consumeAgreedQuote(d,quote,eventId);
-    recordMarketDeal(d,quote,price,quantity,eventId);
+    recordMarketDeal(d,quote,price,quantity,eventId,settled);
 }
 import {medicinePriceFactor} from './medicine-state.mjs';

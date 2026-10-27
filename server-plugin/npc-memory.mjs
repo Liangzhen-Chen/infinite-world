@@ -1,3 +1,4 @@
+import {claimUnit} from './claim-unit.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {settlementLocation} from './obligation-presence.mjs';
 import {parseAccount} from './ledger.mjs';
@@ -93,7 +94,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
             // actual clerk also knows what they handled, but bystanders do not.
             if(seller&&![claim.debtor,claim.creditor].includes(seller))add(paid?'trade':`obligation_${claim.id}`,
                 paid?`${name(buyer)}经${name(seller)}实际偿还${paid.transferred}铜`:`${name(seller)}经手${name(claim.debtor)}的借约登记`,[buyer,seller],{observers:[],private:true,salience:3});
-        }else add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
+        }else add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.paidWith?`${detail.paidWith.amount}${detail.paidWith.name??'铜'}`:detail.resourceName?`${detail.amount??detail.cost}${detail.resourceName}`:`${detail.cost}铜`}${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
     }else if(verb==='learn'){
         const teacher=detail.teacher??(detail.source?.type==='teacher'?detail.source.id:null);
         add('learn',`${name('player')}${teacher?`向${name(teacher)}学习`:'研读'}${name(detail.entity)}，花费${detail.minutes}分钟、${detail.cost}铜，${detail.success?'学会了':'尚未学会'}`,['player',teacher],{salience:3});
@@ -139,7 +140,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     // overdue; the memory is keyed by the record so event splits agree.
     for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&(before.records?.[id]?.status??(debt.status==='逾期'?'待偿还':debt.status))!==debt.status){
         if(debt.obligation&&debt.status==='已还清'&&after.obligations?.[debt.obligation]?.events?.some(e=>e.transferred>0))continue;
-        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
+        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}${claimUnit(debt)}现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
     }
     // The primary social fact of a witnessed, weighty event carries its rumor id.
     const rumorId=eventRumorId(engine,after,event);
