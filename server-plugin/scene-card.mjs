@@ -114,7 +114,7 @@ export function sceneCard(engine,document,query='',index=null){
     if(hiring.length)parts.push('【招工告示】',...hiring.map(o=>`${o.id}｜${o.content}`));
     if(obligations.length||quests.length)parts.push('【进行中】',...[...obligations,...quests].slice(0,8).map(o=>`${o.sourceLabel?`〔${o.sourceLabel}〕`:''}${text(o.content??o.name,180)}｜${o.status??''}${o.deadline?`｜期限${engine.calendar(o.deadline).text}`:''}`));
     const contracts=Object.entries(s.records??{}).filter(([,row])=>row.category==='contract'&&row.room&&row.parties?.includes('player'));
-    const debts=obligationRows(s).filter(row=>row.debtor==='player'&&(!row.resource||['coin_river','core:coin_river'].includes(row.resource))&&obligationView(s,row).owed>0);
+    const debts=obligationRows(s).filter(row=>row.debtor==='player'&&(!row.resource||['coin_river','core:coin_river'].includes(row.resource)||row.category==='debt')&&obligationView(s,row).owed>0);
     if(contracts.length||debts.length)parts.push('【住宿与欠款】',...debts.slice(-6).map(row=>`${row.id}｜欠${name(row.creditor)} ${obligationView(s,row).owed}${claimUnit(row)}｜${row.status}｜${Number.isFinite(row.deadline)?`到期${engine.calendar(row.deadline).text}`:'未定期限'}`),...contracts.slice(-6).map(([,row])=>`${row.name}｜${row.status}｜期限${engine.calendar(row.expires).text}`));
     const features=environmentCatalog(engine,document).entries;
     if(features.length)parts.push(`【可见环境】${features.slice(0,3).map(row=>`${row.name??name(row.id)}（${row.id}）${row.waterMl!==undefined?`，现有水${row.waterMl}毫升`:''}`).join('；')}`);

@@ -14,6 +14,7 @@ import {exchangeRate,currencyValue} from '../server-plugin/currency.mjs';
 import {tenderQuote,turnoverByResource,turnoverReference} from '../server-plugin/tender.mjs';
 import {obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {sceneCard} from '../server-plugin/scene-card.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',keeper='npc_hw_shendu',post='bld_hw_post',shop='bld_hw_qingdeng',NOTE='coin_hw_note';
@@ -112,6 +113,8 @@ test('S5F-4 赊账合同冻结签约时的计价资源与数量；之后兑换�
  assert.ok(owed.messages.some(m=>m.includes('赊账1河湾兑付券')));
  const debt=owed.debt,frozen=structuredClone(f.document.state.records[debt]);
  assert.deepEqual([frozen.resource,frozen.amount,frozen.referenceCopper],[NOTE,1,5]);
+ // 场景卡的【住宿与欠款】也列出这笔按券计的债（显示冻结的 1 张券，不是 5 铜）。
+ assert.ok(sceneCard(f.engine,f.document).includes(`${debt}｜欠${f.engine.byId.get(host).name} 1河湾兑付券`));
  // 然后市场成交把兑换率压低：再用券买 25 个面包（又一笔成交），读公开兑换率。
  const sale=await f.trade({item:'item_bread',quantity:25,payCurrency:NOTE},'f4-shock');assert.equal(sale.paidWith.amount,3);
  // 手算：基准账成交 5(赊账)+25(券)=30 文 → 成交量 30/10=3 张券当量；活跃券（玩家 7 + 店主 3）=10 张 → 充裕度 3/10=.3 → 兑换率 10 x .3 = 3 文/张。
