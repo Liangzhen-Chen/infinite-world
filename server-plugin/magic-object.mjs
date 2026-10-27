@@ -17,6 +17,7 @@ import {resolveInteraction,applyInteraction,assertLiquidWater} from './interacti
 
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
+import {hypot} from './det-math.mjs';
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效`);return n;};
 const clone=x=>structuredClone(x),recordKey=id=>`physical_feature:${id}`;
@@ -175,7 +176,7 @@ const ignites=(d,row,state)=>resolveInteraction('fire',featureTraits(row,state,d
 function access(d,row,args,range){
  if(row.location!==d.get('state','location'))throw preconditionFailure('物件不在所在地');
  const position=d.get('state','records','local_player_position'),point=position?.location===row.location?position.point:[0,0];
- if(!Array.isArray(row.position)||!Array.isArray(point)||row.position.length!==2||point.length!==2||[...row.position,...point].some(x=>!Number.isFinite(x))||Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>range)throw preconditionFailure('未接触物件或超出实际距离');
+ if(!Array.isArray(row.position)||!Array.isArray(point)||row.position.length!==2||point.length!==2||[...row.position,...point].some(x=>!Number.isFinite(x))||hypot(point[0]-row.position[0],point[1]-row.position[1])>range)throw preconditionFailure('未接触物件或超出实际距离');
  if(row.owner==='player'||row.access==='public')return;
  if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('环境授权编号列表无效');
  const p=[args.authorization,...args.authorizations??[]].map(id=>d.get('state','records',id)).find(p=>p?.subject===row.id);
@@ -352,7 +353,7 @@ function livingHand(d,engine,args,catalog){
  if(!isLiving(engine,d,target)||!actor||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw preconditionFailure('暖掌目标不在场或已经死亡');
  if(target!=='player'){
   const facts=areaTargetFacts(d,engine,target,d.get('state','location'),localPlayerPoint(d));
-  if(!facts?.lineOfSight||Math.hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw preconditionFailure('暖掌须真实接触活体');
+  if(!facts?.lineOfSight||hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw preconditionFailure('暖掌须真实接触活体');
   assertSpellConsent(d,engine,catalog,args,target,'support_magic');
  }
  return{target,path,actor};
@@ -369,7 +370,7 @@ export function prepareHeatMagic(d,catalog,args){
   if(d.get('state','player','mp')<spec.upkeepMp)throw preconditionFailure('缺少维持封焰的魔力');
  }else{
   const end=row.fireLine?.end,state=read(d,row),s=state.thermal;
-  if(!Array.isArray(end)||end.length!==2||end.some(x=>!Number.isFinite(x))||Math.abs(Math.hypot(end[0]-row.position[0],end[1]-row.position[1])-2)>1e-6)throw preconditionFailure('火线需要登记的两米地面路径');
+  if(!Array.isArray(end)||end.length!==2||end.some(x=>!Number.isFinite(x))||Math.abs(hypot(end[0]-row.position[0],end[1]-row.position[1])-2)>1e-6)throw preconditionFailure('火线需要登记的两米地面路径');
   if(!ignites(d,row,{...state,thermal:s})||s.fuelMg<1||s.fuelMg>Math.min(spec.power,row.thermalModel.ignitionMaximumMg))throw preconditionFailure('火线需要有限、干燥且未燃的真实地面燃料');
  }
  return{target:row.id,catalog,spec,heatArgs:{...args,target:row.id}};

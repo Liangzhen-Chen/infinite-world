@@ -18,6 +18,7 @@ import {monsterStats}from'./combat.mjs';
 import {assertTrainingRitual}from'./training.mjs';
 import {speciesInHabitat}from'./wildlife-range.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {hypot} from './det-math.mjs';
 declareHoldingWriter('magic-ritual',{kinds:['permit'],locations:true});
 
 // These bounds enable authoring; they do not publish or teach spells.
@@ -32,7 +33,7 @@ export const ritualMechanisms=Object.freeze({
 const clone=x=>structuredClone(x),key=id=>`physical_feature:${id}`;
 const actorPath=id=>id==='player'?['state','player']:['state',id.startsWith('npc_')?'npcs':'creatures',id];
 const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}未登记或超出范围`);return v;};
 const awake=(d,id,a)=>a&&!isPhysicallyDead(null,d,id)&&!['濒死','昏迷'].includes(a.status)&&!a.scheduleTravel&&!a.cognitionTravel;
 function divine(engine,a){

@@ -9,6 +9,7 @@ import {reject} from './action-rejection.mjs';
 import {digest} from './storage.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
+import {ln,pow} from './det-math.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -210,7 +211,7 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
  const bag=inventoryOf(state,seller),ids=instances??bag[item]?.instances?.slice(0,count)??[];
  const units=ids.map(id=>state.itemInstances?.[id]).filter(Boolean);
  const grade=unit=>{
-  const quality=r.qualityStep**(Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)));
+  const quality=pow(r.qualityStep,Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)));
   const liquid=unit?.liquid;
   if(!liquid||!liquid.waterMl)return quality;
   const unsafe=(liquid.toxinUg??0)/liquid.waterMl*1000>r.water.toxinUgPerLitre||(liquid.pathogenRisk??0)>0;
@@ -238,7 +239,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
  const integral=(a,b)=>{
   if(b<=a)return 0;const D=supply.demand,low=D/limits[1],high=D/limits[0];let sum=0;
   const left=Math.min(b,low);if(left>a)sum+=(left-a)*limits[1];
-  const x=Math.max(a,low),y=Math.min(b,high);if(y>x)sum+=D*Math.log(y/x);
+  const x=Math.max(a,low),y=Math.min(b,high);if(y>x)sum+=D*ln(y/x);
   const right=Math.max(a,high);if(b>right)sum+=(b-right)*limits[0];return sum;
  };
  const curve=retail?count*scarcity:side==='sell'?integral(Math.max(0,supply.supply-count),supply.supply):integral(supply.supply,supply.supply+count);

@@ -34,6 +34,7 @@ import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
+import {pow} from './det-math.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
@@ -270,7 +271,7 @@ function familyDay(d,engine,minute){
 const incapable=['濒死','昏迷','患病'];
 const incapacitated=(state,id)=>isPhysicallyDead(null,state,id)||incapable.includes(state.npcs[id]?.status);
 const healthRules=engine=>rules(engine)?.health;
-const perDay=perYear=>1-(1-Math.min(1,perYear))**(1/360);
+const perDay=perYear=>1-pow(1-Math.min(1,perYear),1/360);
 function ageBand(h,age){let band=null;for(const row of h.bands)if(age>=row.fromAge)band=row;return band;}
 const humanLifespan=engine=>(engine.world.balance?.population??populationBalance).params.find(r=>r.id==='lifespan.human').value;
 const agingRates=engine=>(engine.world.balance?.attributes??attributeBalance).params.find(r=>r.id==='attr.aging').value;
@@ -289,7 +290,7 @@ function lifeAge(engine,state,id,minute){
 function annualLifeRisk(h,age){
  const band=ageBand(h,age);if(!band)return 0;
  const last=h.bands.at(-1),exposure=last.fromAge>0?Math.max(1,age/last.fromAge):1;
- return 1-(1-band.suddenDeathPerYear)**exposure;
+ return 1-pow(1-band.suddenDeathPerYear,exposure);
 }
 function ageDay(d,engine,id,minute,path){
  // These reads produce only numbers and copied attributes before writing;
@@ -499,7 +500,7 @@ function healthDay(d,engine,minute){
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
   if(minute<=illness.since)continue;
-  const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
+  const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-pow(1-fatality,DAY/(illness.endsAt-illness.since));
   if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)recordEntityDeath(d,engine,illness.patient,minute,'病故',illness);
  }
  for(const id of Object.keys(d.get('state','npcs')).sort()){

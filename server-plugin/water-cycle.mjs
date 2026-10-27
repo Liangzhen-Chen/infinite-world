@@ -3,6 +3,7 @@ import {locationHabitatTypes} from './wildlife-habitats.mjs';
 import {weatherAt} from './weather.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {derived} from './derived.mjs';
+import {hypot} from './det-math.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v),record=id=>['state','records',`water-cycle:${id}`];
 const level=(l,r)=>l.elevationMeters??(/山|岭|崖|高地/.test(l.terrain??'')?r.highland:/丘|坡/.test(l.terrain??'')?r.hill:/谷|河|滩|沼/.test(l.terrain??'')?r.lowland:r.plain);
@@ -37,7 +38,7 @@ function basinWeather(engine,seed,location,minute){
  let station=null,distance=Infinity;
  for(const region of engine.rules.weather?.regions??[])for(const id of region.locations){
   const p=engine.byId.get(id)?.coordinates;if(!p||region.indoor.includes(id))continue;
-  const delta=Math.hypot(p[0]-point[0],p[1]-point[1]);if(delta<distance){distance=delta;station=id;}
+  const delta=hypot(p[0]-point[0],p[1]-point[1]);if(delta<distance){distance=delta;station=id;}
  }
  return station?weatherAt(engine,seed,station,minute):null;
 }

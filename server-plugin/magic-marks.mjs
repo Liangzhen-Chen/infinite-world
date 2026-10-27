@@ -4,6 +4,7 @@ import {environmentFeatures}from'./environment.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {itemTraits,featureTraits}from'./traits.mjs';
 import {resolveInteraction}from'./interactions.mjs';
+import {hypot} from './det-math.mjs';
 const traitsOfMarkTarget=(d,row)=>row.held?itemTraits(row.definition,row.held):featureTraits(row.definition,row.state,d.get('state','minute'));
 export function validateMarkCatalog(catalog){
  const s=catalog.effectSpec,errors=[];
@@ -21,7 +22,7 @@ function targetOf(d,engine,target,args){
  }
  const row=environmentFeatures(engine).find(r=>r.id===target&&r.location===d.get('state','location'));if(!row)throw preconditionFailure('刻记目标必须是所在地真实非活体');
  const pos=d.get('state','records','local_player_position'),point=pos?.location===row.location?pos.point:[0,0];
- if(Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>(args.rangeMeters??3))throw preconditionFailure('刻记目标超过实际射程');
+ if(hypot(point[0]-row.position[0],point[1]-row.position[1])>(args.rangeMeters??3))throw preconditionFailure('刻记目标超过实际射程');
  if(row.owner!=='player'&&row.access!=='public'){
   const a=d.get('state','records',args.authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw preconditionFailure('刻记目标需要所有者授权');
  }

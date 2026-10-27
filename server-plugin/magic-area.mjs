@@ -6,6 +6,7 @@ import {environmentFeatures,localSightClear}from'./environment.mjs';
 import {validateEffectSpec}from'./magic-primitives.mjs';
 import {validateMagicCatalog,prepareMagic,applyMagic}from'./magic.mjs';
 import {assertSpellConsent,recordSpellViolation}from'./magic-consent.mjs';
+import {hypot} from './det-math.mjs';
 const pointValid=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 const living=(d,target)=>target==='player'?d.get('state','player'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target);
 const locationOf=(d,target)=>target==='player'?d.get('state','location'):living(d,target)?.location;
@@ -16,7 +17,7 @@ export function areaTargetFacts(d,engine,target,location,center){
  if(transit?.subjects?.includes(target)&&d.get('state','minute')<transit.arrival)return null;
  if(target==='player'){
   const row=d.get('state','records','local_player_position'),point=row?.location===location?row.point:[0,0];
-  return pointValid(point)?{point,lineOfSight:(!center||Math.hypot(point[0]-center[0],point[1]-center[1])===0)&&localSightClear(d,engine,location,center??point,point)}:null;
+  return pointValid(point)?{point,lineOfSight:(!center||hypot(point[0]-center[0],point[1]-center[1])===0)&&localSightClear(d,engine,location,center??point,point)}:null;
  }
  const row=d.get('state','records',`local_actor_position:${target}`);
  if(row?.category!=='local_position'||row.subject!==target||row.location!==location||typeof row.source!=='string'||!row.source||!pointValid(row.point))return null;
@@ -62,9 +63,9 @@ export function prepareAreaMagic(d,catalog,args,context={}){
   if(!feature||!pointValid(feature.position))throw preconditionFailure('区域中心须为来源当前位置或已登记环境对象');
   center=feature.position;
   // Existing physical resolver knows clear sight only at contact.
-  if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw preconditionFailure('缺少区域中心无遮挡视线事实');
+  if(hypot(center[0]-origin.point[0],center[1]-origin.point[1])!==0)throw preconditionFailure('缺少区域中心无遮挡视线事实');
  }
- if(Math.hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw preconditionFailure('区域中心超过实际施法射程');
+ if(hypot(center[0]-origin.point[0],center[1]-origin.point[1])>catalog.rangeMeters)throw preconditionFailure('区域中心超过实际施法射程');
  const authorizations=[...new Set([args.authorization,...args.authorizations??[]].filter(Boolean))];
  if(authorizations.length>8||authorizations.some(k=>typeof k!=='string'))throw preconditionFailure('区域授权编号无效');
  return{spec:catalog.effectSpec,catalog,target,location,center:[...center],owner:source,authorizations,permit:args.permit,completionArgs:{...args},context};
@@ -95,7 +96,7 @@ function settleOne(d,engine,id,area,pulse=false){
  const members={...area.members},outcomes=[],targets=[...new Set(['player',...Object.keys(d.get('state','npcs')??{}),...Object.keys(d.get('state','creatures')??{}),...Object.keys(members)])].sort();
  for(const target of targets){
   const member=members[target]??{inside:false,lastTrigger:-1},f=facts(d,engine,target,area.location,area.center);
-  const distance=f?Math.hypot(f.point[0]-area.center[0],f.point[1]-area.center[1]):Infinity;
+  const distance=f?hypot(f.point[0]-area.center[0],f.point[1]-area.center[1]):Infinity;
   if(now>=area.expires||distance>area.radiusMeters||f?.lineOfSight!==true){if(member.inside)members[target]=leave(d,id,target,member);continue;}
   let prepared;
   try{prepared=prepareMagic.call(engine,d,childCatalog(area),targetArgs(d,engine,area,target),{location:area.location,source:area.owner,targetFacts:{distanceMeters:distance,lineOfSight:true}});}
@@ -132,7 +133,7 @@ export function settleMagicAreas(d,engine){
  for(const[id,area]of Object.entries(d.get('state','effects')??{}))if(area.kind==='area'&&area.catalog?.effectSpec?.trigger==='presence'){
   const members={...area.members};let changed=false;
   for(const[target,member]of Object.entries(members))if(member.inside){
-   const f=facts(d,engine,target,area.location,area.center);let allowed=now<area.expires&&f?.lineOfSight===true&&Math.hypot(f.point[0]-area.center[0],f.point[1]-area.center[1])<=area.radiusMeters;
+   const f=facts(d,engine,target,area.location,area.center);let allowed=now<area.expires&&f?.lineOfSight===true&&hypot(f.point[0]-area.center[0],f.point[1]-area.center[1])<=area.radiusMeters;
    if(allowed)try{targetArgs(d,engine,area,target);}catch{allowed=false;}
    if(!allowed){members[target]=leave(d,id,target,member);changed=true;}
   }

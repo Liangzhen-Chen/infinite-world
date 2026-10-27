@@ -7,6 +7,7 @@ import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {placeLayout,zoneOf,destinationZone,localRoute,edgeOpen} from './place-layout.mjs';
 import {isDomainRejection} from './action-rejection.mjs';
 import {perceptionPosition,perceives} from './perception.mjs';
+import {hypot} from './det-math.mjs';
 
 export function moveLocally(d,engine,{entity,destination,mode},eventId,{environmentFeatures,localPlayerPoint,areaTargetFacts,recordLocalContact,assertMindAwake,assertMindSpacePath,assertWaterEarthMovement,waterEarthWalkMinutes,assertLightMovement,assertFirePath,preparePetTravel,movePets,scheduleAt}){
  const partition=d.get('state','npcs',entity)?'npcs':'creatures',body=entity==='player'?d.get('state','player'):d.get('state',partition,entity),feature=environmentFeatures(engine,d.document).find(row=>row.id===destination);
@@ -37,7 +38,7 @@ export function moveLocally(d,engine,{entity,destination,mode},eventId,{environm
  if(!zone)checkPath(route?finalOrigin:origin.point,target.point);
  const view={get:(...p)=>p.length===2&&p[0]==='state'&&p[1]==='location'?location:d.get(...p)};
  const approachMetres=zone||knownZoneMove&&!priorPosition.zoneOnly&&priorPosition.anchor===destination?0:layout.approachMetres;
- const metres=route?(route.metres+approachMetres):Math.hypot(target.point[0]-origin.point[0],target.point[1]-origin.point[1]),speed=engine.rules.environment?.walkingMetresPerMinute*(mode==='horse'?engine.rules.travel.horseMultiplier:1);
+ const metres=route?(route.metres+approachMetres):hypot(target.point[0]-origin.point[0],target.point[1]-origin.point[1]),speed=engine.rules.environment?.walkingMetresPerMinute*(mode==='horse'?engine.rules.travel.horseMultiplier:1);
  if(!Number.isFinite(speed)||speed<=0)reject('E-MOVE-SPEED','Local walking speed is missing');
  const segments=route?.segments??[],segmentMud=segments.map(s=>waterEarthWalkMinutes(view,engine,zonePoint(s.from)??origin.point,zonePoint(s.to)??origin.point));
  const mudMinutes=segmentMud.reduce((n,m)=>n+m,0)+(zone?0:waterEarthWalkMinutes(view,engine,route?finalOrigin:origin.point,target.point));

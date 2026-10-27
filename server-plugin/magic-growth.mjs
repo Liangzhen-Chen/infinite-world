@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
+import {hypot} from './det-math.mjs';
 
 const unit=1440000,clone=x=>structuredClone(x);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效或缺失`);return n;};
@@ -98,7 +99,7 @@ export function prepareGrowthMagic(d,catalog,args){
  if(!limit||catalog.effectSpec.power>limit.power||catalog.duration>limit.duration)throw preconditionFailure('超过本阶段生长界限');
  const {p,f,key}=binding(this,args.target),r=d.get('state','records',key),now=d.get('state','minute');
  if(r?.mode!=='managed'||r.field.id!==p.fieldId)throw preconditionFailure('旧账或缺失农事状态不能补发生长');
- if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||Math.hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw preconditionFailure('生长目标不在实际距离或视线内');
+ if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw preconditionFailure('生长目标不在实际距离或视线内');
  permission(d,p,f,args,now);const rows=cohorts(r,f),s=readResource(d,f);
  if(s.waterMl<1||s.nutrientMg<1)throw preconditionFailure('缺少实际水或营养资源');
  const leases=r.field.growthLeases??[];

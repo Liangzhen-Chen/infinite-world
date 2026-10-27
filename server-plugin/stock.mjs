@@ -24,6 +24,7 @@ import {creatureTraits} from './traits.mjs';
 import {isResourceKey,accountKey,parseAccount,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking,tallyDrift} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
+import {exp} from './det-math.mjs';
 
 export const LOT_PURPOSES=Object.freeze(new Set(['granary','seed','cargo','crop']));
 registerLotPolicy(({purpose})=>LOT_PURPOSES.has(purpose));
@@ -65,7 +66,7 @@ export const stockSink=(engine,kind,item,purpose)=>accountKey(`sink:${kind}`,res
 // continuous quantity before starting the next segment. Zero cannot regrow.
 export function logisticStock(row,channel,{reserve,capacity,rate,from,to}){
     if(![reserve,capacity,rate,from,to].every(Number.isFinite)||reserve<0||capacity<0||rate<0||to<from)throw Error('无效的再生参数');
-    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:a.capacity/(1+(a.capacity/a.reserve-1)*Math.exp(-a.rate*(t-a.minute)/1440));
+    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:a.capacity/(1+(a.capacity/a.reserve-1)*exp(-a.rate*(t-a.minute)/1440));
     let a=row.growthAnchors?.[channel]??{minute:from,reserve,capacity,rate};
     const current=at(a,from),visible=Math.floor(current);
     if(visible!==reserve||a.capacity!==capacity||a.rate!==rate){

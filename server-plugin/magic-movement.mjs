@@ -11,9 +11,10 @@ import {enforceLegalRestriction}from'./law.mjs';
 import {digest}from'./storage.mjs';
 import {assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {assertMindSpacePath,assertMindAwake}from'./magic-mind-space.mjs';
+import {hypot} from './det-math.mjs';
 export const movementKinds=Object.freeze(['anchor_sense','blink','teleport']);
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const knownKey=id=>`known_anchor:${id}`;
 export function validateMovementCatalog(catalog){
  const s=catalog.effectSpec,errors=[];

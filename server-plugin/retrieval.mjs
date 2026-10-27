@@ -3,6 +3,7 @@ import * as OpenCC from 'opencc-js';
 import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystemMemoryText} from './retrieval-lexicon.mjs';
 import {publicSettlementEntries} from './settlement-profile.mjs';
 import {siteKnowledge} from './sites.mjs';
+import {ln,exp} from './det-math.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
 // Pure text results cannot become stale when an entity moves or changes name.
 // The bound covers the 35k-resident fixture without retaining unlimited chats.
@@ -92,7 +93,7 @@ export const engineIndexOptions = engine => ({ entities: engine.entities, resolv
 // Shared by memory retrieval and action routing; callers choose normalization.
 export function bm25TermScore(tf,df,count,length,average){
     if(!tf)return 0;
-    return Math.log(1+(count-df+0.5)/(df+0.5))*tf*2.2/(tf+1.2*(0.25+0.75*length/Math.max(1,average)));
+    return ln(1+(count-df+0.5)/(df+0.5))*tf*2.2/(tf+1.2*(0.25+0.75*length/Math.max(1,average)));
 }
 export class MemoryIndex {
     constructor({ entities = [], dictionary = [], resolver = null } = {}) {
@@ -187,7 +188,7 @@ export class MemoryIndex {
                 relevance += bm25TermScore(tf,df,n,doc.length,average);
             }
             if (doc.entities?.some(id => entities.has(id))) relevance += 2;
-            const decay = doc.guardUntil>now?1:0.5 + 0.5 * Math.exp(-Math.max(0, now - doc.minute) / (1440 * 30));
+            const decay = doc.guardUntil>now?1:0.5 + 0.5 * exp(-Math.max(0, now - doc.minute) / (1440 * 30));
             const score = relevance * (0.5 + doc.salience / 5) * decay;
             if (score > 0) rows.push({ id, source: doc.source, eventId: doc.eventId, minute: doc.minute, text: doc.text, score });
         }
