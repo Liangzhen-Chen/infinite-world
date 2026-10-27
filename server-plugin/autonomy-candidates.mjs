@@ -11,13 +11,21 @@ function applies(c,v){
  if(typeof p!=='object')throw Error('自治候选需使用主观字段条件');
  return subjectiveFact(v,p.fact)?.value===p.equals;
 }
-export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[]}={}){
+// L2 playpacks register what a person may do on his own that no data list can name in advance: candidates derived from the
+// world as it stands, and the execution of the action kinds they use. The engine never names a pack.
+const providers=new Map(),kinds=new Map();
+export function registerAutonomyProvider(id,provider){providers.set(id,provider);}
+export function registerAutonomyKind(kind,spec){kinds.set(kind,spec);}
+export const autonomyKind=kind=>kinds.get(kind)??null;
+export const autonomyRelevant=(engine,state,id,presence)=>[...providers.values()].some(p=>p.relevant(engine,state,id,presence));
+export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[],document=null}={}){
  const coefficients=consumerCoefficients(view,'autonomy'),decisionCoefficients=consumerCoefficients(view,'decision');
- const candidates=[...(engine.world.autonomy?.candidates??[]),...(engine.rules.npcAutonomy?.candidates??[]),...scheduled,...fallback];
+ const derivedRows=document?[...providers.values()].flatMap(p=>p.candidates(engine,view,document)):[];
+ const candidates=[...(engine.world.autonomy?.candidates??[]),...(engine.rules.npcAutonomy?.candidates??[]),...derivedRows,...scheduled,...fallback];
  const needs=Object.values(view.self.goals??{}).flat().filter(g=>(g.progress??0)<100).sort((a,b)=>(b.urgency??0)-(a.urgency??0));
  const need=needs[0]?.need;
  return candidates.filter(c=>(!c.npc||c.npc===view.observer)&&(!need||!c.need||c.need===need)&&applies(c,view)).map(c=>{
-  const decision=npcDecision(view,{kind:c.kind??c.action,from:view.observer,cost:c.cost,needSatisfaction:c.needSatisfaction??100,urgency:c.urgency??needs[0]?.urgency??0,tags:c.tags});
+  const decision=npcDecision(view,{kind:c.kind??c.action,from:c.from??view.observer,cost:c.cost,needSatisfaction:c.needSatisfaction??100,urgency:c.urgency??needs[0]?.urgency??0,tags:c.tags});
   return {...c,decision,score:Number(evalValue(c.utility??0,view))*coefficients.utilityWeight-Number(evalValue(c.risk??0,view))*(view.self.traits.riskAversion??1)*decisionCoefficients.riskAversion*coefficients.riskWeight};
  }).filter(c=>c.decision.outcome==='agree').sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
 }

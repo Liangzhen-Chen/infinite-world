@@ -8321,6 +8321,8 @@
     },
     "coins": 200,
     "inventory": {
+      "item_silkworm_eggs": 4,
+      "item_mulberry_leaf": 16,
       "item_wool": 4,
       "item_tanned_leather": 2,
       "item_clay": 4,

@@ -26,6 +26,7 @@ import {isEffective} from './lifecycle-state.mjs';
 import {facilityView,facilityRepairMaterials,facilityRuntime} from './facility-state.mjs';
 import {recordsWhere} from './storage.mjs';
 import {consent} from './action-consent.mjs';
+import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 
 // A hosted event is distinct from a temple office or a completed rite. It
 // confers only the declared host role for this one scheduled ceremony.
@@ -378,3 +379,38 @@ export function advanceFaith(d,e,{beforeState,id,before=beforeState?.minute??d.g
    participants:[ill.patient],location:d.get('state','npcs',ill.patient,'location'),tags:['faith','disaster','illness'],summary:'患病使当事人重新思量祈愿',sourceEvent:id});
  }
 }
+
+// ---- 来访者供奉（S5-04 香火）----
+// A temple's incense money is what its real visitors decide to give: a devout adult standing in the temple at the day's
+// autonomy hour weighs the customary coin (ordinaryRite) against his own purse and faith through npcDecision, then pays it
+// into the temple's account. Nothing is credited to a temple for a day without a visitor. One offering per person per day.
+const offeringKey=(who,day)=>`faith_offering:${who}:${day}`;
+// Only a building is a place one visits to worship: a church whose seat is a whole settlement has no hall to stand in.
+const visited=(e,state,who,location)=>temples(e).find(t=>t.seat===location&&/^(bld|site)_/.test(t.seat)&&t.teacher!==who&&faithOf(e,state,who).value?.temple===t.id);
+const customaryOffering=(e,document,who,t)=>Math.floor(derived(e,document,'faith:offering',who,{base:e.rules.faith.ordinaryRite.coins,target:t.id}));
+registerAutonomyProvider('faith_offering',{
+ relevant:(e,state,id,presence)=>Boolean(e.rules.faith?.ordinaryRite)&&/^(bld|site)_/.test(presence.location)&&temples(e).some(t=>t.seat===presence.location),
+ candidates(e,view,document){
+  const state=document.state,who=view.observer,t=e.rules.faith?.ordinaryRite?visited(e,state,who,view.self.location):null;
+  if(!t||npcAgeAt(e,state,who,view.minute)<(e.rules.npcLife?.adultAge??18))return [];
+  const day=Math.floor(view.minute/DAY),coins=customaryOffering(e,document,who,t);
+  if(state.records?.[offeringKey(who,day)]||coins<1||view.self.coins<coins)return [];
+  // A believer who doubts gives nothing: the need for the rite is what outweighs the coin.
+  return [{id:`faith:offering:${who}:${day}`,kind:'faith_offering',legacy:{kind:'faith_offering',temple:t.id,coins},from:t.id,cost:{coins},needSatisfaction:faithOf(e,state,who).value.doubt?0:100,utility:1}];
+ }
+});
+registerAutonomyKind('faith_offering',{
+ minutes:e=>e.rules.faith.ordinaryRite.minutes,
+ validate(d,e,id,action,{at}){
+  const t=templeById(e,action.temple);
+  if(!t||visited(e,d.get('state'),id,d.get('state','npcs',id).location)?.id!==t.id)throw preconditionFailure('人物不在自己信奉的寺观里');
+  if(d.get('state','records',offeringKey(id,Math.floor(at/DAY))))throw preconditionFailure('今日已供奉过');
+  if(!Number.isSafeInteger(action.coins)||action.coins<1||d.get('state','npcs',id).coins<action.coins)throw preconditionFailure('钱袋不足以供奉');
+ },
+ execute(d,e,id,action,{at,start,actionId}){
+  const t=templeById(e,action.temple);
+  pay(d,e,t,id,action.coins,{},{kind:'香火捐献',sourceEvent:actionId,minute:at,party:id});
+  holdingSet(d,null,path(offeringKey(id,Math.floor(start/DAY))),{category:'faith_offering',subject:id,temple:t.id,coins:action.coins,sourceEvent:actionId,minute:at},'faith');
+  return {summary:`在${e.byId.get(t.seat)?.name??t.seat}向${t.name}供奉${action.coins}铜香火。`,spent:{coins:action.coins}};
+ }
+});

@@ -199,3 +199,31 @@ export function spendCounterCoins(d,engine,{owner,actor,to,amount,eventId}){
     holdingSet(d,engine,['state','records',receipt],{category:'counter_payment',owner,actor,to,amount,result},'money');
     return result;
 }
+
+// 15 §15.1.1: a business pays its running costs (wages, stock) from its counter, never from the owner's own purse.
+// The balance a payment may use: the recorded counter, capped by the ledger, and nothing while it is frozen.
+export function counterCash(d,owner){
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(!row||aliveHoldings(d,{kind:'frozen',subject:row.account}).length)return 0;
+    return Math.max(0,Math.min(row.coins,d.get('ledger','accounts',row.account)??0));
+}
+// The owner puts working capital in. The first deposit opens the account at the shop's seat (provenance: the
+// opening event); later deposits are the same real purse -> counter transfer as business:fund_counter.
+export function depositCounter(d,engine,{owner,seat,business,amount,eventId,writer='money'}){
+    if(!Number.isSafeInteger(amount)||amount<1||!ledgerActive(d))throw Error('Counter deposit requires a positive amount and open books');
+    const state=d.get('state');
+    if(!dedicatedCoinAccount(state,owner,'counter'))holdingSet(d,engine,['state','records',dedicatedCoinKey(owner,'counter')],
+        {category:'money_account',owner,purpose:'counter',account:accountKey(owner,COIN,'counter'),coins:0,seat,business,sourceEvent:eventId,openedBy:eventId},'money',eventId);
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    moveCoins(d,{from:purse(engine,owner),to:row.account,amount,writer,eventId});
+    mirrorPartyCoins(d,engine,owner,-amount,eventId,writer);
+    return {account:row.account,amount};
+}
+// A payment out of the counter to any money party, limited to what the counter holds.
+export function payFromCounter(d,engine,{owner,to,amount,writer,eventId}){
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(!row||!Number.isSafeInteger(amount)||amount<1||amount>counterCash(d,owner))throw Error('Counter payment exceeds the counter cash');
+    moveCoins(d,{from:row.account,to:partyAccount(engine,d.get('state'),to),amount,writer,eventId});
+    mirrorPartyCoins(d,engine,to,amount,eventId,writer);
+    return {from:row.account,amount};
+}

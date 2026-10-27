@@ -1,6 +1,9 @@
 import {vocabulary} from './domain-rules.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {purse,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
+import {purse,treasury as treasuryAccount,moveCoins,coinRead,dedicatedCoinAccount,counterCash,depositCounter,booksOpen} from './money.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {employmentActive} from './employment-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
 // S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
@@ -152,6 +155,9 @@ export function currentShops(engine,state){
         const changedType=type&&type!==(store.shopType??original?.shopType)&&!store.channels.includes(type),template=changedType?rules.types?.[type]:null;
         if(changedType&&!template)continue;
         const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
+        // The keeper's own repricing (restockShop) stands in place of the type's standard markup while it is on record.
+        const pricing=state.records?.[`shop_pricing:${keeper}`];
+        if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=pricing.markup;}
         const rows=engine.byId.get(keeper)?.shopRestock??store.restock;
         const population=settlementPopulationCount(engine,state,settlement).value;
         shop.restock=rows.map(row=>{
@@ -236,17 +242,35 @@ function assertRules(engine){
 
 const shelf=(engine,d,id,item)=>bagStock(d,engine,{point:'shop.shelf',id,item,legacy:()=>engine.quantity(d,id,item)});
 function managed(d,sid){return d.get('state','records',`agriculture:${sid}`)?.mode==='managed';}
+// ---- 营运柜台（15 §15.1.1）：人物店主的进货款与雇工工钱出自本店柜台，柜台由店主自己决定从钱袋注资 ----
+// 店主的决定都经 npcDecision，取其醒着的上午十点（午夜结算时他在睡觉）的主观视图。
+function keeperView(d,engine,keeper,minute){
+    const s=d.get('state'),n=s.npcs[keeper],day=Math.floor(minute/DAY)*DAY;
+    return subjectiveView(engine,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[keeper]:{...n,activity:'日常起居',status:n.status??'正常'}}}},keeper);
+}
+const keeperChoice=(d,engine,shop,minute,ctx,request)=>{ctx.view??=keeperView(d,engine,shop.keeper,minute);return npcDecision(ctx.view,{from:shop.settlement,...request});};
+// The keeper tops the counter up toward `target` from his own purse if, and only if, he decides to.
+export function fundCounter(d,engine,{shop,minute,target,eventId,ctx={}}){
+    const n=d.get('state','npcs',shop.keeper);if(!n||!booksOpen(d))return {deposited:0,reason:'店主不是名册人物或账本未开'};
+    const have=counterCash(d,shop.keeper),cash=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>n.coins}),amount=Math.min(Math.max(0,target-have),cash);
+    if(amount<1)return {deposited:0};
+    const decision=keeperChoice(d,engine,shop,minute,ctx,{kind:'fund_counter',cost:{coins:amount},reward:amount});
+    if(decision.outcome!=='agree')return {deposited:0,decision};
+    depositCounter(d,engine,{owner:shop.keeper,seat:shop.location??shop.settlement,business:shop.id,amount,eventId,writer:'shop'});
+    return {deposited:amount,decision};
+}
 // One restock row at one boundary. Returns the ledger entry, or null when the
 // shelf was already full (nothing to record).
-function restockRow(d,engine,shop,row,minute){
+function restockRow(d,engine,shop,row,minute,ctx={}){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const from=row.source==='route'?row.from:shop.settlement;
     const quote=quantity=>marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business:{keeper:from,markup:1},base:regionalTradeBase(d,engine,row.item,shop.settlement,minute)});
     const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
-    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),afford=n=>{
-        const cash=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins});
+    // A person keeper lays out stock money from the counter, funding it from his purse as needed; a creature keeper pays from his own coins.
+    const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),person=Boolean(d.get('state','npcs',shop.keeper))&&booksOpen(d),afford=n=>{
+        const own=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins}),cash=person?own+counterCash(d,shop.keeper):own;
         let low=0,high=Math.floor(n);while(low<high){const mid=Math.ceil((low+high)/2);if(quote(mid).totalCoins<=cash)low=mid;else high=mid-1;}return low;
     };
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
@@ -260,18 +284,48 @@ function restockRow(d,engine,shop,row,minute){
         const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
         if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
         if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
-        const purchase=quote(quantity),cost=purchase.totalCoins;moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});s.treasury+=cost;d.set(['state','settlements',from],s);
-        d.set([...keeperPath,'coins'],keeper.coins-cost);
-        entry.added=quantity;entry.paidCopper=cost;entry.from=from;
+        const purchase=quote(quantity),cost=purchase.totalCoins;
+        if(person){
+            // The buy is the keeper's own decision: stock that cannot sell back above its cost is not bought.
+            const verdict=keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',cost:{value:cost},reward:Math.ceil(cost*shop.markup)});
+            if(verdict.outcome!=='agree')return{...entry,reason:`店主决定暂不进货：${verdict.reason}`,decision:verdict.outcome};
+            const funded=cost>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:cost,eventId:`${books.eventId}:fund:${row.item}`,ctx}):null;
+            if(funded&&counterCash(d,shop.keeper)<cost)return{...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
+            moveCoins(d,{from:dedicatedCoinAccount(d.get('state'),shop.keeper,'counter').account,to:treasuryAccount(from),amount:cost,writer:'shop',eventId:`${books.eventId}:${row.item}`});
+        }else{
+            moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});
+            d.set([...keeperPath,'coins'],keeper.coins-cost);
+        }
+        s.treasury+=cost;d.set(['state','settlements',from],s);
+        entry.added=quantity;entry.paidCopper=cost;entry.from=from;entry.referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*quantity);
         recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
     }
     engine.itemDelta(d,shop.keeper,row.item,entry.added,books);
     return entry;
 }
+// Cost-plus: a keeper who pays more (or less) than the reference price for what he stocks passes it on, keeping his type's margin.
+// The reference is the regional base price of the same goods, so the ratio is the extra the buy carried (scarcity, haul).
+function repriceShop(d,engine,shop,minute,entries,ctx){
+    const paid=entries.reduce((n,e)=>n+(e.paidCopper??0),0),reference=entries.reduce((n,e)=>n+(e.referenceCopper??0),0);
+    if(!paid||!reference||!d.get('state','npcs',shop.keeper))return;
+    const [low,high]=engine.rules.economy.priceFactorLimits.shop,standard=shop.baseMarkup??shop.markup;
+    const markup=Math.min(high,Math.max(low,Math.round(standard*paid/reference*100)/100));
+    if(markup===shop.markup)return;
+    const decision=keeperChoice(d,engine,shop,minute,ctx,{kind:'reprice',cost:{},reward:Math.abs(markup-shop.markup)});
+    if(decision.outcome!=='agree')return;
+    d.set(['state','records',`shop_pricing:${shop.keeper}`],{category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
+        sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}});
+}
 function restockShop(d,engine,shop,minute){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
-    const entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute)).filter(Boolean);
+    const ctx={},entries=shop.restock.map(row=>restockRow(d,engine,shop,row,minute,ctx)).filter(Boolean);
+    // The wages of the hands he already employs are backed from the counter for the days until his next cycle.
+    if(d.get('state','npcs',shop.keeper)){
+        const bill=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1&&r.owner===shop.keeper&&employmentActive(r)).reduce((n,r)=>n+r.wage,0);
+        if(bill)fundCounter(d,engine,{shop,minute,target:bill*Math.min(7,shop.cycleDays),eventId:`shop:${shop.id}:${minute}:wages`,ctx});
+        repriceShop(d,engine,shop,minute,entries,ctx);
+    }
     if(!entries.length)return;
     const key=`shop:${shop.id}`,old=d.get('state','records',key);
     if(old&&old.category!=='shop_ledger')throw Error('商店账编号冲突，拒绝覆盖');

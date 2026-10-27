@@ -2820,7 +2820,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:365"
+    "dispatch": "server-plugin/labor-market.mjs:405"
    }
   },
   {
@@ -2894,7 +2894,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:368"
+    "dispatch": "server-plugin/labor-market.mjs:408"
    }
   },
   {
@@ -2968,7 +2968,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:374"
+    "dispatch": "server-plugin/labor-market.mjs:414"
    }
   },
   {
@@ -3042,7 +3042,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:391"
+    "dispatch": "server-plugin/labor-market.mjs:431"
    }
   },
   {
@@ -10367,7 +10367,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:284"
+    "dispatch": "server-plugin/faith.mjs:285"
    }
   },
   {
@@ -10471,7 +10471,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:296"
+    "dispatch": "server-plugin/faith.mjs:297"
    }
   },
   {
@@ -10575,7 +10575,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:299"
+    "dispatch": "server-plugin/faith.mjs:300"
    }
   },
   {
@@ -10679,7 +10679,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:305"
+    "dispatch": "server-plugin/faith.mjs:306"
    }
   },
   {
@@ -10783,7 +10783,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:277"
+    "dispatch": "server-plugin/faith.mjs:278"
    }
   },
   {
@@ -10887,7 +10887,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/faith.mjs:307"
+    "dispatch": "server-plugin/faith.mjs:308"
    }
   },
   {

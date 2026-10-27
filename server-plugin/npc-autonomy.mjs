@@ -33,7 +33,7 @@ import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intel
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {subjectiveView,subjectiveFact,conversationLanguage} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
-import {autonomyCandidates,candidateAction,planFromCandidate} from './autonomy-candidates.mjs';
+import {autonomyCandidates,candidateAction,planFromCandidate,autonomyKind,autonomyRelevant} from './autonomy-candidates.mjs';
 export {applyDialogue,dialogueRequest} from './dialogue.mjs';
 export {npcDecision} from './npc-decision.mjs';
 export {scheduleNpcAutonomy} from './autonomy-candidates.mjs';
@@ -50,7 +50,7 @@ function draft(document,at){const d={document,patches:[],get(...p){if(at!==undef
 // S2a: 工作草稿没有引擎，不双写；回放到正式草稿时经持有写入包装双写。
 const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?holdingSet(target,null,p.path,p.value,'npc-autonomy'):holdingRemove(target,null,p.path,'npc-autonomy');};
 const proficiency=npcProficiency;
-function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
+function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return autonomyKind(action.kind)?.minutes(engine,action)??0;}
 function tradeQuote(d,engine,buyer,action,location){
  // The installed native quote adapter owns environment and shop policy; NPC
  // execution supplies its actual task minute without crossing gameplay packs.
@@ -103,7 +103,8 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw preconditionFailure('交易品种或数量未登记');
   if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||coinRead(d,{point:'npc.cash',account:purse(engine,id),legacy:()=>state.npcs[id].coins})<tradeQuote(d,engine,id,action,actor.location).cost)throw preconditionFailure('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw preconditionFailure('交易没有完整接待窗口');cursor=s.until;}
- }else throw preconditionFailure('自主行动类型未实现');
+ }else if(autonomyKind(action.kind))autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor});
+ else throw preconditionFailure('自主行动类型未实现');
  return {minutes,location:actor.location,furnace,work};
 }
 // R25: a person whose state has no current activity yet (e.g. a fresh save before the first
@@ -162,6 +163,9 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   moveCoins(d,{from:purse(null,id),to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
   recordMarketDeal(d,quote,cost,action.quantity,actionId);
   summary=`向${engine.byId.get(action.seller).name}支付${cost}铜，购得${engine.byId.get(action.item).name}${action.quantity}份。`;
+ }else if(autonomyKind(action.kind)){
+  const done=autonomyKind(action.kind).execute(d,engine,id,action,{at,start,actionId,location:checked.location});
+  summary=done.summary;Object.assign(spent,done.spent);
  }else{
   const r=engine.byId.get(action.recipe),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.document.randomSeed,actionId,'npc-craft']).slice(0,8),16)%20+1;
   const attribute=r.attribute??engine.byId.get(r.skill)?.attribute??'智力',score=d.get('state','npcs',id,'attributes',attribute)??base.attributes?.[attribute]??10;
@@ -231,10 +235,10 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const currentPlan=d.get('state','npcs',id,'plan');
    // An empty candidate set cannot decide or abandon a plan. Avoid building
    // the full subjective projection for every resident with nothing to do.
-   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length))continue;
+   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor))continue;
    const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
    const view=subjectiveView(engine,projected,id);
-   const candidates=autonomyCandidates(engine,view,{scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
+   const candidates=autonomyCandidates(engine,view,{document:projected,scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
     d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
    }
