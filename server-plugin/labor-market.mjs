@@ -14,6 +14,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('labor-market');
 import {groupAccountView} from './group-account.mjs';
 import {currentShops} from './shop.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 import {npcNeedGoals} from './npc-intelligence.mjs';
 import {standing} from './standing.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
@@ -156,7 +158,15 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(travel>60||!Number.isFinite(travel)||minute+travel>Math.floor(minute/DAY)*DAY+480&&minute%DAY<480)return null;
     return {worker:id,need:needs.map(g=>g.id),skill,regard,travel,score:needs.length*100+(food===0?80:0)+skill/30+regard+offer.wage-travel};
 }
-function sign(d,e,offer,app,at,source){
+// G0 §1: a hire (or a move to a better paid employer) is the worker's own decision, made through npcDecision on the
+// worker's own subjective view; nothing a caller or the employer writes can stand in for it. The view is taken at the
+// person's waking hours of that day (10:00, not asleep at the midnight settlement), the request being the real wage for the real commute.
+function hireDecision(d,e,app,offer,at,old){
+    const day=Math.floor(at/DAY)*DAY,s=d.get('state'),n=s.npcs[app.worker];
+    const view=subjectiveView(e,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[app.worker]:{...n,activity:'日常起居',status:n.status??'正常'}}}},app.worker);
+    return npcDecision(view,{kind:'employment',from:offer.owner,cost:{minutes:app.travel*2},reward:offer.wage-(old?.wage??0),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+}
+function sign(d,e,offer,app,at,source,decision=null){
     const old=currentEmployment(d.get('state'),app.worker,at);
     if(old){changeLegacyHoldings(d,e,{holder:old.worker,source:`contract:${old.id}`,eventId:source},()=>holdingSet(d,null,rec(old.id),{...old,status:'已辞工',endedAt:at,reason:'转赴新雇主',successor:`workshop:${source}`},'labor-market'));refundGuarantee(d,e,d.get(...rec(old.id)));}
     const starts=Math.floor(at/DAY)*DAY+480,first=starts>at?starts:starts+DAY,key=`workshop:${source}`;
@@ -164,6 +174,7 @@ function sign(d,e,offer,app,at,source){
     const row={category:'contract',kind:'workshop',laborMarket:1,id:key,...terms,parties:[app.worker,offer.owner],signedTerms:structuredClone(terms),
         offer:offer.id,demandSource:offer.source,item:offer.item??null,targetQuantity:offer.quantity,project:offer.project??null,farm:offer.farm??null,supplier:offer.supplier??null,reason:offer.reason,
         starts:first,nextWork:first+540,createdAt:at,status:'有效',paid:0,produced:0,workedMinutes:0,attendance:{},shifts:[],source,commuteMinutes:app.travel,
+        ...(decision?{workerConsent:{by:app.worker,via:'npc-decision',outcome:decision.outcome,minute:at}}:{}),
         settlement:personHousehold(e,d.get('state'),app.worker).value?.settlement??placeSettlement(e,d.get('state'),offer.location).value};
     holdingSet(d,null,rec(key),row,'labor-market');
     financeEvent(d,e,{id:`${source}:sign`,actor:app.worker,target:offer.owner,location:offer.location,minute:at,tags:['employment','hired']});
@@ -327,7 +338,12 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
         const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after))})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
-        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`labor:${offer.id}:${after}`);break;}
+        for(const app of apps){
+            const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;
+            const decision=hireDecision(d,e,app,offer,after,old);
+            if(decision.outcome!=='agree')continue;
+            sign(d,e,offer,app,after,`labor:${offer.id}:${after}`,decision);break;
+        }
     }
 }
 export function nextLaborMinute(e,d,now){

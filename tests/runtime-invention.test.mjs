@@ -162,3 +162,22 @@ test('公开工具及共享schema能表示自创配方，重启、导入与回�
     assert.equal(new WorldEngine(world).scoped(view.document).resolve('试制木楔法','recipe'),id);
     assert.throws(()=>engine.scoped(fresh()).resolve(id,'recipe'),/未登记/);
 });
+
+test('F050 配方守恒：同一种东西无转化地多出来被拒并给世界内原因；不同材料的转化按工序裁决，不设估值产出上限',async()=>{
+    const c=await researched();
+    // 1 木 -> 200 木: 投入1份、产出200份同一种东西，没有任何转化。拒绝并写明世界内原因，零写入。
+    for(const input of[
+        {...data(),materials:[{item:'item_wood',amount:1}],output:{item:'item_wood',quantity:200}},
+        {...data(),materials:[{item:'item_wood',amount:5}],output:{item:'item_wood',quantity:5}},
+        {...data(),materials:[{item:'item_wood',amount:2}],byproducts:[{item:'item_wood',amount:2}]},
+    ]){
+        const before=structuredClone(c);
+        await assert.rejects(register(c,'recipe','木生木',input),/凭空多出同一种东西/);assert.deepEqual(c,before);
+    }
+    // 同一种东西投入5份、产出4份是有损耗的加工，不是增殖，仍可登记；不同材料之间的转化倍率由材料数量、
+    // 工具、工时与技能阶段裁决，不设按估值算的上限：1 木料 -> 200 木楔（单次成品数量本就最多200）照常登记。
+    const loss=await register(c,'recipe','削耗',{...data(),materials:[{item:'item_wood',amount:5}],output:{item:'item_wood',quantity:4},byproducts:[]});
+    assert.ok(loss.result.entity);
+    const big=await register(c,'recipe','千楔法',{...data(),materials:[{item:'item_wood',amount:1}],output:{item:'item_wooden_peg',quantity:200}});
+    assert.equal(catalogDefinition(engine,big.document,{entity:'千楔法',kind:'recipe'}).output.quantity,200);
+});

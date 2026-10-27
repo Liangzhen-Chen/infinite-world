@@ -271,20 +271,35 @@ export function businessReport(d,engine,shop){
         const row=goods[item]??{opening:shop.opening.goods[item]??0,sources:[]};row.openingSource=shop.source;row.closing=closing.goods[item]??0;
         row.reconciled=row.opening+row.sources.reduce((sum,r)=>sum+r.quantity,0)===row.closing;goods[item]=row;
     }
-    const revenue=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0);
+    const sales=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成'),revenue=sales.reduce((sum,r)=>sum+r.paid,0);
+    // F025: the books are the shop's. Capital the owner puts in or draws out of the counter moves cash but is neither
+    // revenue nor expense; wages are the owner's own hired hands at this shop; tax is only what its own sales incurred.
+    const capital=receipts.reduce((n,r)=>n+(['business_counter_open','business_counter_fund','business_counter_spend'].includes(r.operation)?r.coins:0),0);
     const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0)
-        +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.location===shop.location&&r.createdAt>=shop.createdAt).reduce((n,r)=>n+r.paid,0);
-    const taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&r.minute>=shop.createdAt&&r.minute<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.amount,0);
+        +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.owner===shop.owner&&r.location===shop.location&&r.createdAt>=shop.createdAt&&r.createdAt<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.paid,0);
+    const saleEvents=new Set(sales.map(r=>r.source)),taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&saleEvents.has(r.sourceEvent)).reduce((n,r)=>n+r.amount,0);
     const state=d.get('state'),claimIds=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),debts=obligationRows(state).filter(r=>claimIds.has(r.id)||claimIds.has(r.legacyRecord))
         .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
-        cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
+        cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,capital,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
         profit:{revenue,stockCostOfSales,rent,wages,taxes,net:revenue-stockCostOfSales-rent-wages-taxes,method:'已成交收入减先进先出销货成本、整期租金、已付工钱与实缴税；未售库存为资产，期初旧货按目录基价估值'},
         escrow:contracts.filter(r=>r.escrow).map(r=>({contract:r.id,amount:r.escrow,source:r.source})),debts,
         contracts:contracts.map(r=>({id:r.id,kind:r.kind,parties:r.parties,subject:r.subject,quantity:r.quantity,location:r.location??shop.location,deadline:r.deadline,paid:r.paid,fulfilled:r.fulfilled,status:r.status,source:r.source,performance:r.performance,breaches:r.breaches})),
         quoteAnchor:engine.rules.economy.dailyIncomeBySkillStage,note:'日收入表仅供报价参考；营业和等待不会生成钱或顾客交易。'};
 }
 
+// 05 §5.1 laborHours: draft animals (herds the owner holds whose species declares husbandry.labor {factor,hoursPerDay})
+// work without being employed. A herd's daily minutes are its live head count x factor x hours x 60; a herd that has
+// lost heads or changed hands is counted as it now stands, so disease, sale or death lower the capacity at once.
+export function draftMinutes(engine,state,owner){
+    let minutes=0;
+    for(const herd of Object.values(state.records??{})){
+        if(herd.category!=='husbandry'||herd.owner!==owner)continue;
+        const labor=engine.byId.get(herd.species)?.husbandry?.labor;
+        if(labor)minutes+=Math.floor(herd.count*labor.factor*labor.hoursPerDay*60);
+    }
+    return minutes;
+}
 export function businessOptions(engine,document,owner){
     const view=subjectiveView(engine,document,owner),s=document.state,inventory=quantities(view.self.inventory);
     const cash=Object.entries(view.self.accounts??{}).filter(([key])=>key.endsWith('|counter')).reduce((n,[,r])=>n+r.balance,0);
@@ -303,7 +318,7 @@ export function businessOptions(engine,document,owner){
     const requiredMinutes=Object.values(sold).reduce((n,q)=>n+q*engine.world.openActionRules.generic.transferMinutes,0);
     const jobs=Object.values(s.records??{}).filter(r=>r.kind==='workshop'&&r.owner===owner&&r.endedAt===undefined&&r.deadline>view.minute);
     const working=jobs.filter(r=>r.status!=='罢工'),capacityKnown=working.every(r=>Number.isSafeInteger(r.workMinutes));
-    const capacity=working.reduce((n,r)=>n+(r.workMinutes??0),0);
+    const capacity=working.reduce((n,r)=>n+(r.workMinutes??0),0)+draftMinutes(engine,s,owner);
     if(capacityKnown&&requiredMinutes>capacity)for(const worker of view.observable.people.filter(p=>p.id!==owner&&!jobs.some(r=>r.worker===p.id))){
         const wage=laborValue(engine,document,{worker:worker.id,observer:owner}).daily;
         if(wage<=cash)options.push({kind:'hire',worker:worker.id,wage,requiredMinutes:requiredMinutes-capacity});

@@ -15,6 +15,9 @@ function workshopFixture(){
     const f=fixture({at:mill});f.doc.state.buildings[mill]={owner:'player',condition:100};
     f.doc.state.inventory.item_whittling_knife={quantity:1,durability:80};return f;
 }
+// F083: a workshop shift is paid and produced only for the minutes the worker really spent at the workshop, so shifts are driven
+// by the real clock (the worker's schedule walks them from home to the mill) rather than by a pinned position at 17:00.
+const elapse=(f,to)=>f.act({minutes:to-f.doc.state.minute},`elapse_${to}`,'world_time');
 const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return n;};
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{
@@ -93,29 +96,56 @@ test('工坊实际支付工钱和台费、消耗材料工具，技能派生产�
     const f=workshopFixture(),total=cash(f.doc),wood=f.doc.state.inventory.item_wood.quantity;
     const job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:100,days:10,consent:true},'hire');
     let row=f.doc.state.records[job.contract];assert.ok(npcSchedule(f.e,f.doc.state,worker,row.starts).default.some(s=>s.location===mill&&/生产/.test(s.activity)));
-    f.tick(row.nextWork);row=f.doc.state.records[job.contract];const shift=row.shifts[0];assert.ok(shift.batches>0);assert.equal(f.doc.state.inventory.item_wood.quantity,wood-shift.batches);assert.equal(f.doc.state.npcs[worker].coins,600);assert.equal(cash(f.doc),total);
+    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];const shift=row.shifts[0];assert.ok(shift.batches>0);assert.equal(f.doc.state.inventory.item_wood.quantity,wood-shift.batches);
+    // Day wage 100 pro rata: the minutes at work are 480 minus the walk from home to the mill (road table), paid ceil(100*m/480).
+    const m=480-f.e.route(f.e.byId.get(worker).home.location,mill,'walk',row.starts,f.doc.randomSeed).minutes;
+    assert.equal(shift.minutes,m);assert.equal(f.doc.state.npcs[worker].coins,500+Math.ceil(100*m/480));assert.equal(cash(f.doc),total);
     assert.equal(f.doc.state.inventory.item_wooden_peg.quantity,shift.batches*4);assert.ok(shift.instances.every(id=>f.doc.state.itemInstances[id].maker===worker));
     const snapshot=structuredClone(f.doc);f.tick(f.doc.state.minute);assert.deepEqual(f.doc,snapshot);
-    f.doc.state.npcs[worker].proficiencies={skill_life_6_core:2200};f.tick(row.nextWork);row=f.doc.state.records[job.contract];assert.equal(row.shifts.at(-1).quality,'杰作');assert.ok(row.shifts.at(-1).batches>shift.batches);assert.equal(cash(f.doc),total);
-    delete f.doc.state.inventory.item_wood;const paid=row.paid;f.tick(row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'罢工');assert.equal(f.doc.state.records[job.contract].paid,paid);
+    f.doc.state.npcs[worker].proficiencies={skill_life_6_core:2200};await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];assert.equal(row.shifts.at(-1).quality,'杰作');assert.ok(row.shifts.at(-1).batches>shift.batches);assert.equal(cash(f.doc),total);
+    delete f.doc.state.inventory.item_wood;const paid=row.paid;await elapse(f,row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'罢工');assert.equal(f.doc.state.records[job.contract].paid,paid);
 });
 test('低薪要求加薪、拒绝后罢工辞工；加薪须当面同意；拘押与负立场停止生产',async()=>{
     const f=workshopFixture(),job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:1,days:10,consent:true},'cheap'),total=cash(f.doc);
-    f.tick(f.doc.state.records[job.contract].nextWork);let row=f.doc.state.records[job.contract];assert.equal(row.status,'要求加薪');
-    f.tick(row.nextWork);row=f.doc.state.records[job.contract];assert.equal(row.status,'罢工');assert.equal(row.shifts.length,1);
+    await elapse(f,f.doc.state.records[job.contract].nextWork);let row=f.doc.state.records[job.contract];assert.equal(row.status,'要求加薪');
+    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];assert.equal(row.status,'罢工');assert.equal(row.shifts.length,1);
     await assert.rejects(f.act({operation:'workshop_terms',seller:worker,contract:job.contract,coins:100},'no'),/同意/);
-    await f.act({operation:'workshop_terms',seller:worker,contract:job.contract,coins:100,consent:true},'raise');f.tick(row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'有效');
+    await f.act({operation:'workshop_terms',seller:worker,contract:job.contract,coins:100,consent:true},'raise');await elapse(f,row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'有效');
     f.doc.state.records.hold={category:'legal_custody',subject:worker,status:'生效',location:mill,expires:f.doc.state.minute+10*DAY};const before=f.doc.state.records[job.contract].produced;
-    f.tick(f.doc.state.records[job.contract].nextWork);assert.equal(f.doc.state.records[job.contract].produced,before);assert.equal(f.doc.state.records[job.contract].status,'罢工');delete f.doc.state.records.hold;
+    await elapse(f,f.doc.state.records[job.contract].nextWork);assert.equal(f.doc.state.records[job.contract].produced,before);assert.equal(f.doc.state.records[job.contract].status,'罢工');delete f.doc.state.records.hold;
     await f.act({operation:'dismiss',seller:worker,contract:job.contract},'dismiss');assert.equal(f.doc.state.records[job.contract].status,'已解雇');assert.equal(cash(f.doc),total);
-    const g=workshopFixture(),j=await g.act({operation:'workshop',seller:worker,item:recipe,coins:1,days:10,consent:true},'quit');g.tick(g.doc.state.records[j.contract].nextWork);g.tick(g.doc.state.records[j.contract].nextWork+3*DAY);assert.equal(g.doc.state.records[j.contract].status,'已辞工');
+    const g=workshopFixture(),j=await g.act({operation:'workshop',seller:worker,item:recipe,coins:1,days:10,consent:true},'quit');await elapse(g,g.doc.state.records[j.contract].nextWork);await elapse(g,g.doc.state.records[j.contract].nextWork+3*DAY);assert.equal(g.doc.state.records[j.contract].status,'已辞工');
 });
 test('world_time真实离屏推进完成工坊班次，受雇者不会同时经营原店，工资材料与输出一致',async()=>{
     const f=workshopFixture(),job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:100,days:10,consent:true},'offline');
     const before=cash(f.doc),row=f.doc.state.records[job.contract],wood=f.doc.state.inventory.item_wood.quantity;
     await f.act({minutes:row.nextWork-f.doc.state.minute},'elapsed','world_time');
-    const after=f.doc.state.records[job.contract];assert.equal(after.shifts.length,1);assert.equal(after.paid,100);assert.equal(f.doc.state.inventory.item_wood.quantity,wood-after.shifts[0].batches);
+    const after=f.doc.state.records[job.contract];assert.equal(after.shifts.length,1);
+    // Pro rata: 100 a day for the m minutes actually at the mill (480 less the walk from home), ceil(100*m/480).
+    const m=480-f.e.route(f.e.byId.get(worker).home.location,mill,'walk',row.starts,f.doc.randomSeed).minutes;assert.equal(after.attendance[String(Math.floor(row.starts/DAY))],m);assert.equal(after.paid,Math.ceil(100*m/480));assert.equal(f.doc.state.inventory.item_wood.quantity,wood-after.shifts[0].batches);
     assert.equal(cash(f.doc),before);assert.equal(personBusiness(f.e,f.doc.state,worker).open.value,false);
+});
+test('F083 玩家雇的工坊工人：迟到两小时按实到分钟结薪和产出，整天缺勤不付不产',async()=>{
+    const f=workshopFixture(),job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:100,days:10,consent:true},'late'),home=f.e.byId.get(worker).home.location;
+    const first=f.doc.state.records[job.contract],D1=Math.floor(first.starts/DAY);
+    // 第1日正常：到岗 m1 = 480 - 通勤，工钱 ceil(100*m1/480)。
+    await elapse(f,first.nextWork);let row=f.doc.state.records[job.contract];
+    const m1=480-f.e.route(home,mill,'walk',first.starts,f.doc.randomSeed).minutes;
+    assert.equal(row.shifts[0].minutes,m1);assert.equal(row.paid,Math.ceil(100*m1/480));
+    // 第2日：他 08:00 才上路、10:00 到工坊（已在途的行程是前提）：上午120 + 下午240 = 360 分钟（迟到两小时）。
+    await elapse(f,(D1+1)*DAY);
+    const n=f.doc.state.npcs[worker];Object.assign(n,{location:null,activity:'赶路',scheduleTravel:{from:home,to:mill,depart:(D1+1)*DAY+480,arrive:(D1+1)*DAY+600,edges:[]}});
+    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];
+    assert.equal(row.attendance[String(D1+1)],360);assert.equal(row.shifts[1].minutes,360);
+    // 累计 (m1+360) 分钟：日薪100折算，ceil(100*(m1+360)/480) 减去前一日已付，产出 batches=floor(360/20×(1+技能/3000))。
+    assert.equal(row.paid,Math.ceil(100*(m1+360)/480));
+    const skill=row.shifts[1].skill;assert.equal(row.shifts[1].batches,Math.floor(360/20*(1+skill/3000)));
+    // 第3日整天缺勤（人在远路上，次日清晨才到）：没有到岗分钟 => 不付工钱、不产出，合同照常有效，只记原因。
+    await elapse(f,(D1+2)*DAY);Object.assign(f.doc.state.npcs[worker],{location:null,activity:'赶路',scheduleTravel:{from:home,to:mill,depart:(D1+2)*DAY,arrive:(D1+3)*DAY+10,edges:[]}});
+    const before={paid:row.paid,produced:row.produced,shifts:row.shifts.length,wood:f.doc.state.inventory.item_wood.quantity};
+    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];
+    assert.equal(row.paid,before.paid);assert.equal(row.produced,before.produced);assert.equal(row.shifts.length,before.shifts);
+    assert.equal(f.doc.state.inventory.item_wood.quantity,before.wood);assert.equal(row.status,'有效');assert.equal(row.reason,'没有实际到岗工时');
 });
 test('商税及关税随政体与聚落级别派生，缴入公账，走私数量免于合法通关税；不足拒绝',async()=>{
     const f=fixture(),sid='loc_hw',before=tradeTax(f.e,f.doc.state,post),total=cash(f.doc),treasury=f.doc.state.settlements[sid].treasury;

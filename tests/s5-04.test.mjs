@@ -14,14 +14,14 @@ import {tmpRoot} from '../tools/tmp-root.mjs';
 import {laborValue} from '../server-plugin/market.mjs';
 import {recordEmploymentAttendance} from '../server-plugin/employment-state.mjs';
 import {advanceLaborMarket} from '../server-plugin/labor-market.mjs';
-import {advanceFinanceAssets} from '../server-plugin/finance-assets.mjs';
-import {businessOptions} from '../server-plugin/business.mjs';
+import {businessOptions,draftMinutes} from '../server-plugin/business.mjs';
 import {advanceContracts} from '../server-plugin/contracts.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const place='bld_hw_qingdeng',landlord='npc_hw_linsui';
-async function counter(){
- const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'s504-business');
+async function counter({credit=false}={}){
+ const w=structuredClone(world);if(credit)w.npcs.find(n=>n.id===landlord).creditPolicy={limitCopper:100,maximumMinutes:1440,minimumTrust:0};
+ const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s504-business');
  // 钱袋与营业时段是非考查前提；租铺、资金调拨与来源均由真实动作建立。
  const prepared=applyIntentSetup(engine,initial,{minute:600,location:place,coins:300,inventory:{item_bread:5,item_parchment:1},present:[landlord],abilitiesByActor:{player:{skills:{skill_literacy:500}}}});
  assert.deepEqual(prepared.setupUnmet,[]);
@@ -128,9 +128,12 @@ test('signed-wage: a native new contract uses corrections; existing terms stay f
  const changed=make(2);assert.equal(laborValue(changed,document,{worker,proficiency:1500}).daily,2100);
  assert.equal(document.state.records[row.id].wage,1575);
  // 生产结薪消费者在行情变化后仍实际支付已签1575，2100只成为加薪请求。
- const payable=applyIntentSetup(changed,document,{minute:row.nextWork,location:mill,present:[worker]});assert.deepEqual(payable.setupUnmet,[]);
- const paid={engine:changed,document:payable.document};write(paid,d=>advanceFinanceAssets(d,changed,row.nextWork,[row.id]));
- assert.equal(paid.document.state.records[row.id].paid,1575);assert.equal(paid.document.state.records[row.id].wage,1575);
+ // F083: the shift is run by the real clock under the changed market (the worker walks home and back to the mill by the schedule),
+ // and the day wage is paid pro rata to the minutes really worked: ceil(1575*m/480) with m = 480 minus the walk (road table).
+ const advanced=await changed.reduce(document,{tool:'world_time',args:{minutes:row.nextWork-document.state.minute},eventId:'signed-wage-shift'});
+ const paid={engine:changed,document:applyPatches(document,advanced.patches)},m=480-changed.route(changed.byId.get(worker).home.location,mill,'walk',row.starts,document.randomSeed).minutes;
+ assert.equal(paid.document.state.records[row.id].shifts[0].minutes,m);
+ assert.equal(paid.document.state.records[row.id].paid,Math.ceil(1575*m/480));assert.equal(paid.document.state.records[row.id].wage,1575);
  const renewal=await changed.reduce(document,{tool:'world_trade',args:{operation:'workshop_terms',seller:worker,consent:true,contract:row.id},eventId:'renew-wage'});
  const renewed=applyPatches(document,renewal.patches);assert.equal(renewed.state.records[row.id].wage,2100);
 });
@@ -247,4 +250,142 @@ test('estate-refund: pending operating escrow returns to the current estate coun
  write(f,d=>advanceContracts(d,f.engine,626,[out.result.contract]));
  assert.equal(account(f).coins,0);assert.equal(dedicatedCoinAccount(f.document.state,gone.successor,'counter').coins,100);
  assert.equal(f.document.state.records[out.result.contract].escrow,0);clean(f);
+});
+
+test('books: capital is not revenue, personal trades and taxes stay out, closing keeps the debt (F025)',async()=>{
+ const f=await counter({credit:true});await f.open();
+ const trade=async(args,eventId)=>{const out=await f.engine.reduce(f.document,{tool:'world_trade',args,eventId});f.document=applyPatches(f.document,out.patches);return out.result;};
+ // 个人前提（非考查对象）：行囊里另有木料50，用于一次与店铺无关的私人买卖。
+ const stocked=applyIntentSetup(f.engine,f.document,{inventory:{item_bread:5,item_wood:50,item_parchment:1},facts:[{path:['state','npcs',landlord,'coins'],value:1000}]});assert.deepEqual(stocked.setupUnmet,[]);f.document=stocked.document;
+ await f.act('core:settlement.business_open',{business:f.business},'books-open');
+ const sale=await trade({operation:'sell',business:f.business,buyer:landlord,consent:true,item:'item_bread',quantity:1,unitPrice:2},'books-sale');
+ const report=async id=>f.act('core:settlement.business_report',{business:f.business},id);
+ const first=await report('books-r1');
+ // 营业收入只有这一笔成交：1份面包×约定单价2 = 2铜；柜台开户的100铜是资本，不是收入。
+ assert.equal(first.profit.revenue,2);assert.equal(first.cash.capital,100);
+ // 注资10铜：现金多10、资本多10，营业收入与利润分毫不变（注资不计收入）。
+ await f.act('business:fund_counter',{coins:10},'books-capital');
+ const second=await report('books-r2');
+ assert.equal(second.cash.closing,first.cash.closing+10);assert.equal(second.cash.capital,110);
+ assert.equal(second.profit.revenue,2);assert.equal(second.profit.net,first.profit.net);assert.equal(second.cash.reconciled,true);
+ // 取出5铜给自己：同样不是费用，利润不变，资本记为105。
+ await f.act('business:spend_counter',{to:'player',coins:5},'books-draw');
+ const drawn=await report('books-r3');assert.equal(drawn.cash.capital,105);assert.equal(drawn.profit.net,first.profit.net);
+ // 与店铺无关的私人买卖：玩家把10木料按单价2卖给房东。个人卖木料不是店铺成交，营业收入与利润不变。
+ await trade({operation:'trade',buyer:landlord,seller:'player',item:'item_wood',quantity:10,unitPrice:2},'books-private');
+ // 同期另有一笔与本店无关的个人商税记录（非考查前提，声明为事实）：店铺税项只算本店成交所生的税。
+ const foreign=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records'],value:{...f.document.state.records,'trade_tax:elsewhere:commercial':{category:'trade_tax',id:'trade_tax:elsewhere:commercial',payer:'player',gross:140,location:place,amount:7,sourceEvent:'elsewhere',minute:f.document.state.minute}}}]});
+ assert.deepEqual(foreign.setupUnmet,[]);f.document=foreign.document;
+ const personal=await report('books-r4');
+ assert.equal(personal.profit.taxes,first.profit.taxes);assert.equal(personal.profit.revenue,2);assert.equal(personal.profit.net,first.profit.net);
+ clean(f);
+});
+
+test('books: closing the shop keeps its unpaid debt and the counter cash (F025)',async()=>{
+ const f=await counter({credit:true});
+ // 夹具已现金租下一间铺子；先结束它，再赊租新的（同一时间只允许一间营业铺）。
+ await f.act('core:settlement.business_close',{business:f.business},'books-first-close');
+ // 赊租：租金向房东借，欠款是一笔真实债务。
+ const out=await f.engine.reduce(f.document,{tool:'world_trade',args:{operation:'lease',seller:landlord,consent:true,days:1,payment:'credit',creditMinutes:120},eventId:'books-credit-lease'});
+ f.document=applyPatches(f.document,out.patches);f.business=out.result.business;
+ await f.open();const debt=out.result.debt;
+ assert.ok(debt);
+ await f.act('core:settlement.business_open',{business:f.business},'books-credit-open');
+ await f.act('core:settlement.business_close',{business:f.business},'books-credit-close');
+ const row=f.document.state.records[f.business];
+ assert.equal(row.status,'停业');
+ // 关店不是还债：债仍在、金额不变；柜台100铜仍在原账户，没有被并回钱袋或用来悄悄抵债。
+ assert.equal(obligationView(f.document.state,debt).paid,0);assert.equal(obligationView(f.document.state,debt).owed>0,true);
+ assert.equal(account(f).coins,100);
+ const report=await f.act('core:settlement.business_report',{business:f.business},'books-credit-report');
+ assert.equal(report.debts[0].amount,obligationView(f.document.state,debt).owed);assert.equal(report.status,'停业');
+ clean(f);
+});
+
+async function hiredOnProject(){
+ const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'attendance2'),mill='bld_hw_mill',worker='npc_hw_ayan';
+ // 前提（非考查对象）：林穗在磨坊有一项缺人的工程，雇主有钱，阿燕缺钱求活计；谁应聘由生产招工系统在午夜按各人自己的需要与意愿选出。
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:mill,present:[landlord,worker],facts:[
+  {path:['state','projects'],value:{...initial.state.projects,proj_x:{id:'proj_x',type:'工程',name:'磨坊加固',status:'施工中',creator:landlord,settlement:'loc_hw',location:mill,remainingDays:10,remainingWork:10,days:10}}},
+  {path:['state','npcs',landlord],value:{...initial.state.npcs[landlord],location:mill,coins:5000}},
+  {path:['state','npcs',worker],value:{...initial.state.npcs[worker],location:mill,coins:0,goals:{short:[{id:'need-job',kind:'money',content:'需要工钱',progress:0}]}}}
+ ]});
+ assert.deepEqual(prepared.setupUnmet,[]);
+ const f={engine,document:prepared.document,worker,mill};
+ f.time=async(minutes,id)=>{const out=await engine.reduce(f.document,{tool:'world_time',args:{minutes},eventId:id});f.document=applyPatches(f.document,out.patches);};
+ await f.time(1440-600,'to-midnight');
+ f.row=Object.values(f.document.state.records).find(r=>r.laborMarket===1&&r.owner===landlord&&r.project==='proj_x');
+ f.worker=f.row.worker;
+ return f;
+}
+
+test('real attendance: wage and progress follow the minutes actually at work (2 hours late, one day absent)',async()=>{
+ const f=await hiredOnProject(),id=f.row.id,rec=()=>f.document.state.records[id];
+ assert.ok(f.row);
+ // 签约是阿燕自己经 npcDecision 做的决定，留有来源；签约工价是第0阶日薪 (20+40)/2 = 30。
+ assert.equal(f.row.workerConsent.by,f.worker);assert.equal(f.row.workerConsent.via,'npc-decision');assert.equal(f.row.workerConsent.outcome,'agree');
+ assert.equal(f.row.wage,30);assert.equal(f.row.starts,1920);
+ // 第1日：他从家走到磨坊（路网分钟），到岗 = 480 - 通勤。日薪30按分钟折算：ceil(30×m/480)。
+ await f.time(1440,'day1');
+ const home=engine0(f).byId.get(f.worker).home.location,m1=rec().attendance['1'];
+ assert.equal(m1,480-f.engine.route(home,f.mill,'walk',1920,f.document.randomSeed).minutes);
+ assert.equal(rec().workedMinutes,m1);assert.equal(rec().paid,Math.ceil(30*m1/480));assert.equal(rec().paid,30);
+ // 第2日 08:00 才上路，10:00 到岗（已在途的行程是前提）：上午 120 + 下午 240 = 360 分钟，迟到两小时。
+ const midnight=2*1440;
+ const walking=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs',f.worker],value:{...f.document.state.npcs[f.worker],location:null,activity:'赶路',scheduleTravel:{from:home,to:f.mill,depart:midnight+480,arrive:midnight+600,edges:[]}}}]});
+ assert.deepEqual(walking.setupUnmet,[]);f.document=walking.document;
+ await f.time(1440,'day2');
+ assert.equal(rec().attendance['2'],360);
+ // 累计分钟 m1+360 的工钱 = ceil(30×(m1+360)/480)，第2日增量为差；没有一天按整日480付。
+ assert.equal(rec().workedMinutes,m1+360);assert.equal(rec().paid,Math.ceil(30*(m1+360)/480));
+ // 第3日整天缺勤：没有任何到岗分钟，没有工资、没有进度，合同照常有效。
+ f.document.state.npcs[f.worker].status='患病';
+ const sick={paid:rec().paid,worked:rec().workedMinutes,remaining:f.document.state.projects.proj_x.remainingWork};
+ await f.time(1440,'day3');
+ assert.equal(rec().attendance['3'],undefined);assert.equal(rec().paid,sick.paid);assert.equal(rec().workedMinutes,sick.worked);
+ assert.equal(f.document.state.projects.proj_x.remainingWork,sick.remaining);
+ // 工程进度只按到岗分钟：开工10个工日，剩余 = 10 - (m1+360)/480。
+ assert.ok(Math.abs(sick.remaining-(10-(m1+360)/480))<1e-9);
+ clean(f);
+});
+const engine0=f=>f.engine;
+
+test('npc decision: the worker, not the caller, decides to take a job; a red line refuses it',async()=>{
+ const mill='bld_hw_mill',worker='npc_hw_ayan';
+ const hire=async refusing=>{
+  const w=structuredClone(world);if(refusing)w.npcs.find(n=>n.id===refusing).redLines=['employment'];
+  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'attendance2');
+  const prepared=applyIntentSetup(engine,initial,{minute:600,location:mill,present:[landlord,worker],facts:[
+   {path:['state','projects'],value:{...initial.state.projects,proj_x:{id:'proj_x',type:'工程',name:'磨坊加固',status:'施工中',creator:landlord,settlement:'loc_hw',location:mill,remainingDays:10,remainingWork:10,days:10}}},
+   {path:['state','npcs',landlord],value:{...initial.state.npcs[landlord],location:mill,coins:5000}},
+   {path:['state','npcs',worker],value:{...initial.state.npcs[worker],location:mill,coins:0,goals:{short:[{id:'need-job',kind:'money',content:'需要工钱',progress:0}]}}}
+  ]});
+  assert.deepEqual(prepared.setupUnmet,[]);let document=prepared.document;
+  const out=await engine.reduce(document,{tool:'world_time',args:{minutes:1440-600},eventId:'decide'});document=applyPatches(document,out.patches);
+  return Object.values(document.state.records).find(r=>r.laborMarket===1&&r.owner===landlord&&r.project==='proj_x');
+ };
+ const taken=await hire(null);assert.ok(taken);assert.equal(taken.workerConsent.outcome,'agree');
+ // 同一世界、同一雇主和工价，只是被选中的这位的底线写着不接这类活计（kind 'employment'）：他自己拒绝，
+ // 轮到下一位应聘者（或无人接），没有人能替他签字。
+ const refused=await hire(taken.worker);
+ assert.notEqual(refused?.worker,taken.worker);
+});
+
+test('draft animals: labor minutes are derived from the herd the owner holds, and fall when heads are lost',async()=>{
+ // 物种数据里目前没有役畜；这里只在测试世界副本上给山羊群声明 labor（因子0.5、每日8小时），验证派生公式。
+ const w=structuredClone(world);w.monsters.find(m=>m.id==='monster_bent_horn_goat').husbandry.labor={factor:0.5,hoursPerDay:8};
+ const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'draft-labor');
+ const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'herd-day'});const day=applyPatches(doc,out.patches);
+ const herd=Object.values(day.state.records).find(r=>r.category==='husbandry'&&r.species==='monster_bent_horn_goat');
+ assert.ok(herd);const owner=herd.owner;assert.ok(owner);
+ // 每日 floor(头数 × 0.5 × 8小时 × 60) = floor(头数×240) 分钟；头数按现存计，死亡或转手立即改变。
+ assert.equal(draftMinutes(engine,day.state,owner),Math.floor(herd.count*240));
+ assert.equal(draftMinutes(engine,day.state,owner),herd.count*240);
+ const key=Object.keys(day.state.records).find(k=>day.state.records[k]===herd||day.state.records[k].id===herd.id&&day.state.records[k].category==='husbandry');
+ const fewer=structuredClone(day.state);fewer.records[key].count=herd.count-1;
+ assert.equal(draftMinutes(engine,fewer,owner),(herd.count-1)*240);
+ const sold=structuredClone(day.state);sold.records[key].owner=landlord;
+ assert.equal(draftMinutes(engine,sold,owner),0);
+ // 没有声明 labor 的物种（现有世界数据）不提供工时。
+ assert.equal(draftMinutes(new WorldEngine(world),day.state,owner),0);
 });

@@ -2746,7 +2746,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:349"
+    "dispatch": "server-plugin/labor-market.mjs:365"
    }
   },
   {
@@ -2820,7 +2820,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:352"
+    "dispatch": "server-plugin/labor-market.mjs:368"
    }
   },
   {
@@ -2894,7 +2894,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:358"
+    "dispatch": "server-plugin/labor-market.mjs:374"
    }
   },
   {
@@ -2968,7 +2968,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:375"
+    "dispatch": "server-plugin/labor-market.mjs:391"
    }
   },
   {
@@ -3950,7 +3950,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:347"
+    "dispatch": "server-plugin/business.mjs:362"
    }
   },
   {
@@ -4054,7 +4054,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:352"
+    "dispatch": "server-plugin/business.mjs:367"
    }
   },
   {
@@ -4158,7 +4158,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:344"
+    "dispatch": "server-plugin/business.mjs:359"
    }
   },
   {
@@ -4262,7 +4262,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:343"
+    "dispatch": "server-plugin/business.mjs:358"
    }
   },
   {
@@ -18019,7 +18019,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/employment-state.mjs:50"
+    "dispatch": "server-plugin/employment-state.mjs:83"
    }
   }
  ]

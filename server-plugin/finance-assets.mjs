@@ -284,21 +284,26 @@ function workshopShift(d,e,row,at){
         holdingSet(d,e,rec(row.id),next,'finance-assets');};
     if(!alive(s,row.worker)||regard< -40||row.raiseRequestedAt&&at-row.raiseRequestedAt>=3*DAY)return end('已辞工','工人无法继续或不再接受现有工钱');
     if(base(e,s,row.worker)?.schedule?.restDays?.includes(e.calendar(at).day)){holdingSet(d,e,rec(row.id),{...row,nextWork:at+DAY},'finance-assets');return;}
-    if(personConstraint(e,s,row.worker,at)||worker.levy||worker.caring||worker.scheduleTravel||worker.cognitionTravel||worker.location!==row.location)return end('罢工','工人未到工坊或受拘押、服役、照护、在途限制');
-    const start=Math.floor(at/DAY)*DAY+480;
+    if(personConstraint(e,s,row.worker,at)||worker.levy||worker.caring)return end('罢工','工人受拘押、服役或照护限制');
+    // F083: the day's work is the minutes the worker really spent at the workshop (late arrival, an absent day, a walk home
+    // that ate part of the window all count as they happened); nothing is paid or produced for minutes not worked.
+    const start=Math.floor(at/DAY)*DAY+480,minutes=Math.min(480,row.attendance?.[String(Math.floor(start/DAY))]??0);
+    if(!minutes){holdingSet(d,e,rec(row.id),{...row,nextWork:at+DAY,reason:'没有实际到岗工时'},'finance-assets');return;}
     try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
     catch(error){if(!/冲突|自主工作/.test(error.message))throw error;return end('罢工','本班与已有义务冲突');}
     if(!ownsWorkshop(s,row.location,owner)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
     if(row.wage<wage&&row.raiseRequestedAt)return end('罢工','加薪要求尚未解决');
-    if(financeBalance(d,e,owner)<row.wage)return end('罢工','雇主付不起本班工钱');
-    const plan=employmentProductionPlan(d,e,{...row,owner});
+    // Day wage pro rata to the minutes worked; the cumulative units make the rounding exact (never more than the wage per day).
+    const units=row.wageUnits??0,total=units+row.wage*minutes,earned=Math.ceil(total/480)-Math.ceil(units/480);
+    if(financeBalance(d,e,owner)<earned)return end('罢工','雇主付不起本班工钱');
+    const plan=employmentProductionPlan(d,e,{...row,owner},{minutes});
     if(plan.reason)return end('罢工',plan.reason);
-    if(financeBalance(d,e,owner)<row.wage+plan.fee)return end('罢工','工钱与工作台费用不足');
-    financeTransfer(d,e,owner,row.worker,row.wage,`${row.id}:${at}`);
+    if(financeBalance(d,e,owner)<earned+plan.fee)return end('罢工','工钱与工作台费用不足');
+    financeTransfer(d,e,owner,row.worker,earned,`${row.id}:${at}`);
     const {quantity,...shift}=settleEmploymentProduction(d,e,{...row,owner},at,plan),eventId=`${row.id}:${at}`;
-    const next={...row,nextWork:at+DAY,paid:row.paid+row.wage,produced:row.produced+quantity,status:row.wage<wage?'要求加薪':'有效',
-        ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage}]};holdingSet(d,e,rec(row.id),next,'finance-assets');
-    financeEvent(d,e,{id:eventId,actor:row.worker,target:owner,minute:at,location:row.location,value:row.wage,tags:['workshop']});
+    const next={...row,nextWork:at+DAY,paid:row.paid+earned,wageUnits:total,produced:row.produced+quantity,status:row.wage<wage?'要求加薪':'有效',
+        ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage,minutes,earned}]};holdingSet(d,e,rec(row.id),next,'finance-assets');
+    financeEvent(d,e,{id:eventId,actor:row.worker,target:owner,minute:at,location:row.location,value:earned,tags:['workshop']});
 }
 export function advanceFinanceAssets(d,e,minute,recordIds){
     for(const stored of (recordIds?recordIds.map(id=>d.get('state','records',id)).filter(Boolean):all(d))){
