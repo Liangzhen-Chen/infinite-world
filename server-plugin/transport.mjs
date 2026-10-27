@@ -28,9 +28,7 @@ import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHoldings,setLocation} from './holdings.mjs';
 import {derived} from './derived.mjs';
-import {derivedStats} from './combat.mjs';
 import {refundContractEscrow} from './contracts.mjs';
-import {appendHeard} from './npc-cognition.mjs';
 import {marketQuote} from './market.mjs';
 declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
@@ -72,8 +70,9 @@ function draftAnimals(e,document,asset){
  if(!hasDraftAnimal&&!asset.animal){
   const puller=asset.owner==='player'?'player':operator(e,s,asset.owner);
   if(puller&&(puller==='player'||live(s).some(r=>r.asset===asset.id&&r.driver===puller)||available(e,s,puller))&&!live(s).some(r=>r.asset!==asset.id&&r.driver===puller)){
-   const attributes=puller==='player'?s.player?.attributes:(s.npcs?.[puller]?.attributes??e.byId.get(puller)?.attributes);
-   sources.push({id:puller,kg:derivedStats({level:0,attributes},e.rules).carryKg});
+   // Same carrying rule as combat.derivedStats (carryBase + strength * carryPerStrength); not imported across packs.
+   const attributes=puller==='player'?s.player?.attributes:(s.npcs?.[puller]?.attributes??e.byId.get(puller)?.attributes),c=e.rules.combat.character;
+   sources.push({id:puller,kg:Math.max(1,c.carryBase+(attributes?.力量??10)*c.carryPerStrength)});
   }
  }
  return sources;
@@ -313,8 +312,11 @@ function notifyShipment(d,e,row,text,minute,location){
    d.set(['memories',`player::${key}`],{subject:'player',key,content:text,source:row.carrier,sourceType:'听说',channel:'transport',reliability:'承运人通报',location,minute,sourceEvent:row.id,participants:['player',row.carrier],keywords:['运单'],pinned:false});
    d.say?.(text);informed.push(who);
   }else if(d.get('state','npcs',who)){
-   const memory={id:`transport-notice:${row.id}:${minute}`,sourceEvent:row.id,kind:'transport',minute,participants:[row.carrier,row.owner,row.recipient],content:text,sourceType:'亲历',private:true,permittedRecipients:[who]};
-   if(appendHeard(d,e,row.carrier,who,memory,minute,'transport',row.id,location,{input:text,content:text,distortion:'承运人通报，货损事实原文'}))informed.push(who);
+   // The carrier's own notice, in the same memory shape other channels use (npc-cognition's heard-row); not retold, so not distorted.
+   const stream=d.get('state','npcs',who,'memoryStream')??[],id=`heard_transport-notice:${row.id}:${minute}:${who}`;
+   if(stream.some(m=>m.id===id))continue;
+   d.set(['state','npcs',who,'memoryStream'],[...stream,{id,rootMemoryId:`transport-notice:${row.id}:${minute}`,sourceEvent:row.id,kind:'transport',minute,occurredAt:minute,location,participants:[row.carrier,row.owner,row.recipient],content:text,sourceType:'听说',heardFrom:row.carrier,channel:'transport',messageId:row.id,salience:2,emotion:'待核实',transmissionChain:[{from:row.carrier,to:who,minute,channel:'transport',messageId:row.id,input:text,content:text,distortion:'承运人通报，原文'}],distortion:'承运人通报，原文',reliability:'承运人通报',private:true,permittedRecipients:[who]}]);
+   informed.push(who);
   }
  }
  if(informed.length){row.informed=[...new Set([...row.informed??[],...informed])];row.history=[...row.history??[],{minute,location,kind:'informed',who:informed}];}

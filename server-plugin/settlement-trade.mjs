@@ -63,7 +63,7 @@ function warehouse(d,id){
     if(!integer(s.food)||!integer(s.treasury)||!integer(s.population)||!Array.isArray(r.batches)||r.batches.some(b=>!integer(b.amount,1)||!Number.isSafeInteger(b.expiresDay))||r.batches.reduce((n,b)=>n+b.amount,0)!==s.food||r.field.seedBatches.reduce((n,b)=>n+b.amount,0)!==r.field.seedBank)throw Error('周贸易粮仓或现金账不守恒，拒绝补齐');
     return{s,r};
 }
-function putWarehouse(d,id,{s,r}){d.set(['state','settlements',id],s);d.set(['state','records',`agriculture:${id}`],r);}
+function putWarehouse(d,id,{s,r}){d.set(['state','settlements',id],s);holdingSet(d,null,['state','records',`agriculture:${id}`],r,'settlement-trade');}
 function grain(w,day){return w.r.batches.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0);}
 function reserved(state,id){return orders(state).filter(o=>o.buyer===id&&o.status==='in-transit').reduce((n,o)=>n+cargo(o),0);}
 function fiscal(d,id){
@@ -158,7 +158,7 @@ function arrive(d,engine,o,minute){
     entry(o,'arrival',minute,{receivedFood:accepted,rejectedFood:o.rejectedFood,spoiledFood:o.spoiledFood,grossCopper:gross,netCopper:gross-tax,taxCopper:tax,refundCopper:refund});
     if(d.get('state','location')===profile(engine,o.buyer).counter)d.say?.(`周贸易${o.id}到货：入仓${accepted}份，货价${gross}铜，其中税款${tax}铜；粮损${o.spoiledFood+o.rejectedFood}份，退预付款${refund}铜`);
     o.batches=[];putWarehouse(d,o.seller,a);putWarehouse(d,o.buyer,b);
-    d.set(['state','records',`village-fiscal:${o.seller}`],sf);d.set(['state','records',`village-fiscal:${o.buyer}`],bf);
+    holdingSet(d,null,['state','records',`village-fiscal:${o.seller}`],sf,'settlement-trade');holdingSet(d,null,['state','records',`village-fiscal:${o.buyer}`],bf,'settlement-trade');
 }
 const playerAt=(d,engine,o)=>[profile(engine,o.seller).counter,profile(engine,o.buyer).counter].includes(d.get('state','location'));
 // The hired carrier's vehicle was destroyed: the cargo is gone, the buyer's escrow returns to its
@@ -185,7 +185,7 @@ function lose(d,engine,o,trip,minute){
     Object.assign(o.transport,{phase:'home',nextAt:null,segment:null});o.homeAt=minute;
     entry(o,'lost',minute,{lostFood:lost,refundCopper:refund,owedCopper:owed,carrier:trip.carrier,shipment:trip.id});entry(o,'home',minute);
     putWarehouse(d,o.seller,a);putWarehouse(d,o.buyer,b);
-    d.set(['state','records',`village-fiscal:${o.seller}`],sf);d.set(['state','records',`village-fiscal:${o.buyer}`],bf);
+    holdingSet(d,null,['state','records',`village-fiscal:${o.seller}`],sf,'settlement-trade');holdingSet(d,null,['state','records',`village-fiscal:${o.buyer}`],bf,'settlement-trade');
     if(playerAt(d,engine,o))d.say?.(`周贸易${o.id}承运车船损毁，${lost}份粮全损，预付款${refund}铜退回买方公账，承运人欠${owed}铜货款待赔`);
 }
 function dispatch(d,engine,lane,minute){
@@ -221,7 +221,7 @@ function dispatch(d,engine,lane,minute){
     entry(o,'dispatch',minute,{seller:o.seller,buyer:o.buyer,item:o.item,unitPriceCopper:price,taxBps:o.taxBps,quantity,escrowCopper:cost,workers:o.workers,route:route.edges,estimatedMinutes:route.minutes});
     if(d.get('state','location')===profile(engine,lane.seller).counter)d.say?.(`周贸易${id}发货：${engine.byId.get(r.item).name}${quantity}份，运往${engine.byId.get(lane.buyer).name}，预付款${cost}铜入在途账`);
     putWarehouse(d,lane.seller,a);putWarehouse(d,lane.buyer,b);
-    d.set(['state','records',`village-fiscal:${lane.seller}`],sf);d.set(['state','records',`village-fiscal:${lane.buyer}`],bf);
+    holdingSet(d,null,['state','records',`village-fiscal:${lane.seller}`],sf,'settlement-trade');holdingSet(d,null,['state','records',`village-fiscal:${lane.buyer}`],bf,'settlement-trade');
     // The purchase money stays in the buyer's counter escrow while the cargo
     // travels. The escrow account's entity has an actual native location.
     o.escrowCustodian=lane.buyer;o.escrowLocation=profile(engine,lane.buyer).counter;
@@ -237,7 +237,7 @@ function dispatch(d,engine,lane,minute){
         // The seller's treasury really paid the carrier; the village ledger shows it as an expense.
         const carriageCost=trip.freight+trip.toll+trip.tariff,fs=fiscal(d,lane.seller);
         fs.entries.push({eventId:id,contract:id,phase:'freight',other:trip.carrier,minute,food:0,copper:-carriageCost,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
-        d.set(['state','records',`village-fiscal:${lane.seller}`],fs);
+        holdingSet(d,null,['state','records',`village-fiscal:${lane.seller}`],fs,'settlement-trade');
         o.carriageCostCopper=carriageCost;entry(o,'carriage',minute,{carrier:trip.carrier,shipment:trip.id,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
         d.set(path,o);break;
     }
@@ -275,7 +275,7 @@ export function advanceSettlementTrade(d,engine,minute){
                 o.interceptedAt=minute;entry(o,'intercepted',minute,{custodian:trip.custodian});
                 if(playerAt(d,engine,o))d.say?.(`周贸易${o.id}的货在途中被${trip.custodian}扣下，预付款仍留在买方柜台托管`);
             }
-            assertOrder(o);if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);continue;
+            assertOrder(o);if(JSON.stringify(o)!==JSON.stringify(old))holdingSet(d,null,['state','records',`settlement-trade:${o.id}`],o,'settlement-trade');continue;
         }
         if(o.transport.nextAt<minute)throw Error('周贸易时钟越过未处理的在途节点');
         if(o.transport.nextAt===minute){
@@ -287,15 +287,15 @@ export function advanceSettlementTrade(d,engine,minute){
             schedule(d,engine,o,minute);
         }
         assertOrder(o);
-        if(JSON.stringify(o)!==JSON.stringify(old))d.set(['state','records',`settlement-trade:${o.id}`],o);
+        if(JSON.stringify(o)!==JSON.stringify(old))holdingSet(d,null,['state','records',`settlement-trade:${o.id}`],o,'settlement-trade');
     }
     const clock=d.get('state','records',CLOCK)??{category:'settlement_trade_clock',initializedAt:minute,nextDispatchAt:nextDispatch(engine,minute)};
     if(clock.category!=='settlement_trade_clock'||!integer(clock.nextDispatchAt,1))throw Error('周贸易时钟记录无效');
     if(clock.nextDispatchAt<minute)throw Error('周贸易时钟越过未处理的周订单');
     if(clock.nextDispatchAt===minute){
         for(const lane of r.lanes)dispatch(d,engine,lane,minute);
-        d.set(['state','records',CLOCK],{...clock,nextDispatchAt:minute+r.cycleDays*DAY,lastDispatchAt:minute});
-    }else if(!d.get('state','records',CLOCK))d.set(['state','records',CLOCK],clock);
+        holdingSet(d,null,['state','records',CLOCK],{...clock,nextDispatchAt:minute+r.cycleDays*DAY,lastDispatchAt:minute},'settlement-trade');
+    }else if(!d.get('state','records',CLOCK))holdingSet(d,null,['state','records',CLOCK],clock,'settlement-trade');
 }
 
 // Military quartermasters use the same regional quote, route availability and granary outflow.
