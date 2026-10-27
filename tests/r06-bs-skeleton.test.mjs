@@ -10,6 +10,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 const world=await loadWorld(),original=JSON.parse(await fs.readFile(`${root}/original-contacts.json`,'utf8'));
+// 严哲的现行世界数据 = R06 原始联系人 + 经审批管线发布的 s504-silk-1 蚕丝备货（W2b）；除此之外不得多出钱物。
+const silk=JSON.parse(await fs.readFile('world/drafts/s504-silk/candidate.json','utf8')),silkStock=silk.entries.find(e=>e.id==='sb-yanzhe-silk-stock').row;
+const yanApproved={...original.yan,inventory:{...original.yan.inventory,...silkStock.inventory}};
 const base={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?original.yan:p),locations:world.locations.map(l=>l.id==='loc_bs'?original.town:l.id==='bld_bs_shrine'?original.shrine:l)};
 const bones=baishiSkeleton(base),ids=new Set(bones.residents.map(p=>p.id)),locationIds=new Set(bones.locations.map(l=>l.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -67,7 +70,7 @@ test('玩家实际走到街区和前厅，私宅无许可拒绝；严辙在场�
 });
 test('聚落经济引用实有商货和小窑，职责与争议有来源和边界，登记不凭空发钱物',()=>{
  const p=world.settlementProfiles.find(p=>p.id==='loc_bs'),d=p.details,y=world.npcs.find(p=>p.id===original.yan.id);
- assert.deepEqual(y.inventory,original.yan.inventory);assert.equal(y.coins,original.yan.coins);assert.deepEqual(y.schedule,original.yan.schedule);assert.equal(y.occupation,'商旅行会代理');
+ assert.deepEqual([silk.status,silkStock.npc],['published',original.yan.id]);assert.deepEqual(y.inventory,yanApproved.inventory);assert.equal(y.coins,original.yan.coins);assert.deepEqual(y.schedule,original.yan.schedule);assert.equal(y.occupation,'商旅行会代理');
  assert.ok(d.economy.tradePartners.includes('loc_hw'));assert.match(d.economy.reason,/5铜/);assert.match(d.economy.reason,/每五天/);assert.equal(d.economy.production,null);assert.equal(d.economy.publicStock,null);
  assert.ok(d.governance.customs.some(s=>s.includes('户籍')));assert.ok(d.governance.customs.some(s=>s.includes('巡更')));assert.ok(d.governance.customs.some(s=>s.includes('行会')));
  assert.equal(d.problems.length,6);for(const p of d.problems){assert.equal(p.status,'unresolved');assert.ok(p.options.length>=2);assert.ok(p.stakeholders.every(s=>[...world.npcs,...world.residents].some(x=>x.id===s.person&&x.age>=18)));}
@@ -77,7 +80,7 @@ test('聚落经济引用实有商货和小窑，职责与争议有来源和边�
  const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'t90-no-grants');for(const p of bones.residents){if(world.npcs.some(n=>n.id===p.id))assert.ok(doc.state.npcs[p.id]);else assert.equal(doc.state.npcs[p.id],undefined);}
 });
 test('提升名册保留同ID和原事实，升级不覆盖已运行的现金库存关系记忆，重复升级无差异',()=>{
- const old={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?original.yan:p)},person=bones.residents.find(p=>p.age>=18);
+ const old={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?yanApproved:p)},person=bones.residents.find(p=>p.age>=18);
  const full={...person,tier:'full',coins:12,inventory:{},trust:0,affection:0,skills:[],services:[],notes:person.currentConcern};
  const proposed={...world,npcs:[...world.npcs,full],residents:world.residents.filter(p=>p.id!==full.id)};
  const {world:next}=compatibleWorld(old,proposed);assert.equal(next.residents.some(p=>p.id===full.id),false);assert.equal(next.npcs.filter(p=>p.id===full.id).length,1);

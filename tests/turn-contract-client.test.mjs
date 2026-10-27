@@ -234,7 +234,8 @@ test('实际 act 接点：先显示界面结算模板，异步补叙绑定该事
   publishedTurnText,turnFactsPrompt:(await import('../extension/turn-contract.mjs')).turnFactsPrompt,
   controlledGenerate:async body=>{assert.equal(body.tool_choice,'none');requested();await barrier;return response({content:'你歇了十分钟。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场=""/>'});}};
  const source=await fs.readFile(new URL('../extension/runtime.js',import.meta.url),'utf8');
- const actual=source.slice(source.indexOf('async function act(action,'),source.indexOf('\nasync function modelActions('));
+ // act 依赖其上方的模块级未结动作表（s5ca 635ac008 起），一并取真实源码，不在 env 里另造。
+ const actual=source.slice(source.indexOf('const unsettledActs='),source.indexOf('\nasync function modelActions('));assert.ok(actual.includes('async function act(action,'));
  const act=new Function('env',`with(env){${actual};return act;}`)(env);
  const result=await act('core:time',{minutes:10},{eventId:'ui-bound-action'});assert.notEqual(result.ok,false);await started;
  const entry=context.chatMetadata.fields_event_feed[0];assert.match(entry.lines.join('\n'),/10分钟/);

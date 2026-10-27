@@ -69,7 +69,9 @@ test('河湾渡口：无原语来源时保留拒绝原因与可用留痕，提�
 test('细化到购买动作时保留当前商品选择；留痕受限仍给出真实缺项',()=>{
  const {engine,document,raw}=fixture('loc_bs','npc_hw_yanzhe','core:trade.buy');
  const model=bounded(raw),buy=model.actions.find(row=>row.id==='core:trade.buy');
- assert.ok(buy);assert.ok(buy.slots.find(row=>row.name==='item').options.includes('item_clay_pot'));
+ // 商品选项按真实货单顺序保留、预算截断时只截尾：模型看到的是原始选项的前缀（严哲货单随已发布内容增减，不写死某件货）。
+ const raw_=raw.actions.find(row=>row.id==='core:trade.buy').slots.find(row=>row.name==='item').options.map(o=>o.value??o);
+ assert.ok(buy);const shown=buy.slots.find(row=>row.name==='item').options;assert.ok(shown.length>0);assert.deepEqual(shown,raw_.slice(0,shown.length));
  const at=engine.byId.get(document.state.location);at.primitiveLimits={...at.primitiveLimits,create:false};
  const unavailable=modelActionCatalog(worldActions(engine.scoped(document),document,{target:'npc_hw_yanzhe'}));
  assert.ok(estimateModelActionTokens(unavailable)<=MODEL_ACTION_CATALOG_TOKEN_LIMIT);
