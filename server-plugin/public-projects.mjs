@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
@@ -244,7 +245,7 @@ function collectRent(d,p,at){
         holdingSet(d,null,rec(p.id),{...p,arrears:0,rentDue:p.rentDue+YEAR},'public-projects');
     }else holdingSet(d,null,rec(p.id),{...p,arrears:due,rentDue:p.rentDue+YEAR,lastUnpaid:at},'public-projects');
 }
-const housingDue=state=>Object.values(state.records??{}).flatMap(r=>r.category==='housing_application'&&r.status==='待管事办理'?[r.due]:r.category==='housing_permit'&&r.status!=='已收回'?[r.rentDue]:[]);
+const housingDue=state=>[...recordsWhere(state.records,'category','housing_application'),...recordsWhere(state.records,'category','housing_permit')].flatMap(r=>r.category==='housing_application'&&r.status==='待管事办理'?[r.due]:r.category==='housing_permit'&&r.status!=='已收回'?[r.rentDue]:[]);
 export function nextHousingMinute(state,now){return Math.min(Infinity,...housingDue(state).filter(m=>m>now));}
 export function advanceHousing(d,engine,{after}){
     for(let guard=0;guard<10000;guard++){
