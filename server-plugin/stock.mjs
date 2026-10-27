@@ -21,7 +21,7 @@ import {creatureTraits} from './traits.mjs';
 //   落地/封存/袋内/法院保管的单件     <地点、容器或保管者>|<物品>|placed  state.itemInstances.<id>（落地、封存按 location，袋内按 container，保管按 owner）
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）的用途即流量类别（gather、harvest、meal、craft、decay……）。
 // 批次（lots）用于粮仓、种粮、货运与田间作物（granary、seed、cargo、crop）；其余物品暂按数量计。
-import {isResourceKey,accountKey,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
+import {isResourceKey,accountKey,parseAccount,transfer,registerLedgerOpening,registerLotPolicy,ledgerActive,reviseLots,declareLedgerWriter,registerUpgradeBooking} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 
@@ -269,16 +269,28 @@ function ledgerValue(read,account,lots){
     return (read('ledger','lots',account)??[]).filter(l=>(lots.kind==null||l.kind===lots.kind)&&(lots.after==null||l.expiresDay>lots.after)).reduce((n,l)=>n+l.qty,0);
 }
 // legacy: 取旧字段的函数；account: 账户键；lots: {kind?, after?} 时读批次（kind 相等且 expiresDay > after）。
-export function priceRead(src,{point,scope='stock',account,legacy,lots=null}){
+export function priceRead(src,{point,scope='stock',account,legacy,lots=null,item=null}){
     if(!Object.hasOwn(PRICE_POINTS,point))throw Error(`未登记的价格输入点：${point}`);
     const d=bookView(src),read=d&&getter(d),open=Boolean(d)&&ledgerActive(d)&&(read('ledger','scopes')??['coin']).includes(scope);
+    // A folded purse/bag is an individually owned share of the aggregate,
+    // rather than zero supply or a second physical balance. Read-only quotes
+    // and valuations must not materialize the region merely to inspect it.
+    if(read&&!lots){
+        const {owner,resource,purpose}=parseAccount(account),mark=read('state','npcs',owner,'materialized');
+        if(mark?.folded){
+            const share=read('state','records',`remote-stock:${mark.settlement}`,'members',owner);
+            if(!share)throw Error('远方人物的聚合份额缺失');
+            const value=purpose==='purse'&&resource==='coin_river'?share.coins:purpose==='inventory'?qty(share.inventory[item??resource]):null;
+            if(value!==null){if(probe)probe({point,legacy:value,ledger:value,open});return value;}
+        }
+    }
     if(!open||readMode==='legacy'){const old=legacy();if(probe&&readMode==='ledger')probe({point,legacy:old,ledger:null,open});return old;}
     const now=ledgerValue(read,account,lots);
     if(probe)probe({point,legacy:legacy(),ledger:now,open});
     return now;
 }
 // 行囊里某物品的数量（缺省草稿不开账时回旧字段）。
-export const bagStock=(src,engine,{point,id,item,legacy})=>priceRead(src,{point,account:bag(engine,id,item),legacy});
+export const bagStock=(src,engine,{point,id,item,legacy})=>priceRead(src,{point,account:bag(engine,id,item),legacy,item});
 
 // A population, a travelling group and an encountered fish hold the same resource.
 export function fishPopulationAccount(engine,holder,species){

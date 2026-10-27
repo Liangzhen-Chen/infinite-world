@@ -19,7 +19,10 @@ export function goodsClass(engine,item){
 }
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
-const inventoryOf=(state,id)=>id==='player'?state.inventory:(state.npcs?.[id]??state.creatures?.[id])?.inventory??{};
+const inventoryOf=(state,id)=>{
+ const actor=state.npcs?.[id]??state.creatures?.[id],mark=actor?.materialized;
+ return id==='player'?state.inventory:mark?.folded?state.records[`remote-stock:${mark.settlement}`].members[id].inventory:actor?.inventory??{};
+};
 function marketDeals(state){
  const rows=[];
  for(const [key,row]of Object.entries(state.records??{})){

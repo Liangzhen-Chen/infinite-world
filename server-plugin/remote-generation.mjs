@@ -1,5 +1,5 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
-import {declareLedgerWriter,parseAccount,accountKey} from './ledger.mjs';
+import {declareLedgerWriter,parseAccount,accountKey,ledgerActive} from './ledger.mjs';
 import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
 declareLedgerWriter('remote-generation',{sources:{'src:genesis':{coin_river:1000000,'*':10000000}}});
@@ -14,6 +14,8 @@ import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhy
 import {syncHoldingSource} from './holding-sources.mjs';
 import {pinnedBy} from './holding-kinds.mjs';
 import {addPopulation,populationHealth} from './population-health.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {obligationClosed} from './obligation-protocol.mjs';
 declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
 
 // Private aggregate stock is distinct from the settlement's public treasury.
@@ -576,11 +578,83 @@ function openRemoteStock(d,engine,county,skeleton){
         const owner=sid,account=accountKey(sid,'coin_river','aggregate'),inventory={};
         let coins=0;
         for(const p of people){coins+=p.coins??0;for(const [item,n] of Object.entries(p.inventory??{}))inventory[item]=(inventory[item]??0)+n;}
-        const row={category:'money_account',remoteStock:true,owner,purpose:'aggregate',account,coins,inventory};
+        const row={category:'money_account',remoteStock:true,owner,purpose:'aggregate',account,coins,inventory,members:{}};
         moveCoins(d,{from:source('genesis','remote'),to:account,amount:coins,writer:'remote-generation',eventId:`remote:${county}`});
         for(const [item,n] of Object.entries(inventory))moveStock(d,{from:stockSource(engine,'genesis',item,'remote'),to:aggregateStock(engine,sid,item),amount:n,writer:'remote-generation',eventId:`remote:${county}`});
         d.set(['state','records',`remote-stock:${sid}`],row);
     }
+}
+
+const inventoryQuantity=value=>typeof value==='number'?value:value.quantity;
+const refersTo=(value,id)=>value===id||Boolean(value&&typeof value==='object'&&Object.entries(value).some(([key,v])=>key===id||refersTo(v,id)));
+function transferRemoteCoins(d,from,to,amount){
+    if(ledgerActive(d)&&(d.get('ledger','accounts',from)??0)<amount)throw Error('远方聚合钱款不足，拒绝重复借出');
+    moveCoins(d,{from,to,amount,writer:'remote-generation',eventId:`remote:accounts:${d.get('state','minute')}`});
+}
+function transferRemoteItem(d,from,to,amount){
+    if(ledgerActive(d)&&(d.get('ledger','accounts',from)??0)<amount)throw Error('远方聚合物资不足，拒绝重复借出');
+    moveStock(d,{from,to,amount,writer:'remote-generation',eventId:`remote:accounts:${d.get('state','minute')}`});
+}
+
+// Individual ownership is retained as exact shares, not re-apportioned on
+// return. Restore before native clocks: shops, wages and obligations must see
+// the same purses and bags as continuous individual simulation.
+export function restoreRemoteAccounts(d,engine,county=null){
+    // A skeleton is geography/identity, not evidence of a loan. Only actors
+    // with an outstanding share require restoration (including before books open).
+    const settlements=new Set(Object.values(d.get('state','npcs')??{}).filter(n=>n.materialized?.folded&&(!county||n.materialized.county===county)).map(n=>n.materialized.settlement));
+    for(const settlement of settlements){
+        const key=`remote-stock:${settlement}`,stored=d.get('state','records',key);
+        if(!stored)throw Error('远方人物借出份额与身份不符');
+        const row=structuredClone(stored);let changed=false;
+        for(const [id,share] of Object.entries(row.members)){
+            const n=d.get('state','npcs',id),mark=n?.materialized;
+            if(county&&mark?.county!==county)continue;
+            if(!mark?.folded||mark.settlement!==row.owner)throw Error('远方人物借出份额与身份不符');
+            if(n.coins||Object.keys(n.inventory).length)throw Error('远方人物并回期间出现未结算的个体钱物');
+            transferRemoteCoins(d,row.account,purse(null,id),share.coins);row.coins-=share.coins;
+            for(const [item,value] of Object.entries(share.inventory)){
+                const amount=inventoryQuantity(value);
+                transferRemoteItem(d,aggregateStock(engine,row.owner,item),bag(engine,id,item),amount);row.inventory[item]-=amount;
+            }
+            const {folded,...materialized}=mark;
+            d.set(['state','npcs',id,'coins'],share.coins);d.set(['state','npcs',id,'inventory'],share.inventory);
+            d.set(['state','npcs',id,'materialized'],materialized);delete row.members[id];changed=true;
+        }
+        if(changed)d.set(['state','records',key],row);
+    }
+}
+registerAdvanceHook('restoreRemoteAccounts',restoreRemoteAccounts);
+
+export function settleRemoteAccounts(d,engine){
+    const location=d.get('state','location'),county=remoteCountyOf(engine.world,location);
+    if(county)restoreRemoteAccounts(d,engine,county);
+    const state=d.get('state'),rows=new Map();
+    for(const [id,n] of Object.entries(state.npcs??{})){
+        // Full profiles and household life can admit an already-rostered
+        // resident with a zero opening bag. Subsequent earnings are pooled by
+        // the same ownership conversion as the skeleton's original keepers.
+        const entity=state.created?.[id]??engine.byId.get(id),residentCounty=!n.materialized&&['remote','population'].includes(entity?.generated)&&state.records?.[`remote-stock:${entity.settlement}`]?.remoteStock?remoteCountyOf(engine.world,entity.settlement):null;
+        const mark=n.materialized??(residentCounty?{county:residentCounty,settlement:entity.settlement}:null);
+        if(!mark||mark.folded||mark.county===county||n.status&&n.status!=='正常'||pinnedBy(d,id).length)continue;
+        if(n.scheduleTravel||n.cognitionTravel||n.residence||state.player.companions?.includes(id))continue;
+        if(Object.values(state.npcAutonomy?.tasks??{}).some(t=>t.status==='进行中'&&[t.npc,t.action?.seller].includes(id)))continue;
+        if(Object.values(state.itemInstances??{}).some(u=>u.owner===id))continue;
+        if(Object.values(state.obligations??{}).some(o=>!obligationClosed(o)&&refersTo(o,id))||refersTo(state.effects,id)||refersTo(d.document.memories,id))continue;
+        const key=`remote-stock:${mark.settlement}`;
+        let row=rows.get(key);if(!row){row=structuredClone(d.get('state','records',key));rows.set(key,row);}
+        if(!row||row.members[id])throw Error('远方人物重复并回或缺少聚合账户');
+        const share={coins:n.coins,inventory:structuredClone(n.inventory)};
+        transferRemoteCoins(d,purse(null,id),row.account,share.coins);row.coins+=share.coins;
+        for(const [item,value] of Object.entries(share.inventory)){
+            const amount=inventoryQuantity(value);
+            transferRemoteItem(d,bag(engine,id,item),aggregateStock(engine,row.owner,item),amount);row.inventory[item]=(row.inventory[item]??0)+amount;
+        }
+        row.members[id]=share;
+        d.set(['state','npcs',id,'coins'],0);d.set(['state','npcs',id,'inventory'],{});
+        d.set(['state','npcs',id,'materialized'],{...mark,folded:true});
+    }
+    for(const [key,row] of rows)d.set(['state','records',key],row);
 }
 
 // A contact materializes one body from its native pool. On leaving, return
@@ -592,6 +666,9 @@ export function settleRemoteWildlife(d,engine,location){
     };
     for(const [id,a] of Object.entries(state.creatures??{})){
         if(!a.materialized||a.location===location||a.owner||a.mind||a.cultivation||a.hp!==a.maxHp||a.hp<=0||isPhysicallyDead(engine,d,id)||pinnedBy(d,id).length)continue;
+        // An encounter window owns its concrete sighting until expiry. A
+        // detour and return in that window must retain the same living body.
+        if(Object.values(state.records??{}).some(r=>r.category==='wildlifeEncounter'&&r.sighting?.target===id&&r.sighting.expires>state.minute))continue;
         if(a.coins||Object.keys(a.inventory??{}).length||Object.values(state.itemInstances??{}).some(u=>u.owner===id))continue;
         if(Object.entries(d.get('ledger','accounts')??{}).some(([key,n])=>{
             const account=parseAccount(key);return n>0&&account.owner===id&&!(account.resource==='item_live_fish'&&account.purpose==='reserve'&&n===1);

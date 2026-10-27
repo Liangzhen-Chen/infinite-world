@@ -11,6 +11,9 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {harvestForest,advanceForestWater} from '../server-plugin/forest-water.mjs';
 import {waterBasins,waterConnections,basinState} from '../server-plugin/water-cycle.mjs';
+import {coinRead} from '../server-plugin/money.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
+import {advanceLayerPlan} from '../server-plugin/advance-layers.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const species='monster_black_fin_perch',habitat='habitat_hw_water',ecology=`ecology:${habitat}`;
@@ -186,6 +189,88 @@ test('first arrival borrows private stock once; repeated entry preserves money, 
  assert.equal(ids.reduce((n,id)=>n+doc.state.npcs[id].coins,0),925);
  assert.equal(ids.reduce((n,id)=>n+Object.values(doc.state.npcs[id].inventory).reduce((s,v)=>s+(v.quantity??v),0),0),37);
  books(engine.scoped(doc),doc);
+});
+
+async function remoteArrival(){
+ const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'s509-roundtrip');
+ const document=premise(engine,initial,{minute:0,location:'loc_bs'});
+ return {engine,document:(await act(engine,document,'world_move',{destination:'loc_far_tongji'},'remote-arrival')).document};
+}
+const remoteGenesis=doc=>Object.fromEntries(Object.entries(doc.ledger.flows).filter(([k])=>k.startsWith('src:genesis|')&&k.endsWith('|remote')));
+const keeper='npc_rg_hanlu_tongji_01',stockKey='remote-stock:loc_far_tongji';
+
+test('three native county round trips merge actual ownership shares without a second genesis',async()=>{
+ const f=await remoteArrival(),genesis=remoteGenesis(f.document);let doc=f.document;
+ for(let i=0;i<3;i++){
+  const away=await act(f.engine,doc,'world_move',{destination:'loc_bs'},`county-away:${i}`);
+  assert.deepEqual(conservation(f.engine.scoped(away.document),doc,away.document),[]);doc=away.document;
+  const row=doc.state.records[stockKey];assert.equal(doc.state.npcs[keeper].materialized.folded,true);
+  assert.equal(doc.state.npcs[keeper].coins,0);assert.deepEqual(doc.state.npcs[keeper].inventory,{});
+  assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
+  if(i===0){
+   // Opening keepers372+268+285 and hosts84+154 =1163. Day3's
+   // real route receipts charge42+4+8=54, leaving1109 in the aggregate.
+   // Tavern372-54=318; shelves4+4=8,3+3=6,5+5=10 (24 units).
+   assert.equal(row.coins,1109);assert.equal(row.members[keeper].coins,318);
+   assert.equal(row.members[keeper].inventory.item_barley_pea_stew.quantity,8);
+   assert.equal(row.members[keeper].inventory.item_milk.quantity,6);
+   assert.equal(row.members[keeper].inventory.item_ration.quantity,10);
+   const before=structuredClone(doc),scope=f.engine.scoped(doc),d=scope.primitiveDraft(doc);
+   assert.equal(coinRead(d,{point:'assets.cash',account:`${keeper}|coin_river|purse`,legacy:()=>doc.state.npcs[keeper].coins}),318);
+   assert.equal(saleableStock(d,scope,keeper,'item_barley_pea_stew',{business:true}).stock,8);
+   assert.deepEqual(doc,before);assert.deepEqual(d.patches,[]);
+  }
+  books(f.engine.scoped(doc),doc);
+  const back=await act(f.engine,doc,'world_move',{destination:'loc_far_tongji'},`county-back:${i}`);
+  assert.deepEqual(conservation(f.engine.scoped(back.document),doc,back.document),[]);doc=back.document;
+  assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);
+  assert.deepEqual(doc.state.records[stockKey].members,{});assert.equal(doc.state.records[stockKey].coins,0);
+  assert.equal(doc.state.remote.county_hanlu_tongji.skeleton.census.rostered,2132);
+  assert.deepEqual(remoteGenesis(doc),genesis);books(f.engine.scoped(doc),doc);
+ }
+});
+
+test('three statistics downgrades restore the same roster, purse and stock on promotion',async()=>{
+ const f=await remoteArrival(),county='county_hanlu_tongji',sid='loc_far_tongji',district=f.document.state.remote[county].skeleton.settlements[0].districts[0];
+ let doc=(await act(f.engine,f.document,'world_move',{destination:district},'expand-district')).document;
+ const roster=Object.values(doc.state.created).filter(p=>p.generated==='population'&&p.home?.district===district);
+ assert.ok(roster.length>0);
+ for(let i=0;i<3;i++){
+  // Inter-province travel history is not examined here (the separate test
+  // above walks actual routes). Declare only location; the production action
+  // derives statistics/rule/intelligent and performs both conversions.
+  doc=premise(f.engine,doc,{location:'loc_capital'});
+  assert.equal(advanceLayerPlan(f.engine.scoped(doc),doc.state).layers.get(county),'statistics');
+  doc=(await act(f.engine,doc,'world_time',{minutes:1},`lower:${i}`)).document;
+  assert.equal(doc.state.population[sid].districts[district].compacted,true);
+  assert.equal(doc.state.records[stockKey].members[keeper].coins,372);
+  // Native seat census: 1173 pending +15 registered =1188. Expanded and
+  // compacted residents are counted once in the same pending quota1173.
+  assert.equal(doc.state.population[sid].remaining.population+Object.values(doc.state.population[sid].districts).reduce((n,d)=>n+d.people,0),1173);
+  assert.equal(doc.state.remote[county].skeleton.profiles[0].population,1188);
+  doc=premise(f.engine.scoped(doc),doc,{location:district});
+  doc=(await act(f.engine,doc,'world_time',{minutes:1},`raise:${i}`)).document;
+  assert.equal(doc.state.population[sid].districts[district].compacted,undefined);
+  assert.deepEqual(Object.values(doc.state.created).filter(p=>p.generated==='population'&&p.home?.district===district),roster);
+  assert.equal(doc.state.npcs[keeper].coins,372);assert.equal(doc.state.npcs[keeper].inventory.item_barley_pea_stew,4);
+  assert.deepEqual(doc.state.records[stockKey].members,{});books(f.engine.scoped(doc),doc);
+ }
+});
+
+test('folded account storage round trip continues native clocks and rejects an overdrawn share atomically',async t=>{
+ const f=await remoteArrival(),away=await act(f.engine,f.document,'world_move',{destination:'loc_bs'},'storage-away'),doc=away.document;
+ const directory=await fs.mkdtemp(path.join(tmpRoot(),'s509-accounts-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const reducer=(doc,input)=>f.engine.reduce(doc,input),store=new CampaignStorage(directory,{reducer});
+ await store.create({id:'accounts',worldVersion:world.version,document:doc});
+ const restored=(await store.import(await store.export('accounts'),'accounts-copy')).document;assert.deepEqual(restored,doc);
+ assert.deepEqual((await new CampaignStorage(directory,{reducer}).read('accounts')).document,doc);
+ const a=await act(f.engine,doc,'world_time',{minutes:1440},'accounts-clock'),b=await act(f.engine,restored,'world_time',{minutes:1440},'accounts-clock');
+ assert.deepEqual(a.document,b.document);books(f.engine.scoped(a.document),a.document);
+ const broken=premise(f.engine,doc,{facts:[{path:['state','records',stockKey,'members',keeper,'coins'],value:319}]}),before=structuredClone(broken);
+ // Aggregate1109 still backs1109 coins; raising one318 share to319 would
+ // demand1110. The real restore path must reject, without minting the gap.
+ await assert.rejects(act(f.engine,broken,'world_time',{minutes:1},'overdrawn-share'),/聚合钱款不足/);
+ assert.deepEqual(broken,before);
 });
 
 test('storage restart/export/import retains returned compartments and continues identically',async t=>{
