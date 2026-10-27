@@ -76,6 +76,7 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   }
   // D05 §5.5 / S5-05：放归动作保留已审来源，现已纳入 S0 导出；仍逐项核对唯一入口、必填目标和实际分派。
   if(a.id==='core:wildlife.release'){
+   assert.ok(!tools.get('world_field').properties.operation.enum.includes('wildlife_release'),'已审批的目录动作不应重复进入 S0 静态别名');
    assert.equal(a.source,'s505-resources');
    assert.deepEqual(a.call,{tool:'world_field',operation:'wildlife_release'});
    assert.deepEqual(a.slots,[{name:'target',kind:'text',required:true}]);

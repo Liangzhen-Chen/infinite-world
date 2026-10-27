@@ -7,7 +7,11 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
-import {uiSession,qty} from './helpers/ui-script.mjs';
+import {uiSession as createUISession,qty} from './helpers/ui-script.mjs';
+
+// Reuse the server's campaign seed interface: these scenarios test trade/time,
+// including L4 restocking with a healthy smith, rather than random illness.
+const uiSession=(t,options)=>createUISession(t,{...options,seed:'a1-lt-scenarios'});
 
 const engine=new WorldEngine(await loadWorld());
 const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan';

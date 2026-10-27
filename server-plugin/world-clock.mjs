@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {createHash} from 'node:crypto';
 import {weatherAt} from './weather.mjs';
 import {facilityRuntime} from './facility-state.mjs';
@@ -63,7 +64,7 @@ export function worldClockScene(engine,document){
  const quote=facilityRuntime().currentTradeQuote(engine,document,{item,location:profile.settlement});
  return `本日登记粮价：${engine.byId.get(item)?.name??item}每份${quote.listPrice}铜；按现有余粮和路线核价。`;
 }
-export function nextWorldClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='world_clock'&&r.nextAt>now).map(r=>r.nextAt));}
+export function nextWorldClockMinute(state,now){return Math.min(Infinity,...recordsWhere(state.records,'category','world_clock').filter(r=>r.category==='world_clock'&&r.nextAt>now).map(r=>r.nextAt));}
 export function advanceWorldClocks(d,engine,at){
  for(const r of engine.rules.worldClock?.clocks??[]){
   let row=d.get(...path(r.id));if(!row)continue;

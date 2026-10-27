@@ -1,8 +1,9 @@
 import {moveFishPopulation} from './stock.mjs';
 import {populationHealth,takePopulation,addPopulation} from './population-health.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {migrationPath} from './wildlife-range.mjs';
+import {migrationPath,speciesInHabitat} from './wildlife-range.mjs';
 import {forestHabitatCapacity} from './forest-water.mjs';
+import {populationCapacity,territoryCapacityFactor} from './ecology-dynamics.mjs';
 import {sapient} from './wildlife-awakening.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('seasonal-migration',{kinds:['tamed_by'],entities:['wreck'],locations:true});
@@ -52,7 +53,11 @@ export function advanceSeasonalMigration(d,engine,day){
         const actors=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===route.species&&a.ecology===route.from&&a.location===home.location&&!a.owner&&!sapient(a)&&!a.boss&&!a.lair&&alive(d,id,a)).sort(([a],[b])=>a.localeCompare(b,'en'));
         const target=d.get(...ecology(route.to),'populations',route.species),definition=engine.byId.get(route.species);
         const present=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.species===route.species&&a.location===destination.location&&!a.owner&&!sapient(a)&&alive(d,id,a)).length;
-        const room=Math.max(0,forestHabitatCapacity(engine,d.get('state'),destination,definition)-target.count-present-reservedMigrationCapacity(d,route.to,route.species));
+        // Seasonal arrivals share the same room as daily ecology and territory
+        // displacement; otherwise a displaced cohort can immediately move back.
+        const populations=d.get(...ecology(route.to),'populations'),catalog=speciesInHabitat(engine.rules,engine.world.monsters,destination.id);
+        const capacity=populationCapacity(d,engine,destination,definition,catalog,populations,forestHabitatCapacity(engine,d.get('state'),destination,definition)*territoryCapacityFactor(d,engine,destination),season);
+        const room=Math.max(0,capacity-target.count-present-reservedMigrationCapacity(d,route.to,route.species));
         const amount=Math.min(room,Math.floor((p.count+actors.length)*route.fraction));if(!amount)continue;
         const unseen=Math.min(p.count,amount),travellers=actors.slice(0,amount-unseen).map(([id])=>id),id=`${route.id}:${now}`;
         moveFishPopulation(d,engine,route.species,home.location,`migration:${id}`,unseen,id);

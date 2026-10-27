@@ -193,10 +193,13 @@ function updateRecordGroups(cache, records, id, previous, fields) {
         const groups = new Map(hit.groups);
         if (previous !== undefined && groups.has(oldKey)) {
             const rows = groups.get(oldKey) ?? NO_ROWS;
-            groups.set(oldKey, rows.flatMap(item => {
-                const matches = entries ? item[0] === id : item === previous;
-                return !matches ? [item] : exists && oldKey === newKey ? [entries ? [id, row] : row] : [];
-            }));
+            const updated = rows.slice();
+            for (let i = 0; i < updated.length; i++) {
+                if (entries ? updated[i][0] !== id : updated[i] !== previous) continue;
+                if (exists && oldKey === newKey) updated[i] = entries ? [id, row] : row;
+                else updated.splice(i--, 1);
+            }
+            groups.set(oldKey, updated);
         }
         if (exists && groups.has(newKey) && (previous === undefined || oldKey !== newKey)) {
             const rows=groups.get(newKey)??NO_ROWS;
@@ -358,7 +361,7 @@ export class PatchCursor {
     // chain: the own copies along the last written path. While none of them
     // has escaped since and each still hangs where it did, they are still
     // writable, so consecutive writes below them skip the mark lookups.
-    reset(document) { this.onPatch?.({op:'reset',path:[]});this.root = document; this.marks = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
+    reset(document) { this.onPatch?.({op:'reset',path:[]});this.root = document; this.marks = new WeakMap(); this.ownedChildren = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
     // Only this cursor's own copies are ever written in place, so only they need marking.
     expose(value) {
         if (value && typeof value === 'object' && this.marks.get(value) === 1) {
@@ -372,7 +375,15 @@ export class PatchCursor {
         if (mark === 1) return value;
         const copy = Array.isArray(value) ? [...value] : { ...value };
         // An escaped copy's children are now reachable from the escaped original too.
-        if (mark === 2) { this.chain = null; for (const key in copy) { const child = copy[key]; if (child && typeof child === 'object' && this.marks.get(child) === 1) this.marks.set(child, 2); } }
+        if (mark === 2) {
+            this.chain = null;
+            // Only path copies can be writable children. Cloned patch values
+            // are unmarked, so a large records table need not be scanned again.
+            for (const child of this.ownedChildren.get(value)?.values() ?? NO_ROWS) {
+                if (this.marks.get(child) === 1) this.marks.set(child, 2);
+            }
+            this.ownedChildren.delete(value);
+        }
         this.marks.set(copy, 1);
         return copy;
     }
@@ -418,11 +429,15 @@ export class PatchCursor {
             if (child === null || child === undefined) { next = {}; this.marks.set(next, 1); }
             else next = this.take(child);
             if (next !== child) target[key] = next;
+            let children = this.ownedChildren.get(target);
+            if (!children) this.ownedChildren.set(target, children = new Map());
+            children.set(key, next);
             target = next; nodes.push(next);
         }
         const key = path[last];
         if (patch.op === 'delete') delete target[key];
         else target[key] = value;
+        this.ownedChildren.get(target)?.delete(key);
         this.chain = { nodes, keys: path.slice(0, last) };
         this.revision++;
         if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields);
