@@ -5,19 +5,23 @@ import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,de
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
-import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,recordMarketDeal} from './market.mjs';
+import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,recordMarketDeal,customerPurseShare,customerReachMinutes,assertMarketDepth,reserveShortfall} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
 import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
-import {assessTradeTax,tradeTax} from './finance-tax.mjs';
+import {assessTradeTax,tradeTax,taxableSale} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {presentWitnesses} from './world-events.mjs';
+import {currentShops} from './shop.mjs';
+import {placeSettlement,personConstraint,personSimulation} from './entity-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -162,7 +166,7 @@ export async function businessTrade(d,args,eventId){
         const q=quote(d,this,'player',buyer,item,quantity,args.unitPrice,shop),cost=q.cost;
         const day=Math.floor(d.get('state','minute')/1440);
         const purchases=Object.values(d.get('state','records')??{}).filter(row=>row.kind==='sale'&&row.parties?.[1]===buyer&&Math.floor(row.createdAt/1440)===day);
-        const capacity=purchases[0]?.customerBudget??Math.floor(coinRead(d,{point:'business.cash',account:purse(this,buyer),legacy:()=>this.actor(d,buyer).coins})/4);
+        const capacity=purchases[0]?.customerBudget??Math.floor(coinRead(d,{point:'business.cash',account:purse(this,buyer),legacy:()=>this.actor(d,buyer).coins})*customerPurseShare(this));
         const spent=purchases.reduce((sum,row)=>sum+row.cost,0);
         if(spent+cost>capacity)throw preconditionFailure(`顾客当日店铺消费上限${capacity}铜，不无限消费`);
         const incomeBefore=this.actor(d,buyer).coins;
@@ -233,7 +237,12 @@ export function recordBusinessReceipt(d,before,{tool,args,eventId,detail}){
     for(const item of new Set([...Object.keys(start.goods),...Object.keys(end.goods)])){
         const delta=(end.goods[item]??0)-(start.goods[item]??0);if(delta)goods[item]=delta;
     }
-    const coins=end.coins-start.coins;
+    let coins=end.coins-start.coins;
+    // 居民上门买（advanceCustomerFlow）在时间推进里已各自开了经营回执；工具回执只记其余变化，不重复记同一笔现金与实物。
+    for(const r of Object.values(d.get('state','records')??{}))if(r.category==='business_receipt'&&r.operation==='customer_sale'&&!before.records?.[r.id]){
+        coins-=r.coins;
+        for(const [item,n] of Object.entries(r.goods)){goods[item]=(goods[item]??0)-n;if(!goods[item])delete goods[item];}
+    }
     const contracts=Object.values(d.get('state','records')??{}).filter(row=>row.category==='contract'&&row.version===1&&(row.performance?.some(p=>p.source===eventId)||row.source===eventId)).map(row=>row.id);
     if(coins||Object.keys(goods).length||contracts.length){
         const id=`business_receipt_${eventId}`;if(d.get(...path(id)))throw preconditionFailure('经营来源事件已登记，不能重复改账');
@@ -263,7 +272,7 @@ export function businessReport(d,engine,shop){
         else{
             let remaining=-delta,cost=0;
             while(remaining&&stock.length){const n=Math.min(remaining,stock[0].quantity);cost+=n*stock[0].price;stock[0].quantity-=n;remaining-=n;if(!stock[0].quantity)stock.shift();}
-            if(receipt.operation==='sell')stockCostOfSales+=cost;
+            if(['sell','customer_sale'].includes(receipt.operation))stockCostOfSales+=cost;
         }
         lots.set(item,stock);
     }
@@ -271,13 +280,14 @@ export function businessReport(d,engine,shop){
         const row=goods[item]??{opening:shop.opening.goods[item]??0,sources:[]};row.openingSource=shop.source;row.closing=closing.goods[item]??0;
         row.reconciled=row.opening+row.sources.reduce((sum,r)=>sum+r.quantity,0)===row.closing;goods[item]=row;
     }
-    const sales=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成'),revenue=sales.reduce((sum,r)=>sum+r.paid,0);
+    // 居民上门买（business.mjs 的 advanceCustomerFlow）没有合同行，成交记在经营回执里，与手动成交一并计入收入、销货成本与商税。
+    const sales=contracts.filter(r=>r.kind==='sale'&&r.status==='已完成'),walkIns=receipts.filter(r=>r.operation==='customer_sale'),revenue=sales.reduce((sum,r)=>sum+r.paid,0)+walkIns.reduce((sum,r)=>sum+r.coins,0);
     // F025: the books are the shop's. Capital the owner puts in or draws out of the counter moves cash but is neither
     // revenue nor expense; wages are the owner's own hired hands at this shop; tax is only what its own sales incurred.
     const capital=receipts.reduce((n,r)=>n+(['business_counter_open','business_counter_fund','business_counter_spend'].includes(r.operation)?r.coins:0),0);
     const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0)
         +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.owner===shop.owner&&r.location===shop.location&&r.createdAt>=shop.createdAt&&r.createdAt<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.paid,0);
-    const saleEvents=new Set(sales.map(r=>r.source)),taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&saleEvents.has(r.sourceEvent)).reduce((n,r)=>n+r.amount,0);
+    const saleEvents=new Set([...sales,...walkIns].map(r=>r.source)),taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&saleEvents.has(r.sourceEvent)).reduce((n,r)=>n+r.amount,0);
     const state=d.get('state'),claimIds=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),debts=obligationRows(state).filter(r=>claimIds.has(r.id)||claimIds.has(r.legacyRecord))
         .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
@@ -376,4 +386,151 @@ export function businessAction(d,args,eventId){
     endShop(d,this,shop,bankrupt?'破产':'停业',eventId,bankrupt?'无力用现金偿还现有欠款，欠款保留':'店主主动停业');
     if(bankrupt)entityTransition(d,this,{id:`${eventId}:business-breach`,verb:'breach',actor:shop.id,location:shop.location,visibility:'public',witnesses:presentWitnesses(d.get('state'),shop.location),participants:[shop.owner],tags:['business'],summary:`${shop.id}无力偿还经营欠款，宣告破产；债务保留`});
     return {business:shop.id,status:bankrupt?'破产':'停业',inventoryRetained:true,note:'剩余实物保留，未偿欠款仍在原债务记录中。'};
+}
+
+// F026 客流（营业商铺迎居民上门，属经营域）：商铺营业时，附近真实居民按自己的需求、钱袋与路程决定要不要上门买。
+// 不刷出凭空顾客：上门的是 state.npcs 里的居民，要的是他们自己缺的东西（口粮储备缺口、本行当缺的工具），
+// 付的是他们自己钱袋里的钱（当日上限 = 钱袋 × shop.customerPurseShare），走到店要在 shop.customerReachMinutes 内；
+// 买不买由 NPC 决策路径（npc-decision）当场判定，成交走与手动交易相同的报价、商税、账本与成交记录。
+// 没有需求、没钱、太远、或决策不愿意的人不会出现在成交里（只有真正上门又没买的才留下“未购”记录）。
+const DAY=1440,NOON=720;// 客流：每日正午
+const quantities1=v=>typeof v==='number'?v:v?.quantity??0;
+const SLEEPING=/睡眠|睡觉|熟睡/;
+const flowKey=(shop,day)=>['state','records',`customer_flow:${shop}:${day}`];
+
+// 本次营业的商铺：玩家已开张的店（店主在场、租约有效、柜台在铺内），以及作息里此刻接待交易的商铺。
+function openShops(d,engine,t){
+    const state=d.get('state'),out=[];
+    for(const shop of Object.values(state.records??{})){
+        if(shop.category!=='business'||shop.owner!=='player'||shop.status!=='营业'||(shop.openedAt??Infinity)>t||shop.location!==state.location)continue;
+        const lease=contractTerms(state.records?.[shop.lease]??{},t),counter=dedicatedCoinAccount(state,'player','counter');
+        if(lease?.kind!=='lease'||lease.status!=='有效'||lease.deadline<=t||!counter||counter.business!==shop.id||counter.seat!==shop.location)continue;
+        out.push({kind:'player',id:shop.id,keeper:'player',location:shop.location,settlement:placeSettlement(engine,state,shop.location).value,markup:shop.markup??1,counter});
+    }
+    for(const shop of currentShops(engine,state)){
+        const keeper=state.npcs?.[shop.keeper],slot=keeper&&scheduleAt(engine,shop.keeper,t,state);
+        if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||slot.location!==shop.location||!slot.services?.includes('trade'))continue;
+        out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:shop.location,settlement:shop.settlement,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
+    }
+    return out.sort((a,b)=>a.id.localeCompare(b.id));
+}
+const shelfOf=(d,engine,shop)=>shop.kind==='player'
+    ?Object.entries(d.get('state','inventory')??{}).filter(([item,v])=>quantities1(v)>0&&engine.byId.get(item)?.basePrice).map(([item])=>item)
+    :shop.goods.filter(item=>engine.quantity(d,shop.keeper,item)>0);
+
+// 居民此刻想买的：口粮与饮水按户里储备缺口折成份数；本行当要用而手边没有完好的工具买一件。
+function wants(d,engine,id,item,gaps){
+    const def=engine.byId.get(item),state=d.get('state'),out={quantity:0,severity:0};
+    if(def?.nutrition){
+        if(!gaps.has(id))gaps.set(id,reserveShortfall(d,engine,id));
+        const gap=gaps.get(id);
+        for(const need of ['satiety','hydration']){
+            const gain=def.nutrition[need]??0;if(gain<=0||!(gap[need]>0))continue;
+            const units=Math.ceil(gap[need]/gain);
+            if(units>out.quantity){out.quantity=units;out.severity=100;}
+        }
+    }
+    const trade=engine.world.recipes.filter(r=>r.tools?.includes(item)&&(r.teachers?.includes(id)||state.npcs[id]?.recipes?.[r.id]));
+    if(trade.length&&(!engine.quantity(d,id,item)||(state.npcs[id]?.inventory?.[item]?.durability??1)<=0)&&out.quantity<1){out.quantity=1;out.severity=60;}
+    return out;
+}
+function walkMinutes(engine,from,to,t,seed,cache){
+    if(from===to)return 0;
+    const key=`${from}|${to}`;if(cache.has(key))return cache.get(key);
+    let minutes;try{minutes=engine.route(from,to,'walk',t,seed).movingMinutes;}catch{minutes=Infinity;}
+    cache.set(key,minutes);return minutes;
+}
+// 当日已在各店花掉的钱：顾客一天的总上限按“当日起始钱袋”算，起始钱袋 = 现钱 + 当日已花。
+function spentToday(state,id,day){
+    return Object.values(state.records??{}).filter(r=>r.category==='customer_flow'&&r.day===day).flatMap(r=>r.visits).filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
+}
+
+function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
+    const state=d.get('state'),cost=quote.totalCoins;
+    let tax=0;
+    if(shop.kind==='player'){
+        const counter=shop.counter;
+        moveCoins(d,{from:purse(engine,buyer),to:counter.account,amount:cost,writer:'business',eventId});
+        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'business');
+        // 商税先由柜台划到店主钱袋，再由店主缴纳（与手动成交相同）。
+        const due=Math.floor(cost*tradeTax(engine,state,shop.location).bps/10000);
+        if(due){moveCoins(d,{from:counter.account,to:purse(engine,'player'),amount:due,writer:'business',eventId});mirrorPartyCoins(d,engine,'player',due,eventId,'business');}
+        tax=assessTradeTax(d,engine,{seller:'player',cost,location:shop.location,sourceEvent:eventId}).amount;
+        transferItems(d,engine,'player',buyer,item,quantity);
+    }else{
+        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,shop.keeper),amount:cost,writer:'shop',eventId});
+        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'shop');mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
+        transferItems(d,engine,shop.keeper,buyer,item,quantity);
+        tax=taxableSale(engine,d.get('state'),shop.keeper,item)?assessTradeTax(d,engine,{seller:shop.keeper,cost,location:shop.location,sourceEvent:eventId}).amount:0;
+    }
+    recordFinanceSale(d,engine,{buyer,seller:shop.keeper,item,quantity,cost,tax,eventId});
+    recordMarketDeal(d,quote,cost,quantity,eventId);
+    if(shop.kind==='player'){
+        // 与手动成交同口径的经营回执：现金、实物与成交，供店铺报表对账。
+        holdingSet(d,null,path(`business_receipt_${eventId}`),{id:`business_receipt_${eventId}`,category:'business_receipt',businesses:[shop.id],source:eventId,tool:'customer_flow',operation:'customer_sale',minute:t,
+            coins:cost,goods:{[item]:-quantity},contracts:[],counterparties:[{actor:buyer,coins:-cost,goods:{[item]:quantity}}],trade:{buyer,seller:'player',item,quantity,cost}},'business');
+    }
+    return {cost,tax};
+}
+
+// 当天正午可能上门的居民：活着、成年、有钱、清醒、没有义务冲突；他们的位置按作息在正午的安排。每天只算一次。
+function walkIns(d,engine,t){
+    const state=d.get('state'),out=[];
+    for(const id of Object.keys(state.npcs??{}).sort()){
+        const npc=state.npcs[id];
+        // 只有有独立生活记录的完整人物自己上门；背景居民的吃用并在聚落账里（粮仓、周贸易），不单独采买。
+        if(!npc||!personSimulation(engine,{},id).value||(npc.coins??0)<1||['死亡','濒死','昏迷','患病'].includes(npc.status)||state.player.companions?.includes(id))continue;// 路上与否按正午的作息算（slot），不看结算时刻的临时移动状态，使等待的切分不影响客流
+        if((engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
+        const slot=scheduleAt(engine,id,t,state);
+        if(!slot||SLEEPING.test(slot.activity??'')||personConstraint(engine,state,id,t)||engine.npcObligationAt(state,id,t))continue;
+        out.push({id,slot,settlement:placeSettlement(engine,state,slot.location).value});
+    }
+    return out;
+}
+
+function serve(d,engine,shop,t,residents,gaps,routes){
+    const state=d.get('state'),day=Math.floor(t/DAY),share=customerPurseShare(engine),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
+    const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
+    const visits=[];
+    for(const {id,slot,settlement} of residents){
+        if(id===shop.keeper||settlement!==shop.settlement||walkMinutes(engine,slot.location,shop.location,t,seed,routes)>reach)continue;
+        for(const item of shelf){
+            // 当日上限：起始钱袋（现钱 + 当日已花）× 比例，减去已花；现钱不够的人不上门。
+            const coins=d.get('state','npcs',id,'coins'),spent=spentToday(d.get('state'),id,day)+visits.filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
+            const cap=Math.min(coins,Math.floor((coins+spent)*share)-spent);
+            if(cap<1)break;
+            const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
+            const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
+            let quantity=Math.min(want.quantity,available),quote=null;
+            const base=()=>regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
+            for(;quantity>0;quantity--){
+                const q=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity,location:shop.location,minute:t,base:base(),business:{keeper:shop.keeper,markup:shop.markup}});
+                if(q.totalCoins>=1&&q.totalCoins<=cap){quote=q;break;}
+            }
+            if(!quote)continue;// 买不起哪怕一份：不上门
+            // 决策按居民正午的实际处境判断（此刻结算时他们多半已睡下）：位置与活动取作息在正午的安排。
+            const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
+            const decision=npcDecision(subjectiveView(engine,projected,id),{kind:'purchase',from:shop.keeper,cost:{coins:quote.totalCoins},reward:Math.floor(quote.explanation.value.value*quantity),needSatisfaction:want.severity});
+            if(decision.outcome!=='agree'){visits.push({npc:id,item,quantity,quoted:quote.totalCoins,outcome:decision.outcome,reason:decision.reason});if(decision.outcome==='defer')break;continue;}
+            try{assertMarketDepth(d,engine,quote);}catch(error){visits.push({npc:id,item,quantity,quoted:quote.totalCoins,outcome:'out_of_depth',reason:error.message});continue;}
+            const eventId=`customer:${shop.id}:${t}:${id}:${item}`;
+            const result=sell(d,engine,shop,id,item,quantity,t,quote,eventId);
+            gaps.delete(id);// 买到了东西，户里的储备缺口要重算
+            visits.push({npc:id,item,quantity,paid:result.cost,tax:result.tax,outcome:'bought',sourceEvent:eventId});
+        }
+    }
+    if(visits.length)holdingSet(d,null,flowKey(shop.id,day),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
+}
+
+// 每日打烊结算：跨过午夜时，为刚过去的那一天的正午迎客（店主当日全程在铺内，才算“营业”）。
+// 居民的去向按作息在正午的位置算，不依赖结算时他们在哪里。
+export function advanceCustomerFlow(d,engine,before,after){
+    for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
+        const t=(day-1)*DAY+NOON;
+        if(t<0)continue;
+        const shops=openShops(d,engine,t);
+        if(!shops.length)continue;
+        const residents=walkIns(d,engine,t),gaps=new Map(),routes=new Map();
+        for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+    }
 }

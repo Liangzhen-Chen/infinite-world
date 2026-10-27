@@ -36,10 +36,13 @@ test('D02 卖兽皮：基准6文、供需0.5、收购价差0.6，五张共9文�
 });
 test.todo('D02 ⑤按收购价（6 文）而非零售价计算——引擎同一件货买卖同价（一个 basePrice，没有收购/零售价差），无法区分“按零售价多给”这一易错；缺 side 参数的市场投影（S5：settlePrice(side: buy | sell)，spread.buy）');
 
+// F026: the tavern keeper's only income examined by the lodging tests is the room fee, so every other resident is penniless (nobody walks in
+// at noon and buys; walk-in customers have their own tests in s5-w4-economy).
+const penniless=s=>{for(const [id,npc] of Object.entries(s.npcs))if(id!==LINSUI)npc.coins=0;};
 test('D04 住店一晚 ①②③：单间 40 文/晚，120→80，客栈钱柜 +40，只扣一晚，睡到次日卯时（约 9 小时），随身物品不变',async t=>{
  // 来福客栈单间 40 文→青灯酒馆客房改价 40；秋季九月二十戌时；玩家 120 文。
  const world=variant(w=>{const l=w.locations.find(x=>x.id===INN);l.lodging={...l.lodging,nightlyCopper:40};});
- const start=monthDayMinute(9,20,20,0),ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;s.player.hp=5;})});
+ const start=monthDayMinute(9,20,20,0),ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;s.player.hp=5;penniless(s);})});
  const before=await primed(ui),rent=await ui.choose('trade.lodge',{days:1});assert.ok(rent.ok,rent.error);
  const woke=await ui.choose('time.sleep',{until:{dayOffset:1,hour:5}});assert.ok(woke.ok,woke.error);const after=await ui.read();
  assert.equal(before.state.player.coins,120);assert.equal(after.state.player.coins,80,'①120→80（只扣一晚）');
@@ -50,7 +53,7 @@ test('D04 住店一晚 ①②③：单间 40 文/晚，120→80，客栈钱柜 +
 });
 test('D04.4 public paid lodging sleeps a full 540 minutes and recovers capped stamina, charging the room once',async t=>{
  const world=variant(w=>{w.locations.find(l=>l.id===INN).lodging.nightlyCopper=40;}),start=monthDayMinute(9,20,20,0);
- const ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;s.player.body={stamina:{value:30,asOf:start,activity:'rest'},satiety:{value:100,asOf:start,activity:'rest'}};})});
+ const ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;penniless(s);s.player.body={stamina:{value:30,asOf:start,activity:'rest'},satiety:{value:100,asOf:start,activity:'rest'}};})});
  const before=await primed(ui),room=await ui.choose('trade.lodge',{days:1});assert.ok(room.ok,room.error);assert.equal(room.result.cost,40);
  const bed=await ui.read(),sleep=await ui.choose('time.sleep',{until:{dayOffset:1,hour:5,minute:11}});assert.ok(sleep.ok,sleep.error);const after=await ui.read();
  assert.equal(after.state.minute-bed.state.minute,540);assert.equal(sleep.result.cost.sleep.minutes,540);assert.equal(sleep.result.cost.sleep.coveredMinutes,540);assert.equal(after.state.player.body.stamina.value,100);assert.equal(after.state.player.coins,80);assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,40);assert.deepEqual(after.state.inventory,before.state.inventory);conserved(before,after,'D04.4',new WorldEngine(world));

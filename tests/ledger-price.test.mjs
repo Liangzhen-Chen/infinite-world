@@ -61,9 +61,8 @@ const SURVEY={
     // the regional wrapper delegates inventory pricing to registered market.
     'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
-    'credit.mjs':'公式 = 基价 × 抵押数量，数量来自借据与参数，不读库存',
-    'transition.mjs':'遗产估值 = 基价 × 已转移账户或持有数量；清偿与分配数量来自账本，不使用估值决定可支付库存',
-    'finance-bank.mjs':'当铺估价 = 基价 × 参数数量；存款利率读区域报价缓存与灾害系数，都不读库存或现款',
+    // S5 W4 F007/F058：押品、典当物、遗产与责任上限不再自己拿目录基价乘数量，统一经估值角色（valuation.mjs）取市场估值投影；
+    // credit / transition / finance-bank 因此不再含价格字样，按本测试的规则从归类表删除。
     'bounty.mjs':'贿赂价码 = 涉案金额 × 廉洁度 × 立场，不读存量',
     'law.mjs':'偷窃涉案值取物品基价或参数金额，不读存量',
     'npc-crime.mjs':'涉案值取物品基价','extraction.mjs':'采得物价值取物品基价','boss-negotiation.mjs':'谈判礼物估值取参数数量 × 基价',

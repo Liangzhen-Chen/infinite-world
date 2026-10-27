@@ -69,13 +69,14 @@ function write(d,e,row){
         }
     }
     if(row.legacyRecord){
+        // G0 第 3 条：业务子类型（pawn / player_loan 等）是旧记录的原始事实，规范种类只是适配映射，写回不覆盖 kind。
         const old=read(d,'state','records',row.legacyRecord)??{};
         if(old.category&&old.category!=='debt')return read(d,'state','obligations',row.id);
         const status=row.status==='settled'?'已还清':['void','cancelled'].includes(row.status)?'已取消':old.status??'履行中';
         holdingSet(d,e,['state','records',row.legacyRecord],clean({...old,id:row.legacyRecord,category:'debt',obligation:row.id,
             debtor:row.debtor,creditor:row.creditor,amount:row.remaining!==undefined?(row.paid??0)+row.remaining:row.amount,
             ...(row.remaining!==undefined?{contractualAmount:row.amount}:{}),paid:row.paid??0,status,
-            createdAt:row.createdAt,deadline:row.deadline,kind:row.kind,terms:row.terms,
+            createdAt:row.createdAt,deadline:row.deadline,kind:old.kind??row.kind,terms:row.terms,
             ...(row.endedAt!==undefined?{endedAt:row.endedAt}:{}),...(row.amendments?{amendments:row.amendments}:{})}),W);
     }
     return read(d,'state','obligations',row.id);

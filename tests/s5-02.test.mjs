@@ -19,7 +19,10 @@ const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
 function fixture(setup={},w=world){
  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s502-market');
  // Money, opening shelves and the business window are unrelated premises.
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:inn,coins:10000,...setup});
+ // F026: with {noCustomers:true} every resident but the tavern keeper is penniless, so nobody walks in and buys down the shelves while the
+ // quote/day-rollover mechanics under test run (walk-in customers have their own tests in s5-w4-economy).
+ const {noCustomers,...rest}=setup,poor=noCustomers?Object.keys(initial.state.npcs).filter(id=>id!==host).map(id=>({path:['state','npcs',id,'coins'],value:0})):[];
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:inn,coins:10000,...rest,...(poor.length?{facts:[...(rest.facts??[]),...poor]}:{})});
  assert.deepEqual(prepared.setupUnmet,[]);let document=prepared.document;
  return {engine,get document(){return document;},replace(next){document=next;},read(){return {document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};},
   async act(args,id){const out=await engine.reduce(document,{tool:'world_trade',args,eventId:id});document=applyPatches(document,out.patches);return out;}};
@@ -206,7 +209,7 @@ test('retail rounds only the final total; bulk integrates the clamped supply cur
 });
 
 test('explanation reproduces quote; native storage roundtrip rederives; next day removes daily pressure',async t=>{
- const f=fixture();await f.act({seller:host,item:bread,quantity:1},'s502-roundtrip');
+ const f=fixture({noCustomers:true});await f.act({seller:host,item:bread,quantity:1},'s502-roundtrip');
  const q=quote(f),e=q.explanation;
  assert.equal(e.value.base,e.base*e.scarcity*e.quality);assert.equal(e.price.base,e.value.value*e.depth*e.spread*e.relation);
  assert.equal(q.listPrice,e.price.value);assert.equal(q.totalCoins,Math.trunc(q.exactTotal));

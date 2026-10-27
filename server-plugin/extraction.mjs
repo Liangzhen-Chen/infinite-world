@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView,personConstraint} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
-import {heldUnit,wearItem,produceItems} from './items.mjs';
+import {heldUnit,wearItem,produceItems,changeItems} from './items.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
 import {adjustStanding} from './standing.mjs';
@@ -274,7 +274,7 @@ export function releaseFish(d,args,eventId){
  const individuals=Object.entries(d.get('state','creatures')??{}).filter(([key,a])=>key!==id&&a.species===species&&a.location===location&&!a.owner&&a.hp>0).length;
  if(population.count+individuals>=limit)throw preconditionFailure('The fish habitat is full');
  moveStock(d,{from,to:fishAccount(this,location),amount:1,writer:'extraction',eventId});
- if(unit){this.itemDelta(d,'player',unit.item,-1,BOOKED);holdingSet(d,null,['state','itemInstances',id],{...d.get('state','itemInstances',id),status:'已放归',living:false,releasedAt:d.get('state','minute'),releasedInto:habitat.id},'extraction',eventId);}
+ if(unit){changeItems(d,this,'player',unit.item,-1,{selection:[id],books:BOOKED});holdingSet(d,null,['state','itemInstances',id],{...d.get('state','itemInstances',id),status:'已放归',living:false,releasedAt:d.get('state','minute'),releasedInto:habitat.id},'extraction',eventId);}
  runLifecycleProtocol(d,this,{entity:id,kind:'gone',basis:'aggregated',origin:'aggregated',eventId:`${eventId}:aggregate`,location});
  if(!unit)holdingRemove(d,this,['state','creatures',id],'extraction',eventId);
  const returned=structuredClone(population);

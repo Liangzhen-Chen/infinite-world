@@ -400,7 +400,7 @@ export function agricultureAction(d,args,eventId){
     balanced(r,s);
     if(['buy','donate','reserve_seed','repair'].includes(operation)){
         counter(d,this,p);
-        const quantity=operation==='repair'?0:int(args.quantity);
+        const quantity=operation==='repair'?0:int(args.quantity);let accepted=0;
         const item=this.rules.agriculture.grainItem;
         if(!this.replaying&&['buy','donate','reserve_seed'].includes(operation)&&args.item!==undefined&&this.resolve(args.item,'item')!==item)throw preconditionFailure(`粮仓此操作只办理${this.byId.get(item).name}，不能替换指定物品；其他商品请向实际商家交易`);
         if(operation==='buy'){
@@ -410,7 +410,7 @@ export function agricultureAction(d,args,eventId){
             moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity,BOOKED);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
         }else if(operation==='donate'){
             if(this.quantity(d,'player',item)<quantity)throw preconditionFailure('行囊谷物不足');this.itemDelta(d,'player',item,-quantity,BOOKED);
-            r.ledger.donated+=quantity;addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays,from:{account:bag(this,'player',item)}});
+            accepted=addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays,from:{account:bag(this,'player',item)}});r.ledger.donated+=accepted;// F043：粮仓放不下的部分在交割处损毁，捐赠账与贡献只计实收
         }else if(operation==='reserve_seed'){
             if(r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)<quantity)throw preconditionFailure('实际谷物不足，不能把蔬果或未来收成当种粮');
             const moved=takeGrain(r,s,quantity,true,{account:seedAccount(this,id)},b=>({id:seedLotId(b),kind:'seed'}));r.field.seedBank+=quantity;r.field.seedBatches.push(...moved.parts.map(({amount,harvestDay,expiresDay})=>({amount,harvestDay,expiresDay})));
@@ -420,7 +420,7 @@ export function agricultureAction(d,args,eventId){
             s.wood-=p.repairWood;s.iron-=p.repairIron;r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);
         }
         balanced(r,s);commit(d,this,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);
-        this.advance(d,operation==='repair'?90:10,eventId);return{settlement:id,operation,quantity,food:d.get('state','settlements',id,'food'),seed:d.get(...path(id),'field','seedBank'),note:'只结算实际粮物、材料及款项，不代表额外NPC承诺'};
+        this.advance(d,operation==='repair'?90:10,eventId);return{settlement:id,operation,quantity,...(operation==='donate'?{accepted,destroyed:quantity-accepted}:{}),food:d.get('state','settlements',id,'food'),seed:d.get(...path(id),'field','seedBank'),note:'只结算实际粮物、材料及款项，不代表额外NPC承诺'};
     }
     if(operation==='guard'){
         const pest=farmPestProfile(this,id);if(!pest)throw preconditionFailure('当前农田没有启用害兽防护规则');

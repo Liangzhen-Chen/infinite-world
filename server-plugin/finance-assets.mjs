@@ -5,7 +5,10 @@ import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './con
 import {counterpart} from './credit.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {adoptLegacyObligation} from './obligation-runtime.mjs';
-import {workshopFund,coinRead,partyAccount} from './money.mjs';
+import {settlementPresent} from './obligation-presence.mjs';
+import {registerValuer} from './valuation.mjs';
+import {explainDerived} from './derived.mjs';
+import {workshopFund,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
@@ -13,7 +16,7 @@ import {facilityView} from './facility-state.mjs';
 import {marketQuote} from './market.mjs';
 import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './currency.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
-import {laborTrade} from './labor-market.mjs';
+import {laborTrade,withAbsenceBreach} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
 import {store,bag,bookStock,craftInput,craftOutput,recordCraft,priceRead,bagStock} from './stock.mjs';
@@ -77,6 +80,33 @@ export function netAssets(d,e,id){
     const state=d.get('state'),debt=obligationRows(state).filter(r=>r.debtor===id).reduce((n,r)=>n+obligationView(state,r).owed,0);
     return Math.max(1,cash+stock-debt);
 }
+// ---- 估值角色的登记（valuation.mjs）--------------------------------------------------------------
+// 物品：市场估值投影（基准 × 稀缺 × 品质，不含商家价差与立场），按给定地点；货币按当地汇率。
+function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player'}){
+    const def=e.byId.get(item);
+    if(!def)return {value:null,unvaluable:'不是已登记的物品'};
+    const currency=currencyRow(e,item);
+    if(currency)return {value:currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins,basis:'currency'};
+    if(!def.basePrice)return {value:null,unvaluable:'没有估值基准'};
+    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location)});
+    return {value:quantity*projection.explanation.value.value,basis:'market-value'};
+}
+registerValuer('goods',goodsValuation);
+// 股份：发行方净资产 × 持股比例。
+registerValuer('share',(d,e,{issuer,fraction})=>{
+    try{return {value:netAssets(d,e,issuer)*fraction,basis:'net-assets'};}
+    catch{return {value:null,unvaluable:'发行方账目不可查，无法估计股份价值'};}
+});
+// 地产：市场租金按资本回报率资本化（月租 ÷ 月息带中值），再乘完好度，经 economy:landValue 修正。
+registerValuer('property',(d,e,{subject,fraction=1})=>{
+    const state=d.get('state'),place=base(e,state,subject);
+    if(!place||!(state.buildings?.[subject]||place.purpose))return {value:null,unvaluable:'没有租金或用途可资本化'};
+    const kind=/田|耕|农地/.test(place.purpose??place.name)?'field':/铺|店|商|工坊/.test(place.purpose??place.name)?'commercial':'home';
+    const [low,high]=e.rules.economy.loanMonthlyInterest,monthly=e.rules.economy.rentalCopperPerWeek*4*(kind==='commercial'?2:1);
+    const condition=Math.max(0,Math.min(100,state.buildings?.[subject]?.condition??100))/100;
+    const baseValue=monthly/((low+high)/2)*condition;
+    return {value:explainDerived(e,d.document??{state},'economy:landValue',subject,{kind:'land',base:baseValue}).value*fraction,basis:'capitalized-rent'};
+});
 export function operatingProfit(d,e,issuer){
     const recorded=d.get(...rec(`finance_profit:${issuer}`))?.net??0;
     const ledger=groupAccountView(e,d.get('state'),issuer)?.ledger??d.get(...rec(`organization:${issuer}`),'ledger')??[];
@@ -116,17 +146,31 @@ export function recordFinanceSale(d,e,{buyer,seller,item,quantity,cost,tax=0,eve
     holdingSet(d,e,rec(key),{...old,net:old.net+profit,lots:{...old.lots,[item]:lots},entries:[...old.entries,{sourceEvent:eventId,minute:d.get('state','minute'),revenue:cost,cost:basis,tax,profit}]},'finance-assets');
     return basis;
 }
+// §15.1.1 价值有位置：收付双方（组织以现任代表为位置）同在一处才当面交付；不在场时，能付的款形成到期应付（真实债务），
+// 由通用清偿运行时按在场、代收、汇票或承运结算，不凭空转账。
+const payerAt=(e,state,id)=>groupAccountView(e,state,id)?groupRepresentative(e,state,id)??id:id;
+function openClaim(d,e,key,debt){
+    holdingSet(d,e,rec(key),debt,'finance-assets');adoptLegacyObligation(d,e,key);
+}
 function payDividend(d,e,row,at){
     row=contractTerms(row,at);
     const profit=operatingProfit(d,e,row.issuer),eligible=Math.max(0,Math.floor((profit-row.baselineProfit)*row.share/100)-row.distributed);
     // Earned claims precede the residual return on equity. Count a canonical
     // claim and its compatibility record only once, including unpaid wages.
-    const state=d.get('state'),priority=obligationRows(state).filter(r=>r.debtor===row.issuer&&r.kind!=='dividend'&&r.kind!=='partnership')
-        .reduce((n,r)=>n+obligationView(state,r,at).amountDue,0);
-    const paid=Math.min(eligible,Math.max(0,financeBalance(d,e,row.issuer)-priority));
-    if(paid)financeTransfer(d,e,row.issuer,row.holder,paid,`${row.id}:${at}`);
-    const next={...row,distributed:row.distributed+paid,nextDividend:at+MONTH,payments:[...row.payments,{minute:at,paid,profit,eligible}]};holdingSet(d,e,rec(row.id),next,'finance-assets');
-    if(paid)financeEvent(d,e,{id:`${row.id}:${at}`,actor:row.issuer,target:row.holder,value:paid,minute:at,location:row.location,tags:['dividend']});
+    const state=d.get('state'),open=obligationRows(state).filter(r=>r.debtor===row.issuer);
+    const priority=open.filter(r=>r.kind!=='dividend'&&r.kind!=='partnership').reduce((n,r)=>n+obligationView(state,r,at).amountDue,0);
+    // Dividends already promised but not yet delivered are also owed out of the same cash.
+    const promised=open.filter(r=>r.kind==='dividend').reduce((n,r)=>n+obligationView(state,r,at).owed,0);
+    const payable=Math.min(eligible,Math.max(0,financeBalance(d,e,row.issuer)-priority-promised));
+    const present=settlementPresent(e,state,payerAt(e,state,row.issuer),row.holder),key=`${row.id}:${at}`;
+    let paid=0,claim=null;
+    if(payable&&present){financeTransfer(d,e,row.issuer,row.holder,payable,key);paid=payable;}
+    else if(payable){
+        claim=`debt_dividend:${key}`;
+        openClaim(d,e,claim,{category:'debt',kind:'dividend',debtor:row.issuer,creditor:row.holder,amount:payable,paid:0,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location,unpresented:true});
+    }
+    const next={...row,distributed:row.distributed+paid+(claim?payable:0),nextDividend:at+MONTH,payments:[...row.payments,{minute:at,paid,profit,eligible,...(claim?{claim,owed:payable}:{})}]};holdingSet(d,e,rec(row.id),next,'finance-assets');
+    if(paid)financeEvent(d,e,{id:key,actor:row.issuer,target:row.holder,value:paid,minute:at,location:row.location,tags:['dividend']});
     return next;
 }
 export function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
@@ -266,11 +310,13 @@ export function terminateAssetLease(d,e,{contract,actor,reason='退租'},eventId
     return {contract,status:'已终止',endedAt:now};
 }
 function rentDue(d,e,row,at){
-    const terms=leaseState(e,d.get('state'),row,at);
-    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(terms.monthlyRent*Math.min(MONTH,terms.clauses.expires-at)/MONTH),paid=Math.min(amount,financeBalance(d,e,row.tenant));
-    if(paid)financeTransfer(d,e,row.tenant,contractTerms(row,at).owner??'player',paid,key);
+    const terms=leaseState(e,d.get('state'),row,at),owner=contractTerms(row,at).owner??'player',state=d.get('state');
+    const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(terms.monthlyRent*Math.min(MONTH,terms.clauses.expires-at)/MONTH);
+    // §15.1.1：房客与业主不在同处时租金不凭空转账，形成到期应付，等当面、代收或寄汇清偿。
+    const present=settlementPresent(e,state,payerAt(e,state,row.tenant),owner),paid=present?Math.min(amount,financeBalance(d,e,row.tenant)):0;
+    if(paid)financeTransfer(d,e,row.tenant,owner,paid,key);
     if(paid<amount){
-        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:contractTerms(row,at).owner??'player',amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location};holdingSet(d,e,rec(key),debt,'finance-assets');
+        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:owner,amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location,...(present?{}:{unpresented:true})};holdingSet(d,e,rec(key),debt,'finance-assets');
         adoptLegacyObligation(d,e,key);
     }
     holdingSet(d,e,rec(row.id),{...row,paid:row.paid+paid,nextRent:at+MONTH},'finance-assets');
@@ -288,18 +334,21 @@ function workshopShift(d,e,row,at){
     // F083: the day's work is the minutes the worker really spent at the workshop (late arrival, an absent day, a walk home
     // that ate part of the window all count as they happened); nothing is paid or produced for minutes not worked.
     const start=Math.floor(at/DAY)*DAY+480,minutes=Math.min(480,row.attendance?.[String(Math.floor(start/DAY))]??0);
-    if(!minutes){holdingSet(d,e,rec(row.id),{...row,nextWork:at+DAY,reason:'没有实际到岗工时'},'finance-assets');return;}
+    if(!minutes){holdingSet(d,e,rec(row.id),{...withAbsenceBreach(row,{at,start}),nextWork:at+DAY,reason:'没有实际到岗工时'},'finance-assets');return;}
     try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
     catch(error){if(!/冲突|自主工作/.test(error.message))throw error;return end('罢工','本班与已有义务冲突');}
     if(!ownsWorkshop(s,row.location,owner)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
     if(row.wage<wage&&row.raiseRequestedAt)return end('罢工','加薪要求尚未解决');
     // Day wage pro rata to the minutes worked; the cumulative units make the rounding exact (never more than the wage per day).
     const units=row.wageUnits??0,total=units+row.wage*minutes,earned=Math.ceil(total/480)-Math.ceil(units/480);
-    if(financeBalance(d,e,owner)<earned)return end('罢工','雇主付不起本班工钱');
+    // 15 §15.1.1: an owner who keeps a counter pays his hands from it and from nothing else (same rule as labor-market settleEmploymentPay).
+    const counter=dedicatedCoinAccount(s,owner,'counter'),wageFunds=()=>counter?counterCash(d,owner):financeBalance(d,e,owner);
+    if(wageFunds()<earned)return end('罢工','雇主付不起本班工钱');
     const plan=employmentProductionPlan(d,e,{...row,owner},{minutes});
     if(plan.reason)return end('罢工',plan.reason);
-    if(financeBalance(d,e,owner)<earned+plan.fee)return end('罢工','工钱与工作台费用不足');
-    financeTransfer(d,e,owner,row.worker,earned,`${row.id}:${at}`);
+    if(financeBalance(d,e,owner)<plan.fee+(counter?0:earned))return end('罢工','工钱与工作台费用不足');
+    if(counter)payFromCounter(d,e,{owner,to:row.worker,amount:earned,writer:'finance-assets',eventId:`${row.id}:${at}`});
+    else financeTransfer(d,e,owner,row.worker,earned,`${row.id}:${at}`);
     const {quantity,...shift}=settleEmploymentProduction(d,e,{...row,owner},at,plan),eventId=`${row.id}:${at}`;
     const next={...row,nextWork:at+DAY,paid:row.paid+earned,wageUnits:total,produced:row.produced+quantity,status:row.wage<wage?'要求加薪':'有效',
         ...(row.wage<wage?{raiseRequestedAt:at,requestedWage:wage}:{}),shifts:[...row.shifts,{...shift,wage:row.wage,minutes,earned}]};holdingSet(d,e,rec(row.id),next,'finance-assets');
@@ -319,7 +368,7 @@ export function advanceFinanceAssets(d,e,minute,recordIds){
             if(minute>=contractTerms(initial,minute).deadline&&['有效','要求加薪','罢工'].includes(contractTerms(d.get(...rec(initial.id)),minute).status))changeLegacyHoldings(d,e,{holder:initial.worker,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,e,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:contractTerms(initial,minute).deadline},'finance-assets'));
         }
     }
-    for(const [id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted){
+    for(const [id,row]of (recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{})))if(row.kind==='rent'&&row.category==='debt'&&row.amount>row.paid&&row.deadline<=minute&&!row.defaulted&&!row.unpresented){// 未能当面交付的租金不是违约，催收见 collect
         const legalCase=registerCreditDefault(d,e,{debt:id,row,value:row.amount-row.paid,minute:row.deadline});holdingSet(d,e,rec(id),{...row,status:'逾期',defaulted:{case:legalCase,remaining:row.amount-row.paid,minute:row.deadline}},'finance-assets');
     }
 }

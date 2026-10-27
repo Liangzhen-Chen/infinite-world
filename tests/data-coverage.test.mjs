@@ -62,13 +62,15 @@ test('白石镇公账只记钱，不进每日口粮结算；公事委托从公�
  // T155 may escrow a public wildlife commission during the wait. Food and
  // production remain unchanged; every copper spent must fund an actual quest.
  const spent=doc=>Object.values(doc.state.quests).filter(q=>q.fundedBy?.treasury==='loc_bs').reduce((sum,q)=>sum+q.escrow+(q.rewardPaid??0),0);
+ // F010: shopkeepers pay the settlement treasury for what they restock from it (shop day-books name each payment).
+ const restocked=doc=>Object.values(doc.state.records).filter(r=>r.category==='shop_ledger').flatMap(l=>l.entries).filter(e=>e.from==='loc_bs').reduce((n,e)=>n+(e.cost?.goods??0),0);
  const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:3*1440},eventId:'wait-1'});doc=applyPatches(doc,out.patches);
- assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)});
+ assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc)});
  doc.state.records['hazard-flood:loc_bs_hebu']={category:'hazard_flood',location:'loc_bs_hebu',since:doc.state.minute,until:doc.state.minute+1440*4,soaked:[],sourceEvent:'test-flood'};
  const next=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'wait-2'})).patches);
  const q=Object.values(next.state.quests).find(q=>q.source?.cause==='hazard-flood:loc_bs_hebu');
  assert.ok(q);assert.equal(q.location,'loc_bs');assert.equal(q.publisher,'npc_bs_031_1');assert.equal(q.fundedBy.treasury,'loc_bs');
- assert.equal(next.state.settlements.loc_bs.treasury,before.treasury-spent(next));
+ assert.equal(next.state.settlements.loc_bs.treasury,before.treasury-spent(next)+restocked(next));
 });
 
 test('势力委托：至少15个势力时钟阶段挂了委托，且能按阶段实际张贴',()=>{

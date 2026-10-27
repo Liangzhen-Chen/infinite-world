@@ -146,6 +146,8 @@ test('F083 玩家雇的工坊工人：迟到两小时按实到分钟结薪和产
     await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];
     assert.equal(row.paid,before.paid);assert.equal(row.produced,before.produced);assert.equal(row.shifts.length,before.shifts);
     assert.equal(f.doc.state.inventory.item_wood.quantity,before.wood);assert.equal(row.status,'有效');assert.equal(row.reason,'没有实际到岗工时');
+    // S5 W2b/W4：没有一分钟实际到岗的工作日是工人的缺勤，记一次缺勤违约（与 labor-market 同一 withAbsenceBreach），前两日没有。
+    assert.deepEqual(row.breaches.map(b=>[b.kind,b.by,b.day]),[['缺勤',worker,D1+2]]);
 });
 test('商税及关税随政体与聚落级别派生，缴入公账，走私数量免于合法通关税；不足拒绝',async()=>{
     const f=fixture(),sid='loc_hw',before=tradeTax(f.e,f.doc.state,post),total=cash(f.doc),treasury=f.doc.state.settlements[sid].treasury;

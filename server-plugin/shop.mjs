@@ -1,13 +1,15 @@
 import {vocabulary} from './domain-rules.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {purse,treasury as treasuryAccount,moveCoins,coinRead,dedicatedCoinAccount,counterCash,depositCounter,booksOpen} from './money.mjs';
+import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinAccount,counterCash,depositCounter,booksOpen} from './money.mjs';
+import {porterCharges} from './transport.mjs';
+import {advanceCustomerFlow} from './business.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
 // S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
-declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}}});
+declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}},sinks:['sink:export']});
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
@@ -18,7 +20,7 @@ const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const r
 import {digest,recordsWhere,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
-import {marketQuote,recordMarketDeal,goodsClass} from './market.mjs';
+import {marketQuote,recordMarketDeal,goodsClass,registerShopShelves} from './market.mjs';
 import {currencyRow,currencyTradePrice} from './currency.mjs';
 export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
 
@@ -138,6 +140,18 @@ export function shopStores(world){
     const rules=world.rules.economy?.shops;if(!rules)return[];
     return [...rules.stores??[],...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
 }
+// 某聚落全部商铺的货架条目（登记的店 + 按人物派生的店），按世界定义缓存；市场需求读它（market.mjs 的 F026）。
+const shelfIndex=new WeakMap();
+registerShopShelves((engine,place)=>{
+    const rules=engine.rules.economy?.shops;if(!rules)return null;
+    let index=shelfIndex.get(rules);
+    if(!index||index.npcs!==engine.world.npcs){
+        const rows=new Map();
+        for(const store of shopStores(engine.world))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
+        shelfIndex.set(rules,index={npcs:engine.world.npcs,rows});
+    }
+    return index.rows.get(place)??[];
+});
 export function currentShops(engine,state){
     const rules=shopRules(engine);if(!rules)return[];
     // One legal index for the whole pass; people who can never be open are skipped (entity-view.mjs personBusinesses).
@@ -267,39 +281,54 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
     if(want<=0)return null;
     const from=row.source==='route'?row.from:shop.settlement;
     const quote=quantity=>marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business:{keeper:from,markup:1},base:regionalTradeBase(d,engine,row.item,shop.settlement,minute)});
-    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0};
-    // A person keeper lays out stock money from the counter, funding it from his purse as needed; a creature keeper pays from his own coins.
+    // F010：本地产出与外路来货都在模拟范围外，不能免费入库——店主按市场估值向来源聚落付货款，外路另付挑夫运费、关口通行费与进口关税；
+    // 回执写明来源（origin）和费用构成。聚落库存补货是真实上游，从聚落库存转入。
+    const imported=row.source!=='settlement';
+    const charges=quantity=>row.source==='route'?porterCharges(d,engine,{from,to:shop.settlement,cargo:[{item:row.item,quantity}],owner:shop.keeper,minute}):{freight:0,duties:0,total:0};
+    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0,
+        origin:imported?{kind:'import',from,reason:row.source==='route'?'外路来货（模拟范围外）':'本地产出（模拟范围外）'}:{kind:'settlement_stock',from}};
+    // A person keeper lays out stock money (goods, freight, duties) from the counter, funding it from his purse as needed; a creature keeper pays from his own coins.
     const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),person=Boolean(d.get('state','npcs',shop.keeper))&&booksOpen(d),afford=n=>{
         const own=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins}),cash=person?own+counterCash(d,shop.keeper):own;
-        let low=0,high=Math.floor(n);while(low<high){const mid=Math.ceil((low+high)/2);if(quote(mid).totalCoins<=cash)low=mid;else high=mid-1;}return low;
+        let low=0,high=Math.floor(n);while(low<high){const mid=Math.ceil((low+high)/2);if(quote(mid).totalCoins+charges(mid).total<=cash)low=mid;else high=mid-1;}return low;
     };
     let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
-    if(row.source==='local'){entry.added=want;}
-    else{
-        const s=structuredClone(d.get('state','settlements',from));
-        if(!s||!integer(s.treasury))return{...entry,reason:'来源聚落不在战役账中'};
-        if(row.source==='route'){
-            try{engine.route(from,shop.settlement,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return{...entry,reason:'封路或天气不通，货未到'};}
-        }else if(row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
-        const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
-        if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
-        if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
-        const purchase=quote(quantity),cost=purchase.totalCoins;
-        if(person){
-            // The buy is the keeper's own decision: stock that cannot sell back above its cost is not bought.
-            const verdict=keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',cost:{value:cost},reward:Math.ceil(cost*shop.markup)});
-            if(verdict.outcome!=='agree')return{...entry,reason:`店主决定暂不进货：${verdict.reason}`,decision:verdict.outcome};
-            const funded=cost>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:cost,eventId:`${books.eventId}:fund:${row.item}`,ctx}):null;
-            if(funded&&counterCash(d,shop.keeper)<cost)return{...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
-            moveCoins(d,{from:dedicatedCoinAccount(d.get('state'),shop.keeper,'counter').account,to:treasuryAccount(from),amount:cost,writer:'shop',eventId:`${books.eventId}:${row.item}`});
-        }else{
-            moveCoins(d,{from:purse(engine,shop.keeper),to:treasuryAccount(from),amount:cost,writer:'shop',eventId:null});
-            d.set([...keeperPath,'coins'],keeper.coins-cost);
-        }
-        s.treasury+=cost;d.set(['state','settlements',from],s);
-        entry.added=quantity;entry.paidCopper=cost;entry.from=from;entry.referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*quantity);
-        recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
+    const s=structuredClone(d.get('state','settlements',from));
+    // 本地产出的卖方是本聚落的产户：聚落有公账时货款进公账；聚落还没有公账记录时（尚未展开的小镇）货款付给模拟范围外的产户（sink:export），
+    // 货不会白来。外路来货与聚落库存补货则必须有来源聚落的账。
+    const outside=!s&&row.source==='local';
+    if(!outside&&(!s||!integer(s.treasury)))return{...entry,reason:'来源聚落不在战役账中'};
+    if(row.source==='route'){
+        try{engine.route(from,shop.settlement,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return{...entry,reason:'封路或天气不通，货未到'};}
+    }else if(row.source==='settlement'&&row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
+    const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
+    if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
+    const purchase=quote(quantity),cost=purchase.totalCoins,extra=charges(quantity),total=cost+extra.freight+extra.duties;
+    let payer=purse(engine,shop.keeper);
+    if(person){
+        // The buy is the keeper's own decision (cost-plus: everything he lays out, haul included, is passed on at his markup); stock that cannot sell back above its cost is not bought.
+        const verdict=keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',cost:{value:total},reward:Math.ceil(total*shop.markup)});
+        if(verdict.outcome!=='agree')return{...entry,reason:`店主决定暂不进货：${verdict.reason}`,decision:verdict.outcome};
+        const funded=total>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:total,eventId:`${books.eventId}:fund:${row.item}`,ctx}):null;
+        if(funded&&counterCash(d,shop.keeper)<total)return{...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
+        // A zero-cost lot needs no counter: none may be open yet, and nothing moves.
+        payer=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account??payer;
     }
+    const pay=(to,amount,part)=>moveCoins(d,{from:payer,to,amount,writer:'shop',eventId:person?`${books.eventId}:${row.item}:${part}`:null});
+    if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
+    if(outside)pay(sink('export','local_supply'),cost,'goods');
+    else{pay(treasuryAccount(from),cost,'goods');s.treasury+=cost;d.set(['state','settlements',from],s);}
+    let paid=cost;
+    if(extra.freight){pay(sink('export','freight'),extra.freight,'freight');paid+=extra.freight;}
+    if(extra.duties){
+        pay(treasuryAccount(shop.settlement),extra.duties,'duties');paid+=extra.duties;
+        const here=structuredClone(d.get('state','settlements',shop.settlement));if(!here)throw Error('到岸聚落不在战役账中');here.treasury+=extra.duties;d.set(['state','settlements',shop.settlement],here);
+    }
+    if(!person)d.set([...keeperPath,'coins'],keeper.coins-paid);
+    entry.added=quantity;entry.paidCopper=paid;entry.from=from;entry.cost={goods:cost,freight:extra.freight,duties:extra.duties};
+    entry.referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*quantity);
+    // 本地产出不是公开市场上的一笔成交，不计入当日市场深度；外路来货与聚落库存补货仍计入（与原口径一致）。
+    if(row.source!=='local')recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
     engine.itemDelta(d,shop.keeper,row.item,entry.added,books);
     return entry;
 }
@@ -334,6 +363,8 @@ function restockShop(d,engine,shop,minute){
 // Registered with the advance registry. Restock happens at the midnight that opens
 // a cycle day; each boundary inside (before,after] is settled once, in order.
 export function advanceShops(d,engine,before,after){
+    // F026 客流：先让刚过去的那些正午的顾客按当时的货架买（business.mjs 的 advanceCustomerFlow），再在午夜补货。
+    advanceCustomerFlow(d,engine,before,after);
     const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
     assertRules(engine);
     for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++)

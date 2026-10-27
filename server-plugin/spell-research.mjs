@@ -27,8 +27,10 @@ export function registerResearchSpell(d,engine,data,project,maximumStage){
     // families validate their own units and operation-specific bounds.
     const stage=changes.stage??base.stage;
     if(!Number.isSafeInteger(stage)||stage<0||stage>Math.min(8,maximumStage))throw preconditionFailure('研究法术阶段不得超过相关技能最高阶段减一');
+    // F075：衍生法术不能比原型阶段更低（否则以低阶消耗登记高阶强度）；强度边界只按实际阶段已实现的同族法术派生，不再以原型强度兜底。
+    if(stage<base.stage)throw preconditionFailure('研究法术阶段不得低于原型法术阶段');
     const ceiling=['heal','damage','area','protection','light','repair','dry','status','relief','mark'].includes(family)
-        ?Math.max(...engine.world.spells.filter(s=>s.stage<=stage&&s.effectSpec?.kind===family).map(s=>s.effectSpec.power),base.effectSpec.power):5000;
+        ?Math.max(...engine.world.spells.filter(s=>s.stage<=stage&&s.effectSpec?.kind===family).map(s=>s.effectSpec.power)):5000;
     if(power>ceiling)throw preconditionFailure('研究强度超过此阶段原语的已实现边界');
     const catalog=structuredClone(base);
     delete catalog.id;delete catalog.name;delete catalog.aliases;delete catalog.scope;

@@ -86,7 +86,8 @@ test('pawn redemption: receipt lists the actual closed pledge and returns the or
   holdings:[{id:'upkeep-pawn-title',kind:'owns',holder:'player',subject:'upkeep-pawn-staff',terms:{share:1}}]});
  assert.deepEqual(setup.setupUnmet,[]);const before=setup.document,unit=before.state.inventory.item_staff.instances[0];
  assert.ok(unit);
- const pawned=await runPrelude(engine,before,[act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'upkeep-pawn')]);
+ // F007: the advance is 50% of the staff's valuation (4 x floor .5 = 2 copper): at most 1 copper (2 on the catalogue price).
+ const pawned=await runPrelude(engine,before,[act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'upkeep-pawn')]);
  assert.deepEqual(pawned.unmet,[]);const debt='debt_loan_upkeep-pawn',claim=pawned.document.state.records[debt];
  const input=act('core:trade.redeem',{seller:'npc_hw_shendu',contract:debt},'upkeep-redeem');
  assert.equal((await engine.previewAction(pawned.document,input)).receipt.status,'preview');

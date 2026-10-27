@@ -390,7 +390,10 @@ test('native transport advancement is partition invariant and carries the real d
  const tollFlow='sink:export|coin_river|travel';
  assert.equal((large.ledger.flows[tollFlow]??0)-(start.ledger.flows[tollFlow]??0),3);
  assert.equal((small.ledger.flows[tollFlow]??0)-(start.ledger.flows[tollFlow]??0),3);
- assert.equal(cashTotal(large)+3,cashTotal(start));assert.equal(cashTotal(small)+3,cashTotal(start));
+ // F010: the tavern's route arrival of rations in the same wait also pays its porters through the same export sink
+ // ('sink:export|coin_river|freight', read from the ledger flows, not recomputed).
+ const freight='sink:export|coin_river|freight',freightOf=(d)=>(d.ledger.flows[freight]??0)-(start.ledger.flows[freight]??0);
+ assert.equal(cashTotal(large)+3+freightOf(large),cashTotal(start));assert.equal(cashTotal(small)+3+freightOf(small),cashTotal(start));
  assert.deepEqual(auditLedger(large.ledger),[]);assert.deepEqual(auditLedger(small.ledger),[]);
 });
 

@@ -28,7 +28,8 @@ function fixture({coins=200,inventory={},deposit=0,credit=false}={}){
         lease:async()=>{const leased=await act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1,deposit,...(credit?{payment:'credit',creditMinutes:120}:{})},'lease');const capital=Math.max(0,document.state.player.coins-20);await act('world_act',{action:'business:open_counter',slots:{business:leased.business,coins:capital}},'counter-open');return {...leased,capital};},
         manage:(operation,business,eventId=operation)=>act('world_settlement',{operation:`business_${operation}`,business},eventId)};
 }
-const coinTotal=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,n)=>sum+n.coins,0)+Object.values(c.state.records).filter(r=>r.category==='contract'&&r.version===1).reduce((sum,r)=>sum+r.escrow,0)+Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((sum,r)=>sum+r.coins,0);
+// F010: shopkeepers now pay the source settlement's treasury for their restock (local production and route arrivals), so conservation counts the treasuries too.
+const coinTotal=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,n)=>sum+n.coins,0)+Object.values(c.state.settlements??{}).reduce((sum,s)=>sum+(s.treasury??0),0)+Object.values(c.state.records).filter(r=>r.category==='contract'&&r.version===1).reduce((sum,r)=>sum+r.escrow,0)+Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((sum,r)=>sum+r.coins,0);
 const amount=(c,actor,item)=>{const row=actor==='player'?c.state.inventory[item]:c.state.npcs[actor].inventory[item];return typeof row==='number'?row:row?.quantity??0;};
 const procurement=(f,business,eventId='procure',quantity=2)=>f.act('world_trade',{operation:'procure',business,seller:landlord,consent:true,item:'item_bread',quantity},eventId);
 const fulfill=(f,business,contract,eventId='fulfill')=>f.act('world_trade',{operation:'fulfill',business,seller:landlord,contract},eventId);

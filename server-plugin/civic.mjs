@@ -82,7 +82,7 @@ function credit(d,{sourceEvent,settlement,subject='player',kind,points,minute}){
 }
 export function recordDonationContribution(d,engine,result,eventId){
     if(result.operation!=='donate')return null;
-    const points=Math.floor(result.quantity/civicRules.donationGrainPerPoint);
+    const points=Math.floor((result.accepted??result.quantity)/civicRules.donationGrainPerPoint);// F043：贡献按实收计，交割损毁的不计
     if(!points)return null;
     return credit(d,{sourceEvent:eventId,settlement:result.settlement,kind:'donation',points,minute:d.get('state','minute')});
 }

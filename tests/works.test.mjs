@@ -150,7 +150,8 @@ test('F014 出版需求来自真实读者：同一读者不重复买；再版无
     const total=coin(wrote.document);
     // 普通做工系数1：书价 round(8×1)=8铜。第一版印 80÷4=20 册。可买者：卢清(200÷4=50≥8)、陈白(50÷4=12≥8)；林穗 20÷4=5<8 买不起。
     const first=await run(wrote.document,'world_research',{operation:'publish',project:work,coins:80},'pub1');
-    assert.deepEqual(first.result.buyers,['npc_hw_luqing','npc_hw_chenbai']);
+    // 设计依据（F014）：读者各自经 NPC 决策路径决定买不买，不再按识字高低排序指派；同样有钱愿买的两人按编号先后到柜（陈白在卢清之前）。
+    assert.deepEqual(first.result.buyers,['npc_hw_chenbai','npc_hw_luqing']);
     assert.equal(first.result.sold,2);assert.equal(first.result.income,16);assert.equal(first.result.kept,18);
     assert.equal(first.document.state.npcs.npc_hw_luqing.coins,192);assert.equal(first.document.state.npcs.npc_hw_chenbai.coins,42);assert.equal(first.document.state.npcs.npc_hw_linsui.coins,20);
     assert.equal(first.document.state.player.coins,wrote.document.state.player.coins-80+16);

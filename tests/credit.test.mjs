@@ -67,7 +67,8 @@ test('借款到期过宽限不还：抵押归债主、按签约地法典立案�
     await f.act('world_time',{minutes:DAY},'wait2');
     const debt=f.doc.state.records[loan.debt],key=`legal_case:default:${loan.debt}`,row=f.doc.state.records[key];
     assert.equal(debt.defaulted.case,key);assert.equal(debt.defaulted.pledge.item,'item_bread');
-    assert.equal(debt.paid,world.items.find(i=>i.id==='item_bread').basePrice);assert.equal(debt.defaulted.remaining,debt.amount-debt.paid);
+    // F007: the forfeited pledge is credited at its valuation (bread 2 x scarcity floor .5 = 1 copper), not the catalogue price 2.
+    assert.equal(debt.paid,1);assert.equal(debt.defaulted.remaining,debt.amount-debt.paid);
     assert.equal(f.doc.state.records[loan.pledge].status,'已没收');
     assert.equal(row.law,'law_hw_property');assert.equal(row.offense,'debt_default');assert.equal(row.status,'已报案');assert.equal(row.victim,host);assert.equal(row.value,debt.defaulted.remaining);
     const breach=Object.values(f.doc.state.records).find(r=>r.category==='world_event'&&r.verb==='breach');
