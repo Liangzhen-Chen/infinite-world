@@ -44,7 +44,13 @@ export function render(doc){
 export function syncRegistry(doc,catalog){
  const byId=new Map(catalog.map(a=>[a.id,a])),schemaMap=schemas(),seen=new Set(),out=[],changes=[];
  for(const entry of doc.actions){
-  if(entry.source!=='s0'){out.push(entry);continue;}
+  if(entry.source!=='s0'){
+   // An approved catalog action can later enter the public S0 surface.
+   // Keep its authored source/slots/preconditions; do not append a duplicate.
+   const published=byId.get(entry.id);
+   if(published&&entry.call?.tool===published.tool&&(entry.call.operation??null)===(published.operation??null))seen.add(entry.id);
+   out.push(entry);continue;
+  }
   const action=byId.get(entry.id);
   if(!action){changes.push(`删除 ${entry.id}`);continue;}
   seen.add(entry.id);

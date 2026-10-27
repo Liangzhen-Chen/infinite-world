@@ -156,6 +156,9 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     const personalEscrow=Object.values(f.doc.state.quests).filter(q=>q.personal&&q.publisher===worker).reduce((n,q)=>n+(q.escrow??0),0);
     assert.equal(f.doc.state.npcs[worker].coins+personalEscrow,200);assert.equal(cash(f.doc),total);
     f.doc.state.npcs[host].status='正常';// a day of npc life may have made her ill; the procurement below needs her awake
+    // D05 §5.1: even loan-funded procurement has a separate counter destination
+    // for cancellation; zero opening capital preserves this loan's cash premise.
+    await f.act('world_act',{action:'business:open_counter',slots:{business:lease.business,coins:0}},'credit-counter');
     const before=f.doc.state.npcs[host].coins,cost=await f.act('world_trade',{operation:'procure',business:lease.business,seller:host,consent:true,item:'item_bread',quantity:2,payment:'credit',creditMinutes:3*DAY},'procure');
     assert.ok(cost.debt);assert.equal(f.doc.state.records[cost.debt].principal,cost.cost);assert.equal(f.doc.state.npcs[host].coins,before-cost.cost);
     assert.equal(f.doc.state.records[cost.contract].loan,cost.debt);assert.equal(f.doc.state.records[cost.contract].escrow,cost.cost);

@@ -139,3 +139,33 @@ test('作品系统复用 world_research，不新增工具',()=>{
     const tools=toolDefinitions();assert.equal(tools.length,27);
     assert.match(tools.find(t=>t.function.name==='world_research').function.description,/fuse/);
 });
+
+test('F014 出版需求来自真实读者：同一读者不重复买；再版无新读者则售0；名望与贡献只记一次；钱来自读者钱袋而非凭空',async()=>{
+    const c=fresh();
+    // 读者夹具：卢清（已识字450）有200铜；陈白、林穗识字300，陈白50铜、林穗只有20铜（买不起：20÷4=5铜 < 书价）。
+    for(const id of['npc_hw_chenbai','npc_hw_linsui']){c.state.npcs[id].skills={...c.state.npcs[id].skills,skill_literacy:skill(300)};Object.assign(c.state.npcs[id],{location:'bld_hw_school',status:'正常'});}
+    c.state.npcs.npc_hw_luqing.coins=200;c.state.npcs.npc_hw_chenbai.coins=50;c.state.npcs.npc_hw_linsui.coins=20;
+    const wrote=await until(c,'world_research',{operation:'write',name:'河湾农事札记',concept:'记河湾村一年的播种与收成',minutes:240},row=>row.result.success&&row.result.quality==='普通','write');
+    const work=wrote.result.work,coin=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,x)=>n+x.coins,0);
+    const total=coin(wrote.document);
+    // 普通做工系数1：书价 round(8×1)=8铜。第一版印 80÷4=20 册。可买者：卢清(200÷4=50≥8)、陈白(50÷4=12≥8)；林穗 20÷4=5<8 买不起。
+    const first=await run(wrote.document,'world_research',{operation:'publish',project:work,coins:80},'pub1');
+    assert.deepEqual(first.result.buyers,['npc_hw_luqing','npc_hw_chenbai']);
+    assert.equal(first.result.sold,2);assert.equal(first.result.income,16);assert.equal(first.result.kept,18);
+    assert.equal(first.document.state.npcs.npc_hw_luqing.coins,192);assert.equal(first.document.state.npcs.npc_hw_chenbai.coins,42);assert.equal(first.document.state.npcs.npc_hw_linsui.coins,20);
+    assert.equal(first.document.state.player.coins,wrote.document.state.player.coins-80+16);
+    // 总钱数只减去印刷费80（进 sink:export）：读者付的16铜是从他们钱袋转给作者，不是凭空增加。
+    assert.equal(coin(first.document),total-80);
+    assert.equal(first.document.state.itemInstances[first.result.instances[0]].owner,'player');
+    assert.equal(fame(first.document,'loc_hw').fame,1);assert.equal(first.document.state.works[work].editions[0].points,2);
+    // 第二版：能买的人已各有一册，林穗仍买不起 => 没有新读者，售0、收入0，钱只出不进；名望不再加，贡献分为0。
+    const second=await run(first.document,'world_research',{operation:'publish',project:work,coins:40},'pub2');
+    assert.deepEqual(second.result.buyers,[]);assert.equal(second.result.sold,0);assert.equal(second.result.income,0);assert.equal(second.result.kept,10);
+    assert.equal(second.document.state.player.coins,first.document.state.player.coins-40);
+    assert.equal(fame(second.document,'loc_hw').fame,1);assert.equal(second.document.state.works[work].editions[1].points,0);
+    // 林穗有钱以后成为新读者：第三版印 80÷4=20 册，只有他买一册，得8铜。
+    const richer=structuredClone(second.document);richer.state.npcs.npc_hw_linsui.coins=100;
+    const third=await run(richer,'world_research',{operation:'publish',project:work,coins:80},'pub3');
+    assert.deepEqual(third.result.buyers,['npc_hw_linsui']);assert.equal(third.result.income,8);assert.equal(third.document.state.npcs.npc_hw_linsui.coins,92);
+    assert.equal(fame(third.document,'loc_hw').fame,1);
+});

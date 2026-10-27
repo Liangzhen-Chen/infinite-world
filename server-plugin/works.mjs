@@ -12,12 +12,12 @@ import {craftInput,craftOutput,recordCraft} from './stock.mjs';
 // S1b: 写作、抄书、测绘按作品规则（WORK_RULES，等同配方 works:<操作>）是 src:craft 制造守恒对：纸墨进 sink:consume，
 // 成品来自 src:craft；印坊代印留存的书来自模拟范围外（src:import，印刷费已付 sink:export）。
 declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000,'*':10000},'src:craft':{'*':10000}},sinks:['sink:export','sink:consume']});
-import {knowsKnowledge} from './education-state.mjs';
+import {knowsKnowledge,knowledgeProficiency} from './education-state.mjs';
 import {digest}from'./storage.mjs';
 import {settlementAt}from'./reputation.mjs';
 import {adjustStanding}from'./standing.mjs';
 import {presentWitnesses}from'./world-events.mjs';
-import {produceItems}from'./items.mjs';
+import {produceItems,transferItems}from'./items.mjs';
 import {effectiveProficiency}from'./professions.mjs';
 import {spellElements}from'./career-metrics.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -116,16 +116,32 @@ function publish(d,engine,args,id){
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,60,id);
     const multiplier=factor(engine,work.quality),edition=work.editions.length+1;
-    const sold=Math.min(printed,Math.max(1,Math.round(WORK_RULES.demand*multiplier))),price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),income=sold*price;
-    moveCoins(d,{from:source('import','book_sales'),to:purse(engine,'player'),amount:income,writer:'works',eventId:id});
+    // F014: a book sells only to real readers. A buyer is a literate resident of this settlement who can spare the
+    // price (a quarter of the purse, as for any shop customer) and does not already own a copy of this work.
+    // Their money moves from their own purse; the same person is never a second edition's buyer.
+    const price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),owned=new Set(work.editions.flatMap(row=>row.buyers??[])),state=d.get('state');
+    const readers=Object.entries(state.npcs??{}).filter(([npc,row])=>!owned.has(npc)&&settlementAt(engine,row.location)===settlement&&!['死亡','濒死','昏迷'].includes(row.status)
+        &&knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill)>=engine.rules.books.minimumLiteracy&&Math.floor((row.coins??0)/4)>=price)
+        .map(([npc])=>({npc,literacy:knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill)})).sort((a,b)=>b.literacy-a.literacy||a.npc.localeCompare(b.npc));
+    const buyers=readers.slice(0,printed).map(row=>row.npc),sold=buyers.length,income=sold*price;
+    const kept=printed-sold,instances=printed?produceItems(d,engine,WORK_RULES.book,printed,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
+    const sales=[];
+    for(const [index,npc] of buyers.entries()){
+        const unit=instances[index];
+        transferItems(d,engine,'player',npc,WORK_RULES.book,1,[unit]);
+        moveCoins(d,{from:purseAccount(engine,npc),to:purse(engine,'player'),amount:price,writer:'works',eventId:id});
+        d.set(['state','npcs',npc,'coins'],d.get('state','npcs',npc,'coins')-price);sales.push({npc,instance:unit,price});
+    }
     d.set(['state','player','coins'],d.get('state','player','coins')+income);
-    const kept=printed-sold,instances=kept?produceItems(d,engine,WORK_RULES.book,kept,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
+    const heldCopies=instances.slice(sold);
     for(const unitId of instances){holdingSet(d,null,['state','itemInstances',unitId,'work'],work.id,'works');if(work.knowledge)holdingSet(d,null,['state','itemInstances',unitId,'book'],{...work.knowledge,edition},'works');}
-    const row={edition,eventId:id,settlement,location,printed,sold,kept,price,income,cost:coins,minute:d.get('state','minute'),points:WORK_RULES.points.publish+(work.masterpiece?WORK_RULES.points.masterpiece:0)};
+    // Fame, standing and civic points are earned once per work, by its first edition that actually finds readers.
+    const first=!work.editions.some(row=>row.sold>0),credited=first&&sold>0;
+    const row={edition,eventId:id,settlement,location,printed,sold,kept,price,income,cost:coins,buyers,minute:d.get('state','minute'),points:credited?WORK_RULES.points.publish+(work.masterpiece?WORK_RULES.points.masterpiece:0):0};
     save(d,{...work,editions:[...work.editions,row]});
-    const fame=addFame(d,engine,settlement,fameFor('publish',work.masterpiece),id,'publish');
+    const fame=credited?addFame(d,engine,settlement,fameFor('publish',work.masterpiece),id,'publish'):null;
     d.say(`《${work.title}》第${edition}版印${printed}册，售出${sold}册得${income}铜`);
-    return{operation:'publish',work:work.id,edition,printed,sold,kept,income,cost:coins,instances,...(fame?{fame}:{}),workEvent:event('publish',work,{value:income})};
+    return{operation:'publish',work:work.id,edition,printed,sold,kept,income,cost:coins,instances:heldCopies,buyers,...(fame?{fame}:{}),workEvent:event('publish',work,{value:income})};
 }
 
 // Highest grade among the held units of a book: an uncopied unit carries the

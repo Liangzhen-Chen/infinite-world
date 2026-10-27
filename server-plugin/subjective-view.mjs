@@ -84,7 +84,7 @@ export function subjectiveView(engine,document,observer){
  const ownEvents=events.filter(e=>e.actor===observer).map(copy);
  const byOwner=recordsMemo(document.ledger?.accounts,ownedAccounts,()=>{
   const groups=new Map();for(const entry of Object.entries(document.ledger?.accounts??{})){
-   const [owner,,purpose]=entry[0].split('|');if(!['purse','inventory'].includes(purpose))continue;
+   const [owner,,purpose]=entry[0].split('|');if(!['purse','inventory','counter'].includes(purpose))continue;
    if(!groups.has(owner))groups.set(owner,[]);groups.get(owner).push(entry);
   }return groups;
  });

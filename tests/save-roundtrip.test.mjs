@@ -12,6 +12,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {CampaignStorage,applyPatches,digest} from '../server-plugin/storage.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const DAY=1440,INN='bld_hw_qingdeng',POST='bld_hw_post',LANDLORD='npc_hw_linsui',WORKER='npc_hw_ayan',CLERK='npc_hw_shendu',SEED='r25-roundtrip-seed';
 // The hired hand rests at the inn all day so the hire has a free window; everyone else keeps the real schedules.
@@ -41,17 +42,22 @@ function session(server,campaignId){
 // Campaign opening at 10:00 at the inn: daily autonomy starts in this very minute, from people whose state has no activity yet.
 async function createCampaign(server){
  const {reference}=await server.api('create',{character:{name:'试玩者'}});
- const bundle=await server.api('export',{campaignId:reference.campaignId}),initial=structuredClone(bundle.initial),s=initial.state;
+ const bundle=await server.api('export',{campaignId:reference.campaignId});let initial=structuredClone(bundle.initial);const s=initial.state;
  s.minute=600;s.location=INN;s.player.coins=800;s.inventory.item_coin_coast={quantity:2,quality:'铜',durability:100,weight:0.005};
  s.npcs[WORKER].location=INN;s.npcs[WORKER].activity='休息';
  // The innkeeper gets vinegar, water, shavings and her pot and knife for a few warm drinks of her own, so autonomy keeps running on later days.
  for(const item of ['item_fruit_vinegar','item_water','item_wood_shavings','item_cooking_pot','item_kitchen_knife']){const row=s.npcs[LANDLORD].inventory[item];s.npcs[LANDLORD].inventory[item]=typeof row==='number'?row+4:{quality:'木',durability:100,weight:0.2,...row,quantity:(row?.quantity??0)+4};}
+ // D05 §5.1 / S5-02: the roundtrip tests persistence, not food scarcity;
+ // declare opening stock sufficient for both household reserves and orders.
+ const supplied=applyIntentSetup(engine,initial,{facts:[{path:['state','npcs',LANDLORD,'inventory'],value:{...s.npcs[LANDLORD].inventory,item_bread:{quantity:40}}}]});assert.deepEqual(supplied.setupUnmet,[]);initial=supplied.document;
  const hash=digest(initial),imported=await server.api('import',{bundle:{...bundle,initial,events:[],metadata:{...bundle.metadata,initialHash:hash},checksum:hash,documentHash:hash}});
  return session(server,imported.reference.campaignId);
 }
 async function longScenario(s){
  const bought=await s.choose('trade.buy',{item:'item_bread',quantity:1},'buy',LANDLORD);assert.ok(bought.cost>0);
  const lease=await s.execute('world_trade',{operation:'lease',seller:LANDLORD,consent:true,days:3,deposit:3},'lease'),shop=lease.business;
+ // D05 §5.1: the roundtrip now includes a real operating-capital transfer.
+ await s.execute('world_act',{action:'business:open_counter',slots:{business:shop,coins:100}},'counter');
  const order=await s.execute('world_trade',{operation:'procure',business:shop,seller:LANDLORD,consent:true,item:'item_bread',quantity:2},'procure');
  await s.execute('world_trade',{operation:'fulfill',business:shop,seller:LANDLORD,contract:order.contract},'delivered');
  await s.execute('world_settlement',{operation:'business_open',business:shop},'open');

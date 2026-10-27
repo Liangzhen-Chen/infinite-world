@@ -1,8 +1,8 @@
 import {preconditionFailure} from './precondition.mjs';
 import {relationView} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins} from './money.mjs';
-import {declareLedgerWriter} from './ledger.mjs';
+import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins,dedicatedCoinAccount} from './money.mjs';
+import {declareLedgerWriter,parseAccount,accountKey} from './ledger.mjs';
 declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
 export {advanceRituals,advanceRitualEffects}from'./magic-ritual.mjs';
@@ -59,7 +59,22 @@ export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,pai
 }
 export function refundContractEscrow(d,row,engine=d.engine){
     const recipient=row.parties?.[0]??row.owner??'player';
-    if(row.escrow){moveCoins(d,{from:escrowAccount(row.id),to:partyAccount(engine,d.get('state'),recipient),amount:row.escrow,writer:'contracts'});mirrorPartyCoins(d,engine,recipient,row.escrow,row.source,'contracts');row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');}
+    if(row.escrow){
+        const funding=row.fundingAccount&&parseAccount(row.fundingAccount),purpose=funding?.purpose;
+        let counter=dedicatedCoinAccount(d.get('state'),recipient,'counter');
+        const to=purpose==='counter'?accountKey(recipient,'coin_river','counter'):partyAccount(engine,d.get('state'),recipient);
+        // The original funding account is provenance, not the current owner:
+        // inherited refunds follow the contract's live recipient and keep purpose.
+        if(purpose==='counter'&&!counter){
+            const origin=dedicatedCoinAccount(d.get('state'),funding.owner,'counter');
+            const key=`money_account:${to}`;
+            counter={...origin,category:'money_account',owner:recipient,account:to,purpose:'counter',coins:0,originAccount:row.fundingAccount};
+            holdingSet(d,engine,['state','records',key],counter,'contracts');
+        }
+        moveCoins(d,{from:escrowAccount(row.id),to,amount:row.escrow,writer:'contracts'});
+        if(to!==counter?.account)mirrorPartyCoins(d,engine,recipient,row.escrow,row.source,'contracts');
+        row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');
+    }
     return row;
 }
 export function releaseBusinessLease(d,engine,row,{status='已终止',reason,source}={}){

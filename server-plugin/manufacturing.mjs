@@ -43,6 +43,12 @@ export function registerRecipe(d,engine,data,project,maximumStage){
     const byproducts=materials(data.byproducts??[],'副产品');
     for(const row of byproducts)integer(row.amount,1,200,'副产品数量');
     if(new Set([output.item,...byproducts.map(row=>row.item)]).size!==1+byproducts.length)throw preconditionFailure('主产物与副产品不能重复登记');
+    // G0 §11: only same-resource self-production without a conversion is forbidden. Anything else is judged
+    // by materials, tools, labour hours and skill stage; there is no ceiling derived from value.
+    for(const row of [output,...byproducts.map(b=>({item:b.item,quantity:b.amount}))]){
+        const consumed=ingredients.filter(m=>m.item===row.item).reduce((n,m)=>n+m.amount,0);
+        if(consumed&&row.quantity>=consumed)throw preconditionFailure(`世上没有凭空多出同一种东西的做法：投入${consumed}份${engine.byId.get(row.item)?.name??row.item}不可能做出${row.quantity}份同样的东西；须经不同材料转化`);
+    }
     const minutes=integer(data.minutes,1,43200,'制造时间'),difficulty=data.difficulty;
     if(!Object.values(engine.rules.check.difficulties).includes(difficulty))throw preconditionFailure('难度不在规则档位');
     const toolWear=integer(data.toolWear??1,0,10,'工具损耗'),recoverFraction=data.failure?.recoverFraction??0;

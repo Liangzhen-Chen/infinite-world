@@ -156,7 +156,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:71"
+    "dispatch": "server-plugin/business.mjs:95"
    }
   },
   {
@@ -230,7 +230,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:101"
+    "dispatch": "server-plugin/business.mjs:125"
    }
   },
   {
@@ -304,7 +304,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:101"
+    "dispatch": "server-plugin/business.mjs:125"
    }
   },
   {
@@ -452,7 +452,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:96"
+    "dispatch": "server-plugin/business.mjs:120"
    }
   },
   {
@@ -526,7 +526,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:149"
+    "dispatch": "server-plugin/business.mjs:184"
    }
   },
   {
@@ -2080,7 +2080,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:187"
+    "dispatch": "server-plugin/finance-assets.mjs:188"
    }
   },
   {
@@ -2154,7 +2154,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:193"
+    "dispatch": "server-plugin/finance-assets.mjs:194"
    }
   },
   {
@@ -2228,7 +2228,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:207"
+    "dispatch": "server-plugin/finance-assets.mjs:208"
    }
   },
   {
@@ -2302,7 +2302,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:207"
+    "dispatch": "server-plugin/finance-assets.mjs:208"
    }
   },
   {
@@ -2376,7 +2376,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:221"
+    "dispatch": "server-plugin/finance-assets.mjs:222"
    }
   },
   {
@@ -2524,7 +2524,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:249"
+    "dispatch": "server-plugin/finance-assets.mjs:250"
    }
   },
   {
@@ -2820,7 +2820,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:348"
+    "dispatch": "server-plugin/labor-market.mjs:365"
    }
   },
   {
@@ -2894,7 +2894,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:351"
+    "dispatch": "server-plugin/labor-market.mjs:368"
    }
   },
   {
@@ -2968,7 +2968,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:357"
+    "dispatch": "server-plugin/labor-market.mjs:374"
    }
   },
   {
@@ -3042,7 +3042,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:374"
+    "dispatch": "server-plugin/labor-market.mjs:391"
    }
   },
   {
@@ -4024,7 +4024,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:255"
+    "dispatch": "server-plugin/business.mjs:362"
    }
   },
   {
@@ -4128,7 +4128,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:260"
+    "dispatch": "server-plugin/business.mjs:367"
    }
   },
   {
@@ -4232,7 +4232,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:252"
+    "dispatch": "server-plugin/business.mjs:359"
    }
   },
   {
@@ -4336,7 +4336,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:251"
+    "dispatch": "server-plugin/business.mjs:358"
    }
   },
   {
@@ -17722,7 +17722,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/business.mjs:149"
+    "dispatch": "server-plugin/business.mjs:184"
    }
   },
   {
@@ -18093,7 +18093,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/employment-state.mjs:50"
+    "dispatch": "server-plugin/employment-state.mjs:83"
    }
   }
  ]

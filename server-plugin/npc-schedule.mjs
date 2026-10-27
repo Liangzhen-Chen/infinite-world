@@ -13,7 +13,7 @@ import {npcSchedule}from'./npc-state.mjs';
 import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
-import {recordEmploymentAttendance,employmentActive} from './employment-state.mjs';
+import {recordEmploymentAttendance,recordProjectAttendance,employmentActive,PROJECT_ACTIVITY} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
 import {recordsWhere,canonicalEqual,PatchCursor} from './storage.mjs';
@@ -200,12 +200,14 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
     const jobs=new Map(recordsWhere(peekState(d).records,'kind','workshop').filter(employmentActive).map(r=>[r.worker,r]));
+    // Public works crews are walked person by person, like hired hands (F083).
+    const crews=new Map(recordsWhere(peekState(d).records,'category','project_assignment').filter(r=>r.status==='有效').map(r=>[r.worker,r]));
     const prepared=d.scheduleEducation,state=peekState(d),courses=engine.educationCourseContext;
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
     let candidates;
     if(!promote&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
-        const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
+        const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...crews.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
         // Distant fixed-location actors have no individual heap entries;
         // include them when their regional clock is due.
         for(const [id,group] of batch?.persons??[])if(group.due)due.add(id);
@@ -227,7 +229,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                         if(row.reservationVersion===1){due.add(row.promisor);due.add(row.promisee);}
                         for(const job of jobs.values())if(job.serviceObligation===p[2])due.add(job.worker);
                     }else if(!ignoredScheduleRecords.has(row.category)){
-                        if(row.kind==='workshop')due.add(row.worker);
+                        if(row.kind==='workshop'||row.category==='project_assignment')due.add(row.worker);
                         else if(['legal_detention','legal_custody'].includes(row.category))due.add(row.subject??state.records?.[row.case]?.offender);
                         else if(row.category!=='education_course'){replaced=true;break;}
                     }
@@ -245,7 +247,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     }
     candidates??=Object.keys(state.npcs);
     for(const npcId of candidates){
-        const regional=jobs.has(npcId)?null:batch?.persons.get(npcId);
+        const regional=jobs.has(npcId)||crews.has(npcId)?null:batch?.persons.get(npcId);
         if(promote&&!regional)continue;
         if(regional&&!regional.due)continue;
         const hold=personConstraint(engine,peekState(d),npcId,after,constraints)?.value;
@@ -257,7 +259,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
             }
             continue;
         }
-        if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine')&&!jobs.has(npcId))continue;
+        if(!engine.byId.get(npcId)?.schedule&&!d.get('state','npcs',npcId,'routine')&&!jobs.has(npcId)&&!crews.has(npcId))continue;
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
@@ -266,7 +268,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         // The heap already read this exact actor and all schedule inputs. A
         // stationary, unchanged slot has no work until its boundary. Teaching,
         // employment attendance, companions and furnaces retain the full path.
-        if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId)){
+        if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!crews.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId)){
             if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(slot,scheduleAt(engine,npcId,before,peekState(d),constraints)))throw Error(`schedule settlement cache mismatch: ${npcId} at ${before}`);
             continue;
         }
@@ -313,7 +315,8 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                 activity(slot.activity);
                 engine.educationAttendance?.get(npcId)?.push({start:cursor,end:Math.min(after,slot.until),location:npc.location});
                 const job=jobs.get(npcId);
-                if(!regional&&job?.laborMarket&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+                if(!regional&&job&&!job.education&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+                else if(!regional&&crews.has(npcId)&&slot.activity===PROJECT_ACTIVITY)recordProjectAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
             }
             if(slot.until>after)break;
             const next=facilityRuntime().hasUnattendedFurnace(engine,npcId)?scheduleAt(engine,npcId,slot.until,peekState(d),constraints):null;

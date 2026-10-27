@@ -18,9 +18,8 @@ import {npcHousehold,npcAgeAt} from './npc-life.mjs';
 import {changeItems} from './items.mjs';
 import {prepareFacilityProject} from './facility-state.mjs';
 import {completeFacilityProject} from './facilities.mjs';
-import {currentEmployment,employmentReservation} from './employment-state.mjs';
+import {currentEmployment,projectAssignment,projectAssignmentId} from './employment-state.mjs';
 import {registerEarnedClaim} from './obligation-claims.mjs';
-import {personConstraint} from './entity-view.mjs';
 
 // T125 public works. A sitting official (works deputy or village head) starts
 // a project in their own village: materials leave the village stock and the
@@ -55,7 +54,7 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     if(days*workers.length<plan.requiredWork)throw preconditionFailure('工程实际工时不足');
     for(const id of workers){
         const n=state.npcs[id];
-        if(currentEmployment(state,id))throw preconditionFailure('做工的人已有未结束的雇佣排班');
+        if(currentEmployment(state,id)||projectAssignment(state,id))throw preconditionFailure('做工的人已有未结束的雇佣排班');
         if(!isEffective(engine,state,id)||!awake(n)||n.location!==state.location)throw preconditionFailure('做工的人须当面在场且清醒');
         if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw preconditionFailure('做工的人须是本村成年住户');
     }
@@ -78,10 +77,14 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     }
     const office=offices[0];
     const p={id:project,type:'工程',creator:'player',name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,...plan,
-        public:{office:office?.id,workers,wage,escrow:bill,...(privateFunding?{payer:'player'}:{month:spend.month,spend:spend.id}),workedDays:0,labor:{},paid:{},lostDays:0},
+        public:{office:office?.id,workers,wage,escrow:bill,...(privateFunding?{payer:'player'}:{month:spend.month,spend:spend.id}),workedDays:0,labor:{},paid:{},lostDays:0,
+            // F083: progress and pay follow real on-site minutes. The plan is `days` days of 480 minutes: for work measured in
+            // worker-days (a facility's requiredWork) every crew member's minutes count, otherwise a day counts for its busiest worker.
+            requiredMinutes:days*(plan.requiredWork?workers.length:1)*480,minutesDone:0,minutes:{},attendance:{}},
         ...(!privateFunding?{civicApproval:{settlement,office:office.id,grantor:office.appointedBy,minute:state.minute,source:office.source}}:{}),
         ...(plan.requiredWork?{remainingWork:days*workers.length}:{})};
     d.set(['state','projects',project],p);
+    for(const worker of workers)holdingSet(d,null,['state','records',projectAssignmentId(project,worker)],{id:projectAssignmentId(project,worker),category:'project_assignment',project,worker,settlement,location,starts:state.minute,status:'有效',source:eventId},'public-projects');
     return {project,escrow:bill,note:privateFunding?'自备材料与本人工钱已投入，按实际人工支付。':'工钱已从公账押入工程，按实际做工日付给本人；材料已从公共库存拨出。'};
 }
 function settleLabor(d,p,minute){
@@ -98,8 +101,7 @@ function finish(d,engine,p,status,minute,eventId){
     if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);settleWorks(d,engine,p,{writer:'public-projects',eventId:`${p.id}:works`});}
     else{
         // Materials go in evenly over the planned days; the unused share returns.
-        const fraction=p.remainingWork===undefined?p.public.workedDays/p.days:1-p.remainingWork/(p.days*p.public.workers.length);
-        const used=k=>Math.floor(p[k]*fraction),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
+        const used=k=>Math.floor(p[k]*p.public.minutesDone/p.public.requiredMinutes),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
         const s=d.get('state','settlements',p.settlement);
         settleWorks(d,engine,p,{returned:back,to:p.public.payer?{party:p.public.payer}:{settlement:p.settlement},writer:'public-projects',eventId:`${p.id}:works`});
         if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED});}
@@ -108,6 +110,10 @@ function finish(d,engine,p,status,minute,eventId){
     }
     if(!p.public.payer)settleLabor(d,next,minute);
     d.set(['state','projects',p.id],next);
+    for(const worker of p.public.workers){
+        const id=projectAssignmentId(p.id,worker),row=d.get('state','records',id);
+        if(row?.status==='有效')holdingSet(d,null,['state','records',id],{...row,status:'已结束',endedAt:minute},'public-projects');
+    }
     if(status==='已完成'&&!p.public.payer)milestone(d,engine,'publicContribution',p.id,eventId);
     return next;
 }
@@ -119,25 +125,37 @@ export function abortPublicProject(d,engine,args){
     const row=finish(d,engine,p,'已中止',d.get('state','minute'));
     return {project:p.id,status:row.status,returned:row.returned};
 }
-// One step per elapsed midnight: able workers are paid and the work advances.
+// One step per elapsed midnight (F083). The crew's day is what the schedule really measured at the site
+// (recordProjectAttendance): late arrival, absence, illness, levy or other duties cost exactly those minutes.
+// Pay is the signed day wage pro rata to credited minutes (cumulative, so rounding never loses or invents
+// copper); progress is the same credited minutes. Escrow was sized for the planned minutes, so it always covers it.
 export function advancePublicProjects(d,engine,{before,after,id}){
     for(let day=Math.floor(before/DAY);day<Math.floor(after/DAY);day++){
-        const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&isEffective(engine,state,w)&&able(state.npcs[w])&&!personConstraint(engine,state,w)&&!state.npcs[w].scheduleTravel&&!state.npcs[w].cognitionTravel&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
-            const pub=structuredClone(p.public);
-            if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
-            for(const w of present){
-                moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pub.wage,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
-                registerEarnedClaim(d,engine,{id:`public_wage:${key}:${day}:${w}`,kind:'wage',debtor:p.public.payer??p.settlement,creditor:w,amount:pub.wage,paid:pub.wage,status:'已还清',createdAt:(day+1)*DAY,deadline:(day+1)*DAY,location:p.location,source:key,project:key,minutes:480});
-                pub.escrow-=pub.wage;pub.paid[w]=(pub.paid[w]??0)+pub.wage;pub.labor[w]=(pub.labor[w]??0)+1;
-                (pub.lastPaidDay??={})[w]=day;worked.add(w);
-            }
-            pub.workedDays++;
-            const remainingWork=p.remainingWork===undefined?undefined:p.remainingWork-present.length;
-            const next={...p,public:pub,remainingDays:remainingWork===undefined?p.remainingDays-1:Math.ceil(remainingWork/p.public.workers.length),...(remainingWork===undefined?{}:{remainingWork})};
-            if(next.remainingDays<=0)finish(d,engine,next,'已完成',(day+1)*DAY,id);
+            const pub=structuredClone(p.public),crew=pub.workers.length,workerDays=p.remainingWork!==undefined;
+            const attended=pub.workers.map(w=>[w,pub.attendance?.[w]?.days?.[day]??0]).filter(([,m])=>m>0).sort((a,b)=>a[1]-b[1]||a[0].localeCompare(b[0]));
+            const left=pub.requiredMinutes-pub.minutesDone;
+            const progress=Math.min(left,workerDays?attended.reduce((n,[,m])=>n+m,0):Math.max(0,...attended.map(([,m])=>m)));
+            if(progress<=0){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
+            // Workers share a final partial day equally (smallest claim first); a duration project credits each at most the day's progress.
+            let rest=progress;
+            attended.forEach(([w,m],i)=>{
+                const credit=Math.min(m,workerDays?Math.floor(rest/(attended.length-i)):progress);
+                if(workerDays)rest-=credit;
+                pub.minutes[w]=(pub.minutes[w]??0)+credit;
+                const pay=Math.min(pub.escrow,Math.floor(pub.wage*pub.minutes[w]/480)-(pub.paid[w]??0));
+                if(credit<=0||pay<=0)return;
+                const state=d.get('state');
+                moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pay,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pay);
+                registerEarnedClaim(d,engine,{id:`public_wage:${key}:${day}:${w}`,kind:'wage',debtor:p.public.payer??p.settlement,creditor:w,amount:pay,paid:pay,status:'已还清',createdAt:(day+1)*DAY,deadline:(day+1)*DAY,location:p.location,source:key,project:key,minutes:credit});
+                pub.escrow-=pay;pub.paid[w]=(pub.paid[w]??0)+pay;
+            });
+            for(const w of pub.workers)if((pub.minutes[w]??0)>=480)pub.labor[w]=Math.floor(pub.minutes[w]/480);
+            pub.workedDays++;pub.minutesDone+=progress;
+            const remaining=pub.requiredMinutes-pub.minutesDone;
+            const next={...p,public:pub,remainingDays:Math.ceil(remaining/(480*(workerDays?crew:1))),...(workerDays?{remainingWork:Math.ceil(remaining/480)}:{})};
+            if(remaining<=0)finish(d,engine,next,'已完成',(day+1)*DAY,id);
             else d.set(['state','projects',key],next);
         }
     }

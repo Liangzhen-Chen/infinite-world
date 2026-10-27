@@ -54,6 +54,10 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // health clock and per-settlement rainShare water facts are now persisted.
 // Refresh through UPDATE_ADVANCE_GOLDEN;
 // keep the complete state/patch/message hashes and duplicate deterministic traces.
+// S5-04: paired baseline/current full and quiet traces differ only at the native mining
+// contract wage (including clauses and signedTerms): old half-day12*2=24,
+// D15 §15.2 stage0 income midpoint (20+40)/2=30. No other state or messages
+// change. Refresh the complete hashes; retain both traces and every assertion.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},

@@ -1,3 +1,4 @@
+import {laborValue} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
 
@@ -13,6 +14,8 @@ import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('labor-market');
 import {groupAccountView} from './group-account.mjs';
 import {currentShops} from './shop.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 import {npcNeedGoals} from './npc-intelligence.mjs';
 import {standing} from './standing.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
@@ -23,7 +26,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obligation-claims.mjs';
-import {obligationView as dueObligation,wageQuote} from './obligation-state.mjs';
+import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -37,7 +40,7 @@ function writeJob(d,e,row){
 const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
-const wage=e=>Math.max(1,wageQuote({baseHalfDay:e.rules.economy.wageCopperPerHalfDay?.[0]??10}).daily);
+const wage=(e,s,worker='player',observer=null)=>laborValue(e,{state:s},{worker,observer}).daily;
 const outstanding=(s,id)=>recordsWhere(s.records,'kind','wage').filter(r=>r.category==='debt'&&r.contract===id&&dueObligation(s,r.id)?.owed>0);
 
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
@@ -62,7 +65,7 @@ export function laborOffers(e,s,minute=s.minute){
         if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(taken.has(id))return;
-        const d={...r,id,wage:r.wage??wage(e),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
+        const d={...r,id,wage:r.wage??wage(e,s,r.owner,r.owner),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
         if(d.deadline<=Math.floor(minute/DAY)*DAY+1020)return;
         const account=groupAccountView(e,s,r.owner),balance=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0;
         if(balance<d.wage)return;
@@ -146,7 +149,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;
     const regard=standing(e,s,id,offer.owner);if(regard<=-40)return null;
     const needs=npcNeedGoals(s,id).filter(g=>g.progress!==100&&/money|food|钱|款|粮|口粮|活计/.test(`${g.need??g.kind??''} ${g.content??''}`));
-    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e)),food=Object.entries(n.inventory??{}).reduce((v,[item,q])=>v+(/bread|oat|ration|food/.test(item)?typeof q==='number'?q:q.quantity??0:0),0);
+    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e,s,id,id)),food=Object.entries(n.inventory??{}).reduce((v,[item,q])=>v+(/bread|oat|ration|food/.test(item)?typeof q==='number'?q:q.quantity??0:0),0);
     if(!needs.length&&(n.coins??0)>=low/2&&food>0&&!changing)return null;
     const settlement=personHousehold(e,s,id).value?.settlement??placeSettlement(e,s,n.location).value;
     if(settlement!==placeSettlement(e,s,offer.location).value)return null;
@@ -155,7 +158,15 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(travel>60||!Number.isFinite(travel)||minute+travel>Math.floor(minute/DAY)*DAY+480&&minute%DAY<480)return null;
     return {worker:id,need:needs.map(g=>g.id),skill,regard,travel,score:needs.length*100+(food===0?80:0)+skill/30+regard+offer.wage-travel};
 }
-function sign(d,e,offer,app,at,source){
+// G0 §1: a hire (or a move to a better paid employer) is the worker's own decision, made through npcDecision on the
+// worker's own subjective view; nothing a caller or the employer writes can stand in for it. The view is taken at the
+// person's waking hours of that day (10:00, not asleep at the midnight settlement), the request being the real wage for the real commute.
+function hireDecision(d,e,app,offer,at,old){
+    const day=Math.floor(at/DAY)*DAY,s=d.get('state'),n=s.npcs[app.worker];
+    const view=subjectiveView(e,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[app.worker]:{...n,activity:'日常起居',status:n.status??'正常'}}}},app.worker);
+    return npcDecision(view,{kind:'employment',from:offer.owner,cost:{minutes:app.travel*2},reward:offer.wage-(old?.wage??0),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+}
+function sign(d,e,offer,app,at,source,decision=null){
     const old=currentEmployment(d.get('state'),app.worker,at);
     if(old){changeLegacyHoldings(d,e,{holder:old.worker,source:`contract:${old.id}`,eventId:source},()=>holdingSet(d,null,rec(old.id),{...old,status:'已辞工',endedAt:at,reason:'转赴新雇主',successor:`workshop:${source}`},'labor-market'));refundGuarantee(d,e,d.get(...rec(old.id)));}
     const starts=Math.floor(at/DAY)*DAY+480,first=starts>at?starts:starts+DAY,key=`workshop:${source}`;
@@ -163,6 +174,7 @@ function sign(d,e,offer,app,at,source){
     const row={category:'contract',kind:'workshop',laborMarket:1,id:key,...terms,parties:[app.worker,offer.owner],signedTerms:structuredClone(terms),
         offer:offer.id,demandSource:offer.source,item:offer.item??null,targetQuantity:offer.quantity,project:offer.project??null,farm:offer.farm??null,supplier:offer.supplier??null,reason:offer.reason,
         starts:first,nextWork:first+540,createdAt:at,status:'有效',paid:0,produced:0,workedMinutes:0,attendance:{},shifts:[],source,commuteMinutes:app.travel,
+        ...(decision?{workerConsent:{by:app.worker,via:'npc-decision',outcome:decision.outcome,minute:at}}:{}),
         settlement:personHousehold(e,d.get('state'),app.worker).value?.settlement??placeSettlement(e,d.get('state'),offer.location).value};
     holdingSet(d,null,rec(key),row,'labor-market');
     financeEvent(d,e,{id:`${source}:sign`,actor:app.worker,target:offer.owner,location:offer.location,minute:at,tags:['employment','hired']});
@@ -326,7 +338,12 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
         const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after))})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
-        for(const app of apps){const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;sign(d,e,offer,app,after,`labor:${offer.id}:${after}`);break;}
+        for(const app of apps){
+            const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;
+            const decision=hireDecision(d,e,app,offer,after,old);
+            if(decision.outcome!=='agree')continue;
+            sign(d,e,offer,app,after,`labor:${offer.id}:${after}`,decision);break;
+        }
     }
 }
 export function nextLaborMinute(e,d,now){
@@ -365,7 +382,7 @@ export function laborTrade(d,e,args,id){
             if(amount>cash){const guaranteed=amount-cash;financeChange(d,e,'player',guaranteed,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});escrow-=guaranteed;
                 settleClaim(d,e,{id:debt.id,payer:'player',amount:guaranteed},`${id}:${debt.id}:guarantee`);}
             if(debt.defaulted?.case)settleCreditCase(d,e,debt.defaulted.case,id);}
-        const nextWage=financeInt(args.coins??row.wage,wage(e),1e6,'调解日薪');
+        const nextWage=financeInt(args.coins??wage(e,s,row.worker,row.owner),1,1e6,'调解日薪');
         const other=currentEmployment(s,row.worker,now);
         const active=now<row.deadline&&(!other||other.id===row.id);
         writeJob(d,e,{...row,escrow,paid:row.paid+due,wage:nextWage,...(active?{status:'有效',nextWork:(Math.floor(now/DAY)+1)*DAY+1020}:{}),amendments:[...row.amendments??[],{minute:now,wage:nextWage,source:id}]});

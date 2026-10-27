@@ -335,8 +335,9 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
         const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}delete w.rules.weather;
         const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'ledger-price-projects'),d=draft(doc);
         engine.airDraft=d;d.set(['state','location'],site);d.set(['state','minute'],600);
-        const workers=w.settlementProfiles.find(p=>p.id===sid).details.governance.coordinators.slice(0,2);
-        for(const id of workers)d.set(['state','npcs',id],{...d.get('state','npcs',id),location:site,status:'正常',activity:'议事'});
+        // F083: one person can be on only one works crew, so the private project gets the third villager as its own crew.
+        const coordinators=w.settlementProfiles.find(p=>p.id===sid).details.governance.coordinators,workers=coordinators.slice(0,2),privateCrew=coordinators.slice(2,3);
+        for(const id of coordinators)d.set(['state','npcs',id],{...d.get('state','npcs',id),location:site,status:'正常',activity:'议事'});
         d.set(['state','records','governance_office:fixture'],{category:'governance_office',holder:'player',office:'office_village_head',settlement:sid,status:'在任',appointedAt:0,until:100*DAY,appointedBy:'fixture'});
         d.set(['state','settlements',sid,'treasury'],100000);d.set(['state','settlements',sid,'wood'],1000);d.set(['state','settlements',sid,'stone'],1000);
         const add=(id,extra={})=>{const base={id,name:id,type:'bld',parent:site,scope:sid,owner:sid,facilityType:'house',material:'wood',position:[0,0],access:{mode:'public'},...extra};d.set(['state','created',id],base);return id;};
@@ -345,7 +346,7 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
         damageFacility(d,engine,pub,80,{sourceEvent:'ruin'});d.set(['state','buildings',own],{owner:'player',condition:10});d.set(['state','player','coins'],500);
         d.set(['state','inventory','item_wood'],{quantity:50});d.set(['state','inventory','item_stone'],{quantity:50});
         d.document.ledger=openLedger(engine,d.document);// 夹具设好之后开账
-        const a=start({building:pub,action:'repair'},'public'),b=start({funding:'private',building:own,action:'repair'},'private');
+        const a=start({building:pub,action:'repair'},'public'),b=start({funding:'private',building:own,action:'repair',workers:privateCrew,days:12},'private');
         return {a:a.project,b:b.project,state:d.document.state,ledger:d.document.ledger};
     };
     const done=bothModes(run);assert.ok(done.a&&done.b,'公款与私资两个工程都立项');
