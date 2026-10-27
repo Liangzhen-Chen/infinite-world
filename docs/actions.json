@@ -3223,7 +3223,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:45"
+    "dispatch": "server-plugin/professions.mjs:47"
    }
   },
   {
@@ -3257,7 +3257,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:46"
+    "dispatch": "server-plugin/professions.mjs:48"
    }
   },
   {
@@ -3291,7 +3291,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:65"
+    "dispatch": "server-plugin/professions.mjs:67"
    }
   },
   {
@@ -3325,7 +3325,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:43"
+    "dispatch": "server-plugin/professions.mjs:45"
    }
   },
   {
@@ -3359,7 +3359,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:44"
+    "dispatch": "server-plugin/professions.mjs:46"
    }
   },
   {
@@ -3393,7 +3393,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 1047,
     "symbol": "WorldEngine.profession",
-    "dispatch": "server-plugin/professions.mjs:39"
+    "dispatch": "server-plugin/professions.mjs:41"
    }
   },
   {
@@ -13543,7 +13543,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 352,
+    "line": 377,
     "symbol": "runtime world_search"
    }
   },
@@ -13583,7 +13583,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 353,
+    "line": 378,
     "symbol": "runtime world_catalog"
    }
   },
@@ -13608,7 +13608,7 @@
    "pack": null,
    "handler": {
     "file": "extension/runtime.js",
-    "line": 351,
+    "line": 376,
     "symbol": "runtime world_read"
    }
   },

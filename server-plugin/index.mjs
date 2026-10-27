@@ -16,7 +16,7 @@ import {settleNpcPlanning}from'./npc-planning-service.mjs';
 import {getChronicle,syncChronicleIndex}from'./chronicle.mjs';
 import {groupHistory}from'../extension/history-window.mjs';
 import {registerUIRoutes} from './ui-routes.mjs';
-import {translateCall,narrateExecution,timeSegments,CLIENT_READS} from './action-gateway.mjs';
+import {translateCall,narrateExecution,timeSegments,SPAN_CAP,CLIENT_READS} from './action-gateway.mjs';
 import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
 import {actionBoundary} from './action-boundary.mjs';
@@ -149,6 +149,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         const selected=await store.worldRegistry.get(view.document.worldHash);
         return {...selected.actionPermission(view.document,{action,slots}),reference:view.reference};
     }));
+    const waitNotes=new Map();
     router.post('/execute',handle(async req=>{
         const {campaignId,eventId,anchor,expectedSequence}=req.body;
         const store=getStore(req),view=await store.read(campaignId);
@@ -179,11 +180,20 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         }:store.reducer;
         // A wait longer than one event may span (engine cap, see action-gateway) runs as several world_time events, one per segment,
         // the same events the player would have made by waiting in stages. A retry of the whole request finds segment 1 recorded.
-        const segments=req.body.tool==='world_act'?timeSegments(tool,args,view.document.state.minute):null;
-        if(segments){
-            const prior=await store.recorded(campaignId,`${eventId}#1`);
-            if(prior)return {ok:true,duplicate:true,result:{...prior.result,segments:segments.length},reference:view.reference};
+        // A retry is recognised by segment 1 already being on record, not by re-planning from the clock: an `until` wait that already
+        // finished plans to zero segments from the new minute. The retry returns the receipt the first attempt did: every recorded
+        // segment's total, the real segment count and, when the wait stopped early, why (kept for this process; otherwise said plainly).
+        if(req.body.tool==='world_act'&&tool==='world_time'){
+            const rows=[],first=await store.recorded(campaignId,`${eventId}#1`);
+            if(first){
+                rows.push(first);for(let i=2;;i++){const next=await store.recorded(campaignId,`${eventId}#${i}`);if(!next)break;rows.push(next);}
+                const note=waitNotes.get(`${campaignId}|${eventId}`);
+                const planned=note?.planned??(Number.isSafeInteger(args?.minutes)?Math.ceil(args.minutes/SPAN_CAP):rows.length);
+                const interrupted=rows.length<planned?(note?.interrupted??'后面的几段没有完成'):null;
+                return {ok:true,duplicate:true,result:{...rows.at(-1).result,elapsed:rows.reduce((n,row)=>n+(row.result?.elapsed??0),0),segments:rows.length,...(interrupted?{interrupted}:{})},reference:view.reference};
+            }
         }
+        const segments=req.body.tool==='world_act'?timeSegments(tool,args,view.document.state.minute):null;
         const runs=segments?segments.map((segment,i)=>({args:segment,eventId:`${eventId}#${i+1}`})):[{args,eventId}];
         let saved,interrupted=null;const saves=[];
         for(const [i,run] of runs.entries()){
@@ -198,6 +208,10 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
                 if(translated.action&&!consentIsOwn(translated.action,req.body.args?.slots??{})&&/同意/.test(error.message))throw new Error(CONSENT_PENDING);
                 throw error;
             }
+        }
+        if(segments){
+            const key=`${campaignId}|${eventId}`;waitNotes.set(key,{planned:runs.length,interrupted});
+            if(waitNotes.size>200)waitNotes.delete(waitNotes.keys().next().value);
         }
         if(segments)saved={...saved,duplicate:saves.every(row=>row.duplicate),result:{...saved.result,elapsed:saves.reduce((n,row)=>n+(row.result?.elapsed??0),0),segments:saves.length,...(interrupted?{interrupted}:{})}};
         const after=saved.document??(await store.read(campaignId)).document;

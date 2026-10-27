@@ -261,13 +261,20 @@ async function previewUIAction(action,slots={},eventId=`ui_${crypto.randomUUID()
         return {...result,startMinute:current.document.state.minute};
     });
 }
+// 已发出却没有确认完成的界面动作：提交成功但保存/刷新失败，或请求发出后断线。再次点同一动作时复用原事件编号，
+// 服务端按编号取回原回执（duplicate），不会再成交一次。成功收尾或被明确拒绝后移除。
+const unsettledActs=new Map();
+const UNSETTLED_HINT='再点一次会取回这次回执，不会重复成交；也可点“重新对账”。';
 async function act(action,slots={},confirmation={}){
     if(generating||reviewsPending)return {ok:false,error:'主持人正在回应这一轮，等这一轮结束再动手',lines:[]};
     return queue(async()=>{
+        const key=`${action}|${JSON.stringify(slots)}`;
+        const owed=unsettledActs.get(key);
+        let eventId=owed?.eventId??null,sent=false,committed=false,result=null,lines=[],completion={ok:true},fed=owed?.fed===true;
         try{
             await load();if(blocked)throw new Error(blocked);if(!view)throw new Error('请先在副本上启用新版');
             const campaignId=view.reference.campaignId;
-            if(confirmation.expectedSequence!==undefined){
+            if(confirmation.expectedSequence!==undefined&&!owed){
                 const current=await api('read',{campaignId});
                 if(current.reference.sequence!==confirmation.expectedSequence)return {ok:false,stale:true,error:'此刻情形已变化，请重新预览后再确认',lines:[]};
                 view=current;
@@ -276,21 +283,39 @@ async function act(action,slots={},confirmation={}){
             const resolved=call.tool==='world_propose'?{tool:call.tool}:await api('actions',{campaignId,resolve:{action,slots}});
             if(resolved.projection){const here=await api('actions',{campaignId});recordFeed(here.scene,'look');await ctx().saveChat();return {ok:true,lines:here.scene};}
             if(resolved.clientRead)return {ok:true,read:readStateSection(view.document.state,resolved.args.section,resolved.args.npc),lines:[]};
-            const eventId=confirmation.eventId??`ui_${crypto.randomUUID()}`;
-            const uiReview=getActionModes().narration==='async'?await api('review/begin',{campaignId,anchor:null,eventId,playerText:`界面行动：${action} ${JSON.stringify(slots)}`,expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false,captureSearch:true}):null;
-            const result=await api('execute',{campaignId,...call,eventId,anchor:null,expectedSequence:view.reference.sequence});
+            eventId??=confirmation.eventId??`ui_${crypto.randomUUID()}`;
+            const uiReview=!owed&&getActionModes().narration==='async'?await api('review/begin',{campaignId,anchor:null,eventId,playerText:`界面行动：${action} ${JSON.stringify(slots)}`,expectedSequence:view.reference.sequence,enabled:ctx().chatMetadata.fields_consistency_enabled!==false,captureSearch:true}):null;
+            sent=true;
+            result=await api('execute',{campaignId,...call,eventId,anchor:null,expectedSequence:owed?undefined:view.reference.sequence});
+            committed=true;
+            completion=actionCompletion(result);
+            lines=completion.pending?['行动仍在等待裁决，尚未完成。']:(result.narration?.lines?.length?result.narration.lines:owed?.lines)??[];
+            unsettledActs.set(key,{eventId,lines,fed});
             view=await api('read',{campaignId});
-            const completion=actionCompletion(result);
-            const lines=completion.pending?['行动仍在等待裁决，尚未完成。']:result.narration?.lines??[];
-            const entry=!completion.pending?recordFeed(lines):null;
+            const entry=!completion.pending&&!fed&&lines.length?recordFeed(lines):null;
+            if(entry)fed=true;
+            unsettledActs.set(key,{eventId,lines,fed});
             ambientAudio.noteAction(result.result,view.document.state.player,resolved.tool);
             await persist();await refresh();
+            unsettledActs.delete(key);
             if(uiReview&&entry){
                 entry.eventId=eventId;entry.sequence=view.reference.sequence;
                 void narrateUIAction({session:uiReview,campaignId,eventId,sequence:view.reference.sequence,chatId:ctx().chatId,entry});
             }
-            return {...completion,lines,result:result.result};
-        }catch(error){return {ok:false,error:error.message,lines:[]};}
+            return {...completion,lines,result:result.result,eventId,committed:true,uncertain:false};
+        }catch(error){
+            if(committed){
+                // 引擎已记下这次行动，回执照实保留；只是保存/显示没跟上。不当作“没成交”。
+                const note=`行动已成交，但保存或显示更新没有完成（${error.message}）。${UNSETTLED_HINT}`;
+                return {...completion,lines:[...lines,note],result:result.result,eventId,committed:true,uncertain:false,needsReconcile:true};
+            }
+            if(sent&&!error.rejected){
+                unsettledActs.set(key,{eventId,lines:[],fed});
+                return {ok:false,uncertain:true,committed:false,eventId,error:`执行结果尚未确认：${error.message}。${UNSETTLED_HINT}`,lines:[]};
+            }
+            if(sent)unsettledActs.delete(key);
+            return {ok:false,committed:false,uncertain:false,error:error.message,lines:[]};
+        }
     });
 }
 async function narrateUIAction({session,campaignId,eventId,sequence,chatId,entry}){
