@@ -164,9 +164,13 @@ test('W1-9 after a sale that does not cover the pawn, the remainder is repaid no
  await f.elapse(row.auctionAt);
  assert.equal(f.document.state.records[pawn.contract].status,'流当');
  const hostCoins=f.document.state.npcs[host].coins;
+ // The buyer's seeded larder is a bare count (premise from the NPC's own stock); the sale adds exactly the 10 pledged loaves.
+ const stock=n=>{const v=f.document.state.npcs[host].inventory.item_bread;return typeof v==='number'?v:v?.quantity??0;};
+ const hostBread=stock();
  // The goods are valued 20; the buyer pays 20; the counter takes 20, 1 remains owed.
  const sold=await f.act({operation:'auction',buyer:host,contract:pawn.contract,coins:20,consent:true},'w1-sf-auction');
 assert.equal(sold.surplus,0);assert.equal(f.document.state.npcs[host].coins,hostCoins-20);
+ assert.equal(stock(),hostBread+10);
  const pledged=f.document.state.records[`pledge:${pawn.contract}`];assert.equal(pledged.status,'已拍卖');assert.equal(pledged.holder,host);
  const after=f.document.state.records[pawn.contract];assert.equal(after.paid,20);assert.equal(after.status,'逾期');
  assert.equal(owed(f,`finance:${pawn.contract}`),1);
@@ -233,4 +237,24 @@ test('W1-12 a paper handed to someone else and then reported lost cannot be cash
  const frozen=structuredClone(f.document);
  await assert.rejects(f.act({operation:'withdraw',coins:50,debt:a.claim},'w1-give-cash'));
  assert.deepEqual(f.document,frozen);assert.equal(owed(f,a.claim),100);
+});
+
+test('W1-13 interest earned while the vault is empty stays a real debt on the open claim and is paid once cash returns',async()=>{
+ const f=fixture(),before=f.coins();
+ const a=await f.act({operation:'deposit',coins:1001},'w1-arrears-dep');
+ await f.elapse(600+15*DAY);
+ // The vault holds exactly the principal: 1000. Interest earned is 1000 x 2% x 15/30 = 10.
+ const drained=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:1000}]});
+ assert.deepEqual(drained.setupUnmet,[]);f.document=drained.document;
+ const first=await f.act({operation:'withdraw',coins:1000,debt:a.claim},'w1-arrears-out');
+ assert.equal(first.withdrawn,1000);assert.equal(f.coins(),before-1001+1000);
+ // The 10 copper is still owed, visible on the same open claim.
+ assert.equal(owed(f,a.claim),10);assert.equal(f.document.state.records[bankId].accounts.player,10);
+ const seen=await f.act({operation:'bank_inspect'},'w1-arrears-look');
+ assert.equal(seen.deposits.find(x=>x.claim===a.claim).balance,10);
+ // Cash returns to the vault: the remainder is paid out and the claim closes.
+ const refilled=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:50}]});
+ assert.deepEqual(refilled.setupUnmet,[]);f.document=refilled.document;
+ const second=await f.act({operation:'withdraw',coins:10,debt:a.claim},'w1-arrears-late');
+ assert.equal(second.withdrawn,10);assert.equal(f.coins(),before-1001+1010);assert.equal(owed(f,a.claim),0);
 });

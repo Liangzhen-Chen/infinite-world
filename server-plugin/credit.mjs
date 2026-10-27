@@ -289,7 +289,8 @@ export async function creditTrade(d,args,eventId,terms){
             // drawing the whole displayed balance therefore settles it with that interest.
             const gained=settleDepositInterest(d,engine,b,claims.map(o=>o.id));
             Object.assign(row,d.get(...rec(b.id)));
-            if(gained&&amount===before&&row.coins>=amount+gained)amount+=gained;
+            const extra=claims.reduce((n,o)=>n+obligationView(d.get('state'),o.id).owed,0)-before;
+            if(extra>0&&amount===before)amount=Math.min(before+extra,row.coins);
             let left=amount;
             for(const claim of claims){
                 if(!left)break;

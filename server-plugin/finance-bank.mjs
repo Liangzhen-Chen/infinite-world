@@ -204,7 +204,8 @@ export function accrueDepositClaim(state,e,claim,at,{quote,rate,capacity,frozen}
     const basis=claim.terms.rateTerms??{per:'anchor',calendar:'core:calendar_default'},month=obligationCalendar(basis.calendar).rateBasis?.month??30;
     const signedRate=quote.per===basis.per?rate:rate*(basis.per==='day'?1/month:month);
     // The cursor never moves backwards: nothing accrues for a span already settled.
-    if(at<=(claim.accruedTo??claim.createdAt))return {earned:0,capitalized:0,arrears:claim.interestArrears??0,claim};
+    const cursor=claim.accruedTo??claim.createdAt;
+    if(at<cursor||at===cursor&&!claim.interestArrears)return {earned:0,capitalized:0,arrears:claim.interestArrears??0,claim};
     const previous=claim.interestRemainder;
     const exact=addAccrual(depositAccrual(state,claim,basis,signedRate,at),previous?fraction(BigInt(previous.numerator),BigInt(previous.denominator)):fraction(0n));
     const earned=Number(exact.numerator/exact.denominator),remainder=fraction(exact.numerator%exact.denominator,exact.denominator);
@@ -212,6 +213,9 @@ export function accrueDepositClaim(state,e,claim,at,{quote,rate,capacity,frozen}
     return {earned,capitalized,arrears:owed-capitalized,claim:{...claim,amount:claim.amount+capitalized,interest:(claim.interest??0)+capitalized,accruedTo:at,
         interestRemainder:{numerator:String(remainder.numerator),denominator:String(remainder.denominator)},interestArrears:owed-capitalized}};
 }
+// Interest already earned is a real debt of the bank: at a withdrawal it is capitalized
+// in full (never left as arrears on a claim that may close); paying it out is limited
+// only by cash, and an unpaid remainder stays on the open claim.
 // A withdrawal is a settlement event for the claims it draws on (A.15.6: the
 // cursor advances and accrued interest joins the claim). Rate is the quote at
 // that moment; it never rewrites earlier intervals.
@@ -221,7 +225,7 @@ export function settleDepositInterest(d,e,b,claimIds,at=d.get('state','minute'))
     const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===b.id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);
     let liabilities=bankLiabilities(state,b.id,at).total;const accounts={...bank.accounts};let capitalizedTotal=0;
     for(const id of claimIds){
-        const claim=obligationRow(d.get('state'),id),step=accrueDepositClaim(d.get('state'),e,claim,at,{quote,rate,capacity:bank.coins-liabilities-issueReserve,frozen:blocked(e,d.get('state'),b,at)});
+        const claim=obligationRow(d.get('state'),id),step=accrueDepositClaim(d.get('state'),e,claim,at,{quote,rate,capacity:Infinity,frozen:false});
         d.set(['state','obligations',id],step.claim);accounts[claim.creditor]=(accounts[claim.creditor]??0)+step.capitalized;liabilities+=step.capitalized;capitalizedTotal+=step.capitalized;
     }
     holdingSet(d,e,financePath(b.id),{...bank,accounts},'finance-bank');return capitalizedTotal;
