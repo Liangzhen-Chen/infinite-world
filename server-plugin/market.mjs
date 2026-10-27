@@ -123,16 +123,16 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
  const ordinary=grade(typeof bag[item]==='object'?bag[item]:null);
  return (units.reduce((n,u)=>n+grade(u),0)+Math.max(0,count-units.length)*ordinary)/count;
 }
-export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute}){
+export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute,observer=null,view=null}){
  const document=d.document??{state:stateOf(d)},state=document.state,r=rulesOf(engine),side=business?(business.keeper===seller?'sell':'buy'):seller==='player'?'buy':'sell';
  const supply=marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});
  const day=Math.floor(minute/DAY),deals=marketDeals(state).filter(row=>row.day===day&&row.place===supply.place&&row.goods===supply.goods);
  const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,supply.supply+net);
  const scarcity=clamp(supply.demand/Math.max(1,supply.supply),engine.rules.economy.priceFactorLimits.region);
  const depth=Math.max(0,1+r.depthImpact*net/opening),quality=marketGrade(engine,document,item,{seller,instances,quantity:count});
- const value=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
+ const value=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality,observer,view});
  const spread=business?(side==='sell'?clamp(business.markup,engine.rules.economy.priceFactorLimits.shop):r.spread.buy):1;
- const price=explainDerived(engine,document,'economy:price',item,{base:value.value*depth*spread*relation});
+ const price=explainDerived(engine,document,'economy:price',item,{base:value.value*depth*spread*relation,observer,view});
  // 15 §15.2: peer trade has no business stock curve and always uses retail value.
  const retail=!business||count<=Math.max(r.retailFloor,supply.supply*r.retailShare);
  // Integrate the clamped demand/supply curve analytically. Quality, correction
@@ -152,8 +152,8 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
   const marginal=x=>{
    const available=Math.max(0,supply.supply+(side==='sell'?-x:x));
    const scarcityAt=clamp(supply.demand/Math.max(Number.EPSILON,available),limits);
-   const v=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcityAt*quality});
-   return explainDerived(engine,document,'economy:price',item,{base:v.value*depth*spread*relation}).value;
+   const v=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcityAt*quality,observer,view});
+   return explainDerived(engine,document,'economy:price',item,{base:v.value*depth*spread*relation,observer,view}).value;
   };
   const simpson=(a,b,fa,fm,fb)=>(b-a)*(fa+4*fm+fb)/6;
   const integrate=(a,b,fa,fm,fb,whole,tolerance,left)=>{
@@ -194,4 +194,32 @@ export function purchasingPower(d,engine,location,coins=1){
  });
  const ppi=basket.reduce((n,row)=>n+row.weight*row.value,0);
  return {basket,ppi,realValue:ppi?coins/ppi:0};
+}
+
+// New terms use the common S5-01 valuation slot. Signed contracts keep their amount.
+export function laborValue(engine,document,{worker='player',observer=null,proficiency=0}={}){
+ // D15 §15.2: a skill stage is 300 proficiency. The midpoint of its
+ // authored daily-income range is the neutral typical-day valuation.
+ const table=engine.rules.economy.dailyIncomeBySkillStage;
+ const [low,high]=table[Math.min(table.length-1,Math.floor(proficiency/300))];
+ const quote=explainDerived(engine,document,'economy:wage',worker,{base:(low+high)/2,observer});
+ return {...quote,daily:Math.max(1,Math.ceil(quote.value))};
+}
+
+// Candidate estimates use the same quote formula over the observer's own
+// stock and remembered trades. Unknown bags, granaries and market depth are
+// absent from this projection; execution still rechecks the actual market.
+export function subjectiveMarketQuote(engine,document,view,args){
+ const observer=view.observer,location=view.self.location;
+ const known=marketDeals(document.state).filter(r=>[r.seller,r.buyer].includes(observer)&&r.minute<=view.minute);
+ const remembered=view.knowledge.facts[`market:${location}:${args.item}`];
+ const last=known.filter(r=>r.item===args.item).sort((a,b)=>b.minute-a.minute).at(0);
+ const price=remembered?.value?.unitPrice??(last?last.totalCoins/last.quantity:engine.byId.get(args.item)?.basePrice);
+ const body=observer==='player'?document.state.player:document.state.npcs[observer];
+ const state={...document.state,minute:view.minute,location,inventory:observer==='player'?view.self.inventory:{},player:observer==='player'?body:{coins:0},npcs:{},creatures:{},settlements:{},records:Object.fromEntries(known.map((r,i)=>[`market-trade:known:${i}`,r]))};
+ for(const p of view.observable.people)state.npcs[p.id]={...p,location,coins:0,inventory:{}};
+ if(observer!=='player')state.npcs[observer]={...body,location,inventory:view.self.inventory};
+ const projected={state},reader={document:projected,get:(...p)=>p.reduce((x,k)=>x?.[k],projected)};
+ const quote=marketQuote(reader,engine,{...args,location,base:price,observer,view});
+ return {...quote,knownFrom:remembered?.source??last?.eventId??'catalog_prior',estimate:true};
 }

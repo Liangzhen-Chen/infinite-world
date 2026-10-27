@@ -23,10 +23,15 @@ const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(fs.r
 const fresh=()=>engine.initialFromLegacy(seed,'a1-registry');
 
 test('注册表：数据声明、带命名空间、与 S0 动作清单一一对应且为最新同步',()=>{
+ // S5-04 adds business:open_counter / business:spend_counter; retain the exact
+ // namespace set (including rejection of undeclared namespaces) and S0 equality.
  // S4 adds the institutional lifecycle catalogue. Keep the exact namespace
  // and S0-set assertions, including rejection of any undeclared namespace.
- assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core','documents','institutions','law','open']);
- const s0=registry.actions.filter(a=>a.source==='s0');
+ assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['business','core','documents','institutions','law','open']);
+ // S505's approved release alias now also occurs in the exported public enum;
+ // keep its approval source and exact declaration (checked below), count the
+ // same unique action in S0 equality, and reject every other extra/missing ID.
+ const s0=registry.actions.filter(a=>a.source==='s0'||a.id==='core:wildlife.release');
  assert.deepEqual(s0.map(a=>a.id).sort(),catalog.map(a=>a.id).sort());
  assert.ok(registry.actions.length>catalog.length,'注册表在 S0 别名之外还有模板动作');
  const doc=JSON.parse(fs.readFileSync(REGISTRY,'utf8'));
@@ -69,7 +74,7 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    if(['open:leave_mark','open:question','open:waive_debt'].includes(a.id)){assert.equal(a.call,undefined);continue;}
    assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
   }
-  // D05 §5.5 / S5-05：新审批的放归动作不属于旧 S0 清单；仍逐项核对唯一入口、必填目标和实际分派。
+  // D05 §5.5 / S5-05：放归动作保留已审来源，现已纳入 S0 导出；仍逐项核对唯一入口、必填目标和实际分派。
   if(a.id==='core:wildlife.release'){
    assert.equal(a.source,'s505-resources');
    assert.deepEqual(a.call,{tool:'world_field',operation:'wildlife_release'});

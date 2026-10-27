@@ -50,58 +50,66 @@ async function nativeSummon(){
  assert.fail('successful native summon required');
 }
 
-test.todo('N: counter opening persists independently from the personal purse; only its owner can spend〔前提待真实动作：创建独立柜台账户，不能把个人钱袋当成柜台；归 S5〕',()=>{
- const loaded=load('082');assert.deepEqual(ownedErrors(loaded),[]);
- const document=save(loaded.document),npc='npc_hw_linsui',row=dedicatedCoinAccount(document.state,npc,'counter'),purse=document.state.npcs[npc].coins;
- assert.equal(row.coins,100);assert.equal(document.ledger.accounts[row.account],100);assert.equal(document.state.player.coins,0);
- assert.throws(()=>write(document,d=>spendCounterCoins(d,engine,{owner:npc,actor:'player',to:'player',amount:100,eventId:'forged'})),/owner/);
- assert.throws(()=>write(document,d=>spendCounterCoins(d,engine,{owner:npc,actor:npc,to:'player',amount:101,eventId:'overdraw'})),/funds/);
- const out=write(document,d=>spendCounterCoins(d,engine,{owner:npc,actor:npc,to:'player',amount:20,eventId:'owner-payment'}));
- assert.equal(dedicatedCoinAccount(out.document.state,npc,'counter').coins,80);assert.equal(out.document.state.player.coins,20);assert.equal(out.document.state.npcs[npc].coins,purse);clean(out.document);
- const replay=write(out.document,d=>spendCounterCoins(d,engine,{owner:npc,actor:npc,to:'player',amount:20,eventId:'owner-payment'}));assert.deepEqual(replay.patches,[]);
- const reopened=write(out.document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'counter',balance:100,sourceEvent:'world_event:a3v2_082_account_0'},{origin:'initial'}));
- assert.equal(dedicatedCoinAccount(reopened.document.state,npc,'counter').coins,80);assert.deepEqual(reopened.patches,[]);
- assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:npc,purpose:'purse',balance:100,sourceEvent:'world_event:a3v2_082_account_0'},{origin:'initial'})),/already exists/);
+// D05 5.1 / product principle III.2: replace removed account snapshots with
+// real leasing and opening transfers. The owner is now the actual player caller;
+// the original isolation, authorization, source and probate guarantees remain.
+async function nativeCounter(){
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:'bld_hw_qingdeng',coins:300,inventory:{item_bread:5},present:['npc_hw_linsui']});
+ assert.deepEqual(prepared.setupUnmet,[]);const f={engine,document:prepared.document};
+ f.act=async(tool,args,eventId)=>{const out=await engine.reduce(f.document,{tool,args,eventId});if(out.result.receipt?.status==='rejected')assert.deepEqual(out.patches,[]);assert.notEqual(out.result.receipt?.status,'rejected',JSON.stringify(out.result));f.document=applyPatches(f.document,out.patches);return out.result;};
+ const leased=await f.act('world_trade',{operation:'lease',seller:'npc_hw_linsui',consent:true,days:1},'owner-counter-lease');f.business=leased.business;
+ f.open=(slots={},id='owner-counter-open')=>f.act('world_act',{action:'business:open_counter',slots:{business:f.business,coins:100,...slots}},id);
+ return f;
+}
+
+test('N: counter opening persists independently from the personal purse; only its owner can spend',async()=>{
+ const f=await nativeCounter(),purse=f.document.state.player.coins,npc='npc_hw_linsui',beforeNpc=f.document.state.npcs[npc].coins;await f.open();
+ assert.equal(dedicatedCoinAccount(f.document.state,'player','counter').coins,100);assert.equal(f.document.ledger.accounts['player|coin_river|counter'],100);
+ assert.equal(f.document.state.player.coins,purse-100);
+ assert.throws(()=>write(f.document,d=>spendCounterCoins(d,engine,{owner:'player',actor:npc,to:npc,amount:100,eventId:'forged'})),/owner/);
+ assert.throws(()=>write(f.document,d=>spendCounterCoins(d,engine,{owner:'player',actor:'player',to:npc,amount:101,eventId:'overdraw'})),/funds/);
+ const out=write(f.document,d=>spendCounterCoins(d,engine,{owner:'player',actor:'player',to:npc,amount:20,eventId:'owner-payment'}));
+ // 100-20=80 in counter; only the recipient purse gains20.
+ assert.equal(dedicatedCoinAccount(out.document.state,'player','counter').coins,80);assert.equal(out.document.state.npcs[npc].coins,beforeNpc+20);assert.equal(out.document.state.player.coins,purse-100);clean(out.document);
+ const replay=write(out.document,d=>spendCounterCoins(d,engine,{owner:'player',actor:'player',to:npc,amount:20,eventId:'owner-payment'}));assert.deepEqual(replay.patches,[]);
+ f.document=out.document;const before=save(f.document);await assert.rejects(f.open({},'owner-counter-reopen'));assert.deepEqual(f.document,before);
 });
 
-test.todo('N: invalid opening source, purpose, owner and negative balances cannot initialize accounts〔前提待真实动作：创建独立柜台账户，不能把个人钱袋当成柜台；归 S5〕',()=>{
- for(const change of [s=>s.accounts[0].balance=-1,s=>s.accounts[0].sourceEvent='missing',s=>s.accounts[0].purpose='unregistered',s=>s.accounts[0].owner='player']){
-  const loaded=load('082',change);assert.equal(ownedErrors(loaded).length,1);assert.equal(loaded.document.state.player.coins,0);
+test('N: invalid opening source, purpose, owner and negative balances cannot initialize accounts',async()=>{
+ for(const slots of [{coins:-1},{sourceEvent:'missing'},{purpose:'unregistered'},{owner:'npc_hw_linsui'}]){
+  const f=await nativeCounter(),before=save(f.document);await assert.rejects(f.open(slots));assert.deepEqual(f.document,before);assert.equal(dedicatedCoinAccount(f.document.state,'player','counter'),null);clean(f.document);
  }
- const loaded=load('082'),document=save(loaded.document);
- assert.throws(()=>write(document,d=>restoreCoinAccount(d,engine,{owner:'npc_hw_linsui',purpose:'counter',balance:100,sourceEvent:'not-an-event'},{origin:'initial'})),/source/);
- const remote=load('082',s=>s.accounts[0].seat=engine.world.locations.find(l=>l.id!==s.location).id);
- assert.throws(()=>write(save(remote.document),d=>spendCounterCoins(d,engine,{owner:'npc_hw_linsui',actor:'npc_hw_linsui',to:'player',amount:1,eventId:'remote-counter'})),/cannot act here/);
- clean(document);
+ const f=await nativeCounter();await f.open();assert.equal(dedicatedCoinAccount(f.document.state,'player','counter').sourceEvent,'owner-counter-lease');
+ // D05 5.1 /15 15.1.1: moving away cannot make a remote counter spendable.
+ const moved=applyIntentSetup(engine,f.document,{location:'bld_hw_post'});assert.deepEqual(moved.setupUnmet,[]);
+ assert.throws(()=>write(moved.document,d=>spendCounterCoins(d,engine,{owner:'player',actor:'player',to:'player',amount:1,eventId:'remote-counter'})),/cannot act here/);clean(f.document);
 });
 
-test.todo('N: real owner death carries the independent counter into the estate without stale or duplicated cash〔前提待真实动作：创建独立柜台账户，不能把个人钱袋当成柜台；归 S5〕',()=>{
- const loaded=load('082'),document=save(loaded.document),npc='npc_hw_linsui',before=dedicatedCoinAccount(document.state,npc,'counter');
- const out=write(document,d=>transition(d,engine,{entity:npc,basis:'death',origin:'death_rule',eventId:'counter-owner-death'}));
+test('N: real owner death carries the independent counter into the estate without stale or duplicated cash',async()=>{
+ const f=await nativeCounter();await f.open();const before=dedicatedCoinAccount(f.document.state,'player','counter');
+ const out=write(f.document,d=>transition(d,engine,{entity:'player',basis:'death',origin:'death_rule',eventId:'counter-owner-death',successors:['npc_hw_linsui']}));
  const estate=out.result.successor;assert.ok(estate);
  assert.equal(out.document.ledger.accounts[before.account]??0,0);assert.equal(out.document.ledger.accounts[`${estate}|coin_river|counter`],100);
- assert.equal(dedicatedCoinAccount(out.document.state,npc,'counter').coins,0);assert.equal(dedicatedCoinAccount(out.document.state,estate,'counter').coins,100);clean(out.document);
+ assert.equal(dedicatedCoinAccount(out.document.state,'player','counter').coins,0);assert.equal(dedicatedCoinAccount(out.document.state,estate,'counter').coins,100);clean(out.document);
 });
 
-test.todo('N/O: estate repays an existing loan from its owned counter before distributing the remainder〔前提待真实动作：创建独立柜台账户，不能把个人钱袋当成柜台；归 S5〕',()=>{
- const npc='npc_hw_linsui',loaded=load('082',s=>{
-  const source={kind:'corpus_premise',row:'A3-OWNER-DING-ESTATE'};
-  s.history.push({id:'estate-purse',verb:'opening_balance',at:599,source,owner:npc,resource:'coin_river',balance:0},
-   {id:'estate-loan-source',verb:'obligation_opened',at:540,source,subject:'estate-old-loan',debtor:npc,creditor:'player',amount:40});
-  s.accounts.push({owner:npc,resource:'coin_river',purpose:'purse',balance:0,sourceEvent:'estate-purse'});
-  s.obligations=[{id:'estate-old-loan',kind:'loan',debtor:npc,creditor:'player',amount:40,paid:0,openedAt:540,dueAt:600,sourceEvent:'estate-loan-source',terms:{}}];
+test('N/O: estate repays an existing loan from its owned counter before distributing the remainder',async()=>{
+ const f=await nativeCounter();
+ let prepared=applyIntentSetup(engine,f.document,{minute:600,location:'bld_hw_post',coins:0,inventory:{item_wood:100}});assert.deepEqual(prepared.setupUnmet,[]);f.document=prepared.document;
+ const loan=await f.act('world_trade',{operation:'borrow',seller:'npc_hw_shendu',coins:40,days:1,item:'item_wood',quantity:100},'owner-estate-loan');
+ prepared=applyIntentSetup(engine,f.document,{minute:610,location:'bld_hw_qingdeng',coins:100});assert.deepEqual(prepared.setupUnmet,[]);f.document=prepared.document;await f.open();
+ // S3 signed loans keep their schedule: probate tests an already due loan.
+ prepared=applyIntentSetup(engine,f.document,{minute:2050});assert.deepEqual(prepared.setupUnmet,[]);f.document=prepared.document;
+ const beforeBank=f.document.state.records.bank_hw_post.coins,heirPurse=f.document.state.npcs.npc_hw_linsui.coins;
+ const out=write(f.document,d=>{
+  const r=transition(d,engine,{entity:'player',basis:'death',origin:'death_rule',eventId:'estate-counter-debt',successors:['npc_hw_linsui'],durations:{notice:0,filing:0,settlement:0,distribution:0}});
+  assert.deepEqual(engine.protocolAdditionalClaimAccounts(d,r.successor),[[`${r.successor}|coin_river|counter`,100]]);advanceProcedure(d,engine,r.successor);return r;
  });
- assert.deepEqual(ownedErrors(loaded),[]);const document=save(loaded.document);clean(document);
- const out=write(document,d=>{
-  const r=transition(d,engine,{entity:npc,basis:'death',origin:'death_rule',eventId:'estate-counter-debt',durations:{notice:0,filing:0,settlement:0,distribution:0}});
-  assert.deepEqual(engine.protocolAdditionalClaimAccounts(d,r.successor),[[`${r.successor}|coin_river|counter`,100]]);
-  advanceProcedure(d,engine,r.successor);return r;
- });
- const claim=obligationView(out.document.state,'estate-old-loan');
- assert.equal(out.document.state.player.coins,40,JSON.stringify({phase:out.document.state.records[`transition_procedure:${out.result.successor}`].phase,
-  paid:claim.paid,owed:claim.owed,badDebt:claim.row.badDebt,counterTotal:Object.values(out.document.state.records).filter(r=>r.category==='money_account'&&r.purpose==='counter').reduce((n,r)=>n+r.coins,0)}));
- assert.equal(obligationView(out.document.state,'estate-old-loan').paid,40);
- assert.equal(obligationView(out.document.state,'estate-old-loan').owed,0);clean(out.document);
+ // Native loan40 + ceil(40 * .0154 /30)=1 interest => debt41;
+ // 100-41=59 inherited once, in the same counter purpose, never a purse copy.
+ assert.equal(obligationView(out.document.state,loan.debt).paid,41);assert.equal(obligationView(out.document.state,loan.debt).owed,0);
+ assert.equal(out.document.state.records.bank_hw_post.coins,beforeBank+41);
+ assert.equal(dedicatedCoinAccount(out.document.state,'npc_hw_linsui','counter').coins,59);assert.equal(out.document.state.npcs.npc_hw_linsui.coins,heirPurse);clean(out.document);
 });
 
 // S4LAW: 下列三个白石罚款 todo 仍缺真实前提。loc_bs 已按垄渠郡王国归属

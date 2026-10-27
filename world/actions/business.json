@@ -1,0 +1,187 @@
+{
+  "format": 1,
+  "namespace": "business",
+  "actions": [
+    {
+      "id": "business:open_counter",
+      "call": {
+        "tool": "world_settlement",
+        "operation": "business_counter_open"
+      },
+      "label": "柜台开户",
+      "verb": "business.open_counter",
+      "group": "经营",
+      "pack": "economy",
+      "readOnly": false,
+      "participants": {
+        "actor": "player"
+      },
+      "slots": [
+        {
+          "name": "business",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "name": "coins",
+          "kind": "coins",
+          "required": true
+        },
+        {
+          "name": "sourceEvent",
+          "kind": "text"
+        },
+        {
+          "name": "owner",
+          "kind": "text"
+        },
+        {
+          "name": "purpose",
+          "kind": "text"
+        }
+      ],
+      "preconditions": [
+        "canAct(actor, 'environment').allowed"
+      ],
+      "cost": {
+        "time": "engine"
+      },
+      "check": null,
+      "visibility": {
+        "catalog": "search",
+        "witness": "private"
+      },
+      "synonyms": [],
+      "narration": "business.open_counter",
+      "source": "catalog",
+      "consent": {
+        "from": "self"
+      }
+    },
+    {
+      "id": "business:spend_counter",
+      "call": {
+        "tool": "world_settlement",
+        "operation": "business_counter_spend"
+      },
+      "label": "柜台支用",
+      "verb": "business.spend_counter",
+      "group": "经营",
+      "pack": "economy",
+      "readOnly": false,
+      "participants": {
+        "actor": "player"
+      },
+      "slots": [
+        {
+          "name": "coins",
+          "kind": "coins",
+          "required": true
+        },
+        {
+          "name": "to",
+          "kind": "text"
+        },
+        {
+          "name": "owner",
+          "kind": "text"
+        }
+      ],
+      "preconditions": [
+        "canAct(actor, 'environment').allowed"
+      ],
+      "cost": {
+        "time": "engine"
+      },
+      "check": null,
+      "visibility": {
+        "catalog": "search",
+        "witness": "private"
+      },
+      "synonyms": [],
+      "narration": "business.spend_counter",
+      "source": "catalog",
+      "consent": {
+        "from": "self"
+      }
+    },
+    {
+      "id": "business:fund_counter",
+      "call": {
+        "tool": "world_settlement",
+        "operation": "business_counter_fund"
+      },
+      "label": "柜台调拨",
+      "verb": "business.fund_counter",
+      "group": "经营",
+      "pack": "economy",
+      "readOnly": false,
+      "participants": {
+        "actor": "player"
+      },
+      "slots": [
+        {
+          "name": "coins",
+          "kind": "coins",
+          "required": true
+        }
+      ],
+      "preconditions": [
+        "canAct(actor, 'environment').allowed"
+      ],
+      "cost": {
+        "time": "engine"
+      },
+      "check": null,
+      "visibility": {
+        "catalog": "search",
+        "witness": "private"
+      },
+      "synonyms": [],
+      "narration": "business.fund_counter",
+      "source": "catalog",
+      "consent": {
+        "from": "self"
+      }
+    },
+    {
+      "id": "business:options",
+      "call": {
+        "tool": "world_settlement",
+        "operation": "business_options"
+      },
+      "label": "经营候选",
+      "verb": "business.options",
+      "group": "经营",
+      "pack": "economy",
+      "readOnly": true,
+      "participants": {
+        "actor": "player"
+      },
+      "slots": [
+        {
+          "name": "business",
+          "kind": "text",
+          "required": true
+        }
+      ],
+      "preconditions": [
+        "canAct(actor, 'environment').allowed"
+      ],
+      "cost": {
+        "time": "engine"
+      },
+      "check": null,
+      "visibility": {
+        "catalog": "search",
+        "witness": "private"
+      },
+      "synonyms": [],
+      "narration": "business.options",
+      "source": "catalog",
+      "consent": {
+        "from": "self"
+      }
+    }
+  ]
+}

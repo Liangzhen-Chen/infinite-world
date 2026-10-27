@@ -15,6 +15,7 @@ import {marry,recordEntityDeath} from '../server-plugin/npc-life.mjs';
 import {withLawRules} from '../world/design/law-foundation.mjs';
 import {holdingsDiscrepancies} from './helpers/holdings-audit.mjs';
 import {grantLoanConsent} from './helpers/finance.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',post='bld_hw_post',host='npc_hw_linsui',clerk='npc_hw_shendu',worker='npc_hw_ayan';
@@ -59,6 +60,9 @@ test('多日推演对账：组织、议案、商号租铺与雇工、受雇、�
     doc.state.minute=600;doc.state.location=inn;doc.state.player.coins=800;
     for(const [id,location] of [[host,inn],[worker,inn],[clerk,post]])Object.assign(doc.state.npcs[id],{location,activity:id===worker?'休息':'营业',status:'正常',coins:100});
     const c={engine,doc};
+    // D05 §5.1 / S5-02: preserve supplier household reserves. Opening bread
+    // stock is not examined by this holding reconciliation scenario.
+    const supplied=applyIntentSetup(engine,doc,{facts:[{path:['state','npcs',host,'inventory'],value:{...doc.state.npcs[host].inventory,item_bread:{quantity:40}}}]});assert.deepEqual(supplied.setupUnmet,[]);c.doc=supplied.document;
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:1},'buy');
     const org=(await step(c,'world_create',{type:'org',name:'青灯互助会',data:{notes:'互相照应',occupation:'行会'}},'found')).organization;
     assert.ok(c.doc.holdings,'第一次写持有时开出分区');
@@ -68,6 +72,8 @@ test('多日推演对账：组织、议案、商号租铺与雇工、受雇、�
     assert.ok(aliveHoldings(view(c.doc),{kind:'member_of',holder:worker,subject:org}).length,'表决通过后入会');
     assert.ok(c.doc.holdings.entities[`motion_${apply.proposal}`],'议案是实体');
     const lease=await step(c,'world_trade',{operation:'lease',seller:host,consent:true,days:3,deposit:3},'lease'),shop=lease.business;
+    // D05 §5.1: real operating-capital transfer; keep every holding/ledger check.
+    await step(c,'world_act',{action:'business:open_counter',slots:{business:shop,coins:100}},'counter');
     const order=await step(c,'world_trade',{operation:'procure',business:shop,seller:host,consent:true,item:'item_bread',quantity:2},'procure');
     await step(c,'world_trade',{operation:'fulfill',business:shop,seller:host,contract:order.contract},'delivered');
     await step(c,'world_settlement',{operation:'business_open',business:shop},'open');

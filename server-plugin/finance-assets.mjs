@@ -1,8 +1,9 @@
+import {laborValue} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './contract-state.mjs';
 import {counterpart} from './credit.mjs';
-import {obligationRows,obligationView,wageQuote} from './obligation-state.mjs';
+import {obligationRows,obligationView} from './obligation-state.mjs';
 import {adoptLegacyObligation} from './obligation-runtime.mjs';
 import {workshopFund,coinRead,partyAccount} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
@@ -179,7 +180,7 @@ export function settleEmploymentProduction(d,e,row,at,plan){
     recordCraft(d,{recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
     return {minute:at,fee,batches,quality,skill,instances,quantity:recipe.output.quantity*batches};
 }
-function fairWage(e,s,worker,recipe){return wageQuote({baseHalfDay:e.rules.economy.wageCopperPerHalfDay[0],proficiency:workerSkill(e,s,worker,recipe),regard:standing(e,s,worker,'player')}).daily;}
+function fairWage(e,s,worker,recipe){return laborValue(e,{state:s},{worker,observer:'player',proficiency:workerSkill(e,s,worker,recipe)}).daily;}
 export function assetTrade(d,e,args,id){
     if(args.operation?.startsWith('labor_'))return laborTrade(d,e,args,id);
     const op=args.operation,state=d.get('state'),now=state.minute,location=state.location;
@@ -248,7 +249,7 @@ export function assetTrade(d,e,args,id){
     if(op==='dismiss'){changeLegacyHoldings(d,e,{holder:row.worker,source:`contract:${row.id}`,reason:'vacated',eventId:id},()=>holdingSet(d,e,rec(row.id),{...row,status:'已解雇',endedAt:now},'finance-assets'));return {contract:row.id,status:'已解雇'};}
     if(op==='workshop_terms'){
         if(e.resolve(args.seller)!==row.worker)throw preconditionFailure('须由原雇工同意新工钱');counterpart(d,e,row.worker,{consent:args.consent});
-        const wage=int(args.coins,1,1e6,'新日薪');holdingSet(d,e,rec(row.id),{...row,wage,status:'有效',raiseRequestedAt:null,amendments:[...row.amendments??[],{wage,minute:now,source:id}]},'finance-assets');return {contract:row.id,wage};
+        const wage=int(args.coins??fairWage(e,state,row.worker,e.byId.get(row.recipe)),1,1e6,'新日薪');holdingSet(d,e,rec(row.id),{...row,wage,status:'有效',raiseRequestedAt:null,amendments:[...row.amendments??[],{wage,minute:now,source:id}]},'finance-assets');return {contract:row.id,wage};
     }
     throw preconditionFailure('未知资产操作');
 }

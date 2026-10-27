@@ -1,3 +1,4 @@
+import {laborValue} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 
 import {settleStewardRequests} from './high-nobility.mjs';
@@ -22,7 +23,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obligation-claims.mjs';
-import {obligationView as dueObligation,wageQuote} from './obligation-state.mjs';
+import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -36,7 +37,7 @@ function writeJob(d,e,row){
 const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
-const wage=e=>Math.max(1,wageQuote({baseHalfDay:e.rules.economy.wageCopperPerHalfDay?.[0]??10}).daily);
+const wage=(e,s,worker='player',observer=null)=>laborValue(e,{state:s},{worker,observer}).daily;
 const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&dueObligation(s,r.id)?.owed>0);
 
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
@@ -61,7 +62,7 @@ export function laborOffers(e,s,minute=s.minute){
         if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(taken.has(id))return;
-        const d={...r,id,wage:r.wage??wage(e),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
+        const d={...r,id,wage:r.wage??wage(e,s,r.owner,r.owner),workMinutes:480,createdAt:minute,deadline:Math.min(r.deadline??minute+7*DAY,minute+30*DAY)};
         if(d.deadline<=Math.floor(minute/DAY)*DAY+1020)return;
         const account=groupAccountView(e,s,r.owner),balance=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0;
         if(balance<d.wage)return;
@@ -145,7 +146,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;
     const regard=standing(e,s,id,offer.owner);if(regard<=-40)return null;
     const needs=npcNeedGoals(s,id).filter(g=>g.progress!==100&&/money|food|钱|款|粮|口粮|活计/.test(`${g.need??g.kind??''} ${g.content??''}`));
-    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e)),food=Object.entries(n.inventory??{}).reduce((v,[item,q])=>v+(/bread|oat|ration|food/.test(item)?typeof q==='number'?q:q.quantity??0:0),0);
+    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e,s,id,id)),food=Object.entries(n.inventory??{}).reduce((v,[item,q])=>v+(/bread|oat|ration|food/.test(item)?typeof q==='number'?q:q.quantity??0:0),0);
     if(!needs.length&&(n.coins??0)>=low/2&&food>0&&!changing)return null;
     const settlement=personHousehold(e,s,id).value?.settlement??placeSettlement(e,s,n.location).value;
     if(settlement!==placeSettlement(e,s,offer.location).value)return null;
@@ -364,7 +365,7 @@ export function laborTrade(d,e,args,id){
             if(amount>cash){const guaranteed=amount-cash;financeChange(d,e,'player',guaranteed,id,{account:escrowAccount(row.id),writer:'labor-market',eventId:id});escrow-=guaranteed;
                 settleClaim(d,e,{id:debt.id,payer:'player',amount:guaranteed},`${id}:${debt.id}:guarantee`);}
             if(debt.defaulted?.case)settleCreditCase(d,e,debt.defaulted.case,id);}
-        const nextWage=financeInt(args.coins??row.wage,wage(e),1e6,'调解日薪');
+        const nextWage=financeInt(args.coins??wage(e,s,row.worker,row.owner),1,1e6,'调解日薪');
         const other=currentEmployment(s,row.worker,now);
         const active=now<row.deadline&&(!other||other.id===row.id);
         writeJob(d,e,{...row,escrow,paid:row.paid+due,wage:nextWage,...(active?{status:'有效',nextWork:(Math.floor(now/DAY)+1)*DAY+1020}:{}),amendments:[...row.amendments??[],{minute:now,wage:nextWage,source:id}]});

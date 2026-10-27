@@ -51,6 +51,14 @@ function source(d,engine,reference){
  const event=worldEvent(d.get('state'),reference);
  if(!event||event.source?.kind==='corpus_premise')throw preconditionFailure('须先完成真实交易或机构办理');
  const sale=d.get('state','records',`item_sale:${event.id}`),institution=d.get('state','records',`governance_source:${event.id}`);
+ const book=d.get('state','records',`business_receipt_${event.id}`);
+ if(book?.category==='business_receipt'&&book.operation==='sell'){
+  const sales=(book.contracts??[]).map(id=>d.get('state','records',id)).filter(r=>r?.kind==='sale'&&r.status==='已完成'&&r.source===event.id&&r.parties?.[0]==='player');
+  const signed=sales.length===1&&sales[0],trade=book.trade;
+  if(signed&&event.verb==='trade'&&event.actor===signed.parties[1]&&event.target==='player'&&event.value===signed.cost&&trade?.seller==='player'&&trade.buyer===signed.parties[1]&&trade.item===signed.subject&&trade.quantity===signed.quantity&&trade.cost===signed.cost&&signed.paid===signed.cost&&book.businesses?.includes(signed.business))
+   return {event,business:signed,describes:signed.id};
+  throw preconditionFailure('经营收据须对应同一笔已完成销售及其账簿');
+ }
  const deposit=obligationRows(d.get('state')).find(o=>o.kind==='deposit'&&o.terms?.sourceEvent===event.id);
  if(deposit){
   const bank=engine.rules.economy.credit.banks.find(b=>b.id===deposit.debtor)??d.get('state','records',deposit.debtor);
@@ -93,13 +101,14 @@ export function documentAction(d,engine,args,eventId){
   const proof=source(d,engine,args.source),kind=args.kind??'receipt';
   if(!['receipt','notice'].includes(kind))throw preconditionFailure('本流程签发收据或告示');
   if(Object.values(s.itemInstances??{}).some(p=>p.document?.sourceEvent===`world_event:${proof.event.id}`&&p.document.kind===kind))throw preconditionFailure('这次事务已签发原件，请取用原件');
-  const content=args.text===undefined?(proof.deposit?`具名存单：${proof.bank.name}收存${s.player.name??'本人'}${proof.deposit.terms.principal}铜，凭此原件支取；已支取部分以柜账核销。`:proof.sale?`${engine.byId.get(proof.sale.item)?.name}×${proof.sale.quantity}，成交${proof.event.value}铜。`:'机构办理凭据'):text(args.text);
+  const content=args.text===undefined?(proof.deposit?`具名存单：${proof.bank.name}收存${s.player.name??'本人'}${proof.deposit.terms.principal}铜，凭此原件支取；已支取部分以柜账核销。`:proof.business?`${engine.byId.get(proof.business.subject)?.name}×${proof.business.quantity}，实收${proof.business.paid}铜。`:proof.sale?`${engine.byId.get(proof.sale.item)?.name}×${proof.sale.quantity}，成交${proof.event.value}铜。`:'机构办理凭据'):text(args.text);
   if(!canReadDocument(engine,s,'player',{document:{language:args.language??'lang:common'}}))throw preconditionFailure('你尚不能书写这种文字');
   const item=engine.resolve(args.paper,'item'),id=blank(d,engine,item,eventId),paper=d.get(...path(id));
   // Writing consumes one blank sheet by converting that SAME physical unit.
   // The written sheet remains in the bag; it is never an extra stock output.
   const ruleVersion=engine.replaying?engine.replayResult?.ruleVersion??engine.world.version:engine.world.version;
   const doc={kind,sourceEvent:`world_event:${proof.event.id}`,issuedEvent:`world_event:${eventId}:issued`,ruleVersion,describes:proof.describes,language:args.language??'lang:common',content,records:[{event:`world_event:${proof.event.id}`,version:content}],public:false,annotations:[],reviewed:false};
+  if(proof.business){doc.issuer='player';doc.business=proof.business.business;doc.namedHolder=proof.business.parties[1];doc.valid=true;}
   if(proof.deposit){
    if(kind!=='receipt'||proof.deposit.terms.requiresInstrument)throw preconditionFailure('同一笔存款只能签发一份具名存单');
    doc.valid=true;doc.namedHolder=proof.deposit.creditor;doc.issuer=proof.deposit.debtor;doc.certifier=proof.certifier;
