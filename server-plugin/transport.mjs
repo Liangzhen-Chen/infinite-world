@@ -400,7 +400,10 @@ export function transportAction(d,e,args,eventId){
   const value=marketQuote(d,e,{item,location,seller:debtor,buyer:creditor}).listPrice*args.quantity;
   const terms={item,quantity:args.quantity,prepayment:args.coins??(selling?Math.ceil(value):0),deadline:args.deadline,location};
   counterpart(d,e,party,{consent:true,minutes:0});
-  const agreement=requestContractConsent(d,e,{from:party,scope:'forward',purpose:'player',subject:item,terms,cost:selling?{coins:terms.prepayment}:{value},reward:selling?value:terms.prepayment,eventId});
+  // NPC consent uses the goods' derived baseline opportunity value. Regional
+  // spot scarcity is not an extra cash cost of delivering already-owned goods.
+  const opportunity=derived(e,d.document,'economy:value',item,{kind:'item',holder:debtor,base:e.byId.get(item).basePrice})*args.quantity;
+  const agreement=requestContractConsent(d,e,{from:party,scope:'forward',purpose:'player',subject:item,terms,cost:selling?{coins:terms.prepayment}:{value:opportunity},reward:selling?value:terms.prepayment,eventId});
   counterpart(d,e,party,{consent:agreement.allowed,minutes:0});
   return openGoodsObligation(d,e,{kind:'forward',debtor,creditor,...terms,terms:{consent:agreement.source}},eventId);
   });

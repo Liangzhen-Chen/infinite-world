@@ -12,7 +12,7 @@ import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 import {transportSegment} from './transport-route.mjs';
 import {transportServices,quoteTransport,bookTransport} from './transport.mjs';
-import {declareHoldingWriter,ensureHoldings,setLocation} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('settlement-trade',{kinds:[],locations:true});
 
 const DAY=1440, CLOCK='settlement-trade:clock';
@@ -194,8 +194,7 @@ function dispatch(d,engine,lane,minute){
     // The purchase money stays in the buyer's counter escrow while the cargo
     // travels. The escrow account's entity has an actual native location.
     o.escrowCustodian=lane.buyer;o.escrowLocation=profile(engine,lane.buyer).counter;
-    schedule(d,engine,o,minute);assertOrder(o);d.set(path,o);
-    ensureHoldings(d,engine);setLocation(d,{entity:`settlement-trade:${id}`,at:o.escrowLocation,mode:'place',writer:'settlement-trade',engine});
+    schedule(d,engine,o,minute);assertOrder(o);holdingSet(d,engine,path,o,'settlement-trade');
     const origin=profile(engine,lane.seller).counter,destination=profile(engine,lane.buyer).counter;
     // Gradual adoption: a real available carrier replaces only the outbound
     // movement; food batches, spoilage and purchase escrow remain this ledger.
