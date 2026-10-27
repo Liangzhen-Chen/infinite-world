@@ -69,6 +69,21 @@ function source(d,engine,reference){
  if(institution?.category==='governance_receipt'&&event.actor==='player'&&institution.result?.ok!==false)return {event,institution,describes:`governance_source:${event.id}`};
  throw preconditionFailure('该来源不是玩家已完成的交易或机构办理');
 }
+// Deposit-receipt loss (挂失): the holder reports at the issuing counter. The
+// original is voided at once; the claim still demands a valid named original,
+// so only a reissued paper (documents:issue on the same deposit) can redeem it.
+export function reportDepositLost(d,engine,{bank,keeper,claim,eventId}){
+ const s=d.get('state'),row=obligationRows(s).find(o=>o.id===claim&&o.kind==='deposit');
+ if(!row||row.debtor!==bank.id||row.creditor!=='player'||!obligationView(s,row).owed)throw preconditionFailure('没有本人在此钱庄尚存的存款债权可挂失');
+ const required=row.terms?.requiresInstrument,old=typeof required==='string'?s.itemInstances?.[required]:null;
+ if(!required)throw preconditionFailure('这笔存款没有签发具名存单，无须挂失');
+ if(!old?.document||old.document.valid!==true)throw preconditionFailure('该存单已经挂失作废');
+ const lost={minute:s.minute,event:`world_event:${eventId}:lost`,keeper,bank:bank.id};
+ write(d,required,{...old,document:{...old.document,valid:false,lost}},eventId);
+ publishTransitionEvent(d,engine,{id:`${eventId}:lost`,verb:'author',actor:'player',target:required,visibility:'private',witnesses:[],participants:['player',keeper,bank.id],minute:s.minute,location:s.location,tags:['document','lost']});
+ engine.advance(d,engine.world.openActionRules.generic.transferMinutes,eventId);
+ return {claim,lost:required,balance:obligationView(d.get('state'),row).owed,note:'原件已作废；请凭此存款来源用 documents:issue 补发新存单，新单可支取。'};
+}
 function blank(d,engine,item,eventId){
  const definition=engine.byId.get(item),held=d.get(...engine.bagPath('player'),item),ids=held?.instances??[];
  if(!definition?.tags?.includes('paper'))throw preconditionFailure('需要实际持有可书写的空白纸');
@@ -92,7 +107,7 @@ export function documentAction(d,engine,args,eventId){
  if(operation==='issue'){
   const proof=source(d,engine,args.source),kind=args.kind??'receipt';
   if(!['receipt','notice'].includes(kind))throw preconditionFailure('本流程签发收据或告示');
-  if(Object.values(s.itemInstances??{}).some(p=>p.document?.sourceEvent===`world_event:${proof.event.id}`&&p.document.kind===kind))throw preconditionFailure('这次事务已签发原件，请取用原件');
+  if(Object.values(s.itemInstances??{}).some(p=>p.document?.sourceEvent===`world_event:${proof.event.id}`&&p.document.kind===kind&&!p.document.lost))throw preconditionFailure('这次事务已签发原件，请取用原件');
   const content=args.text===undefined?(proof.deposit?`具名存单：${proof.bank.name}收存${s.player.name??'本人'}${proof.deposit.terms.principal}铜，凭此原件支取；已支取部分以柜账核销。`:proof.sale?`${engine.byId.get(proof.sale.item)?.name}×${proof.sale.quantity}，成交${proof.event.value}铜。`:'机构办理凭据'):text(args.text);
   if(!canReadDocument(engine,s,'player',{document:{language:args.language??'lang:common'}}))throw preconditionFailure('你尚不能书写这种文字');
   const item=engine.resolve(args.paper,'item'),id=blank(d,engine,item,eventId),paper=d.get(...path(id));
@@ -101,9 +116,13 @@ export function documentAction(d,engine,args,eventId){
   const ruleVersion=engine.replaying?engine.replayResult?.ruleVersion??engine.world.version:engine.world.version;
   const doc={kind,sourceEvent:`world_event:${proof.event.id}`,issuedEvent:`world_event:${eventId}:issued`,ruleVersion,describes:proof.describes,language:args.language??'lang:common',content,records:[{event:`world_event:${proof.event.id}`,version:content}],public:false,annotations:[],reviewed:false};
   if(proof.deposit){
-   if(kind!=='receipt'||proof.deposit.terms.requiresInstrument)throw preconditionFailure('同一笔存款只能签发一份具名存单');
+   // A lost original (reported at the counter) no longer counts: the one claim
+   // may be reissued once, and only the reissued paper then redeems it.
+   const required=proof.deposit.terms.requiresInstrument,prior=typeof required==='string'?s.itemInstances?.[required]:null;
+   if(kind!=='receipt'||required&&!(prior?.document?.lost&&prior.document.valid===false))throw preconditionFailure('同一笔存款只能签发一份具名存单；原件未挂失前不能补发');
    doc.valid=true;doc.namedHolder=proof.deposit.creditor;doc.issuer=proof.deposit.debtor;doc.certifier=proof.certifier;
-   d.set(['state','obligations',proof.deposit.id],{...proof.deposit,terms:{...proof.deposit.terms,requiresInstrument:id}});
+   d.set(['state','obligations',proof.deposit.id],{...proof.deposit,terms:{...proof.deposit.terms,requiresInstrument:id,...(prior?{reissuedFrom:[...proof.deposit.terms.reissuedFrom??[],required]}:{})}});
+   if(prior)write(d,required,{...prior,document:{...prior.document,lost:{...prior.document.lost,supersededBy:id}}},eventId);
   }
   write(d,id,{...paper,...(proof.deposit?{represents:proof.deposit.id}:{}),document:doc},eventId);setLocation(d,{entity:id,at:'player',mode:'carried',writer:'documents',engine});
   publishTransitionEvent(d,engine,{id:`${eventId}:issued`,verb:'author',actor:'player',target:id,visibility:'private',witnesses:[],...(proof.deposit?{participants:['player',proof.certifier,proof.deposit.debtor]}:{}),minute:s.minute,location:s.location,tags:['document'],source:{event:doc.sourceEvent},ruleVersion:doc.ruleVersion});

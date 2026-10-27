@@ -13,6 +13,7 @@ import {itemResource,vaultGoods} from './stock.mjs';
 import {purse,vault,moveCoins} from './money.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {decimalFraction,fraction} from './obligation-calendar.mjs';
+import {bankLiabilities} from './finance-liabilities.mjs';
 
 declareHoldingWriter('currency',{kinds:[]});declareLedgerWriter('currency');
 const DAY=1440,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -70,7 +71,9 @@ export function issuedCurrency(e,s,resource){
 export function currencyReserve(e,s,resource){
  const c=currencyRow(e,resource),m=c?.money;if(!m?.backedBy)return {outstanding:0,reserve:0,ratio:1,confidence:1,required:0};
  const issuance=issuedCurrency(e,s,resource),outstanding=issuance.issued-issuance.redeemed;
- const bank=s.records?.[m.issuer],base=e.rules.economy.credit.banks.find(b=>b.id===m.issuer),reserve=bank?.coins??base?.reserveCopper??0;
+ const bank=s.records?.[m.issuer],base=e.rules.economy.credit.banks.find(b=>b.id===m.issuer);
+ // Cash already owed to depositors or bill holders cannot also back notes.
+ const reserve=Math.max(0,(bank?.coins??base?.reserveCopper??0)-bankLiabilities(s,m.issuer).total);
  const ratio=outstanding?reserve/(outstanding*m.backedBy.ratio):1;
  const minimum=table(e).issuer.minReserveRatio,requirement=mul(F(outstanding),mul(F(m.backedBy.ratio),F(minimum)));
  const confidence=outstanding?bounded(div(F(reserve),requirement),F(0),F(1)):F(1);
@@ -114,10 +117,14 @@ export function currencyTradePrice(d,e,{currency,quantity,location,spread=1,rela
 export function currencyExchange(d,e,{bank:b,row,item,quantity,buy,mode,eventId,loanable}){
  const c=currencyRow(e,item),location=d.get('state','location');
  if(!c)throw preconditionFailure('这不是登记的通货');
- const pricing=exchangeRate(d,e,{from:c.resource,location,bank:b.id}),m=c.money;
+ const m=c.money;
  const issue=mode==='issue',redeem=mode==='redeem';
  if((issue||redeem)&&(!m.backedBy||m.issuer!==b.id||table(e).issuer.id!==b.id))throw preconditionFailure('须到已登记发行网点办理发行或兑付');
  if(issue&&!buy||redeem&&buy)throw preconditionFailure('发行须领取通货，兑付须交回通货');
+ // D15 §15.3: backedBy is the issuer's promise, not a market quote.
+ // Keep the market explanation even at zero confidence; a funded issuer
+ // can redeem without a positive third-party exchange rate.
+ const pricing=issue||redeem?{rate:m.backedBy.ratio,exact:encode(F(m.backedBy.ratio)),from:currencyValue(d,e,{currency:c.resource,location,bank:b.id})}:exchangeRate(d,e,{from:c.resource,location,bank:b.id});
  const coins=d.get('state','player','coins');
  if(buy){
   const cost=ceil(mul(F(quantity),mul(decode(pricing.exact),plus(F(1),F(b.exchangeFeeRate)))));if(coins<cost)throw preconditionFailure('现钱不足');
