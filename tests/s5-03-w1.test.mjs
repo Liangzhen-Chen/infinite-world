@@ -144,9 +144,11 @@ test('W1-7 borrowing and repaying at the same moment pays the whole signed inter
 
 test('W1-8 pawn and redeem at once costs the interest of the pledged period',async()=>{
  const f=fixture(),before=f.coins();
- // bread x10 is worth 20; the counter advances 50% = 10 for one day: 10 x 4% x 1/30 = 0.0133 -> ceil 1.
+ // F007: the pledge is valued by the valuation role, not the catalogue base price. Bread base 2 x local scarcity at its
+ // floor 0.5 x quality 1 = 1 copper a loaf, so bread x10 is worth 10; the counter advances 50% = 5 for one day:
+ // 5 x 4% x 1/30 = 0.0067 -> ceil 1.
  const pawn=await f.act({operation:'pawn',item:'item_bread',quantity:10,days:1},'w1-pawn');
- assert.equal(pawn.principal,10);assert.equal(pawn.interest,1);
+ assert.equal(pawn.principal,5);assert.equal(pawn.interest,1);
  await f.act({operation:'redeem',contract:pawn.contract},'w1-redeem');
  assert.equal(f.coins(),before-1);assert.equal(f.document.state.inventory.item_bread.quantity,100);clean(f);
 });
@@ -161,8 +163,8 @@ async function shortfallPawn(){
 
 test('W1-9 after a sale that does not cover the pawn, the remainder is repaid normally and the goods cannot be sold twice',async()=>{
  const {f,pawn}=await shortfallPawn();
- // Principal 20 (bread x10 = 20 at 100%), one day at 4%: 20 x 4% / 30 = 0.0267 -> 1; debt 21.
- assert.equal(pawn.principal,20);assert.equal(pawn.interest,1);
+ // F007: valuation role, bread x10 = 10 (2 x floor 0.5 x 10). Principal 10 at 100%, one day at 4%: 10 x 4% / 30 = 0.0133 -> 1; debt 11.
+ assert.equal(pawn.principal,10);assert.equal(pawn.interest,1);
  const row=f.document.state.records[pawn.contract];
  await f.elapse(row.auctionAt);
  assert.equal(f.document.state.records[pawn.contract].status,'流当');
@@ -170,18 +172,18 @@ test('W1-9 after a sale that does not cover the pawn, the remainder is repaid no
  // The buyer's seeded larder is a bare count (premise from the NPC's own stock); the sale adds exactly the 10 pledged loaves.
  const stock=n=>{const v=f.document.state.npcs[host].inventory.item_bread;return typeof v==='number'?v:v?.quantity??0;};
  const hostBread=stock();
- // The goods are valued 20; the buyer pays 20; the counter takes 20, 1 remains owed.
- const sold=await f.act({operation:'auction',buyer:host,contract:pawn.contract,coins:20,consent:true},'w1-sf-auction');
-assert.equal(sold.surplus,0);assert.equal(f.document.state.npcs[host].coins,hostCoins-20);
+ // The goods are valued 10; the buyer pays 10; the counter takes 10, 1 remains owed.
+ const sold=await f.act({operation:'auction',buyer:host,contract:pawn.contract,coins:10,consent:true},'w1-sf-auction');
+assert.equal(sold.surplus,0);assert.equal(f.document.state.npcs[host].coins,hostCoins-10);
  assert.equal(stock(),hostBread+10);
  const pledged=f.document.state.records[`pledge:${pawn.contract}`];assert.equal(pledged.status,'已拍卖');assert.equal(pledged.holder,host);
- const after=f.document.state.records[pawn.contract];assert.equal(after.paid,20);assert.equal(after.status,'逾期');
+ const after=f.document.state.records[pawn.contract];assert.equal(after.paid,10);assert.equal(after.status,'逾期');
  assert.equal(owed(f,`finance:${pawn.contract}`),1);
  // Time passing does not turn it back into a forfeited pledge, and the sold goods cannot be sold or delivered again.
  await f.elapse(row.auctionAt+10*DAY);
  assert.equal(f.document.state.records[pawn.contract].status,'逾期');
  const frozen=structuredClone(f.document);
- await assert.rejects(f.act({operation:'auction',buyer:host,contract:pawn.contract,coins:20,consent:true},'w1-sf-again'),/尚不可|已经拍卖/);
+ await assert.rejects(f.act({operation:'auction',buyer:host,contract:pawn.contract,coins:10,consent:true},'w1-sf-again'),/尚不可|已经拍卖/);
  await assert.rejects(f.act({operation:'redeem',contract:pawn.contract},'w1-sf-redeem'),/流当|当票/);
  assert.deepEqual(f.document,frozen);
  // The ordinary repay path clears the last copper and returns nothing (the goods are gone).

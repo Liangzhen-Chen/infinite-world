@@ -8,7 +8,16 @@ import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {digest} from './storage.mjs';
 import {bodyRule} from './primitives-body.mjs';
+import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 
+// 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
+// （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
+const balanceParam=(engine,id)=>(engine.world.balance?.economy??economyBalance).params.find(row=>row.id===id).value;
+export const customerPurseShare=engine=>balanceParam(engine,'shop.customerPurseShare');
+export const customerReachMinutes=engine=>balanceParam(engine,'shop.customerReachMinutes');
+// 全部商铺（手工登记的与按人物派生的）在某聚落的货架条目：由 shop.mjs 登记，market 只读。
+let shopShelves=()=>null;
+export function registerShopShelves(fn){shopShelves=fn;}
 const DAY=1440;
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
 const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
@@ -36,8 +45,11 @@ function marketDeals(state){
  return rows;
 }
 
-function personalReserves(d,engine,owner){
- const state=stateOf(d),reserved=new Map();
+function personalReserves(d,engine,owner){return reserveAllocation(d,engine,owner).reserved;}
+// 一户人按储备天数需要的口粮、饮水中，目前行囊里的存粮没能覆盖的缺口（营养单位）：居民自己的真实采购需求。
+export function reserveShortfall(d,engine,owner){return reserveAllocation(d,engine,owner).shortfall;}
+function reserveAllocation(d,engine,owner){
+ const state=stateOf(d),reserved=new Map(),shortfall={};
  // One shared allocation across the current household's actual bags. A shop
  // keeper's shelf is also the family's food; each portion is retained once.
  const members=personHousehold(engine,state,owner).value?.members??[owner];
@@ -53,8 +65,9 @@ function personalReserves(d,engine,owner){
    const count=Math.min(Math.max(0,stock-prior),Math.ceil(remaining/gain));
    reserved.set(row.key,prior+count);remaining-=count*gain;
   }
+  shortfall[need]=Math.max(0,remaining);
  }
- return new Map(foods.filter(row=>row.holder===owner).map(row=>[row.id,reserved.get(row.key)??0]));
+ return {shortfall,reserved:new Map(foods.filter(row=>row.holder===owner).map(row=>[row.id,reserved.get(row.key)??0]))};
 }
 
 // Canonical obligations and their records projections are counted once.
@@ -180,7 +193,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  }
  const supply=rows.reduce((n,r)=>n+r.available,0);
  // Shelf ceilings and household retention are actual demand inputs.
- const shelf=(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[]).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
+ // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
+ // 已在上面 rows 的 retained 里逐户计入，聚落粮仓另计全村储备——这里不再把同一口粮需求按商品类重复计入。
+ const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
  const demand=Math.max(shelf,rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }

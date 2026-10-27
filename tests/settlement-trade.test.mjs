@@ -203,7 +203,10 @@ test('真实世界人物作息保留时world_time仍发运到货；只在本地�
     // changing any shipment, NPC asset or accounting field.
     c.state.location='bld_wt_hall';const arrival=await wait(engine,c,order.estimatedArrivalAt);c=arrival.doc;
     assert.ok(arrival.out.result.messages.some(s=>s.includes(order.id)&&s.includes('到货')));
-    assert.equal(c.state.records[key(lanes[0])].status,'delivered');assert.equal(snapshotCash(c),cash);conservation(c);
+    assert.equal(c.state.records[key(lanes[0])].status,'delivered');
+    // F010: shops restocking from other settlements in the same days pay their porters through sink:export (read from the ledger flows).
+    const freight=(c.ledger.flows['sink:export|coin_river|freight']??0)-(doc.ledger?.flows?.['sink:export|coin_river|freight']??0);
+    assert.equal(snapshotCash(c)+freight,cash);conservation(c);
 });
 test('天气阻力和实际道路距离影响正常周货运，持续占用回程劳力',async()=>{
     const results=[];

@@ -30,6 +30,7 @@ import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.m
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
 import {interestAmount} from './obligation-calendar.mjs';
+import {valuation} from './valuation.mjs';
 
 export {CREDIT_OPERATIONS} from './finance-operations.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -42,7 +43,13 @@ const awake=n=>projectionLiving(n)&&!['濒死','昏迷','患病'].includes(n.sta
 export const creditRules=engine=>engine.rules.economy?.credit??null;
 function rules(engine){const c=creditRules(engine);if(!c)throw preconditionFailure('此世界尚未登记借贷与钱庄规则');return c;}
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
-const valueOf=(d,engine,item,quantity)=>currencyRow(engine,item)?currencyTradePrice(d,engine,{currency:item,quantity,location:d.get('state','location')}).totalCoins:(engine.byId.get(item)?.basePrice??0)*quantity;
+// F007：押品、典当物的价值走估值角色（市场估值投影），不是目录基价也不是成交价；没有估值依据的物品不能作押。
+const valueOf=(d,engine,item,quantity,location=d.get('state','location'),holder='player')=>{
+    const r=valuation(d,engine,{role:'goods',item,quantity,location,holder});
+    if(r.value===null)throw preconditionFailure(`${nameOf(engine,item)}没有可派生的估值依据，不能作押：${r.unvaluable}`);
+    return r.value;
+};
+export const collateralValue=valueOf;
 
 // A present, awake adult who agreed now and has a waking window at this place.
 export function counterpart(d,engine,name,{consent,minutes=5}){

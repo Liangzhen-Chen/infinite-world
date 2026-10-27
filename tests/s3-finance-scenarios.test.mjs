@@ -93,9 +93,9 @@ test('R3-E15: 入狱债务由真实到场第三人代偿，仍是原债；远方
 test('E18-2: NPC实际典当扣本人抵押并领取本人本金，冒充其他所有人零写拒绝',()=>{
     const f=fixture(),bank=f.e.rules.economy.credit.banks[0];f.doc.state.location='loc_bs';
     const total=cash(f.doc)+bank.reserveCopper,player=f.doc.state.player.coins,npc=f.doc.state.npcs[host].coins,stock=f.doc.state.npcs[host].inventory.item_bread.quantity;
-    let d=f.draft();const args={actor:host,owner:host,representative:host,keeper:clerk,bank:bank.id,item:'item_bread',quantity:10,coins:10,days:1,consent:true};
+    let d=f.draft();const args={actor:host,owner:host,representative:host,keeper:clerk,bank:bank.id,item:'item_bread',quantity:20,coins:10,days:1,consent:true};// F007: 20 loaves valued 1 copper each back the 10-copper advance at 50%
     const pawn=pawnForActor(d,f.e,args,'npc-pawn');d.done();
-    assert.equal(f.doc.state.player.coins,player);assert.equal(f.doc.state.npcs[host].coins,npc+10);assert.equal(f.doc.state.npcs[host].inventory.item_bread.quantity,stock-10);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.player.coins,player);assert.equal(f.doc.state.npcs[host].coins,npc+10);assert.equal(f.doc.state.npcs[host].inventory.item_bread?.quantity??0,stock-20);assert.equal(cash(f.doc),total);
     assert.equal(dueObligation(f.doc.state,pawn.contract).row.debtor,host);assert.equal(f.doc.state.records[pawn.pledge].owner,host);
     d=f.draft();const before=structuredClone(d.document);assert.throws(()=>pawnForActor(d,f.e,{...args,owner:worker},'forged'),/authority/);assert.deepEqual(d.document,before);d.done();
 });

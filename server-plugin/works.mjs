@@ -21,6 +21,9 @@ import {produceItems,transferItems}from'./items.mjs';
 import {effectiveProficiency}from'./professions.mjs';
 import {spellElements}from'./career-metrics.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {customerPurseShare} from './market.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 declareHoldingWriter('works',{kinds:['owns'],locations:true});
 
 export const WORK_RULES=Object.freeze({
@@ -116,14 +119,23 @@ function publish(d,engine,args,id){
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,60,id);
     const multiplier=factor(engine,work.quality),edition=work.editions.length+1;
-    // F014: a book sells only to real readers. A buyer is a literate resident of this settlement who can spare the
-    // price (a quarter of the purse, as for any shop customer) and does not already own a copy of this work.
-    // Their money moves from their own purse; the same person is never a second edition's buyer.
-    const price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),owned=new Set(work.editions.flatMap(row=>row.buyers??[])),state=d.get('state');
+    // F014: a book sells only to real readers. A candidate is a literate resident of this settlement who can spare the
+    // price (the shop-customer share of the purse, balance/economy shop.customerPurseShare) and does not already own a
+    // copy. Each candidate decides for themselves through the NPC decision path (red lines, circumstances, cost against
+    // the value of the book to them); nobody is assigned a copy by ranking. Their money moves from their own purse; the
+    // same person is never a second edition's buyer.
+    const price=Math.max(1,Math.round(WORK_RULES.bookPrice*multiplier)),owned=new Set(work.editions.flatMap(row=>row.buyers??[])),state=d.get('state'),share=customerPurseShare(engine);
     const readers=Object.entries(state.npcs??{}).filter(([npc,row])=>!owned.has(npc)&&settlementAt(engine,row.location)===settlement&&!['死亡','濒死','昏迷'].includes(row.status)
-        &&knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill)>=engine.rules.books.minimumLiteracy&&Math.floor((row.coins??0)/4)>=price)
-        .map(([npc])=>({npc,literacy:knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill)})).sort((a,b)=>b.literacy-a.literacy||a.npc.localeCompare(b.npc));
-    const buyers=readers.slice(0,printed).map(row=>row.npc),sold=buyers.length,income=sold*price;
+        &&knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill)>=engine.rules.books.minimumLiteracy&&Math.floor((row.coins??0)*share)>=price)
+        .map(([npc])=>npc).sort();
+    const buyers=[],ceiling=engine.rules.npcGrowth?.maximumProficiency??2700;
+    for(const npc of readers){
+        if(buyers.length>=printed)break;
+        const literacy=knowledgeProficiency(engine,state,npc,WORK_RULES.literacySkill);
+        const decision=npcDecision(subjectiveView(engine,d.document,npc),{kind:'purchase',from:'player',cost:{coins:price},reward:price,needSatisfaction:Math.min(100,Math.round(100*literacy/ceiling))});
+        if(decision.outcome==='agree')buyers.push(npc);
+    }
+    const sold=buyers.length,income=sold*price;
     const kept=printed-sold,instances=printed?produceItems(d,engine,WORK_RULES.book,printed,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
     const sales=[];
     for(const [index,npc] of buyers.entries()){

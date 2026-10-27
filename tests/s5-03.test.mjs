@@ -165,7 +165,7 @@ test('NPC pawn rate follows the owner default history rather than the player his
  ]});assert.deepEqual(history.setupUnmet,[]);f.replace(history.document);
  const before=structuredClone(f.document);
  draft=f.engine.primitiveDraft(before);
- const npc=pawnForActor(draft,f.engine,{actor:owner,owner,keeper,bank:bankId,item:'item_bread',quantity:10,coins:10,days:1,consent:true},'owner-rate-pawn');
+ const npc=pawnForActor(draft,f.engine,{actor:owner,owner,keeper,bank:bankId,item:'item_bread',quantity:20,coins:10,days:1,consent:true},'owner-rate-pawn');// F007: a loaf is valued 1 copper (2 x floor .5), so 20 loaves back the 10-copper advance at 50%
  // Cash1490, recent principal10, prospective10: .015*(1+20/1490).
  // One owner default multiplies by2; the player has no default.
  assert.equal(npc.monthlyInterest,0.015*(1+20/1490)*2);

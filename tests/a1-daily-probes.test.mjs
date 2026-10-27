@@ -39,7 +39,9 @@ test('D02 卖兽皮：店主从自己钱柜付钱、收进货，玩家交出全�
 });
 
 test('D04 住店一晚：房钱给店主，睡到次日清晨，生命恢复',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,20*60,s=>{s.player.hp=Math.max(1,s.player.hp-8);})}),before=await primed(ui);
+ // F026: the keeper's only income examined here is the room fee, so every other resident is penniless (nobody walks into the tavern at noon
+ // and buys; walk-in customers have their own tests in s5-w4-economy).
+ const ui=await uiSession(t,{mutate:at(INN,20*60,s=>{s.player.hp=Math.max(1,s.player.hp-8);for(const [id,npc] of Object.entries(s.npcs))if(id!==LINSUI)npc.coins=0;})}),before=await primed(ui);
  const rent=await ui.choose('trade.lodge',{days:1});assert.ok(rent.ok,rent.error);
  const sleep=await ui.choose('time.sleep',{until:{dayOffset:1,hour:6}});assert.ok(sleep.ok,sleep.error);const after=await ui.read();
  assert.equal(before.state.player.coins-after.state.player.coins,rent.result.cost,'只扣一晚');assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,rent.result.cost);

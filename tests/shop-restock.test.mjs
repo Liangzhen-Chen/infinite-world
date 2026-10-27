@@ -19,6 +19,9 @@ function fixture({at=inn,coins=500,withTown=true,edit=null}={}){
     let doc=engine.initialFromLegacy(seed,'shop-restock');
     doc.state.minute=600;doc.state.location=at;doc.state.player.coins=coins;
     for(const [id,loc]of Object.entries(placeOf))doc.state.npcs[id]={...doc.state.npcs[id],coins:200,location:loc,activity:'营业',status:'正常',goals:{},memoryStream:[]};
+    // These tests examine restocking, quoting and sources, not walk-in customers (F026, covered in s5-w4-economy): every other resident is
+    // penniless here, so nobody comes in and buys down the shelves between the examined steps.
+    for(const [id,npc]of Object.entries(doc.state.npcs))if(!placeOf[id])npc.coins=0;
     for(const npc of w.npcs.filter(n=>placeOf[n.id])){delete npc.tier;npc.schedule={default:[{start:0,end:1440,location:placeOf[npc.id],activity:'营业',services:['trade']}]};}
     if(withTown)doc.state.settlements[town]={...structuredClone(doc.state.settlements.loc_hw),name:'白石镇',population:1000,treasury:900};
     const act=async(tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out.result;};
@@ -59,6 +62,11 @@ test('周期补货：按店家周期在午夜补到上限，不会无限出售�
     assert.equal(qty(f.doc,host,'item_bread'),6);
     const inn1=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_bread');
     assert.deepEqual([inn1.source,inn1.added,inn1.day],['local',2,1]);
+    // F010: the tavern's local production is outside the simulation but no longer free. Hand anchor: bread 2 x scarcity floor .5 = 1 copper
+    // a loaf, two loaves = 2 copper paid by the keeper to the settlement treasury; no freight or duty for a local source, and the
+    // receipt names where the goods came from.
+    assert.deepEqual(inn1.cost,{goods:2,freight:0,duties:0});assert.equal(inn1.paidCopper,2);
+    assert.deepEqual(inn1.origin,{kind:'import',from:'loc_hw',reason:'本地产出（模拟范围外）'});
     // Forge is weekly from day 1: one knife per cycle.
     assert.equal(qty(f.doc,smith,'item_kitchen_knife'),1);
     await f.act('world_time',{minutes:DAY},'day2');
@@ -90,12 +98,16 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     const row=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration');
     // S5-02: ration baseline3 * clamped scarcity .5 * all other
     // factors1 *two =3, truncated once. Source/cash guarantees remain.
-    assert.deepEqual([row.source,row.from,row.added,row.paidCopper],['route',town,2,3]);
-    assert.equal(qty(f.doc,host,'item_ration'),2);assert.equal(f.doc.state.npcs[host].coins,coins-3);assert.equal(f.doc.state.settlements[town].treasury,treasury+3);
+    // F010: the route arrival is outside the simulation but no longer free. Hand anchor: goods 3 (above), porter freight =
+    // route_hw_bs 24 km × billable max(2×0.2kg, 1kg)=1kg × pack rate 0.02 = 0.48 → ceil 1 copper (15 §15.1.1 / SPECS.pack);
+    // no toll or guard on the edge, so no duty. Freight leaves the simulated economy through the declared sink:export.
+    assert.deepEqual([row.source,row.from,row.added,row.paidCopper],['route',town,2,4]);
+    assert.deepEqual(row.cost,{goods:3,freight:1,duties:0});assert.deepEqual(row.origin,{kind:'import',from:town,reason:'外路来货（模拟范围外）'});
+    assert.equal(qty(f.doc,host,'item_ration'),2);assert.equal(f.doc.state.npcs[host].coins,coins-4);assert.equal(f.doc.state.settlements[town].treasury,treasury+3);
     const iron=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_iron');
     assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,3*ironPrice],'聚落只放出保留量以上的铁料，按实际材料行情支付');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
     assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice);assert.equal(qty(f.doc,smith,'item_iron'),3);
-    assert.equal(cash(f.doc),total,'铜钱守恒');
+    assert.equal(cash(f.doc),total-1,'铜钱守恒：仅挑夫运费 1 铜经 sink:export 离开模拟经济（口径见上），其余每文都有对手方');
 
     // No producing settlement in this campaign: nothing arrives, the refusal is on the ledger.
     const g=fixture({withTown:false});
@@ -203,10 +215,11 @@ test('K10：有交易服务并登记店铺类型的人物自动成为店铺；�
     f.doc.state.npcs[miller]={...f.doc.state.npcs[miller],coins:200,location:mill,activity:'营业',status:'正常',goals:{},memoryStream:[],inventory:{...f.doc.state.npcs[miller].inventory,item_iron_nail:6}};
     const expected=projected(f,miller,'item_iron_nail',4);
     const r=await f.act('world_trade',{seller:miller,item:'item_iron_nail',quantity:4},'nails');
-    // Iron-class D=40; S=40 nails+6 scrap+2 hinges+6 miller nails=54.
-    // 1 × (40/54) × markup 1.2 × depth/grade/regard/correction 1 × 4
-    // = 3.555...; total truncation gives 3, not four free single units.
-    assert.equal(r.cost,3);
+    // F026: demand now reads every shop's shelf, derived ones included. Iron-class D = forge shelf 40 + the derived
+    // miller shop's own shelf maximum 6 = 46; S=40 nails+6 scrap+2 hinges+6 miller nails=54.
+    // 1 × (46/54) × markup 1.2 × depth/grade/regard/correction 1 × 4
+    // = 4.0888...; total truncation gives 4 (it was 3 while the derived shop's shelf was ignored as demand).
+    assert.equal(r.cost,4);
     assert.ok(r.cost>0);
     // S5-02: the derived shop remains the quote source without persisting it.
     assert.equal(expected.shop,'shop_hw_ayan');assert.equal(r.cost,expected.totalCoins);

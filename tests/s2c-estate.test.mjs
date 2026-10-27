@@ -136,13 +136,28 @@ test('the same recorded and canonical loan is one claim; both projections close 
 });
 
 test('recorded inherited debt is split once, stays collectible and is capped by each heir receipt',()=>{
- const d=fresh(s=>{s.npcs[person].coins=10;s.npcs[person].inventory={};s.records.loan=debt(80,{clauses:{onDebtorGone:'assume_by_heirs',onCreditorGone:'estate'}});});
+ // F058: real property is valued now (capitalized rent), so for the cap to be the examined mechanism the premise gives the estate coins
+ // only: the tavern the person owned in the seed belongs to someone else here. The property-valued case is the next test.
+ const d=fresh(s=>{s.npcs[person].coins=10;s.npcs[person].inventory={};s.buildings.bld_hw_qingdeng={...s.buildings.bld_hw_qingdeng,owner:'npc_hw_ayan'};s.records.loan=debt(80,{clauses:{onDebtorGone:'assume_by_heirs',onCreditorGone:'estate'}});});
  const r=transition(d,engine,{entity:person,basis:'death',origin:'death_rule',successors:[creditor,'player']});advanceProcedure(d,engine,r.successor);
  const debts=Object.values(d.get('state','obligations')).filter(o=>o.legacyRecord);
  assert.equal(debts.reduce((n,o)=>n+o.remaining,0),10);assert.equal(debts.reduce((n,o)=>n+o.amount,0),80);
  assert.ok(debts.every(o=>['player',creditor].includes(o.debtor)&&o.terms.liabilityCap===5));
  const records=Object.values(d.get('state','records')).filter(o=>o.category==='debt'&&o.obligation);
  assert.equal(records.reduce((n,o)=>n+o.amount,0),10);reconcile(d);
+});
+
+test('F058 heirs receipts value inherited property and shares by the valuation role; holdings with no basis are listed, not counted as zero',()=>{
+ const d=fresh(s=>{s.npcs[person].coins=10;s.npcs[person].inventory={};s.records.loan=debt(80,{clauses:{onDebtorGone:'assume_by_heirs',onCreditorGone:'estate'}});});
+ const r=transition(d,engine,{entity:person,basis:'death',origin:'death_rule',successors:[creditor,'player']});advanceProcedure(d,engine,r.successor);
+ const debts=Object.values(d.get('state','obligations')).filter(o=>o.legacyRecord);
+ // Hand anchor. The person owns the tavern (condition 70). Home-type rent = rentalCopperPerWeek 35 x 4 = 140 a month; capital
+ // return = midpoint of loanMonthlyInterest [0.01,0.08] = 0.045; value = 140 / 0.045 x condition .7 = 2177.77.. -> floor 2177.
+ // Two heirs share it equally: floor(2177 x .5) = 1088 each, plus half the 10 coins = 5: every receipt is worth 1093.
+ assert.ok(debts.every(o=>o.terms.liabilityCap===1093),JSON.stringify(debts.map(o=>o.terms.liabilityCap)));
+ // 1093 covers each heir's 40 share of the 80 debt: nothing is left uncollectable (the old zero-value rule capped it at 5 each).
+ assert.equal(debts.reduce((n,o)=>n+o.remaining,0),80);
+ reconcile(d);
 });
 
 function employedEstate(cash){

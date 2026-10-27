@@ -5,7 +5,7 @@ import {settleObligation,openObligation,amendObligation,adoptLegacyObligation,du
 import {obligationTransaction} from './transition.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 // F1: contract facts are persisted; prices, services and creditworthiness are views.
-import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms} from './credit.mjs';
+import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms,collateralValue} from './credit.mjs';
 import {placeSettlement,settlementGovernment,groupRepresentative,personConstraint,personBusiness,personOccupation,personAge} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
@@ -260,7 +260,7 @@ export function pawnForActor(d,e,{actor,owner=actor,representative=actor,actedAs
         if(!b.keepers.includes(keeper)||!teller||teller.location!==b.location||['死亡','昏迷','濒死'].includes(teller.status)||/睡眠|睡觉|熟睡/.test(teller.activity??'')||teller.scheduleTravel||teller.cognitionTravel||personConstraint(e,state,keeper))throw preconditionFailure('须由当前在场柜员经手');
         e.assertNpcObligationAction(d,[actor,keeper],{minutes:5});e.assertNpcAutonomyAction(state,[actor,keeper],{minutes:5});
         item=e.resolve(item,'item');quantity=financeInt(quantity,1,100000,'典当数量');
-        const maximum=Math.floor((e.byId.get(item).basePrice??0)*quantity*cfg(e).pawn.advanceRatio),principal=financeInt(coins??maximum,1,maximum,'典当金额');
+        const maximum=Math.floor(collateralValue(d,e,item,quantity,b.location,owner)*cfg(e).pawn.advanceRatio),principal=financeInt(coins??maximum,1,maximum,'典当金额');
         const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal,days,collateral:{item,quantity},eventId,kind:'pawn',debtor:owner,actor,actedAs});
         const row=d.get(...financePath(loan.debt));holdingSet(d,e,financePath(loan.debt),{...row,kind:'pawn',auctionAt:row.deadline+cfg(e).pawn.graceDays*DAY},'finance-bank');
         return {...loan,contract:loan.debt,owner,actor,bank:b.id};
@@ -327,7 +327,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     }
     if(op==='collect'){
         const key=args.debt,row=d.get(...financePath(key)),canonical=obligationRow(d.get('state'),key);
-        if(canonical?.kind==='loan'&&row?.kind!=='rent'&&canonical.creditor==='player'&&!obligationView(d.get('state'),canonical).closed){
+        if(canonical?.kind==='loan'&&!['rent','dividend'].includes(row?.kind)&&canonical.creditor==='player'&&!obligationView(d.get('state'),canonical).closed){
             const view=obligationView(d.get('state'),canonical),amount=financeInt(args.coins??view.owed,1,view.owed,'追收金额');
             const agreement=nativeConsent({engine:e,document:d.document},canonical.debtor,'player','repay',{purpose:canonical.id,subject:canonical.id,terms:{amount},until:now,onRefusal:'abort'});
             // Settlement is instantaneous. Validate the real present signer,
@@ -336,7 +336,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
             const result=settleObligation(d,e,{id:canonical.id,payer:canonical.debtor,actor:'player',amount},id,{authorize:request=>authority({engine:e,document:d.document},request.actor,'obligation.settle',request.party,{effect:{id:canonical.id,amount}})});
             return {debt:key,repaid:amount,settlement:result};
         }
-        if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent'].includes(row.kind))throw preconditionFailure('没有本人可追收的未清欠款');
+        if(row?.creditor!=='player'||row.status==='已还清'||!['player_loan','rent','dividend'].includes(row.kind))throw preconditionFailure('没有本人可追收的未清欠款');
         const representative=row.representative??row.debtor;counterpart(d,e,representative,{consent:args.consent});
         const amount=financeInt(args.coins??row.amount-row.paid,1,row.amount-row.paid,'追收金额');
         loanPayment(d,e,key,row,amount,now,id);return {debt:key,repaid:amount};
@@ -359,7 +359,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     }
     if(blocked(e,d.get('state'),b,now))throw preconditionFailure('钱庄倒闭或战乱导致兑付受阻');
     if(op==='pawn'){
-        const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=(e.byId.get(item).basePrice??0)*quantity;
+        const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=collateralValue(d,e,item,quantity,b.location);
         const maximum=Math.floor(value*cfg(e).pawn.advanceRatio),amount=financeInt(args.coins??maximum,1,maximum,'典当金额');
         const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal:amount,days:args.days??30,collateral:{item,quantity},eventId:id,kind:'pawn'});
         const debt=d.get(...financePath(loan.debt));holdingSet(d,e,financePath(loan.debt),{...debt,kind:'pawn',auctionAt:debt.deadline+cfg(e).pawn.graceDays*DAY},'finance-bank');

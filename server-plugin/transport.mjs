@@ -153,6 +153,23 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
  return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt:departAt+route.minutes,route,passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll:route.cost,total:freight+tariff+route.cost};
 }
+// F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（SPECS.pack）、沿途关口通行费与进口关税，
+// 由收货人实际支付。与 quoteTransport 同一套口径：运价按路程×计费重量×费率，关税按到岸聚落的 tariff 税率与货值。
+export function porterCharges(d,e,{from,to,cargo,owner,minute=d.get('state','minute')}){
+ const s=d.get('state'),route=e.route(from,to,'walk',minute,d.document.randomSeed),load=dimensions(e,cargo,[]);
+ const billableKg=Math.max(load.kg,load.m3*250,1),edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id));
+ let at=from,freight=0,tariff=0;
+ for(const r of edges){
+  const destination=r.from===at?r.to:r.from;at=destination;
+  freight+=r.lengthKm*billableKg*SPECS.pack.rate;
+  if(r.toll||r.guards?.length){
+   const rate=tradeTax(e,s,destination,'tariff'),value=cargo.reduce((v,c)=>v+c.quantity*marketQuote(d,e,{item:c.item,location:destination,seller:owner}).explanation.value.value,0);
+   tariff+=Math.floor(Math.trunc(value)*rate.bps/10000);
+  }
+ }
+ const duties=tariff+(route.cost??0);
+ return {route,freight:Math.max(1,Math.ceil(freight)),tariff,toll:route.cost??0,duties,total:Math.max(1,Math.ceil(freight))+duties};
+}
 export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},eventId){
  const a=transportAssetView(e,d.document,asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
  if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw preconditionFailure('资产不能出租');

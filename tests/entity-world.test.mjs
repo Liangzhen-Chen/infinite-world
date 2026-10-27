@@ -44,7 +44,8 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  const ledger=d.get('state','records','shop:shop_hw_qingdeng'),row=ledger.entries.find(e=>e.item==='item_bread');
  assert.equal(ledger.settlement,'loc_bs');assert.equal(row.from,'loc_hw');assert.ok(row.added>0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.paidCopper);
+ // F010: the route arrival also pays porters (sink:export), so the source treasury gets the goods price only and the keeper pays goods + freight + duties.
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.cost.goods);assert.equal(row.paidCopper,row.cost.goods+row.cost.freight+row.cost.duties);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
  // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/

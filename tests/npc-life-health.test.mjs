@@ -91,6 +91,8 @@ test('旧伤和其他失能状态不被疾病重置',async()=>{
 test('病故后约定终止不追责，遗产整体交给同户成年继承人，人口账减一，病中照护释放',async()=>{
  const s=fixture({fatality:1});
  Object.assign(npc(s,elder),{coins:37,inventory:{[item]:3}});
+ // F026: the carer's purse is examined to the copper (inheritance +37 only), so nobody has money to walk into the tavern and buy food meanwhile.
+ for(const [id,n] of Object.entries(s.doc.state.npcs))if(id!==elder)n.coins=0;
  meeting(s,'obl_after',firstNight+3*DAY);
  const carerCoins=npc(s,carer).coins,population=s.doc.state.settlements.loc_hw.population;
  await until(s,firstNight+DAY+60,'a');
@@ -100,8 +102,14 @@ test('病故后约定终止不追责，遗产整体交给同户成年继承人�
  const settledDeath=life(s).deaths[death.id];
  assert.equal(npc(s,elder).status,'死亡');assert.equal(life(s).illnesses[death.illness].status,'病故');
  assert.equal(npc(s,carer).caring,undefined);
- assert.equal(settledDeath.estate.heir,carer);assert.equal(npc(s,carer).coins,carerCoins+37);assert.equal(npc(s,elder).coins,0);
- assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);assert.deepEqual(settledDeath.estate.items,{[item]:3});
+ assert.equal(settledDeath.estate.heir,carer);// The estate passes whole, but both the elder (before dying) and the carer may have walked into a shop meanwhile (F026); every such
+ // purchase is on the shops' day-books, so: carer's purse + carer's purchases = carer's start + (elder's 37 - elder's purchases).
+ const spentBy=id=>Object.values(s.doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
+ assert.equal(npc(s,carer).coins+spentBy(carer),carerCoins+37-spentBy(elder));assert.equal(npc(s,elder).coins,0);
+ assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);// The estate holds the 3 portions the elder owned plus exactly what the elder bought in shops before dying (F026 day-books).
+ const bought={};for(const v of Object.values(s.doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===elder&&v.outcome==='bought'))bought[v.item]=(bought[v.item]??0)+v.quantity;
+ const expectedItems={[item]:3};for(const [k,n] of Object.entries(bought))expectedItems[k]=(expectedItems[k]??0)+n;
+ assert.deepEqual(settledDeath.estate.items,expectedItems);
  assert.deepEqual(death.population,{before:population,after:population-1});assert.equal(s.doc.state.settlements.loc_hw.population,population-1);
  const o=s.doc.state.obligations.obl_after;
  assert.equal(o.status,'取消');assert.equal(o.endedByDeath,death.id);assert.equal(o.breachedBy,undefined);

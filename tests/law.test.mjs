@@ -18,7 +18,8 @@ import {applyIntentSetup}from'../tools/a3-score.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai';
-const money=c=>Object.values(c.state.workshopFunds??{}).reduce((sum,coins)=>sum+coins,0)+c.state.player.coins+Object.values(c.state.npcs).reduce((sum,a)=>sum+a.coins,0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((sum,r)=>sum+r.coins,0);
+// F010: shopkeepers pay the source settlement's treasury for restock and porters (sink:export freight), so the conserved total counts treasuries and the freight already paid out; a quest a resident funds from their purse holds escrow.
+const money=c=>Object.values(c.state.quests??{}).reduce((sum,q)=>sum+(q.escrow??0),0)+Object.values(c.state.settlements??{}).reduce((sum,s)=>sum+(s.treasury??0),0)+(c.ledger?.flows?.['sink:export|coin_river|freight']??0)+Object.values(c.state.workshopFunds??{}).reduce((sum,coins)=>sum+coins,0)+c.state.player.coins+Object.values(c.state.npcs).reduce((sum,a)=>sum+a.coins,0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((sum,r)=>sum+r.coins,0);
 async function setup(){
     const world=withLawRules(await loadWorld());
     // These procedure fixtures explicitly place the participants at interviews

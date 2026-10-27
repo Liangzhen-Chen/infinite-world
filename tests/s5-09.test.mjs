@@ -198,6 +198,8 @@ async function remoteArrival(){
 }
 const remoteGenesis=doc=>Object.fromEntries(Object.entries(doc.ledger.flows).filter(([k])=>k.startsWith('src:genesis|')&&k.endsWith('|remote')));
 const keeper='npc_rg_hanlu_tongji_01',stockKey='remote-stock:loc_far_tongji';
+// F010: what a keeper paid for restocking is read from its own shop ledger (goods + freight + duties).
+const paidBy=(doc,id)=>Object.values(doc.state.records).filter(r=>r.category==='shop_ledger'&&r.keeper===id).reduce((n,l)=>n+l.entries.reduce((m,e)=>m+e.paidCopper,0),0);
 
 test('three native county round trips merge actual ownership shares without a second genesis',async()=>{
  const f=await remoteArrival(),genesis=remoteGenesis(f.document);let doc=f.document;
@@ -208,15 +210,19 @@ test('three native county round trips merge actual ownership shares without a se
   assert.equal(doc.state.npcs[keeper].coins,0);assert.deepEqual(doc.state.npcs[keeper].inventory,{});
   assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
   if(i===0){
-   // Opening keepers372+268+285 and hosts84+154 =1163. Day3's
-   // real route receipts charge42+4+8=54, leaving1109 in the aggregate.
-   // Tavern372-54=318; shelves4+4=8,3+3=6,5+5=10 (24 units).
-   assert.equal(row.coins,1109);assert.equal(row.members[keeper].coins,318);
+   // Opening keepers372+268+285 and hosts84+154 =1163. Day3's real route receipts charged42+4+8=54 for the goods alone.
+   // F010: restocking is no longer free for local production and route freight/duty is paid too, so what the shops paid out
+   // is read from their own restock ledgers (goods + freight + duties, every copper named) and the aggregate is the
+   // opening 1163 less exactly that. The tavern keeps 372 less its own payments; shelves4+4=8,3+3=6,5+5=10 (24 units).
+   const ledgers=Object.values(doc.state.records).filter(r=>r.category==='shop_ledger'&&(r.keeper in row.members)),paid=ledgers.reduce((n,l)=>n+l.entries.reduce((m,e)=>m+e.paidCopper,0),0);
+   const tavernPaid=ledgers.filter(l=>l.keeper===keeper).reduce((n,l)=>n+l.entries.reduce((m,e)=>m+e.paidCopper,0),0);
+   assert.ok(paid>=54);
+   assert.equal(row.coins+paid,1163);assert.equal(row.members[keeper].coins,372-tavernPaid);
    assert.equal(row.members[keeper].inventory.item_barley_pea_stew.quantity,8);
    assert.equal(row.members[keeper].inventory.item_milk.quantity,6);
    assert.equal(row.members[keeper].inventory.item_ration.quantity,10);
    const before=structuredClone(doc),scope=f.engine.scoped(doc),d=scope.primitiveDraft(doc);
-   assert.equal(coinRead(d,{point:'assets.cash',account:`${keeper}|coin_river|purse`,legacy:()=>doc.state.npcs[keeper].coins}),318);
+   assert.equal(coinRead(d,{point:'assets.cash',account:`${keeper}|coin_river|purse`,legacy:()=>doc.state.npcs[keeper].coins}),row.members[keeper].coins);
    assert.equal(saleableStock(d,scope,keeper,'item_barley_pea_stew',{business:true}).stock,8);
    assert.deepEqual(doc,before);assert.deepEqual(d.patches,[]);
   }
@@ -236,16 +242,17 @@ test('a keeper that a memory refers to stays individual on departure; unreferenc
  const away=await act(f.engine,told.document,'world_move',{destination:'loc_bs'},'s509-memory-away');
  assert.deepEqual(conservation(f.engine.scoped(away.document),told.document,away.document),[]);
  const doc=away.document,row=doc.state.records[stockKey];
- // Same departure as the round-trip anchor: keeper 372 minus 54 route receipts is 318, kept as its own purse.
+ // Same departure as the round-trip anchor: keeper 372 minus what its restocking cost (shop ledger) stays as its own purse.
+ const kept=372-paidBy(doc,keeper);
  assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);
- assert.equal(doc.state.npcs[keeper].coins,318);assert.equal(row.members[keeper],undefined);
+ assert.equal(doc.state.npcs[keeper].coins,kept);assert.equal(row.members[keeper],undefined);
  assert.equal(doc.state.npcs[other].materialized.folded,true);assert.equal(doc.state.npcs[other].coins,0);
  assert.equal(row.members[other].coins,268);
- assert.equal(doc.ledger.accounts[`${keeper}|coin_river|purse`],318);
+ assert.equal(doc.ledger.accounts[`${keeper}|coin_river|purse`],kept);
  assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
  books(f.engine.scoped(doc),doc);
  const back=await act(f.engine,doc,'world_move',{destination:'loc_far_tongji'},'s509-memory-back');
- assert.equal(back.document.state.npcs[keeper].coins,318);assert.equal(back.document.state.npcs[other].coins,268);
+ assert.equal(back.document.state.npcs[keeper].coins,kept);assert.equal(back.document.state.npcs[other].coins,268);
  assert.deepEqual(back.document.state.records[stockKey].members,{});books(f.engine.scoped(back.document),back.document);
 });
 
@@ -324,9 +331,9 @@ test('folded account storage round trip continues native clocks and rejects an o
  assert.deepEqual((await new CampaignStorage(directory,{reducer}).read('accounts')).document,doc);
  const a=await act(f.engine,doc,'world_time',{minutes:1440},'accounts-clock'),b=await act(f.engine,restored,'world_time',{minutes:1440},'accounts-clock');
  assert.deepEqual(a.document,b.document);books(f.engine.scoped(a.document),a.document);
- const broken=premise(f.engine,doc,{facts:[{path:['state','records',stockKey,'members',keeper,'coins'],value:319}]}),before=structuredClone(broken);
- // Aggregate1109 still backs1109 coins; raising one318 share to319 would
- // demand1110. The real restore path must reject, without minting the gap.
+ const broken=premise(f.engine,doc,{facts:[{path:['state','records',stockKey,'members',keeper,'coins'],value:doc.state.records[stockKey].members[keeper].coins+1}]}),before=structuredClone(broken);
+ // The aggregate still backs exactly its members' coins; raising one share by one copper would
+ // demand one more. The real restore path must reject, without minting the gap.
  await assert.rejects(act(f.engine,broken,'world_time',{minutes:1},'overdrawn-share'),/聚合钱款不足/);
  assert.deepEqual(broken,before);
 });

@@ -11,6 +11,7 @@ import {publishTransitionEvent,SOCIAL_VERBS,registerWorldEventSubscriber,present
 import {identities} from './identity.mjs';
 import {inheritanceRule,inheritanceCandidates,guardianCandidates} from './family-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
+import {valuation,holdingValuation} from './valuation.mjs';
 import {npcAgeAt,npcHousehold} from './npc-state.mjs';
 import {legalCodeAt,legalCodeById} from './law-codes.mjs';
 import {personOffices} from './entity-view.mjs';
@@ -87,7 +88,7 @@ export function fileClosedObligation(d,e,{estate,obligation,eventId}){
                 inheritanceFrom:estate,originalObligation:obligation,originalAmount:amount,originalTerms:source.originalTerms??source.terms??{},
                 inheritedPaid:0,goneRoute:'assume_by_heirs',filedAt:now(d),filedBy:eventId,
                 ...(source.legacyRecord?{legacyRecord:index?`${source.legacyRecord}:heir:${part.heir}`:source.legacyRecord,originalLegacyRecord:source.legacyRecord}:{}),
-                terms:{...source.terms,liabilityCap:r.value,guardian:r.guardian??null}});
+                terms:{...source.terms,liabilityCap:r.value,...(r.unvaluable?.length?{liabilityUnvalued:r.unvaluable}:{}),guardian:r.guardian??null}});
             row.kind??='compensation';
             if(state.records?.[obligation]===source&&!row.legacyRecord)row.legacyRecord=index?`${obligation}:heir:${part.heir}`:obligation;
             if(source.terms?.accrual){
@@ -877,7 +878,19 @@ function configureEstate(d,e,r,input){
     projectFields(d,e,['state','records',key],{...read(d,'state','records',key),executor:executor??null,...(!executor?{sealedAt:now(d)}:{})});
     if(!executor)for(const h of aliveHoldings(d,{holder:r.successor,kind:'operates'})){closeHolding(d,{id:h.id,reason:'vacated',writer:W,eventId:r.eventId});projectHolding(d,e,h,null,r);}
 }
-const price=(e,resource)=>resource==='coin_river'?1:e.byId?.get(resource)?.basePrice??0;
+// F007/F058：遗产与责任上限的估值走估值角色（valuation.mjs），不读目录基价。没有可派生依据的持有或账户
+// 如实标成 unvaluable 写进回执，不计入可得价值，也不静默当 0 掩盖。
+const accountWorth=(d,e,resource,amount,location)=>{
+    if(resource==='coin_river')return {value:amount};
+    const r=valuation(d,e,{role:'goods',item:resource,quantity:amount,location,holder:null});
+    return r.value===null?r:{value:r.value};
+};
+const holdingWorth=(d,e,h,part=1)=>{
+    if(h.terms?.value!==undefined)return {value:Math.floor(h.terms.value*part)};
+    const r=holdingValuation(d,e,h);
+    return r.value===null?r:{...r,value:Math.floor(r.value*part)};
+};
+const noteUnvaluable=(r,key,w)=>{(r.unvaluable??=[]).push({holding:key,reason:w.unvaluable});};
 function publicRecipient(d,e,entity,location,rule){
     const code=legalCodeAt(e,location,read(d,'state'));
     return rule.noHeir?.recipient??rule.escheatTo??[code?.treasury,code?.faction,code?.polity,npcHousehold(e,read(d,'state'),entity)?.settlement,code?.settlement,location].find(id=>live(d,e,id));
@@ -981,10 +994,10 @@ function distribute(d,e,id,p){
             const ids=rescaleHolding(d,{kind:h.kind,subject:h.subject,shares,writer:W,engine:e,eventId:p.eventId});
             if(h.kind==='owns')projectProperty(d,h.subject,shares);
             for(const hid of ids){const row=holdingRow(d,hid),part=dest.filter(x=>x.heir===row.holder).reduce((n,x)=>n+x.share,0);if(!part)continue;
-                const r=receipt(row.holder);r.holdings.push(hid);const value=(h.terms?.value??e.byId?.get(h.subject)?.basePrice??0)*part;r.holdingValues[hid]=value;r.value+=value;}
+                const r=receipt(row.holder);r.holdings.push(hid);const w=holdingWorth(d,e,h,part);r.holdingValues[hid]=w.value??null;if(w.value===null)noteUnvaluable(r,hid,w);else r.value+=w.value;}
         }else{
             const target=dest.slice().sort((a,b)=>b.share-a.share||a.heir.localeCompare(b.heir))[0].heir;
-            const hid=transferHolding(d,{id:h.id,holder:target,writer:W,engine:e,eventId:p.eventId});projectHolding(d,e,h,holdingRow(d,hid),p);receipt(target).holdings.push(hid);const value=h.terms?.value??e.byId?.get(h.subject)?.basePrice??0;receipt(target).holdingValues[hid]=value;receipt(target).value+=value;
+            const hid=transferHolding(d,{id:h.id,holder:target,writer:W,engine:e,eventId:p.eventId});projectHolding(d,e,h,holdingRow(d,hid),p);receipt(target).holdings.push(hid);const w=holdingWorth(d,e,h),t=receipt(target);t.holdingValues[hid]=w.value??null;if(w.value===null)noteUnvaluable(t,hid,w);else t.value+=w.value;
         }
         };
         if(!bequest)assign(dest);
@@ -1000,7 +1013,7 @@ function distribute(d,e,id,p){
     for(const [key,amount]of Object.entries(read(d,'ledger','accounts')??{})){
         const ac=parseAccount(key);if(ac.owner!==id||!amount)continue;
         for(const part of allocation(amount,heirs))if(part.amount){bookTransfer(d,e,{from:key,to:accountKey(part.heir,ac.resource,ac.purpose),amount:part.amount,writer:W,eventId:p.eventId});
-            const r=receipt(part.heir);r.accounts.push({...ac,amount:part.amount});r.value+=part.amount*price(e,ac.resource);}
+            const r=receipt(part.heir),w=accountWorth(d,e,ac.resource,part.amount,p.location);r.accounts.push({...ac,amount:part.amount});if(w.value===null)noteUnvaluable(r,key,w);else r.value+=w.value;}
     }
     distributeEmployments(d,e,id,heirs,p);
     splitDeposits(d,e,id,heirs,p.eventId);
@@ -1030,7 +1043,7 @@ function distribute(d,e,id,p){
             if(o.legacyRecord){n.originalLegacyRecord=o.legacyRecord;n.legacyRecord=i?`${o.legacyRecord}:heir:${part.heir}`:o.legacyRecord;}
             n.inheritedEndpoints=['debtor','promisor','creditor','promisee'].filter(k=>n[k]===id);
             for(const k of n.inheritedEndpoints)n[k]=part.heir;
-            if(['assume_by_heirs','substitute_performance'].includes(o.goneRoute))n.terms={...o.terms,liabilityCap:receipt(part.heir).value,guardian:receipt(part.heir).guardian??null};
+            if(['assume_by_heirs','substitute_performance'].includes(o.goneRoute))n.terms={...o.terms,liabilityCap:receipt(part.heir).value,...(receipt(part.heir).unvaluable?.length?{liabilityUnvalued:receipt(part.heir).unvaluable}:{}),guardian:receipt(part.heir).guardian??null};
             d.set(['state','obligations',n.id],n);
         }
         if(!parts.length)d.set(['state','obligations',oid],{...o,status:'settled',remaining:0});
@@ -1236,15 +1249,15 @@ export function restoreTransition(d,engine,{entity,origin,eventId=`restored:${en
             const grouped=new Map();
             for(const dist of [...p.previousDistributions??[],p.distribution])for(const part of dist.heirs??[dist]){
                 let r=grouped.get(part.heir);if(!r){r={heir:part.heir,value:0,holdings:[],holdingValues:{},accounts:[]};grouped.set(part.heir,r);}
-                r.value+=part.value??0;r.holdings=[...new Set([...r.holdings,...part.holdings])];Object.assign(r.holdingValues,part.holdingValues??{});
+                r.value+=part.value??0;r.holdings=[...new Set([...r.holdings,...part.holdings])];Object.assign(r.holdingValues,part.holdingValues??{});if(part.unvaluable?.length)r.unvaluable=[...(r.unvaluable??[]),...part.unvaluable];
                 for(const ac of part.accounts){const prior=r.accounts.find(x=>x.resource===ac.resource&&x.purpose===ac.purpose);if(prior)prior.amount+=ac.amount;else r.accounts.push({...ac});}
             }
             const receipts=[...grouped.values()];
             for(const receipt of receipts){
                 const heir=receipt.heir;let benefit=0;
                 for(const ac of receipt.accounts){const present=read(d,'ledger','accounts',accountKey(heir,ac.resource,ac.purpose))??0;
-                    benefit+=Math.min(ac.amount,present)*price(engine,ac.resource);}
-                for(const hid of receipt.holdings){const h=holdingRow(d,hid);if(h?.until===undefined&&h.holder===heir)benefit+=receipt.holdingValues?.[hid]??h.terms?.value??engine.byId?.get(h.subject)?.basePrice??0;}
+                    benefit+=accountWorth(d,engine,ac.resource,Math.min(ac.amount,present),p.location).value??0;}
+                for(const hid of receipt.holdings){const h=holdingRow(d,hid);if(h?.until===undefined&&h.holder===heir)benefit+=(hid in (receipt.holdingValues??{})?receipt.holdingValues[hid]:holdingWorth(d,engine,h).value)??0;}
                 const amount=Math.max(0,Math.floor(law.restitution==='received'?receipt.value:benefit));
                 if(amount>0){const id=`${eventId}:compensation:${heir}`;d.set(['state','obligations',id],{id,kind:'compensation',debtor:heir,creditor:entity,resource:'coin_river',amount,remaining:amount,status:'pending',cause:eventId});}
             }

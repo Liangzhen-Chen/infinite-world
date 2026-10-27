@@ -118,6 +118,8 @@ export function finishLedger(patches,opening){
 let lotPolicy=()=>false;
 export function registerLotPolicy(fn){lotPolicy=fn;}
 export const lotAccount=key=>{const {owner,resource,purpose}=parseAccount(key);return !isFlow(owner)&&lotPolicy({owner,resource,purpose});};
+// G0 第 3 条：转移不得丢原始事实——转出批次已有的入库日、保质到期、品质、来源不被转入方的批次说明覆盖（编号与类别可改，如种粮重编号）。
+const ORIGINAL_LOT_FACTS=['day','expiresDay','quality','origin'];
 const LOT_FIELDS=new Set(['id','qty','day','quality','origin','expiresDay','kind']);
 const byExpiry=(a,b)=>(a.expiresDay??Infinity)-(b.expiresDay??Infinity)||String(a.id).localeCompare(String(b.id));
 // 从批次列表取出 amount；pick = 批次编号列表，或 {kind} 过滤。返回 [剩余, 取出]。
@@ -203,7 +205,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
             let add;
             if(Array.isArray(lot)){add=lot;if(lot.reduce((n,l)=>n+l.qty,0)!==amount)throw Error('指定批次的数量与转移数量不符');}
             else{
-                const carried=(moved??[]).map(l=>({...l,...(lot??{}),qty:l.qty})),rest=amount-carried.reduce((n,l)=>n+l.qty,0);
+                const carried=(moved??[]).map(l=>{const o={...lot??{}};for(const k of ORIGINAL_LOT_FACTS)if(l[k]!==undefined)delete o[k];return {...l,...o,qty:l.qty};}),rest=amount-carried.reduce((n,l)=>n+l.qty,0);
                 add=[...carried,...(rest>0?[{id:eventId??`lot:${day}`,day,...(lot??{}),qty:rest}]:[])];
             }
             d.set(['ledger','lots',to],mergeLots(lotsOf(d,to),add));
