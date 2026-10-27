@@ -11,7 +11,7 @@ import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {standing} from './standing.mjs';
 import {explainDerived} from './derived.mjs';
-import {decimalFraction,interestFraction,interestAmount,addAccrual,fraction,obligationCalendar} from './obligation-calendar.mjs';
+import {decimalFraction,interestAmount,addAccrual,fraction,obligationCalendar,accrualFraction} from './obligation-calendar.mjs';
 import creditBalance from '../world/rules/tables/balance/credit.json' with {type:'json'};
 import {currencyReserve} from './currency.mjs';
 import {bankLiabilities} from './finance-liabilities.mjs';
@@ -24,6 +24,7 @@ declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {reportDepositLost} from './documents.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent as nativeConsent,agreedLoan,requestContractConsent} from './action-consent.mjs';
@@ -175,6 +176,56 @@ export function borrowerCashFlow(e,state,id,minute=state.minute){
     for(const l of account?.ledger??[])if(l.kind==='trade'&&l.minute>=since&&l.minute<=minute){if(l.coins>0)income+=l.coins;else expense-=l.coins;}
     return {income:Math.ceil(income/30),expense:Math.max(account?0:e.rules.economy.rentalCopperPerNight,Math.ceil(expense/30))};
 }
+// F049 (D15 §15.5, 附录 A.15.6): interest accrues over the actual balance
+// intervals. The balance only changes by settlement events recorded on the
+// claim, so each interval's principal is today's balance plus whatever was paid
+// out after the interval began. Anchors always count from the signing minute
+// (createdAt): a settlement date never becomes a new signing date, and the sum
+// of consecutive intervals equals one interval over the same span.
+const mulFraction=(a,b)=>fraction(a.numerator*b.numerator,a.denominator*b.denominator);
+export function depositAccrual(state,claim,basis,signedRate,to){
+    const from=claim.accruedTo??claim.createdAt,rateFraction=decimalFraction(signedRate);
+    const paidOut=(claim.events??[]).filter(ev=>ev.transferred>0);
+    const cuts=[...new Set(paidOut.map(ev=>ev.minute).filter(m=>m>from&&m<to))].sort((a,b)=>a-b);
+    const owed=obligationView(state,claim,to).owed,points=[from,...cuts,to];
+    const units=t=>accrualFraction({from:claim.createdAt,to:t,per:basis.per,calendar:basis.calendar,value:1});
+    let total=fraction(0n),last=units(from);
+    for(let i=1;i<points.length;i++){
+        const here=units(points[i]),principal=owed+paidOut.filter(ev=>ev.minute>points[i-1]).reduce((n,ev)=>n+ev.transferred,0);
+        total=addAccrual(total,mulFraction(mulFraction(decimalFraction(principal),rateFraction),addAccrual(here,last,-1n)));
+        last=here;
+    }
+    return total;
+}
+// One claim, one settlement event: interest earned since the claim's cursor is
+// capitalized into the original claim up to the bank's free cash; the rest is
+// carried as arrears and the sub-copper remainder is carried exactly.
+export function accrueDepositClaim(state,e,claim,at,{quote,rate,capacity,frozen}){
+    const basis=claim.terms.rateTerms??{per:'anchor',calendar:'core:calendar_default'},month=obligationCalendar(basis.calendar).rateBasis?.month??30;
+    const signedRate=quote.per===basis.per?rate:rate*(basis.per==='day'?1/month:month);
+    // The cursor never moves backwards: nothing accrues for a span already settled.
+    if(at<=(claim.accruedTo??claim.createdAt))return {earned:0,capitalized:0,arrears:claim.interestArrears??0,claim};
+    const previous=claim.interestRemainder;
+    const exact=addAccrual(depositAccrual(state,claim,basis,signedRate,at),previous?fraction(BigInt(previous.numerator),BigInt(previous.denominator)):fraction(0n));
+    const earned=Number(exact.numerator/exact.denominator),remainder=fraction(exact.numerator%exact.denominator,exact.denominator);
+    const owed=earned+(claim.interestArrears??0),capitalized=frozen?0:Math.min(owed,Math.max(0,capacity));
+    return {earned,capitalized,arrears:owed-capitalized,claim:{...claim,amount:claim.amount+capitalized,interest:(claim.interest??0)+capitalized,accruedTo:at,
+        interestRemainder:{numerator:String(remainder.numerator),denominator:String(remainder.denominator)},interestArrears:owed-capitalized}};
+}
+// A withdrawal is a settlement event for the claims it draws on (A.15.6: the
+// cursor advances and accrued interest joins the claim). Rate is the quote at
+// that moment; it never rewrites earlier intervals.
+export function settleDepositInterest(d,e,b,claimIds,at=d.get('state','minute')){
+    const state=d.get('state'),bank=state.records[b.id];
+    const quote=interestRate(e,state,b,{borrower:null,minute:at,document:d.document}),rate=depositRate(e,state,b,at,d.document);
+    const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===b.id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);
+    let liabilities=bankLiabilities(state,b.id,at).total;const accounts={...bank.accounts};let capitalizedTotal=0;
+    for(const id of claimIds){
+        const claim=obligationRow(d.get('state'),id),step=accrueDepositClaim(d.get('state'),e,claim,at,{quote,rate,capacity:bank.coins-liabilities-issueReserve,frozen:blocked(e,d.get('state'),b,at)});
+        d.set(['state','obligations',id],step.claim);accounts[claim.creditor]=(accounts[claim.creditor]??0)+step.capitalized;liabilities+=step.capitalized;capitalizedTotal+=step.capitalized;
+    }
+    holdingSet(d,e,financePath(b.id),{...bank,accounts},'finance-bank');return capitalizedTotal;
+}
 function loanPayment(d,e,key,row,amount,minute,id){
     const canonical=obligationRow(d.get('state'),key);
     const migrated=canonical&&d.get('state','obligations',canonical.id);
@@ -306,6 +357,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     }
     if(op==='auction'){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status!=='流当')throw preconditionFailure('当物尚不可拍卖');
+        if(debt.auction||d.get(...financePath(debt.pledgeRecord),'status')!=='质押中')throw preconditionFailure('当物已经拍卖处置，不能再次出售或交付；余欠请按普通还款清偿');
         const p=d.get(...financePath(debt.pledgeRecord)),price=financeInt(args.coins,p.value,Math.max(p.value,1e9),'拍卖价');
         const buyer=counterpart(d,e,args.buyer,{consent:args.consent});if(financeBalance(d,e,buyer)<price)throw preconditionFailure('买方资金不足');
         const toBank=Math.min(price,debt.amount-debt.paid),surplus=Math.max(0,price-(debt.amount-debt.paid)),state=d.get('state');
@@ -318,6 +370,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         const paid=Math.min(debt.amount,debt.paid+price);holdingSet(d,e,financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}},'finance-bank');
         return {contract:args.contract,buyer,price,surplus};
     }
+    if(op==='report_lost')return reportDepositLost(d,e,{bank:b,keeper,claim:args.debt,eventId:id});
     if(op==='remit'){
         const dest=derivedBankAt(e,d.get('state'),e.resolve(args.location));if(!dest||dest.id===b.id)throw preconditionFailure('汇票须指定异地的真实钱庄柜面');
         const beneficiary=args.buyer===undefined?null:e.resolve(args.buyer,'npc');
@@ -381,24 +434,21 @@ export function advanceBankFinance(d,e,minute,recordIds){
                 let due=0,paid=0,arrears=0;
                 const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);
                 for(const claim of obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===id&&o.createdAt<=at&&obligationView(state,o,at).owed>0)){
-                    const basis=claim.terms.rateTerms??{per:'anchor',calendar:'core:calendar_default'},month=obligationCalendar(basis.calendar).rateBasis?.month??30;
-                    const signedRate=quote.per===basis.per?rate:rate*(basis.per==='day'?1/month:month);
-                    const from=claim.accruedTo??claim.createdAt,previous=claim.interestRemainder;
-                    const exact=addAccrual(interestFraction({principal:obligationView(state,claim,at).owed,rate:signedRate,from,to:at,per:basis.per,calendar:basis.calendar}),previous?fraction(BigInt(previous.numerator),BigInt(previous.denominator)):fraction(0n));
-                    const earned=Number(exact.numerator/exact.denominator),remainder=fraction(exact.numerator%exact.denominator,exact.denominator);
-                    const owed=earned+(claim.interestArrears??0),capitalized=blocked(e,state,b,at)?0:Math.min(owed,Math.max(0,row.coins-liabilities-issueReserve));
+                    const step=accrueDepositClaim(state,e,claim,at,{quote,rate,capacity:row.coins-liabilities-issueReserve,frozen:blocked(e,state,b,at)});
                     // The original claim and original paper remain the only debt.
-                    d.set(['state','obligations',claim.id],{...claim,amount:claim.amount+capitalized,interest:(claim.interest??0)+capitalized,accruedTo:at,
-                        interestRemainder:{numerator:String(remainder.numerator),denominator:String(remainder.denominator)},interestArrears:owed-capitalized});
-                    row.accounts[claim.creditor]=(row.accounts[claim.creditor]??0)+capitalized;
-                    due+=earned;paid+=capitalized;arrears+=owed-capitalized;liabilities+=capitalized;
+                    d.set(['state','obligations',claim.id],step.claim);
+                    row.accounts[claim.creditor]=(row.accounts[claim.creditor]??0)+step.capitalized;
+                    due+=step.earned;paid+=step.capitalized;arrears+=step.arrears;liabilities+=step.capitalized;
                 }
                 row.interestArrears=arrears;row.interestAt=at;row.accruedTo=at;
                 row.interestLedger=[...row.interestLedger??[],{minute:at,due,paid,rate}];
             }
             holdingSet(d,e,financePath(id),row,'finance-bank');
         }
-        if(original.kind==='pawn'&&original.status!=='已还清'&&pawnDeadline(original,e,minute,d.get('state'))<=minute){
+        // F028: once the collateral is sold the pledge is final. A residual deficit
+        // stays an ordinary overdue claim, repayable through the common repay path;
+        // it must not flip back to "流当" and re-offer the same sold goods.
+        if(original.kind==='pawn'&&original.status!=='已还清'&&!original.auction&&pawnDeadline(original,e,minute,d.get('state'))<=minute){
             if(original.status!=='流当')holdingSet(d,e,financePath(id),{...original,status:'流当'},'finance-bank');
             continue;
         }
