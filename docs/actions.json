@@ -2450,7 +2450,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/advance-registry.mjs:187"
+    "dispatch": "server-plugin/advance-registry.mjs:189"
    }
   },
   {

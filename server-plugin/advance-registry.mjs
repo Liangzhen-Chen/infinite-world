@@ -97,12 +97,14 @@ export function nextAdvanceMinute(engine,d,now,end){
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
 // R31: a draft whose every write goes through its PatchCursor can share a records-by-kind index across one pass (storage.mjs recordsWhere).
 export function runAdvance(engine,d,ctx){
+    advanceHook('restoreRemoteAccounts')?.(d,engine);
     return withScheduleCache(engine,d,()=>d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx));
 }
 // Continuous local processes catch up to reads/actions without introducing a
 // clock tick or advancing lastSettled. Their own cursor prevents the next
 // scheduled settlement from charging the same elapsed minutes twice.
 export function catchUpLocal(engine,d,after){
+    advanceHook('restoreRemoteAccounts')?.(d,engine);
     const before=d.get('state','scheduler','localUntil')??d.scheduler.lastSettled;
     if(after<=before)return;
     // Roots can draw from a leaking source. Preserve minute order for that

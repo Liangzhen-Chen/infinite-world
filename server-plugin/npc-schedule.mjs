@@ -17,7 +17,7 @@ import {recordEmploymentAttendance,employmentActive} from './employment-state.mj
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
 import {recordsWhere,canonicalEqual,PatchCursor} from './storage.mjs';
-import {registerAdvanceHook} from './advance-hooks.mjs';
+import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('npc-schedule',{kinds:[]});
 // The cache belongs to one draft and one elapsed-time action. Cursor writes
@@ -191,6 +191,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 // it only before this NPC's writes; it does not make the draft recopy state.
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
 export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
+    advanceHook('restoreRemoteAccounts')?.(d,engine);
     const previous=engine.educationScheduleCourses;engine.educationScheduleCourses??=new Map();
     try{return withScheduleCache(engine,d,()=>settleSchedules(d,engine,before,after,{promote,beforeState}));}finally{engine.educationScheduleCourses=previous;}
 }
