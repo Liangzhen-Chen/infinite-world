@@ -1,8 +1,10 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
-import {bagStock,priceRead,settlementStock,granary} from './stock.mjs';
+import {bagStock,priceRead,settlementStock,granary,pledged,crop as cropAccount} from './stock.mjs';
+import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personHousehold} from './entity-view.mjs';
 import {explainDerived} from './derived.mjs';
-import {obligationRows,obligationClosed} from './obligation-state.mjs';
+import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
+import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {digest} from './storage.mjs';
 import {bodyRule} from './primitives-body.mjs';
@@ -12,6 +14,7 @@ const quantity=v=>typeof v==='number'?v:v?.quantity??0;
 const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
 const stateOf=d=>d.get('state');
 const rulesOf=engine=>engine.world.marketRules;
+const itemValue=(engine,document,item,base,scarcity,quality)=>explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
 export function goodsClass(engine,item){
  const row=engine.byId.get(item),tags=row?.tags??[];
  const category=Object.entries(rulesOf(engine).goodsTags).find(([tag])=>tags.includes(tag))?.[1];
@@ -60,7 +63,7 @@ function commitments(state,owner,item){
  for(const row of obligationRows(state)){
   if(obligationClosed(row))continue;
   if(row.legacyRecord)represented.add(row.legacyRecord);
-  if((row.debtor??row.promisor)===owner&&(row.item??row.subject)===item)held+=Math.max(0,(row.quantity??0)-(row.fulfilled??0));
+  if((row.debtor??row.promisor)===owner&&(row.resource??row.item??row.subject)===item)held+=Math.max(0,(row.amount??row.quantity??0)-(row.paid??row.fulfilled??0));
  }
  for(const [key,row]of Object.entries(state.records??{})){
   if(represented.has(key)||row.obligation&&state.obligations?.[row.obligation])continue;
@@ -74,6 +77,76 @@ function commitments(state,owner,item){
  }
  return held;
 }
+// D15 §15.6: reliability is a projection of actual performances, never a
+// reputation counter written when a quote happens to be read.
+export function forwardReliability(d,engine,debtor){
+ const state=stateOf(d),rules=rulesOf(engine).forward;let fulfilled=0,cancelled=0,defaults=0,blockedUntil=0;
+ for(const row of obligationRows(state).filter(r=>r.kind==='forward'&&r.debtor===debtor)){
+  const remaining=Math.max(0,row.amount-(row.paid??0));
+  const deadline=row.deadline+currentGrace(engine,state,row,state.minute).minutes;
+  const late=(remaining>0?Math.min(state.minute,row.endedAt??Infinity):row.resolvedAt)>deadline;
+  if(late){defaults++;blockedUntil=Math.max(blockedUntil,deadline+rules.defaultQuarters*rules.quarterMinutes);}
+  else if(row.endedAt!==undefined||row.status==='cancelled')cancelled++;
+  else if(row.status==='completed'&&!remaining)fulfilled++;
+ }
+ const cancellationWeight=explainDerived(engine,d.document??{state},'economy:forwardCancellation',debtor,{base:rules.cancellationWeight}).value;
+ const attempts=fulfilled+defaults+cancelled*cancellationWeight;
+ const reliability=state.minute<blockedUntil?0:attempts?fulfilled/attempts:0;
+ return {debtor,fulfilled,cancelled,defaults,blockedUntil,reliability};
+}
+export function forwardSupply(d,engine,item,location){
+ const state=stateOf(d),document=d.document??{state},place=settlementOf(engine,state,location),allocations=new Map(),rows=[];
+ const forwards=obligationRows(state).filter(r=>r.kind==='forward'&&engine.byId.has(r.resource)&&!obligationClosed(r)&&r.endedAt===undefined&&r.deadline>state.minute)
+  .sort((a,b)=>a.deadline-b.deadline||a.createdAt-b.createdAt||a.id.localeCompare(b.id));
+ for(const row of forwards){
+  const resource=row.resource,remaining=Math.max(0,row.amount-(row.paid??0)),key=`${row.debtor}:${resource}`;
+  // All destinations share one stock budget, including promises outside this market.
+  const promised=forwards.filter(r=>r.debtor===row.debtor&&r.resource===resource).reduce((sum,r)=>sum+Math.max(0,r.amount-(r.paid??0)),0);
+  const otherCommitments=Math.max(0,commitments(state,row.debtor,resource)-promised);
+  const retained=engine.byId.get(resource)?.nutrition?personalReserves(d,engine,row.debtor).get(resource)??0:0;
+  const production=Object.values(state.records??{}).filter(f=>f.category==='private_farm'&&f.owner===row.debtor&&f.crop===resource&&['growing','ready'].includes(f.status)).reduce((sum,farm)=>{
+   const title=state.buildings?.[farm.location];
+   if(title?.owner!==row.debtor||title.condition<=0||Object.values(state.records??{}).some(r=>r.kind==='asset_lease'&&r.subject===farm.location&&r.tenant!==row.debtor&&r.status==='有效'&&r.deadline>state.minute))return sum;
+   if(farm.status==='ready')return (farm.expiresDay*DAY>row.deadline)?sum+priceRead(d,{point:'region.material',account:cropAccount(engine,farm.location,resource),lots:{id:`private:${farm.seedEvent}`,after:Math.floor(row.deadline/DAY)},legacy:()=>farm.yield}):sum;
+   const remainingDays=Math.max(0,engine.rules.agriculture.crop.growthDays-farm.grownDays);
+   const maturesAt=state.minute+remainingDays*DAY,storageDays=engine.rules.agriculture.settlements.find(p=>p.settlement===farm.settlement)?.normalStorageDays??0;
+   if(maturesAt>row.deadline||row.deadline>=maturesAt+storageDays*DAY)return sum;
+   return sum+Math.floor(explainDerived(engine,document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)}).value);
+  },0);
+  const capacity=Math.max(0,bagStock(d,engine,{point:'region.material',id:row.debtor,item:resource,legacy:()=>quantity(inventoryOf(state,row.debtor)[resource])})+production-retained-otherCommitments-(allocations.get(key)??0));
+  const backed=Math.min(remaining,capacity);allocations.set(key,(allocations.get(key)??0)+backed);
+  if(resource!==item||settlementOf(engine,state,row.terms?.performance?.location)!==place)continue;
+  const consideration=row.terms?.forward?.consideration;
+  const payment=state.obligations?.[`${row.id}:prepayment`];
+  const paidRatio=consideration>0?Math.min(1,(payment?.paid??0)/consideration):0;
+  const threshold=explainDerived(engine,document,'economy:forwardPaidThreshold',row.debtor,{base:rulesOf(engine).forward.paidThreshold}).value;
+  const history=forwardReliability(d,engine,row.debtor);
+  let securedValue=0;
+  for(const pledge of aliveHoldings(holdingsView(document),{kind:'pledged',holder:row.id})){
+   // A template id or a quoted collateral value is not a physical guarantee.
+   // Shared pledges divide the same backing, rather than multiplying its value.
+   const claimants=aliveHoldings(holdingsView(document),{kind:'pledged',subject:pledge.subject}).length;
+   const record=state.records?.[pledge.subject],unit=institutionOriginal(engine,document,pledge.subject);
+   const definition=engine.byId.get(record?.category==='pledge'?record.item:unit?.item);
+   if(!definition)continue;
+   const units=record?.category==='pledge'&&record.owner===row.debtor&&record.status==='质押中'
+    ?priceRead(d,{point:'region.material',account:pledged(engine,pledge.subject,record.item),legacy:()=>record.quantity})
+    :unit&&unit.destroyedAt===undefined?1:0;
+   if(units>0){
+    // A pledge cannot obtain its own backing value from the forwards it backs.
+    // Use the shared item valuation with current stock/demand and actual grade.
+    const stock=stockSupply(d,engine,definition.id,row.terms?.performance?.location),scarcity=clamp(stock.demand/Math.max(1,stock.supply),engine.rules.economy.priceFactorLimits.region);
+    const quality=marketGrade(engine,document,definition.id,{seller:row.debtor,instances:record?.instances??[pledge.subject],quantity:units});
+    securedValue+=itemValue(engine,document,definition.id,definition.basePrice,scarcity,quality).value*units/claimants;
+   }
+  }
+  const unitValue=consideration/row.amount;
+  const secured=unitValue>0?Math.min(backed,securedValue/unitValue):0;
+  const expected=paidRatio>=threshold&&state.minute>=history.blockedUntil?Math.min(backed,Math.max(backed*history.reliability,secured))*paidRatio:0;
+  rows.push({id:row.id,debtor:row.debtor,item,remaining,production,capacity:backed,paidRatio,secured,reliability:history.reliability,expected});
+ }
+ return {expected:rows.reduce((sum,row)=>sum+row.expected,0),rows};
+}
 export function saleableStock(d,engine,owner,item,{business=false}={}){
  const state=stateOf(d),catalog=engine.byId.get(item),bag=inventoryOf(state,owner),raw=quantity(bag[item]);
  const stock=bagStock(d,engine,{point:'region.material',id:owner,item,legacy:()=>raw});
@@ -84,7 +157,7 @@ export function saleableStock(d,engine,owner,item,{business=false}={}){
  const committed=commitments(state,owner,item),retained=Math.max(inUse,reserve);
  return {owner,item,stock,retained,committed,available:Math.max(0,stock-retained-committed)};
 }
-export function marketSupply(d,engine,item,location,{businessOwners=[]}={}){
+function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  const items=engine.world.items.filter(i=>goodsClass(engine,i.id)===goods);
  const owners=new Set(businessOwners);
@@ -111,6 +184,12 @@ export function marketSupply(d,engine,item,location,{businessOwners=[]}={}){
  const demand=Math.max(shelf,rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }
+export function marketSupply(d,engine,item,location,options={}){
+ const current=stockSupply(d,engine,item,location,options);
+ const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
+ const expected=forward.reduce((sum,row)=>sum+row.expected,0);
+ return {...current,supply:current.supply+expected,expected,forwards:forward.flatMap(row=>row.rows)};
+}
 export function marketGrade(engine,document,item,{seller,instances=null,quantity:count=1}={}){
  const state=document.state,catalog=engine.byId.get(item),r=rulesOf(engine),order=engine.rules.equipment.qualities;
  const bag=inventoryOf(state,seller),ids=instances??bag[item]?.instances?.slice(0,count)??[];
@@ -133,7 +212,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
  const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,supply.supply+net);
  const scarcity=clamp(supply.demand/Math.max(1,supply.supply),engine.rules.economy.priceFactorLimits.region);
  const depth=Math.max(0,1+r.depthImpact*net/opening),quality=marketGrade(engine,document,item,{seller,instances,quantity:count});
- const value=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
+ const value=itemValue(engine,document,item,base,scarcity,quality);
  const spread=business?(side==='sell'?clamp(business.markup,engine.rules.economy.priceFactorLimits.shop):r.spread.buy):1;
  const price=explainDerived(engine,document,'economy:price',item,{base:value.value*depth*spread*relation});
  // 15 §15.2: peer trade has no business stock curve and always uses retail value.
@@ -155,7 +234,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
   const marginal=x=>{
    const available=Math.max(0,supply.supply+(side==='sell'?-x:x));
    const scarcityAt=clamp(supply.demand/Math.max(Number.EPSILON,available),limits);
-   const v=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcityAt*quality});
+   const v=itemValue(engine,document,item,base,scarcityAt,quality);
    return explainDerived(engine,document,'economy:price',item,{base:v.value*depth*spread*relation}).value;
   };
   const simpson=(a,b,fa,fm,fb)=>(b-a)*(fa+4*fm+fb)/6;

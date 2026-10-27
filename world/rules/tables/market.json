@@ -1,6 +1,13 @@
 {
   "source": "15 §15.2、§15.4：首批市场参数，待标定",
   "retailShare": 0.05,
+  "forward": {
+    "source": "D15 §15.6：预付门槛、违约禁入与取消权重的初始标定；可靠度由履约记录派生",
+    "paidThreshold": 0.5,
+    "cancellationWeight": 1,
+    "defaultQuarters": 1,
+    "quarterMinutes": 129600
+  },
   "retailFloor": 5,
   "maxShare": 0.3,
   "dailyShare": 1,

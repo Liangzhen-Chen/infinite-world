@@ -24,7 +24,7 @@ import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {domainRules} from './domain-rules.mjs';
+import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -542,11 +542,7 @@ function advancePrivateFarms(d,engine,settlement,day){
                 if((weather?.temperatureC??10)>=crop.minimumTemperatureC){farm.grownDays++;farm.qualityDays++;farm.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),settlement,at);}
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;
-                    const perMu=engine.world.primitiveTables?.yields?.rows?.find(r=>r.key==='field:wheat')?.perUnit.qty;
-                    const binding=domainRules(engine).privateField.crops.find(c=>c.seed===farm.seedItem);
-                    if(!binding)throw Error('Crop seed binding is missing');
-                    const portions=binding.yieldSelector==='field:wheat'?farm.areaMu*perMu*domainRules(engine).privateField.kgPerJin/engine.byId.get(farm.crop).weight:farm.areaMu*crop.yieldPerHa/domainRules(engine).privateField.muPerHectare;
-                    farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:portions*farm.qualitySum/Math.max(1,farm.qualityDays)}));
+                    farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)}));
                     const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1];
                     moveStock(d,{from:`src:regrowth|${resource}|private_crop`,to:account,amount:farm.yield,writer:'agriculture',eventId:`${farm.seedEvent}:ripe:${at}`,lot:cropLot(`private:${farm.seedEvent}`,at,farm.expiresDay)});
                 }

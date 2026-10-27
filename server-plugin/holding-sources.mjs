@@ -46,6 +46,17 @@ export function defineHoldingSource(name,spec){
 }
 export const holdingSources=()=>[...sources.keys()].sort();
 
+// Purchase escrow remains at the buyer's counter throughout the order. The
+// persisted order is also the source used by genesis and reconciliation.
+defineHoldingSource('settlement-trade',{
+ recordCategories:['settlement_trade'],unitOfRecord:(_state,key)=>key,
+ units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r.category==='settlement_trade').map(([key])=>key),
+ extract(_engine,state,key){
+  const row=state.records?.[key];
+  return row?.escrowLocation?{locations:[{entity:`settlement-trade:${row.id}`,at:row.escrowLocation,mode:'place'}]}:null;
+ }
+});
+
 defineHoldingSource('husbandry',{
  recordCategories:['husbandry'],unitOfRecord:(_state,key)=>key,
  units:(_engine,state)=>Object.entries(state.records??{}).filter(([,r])=>r.category==='husbandry').map(([id])=>id),

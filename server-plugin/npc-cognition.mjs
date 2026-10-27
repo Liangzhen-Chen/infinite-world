@@ -80,7 +80,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  // The ordinary walking path remains available when no paid service can run.
  if(b.location&&a.location!==b.location){
   const existing=state.records?.[`post:${messageId}`];if(existing)return {duplicate:true,messageId:existing.id};
-  for(const service of transportServices(engine,state,a.location).filter(s=>s.driver!==from)){
+  for(const service of transportServices(engine,d.document,a.location).filter(s=>s.driver!==from)){
    let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:a.location,to:b.location,departAt:service.nextDeparture});}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;continue;}
    if(a.coins<quote.total)continue;
    const posted=sendPost(d,engine,{from,to,memoryId,legs:[{asset:service.asset,to:b.location}],receipt:false},messageId);
