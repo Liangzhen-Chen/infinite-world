@@ -970,7 +970,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:315"
+    "dispatch": "server-plugin/credit.mjs:312"
    }
   },
   {
@@ -1044,7 +1044,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/credit.mjs:335"
+    "dispatch": "server-plugin/credit.mjs:332"
    }
   },
   {
@@ -1636,7 +1636,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:351"
+    "dispatch": "server-plugin/finance-bank.mjs:361"
    }
   },
   {
@@ -1784,7 +1784,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:362"
+    "dispatch": "server-plugin/finance-bank.mjs:372"
    }
   },
   {
@@ -1932,7 +1932,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:394"
+    "dispatch": "server-plugin/finance-bank.mjs:404"
    }
   },
   {
@@ -2006,7 +2006,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 602,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:377"
+    "dispatch": "server-plugin/finance-bank.mjs:387"
    }
   },
   {

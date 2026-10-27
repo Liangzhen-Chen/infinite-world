@@ -342,11 +342,21 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         loanPayment(d,e,key,row,amount,now,id);return {debt:key,repaid:amount};
     }
     const {b,row,keeper}=openBank(d,e,args.seller);
-    if(op==='bank_inspect')return {bank:b.id,balance:row.accounts.player??0,depositInterest:{rate:depositRate(e,d.get('state'),b,now,d.document),per:b.rateTerms?.per??'anchor',calendar:b.rateTerms?.calendar??'core:calendar_default'},reserve:row.coins,
+    if(op==='bank_inspect'){
+        // The balance shown is what a withdrawal now settles against: interest earned
+        // since each claim's cursor is projected here (read only, nothing written).
+        const state=d.get('state'),quote=interestRate(e,state,b,{borrower:null,minute:now,document:d.document}),rate=depositRate(e,state,b,now,d.document);
+        const projected=new Map(obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player').map(o=>{
+            const step=accrueDepositClaim(state,e,o,now,{quote,rate,capacity:Infinity,frozen:false});
+            return [o.id,{row:o,owed:obligationView({...state,obligations:{...state.obligations,[o.id]:step.claim}},step.claim,now).owed,accrued:step.capitalized}];
+        }));
+        const accrued=[...projected.values()].reduce((n,v)=>n+v.accrued,0);
+        return {bank:b.id,balance:(row.accounts.player??0)+accrued,accruedInterest:accrued,depositInterest:{rate:depositRate(e,d.get('state'),b,now,d.document),per:b.rateTerms?.per??'anchor',calendar:b.rateTerms?.calendar??'core:calendar_default'},reserve:row.coins,
         credit:interestRate(e,d.get('state'),b,{document:d.document}),
-        deposits:obligationRows(d.get('state')).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player').map(o=>({claim:o.id,principal:o.terms.principal,paid:o.paid,balance:obligationView(d.get('state'),o).owed,original:o.terms.requiresInstrument??null,sourceEvent:o.terms.sourceEvent,rateTerms:o.terms.rateTerms})),
+        deposits:[...projected.values()].map(({row:o,owed})=>({claim:o.id,principal:o.terms.principal,paid:o.paid,balance:owed,original:o.terms.requiresInstrument??null,sourceEvent:o.terms.sourceEvent,rateTerms:o.terms.rateTerms})),
         regionalLoanable:regionalCredit(e,d.get('state'),b.location),
         operations:[...BANK_OPERATIONS],note:'borrow的quantity为分期期数；repay用coins部分还款；withdraw可用debt指定存款债权，已签发存单须持有具名原件；remit的location为兑付柜；凭contract兑票或赎回。'};
+    }
     if(blocked(e,d.get('state'),b,now))throw preconditionFailure('钱庄倒闭或战乱导致兑付受阻');
     if(op==='pawn'){
         const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=(e.byId.get(item).basePrice??0)*quantity;

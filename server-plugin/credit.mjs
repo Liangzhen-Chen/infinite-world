@@ -271,9 +271,6 @@ export async function creditTrade(d,args,eventId,terms){
                 terms:{sourceEvent:eventId,bank:b.id,principal:amount-b.depositFeeCopper,fee:b.depositFeeCopper,rateTerms:{per:rateTerms.per,calendar:rateTerms.calendar}}},`${eventId}:deposit`);
             detail={deposited:amount-b.depositFeeCopper,fee:b.depositFeeCopper,claim};
         }else if(op==='withdraw'){
-            const balance=row.accounts.player??0;
-            if(!Number.isSafeInteger(args.coins)||args.coins<1||args.coins>balance)reject('E-ACTION-WITHDRAWAL',`支取铜钱必须在1到${balance}之间`,{missing:['支取数额须大于零且不超过当前存款'],repair:['核对当前存款，存入钱款或调低支取数额后重试']});
-            let amount=args.coins;if(row.coins<amount)throw preconditionFailure(`${b.name}现银不足，暂不能兑付`);
             const state=d.get('state');
             if(args.debt){
                 const named=obligationRows(state).find(o=>o.id===args.debt&&o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player');
@@ -282,15 +279,15 @@ export async function creditTrade(d,args,eventId,terms){
             }
             const claims=obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===b.id&&o.creditor==='player'&&obligationView(state,o).owed>0&&
                 (args.debt?o.id===args.debt:!o.terms?.requiresInstrument||obligationInstrument(engine,state,o,b.id)));
-            const before=claims.reduce((n,o)=>n+obligationView(state,o).owed,0);
-            if(before<amount)throw preconditionFailure('支取须对应本人足额的真实存款债权');
             // F049: a withdrawal is a settlement event for the claims it draws on.
-            // Interest earned over the balance held so far joins the claim first;
-            // drawing the whole displayed balance therefore settles it with that interest.
+            // Interest earned so far joins the claims first, so the balance checked
+            // here is the one bank_inspect shows; the player receives exactly what is asked.
             const gained=settleDepositInterest(d,engine,b,claims.map(o=>o.id));
             Object.assign(row,d.get(...rec(b.id)));
-            const extra=claims.reduce((n,o)=>n+obligationView(d.get('state'),o.id).owed,0)-before;
-            if(extra>0&&amount===before)amount=Math.min(before+extra,row.coins);
+            const balance=row.accounts.player??0,amount=args.coins;
+            if(!Number.isSafeInteger(amount)||amount<1||amount>balance)reject('E-ACTION-WITHDRAWAL',`支取铜钱必须在1到${balance}之间`,{missing:['支取数额须大于零且不超过当前存款'],repair:['核对当前存款，存入钱款或调低支取数额后重试']});
+            if(row.coins<amount)throw preconditionFailure(`${b.name}现银不足，暂不能兑付`);
+            if(claims.reduce((n,o)=>n+obligationView(d.get('state'),o.id).owed,0)<amount)throw preconditionFailure('支取须对应本人足额的真实存款债权');
             let left=amount;
             for(const claim of claims){
                 if(!left)break;

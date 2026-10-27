@@ -79,8 +79,11 @@ test('W1-2 withdrawing the whole balance settles the accrued interest with it',a
  const f=fixture(),before=f.coins();
  const a=await f.act({operation:'deposit',coins:1001},'w1-full-dep');
  await f.elapse(600+15*DAY);
- // 1000 x 2% x 15/30 = 10 copper accrued; the whole displayed balance 1000 draws 1010.
- const out=await f.act({operation:'withdraw',coins:1000,debt:a.claim},'w1-full');
+ // 1000 x 2% x 15/30 = 10 copper accrued; the counter shows that balance (1010)
+ // before any settlement, and withdrawing exactly the shown amount pays it out.
+ const shown=await f.act({operation:'bank_inspect'},'w1-full-look');
+ assert.equal(shown.balance,1010);assert.equal(shown.accruedInterest,10);
+ const out=await f.act({operation:'withdraw',coins:1010,debt:a.claim},'w1-full');
  assert.equal(out.withdrawn,1010);assert.equal(f.coins(),before-1001+1010);
  assert.equal(owed(f,a.claim),0);assert.equal(f.claim(a.claim).paid,1010);
  assert.equal(f.vault(),1500+1001-1010);assert.equal(f.document.state.records[bankId].accounts.player,0);
