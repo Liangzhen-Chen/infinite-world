@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {recordsWhere} from './storage.mjs';
 
 import {settleStewardRequests} from './high-nobility.mjs';
 import {currentDomains,containsDomain} from './noble-state.mjs';
@@ -37,7 +38,7 @@ const base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const able=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
 const layer=(e,s,location,plan=e.advanceLayerContext??advanceLayerPlan(e,s))=>plan.layers.get(plan.countyOf(location))??'intelligent';
 const wage=e=>Math.max(1,wageQuote({baseHalfDay:e.rules.economy.wageCopperPerHalfDay?.[0]??10}).daily);
-const outstanding=(s,id)=>rows(s).filter(r=>r.category==='debt'&&r.kind==='wage'&&r.contract===id&&dueObligation(s,r.id)?.owed>0);
+const outstanding=(s,id)=>recordsWhere(s.records,'kind','wage').filter(r=>r.category==='debt'&&r.contract===id&&dueObligation(s,r.id)?.owed>0);
 
 const occupied=(s,id,start,end)=>rows(s).some(r=>r.category==='contract'&&r.kind==='workshop'&&r.worker===id&&employmentActive(r)&&r.starts<end&&r.deadline>start);
 
@@ -277,7 +278,7 @@ export function settleArrears(d,e,row,minute){
 function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`,{account:escrowAccount(row.id),writer:'labor-market'});writeJob(d,e,{...row,escrow:0});}}
 export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
 
-    const contracts=rows(d.get('state')).filter(r=>r.laborMarket===1&&r.kind==='workshop');
+    const contracts=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1);
     if(!contracts.length&&Math.floor(before/DAY)===Math.floor(after/DAY))return;
     const plan=e.advanceLayerContext??advanceLayerPlan(e,d.get('state'));
     for(const initial of contracts){
@@ -330,7 +331,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
 }
 export function nextLaborMinute(e,d,now){
 
-    const contracts=rows(d.get('state')).filter(r=>r.laborMarket===1&&employmentActive(r));if(!contracts.length)return Infinity;
+    const contracts=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1&&employmentActive(r));if(!contracts.length)return Infinity;
     let next=Infinity;const plan=e.advanceLayerContext??advanceLayerPlan(e,d.get('state'));
     for(const r of contracts){
         const at=layer(e,d.get('state'),r.location,plan)==='statistics'?(Math.floor(now/(7*DAY))+1)*7*DAY:r.nextWork;

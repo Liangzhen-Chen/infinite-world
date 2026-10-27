@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {purse,treasury,sink,bookSide,BOOKED} from './money.mjs';
@@ -135,7 +136,7 @@ export function initializeFactionClocks(d,engine,minute,end=minute){
   holdingSet(d,null,clockPath(rule.id),{category:'faction_clock',id:rule.id,faction:rule.faction,phase:0,year:Math.floor(minute/DAY/360)+1,initializedAt:nextAt,nextAt,paused:false,history:[],interventions:[]},'faction-clock');
  }
 }
-export function nextFactionClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='faction_clock'&&r.nextAt>now).map(r=>r.nextAt));}
+export function nextFactionClockMinute(state,now){return Math.min(Infinity,...recordsWhere(state.records,'category','faction_clock').filter(r=>r.category==='faction_clock'&&r.nextAt>now).map(r=>r.nextAt));}
 function condition(d,rule,clock,assets){
  const c=rule.stages[clock.phase].condition;
  switch(c.kind){

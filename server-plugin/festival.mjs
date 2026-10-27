@@ -3,7 +3,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('festival',{sinks:['sink:consume']});
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
@@ -321,14 +321,14 @@ export function festivalAction(d,args,eventId){
  throw preconditionFailure('未知节俗操作');
 }
 export function nextFestivalMinute(state,engine,now){
- const pending=Object.values(state.records??{}).filter(r=>r.category==='festival'&&r.status==='planned'&&r.due>now).map(r=>r.due);
+ const pending=recordsWhere(state.records,'category','festival').filter(r=>r.category==='festival'&&r.status==='planned'&&r.due>now).map(r=>r.due);
  const year=engine.calendar(now).year;
  for(const f of festivalCalendar(engine)){const at=when(f,year,engine),next=at!==null&&at>now?at:when(f,year+1,engine);if(next!==null)pending.push(next);}
- for(const r of Object.values(state.records??{}))if(r.category==='festival'&&r.status==='held'&&r.endsAt>now)pending.push(r.endsAt);
+ for(const r of recordsWhere(state.records,'category','festival'))if(r.category==='festival'&&r.status==='held'&&r.endsAt>now)pending.push(r.endsAt);
  return Math.min(Infinity,...pending);
 }
 export function advanceFestivals(d,engine,at){
- for(const row of Object.values(d.get('state','records')??{}))if(row.category==='festival'&&row.ordinary){
+ for(const row of recordsWhere(d.get('state','records'),'category','festival'))if(row.category==='festival'&&row.ordinary){
   if((row.status==='planned'||row.status==='held')&&row.endsAt<=at)
    holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
   else if(row.status==='planned'&&row.due<=at)
@@ -336,7 +336,7 @@ export function advanceFestivals(d,engine,at){
  }
  const year=engine.calendar(at).year;
  const calendar=festivalCalendar(engine);
- for(const old of Object.values(d.get('state','records')??{}))if(old.category==='festival'&&!old.ordinary&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
+ for(const old of recordsWhere(d.get('state','records'),'category','festival'))if(old.category==='festival'&&!old.ordinary&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
   d.set(path(old.id),{...old,status:'unavailable',reason:'已预约节日不再有正式运行来源',resolvedAt:at,resultEvent:`festival-result:${old.id}`});
  }
  for(const f of calendar){

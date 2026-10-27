@@ -1,3 +1,4 @@
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings,changeHolding,transition} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
@@ -47,9 +48,9 @@ const within=(engine,location,place)=>{const seen=new Set();while(location&&!see
 // Shared selector keeps current removals, vacancies and actor aliases consistent.
 export const organization=(engine,state,id)=>groupView(engine,state,id)?.organization.value??null;
 export function organizationsOf(state,member,engine=null){
-    if(engine&&state.records?.[member]?.category==='business')return Object.values(state.records??{}).filter(r=>r.category==='organization'&&organization(engine,state,r.id)?.members[member]).map(r=>r.id).sort();
+    if(engine&&state.records?.[member]?.category==='business')return recordsWhere(state.records,'category','organization').filter(r=>r.category==='organization'&&organization(engine,state,r.id)?.members[member]).map(r=>r.id).sort();
     if(engine)return (personView(engine,state,member)?.organizations??[]).map(o=>o.value.id).sort();
-    return Object.values(state.records??{}).filter(r=>r.category==='organization'&&r.members?.[member]).map(r=>r.id).sort();
+    return recordsWhere(state.records,'category','organization').filter(r=>r.category==='organization'&&r.members?.[member]).map(r=>r.id).sort();
 }
 function rowOf(d,engine,org){
     return structuredClone({category:'organization',id:org.id,source:org.source,members:{},removed:{},treasury:0,ledger:[],...d.get(...path(org.id))});
@@ -351,10 +352,10 @@ function organizationSuccessionEvents(d,engine,events){
 registerWorldEventSubscriber({id:'organization_succession',order:55,on:(d,engine,events)=>organizationSuccessionEvents(d,engine,events)});
 
 export function advanceOrganizations(d,engine,{before,after}){
-    const records=()=>Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b));
+    const records=category=>recordEntriesWhere(d.get('state','records'),'category',category).slice().sort(([a],[b])=>a.localeCompare(b));
     for(let day=Math.floor(before/DAY)+1;day*DAY<=after;day++){
         const at=day*DAY;
-        for(const [id,v]of records()){
+        for(const [id,v]of records('organization_vacancy')){
             if(v.category!=='organization_vacancy'||v.proposal)continue;
             const org=organization(engine,d.get('state'),v.org);
             if(!org||org.leader||org.charter.rules?.some(r=>/约斗|比试/.test(r)&&/继任|承继|继位/.test(r)))continue;
@@ -365,7 +366,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             const nominee=candidates[0],p=propose(d,engine,org,{action:'appoint',member:nominee,name:org.leaderTitle},nominee,`vacancy:${v.cause}`);
             holdingSet(d,engine,['state','records',id],{...v,proposal:p.id},'organizations');
         }
-        for(const [id,p]of records()){
+        for(const [id,p]of records('organization_proposal')){
             if(p.category!=='organization_proposal'||p.status!=='议事中'||p.minute>=at)continue;
             const state=d.get('state'),org=organization(engine,state,p.org);
             if(!org){holdingSet(d,null,['state','records',id],{...p,status:'搁置',closedAt:at,outcome:'组织已不存在'},'organizations');continue;}
@@ -381,7 +382,7 @@ export function advanceOrganizations(d,engine,{before,after}){
             }
         }
     }
-    for(const [,r]of records()){
+    for(const [,r]of records('organization')){
         if(r.category!=='organization'||!r.nextDues||r.nextDues>after)continue;
         let row=structuredClone(r);
         while(row.nextDues<=after){
@@ -406,7 +407,7 @@ export function advanceOrganizations(d,engine,{before,after}){
     }
 }
 export function nextOrganizationMinute(state){
-    let next=Infinity;for(const r of Object.values(state.records??{}))if(r.category==='organization'&&r.nextDues)next=Math.min(next,r.nextDues);return next;
+    let next=Infinity;for(const r of recordsWhere(state.records,'category','organization'))if(r.category==='organization'&&r.nextDues)next=Math.min(next,r.nextDues);return next;
 }
 
 // world_create type org.
