@@ -367,7 +367,8 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     }
     if(op==='redeem'){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status==='流当'||pawnDeadline(debt,e,now,d.get('state'))<=now)throw preconditionFailure('当票不存在或已经流当');
-        return repayCredit(d,e,{seller:keeper,debt:args.contract},id);
+        // The receipt names the pawnshop that took the money back, as every other counter operation names its bank.
+        return {...repayCredit(d,e,{seller:keeper,debt:args.contract},id),bank:b.id};
     }
     if(op==='auction'){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status!=='流当')throw preconditionFailure('当物尚不可拍卖');

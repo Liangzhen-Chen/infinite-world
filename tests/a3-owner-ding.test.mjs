@@ -396,7 +396,7 @@ async function nativePawn(prefix='ding-pawn'){
   itemInstances:[{id:`${prefix}-staff`,template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
   holdings:[{id:`${prefix}-title`,kind:'owns',holder:'player',subject:`${prefix}-staff`,terms:{share:1}}]});
  assert.deepEqual(scene.setupUnmet,[]);
- const loaded=await runPrelude(engine,scene.document,[{tool:'world_act',args:{action:'core:trade.pawn',slots:{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1}},eventId:prefix}]);
+ const loaded=await runPrelude(engine,scene.document,[{tool:'world_act',args:{action:'core:trade.pawn',slots:{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1}},eventId:prefix}]);
  assert.deepEqual(loaded.unmet,[]);return {document:save(loaded.document),contract:`debt_loan_${prefix}`};
 }
 async function nativePremise(kind){
@@ -413,7 +413,8 @@ test('N–Q: real counter, deposit, pawn and summon-upkeep premises are all load
  assert.equal(obligationView(deposit.document.state,deposit.claim).owed,100);assert.equal(obligationRows(deposit.document.state).filter(o=>o.kind==='deposit').length,1);
  assert.equal(deposit.document.state.records.bank_hw_post.accounts.player,100);clean(save(deposit.document));
  const pawn=await nativePremise('pawn'),row=pawn.document.state.records[pawn.contract];
- assert.equal(row.principal,2);assert.equal(obligationView(pawn.document.state,pawn.contract).owed,row.amount);assert.equal(pawn.document.state.records[row.pledgeRecord].status,'质押中');
+ // W4 F007：旧木杖估值 4×0.5=2 铜，5成放款即本金 1 铜；钱袋 1+1 = 欠款 1+利息1。
+ assert.equal(row.principal,1);assert.equal(obligationView(pawn.document.state,pawn.contract).owed,row.amount);assert.equal(pawn.document.state.records[row.pledgeRecord].status,'质押中');
  assert.equal(pawn.document.state.player.coins,row.amount);clean(save(pawn.document));
  const upkeep=await nativePremise('upkeep'),claim=upkeep.document.state.obligations[upkeep.upkeep];
  assert.equal(claim.kind,'upkeep');assert.equal(claim.paid,0);assert.equal(obligationRows(upkeep.document.state).filter(o=>o.kind==='upkeep').length,1);clean(save(upkeep.document));

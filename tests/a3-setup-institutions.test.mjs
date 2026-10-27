@@ -178,11 +178,12 @@ test('obligations: real deposit, pawn and upkeep claims are single, unpaid and n
  const pawnScene=run({minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
   itemInstances:[{id:'inst-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
   holdings:[{id:'inst-pawn-title',kind:'owns',holder:'player',subject:'inst-pawn-staff',terms:{share:1}}]});assert.deepEqual(pawnScene.setupUnmet,[]);
- const pawned=await runPrelude(engine,pawnScene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'inst-pawn')]);assert.deepEqual(pawned.unmet,[]);
+ const pawned=await runPrelude(engine,pawnScene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'inst-pawn')]);assert.deepEqual(pawned.unmet,[]);
  const loans=obligationRows(pawned.document.state).filter(o=>o.creditor==='bank_hw_post'&&o.debtor==='player');assert.equal(loans.length,1);
  const pawnRow=pawned.document.state.records[Object.keys(pawned.document.state.records).find(k=>k.startsWith('debt_loan_inst-pawn'))];
- // 真实当票本金即题面的 2 铜；真实签约另含一铜利息，钱袋只多了本金（1+2），没有重复出资。
- assert.equal(pawnRow.principal,fixture('037').obligations[0].amount);assert.equal(loans[0].paid,0);assert.equal(pawned.document.state.player.coins,3);
+ // W4 F007：当物按估值角色作价——旧木杖基价4 × 本地供需系数下限0.5 = 2 铜，当铺按5成放款，最多借 1 铜（题面的 2 铜是旧目录价口径）。
+ // 真实当票本金 1 铜，另含一铜利息；钱袋只多了本金（1+1），没有重复出资。
+ assert.equal(pawnRow.principal,1);assert.equal(loans[0].paid,0);assert.equal(pawned.document.state.player.coins,2);
  assert.equal(obligationView(pawned.document.state,loans[0].id).owed,pawnRow.principal+pawnRow.interest);cleanDoc(pawned.document);
  // 073 维持债权：真实施法召唤水盏，产生唯一的维持义务，不另收开办费。
  const spell=engine.byId.get('spell_summon_04'),scene=run({minute:600,location:'bld_hw_school',present:[],coins:0,inventory:Object.fromEntries(spell.materials.map(m=>[m.item,m.amount])),abilitiesByActor:{player:{spells:[spell.id],skills:{[spell.skill]:2699}}}});assert.deepEqual(scene.setupUnmet,[]);

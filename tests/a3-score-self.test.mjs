@@ -277,7 +277,7 @@ test('A3 signature r9: role endpoints use resolved counterparties and exact acco
  assert.equal(signatureMatches(['transfer(self->seller)'],[{...effect,to:'npc_hw_wushuo|coin_river|purse'}],receipt),false);
 });
 
-test.todo('A3 signature r9: pawn redemption resolves the pawnshop endpoint from the real redeem receipt〔真实当物与赎回已可执行并提交，但赎回回执 legacy 不含 payment.creditor/bank，a3-score 的 pawnshop 角色无法解析；需 core:trade.redeem 回执补出债权人（server-plugin 经济文件或评分器解析，非测试可改）；归 S5（W4 经济回执）〕',async()=>{
+test('A3 signature r9: pawn redemption resolves the pawnshop endpoint from the real redeem receipt',async()=>{
  const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
  const call=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
  const pick=number=>corpus.find(r=>r.id===`A3V2-${number}`);
@@ -285,7 +285,7 @@ test.todo('A3 signature r9: pawn redemption resolves the pawnshop endpoint from 
   const row=pick('037'),scene=applyIntentSetup(charterEngine,initial,{minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
    itemInstances:[{id:'r9-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
    holdings:[{id:'r9-pawn-title',kind:'owns',holder:'player',subject:'r9-pawn-staff',terms:{share:1}}]});assert.deepEqual(scene.setupUnmet,[]);
-  const pawned=await runPrelude(charterEngine,scene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'r9-pawn')]);assert.deepEqual(pawned.unmet,[]);
+  const pawned=await runPrelude(charterEngine,scene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'r9-pawn')]);assert.deepEqual(pawned.unmet,[]);
   const at=pawned.document.state.minute,native={...row,setup:{appointments:row.setup.appointments.map(a=>({...a,start:at,end:at+180})),history:row.setup.history.filter(e=>e.verb==='appointment_agreed').map(e=>({...e,at:at-1}))}};
   const run=await executeIntent(charterEngine,pawned.document,native);assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true,row.id);await checkR9Roles('037',row,run);
  }
