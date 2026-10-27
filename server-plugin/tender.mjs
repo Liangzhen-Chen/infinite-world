@@ -74,6 +74,18 @@ export function contractTerms(d,e,{location,copper}){
  const q=tenderQuote(d,e,{location,copper,side:'buy'});
  return q.unit!==REFERENCE&&q.amount!==null?{resource:q.unit,amount:q.amount}:null;
 }
+// Freeze every money field of one contract in the place's tender unit with the same contractTerms path.
+// `coppers` = {field: reference-copper bill}; returns null in a coin_river place (or when a field has no unit price),
+// otherwise {resource,resourceName,amounts:{field:integer units},referenceCopper:{field:bill}} - one resource for the whole contract.
+export function contractFreeze(d,e,{location,coppers}){
+ const amounts={};let resource=null;
+ for(const [field,copper] of Object.entries(coppers)){
+  const t=contractTerms(d,e,{location,copper});
+  if(!t||(resource&&t.resource!==resource))return null;
+  resource=t.resource;amounts[field]=t.amount;
+ }
+ return resource?{resource,resourceName:resourceName(e,resource),amounts,referenceCopper:{...coppers}}:null;
+}
 // Repayment in another resource converts at repayment time. The debtor hands over
 // ceil(owed x value(claim) / value(pay)) whole units; the claim is cleared by exactly the owed
 // quantity, and the sub-unit rounding stays with the creditor (coins are indivisible, no change is made).

@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
-import {REFERENCE,claimCopper,resourceName} from './tender.mjs';
+import {REFERENCE,claimCopper,resourceName,repaymentPlan,payInKind} from './tender.mjs';
+import {releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
 import {relationView} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
@@ -61,7 +62,11 @@ export function finishBusinessContract(d,row,{status,fulfilled=row.fulfilled,pai
 }
 export function refundContractEscrow(d,row,engine=d.engine){
     const recipient=row.parties?.[0]??row.owner??'player';
-    if(row.escrow){
+    // S5-F2: a deposit/fee frozen in a tender-unit resource is held and returned as that resource, unit for unit.
+    if(row.escrow&&row.resource&&row.resource!==REFERENCE){
+        releaseGoods(d,engine,{contract:row.id,to:recipient,resource:row.resource,amount:row.escrow,writer:'contracts'});
+        row={...row,escrow:0};holdingSet(d,null,contractPath(row.id),row,'contracts');
+    }else if(row.escrow){
         const funding=row.fundingAccount&&parseAccount(row.fundingAccount),purpose=funding?.purpose;
         let counter=dedicatedCoinAccount(d.get('state'),recipient,'counter');
         const to=purpose==='counter'?accountKey(recipient,'coin_river','counter'):partyAccount(engine,d.get('state'),recipient);
@@ -92,9 +97,11 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
     return finishBusinessContract(d,row,{status,reason,by:reason?'player':undefined,source});
 }
-export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description},eventId){
+export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description,terms=null},eventId){
     if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw preconditionFailure('交易当事人或金额无效');
     if(payment==='cash'){
+        // S5-F2: a bill frozen in the place's tender unit is paid in kind (see chargeTrade), not from the copper purse.
+        if(terms)return {payment:'cash'};
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
         if(source.coins<cost)throw preconditionFailure('买方余额不足');
         return {payment:'cash'};
@@ -114,7 +121,12 @@ export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',c
     return {payment:'credit',minutes};
 }
 export function chargeTrade(d,engine,args,eventId){
-    const {buyer,seller,cost,payment='cash',description,terms=null}=args,plan=validateTradeCharge(d,engine,args,eventId),minutes=plan.minutes;
+    const {buyer,seller,cost,payment='cash',description,terms=null,payCurrency}=args,plan=validateTradeCharge(d,engine,args,eventId),minutes=plan.minutes;
+    if(payment==='cash'&&terms){
+        // The bill is `terms.amount` of `terms.resource`; another currency converts at today's rate, rounded up to whole units (rest stays with the payee).
+        const pay=repaymentPlan(d,engine,{resource:terms.resource,quantity:terms.amount,payWith:payCurrency});
+        return{paidWith:payInKind(d,engine,{payer:buyer,payee:seller,plan:pay,eventId})};
+    }
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
         moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'contracts',eventId});

@@ -5,6 +5,9 @@ import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,de
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
+import {contractFreeze,claimCopper,REFERENCE} from './tender.mjs';
+import {holdGoods,releaseGoods} from './goods-escrow.mjs';
+import {claimUnit} from './claim-unit.mjs';
 import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,recordMarketDeal,customerPurseShare,customerReachMinutes,assertMarketDepth,reserveShortfall} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {openLoan} from './credit.mjs';
@@ -111,15 +114,19 @@ export async function businessTrade(d,args,eventId){
         const deposit=int(args.deposit??0,0,1e9,'押金'),shopId=`business_${eventId}`;
         if(d.get(...path(shopId)))throw preconditionFailure('店铺编号已存在');
         const opening={...assets(d.original?.state??d.get('state')),coins:0};
-        hold(d,deposit,`contract_lease_${eventId}`);
-        const payment=chargeTrade(d,this,{buyer:'player',seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'铺面租金'},eventId);
+        // S5-F2: where the legal tender is not coin_river, rent and deposit freeze together as one resource in whole units (contractFreeze = tender.contractTerms per field).
+        const freeze=contractFreeze(d,this,{location,coppers:{cost,deposit}}),unit=freeze&&{resource:freeze.resource,resourceName:freeze.resourceName,referenceCopper:freeze.referenceCopper};
+        if(freeze)holdGoods(d,this,{contract:`contract_lease_${eventId}`,payer:'player',resource:freeze.resource,amount:freeze.amounts.deposit,writer:'business',eventId});
+        else hold(d,deposit,`contract_lease_${eventId}`);
+        const payment=chargeTrade(d,this,{buyer:'player',seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:'铺面租金',...(freeze?{terms:{resource:freeze.resource,amount:freeze.amounts.cost},payCurrency:args.payCurrency}:{})},eventId);
+        const owed=freeze?freeze.amounts.cost:cost,held=freeze?freeze.amounts.deposit:deposit;
         const row=createBusinessContract(d,{kind:'lease',parties:['player',seller],subject:location,quantity:days,
-            deadline:d.get('state','minute')+days*1440,business:shopId,cost,escrow:deposit,quote:key,...(payment.debt?{debt:payment.debt}:{})},eventId);
-        const lease={...row,status:'有效',paid:payment.debt?0:cost,fulfilled:days};holdingSet(d,null,path(row.id),lease,'business');
+            deadline:d.get('state','minute')+days*1440,business:shopId,cost:owed,escrow:held,quote:key,...unit,...(payment.debt?{debt:payment.debt}:{})},eventId);
+        const lease={...row,status:'有效',paid:payment.debt?0:owed,fulfilled:days};holdingSet(d,null,path(row.id),lease,'business');
         holdingSet(d,null,path(shopId),{id:shopId,category:'business',owner:'player',location,lease:row.id,status:'筹备',createdAt:d.get('state','minute'),source:eventId,
             opening,openingSource:{event:eventId,kind:'期初已有现金和行囊；制作者未知的旧物不补造来源'}},'business');
         d.set(['state','quotes',key],cost);this.advance(d,5,eventId);
-        return {business:shopId,contract:row.id,cost,deposit,...payment};
+        return {business:shopId,contract:row.id,cost:owed,deposit:held,...(unit?{resource:unit.resource,resourceName:unit.resourceName,referenceCopper:unit.referenceCopper}:{}),...payment};
     }
     const shop=operation==='sell'?localBusiness(d,args.business):business(d,args.business);
     if(operation!=='pay'){
@@ -147,15 +154,28 @@ export async function businessTrade(d,args,eventId){
             cost=int(args.coins??minimum,minimum,Math.max(minimum,Math.ceil(daily*high/low*minutes/480)),'报酬');
             terms={minutes,task:'stocktake'};
         }
-        const loan=args.payment==='credit'?openLoan(d,this,{lender:seller,principal:cost,days:Math.max(1,Math.ceil((args.creditMinutes??7*1440)/1440)),eventId,
-            purpose:`${operation==='hire'?'雇工报酬':'货款'}向${this.byId.get(seller)?.name}借款`,toPlayer:false,escrowTo:escrowAccount(`contract_${operation==='hire'?'hire':'procurement'}_${eventId}`)}):null;
-        const counter=counterFor(d,shop),atCounter=counter.seat===d.get('state','location');
-        // An owner carrying stock off-site may personally advance the expense.
-        // That is a real purse -> escrow payment, never remote counter access.
-        const fundingAccount=atCounter?counterFor(d,shop,{spend:!loan}).account:purse(this,'player');
-        if(!loan)hold(d,cost,`contract_${operation==='hire'?'hire':'procurement'}_${eventId}`,fundingAccount);
-        const row=createBusinessContract(d,{kind:operation==='hire'?'hire':'procurement',parties:['player',seller],subject:item,quantity,deadline,business:shop.id,cost,escrow:cost,fundingAccount,location:d.get('state','location'),consentEvent:eventId,...terms,...(loan?{loan:loan.debt}:{})},eventId);
-        return {business:shop.id,contract:row.id,cost,escrow:cost,status:row.status,...(loan?{debt:loan.debt,loanAmount:loan.amount,loanDeadline:loan.deadline}:{})};
+        const contractId=`contract_${operation==='hire'?'hire':'procurement'}_${eventId}`;
+        // S5-F2: in a place whose legal tender is not coin_river the fee/price freezes as that resource in whole units (the reference bill stays only as record).
+        const freeze=contractFreeze(d,this,{location:d.get('state','location'),coppers:{cost}}),owed=freeze?freeze.amounts.cost:cost;
+        const unit=freeze&&{resource:freeze.resource,resourceName:freeze.resourceName,referenceCopper:{cost,...(terms.unitPrice!==undefined?{unitPrice:terms.unitPrice}:{})}};
+        if(freeze&&terms.unitPrice!==undefined){terms={...terms};delete terms.unitPrice;}
+        const loan=args.payment==='credit'?openLoan(d,this,{lender:seller,principal:owed,days:Math.max(1,Math.ceil((args.creditMinutes??7*1440)/1440)),eventId,
+            purpose:`${operation==='hire'?'雇工报酬':'货款'}向${this.byId.get(seller)?.name}借款`,toPlayer:false,escrowTo:escrowAccount(contractId),
+            ...(freeze?{frozen:{resource:freeze.resource,resourceName:freeze.resourceName,referenceCopper:cost,escrowContract:contractId}}:{})}):null;
+        let fundingAccount;
+        if(freeze){
+            // In kind the owner hands the resource over personally; the counter holds coins only.
+            counterFor(d,shop);fundingAccount=purse(this,'player');
+            if(!loan)holdGoods(d,this,{contract:contractId,payer:'player',resource:freeze.resource,amount:owed,writer:'business',eventId});
+        }else{
+            const counter=counterFor(d,shop),atCounter=counter.seat===d.get('state','location');
+            // An owner carrying stock off-site may personally advance the expense.
+            // That is a real purse -> escrow payment, never remote counter access.
+            fundingAccount=atCounter?counterFor(d,shop,{spend:!loan}).account:purse(this,'player');
+            if(!loan)hold(d,cost,contractId,fundingAccount);
+        }
+        const row=createBusinessContract(d,{kind:operation==='hire'?'hire':'procurement',parties:['player',seller],subject:item,quantity,deadline,business:shop.id,cost:owed,escrow:owed,fundingAccount,location:d.get('state','location'),consentEvent:eventId,...terms,...unit,...(loan?{loan:loan.debt}:{})},eventId);
+        return {business:shop.id,contract:row.id,cost:owed,escrow:owed,status:row.status,...(unit?{resource:unit.resource,resourceName:unit.resourceName,referenceCopper:cost}:{}),...(loan?{debt:loan.debt,loanAmount:loan.amount,loanDeadline:loan.deadline}:{})};
     }
     if(operation==='sell'){
         if(shop.status!=='营业')throw preconditionFailure('店铺未营业');
@@ -191,8 +211,9 @@ export async function businessTrade(d,args,eventId){
         party(d,this,seller,{consent:true});
         const debt=d.get(...path(row.debt));
         if(debt?.status==='已还清')throw preconditionFailure('这笔欠款已经还清，不重复付款');
-        if(counterFor(d,shop).seat===d.get('state','location'))fundSettlement(d,this,shop,debt.amount-debt.paid,eventId);
-        return {business:shop.id,contract:row.id,...repayDebt(d,this,{buyer:'player',seller,debt:row.debt},eventId)};
+        // A debt frozen in a tender-unit resource is paid in kind from the owner's bag, never out of the coin counter.
+        if(!(debt.resource&&debt.resource!==REFERENCE)&&counterFor(d,shop).seat===d.get('state','location'))fundSettlement(d,this,shop,debt.amount-debt.paid,eventId);
+        return {business:shop.id,contract:row.id,...repayDebt(d,this,{buyer:'player',seller,debt:row.debt,payCurrency:args.payCurrency},eventId)};
     }
     if(!['fulfill','cancel'].includes(operation))throw preconditionFailure('未知经营交易操作');
     if(row.status!=='待履行')throw preconditionFailure(`合同已${row.status}，不能重复履行或退款`);
@@ -222,11 +243,12 @@ export async function businessTrade(d,args,eventId){
         }
         audit.finish=d.get('state','minute');
     }else throw preconditionFailure('此类合同不能用 fulfill 履行');
-    moveCoins(d,{from:escrowAccount(row.id),to:purse(this,seller),amount:row.escrow,writer:'business',eventId});d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+row.escrow);
+    if(row.resource&&row.resource!==REFERENCE)releaseGoods(d,this,{contract:row.id,to:seller,resource:row.resource,amount:row.escrow,writer:'business',eventId});
+    else{moveCoins(d,{from:escrowAccount(row.id),to:purse(this,seller),amount:row.escrow,writer:'business',eventId});d.set([...this.actorPath(seller),'coins'],this.actor(d,seller).coins+row.escrow);}
     const next=finishBusinessContract(d,{...row,escrow:0,...(audit?{audit}:{})},{status:'已完成',fulfilled:row.quantity,paid:row.cost,source:eventId});
-    if(row.kind==='procurement')recordMarketDeal(d,{...row.marketBill,day:Math.floor(d.get('state','minute')/1440)},row.cost,row.quantity,eventId);
+    if(row.kind==='procurement')recordMarketDeal(d,{...row.marketBill,day:Math.floor(d.get('state','minute')/1440)},row.referenceCopper?.cost??row.cost,row.quantity,eventId);
     if(row.kind==='procurement')this.advance(d,5,eventId);
-    return {business:shop.id,contract:row.id,status:next.status,...(row.kind==='procurement'?{buyer:'player',seller,item:row.subject,quantity:row.quantity,cost:row.cost,instances:moved.instances}:{audit,cost:row.cost})};
+    return {business:shop.id,contract:row.id,status:next.status,...(row.resource&&row.resource!==REFERENCE?{resource:row.resource,resourceName:row.resourceName,referenceCopper:row.referenceCopper?.cost}:{}),...(row.kind==='procurement'?{buyer:'player',seller,item:row.subject,quantity:row.quantity,cost:row.cost,instances:moved.instances}:{audit,cost:row.cost})};
 }
 
 // Receipts describe actual tool patches. All balances remain in player/NPC/escrow state.
@@ -253,7 +275,7 @@ export function recordBusinessReceipt(d,before,{tool,args,eventId,detail}){
             return cash||Object.keys(items).length?[{actor,coins:cash,goods:items}]:[];
         });
         holdingSet(d,null,path(id),{id,category:'business_receipt',businesses:shops.map(s=>s.id),source:eventId,tool,operation:args.operation??args.payment??'trade',minute:d.get('state','minute'),coins,goods,contracts,counterparties,
-            trade:detail.item&&detail.quantity&&detail.cost!==undefined?{buyer:detail.buyer,seller:detail.seller,item:detail.item,quantity:detail.quantity,cost:detail.cost}:null},'business');
+            trade:detail.item&&detail.quantity&&detail.cost!==undefined?{buyer:detail.buyer,seller:detail.seller,item:detail.item,quantity:detail.quantity,cost:detail.referenceCopper??detail.cost}:null},'business');
     }
     for(const shop of shops)if(!live(shop)&&!shop.closing)holdingSet(d,null,path(shop.id),{...shop,closing:end,closingSource:eventId},'business');
 }
@@ -285,15 +307,16 @@ export function businessReport(d,engine,shop){
     // F025: the books are the shop's. Capital the owner puts in or draws out of the counter moves cash but is neither
     // revenue nor expense; wages are the owner's own hired hands at this shop; tax is only what its own sales incurred.
     const capital=receipts.reduce((n,r)=>n+(['business_counter_open','business_counter_fund','business_counter_spend'].includes(r.operation)?r.coins:0),0);
-    const rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+r.cost,0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+r.paid,0)
+    // Contracts frozen in a tender-unit resource keep their reference-copper bill; the profit statement stays in one yardstick (reference copper).
+    const bill=r=>r.referenceCopper?.cost??r.cost,rent=contracts.filter(r=>r.kind==='lease').reduce((sum,r)=>sum+bill(r),0),wages=contracts.filter(r=>r.kind==='hire'&&r.status==='已完成').reduce((sum,r)=>sum+(r.referenceCopper?.cost??r.paid),0)
         +Object.values(d.get('state','records')??{}).filter(r=>r.kind==='workshop'&&r.owner===shop.owner&&r.location===shop.location&&r.createdAt>=shop.createdAt&&r.createdAt<=(shop.endedAt??Infinity)).reduce((n,r)=>n+r.paid,0);
     const saleEvents=new Set([...sales,...walkIns].map(r=>r.source)),taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&saleEvents.has(r.sourceEvent)).reduce((n,r)=>n+r.amount,0);
     const state=d.get('state'),claimIds=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),debts=obligationRows(state).filter(r=>claimIds.has(r.id)||claimIds.has(r.legacyRecord))
-        .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status}));
+        .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status,...(r.resource&&r.resource!==REFERENCE?{resource:r.resource}:{})}));
     return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
         cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,capital,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
         profit:{revenue,stockCostOfSales,rent,wages,taxes,net:revenue-stockCostOfSales-rent-wages-taxes,method:'已成交收入减先进先出销货成本、整期租金、已付工钱与实缴税；未售库存为资产，期初旧货按目录基价估值'},
-        escrow:contracts.filter(r=>r.escrow).map(r=>({contract:r.id,amount:r.escrow,source:r.source})),debts,
+        escrow:contracts.filter(r=>r.escrow).map(r=>({contract:r.id,amount:r.escrow,source:r.source,...(r.resource&&r.resource!==REFERENCE?{resource:r.resource}:{})})),debts,
         contracts:contracts.map(r=>({id:r.id,kind:r.kind,parties:r.parties,subject:r.subject,quantity:r.quantity,location:r.location??shop.location,deadline:r.deadline,paid:r.paid,fulfilled:r.fulfilled,status:r.status,source:r.source,performance:r.performance,breaches:r.breaches})),
         quoteAnchor:engine.rules.economy.dailyIncomeBySkillStage,note:'日收入表仅供报价参考；营业和等待不会生成钱或顾客交易。'};
 }
@@ -379,8 +402,9 @@ export function businessAction(d,args,eventId){
     if(bankrupt){
         const contracts=Object.values(d.get('state','records')??{}).filter(r=>r.category==='contract'&&r.business===shop.id);
         const keys=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),state=d.get('state');
-        const debt=obligationRows(state).filter(r=>keys.has(r.id)||keys.has(r.legacyRecord)).reduce((sum,r)=>sum+obligationView(state,r).owed,0);
-        const refundable=contracts.reduce((sum,c)=>sum+c.escrow,0);
+        // Debts and deposits frozen in a tender-unit resource are compared with the counter's coins at today's reference value.
+        const debt=obligationRows(state).filter(r=>keys.has(r.id)||keys.has(r.legacyRecord)).reduce((sum,r)=>sum+claimCopper(d,this,{resource:r.resource,amount:obligationView(state,r).owed,paid:0}),0);
+        const refundable=contracts.reduce((sum,c)=>sum+claimCopper(d,this,{resource:c.resource,amount:c.escrow,paid:0}),0);
         if(debt<=(dedicatedCoinAccount(d.get('state'),'player','counter')?.coins??0)+refundable)throw preconditionFailure('现有现金和托管款足以偿债，不符合现金破产条件');
     }
     endShop(d,this,shop,bankrupt?'破产':'停业',eventId,bankrupt?'无力用现金偿还现有欠款，欠款保留':'店主主动停业');
