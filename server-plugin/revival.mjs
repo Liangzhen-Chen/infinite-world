@@ -43,13 +43,29 @@ export function revivePlayer(d,args,id){
     if(!isPhysicallyDead(this,d,'player'))throw preconditionFailure('当前没有死亡');
     const player=d.get('state','player');
     let location=player.revivalAnchor;
-    if(this.rules.death.points){
-        const active=revivalPoint(this.rules,location);
-        const available=point=>point&&d.get('state','revivalPoints',point.location)&&d.get('state','buildings',point.location,'condition')!==0;
-        const selected=available(active)?active:this.rules.death.points.find(available);
-        if(!selected)throw preconditionFailure('没有仍可使用的已登记复活点');
+    let notice=null;
+    if(this.rules.death.points?.length){
+        const active=revivalPoint(this.rules,location),from=d.get('state','location');
+        const registered=point=>point&&d.get('state','revivalPoints',point.location),standing=point=>point&&d.get('state','buildings',point.location,'condition')!==0;
+        const available=point=>registered(point)&&standing(point);
+        // Nearest by the engine's own route time; unreachable points sort last, ties by world order.
+        const order=new Map(this.world.locations.map((l,i)=>[l.id,i])),minutes=point=>{try{return this.route(from,point.location,'walk',d.get('state','minute'),d.document.randomSeed).minutes;}catch{return Infinity;}};
+        const nearest=pool=>pool.map(point=>({point,m:minutes(point)})).sort((x,y)=>x.m-y.m||(order.get(x.point.location)??Infinity)-(order.get(y.point.location)??Infinity)||(x.point.location<y.point.location?-1:1))[0]?.point;
+        const name=id=>this.byId.get(id)?.name??id,points=this.rules.death.points;
+        let selected=available(active)?active:null;
+        if(!selected){
+            const was=active&&registered(active)?`原登记的${name(active.location)}已不可用`:`没有可用的登记点`;
+            if(selected=nearest(points.filter(available))){
+                notice=`${was}，在最近的复活点${name(selected.location)}醒来，登记点改为此处`;
+                d.set(['state','player','revivalAnchor'],selected.location);
+            }else if(selected=nearest(points.filter(standing))){
+                notice=`${was}，其余已登记的复活点也都不可用；在最近仍存的${name(selected.location)}醒来，此处尚未登记`;
+            }else{
+                selected=nearest(points);
+                notice=`${was}，复活点的建筑都已损毁；在最近的${name(selected.location)}废墟中醒来`;
+            }
+        }
         location=selected.location;
-        d.set(['state','player','revivalAnchor'],location);
     }
     restoreTransition(d,this,{entity:'player',origin:'registered_action',action:{produces:'restored'},eventId:id,location,
         vital:{hp:Math.max(1,Math.ceil(player.maxHp*this.rules.death.reviveFraction))}});
@@ -57,6 +73,6 @@ export function revivePlayer(d,args,id){
     d.set(['state','player','hp'],Math.max(1,Math.ceil(player.maxHp*this.rules.death.reviveFraction)));
     d.set(['state','player','mp'],Math.ceil(player.maxMp*this.rules.death.reviveFraction));
     d.set(['state','player','status'],'正常');d.set(['state','player','dyingSince'],null);
-    d.say(`在${this.byId.get(location)?.name??location}醒来`);
-    return{location,prayerMark:revivalPrayerMark(d,this,location)};
+    d.say(notice??`在${this.byId.get(location)?.name??location}醒来`);
+    return{location,...(notice&&{notice}),prayerMark:revivalPrayerMark(d,this,location)};
 }
