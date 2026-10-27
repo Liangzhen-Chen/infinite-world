@@ -14,6 +14,7 @@ import {explainDerived} from './derived.mjs';
 import {decimalFraction,interestFraction,interestAmount,addAccrual,fraction,obligationCalendar} from './obligation-calendar.mjs';
 import creditBalance from '../world/rules/tables/balance/credit.json' with {type:'json'};
 import {currencyReserve} from './currency.mjs';
+import {bankLiabilities} from './finance-liabilities.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {changeItems} from './items.mjs';
@@ -104,8 +105,7 @@ const creditParameter=(e,id)=>(e.world.balance?.credit??creditBalance).params.fi
 // D15 §15.5: balances are facts; reserves, loanable cash and rates are views.
 export function bankCredit(e,state,b,minute=state.minute){
     const row=state.records?.[b.id],cash=row?.coins??b.reserveCopper??0;
-    const liabilities=obligationRows(state).filter(o=>o.kind==='deposit'&&o.debtor===b.id)
-        .reduce((sum,o)=>sum+obligationView(state,o,minute).owed,0);
+    const liabilities=bankLiabilities(state,b.id,minute).total;
     const reserveRatio=b.reserveRatio??creditParameter(e,'reserve.ratio');
     if(!Number.isFinite(reserveRatio)||reserveRatio<0||reserveRatio>1)throw preconditionFailure('准备金率须在零与一之间');
     // Integer cash minus an exact decimal reserve: .14*100 must protect
@@ -373,8 +373,8 @@ export function advanceBankFinance(d,e,minute,recordIds){
             if(original.interestAt===undefined||original.interestAt+c.depositInterest.periodDays*DAY>minute)continue;
             const row=structuredClone(original),period=c.depositInterest.periodDays*DAY;
             for(let at=(row.interestAt??minute)+period;at<=minute;at+=period){
-                const state=d.get('state'),clearing=obligationRows(state).filter(r=>r.debtor===id&&r.kind==='bill'&&!r.billPayable).reduce((n,r)=>n+obligationView(state,r,at).owed,0);
-                let liabilities=Object.values(row.accounts).reduce((n,v)=>n+v,0)+Object.values(state.records).filter(r=>r.category==='bank_bill'&&r.bank===id&&r.status==='未兑付').reduce((n,r)=>n+r.amount,0)+clearing;
+                const state=d.get('state');
+                let liabilities=bankLiabilities(state,id,at).total;
                 // Interest is settled only at the agreed interest event. Its
                 // cursor moves here, never during a daily accumulation pass.
                 const quote=interestRate(e,state,b,{borrower:null,minute:at,document:d.document}),rate=depositRate(e,state,b,at,d.document);

@@ -38,7 +38,7 @@ const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
 put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 // Conserved liquid arithmetic and read-only intent matching are shared logic.
-put(['water-volume','documents','population-health'],'L1');
+put(['water-volume','documents','population-health','finance-liabilities'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
 put(['currency','market','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
