@@ -158,6 +158,7 @@ export async function renderActionsPanel(container,data){
     if(state.last){
         const entry=node('div',undefined,state.last.ok?'fields-actions-entry':'fields-actions-entry fields-actions-refused');
         if(state.last.ok)for(const line of state.last.lines)entry.append(node('p',line));
+        else if(state.last.uncertain)entry.append(node('p',`${state.last.label}：${state.last.error}`));
         else entry.append(node('p',fillText(here.texts?.refused??'没能{label}：{reason}',{label:state.last.label,reason:state.last.error})));
         stream.append(entry);
     }

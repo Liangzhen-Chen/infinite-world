@@ -35,6 +35,8 @@ function validMentor(d,engine,teacher,profession){
     if(!actor||isPhysicallyDead(engine,d,teacher)||actor.location!==d.get('state','location')||!npcServices(engine,d.get('state'),teacher).includes(profession))throw preconditionFailure('认证导师不在场或无资格');
     return definition;
 }
+// advance() may settle rent or other dues before the fee is taken: charge against the balance now, never the entry snapshot.
+const spendable=(d,fee)=>{const now=d.get('state','player','coins');if(now<fee)throw preconditionFailure('等待期间钱袋已变化，费用不足');return now-fee;};
 export function profession(d,args,id){
     if(args.operation==='examine')return localExamination.call(this,d,args,id);
     if(args.student)return examineNpc(d,this,args,id);
@@ -88,7 +90,7 @@ export function profession(d,args,id){
         assertNpcService(d,this,teacher,'teach',180);
         const outcome=this.check(d,{attribute:catalog.attribute,skill:choice.requiredSkill,difficulty:20},id);this.advance(d,180,id);
         if(outcome.success){
-            moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:choice.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],player.coins-choice.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+choice.fee);
+            moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:choice.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],spendable(d,choice.fee));d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+choice.fee);
             d.set(['state','careers',role,'promotions'],[...history,{...choice,level:step.level,teacher,minute:d.get('state','minute'),source:id}]);
             d.say(`完成${catalog.name}升职：${choice.name}`);
         }
@@ -121,7 +123,7 @@ export function profession(d,args,id){
     }
     const outcome=this.check(d,{attribute:catalog.attribute??'智力',skill:entry?.skill,difficulty:entry?.difficulty??15},id);this.advance(d,entry?.minutes??120,id);
     if(outcome.success){
-        moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:catalog.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],player.coins-catalog.fee);d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);
+        moveCoins(d,{from:purse(this,'player'),to:purse(this,teacher),amount:catalog.fee,writer:'professions',eventId:id});d.set(['state','player','coins'],spendable(d,catalog.fee));d.set(['state','npcs',teacher,'coins'],d.get('state','npcs',teacher,'coins')+catalog.fee);
         holdingSet(d,null,['state','professions',catalog.kind],catalog.kind==='combat'?role:[...current.life,role],'professions');
         d.set(['state','careers',role,'certification'],{teacher,minute:d.get('state','minute'),source:id,...(task?{task:task.name}:{})});
         d.say(`通过${catalog.name}职业认证`);
