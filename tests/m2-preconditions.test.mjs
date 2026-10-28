@@ -120,7 +120,8 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     await assert.rejects(s.call('world_farm',{operation:'buy',settlement:'河湾村',quantity:10,item:'面包'}),/不能替换指定物品/);
     assert.deepEqual(s.document,exactBefore);
     const bought=await s.turn(5,async()=>[await s.call('world_farm',{operation:'buy',settlement:'loc_hw',quantity:10,item:'带壳燕麦'})]);
-    assert.equal(bought.after.state.player.coins,150);
+    // 手算：区域燕麦基准10文×稀缺下限0.5=5文/份；10份共50文；此前 180 文（W8-A 前按目录价 3 文/份付 30 文后余 150），现余 130 文。
+    assert.equal(bought.after.state.player.coins,130);
     await s.turn(6,async()=>[await s.call('world_move',{destination:'青灯酒馆'})],5);
     const beforeDelivery=s.document;
     await s.turn(7,async()=>[await s.call('world_quest',{operation:'complete',quest})],5);
@@ -128,7 +129,8 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     await s.turn(8,undefined,5);
     await s.turn(9,undefined,5);
     await s.turn(10);
-    assert.equal(s.document.state.player.coins,170);
+    // 130 文 + 委托酬金 20 = 150（W8-A 前为 150+20=170）。
+    assert.equal(s.document.state.player.coins,150);
 });
 
 test('已观察到的濒死样本不能硬走；实际死亡、登记点复活后仍可自认并审理',async t=>{

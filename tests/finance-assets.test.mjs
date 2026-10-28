@@ -22,15 +22,18 @@ const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{
     const f=fixture(),total=cash(f.doc);
-    // 15 §15.2: the old 3-copper offer exceeds today's 1-copper market
-    // range. Profit is still tested strictly positive, with real acquisition
-    // cost: opening stock is an unrelated premise; buy twelve originals at
-    // one copper through the native trade before reselling ten at two.
-    const setup=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{}}]});
+    // 15 §15.2：私人行囊不供给市场。林穗的正式薄饼货架提供同类公开食品存量，
+    // 面包仍从零开始，经真实交易取得16份、每份成本1；原成本/正利润/分红断言全部保留。
+    // 玩家只带本例所需20面包（3kg），不带无关的100木/100粮，买回12份后也不超30kg。
+    const setup=applyIntentSetup(f.e,f.doc,{facts:[
+        {path:['state','inventory'],value:{item_bread:{quantity:20}}},
+        {path:['state','npcs',host,'inventory'],value:{item_oat_flatbread:{quantity:60}}}
+    ]});
     assert.deepEqual(setup.setupUnmet,[]);f.doc=setup.document;
     const acquired=await f.act({buyer:host,seller:'player',item:'item_bread',quantity:16,unitPrice:1},'stock-acquired');
-    // Food scarcity floor .5 × baseline2 × buy spread .6; offered1 is
-    // within ceil(.6*.9)..ceil(.6*1.1). Flat clamped curve: 16*1=16; four household portions remain after the 10 cash + 2 credit sale.
+    // 薄饼60份即便扣4份家户保留仍有S≥56，D≤28，稀缺钳在.5；16≤56×.3、日内总量16+10+2≤56×.5。
+    // 采购报价2×.5×收购价差.6=.6，合法整数价1，16×1=16；随后库存流入后的深度仍使合法整数卖价包含2。
+    // 现金卖10、赊卖2后仍留4份面包，FIFO的实际取得成本按1计，不用目录成本2。
     assert.equal(acquired.cost,16);
     await assert.rejects(f.act({operation:'invest',seller:host,quantity:20},'no'),/同意/);
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');assert.equal(profit(f),0);assert.equal(cash(f.doc),total);

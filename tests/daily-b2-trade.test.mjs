@@ -20,9 +20,9 @@ test('D03 议价在市场区间内成交；钱货守恒、基准不变、次日�
  const before=await primed(ui),stockBefore=held(before.state.npcs[SULAN].inventory,'item_linen_cloth'),regard=standing(engine,before.state,SULAN,'player');
  assert.equal(regard,20,'夹具：好感 +20');
  const quote=projected(world,before,SULAN,'item_linen_cloth'),[lo]=world.rules.economy.priceFactorLimits.bargain,offered=Math.ceil(quote.listPrice*lo);
- // Cloth D=1, S=7 → .5 floor; regard 20 × keeper weight .7 gives
- // relation 1-.15*.7*.2=.979. 50*.5*.979=24.475; min ceil(*.9)=23.
- assert.equal(offered,23);
+ // 15 §15.2：普通人的7匹布不是公开供给，D=1、S=0 → 稀缺1；
+ // relation=1-.15*.7*.2=.979，50×1×.979=48.95，议价下限ceil(48.95×.9)=45。
+ assert.equal(offered,45);
  const low=await ui.choose('trade.trade',{seller:SULAN,item:'item_linen_cloth',quantity:1,unitPrice:offered-1},{search:true,target:SULAN});
  assert.equal(low.ok,false);assert.match(low.error,new RegExp(`单价必须在${offered}到`),'低于投影议价下限：不成交');
  assert.deepEqual((await ui.read()).state.player,before.state.player,'没谈拢，钱物不动');

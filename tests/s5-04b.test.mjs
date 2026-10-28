@@ -8,6 +8,7 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {dedicatedCoinAccount,depositCounter,payFromCounter} from '../server-plugin/money.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {groupAccountView} from '../server-plugin/group-account.mjs';
+import {currentShops} from '../server-plugin/shop.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const mill='bld_hw_mill',owner='npc_hw_linsui',DAY=1440;
@@ -131,7 +132,12 @@ test('npc shopkeepers: within a week each stocks up, reprices and hires by his o
  assert.equal(s.npcs.npc_hw_yanzhe.inventory.item_clay.quantity,2);
  // 调价：实付是参照价的 19/6≈3.17 倍，按本行加成1.2成本加成≈3.8，被店铺加成上限1.4封顶（价格系数上限 shop [1,1.4]）。
  const pricing=s.records['shop_pricing:npc_hw_yanzhe'];
- assert.deepEqual([pricing.previous,pricing.markup,pricing.standard,pricing.basis.paidCopper,pricing.basis.referenceCopper,pricing.decision.outcome],[1.2,1.4,1.2,19,6,'agree']);
+ // 世界价格既有有理数格式：1.2=1200000/1000000，1.4=1400000/1000000。
+ // 倍率/成本/决定的原有数值断言保留，同时要求改价回执不把小数写入存档。
+ assert.deepEqual([pricing.previous,pricing.markup,pricing.standard,pricing.basis.paidCopper,pricing.basis.referenceCopper,pricing.decision.outcome],[{numerator:1200000,denominator:1000000},{numerator:1400000,denominator:1000000},{numerator:1200000,denominator:1000000},19,6,'agree']);
+ assert.equal(currentShops(f.engine,s).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.4,'新有理数存档读回同一倍率');
+ const legacyPricing=structuredClone(s);legacyPricing.records['shop_pricing:npc_hw_yanzhe'].markup=1.2;
+ assert.equal(currentShops(f.engine,legacyPricing).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.2,'旧数字倍率仍可读取');
  // 林穗的干粮：2份货款3（参照价6的一半）；W4 F010 外路另付运费 route_hw_bs 24km × 计费重 max(2×0.2kg,1kg)=1kg × 0.02 = 0.48 → 1，实付4。
  // 4/6×1 低于下限1，加成不变，没有调价记录。
  const ration=s.records['shop:shop_hw_qingdeng'].entries.find(e=>e.item==='item_ration'&&e.day===1);

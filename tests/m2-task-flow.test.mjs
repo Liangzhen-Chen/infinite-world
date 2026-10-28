@@ -62,8 +62,9 @@ async function setup(t){
         await run('world_field',{operation:'farm_buy',settlement:'河湾村',item:'燕麦',quantity:10});
         const after=await read();
         assert.equal(quantity(after.state.inventory),quantity(before.state.inventory)+10);
-        assert.equal(after.state.player.coins,before.state.player.coins-30);
-        assert.equal(after.state.settlements[settlement].treasury,before.state.settlements[settlement].treasury+30);
+        // 手算锚点：燕麦区域基准10文×稀缺下限0.5=5文/份；10份付50文。
+        assert.equal(after.state.player.coins,before.state.player.coins-50);
+        assert.equal(after.state.settlements[settlement].treasury,before.state.settlements[settlement].treasury+50);
         assert.equal(after.state.settlements[settlement].food,before.state.settlements[settlement].food-10);
         const r=after.state.records[`agriculture:${settlement}`];
         assert.equal(r.batches.reduce((n,row)=>n+row.amount,0),after.state.settlements[settlement].food);
@@ -81,7 +82,7 @@ test('HTTP燕麦委托：发布、明确承接、柜台买粮、当面交付与�
     assert.equal(quantity(after.state.inventory),quantity(before.state.inventory)-10);
     assert.equal(quantity(after.state.npcs[publisher].inventory),quantity(before.state.npcs[publisher].inventory)+10);
     assert.equal(after.state.player.coins,before.state.player.coins+20);
-    assert.equal(after.state.player.coins,f.opening.state.player.coins-10);
+    assert.equal(after.state.player.coins,f.opening.state.player.coins-30);
     assert.equal(after.state.quests[quest].status,'已完成');assert.equal(after.state.quests[quest].escrow,0);
     await f.assertBalanced();
     const duplicate=await f.run('world_quest',args,'deliver');assert.equal(duplicate.duplicate,true);

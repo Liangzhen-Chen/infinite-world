@@ -93,6 +93,34 @@ test('展开的远方郡按各自统治政体的九省法典立案：王国寒�
  assert.deepEqual(fines,{'王国':15+ore*2,'赭牙部盟':31+ore*3});
 });
 
+test('同地重复盗采：多背上一块赃矿不增加市场供给，案值与判罚不下降',async()=>{
+ const owner='npc_hw_linsui',officer='npc_hw_gucen';
+ const f=campaign(w=>{w.rules.extraction.mining.locations.loc_hw_gate=[{item:ORE,reserve:5,owner,recoveryDays:0}];});
+ f.place(owner,'loc_hw_gate');f.place(officer,'loc_hw_gate');
+ const first=await f.mine('loc_hw_gate','anti-arbitrage-first'),firstValue=f.doc.state.records[first.case].value;
+ const firstFine=sentence(f,first.case),held=()=>{const row=f.doc.state.inventory[ORE];return typeof row==='number'?row:row?.quantity??0;};
+ assert.equal(first.success,true);assert.equal(held(),1);
+ const second=await f.mine('loc_hw_gate','anti-arbitrage-second');
+ assert.equal(second.success,true);assert.equal(held(),2);
+ // 手算：背 1 块和 2 块赃矿都不是公开供给；需求 1 / max(1,市场供给 0) = 1。
+ // 铁矿基价 4 × 稀缺 1 = 两次案值均 4；同法域同条文，罚金均为基础罚则 + 4 × 倍数。
+ assert.equal(firstValue,4);assert.equal(f.doc.state.records[second.case].value,4);
+ assert.equal(sentence(f,second.case),firstFine);
+});
+
+test('盗采物无从估价时保留未知案值，只执行基础罚则',async()=>{
+ const f=campaign(w=>{w.items.find(i=>i.id===ORE).basePrice=0;
+  w.rules.extraction.mining.locations.loc_hw_gate=[{item:ORE,reserve:3,owner:'npc_hw_linsui',recoveryDays:0}];
+  w.rules.law.templates.find(t=>t.id===HOME_POLITY).penalties.illegal_mining={baseFine:17,valueMultiplier:3};
+ });
+ f.place('npc_hw_linsui','loc_hw_gate');f.place('npc_hw_gucen','loc_hw_gate');
+ const out=await f.mine('loc_hw_gate','unvaluable-ore'),row=f.doc.state.records[out.case];
+ assert.equal(out.success,true);assert.equal(row.value,null);assert.equal(out.unvaluable,'无法核定案值');
+ assert.match(out.valuationNote,/无从估价/);assert.equal(row.unvaluable,'无法核定案值');
+ // 手算：未知案值没有可乘数值，valueMultiplier=3 不参与，罚金仅为基础17，而不是认定案值0。
+ assert.equal(sentence(f,out.case),17);assert.equal(f.doc.state.records[out.case].judgment.compensation,null);
+});
+
 test('五村盗采按西陲王国法典判罚，不读全局默认；政体条文缺罪名时明确拒绝',async()=>{
  const owner='npc_hw_linsui',officer='npc_hw_gucen';
  const f=campaign(w=>{w.rules.extraction.mining.locations.loc_hw_gate=[{item:ORE,reserve:3,owner,recoveryDays:0}];

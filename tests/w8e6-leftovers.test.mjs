@@ -14,6 +14,7 @@ import {carrierDeparture,quoteTransport} from '../server-plugin/transport.mjs';
 import {eventWeight} from '../server-plugin/standing.mjs';
 import {adjudicateLegalCase,caseLoss} from '../server-plugin/law.mjs';
 import {legalCodeAt} from '../server-plugin/law-codes.mjs';
+import {marketSupply,marketQuote} from '../server-plugin/market.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const transportTable=JSON.parse(await fs.readFile('world/rules/tables/balance/transport.json','utf8'));
@@ -41,6 +42,19 @@ test('基准估值不含当地稀缺，派生修正只计一次；未知基准�
  assert.equal(valuation(reader(document),changed,{role:'baseline',item,quantity:2}).value,200);
  const unknown=prepared({unknown:true});
  assert.equal(valuation(reader(unknown.document),unknown.e,{role:'baseline',item}).value,null);
+});
+
+test('商家可售库存参与市场报价，但估价对象自己的行囊不参与给自己的估值',()=>{
+ const {e,document}=prepared(),item='item_steel_arming_sword',holder='npc_hw_duanyan',location='bld_hw_forge';
+ const setup=applyIntentSetup(e,document,{facts:[{path:['state','npcs',holder,'inventory',item],value:6},{path:['state','npcs',holder,'location'],value:location}]});
+ assert.deepEqual(setup.setupUnmet,[]);
+ const d=reader(setup.document),supply=marketSupply(d,e,item,location);
+ assert.ok(supply.rows.some(row=>row.owner===holder&&row.available===6),'真实铁匠的在售存量仍进市场');
+ assert.ok(supply.rows.every(row=>row.owner!=='player'));
+ // 手算：交易市场 S=6、货架需求2，稀缺钳至.5 → 230×.5=115。
+ assert.equal(marketQuote(d,e,{item,location,seller:holder}).explanation.value.value,115);
+ // 给持有人估值排除自己的6把剑：S=0、D=2，稀缺2 → 230×2=460（不是自己的库存压成115）。
+ assert.equal(goodsWorth(d,e,{item,location,holder}),460);
 });
 
 test('真实扒窃、递交自认、立案和审理：未知案值只按基础罚则，赔偿不记零',async()=>{
