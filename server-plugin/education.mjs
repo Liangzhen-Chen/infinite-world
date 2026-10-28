@@ -20,7 +20,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {recordsWhere} from './storage.mjs';
-import {serviceCapacity,waitingInOrder} from './service-queue.mjs';
+import {serviceCapacity,serviceCapacityView,waitingInOrder,nextServiceOrder,queuePosition} from './service-queue.mjs';
 declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
@@ -99,8 +99,11 @@ function lesson(d,e,c,student,attended,factor,at,dismissed,day){
  return gain;
 }
 export function nextEducationMinute(e,d,now){
- let next=Infinity;for(const c of educationCourses(e,d.get('state')))for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1]){
-  const w=courseWindow(c,day*DAY);if(w)for(const at of [w.start,w.end])if(at>now)next=Math.min(next,at);
+ let next=Infinity;for(const c of educationCourses(e,d.get('state'))){
+  if(c.until>now)next=Math.min(next,c.until);
+  for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1]){
+   const w=courseWindow(c,day*DAY);if(w)for(const at of [w.start,w.end])if(at>now)next=Math.min(next,at);
+  }
  }return next;
 }
 // 预计座位空出：同场所、同时段的已定停课日里最早的一个；没有定期停课的班（常设学堂）无从预计，返回 null。
@@ -111,16 +114,20 @@ function seatEta(e,s,location,start,end){
 // 座位一空出，排队者按（紧迫度、登记先后）补入对应课程；已离开、受限或与别的课冲突者跳过，排队号保留。
 function promoteWaitlist(d,e){
  const waiting=recordsWhere(d.get('state','records'),'category','service_ticket').filter(t=>t.service==='teach'&&t.status==='排队');if(!waiting.length)return;
- const added=new Map();
+ // Hold one occupancy snapshot for this settlement. educationCourses may be
+ // cached by the clock, or freshly derived for a direct domain action.
+ const courses=educationCourses(e,d.get('state')).filter(c=>(c.until??Infinity)>d.get('state','minute')),added=[];
  for(const t of waitingInOrder(waiting)){
   const s=d.get('state'),c=s.records?.[t.subject];
-  if(!c||c.status!=='开课'){holdingSet(d,null,path(t.id),{...t,status:'已取消',endedAt:s.minute},'education');continue;}
+  if(!c||c.status!=='开课'||c.until<=s.minute){holdingSet(d,null,path(t.id),{...t,status:'已取消',endedAt:s.minute},'education');continue;}
   const view=facilityView(e,s,c.location);if(!view||view.factor===0)continue;
   const seats=serviceCapacity(e,d,{provider:c.location,service:'teach',seats:view.capacity,factor:1});
-  const occupied=educationCourses(e,s).filter(x=>x.location===c.location&&x.start<c.end&&x.end>c.start).reduce((n,x)=>n+x.students.length+(x.cohort?.roster.length??0),0)+(added.get(c.location)??0);
+  const overlaps=x=>x.location===c.location&&x.start<c.end&&x.end>c.start;
+  const occupied=courses.filter(overlaps).reduce((n,x)=>n+x.students.length+(x.cohort?.roster.length??0),0)+added.filter(overlaps).length;
   if(occupied>=seats||!capable(s,t.requester)||personConstraint(e,s,t.requester)||educationReservation(e,s,t.requester,Math.floor(s.minute/DAY)*DAY+c.start,c.end-c.start))continue;
   holdingSet(d,null,path(c.id),{...s.records[c.id],students:[...s.records[c.id].students,t.requester]},'education');
-  holdingSet(d,null,path(t.id),{...t,status:'已受理',servedAt:s.minute},'education');added.set(c.location,(added.get(c.location)??0)+1);
+  holdingSet(d,null,path(t.id),{...t,status:'已受理',servedAt:s.minute},'education');
+  added.push(c);
  }
 }
 export function advanceEducation(d,e,{before,after,beforeState}){
@@ -195,7 +202,9 @@ export function educationAction(d,args,id){
   const start=int(args.start??480,0,1439,'每日开课时刻'),minutes=int(args.minutes??e.rules.npcGrowth.teach.minutes,30,480,'课时'),end=start+minutes;if(end>1440)throw preconditionFailure('每日课程不能跨午夜');
   const occupied=educationCourses(e,s).filter(c=>c.location===location&&c.start<end&&c.end>start).reduce((n,c)=>n+c.students.length,0);
   // 座位满员不拒绝：能坐下的先入班，其余按报名先后（同紧迫度先到先得）登记排队号，空出座位时自动补入。
-  const seats=book?students.length:Math.max(0,serviceCapacity(e,d,{provider:location,service:'teach',seats:view.capacity,factor:1})-occupied),seated=students.slice(0,seats),waiting=students.slice(seats);
+  const capacitySource=book?null:serviceCapacityView(e,d,{provider:location,service:'teach',seats:view.capacity,factor:1});
+  if(capacitySource)capacitySource.sources.facility={id:location,condition:view.condition,factor:view.factor,capacity:view.capacity};
+  const seats=book?students.length:Math.max(0,capacitySource.capacity-occupied),seated=students.slice(0,seats),waiting=students.slice(seats);
   const since=s.minute,until=since+int(args.days??30,1,360,'开课天数')*DAY;
   for(const who of [...students,...teacher?[teacher]:[]]){
    if(educationReservation(e,s,who,Math.floor(since/DAY)*DAY+start,minutes))throw preconditionFailure('已有重叠课程');
@@ -216,10 +225,14 @@ export function educationAction(d,args,id){
   const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students:seated,start,end,since,until,status:'开课',founder:'player',contract};
   holdingSet(d,null,path(course),row,'education');
   const waitlist=waiting.map((student,i)=>{
-   const ticket={category:'service_ticket',id:`service_ticket:teach:${course}:${String(i).padStart(3,'0')}:${student}`,service:'teach',provider:location,requester:student,subject:course,urgency:1,createdAt:since,status:'排队',position:i+1,eta:seatEta(e,s,location,start,end),capacity:seats+occupied};
+   const tickets=recordsWhere(d.get('state','records'),'category','service_ticket').filter(t=>t.service==='teach'&&t.provider===location);
+   const ticket={category:'service_ticket',id:`service_ticket:teach:${course}:${String(i).padStart(3,'0')}:${student}`,service:'teach',provider:location,requester:student,subject:course,urgency:1,createdAt:since,arrivalOrder:nextServiceOrder(tickets),status:'排队',position:i+1,eta:seatEta(e,s,location,start,end),capacity:seats+occupied};
+   ticket.position=queuePosition([...tickets,ticket],ticket,{same:t=>{
+    const other=s.records?.[t.subject];return t.subject===course||other?.start<end&&other.end>start;
+   },now:since});
    holdingSet(d,null,path(ticket.id),ticket,'education');return {student,ticket:ticket.id,position:ticket.position,eta:ticket.eta};
   });
-  return {course,...row,...(waitlist.length?{queued:true,waitlist,note:`学堂此时段座位已满：${seated.length}人入班，${waitlist.length}人排队，座位空出时按先后补入`}:{})};
+  return {course,...row,capacitySource,...(waitlist.length?{queued:true,waitlist,note:`学堂此时段座位已满：${seated.length}人入班，${waitlist.length}人排队，座位空出时按先后补入`}:{})};
  }
  throw preconditionFailure('未知授业操作；合法 operation：school_inspect、book_give、school_fund、school_close、school_open、book_study；普通师授、单次读书或研究成果学习不填 operation；entity 填学习内容编号或登记名称，source 填导师、书本或研究项目编号；自己学习省略 student 或填 player');
 }
