@@ -2,7 +2,15 @@
 // 质押、典当、遗产与责任上限需要的是“这东西现在值多少”：不是某次成交价，也不是目录基价。
 // 本模块只是登记表和分派：各领域登记自己的估值依据（物品走市场估值投影，股份走组织净资产，地产走租金资本化），
 // 找不到依据的如实返回 unvaluable，由调用方明确处理——绝不静默当作 0。
+import {explainDerived} from './derived.mjs';
 const valuers=new Map();
+// 脱离当地供需的物品基准估值，复用 economy:value 自身的基准与修正。
+// 不乘市场稀缺、货架深度或交易价差，也不再次应用该槽。
+registerValuer('baseline',(d,e,{item,quantity=1,holder=null})=>{
+    if(!(e.byId.get(item)?.basePrice>0))return {value:null,unvaluable:'没有估值基准'};
+    const projection=explainDerived(e,d.document,'economy:value',item,{kind:'item',holder});
+    return {value:projection.value*quantity,basis:'derived-baseline'};
+});
 export function registerValuer(role,fn){valuers.set(role,fn);}
 // asset.role：'goods' {item,quantity,location,holder} | 'share' {issuer,fraction} | 'property' {subject,fraction}
 // 返回 {value:整数,basis} 或 {value:null,unvaluable:原因}

@@ -1,4 +1,5 @@
 import {vocabulary} from './domain-rules.mjs';
+import {toRational,fromRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinAccount,counterCash,depositCounter,booksOpen} from './money.mjs';
 import {porterCharges} from './transport.mjs';
@@ -172,7 +173,7 @@ export function currentShops(engine,state){
         const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
         // The keeper's own repricing (restockShop) stands in place of the type's standard markup while it is on record.
         const pricing=state.records?.[`shop_pricing:${keeper}`];
-        if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=pricing.markup;}
+        if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=typeof pricing.markup==='number'?pricing.markup:fromRational(pricing.markup);}
         const rows=engine.byId.get(keeper)?.shopRestock??store.restock;
         const population=settlementPopulationCount(engine,state,settlement).value;
         shop.restock=rows.map(row=>{
@@ -342,6 +343,9 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
 }
 // Cost-plus: a keeper who pays more (or less) than the reference price for what he stocks passes it on, keeping his type's margin.
 // The reference is the regional base price of the same goods, so the ratio is the extra the buy carried (scarcity, haul).
+// 改价回执含倍率与决策依据；数值持久化复用世界价格的整数分子/分母，读取仍兼容旧数字。
+const pricingRecord=value=>typeof value==='number'?(Number.isInteger(value)?value:toRational(value)):
+    Array.isArray(value)?value.map(pricingRecord):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,pricingRecord(v)])):value;
 function repriceShop(d,engine,shop,minute,entries,ctx){
     const paid=entries.reduce((n,e)=>n+(e.paidCopper??0),0),reference=entries.reduce((n,e)=>n+(e.referenceCopper??0),0);
     if(!paid||!reference||!d.get('state','npcs',shop.keeper))return;
@@ -350,8 +354,8 @@ function repriceShop(d,engine,shop,minute,entries,ctx){
     if(markup===shop.markup)return;
     const decision=keeperChoice(d,engine,shop,minute,ctx,{kind:'reprice',cost:{},reward:Math.abs(markup-shop.markup)});
     if(decision.outcome!=='agree')return;
-    d.set(['state','records',`shop_pricing:${shop.keeper}`],{category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
-        sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}});
+    d.set(['state','records',`shop_pricing:${shop.keeper}`],pricingRecord({category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
+        sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}}));
 }
 function restockShop(d,engine,shop,minute){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);

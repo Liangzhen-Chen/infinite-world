@@ -69,7 +69,7 @@ export function commitNpcCrime(d,e,plan,minute){
  }else if(offense==='smuggling'){
   const cargo=cargoAt(e,state,actor);if(!cargo||cargo.item!==plan.item)return null;
   // Contraband really changes hands at the checkpoint; no sale proceeds are invented.
-  value=goodsWorth(d,e,{item:plan.item,quantity:1,location,holder:actor})??0;transferItems(d,e,actor,victim,plan.item,1);stolen=null;
+  value=goodsWorth(d,e,{item:plan.item,quantity:1,location,holder:actor});transferItems(d,e,actor,victim,plan.item,1);stolen=null;
  }else throw preconditionFailure('未登记的NPC犯罪来源');
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;

@@ -34,12 +34,12 @@ test('current stock net assets share market value and S5-01 corrections, not his
   {path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:10,quality:world.items.find(i=>i.id===bread).quality}}},
   {path:['state','npcs',host,'coins'],value:200}
  ]});assert.deepEqual(prepared.setupUnmet,[]);f.replace(prepared.document);
- // Food D=14, other holders plus these ten portions keep S>28, so
- // scarcity clamps to .5. Bread value=2*.5*grade1=1. Cash200+10*1=210.
- assert.equal(netAssets(f.read(),f.engine,host),210);
- // Author economy:value add 1 acts before stock valuation: 200+10*(1+1).
+ // 15 §15.2：普通人的行囊不再供给市场。D=14，店主10份扣家户保留4份，S=6；
+ // 稀缺14/6，面包价值2×14/6=14/3，净资产=现钱200+10×14/3。
+ assert.equal(netAssets(f.read(),f.engine,host),200+10*(14/3));
+ // 注册修正按四位定点向零：14/3→4.6666，再加1=5.6666；历史成本仍不参与现价。
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
- assert.equal(netAssets(f.read(),new WorldEngine(w),host),220);
+ assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*5.6666);
 });
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{
@@ -76,14 +76,19 @@ test('independent copper anchors: neutral, second/third purchase, next day, qual
  // Baseline 230 × D/S 1 × depth 1 × grade 1 × spread 1 ×
  // neutral regard 1 × corrections 1 = 230; truncate the full bill once.
  const one=await f.act({seller:smith,item,quantity:1},'anchor-first');assert.equal(one.result.cost,230);
- // Transfer retains three saleable units locally (buyer holds the original
- // sword). net=1, opening=S+net=4: 230 × (1+.2/4)=241.5 → 241.
- const two=await f.act({seller:smith,item,quantity:1},'anchor-second');assert.equal(two.result.cost,241);
- // net=2, opening=5: 230 × (1+.2*2/5)=248.4 → 248.
- const three=await f.act({seller:smith,item,quantity:1},'anchor-third');assert.equal(three.result.cost,248);
+ // 15 §15.2：买走的剑在个人行囊中，不再是市场供给。第二笔 S=2、D=3、net=1、opening=3；
+ // trunc(230×1.5×(1+.2/3)×既有关系因子.99895)=367。
+ const two=await f.act({seller:smith,item,quantity:1},'anchor-second');assert.equal(two.result.cost,367);
+ assert.equal(two.result.pricing.relation,.99895);
+ // 第三笔 S=1、D=3、net=2、opening=3；既有日内关系快照仍为.99895，
+ // trunc(230×3×(1+.4/3)×.99895)=781（本卡不改变关系规则）。
+ const three=await f.act({seller:smith,item,quantity:1},'anchor-third');assert.equal(three.result.cost,781);
+ assert.equal(three.result.pricing.relation,.99895);
  const next=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:1440},eventId:'anchor-tomorrow'});f.replace(applyPatches(f.document,next.patches));
- // New day clears net; same D/S=1 and all other factors 1 → 230.
- const plain=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge});assert.equal(plain.totalCoins,230);
+ // 新日只清除 net，不把已买走的剑放回市场：S=0、D=3，稀缺上限3 → 230×3=690。
+ const plain=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge});assert.equal(plain.totalCoins,690);
+ // 以下独立检验品质、修正和整笔取整，复用本例起始中性市场，避免混入已发生的去库存。
+ f.replace(opening);
  // Published qualityStep=1.25. Native silver baseline → silver 230;
  // next authored tier gives 230 × 1.25 = 287.5 → 287.
  const tiers=world.rules.equipment.qualities,index=tiers.indexOf(f.engine.byId.get(item).quality);
@@ -147,12 +152,19 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  assert.equal(personal.retained,4);assert.equal(personal.available,5);
  const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===5));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available,0));
  const before=structuredClone(f.document);
- await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/库存不足/);
+ // 公开供给只剩店主可售5份，6份已先超过市场深度下限5；按真实校验顺序拒绝，
+ // 上面的保留/承诺数量断言和下面的整档无写入断言不变。
+ await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/市场今天没有那么多可成交深度/);
  assert.deepEqual(f.document,before,'retained or promised food cannot fund a partial transaction');
  // Same twelve portions split across two bags still retain four, not eight.
  const split=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs',host,'inventory',bread],value:6},{path:['state','npcs','npc_hw_ayan','inventory'],value:{[bread]:6}}]});assert.deepEqual(split.setupUnmet,[]);f.replace(split.document);
  const pair=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),f.engine,id,bread,{business:true}));
  assert.equal(pair.reduce((n,r)=>n+r.retained,0),4);assert.equal(pair.reduce((n,r)=>n+r.available,0),5);
+ // 同一两人家户仍保留4份、承诺3份：分到无经营身份成员的行囊不进入市场供给，
+ // 但家户的消费/承诺需求不能随分袋方式消失（15 §15.2，有效需求与可售存量分列）。
+ const splitSupply=marketSupply(f.read(),f.engine,bread,inn);
+ assert.ok(splitSupply.rows.every(r=>r.owner!=='npc_hw_ayan'));
+ assert.equal(splitSupply.demand,supply.demand);
  // Registered body:drain multiplier2 doubles each member's 60/day need:
  // 2 people *120 /30 =8 portions, leaving12-8-3=1 saleable.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'household-needs',pack:'market',target:'body:drain',stage:'mul',value:2}]}};
@@ -242,10 +254,10 @@ test('bulk integrates additive derived corrections instead of multiplying the in
  const supply=marketSupply(original.read(),original.engine,item,inn),quantity=Math.max(6,Math.floor(supply.supply*.2));
  const plain=marketQuote(original.read(),original.engine,{...args,quantity}),extra=marketQuote(corrected.read(),corrected.engine,{...args,quantity});
  assert.equal(plain.retail,false);assert.equal(extra.retail,false);assert.ok(extra.explanation.price.contributions.some(r=>r.id==='handling'));
- // S5-01 evaluates active corrections in fixed-point units. Each marginal
- // price can differ from the native IEEE curve by half one fixed unit; the
- // integral's error bound is that unit times quantity, not an arbitrary epsilon.
- assert.ok(Math.abs(extra.exactTotal-plain.exactTotal-quantity)<=quantity/(2*Number(FIXED_SCALE))+1e-7);
+ // rx.fixed 按四位向零截断，而非四舍五入。正价格每个边际点误差在[-1定点单位,0]，
+ // 积分误差在[-quantity/FIXED_SCALE,0]；以同宽单边区间替代旧的错误半单位对称区间。
+ const truncation=extra.exactTotal-plain.exactTotal-quantity;
+ assert.ok(truncation<=1e-7);assert.ok(truncation>=-quantity/Number(FIXED_SCALE)-1e-7);
  assert.equal(extra.totalCoins-plain.totalCoins,quantity);assert.equal(extra.totalCoins,Math.trunc(extra.exactTotal));
 });
 

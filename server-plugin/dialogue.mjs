@@ -157,7 +157,10 @@ export function applyDialogue(d,engine,args,eventId){
  }else if(action==='interpreter')detail=view.observable.people.filter(p=>p.id!==npc).map(p=>p.name).join('、')||'这里没有可找的通译。';
  else if(action==='leave')detail='回头见。';
  else if(action!=='greet')throw preconditionFailure('未知对话动作');
- return {...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{}),
-  ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:goodsWorth(d,engine,{item:gift.item,quantity:1,holder:'player'})??0,tags:['dialogue','gift']}}:{})};
+ const giftValue=gift?goodsWorth(d,engine,{item:gift.item,quantity:1,holder:'player'}):undefined;
+ const unknown=gift&&giftValue===null?{unvaluable:'对方无法估值',valuationNote:'无从估价：对方无法估值，不计价值，只计心意。'}:{};
+ if(unknown.unvaluable)d.say(unknown.valuationNote);
+ return {...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{}),...unknown,
+  ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:giftValue,...unknown,tags:['dialogue','gift']}}:{})};
 }
 export {npcDecision,subjectiveView};

@@ -55,11 +55,11 @@ const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(v
 export function presentWitnesses(state,location,exclude=[]){
     return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===location&&awake(state,id,n)&&!exclude.includes(id)).map(([id])=>id).sort();
 }
-// 事件里的物品价值：事件发生时所在地的市场估值（goods 估值角色，只读状态快照），不读目录基价；无从估价记 0。
+// 事件里的物品价值：事件发生时所在地的市场估值；未知值保留 null。
 // 估值登记在更高层（finance-assets），这里只留安装口，避免低层反向依赖。
 function worthRuntime(){return worthRuntime.worth;}
 export function installEventWorth(fn){worthRuntime.worth=fn;}
-const valueOf=(engine,state,item,quantity=1,location=state.location)=>worthRuntime()?.(engine,state,{item,quantity,location})??0;
+const valueOf=(engine,state,item,quantity=1,location=state.location)=>worthRuntime()?.(engine,state,{item,quantity,location})??null;
 
 // Unpaid deliveries completed in this call: the existing kindness rule for gifts.
 function obligationGifts(engine,before,after){
@@ -183,6 +183,8 @@ export function drainWorldReactions(d){
     }finally{tick.active=null;tick.draining=false;}
 }
 export function publishWorldEvents(d,engine,events,context,subscribers){
+    events=events.map(event=>event.value===null&&['gift','steal'].includes(event.verb)?{...event,unvaluable:event.unvaluable??(event.verb==='gift'?'对方无法估值':'无法核定案值'),valuationNote:event.valuationNote??(event.verb==='gift'?'无从估价：对方无法估值，不计价值，只计心意。':'无从估价：无法核定案值。')}:event);
+    for(const event of events)if(event.verb==='gift'&&event.unvaluable)d.say?.(event.valuationNote);
     if(!context.legacy)events=events.map(event=>{
         // This card resolves the player's local intelligent layer only. Remote
         // producers keep their existing contract until S7 supplies that model.

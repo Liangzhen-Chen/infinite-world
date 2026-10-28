@@ -206,7 +206,7 @@ function mineActor(d,args,id,actor,advance){
     }
     holdingSet(d,null,path(key),row,'extraction');
     const witnesses=[...new Set([...atStart,...present()])].filter(w=>w!==actor);
-    const value=success?goodsWorth(d,this,{item,quantity:1,location,holder:null})??0:0;
+    const value=success?goodsWorth(d,this,{item,quantity:1,location,holder:null}):0;
     const stolen=units.length?{item,quantity:1,unit:units[0]}:null;
     const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,stolen,witnesses,eventId:id,location,code:jurisdiction.code}):null;
     for(const unit of units){
@@ -218,6 +218,7 @@ function mineActor(d,args,id,actor,advance){
     const judged=jurisdiction&&{kind:jurisdiction.kind,executable:jurisdiction.executable,...(jurisdiction.kind==='faction'?{faction:jurisdiction.faction,settlement:jurisdiction.settlement,standing:custom?jurisdiction.rule.standing:0,witnessed:witnesses.length>0}:{law:jurisdiction.law,polity:jurisdiction.polity,penalty:jurisdiction.penalty,
         ...(local?{custom:{faction:local.faction,standing:custom?local.rule.standing:0,witnessed:witnesses.length>0}}:{})})};
     return {success,check,obtained:success?[{item,quantity:1}]:[],reserve:row.reserve,case:incident,illegal:Boolean(owner&&!licensed),jurisdiction:judged,
+        ...(success&&value===null?{value:null,unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅按基础罚则，不加案值倍数。'}:{}),
         training:actor==='player'&&able(d)?practice(d,this,rules.check.skill,`开矿:${location}`):null,actionScope:{kind:'mining',clockManaged:true,minutes:rules.minutes}};
 }
 

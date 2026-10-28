@@ -42,8 +42,10 @@ test('候选矿镐从段岩真实有限库存购买，双方铜币与镐数量�
  const buy=async eventId=>{const step=await engine.reduce(c,{tool:'world_trade',args:{seller:'段岩',item:'普通矿镐',quantity:1},eventId});c=applyPatches(c,step.patches);return step.result;};
  await buy('pick-one');assert.equal(c.state.inventory.item_mining_pick.quantity,1);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick.quantity,1);
  await buy('pick-two');assert.equal(c.state.inventory.item_mining_pick.quantity,2);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,undefined);
- // S5-02: first trunc(28*1)=28; same local S2, net1 => opening3; second trunc(28*(1+.2/3)*.99895)=29. Total57.
- assert.equal(c.state.player.coins,initialPlayer-57);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+57);
+ // 15 §15.2：买到玩家行囊里的镐不再是市场存量。首笔 S=2、D=1，56×.5=28；
+ // 次笔 S=1、net=1、opening=2：trunc(56×1×(1+.2/2)×.99895)=61，共89铜。
+ // 买方扣款与卖方入款仍须逐文守恒，售罄拒绝及无写入断言保留。
+ assert.equal(c.state.player.coins,initialPlayer-89);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+89);
  const before=structuredClone(c);await assert.rejects(buy('pick-three'),/库存不足/);assert.deepEqual(c,before);
 });
 
