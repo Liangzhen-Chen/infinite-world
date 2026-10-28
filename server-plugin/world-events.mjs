@@ -55,7 +55,11 @@ const resolve=(engine,value)=>{if(!value)return null;try{return engine.resolve(v
 export function presentWitnesses(state,location,exclude=[]){
     return Object.entries(state.npcs??{}).filter(([id,n])=>n.location===location&&awake(state,id,n)&&!exclude.includes(id)).map(([id])=>id).sort();
 }
-const valueOf=(engine,item,quantity=1)=>(engine.byId.get(item)?.basePrice??0)*quantity;
+// 事件里的物品价值：事件发生时所在地的市场估值（goods 估值角色，只读状态快照），不读目录基价；无从估价记 0。
+// 估值登记在更高层（finance-assets），这里只留安装口，避免低层反向依赖。
+function worthRuntime(){return worthRuntime.worth;}
+export function installEventWorth(fn){worthRuntime.worth=fn;}
+const valueOf=(engine,state,item,quantity=1,location=state.location)=>worthRuntime()?.(engine,state,{item,quantity,location})??0;
 
 // Unpaid deliveries completed in this call: the existing kindness rule for gifts.
 function obligationGifts(engine,before,after){
@@ -68,7 +72,7 @@ function obligationGifts(engine,before,after){
             ||Object.values(after.records??{}).some(r=>r.category==='debt'&&r.debtor===o.promisee&&r.creditor===o.promisor);
         if(paid)continue;
         const minute=o.resolvedAt??o.completion?.minute??o.deadline??after.minute;
-        rows.push({verb:'gift',actor:o.promisor,target:o.promisee,gift:{item:o.item,quantity:o.quantity},value:valueOf(engine,o.item,o.quantity??1),
+        rows.push({verb:'gift',actor:o.promisor,target:o.promisee,gift:{item:o.item,quantity:o.quantity},value:valueOf(engine,after,o.item,o.quantity??1,o.location??after.location),
             location:o.location??after.location,minute,tags:['gift','obligation'],source:{obligation:id},key:`obligation:${id}:gift`});
     }
     return rows;
@@ -105,7 +109,7 @@ export function deriveWorldEvents(engine,before,after,{tool,args={},detail={},ev
             e={verb:'help',actor:'player',target,value:detail.healed,tags:['magic','heal'],spell:spell.id};
         else e={verb:'cast',actor:'player',target:resolve(engine,args.target),tags:['magic'],...(spell?{spell:spell.id}:{})};
     }else if(tool==='crime'&&detail.target){
-        const stolen=detail.stolen,value=stolen?.coins??(stolen?.item?valueOf(engine,stolen.item):0);
+        const stolen=detail.stolen,value=stolen?.coins??after.records?.[detail.case]?.value??(stolen?.item?valueOf(engine,after,stolen.item):0);
         e={verb:'steal',actor:'player',target:detail.target,value,witnesses:[...new Set(detail.witnesses??[])].sort(),
             ...(detail.perception?{perception:detail.perception}:{}),stolen:detail.stolen,tags:['crime','hostile','theft',detail.success?'success':'attempt',...(detail.witnesses?.length?['discovered']:[])],case:detail.case};
     }else if(tool==='trade'){

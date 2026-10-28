@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins,coinRead} from './money.mjs';
 import {bagStock} from './stock.mjs';
@@ -66,7 +67,7 @@ export function inspectSmuggling(d,engine,route,eventId){
             let passed=!guard||check.success,bribed=false,exposed=false,incident=null,corruption=null;
             const tag=`${eventId}_${row.id}_${cp.edge}`;
             if(!passed&&row.bribe){
-                const stake=Math.max(1,engine.byId.get(row.item).basePrice*row.quantity),price=bribePrice(engine,d.get('state'),guard,stake);
+                const stake=Math.max(1,goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'})??0),price=bribePrice(engine,d.get('state'),guard,stake);
                 bribed=row.bribe>=price&&d.get('state','player','coins')>=row.bribe;
                 if(bribed){
                     moveCoins(d,{from:purse(engine,'player'),to:purse(engine,guard),amount:row.bribe,writer:'smuggling',eventId:tag});d.set(['state','player','coins'],d.get('state','player','coins')-row.bribe);d.set(['state','npcs',guard,'coins'],d.get('state','npcs',guard,'coins')+row.bribe);
@@ -84,7 +85,7 @@ export function inspectSmuggling(d,engine,route,eventId){
             let seizure=null;
             if(!passed){
                 transferItems(d,engine,'player',guard,row.item,row.quantity);
-                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:engine.byId.get(row.item).basePrice*row.quantity,witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
+                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'})??0,witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
                 seizure={custodian:guard,item:row.item,quantity:row.quantity,case:incident};
             }
             const latest=d.get(...path(row.id));

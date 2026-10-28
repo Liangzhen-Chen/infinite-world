@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
 import {populationView,personConstraint} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
@@ -205,7 +206,7 @@ function mineActor(d,args,id,actor,advance){
     }
     holdingSet(d,null,path(key),row,'extraction');
     const witnesses=[...new Set([...atStart,...present()])].filter(w=>w!==actor);
-    const value=success?this.byId.get(item).basePrice:0;
+    const value=success?goodsWorth(d,this,{item,quantity:1,location,holder:null})??0:0;
     const stolen=units.length?{item,quantity:1,unit:units[0]}:null;
     const incident=jurisdiction?.kind==='code'?registerIncident(d,this,{offender:actor,victim:owner,offense:'illegal_mining',value,stolen,witnesses,eventId:id,location,code:jurisdiction.code}):null;
     for(const unit of units){

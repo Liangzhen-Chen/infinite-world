@@ -7,6 +7,8 @@ import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
 import {withAgricultureRules} from '../world/design/agriculture-foundation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
 import {initializeAgriculture,planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
@@ -64,10 +66,15 @@ test('跨季长等待与每日结算的库存、粮种和全部农业账一致',
     assert.deepEqual(record(long),record(split));assert.deepEqual(long.state.settlements,split.state.settlements);conservation(long);
 });
 test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种粮原到期日',async()=>{
-    const{c,run}=setup();atCounter(c);const coins=c.state.player.coins,treasury=c.state.settlements.loc_hw.treasury;
+    const{c,run,engine}=setup();atCounter(c);const coins=c.state.player.coins,treasury=c.state.settlements.loc_hw.treasury;
     let out=await run(c,'world_farm',{operation:'buy',quantity:2},'buy'),doc=out.document;
-    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-6);
-    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+6);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
+    // W8-A：粮仓售价读当地市场估值（goods 角色），不再是目录价×数量。手算：成交前河湾村燕麦的稀缺 = clamp(需求/供给, 0.5, 3)
+    // （供给 = 仓存 − 居民口粮储备等；需求 = 储备与承诺），单份市值 = 基价 3 × 环境系数 × 稀缺；2 份取整。旧：恒为 2×3 = 6 文。
+    const read=x=>({document:x,get:(...p)=>p.reduce((v,k)=>v?.[k],x)}),sup=marketSupply(read(c),engine,'item_oats','bld_hw_council');
+    const scarcity=Math.max(0.5,Math.min(3,sup.demand/Math.max(1,sup.supply))),cost=Math.floor(2*regionalTradeBase(read(c),engine,'item_oats','bld_hw_council')*scarcity);
+    assert.equal(cost,10,'手算价款');
+    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-cost);
+    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+cost);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
     doc=(await run(doc,'world_farm',{operation:'donate',quantity:1},'donate')).document;
     assert.equal(doc.state.inventory.item_oats.quantity,1);assert.equal(record(doc).ledger.donated,1);conservation(doc);
     const oldExpiry=record(doc).batches[0].expiresDay;

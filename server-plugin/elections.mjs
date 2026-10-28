@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('elections');
@@ -77,7 +78,7 @@ export function electionAction(d,args,id){
             observer=here(d,this,args.authority);if(targets.includes(observer))throw preconditionFailure('须另有被赠礼说法误导的在场人');
         }
         advanceWithNpcParticipants(d,this,30,id,[...targets,...observer?[observer]:[]]);
-        const check=this.check(d,{attribute:'魅力',difficulty:15},id),gain=action==='gift'?Math.min(10,2+Math.floor(this.byId.get(gift).basePrice/5)):action==='buy_votes'?Math.min(20,Math.floor(coins/2)):check.success?6:-2;
+        const check=this.check(d,{attribute:'魅力',difficulty:15},id),gain=action==='gift'?Math.min(10,2+Math.floor((goodsWorth(d,this,{item:gift,quantity:1,holder:'player'})??0)/5)):action==='buy_votes'?Math.min(20,Math.floor(coins/2)):check.success?6:-2;
         if(gift)transferItems(d,this,'player',targets[0],gift,1);
         const frauds=[...row.frauds];let disqualified=row.disqualified??false;
         if(coins){

@@ -211,6 +211,7 @@ export function explainDerived(engine,document,id,subject,options={}){
  if(base===undefined&&slot.baselines){baseline=selectDerivedBaseline(engine,document,slot.baselines,subject,{...options,kind});base=fixedNumber(baseline.reduce((sum,r)=>checkedFixed(sum+fixedUnits(r.value)),0n));}
  if(base===undefined&&slot.id==='economy:value'){
   if(kind==='labor')base=wageQuote(options).daily;
+  // 公式输入：目录基准价是估值/市场公式自己的起点（规则定义的基价本身），不是现价。
   else base=optionalRead(()=>getContext().fact(subject,'basePrice'));
  }
  if(!Number.isFinite(base))reject('E-DERIVED-BASE','尚无足够知情或事实计算这个数值');

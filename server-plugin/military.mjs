@@ -278,7 +278,6 @@ export function loseSoldiers(d,engine,a,n,{at,reason,killed=false}){
 }
 
 // ---- 每周：补给、操练、士气、逃兵 ------------------------------------------------------
-const oatsPrice=engine=>engine.byId.get(engine.rules.agriculture?.grainItem??'item_oats')?.basePrice??3;
 function supplyWeek(d,engine,a,at,src,blocked){
  const m=rules(engine),state=d.get('state'),season=engine.calendar(at).season,famine=Boolean(famineAt(state,a.base,at));
  const eaters=armyStrength(a),daily=eaters*m.soldier.rationPerDay,need=daily*7;

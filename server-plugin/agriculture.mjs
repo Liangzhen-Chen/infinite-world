@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {husbandryAction} from './husbandry.mjs';
 import {wearItem,useTool} from './items.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
@@ -404,8 +405,8 @@ export function agricultureAction(d,args,eventId){
         const item=this.rules.agriculture.grainItem;
         if(!this.replaying&&['buy','donate','reserve_seed'].includes(operation)&&args.item!==undefined&&this.resolve(args.item,'item')!==item)throw preconditionFailure(`粮仓此操作只办理${this.byId.get(item).name}，不能替换指定物品；其他商品请向实际商家交易`);
         if(operation==='buy'){
-            const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),price=this.byId.get(item).basePrice,cost=quantity*price;
-            if(quantity>available)throw preconditionFailure('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw preconditionFailure('买粮余额不足');
+            const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),worth=quantity>0?goodsWorth(d,this,{item,quantity,location:p.settlement,holder:null}):0,cost=worth??0;
+            if(worth===null)throw preconditionFailure('这批粮当地无从估价，粮仓不能定价出售');if(quantity>available)throw preconditionFailure('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw preconditionFailure('买粮余额不足');
             const paid=takeGrain(r,s,quantity,false,{account:bag(this,'player',item)});if(paid!==quantity)throw preconditionFailure('粮仓实际库存不足');
             moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity,BOOKED);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
         }else if(operation==='donate'){

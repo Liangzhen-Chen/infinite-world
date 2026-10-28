@@ -121,6 +121,8 @@ export function negotiateBoss(d,engine,boss,residence,args,eventId){
     if(!reason&&t.offer.some(r=>!accepts.has(r.item)))reason='所交物资不在首领愿意收取的目录中';
     if(!reason&&t.request.some(r=>(n.inventory[r.item]?.quantity??0)<r.quantity))reason='首领实际库存不足，不能交付所索物资';
     if(!reason&&t.offer.some(r=>engine.quantity(d,'player',r.item)<r.quantity))reason='你没有足够的实际物资履行条件';
+    // 保留目录价值（W8-A 判定为规则定义的基准价，非现价）：首领在巢穴里没有市场，也不报价；它按物品本身的目录价值衡量“值不值”这笔交换，
+    // 若改读当地市场估值，野外无供给处价格由环境系数主导（燕麦 5、干粮 1），会让“一份干粮换一份燕麦”这类设计内的交换无故失败。
     const value=rows=>rows.reduce((sum,r)=>sum+engine.byId.get(r.item).basePrice*r.quantity,0);
     if(!reason&&value(t.offer)<value(t.request))reason='交付物资的目录价值不足以换取所索物资';
     const h={event:eventId,minute:d.get('state','minute'),terms:t,accepted:!reason,

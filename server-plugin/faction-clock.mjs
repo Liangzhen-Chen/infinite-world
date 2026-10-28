@@ -1,4 +1,5 @@
 import {recordsWhere} from './storage.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {purse,treasury,sink,bookSide,BOOKED} from './money.mjs';
@@ -196,7 +197,9 @@ export function advanceFactionClocks(d,engine,at){
     const sourceEvent=`faction-clock:${rule.id}:${at}`,context={faction:rule.faction,settlement:rule.settlement,minute:at,sourceEvent,scope:'regional',stage:stage.id};
     const receipt=clockTransaction(d,tx=>{
      if(!affordable(assets,stage.cost))return {applied:false,reason:'阶段资源不足'};
-     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id},{account:sink('export','faction_stage'),writer:'faction-clock',eventId:sourceEvent},{flow:'sink:consume',purpose:'faction_stage',writer:'faction-clock',eventId:sourceEvent});
+     // 阶段耗用的物资在此刻按当地市场估值冻结进账（itemWorth），此后不随市价回改；无从估价的不计。
+     const itemWorth=Object.entries(stage.cost?.items??{}).reduce((n,[item,q])=>n+(goodsWorth(tx,engine,{item,quantity:q,location:rule.settlement,holder:null})??0),0);
+     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id,itemWorth},{account:sink('export','faction_stage'),writer:'faction-clock',eventId:sourceEvent},{flow:'sink:consume',purpose:'faction_stage',writer:'faction-clock',eventId:sourceEvent});
      const results=[];
      for(const effect of stageEffects(engine,rule,stage)){const result=applyEffect(tx,engine,effect,context);if(!result.applied)return result;results.push(result);}
      return {applied:true,effects:results};
